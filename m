@@ -2,189 +2,219 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE175C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 18:19:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EACC4C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 18:20:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C962761B42
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 18:19:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAA7761A40
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 18:20:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230209AbhKSSW7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Nov 2021 13:22:59 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41366 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229457AbhKSSW6 (ORCPT
+        id S232456AbhKSSXP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Nov 2021 13:23:15 -0500
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:46704 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231751AbhKSSXO (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Nov 2021 13:22:58 -0500
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1AJIHW2L014164;
-        Fri, 19 Nov 2021 18:19:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=+IS7Heh4kpZN7WNKRQ/8WF0S9yXIhNl0l/8wD29QIas=;
- b=WX55utL8d3cDCYUCCWoEsRQTLKA0Ik7PS3FZPEbY2XsrPwpmV0uAOhSf+dFsQ/7aALea
- HF+eDcTM5zQ+MzzdUnM+TkiRAsBZ3TvYcC+ODCljTAS8FfqlMdEUdOIRmQMJoW0jqmfi
- +rby2xCaJEiB0MtKOocAOwx9nf5Kkh/YmCLZAcjkx0gz1THRAzgWzs6WxeAQD2v1xQgG
- 9O3yZFDWyKg++jmKT76XyyZJLTaQtS0KSbJQRZQwxBOmPD3NjYajfTAn1ZoadEttlFwu
- vIWDWE0NYoUS4E0ry/Sez+v5Mu5hhuJUsHEuIq0aSoVw8W3X7grWbGG7J081yNnOS0TJ ww== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3ceh2rg0ya-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 19 Nov 2021 18:19:42 +0000
-Received: from m0098421.ppops.net (m0098421.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1AJIJNeV017579;
-        Fri, 19 Nov 2021 18:19:42 GMT
-Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3ceh2rg0y1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 19 Nov 2021 18:19:42 +0000
-Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1AJIH86r028933;
-        Fri, 19 Nov 2021 18:19:41 GMT
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-        by ppma01dal.us.ibm.com with ESMTP id 3ca50ehhh4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 19 Nov 2021 18:19:41 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1AJIJeOq21234014
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 19 Nov 2021 18:19:40 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2BCA07805C;
-        Fri, 19 Nov 2021 18:19:40 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1BEE178067;
-        Fri, 19 Nov 2021 18:19:39 +0000 (GMT)
-Received: from jarvis.int.hansenpartnership.com (unknown [9.211.93.152])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Fri, 19 Nov 2021 18:19:38 +0000 (GMT)
-Message-ID: <3bf7f06cd2b905dad77c9dda8cfa080c5114e731.camel@linux.ibm.com>
-Subject: Re: [PATCH 2/2] scsi: Fix hang when device state is set via sysfs
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Mike Christie <michael.christie@oracle.com>, lduncan@suse.com,
-        cleech@redhat.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        lijinlin <lijinlin3@huawei.com>, Wu Bo <wubo40@huawei.com>
-Date:   Fri, 19 Nov 2021 13:19:37 -0500
-In-Reply-To: <85ff7a01-fd44-b036-b2c8-145f30790752@oracle.com>
-References: <20211105221048.6541-1-michael.christie@oracle.com>
-         <20211105221048.6541-3-michael.christie@oracle.com>
-         <b78c655594d3aa5c6ac5540dbf8fb931dce5a78b.camel@linux.ibm.com>
-         <85ff7a01-fd44-b036-b2c8-145f30790752@oracle.com>
+        Fri, 19 Nov 2021 13:23:14 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1637346012;
+        bh=Y88sxabhj9CGU3Tbdikvp0XrX7xemk5smViQuCFxuE8=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=El4Dc4Gais46ZDSUQxmWrUlE9Alk2WtJS2Griz8monbOzTB0WecDo7CUJqMk4jOOq
+         JwmUZz1TfO4Pce5i90z3FoDiRUt1O/9HxhRz5nVzaJro/dLFz1PIpToA+ITu3SlEqV
+         1f6RU2f7V6FUZm6aIj2daYrLXz8/jxRAsgjiwR8I=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 92FE61280C1F;
+        Fri, 19 Nov 2021 13:20:12 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id sDxXRArctZ4u; Fri, 19 Nov 2021 13:20:12 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1637346012;
+        bh=Y88sxabhj9CGU3Tbdikvp0XrX7xemk5smViQuCFxuE8=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=El4Dc4Gais46ZDSUQxmWrUlE9Alk2WtJS2Griz8monbOzTB0WecDo7CUJqMk4jOOq
+         JwmUZz1TfO4Pce5i90z3FoDiRUt1O/9HxhRz5nVzaJro/dLFz1PIpToA+ITu3SlEqV
+         1f6RU2f7V6FUZm6aIj2daYrLXz8/jxRAsgjiwR8I=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::c447])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 0CAA7128010E;
+        Fri, 19 Nov 2021 13:20:11 -0500 (EST)
+Message-ID: <0a508ff31bbfa9cd73c24713c54a29ac459e3254.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.16-rc1
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Fri, 19 Nov 2021 13:20:10 -0500
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: aJQ1SKJNn6e015FdElFMP8wAPwWpTEHs
-X-Proofpoint-ORIG-GUID: oEhSq-uV_Nf1LjAt2EgYWTQ9xioK-PwS
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
- definitions=2021-11-19_14,2021-11-17_01,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 clxscore=1015
- suspectscore=0 phishscore=0 bulkscore=0 adultscore=0 priorityscore=1501
- spamscore=0 impostorscore=0 malwarescore=0 mlxscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
- definitions=main-2111190098
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2021-11-19 at 11:13 -0600, Mike Christie wrote:
-> On 11/19/21 7:35 AM, James Bottomley wrote:
-> > On Fri, 2021-11-05 at 17:10 -0500, Mike Christie wrote:
-> > > This fixes a regression added with:
-> > > 
-> > > commit f0f82e2476f6 ("scsi: core: Fix capacity set to zero after
-> > > offlinining device")
-> > > 
-> > > The problem is that after iSCSI recovery, iscsid will call into
-> > > the kernel to set the dev's state to running, and with that patch
-> > > we now call scsi_rescan_device with the state_mutex held. If the
-> > > scsi error handler thread is just starting to test the device in
-> > > scsi_send_eh_cmnd then it's going to try to grab the state_mutex.
-> > > 
-> > > We are then stuck, because when scsi_rescan_device tries to send
-> > > its IO scsi_queue_rq calls -> scsi_host_queue_ready ->
-> > > scsi_host_in_recovery which will return true (the host state is
-> > > still in recovery) and IO will just be requeued.
-> > > scsi_send_eh_cmnd will then never be able to grab the state_mutex
-> > > to finish error handling.
-> > > 
-> > > To prevent the deadlock this moves the rescan related code to
-> > > after we drop the state_mutex.
-> > > 
-> > > This also adds a check for if we are already in the running
-> > > state. This prevents extra scans and helps the iscsid case where
-> > > if the transport class has already onlined the device during it's
-> > > recovery process then we don't need userspace to do it again plus
-> > > possibly block that daemon.
-> > > 
-> > > Fixes: f0f82e2476f6 ("scsi: core: Fix capacity set to zero after
-> > > offlinining device")
-> > > Cc: Bart Van Assche <bvanassche@acm.org>
-> > > Cc: lijinlin <lijinlin3@huawei.com>
-> > > Cc: Wu Bo <wubo40@huawei.com>
-> > > Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> > > ---
-> > >  drivers/scsi/scsi_sysfs.c | 30 +++++++++++++++++++-----------
-> > >  1 file changed, 19 insertions(+), 11 deletions(-)
-> > > 
-> > > diff --git a/drivers/scsi/scsi_sysfs.c
-> > > b/drivers/scsi/scsi_sysfs.c
-> > > index a35841b34bfd..53e23a7bc0d3 100644
-> > > --- a/drivers/scsi/scsi_sysfs.c
-> > > +++ b/drivers/scsi/scsi_sysfs.c
-> > > @@ -797,6 +797,7 @@ store_state_field(struct device *dev, struct
-> > > device_attribute *attr,
-> > >  	int i, ret;
-> > >  	struct scsi_device *sdev = to_scsi_device(dev);
-> > >  	enum scsi_device_state state = 0;
-> > > +	bool rescan_dev = false;
-> > >  
-> > >  	for (i = 0; i < ARRAY_SIZE(sdev_states); i++) {
-> > >  		const int len = strlen(sdev_states[i].name);
-> > > @@ -815,20 +816,27 @@ store_state_field(struct device *dev,
-> > > struct
-> > > device_attribute *attr,
-> > >  	}
-> > >  
-> > >  	mutex_lock(&sdev->state_mutex);
-> > > -	ret = scsi_device_set_state(sdev, state);
-> > > -	/*
-> > > -	 * If the device state changes to SDEV_RUNNING, we need to
-> > > -	 * run the queue to avoid I/O hang, and rescan the device
-> > > -	 * to revalidate it. Running the queue first is necessary
-> > > -	 * because another thread may be waiting inside
-> > > -	 * blk_mq_freeze_queue_wait() and because that call may be
-> > > -	 * waiting for pending I/O to finish.
-> > > -	 */
-> > > -	if (ret == 0 && state == SDEV_RUNNING) {
-> > > +	if (sdev->sdev_state == SDEV_RUNNING && state == SDEV_RUNNING)
-> > > {
-> > > +		ret = count;
-> > 
-> > This looks wrong because of this
-> > 
-> > [...]
-> > >  	return ret == 0 ? count : -EINVAL;
-> > 
-> > Don't we now return EINVAL on idempotent set state running because
-> > the count is always non-zero?
-> > 
-> > I think the first statement should be 'ret = 0;' instead to cause
-> > idempotent state setting to succeed as a nop.
-> > 
-> 
-> You're right.
-> 
-> I'll resend this patchset with James's comment handled.
+Six fixes, five in drivers (ufs, qla2xxx, iscsi) and one core change to
+fix a regression in user space device state setting, which is used by
+the iscsi daemons to effect device recovery.
 
-Send an incremental patch because this is already in the queue for
-Linus and he'd go ballistic if we had to rebase to remove it.
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Adrian Hunter (2):
+      scsi: ufs: core: Fix another task management completion race
+      scsi: ufs: core: Fix task management completion timeout race
+
+Bart Van Assche (1):
+      scsi: ufs: core: Improve SCSI abort handling
+
+Ewan D. Milne (1):
+      scsi: qla2xxx: Fix mailbox direction flags in qla2xxx_get_adapter_id()
+
+Mike Christie (2):
+      scsi: core: sysfs: Fix hang when device state is set via sysfs
+      scsi: iscsi: Unblock session then wake up error handler
+
+And the diffstat:
+
+ drivers/scsi/qla2xxx/qla_mbx.c      |  6 ++----
+ drivers/scsi/scsi_sysfs.c           | 30 +++++++++++++++++++-----------
+ drivers/scsi/scsi_transport_iscsi.c |  6 +++---
+ drivers/scsi/ufs/ufshcd.c           |  9 ++-------
+ 4 files changed, 26 insertions(+), 25 deletions(-)
+
+With full diff below.
 
 James
 
+---
+
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 73a353153d33..10d2655ef676 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -1695,10 +1695,8 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, uint16_t *id, uint8_t *al_pa,
+ 		mcp->in_mb |= MBX_13|MBX_12|MBX_11|MBX_10;
+ 	if (IS_FWI2_CAPABLE(vha->hw))
+ 		mcp->in_mb |= MBX_19|MBX_18|MBX_17|MBX_16;
+-	if (IS_QLA27XX(vha->hw) || IS_QLA28XX(vha->hw)) {
+-		mcp->in_mb |= MBX_15;
+-		mcp->out_mb |= MBX_7|MBX_21|MBX_22|MBX_23;
+-	}
++	if (IS_QLA27XX(vha->hw) || IS_QLA28XX(vha->hw))
++		mcp->in_mb |= MBX_15|MBX_21|MBX_22|MBX_23;
+ 
+ 	mcp->tov = MBX_TOV_SECONDS;
+ 	mcp->flags = 0;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 55addd78fde4..7afcec250f9b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -792,6 +792,7 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+ 	int i, ret;
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 	enum scsi_device_state state = 0;
++	bool rescan_dev = false;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(sdev_states); i++) {
+ 		const int len = strlen(sdev_states[i].name);
+@@ -810,20 +811,27 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+ 	}
+ 
+ 	mutex_lock(&sdev->state_mutex);
+-	ret = scsi_device_set_state(sdev, state);
+-	/*
+-	 * If the device state changes to SDEV_RUNNING, we need to
+-	 * run the queue to avoid I/O hang, and rescan the device
+-	 * to revalidate it. Running the queue first is necessary
+-	 * because another thread may be waiting inside
+-	 * blk_mq_freeze_queue_wait() and because that call may be
+-	 * waiting for pending I/O to finish.
+-	 */
+-	if (ret == 0 && state == SDEV_RUNNING) {
++	if (sdev->sdev_state == SDEV_RUNNING && state == SDEV_RUNNING) {
++		ret = count;
++	} else {
++		ret = scsi_device_set_state(sdev, state);
++		if (ret == 0 && state == SDEV_RUNNING)
++			rescan_dev = true;
++	}
++	mutex_unlock(&sdev->state_mutex);
++
++	if (rescan_dev) {
++		/*
++		 * If the device state changes to SDEV_RUNNING, we need to
++		 * run the queue to avoid I/O hang, and rescan the device
++		 * to revalidate it. Running the queue first is necessary
++		 * because another thread may be waiting inside
++		 * blk_mq_freeze_queue_wait() and because that call may be
++		 * waiting for pending I/O to finish.
++		 */
+ 		blk_mq_run_hw_queues(sdev->request_queue, true);
+ 		scsi_rescan_device(dev);
+ 	}
+-	mutex_unlock(&sdev->state_mutex);
+ 
+ 	return ret == 0 ? count : -EINVAL;
+ }
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 78343d3f9385..554b6f784223 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1899,12 +1899,12 @@ static void session_recovery_timedout(struct work_struct *work)
+ 	}
+ 	spin_unlock_irqrestore(&session->lock, flags);
+ 
+-	if (session->transport->session_recovery_timedout)
+-		session->transport->session_recovery_timedout(session);
+-
+ 	ISCSI_DBG_TRANS_SESSION(session, "Unblocking SCSI target\n");
+ 	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
+ 	ISCSI_DBG_TRANS_SESSION(session, "Completed unblocking SCSI target\n");
++
++	if (session->transport->session_recovery_timedout)
++		session->transport->session_recovery_timedout(session);
+ }
+ 
+ static void __iscsi_unblock_session(struct work_struct *work)
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index afd38142b1c0..13c09dbd99b9 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6453,9 +6453,8 @@ static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba)
+ 	irqreturn_t ret = IRQ_NONE;
+ 	int tag;
+ 
+-	pending = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+-
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	pending = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+ 	issued = hba->outstanding_tasks & ~pending;
+ 	for_each_set_bit(tag, &issued, hba->nutmrs) {
+ 		struct request *req = hba->tmf_rqs[tag];
+@@ -6616,11 +6615,6 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	err = wait_for_completion_io_timeout(&wait,
+ 			msecs_to_jiffies(TM_CMD_TIMEOUT));
+ 	if (!err) {
+-		/*
+-		 * Make sure that ufshcd_compl_tm() does not trigger a
+-		 * use-after-free.
+-		 */
+-		req->end_io_data = NULL;
+ 		ufshcd_add_tm_upiu_trace(hba, task_tag, UFS_TM_ERR);
+ 		dev_err(hba->dev, "%s: task management cmd 0x%.2x timed-out\n",
+ 				__func__, tm_function);
+@@ -7116,6 +7110,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 		goto release;
+ 	}
+ 
++	lrbp->cmd = NULL;
+ 	err = SUCCESS;
+ 
+ release:
 
