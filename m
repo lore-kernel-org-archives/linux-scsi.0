@@ -2,92 +2,61 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 901C9C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:39:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4394C43219
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:46:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A87F61A6C
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:39:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D14FB61AF0
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:46:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236046AbhKSTmg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Nov 2021 14:42:36 -0500
-Received: from mail-pl1-f179.google.com ([209.85.214.179]:39662 "EHLO
-        mail-pl1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235775AbhKSTmf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 14:42:35 -0500
-Received: by mail-pl1-f179.google.com with SMTP id z6so7705164plk.6
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2021 11:39:29 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=Y4Mipi8KfW+FxLWz+h7xa73fwcA50nZTj+lIi+BiR+c=;
-        b=2C/v2YitJEX5fsVVxmrIIXcv7T555w8fyWMCRPycQhWZcuOhV/YlnZvHYh+mk6O78O
-         +S0GzhbHV2pH20+GFI0Dfn70bymkWqthRUtF/BShgfMYLmslUUzU6AfA3TIq6vNbxIwR
-         l0izdLII/GP2bGqoz204LdJG3def5SjI64vxboBzCjXxyF+hlKIaV7gO01DuMb7XmHqA
-         3lwYJFivgrxMHIF4XFzvcSz1WYEKL4vFq+0tV/ucWiIHib4h1le8WZ0gSHmgwiMxukib
-         Id1N5HQvQ1qOmNbC3/pYLSnNIeDr0qTlpov9rWgrHm7Nm1VxEDA/Sc4x1EJF6vSwGUh2
-         wXqA==
-X-Gm-Message-State: AOAM531+oJmYu2Hl6B1lPCJH/f0dlpDrwXDfEW1qhwhdsGBF4+k+W/9p
-        nqOqMYx9NQTy8cp0rk7IRZM=
-X-Google-Smtp-Source: ABdhPJzbr35fuXRGPPmAi+t/MicCLAnj68POgwG2ljM8g0+ccHuVSOIRHraj4LAZesOg/0fdm/+WYA==
-X-Received: by 2002:a17:90a:7004:: with SMTP id f4mr2615478pjk.156.1637350769338;
-        Fri, 19 Nov 2021 11:39:29 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id k12sm364895pgi.23.2021.11.19.11.39.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Nov 2021 11:39:28 -0800 (PST)
-Message-ID: <209216ac-878a-3e96-5e8e-eaa92fad7f35@acm.org>
-Date:   Fri, 19 Nov 2021 11:39:26 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.0
-Subject: Re: [PATCH 11/11] scsi: ufs: Implement polling support
-Content-Language: en-US
-To:     dgilbert@interlog.com,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Asutosh Das <asutoshd@codeaurora.org>
-References: <20211110004440.3389311-1-bvanassche@acm.org>
- <20211110004440.3389311-12-bvanassche@acm.org>
- <b921b85e-1685-da71-2ee7-806d8e75ce9d@interlog.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <b921b85e-1685-da71-2ee7-806d8e75ce9d@interlog.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        id S236420AbhKSTtY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Nov 2021 14:49:24 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45506 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236252AbhKSTtT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 Nov 2021 14:49:19 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id 873EB61AF0;
+        Fri, 19 Nov 2021 19:46:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637351177;
+        bh=w/cV0A9d6vhVxYizPKfIH3mkDSr6ob/IVDyHXYbsy1Q=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=V8RQWVJvtgaxO7JctxEjYho+M4RqbjJ17CEuy8si+6HvPQU//qntsgV2rodl5XTAv
+         QIQX9hlhUD1tqrRbzaBLu9hToMSXA9ymgEmxjNlFY5hzhAvyYMOCodXz9RXJHs1/js
+         e76Vit860XUcdjwjR6l82L/uoVpq9AeJX8hxbe2+Cm5bkTifCg+QpQEqh/5+7Dqdfb
+         +7QFVQXdFumnLBCiXu/vzdnns7GG123NQFGHYcKei3JmDEEUe8bVzER1r+L9xXyrLQ
+         RT9VUc0PhLYHWSfmivTgKailo34nd2lmoORnXq1okeRDXHVm4lc0bGvc3uZFYLhg34
+         EKz1t5D5sTCvQ==
+Subject: Re: [GIT PULL] SCSI fixes for 5.16-rc1
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <0a508ff31bbfa9cd73c24713c54a29ac459e3254.camel@HansenPartnership.com>
+References: <0a508ff31bbfa9cd73c24713c54a29ac459e3254.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <0a508ff31bbfa9cd73c24713c54a29ac459e3254.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 392006871bb26166bcfafa56faf49431c2cfaaa8
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: ecd510d2ff86953378c540182f14c8890b1f1225
+Message-Id: <163735117752.2946.13162608094770241495.pr-tracker-bot@kernel.org>
+Date:   Fri, 19 Nov 2021 19:46:17 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/9/21 17:36, Douglas Gilbert wrote:
-> On 2021-11-09 7:44 p.m., Bart Van Assche wrote:
->> The time spent in io_schedule() is significant when submitting direct
->> I/O to a UFS device. Hence this patch that implements polling support.
->> User space software can enable polling by passing the RWF_HIPRI flag to
->> the preadv2() system call or the IORING_SETUP_IOPOLL flag to the
->> io_uring interface.
-> 
-> There have been some changes recently (i.e. in linux-stable now),
-> "HIPRI" seems to be on the out, replaced by "POLLED". [I'm using
-> poll_lld in my sg rewrite to refer to this type of polling, as "poll"
-> is an overloaded term in the kernel].
-> 
-> REQ_HIPRI has become REQ_POLLED and blk_poll() is now bio_poll().
-> That said RWF_HIPRI is still in fs.h and there is no RWF_POLLED (yet).
+The pull request you sent on Fri, 19 Nov 2021 13:20:10 -0500:
 
-Hi Doug,
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-My reference to RWF_HIPRI in the patch description refers to the flag
-defined in the uapi headers. As far as I know that flag is still there:
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/ecd510d2ff86953378c540182f14c8890b1f1225
 
-$ PAGER= git grep define.RWF_HIPRI include/uapi
-include/uapi/linux/fs.h:#define RWF_HIPRI       ((__force __kernel_rwf_t)0x00000001)
+Thank you!
 
-Thanks,
-
-Bart.
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
