@@ -2,40 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F210C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:58:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75892C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:58:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BEC061B1E
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:58:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 614D1610A1
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:58:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235415AbhKSUBq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Nov 2021 15:01:46 -0500
-Received: from mail-pg1-f178.google.com ([209.85.215.178]:43717 "EHLO
-        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234583AbhKSUB3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 15:01:29 -0500
-Received: by mail-pg1-f178.google.com with SMTP id b4so9485169pgh.10
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2021 11:58:27 -0800 (PST)
+        id S234583AbhKSUBs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Nov 2021 15:01:48 -0500
+Received: from mail-pg1-f180.google.com ([209.85.215.180]:33571 "EHLO
+        mail-pg1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235057AbhKSUBk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 15:01:40 -0500
+Received: by mail-pg1-f180.google.com with SMTP id q132so507204pgq.0
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2021 11:58:38 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=JEfGaERSd8ev5avfUXESx4NC6L+Goz/+gFSlRtuLz4A=;
-        b=3/JI6Tlx56KWlZ3cdGDVicfJWcfymuZ23MYikjPsO4HV2jDQErQV3aiN+r+HrM3ETD
-         E6CYZfR3SZDx0ow3DNGasD44nAoV5khBaFFiu35At/wJK6X7SjVRy0SPK6aMYq1U2Dsw
-         UYefSwh5EHaGAzNBEiqdFMvZeGETwpJuoJPrdNQkLAT38PqfWG+dVPOqxt/YVMj23jOD
-         zMTC1mScHcZ3utXTvyDjlbUifo9lSwrw5GY7QO2lOo8oDDowzXyaVIf3OPR71ieAZuiP
-         UDdm9S/bFVS/6tRL0/WAMkm6C1/BpO9ZXHDgAeJ5uNU4aP8BO2kyxkTTDQRuUiNCHLSH
-         j20w==
-X-Gm-Message-State: AOAM533cperuAl6QbJKeSs/jLkzQljp7HchYeYKi+uB42DGVRhxQvwkj
-        j/p6Phd6/1ia1EH2Fus+xpQ=
-X-Google-Smtp-Source: ABdhPJzCLTkT+uOi9Zm+KI62SOPNhIpH1OZzZ3KTXatK3RvAd1LYBn7oa0bw0Pf2mDCL3w2i0t7S9Q==
-X-Received: by 2002:a05:6a00:248f:b0:4a0:1e25:3155 with SMTP id c15-20020a056a00248f00b004a01e253155mr26024501pfv.21.1637351907186;
-        Fri, 19 Nov 2021 11:58:27 -0800 (PST)
+        bh=WrYeo7tYkXST+sHToY5jizV2wJElIVQ9VwMxEsVc/Kk=;
+        b=KkGGKNFsy+Jyq5yNd/S+fVHt4LZ0P7eU2wiq8TZokX3KTH4bqFqymhj0Vp4DHooPzv
+         UbGDCbr9etHtCtKY8DlIqsDMpZfFGC3jqkJBiPOo902J1OeMffvcWftPw2zr0x35lCRZ
+         VD/05wvnaYFOoXM7RtGJZK3jCUv2Agz7ojl5/XSn5Nzg10WF7OsImStfdu3sdJPJL2iR
+         KL0Mnx54kDhEZEc+3d/syBn2PjpdwEW4OjR8gb8SOA+UAXzn2MMRmp1OXvStn27cHnQS
+         j/iA8za+JS1rRDIgncC55Zy0g/uZ/bbPCNOdE0K9+0AaDY2SdIMtDEuBWKRutza2vFqe
+         snYg==
+X-Gm-Message-State: AOAM532KypLgdRbWxmRzgFMmynNZIYsrc0nR01iIfQg8jWnZV4p54u3R
+        /q+0LQitU9wGnzk6Ucs1e4I=
+X-Google-Smtp-Source: ABdhPJwBlGCutzKpV3AGUNLNrOQvOUKv6BEB2xJyfz9TohfxwJhHlGTN4dWstmunvkhxvHQRcAXr2g==
+X-Received: by 2002:aa7:864f:0:b0:4a2:ea0a:a16d with SMTP id a15-20020aa7864f000000b004a2ea0aa16dmr25503411pfo.11.1637351918138;
+        Fri, 19 Nov 2021 11:58:38 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id g11sm379010pgn.41.2021.11.19.11.58.26
+        by smtp.gmail.com with ESMTPSA id g11sm379010pgn.41.2021.11.19.11.58.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Nov 2021 11:58:26 -0800 (PST)
+        Fri, 19 Nov 2021 11:58:37 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
@@ -46,9 +46,9 @@ Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Avri Altman <avri.altman@wdc.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Asutosh Das <asutoshd@codeaurora.org>
-Subject: [PATCH v2 13/20] scsi: ufs: Fix a deadlock in the error handler
-Date:   Fri, 19 Nov 2021 11:57:36 -0800
-Message-Id: <20211119195743.2817-14-bvanassche@acm.org>
+Subject: [PATCH v2 16/20] scsi: ufs: Fix a kernel crash during shutdown
+Date:   Fri, 19 Nov 2021 11:57:39 -0800
+Message-Id: <20211119195743.2817-17-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.1
 In-Reply-To: <20211119195743.2817-1-bvanassche@acm.org>
 References: <20211119195743.2817-1-bvanassche@acm.org>
@@ -58,85 +58,71 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The following deadlock has been observed on a test setup:
-* All tags allocated.
-* The SCSI error handler calls ufshcd_eh_host_reset_handler()
-* ufshcd_eh_host_reset_handler() queues work that calls ufshcd_err_handler()
-* ufshcd_err_handler() locks up as follows:
+Fix the following kernel crash:
 
-Workqueue: ufs_eh_wq_0 ufshcd_err_handler.cfi_jt
+Unable to handle kernel paging request at virtual address ffffffc91e735000
 Call trace:
- __switch_to+0x298/0x5d8
- __schedule+0x6cc/0xa94
- schedule+0x12c/0x298
- blk_mq_get_tag+0x210/0x480
- __blk_mq_alloc_request+0x1c8/0x284
- blk_get_request+0x74/0x134
- ufshcd_exec_dev_cmd+0x68/0x640
- ufshcd_verify_dev_init+0x68/0x35c
- ufshcd_probe_hba+0x12c/0x1cb8
- ufshcd_host_reset_and_restore+0x88/0x254
- ufshcd_reset_and_restore+0xd0/0x354
- ufshcd_err_handler+0x408/0xc58
- process_one_work+0x24c/0x66c
- worker_thread+0x3e8/0xa4c
- kthread+0x150/0x1b4
- ret_from_fork+0x10/0x30
+ __queue_work+0x26c/0x624
+ queue_work_on+0x6c/0xf0
+ ufshcd_hold+0x12c/0x210
+ __ufshcd_wl_suspend+0xc0/0x400
+ ufshcd_wl_shutdown+0xb8/0xcc
+ device_shutdown+0x184/0x224
+ kernel_restart+0x4c/0x124
+ __arm64_sys_reboot+0x194/0x264
+ el0_svc_common+0xc8/0x1d4
+ do_el0_svc+0x30/0x8c
+ el0_svc+0x20/0x30
+ el0_sync_handler+0x84/0xe4
+ el0_sync+0x1bc/0x1c0
 
-Fix this lockup by making ufshcd_exec_dev_cmd() allocate a reserved
-request.
+Fix this crash by ungating the clock before destroying the work queue
+on which clock gating work is queued.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a241ef6bbc6f..03f4772fc2e2 100644
+index 7e27d6436889..6a743da7d2db 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -128,8 +128,9 @@ EXPORT_SYMBOL_GPL(ufshcd_dump_regs);
- enum {
- 	UFSHCD_MAX_CHANNEL	= 0,
- 	UFSHCD_MAX_ID		= 1,
--	UFSHCD_CMD_PER_LUN	= 32,
--	UFSHCD_CAN_QUEUE	= 32,
-+	UFSHCD_NUM_RESERVED	= 1,
-+	UFSHCD_CMD_PER_LUN	= 32 - UFSHCD_NUM_RESERVED,
-+	UFSHCD_CAN_QUEUE	= 32 - UFSHCD_NUM_RESERVED,
- };
+@@ -1667,7 +1667,8 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 	bool flush_result;
+ 	unsigned long flags;
  
- static const char *const ufshcd_state_name[] = {
-@@ -2941,12 +2942,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+-	if (!ufshcd_is_clkgating_allowed(hba))
++	if (!ufshcd_is_clkgating_allowed(hba) ||
++	    !hba->clk_gating.is_initialized)
+ 		goto out;
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	hba->clk_gating.active_reqs++;
+@@ -1827,7 +1828,7 @@ static void __ufshcd_release(struct ufs_hba *hba)
  
- 	down_read(&hba->clk_scaling_lock);
+ 	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended ||
+ 	    hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL ||
+-	    hba->outstanding_tasks ||
++	    hba->outstanding_tasks || !hba->clk_gating.is_initialized ||
+ 	    hba->active_uic_cmd || hba->uic_async_done ||
+ 	    hba->clk_gating.state == CLKS_OFF)
+ 		return;
+@@ -1962,11 +1963,15 @@ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
+ {
+ 	if (!hba->clk_gating.is_initialized)
+ 		return;
++
+ 	ufshcd_remove_clk_gating_sysfs(hba);
+-	cancel_work_sync(&hba->clk_gating.ungate_work);
+-	cancel_delayed_work_sync(&hba->clk_gating.gate_work);
+-	destroy_workqueue(hba->clk_gating.clk_gating_workq);
++
++	/* Ungate the clock if necessary. */
++	ufshcd_hold(hba, false);
+ 	hba->clk_gating.is_initialized = false;
++	ufshcd_release(hba);
++
++	destroy_workqueue(hba->clk_gating.clk_gating_workq);
+ }
  
--	/*
--	 * Get free slot, sleep if slots are unavailable.
--	 * Even though we use wait_event() which sleeps indefinitely,
--	 * the maximum wait time is bounded by SCSI request timeout.
--	 */
--	scmd = scsi_get_internal_cmd(q, DMA_TO_DEVICE, 0);
-+	scmd = scsi_get_internal_cmd(q, DMA_TO_DEVICE, BLK_MQ_REQ_RESERVED);
- 	if (IS_ERR(scmd)) {
- 		err = PTR_ERR(scmd);
- 		goto out_unlock;
-@@ -8171,6 +8167,7 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
- 	.can_queue		= UFSHCD_CAN_QUEUE,
-+	.reserved_tags		= UFSHCD_NUM_RESERVED,
- 	.max_segment_size	= PRDT_DATA_BYTE_COUNT_MAX,
- 	.max_host_blocked	= 1,
- 	.track_queue_depth	= 1,
-@@ -9531,8 +9528,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	/* Configure LRB */
- 	ufshcd_host_memory_configure(hba);
- 
--	host->can_queue = hba->nutrs;
--	host->cmd_per_lun = hba->nutrs;
-+	host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
-+	host->cmd_per_lun = hba->nutrs - UFSHCD_NUM_RESERVED;
- 	host->max_id = UFSHCD_MAX_ID;
- 	host->max_lun = UFS_MAX_LUNS;
- 	host->max_channel = UFSHCD_MAX_CHANNEL;
+ /* Must be called with host lock acquired */
