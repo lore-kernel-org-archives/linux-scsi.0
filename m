@@ -2,134 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98F53C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 16:21:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 333FDC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 16:22:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77BE9611C9
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 16:21:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 164CE6124B
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 16:22:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232081AbhKSQY1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Nov 2021 11:24:27 -0500
-Received: from mail-pl1-f182.google.com ([209.85.214.182]:42860 "EHLO
-        mail-pl1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229882AbhKSQY1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 11:24:27 -0500
-Received: by mail-pl1-f182.google.com with SMTP id u17so8495843plg.9;
-        Fri, 19 Nov 2021 08:21:25 -0800 (PST)
+        id S236101AbhKSQZ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Nov 2021 11:25:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57476 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229585AbhKSQZz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 11:25:55 -0500
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65CA0C061574;
+        Fri, 19 Nov 2021 08:22:53 -0800 (PST)
+Received: by mail-wr1-x431.google.com with SMTP id c4so19034481wrd.9;
+        Fri, 19 Nov 2021 08:22:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=gJ7nvh3PYL8XuI32u9B1gA3gTx9kf/bMqpXsk3AEZsU=;
+        b=fpsj7+4SpFXqpTSemI06B9IcXVdlbuued/IQBN4FCqBdSC/xtpTgB2iz9UIQnOPSv5
+         7dinU35yvOUDiH/9vJWKbZ9GctdBbeB/cRDVHk0phW4F/NxhOCWoSFMTVcX26VVw3HMt
+         GPKNYBxNtyTgnGx50kBrFXzcpurXEIcb4r3vdAScw53cOY82S+nnM1F4LxEs39YLMQ/S
+         uDHYEpfJs9WPfjtx2YvKeV+ilwmoATVlGw8z6GW1nGOzQsTXfXgbQ/sMgtuNKtzjMgO+
+         m/GWqEfFdALvOcc/k4vNSzQQ8s1MyiSdciXJWtO0mjZ1O20qNFBqF7s2UCtRG1bgp0aS
+         YbJQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=dYLRPwJpMIma+7I/gXS8Fe5+Xg8Jtu68cLUUk/7i+NA=;
-        b=6JwWElR7M04LaPrvrjcIlcqjJvIPzSPTW0U+mGcjYK4Q8carsl9+n8MBGqLX+JRI3I
-         HqcRv5ZMmIXguaQPAi+PApfE1YHTpIYgwMZ3ETtjzEVWZllkCjUMM60Cz+2vFEha1Uqq
-         I0Ls5mWMiyKUyh+7y+NREdXncwas7R+uSNjE5SdiFL4mtPMG9+/u3Yu6WjWtkoVITCa8
-         DOz/DODv6oAFY7PCVbFJvOXA1YheQmJ+hysGdZ4T4UyE/x/TF1CaCDzmE07hQIxaZ8/B
-         SB9S9xnEcnZdh9E7ouA/KPYVjLXTjNwLG8+IKgkooBR5AFzxoNSvR+ENIt0a44LOchej
-         jLjA==
-X-Gm-Message-State: AOAM532NQpbxSa5P5TQrnPthgRpICRdQylS16gxRCiYNEpfMCpOXpx5N
-        dNADz8PQ8L4gIgcIEEmjzOU=
-X-Google-Smtp-Source: ABdhPJw16jjqfIprCHt2mG+Ksck30kqntK4sVEg0T0pyn+4kYe1d4XjIzZ1UNiSmcyxOlOBtUI890Q==
-X-Received: by 2002:a17:90a:f00e:: with SMTP id bt14mr927761pjb.219.1637338884999;
-        Fri, 19 Nov 2021 08:21:24 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id j1sm172775pfu.47.2021.11.19.08.21.23
+        bh=gJ7nvh3PYL8XuI32u9B1gA3gTx9kf/bMqpXsk3AEZsU=;
+        b=3UAVTh0LUHtRX1wmiMOCq7iQ9nP43yrlAw+tKssdwrTo7IkqKs/trY2X7vcTrdTsly
+         RqoPlwUHj+/G1q6+u4eESRMLivU3clJv6h1yUXlVuXG8JNNf53guyERJhvKEpeT24qCs
+         yh4aHG8HVtwA1mq6f3QPdSUc2kJhJm2JMT7CgpSDpvumLpx6VqTqzbkmFY3S7B1DOF4C
+         WaeRxdjGvI0fU7GnzMmjJNUCyJpDhzzKUT92FALy/RKTzZVd05kLisuyqmtg0A1/CZTY
+         cC0es4+rLdPwbqz+O0ucopKuzhefQqh0LW3rvLjEJ1knsZ4+6em0mnvZrfW/2VwADFZE
+         WoDw==
+X-Gm-Message-State: AOAM533Qd2EXmjPYUk14KuMgoFH7xykgZr1I2wFfhhrGcHTb1CaqmaHf
+        0HGTX6xQ0GpN3N/wYHLG8OA=
+X-Google-Smtp-Source: ABdhPJz+RkhKg2oPM+DFfdJrmKTihG8D5yySz9/H4aR55REMYZ6fa+PNcb8l7yv++672VBes+PtaDw==
+X-Received: by 2002:a5d:5986:: with SMTP id n6mr9039788wri.297.1637338971943;
+        Fri, 19 Nov 2021 08:22:51 -0800 (PST)
+Received: from [192.168.0.160] ([170.253.36.171])
+        by smtp.gmail.com with ESMTPSA id n2sm12993701wmi.36.2021.11.19.08.22.49
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Nov 2021 08:21:24 -0800 (PST)
-Message-ID: <bbe942b4-3239-6c54-2e16-431ac8056afa@acm.org>
-Date:   Fri, 19 Nov 2021 08:21:22 -0800
+        Fri, 19 Nov 2021 08:22:51 -0800 (PST)
+Message-ID: <2d790206-124b-f850-895f-a57a74c55f79@gmail.com>
+Date:   Fri, 19 Nov 2021 17:22:48 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.3.0
-Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+Subject: Re: [PATCH 00/17] Add memberof(), split some headers, and slightly
+ simplify code
 Content-Language: en-US
-To:     Kanchan Joshi <joshiiitr@gmail.com>,
-        =?UTF-8?Q?Javier_Gonz=c3=a1lez?= <javier@javigon.com>
-Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "msnitzer@redhat.com" <msnitzer@redhat.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "roland@purestorage.com" <roland@purestorage.com>,
-        "mpatocka@redhat.com" <mpatocka@redhat.com>,
-        "hare@suse.de" <hare@suse.de>,
-        "kbusch@kernel.org" <kbusch@kernel.org>,
-        "rwheeler@redhat.com" <rwheeler@redhat.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
-        "zach.brown@ni.com" <zach.brown@ni.com>,
-        "osandov@fb.com" <osandov@fb.com>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        SelvaKumar S <selvakuma.s1@samsung.com>,
-        Nitesh Shetty <nj.shetty@samsung.com>,
-        Kanchan Joshi <joshi.k@samsung.com>,
-        Vincent Fu <vincent.fu@samsung.com>
-References: <PH0PR04MB74161CD0BD15882BBD8838AB9B529@PH0PR04MB7416.namprd04.prod.outlook.com>
- <CGME20210928191342eucas1p23448dcd51b23495fa67cdc017e77435c@eucas1p2.samsung.com>
- <20210928191340.dcoj7qrclpudtjbo@mpHalley.domain_not_set.invalid>
- <c2d0dff9-ad6d-c32b-f439-00b7ee955d69@acm.org>
- <20211006100523.7xrr3qpwtby3bw3a@mpHalley.domain_not_set.invalid>
- <fbe69cc0-36ea-c096-d247-f201bad979f4@acm.org>
- <20211008064925.oyjxbmngghr2yovr@mpHalley.local>
- <2a65e231-11dd-d5cc-c330-90314f6a8eae@nvidia.com>
- <20211029081447.ativv64dofpqq22m@ArmHalley.local>
- <20211103192700.clqzvvillfnml2nu@mpHalley-2>
- <20211116134324.hbs3tp5proxootd7@ArmHalley.localdomain>
- <CA+1E3rJRT+89OCyqRtb5BFbez0BfkKvCGijd=nObMEB3_v6MyA@mail.gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CA+1E3rJRT+89OCyqRtb5BFbez0BfkKvCGijd=nObMEB3_v6MyA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Arnd Bergmann <arnd@arndb.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Ajit Khaparde <ajit.khaparde@broadcom.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Borislav Petkov <bp@suse.de>,
+        Corey Minyard <cminyard@mvista.com>, Chris Mason <clm@fb.com>,
+        Christian Brauner <christian.brauner@ubuntu.com>,
+        David Sterba <dsterba@suse.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        "John S . Gruber" <JohnSGruber@gmail.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Kees Cook <keescook@chromium.org>,
+        Ketan Mukadam <ketan.mukadam@broadcom.com>,
+        Len Brown <lenb@kernel.org>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Miguel Ojeda <ojeda@kernel.org>,
+        Mike Rapoport <rppt@linux.ibm.com>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Somnath Kotur <somnath.kotur@broadcom.com>,
+        Sriharsha Basavapatna <sriharsha.basavapatna@broadcom.com>,
+        Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
+        Intel Graphics <intel-gfx@lists.freedesktop.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>,
+        "open list:DRM DRIVER FOR QEMU'S CIRRUS DEVICE" 
+        <virtualization@lists.linux-foundation.org>
+References: <20211119113644.1600-1-alx.manpages@gmail.com>
+ <CAK8P3a0qT9tAxFkLN_vJYRcocDW2TcBq79WcYKZFyAG0udZx5Q@mail.gmail.com>
+ <434296d3-8fe1-f1d2-ee9d-ea25d6c4e43e@gmail.com>
+ <CAK8P3a2yVXw9gf8-BNvX_rzectNoiy0MqGKvBcXydiUSrc_fCA@mail.gmail.com>
+ <YZfMXlqvG52ls2TE@smile.fi.intel.com>
+ <CAK8P3a06CMzWVj2C3P5v0u8ZVPumXJKrq=TdjSq1NugmeT7-RQ@mail.gmail.com>
+From:   "Alejandro Colomar (man-pages)" <alx.manpages@gmail.com>
+In-Reply-To: <CAK8P3a06CMzWVj2C3P5v0u8ZVPumXJKrq=TdjSq1NugmeT7-RQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/19/21 02:47, Kanchan Joshi wrote:
-> Given the multitude of things accumulated on this topic, Martin
-> suggested to have a table/matrix.
-> Some of those should go in the initial patchset, and the remaining are
-> to be staged for subsequent work.
-> Here is the attempt to split the stuff into two buckets. Please change
-> if something needs to be changed below.
-> 
-> 1. Driver
-> *********
-> Initial: NVMe Copy command (single NS)
-> Subsequent: Multi NS copy, XCopy/Token-based Copy
-> 
-> 2. Block layer
-> **************
-> Initial:
-> - Block-generic copy (REQ_OP_COPY), with interface accommodating two block-devs
-> - Emulation, when offload is natively absent
-> - DM support (at least dm-linear)
-> 
-> 3. User-interface
-> *****************
-> Initial: new ioctl or io_uring opcode
-> 
-> 4. In-kernel user
-> ******************
-> Initial: at least one user
-> - dm-kcopyd user (e.g. dm-clone), or FS requiring GC (F2FS/Btrfs)
-> 
-> Subsequent:
-> - copy_file_range
 
-Integrity support and inline encryption support are missing from the above
-overview. Both are supported by the block layer. See also block/blk-integrity.c
-and include/linux/blk-crypto.h. I'm not claiming that these should be supported
-in the first version but I think it would be good to add these to the above
-overview.
 
-Thanks,
+On 11/19/21 17:18, Arnd Bergmann wrote:
+> On Fri, Nov 19, 2021 at 5:10 PM Andy Shevchenko
+> <andriy.shevchenko@linux.intel.com> wrote:
+>> On Fri, Nov 19, 2021 at 04:57:46PM +0100, Arnd Bergmann wrote:
+> 
+>>> The main problem with this approach is that as soon as you start
+>>> actually reducing the unneeded indirect includes, you end up with
+>>> countless .c files that no longer build because they are missing a
+>>> direct include for something that was always included somewhere
+>>> deep underneath, so I needed a second set of scripts to add
+>>> direct includes to every .c file.
+>>
+>> Can't it be done with cocci support?
+> 
+> There are many ways of doing it, but they all tend to suffer from the
+> problem of identifying which headers are actually needed based on
+> the contents of a file, and also figuring out where to put the extra
+> #include if there are complex #ifdefs.
+> 
+> For reference, see below for the naive pattern matching I tried.
+> This is obviously incomplete and partially wrong.
 
-Bart.
+FYI, if you may not know the tool,
+theres include-what-you-use(1) (a.k.a. iwyu(1))[1],
+although it is still not mature,
+and I'm helping improve it a bit.
+
+If I understood better the kernel Makefiles,
+I'd try it.
+
+You can try it yourselves.
+I still can't use it for my own code,
+since it has a lot of false positives.
+
+Cheers,
+Alex
+
+[1]: <https://include-what-you-use.org/>
+
+
+-- 
+Alejandro Colomar
+Linux man-pages comaintainer; https://www.kernel.org/doc/man-pages/
+http://www.alejandro-colomar.es/
