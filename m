@@ -2,116 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4743AC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 14:23:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73336C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 14:48:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2DDE461213
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 14:23:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 618D561546
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 14:48:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235843AbhKSO06 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Nov 2021 09:26:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58186 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232080AbhKSO06 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 09:26:58 -0500
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9396C061574;
-        Fri, 19 Nov 2021 06:23:56 -0800 (PST)
-Received: by mail-pg1-x531.google.com with SMTP id 200so8796593pga.1;
-        Fri, 19 Nov 2021 06:23:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language
-         :from:to:cc:references:in-reply-to:content-transfer-encoding;
-        bh=dvjMlZBI3ldb1jXqYwhDV7AWs1lj5LCSS81ZY56RgHg=;
-        b=lD29CjzOk03sgDLP+GNvSpxJtgVkW5rJkK+91U6AQudAzMZxrwkaky9OEq6jf27Gw7
-         +El3go4e6gBFGCWthIzBWcaH6MtynoVd2Asx0s8lF4AHh9KTCrYFWAivyI8ee0X1Vv36
-         V2FQuAVabQQBAbOL0fIquaORLXE6V2pQuWoxP4p8Bdmk66ffMTRypmvZJws3ZQPoiG7R
-         xBnlvWtgNAT1CZU5CVKw8D3+cafHZ/lwicgnA/RP75ZpQaa+0T4cnXOpdWgAZYBmS+Ds
-         D+JWFTqNXrZl80kk+n0WgCyZhptSAvKOJXiZ1wT44+Ikfkw7mB3QMLEop9ypqPjQJy3c
-         M8pw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:from:to:cc:references:in-reply-to
-         :content-transfer-encoding;
-        bh=dvjMlZBI3ldb1jXqYwhDV7AWs1lj5LCSS81ZY56RgHg=;
-        b=ymOoSNPXb9r3m4Ip0eXlmv0Q4P1UZsmxUwGL5lKG/9B7dE2h+J3/mZSlEGyKl66/v1
-         0GwcmDvEOK1uQdQxDkgT6oCc7DuGNytaHFfzTNJALqupO2HMuNf/RK5bnZM6PDLLwq7f
-         kK6EGX1448Q21QUEGs5Vfz41APQwtGtzHbKJwzpriOPEAWjQRfFRzDYcKyphbCKaMuvX
-         RymMoxcyEXGdlUWR8iuZYzqd3l8X8ap8TosIWVJBK0sK1N9gyVjqVTEb3uLrI3kJ+9aG
-         iHytVLT8pWOJbrFv80RMGta6mzqTWS4j9ZNkV3DU3LjimptmgCDs90a9+iNzZzzmQIUC
-         cFUA==
-X-Gm-Message-State: AOAM533D70nN4qd2+pQf94pHCLx7NMxOCx+wlfL/XlIBDxI4keQOYY/X
-        y5ekXgyMeYgJxNEInVywDT7KYgjaLReP6g==
-X-Google-Smtp-Source: ABdhPJzKRBXlcGt3waRWzaH9R47/6SD0/IgoWcAgajHv/fxOJufbEPJI6hNEQ9SuwB+/pum/5oX3UA==
-X-Received: by 2002:a63:b54a:: with SMTP id u10mr17506905pgo.69.1637331836308;
-        Fri, 19 Nov 2021 06:23:56 -0800 (PST)
-Received: from ?IPV6:2404:f801:0:5:8000::50b? ([2404:f801:9000:1a:efea::50b])
-        by smtp.gmail.com with ESMTPSA id l12sm3181520pfu.100.2021.11.19.06.23.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Nov 2021 06:23:55 -0800 (PST)
-Message-ID: <f7fcb4d5-fcdd-0d24-60ed-62c27ed8e2d9@gmail.com>
-Date:   Fri, 19 Nov 2021 22:23:45 +0800
+        id S236079AbhKSOvC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Nov 2021 09:51:02 -0500
+Received: from mout.kundenserver.de ([212.227.126.134]:48197 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236059AbhKSOu6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 09:50:58 -0500
+Received: from mail-ot1-f43.google.com ([209.85.210.43]) by
+ mrelayeu.kundenserver.de (mreue010 [213.165.67.97]) with ESMTPSA (Nemesis) id
+ 1N332D-1mg05n2lLh-013QTC; Fri, 19 Nov 2021 15:47:54 +0100
+Received: by mail-ot1-f43.google.com with SMTP id x43-20020a056830246b00b00570d09d34ebso17180282otr.2;
+        Fri, 19 Nov 2021 06:47:53 -0800 (PST)
+X-Gm-Message-State: AOAM533IGLLFKWbdPAcyMBAQuYLXxHjUCAolI8JP4oECn1K0wQUuEKiR
+        G0Z7+oduPubJTRq6fH9cylUDzXfxYz1nT3NCm7g=
+X-Google-Smtp-Source: ABdhPJyEA9Cm9jWRHlNRoILV4HxXKS70yYn95cfqEWkgZ0erwiDK8IdJrB6FynNXAmz1W8+x37fIqweN9je4/+8NifA=
+X-Received: by 2002:a05:6830:453:: with SMTP id d19mr5257576otc.72.1637333272785;
+ Fri, 19 Nov 2021 06:47:52 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH 3/5] hyperv/IOMMU: Enable swiotlb bounce buffer for
- Isolation VM
-Content-Language: en-US
-From:   Tianyu Lan <ltykernel@gmail.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, x86@kernel.org,
-        hpa@zytor.com, jgross@suse.com, sstabellini@kernel.org,
-        boris.ostrovsky@oracle.com, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
-        decui@microsoft.com, joro@8bytes.org, will@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, m.szyprowski@samsung.com,
-        robin.murphy@arm.com, xen-devel@lists.xenproject.org,
-        michael.h.kelley@microsoft.com,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        iommu@lists.linux-foundation.org, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, vkuznets@redhat.com, brijesh.singh@amd.com,
-        konrad.wilk@oracle.com, parri.andrea@gmail.com,
-        thomas.lendacky@amd.com, dave.hansen@intel.com
-References: <20211116153923.196763-1-ltykernel@gmail.com>
- <20211116153923.196763-4-ltykernel@gmail.com> <20211117100142.GB10330@lst.de>
- <c93bf3d4-75c1-bc3d-2789-1d65e7c19158@gmail.com>
-In-Reply-To: <c93bf3d4-75c1-bc3d-2789-1d65e7c19158@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20211119113644.1600-1-alx.manpages@gmail.com>
+In-Reply-To: <20211119113644.1600-1-alx.manpages@gmail.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Fri, 19 Nov 2021 15:47:35 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a0qT9tAxFkLN_vJYRcocDW2TcBq79WcYKZFyAG0udZx5Q@mail.gmail.com>
+Message-ID: <CAK8P3a0qT9tAxFkLN_vJYRcocDW2TcBq79WcYKZFyAG0udZx5Q@mail.gmail.com>
+Subject: Re: [PATCH 00/17] Add memberof(), split some headers, and slightly
+ simplify code
+To:     Alejandro Colomar <alx.manpages@gmail.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Ajit Khaparde <ajit.khaparde@broadcom.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Borislav Petkov <bp@suse.de>,
+        Corey Minyard <cminyard@mvista.com>, Chris Mason <clm@fb.com>,
+        Christian Brauner <christian.brauner@ubuntu.com>,
+        David Sterba <dsterba@suse.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        "John S . Gruber" <JohnSGruber@gmail.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Kees Cook <keescook@chromium.org>,
+        Ketan Mukadam <ketan.mukadam@broadcom.com>,
+        Len Brown <lenb@kernel.org>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Miguel Ojeda <ojeda@kernel.org>,
+        Mike Rapoport <rppt@linux.ibm.com>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Somnath Kotur <somnath.kotur@broadcom.com>,
+        Sriharsha Basavapatna <sriharsha.basavapatna@broadcom.com>,
+        Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
+        intel-gfx@lists.freedesktop.org, linux-acpi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-btrfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:GFuoAY7cBVxv1hE6c2usNm2Wzsn2Ca40ybiDicGvG/6dGFof8Fl
+ ID0Pq6SFVJbjL61tfm7FjmaodejJMFDsPkYnXv4+0SqsD5VSMqYGe5P8y8kQZcgFvFZ2Wvw
+ 2+3326h4X/ARP1UPrxV3qklM8pCGwHAjxb9un9kn8xAcJW0s3i9rm2/3KxUXgJ7Iczcyxnd
+ W7FQ+CznKlyJn19hp5a/Q==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:wr5stG4BzOA=:DSALNYYDwQYB/SOa2CCFkL
+ Kzvd3pgCIToq/LtQAv5xDRBKvgzJJ2zNtM64VfmIKJzBwFU7nQuETkJtBQfuGVfvjwNSGr439
+ LF9P2vwTKAkc57yNo4gzt7PjyCnZxQ001xr5L+SBIxuW4eOYBem5X7j8wQzbZReNtLw7zxT4b
+ rTYugxC2QHhQnEfvbQhrcnd+/wozG6LACe6fKXnHrwAEgf4MiJsN+Rr0JQ8S26r2/qlmnrOkH
+ HsiuT4Ealqd0G99KqoHouBvM3iQ7ufMeSMbi0UE2rLiMKLeWcK0JfyHC50q5nuMZuEZaQJKYL
+ 9Y8w1+xSbxmV6BrJFH75pQZlW1ge+w/9u4UDFgPT1IRiX29v5WYxDO9Zpk3d77tskoMXtSabL
+ TCIXunYWR9TWsfOHjWmgis2Je5Jbm5Cgv7ERKiRbCiMvaE/9YvVKUWx6AHjbD4niCI3ZfrEMG
+ L2E7aa9lLHPhqIcG4GtvxXkxii/Awf+LwCqPhv9nzKM8/Ic5yJoga2AICJgVs43yybk0QlKdb
+ /WqxlTY+HeETKJfxfxt314bJgGEHgXDWoILwkJFzKTaK0EwSiXLcAhIbGSFjPhmXN4YdsPaL2
+ By1B3hJry0Gtuwtgs/o1f9LFC/Pik/gSd5WDy6xBMQF5xUX9khaaw7ZNXFw1f8tayeVYQ9Fk5
+ 8u7vKqKV+SPskbzpUtgso0rEClDfDbPZqUv2fgUCZi0iDmM/gIZ00pr4afESKZwv/cvbZ8cso
+ Lb1Puv174QQUX3ziPGCm2YDD28Kk8vDKkZ+LNCVqDvduxQ739SKJsQVlZjTwe2wjnMv8DZ7e2
+ k0VkzUhq6VkJ5WriSHpihXISaxaDbc19NyluTevBEbeTrri08o=
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/17/2021 10:00 PM, Tianyu Lan wrote:
-> On 11/17/2021 6:01 PM, Christoph Hellwig wrote:
->> This doesn't really have much to do with normal DMA mapping,
->> so why does this direct through the dma ops?
->>
-> 
-> According to the previous discussion, dma_alloc_noncontigous()
-> and dma_vmap_noncontiguous() may be used to handle the noncontigous
-> memory alloc/map in the netvsc driver. So add alloc/free and vmap/vunmap
-> callbacks here to handle the case. The previous patch v4 & v5 handles
-> the allocation and map in the netvsc driver. If this should not go 
-> though dma ops, We also may make it as vmbus specific function and keep
-> the function in the vmbus driver.
-> 
-> https://lkml.org/lkml/2021/9/28/51
+On Fri, Nov 19, 2021 at 12:36 PM Alejandro Colomar
+<alx.manpages@gmail.com> wrote:
+>
+> Alejandro Colomar (17):
+>   linux/container_of.h: Add memberof(T, m)
+>   Use memberof(T, m) instead of explicit NULL dereference
+>   Replace some uses of memberof() by its wrappers
+>   linux/memberof.h: Move memberof() to separate header
+>   linux/typeof_member.h: Move typeof_member() to a separate header
+>   Simplify sizeof(typeof_member()) to sizeof_field()
+>   linux/NULL.h: Move NULL to a separate header
+>   linux/offsetof.h: Move offsetof(T, m) to a separate header
+>   linux/offsetof.h: Implement offsetof() in terms of memberof()
+>   linux/container_of.h: Implement container_of_safe() in terms of
+>     container_of()
+>   linux/container_of.h: Cosmetic
+>   linux/container_of.h: Remove unnecessary cast to (void *)
 
+My feeling is that this takes the separation too far: by having this many header
+files that end up being included from practically every single .c file
+in the kernel,
+I think you end up making compile speed worse overall.
 
-Hi Christoph:
-       Sorry to bother you. Could you have a look? Which solution do you
-prefer? If we need to call dma_alloc/map_noncontigous() function in the
-netvsc driver what patch 4 does. The Hyper-V specific implementation
-needs to be hided in some callbacks and call these callback in the
-dma_alloc/map_noncontigous(). I used dma ops here. If the allocation and
-map operation should be Hyper-V specific function, we may put these
-functions in the vmbus driver and other vmbus device drivers also may
-reuse these functions if necessary.
+If your goal is to avoid having to recompile as much of the kernel
+after touching
+a header, I think a better approach is to help untangle the dependencies, e.g.
+by splitting out type definitions from headers with inline functions (most
+indirect header dependencies are on type definitions) and by focusing on
+linux/fs.h, linux/sched.h, linux/mm.h and how they interact with the rest of the
+headers. At the moment, these are included in most .c files and they in turn
+include a ton of other headers.
 
-Thanks.
+          Arnd
