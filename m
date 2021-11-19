@@ -2,248 +2,275 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB194C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 10:48:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47DC2C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 11:37:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9350061221
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 10:48:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 344E6611C0
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 11:37:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234880AbhKSKvV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Nov 2021 05:51:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37366 "EHLO
+        id S235116AbhKSLkL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Nov 2021 06:40:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232576AbhKSKvV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 05:51:21 -0500
-Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CD89C061574;
-        Fri, 19 Nov 2021 02:48:19 -0800 (PST)
-Received: by mail-wr1-x431.google.com with SMTP id a9so17399459wrr.8;
-        Fri, 19 Nov 2021 02:48:19 -0800 (PST)
+        with ESMTP id S231243AbhKSLkL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 06:40:11 -0500
+Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36DAFC061574;
+        Fri, 19 Nov 2021 03:37:09 -0800 (PST)
+Received: by mail-wm1-x32f.google.com with SMTP id d72-20020a1c1d4b000000b00331140f3dc8so7263328wmd.1;
+        Fri, 19 Nov 2021 03:37:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=Tk68xSaHdAppwyG5+67yI7OUPgx+CCb94LsMtgQhev0=;
-        b=XDVSvoTT96zb1q7CFaPGEvknaz1XybsElxkVvAWHDwIlm8/9eM7bVQoNGgMuyFTvJ6
-         cayUngAYzb0fjzEJ9QBp48OhLSE7gsup8K7+ksxJwubkZf0pct/X/Nw0o9Sxp1U0+j2+
-         EHjy32Gum7+k614b6trYMNs6DArCIixYEdOZkok3QZ3jUModL6wzEUyj3CwHuANJbWOt
-         JO4jwGIFl6RDjj+XsfqzLq5zJTTIL21b36qH6tnGr2Y3vVd8BEtPzpMY5HzsUSP56VQg
-         UVVP+Mk5onza0Xhn9pOJC47F6RG2Z7xLyM8hcX1a1yn+K14RQGC/OdNqA3H1gIFikf/i
-         QDyQ==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=i/fXbPVRBN7s8r5M3WRHcaBt2UUAnkHDSIE3JuEClQs=;
+        b=LdKaBDoXj5kLikAyAmdIKIT2p/1ZnFNnEoDHrFpvPz7+3Ge8onDjpohtiCMAnlnsiK
+         SBn8bjvzha8CnoksjBka38G2LiNZqnYBv275eAjwpBruCcNX7PYKuRJSnX8RcO5ORT/g
+         l2Ebp7hBv9FRd6DoviS5UaQJN+kUwYCf+cZGSD0dbUhMFVOjR6DfDQGHL+bmpzTYKkAD
+         U2E5MYD17sxdcnjcomWe4oG7wo7H90SpoWYL2I41ybq+DVRU7A/hifhcbTucr7CG5zdC
+         sOxBPibe1UMLSiucWQu3denVSkrZVSS/diEnVBHTo80lgv+7qZffYh7SMRb7wNWX2Iaj
+         qOCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=Tk68xSaHdAppwyG5+67yI7OUPgx+CCb94LsMtgQhev0=;
-        b=aGL/FWzd+1Sib3VkuE9uRZuPgkLdiUFWILDePcrnj2OA7JqJn1rG03EC5y+OOf43E1
-         SZnCcwVrOnFMk5LIzfV+RQecQTk0pnZzy01Gfx5l4ZMrXmoBPEQn8F1g8UT7NrkxfUVq
-         heSuo2Hj94rJ8pZEQCRgjAE0TQ1srAibSTDED/unraL5Ph8m7G3OmawVWV/+mEfdW//M
-         XpimGBcg84qI/tngkCTtTokku4lTiQm/dqfwF8kxN1SkyrtUJt7D/bkQgn6Fo447m1bV
-         /lFKUuyWnX2HWhCZghSMPxD6scGBS4wW+28me1wVzZGWaoVX+LvjUtzbPt0viEsD2Dpg
-         NHAg==
-X-Gm-Message-State: AOAM532k+LEofTTvHiJCpDT+TseS6bJOyOGewONE9WvkrHLrBrnwfNji
-        obZ8YNGgUdGiWw4UT1VtY2lwTg4tyPQzZ9VDoSQ=
-X-Google-Smtp-Source: ABdhPJyZpbfCDp3ybadK8EsoHtiSMUx4mYJsHOy0WefCsz5FmU+0JuPuNZdF1iPi34jUiQIoV2beE2pjsGiQLxcgQM0=
-X-Received: by 2002:adf:dc52:: with SMTP id m18mr6455876wrj.216.1637318897846;
- Fri, 19 Nov 2021 02:48:17 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=i/fXbPVRBN7s8r5M3WRHcaBt2UUAnkHDSIE3JuEClQs=;
+        b=x0Wm1zCcajFrkoiOf3OSsnu0cub3soVIPrLWuRbbN2zcd1JkbbcCc7OxY02R/h3Q7m
+         eODluNJd/OkPhX1O3VzWfm71eMZClDoDXpSuA50Idx1cfj7sBEIRnSpRMHDPmxnRrk31
+         pVJ9tqrpXdMfRpYpngvljrTJIzgYqmFJDkwZQI93Qk/vVNAZ5UdKzrX6g0NgA711hNRp
+         HlwJXF+JYEWhP/xHCsoFY924AzJZBFAgP9C1kNZlcmOwBZ5KIWxehkbysml8iKSW8kit
+         lHzdwUYjLwbpa4Av++mQILdTHwyC2yxiX7Plx6jHkg0YeBSjrxMoPrPtDdxEq/nPPV1S
+         iOYQ==
+X-Gm-Message-State: AOAM532y7xUbs/bf3gz+BHLqyBMjMRU8d7p+0vAYIKVQfpvE3X3P7/du
+        +rYQlBMuSpotGdH0hZZop+Tio4XCwnkrqQ==
+X-Google-Smtp-Source: ABdhPJyJbfoMgk75T8Fyd/k0Splt6ZMCLNuREiyUbadwsKMpXolha/fffbI6cizRQl/wpfUClrVQ4g==
+X-Received: by 2002:a7b:cd02:: with SMTP id f2mr324816wmj.115.1637321827678;
+        Fri, 19 Nov 2021 03:37:07 -0800 (PST)
+Received: from ady1.alejandro-colomar.es ([170.253.36.171])
+        by smtp.googlemail.com with ESMTPSA id f15sm3361260wmg.30.2021.11.19.03.37.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Nov 2021 03:37:07 -0800 (PST)
+From:   Alejandro Colomar <alx.manpages@gmail.com>
+To:     LKML <linux-kernel@vger.kernel.org>
+Cc:     Alejandro Colomar <alx.manpages@gmail.com>,
+        Ajit Khaparde <ajit.khaparde@broadcom.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Borislav Petkov <bp@suse.de>,
+        Corey Minyard <cminyard@mvista.com>, Chris Mason <clm@fb.com>,
+        Christian Brauner <christian.brauner@ubuntu.com>,
+        David Sterba <dsterba@suse.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        "John S . Gruber" <JohnSGruber@gmail.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Kees Cook <keescook@chromium.org>,
+        Ketan Mukadam <ketan.mukadam@broadcom.com>,
+        Len Brown <lenb@kernel.org>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Miguel Ojeda <ojeda@kernel.org>,
+        Mike Rapoport <rppt@linux.ibm.com>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Somnath Kotur <somnath.kotur@broadcom.com>,
+        Sriharsha Basavapatna <sriharsha.basavapatna@broadcom.com>,
+        Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
+        intel-gfx@lists.freedesktop.org, linux-acpi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-btrfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: [PATCH 00/17] Add memberof(), split some headers, and slightly simplify code
+Date:   Fri, 19 Nov 2021 12:36:28 +0100
+Message-Id: <20211119113644.1600-1-alx.manpages@gmail.com>
+X-Mailer: git-send-email 2.33.1
 MIME-Version: 1.0
-References: <PH0PR04MB74161CD0BD15882BBD8838AB9B529@PH0PR04MB7416.namprd04.prod.outlook.com>
- <CGME20210928191342eucas1p23448dcd51b23495fa67cdc017e77435c@eucas1p2.samsung.com>
- <20210928191340.dcoj7qrclpudtjbo@mpHalley.domain_not_set.invalid>
- <c2d0dff9-ad6d-c32b-f439-00b7ee955d69@acm.org> <20211006100523.7xrr3qpwtby3bw3a@mpHalley.domain_not_set.invalid>
- <fbe69cc0-36ea-c096-d247-f201bad979f4@acm.org> <20211008064925.oyjxbmngghr2yovr@mpHalley.local>
- <2a65e231-11dd-d5cc-c330-90314f6a8eae@nvidia.com> <20211029081447.ativv64dofpqq22m@ArmHalley.local>
- <20211103192700.clqzvvillfnml2nu@mpHalley-2> <20211116134324.hbs3tp5proxootd7@ArmHalley.localdomain>
-In-Reply-To: <20211116134324.hbs3tp5proxootd7@ArmHalley.localdomain>
-From:   Kanchan Joshi <joshiiitr@gmail.com>
-Date:   Fri, 19 Nov 2021 16:17:51 +0530
-Message-ID: <CA+1E3rJRT+89OCyqRtb5BFbez0BfkKvCGijd=nObMEB3_v6MyA@mail.gmail.com>
-Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
-To:     =?UTF-8?Q?Javier_Gonz=C3=A1lez?= <javier@javigon.com>
-Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "msnitzer@redhat.com" <msnitzer@redhat.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "roland@purestorage.com" <roland@purestorage.com>,
-        "mpatocka@redhat.com" <mpatocka@redhat.com>,
-        "hare@suse.de" <hare@suse.de>,
-        "kbusch@kernel.org" <kbusch@kernel.org>,
-        "rwheeler@redhat.com" <rwheeler@redhat.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
-        "zach.brown@ni.com" <zach.brown@ni.com>,
-        "osandov@fb.com" <osandov@fb.com>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        SelvaKumar S <selvakuma.s1@samsung.com>,
-        Nitesh Shetty <nj.shetty@samsung.com>,
-        Kanchan Joshi <joshi.k@samsung.com>,
-        Vincent Fu <vincent.fu@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Given the multitude of things accumulated on this topic, Martin
-suggested to have a table/matrix.
-Some of those should go in the initial patchset, and the remaining are
-to be staged for subsequent work.
-Here is the attempt to split the stuff into two buckets. Please change
-if something needs to be changed below.
 
-1. Driver
-*********
-Initial: NVMe Copy command (single NS)
-Subsequent: Multi NS copy, XCopy/Token-based Copy
+Hi all,
 
-2. Block layer
-**************
-Initial:
-- Block-generic copy (REQ_OP_COPY), with interface accommodating two block-=
-devs
-- Emulation, when offload is natively absent
-- DM support (at least dm-linear)
+I simplified some xxxof() macros,
+by adding a new macro memberof(),
+which implements a common operation in many of them.
 
-3. User-interface
-*****************
-Initial: new ioctl or io_uring opcode
+I also splitted many of those macros into tiny headers,
+since I noticed that touching those headers implied
+recompiling almost the whole kernel.
 
-4. In-kernel user
-******************
-Initial: at least one user
-- dm-kcopyd user (e.g. dm-clone), or FS requiring GC (F2FS/Btrfs)
+Hopefully after this patch there will be less
+things to recompile after touching one of those.
 
-Subsequent:
-- copy_file_range
+Having simpler headers means that now one can
+include one of those without pulling too much stuff
+that might break other stuff.
+
+I removed some unnecessary casts too.
+
+Every few commits in this series
+and of course after the last commit
+I rebuilt the kernel and run for a while with it without any problems.
+
+Please note that I have written very few kernel code
+and for example some files wouldn't let me include some of these files,
+so I didn't change those.
+
+What I mean is that,
+even though this is super obvious and shouldn't break stuff,
+and I'm not new to C,
+I'm quite new to the kernel,
+and ask that reviewers take deep look, please.
+
+
+In the first and second commits
+I changed a lot of stuff in many parts,
+and that's why I CCd so many people (also in this cover letter).
+However, to avoid spamming,
+and since it would be a nightmare to
+find all the relevant people affected in so many different areas,
+I only CCd in 01, 02 and in the cover letter.
+If anyone is interested in reading the full patch set,
+I sent it to the LKML.
+
 
 Thanks,
-On Tue, Nov 16, 2021 at 7:15 PM Javier Gonz=C3=A1lez <javier@javigon.com> w=
-rote:
->
-> Hi all,
->
-> Thanks for attending the call on Copy Offload yesterday. Here you have
-> the meeting notes and 2 specific actions before we proceed with another
-> version of the patchset.
->
-> We will work on a version of the use-case matrix internally and reply
-> here in the next couple of days.
->
-> Please, add to the notes and the matrix as you see fit.
->
-> Thanks,
-> Javier
->
-> ----
->
-> ATTENDEES
->
-> - Adam
-> - Arnav
-> - Chaitanya
-> - Himashu
-> - Johannes
-> - Kanchan
-> - Keith
-> - Martin
-> - Mikulas
-> - Niklas
-> - Nitesh
-> - Selva
-> - Vincent
-> - Bart
->
-> NOTES
->
-> - MD and DM are hard requirements
->         - We need support for all the main users of the block layer
->         - Same problem with crypto and integrity
-> - Martin would be OK with separating Simple Copy in ZNS and Copy Offload
-> - Why did Mikulas work not get upstream?
->         - Timing was an issue
->                 - Use-case was about copying data across VMs
->                 - No HW vendor support
->                 - Hard from a protocol perspective
->                         - At that point, SCSI was still adding support in=
- the spec
->                         - MSFT could not implement extended copy command =
-in the target (destination) device.
->                                 - This is what triggered the token-based =
-implementation
->                                 - This triggered array vendors to impleme=
-nt support for copy offload as token-based. This allows mixing with normal =
-read / write workloads
->                         - Martin lost the implementation and dropped it
->
-> DIRECTION
->
-> - Keeping the IOCTL interface is an option. It might make sense to move f=
-rom IOCTL to io_uring opcode
-> - Martin is happy to do the SCSIpart if the block layer API is upstreamed
-> - Token-based implementationis the norm. This allows mixing normal read /=
- write workloads to avoid DoS
->         - This is the direction as opposed to the extended copy command
->         - It addresses problems when integrating with DM and simplifies c=
-ommand multiplexing a single bio into many
->         - It simplifies multiple bios
->         - We should explore Mikulas approach with pointers.
-> - Use-cases
->         - ZNS GC
->         - dm-kcopyd
->         - file system GC
->         - fabrics offload to the storage node
->         - copy_file_range
-> - It is OK to implement support incrementally, but the interface needs to=
- support all customers of the block layer
->         - OK to not support specific DMs (e.g., RAID5)
->         - We should support DM and MD as a framework and the personalitie=
-s that are needed. Inspiration in integrity
->                 - dm-linear
->                 - dm-crypt and dm-verify are needed for F2FSuse-case in A=
-ndrod
->                         - Here, we need copy emulation to support encrypt=
-ion without dealing with HW issues and garbage
-> - User-interface can wait and be carried out on the side
-> - Maybe it makes sense to start with internal users
->         - copy_file_range
->         - F2FS GC, btrfs GC
-> - User-space should be allowed to do anything and kernel-space can chop t=
-he command accordingly
-> - We need to define the heuristics of the sizes
-> - User-space should only work on block devices (no other constructs that =
-are protocol-specific) . Export capabilities in sysfs
->         - Need copy domains to be exposed in sysfs
->         - We need to start with bdev to bdev in block layer
->         - Not specific requirement on multi-namespace in NVMe, but it sho=
-uld be extendable
->         - Plumbing will support all use-cases
-> - Try to start with one in-kernel consumer
-> - Emulation is a must
->         - Needed for failed I/Os
->         - Expose capabilities so that users can decide
-> - We can get help from btrfs and F2FS folks
-> - The use case for GC and for copy are different. We might have to reflec=
-t this in the interface, but the internal plumbing should allow both paths =
-to be maintained as a single one.
->
-> ACTIONS
->
-> - [ ] Make a list of use-cases that we want to support in each specificat=
-ion and pick 1-2 examples for MD, DM. Make sure that the interfaces support=
- this
-> - [ ] Vendors: Ask internally what is the recommended size for copy, if
->    any
->
+Alex
 
 
---=20
-Joshi
+Alejandro Colomar (17):
+  linux/container_of.h: Add memberof(T, m)
+  Use memberof(T, m) instead of explicit NULL dereference
+  Replace some uses of memberof() by its wrappers
+  linux/memberof.h: Move memberof() to separate header
+  linux/typeof_member.h: Move typeof_member() to a separate header
+  Simplify sizeof(typeof_member()) to sizeof_field()
+  linux/NULL.h: Move NULL to a separate header
+  linux/offsetof.h: Move offsetof(T, m) to a separate header
+  linux/offsetof.h: Implement offsetof() in terms of memberof()
+  linux/container_of.h: Implement container_of_safe() in terms of
+    container_of()
+  linux/container_of.h: Cosmetic
+  linux/container_of.h: Remove unnecessary cast to (void *)
+  linux/sizeof_field.h: Move sizeof_field(T, m) to a separate header
+  include/linux/: Include a smaller header if just for NULL
+  linux/offsetofend.h: Move offsetofend(T, m) to a separate header
+  linux/array_size.h: Move ARRAY_SIZE(arr) to a separate header
+  include/: Include <linux/array_size.h> for ARRAY_SIZE()
+
+ arch/x86/include/asm/bootparam_utils.h        |  3 +-
+ arch/x86/kernel/signal_compat.c               |  5 ++--
+ drivers/gpu/drm/i915/i915_sw_fence.c          |  1 +
+ drivers/gpu/drm/i915/i915_utils.h             |  5 ++--
+ drivers/gpu/drm/i915/intel_runtime_pm.h       |  3 +-
+ drivers/net/ethernet/emulex/benet/be.h        | 10 +++----
+ drivers/net/ethernet/i825xx/ether1.c          |  7 +++--
+ drivers/platform/x86/wmi.c                    |  3 +-
+ drivers/scsi/be2iscsi/be.h                    | 12 ++++----
+ drivers/scsi/be2iscsi/be_cmds.h               |  5 +++-
+ fs/btrfs/ctree.h                              |  5 ++--
+ fs/proc/inode.c                               |  1 +
+ include/acpi/actypes.h                        |  4 ++-
+ include/crypto/internal/blake2b.h             |  1 +
+ include/crypto/internal/blake2s.h             |  1 +
+ include/crypto/internal/chacha.h              |  1 +
+ include/drm/drm_mipi_dbi.h                    |  1 +
+ include/drm/drm_mode_object.h                 |  1 +
+ include/kunit/test.h                          |  1 +
+ include/linux/NULL.h                          | 10 +++++++
+ include/linux/arm_ffa.h                       |  1 +
+ include/linux/array_size.h                    | 15 ++++++++++
+ include/linux/blk_types.h                     |  1 +
+ include/linux/can/core.h                      |  1 +
+ include/linux/clk-provider.h                  |  1 +
+ include/linux/container_of.h                  | 28 ++++++++++-------
+ include/linux/counter.h                       |  1 +
+ include/linux/crash_core.h                    |  1 +
+ include/linux/efi.h                           |  1 +
+ include/linux/extable.h                       |  2 +-
+ include/linux/f2fs_fs.h                       |  1 +
+ include/linux/filter.h                        |  3 ++
+ include/linux/fs.h                            |  1 +
+ include/linux/genl_magic_func.h               |  1 +
+ include/linux/hashtable.h                     |  1 +
+ include/linux/ieee80211.h                     |  1 +
+ include/linux/kbuild.h                        |  3 ++
+ include/linux/kernel.h                        |  7 +----
+ include/linux/kfifo.h                         |  1 +
+ include/linux/kvm_host.h                      |  3 ++
+ include/linux/libata.h                        |  1 +
+ include/linux/llist.h                         |  1 +
+ include/linux/memberof.h                      | 11 +++++++
+ include/linux/mlx5/device.h                   |  1 +
+ include/linux/mlx5/driver.h                   |  1 +
+ include/linux/mm_types.h                      |  1 +
+ include/linux/moduleparam.h                   |  3 ++
+ include/linux/mtd/rawnand.h                   |  1 +
+ include/linux/netdevice.h                     |  1 +
+ include/linux/netfilter.h                     |  1 +
+ include/linux/nvme-fc.h                       |  2 ++
+ include/linux/offsetof.h                      | 17 +++++++++++
+ include/linux/offsetofend.h                   | 19 ++++++++++++
+ include/linux/pagemap.h                       |  1 +
+ include/linux/phy.h                           |  1 +
+ include/linux/phy_led_triggers.h              |  1 +
+ include/linux/pinctrl/machine.h               |  1 +
+ include/linux/property.h                      |  1 +
+ include/linux/rcupdate.h                      |  1 +
+ include/linux/rcupdate_wait.h                 |  1 +
+ include/linux/regmap.h                        |  1 +
+ include/linux/sched/task.h                    |  1 +
+ include/linux/sizeof_field.h                  | 14 +++++++++
+ include/linux/skb_array.h                     |  1 +
+ include/linux/skbuff.h                        |  1 +
+ include/linux/skmsg.h                         |  3 ++
+ include/linux/slab.h                          |  2 ++
+ include/linux/spinlock_types.h                |  1 +
+ include/linux/stddef.h                        | 30 +++----------------
+ include/linux/string.h                        |  5 +++-
+ include/linux/surface_aggregator/controller.h |  1 +
+ include/linux/surface_aggregator/serial_hub.h |  1 +
+ include/linux/swap.h                          |  1 +
+ include/linux/ti-emif-sram.h                  |  1 +
+ include/linux/typeof_member.h                 | 11 +++++++
+ include/linux/ucs2_string.h                   |  2 +-
+ include/linux/vdpa.h                          |  1 +
+ include/linux/virtio_config.h                 | 17 ++++++-----
+ include/linux/wireless.h                      |  2 ++
+ include/net/bond_3ad.h                        |  1 +
+ include/net/dsa.h                             |  1 +
+ include/net/ip_vs.h                           |  1 +
+ include/net/netfilter/nf_conntrack_tuple.h    |  1 +
+ include/net/netfilter/nf_tables.h             |  1 +
+ include/net/netlink.h                         |  1 +
+ include/rdma/uverbs_ioctl.h                   |  1 +
+ include/rdma/uverbs_named_ioctl.h             |  1 +
+ include/scsi/scsi_host.h                      |  1 +
+ include/sound/soc-dapm.h                      |  1 +
+ include/sound/soc.h                           |  1 +
+ include/trace/events/wbt.h                    |  1 +
+ include/uapi/linux/netfilter/xt_sctp.h        |  1 +
+ include/xen/hvm.h                             |  1 +
+ kernel/kallsyms.c                             |  3 +-
+ 94 files changed, 255 insertions(+), 79 deletions(-)
+ create mode 100644 include/linux/NULL.h
+ create mode 100644 include/linux/array_size.h
+ create mode 100644 include/linux/memberof.h
+ create mode 100644 include/linux/offsetof.h
+ create mode 100644 include/linux/offsetofend.h
+ create mode 100644 include/linux/sizeof_field.h
+ create mode 100644 include/linux/typeof_member.h
+
+-- 
+2.33.1
+
