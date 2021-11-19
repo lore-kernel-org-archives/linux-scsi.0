@@ -2,100 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD865C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 02:19:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7783C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 02:46:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A431D61B27
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 02:19:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89D7A61B29
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 02:46:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234081AbhKSCW4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Nov 2021 21:22:56 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:47082 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234085AbhKSCWy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 Nov 2021 21:22:54 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1637288392;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=kVmDn8fHlf4GXS6Ok/pt7q9KsTTX1i/7O5l8UCEX6+c=;
-        b=ZpLoG852e661ZrhtAPcZKOHMntiCKTpXRhGjo6s450ZDURFFiv5S66dsq60UxkOJZrCJY6
-        DPaH4BOrvE+3bKOoskN7QKdDvwmZBKt5GArkImg9rNDl1ohUDb9kkuIy/5HtTJsjnEtuYB
-        TWfMnlrsbbsdAWF/PFhg1W0P+PNC51c=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-205-ueS-ZQ7CPi6veN9qdj_HDQ-1; Thu, 18 Nov 2021 21:19:51 -0500
-X-MC-Unique: ueS-ZQ7CPi6veN9qdj_HDQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CE2E91808312;
-        Fri, 19 Nov 2021 02:19:49 +0000 (UTC)
-Received: from localhost (ovpn-8-23.pek2.redhat.com [10.72.8.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 84D115F4ED;
-        Fri, 19 Nov 2021 02:19:44 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>, Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 5/5] scsi: use blk-mq quiesce APIs to implement scsi_host_block
-Date:   Fri, 19 Nov 2021 10:18:49 +0800
-Message-Id: <20211119021849.2259254-6-ming.lei@redhat.com>
-In-Reply-To: <20211119021849.2259254-1-ming.lei@redhat.com>
-References: <20211119021849.2259254-1-ming.lei@redhat.com>
+        id S231576AbhKSCt4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Nov 2021 21:49:56 -0500
+Received: from exvmail.hynix.com ([166.125.252.79]:53980 "EHLO
+        invmail.skhynix.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231264AbhKSCt4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Nov 2021 21:49:56 -0500
+X-Greylist: delayed 902 seconds by postgrey-1.27 at vger.kernel.org; Thu, 18 Nov 2021 21:49:55 EST
+X-AuditID: a67dfc4e-335ff7000000da67-b4-61970c944540
+Received: from hymail21.hynixad.com (10.156.135.51) by hymail08.hynixad.com
+ (10.156.135.38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.2.986.5; Fri, 19 Nov 2021
+ 11:31:48 +0900
+Received: from hymail21.hynixad.com ([10.156.135.51]) by hymail21.hynixad.com
+ ([10.156.135.51]) with mapi id 15.02.0986.005; Fri, 19 Nov 2021 11:31:48
+ +0900
+From:   =?ks_c_5601-1987?B?waS/5MfRKEpPVU5HIFlPSEFOKSBNb2JpbGUgU0U=?= 
+        <yohan.joung@sk.com>
+To:     "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        =?ks_c_5601-1987?B?w9bA57+1KENIT0kgSkFFIFlPVU5HKSBNb2JpbGUgU0U=?= 
+        <jaeyoung21.choi@sk.com>,
+        =?ks_c_5601-1987?B?sPvFwrz2KEtXQUsgVEFFU1UpIE1vYmlsZSBTRQ==?= 
+        <taesu.kwak@sk.com>
+Subject: Please check ufshpb init flow
+Thread-Topic: Please check ufshpb init flow
+Thread-Index: Adfc6j2tFkh4yQNUQbaUsbtOylGK5Q==
+Date:   Fri, 19 Nov 2021 02:31:47 +0000
+Message-ID: <e092e35414844175bf76868b820d907f@sk.com>
+Accept-Language: ko-KR, en-US
+Content-Language: ko-KR
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.152.36.34]
+Content-Type: text/plain; charset="ks_c_5601-1987"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-CFilter-Loop: Reflected
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrMLMWRmVeSWpSXmKPExsXCNUdUWXcKz/REg593JS26r+9gc2D0+LxJ
+        LoAxissmJTUnsyy1SN8ugStj6oE/TAVbeCsW/T7K2MDYwdvFyMkhIWAicf/YSdYuRi4OIYFX
+        jBKfH/9lhnAWMEq8aJvKBFLFJhAl8bh1BTtIQkTgLpPEm7YJbCAOs8AXRokdT56zgFQJC6hJ
+        vPx9kRXEFhHQlvh6aROQzQFk60nc3ygNEmYRUJV4sXE2O0iYV8BUomFXIIjJKCArcfWaDEgF
+        s4C4xOKv15ghjhOQWLLnPJQtKvHy8T9WCFtBYuX3C0wQ9UYSS1bPh7IVJaZ0P2QHsXkFBCVO
+        znzCAlEvKXFwxQ2WCYwis5CsmIWkfRaS9llI2hcwsqxiFM7MK8tNzMzRK87OqMzLrNBLzs/d
+        xAgM+mW1f/x2MH65EHyIUYCDUYmHNyN5WqIQa2JZcWXuIUYJDmYlEV6hhqmJQrwpiZVVqUX5
+        8UWlOanFhxilOViUxHm/haUmCAmkJ5akZqemFqQWwWSZODilGhjj+paFHxI33Tn3scykWUcf
+        /vrH4Nchxz57Vmdz6Iv+F69DEy5tutjyln/vJmOb9zOe7pPv/HcmmPHGg/JVt/gu/xTjtrS+
+        +NHA8vDSf+/vyrm6Sj/qjbY1zw2ZmaqgbCn2M9jBT4DfpCV7i+feaHveIKVDpbnbBKV/lj7Z
+        MO+MK2uk/Ku0swJKLMUZiYZazEXFiQCk9hSbdgIAAA==
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_host_block() calls synchronize_rcu() directly to wait for
-quiesce done, this way is ugly since it exposes blk-mq quiesce's
-implementation details.
-
-Instead apply blk_mq_wait_quiesce_done() and
-blk_mq_global_quiesce_wait() for scsi_host_block().
-
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi_lib.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5e8b5ecb3245..b0da6a4a1784 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2952,15 +2952,15 @@ scsi_host_block(struct Scsi_Host *shost)
- 		}
- 	}
- 
--	/*
--	 * SCSI never enables blk-mq's BLK_MQ_F_BLOCKING flag so
--	 * calling synchronize_rcu() once is enough.
--	 */
--	WARN_ON_ONCE(shost->tag_set.flags & BLK_MQ_F_BLOCKING);
--
--	if (!ret)
--		synchronize_rcu();
-+	if (!ret) {
-+		shost_for_each_device(sdev, shost) {
-+			struct request_queue *q = sdev->request_queue;
- 
-+			blk_mq_wait_quiesce_done(q);
-+			if (blk_mq_global_quiesce_wait(q))
-+				break;
-+		}
-+	}
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(scsi_host_block);
--- 
-2.31.1
-
+SGkgZGFlanVuDQoNClBsZWFzZSBjaGVjayB1ZnNocGIgaW5pdCBmbG93Lg0Kc2VuZGluZyB3cml0
+ZSBidWZmZXIoMHgwMykgc2VlbXMgc3BlYyB2aW9sYXRpb24gKEpFU0QyMjAgQ29tbWFuZHMgZm9y
+IGV4Y2VwdGlvbmFsIGJlaGF2aW9yIG9uIFVBQywgU0FNIDVyMDUpIGJlZm9yZSBVQUMgY2xlYXIg
+KHNkX3Byb2JlKS4NCkFueXdheSBocGIgcmVzZXQgcXVlcnkodWZzaHBiX2NoZWNrX2hwYl9yZXNl
+dF9xdWVyeSkgc2VlbXMgc3VmZmljaWVudC4NCldoeSBkbyB3ZSBuZWVkIHRvIHNlbmQgd3JpdGUg
+YnVmZmVyPw0KDQp2b2lkIHVmc2hwYl9pbml0X2hwYl9sdShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBz
+dHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYpDQp7DQpvdXQ6DQogICAgLyogQWxsIExVcyBhcmUgaW5p
+dGlhbGl6ZWQgKi8NCiAgICBpZiAoYXRvbWljX2RlY19hbmRfdGVzdCgmaGJhLT51ZnNocGJfZGV2
+LnNsYXZlX2NvbmZfY250KSkNCglUaGVyZSBzZWVtcyB0byBiZSBhIHByb2JsZW0gd2l0aCB0aGlz
+IGxvZ2ljLg0KCUlmIGhwYiBpcyBzZXQgb24gdGhlIGxhc3QgTFVOLCB3cml0ZSBidWZmZXIgY29t
+bWFuZCBpcyBzZW50IGJlZm9yZSBzZF9wcm9iZSBjb21wbGV0ZXMuDQogICAgICAgIHVmc2hwYl9o
+cGJfbHVfcHJlcGFyZWQoaGJhKTsNCn0NCg0Kc3RhdGljIHZvaWQgdWZzaHBiX2hwYl9sdV9wcmVw
+YXJlZChzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0Kew0KDQogICAgaW5pdF9zdWNjZXNzID0gIXVmc2hw
+Yl9jaGVja19ocGJfcmVzZXRfcXVlcnkoaGJhKTsNCg0KICAgIHNob3N0X2Zvcl9lYWNoX2Rldmlj
+ZShzZGV2LCBoYmEtPmhvc3QpIHsNCiAgICAgICAgaHBiID0gdWZzaHBiX2dldF9ocGJfZGF0YShz
+ZGV2KTsNCiAgICAgICAgaWYgKCFocGIpDQogICAgICAgICAgICBjb250aW51ZTsNCg0KICAgICAg
+ICBpZiAoaW5pdF9zdWNjZXNzKSB7DQogICAgICAgICAgICB1ZnNocGJfc2V0X3N0YXRlKGhwYiwg
+SFBCX1BSRVNFTlQpOw0KICAgICAgICAgICAgaWYgKChocGItPmx1X3Bpbm5lZF9lbmQgLSBocGIt
+Pmx1X3Bpbm5lZF9zdGFydCkgPiAwKQ0KICAgICAgICAgICAgICAgIHF1ZXVlX3dvcmsodWZzaHBi
+X3dxLCAmaHBiLT5tYXBfd29yayk7DQogICAgICAgICAgICBpZiAoIWhwYi0+aXNfaGNtKQ0KICAg
+ICAgICAgICAgICAgIHVmc2hwYl9pc3N1ZV91bWFwX2FsbF9yZXEoaHBiKTsgDQoJCVRoaXMgc2Vl
+bXMgdW5uZWNlc3NhcnkuDQoJCQ0KICAgICAgICB9IGVsc2Ugew0KDQpUaGFua3MgDQp5b2hhbg0K
