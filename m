@@ -2,93 +2,190 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D86C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 15:51:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20B5BC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 15:58:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3EBEF61B27
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 15:51:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00C9561B1E
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 15:58:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233891AbhKSPyM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Nov 2021 10:54:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51056 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229936AbhKSPyM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Nov 2021 10:54:12 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5A92861221;
-        Fri, 19 Nov 2021 15:51:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637337070;
-        bh=TlDTq9AOv8FgH+en11enMFFGBmpJzRegCF+fD5onZjM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bQeuXN4l1sz2ptHXt/d6W4TIuBCmMUS0qzRCLG2JD/OcSt3CWMjf4Kz9umEyD1Mnf
-         sSoYa9EvfwrozqMXJmAWFC6ibMXKDdNcJ1i4SI49sZqWZBHEPRV0ZD7AozXVQE+IU0
-         EzMQyJzLToEDD2KSF0UKITDIqDo4grbVTo9CDIcpWapmUvwbLfWN+O/dHAX6Sxf6nd
-         UHHuN3UipIyG16hQ2b2UTuK8qG4j3heaexfNuzUAeZgikGs+VXBm0hhb2+G/TDwtM5
-         sK4sguJxwE8PWRLdzTHlwVJ6JKtYTbavkglzBiWlscMyKruLREW97MhYaavX/CKMqF
-         Te3gnmFDubS9w==
-Date:   Fri, 19 Nov 2021 07:51:05 -0800
-From:   Keith Busch <kbusch@kernel.org>
-To:     Kanchan Joshi <joshiiitr@gmail.com>
-Cc:     Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier@javigon.com>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "msnitzer@redhat.com" <msnitzer@redhat.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "roland@purestorage.com" <roland@purestorage.com>,
-        "mpatocka@redhat.com" <mpatocka@redhat.com>,
-        "hare@suse.de" <hare@suse.de>,
-        "rwheeler@redhat.com" <rwheeler@redhat.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
-        "zach.brown@ni.com" <zach.brown@ni.com>,
-        "osandov@fb.com" <osandov@fb.com>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        SelvaKumar S <selvakuma.s1@samsung.com>,
-        Nitesh Shetty <nj.shetty@samsung.com>,
-        Kanchan Joshi <joshi.k@samsung.com>,
-        Vincent Fu <vincent.fu@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
-Message-ID: <20211119155105.GA3298398@dhcp-10-100-145-180.wdc.com>
-References: <20210928191340.dcoj7qrclpudtjbo@mpHalley.domain_not_set.invalid>
- <c2d0dff9-ad6d-c32b-f439-00b7ee955d69@acm.org>
- <20211006100523.7xrr3qpwtby3bw3a@mpHalley.domain_not_set.invalid>
- <fbe69cc0-36ea-c096-d247-f201bad979f4@acm.org>
- <20211008064925.oyjxbmngghr2yovr@mpHalley.local>
- <2a65e231-11dd-d5cc-c330-90314f6a8eae@nvidia.com>
- <20211029081447.ativv64dofpqq22m@ArmHalley.local>
- <20211103192700.clqzvvillfnml2nu@mpHalley-2>
- <20211116134324.hbs3tp5proxootd7@ArmHalley.localdomain>
- <CA+1E3rJRT+89OCyqRtb5BFbez0BfkKvCGijd=nObMEB3_v6MyA@mail.gmail.com>
+        id S235999AbhKSQBI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Nov 2021 11:01:08 -0500
+Received: from mout.kundenserver.de ([212.227.126.135]:43863 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233489AbhKSQBH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 11:01:07 -0500
+Received: from mail-wr1-f45.google.com ([209.85.221.45]) by
+ mrelayeu.kundenserver.de (mreue010 [213.165.67.97]) with ESMTPSA (Nemesis) id
+ 1M42zo-1mo6H531ns-0000FQ; Fri, 19 Nov 2021 16:58:03 +0100
+Received: by mail-wr1-f45.google.com with SMTP id r8so18888104wra.7;
+        Fri, 19 Nov 2021 07:58:03 -0800 (PST)
+X-Gm-Message-State: AOAM532mhDjdtvu6c6ToTliwYZng/8gDigytuaK+QoyyX1WgYdrj7nq5
+        tT+R5WMVTX5SxHhnzgAScBM7NiMsAxY9ovH+G8Q=
+X-Google-Smtp-Source: ABdhPJwnsTso3SJsyzelpHMk45ZnrIpUGUkP3Z97jucoO4GjyflpBdZvuKfoRBo685VC8w89e5cIDe6TdYLQkVPBgCM=
+X-Received: by 2002:adf:efc6:: with SMTP id i6mr8808061wrp.428.1637337483020;
+ Fri, 19 Nov 2021 07:58:03 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+1E3rJRT+89OCyqRtb5BFbez0BfkKvCGijd=nObMEB3_v6MyA@mail.gmail.com>
+References: <20211119113644.1600-1-alx.manpages@gmail.com> <CAK8P3a0qT9tAxFkLN_vJYRcocDW2TcBq79WcYKZFyAG0udZx5Q@mail.gmail.com>
+ <434296d3-8fe1-f1d2-ee9d-ea25d6c4e43e@gmail.com>
+In-Reply-To: <434296d3-8fe1-f1d2-ee9d-ea25d6c4e43e@gmail.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Fri, 19 Nov 2021 16:57:46 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a2yVXw9gf8-BNvX_rzectNoiy0MqGKvBcXydiUSrc_fCA@mail.gmail.com>
+Message-ID: <CAK8P3a2yVXw9gf8-BNvX_rzectNoiy0MqGKvBcXydiUSrc_fCA@mail.gmail.com>
+Subject: Re: [PATCH 00/17] Add memberof(), split some headers, and slightly
+ simplify code
+To:     "Alejandro Colomar (man-pages)" <alx.manpages@gmail.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>,
+        Ajit Khaparde <ajit.khaparde@broadcom.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Borislav Petkov <bp@suse.de>,
+        Corey Minyard <cminyard@mvista.com>, Chris Mason <clm@fb.com>,
+        Christian Brauner <christian.brauner@ubuntu.com>,
+        David Sterba <dsterba@suse.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        "John S . Gruber" <JohnSGruber@gmail.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Kees Cook <keescook@chromium.org>,
+        Ketan Mukadam <ketan.mukadam@broadcom.com>,
+        Len Brown <lenb@kernel.org>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Miguel Ojeda <ojeda@kernel.org>,
+        Mike Rapoport <rppt@linux.ibm.com>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Somnath Kotur <somnath.kotur@broadcom.com>,
+        Sriharsha Basavapatna <sriharsha.basavapatna@broadcom.com>,
+        Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
+        Intel Graphics <intel-gfx@lists.freedesktop.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>,
+        "open list:DRM DRIVER FOR QEMU'S CIRRUS DEVICE" 
+        <virtualization@lists.linux-foundation.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:Y/JjwNjDwd/Q0+diMms58NLy9JY4EB9LGPrp/6JP0lk1hDVVgRw
+ JCE0Ex5UBNbAAg67jcURPyD4IubROn6TXvXmVxG94DTEmNqyr7JjIEeE1XkKRr/7kfNyoLh
+ jXXpthUqT1dr0yh9xfD2raQjMjwuCxSpUAEyGgTEagaX2QZ5t4WEDLzWbWdWZXZR/eCOLsA
+ HoSFiyawE2pP8REfWS+jg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:Vf+MpytySlc=:u0G9LLNolDhAJ7j2PFAMBU
+ T6p69vmJQ4U9DqYVupBe7fs9YXstBnGm/v/sz+Cp/4L+mU4U0oZGrj2JwClfryQ2UsOiWs1l5
+ 6KKCNEWHxhq1wLNivg8zuwR5nublGr73jhscZY/xC0zSszWx0b7yWvpmGSUOqi7tqGvEpx7BG
+ f9xLxxrL5zjZRHCDcRi7buNM8KJnOYQG79k1a8HGWXnnOs6IiR754JPo75bLdewSqJ5L9SyjA
+ auBikGOp43f+lhYpOXljsu1L9aN67o3qu1FVT6OxRmObSaHh9/4leZlzD6QH0y//c5KkEKrKe
+ bqVVMcOTv6P3ObWrpPjTWE2uXb6oAyRwnIPPKBAbT8y9LDFoaN95TvgmFUH0+kscEgbvVBx1w
+ 9o/ifi7tNiFc750grxdJn0NpQVRUtc9KqPt+wzw1cHTFAV7BnjxJZCcZm9GoQ8FZBYwPaMrF5
+ DWlyu+Z5eMUA0swwjNoAw6rwCvECZe4D0kden2NxFRVqy1/iWq4hYiKTB5sqShQo2SqELr6v6
+ LDlgNVw5eRqizMQp22K5/0P7itSXJUFP82t/qVhsA4EDmM62Owb1OplnBQ4mL3NY+cEO+yT5+
+ n7/BSRn1S6528EXUQS/kxBBwz2OKiRxcHrcxRaRDHQfiFYZhWigPPL963KNVZR7wN29jWQiIv
+ /FDCLjJbGOdIlVl4rD0cGtRftij2qa+/ElWBLHFlggTpfUbTmQrCDmbKGhOgDX0oXhWjst+3D
+ mdsbQJ3+ru9CgTcV7RRoI9Mg1mCo873z4rWhh9P9UMidKkVVK7JkVax6Wa0hyDdNpdO6lbe+o
+ ilR/jBtZSV8xkpFo5eyLLX/8L13BSLtO1KFg1PH+kj4PhcKzMVUYCzoiVpwwks21ym4xUDQTp
+ c19/D3EAg9Zip6vea0fg==
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Nov 19, 2021 at 04:17:51PM +0530, Kanchan Joshi wrote:
-> Given the multitude of things accumulated on this topic, Martin
-> suggested to have a table/matrix.
-> Some of those should go in the initial patchset, and the remaining are
-> to be staged for subsequent work.
-> Here is the attempt to split the stuff into two buckets. Please change
-> if something needs to be changed below.
-> 
-> 1. Driver
-> *********
-> Initial: NVMe Copy command (single NS)
+On Fri, Nov 19, 2021 at 4:06 PM Alejandro Colomar (man-pages)
+<alx.manpages@gmail.com> wrote:
+> On 11/19/21 15:47, Arnd Bergmann wrote:
+> > On Fri, Nov 19, 2021 at 12:36 PM Alejandro Colomar
+>
+> Yes, I would like to untangle the dependencies.
+>
+> The main reason I started doing this splitting
+> is because I wouldn't be able to include
+> <linux/stddef.h> in some headers,
+> because it pulled too much stuff that broke unrelated things.
+>
+> So that's why I started from there.
+>
+> I for example would like to get NULL in memberof()
+> without puling anything else,
+> so <linux/NULL.h> makes sense for that.
+>
+> It's clear that every .c wants NULL,
+> but it's not so clear that every .c wants
+> everything that <linux/stddef.h> pulls indirectly.
 
-Does this point include implementing the copy command in the nvme target
-driver or just the host side? Enabling the target should be pretty
-straight forward, and would provide an in-kernel standard compliant
-"device" that everyone could test future improvements against.
+From what I can tell, linux/stddef.h is tiny, I don't think it's really
+worth optimizing this part. I have spent some time last year
+trying to untangle some of the more interesting headers, but ended
+up not completing this as there are some really hard problems
+once you start getting to the interesting bits.
+
+The approach I tried was roughly:
+
+- For each header in the kernel, create a preprocessed version
+  that includes all the indirect includes, from that start a set
+  of lookup tables that record which header is eventually included
+  by which ones, and the size of each preprocessed header in
+  bytes
+
+- For a given kernel configuration (e.g. defconfig or allmodconfig)
+  that I'm most interested in, look at which files are built, and what
+  the direct includes are in the source files.
+
+- Sort the headers by the product of the number of direct includes
+  and the preprocessed size: the largest ones are those that are
+  worth looking at first.
+
+- use graphviz to visualize the directed graph showing the includes
+  between the top 100 headers in that list. You get something like
+  I had in [1], or the version afterwards at [2].
+
+- split out unneeded indirect includes from the headers in the center
+  of that graph, typically by splitting out struct definitions.
+
+- repeat.
+
+The main problem with this approach is that as soon as you start
+actually reducing the unneeded indirect includes, you end up with
+countless .c files that no longer build because they are missing a
+direct include for something that was always included somewhere
+deep underneath, so I needed a second set of scripts to add
+direct includes to every .c file.
+
+On the plus side, I did see something on the order of a 30%
+compile speed improvement with clang, which is insane
+given that this only removed dead definitions.
+
+> But I'll note that linux/fs.h, linux/sched.h, linux/mm.h are
+> interesting headers for further splitting.
+>
+>
+> BTW, I also have a longstanding doubt about
+> how header files are organized in the kernel,
+> and which headers can and cannot be included
+> from which other files.
+>
+> For example I see that files in samples or scripts or tools,
+> that redefine many things such as offsetof() or ARRAY_SIZE(),
+> and I don't know if there's a good reason for that,
+> or if I should simply remove all that stuff and
+> include <linux/offsetof.h> everywhere I see offsetof() being used.
+
+The main issue here is that user space code should not
+include anything outside of include/uapi/ and arch/*/include/uapi/
+
+offsetof() is defined in include/linux/stddef.h, so this is by
+definition not accessible here. It appears that there is also
+an include/uapi/linux/stddef.h that is really strange because
+it includes linux/compiler_types.h, which in turn is outside
+of uapi/. This should probably be fixed.
+
+      Arnd
+
+[1] https://drive.google.com/file/d/14IKifYDadg2W5fMsefxr4373jizo9bLl/view?usp=sharing
+[2] https://drive.google.com/file/d/1pWQcv3_ZXGqZB8ogV-JOfoV-WJN2UNnd/view?usp=sharing
