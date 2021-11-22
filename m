@@ -2,72 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8267C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Nov 2021 18:13:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C444C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Nov 2021 18:13:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235480AbhKVSQa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Nov 2021 13:16:30 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4148 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233434AbhKVSQ3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Nov 2021 13:16:29 -0500
-Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Hyb2w0NxGz686y1;
-        Tue, 23 Nov 2021 02:12:24 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Mon, 22 Nov 2021 19:13:21 +0100
-Received: from [10.47.91.234] (10.47.91.234) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2308.20; Mon, 22 Nov
- 2021 18:13:20 +0000
-Subject: Re: [PATCH v2 06/20] scsi: core: Add support for reserved tags
-To:     Bart Van Assche <bvanassche@acm.org>,
+        id S239995AbhKVSQk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Nov 2021 13:16:40 -0500
+Received: from mail-pl1-f180.google.com ([209.85.214.180]:36675 "EHLO
+        mail-pl1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233434AbhKVSQi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Nov 2021 13:16:38 -0500
+Received: by mail-pl1-f180.google.com with SMTP id u11so14820794plf.3
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Nov 2021 10:13:32 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=aGXcIKf1tNGFp5+tNiX6B+yjR/XUilzqARZjz5EnS0A=;
+        b=5ed7V8bY8GLP4nvH03oQdJWM0WZRpixFrdvL+0n32X/ZpQbf1KgJYMumQf4OnvQ9zZ
+         d/UgObSWbaku+gbtNsDgY+wSaSZasFql+NOfNGNo7unFdo6ZzqOdgIrAkWlWo/930geG
+         VxaIpY3m6lv4lNPK+h58fKBpAMsw0uFLBJixn12RmuJUXBJD1QQq5MfdCXz6uSFlO/9C
+         4qbeTaTSvpmsfPkRlKBjDK+TOUNnMVeuAEkjFRN/l+FtCNhDRA97HfORZhTTYjbW8vKO
+         AvZNJLQbWgiWf+Sz2P6GvzbYEuJI3J/DiO9t71xPi3TrXIDXiKvuaTzmPDoRpgg2A1ci
+         S46g==
+X-Gm-Message-State: AOAM530kErh/BvIPgcxKhA3SR0n0e4L/Ni8NRMCz2iUCJ3vV62jpW4N4
+        gquQcWk2YrqVLiMFiSIti+4=
+X-Google-Smtp-Source: ABdhPJy45YWvy+ocbsIlyHWGTziGCwqE4qentQD5wV4FptU1pWPkulC8Zbd71Ws2H6K6HYcf7Es9DA==
+X-Received: by 2002:a17:90b:1293:: with SMTP id fw19mr34068427pjb.155.1637604811849;
+        Mon, 22 Nov 2021 10:13:31 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:3432:c377:2744:1125])
+        by smtp.gmail.com with ESMTPSA id m127sm6925057pgm.64.2021.11.22.10.13.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 22 Nov 2021 10:13:31 -0800 (PST)
+Subject: Re: [PATCH v2 18/20] scsi: ufs: Optimize the command queueing code
+To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     Jaegeuk Kim <jaegeuk@kernel.org>,
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Keoseong Park <keosung.park@samsung.com>
 References: <20211119195743.2817-1-bvanassche@acm.org>
- <20211119195743.2817-7-bvanassche@acm.org>
- <4f76acb2-68ff-6f6a-775b-81efc4cf10cc@huawei.com>
- <c5e09609-d61a-dd6d-0962-3c30a099638c@acm.org>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <c831196c-af7a-afc4-7468-c789d8b7876a@huawei.com>
-Date:   Mon, 22 Nov 2021 18:13:15 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+ <20211119195743.2817-19-bvanassche@acm.org>
+ <a2599b2c-208c-3333-61f0-d61a269b53d4@codeaurora.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <f6eb1b4c-ef73-7e34-cecd-fa0c9ce07a2f@acm.org>
+Date:   Mon, 22 Nov 2021 10:13:29 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <c5e09609-d61a-dd6d-0962-3c30a099638c@acm.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <a2599b2c-208c-3333-61f0-d61a269b53d4@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.91.234]
-X-ClientProxiedBy: lhreml705-chm.china.huawei.com (10.201.108.54) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 22/11/2021 17:25, Bart Van Assche wrote:
-> On 11/22/21 12:15 AM, John Garry wrote:
->> On 19/11/2021 19:57, Bart Van Assche wrote:
->>> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
->>> index 72e1a347baa6..ec0f7705e06a 100644
->>> --- a/include/scsi/scsi_host.h
->>> +++ b/include/scsi/scsi_host.h
->>> @@ -367,10 +367,17 @@ struct scsi_host_template {
->>
->> why no field in struct Scsi_Host?
-> 
-> Why to duplicate this field in struct Scsi_Host? Do we expect that there
-> will be SCSI drivers in the future for which the number of reserved tags
-> is only known at runtime? This seems unlikely to me.
+On 11/22/21 9:46 AM, Asutosh Das (asd) wrote:
+> On 11/19/2021 11:57 AM, Bart Van Assche wrote:
+>> +    blk_freeze_queue_start(hba->tmf_queue);
+>> +    blk_freeze_queue_start(hba->cmd_queue);
+>> +    shost_for_each_device(sdev, hba->host)
+>> +        blk_freeze_queue_start(sdev->request_queue);
+>
+> This would still issue the requests present in the queue before freezing 
+> and that's a concern.
 
-
-Fine, I was using this but I suppose it's not needed ATM.
+Isn't that exactly what the existing code is doing since the existing 
+code waits until both doorbell registers are zero? See also 
+ufshcd_wait_for_doorbell_clr().
 
 Thanks,
-John
+
+Bart.
