@@ -2,99 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 716D6C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Nov 2021 18:45:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68E72C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Nov 2021 19:04:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240238AbhKVSsW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Nov 2021 13:48:22 -0500
-Received: from mail-1.ca.inter.net ([208.85.220.69]:58695 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239598AbhKVSsV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Nov 2021 13:48:21 -0500
-Received: from mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id 6A9A52EA7E6;
-        Mon, 22 Nov 2021 13:45:12 -0500 (EST)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19]) (amavisd-new, port 10024)
-        with ESMTP id SfAv9z5ZKphY; Mon, 22 Nov 2021 13:45:12 -0500 (EST)
-Received: from [192.168.48.23] (host-45-58-208-241.dyn.295.ca [45.58.208.241])
-        (using TLSv1 with cipher AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id B103D2EA7AB;
-        Mon, 22 Nov 2021 13:45:11 -0500 (EST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v2] scsi: scsi_debug: Zero clear zones at reset write
- pointer
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        linux-scsi@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>
-References: <20211122061223.298890-1-shinichiro.kawasaki@wdc.com>
- <a307f2c2-12fc-a193-6438-fc44c653657b@opensource.wdc.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <3058c488-996f-2f07-d9bd-4384bd4f7ba6@interlog.com>
-Date:   Mon, 22 Nov 2021 13:45:10 -0500
+        id S237463AbhKVTIE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Nov 2021 14:08:04 -0500
+Received: from mail-pl1-f174.google.com ([209.85.214.174]:43990 "EHLO
+        mail-pl1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234243AbhKVTID (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Nov 2021 14:08:03 -0500
+Received: by mail-pl1-f174.google.com with SMTP id m24so14919810pls.10
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Nov 2021 11:04:56 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Xa+I9yVR9gwf4/4bLSgBTGVsxzvnWooS/A/IHz2fybs=;
+        b=BV9yZlh097xYL5fbTS9VxZLzCYYRFitnC1ePCjPoYi0UxPIaoJdzbHVBjWE1jVmnOK
+         UOhzkgPHCzownioUzCugQf6Yj3uWMRavEKMRJxeSrwgQoz0r7jZ4KrUB0n3lTlSHnd7t
+         UUILvxPH+xp8gATvkKpMGPJ97qokzjKtJySlD/VAvEHw2aRPS/9oeF8nufj5fsAdYPs1
+         jD7amNxIS3I8/byBd+P5Q+BzFmF/ic58Zx8w8Z1qq88LlVOJfAFtC53RWvcDknRXTvrh
+         UAjapgv6nopBI7tdgbs/i67oB2Tg/x1E39roAvKXSKPAqY4zjDdpYK8m70R0IT4QXo/D
+         Bnog==
+X-Gm-Message-State: AOAM533iqoMm+vYdMdkvIfXGL0miSXJ5EA0A8kOMZkprkHX0f7z4SaQ4
+        aDtDOMvuYKpZFEgPSl7ZzTw=
+X-Google-Smtp-Source: ABdhPJxD33gZ9iTTKo3CZGE51xKWGbz14EO2lulDPWdoWcnX1GwDaLN2EsGrJYdMuBTJveObadtGFg==
+X-Received: by 2002:a17:902:a584:b0:143:c2e3:c4 with SMTP id az4-20020a170902a58400b00143c2e300c4mr86320511plb.69.1637607895795;
+        Mon, 22 Nov 2021 11:04:55 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:3432:c377:2744:1125])
+        by smtp.gmail.com with ESMTPSA id i185sm9581455pfg.80.2021.11.22.11.04.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 22 Nov 2021 11:04:54 -0800 (PST)
+Subject: Re: [PATCH v2 05/20] scsi: core: Add support for internal commands
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     John Garry <john.garry@huawei.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20211119195743.2817-1-bvanassche@acm.org>
+ <20211119195743.2817-6-bvanassche@acm.org>
+ <d396a5ed-763e-de79-1714-b4e58e812c7f@huawei.com>
+ <24ce9815-c01d-9ad4-2221-5a5b041ee231@acm.org>
+Message-ID: <19abf385-da1a-4e6f-2101-1b721a3fdfb0@acm.org>
+Date:   Mon, 22 Nov 2021 11:04:54 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <a307f2c2-12fc-a193-6438-fc44c653657b@opensource.wdc.com>
+In-Reply-To: <24ce9815-c01d-9ad4-2221-5a5b041ee231@acm.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-11-22 1:32 a.m., Damien Le Moal wrote:
-> On 2021/11/22 15:12, Shin'ichiro Kawasaki wrote:
->> When reset write pointer is requested to scsi_debug devices with zoned
->> model, positions of write pointers are reset, but the data in the target
->> zones are not cleared. Read to the zones returns data written before the
->> reset write pointer. This unexpected left data is confusing and does not
->> allow using scsi_debug for stale page cache test of the BLKRESETZONE
->> ioctl. Hence, zero clear the written data in the zones at reset write
->> pointer.
+On 11/22/21 9:46 AM, Bart Van Assche wrote:
+> On 11/22/21 12:58 AM, John Garry wrote:
+>> On 19/11/2021 19:57, Bart Van Assche wrote:
+>>> +{
+>>> +    unsigned int opf = REQ_INTERNAL;
+>>> +    struct request *rq;
+>>> +
+>>> +    opf |= data_direction == DMA_TO_DEVICE ? REQ_OP_DRV_OUT : 
+>>> REQ_OP_DRV_IN;
+>>> +    rq = blk_mq_alloc_request(q, opf, flags);
+>>> +    if (IS_ERR(rq))
+>>> +        return ERR_CAST(rq);
 >>
->> Fixes: f0d1cf9378bd ("scsi: scsi_debug: Add ZBC zone commands")
->> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
->> ---
->> Changes from v1:
->> * Zero clear only the written data area in non-empty zones
->>
->>   drivers/scsi/scsi_debug.c | 5 +++++
->>   1 file changed, 5 insertions(+)
->>
->> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
->> index 1d0278da9041..1ef9907c479a 100644
->> --- a/drivers/scsi/scsi_debug.c
->> +++ b/drivers/scsi/scsi_debug.c
->> @@ -4653,6 +4653,7 @@ static void zbc_rwp_zone(struct sdebug_dev_info *devip,
->>   			 struct sdeb_zone_state *zsp)
->>   {
->>   	enum sdebug_z_cond zc;
->> +	struct sdeb_store_info *sip = devip2sip(devip, false);
->>   
->>   	if (zbc_zone_is_conv(zsp))
->>   		return;
->> @@ -4664,6 +4665,10 @@ static void zbc_rwp_zone(struct sdebug_dev_info *devip,
->>   	if (zsp->z_cond == ZC4_CLOSED)
->>   		devip->nr_closed--;
->>   
->> +	if (zsp->z_wp > zsp->z_start)
->> +		memset(sip->storep + zsp->z_start * sdebug_sector_size, 0,
->> +		       (zsp->z_wp - zsp->z_start) * sdebug_sector_size);
->> +
->>   	zsp->z_non_seq_resource = false;
->>   	zsp->z_wp = zsp->z_start;
->>   	zsp->z_cond = ZC1_EMPTY;
->>
+>> I think that Christoph suggested elsewhere that we should poison all 
+>> the scsi_cmnd
 > 
-> Looks good.
-> 
-> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> I had overlooked that comment. I will look into this.
 
-Thanks.
+If anyone comes up with a good approach for poisoning the scsi_cmnd I 
+will look into this. Only overwriting struct scsi_cmnd is not acceptable 
+since that would result in a memory leak. See also the memory allocation
+statements in scsi_mq_init_request().
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Thanks,
+
+Bart.
