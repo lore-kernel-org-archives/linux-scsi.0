@@ -2,143 +2,248 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69EC3C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Nov 2021 06:32:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9440C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Nov 2021 07:39:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230142AbhKVGfv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Nov 2021 01:35:51 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:27493 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229736AbhKVGfv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Nov 2021 01:35:51 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1637562764; x=1669098764;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=hAlPV2ezMof5pjyfmuJwM6x5RoCxfNfKdyCyt7CSXBU=;
-  b=Jm59qTW+qLCe22BA7dD3+p3WAMiRgoPs0N8OPJf+WdrhlJi23lAXckOV
-   9jqhyE1aL23Uhp7BGuNO4C1RqAz+xXVnXxxWxmQ8rL79UK7AU3EHPdQzQ
-   ftC+wVkhXB9uZBM+hcQG7s9qkeLnZKttSbXnT4Usdfi+ZNtrlpqs5kPeK
-   hHLMcJDOoT8IyKf8VL2BymnxGdlfsEs/m5XiSADLsp5uQlmzYYvakhwwI
-   j0qanwEFXo7FZ4u8n8qQsf0ry3BqX2Ii9RI6kJ9uco077cWUMjPsGxuUG
-   BMTStRhrPkIIlZb7TBmkNk1YXgOVrjrUg8VXRGCjr6xPoolr4PjAAe9WI
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.87,254,1631548800"; 
-   d="scan'208";a="186286816"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Nov 2021 14:32:44 +0800
-IronPort-SDR: cWGIX1SxAHuFAYi1LDFG1E7Gx8b35HQzBH5a88GkPRSpmfqJZc2WuwsoAvIENEAV/TSAMQN0WA
- 0A+dcjVdKoZ0dxoppWeMbr+Jn63cL1Fk+X0lpU3FGLNlOpNddJU9BWGJKJzN+tWcHIHJK3N9cZ
- RPeUA6sMrsokcP3TH2B4HhxFRkNzKC5T+pDy9zcbVPxUmKz8+wZRn39X3kQTH4B6aUz/xpXip9
- SeosBmiM0NVjtgWPU3a26Bs98SKISSOMqyehwYvg3EyScy0tzQzn1e2+3a/+KWT0axbHBmuOhN
- N+GkinwECaW153kx3opFRHPl
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2021 22:06:08 -0800
-IronPort-SDR: mP9KCZYHZyUwJceUah4TG7oj1s2iL0JCMJITLl+BkIjkqtqquJO/acJkwk5FgKbmy5z6QEyeNe
- WW9uizHTWEq73NdXIbqVtuXsMU5DuZcUSZpDhtjk7QaeU3ATEGNhzsqPEcCyLAd3koyE01BDGv
- wWQqLiejMDk/+QV2iOMrkVFKGoMbR5ds3am+Zuzd+XKUIGfDG9RsZHEXt6DEMNU9SS382PUns0
- WWjV1BcXB1wYm5phsLSpOSDBJ9CCoY8ndDh+p6BMp7/6gd6useXzc5ouczyqvpkdszth2TactB
- Czg=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2021 22:32:45 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4HyHWd0l4Nz1RtVv
-        for <linux-scsi@vger.kernel.org>; Sun, 21 Nov 2021 22:32:45 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1637562763; x=1640154764; bh=hAlPV2ezMof5pjyfmuJwM6x5RoCxfNfKdyC
-        yt7CSXBU=; b=ZAx+bmyw1qsaL3s9hGyPonbHvAPE9cVfg94V6xXXuPNzSsCFYeo
-        pD/lzW16fu7lLFBW/6Pv/GqyhsKRwS3oEwXsOot+Eb6P1BTG1QmbT9TdAnxmWUD8
-        F5+P+Uty9F76OefktkIipkrjMEuQ4C6HKVNQ6QT7IxS49P2tkI/t/Oj66nLdH2DW
-        XCNBVoGr2XRrHLaayCK8HyHxOp8Li5ypNROzo39H4IJwYAmQKsm9CWwZYkWuFG/h
-        L1oL3B5XPjX+dXzU8y9O4BPHGNsuY26kQyk61GqGMJREY6YAoj/dnDkW/qA4kss2
-        PaHcNo2QjeUufuL9GsRAOsI+qNsrUSJmDJg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id isqXzcpVV-bN for <linux-scsi@vger.kernel.org>;
-        Sun, 21 Nov 2021 22:32:43 -0800 (PST)
-Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4HyHWb0Dn1z1RtVl;
-        Sun, 21 Nov 2021 22:32:42 -0800 (PST)
-Message-ID: <a307f2c2-12fc-a193-6438-fc44c653657b@opensource.wdc.com>
-Date:   Mon, 22 Nov 2021 15:32:41 +0900
+        id S233028AbhKVHm6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Nov 2021 02:42:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37560 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232870AbhKVHmz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Nov 2021 02:42:55 -0500
+Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12301C061574;
+        Sun, 21 Nov 2021 23:39:49 -0800 (PST)
+Received: by mail-wr1-x42d.google.com with SMTP id d5so30950240wrc.1;
+        Sun, 21 Nov 2021 23:39:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=59Uf33qFbC50ReMtjtCPkloBHRUfMzOqwlWxxxPFuLU=;
+        b=D5rYQu/sC3/VbXCvDhnGLF31bs7GNDQ0e0Hf6LdaiGM0Z955z/bj+i9ILcMnMXi6tC
+         wBncqaYCXCiQlfD+OKcaXdM+Zju0MS6BmslxwXHNiJgKx2ckIoqvThDnOZ5pDi6SB0Wv
+         MR1wlpZjCEghZG2Z3LhyaXKsJMZhSHe4UhKWLeokSKaCcHNn5E6xLOFdM7RDLPXAQfTV
+         DfE/pZCHigD5uF01VbnRh8qrytIy85xzPDZy2K5NO/0PnsaaccL1irSnrKdIjRFbm/Gk
+         hznyGXdbMGlCXsunXJ0rXpUHjQiYlJXvwdkFlIiPo1nDAUEny9DJQ/f7FyTY6vVsXWPr
+         mmkQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=59Uf33qFbC50ReMtjtCPkloBHRUfMzOqwlWxxxPFuLU=;
+        b=k0Je2GaeFzF2ZHF9QiTh12eqeiPPaMofkwQnlwXMsmLzFqfF/CUgUl04fTEtEw3brc
+         1oBILhZAu2tnsZG/qyvMUYh/Cr3P2eVsicj/YETDcIv42KhVWwQeWBZWoiNXA3ipyUJg
+         Nm91szegQch6TiWucZoEgO9nc/UkmqWakTcpvvWIDHB8e424eiNf1Z3R6m+iLgyOzY5P
+         ygRoO5qMyPLkjHvs27u5z0gPl0+mgJJln4iRtxMf1V5t3FEWII/oGBP9S//DXTc5EOAp
+         J3K3901ZiPMdUF5wouTwVVsDcXxp7eW01iqKzvcBAAhkqY3kB+AEj1+razw/Xeu9aIyc
+         H8RA==
+X-Gm-Message-State: AOAM5315/9StQ4Ix8S4enNZfmzBJNXBm5vQUoa6267P/BXxjKe7YVkBs
+        BxP6zfafA9zx+3v67B2PlURRkRDeUe+dvj0BgLs=
+X-Google-Smtp-Source: ABdhPJzlurbcl6fKzLl3g89MINwTiqNH1fxX1EGfM0gA2NeWfvkvhN1/nxnVHg4NbFTuJ4XTOVtqX5UItInjbbe9hJE=
+X-Received: by 2002:a5d:47a1:: with SMTP id 1mr34008799wrb.436.1637566787459;
+ Sun, 21 Nov 2021 23:39:47 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.3.1
-Subject: Re: [PATCH v2] scsi: scsi_debug: Zero clear zones at reset write
- pointer
-Content-Language: en-US
-To:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        linux-scsi@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>
-References: <20211122061223.298890-1-shinichiro.kawasaki@wdc.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital
-In-Reply-To: <20211122061223.298890-1-shinichiro.kawasaki@wdc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <PH0PR04MB74161CD0BD15882BBD8838AB9B529@PH0PR04MB7416.namprd04.prod.outlook.com>
+ <CGME20210928191342eucas1p23448dcd51b23495fa67cdc017e77435c@eucas1p2.samsung.com>
+ <20210928191340.dcoj7qrclpudtjbo@mpHalley.domain_not_set.invalid>
+ <c2d0dff9-ad6d-c32b-f439-00b7ee955d69@acm.org> <20211006100523.7xrr3qpwtby3bw3a@mpHalley.domain_not_set.invalid>
+ <fbe69cc0-36ea-c096-d247-f201bad979f4@acm.org> <20211008064925.oyjxbmngghr2yovr@mpHalley.local>
+ <2a65e231-11dd-d5cc-c330-90314f6a8eae@nvidia.com> <20211029081447.ativv64dofpqq22m@ArmHalley.local>
+ <20211103192700.clqzvvillfnml2nu@mpHalley-2> <20211116134324.hbs3tp5proxootd7@ArmHalley.localdomain>
+In-Reply-To: <20211116134324.hbs3tp5proxootd7@ArmHalley.localdomain>
+From:   Kanchan Joshi <joshiiitr@gmail.com>
+Date:   Mon, 22 Nov 2021 13:09:22 +0530
+Message-ID: <CA+1E3rJ7BZ7LjQXXTdX+-0Edz=zT14mmPGMiVCzUgB33C60tbQ@mail.gmail.com>
+Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+To:     =?UTF-8?Q?Javier_Gonz=C3=A1lez?= <javier@javigon.com>
+Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "msnitzer@redhat.com" <msnitzer@redhat.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "roland@purestorage.com" <roland@purestorage.com>,
+        "mpatocka@redhat.com" <mpatocka@redhat.com>,
+        "hare@suse.de" <hare@suse.de>,
+        "kbusch@kernel.org" <kbusch@kernel.org>,
+        "rwheeler@redhat.com" <rwheeler@redhat.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
+        "zach.brown@ni.com" <zach.brown@ni.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        SelvaKumar S <selvakuma.s1@samsung.com>,
+        Nitesh Shetty <nj.shetty@samsung.com>,
+        Kanchan Joshi <joshi.k@samsung.com>,
+        Vincent Fu <vincent.fu@samsung.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/11/22 15:12, Shin'ichiro Kawasaki wrote:
-> When reset write pointer is requested to scsi_debug devices with zoned
-> model, positions of write pointers are reset, but the data in the target
-> zones are not cleared. Read to the zones returns data written before the
-> reset write pointer. This unexpected left data is confusing and does not
-> allow using scsi_debug for stale page cache test of the BLKRESETZONE
-> ioctl. Hence, zero clear the written data in the zones at reset write
-> pointer.
-> 
-> Fixes: f0d1cf9378bd ("scsi: scsi_debug: Add ZBC zone commands")
-> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-> ---
-> Changes from v1:
-> * Zero clear only the written data area in non-empty zones
-> 
->  drivers/scsi/scsi_debug.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 1d0278da9041..1ef9907c479a 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -4653,6 +4653,7 @@ static void zbc_rwp_zone(struct sdebug_dev_info *devip,
->  			 struct sdeb_zone_state *zsp)
->  {
->  	enum sdebug_z_cond zc;
-> +	struct sdeb_store_info *sip = devip2sip(devip, false);
->  
->  	if (zbc_zone_is_conv(zsp))
->  		return;
-> @@ -4664,6 +4665,10 @@ static void zbc_rwp_zone(struct sdebug_dev_info *devip,
->  	if (zsp->z_cond == ZC4_CLOSED)
->  		devip->nr_closed--;
->  
-> +	if (zsp->z_wp > zsp->z_start)
-> +		memset(sip->storep + zsp->z_start * sdebug_sector_size, 0,
-> +		       (zsp->z_wp - zsp->z_start) * sdebug_sector_size);
-> +
->  	zsp->z_non_seq_resource = false;
->  	zsp->z_wp = zsp->z_start;
->  	zsp->z_cond = ZC1_EMPTY;
-> 
+Updated one (points from Keith and Bart) -
 
-Looks good.
+Given the multitude of things accumulated on this topic, Martin
+suggested to have a table/matrix.
+Some of those should go in the initial patchset, and the remaining are
+to be staged for subsequent work.
+Here is the attempt to split the stuff into two buckets. Please change
+if something needs to be changed below.
 
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+1. Driver
+*********
+Initial: NVMe Copy command (single NS), including support in nvme-target
+Subsequent: Multi NS copy, XCopy/Token-based Copy
+
+2. Block layer
+**************
+Initial:
+- Block-generic copy (REQ_OP_COPY), with interface accommodating two block-=
+devs
+- Emulation, when offload is natively absent
+- DM support (at least dm-linear)
+
+Subsequent: Integrity and encryption support
+
+3. User-interface
+*****************
+Initial: new ioctl or io_uring opcode
+
+4. In-kernel user
+******************
+Initial: at least one user
+- dm-kcopyd user (e.g. dm-clone), or FS requiring GC (F2FS/Btrfs)
+
+Subsequent:
+- copy_file_range
+
+On Tue, Nov 16, 2021 at 7:15 PM Javier Gonz=C3=A1lez <javier@javigon.com> w=
+rote:
+>
+> Hi all,
+>
+> Thanks for attending the call on Copy Offload yesterday. Here you have
+> the meeting notes and 2 specific actions before we proceed with another
+> version of the patchset.
+>
+> We will work on a version of the use-case matrix internally and reply
+> here in the next couple of days.
+>
+> Please, add to the notes and the matrix as you see fit.
+>
+> Thanks,
+> Javier
+>
+> ----
+>
+> ATTENDEES
+>
+> - Adam
+> - Arnav
+> - Chaitanya
+> - Himashu
+> - Johannes
+> - Kanchan
+> - Keith
+> - Martin
+> - Mikulas
+> - Niklas
+> - Nitesh
+> - Selva
+> - Vincent
+> - Bart
+>
+> NOTES
+>
+> - MD and DM are hard requirements
+>         - We need support for all the main users of the block layer
+>         - Same problem with crypto and integrity
+> - Martin would be OK with separating Simple Copy in ZNS and Copy Offload
+> - Why did Mikulas work not get upstream?
+>         - Timing was an issue
+>                 - Use-case was about copying data across VMs
+>                 - No HW vendor support
+>                 - Hard from a protocol perspective
+>                         - At that point, SCSI was still adding support in=
+ the spec
+>                         - MSFT could not implement extended copy command =
+in the target (destination) device.
+>                                 - This is what triggered the token-based =
+implementation
+>                                 - This triggered array vendors to impleme=
+nt support for copy offload as token-based. This allows mixing with normal =
+read / write workloads
+>                         - Martin lost the implementation and dropped it
+>
+> DIRECTION
+>
+> - Keeping the IOCTL interface is an option. It might make sense to move f=
+rom IOCTL to io_uring opcode
+> - Martin is happy to do the SCSIpart if the block layer API is upstreamed
+> - Token-based implementationis the norm. This allows mixing normal read /=
+ write workloads to avoid DoS
+>         - This is the direction as opposed to the extended copy command
+>         - It addresses problems when integrating with DM and simplifies c=
+ommand multiplexing a single bio into many
+>         - It simplifies multiple bios
+>         - We should explore Mikulas approach with pointers.
+> - Use-cases
+>         - ZNS GC
+>         - dm-kcopyd
+>         - file system GC
+>         - fabrics offload to the storage node
+>         - copy_file_range
+> - It is OK to implement support incrementally, but the interface needs to=
+ support all customers of the block layer
+>         - OK to not support specific DMs (e.g., RAID5)
+>         - We should support DM and MD as a framework and the personalitie=
+s that are needed. Inspiration in integrity
+>                 - dm-linear
+>                 - dm-crypt and dm-verify are needed for F2FSuse-case in A=
+ndrod
+>                         - Here, we need copy emulation to support encrypt=
+ion without dealing with HW issues and garbage
+> - User-interface can wait and be carried out on the side
+> - Maybe it makes sense to start with internal users
+>         - copy_file_range
+>         - F2FS GC, btrfs GC
+> - User-space should be allowed to do anything and kernel-space can chop t=
+he command accordingly
+> - We need to define the heuristics of the sizes
+> - User-space should only work on block devices (no other constructs that =
+are protocol-specific) . Export capabilities in sysfs
+>         - Need copy domains to be exposed in sysfs
+>         - We need to start with bdev to bdev in block layer
+>         - Not specific requirement on multi-namespace in NVMe, but it sho=
+uld be extendable
+>         - Plumbing will support all use-cases
+> - Try to start with one in-kernel consumer
+> - Emulation is a must
+>         - Needed for failed I/Os
+>         - Expose capabilities so that users can decide
+> - We can get help from btrfs and F2FS folks
+> - The use case for GC and for copy are different. We might have to reflec=
+t this in the interface, but the internal plumbing should allow both paths =
+to be maintained as a single one.
+>
+> ACTIONS
+>
+> - [ ] Make a list of use-cases that we want to support in each specificat=
+ion and pick 1-2 examples for MD, DM. Make sure that the interfaces support=
+ this
+> - [ ] Vendors: Ask internally what is the recommended size for copy, if
+>    any
+>
 
 
--- 
-Damien Le Moal
-Western Digital Research
+--=20
+Joshi
