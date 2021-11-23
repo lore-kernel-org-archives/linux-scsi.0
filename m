@@ -2,145 +2,66 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C072C43217
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Nov 2021 08:13:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11D1BC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Nov 2021 08:54:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234696AbhKWIQX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Nov 2021 03:16:23 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:40964 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234531AbhKWIQV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2021 03:16:21 -0500
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 7901C218BB;
-        Tue, 23 Nov 2021 08:13:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1637655192; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=nF3cZaA+Zy5EwN4yhrnvHlGbHQAzDUiHxt7H5OQiTFw=;
-        b=vdgOHY3LlG6MqiiPIaDRwXQddij1WkSrVBt/P8ubVzHZngtvAS6fJjgCVGzTVdlj5/hhXH
-        TS8aBChOvOYQZrcsDg9o6aNkdovD4fvRdV2zVvqiGCgC/ckqLv+U5JDYEDUjvDwF2NIZOA
-        05mPMYR1nXsr6C95jiNMJFNljyI9sWM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1637655192;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=nF3cZaA+Zy5EwN4yhrnvHlGbHQAzDUiHxt7H5OQiTFw=;
-        b=mUNzJijI4wFLzqg3vyGq+d5KwE1S/l+UPTgatranHTPd8/xUNWa/l6AQtudfEcod7vNJCM
-        +7Q6U5+CwmKbHZCw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6D1E113D2B;
-        Tue, 23 Nov 2021 08:13:12 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id nLNpGpiinGGJcgAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 23 Nov 2021 08:13:12 +0000
-Subject: Re: [PATCH v2 05/20] scsi: core: Add support for internal commands
-To:     Bart Van Assche <bvanassche@acm.org>,
-        John Garry <john.garry@huawei.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20211119195743.2817-1-bvanassche@acm.org>
- <20211119195743.2817-6-bvanassche@acm.org>
- <d396a5ed-763e-de79-1714-b4e58e812c7f@huawei.com>
- <24ce9815-c01d-9ad4-2221-5a5b041ee231@acm.org>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <0be5022e-bf3d-6e9f-22ee-9848265d2b82@suse.de>
-Date:   Tue, 23 Nov 2021 09:13:12 +0100
+        id S234136AbhKWI5m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Nov 2021 03:57:42 -0500
+Received: from mail-wm1-f49.google.com ([209.85.128.49]:35450 "EHLO
+        mail-wm1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233970AbhKWI5k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2021 03:57:40 -0500
+Received: by mail-wm1-f49.google.com with SMTP id 77-20020a1c0450000000b0033123de3425so1545909wme.0;
+        Tue, 23 Nov 2021 00:54:32 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=HFaINRL63IBNxp0Soii4v8PCGz3DCo3roLnsnw7uKlA=;
+        b=upPbHUnFR8l9OUeP0SZKyJNEN1YUFQD3DtFytaBUqaymwX3sfZYTPEXLSH8DMdISRW
+         eG953jTsu4t5oDQCw+2zYXEv+5ntJgCVbxXZdpCL12QtU2+sCOdN00talSum+EjEdypx
+         FTwPS98+Be7UKs/apFcl/uk5kDzxkH5DLtu9u6tGdTHhhVZA2+I28lYDpb6uA4DyHAKG
+         juLs+kvqna6gdtmGNCn4CpXeDSJ72ZjmADW4Q/cEgCvWpntYzzTkCYRkJTLqu7WZ4Syn
+         9hn0GmbGDOKAUR1UTCW++W4Z+nskxSidCu7cAtrhGiEdyjjCEWFW3mznONWpe8jJPshA
+         LE2Q==
+X-Gm-Message-State: AOAM532dh9Rtj5wSDDX4TQXKj6BTdaj1H73zCgqaYPd4bth3os9Bew6X
+        9N+H0L2hR02J+MQiEN3v4Hw=
+X-Google-Smtp-Source: ABdhPJyFhDboZZAHwP1dMbmtQqaChktGrhfT/J1/+HcY10WP1jFZw9WdsEvIFetkr1Av3CMZx1G3gw==
+X-Received: by 2002:a1c:7c19:: with SMTP id x25mr1081278wmc.42.1637657672093;
+        Tue, 23 Nov 2021 00:54:32 -0800 (PST)
+Received: from [192.168.64.123] (bzq-219-42-90.isdn.bezeqint.net. [62.219.42.90])
+        by smtp.gmail.com with ESMTPSA id m36sm479864wms.25.2021.11.23.00.54.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 23 Nov 2021 00:54:31 -0800 (PST)
+Subject: Re: [PATCH 2/5] blk-mq: rename hctx_lock & hctx_unlock
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, Keith Busch <kbusch@kernel.org>
+References: <20211119021849.2259254-1-ming.lei@redhat.com>
+ <20211119021849.2259254-3-ming.lei@redhat.com>
+ <ed13ee7f-a017-874a-cd28-e40b3aa6b4a7@grimberg.me> <YZuZCsCIyQrc+539@T590>
+ <737e0543-9b7b-4872-082c-9ea51069d57f@grimberg.me> <YZww/1iBDbou1yQY@T590>
+From:   Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <c10b2729-d0ca-5705-5149-828dd269f191@grimberg.me>
+Date:   Tue, 23 Nov 2021 10:54:30 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <24ce9815-c01d-9ad4-2221-5a5b041ee231@acm.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <YZww/1iBDbou1yQY@T590>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/22/21 6:46 PM, Bart Van Assche wrote:
-> On 11/22/21 12:58 AM, John Garry wrote:
->> On 19/11/2021 19:57, Bart Van Assche wrote:
->>> +/**
->>> + * scsi_get_internal_cmd - Allocate an internal SCSI command
->>> + * @q: request queue from which to allocate the command. This
->>> request queue may
->>> + *    but does not have to be associated with a SCSI device. This
->>> request
->>> + *    queue must be associated with a SCSI tag set. See also
->>> + *    scsi_mq_setup_tags().
->>> + * @data_direction: Data direction for the allocated command.
->>> + * @flags: Zero or more BLK_MQ_REQ_* flags.
->>> + *
->>> + * Allocates a request for driver-internal use. The tag of the
->>> returned SCSI
->>> + * command is guaranteed to be unique.
->>> + */
->>> +struct scsi_cmnd *scsi_get_internal_cmd(struct request_queue *q,
->>> +                    enum dma_data_direction data_direction,
->>> +                    blk_mq_req_flags_t flags)
->>
->> I'd pass the Scsi_Host or scsi_device rather than a request q, so maybe:
->>
->> struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev, ..)
->> struct scsi_cmnd *scsi_host_get_internal_cmd(struct Scsi_Host *shost, ..)
+
+>> Then look at q->has_srcu that Bart suggested?
 > 
-> Passing a request queue pointer as first argument instead of a struct
-> scsi_device is a deliberate choice. In the UFS driver (and probably also
-> in other SCSI LLDs) we want to allocate internal requests without these
-> requests being visible in any existing SCSI device statistics. Creating
-> a new SCSI device for the allocation of internal requests is not a good
-> choice because that new SCSI device would have to be assigned a LUN
-> number and would be visible in sysfs. Hence the choice to allocate
-> internal requests from a request queue that is not associated with any
-> SCSI device.
-> 
-It's actually a bit more involved.
+> Bart just suggested to rename q->alloc_srcu as q->has_srcu.
 
-The biggest issue is that the SCSI layer is littered with the assumption
-that there _will_ be a ->device pointer in struct scsi_cmnd.
-If we make up a scsi_cmnd structure _without_ that we'll have to audit
-the entire stack to ensure we're not tripping over a NULL device pointer.
-And to make matters worse, we also need to audit the completion path in
-the driver, which typically have the same 'issue'.
-
-Case in point:
-
-# git grep -- '->device' drivers/scsi | wc --lines
-2712
-
-Which was the primary reason for adding a stub device to the SCSI Host;
-simply to avoid all the pointless churn and have a valid device for all
-commands.
-
-The only way I can see how to avoid getting dragged down into that
-rat-hole is to _not_ returning a scsi_cmnd, but rather something else
-entirely; that's the avenue I've exploited with my last patchset which
-would just return a tag number.
-But as there are drivers which really need a scsi_cmnd I can't se how we
-can get away with not having a stub scsi_device for the scsi host.
-
-And that won't even show up in sysfs if we assign it a LUN number beyond
-the addressable range; 'max_id':0 tends to be a safe choice here.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+Yea, is there a problem using that instead of having callers
+pass a flag?
