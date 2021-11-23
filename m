@@ -2,162 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2012DC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Nov 2021 18:24:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEBAEC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Nov 2021 19:18:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239679AbhKWS10 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Nov 2021 13:27:26 -0500
-Received: from so254-9.mailgun.net ([198.61.254.9]:48182 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232326AbhKWS10 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2021 13:27:26 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1637691858; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: From: References: Cc: To: Subject: MIME-Version: Date:
- Message-ID: Sender; bh=kaODoVl8ogW2xM/bLvPJNTJ+LzYWP4PCfGjVEIJk8Ik=; b=TMGpwzPHUiTI1oP85Q7TIzhPtUGmLdWvpIEPzsKpuR27iTCbTTqMPoGreQ3kVq2pBwg5JqO8
- 1tVleSg1zcXSJc12Z7K8tYx0Kjq0edgTPeUK4rBohFcY9HTzMFyTLho+TYFCqvyINjE10bsR
- 6QuOfLxDXmc08ucH03hXRGVIruM=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 619d31cde7d68470af3ae28a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 23 Nov 2021 18:24:13
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 97DE7C43616; Tue, 23 Nov 2021 18:24:12 +0000 (UTC)
-Received: from [192.168.1.3] (cpe-66-27-70-157.san.res.rr.com [66.27.70.157])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6C654C4338F;
-        Tue, 23 Nov 2021 18:24:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 6C654C4338F
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-Message-ID: <b3d2764a-8dd3-1c4e-675d-c43039d28850@codeaurora.org>
-Date:   Tue, 23 Nov 2021 10:24:05 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.1
-Subject: Re: [PATCH v2 18/20] scsi: ufs: Optimize the command queueing code
-To:     Bart Van Assche <bvanassche@acm.org>,
+        id S231824AbhKWTVd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Nov 2021 14:21:33 -0500
+Received: from mail-pl1-f175.google.com ([209.85.214.175]:34410 "EHLO
+        mail-pl1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231732AbhKWTVc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2021 14:21:32 -0500
+Received: by mail-pl1-f175.google.com with SMTP id y8so17923811plg.1
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Nov 2021 11:18:24 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=b0BCQnCv7UdMCI30mY2LZNcr/pYmdTbSIcdCNr/S4vY=;
+        b=c8jq/5K6BVmC9LS84fGNUlgQjI+IjI2ZPLFB23HBFDFKe8bwWF9xqyEtTLQEaRktpV
+         m1gyFZvZHPOwWx+DGTKoAivpswH0N5Dflyf0YU4Dp21c7slFkUqa+0se3OQceYljvD1H
+         CavzEKkZdmG/IoxfogEm1zWo0/YOvQS9NWpoN4pXjl8IlIwVaG3fMcwiV4YrADnsP2ku
+         an/i50zz4dAs3CfAplcf8bnd3H5HLIgKtxrOyoxWHq7HmN4wYtDyW643z3zQs4uUy2Xd
+         hqIbN00hhOq8p3eezPTxOlct8owEXrlBBum/JEJ88KvS9z1qD2foluT2fnTK3ygiHbwd
+         D0aQ==
+X-Gm-Message-State: AOAM533Zz/LbMy2ejPLFG81RWtLznxJrR7qSjto2vkgIgFMPK0GJjJCz
+        m4Zn137UVpcgFsqT1fl4PmBLfs9aPAjXbQ==
+X-Google-Smtp-Source: ABdhPJzCgus8aqRrDQTAInf+gJZC08OwACrSE/3mevPR6cW9iDU+X5CWp1aro0ir0tp76HwPXvYRcA==
+X-Received: by 2002:a17:90b:1d82:: with SMTP id pf2mr6094393pjb.17.1637695104024;
+        Tue, 23 Nov 2021 11:18:24 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:58e8:6593:938:2bea])
+        by smtp.gmail.com with ESMTPSA id t10sm765787pga.6.2021.11.23.11.18.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 23 Nov 2021 11:18:23 -0800 (PST)
+Subject: Re: [PATCH v2 05/20] scsi: core: Add support for internal commands
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Keoseong Park <keosung.park@samsung.com>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
 References: <20211119195743.2817-1-bvanassche@acm.org>
- <20211119195743.2817-19-bvanassche@acm.org>
- <a2599b2c-208c-3333-61f0-d61a269b53d4@codeaurora.org>
- <f6eb1b4c-ef73-7e34-cecd-fa0c9ce07a2f@acm.org>
- <2071f69b-885f-e0c5-3ded-9f0c39eb38ae@codeaurora.org>
- <6dea2d9c-c04a-20a5-4292-e48badf89ba2@acm.org>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-In-Reply-To: <6dea2d9c-c04a-20a5-4292-e48badf89ba2@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+ <20211119195743.2817-6-bvanassche@acm.org>
+ <d396a5ed-763e-de79-1714-b4e58e812c7f@huawei.com>
+ <24ce9815-c01d-9ad4-2221-5a5b041ee231@acm.org>
+ <0be5022e-bf3d-6e9f-22ee-9848265d2b82@suse.de>
+ <140badd9-7ee0-73c8-9563-07761ab17753@acm.org>
+Message-ID: <64e961f1-f4c4-655a-82af-60d75ab35f7a@acm.org>
+Date:   Tue, 23 Nov 2021 11:18:22 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
+MIME-Version: 1.0
+In-Reply-To: <140badd9-7ee0-73c8-9563-07761ab17753@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/22/2021 3:48 PM, Bart Van Assche wrote:
-> On 11/22/21 3:02 PM, Asutosh Das (asd) wrote:
->> Current code waits for the already issued requests to complete. It 
->> doesn't issue the yet-to-be issued requests. Wouldn't freezing the 
->> queue issue the requests in the context of scaling_{up/down}?
->> If yes, I don't think the current code is doing that.
+On 11/23/21 9:46 AM, Bart Van Assche wrote:
+> On 11/23/21 12:13 AM, Hannes Reinecke wrote:
+>> It's actually a bit more involved.
+>>
+>> The biggest issue is that the SCSI layer is littered with the assumption
+>> that there _will_ be a ->device pointer in struct scsi_cmnd.
+>> If we make up a scsi_cmnd structure _without_ that we'll have to audit
+>> the entire stack to ensure we're not tripping over a NULL device pointer.
+>> And to make matters worse, we also need to audit the completion path in
+>> the driver, which typically have the same 'issue'.
+>>
+>> Case in point:
+>>
+>> # git grep -- '->device' drivers/scsi | wc --lines
+>> 2712
+>>
+>> Which was the primary reason for adding a stub device to the SCSI Host;
+>> simply to avoid all the pointless churn and have a valid device for all
+>> commands.
+>>
+>> The only way I can see how to avoid getting dragged down into that
+>> rat-hole is to _not_ returning a scsi_cmnd, but rather something else
+>> entirely; that's the avenue I've exploited with my last patchset which
+>> would just return a tag number.
+>> But as there are drivers which really need a scsi_cmnd I can't se how we
+>> can get away with not having a stub scsi_device for the scsi host.
+>>
+>> And that won't even show up in sysfs if we assign it a LUN number beyond
+>> the addressable range; 'max_id':0 tends to be a safe choice here.
 > 
-> Hi Asutosh,
-> 
-> How about the patch below that preserves most of the existing code for
-> preparing for clock scaling?
-> 
-> Thanks,
-> 
-> Bart.
-> 
-Hi Bart,
-This looks good to me. Please push a change and I can test it out.
+> There is no risk that the scsi_cmnd.device member will be dereferenced for
+> internal requests allocated by the UFS driver. But I understand from your
+> email that making sure that the scsi_cmnd.device member is not NULL is
+> important for other SCSI LLDs. I will look into the approach of associating
+> a stub SCSI device with internal requests.
 
--asd
+(replying to my own email)
 
-> 
-> Subject: [PATCH] scsi: ufs: Optimize the command queueing code
-> 
-> Remove the clock scaling lock from ufshcd_queuecommand() since it is a
-> performance bottleneck. Instead, use synchronize_rcu_expedited() to wait
-> for ongoing ufshcd_queuecommand() calls.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/ufs/ufshcd.c | 12 +++++++-----
->   drivers/scsi/ufs/ufshcd.h |  1 +
->   2 files changed, 8 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 5d214456bf82..1d929c28efaf 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1196,6 +1196,13 @@ static int ufshcd_clock_scaling_prepare(struct 
-> ufs_hba *hba)
->       /* let's not get into low power until clock scaling is completed */
->       ufshcd_hold(hba, false);
-> 
-> +    /*
-> +     * Wait for ongoing ufshcd_queuecommand() calls. Calling
-> +     * synchronize_rcu_expedited() instead of synchronize_rcu() reduces 
-> the
-> +     * waiting time from milliseconds to microseconds.
-> +     */
-> +    synchronize_rcu_expedited();
-> +
->   out:
->       return ret;
->   }
-> @@ -2699,9 +2706,6 @@ static int ufshcd_queuecommand(struct Scsi_Host 
-> *host, struct scsi_cmnd *cmd)
-> 
->       WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
-> 
-> -    if (!down_read_trylock(&hba->clk_scaling_lock))
-> -        return SCSI_MLQUEUE_HOST_BUSY;
-> -
->       /*
->        * Allows the UFS error handler to wait for prior 
-> ufshcd_queuecommand()
->        * calls.
-> @@ -2790,8 +2794,6 @@ static int ufshcd_queuecommand(struct Scsi_Host 
-> *host, struct scsi_cmnd *cmd)
->   out:
->       rcu_read_unlock();
-> 
-> -    up_read(&hba->clk_scaling_lock);
-> -
->       if (ufs_trigger_eh()) {
->           unsigned long flags;
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index c13ae56fbff8..695bede14dac 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -777,6 +777,7 @@ struct ufs_hba_monitor {
->    * @clk_list_head: UFS host controller clocks list node head
->    * @pwr_info: holds current power mode
->    * @max_pwr_info: keeps the device max valid pwm
-> + * @clk_scaling_lock: used to serialize device commands and clock scaling
->    * @desc_size: descriptor sizes reported by device
->    * @urgent_bkops_lvl: keeps track of urgent bkops level for device
->    * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level 
-> for
+Hi Hannes,
 
+Allocating a struct scsi_device for internal requests seems tricky to me. The
+most straightforward approach would be to call scsi_alloc_sdev(). However, that
+function accepts a scsi_target pointer and calls .slave_alloc(). So a
+scsi_target structure would have to be set up before that function is called and
+SCSI LLDs would have to be audited to verify that .slave_alloc() works fine for
+the H:C:I:L tuple assigned to the fake SCSI device. Additionally, how should the
+inquiry data be initialized that is filled in by scsi_add_lun()?
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+Since I do not use SCSI hardware that needs a scsi_device to be associated with
+internal requests, I prefer that this functionality is implemented in a future
+patch series. Changing the hba->host->internal_queue occurrences in the UFS
+driver into something like hba->host->internal_sdev->request_queue once this
+functionality is implemented should be easy.
+
+Thanks,
+
+Bart.
+
