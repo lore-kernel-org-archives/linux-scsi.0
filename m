@@ -2,209 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B32A1C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Nov 2021 06:34:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C072C43217
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Nov 2021 08:13:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230270AbhKWGhR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Nov 2021 01:37:17 -0500
-Received: from mga04.intel.com ([192.55.52.120]:2437 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229579AbhKWGhQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 Nov 2021 01:37:16 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10176"; a="233683844"
-X-IronPort-AV: E=Sophos;i="5.87,257,1631602800"; 
-   d="scan'208";a="233683844"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Nov 2021 22:34:08 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,257,1631602800"; 
-   d="scan'208";a="456591620"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
-  by orsmga003.jf.intel.com with ESMTP; 22 Nov 2021 22:34:05 -0800
-Subject: Re: [PATCH V8 1/1] scsi: ufs: Let devices remain runtime suspended
- during system suspend
-From:   Adrian Hunter <adrian.hunter@intel.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
-References: <20211027130614.406985-1-adrian.hunter@intel.com>
- <20211027130614.406985-2-adrian.hunter@intel.com>
- <9fae5b29-72d2-046c-204b-b12629fa6e09@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <3f530afd-89c3-30d2-d44a-586e488f343c@intel.com>
-Date:   Tue, 23 Nov 2021 08:34:04 +0200
+        id S234696AbhKWIQX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Nov 2021 03:16:23 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:40964 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234531AbhKWIQV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2021 03:16:21 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 7901C218BB;
+        Tue, 23 Nov 2021 08:13:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1637655192; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=nF3cZaA+Zy5EwN4yhrnvHlGbHQAzDUiHxt7H5OQiTFw=;
+        b=vdgOHY3LlG6MqiiPIaDRwXQddij1WkSrVBt/P8ubVzHZngtvAS6fJjgCVGzTVdlj5/hhXH
+        TS8aBChOvOYQZrcsDg9o6aNkdovD4fvRdV2zVvqiGCgC/ckqLv+U5JDYEDUjvDwF2NIZOA
+        05mPMYR1nXsr6C95jiNMJFNljyI9sWM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1637655192;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=nF3cZaA+Zy5EwN4yhrnvHlGbHQAzDUiHxt7H5OQiTFw=;
+        b=mUNzJijI4wFLzqg3vyGq+d5KwE1S/l+UPTgatranHTPd8/xUNWa/l6AQtudfEcod7vNJCM
+        +7Q6U5+CwmKbHZCw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6D1E113D2B;
+        Tue, 23 Nov 2021 08:13:12 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id nLNpGpiinGGJcgAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 23 Nov 2021 08:13:12 +0000
+Subject: Re: [PATCH v2 05/20] scsi: core: Add support for internal commands
+To:     Bart Van Assche <bvanassche@acm.org>,
+        John Garry <john.garry@huawei.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20211119195743.2817-1-bvanassche@acm.org>
+ <20211119195743.2817-6-bvanassche@acm.org>
+ <d396a5ed-763e-de79-1714-b4e58e812c7f@huawei.com>
+ <24ce9815-c01d-9ad4-2221-5a5b041ee231@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <0be5022e-bf3d-6e9f-22ee-9848265d2b82@suse.de>
+Date:   Tue, 23 Nov 2021 09:13:12 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.13.0
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <9fae5b29-72d2-046c-204b-b12629fa6e09@intel.com>
+In-Reply-To: <24ce9815-c01d-9ad4-2221-5a5b041ee231@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/11/2021 09:09, Adrian Hunter wrote:
-> On 27/10/2021 16:06, Adrian Hunter wrote:
->> If the UFS Device WLUN is runtime suspended and is in the same power
->> mode, link state and b_rpm_dev_flush_capable (BKOP or WB buffer flush etc)
->> state, then it can remain runtime suspended instead of being runtime
->> resumed and then system suspended.
+On 11/22/21 6:46 PM, Bart Van Assche wrote:
+> On 11/22/21 12:58 AM, John Garry wrote:
+>> On 19/11/2021 19:57, Bart Van Assche wrote:
+>>> +/**
+>>> + * scsi_get_internal_cmd - Allocate an internal SCSI command
+>>> + * @q: request queue from which to allocate the command. This
+>>> request queue may
+>>> + *    but does not have to be associated with a SCSI device. This
+>>> request
+>>> + *    queue must be associated with a SCSI tag set. See also
+>>> + *    scsi_mq_setup_tags().
+>>> + * @data_direction: Data direction for the allocated command.
+>>> + * @flags: Zero or more BLK_MQ_REQ_* flags.
+>>> + *
+>>> + * Allocates a request for driver-internal use. The tag of the
+>>> returned SCSI
+>>> + * command is guaranteed to be unique.
+>>> + */
+>>> +struct scsi_cmnd *scsi_get_internal_cmd(struct request_queue *q,
+>>> +                    enum dma_data_direction data_direction,
+>>> +                    blk_mq_req_flags_t flags)
 >>
->> The following patch has cleared the way for that to happen:
->>   scsi: core: pm: Only runtime resume if necessary
+>> I'd pass the Scsi_Host or scsi_device rather than a request q, so maybe:
 >>
->> So amend the logic accordingly.
->>
->> Note, the ufs-hisi driver uses different RPM and SPM, but it is made
->> explicit by a new parameter to suspend prepare.
->>
->> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
->> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+>> struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev, ..)
+>> struct scsi_cmnd *scsi_host_get_internal_cmd(struct Scsi_Host *shost, ..)
 > 
-> Any more comments on this?
-
-Seems like there are no objections, so can this be applied for 5.17 ?
-
+> Passing a request queue pointer as first argument instead of a struct
+> scsi_device is a deliberate choice. In the UFS driver (and probably also
+> in other SCSI LLDs) we want to allocate internal requests without these
+> requests being visible in any existing SCSI device statistics. Creating
+> a new SCSI device for the allocation of internal requests is not a good
+> choice because that new SCSI device would have to be assigned a LUN
+> number and would be visible in sysfs. Hence the choice to allocate
+> internal requests from a request queue that is not associated with any
+> SCSI device.
 > 
->> ---
->>  drivers/scsi/ufs/ufs-hisi.c |  8 ++++++-
->>  drivers/scsi/ufs/ufshcd.c   | 45 ++++++++++++++++++++++++++++++++-----
->>  drivers/scsi/ufs/ufshcd.h   | 11 +++++++++
->>  3 files changed, 58 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
->> index 8c7e8d321746..ab1a7ebd89b1 100644
->> --- a/drivers/scsi/ufs/ufs-hisi.c
->> +++ b/drivers/scsi/ufs/ufs-hisi.c
->> @@ -396,6 +396,12 @@ static int ufs_hisi_pwr_change_notify(struct ufs_hba *hba,
->>  	return ret;
->>  }
->>  
->> +static int ufs_hisi_suspend_prepare(struct device *dev)
->> +{
->> +	/* RPM and SPM are different. Refer ufs_hisi_suspend() */
->> +	return __ufshcd_suspend_prepare(dev, false);
->> +}
->> +
->>  static int ufs_hisi_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
->>  	enum ufs_notify_change_status status)
->>  {
->> @@ -578,7 +584,7 @@ static int ufs_hisi_remove(struct platform_device *pdev)
->>  static const struct dev_pm_ops ufs_hisi_pm_ops = {
->>  	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
->>  	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
->> -	.prepare	 = ufshcd_suspend_prepare,
->> +	.prepare	 = ufs_hisi_suspend_prepare,
->>  	.complete	 = ufshcd_resume_complete,
->>  };
->>  
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 04cb67995750..115ea16f5a22 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -9707,7 +9707,27 @@ void ufshcd_resume_complete(struct device *dev)
->>  }
->>  EXPORT_SYMBOL_GPL(ufshcd_resume_complete);
->>  
->> -int ufshcd_suspend_prepare(struct device *dev)
->> +static bool ufshcd_rpm_ok_for_spm(struct ufs_hba *hba)
->> +{
->> +	struct device *dev = &hba->sdev_ufs_device->sdev_gendev;
->> +	enum ufs_dev_pwr_mode dev_pwr_mode;
->> +	enum uic_link_state link_state;
->> +	unsigned long flags;
->> +	bool res;
->> +
->> +	spin_lock_irqsave(&dev->power.lock, flags);
->> +	dev_pwr_mode = ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl);
->> +	link_state = ufs_get_pm_lvl_to_link_pwr_state(hba->spm_lvl);
->> +	res = pm_runtime_suspended(dev) &&
->> +	      hba->curr_dev_pwr_mode == dev_pwr_mode &&
->> +	      hba->uic_link_state == link_state &&
->> +	      !hba->dev_info.b_rpm_dev_flush_capable;
->> +	spin_unlock_irqrestore(&dev->power.lock, flags);
->> +
->> +	return res;
->> +}
->> +
->> +int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm)
->>  {
->>  	struct ufs_hba *hba = dev_get_drvdata(dev);
->>  	int ret;
->> @@ -9719,15 +9739,30 @@ int ufshcd_suspend_prepare(struct device *dev)
->>  	 * Refer ufshcd_resume_complete()
->>  	 */
->>  	if (hba->sdev_ufs_device) {
->> -		ret = ufshcd_rpm_get_sync(hba);
->> -		if (ret < 0 && ret != -EACCES) {
->> -			ufshcd_rpm_put(hba);
->> -			return ret;
->> +		/* Prevent runtime suspend */
->> +		ufshcd_rpm_get_noresume(hba);
->> +		/*
->> +		 * Check if already runtime suspended in same state as system
->> +		 * suspend would be.
->> +		 */
->> +		if (!rpm_ok_for_spm || !ufshcd_rpm_ok_for_spm(hba)) {
->> +			/* RPM state is not ok for SPM, so runtime resume */
->> +			ret = ufshcd_rpm_resume(hba);
->> +			if (ret < 0 && ret != -EACCES) {
->> +				ufshcd_rpm_put(hba);
->> +				return ret;
->> +			}
->>  		}
->>  		hba->complete_put = true;
->>  	}
->>  	return 0;
->>  }
->> +EXPORT_SYMBOL_GPL(__ufshcd_suspend_prepare);
->> +
->> +int ufshcd_suspend_prepare(struct device *dev)
->> +{
->> +	return __ufshcd_suspend_prepare(dev, true);
->> +}
->>  EXPORT_SYMBOL_GPL(ufshcd_suspend_prepare);
->>  
->>  #ifdef CONFIG_PM_SLEEP
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index 3f5dc6732fe1..b9492f300bd1 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -1199,6 +1199,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
->>  
->>  int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
->>  int ufshcd_suspend_prepare(struct device *dev);
->> +int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm);
->>  void ufshcd_resume_complete(struct device *dev);
->>  
->>  /* Wrapper functions for safely calling variant operations */
->> @@ -1408,6 +1409,16 @@ static inline int ufshcd_rpm_put_sync(struct ufs_hba *hba)
->>  	return pm_runtime_put_sync(&hba->sdev_ufs_device->sdev_gendev);
->>  }
->>  
->> +static inline void ufshcd_rpm_get_noresume(struct ufs_hba *hba)
->> +{
->> +	pm_runtime_get_noresume(&hba->sdev_ufs_device->sdev_gendev);
->> +}
->> +
->> +static inline int ufshcd_rpm_resume(struct ufs_hba *hba)
->> +{
->> +	return pm_runtime_resume(&hba->sdev_ufs_device->sdev_gendev);
->> +}
->> +
->>  static inline int ufshcd_rpm_put(struct ufs_hba *hba)
->>  {
->>  	return pm_runtime_put(&hba->sdev_ufs_device->sdev_gendev);
->>
-> 
+It's actually a bit more involved.
 
+The biggest issue is that the SCSI layer is littered with the assumption
+that there _will_ be a ->device pointer in struct scsi_cmnd.
+If we make up a scsi_cmnd structure _without_ that we'll have to audit
+the entire stack to ensure we're not tripping over a NULL device pointer.
+And to make matters worse, we also need to audit the completion path in
+the driver, which typically have the same 'issue'.
+
+Case in point:
+
+# git grep -- '->device' drivers/scsi | wc --lines
+2712
+
+Which was the primary reason for adding a stub device to the SCSI Host;
+simply to avoid all the pointless churn and have a valid device for all
+commands.
+
+The only way I can see how to avoid getting dragged down into that
+rat-hole is to _not_ returning a scsi_cmnd, but rather something else
+entirely; that's the avenue I've exploited with my last patchset which
+would just return a tag number.
+But as there are drivers which really need a scsi_cmnd I can't se how we
+can get away with not having a stub scsi_device for the scsi host.
+
+And that won't even show up in sysfs if we assign it a LUN number beyond
+the addressable range; 'max_id':0 tends to be a safe choice here.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
