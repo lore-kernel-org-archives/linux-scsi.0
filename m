@@ -2,50 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC153C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 00:52:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 925EDC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 00:52:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232311AbhKXAzv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Nov 2021 19:55:51 -0500
-Received: from mail-pg1-f174.google.com ([209.85.215.174]:42912 "EHLO
-        mail-pg1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232191AbhKXAzt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2021 19:55:49 -0500
-Received: by mail-pg1-f174.google.com with SMTP id t4so561179pgn.9
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Nov 2021 16:52:40 -0800 (PST)
+        id S232229AbhKXAzw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Nov 2021 19:55:52 -0500
+Received: from mail-pf1-f172.google.com ([209.85.210.172]:42716 "EHLO
+        mail-pf1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232252AbhKXAzu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2021 19:55:50 -0500
+Received: by mail-pf1-f172.google.com with SMTP id u80so920201pfc.9
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Nov 2021 16:52:41 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=k3aRkXwcHbUrav//xi729orhtu49BIZsPxsJGGDFykc=;
-        b=ABQ/X/yyiy9/Mab5d9+3ScYVcI2GEkDdJGAAT9Ry7dOfM6CUO29RrXvdBfYZELJGBt
-         QKR3wjW70JE1TwPEo9q6VMaO/ko2M8ngw8I64pEN50TFFCfHB/QjZkQtuJdXs0DqQMQp
-         awUIXPAea4H0e9RBw19g8pO2fET93cs71iYVKkm+icNaxXXEtM96HPssEgLszFSt6IgD
-         nquqP2bv8aNeviOxUYxClDq+PUmdNHQm0zdQpd0UlejjYVaGpBgGdyvRgnWUXgl6go5F
-         Ovd6QilQaUV2suziKb9zZEWCVJQ3l/Ofww2UrbTMU1QUeiPhQGVZ0tpuJI1uox8kvj+X
-         kdVw==
-X-Gm-Message-State: AOAM531c7tBxuww/P2cD5oObDnRySXfg+/g8yuI1E4GkfJjfztd/Qcj4
-        koNy3jNg99OI9Wfo9cNC5FPQhixMzHYnlQ==
-X-Google-Smtp-Source: ABdhPJy2iS7whgsCywhlN1n1bvDkree+ItJH2YEBnR337BmHGIrhH0Uu5sDHjALlIyqAwgSo1Ooc5Q==
-X-Received: by 2002:aa7:8109:0:b0:4a2:a98e:9020 with SMTP id b9-20020aa78109000000b004a2a98e9020mr1763842pfi.61.1637715160333;
-        Tue, 23 Nov 2021 16:52:40 -0800 (PST)
+        bh=7cuj8FAQu+U4mwMtZt6FcuDFWW6tk2Sw8Wa4aySB2Kg=;
+        b=vTmqw/m0+ETk6KC8fMS9bE10G+oIjyOepQSAftfBrUSWH7TMxliAPj9VsWo3SjMqQz
+         k3Bce4pPaWOl1M5kcTH1UR3V+xwkTKawvOcpEKAAEKkX9+UkBKhEb3oywLgj65CPWxQk
+         wpQJIO4ykFfdy6FLrthph0/nkAuwevw7lcSssNNPqhG1w5l4IRor9PgMggRCm2aWYmXL
+         Y7WVY1B1nl/EptLaoCSQ4UeT6+p5EQba8G/xXDIDbcHkNztWseX8hd0K47rq4dOIa4Vs
+         v1fqZxg7zkCaSiPxSAHgDGSgsPyUyfoiPuaHQWF/mPS5MCeiNyLAaX6nI6kTIHtizoHl
+         oClw==
+X-Gm-Message-State: AOAM532vhME6MYvoupkjT9JFtEYDN9UVi+ghxgx1eI57lCIzk4Xqe1wK
+        GKbYE82bBxOqDAA8ZTBmO1Y=
+X-Google-Smtp-Source: ABdhPJyURwfnftIDxGsHavoCJtD0tQCqC733Vzval1SblLiVIKT1xv+TXFp0xHFjmSChxEYKs1iEsA==
+X-Received: by 2002:aa7:93aa:0:b0:4a2:bf77:b42f with SMTP id x10-20020aa793aa000000b004a2bf77b42fmr1784797pff.47.1637715161636;
+        Tue, 23 Nov 2021 16:52:41 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:58e8:6593:938:2bea])
-        by smtp.gmail.com with ESMTPSA id x33sm14210387pfh.133.2021.11.23.16.52.39
+        by smtp.gmail.com with ESMTPSA id x33sm14210387pfh.133.2021.11.23.16.52.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Nov 2021 16:52:39 -0800 (PST)
+        Tue, 23 Nov 2021 16:52:41 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Ashokkumar N <Ashokkumar.N@microchip.com>,
-        kernel test robot <lkp@intel.com>,
-        Radha Ramachandran <radha@google.com>,
-        Viswas G <Viswas.G@microchip.com>
-Subject: [PATCH 11/13] scsi: pm8001: Fix kernel-doc warnings
-Date:   Tue, 23 Nov 2021 16:52:15 -0800
-Message-Id: <20211124005217.2300458-12-bvanassche@acm.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH 12/13] scsi: pmcraid: Fix a kernel-doc warning
+Date:   Tue, 23 Nov 2021 16:52:16 -0800
+Message-Id: <20211124005217.2300458-13-bvanassche@acm.org>
 X-Mailer: git-send-email 2.34.0.rc2.393.gf8c9666880-goog
 In-Reply-To: <20211124005217.2300458-1-bvanassche@acm.org>
 References: <20211124005217.2300458-1-bvanassche@acm.org>
@@ -55,103 +50,25 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following kernel-doc warnings:
+Fix the following kernel-doc warning:
 
-drivers/scsi/pm8001/pm8001_ctl.c:900: warning: cannot understand function prototype: 'const char *const mpiStateText[] = '
-drivers/scsi/pm8001/pm8001_ctl.c:930: warning: Function parameter or member 'attr' not described in 'ctl_hmi_error_show'
-drivers/scsi/pm8001/pm8001_ctl.c:951: warning: Function parameter or member 'attr' not described in 'ctl_raae_count_show'
-drivers/scsi/pm8001/pm8001_ctl.c:972: warning: Function parameter or member 'attr' not described in 'ctl_iop0_count_show'
-drivers/scsi/pm8001/pm8001_ctl.c:993: warning: Function parameter or member 'attr' not described in 'ctl_iop1_count_show'
+drivers/scsi/pmcraid.c:3317: warning: Excess function parameter 'done' description in 'pmcraid_queuecommand_lck'
 
-Fixes: 4ddbea1b6f51 ("scsi: pm80xx: Add sysfs attribute to check MPI state")
+Fixes: af049dfd0b10 ("scsi: core: Remove the 'done' argument from SCSI queuecommand_lck functions")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/pm8001/pm8001_ctl.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/scsi/pmcraid.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 397eb9f6a1dd..41a63c9b719b 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -889,14 +889,6 @@ static ssize_t pm8001_show_update_fw(struct device *cdev,
- static DEVICE_ATTR(update_fw, S_IRUGO|S_IWUSR|S_IWGRP,
- 	pm8001_show_update_fw, pm8001_store_update_fw);
- 
--/**
-- * ctl_mpi_state_show - controller MPI state check
-- * @cdev: pointer to embedded class device
-- * @buf: the buffer returned
-- *
-- * A sysfs 'read-only' shost attribute.
-- */
--
- static const char *const mpiStateText[] = {
- 	"MPI is not initialized",
- 	"MPI is successfully initialized",
-@@ -904,6 +896,14 @@ static const char *const mpiStateText[] = {
- 	"MPI initialization failed with error in [31:16]"
- };
- 
-+/**
-+ * ctl_mpi_state_show - controller MPI state check
-+ * @cdev: pointer to embedded class device
-+ * @attr: device attribute (unused)
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' shost attribute.
-+ */
- static ssize_t ctl_mpi_state_show(struct device *cdev,
- 		struct device_attribute *attr, char *buf)
- {
-@@ -920,11 +920,11 @@ static DEVICE_ATTR_RO(ctl_mpi_state);
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 88046a793767..2fe7a0019fff 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -3302,7 +3302,6 @@ static int pmcraid_copy_sglist(
  /**
-  * ctl_hmi_error_show - controller MPI initialization fails
-  * @cdev: pointer to embedded class device
-+ * @attr: device attribute (unused)
-  * @buf: the buffer returned
+  * pmcraid_queuecommand_lck - Queue a mid-layer request
+  * @scsi_cmd: scsi command struct
+- * @done: done function
   *
-  * A sysfs 'read-only' shost attribute.
-  */
--
- static ssize_t ctl_hmi_error_show(struct device *cdev,
- 		struct device_attribute *attr, char *buf)
- {
-@@ -941,11 +941,11 @@ static DEVICE_ATTR_RO(ctl_hmi_error);
- /**
-  * ctl_raae_count_show - controller raae count check
-  * @cdev: pointer to embedded class device
-+ * @attr: device attribute (unused)
-  * @buf: the buffer returned
-  *
-  * A sysfs 'read-only' shost attribute.
-  */
--
- static ssize_t ctl_raae_count_show(struct device *cdev,
- 		struct device_attribute *attr, char *buf)
- {
-@@ -962,11 +962,11 @@ static DEVICE_ATTR_RO(ctl_raae_count);
- /**
-  * ctl_iop0_count_show - controller iop0 count check
-  * @cdev: pointer to embedded class device
-+ * @attr: device attribute (unused)
-  * @buf: the buffer returned
-  *
-  * A sysfs 'read-only' shost attribute.
-  */
--
- static ssize_t ctl_iop0_count_show(struct device *cdev,
- 		struct device_attribute *attr, char *buf)
- {
-@@ -983,11 +983,11 @@ static DEVICE_ATTR_RO(ctl_iop0_count);
- /**
-  * ctl_iop1_count_show - controller iop1 count check
-  * @cdev: pointer to embedded class device
-+ * @attr: device attribute (unused)
-  * @buf: the buffer returned
-  *
-  * A sysfs 'read-only' shost attribute.
-  */
--
- static ssize_t ctl_iop1_count_show(struct device *cdev,
- 		struct device_attribute *attr, char *buf)
- {
+  * This function queues a request generated by the mid-layer. Midlayer calls
+  * this routine within host->lock. Some of the functions called by queuecommand
