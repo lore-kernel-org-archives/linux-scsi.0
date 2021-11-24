@@ -2,138 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E274C43217
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 12:12:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71CCBC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 12:30:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242674AbhKXMP1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Nov 2021 07:15:27 -0500
-Received: from mga11.intel.com ([192.55.52.93]:64854 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S241742AbhKXMMN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 Nov 2021 07:12:13 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10177"; a="232759367"
-X-IronPort-AV: E=Sophos;i="5.87,260,1631602800"; 
-   d="scan'208";a="232759367"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2021 04:03:39 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,260,1631602800"; 
-   d="scan'208";a="740968752"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
-  by fmsmga006.fm.intel.com with ESMTP; 24 Nov 2021 04:03:36 -0800
-Subject: Re: [PATCH v2 14/20] scsi: ufs: Introduce ufshcd_release_scsi_cmd()
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Asutosh Das <asutoshd@codeaurora.org>
-References: <20211119195743.2817-1-bvanassche@acm.org>
- <20211119195743.2817-15-bvanassche@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <1383eeb3-dc40-6498-7388-b5d35b923f88@intel.com>
-Date:   Wed, 24 Nov 2021 14:03:35 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.13.0
+        id S244753AbhKXMdx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Nov 2021 07:33:53 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4158 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244115AbhKXMcA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Nov 2021 07:32:00 -0500
+Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HzgF22r94z6889W;
+        Wed, 24 Nov 2021 20:24:54 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Wed, 24 Nov 2021 13:28:48 +0100
+Received: from [10.202.227.179] (10.202.227.179) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Wed, 24 Nov 2021 12:28:47 +0000
+From:   John Garry <john.garry@huawei.com>
+Subject: [issue report] pm8001 driver crashes with IOMMU enabled
+To:     Jinpu Wang <jinpu.wang@cloud.ionos.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Message-ID: <894f766f-74b7-62b1-f6d2-82ac85b6478f@huawei.com>
+Date:   Wed, 24 Nov 2021 12:28:46 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-In-Reply-To: <20211119195743.2817-15-bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.227.179]
+X-ClientProxiedBy: lhreml721-chm.china.huawei.com (10.201.108.72) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 19/11/2021 21:57, Bart Van Assche wrote:
-> The only functional change in this patch is that scsi_done() is now called
-> after ufshcd_release() and ufshcd_clk_scaling_update_busy().
-> 
-> The next patch in this series will introduce a call to
-> ufshcd_release_scsi_cmd() in the abort handler.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 27 +++++++++++++++------------
->  1 file changed, 15 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 03f4772fc2e2..39dcf997a638 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5248,6 +5248,18 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
->  	return retval;
->  }
->  
-> +/* Release the resources allocated for processing a SCSI command. */
-> +static void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
-> +				    struct ufshcd_lrb *lrbp)
-> +{
-> +	struct scsi_cmnd *cmd = lrbp->cmd;
-> +
-> +	scsi_dma_unmap(cmd);
-> +	lrbp->cmd = NULL;	/* Mark the command as completed. */
-> +	ufshcd_release(hba);
-> +	ufshcd_clk_scaling_update_busy(hba);
-> +}
+Hi,
 
-That seems to leave a gap in the handling of tracing.
+When I enable the IOMMU on my arm64 system, the pm8001 driver crashes as 
+follows:
 
-Wouldn't we be better served to tweak the monitoring code
-in __ufshcd_transfer_req_compl() and then use
- __ufshcd_transfer_req_compl()? i.e.
+[    8.649365] pm80xx 0000:04:00.0: Adding to iommu group 0
+[    8.655901] pm80xx 0000:04:00.0: pm80xx: driver version 0.1.40
+[    8.661755] pm80xx 0000:04:00.0: enabling device (0140 -> 0142)
+[    8.667864] :: pm8001_pci_alloc  530:Setting link rate to default value
+[    9.716548] scsi host0: pm80xx
+[   10.423522] Freeing initrd memory: 413456K
+[   11.693443] Unable to handle kernel paging request at virtual address 
+ffff0000fcebfb00
+[   11.701348] Mem abort info:
+[   11.704129]   ESR = 0x96000005
+[   11.707170]   EC = 0x25: DABT (current EL), IL = 32 bits
+[   11.712468]   SET = 0, FnV = 0
+[   11.715510]   EA = 0, S1PTW = 0
+[   11.718637]   FSC = 0x05: level 1 translation fault
+[   11.723501] Data abort info:
+[   11.726368]   ISV = 0, ISS = 0x00000005
+[   11.730190]   CM = 0, WnR = 0
+[   11.733145] swapper pgtable: 4k pages, 48-bit VAs, pgdp=0000000013d43000
+[   11.739832] [ffff0000fcebfb00] pgd=18000a4fffff8003, 
+p4d=18000a4fffff8003, pud=0000000000000000
+[   11.748521] Internal error: Oops: 96000005 [#1] PREEMPT SMP
+[   11.754080] Modules linked in:
+[   11.757122] CPU: 1 PID: 7 Comm: kworker/u192:0 Not tainted 
+5.16.0-rc2-dirty #102
+[   11.764505] Hardware name: Huawei D06 /D06, BIOS Hisilicon D06 UEFI 
+RC0 - V1.16.01 03/15/2019
+[   11.773015] Workqueue: 0000:04:00.0_disco_q sas_discover_domain
+[   11.778926] pstate: 604000c9 (nZCv daIF +PAN -UAO -TCO -DIT -SSBS 
+BTYPE=--)
+[   11.785874] pc : pm80xx_chip_smp_req+0x2d0/0x3d0
+[   11.790479] lr : pm80xx_chip_smp_req+0xac/0x3d0
+[   11.794996] sp : ffff80001258ba60
+[   11.798297] x29: ffff80001258ba60 x28: ffff0020a2892b50 x27: 
+ffff0020a2898000
+[   11.805421] x26: ffff0020a3ee0000 x25: 0000000000000008 x24: 
+ffff0000fcebfb00
+[   11.812546] x23: ffff8000113ab6b8 x22: 0000000000000000 x21: 
+ffff0020a3ed0038
+[   11.819670] x20: ffff0020a2890000 x19: ffff80001258badc x18: 
+00000000fffffffb
+[   11.826794] x17: 0000000000000000 x16: 0000000000000000 x15: 
+0000000000000000
+[   11.833917] x14: 0000000000000000 x13: 0000000000000000 x12: 
+0000000000000002
+[   11.841041] x11: 00000a20098b1000 x10: ffff0020b36515f0 x9 : 
+0000000000001000
+[   11.848165] x8 : 00000a20098b0000 x7 : ffff8000117eb7f0 x6 : 
+0000000000000001
+[   11.855288] x5 : 0000000000000f44 x4 : 0000000000001000 x3 : 
+0000000000000000
+[   11.862412] x2 : ffff8000113ab698 x1 : 0000000000000004 x0 : 
+ffff8000117eb000
+[   11.869535] Call trace:
+[   11.871969]  pm80xx_chip_smp_req+0x2d0/0x3d0
+[   11.876226]  pm8001_task_exec.constprop.0+0x368/0x520
+[   11.881266]  pm8001_queue_command+0x1c/0x30
+[   11.885437]  smp_execute_task_sg+0xdc/0x204
+[   11.889607]  sas_discover_expander.part.0+0xac/0x6cc
+[   11.894559]  sas_discover_root_expander+0x8c/0x150
+[   11.899337]  sas_discover_domain+0x3ac/0x6a0
+[   11.903594]  process_one_work+0x1d0/0x354
+[   11.907592]  worker_thread+0x13c/0x470
+[   11.911328]  kthread+0x17c/0x190
+[   11.914545]  ret_from_fork+0x10/0x20
+[   11.918110] Code: 371806e1 910006d6 6b16033f 54000249 (38766b05)
+[   11.924192] ---[ end trace b91d59aaee98ea2d ]---
+[   11.928796] note: kworker/u192:0[7] exited with preempt_count 1
 
-	result = ufshcd_transfer_rsp_status(hba, lrbp);
-	if (unlikely(!result && ufshcd_should_inform_monitor(hba, lrbp)))
-		ufshcd_update_monitor(hba, lrbp);
 
+I notice that the driver is calling virt_to_phys() on a dma_addr_t, 
+which is broken:
 
-> +
->  /**
->   * __ufshcd_transfer_req_compl - handle SCSI and query command completion
->   * @hba: per adapter instance
-> @@ -5258,9 +5270,7 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
->  {
->  	struct ufshcd_lrb *lrbp;
->  	struct scsi_cmnd *cmd;
-> -	int result;
->  	int index;
-> -	bool update_scaling = false;
->  
->  	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
->  		lrbp = &hba->lrb[index];
-> @@ -5270,26 +5280,19 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
->  			if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
->  				ufshcd_update_monitor(hba, lrbp);
->  			ufshcd_add_command_trace(hba, index, UFS_CMD_COMP);
-> -			result = ufshcd_transfer_rsp_status(hba, lrbp);
-> -			scsi_dma_unmap(cmd);
-> -			cmd->result = result;
-> -			/* Mark completed command as NULL in LRB */
-> -			lrbp->cmd = NULL;
-> +			cmd->result = ufshcd_transfer_rsp_status(hba, lrbp);
-> +			ufshcd_release_scsi_cmd(hba, lrbp);
->  			/* Do not touch lrbp after scsi done */
->  			scsi_done(cmd);
-> -			ufshcd_release(hba);
-> -			update_scaling = true;
->  		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
->  			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
->  			if (hba->dev_cmd.complete) {
->  				ufshcd_add_command_trace(hba, index,
->  							 UFS_DEV_COMP);
->  				complete(hba->dev_cmd.complete);
-> -				update_scaling = true;
-> +				ufshcd_clk_scaling_update_busy(hba);
->  			}
->  		}
-> -		if (update_scaling)
-> -			ufshcd_clk_scaling_update_busy(hba);
->  	}
->  }
->  
-> 
+static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+struct pm8001_ccb_info *ccb)
+{
+char *preq_dma_addr = NULL;
+__le64 tmp_addr;
 
+tmp_addr = cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_req));
+preq_dma_addr = (char *)phys_to_virt(tmp_addr);
+
+How is this supposed to work? I assume that someone has enabled the 
+IOMMU on a system with one of these cards before.
+
+I have encountered some other RAID cards which bypasses the IOMMU to 
+access host memory - is that the case here potentially?
+
+Thanks,
+John
