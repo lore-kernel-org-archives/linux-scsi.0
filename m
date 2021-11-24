@@ -2,98 +2,165 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14AEBC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 20:42:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65066C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 22:16:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238560AbhKXUpb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Nov 2021 15:45:31 -0500
-Received: from mga09.intel.com ([134.134.136.24]:56978 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238347AbhKXUpb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 Nov 2021 15:45:31 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10178"; a="235190973"
-X-IronPort-AV: E=Sophos;i="5.87,261,1631602800"; 
-   d="scan'208";a="235190973"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2021 12:42:20 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,261,1631602800"; 
-   d="scan'208";a="607329048"
-Received: from ahunter-desktop.fi.intel.com ([10.237.72.76])
-  by orsmga004.jf.intel.com with ESMTP; 24 Nov 2021 12:42:19 -0800
-From:   Adrian Hunter <adrian.hunter@intel.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH V2] scsi: ufs: ufs-pci: Add support for Intel ADL
-Date:   Wed, 24 Nov 2021 22:42:18 +0200
-Message-Id: <20211124204218.1784559-1-adrian.hunter@intel.com>
-X-Mailer: git-send-email 2.25.1
+        id S245314AbhKXWTn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Nov 2021 17:19:43 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38050 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S244993AbhKXWTl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 Nov 2021 17:19:41 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1637792190;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=EEVhKDq1EhBHdoS7pTs0RLbzDWey60atk3W5DA5v0B4=;
+        b=OSyF49HBsRBesjnwLpONI2KlKEDOWpy69mX8OXVZYMSAD5PwrVyygjSVVr+H2RaPXoIRW6
+        WGqHU7BcTZQPx26kJ4loOyXZdQ44kfYnyS9W0hEmdAZmTqISWgbb7cnjJFShFTucchodyT
+        lwvgvkcdp+nHjbvMCRQOZOif6JrjtQo=
+Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
+ [209.85.167.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-318-XywWK9eqPzq-4jAHTjw3VA-1; Wed, 24 Nov 2021 17:16:29 -0500
+X-MC-Unique: XywWK9eqPzq-4jAHTjw3VA-1
+Received: by mail-lf1-f70.google.com with SMTP id g38-20020a0565123ba600b004036147023bso2074374lfv.10
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2021 14:16:29 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EEVhKDq1EhBHdoS7pTs0RLbzDWey60atk3W5DA5v0B4=;
+        b=43PJnLuWY0B5UppoIc+GpDGm9p1s75pa7v5Cho9uPoBoDXkilh1Bc/qdodLb3JYjrl
+         ed2ZqHJbip6kS+Vv4SAYwVeg/2cOOwrjAdEGWlEab/KdhOr/ewsaKtckbBfsYgcRxAUI
+         Yp3NJmJid3YaUYF+eq0LXRsARUlvoqaufGJ5fv5W7FNOJYjpzpwcFT0xaN7r+Oub+Kmm
+         23futf1F9g6Pd35m9WtrC285KkHmESOLBoWdA4A3vT7XNUahytTnvUVOJ1AgmXGakquF
+         q034SEWag/MioLDsA8g+vBsHnr9iMLIMNCS/Tm6zUT52qtlezzSIYx/39iQvz8gEDXRO
+         HvYQ==
+X-Gm-Message-State: AOAM530jJYSfvnPfRc1utw6KpS4+f/RoNIfH20nt4LCtySCgXL75BfFE
+        4zuVPd9C26Gxblw4VGijnRlf8DLyz+uyFQZ8bpo1QzuENdLA659gHI7809+q+onWr6YtAzusDJG
+        eTp+Dkr7lL8Xlu0b4F7f1N2g7N1O2cO+g1aqpNg==
+X-Received: by 2002:a05:6512:3096:: with SMTP id z22mr18777555lfd.124.1637792187792;
+        Wed, 24 Nov 2021 14:16:27 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJy3HKmtNAafBBlI7bMVT3RazivdW2g2TUcEskctZmuEaRpOF7Jx2bvW50+8WUNSPiqnQC6nZn8f0zY2CSibUtA=
+X-Received: by 2002:a05:6512:3096:: with SMTP id z22mr18777505lfd.124.1637792187488;
+ Wed, 24 Nov 2021 14:16:27 -0800 (PST)
 MIME-Version: 1.0
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Content-Transfer-Encoding: 8bit
+References: <20210903152430.244937-1-nitesh@redhat.com> <CAFki+L=9Hw-2EONFEX6b7k6iRX_yLx1zcS+NmWsDSuBWg8w-Qw@mail.gmail.com>
+ <87bl29l5c6.ffs@tglx>
+In-Reply-To: <87bl29l5c6.ffs@tglx>
+From:   Nitesh Lal <nilal@redhat.com>
+Date:   Wed, 24 Nov 2021 17:16:16 -0500
+Message-ID: <CAFki+Lmrv-UjZpuTQWr9c-Rymfm-tuCw9WpwmHgyfjVhJgp--g@mail.gmail.com>
+Subject: Re: [PATCH v6 00/14] genirq: Cleanup the abuse of irq_set_affinity_hint()
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Cc:     Juri Lelli <juri.lelli@redhat.com>,
+        Marcelo Tosatti <mtosatti@redhat.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        davem@davemloft.net, ajit.khaparde@broadcom.com,
+        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com,
+        huangguangbin2@huawei.com, huangdaode@huawei.com,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Alex Belits <abelits@marvell.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, rostedt@goodmis.org,
+        Peter Zijlstra <peterz@infradead.org>,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Ingo Molnar <mingo@kernel.org>, jbrandeb@kernel.org,
+        akpm@linuxfoundation.org, sfr@canb.auug.org.au,
+        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
+        chris.friesen@windriver.com, Marc Zyngier <maz@kernel.org>,
+        Neil Horman <nhorman@tuxdriver.com>, pjwaskiewicz@gmail.com,
+        Stefan Assmann <sassmann@redhat.com>,
+        Tomas Henzl <thenzl@redhat.com>, james.smart@broadcom.com,
+        Ken Cox <jkc@redhat.com>, faisal.latif@intel.com,
+        shiraz.saleem@intel.com, tariqt@nvidia.com,
+        Alaa Hleihel <ahleihel@redhat.com>,
+        Kamal Heib <kheib@redhat.com>, borisp@nvidia.com,
+        saeedm@nvidia.com,
+        "Nikolova, Tatyana E" <tatyana.e.nikolova@intel.com>,
+        "Ismail, Mustafa" <mustafa.ismail@intel.com>,
+        Al Stone <ahs3@redhat.com>,
+        Leon Romanovsky <leonro@nvidia.com>,
+        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+        bjorn.andersson@linaro.org, chunkuang.hu@kernel.org,
+        yongqiang.niu@mediatek.com, baolin.wang7@gmail.com,
+        Petr Oros <poros@redhat.com>, Ming Lei <minlei@redhat.com>,
+        Ewan Milne <emilne@redhat.com>, jejb@linux.ibm.com,
+        kabel@kernel.org, Viresh Kumar <viresh.kumar@linaro.org>,
+        Jakub Kicinski <kuba@kernel.org>, kashyap.desai@broadcom.com,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        shivasharan.srikanteshwara@broadcom.com,
+        sathya.prakash@broadcom.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        suganath-prabu.subramani@broadcom.com, ley.foon.tan@intel.com,
+        jbrunet@baylibre.com, johannes@sipsolutions.net,
+        snelson@pensando.io, lewis.hanly@microchip.com, benve@cisco.com,
+        _govind@gmx.com, jassisinghbrar@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add PCI ID and callbacks to support Intel Alder Lake.
+On Wed, Nov 24, 2021 at 2:30 PM Thomas Gleixner <tglx@linutronix.de> wrote:
+>
+> Nitesh,
+>
+> On Mon, Sep 13 2021 at 10:34, Nitesh Lal wrote:
+> > On Fri, Sep 3, 2021 at 11:25 AM Nitesh Narayan Lal <nitesh@redhat.com> wrote:
+> >>
+> >> The drivers currently rely on irq_set_affinity_hint() to either set the
+> >> affinity_hint that is consumed by the userspace and/or to enforce a custom
+> >> affinity.
+> >>
+> >> irq_set_affinity_hint() as the name suggests is originally introduced to
+> >> only set the affinity_hint to help the userspace in guiding the interrupts
+> >> and not the affinity itself. However, since the commit
+> >>
+> >>         e2e64a932556 "genirq: Set initial affinity in irq_set_affinity_hint()"
+>
+> sorry for ignoring this. It fell through the cracks.
 
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-Cc: stable@vger.kernel.org # v5.15+
----
+
+No worries, thank you for reviewing.
+
+>
+>
+> >> Thomas Gleixner (1):
+> >>   genirq: Provide new interfaces for affinity hints
+>
+> Did I actually write this?
 
 
-Changes in V2:
+Yeap, the idea and the initial patch came from you. :)
 
-    Spell out Alder Lake in the commit message.
+>
+>
+> > Any suggestions on what should be the next steps here? Unfortunately, I haven't
+> > been able to get any reviews on the following two patches:
+> >   be2net: Use irq_update_affinity_hint
+> >   hinic: Use irq_set_affinity_and_hint
+> >
+> > One option would be to proceed with the remaining patches and I can try
+> > posting these two again when I post patches for the remaining drivers?
+>
+> The more general question is whether I should queue all the others or
+> whether some subsystem would prefer to pull in a tagged commit on top of
+> rc1. I'm happy to carry them all of course.
+>
 
+I am fine either way.
+In the past, while I was asking for more testing help I was asked if the
+SCSI changes are part of Martins's scsi-fixes tree as that's something
+Broadcom folks test to check for regression.
+So, maybe Martin can pull this up?
 
- drivers/scsi/ufs/ufshcd-pci.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
-
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index 51424557810d..f725248ba57f 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -421,6 +421,13 @@ static int ufs_intel_lkf_init(struct ufs_hba *hba)
- 	return err;
- }
- 
-+static int ufs_intel_adl_init(struct ufs_hba *hba)
-+{
-+	hba->nop_out_timeout = 200;
-+	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
-+	return ufs_intel_common_init(hba);
-+}
-+
- static struct ufs_hba_variant_ops ufs_intel_cnl_hba_vops = {
- 	.name                   = "intel-pci",
- 	.init			= ufs_intel_common_init,
-@@ -449,6 +456,15 @@ static struct ufs_hba_variant_ops ufs_intel_lkf_hba_vops = {
- 	.device_reset		= ufs_intel_device_reset,
- };
- 
-+static struct ufs_hba_variant_ops ufs_intel_adl_hba_vops = {
-+	.name			= "intel-pci",
-+	.init			= ufs_intel_adl_init,
-+	.exit			= ufs_intel_common_exit,
-+	.link_startup_notify	= ufs_intel_link_startup_notify,
-+	.resume			= ufs_intel_resume,
-+	.device_reset		= ufs_intel_device_reset,
-+};
-+
- #ifdef CONFIG_PM_SLEEP
- static int ufshcd_pci_restore(struct device *dev)
- {
-@@ -563,6 +579,8 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x4B41), (kernel_ulong_t)&ufs_intel_ehl_hba_vops },
- 	{ PCI_VDEVICE(INTEL, 0x4B43), (kernel_ulong_t)&ufs_intel_ehl_hba_vops },
- 	{ PCI_VDEVICE(INTEL, 0x98FA), (kernel_ulong_t)&ufs_intel_lkf_hba_vops },
-+	{ PCI_VDEVICE(INTEL, 0x51FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
-+	{ PCI_VDEVICE(INTEL, 0x54FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
- 	{ }	/* terminate list */
- };
- 
 -- 
-2.25.1
+Thanks
+Nitesh
 
