@@ -2,168 +2,187 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC0CC4321E
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 14:18:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D72BC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 14:41:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353694AbhKXOVT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Nov 2021 09:21:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45544 "EHLO
+        id S1353999AbhKXOoT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Nov 2021 09:44:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357777AbhKXOUg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Nov 2021 09:20:36 -0500
-Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F16B8C069D94
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2021 04:43:25 -0800 (PST)
-Received: by mail-ed1-x52f.google.com with SMTP id e3so9867248edu.4
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2021 04:43:25 -0800 (PST)
+        with ESMTP id S1352652AbhKXOoR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Nov 2021 09:44:17 -0500
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E07BC21B32C;
+        Wed, 24 Nov 2021 06:07:52 -0800 (PST)
+Received: by mail-pl1-x62b.google.com with SMTP id v19so1944287plo.7;
+        Wed, 24 Nov 2021 06:07:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=wfhjsBQJDS60fTCuWCeORMFhLzTPkgD37vMZeWmuP2o=;
-        b=NnrCYA483U/KkfVlw8emAPlXXztOwPDbrEnWe4ZucJvZr8OjOOt2fI2K5nFfOPVIvw
-         YdUUnq7F8q6l0T0JpHYuj6hAuBegRV8TdLMFWZ1OCMcg+Co8mQa6lM/p+/ggTuXfVne8
-         xuN01ZDLIae1o8s0LQtOmTAyBIp6uY2789wPJm6wxVjM0/HnP4BL70MAx8lbYNYu3Ykc
-         Kq6FPnxyO9BggSjrfhoJMqjjYcZufTwZcvpOLgo+w4ucjuGTNNWTUK9FhBnBeR0NVii3
-         XN22G624uCy3ocH15bTdqEVt3Qa513kMgBB2MzHtJQOIiMczCZ5t3zlAgn17R3a6d74f
-         oprw==
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=syp/sAx1WBqbnIsfqrbBbnU7pLQsZBgXpQdqrXqrl38=;
+        b=iecLeo1CCg8zt+sCXUOh364DhRhAV/Ar/v0CTPnIw92trVIyH4qvDLyLNdAiBMXH4T
+         y+0BfWQ61+rOjIQbdKy9swqEYsMOae4eIFV1313ZNnDT1Lbv+aQO2IbYTdrbWOvmPEQu
+         KlSl5yD8YP31w1z8kq/HaASDcSvcnIEnzDtL5YgUuswZfXpPxYfhz71mw789p88NP4MI
+         rs74u4gMJh8nMwRq/chOwPKzLo9eH4bM7b5lm+1o85GlnoBeIlU+U2qG0z31u0KruJlF
+         tO4ST89te9GQQvoWvoAHX2ms15JvNlQ1QJuyCl7nZWEUc1aTjDEBcKPhZNHdIMGNmbVg
+         pbeQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=wfhjsBQJDS60fTCuWCeORMFhLzTPkgD37vMZeWmuP2o=;
-        b=RbmIKJfh9t7JVaGPS/6u3mmp6fj9uTOIJaMddWdhIOkyfNWYKrLr8OAw7WwF72Pwpd
-         uEj1G/QsgOoDnLVFD8cjC9CPYFVlEAQtSVmLziuVcQBELzBJ1euvPh8ru5OfWkWLiQDn
-         Dm+r5/5twsVgrAd7xjr1JwdcDs3IJOtZCtZUw2a581X7uW/LIoI6oWrQothKG8OOZbMt
-         7SKHs148nVFvkW4YJFd2Wa6HxNK+QBtF1G7fJFJb3SAKikjPYxc1mn6WOnsDSkzmiWGO
-         MlWyq44KJncSXOWdA9RlbH78apiJQi+n3r8LM75P9lHz5NLbfWgbct0ENIK0TR/bEr0D
-         eEaA==
-X-Gm-Message-State: AOAM530L8mkJy5YZjkAv1kmGWxtvjuJOc5IXdUaDm6FPsRajszPognBa
-        cVX0l5tBESpiigVjEghfMYPg0tH8fDeJ7sU9DClftg==
-X-Google-Smtp-Source: ABdhPJxPuhLft566KNSyDKcg47gWyEEUaG5gWFMEc2gPqfh1NzpPGjua+fLvmRBHaTozYwbl9jsr6zAoQqxwTWMRUrM=
-X-Received: by 2002:a50:e683:: with SMTP id z3mr24875359edm.206.1637757804495;
- Wed, 24 Nov 2021 04:43:24 -0800 (PST)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=syp/sAx1WBqbnIsfqrbBbnU7pLQsZBgXpQdqrXqrl38=;
+        b=Ag6Yl8hpV9brJYG+Mys3gb67IeSpKZDk3pOxtslLyxIffGTjrXq3Rrn6ufYq+DP/Nj
+         CnVB1jq+vQ4E7Q+ZCijXcinR5fmqZQY/RFRbSgjsBinMorEKGHYbN1YFyZWfI3TeWSPL
+         6R6C8jtV8nRmHsDHiHPBXN77u6u3T7VUQyBg7VAFmCR4KMo3tJSI9Z3/QtK31BhiX+Af
+         vQg2X9TxYvScHPrOarOyrI+X0taQaaCiJkLGc3qdOIbGct/MLAcZhLi5oyUpttMtSN6n
+         qm/n47eS93r75oS4lVHRMv6ttpl2bjNmA06u54RKeg4VP57Kzc09niCxDmI6Kk2mrhWL
+         r+TA==
+X-Gm-Message-State: AOAM531zn9W9BNZt9ywX1sao2mN/EEJPi4ZKcGwellsoPod2jrG6ov5W
+        ZV8S0BP6K3EPbx+hiYwSIK3HeyVUUgUZ6g==
+X-Google-Smtp-Source: ABdhPJxcvy1hEASS+ae7P9Zr40fMPVIge5ooMequB2zH2fg19BpSdiMXmZRAmprhgB5OLHpbaYCO2A==
+X-Received: by 2002:a17:902:b581:b0:144:e601:de7 with SMTP id a1-20020a170902b58100b00144e6010de7mr19054433pls.71.1637762871786;
+        Wed, 24 Nov 2021 06:07:51 -0800 (PST)
+Received: from ?IPV6:2404:f801:0:5:8000::50b? ([2404:f801:9000:18:efec::50b])
+        by smtp.gmail.com with ESMTPSA id g5sm4694513pjt.15.2021.11.24.06.07.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 24 Nov 2021 06:07:51 -0800 (PST)
+Message-ID: <887d57bc-8b1a-48ab-be72-17144791334a@gmail.com>
+Date:   Wed, 24 Nov 2021 22:07:40 +0800
 MIME-Version: 1.0
-References: <894f766f-74b7-62b1-f6d2-82ac85b6478f@huawei.com>
-In-Reply-To: <894f766f-74b7-62b1-f6d2-82ac85b6478f@huawei.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Wed, 24 Nov 2021 13:43:13 +0100
-Message-ID: <CAMGffEkvrAxhrsL=azkVzQHHyDczZwJ3uiNWydSA6o2K+Xh_Jw@mail.gmail.com>
-Subject: Re: [issue report] pm8001 driver crashes with IOMMU enabled
-To:     John Garry <john.garry@huawei.com>,
-        Viswas G <Viswas.G@microchip.com>,
-        Ajish Koshy <Ajish.Koshy@microchip.com>
-Cc:     Jinpu Wang <jinpu.wang@ionos.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH V2 1/6] Swiotlb: Add Swiotlb bounce buffer remap function
+ for HV IVM
+Content-Language: en-US
+To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        vkuznets <vkuznets@redhat.com>,
+        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
+        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
+        "dave.hansen@intel.com" <dave.hansen@intel.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "mingo@redhat.com" <mingo@redhat.com>,
+        "bp@alien8.de" <bp@alien8.de>,
+        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+        "x86@kernel.org" <x86@kernel.org>, "hpa@zytor.com" <hpa@zytor.com>,
+        "luto@kernel.org" <luto@kernel.org>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        "jgross@suse.com" <jgross@suse.com>,
+        "sstabellini@kernel.org" <sstabellini@kernel.org>,
+        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        "will@kernel.org" <will@kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
+References: <20211123143039.331929-1-ltykernel@gmail.com>
+ <20211123143039.331929-2-ltykernel@gmail.com>
+ <MWHPR21MB1593169593AD833A91DF553FD7609@MWHPR21MB1593.namprd21.prod.outlook.com>
+From:   Tianyu Lan <ltykernel@gmail.com>
+In-Reply-To: <MWHPR21MB1593169593AD833A91DF553FD7609@MWHPR21MB1593.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-+cc folks from microchips
+Hi Michael:
+	Thanks for your review.
 
-On Wed, Nov 24, 2021 at 1:28 PM John Garry <john.garry@huawei.com> wrote:
->
-> Hi,
->
-> When I enable the IOMMU on my arm64 system, the pm8001 driver crashes as
-> follows:
->
-> [    8.649365] pm80xx 0000:04:00.0: Adding to iommu group 0
-> [    8.655901] pm80xx 0000:04:00.0: pm80xx: driver version 0.1.40
-> [    8.661755] pm80xx 0000:04:00.0: enabling device (0140 -> 0142)
-> [    8.667864] :: pm8001_pci_alloc  530:Setting link rate to default value
-> [    9.716548] scsi host0: pm80xx
-> [   10.423522] Freeing initrd memory: 413456K
-> [   11.693443] Unable to handle kernel paging request at virtual address
-> ffff0000fcebfb00
-> [   11.701348] Mem abort info:
-> [   11.704129]   ESR = 0x96000005
-> [   11.707170]   EC = 0x25: DABT (current EL), IL = 32 bits
-> [   11.712468]   SET = 0, FnV = 0
-> [   11.715510]   EA = 0, S1PTW = 0
-> [   11.718637]   FSC = 0x05: level 1 translation fault
-> [   11.723501] Data abort info:
-> [   11.726368]   ISV = 0, ISS = 0x00000005
-> [   11.730190]   CM = 0, WnR = 0
-> [   11.733145] swapper pgtable: 4k pages, 48-bit VAs, pgdp=0000000013d43000
-> [   11.739832] [ffff0000fcebfb00] pgd=18000a4fffff8003,
-> p4d=18000a4fffff8003, pud=0000000000000000
-> [   11.748521] Internal error: Oops: 96000005 [#1] PREEMPT SMP
-> [   11.754080] Modules linked in:
-> [   11.757122] CPU: 1 PID: 7 Comm: kworker/u192:0 Not tainted
-> 5.16.0-rc2-dirty #102
-> [   11.764505] Hardware name: Huawei D06 /D06, BIOS Hisilicon D06 UEFI
-> RC0 - V1.16.01 03/15/2019
-> [   11.773015] Workqueue: 0000:04:00.0_disco_q sas_discover_domain
-> [   11.778926] pstate: 604000c9 (nZCv daIF +PAN -UAO -TCO -DIT -SSBS
-> BTYPE=--)
-> [   11.785874] pc : pm80xx_chip_smp_req+0x2d0/0x3d0
-> [   11.790479] lr : pm80xx_chip_smp_req+0xac/0x3d0
-> [   11.794996] sp : ffff80001258ba60
-> [   11.798297] x29: ffff80001258ba60 x28: ffff0020a2892b50 x27:
-> ffff0020a2898000
-> [   11.805421] x26: ffff0020a3ee0000 x25: 0000000000000008 x24:
-> ffff0000fcebfb00
-> [   11.812546] x23: ffff8000113ab6b8 x22: 0000000000000000 x21:
-> ffff0020a3ed0038
-> [   11.819670] x20: ffff0020a2890000 x19: ffff80001258badc x18:
-> 00000000fffffffb
-> [   11.826794] x17: 0000000000000000 x16: 0000000000000000 x15:
-> 0000000000000000
-> [   11.833917] x14: 0000000000000000 x13: 0000000000000000 x12:
-> 0000000000000002
-> [   11.841041] x11: 00000a20098b1000 x10: ffff0020b36515f0 x9 :
-> 0000000000001000
-> [   11.848165] x8 : 00000a20098b0000 x7 : ffff8000117eb7f0 x6 :
-> 0000000000000001
-> [   11.855288] x5 : 0000000000000f44 x4 : 0000000000001000 x3 :
-> 0000000000000000
-> [   11.862412] x2 : ffff8000113ab698 x1 : 0000000000000004 x0 :
-> ffff8000117eb000
-> [   11.869535] Call trace:
-> [   11.871969]  pm80xx_chip_smp_req+0x2d0/0x3d0
-> [   11.876226]  pm8001_task_exec.constprop.0+0x368/0x520
-> [   11.881266]  pm8001_queue_command+0x1c/0x30
-> [   11.885437]  smp_execute_task_sg+0xdc/0x204
-> [   11.889607]  sas_discover_expander.part.0+0xac/0x6cc
-> [   11.894559]  sas_discover_root_expander+0x8c/0x150
-> [   11.899337]  sas_discover_domain+0x3ac/0x6a0
-> [   11.903594]  process_one_work+0x1d0/0x354
-> [   11.907592]  worker_thread+0x13c/0x470
-> [   11.911328]  kthread+0x17c/0x190
-> [   11.914545]  ret_from_fork+0x10/0x20
-> [   11.918110] Code: 371806e1 910006d6 6b16033f 54000249 (38766b05)
-> [   11.924192] ---[ end trace b91d59aaee98ea2d ]---
-> [   11.928796] note: kworker/u192:0[7] exited with preempt_count 1
->
->
-> I notice that the driver is calling virt_to_phys() on a dma_addr_t,
-> which is broken:
-phys_to_virt you meant.
->
-> static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
-> struct pm8001_ccb_info *ccb)
-> {
-> char *preq_dma_addr = NULL;
-> __le64 tmp_addr;
->
-> tmp_addr = cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_req));
-> preq_dma_addr = (char *)phys_to_virt(tmp_addr);
->
-The code was there since the initial support in 2013.
-f5860992db55 ("[SCSI] pm80xx: Added SPCv/ve specific hardware
-functionalities and relevant changes in common files")
+On 11/24/2021 1:15 AM, Michael Kelley (LINUX) wrote:
+>> @@ -172,7 +200,14 @@ void __init swiotlb_update_mem_attributes(void)
+>>   	vaddr = phys_to_virt(mem->start);
+>>   	bytes = PAGE_ALIGN(mem->nslabs << IO_TLB_SHIFT);
+>>   	set_memory_decrypted((unsigned long)vaddr, bytes >> PAGE_SHIFT);
+>> -	memset(vaddr, 0, bytes);
+>> +
+>> +	mem->vaddr = swiotlb_mem_remap(mem, bytes);
+>> +	if (!mem->vaddr) {
+>> +		pr_err("Fail to remap swiotlb mem.\n");
+>> +		return;
+>> +	}
+>> +
+>> +	memset(mem->vaddr, 0, bytes);
+>>   }
 
-> How is this supposed to work? I assume that someone has enabled the
-> IOMMU on a system with one of these cards before.
-I guess it's due to the unaligned access to memory on ARM? AFAIK most
-of the user are on x86_64.
->
-> I have encountered some other RAID cards which bypasses the IOMMU to
-> access host memory - is that the case here potentially?
-I don't know, maybe guys from microchip can answer.
->
-> Thanks,
-> John
-Thanks for reporting!
+
+> In the error case, do you want to leave mem->vaddr as NULL?  Or is it
+> better to leave it as the virtual address of mem-start?  Your code leaves it
+> as NULL.
+> 
+> The interaction between swiotlb_update_mem_attributes() and the helper
+> function swiotlb_memo_remap() seems kind of clunky.  phys_to_virt() gets called
+> twice, for example, and two error messages are printed.  The code would be
+> more straightforward by just putting the helper function inline:
+> 
+> mem->vaddr = phys_to_virt(mem->start);
+> bytes = PAGE_ALIGN(mem->nslabs << IO_TLB_SHIFT);
+> set_memory_decrypted((unsigned long)(mem->vaddr), bytes >> PAGE_SHIFT);
+> 
+> if (swiotlb_unencrypted_base) {
+> 	phys_addr_t paddr = mem->start + swiotlb_unencrypted_base;
+> 
+> 	mem->vaddr = memremap(paddr, bytes, MEMREMAP_WB);
+> 	if (!mem->vaddr) {
+> 		pr_err("Failed to map the unencrypted memory %llx size %lx.\n",
+> 			       paddr, bytes);
+> 		return;
+> 	}
+> }
+> 
+> memset(mem->vaddr, 0, bytes);
+> 
+> (This version also leaves mem->vaddr as NULL in the error case.)
+
+ From Christoph's previous suggestion, there should be a well-documented 
+wrapper to explain the remap option and so I split the code. leaving the 
+virtual address of mem-start is better.
+
+https://lkml.org/lkml/2021/9/28/51
+
+> 
+>>   static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
+>> @@ -196,7 +231,18 @@ static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
+>>   		mem->slots[i].orig_addr = INVALID_PHYS_ADDR;
+>>   		mem->slots[i].alloc_size = 0;
+>>   	}
+>> +
+>> +	/*
+>> +	 * If swiotlb_unencrypted_base is set, the bounce buffer memory will
+>> +	 * be remapped and cleared in swiotlb_update_mem_attributes.
+>> +	 */
+>> +	if (swiotlb_unencrypted_base)
+>> +		return;
+>> +
+>> +	set_memory_decrypted((unsigned long)vaddr, bytes >> PAGE_SHIFT);
+> Prior to this patch, and here in the new version as well, the return value from
+> set_memory_decrypted() is ignored in several places in this file.  As previously
+> discussed, swiotlb_init_io_tlb_mem() is a void function, so there's no place to
+> return an error. Is that OK?
+
+Yes, the original code doesn't check the return value and so keep the 
+rule。
+
+Christoph, Could you help to check which way do you prefer?
+
+
