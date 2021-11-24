@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FFACC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 23:15:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22EC8C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 23:15:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346638AbhKXXSW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Nov 2021 18:18:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56476 "EHLO
+        id S1349620AbhKXXSX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Nov 2021 18:18:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346119AbhKXXSV (ORCPT
+        with ESMTP id S245001AbhKXXSV (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Nov 2021 18:18:21 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9582EC06173E;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74F0EC061574;
         Wed, 24 Nov 2021 15:15:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=WIg2RMA4JYKIaP1iMAszasochEawTJ8KAp+gJo8930Q=; b=hus/c8h2GJnuuW4FAU5gkFdDXu
-        FqdSY7eJVD6Coudhsjsbu+4TuzbdZDYQcLU4jN4NK5X3BFra/xe1ePyvmm5VwuwwsVZ2yJnimy6Ef
-        quj8brWL+sJWGnaZkcnZNK0eU2z3c0/u6m34/vAx4j4aKV2UvVq/qNtS45omTNbTGSIrT66QhXJ+m
-        oJsk7cysPEQqqRz8o5NkKDAf0FYhU1enI/nOFdTtV5quwDvCd9slaOx+V63Z1ad/pK/OSHzG4T3TT
-        GNAB6LWsKLDyYk+/+bPt57H6iKRmgRCO0upKlUvH+/NqKe0EEYyowAQ9/d8OhRlw63fW37cFRD445
-        t3vliCLQ==;
+        bh=EmbnGF5E3X7PPKzRoMxBObQ25iaJW1VVEtk3YOxE710=; b=X0Ddn93Ab27SsMBYonlR3fLKSq
+        akkQsm9qTnY6+XntvFQHnMgMvkPS7JOq0ixdxuijuSgYIZ2/AirEdectYv8xW8aUrHLqeCRGqo3fl
+        o6qquwVdwE/fBU07WdqPC6a7vhKArlQAbMtxCuMW7O1eHZPwQne1eY25CImLk2S3VCGi529/gYO4Y
+        ycidYCNtvojzf7lWWE5j9v1V2POFEyk3R9dkZNoTNT1iyG0ltSOZCI+kE5uuXa45FgHt8QNSqR1m7
+        YQ0E6IqKJsw2XudW3Kte/KhcfvNOwHi6QMQbwYLyVwzzX+6xgAlnM6xlwQqpwwv2aD8XZddc5SZh5
+        rs/F2szg==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mq1TI-0063z0-L2; Wed, 24 Nov 2021 23:14:36 +0000
+        id 1mq1TI-0063zH-Rl; Wed, 24 Nov 2021 23:14:36 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     akpm@linux-foundation.org, keescook@chromium.org,
         yzaikin@google.com, nixiaoming@huawei.com, ebiederm@xmission.com,
@@ -37,9 +37,9 @@ To:     akpm@linux-foundation.org, keescook@chromium.org,
         mcgrof@bombadil.infradead.org, mcgrof@kernel.org,
         linux-scsi@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/8] random: move the random sysctl declarations to its own file
-Date:   Wed, 24 Nov 2021 15:14:29 -0800
-Message-Id: <20211124231435.1445213-3-mcgrof@kernel.org>
+Subject: [PATCH v2 7/8] stackleak: move stack_erasing sysctl to stackleak.c
+Date:   Wed, 24 Nov 2021 15:14:34 -0800
+Message-Id: <20211124231435.1445213-8-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20211124231435.1445213-1-mcgrof@kernel.org>
 References: <20211124231435.1445213-1-mcgrof@kernel.org>
@@ -60,78 +60,114 @@ places where they actually belong. The proc sysctl maintainers
 do not want to know what sysctl knobs you wish to add for your own
 piece of code, we just care about the core logic.
 
-So move the random sysctls to its own file and use
-register_sysctl_init().
+So move the stack_erasing sysctl from kernel/sysctl.c to
+kernel/stackleak.c and use register_sysctl() to register the
+sysctl interface.
 
 Signed-off-by: Xiaoming Ni <nixiaoming@huawei.com>
-[mcgrof: commit log update to justify the move]
+[mcgrof: commit log update]
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/char/random.c  | 14 ++++++++++++--
- include/linux/sysctl.h |  1 -
- kernel/sysctl.c        |  5 -----
- 3 files changed, 12 insertions(+), 8 deletions(-)
+ include/linux/stackleak.h |  5 -----
+ kernel/stackleak.c        | 26 ++++++++++++++++++++++++--
+ kernel/sysctl.c           | 14 --------------
+ 3 files changed, 24 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/char/random.c b/drivers/char/random.c
-index 605969ed0f96..35fcc09c0228 100644
---- a/drivers/char/random.c
-+++ b/drivers/char/random.c
-@@ -2077,8 +2077,7 @@ static int proc_do_entropy(struct ctl_table *table, int write,
+diff --git a/include/linux/stackleak.h b/include/linux/stackleak.h
+index a59db2f08e76..ccaab2043fcd 100644
+--- a/include/linux/stackleak.h
++++ b/include/linux/stackleak.h
+@@ -23,11 +23,6 @@ static inline void stackleak_task_init(struct task_struct *t)
+ # endif
  }
  
- static int sysctl_poolsize = INPUT_POOL_WORDS * 32;
--extern struct ctl_table random_table[];
--struct ctl_table random_table[] = {
-+static struct ctl_table random_table[] = {
- 	{
- 		.procname	= "poolsize",
- 		.data		= &sysctl_poolsize,
-@@ -2140,6 +2139,17 @@ struct ctl_table random_table[] = {
+-#ifdef CONFIG_STACKLEAK_RUNTIME_DISABLE
+-int stack_erasing_sysctl(struct ctl_table *table, int write,
+-			void *buffer, size_t *lenp, loff_t *ppos);
+-#endif
+-
+ #else /* !CONFIG_GCC_PLUGIN_STACKLEAK */
+ static inline void stackleak_task_init(struct task_struct *t) { }
+ #endif
+diff --git a/kernel/stackleak.c b/kernel/stackleak.c
+index ce161a8e8d97..66b8af394e58 100644
+--- a/kernel/stackleak.c
++++ b/kernel/stackleak.c
+@@ -16,11 +16,13 @@
+ #ifdef CONFIG_STACKLEAK_RUNTIME_DISABLE
+ #include <linux/jump_label.h>
+ #include <linux/sysctl.h>
++#include <linux/init.h>
+ 
+ static DEFINE_STATIC_KEY_FALSE(stack_erasing_bypass);
+ 
+-int stack_erasing_sysctl(struct ctl_table *table, int write,
+-			void *buffer, size_t *lenp, loff_t *ppos)
++#ifdef CONFIG_SYSCTL
++static int stack_erasing_sysctl(struct ctl_table *table, int write,
++			void __user *buffer, size_t *lenp, loff_t *ppos)
+ {
+ 	int ret = 0;
+ 	int state = !static_branch_unlikely(&stack_erasing_bypass);
+@@ -42,6 +44,26 @@ int stack_erasing_sysctl(struct ctl_table *table, int write,
+ 					state ? "enabled" : "disabled");
+ 	return ret;
+ }
++static struct ctl_table stackleak_sysctls[] = {
++	{
++		.procname	= "stack_erasing",
++		.data		= NULL,
++		.maxlen		= sizeof(int),
++		.mode		= 0600,
++		.proc_handler	= stack_erasing_sysctl,
++		.extra1		= SYSCTL_ZERO,
++		.extra2		= SYSCTL_ONE,
++	},
++	{}
++};
++
++static int __init stackleak_sysctls_init(void)
++{
++	register_sysctl_init("kernel", stackleak_sysctls);
++	return 0;
++}
++late_initcall(stackleak_sysctls_init);
++#endif /* CONFIG_SYSCTL */
+ 
+ #define skip_erasing()	static_branch_unlikely(&stack_erasing_bypass)
+ #else
+diff --git a/kernel/sysctl.c b/kernel/sysctl.c
+index a4bda4a11ea8..5812d76ecee1 100644
+--- a/kernel/sysctl.c
++++ b/kernel/sysctl.c
+@@ -94,9 +94,6 @@
+ #if defined(CONFIG_PROVE_LOCKING) || defined(CONFIG_LOCK_STAT)
+ #include <linux/lockdep.h>
+ #endif
+-#ifdef CONFIG_STACKLEAK_RUNTIME_DISABLE
+-#include <linux/stackleak.h>
+-#endif
+ 
+ #if defined(CONFIG_SYSCTL)
+ 
+@@ -2441,17 +2438,6 @@ static struct ctl_table kern_table[] = {
+ 		.extra1		= SYSCTL_ONE,
+ 		.extra2		= SYSCTL_INT_MAX,
+ 	},
+-#endif
+-#ifdef CONFIG_STACKLEAK_RUNTIME_DISABLE
+-	{
+-		.procname	= "stack_erasing",
+-		.data		= NULL,
+-		.maxlen		= sizeof(int),
+-		.mode		= 0600,
+-		.proc_handler	= stack_erasing_sysctl,
+-		.extra1		= SYSCTL_ZERO,
+-		.extra2		= SYSCTL_ONE,
+-	},
  #endif
  	{ }
  };
-+
-+/*
-+ * rand_initialize() is called before sysctl_init(),
-+ * so we cannot call register_sysctl_init() in rand_initialize()
-+ */
-+static int __init random_sysctls_init(void)
-+{
-+	register_sysctl_init("kernel/random", random_table);
-+	return 0;
-+}
-+device_initcall(random_sysctls_init);
- #endif 	/* CONFIG_SYSCTL */
- 
- struct batched_entropy {
-diff --git a/include/linux/sysctl.h b/include/linux/sysctl.h
-index ae6e66177d88..e4da44567f18 100644
---- a/include/linux/sysctl.h
-+++ b/include/linux/sysctl.h
-@@ -216,7 +216,6 @@ extern int unaligned_dump_stack;
- extern int no_unaligned_warning;
- 
- extern struct ctl_table sysctl_mount_point[];
--extern struct ctl_table random_table[];
- 
- #else /* CONFIG_SYSCTL */
- static inline struct ctl_table_header *register_sysctl_table(struct ctl_table * table)
-diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 3032aaa11ed9..1682714605e6 100644
---- a/kernel/sysctl.c
-+++ b/kernel/sysctl.c
-@@ -2143,11 +2143,6 @@ static struct ctl_table kern_table[] = {
- 		.mode		= 0644,
- 		.proc_handler	= sysctl_max_threads,
- 	},
--	{
--		.procname	= "random",
--		.mode		= 0555,
--		.child		= random_table,
--	},
- 	{
- 		.procname	= "usermodehelper",
- 		.mode		= 0555,
 -- 
 2.33.0
 
