@@ -2,220 +2,258 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DB8DC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 17:41:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5C95C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 18:18:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242750AbhKXRon (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Nov 2021 12:44:43 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:13588 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S242903AbhKXRon (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 Nov 2021 12:44:43 -0500
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1AOGrLhf000726;
-        Wed, 24 Nov 2021 17:41:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=vxYdQzvFfXv/ph46/KFgkygR17UhjrbAuB7xNgqQPgM=;
- b=0JT4K6uWGtzfCg98HMnbyTxrxv4WPKwy2XiEQdks6D0mfKgoyLfrpXuAClv7vjLEDS3u
- l3fgeekHscms+VzJ8Huzv86QT0CJG+aXDsDIUShkV0lZ02G0s0ZGRoFVwLuzPOQQPto8
- OYRrHLV79BcYOk0DuCv3yne7Gnl+7gcoZicsQBRh+3KenSg3Z0Uvfa0D4NM/KhEIaGZ5
- KZDFHgpx197uE08nKFjBsLwW588msUWsKXnGve6I8pFLqjN4T6HWS8nzB5ssJq5j0lY5
- KLzKkgWkDEEhQsflgJBiVJZ3PfypYHUPS3SrC+Knm0h0HNB0/kyaOkFBZTB//lWH7Zio Hw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3chkfkaj3u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 24 Nov 2021 17:41:27 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1AOHUsbi095734;
-        Wed, 24 Nov 2021 17:41:23 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2108.outbound.protection.outlook.com [104.47.58.108])
-        by userp3030.oracle.com with ESMTP id 3cep52246g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 24 Nov 2021 17:41:23 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TVaU1evYoNbd0ActmRVAjCSHVOEHmQ0hqtd355B5rg62YxS2ZO4/Ftd3vA9UdH+hdlIS5MnQOaHlmB2W0fH8VVyeIfmjCZlwKWE9XnGbRgezFo1HMhyAM1yWnM0xJxFxnoLRi1HwXUQad3SdcoZQJut+zSRtT4Rz7clt7fTdkbpTNbeEKnd1Zm7DyVmBJkqX2cf6EPSkUjAk0yudzhYLRBzGlBZqxXsMJx7s/Qw0ZulECd3zW79ilw0DR6gNsxs7//zf+PaS26Xs2uLEOE+Qhn6ypKOQPEBWzyyd56Shm0hkCXBIlvQC2gJWPy41376Kx1/GbyaMdbBAtsDb2z8Ccg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vxYdQzvFfXv/ph46/KFgkygR17UhjrbAuB7xNgqQPgM=;
- b=cYgUs/rA5NLXXAJeeLxlxz7icW6n3eZm648O0dd+rIXXiyqE8PfmsTCIEADiYM/L0859MYM4C/Ikhb2cYqiQgaQUbApb1Tb7p7z2DyD6p5GuyAKojsFiYaN9gJynHmN+ttX4bjQZIhCSUqOOgODPsnaQiAkfPIJAXZDit1acHweUEfwbpA6FyspLhTzho/FIH0TrsIoRgYlh33ioJ7lRuv/MT15CnvMWO0HYsnd6X/HUHAD2CKF8vx+6LkcXAKLo13B3ZxaEM8fMP+zTbQPCstJ3H+85e0Rrwn94ElWEx0BQnskouNqsECVsyw3A6TWo5xUF5XKt6keTD5SaEIvq+Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        id S243256AbhKXSVa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Nov 2021 13:21:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45068 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230396AbhKXSV1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Nov 2021 13:21:27 -0500
+Received: from mail-wm1-x329.google.com (mail-wm1-x329.google.com [IPv6:2a00:1450:4864:20::329])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB5F9C061574
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2021 10:18:17 -0800 (PST)
+Received: by mail-wm1-x329.google.com with SMTP id 137so3315534wma.1
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Nov 2021 10:18:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vxYdQzvFfXv/ph46/KFgkygR17UhjrbAuB7xNgqQPgM=;
- b=Jyl6T5X8txXIpLpFDPLpX7EmhAGQo+lw0dBm+0/rZTmV8ztY3cFR9uYMzU62hhjEGORo7+cvpZ5+2BNuoI+UwyID97J2R53qq7IZFkADzILA9fv753fFnJ/df20aFIyeyAM9JiSvZrLvHTtF7gOO9iHr9LB5zq6JogAP7iWVCOc=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- DM5PR10MB1962.namprd10.prod.outlook.com (2603:10b6:3:110::13) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4734.22; Wed, 24 Nov 2021 17:41:08 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::601a:d0f6:b9db:f041]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::601a:d0f6:b9db:f041%11]) with mapi id 15.20.4713.026; Wed, 24 Nov
- 2021 17:41:07 +0000
-Message-ID: <3edefd05-333f-7879-7ce7-ecb758fa0ec9@oracle.com>
-Date:   Wed, 24 Nov 2021 11:41:06 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.3.2
-Subject: Re: [EXT] Re: [PATCH] qedi: Fix cmd_cleanup_cmpl counter mismatch
- issue.
-Content-Language: en-US
-To:     Manish Rangankar <mrangankar@marvell.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "lduncan@suse.com" <lduncan@suse.com>,
-        "cleech@redhat.com" <cleech@redhat.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>
-References: <20211123122115.8599-1-mrangankar@marvell.com>
- <9c21c019-d6ff-a908-80e5-51b9c765d118@oracle.com>
- <PH0PR18MB4425F4F08057B89453C2222ED8619@PH0PR18MB4425.namprd18.prod.outlook.com>
-From:   michael.christie@oracle.com
-In-Reply-To: <PH0PR18MB4425F4F08057B89453C2222ED8619@PH0PR18MB4425.namprd18.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CH0PR03CA0344.namprd03.prod.outlook.com
- (2603:10b6:610:11a::35) To DM5PR10MB1466.namprd10.prod.outlook.com
- (2603:10b6:3:b::7)
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=8rLg0gQjRcuJSuEZFV5gXDfhFGVEiXQZBU1uQnpBH9o=;
+        b=G/QNzn/OOV1FUDpoYw1CQXrJ6tBHlYiAgoAtnwT+z1ftrfvLAOlF8oEf1jtoa+THDG
+         W1NSBddagKkd8fd2dESta/oJkUTdiB8Ox4jCFGb9vECUOWbOAbFGM4Lt4UiUmGnFvkAF
+         nOVDcPoDhjflucpVpiEZTgxgJljXO/oxxUL4dBralS2IK8H+Lvoge6zbeMSk5k6sXAzg
+         t6jhUcpSzUD/l4Ful/csOiQCCh3oAjCtgQZ5sktkFhaiu0mZHbkAMRHl5NqGXlaALpYB
+         OP2C3g89DUeCmGBufFLVip4v3i7j7rRcfTsqKE7vs6Z0xjQryTDxYCAnCSDY3eHYhKlY
+         97Tg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=8rLg0gQjRcuJSuEZFV5gXDfhFGVEiXQZBU1uQnpBH9o=;
+        b=c0ZCHF1dne+tXDHEFvNPrFPmZe563jVRW75HXMU/X+UhA8LuF4TQBEcpnct9PWXGwC
+         kDoN6Bjwi4/wn+lxSk0302Rpn42ifTUl1l46oXOMqcdbOQM/BGjL7M9ZYKLPLhGrHy7b
+         aRFxOG9h2cyKjZGWHxctPD8iE2zCrdP5S4TwujZYgajvstUja5JIDP2k8Oq17PrUVgVT
+         oNBdVT0n2QUBo5fOl1FDoHDOCCTwaPM128Y7gICgoeY/t77Xadzl3mFxod37IPd/IaPH
+         6DAYZq9uqeWDhCRoQml8I/+Y+VIKpiuYPeTaWjAiuWocwVUOKh91QqOeCmKtCk0ZBM43
+         74CA==
+X-Gm-Message-State: AOAM533uQulvJL6NkVERhVhg8t5IE31jJvyIY3paB1t3w3jGV2chJXYd
+        WH0y/f2bIO29U6eRu3sIa18=
+X-Google-Smtp-Source: ABdhPJzcT9cDdM/EUZdSdUaQUyqkP1aBwLhrZLsBQ01iLCpfKOgqWt6HoITyRRi9e90J7uRdwZae2A==
+X-Received: by 2002:a7b:c1d5:: with SMTP id a21mr17608791wmj.14.1637777896244;
+        Wed, 24 Nov 2021 10:18:16 -0800 (PST)
+Received: from p200300e94719c9965ac0d8c2d4c25ef2.dip0.t-ipconnect.de (p200300e94719c9965ac0d8c2d4c25ef2.dip0.t-ipconnect.de. [2003:e9:4719:c996:5ac0:d8c2:d4c2:5ef2])
+        by smtp.googlemail.com with ESMTPSA id f8sm6622367wmf.2.2021.11.24.10.18.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 24 Nov 2021 10:18:15 -0800 (PST)
+Message-ID: <8a841ac7504a1520cfaee7d673441ceb7f3cf4b4.camel@gmail.com>
+Subject: Re: [PATCH v2 11/20] scsi: ufs: Switch to
+ scsi_(get|put)_internal_cmd()
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Date:   Wed, 24 Nov 2021 19:18:14 +0100
+In-Reply-To: <09fc22b5-d654-4aa1-0afa-a9b99c526460@acm.org>
+References: <20211119195743.2817-1-bvanassche@acm.org>
+         <20211119195743.2817-12-bvanassche@acm.org>
+         <5dc2cf927a0e196067b7207ee1800a09cd769de6.camel@gmail.com>
+         <09fc22b5-d654-4aa1-0afa-a9b99c526460@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
 MIME-Version: 1.0
-Received: from [20.15.0.19] (73.88.28.6) by CH0PR03CA0344.namprd03.prod.outlook.com (2603:10b6:610:11a::35) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4713.22 via Frontend Transport; Wed, 24 Nov 2021 17:41:07 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 70ed1024-7060-4179-00f0-08d9af71989e
-X-MS-TrafficTypeDiagnostic: DM5PR10MB1962:
-X-Microsoft-Antispam-PRVS: <DM5PR10MB1962FC57A40C10B6C118C3D8F1619@DM5PR10MB1962.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: J5Aju+EVbhudBZn5UbNGFrIu8Co2ZnoYT+srnj4s0SRYCpdN8OVPwcM8j1jMKYrCNSX7VAj8ivngGjzW8uPVTH/fpU/H0w7wFSiRXaoxJcppTmpEfQTpiohZWqo23Jj4hauAyvZuz5m6VekE9JCewmeZo2mOAi/lTJ6YMX++Q/M666Y2akKan3GhtL1QUKn/Z2kYXx/sFiW89xBfxtxhUXpIBr4SBRdJ5gjrnPsH3W2Q6zWFJ9eMcHMmDYcwnAXUR9ZXfPG3ge1NRpNkMncYg6Wg3bcW6odPKN04wURaijkM98clwNw31cvHpAzlAy+sJsLGMjq/9NmDJl9eKtSm9ipNc25kwowWkjHCX8oQGlzHHWZOIMNM7XYJeMzGY+V8KddsYdK74jsLWpYhAa9+Lv1m6DL95Q5JcTYtPB2B7zecuF8pXFkG5Hyz/ndqDwzfWmEv15AjeO2bHe/35A7LrbOi3T0Hnr1B/iisBOoT7ezsKJl8ivYvwbvYX6jEwjezH4a8Gy4gtpx8pAmDvhdFnPlAO0rr+qYv9gYdqpn+gsRfds8iVqeDrkKm4hEL3GLdqS07+tChwfhnMADCogAZ4HKHN5p03a10idKw50ZLwWaGtiuSEaHgLiaWYdAGAqCqmGQhEbMfrghrKZJm1OZMbaSqMiWpUVPOMqMiGpwZH8lMWr7opV2LJf5fO9n36DvLVAguogp/Put73PROkSjzi+w+iyxr8qwRxhCrvAAVjr8=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(2616005)(8676002)(66946007)(6706004)(508600001)(66556008)(66476007)(9686003)(8936002)(86362001)(31686004)(54906003)(956004)(4326008)(83380400001)(16576012)(316002)(110136005)(38100700002)(26005)(31696002)(36756003)(2906002)(186003)(6486002)(53546011)(5660300002)(78286007)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?cWNYUzJpS3IxcGh1WlZFZG8rRTlhbWIwNWFOUlRYZWF3Wi9MS21HUTJwQ09C?=
- =?utf-8?B?YXRIbElTam4zQ2ZsM20yNWpzV2Q3N2plcW0xaFJQVkdGNkREVzFXMHZnOWNG?=
- =?utf-8?B?VXBvdkRwZzZlMFBNSnQ5V0wxWUNMeCtENTRFdjI5elI5c0s5dlU5VGZTM0F0?=
- =?utf-8?B?YnFTcFB3Q2syR1BQZkxxd2pKYlliOXRRZGxhNU1uaktJNFRBc1YxWTQ3a1Fn?=
- =?utf-8?B?d0t6TXp0N2tUcjFHdFIwcHVFMC9OR202M1ZjRkQ3Y1k2QnU0R3RsMG83bThI?=
- =?utf-8?B?VVdzaVduQkwvckRGL3ovTHViLzlrT08veUdyM081RXBCclhkYmR1OU0yWHhx?=
- =?utf-8?B?aC9aSytRRUNtM2Y3TDNaQ21WT0xqVlBoR0xKRVVPT0w1NnoxbWRUb0ZVRTNV?=
- =?utf-8?B?dUJnZC9MVC9oTEZPZXBBTysvZndhRUhkM29tanJRaFVSWnRaRGdlT1lwU29i?=
- =?utf-8?B?ZHJWQzNXV3FhOVlvcjROdEtnU3dVNTkxMXpEL2FoSzM2b3pXUUo3WmpSWTA4?=
- =?utf-8?B?d0E4NHd2NGtoMVAwMHZmOU9jT3NUZG8yTDhBS0Z3TUJ5Y05TZlM4b0NJQTJ2?=
- =?utf-8?B?VlZYYVJBSmU3QXpWVE9oM1d5UnhVY1ZWUGsrV3BHZ0U1N1NZVHIyTjFOdjU1?=
- =?utf-8?B?aXcwWkI1aUttVVR6Q3BSUXNpalRzTnoxbEFoNE5YeVduUHkwUGdtS042VXF4?=
- =?utf-8?B?UGdXdjZzbHZoRnNuZTdJUzZxM1dYNXVGUlhjNWNweTV4QUV4NWtzK0lwaDU1?=
- =?utf-8?B?NVpGek5IUWoyOGxPUGpERlZRL1JQZ3NUeWRnR2hlZGxPdi9rVlgvMmtDT2tD?=
- =?utf-8?B?YzZ4TUZsaVJGS2x3Z3F4VVV2V0lZNERkazZGdGJpbGNHUDRMVVJqZkN0Vnkz?=
- =?utf-8?B?a3BXc2REVDdHL3pVVllnWFVNdm1CWEQyYXlPeHU0R1VwejdmT3NVWm92WGlr?=
- =?utf-8?B?Z3dSM2Y4N2VXY3Z4RFVsL09CRkZZUHFHMnZJa0NhbUhUNjNIMWFwcUE3ZHp1?=
- =?utf-8?B?SGhmUFBTZm1zdEdOT2FOODVQN2hYc3Myd28yRXh4NjZFWVExdG54RGIvaWo5?=
- =?utf-8?B?U2pwN09Ec3E3aXA1M290dTBGMzJRQWZMOUlvcEo3Ymc1RUNOSlRmdm1SR1kz?=
- =?utf-8?B?VEZRaGhQcElCaWFzV0dMN3MrTmpwbTY0ZEdhWFZYdkFaYVlFOUlYbC9XQUhY?=
- =?utf-8?B?OVRUQ0xmK0c0TFZMR29halRQZ1ZrbFY3Z25zVXRuSEd6OVBWb0t1aFpXTWVZ?=
- =?utf-8?B?ZUhKcnZGREZJL2JYS3ZaNmY4SHMxWS9wWlR2N0dIc2JZa1lnT2ZOSU1xLzRK?=
- =?utf-8?B?Nmw5aGVaVVR5Z09mU1RTcVBjZTFtWThOc3pvN1lFeExOZlEraGNyM2g4UG44?=
- =?utf-8?B?aE8yZzdkSGlQWGF6WWpXU1hiaGxBbXd4VlN0bGJNWGo3WXJ5SWh1MHl6aFNz?=
- =?utf-8?B?YldpMFBZdXVuSTliOWo1dFFONXVKVGFpR2RzcmZuclBqQ0JVMFNmWnhldlIw?=
- =?utf-8?B?SXFHcGxwUy80VXd0U1lRZnZWQVcyMUN3NUdGa1FyNkIwR2hkMEVWTDVFUy9R?=
- =?utf-8?B?WjJzVWp5MTBhdTEzd1hoZ05Yem5IbW1qZ2J0cDRRVTl2YThCaENhUTgrVm8r?=
- =?utf-8?B?VUVGTGhIWWxFcTA1S0c2MWNWM1AvaUhkTnZjaUh5UHhVSEx2aUtXZ3pKVXI2?=
- =?utf-8?B?TjYyZndicGc2N0V5VDl6bENEdkFMRVphWGYxUnFSTWdxV2NJUmhuTTdrTWZG?=
- =?utf-8?B?cXh0OXJHY0xzS0ZsK1VnajN6bjdLZU03TkxuWUxybDdMcGNzMTRwMmtwaUtU?=
- =?utf-8?B?MFpuWTFnalQ1bUNLbXRqRUExUkVJODM3VmtsT3FCYVQzSU80VVFOSmgxNmY1?=
- =?utf-8?B?K3dQUjV1S3o3aDZ2VytISmhrS0FPOGJRWGJqV3k3d0l0Y1FMZHh1VjJWMlRo?=
- =?utf-8?B?R1Z1MnpwWGY0ZXgzc0FiS1ZBbS9NZ0NBWnVtUm8wdXVFWCtGc3dvdW5lMGhB?=
- =?utf-8?B?NFZUWDFMaTJiblRwTlJlQUlOalZLcEJuT2NITkJjSFV2S3YvV3I5UzYxZVRI?=
- =?utf-8?B?eTBSYWt3UXA5MVRwR2psZFAyQUlBeHZDZjZPbWx5bkVQQS81aVAyS0tBWGMy?=
- =?utf-8?B?dEVDWk9HWm5lajIyL1FRWmZJRTdNcWx2TW5ZQ2FCMUZqVmYyK1RLcXd3K3pZ?=
- =?utf-8?B?Rm1aZTRPWnZnN2EvZGJrMW5NNS9Mb3RaTWxxSHd6TU1LajBMTElYOThxenNn?=
- =?utf-8?B?b2FIRUVNMURoWnlCcXRLSFJNaXFBPT0=?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 70ed1024-7060-4179-00f0-08d9af71989e
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Nov 2021 17:41:07.7392
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ix/lyl+N/xOx3FRUEMHiId2y8EIY/Zvp1eAwYFDCTnXUY2CncQkr8fs0GF23Q0JlQEP27TnO0r5msziqyFGpT3sdEDiqLkA21UbIN0V3xhs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR10MB1962
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10178 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 malwarescore=0
- mlxlogscore=999 bulkscore=0 mlxscore=0 suspectscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
- definitions=main-2111240094
-X-Proofpoint-GUID: 8_dmml7wpdEIGALXm58P1ohexfPVTt21
-X-Proofpoint-ORIG-GUID: 8_dmml7wpdEIGALXm58P1ohexfPVTt21
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/24/21 12:05 AM, Manish Rangankar wrote:
->>>
->>>  check_cleanup_reqs:
->>>  	if (qedi_conn->cmd_cleanup_req > 0) {
->>> -		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_TID,
->>> -			  "Freeing tid=0x%x for cid=0x%x\n",
->>> -			  cqe->itid, qedi_conn->iscsi_conn_id);
->>> -		qedi_conn->cmd_cleanup_cmpl++;
->>> +		++qedi_conn->cmd_cleanup_cmpl;
->>> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
->>> +			  "Freeing tid=0x%x for cid=0x%x cleanup count=%d\n",
->>> +			  cqe->itid, qedi_conn->iscsi_conn_id,
->>> +			  qedi_conn->cmd_cleanup_cmpl);
->>
->> Is the issue that cmd_cleanup_cmpl's increment is not seen by
->> qedi_cleanup_all_io's wait_event_interruptible_timeout call when it wakes up,
->> and your patch fixes this by doing a pre increment?
->>
+On Tue, 2021-11-23 at 11:41 -0800, Bart Van Assche wrote:
+> On 11/23/21 4:20 AM, Bean Huo wrote:
+> > Calling blk_mq_start_request() will inject the trace print of the
+> > block
+> > issued, but we do not have its paired completion trace print.
+> > In addition, blk_mq_tag_idle() will not be called after the device
+> > management request is completed, it will be called after the timer
+> > expires.
+> > 
+> > I remember that we used to not allow this kind of LLD internal
+> > commands
+> > to be attached to the block layer. I now find that to be correct
+> > way.
 > 
-> Yes, cmd_cleanup_cmpl's increment is not seen by qedi_cleanup_all_io's 
-> wait_event_interruptible_timeout call when it wakes up, even after firmware 
-> post all the ISCSI_CQE_TYPE_TASK_CLEANUP events for requested cmd_cleanup_req.
-> Yes, pre increment did addressed this issue. Do you feel otherwise ?
+> Hi Bean,
 > 
->> Does doing a pre increment give you barrier like behavior and is that why this
->> works? I thought if wake_up ends up waking up the other thread it does a barrier
->> already, so it's not clear to me how changing to a pre-increment helps.
->>
->> Is doing a pre-increment a common way to handle this? It looks like we do a
->> post increment and wake_up* in other places. However, like in the scsi layer we
->> do wake_up_process and memory-barriers.txt says that always does a general
->> barrier, so is that why we can do a post increment there?
->>
->> Does pre-increment give you barrier like behavior, and is the wake_up call not
->> waking up the process so we didn't get a barrier from that, and so that's why this
->> works?
->>
-> 
-> Issue happen before calling wake_up. When we gets a ISCSI_CQE_TYPE_TASK_CLEANUP surge on
-> multiple Rx threads, cmd_cleanup_cmpl tend to miss the increment. The scenario is more similar to
-> multiple threads access cmd_cleanup_cmpl causing race during postfix increment. This could be because of 
-> thread reading the same value at a time.
-> 
-> Now that I am explaining it, it felt instead of pre-incrementing cmd_cleanup_cmpl, 
-> it should be atomic variable. Do see any issue ? 
+> How about modifying the block layer such that blk_mq_tag_busy() is
+> not
+> called for requests with operation type REQ_OP_DRV_*? I think that
+> will
+> allow to leave out the blk_mq_start_request() calls from the UFS
+> driver.
+> These are the changes I currently have in mind (on top of this patch
+> series):
 > 
 
-Yeah, atomic.
+Hi Bart,
 
-And then I guess for this:
-
-        if (qedi_conn->cmd_cleanup_req > 0) {
-                QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_TID,
-                          "Freeing tid=0x%x for cid=0x%x\n",
-                          cqe->itid, qedi_conn->iscsi_conn_id);
-                qedi_conn->cmd_cleanup_cmpl++;
-                wake_up(&qedi_conn->wait_queue);
+Yes, the following patch can solve these two problems, but you need to
+change block layer code. Why do we have to fly to the block layer to
+get this tag? and what is the benefit? This is a device management
+request. As for the patch recommended by Adrian, that is the way I
+think.
 
 
-we might only want to do the wake_up once:
+Kind regards,
+Bean
 
-if (atomic_inc_return(&qedi_conn->cmd_cleanup_cmpl) ==
-    qedi_conn->cmd_cleanup_req) {
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index 3ab34c4f20da..a7090b509f2d 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -433,6 +433,7 @@ __blk_mq_alloc_requests_batch(struct
+> blk_mq_alloc_data *data,
+> 
+>   static struct request *__blk_mq_alloc_requests(struct
+> blk_mq_alloc_data *data)
+>   {
+> +	const bool is_passthrough = blk_op_is_passthrough(data-
+> >cmd_flags);
+>   	struct request_queue *q = data->q;
+>   	u64 alloc_time_ns = 0;
+>   	struct request *rq;
+> @@ -455,8 +456,7 @@ static struct request
+> *__blk_mq_alloc_requests(struct blk_mq_alloc_data *data)
+>   		 * dispatch list. Don't include reserved tags in the
+>   		 * limiting, as it isn't useful.
+>   		 */
+> -		if (!op_is_flush(data->cmd_flags) &&
+> -		    !blk_op_is_passthrough(data->cmd_flags) &&
+> +		if (!op_is_flush(data->cmd_flags) && !is_passthrough &&
+>   		    e->type->ops.limit_depth &&
+>   		    !(data->flags & BLK_MQ_REQ_RESERVED))
+>   			e->type->ops.limit_depth(data->cmd_flags,
+> data);
+> @@ -465,7 +465,7 @@ static struct request
+> *__blk_mq_alloc_requests(struct blk_mq_alloc_data *data)
+>   retry:
+>   	data->ctx = blk_mq_get_ctx(q);
+>   	data->hctx = blk_mq_map_queue(q, data->cmd_flags, data->ctx);
+> -	if (!(data->rq_flags & RQF_ELV))
+> +	if (!(data->rq_flags & RQF_ELV) && !is_passthrough)
+>   		blk_mq_tag_busy(data->hctx);
+> 
+>   	/*
+> @@ -575,10 +575,10 @@ struct request
+> *blk_mq_alloc_request_hctx(struct request_queue *q,
+>   	cpu = cpumask_first_and(data.hctx->cpumask, cpu_online_mask);
+>   	data.ctx = __blk_mq_get_ctx(q, cpu);
+> 
+> -	if (!q->elevator)
+> -		blk_mq_tag_busy(data.hctx);
+> -	else
+> +	if (q->elevator)
+>   		data.rq_flags |= RQF_ELV;
+> +	else if (!blk_op_is_passthrough(data.cmd_flags))
+> +		blk_mq_tag_busy(data.hctx);
+> 
+>   	ret = -EWOULDBLOCK;
+>   	tag = blk_mq_get_tag(&data);
+> @@ -1369,7 +1369,8 @@ static bool __blk_mq_alloc_driver_tag(struct
+> request *rq)
+>   	unsigned int tag_offset = rq->mq_hctx->tags->nr_reserved_tags;
+>   	int tag;
+> 
+> -	blk_mq_tag_busy(rq->mq_hctx);
+> +	if (!blk_rq_is_passthrough(rq))
+> +		blk_mq_tag_busy(rq->mq_hctx);
+> 
+>   	if (blk_mq_tag_is_reserved(rq->mq_hctx->sched_tags, rq-
+> >internal_tag)) {
+>   		bt = &rq->mq_hctx->tags->breserved_tags;
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index fcecbc4ee81b..2c9e9c79ca34 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1360,25 +1360,6 @@ static int ufshcd_devfreq_target(struct device
+> *dev,
+>   	return ret;
+>   }
+> 
+> -static bool ufshcd_is_busy(struct request *req, void *priv, bool
+> reserved)
+> -{
+> -	int *busy = priv;
+> -
+> -	WARN_ON_ONCE(reserved);
+> -	(*busy)++;
+> -	return false;
+> -}
+> -
+> -/* Whether or not any tag is in use by a request that is in
+> progress. */
+> -static bool ufshcd_any_tag_in_use(struct ufs_hba *hba)
+> -{
+> -	struct request_queue *q = hba->host->internal_queue;
+> -	int busy = 0;
+> -
+> -	blk_mq_tagset_busy_iter(q->tag_set, ufshcd_is_busy, &busy);
+> -	return busy;
+> -}
+> -
+>   static int ufshcd_devfreq_get_dev_status(struct device *dev,
+>   		struct devfreq_dev_status *stat)
+>   {
+> @@ -1778,7 +1759,7 @@ static void ufshcd_gate_work(struct work_struct
+> *work)
+> 
+>   	if (hba->clk_gating.active_reqs
+>   		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
+> -		|| ufshcd_any_tag_in_use(hba) || hba->outstanding_tasks
+> +		|| hba->outstanding_reqs || hba->outstanding_tasks
+>   		|| hba->active_uic_cmd || hba->uic_async_done)
+>   		goto rel_lock;
+> 
+> @@ -2996,12 +2977,6 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba
+> *hba,
+>   	req = scsi_cmd_to_rq(scmd);
+>   	tag = req->tag;
+>   	WARN_ONCE(tag < 0 || tag >= hba->nutrs, "Invalid tag %d\n",
+> tag);
+> -	/*
+> -	 * Start the request such that blk_mq_tag_idle() is called when
+> the
+> -	 * device management request finishes.
+> -	 */
+> -	blk_mq_start_request(req);
+> -
+>   	lrbp = &hba->lrb[tag];
+>   	WARN_ON(lrbp->cmd);
+>   	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
+> @@ -6792,12 +6767,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct
+> ufs_hba *hba,
+>   	req = scsi_cmd_to_rq(scmd);
+>   	tag = req->tag;
+>   	WARN_ONCE(tag < 0 || tag >= hba->nutrs, "Invalid tag %d\n",
+> tag);
+> -	/*
+> -	 * Start the request such that blk_mq_tag_idle() is called when
+> the
+> -	 * device management request finishes.
+> -	 */
+> -	blk_mq_start_request(req);
+> -
+>   	lrbp = &hba->lrb[tag];
+>   	WARN_ON(lrbp->cmd);
+>   	lrbp->cmd = NULL;
+> 
+> Thanks,
+> 
+> Bart.
 
-?
