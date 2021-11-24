@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3B29C43217
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 23:15:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE05EC4167B
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 23:15:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352609AbhKXXSc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Nov 2021 18:18:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56490 "EHLO
+        id S1346178AbhKXXSd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Nov 2021 18:18:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346278AbhKXXSW (ORCPT
+        with ESMTP id S1346272AbhKXXSW (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Nov 2021 18:18:22 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75EAAC06173E;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 630A5C061574;
         Wed, 24 Nov 2021 15:15:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=uypgeyB0u27jmjLP832wchi6YoRiX1F3ojCRBUTdWCk=; b=FKmIg7JVtCRCr1NV+2lG+aDQkm
-        yv/Ry67attGrXnT3mPZF/aAJVUfmxyhUjBecRQXQtRrOFMtC/YpGr7cbJdy10GKVWe4tetwDl6MOu
-        yftHGzcW1tPDuJY3FKQ7J5tqoVVRg10w6B/ep7pedEL93Mp++I/hdQA3KHLaRbjkyeYwnstR1gE9r
-        DB9FuUJaSb4UxmYpG0C/nkrALTrSL7Hrue2lJhDQwIPLw/dGkn66vULxsukKo2/qU4Tad3/Wl43r1
-        jq49B1+5LKpikyWqCXQuwVLBDVDOqfxXDIa0JxnX/+X89dVQQjjuGkLvf3RGNI+9bA8Hx9kwUfnB/
-        i954MqIw==;
+        bh=/BehJWA378MuzCcNzYeiaptr9YB2kX6SkWqVtJnXf90=; b=M5Qs3grdB16pLj3aU+oKgVtrYf
+        +9X53Hc9TEpgvqrxdEacMBLIfLUpIRcdx0pspIrtG0DxItwaTy3rk1K/2OFZDGx0R7+fenta8bzwt
+        TREipnX6auLhQV3MwazJgA0BMRl5ForyeKLzFMhhge2Bs/DjIi9Q7yGUjTmP6eIlGrd9aDrgtvuFS
+        JW6sS7fevhy+T4aIZTlGhxX3rgLwIsgckJKUGWECBA5vOH+3+uFupDb1zxgzwEBpeYxtogUhDwO3G
+        qAPJJftYL3FpkKPNCkBom6O2Mhu1fPFHi6L+oIwyfval9Y3BZZAiM2A7WVL4ZVEnITt4opq1g+XSM
+        xlDxcIdA==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mq1TI-0063zB-PA; Wed, 24 Nov 2021 23:14:36 +0000
+        id 1mq1TI-0063zK-TI; Wed, 24 Nov 2021 23:14:36 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     akpm@linux-foundation.org, keescook@chromium.org,
         yzaikin@google.com, nixiaoming@huawei.com, ebiederm@xmission.com,
@@ -37,9 +37,9 @@ To:     akpm@linux-foundation.org, keescook@chromium.org,
         mcgrof@bombadil.infradead.org, mcgrof@kernel.org,
         linux-scsi@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 5/8] printk: move printk sysctl to printk/sysctl.c
-Date:   Wed, 24 Nov 2021 15:14:32 -0800
-Message-Id: <20211124231435.1445213-6-mcgrof@kernel.org>
+Subject: [PATCH v2 8/8] sysctl: share unsigned long const values
+Date:   Wed, 24 Nov 2021 15:14:35 -0800
+Message-Id: <20211124231435.1445213-9-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20211124231435.1445213-1-mcgrof@kernel.org>
 References: <20211124231435.1445213-1-mcgrof@kernel.org>
@@ -50,251 +50,82 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiaoming Ni <nixiaoming@huawei.com>
+Provide a way to share unsigned long values.
+This will allow others to not have to re-invent
+these values.
 
-The kernel/sysctl.c is a kitchen sink where everyone leaves
-their dirty dishes, this makes it very difficult to maintain.
-
-To help with this maintenance let's start by moving sysctls to
-places where they actually belong. The proc sysctl maintainers
-do not want to know what sysctl knobs you wish to add for your own
-piece of code, we just care about the core logic.
-
-So move printk sysctl from kernel/sysctl.c to kernel/printk/sysctl.c.
-Use register_sysctl() to register the sysctl interface.
-
-Signed-off-by: Xiaoming Ni <nixiaoming@huawei.com>
-[mcgrof: fixed compile issues when PRINTK is not set, commit log update]
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- kernel/printk/Makefile   |  5 ++-
- kernel/printk/internal.h |  6 +++
- kernel/printk/printk.c   |  1 +
- kernel/printk/sysctl.c   | 85 ++++++++++++++++++++++++++++++++++++++++
- kernel/sysctl.c          | 68 --------------------------------
- 5 files changed, 96 insertions(+), 69 deletions(-)
- create mode 100644 kernel/printk/sysctl.c
+ fs/proc/proc_sysctl.c  | 3 +++
+ include/linux/sysctl.h | 6 ++++++
+ kernel/sysctl.c        | 9 +++------
+ 3 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/kernel/printk/Makefile b/kernel/printk/Makefile
-index d118739874c0..f5b388e810b9 100644
---- a/kernel/printk/Makefile
-+++ b/kernel/printk/Makefile
-@@ -2,5 +2,8 @@
- obj-y	= printk.o
- obj-$(CONFIG_PRINTK)	+= printk_safe.o
- obj-$(CONFIG_A11Y_BRAILLE_CONSOLE)	+= braille.o
--obj-$(CONFIG_PRINTK)	+= printk_ringbuffer.o
- obj-$(CONFIG_PRINTK_INDEX)	+= index.o
-+
-+obj-$(CONFIG_PRINTK)                 += printk_support.o
-+printk_support-y	             := printk_ringbuffer.o
-+printk_support-$(CONFIG_SYSCTL)	     += sysctl.o
-diff --git a/kernel/printk/internal.h b/kernel/printk/internal.h
-index 9f3ed2fdb721..6b1c4b399845 100644
---- a/kernel/printk/internal.h
-+++ b/kernel/printk/internal.h
-@@ -4,6 +4,12 @@
-  */
- #include <linux/percpu.h>
+diff --git a/fs/proc/proc_sysctl.c b/fs/proc/proc_sysctl.c
+index aa743bbb8400..2b73648a19a5 100644
+--- a/fs/proc/proc_sysctl.c
++++ b/fs/proc/proc_sysctl.c
+@@ -29,6 +29,9 @@ static const struct inode_operations proc_sys_dir_operations;
+ const int sysctl_vals[] = { -1, 0, 1, 2, 4, 100, 200, 1000, INT_MAX };
+ EXPORT_SYMBOL(sysctl_vals);
  
-+#if defined(CONFIG_PRINTK) && defined(CONFIG_SYSCTL)
-+void __init printk_sysctl_init(void);
-+#else
-+#define printk_sysctl_init() do { } while (0)
-+#endif
++const unsigned long sysctl_long_vals[] = { 0, 1, LONG_MAX };
++EXPORT_SYMBOL_GPL(sysctl_long_vals);
 +
- #ifdef CONFIG_PRINTK
+ /* Support for permanently empty directories */
  
- /* Flags for a single printk record. */
-diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
-index cbc35d586afb..dbb44086ba65 100644
---- a/kernel/printk/printk.c
-+++ b/kernel/printk/printk.c
-@@ -3202,6 +3202,7 @@ static int __init printk_late_init(void)
- 	ret = cpuhp_setup_state_nocalls(CPUHP_AP_ONLINE_DYN, "printk:online",
- 					console_cpu_notify, NULL);
- 	WARN_ON(ret < 0);
-+	printk_sysctl_init();
- 	return 0;
- }
- late_initcall(printk_late_init);
-diff --git a/kernel/printk/sysctl.c b/kernel/printk/sysctl.c
-new file mode 100644
-index 000000000000..653ae04aab7f
---- /dev/null
-+++ b/kernel/printk/sysctl.c
-@@ -0,0 +1,85 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * sysctl.c: General linux system control interface
-+ */
+ struct ctl_table sysctl_mount_point[] = {
+diff --git a/include/linux/sysctl.h b/include/linux/sysctl.h
+index 7946b532e964..162aaee92daf 100644
+--- a/include/linux/sysctl.h
++++ b/include/linux/sysctl.h
+@@ -50,6 +50,12 @@ struct ctl_dir;
+ 
+ extern const int sysctl_vals[];
+ 
++#define SYSCTL_LONG_ZERO	((void *)&sysctl_long_vals[0])
++#define SYSCTL_LONG_ONE		((void *)&sysctl_long_vals[1])
++#define SYSCTL_LONG_MAX		((void *)&sysctl_long_vals[2])
 +
-+#include <linux/sysctl.h>
-+#include <linux/printk.h>
-+#include <linux/capability.h>
-+#include <linux/ratelimit.h>
-+#include "internal.h"
++extern const unsigned long sysctl_long_vals[];
 +
-+static const int ten_thousand = 10000;
-+
-+static int proc_dointvec_minmax_sysadmin(struct ctl_table *table, int write,
-+				void __user *buffer, size_t *lenp, loff_t *ppos)
-+{
-+	if (write && !capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	return proc_dointvec_minmax(table, write, buffer, lenp, ppos);
-+}
-+
-+static struct ctl_table printk_sysctls[] = {
-+	{
-+		.procname	= "printk",
-+		.data		= &console_loglevel,
-+		.maxlen		= 4*sizeof(int),
-+		.mode		= 0644,
-+		.proc_handler	= proc_dointvec,
-+	},
-+	{
-+		.procname	= "printk_ratelimit",
-+		.data		= &printk_ratelimit_state.interval,
-+		.maxlen		= sizeof(int),
-+		.mode		= 0644,
-+		.proc_handler	= proc_dointvec_jiffies,
-+	},
-+	{
-+		.procname	= "printk_ratelimit_burst",
-+		.data		= &printk_ratelimit_state.burst,
-+		.maxlen		= sizeof(int),
-+		.mode		= 0644,
-+		.proc_handler	= proc_dointvec,
-+	},
-+	{
-+		.procname	= "printk_delay",
-+		.data		= &printk_delay_msec,
-+		.maxlen		= sizeof(int),
-+		.mode		= 0644,
-+		.proc_handler	= proc_dointvec_minmax,
-+		.extra1		= SYSCTL_ZERO,
-+		.extra2		= (void *)&ten_thousand,
-+	},
-+	{
-+		.procname	= "printk_devkmsg",
-+		.data		= devkmsg_log_str,
-+		.maxlen		= DEVKMSG_STR_MAX_SIZE,
-+		.mode		= 0644,
-+		.proc_handler	= devkmsg_sysctl_set_loglvl,
-+	},
-+	{
-+		.procname	= "dmesg_restrict",
-+		.data		= &dmesg_restrict,
-+		.maxlen		= sizeof(int),
-+		.mode		= 0644,
-+		.proc_handler	= proc_dointvec_minmax_sysadmin,
-+		.extra1		= SYSCTL_ZERO,
-+		.extra2		= SYSCTL_ONE,
-+	},
-+	{
-+		.procname	= "kptr_restrict",
-+		.data		= &kptr_restrict,
-+		.maxlen		= sizeof(int),
-+		.mode		= 0644,
-+		.proc_handler	= proc_dointvec_minmax_sysadmin,
-+		.extra1		= SYSCTL_ZERO,
-+		.extra2		= SYSCTL_TWO,
-+	},
-+	{}
-+};
-+
-+void __init printk_sysctl_init(void)
-+{
-+	register_sysctl_init("kernel", printk_sysctls);
-+}
+ typedef int proc_handler(struct ctl_table *ctl, int write, void *buffer,
+ 		size_t *lenp, loff_t *ppos);
+ 
 diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 7745c9b72bda..02ef27804601 100644
+index 5812d76ecee1..b8a3dcf7b925 100644
 --- a/kernel/sysctl.c
 +++ b/kernel/sysctl.c
-@@ -907,17 +907,6 @@ static int proc_taint(struct ctl_table *table, int write,
- 	return err;
- }
+@@ -99,9 +99,6 @@
  
--#ifdef CONFIG_PRINTK
--static int proc_dointvec_minmax_sysadmin(struct ctl_table *table, int write,
--				void *buffer, size_t *lenp, loff_t *ppos)
--{
--	if (write && !capable(CAP_SYS_ADMIN))
--		return -EPERM;
--
--	return proc_dointvec_minmax(table, write, buffer, lenp, ppos);
--}
--#endif
--
- /**
-  * struct do_proc_dointvec_minmax_conv_param - proc_dointvec_minmax() range checking structure
-  * @min: pointer to minimum allowable value
-@@ -2209,63 +2198,6 @@ static struct ctl_table kern_table[] = {
+ /* Constants used for minimum and  maximum */
+ 
+-static const unsigned long zero_ul;
+-static const unsigned long one_ul = 1;
+-static const unsigned long long_max = LONG_MAX;
+ #ifdef CONFIG_PRINTK
+ static const int ten_thousand = 10000;
+ #endif
+@@ -2512,7 +2509,7 @@ static struct ctl_table vm_table[] = {
+ 		.maxlen		= sizeof(dirty_background_bytes),
+ 		.mode		= 0644,
+ 		.proc_handler	= dirty_background_bytes_handler,
+-		.extra1		= (void *)&one_ul,
++		.extra1		= SYSCTL_LONG_ONE,
+ 	},
+ 	{
+ 		.procname	= "dirty_ratio",
+@@ -2930,8 +2927,8 @@ static struct ctl_table fs_table[] = {
+ 		.maxlen		= sizeof(files_stat.max_files),
  		.mode		= 0644,
  		.proc_handler	= proc_doulongvec_minmax,
+-		.extra1		= (void *)&zero_ul,
+-		.extra2		= (void *)&long_max,
++		.extra1		= SYSCTL_LONG_ZERO,
++		.extra2		= SYSCTL_LONG_MAX,
  	},
--#if defined CONFIG_PRINTK
--	{
--		.procname	= "printk",
--		.data		= &console_loglevel,
--		.maxlen		= 4*sizeof(int),
--		.mode		= 0644,
--		.proc_handler	= proc_dointvec,
--	},
--	{
--		.procname	= "printk_ratelimit",
--		.data		= &printk_ratelimit_state.interval,
--		.maxlen		= sizeof(int),
--		.mode		= 0644,
--		.proc_handler	= proc_dointvec_jiffies,
--	},
--	{
--		.procname	= "printk_ratelimit_burst",
--		.data		= &printk_ratelimit_state.burst,
--		.maxlen		= sizeof(int),
--		.mode		= 0644,
--		.proc_handler	= proc_dointvec,
--	},
--	{
--		.procname	= "printk_delay",
--		.data		= &printk_delay_msec,
--		.maxlen		= sizeof(int),
--		.mode		= 0644,
--		.proc_handler	= proc_dointvec_minmax,
--		.extra1		= SYSCTL_ZERO,
--		.extra2		= (void *)&ten_thousand,
--	},
--	{
--		.procname	= "printk_devkmsg",
--		.data		= devkmsg_log_str,
--		.maxlen		= DEVKMSG_STR_MAX_SIZE,
--		.mode		= 0644,
--		.proc_handler	= devkmsg_sysctl_set_loglvl,
--	},
--	{
--		.procname	= "dmesg_restrict",
--		.data		= &dmesg_restrict,
--		.maxlen		= sizeof(int),
--		.mode		= 0644,
--		.proc_handler	= proc_dointvec_minmax_sysadmin,
--		.extra1		= SYSCTL_ZERO,
--		.extra2		= SYSCTL_ONE,
--	},
--	{
--		.procname	= "kptr_restrict",
--		.data		= &kptr_restrict,
--		.maxlen		= sizeof(int),
--		.mode		= 0644,
--		.proc_handler	= proc_dointvec_minmax_sysadmin,
--		.extra1		= SYSCTL_ZERO,
--		.extra2		= SYSCTL_TWO,
--	},
--#endif
  	{
- 		.procname	= "ngroups_max",
- 		.data		= (void *)&ngroups_max,
+ 		.procname	= "nr_open",
 -- 
 2.33.0
 
