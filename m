@@ -2,169 +2,152 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0716C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 06:08:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0308C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Nov 2021 06:33:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230185AbhKXGLp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Nov 2021 01:11:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50142 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229825AbhKXGLp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Nov 2021 01:11:45 -0500
-Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 924FDC061574
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Nov 2021 22:08:35 -0800 (PST)
-Received: by mail-ed1-x531.google.com with SMTP id y12so5167439eda.12
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Nov 2021 22:08:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ujRKFX4PIJvnclF/OPPhkXaFhG9Mw/UagvepGlC2Pog=;
-        b=Ll/Xp/lCc6Y7OG6aoSVqeTPn5ibbyYKh6LcX2V/aJX9sUavPZ+Sv70HEEeCmD0RLsS
-         Y8rNwU0+lrholo5cW+E1C7ZtmiKbEsKh3UvkxmAKAQbFjzWb+qrybqdDn6iYv40sTD1e
-         o9O8acUm0ofVdo5Krs6jejENl5VFruUippASmSZvprqVWkgPjOKBtuoEb3/rx/FWA7Qx
-         sJHCTXCW/3I0VxAcIxzRMcRpE5qyycEtQ+1iRPjE6JjOVXJW7i/UEXQX9pr4OWDZx8Hn
-         9iI+SZWhVa0uomeNqXqoehNwJsjzQQPDxxCkgSEl1l2O3XhOiLlODNhSaDsNd8AZwK70
-         AV+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ujRKFX4PIJvnclF/OPPhkXaFhG9Mw/UagvepGlC2Pog=;
-        b=33h+i7ZbPmHLFC5TOJYweRfBMkWKc092WcbM6FqhA9gddnLk7XAJ0xtTQz3yvKjdN2
-         MLFUUItr5phEo7r7f+C5bZuYDKeaVxho6um8IL6xZ1EdDZxi1ZTuNWJxuTiA/92P0NjT
-         IznxN7tNO1QrCprsCOLg8biGaA/yAnKVOrIv4dt4N4UET7be9ixbXgXnXaOYE5jJT/rA
-         OyJ6IFNolqexxNn/jMnB8k+4QNIEHnOV/0iyncJTc8bhPd7xpYQQSMSb4QufuSJ1noIj
-         +okXH0szkLAwcN0VXYB+nGAs5LsXAck4a258BfQ531jGG1Ma9Q3gNs9ve0gUkbK89rT2
-         qTvg==
-X-Gm-Message-State: AOAM530Nt7kaIuDQAxal7jLSFi27jZ1oSiT8HO4xRafJhlHYW82Gv+6j
-        AqHlm9f4w4nlfr7bHS4s8anNcvUNlmMYoBtJcROGWw==
-X-Google-Smtp-Source: ABdhPJwTLhN/Lnn9FeT8LuDtEdOM8fV7sCnVbAq14AkrDWsBdmhnCEq+upBOFS+i49Z6XHihd3vteiXO3T11i8+0o2g=
-X-Received: by 2002:a17:907:7d8b:: with SMTP id oz11mr16716295ejc.507.1637734114075;
- Tue, 23 Nov 2021 22:08:34 -0800 (PST)
+        id S235270AbhKXGg3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Nov 2021 01:36:29 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:56706 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229479AbhKXGg2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Nov 2021 01:36:28 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 3C0791FD2F;
+        Wed, 24 Nov 2021 06:33:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1637735598; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fdQKBkcCqB612mejiwZus0NwSsAGjyVyWJB8rbQT0I8=;
+        b=F5obHFFJKLPxkTvEK8rJ0AXxJjbi4duk3wCnnH676aXFtoyxUqhsAzz1FSKf2ep/OPiuoK
+        86nYT+Fxai/CQt2xdF7k3MUc1zrbtizqXPFfaTR73P+7Lt6Pv+ySEwGuuoltb/5iibDxMv
+        Y3p1x7Vz42daJzuklhVcp//udjovRV8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1637735598;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fdQKBkcCqB612mejiwZus0NwSsAGjyVyWJB8rbQT0I8=;
+        b=InTrHQgzSv277ldS07vandTv8nOCE+ArNPVmxGVs5yPhS1zgTq+TjlwKLDm0NYQSMVad32
+        XNzAhc1oiFEZteAw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1DBEB13EC2;
+        Wed, 24 Nov 2021 06:33:18 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id OpsxBq7cnWHQfQAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 24 Nov 2021 06:33:18 +0000
+Subject: Re: [PATCH v2 05/20] scsi: core: Add support for internal commands
+To:     Bart Van Assche <bvanassche@acm.org>,
+        John Garry <john.garry@huawei.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20211119195743.2817-1-bvanassche@acm.org>
+ <20211119195743.2817-6-bvanassche@acm.org>
+ <d396a5ed-763e-de79-1714-b4e58e812c7f@huawei.com>
+ <24ce9815-c01d-9ad4-2221-5a5b041ee231@acm.org>
+ <0be5022e-bf3d-6e9f-22ee-9848265d2b82@suse.de>
+ <140badd9-7ee0-73c8-9563-07761ab17753@acm.org>
+ <64e961f1-f4c4-655a-82af-60d75ab35f7a@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <f0e13859-c9f6-bd7c-4da2-9d11a2268a6d@suse.de>
+Date:   Wed, 24 Nov 2021 07:33:17 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-References: <20211124005217.2300458-1-bvanassche@acm.org> <20211124005217.2300458-12-bvanassche@acm.org>
-In-Reply-To: <20211124005217.2300458-12-bvanassche@acm.org>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Wed, 24 Nov 2021 07:08:23 +0100
-Message-ID: <CAMGffE=+zdRykynKMn+N525e_He-hOVOvTx5aNX_PWiZj=NYPA@mail.gmail.com>
-Subject: Re: [PATCH 11/13] scsi: pm8001: Fix kernel-doc warnings
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Jack Wang <jinpu.wang@ionos.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Ashokkumar N <Ashokkumar.N@microchip.com>,
-        kernel test robot <lkp@intel.com>,
-        Radha Ramachandran <radha@google.com>,
-        Viswas G <Viswas.G@microchip.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <64e961f1-f4c4-655a-82af-60d75ab35f7a@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 24, 2021 at 1:52 AM Bart Van Assche <bvanassche@acm.org> wrote:
->
-> Fix the following kernel-doc warnings:
->
-> drivers/scsi/pm8001/pm8001_ctl.c:900: warning: cannot understand function prototype: 'const char *const mpiStateText[] = '
-> drivers/scsi/pm8001/pm8001_ctl.c:930: warning: Function parameter or member 'attr' not described in 'ctl_hmi_error_show'
-> drivers/scsi/pm8001/pm8001_ctl.c:951: warning: Function parameter or member 'attr' not described in 'ctl_raae_count_show'
-> drivers/scsi/pm8001/pm8001_ctl.c:972: warning: Function parameter or member 'attr' not described in 'ctl_iop0_count_show'
-> drivers/scsi/pm8001/pm8001_ctl.c:993: warning: Function parameter or member 'attr' not described in 'ctl_iop1_count_show'
->
-> Fixes: 4ddbea1b6f51 ("scsi: pm80xx: Add sysfs attribute to check MPI state")
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-looks good to me, thx!
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
-> ---
->  drivers/scsi/pm8001/pm8001_ctl.c | 24 ++++++++++++------------
->  1 file changed, 12 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index 397eb9f6a1dd..41a63c9b719b 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -889,14 +889,6 @@ static ssize_t pm8001_show_update_fw(struct device *cdev,
->  static DEVICE_ATTR(update_fw, S_IRUGO|S_IWUSR|S_IWGRP,
->         pm8001_show_update_fw, pm8001_store_update_fw);
->
-> -/**
-> - * ctl_mpi_state_show - controller MPI state check
-> - * @cdev: pointer to embedded class device
-> - * @buf: the buffer returned
-> - *
-> - * A sysfs 'read-only' shost attribute.
-> - */
-> -
->  static const char *const mpiStateText[] = {
->         "MPI is not initialized",
->         "MPI is successfully initialized",
-> @@ -904,6 +896,14 @@ static const char *const mpiStateText[] = {
->         "MPI initialization failed with error in [31:16]"
->  };
->
-> +/**
-> + * ctl_mpi_state_show - controller MPI state check
-> + * @cdev: pointer to embedded class device
-> + * @attr: device attribute (unused)
-> + * @buf: the buffer returned
-> + *
-> + * A sysfs 'read-only' shost attribute.
-> + */
->  static ssize_t ctl_mpi_state_show(struct device *cdev,
->                 struct device_attribute *attr, char *buf)
->  {
-> @@ -920,11 +920,11 @@ static DEVICE_ATTR_RO(ctl_mpi_state);
->  /**
->   * ctl_hmi_error_show - controller MPI initialization fails
->   * @cdev: pointer to embedded class device
-> + * @attr: device attribute (unused)
->   * @buf: the buffer returned
->   *
->   * A sysfs 'read-only' shost attribute.
->   */
-> -
->  static ssize_t ctl_hmi_error_show(struct device *cdev,
->                 struct device_attribute *attr, char *buf)
->  {
-> @@ -941,11 +941,11 @@ static DEVICE_ATTR_RO(ctl_hmi_error);
->  /**
->   * ctl_raae_count_show - controller raae count check
->   * @cdev: pointer to embedded class device
-> + * @attr: device attribute (unused)
->   * @buf: the buffer returned
->   *
->   * A sysfs 'read-only' shost attribute.
->   */
-> -
->  static ssize_t ctl_raae_count_show(struct device *cdev,
->                 struct device_attribute *attr, char *buf)
->  {
-> @@ -962,11 +962,11 @@ static DEVICE_ATTR_RO(ctl_raae_count);
->  /**
->   * ctl_iop0_count_show - controller iop0 count check
->   * @cdev: pointer to embedded class device
-> + * @attr: device attribute (unused)
->   * @buf: the buffer returned
->   *
->   * A sysfs 'read-only' shost attribute.
->   */
-> -
->  static ssize_t ctl_iop0_count_show(struct device *cdev,
->                 struct device_attribute *attr, char *buf)
->  {
-> @@ -983,11 +983,11 @@ static DEVICE_ATTR_RO(ctl_iop0_count);
->  /**
->   * ctl_iop1_count_show - controller iop1 count check
->   * @cdev: pointer to embedded class device
-> + * @attr: device attribute (unused)
->   * @buf: the buffer returned
->   *
->   * A sysfs 'read-only' shost attribute.
->   */
-> -
->  static ssize_t ctl_iop1_count_show(struct device *cdev,
->                 struct device_attribute *attr, char *buf)
->  {
+On 11/23/21 8:18 PM, Bart Van Assche wrote:
+> On 11/23/21 9:46 AM, Bart Van Assche wrote:
+>> On 11/23/21 12:13 AM, Hannes Reinecke wrote:
+>>> It's actually a bit more involved.
+>>>
+>>> The biggest issue is that the SCSI layer is littered with the assumption
+>>> that there _will_ be a ->device pointer in struct scsi_cmnd.
+>>> If we make up a scsi_cmnd structure _without_ that we'll have to audit
+>>> the entire stack to ensure we're not tripping over a NULL device 
+>>> pointer.
+>>> And to make matters worse, we also need to audit the completion path in
+>>> the driver, which typically have the same 'issue'.
+>>>
+>>> Case in point:
+>>>
+>>> # git grep -- '->device' drivers/scsi | wc --lines
+>>> 2712
+>>>
+>>> Which was the primary reason for adding a stub device to the SCSI Host;
+>>> simply to avoid all the pointless churn and have a valid device for all
+>>> commands.
+>>>
+>>> The only way I can see how to avoid getting dragged down into that
+>>> rat-hole is to _not_ returning a scsi_cmnd, but rather something else
+>>> entirely; that's the avenue I've exploited with my last patchset which
+>>> would just return a tag number.
+>>> But as there are drivers which really need a scsi_cmnd I can't se how we
+>>> can get away with not having a stub scsi_device for the scsi host.
+>>>
+>>> And that won't even show up in sysfs if we assign it a LUN number beyond
+>>> the addressable range; 'max_id':0 tends to be a safe choice here.
+>>
+>> There is no risk that the scsi_cmnd.device member will be dereferenced 
+>> for
+>> internal requests allocated by the UFS driver. But I understand from your
+>> email that making sure that the scsi_cmnd.device member is not NULL is
+>> important for other SCSI LLDs. I will look into the approach of 
+>> associating
+>> a stub SCSI device with internal requests.
+> 
+> (replying to my own email)
+> 
+> Hi Hannes,
+> 
+> Allocating a struct scsi_device for internal requests seems tricky to 
+> me. The
+> most straightforward approach would be to call scsi_alloc_sdev(). 
+> However, that
+> function accepts a scsi_target pointer and calls .slave_alloc(). So a
+> scsi_target structure would have to be set up before that function is 
+> called and
+> SCSI LLDs would have to be audited to verify that .slave_alloc() works 
+> fine for
+> the H:C:I:L tuple assigned to the fake SCSI device. Additionally, how 
+> should the
+> inquiry data be initialized that is filled in by scsi_add_lun()?
+> 
+> Since I do not use SCSI hardware that needs a scsi_device to be 
+> associated with
+> internal requests, I prefer that this functionality is implemented in a 
+> future
+> patch series. Changing the hba->host->internal_queue occurrences in the UFS
+> driver into something like hba->host->internal_sdev->request_queue once 
+> this
+> functionality is implemented should be easy.
+> 
+Well, I still do have the patchset for implementing it.
+Will be reposting it.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
