@@ -2,41 +2,37 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E912C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Nov 2021 15:13:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D0E8C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Nov 2021 15:13:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355968AbhKYPQP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Nov 2021 10:16:15 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:47078 "EHLO
+        id S1355971AbhKYPQQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Nov 2021 10:16:16 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:47086 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352191AbhKYPOO (ORCPT
+        with ESMTP id S1353289AbhKYPOO (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Nov 2021 10:14:14 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 1019A1FD3C;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 11E511FD3D;
         Thu, 25 Nov 2021 15:11:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1637853062; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=9eyq1HeKplGRs/+Oee78lchL2tHMM9PkF+Ez+YRYbCc=;
-        b=l8oHOjvFEu67uje1jjGMGZFSoCaXUV0S8UiHl1cuzwzvfPeQ/Dschuh/cgiQ3AuQPCh4k4
-        tQWh7YE7Cg48gNlJGDimYTGIbuxQgiX/AKd6tWQvVGG3RyBRiXf/cIoVpQiUW2Q+tQm8Xl
-        SOF7MJ/TxxGam9mB1xvWBlagkIpDDVQ=
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=dA7Dmc4olRP0G4ydFs7HGuiiT5FgmeXvV+AOkou6stw=;
+        b=LF6Jz52+PDJ17/hSFmm7fmSQDfj/DOahO8bSOdd43VLMA+hTN8WVAMXbK5oRWspsL1a4cY
+        ixw177oow8jzt7NHHZUHgnjtIF7Alos8CE2hws6NWbSEt9n5o6qvHMl0/AaCYrBlY82uJy
+        MupB/h9hz9nbVG+GV/QToR4OVaeqKy4=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1637853062;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=9eyq1HeKplGRs/+Oee78lchL2tHMM9PkF+Ez+YRYbCc=;
-        b=UjwW+z3DKRTnLGldb1SAFndv/tsmxCR8jcDTaTOzAgT9i9s2Vepa/iMjzpQI14o2GSBWzz
-        psiT7zsEA1m7JgBg==
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=dA7Dmc4olRP0G4ydFs7HGuiiT5FgmeXvV+AOkou6stw=;
+        b=c1Zg8FDWe+31Z7abjnt9WiOYQBZ4oGDP7yhd/1II09WiGSzu7AUdUIQYns9UVwOEbehFlU
+        cfQ7WdAfNzI++eAg==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id A3EE8A3B87;
+        by relay2.suse.de (Postfix) with ESMTP id 9DEEEA3B85;
         Thu, 25 Nov 2021 15:11:01 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 9316D51919EE; Thu, 25 Nov 2021 16:11:01 +0100 (CET)
+        id 8F53551919EC; Thu, 25 Nov 2021 16:11:01 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -44,229 +40,137 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>,
         Bart van Assche <bvanassche@acm.org>,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 01/15] scsi: allocate host device
-Date:   Thu, 25 Nov 2021 16:10:34 +0100
-Message-Id: <20211125151048.103910-2-hare@suse.de>
+Subject: [PATCHv9 00/15] scsi: enabled reserved commands for LLDDs
+Date:   Thu, 25 Nov 2021 16:10:33 +0100
+Message-Id: <20211125151048.103910-1-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20211125151048.103910-1-hare@suse.de>
-References: <20211125151048.103910-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a flag 'alloc_host_dev' to the SCSI host template and allocate
-a virtual scsi device if the flag is set.
-This device has the SCSI id <max_id + 1>:0, so won't clash with any
-devices the HBA might allocate. It's also excluded from scanning and
-will not show up in sysfs.
-Intention is to use this device to send internal commands to the HBA.
+Hi all,
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/hosts.c       |  8 +++++
- drivers/scsi/scsi_scan.c   | 67 +++++++++++++++++++++++++++++++++++++-
- drivers/scsi/scsi_sysfs.c  |  3 +-
- include/scsi/scsi_device.h |  2 +-
- include/scsi/scsi_host.h   | 21 ++++++++++++
- 5 files changed, 98 insertions(+), 3 deletions(-)
+quite some drivers use internal commands for various purposes, most
+commonly sending TMFs or querying the HBA status.
+While these commands use the same submission mechanism than normal
+I/O commands, they will not be counted as outstanding commands,
+requiring those drivers to implement their own mechanism to figure
+out outstanding commands.
+The block layer already has the concept of 'reserved' tags for
+precisely this purpose, namely non-I/O tags which live off a separate
+tag pool. That guarantees that these commands can always be sent,
+and won't be influenced by tag starvation from the I/O tag pool.
+This patchset enables the use of reserved tags for the SCSI midlayer
+by allocating a virtual LUN for the HBA itself which just serves
+as a resource to allocate valid tags from.
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index f69b77cbf538..a539fa2fb221 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -290,6 +290,14 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	if (error)
- 		goto out_del_dev;
- 
-+	if (sht->alloc_host_sdev) {
-+		shost->shost_sdev = scsi_get_host_dev(shost);
-+		if (!shost->shost_sdev) {
-+			error = -ENOMEM;
-+			goto out_del_dev;
-+		}
-+	}
-+
- 	scsi_proc_host_add(shost);
- 	scsi_autopm_put_host(shost);
- 	return error;
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 328c0e79dfe7..e2910aa02a65 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1139,6 +1139,12 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	if (!sdev)
- 		goto out;
- 
-+	if (scsi_device_is_host_dev(sdev)) {
-+		if (bflagsp)
-+			*bflagsp = BLIST_NOLUN;
-+		return SCSI_SCAN_LUN_PRESENT;
-+	}
-+
- 	result = kmalloc(result_len, GFP_KERNEL);
- 	if (!result)
- 		goto out_free_sdev;
-@@ -1755,6 +1761,9 @@ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
- 		/* If device is already visible, skip adding it to sysfs */
- 		if (sdev->is_visible)
- 			continue;
-+		/* Host devices should never be visible in sysfs */
-+		if (scsi_device_is_host_dev(sdev))
-+			continue;
- 		if (!scsi_host_scan_allowed(shost) ||
- 		    scsi_sysfs_add_sdev(sdev) != 0)
- 			__scsi_remove_device(sdev);
-@@ -1919,12 +1928,16 @@ EXPORT_SYMBOL(scsi_scan_host);
- 
- void scsi_forget_host(struct Scsi_Host *shost)
- {
--	struct scsi_device *sdev;
-+	struct scsi_device *sdev, *host_sdev = NULL;
- 	unsigned long flags;
- 
-  restart:
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_for_each_entry(sdev, &shost->__devices, siblings) {
-+		if (scsi_device_is_host_dev(sdev)) {
-+			host_sdev = sdev;
-+			continue;
-+		}
- 		if (sdev->sdev_state == SDEV_DEL)
- 			continue;
- 		spin_unlock_irqrestore(shost->host_lock, flags);
-@@ -1932,5 +1945,57 @@ void scsi_forget_host(struct Scsi_Host *shost)
- 		goto restart;
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
-+	/* Remove host device last, might be needed to send commands */
-+	if (host_sdev)
-+		__scsi_remove_device(host_sdev);
- }
- 
-+/**
-+ * scsi_get_host_dev - Create a virtual scsi_device to the host adapter
-+ * @shost: Host that needs a scsi_device
-+ *
-+ * Lock status: None assumed.
-+ *
-+ * Returns:     The scsi_device or NULL
-+ *
-+ * Notes:
-+ *	Attach a single scsi_device to the Scsi_Host. The primary aim
-+ *	for this device is to serve as a container from which valid
-+ *	scsi commands can be allocated from. Each scsi command will carry
-+ *	an unused/free command tag, which then can be used by the LLDD to
-+ *	send internal or passthrough commands without having to find a
-+ *	valid command tag internally.
-+ */
-+struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
-+{
-+	struct scsi_device *sdev = NULL;
-+	struct scsi_target *starget;
-+
-+	mutex_lock(&shost->scan_mutex);
-+	if (!scsi_host_scan_allowed(shost))
-+		goto out;
-+	starget = scsi_alloc_target(&shost->shost_gendev, 0,
-+				    shost->max_id);
-+	if (!starget)
-+		goto out;
-+
-+	sdev = scsi_alloc_sdev(starget, 0, NULL);
-+	if (sdev)
-+		sdev->borken = 0;
-+	else
-+		scsi_target_reap(starget);
-+	put_device(&starget->dev);
-+ out:
-+	mutex_unlock(&shost->scan_mutex);
-+	return sdev;
-+}
-+EXPORT_SYMBOL(scsi_get_host_dev);
-+
-+/*
-+ * Test if a given device is a SCSI host device
-+ */
-+bool scsi_device_is_host_dev(struct scsi_device *sdev)
-+{
-+	return sdev == sdev->host->shost_sdev;
-+}
-+EXPORT_SYMBOL_GPL(scsi_device_is_host_dev);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 61839773cc72..a6e0a70ca6f5 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -500,7 +500,8 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 		kfree_rcu(vpd_pg80, rcu);
- 	if (vpd_pg89)
- 		kfree_rcu(vpd_pg89, rcu);
--	kfree(sdev->inquiry);
-+	if (!scsi_device_is_host_dev(sdev))
-+		kfree(sdev->inquiry);
- 	kfree(sdev);
- 
- 	if (parent)
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index d1c6fc83b1e3..5d7204186831 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -604,7 +604,7 @@ static inline int scsi_device_busy(struct scsi_device *sdev)
- 	return sbitmap_weight(&sdev->budget_map);
- }
- 
--#define MODULE_ALIAS_SCSI_DEVICE(type) \
-+#define MODULE_ALIAS_SCSI_DEVICE(type)			\
- 	MODULE_ALIAS("scsi:t-" __stringify(type) "*")
- #define SCSI_DEVICE_MODALIAS_FMT "scsi:t-0x%02x"
- 
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 72e1a347baa6..6f49a8940dc4 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -459,6 +459,9 @@ struct scsi_host_template {
- 	/* True if the host uses host-wide tagspace */
- 	unsigned host_tagset:1;
- 
-+	/* True if a host sdev should be allocated */
-+	unsigned alloc_host_sdev:1;
-+
- 	/*
- 	 * Countdown for host blocking with no commands outstanding.
- 	 */
-@@ -704,6 +707,12 @@ struct Scsi_Host {
- 	 */
- 	struct device *dma_dev;
- 
-+	/*
-+	 * Points to a virtual SCSI device used for sending
-+	 * internal commands to the HBA.
-+	 */
-+	struct scsi_device *shost_sdev;
-+
- 	/*
- 	 * We should ensure that this is aligned, both for better performance
- 	 * and also because some compilers (m68k) don't automatically force
-@@ -793,6 +802,18 @@ void scsi_host_busy_iter(struct Scsi_Host *,
- 
- struct class_container;
- 
-+/*
-+ * These functions are used to allocate and test a pseudo device
-+ * which will refer to the host adapter itself rather than any
-+ * physical device.  The device will be deallocated together with
-+ * all other scsi devices, so there is no need to have a separate
-+ * function to free it.
-+ * This device will not show up in sysfs and won't be available
-+ * from any high-level drivers.
-+ */
-+struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
-+bool scsi_device_is_host_dev(struct scsi_device *sdev);
-+
- /*
-  * DIF defines the exchange of protection information between
-  * initiator and SBC block device.
+Command allocation currently ignores the hardware queues, as none
+of the modified drivers is mq-capable.
+
+This patchset is being sent out as a base for the current discussion
+for enabling reserved commands for the UFS driver; idea is to
+base those patches on top of this one if we are agree that this
+is the way forward.
+
+The entire patchset can be found at
+
+git://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git
+reserved-tags.v9
+
+As usual, comments and reviews are welcome.
+
+Changes to v8:
+- Drop changes to fnic and snic
+- Rebase after scsi_get_host_dev() removal
+- Rework aacraid to store callback pointer in host_scribble
+
+Changes to v7:
+- Drop changes to hisi_sas, pm8001, and mv_sas
+- Drop patch to introduce REQ_INTERNAL flag
+- Include reviews from John Garry
+
+Changes to v6:
+- Remove patch to drop gdth
+- Rework libsas to use a tag per slow task
+- Update hisi_sas, pm8001, and mv_sas
+
+Changes to v5:
+- Remove patch for csiostor
+- Warn on normal commands in scsi_put_reserved_cmd()
+- Fixup aacraid to not only scsi_put_internal_cmd() for
+  reserved commands
+- Add 'nr_reserved_cmds' field to host template
+- Reshuffle patches
+
+Changes to v4:
+- Fixup kbuild warning
+- Include reviews from Bart
+
+Changes to v3:
+- Kill gdth
+- Only convert fnic, snic, hpsa, and aacraid
+- Drop command emulation for pseudo host device
+- make 'can_queue' exclude the number or reserved tags
+- Drop persistent commands proposal
+- Sanitize host device handling
+
+Changes to v2:
+- Update patches from John Garry
+- Use virtual LUN as suggested by Christoph
+- Improve SCSI Host device to present a real SCSI device
+- Implement 'persistent' commands for AENs
+- Convert Megaraid SAS
+
+Changes to v1:
+- Make scsi_{get, put}_reserved_cmd() for Scsi host
+- Previously we separate scsi_{get, put}_reserved_cmd() for sdev
+  and scsi_host_get_reserved_cmd() for the host
+- Fix how Scsi_Host.can_queue is set in the virtio-scsi change
+- Drop Scsi_Host.use_reserved_cmd_q
+- Drop scsi_is_reserved_cmd()
+- Add support in libsas and associated HBA drivers
+- Allocate reserved command in slow task
+- Switch hisi_sas to use reserved Scsi command
+- Reorder the series a little
+- Some tidying
+
+Hannes Reinecke (15):
+  scsi: allocate host device
+  scsi: add scsi_{get,put}_internal_cmd() helper
+  scsi: implement reserved command handling
+  hpsa: move hpsa_hba_inquiry after scsi_add_host()
+  hpsa: use reserved commands
+  hpsa: use scsi_host_busy_iter() to traverse outstanding commands
+  hpsa: drop refcount field from CommandList
+  aacraid: return valid status from aac_scsi_cmd()
+  aacraid: don't bother with setting SCp.Status
+  aacraid: move scsi_add_host()
+  aacraid: move container ID into struct fib
+  aacraid: fsa_dev pointer is always valid
+  aacraid: store callback in scsi_cmnd.host_scribble
+  aacraid: use scsi_get_internal_cmd()
+  aacraid: use scsi_host_busy_iter() to traverse outstanding commands
+
+ drivers/scsi/aacraid/aachba.c   | 208 +++++++++---------
+ drivers/scsi/aacraid/aacraid.h  |  15 +-
+ drivers/scsi/aacraid/commctrl.c |  25 ++-
+ drivers/scsi/aacraid/comminit.c |   2 +-
+ drivers/scsi/aacraid/commsup.c  | 115 +++++-----
+ drivers/scsi/aacraid/dpcsup.c   |   2 +-
+ drivers/scsi/aacraid/linit.c    | 170 +++++++--------
+ drivers/scsi/hosts.c            |  11 +
+ drivers/scsi/hpsa.c             | 364 ++++++++++++++------------------
+ drivers/scsi/hpsa.h             |   1 -
+ drivers/scsi/hpsa_cmd.h         |  10 -
+ drivers/scsi/scsi_lib.c         |  53 ++++-
+ drivers/scsi/scsi_scan.c        |  67 +++++-
+ drivers/scsi/scsi_sysfs.c       |   3 +-
+ include/scsi/scsi_device.h      |   5 +-
+ include/scsi/scsi_host.h        |  43 +++-
+ 16 files changed, 595 insertions(+), 499 deletions(-)
+
 -- 
 2.29.2
 
