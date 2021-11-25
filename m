@@ -2,636 +2,308 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B745C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Nov 2021 15:15:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C7A5C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Nov 2021 22:00:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353210AbhKYPSU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Nov 2021 10:18:20 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:47316 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355963AbhKYPQP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Nov 2021 10:16:15 -0500
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 258351FDF3;
-        Thu, 25 Nov 2021 15:11:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1637853062; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ha0BcPhGIOFUjTBI4owINVfkCQUosbAJtPYzbLrQgDo=;
-        b=pFqZms9R4NRDe5Xwwuo61PabkF1H/W3qUYjhLNCNJkc9FLEgYuQdeFYOeGpU+BIDKaBzne
-        /Xp3mTKd8a3+X3chIbOalPZIiE6pOCARxS46sOMmxZs4tsz94+K2gUWhb2DoMgw0Ak0PzV
-        hwivXSKK7nUVyJagbgVsEHEp6j/V+yU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1637853062;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ha0BcPhGIOFUjTBI4owINVfkCQUosbAJtPYzbLrQgDo=;
-        b=1xH+dbfw8v6NSTujIZt9tL+fw+wQ4e1FZcSbeYusgRi9KhFy6QgV0LHpgS+8NMwweAI226
-        LEsp6AeaNvp+OdDA==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 1ACE9A3B95;
-        Thu, 25 Nov 2021 15:11:02 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id CEE5F5191A08; Thu, 25 Nov 2021 16:11:01 +0100 (CET)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>,
-        Bart van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH 14/15] aacraid: use scsi_get_internal_cmd()
-Date:   Thu, 25 Nov 2021 16:10:47 +0100
-Message-Id: <20211125151048.103910-15-hare@suse.de>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20211125151048.103910-1-hare@suse.de>
-References: <20211125151048.103910-1-hare@suse.de>
+        id S1344487AbhKYWDj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Nov 2021 17:03:39 -0500
+Received: from mail-cusazlp17010005.outbound.protection.outlook.com ([40.93.13.5]:11406
+        "EHLO na01-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S245083AbhKYWBi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 25 Nov 2021 17:01:38 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=kyzdog9TP2newNdztC9VMfhTW/ilr0c4/cL4x0YfMozL4IJenkKkFGGqJ2d3LafeGtV62z+hhqmzVv6Lt9txnaRVGUsOU15bdE+SDrgk52nRH7Y92K50ztsqlnN1MVqP7l1SH6MJxrqwdrOEIiR7DrXtERQiNKVV/CI+C+6FJXcbNkps3ZRUx/3MnTdxLF++/6+6j2oHVgHpaMR5Q4XmtAAKtCnSd/XEDbyQgmgCeU+Jt0BR7mEB6X1pe9bTKz1YaGoPjSgD47DMXqrbmpIOAUvZm9gdWhfEoT2FT0/rP+JlsfYcB9OTW59rk147sHo9SLleDXpcliMiXXCI9hvaSg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0TGhSUp+GC5hi0nhdB6SHKVvlB9ZF8FWDxwhyYXwBSU=;
+ b=HrUaYT46h+24XRCqqDSlgoUG0CnKqNnseeC+NI6XE5YHtxOVreZCxiq/P424diVAC+IeBI8ixsXJKHTcLf/yDwM3PS/4DI1VAfdDVZ1+B6MJuZr/pCGgktrHqvGsiPK+4SRE8Jaj3s2cHDVdxOLJlFI9IeerQUobTw6rj+bGzOifxzyYkONMBasNpLW7zqEYJyXgRXpbCyw9nL4xNu/ZfKXSEo69rLiVjbB7VCStOBWW1aXtVVFmDMFZa+7LzBAGHisDU89x/UUYbcpmIFcSoi+0vRlaBA46dM5KVb/kRrSANjYN6HXf4rxfFbOEnqBAsrBFAjZ++Qq03qM2XBkanw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0TGhSUp+GC5hi0nhdB6SHKVvlB9ZF8FWDxwhyYXwBSU=;
+ b=XtyDvwpKrI29n7TFOetnHFPtEwPCKIX76ytEXuJbhyCRTrhrdpJqiUtYeOVBa2pkUpTk3qvPN2C9xVJxANmKGNAQHj051yy6sb4xzvjQODg75mZgvYzFsCl2F4+n64ROZ/gyjLPR86HaY7p9mY9CJLPMUgNIN++HTV+yOXlInJ4=
+Received: from DM6PR21MB1292.namprd21.prod.outlook.com (2603:10b6:5:170::19)
+ by DM5PR2101MB0871.namprd21.prod.outlook.com (2603:10b6:4:80::39) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.9; Thu, 25 Nov
+ 2021 21:58:17 +0000
+Received: from DM6PR21MB1292.namprd21.prod.outlook.com
+ ([fe80::c95a:f84f:ded0:b8e6]) by DM6PR21MB1292.namprd21.prod.outlook.com
+ ([fe80::c95a:f84f:ded0:b8e6%7]) with mapi id 15.20.4713.010; Thu, 25 Nov 2021
+ 21:58:16 +0000
+From:   Haiyang Zhang <haiyangz@microsoft.com>
+To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
+        Tianyu Lan <ltykernel@gmail.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "mingo@redhat.com" <mingo@redhat.com>,
+        "bp@alien8.de" <bp@alien8.de>,
+        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+        "x86@kernel.org" <x86@kernel.org>, "hpa@zytor.com" <hpa@zytor.com>,
+        "luto@kernel.org" <luto@kernel.org>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        "jgross@suse.com" <jgross@suse.com>,
+        "sstabellini@kernel.org" <sstabellini@kernel.org>,
+        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        "will@kernel.org" <will@kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
+CC:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        vkuznets <vkuznets@redhat.com>,
+        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
+        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
+        "dave.hansen@intel.com" <dave.hansen@intel.com>
+Subject: RE: [PATCH V2 5/6] net: netvsc: Add Isolation VM support for netvsc
+ driver
+Thread-Topic: [PATCH V2 5/6] net: netvsc: Add Isolation VM support for netvsc
+ driver
+Thread-Index: AQHX4HeZrm8ii8lkM0eh2/Yg8KcHmqwS6XUAgAHkSoA=
+Date:   Thu, 25 Nov 2021 21:58:16 +0000
+Message-ID: <DM6PR21MB12926C3BC4766C78C57D9210CA629@DM6PR21MB1292.namprd21.prod.outlook.com>
+References: <20211123143039.331929-1-ltykernel@gmail.com>
+ <20211123143039.331929-6-ltykernel@gmail.com>
+ <MWHPR21MB1593093B61DC506B64986B14D7619@MWHPR21MB1593.namprd21.prod.outlook.com>
+In-Reply-To: <MWHPR21MB1593093B61DC506B64986B14D7619@MWHPR21MB1593.namprd21.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=4391e0e8-47f1-4dc5-aa3c-c57814906b25;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-11-24T16:08:18Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 18755722-ee1d-4ade-c5e1-08d9b05eaf67
+x-ms-traffictypediagnostic: DM5PR2101MB0871:
+x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
+x-microsoft-antispam-prvs: <DM5PR2101MB08714BB3CCD74813A004F8A2CA629@DM5PR2101MB0871.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: xoYIzcAmGZEUIrcPE46VDKTqGfQ/03SBKM4jh0UmRXa4ymu6TUyP4ZLqLhuFIsKeMUZZ4vGIUjgANFxMRREBlW/ZKKTRJ99HuQDrJcYhzHWtzCJ6GiH6Va6NPIY2Ja4GImaKkPV5uBLdFhghwP1OX+H3ffPI+exGzJPhRVcNPo8aOQcwecQS5158HoxQGCtFkUb6sNavrcfau6WZHoRVGNMwV/O+FPjd4JGXLIBo8g8MVxpG64ssm8nl5sGfU6+CCodiDJ6W7GW1drCxcV558+FeeaReUK0KgPXmaenKFFhezbYatCqOd611v22xVGl6qBt2dF3zB0vazhKRDWgVass+/V7xSpADM1Xp97HF1myDgocmFfXERfnvw71I9DNhuH6lSF6xqa/7bSkfzPgn2SnUEK4/aYhijlkkQ5bFZJzM4w0DnqRNBlPNAiA4IwR9+yLiPCnHoXlSZ6fMlsmEt+Zr3xIVMeF7q3jGZJbpQsqWXCZ1/zxNALEiVYDXrfguB7WHdNiXC/jLGFOOlwxrVa89hch6A4C7y4/vxhE6koWidWFA/E6mhKbmWrqDc1aJmohO1ewyG8q0QG2q1vrWtHVXc9zGm9LMuthgam0iwZZeCq/1s6pghUlRB6a0TbvkB0qeAzl843SlnVdis10rpOWOp9zmzsAnbJr83h7YWhFlzcPITzJ7d5p2k4P5wajBZRIkDoXdmkywObDT6SRwkoWMCNvo9K0WQWrb5oJooQUz/2ORmXFiuCfjiYhgGoGAJOIUQ2344rjljbCRVl1d/g==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1292.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(122000001)(38100700002)(10290500003)(82960400001)(6506007)(82950400001)(53546011)(83380400001)(55016003)(508600001)(2906002)(7416002)(7406005)(5660300002)(33656002)(52536014)(186003)(71200400001)(7696005)(921005)(8936002)(66446008)(64756008)(66476007)(8990500004)(8676002)(4326008)(316002)(86362001)(110136005)(54906003)(66556008)(38070700005)(66946007)(9686003)(26005)(76116006)(20210929001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?JS7hZGSfAYVAfOMB1vqvSmyBRrWHK7GuFyfQ0PgrZf97/KTPgUuk4OSkYhd+?=
+ =?us-ascii?Q?GB/LlcmnxP2BVpg6z4r9+CZKvJFnZ5aI24zDZqLdAjDuWOfTAwOPcUHez14f?=
+ =?us-ascii?Q?qapg3PSqVnUPh6NsZHkC7Qg6eDfqsNQNdqeAneImWyRkCQrk6n5rJT9YAn9F?=
+ =?us-ascii?Q?tbTFo2dCQFnVMccKqqvM9j6W5vNSwiV7/4kr3vAkaeXXDqzBvuCubB6CsMDc?=
+ =?us-ascii?Q?xvSq3djLdmDQf73CncwZS2PSgTpY8g4Q1vY2HvQ9QcqETooV90ppKnDUD+HC?=
+ =?us-ascii?Q?sjFcgxOXQGr5LOodbmmZnBfiJDYg6xn1aPCPs8coMk88+5rMFuUQtsLT/U6T?=
+ =?us-ascii?Q?GXgctjEjY6+um3SHuKjLkF5x8+EWzf4CgqKiX3OtQxGnMiVHR7ypbV+ALCh3?=
+ =?us-ascii?Q?MLyYqnQfDFZZx5z+vpFG4sWYyxVY9wayqtU73Md7v2nEvWsJWcUJ6fqIO27u?=
+ =?us-ascii?Q?yEJRFP1TfYCFEDW0Nw4W9eycQ2lwL/CI7YmIfHvGpHD1L7QpJliBwImO8iQ8?=
+ =?us-ascii?Q?z6brmpqgoIltO2HGohjbhJAjxdAaMr4Xq9ScXkvAq/caZNY0HuETkcvcK/j8?=
+ =?us-ascii?Q?fyt1rwvkroqskh2ssdBSnuWzCHw8gLXaeX3XJgVjMUzWNtD860bt8biNk3lY?=
+ =?us-ascii?Q?9gD35LGiHy9TS+4HjroZiqUB2+t8T5q7FvbMdAqHsu7mWoos00HdSMzdWA5N?=
+ =?us-ascii?Q?w12CuBFAbO0WVHrS4Rx4pzkFymjybWbbjb+SJQ1a84uMOzknzYa1vpkUJtdz?=
+ =?us-ascii?Q?DmrBI+RVcrPjD5FPoFmOBTgihgUjutvzX0J/HM53tLkjWpm9aZerK+zSaRDp?=
+ =?us-ascii?Q?vh4uGHY19+wRBM7GL2H0CcnJ721ZuwuUukl7Ce91AF3KLFpybpfBVo89nm1+?=
+ =?us-ascii?Q?CPkaAbiE7eEUgSJI1JYekJQ0woIgaio5NUzdHoAxe42gWgGSDYhYeRwsoSYm?=
+ =?us-ascii?Q?T+1M8nY+arhIlAgiMNYk9NYhHnHNyWEYi2XO441VvtwVTqI8TsNlOq1Y+H6y?=
+ =?us-ascii?Q?ItkfXI8FYdSPqRz5hZmdFJ0hDIJPZWXdKlWW9kNqz2Q9QjKlMnw3P71Hukxt?=
+ =?us-ascii?Q?KvoyltK5fkkEwCrusMI2xbMUgaowgUAwZ6rZQ4eI0cK+Wx2cf2IlInDmhVZq?=
+ =?us-ascii?Q?VDCwpoieiXyFKKhhgdwnbxyNGgbZjYpllJ6CGaZ8DNHWzqQOkWA0vsDMJV5f?=
+ =?us-ascii?Q?wZJ3TD8mmUqysmUg1mzzNclFgX78rw5OBxl/sjW7SwWsF97t8Qu8uMdXmk9n?=
+ =?us-ascii?Q?Ry2jI3kPdMSi1yYZ1jScAUltDlJpPeZvSFAFzg70qyV+9n7r5WyhD0rmibvG?=
+ =?us-ascii?Q?12trwECnRY3kVvXEtywnjCsgD8fs2iDY5R2itwmXJdeLorI7PRH/lvGYSGgd?=
+ =?us-ascii?Q?fq/ziGYFoTw1hLE3BwlICX5IeALWGyKuB1gKdV3ebcWRQaYc7zADHbYpHycQ?=
+ =?us-ascii?Q?02LR6QQCypfqiFj3SLy1ALKR/uoyLN9citVvfsMLG9S0Ng32+DpNoVIbXGBU?=
+ =?us-ascii?Q?f75P8ewp7YXdWsbbdUiav4TFSQc+C2hTzyT4V2czqBbBVbK3CNR6sZjjc+aw?=
+ =?us-ascii?Q?wr+WLMuLa6Lf57HmZiFI2gqoCkpHdMI8/DAuOmFnXX89j9wF7jAGGOK86Mzs?=
+ =?us-ascii?Q?Kg=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1292.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 18755722-ee1d-4ade-c5e1-08d9b05eaf67
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Nov 2021 21:58:16.4384
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: kYiE8U89jtj1r+9eugmKknWQYtqYQDXP2stSr/pxJeP8Ke1OvKRb3aa6YbktLXP5kF9T4J6Ed1JW1dhzqVktEw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR2101MB0871
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.com>
 
-Use scsi_get_internal_cmd() to allocate internal commands and drop
-the fake scsi command and device allocation during container probing.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/aacraid/aachba.c   | 103 +++++++++++++++-----------------
- drivers/scsi/aacraid/aacraid.h  |   9 ++-
- drivers/scsi/aacraid/commctrl.c |  25 ++++----
- drivers/scsi/aacraid/comminit.c |   2 +-
- drivers/scsi/aacraid/commsup.c  |  66 +++++++++-----------
- drivers/scsi/aacraid/dpcsup.c   |   2 +-
- drivers/scsi/aacraid/linit.c    |   8 ++-
- 7 files changed, 104 insertions(+), 111 deletions(-)
-
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index b21ccf7af43f..ff4c5153b5d6 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -360,7 +360,7 @@ int aac_get_config_status(struct aac_dev *dev, int commit_flag)
- 	int status = 0;
- 	struct fib * fibptr;
- 
--	if (!(fibptr = aac_fib_alloc(dev)))
-+	if (!(fibptr = aac_fib_alloc(dev, DMA_FROM_DEVICE)))
- 		return -ENOMEM;
- 
- 	aac_fib_init(fibptr);
-@@ -457,7 +457,7 @@ int aac_get_containers(struct aac_dev *dev)
- 	struct aac_get_container_count_resp *dresp;
- 	int maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
- 
--	if (!(fibptr = aac_fib_alloc(dev)))
-+	if (!(fibptr = aac_fib_alloc(dev, DMA_FROM_DEVICE)))
- 		return -ENOMEM;
- 
- 	aac_fib_init(fibptr);
-@@ -520,7 +520,7 @@ int aac_get_containers(struct aac_dev *dev)
- 
- static void aac_scsi_done(struct scsi_cmnd *scmd)
- {
--	if (scmd->device->request_queue) {
-+	if (scmd->device != scmd->device->host->shost_sdev) {
- 		/* SCSI command has been submitted by the SCSI mid-layer. */
- 		scsi_done(scmd);
- 	} else {
-@@ -620,9 +620,10 @@ static int aac_get_container_name(struct scsi_cmnd * scsicmd)
- 
- static int aac_probe_container_callback2(struct scsi_cmnd * scsicmd)
- {
--	struct fsa_dev_info *fsa_dev_ptr = ((struct aac_dev *)(scsicmd->device->host->hostdata))->fsa_dev;
-+	struct aac_dev * dev = (struct aac_dev *)scsicmd->device->host->hostdata;
-+	unsigned int cid = scmd_id(scsicmd);
- 
--	if ((fsa_dev_ptr[scmd_id(scsicmd)].valid & 1))
-+	if (cid < dev->maximum_num_containers && (dev->fsa_dev[cid].valid & 1))
- 		return aac_scsi_cmd(scsicmd);
- 
- 	scsicmd->result = DID_NO_CONNECT << 16;
-@@ -675,7 +676,6 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
- 		fsa_dev_ptr->valid = 0;
- 
- 	aac_fib_complete(fibptr);
--	aac_fib_free(fibptr);
- 	callback = (int (*)(struct scsi_cmnd *))(scsicmd->host_scribble);
- 	scsicmd->host_scribble = NULL;
- 	(*callback)(scsicmd);
-@@ -734,55 +734,46 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
- 	}
- }
- 
--static int _aac_probe_container(struct scsi_cmnd * scsicmd, unsigned int cid,
-+static int _aac_probe_container(struct aac_dev *dev, struct fib *fibptr,
- 				int (*callback)(struct scsi_cmnd *))
- {
--	struct aac_dev * dev =
--		(struct aac_dev *)scsicmd->device->host->hostdata;
--	struct fib * fibptr;
-+	struct scsi_cmnd *scsicmd = fibptr->scmd;
- 	int status = -ENOMEM;
-+	struct aac_query_mount *dinfo;
- 
--	if ((fibptr = aac_fib_alloc(dev))) {
--		struct aac_query_mount *dinfo;
+> -----Original Message-----
+> From: Michael Kelley (LINUX) <mikelley@microsoft.com>
+> Sent: Wednesday, November 24, 2021 12:03 PM
+> To: Tianyu Lan <ltykernel@gmail.com>; tglx@linutronix.de; mingo@redhat.co=
+m; bp@alien8.de;
+> dave.hansen@linux.intel.com; x86@kernel.org; hpa@zytor.com; luto@kernel.o=
+rg;
+> peterz@infradead.org; jgross@suse.com; sstabellini@kernel.org; boris.ostr=
+ovsky@oracle.com;
+> KY Srinivasan <kys@microsoft.com>; Haiyang Zhang <haiyangz@microsoft.com>=
+; Stephen
+> Hemminger <sthemmin@microsoft.com>; wei.liu@kernel.org; Dexuan Cui <decui=
+@microsoft.com>;
+> joro@8bytes.org; will@kernel.org; davem@davemloft.net; kuba@kernel.org; j=
+ejb@linux.ibm.com;
+> martin.petersen@oracle.com; hch@lst.de; m.szyprowski@samsung.com; robin.m=
+urphy@arm.com;
+> Tianyu Lan <Tianyu.Lan@microsoft.com>; thomas.lendacky@amd.com; xen-
+> devel@lists.xenproject.org
+> Cc: iommu@lists.linux-foundation.org; linux-hyperv@vger.kernel.org; linux=
 -
--		aac_fib_init(fibptr);
--		fibptr->cid = cid;
-+	aac_fib_init(fibptr);
- 
--		dinfo = (struct aac_query_mount *)fib_data(fibptr);
-+	dinfo = (struct aac_query_mount *)fib_data(fibptr);
- 
--		if (fibptr->dev->supplement_adapter_info.supported_options2 &
--		    AAC_OPTION_VARIABLE_BLOCK_SIZE)
--			dinfo->command = cpu_to_le32(VM_NameServeAllBlk);
--		else
--			dinfo->command = cpu_to_le32(VM_NameServe);
-+	if (fibptr->dev->supplement_adapter_info.supported_options2 &
-+	    AAC_OPTION_VARIABLE_BLOCK_SIZE)
-+		dinfo->command = cpu_to_le32(VM_NameServeAllBlk);
-+	else
-+		dinfo->command = cpu_to_le32(VM_NameServe);
- 
--		dinfo->count = cpu_to_le32(fibptr->cid);
--		dinfo->type = cpu_to_le32(FT_FILESYS);
--		scsicmd->host_scribble = (char *)callback;
--		scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
-+	dinfo->count = cpu_to_le32(fibptr->cid);
-+	dinfo->type = cpu_to_le32(FT_FILESYS);
-+	scsicmd->host_scribble = (unsigned char *)callback;
-+	scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
- 
--		status = aac_fib_send(ContainerCommand,
-+	status = aac_fib_send(ContainerCommand,
- 			  fibptr,
- 			  sizeof(struct aac_query_mount),
- 			  FsaNormal,
- 			  0, 1,
- 			  _aac_probe_container1,
- 			  (void *) scsicmd);
--		/*
--		 *	Check that the command queued to the controller
--		 */
--		if (status == -EINPROGRESS)
--			return 0;
-+	/*
-+	 *	Check that the command queued to the controller
-+	 */
-+	if (status == -EINPROGRESS)
-+		return 0;
- 
--		if (status < 0) {
--			aac_fib_complete(fibptr);
--			aac_fib_free(fibptr);
--			scsicmd->host_scribble = NULL;
--		}
--	}
- 	if (status < 0) {
--		if ((dev->fsa_dev[cid].valid & 1) == 0) {
--			dev->fsa_dev[cid].valid = 0;
-+		aac_fib_complete(fibptr);
-+		if ((dev->fsa_dev[fibptr->cid].valid & 1) == 0) {
-+			dev->fsa_dev[fibptr->cid].valid = 0;
-+			scsicmd->host_scribble = NULL;
- 			return (*callback)(scsicmd);
- 		}
- 	}
-@@ -809,28 +800,24 @@ static void aac_probe_container_scsi_done(struct scsi_cmnd *scsi_cmnd)
- 
- int aac_probe_container(struct aac_dev *dev, unsigned int cid)
- {
--	struct scsi_cmnd *scsicmd = kzalloc(sizeof(*scsicmd), GFP_KERNEL);
--	struct scsi_device *scsidev = kzalloc(sizeof(*scsidev), GFP_KERNEL);
-+	struct fib *fibptr;
-+	struct scsi_cmnd *scsicmd;
- 	int status;
- 
--	if (!scsicmd || !scsidev) {
--		kfree(scsicmd);
--		kfree(scsidev);
-+	fibptr = aac_fib_alloc(dev, DMA_FROM_DEVICE);
-+	if (!fibptr)
- 		return -ENOMEM;
--	}
- 
--	scsicmd->device = scsidev;
--	scsidev->sdev_state = 0;
--	scsidev->id = cid;
--	scsidev->host = dev->scsi_host_ptr;
-+	fibptr->cid = cid;
-+	scsicmd = fibptr->scmd;
- 
--	status = _aac_probe_container(scsicmd, cid,
-+	status = _aac_probe_container(dev, fibptr,
- 				      aac_probe_container_callback1);
- 	if (status == 0)
- 		while (scsicmd->host_scribble != NULL)
- 			schedule();
--	kfree(scsidev);
--	kfree(scsicmd);
-+
-+	aac_fib_free(fibptr);
- 	return status;
- }
- 
-@@ -1675,7 +1662,7 @@ static int aac_send_safw_bmic_cmd(struct aac_dev *dev,
- 		return 0;
- 
- 	/* allocate FIB */
--	fibptr = aac_fib_alloc(dev);
-+	fibptr = aac_fib_alloc(dev, DMA_BIDIRECTIONAL);
- 	if (!fibptr)
- 		return -ENOMEM;
- 
-@@ -2035,7 +2022,7 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 	struct aac_bus_info *command;
- 	struct aac_bus_info_response *bus_info;
- 
--	if (!(fibptr = aac_fib_alloc(dev)))
-+	if (!(fibptr = aac_fib_alloc(dev, DMA_FROM_DEVICE)))
- 		return -ENOMEM;
- 
- 	aac_fib_init(fibptr);
-@@ -2082,7 +2069,7 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 		if (rcode >= 0)
- 			memcpy(&dev->supplement_adapter_info, sinfo, sizeof(*sinfo));
- 		if (rcode == -ERESTARTSYS) {
--			fibptr = aac_fib_alloc(dev);
-+			fibptr = aac_fib_alloc(dev, DMA_FROM_DEVICE);
- 			if (!fibptr)
- 				return -ENOMEM;
- 		}
-@@ -2795,6 +2782,8 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 			if (((fsa_dev_ptr[cid].valid & 1) == 0) ||
- 			  (fsa_dev_ptr[cid].sense_data.sense_key ==
- 			   NOT_READY)) {
-+				struct fib * fibptr;
-+
- 				switch (scsicmd->cmnd[0]) {
- 				case SERVICE_ACTION_IN_16:
- 					if (!(dev->raw_io_interface) ||
-@@ -2807,7 +2796,9 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 				case TEST_UNIT_READY:
- 					if (dev->in_reset)
- 						return SCSI_MLQUEUE_DEVICE_BUSY;
--					return _aac_probe_container(scsicmd, cid,
-+					fibptr = aac_fib_alloc_tag(dev, scsicmd);
-+					fibptr->cid = cid;
-+					return _aac_probe_container(dev, fibptr,
- 							aac_probe_container_callback2);
- 				default:
- 					break;
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 90705c4f8ec8..1892f49668aa 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1291,7 +1291,6 @@ struct fsa_dev_info {
- };
- 
- struct fib {
--	void			*next;	/* this is used by the allocator */
- 	s16			type;
- 	s16			size;
- 	/*
-@@ -1302,6 +1301,10 @@ struct fib {
- 	 *	The Container that this I/O is destined for.
- 	 */
- 	u32			cid;
-+	/*
-+	 * The associated scsi command
-+	 */
-+	struct scsi_cmnd 	*scmd;
- 	/*
- 	 *	This is the event the sendfib routine will wait on if the
- 	 *	caller did not pass one and this is synch io.
-@@ -1556,7 +1559,6 @@ struct aac_dev
- 	 */
- 	struct fib              *fibs;
- 
--	struct fib		*free_fib;
- 	spinlock_t		fib_lock;
- 
- 	struct mutex		ioctl_mutex;
-@@ -1733,6 +1735,7 @@ struct aac_dev
- #define FIB_CONTEXT_FLAG_NATIVE_HBA_TMF	(0x00000020)
- #define FIB_CONTEXT_FLAG_SCSI_CMD	(0x00000040)
- #define FIB_CONTEXT_FLAG_EH_RESET	(0x00000080)
-+#define FIB_CONTEXT_FLAG_INTERNAL_CMD	(0x00000100)
- 
- /*
-  *	Define the command values
-@@ -2690,7 +2693,7 @@ void aac_free_irq(struct aac_dev *dev);
- int aac_setup_safw_adapter(struct aac_dev *dev);
- const char *aac_driverinfo(struct Scsi_Host *);
- void aac_fib_vector_assign(struct aac_dev *dev);
--struct fib *aac_fib_alloc(struct aac_dev *dev);
-+struct fib *aac_fib_alloc(struct aac_dev *dev, int direction);
- struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd);
- int aac_fib_setup(struct aac_dev *dev);
- void aac_fib_map_free(struct aac_dev *dev);
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index e7cc927ed952..bc5b81696476 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -55,7 +55,7 @@ static int ioctl_send_fib(struct aac_dev * dev, void __user *arg)
- 	if (dev->in_reset) {
- 		return -EBUSY;
- 	}
--	fibptr = aac_fib_alloc(dev);
-+	fibptr = aac_fib_alloc(dev, DMA_BIDIRECTIONAL);
- 	if(fibptr == NULL) {
- 		return -ENOMEM;
- 	}
-@@ -478,7 +478,7 @@ static int check_revision(struct aac_dev *dev, void __user *arg)
-  */
- static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- {
--	struct fib* srbfib;
-+	struct fib* srbfib = NULL;
- 	int status;
- 	struct aac_srb *srbcmd = NULL;
- 	struct aac_hba_cmd_req *hbacmd = NULL;
-@@ -509,12 +509,6 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 		dprintk((KERN_DEBUG"aacraid: No permission to send raw srb\n"));
- 		return -EPERM;
- 	}
--	/*
--	 *	Allocate and initialize a Fib then setup a SRB command
--	 */
--	if (!(srbfib = aac_fib_alloc(dev))) {
--		return -ENOMEM;
--	}
- 
- 	memset(sg_list, 0, sizeof(sg_list)); /* cleanup may take issue */
- 	if(copy_from_user(&fibsize, &user_srb->count,sizeof(u32))){
-@@ -561,6 +555,15 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 		rcode = -EINVAL;
- 		goto cleanup;
- 	}
-+
-+	/*
-+	 *	Allocate and initialize a Fib
-+	 */
-+	if (!(srbfib = aac_fib_alloc(dev, data_dir))) {
-+		rcode = -ENOMEM;
-+		goto cleanup;
-+	}
-+
- 	actual_fibsize = sizeof(struct aac_srb) - sizeof(struct sgentry) +
- 		((user_srbcmd->sg.count & 0xff) * sizeof(struct sgentry));
- 	actual_fibsize64 = actual_fibsize + (user_srbcmd->sg.count & 0xff) *
-@@ -988,8 +991,10 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 	if (rcode != -ERESTARTSYS) {
- 		for (i = 0; i <= sg_indx; i++)
- 			kfree(sg_list[i]);
--		aac_fib_complete(srbfib);
--		aac_fib_free(srbfib);
-+		if (srbfib) {
-+			aac_fib_complete(srbfib);
-+			aac_fib_free(srbfib);
-+		}
- 	}
- 
- 	return rcode;
-diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-index 355b16f0b145..0d5be76891b0 100644
---- a/drivers/scsi/aacraid/comminit.c
-+++ b/drivers/scsi/aacraid/comminit.c
-@@ -327,7 +327,7 @@ int aac_send_shutdown(struct aac_dev * dev)
- 
- 	aac_wait_for_io_completion(dev);
- 
--	fibctx = aac_fib_alloc(dev);
-+	fibctx = aac_fib_alloc(dev, DMA_NONE);
- 	if (!fibctx)
- 		return -ENOMEM;
- 	aac_fib_init(fibctx);
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index deb32c9f4b3e..aaa9b5d6f55d 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -173,7 +173,6 @@ int aac_fib_setup(struct aac_dev * dev)
- 		fibptr->dev = dev;
- 		fibptr->hw_fib_va = hw_fib;
- 		fibptr->data = (void *) fibptr->hw_fib_va->data;
--		fibptr->next = fibptr+1;	/* Forward chain the fibs */
- 		init_completion(&fibptr->event_wait);
- 		spin_lock_init(&fibptr->event_lock);
- 		hw_fib->header.XferState = cpu_to_le32(0xffffffff);
-@@ -200,14 +199,6 @@ int aac_fib_setup(struct aac_dev * dev)
- 	 */
- 	aac_fib_vector_assign(dev);
- 
--	/*
--	 *	Add the fib chain to the free list
--	 */
--	dev->fibs[dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB - 1].next = NULL;
--	/*
--	*	Set 8 fibs aside for management tools
--	*/
--	dev->free_fib = &dev->fibs[dev->scsi_host_ptr->can_queue];
- 	return 0;
- }
- 
-@@ -233,7 +224,7 @@ struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
- 	fibptr->type = FSAFS_NTC_FIB_CONTEXT;
- 	fibptr->callback_data = NULL;
- 	fibptr->callback = NULL;
--	fibptr->flags = 0;
-+	fibptr->scmd = scmd;
- 
- 	return fibptr;
- }
-@@ -241,36 +232,30 @@ struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
- /**
-  *	aac_fib_alloc	-	allocate a fib
-  *	@dev: Adapter to allocate the fib for
-+ *	@direction: DMA data direction
-  *
-  *	Allocate a fib from the adapter fib pool. If the pool is empty we
-  *	return NULL.
-  */
- 
--struct fib *aac_fib_alloc(struct aac_dev *dev)
-+struct fib *aac_fib_alloc(struct aac_dev *dev, int direction)
- {
--	struct fib * fibptr;
-+	struct scsi_cmnd *scmd;
-+	struct fib * fibptr = NULL;
- 	unsigned long flags;
-+
- 	spin_lock_irqsave(&dev->fib_lock, flags);
--	fibptr = dev->free_fib;
--	if(!fibptr){
--		spin_unlock_irqrestore(&dev->fib_lock, flags);
--		return fibptr;
-+	scmd = scsi_get_internal_cmd(dev->scsi_host_ptr->shost_sdev,
-+				     direction, true);
-+	if (scmd) {
-+		fibptr = aac_fib_alloc_tag(dev, scmd);
-+		fibptr->flags |= FIB_CONTEXT_FLAG_INTERNAL_CMD;
- 	}
--	dev->free_fib = fibptr->next;
- 	spin_unlock_irqrestore(&dev->fib_lock, flags);
--	/*
--	 *	Set the proper node type code and node byte size
--	 */
--	fibptr->type = FSAFS_NTC_FIB_CONTEXT;
-+	if (!fibptr)
-+		return NULL;
-+
- 	fibptr->size = sizeof(struct fib);
--	/*
--	 *	Null out fields that depend on being zero at the start of
--	 *	each I/O
--	 */
--	fibptr->hw_fib_va->header.XferState = 0;
--	fibptr->flags = 0;
--	fibptr->callback = NULL;
--	fibptr->callback_data = NULL;
- 
- 	return fibptr;
- }
-@@ -298,8 +283,15 @@ void aac_fib_free(struct fib *fibptr)
- 			 (void*)fibptr,
- 			 le32_to_cpu(fibptr->hw_fib_va->header.XferState));
- 	}
--	fibptr->next = fibptr->dev->free_fib;
--	fibptr->dev->free_fib = fibptr;
-+	if (fibptr->scmd) {
-+		struct scsi_cmnd *scmd = fibptr->scmd;
-+
-+		fibptr->scmd = NULL;
-+		if (fibptr->flags & FIB_CONTEXT_FLAG_INTERNAL_CMD) {
-+			scsi_put_internal_cmd(scmd);
-+			fibptr->flags &= ~FIB_CONTEXT_FLAG_INTERNAL_CMD;
-+		}
-+	}
- 	spin_unlock_irqrestore(&fibptr->dev->fib_lock, flags);
- }
- 
-@@ -507,7 +499,7 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
- 	 *	will have a debug mode where the adapter can notify the host
- 	 *	it had a problem and the host can log that fact.
- 	 */
--	fibptr->flags = 0;
-+	fibptr->flags &= FIB_CONTEXT_FLAG_INTERNAL_CMD;
- 	if (wait && !reply) {
- 		return -EINVAL;
- 	} else if (!wait && reply) {
-@@ -562,7 +554,7 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
- 	if (!wait) {
- 		fibptr->callback = callback;
- 		fibptr->callback_data = callback_data;
--		fibptr->flags = FIB_CONTEXT_FLAG;
-+		fibptr->flags |= FIB_CONTEXT_FLAG;
- 	}
- 
- 	fibptr->done = 0;
-@@ -714,7 +706,7 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
- 	struct aac_hba_cmd_req *hbacmd = (struct aac_hba_cmd_req *)
- 			fibptr->hw_fib_va;
- 
--	fibptr->flags = (FIB_CONTEXT_FLAG | FIB_CONTEXT_FLAG_NATIVE_HBA);
-+	fibptr->flags |= (FIB_CONTEXT_FLAG | FIB_CONTEXT_FLAG_NATIVE_HBA);
- 	if (callback) {
- 		wait = 0;
- 		fibptr->callback = callback;
-@@ -1663,7 +1655,7 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 		retval = unblock_retval;
- 	if ((forced < 2) && (retval == -ENODEV)) {
- 		/* Unwind aac_send_shutdown() IOP_RESET unsupported/disabled */
--		struct fib * fibctx = aac_fib_alloc(aac);
-+		struct fib * fibctx = aac_fib_alloc(aac, DMA_NONE);
- 		if (fibctx) {
- 			struct aac_pause *cmd;
- 			int status;
-@@ -2290,7 +2282,7 @@ static int aac_send_wellness_command(struct aac_dev *dev, char *wellness_str,
- 	int ret = -ENOMEM;
- 	u32 vbus, vid;
- 
--	fibptr = aac_fib_alloc(dev);
-+	fibptr = aac_fib_alloc(dev, DMA_TO_DEVICE);
- 	if (!fibptr)
- 		goto out;
- 
-@@ -2388,7 +2380,7 @@ static int aac_send_hosttime(struct aac_dev *dev, struct timespec64 *now)
- 	struct fib *fibptr;
- 	__le32 *info;
- 
--	fibptr = aac_fib_alloc(dev);
-+	fibptr = aac_fib_alloc(dev, DMA_TO_DEVICE);
- 	if (!fibptr)
- 		goto out;
- 
-diff --git a/drivers/scsi/aacraid/dpcsup.c b/drivers/scsi/aacraid/dpcsup.c
-index fbe334c59f37..9424792432ec 100644
---- a/drivers/scsi/aacraid/dpcsup.c
-+++ b/drivers/scsi/aacraid/dpcsup.c
-@@ -315,7 +315,7 @@ unsigned int aac_intr_normal(struct aac_dev *dev, u32 index, int isAif,
- 		struct fib *fibctx;
- 		struct aac_aifcmd *cmd;
- 
--		fibctx = aac_fib_alloc(dev);
-+		fibctx = aac_fib_alloc(dev, DMA_FROM_DEVICE);
- 		if (!fibctx)
- 			return 1;
- 		aac_fib_init(fibctx);
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index b92a6595358e..7268118186d1 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -716,7 +716,7 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
- 			return ret;
- 
- 		/* start a HBA_TMF_ABORT_TASK TMF request */
--		fib = aac_fib_alloc(aac);
-+		fib = aac_fib_alloc(aac, DMA_NONE);
- 		if (!fib)
- 			return ret;
- 
-@@ -927,7 +927,7 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
- 	pr_err("%s: Host device reset request. SCSI hang ?\n",
- 	       AAC_DRIVERNAME);
- 
--	fib = aac_fib_alloc(aac);
-+	fib = aac_fib_alloc(aac, DMA_NONE);
- 	if (!fib)
- 		return ret;
- 
-@@ -990,7 +990,7 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
- 	pr_err("%s: Host target reset request. SCSI hang ?\n",
- 	       AAC_DRIVERNAME);
- 
--	fib = aac_fib_alloc(aac);
-+	fib = aac_fib_alloc(aac, DMA_NONE);
- 	if (!fib)
- 		return ret;
- 
-@@ -1507,6 +1507,7 @@ static struct scsi_host_template aac_driver_template = {
- #endif
- 	.emulated			= 1,
- 	.no_write_same			= 1,
-+	.alloc_host_sdev		= 1,
- };
- 
- static void __aac_shutdown(struct aac_dev * aac)
-@@ -1645,6 +1646,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	shost->max_cmd_len = 16;
- 	shost->max_id = MAXIMUM_NUM_CONTAINERS;
- 	shost->max_lun = AAC_MAX_LUN;
-+	shost->nr_reserved_cmds = AAC_NUM_MGT_FIB;
- 	shost->sg_tablesize = HBA_MAX_SG_SEPARATE;
- 
- 	if (aac_cfg_major == AAC_CHARDEV_NEEDS_REINIT)
--- 
-2.29.2
+> kernel@vger.kernel.org; linux-scsi@vger.kernel.org; netdev@vger.kernel.or=
+g; vkuznets
+> <vkuznets@redhat.com>; brijesh.singh@amd.com; konrad.wilk@oracle.com;
+> parri.andrea@gmail.com; dave.hansen@intel.com
+> Subject: RE: [PATCH V2 5/6] net: netvsc: Add Isolation VM support for net=
+vsc driver
+>=20
+> From: Tianyu Lan <ltykernel@gmail.com> Sent: Tuesday, November 23, 2021 6=
+:31 AM
+> >
+> > In Isolation VM, all shared memory with host needs to mark visible to
+> > host via hvcall. vmbus_establish_gpadl() has already done it for
+> > netvsc rx/tx ring buffer. The page buffer used by vmbus_sendpacket_
+> > pagebuffer() stills need to be handled. Use DMA API to map/umap these
+> > memory during sending/receiving packet and Hyper-V swiotlb bounce
+> > buffer dma address will be returned. The swiotlb bounce buffer has
+> > been masked to be visible to host during boot up.
+> >
+> > Allocate rx/tx ring buffer via dma_alloc_noncontiguous() in Isolation
+> > VM. After calling vmbus_establish_gpadl() which marks these pages
+> > visible to host, map these pages unencrypted addes space via dma_vmap_n=
+oncontiguous().
+> >
+>=20
+> The big unresolved topic is how best to do the allocation and mapping of =
+the big netvsc
+> send and receive buffers.  Let me summarize and make a recommendation.
+>=20
+> Background
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> 1.  Each Hyper-V synthetic network device requires a large pre-allocated =
+receive
+>      buffer (defaults to 16 Mbytes) and a similar send buffer (defaults t=
+o 1 Mbyte).
+> 2.  The buffers are allocated in guest memory and shared with the Hyper-V=
+ host.
+>      As such, in the Hyper-V SNP environment, the memory must be unencryp=
+ted
+>      and accessed in the Hyper-V guest with shared_gpa_boundary (i.e., VT=
+OM)
+>      added to the physical memory address.
+> 3.  The buffers need *not* be contiguous in guest physical memory, but mu=
+st be
+>      contiguously mapped in guest kernel virtual space.
+> 4.  Network devices may come and go during the life of the VM, so allocat=
+ion of
+>      these buffers and their mappings may be done after Linux has been ru=
+nning for
+>      a long time.
+> 5.  Performance of the allocation and mapping process is not an issue sin=
+ce it is
+>      done only on synthetic network device add/remove.
+> 6.  So the primary goals are an appropriate logical abstraction, code tha=
+t is
+>      simple and straightforward, and efficient memory usage.
+>=20
+> Approaches
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> During the development of these patches, four approaches have been
+> implemented:
+>=20
+> 1.  Two virtual mappings:  One from vmalloc() to allocate the guest memor=
+y, and
+>      the second from vmap_pfns() after adding the shared_gpa_boundary.   =
+This is
+>      implemented in Hyper-V or netvsc specific code, with no use of DMA A=
+PIs.
+>      No separate list of physical pages is maintained, so for creating th=
+e second
+>      mapping, the PFN list is assembled temporarily by doing virt-to-phys=
+()
+>      page-by-page on the vmalloc mapping, and then discarded because it i=
+s no
+>      longer needed.  [v4 of the original patch series.]
+>=20
+> 2.  Two virtual mappings as in (1) above, but implemented via new DMA cal=
+ls
+>      dma_map_decrypted() and dma_unmap_encrypted().  [v3 of the original
+>      patch series.]
+>=20
+> 3.  Two virtual mappings as in (1) above, but implemented via DMA noncont=
+iguous
+>       allocation and mapping calls, as enhanced to allow for custom map/u=
+nmap
+>       implementations.  A list of physical pages is maintained in the dma=
+_sgt_handle
+>       as expected by the DMA noncontiguous API.  [New split-off patch ser=
+ies v1 & v2]
+>=20
+> 4.   Single virtual mapping from vmap_pfns().  The netvsc driver allocate=
+s physical
+>       memory via alloc_pages() with as much contiguity as possible, and m=
+aintains a
+>       list of physical pages and ranges.   Single virtual map is setup wi=
+th vmap_pfns()
+>       after adding shared_gpa_boundary.  [v5 of the original patch series=
+.]
+>=20
+> Both implementations using DMA APIs use very little of the existing DMA m=
+achinery.  Both
+> require extensions to the DMA APIs, and custom ops functions.
+> While in some sense the netvsc send and receive buffers involve DMA, they=
+ do not require
+> any DMA actions on a per-I/O basis.  It seems better to me to not try to =
+fit these two
+> buffers into the DMA model as a one-off.  Let's just use Hyper-V specific=
+ code to allocate
+> and map them, as is done with the Hyper-V VMbus channel ring buffers.
+>=20
+> That leaves approaches (1) and (4) above.  Between those two, (1) is simp=
+ler even though
+> there are two virtual mappings.  Using alloc_pages() as in (4) is messy a=
+nd there's no
+> real benefit to using higher order allocations.
+> (4) also requires maintaining a separate list of PFNs and ranges, which o=
+ffsets some of
+> the benefits to having only one virtual mapping active at any point in ti=
+me.
+>=20
+> I don't think there's a clear "right" answer, so it's a judgment call.  W=
+e've explored
+> what other approaches would look like, and I'd say let's go with
+> (1) as the simpler approach.  Thoughts?
+>=20
+I agree with the following goal:
+"So the primary goals are an appropriate logical abstraction, code that is
+     simple and straightforward, and efficient memory usage."
+
+And the Approach #1 looks better to me as well.
+
+Thanks,
+- Haiyang
 
