@@ -2,37 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D0E8C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Nov 2021 15:13:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FAF5C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Nov 2021 15:13:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355971AbhKYPQQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Nov 2021 10:16:16 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:47086 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353289AbhKYPOO (ORCPT
+        id S1355972AbhKYPQS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Nov 2021 10:16:18 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:35606 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1353315AbhKYPOO (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Nov 2021 10:14:14 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 11E511FD3D;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 2040A21B36;
         Thu, 25 Nov 2021 15:11:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1637853062; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=dA7Dmc4olRP0G4ydFs7HGuiiT5FgmeXvV+AOkou6stw=;
-        b=LF6Jz52+PDJ17/hSFmm7fmSQDfj/DOahO8bSOdd43VLMA+hTN8WVAMXbK5oRWspsL1a4cY
-        ixw177oow8jzt7NHHZUHgnjtIF7Alos8CE2hws6NWbSEt9n5o6qvHMl0/AaCYrBlY82uJy
-        MupB/h9hz9nbVG+GV/QToR4OVaeqKy4=
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=6UI9GunQsBtnUmKnGQMS+6Dg+8spqijiZfuVVc7sY/w=;
+        b=12rHIiCha+oplSCdK5CI2Zs0bZpVkkForrXqkF5i4c0jC1SMaHfvGm9huDAgPxbpA0O3gK
+        E/FHNnwOfmxynXTuu/nC+VvGqHSh6FLOUiTPzNw1KA/t5fjC81ISFPMultBIHRqjGpbzf8
+        GgVCDiLjMRQ3izNXxtM1tHhY5tXYkOA=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1637853062;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=dA7Dmc4olRP0G4ydFs7HGuiiT5FgmeXvV+AOkou6stw=;
-        b=c1Zg8FDWe+31Z7abjnt9WiOYQBZ4oGDP7yhd/1II09WiGSzu7AUdUIQYns9UVwOEbehFlU
-        cfQ7WdAfNzI++eAg==
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=6UI9GunQsBtnUmKnGQMS+6Dg+8spqijiZfuVVc7sY/w=;
+        b=YMw6rS6G7wbWSk8+FPHB9xH9jnbncuQB/RBzcurSGV9GFEDOUFT747zzNC50Zjt7JklVpZ
+        CuNmnQqehCkdUMCw==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 9DEEEA3B85;
-        Thu, 25 Nov 2021 15:11:01 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id 1800FA3B93;
+        Thu, 25 Nov 2021 15:11:02 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 8F53551919EC; Thu, 25 Nov 2021 16:11:01 +0100 (CET)
+        id BFC485191A02; Thu, 25 Nov 2021 16:11:01 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -40,137 +44,137 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>,
         Bart van Assche <bvanassche@acm.org>,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv9 00/15] scsi: enabled reserved commands for LLDDs
-Date:   Thu, 25 Nov 2021 16:10:33 +0100
-Message-Id: <20211125151048.103910-1-hare@suse.de>
+Subject: [PATCH 11/15] aacraid: move container ID into struct fib
+Date:   Thu, 25 Nov 2021 16:10:44 +0100
+Message-Id: <20211125151048.103910-12-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20211125151048.103910-1-hare@suse.de>
+References: <20211125151048.103910-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
+Add a new field 'cid' to struct fib to hold the container ID this
+I/O is destined for.
 
-quite some drivers use internal commands for various purposes, most
-commonly sending TMFs or querying the HBA status.
-While these commands use the same submission mechanism than normal
-I/O commands, they will not be counted as outstanding commands,
-requiring those drivers to implement their own mechanism to figure
-out outstanding commands.
-The block layer already has the concept of 'reserved' tags for
-precisely this purpose, namely non-I/O tags which live off a separate
-tag pool. That guarantees that these commands can always be sent,
-and won't be influenced by tag starvation from the I/O tag pool.
-This patchset enables the use of reserved tags for the SCSI midlayer
-by allocating a virtual LUN for the HBA itself which just serves
-as a resource to allocate valid tags from.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/aacraid/aachba.c  | 19 +++++++++++--------
+ drivers/scsi/aacraid/aacraid.h |  6 +++++-
+ 2 files changed, 16 insertions(+), 9 deletions(-)
 
-Command allocation currently ignores the hardware queues, as none
-of the modified drivers is mq-capable.
-
-This patchset is being sent out as a base for the current discussion
-for enabling reserved commands for the UFS driver; idea is to
-base those patches on top of this one if we are agree that this
-is the way forward.
-
-The entire patchset can be found at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git
-reserved-tags.v9
-
-As usual, comments and reviews are welcome.
-
-Changes to v8:
-- Drop changes to fnic and snic
-- Rebase after scsi_get_host_dev() removal
-- Rework aacraid to store callback pointer in host_scribble
-
-Changes to v7:
-- Drop changes to hisi_sas, pm8001, and mv_sas
-- Drop patch to introduce REQ_INTERNAL flag
-- Include reviews from John Garry
-
-Changes to v6:
-- Remove patch to drop gdth
-- Rework libsas to use a tag per slow task
-- Update hisi_sas, pm8001, and mv_sas
-
-Changes to v5:
-- Remove patch for csiostor
-- Warn on normal commands in scsi_put_reserved_cmd()
-- Fixup aacraid to not only scsi_put_internal_cmd() for
-  reserved commands
-- Add 'nr_reserved_cmds' field to host template
-- Reshuffle patches
-
-Changes to v4:
-- Fixup kbuild warning
-- Include reviews from Bart
-
-Changes to v3:
-- Kill gdth
-- Only convert fnic, snic, hpsa, and aacraid
-- Drop command emulation for pseudo host device
-- make 'can_queue' exclude the number or reserved tags
-- Drop persistent commands proposal
-- Sanitize host device handling
-
-Changes to v2:
-- Update patches from John Garry
-- Use virtual LUN as suggested by Christoph
-- Improve SCSI Host device to present a real SCSI device
-- Implement 'persistent' commands for AENs
-- Convert Megaraid SAS
-
-Changes to v1:
-- Make scsi_{get, put}_reserved_cmd() for Scsi host
-- Previously we separate scsi_{get, put}_reserved_cmd() for sdev
-  and scsi_host_get_reserved_cmd() for the host
-- Fix how Scsi_Host.can_queue is set in the virtio-scsi change
-- Drop Scsi_Host.use_reserved_cmd_q
-- Drop scsi_is_reserved_cmd()
-- Add support in libsas and associated HBA drivers
-- Allocate reserved command in slow task
-- Switch hisi_sas to use reserved Scsi command
-- Reorder the series a little
-- Some tidying
-
-Hannes Reinecke (15):
-  scsi: allocate host device
-  scsi: add scsi_{get,put}_internal_cmd() helper
-  scsi: implement reserved command handling
-  hpsa: move hpsa_hba_inquiry after scsi_add_host()
-  hpsa: use reserved commands
-  hpsa: use scsi_host_busy_iter() to traverse outstanding commands
-  hpsa: drop refcount field from CommandList
-  aacraid: return valid status from aac_scsi_cmd()
-  aacraid: don't bother with setting SCp.Status
-  aacraid: move scsi_add_host()
-  aacraid: move container ID into struct fib
-  aacraid: fsa_dev pointer is always valid
-  aacraid: store callback in scsi_cmnd.host_scribble
-  aacraid: use scsi_get_internal_cmd()
-  aacraid: use scsi_host_busy_iter() to traverse outstanding commands
-
- drivers/scsi/aacraid/aachba.c   | 208 +++++++++---------
- drivers/scsi/aacraid/aacraid.h  |  15 +-
- drivers/scsi/aacraid/commctrl.c |  25 ++-
- drivers/scsi/aacraid/comminit.c |   2 +-
- drivers/scsi/aacraid/commsup.c  | 115 +++++-----
- drivers/scsi/aacraid/dpcsup.c   |   2 +-
- drivers/scsi/aacraid/linit.c    | 170 +++++++--------
- drivers/scsi/hosts.c            |  11 +
- drivers/scsi/hpsa.c             | 364 ++++++++++++++------------------
- drivers/scsi/hpsa.h             |   1 -
- drivers/scsi/hpsa_cmd.h         |  10 -
- drivers/scsi/scsi_lib.c         |  53 ++++-
- drivers/scsi/scsi_scan.c        |  67 +++++-
- drivers/scsi/scsi_sysfs.c       |   3 +-
- include/scsi/scsi_device.h      |   5 +-
- include/scsi/scsi_host.h        |  43 +++-
- 16 files changed, 595 insertions(+), 499 deletions(-)
-
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 289c4968a92e..2cc9f79c75ff 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -646,7 +646,7 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
+ 		struct aac_mount * dresp = (struct aac_mount *) fib_data(fibptr);
+ 		__le32 sup_options2;
+ 
+-		fsa_dev_ptr += scmd_id(scsicmd);
++		fsa_dev_ptr += fibptr->cid;
+ 		sup_options2 =
+ 			fibptr->dev->supplement_adapter_info.supported_options2;
+ 
+@@ -718,7 +718,7 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
+ 	else
+ 		dinfo->command = cpu_to_le32(VM_NameServe64);
+ 
+-	dinfo->count = cpu_to_le32(scmd_id(scsicmd));
++	dinfo->count = cpu_to_le32(fibptr->cid);
+ 	dinfo->type = cpu_to_le32(FT_FILESYS);
+ 	scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
+ 
+@@ -739,7 +739,8 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
+ 	}
+ }
+ 
+-static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(struct scsi_cmnd *))
++static int _aac_probe_container(struct scsi_cmnd * scsicmd, unsigned int cid,
++				int (*callback)(struct scsi_cmnd *))
+ {
+ 	struct fib * fibptr;
+ 	int status = -ENOMEM;
+@@ -748,6 +749,7 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
+ 		struct aac_query_mount *dinfo;
+ 
+ 		aac_fib_init(fibptr);
++		fibptr->cid = cid;
+ 
+ 		dinfo = (struct aac_query_mount *)fib_data(fibptr);
+ 
+@@ -757,7 +759,7 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
+ 		else
+ 			dinfo->command = cpu_to_le32(VM_NameServe);
+ 
+-		dinfo->count = cpu_to_le32(scmd_id(scsicmd));
++		dinfo->count = cpu_to_le32(fibptr->cid);
+ 		dinfo->type = cpu_to_le32(FT_FILESYS);
+ 		scsicmd->SCp.ptr = (char *)callback;
+ 		scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
+@@ -784,7 +786,7 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
+ 	if (status < 0) {
+ 		struct fsa_dev_info *fsa_dev_ptr = ((struct aac_dev *)(scsicmd->device->host->hostdata))->fsa_dev;
+ 		if (fsa_dev_ptr) {
+-			fsa_dev_ptr += scmd_id(scsicmd);
++			fsa_dev_ptr += cid;
+ 			if ((fsa_dev_ptr->valid & 1) == 0) {
+ 				fsa_dev_ptr->valid = 0;
+ 				return (*callback)(scsicmd);
+@@ -812,7 +814,7 @@ static void aac_probe_container_scsi_done(struct scsi_cmnd *scsi_cmnd)
+ 	aac_probe_container_callback1(scsi_cmnd);
+ }
+ 
+-int aac_probe_container(struct aac_dev *dev, int cid)
++int aac_probe_container(struct aac_dev *dev, unsigned int cid)
+ {
+ 	struct scsi_cmnd *scsicmd = kzalloc(sizeof(*scsicmd), GFP_KERNEL);
+ 	struct scsi_device *scsidev = kzalloc(sizeof(*scsidev), GFP_KERNEL);
+@@ -829,7 +831,8 @@ int aac_probe_container(struct aac_dev *dev, int cid)
+ 	scsidev->id = cid;
+ 	scsidev->host = dev->scsi_host_ptr;
+ 
+-	status = _aac_probe_container(scsicmd, aac_probe_container_callback1);
++	status = _aac_probe_container(scsicmd, cid,
++				      aac_probe_container_callback1);
+ 	if (status == 0)
+ 		while (scsicmd->device == scsidev)
+ 			schedule();
+@@ -2811,7 +2814,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
+ 				case TEST_UNIT_READY:
+ 					if (dev->in_reset)
+ 						return SCSI_MLQUEUE_DEVICE_BUSY;
+-					return _aac_probe_container(scsicmd,
++					return _aac_probe_container(scsicmd, cid,
+ 							aac_probe_container_callback2);
+ 				default:
+ 					break;
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 3733df77bc65..90705c4f8ec8 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1298,6 +1298,10 @@ struct fib {
+ 	 *	The Adapter that this I/O is destined for.
+ 	 */
+ 	struct aac_dev		*dev;
++	/*
++	 *	The Container that this I/O is destined for.
++	 */
++	u32			cid;
+ 	/*
+ 	 *	This is the event the sendfib routine will wait on if the
+ 	 *	caller did not pass one and this is synch io.
+@@ -2734,7 +2738,7 @@ int aac_fib_adapter_complete(struct fib * fibptr, unsigned short size);
+ struct aac_driver_ident* aac_get_driver_ident(int devtype);
+ int aac_get_adapter_info(struct aac_dev* dev);
+ int aac_send_shutdown(struct aac_dev *dev);
+-int aac_probe_container(struct aac_dev *dev, int cid);
++int aac_probe_container(struct aac_dev *dev, unsigned int cid);
+ int _aac_rx_init(struct aac_dev *dev);
+ int aac_rx_select_comm(struct aac_dev *dev, int comm);
+ int aac_rx_deliver_producer(struct fib * fib);
 -- 
 2.29.2
 
