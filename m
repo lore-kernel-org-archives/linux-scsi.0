@@ -2,129 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EC45C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Nov 2021 07:29:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72569C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Nov 2021 15:13:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236064AbhKYHck (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Nov 2021 02:32:40 -0500
-Received: from mga04.intel.com ([192.55.52.120]:29119 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234057AbhKYHaj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 25 Nov 2021 02:30:39 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10178"; a="234192255"
-X-IronPort-AV: E=Sophos;i="5.87,262,1631602800"; 
-   d="scan'208";a="234192255"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2021 23:27:28 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,262,1631602800"; 
-   d="scan'208";a="675142606"
-Received: from lkp-server02.sh.intel.com (HELO 9e1e9f9b3bcb) ([10.239.97.151])
-  by orsmga005.jf.intel.com with ESMTP; 24 Nov 2021 23:27:26 -0800
-Received: from kbuild by 9e1e9f9b3bcb with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1mq9AD-0005xm-Cq; Thu, 25 Nov 2021 07:27:25 +0000
-Date:   Thu, 25 Nov 2021 15:26:25 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Konstantin Shelekhin <k.shelekhin@yadro.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        target-devel@vger.kernel.org
-Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
-        linux@yadro.com, Konstantin Shelekhin <k.shelekhin@yadro.com>,
-        Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: Re: [PATCH 2/2] scsi: target: iblock: Report space allocation errors
-Message-ID: <202111251517.Xys8GZym-lkp@intel.com>
-References: <20211020184319.588002-3-k.shelekhin@yadro.com>
+        id S1355965AbhKYPQO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Nov 2021 10:16:14 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:47054 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344236AbhKYPOO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Nov 2021 10:14:14 -0500
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id 0FE051FD37;
+        Thu, 25 Nov 2021 15:11:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1637853062; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=pky+DWOH7WZ6MkRRYN3MwgJeBBcpWYNHc6dTY2N9m3M=;
+        b=r6PK1ey/y1sZdcOURyjkZ1ll2xmhgQ5x8p0cWNwNah/lGSngN5DB9g8SKEp71aFZf58TrQ
+        kXXOYc1jUdVQTHIr9OxzFnkgjJJNyitwYTGWczGY3M6hDhDTa2jIhGBAULIiwA46VRp+Ft
+        3P03pjJYBUcLIiFYMgqyZ5J14q2ZTI8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1637853062;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=pky+DWOH7WZ6MkRRYN3MwgJeBBcpWYNHc6dTY2N9m3M=;
+        b=yIu44yPQg1y95KqFT9iE0apOsca6Nrq2bYkxcWZAYZeu+uPGI7HgZqOxaQAGc6+mYOs0eZ
+        QXFi0wiizAgGebBA==
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id A81FDA3B88;
+        Thu, 25 Nov 2021 15:11:01 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 16045)
+        id 965ED51919F0; Thu, 25 Nov 2021 16:11:01 +0100 (CET)
+From:   Hannes Reinecke <hare@suse.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 02/15] scsi: add scsi_{get,put}_internal_cmd() helper
+Date:   Thu, 25 Nov 2021 16:10:35 +0100
+Message-Id: <20211125151048.103910-3-hare@suse.de>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20211125151048.103910-1-hare@suse.de>
+References: <20211125151048.103910-1-hare@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211020184319.588002-3-k.shelekhin@yadro.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Konstantin,
+Add helper functions to allow LLDDs to allocate and free
+internal commands.
 
-Thank you for the patch! Perhaps something to improve:
-
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on v5.16-rc2 next-20211125]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
-
-url:    https://github.com/0day-ci/linux/commits/Konstantin-Shelekhin/scsi-target-iblock-Report-space-allocation-errors/20211021-024526
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-config: i386-randconfig-s001-20211021 (https://download.01.org/0day-ci/archive/20211125/202111251517.Xys8GZym-lkp@intel.com/config)
-compiler: gcc-9 (Debian 9.3.0-22) 9.3.0
-reproduce:
-        # apt-get install sparse
-        # sparse version: v0.6.4-dirty
-        # https://github.com/0day-ci/linux/commit/15d4d8f9601b04ee21f8f6042481828c4c34f6b7
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Konstantin-Shelekhin/scsi-target-iblock-Report-space-allocation-errors/20211021-024526
-        git checkout 15d4d8f9601b04ee21f8f6042481828c4c34f6b7
-        # save the config file to linux build tree
-        make W=1 C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' ARCH=i386 
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-
-sparse warnings: (new ones prefixed by >>)
->> drivers/target/target_core_iblock.c:329:57: sparse: sparse: incorrect type in argument 1 (different base types) @@     expected restricted blk_status_t [usertype] status @@     got int @@
-   drivers/target/target_core_iblock.c:329:57: sparse:     expected restricted blk_status_t [usertype] status
-   drivers/target/target_core_iblock.c:329:57: sparse:     got int
->> drivers/target/target_core_iblock.c:351:61: sparse: sparse: incorrect type in argument 3 (different base types) @@     expected int new @@     got restricted blk_status_t [usertype] bi_status @@
-   drivers/target/target_core_iblock.c:351:61: sparse:     expected int new
-   drivers/target/target_core_iblock.c:351:61: sparse:     got restricted blk_status_t [usertype] bi_status
-
-vim +329 drivers/target/target_core_iblock.c
-
-   319	
-   320	static void iblock_complete_cmd(struct se_cmd *cmd)
-   321	{
-   322		struct iblock_req *ibr = cmd->priv;
-   323		u8 status;
-   324		sense_reason_t reason;
-   325	
-   326		if (!refcount_dec_and_test(&ibr->pending))
-   327			return;
-   328	
- > 329		reason = iblock_blk_status_to_reason(atomic_read(&ibr->status));
-   330	
-   331		if (reason != TCM_NO_SENSE)
-   332			status = SAM_STAT_CHECK_CONDITION;
-   333		else
-   334			status = SAM_STAT_GOOD;
-   335	
-   336		target_complete_cmd_with_sense(cmd, status, reason);
-   337		kfree(ibr);
-   338	}
-   339	
-   340	static void iblock_bio_done(struct bio *bio)
-   341	{
-   342		struct se_cmd *cmd = bio->bi_private;
-   343		struct iblock_req *ibr = cmd->priv;
-   344	
-   345		if (bio->bi_status) {
-   346			pr_err("bio error: %p,  err: %d\n", bio, bio->bi_status);
-   347			/*
-   348			 * Set the error status of the iblock request to the error
-   349			 * status of the first failed bio.
-   350			 */
- > 351			atomic_cmpxchg(&ibr->status, BLK_STS_OK, bio->bi_status);
-   352			smp_mb__after_atomic();
-   353		}
-   354	
-   355		bio_put(bio);
-   356	
-   357		iblock_complete_cmd(cmd);
-   358	}
-   359	
-
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ drivers/scsi/scsi_lib.c    | 44 ++++++++++++++++++++++++++++++++++++++
+ include/scsi/scsi_device.h |  3 +++
+ 2 files changed, 47 insertions(+)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 621d841d819a..6fbd36c9c416 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1957,6 +1957,50 @@ void scsi_mq_destroy_tags(struct Scsi_Host *shost)
+ 	blk_mq_free_tag_set(&shost->tag_set);
+ }
+ 
++/**
++ * scsi_get_internal_cmd - allocate an internal SCSI command
++ * @sdev: SCSI device from which to allocate the command
++ * @data_direction: Data direction for the allocated command
++ * @nowait: do not wait for command allocation to succeed.
++ *
++ * Allocates a SCSI command for internal LLDD use.
++ */
++struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
++	int data_direction, bool nowait)
++{
++	struct request *rq;
++	struct scsi_cmnd *scmd;
++	blk_mq_req_flags_t flags = 0;
++	int op;
++
++	if (nowait)
++		flags |= BLK_MQ_REQ_NOWAIT;
++	op = (data_direction == DMA_TO_DEVICE) ?
++		REQ_OP_DRV_OUT : REQ_OP_DRV_IN;
++	rq = blk_mq_alloc_request(sdev->request_queue, op, flags);
++	if (IS_ERR(rq))
++		return NULL;
++	scmd = blk_mq_rq_to_pdu(rq);
++	scmd->device = sdev;
++	return scmd;
++}
++EXPORT_SYMBOL_GPL(scsi_get_internal_cmd);
++
++/**
++ * scsi_put_internal_cmd - free an internal SCSI command
++ * @scmd: SCSI command to be freed
++ *
++ * Check if @scmd is an internal command, and call
++ * blk_mq_free_request() if true.
++ */
++void scsi_put_internal_cmd(struct scsi_cmnd *scmd)
++{
++	struct request *rq = blk_mq_rq_from_pdu(scmd);
++
++	blk_mq_free_request(rq);
++}
++EXPORT_SYMBOL_GPL(scsi_put_internal_cmd);
++
+ /**
+  * scsi_device_from_queue - return sdev associated with a request_queue
+  * @q: The request queue to return the sdev from
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 5d7204186831..218b541515bf 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -470,6 +470,9 @@ static inline int scsi_execute_req(struct scsi_device *sdev,
+ 	return scsi_execute(sdev, cmd, data_direction, buffer,
+ 		bufflen, NULL, sshdr, timeout, retries,  0, 0, resid);
+ }
++struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
++	int data_direction, bool nowait);
++void scsi_put_internal_cmd(struct scsi_cmnd *scmd);
+ extern void sdev_disable_disk_events(struct scsi_device *sdev);
+ extern void sdev_enable_disk_events(struct scsi_device *sdev);
+ extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
+-- 
+2.29.2
+
