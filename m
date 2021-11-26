@@ -2,91 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 694F7C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Nov 2021 17:40:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A51DC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Nov 2021 17:40:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355760AbhK0Rnz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 27 Nov 2021 12:43:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49884 "EHLO
+        id S1355778AbhK0Rn5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 27 Nov 2021 12:43:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233014AbhK0Rlz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Nov 2021 12:41:55 -0500
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7ED7EC061574;
-        Sat, 27 Nov 2021 09:38:40 -0800 (PST)
-Received: by mail-pg1-x535.google.com with SMTP id r138so11160159pgr.13;
-        Sat, 27 Nov 2021 09:38:40 -0800 (PST)
+        with ESMTP id S244168AbhK0Rl4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Nov 2021 12:41:56 -0500
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F23CC06173E;
+        Sat, 27 Nov 2021 09:38:41 -0800 (PST)
+Received: by mail-pg1-x52c.google.com with SMTP id c29so200539pgl.12;
+        Sat, 27 Nov 2021 09:38:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=KXHOYE2DGpHKJjVyUDHRjV9NmlxJIMrpXm3uC4olpKs=;
-        b=migdmGkkMQ3km3OtfvhJRC6bNOuIX0tVx5umTvyla6Sgyuy8cswRVmq9bunpQrcztu
-         /GKRaMViJuH252Ix3WWZC7GrOS3AM8bQ025Y+rV/lvu6+Ri5JAollWd+SmbYZwz9HdYJ
-         FpUZFrYxgNAfD0kdYMte22h/MNWJcEbK3MvzSOOgX6gU1yGYb0dGMt1YkTSn+7xjdnsq
-         gLulWpF+ZmqeJ9eHZkiufDlEZcZPAyP08buPOBADEHAPIEQIbDGvEiOLkBOdAucy0ks/
-         BjjxxrNu3wmKbMo54oK91ZgzS9LPXf1GuRZf/tf2YddPlmwn0utJo5xxCDqXdId5cvEF
-         u0lg==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=G1gqFj3clXWd81d+tagIDoTyLSEKgRKuTjgTMfvLzXU=;
+        b=NkYTIZ/0gzM3E0FWu98BncXqLTfzHa42nEejDVPwGAXpP/HAgxrMTc4+aR0yMY5qSJ
+         OVyvH90/xXXuvksqazEgkjUyua3hpGrCtCN8zt+STMmaqoxYDxe5QmKeJL9AAgC07+vi
+         BDLm9knf8v1xlBM9CRaSfN6h2Aig2BJFMlIJQgkiex9R1HswYYBW8/JboTQjs6ufIyxI
+         hArghoWWB+gz+Y3wB1FDEEZRJVXFRfPRArjn+TKwKKplJO9JMJ5tS34RACn42aaQIf1W
+         D8+U6Qu3rxSIk13xji4qRakjKHMVDSMupXYW863GDwrCfduN8x4EFvwF4To8VFROxwz5
+         HK4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=KXHOYE2DGpHKJjVyUDHRjV9NmlxJIMrpXm3uC4olpKs=;
-        b=3hjDLtfrIlcJk1iekKNdAdVV7SvpuylC8wODwwwptuo8fhdFXVfNSf/XAxLkbL2lJm
-         bDCfQLodSfPFlXpJh0j95DeMJlb2Zf4SqUEdxuuDu1t1BbcI4mxPm5ugQm7TNltR4IPy
-         2t6MJKNQQdsa5Tg4RWBUNRF5CjJYZepCAOTL2ftPKNjKG8pMY31a3CSTc+81MTzUDLNb
-         SAuTglc1Xm1P8TltxD3iMBDqbIxWgpDtCI/i56MQroxhy60JB3/iXW0nECl6vQZekYIF
-         yKpAzbFCIYjYS+oDqruzbCOoVvrY5tJsoaLToSlZlLx6N8sh8cvgrVlUzTdUTnsrwc9P
-         zZTw==
-X-Gm-Message-State: AOAM532mTukkqEMQE3WHlc+w5l93XUkvvpH7tNXmmsZ32DEb4sySmGjg
-        r7cd23lWK5fNTRQmlBY/MP3SNP8W9VEaAQ==
-X-Google-Smtp-Source: ABdhPJyKFHji3KirT7hXrnmGoSamfC1s0BzrGR92mwf9Vt7W9b45eWnhICptB24UDv8sKxtjB7LBzQ==
-X-Received: by 2002:a05:6a00:2151:b0:4a2:5c9a:f0a9 with SMTP id o17-20020a056a00215100b004a25c9af0a9mr29308241pfk.39.1638034719529;
-        Sat, 27 Nov 2021 09:38:39 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=G1gqFj3clXWd81d+tagIDoTyLSEKgRKuTjgTMfvLzXU=;
+        b=E1GVo6EKo/ew0g/vSlTTwFwRKRlm/rj1K4VT5Mbceb/g7+/n0AnS2qnfAY9TAHRdbg
+         QJAnXUBKVtggRJehvkkBYB0nGOtDsmxEQimkDTSsQeyEsUT1E3TOVv7gclPqLhtBpnGL
+         dKDrN78joWIjmQvsWvoIVamCbaw8lxnrOUQukGQzUY7N9h7BLAxUkP0UE8lZJf/Ale1H
+         5QfIhoNbhkQjoGeIGKHzIpCMG1o+etmqTB+L477NzHy893AY4uKJmI5qDBujiOo9zHgq
+         k6YLA/65dStx340tiqeyhCP1uOYDeTjZ3mEwtinnzpEXCmHYht5aizyyoct/zv8jMfmY
+         RwDg==
+X-Gm-Message-State: AOAM531MFYQ1SEAPEmIBxzb4T+vomjTuMi2QxOHLB6HCJV/ZcdDd1Dl0
+        zyf+zDRR+hz/kkKluGn/UUmAYRXaRNrQTQ==
+X-Google-Smtp-Source: ABdhPJzBjLoGgoqXbfxqcwqxqaJSsG8xONXeqLp9O2K2KP3UmGTNh5MCWtFXU8DS4MY80cYcbILVGA==
+X-Received: by 2002:a63:ef03:: with SMTP id u3mr15761534pgh.74.1638034720702;
+        Sat, 27 Nov 2021 09:38:40 -0800 (PST)
 Received: from 7YHHR73.igp.broadcom.net (70-36-60-214.dyn.novuscom.net. [70.36.60.214])
-        by smtp.gmail.com with ESMTPSA id t19sm8051776pgn.7.2021.11.27.09.38.38
+        by smtp.gmail.com with ESMTPSA id t19sm8051776pgn.7.2021.11.27.09.38.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 27 Nov 2021 09:38:39 -0800 (PST)
+        Sat, 27 Nov 2021 09:38:40 -0800 (PST)
 From:   Florian Fainelli <f.fainelli@gmail.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     Florian Fainelli <f.fainelli@gmail.com>,
-        Nilesh Javali <njavali@marvell.com>,
+        kernel test robot <lkp@intel.com>,
         Manish Rangankar <mrangankar@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
         GR-QLogic-Storage-Upstream@marvell.com (supporter:QLOGIC QL41xxx ISCSI
         DRIVER), "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org (open list:QLOGIC QL41xxx ISCSI DRIVER)
-Subject: [PATCH v2 0/2] scsi: qedi: Couple of warning fixes
-Date:   Fri, 26 Nov 2021 12:17:06 -0800
-Message-Id: <20211126201708.27140-1-f.fainelli@gmail.com>
+Subject: [PATCH v2 1/2] scsi: qedi: Remove set but unused 'page' variable
+Date:   Fri, 26 Nov 2021 12:17:07 -0800
+Message-Id: <20211126201708.27140-2-f.fainelli@gmail.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20211126201708.27140-1-f.fainelli@gmail.com>
+References: <20211126201708.27140-1-f.fainelli@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-These warnings started to show up after enabling PCI on BMIPS (32-bit
-MIPS architecture) and were reported by the kbuild robot.
+The variable page is set but never used throughout qedi_alloc_bdq()
+therefore remove it.
 
-I don't know whether they are technically correct, in particular the
-unused 'page' variable might be unveiling a genuine bug whereby it
-should have been used. Please review.
-
-Changes in v2:
-
-- added Acked-by to patch #1
-- changed SYSFS_FLAG_FW_SEL_BOOT to contain the typecasting and not
-  change the way it is formatted before sysfs printing
-
-Florian Fainelli (2):
-  scsi: qedi: Remove set but unused 'page' variable
-  scsi: qedi: Fix SYSFS_FLAG_FW_SEL_BOOT formatting
-
- drivers/scsi/qedi/qedi.h      | 2 +-
+Reported-by: kernel test robot <lkp@intel.com>
+Acked-by: Manish Rangankar <mrangankar@marvell.com>
+Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+---
  drivers/scsi/qedi/qedi_main.c | 3 ---
- 2 files changed, 1 insertion(+), 4 deletions(-)
+ 1 file changed, 3 deletions(-)
 
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index 1dec814d8788..f1c933070884 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -1538,7 +1538,6 @@ static int qedi_alloc_bdq(struct qedi_ctx *qedi)
+ 	int i;
+ 	struct scsi_bd *pbl;
+ 	u64 *list;
+-	dma_addr_t page;
+ 
+ 	/* Alloc dma memory for BDQ buffers */
+ 	for (i = 0; i < QEDI_BDQ_NUM; i++) {
+@@ -1608,11 +1607,9 @@ static int qedi_alloc_bdq(struct qedi_ctx *qedi)
+ 	qedi->bdq_pbl_list_num_entries = qedi->bdq_pbl_mem_size /
+ 					 QEDI_PAGE_SIZE;
+ 	list = (u64 *)qedi->bdq_pbl_list;
+-	page = qedi->bdq_pbl_list_dma;
+ 	for (i = 0; i < qedi->bdq_pbl_list_num_entries; i++) {
+ 		*list = qedi->bdq_pbl_dma;
+ 		list++;
+-		page += QEDI_PAGE_SIZE;
+ 	}
+ 
+ 	return 0;
 -- 
 2.25.1
 
