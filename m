@@ -2,95 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14267C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Nov 2021 21:35:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC140C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Nov 2021 22:50:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242439AbhKZVih (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Nov 2021 16:38:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43746 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230390AbhKZVgf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Nov 2021 16:36:35 -0500
-Received: from mail-lj1-x22e.google.com (mail-lj1-x22e.google.com [IPv6:2a00:1450:4864:20::22e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91D36C06173E;
-        Fri, 26 Nov 2021 13:33:21 -0800 (PST)
-Received: by mail-lj1-x22e.google.com with SMTP id v15so21238856ljc.0;
-        Fri, 26 Nov 2021 13:33:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=sxqcIjSFGAKIxMCugWfN70Te+bGd3kOxeqXTHrWguDM=;
-        b=jhNbO6BZsgucD8J1Jm72kMdgTt5CYGIfaNPydl7735+cJqxkEVZ3hGmLvyHs//hd24
-         K9H624feCwv2V7W5F5n5F0DttFcCFvNJtNqAe/8y6Krq1B9Ifh1fyaFScgB7mi6X7eaW
-         9BiJ6iRMSvDgwj1chhSe35u7CKrUXddYJpxdeOSb8b32Tnty1Ji8YNaAt4SBtLJar13l
-         1PmqtZkJSBsqTFAQPdQ3r/BCW3rsladZ8K4TKrToq6eZTfImR5RnLkK4FVeIIieRCWhg
-         HKIw1qGInQwOcnRtW9o0/Jd6loKiRfKxTvdrwEYRAkUfjxemUCprI51GupmP3sG3c7D9
-         +0XA==
+        id S245554AbhKZWxu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Nov 2021 17:53:50 -0500
+Received: from mail-pf1-f178.google.com ([209.85.210.178]:39631 "EHLO
+        mail-pf1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234191AbhKZWvu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Nov 2021 17:51:50 -0500
+Received: by mail-pf1-f178.google.com with SMTP id i12so10173251pfd.6
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Nov 2021 14:48:37 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=sxqcIjSFGAKIxMCugWfN70Te+bGd3kOxeqXTHrWguDM=;
-        b=g92o7S9iTmvRn9oa3778F98b67g4jSx6HDQvXMUFbEsvRvnyRS+L45f0nD8ytpRvwi
-         u3ssXHgXTJxETyqeOxsl4pe/fg9lllpoXqD9NkaweDU1d1U5Jsso9/qeGcWb4Ui8n24W
-         M3fv1uY3LwluD+n4LvITRq02r7So0xTnW/jDiyogu5gR9OSMp6pYKEYUAs6IAEKNS8tZ
-         bvT9+zVLxRdiEg6Mq1XzpOsTcxMYIXsXzsqXF0f+GtTA0SsOpKmYwxINTBWLeYrdl8Ky
-         yu4GFl0bu2jITW75htdnwTR+JYdRCnnaMiAsj8GLddiaIT59rgsCV95Pt/6/NnQE0aOJ
-         4rpQ==
-X-Gm-Message-State: AOAM530LOSsguXYmcI6DqGDvGHPJBRwu7v/Nx4Asc3JLj2WMiQF1I0Ua
-        P465dB9NpsQQTBQ5AbCbrwU97XW9g8cJ094/Wc+WTcs9OQE=
-X-Google-Smtp-Source: ABdhPJzezbih18E7sKlvuHHPdJwZXWyAPU/MK2cDTnZuFqVkz5GFoXMLhVVf86mJERrzSoCM4TRJxf/VsjSbYz/ZJbE=
-X-Received: by 2002:a2e:740b:: with SMTP id p11mr34110578ljc.215.1637962399497;
- Fri, 26 Nov 2021 13:33:19 -0800 (PST)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=nHieBjn1cm8ITFciLFVmXkD5CbLD4MImKR4IHkmbFrc=;
+        b=MtJoGz8zeZ+SDV2UjXaKnJOnLXOcaiJ7YNehZlLdjXM35+YvdYo8wi8ppH5KtEHEA8
+         DD6DmQKSAA5UYfQIcJ9h42jkkY/c1btQPTfU5JxzEqjvE+pa41InxgyOp4WTAPkpBWtu
+         FQE3kAzcnl0LlfHywQqgHthEV2cRxdpSg2r8bb8Ca3a0ucZqRnd0FtK5KyQXtdg/u1iH
+         cEfw+hTFXxRgsOkXZZVsnfaDusSohXqb9HIrSFBvho6001k3QIpfnaw1Zkq+mYyzsFSO
+         5CeY7akY673HIFBbT8SDQLGU1Qi4LwigBxA2PPS47AcfDQTrPTI+mTPEYqMQ2vjQa9gH
+         37Qg==
+X-Gm-Message-State: AOAM530mANVFK/aB8n5anvOQnyQU0ntcD37LpbjBYZeIpdP+uVgpFtnB
+        OwcA/YycF60v6SPODGryWUw=
+X-Google-Smtp-Source: ABdhPJxL4z4hYlae/pItOskY+0lq/0Nj0IlLF6ehNyEq3hW1kqjz+fj6V50gnbkBdJdu7pAJhiuVAQ==
+X-Received: by 2002:aa7:8b07:0:b0:4a4:d003:92a9 with SMTP id f7-20020aa78b07000000b004a4d00392a9mr23488942pfd.61.1637966916650;
+        Fri, 26 Nov 2021 14:48:36 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id b32sm5701131pgl.51.2021.11.26.14.48.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 26 Nov 2021 14:48:36 -0800 (PST)
+Message-ID: <88757528-1b71-2fec-0936-edb34f1676bb@acm.org>
+Date:   Fri, 26 Nov 2021 14:48:34 -0800
 MIME-Version: 1.0
-References: <CAGnHSE=uOEiLUS=Sx5xhSVrx-7kvdriC=RZxuRasZaM2cLmDeQ@mail.gmail.com>
- <CAGnHSEmFoAS-ZY6u=ar=O0UU=FPgEuOx5KLcBWkboEVdeFXbGg@mail.gmail.com>
-In-Reply-To: <CAGnHSEmFoAS-ZY6u=ar=O0UU=FPgEuOx5KLcBWkboEVdeFXbGg@mail.gmail.com>
-From:   Tom Yan <tom.ty89@gmail.com>
-Date:   Sat, 27 Nov 2021 05:33:08 +0800
-Message-ID: <CAGnHSEmkTyq_QqP9S6TemsHOKxj2Gzq3R7X6+PxbQs_R-iBB7Q@mail.gmail.com>
-Subject: Re: [Regression][Stable] sd use scsi_mode_sense with invalid param
-To:     linux-scsi@vger.kernel.org, damien.lemoal@wdc.com,
-        martin.petersen@oracle.com, sashal@kernel.org,
-        stable@vger.kernel.org, Greg KH <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.0
+Subject: Re: [PATCH] scsi: esp_scsi: limit build to builtin only
+Content-Language: en-US
+To:     Randy Dunlap <rdunlap@infradead.org>, linux-scsi@vger.kernel.org
+Cc:     kernel test robot <lkp@intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20211126032151.15040-1-rdunlap@infradead.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20211126032151.15040-1-rdunlap@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Greg,
+On 11/25/21 19:21, Randy Dunlap wrote:
+> Fixes: f8ab27d96494 ("scsi: esp_scsi: Call scsi_done() directly")
 
-Could you help pulling c749301ebee82eb5e97dec14b6ab31a4aabe37a6 into
-the stable branches in which 17b49bcbf8351d3dbe57204468ac34f033ed60bc
-has been pulled? Thanks!
+The build robot reported link failures for many more functions than 
+scsi_done() so I do not agree with the above line.
 
-Regards,
-Tom
+> --- linux-next-20211125.orig/drivers/scsi/Kconfig
+> +++ linux-next-20211125/drivers/scsi/Kconfig
+> @@ -1296,7 +1296,7 @@ source "drivers/scsi/arm/Kconfig"
+>   
+>   config JAZZ_ESP
+>   	bool "MIPS JAZZ FAS216 SCSI support"
+> -	depends on MACH_JAZZ && SCSI
+> +	depends on MACH_JAZZ && SCSI=y
+>   	select SCSI_SPI_ATTRS
+>   	help
+>   	  This is the driver for the onboard SCSI host adapter of MIPS Magnum
 
-On Sat, 27 Nov 2021 at 05:21, Tom Yan <tom.ty89@gmail.com> wrote:
->
-> Ahh, looks like the required change to sd
-> (c749301ebee82eb5e97dec14b6ab31a4aabe37a6) has been added to upstream
-> but somehow got missed when 17b49bcbf8351d3dbe57204468ac34f033ed60bc
-> was pulled into stable...
->
-> On Sat, 27 Nov 2021 at 05:11, Tom Yan <tom.ty89@gmail.com> wrote:
-> >
-> > Hi,
-> >
-> > So with 17b49bcbf8351d3dbe57204468ac34f033ed60bc (upstream),
-> > scsi_mode_sense now returns -EINVAL if len < 8, yet in sd, the first mode
-> > sense attempted by sd_read_cache_type() is done with (first_)len being
-> > 4, which results in the failure of the attempt.
-> >
-> > Since the commit is merged into stable, my SATA drive (that has
-> > volatile write cache) is assumed to be a "write through" drive after I
-> > upgraded from 5.15.4 to 5.15.5, as libata sets use_10_for_ms to 1.
-> >
-> > Since sd does not (get to) determine which mode sense command to use,
-> > should scsi_mode_sense at least accept a special value 0 (which
-> > first_len would be set to), which is use to refers to the minimum len
-> > to use for mode sense 6 and 10 respectively (i.e. 4 or 8)?
-> >
-> > Regards,
-> > Tom
+There are many more similar entries in drivers/scsi. Why to modify only 
+one entry instead of modifying them all?
+
+Additionally, to me it seems that the root cause is in the kbuild 
+infrastructure instead of in drivers/scsi/Kconfig. From
+Documentation/kbuild/kconfig-language.rst about "select <symbol>": "The 
+value of the current menu symbol is used as the minimal value <symbol> 
+can be set to."
+
+The build errors are the result of the combination JAZZ_ESP=y and 
+SCSI_SPI_ATTRS=m. Since that combination is not allowed according to the 
+kbuild documention, I think the kbuild infrastructure should be fixed.
+
+Thanks,
+
+Bart.
