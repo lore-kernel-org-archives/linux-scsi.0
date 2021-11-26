@@ -2,190 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72556C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Nov 2021 15:42:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0717C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Nov 2021 16:38:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351661AbhKZPqA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Nov 2021 10:46:00 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4174 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377923AbhKZPoA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Nov 2021 10:44:00 -0500
-Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4J0zPX2h4tz67fMV;
-        Fri, 26 Nov 2021 23:36:48 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Fri, 26 Nov 2021 16:40:45 +0100
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Fri, 26 Nov 2021 15:40:42 +0000
-From:   John Garry <john.garry@huawei.com>
-To:     <jinpu.wang@cloud.ionos.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <Viswas.G@microchip.com>, <Ajish.Koshy@microchip.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
-Date:   Fri, 26 Nov 2021 23:35:33 +0800
-Message-ID: <1637940933-107862-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        id S1354607AbhKZQll (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Nov 2021 11:41:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35502 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239282AbhKZQjk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Nov 2021 11:39:40 -0500
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05C71C06175C
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Nov 2021 08:21:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1637943691;
+        bh=Y9HSFTcCrFtnReYTTXOKf3J5RzZ2hRTZup2WHrnjaWc=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=fIKTDqXenZz/2WU/SrUQTKwBR/AJMNQksSSXgLCMsFD+y9e+NdgXT1wkQmMh7wQbL
+         guO2Jv7Vsm3cPMEZgpDdpAbyN/KgHSqFubga/0Dr6/PirtN5o6F9FkhHTcowDrC+Mf
+         K4Y/KyXLZWMkDs2uA4uIXq6tc5CyvePfnc4bl01w=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 3813F12808B7;
+        Fri, 26 Nov 2021 11:21:31 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id kncOCKoMM_L2; Fri, 26 Nov 2021 11:21:31 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1637943691;
+        bh=Y9HSFTcCrFtnReYTTXOKf3J5RzZ2hRTZup2WHrnjaWc=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=fIKTDqXenZz/2WU/SrUQTKwBR/AJMNQksSSXgLCMsFD+y9e+NdgXT1wkQmMh7wQbL
+         guO2Jv7Vsm3cPMEZgpDdpAbyN/KgHSqFubga/0Dr6/PirtN5o6F9FkhHTcowDrC+Mf
+         K4Y/KyXLZWMkDs2uA4uIXq6tc5CyvePfnc4bl01w=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::c447])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 8D3D812807B3;
+        Fri, 26 Nov 2021 11:21:30 -0500 (EST)
+Message-ID: <75aa75adfd5f17d256c0a242a31c04032ecafe3f.camel@HansenPartnership.com>
+Subject: Re: [PATCH V2] scsi:spraid: initial commit of Ramaxel spraid driver
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Yanling Song <songyl@ramaxel.com>, martin.petersen@oracle.com,
+        bvanassche@acm.org
+Cc:     linux-scsi@vger.kernel.org, yujiang@ramaxel.com
+Date:   Fri, 26 Nov 2021 11:21:29 -0500
+In-Reply-To: <20211126073310.87683-1-songyl@ramaxel.com>
+References: <20211126073310.87683-1-songyl@ramaxel.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver supports a "direct" mode of operation, where the SMP req frame
-is directly copied into the command payload (and vice-versa for the SMP
-resp).
+On Fri, 2021-11-26 at 15:33 +0800, Yanling Song wrote:
+> This initial commit contains Ramaxel's spraid module.
+> 
+> Signed-off-by: Yanling Song <songyl@ramaxel.com>
 
-To get at the SMP req frame data in the scatterlist the driver uses
-phys_to_virt() on the DMA mapped memory dma_addr_t . This is broken,
-and subsequently crashes as follows when an IOMMU is enabled:
+Please stop.  Something in your organization has sent this same email
+to the list over 20 times now.  The headers seem to confirm it's
+something at your end not vger:
 
- Unable to handle kernel paging request at virtual address
-ffff0000fcebfb00
-	...
- pc : pm80xx_chip_smp_req+0x2d0/0x3d0
- lr : pm80xx_chip_smp_req+0xac/0x3d0
- pm80xx_chip_smp_req+0x2d0/0x3d0
- pm8001_task_exec.constprop.0+0x368/0x520
- pm8001_queue_command+0x1c/0x30
- smp_execute_task_sg+0xdc/0x204
- sas_discover_expander.part.0+0xac/0x6cc
- sas_discover_root_expander+0x8c/0x150
- sas_discover_domain+0x3ac/0x6a0
- process_one_work+0x1d0/0x354
- worker_thread+0x13c/0x470
- kthread+0x17c/0x190
- ret_from_fork+0x10/0x20
- Code: 371806e1 910006d6 6b16033f 54000249 (38766b05)
- ---[ end trace b91d59aaee98ea2d ]---
-note: kworker/u192:0[7] exited with preempt_count 1
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+        id S1353875AbhKZOv4 (ORCPT
+        <rfc822;James.Bottomley@hansenpartnership.com>);
+        Fri, 26 Nov 2021 09:51:56 -0500
+Received: from email.unionmem.com ([221.4.138.186]:60920 "EHLO
+ VLXDG1SPAM1.ramaxel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with
+ ESMTP id S1353445AbhKZOt4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>); Fri,
+ 26 Nov 2021 09:49:56 -0500
+Received: from VLXDG1SPAM1.ramaxel.com (localhost [127.0.0.2] (may be
+ forged)) by VLXDG1SPAM1.ramaxel.com with ESMTP id 1AQ7rqwC023264 for
+ <linux-scsi@vger.kernel.org>; Fri, 26 Nov 2021 15:53:52 +0800 (GMT-8)
+ (envelope-from songyl@ramaxel.com)
+Received: from V12DG1MBS01.ramaxel.local (v12dg1mbs01.ramaxel.local
+ [172.26.18.31]) by VLXDG1SPAM1.ramaxel.com with ESMTPS id 1AQ7XF7m009870
+ (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL); Fri, 26
+ Nov 2021 15:33:15 +0800 (GMT-8) (envelope-from songyl@ramaxel.com)
+Received: from localhost.localdomain (10.64.9.47) by
+ V12DG1MBS01.ramaxel.local (172.26.18.31) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.14; Fri, 26 Nov 2021 15:33:15 +0800
+From:   Yanling Song <songyl@ramaxel.com>
+To:     <martin.petersen@oracle.com>, <bvanassche@acm.org>
+CC:     <linux-scsi@vger.kernel.org>, <songyl@ramaxel.com>,
+        <yujiang@ramaxel.com>
+Subject: [PATCH V2] scsi:spraid: initial commit of Ramaxel spraid driver
+Date:   Fri, 26 Nov 2021 15:33:10 +0800
 
-Instead use kmap{_atomic}().
+I'd guess whatever the problem is, it's at your outbound spam filter:
+VLXDG1SPAM1.ramaxel.com
 
-Signed-off-by: John Garry <john.garry@huawei.com>
---
-I would appreciate if someone could test this change a bit more.
+We can fix it at our end by blocking email from the ramaxel.com domain
+but that would be a bit drastic ...
 
-Even though my system boots and I can mount the disks now, SCSI error
-handling kicks eventually in for some erroneously completed tasks.
-That's even on my x86 machine, IIRC. I think the card FW needs updating.
+James
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index b9f6d83ff380..0e2221b4f411 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3053,7 +3053,6 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	struct smp_completion_resp *psmpPayload;
- 	struct task_status_struct *ts;
- 	struct pm8001_device *pm8001_dev;
--	char *pdma_respaddr = NULL;
- 
- 	psmpPayload = (struct smp_completion_resp *)(piomb + 4);
- 	status = le32_to_cpu(psmpPayload->status);
-@@ -3080,19 +3079,23 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		if (pm8001_dev)
- 			atomic_dec(&pm8001_dev->running_req);
- 		if (pm8001_ha->smp_exp_mode == SMP_DIRECT) {
-+			struct scatterlist *sg_resp = &t->smp_task.smp_resp;
-+			u8 *payload;
-+			void *to;
-+
- 			pm8001_dbg(pm8001_ha, IO,
- 				   "DIRECT RESPONSE Length:%d\n",
- 				   param);
--			pdma_respaddr = (char *)(phys_to_virt(cpu_to_le64
--						((u64)sg_dma_address
--						(&t->smp_task.smp_resp))));
-+			to = kmap_atomic(sg_page(sg_resp));
-+			payload = to + sg_resp->offset;
- 			for (i = 0; i < param; i++) {
--				*(pdma_respaddr+i) = psmpPayload->_r_a[i];
-+				*(payload + i) = psmpPayload->_r_a[i];
- 				pm8001_dbg(pm8001_ha, IO,
- 					   "SMP Byte%d DMA data 0x%x psmp 0x%x\n",
--					   i, *(pdma_respaddr + i),
-+					   i, *(payload + i),
- 					   psmpPayload->_r_a[i]);
- 			}
-+			kunmap_atomic(to);
- 		}
- 		break;
- 	case IO_ABORTED:
-@@ -4236,14 +4239,14 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
- 	struct sas_task *task = ccb->task;
- 	struct domain_device *dev = task->dev;
- 	struct pm8001_device *pm8001_dev = dev->lldd_dev;
--	struct scatterlist *sg_req, *sg_resp;
-+	struct scatterlist *sg_req, *sg_resp, *smp_req;
- 	u32 req_len, resp_len;
- 	struct smp_req smp_cmd;
- 	u32 opc;
- 	struct inbound_queue_table *circularQ;
--	char *preq_dma_addr = NULL;
--	__le64 tmp_addr;
- 	u32 i, length;
-+	u8 *payload;
-+	u8 *to;
- 
- 	memset(&smp_cmd, 0, sizeof(smp_cmd));
- 	/*
-@@ -4280,8 +4283,9 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
- 		pm8001_ha->smp_exp_mode = SMP_INDIRECT;
- 
- 
--	tmp_addr = cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_req));
--	preq_dma_addr = (char *)phys_to_virt(tmp_addr);
-+	smp_req = &task->smp_task.smp_req;
-+	to = kmap(sg_page(smp_req));
-+	payload = to + smp_req->offset;
- 
- 	/* INDIRECT MODE command settings. Use DMA */
- 	if (pm8001_ha->smp_exp_mode == SMP_INDIRECT) {
-@@ -4289,7 +4293,7 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
- 		/* for SPCv indirect mode. Place the top 4 bytes of
- 		 * SMP Request header here. */
- 		for (i = 0; i < 4; i++)
--			smp_cmd.smp_req16[i] = *(preq_dma_addr + i);
-+			smp_cmd.smp_req16[i] = *(payload + i);
- 		/* exclude top 4 bytes for SMP req header */
- 		smp_cmd.long_smp_req.long_req_addr =
- 			cpu_to_le64((u64)sg_dma_address
-@@ -4320,20 +4324,20 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
- 		pm8001_dbg(pm8001_ha, IO, "SMP REQUEST DIRECT MODE\n");
- 		for (i = 0; i < length; i++)
- 			if (i < 16) {
--				smp_cmd.smp_req16[i] = *(preq_dma_addr+i);
-+				smp_cmd.smp_req16[i] = *(payload+i);
- 				pm8001_dbg(pm8001_ha, IO,
- 					   "Byte[%d]:%x (DMA data:%x)\n",
- 					   i, smp_cmd.smp_req16[i],
--					   *(preq_dma_addr));
-+					   *(payload));
- 			} else {
--				smp_cmd.smp_req[i] = *(preq_dma_addr+i);
-+				smp_cmd.smp_req[i] = *(payload+i);
- 				pm8001_dbg(pm8001_ha, IO,
- 					   "Byte[%d]:%x (DMA data:%x)\n",
- 					   i, smp_cmd.smp_req[i],
--					   *(preq_dma_addr));
-+					   *(payload));
- 			}
- 	}
--
-+	kunmap(sg_page(smp_req));
- 	build_smp_cmd(pm8001_dev->device_id, smp_cmd.tag,
- 				&smp_cmd, pm8001_ha->smp_exp_mode, length);
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &smp_cmd,
--- 
-2.17.1
 
