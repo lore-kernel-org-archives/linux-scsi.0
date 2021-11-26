@@ -2,94 +2,182 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32AF6C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Nov 2021 02:47:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6AB6C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Nov 2021 02:49:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357700AbhKZCuh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Nov 2021 21:50:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51540 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1358594AbhKZCrX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 25 Nov 2021 21:47:23 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 043806137B;
-        Fri, 26 Nov 2021 02:37:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637894230;
-        bh=Ug+TWSLq1mJYFr8I3bm6JpeLTyEOeY2Ps6JFuc9N3sE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LOdLKuJ0A2wNZk2LZ0YfmHyt3KNmRRHBxb1uyha4tByfMTUOVHj8AR/rC+mo/1s65
-         iUpiPkhc4R6hXqeu0X/rA8k2k0AokdnBynemj4iHmKmqwsl0w5zIAkrr7qbsH2wa1M
-         2zal02orW8yAUukyNDcL+pjGC6w6baa5CihiGMgqfPhzCwKMui3Ml7Ybu2UzeFDOOu
-         3Uauy1VhGFK7zIevyrbqa+FbdEiHzwnF62DYVsQmiV3VZvE3e2k9GdgrZvj0oZOo0U
-         H6UKCvTWC8d3D240th8oNl2JMssqtBJyopYFYkOsRbgxBdVdHVdLAKp0p/uoVqpNwn
-         l7zKT76Xvwdbg==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, cleech@redhat.com,
-        jejb@linux.ibm.com, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 4/6] scsi: iscsi: Unblock session then wake up error handler
-Date:   Thu, 25 Nov 2021 21:36:59 -0500
-Message-Id: <20211126023701.443472-4-sashal@kernel.org>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211126023701.443472-1-sashal@kernel.org>
-References: <20211126023701.443472-1-sashal@kernel.org>
+        id S1359316AbhKZCwV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Nov 2021 21:52:21 -0500
+Received: from szxga02-in.huawei.com ([45.249.212.188]:15872 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1358571AbhKZCuT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Nov 2021 21:50:19 -0500
+Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4J0fJq1krVz91Fy;
+        Fri, 26 Nov 2021 10:46:35 +0800 (CST)
+Received: from [127.0.0.1] (10.40.193.166) by dggeme756-chm.china.huawei.com
+ (10.3.19.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.20; Fri, 26
+ Nov 2021 10:47:03 +0800
+Subject: Re: [PATCH 01/15] scsi: allocate host device
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20211125151048.103910-1-hare@suse.de>
+ <20211125151048.103910-2-hare@suse.de>
+CC:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        <linux-scsi@vger.kernel.org>, John Garry <john.garry@huawei.com>,
+        Bart van Assche <bvanassche@acm.org>
+From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
+Message-ID: <3e3eb96b-ad89-41a3-f915-4855695f1b77@hisilicon.com>
+Date:   Fri, 26 Nov 2021 10:47:02 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+In-Reply-To: <20211125151048.103910-2-hare@suse.de>
+Content-Type: text/plain; charset="gbk"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.40.193.166]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ dggeme756-chm.china.huawei.com (10.3.19.102)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michael.christie@oracle.com>
+Hi Hannes,
 
-[ Upstream commit a0c2f8b6709a9a4af175497ca65f93804f57b248 ]
 
-We can race where iscsi_session_recovery_timedout() has woken up the error
-handler thread and it's now setting the devices to offline, and
-session_recovery_timedout()'s call to scsi_target_unblock() is also trying
-to set the device's state to transport-offline. We can then get a mix of
-states.
+ÔÚ 2021/11/25 23:10, Hannes Reinecke Ð´µÀ:
+> Add a flag 'alloc_host_dev' to the SCSI host template and allocate
+> a virtual scsi device if the flag is set.
+> This device has the SCSI id <max_id + 1>:0, so won't clash with any
+> devices the HBA might allocate. It's also excluded from scanning and
+> will not show up in sysfs.
+> Intention is to use this device to send internal commands to the HBA.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>   drivers/scsi/hosts.c       |  8 +++++
+>   drivers/scsi/scsi_scan.c   | 67 +++++++++++++++++++++++++++++++++++++-
+>   drivers/scsi/scsi_sysfs.c  |  3 +-
+>   include/scsi/scsi_device.h |  2 +-
+>   include/scsi/scsi_host.h   | 21 ++++++++++++
+>   5 files changed, 98 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index f69b77cbf538..a539fa2fb221 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -290,6 +290,14 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>   	if (error)
+>   		goto out_del_dev;
+>   
+> +	if (sht->alloc_host_sdev) {
+> +		shost->shost_sdev = scsi_get_host_dev(shost);
+> +		if (!shost->shost_sdev) {
+> +			error = -ENOMEM;
+> +			goto out_del_dev;
+> +		}
+> +	}
+> +
+>   	scsi_proc_host_add(shost);
+>   	scsi_autopm_put_host(shost);
+>   	return error;
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 328c0e79dfe7..e2910aa02a65 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1139,6 +1139,12 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+>   	if (!sdev)
+>   		goto out;
+>   
+> +	if (scsi_device_is_host_dev(sdev)) {
+> +		if (bflagsp)
+> +			*bflagsp = BLIST_NOLUN;
+> +		return SCSI_SCAN_LUN_PRESENT;
+> +	}
+> +
+>   	result = kmalloc(result_len, GFP_KERNEL);
+>   	if (!result)
+>   		goto out_free_sdev;
+> @@ -1755,6 +1761,9 @@ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
+>   		/* If device is already visible, skip adding it to sysfs */
+>   		if (sdev->is_visible)
+>   			continue;
+> +		/* Host devices should never be visible in sysfs */
+> +		if (scsi_device_is_host_dev(sdev))
+> +			continue;
+>   		if (!scsi_host_scan_allowed(shost) ||
+>   		    scsi_sysfs_add_sdev(sdev) != 0)
+>   			__scsi_remove_device(sdev);
+> @@ -1919,12 +1928,16 @@ EXPORT_SYMBOL(scsi_scan_host);
+>   
+>   void scsi_forget_host(struct Scsi_Host *shost)
+>   {
+> -	struct scsi_device *sdev;
+> +	struct scsi_device *sdev, *host_sdev = NULL;
+>   	unsigned long flags;
+>   
+>    restart:
+>   	spin_lock_irqsave(shost->host_lock, flags);
+>   	list_for_each_entry(sdev, &shost->__devices, siblings) {
+> +		if (scsi_device_is_host_dev(sdev)) {
+> +			host_sdev = sdev;
+> +			continue;
+> +		}
+>   		if (sdev->sdev_state == SDEV_DEL)
+>   			continue;
+>   		spin_unlock_irqrestore(shost->host_lock, flags);
+> @@ -1932,5 +1945,57 @@ void scsi_forget_host(struct Scsi_Host *shost)
+>   		goto restart;
+>   	}
+>   	spin_unlock_irqrestore(shost->host_lock, flags);
+> +	/* Remove host device last, might be needed to send commands */
+> +	if (host_sdev)
+> +		__scsi_remove_device(host_sdev);
+>   }
+>   
+> +/**
+> + * scsi_get_host_dev - Create a virtual scsi_device to the host adapter
+> + * @shost: Host that needs a scsi_device
+> + *
+> + * Lock status: None assumed.
+> + *
+> + * Returns:     The scsi_device or NULL
+> + *
+> + * Notes:
+> + *	Attach a single scsi_device to the Scsi_Host. The primary aim
+> + *	for this device is to serve as a container from which valid
+> + *	scsi commands can be allocated from. Each scsi command will carry
+> + *	an unused/free command tag, which then can be used by the LLDD to
+> + *	send internal or passthrough commands without having to find a
+> + *	valid command tag internally.
+> + */
+> +struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+> +{
+> +	struct scsi_device *sdev = NULL;
+> +	struct scsi_target *starget;
+> +
+> +	mutex_lock(&shost->scan_mutex);
+> +	if (!scsi_host_scan_allowed(shost))
+> +		goto out;
+> +	starget = scsi_alloc_target(&shost->shost_gendev, 0,
+> +				    shost->max_id);
+> +	if (!starget)
+> +		goto out;
+> +
+> +	sdev = scsi_alloc_sdev(starget, 0, NULL);
+> +	if (sdev)
+> +		sdev->borken = 0;
+> +	else
+> +		scsi_target_reap(starget);
 
-For the case where we can't relogin we want the devices to be in
-transport-offline so when we have repaired the connection
-__iscsi_unblock_session() can set the state back to running.
+Currently many scsi drivers fill some interfaces such as 
+target_alloc()/slave_alloc() for real disks.
+When allocating scsi target and scsi device for host dev, it will also 
+call those interfaces, and not sure whether it breaks those drivers.
+ From function sas_target_alloc() (common interface in libsas layer), it 
+seems break it as there is no sas_rphy for host dev.
 
-Set the device state then call into libiscsi to wake up the error handler.
 
-Link: https://lore.kernel.org/r/20211105221048.6541-2-michael.christie@oracle.com
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/scsi_transport_iscsi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 9906a3b562e93..269277c1d9dcc 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1896,12 +1896,12 @@ static void session_recovery_timedout(struct work_struct *work)
- 	}
- 	spin_unlock_irqrestore(&session->lock, flags);
- 
--	if (session->transport->session_recovery_timedout)
--		session->transport->session_recovery_timedout(session);
--
- 	ISCSI_DBG_TRANS_SESSION(session, "Unblocking SCSI target\n");
- 	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
- 	ISCSI_DBG_TRANS_SESSION(session, "Completed unblocking SCSI target\n");
-+
-+	if (session->transport->session_recovery_timedout)
-+		session->transport->session_recovery_timedout(session);
- }
- 
- static void __iscsi_unblock_session(struct work_struct *work)
--- 
-2.33.0
 
