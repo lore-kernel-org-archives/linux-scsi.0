@@ -2,83 +2,70 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF0B6C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Nov 2021 23:15:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D374EC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Nov 2021 23:17:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343742AbhKZXS5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Nov 2021 18:18:57 -0500
-Received: from mail-pf1-f169.google.com ([209.85.210.169]:33764 "EHLO
-        mail-pf1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232397AbhKZXQ5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Nov 2021 18:16:57 -0500
-Received: by mail-pf1-f169.google.com with SMTP id x5so10264487pfr.0
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Nov 2021 15:13:44 -0800 (PST)
+        id S245619AbhKZXUZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Nov 2021 18:20:25 -0500
+Received: from mail-pf1-f172.google.com ([209.85.210.172]:46803 "EHLO
+        mail-pf1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232489AbhKZXSZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Nov 2021 18:18:25 -0500
+Received: by mail-pf1-f172.google.com with SMTP id o4so10174874pfp.13
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Nov 2021 15:15:11 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=ptRRs5418giOGX8nSvXxT1+AoOjl6/W3w7C+b+3xNKc=;
-        b=dqygWcQzv3WeszQd1VMEkJrCG+DIHT9bwbtWvFwgEr4rNUoB/WYGPx88SFseLUN+vX
-         9b47L33YLP/VWN769QOks63tslKP3szZ2pQK41SCH4GPgZAV7Fh7eI96rLpyavg9Wprr
-         pmUXjeWtixtlL4Vd5OspwlOjZYa5cLgXyaKC0oFi0+kw5S3KjiR2lUW+rcv+95T6bjiG
-         ajH9ypEV/e0RkphePO07MtbxxquS7RHOC+F1ZMUCA/OTFqPZYSK3hZOplVWxIWqTMcuh
-         RR7FEqbOfic4DC9szhLKWL7l06uXyE6g+xR4I6hvTI6bv3EbKOWntbdCPbdVhfzyXuw4
-         Qh1g==
-X-Gm-Message-State: AOAM533AkL7KsH3Gy7npJ3+bGW62iI5p1PyYkmQ2BDQ9936wnNebJ+bO
-        6jtgImkW6+g7htfS5agtEW4=
-X-Google-Smtp-Source: ABdhPJx1vWoqv8Eidlcu2ZOeMb3RecIYR4dhXU0LOpJ7kmEqDuONoJ2AF6d9HcpRIWbN1IXc6pyC8A==
-X-Received: by 2002:a63:2cd1:: with SMTP id s200mr9458883pgs.489.1637968423812;
-        Fri, 26 Nov 2021 15:13:43 -0800 (PST)
+        bh=u2NH7rZGqJ6QApdVbz2mUj7GO0HJxfMdGpo49V1qAjo=;
+        b=3Fb6Fs7jhqs4M0g6AFgnXXBBLOkkr+WUg+nmyyOO1aIPmw8wyy+er95P/NZtqcdzbp
+         omEvOciPsQii9KWEXkOD30IUH/gliJuWbUttARtFugMGIC06PNJoLuow56RS5W3Dzku1
+         fmifk84SsZZTgmC4/sXGUZK7xx9IZKnAJTDCGQL1EYPWyIoa6c+WVsTQR44CrTGUNhBA
+         OCXFMCAU70Xr6QNAdzmKlm2gt2QfqfTdjPis1CWv87ARs0aNVTB2zUlD+lKWl4yg8NtZ
+         sR9oHnNwC2yqP6POzzdxNH7uwwolQhByRDJ/vfzT7O34qiQPA/QxEFQCG6hP7mur8C3A
+         Mfrw==
+X-Gm-Message-State: AOAM530xnztTcBwqwRJPcXfE9yiRPTDgD1fujnBTCUL1h0mnMMtFdcrg
+        yeUIo5BOiD5loJIsSBSFFUw=
+X-Google-Smtp-Source: ABdhPJzOcY/EEklLO+bL3QdLVL8MJEvNl2BFxKP1szDDMgKWa3zgzUcRcW3czPNTE6vzOcZcKi7TlA==
+X-Received: by 2002:a62:7a54:0:b0:494:6e78:994b with SMTP id v81-20020a627a54000000b004946e78994bmr23970191pfc.5.1637968511597;
+        Fri, 26 Nov 2021 15:15:11 -0800 (PST)
 Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id d12sm5738395pgf.19.2021.11.26.15.13.42
+        by smtp.gmail.com with ESMTPSA id h22sm5836409pgl.79.2021.11.26.15.15.10
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 26 Nov 2021 15:13:43 -0800 (PST)
-Message-ID: <7964ddf8-6d48-8f6f-0800-6db0b0c4eb5e@acm.org>
-Date:   Fri, 26 Nov 2021 15:13:41 -0800
+        Fri, 26 Nov 2021 15:15:11 -0800 (PST)
+Message-ID: <9ac0278e-bee4-adc5-540b-0e0ba8131d6b@acm.org>
+Date:   Fri, 26 Nov 2021 15:15:09 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.3.0
-Subject: Re: [PATCH 02/15] scsi: add scsi_{get,put}_internal_cmd() helper
+Subject: Re: [PATCH 03/15] scsi: implement reserved command handling
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, Hannes Reinecke <hare@suse.de>,
+To:     Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, chenxiang <chenxiang66@hisilicon.com>
+        linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
 References: <20211125151048.103910-1-hare@suse.de>
- <20211125151048.103910-3-hare@suse.de>
- <54d74843-3b14-68c2-a526-a111e26e84a3@huawei.com>
+ <20211125151048.103910-4-hare@suse.de>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <54d74843-3b14-68c2-a526-a111e26e84a3@huawei.com>
+In-Reply-To: <20211125151048.103910-4-hare@suse.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/26/21 01:58, John Garry wrote:
-> How about these:
-> a. allow block driver to specify size of reserved request PDU separately 
-> to regular requests, so we can use something like this for rsvd commands:
-> struct scsi_rsvd_cmnd {
->      struct scsi_device *sdev;
-> }
-> And fix up SCSI iter functions and LLDs to deal with it.
-> b. provide block layer API to provide just same as is returned from 
-> blk_mq_unique_tag(), but no request is provided. This just gives what we 
-> need but would be disruptive in scsi layer and LLDs.
-> c. as alternative to b., send all rsvd requests through the block layer, 
-> but can be very difficult+disruptive for users
-> 
-> *For polling rsvd commands on a poll queue (which we will need for 
-> hisi_sas driver and maybe others for poll mode support), we would need 
-> to send the request through the block layer, but block layer polling 
-> requires a request with a bio, which is a problem.
+On 11/25/21 07:10, Hannes Reinecke wrote:
+> Quite some drivers are using management commands internally, which
+> typically use the same hardware tag pool (ie they are being allocated
+> from the same hardware resources) as the 'normal' I/O commands.
+> These commands are set aside before allocating the block-mq tag bitmap,
+> so they'll never show up as busy in the tag map.
+> The block-layer, OTOH, already has 'reserved_tags' to handle precisely
+> this situation.
+> So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
+> template to instruct the block layer to set aside a tag space for these
+> management commands by using reserved tags.
 
-How about postponing these changes until a patch is ready that converts 
-at least one SCSI LLD such that it uses the above functionality?
-
-Thanks,
-
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
