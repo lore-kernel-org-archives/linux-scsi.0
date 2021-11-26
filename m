@@ -2,27 +2,27 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD7E9C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Nov 2021 02:44:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DA5FC43219
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Nov 2021 02:47:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358970AbhKZCra (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Nov 2021 21:47:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50276 "EHLO mail.kernel.org"
+        id S1344376AbhKZCug (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Nov 2021 21:50:36 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50356 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231193AbhKZCp2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 25 Nov 2021 21:45:28 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9A160611EF;
-        Fri, 26 Nov 2021 02:36:23 +0000 (UTC)
+        id S1352590AbhKZCqM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 25 Nov 2021 21:46:12 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8FD5B61361;
+        Fri, 26 Nov 2021 02:36:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637894184;
-        bh=hkYVPCOtRSDvrOSVFXJeMhIBMG20cVaYecaZdJJwkG4=;
+        s=k20201202; t=1637894209;
+        bh=SCbTQ9iOmR7KLOuf5o37ZnR8TWH3EbshxaDxG0fTRR8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cjL5IQV3fcmGnBvgc9GzDYZo/wuFImjwsk7k5Sbi09zFUAgbzNX1szKfcAgaKu9C7
-         876dhIXjgkdfCi7f13nFYZNWAh/oHqHNDBJBfRysKVDFz4AnXdbWVkbSEGTijaNj8/
-         vZu0WDkx50sOw030O1Rws5W3IpyPLvlsiE+riD8u4mng1X4JgrV9L2rOccYvo9bGbw
-         bgoC9BXaZBfBSb5yrPk5L47W6j1hleH2YUEQAfIZ6O5GW9V1rz7AlPhMuL3rrx3G5m
-         JRZfyrc88s0CWHsouowvWrj2TlJ9yQoH4u3E+ED9QR7hZal+rl9Bm+eNamPs5q0G+4
-         yciuCFRmyhdig==
+        b=TJLbddrTMnhRnJTVRjyBHERHG7EDFGBc8CFU9iQGeFcLLd7HqvpwVsnfOv3Xyuy4G
+         04Ba8aCTRNdMQca+UBwmjy1R9BuSaEGNJ8e0WL+Xgfqb3KD8w+0XpBjuBGfkp3s1JI
+         0CVaEdI+k9SZMg7RRjCsioDLKrKFWxvuGdCrDJGfRt4h5zSx7Ily0AHaa6DrKCqC3m
+         OTRVCr9/hS5m/uRUnasZdGzcbuP6oHFvAwxDOcJoCnWyQXZYrk8O7AofBiYACrmqT0
+         3adX/9HTdnLEl9wUfO19zjua4UGWqzvOXwjvxKG+4GkqDLeO7thNCLXDO6KrhX9JNL
+         EmFj43B4sY53A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mike Christie <michael.christie@oracle.com>,
@@ -31,12 +31,12 @@ Cc:     Mike Christie <michael.christie@oracle.com>,
         Sasha Levin <sashal@kernel.org>, cleech@redhat.com,
         jejb@linux.ibm.com, open-iscsi@googlegroups.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 08/12] scsi: iscsi: Unblock session then wake up error handler
-Date:   Thu, 25 Nov 2021 21:36:04 -0500
-Message-Id: <20211126023611.443098-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 5/8] scsi: iscsi: Unblock session then wake up error handler
+Date:   Thu, 25 Nov 2021 21:36:37 -0500
+Message-Id: <20211126023640.443271-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211126023611.443098-1-sashal@kernel.org>
-References: <20211126023611.443098-1-sashal@kernel.org>
+In-Reply-To: <20211126023640.443271-1-sashal@kernel.org>
+References: <20211126023640.443271-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -71,10 +71,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index d276d84c0f7a2..26c6f1b288013 100644
+index aed17f958448d..acd8eb8c94cf7 100644
 --- a/drivers/scsi/scsi_transport_iscsi.c
 +++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1892,12 +1892,12 @@ static void session_recovery_timedout(struct work_struct *work)
+@@ -1898,12 +1898,12 @@ static void session_recovery_timedout(struct work_struct *work)
  	}
  	spin_unlock_irqrestore(&session->lock, flags);
  
