@@ -2,150 +2,131 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 059D3C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Nov 2021 01:17:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9837C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Nov 2021 05:35:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344374AbhK0BVJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:21:09 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:31208 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344734AbhK0BTJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Nov 2021 20:19:09 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1637975755; x=1669511755;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=utQLa83hwo/LT3g1aLDWo1eI0/DqR7aayg7wMGJqu70=;
-  b=PaM00NptkjtmrALS5KbAG6C90/qhBS5TJqCyH7cjw9F+chJIwodT6LHQ
-   a/EbVrk1gqBm4AhBfFfskB1GTVxEvoMnDY91CvH+DI9XedkdtmYwUUwkQ
-   3VKOErqH+bPjSX8MnQDFP0FnziybB/EOffY+wjnRqDI9XD702QxbRMkut
-   tKa3hEFDv/u4kRSnC+ejhzgfJOAfwZxKVry42GHdXXiFaIWkEV8YqzyB7
-   ZVsMcUYisgJVeQLCJ5qhNIprDdKutJxLqynZbxv1ipk6O5+kcUqAww1xF
-   JNIuC+cS1FO2NsITAH3EctNyEp0VNEvzTpBWPxbOC/BKGCPeB8hwS2K0A
-   w==;
-X-IronPort-AV: E=Sophos;i="5.87,267,1631548800"; 
-   d="scan'208";a="185778781"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Nov 2021 09:15:55 +0800
-IronPort-SDR: RJdAn8+W4LCPx1FWTTXIdpvK9YvT4cIANWmh2IeUc7bCXNJCMmaGXtdrv1mIhDNYink04QCg0o
- /wVH6YGk5L3EeAzJOrpfNCsU+fbVUgkaOhXxC0BWkxZ9BPgk+8rS6QgcJUuf0b0O0XhrBxpLLj
- 82/ZG3DzC81Vc65HFTclvWu4uT1mzGLmlYiFJIEK9Sv6Kz8yKVpwZM0oeYhaNGbyM7HDYf4i5h
- Ljbcr51ssCcxqd1RJz1pFrWVZMxFbH2Ew5ACLlZbNl6/mQfGO+WPVKBOEn1U/PJz5nOcQUh6qC
- ukhWD4GJwGKVRmryYeZ6eHH1
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Nov 2021 16:49:12 -0800
-IronPort-SDR: 4Km/JKF3RnylIBXV17seHhmsbWej2RHXCiF2oBdh4J8Vp8f+ip83g/I+xUQjKlUA0rMDHbCKzy
- etfexprn85g8Ctq/6yV+W+luWC2eyJ3ronuMvbm7Z+KH2waOeZgiR/6SowaNxrIOZeRNZOUKFZ
- kxs/tHj0/uqfLanM2ZWdIoIy0anx4lhgXaPuySdoEkcg9mAwED63zP1SV4PZEsCJkKIsl68g0j
- jRcLjxv/gE8TNuvIgSKoWk7OZpHE/MdRJHiiEyoWPUHb2r+6jPIeUK/x5Hn3ciImFEPC0xUDNE
- 5ts=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Nov 2021 17:15:55 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J1DFk6R59z1RtVn
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Nov 2021 17:15:54 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1637975754; x=1640567755; bh=utQLa83hwo/LT3g1aLDWo1eI0/DqR7aayg7
-        wMGJqu70=; b=Xuo7PYG1tXSUDqz8aNP4JV/uYIPuHQF4yk9dy8GhY9SpAaSJ82G
-        KrB3oIiVJXJpi7AP3LbCGaluD0UpqJU1loHZfF17eMxg6wxR3t2UubnAhCMAAI0c
-        l9Fcaok+yRsVwsuzapM0UTrAKbt3QbcbqBKXqxLPKoBGllu0Lh2wEbXPsfFq1b+b
-        oEoLQFDpkpo7VCgf1MJ6KtBLfJzuqySOU6jWxQXX1ay8Tpy2GziOow03s2fzWOPB
-        Tp1gZM0l5hTpTYdkw0BhrWH9Park2jEocDbEZRVYBQm9ZfTTfoasxNkJPPSzn5/W
-        bP2OCBJ2mEPuqcjElnDjQMP8vyrFVFsqfNA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id DzfKX1DGc1hv for <linux-scsi@vger.kernel.org>;
-        Fri, 26 Nov 2021 17:15:54 -0800 (PST)
-Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J1DFj1ZRdz1RtVl;
-        Fri, 26 Nov 2021 17:15:52 -0800 (PST)
-Message-ID: <92cc74fd-ce93-b844-830f-71e744e0c084@opensource.wdc.com>
-Date:   Sat, 27 Nov 2021 10:15:51 +0900
+        id S239105AbhK0Fi2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 27 Nov 2021 00:38:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34600 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237213AbhK0Fg2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Nov 2021 00:36:28 -0500
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E068AC061746;
+        Fri, 26 Nov 2021 21:31:36 -0800 (PST)
+Received: by mail-pj1-x1036.google.com with SMTP id h24so8465818pjq.2;
+        Fri, 26 Nov 2021 21:31:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=skjuFpTUAa0yIS681Azg1k5aE0n9qFIeHJ6lXgBfHbo=;
+        b=pZ+FA72CprpYlBZ9EXAqOujbhMilCm3DRNywXAvqfgbIEeQHMyR4V73G1Jh89PrfPX
+         +c0GFHrzXlatC3dy7g0O2Sh9uSQuDVSJwoxvqmoVcO/3sEHhCMEuOidIBJpD0qjQN+1j
+         K4D3wsPijxQiH0V1GsHvbnL83voKA6k6bYCK+hJWd1pn80g6+fYe/Uu93qlpRV90bOjB
+         1FbPuHvU8QOF80pInEXqh0lO6ZamHEAjSI5DC/ad99EILTX2DsHP+/5x+ZxdBShlgk18
+         xfg5r2zM+oE5ql9OSj+IAVjpH2z7Zdnb1UAuLzUmrtIoZ3gCgRWz+ZSKOvX7gxdmGL0V
+         oTXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=skjuFpTUAa0yIS681Azg1k5aE0n9qFIeHJ6lXgBfHbo=;
+        b=B/2feuLCR1/fF+8yTtVJoBOLwKaLZiu9sQnTgEkWuv3soT00OZe/Gc+njtJ4S5bKvr
+         9c84Ondhh0VN8Xx4IjVzvoH9yWIxNPtoHQeHvr1fpRzTTSPvpdFJLTSUa6k9a5cOBE1W
+         21k5Q4Lz+LFGRn0sA3TzVbrjq2ichpX9hjWW9y+ygUuE4cLH3eJbI48uTnni7C9zreiu
+         eTlin978eoLH8Zlq0Ow1ge9+TsnXoSkqoXc4HxzZ4f7HJaty3p3S/elq4nrvS6ohnvGD
+         yUZo2LJdti7Kn/Tn2Yh9pXAueJ5J2WlbDN+DwQk/45PtqF5C0rvGWFJ6kGSC3wTG3euk
+         ehIg==
+X-Gm-Message-State: AOAM5313FBO1FZocss0Ccz6ebEZXl99Cu7cmQUIA4nALkfJ7mqPRlyVc
+        FtlzT4+cWOhxEsyE3vjQPQc=
+X-Google-Smtp-Source: ABdhPJy72jutcrLCyoKCpNxbIX+bw0pOAV/hDgunjk7MzD0u9Xe1DBNv/Gx51Gc2UNR6/Q/nct1SWQ==
+X-Received: by 2002:a17:90b:30e:: with SMTP id ay14mr20799525pjb.60.1637991096390;
+        Fri, 26 Nov 2021 21:31:36 -0800 (PST)
+Received: from [192.168.1.5] (70-36-60-214.dyn.novuscom.net. [70.36.60.214])
+        by smtp.gmail.com with ESMTPSA id d17sm8990050pfj.215.2021.11.26.21.31.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 26 Nov 2021 21:31:35 -0800 (PST)
+Message-ID: <5b5ec5df-962a-e0f5-c88c-ecc26249c659@gmail.com>
+Date:   Fri, 26 Nov 2021 21:31:37 -0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.3.2
-Subject: Re: [Regression][Stable] sd use scsi_mode_sense with invalid param
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.0
+Subject: Re: [EXT] [PATCH 2/2] scsi: qedi: Fix SYSFS_FLAG_FW_SEL_BOOT
+ formatting
 Content-Language: en-US
-To:     Tom Yan <tom.ty89@gmail.com>, linux-scsi@vger.kernel.org,
-        damien.lemoal@wdc.com, martin.petersen@oracle.com,
-        sashal@kernel.org, stable@vger.kernel.org,
-        Greg KH <gregkh@linuxfoundation.org>
-References: <CAGnHSE=uOEiLUS=Sx5xhSVrx-7kvdriC=RZxuRasZaM2cLmDeQ@mail.gmail.com>
- <CAGnHSEmFoAS-ZY6u=ar=O0UU=FPgEuOx5KLcBWkboEVdeFXbGg@mail.gmail.com>
- <CAGnHSEmkTyq_QqP9S6TemsHOKxj2Gzq3R7X6+PxbQs_R-iBB7Q@mail.gmail.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital
-In-Reply-To: <CAGnHSEmkTyq_QqP9S6TemsHOKxj2Gzq3R7X6+PxbQs_R-iBB7Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To:     Manish Rangankar <mrangankar@marvell.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:QLOGIC QL41xxx ISCSI DRIVER" <linux-scsi@vger.kernel.org>
+References: <20211126051529.5380-1-f.fainelli@gmail.com>
+ <20211126051529.5380-3-f.fainelli@gmail.com>
+ <CO6PR18MB4419E1ADDB4D336E83C624FBD8639@CO6PR18MB4419.namprd18.prod.outlook.com>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+In-Reply-To: <CO6PR18MB4419E1ADDB4D336E83C624FBD8639@CO6PR18MB4419.namprd18.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/11/27 6:33, Tom Yan wrote:
-> Hi Greg,
+
+
+On 11/26/2021 12:43 AM, Manish Rangankar wrote:
 > 
-> Could you help pulling c749301ebee82eb5e97dec14b6ab31a4aabe37a6 into
-> the stable branches in which 17b49bcbf8351d3dbe57204468ac34f033ed60bc
-> has been pulled? Thanks!
-
-Yeah, in retrospect, these 2 patches should really have been squashed together.
-Sorry about that. Note that none of these were marked for stable though. I think
-that Sasha's bot picked-up automatically
-17b49bcbf8351d3dbe57204468ac34f033ed60bc for stable because of the "Fix" in the
-commit title. But c749301ebee82eb5e97dec14b6ab31a4aabe37a6 also has "Fix" in its
-title but was not picked-up. Weird.
-
-Greg, Martin,
-
-To fix this, c749301ebee82eb5e97dec14b6ab31a4aabe37a6 is needed in stable !
-
-Reference: https://bugzilla.kernel.org/show_bug.cgi?id=215137
-
-Thanks.
-
 > 
-> Regards,
-> Tom
-> 
-> On Sat, 27 Nov 2021 at 05:21, Tom Yan <tom.ty89@gmail.com> wrote:
+>> -----Original Message-----
+>> From: Florian Fainelli <f.fainelli@gmail.com>
+>> Sent: Friday, November 26, 2021 10:45 AM
+>> To: linux-kernel@vger.kernel.org
+>> Cc: Florian Fainelli <f.fainelli@gmail.com>; Nilesh Javali <njavali@marvell.com>;
+>> Manish Rangankar <mrangankar@marvell.com>; GR-QLogic-Storage-Upstream
+>> <GR-QLogic-Storage-Upstream@marvell.com>; James E.J. Bottomley
+>> <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>;
+>> open list:QLOGIC QL41xxx ISCSI DRIVER <linux-scsi@vger.kernel.org>
+>> Subject: [EXT] [PATCH 2/2] scsi: qedi: Fix SYSFS_FLAG_FW_SEL_BOOT formatting
 >>
->> Ahh, looks like the required change to sd
->> (c749301ebee82eb5e97dec14b6ab31a4aabe37a6) has been added to upstream
->> but somehow got missed when 17b49bcbf8351d3dbe57204468ac34f033ed60bc
->> was pulled into stable...
+>> External Email
 >>
->> On Sat, 27 Nov 2021 at 05:11, Tom Yan <tom.ty89@gmail.com> wrote:
->>>
->>> Hi,
->>>
->>> So with 17b49bcbf8351d3dbe57204468ac34f033ed60bc (upstream),
->>> scsi_mode_sense now returns -EINVAL if len < 8, yet in sd, the first mode
->>> sense attempted by sd_read_cache_type() is done with (first_)len being
->>> 4, which results in the failure of the attempt.
->>>
->>> Since the commit is merged into stable, my SATA drive (that has
->>> volatile write cache) is assumed to be a "write through" drive after I
->>> upgraded from 5.15.4 to 5.15.5, as libata sets use_10_for_ms to 1.
->>>
->>> Since sd does not (get to) determine which mode sense command to use,
->>> should scsi_mode_sense at least accept a special value 0 (which
->>> first_len would be set to), which is use to refers to the minimum len
->>> to use for mode sense 6 and 10 respectively (i.e. 4 or 8)?
->>>
->>> Regards,
->>> Tom
+>> ----------------------------------------------------------------------
+>> The format used for formatting SYSFS_FLAG_FW_SEL_BOOT creates the
+>> following warning:
+>>
+>> drivers/scsi/qedi/qedi_main.c:2259:35: warning: format specifies type 'char' but
+>> the argument has type 'int' [-Wformat]
+>>                     rc = snprintf(buf, 3, "%hhd\n", SYSFS_FLAG_FW_SEL_BOOT);
+>>
+>> Fix this to use %d since this is a plain integer.
+>>
+>> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+>> ---
+>>   drivers/scsi/qedi/qedi_main.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c index
+>> f1c933070884..367a0337b53e 100644
+>> --- a/drivers/scsi/qedi/qedi_main.c
+>> +++ b/drivers/scsi/qedi/qedi_main.c
+>> @@ -2254,7 +2254,7 @@ qedi_show_boot_tgt_info(struct qedi_ctx *qedi, int
+>> type,
+>>   			     mchap_secret);
+>>   		break;
+>>   	case ISCSI_BOOT_TGT_FLAGS:
+>> -		rc = snprintf(buf, 3, "%hhd\n", SYSFS_FLAG_FW_SEL_BOOT);
+>> +		rc = snprintf(buf, 3, "%d\n", SYSFS_FLAG_FW_SEL_BOOT);
+>>   		break;
+>>   	case ISCSI_BOOT_TGT_NIC_ASSOC:
+>>   		rc = snprintf(buf, 3, "0\n");
+>> --
+>> 2.25.1
+> 
+> SYSFS_FLAG_FW_SEL_BOOT is always going to have value 2, that's why it is given %hhd to limit the size to 1 byte.
+> Is there other way to suppress this warning, such as typecasting or any other ?
 
-
+Yes typecasting would work, if you are fine with that.
 -- 
-Damien Le Moal
-Western Digital Research
+Florian
