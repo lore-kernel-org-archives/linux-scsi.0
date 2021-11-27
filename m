@@ -2,70 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D374EC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Nov 2021 23:17:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E4EFC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Nov 2021 01:03:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245619AbhKZXUZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Nov 2021 18:20:25 -0500
-Received: from mail-pf1-f172.google.com ([209.85.210.172]:46803 "EHLO
-        mail-pf1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232489AbhKZXSZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Nov 2021 18:18:25 -0500
-Received: by mail-pf1-f172.google.com with SMTP id o4so10174874pfp.13
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Nov 2021 15:15:11 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=u2NH7rZGqJ6QApdVbz2mUj7GO0HJxfMdGpo49V1qAjo=;
-        b=3Fb6Fs7jhqs4M0g6AFgnXXBBLOkkr+WUg+nmyyOO1aIPmw8wyy+er95P/NZtqcdzbp
-         omEvOciPsQii9KWEXkOD30IUH/gliJuWbUttARtFugMGIC06PNJoLuow56RS5W3Dzku1
-         fmifk84SsZZTgmC4/sXGUZK7xx9IZKnAJTDCGQL1EYPWyIoa6c+WVsTQR44CrTGUNhBA
-         OCXFMCAU70Xr6QNAdzmKlm2gt2QfqfTdjPis1CWv87ARs0aNVTB2zUlD+lKWl4yg8NtZ
-         sR9oHnNwC2yqP6POzzdxNH7uwwolQhByRDJ/vfzT7O34qiQPA/QxEFQCG6hP7mur8C3A
-         Mfrw==
-X-Gm-Message-State: AOAM530xnztTcBwqwRJPcXfE9yiRPTDgD1fujnBTCUL1h0mnMMtFdcrg
-        yeUIo5BOiD5loJIsSBSFFUw=
-X-Google-Smtp-Source: ABdhPJzOcY/EEklLO+bL3QdLVL8MJEvNl2BFxKP1szDDMgKWa3zgzUcRcW3czPNTE6vzOcZcKi7TlA==
-X-Received: by 2002:a62:7a54:0:b0:494:6e78:994b with SMTP id v81-20020a627a54000000b004946e78994bmr23970191pfc.5.1637968511597;
-        Fri, 26 Nov 2021 15:15:11 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id h22sm5836409pgl.79.2021.11.26.15.15.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 26 Nov 2021 15:15:11 -0800 (PST)
-Message-ID: <9ac0278e-bee4-adc5-540b-0e0ba8131d6b@acm.org>
-Date:   Fri, 26 Nov 2021 15:15:09 -0800
+        id S1344035AbhK0BGP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:06:15 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:25822 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344257AbhK0BEO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Nov 2021 20:04:14 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1637974861; x=1669510861;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=5NdzGhyWLqSuyXUPp3yipZpIj0NWrYfZrWkdVCnTtw0=;
+  b=FUMifaCaMLve1Ku9W1EER++I0Z6OotCMIJwLXMh3WjfBFTaXZ7remL2w
+   b4bzICRjMILJd8utjPdDIcYeYm3LLYUpqo5R1TG8qjplxC+yRCXbO9GVZ
+   nE+2nE+TQMKZ2o71f5cb+XiPRNMYpep25dko7Szms91/9xV1Fvh9g/Q41
+   KbOhZzgRX4WMDVt72fTjd5J04INzie5puyDrt9kpfilM6PXUiVRdGqbTc
+   iGRVY6AtoV37K00DEWbZxcklAeVqCET4FzFSW+z3v36miPU6rMlq+Ai1G
+   Q6gac5UoritIxB6YZ2V0MLDblQj1rujDPAaMBmSKseQZ6cm7UUCY5DPgS
+   w==;
+X-IronPort-AV: E=Sophos;i="5.87,267,1631548800"; 
+   d="scan'208";a="298621242"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Nov 2021 09:01:01 +0800
+IronPort-SDR: dySmHeykyJoias1gV9bf9OpVUzevBjePRBi0rMt1MM7LzypHZqVqrF9sr70bhwVxuboy6Cq8MH
+ 1Parn4dgsOuVjCPvL0Fcylj0QVhEYy/zGYs2hp5oXNUQLYuGtMWwavYIXIeuddDNmBIvjSvfPD
+ nzsFYtHS3zq5KwMJyviWz29ZlaOOdlluRvDntGEsU7z1ibrBmDAy/zjleTC3DtP35HH6lnGKeB
+ /Q6FQovetSn/fBS6iuxn1rcwZ1U+dtG6Fi7nVLhNUrv1OG05P3DW1Dg4MI6rqeSteET35RV3UV
+ z2vl1nUKz4tabLzjdc8WvdG7
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Nov 2021 16:34:18 -0800
+IronPort-SDR: KHiwnA4ZSePJQXhI6+a1csiJLEYQyRkeUPUF24a/zpIr79n4E3eUuBXKlnDNwPp7JlTSxmrH89
+ bev97A89oX4sQA5D4NDCBgFkOEjJLax5KAm2ItfPcnQxvu6brznnDI8ACi7klp1tSa6Ape1tum
+ 5k+q/jppD2LIDf5Jr5Gho5oMnHdYTIxNYij0uFEedcrfnDvf9THAwngJQaebGGvuEAwK9JnQkg
+ vQhyVCgLGOoI0hpzXuIwviDyc+RYTFYzQN83XOuGPGCpe1iLAKW36ggUP5mjam4JW2jCph1bSs
+ 0rk=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Nov 2021 17:01:00 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J1CwX1YCFz1RtVp
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Nov 2021 17:01:00 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1637974859; x=1640566860; bh=5NdzGhyWLqSuyXUPp3yipZpIj0NWrYfZrWk
+        dVCnTtw0=; b=F03gprLKE4QCXMw6qXE4vjieQNQRRlZRqe6X7hcbvPmzlwHNdCP
+        Rrxzk1wWbxLrb2NEOuwsbpk2/+x1agIF1tqyXFhh1wLimnUh0IyCiB+YYpx8pywy
+        n++5WgUYBXFj+1/SKtqkkFWIOL0F6kqoZPPP8y2pzRT8i46Y/03hHVv1LHcVmsAV
+        Gwmem/jIV7ZGxoBD8NntK9mveRHkpFc6mIEcATyoaN2RQT3zC43LCdaLtkDqMoQG
+        3Lx3BnY1xO9v5qL0+XxFvirjCFKZQL4L/upGpHZXkMcDQnHVS5VWnxVvRVAxisW3
+        zphrXPh8ZLAKuUiSX1IWsRKO+aT2Ro3sp4A==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 1Y2AYtUaflqi for <linux-scsi@vger.kernel.org>;
+        Fri, 26 Nov 2021 17:00:59 -0800 (PST)
+Received: from [10.225.54.48] (unknown [10.225.54.48])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J1CwW0hWTz1RtVl;
+        Fri, 26 Nov 2021 17:00:58 -0800 (PST)
+Message-ID: <9172d395-29d0-6b1a-4be7-8968bfac6762@opensource.wdc.com>
+Date:   Sat, 27 Nov 2021 10:00:57 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.0
-Subject: Re: [PATCH 03/15] scsi: implement reserved command handling
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.3.2
+Subject: Re: [PATCH 1/2] scsi: sd_zbc: Compare against block layer enum values
 Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>,
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
-References: <20211125151048.103910-1-hare@suse.de>
- <20211125151048.103910-4-hare@suse.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20211125151048.103910-4-hare@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <20211126125533.266015-1-Niklas.Cassel@wdc.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital
+In-Reply-To: <20211126125533.266015-1-Niklas.Cassel@wdc.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/25/21 07:10, Hannes Reinecke wrote:
-> Quite some drivers are using management commands internally, which
-> typically use the same hardware tag pool (ie they are being allocated
-> from the same hardware resources) as the 'normal' I/O commands.
-> These commands are set aside before allocating the block-mq tag bitmap,
-> so they'll never show up as busy in the tag map.
-> The block-layer, OTOH, already has 'reserved_tags' to handle precisely
-> this situation.
-> So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
-> template to instruct the block layer to set aside a tag space for these
-> management commands by using reserved tags.
+On 2021/11/26 21:55, Niklas Cassel wrote:
+> From: Niklas Cassel <niklas.cassel@wdc.com>
+> 
+> sd_zbc_parse_report() fills in a struct blk_zone, which is the block layer
+> representation of a zone. This struct is also what will be copied to user
+> for a BLKREPORTZONE ioctl.
+> 
+> Since sd_zbc_parse_report() compares against zone.type and zone.cond, which
+> are members of a struct blk_zone, the correct enum values to compare
+> against are the enum values defined by the block layer.
+> 
+> These specific enum values for ZBC and the block layer happen to have the
+> same enum constants, but they could theoretically have been different.
+> 
+> Compare against the block layer enum values, to make it more obvious that
+> struct blk_zone is the block layer representation of a zone, and not the
+> SCSI/ZBC representation of a zone.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+> ---
+>  drivers/scsi/sd_zbc.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+> index ed06798983f8..024f1bec6e5a 100644
+> --- a/drivers/scsi/sd_zbc.c
+> +++ b/drivers/scsi/sd_zbc.c
+> @@ -62,8 +62,8 @@ static int sd_zbc_parse_report(struct scsi_disk *sdkp, u8 *buf,
+>  	zone.capacity = zone.len;
+>  	zone.start = logical_to_sectors(sdp, get_unaligned_be64(&buf[16]));
+>  	zone.wp = logical_to_sectors(sdp, get_unaligned_be64(&buf[24]));
+> -	if (zone.type != ZBC_ZONE_TYPE_CONV &&
+> -	    zone.cond == ZBC_ZONE_COND_FULL)
+> +	if (zone.type != BLK_ZONE_TYPE_CONVENTIONAL &&
+> +	    zone.cond == BLK_ZONE_COND_FULL)
+>  		zone.wp = zone.start + zone.len;
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+For the sake of avoiding layering violation, I would keep the code as is, unles
+Martin and James are OK with this ?
+
+A more sensible patch may be to add a static checking that all BLK_ZONE_COND_*
+and BLK_ZONE_TYPE_* enum values are equal to the ZBC defined values in
+include/scsi/scsi_proto.h (ZBC_ZONE_COND_* and ZBC_ZONE_TYPE_* macros).
+
+
+-- 
+Damien Le Moal
+Western Digital Research
