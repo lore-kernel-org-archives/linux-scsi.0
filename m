@@ -2,167 +2,174 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20F27C433FE
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Nov 2021 08:16:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C856CC433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Nov 2021 10:38:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356449AbhK1ITv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 Nov 2021 03:19:51 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:44782 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356950AbhK1IRu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Nov 2021 03:17:50 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1357176AbhK1Klw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Nov 2021 05:41:52 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:40808 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1357103AbhK1Kjw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Nov 2021 05:39:52 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 7EBF6B80B5F;
-        Sun, 28 Nov 2021 08:14:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD3F1C004E1;
-        Sun, 28 Nov 2021 08:14:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1638087272;
-        bh=39xPZMfe1ibuiHjcR8GPwApROOOXNw4PxPfnXkQy+GA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bTVi1qpOMK3snj3/5ngTGJBwNOtzVHs6mmhM7bpLN2Ylw7BStAeJBwg+ljnNqImWZ
-         GJF0n6LGABUqLnff6dpEUz3OopAoWIvmyR+6cd/4B3EaStgj6mJ/iqaWRy/CM3Fh7s
-         YIqq4s/fj/XxocPyvN10jawk/Ii1e5eiWoNokMBg=
-Date:   Sun, 28 Nov 2021 09:14:28 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-mmc@vger.kernel.org
-Subject: Re: [PATCH 3/3] blk-crypto: show crypto capabilities in sysfs
-Message-ID: <YaM6ZJUByYXaI3/X@kroah.com>
-References: <20211126212514.173334-1-ebiggers@kernel.org>
- <20211126212514.173334-4-ebiggers@kernel.org>
- <YaH1CmHClx5WvDWD@kroah.com>
- <YaKZUu0tQc8bblmI@sol.localdomain>
+        by smtp-out1.suse.de (Postfix) with ESMTPS id D8376212BB;
+        Sun, 28 Nov 2021 10:36:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1638095795; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4ywsDTALh2eqYDCQ/oiLenibdscGM7xV7U58MIMbYA8=;
+        b=CFXaEli1QBa4S5JsS5sl91yNcKa7SDqi6e0Kwbx9ZvDqmayXF9xC5dejB2DlncLaC61awK
+        3fli5Pon0fPSSmoOWid0Z9IqfnWM1a2NHaQMu3RZ4HPJuZDFiXRYDVZd6ZmewCR8VRQb1o
+        TjFOddYHNZvRKwK3xLSyI1wqh9wvZwo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1638095795;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4ywsDTALh2eqYDCQ/oiLenibdscGM7xV7U58MIMbYA8=;
+        b=IoFQzcHHPbbS2fGuK9BLKJJo47wnxRitA04IW2C+WNKK8JgbxkoaABAJPmqCVPajegOvHN
+        QFTYspBIYiCGvTCA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AC2FC133D1;
+        Sun, 28 Nov 2021 10:36:35 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id +Io5KLNbo2HSRwAAMHmgww
+        (envelope-from <hare@suse.de>); Sun, 28 Nov 2021 10:36:35 +0000
+Subject: Re: [PATCH 02/15] scsi: add scsi_{get,put}_internal_cmd() helper
+To:     John Garry <john.garry@huawei.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>,
+        chenxiang <chenxiang66@hisilicon.com>
+References: <20211125151048.103910-1-hare@suse.de>
+ <20211125151048.103910-3-hare@suse.de>
+ <54d74843-3b14-68c2-a526-a111e26e84a3@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <ddc265d3-9f31-b4d9-06c4-d205b03a566f@suse.de>
+Date:   Sun, 28 Nov 2021 11:36:34 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YaKZUu0tQc8bblmI@sol.localdomain>
+In-Reply-To: <54d74843-3b14-68c2-a526-a111e26e84a3@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Nov 27, 2021 at 12:47:14PM -0800, Eric Biggers wrote:
-> Hi Greg, thanks for the review!
+On 11/26/21 10:58 AM, John Garry wrote:
+> On 25/11/2021 15:10, Hannes Reinecke wrote:
+>> +/**
+>> + * scsi_get_internal_cmd - allocate an internal SCSI command
+>> + * @sdev: SCSI device from which to allocate the command
+>> + * @data_direction: Data direction for the allocated command
+>> + * @nowait: do not wait for command allocation to succeed.
+>> + *
+>> + * Allocates a SCSI command for internal LLDD use.
+>> + */
+>> +struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
+>> +    int data_direction, bool nowait)
+>> +{
+>> +    struct request *rq;
+>> +    struct scsi_cmnd *scmd;
+>> +    blk_mq_req_flags_t flags = 0;
+>> +    int op;
+>> +
+>> +    if (nowait)
+>> +        flags |= BLK_MQ_REQ_NOWAIT;
+>> +    op = (data_direction == DMA_TO_DEVICE) ?
+>> +        REQ_OP_DRV_OUT : REQ_OP_DRV_IN;
+>> +    rq = blk_mq_alloc_request(sdev->request_queue, op, flags);
+>> +    if (IS_ERR(rq))
+>> +        return NULL;
+>> +    scmd = blk_mq_rq_to_pdu(rq);
+>> +    scmd->device = sdev;
+>> +    return scmd;
+>> +}
+>> +EXPORT_SYMBOL_GPL(scsi_get_internal_cmd);
 > 
-> On Sat, Nov 27, 2021 at 10:06:18AM +0100, Greg KH wrote:
-> > > diff --git a/Documentation/block/queue-sysfs.rst b/Documentation/block/queue-sysfs.rst
-> > > index 3f569d5324857..252939f340459 100644
-> > > --- a/Documentation/block/queue-sysfs.rst
-> > > +++ b/Documentation/block/queue-sysfs.rst
-> > 
-> > Why is all of this information not in Documentation/ABI/ like the rest
-> > of the kernel's sysfs information?  When it is there it can be
-> > automatically tested as well.
-> > 
-> > Please don't add new entries to the wrong place if at all possible.
+> So there are a couple of generally-accepted grievances about this approach:
+> a. we're being allocated a scsi_cmnd, but not using what is being 
+> allocated as a scsi_cmnd, but rather just a holder as a reference to an 
+> allocated tag
+> b. we're being allocated a request, which is not being sent through the 
+> block layer*
 > 
-> Some of the block queue attributes are documented in
-> Documentation/ABI/testing/sysfs-block, but Documentation/block/queue-sysfs.rst
-> seems to be the authoritative source in practice.  I checked all QUEUE_*_ENTRY
-> in block/blk-sysfs.c, and I got:
+And while being true in general, it does make some assumptions:
+- Reserved commands will never being sent via the block layer
+- None of the drivers will need to use the additional 'scsi_cmnd' payload.
+
+Here I'm not sure if this is true in general.
+While it doesn't seem to be necessary to send reserved commands via the 
+block layer (ie calling 'queue_rq' on them), we shouldn't exclude the 
+possibility.
+Didn't we speak about that in the context of converting libata?
+
+And I have some driver conversions queued (fnic in particular), which 
+encapsulate everything into a scsi command.
+
+> It just seems to me that what the block layer is providing is not suitable.
 > 
-> - 16 attributes are documented in both places
-> - 23 attributes are documented in Documentation/block/ only
-> - 0 attributes are documented in Documentation/ABI/ only
-> - 2 attributes ("virt_boundary_mask" and "stable_writes") not documented in
->   either place
+> How about these:
+> a. allow block driver to specify size of reserved request PDU separately 
+> to regular requests, so we can use something like this for rsvd commands:
+> struct scsi_rsvd_cmnd {
+>      struct scsi_device *sdev;
+> }
+> And fix up SCSI iter functions and LLDs to deal with it.
+
+That's what Bart suggested a while back, but then we have to problem 
+that the reserved tags are completed with the same interrupt routine, 
+and _that_ currently assumes that everything is a scsi command.
+Trying to fix up that assumption would mean to audit the midlayer 
+(scmd->device is a particular common pattern), _and_ all drivers wanting 
+to make use of reserved commands.
+For me that's too high an risk to introduce errors; audits are always 
+painful and error-prone.
+
+> b. provide block layer API to provide just same as is returned from 
+> blk_mq_unique_tag(), but no request is provided. This just gives what we 
+> need but would be disruptive in scsi layer and LLDs.
+
+Having looked at the block layer and how tags are allocated I found it 
+too deeply interlinked with the request queue and requests in general.
+Plus I've suggested that with a previous patchset, which got vetoed by 
+Bart as he couldn't use such an API for UFS.
+
+> c. as alternative to b., send all rsvd requests through the block layer, 
+> but can be very difficult+disruptive for users
 > 
-> So most block queue attributes are documented only in Documentation/block/.  And
-> if I added my new attributes to Documentation/ABI/ only, as you're requesting,
-> they would be the only block queue attributes that would be documented in only
-> that place.  I think that would make things worse, as then there would be no
-> authoritative source anymore.
+And, indeed, not possible when we will need to send these requests 
+during error handling, where the queue might be blocked/frozen/quiesced 
+precisely because we are in error handling ...
 
-I agree, it should all move to the proper location in Documentation/ABI/
-as that is where all sysfs attributes need to be documented.  Block
-queues are not special here.
-
-> If both you and the block people agree that *all* block queue attributes should
-> be documented in Documentation/ABI/ only, I'd be glad to send a separate patch
-> that adds anything missing to Documentation/ABI/testing/sysfs-block, then
-> removes Documentation/block/queue-sysfs.rst.  (BTW, shouldn't it really be in
-> Documentation/ABI/stable/?  This ABI has been around a long time, so surely
-> users are relying on it.)  But it doesn't seem fair to block this patch on that.
-
-"stable" is fine with me, people abuse "testing" by throwing everything
-into it.
-
+> *For polling rsvd commands on a poll queue (which we will need for 
+> hisi_sas driver and maybe others for poll mode support), we would need 
+> to send the request through the block layer, but block layer polling 
+> requires a request with a bio, which is a problem.
 > 
-> > > +static ssize_t blk_crypto_max_dun_bits_show(struct blk_crypto_profile *profile,
-> > > +					    struct blk_crypto_attr *attr,
-> > > +					    char *page)
-> > > +{
-> > > +	return sprintf(page, "%u\n", 8 * profile->max_dun_bytes_supported);
-> > 
-> > sysfs_emit() please, for this, and all other show functions.
-> 
-> Sure.  Note that in .show() functions kernel-wide, it appears that sprintf() is
-> much more commonly used than sysfs_emit().  Is there any plan to convert these?
-> As-is, if people use existing code as a reference, it will be "wrong" most of
-> the time, which is unfortunate.
+Allocating a bio is a relatively trivial task. But as soon as we ever 
+want to be able to implement polling support for reserved tags we 
+essentially _have_ to use requests, and that means we'll have to use the 
+provided interfaces from the block layer.
 
-Doing a wholesale replacement across the kernel is a pain and disruptive
-and not really needed.  But for all new code, please use the new
-functions.  If you want to convert your driver/subsystem to the new
-functions, no objection from me!
+Cheers,
 
-> > > +}
-> > > +
-> > > +static ssize_t blk_crypto_num_keyslots_show(struct blk_crypto_profile *profile,
-> > > +					    struct blk_crypto_attr *attr,
-> > > +					    char *page)
-> > > +{
-> > > +	return sprintf(page, "%u\n", profile->num_slots);
-> > > +}
-> > > +
-> > > +#define BLK_CRYPTO_RO_ATTR(_name)			\
-> > > +static struct blk_crypto_attr blk_crypto_##_name = {	\
-> > > +	.attr	= { .name = #_name, .mode = 0444 },	\
-> > 
-> > __ATTR_RO()?
-> 
-> Sure.  This would require removing the "blk_crypto_" prefix from the .show()
-> functions, which I'd prefer to have, but it doesn't really matter.
-
-Ah, you are right, but I think using the default macros sometimes can be
-nicer as they are easier to verify you are doing things correctly.
-
-> > > +static const struct attribute_group *blk_crypto_attr_groups[] = {
-> > > +	&blk_crypto_attr_group,
-> > > +	&blk_crypto_modes_attr_group,
-> > > +	NULL,
-> > > +};
-> > 
-> > ATTRIBUTE_GROUP()?
-> > 
-> > Hm, maybe not, but I think it could be used here.
-> 
-> ATTRIBUTE_GROUP() doesn't exist; probably you're referring to
-> ATTRIBUTE_GROUPS()?  ATTRIBUTE_GROUPS() is only usable when there is only one
-> attribute group.  In this case, there are two attribute groups.
-
-You are right, sorry.
-
-> > > +static int __init blk_crypto_sysfs_init(void)
-> > > +{
-> > > +	int i;
-> > > +
-> > > +	BUILD_BUG_ON(BLK_ENCRYPTION_MODE_INVALID != 0);
-> > > +	for (i = 1; i < BLK_ENCRYPTION_MODE_MAX; i++) {
-> > > +		struct blk_crypto_attr *attr = &__blk_crypto_mode_attrs[i];
-> > 
-> > sysfs_attr_init() might be needed here, have you run with lockdep
-> > enabled?
-> 
-> It's not needed because __blk_crypto_mode_attrs isn't dynamically allocated
-> memory.  Yes, I've run with lockdep enabled.
-
-Ok, good, just checking.
-
-thanks,
-
-greg k-h
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
