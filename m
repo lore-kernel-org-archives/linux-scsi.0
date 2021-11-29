@@ -2,217 +2,168 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C31AC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Nov 2021 13:17:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 599ADC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Nov 2021 13:17:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377250AbhK2NUt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Nov 2021 08:20:49 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:26904 "EHLO
+        id S1377353AbhK2NU5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Nov 2021 08:20:57 -0500
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:26922 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377578AbhK2NSs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Nov 2021 08:18:48 -0500
+        with ESMTP id S235896AbhK2NS4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Nov 2021 08:18:56 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1638191730; x=1669727730;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=bKDEWHJ4RKXOmE3BlUN9jvvWlP1nirsfCFERW7X+zcw=;
-  b=SLFMEhmAmYJ5hd04Bm2/mkYZqLqPW4Ltu40WJHSqJUQIwbhRTsUg4azJ
-   5SuqdLovx5sEfbFYtpUv5LAqc3nArWEz48wqdExMrkT/wvrYBE8lIJtsR
-   pRug4Qv9tswm4QZ2/DmWfV7vQLNu4IExmEQ0t+8sPalo2OSoA9Dblj+Ok
-   GpogWLvsWgVqb+9+J9EoAaO8ymH812R4eDHs60sMMjxnR7PXXA/Wr4ro1
-   tcwYAEW25w0WK330OZZfFhumZ5az5pZLx2/JtOFsH5srhRqmHzP+h0F2u
-   akXyAuFfpvckqAplPZf5OUCAwKCWOimwGSW/xx5HYS2G9xpAtxt3Amm0N
-   w==;
+  t=1638191739; x=1669727739;
+  h=from:to:cc:subject:date:message-id:
+   content-transfer-encoding:mime-version;
+  bh=04t+K5EEj5Rvf297p1C8w9VZS432qSxSQ6NE/9OauMI=;
+  b=BfY8KVfma+s+wGdvsWIksNDniMsT/TH2tXZ7sf7UGBgVKf2yZVS5CxI9
+   vBfVb6K20WmJkwoXSITcbIJL0uSQGWE6QSZ3C5Acwam0LtpZtl9tagFdL
+   C5GbhaE0ZXV4sH+LVFL7quJzEsZRjWCk8t2WkzNeNQF/RxWRq5nlAyDaU
+   pAAOqTA9ESmMxmv+5UD7KpYfLO5grQ3WVv2Kl1ZbD53e5WwyL39qOAU++
+   gEFK+lQzApCIakLqHcXJdoKsfDQgss3tuff3eeLxGrnkNHSSEp0JTYABZ
+   bA2Zwq9Z7r74e9eJemyeHAZUXDBoGpCe38GbL7mvSEf6wWFRXt2swEUUt
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.87,273,1631548800"; 
-   d="scan'208";a="290909463"
-Received: from mail-bn8nam12lp2171.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.171])
-  by ob1.hgst.iphmx.com with ESMTP; 29 Nov 2021 21:15:29 +0800
+   d="scan'208";a="290909479"
+Received: from mail-bn8nam12lp2177.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.177])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Nov 2021 21:15:38 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Lva8/1rpg22IMFgLanthOHa5HUpDPREa5fhXDijwxkHndwg+oqW7FjtVTdw7SnhGSxhHFaS/DWtRJssyr27TMo7xDDMiFk0dvPxsdU+ow6fOoXLWYi9z72/Gh1qLiaJ4iVxeNFTQcq+fCZVj+roaWQB+yB/rod02Wjrdvbzm3D8u8h1MUcukJQqKsVSrnr0kWG8g+uoGTGseB4MI2B6JyLNTik+Dt3aZCok7ZzJQaAOgCHW3dOQP0B4AZatFp67dhoB2C2UC+x0l3cq8uJZXAkKLDoOc0o8dr5maCCs4NtUT/pc9W/035dB7+1kQKHNi1gY+gAd0YcPTKnlWG9zcbQ==
+ b=hxhCuYOsPwHXD8U9f07YPFX++CXQC0w44TqxWOPhyOjMAJ0DkCWdXucWcXSd1ImF8BP2VGC/QyD+t8eTGHyhBpPyjNpj8fswPdlvdvA3p5IzW1HguzpYFvaC07jSXcOzgidi3/Su5eDLpr9UUB5mFb4ijO+QRNT+aqE4er2b1QeBBA3Qk52bJ7h9KIr008NGVwlki0j/6gcH614cdJRHGHTWCuyYUYapqqRGsnn9CaXAv0bKL7WGOP7byZVKX1y2DzVJ9zrlWJ9ozFvyAWx999iIk0PuNstvPKzhbqH41PQmBmbggwGy5vbx7fbBqxBhEACscR7YypgXkvJpIpJJCQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0+ag78/ZNYWvPgCs+fyL+X3z9Jj1gmgMLFRmIuxUQxk=;
- b=KeO85hnz5NxN5S5bRARJw76xXlwsLMA5LZCYz3klIGnMTOw2sQ1qOSCKj1g7YiE2owMkuzt+3lF2MC6NfUOMIGydOgeDoufRjvTG63O6ENza6jTBhaSsTjExQmJgQjDhtRy+VpXa1AML0McTED7oVfXhcWFPkYgppOmJbb44gNj2JpyZ3JWaXAMbivQyuo3yVXT6zTBGH46IfFriLWqYCfceUXa0Ju5n/Qe22gWGcPgdy/1SjoPOqITwQ6Bl3OjV0yOZCvyJ2Hhd3NoLjEZTxY7/6tqzL/kgmUExQ0F3s1nJvpV//xD/FZaWYLVEF1YA5eM+C47JL/woTRNHxZaytA==
+ bh=5rx42QRRJWR1JumR+w7sPHzfRYTDjz2mCAXKfSRK7Bk=;
+ b=NzB1XvDuz5J2JnviSOjDJqgF3XDQ95LBqxPEhVqTbwfacwbwNsP8siSgqiEOU38Rms315yHpac5Sib0iMylKVQ+bZbzXXK7hkeDl9IP4ljqYRtdRo8D2gcvf+3OHJCezfzjI9h6AE3CfMcJ7WOK6IcjfAT2t3Q4lTItv3OGGgORIMH5iEvNhY83UlDbrv46YPPbyzoUshj8oFnQnKpIkWRmXIlZSX6rzHzl1WUFg0h7ntN9gfGImjbYWcfaX8XcDR/ssPpdbmykhMqykeeX2gd+J8P4pWHPbJLInJvIHFfa9x4FH6M6Mz/kHUHqGYgDP+3xZFUUJN3dIOR9rMz8olA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0+ag78/ZNYWvPgCs+fyL+X3z9Jj1gmgMLFRmIuxUQxk=;
- b=ZDPyAi+08T9TlxSBUGoJgvBMXdF5fLivkpLrbyuVh07DMtclskvPva8hZsASJVvuCPXRNRvT1f4nnsexmjMbgy7b6B5VZyAKxxSgbi+wUGTApakyemAr0+JlEDHiP7gXzmIJRUwvHZ2mHftPE06lilaXPMqG8TdhB3ZzPbUjtjQ=
+ bh=5rx42QRRJWR1JumR+w7sPHzfRYTDjz2mCAXKfSRK7Bk=;
+ b=D+4jF1mUvjGA8hTbF/HqQVe9Y6SyCdobcOSoOI3hdoA5p4+fudCsX3AryW2MMVPwEgVHiVZKcD+HMPZAXh6fbJJtQ7rGdc8gSNIUWTyPAdxqLyaqXaV19uorWS0YfLEp7r2htbNto0lKZW45vm+tyIRfdnjDTbeYhbeLC1atJqo=
 Received: from PH0PR04MB7158.namprd04.prod.outlook.com (2603:10b6:510:8::18)
  by PH0PR04MB7703.namprd04.prod.outlook.com (2603:10b6:510:5c::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4734.23; Mon, 29 Nov
- 2021 13:15:26 +0000
+ 2021 13:15:37 +0000
 Received: from PH0PR04MB7158.namprd04.prod.outlook.com
  ([fe80::c504:3d44:5aef:f3ca]) by PH0PR04MB7158.namprd04.prod.outlook.com
  ([fe80::c504:3d44:5aef:f3ca%4]) with mapi id 15.20.4734.024; Mon, 29 Nov 2021
- 13:15:26 +0000
+ 13:15:37 +0000
 From:   Niklas Cassel <Niklas.Cassel@wdc.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-CC:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     "damien.lemoal@opensource.wdc.com" <damien.lemoal@opensource.wdc.com>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 1/2] scsi: sd_zbc: Compare against block layer enum values
-Thread-Topic: [PATCH 1/2] scsi: sd_zbc: Compare against block layer enum
- values
-Thread-Index: AQHX4sT1wmIgicv9UkS/qqm8MDen0awWju6AgACWIACAAvzTgIAAXuyA
-Date:   Mon, 29 Nov 2021 13:15:26 +0000
-Message-ID: <YaTSbcs/cNfl/hKO@x1-carbon>
-References: <20211126125533.266015-1-Niklas.Cassel@wdc.com>
- <9172d395-29d0-6b1a-4be7-8968bfac6762@opensource.wdc.com>
- <YaIBOPmCC6QH2rei@x1-carbon>
- <aae7748c-7915-28b4-75a4-033dc76f75d2@opensource.wdc.com>
-In-Reply-To: <aae7748c-7915-28b4-75a4-033dc76f75d2@opensource.wdc.com>
+Subject: [PATCH v2] scsi: sd_zbc: Clean up sd_zbc_parse_report() setting of wp
+Thread-Topic: [PATCH v2] scsi: sd_zbc: Clean up sd_zbc_parse_report() setting
+ of wp
+Thread-Index: AQHX5SMyRtQXEDl9pEGbEIjTATD2dg==
+Date:   Mon, 29 Nov 2021 13:15:37 +0000
+Message-ID: <20211129131508.350058-1-Niklas.Cassel@wdc.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
+x-mailer: git-send-email 2.33.1
 authentication-results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=wdc.com;
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 0513532d-164b-446c-2e52-08d9b33a4f1f
+x-ms-office365-filtering-correlation-id: eaa8a7a4-e635-446c-bd6f-08d9b33a5582
 x-ms-traffictypediagnostic: PH0PR04MB7703:
-x-microsoft-antispam-prvs: <PH0PR04MB7703A5AD553E0546DC29B693F2669@PH0PR04MB7703.namprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <PH0PR04MB7703C43B5151148E1EE8DEE2F2669@PH0PR04MB7703.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-ms-oob-tlc-oobclassifiers: OLM:3383;
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: juskKaLg/jyk+MWxs3vmUYuTHU9VF/6fOeWkxBbkFGsbSwAo1qam+4C8ry/tdiwRTh0pp1DOoDP8JlxoARRzFDVpKBzwbRQWJdUsZOKDK9PIOU+YppYYE7srLx09VHMTWT7dOt/vTv+9O0ehdPOaL76Grr4j4sHTF84CWdrrNPJqsjlBM8kw+/W+Ftrjt4SbaWtd90cGgSLOlj++bLkemGxmKjceS4/eQi5OQHZzalKJF9rQhHec/9hyAAvsiLEaFxodmfGwtlpJaGkPOui2NF6k+lvKvg1BcUhSwGjaYpOG+ZKDJsYsDkPcPWAaICQGvAnab+lowMwjpwq3q2bSOFg+oXRk2fgKX7vd+fwmxtKBJpZ6znoLqeRPPKM6DSXrxvoYhWpm5V1BF07Geo9rIk2vCHbFSri6AVabY5FBEZWKTW1FWy0R/JcHp1saFgtwJ6hWpE+niKJeDnTYsjzSNMXY4uI50Xi1wD0/Yn3UKEzArm/PRt1vKPnM+viBuD/PpURgwD6K00t/PBXjW170BSczc5oE1y83R744TrVOrG4MnGV4UtbJyR09zlim6BGPyEHQm7nCf9/viXpmfGUf2pXTBSq+EDa2W1jRENhMJaoQxQj2olh/SOv9wYZT7YLHHIgtSvCW3/93VooAai7hHHt8kbeHy5Ai8y2o1+yPTd8duKFy2iB+nNz4l0YaNeoi9rC0mk4w7hoviVrdrStJhQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7158.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(7916004)(366004)(508600001)(186003)(4326008)(66446008)(9686003)(66476007)(66556008)(6512007)(64756008)(71200400001)(33716001)(38100700002)(6486002)(53546011)(66946007)(86362001)(38070700005)(76116006)(91956017)(6506007)(5660300002)(8936002)(26005)(83380400001)(316002)(2906002)(122000001)(8676002)(54906003)(6862004)(82960400001);DIR:OUT;SFP:1102;
+x-microsoft-antispam-message-info: mLZkUzX42CEPRODJBiLHGnnokLVMMFroqFiEdrV/WrPf/cI++auxoSpCWdwKTHX0L2x8KuoKgtD5BZkeuez/6yCxOMCLLoKiP8u1/jldPkPg9ZCrMlvsB7E4jwMuN4FXwq7J0QUtQEmnHBkoTfdrPRlbjjG5t6ef23LknVKZh/EcOZHIh5ehHcptaxbpmJtGsOaaQ2aPe9x/cwBEbDQTb7rEzvDwA/ZMKeMWyltEfpuAYgbCWXf2rv0MRwpo2vazyH74zbmo+8g4DLPPHIxQZu5dAI2UP6J2g3gq+zM0bR+/tHMAhz0Gwxk7cQgsEUoBZWIRXd3hUT2+KgmfDuoUXV80u30TVACFyRgInwLJxCqDKm/nvAcCYFkB5aCdfBQyCOPBlybmtEGy10KZRIDvNqUxcn8WeR2vV5cg2WPkKM46HSi9hb6Rfh6LV06YatWKPNLOg0XlRoLMFYwoR6felOHANYAI30r3eTFo7HvnHMhj0tMohgTFCGG/HEN87Lo0u4PO2MsReCAdSGh1haVvx3mRxFRi+CrCt22AD0lDY55KOB3wKx5UhRJmhmdXOQ47FMLxYcIlfcih3H5KkjHPt4VHQCbdZogQxV3ufymnqZCu3yhv7eNF9jCgb2Ibs0iFACS3YQsdyoqKsU/KCeK2SiVun4Dh3qw0kC7mlCxXiG7jQkkt5aurmM+bwZmsUJOZYjL1Mw2N0iGRCDWAGP2eqA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7158.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(508600001)(186003)(4326008)(66446008)(66476007)(66556008)(6512007)(64756008)(71200400001)(38100700002)(6486002)(66946007)(86362001)(38070700005)(76116006)(91956017)(6506007)(5660300002)(8936002)(36756003)(26005)(83380400001)(316002)(110136005)(2906002)(1076003)(122000001)(8676002)(54906003)(82960400001)(2616005);DIR:OUT;SFP:1102;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?6/dwQCSuzOBv3PkMO2wSCPGn8SRR/hiPShT9YUuMZYPti3G6R/vo5krxfbxP?=
- =?us-ascii?Q?j8DN8kM4ZxKUND3CGWkzQRbJc4uvv2surww0zUCRbbPdeuGwdi1jbWwYsI5f?=
- =?us-ascii?Q?zM7jC4GxvivmLE4RqQDxtUVJIQ2x7Yu5l6j+X37ruXtCqMv+vIjNraJHxIdD?=
- =?us-ascii?Q?6RdyHO+vJ0WoEEv6rq7ggOVZvQTct52QffTZa9UF9EoDV184wZdT3hlcUrGH?=
- =?us-ascii?Q?d81xXnmk1ys2VZWORvXGozvTxrNFDbz/Mx09ZMWXyWsBOrAR6kgb6XYTY5yT?=
- =?us-ascii?Q?CrYcjQVD76d9oDBeTx0QayhnSHoPT5uGRixbJ/6bpc0Pm7n8n6g8K2ue11uv?=
- =?us-ascii?Q?R09kJhHTBwRIR6qN66nDQNdqnqyR81fRgua2MY6l2GQXx4yLmD3DZSbUa1rY?=
- =?us-ascii?Q?CeabRVJBQgZQU6XzVwXCtJWUvdZbxJ4H+akI5PJgiVXE64e1nHFy/H2TZXLI?=
- =?us-ascii?Q?MxfeXhk13VcINKSHfARbMpHncYNLEw8jd/i5XnGyrfpjcACU6wFc2xge/SV0?=
- =?us-ascii?Q?qvaRcbnY8+7SgHUt2j0ZMbdTyo4pnYACWgLLdMId4k0ovBj2Mjlg9h+an3ih?=
- =?us-ascii?Q?ei0FXETvn9MXlRfsPdNTkE3UzxPKKEoFiiHTCYK5+JXUrbvMsghLQWtZJyNr?=
- =?us-ascii?Q?7ATxWV17RkTVT9IWbBCvkXA4FRGdCe/rlpTghuSxipc5ZjAoFv6pBRj9BWX+?=
- =?us-ascii?Q?+mXf7e6MtXxGYhvusMnsorGpR2rmj3kwDzEGaQn60RJb+tP+D8wB8ioI8OQO?=
- =?us-ascii?Q?AUOBjEKfWO4AkCOtHc4bVmCq/qexfSbcoBzSPkjdelAj6pb+f39m2pu+wNbm?=
- =?us-ascii?Q?GQsd4T+52oBHtSX1E7Ie0PNszTGDTMv+rwTtUA6M8iygvXivOins4XGt1G5S?=
- =?us-ascii?Q?wQwOha6FCRmxXlKzJ0NgGJ3YdxhZ0KIyj0J2GutCBqcpdkDsYfGaaZ/5H5Pw?=
- =?us-ascii?Q?CjtTLBoI+kQcFZu52PqbCuySar0HR6uLmlDWTgaDOOvBc3mG2LXtFWtgWh9f?=
- =?us-ascii?Q?t6A0I8lqadYrHO9V1znHd3peS9jKfAKMGkaGOB2i2EphzdUL+yxquvWTkOg9?=
- =?us-ascii?Q?0WWLilABOEUGdQakzjY18tJPzQKKO5+t7KxvYQX/SlhCdPGj3KIi+HLifZov?=
- =?us-ascii?Q?JLXVg8rk8uvIwgez26cRZumGHGmOxKyrYEOEyb/YZCxyJKOH71egguW+K1RK?=
- =?us-ascii?Q?NRtG1AZxgko7+GnwxVphbz5BCsF1sTB94PNVmf2e2HnmA+JidwVUYHOTSzB1?=
- =?us-ascii?Q?SNgwrlt6t/XdJvAHlNTNVFzrJ2vuLaP0oAVvk8msQjaxIfrssV31yrTZfZqN?=
- =?us-ascii?Q?XhYDgtQh6+ezEcLRVb1n3rpMYKSRamRgG78v96PyF1ozaVl0+5ejqakyVzsR?=
- =?us-ascii?Q?9z4VOwGLvyq3W7w7+X8yWlkisqsfFZyt6XAbDfWF5R8BtxCNooO8F3bk/ppH?=
- =?us-ascii?Q?TbyBHbGFSb6dZk4n8Xr/ua2I1F7PREH1UW+xE/UTLQ5sEC8dB8xf9mFn0ZRA?=
- =?us-ascii?Q?P/mmiyIiT2DZUvxL2Rk/tVZOeClIjrgyc1zPmGUtiECcG1rL7HLCHUDgULtI?=
- =?us-ascii?Q?RkQHRiWjfJVSr8tQBofvzimf7Hu0numT6mqJXt5EXSVpOULlIoeO+XZr6Wca?=
- =?us-ascii?Q?nO5UP/LvoR0VNIxzsqEfPao=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <6370331D42991843BE6D0C48DAB13A07@namprd04.prod.outlook.com>
+x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?6Ex26fty7xRolJ2iAfKddroTn3Wy8lknIeAtAsFaooWk0t6H5iHWGDHlQE?=
+ =?iso-8859-1?Q?V8FsL7bk/MstWphMMSJoVPKwierzHOAGBcL/BrGhLuOb17mPk3xn8IUlOM?=
+ =?iso-8859-1?Q?m3k7dRTIaopaV6ceRPUzc/F5anceuSanHYjnJf1j5FpgDLz/BDO3Xiblpn?=
+ =?iso-8859-1?Q?yr0ZJDKfl+XopXrUMAUawFk65A/sKC262oNC6Fkqe97CpVO57x9InoXki1?=
+ =?iso-8859-1?Q?x9vwEjtl218R/alKD3eOF9RAUOYJQwuZc3rufJB0hf4ftNF+lZdnYm60Pa?=
+ =?iso-8859-1?Q?gjfZnKEht+Cv+1j1FNhke4nFXsNc6St56/M5Em9sA26vDohHv+08b6NkyJ?=
+ =?iso-8859-1?Q?ZQLyCi9WqTCR5Fnvc5qIzQcJq/FS2B/WTXgRXWiAwMBmcpGnoQiXP/uc/B?=
+ =?iso-8859-1?Q?aQSlJDC+SKAp3LpqZ3WRJfJ9+HdV6xr6Zcvid6ry7nnfVejyOMyTWavF+D?=
+ =?iso-8859-1?Q?T3QG6TqV05VH8NoLe5VWUIgQ3eacNKGt9kn5o+382tET5VmshHEoqfAsow?=
+ =?iso-8859-1?Q?0zRZEFy0/BVs+iuzPsEIzC0PkDO8nzsh3pWeIr2h5GSOT1cUuQiIG9R7aU?=
+ =?iso-8859-1?Q?yLyRULE2aKhQ+C9qSPwiRSNXDu5iXkj55hiG5sta5BKTclyNVc0cvGPDCE?=
+ =?iso-8859-1?Q?z3wIjVLH09fGpX0GcPUIN+ZpfMl1nQEmJTOecyodzC+BpkQNUhcj3TJUg6?=
+ =?iso-8859-1?Q?s6KgQkHrmc7nLG2NYKMTPUYK2n9u0FoN7B07uZ+x4cGi17PPKkrLc54y4y?=
+ =?iso-8859-1?Q?nrsG5UhqVKPisC9s6wY6VuAQJLw30pk6X05Gjo+s4kFHqIaQjVj2OK+FxW?=
+ =?iso-8859-1?Q?K7RgXUdyB5ouSVDRh35aZfkPCn+AU2q1j6HpN6d+aA/Ezu52JHqrKJmaGy?=
+ =?iso-8859-1?Q?5fa3QqId4ANWKsryuDM+SMiM5psPe6/4619XBTiEoqrAqoss6+cYwMke6+?=
+ =?iso-8859-1?Q?fl1enK9mzfltDiJoL6f/nkcA723VnB4oQQfmOuR1BGmVjuEU95kCKWRp0c?=
+ =?iso-8859-1?Q?WXpaHYxpTMobAjzhPUJ5R6OQC0cS3NHidKs6QfW9Ib7pDcTsyCimwzuy+l?=
+ =?iso-8859-1?Q?uLxXc75dkay/is6U5I/c467l4YasercTFy0Zt8Q/ICHEQ29nnWYbUtdHR6?=
+ =?iso-8859-1?Q?aGaUq73/13+Ui8dnnp4JDZ5JnccN001xN3L7cWVQL5+BL2KFYIW5ZadzCA?=
+ =?iso-8859-1?Q?tQOdYcrDRkzfhtnwXDNA9kU9z5lkH7FOWCmPBiHc16mkn3zBv9G0Fq2jD0?=
+ =?iso-8859-1?Q?Gb9WfpFbSy0nTXaOoSfofX8YPc8iAzJhQXzp9KbHrQ2aUm9feNV9+cbqvf?=
+ =?iso-8859-1?Q?66gM0DmZV9elZA31EhVEJBGiSjPCxLGy8ZQiB82ip6KBo1sQXa2mz47PEQ?=
+ =?iso-8859-1?Q?nekCqHAvhllB+c4ytqEcERuRSPosYw5qy1o3kvKskh4zjq7MUawp3vBWLV?=
+ =?iso-8859-1?Q?3502AbNYt/fwB7RQh8uP2PIjcmUCgO4Q1RvylHojEa55GK30mfwXoz7nKc?=
+ =?iso-8859-1?Q?p4B+sMGmyva3IHW/+UM16BlLaOe1v863oET3n5KupV5Eyh+0jMXh3fI827?=
+ =?iso-8859-1?Q?08NWFoU+gACamz3U/ofq7IzfKdDLKk552IKaogLQdROE8MIMAwOAJ0qGFZ?=
+ =?iso-8859-1?Q?GUMnjgF6qp63hGNRmM95k81B4EU8MmTbdAjZoIKg0frjQiikbXTcRNfgNJ?=
+ =?iso-8859-1?Q?dcYkgxNLQ+iWOXRGrDc=3D?=
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7158.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0513532d-164b-446c-2e52-08d9b33a4f1f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Nov 2021 13:15:26.4413
+X-MS-Exchange-CrossTenant-Network-Message-Id: eaa8a7a4-e635-446c-bd6f-08d9b33a5582
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Nov 2021 13:15:37.2189
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: cJhEvpVLc2zpyMdKenhBSEi68eojrWXFWInFFgCgiSSvlMddEbHpKeVU0L6TrJtD52K6hL98VvgkDFXiomVqHw==
+X-MS-Exchange-CrossTenant-userprincipalname: CCH8UrMii4FUSuv/cWVL2ElzG2C3C0jlq2c1wNBTpJFSdf3DFtCfYoyTIOmVCPA5X3NySKesrULGaMTrdD0yLA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR04MB7703
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 29, 2021 at 04:35:41PM +0900, Damien Le Moal wrote:
-> On 2021/11/27 18:58, Niklas Cassel wrote:
-> > On Sat, Nov 27, 2021 at 10:00:57AM +0900, Damien Le Moal wrote:
-> >> On 2021/11/26 21:55, Niklas Cassel wrote:
-> >>> From: Niklas Cassel <niklas.cassel@wdc.com>
-> >>>
-> >>> sd_zbc_parse_report() fills in a struct blk_zone, which is the block =
-layer
-> >>> representation of a zone. This struct is also what will be copied to =
-user
-> >>> for a BLKREPORTZONE ioctl.
-> >>>
-> >>> Since sd_zbc_parse_report() compares against zone.type and zone.cond,=
- which
-> >>> are members of a struct blk_zone, the correct enum values to compare
-> >>> against are the enum values defined by the block layer.
-> >>>
-> >>> These specific enum values for ZBC and the block layer happen to have=
- the
-> >>> same enum constants, but they could theoretically have been different=
-.
-> >>>
-> >>> Compare against the block layer enum values, to make it more obvious =
-that
-> >>> struct blk_zone is the block layer representation of a zone, and not =
-the
-> >>> SCSI/ZBC representation of a zone.
-> >>>
-> >>> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-> >>> ---
-> >>>  drivers/scsi/sd_zbc.c | 4 ++--
-> >>>  1 file changed, 2 insertions(+), 2 deletions(-)
-> >>>
-> >>> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-> >>> index ed06798983f8..024f1bec6e5a 100644
-> >>> --- a/drivers/scsi/sd_zbc.c
-> >>> +++ b/drivers/scsi/sd_zbc.c
-> >>> @@ -62,8 +62,8 @@ static int sd_zbc_parse_report(struct scsi_disk *sd=
-kp, u8 *buf,
-> >>>  	zone.capacity =3D zone.len;
-> >>>  	zone.start =3D logical_to_sectors(sdp, get_unaligned_be64(&buf[16])=
-);
-> >>>  	zone.wp =3D logical_to_sectors(sdp, get_unaligned_be64(&buf[24]));
-> >>> -	if (zone.type !=3D ZBC_ZONE_TYPE_CONV &&
-> >>> -	    zone.cond =3D=3D ZBC_ZONE_COND_FULL)
-> >>> +	if (zone.type !=3D BLK_ZONE_TYPE_CONVENTIONAL &&
-> >>> +	    zone.cond =3D=3D BLK_ZONE_COND_FULL)
-> >>>  		zone.wp =3D zone.start + zone.len;
-> >>
-> >> For the sake of avoiding layering violation, I would keep the code as =
-is, unles
-> >> Martin and James are OK with this ?
-> >=20
-> > Sorry, but I don't understand this comment.
-> >=20
-> > The whole point of sd_zbc_parse_report() is to take a ZBC zone represen=
-tation,
-> > stored in u8 *buf, and to convert it to a struct blk_zone used by the b=
-lock
-> > layer.
->=20
-> Yes. So what is the problem with using the scsi_proto.h defined ZBC_ZONE_=
-*
-> macros ? We are deep in scsi territory with this code, so using an UAPI d=
-efined
-> macro is weird.
+From: Niklas Cassel <niklas.cassel@wdc.com>
 
-There is no problem with the existing code.
-I simply think that it is strictly more correct and slightly less confusing
-to use the BLK_ZONE_ enums when accessing members of struct blk_zone.
+Make sd_zbc_parse_report() use if/else when setting the write pointer,
+instead of setting it unconditionally and then conditionally updating it.
 
-I didn't see the weirdness of doing so, especially considering that NVMe
-uses the BLK_ZONE_ enums when assigning members of struct blk_zone, and
-since struct blk_zone, which is the type we are using here, is itself
-defined in (and only in) the UAPI header include/uapi/linux/blkzoned.h.
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+---
+Changes since V2:
+-Picked up Johannes' tag.
+-Dropped patch 1/2 from the series. The actual +/- lines of this patch is
+ unchanged.
 
-Anyway, I will drop this patch from the series and send out a V2 of patch 2=
-/2.
+ drivers/scsi/sd_zbc.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-
-Kind regards,
-Niklas=
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index ed06798983f8..20e849437687 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -61,10 +61,11 @@ static int sd_zbc_parse_report(struct scsi_disk *sdkp, =
+u8 *buf,
+ 	zone.len =3D logical_to_sectors(sdp, get_unaligned_be64(&buf[8]));
+ 	zone.capacity =3D zone.len;
+ 	zone.start =3D logical_to_sectors(sdp, get_unaligned_be64(&buf[16]));
+-	zone.wp =3D logical_to_sectors(sdp, get_unaligned_be64(&buf[24]));
+ 	if (zone.type !=3D ZBC_ZONE_TYPE_CONV &&
+ 	    zone.cond =3D=3D ZBC_ZONE_COND_FULL)
+ 		zone.wp =3D zone.start + zone.len;
++	else
++		zone.wp =3D logical_to_sectors(sdp, get_unaligned_be64(&buf[24]));
+=20
+ 	ret =3D cb(&zone, idx, data);
+ 	if (ret)
+--=20
+2.33.1
