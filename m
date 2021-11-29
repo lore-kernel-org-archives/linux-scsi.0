@@ -2,185 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F71DC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Nov 2021 19:18:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A327EC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Nov 2021 19:35:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350175AbhK2TVS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Nov 2021 14:21:18 -0500
-Received: from m43-7.mailgun.net ([69.72.43.7]:23634 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1380066AbhK2TTS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Nov 2021 14:19:18 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1638213360; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: From: References: Cc: To: Subject: MIME-Version: Date:
- Message-ID: Sender; bh=RScI3Hhu2IHWULTsGJc57d5MH8nBdwIsssHjRze0B6U=; b=g0rZGCFWJ+G7LNM1DlQcPS4pQTYnn9K9jVUB7MN3ZxHrQcvIJCNht0dhaiTJroCYwLcjh444
- EC7Inq3/ngqEAQQFXZFznCWuwnPkQugmFWX31rf21uU1iDfGPjMe1Zv5hiUKVhdsg0qKbSET
- 0Cz+Q5i/Zq20HUh7RXR2brth/IM=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 61a526ef6bacc185a5c1db81 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 29 Nov 2021 19:15:59
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 61AD5C4314E; Mon, 29 Nov 2021 19:15:58 +0000 (UTC)
-Received: from [192.168.1.3] (cpe-66-27-70-157.san.res.rr.com [66.27.70.157])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 763CEC43637;
-        Mon, 29 Nov 2021 19:15:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 763CEC43637
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-Message-ID: <2288f0b8-fa55-2020-b210-b5e7d06d6a4b@codeaurora.org>
-Date:   Mon, 29 Nov 2021 11:15:53 -0800
+        id S233335AbhK2TiR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Nov 2021 14:38:17 -0500
+Received: from mail-pl1-f170.google.com ([209.85.214.170]:43796 "EHLO
+        mail-pl1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1349986AbhK2TgN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Nov 2021 14:36:13 -0500
+Received: by mail-pl1-f170.google.com with SMTP id m24so13001066pls.10
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Nov 2021 11:32:55 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=tEaSCPISNJhJiU0Y5Rp1j0GcoL1HoGplL1acQNXZ/w8=;
+        b=LUEAyFeMBfyMOzOMeLYnnFa7YFJl5egagxl7shP2ZMzFmfq9xdQSTMEmBgREX8g3/w
+         e8tr/WElAYn3O9o2C02Qfr4sJ6eX/IOhLlpSNuNVqfa3WIa6aNPeGeUcOLqKU/bOeSAE
+         LARHKGAqHpnzbUyRu5oxoHV5tQjvJ8hHIVSuEG8xTJMMynyugbMOkebhxx9/xZnsuFiA
+         9rHqZ35wLaMDKBAGWTU2/RlVMg3bQb3MfEikBK3Vp2OzhM3xpp3d6LwnOiAqUIumz8lo
+         m//piNdpgn4gP5wF7A2MKrPvkktABh/PiSpy7OoadnrWCeqT4kyaETdAk3+jHBAQ/Qfe
+         V0jw==
+X-Gm-Message-State: AOAM530WGreaxnJ516ozRSWZXeSyHxgHX4iJahOXv2wxVuT/sEu9+fkr
+        0JEUyemAwXMNIclRW+16fJU=
+X-Google-Smtp-Source: ABdhPJzxEE5u6L2coflzzTvhLBrmqSX702QGworpjJY7YLAidtZ2MvAPoL/PLlF3XggsjhEP54uYsw==
+X-Received: by 2002:a17:90a:3d42:: with SMTP id o2mr122301pjf.150.1638214375428;
+        Mon, 29 Nov 2021 11:32:55 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:a4a0:8cb5:fff:67db])
+        by smtp.gmail.com with ESMTPSA id w17sm18242392pfu.58.2021.11.29.11.32.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 29 Nov 2021 11:32:54 -0800 (PST)
+Subject: Re: [PATCH v2 11/20] scsi: ufs: Switch to
+ scsi_(get|put)_internal_cmd()
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+References: <20211119195743.2817-1-bvanassche@acm.org>
+ <20211119195743.2817-12-bvanassche@acm.org>
+ <6bfb59ef-4f00-3918-59e6-3c9569f6adc6@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <bc19f55f-a3e9-a3fe-437d-57b9e077f532@acm.org>
+Date:   Mon, 29 Nov 2021 11:32:53 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.1
-Subject: Re: [PATCH 03/15] scsi: implement reserved command handling
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>,
-        Bart van Assche <bvanassche@acm.org>
-References: <20211125151048.103910-1-hare@suse.de>
- <20211125151048.103910-4-hare@suse.de>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-In-Reply-To: <20211125151048.103910-4-hare@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <6bfb59ef-4f00-3918-59e6-3c9569f6adc6@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/25/2021 7:10 AM, Hannes Reinecke wrote:
-> Quite some drivers are using management commands internally, which
-> typically use the same hardware tag pool (ie they are being allocated
-> from the same hardware resources) as the 'normal' I/O commands.
-> These commands are set aside before allocating the block-mq tag bitmap,
-> so they'll never show up as busy in the tag map.
-> The block-layer, OTOH, already has 'reserved_tags' to handle precisely
-> this situation.
-> So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
-> template to instruct the block layer to set aside a tag space for these
-> management commands by using reserved tags.
+On 11/24/21 3:02 AM, Adrian Hunter wrote:
+> On 19/11/2021 21:57, Bart Van Assche wrote:
+>> The only functional change in this patch is the addition of a
+>> blk_mq_start_request() call in ufshcd_issue_devman_upiu_cmd().
+>>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> ---
+>>   drivers/scsi/ufs/ufshcd.c | 46 +++++++++++++++++++++++++--------------
+>>   1 file changed, 30 insertions(+), 16 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index fced4528ee90..dfa5f127342b 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -2933,6 +2933,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>>   {
+>>   	struct request_queue *q = hba->cmd_queue;
+>>   	DECLARE_COMPLETION_ONSTACK(wait);
+>> +	struct scsi_cmnd *scmd;
+>>   	struct request *req;
+>>   	struct ufshcd_lrb *lrbp;
+>>   	int err;
+>> @@ -2945,15 +2946,18 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>>   	 * Even though we use wait_event() which sleeps indefinitely,
+>>   	 * the maximum wait time is bounded by SCSI request timeout.
+>>   	 */
+>> -	req = blk_mq_alloc_request(q, REQ_OP_DRV_OUT, 0);
+>> -	if (IS_ERR(req)) {
+>> -		err = PTR_ERR(req);
+>> +	scmd = scsi_get_internal_cmd(q, DMA_TO_DEVICE, 0);
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-
->   drivers/scsi/hosts.c     |  3 +++
->   drivers/scsi/scsi_lib.c  |  9 ++++++++-
->   include/scsi/scsi_host.h | 22 +++++++++++++++++++++-
->   3 files changed, 32 insertions(+), 2 deletions(-)
+> We do not need the block layer, nor SCSI commands which begs the question,
+> why involve them at all?
 > 
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index a539fa2fb221..8ee7a7279b6b 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -482,6 +482,9 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->   	if (sht->virt_boundary_mask)
->   		shost->virt_boundary_mask = sht->virt_boundary_mask;
->   
-> +	if (sht->nr_reserved_cmds)
-> +		shost->nr_reserved_cmds = sht->nr_reserved_cmds;
-> +
->   	device_initialize(&shost->shost_gendev);
->   	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
->   	shost->shost_gendev.bus = &scsi_bus_type;
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 6fbd36c9c416..e8f1025d0ed8 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1939,7 +1939,9 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
->   		tag_set->ops = &scsi_mq_ops_no_commit;
->   	tag_set->nr_hw_queues = shost->nr_hw_queues ? : 1;
->   	tag_set->nr_maps = shost->nr_maps ? : 1;
-> -	tag_set->queue_depth = shost->can_queue;
-> +	tag_set->queue_depth =
-> +		shost->can_queue + shost->nr_reserved_cmds;
-> +	tag_set->reserved_tags = shost->nr_reserved_cmds;
->   	tag_set->cmd_size = cmd_size;
->   	tag_set->numa_node = NUMA_NO_NODE;
->   	tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
-> @@ -1964,6 +1966,9 @@ void scsi_mq_destroy_tags(struct Scsi_Host *shost)
->    * @nowait: do not wait for command allocation to succeed.
->    *
->    * Allocates a SCSI command for internal LLDD use.
-> + * If 'nr_reserved_commands' is spectified by the host the
-> + * command will be allocated from the reserved tag pool;
-> + * otherwise the normal tag pool will be used.
->    */
->   struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
->   	int data_direction, bool nowait)
-> @@ -1973,6 +1978,8 @@ struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
->   	blk_mq_req_flags_t flags = 0;
->   	int op;
->   
-> +	if (sdev->host->nr_reserved_cmds)
-> +		flags |= BLK_MQ_REQ_RESERVED;
->   	if (nowait)
->   		flags |= BLK_MQ_REQ_NOWAIT;
->   	op = (data_direction == DMA_TO_DEVICE) ?
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 6f49a8940dc4..7512d97aceb4 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -367,10 +367,19 @@ struct scsi_host_template {
->   	/*
->   	 * This determines if we will use a non-interrupt driven
->   	 * or an interrupt driven scheme.  It is set to the maximum number
-> -	 * of simultaneous commands a single hw queue in HBA will accept.
-> +	 * of simultaneous commands a single hw queue in HBA will accept
-> +	 * excluding internal commands.
->   	 */
->   	int can_queue;
->   
-> +	/*
-> +	 * This determines how many commands the HBA will set aside
-> +	 * for internal commands. This number will be added to
-> +	 * @can_queue to calcumate the maximum number of simultaneous
-> +	 * commands sent to the host.
-> +	 */
-> +	int nr_reserved_cmds;
-> +
->   	/*
->   	 * In many instances, especially where disconnect / reconnect are
->   	 * supported, our host also has an ID on the SCSI bus.  If this is
-> @@ -608,6 +617,11 @@ struct Scsi_Host {
->   	unsigned short max_cmd_len;
->   
->   	int this_id;
-> +
-> +	/*
-> +	 * Number of commands this host can handle at the same time.
-> +	 * This excludes reserved commands as specified by nr_reserved_cmds.
-> +	 */
->   	int can_queue;
->   	short cmd_per_lun;
->   	short unsigned int sg_tablesize;
-> @@ -626,6 +640,12 @@ struct Scsi_Host {
->   	 */
->   	unsigned nr_hw_queues;
->   	unsigned nr_maps;
-> +
-> +	/*
-> +	 * Number of reserved commands to allocate, if any.
-> +	 */
-> +	unsigned nr_reserved_cmds;
-> +
->   	unsigned active_mode:2;
->   
->   	/*
-> 
+> For example, the following is much simpler and seems to work:
+> [ ... ]
 
+That patch bypasses the block layer for device management commands. So that
+patch breaks a very basic assumption on which the block layer has been built,
+namely that the block layer core knows whether or not any requests are ongoing.
+That patch breaks at least the following functionality:
+* Run-time power management. blk_pre_runtime_suspend() checks whether
+   q_usage_counter is zero before initiating runtime power management.
+   q_usage_counter is increased by blk_mq_alloc_request() and decreased by
+   blk_mq_free_request(). I don't think it is safe to change the power state
+   while a device management request is in progress.
+* The code in blk_cleanup_queue() that waits for pending requests to finish
+   before resources associated with the request queue are freed.
+   ufshcd_remove() calls blk_cleanup_queue(hba->cmd_queue) and hence waits until
+   pending device management commands have finished. That would no longer be the
+   case if the block layer is bypassed to submit device management commands.
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+Bart.
