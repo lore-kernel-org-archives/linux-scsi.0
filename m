@@ -2,45 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AED1BC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Nov 2021 19:48:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20EC6C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Nov 2021 19:48:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353754AbhK2Tvr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Nov 2021 14:51:47 -0500
-Received: from mail-pg1-f180.google.com ([209.85.215.180]:35632 "EHLO
-        mail-pg1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378839AbhK2Ttp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Nov 2021 14:49:45 -0500
-Received: by mail-pg1-f180.google.com with SMTP id j11so7292951pgs.2
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Nov 2021 11:46:27 -0800 (PST)
+        id S1354589AbhK2Tvs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Nov 2021 14:51:48 -0500
+Received: from mail-pf1-f170.google.com ([209.85.210.170]:42684 "EHLO
+        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1378862AbhK2Ttq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Nov 2021 14:49:46 -0500
+Received: by mail-pf1-f170.google.com with SMTP id u80so18025054pfc.9
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Nov 2021 11:46:29 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=nmSr4aGAqiYob5EbKWRQg54NwSmiITSVXf9eYWzcg/A=;
-        b=aYlIJaLRwOugIOWWJnRn01/k/t35+wPWKup9uyp28V0C6l73joqMFiZLSVrh/BX6wr
-         Xzq11aTTrUUq/7dEfBvp95mLx2xEAi7SzeChdE0I8VxUlwcPZ2w/eWKh3Gc6/e/6XOP1
-         X6Tn198VlIzfZdZVjBwCgq+5OUhPFc5ohF+SBYvKtUe/kt2wzfZXmlFbPkirmbEGh42r
-         uutbb3cLAsJCHaDVEcKerVGbxak5x47d9rkKFA98/+fgz9VaK87OQC7p20hN2UAeq3Ui
-         FVzf9brvjR++5n+6rxG1pyL+IsC175aVzgbmWk0S3O0qHuWupHUscI5vRqyMekS7OrUR
-         pRaQ==
-X-Gm-Message-State: AOAM533tSo/wPc+xGsrUCe8L3CmkabQC/yaSof0fT1wjguzdBWir6m9A
-        gCKqOlXEdV+6QPCyoYOaCS4=
-X-Google-Smtp-Source: ABdhPJwZ0nHKJPJUV3KCIDW2XGFJzfKON9K6oMSzFQNeME7uzB1mZDEsfa0FUvWHFvhm20mD4JOdlA==
-X-Received: by 2002:a05:6a00:14ce:b0:49f:dc1c:a0fb with SMTP id w14-20020a056a0014ce00b0049fdc1ca0fbmr42109299pfu.56.1638215187265;
-        Mon, 29 Nov 2021 11:46:27 -0800 (PST)
+        bh=54db5IroZ/C1hKDclRAMB0jVjoQpe+ZQfjyZH9rHows=;
+        b=um2Ijd4y3WYvrTVznGxKWIEeRZAEd5f/8RRmifyhnRtArKzYUEm62mBw9zx5mXSKym
+         ErTMRWCdPUizIjTCuAIvG1d7l6GUmnsurcoiQpE+g2w/yZBOUR3YLyyb2YbY4lEWcFi9
+         P73dAuGHO3RDkGoI4SikMX0rBohB6wuiyDvOb/d8jhu6uhU7nJu2y0dTwQvr914LFaEk
+         isPd3zOHIutThHYfwfIO8uYsKVOh1VTo1fmctNh7szuvn2frfmzNCgq7Hd/naugZOUsy
+         MzMxlC/0Ad/7HTtK1lRVbtfz3p+WLsf1ErBp6jejUCv6giCoMwevH48aqppxsc2QbTKl
+         IWtg==
+X-Gm-Message-State: AOAM530jPd251DLMAT8UzZPWKmwHhn+9baWMYeYv8cr7Q+2fFj9P/WXW
+        WLF85JS1uVE2zWZU2jh3170=
+X-Google-Smtp-Source: ABdhPJzZ9maHy1WSIGLEC85vOPaFA89MNp21jv5Ix5iDsupf8PtF4Lo0OKuI2bScTFviCBRvBz2IpQ==
+X-Received: by 2002:a62:e908:0:b0:49f:c633:51ec with SMTP id j8-20020a62e908000000b0049fc63351ecmr41028210pfh.1.1638215188577;
+        Mon, 29 Nov 2021 11:46:28 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:a4a0:8cb5:fff:67db])
-        by smtp.gmail.com with ESMTPSA id ns21sm141715pjb.37.2021.11.29.11.46.26
+        by smtp.gmail.com with ESMTPSA id ns21sm141715pjb.37.2021.11.29.11.46.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Nov 2021 11:46:26 -0800 (PST)
+        Mon, 29 Nov 2021 11:46:28 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 08/12] scsi: initio: Fix a kernel-doc warning
-Date:   Mon, 29 Nov 2021 11:46:05 -0800
-Message-Id: <20211129194609.3466071-9-bvanassche@acm.org>
+Subject: [PATCH v2 09/12] scsi: megaraid: Fix a kernel-doc warning
+Date:   Mon, 29 Nov 2021 11:46:06 -0800
+Message-Id: <20211129194609.3466071-10-bvanassche@acm.org>
 X-Mailer: git-send-email 2.34.0.rc2.393.gf8c9666880-goog
 In-Reply-To: <20211129194609.3466071-1-bvanassche@acm.org>
 References: <20211129194609.3466071-1-bvanassche@acm.org>
@@ -52,29 +55,23 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fix the following kernel-doc warning:
 
-drivers/scsi/initio.c:2613: warning: Excess function parameter 'done' description in 'i91u_queuecommand_lck'
+drivers/scsi/megaraid/megaraid_mbox.c:1439: warning: Excess function parameter 'done' description in 'megaraid_queue_command_lck'
 
 Fixes: af049dfd0b10 ("scsi: core: Remove the 'done' argument from SCSI queuecommand_lck functions")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/initio.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_mbox.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index fd6da96bc51a..9cdee38f5ba3 100644
---- a/drivers/scsi/initio.c
-+++ b/drivers/scsi/initio.c
-@@ -2602,13 +2602,11 @@ static void initio_build_scb(struct initio_host * host, struct scsi_ctrl_blk * c
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index 14f930d27ca1..2a339d4a7e9d 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -1431,7 +1431,6 @@ mbox_post_cmd(adapter_t *adapter, scb_t *scb)
  /**
-  *	i91u_queuecommand_lck	-	Queue a new command if possible
-  *	@cmd: SCSI command block from the mid layer
-- *	@done: Completion handler
+  * megaraid_queue_command_lck - generic queue entry point for all LLDs
+  * @scp		: pointer to the scsi command to be executed
+- * @done	: callback routine to be called after the cmd has be completed
   *
-  *	Attempts to queue a new command with the host adapter. Will return
-  *	zero if successful or indicate a host busy condition if not (which
-  *	will cause the mid layer to call us again later with the command)
+  * Queue entry point for mailbox based controllers.
   */
--
- static int i91u_queuecommand_lck(struct scsi_cmnd *cmd)
- {
- 	struct initio_host *host = (struct initio_host *) cmd->device->host->hostdata;
