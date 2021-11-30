@@ -2,64 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C245BC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 06:49:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0997EC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 06:51:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238811AbhK3GxR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 01:53:17 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:48196 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233919AbhK3GxP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 01:53:15 -0500
+        id S238825AbhK3Gy4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 01:54:56 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:38100 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238824AbhK3Gyz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 01:54:55 -0500
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 6A8DD1FD2F;
-        Tue, 30 Nov 2021 06:49:55 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id CD732212C6;
+        Tue, 30 Nov 2021 06:51:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1638254995; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1638255095; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=hPMSjAKUvWrxkyumPjAUQRt3wWFJYgrlV6wdEOiht/I=;
-        b=PGJVRHICcc8IILBvJDuzDgZwDz6Qkh7yf850L7I7o31/zrc3I6oqwcOO8p6d5ZNbc69cHs
-        U9T1FZuLMXt7tX/lB3+VD+UniOqFlU4YPlsmIfAYxLajulZeGdgM8BAW0KDymcmSHJsiiY
-        9heMsTkTuBAeVFI1dNoO/ZExDPR++Rk=
+        bh=b00+GWWDcpKcyagEKMOLBKxGaFqKPZzkNhnQJidPsZ8=;
+        b=aB2Vd1BwWKceCMgrfVlhGe2ifi9gT56tOjuANxh+H5dqz2vEcpy6j1xHJjqfaChWMHI/Lw
+        yLMJGX3uJqImxw1wbNqVw1B6A+5tb4ZSQ/V6UUwUcLuAHQqm8iDveKoQuj+A2vQzew07E1
+        B/AMi2S0KJIBjfqJi0l+tYkrUxCq6no=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1638254995;
+        s=susede2_ed25519; t=1638255095;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=hPMSjAKUvWrxkyumPjAUQRt3wWFJYgrlV6wdEOiht/I=;
-        b=QRRkhJfYi+SD5N2gnL0qDMxV97N76RaXiOZP5vBVQRhhBl52qQST9LwQSFlaodnRSmOnqe
-        3xa+H9bPzh4LA5BQ==
+        bh=b00+GWWDcpKcyagEKMOLBKxGaFqKPZzkNhnQJidPsZ8=;
+        b=Ryp2XjLCcjXiA6zbabDn5TnUnB+jnoh5T109K0nPJu1oB2OFzlANRy6vm9CQswDxdW8v1p
+        UzqqzQ623z4RC2AA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0D6D713BA9;
-        Tue, 30 Nov 2021 06:49:55 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A0EE813BA9;
+        Tue, 30 Nov 2021 06:51:35 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id u30XApPJpWEWVQAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 30 Nov 2021 06:49:55 +0000
-Subject: Re: [PATCH v2 3/3] blk-crypto: show crypto capabilities in sysfs
-To:     Eric Biggers <ebiggers@kernel.org>, linux-block@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bart Van Assche <bvanassche@acm.org>
-References: <20211130040306.148925-1-ebiggers@kernel.org>
- <20211130040306.148925-4-ebiggers@kernel.org>
+        id 1rH+JffJpWGIVQAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 30 Nov 2021 06:51:35 +0000
+Subject: Re: [PATCH 02/15] scsi: add scsi_{get,put}_internal_cmd() helper
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
+References: <20211125151048.103910-1-hare@suse.de>
+ <20211125151048.103910-3-hare@suse.de>
+ <1eb99f16-5b65-3150-48c6-353b088818ad@acm.org>
+ <239804d1-aae7-63ba-c3bf-ca1dd523df6c@suse.de>
+ <yq1y256xp5b.fsf@ca-mkp.ca.oracle.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <8745aed7-d4b6-eb8d-60ad-f4d768d62a62@suse.de>
-Date:   Tue, 30 Nov 2021 07:49:54 +0100
+Message-ID: <7dc3ea71-cb0d-2c6d-bcfc-c9e8af61b427@suse.de>
+Date:   Tue, 30 Nov 2021 07:51:35 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20211130040306.148925-4-ebiggers@kernel.org>
+In-Reply-To: <yq1y256xp5b.fsf@ca-mkp.ca.oracle.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -67,59 +70,27 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/30/21 5:03 AM, Eric Biggers wrote:
-> From: Eric Biggers <ebiggers@google.com>
+On 11/30/21 5:17 AM, Martin K. Petersen wrote:
 > 
-> Add sysfs files that expose the inline encryption capabilities of
-> request queues:
+> Hannes,
 > 
-> 	/sys/class/block/$disk/queue/crypto/max_dun_bits
-> 	/sys/class/block/$disk/queue/crypto/modes/$mode
-> 	/sys/class/block/$disk/queue/crypto/num_keyslots
+>> I have oriented myself at __scsi_execute(), which also has
+>> 'data_direction' as an integer.  Presumably to avoid header clutter.
+>> Martin?
 > 
-> Userspace can use these new files to decide what encryption settings to
-> use, or whether to use inline encryption at all.  This also brings the
-> crypto capabilities in line with the other queue properties, which are
-> already discoverable via the queue directory in sysfs.
+> Just a vestige from ancient times. I really hate scsi_execute() and its
+> 10,000 randomly ordered arguments. The more sanity checking we have in
+> that department, the better.
 > 
-> Design notes:
+> At some point I proposed having scsi_execute() take a single struct as
+> argument to get better input validation. I've lost count how many things
+> have been broken because of misordered arguments to this function.
+> Backporting patches almost inevitably causes regressions because of this
+> interface.
 > 
->    - Place the new files in a new subdirectory "crypto" to group them
->      together and to avoid complicating the main "queue" directory.  This
->      also makes it possible to replace "crypto" with a symlink later if
->      we ever make the blk_crypto_profiles into real kobjects (see below).
-> 
->    - It was necessary to define a new kobject that corresponds to the
->      crypto subdirectory.  For now, this kobject just contains a pointer
->      to the blk_crypto_profile.  Note that multiple queues (and hence
->      multiple such kobjects) may refer to the same blk_crypto_profile.
-> 
->      An alternative design would more closely match the current kernel
->      data structures: the blk_crypto_profile could be a kobject itself,
->      located directly under the host controller device's kobject, while
->      /sys/class/block/$disk/queue/crypto would be a symlink to it.
-> 
->      I decided not to do that for now because it would require a lot more
->      changes, such as no longer embedding blk_crypto_profile in other
->      structures, and also because I'm not sure we can rule out moving the
->      crypto capabilities into 'struct queue_limits' in the future.  (Even
->      if multiple queues share the same crypto engine, maybe the supported
->      data unit sizes could differ due to other queue properties.)  It
->      would also still be possible to switch to that design later without
->      breaking userspace, by replacing the directory with a symlink.
-> 
->    - Use "max_dun_bits" instead of "max_dun_bytes".  Currently, the
->      kernel internally stores this value in bytes, but that's an
->      implementation detail.  It probably makes more sense to talk about
->      this value in bits, and choosing bits is more future-proof.
-> 
->    - "modes" is a sub-subdirectory, since there may be multiple supported
->      crypto modes, and sysfs is supposed to have one value per file.
-> 
-Why do you have a sub-directory here?
- From what I can see, that subdirectory just contains the supported 
-modes, so wouldn't it be easier to create individual files like 
-'mode_<modename>' instead of a subdirectory?
+Right. As it so happens, I've already created a patch to include 
+<linux/dma-direction.h> here.
+But yeah, the arguments to __scsi_execute are patently horrible.
 
 Cheers,
 
