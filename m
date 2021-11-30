@@ -2,48 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C36F5C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 23:33:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAEF4C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 23:33:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241075AbhK3Xg4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 18:36:56 -0500
-Received: from mail-pg1-f182.google.com ([209.85.215.182]:35571 "EHLO
-        mail-pg1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237120AbhK3Xgy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 18:36:54 -0500
-Received: by mail-pg1-f182.google.com with SMTP id j11so11634762pgs.2
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 15:33:34 -0800 (PST)
+        id S241159AbhK3XhI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 18:37:08 -0500
+Received: from mail-pl1-f171.google.com ([209.85.214.171]:36849 "EHLO
+        mail-pl1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241095AbhK3XhB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 18:37:01 -0500
+Received: by mail-pl1-f171.google.com with SMTP id u11so16210012plf.3
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 15:33:42 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=79ANoRxFCQyQSQeGrkbytlrH447uaGQEk6m/ikz4z1g=;
-        b=42ptKKzajKErzT44E8K2iaTmje2eLTMYuBzcF83UzP1zUs94t9I7RzGDewuEVqmSYN
-         FCPOmcN7cS3wVdTeEhp53kvQvD9a04QVCuOXZsIzVTn9tuOq4i40CCpRjCsGomZDC2CO
-         rsOMmj9tHHHOeGYtOnvKl1jOAJacidW50U4gta5lqMOcyU/VOq+6sFnU5wAKhjk0Nt44
-         uzqBdjHWdiSEhcTsXwp2WNS3pTrPUnes8uk3LFcc4dkqfJSxy+ktqG2cAmGgpBLBUTjw
-         VHTZOwuE28R/bKjiAzAZYwOXVtJ+ykmqA9hEZHDYu75XFqLxVJ5s/VH0H7aYJDJz4Plx
-         z09w==
-X-Gm-Message-State: AOAM530G3am3Qhtk1PlRZf4JO9W09Jez2dcCDnlROvRcRYy3/EpTJMmi
-        ylYtu7r//4sn4Y0dImbdAuB8AMepCuc=
-X-Google-Smtp-Source: ABdhPJwI1oFULDV9YKeuO1EkUc6vtVjokVMM3+vaMGYn3k5yoNw5Pes5sm+2hUWrTBYSxA4ARKCz/A==
-X-Received: by 2002:a63:1016:: with SMTP id f22mr1853259pgl.566.1638315213916;
-        Tue, 30 Nov 2021 15:33:33 -0800 (PST)
+        bh=rrrrLIqTiCPIc2x/fw9rWnKpd2BAH4hDd4xjJM9vM+0=;
+        b=rQxQGGPGyEKwOUDPdgaG0aBK260sBWsr9NFCAvDQ5pZDZkbaG8yqjYIdTOJ487Ac03
+         4RHDoTDg3DmNPQgX97+e/qcKD+nPB4IpTg0asCMdATHBrbAjDZ8rlsxcBNpukZVQ01Va
+         EB4WANWTcyjm9VBbo4GKA5UWoHIxp5ylGruxRBdMqc8GcMnqK3XS8NzQxN+audZtlc+m
+         VMtWSvcaXERSo0n+NVV9OJTCYCEv1f3dUbRdJlkAgQCj49NiVR68CayAY4OFQUVhzwwV
+         iJu66DgtQsl2LJGRmfeGLDo2TbNCMiDDR2mIZUI8h67suJlN4224/J/GdEWvfJ3yvKe/
+         7PFQ==
+X-Gm-Message-State: AOAM531aCSxMVlW+pXA6mEnGxWdVL3HiQ8ytca5y8naNemUy0LxiTJpl
+        RIX43q8hvuvOfyStW+iMIbw=
+X-Google-Smtp-Source: ABdhPJxnodbDOlUjs8r3gJtIFVGJZV2PAP+mKAJrCJVEMEF0RcJUAyQXAWZXT3OVi606PA5QbILUbw==
+X-Received: by 2002:a17:90b:2245:: with SMTP id hk5mr2821936pjb.6.1638315221576;
+        Tue, 30 Nov 2021 15:33:41 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ef1f:f086:d1ba:8190])
-        by smtp.gmail.com with ESMTPSA id mu4sm4127187pjb.8.2021.11.30.15.33.32
+        by smtp.gmail.com with ESMTPSA id mu4sm4127187pjb.8.2021.11.30.15.33.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Nov 2021 15:33:33 -0800 (PST)
+        Tue, 30 Nov 2021 15:33:41 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
-        Keith Busch <kbusch@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
+        Chanho Park <chanho61.park@samsung.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH v3 02/17] scsi: core: Fix a race between scsi_done() and scsi_times_out()
-Date:   Tue, 30 Nov 2021 15:33:09 -0800
-Message-Id: <20211130233324.1402448-3-bvanassche@acm.org>
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Yue Hu <huyue2@yulong.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Subject: [PATCH v3 03/17] scsi: ufs: Rename a function argument
+Date:   Tue, 30 Nov 2021 15:33:10 -0800
+Message-Id: <20211130233324.1402448-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.34.0.rc2.393.gf8c9666880-goog
 In-Reply-To: <20211130233324.1402448-1-bvanassche@acm.org>
 References: <20211130233324.1402448-1-bvanassche@acm.org>
@@ -53,60 +62,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch restores the behavior of the following algorithm from the legacy
-block layer:
-- Before completing a request, test-and-set REQ_ATOM_COMPLETE atomically.
-  Only call the block driver completion function if that flag was not yet
-  set.
-- Before calling the block driver timeout function, test-and-set
-  REQ_ATOM_COMPLETE atomically. Only call the timeout handler if that flag
-  was not yet set. If that flag was already set, do not restart the timer.
+The new name makes it clear what the meaning of the function argument is.
 
-Cc: Keith Busch <kbusch@kernel.org>
-Reported-by: Adrian Hunter <adrian.hunter@intel.com>
-Fixes: 065990bd198e ("scsi: set timed out out mq requests to complete")
+Reviewed-by: Chanho Park <chanho61.park@samsung.com>
+Acked-by: Alim Akhtar <alim.akhtar@samsung.com>
+Reviewed-by: Keoseong Park <keosung.park@samsung.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_error.c | 22 ++++++++--------------
- 1 file changed, 8 insertions(+), 14 deletions(-)
+ drivers/scsi/ufs/ufs-exynos.c | 4 ++--
+ drivers/scsi/ufs/ufshcd.h     | 3 ++-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 9cb0f9df621a..cd05f2db3339 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -331,6 +331,14 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
- 	enum blk_eh_timer_return rtn = BLK_EH_DONE;
- 	struct Scsi_Host *host = scmd->device->host;
+diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
+index cd26bc82462e..474a4a064a68 100644
+--- a/drivers/scsi/ufs/ufs-exynos.c
++++ b/drivers/scsi/ufs/ufs-exynos.c
+@@ -853,14 +853,14 @@ static int exynos_ufs_post_pwr_mode(struct ufs_hba *hba,
+ }
  
-+	/*
-+	 * scsi_done() may be called concurrently with scsi_times_out(). Only
-+	 * one of these two functions should proceed. Hence return early if
-+	 * scsi_done() won the race.
-+	 */
-+	if (test_and_set_bit(SCMD_STATE_COMPLETE, &scmd->state))
-+		return BLK_EH_DONE;
-+
- 	trace_scsi_dispatch_cmd_timeout(scmd);
- 	scsi_log_completion(scmd, TIMEOUT_ERROR);
+ static void exynos_ufs_specify_nexus_t_xfer_req(struct ufs_hba *hba,
+-						int tag, bool op)
++						int tag, bool is_scsi_cmd)
+ {
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+ 	u32 type;
  
-@@ -341,20 +349,6 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
- 		rtn = host->hostt->eh_timed_out(scmd);
+ 	type =  hci_readl(ufs, HCI_UTRL_NEXUS_TYPE);
  
- 	if (rtn == BLK_EH_DONE) {
--		/*
--		 * Set the command to complete first in order to prevent a real
--		 * completion from releasing the command while error handling
--		 * is using it. If the command was already completed, then the
--		 * lower level driver beat the timeout handler, and it is safe
--		 * to return without escalating error recovery.
--		 *
--		 * If timeout handling lost the race to a real completion, the
--		 * block layer may ignore that due to a fake timeout injection,
--		 * so return RESET_TIMER to allow error handling another shot
--		 * at this command.
--		 */
--		if (test_and_set_bit(SCMD_STATE_COMPLETE, &scmd->state))
--			return BLK_EH_RESET_TIMER;
- 		if (scsi_abort_command(scmd) != SUCCESS) {
- 			set_host_byte(scmd, DID_TIME_OUT);
- 			scsi_eh_scmd_add(scmd);
+-	if (op)
++	if (is_scsi_cmd)
+ 		hci_writel(ufs, type | (1 << tag), HCI_UTRL_NEXUS_TYPE);
+ 	else
+ 		hci_writel(ufs, type & ~(1 << tag), HCI_UTRL_NEXUS_TYPE);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 6103e98e9a08..28c1bbe9fa7d 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -338,7 +338,8 @@ struct ufs_hba_variant_ops {
+ 					enum ufs_notify_change_status status,
+ 					struct ufs_pa_layer_attr *,
+ 					struct ufs_pa_layer_attr *);
+-	void	(*setup_xfer_req)(struct ufs_hba *, int, bool);
++	void	(*setup_xfer_req)(struct ufs_hba *hba, int tag,
++				  bool is_scsi_cmd);
+ 	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
+ 	void    (*hibern8_notify)(struct ufs_hba *, enum uic_cmd_dme,
+ 					enum ufs_notify_change_status);
