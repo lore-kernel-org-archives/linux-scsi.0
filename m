@@ -2,82 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37189C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 04:37:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8535AC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 06:41:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233044AbhK3ElK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Nov 2021 23:41:10 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:7742 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232820AbhK3ElK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Nov 2021 23:41:10 -0500
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1AU42HMC028128;
-        Tue, 30 Nov 2021 04:37:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=I4/8xP+P5naVpDMQKQw3wl7Q2Zf67qDaHP6sdRJzeQc=;
- b=RRxEmRuyDHfcYOoU7HzmAD41H9l+ng8IkithTiMfYI8TQW5GRRF04XX3yEBc+Gz1oRGe
- wds0OQG7n+jMIh7BBRgIheO7v0KBFy028pOxeqQEEXgd5sRy+elrkqYc8Yrly9yLw1XM
- mz1b+Ika/IKdP9Z/DpiJoAdE/KiEQ47IL5rZMzfM1JA5Yn6kI79S/N1QtvDLVY1XSFBV
- 0vQJE02pJx3GVlz7Q2OGJHWx2tSbephTUjGEUniDiV3PCHVrQPnn7m3UXzSk2PUKz3It
- wq7ycbj/xuTUbTUtR0DH5wGPtyCo4B2gSiUfrodpbwoIJlIfOAPhaa+icrFv78KBjDVe /g== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3cmu1we5vc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 30 Nov 2021 04:37:49 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1AU4ZbA9145685;
-        Tue, 30 Nov 2021 04:37:49 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3030.oracle.com with ESMTP id 3ckaqe0p2r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 30 Nov 2021 04:37:48 +0000
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 1AU4blLc152494;
-        Tue, 30 Nov 2021 04:37:48 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by aserp3030.oracle.com with ESMTP id 3ckaqe0p2c-2;
-        Tue, 30 Nov 2021 04:37:48 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, James Smart <jsmart2021@gmail.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Paul Ely <paul.ely@broadcom.com>, stable@vger.kernel.org
-Subject: Re: [PATCH] lpfc: Fix nonrecovery of remote ports following an unsolicited LOGO
-Date:   Mon, 29 Nov 2021 23:37:46 -0500
-Message-Id: <163824680188.31422.4555155751798537025.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20211123165646.62740-1-jsmart2021@gmail.com>
-References: <20211123165646.62740-1-jsmart2021@gmail.com>
+        id S238711AbhK3GpL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 01:45:11 -0500
+Received: from mga05.intel.com ([192.55.52.43]:29984 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233768AbhK3GpL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 30 Nov 2021 01:45:11 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10183"; a="322397001"
+X-IronPort-AV: E=Sophos;i="5.87,275,1631602800"; 
+   d="scan'208";a="322397001"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Nov 2021 22:41:52 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.87,275,1631602800"; 
+   d="scan'208";a="512046397"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
+  by orsmga008.jf.intel.com with ESMTP; 29 Nov 2021 22:41:49 -0800
+Subject: Re: [PATCH v2 11/20] scsi: ufs: Switch to
+ scsi_(get|put)_internal_cmd()
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+References: <20211119195743.2817-1-bvanassche@acm.org>
+ <20211119195743.2817-12-bvanassche@acm.org>
+ <6bfb59ef-4f00-3918-59e6-3c9569f6adc6@intel.com>
+ <bc19f55f-a3e9-a3fe-437d-57b9e077f532@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <1a9cddd9-b67a-be4b-4c83-3636f37e6769@intel.com>
+Date:   Tue, 30 Nov 2021 08:41:47 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <bc19f55f-a3e9-a3fe-437d-57b9e077f532@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: _MFllKRhPEUkF9m3StPTWLm4nh6mf_zk
-X-Proofpoint-ORIG-GUID: _MFllKRhPEUkF9m3StPTWLm4nh6mf_zk
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 23 Nov 2021 08:56:46 -0800, James Smart wrote:
-
-> A commit introduced formal regstration of all Fabric nodes to the SCSI
-> transport as well as REG/UNREG RPI mailbox requests. The commit
-> introduced the NLP_RELEASE_RPI flag for rports  set in the
-> lpfc_cmpl_els_logo_acc() routine to help clean up the RPIs. This new
-> code caused the driver to release the RPI value used for the remote port
-> and marked the RPI invalid.  When the driver later attempted to re-login,
-> it would use the invalid RPI and the adapter rejected the PLOGI request.
-> As no login occurred, the devloss timer on the rport expired and
-> connectivity was lost.
+On 29/11/2021 21:32, Bart Van Assche wrote:
+> On 11/24/21 3:02 AM, Adrian Hunter wrote:
+>> On 19/11/2021 21:57, Bart Van Assche wrote:
+>>> The only functional change in this patch is the addition of a
+>>> blk_mq_start_request() call in ufshcd_issue_devman_upiu_cmd().
+>>>
+>>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>>> ---
+>>>   drivers/scsi/ufs/ufshcd.c | 46 +++++++++++++++++++++++++--------------
+>>>   1 file changed, 30 insertions(+), 16 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>> index fced4528ee90..dfa5f127342b 100644
+>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>> @@ -2933,6 +2933,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>>>   {
+>>>       struct request_queue *q = hba->cmd_queue;
+>>>       DECLARE_COMPLETION_ONSTACK(wait);
+>>> +    struct scsi_cmnd *scmd;
+>>>       struct request *req;
+>>>       struct ufshcd_lrb *lrbp;
+>>>       int err;
+>>> @@ -2945,15 +2946,18 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>>>        * Even though we use wait_event() which sleeps indefinitely,
+>>>        * the maximum wait time is bounded by SCSI request timeout.
+>>>        */
+>>> -    req = blk_mq_alloc_request(q, REQ_OP_DRV_OUT, 0);
+>>> -    if (IS_ERR(req)) {
+>>> -        err = PTR_ERR(req);
+>>> +    scmd = scsi_get_internal_cmd(q, DMA_TO_DEVICE, 0);
+>>
+>> We do not need the block layer, nor SCSI commands which begs the question,
+>> why involve them at all?
+>>
+>> For example, the following is much simpler and seems to work:
+>> [ ... ]
 > 
-> [...]
+> That patch bypasses the block layer for device management commands. So that
+> patch breaks a very basic assumption on which the block layer has been built,
+> namely that the block layer core knows whether or not any requests are ongoing.
+> That patch breaks at least the following functionality:
+> * Run-time power management. blk_pre_runtime_suspend() checks whether
+>   q_usage_counter is zero before initiating runtime power management.
+>   q_usage_counter is increased by blk_mq_alloc_request() and decreased by
+>   blk_mq_free_request(). I don't think it is safe to change the power state
+>   while a device management request is in progress.
 
-Applied to 5.16/scsi-fixes, thanks!
+hba->cmd_queue does not have runtime PM.
 
-[1/1] lpfc: Fix nonrecovery of remote ports following an unsolicited LOGO
-      https://git.kernel.org/mkp/scsi/c/0956ba63bd94
+I suspect making it do runtime PM might open up deadlock issues similar to
+the issues that were seen with sending sending clear WLUN UA from the
+UFS error handler.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> * The code in blk_cleanup_queue() that waits for pending requests to finish
+>   before resources associated with the request queue are freed.
+>   ufshcd_remove() calls blk_cleanup_queue(hba->cmd_queue) and hence waits until
+>   pending device management commands have finished. That would no longer be the
+>   case if the block layer is bypassed to submit device management commands.
+
+cmd_queue is used only by the UFS driver, so if the driver is racing with
+itself at "remove", then that should be fixed. The risk is not that the UFS
+driver might use requests, but that it might still be operating when hba or
+other resources get freed.
+
+So the question remains, for device commands, we do not need the block
+layer, nor SCSI commands which still begs the question, why involve them
+at all?
