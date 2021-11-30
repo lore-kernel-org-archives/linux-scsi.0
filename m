@@ -2,103 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 456CDC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 20:38:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BC81C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 23:00:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343785AbhK3Uli (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 15:41:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56462 "EHLO
+        id S235730AbhK3XEQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 18:04:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343765AbhK3Ulf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 15:41:35 -0500
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4362BC061574;
-        Tue, 30 Nov 2021 12:38:16 -0800 (PST)
-Received: by mail-pl1-x631.google.com with SMTP id u11so15886261plf.3;
-        Tue, 30 Nov 2021 12:38:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=adInch71SLEMVkH+ZK5ZoRGHSjRkMo2zTe9ZpiHePds=;
-        b=WbTHCokZgY0W+MXKvSmTBvy0WS1KNBp+NfAYwTjpuVaYTtosXObuHiZ01XiWdSiHC9
-         brTNv8EzP66HFtVTdI7KUxvbpk2ZQATsLZAxDP89UPQz3/itRFynGrCyZnXC7dhSFCrr
-         PdtUuEErKNClqeS89vCgv1T0Aq01cvLZZ919JszwvVleLQljB8Uv9gusUibq4tmQMg/r
-         S4CFAjHqQegl9P/LaxBdt2HcGnSVIs5hTtKQqP8ZzSeRXAxd8oWOLRYzOyRxZgt658bq
-         Ya/XCjl8Tr55SV/nnVpt8IWAeZQtEW6Xo5hxbVehbemOml0cGxoGMHpCn543MLXZLmnJ
-         r2FQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=adInch71SLEMVkH+ZK5ZoRGHSjRkMo2zTe9ZpiHePds=;
-        b=tZBAJqCF+pbfmg7PfgKSwGxB4ySlUnbPUEPrdH/ARg/FPDbvRKO2huIJbPObXUVdQr
-         ZJWxLU320vdc0f/Oc5pcnUlPWIZ8WzzXD3xPNLp2zN5BElrm2ZbgIkoUI5NeJsmHNsem
-         AN+T6/QIzWJvOVIXUA/3tW/ooBxdFLcivxDvW32XRS+MP5L2K/uRCjnS3iuzM+kSj/jx
-         piiK2s0O/W8CYnw+cBf8a/zN8mSPrzet0WfPR/aghQ4jJ0SgAgaODOKrTp378Es7qEaU
-         SHgEEvaaLu2fgAYGEIt6yiwRDX/ovvxNLNMa03j1U33bhqtavZj4ht3mIFDW6I81F+xX
-         RDzQ==
-X-Gm-Message-State: AOAM532OEr+FnyutEWVTNsuNaeWISVVY799zAceDdsq+4hCEoD6DPry3
-        NDo5j9INJSKngGwxTVq7OltruqnbpuU=
-X-Google-Smtp-Source: ABdhPJz9vjrZ4xYePcRD/8BfStCL7fLuE/lAGIre094lVcas8d8WcKi5ZVNGrJExpqfW9CYEU5y8SQ==
-X-Received: by 2002:a17:903:2348:b0:141:d60b:ee90 with SMTP id c8-20020a170903234800b00141d60bee90mr1890826plh.15.1638304695415;
-        Tue, 30 Nov 2021 12:38:15 -0800 (PST)
-Received: from 7YHHR73.igp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id j7sm23071520pfc.74.2021.11.30.12.38.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Nov 2021 12:38:14 -0800 (PST)
-From:   Florian Fainelli <f.fainelli@gmail.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     Florian Fainelli <f.fainelli@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com (supporter:QLOGIC QL41xxx ISCSI
-        DRIVER), "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org (open list:QLOGIC QL41xxx ISCSI DRIVER)
-Subject: [PATCH v2 2/2] scsi: qla4xxx: Format SYSFS_FLAG_FW_SEL_BOOT as byte
-Date:   Tue, 30 Nov 2021 12:38:13 -0800
-Message-Id: <20211130203813.12138-3-f.fainelli@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20211130203813.12138-1-f.fainelli@gmail.com>
-References: <20211130203813.12138-1-f.fainelli@gmail.com>
+        with ESMTP id S233731AbhK3XEP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 18:04:15 -0500
+Received: from desiato.infradead.org (desiato.infradead.org [IPv6:2001:8b0:10b:1:d65d:64ff:fe57:4e05])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80159C061574;
+        Tue, 30 Nov 2021 15:00:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=desiato.20200630; h=Content-Transfer-Encoding:Content-Type
+        :In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=7s1aPT3qHD5YCR49RxSxx9XhraS/zuizMh2ONmra3+g=; b=a6j7Q0Qtys/oL3gKZPuCruyL1Y
+        VwlL8cYDBwKH5FRU4FMWBN50k2BTulOcIKq7sDwiCVCBOvZTDoUYKF58EYkvQ2nIqrwcxjYieVg5i
+        ML9yKmWO6IhTMAGkGqsHddvZc0JHQsxlMObhfA9eL+7BUUyyzlKmoA/84W47Mo2WMr0GLHslKsCOV
+        OwfqFPgRkksEJzVbqaZHzyibcS/+8CyzkgH+W+i5mFCg57nf6hJ4um2P8TOUrfQrEq7WBhjNOS9jv
+        uikMInCZlMSs9ltTZ+2y2lIm5iOR47m5MoqZg/HsYPI/vRBEIEUIxVh2pawRZ7OR5dB6RB6kIJcrJ
+        sSeFmWBA==;
+Received: from [2601:1c0:6280:3f0::aa0b]
+        by desiato.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1msC6C-001Wgu-SU; Tue, 30 Nov 2021 22:59:45 +0000
+Message-ID: <183b6172-c04e-42d9-00c5-d760c04f0b96@infradead.org>
+Date:   Tue, 30 Nov 2021 14:59:36 -0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.2
+Subject: Re: [PATCH] firmware_loader: export sysctl registration
+Content-Language: en-US
+To:     Luis Chamberlain <mcgrof@kernel.org>, akpm@linux-foundation.org,
+        keescook@chromium.org, yzaikin@google.com, nixiaoming@huawei.com,
+        ebiederm@xmission.com, steve@sk2.org, gregkh@linuxfoundation.org,
+        rafael@kernel.org, tytso@mit.edu, viro@zeniv.linux.org.uk,
+        pmladek@suse.com, senozhatsky@chromium.org, rostedt@goodmis.org,
+        john.ogness@linutronix.de, dgilbert@interlog.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        mcgrof@bombadil.infradead.org, linux-scsi@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20211130164525.1478009-1-mcgrof@kernel.org>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20211130164525.1478009-1-mcgrof@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-qedi formats SYSFS_FLAG_FW_SEL_BOOT as a byte, and the qla4xxx driver
-does exactly the same thing, align them for consistency.
 
-Suggested-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
----
- drivers/scsi/qla4xxx/ql4_os.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 8987acc24dac..8b2aac49782c 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -5734,7 +5734,7 @@ static ssize_t qla4xxx_show_boot_eth_info(void *data, int type, char *buf)
- 
- 	switch (type) {
- 	case ISCSI_BOOT_ETH_FLAGS:
--		rc = sprintf(str, "%d\n", SYSFS_FLAG_FW_SEL_BOOT);
-+		rc = sprintf(str, "%hhd\n", (char)SYSFS_FLAG_FW_SEL_BOOT);
- 		break;
- 	case ISCSI_BOOT_ETH_INDEX:
- 		rc = sprintf(str, "0\n");
-@@ -5843,7 +5843,7 @@ qla4xxx_show_boot_tgt_info(struct ql4_boot_session_info *boot_sess, int type,
- 			     (char *)&boot_conn->chap.intr_secret);
- 		break;
- 	case ISCSI_BOOT_TGT_FLAGS:
--		rc = sprintf(str, "%d\n", SYSFS_FLAG_FW_SEL_BOOT);
-+		rc = sprintf(str, "%hhd\n", (char)SYSFS_FLAG_FW_SEL_BOOT);
- 		break;
- 	case ISCSI_BOOT_TGT_NIC_ASSOC:
- 		rc = sprintf(str, "0\n");
+On 11/30/21 08:45, Luis Chamberlain wrote:
+> The firmware loader fallback sysctl table is always built-in,
+> but when FW_LOADER=m the build will fail. We need to export
+> the sysctl registration and de-registration. Use the private
+> symbol namespace so that only the firmware loader uses these
+> calls.
+> 
+> Reported-by: Randy Dunlap <rdunlap@infradead.org>
+> Fixes: firmware_loader: move firmware sysctl to its own files
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+
+Acked-by: Randy Dunlap <rdunlap@infradead.org> # build-tested
+
+Thanks.
+
+> ---
+>  drivers/base/firmware_loader/fallback_table.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/base/firmware_loader/fallback_table.c b/drivers/base/firmware_loader/fallback_table.c
+> index 51751c46cdcf..255823887c70 100644
+> --- a/drivers/base/firmware_loader/fallback_table.c
+> +++ b/drivers/base/firmware_loader/fallback_table.c
+> @@ -56,10 +56,12 @@ int register_firmware_config_sysctl(void)
+>  		return -ENOMEM;
+>  	return 0;
+>  }
+> +EXPORT_SYMBOL_NS_GPL(register_firmware_config_sysctl, FIRMWARE_LOADER_PRIVATE);
+>  
+>  void unregister_firmware_config_sysctl(void)
+>  {
+>  	unregister_sysctl_table(firmware_config_sysct_table_header);
+>  	firmware_config_sysct_table_header = NULL;
+>  }
+> +EXPORT_SYMBOL_NS_GPL(unregister_firmware_config_sysctl, FIRMWARE_LOADER_PRIVATE);
+>  #endif /* CONFIG_SYSCTL */
+> 
+
 -- 
-2.25.1
-
+~Randy
