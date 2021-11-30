@@ -2,77 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C306FC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 17:18:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF38C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 17:19:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244595AbhK3RWB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 12:22:01 -0500
-Received: from mta-p7.oit.umn.edu ([134.84.196.207]:49916 "EHLO
-        mta-p7.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239078AbhK3RWA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 12:22:00 -0500
-X-Greylist: delayed 400 seconds by postgrey-1.27 at vger.kernel.org; Tue, 30 Nov 2021 12:22:00 EST
+        id S244775AbhK3RWf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 12:22:35 -0500
+Received: from mta-p8.oit.umn.edu ([134.84.196.208]:52178 "EHLO
+        mta-p8.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244730AbhK3RW3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 12:22:29 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-p7.oit.umn.edu (Postfix) with ESMTP id 4J3TKX5qnNz9xZ3C
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 17:12:00 +0000 (UTC)
+        by mta-p8.oit.umn.edu (Postfix) with ESMTP id 4J3TTm57hFz9w3m6
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 17:19:08 +0000 (UTC)
 X-Virus-Scanned: amavisd-new at umn.edu
-Received: from mta-p7.oit.umn.edu ([127.0.0.1])
-        by localhost (mta-p7.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Tq4uVKcP_kUj for <linux-scsi@vger.kernel.org>;
-        Tue, 30 Nov 2021 11:12:00 -0600 (CST)
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
+Received: from mta-p8.oit.umn.edu ([127.0.0.1])
+        by localhost (mta-p8.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id ZZRWQptf9thY for <linux-scsi@vger.kernel.org>;
+        Tue, 30 Nov 2021 11:19:08 -0600 (CST)
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mta-p7.oit.umn.edu (Postfix) with ESMTPS id 4J3TKX3r39z9xZ3L
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 11:12:00 -0600 (CST)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mta-p7.oit.umn.edu 4J3TKX3r39z9xZ3L
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-p7.oit.umn.edu 4J3TKX3r39z9xZ3L
-Received: by mail-pf1-f197.google.com with SMTP id m16-20020a628c10000000b004a282d715b2so13208259pfd.11
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 09:12:00 -0800 (PST)
+        by mta-p8.oit.umn.edu (Postfix) with ESMTPS id 4J3TTm30Mbz9w3ld
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 11:19:08 -0600 (CST)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mta-p8.oit.umn.edu 4J3TTm30Mbz9w3ld
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-p8.oit.umn.edu 4J3TTm30Mbz9w3ld
+Received: by mail-pf1-f199.google.com with SMTP id m16-20020a628c10000000b004a282d715b2so13218788pfd.11
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 09:19:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=umn.edu; s=google;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=V0lWGpYWyNpOYPxuRnSF3f8gDAFkgkH4nbP8crWjnQc=;
-        b=mpUcODJ4kpde9Ay7Z/krQyfktHenkFWFmQDS1w2AgoRAY3OABAVNotR4Qf0OmlvfUZ
-         1NyBd2+ivU57FrKLRsu4L5zm1mxOvHK2ZQFcEfdSaimtmL26gxkPGarzPQ3w2H7YmEN8
-         zJmebwb793bOf0EE+JCw22LFOLO01H2DqptjFlEcW7SHfVU5PKzz72trj+0es4RvgsCj
-         J748A2Ft+WA2Y8A0xtwwnKQYcy+e+rHPIHGoi6rs48IcSaNqeHutinnctETP9RNNAxt7
-         8Hoisxxnj1Evfb8tr9vEcNjVKXzB2DMisXyIA/j5rR+gZGcvDvEqm9V4/3WiFE9PhO52
-         7I/A==
+        bh=RFhArOyxQn5pjZYL9yNu46kO2Q7Wi3qiSk6NbXAyyM0=;
+        b=DwwDjFZrzioL04V/Lb87rUAcaUDlq48oyaCgzLIjUaihJji3fpz48cDEumpK4d+k0i
+         U7mmUS1VSfOnoUf/FsfjvPgQHf1Wmn/uGFx/FrRPWsxdk9E4fjHmD6anao8BGSEqWLbK
+         iVWlof7W6Lm2vgk9XgUZ9cF+ONIBCwrMo0Fg+texL/BdJbisUHwZZW2qxzgtxOlxZ4RZ
+         3/8Hm0kBtE038J15Cyh5WWhkmt9qG8RAuFbHzIX0RTY+NU2IVETtHPeMaeA9NHzHUx8v
+         fObufUEFzYEVR2EowOmTT4HqF1JzSAp6QaLd5wZGv5q4vZ8z2NDW5Lr89fCYga8mAsQa
+         sWng==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=V0lWGpYWyNpOYPxuRnSF3f8gDAFkgkH4nbP8crWjnQc=;
-        b=usjKZDPpdRDQ8ARLfYdWwg2gZY3eWuvrm/UH1rLXzoc9I8VPOQXtdD0hiY+ISbrmp+
-         jmlN5Z4CKhmAqpwESgpJJ5vFx+LVCynhbOBuxZcqK5iljAujZdtXij5TMm1nDzBFuafY
-         0Utgdt16poeMhcnN4PUHE8wnhR6+EkOLApxQImy0KbsHWHzqxUG9rFX/d+zfTshIwHkk
-         /9lGL7lN+UJ/pyjXhj5A0Vamry5qQwhRmCQv/o52M1wiJjcpgjO2h18BDIrm8hHqbJaD
-         bP12avK1Nnb5qT8FOoyPkqVvxnPwzLNTgvgSN4daRirl2uRDLEZEw0PyKdCn7JMsLi/W
-         KLng==
-X-Gm-Message-State: AOAM5329mIV/50YbdoR7vcxdDLB5E7WK/4Gu5RPt5tSrh+okjmqwpeBH
-        Czq67Qs0TSW8PJc73VZETSjEA3kTF/VJUhTsV+xp+1HIit4NWWy+1SoODENS3aqXuRDcKcTIiHM
-        wroAHdhDQ+9N43MMwPqKZ4Y3Dyg==
-X-Received: by 2002:a17:902:c410:b0:142:2506:cb5b with SMTP id k16-20020a170902c41000b001422506cb5bmr495037plk.36.1638292319707;
-        Tue, 30 Nov 2021 09:11:59 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJz2fXuTGnSmdHQRZFTjtJ71nlh0+Fs1qffHsWrGRYAwEWvVrGJGew4rmr+xWPQ0i+cAagA6qQ==
-X-Received: by 2002:a17:902:c410:b0:142:2506:cb5b with SMTP id k16-20020a170902c41000b001422506cb5bmr494998plk.36.1638292319396;
-        Tue, 30 Nov 2021 09:11:59 -0800 (PST)
+        bh=RFhArOyxQn5pjZYL9yNu46kO2Q7Wi3qiSk6NbXAyyM0=;
+        b=D3S7TygmWJRyPEgSFoKAE72Nl2AR/z0fQJgScWelhfuiosHKjWQDTpta+O9lx1kQsk
+         5CRCcRy+2HUozluPkZzfNeAJ82I4YRJhBasFf3pyoofCWL0oQ6nuSaMICfPAezbQV93k
+         4/x0OyBg76Bov94xeO6uqx2Ls1DtIEG3GWL842jU5HG061F0dFlVI+nHVJPmQnf6WzdR
+         1OPCj2Ndu9cjclypXO6wK73tdUAQj4P2hpG+OxQ+La7ojF+dEefxCyJaTWKOpFOhJb/d
+         a9qxdzQFUIulEbtB5aLh62Ng4sTZQy7ulOKckTjBcJEQudncElRB+cNQSKglAmr/LEhA
+         n25A==
+X-Gm-Message-State: AOAM531ul5nQ3d2K5oQIqtVX9R4hEiu9h+Wd//RUCnUPpfAMuLjm1GIV
+        PvAAKLPLFm39pL19TBHO0aEQTMl1aiu4Lgme2eywOMVlAdi+grbMx3Ai+kmRIPwBBhwrRA9xbUE
+        p+/uH3LdTzgnj968u0YIaMU22gg==
+X-Received: by 2002:a63:778c:: with SMTP id s134mr366182pgc.289.1638292747704;
+        Tue, 30 Nov 2021 09:19:07 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxg8qDxsG9c58L5rijf8FS/fNzjxeNzfkQ8Ajjp/dGFQ3NjtBZe/4EeXghkDZwhOI/PccSaOA==
+X-Received: by 2002:a63:778c:: with SMTP id s134mr366160pgc.289.1638292747459;
+        Tue, 30 Nov 2021 09:19:07 -0800 (PST)
 Received: from zqy787-GE5S.lan ([36.7.42.137])
-        by smtp.gmail.com with ESMTPSA id p2sm3124816pja.55.2021.11.30.09.11.57
+        by smtp.gmail.com with ESMTPSA id me7sm3988741pjb.9.2021.11.30.09.19.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Nov 2021 09:11:59 -0800 (PST)
+        Tue, 30 Nov 2021 09:19:07 -0800 (PST)
 From:   Zhou Qingyang <zhou1615@umn.edu>
 To:     zhou1615@umn.edu
-Cc:     kjlu@umn.edu, Hannes Reinecke <hare@suse.de>,
+Cc:     kjlu@umn.edu, "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Johannes Thumshirn <jth@kernel.org>,
+        Matt Lupfer <mlupfer@ddn.com>,
+        virtualization@lists.linux-foundation.org,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: libfc: Fix a NULL pointer dereference in fc_lport_ptp_setup()
-Date:   Wed,  1 Dec 2021 01:10:49 +0800
-Message-Id: <20211130171049.199111-1-zhou1615@umn.edu>
+Subject: [PATCH] scsi: virtio_scsi: Fix a NULL pointer dereference in virtscsi_rescan_hotunplug()
+Date:   Wed,  1 Dec 2021 01:19:01 +0800
+Message-Id: <20211130171901.202229-1-zhou1615@umn.edu>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -80,12 +83,11 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In fc_lport_ptp_setup(), fc_rport_create() is assigned to
-lport->ptp_rdata and there is a dereference of in fc_lport_ptp_setup(),
+In virtscsi_rescan_hotunplug(), kmalloc() is directly used in memset(),
 which could lead to a NULL pointer dereference on failure of
-fc_rport_create().
+kmalloc().
 
-Fix this bug by adding a check of fc_rport_create().
+Fix this bug by adding a check of inq_result.
 
 This bug was found by a static analyzer. The analysis employs
 differential checking to identify inconsistent security operations
@@ -97,33 +99,32 @@ Note that, as a bug found by static analysis, it can be a false
 positive or hard to trigger. Multiple researchers have cross-reviewed
 the bug.
 
-Builds with CONFIG_LIBFC=m show no new warnings,
+Builds with CONFIG_SCSI_VIRTIO=m show no new warnings,
 and our static analyzer no longer warns about this code.
 
-Fixes: 2580064b5ec6 ("scsi: libfc: Replace ->rport_create callback with function call")
+Fixes: 5ff843721467 ("scsi: virtio_scsi: unplug LUNs when events missed")
 Signed-off-by: Zhou Qingyang <zhou1615@umn.edu>
 ---
- drivers/scsi/libfc/fc_lport.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/virtio_scsi.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 19cd4a95d354..5cd716afb711 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -241,6 +241,13 @@ static void fc_lport_ptp_setup(struct fc_lport *lport,
- 	}
- 	mutex_lock(&lport->disc.disc_mutex);
- 	lport->ptp_rdata = fc_rport_create(lport, remote_fid);
-+	if (!lport->ptp_rdata) {
-+		mutex_unlock(&lport->disc.disc_mutex);
-+		printk(KERN_WARNING "libfc: Failed to allocate for the port (%6.6x)\n",
-+				remote_fid);
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 28e1d98ae102..5309f2a3a4cb 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -337,7 +337,11 @@ static void virtscsi_rescan_hotunplug(struct virtio_scsi *vscsi)
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 	int result, inquiry_len, inq_result_len = 256;
+ 	char *inq_result = kmalloc(inq_result_len, GFP_KERNEL);
+-
++	if (!inq_result) {
++		pr_err("%s:no enough memory for inq_result\n",
++			__func__);
 +		return;
 +	}
-+
- 	kref_get(&lport->ptp_rdata->kref);
- 	lport->ptp_rdata->ids.port_name = remote_wwpn;
- 	lport->ptp_rdata->ids.node_name = remote_wwnn;
+ 	shost_for_each_device(sdev, shost) {
+ 		inquiry_len = sdev->inquiry_len ? sdev->inquiry_len : 36;
+ 
 -- 
 2.25.1
 
