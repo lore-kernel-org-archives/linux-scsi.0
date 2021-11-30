@@ -2,32 +2,32 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03CE8C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 14:49:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2452C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 14:52:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242537AbhK3Owr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 09:52:47 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:45714 "EHLO
+        id S242948AbhK3O4F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 09:56:05 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:48470 "EHLO
         ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242530AbhK3OwE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 09:52:04 -0500
+        with ESMTP id S243141AbhK3Oyg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 09:54:36 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E826EB81A22;
-        Tue, 30 Nov 2021 14:48:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6D44C53FC7;
-        Tue, 30 Nov 2021 14:48:41 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BBFCDB81A3D;
+        Tue, 30 Nov 2021 14:51:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A0ACC53FD2;
+        Tue, 30 Nov 2021 14:51:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638283722;
-        bh=bColCuQBc0Z8JIaGoT+MBseiZgP9lOeHt+TkV7TJKXY=;
+        s=k20201202; t=1638283874;
+        bh=Ol96S3EGbuPna/OSBMlmghKXF4xV8E6x/YtmxDFs/XI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=h3SdZ5M6pk9KNl3LRzjFXSWUAwASG1/7C9bwMp+nL9VpVjmyGOlxjn3xWpdTSwVmg
-         P6y6VkdbdrBE294gJtysQsoEPrGXW+Yu959wUJrVFCbJ0GJhsVgqNzXCZArdbKfAmL
-         uPvE+HCUpKxj6XfQCp8Q6LjerhggnRvJn2igZqWVA2dqkjntmJHG7oAHIjty8PEcPw
-         5+Ypco1d3ogKbFdE2sb4/FAGJ1zEO37NvzdNu7TmOa+v8TxpmMEuSmBZrTn+ssPGjY
-         /jqn2eNtrlteQ3fvVtAB207w5V/UYqOguXRGig8c9s5dP6XwoRrfFHHnFYyvXFh+QG
-         vcmnjbe1Nh+gw==
+        b=uvcHLOfekHjNrdY6zZTmFGu87v1m1V3wooucfUN4bfIPktlUSUBwxMDfpCcyoXijT
+         obBV4lLxu5O0kqkWcKsnxLvQcm/h/rbtBYJkxyQn+r9UgtDL2ycmhdWlPcdgQJk1L/
+         AtN1cn7v9nYDyKAksuqrDnZTugroE/UhqADgJpE8ZygVtJ9q0ZVl1OdXOXcm9HE5jH
+         vo8iCgqkY0g2r0Qi4CySOcg7qzxXjZsVVcJwEukg95+wHqocVSgis6ySiwSnYeBI9K
+         cFU2vT3jBWUs0QAQFqFArrMnnstgVIsB7X5chhZusGlfjmzlHesKDU3UXM2XB39PNC
+         mLvMwUzGIHPoA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     George Kennedy <george.kennedy@oracle.com>,
@@ -36,12 +36,12 @@ Cc:     George Kennedy <george.kennedy@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 33/68] scsi: scsi_debug: Sanity check block descriptor length in resp_mode_select()
-Date:   Tue, 30 Nov 2021 09:46:29 -0500
-Message-Id: <20211130144707.944580-33-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 21/43] scsi: scsi_debug: Sanity check block descriptor length in resp_mode_select()
+Date:   Tue, 30 Nov 2021 09:49:58 -0500
+Message-Id: <20211130145022.945517-21-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211130144707.944580-1-sashal@kernel.org>
-References: <20211130144707.944580-1-sashal@kernel.org>
+In-Reply-To: <20211130145022.945517-1-sashal@kernel.org>
+References: <20211130145022.945517-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -98,10 +98,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 871b5e1e5b8f1..4541a080e7a4d 100644
+index f2f202424c6b2..54075d57729cb 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -2502,11 +2502,11 @@ static int resp_mode_select(struct scsi_cmnd *scp,
+@@ -2501,11 +2501,11 @@ static int resp_mode_select(struct scsi_cmnd *scp,
  			    __func__, param_len, res);
  	md_len = mselect6 ? (arr[0] + 1) : (get_unaligned_be16(arr + 0) + 2);
  	bd_len = mselect6 ? arr[3] : get_unaligned_be16(arr + 6);
