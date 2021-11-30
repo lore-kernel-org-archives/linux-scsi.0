@@ -2,107 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56F4DC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 20:30:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEF50C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 20:38:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343748AbhK3UeI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 15:34:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54618 "EHLO
+        id S1343737AbhK3Uld (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 15:41:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343728AbhK3Udt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 15:33:49 -0500
+        with ESMTP id S233340AbhK3Uld (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 15:41:33 -0500
 Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABD35C061746;
-        Tue, 30 Nov 2021 12:30:29 -0800 (PST)
-Received: by mail-pj1-x1035.google.com with SMTP id gt5so16202104pjb.1;
-        Tue, 30 Nov 2021 12:30:29 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAC1FC061574;
+        Tue, 30 Nov 2021 12:38:13 -0800 (PST)
+Received: by mail-pj1-x1035.google.com with SMTP id cq22-20020a17090af99600b001a9550a17a5so19201364pjb.2;
+        Tue, 30 Nov 2021 12:38:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=LB/UpLmF0G/QWkAI+gjzYfJzqDpyo7KEC6icunFW9lA=;
-        b=i8Y8vuu77WN+vi5Wbd7ObhXHj32sZeYDbQAxyhTroXEOluDXBJrQ2D0D4DZ70At9Xh
-         sc3/t/4U+PuMRtF3pAyDrJxBtlTO6V8nwXsW7iUqRp2bWwrVqGy8s8h85pq5T4YHLuaC
-         hiW6jNb1HzqZNHHylC+01fil+rOQ5tNfTYidVdoLWO2QXEO4LhIWWQvT21yAq0ANKU23
-         fH1yqDP+QHbqVD+xT3bkTN+EyFge/0h2sZGE+LPfz0wOXZw3lpOtRmmPfAhAW21n5C0C
-         FqCvJ6zKbslTfnB+qvhaIGIovYNu+VjunvKmR9Z/2NTTnrheAfVUQtXNZLJexC3/UqkO
-         v4Mw==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Ong6/4IL92LMdcOa16LOw6DP2Z1AN5gi8h8irI+N774=;
+        b=oPLcJF5LzzUDBcgWGwP0janfoey9R+26kFDoReV4IyoPwejgUAK/30bXsL2Bgz0I/v
+         ajNCWxibs05dyVXJxHonDGgk2TRcrVFKTKSozeN4UIC1UMRbJrSGxI2bYzw7+IoSCMaJ
+         /PcymVKwkCkc6H3ciMnFdkZC6Ei5jqin6+WYYPYFyx4bqyCB2cGUl7bDXPh7dqOiP3f7
+         usShl2zs2Cz72bjeCafwLFsiCqnmga8MhzQPO1zT76NSdwEsSS2XN5q3b9P6Yfi8tHwp
+         Qu5V/AKZu5/f1RJvcmhR76BVU75p2SeMBmf1enKpE2Uw984QOEWHqh0CsPcgVz0eSwu7
+         j7Uw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=LB/UpLmF0G/QWkAI+gjzYfJzqDpyo7KEC6icunFW9lA=;
-        b=gVWdnSiruIXObAdreZLW/ukMp7OLbhhE8uTcGvETH7BGPfFk7Iv+Qp/Oor7GZ/Mnes
-         5G7bLueCRw9C0+TjD6nNYL6x6uMq44LVtFMaYew5kNs9M3t6syIt6JeU+NGII5DmFzf4
-         DMXjwFqqXEAxuHnX1wtpOszr96Fa98fh4NZ6HP55eABxgaCCKgZ8exwsJyIW2sxagPK4
-         VOYykihgig9Mw/ECkXLbFZo79hoGSLstQnKN2SmGggG08wkrAAw7wZQtIxF9CtbQaBlD
-         UP4Cpf01f6SL3k2iX2n9eEVm9fSp1JmgObewqPpP8Omc68H7vyzIlz8XWXBJOUWqxsjy
-         eMZQ==
-X-Gm-Message-State: AOAM53186bk10QFOfnGJW/+v8FO6I++8Z3lYlgPUbk2hBaXbPbBZ6LIC
-        OjHfnoRSB0dwiQ4tsRWeClAHCxwxZp8=
-X-Google-Smtp-Source: ABdhPJz2vZ4/AlsMzOcZBLPlW25yLLJtwfedjUH3UjsfFxLl8XyrL3gEdAYs1P7R2ytZ7pzI8Ziw6Q==
-X-Received: by 2002:a17:902:f545:b0:145:4402:c334 with SMTP id h5-20020a170902f54500b001454402c334mr1520236plf.65.1638304228935;
-        Tue, 30 Nov 2021 12:30:28 -0800 (PST)
-Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.googlemail.com with ESMTPSA id gv23sm3292945pjb.17.2021.11.30.12.30.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 30 Nov 2021 12:30:28 -0800 (PST)
-Subject: Re: [PATCH 2/2] scsi: qla4xxx: Format SYSFS_FLAG_FW_SEL_BOOT as byte
+        bh=Ong6/4IL92LMdcOa16LOw6DP2Z1AN5gi8h8irI+N774=;
+        b=zJVRDZa7m1Clt3oHdfKUAtiU4g+DZkikNbySh0m1XFvcrbltPSXCQLhXGH41rXuyaG
+         iIekdm0pgp7Va37UUsIuWH9mwgLTAoL7a1hNEkXvktZmSVTp1YOSTT+6pBC5S+x2SFY7
+         apQKioImEsaks2ZxxDSS0KB4FBvTsFDe2CyzuBCPs9T/bVIYPBIJvBx0KC8arAHj4eFf
+         d7bkmj38fnOV3f/cBWWzL0S61oZpFyxPoj85ZU6yXZ32XJ0hfX++ocRG5uwi35fMhegP
+         8SaNvEMpIzBnaif7M5pmQSSgP6+pCqObnpYE5bQfRBw32AHPqZdThmGn0Q9BvHTlgEfN
+         l2kQ==
+X-Gm-Message-State: AOAM530r+nxEfiyRHIXExxB93ZPD27bystERl2+Vaaylip7R0BWGdwxz
+        38Gujs9i9lClEopvbURWL5UcNXrZqoA=
+X-Google-Smtp-Source: ABdhPJwjWo2BmePL72i5dZrndZNwGD2t3EetRa6onOAuGkW/LbPJSwwPajueftrXirWUovYnmN4Zvg==
+X-Received: by 2002:a17:90b:1c06:: with SMTP id oc6mr1665408pjb.126.1638304692634;
+        Tue, 30 Nov 2021 12:38:12 -0800 (PST)
+Received: from 7YHHR73.igp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id j7sm23071520pfc.74.2021.11.30.12.38.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Nov 2021 12:38:12 -0800 (PST)
+From:   Florian Fainelli <f.fainelli@gmail.com>
 To:     linux-kernel@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
         Nilesh Javali <njavali@marvell.com>,
         Manish Rangankar <mrangankar@marvell.com>,
-        "supporter:QLOGIC QL41xxx ISCSI DRIVER" 
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "open list:QLOGIC QL41xxx ISCSI DRIVER" <linux-scsi@vger.kernel.org>
-References: <20211130202934.5023-1-f.fainelli@gmail.com>
- <20211130202934.5023-3-f.fainelli@gmail.com>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <30497371-1f5a-a22a-1a60-8f6105ea8ddd@gmail.com>
-Date:   Tue, 30 Nov 2021 12:30:26 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        GR-QLogic-Storage-Upstream@marvell.com (supporter:QLOGIC QL41xxx ISCSI
+        DRIVER), "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org (open list:QLOGIC QL41xxx ISCSI DRIVER)
+Subject: [PATCH v2 0/2] SYSFS_FLAG_FW_SEL_BOOT formatting fixes
+Date:   Tue, 30 Nov 2021 12:38:11 -0800
+Message-Id: <20211130203813.12138-1-f.fainelli@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <20211130202934.5023-3-f.fainelli@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/30/21 12:29 PM, Florian Fainelli wrote:
-> qedi formats SYSFS_FLAG_FW_SEL_BOOT as a byte, and the qla4xxx driver
-> does exactly the same thing, align them for consistency.
-> 
-> Suggested-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
-> ---
->  drivers/scsi/qla4xxx/ql4_os.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-> index 8987acc24dac..39b2f833eb26 100644
-> --- a/drivers/scsi/qla4xxx/ql4_os.c
-> +++ b/drivers/scsi/qla4xxx/ql4_os.c
-> @@ -5734,7 +5734,7 @@ static ssize_t qla4xxx_show_boot_eth_info(void *data, int type, char *buf)
->  
->  	switch (type) {
->  	case ISCSI_BOOT_ETH_FLAGS:
-> -		rc = sprintf(str, "%d\n", SYSFS_FLAG_FW_SEL_BOOT);
-> +		rc = sprintf(str, "%hhd\n", (char)SYSFS_FLAG_FW_SEL_BOOT);
->  		break;
->  	case ISCSI_BOOT_ETH_INDEX:
->  		rc = sprintf(str, "0\n");
-> @@ -5843,7 +5843,7 @@ qla4xxx_show_boot_tgt_info(struct ql4_boot_session_info *boot_sess, int type,
->  			     (char *)&boot_conn->chap.intr_secret);
->  		break;
->  	case ISCSI_BOOT_TGT_FLAGS:
-> -		rc = sprintf(str, "%d\n", SYSFS_FLAG_FW_SEL_BOOT);
-> +		rc = sprintf(str, "%hdd\n", (char)SYSFS_FLAG_FW_SEL_BOOT);
+Hi Martin, Manish,
 
-Sorry, I botched up that one, let me resend.
+This patch series aligns the formatting of SYSFS_FLAG_FW_SEL_BOOT
+between qedi and qla4xxx.
+
+Changes in v2:
+
+- fixed incorrect format in second hunk of qla4xxx
+
+Florian Fainelli (2):
+  scsi: qedi: Fix SYSFS_FLAG_FW_SEL_BOOT formatting
+  scsi: qla4xxx: Format SYSFS_FLAG_FW_SEL_BOOT as byte
+
+ drivers/scsi/qedi/qedi_main.c | 5 ++---
+ drivers/scsi/qla4xxx/ql4_os.c | 4 ++--
+ 2 files changed, 4 insertions(+), 5 deletions(-)
+
 -- 
-Florian
+2.25.1
+
