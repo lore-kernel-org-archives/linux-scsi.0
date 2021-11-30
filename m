@@ -2,244 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B997FC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 15:03:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F32B7C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 15:40:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245253AbhK3PHI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 10:07:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60840 "EHLO
+        id S232761AbhK3Pn7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 10:43:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243505AbhK3O4z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 09:56:55 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4777DC061D7C;
-        Tue, 30 Nov 2021 06:51:00 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 89FD0CE1A4C;
-        Tue, 30 Nov 2021 14:50:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8A37C53FD0;
-        Tue, 30 Nov 2021 14:50:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638283857;
-        bh=SUurU2bwaLmW/ODrNAtqZRvL1+/BsSrKCM8L1cmVcnI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lNlKsrv5lgHJYJzcnSLT5OjR4h1dPp+fk9xfiuj7VwEIXtzhsDAvSFj6on6spj9am
-         B7Q//doBpnYebQiIuHjZF6XpeVGbXxxpmbzApn24EQjk1BgyKqBWREFQMKGJs1FH04
-         frJC63Z65x2eaMeMA/oxmcQ+hlhiTwxlCVX0sy49+AmYr8oH1dKsg38UB4l9KtkwQh
-         oVopkY4q+fP+iGM0sB2l3CPp0UeSpcuc74A1ROTcjWoDfa0wfO8dcoX0cSqrFH7hBQ
-         /j3ZAh8DtdCEVTb8jhLUrMh5cmxhiKXVm0mdPGDw4gLY3uk3E8gM1KnrzII5jiZPGk
-         d1sb4iNzUDxKw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     George Kennedy <george.kennedy@oracle.com>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 13/43] scsi: scsi_debug: Fix type in min_t to avoid stack OOB
-Date:   Tue, 30 Nov 2021 09:49:50 -0500
-Message-Id: <20211130145022.945517-13-sashal@kernel.org>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211130145022.945517-1-sashal@kernel.org>
-References: <20211130145022.945517-1-sashal@kernel.org>
+        with ESMTP id S234474AbhK3Pn5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 10:43:57 -0500
+Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F8BFC06174A
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 07:40:38 -0800 (PST)
+Received: by mail-wm1-x332.google.com with SMTP id p3-20020a05600c1d8300b003334fab53afso19863216wms.3
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 07:40:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=nqhuFDsnKkXRDBD2VkYSTunv9kP+Et39ou1k8Mq4Y+8=;
+        b=NHYCWCLodTGiZBRXtkksO+9f1IGkfW+K/54xJTf4QHyMfaUQXmBq1eKy3Co9/MsCeg
+         M8eyQmrhlIZAps3ir9vh+Cs1W0ghawJ3N2asOO25/429B8gNsKZThr/qF1XXuwju337D
+         z4S2fkMOb5+KH1DLSy/1iXih3plROx4mFhwJfrhUffIx6QLz5Xx5jRnDx6jEnPqtrY7o
+         mfx6uKON0aFh01e95HlDREOsHa5nCUU3s59pgZpHOH3KuHkuzoVyIaoYH1brtP7FkLJ2
+         6DA8nAZaYmrh7BknicjuYTUweFj4a8nDXu477XykfdakxZqqgzBhD6Lx6zS2wBx6F2Yr
+         PaOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=nqhuFDsnKkXRDBD2VkYSTunv9kP+Et39ou1k8Mq4Y+8=;
+        b=kRXnv53O9i9Z6DzAESysQeDZcILyfB5YoK39hlFeNrbi2xLBxh2M8YStRQ295P/c9Z
+         w4jrCgnZa/Ex9Xe1PA1fc06syO8rkbW+LYONcsa9M+WIxW3d3m+YyotbhFCMw75d8HO6
+         xVdS18n78I1qr7UMQagkEPQHABxAK0E7eqH2F78qqUAaFWv5LG0tEawpocEERYvdsCVV
+         5iqPkCEc+iqvpPbCY+204CbPr8F5Qmj0STm8dEF73+QCUR5t00H3bsCZrr72HEqhyb1+
+         oJ/IJ+U4Ygx8vHL1f3dcdorhTOsCAZD7ePf5BfazMjey/ZDwt7QXRN45PBSKKclcoxZG
+         6P4w==
+X-Gm-Message-State: AOAM531+JRDCq6dpOBpqwTXnhyyYVwJH3z8U4aaT1++AYE+DwtIezYfK
+        eiaI+SPF78jE+pFy3M0x83I=
+X-Google-Smtp-Source: ABdhPJyP5t1DF+WoiL/if4a9sOp5XXpCttRBciHtZGWUzoPI3q1wdId8914BqmUlS7DtX6RP7YD1Sg==
+X-Received: by 2002:a1c:6a04:: with SMTP id f4mr242155wmc.56.1638286836777;
+        Tue, 30 Nov 2021 07:40:36 -0800 (PST)
+Received: from p200300e94719c91f05d9351815d7236e.dip0.t-ipconnect.de (p200300e94719c91f05d9351815d7236e.dip0.t-ipconnect.de. [2003:e9:4719:c91f:5d9:3518:15d7:236e])
+        by smtp.googlemail.com with ESMTPSA id c4sm16775520wrr.37.2021.11.30.07.40.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Nov 2021 07:40:36 -0800 (PST)
+Message-ID: <952443760df360b48a153c01b1dad957cd82fdea.camel@gmail.com>
+Subject: Re: [PATCH v2 19/20] scsi: ufs: Implement polling support
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Date:   Tue, 30 Nov 2021 16:40:34 +0100
+In-Reply-To: <deeb660e-d1ef-7a54-6221-45cfebd87881@acm.org>
+References: <20211119195743.2817-1-bvanassche@acm.org>
+         <20211119195743.2817-20-bvanassche@acm.org>
+         <e0dc15c742c2f626a7149c3c44d53493fe1a9a44.camel@gmail.com>
+         <deeb660e-d1ef-7a54-6221-45cfebd87881@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: George Kennedy <george.kennedy@oracle.com>
+On Tue, 2021-11-30 at 06:26 -0800, Bart Van Assche wrote:
+> On 11/30/21 12:43 AM, Bean Huo wrote:
+> > On Fri, 2021-11-19 at 11:57 -0800, Bart Van Assche wrote:
+> > > On my test setup this patch increases IOPS from 2736 to 22000
+> > > (8x)
+> > > for the
+> > > following test:
+> > > 
+> > > for hipri in 0 1; do
+> > >      fio --ioengine=io_uring --iodepth=1 --rw=randread \
+> > >      --runtime=60 --time_based=1 --direct=1 --name=qd1 \
+> > >      --filename=/dev/block/sda --ioscheduler=none --gtod_reduce=1 
+> > > \
+> > >      --norandommap --hipri=$hipri
+> > > done
+> > 
+> > For 4KB random read, direct IO, and iodepth=1, we did not see an
+> > improvement in IOPS due to this patch. Maybe the test case above is
+> > not
+> > sufficient.
+> 
+> Hi Bean,
+> 
+> Which test has been run? Polling is only enabled if --hipri=1 is
+> specified
+> to fio and --ioengine=io_uring is the only I/O engine on Android that
+> supports
+> that flag.
+> 
+> Thanks,
+> 
+> Bart.
 
-[ Upstream commit 36e07d7ede88a1f1ef8f0f209af5b7612324ac2c ]
+Hi Bart,
 
-Change min_t() to use type "u32" instead of type "int" to avoid stack out
-of bounds. With min_t() type "int" the values get sign extended and the
-larger value gets used causing stack out of bounds.
+It is the test case in your commit message. If iodepth=1, there is no
+performance improvement. Increase the io-depth to multiple, for
+example, let iodepth= CPU core counter. I see that the interrupt
+overhead is significantly increased when the request is completed, so
+IO_polling will win compared to the interrupt mode.
 
-BUG: KASAN: stack-out-of-bounds in memcpy include/linux/fortify-string.h:191 [inline]
-BUG: KASAN: stack-out-of-bounds in sg_copy_buffer+0x1de/0x240 lib/scatterlist.c:976
-Read of size 127 at addr ffff888072607128 by task syz-executor.7/18707
-
-CPU: 1 PID: 18707 Comm: syz-executor.7 Not tainted 5.15.0-syzk #1
-Hardware name: Red Hat KVM, BIOS 1.13.0-2
-Call Trace:
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x89/0xb5 lib/dump_stack.c:106
- print_address_description.constprop.9+0x28/0x160 mm/kasan/report.c:256
- __kasan_report mm/kasan/report.c:442 [inline]
- kasan_report.cold.14+0x7d/0x117 mm/kasan/report.c:459
- check_region_inline mm/kasan/generic.c:183 [inline]
- kasan_check_range+0x1a3/0x210 mm/kasan/generic.c:189
- memcpy+0x23/0x60 mm/kasan/shadow.c:65
- memcpy include/linux/fortify-string.h:191 [inline]
- sg_copy_buffer+0x1de/0x240 lib/scatterlist.c:976
- sg_copy_from_buffer+0x33/0x40 lib/scatterlist.c:1000
- fill_from_dev_buffer.part.34+0x82/0x130 drivers/scsi/scsi_debug.c:1162
- fill_from_dev_buffer drivers/scsi/scsi_debug.c:1888 [inline]
- resp_readcap16+0x365/0x3b0 drivers/scsi/scsi_debug.c:1887
- schedule_resp+0x4d8/0x1a70 drivers/scsi/scsi_debug.c:5478
- scsi_debug_queuecommand+0x8c9/0x1ec0 drivers/scsi/scsi_debug.c:7533
- scsi_dispatch_cmd drivers/scsi/scsi_lib.c:1520 [inline]
- scsi_queue_rq+0x16b0/0x2d40 drivers/scsi/scsi_lib.c:1699
- blk_mq_dispatch_rq_list+0xb9b/0x2700 block/blk-mq.c:1639
- __blk_mq_sched_dispatch_requests+0x28f/0x590 block/blk-mq-sched.c:325
- blk_mq_sched_dispatch_requests+0x105/0x190 block/blk-mq-sched.c:358
- __blk_mq_run_hw_queue+0xe5/0x150 block/blk-mq.c:1761
- __blk_mq_delay_run_hw_queue+0x4f8/0x5c0 block/blk-mq.c:1838
- blk_mq_run_hw_queue+0x18d/0x350 block/blk-mq.c:1891
- blk_mq_sched_insert_request+0x3db/0x4e0 block/blk-mq-sched.c:474
- blk_execute_rq_nowait+0x16b/0x1c0 block/blk-exec.c:62
- sg_common_write.isra.18+0xeb3/0x2000 drivers/scsi/sg.c:836
- sg_new_write.isra.19+0x570/0x8c0 drivers/scsi/sg.c:774
- sg_ioctl_common+0x14d6/0x2710 drivers/scsi/sg.c:939
- sg_ioctl+0xa2/0x180 drivers/scsi/sg.c:1165
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:874 [inline]
- __se_sys_ioctl fs/ioctl.c:860 [inline]
- __x64_sys_ioctl+0x19d/0x220 fs/ioctl.c:860
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x3a/0x80 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x44/0xae
-
-Link: https://lore.kernel.org/r/1636484247-21254-1-git-send-email-george.kennedy@oracle.com
-Reported-by: syzkaller <syzkaller@googlegroups.com>
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-Signed-off-by: George Kennedy <george.kennedy@oracle.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/scsi_debug.c | 34 +++++++++++++++++++---------------
- 1 file changed, 19 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 3fc7c2a31c191..f2f202424c6b2 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -1188,7 +1188,7 @@ static int p_fill_from_dev_buffer(struct scsi_cmnd *scp, const void *arr,
- 		 __func__, off_dst, scsi_bufflen(scp), act_len,
- 		 scsi_get_resid(scp));
- 	n = scsi_bufflen(scp) - (off_dst + act_len);
--	scsi_set_resid(scp, min_t(int, scsi_get_resid(scp), n));
-+	scsi_set_resid(scp, min_t(u32, scsi_get_resid(scp), n));
- 	return 0;
- }
- 
-@@ -1561,7 +1561,8 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	unsigned char pq_pdt;
- 	unsigned char *arr;
- 	unsigned char *cmd = scp->cmnd;
--	int alloc_len, n, ret;
-+	u32 alloc_len, n;
-+	int ret;
- 	bool have_wlun, is_disk, is_zbc, is_disk_zbc;
- 
- 	alloc_len = get_unaligned_be16(cmd + 3);
-@@ -1584,7 +1585,8 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		kfree(arr);
- 		return check_condition_result;
- 	} else if (0x1 & cmd[1]) {  /* EVPD bit set */
--		int lu_id_num, port_group_id, target_dev_id, len;
-+		int lu_id_num, port_group_id, target_dev_id;
-+		u32 len;
- 		char lu_id_str[6];
- 		int host_no = devip->sdbg_host->shost->host_no;
- 		
-@@ -1675,9 +1677,9 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 			kfree(arr);
- 			return check_condition_result;
- 		}
--		len = min(get_unaligned_be16(arr + 2) + 4, alloc_len);
-+		len = min_t(u32, get_unaligned_be16(arr + 2) + 4, alloc_len);
- 		ret = fill_from_dev_buffer(scp, arr,
--			    min(len, SDEBUG_MAX_INQ_ARR_SZ));
-+			    min_t(u32, len, SDEBUG_MAX_INQ_ARR_SZ));
- 		kfree(arr);
- 		return ret;
- 	}
-@@ -1713,7 +1715,7 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	}
- 	put_unaligned_be16(0x2100, arr + n);	/* SPL-4 no version claimed */
- 	ret = fill_from_dev_buffer(scp, arr,
--			    min_t(int, alloc_len, SDEBUG_LONG_INQ_SZ));
-+			    min_t(u32, alloc_len, SDEBUG_LONG_INQ_SZ));
- 	kfree(arr);
- 	return ret;
- }
-@@ -1728,8 +1730,8 @@ static int resp_requests(struct scsi_cmnd *scp,
- 	unsigned char *cmd = scp->cmnd;
- 	unsigned char arr[SCSI_SENSE_BUFFERSIZE];	/* assume >= 18 bytes */
- 	bool dsense = !!(cmd[1] & 1);
--	int alloc_len = cmd[4];
--	int len = 18;
-+	u32 alloc_len = cmd[4];
-+	u32 len = 18;
- 	int stopped_state = atomic_read(&devip->stopped);
- 
- 	memset(arr, 0, sizeof(arr));
-@@ -1773,7 +1775,7 @@ static int resp_requests(struct scsi_cmnd *scp,
- 			arr[7] = 0xa;
- 		}
- 	}
--	return fill_from_dev_buffer(scp, arr, min_t(int, len, alloc_len));
-+	return fill_from_dev_buffer(scp, arr, min_t(u32, len, alloc_len));
- }
- 
- static int resp_start_stop(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
-@@ -2311,7 +2313,8 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- {
- 	int pcontrol, pcode, subpcode, bd_len;
- 	unsigned char dev_spec;
--	int alloc_len, offset, len, target_dev_id;
-+	u32 alloc_len, offset, len;
-+	int target_dev_id;
- 	int target = scp->device->id;
- 	unsigned char *ap;
- 	unsigned char arr[SDEBUG_MAX_MSENSE_SZ];
-@@ -2467,7 +2470,7 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 		arr[0] = offset - 1;
- 	else
- 		put_unaligned_be16((offset - 2), arr + 0);
--	return fill_from_dev_buffer(scp, arr, min_t(int, alloc_len, offset));
-+	return fill_from_dev_buffer(scp, arr, min_t(u32, alloc_len, offset));
- }
- 
- #define SDEBUG_MAX_MSELECT_SZ 512
-@@ -2582,7 +2585,8 @@ static int resp_ie_l_pg(unsigned char *arr)
- static int resp_log_sense(struct scsi_cmnd *scp,
- 			  struct sdebug_dev_info *devip)
- {
--	int ppc, sp, pcode, subpcode, alloc_len, len, n;
-+	int ppc, sp, pcode, subpcode;
-+	u32 alloc_len, len, n;
- 	unsigned char arr[SDEBUG_MAX_LSENSE_SZ];
- 	unsigned char *cmd = scp->cmnd;
- 
-@@ -2652,9 +2656,9 @@ static int resp_log_sense(struct scsi_cmnd *scp,
- 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 3, -1);
- 		return check_condition_result;
- 	}
--	len = min_t(int, get_unaligned_be16(arr + 2) + 4, alloc_len);
-+	len = min_t(u32, get_unaligned_be16(arr + 2) + 4, alloc_len);
- 	return fill_from_dev_buffer(scp, arr,
--		    min_t(int, len, SDEBUG_MAX_INQ_ARR_SZ));
-+		    min_t(u32, len, SDEBUG_MAX_INQ_ARR_SZ));
- }
- 
- static inline bool sdebug_dev_is_zoned(struct sdebug_dev_info *devip)
-@@ -4405,7 +4409,7 @@ static int resp_report_zones(struct scsi_cmnd *scp,
- 	put_unaligned_be64(sdebug_capacity - 1, arr + 8);
- 
- 	rep_len = (unsigned long)desc - (unsigned long)arr;
--	ret = fill_from_dev_buffer(scp, arr, min_t(int, alloc_len, rep_len));
-+	ret = fill_from_dev_buffer(scp, arr, min_t(u32, alloc_len, rep_len));
- 
- fini:
- 	read_unlock(macc_lckp);
--- 
-2.33.0
+Kind regards,
+Bean
 
