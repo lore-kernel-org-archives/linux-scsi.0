@@ -2,152 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9662AC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 00:06:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E181FC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 02:34:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232139AbhK3AKJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Nov 2021 19:10:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56126 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232165AbhK3AKI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Nov 2021 19:10:08 -0500
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DEC2C061574;
-        Mon, 29 Nov 2021 16:06:49 -0800 (PST)
-Received: by mail-pf1-x432.google.com with SMTP id 8so18667514pfo.4;
-        Mon, 29 Nov 2021 16:06:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=EzaxcIY5royQHN5xoXfZ35t2h3OBMnvlOC7rpJ9geNk=;
-        b=dbimWW9gB8wJlLfjWTb78/MzsnhGlNhemdzZFVzUkIlvmNlTFT5fPJXcPj51zxfoyV
-         VSb6Ztdx09Cm7QOCeZQ6zKY1YHfXoJW9i5OvPW8tgv4QNV6L05rMI4f8777qKuLwV2ss
-         UQ4P8DjB4WfuAq6/zi5ZdS4an2o/4W9cmkVkJC7EDLG2d5RETz8s0drfBcJYpagfyQJy
-         6BpUWV/A5uMgfFXouyrVnWu2wbdAlH/hK8h88tZdWDmjji2pmy6hu9nbdh5JfLULa5qN
-         WvbRjlgy2elDKFIa0Ycovy5dY5r+L1xeRra6jAMD1KgkUQx4Ux9LhBXnASdRmUjg3leq
-         uDNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=EzaxcIY5royQHN5xoXfZ35t2h3OBMnvlOC7rpJ9geNk=;
-        b=FWgpEiGx77y3Sr0RcNJ/WnnMnThet1vcLSTD29duEqWp17nj7r7IyRDxGIGEMCWi4Q
-         hjE6u8J5QATUhQ4xsGJoeUj9vasgZ+CiTYDwhRuuWkhTXKTAP0qEu+TXMt8kezb6rcsa
-         vNYXBMSn+cW8ZOExRZRiOJ1llQAfSbOfJGJ1ZOgJs8qdozfewBtm3+9VtE9LouvsmIyv
-         sDNFlEYJrlLIVKhmCUbaRpbry/tcCHb37pOtQAqxfQY5Ox3wZPysmzn3P+kMPjfe8vPU
-         p/mmKydgj/8PeL4Dob5xAHJWEsxs0O5BIcrZ0IwbvEUNoH38CG3dzmA3kgL9KsOB89MU
-         q2GA==
-X-Gm-Message-State: AOAM533imIrbTCo5w4neNPeEt+tuLuoOsSLSjNdJ3Rip4pi3VrV8K+hJ
-        MoKncFstFM1dvJjyiMt9604=
-X-Google-Smtp-Source: ABdhPJypnMItEAw3uRBbEUbGdiIRonmaVfX9GMtHOHZavbW1dFGiq/gM25pzztQR7UT7Wq2c5PywWQ==
-X-Received: by 2002:a63:4244:: with SMTP id p65mr37945736pga.440.1638230809236;
-        Mon, 29 Nov 2021 16:06:49 -0800 (PST)
-Received: from debian11-dev-61.localdomain (192.243.120.180.16clouds.com. [192.243.120.180])
-        by smtp.gmail.com with ESMTPSA id lx15sm415227pjb.44.2021.11.29.16.06.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Nov 2021 16:06:49 -0800 (PST)
-From:   davidcomponentone@gmail.com
-X-Google-Original-From: yang.guang5@zte.com.cn
-To:     tyreld@linux.ibm.com
-Cc:     davidcomponentone@gmail.com, mpe@ellerman.id.au,
-        benh@kernel.crashing.org, paulus@samba.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        Yang Guang <yang.guang5@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi: ibmvfc: replace snprintf with sysfs_emit
-Date:   Tue, 30 Nov 2021 08:06:37 +0800
-Message-Id: <eb06c0df4ef4b4786cbafbbe4d74c890dc50fa7b.1638185169.git.yang.guang5@zte.com.cn>
-X-Mailer: git-send-email 2.30.2
+        id S237607AbhK3Chb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Nov 2021 21:37:31 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:31205 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233451AbhK3Chb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Nov 2021 21:37:31 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1638239652;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=BwYQSMaKGhnVjdlg6/XWIcbt1mryEgoJl23wrK4HkPE=;
+        b=MjpKCvioQIROX5ptNgXJ0u/CdU7WVdDV48kGDHZWZpvWxz6XRs1MjCxDvJcxxm9AFsABVD
+        V2d8gw2DiLli5ob+PXzUDEJb/rh8+Y79SmfdX0jUMbF79JRx6XDrIjpIw9+PBzS8u9gI6o
+        JJtuRsiDR0vI8Qbc3w+2LDqKS8Eo72k=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-164-N5HmpV_gOPu2964hsrRfPg-1; Mon, 29 Nov 2021 21:34:08 -0500
+X-MC-Unique: N5HmpV_gOPu2964hsrRfPg-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 370F183DD22;
+        Tue, 30 Nov 2021 02:34:07 +0000 (UTC)
+Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 67DA610016FE;
+        Tue, 30 Nov 2021 02:33:13 +0000 (UTC)
+Date:   Tue, 30 Nov 2021 10:33:08 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Sagi Grimberg <sagi@grimberg.me>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH 3/5] blk-mq: add helper of blk_mq_global_quiesce_wait()
+Message-ID: <YaWNZF3ZYWPQBSbk@T590>
+References: <20211119021849.2259254-1-ming.lei@redhat.com>
+ <20211119021849.2259254-4-ming.lei@redhat.com>
+ <8f6b6452-9abb-fd89-0262-9fb9d00d42a5@grimberg.me>
+ <YZuagPbZJ6CjiUNi@T590>
+ <38b9661e-c5b8-ae18-f2ab-b30f9d3e7115@grimberg.me>
+ <YZwzEBtFug6JEmMZ@T590>
+ <a3ea006a-738b-af69-4dd5-f33444e3559d@grimberg.me>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a3ea006a-738b-af69-4dd5-f33444e3559d@grimberg.me>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yang Guang <yang.guang5@zte.com.cn>
+On Tue, Nov 23, 2021 at 11:00:45AM +0200, Sagi Grimberg wrote:
+> 
+> > > > > > Add helper of blk_mq_global_quiesce_wait() for supporting to quiesce
+> > > > > > queues in parallel, then we can just wait once if global quiesce wait
+> > > > > > is allowed.
+> > > > > 
+> > > > > blk_mq_global_quiesce_wait() is a poor name... global is scope-less and
+> > > > > obviously it has a scope.
+> > > > 
+> > > > How about blk_mq_shared_quiesce_wait()? or any suggestion?
+> > > 
+> > > Shared between what?
+> > 
+> > All request queues in one host-wide, both scsi and nvme has such
+> > requirement.
+> > 
+> > > 
+> > > Maybe if the queue has a non-blocking tagset, it can have a "quiesced"
+> > > flag that is cleared in unquiesce? then the callers can just continue
+> > > to iterate but will only wait the rcu grace period once.
+> > 
+> > Yeah, that is what these patches try to implement.
+> 
+> I was suggesting to "hide" it in the interface.
+> Maybe something like:
+> --
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index 8799fa73ef34..627b631db1f9 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -263,14 +263,18 @@ void blk_mq_wait_quiesce_done(struct request_queue *q)
+>         unsigned int i;
+>         bool rcu = false;
+> 
+> +       if (!q->has_srcu && q->quiesced)
+> +               return;
+>         queue_for_each_hw_ctx(q, hctx, i) {
+>                 if (hctx->flags & BLK_MQ_F_BLOCKING)
+>                         synchronize_srcu(hctx->srcu);
+>                 else
+>                         rcu = true;
+>         }
+> -       if (rcu)
+> +       if (rcu) {
+>                 synchronize_rcu();
+> +               q->quiesced = true;
+> +       }
+>  }
+>  EXPORT_SYMBOL_GPL(blk_mq_wait_quiesce_done);
+> 
+> @@ -308,6 +312,7 @@ void blk_mq_unquiesce_queue(struct request_queue *q)
+>         } else if (!--q->quiesce_depth) {
+>                 blk_queue_flag_clear(QUEUE_FLAG_QUIESCED, q);
+>                 run_queue = true;
+> +               q->quiesced = false;
 
-coccinelle report:
-./drivers/scsi/ibmvscsi/ibmvfc.c:3453:8-16:
-WARNING: use scnprintf or sprintf
-./drivers/scsi/ibmvscsi/ibmvfc.c:3416:8-16:
-WARNING: use scnprintf or sprintf
-./drivers/scsi/ibmvscsi/ibmvfc.c:3436:8-16:
-WARNING: use scnprintf or sprintf
-./drivers/scsi/ibmvscsi/ibmvfc.c:3426:8-16:
-WARNING: use scnprintf or sprintf
-./drivers/scsi/ibmvscsi/ibmvfc.c:3445:8-16:
-WARNING: use scnprintf or sprintf
-./drivers/scsi/ibmvscsi/ibmvfc.c:3406:8-16:
-WARNING: use scnprintf or sprintf
+Different request queues are passed to blk_mq_wait_quiesce_done() during
+the iteration, so marking 'quiesced' doesn't make any difference here.
 
-Use sysfs_emit instead of scnprintf or sprintf makes more sense.
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Yang Guang <yang.guang5@zte.com.cn>
----
- drivers/scsi/ibmvscsi/ibmvfc.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index d0eab5700dc5..69bf55c037a5 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -3403,7 +3403,7 @@ static ssize_t ibmvfc_show_host_partition_name(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct ibmvfc_host *vhost = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n",
-+	return sysfs_emit(buf, "%s\n",
- 			vhost->login_buf->resp.partition_name);
- }
- 
-@@ -3413,7 +3413,7 @@ static ssize_t ibmvfc_show_host_device_name(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct ibmvfc_host *vhost = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n",
-+	return sysfs_emit(buf, "%s\n",
- 			vhost->login_buf->resp.device_name);
- }
- 
-@@ -3423,7 +3423,7 @@ static ssize_t ibmvfc_show_host_loc_code(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct ibmvfc_host *vhost = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n",
-+	return sysfs_emit(buf, "%s\n",
- 			vhost->login_buf->resp.port_loc_code);
- }
- 
-@@ -3433,7 +3433,7 @@ static ssize_t ibmvfc_show_host_drc_name(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct ibmvfc_host *vhost = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n",
-+	return sysfs_emit(buf, "%s\n",
- 			vhost->login_buf->resp.drc_name);
- }
- 
-@@ -3442,7 +3442,7 @@ static ssize_t ibmvfc_show_host_npiv_version(struct device *dev,
- {
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct ibmvfc_host *vhost = shost_priv(shost);
--	return snprintf(buf, PAGE_SIZE, "%d\n", be32_to_cpu(vhost->login_buf->resp.version));
-+	return sysfs_emit(buf, "%d\n", be32_to_cpu(vhost->login_buf->resp.version));
- }
- 
- static ssize_t ibmvfc_show_host_capabilities(struct device *dev,
-@@ -3450,7 +3450,7 @@ static ssize_t ibmvfc_show_host_capabilities(struct device *dev,
- {
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct ibmvfc_host *vhost = shost_priv(shost);
--	return snprintf(buf, PAGE_SIZE, "%llx\n", be64_to_cpu(vhost->login_buf->resp.capabilities));
-+	return sysfs_emit(buf, "%llx\n", be64_to_cpu(vhost->login_buf->resp.capabilities));
- }
- 
- /**
--- 
-2.30.2
+Thanks,
+Ming
 
