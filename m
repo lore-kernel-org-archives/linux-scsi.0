@@ -2,101 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0997EC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 06:51:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95550C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 07:09:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238825AbhK3Gy4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 01:54:56 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:38100 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238824AbhK3Gyz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 01:54:55 -0500
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        id S238974AbhK3HNO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 02:13:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37520 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234559AbhK3HNO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 02:13:14 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E97CC061574;
+        Mon, 29 Nov 2021 23:09:55 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id CD732212C6;
-        Tue, 30 Nov 2021 06:51:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1638255095; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=b00+GWWDcpKcyagEKMOLBKxGaFqKPZzkNhnQJidPsZ8=;
-        b=aB2Vd1BwWKceCMgrfVlhGe2ifi9gT56tOjuANxh+H5dqz2vEcpy6j1xHJjqfaChWMHI/Lw
-        yLMJGX3uJqImxw1wbNqVw1B6A+5tb4ZSQ/V6UUwUcLuAHQqm8iDveKoQuj+A2vQzew07E1
-        B/AMi2S0KJIBjfqJi0l+tYkrUxCq6no=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1638255095;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=b00+GWWDcpKcyagEKMOLBKxGaFqKPZzkNhnQJidPsZ8=;
-        b=Ryp2XjLCcjXiA6zbabDn5TnUnB+jnoh5T109K0nPJu1oB2OFzlANRy6vm9CQswDxdW8v1p
-        UzqqzQ623z4RC2AA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A0EE813BA9;
-        Tue, 30 Nov 2021 06:51:35 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 1rH+JffJpWGIVQAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 30 Nov 2021 06:51:35 +0000
-Subject: Re: [PATCH 02/15] scsi: add scsi_{get,put}_internal_cmd() helper
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
-References: <20211125151048.103910-1-hare@suse.de>
- <20211125151048.103910-3-hare@suse.de>
- <1eb99f16-5b65-3150-48c6-353b088818ad@acm.org>
- <239804d1-aae7-63ba-c3bf-ca1dd523df6c@suse.de>
- <yq1y256xp5b.fsf@ca-mkp.ca.oracle.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <7dc3ea71-cb0d-2c6d-bcfc-c9e8af61b427@suse.de>
-Date:   Tue, 30 Nov 2021 07:51:35 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        by sin.source.kernel.org (Postfix) with ESMTPS id BF03ACE1814;
+        Tue, 30 Nov 2021 07:09:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DACBC53FC1;
+        Tue, 30 Nov 2021 07:09:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1638256190;
+        bh=kLuGWOj0/CeNyazjZ0443VRhbHXKaiSe5ZXsMM3dZ+Q=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KTkyqgZnTc7ZIL5IAI7yvIO9d3CjLkYX8CTok2BgGUg/ZKUO0qud2UQfhdqJ1l2Gn
+         zuoylXn5MHW31XyIkUSx6K8+MBEyvEAn/3qHEWtz8JvSAS8FpFsffMNF6+YI6kgOdw
+         t1ka0Df/7ZmeS6YJCG7JsbvI8nNMzdWi1xgx7+xE=
+Date:   Tue, 30 Nov 2021 08:09:45 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-mmc@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v2 2/3] block: don't delete queue kobject before its
+ children
+Message-ID: <YaXOOcoMZb0fymVX@kroah.com>
+References: <20211130040306.148925-1-ebiggers@kernel.org>
+ <20211130040306.148925-3-ebiggers@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <yq1y256xp5b.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211130040306.148925-3-ebiggers@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/30/21 5:17 AM, Martin K. Petersen wrote:
+On Mon, Nov 29, 2021 at 08:03:05PM -0800, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
 > 
-> Hannes,
+> kobjects aren't supposed to be deleted before their child kobjects are
+> deleted.  Apparently this is usually benign; however, a WARN will be
+> triggered if one of the child kobjects has a named attribute group:
 > 
->> I have oriented myself at __scsi_execute(), which also has
->> 'data_direction' as an integer.  Presumably to avoid header clutter.
->> Martin?
+>     sysfs group 'modes' not found for kobject 'crypto'
+>     WARNING: CPU: 0 PID: 1 at fs/sysfs/group.c:278 sysfs_remove_group+0x72/0x80
+>     ...
+>     Call Trace:
+>       sysfs_remove_groups+0x29/0x40 fs/sysfs/group.c:312
+>       __kobject_del+0x20/0x80 lib/kobject.c:611
+>       kobject_cleanup+0xa4/0x140 lib/kobject.c:696
+>       kobject_release lib/kobject.c:736 [inline]
+>       kref_put include/linux/kref.h:65 [inline]
+>       kobject_put+0x53/0x70 lib/kobject.c:753
+>       blk_crypto_sysfs_unregister+0x10/0x20 block/blk-crypto-sysfs.c:159
+>       blk_unregister_queue+0xb0/0x110 block/blk-sysfs.c:962
+>       del_gendisk+0x117/0x250 block/genhd.c:610
 > 
-> Just a vestige from ancient times. I really hate scsi_execute() and its
-> 10,000 randomly ordered arguments. The more sanity checking we have in
-> that department, the better.
+> Fix this by moving the kobject_del() and the corresponding
+> kobject_uevent() to the correct place.
 > 
-> At some point I proposed having scsi_execute() take a single struct as
-> argument to get better input validation. I've lost count how many things
-> have been broken because of misordered arguments to this function.
-> Backporting patches almost inevitably causes regressions because of this
-> interface.
+> Fixes: 2c2086afc2b8 ("block: Protect less code with sysfs_lock in blk_{un,}register_queue()")
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> ---
+>  block/blk-sysfs.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
 > 
-Right. As it so happens, I've already created a patch to include 
-<linux/dma-direction.h> here.
-But yeah, the arguments to __scsi_execute are patently horrible.
+> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+> index 91d3805a6ec6b..1368dfe3ee500 100644
+> --- a/block/blk-sysfs.c
+> +++ b/block/blk-sysfs.c
+> @@ -951,15 +951,17 @@ void blk_unregister_queue(struct gendisk *disk)
+>  	 */
+>  	if (queue_is_mq(q))
+>  		blk_mq_unregister_dev(disk_to_dev(disk), q);
+> -
+> -	kobject_uevent(&q->kobj, KOBJ_REMOVE);
+> -	kobject_del(&q->kobj);
+>  	blk_trace_remove_sysfs(disk_to_dev(disk));
+>  
+>  	mutex_lock(&q->sysfs_lock);
+>  	elv_unregister_queue(q);
+>  	disk_unregister_independent_access_ranges(disk);
+>  	mutex_unlock(&q->sysfs_lock);
+> +
+> +	/* Now that all child objects were deleted, the queue can be deleted. */
+> +	kobject_uevent(&q->kobj, KOBJ_REMOVE);
+> +	kobject_del(&q->kobj);
+> +
+>  	mutex_unlock(&q->sysfs_dir_lock);
+>  
+>  	kobject_put(&disk_to_dev(disk)->kobj);
+> -- 
+> 2.34.1
+> 
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
