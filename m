@@ -2,100 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FF2AC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 17:36:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D322DC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 17:37:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233332AbhK3Rj2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 12:39:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43456 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230443AbhK3RjW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 12:39:22 -0500
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D1BFC061574;
-        Tue, 30 Nov 2021 09:36:02 -0800 (PST)
-Received: by mail-ed1-x52d.google.com with SMTP id y13so89950178edd.13;
-        Tue, 30 Nov 2021 09:36:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=Oywvq+utTerFq6V8S/x70IeHU0QO5TyY6jTfAnkHZ9I=;
-        b=cfojqhysDIMRwY+mqnD9kh3WDnYnhLEiUMTbj+w3NNvkofPxAL0FuELgxKL/o9Jqvc
-         1twq8TqzePvIO+ya7YgXvK/2bJul8eN13GdklzL75WmOk8bf7btZoTtZqHPRpswx8E9h
-         BCYfi9mtp+FoTixbdaVD0VDX6Jbk8wjWuJAtFIKXyEueo4+E5ipefcQu6wTdf5EIq4X8
-         X4sh7jWhd+8X//LKwLTkDwqlDqEMpLbI9/qbRQ3HAxoAjV907M7DpCJLh48agnXXrfiV
-         rpJsCnp9/yUrBe+MTnfRUJ85UDVpv4VeJIrKFmq6V+H4wIUmvp8bvMfPg2h/1OaPtlfj
-         tl5g==
+        id S244898AbhK3RlI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 12:41:08 -0500
+Received: from mail-pf1-f176.google.com ([209.85.210.176]:37743 "EHLO
+        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230443AbhK3RlH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 12:41:07 -0500
+Received: by mail-pf1-f176.google.com with SMTP id 8so21347145pfo.4
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 09:37:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:sender:message-id:date:mime-version:user-agent
-         :subject:content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=Oywvq+utTerFq6V8S/x70IeHU0QO5TyY6jTfAnkHZ9I=;
-        b=tLqneVtGT1eS9BJIf1M/JcScxuqkvEF5kFQ8lTLEaeoMNS3I9LsiUl1GmGKmm5plow
-         tqVmgnm8qhVhcgKK2Ft5VlIO+6xAg1+2C7rrpjaVvIg2WHzBTHx7q0XvINzM0lMS7RhF
-         gdfTKGYAbqxqH/7j4p9uvgn5sD7UO2FahU1UCrbQsVZlfVEs7GIshj+ZmTINzDjcRMTE
-         Wv5RXGMUpu9UkUk8XTKv4xBMjRcErfH7ghraSSUxYNAxRPUOVoivLWB6KGB3TirAwDvj
-         go3kedWN0qYiQCxzOcYjaKL1Qasff1BrCkJRwtEQ0Rg9BzPPP2eQ5BXWa6l4+vVYNhtX
-         vCJQ==
-X-Gm-Message-State: AOAM5301DitPnOvIfgQML/GmW5gItzsJ95wDR+3F5z3jPhWlUUm+gJpe
-        G2LLmRNHmFgibvcG6GgfOKU=
-X-Google-Smtp-Source: ABdhPJwX+VqmCvUvIH+Vrzn67m5keK1nVizErpKsz9xY5hMnklBKQ0T/tH8iHItv+tP4C3Zz7cXSsg==
-X-Received: by 2002:a50:ce46:: with SMTP id k6mr532940edj.45.1638293760775;
-        Tue, 30 Nov 2021 09:36:00 -0800 (PST)
-Received: from ?IPV6:2001:b07:add:ec09:c399:bc87:7b6c:fb2a? ([2001:b07:add:ec09:c399:bc87:7b6c:fb2a])
-        by smtp.googlemail.com with ESMTPSA id oz11sm9583941ejc.81.2021.11.30.09.35.54
+        bh=tfTHhauoRg+InOcWwYkykJkWTiJ0S3QGnrhKv0OCwzI=;
+        b=Uswdl849uZ4pm1kg6FNY5fFPk5EJUdiDA8VphDxI28I49NcKGxflfp3GYg87R1DRVv
+         7C6FqQ1lJ6qB7p2wYqU0FGRpAlszW4MxbF/i5vTrT3Jj/wdEvlGrgJNJfu36lwTdakLr
+         2P001VaJ1X2FEyUyy+gqCFUOfIoL6mSmVvS8V/bG4HJsCcp1mwTOLb5c6U2hPjiKZTQ2
+         hiHc66swDVIt8cJK0kKRDP/WOeeDR3F2qCEq4e04j/5Sz81I1rCrfo/Y5VoK5ctcUlTi
+         IFsIfZyp0Nokrudjimrj5QUt5HLVH0JTEphoRqOSlnNn1b7xwY9X0pAVm3OewOQmJcuY
+         IdXg==
+X-Gm-Message-State: AOAM533KRGp/+aKkPRhc0BOPkmLPMYsfPcwZOBrdzyF6GQOwnkwlrqmy
+        pwpwaiIFmornnPYKBV9k2HY=
+X-Google-Smtp-Source: ABdhPJz5JXW9zxCK0piEqH7mFpmNrp20ppYoKqh2e8zDaY97XY91ZB1GjQmZ4ZW1oVjKFZLxhoRBdw==
+X-Received: by 2002:a05:6a00:1ad0:b0:49f:d04e:78da with SMTP id f16-20020a056a001ad000b0049fd04e78damr257212pfv.77.1638293867645;
+        Tue, 30 Nov 2021 09:37:47 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ef1f:f086:d1ba:8190])
+        by smtp.gmail.com with ESMTPSA id w142sm21293458pfc.115.2021.11.30.09.37.46
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 30 Nov 2021 09:36:00 -0800 (PST)
-Sender: Paolo Bonzini <paolo.bonzini@gmail.com>
-Message-ID: <ecb2f3c6-af8c-dd43-1dcf-0b5e8a9d8848@redhat.com>
-Date:   Tue, 30 Nov 2021 18:35:52 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.0
-Subject: Re: [PATCH] scsi: virtio_scsi: Fix a NULL pointer dereference in
- virtscsi_rescan_hotunplug()
-Content-Language: en-US
-To:     Zhou Qingyang <zhou1615@umn.edu>
-Cc:     kjlu@umn.edu, "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
+        Tue, 30 Nov 2021 09:37:47 -0800 (PST)
+Subject: Re: [PATCH v2 19/20] scsi: ufs: Implement polling support
+To:     Bean Huo <huobean@gmail.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matt Lupfer <mlupfer@ddn.com>,
-        virtualization@lists.linux-foundation.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20211130171901.202229-1-zhou1615@umn.edu>
-From:   Paolo Bonzini <pbonzini@redhat.com>
-In-Reply-To: <20211130171901.202229-1-zhou1615@umn.edu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+References: <20211119195743.2817-1-bvanassche@acm.org>
+ <20211119195743.2817-20-bvanassche@acm.org>
+ <e0dc15c742c2f626a7149c3c44d53493fe1a9a44.camel@gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <ca60e62b-d310-1f97-d61e-d0ba8bdd420b@acm.org>
+Date:   Tue, 30 Nov 2021 09:37:46 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
+MIME-Version: 1.0
+In-Reply-To: <e0dc15c742c2f626a7149c3c44d53493fe1a9a44.camel@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/30/21 18:19, Zhou Qingyang wrote:
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -337,7 +337,11 @@ static void virtscsi_rescan_hotunplug(struct virtio_scsi *vscsi)
->   	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
->   	int result, inquiry_len, inq_result_len = 256;
->   	char *inq_result = kmalloc(inq_result_len, GFP_KERNEL);
-> -
-> +	if (!inq_result) {
-> +		pr_err("%s:no enough memory for inq_result\n",
-> +			__func__);
-> +		return;
-> +	}
->   	shost_for_each_device(sdev, shost) {
->   		inquiry_len = sdev->inquiry_len ? sdev->inquiry_len : 36;
->   
+On 11/30/21 12:43 AM, Bean Huo wrote:
+> On Fri, 2021-11-19 at 11:57 -0800, Bart Van Assche wrote:
+>> +	return IRQ_HANDLED;
+>>   }
+>>   
+> 
+> ufshcd_transfer_req_compl() will never return IRQ_NONE,
+> but ufshcd_intr() needs this return to check the fake interrupt.
 
-In practice this will never happen, since the kmalloc is very small, so 
-I think it's easier to just return early without a printk.  On the other 
-hand, if the out-of-memory really could happen, this should be a 
-pr_err_ratelimited.
+I don't think that it is possible to implement polling and detect
+spurious interrupts without affecting performance negatively. Hence
+the choice to never return IRQ_NONE. Is spurious interrupt detection
+that important or is this only required for debugging host controllers?
+I consider helping with hardware debugging as out of scope for the UFS
+driver.
 
-Paolo
+>> @@ -9437,6 +9481,7 @@ int ufshcd_alloc_host(struct device *dev,
+>> struct ufs_hba **hba_handle)
+>>   		err = -ENOMEM;
+>>   		goto out_error;
+>>   	}
+>> +	host->nr_maps = 3;
+> 
+> I don't understand why not directly uses HCTX_MAX_TYPES, 3 is already
+> maximum.
+
+If new map types would be introduced in the future, we still need 3 maps.
+Hence the choice for '3' instead of HCTX_MAX_TYPES.
+
+Thanks,
+
+Bart.
