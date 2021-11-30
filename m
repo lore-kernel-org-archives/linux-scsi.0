@@ -2,39 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB9CC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 19:17:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D1A5C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 19:21:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343525AbhK3TUW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 14:20:22 -0500
-Received: from mail-pf1-f171.google.com ([209.85.210.171]:41886 "EHLO
-        mail-pf1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245734AbhK3TT4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 14:19:56 -0500
-Received: by mail-pf1-f171.google.com with SMTP id g19so21600659pfb.8
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 11:16:36 -0800 (PST)
+        id S245712AbhK3TY2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 14:24:28 -0500
+Received: from mail-pj1-f47.google.com ([209.85.216.47]:36704 "EHLO
+        mail-pj1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239820AbhK3TYY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 14:24:24 -0500
+Received: by mail-pj1-f47.google.com with SMTP id n15-20020a17090a160f00b001a75089daa3so19062753pja.1
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 11:21:05 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=f1GbbMfWsY+kjrnQS0Yy5NHtinI+2HPXzH06O0mgGTA=;
-        b=UfadiW+x9k3df4n99yeE5W6JeIMirn2ba/EQSHphhiO1iYB85srvrh+K3IAEsyMgfX
-         Va7Is7efF21I3THAYSE4g2EAuhIgoY6ApkrwhwyLerNOIybviv7Du2vIE3cBvqpTSirf
-         N5DszmA3T6vJOfv0hOA9CTVnDta0bGYGiWm3YKH5XekrgYYXo63pPbefUda4Io1s89bx
-         VKYqO06rdyX6cVa/aP1W/rg49BedGHDHE1M7lWKOSPYeDMYCViQWYZjUWw+qAsOoLM96
-         Q2U4vIebbxKlkL2Pp+B85goQ49LMb/ZlWItwHMKLWzQIi7cJN8qVVmWCEqUe1FJ6Sraw
-         Z6FA==
-X-Gm-Message-State: AOAM530gjfg2QnS7f3K7qB+9nxP9Gn5apS3fpubTvYNaCtCYiPexHWXV
-        m5S8UDB/d7CuebLDjR2BSSE=
-X-Google-Smtp-Source: ABdhPJyiVsXjHWvpT35y0pF5gHk+8gj1SD7oJ0d3xS52DpgtHxZ6Et4a1uCLvwOqy1slA2n6277Z4A==
-X-Received: by 2002:a63:f008:: with SMTP id k8mr876880pgh.189.1638299796133;
-        Tue, 30 Nov 2021 11:16:36 -0800 (PST)
+        bh=rFUVUyYZt++d16sRUJYkdH2pYmZbGuFxOaDacLUpXgU=;
+        b=ckUrVvzyjxR4vlUIbytjj87BI2GwpvQYDYr5Faj65eCpRp3E8bTKqc1GUp49/G+0Oa
+         5/YtzvexDM4NfdHrR3LbTeuTqgLtdVuVmxwgBs6OQyJKSJt6qQXZ3c5JGfTMI3USXWmw
+         BXb2jUFXcerCWdrZBO7awMhiEOPo77UqDlata95ZRpY97WJ4EljGKHViog7/GIyUnjOl
+         a6hfJDb483HLEd6ZeaYaEcpaXrLmDs/vblB70zVUbc7FLeLYmjJMYqoCWyn/kcghujzM
+         vCRyn8gzrVqWw4DDmOPb2d479AUIv3yCfUclTYQdZdXirinIcfVHSsgpnFzm3YDI/gnh
+         3p8Q==
+X-Gm-Message-State: AOAM530p46TcsHFckjqqaZ2YAnmVrWz+PKGv6TCdtrYsQjg46LDx66F7
+        /g/6hoMUjSBxlnrKk7nuX/07uPJUMfs=
+X-Google-Smtp-Source: ABdhPJwJ4FT8DmK/+YLmQMbrav3lrqCt/MzZIE7aciSWSc5jI92j/ix923/GxEisu5pBl94zA7NjwQ==
+X-Received: by 2002:a17:902:ecc1:b0:142:fae:f686 with SMTP id a1-20020a170902ecc100b001420faef686mr1204291plh.24.1638300065136;
+        Tue, 30 Nov 2021 11:21:05 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ef1f:f086:d1ba:8190])
-        by smtp.gmail.com with ESMTPSA id s15sm3275354pjs.51.2021.11.30.11.16.35
+        by smtp.gmail.com with ESMTPSA id d12sm21473346pfh.165.2021.11.30.11.21.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 30 Nov 2021 11:16:35 -0800 (PST)
-Subject: Re: [PATCH v2 14/20] scsi: ufs: Introduce ufshcd_release_scsi_cmd()
+        Tue, 30 Nov 2021 11:21:04 -0800 (PST)
+Subject: Re: [PATCH v2 11/20] scsi: ufs: Switch to
+ scsi_(get|put)_internal_cmd()
 To:     Adrian Hunter <adrian.hunter@intel.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
@@ -44,17 +45,19 @@ Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
         Stanley Chu <stanley.chu@mediatek.com>,
         Asutosh Das <asutoshd@codeaurora.org>
 References: <20211119195743.2817-1-bvanassche@acm.org>
- <20211119195743.2817-15-bvanassche@acm.org>
- <1383eeb3-dc40-6498-7388-b5d35b923f88@intel.com>
- <4e4fb79a-6783-0613-9fbd-d22b7c18d079@acm.org>
- <7d135f3b-dcf3-f612-dfba-8a72f1026c79@intel.com>
+ <20211119195743.2817-12-bvanassche@acm.org>
+ <6bfb59ef-4f00-3918-59e6-3c9569f6adc6@intel.com>
+ <bc19f55f-a3e9-a3fe-437d-57b9e077f532@acm.org>
+ <1a9cddd9-b67a-be4b-4c83-3636f37e6769@intel.com>
+ <2cb66e0a-df1e-0825-67b9-cbd2f116fe92@acm.org>
+ <e214da03-ce47-9987-09d9-2bbf125b59bf@intel.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <ef6164d4-be37-cb3f-8621-99bfb1c21ca9@acm.org>
-Date:   Tue, 30 Nov 2021 11:16:34 -0800
+Message-ID: <ddb7001b-c6c5-ae5a-962b-832f2fd638a5@acm.org>
+Date:   Tue, 30 Nov 2021 11:21:03 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <7d135f3b-dcf3-f612-dfba-8a72f1026c79@intel.com>
+In-Reply-To: <e214da03-ce47-9987-09d9-2bbf125b59bf@intel.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -62,23 +65,20 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/30/21 11:02 AM, Adrian Hunter wrote:
-> On 30/11/2021 20:00, Bart Van Assche wrote:
->> ufshcd_abort() only calls
->> ufshcd_release_scsi_cmd() after ufshcd_try_to_abort_task() succeeded.
->> That means that the command has not completed and hence that
->> ufshcd_update_monitor() must not be called.
+On 11/30/21 11:15 AM, Adrian Hunter wrote:
+> On 30/11/2021 19:51, Bart Van Assche wrote:
+>> By using the block layer request allocation functions the block layer guarantees
+>> that each tag is in use in only one context. When bypassing the block layer code
+>> would have to be inserted in ufshcd_exec_dev_cmd() and ufshcd_issue_devman_upiu_cmd()
+>> to serialize these functions.
 > 
-> AFAICT the monitor is for successful commands, which is why I suggested
-> checking the 'result'.
-> 
-> So make that change to __ufshcd_transfer_req_compl() and then it will
-> work for ufshcd_abort() and provide tracing.
+> They already are serialized, but you are essentially saying the functionality
+> being duplicated is just a lock.  What you are proposing seems awfully
+> complicated just to get the functionality of a lock.
 
-ufshcd_abort() does not set cmd->result because it doesn't have to.
-Additionally, __ufshcd_transfer_req_compl() calls scsi_done() while an
-abort handler should not call scsi_done(). In other words, my point of
-view is that ufshcd_abort() should not call __ufshcd_transfer_req_compl().
+Are you perhaps referring to hba->dev_cmd.lock? I had overlooked that lock
+when I wrote my previous email. I will take a closer look at the reserved
+slot approach.
 
 Thanks,
 
