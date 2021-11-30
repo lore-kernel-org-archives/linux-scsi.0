@@ -2,52 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D977DC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 23:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 115F0C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 23:35:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345217AbhK3Xi0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 18:38:26 -0500
-Received: from mail-pf1-f177.google.com ([209.85.210.177]:39834 "EHLO
-        mail-pf1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345130AbhK3XiX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 18:38:23 -0500
-Received: by mail-pf1-f177.google.com with SMTP id i12so22269897pfd.6
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 15:35:03 -0800 (PST)
+        id S1345280AbhK3Xif (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 18:38:35 -0500
+Received: from mail-pl1-f179.google.com ([209.85.214.179]:43617 "EHLO
+        mail-pl1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240977AbhK3Xi2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2021 18:38:28 -0500
+Received: by mail-pl1-f179.google.com with SMTP id m24so16195915pls.10
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2021 15:35:09 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=CnZqmy35APeBK43FDLtAn48H00//bAqCefvaRW8D3WU=;
-        b=XQMvtC3GC/52bW3nY8Q7Xqdu9qymJtI4w+uYdQO3szE3x6StH0m3UTm2vrR7Rs8Hk4
-         4nRn0KC6rF7MmI6i9odLTXp5tMgKU7U/Ymfkypzz8Sx1zJQBjh5slYX5o0j9tn2Bf3hM
-         1s+5ApmAa0qKkZaeP1bAGIKJqKT+kFBZmtP1c5hL9po6cGksbsewk+yJ8SvdHT5JjxMB
-         Eaofn8+e9tm7aNEAva0osTUBCjjFhohKb3aH/I0/7/4uXaQV32x53FCIh6kn5ccDr4Dw
-         WwOfVCnDamF36VPD8MZbs/j9LuzjmcOJFX5FLQR7Vg04XwG75HlBUrCoEx4N8mb1vujk
-         HdkQ==
-X-Gm-Message-State: AOAM532raD52EqHZ0ZcZixXmpGd1+VO0f6qhS+MkCwxDpnRqQJN3qt1Z
-        vgpXpx6v1nL4Vaz+/LIJgYuAPAXRGec=
-X-Google-Smtp-Source: ABdhPJwIdqafhnckBJbw/zfEo2ssqd/JzpZuXProVRI/dIMO0MZGvMGpMnyqULpL9n0ImJqeErmlDg==
-X-Received: by 2002:a63:24c4:: with SMTP id k187mr1877766pgk.554.1638315303274;
-        Tue, 30 Nov 2021 15:35:03 -0800 (PST)
+        bh=LOwNxUGaXRXYkzQoj4hoWe0WWsfF8s4evhhcNvlzf3k=;
+        b=ibnEuFmYScAumJ4MwSBcRUua8AFf1k0bmlW+HHWxKFmr1Knh5n4xgJXVhvUc79oHzK
+         joOGYWpjuPA5kUKLASxouw7dRLclFz/nDx50szRZHSyN3dxGUlexei+9Oyajw2RADwdP
+         X7w8gqBLxr3Fz1hmTJnvQRDM8rAGbDkuDHLo9FkYyWRCb6o3Mvv9pVLwBPgDU2jptbNa
+         KKar/36rWZccGr9KLo70d3lvSsAkz6C7PgaUHXRci7DWwYNYC4BEClmWKsbhogM3zd4x
+         ICJxX4O/nTBkn06OfMJJY0eWyFRbMigxK2/pTKG7Q0dDAmM0SjU7YfjwMuYwmDzYYb9+
+         CvLQ==
+X-Gm-Message-State: AOAM530pWMshC5c4dC1kQQaq1rkpQMlA/hu1v2Ka9FxJgpr8PL7vnJ/t
+        qosnqOtExoWasrCK/Lzc9Ug=
+X-Google-Smtp-Source: ABdhPJzKG+xNHSa3QCLsZMXcJMGeufhO2YRZOOVsOMzabhaYAoITGQa3BjRmmqGPnuwXm/fFijBvow==
+X-Received: by 2002:a17:902:d50e:b0:142:1b2a:144 with SMTP id b14-20020a170902d50e00b001421b2a0144mr2651712plg.51.1638315308587;
+        Tue, 30 Nov 2021 15:35:08 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ef1f:f086:d1ba:8190])
-        by smtp.gmail.com with ESMTPSA id mu4sm4127187pjb.8.2021.11.30.15.35.02
+        by smtp.gmail.com with ESMTPSA id mu4sm4127187pjb.8.2021.11.30.15.35.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Nov 2021 15:35:02 -0800 (PST)
+        Tue, 30 Nov 2021 15:35:07 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
         Avri Altman <avri.altman@wdc.com>,
-        Can Guo <cang@codeaurora.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Keoseong Park <keosung.park@samsung.com>
-Subject: [PATCH v3 16/17] scsi: ufs: Optimize the command queueing code
-Date:   Tue, 30 Nov 2021 15:33:23 -0800
-Message-Id: <20211130233324.1402448-17-bvanassche@acm.org>
+        Asutosh Das <asutoshd@codeaurora.org>
+Subject: [PATCH v3 17/17] scsi: ufs: Implement polling support
+Date:   Tue, 30 Nov 2021 15:33:24 -0800
+Message-Id: <20211130233324.1402448-18-bvanassche@acm.org>
 X-Mailer: git-send-email 2.34.0.rc2.393.gf8c9666880-goog
 In-Reply-To: <20211130233324.1402448-1-bvanassche@acm.org>
 References: <20211130233324.1402448-1-bvanassche@acm.org>
@@ -57,63 +55,177 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove the clock scaling lock from ufshcd_queuecommand() since it is a
-performance bottleneck. Instead, use synchronize_rcu_expedited() to wait
-for ongoing ufshcd_queuecommand() calls.
+The time spent in io_schedule() and also the interrupt latency are
+significant when submitting direct I/O to a UFS device. Hence this patch
+that implements polling support. User space software can enable polling by
+passing the RWF_HIPRI flag to the preadv2() system call or the
+IORING_SETUP_IOPOLL flag to the io_uring interface.
 
-Cc: Asutosh Das (asd) <asutoshd@codeaurora.org>
+Although the block layer supports to partition the tag space for
+interrupt-based completions (HCTX_TYPE_DEFAULT) purposes and polling
+(HCTX_TYPE_POLL), the choice has been made to use the same hardware
+queue for both hctx types because partitioning the tag space would
+negatively affect performance.
+
+On my test setup this patch increases IOPS from 2736 to 22000 (8x) for the
+following test:
+
+for hipri in 0 1; do
+    fio --ioengine=io_uring --iodepth=1 --rw=randread \
+    --runtime=60 --time_based=1 --direct=1 --name=qd1 \
+    --filename=/dev/block/sda --ioscheduler=none --gtod_reduce=1 \
+    --norandommap --hipri=$hipri
+done
+
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 12 +++++++-----
- drivers/scsi/ufs/ufshcd.h |  1 +
- 2 files changed, 8 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 85 ++++++++++++++++++++++++++++++---------
+ 1 file changed, 67 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c4cf5c4b4893..3e4c62c6f9d2 100644
+index 3e4c62c6f9d2..5b3efc880246 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1196,6 +1196,13 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
- 	/* let's not get into low power until clock scaling is completed */
- 	ufshcd_hold(hba, false);
- 
-+	/*
-+	 * Wait for ongoing ufshcd_queuecommand() calls. Calling
-+	 * synchronize_rcu_expedited() instead of synchronize_rcu() reduces the
-+	 * waiting time from milliseconds to microseconds.
-+	 */
-+	synchronize_rcu_expedited();
-+
- out:
- 	return ret;
+@@ -2651,6 +2651,36 @@ static inline bool is_device_wlun(struct scsi_device *sdev)
+ 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN);
  }
-@@ -2681,9 +2688,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
  
- 	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
++/*
++ * Associate the UFS controller queue with the default and poll HCTX types.
++ * Initialize the mq_map[] arrays.
++ */
++static int ufshcd_map_queues(struct Scsi_Host *shost)
++{
++	int i, ret;
++
++	for (i = 0; i < shost->nr_maps; i++) {
++		struct blk_mq_queue_map *map = &shost->tag_set.map[i];
++
++		switch (i) {
++		case HCTX_TYPE_DEFAULT:
++		case HCTX_TYPE_POLL:
++			map->nr_queues = 1;
++			break;
++		case HCTX_TYPE_READ:
++			map->nr_queues = 0;
++			break;
++		default:
++			WARN_ON_ONCE(true);
++		}
++		map->queue_offset = 0;
++		ret = blk_mq_map_queues(map);
++		WARN_ON_ONCE(ret);
++	}
++
++	return 0;
++}
++
+ static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
+ {
+ 	struct utp_transfer_cmd_desc *cmd_descp = hba->ucdl_base_addr;
+@@ -2686,7 +2716,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	struct ufshcd_lrb *lrbp;
+ 	int err = 0;
  
--	if (!down_read_trylock(&hba->clk_scaling_lock))
--		return SCSI_MLQUEUE_HOST_BUSY;
--
+-	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
++	WARN_ONCE(tag < 0 || tag >= hba->nutrs, "Invalid tag %d\n", tag);
+ 
  	/*
  	 * Allows the UFS error handler to wait for prior ufshcd_queuecommand()
- 	 * calls.
-@@ -2772,8 +2776,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- out:
- 	rcu_read_unlock();
+@@ -5277,6 +5307,31 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+ 	}
+ }
  
--	up_read(&hba->clk_scaling_lock);
++/*
++ * Returns > 0 if one or more commands have been completed or 0 if no
++ * requests have been completed.
++ */
++static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
++{
++	struct ufs_hba *hba = shost_priv(shost);
++	unsigned long completed_reqs, flags;
++	u32 tr_doorbell;
++
++	spin_lock_irqsave(&hba->outstanding_lock, flags);
++	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
++	completed_reqs = ~tr_doorbell & hba->outstanding_reqs;
++	WARN_ONCE(completed_reqs & ~hba->outstanding_reqs,
++		  "completed: %#lx; outstanding: %#lx\n", completed_reqs,
++		  hba->outstanding_reqs);
++	hba->outstanding_reqs &= ~completed_reqs;
++	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
++
++	if (completed_reqs)
++		__ufshcd_transfer_req_compl(hba, completed_reqs);
++
++	return completed_reqs;
++}
++
+ /**
+  * ufshcd_transfer_req_compl - handle SCSI and query command completion
+  * @hba: per adapter instance
+@@ -5287,9 +5342,6 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+  */
+ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ {
+-	unsigned long completed_reqs, flags;
+-	u32 tr_doorbell;
 -
- 	if (ufs_trigger_eh()) {
- 		unsigned long flags;
+ 	/* Resetting interrupt aggregation counters first and reading the
+ 	 * DOOR_BELL afterward allows us to handle all the completed requests.
+ 	 * In order to prevent other interrupts starvation the DB is read once
+@@ -5304,21 +5356,13 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 	if (ufs_fail_completion())
+ 		return IRQ_HANDLED;
  
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index c3c2792f309f..411c6015bbfe 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -779,6 +779,7 @@ struct ufs_hba_monitor {
-  * @clk_list_head: UFS host controller clocks list node head
-  * @pwr_info: holds current power mode
-  * @max_pwr_info: keeps the device max valid pwm
-+ * @clk_scaling_lock: used to serialize device commands and clock scaling
-  * @desc_size: descriptor sizes reported by device
-  * @urgent_bkops_lvl: keeps track of urgent bkops level for device
-  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
+-	spin_lock_irqsave(&hba->outstanding_lock, flags);
+-	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-	completed_reqs = ~tr_doorbell & hba->outstanding_reqs;
+-	WARN_ONCE(completed_reqs & ~hba->outstanding_reqs,
+-		  "completed: %#lx; outstanding: %#lx\n", completed_reqs,
+-		  hba->outstanding_reqs);
+-	hba->outstanding_reqs &= ~completed_reqs;
+-	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
++	/*
++	 * Ignore the ufshcd_poll() return value and return IRQ_HANDLED since we
++	 * do not want polling to trigger spurious interrupt complaints.
++	 */
++	ufshcd_poll(hba->host, 0);
+ 
+-	if (completed_reqs) {
+-		__ufshcd_transfer_req_compl(hba, completed_reqs);
+-		return IRQ_HANDLED;
+-	} else {
+-		return IRQ_NONE;
+-	}
++	return IRQ_HANDLED;
+ }
+ 
+ int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask)
+@@ -6570,6 +6614,8 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	spin_lock_irqsave(host->host_lock, flags);
+ 
+ 	task_tag = req->tag;
++	WARN_ONCE(task_tag < 0 || task_tag >= hba->nutmrs, "Invalid tag %d\n",
++		  task_tag);
+ 	hba->tmf_rqs[req->tag] = req;
+ 	treq->upiu_req.req_header.dword_0 |= cpu_to_be32(task_tag);
+ 
+@@ -8133,7 +8179,9 @@ static struct scsi_host_template ufshcd_driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= UFSHCD,
+ 	.proc_name		= UFSHCD,
++	.map_queues		= ufshcd_map_queues,
+ 	.queuecommand		= ufshcd_queuecommand,
++	.mq_poll		= ufshcd_poll,
+ 	.slave_alloc		= ufshcd_slave_alloc,
+ 	.slave_configure	= ufshcd_slave_configure,
+ 	.slave_destroy		= ufshcd_slave_destroy,
+@@ -9422,6 +9470,7 @@ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+ 		err = -ENOMEM;
+ 		goto out_error;
+ 	}
++	host->nr_maps = HCTX_TYPE_POLL + 1;
+ 	hba = shost_priv(host);
+ 	hba->host = host;
+ 	hba->dev = dev;
