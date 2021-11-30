@@ -2,49 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3344AC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 07:39:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B7B3C43217
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Nov 2021 07:39:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239116AbhK3Hmn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Nov 2021 02:42:43 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:57338 "EHLO
+        id S239100AbhK3Hmp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Nov 2021 02:42:45 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38402 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239100AbhK3HmF (ORCPT
+        by vger.kernel.org with ESMTP id S239102AbhK3HmI (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 Nov 2021 02:42:05 -0500
+        Tue, 30 Nov 2021 02:42:08 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1638257926;
+        s=mimecast20190719; t=1638257929;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7xMXqhptIWrpNXAqWAhz5g7mlgjr3NfEv27Xmhs7v4E=;
-        b=iunFKNMt2Wa7SfQZcNZkClkRua39Q2N95DCx8IUKJSEWFIctgEMjNSnGkzWbFAhUHTCxCT
-        hVYUzp93jgjlLTLnhAgFWDJxtCPzzxroT81Ypxu2/pcBO3I0pJ4tGL1e8liTkY0mdzt2rd
-        bYei+/6Tk6WsW+SupwZ3NEMjJWVW7IQ=
+        bh=qP5lgzlSfPS1WcUPtQFjVSSj/qUXqQzGqLQNL0G+rkE=;
+        b=CGV67cF8GAQafd4zdgAIz1Hd2ylULSK9YGq316MLWvFkIetFjJ3EcrC+MEelki3N1YWQ0m
+        cwXLqaXXk1HhYcDeTgoqhWChRhW3HFE6jVzxFoTRJuA21AM0/rPjswWTtiyzY74KwzE+FB
+        w1UffLRR8Yvpji+fNnoNgKYkDFygycA=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-303-SQ0-HJPHMh2yTZUriJMdlQ-1; Tue, 30 Nov 2021 02:38:42 -0500
-X-MC-Unique: SQ0-HJPHMh2yTZUriJMdlQ-1
+ us-mta-464-QyGI1VKwPbepzAfNy_X2bg-1; Tue, 30 Nov 2021 02:38:46 -0500
+X-MC-Unique: QyGI1VKwPbepzAfNy_X2bg-1
 Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 005AB94EE1;
-        Tue, 30 Nov 2021 07:38:41 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A1F2580DDFE;
+        Tue, 30 Nov 2021 07:38:44 +0000 (UTC)
 Received: from localhost (ovpn-8-25.pek2.redhat.com [10.72.8.25])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5A54D5D6BA;
-        Tue, 30 Nov 2021 07:38:31 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C935E5D6BA;
+        Tue, 30 Nov 2021 07:38:43 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>,
-        Ming Lei <ming.lei@redhat.com>, Chao Leng <lengchao@huawei.com>
-Subject: [PATCH V2 4/5] nvme: quiesce namespace queue in parallel
-Date:   Tue, 30 Nov 2021 15:37:51 +0800
-Message-Id: <20211130073752.3005936-5-ming.lei@redhat.com>
+        Keith Busch <kbusch@kernel.org>, Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V2 5/5] scsi: use blk-mq quiesce APIs to implement scsi_host_block
+Date:   Tue, 30 Nov 2021 15:37:52 +0800
+Message-Id: <20211130073752.3005936-6-ming.lei@redhat.com>
 In-Reply-To: <20211130073752.3005936-1-ming.lei@redhat.com>
 References: <20211130073752.3005936-1-ming.lei@redhat.com>
 MIME-Version: 1.0
@@ -54,46 +53,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Chao Leng reported that in case of lots of namespaces, it may take quite a
-while for nvme_stop_queues() to quiesce all namespace queues.
+scsi_host_block() calls synchronize_rcu() directly to wait for
+quiesce done, this way is ugly since it exposes blk-mq quiesce's
+implementation details.
 
-Improve nvme_stop_queues() by running quiesce in parallel, and just wait
-once if global quiesce wait is allowed.
+Instead apply blk_mq_wait_quiesce_done() and
+blk_mq_shared_quiesce_wait() for scsi_host_block().
 
-Link: https://lore.kernel.org/linux-block/cc732195-c053-9ce4-e1a7-e7f6dcf762ac@huawei.com/
-Reported-by: Chao Leng <lengchao@huawei.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/nvme/host/core.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_lib.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 4c63564adeaa..20827a360099 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -4540,9 +4540,7 @@ static void nvme_start_ns_queue(struct nvme_ns *ns)
- static void nvme_stop_ns_queue(struct nvme_ns *ns)
- {
- 	if (!test_and_set_bit(NVME_NS_STOPPED, &ns->flags))
--		blk_mq_quiesce_queue(ns->queue);
--	else
--		blk_mq_wait_quiesce_done(ns->queue);
-+		blk_mq_quiesce_queue_nowait(ns->queue);
- }
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 5e8b5ecb3245..d93bfc08bc1a 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2952,15 +2952,15 @@ scsi_host_block(struct Scsi_Host *shost)
+ 		}
+ 	}
  
- /*
-@@ -4643,6 +4641,11 @@ void nvme_stop_queues(struct nvme_ctrl *ctrl)
- 	down_read(&ctrl->namespaces_rwsem);
- 	list_for_each_entry(ns, &ctrl->namespaces, list)
- 		nvme_stop_ns_queue(ns);
-+	list_for_each_entry(ns, &ctrl->namespaces, list) {
-+		blk_mq_wait_quiesce_done(ns->queue);
-+		if (blk_mq_shared_quiesce_wait(ns->queue))
-+			break;
+-	/*
+-	 * SCSI never enables blk-mq's BLK_MQ_F_BLOCKING flag so
+-	 * calling synchronize_rcu() once is enough.
+-	 */
+-	WARN_ON_ONCE(shost->tag_set.flags & BLK_MQ_F_BLOCKING);
+-
+-	if (!ret)
+-		synchronize_rcu();
++	if (!ret) {
++		shost_for_each_device(sdev, shost) {
++			struct request_queue *q = sdev->request_queue;
+ 
++			blk_mq_wait_quiesce_done(q);
++			if (blk_mq_shared_quiesce_wait(q))
++				break;
++		}
 +	}
- 	up_read(&ctrl->namespaces_rwsem);
+ 	return ret;
  }
- EXPORT_SYMBOL_GPL(nvme_stop_queues);
+ EXPORT_SYMBOL_GPL(scsi_host_block);
 -- 
 2.31.1
 
