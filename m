@@ -2,70 +2,233 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9C1AC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Dec 2021 13:49:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79529C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Dec 2021 13:50:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349666AbhLANxN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Dec 2021 08:53:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36012 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349653AbhLANxI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2021 08:53:08 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89040C06175B;
-        Wed,  1 Dec 2021 05:48:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=OA3C6eAJyO11mJisGgWVf58QA2xEZ0yk0l6SQUd5O5A=; b=bM+BGcNpPjSN9k9h+9Pt6NHnOU
-        +heQDNEKhBhhWMRKk8b8okcq0C0DJSqUs+RbaZJR3uoosOKnlyazlnUFzvwlgP9ipSwDdDVNfvtBe
-        B83t0kL5FKdIjdzIjJGOWjsxxW2vMaBwm/EAouQQK7BMerdU+BVkFUJey7Ktesi8/XAj3s3bg9Q2D
-        I5pHbdJ7PinjKOwYI3rs0xy4dKBfy+XSJ5D2JKaPJZllhi3+UAS4bzbMJN0ZKlC0TnRuZgwwrGKt8
-        nrtO9jLFqTURtOeXnt2buU9Lh2aiQV6nEehD+Cl67pImcm6fY9006PUHnNSNdCU3iypqvbSLxZBBi
-        ObTGxaLw==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1msPy7-008szk-0m; Wed, 01 Dec 2021 13:48:19 +0000
-Date:   Wed, 1 Dec 2021 05:48:18 -0800
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Greg KH <gregkh@linuxfoundation.org>
-Cc:     akpm@linux-foundation.org, keescook@chromium.org,
-        yzaikin@google.com, nixiaoming@huawei.com, ebiederm@xmission.com,
-        steve@sk2.org, rafael@kernel.org, tytso@mit.edu,
-        viro@zeniv.linux.org.uk, pmladek@suse.com,
-        senozhatsky@chromium.org, rostedt@goodmis.org,
-        john.ogness@linutronix.de, dgilbert@interlog.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH] firmware_loader: export sysctl registration
-Message-ID: <Yad9Iu8K9k/NvKJj@bombadil.infradead.org>
-References: <20211130164525.1478009-1-mcgrof@kernel.org>
- <YacfULGI1mhE/0iv@kroah.com>
+        id S1349684AbhLANxY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Dec 2021 08:53:24 -0500
+Received: from mga14.intel.com ([192.55.52.115]:44389 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1349639AbhLANvc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 1 Dec 2021 08:51:32 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10184"; a="236687410"
+X-IronPort-AV: E=Sophos;i="5.87,278,1631602800"; 
+   d="scan'208";a="236687410"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 05:48:11 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.87,278,1631602800"; 
+   d="scan'208";a="459254648"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
+  by orsmga003.jf.intel.com with ESMTP; 01 Dec 2021 05:48:08 -0800
+Subject: Re: [PATCH v3 10/17] scsi: ufs: Fix a deadlock in the error handler
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Keoseong Park <keosung.park@samsung.com>
+References: <20211130233324.1402448-1-bvanassche@acm.org>
+ <20211130233324.1402448-11-bvanassche@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <25844cd2-872a-514f-4384-6ee877418dc7@intel.com>
+Date:   Wed, 1 Dec 2021 15:48:07 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YacfULGI1mhE/0iv@kroah.com>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <20211130233324.1402448-11-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 01, 2021 at 08:08:00AM +0100, Greg KH wrote:
-> On Tue, Nov 30, 2021 at 08:45:25AM -0800, Luis Chamberlain wrote:
-> > The firmware loader fallback sysctl table is always built-in,
-> > but when FW_LOADER=m the build will fail. We need to export
-> > the sysctl registration and de-registration. Use the private
-> > symbol namespace so that only the firmware loader uses these
-> > calls.
-> > 
-> > Reported-by: Randy Dunlap <rdunlap@infradead.org>
-> > Fixes: firmware_loader: move firmware sysctl to its own files
+On 01/12/2021 01:33, Bart Van Assche wrote:
+> The following deadlock has been observed on a test setup:
+> * All tags allocated.
+> * The SCSI error handler calls ufshcd_eh_host_reset_handler()
+> * ufshcd_eh_host_reset_handler() queues work that calls ufshcd_err_handler()
+> * ufshcd_err_handler() locks up as follows:
 > 
-> Have a git id for this?
+> Workqueue: ufs_eh_wq_0 ufshcd_err_handler.cfi_jt
+> Call trace:
+>  __switch_to+0x298/0x5d8
+>  __schedule+0x6cc/0xa94
+>  schedule+0x12c/0x298
+>  blk_mq_get_tag+0x210/0x480
+>  __blk_mq_alloc_request+0x1c8/0x284
+>  blk_get_request+0x74/0x134
+>  ufshcd_exec_dev_cmd+0x68/0x640
+>  ufshcd_verify_dev_init+0x68/0x35c
+>  ufshcd_probe_hba+0x12c/0x1cb8
+>  ufshcd_host_reset_and_restore+0x88/0x254
+>  ufshcd_reset_and_restore+0xd0/0x354
+>  ufshcd_err_handler+0x408/0xc58
+>  process_one_work+0x24c/0x66c
+>  worker_thread+0x3e8/0xa4c
+>  kthread+0x150/0x1b4
+>  ret_from_fork+0x10/0x30
+> 
+> Fix this lockup by making ufshcd_exec_dev_cmd() allocate a reserved
+> request.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-I thought it would be ephemeral at this point since it was on
-linux-next, so had not provided one. If it is a static commit
-then I suppose this is 5cc0fea09ee52c9bcb6c41456bea03ca1b49602d
+One minor comment below, nevertheless:
 
-  Luis
+Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
+
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 53 +++++++++++----------------------------
+>  drivers/scsi/ufs/ufshcd.h |  2 ++
+>  2 files changed, 16 insertions(+), 39 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 2d0f59424b00..da4714aaa850 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -128,8 +128,9 @@ EXPORT_SYMBOL_GPL(ufshcd_dump_regs);
+>  enum {
+>  	UFSHCD_MAX_CHANNEL	= 0,
+>  	UFSHCD_MAX_ID		= 1,
+> -	UFSHCD_CMD_PER_LUN	= 32,
+> -	UFSHCD_CAN_QUEUE	= 32,
+> +	UFSHCD_NUM_RESERVED	= 1,
+> +	UFSHCD_CMD_PER_LUN	= 32 - UFSHCD_NUM_RESERVED,
+> +	UFSHCD_CAN_QUEUE	= 32 - UFSHCD_NUM_RESERVED,
+>  };
+>  
+>  static const char *const ufshcd_state_name[] = {
+> @@ -2170,6 +2171,7 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+>  	hba->nutrs = (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS) + 1;
+>  	hba->nutmrs =
+>  	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
+> +	hba->reserved_slot = hba->nutrs - 1;
+>  
+>  	/* Read crypto capabilities */
+>  	err = ufshcd_hba_init_crypto_capabilities(hba);
+> @@ -2912,30 +2914,15 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+>  static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>  		enum dev_cmd_type cmd_type, int timeout)
+>  {
+> -	struct request_queue *q = hba->cmd_queue;
+
+I think cmd_queue is not used anymore after this.
+
+>  	DECLARE_COMPLETION_ONSTACK(wait);
+> -	struct request *req;
+> +	const u32 tag = hba->reserved_slot;
+>  	struct ufshcd_lrb *lrbp;
+>  	int err;
+> -	int tag;
+>  
+> -	down_read(&hba->clk_scaling_lock);
+> +	/* Protects use of hba->reserved_slot. */
+> +	lockdep_assert_held(&hba->dev_cmd.lock);
+>  
+> -	/*
+> -	 * Get free slot, sleep if slots are unavailable.
+> -	 * Even though we use wait_event() which sleeps indefinitely,
+> -	 * the maximum wait time is bounded by SCSI request timeout.
+> -	 */
+> -	req = blk_mq_alloc_request(q, REQ_OP_DRV_OUT, 0);
+> -	if (IS_ERR(req)) {
+> -		err = PTR_ERR(req);
+> -		goto out_unlock;
+> -	}
+> -	tag = req->tag;
+> -	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+> -	/* Set the timeout such that the SCSI error handler is not activated. */
+> -	req->timeout = msecs_to_jiffies(2 * timeout);
+> -	blk_mq_start_request(req);
+> +	down_read(&hba->clk_scaling_lock);
+>  
+>  	lrbp = &hba->lrb[tag];
+>  	WARN_ON(lrbp->cmd);
+> @@ -2953,8 +2940,6 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>  				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
+>  
+>  out:
+> -	blk_mq_free_request(req);
+> -out_unlock:
+>  	up_read(&hba->clk_scaling_lock);
+>  	return err;
+>  }
+> @@ -6689,23 +6674,16 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+>  					enum dev_cmd_type cmd_type,
+>  					enum query_opcode desc_op)
+>  {
+> -	struct request_queue *q = hba->cmd_queue;
+>  	DECLARE_COMPLETION_ONSTACK(wait);
+> -	struct request *req;
+> +	const u32 tag = hba->reserved_slot;
+>  	struct ufshcd_lrb *lrbp;
+>  	int err = 0;
+> -	int tag;
+>  	u8 upiu_flags;
+>  
+> -	down_read(&hba->clk_scaling_lock);
+> +	/* Protects use of hba->reserved_slot. */
+> +	lockdep_assert_held(&hba->dev_cmd.lock);
+>  
+> -	req = blk_mq_alloc_request(q, REQ_OP_DRV_OUT, 0);
+> -	if (IS_ERR(req)) {
+> -		err = PTR_ERR(req);
+> -		goto out_unlock;
+> -	}
+> -	tag = req->tag;
+> -	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+> +	down_read(&hba->clk_scaling_lock);
+>  
+>  	lrbp = &hba->lrb[tag];
+>  	WARN_ON(lrbp->cmd);
+> @@ -6774,9 +6752,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+>  	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
+>  				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
+>  
+> -	blk_mq_free_request(req);
+> -
+> -out_unlock:
+>  	up_read(&hba->clk_scaling_lock);
+>  	return err;
+>  }
+> @@ -9507,8 +9482,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>  	/* Configure LRB */
+>  	ufshcd_host_memory_configure(hba);
+>  
+> -	host->can_queue = hba->nutrs;
+> -	host->cmd_per_lun = hba->nutrs;
+> +	host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
+> +	host->cmd_per_lun = hba->nutrs - UFSHCD_NUM_RESERVED;
+>  	host->max_id = UFSHCD_MAX_ID;
+>  	host->max_lun = UFS_MAX_LUNS;
+>  	host->max_channel = UFSHCD_MAX_CHANNEL;
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index ecc6c545a19d..c3c2792f309f 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -745,6 +745,7 @@ struct ufs_hba_monitor {
+>   * @capabilities: UFS Controller Capabilities
+>   * @nutrs: Transfer Request Queue depth supported by controller
+>   * @nutmrs: Task Management Queue depth supported by controller
+> + * @reserved_slot: Used to submit device commands. Protected by @dev_cmd.lock.
+>   * @ufs_version: UFS Version to which controller complies
+>   * @vops: pointer to variant specific operations
+>   * @priv: pointer to variant specific private data
+> @@ -836,6 +837,7 @@ struct ufs_hba {
+>  	u32 capabilities;
+>  	int nutrs;
+>  	int nutmrs;
+> +	u32 reserved_slot;
+>  	u32 ufs_version;
+>  	const struct ufs_hba_variant_ops *vops;
+>  	struct ufs_hba_variant_params *vps;
+> 
+
