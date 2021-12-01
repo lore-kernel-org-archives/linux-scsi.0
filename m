@@ -2,100 +2,143 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DADDC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Dec 2021 15:34:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5EA8C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Dec 2021 16:03:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243098AbhLAPhV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Dec 2021 10:37:21 -0500
-Received: from mga12.intel.com ([192.55.52.136]:19698 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234031AbhLAPhU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 1 Dec 2021 10:37:20 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10185"; a="216496995"
-X-IronPort-AV: E=Sophos;i="5.87,278,1631602800"; 
-   d="scan'208";a="216496995"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 07:33:59 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,278,1631602800"; 
-   d="scan'208";a="459286894"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
-  by orsmga003.jf.intel.com with ESMTP; 01 Dec 2021 07:33:54 -0800
-Subject: Re: [PATCH v3 13/17] scsi: ufs: Improve SCSI abort handling further
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Santosh Yaraganavi <santoshsy@gmail.com>,
-        Vishak G <vishak.g@samsung.com>,
-        Vinayak Holikatti <vinholikatti@gmail.com>,
-        Namjae Jeon <linkinjeon@gmail.com>
-References: <20211130233324.1402448-1-bvanassche@acm.org>
- <20211130233324.1402448-14-bvanassche@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <ba11f47f-9498-a4d1-7dff-730ab755f554@intel.com>
-Date:   Wed, 1 Dec 2021 17:33:53 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.13.0
+        id S1351184AbhLAQG1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Dec 2021 11:06:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39310 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231144AbhLAQGZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2021 11:06:25 -0500
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB6F2C061748;
+        Wed,  1 Dec 2021 08:03:04 -0800 (PST)
+Received: by mail-pj1-x102b.google.com with SMTP id gb13-20020a17090b060d00b001a674e2c4a8so1985980pjb.4;
+        Wed, 01 Dec 2021 08:03:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=rlwCB8WctxDfzc6GjE9sqD8LeMvFTR6Cy4YHzp8XozM=;
+        b=g65nlico0J7bcL2aCYAvGlzhTnCKVbRduh36LX8XvjEFFN6wHfS2L0u8BDmelEHEXY
+         Wv2DKXAKifhTQ2TpjjT56A67ntJ/hLaAeFO4OjbN4Ti7m1iEE1qu9F65fiYof7/4PEPV
+         ZCP/wMs4XoUk93Q/OO68b2EbvB6PER51u6kuhgNSK6ZzO9ZORgPO6UIUg5xjG8sFLdGd
+         ls4FlMeHyYU9uABxxpZWR+w8CK7IGHVPGRX+JHnBOypkPhIhIwhSSMvJYvCaN/oA8IVr
+         9XQqbYS4GRZB8sJJVE4lMBsN5HiN6zBTtQSYbnnf3R6OllAQ6RujK5AFIFhuwjrdXs5b
+         YyRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=rlwCB8WctxDfzc6GjE9sqD8LeMvFTR6Cy4YHzp8XozM=;
+        b=fqxa5CQqKOb7q61+/d4GAu86b+/Qugy6aURxejSFEaafWpd4fFRgwVxYeHGrHOE+x4
+         SvdIrYq/W7nFn8+Vfu76FEkOkMCe+3HnldHHOHVbUO0vmjS3p17rSOSX5Eo6v3K+OiWq
+         a/vjg3GF5qnaJ76rsPTMvDuVPYeY4lgLxe05w16OdTkCKwNK+zkjpItuJpRCigWFi056
+         /tUPRsJ/xkADUv87HBAMkySJ1GJzgpDEX2mpJsHsOs9QB/S9HuMRBXDc/lBBASC9V+WN
+         Bbi70q+FAaoYqy0DycsqRuB8AGQeiIeMCkyeVICxBpROlyV+cF8ZfNXUrAp4226p1Brf
+         cbOA==
+X-Gm-Message-State: AOAM530/HsjRYcJMMap3abBmCwTjD1xGYuG1wckHBkHG9YljnFjYYVO2
+        pPNo1k4iWU4z9xdrN76bC1M=
+X-Google-Smtp-Source: ABdhPJzx8p2vypCygtN2v0ahrkMP7/JwVPIEscHdxdl4qbo3ST4qz0+r/UT4/nSDoAKM/Jt7Mpx/+Q==
+X-Received: by 2002:a17:902:748c:b0:141:c45e:c612 with SMTP id h12-20020a170902748c00b00141c45ec612mr8329728pll.73.1638374584178;
+        Wed, 01 Dec 2021 08:03:04 -0800 (PST)
+Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:f:7fe9:3f1e:749e:5d26])
+        by smtp.gmail.com with ESMTPSA id i193sm260316pfe.87.2021.12.01.08.03.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Dec 2021 08:03:03 -0800 (PST)
+From:   Tianyu Lan <ltykernel@gmail.com>
+To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
+        x86@kernel.org, hpa@zytor.com, jgross@suse.com,
+        sstabellini@kernel.org, boris.ostrovsky@oracle.com,
+        joro@8bytes.org, will@kernel.org, davem@davemloft.net,
+        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        arnd@arndb.de, hch@infradead.org, m.szyprowski@samsung.com,
+        robin.murphy@arm.com, Tianyu.Lan@microsoft.com,
+        thomas.lendacky@amd.com, xen-devel@lists.xenproject.org,
+        michael.h.kelley@microsoft.com
+Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        vkuznets@redhat.com, brijesh.singh@amd.com, konrad.wilk@oracle.com,
+        hch@lst.de, parri.andrea@gmail.com, dave.hansen@intel.com
+Subject: [PATCH V3 0/5] x86/Hyper-V: Add Hyper-V Isolation VM support(Second part)
+Date:   Wed,  1 Dec 2021 11:02:51 -0500
+Message-Id: <20211201160257.1003912-1-ltykernel@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <20211130233324.1402448-14-bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 01/12/2021 01:33, Bart Van Assche wrote:
-> Release resources when aborting a command. Make sure that aborted commands
-> are completed once by clearing the corresponding tag bit from
-> hba->outstanding_reqs. This patch is an improved version of commit
-> 3ff1f6b6ba6f ("scsi: ufs: core: Improve SCSI abort handling").
-> 
-> Fixes: 7a3e97b0dc4b ("[SCSI] ufshcd: UFS Host controller driver")
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
+Hyper-V provides two kinds of Isolation VMs. VBS(Virtualization-based
+security) and AMD SEV-SNP unenlightened Isolation VMs. This patchset
+is to add support for these Isolation VM support in Linux.
 
-> ---
->  drivers/scsi/ufs/ufshcd.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 8703e4a70256..1a4f2ebf955e 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6984,6 +6984,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->  	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
->  	unsigned long flags;
->  	int err = FAILED;
-> +	bool outstanding;
->  	u32 reg;
->  
->  	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
-> @@ -7061,6 +7062,17 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->  		goto release;
->  	}
->  
-> +	/*
-> +	 * Clear the corresponding bit from outstanding_reqs since the command
-> +	 * has been aborted successfully.
-> +	 */
-> +	spin_lock_irqsave(&hba->outstanding_lock, flags);
-> +	outstanding = __test_and_clear_bit(tag, &hba->outstanding_reqs);
-> +	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-> +
-> +	if (outstanding)
-> +		ufshcd_release_scsi_cmd(hba, lrbp);
-> +
->  	err = SUCCESS;
->  
->  release:
-> 
+The memory of these vms are encrypted and host can't access guest
+memory directly. Hyper-V provides new host visibility hvcall and
+the guest needs to call new hvcall to mark memory visible to host
+before sharing memory with host. For security, all network/storage
+stack memory should not be shared with host and so there is bounce
+buffer requests.
+
+Vmbus channel ring buffer already plays bounce buffer role because
+all data from/to host needs to copy from/to between the ring buffer
+and IO stack memory. So mark vmbus channel ring buffer visible.
+
+For SNP isolation VM, guest needs to access the shared memory via
+extra address space which is specified by Hyper-V CPUID HYPERV_CPUID_
+ISOLATION_CONFIG. The access physical address of the shared memory
+should be bounce buffer memory GPA plus with shared_gpa_boundary
+reported by CPUID.
+
+This patchset is to enable swiotlb bounce buffer for netvsc/storvsc
+in Isolation VM.
+
+This version follows Michael Kelley suggestion in the following link.
+https://lkml.org/lkml/2021/11/24/2044
+
+Change since v2:
+     * Remove Hyper-V dma ops and dma_alloc/free_noncontiguous. Add
+       hv_map/unmap_memory() to map/umap netvsc rx/tx ring into extra
+       address space.
+     * Leave mem->vaddr in swiotlb code with phys_to_virt(mem->start)
+       when fail to remap swiotlb memory.
+
+Change since v1:
+     * Add Hyper-V Isolation support check in the cc_platform_has()
+       and return true for guest memory encrypt attr.
+     * Remove hv isolation check in the sev_setup_arch()
+
+Tianyu Lan (5):
+  Swiotlb: Add Swiotlb bounce buffer remap function for HV IVM
+  x86/hyper-v: Add hyperv Isolation VM check in the cc_platform_has()
+  hyperv/IOMMU: Enable swiotlb bounce buffer for Isolation VM
+  scsi: storvsc: Add Isolation VM support for storvsc driver
+  hv_netvsc: Add Isolation VM support for netvsc driver
+
+ arch/x86/hyperv/ivm.c             |  28 ++++++
+ arch/x86/kernel/cc_platform.c     |  15 ++++
+ arch/x86/xen/pci-swiotlb-xen.c    |   3 +-
+ drivers/hv/hv_common.c            |  11 +++
+ drivers/hv/vmbus_drv.c            |   4 +
+ drivers/iommu/hyperv-iommu.c      |  56 ++++++++++++
+ drivers/net/hyperv/hyperv_net.h   |   5 ++
+ drivers/net/hyperv/netvsc.c       | 136 +++++++++++++++++++++++++++++-
+ drivers/net/hyperv/netvsc_drv.c   |   1 +
+ drivers/net/hyperv/rndis_filter.c |   2 +
+ drivers/scsi/storvsc_drv.c        |  37 ++++----
+ include/asm-generic/mshyperv.h    |   2 +
+ include/linux/hyperv.h            |  14 +++
+ include/linux/swiotlb.h           |   6 ++
+ kernel/dma/swiotlb.c              |  47 +++++++++--
+ 15 files changed, 342 insertions(+), 25 deletions(-)
+
+-- 
+2.25.1
 
