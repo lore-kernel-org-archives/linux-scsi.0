@@ -2,40 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9ED6C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Dec 2021 18:31:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CCDEC43219
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Dec 2021 18:34:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240070AbhLASfN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Dec 2021 13:35:13 -0500
-Received: from mail-pl1-f181.google.com ([209.85.214.181]:45571 "EHLO
-        mail-pl1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352512AbhLASfE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2021 13:35:04 -0500
-Received: by mail-pl1-f181.google.com with SMTP id b11so18362398pld.12
-        for <linux-scsi@vger.kernel.org>; Wed, 01 Dec 2021 10:31:44 -0800 (PST)
+        id S1352525AbhLASho (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Dec 2021 13:37:44 -0500
+Received: from mail-pf1-f175.google.com ([209.85.210.175]:41957 "EHLO
+        mail-pf1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1352551AbhLAShH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2021 13:37:07 -0500
+Received: by mail-pf1-f175.google.com with SMTP id g19so25402472pfb.8
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Dec 2021 10:33:46 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=k3BtUISZbH+R5cKB4I26o8fKtu5DrQch8Aqeuj2ve8k=;
-        b=EBDUTyNCZmZ4I8BC+vahwAaUHz9jz/g1WvYD/GaEs8BL2+WeoNrxaC4Uo0YyDPNNAq
-         +Kx9ia30AgGKKZk9tJSSLT7hFrzClISat1FCDFODTewaQ3KdBfE3Mj0tFL4YZ/A+uN7i
-         NvvKAlCaPExN/NRbHGbSa3jc0sDH8IsAKnhp+QY8Ya4bljCtxr3cuFRjVmAYmSi7hZXR
-         GehQUZmN/wqY8LeRV1TY4ZXY9goi9HtwKkc0EwM+IMgNkBws51yI3/jGDHCbAGuTKMuh
-         3fNsPbBVB7F08taP537tVa/YgU8SfIs57M/GBYqBN9gVL3Xs7ZOTCVBkPCeY6jchJTAy
-         vl+A==
-X-Gm-Message-State: AOAM532xQaW/6wFR7mB5lzvwdZ3O5Azm4zNLc1ktIezykB3nlfQTigm6
-        eLwRqtbQBpDXncBjdB4E9O0=
-X-Google-Smtp-Source: ABdhPJyhFHxloxPR3DTm93JTGAgSmQrPseFeWq9AhNwt6mGkjeISyF1CYJHicj/hLa27va96wvQRmQ==
-X-Received: by 2002:a17:902:ec90:b0:142:269:4691 with SMTP id x16-20020a170902ec9000b0014202694691mr9814649plg.48.1638383503571;
-        Wed, 01 Dec 2021 10:31:43 -0800 (PST)
+        bh=BL8t6kyRm1ldtEOoFlj1IBjPz8mq+rXjVlBZEOSv6IQ=;
+        b=HF0S6/5xLyV0Nre37ymQdtm85aglcBgO7TW3h1MknGJlZqB6S/qA9wRbyRhRi1DnZp
+         OUgAyahOPVLgo4MrAn8LO1zPct+HVg65NCV0YjTTMNjB/gbhqL6ZoEohm8em9I1AKEEq
+         qnZIIoqxKdWONAkyd/an5Pl1jROGnhG2Bd4CWA813B9wN+4f2qPKcRD1hdy8bwsQ4hNX
+         fKMBLhWU83UtCcCrSi/pu/H61R9bjASRByYje1zpmqItDbbTaogUH+s7HdlUBz0dF0rf
+         4GoWPE2QX4ZQb1x72+DmyfRfEPk+yy8viiQDU6kTsdc+gq+AtC0Tm97C2FI5B1PYksnN
+         85cA==
+X-Gm-Message-State: AOAM531Ho/j67kVMCAL4d9pzSxl3aDLyB39ln6VLj5NyH4S64yZcL2s8
+        Ng+vd8akaPvJuOhFI8D9t5w=
+X-Google-Smtp-Source: ABdhPJzdyD7VaAEOGONrZmw/EORmzLPABbpi8BZLtAx8jHrHxp30qiZeD9b+y4JycPNVV7GnUAdfEQ==
+X-Received: by 2002:a63:6cc8:: with SMTP id h191mr5994488pgc.76.1638383625796;
+        Wed, 01 Dec 2021 10:33:45 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:7344:c0bd:a55f:88b8])
-        by smtp.gmail.com with ESMTPSA id kk7sm42796pjb.19.2021.12.01.10.31.42
+        by smtp.gmail.com with ESMTPSA id k18sm556550pfc.155.2021.12.01.10.33.44
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 01 Dec 2021 10:31:43 -0800 (PST)
-Subject: Re: [PATCH v2 13/20] scsi: ufs: Fix a deadlock in the error handler
-To:     Bean Huo <huobean@gmail.com>,
+        Wed, 01 Dec 2021 10:33:45 -0800 (PST)
+Subject: Re: [PATCH v2 18/20] scsi: ufs: Optimize the command queueing code
+To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
@@ -44,19 +44,21 @@ Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
         Avri Altman <avri.altman@wdc.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Asutosh Das <asutoshd@codeaurora.org>
+        Keoseong Park <keosung.park@samsung.com>
 References: <20211119195743.2817-1-bvanassche@acm.org>
- <20211119195743.2817-14-bvanassche@acm.org>
- <788d060573ed475a902f17bc32d05540b78e66da.camel@gmail.com>
- <235fe40e-5695-a7a6-7422-68fc6d33cdac@acm.org>
- <062f4ad2381d652162c010755600557cce2211dd.camel@gmail.com>
+ <20211119195743.2817-19-bvanassche@acm.org>
+ <a2599b2c-208c-3333-61f0-d61a269b53d4@codeaurora.org>
+ <f6eb1b4c-ef73-7e34-cecd-fa0c9ce07a2f@acm.org>
+ <2071f69b-885f-e0c5-3ded-9f0c39eb38ae@codeaurora.org>
+ <6dea2d9c-c04a-20a5-4292-e48badf89ba2@acm.org>
+ <b3d2764a-8dd3-1c4e-675d-c43039d28850@codeaurora.org>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <90d702d0-907b-c56d-2a5b-db0318580198@acm.org>
-Date:   Wed, 1 Dec 2021 10:31:42 -0800
+Message-ID: <892fe890-6f8f-f9a6-0a0e-271b16c76da4@acm.org>
+Date:   Wed, 1 Dec 2021 10:33:44 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <062f4ad2381d652162c010755600557cce2211dd.camel@gmail.com>
+In-Reply-To: <b3d2764a-8dd3-1c4e-675d-c43039d28850@codeaurora.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -64,27 +66,10 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/1/21 5:44 AM, Bean Huo wrote:
-> How about adding a hardware-specific UFS device management queue to the
-> UFS device? Compared with NVMe and eMMC CMDQ, they both have dedicated
-> tags for device management commands. NVMe is queue 0, eMMC CMDQ is CMDQ
-> slot 31.
-> 
-> I'm thinking about the benefits of using this device manage queue. If
-> the benefits are significant, we can submit the Jedec proposal for the
-> UFS equipment management queue.
+On 11/23/21 10:24 AM, Asutosh Das (asd) wrote:
+> This looks good to me. Please push a change and I can test it out.
 
-Hi Bean,
-
-Do you want to modify UFSHCI 4.0 or UFSHCI 3.0? As you may know UFSHCI 4.0
-will support multiple queues. The proposal is called multi-circular queue
-(MCQ). Since UFSHCI 4.0 has not yet been ratified the draft is only available
-to JEDEC members.
-
-For UFSHCI 3.0, how about increasing the number of tags instead of adding an
-additional queue? Increasing the number of tags probably will be easier to
-implement in existing UFS host controllers than adding a new queue.
-
-Thanks,
+Thanks for having taken a look. v3 of this patch series is available at
+https://github.com/bvanassche/linux/tree/ufs-for-next.
 
 Bart.
