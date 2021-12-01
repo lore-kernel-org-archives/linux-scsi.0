@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2062CC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Dec 2021 16:03:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E6E8C43219
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Dec 2021 16:03:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351327AbhLAQGd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Dec 2021 11:06:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39328 "EHLO
+        id S1351332AbhLAQGe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Dec 2021 11:06:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351289AbhLAQG3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2021 11:06:29 -0500
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AE7EC061574;
-        Wed,  1 Dec 2021 08:03:08 -0800 (PST)
-Received: by mail-pj1-x102b.google.com with SMTP id nn15-20020a17090b38cf00b001ac7dd5d40cso1981297pjb.3;
-        Wed, 01 Dec 2021 08:03:08 -0800 (PST)
+        with ESMTP id S1351302AbhLAQGb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2021 11:06:31 -0500
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FC3EC061574;
+        Wed,  1 Dec 2021 08:03:10 -0800 (PST)
+Received: by mail-pf1-x42a.google.com with SMTP id x131so24908224pfc.12;
+        Wed, 01 Dec 2021 08:03:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=4faqUlJ+SZYnP9uFrNO41NoVrlsOh4d1PwMWVTDsii0=;
-        b=EoEQhzYXyn/Uz+fYQL6+D8YgSqQQiHPwqGQJ6GM45qZKsFpcjhevIa8L/pl+sFAUkL
-         6ilR5PMAfTa4GsQKH9BkVavcBWMKa3q095ZfyfDYU37jcqq/AZk4p28bXA3B30TG4Cep
-         dbFjMch18yARC14F1a6g7hBovcdUv7sIZFsG7SgWxaROgr88xIIAt+ZoyIpLMF1rhMBD
-         PTZFK0k8zcIn+A3NBF41yakdEyzg6WDCLGa3pEQwZyig4H4B9ik8x0c7UoU5nNLaGNYT
-         FXj+LDj5JrE+2yeyXT9DMjB46S8nDNWguqmxDY7hZisVft7Wg4WHe66j7swhVwm+GYDc
-         x0FA==
+        bh=wLAMPbpvKAZWRaOKURSZPZh3xKYj1Gt4MyClJOtgAw8=;
+        b=QjTveNx4o5sgvmndH3bJITARz8VJfsr1N9XKDmWcLplouYsETdeAeVcMpTV5aL3RQc
+         2Jbn1oE35+qrcZwO4MalG+vERTCir+RSo0cd6L5S6+ezjh9cOLpUmD94JFl3amTFgm5H
+         GjCvjzVQEsrITTX50/38gC5ji5ccibs6LQnngjDJ7uJqC+GFq2dO66zseU8vSnFLFWhB
+         492cwd2890tpGX8E2ksQAkURiM3+p+SmLfr/WT9HIYXSBPLSlIiguoogcrNSSOyiGvOv
+         J+FjWE5u4IcpeznTj19LSiRN4ZQ4wkgR96nodqYpoXAGMncYd9kVEyh4dcZ+SRwE88Nr
+         J/pA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=4faqUlJ+SZYnP9uFrNO41NoVrlsOh4d1PwMWVTDsii0=;
-        b=mII4P8b1V7NXiK/ULMoEMw21MOzvRWYJUpGTLmPItv/rtyp+JibLfv9zG9LPpzc3wD
-         0GwVXOyKrFJ7Z22AN1KZ3/H1WJBbvIlupkM10t7TomoNpR7fg3/GP6HBkoZ4KvZdT3jz
-         p8FL4eN15J8/XHYi9FcM9e1I8Wz/18f4H0ML2W8PZps6/IYJDI8Y5dM1TYH/g+eWgNho
-         A/jdDrCx7Ys52tNH3aFpniLbsLxuk77zAsSkq3VWUjkwIx0ndqTYTGtOnamDEbGQfV9U
-         ++KzeyOiZ207xZ3YOBZpfpERDiVBGDSGPVSdDebwgb35uPCpH+KG/UiMSany2BqxhwRU
-         cOkg==
-X-Gm-Message-State: AOAM531HYLVV57GkDNa295Q43MBqCk3pTREa3qBFRfnDfXwE9Tl1L39W
-        cupFpf98FYRKBtFcJPrbyWc=
-X-Google-Smtp-Source: ABdhPJy1JxfjA/xzL4ufAFR3Zv/5zOIXPmdOHVJwpGxXD0b7sbTpoBxYwO/zTP0eS3+GqwpjJnNX9w==
-X-Received: by 2002:a17:902:e5c9:b0:142:53c4:478d with SMTP id u9-20020a170902e5c900b0014253c4478dmr8110755plf.33.1638374585940;
-        Wed, 01 Dec 2021 08:03:05 -0800 (PST)
+        bh=wLAMPbpvKAZWRaOKURSZPZh3xKYj1Gt4MyClJOtgAw8=;
+        b=uOhDwm9jP+JcBl/xhnh0Mmtp40qBJbKgqwQ9IUQBzuZQc26WfP0qVNT6dYJT8eYhJ2
+         TkmCTsVXqz1t94rtqM482wRhLLHVn7USYXabBOmj3wlcmpytlHCxBIxH7+GVmz/vrpVD
+         pR+Sr6tjeCgS2F401HXZUb8d2WKBICmZ7BWUrckCaRDIf7z0BLzAFygrxbzIkgByYC9D
+         XUQ1USTtWFsX09qhqYi62moNFqdZiWFAQC9R7R6t+dwdDBcL6VGsz0JkYtuALSdLGv9t
+         FQTQAFqSNjYdSdCh+4BXt8qzzHy4N9Tl5dKurDec2AOehSO0gTEGLz52pHp2E6lBoF+c
+         F7Kg==
+X-Gm-Message-State: AOAM53101XV6QbY45UmyTRkd0oly5kJoVxD8QcwX6goXK+zLgwZ+NXuM
+        a5fKvfynpIbe+MuoqWLnzno=
+X-Google-Smtp-Source: ABdhPJwCOrEjcXULS6IsRuHQYw88ti0kK9hc/beS0BPepNxz/EDJIwT27gio08ZRg1Vj4i4WW4qECg==
+X-Received: by 2002:a63:904a:: with SMTP id a71mr5401908pge.528.1638374589720;
+        Wed, 01 Dec 2021 08:03:09 -0800 (PST)
 Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:f:7fe9:3f1e:749e:5d26])
-        by smtp.gmail.com with ESMTPSA id i193sm260316pfe.87.2021.12.01.08.03.04
+        by smtp.gmail.com with ESMTPSA id i193sm260316pfe.87.2021.12.01.08.03.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Dec 2021 08:03:05 -0800 (PST)
+        Wed, 01 Dec 2021 08:03:09 -0800 (PST)
 From:   Tianyu Lan <ltykernel@gmail.com>
 To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
         wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
@@ -64,9 +64,9 @@ Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
         linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
         vkuznets@redhat.com, brijesh.singh@amd.com, konrad.wilk@oracle.com,
         hch@lst.de, parri.andrea@gmail.com, dave.hansen@intel.com
-Subject: [PATCH V3 1/5] Swiotlb: Add Swiotlb bounce buffer remap function for HV IVM
-Date:   Wed,  1 Dec 2021 11:02:52 -0500
-Message-Id: <20211201160257.1003912-2-ltykernel@gmail.com>
+Subject: [PATCH V3 3/5] hyperv/IOMMU: Enable swiotlb bounce buffer for Isolation VM
+Date:   Wed,  1 Dec 2021 11:02:54 -0500
+Message-Id: <20211201160257.1003912-4-ltykernel@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211201160257.1003912-1-ltykernel@gmail.com>
 References: <20211201160257.1003912-1-ltykernel@gmail.com>
@@ -78,172 +78,191 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-In Isolation VM with AMD SEV, bounce buffer needs to be accessed via
-extra address space which is above shared_gpa_boundary (E.G 39 bit
-address line) reported by Hyper-V CPUID ISOLATION_CONFIG. The access
-physical address will be original physical address + shared_gpa_boundary.
-The shared_gpa_boundary in the AMD SEV SNP spec is called virtual top of
-memory(vTOM). Memory addresses below vTOM are automatically treated as
-private while memory above vTOM is treated as shared.
+hyperv Isolation VM requires bounce buffer support to copy
+data from/to encrypted memory and so enable swiotlb force
+mode to use swiotlb bounce buffer for DMA transaction.
 
-Expose swiotlb_unencrypted_base for platforms to set unencrypted
-memory base offset and platform calls swiotlb_update_mem_attributes()
-to remap swiotlb mem to unencrypted address space. memremap() can
-not be called in the early stage and so put remapping code into
-swiotlb_update_mem_attributes(). Store remap address and use it to copy
-data from/to swiotlb bounce buffer.
+In Isolation VM with AMD SEV, the bounce buffer needs to be
+accessed via extra address space which is above shared_gpa_boundary
+(E.G 39 bit address line) reported by Hyper-V CPUID ISOLATION_CONFIG.
+The access physical address will be original physical address +
+shared_gpa_boundary. The shared_gpa_boundary in the AMD SEV SNP
+spec is called virtual top of memory(vTOM). Memory addresses below
+vTOM are automatically treated as private while memory above
+vTOM is treated as shared.
+
+Hyper-V initalizes swiotlb bounce buffer and default swiotlb
+needs to be disabled. pci_swiotlb_detect_override() and
+pci_swiotlb_detect_4gb() enable the default one. To override
+the setting, hyperv_swiotlb_detect() needs to run before
+these detect functions which depends on the pci_xen_swiotlb_
+init(). Make pci_xen_swiotlb_init() depends on the hyperv_swiotlb
+_detect() to keep the order.
+
+Swiotlb bounce buffer code calls set_memory_decrypted()
+to mark bounce buffer visible to host and map it in extra
+address space via memremap. Populate the shared_gpa_boundary
+(vTOM) via swiotlb_unencrypted_base variable.
+
+The map function memremap() can't work in the early place
+hyperv_iommu_swiotlb_init() and so call swiotlb_update_mem_attributes()
+in the hyperv_iommu_swiotlb_later_init().
 
 Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
 ---
-Change since v2:
-	* Leave mem->vaddr with phys_to_virt(mem->start) when fail
-	  to remap swiotlb memory.
+ arch/x86/xen/pci-swiotlb-xen.c |  3 +-
+ drivers/hv/vmbus_drv.c         |  3 ++
+ drivers/iommu/hyperv-iommu.c   | 56 ++++++++++++++++++++++++++++++++++
+ include/linux/hyperv.h         |  8 +++++
+ 4 files changed, 69 insertions(+), 1 deletion(-)
 
-Change since v1:
-	* Rework comment in the swiotlb_init_io_tlb_mem()
-	* Make swiotlb_init_io_tlb_mem() back to return void.
----
- include/linux/swiotlb.h |  6 ++++++
- kernel/dma/swiotlb.c    | 47 ++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 48 insertions(+), 5 deletions(-)
-
-diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
-index 569272871375..f6c3638255d5 100644
---- a/include/linux/swiotlb.h
-+++ b/include/linux/swiotlb.h
-@@ -73,6 +73,9 @@ extern enum swiotlb_force swiotlb_force;
-  * @end:	The end address of the swiotlb memory pool. Used to do a quick
-  *		range check to see if the memory was in fact allocated by this
-  *		API.
-+ * @vaddr:	The vaddr of the swiotlb memory pool. The swiotlb memory pool
-+ *		may be remapped in the memory encrypted case and store virtual
-+ *		address for bounce buffer operation.
-  * @nslabs:	The number of IO TLB blocks (in groups of 64) between @start and
-  *		@end. For default swiotlb, this is command line adjustable via
-  *		setup_io_tlb_npages.
-@@ -92,6 +95,7 @@ extern enum swiotlb_force swiotlb_force;
- struct io_tlb_mem {
- 	phys_addr_t start;
- 	phys_addr_t end;
-+	void *vaddr;
- 	unsigned long nslabs;
- 	unsigned long used;
- 	unsigned int index;
-@@ -186,4 +190,6 @@ static inline bool is_swiotlb_for_alloc(struct device *dev)
+diff --git a/arch/x86/xen/pci-swiotlb-xen.c b/arch/x86/xen/pci-swiotlb-xen.c
+index 46df59aeaa06..30fd0600b008 100644
+--- a/arch/x86/xen/pci-swiotlb-xen.c
++++ b/arch/x86/xen/pci-swiotlb-xen.c
+@@ -4,6 +4,7 @@
+ 
+ #include <linux/dma-map-ops.h>
+ #include <linux/pci.h>
++#include <linux/hyperv.h>
+ #include <xen/swiotlb-xen.h>
+ 
+ #include <asm/xen/hypervisor.h>
+@@ -91,6 +92,6 @@ int pci_xen_swiotlb_init_late(void)
+ EXPORT_SYMBOL_GPL(pci_xen_swiotlb_init_late);
+ 
+ IOMMU_INIT_FINISH(pci_xen_swiotlb_detect,
+-		  NULL,
++		  hyperv_swiotlb_detect,
+ 		  pci_xen_swiotlb_init,
+ 		  NULL);
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index 392c1ac4f819..0a64ccfafb8b 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -33,6 +33,7 @@
+ #include <linux/random.h>
+ #include <linux/kernel.h>
+ #include <linux/syscore_ops.h>
++#include <linux/dma-map-ops.h>
+ #include <clocksource/hyperv_timer.h>
+ #include "hyperv_vmbus.h"
+ 
+@@ -2078,6 +2079,7 @@ struct hv_device *vmbus_device_create(const guid_t *type,
+ 	return child_device_obj;
  }
- #endif /* CONFIG_DMA_RESTRICTED_POOL */
  
-+extern phys_addr_t swiotlb_unencrypted_base;
-+
- #endif /* __LINUX_SWIOTLB_H */
-diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
-index 8e840fbbed7c..adb9d06af5c8 100644
---- a/kernel/dma/swiotlb.c
-+++ b/kernel/dma/swiotlb.c
-@@ -50,6 +50,7 @@
- #include <asm/io.h>
- #include <asm/dma.h>
- 
-+#include <linux/io.h>
- #include <linux/init.h>
- #include <linux/memblock.h>
- #include <linux/iommu-helper.h>
-@@ -72,6 +73,8 @@ enum swiotlb_force swiotlb_force;
- 
- struct io_tlb_mem io_tlb_default_mem;
- 
-+phys_addr_t swiotlb_unencrypted_base;
-+
++static u64 vmbus_dma_mask = DMA_BIT_MASK(64);
  /*
-  * Max segment that we can provide which (if pages are contingous) will
-  * not be bounced (unless SWIOTLB_FORCE is set).
-@@ -155,6 +158,27 @@ static inline unsigned long nr_slots(u64 val)
- 	return DIV_ROUND_UP(val, IO_TLB_SIZE);
- }
- 
-+/*
-+ * Remap swioltb memory in the unencrypted physical address space
-+ * when swiotlb_unencrypted_base is set. (e.g. for Hyper-V AMD SEV-SNP
-+ * Isolation VMs).
-+ */
-+void *swiotlb_mem_remap(struct io_tlb_mem *mem, unsigned long bytes)
-+{
-+	void *vaddr = NULL;
-+
-+	if (swiotlb_unencrypted_base) {
-+		phys_addr_t paddr = mem->start + swiotlb_unencrypted_base;
-+
-+		vaddr = memremap(paddr, bytes, MEMREMAP_WB);
-+		if (!vaddr)
-+			pr_err("Failed to map the unencrypted memory %llx size %lx.\n",
-+			       paddr, bytes);
-+	}
-+
-+	return vaddr;
-+}
-+
- /*
-  * Early SWIOTLB allocation may be too early to allow an architecture to
-  * perform the desired operations.  This function allows the architecture to
-@@ -172,7 +196,12 @@ void __init swiotlb_update_mem_attributes(void)
- 	vaddr = phys_to_virt(mem->start);
- 	bytes = PAGE_ALIGN(mem->nslabs << IO_TLB_SHIFT);
- 	set_memory_decrypted((unsigned long)vaddr, bytes >> PAGE_SHIFT);
--	memset(vaddr, 0, bytes);
-+
-+	mem->vaddr = swiotlb_mem_remap(mem, bytes);
-+	if (!mem->vaddr)
-+		mem->vaddr = vaddr;
-+
-+	memset(mem->vaddr, 0, bytes);
- }
- 
- static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
-@@ -196,7 +225,18 @@ static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
- 		mem->slots[i].orig_addr = INVALID_PHYS_ADDR;
- 		mem->slots[i].alloc_size = 0;
+  * vmbus_device_register - Register the child device
+  */
+@@ -2118,6 +2120,7 @@ int vmbus_device_register(struct hv_device *child_device_obj)
  	}
+ 	hv_debug_add_dev_dir(child_device_obj);
+ 
++	child_device_obj->device.dma_mask = &vmbus_dma_mask;
+ 	return 0;
+ 
+ err_kset_unregister:
+diff --git a/drivers/iommu/hyperv-iommu.c b/drivers/iommu/hyperv-iommu.c
+index e285a220c913..dd729d49a1eb 100644
+--- a/drivers/iommu/hyperv-iommu.c
++++ b/drivers/iommu/hyperv-iommu.c
+@@ -13,14 +13,20 @@
+ #include <linux/irq.h>
+ #include <linux/iommu.h>
+ #include <linux/module.h>
++#include <linux/hyperv.h>
++#include <linux/io.h>
+ 
+ #include <asm/apic.h>
+ #include <asm/cpu.h>
+ #include <asm/hw_irq.h>
+ #include <asm/io_apic.h>
++#include <asm/iommu.h>
++#include <asm/iommu_table.h>
+ #include <asm/irq_remapping.h>
+ #include <asm/hypervisor.h>
+ #include <asm/mshyperv.h>
++#include <asm/swiotlb.h>
++#include <linux/dma-direct.h>
+ 
+ #include "irq_remapping.h"
+ 
+@@ -337,4 +343,54 @@ static const struct irq_domain_ops hyperv_root_ir_domain_ops = {
+ 	.free = hyperv_root_irq_remapping_free,
+ };
+ 
++static void __init hyperv_iommu_swiotlb_init(void)
++{
++	unsigned long hyperv_io_tlb_size;
++	void *hyperv_io_tlb_start;
 +
 +	/*
-+	 * If swiotlb_unencrypted_base is set, the bounce buffer memory will
-+	 * be remapped and cleared in swiotlb_update_mem_attributes.
++	 * Allocate Hyper-V swiotlb bounce buffer at early place
++	 * to reserve large contiguous memory.
 +	 */
-+	if (swiotlb_unencrypted_base)
-+		return;
++	hyperv_io_tlb_size = swiotlb_size_or_default();
++	hyperv_io_tlb_start = memblock_alloc(hyperv_io_tlb_size, PAGE_SIZE);
 +
-+	set_memory_decrypted((unsigned long)vaddr, bytes >> PAGE_SHIFT);
- 	memset(vaddr, 0, bytes);
-+	mem->vaddr = vaddr;
-+	return;
- }
++	if (!hyperv_io_tlb_start)
++		pr_warn("Fail to allocate Hyper-V swiotlb buffer.\n");
++
++	swiotlb_init_with_tbl(hyperv_io_tlb_start,
++			      hyperv_io_tlb_size >> IO_TLB_SHIFT, true);
++}
++
++int __init hyperv_swiotlb_detect(void)
++{
++	if (!hypervisor_is_type(X86_HYPER_MS_HYPERV))
++		return 0;
++
++	if (!hv_is_isolation_supported())
++		return 0;
++
++	/*
++	 * Enable swiotlb force mode in Isolation VM to
++	 * use swiotlb bounce buffer for dma transaction.
++	 */
++	if (hv_isolation_type_snp())
++		swiotlb_unencrypted_base = ms_hyperv.shared_gpa_boundary;
++	swiotlb_force = SWIOTLB_FORCE;
++	return 1;
++}
++
++static void __init hyperv_iommu_swiotlb_later_init(void)
++{
++	/*
++	 * Swiotlb bounce buffer needs to be mapped in extra address
++	 * space. Map function doesn't work in the early place and so
++	 * call swiotlb_update_mem_attributes() here.
++	 */
++	swiotlb_update_mem_attributes();
++}
++
++IOMMU_INIT_FINISH(hyperv_swiotlb_detect,
++		  NULL, hyperv_iommu_swiotlb_init,
++		  hyperv_iommu_swiotlb_later_init);
+ #endif
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index b823311eac79..1f037e114dc8 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -1726,6 +1726,14 @@ int hyperv_write_cfg_blk(struct pci_dev *dev, void *buf, unsigned int len,
+ int hyperv_reg_block_invalidate(struct pci_dev *dev, void *context,
+ 				void (*block_invalidate)(void *context,
+ 							 u64 block_mask));
++#if IS_ENABLED(CONFIG_HYPERV)
++int __init hyperv_swiotlb_detect(void);
++#else
++static inline int __init hyperv_swiotlb_detect(void)
++{
++	return 0;
++}
++#endif
  
- int __init swiotlb_init_with_tbl(char *tlb, unsigned long nslabs, int verbose)
-@@ -318,7 +358,6 @@ swiotlb_late_init_with_tbl(char *tlb, unsigned long nslabs)
- 	if (!mem->slots)
- 		return -ENOMEM;
- 
--	set_memory_decrypted((unsigned long)tlb, bytes >> PAGE_SHIFT);
- 	swiotlb_init_io_tlb_mem(mem, virt_to_phys(tlb), nslabs, true);
- 
- 	swiotlb_print_info();
-@@ -371,7 +410,7 @@ static void swiotlb_bounce(struct device *dev, phys_addr_t tlb_addr, size_t size
- 	phys_addr_t orig_addr = mem->slots[index].orig_addr;
- 	size_t alloc_size = mem->slots[index].alloc_size;
- 	unsigned long pfn = PFN_DOWN(orig_addr);
--	unsigned char *vaddr = phys_to_virt(tlb_addr);
-+	unsigned char *vaddr = mem->vaddr + tlb_addr - mem->start;
- 	unsigned int tlb_offset, orig_addr_offset;
- 
- 	if (orig_addr == INVALID_PHYS_ADDR)
-@@ -806,8 +845,6 @@ static int rmem_swiotlb_device_init(struct reserved_mem *rmem,
- 			return -ENOMEM;
- 		}
- 
--		set_memory_decrypted((unsigned long)phys_to_virt(rmem->base),
--				     rmem->size >> PAGE_SHIFT);
- 		swiotlb_init_io_tlb_mem(mem, rmem->base, nslabs, false);
- 		mem->force_bounce = true;
- 		mem->for_alloc = true;
+ struct hyperv_pci_block_ops {
+ 	int (*read_block)(struct pci_dev *dev, void *buf, unsigned int buf_len,
 -- 
 2.25.1
 
