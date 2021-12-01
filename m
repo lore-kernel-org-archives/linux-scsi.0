@@ -2,98 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93C4CC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Dec 2021 06:45:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A84E8C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Dec 2021 07:08:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239822AbhLAGsi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Dec 2021 01:48:38 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:40362 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229492AbhLAGsi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2021 01:48:38 -0500
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        id S1347097AbhLAHL2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Dec 2021 02:11:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57306 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232517AbhLAHL1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2021 02:11:27 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DE2BC061574;
+        Tue, 30 Nov 2021 23:08:07 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 964151FD58;
-        Wed,  1 Dec 2021 06:45:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1638341116; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tMhHLjMDal40aoJPgixW4AZWOZicKmK6zULWZcT34w0=;
-        b=bR1Haya9j6KKtmezsJOqIuJOv84iymar9dU0waJJV++gGLOprPsuiEZzQkfA/07SyDIk1G
-        NDmy8nfp5NJFHkrfbP6QNJiCptL9hEqNHH6/2pe+04PXFZryo15STKTPApf9hmB0j2LZfc
-        srNqY2A/nVCapYP/9l6IpXvmL6RucmI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1638341116;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tMhHLjMDal40aoJPgixW4AZWOZicKmK6zULWZcT34w0=;
-        b=Zyy9lQ9v6ZSkldI9XKKBzbi46QYKGNM+XzDlCooLFbF0YzO2PDR/jOk88xwrCz67eyyV+L
-        gW5/wwlPC9nK4TDQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6977113425;
-        Wed,  1 Dec 2021 06:45:16 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id dzxkGPwZp2F4CAAAMHmgww
-        (envelope-from <hare@suse.de>); Wed, 01 Dec 2021 06:45:16 +0000
-Subject: Re: [PATCH v2 3/3] blk-crypto: show crypto capabilities in sysfs
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-mmc@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bart Van Assche <bvanassche@acm.org>
-References: <20211130040306.148925-1-ebiggers@kernel.org>
- <20211130040306.148925-4-ebiggers@kernel.org>
- <8745aed7-d4b6-eb8d-60ad-f4d768d62a62@suse.de>
- <YaXVXU77yvKUyVwg@sol.localdomain>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <ea5db68e-8d2b-b242-bf81-9fce29cdde83@suse.de>
-Date:   Wed, 1 Dec 2021 07:45:14 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3C9C0B81DD9;
+        Wed,  1 Dec 2021 07:08:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3ABF3C53FAD;
+        Wed,  1 Dec 2021 07:08:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1638342484;
+        bh=yfIMUIvts+TyrLXbtbjnXJs9LD9n68BaPAB4iOgy3qg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=S7jJU9WIP9DMXDmam/SjhaiuzPS7Ra7/EYXmguLkxqGe5u7VGZnYbFpFWCikUX7KY
+         KUIFgXQJaW9plm8jIHkHRWg4gcFgqVwdTl5/SqAOgnoPIsUn/bsTJv8C754OltOW50
+         ME2+ljRebs92eTK/rzjKsahTiLe4BpPO4ueGoW3o=
+Date:   Wed, 1 Dec 2021 08:08:00 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     akpm@linux-foundation.org, keescook@chromium.org,
+        yzaikin@google.com, nixiaoming@huawei.com, ebiederm@xmission.com,
+        steve@sk2.org, rafael@kernel.org, tytso@mit.edu,
+        viro@zeniv.linux.org.uk, pmladek@suse.com,
+        senozhatsky@chromium.org, rostedt@goodmis.org,
+        john.ogness@linutronix.de, dgilbert@interlog.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        mcgrof@bombadil.infradead.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH] firmware_loader: export sysctl registration
+Message-ID: <YacfULGI1mhE/0iv@kroah.com>
+References: <20211130164525.1478009-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <YaXVXU77yvKUyVwg@sol.localdomain>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211130164525.1478009-1-mcgrof@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/30/21 8:40 AM, Eric Biggers wrote:
-> On Tue, Nov 30, 2021 at 07:49:54AM +0100, Hannes Reinecke wrote:
->>>     - "modes" is a sub-subdirectory, since there may be multiple supported
->>>       crypto modes, and sysfs is supposed to have one value per file.
->>>
->> Why do you have a sub-directory here?
->>  From what I can see, that subdirectory just contains the supported modes, so
->> wouldn't it be easier to create individual files like 'mode_<modename>'
->> instead of a subdirectory?
+On Tue, Nov 30, 2021 at 08:45:25AM -0800, Luis Chamberlain wrote:
+> The firmware loader fallback sysctl table is always built-in,
+> but when FW_LOADER=m the build will fail. We need to export
+> the sysctl registration and de-registration. Use the private
+> symbol namespace so that only the firmware loader uses these
+> calls.
 > 
-> It is a group of attributes, so it makes sense to group them together rather
-> than put them all in the parent directory alongside other attributes.  It also
-> allows the use of proper names like "AES-256-XTS" rather than weird names like
-> "mode_AES-256-XTS" or "mode_aes_256_xts".
-> 
-Right.
+> Reported-by: Randy Dunlap <rdunlap@infradead.org>
+> Fixes: firmware_loader: move firmware sysctl to its own files
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Have a git id for this?
 
-Cheers,
+thanks,
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+greg k-h
