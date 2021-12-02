@@ -2,129 +2,186 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08CEAC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Dec 2021 15:44:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F033C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Dec 2021 18:13:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358997AbhLBPra (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Dec 2021 10:47:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54070 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347967AbhLBPr3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Dec 2021 10:47:29 -0500
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B07DC06174A
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Dec 2021 07:44:07 -0800 (PST)
-Received: by mail-wr1-x430.google.com with SMTP id c4so60521065wrd.9
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Dec 2021 07:44:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=E9lzNdkn7909m1FchmdwxHZSjGvdcsYgvDGh/LoZ6As=;
-        b=I3dI/zOfMxZQp8QFo0z0ELPyraPXvMTYfGIp5iG2BQFlsqqGx1N+D9Q86e0QqjhBBS
-         /4W+qF3sgX01eYt9jHKKBh1DRvuuL3bG6iFncsFQo0gkNjiDHPOtbH7IP1gnGDJ4JXFY
-         8bx77Nr9wPxOdXJs7o97s0eitsIuE7XBtpMTgI/4ogS/g4R1zjd4lIupRnML6mABBELz
-         Ol9D3uGR+qj5xGKETTuqNm0tTG/PKozJ0RfUXbN+T/z/69NFgGkvmGl6I9QGj9I1g+fb
-         nC5Hb2WMUa/6dEzKRii9tzLqSDyOKN2HYor4pXmQMDe3yrzoFsPhY2rm0m6xMXBod7zn
-         0IEQ==
+        id S231128AbhLBSQv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Dec 2021 13:16:51 -0500
+Received: from mail-pf1-f172.google.com ([209.85.210.172]:36763 "EHLO
+        mail-pf1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1355847AbhLBSQu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Dec 2021 13:16:50 -0500
+Received: by mail-pf1-f172.google.com with SMTP id n26so356968pff.3
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Dec 2021 10:13:27 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=E9lzNdkn7909m1FchmdwxHZSjGvdcsYgvDGh/LoZ6As=;
-        b=IKcjUdH+Mc3ZM+TlbYDttAonolQ/H9j721PpGL9PP0E4tc1GyaP9BBO/hdQ31ZDRWI
-         pifubA7hQF3vIokdZYZVKAEQ5zVrs49j+i/11a87fARCaaHHqZFSVcUhBnbPFFwenjkl
-         bf6ygzpY6hcAxN5BW8OOxW+4T1QnFrFkLqfJz2j22T39PBQMirJSk/tcvu+87PI85WzJ
-         PIBOxSWFqcvAeOT46K3iZk0Lv/YQ2kH6IkirWToJJi1ZTHac0+JVccBENpbGT4EbiH1T
-         uaJUOE3lPY2CnBd+S5hYq/FyaRxAWSZulo7BsxWOMO/2uU/Z4bctp7N+tW2QF/45Zgar
-         u2kw==
-X-Gm-Message-State: AOAM5308K8oDGoNMDgNNL8az47l3/FokKR6qfwtc0q0li4Rqcqz1leDo
-        WiaGzAS+OiBu6CXftPIPpPQ=
-X-Google-Smtp-Source: ABdhPJxsdgmmh/GmSG8+MUHyn2KOJ/UPNtD7irGkHpkNzjpDxj3fWaq2h6WNclx9XKxWlVhcjuu1ig==
-X-Received: by 2002:a5d:6849:: with SMTP id o9mr15113048wrw.515.1638459845828;
-        Thu, 02 Dec 2021 07:44:05 -0800 (PST)
-Received: from p200300e9471019d1b21724649ae7b436.dip0.t-ipconnect.de (p200300e9471019d1b21724649ae7b436.dip0.t-ipconnect.de. [2003:e9:4710:19d1:b217:2464:9ae7:b436])
-        by smtp.googlemail.com with ESMTPSA id d2sm29146wmb.31.2021.12.02.07.44.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Dec 2021 07:44:05 -0800 (PST)
-Message-ID: <0f4719c4d62df1e85430a7422d5628adb6f2b4b3.camel@gmail.com>
-Subject: Re: [PATCH v3 00/17] UFS patches for kernel v5.17
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=y/6Lx9pbndDuku49wbM5Z/PhzhjdYmV8y4hXVGoxepc=;
+        b=mtWyrbg/SlfYVoT/elRUUP8yXizYysU91zax1fyOlby0YnUsFXKlx7EU2AI6VnQTk6
+         h4/rb1YmZNCMzEEl2XkB3Imoe1f8rirnOS5XvcWlJJgHW4zl5wP+q4iesT56mLquhwZT
+         yNsKHClRAswBMfDE8+lRoVAuoRoTSMIvuNqNNVV0ej2c29R+JprEi8zBVT/Jc9ghgNEF
+         caIk1twc0rp1kye43+qRt/B9zDDONECtkMdODXT3EqFaO0aylICqL7XuYMndosD0Bncp
+         J+Y9JsSm8jpg1UvGzotTObiMWkx2Ex5rnbAFR94ThEkduJ2XCW53arne0qYektizbx/i
+         /ddg==
+X-Gm-Message-State: AOAM531FxGroeizzQ3K/HW0lNttngzFH9rQxzTxfIFYp5YDaazG8Yr9Y
+        +4F0FH+mB1soo8crChSu6wY=
+X-Google-Smtp-Source: ABdhPJwJWHlNAqVAESgxqdqfzYpR94uTLoUHI3+XpUqLzOcdYqkKP3SkgLMBPc4b5O/ZEEt1tAXA+w==
+X-Received: by 2002:a63:b0e:: with SMTP id 14mr587520pgl.229.1638468806839;
+        Thu, 02 Dec 2021 10:13:26 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:fac5:b2eb:ef0d:f30b])
+        by smtp.gmail.com with ESMTPSA id oc10sm3484052pjb.26.2021.12.02.10.13.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 02 Dec 2021 10:13:26 -0800 (PST)
+Subject: Re: [PATCH v3 16/17] scsi: ufs: Optimize the command queueing code
+To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org
-Date:   Thu, 02 Dec 2021 16:44:04 +0100
-In-Reply-To: <20211130233324.1402448-1-bvanassche@acm.org>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Keoseong Park <keosung.park@samsung.com>
 References: <20211130233324.1402448-1-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5-0ubuntu1 
+ <20211130233324.1402448-17-bvanassche@acm.org>
+ <1be2859c-c698-7bfd-2ed1-ea17bbeedad7@codeaurora.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <1be02f4a-2ab6-63fd-f6f2-3825c28ef4e5@acm.org>
+Date:   Thu, 2 Dec 2021 10:13:25 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
+In-Reply-To: <1be2859c-c698-7bfd-2ed1-ea17bbeedad7@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 12/1/21 3:33 PM, Asutosh Das (asd) wrote:
+> Hi Bart,
+> Say an IO (req1) has crossed the scsi_host_queue_ready() check but hasn't yet reached ufshcd_queuecommand() and DBR is 0.
+> ufshcd_clock_scaling_prepare() is invoked and completes and scaling proceeds to change the clocks and gear.
+> I wonder if the IO (req1) would be issued while scaling is in progress.
+> If so, do you think a check should be added in ufshcd_queuecommand() to see if scaling is in progress or if host is blocked?
 
-Reply in the email to cover each sub-patch:
+How about using the patch below instead of patch 16/17 from this patch
+series? The patch below should not trigger the race condition mentioned
+above.
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Tested-by: Bean Huo <beanhuo@micron.com>
+Thanks,
+
+Bart.
 
 
-On Tue, 2021-11-30 at 15:33 -0800, Bart Van Assche wrote:
-> Hi Martin,
-> 
-> This patch series includes the following changes:
-> - Fix a deadlock in the UFS error handler.
-> - Add polling support in the UFS driver.
-> - Several smaller fixes for the UFS driver.
-> 
-> Please consider these UFS driver kernel patches for kernel v5.17.
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> Changes compared to v2:
-> - Dropped SCSI core patches that add support for internal commands.
-> - Reworked patch "Fix a deadlock in the error handler" such that it
-> uses a
->   reserved tag as proposed by Adrian.
-> - Split patch "ufs: Introduce ufshcd_release_scsi_cmd()" into two
-> patches.
-> 
-> Changes compared to v1:
-> - Add internal command support to the SCSI core.
-> - Reworked patch "ufs: Optimize the command queueing code".
-> 
-> Bart Van Assche (17):
->   scsi: core: Fix scsi_device_max_queue_depth()
->   scsi: core: Fix a race between scsi_done() and scsi_times_out()
->   scsi: ufs: Rename a function argument
->   scsi: ufs: Remove is_rpmb_wlun()
->   scsi: ufs: Remove the sdev_rpmb member
->   scsi: ufs: Remove dead code
->   scsi: ufs: Fix race conditions related to driver data
->   scsi: ufs: Remove ufshcd_any_tag_in_use()
->   scsi: ufs: Rework ufshcd_change_queue_depth()
->   scsi: ufs: Fix a deadlock in the error handler
->   scsi: ufs: Remove the 'update_scaling' local variable
->   scsi: ufs: Introduce ufshcd_release_scsi_cmd()
->   scsi: ufs: Improve SCSI abort handling further
->   scsi: ufs: Fix a kernel crash during shutdown
->   scsi: ufs: Stop using the clock scaling lock in the error handler
->   scsi: ufs: Optimize the command queueing code
->   scsi: ufs: Implement polling support
-> 
->  drivers/scsi/scsi.c                |   4 +-
->  drivers/scsi/scsi_error.c          |  22 +--
->  drivers/scsi/ufs/tc-dwc-g210-pci.c |   1 -
->  drivers/scsi/ufs/ufs-exynos.c      |   4 +-
->  drivers/scsi/ufs/ufshcd-pci.c      |   2 -
->  drivers/scsi/ufs/ufshcd-pltfrm.c   |   2 -
->  drivers/scsi/ufs/ufshcd.c          | 268 ++++++++++++++++-----------
-> --
->  drivers/scsi/ufs/ufshcd.h          |   7 +-
->  8 files changed, 165 insertions(+), 145 deletions(-)
-> 
+Subject: [PATCH] scsi: ufs: Optimize the command queueing code
 
+Remove the clock scaling lock from ufshcd_queuecommand() since it is a
+performance bottleneck. Instead, wait until all budget_maps have cleared
+to wait for ongoing ufshcd_queuecommand() calls.
+
+Cc: Asutosh Das (asd) <asutoshd@codeaurora.org>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+  drivers/scsi/ufs/ufshcd.c | 33 +++++++++++++++++++++++----------
+  drivers/scsi/ufs/ufshcd.h |  1 +
+  2 files changed, 24 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c4cf5c4b4893..be679f2a97da 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1070,13 +1070,31 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
+  	return false;
+  }
+
++/*
++ * Determine the number of pending commands by counting the bits in the SCSI
++ * device budget maps. This approach has been selected because a bit is set in
++ * the budget map before scsi_host_queue_ready() checks the host_self_blocked
++ * flag. The host_self_blocked flag can be modified by calling
++ * scsi_block_requests() or scsi_unblock_requests().
++ */
++static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
++{
++	struct scsi_device *sdev;
++	u32 pending;
++
++	shost_for_each_device(sdev, hba->host)
++		pending += sbitmap_weight(&sdev->budget_map);
++
++	return pending;
++}
++
+  static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+  					u64 wait_timeout_us)
+  {
+  	unsigned long flags;
+  	int ret = 0;
+  	u32 tm_doorbell;
+-	u32 tr_doorbell;
++	u32 tr_pending;
+  	bool timeout = false, do_last_check = false;
+  	ktime_t start;
+
+@@ -1094,8 +1112,8 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+  		}
+
+  		tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+-		tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-		if (!tm_doorbell && !tr_doorbell) {
++		tr_pending = ufshcd_pending_cmds(hba);
++		if (!tm_doorbell && !tr_pending) {
+  			timeout = false;
+  			break;
+  		} else if (do_last_check) {
+@@ -1115,12 +1133,12 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+  			do_last_check = true;
+  		}
+  		spin_lock_irqsave(hba->host->host_lock, flags);
+-	} while (tm_doorbell || tr_doorbell);
++	} while (tm_doorbell || tr_pending);
+
+  	if (timeout) {
+  		dev_err(hba->dev,
+  			"%s: timedout waiting for doorbell to clear (tm=0x%x, tr=0x%x)\n",
+-			__func__, tm_doorbell, tr_doorbell);
++			__func__, tm_doorbell, tr_pending);
+  		ret = -EBUSY;
+  	}
+  out:
+@@ -2681,9 +2699,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+
+  	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+
+-	if (!down_read_trylock(&hba->clk_scaling_lock))
+-		return SCSI_MLQUEUE_HOST_BUSY;
+-
+  	/*
+  	 * Allows the UFS error handler to wait for prior ufshcd_queuecommand()
+  	 * calls.
+@@ -2772,8 +2787,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+  out:
+  	rcu_read_unlock();
+
+-	up_read(&hba->clk_scaling_lock);
+-
+  	if (ufs_trigger_eh()) {
+  		unsigned long flags;
+
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index c3c2792f309f..411c6015bbfe 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -779,6 +779,7 @@ struct ufs_hba_monitor {
+   * @clk_list_head: UFS host controller clocks list node head
+   * @pwr_info: holds current power mode
+   * @max_pwr_info: keeps the device max valid pwm
++ * @clk_scaling_lock: used to serialize device commands and clock scaling
+   * @desc_size: descriptor sizes reported by device
+   * @urgent_bkops_lvl: keeps track of urgent bkops level for device
+   * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
