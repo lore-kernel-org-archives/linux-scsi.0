@@ -2,131 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87510C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Dec 2021 08:18:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0562C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Dec 2021 08:26:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345470AbhLBIV0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Dec 2021 03:21:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35548 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240800AbhLBIVZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Dec 2021 03:21:25 -0500
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF998C061574
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Dec 2021 00:18:02 -0800 (PST)
-Received: by mail-ed1-x536.google.com with SMTP id r25so46688106edq.7
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Dec 2021 00:18:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=8EMefng5erdf0jDsY/Rk+qQrk7z/fTIuyGvC3fX9B4A=;
-        b=KqpVPmtXi4VibzCGZkpMlgh0Kv2CPnslvbt9Ft4SjeKb7HxfGk16aCgULtr26hvjzO
-         ulLufdTRr3HwimECQqduTBH5GBvLZG7T3yMxQCT1USItv+UyoqxiU9GP1v3Z/NSN9w5U
-         FBGJnGyfWhDQAsoDhWc71frVCtc48APr8MRAhXA7TqlgcaAPaMOz2ptYBWJO2opJArET
-         4YuFLySNzSagzd/1YEbs9MhzpeeLw4IF1hYpZuEN/Fd/3dlV170MK8zY3VXJ4ZBQ+D4y
-         /q++dRgy9mmLGgsuxQKtHT6Xo0Erv/mhRRVhmBoN/vMWflZyo9kIVIuNFRv2ps0r+YSm
-         ZA/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8EMefng5erdf0jDsY/Rk+qQrk7z/fTIuyGvC3fX9B4A=;
-        b=qt9dMPaFzEcMAEJ0CvvNCsuIqbYLqvcTCSFajNAgDU7wDCJiU7FiOs2L5QwEmeUCcC
-         Rv4pgKgcdsUB+VUIbgxDA95oMhtF6BRST1O1sHklRhPhJqx7pDiPoaIHmlz5Xkowqe0b
-         6C9C1lpI2w1yyQNrkufQDusgcspIqif4LLxjM9Aup8QFxIXaXw5/euqAt+bGlx3swh86
-         vz2CtdbkpLdckJ6/BmCDk76zofDo/JP5CnGgtvmrcbuA7KmN0qsZ2AnsYw4ygXfIHFq2
-         sH3OpKaiRl6SnRaRGss+PCcjUxeNBGWmET6rb4zPaYuFin7zbapOMZXQuDIDX3teOS7X
-         4A5A==
-X-Gm-Message-State: AOAM531aTOYTCJ+Wy+sdZa/WyeWNDa1QxsS6Wp+zknvf7+Ta6t8CmBvI
-        ZUR1olHkXriVUY4kNJ9K9dCkjJNm0Cg19BWq04Xz2Q==
-X-Google-Smtp-Source: ABdhPJzlTCsmeT9iYNsKVmcveymS1MrvaGPW5ALaVFT+izVCdIH7yGa7cr/14mQPALaLKVcmCiL0vYBXMOdzZmLGeBs=
-X-Received: by 2002:a17:907:7d8b:: with SMTP id oz11mr13777617ejc.507.1638433080959;
- Thu, 02 Dec 2021 00:18:00 -0800 (PST)
-MIME-Version: 1.0
-References: <20211201041627.1592487-1-ipylypiv@google.com>
-In-Reply-To: <20211201041627.1592487-1-ipylypiv@google.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Thu, 2 Dec 2021 09:17:50 +0100
-Message-ID: <CAMGffEnXaD8s93hd09Dv92G=kPbv3CzAx-gbtXfR6ukmNdFjTQ@mail.gmail.com>
-Subject: Re: [PATCH] scsi: pm80xx: Do not call scsi_remove_host() in pm8001_alloc()
-To:     Igor Pylypiv <ipylypiv@google.com>
-Cc:     Jack Wang <jinpu.wang@ionos.com>,
+        id S1356075AbhLBI3h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Dec 2021 03:29:37 -0500
+Received: from mga03.intel.com ([134.134.136.65]:43658 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S241248AbhLBI3g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 2 Dec 2021 03:29:36 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10185"; a="236596833"
+X-IronPort-AV: E=Sophos;i="5.87,281,1631602800"; 
+   d="scan'208";a="236596833"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2021 00:25:55 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.87,281,1631602800"; 
+   d="scan'208";a="602639731"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
+  by fmsmga002.fm.intel.com with ESMTP; 02 Dec 2021 00:25:52 -0800
+Subject: Re: [PATCH v3 10/17] scsi: ufs: Fix a deadlock in the error handler
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Vishakha Channapattan <vishakhavc@google.com>,
-        Changyuan Lyu <changyuanl@google.com>,
-        linux-scsi@vger.kernel.org, Viswas G <Viswas.G@microchip.com>,
-        Ruksar Devadi <Ruksar.devadi@microchip.com>
-Content-Type: text/plain; charset="UTF-8"
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Keoseong Park <keosung.park@samsung.com>
+References: <20211130233324.1402448-1-bvanassche@acm.org>
+ <20211130233324.1402448-11-bvanassche@acm.org>
+ <25844cd2-872a-514f-4384-6ee877418dc7@intel.com>
+ <ab84bffe-fd84-82c6-d4f2-3ee73e7a850e@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <e65a5cd1-7397-c04e-953d-194781a79f3e@intel.com>
+Date:   Thu, 2 Dec 2021 10:25:51 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.13.0
+MIME-Version: 1.0
+In-Reply-To: <ab84bffe-fd84-82c6-d4f2-3ee73e7a850e@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 1, 2021 at 5:16 AM Igor Pylypiv <ipylypiv@google.com> wrote:
->
-> Calling scsi_remove_host() before scsi_add_host() results in a crash:
->
->  BUG: kernel NULL pointer dereference, address: 0000000000000108
->  RIP: 0010:device_del+0x63/0x440
->  Call Trace:
->   device_unregister+0x17/0x60
->   scsi_remove_host+0xee/0x2a0
->   pm8001_pci_probe+0x6ef/0x1b90 [pm80xx]
->   local_pci_probe+0x3f/0x90
->
-> We cannot call scsi_remove_host() in pm8001_alloc() because
-> scsi_add_host() have not been called yet at that point of time.
->
-> Function call tree:
->
->   pm8001_pci_probe()
->   |
->   `- pm8001_pci_alloc()
->   |  |
->   |  `- pm8001_alloc()
->   |     |
->   |     `- scsi_remove_host()
->   |
->   `- scsi_add_host()
->
-> Fixes: 05c6c029a44d ("scsi: pm80xx: Increase number of supported queues")
-> Reviewed-by: Vishakha Channapattan <vishakhavc@google.com>
-> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Thanks!
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
+On 01/12/2021 23:26, Bart Van Assche wrote:
+> On 12/1/21 5:48 AM, Adrian Hunter wrote:
+>> I think cmd_queue is not used anymore after this.
+> 
+> Let's remove cmd_queue via a separate patch. I have started testing this patch:
+> 
+> Subject: [PATCH] scsi: ufs: Remove hba->cmd_queue
+> 
+> Suggested-by: Adrian Hunter <adrian.hunter@intel.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+
+Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
+
 > ---
->  drivers/scsi/pm8001/pm8001_init.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index bed8cc125544..fbfeb0b046dd 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -282,12 +282,12 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
->         if (rc) {
->                 pm8001_dbg(pm8001_ha, FAIL,
->                            "pm8001_setup_irq failed [ret: %d]\n", rc);
-> -               goto err_out_shost;
-> +               goto err_out;
->         }
->         /* Request Interrupt */
->         rc = pm8001_request_irq(pm8001_ha);
->         if (rc)
-> -               goto err_out_shost;
-> +               goto err_out;
->
->         count = pm8001_ha->max_q_num;
->         /* Queues are chosen based on the number of cores/msix availability */
-> @@ -423,8 +423,6 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
->         pm8001_tag_init(pm8001_ha);
->         return 0;
->
-> -err_out_shost:
-> -       scsi_remove_host(pm8001_ha->shost);
->  err_out_nodev:
->         for (i = 0; i < pm8001_ha->max_memcnt; i++) {
->                 if (pm8001_ha->memoryMap.region[i].virt_ptr != NULL) {
-> --
-> 2.34.0.rc2.393.gf8c9666880-goog
->
+>  drivers/scsi/ufs/ufshcd.c | 11 +----------
+>  drivers/scsi/ufs/ufshcd.h |  2 --
+>  2 files changed, 1 insertion(+), 12 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 5b3efc880246..d379c2b0c058 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -9409,7 +9409,6 @@ void ufshcd_remove(struct ufs_hba *hba)
+>      ufs_sysfs_remove_nodes(hba->dev);
+>      blk_cleanup_queue(hba->tmf_queue);
+>      blk_mq_free_tag_set(&hba->tmf_tag_set);
+> -    blk_cleanup_queue(hba->cmd_queue);
+>      scsi_remove_host(hba->host);
+>      /* disable interrupts */
+>      ufshcd_disable_intr(hba, hba->intr_mask);
+> @@ -9630,12 +9629,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>          goto out_disable;
+>      }
+> 
+> -    hba->cmd_queue = blk_mq_init_queue(&hba->host->tag_set);
+> -    if (IS_ERR(hba->cmd_queue)) {
+> -        err = PTR_ERR(hba->cmd_queue);
+> -        goto out_remove_scsi_host;
+> -    }
+> -
+>      hba->tmf_tag_set = (struct blk_mq_tag_set) {
+>          .nr_hw_queues    = 1,
+>          .queue_depth    = hba->nutmrs,
+> @@ -9644,7 +9637,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>      };
+>      err = blk_mq_alloc_tag_set(&hba->tmf_tag_set);
+>      if (err < 0)
+> -        goto free_cmd_queue;
+> +        goto out_remove_scsi_host;
+>      hba->tmf_queue = blk_mq_init_queue(&hba->tmf_tag_set);
+>      if (IS_ERR(hba->tmf_queue)) {
+>          err = PTR_ERR(hba->tmf_queue);
+> @@ -9713,8 +9706,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>      blk_cleanup_queue(hba->tmf_queue);
+>  free_tmf_tag_set:
+>      blk_mq_free_tag_set(&hba->tmf_tag_set);
+> -free_cmd_queue:
+> -    blk_cleanup_queue(hba->cmd_queue);
+>  out_remove_scsi_host:
+>      scsi_remove_host(hba->host);
+>  out_disable:
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 411c6015bbfe..88c20f3608c2 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -738,7 +738,6 @@ struct ufs_hba_monitor {
+>   * @host: Scsi_Host instance of the driver
+>   * @dev: device handle
+>   * @lrb: local reference block
+> - * @cmd_queue: Used to allocate command tags from hba->host->tag_set.
+>   * @outstanding_tasks: Bits representing outstanding task requests
+>   * @outstanding_lock: Protects @outstanding_reqs.
+>   * @outstanding_reqs: Bits representing outstanding transfer requests
+> @@ -805,7 +804,6 @@ struct ufs_hba {
+> 
+>      struct Scsi_Host *host;
+>      struct device *dev;
+> -    struct request_queue *cmd_queue;
+>      /*
+>       * This field is to keep a reference to "scsi_device" corresponding to
+>       * "UFS device" W-LU.
+
