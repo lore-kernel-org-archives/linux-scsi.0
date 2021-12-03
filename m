@@ -2,299 +2,237 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E966AC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Dec 2021 09:14:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 349A5C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Dec 2021 09:53:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379464AbhLCJRv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Dec 2021 04:17:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37078 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350564AbhLCJRu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Dec 2021 04:17:50 -0500
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF15BC061757
-        for <linux-scsi@vger.kernel.org>; Fri,  3 Dec 2021 01:14:26 -0800 (PST)
-Received: by mail-pj1-x102b.google.com with SMTP id j6-20020a17090a588600b001a78a5ce46aso4705940pji.0
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Dec 2021 01:14:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=saVuQhzixBwsqDYRywfLCa1HkOX8bignwBCsRWI1qEU=;
-        b=SlTpIt8ZNCqW/9A4VUbaR83S1wMyfqdCewD6rXm+VJsVUfcmFju+i0rgDaRiL3X2FO
-         FvKdIsYob7oyCjWrkpN2Etf1mA576MDr/cDygoeRNe3vedQHKPRj//TxFYNAA/qvT+1P
-         2I2hQ0gXFqqEWsBI5TrldoZYGyyce4VvGqP6U=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=saVuQhzixBwsqDYRywfLCa1HkOX8bignwBCsRWI1qEU=;
-        b=d7wpHFHFlwqVwOszitkDbcfwjOQiMy5WMD3bxQccOOPmhi+jAaqRuw1xIVdrsKlo85
-         o1ULelBpWkHA60YKcGoBncTcc8BhRDo/J3T3lp795i2ZPFdJL40jvrdzEUcgSECigZUG
-         CtUTlWXCtiCsIYdsAWInM5cEYcbqYfTaRbpz0rkGtG7yLajl8Pi+pYXVBBk6mpsLfLwZ
-         pkUNkmqL6l/xzd9wHv4WOgWLNErd3xGhfco9C5BvnuPOIA2wPxNPUlx3nb6wso/F0uCf
-         mmJaz0sai+a1srTYLk5UxsiyE+JWwoCODF4fI7kWSSPMn8sMlRErq6QTwXLzFMY1N1fL
-         B8tA==
-X-Gm-Message-State: AOAM531VCFfZInPC9+wX04Dm76hI7A08KTr5fcLp+UV6QA7/tYWh5a/T
-        30ilw2u1vcCD8hVgyU2iryRIeQ==
-X-Google-Smtp-Source: ABdhPJz8RnRahBC15FlwjjPsKlZ+CpQcH75sjsinaHiphr+fFlXgxA/jx9yn9VYUsmsMio1yEUacIw==
-X-Received: by 2002:a17:903:248c:b0:142:9bf:8b0 with SMTP id p12-20020a170903248c00b0014209bf08b0mr21371502plw.70.1638522866265;
-        Fri, 03 Dec 2021 01:14:26 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id s15sm1814024pjs.51.2021.12.03.01.14.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Dec 2021 01:14:26 -0800 (PST)
-From:   Kees Cook <keescook@chromium.org>
-To:     Kashyap Desai <kashyap.desai@broadcom.com>
-Cc:     Kees Cook <keescook@chromium.org>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: [PATCH] scsi: megaraid: Avoid mismatched storage type sizes
-Date:   Fri,  3 Dec 2021 01:14:24 -0800
-Message-Id: <20211203091424.3355371-1-keescook@chromium.org>
-X-Mailer: git-send-email 2.30.2
+        id S1379483AbhLCJ4f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Dec 2021 04:56:35 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35422 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S232991AbhLCJ4e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Dec 2021 04:56:34 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 1B38QB5i014928;
+        Fri, 3 Dec 2021 01:53:06 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=tV//p3k1jSZ3YWVe4pHffCHpRJ/iSpCPT/ay/gHxNv4=;
+ b=BhUpxQZxe8hEjfoLQC5qmXr8asamkAsL+ZAgSaL+nV/7DlxtTZZX4b6K8FXIZ4jMxGKF
+ VMcL+WwoYVIfitPJZPR2jbOz+moeTshC+lfrSHCIdNd0w3rqH3m6nZJ2UJiCPB+0qgfJ
+ oGOpfj6sMf4esT3zxyabwKYSCj2SLwZqt9EajatqXV9fyyB55t2SdouKTeEqI9jSYgoh
+ psANHOL3m7qUuzuA5KfEpM5tJWUMc5aChYuM8GfSNkglMwepXvz5JwiohWbeGkxF8/rr
+ HBK5oPAgBVWmX2CMVfJdQMqWZM7U0vOe1Bx7xtoFynfAYuho6DCn5WOYpKu5Fs0biH4g EA== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3cqfqq89ga-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Fri, 03 Dec 2021 01:53:06 -0800
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Fri, 3 Dec
+ 2021 01:53:04 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Fri, 3 Dec 2021 01:53:04 -0800
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id BEC173F705E;
+        Fri,  3 Dec 2021 01:53:04 -0800 (PST)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 1B39qsFa005520;
+        Fri, 3 Dec 2021 01:52:54 -0800
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 1B39qIeD005511;
+        Fri, 3 Dec 2021 01:52:18 -0800
+From:   Manish Rangankar <mrangankar@marvell.com>
+To:     <martin.petersen@oracle.com>, <lduncan@suse.com>,
+        <cleech@redhat.com>, <michael.christie@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH v2 REPOST] qedi: Fix cmd_cleanup_cmpl counter mismatch issue.
+Date:   Fri, 3 Dec 2021 01:52:18 -0800
+Message-ID: <20211203095218.5477-1-mrangankar@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7024; h=from:subject; bh=LkdLDRS96rJJ+hsAnyw+nSek/NN70rsR6NXpE1WqNL0=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhqd/vtwMNKerswTCQUH/RzzThOHW470nn5B9vB56H GLxt2qSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYanf7wAKCRCJcvTf3G3AJjzbEA CJgny2oO/KaCl8l/C0HuShj6t+Kya+5RGbj776BKxjzVP8r12CulsTYnPWCFTLiXIM2CgzhHgZ/hhF uUIbLHncQ2M0UG/bOvuzqqBDLa8lc9XllLmTSxgXgRL3C2rnWHZ9mOjXpDvm+AzeZMBrOzkWhnMp53 k8IBu/HZcFuHDvLjTChZNmJxU0Owbrcrkns4KUqp7heH0gHLC5ZUCI7L4rmihEz0lQzr/RHKpjwy3i +phfAd+Eh853oaRCtg/TYI5bIzCnZQtUjwEmcF7kCv8uSqKuLLGAS+rUB5o60pxQIk7HrfuUGKNZV1 hahWnk48CPCLhDlLOb9cqeg2ObYrOitbaD2HNmxacySFe4t6EpfGTLd9vGYxxL37QDObmCYJI4ykzN OFYwNT/jpa4Z3zlGlu+hkmJ13Y+827pGXaoZ2ze9Z2knbOIn5jlSK4WO3ljhhduNIo1e/bttTwf3zE PTI4gNz7lylHPOb4lnJuEZKWyek4EPmEF3Yh0ToAyI8bkpbltSfqotzITyuWBXaerWh/UxpmdgQIVM 14vo61cj+l+Xw6JZIteOkCHIIeRKu7csJkNYaSDpMyErO5vFnbTWsUUwO7GVT4s8EueZyI0HR5andj V6cZu/c97mcCHEg0I4vTNF9087WaCDsgEnq4D9TJU4qii8BwRbsrvwKHGtiw==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-GUID: U6lErhQGSgEAIQvVJZCqWdI2mcV4E2Jk
+X-Proofpoint-ORIG-GUID: U6lErhQGSgEAIQvVJZCqWdI2mcV4E2Jk
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
+ definitions=2021-12-03_05,2021-12-02_01,2021-12-02_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove needless use of mbox_t, replacing with just struct
-mbox_out. Silences compiler warnings under a -Warray-bounds build:
+When issued LUN reset under heavy i/o, we hit the qedi WARN_ON
+because of a mismatch in firmware i/o cmd cleanup request count
+and i/o cmd cleanup response count received. The mismatch is
+because of the race caused by the postfix increment of
+cmd_cleanup_cmpl.
 
-drivers/scsi/megaraid.c: In function 'megaraid_probe_one':
-drivers/scsi/megaraid.c:3615:30: error: array subscript 'mbox_t[0]' is partly outside array bounds of 'unsigned char[15]' [-Werror=array-bounds]
- 3615 |         mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-      |         ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/megaraid.c:3599:23: note: while referencing 'raw_mbox'
- 3599 |         unsigned char raw_mbox[sizeof(struct mbox_out)];
-      |                       ^~~~~~~~
+[qedi_clearsq:1295]:18: fatal error, need hard reset, cid=0x0
+WARNING: CPU: 48 PID: 110963 at drivers/scsi/qedi/qedi_fw.c:1296 qedi_clearsq+0xa5/0xd0 [qedi]
+CPU: 48 PID: 110963 Comm: kworker/u130:0 Kdump: loaded Tainted: G        W
+Hardware name: HPE ProLiant DL385 Gen10/ProLiant DL385 Gen10, BIOS A40 04/15/2020
+Workqueue: iscsi_conn_cleanup iscsi_cleanup_conn_work_fn [scsi_transport_iscsi]
+RIP: 0010:qedi_clearsq+0xa5/0xd0 [qedi]
+ RSP: 0018:ffffac2162c7fd98 EFLAGS: 00010246
+ RAX: 0000000000000000 RBX: ffff975213c40ab8 RCX: 0000000000000000
+ RDX: 0000000000000000 RSI: ffff9761bf816858 RDI: ffff9761bf816858
+ RBP: ffff975247018628 R08: 000000000000522c R09: 000000000000005b
+ R10: 0000000000000000 R11: ffffac2162c7fbd8 R12: ffff97522e1b2be8
+ R13: 0000000000000000 R14: ffff97522e1b2800 R15: 0000000000000001
+ FS:  0000000000000000(0000) GS:ffff9761bf800000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ CR2: 00007f1a34e3e1a0 CR3: 0000000108bb2000 CR4: 0000000000350ee0
+ Call Trace:
+  qedi_ep_disconnect+0x533/0x550 [qedi]
+  ? iscsi_dbg_trace+0x63/0x80 [scsi_transport_iscsi]
+  ? _cond_resched+0x15/0x30
+  ? iscsi_suspend_queue+0x19/0x40 [libiscsi]
+  iscsi_ep_disconnect+0xb0/0x130 [scsi_transport_iscsi]
+  iscsi_cleanup_conn_work_fn+0x82/0x130 [scsi_transport_iscsi]
+  process_one_work+0x1a7/0x360
+  ? create_worker+0x1a0/0x1a0
+  worker_thread+0x30/0x390
+  ? create_worker+0x1a0/0x1a0
+  kthread+0x116/0x130
+  ? kthread_flush_work_fn+0x10/0x10
+  ret_from_fork+0x22/0x40
+ ---[ end trace 5f1441f59082235c ]---
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 ---
- drivers/scsi/megaraid.c | 84 +++++++++++++++++------------------------
- 1 file changed, 34 insertions(+), 50 deletions(-)
+v1 -> v2:
+ - Changing cmd_cleanup_cmpl variable to atomic
+ - In completion path instead pre-increment use atomic inc.
 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 0d31d7a5e335..bf987f3a7f3f 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -192,23 +192,21 @@ mega_query_adapter(adapter_t *adapter)
+
+ drivers/scsi/qedi/qedi_fw.c    | 37 ++++++++++++++--------------------
+ drivers/scsi/qedi/qedi_iscsi.c |  2 +-
+ drivers/scsi/qedi/qedi_iscsi.h |  2 +-
+ 3 files changed, 17 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index 84a4204a2cb4..5916ed7662d5 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -732,7 +732,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
  {
- 	dma_addr_t	prod_info_dma_handle;
- 	mega_inquiry3	*inquiry3;
--	u8	raw_mbox[sizeof(struct mbox_out)];
--	mbox_t	*mbox;
-+	struct mbox_out	mbox;
-+	u8	*raw_mbox = (u8 *)&mbox;
- 	int	retval;
+ 	struct qedi_work_map *work, *work_tmp;
+ 	u32 proto_itt = cqe->itid;
+-	itt_t protoitt = 0;
+ 	int found = 0;
+ 	struct qedi_cmd *qedi_cmd = NULL;
+ 	u32 iscsi_cid;
+@@ -812,16 +811,12 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 	return;
  
- 	/* Initialize adapter inquiry mailbox */
- 
--	mbox = (mbox_t *)raw_mbox;
--
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	/*
- 	 * Try to issue Inquiry3 command
- 	 * if not succeeded, then issue MEGA_MBOXCMD_ADAPTERINQ command and
- 	 * update enquiry3 structure
- 	 */
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
- 
- 	inquiry3 = (mega_inquiry3 *)adapter->mega_buffer;
- 
-@@ -232,10 +230,10 @@ mega_query_adapter(adapter_t *adapter)
- 
- 		inq = &ext_inq->raid_inq;
- 
--		mbox->m_out.xferaddr = (u32)dma_handle;
-+		mbox.xferaddr = (u32)dma_handle;
- 
- 		/*issue old 0x04 command to adapter */
--		mbox->m_out.cmd = MEGA_MBOXCMD_ADPEXTINQ;
-+		mbox.cmd = MEGA_MBOXCMD_ADPEXTINQ;
- 
- 		issue_scb_block(adapter, raw_mbox);
- 
-@@ -262,7 +260,7 @@ mega_query_adapter(adapter_t *adapter)
- 						      sizeof(mega_product_info),
- 						      DMA_FROM_DEVICE);
- 
--		mbox->m_out.xferaddr = prod_info_dma_handle;
-+		mbox.xferaddr = prod_info_dma_handle;
- 
- 		raw_mbox[0] = FC_NEW_CONFIG;	/* i.e. mbox->cmd=0xA1 */
- 		raw_mbox[2] = NC_SUBOP_PRODUCT_INFO;	/* i.e. 0x0E */
-@@ -3569,16 +3567,14 @@ mega_n_to_m(void __user *arg, megacmd_t *mc)
- static int
- mega_is_bios_enabled(adapter_t *adapter)
- {
--	unsigned char	raw_mbox[sizeof(struct mbox_out)];
--	mbox_t	*mbox;
--
--	mbox = (mbox_t *)raw_mbox;
-+	struct mbox_out mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
- 
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
- 
- 	raw_mbox[0] = IS_BIOS_ENABLED;
- 	raw_mbox[2] = GET_BIOS;
-@@ -3600,13 +3596,11 @@ mega_is_bios_enabled(adapter_t *adapter)
- static void
- mega_enum_raid_scsi(adapter_t *adapter)
- {
--	unsigned char raw_mbox[sizeof(struct mbox_out)];
--	mbox_t *mbox;
-+	struct mbox_out mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 	int i;
- 
--	mbox = (mbox_t *)raw_mbox;
--
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	/*
- 	 * issue command to find out what channels are raid/scsi
-@@ -3616,7 +3610,7 @@ mega_enum_raid_scsi(adapter_t *adapter)
- 
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
- 
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
- 
- 	/*
- 	 * Non-ROMB firmware fail this command, so all channels
-@@ -3655,23 +3649,21 @@ static void
- mega_get_boot_drv(adapter_t *adapter)
- {
- 	struct private_bios_data	*prv_bios_data;
--	unsigned char	raw_mbox[sizeof(struct mbox_out)];
--	mbox_t	*mbox;
-+	struct mbox_out mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 	u16	cksum = 0;
- 	u8	*cksum_p;
- 	u8	boot_pdrv;
- 	int	i;
- 
--	mbox = (mbox_t *)raw_mbox;
--
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	raw_mbox[0] = BIOS_PVT_DATA;
- 	raw_mbox[2] = GET_BIOS_PVT_DATA;
- 
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
- 
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
- 
- 	adapter->boot_ldrv_enabled = 0;
- 	adapter->boot_ldrv = 0;
-@@ -3721,13 +3713,11 @@ mega_get_boot_drv(adapter_t *adapter)
- static int
- mega_support_random_del(adapter_t *adapter)
- {
--	unsigned char raw_mbox[sizeof(struct mbox_out)];
--	mbox_t *mbox;
-+	struct mbox_out mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 	int rval;
- 
--	mbox = (mbox_t *)raw_mbox;
--
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	/*
- 	 * issue command
-@@ -3750,13 +3740,11 @@ mega_support_random_del(adapter_t *adapter)
- static int
- mega_support_ext_cdb(adapter_t *adapter)
- {
--	unsigned char raw_mbox[sizeof(struct mbox_out)];
--	mbox_t *mbox;
-+	struct mbox_out mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 	int rval;
- 
--	mbox = (mbox_t *)raw_mbox;
--
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 	/*
- 	 * issue command to find out if controller supports extended CDBs.
- 	 */
-@@ -3865,16 +3853,14 @@ mega_do_del_logdrv(adapter_t *adapter, int logdrv)
- static void
- mega_get_max_sgl(adapter_t *adapter)
- {
--	unsigned char	raw_mbox[sizeof(struct mbox_out)];
--	mbox_t	*mbox;
-+	struct mbox_out	mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 
--	mbox = (mbox_t *)raw_mbox;
--
--	memset(mbox, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
- 
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
- 
- 	raw_mbox[0] = MAIN_MISC_OPCODE;
- 	raw_mbox[2] = GET_MAX_SG_SUPPORT;
-@@ -3888,7 +3874,7 @@ mega_get_max_sgl(adapter_t *adapter)
+ check_cleanup_reqs:
+-	if (qedi_conn->cmd_cleanup_req > 0) {
+-		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_TID,
++	if (atomic_inc_return(&qedi_conn->cmd_cleanup_cmpl) ==
++	    qedi_conn->cmd_cleanup_req) {
++		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
+ 			  "Freeing tid=0x%x for cid=0x%x\n",
+ 			  cqe->itid, qedi_conn->iscsi_conn_id);
+-		qedi_conn->cmd_cleanup_cmpl++;
+ 		wake_up(&qedi_conn->wait_queue);
+-	} else {
+-		QEDI_ERR(&qedi->dbg_ctx,
+-			 "Delayed or untracked cleanup response, itt=0x%x, tid=0x%x, cid=0x%x\n",
+-			 protoitt, cqe->itid, qedi_conn->iscsi_conn_id);
  	}
- 	else {
- 		adapter->sglen = *((char *)adapter->mega_buffer);
--		
-+
- 		/*
- 		 * Make sure this is not more than the resources we are
- 		 * planning to allocate
-@@ -3910,16 +3896,14 @@ mega_get_max_sgl(adapter_t *adapter)
- static int
- mega_support_cluster(adapter_t *adapter)
- {
--	unsigned char	raw_mbox[sizeof(struct mbox_out)];
--	mbox_t	*mbox;
--
--	mbox = (mbox_t *)raw_mbox;
-+	struct mbox_out	mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
+ }
  
--	memset(mbox, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
+@@ -1163,7 +1158,7 @@ int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
+ 	}
  
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
+ 	qedi_conn->cmd_cleanup_req = 0;
+-	qedi_conn->cmd_cleanup_cmpl = 0;
++	atomic_set(&qedi_conn->cmd_cleanup_cmpl, 0);
  
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
+ 	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
+ 		  "active_cmd_count=%d, cid=0x%x, in_recovery=%d, lun_reset=%d\n",
+@@ -1215,16 +1210,15 @@ int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
+ 		  qedi_conn->iscsi_conn_id);
  
- 	/*
- 	 * Try to get the initiator id. This command will succeed iff the
+ 	rval  = wait_event_interruptible_timeout(qedi_conn->wait_queue,
+-						 ((qedi_conn->cmd_cleanup_req ==
+-						 qedi_conn->cmd_cleanup_cmpl) ||
+-						 test_bit(QEDI_IN_RECOVERY,
+-							  &qedi->flags)),
+-						 5 * HZ);
++				(qedi_conn->cmd_cleanup_req ==
++				 atomic_read(&qedi_conn->cmd_cleanup_cmpl)) ||
++				test_bit(QEDI_IN_RECOVERY, &qedi->flags),
++				5 * HZ);
+ 	if (rval) {
+ 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
+ 			  "i/o cmd_cleanup_req=%d, equal to cmd_cleanup_cmpl=%d, cid=0x%x\n",
+ 			  qedi_conn->cmd_cleanup_req,
+-			  qedi_conn->cmd_cleanup_cmpl,
++			  atomic_read(&qedi_conn->cmd_cleanup_cmpl),
+ 			  qedi_conn->iscsi_conn_id);
+ 
+ 		return 0;
+@@ -1233,7 +1227,7 @@ int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
+ 	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
+ 		  "i/o cmd_cleanup_req=%d, not equal to cmd_cleanup_cmpl=%d, cid=0x%x\n",
+ 		  qedi_conn->cmd_cleanup_req,
+-		  qedi_conn->cmd_cleanup_cmpl,
++		  atomic_read(&qedi_conn->cmd_cleanup_cmpl),
+ 		  qedi_conn->iscsi_conn_id);
+ 
+ 	iscsi_host_for_each_session(qedi->shost,
+@@ -1242,11 +1236,10 @@ int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
+ 
+ 	/* Enable IOs for all other sessions except current.*/
+ 	if (!wait_event_interruptible_timeout(qedi_conn->wait_queue,
+-					      (qedi_conn->cmd_cleanup_req ==
+-					       qedi_conn->cmd_cleanup_cmpl) ||
+-					       test_bit(QEDI_IN_RECOVERY,
+-							&qedi->flags),
+-					      5 * HZ)) {
++				(qedi_conn->cmd_cleanup_req ==
++				 atomic_read(&qedi_conn->cmd_cleanup_cmpl)) ||
++				test_bit(QEDI_IN_RECOVERY, &qedi->flags),
++				5 * HZ)) {
+ 		iscsi_host_for_each_session(qedi->shost,
+ 					    qedi_mark_device_available);
+ 		return -1;
+@@ -1266,7 +1259,7 @@ void qedi_clearsq(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
+ 
+ 	qedi_ep = qedi_conn->ep;
+ 	qedi_conn->cmd_cleanup_req = 0;
+-	qedi_conn->cmd_cleanup_cmpl = 0;
++	atomic_set(&qedi_conn->cmd_cleanup_cmpl, 0);
+ 
+ 	if (!qedi_ep) {
+ 		QEDI_WARN(&qedi->dbg_ctx,
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 88aa7d8b11c9..282ecb4e39bb 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -412,7 +412,7 @@ static int qedi_conn_bind(struct iscsi_cls_session *cls_session,
+ 	qedi_conn->iscsi_conn_id = qedi_ep->iscsi_cid;
+ 	qedi_conn->fw_cid = qedi_ep->fw_cid;
+ 	qedi_conn->cmd_cleanup_req = 0;
+-	qedi_conn->cmd_cleanup_cmpl = 0;
++	atomic_set(&qedi_conn->cmd_cleanup_cmpl, 0);
+ 
+ 	if (qedi_bind_conn_to_iscsi_cid(qedi, qedi_conn)) {
+ 		rc = -EINVAL;
+diff --git a/drivers/scsi/qedi/qedi_iscsi.h b/drivers/scsi/qedi/qedi_iscsi.h
+index a282860da0aa..9b9f2e44fdde 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.h
++++ b/drivers/scsi/qedi/qedi_iscsi.h
+@@ -155,7 +155,7 @@ struct qedi_conn {
+ 	spinlock_t list_lock;		/* internal conn lock */
+ 	u32 active_cmd_count;
+ 	u32 cmd_cleanup_req;
+-	u32 cmd_cleanup_cmpl;
++	atomic_t cmd_cleanup_cmpl;
+ 
+ 	u32 iscsi_conn_id;
+ 	int itt;
 -- 
-2.30.2
+2.18.2
 
