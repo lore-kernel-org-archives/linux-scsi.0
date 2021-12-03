@@ -2,310 +2,565 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E1AC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Dec 2021 18:48:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A90CC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Dec 2021 18:59:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343835AbhLCSvi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Dec 2021 13:51:38 -0500
-Received: from de-smtp-delivery-102.mimecast.com ([194.104.111.102]:33616 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233187AbhLCSve (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Dec 2021 13:51:34 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1638557287;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tQIeGwkBSOnnN/e5MZi4TullPL0lLBkyVAKnNGK+M54=;
-        b=guyF2pRdwYeMD0e8OiuzSaTxfHlPdygrrxOOiZCN0oliXOCukGV2oGO78WqUzHx9+jn65s
-        z1Qr9aEwjIJxd1dt2euMUXvV4jYeSdKPdrVcE3xxzesYFxmBjHLevK2sapxUygMoFKL5j/
-        dtMig2XQ8U+TEQbHrFEJUv++Li9TwOM=
-Received: from EUR05-VI1-obe.outbound.protection.outlook.com
- (mail-vi1eur05lp2175.outbound.protection.outlook.com [104.47.17.175]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- de-mta-16-NuNZDymdO0-CcUm_aDJbOw-1; Fri, 03 Dec 2021 19:48:06 +0100
-X-MC-Unique: NuNZDymdO0-CcUm_aDJbOw-1
+        id S243231AbhLCTDE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Dec 2021 14:03:04 -0500
+Received: from mail-cusazlp17010005.outbound.protection.outlook.com ([40.93.13.5]:31537
+        "EHLO na01-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S242639AbhLCTDC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Dec 2021 14:03:02 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=N3HaTHw6Tkt7wUsKNBfy/0upYXbiMHCZP7enMq6+p+n8XjDf6CzJBcD5miVBmmDf2FB6llzIkvXo0EVpKZZCqJeW5D3mk9T9kbj6ESwAjLwr9HqjyInHtte1E6iYZxClE/izsSkp8aXWkpa0HK32YQycSeOTaZgG+1fc7CqmTbcETLwJ3dwm7QxQRQC0WzLVOCRd1enSJFmBfMDgnojduX//X7FcWO9Q3K6Vk9uWR4Oytib7Z8/mt5TIX/dxxp+tT/TKewXledPsNSpVMz7NVe7qXuiyGWGfsPLVIv56R3R0f3GpeNhlaZtsV2SzmnZwrIZlrxAX4vOwq9w9mkwZzw==
+ b=lwvvorw3+A+YYcD5vSTxaajypwrEDSblNTf15y8nBuFDxy9pl2iteCEGoAzTWU4+Neck9CAlJlGg47Syj+46hZmHGC/VuM1nJnorGizfpa3YGQ7PRL1h3YiB1/qEJmHDWkMQ482EA17hW3AleMLlfOuDeWwP8Nyu5aUbUukOGtZ3tPnHW/O7MDCeN6hIDbARVOttrQ/JI620sN9+uWOwdoyTZ2vviv+IjXg1WCqJkSNZ44ASHtV0Y7+AusIHsiR6i1Mm8l3crOpaMOCcBtSdIgBOOE+Qp6Sw/cUT5fzB1Yhai29RBKMKh2BNO/rKXE2Taev5aufAcAHKjWcAZ/ReWw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tQIeGwkBSOnnN/e5MZi4TullPL0lLBkyVAKnNGK+M54=;
- b=k2GVq+RtZRKfJjccrDK+jGuPCL+xGpjULTziczioxgcoleaD4Co+XfaIQLGHBu8qq5KBc0V/TmxVRcb4q0ppj8TYUx1cy1zHWE5G4agxMhGQ0NRdshpnbVMnSRJToCS85M3pnHNmMEI6XOdqoO+vQ4ZrOJZ6e40xJ5WjyIzB1TeZsrRntglUFrSRnMJGoPBYX5QAd1B1rlsyelVg3uuNG50K7e1gY9YygLRPDl+JM2RLSqjXGA0xeG5j8HC7KG8TSXXnUFIChNABQQAvDK3JcCm/x8K4GvqmDOFprnCFT2XK99zRiswwuAez6zqxCU2xXbS04cLDYR0/I1xaHo8R8Q==
+ bh=1zvSmGZWeL7RWAEcBm9oIjTfTcaBDiK4JIFwRC9Z5qI=;
+ b=DmA9wQkU4WWD70vdJ0rTD7Utt4ya1UcV9DrNvYAkSwSk2FZMOWwb7QsIbs6cRwzxRUCFb0k8LE0mhH46wwrUg2hWxz2JuLz52YzNKugvjGUe47SerHwK52YKCmlCOIf11P/6hxKHtgJTE0NoqHoKaShnDpW45eXETGCYLFLzNmYvS8UKHw+QSX8B4nIefEWx5rw72hvJ02EN7KGoLcPl8NUjzuHAxWbYf1+t0xA/BipuZc6sHKj3/UR1Xwy+LkfWRc6/kuZ1GkQ+NDGyAbBFOTwQfq3BgH2R524Arty1KNdNkfHcUiaBCZo7XTMGw0022uI8t2S1AtgCTd7N866Z9A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=suse.com;
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
- by AM5PR04MB3267.eurprd04.prod.outlook.com (2603:10a6:206:d::20) with
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1zvSmGZWeL7RWAEcBm9oIjTfTcaBDiK4JIFwRC9Z5qI=;
+ b=BiC27HDQ44LRg9RXfOjZHExAaPOFEGxSNUX1P8QoDaUcBh8HcGtMWo/XjI9KTkBpjCqf829atRtTQUtzU285LfbyFmgSUL9mKjzGT9hjoee1TATPnI0wcuCFKA23nyxvxREAKRdkP4vidPKJBTbfCFg+6WCUAN4eXASP+yAtXSs=
+Received: from MWHPR21MB1593.namprd21.prod.outlook.com (2603:10b6:301:7c::11)
+ by MW2PR2101MB1019.namprd21.prod.outlook.com (2603:10b6:302:5::10) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4734.23; Fri, 3 Dec
- 2021 18:48:04 +0000
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::a555:3b27:dc03:8fcb]) by AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::a555:3b27:dc03:8fcb%6]) with mapi id 15.20.4734.028; Fri, 3 Dec 2021
- 18:48:04 +0000
-Subject: Re: [PATCH v2 REPOST] qedi: Fix cmd_cleanup_cmpl counter mismatch
- issue.
-To:     Manish Rangankar <mrangankar@marvell.com>,
-        martin.petersen@oracle.com, cleech@redhat.com,
-        michael.christie@oracle.com
-Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
-References: <20211203095218.5477-1-mrangankar@marvell.com>
-From:   Lee Duncan <lduncan@suse.com>
-Message-ID: <87db07ec-63b8-ee96-14bd-1cc170228c1a@suse.com>
-Date:   Fri, 3 Dec 2021 10:47:59 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
-In-Reply-To: <20211203095218.5477-1-mrangankar@marvell.com>
-Content-Type: text/plain; charset=utf-8
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.4; Fri, 3 Dec
+ 2021 18:59:29 +0000
+Received: from MWHPR21MB1593.namprd21.prod.outlook.com
+ ([fe80::40d7:92be:b38f:a9cd]) by MWHPR21MB1593.namprd21.prod.outlook.com
+ ([fe80::40d7:92be:b38f:a9cd%3]) with mapi id 15.20.4778.007; Fri, 3 Dec 2021
+ 18:59:28 +0000
+From:   "Michael Kelley (LINUX)" <mikelley@microsoft.com>
+To:     Tianyu Lan <ltykernel@gmail.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "mingo@redhat.com" <mingo@redhat.com>,
+        "bp@alien8.de" <bp@alien8.de>,
+        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+        "x86@kernel.org" <x86@kernel.org>, "hpa@zytor.com" <hpa@zytor.com>,
+        "jgross@suse.com" <jgross@suse.com>,
+        "sstabellini@kernel.org" <sstabellini@kernel.org>,
+        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        "will@kernel.org" <will@kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
+CC:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        vkuznets <vkuznets@redhat.com>,
+        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
+        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
+        "dave.hansen@intel.com" <dave.hansen@intel.com>
+Subject: RE: [PATCH V3 5/5] hv_netvsc: Add Isolation VM support for netvsc
+ driver
+Thread-Topic: [PATCH V3 5/5] hv_netvsc: Add Isolation VM support for netvsc
+ driver
+Thread-Index: AQHX5sz1lOYUX8sXwkWf4jhcdD0xcKwhHfRw
+Date:   Fri, 3 Dec 2021 18:59:28 +0000
+Message-ID: <MWHPR21MB15934DE25012A8565256336ED76A9@MWHPR21MB1593.namprd21.prod.outlook.com>
+References: <20211201160257.1003912-1-ltykernel@gmail.com>
+ <20211201160257.1003912-6-ltykernel@gmail.com>
+In-Reply-To: <20211201160257.1003912-6-ltykernel@gmail.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AS8PR04CA0039.eurprd04.prod.outlook.com
- (2603:10a6:20b:312::14) To AM5PR04MB3089.eurprd04.prod.outlook.com
- (2603:10a6:206:b::28)
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=7aa46730-7ac1-4f56-a342-d06f8d3c5a0d;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-12-03T18:44:18Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: e4fd0545-1fe9-490d-11ea-08d9b68f0888
+x-ms-traffictypediagnostic: MW2PR2101MB1019:EE_
+x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
+x-microsoft-antispam-prvs: <MW2PR2101MB1019D55A2C3EF51484B7E581D76A9@MW2PR2101MB1019.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:862;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: ydoQvVlPfMxx+YfYtW+339jBk6xMiWetvoI6kXCiqRvtC6JfucpyOWfrd0a+h5RxygwYl1I15pZuDA/v6Wjcp3XaJ1B83XVnxyWcHSKltL3yJuiSFfAwXb7WKwZ154+PE8lS46uTBLyzoFr21VpaXTifhDJylakapYurHcVSWxqt7rOZkj9rlLmhPfRbTVUwUXqrZqjYrsGAY7idYxiUuG5Rj2qrTI+1Cvsqr3NbYEtWUINEvXyOYDmvWq0wC0c92gUaJX1U5XKYyeDdVq2OusotUAhVrhTXmkLb04/Z4ZBTzf2pZ3djvQczH1R0zfTcqyMZkFQ/HZcStt8NYkJ0cIa4AO2C2CaspPns3WLiw1h7hEbRVnUbAugzCm2Tm64htPq9XL8lIE9Iqgke5rYfmAMvVBfZwPVj9ZS/IqL3oc5A80gv+QQBaq5M0Zl/MnpPu1OcJBKmwqNVcJnyUiVuOS9RabA/rjQFKa63SHLSOfFl9lZwXAA7axn7q5ffN9ZlnJbLnoVSuw62EiPDZ+pyMTrB6z8uxekQq1O8CoN2H1lcAW/gNHrPHg34zJmH/TApJTIXZKHyl0XHBUZxx+W/a8U4OUzRedAdNFREgbEM52vLDdmUj8sbzjN4wjUH5SB4ovixqy060ke6VuebNhQBHkYGMhRIOHV2WYVJ9Tz+gv3xectNAtgHdZkeOiTk8egzDXvUNcIGI9n4GCeaSzB6uinDf7/YrcewVU2V2KDxWj2EcAQBIU3a0vW83ymH8zlCPHru2tVQ/LoBsV4dtth2iQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR21MB1593.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(7406005)(83380400001)(7696005)(38100700002)(52536014)(26005)(122000001)(7416002)(33656002)(2906002)(30864003)(55016003)(8990500004)(921005)(76116006)(110136005)(10290500003)(66476007)(54906003)(508600001)(66946007)(38070700005)(71200400001)(9686003)(316002)(64756008)(4326008)(186003)(66446008)(82960400001)(8676002)(8936002)(82950400001)(5660300002)(6506007)(86362001)(66556008)(20210929001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?zro05vSCjNhuL5MHhJZOTjES/UopVWOcpIskjM1HonsMdpJeWb4uyjKZK49+?=
+ =?us-ascii?Q?sPTbWrp09l4kVjrnPUElkyQPSW2rCsjz9I0uqEYXSscsthBnmLBxIn9OFuIn?=
+ =?us-ascii?Q?/ko3l7vahMQIWCVgMS/3clNRo8sbdGJ5KSN2jUawD6pr/3m+Psh7Jzpt1zEQ?=
+ =?us-ascii?Q?Jo7rc1X4wPqQvquhEWhM0xaZf6BcSdmfAmq5oyLzqWxYdyTJMT6D3Nv1IZoP?=
+ =?us-ascii?Q?G5S6svamQHo/NG72c6H1PIyRkVThXgCZ3TFHfTKL5mSGkbfMmz3L9ofEOVkG?=
+ =?us-ascii?Q?hz4W72vOpX/2jIXdE0XrP1g7TOIt9Euax44m2MkDuaA5K9MegcMEjJjBMTH7?=
+ =?us-ascii?Q?uEUas+uIia4ztMbRKx7d/v0XVEjHFiAfySOL7pCa0OLlQ30Att4f6rmBQQmG?=
+ =?us-ascii?Q?eG3bdaBrnYhaxeD7M7lV/Nux6v/mcc4gErL5Ek2QWc8JizuQN/XpSsJdGg9y?=
+ =?us-ascii?Q?NJQ3DVOjgBuhQBPIdd9BaeNTA3YuoZHCGdMnY/cgQxDqGqvm9go9EaA1/LfZ?=
+ =?us-ascii?Q?QrlLu/dnubx1sw92+WypKQcH8BRbW/a6hCxKmDjYYO9kls5FWRsTllUzPQcQ?=
+ =?us-ascii?Q?AjjfxzU/CReHsPVVAjj2X+8CozdfyXNgeU3F3vNpN7gmiSiEZ7IIwa69v2Az?=
+ =?us-ascii?Q?ydOhQIzKdk2xL7PZup1Qi1LaEHZKNz/4zh9H+iH9aZg6KgxkZs1PbfbdgiI1?=
+ =?us-ascii?Q?pZW9idJgm8kIDWzDfxW6Z4Ycyr66zEdbkrtcVnNY7O+5BXwlxst96aJAj+va?=
+ =?us-ascii?Q?uGNSZu81g3h2Acq4GNRQxb/1fdEDa01z6/9Tiu73WxzTprkmlrqV8cTO3MmJ?=
+ =?us-ascii?Q?I2GixJzZjMahihMWVm+gILXztvQQjyjGEQm+2JKNRflygrVIQllAzhf/FhCS?=
+ =?us-ascii?Q?+247wG9pKiyt2JF7bph+WCgID9oRz90f/AqwVG2JSdM7Uj3H7IFuCXiibXw7?=
+ =?us-ascii?Q?Z5CIgeeV0XFrHXT/1Nu1vAO9ceHSzVeEL/rHUDBp67rXjOutI2+lqgWTKTeO?=
+ =?us-ascii?Q?f1vR1eEABitU9o9v3kHjGkgPLwF4V7aNHXqPmzLnpgTSCQ4cQzk2oal1cAJD?=
+ =?us-ascii?Q?YN/2lAfhZCo/gwpodcKhFT9/R/sNpwGwtI0+4gbTXJ3b/U7jHJDY2ZhkDRDc?=
+ =?us-ascii?Q?LwIW15Tg5VbdX+hcaVnPNvMTJFSbakCQCm7cOSh+4lNhi1dWe2mnuBBb3Pig?=
+ =?us-ascii?Q?/6V6BEnNe/xjAuu0yO4fc8kRTSDXPv99wtqcMFQ4Ygsmd1VYaPGOHrk/7nvz?=
+ =?us-ascii?Q?wyXUbAlq1VOevie58iYz06IJn0uRxxqzKCZ3WnD9X7eDNgCwJUUU36Bc0cBl?=
+ =?us-ascii?Q?jQvDM79Xd8wsUD8PEGR8F0J0vKgcxSc+1EnINQRLjntgo1ELCmE2REZSZ/fN?=
+ =?us-ascii?Q?GRseoeIIFNtDnDxO2JKwMGlnQIsKBY+nAH/Jp1VZ3NbYVxiNU7LuuwvZkEz6?=
+ =?us-ascii?Q?76Mg1mInYSEe7Xh27WOuH1Av+0Shqefq64UumAWF4FB2m1sBvHvYXXfx8xHq?=
+ =?us-ascii?Q?ah4Ul6oRzXrIQUL5/YXRuzb1yKj618fuHOVSq+UzA+6kToluDHd4w0XfFOOq?=
+ =?us-ascii?Q?5cuYbfyBTSZnEyFbShNhPGM5BuhBHX/yNn/Pq4tMkSOwJjzQ2TTma10tmB9S?=
+ =?us-ascii?Q?d402NcSXuQalpQsaEegUQG2pmbbC1GUqaMH59uPaQpgJqr25hurQg7ODq8ET?=
+ =?us-ascii?Q?QmrLAA=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Received: from [192.168.20.3] (73.25.22.216) by AS8PR04CA0039.eurprd04.prod.outlook.com (2603:10a6:20b:312::14) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.17 via Frontend Transport; Fri, 3 Dec 2021 18:48:02 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 592233a1-8afb-4982-e97b-08d9b68d7057
-X-MS-TrafficTypeDiagnostic: AM5PR04MB3267:
-X-Microsoft-Antispam-PRVS: <AM5PR04MB32676CB01C6285B694728C73DA6A9@AM5PR04MB3267.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: e/0VFiRD7Ocpx4+fWLmFsb5NSgYktCRLvsMwh7kU+gX/xO+jJQNiBWteC+5OqizqAo3kh6JRjfU3is23s35s40xkUGdVK9cjz65z/DVmQDRLv8uMvKF9dnAta4H+lZ6NZIA1wc3ztj0uoYl2jwzj5NDXAJQwmT1GXuusW6I2ttMA9/872omLEtWV4mX+t0+tSZNDzOHRflx4GdUC8Ex9lQ2XfQ0EiKijXqgCrkdMhDEDuSrWzhaje0GofnB42DreJF1KKzQGIWTMrxhdgO0zAQUnB9n7E2fOcghnzXkPF9aB2MTOr1bsQ9EVRPtATJEd3rdjs54vvx3FZ3gnhom4jPMXp6UGlHM6VWYUPcTZEFHCi4d/iKn4w8NyR5cDfZSVt9bbZKY/86041TaGDjhICNxcvqwhoYf6k6xvJodlIjxQIVv0Ckxff7uE3kGLRNk0dEAqkeG1543PLyxZgWJ4WBLOQ9hDB4Z/dG0iW5K/hxwJm82tLaaj0YSpdxAsmF5HJEigCyJ/LumcDceOcQNQMzGINxJBbNEGyu84PbVoF5pVrvh2nlJlrXzqqck0r7veM/kyCkcojVrki3UEeMh4fEjctkvlzy1YX6L62yjnG4sLQQWRVt4363RcUg3ZwduBuxz5/4zcGUyCJTfav1ZqUuitjaQbIPEH1xeZbKx4uZWp304w26E891k4VzOUfKDaiq0QYyAEfMJxPkV5wxeePAsat8twgssy2kylZGwBlf8=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(8936002)(4326008)(83380400001)(66476007)(5660300002)(956004)(53546011)(2906002)(6666004)(66946007)(66556008)(31696002)(26005)(16576012)(8676002)(36756003)(316002)(38100700002)(508600001)(186003)(6486002)(31686004)(86362001)(2616005)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?RGNpTUFtSnkyYVIvWUF6bVdheTZraWc2WjVnQTFXcGpYYmtOdFdTMGJHR0RR?=
- =?utf-8?B?ME1ERnVEUVFnYmFjMG9VYThxYStJVDhaVjcvVS9sTXUxOStvQkVwN0VicExo?=
- =?utf-8?B?end6MzFwZ1NDNG5qUVZKSWQvNlM4SHpTUWZJZWM2QkZFcGdhQTBEb09IOHF6?=
- =?utf-8?B?UWIwZ3o0cDVtVGZETzVYWXdaT1Q4bUZpVHA4THFwZzQ1aU8zVzlrRkFMaEsv?=
- =?utf-8?B?ZVArVk9WRkFTRGp4MEJsUDg1akJtQ3pOd1RScm5xTE9xWFpRRW43Y254QnZS?=
- =?utf-8?B?bDNyOGVEelpBN2w0VTZqWmhUY0wzRUV0OVVrV29nMGw4NEhhVnRBT0RxT0lV?=
- =?utf-8?B?VzI1c0tvYVdQTURiME40R3VqWEtPby92a3VCaGVFVXlyeUNHMjVzNDRUaHNZ?=
- =?utf-8?B?QklsR3JyTW1iZnlhanhqR2xtaDFsZHdTak9WODFXL3JneFc4QkFaelNUNlFF?=
- =?utf-8?B?cXlBK1ZiT2FXSVU1S21ZSktaRDRHSnduZWh0R2hZOGovYVRGT0ZuVDJTbnQz?=
- =?utf-8?B?NUEra0RrbVlQalhqNExOQWRzSU9KZVprNEZRUDlETlc1VnU4OGdqVjVvQUdw?=
- =?utf-8?B?QkFrK1lETytPY2xiK2JrNUZxRk5sUjhZWEhMSkJGU210L0daNEN3TWo3ZEFr?=
- =?utf-8?B?M21ZOUVRR0s0SERmR0JNbDBxbEwwbVpyUUxJRVdIdUI2VDZzd3k1SVBydDZY?=
- =?utf-8?B?RjVWN2l5dDQrVmpraGo5U1BNY0tFTUQvZzRxbWZOOHJGWW9iK08vQjJzVUsy?=
- =?utf-8?B?alVLUW5McjFJQ256cDZTR0VMYjFrOE84ZFZqaXQ0OHExcEpCNGo0TmIrMVpv?=
- =?utf-8?B?UXBCNXpmRjVRdm9EUzg0QXZLMlRDdFlUT2FlRTBBa2RHRUwvSzQ3SUtqeGhD?=
- =?utf-8?B?WVh3V0M2eE1TVDNtdTN3bEZxRTQxTnUwQlZ6YThYQXZ2YjNoMjRiVVZBWlF4?=
- =?utf-8?B?RzBGYzFCTWFTL3BtT21aRlVZQTdubmZERjRDbElIWGNrdE4rd3ZmUXF6WkRI?=
- =?utf-8?B?U200bnBtcWg0WFpZRnpVbkFDUmt6TkRZYkhGeFpNNVRjZ1RDMW1XWEwzVUVC?=
- =?utf-8?B?dXMwYS9YUXEvakJnMk9QQkpvcEtzNTZ0eHBrdDEwaVJTakhZYkZDYnlIaVdw?=
- =?utf-8?B?eHBZRWt1TzZUaVhyVHBRMVBaaXB4NjZ4R3A2QVZqenhVTWQ2cS9MMkpJVnRr?=
- =?utf-8?B?VitvVm1mTkE3S2xnQWxLMWFpUGVVVFVUWDFaWUtUUFNGRVVWQjVpaWdPNzZ0?=
- =?utf-8?B?VDRER1duYWNvM1hkajNNaFFmQkppdG54RlVnWEIweHgzb0VzYjZKOVBpSXo3?=
- =?utf-8?B?c3BqVWZsL2g4cTVKKy9iZjR3SmlSTnVQbTdtL2lienY5OWxDMmRhRWNCZXM1?=
- =?utf-8?B?UGNpN085c2QzeWFQRjZRZzlEMjhhYWNiWEZ3MUM2eGh4OHkyTWM5ZDdYaCs5?=
- =?utf-8?B?TUZ0dzhWREt4RkdGbW1hdU9QNTd6U1VROTRjRDFMbUJFeExOOU1IaXMvVjBE?=
- =?utf-8?B?REprRGNOMWFFQ3lRK1crSFM4aGJyL3J4NkZFR2FEYmVSTlRtQVJBVWFHTXB5?=
- =?utf-8?B?cEMxZ2NMeCtnVTJSS0VaUlkzY0hBQWNKN2h5dWhFT3U2SlJhU0ZOZjhFZXdK?=
- =?utf-8?B?WkxhYVFGKzlwcjgwdEtPejFIeEtxZHFXL2NYcGhmNExRV3M1ZlcvRU1WRm1S?=
- =?utf-8?B?Q0dxaVY2Tjc1czE2SjVqSlBaQi9ORy9DY05ZeEcweXR5MW5uMmdMTDJzRU0v?=
- =?utf-8?B?UUdDSFJXVXpMdFVTOGttLzYwOFJJZURCb0NoVDRVQlhHKzMydFdpYXpReldM?=
- =?utf-8?B?NElOZHNiZFBGS1cwcVpYT1IySjA5SnpIb1VQNUQwRUdJeEVOY3d2QlZQUlBq?=
- =?utf-8?B?SEpGSUkwSEFnSzYyVEZ4Qk00QzgxZzYxNitKaTAyMlllWmM0N0JxM0hVd3g3?=
- =?utf-8?B?eUZSa04xWmtocDhtYzZXY3NQdi96dTlPSHFUSEdaNGFZNnRTbHJlMnZrckNx?=
- =?utf-8?B?ZlJSZzU4VjBnVk9IN1BiWXFYSW1CYnB1UmlKcUtFUFB4UU1aaGRTb2hnV2RG?=
- =?utf-8?B?UWtoZ0lVMi8zaTRPNFVuWDBjYW0rR2Z5OHpLWENoZ3cxWjRLU0grbXdLaHFu?=
- =?utf-8?B?bjlNaURjT0J0U25hMUtSd1QwWXorNFkvL3ZqaW5EMzVINWlOMllycXQwM2Fm?=
- =?utf-8?Q?Lpw+HlE1Uwi95f7/5Dzi8no=3D?=
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 592233a1-8afb-4982-e97b-08d9b68d7057
-X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
+X-OriginatorOrg: microsoft.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Dec 2021 18:48:04.2878
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR21MB1593.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e4fd0545-1fe9-490d-11ea-08d9b68f0888
+X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Dec 2021 18:59:28.7049
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: QYOlzM3MkKohfgJ96bIqWoXik4bDH7P1rLvNXF7wltoxX2WV+q6Q1Fdm4ZLKInUpGIitcmR9Or74AI3yjafhaw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5PR04MB3267
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: NNhAqCcIO2/MvZ83887pIu/DkGlbprQSyQM4VAMD175E+8fHTfeqdSeFGghpyHZnawQeWGOLtdfagQjnJczuCNx+Z3JOc24ccqsSmogkqcU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW2PR2101MB1019
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/3/21 1:52 AM, Manish Rangankar wrote:
-> When issued LUN reset under heavy i/o, we hit the qedi WARN_ON
-> because of a mismatch in firmware i/o cmd cleanup request count
-> and i/o cmd cleanup response count received. The mismatch is
-> because of the race caused by the postfix increment of
-> cmd_cleanup_cmpl.
-> 
-> [qedi_clearsq:1295]:18: fatal error, need hard reset, cid=0x0
-> WARNING: CPU: 48 PID: 110963 at drivers/scsi/qedi/qedi_fw.c:1296 qedi_clearsq+0xa5/0xd0 [qedi]
-> CPU: 48 PID: 110963 Comm: kworker/u130:0 Kdump: loaded Tainted: G        W
-> Hardware name: HPE ProLiant DL385 Gen10/ProLiant DL385 Gen10, BIOS A40 04/15/2020
-> Workqueue: iscsi_conn_cleanup iscsi_cleanup_conn_work_fn [scsi_transport_iscsi]
-> RIP: 0010:qedi_clearsq+0xa5/0xd0 [qedi]
->  RSP: 0018:ffffac2162c7fd98 EFLAGS: 00010246
->  RAX: 0000000000000000 RBX: ffff975213c40ab8 RCX: 0000000000000000
->  RDX: 0000000000000000 RSI: ffff9761bf816858 RDI: ffff9761bf816858
->  RBP: ffff975247018628 R08: 000000000000522c R09: 000000000000005b
->  R10: 0000000000000000 R11: ffffac2162c7fbd8 R12: ffff97522e1b2be8
->  R13: 0000000000000000 R14: ffff97522e1b2800 R15: 0000000000000001
->  FS:  0000000000000000(0000) GS:ffff9761bf800000(0000) knlGS:0000000000000000
->  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->  CR2: 00007f1a34e3e1a0 CR3: 0000000108bb2000 CR4: 0000000000350ee0
->  Call Trace:
->   qedi_ep_disconnect+0x533/0x550 [qedi]
->   ? iscsi_dbg_trace+0x63/0x80 [scsi_transport_iscsi]
->   ? _cond_resched+0x15/0x30
->   ? iscsi_suspend_queue+0x19/0x40 [libiscsi]
->   iscsi_ep_disconnect+0xb0/0x130 [scsi_transport_iscsi]
->   iscsi_cleanup_conn_work_fn+0x82/0x130 [scsi_transport_iscsi]
->   process_one_work+0x1a7/0x360
->   ? create_worker+0x1a0/0x1a0
->   worker_thread+0x30/0x390
->   ? create_worker+0x1a0/0x1a0
->   kthread+0x116/0x130
->   ? kthread_flush_work_fn+0x10/0x10
->   ret_from_fork+0x22/0x40
->  ---[ end trace 5f1441f59082235c ]---
-> 
-> Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+From: Tianyu Lan <ltykernel@gmail.com> Sent: Wednesday, December 1, 2021 8:=
+03 AM
+>=20
+> In Isolation VM, all shared memory with host needs to mark visible
+> to host via hvcall. vmbus_establish_gpadl() has already done it for
+> netvsc rx/tx ring buffer. The page buffer used by vmbus_sendpacket_
+> pagebuffer() stills need to be handled. Use DMA API to map/umap
+> these memory during sending/receiving packet and Hyper-V swiotlb
+> bounce buffer dma adress will be returned. The swiotlb bounce buffer
+> has been masked to be visible to host during boot up.
+>=20
+> rx/tx ring buffer is allocated via vzalloc() and they need to be
+> mapped into unencrypted address space(above vTOM) before sharing
+> with host and accessing. Add hv_map/unmap_memory() to map/umap rx
+> /tx ring buffer.
+>=20
+> Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
 > ---
-> v1 -> v2:
->  - Changing cmd_cleanup_cmpl variable to atomic
->  - In completion path instead pre-increment use atomic inc.
-> 
-> 
->  drivers/scsi/qedi/qedi_fw.c    | 37 ++++++++++++++--------------------
->  drivers/scsi/qedi/qedi_iscsi.c |  2 +-
->  drivers/scsi/qedi/qedi_iscsi.h |  2 +-
->  3 files changed, 17 insertions(+), 24 deletions(-)
-> 
-> diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-> index 84a4204a2cb4..5916ed7662d5 100644
-> --- a/drivers/scsi/qedi/qedi_fw.c
-> +++ b/drivers/scsi/qedi/qedi_fw.c
-> @@ -732,7 +732,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
->  {
->  	struct qedi_work_map *work, *work_tmp;
->  	u32 proto_itt = cqe->itid;
-> -	itt_t protoitt = 0;
->  	int found = 0;
->  	struct qedi_cmd *qedi_cmd = NULL;
->  	u32 iscsi_cid;
-> @@ -812,16 +811,12 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
->  	return;
->  
->  check_cleanup_reqs:
-> -	if (qedi_conn->cmd_cleanup_req > 0) {
-> -		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_TID,
-> +	if (atomic_inc_return(&qedi_conn->cmd_cleanup_cmpl) ==
-> +	    qedi_conn->cmd_cleanup_req) {
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
->  			  "Freeing tid=0x%x for cid=0x%x\n",
->  			  cqe->itid, qedi_conn->iscsi_conn_id);
-> -		qedi_conn->cmd_cleanup_cmpl++;
->  		wake_up(&qedi_conn->wait_queue);
-> -	} else {
-> -		QEDI_ERR(&qedi->dbg_ctx,
-> -			 "Delayed or untracked cleanup response, itt=0x%x, tid=0x%x, cid=0x%x\n",
-> -			 protoitt, cqe->itid, qedi_conn->iscsi_conn_id);
->  	}
+> Change since v2:
+>        * Add hv_map/unmap_memory() to map/umap rx/tx ring buffer.
+> ---
+>  arch/x86/hyperv/ivm.c             |  28 ++++++
+>  drivers/hv/hv_common.c            |  11 +++
+>  drivers/net/hyperv/hyperv_net.h   |   5 ++
+>  drivers/net/hyperv/netvsc.c       | 136 +++++++++++++++++++++++++++++-
+>  drivers/net/hyperv/netvsc_drv.c   |   1 +
+>  drivers/net/hyperv/rndis_filter.c |   2 +
+>  include/asm-generic/mshyperv.h    |   2 +
+>  include/linux/hyperv.h            |   5 ++
+>  8 files changed, 187 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/arch/x86/hyperv/ivm.c b/arch/x86/hyperv/ivm.c
+> index 69c7a57f3307..9f78d8f67ea3 100644
+> --- a/arch/x86/hyperv/ivm.c
+> +++ b/arch/x86/hyperv/ivm.c
+> @@ -287,3 +287,31 @@ int hv_set_mem_host_visibility(unsigned long kbuffer=
+, int pagecount, bool visibl
+>  	kfree(pfn_array);
+>  	return ret;
 >  }
->  
-> @@ -1163,7 +1158,7 @@ int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
->  	}
->  
->  	qedi_conn->cmd_cleanup_req = 0;
-> -	qedi_conn->cmd_cleanup_cmpl = 0;
-> +	atomic_set(&qedi_conn->cmd_cleanup_cmpl, 0);
->  
->  	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
->  		  "active_cmd_count=%d, cid=0x%x, in_recovery=%d, lun_reset=%d\n",
-> @@ -1215,16 +1210,15 @@ int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
->  		  qedi_conn->iscsi_conn_id);
->  
->  	rval  = wait_event_interruptible_timeout(qedi_conn->wait_queue,
-> -						 ((qedi_conn->cmd_cleanup_req ==
-> -						 qedi_conn->cmd_cleanup_cmpl) ||
-> -						 test_bit(QEDI_IN_RECOVERY,
-> -							  &qedi->flags)),
-> -						 5 * HZ);
-> +				(qedi_conn->cmd_cleanup_req ==
-> +				 atomic_read(&qedi_conn->cmd_cleanup_cmpl)) ||
-> +				test_bit(QEDI_IN_RECOVERY, &qedi->flags),
-> +				5 * HZ);
->  	if (rval) {
->  		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
->  			  "i/o cmd_cleanup_req=%d, equal to cmd_cleanup_cmpl=%d, cid=0x%x\n",
->  			  qedi_conn->cmd_cleanup_req,
-> -			  qedi_conn->cmd_cleanup_cmpl,
-> +			  atomic_read(&qedi_conn->cmd_cleanup_cmpl),
->  			  qedi_conn->iscsi_conn_id);
->  
->  		return 0;
-> @@ -1233,7 +1227,7 @@ int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
->  	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
->  		  "i/o cmd_cleanup_req=%d, not equal to cmd_cleanup_cmpl=%d, cid=0x%x\n",
->  		  qedi_conn->cmd_cleanup_req,
-> -		  qedi_conn->cmd_cleanup_cmpl,
-> +		  atomic_read(&qedi_conn->cmd_cleanup_cmpl),
->  		  qedi_conn->iscsi_conn_id);
->  
->  	iscsi_host_for_each_session(qedi->shost,
-> @@ -1242,11 +1236,10 @@ int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
->  
->  	/* Enable IOs for all other sessions except current.*/
->  	if (!wait_event_interruptible_timeout(qedi_conn->wait_queue,
-> -					      (qedi_conn->cmd_cleanup_req ==
-> -					       qedi_conn->cmd_cleanup_cmpl) ||
-> -					       test_bit(QEDI_IN_RECOVERY,
-> -							&qedi->flags),
-> -					      5 * HZ)) {
-> +				(qedi_conn->cmd_cleanup_req ==
-> +				 atomic_read(&qedi_conn->cmd_cleanup_cmpl)) ||
-> +				test_bit(QEDI_IN_RECOVERY, &qedi->flags),
-> +				5 * HZ)) {
->  		iscsi_host_for_each_session(qedi->shost,
->  					    qedi_mark_device_available);
->  		return -1;
-> @@ -1266,7 +1259,7 @@ void qedi_clearsq(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
->  
->  	qedi_ep = qedi_conn->ep;
->  	qedi_conn->cmd_cleanup_req = 0;
-> -	qedi_conn->cmd_cleanup_cmpl = 0;
-> +	atomic_set(&qedi_conn->cmd_cleanup_cmpl, 0);
->  
->  	if (!qedi_ep) {
->  		QEDI_WARN(&qedi->dbg_ctx,
-> diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-> index 88aa7d8b11c9..282ecb4e39bb 100644
-> --- a/drivers/scsi/qedi/qedi_iscsi.c
-> +++ b/drivers/scsi/qedi/qedi_iscsi.c
-> @@ -412,7 +412,7 @@ static int qedi_conn_bind(struct iscsi_cls_session *cls_session,
->  	qedi_conn->iscsi_conn_id = qedi_ep->iscsi_cid;
->  	qedi_conn->fw_cid = qedi_ep->fw_cid;
->  	qedi_conn->cmd_cleanup_req = 0;
-> -	qedi_conn->cmd_cleanup_cmpl = 0;
-> +	atomic_set(&qedi_conn->cmd_cleanup_cmpl, 0);
->  
->  	if (qedi_bind_conn_to_iscsi_cid(qedi, qedi_conn)) {
->  		rc = -EINVAL;
-> diff --git a/drivers/scsi/qedi/qedi_iscsi.h b/drivers/scsi/qedi/qedi_iscsi.h
-> index a282860da0aa..9b9f2e44fdde 100644
-> --- a/drivers/scsi/qedi/qedi_iscsi.h
-> +++ b/drivers/scsi/qedi/qedi_iscsi.h
-> @@ -155,7 +155,7 @@ struct qedi_conn {
->  	spinlock_t list_lock;		/* internal conn lock */
->  	u32 active_cmd_count;
->  	u32 cmd_cleanup_req;
-> -	u32 cmd_cleanup_cmpl;
-> +	atomic_t cmd_cleanup_cmpl;
->  
->  	u32 iscsi_conn_id;
->  	int itt;
-> 
+> +
+> +/*
+> + * hv_map_memory - map memory to extra space in the AMD SEV-SNP Isolatio=
+n VM.
+> + */
+> +void *hv_map_memory(void *addr, unsigned long size)
+> +{
+> +	unsigned long *pfns =3D kcalloc(size / HV_HYP_PAGE_SIZE,
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+This should be just PAGE_SIZE, as this code is unrelated to communication
+with Hyper-V.
+
+> +				      sizeof(unsigned long), GFP_KERNEL);
+> +	void *vaddr;
+> +	int i;
+> +
+> +	if (!pfns)
+> +		return NULL;
+> +
+> +	for (i =3D 0; i < size / PAGE_SIZE; i++)
+> +		pfns[i] =3D virt_to_hvpfn(addr + i * PAGE_SIZE) +
+
+Same here:  Use virt_to_pfn().
+
+> +			(ms_hyperv.shared_gpa_boundary >> PAGE_SHIFT);
+> +
+> +	vaddr =3D vmap_pfn(pfns, size / PAGE_SIZE, PAGE_KERNEL_IO);
+> +	kfree(pfns);
+> +
+> +	return vaddr;
+> +}
+> +
+> +void hv_unmap_memory(void *addr)
+> +{
+> +	vunmap(addr);
+> +}
+> diff --git a/drivers/hv/hv_common.c b/drivers/hv/hv_common.c
+> index 7be173a99f27..3c5cb1f70319 100644
+> --- a/drivers/hv/hv_common.c
+> +++ b/drivers/hv/hv_common.c
+> @@ -295,3 +295,14 @@ u64 __weak hv_ghcb_hypercall(u64 control, void *inpu=
+t, void *output, u32 input_s
+>  	return HV_STATUS_INVALID_PARAMETER;
+>  }
+>  EXPORT_SYMBOL_GPL(hv_ghcb_hypercall);
+> +
+> +void __weak *hv_map_memory(void *addr, unsigned long size)
+> +{
+> +	return NULL;
+> +}
+> +EXPORT_SYMBOL_GPL(hv_map_memory);
+> +
+> +void __weak hv_unmap_memory(void *addr)
+> +{
+> +}
+> +EXPORT_SYMBOL_GPL(hv_unmap_memory);
+> diff --git a/drivers/net/hyperv/hyperv_net.h b/drivers/net/hyperv/hyperv_=
+net.h
+> index 315278a7cf88..cf69da0e296c 100644
+> --- a/drivers/net/hyperv/hyperv_net.h
+> +++ b/drivers/net/hyperv/hyperv_net.h
+> @@ -164,6 +164,7 @@ struct hv_netvsc_packet {
+>  	u32 total_bytes;
+>  	u32 send_buf_index;
+>  	u32 total_data_buflen;
+> +	struct hv_dma_range *dma_range;
+>  };
+>=20
+>  #define NETVSC_HASH_KEYLEN 40
+> @@ -1074,6 +1075,7 @@ struct netvsc_device {
+>=20
+>  	/* Receive buffer allocated by us but manages by NetVSP */
+>  	void *recv_buf;
+> +	void *recv_original_buf;
+>  	u32 recv_buf_size; /* allocated bytes */
+>  	struct vmbus_gpadl recv_buf_gpadl_handle;
+>  	u32 recv_section_cnt;
+> @@ -1082,6 +1084,7 @@ struct netvsc_device {
+>=20
+>  	/* Send buffer allocated by us */
+>  	void *send_buf;
+> +	void *send_original_buf;
+>  	u32 send_buf_size;
+>  	struct vmbus_gpadl send_buf_gpadl_handle;
+>  	u32 send_section_cnt;
+> @@ -1731,4 +1734,6 @@ struct rndis_message {
+>  #define RETRY_US_HI	10000
+>  #define RETRY_MAX	2000	/* >10 sec */
+>=20
+> +void netvsc_dma_unmap(struct hv_device *hv_dev,
+> +		      struct hv_netvsc_packet *packet);
+>  #endif /* _HYPERV_NET_H */
+> diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
+> index 396bc1c204e6..b7ade735a806 100644
+> --- a/drivers/net/hyperv/netvsc.c
+> +++ b/drivers/net/hyperv/netvsc.c
+> @@ -153,8 +153,21 @@ static void free_netvsc_device(struct rcu_head *head=
+)
+>  	int i;
+>=20
+>  	kfree(nvdev->extension);
+> -	vfree(nvdev->recv_buf);
+> -	vfree(nvdev->send_buf);
+> +
+> +	if (nvdev->recv_original_buf) {
+> +		hv_unmap_memory(nvdev->recv_buf);
+> +		vfree(nvdev->recv_original_buf);
+> +	} else {
+> +		vfree(nvdev->recv_buf);
+> +	}
+> +
+> +	if (nvdev->send_original_buf) {
+> +		hv_unmap_memory(nvdev->send_buf);
+> +		vfree(nvdev->send_original_buf);
+> +	} else {
+> +		vfree(nvdev->send_buf);
+> +	}
+> +
+>  	kfree(nvdev->send_section_map);
+>=20
+>  	for (i =3D 0; i < VRSS_CHANNEL_MAX; i++) {
+> @@ -338,6 +351,7 @@ static int netvsc_init_buf(struct hv_device *device,
+>  	unsigned int buf_size;
+>  	size_t map_words;
+>  	int i, ret =3D 0;
+> +	void *vaddr;
+>=20
+>  	/* Get receive buffer area. */
+>  	buf_size =3D device_info->recv_sections * device_info->recv_section_siz=
+e;
+> @@ -373,6 +387,17 @@ static int netvsc_init_buf(struct hv_device *device,
+>  		goto cleanup;
+>  	}
+>=20
+> +	if (hv_isolation_type_snp()) {
+> +		vaddr =3D hv_map_memory(net_device->recv_buf, buf_size);
+> +		if (!vaddr) {
+> +			ret =3D -ENOMEM;
+> +			goto cleanup;
+> +		}
+> +
+> +		net_device->recv_original_buf =3D net_device->recv_buf;
+> +		net_device->recv_buf =3D vaddr;
+> +	}
+> +
+>  	/* Notify the NetVsp of the gpadl handle */
+>  	init_packet =3D &net_device->channel_init_pkt;
+>  	memset(init_packet, 0, sizeof(struct nvsp_message));
+> @@ -476,6 +501,17 @@ static int netvsc_init_buf(struct hv_device *device,
+>  		goto cleanup;
+>  	}
+>=20
+> +	if (hv_isolation_type_snp()) {
+> +		vaddr =3D hv_map_memory(net_device->send_buf, buf_size);
+> +		if (!vaddr) {
+> +			ret =3D -ENOMEM;
+> +			goto cleanup;
+> +		}
+> +
+> +		net_device->send_original_buf =3D net_device->send_buf;
+> +		net_device->send_buf =3D vaddr;
+> +	}
+> +
+>  	/* Notify the NetVsp of the gpadl handle */
+>  	init_packet =3D &net_device->channel_init_pkt;
+>  	memset(init_packet, 0, sizeof(struct nvsp_message));
+> @@ -766,7 +802,7 @@ static void netvsc_send_tx_complete(struct net_device=
+ *ndev,
+>=20
+>  	/* Notify the layer above us */
+>  	if (likely(skb)) {
+> -		const struct hv_netvsc_packet *packet
+> +		struct hv_netvsc_packet *packet
+>  			=3D (struct hv_netvsc_packet *)skb->cb;
+>  		u32 send_index =3D packet->send_buf_index;
+>  		struct netvsc_stats *tx_stats;
+> @@ -782,6 +818,7 @@ static void netvsc_send_tx_complete(struct net_device=
+ *ndev,
+>  		tx_stats->bytes +=3D packet->total_bytes;
+>  		u64_stats_update_end(&tx_stats->syncp);
+>=20
+> +		netvsc_dma_unmap(ndev_ctx->device_ctx, packet);
+>  		napi_consume_skb(skb, budget);
+>  	}
+>=20
+> @@ -946,6 +983,88 @@ static void netvsc_copy_to_send_buf(struct netvsc_de=
+vice *net_device,
+>  		memset(dest, 0, padding);
+>  }
+>=20
+> +void netvsc_dma_unmap(struct hv_device *hv_dev,
+> +		      struct hv_netvsc_packet *packet)
+> +{
+> +	u32 page_count =3D packet->cp_partial ?
+> +		packet->page_buf_cnt - packet->rmsg_pgcnt :
+> +		packet->page_buf_cnt;
+> +	int i;
+> +
+> +	if (!hv_is_isolation_supported())
+> +		return;
+> +
+> +	if (!packet->dma_range)
+> +		return;
+> +
+> +	for (i =3D 0; i < page_count; i++)
+> +		dma_unmap_single(&hv_dev->device, packet->dma_range[i].dma,
+> +				 packet->dma_range[i].mapping_size,
+> +				 DMA_TO_DEVICE);
+> +
+> +	kfree(packet->dma_range);
+> +}
+> +
+> +/* netvsc_dma_map - Map swiotlb bounce buffer with data page of
+> + * packet sent by vmbus_sendpacket_pagebuffer() in the Isolation
+> + * VM.
+> + *
+> + * In isolation VM, netvsc send buffer has been marked visible to
+> + * host and so the data copied to send buffer doesn't need to use
+> + * bounce buffer. The data pages handled by vmbus_sendpacket_pagebuffer(=
+)
+> + * may not be copied to send buffer and so these pages need to be
+> + * mapped with swiotlb bounce buffer. netvsc_dma_map() is to do
+> + * that. The pfns in the struct hv_page_buffer need to be converted
+> + * to bounce buffer's pfn. The loop here is necessary because the
+> + * entries in the page buffer array are not necessarily full
+> + * pages of data.  Each entry in the array has a separate offset and
+> + * len that may be non-zero, even for entries in the middle of the
+> + * array.  And the entries are not physically contiguous.  So each
+> + * entry must be individually mapped rather than as a contiguous unit.
+> + * So not use dma_map_sg() here.
+> + */
+> +int netvsc_dma_map(struct hv_device *hv_dev,
+> +		   struct hv_netvsc_packet *packet,
+> +		   struct hv_page_buffer *pb)
+> +{
+> +	u32 page_count =3D  packet->cp_partial ?
+> +		packet->page_buf_cnt - packet->rmsg_pgcnt :
+> +		packet->page_buf_cnt;
+> +	dma_addr_t dma;
+> +	int i;
+> +
+> +	if (!hv_is_isolation_supported())
+> +		return 0;
+> +
+> +	packet->dma_range =3D kcalloc(page_count,
+> +				    sizeof(*packet->dma_range),
+> +				    GFP_KERNEL);
+> +	if (!packet->dma_range)
+> +		return -ENOMEM;
+> +
+> +	for (i =3D 0; i < page_count; i++) {
+> +		char *src =3D phys_to_virt((pb[i].pfn << HV_HYP_PAGE_SHIFT)
+> +					 + pb[i].offset);
+> +		u32 len =3D pb[i].len;
+> +
+> +		dma =3D dma_map_single(&hv_dev->device, src, len,
+> +				     DMA_TO_DEVICE);
+> +		if (dma_mapping_error(&hv_dev->device, dma)) {
+> +			kfree(packet->dma_range);
+> +			return -ENOMEM;
+> +		}
+> +
+> +		/* pb[].offset and pb[].len are not changed during dma mapping
+> +		 * and so not reassign.
+> +		 */
+> +		packet->dma_range[i].dma =3D dma;
+> +		packet->dma_range[i].mapping_size =3D len;
+> +		pb[i].pfn =3D dma >> HV_HYP_PAGE_SHIFT;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static inline int netvsc_send_pkt(
+>  	struct hv_device *device,
+>  	struct hv_netvsc_packet *packet,
+> @@ -986,14 +1105,24 @@ static inline int netvsc_send_pkt(
+>=20
+>  	trace_nvsp_send_pkt(ndev, out_channel, rpkt);
+>=20
+> +	packet->dma_range =3D NULL;
+>  	if (packet->page_buf_cnt) {
+>  		if (packet->cp_partial)
+>  			pb +=3D packet->rmsg_pgcnt;
+>=20
+> +		ret =3D netvsc_dma_map(ndev_ctx->device_ctx, packet, pb);
+> +		if (ret) {
+> +			ret =3D -EAGAIN;
+> +			goto exit;
+> +		}
+> +
+>  		ret =3D vmbus_sendpacket_pagebuffer(out_channel,
+>  						  pb, packet->page_buf_cnt,
+>  						  &nvmsg, sizeof(nvmsg),
+>  						  req_id);
+> +
+> +		if (ret)
+> +			netvsc_dma_unmap(ndev_ctx->device_ctx, packet);
+>  	} else {
+>  		ret =3D vmbus_sendpacket(out_channel,
+>  				       &nvmsg, sizeof(nvmsg),
+> @@ -1001,6 +1130,7 @@ static inline int netvsc_send_pkt(
+>  				       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+>  	}
+>=20
+> +exit:
+>  	if (ret =3D=3D 0) {
+>  		atomic_inc_return(&nvchan->queue_sends);
+>=20
+> diff --git a/drivers/net/hyperv/netvsc_drv.c b/drivers/net/hyperv/netvsc_=
+drv.c
+> index 7e66ae1d2a59..17958533bf30 100644
+> --- a/drivers/net/hyperv/netvsc_drv.c
+> +++ b/drivers/net/hyperv/netvsc_drv.c
+> @@ -2512,6 +2512,7 @@ static int netvsc_probe(struct hv_device *dev,
+>  	net->netdev_ops =3D &device_ops;
+>  	net->ethtool_ops =3D &ethtool_ops;
+>  	SET_NETDEV_DEV(net, &dev->device);
+> +	dma_set_min_align_mask(&dev->device, HV_HYP_PAGE_SIZE - 1);
+>=20
+>  	/* We always need headroom for rndis header */
+>  	net->needed_headroom =3D RNDIS_AND_PPI_SIZE;
+> diff --git a/drivers/net/hyperv/rndis_filter.c b/drivers/net/hyperv/rndis=
+_filter.c
+> index f6c9c2a670f9..448fcc325ed7 100644
+> --- a/drivers/net/hyperv/rndis_filter.c
+> +++ b/drivers/net/hyperv/rndis_filter.c
+> @@ -361,6 +361,8 @@ static void rndis_filter_receive_response(struct net_=
+device *ndev,
+>  			}
+>  		}
+>=20
+> +		netvsc_dma_unmap(((struct net_device_context *)
+> +			netdev_priv(ndev))->device_ctx, &request->pkt);
+>  		complete(&request->wait_event);
+>  	} else {
+>  		netdev_err(ndev,
+> diff --git a/include/asm-generic/mshyperv.h b/include/asm-generic/mshyper=
+v.h
+> index 3e2248ac328e..94e73ba129c5 100644
+> --- a/include/asm-generic/mshyperv.h
+> +++ b/include/asm-generic/mshyperv.h
+> @@ -269,6 +269,8 @@ bool hv_isolation_type_snp(void);
+>  u64 hv_ghcb_hypercall(u64 control, void *input, void *output, u32 input_=
+size);
+>  void hyperv_cleanup(void);
+>  bool hv_query_ext_cap(u64 cap_query);
+> +void *hv_map_memory(void *addr, unsigned long size);
+> +void hv_unmap_memory(void *addr);
+>  #else /* CONFIG_HYPERV */
+>  static inline bool hv_is_hyperv_initialized(void) { return false; }
+>  static inline bool hv_is_hibernation_supported(void) { return false; }
+> diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+> index 74f5e92f91a0..b53cfc4163af 100644
+> --- a/include/linux/hyperv.h
+> +++ b/include/linux/hyperv.h
+> @@ -1584,6 +1584,11 @@ struct hyperv_service_callback {
+>  	void (*callback)(void *context);
+>  };
+>=20
+> +struct hv_dma_range {
+> +	dma_addr_t dma;
+> +	u32 mapping_size;
+> +};
+> +
+>  #define MAX_SRV_VER	0x7ffffff
+>  extern bool vmbus_prep_negotiate_resp(struct icmsg_hdr *icmsghdrp, u8 *b=
+uf, u32 buflen,
+>  				const int *fw_version, int fw_vercnt,
+> --
+> 2.25.1
 
