@@ -2,133 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04965C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Dec 2021 22:58:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B29A1C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Dec 2021 23:20:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240817AbhLCXBw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Dec 2021 18:01:52 -0500
-Received: from mga12.intel.com ([192.55.52.136]:32318 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233523AbhLCXBw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Dec 2021 18:01:52 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10187"; a="217093439"
-X-IronPort-AV: E=Sophos;i="5.87,284,1631602800"; 
-   d="scan'208";a="217093439"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Dec 2021 14:58:27 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,284,1631602800"; 
-   d="scan'208";a="501359484"
-Received: from lkp-server02.sh.intel.com (HELO 9e1e9f9b3bcb) ([10.239.97.151])
-  by orsmga007.jf.intel.com with ESMTP; 03 Dec 2021 14:58:25 -0800
-Received: from kbuild by 9e1e9f9b3bcb with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1mtHVY-000IA0-Fc; Fri, 03 Dec 2021 22:58:24 +0000
-Date:   Sat, 4 Dec 2021 06:58:12 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        linux-scsi@vger.kernel.org
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        Ketan Mukadam <ketan.mukadam@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
-        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH v2 REPOST] scsi: be2iscsi: Replace irq_poll with threaded
- IRQ handler.
-Message-ID: <202112040653.cszvYjJj-lkp@intel.com>
-References: <20211202200556.qz7cjuktgxoum2u2@linutronix.de>
+        id S1376636AbhLCXXZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Dec 2021 18:23:25 -0500
+Received: from mail-pg1-f173.google.com ([209.85.215.173]:36650 "EHLO
+        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233523AbhLCXXZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Dec 2021 18:23:25 -0500
+Received: by mail-pg1-f173.google.com with SMTP id 137so4542545pgg.3
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Dec 2021 15:20:00 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dKAyAmIiCEJ34ioNVZ8Od4OPrKOrZR9lU0T8l7rVuLc=;
+        b=5gHnw9BRyJNs8xCIXMYawgbEQ61nZPLv/zH+zDA8rVE3Ldy2K2RTs8I19B9YeMH+/l
+         GlFhicyj99uIbjLrqhrlNMI9Clq5O1EguDeNlhSYTWtKYz6vjbIxsYrPoc8qBrfSGJ2e
+         74N/zAuTX5KxvTkxbobShcG047/z1mxToE0wzFQpWMx+FWKSTSKJd/lUsGyEU2Lp5r3O
+         OPnXJxfSyAj/YlV/9hq5LfKM7zFh0yJLPxFw2q940kCLZFy2fcryNU8GqrWFpzljHuFl
+         DXL+kv8nMhKrNaxHm8xDzd/XqgxUPTW2+PiiTNGBxynSspfoT8C0NyUXVzjvWY8vy9AO
+         bHEQ==
+X-Gm-Message-State: AOAM530yXApy2N7p9pmk6kv7dRgERIghiw37CsOCUncdh3B8BvPvo3CK
+        XRCPKVkt6aVkH7GFNkhKL0o=
+X-Google-Smtp-Source: ABdhPJz2mvNufEYs6GtZwpTK1ENYrLf80JtIAtbW1cyJ74XBJZNvqN9Ty7PpB5L/Y17Mlq/1JVqi0g==
+X-Received: by 2002:a62:9202:0:b0:4a4:f09e:7d75 with SMTP id o2-20020a629202000000b004a4f09e7d75mr22822692pfd.33.1638573600256;
+        Fri, 03 Dec 2021 15:20:00 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:f942:89a1:6ccd:130])
+        by smtp.gmail.com with ESMTPSA id k18sm3233849pgb.70.2021.12.03.15.19.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 Dec 2021 15:19:59 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v4 00/17] UFS patches for kernel v5.17
+Date:   Fri,  3 Dec 2021 15:19:33 -0800
+Message-Id: <20211203231950.193369-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.34.1.400.ga245620fadb-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211202200556.qz7cjuktgxoum2u2@linutronix.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Sebastian,
+Hi Martin,
 
-Thank you for the patch! Perhaps something to improve:
+This patch series includes the following changes:
+- Fix a deadlock in the UFS error handler.
+- Add polling support in the UFS driver.
+- Several smaller fixes for the UFS driver.
 
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on mkp-scsi/for-next v5.16-rc3 next-20211203]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+Please consider these UFS driver kernel patches for kernel v5.17.
 
-url:    https://github.com/0day-ci/linux/commits/Sebastian-Andrzej-Siewior/scsi-be2iscsi-Replace-irq_poll-with-threaded-IRQ-handler/20211203-040851
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-config: riscv-buildonly-randconfig-r002-20211203 (https://download.01.org/0day-ci/archive/20211204/202112040653.cszvYjJj-lkp@intel.com/config)
-compiler: clang version 14.0.0 (https://github.com/llvm/llvm-project d30fcadf07ee552f20156ea90be2fdb54cb9cb08)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install riscv cross compiling tool for clang build
-        # apt-get install binutils-riscv64-linux-gnu
-        # https://github.com/0day-ci/linux/commit/46ae6b75188a7c555a80135814182b82a0fad7c8
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Sebastian-Andrzej-Siewior/scsi-be2iscsi-Replace-irq_poll-with-threaded-IRQ-handler/20211203-040851
-        git checkout 46ae6b75188a7c555a80135814182b82a0fad7c8
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=riscv SHELL=/bin/bash drivers/ata/ drivers/infiniband/sw/rxe/ drivers/scsi/be2iscsi/
+Thanks,
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+Bart.
 
-All warnings (new ones prefixed by >>):
+Changes compared to v3:
+- Dropped patch "scsi: core: Fix a race between scsi_done() and
+  scsi_times_out()" since the conversation around that patch is still ongoing.
+- Added patch "scsi: ufs: Remove hba->cmd_queue".
+- Modified patch "scsi: ufs: Optimize the command queueing code".
 
->> drivers/scsi/be2iscsi/be_main.c:5392:33: warning: variable 'i' is uninitialized when used here [-Wuninitialized]
-                   pbe_eq = &phwi_context->be_eq[i];
-                                                 ^
-   drivers/scsi/be2iscsi/be_main.c:5377:16: note: initialize the variable 'i' to silence this warning
-           unsigned int i;
-                         ^
-                          = 0
-   1 warning generated.
+Changes compared to v2:
+- Dropped SCSI core patches that add support for internal commands.
+- Reworked patch "Fix a deadlock in the error handler" such that it uses a
+  reserved tag as proposed by Adrian.
+- Split patch "ufs: Introduce ufshcd_release_scsi_cmd()" into two patches.
 
+Changes compared to v1:
+- Add internal command support to the SCSI core.
+- Reworked patch "ufs: Optimize the command queueing code".
 
-vim +/i +5392 drivers/scsi/be2iscsi/be_main.c
+Bart Van Assche (17):
+  scsi: core: Fix scsi_device_max_queue_depth()
+  scsi: ufs: Rename a function argument
+  scsi: ufs: Remove is_rpmb_wlun()
+  scsi: ufs: Remove the sdev_rpmb member
+  scsi: ufs: Remove dead code
+  scsi: ufs: Fix race conditions related to driver data
+  scsi: ufs: Remove ufshcd_any_tag_in_use()
+  scsi: ufs: Rework ufshcd_change_queue_depth()
+  scsi: ufs: Fix a deadlock in the error handler
+  scsi: ufs: Remove hba->cmd_queue
+  scsi: ufs: Remove the 'update_scaling' local variable
+  scsi: ufs: Introduce ufshcd_release_scsi_cmd()
+  scsi: ufs: Improve SCSI abort handling further
+  scsi: ufs: Fix a kernel crash during shutdown
+  scsi: ufs: Stop using the clock scaling lock in the error handler
+  scsi: ufs: Optimize the command queueing code
+  scsi: ufs: Implement polling support
 
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5363  
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5364  /*
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5365   * beiscsi_disable_port()- Disable port and cleanup driver resources.
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5366   * This is called in HBA error handling and driver removal.
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5367   * @phba: Instance Priv structure
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5368   * @unload: indicate driver is unloading
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5369   *
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5370   * Free the OS and HW resources held by the driver
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5371   **/
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5372  static void beiscsi_disable_port(struct beiscsi_hba *phba, int unload)
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5373  {
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5374  	struct hwi_context_memory *phwi_context;
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5375  	struct hwi_controller *phwi_ctrlr;
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5376  	struct be_eq_obj *pbe_eq;
-831488669a334e Christoph Hellwig 2017-01-13  5377  	unsigned int i;
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5378  
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5379  	if (!test_and_clear_bit(BEISCSI_HBA_ONLINE, &phba->state))
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5380  		return;
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5381  
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5382  	phwi_ctrlr = phba->phwi_ctrlr;
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5383  	phwi_context = phwi_ctrlr->phwi_ctxt;
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5384  	hwi_disable_intr(phba);
-45371aa398c647 Jitendra Bhivare  2017-10-10  5385  	beiscsi_free_irqs(phba);
-831488669a334e Christoph Hellwig 2017-01-13  5386  	pci_free_irq_vectors(phba->pcidev);
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5387  
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5388  	cancel_delayed_work_sync(&phba->eqd_update);
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5389  	cancel_work_sync(&phba->boot_work);
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5390  	/* WQ might be running cancel queued mcc_work if we are not exiting */
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5391  	if (!unload && beiscsi_hba_in_error(phba)) {
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19 @5392  		pbe_eq = &phwi_context->be_eq[i];
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5393  		cancel_work_sync(&pbe_eq->mcc_work);
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5394  	}
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5395  	hwi_cleanup_port(phba);
-dd940972f36779 Jitendra Bhivare  2016-12-13  5396  	beiscsi_cleanup_port(phba);
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5397  }
-d1d5ca887c0ee6 Jitendra Bhivare  2016-08-19  5398  
+ drivers/scsi/scsi.c                |   4 +-
+ drivers/scsi/ufs/tc-dwc-g210-pci.c |   1 -
+ drivers/scsi/ufs/ufs-exynos.c      |   4 +-
+ drivers/scsi/ufs/ufshcd-pci.c      |   2 -
+ drivers/scsi/ufs/ufshcd-pltfrm.c   |   2 -
+ drivers/scsi/ufs/ufshcd.c          | 300 ++++++++++++++++-------------
+ drivers/scsi/ufs/ufshcd.h          |   9 +-
+ 7 files changed, 174 insertions(+), 148 deletions(-)
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
