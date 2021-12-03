@@ -2,231 +2,299 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2AFDC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Dec 2021 07:58:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E966AC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Dec 2021 09:14:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379033AbhLCICO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Dec 2021 03:02:14 -0500
-Received: from mail-sgaapc01on2134.outbound.protection.outlook.com ([40.107.215.134]:28608
-        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1350800AbhLCICN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Dec 2021 03:02:13 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jpCdrOG9kagxpr//YV+41q8fmjnrNCz4a/2FkEWBaPLAzs+NA3+LxmGIy2u2Ji9QqLCuJAMMQW8YgMuiASsdjjJ9kf00jwxaiEDksFj6V3cpe2t1mdlAPLOwO5nC5tFtnpJLAfcvEvBMxKUr/51ZfVTTza7X401glWIz6cR99myw4fOdoKGYHZQJZn0OuohyO5oabbzZWQXI+qdsd08AFGKEJgCprwbMofDtErrOFNToLMcqUZ9dg3YgvboHuVqLKm/FwE9kpl6zm20GH+y+kl+eX2sHG4KLE9d4wFGB2pmDn3b9nJTMPzXCTknf3BrbVhVzbt26qf/Tjmz86o0D5g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=wKo+Zqwe7OVlhaPJFUOo017opDIl8mbQepDZobp/WCY=;
- b=M4PtYTC+IFybiDork4vRjpqhqgoXLS7UlrZHlupDWxNSanQhuNhpXLP3c518/MIIXNkeSR/nvfBgyK7R6vQj4z7kqavwUbArqYU8YVfZZj8GzpmdQD6gHNAxHeYGWVoHtKc3mtzMJdJIuM1o0WEaTnYf+LzS9MLAtZfdDanEid+e9GS5mpnvY4c0vzM1ThytQipe2y6ANjHOj8PtKsjWnsA6cbOh1lGV9oXa+qiTFWyhLeX5mzaQ/lE6NwuJMPj1cSRvaV7NV2h4G178nBO0MnBWELg2lDt2gIAm071AuBLKXeroQzdRB+46fFANDCub0cYdDVNY/rtpOHm5TJ3VUw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo0.onmicrosoft.com;
- s=selector2-vivo0-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wKo+Zqwe7OVlhaPJFUOo017opDIl8mbQepDZobp/WCY=;
- b=J9cVJn/dTCtmxuvKCpud2XP/3XNnus8x34wYu0Je8kGpGBXxJGnbzEdzbhnwyuBlFdKCinq64yXdPF9Z+hq94+UgnIlCv95oel+h1BOX202bPtxOSmtjL/78Wf8eM+dB43VMJdE9jvRq1BbqndFGk3pNB64oKtiQxKkSB6gPpS0=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from TYZPR06MB4173.apcprd06.prod.outlook.com (2603:1096:400:26::14)
- by TY2PR06MB2462.apcprd06.prod.outlook.com (2603:1096:404:4d::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4734.22; Fri, 3 Dec
- 2021 07:58:46 +0000
-Received: from TYZPR06MB4173.apcprd06.prod.outlook.com
- ([fe80::6093:831:2123:6092]) by TYZPR06MB4173.apcprd06.prod.outlook.com
- ([fe80::6093:831:2123:6092%5]) with mapi id 15.20.4734.027; Fri, 3 Dec 2021
- 07:58:46 +0000
-From:   Yihao Han <hanyihao@vivo.com>
-To:     Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+        id S1379464AbhLCJRv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Dec 2021 04:17:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37078 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1350564AbhLCJRu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Dec 2021 04:17:50 -0500
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF15BC061757
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Dec 2021 01:14:26 -0800 (PST)
+Received: by mail-pj1-x102b.google.com with SMTP id j6-20020a17090a588600b001a78a5ce46aso4705940pji.0
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Dec 2021 01:14:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=saVuQhzixBwsqDYRywfLCa1HkOX8bignwBCsRWI1qEU=;
+        b=SlTpIt8ZNCqW/9A4VUbaR83S1wMyfqdCewD6rXm+VJsVUfcmFju+i0rgDaRiL3X2FO
+         FvKdIsYob7oyCjWrkpN2Etf1mA576MDr/cDygoeRNe3vedQHKPRj//TxFYNAA/qvT+1P
+         2I2hQ0gXFqqEWsBI5TrldoZYGyyce4VvGqP6U=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=saVuQhzixBwsqDYRywfLCa1HkOX8bignwBCsRWI1qEU=;
+        b=d7wpHFHFlwqVwOszitkDbcfwjOQiMy5WMD3bxQccOOPmhi+jAaqRuw1xIVdrsKlo85
+         o1ULelBpWkHA60YKcGoBncTcc8BhRDo/J3T3lp795i2ZPFdJL40jvrdzEUcgSECigZUG
+         CtUTlWXCtiCsIYdsAWInM5cEYcbqYfTaRbpz0rkGtG7yLajl8Pi+pYXVBBk6mpsLfLwZ
+         pkUNkmqL6l/xzd9wHv4WOgWLNErd3xGhfco9C5BvnuPOIA2wPxNPUlx3nb6wso/F0uCf
+         mmJaz0sai+a1srTYLk5UxsiyE+JWwoCODF4fI7kWSSPMn8sMlRErq6QTwXLzFMY1N1fL
+         B8tA==
+X-Gm-Message-State: AOAM531VCFfZInPC9+wX04Dm76hI7A08KTr5fcLp+UV6QA7/tYWh5a/T
+        30ilw2u1vcCD8hVgyU2iryRIeQ==
+X-Google-Smtp-Source: ABdhPJz8RnRahBC15FlwjjPsKlZ+CpQcH75sjsinaHiphr+fFlXgxA/jx9yn9VYUsmsMio1yEUacIw==
+X-Received: by 2002:a17:903:248c:b0:142:9bf:8b0 with SMTP id p12-20020a170903248c00b0014209bf08b0mr21371502plw.70.1638522866265;
+        Fri, 03 Dec 2021 01:14:26 -0800 (PST)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id s15sm1814024pjs.51.2021.12.03.01.14.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 Dec 2021 01:14:26 -0800 (PST)
+From:   Kees Cook <keescook@chromium.org>
+To:     Kashyap Desai <kashyap.desai@broadcom.com>
+Cc:     Kees Cook <keescook@chromium.org>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     kernel@vivo.com, Yihao Han <hanyihao@vivo.com>
-Subject: [PATCH] scsi: bfa: Replace snprintf in show functions with sysfs_emit
-Date:   Thu,  2 Dec 2021 23:58:33 -0800
-Message-Id: <20211203075833.4435-1-hanyihao@vivo.com>
-X-Mailer: git-send-email 2.17.1
-Content-Type: text/plain
-X-ClientProxiedBy: HK2PR02CA0185.apcprd02.prod.outlook.com
- (2603:1096:201:21::21) To TYZPR06MB4173.apcprd06.prod.outlook.com
- (2603:1096:400:26::14)
+        linux-kernel@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: [PATCH] scsi: megaraid: Avoid mismatched storage type sizes
+Date:   Fri,  3 Dec 2021 01:14:24 -0800
+Message-Id: <20211203091424.3355371-1-keescook@chromium.org>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Received: from ubuntu.vivo.xyz (103.220.76.181) by HK2PR02CA0185.apcprd02.prod.outlook.com (2603:1096:201:21::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.11 via Frontend Transport; Fri, 3 Dec 2021 07:58:45 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b1d6eedc-ea86-4f5b-029f-08d9b632bb9b
-X-MS-TrafficTypeDiagnostic: TY2PR06MB2462:
-X-Microsoft-Antispam-PRVS: <TY2PR06MB24620D4D21E16B3274086F23A26A9@TY2PR06MB2462.apcprd06.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:111;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: +PfgzXa+uUb+/xys56GQbz7qju5mOPUFV9bPU3eaNbFpZ0W/2EtHrz5w/KTtZiaHWRbOb4JowVuXfYSD5u+TP65+L9vP7WpNxjC1LGYmb9Q4Rg0wOi9ISi8z5rciDlNPHVCEBFBYY1o0GHg9UxROGieJyVMOJ1rmGOCNw/Fk6Jxyuf1GmPpMj/0+3aNGhpXGoTrm0FCzLTNy/4nIv74Q06nluhd3UKmfJ/VDSUTcm89WuB5OLOF6xMyipc0OJBzFVdIEh8J2D3gI8QaZNSAJ9j4x/TKIYjgQTqcOVghEFdvOhER0Nzk9LmRPv3CYUuPa426mPw/GfDKxG0Ic3jeUfgQwXIHZ3Mf82BhFI3u01Kbo9WUXLYZX7miDEUd8EsXvHyj54WNcbczvO++ZHb+wR7qML1bWPor2jlXFt8teI3KZA49Ix75BW5lcy+YMgw+cpPQuYCpD0eQTdHE6H1Z5KUQmJAj+3uQToxDAfOT8pn38CEZFT+Y/HtNxyAb/U3e3U4r8/ipLvPzSOFy37rk5hf1c6JFXIB3toeKhex6vumAPp88c7Y0FbwD7YiPSERmfJXrCoAXH1/HmNViaHlKvNorWHQ48cUELTSI52uHvfeZlbkktW0UbeljI3LWchVfZ3UPwC1dGnEnoxn6I6p8+Q9RZKeYhIanEUv6VdmI8OfQwlHsJ5vcu7GhMRtgpSBUv0laXaCHBtB0er4gm9mbDOKTXDit6FwA7X+a4NzfcA78=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYZPR06MB4173.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(186003)(8676002)(956004)(107886003)(2616005)(26005)(36756003)(6512007)(66476007)(110136005)(508600001)(83380400001)(66556008)(66946007)(1076003)(52116002)(4326008)(38100700002)(6486002)(5660300002)(6506007)(86362001)(38350700002)(8936002)(2906002)(6666004)(316002)(182500001);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?OhhXzx/ntGIwLjcvy3P5Kg6t7ZL7R79n9i+iC11qaj9kwKF0ZKWBosmxiiZ+?=
- =?us-ascii?Q?plWgwPb4Ks1Yw5OpXY0ezKRHM8IjAe/z3eR97uLCcyo70wPdKgQX+X09aEXt?=
- =?us-ascii?Q?hZG0ZifCZByb1Ycs5q/H9R7DKgZS9LsJaGZmRqx1ORif6GLORiNcqt12n99z?=
- =?us-ascii?Q?5+HnkVjjiBJqSb6t0MFUBXxApt9CTNfAwuwGh984noKekny17lDfdHKQvVQA?=
- =?us-ascii?Q?pdvIFNswSs5K7qHy8npvXTe7o+PPtaxQnJKHx1NIEVNyvm2nn3yiQnf5Fw25?=
- =?us-ascii?Q?cdUJN3Sh81jqqD03TZybW5ZGhrFz6TQ3B17pZQXU9oQw9dNQy/W/RU87Ez+o?=
- =?us-ascii?Q?6DnTzgBDWLkLWpNltgWSv3qyhDtMUs4y7ZdPnUELA81IR6XmegA1/uKtAhrj?=
- =?us-ascii?Q?kDq7iq3Xhbbw/yw7AanHUZj2HGHy1XZ8x1iaPvvmc7raO26Q+qwzkfuHBsMj?=
- =?us-ascii?Q?mt11wdtUb0L1KRKbSN6cjSD7P2Jgrig+NMuGzMpNP9+TQ16wxrP1ebOmd2dL?=
- =?us-ascii?Q?EZQj/cwbfF8dgmpfzyNx65oedF6dyRmmb1mo7LIaogfw73cGfMWiPopMfS/o?=
- =?us-ascii?Q?FF/cvmbHCRTtVL8SfVKPS7T5uO8t7zuAAKnZ6W0V7ONgtcq6X2y77cWFFcrg?=
- =?us-ascii?Q?FWYeFAp8M/cZ9xc/b8suWd0FQYPYYD0Cf5uG99j4Pt9U4WPjSlll4L5M65Fq?=
- =?us-ascii?Q?Zk0N12wB1YrwTAifPgIKeiwlSFU0evONzjDym6tySC12wp6zpeAmiDe5tGkE?=
- =?us-ascii?Q?ubTPysr2bWGuVo4iz7eJWosytxlMcDFR7PZCS6ocqbmEVl9Ra4SSX0p9Mzx8?=
- =?us-ascii?Q?ecJM9vL/fzlSd51J5yJdDIkImdstGwwKZoFnBWIyUSA5mB2JfowSCuuS8FRc?=
- =?us-ascii?Q?9lWsFqe66Ks1aY+FoCFnuDuBUfme/oOdCoVR4UsgTCLbNTGopx07kc3Y4ckF?=
- =?us-ascii?Q?nHpOGTq9PhXsfZYdikh6v/7c4XixW9sezHUsWZpbhsPaOb2yuZ2CDMw5WYXR?=
- =?us-ascii?Q?+Ra66htq8ff2tD43+gNTBURtx+jOmnecnsfZCPWWLrvj8V9zRst2XIOtukG5?=
- =?us-ascii?Q?VX+pnicv0PhefA1sdsXqYV+5Ad+3m5wVGzEgvLqS/wH3cILaBgpKcimyq2sW?=
- =?us-ascii?Q?4y5Tf1jYT3dQXuyClZ/uNYLZzaClj9Vqo2PWZVydJh9cAc2xrtMq7nlxZ2vx?=
- =?us-ascii?Q?lPwHq6kHDuEvESeLMzZ+q2h0yzvKjWbA8Oc4BHtCqbzON1byZceCIKYAY+Gb?=
- =?us-ascii?Q?0FXYz7/cLbEmXxeoEuivu4guBgh4HnSI29OzVzrlqK4uNLAoEwAOYw2c2BVw?=
- =?us-ascii?Q?V8EZIpaZzRRnu4oMLGwehdjkxJnB9Xedmc9zxmGwEe/BwaSvucuKbCzxNLdq?=
- =?us-ascii?Q?cwbc+3XOdNsaSbyfpTRiuXSqkGRCfJkP4N7shSDAErC0RfooIsopKU9Fz7Ft?=
- =?us-ascii?Q?eHtpS7KA16LeJB92j4XvtqpVbXDytcfgzKaf1b+CQPPINiOc0PrLLc4MlDzk?=
- =?us-ascii?Q?vRFayUeR8c9jwfn3lRIR8KMXwhd9Tgp08HDKsZvpRcUJxBUchG4O9XC1iY2a?=
- =?us-ascii?Q?2jp1InfljUHOy5J/f6T/QxEhfZOxqPWjFaYIYrWVX8pJRkgLBSxT736c2a+i?=
- =?us-ascii?Q?Lvno2vLP7XfN1wsBI3T0hv0=3D?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b1d6eedc-ea86-4f5b-029f-08d9b632bb9b
-X-MS-Exchange-CrossTenant-AuthSource: TYZPR06MB4173.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Dec 2021 07:58:46.2779
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JiMHFOGnVpBaKEIyAZe9Zci4U3UmZaSlfI6fY8/K9YqFP+EL7WfC6IITSXGz2Nd1syKBmtiiQ26QprO+ocGOpQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY2PR06MB2462
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7024; h=from:subject; bh=LkdLDRS96rJJ+hsAnyw+nSek/NN70rsR6NXpE1WqNL0=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhqd/vtwMNKerswTCQUH/RzzThOHW470nn5B9vB56H GLxt2qSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYanf7wAKCRCJcvTf3G3AJjzbEA CJgny2oO/KaCl8l/C0HuShj6t+Kya+5RGbj776BKxjzVP8r12CulsTYnPWCFTLiXIM2CgzhHgZ/hhF uUIbLHncQ2M0UG/bOvuzqqBDLa8lc9XllLmTSxgXgRL3C2rnWHZ9mOjXpDvm+AzeZMBrOzkWhnMp53 k8IBu/HZcFuHDvLjTChZNmJxU0Owbrcrkns4KUqp7heH0gHLC5ZUCI7L4rmihEz0lQzr/RHKpjwy3i +phfAd+Eh853oaRCtg/TYI5bIzCnZQtUjwEmcF7kCv8uSqKuLLGAS+rUB5o60pxQIk7HrfuUGKNZV1 hahWnk48CPCLhDlLOb9cqeg2ObYrOitbaD2HNmxacySFe4t6EpfGTLd9vGYxxL37QDObmCYJI4ykzN OFYwNT/jpa4Z3zlGlu+hkmJ13Y+827pGXaoZ2ze9Z2knbOIn5jlSK4WO3ljhhduNIo1e/bttTwf3zE PTI4gNz7lylHPOb4lnJuEZKWyek4EPmEF3Yh0ToAyI8bkpbltSfqotzITyuWBXaerWh/UxpmdgQIVM 14vo61cj+l+Xw6JZIteOkCHIIeRKu7csJkNYaSDpMyErO5vFnbTWsUUwO7GVT4s8EueZyI0HR5andj V6cZu/c97mcCHEg0I4vTNF9087WaCDsgEnq4D9TJU4qii8BwRbsrvwKHGtiw==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use sysfs_emit instead of scnprintf or sprintf makes more sense.
+Remove needless use of mbox_t, replacing with just struct
+mbox_out. Silences compiler warnings under a -Warray-bounds build:
 
-Signed-off-by: Yihao Han <hanyihao@vivo.com>
+drivers/scsi/megaraid.c: In function 'megaraid_probe_one':
+drivers/scsi/megaraid.c:3615:30: error: array subscript 'mbox_t[0]' is partly outside array bounds of 'unsigned char[15]' [-Werror=array-bounds]
+ 3615 |         mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
+      |         ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/megaraid.c:3599:23: note: while referencing 'raw_mbox'
+ 3599 |         unsigned char raw_mbox[sizeof(struct mbox_out)];
+      |                       ^~~~~~~~
+
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/scsi/bfa/bfad_attr.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/scsi/megaraid.c | 84 +++++++++++++++++------------------------
+ 1 file changed, 34 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
-index f46989bd083c..662f1e66c22f 100644
---- a/drivers/scsi/bfa/bfad_attr.c
-+++ b/drivers/scsi/bfa/bfad_attr.c
-@@ -711,7 +711,7 @@ bfad_im_serial_num_show(struct device *dev, struct device_attribute *attr,
- 	char serial_num[BFA_ADAPTER_SERIAL_NUM_LEN];
- 
- 	bfa_get_adapter_serial_num(&bfad->bfa, serial_num);
--	return snprintf(buf, PAGE_SIZE, "%s\n", serial_num);
-+	return sysfs_emit(buf, "%s\n", serial_num);
- }
- 
- static ssize_t
-@@ -725,7 +725,7 @@ bfad_im_model_show(struct device *dev, struct device_attribute *attr,
- 	char model[BFA_ADAPTER_MODEL_NAME_LEN];
- 
- 	bfa_get_adapter_model(&bfad->bfa, model);
--	return snprintf(buf, PAGE_SIZE, "%s\n", model);
-+	return sysfs_emit(buf, "%s\n", model);
- }
- 
- static ssize_t
-@@ -805,7 +805,7 @@ bfad_im_model_desc_show(struct device *dev, struct device_attribute *attr,
- 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
- 			"Invalid Model");
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n", model_descr);
-+	return sysfs_emit(buf, "%s\n", model_descr);
- }
- 
- static ssize_t
-@@ -819,7 +819,7 @@ bfad_im_node_name_show(struct device *dev, struct device_attribute *attr,
- 	u64        nwwn;
- 
- 	nwwn = bfa_fcs_lport_get_nwwn(port->fcs_port);
--	return snprintf(buf, PAGE_SIZE, "0x%llx\n", cpu_to_be64(nwwn));
-+	return sysfs_emit(buf, "0x%llx\n", cpu_to_be64(nwwn));
- }
- 
- static ssize_t
-@@ -836,7 +836,7 @@ bfad_im_symbolic_name_show(struct device *dev, struct device_attribute *attr,
- 	bfa_fcs_lport_get_attr(&bfad->bfa_fcs.fabric.bport, &port_attr);
- 	strlcpy(symname, port_attr.port_cfg.sym_name.symname,
- 			BFA_SYMNAME_MAXLEN);
--	return snprintf(buf, PAGE_SIZE, "%s\n", symname);
-+	return sysfs_emit(buf, "%s\n", symname);
- }
- 
- static ssize_t
-@@ -850,14 +850,14 @@ bfad_im_hw_version_show(struct device *dev, struct device_attribute *attr,
- 	char hw_ver[BFA_VERSION_LEN];
- 
- 	bfa_get_pci_chip_rev(&bfad->bfa, hw_ver);
--	return snprintf(buf, PAGE_SIZE, "%s\n", hw_ver);
-+	return sysfs_emit(buf, "%s\n", hw_ver);
- }
- 
- static ssize_t
- bfad_im_drv_version_show(struct device *dev, struct device_attribute *attr,
- 				char *buf)
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 0d31d7a5e335..bf987f3a7f3f 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -192,23 +192,21 @@ mega_query_adapter(adapter_t *adapter)
  {
--	return snprintf(buf, PAGE_SIZE, "%s\n", BFAD_DRIVER_VERSION);
-+	return sysfs_emit(buf, "%s\n", BFAD_DRIVER_VERSION);
- }
+ 	dma_addr_t	prod_info_dma_handle;
+ 	mega_inquiry3	*inquiry3;
+-	u8	raw_mbox[sizeof(struct mbox_out)];
+-	mbox_t	*mbox;
++	struct mbox_out	mbox;
++	u8	*raw_mbox = (u8 *)&mbox;
+ 	int	retval;
  
- static ssize_t
-@@ -871,7 +871,7 @@ bfad_im_optionrom_version_show(struct device *dev,
- 	char optrom_ver[BFA_VERSION_LEN];
+ 	/* Initialize adapter inquiry mailbox */
  
- 	bfa_get_adapter_optrom_ver(&bfad->bfa, optrom_ver);
--	return snprintf(buf, PAGE_SIZE, "%s\n", optrom_ver);
-+	return sysfs_emit(buf, "%s\n", optrom_ver);
- }
+-	mbox = (mbox_t *)raw_mbox;
+-
+ 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
+-	memset(&mbox->m_out, 0, sizeof(raw_mbox));
++	memset(&mbox, 0, sizeof(mbox));
  
- static ssize_t
-@@ -885,7 +885,7 @@ bfad_im_fw_version_show(struct device *dev, struct device_attribute *attr,
- 	char fw_ver[BFA_VERSION_LEN];
+ 	/*
+ 	 * Try to issue Inquiry3 command
+ 	 * if not succeeded, then issue MEGA_MBOXCMD_ADAPTERINQ command and
+ 	 * update enquiry3 structure
+ 	 */
+-	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
++	mbox.xferaddr = (u32)adapter->buf_dma_handle;
  
- 	bfa_get_adapter_fw_ver(&bfad->bfa, fw_ver);
--	return snprintf(buf, PAGE_SIZE, "%s\n", fw_ver);
-+	return sysfs_emit(buf, "%s\n", fw_ver);
- }
+ 	inquiry3 = (mega_inquiry3 *)adapter->mega_buffer;
  
- static ssize_t
-@@ -897,7 +897,7 @@ bfad_im_num_of_ports_show(struct device *dev, struct device_attribute *attr,
- 			(struct bfad_im_port_s *) shost->hostdata[0];
- 	struct bfad_s *bfad = im_port->bfad;
+@@ -232,10 +230,10 @@ mega_query_adapter(adapter_t *adapter)
  
--	return snprintf(buf, PAGE_SIZE, "%d\n",
-+	return sysfs_emit(buf, "%d\n",
- 			bfa_get_nports(&bfad->bfa));
- }
+ 		inq = &ext_inq->raid_inq;
  
-@@ -905,7 +905,7 @@ static ssize_t
- bfad_im_drv_name_show(struct device *dev, struct device_attribute *attr,
- 				char *buf)
+-		mbox->m_out.xferaddr = (u32)dma_handle;
++		mbox.xferaddr = (u32)dma_handle;
+ 
+ 		/*issue old 0x04 command to adapter */
+-		mbox->m_out.cmd = MEGA_MBOXCMD_ADPEXTINQ;
++		mbox.cmd = MEGA_MBOXCMD_ADPEXTINQ;
+ 
+ 		issue_scb_block(adapter, raw_mbox);
+ 
+@@ -262,7 +260,7 @@ mega_query_adapter(adapter_t *adapter)
+ 						      sizeof(mega_product_info),
+ 						      DMA_FROM_DEVICE);
+ 
+-		mbox->m_out.xferaddr = prod_info_dma_handle;
++		mbox.xferaddr = prod_info_dma_handle;
+ 
+ 		raw_mbox[0] = FC_NEW_CONFIG;	/* i.e. mbox->cmd=0xA1 */
+ 		raw_mbox[2] = NC_SUBOP_PRODUCT_INFO;	/* i.e. 0x0E */
+@@ -3569,16 +3567,14 @@ mega_n_to_m(void __user *arg, megacmd_t *mc)
+ static int
+ mega_is_bios_enabled(adapter_t *adapter)
  {
--	return snprintf(buf, PAGE_SIZE, "%s\n", BFAD_DRIVER_NAME);
-+	return sysfs_emit(buf, "%s\n", BFAD_DRIVER_NAME);
- }
+-	unsigned char	raw_mbox[sizeof(struct mbox_out)];
+-	mbox_t	*mbox;
+-
+-	mbox = (mbox_t *)raw_mbox;
++	struct mbox_out mbox;
++	unsigned char	*raw_mbox = (u8 *)&mbox;
  
- static ssize_t
-@@ -924,7 +924,7 @@ bfad_im_num_of_discovered_ports_show(struct device *dev,
- 	rports = kcalloc(nrports, sizeof(struct bfa_rport_qualifier_s),
- 			 GFP_ATOMIC);
- 	if (rports == NULL)
--		return snprintf(buf, PAGE_SIZE, "Failed\n");
-+		return sysfs_emit(buf, "Failed\n");
+-	memset(&mbox->m_out, 0, sizeof(raw_mbox));
++	memset(&mbox, 0, sizeof(mbox));
  
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
- 	bfa_fcs_lport_get_rport_quals(port->fcs_port, rports, &nrports);
+ 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
+ 
+-	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
++	mbox.xferaddr = (u32)adapter->buf_dma_handle;
+ 
+ 	raw_mbox[0] = IS_BIOS_ENABLED;
+ 	raw_mbox[2] = GET_BIOS;
+@@ -3600,13 +3596,11 @@ mega_is_bios_enabled(adapter_t *adapter)
+ static void
+ mega_enum_raid_scsi(adapter_t *adapter)
+ {
+-	unsigned char raw_mbox[sizeof(struct mbox_out)];
+-	mbox_t *mbox;
++	struct mbox_out mbox;
++	unsigned char	*raw_mbox = (u8 *)&mbox;
+ 	int i;
+ 
+-	mbox = (mbox_t *)raw_mbox;
+-
+-	memset(&mbox->m_out, 0, sizeof(raw_mbox));
++	memset(&mbox, 0, sizeof(mbox));
+ 
+ 	/*
+ 	 * issue command to find out what channels are raid/scsi
+@@ -3616,7 +3610,7 @@ mega_enum_raid_scsi(adapter_t *adapter)
+ 
+ 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
+ 
+-	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
++	mbox.xferaddr = (u32)adapter->buf_dma_handle;
+ 
+ 	/*
+ 	 * Non-ROMB firmware fail this command, so all channels
+@@ -3655,23 +3649,21 @@ static void
+ mega_get_boot_drv(adapter_t *adapter)
+ {
+ 	struct private_bios_data	*prv_bios_data;
+-	unsigned char	raw_mbox[sizeof(struct mbox_out)];
+-	mbox_t	*mbox;
++	struct mbox_out mbox;
++	unsigned char	*raw_mbox = (u8 *)&mbox;
+ 	u16	cksum = 0;
+ 	u8	*cksum_p;
+ 	u8	boot_pdrv;
+ 	int	i;
+ 
+-	mbox = (mbox_t *)raw_mbox;
+-
+-	memset(&mbox->m_out, 0, sizeof(raw_mbox));
++	memset(&mbox, 0, sizeof(mbox));
+ 
+ 	raw_mbox[0] = BIOS_PVT_DATA;
+ 	raw_mbox[2] = GET_BIOS_PVT_DATA;
+ 
+ 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
+ 
+-	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
++	mbox.xferaddr = (u32)adapter->buf_dma_handle;
+ 
+ 	adapter->boot_ldrv_enabled = 0;
+ 	adapter->boot_ldrv = 0;
+@@ -3721,13 +3713,11 @@ mega_get_boot_drv(adapter_t *adapter)
+ static int
+ mega_support_random_del(adapter_t *adapter)
+ {
+-	unsigned char raw_mbox[sizeof(struct mbox_out)];
+-	mbox_t *mbox;
++	struct mbox_out mbox;
++	unsigned char	*raw_mbox = (u8 *)&mbox;
+ 	int rval;
+ 
+-	mbox = (mbox_t *)raw_mbox;
+-
+-	memset(&mbox->m_out, 0, sizeof(raw_mbox));
++	memset(&mbox, 0, sizeof(mbox));
+ 
+ 	/*
+ 	 * issue command
+@@ -3750,13 +3740,11 @@ mega_support_random_del(adapter_t *adapter)
+ static int
+ mega_support_ext_cdb(adapter_t *adapter)
+ {
+-	unsigned char raw_mbox[sizeof(struct mbox_out)];
+-	mbox_t *mbox;
++	struct mbox_out mbox;
++	unsigned char	*raw_mbox = (u8 *)&mbox;
+ 	int rval;
+ 
+-	mbox = (mbox_t *)raw_mbox;
+-
+-	memset(&mbox->m_out, 0, sizeof(raw_mbox));
++	memset(&mbox, 0, sizeof(mbox));
+ 	/*
+ 	 * issue command to find out if controller supports extended CDBs.
+ 	 */
+@@ -3865,16 +3853,14 @@ mega_do_del_logdrv(adapter_t *adapter, int logdrv)
+ static void
+ mega_get_max_sgl(adapter_t *adapter)
+ {
+-	unsigned char	raw_mbox[sizeof(struct mbox_out)];
+-	mbox_t	*mbox;
++	struct mbox_out	mbox;
++	unsigned char	*raw_mbox = (u8 *)&mbox;
+ 
+-	mbox = (mbox_t *)raw_mbox;
+-
+-	memset(mbox, 0, sizeof(raw_mbox));
++	memset(&mbox, 0, sizeof(mbox));
+ 
+ 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
+ 
+-	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
++	mbox.xferaddr = (u32)adapter->buf_dma_handle;
+ 
+ 	raw_mbox[0] = MAIN_MISC_OPCODE;
+ 	raw_mbox[2] = GET_MAX_SG_SUPPORT;
+@@ -3888,7 +3874,7 @@ mega_get_max_sgl(adapter_t *adapter)
+ 	}
+ 	else {
+ 		adapter->sglen = *((char *)adapter->mega_buffer);
+-		
++
+ 		/*
+ 		 * Make sure this is not more than the resources we are
+ 		 * planning to allocate
+@@ -3910,16 +3896,14 @@ mega_get_max_sgl(adapter_t *adapter)
+ static int
+ mega_support_cluster(adapter_t *adapter)
+ {
+-	unsigned char	raw_mbox[sizeof(struct mbox_out)];
+-	mbox_t	*mbox;
+-
+-	mbox = (mbox_t *)raw_mbox;
++	struct mbox_out	mbox;
++	unsigned char	*raw_mbox = (u8 *)&mbox;
+ 
+-	memset(mbox, 0, sizeof(raw_mbox));
++	memset(&mbox, 0, sizeof(mbox));
+ 
+ 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
+ 
+-	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
++	mbox.xferaddr = (u32)adapter->buf_dma_handle;
+ 
+ 	/*
+ 	 * Try to get the initiator id. This command will succeed iff the
 -- 
-2.17.1
+2.30.2
 
