@@ -2,121 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34004C4332F
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Dec 2021 07:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7885AC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Dec 2021 14:19:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354813AbhLDHqP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 4 Dec 2021 02:46:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57694 "EHLO
+        id S1385197AbhLDOXQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 4 Dec 2021 09:23:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243286AbhLDHqO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Dec 2021 02:46:14 -0500
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BE7AC061751;
-        Fri,  3 Dec 2021 23:42:49 -0800 (PST)
-Received: by mail-pj1-x102f.google.com with SMTP id x7so4041390pjn.0;
-        Fri, 03 Dec 2021 23:42:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=k/XW81IzuVveDnfkiaihrgRy1fm8QRuVkAriBYUSktQ=;
-        b=aeetCr9E159DG34hEjAeWGhArTHlrTQp+RvPNuwjMb9u/3PFY53wzhtHubgWJQvDgG
-         Jozxdg5UENxD6v0AUKHmjx4efncr1d3uH51laaSKr9cPyQcT+BdlVcFvxfS2q7alc9M+
-         IQoElcNzWMNvIxf21BBZKf234HszCsVWMj7scSChzf64nuKTXacuscJrUCAKLRq29Wrh
-         e5337Xbg+LNRcQZd6EO7eqCabhSTi7bBHidYnjemVzHYg6jyVwVpnU2LRvbC5rtLuJMX
-         22ZzHU6J0KwMuux99RJ5m0Zk9mxBVsGjyiM9lko2MTYAamfaDiH1DIbBhIO1ffuEquNb
-         e04w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=k/XW81IzuVveDnfkiaihrgRy1fm8QRuVkAriBYUSktQ=;
-        b=n0/OGKrzb8Hn8Bc5pytbQDyzmvSaf40yltQNpz0TQYTsnRUzAA03RhhGTNlrinwYoN
-         YPoE5utXEnLduscuTBfDJc9KImSaYi7TRK7GNJ/rK8NHDhkQlU5XdILob3H8G2PAsxFv
-         1S84EtbKLCNYs02P4XVCe8zFLmIVipzSjNcR77lF781zKA/Vs80hhDaDBgPJBWb0Pe0z
-         6nCMiXR7EV/K+DshpepXmAS/CDeM2YLh5g89mJJXi2BiJOIXs3T2QjFlXhgU8jz4crbe
-         mlu+ShRbWndT1ya9LYDXo2ZmFURXYeOC+FY7RXfDPOm25Ck06xz70/VF4rvSMRxOURLn
-         6LYg==
-X-Gm-Message-State: AOAM532fIBlmmNrF65MPpZA96q2GTX578JM+4J3+E33zFJ52Rqmv0dTH
-        OPaepqGanBOED9OEFFMM574=
-X-Google-Smtp-Source: ABdhPJwRWGj4ETvjt39e2arm3ZwL48sLjKr/6To2ton+oBAvgGlhyx9UEyFTCkGwPmBxwIqCiR8C4Q==
-X-Received: by 2002:a17:902:714f:b0:142:892d:a46 with SMTP id u15-20020a170902714f00b00142892d0a46mr28039873plm.39.1638603768758;
-        Fri, 03 Dec 2021 23:42:48 -0800 (PST)
-Received: from ?IPV6:2404:f801:0:5:8000::50b? ([2404:f801:9000:18:efec::50b])
-        by smtp.gmail.com with ESMTPSA id mz7sm7286643pjb.7.2021.12.03.23.42.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 03 Dec 2021 23:42:48 -0800 (PST)
-Message-ID: <448de4ec-b73e-597f-16fe-623123c04d1e@gmail.com>
-Date:   Sat, 4 Dec 2021 15:42:36 +0800
+        with ESMTP id S241124AbhLDOXP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Dec 2021 09:23:15 -0500
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B8E8C061751;
+        Sat,  4 Dec 2021 06:19:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1638627589;
+        bh=4UpQiGaFFla6kEoSrEB6tjLYKfWhGPQkWDOaRHaaWeo=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=MI5kuW6om69NEOKzJEHolPs3JdY2ks6Lgyl9en+keXRWI8VKBCNDtipB2HI1/9K99
+         KaeFwH5SpodqCVaTcC/v7JgYxSkqtZe98R0lHth6TueCJSBAFyJtK4KG7Hy+/1T2Pe
+         h2tQX5xTcJIEOhfVtNhCobGasUagStfp+Oi7SGMY=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 478221280998;
+        Sat,  4 Dec 2021 09:19:49 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 2xSxmAU7tXoP; Sat,  4 Dec 2021 09:19:49 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1638627589;
+        bh=4UpQiGaFFla6kEoSrEB6tjLYKfWhGPQkWDOaRHaaWeo=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=MI5kuW6om69NEOKzJEHolPs3JdY2ks6Lgyl9en+keXRWI8VKBCNDtipB2HI1/9K99
+         KaeFwH5SpodqCVaTcC/v7JgYxSkqtZe98R0lHth6TueCJSBAFyJtK4KG7Hy+/1T2Pe
+         h2tQX5xTcJIEOhfVtNhCobGasUagStfp+Oi7SGMY=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id C24271280994;
+        Sat,  4 Dec 2021 09:19:48 -0500 (EST)
+Message-ID: <a6cae8ac4c95123d9dbda07a7cc553ea0367f4b8.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.16-rc3
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 04 Dec 2021 09:19:47 -0500
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.2
-Subject: Re: [PATCH V3 5/5] hv_netvsc: Add Isolation VM support for netvsc
- driver
-Content-Language: en-US
-To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "bp@alien8.de" <bp@alien8.de>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "x86@kernel.org" <x86@kernel.org>, "hpa@zytor.com" <hpa@zytor.com>,
-        "jgross@suse.com" <jgross@suse.com>,
-        "sstabellini@kernel.org" <sstabellini@kernel.org>,
-        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "will@kernel.org" <will@kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
-Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-References: <20211201160257.1003912-1-ltykernel@gmail.com>
- <20211201160257.1003912-6-ltykernel@gmail.com>
- <MWHPR21MB15934DE25012A8565256336ED76A9@MWHPR21MB1593.namprd21.prod.outlook.com>
-From:   Tianyu Lan <ltykernel@gmail.com>
-In-Reply-To: <MWHPR21MB15934DE25012A8565256336ED76A9@MWHPR21MB1593.namprd21.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/4/2021 2:59 AM, Michael Kelley (LINUX) wrote:
->> +
->> +/*
->> + * hv_map_memory - map memory to extra space in the AMD SEV-SNP Isolation VM.
->> + */
->> +void *hv_map_memory(void *addr, unsigned long size)
->> +{
->> +	unsigned long *pfns = kcalloc(size / HV_HYP_PAGE_SIZE,
-> This should be just PAGE_SIZE, as this code is unrelated to communication
-> with Hyper-V.
->
+two patches, both in drivers.  One is a fix to FC recovery (lpfc) and
+the other is an enhancement to support the Intel Alder Motherboard with
+the UFS driver which comes under the -rc exception process for hardware
+enabling.
 
-Yes, agree. Will update.
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Adrian Hunter (1):
+      scsi: ufs: ufs-pci: Add support for Intel ADL
+
+James Smart (1):
+      scsi: lpfc: Fix non-recovery of remote ports following an unsolicited LOGO
+
+And the diffstat:
+
+ drivers/scsi/lpfc/lpfc_els.c  |  9 ++-------
+ drivers/scsi/ufs/ufshcd-pci.c | 18 ++++++++++++++++++
+ 2 files changed, 20 insertions(+), 7 deletions(-)
+
+With full diff below.
+
+James
+
+---
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index b940e0268f96..e83453bea2ae 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -5095,14 +5095,9 @@ lpfc_cmpl_els_logo_acc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		/* NPort Recovery mode or node is just allocated */
+ 		if (!lpfc_nlp_not_used(ndlp)) {
+ 			/* A LOGO is completing and the node is in NPR state.
+-			 * If this a fabric node that cleared its transport
+-			 * registration, release the rpi.
++			 * Just unregister the RPI because the node is still
++			 * required.
+ 			 */
+-			spin_lock_irq(&ndlp->lock);
+-			ndlp->nlp_flag &= ~NLP_NPR_2B_DISC;
+-			if (phba->sli_rev == LPFC_SLI_REV4)
+-				ndlp->nlp_flag |= NLP_RELEASE_RPI;
+-			spin_unlock_irq(&ndlp->lock);
+ 			lpfc_unreg_rpi(vport, ndlp);
+ 		} else {
+ 			/* Indicate the node has already released, should
+diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+index 51424557810d..f725248ba57f 100644
+--- a/drivers/scsi/ufs/ufshcd-pci.c
++++ b/drivers/scsi/ufs/ufshcd-pci.c
+@@ -421,6 +421,13 @@ static int ufs_intel_lkf_init(struct ufs_hba *hba)
+ 	return err;
+ }
+ 
++static int ufs_intel_adl_init(struct ufs_hba *hba)
++{
++	hba->nop_out_timeout = 200;
++	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
++	return ufs_intel_common_init(hba);
++}
++
+ static struct ufs_hba_variant_ops ufs_intel_cnl_hba_vops = {
+ 	.name                   = "intel-pci",
+ 	.init			= ufs_intel_common_init,
+@@ -449,6 +456,15 @@ static struct ufs_hba_variant_ops ufs_intel_lkf_hba_vops = {
+ 	.device_reset		= ufs_intel_device_reset,
+ };
+ 
++static struct ufs_hba_variant_ops ufs_intel_adl_hba_vops = {
++	.name			= "intel-pci",
++	.init			= ufs_intel_adl_init,
++	.exit			= ufs_intel_common_exit,
++	.link_startup_notify	= ufs_intel_link_startup_notify,
++	.resume			= ufs_intel_resume,
++	.device_reset		= ufs_intel_device_reset,
++};
++
+ #ifdef CONFIG_PM_SLEEP
+ static int ufshcd_pci_restore(struct device *dev)
+ {
+@@ -563,6 +579,8 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x4B41), (kernel_ulong_t)&ufs_intel_ehl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x4B43), (kernel_ulong_t)&ufs_intel_ehl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x98FA), (kernel_ulong_t)&ufs_intel_lkf_hba_vops },
++	{ PCI_VDEVICE(INTEL, 0x51FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
++	{ PCI_VDEVICE(INTEL, 0x54FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
+ 	{ }	/* terminate list */
+ };
+ 
 
