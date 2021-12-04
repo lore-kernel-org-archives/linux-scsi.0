@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55E8FC4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B20C433EF
 	for <linux-scsi@archiver.kernel.org>; Sat,  4 Dec 2021 00:27:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1383712AbhLDAaZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1354494AbhLDAaZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 3 Dec 2021 19:30:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48076 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1383668AbhLDAaU (ORCPT
+        with ESMTP id S1383694AbhLDAaU (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Dec 2021 19:30:20 -0500
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A52CC061359
-        for <linux-scsi@vger.kernel.org>; Fri,  3 Dec 2021 16:26:55 -0800 (PST)
-Received: by mail-pg1-x529.google.com with SMTP id f125so4697215pgc.0
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Dec 2021 16:26:55 -0800 (PST)
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F2CBC061751
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Dec 2021 16:26:56 -0800 (PST)
+Received: by mail-pg1-x52e.google.com with SMTP id 71so4647465pgb.4
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Dec 2021 16:26:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=F2b6CO0wbY7ltn0TUDXIpHpO2ZaLmPQnprTRUm0/D/g=;
-        b=LzTIeZlGFAPSgykOBkV1jrdoL7uXA/SB4uXF4/JotolfCznyDjiU7AaMMl7Ts1ppUj
-         70SPyWUBO8WDIKAtl9VjCQPhTeGeD8sIGxdecx0r77sIwYr0qQqU8aumSCn/AMcnk67K
-         7KGarYaz0zatpX+N/8q4VfxnpaBOSWvDU4y9TaEn4xLObMqozPT6ovs94rkoAxbl9+fR
-         3l4t27vp8/30L40RTHsGze/YBWuEvd0vaIrjVY2FLniruBtS9qxgfsTcJalZcFNAFXkJ
-         xQ+TrJssBgwtIFCwlpJnCRNq34PezsLbda+Mzf5GBrRyCGmMgUl5YbEuGKwtxqOO5Fbl
-         vCmA==
+        bh=tangISIjMFoARjF61DTQkK8+AJWtgxHEidCHBUi2IkA=;
+        b=ZopRFYHg5UWYvdlS0VRvSyIBttTQSbOXFF7leFWJSr/CTMHcuQ2qUkWimL/U+BJdWj
+         NiRg2/PbVmSkGca/3T33cLv82aq/6tb0aoQlmnteSpAj/eKVX+2SBg1tMVvjnD4v/qgI
+         50I7FJ/vb3nTH0+RxCWI/J99o4S8zyGqo9RPTlM669SY2hvr1IAldK0RLvfyHH10vOct
+         lDNr5pvzbM1FJXbcqQK1Oa+eqr0BeOy2wTJ3ATTGHGu12fatDqPEbglUype26pla/zKu
+         RkxhskCnsToWC4wLGtYu34g6RwnYlC81vHYGBjF0AsEtpB8vDyWTa3SN6qGI7f5Y8RVv
+         /7oA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=F2b6CO0wbY7ltn0TUDXIpHpO2ZaLmPQnprTRUm0/D/g=;
-        b=bADf3oCO3/c1ivlIgefuPJsLOYcLgA33joQcOV2dYZcv5ooZUe9SDxsessZtQNfNHY
-         WdTROUbUGbRySnHTPjEB+A+xX2U4yHrec9ENlXNffmKThkq0x29u6ZuNWQW9REmXFWy7
-         cdx830/sItLBGkr3bg05TIXCOskWWujtQFdstIZAR8oMlqdOyMM999cKM+m7gzyvKX3y
-         yenL97xlrQVbSMpLpM8GiHutuNP0MFWKUHEprY/zjY5c0USSVNcu4t6aYNfJBYWIM32H
-         pj1mR1KjV5Soyhl6wqar2c+oW4Ijr4NvVknNIHWcIX8Lsa7A4ttH7sTNwHE4510qqz9e
-         rxFQ==
-X-Gm-Message-State: AOAM532eIIRAwpe9iE1mrcAMZksQjvMGJuN1vu5kM7bE86mTq6NoLvW2
-        IvUvBdcozdJzOfqBDZwa5oXBZsVLBMo=
-X-Google-Smtp-Source: ABdhPJy+Civ5wgKJYJRQO/QiGt8DXSvmVSsyQtZIvsQeWLE7MUxbchI90oE+QfLqqyO12hmcJMaEsg==
-X-Received: by 2002:a05:6a00:228f:b0:49f:d8ac:2f1c with SMTP id f15-20020a056a00228f00b0049fd8ac2f1cmr22563916pfe.35.1638577615007;
+        bh=tangISIjMFoARjF61DTQkK8+AJWtgxHEidCHBUi2IkA=;
+        b=kCJ+jOfQU1tr0MFwE21ojxEvqv39RZ3RyapN5kj7Y+rJo+wE66unQGPyMXOVZvMd6q
+         B51+fwIGtYFGYHKbaKwRf4B6AzYTAlAaV6rHTquVnZdz43DLC8pl7fulCQkHRG92Kfv0
+         H5yGFlv/nxDCt45vbkZ9tOMw7wnKYLFsLCstuhI8LbHtVODrNq5dycSw8fkm+kMo4erJ
+         mxbtToO5SZL5+YGsjae6EP59AA8a/uByufLJZLmLx8P6UBpzY6NLFj1rVskjMBd5DN10
+         es9dV7f9+dVipuJZRgYo4DRT57Wuvg3+AeK6Jh8nPfBT78dLbFdkSS/CHmagE47d0eFq
+         VqLg==
+X-Gm-Message-State: AOAM530DxBF3DnJiBjN4De86kPwIPp8qcAHoyhAPtS26AFNNyeYDoCcq
+        avFJhiK4LcodwtKUtTG1KbLvcA01TKo=
+X-Google-Smtp-Source: ABdhPJyJk9ohiXwqUUnqg12mTkSFKWvLGpD7U8vULjmqE6y1ma5CCUKojXdsfy5HpxqhHIPWbtiKNw==
+X-Received: by 2002:a65:4bc8:: with SMTP id p8mr7105686pgr.119.1638577615526;
         Fri, 03 Dec 2021 16:26:55 -0800 (PST)
 Received: from mail-lvn-it-01.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id q17sm4970707pfu.117.2021.12.03.16.26.54
+        by smtp.gmail.com with ESMTPSA id q17sm4970707pfu.117.2021.12.03.16.26.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Dec 2021 16:26:54 -0800 (PST)
+        Fri, 03 Dec 2021 16:26:55 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 7/9] lpfc: Cap CMF read bytes to MBPI
-Date:   Fri,  3 Dec 2021 16:26:42 -0800
-Message-Id: <20211204002644.116455-8-jsmart2021@gmail.com>
+Subject: [PATCH 8/9] lpfc: Add additional debugfs support for CMF
+Date:   Fri,  3 Dec 2021 16:26:43 -0800
+Message-Id: <20211204002644.116455-9-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20211204002644.116455-1-jsmart2021@gmail.com>
 References: <20211204002644.116455-1-jsmart2021@gmail.com>
@@ -63,67 +63,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Ensure read bytes data does not go over MBPI for CMF timer intervals that
-are purposely shortened.
+Dump raw CMF parameter information in debugfs cgn_buffer.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc.h      |  2 +-
- drivers/scsi/lpfc/lpfc_init.c | 11 ++++++++++-
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 49abbf132bee..3faadcfcdcbb 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -1028,7 +1028,7 @@ struct lpfc_hba {
- 					 */
- #define HBA_PCI_ERR		0x80000 /* The PCI slot is offline */
- #define HBA_FLOGI_ISSUED	0x100000 /* FLOGI was issued */
--#define HBA_CGN_RSVD1		0x200000 /* Reserved CGN flag */
-+#define HBA_SHORT_CMF		0x200000 /* shorter CMF timer routine */
- #define HBA_CGN_DAY_WRAP	0x400000 /* HBA Congestion info day wraps */
- #define HBA_DEFER_FLOGI		0x800000 /* Defer FLOGI till read_sparm cmpl */
- #define HBA_SETUP		0x1000000 /* Signifies HBA setup is completed */
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 132f2e60bdb4..2fe7d9d885d9 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -6004,8 +6004,13 @@ lpfc_cmf_timer(struct hrtimer *timer)
- 		if (ms && ms < LPFC_CMF_INTERVAL) {
- 			cnt = div_u64(total, ms); /* bytes per ms */
- 			cnt *= LPFC_CMF_INTERVAL; /* what total should be */
--			if (cnt > mbpi)
-+
-+			/* If the timeout is scheduled to be shorter,
-+			 * this value may skew the data, so cap it at mbpi.
-+			 */
-+			if ((phba->hba_flag & HBA_SHORT_CMF) && cnt > mbpi)
- 				cnt = mbpi;
-+
- 			extra = cnt - total;
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index ab2550ad0597..21152c9a96ef 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -5484,7 +5484,7 @@ lpfc_cgn_buffer_read(struct file *file, char __user *buf, size_t nbytes,
+ 		if (len > (LPFC_CGN_BUF_SIZE - LPFC_DEBUG_OUT_LINE_SZ)) {
+ 			len += scnprintf(buffer + len, LPFC_CGN_BUF_SIZE - len,
+ 					 "Truncated . . .\n");
+-			break;
++			goto out;
  		}
- 		lpfc_issue_cmf_sync_wqe(phba, LPFC_CMF_INTERVAL, total + extra);
-@@ -6088,6 +6093,8 @@ lpfc_cmf_timer(struct hrtimer *timer)
- 	/* Each minute save Fabric and Driver congestion information */
- 	lpfc_cgn_save_evt_cnt(phba);
- 
-+	phba->hba_flag &= ~HBA_SHORT_CMF;
-+
- 	/* Since we need to call lpfc_cgn_save_evt_cnt every minute, on the
- 	 * minute, adjust our next timer interval, if needed, to ensure a
- 	 * 1 minute granularity when we get the next timer interrupt.
-@@ -6098,6 +6105,8 @@ lpfc_cmf_timer(struct hrtimer *timer)
- 						  jiffies);
- 		if (timer_interval <= 0)
- 			timer_interval = LPFC_CMF_INTERVAL;
-+		else
-+			phba->hba_flag |= HBA_SHORT_CMF;
- 
- 		/* If we adjust timer_interval, max_bytes_per_interval
- 		 * needs to be adjusted as well.
+ 		len += scnprintf(buffer + len, LPFC_CGN_BUF_SIZE - len,
+ 				 "%03x: %08x %08x %08x %08x "
+@@ -5495,6 +5495,17 @@ lpfc_cgn_buffer_read(struct file *file, char __user *buf, size_t nbytes,
+ 		cnt += 32;
+ 		ptr += 8;
+ 	}
++	if (len > (LPFC_CGN_BUF_SIZE - LPFC_DEBUG_OUT_LINE_SZ)) {
++		len += scnprintf(buffer + len, LPFC_CGN_BUF_SIZE - len,
++				 "Truncated . . .\n");
++		goto out;
++	}
++	len += scnprintf(buffer + len, LPFC_CGN_BUF_SIZE - len,
++			 "Parameter Data\n");
++	ptr = (uint32_t *)&phba->cgn_p;
++	len += scnprintf(buffer + len, LPFC_CGN_BUF_SIZE - len,
++			 "%08x %08x %08x %08x\n",
++			 *ptr, *(ptr + 1), *(ptr + 2), *(ptr + 3));
+ out:
+ 	return simple_read_from_buffer(buf, nbytes, ppos, buffer, len);
+ }
 -- 
 2.26.2
 
