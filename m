@@ -2,137 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E258EC4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Dec 2021 15:14:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09A44C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Dec 2021 17:05:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349476AbhLFPSC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Dec 2021 10:18:02 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4214 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345322AbhLFPNd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Dec 2021 10:13:33 -0500
-Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4J76Jn5y48z67MmS;
-        Mon,  6 Dec 2021 23:08:57 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.20; Mon, 6 Dec 2021 16:10:01 +0100
-Received: from [10.47.82.161] (10.47.82.161) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Mon, 6 Dec
- 2021 15:10:00 +0000
-Subject: Re: [PATCH] scsi: libsas: Fix a NULL pointer dereference in
- sas_ex_discover_expander()
-To:     Zhou Qingyang <zhou1615@umn.edu>
-CC:     <kjlu@umn.edu>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Luo Jiaxing <luojiaxing@huawei.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        James Bottomley <James.Bottomley@SteelEye.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20211130171629.201026-1-zhou1615@umn.edu>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <b757aabe-5231-64bc-8ad5-cedac79b0f43@huawei.com>
-Date:   Mon, 6 Dec 2021 15:09:47 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S233331AbhLFRI6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Dec 2021 12:08:58 -0500
+Received: from mail-pg1-f181.google.com ([209.85.215.181]:41935 "EHLO
+        mail-pg1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1349567AbhLFRE1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Dec 2021 12:04:27 -0500
+Received: by mail-pg1-f181.google.com with SMTP id k4so11041721pgb.8
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Dec 2021 09:00:58 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=zoQiiF6RoE4pj7ANn1G+Fd4eNhBsO/e09yU1b0+qbPU=;
+        b=5/4COW7qXm1E14beQq8C+KbMlAoi8u195w7Nmx+DW7d3NaRSpOpILfwc/y4H8ddkZp
+         Pl9Ytj98NP3b58lRWj24R3Uye/NcXF/OCzQpzMUBm/C8WpRukmO7paloLfjHPEkvoNq+
+         XtFocfzIWbVAFZqWr/ThoX8qtecgpEn5fOYzKAVonVD27zPSJOcQvADtKELIN5ckAW+Z
+         Xjn4iNvvQcZ1RhhonpoDIfXS7rRXffiPn2nM4RvptzbSfeb3fqcyEAd/UDKIxjd5M5De
+         7aF6+Iwo9KtO2MPBVsZJcmbSiRow3NOAdPpWM7M0G31xE/z4GB5xaBVLDUGd/suaHkmn
+         C7bA==
+X-Gm-Message-State: AOAM530Qqtb4YS+tM4QU9FHzN6g6UV18Rmg1sWUnvmpNhi9/cYCNSz8o
+        VruZe4pozmg+fEnbmhzOJ/U=
+X-Google-Smtp-Source: ABdhPJx5Q16Mqbzx/hWZ1US8GLpYY6GwTZnkvu5XsYz4RY4kZxEsyLtOctfm8L1ks+5xft2mHdsnDw==
+X-Received: by 2002:a05:6a00:10c7:b0:4ad:bbfd:7b3b with SMTP id d7-20020a056a0010c700b004adbbfd7b3bmr8680528pfu.78.1638810058037;
+        Mon, 06 Dec 2021 09:00:58 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:c500:c5f2:b7a5:d7c6])
+        by smtp.gmail.com with ESMTPSA id u11sm5351313pfg.120.2021.12.06.09.00.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Dec 2021 09:00:57 -0800 (PST)
+Subject: Re: [PATCH V2] scsi:spraid: initial commit of Ramaxel spraid driver
+To:     Hannes Reinecke <hare@suse.de>, Yanling Song <songyl@ramaxel.com>,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, yujiang@ramaxel.com
+References: <20211126073310.87683-1-songyl@ramaxel.com>
+ <99fb2d55-88c0-2911-3b71-7670d386ab1c@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <7d6f4200-9140-5f1c-b962-8762703ccba1@acm.org>
+Date:   Mon, 6 Dec 2021 09:00:56 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <20211130171629.201026-1-zhou1615@umn.edu>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <99fb2d55-88c0-2911-3b71-7670d386ab1c@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.82.161]
-X-ClientProxiedBy: lhreml721-chm.china.huawei.com (10.201.108.72) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 30/11/2021 17:16, Zhou Qingyang wrote:
-
-I'd have "scsi: libsas: Improve error handling in 
-sas_ex_discover_expander()"
-
-> In sas_ex_discover_expander(), sas_port_alloc() is assigned to phy->port
-
-"sas_port_alloc() is assigned to phy->port" - the function is not assigned
-
-> and used in sas_port_add(). sas_port_add() further passes phy->port to
-> list_empty(), and there is a dereference of it in list_empty(), which
-> could lead to a NULL pointer dereference on failure of
-> sas_port_alloc().
+On 11/29/21 5:04 AM, Hannes Reinecke wrote:
+> This entire thing looks like an NVMe controller which is made to look like a SCSI controller.
+> It even uses most of the NVMe structures.
+> And from what I've seen there is not much SCSI specific in here; I/O and queue setup is pretty much what every NVMe controller does.
+> So why not make it a true NVMe controller?
+> Yes, you would need to discuss with the NVMe folks on how a RAID controller should look like in NVMe terms.
+> But overall I guess the driver would be far smaller and possibly easier to maintain.
 > 
-> This patch imitates the same error-handling logic in
-> sas_ex_discover_end_dev().
+> So where's the benefit having it as a SCSI driver (apart from the fact that is allows you to side-step having to discuss the interface with NVMexpress.org ...)?
+> Or, to put it the other way round: Is there anything SCSI specific which would prevent such an approach?
 
-git grep 'This patch' Documentation/process/submitting-patches.rst
+Hi Hannes,
 
-> 
-> Fix this bug by adding checks for phy->port and sas_port_add().
-> 
-> This bug was found by a static analyzer. The analysis employs
-> differential checking to identify inconsistent security operations
-> (e.g., checks or kfrees) between two code paths and confirms that the
-> inconsistent operations are not recovered in the current function or
-> the callers, so they constitute bugs.
-> 
-> Note that, as a bug found by static analysis, it can be a false
-> positive or hard to trigger. Multiple researchers have cross-reviewed
-> the bug.
+Isn't every driver that defines a struct scsi_host_template by definition a
+SCSI driver?
 
-Who are these researchers?
+If there is enough code that is shared between the spraid driver and the NVMe
+core one could look into creating a library with the shared code. However,
+I'm not sure this is worth the effort nor that the NVMe maintainers will
+agree with this.
 
-> 
-> Builds with CONFIG_SCSI_SAS_LIBSAS=m show no new warnings,
-> and our static analyzer no longer warns about this code.
+Thanks,
 
-This is all implied by sending the patch in the first place
-
-> 
-> Fixes:  2908d778ab3e ("[SCSI] aic94xx: new driver")
-
-personally I don't think that this is a fix - the code is old and 
-already had BUG_ON()
-
-> Signed-off-by: Zhou Qingyang <zhou1615@umn.edu>
-> ---
->   drivers/scsi/libsas/sas_expander.c | 11 +++++++++--
->   1 file changed, 9 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index c2150a818423..7530b1773d6b 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -957,9 +957,16 @@ static struct domain_device *sas_ex_discover_expander(
->   		return NULL;
->   
->   	phy->port = sas_port_alloc(&parent->rphy->dev, phy_id);
-> -	/* FIXME: better error handling */
-> -	BUG_ON(sas_port_add(phy->port) != 0);
-> +	if (unlikely(!phy->port)) {
-
-no need for unlikely() - this is not fastpath
-
-> +		sas_put_device(child);
-> +		return NULL;
-> +	}
->   
-> +	if (sas_port_add(phy->port) != 0) {
-> +		sas_port_free(phy->port);
-> +		sas_put_device(child);
-
-better have a goto error now as we're replicting code, including what is 
-already there for the sas_discover_expander() failure error path
-
-> +		return NULL;
-> +	}
->   
->   	switch (phy->attached_dev_type) {
->   	case SAS_EDGE_EXPANDER_DEVICE:
-> 
-
+Bart.
