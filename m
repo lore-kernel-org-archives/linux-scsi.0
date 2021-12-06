@@ -2,18 +2,18 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEF8DC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Dec 2021 14:07:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9EFDC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Dec 2021 14:09:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245658AbhLFOLF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Dec 2021 09:11:05 -0500
-Received: from verein.lst.de ([213.95.11.211]:50654 "EHLO verein.lst.de"
+        id S245536AbhLFOM5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Dec 2021 09:12:57 -0500
+Received: from verein.lst.de ([213.95.11.211]:50705 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S245648AbhLFOKa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 6 Dec 2021 09:10:30 -0500
+        id S237344AbhLFOM4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 6 Dec 2021 09:12:56 -0500
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 1077C68B05; Mon,  6 Dec 2021 15:06:52 +0100 (CET)
-Date:   Mon, 6 Dec 2021 15:06:51 +0100
+        id 6C59868B05; Mon,  6 Dec 2021 15:09:17 +0100 (CET)
+Date:   Mon, 6 Dec 2021 15:09:16 +0100
 From:   Christoph Hellwig <hch@lst.de>
 To:     Tianyu Lan <ltykernel@gmail.com>
 Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
@@ -32,27 +32,22 @@ Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
         netdev@vger.kernel.org, vkuznets@redhat.com, brijesh.singh@amd.com,
         konrad.wilk@oracle.com, hch@lst.de, parri.andrea@gmail.com,
         dave.hansen@intel.com
-Subject: Re: [PATCH V4 2/5] x86/hyper-v: Add hyperv Isolation VM check in
- the cc_platform_has()
-Message-ID: <20211206140651.GA5100@lst.de>
-References: <20211205081815.129276-1-ltykernel@gmail.com> <20211205081815.129276-3-ltykernel@gmail.com>
+Subject: Re: [PATCH V4 1/5] Swiotlb: Add Swiotlb bounce buffer remap
+ function for HV IVM
+Message-ID: <20211206140916.GB5100@lst.de>
+References: <20211205081815.129276-1-ltykernel@gmail.com> <20211205081815.129276-2-ltykernel@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211205081815.129276-3-ltykernel@gmail.com>
+In-Reply-To: <20211205081815.129276-2-ltykernel@gmail.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Dec 05, 2021 at 03:18:10AM -0500, Tianyu Lan wrote:
-> +static bool hyperv_cc_platform_has(enum cc_attr attr)
-> +{
-> +#ifdef CONFIG_HYPERV
-> +	return attr == CC_ATTR_GUEST_MEM_ENCRYPT;
-> +#else
-> +	return false;
-> +#endif
-> +}
+Please spell swiotlb with a lower case s.  Otherwise this look good
 
-Can we even end up here without CONFIG_HYPERV?
+Acked-by: Christoph Hellwig <hch@lst.de>
+
+Feel free to carry this in whatever tree is suitable for the rest of the
+patches.
