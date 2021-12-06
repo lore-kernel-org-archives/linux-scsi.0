@@ -2,188 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E2FAC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Dec 2021 22:42:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F304FC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Dec 2021 22:58:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351254AbhLFWpv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Dec 2021 17:45:51 -0500
-Received: from so254-9.mailgun.net ([198.61.254.9]:62399 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359520AbhLFWp0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Dec 2021 17:45:26 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1638830517; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: From: References: Cc: To: Subject: MIME-Version: Date:
- Message-ID: Sender; bh=LJZSWapBIZLhgFvIVvGnR5Ybs8OKtx8dHiUW5wkwBQk=; b=oRpAGy1Y/2kzuo/RTC+XpyxU0seyE1kXFwVa2Wp3oFlgt0gfKxa+Mta1YxU5yjST/Hbg7AFq
- JKh6mUT0uRP/IrCWNvOvSPKGorR//CQm8gRB6J+5T3Kbtu8Zbj8/XN+O23EJQfplnDGKRgNw
- bh6f7OfnIt1Pk1kz+U7RVsG748I=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
- 61ae91b403b7c5d147c6d80f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 06 Dec 2021 22:41:56
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 616D1C14934; Mon,  6 Dec 2021 22:41:56 +0000 (UTC)
-Received: from [192.168.1.3] (cpe-66-27-70-157.san.res.rr.com [66.27.70.157])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 782BFC4162C;
-        Mon,  6 Dec 2021 22:41:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 782BFC4162C
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-Message-ID: <0ba5c50f-3e79-2cae-c502-59f70812cca3@codeaurora.org>
-Date:   Mon, 6 Dec 2021 14:41:50 -0800
+        id S1376623AbhLFXCD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Dec 2021 18:02:03 -0500
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:24676 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1359564AbhLFXCD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Dec 2021 18:02:03 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1638831514; x=1670367514;
+  h=from:to:cc:subject:date:message-id:mime-version;
+  bh=zoqnyRmkSd5RO5BU5otfubBRWktBekjMrFhDCqc/zdw=;
+  b=y/Dd/yc/PbinDqbqiETddAsC7OlZiMCBwNvAkV/Gvj43GbNWXp4Ma8td
+   yL9z6wvS7Ri7tJsGZ8UiVIqp4sT3NTAfcrQOkpsLWls7t3mMMhfx5+ZEe
+   6wubAngCRhG8lxbAQ+ERw8N1bsumss8wLA9pogm3yTFikDCUWJWg7vIx3
+   A=;
+Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
+  by alexa-out.qualcomm.com with ESMTP; 06 Dec 2021 14:58:33 -0800
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Dec 2021 14:58:33 -0800
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.922.19; Mon, 6 Dec 2021 14:58:32 -0800
+Received: from gabriel.qualcomm.com (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.922.19; Mon, 6 Dec 2021
+ 14:58:32 -0800
+From:   Gaurav Kashyap <quic_gaurkash@quicinc.com>
+To:     <linux-scsi@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
+CC:     <linux-mmc@vger.kernel.org>, <linux-block@vger.kernel.org>,
+        <linux-fscrypt@vger.kernel.org>, <thara.gopinath@linaro.org>,
+        <quic_neersoni@quicinc.com>, <dineshg@quicinc.com>,
+        Gaurav Kashyap <quic_gaurkash@quicinc.com>
+Subject: [PATCH 00/10] Add wrapped key support for Qualcomm ICE
+Date:   Mon, 6 Dec 2021 14:57:15 -0800
+Message-ID: <20211206225725.77512-1-quic_gaurkash@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.1
-Subject: Re: [PATCH v4 16/17] scsi: ufs: Optimize the command queueing code
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Keoseong Park <keosung.park@samsung.com>
-References: <20211203231950.193369-1-bvanassche@acm.org>
- <20211203231950.193369-17-bvanassche@acm.org>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-In-Reply-To: <20211203231950.193369-17-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/3/2021 3:19 PM, Bart Van Assche wrote:
-> Remove the clock scaling lock from ufshcd_queuecommand() since it is a
-> performance bottleneck. Instead check the SCSI device budget bitmaps in
-> the code that waits for ongoing ufshcd_queuecommand() calls. A bit is
-> set in sdev->budget_map just before scsi_queue_rq() is called and a bit
-> is cleared from that bitmap if scsi_queue_rq() does not submit the
-> request or after the request has finished. See also the
-> blk_mq_{get,put}_dispatch_budget() calls in the block layer.
-> 
-> There is no risk for a livelock since the block layer delays queue
-> reruns if queueing a request fails because the SCSI host has been
-> blocked.
-> 
-> Cc: Asutosh Das (asd) <asutoshd@codeaurora.org>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
+These patches add support to Qualcomm ICE for hardware
+wrapped keys and are made on top of Eric Bigger's set of changes to
+support wrapped keys.
+Found here: https://lore.kernel.org/linux-block/20210916174928.65529-1-ebiggers@kernel.org).
+Explanation and use of hardware-wrapped-keys can be found here:
+Documentation/block/inline-encryption.rst
 
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+The first patch however is not related to wrapped keys. It is
+for moving ICE functionality into a shared library which both ufs and
+sdhci can use. The patch for sdhc-msm will be uploaded later.
 
->   drivers/scsi/ufs/ufshcd.c | 33 +++++++++++++++++++++++----------
->   drivers/scsi/ufs/ufshcd.h |  1 +
->   2 files changed, 24 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 9f0a1f637030..650dddf960c2 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1070,13 +1070,31 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
->   	return false;
->   }
->   
-> +/*
-> + * Determine the number of pending commands by counting the bits in the SCSI
-> + * device budget maps. This approach has been selected because a bit is set in
-> + * the budget map before scsi_host_queue_ready() checks the host_self_blocked
-> + * flag. The host_self_blocked flag can be modified by calling
-> + * scsi_block_requests() or scsi_unblock_requests().
-> + */
-> +static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
-> +{
-> +	struct scsi_device *sdev;
-> +	u32 pending = 0;
-> +
-> +	shost_for_each_device(sdev, hba->host)
-> +		pending += sbitmap_weight(&sdev->budget_map);
-> +
-> +	return pending;
-> +}
-> +
->   static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
->   					u64 wait_timeout_us)
->   {
->   	unsigned long flags;
->   	int ret = 0;
->   	u32 tm_doorbell;
-> -	u32 tr_doorbell;
-> +	u32 tr_pending;
->   	bool timeout = false, do_last_check = false;
->   	ktime_t start;
->   
-> @@ -1094,8 +1112,8 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
->   		}
->   
->   		tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
-> -		tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> -		if (!tm_doorbell && !tr_doorbell) {
-> +		tr_pending = ufshcd_pending_cmds(hba);
-> +		if (!tm_doorbell && !tr_pending) {
->   			timeout = false;
->   			break;
->   		} else if (do_last_check) {
-> @@ -1115,12 +1133,12 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
->   			do_last_check = true;
->   		}
->   		spin_lock_irqsave(hba->host->host_lock, flags);
-> -	} while (tm_doorbell || tr_doorbell);
-> +	} while (tm_doorbell || tr_pending);
->   
->   	if (timeout) {
->   		dev_err(hba->dev,
->   			"%s: timedout waiting for doorbell to clear (tm=0x%x, tr=0x%x)\n",
-> -			__func__, tm_doorbell, tr_doorbell);
-> +			__func__, tm_doorbell, tr_pending);
->   		ret = -EBUSY;
->   	}
->   out:
-> @@ -2681,9 +2699,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
->   
->   	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
->   
-> -	if (!down_read_trylock(&hba->clk_scaling_lock))
-> -		return SCSI_MLQUEUE_HOST_BUSY;
-> -
->   	/*
->   	 * Allows the UFS error handler to wait for prior ufshcd_queuecommand()
->   	 * calls.
-> @@ -2772,8 +2787,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
->   out:
->   	rcu_read_unlock();
->   
-> -	up_read(&hba->clk_scaling_lock);
-> -
->   	if (ufs_trigger_eh()) {
->   		unsigned long flags;
->   
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 8e942762e668..88c20f3608c2 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -778,6 +778,7 @@ struct ufs_hba_monitor {
->    * @clk_list_head: UFS host controller clocks list node head
->    * @pwr_info: holds current power mode
->    * @max_pwr_info: keeps the device max valid pwm
-> + * @clk_scaling_lock: used to serialize device commands and clock scaling
->    * @desc_size: descriptor sizes reported by device
->    * @urgent_bkops_lvl: keeps track of urgent bkops level for device
->    * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
-> 
+Wrapped keys are supported in Qualcomm's ICE engine using
+a proprietary hardware module known as Hardware Key Manager (HWKM).
+The patches are revolved around that and testing for them
+can be done only on a HWKM supported Qualcomm device.
 
+Testing:
+Test platform: SM8350 HDK/MTP
+Engineering trustzone image (based on sm8350) is required to test
+this feature. This is because of version changes of HWKM.
+HWKM version 2 and moving forward has a lot of restrictions on the
+key management due to which the launched SM8350 solution (based on v1)
+cannot be used and some modifications are required in trustzone.
+
+The ideal scenario is to test by mounting initramfs on an upstream
+kernel and then using the fscrypt tool to setup directories with
+encryption policies. Testing and development for that is still under way.
+
+All the SCM calls however were individually tested from UFS by invoking
+a test API on bootup which is not part of these patchsets.
+
+Gaurav Kashyap (10):
+  soc: qcom: new common library for ICE functionality
+  scsi: ufs: qcom: move ICE functionality to common library
+  qcom_scm: scm call for deriving a software secret
+  soc: qcom: add HWKM library for storage encryption
+  scsi: ufs: prepare to support wrapped keys
+  soc: qcom: add wrapped key support for ICE
+  qcom_scm: scm call for create, prepare and import keys
+  scsi: ufs: add support for generate, import and prepare keys
+  soc: qcom: support for generate, import and prepare key
+  arm64: dts: qcom: sm8350: add ice and hwkm mappings
+
+ arch/arm64/boot/dts/qcom/sm8350.dtsi |   5 +-
+ drivers/firmware/qcom_scm.c          | 286 +++++++++++++++++++
+ drivers/firmware/qcom_scm.h          |   4 +
+ drivers/scsi/ufs/Kconfig             |   1 +
+ drivers/scsi/ufs/ufs-qcom-ice.c      | 227 +++++----------
+ drivers/scsi/ufs/ufs-qcom.c          |   4 +
+ drivers/scsi/ufs/ufs-qcom.h          |  22 +-
+ drivers/scsi/ufs/ufshcd-crypto.c     |  96 ++++++-
+ drivers/scsi/ufs/ufshcd.h            |  20 +-
+ drivers/soc/qcom/Kconfig             |   7 +
+ drivers/soc/qcom/Makefile            |   1 +
+ drivers/soc/qcom/qti-ice-common.c    | 402 +++++++++++++++++++++++++++
+ drivers/soc/qcom/qti-ice-hwkm.c      | 111 ++++++++
+ drivers/soc/qcom/qti-ice-regs.h      | 264 ++++++++++++++++++
+ include/linux/qcom_scm.h             |  30 +-
+ include/linux/qti-ice-common.h       |  40 +++
+ 16 files changed, 1345 insertions(+), 175 deletions(-)
+ create mode 100644 drivers/soc/qcom/qti-ice-common.c
+ create mode 100644 drivers/soc/qcom/qti-ice-hwkm.c
+ create mode 100644 drivers/soc/qcom/qti-ice-regs.h
+ create mode 100644 include/linux/qti-ice-common.h
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+2.17.1
+
