@@ -2,122 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC7A7C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Dec 2021 07:56:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED885C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Dec 2021 09:47:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231779AbhLGH7k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Dec 2021 02:59:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35948 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231334AbhLGH7i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Dec 2021 02:59:38 -0500
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3401C061746;
-        Mon,  6 Dec 2021 23:56:07 -0800 (PST)
-Received: by mail-pl1-x632.google.com with SMTP id y7so8899505plp.0;
-        Mon, 06 Dec 2021 23:56:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=/5M9gOfMUisREUkN0oMDl3d5AgAs/rybQfOBV8c7GG0=;
-        b=iqMBIlwZ0cRMihL7ebFJzQtnX9gzY8f/Gm2aKiyj/dGxhCyKv5GRhzBpl9NhhQf5Ki
-         YauW6iCaVM+V7sWtMpLOPLmOPjg9/BIMvQ0b1wuOkR8TcY3WEujZIqbGpF5f3cw6/06b
-         69V2kLpNyPwzybu2vn5o9cRG5Uz6RHC0HwESSGM/r1HIN1AhaPbIGU47hRZ5nwiWWg1e
-         gQkfLpRIm3z+OYUAqzGEkm1vChWfc7flJlcj2dBpJlByKd9vDfOLtQflSeYO/abZs5WR
-         MCL34gCWxwnyzqBxdthcCJ4C+T8SL3YtulbJgNv6i00TgK+w0a6w+YEtDPbvfTlzg2y3
-         wbKA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=/5M9gOfMUisREUkN0oMDl3d5AgAs/rybQfOBV8c7GG0=;
-        b=aKDdf2NmaG+iEfqzzSzcWySHal3HzeEM98DUSEttMBSphfMtSf7I5QdnjHt83bkP8V
-         OAjM9LDWrHoziyVlt+AAVKFcNetGnprkSiTd5OfV1zX6la+Gn4JFEypG2/+ajOCxUVj5
-         ylAk5Vu6tMcFGDQH35zoAf96URKbMMuU8BURDJ6chodN+iPUYnC352lnt862MI9wNcbl
-         1LDcZIUmEoN4kvCTddBbYowqAy+3kyOP/hdtYWc1GCF5G0BMlUq5fk6NPbRIihAZARaW
-         bQKkm7fVVnuG0bZWbzUyCU9S2WQmzqQQpqrqW1RfyzrulRvgpE7KO9jO0Hgsevh0kq+W
-         aJ6A==
-X-Gm-Message-State: AOAM533veuVn/BJmtuR3MPFvPkh4mkHwJKVmXab3YyPQa8FxUx/ktlOu
-        K7x9v/KcShngVSpWv0XGcCs=
-X-Google-Smtp-Source: ABdhPJzmSQygtcV32AiUSqniemv899Kpepc9kNHnUv4WZ8zdPUOplc9hqggQY5r9lcsEO2Agyr2q0Q==
-X-Received: by 2002:a17:90a:6a82:: with SMTP id u2mr4795405pjj.105.1638863767382;
-        Mon, 06 Dec 2021 23:56:07 -0800 (PST)
-Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:0:a463:d753:723:c3a9])
-        by smtp.gmail.com with ESMTPSA id n15sm1794353pgs.59.2021.12.06.23.56.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Dec 2021 23:56:07 -0800 (PST)
-From:   Tianyu Lan <ltykernel@gmail.com>
-To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        id S234291AbhLGJug (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Dec 2021 04:50:36 -0500
+Received: from mail.skyhub.de ([5.9.137.197]:38582 "EHLO mail.skyhub.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234223AbhLGJuf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Dec 2021 04:50:35 -0500
+Received: from zn.tnic (dslb-088-067-202-008.088.067.pools.vodafone-ip.de [88.67.202.8])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 0C8C41EC0512;
+        Tue,  7 Dec 2021 10:47:00 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
+        t=1638870420;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
+        bh=wRE0vGa0fNJQQgdPcGxdfvPKi0PLqxdR04fFjmBBpUY=;
+        b=cz2oWQLH06+YeLVYP0B8dsSse8TDIxm+kRm8PQ7oDI9AlFqc0hCQRm0Ehi7YBpIgPTgDOo
+        +0LEN/izPXYL7h+K7KjaOZiGmCWrIHSEPBrg2CJ65pOFaaUOI+tcqVWYIIBpNmrCbCAy41
+        wDvwWgGs9ZnpiaHLkYCu2f36mGkRLO4=
+Date:   Tue, 7 Dec 2021 10:47:01 +0100
+From:   Borislav Petkov <bp@alien8.de>
+To:     Tianyu Lan <ltykernel@gmail.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
         wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
-        x86@kernel.org, hpa@zytor.com, davem@davemloft.net,
-        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        arnd@arndb.de, hch@infradead.org, m.szyprowski@samsung.com,
-        robin.murphy@arm.com, Tianyu.Lan@microsoft.com,
-        thomas.lendacky@amd.com, michael.h.kelley@microsoft.com
-Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, brijesh.singh@amd.com, konrad.wilk@oracle.com,
-        hch@lst.de, joro@8bytes.org, parri.andrea@gmail.com,
-        dave.hansen@intel.com
-Subject: [PATCH V6 2/5] x86/hyper-v: Add hyperv Isolation VM check in the cc_platform_has()
-Date:   Tue,  7 Dec 2021 02:55:58 -0500
-Message-Id: <20211207075602.2452-3-ltykernel@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20211207075602.2452-1-ltykernel@gmail.com>
+        mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org,
+        hpa@zytor.com, davem@davemloft.net, kuba@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
+        hch@infradead.org, m.szyprowski@samsung.com, robin.murphy@arm.com,
+        Tianyu.Lan@microsoft.com, thomas.lendacky@amd.com,
+        michael.h.kelley@microsoft.com, iommu@lists.linux-foundation.org,
+        linux-arch@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org, vkuznets@redhat.com, brijesh.singh@amd.com,
+        konrad.wilk@oracle.com, hch@lst.de, joro@8bytes.org,
+        parri.andrea@gmail.com, dave.hansen@intel.com
+Subject: Re: [PATCH V6 2/5] x86/hyper-v: Add hyperv Isolation VM check in the
+ cc_platform_has()
+Message-ID: <Ya8tlQZf7+Ec6Oyp@zn.tnic>
 References: <20211207075602.2452-1-ltykernel@gmail.com>
+ <20211207075602.2452-3-ltykernel@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20211207075602.2452-3-ltykernel@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tianyu Lan <Tianyu.Lan@microsoft.com>
+On Tue, Dec 07, 2021 at 02:55:58AM -0500, Tianyu Lan wrote:
+> From: Tianyu Lan <Tianyu.Lan@microsoft.com>
+> 
+> Hyper-V provides Isolation VM which has memory encrypt support. Add
+> hyperv_cc_platform_has() and return true for check of GUEST_MEM_ENCRYPT
+> attribute.
 
-Hyper-V provides Isolation VM which has memory encrypt support. Add
-hyperv_cc_platform_has() and return true for check of GUEST_MEM_ENCRYPT
-attribute.
+You need to refresh on how to write commit messages - never say what the
+patch is doing - that's visible in the diff itself. Rather, you should
+talk about *why* it is doing what it is doing.
 
-Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
----
-Change since v3:
-	* Change code style of checking GUEST_MEM attribute in the
-	  hyperv_cc_platform_has().
----
- arch/x86/kernel/cc_platform.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+>  bool cc_platform_has(enum cc_attr attr)
+>  {
+> +	if (hv_is_isolation_supported())
+> +		return hyperv_cc_platform_has(attr);
 
-diff --git a/arch/x86/kernel/cc_platform.c b/arch/x86/kernel/cc_platform.c
-index 03bb2f343ddb..47db88c275d5 100644
---- a/arch/x86/kernel/cc_platform.c
-+++ b/arch/x86/kernel/cc_platform.c
-@@ -11,6 +11,7 @@
- #include <linux/cc_platform.h>
- #include <linux/mem_encrypt.h>
- 
-+#include <asm/mshyperv.h>
- #include <asm/processor.h>
- 
- static bool __maybe_unused intel_cc_platform_has(enum cc_attr attr)
-@@ -58,9 +59,16 @@ static bool amd_cc_platform_has(enum cc_attr attr)
- #endif
- }
- 
-+static bool hyperv_cc_platform_has(enum cc_attr attr)
-+{
-+	return attr == CC_ATTR_GUEST_MEM_ENCRYPT;
-+}
- 
- bool cc_platform_has(enum cc_attr attr)
- {
-+	if (hv_is_isolation_supported())
-+		return hyperv_cc_platform_has(attr);
-+
- 	if (sme_me_mask)
- 		return amd_cc_platform_has(attr);
- 
+Is there any reason for the hv_is_.. check to come before...
+
+> +
+>  	if (sme_me_mask)
+>  		return amd_cc_platform_has(attr);
+
+... the sme_me_mask check?
+
+What's in sme_me_mask on hyperv?
+
+Thx.
+
 -- 
-2.25.1
+Regards/Gruss,
+    Boris.
 
+https://people.kernel.org/tglx/notes-about-netiquette
