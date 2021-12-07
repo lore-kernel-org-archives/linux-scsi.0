@@ -2,84 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1306C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Dec 2021 03:46:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 722C7C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Dec 2021 04:13:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234419AbhLGDtl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Dec 2021 22:49:41 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:55726 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234400AbhLGDtl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Dec 2021 22:49:41 -0500
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1B6M5QxT007515;
-        Tue, 7 Dec 2021 03:46:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=c7Wju0PrbVwiTKJqEWcp+cwFJmehCOpsD1bpIRs+jMI=;
- b=EqZkB1ipBGRq2Mtvq/yYxIUQge0Ev9X7XYCJhebKQJZERCseONyEVG5C556Yr/SbBSNN
- pBK3v/9srQaa3i24Bs+ohCYviGPTZl0YKNnyeelaf3/Muee10y0iTYmnoi2kVBXBVJER
- Y3r2goQiY40a650OfVEc3hfDaXaPXkYNiOoVkdNg0wVK/40DdmMRF9um3YFXnrxDpFf4
- RV+aSlQMPMZU2MLfE+/fOFpb6bzHLL+EZlpTSS9K7np6aAZPTjdOVLucUtYKLDSYhvv1
- DVO8Sf4iEdFBB+Xt6H7OJ0OAJyJm9fiZjb2REf0TzH2Bl/hZFJ6PyISzdU/6h477cV+d zQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3csd2ybx8d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 07 Dec 2021 03:46:09 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1B73fCn7086707;
-        Tue, 7 Dec 2021 03:46:08 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3030.oracle.com with ESMTP id 3csc4sq0fy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 07 Dec 2021 03:46:08 +0000
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 1B73k80u096868;
-        Tue, 7 Dec 2021 03:46:08 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by aserp3030.oracle.com with ESMTP id 3csc4sq0fa-1;
-        Tue, 07 Dec 2021 03:46:08 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, damien.lemoal@opensource.wdc.com
-Subject: Re: [PATCH v3 1/2] scsi: sd_zbc: Simplify zone full condition check
-Date:   Mon,  6 Dec 2021 22:46:07 -0500
-Message-Id: <163884871675.22039.1281107040123359835.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20211201142821.64650-1-Niklas.Cassel@wdc.com>
-References: <20211201142821.64650-1-Niklas.Cassel@wdc.com>
+        id S234812AbhLGERJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Dec 2021 23:17:09 -0500
+Received: from mail-pf1-f181.google.com ([209.85.210.181]:42910 "EHLO
+        mail-pf1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229817AbhLGERI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Dec 2021 23:17:08 -0500
+Received: by mail-pf1-f181.google.com with SMTP id u80so12188986pfc.9;
+        Mon, 06 Dec 2021 20:13:39 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=xgiSNZK4fLLZAoxoUS4UBNdFGugmbF9fVZrA6ihuE2w=;
+        b=vLnNw1esR4wAAliYV1LrDgvGvPKrvPu0lY5i/uK2CthUqczbJCj1Mxfvkt9UTXipZU
+         1AjYh4Foa2oW/g3r58hAKm8k4PXXUlpsjL36FHdTjp23bieX+h0b3RA5XhM0Ps5RpcOi
+         VlEYmt9aWrzyFk2gixwW8j395b4lp2b0p6Hcg2As0hgJml64CnJo7dbAJsEz50jT4SAi
+         +3hu889AOpehk6zyuuKYkCNJF0bSWNCeSdavTBokJEXGUjruSZQ2iVn69379sn4TJScG
+         x0Ur1EyDhFuOpKISZjcaETcMqkUuikKqV5lCIV9iUBQXPT0D5Ds7ll68Zo1KlCKr6ohY
+         0qIg==
+X-Gm-Message-State: AOAM530B085OntyfSn/OIt8Ywkntq58gr7BDMFk0bmyfird8cDm9iBde
+        qbS6DLyGEKmZdkUZZ9OXs5s=
+X-Google-Smtp-Source: ABdhPJx9tRk3qrBo6fi4OR4zE7O3+gtUWDojC6gsjYougV5Pr5XYxCUT3TI7FBfQUyeJb1tldjkb7g==
+X-Received: by 2002:a63:8348:: with SMTP id h69mr22840709pge.490.1638850418506;
+        Mon, 06 Dec 2021 20:13:38 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id f5sm898282pju.15.2021.12.06.20.13.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Dec 2021 20:13:37 -0800 (PST)
+Message-ID: <dc8d2a9d-69a7-c921-a995-d216e30ca2ee@acm.org>
+Date:   Mon, 6 Dec 2021 20:13:36 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.2
+Subject: Re: Part of Spinning up disk... ....ready logged on separate line and
+ as warning (default level)
+Content-Language: en-US
+To:     Paul Menzel <pmenzel@molgen.mpg.de>,
+        "James E. J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+References: <8fdeecc3-bcce-1f5c-9aac-656fb3464c27@molgen.mpg.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <8fdeecc3-bcce-1f5c-9aac-656fb3464c27@molgen.mpg.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: oiGf-Q7FtEyLutXZo40TMOw0Yk2OHznv
-X-Proofpoint-ORIG-GUID: oiGf-Q7FtEyLutXZo40TMOw0Yk2OHznv
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 1 Dec 2021 14:28:30 +0000, Niklas Cassel wrote:
-
-> From: Niklas Cassel <niklas.cassel@wdc.com>
+On 12/3/21 06:48, Paul Menzel wrote:
+> Also, there are four dots in `....ready`, but the log timestamps only 
+> differ by one seconds.
 > 
-> According to the ZBC (and ZAC) specification, a zone that has Zone Type set
-> to Conventional, must also have its Zone Condition set to
-> "Not Write Pointer".
+>      /* Wait 1 second for next try */
+>      msleep(1000);
+>      printk(KERN_CONT ".");
 > 
-> Therefore, a conventional zone will never have Zone Condition set to
-> "Full", which means that we can omit the non-conventional prerequisite from
-> the zone full condition check.
-> 
-> [...]
+> Any idea, how that can be?
 
-Applied to 5.17/scsi-queue, thanks!
+Not sure what is going on. All I know is that KERN_CONT is considered
+deprecated and that it should be avoided. From commit 45c55e92fcee 
+("checkpatch: warn on logging continuations"):
 
-[1/2] scsi: sd_zbc: Simplify zone full condition check
-      https://git.kernel.org/mkp/scsi/c/13202ebf5f33
-[2/2] scsi: sd_zbc: Clean up sd_zbc_parse_report() setting of wp
-      https://git.kernel.org/mkp/scsi/c/bf3f120fd61c
+     pr_cont(...) and printk(KERN_CONT ...) uses should be discouraged
+     as their output can be interleaved by multiple logging processes.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks,
+
+Bart.
+
