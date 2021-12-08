@@ -2,73 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A52FC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Dec 2021 00:23:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55081C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Dec 2021 01:36:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242785AbhLHA0u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Dec 2021 19:26:50 -0500
-Received: from sin.source.kernel.org ([145.40.73.55]:53508 "EHLO
-        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242784AbhLHA0t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Dec 2021 19:26:49 -0500
+        id S242879AbhLHBkR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Dec 2021 20:40:17 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:41008 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234326AbhLHBkR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Dec 2021 20:40:17 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 275DFCE1ECD;
-        Wed,  8 Dec 2021 00:23:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1151DC341C3;
-        Wed,  8 Dec 2021 00:23:14 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 989E0B81EBA;
+        Wed,  8 Dec 2021 01:36:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32B2CC341C5;
+        Wed,  8 Dec 2021 01:36:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638922994;
-        bh=0ZNt76/nvy/Rqz+ZKBk5k6H1mK9LdC/GVtTbQ4FcSLw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Isx9oospbcHINu/yBa+FlYf26Ceaq8XFoWJ5pUqYhBY9t0eMc4FGLJuUTrJma/UwH
-         0+3Ye9kjKtg+uqEMSmOVP/t7TApEJcGU+RHDtGRJqH3D8ZHVbiX26fVCigHZfXSwQg
-         l8ijbht+pecHIkJNCy43T8tuGQ0P1j1jNiEe5bZJ+m4d/GGvaew1+TbocpUIpbOj1l
-         xr/3RByIR06tfvIx1cH0sSFlf7G+vRCwv5dPhsCY/q11Y9vaJ8qquLKa3bu0iiOovM
-         AzZVmLQ4FLjce4+OPJOe46AljvQhQwDSM21ccGbG909BXMTCA6xpkGAIbPZHVnFUmI
-         RLlCwYmeuHlRg==
-Date:   Tue, 7 Dec 2021 16:23:12 -0800
+        s=k20201202; t=1638927403;
+        bh=O5wE9+3ULZmhOnsEESu1m4V7ztbE6p5LfhS0yA36me0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=KFztRX1RL8+lQQfHnzjQWu7UE3ehD9VZ8nvJ1W7U3ghFzxhtwxsOV90PqajMrdURb
+         ITEWs7SmUbpIFIimCjCZnR6+DlNgfsco1yMQTWL1xNBTJhBdK/reg0SQtzoYpho1AG
+         Bgj13m15U18EpS+5qgF2kvt7zLy+G8t1wz66vjR2kwfbXpCUGsZk7Lv7X3uD+aDMOg
+         bOKGTwFTD6yXjuIW7DYFy8IaYcxh1Jord3atrqQcxaCQRHuj/cz7uXDz9CKVLY1goz
+         K4FDszwJqUbsgbiX5eZ2QzuB2KPFsTLFg3GYr3HIS08K9AuLNi+Nrq0MRVKW6qmM8d
+         W43malhVRkM9w==
 From:   Eric Biggers <ebiggers@kernel.org>
-To:     Gaurav Kashyap <gaurkash@qti.qualcomm.com>
-Cc:     "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
-        "thara.gopinath@linaro.org" <thara.gopinath@linaro.org>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>
-Subject: Re: [PATCH 0/4] Adds wrapped key support for inline storage
- encryption
-Message-ID: <Ya/68GveS/hWhJD3@sol.localdomain>
-References: <20211103231840.115521-1-quic_gaurkash@quicinc.com>
- <YYRjbCDhEt8Vh1xv@gmail.com>
- <BYAPR02MB4071BFEFB87D0B2E4FC98C9EE26F9@BYAPR02MB4071.namprd02.prod.outlook.com>
+To:     linux-block@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v3 0/3] block: show crypto capabilities in sysfs
+Date:   Tue,  7 Dec 2021 17:35:31 -0800
+Message-Id: <20211208013534.136590-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <BYAPR02MB4071BFEFB87D0B2E4FC98C9EE26F9@BYAPR02MB4071.namprd02.prod.outlook.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 08, 2021 at 12:09:03AM +0000, Gaurav Kashyap wrote:
-> Hey Eric, here are the answers to some of the questions across all the patches
-> 
-> > Also, at runtime, does any of the Qualcomm hardware support multiple key
-> > types, and if so can they be used at the same time?
-> 
-> Currently, with hardware key manager data path, there is no support for
-> standard keys. So, when HWKM is being used, only wrapped keys are supported.
-> If standard keys need to be supported, it can be, but modifications are
-> required within trustzone.
+This series adds sysfs files that expose the inline encryption
+capabilities of request queues.
 
-Do the SoCs support both key types though, just not at the same time?  E.g. when
-the ufs_qcom driver loads on SM8350, could it choose to expose either standard
-key support or wrapped key support, or is it predetermined by the hardware
-and/or firmware?  If the driver has a choice, then there should be a kernel
-module parameter (module_param()) that controls it, so that the user can choose
-which key type they want when they boot their kernel.
+Patches 1 and 2 are some related cleanups for existing blk-sysfs code.
+Patch 3 is the real change; see there for more details.
 
-- Eric
+This is based on top of my other patch series
+"[PATCH v2 0/8] docs: consolidate sysfs-block into Documentation/ABI/"
+(https://lore.kernel.org/r/20211208005640.102814-1-ebiggers@kernel.org).
+
+Changed v2 => v3:
+   - Moved the documentation into Documentation/ABI/stable/sysfs-block,
+     and improved it a bit.
+   - Write "/sys/block/" instead of "/sys/class/block/".
+   - Added Reviewed-by tags.
+
+Changed v1 => v2:
+   - Use sysfs_emit() instead of sprintf().
+   - Use __ATTR_RO().
+
+Eric Biggers (3):
+  block: simplify calling convention of elv_unregister_queue()
+  block: don't delete queue kobject before its children
+  blk-crypto: show crypto capabilities in sysfs
+
+ Documentation/ABI/stable/sysfs-block |  49 ++++++++
+ block/Makefile                       |   3 +-
+ block/blk-crypto-internal.h          |  12 ++
+ block/blk-crypto-sysfs.c             | 172 +++++++++++++++++++++++++++
+ block/blk-crypto.c                   |   3 +
+ block/blk-sysfs.c                    |  17 ++-
+ block/elevator.c                     |   8 +-
+ include/linux/blkdev.h               |   1 +
+ 8 files changed, 255 insertions(+), 10 deletions(-)
+ create mode 100644 block/blk-crypto-sysfs.c
+
+-- 
+2.34.1
+
