@@ -2,125 +2,210 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD825C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Dec 2021 12:49:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD8B3C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Dec 2021 17:28:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233750AbhLHMxB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Dec 2021 07:53:01 -0500
-Received: from mail-wr1-f52.google.com ([209.85.221.52]:38639 "EHLO
-        mail-wr1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231773AbhLHMxA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2021 07:53:00 -0500
-Received: by mail-wr1-f52.google.com with SMTP id q3so3915651wru.5;
-        Wed, 08 Dec 2021 04:49:28 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=FYH/sRLBPleRFcKivJ4eo0TXpFe+PUcyhNxulaKbV2g=;
-        b=aGC5AT9vTr7cdWqyniU1CQx2d2KgkaHudtaF7UD/8oU2aZTlBKZh8uvPM8F1bmmYqG
-         CHelqYWrNqbd5mMONDs5/x71oIy/qBRcnZ8vKfhV+z7C6Oel6VOiwLqQEt+Z6Rb6NdVQ
-         X0MRtbZ9BgjqvYgzRRoqGMnoHSA/IOMMqv0OTVqpe8XjfnBxRTr6YJbH6IYjNoAxdePX
-         OgdMGD6xEOoSVz/XcgepgxEgNKb7sy+q3b6Zj/A6Nq3ZtZhrNG8M/hTiZEBRTwmKWvlN
-         66zaVxRqz04m+rt3JZfq7H4qfKR/vHqNBXKHdAHFXJgONtUiUNWbtfXPHUR/lhAhk0HK
-         fIIg==
-X-Gm-Message-State: AOAM533TsuUc2Tbqs8JM64VwZl0F7WoEk/yR6kww5XzvCRAkKBLhH/zO
-        QkD2Fj4NSHa8OBoPl/NMDQw=
-X-Google-Smtp-Source: ABdhPJwqgeHzS+IbEYPxPRtwHZ6X78/4f9whMBS/JU960T1maZxl3zWma4xGqPiC4FUDcCF7ARBw4Q==
-X-Received: by 2002:a5d:6244:: with SMTP id m4mr60754430wrv.186.1638967767449;
-        Wed, 08 Dec 2021 04:49:27 -0800 (PST)
-Received: from [192.168.64.123] (bzq-219-42-90.isdn.bezeqint.net. [62.219.42.90])
-        by smtp.gmail.com with ESMTPSA id j40sm5699863wms.19.2021.12.08.04.49.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Dec 2021 04:49:26 -0800 (PST)
-Subject: Re: [PATCH 3/5] blk-mq: add helper of blk_mq_global_quiesce_wait()
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, Keith Busch <kbusch@kernel.org>
-References: <20211119021849.2259254-1-ming.lei@redhat.com>
- <20211119021849.2259254-4-ming.lei@redhat.com>
- <8f6b6452-9abb-fd89-0262-9fb9d00d42a5@grimberg.me> <YZuagPbZJ6CjiUNi@T590>
- <38b9661e-c5b8-ae18-f2ab-b30f9d3e7115@grimberg.me> <YZwzEBtFug6JEmMZ@T590>
- <a3ea006a-738b-af69-4dd5-f33444e3559d@grimberg.me> <YaWNZF3ZYWPQBSbk@T590>
-From:   Sagi Grimberg <sagi@grimberg.me>
-Message-ID: <4394200f-782b-5d75-4570-79a1f63110b1@grimberg.me>
-Date:   Wed, 8 Dec 2021 14:49:25 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S237818AbhLHRbo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Dec 2021 12:31:44 -0500
+Received: from so254-9.mailgun.net ([198.61.254.9]:26409 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235064AbhLHRbn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2021 12:31:43 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1638984491; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: References: Cc: To: From: Subject: MIME-Version: Date:
+ Message-ID: Sender; bh=5eqafb+LEmyZkIcd9/lijg9GG63+907xbYm1XBVYPqo=; b=IuAV+lc4NqzSkVy8gvRxS6CfhoD/HgHWuB4+0N87NTAMpl0ikyB75D3IYu1TQ111zd8d2uZ6
+ brnRFbnYSEfZC3B+TO2mfMjDUVjv0iA3LIK23CpVzwpzCSzI728ER/GGThg0d5KURvyaXqq1
+ nOza3rfjXYM+IGppxqIUqRSAUws=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 61b0eb283553c354be52d995 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 08 Dec 2021 17:28:08
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 38F13C43635; Wed,  8 Dec 2021 17:28:08 +0000 (UTC)
+Received: from [10.71.115.70] (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 988EAC4338F;
+        Wed,  8 Dec 2021 17:28:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 988EAC4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+Message-ID: <e58839a4-7dea-b549-740a-c7b8c9028aa1@codeaurora.org>
+Date:   Wed, 8 Dec 2021 09:28:05 -0800
 MIME-Version: 1.0
-In-Reply-To: <YaWNZF3ZYWPQBSbk@T590>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.1
+Subject: Re: [PATCH v4 16/17] scsi: ufs: Optimize the command queueing code
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Keoseong Park <keosung.park@samsung.com>
+References: <20211203231950.193369-1-bvanassche@acm.org>
+ <20211203231950.193369-17-bvanassche@acm.org>
+ <0ba5c50f-3e79-2cae-c502-59f70812cca3@codeaurora.org>
+In-Reply-To: <0ba5c50f-3e79-2cae-c502-59f70812cca3@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 11/30/21 4:33 AM, Ming Lei wrote:
-> On Tue, Nov 23, 2021 at 11:00:45AM +0200, Sagi Grimberg wrote:
+On 12/6/2021 2:41 PM, Asutosh Das (asd) wrote:
+> On 12/3/2021 3:19 PM, Bart Van Assche wrote:
+>> Remove the clock scaling lock from ufshcd_queuecommand() since it is a
+>> performance bottleneck. Instead check the SCSI device budget bitmaps in
+>> the code that waits for ongoing ufshcd_queuecommand() calls. A bit is
+>> set in sdev->budget_map just before scsi_queue_rq() is called and a bit
+>> is cleared from that bitmap if scsi_queue_rq() does not submit the
+>> request or after the request has finished. See also the
+>> blk_mq_{get,put}_dispatch_budget() calls in the block layer.
 >>
->>>>>>> Add helper of blk_mq_global_quiesce_wait() for supporting to quiesce
->>>>>>> queues in parallel, then we can just wait once if global quiesce wait
->>>>>>> is allowed.
->>>>>>
->>>>>> blk_mq_global_quiesce_wait() is a poor name... global is scope-less and
->>>>>> obviously it has a scope.
->>>>>
->>>>> How about blk_mq_shared_quiesce_wait()? or any suggestion?
->>>>
->>>> Shared between what?
->>>
->>> All request queues in one host-wide, both scsi and nvme has such
->>> requirement.
->>>
->>>>
->>>> Maybe if the queue has a non-blocking tagset, it can have a "quiesced"
->>>> flag that is cleared in unquiesce? then the callers can just continue
->>>> to iterate but will only wait the rcu grace period once.
->>>
->>> Yeah, that is what these patches try to implement.
+>> There is no risk for a livelock since the block layer delays queue
+>> reruns if queueing a request fails because the SCSI host has been
+>> blocked.
 >>
->> I was suggesting to "hide" it in the interface.
->> Maybe something like:
->> --
->> diff --git a/block/blk-mq.c b/block/blk-mq.c
->> index 8799fa73ef34..627b631db1f9 100644
->> --- a/block/blk-mq.c
->> +++ b/block/blk-mq.c
->> @@ -263,14 +263,18 @@ void blk_mq_wait_quiesce_done(struct request_queue *q)
->>          unsigned int i;
->>          bool rcu = false;
->>
->> +       if (!q->has_srcu && q->quiesced)
->> +               return;
->>          queue_for_each_hw_ctx(q, hctx, i) {
->>                  if (hctx->flags & BLK_MQ_F_BLOCKING)
->>                          synchronize_srcu(hctx->srcu);
->>                  else
->>                          rcu = true;
->>          }
->> -       if (rcu)
->> +       if (rcu) {
->>                  synchronize_rcu();
->> +               q->quiesced = true;
->> +       }
->>   }
->>   EXPORT_SYMBOL_GPL(blk_mq_wait_quiesce_done);
->>
->> @@ -308,6 +312,7 @@ void blk_mq_unquiesce_queue(struct request_queue *q)
->>          } else if (!--q->quiesce_depth) {
->>                  blk_queue_flag_clear(QUEUE_FLAG_QUIESCED, q);
->>                  run_queue = true;
->> +               q->quiesced = false;
+>> Cc: Asutosh Das (asd) <asutoshd@codeaurora.org>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> ---
 > 
-> Different request queues are passed to blk_mq_wait_quiesce_done() during
-> the iteration, so marking 'quiesced' doesn't make any difference here.
+> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+> 
 
-I actually meant q->tag_set->quiesced, such that the flag will be
-used in the tag_set reference. This way this sharing will be kept
-hidden from the callers.
+Replying to my own mail.
+
+Hi Bart,
+>>   drivers/scsi/ufs/ufshcd.c | 33 +++++++++++++++++++++++----------
+>>   drivers/scsi/ufs/ufshcd.h |  1 +
+>>   2 files changed, 24 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 9f0a1f637030..650dddf960c2 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -1070,13 +1070,31 @@ static bool 
+>> ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
+>>       return false;
+>>   }
+>> +/*
+>> + * Determine the number of pending commands by counting the bits in 
+>> the SCSI
+>> + * device budget maps. This approach has been selected because a bit 
+>> is set in
+>> + * the budget map before scsi_host_queue_ready() checks the 
+>> host_self_blocked
+>> + * flag. The host_self_blocked flag can be modified by calling
+>> + * scsi_block_requests() or scsi_unblock_requests().
+>> + */
+>> +static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
+>> +{
+>> +    struct scsi_device *sdev;
+>> +    u32 pending = 0;
+>> +
+>> +    shost_for_each_device(sdev, hba->host)
+>> +        pending += sbitmap_weight(&sdev->budget_map);
+>> +
+I was porting this change to my downstream code and it occurred to me 
+that in a high IO rate scenario it's possible that bits in the 
+budget_map may be set even when that particular IO may not be issued to 
+driver. So there would unnecessary waiting for that to be cleared.
+Do you think it's possible?
+I think we should wait only for requests which are already started.
+e.g. blk_mq_tagset_busy_iter() ?
+
+PLMK your thoughts on this.
+
+>> +    return pending;
+>> +}
+>> +
+>>   static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+>>                       u64 wait_timeout_us)
+>>   {
+>>       unsigned long flags;
+>>       int ret = 0;
+>>       u32 tm_doorbell;
+>> -    u32 tr_doorbell;
+>> +    u32 tr_pending;
+>>       bool timeout = false, do_last_check = false;
+>>       ktime_t start;
+>> @@ -1094,8 +1112,8 @@ static int ufshcd_wait_for_doorbell_clr(struct 
+>> ufs_hba *hba,
+>>           }
+>>           tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+>> -        tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>> -        if (!tm_doorbell && !tr_doorbell) {
+>> +        tr_pending = ufshcd_pending_cmds(hba);
+>> +        if (!tm_doorbell && !tr_pending) {
+>>               timeout = false;
+>>               break;
+>>           } else if (do_last_check) {
+>> @@ -1115,12 +1133,12 @@ static int ufshcd_wait_for_doorbell_clr(struct 
+>> ufs_hba *hba,
+>>               do_last_check = true;
+>>           }
+>>           spin_lock_irqsave(hba->host->host_lock, flags);
+>> -    } while (tm_doorbell || tr_doorbell);
+>> +    } while (tm_doorbell || tr_pending);
+>>       if (timeout) {
+>>           dev_err(hba->dev,
+>>               "%s: timedout waiting for doorbell to clear (tm=0x%x, 
+>> tr=0x%x)\n",
+>> -            __func__, tm_doorbell, tr_doorbell);
+>> +            __func__, tm_doorbell, tr_pending);
+>>           ret = -EBUSY;
+>>       }
+>>   out:
+>> @@ -2681,9 +2699,6 @@ static int ufshcd_queuecommand(struct Scsi_Host 
+>> *host, struct scsi_cmnd *cmd)
+>>       WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+>> -    if (!down_read_trylock(&hba->clk_scaling_lock))
+>> -        return SCSI_MLQUEUE_HOST_BUSY;
+>> -
+>>       /*
+>>        * Allows the UFS error handler to wait for prior 
+>> ufshcd_queuecommand()
+>>        * calls.
+>> @@ -2772,8 +2787,6 @@ static int ufshcd_queuecommand(struct Scsi_Host 
+>> *host, struct scsi_cmnd *cmd)
+>>   out:
+>>       rcu_read_unlock();
+>> -    up_read(&hba->clk_scaling_lock);
+>> -
+>>       if (ufs_trigger_eh()) {
+>>           unsigned long flags;
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> index 8e942762e668..88c20f3608c2 100644
+>> --- a/drivers/scsi/ufs/ufshcd.h
+>> +++ b/drivers/scsi/ufs/ufshcd.h
+>> @@ -778,6 +778,7 @@ struct ufs_hba_monitor {
+>>    * @clk_list_head: UFS host controller clocks list node head
+>>    * @pwr_info: holds current power mode
+>>    * @max_pwr_info: keeps the device max valid pwm
+>> + * @clk_scaling_lock: used to serialize device commands and clock 
+>> scaling
+>>    * @desc_size: descriptor sizes reported by device
+>>    * @urgent_bkops_lvl: keeps track of urgent bkops level for device
+>>    * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops 
+>> level for
+>>
+> 
+> 
+
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
