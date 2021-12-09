@@ -2,95 +2,150 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB0FFC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 22:19:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78206C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 22:26:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231720AbhLIWWp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Dec 2021 17:22:45 -0500
-Received: from smtp07.smtpout.orange.fr ([80.12.242.129]:52177 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230304AbhLIWWp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 17:22:45 -0500
-Received: from [10.0.2.15] ([146.0.31.27])
-        by smtp.orange.fr with ESMTPA
-        id vRkqmeRsoMNzvvRkqmHJXw; Thu, 09 Dec 2021 23:19:10 +0100
-X-ME-Helo: [10.0.2.15]
-X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
-X-ME-Date: Thu, 09 Dec 2021 23:19:10 +0100
-X-ME-IP: 146.0.31.27
-Message-ID: <52c4bc82-f8eb-c884-dfd8-2579f6632517@wanadoo.fr>
-Date:   Thu, 9 Dec 2021 23:19:08 +0100
+        id S233584AbhLIWab (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Dec 2021 17:30:31 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:27926 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232449AbhLIWaa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 17:30:30 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1639088817; x=1670624817;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=975X2tBKbiQALZA1i/B97FNGR1LMtD4rh57iUWiO0Zw=;
+  b=oq4/J47m07dejqhwpEPHjSKYdE3z9bmfEuRFBuxVGdKrNifceMuzvZ+k
+   fSYb6laxVl6MA5ICG6jDyRtbzuhj71oF8cnJ04xzrnq78EGLdGOnXXvkb
+   rNpu25bANfwfQj04hRMzYMofnG4DAETKnO78i1nrikTE32I2fqqAL+vmJ
+   V2r8n6eBLxYid8s/XsSQi/qWdtx2cDN62GjNS2R+0sNLnPBLyWyNveb1c
+   DaJBPS6OwHZa4fVrS5aQ8LTMq/p7W6tLf32yXDoWNfoDPPFHA9RoteWjs
+   ODK5MqzSiWApQ3aXUmD0jHFsghPNJ9VLqAeZIV3ngmcBtLMNqPG1co98c
+   g==;
+X-IronPort-AV: E=Sophos;i="5.88,193,1635177600"; 
+   d="scan'208";a="188892982"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 10 Dec 2021 06:26:57 +0800
+IronPort-SDR: jeMMF7mZ1h1Sls0P+iKju8CQmZaBtUWRKPMvCqAf35YS2MUmCjnUd3M9jX9ZNh2CcZ7coFgOTX
+ O9FPbIPORAdvQNk0w8fo0yMUAn/XeHF2X8vU25eYWRTUlvZThxC+aqgUWyB9/fi8oCzXvpSYbA
+ ZWdi3MRQmfXHLWH6JAESakRFxu9mTjxIZBVOOzC/C8oFoDpuepAvVg0VGFYeNG6GuiPwXU28DJ
+ FWJ+jQHLjuRjLewOZ17sf1dPdYeyENm+ios5Ox7o35+IPGjCGmqqRbaoW6Y6+Umu5Md/WzNHd/
+ pcygyYusLgtHbuWq0+w701xZ
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Dec 2021 14:01:29 -0800
+IronPort-SDR: Y33ZD/vWQj/gXvZ8Xrjg0miOxO0wVUhjd4SybXFOWaeq2DuwiD1VbhcJUbJfo4DhuGvbO6S8EJ
+ s39MxoC1g3en0y7OwwLQR7Cdiew2fJYaD5AHihhZUARazEwJOTL1uRGk8KrD86pJNpwEjrx+31
+ C8wS+qUaY7cKmcpztOdeR2ZHT3JmRDIQOwkAiuGViOuJDPo/4YBDiul0ZbIGLLt1za3+Iq9L+M
+ 0Cf9LLwt+JjOAZvJX1gS3uEh3EA5ntMHdWgb5c8Uo/T/EcCjYVjhfYkViwYCCqMK0f6R3y8pi1
+ K9Y=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Dec 2021 14:26:57 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J97tm4Vd2z1Rwns
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Dec 2021 14:26:56 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1639088815; x=1641680816; bh=975X2tBKbiQALZA1i/B97FNGR1LMtD4rh57
+        iUWiO0Zw=; b=LWg8HmILYtwcIy67QMnmFtLckzM5vDZQxuW/0WrAY66BlZTJDSU
+        oI5p/edn4uz21hPgYEi325chLddcQTgcaf+tkYps4rpWWTH7tmLorT2zhxkvBLDU
+        ibFH68uGrJn374cUokUtPUSCgthUvUW9GkNN4QFnIKT5Wls3MqiVhZtalCFhK9HG
+        /DEUJo6woooqeVAUUJSHORsbPegkfgl2ZO9ZRxRH3KeG5eUIxKPKEfCn3RkION/O
+        9SQ2pRLuABnDHZbjtCTuo4Vn1qBXronI4QY8oIeMn4fM5Q5l+nmfiVDiTdMwjBFa
+        UtHJEdEcmfj9Qz8l5ryqht5Y8mXW+i92y5Q==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 4TmE95pCrDeu for <linux-scsi@vger.kernel.org>;
+        Thu,  9 Dec 2021 14:26:55 -0800 (PST)
+Received: from [10.225.54.48] (unknown [10.225.54.48])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J97tk19ZWz1RtVG;
+        Thu,  9 Dec 2021 14:26:53 -0800 (PST)
+Message-ID: <666af6d2-ac0b-9b47-a396-a5028772cf0a@opensource.wdc.com>
+Date:   Fri, 10 Dec 2021 07:26:52 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH] scsi: elx: efct: Avoid a useless memset
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.4.0
+Subject: Re: [PATCH] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
 Content-Language: en-US
-To:     Joe Perches <joe@perches.com>, james.smart@broadcom.com,
-        ram.vegesna@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, hare@suse.de, dwagner@suse.de
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-References: <009cddb72f4a1b6d1744d5a8ab1955eb93509e41.1639086550.git.christophe.jaillet@wanadoo.fr>
- <4208b3d08a677601c73889f78dd25e5c9f056a86.camel@perches.com>
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-In-Reply-To: <4208b3d08a677601c73889f78dd25e5c9f056a86.camel@perches.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+To:     Ajish.Koshy@microchip.com, john.garry@huawei.com
+Cc:     jinpu.wang@cloud.ionos.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, Viswas.G@microchip.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Niklas.Cassel@wdc.com, Vasanthalakshmi.Tharmarajan@microchip.com
+References: <1637940933-107862-1-git-send-email-john.garry@huawei.com>
+ <PH0PR11MB51123148E4932FE1C64F8052EC669@PH0PR11MB5112.namprd11.prod.outlook.com>
+ <a60318ef-dc19-a146-5ac3-16eae38b8c37@huawei.com>
+ <Ya4PAu4Xj8UGHEV7@x1-carbon>
+ <PH0PR11MB5112E2E7D00D95F32C86677AEC6E9@PH0PR11MB5112.namprd11.prod.outlook.com>
+ <6ee6fe1b-e811-cada-0c18-78149c313358@huawei.com>
+ <PH0PR11MB51120361EB6F6931CCE023D6EC709@PH0PR11MB5112.namprd11.prod.outlook.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital
+In-Reply-To: <PH0PR11MB51120361EB6F6931CCE023D6EC709@PH0PR11MB5112.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-Le 09/12/2021 à 22:57, Joe Perches a écrit :
-> On Thu, 2021-12-09 at 22:51 +0100, Christophe JAILLET wrote:
->> 'io->sgl' is kzalloced just a few lines above. There is no need to memset
->> it another time.
+On 2021/12/09 21:04, Ajish.Koshy@microchip.com wrote:
+> Hi John,
 > 
-> Better to use kcalloc as well and delete the memset
+> Was testing the patch on arm server. Didn't see crash there but observing
+> timeouts and error handling getting triggered for drives. But the same code
+> works fine on x86.
+> 
+> At your end do you still face similar situation on arm server ?
+> 
+> Thanks, Ajish
 
-Sure, thanks for spotting it Joe.
+Please do not top post. It makes it hard to follow the conversation.
 
-Should a clean v2 be sent or the patch in your reply is enough?
-As your proposal is better than mine, if a v2 is needed, can you do it?
-
-CJ
-
+Are the drives you are using SATA or SAS ?
+Could you post the output of dmesg related to the errors you are seeing ?
 
 > 
->> diff --git a/drivers/scsi/elx/efct/efct_io.c b/drivers/scsi/elx/efct/efct_io.c
-> []
->> @@ -62,7 +62,6 @@ efct_io_pool_create(struct efct *efct, u32 num_sgl)
->>   			return NULL;
->>   		}
->>   
->> -		memset(io->sgl, 0, sizeof(*io->sgl) * num_sgl);
->>   		io->sgl_allocated = num_sgl;
->>   		io->sgl_count = 0;
->>   
+> -----Original Message----- From: John Garry <john.garry@huawei.com> Sent:
+> Tuesday, December 7, 2021 07:24 PM To: Ajish Koshy - I30923
+> <Ajish.Koshy@microchip.com> Cc: jinpu.wang@cloud.ionos.com;
+> jejb@linux.ibm.com; martin.petersen@oracle.com; Viswas G - I30667
+> <Viswas.G@microchip.com>; linux-scsi@vger.kernel.org;
+> linux-kernel@vger.kernel.org; damien.lemoal@opensource.wdc.com;
+> Niklas.Cassel@wdc.com; Vasanthalakshmi Tharmarajan - I30664
+> <Vasanthalakshmi.Tharmarajan@microchip.com> Subject: Re: [PATCH] scsi:
+> pm8001: Fix phys_to_virt() usage on dma_addr_t
 > 
-> ---
->   drivers/scsi/elx/efct/efct_io.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+> EXTERNAL EMAIL: Do not click links or open attachments unless you know the
+> content is safe
 > 
-> diff --git a/drivers/scsi/elx/efct/efct_io.c b/drivers/scsi/elx/efct/efct_io.c
-> index 71e21655916a9..109483f3e3dfd 100644
-> --- a/drivers/scsi/elx/efct/efct_io.c
-> +++ b/drivers/scsi/elx/efct/efct_io.c
-> @@ -56,13 +56,12 @@ efct_io_pool_create(struct efct *efct, u32 num_sgl)
->   		}
->   
->   		/* Allocate SGL */
-> -		io->sgl = kzalloc(sizeof(*io->sgl) * num_sgl, GFP_KERNEL);
-> +		io->sgl = kcalloc(num_sgl, sizeof(*io->sgl), GFP_KERNEL);
->   		if (!io->sgl) {
->   			efct_io_pool_free(io_pool);
->   			return NULL;
->   		}
->   
-> -		memset(io->sgl, 0, sizeof(*io->sgl) * num_sgl);
->   		io->sgl_allocated = num_sgl;
->   		io->sgl_count = 0;
->   
+> On 07/12/2021 10:36, Ajish.Koshy@microchip.com wrote:
+>> Well I could see this kernel panic [  126.843958] RIP:
+>> 0010:pm80xx_chip_smp_req+0x1d6/0x2e0 [pm80xx] with respect to existing
+>> driver on my current system x86 64bit after enabling the following 2 kernel
+>> boot arguments: -intel_iommu=on -iommu.passthrough=0
+>> 
+> OK, so it seems that it was the kernel which was just not enabling the IOMMU
+> previously, which would be consistent with what Niklas mentioned.
 > 
+> Anyway, please supply reviewed-by and/or tested-by tags so that the SCSI
+> maintainers can pick it up.
 > 
+> I suppose that we should also have:
+> 
+> Fixes: f5860992db55 ("[SCSI] pm80xx: Added SPCv/ve specific hardware
+> functionalities and relevant changes in common files")
+> 
+> Thanks for testing, John
+
+
+-- 
+Damien Le Moal
+Western Digital Research
