@@ -2,54 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A131AC43217
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 19:00:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 632B1C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 19:44:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230026AbhLITDz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Dec 2021 14:03:55 -0500
-Received: from mail-pl1-f177.google.com ([209.85.214.177]:33581 "EHLO
-        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229693AbhLITDy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 14:03:54 -0500
-Received: by mail-pl1-f177.google.com with SMTP id y7so4642088plp.0;
-        Thu, 09 Dec 2021 11:00:20 -0800 (PST)
+        id S229940AbhLITrq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Dec 2021 14:47:46 -0500
+Received: from mail-pg1-f170.google.com ([209.85.215.170]:47079 "EHLO
+        mail-pg1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229517AbhLITrp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 14:47:45 -0500
+Received: by mail-pg1-f170.google.com with SMTP id r138so5974636pgr.13;
+        Thu, 09 Dec 2021 11:44:12 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=Y5WLCqS4oNc0B1PWaXC9NLJsjv2DgMhZyXGdTfRBzWA=;
-        b=LyW0qtm5fHCIOCDe7nPNj5ZjkFLZqqwz/5bRzOoGpVBWHJn4c03s9zMoNKxOtawmtN
-         ZbmFQgSkFIdXM4I/xYbhYixNXnXgrajeJ0J1RkPPdzq1Y/UePnpmKZUqRGtTorvVS0tE
-         kAKTvZJpuKHSCdblRK17DP1vtkUtyNrgvKgQdZ7UVhlGo+PfE5wfXKijoj+rZ7YsMs/d
-         Ojl7cqcYWzHHkh+TBq0/QF1256cnMo8RjpTrkBsHiKsYhe3VWtZu9lieJKbZkBxqZqJ+
-         zTF00mBmZDCS1p9z0pGeBhfUVw514Z2M6oQhhR1tnedRc1WB0C8KdDecGPi7U54qJr++
-         h5OQ==
-X-Gm-Message-State: AOAM531+6PTZtOhxgakZZAXrjjHsmC0NFiAUghEfHDckpkYFxlF9aok3
-        q5e9dk5sUKUzsbaNBYcxuMY=
-X-Google-Smtp-Source: ABdhPJyRCWX4C0QwOJfqX18IofvfAJ4UX5G4Sj9+JeujP7WTbWENzrXr2tworBPXvHqHktjeVgu94A==
-X-Received: by 2002:a17:903:22c4:b0:141:deda:a744 with SMTP id y4-20020a17090322c400b00141dedaa744mr70258352plg.25.1639076420392;
-        Thu, 09 Dec 2021 11:00:20 -0800 (PST)
+        bh=VlKj6DMExfzicQ3MgAc+lGSRrWeAFRS2WV0yuzGqAE0=;
+        b=oHWr3FbWc2Jw0rGB+V1tuGCrVUguz9rz0DQTehFLGatwGEiPtjiLZ+ah6T5O/cKYKE
+         Xf5N/SWW7ptxv1AGAHCcPE8oF9uCJ4j3EjnJRIL2cb5qO5JuBsZQzZ+Q6I9xplX5YAo9
+         cjrGonCdE2qanZ7PTzP6AGnumaxu97X+7hON/DbYXGYzr696QHtbtbGIV82MJnxuGjwI
+         v5FVDA6rqBlU/+M9kkSmz0pX+R/nONUp8305SIAacdD3ReLyCHHjq1x+lRqXbvvl+ATA
+         5i/JQi0o2PPsOSHSCDZjyVQqULb8QrrNBgknXbaKfNQwerdCK13+yvkOh9yG/DdSATRf
+         ARHg==
+X-Gm-Message-State: AOAM532UeLZUN5si7MaL3V8aoisZuh5iNtUkev0zrW6cM6+k7TMM56rA
+        n1FfMKfQSJjEJsEg1PVP2ZlI8gAw1vY=
+X-Google-Smtp-Source: ABdhPJyNgXeLlKUNnuJxTFyyEwWGKWORgJneEZ9l6TDb5yYWOSo1QR+SDqZAS6k35bQtQVV9i+qAPQ==
+X-Received: by 2002:a63:6c8a:: with SMTP id h132mr36390886pgc.85.1639079051890;
+        Thu, 09 Dec 2021 11:44:11 -0800 (PST)
 Received: from ?IPv6:2620:0:1000:2514:4f5b:f494:7264:b4d4? ([2620:0:1000:2514:4f5b:f494:7264:b4d4])
-        by smtp.gmail.com with ESMTPSA id h8sm359669pgj.26.2021.12.09.11.00.18
+        by smtp.gmail.com with ESMTPSA id f5sm429422pju.15.2021.12.09.11.44.10
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Dec 2021 11:00:19 -0800 (PST)
-Subject: Re: [PATCH v3 1/3] block: simplify calling convention of
- elv_unregister_queue()
-To:     Eric Biggers <ebiggers@kernel.org>, linux-block@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Hannes Reinecke <hare@suse.de>
-References: <20211208013534.136590-1-ebiggers@kernel.org>
- <20211208013534.136590-2-ebiggers@kernel.org>
+        Thu, 09 Dec 2021 11:44:11 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <ddb37191-c838-2c45-6a9e-a8eb02d18e8b@acm.org>
-Date:   Thu, 9 Dec 2021 11:00:17 -0800
+Subject: Re: [PATCH] scsi: docs: update notes about scsi_times_out
+To:     Khazhismel Kumykov <khazhy@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+References: <20211208225637.1054164-1-khazhy@google.com>
+Message-ID: <6c50efd9-2987-067a-bc05-0a68ad908a5f@acm.org>
+Date:   Thu, 9 Dec 2021 11:44:09 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <20211208013534.136590-2-ebiggers@kernel.org>
+In-Reply-To: <20211208225637.1054164-1-khazhy@google.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -57,15 +56,25 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/7/21 5:35 PM, Eric Biggers wrote:
-> From: Eric Biggers <ebiggers@google.com>
-> 
-> Make elv_unregister_queue() a no-op if q->elevator is NULL or is not
-> registered.
-> 
-> This simplifies the existing callers, as well as the future caller in
-> the error path of blk_register_queue().
-> 
-> Also don't bother checking whether q is NULL, since it never is.
+On 12/8/21 2:56 PM, Khazhismel Kumykov wrote:
+> + 2. scsi_abort_command() is invoked to schedule an asynchrous abort. which may
+                                                                       ^^^^^^^
+                                                            Should the dot perhaps be removed?
+> +    issue a retry scmd->allowed + 1 times.  Asynchronous abort are not invoked
+                                                             ^^^^
+                                                        abort -> aborts?
+> +    for commands which the SCSI_EH_ABORT_SCHEDULED flag is set (this indicates
+                     ^^^^^
+                 which -> for which?
+> +    that the command already had been aborted once, and this is a retry which
+> +    failed), when retries are exceeded, or when the EH deadline is expired. In
+> +    these case Step #3 is taken.
+>   
+>    3. scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD) is invoked for the
+>       command.  See [1-4] for more information.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Thanks,
+
+Bart.
+
+
