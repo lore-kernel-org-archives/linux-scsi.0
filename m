@@ -2,31 +2,32 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51EE2C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 21:12:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BECC2C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 21:51:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232664AbhLIVPh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Dec 2021 16:15:37 -0500
-Received: from smtp07.smtpout.orange.fr ([80.12.242.129]:64215 "EHLO
+        id S232012AbhLIVym (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Dec 2021 16:54:42 -0500
+Received: from smtp07.smtpout.orange.fr ([80.12.242.129]:49214 "EHLO
         smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232655AbhLIVPf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 16:15:35 -0500
+        with ESMTP id S230498AbhLIVym (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 16:54:42 -0500
 Received: from ubuntu-CJ.sitez.s.ibrowse.com ([146.0.31.27])
         by smtp.orange.fr with ESMTPA
-        id vQhpme7oIMNzvvQhqmHER9; Thu, 09 Dec 2021 22:11:59 +0100
+        id vRJimeJelMNzvvRJimHHSO; Thu, 09 Dec 2021 22:51:07 +0100
 X-ME-Helo: ubuntu-CJ.sitez.s.ibrowse.com
 X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
-X-ME-Date: Thu, 09 Dec 2021 22:11:59 +0100
+X-ME-Date: Thu, 09 Dec 2021 22:51:07 +0100
 X-ME-IP: 146.0.31.27
 From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     don.brace@microchip.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     storagedev@microchip.com, linux-scsi@vger.kernel.org,
+To:     james.smart@broadcom.com, ram.vegesna@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, hare@suse.de,
+        dwagner@suse.de
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
         Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] scsi: hpsa: Remove an unused variable in 'hpsa_update_scsi_devices()'
-Date:   Thu,  9 Dec 2021 22:11:56 +0100
-Message-Id: <9f80ea569867b5f7ae1e0f99d656e5a8bacad34e.1639084205.git.christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] scsi: elx: efct: Avoid a useless memset
+Date:   Thu,  9 Dec 2021 22:51:04 +0100
+Message-Id: <009cddb72f4a1b6d1744d5a8ab1955eb93509e41.1639086550.git.christophe.jaillet@wanadoo.fr>
 X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -34,35 +35,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-'lunzerobits' is unused. Remove it.
+'io->sgl' is kzalloced just a few lines above. There is no need to memset
+it another time.
 
-This a left over of commit 2d62a33e05d4("hpsa: eliminate fake lun0
-enclosures")
 
 Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
- drivers/scsi/hpsa.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/elx/efct/efct_io.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index cdf3328cc065..a47bcce3c9c7 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4354,7 +4354,6 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 	int i, ndevs_to_allocate;
- 	int raid_ctlr_position;
- 	bool physical_device;
--	DECLARE_BITMAP(lunzerobits, MAX_EXT_TARGETS);
+diff --git a/drivers/scsi/elx/efct/efct_io.c b/drivers/scsi/elx/efct/efct_io.c
+index 71e21655916a..e483d936342b 100644
+--- a/drivers/scsi/elx/efct/efct_io.c
++++ b/drivers/scsi/elx/efct/efct_io.c
+@@ -62,7 +62,6 @@ efct_io_pool_create(struct efct *efct, u32 num_sgl)
+ 			return NULL;
+ 		}
  
- 	currentsd = kcalloc(HPSA_MAX_DEVICES, sizeof(*currentsd), GFP_KERNEL);
- 	physdev_list = kzalloc(sizeof(*physdev_list), GFP_KERNEL);
-@@ -4368,7 +4367,6 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 		dev_err(&h->pdev->dev, "out of memory\n");
- 		goto out;
- 	}
--	memset(lunzerobits, 0, sizeof(lunzerobits));
- 
- 	h->drv_req_rescan = 0; /* cancel scheduled rescan - we're doing it. */
+-		memset(io->sgl, 0, sizeof(*io->sgl) * num_sgl);
+ 		io->sgl_allocated = num_sgl;
+ 		io->sgl_count = 0;
  
 -- 
 2.32.0
