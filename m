@@ -2,84 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ED7DC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 14:43:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51594C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 14:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238847AbhLIOqx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Dec 2021 09:46:53 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4239 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233886AbhLIOqx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 09:46:53 -0500
-Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4J8xVt5szMz67sxC;
-        Thu,  9 Dec 2021 22:39:02 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.20; Thu, 9 Dec 2021 15:43:17 +0100
-Received: from [10.47.91.245] (10.47.91.245) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Thu, 9 Dec
- 2021 14:43:17 +0000
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v2] blk-mq: Fix blk_mq_tagset_busy_iter() for shared tags
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Jens Axboe <axboe@kernel.dk>
-CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <hare@suse.de>, <ming.lei@redhat.com>, <linux-scsi@vger.kernel.org>
-References: <1634550083-202815-1-git-send-email-john.garry@huawei.com>
- <163482611742.37241.15630114014516067630.b4-ty@kernel.dk>
- <0b928f7dbc2f3244afe8a475b547157f@mail.gmail.com>
-Message-ID: <3389cd7b-2934-8e82-b09a-a4fdb0f00ea3@huawei.com>
-Date:   Thu, 9 Dec 2021 14:42:55 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S238875AbhLIOx7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Dec 2021 09:53:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38492 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232885AbhLIOx6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 09:53:58 -0500
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CBE6C061746;
+        Thu,  9 Dec 2021 06:50:25 -0800 (PST)
+Received: by mail-pg1-x532.google.com with SMTP id 137so5303260pgg.3;
+        Thu, 09 Dec 2021 06:50:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=7vWihmr59C13m9Ozt+hiMYmUMWdYzIoFqzd7V9RXcfM=;
+        b=MC4uL5S1+WqFCH29RaCtS/l/zRAoxHchDRRw/aOYWFkr2oCxqF827rcEAgmaTLhu6v
+         w+TOtAociGo9cL0rhYINObhIZBlWAjvzJqwx+L63SCRU2Jg+clQ4M31K8/FedTJJn96t
+         KPxfzplPTmCfqMLpRE4N65t3DNa3C/gs7zsWD/iK51T9e2tczH2Vcz8PJsZnxmxsTMIJ
+         yzO/zkJMJUCtq5NBD4cBG6SJqE1Kop2j/Foxw/i0GO7jjHcBCm78cP80RKg1gDbQFlfK
+         0JP+fUuPhO18QXyXhz6/JKC4gIkYOA3QLay2GvLkJfLI5jHN7YVq4nbG4nuFeoaUEec+
+         AQXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=7vWihmr59C13m9Ozt+hiMYmUMWdYzIoFqzd7V9RXcfM=;
+        b=bWpds9wESnxf9EUSX8tpwTq7m+Ebk0+n6t/bfu8ePlCbCkdUMslphpdesytt9Ijh1A
+         HqAFB96gUhABblIFCf56N53zqWV62K3YhJ1Q4PNXNzvI4B+1YwrdPc0sBOjuYoZYrX0G
+         6RmZPbDyLoZA0d7hmcdsUmBumR5WSdLy8tf43AMEqQiPKh1DWLgw8VaY11pNQQrlEKxY
+         uivfN5YcoP7RDNZrEpuvIgFkj407743LATVIE/GcPDH5QkxXh2gYcHn7QhRl/ZLrkYig
+         mIDATT7PYjsVuOyfUA3lySvHR4NfCE13T0oJYI/5gV0AOAFrTLLZ20KnKpsKIt4d2BcS
+         7meg==
+X-Gm-Message-State: AOAM5337IyXNcSeNnTREMJhqAyCG3YsT2Km7nqyS6sliGSqyvODNK6v3
+        0zXS6hiIGyosDKFaV63l4Ok=
+X-Google-Smtp-Source: ABdhPJxciT4mvoW+5yfsk7BvgzflK7lvRpqZXJjRVcqs7xAjuCaRpJXEHyV7OyjU7Uz51nkcWt0iSA==
+X-Received: by 2002:a63:481d:: with SMTP id v29mr34833070pga.209.1639061424824;
+        Thu, 09 Dec 2021 06:50:24 -0800 (PST)
+Received: from [192.168.1.26] (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
+        by smtp.gmail.com with ESMTPSA id h3sm9556499pjz.43.2021.12.09.06.50.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 09 Dec 2021 06:50:24 -0800 (PST)
+Message-ID: <d2988e81-64ec-9a56-b8a8-2d2d328d2590@gmail.com>
+Date:   Thu, 9 Dec 2021 06:50:23 -0800
 MIME-Version: 1.0
-In-Reply-To: <0b928f7dbc2f3244afe8a475b547157f@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.1
+Subject: Re: [PATCH] scsi: lpfc: Use struct_group to isolate cast to larger
+ object
 Content-Language: en-US
+To:     Kees Cook <keescook@chromium.org>,
+        James Smart <james.smart@broadcom.com>
+Cc:     Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+References: <20211203223351.107323-1-keescook@chromium.org>
+From:   James Smart <jsmart2021@gmail.com>
+In-Reply-To: <20211203223351.107323-1-keescook@chromium.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.91.245]
-X-ClientProxiedBy: lhreml724-chm.china.huawei.com (10.201.108.75) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/12/2021 13:52, Kashyap Desai wrote:
-> + scsi mailing list
+On 12/3/2021 2:33 PM, Kees Cook wrote:
+> When building under -Warray-bounds, a warning is generated when casting
+> a u32 into MAILBOX_t (which is larger). This warning is conservative, but
+> it's not an unreasonable change to make to improve future robustness. Use
+> a tagged struct_group that can refer to either the specific fields or
+> the first u32 separately, silencing this warning:
 > 
->> On Mon, 18 Oct 2021 17:41:23 +0800, John Garry wrote:
->>> Since it is now possible for a tagset to share a single set of tags,
->>> the iter function should not re-iter the tags for the count of #hw
->>> queues in that case. Rather it should just iter once.
-> John - Recently we found issue of error hander thread never kicked off and
-> this patch fix the issue.
-> Without this patch, scsi error hander will not find correct host_busy
-> counter.
+> drivers/scsi/lpfc/lpfc_sli.c: In function 'lpfc_reset_barrier':
+> drivers/scsi/lpfc/lpfc_sli.c:4787:29: error: array subscript 'MAILBOX_t[0]' is partly outside array bounds of 'volatile uint32_t[1]' {aka 'volatile unsigned int[1]'} [-Werror=array-bounds]
+>   4787 |         ((MAILBOX_t *)&mbox)->mbxCommand = MBX_KILL_BOARD;
+>        |                             ^~
+> drivers/scsi/lpfc/lpfc_sli.c:4752:27: note: while referencing 'mbox'
+>   4752 |         volatile uint32_t mbox;
+>        |                           ^~~~
 > 
-> Take one simple case. There is one IO outstanding and that is getting
-> timedout.
-> Now SML wants to wake up EH thread only if, below condition met
-> "scsi_host_busy(shost) == shost->host_failed"
+> There is no change to the resulting executable instruction code.
 > 
-> Without this patch, shared host tag enabled meagaraid_sas driver will find
-> host_busy = actual outstanding * nr_hw_queues.
-> Error handler thread will never be kicked-off.
-> 
-> This patch is mandatory for fixing shared host tag feature and require to be
-> part of stable kernel.
-> 
-> Do you need more data for posting to stable kernel ?
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
 
-To be clear, are you saying that you see the issue which patch "blk-mq: 
-Fix blk_mq_tagset_busy_iter() for shared tags" fixes before v5.16-rc?
+looks fine.
 
-This patch (now commit 0994c64eb415) and the commit which it is supposed 
-to fix, e155b0c238b2, will only be in v5.16, so I don't see anything 
-which is needed in stable.
+Reviewed-by: James Smart <jsmart2021@gmail.com>
 
-Thanks,
-John
+-- james
+
+
