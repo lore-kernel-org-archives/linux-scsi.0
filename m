@@ -2,47 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAD20C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 12:20:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4396C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 13:46:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235909AbhLIMXj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Dec 2021 07:23:39 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4237 "EHLO
+        id S238193AbhLINuC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Dec 2021 08:50:02 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4238 "EHLO
         frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234627AbhLIMXj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 07:23:39 -0500
-Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4J8tNP3chTz6H7bP;
-        Thu,  9 Dec 2021 20:18:13 +0800 (CST)
+        with ESMTP id S238154AbhLINuA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 08:50:00 -0500
+Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4J8wJ241Gpz67xjc;
+        Thu,  9 Dec 2021 21:44:34 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
+ fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Thu, 9 Dec 2021 13:20:03 +0100
+ 15.1.2308.20; Thu, 9 Dec 2021 14:46:24 +0100
 Received: from [10.47.91.245] (10.47.91.245) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Thu, 9 Dec
- 2021 12:20:02 +0000
+ 2021 13:46:23 +0000
 Subject: Re: [PATCH] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
-To:     <Ajish.Koshy@microchip.com>
-CC:     <jinpu.wang@cloud.ionos.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <Viswas.G@microchip.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <damien.lemoal@opensource.wdc.com>, <Niklas.Cassel@wdc.com>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>
+To:     <jinpu.wang@cloud.ionos.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <Viswas.G@microchip.com>, <Ajish.Koshy@microchip.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 References: <1637940933-107862-1-git-send-email-john.garry@huawei.com>
- <PH0PR11MB51123148E4932FE1C64F8052EC669@PH0PR11MB5112.namprd11.prod.outlook.com>
- <a60318ef-dc19-a146-5ac3-16eae38b8c37@huawei.com>
- <Ya4PAu4Xj8UGHEV7@x1-carbon>
- <PH0PR11MB5112E2E7D00D95F32C86677AEC6E9@PH0PR11MB5112.namprd11.prod.outlook.com>
- <6ee6fe1b-e811-cada-0c18-78149c313358@huawei.com>
- <PH0PR11MB51120361EB6F6931CCE023D6EC709@PH0PR11MB5112.namprd11.prod.outlook.com>
 From:   John Garry <john.garry@huawei.com>
-Message-ID: <f41d2bed-f320-1b70-7d63-fe77caa2534d@huawei.com>
-Date:   Thu, 9 Dec 2021 12:19:40 +0000
+Message-ID: <a93da7a3-9cbe-b278-36ce-1ac860ad43d6@huawei.com>
+Date:   Thu, 9 Dec 2021 13:46:01 +0000
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.12.1
 MIME-Version: 1.0
-In-Reply-To: <PH0PR11MB51120361EB6F6931CCE023D6EC709@PH0PR11MB5112.namprd11.prod.outlook.com>
+In-Reply-To: <1637940933-107862-1-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -54,23 +46,60 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/12/2021 12:04, Ajish.Koshy@microchip.com wrote:
-> Was testing the patch on arm server. Didn't see crash there but observing timeouts and error
-> handling getting triggered for drives. But the same code works fine on x86.
-> 
-> At your end do you still face similar situation on arm server ?
+On 26/11/2021 15:35, John Garry wrote:
+>   	/*
+> @@ -4280,8 +4283,9 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>   		pm8001_ha->smp_exp_mode = SMP_INDIRECT;
+>   
+>   
+> -	tmp_addr = cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_req));
+> -	preq_dma_addr = (char *)phys_to_virt(tmp_addr);
+> +	smp_req = &task->smp_task.smp_req;
+> +	to = kmap(sg_page(smp_req));
 
-Yeah, I see that as well even without enabling the IOMMU.
+This should be a kmap_atomic() as well, as I see the following for when 
+CONFIG_DEBUG_ATOMIC_SLEEP is enabled:
 
-root@(none)$ [  163.974907] sas: Enter sas_scsi_recover_host busy: 222 
-failed: 222
-[  163.981108] sas: sas_scsi_find_task: aborting task 0x000000005c703676
-root@(none)$
-root@(none)$ [  185.963714] pm80xx0:: pm8001_exec_internal_tmf_task 
-757:TMF task[1]timeout.
+[   27.222116]  dump_backtrace+0x0/0x2b4
+[   27.225774]  show_stack+0x1c/0x30
+[   27.229084]  dump_stack_lvl+0x68/0x84
+[   27.232741]  dump_stack+0x20/0x3c
+[   27.236049]  __might_resched+0x1d4/0x240
+[   27.239967]  __might_sleep+0x70/0xd0
+[   27.243536]  pm80xx_chip_smp_req+0x2c4/0x56c
+[   27.247802]  pm8001_task_exec.constprop.0+0x718/0x770
+[   27.252848]  pm8001_queue_command+0x1c/0x2c
+[   27.257026]  smp_execute_task_sg+0x1e8/0x370
+[   27.261289]  sas_ex_phy_discover+0x29c/0x31c
+[   27.265553]  smp_ata_check_ready+0x74/0x190
+[   27.269729]  ata_wait_ready+0xd0/0x224
+[   27.273474]  ata_wait_after_reset+0x78/0xac
+[   27.277652]  sas_ata_hard_reset+0xf0/0x18c
+[   27.281742]  ata_do_reset.constprop.0+0x80/0x9c
+[   27.286266]  ata_eh_reset+0xba4/0x1170
+[   27.290008]  ata_eh_recover+0x4b0/0x1b40
+[   27.293924]  ata_do_eh+0x8c/0x110
+[   27.297232]  ata_std_error_handler+0x80/0xb0
+[   27.301495]  ata_scsi_port_error_handler+0x3d4/0x9d0
+[   27.306454]  async_sas_ata_eh+0x70/0xf8
+[   27.310285]  async_run_entry_fn+0x5c/0x1e0
+[   27.314375]  process_one_work+0x378/0x630
+[   27.318379]  worker_thread+0xa8/0x6bc
+[   27.322033]  kthread+0x214/0x230
+[   27.325256]  ret_from_fork+0x10/0x20
+[   27.328825] pm80xx0:: pm80xx_chip_smp_req  4292:SMP REQUEST INDIRECT MODE
 
-I figured that it was a card FW issue as I have been using what I got 
-out the box, and I have no tool to update the firmware on an arm host.
+But I don't think that this is the problem which causes error handling 
+to kick in later, as discussed in this thread.
 
-It seems that SSP and STP commands are not completing for some reason, 
-from the "busy: 222" line.
+> +	payload = to + smp_req->offset;
+>   
+>   	/* INDIRECT MODE command settings. Use DMA */
+>   	if (pm8001_ha->smp_exp_mode == SMP_INDIRECT) {
+> @@ -4289,7 +4293,7 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>   		/* for SPCv indirect mode. Place the top 4 bytes of
+>   		 * SMP Request header here. */
+>   		for (i = 0; i < 4; i++)
+> -			smp_cmd.smp_req16[i] = *(preq_dma_addr + i);
+> +			smp_cmd.smp_req16[i] = *(payload + i);
+
