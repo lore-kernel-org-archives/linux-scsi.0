@@ -2,104 +2,184 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4396C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 13:46:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D5B6C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 13:53:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238193AbhLINuC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Dec 2021 08:50:02 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4238 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238154AbhLINuA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 08:50:00 -0500
-Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4J8wJ241Gpz67xjc;
-        Thu,  9 Dec 2021 21:44:34 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Thu, 9 Dec 2021 14:46:24 +0100
-Received: from [10.47.91.245] (10.47.91.245) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Thu, 9 Dec
- 2021 13:46:23 +0000
-Subject: Re: [PATCH] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
-To:     <jinpu.wang@cloud.ionos.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <Viswas.G@microchip.com>, <Ajish.Koshy@microchip.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <1637940933-107862-1-git-send-email-john.garry@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <a93da7a3-9cbe-b278-36ce-1ac860ad43d6@huawei.com>
-Date:   Thu, 9 Dec 2021 13:46:01 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S238150AbhLIN4h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Dec 2021 08:56:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53424 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229963AbhLIN4g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 08:56:36 -0500
+Received: from mail-qt1-x831.google.com (mail-qt1-x831.google.com [IPv6:2607:f8b0:4864:20::831])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 580AFC061746
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Dec 2021 05:53:03 -0800 (PST)
+Received: by mail-qt1-x831.google.com with SMTP id l8so5331596qtk.6
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Dec 2021 05:53:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=eH+6G9U5YBLOs7dUvAtSqBwymQ/YPWx2C0zoWpBwNhQ=;
+        b=DSag9WE1YHnIn4pe7AMuISdLFXGOLaC3JsXBlka7jsuJY7PiGcZIMuk5afz9VxZX5u
+         Qi6f5CfupbT/4Kk2J1+0urW2yJB+EeCV8TXgECjm14JSGXJ5kWigdOdHVztcHJdUa+oo
+         w+COVTYEgTprppKFnVpAjRmntXrsNyGq4Muyo=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=eH+6G9U5YBLOs7dUvAtSqBwymQ/YPWx2C0zoWpBwNhQ=;
+        b=BnvTnAMtwQOxiVa99Y0SZN58MmTfgKDb/vFNernuvJQm0y4c7sW7GLwbJm8UMsnbwK
+         lBxn2BOmosKs2k9u9/v2hdvz7nLFqOklODsu5HRb19+GM0DNuCOb54HDwNBjrTrT7amH
+         466gr+uY5nSMnwxalaUMmTrcJmhwHm/3uX8TgQfAQrilK6iPYCx9gZbbVaUGZFrhWUxW
+         gpx39WhSe26Mjlo/IKkSsoPAR0pktnPqbvG7pK5NFDFDYY+8+IecJBz/A5kkMNTgDz/d
+         wGAHO7AruJgkg5MozmaSnqBhteQFL02HVCYM07uVBUDnzTY9CJL7kHiwWL79q+MbBTqG
+         ip3w==
+X-Gm-Message-State: AOAM530Ug5kKQ8uSfa/VuotsnGyeXN1TbnjZ5m5J9Mov4iAyGc7SnoDt
+        MXyczSMFSLSMLtoKOusa3zxWljQQmdwuDH/fKhqO3A==
+X-Google-Smtp-Source: ABdhPJzSDBC6WCK9MBqrX/WKgbsf9++WU09cgzNx58TT5GcWviCo7KOaxwMXMFaKrhkspwAraoVnmYWigXpsKvl3ssE=
+X-Received: by 2002:a05:622a:24b:: with SMTP id c11mr17595277qtx.19.1639057982301;
+ Thu, 09 Dec 2021 05:53:02 -0800 (PST)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+References: <1634550083-202815-1-git-send-email-john.garry@huawei.com> <163482611742.37241.15630114014516067630.b4-ty@kernel.dk>
+In-Reply-To: <163482611742.37241.15630114014516067630.b4-ty@kernel.dk>
 MIME-Version: 1.0
-In-Reply-To: <1637940933-107862-1-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.91.245]
-X-ClientProxiedBy: lhreml724-chm.china.huawei.com (10.201.108.75) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQH6ME5L8xUsgQGWU+HICvNEbBVHbgMhOjIaq8yakCA=
+Date:   Thu, 9 Dec 2021 19:22:59 +0530
+Message-ID: <0b928f7dbc2f3244afe8a475b547157f@mail.gmail.com>
+Subject: RE: [PATCH v2] blk-mq: Fix blk_mq_tagset_busy_iter() for shared tags
+To:     Jens Axboe <axboe@kernel.dk>, John Garry <john.garry@huawei.com>
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        hare@suse.de, ming.lei@redhat.com, linux-scsi@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000d33a4605d2b6ec76"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 26/11/2021 15:35, John Garry wrote:
->   	/*
-> @@ -4280,8 +4283,9 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
->   		pm8001_ha->smp_exp_mode = SMP_INDIRECT;
->   
->   
-> -	tmp_addr = cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_req));
-> -	preq_dma_addr = (char *)phys_to_virt(tmp_addr);
-> +	smp_req = &task->smp_task.smp_req;
-> +	to = kmap(sg_page(smp_req));
+--000000000000d33a4605d2b6ec76
+Content-Type: text/plain; charset="UTF-8"
 
-This should be a kmap_atomic() as well, as I see the following for when 
-CONFIG_DEBUG_ATOMIC_SLEEP is enabled:
++ scsi mailing list
 
-[   27.222116]  dump_backtrace+0x0/0x2b4
-[   27.225774]  show_stack+0x1c/0x30
-[   27.229084]  dump_stack_lvl+0x68/0x84
-[   27.232741]  dump_stack+0x20/0x3c
-[   27.236049]  __might_resched+0x1d4/0x240
-[   27.239967]  __might_sleep+0x70/0xd0
-[   27.243536]  pm80xx_chip_smp_req+0x2c4/0x56c
-[   27.247802]  pm8001_task_exec.constprop.0+0x718/0x770
-[   27.252848]  pm8001_queue_command+0x1c/0x2c
-[   27.257026]  smp_execute_task_sg+0x1e8/0x370
-[   27.261289]  sas_ex_phy_discover+0x29c/0x31c
-[   27.265553]  smp_ata_check_ready+0x74/0x190
-[   27.269729]  ata_wait_ready+0xd0/0x224
-[   27.273474]  ata_wait_after_reset+0x78/0xac
-[   27.277652]  sas_ata_hard_reset+0xf0/0x18c
-[   27.281742]  ata_do_reset.constprop.0+0x80/0x9c
-[   27.286266]  ata_eh_reset+0xba4/0x1170
-[   27.290008]  ata_eh_recover+0x4b0/0x1b40
-[   27.293924]  ata_do_eh+0x8c/0x110
-[   27.297232]  ata_std_error_handler+0x80/0xb0
-[   27.301495]  ata_scsi_port_error_handler+0x3d4/0x9d0
-[   27.306454]  async_sas_ata_eh+0x70/0xf8
-[   27.310285]  async_run_entry_fn+0x5c/0x1e0
-[   27.314375]  process_one_work+0x378/0x630
-[   27.318379]  worker_thread+0xa8/0x6bc
-[   27.322033]  kthread+0x214/0x230
-[   27.325256]  ret_from_fork+0x10/0x20
-[   27.328825] pm80xx0:: pm80xx_chip_smp_req  4292:SMP REQUEST INDIRECT MODE
+> On Mon, 18 Oct 2021 17:41:23 +0800, John Garry wrote:
+> > Since it is now possible for a tagset to share a single set of tags,
+> > the iter function should not re-iter the tags for the count of #hw
+> > queues in that case. Rather it should just iter once.
 
-But I don't think that this is the problem which causes error handling 
-to kick in later, as discussed in this thread.
+John - Recently we found issue of error hander thread never kicked off and
+this patch fix the issue.
+Without this patch, scsi error hander will not find correct host_busy
+counter.
 
-> +	payload = to + smp_req->offset;
->   
->   	/* INDIRECT MODE command settings. Use DMA */
->   	if (pm8001_ha->smp_exp_mode == SMP_INDIRECT) {
-> @@ -4289,7 +4293,7 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
->   		/* for SPCv indirect mode. Place the top 4 bytes of
->   		 * SMP Request header here. */
->   		for (i = 0; i < 4; i++)
-> -			smp_cmd.smp_req16[i] = *(preq_dma_addr + i);
-> +			smp_cmd.smp_req16[i] = *(payload + i);
+Take one simple case. There is one IO outstanding and that is getting
+timedout.
+Now SML wants to wake up EH thread only if, below condition met
+"scsi_host_busy(shost) == shost->host_failed"
 
+Without this patch, shared host tag enabled meagaraid_sas driver will find
+host_busy = actual outstanding * nr_hw_queues.
+Error handler thread will never be kicked-off.
+
+This patch is mandatory for fixing shared host tag feature and require to be
+part of stable kernel.
+
+Do you need more data for posting to stable kernel ?
+
+Kashyap
+
+> >
+> >
+>
+> Applied, thanks!
+>
+> [1/1] blk-mq: Fix blk_mq_tagset_busy_iter() for shared tags
+>       commit: 0994c64eb4159ba019e7fedc7ba0dd6a69235b40
+>
+> Best regards,
+> --
+> Jens Axboe
+>
+
+--000000000000d33a4605d2b6ec76
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+P3lSxcw4Cg90iKHqfpwLnGNc9AGXHMxUCukpnAHRlivljilKHMx1ymb180BLmtF+ZLm6KrFLQWzB
+4KeiUOMtKM13wJrQubqTeZgB1XA+89jeLYlxagVsMyksdwIDAQABo4IB2zCCAdcwDgYDVR0PAQH/
+BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9i
+YWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUF
+BzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xv
+YmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
+Oi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAlBgNV
+HREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAf
+BgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUkTOZp9jXE3yPj4ieKeDT
+OiNyCtswDQYJKoZIhvcNAQELBQADggEBABG1KCh7cLjStywh4S37nKE1eE8KPyAxDzQCkhxYLBVj
+gnnhaLmEOayEucPAsM1hCRAm/vR3RQ27lMXBGveCHaq9RZkzTjGSbzr8adOGK3CluPrasNf5StX3
+GSk4HwCapA39BDUrhnc/qG5vHwLrgA1jwAvSy8e/vn4F4h+KPrPoFNd1OnCafedbuiEXTqTkn5Rk
+vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
+MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
+MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
+VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINE+Sf6ZLQnFA/ZjRRK0l4wU+1mL
+rRNRZoIJWDG94hJ1MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MTIwOTEzNTMwMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
+AwQCATANBgkqhkiG9w0BAQEFAASCAQCeSrzIZQUuyC/Z3bV/9Zv+spbhNQ8dmKb5jW4IQnD7MLNc
+aK6TosQ1Bi2v3HE5JV62Bp2CFwVtpvkTkwkkDD2K23Qkf40QjfflEmMbKoIAF+4oBv1m+3qjMnbE
++gsXm5XP1hFVPQ06PjtTTKmYZGVy9+JQQb7ANsYWw/WWxwvYMqLC88+MTQJ9UoZA/ixGcEPG/ra+
+GG+QgKFEQ3tk9KkqVnODKi/wrgMxUsorRvVac6nzyQu9ee4ou8ecypg2fP29TfPiEqJU8vehkTNQ
+qq89whdBj6i+dxBTnXG6rWhEqPJ28Pi1cXjBcZ+zgNWbeyCJ8WEz6b4eA+tpXJCmXaX4
+--000000000000d33a4605d2b6ec76--
