@@ -2,99 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56411C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 01:59:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DD19C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Dec 2021 07:00:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229711AbhLICC5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Dec 2021 21:02:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59488 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229718AbhLICC4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2021 21:02:56 -0500
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71C27C061746;
-        Wed,  8 Dec 2021 17:59:24 -0800 (PST)
-Received: by mail-pg1-x534.google.com with SMTP id s137so3696688pgs.5;
-        Wed, 08 Dec 2021 17:59:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=JzKJU9/fdgz4zCFQsZnYR8rQ00toTP+WIkyJkXRFWIM=;
-        b=OZr3wZmNqqTFiJAx7f5og5BMSj4JcKYzH3VKHx1/PSUryXYdVZuwSsbF/J8hWB/M1K
-         7Tbe794hKeqjqAgHkY94RnmaL1bxdv5Fw1GRG8ESKuP+d+VFZlTFyntcuVbQRJUdzeXJ
-         j2wybrgdQQOL5VO4gTU5UCRD9dyTmuwslv7TgtgtrXyeaMasLubjFApOiMtEcQZp7c7x
-         YsWONmLMkjAVV23slk9bpOatn17O8Te1ymv1yYCnsPHPAmIwZxEZYC4HCtqhF1aGH4pd
-         KhpufkB0Zx1ZDhDEPodIA/OBp4S2ygGz1SFEGSKam6E3OYGpMCTK0bqPxaEPvxAPOqaT
-         xpYA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=JzKJU9/fdgz4zCFQsZnYR8rQ00toTP+WIkyJkXRFWIM=;
-        b=6M0d2s0Lz9EvsvtilC71j0o5jo0mb0Bjgp3QVT5mkDpQltxKTBlwNdDGWJ7MV+1v5x
-         SZVeVG7Ipjiw5szcoZ7Fv3OMySUD/7WR2AOPXKMxtWgp+AsMB/1TKd3r/aQ4W7mVkYyh
-         zbsxQnXv5+S7fHz37sq63Zo9p9R0qr7y1q9Dij2ggtErkfmHZ8KzTyQHHGcdqdWNSgRe
-         xImrc8jGg/vSPyfsGiHGemhcYzdlVMbJCPS8KhtZFarjh2bbiNIDmh3n6g/oC3nOjZQX
-         uPvyw9OYvazpITbTDgfdjOiPz36iMyKVz3bMyAHZuc6aCczg1EtwXEL7pYamLX5ywCoi
-         o+ZQ==
-X-Gm-Message-State: AOAM533aIXTMYoFQOcXTkKLRYQCZwOa9vNylGxH+nI/8XV2cqfPgaZvf
-        SvmaCykSkb1a/Qr4viLxRuY=
-X-Google-Smtp-Source: ABdhPJxKwSGtoAL4ai1J6zxR9GiJm5eg+1s+NhFdnI2yPRP9D4OGjb6PtzeaaD3Sg2A6dVoX3Pn+xA==
-X-Received: by 2002:a62:7a92:0:b0:49f:9a0f:6bcd with SMTP id v140-20020a627a92000000b0049f9a0f6bcdmr9071956pfc.43.1639015164031;
-        Wed, 08 Dec 2021 17:59:24 -0800 (PST)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id o16sm5316435pfu.72.2021.12.08.17.59.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Dec 2021 17:59:23 -0800 (PST)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: chi.minghao@zte.com.cn
-To:     willy@infradead.org
-Cc:     hare@suse.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        chiminghao <chi.minghao@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cm>
-Subject: [PATCH] drivers:scsi:remove unneeded variable
-Date:   Thu,  9 Dec 2021 01:59:17 +0000
-Message-Id: <20211209015917.410029-1-chi.minghao@zte.com.cn>
+        id S233446AbhLIHDd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Dec 2021 02:03:33 -0500
+Received: from mail-m974.mail.163.com ([123.126.97.4]:25986 "EHLO
+        mail-m974.mail.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233425AbhLIHDc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2021 02:03:32 -0500
+X-Greylist: delayed 907 seconds by postgrey-1.27 at vger.kernel.org; Thu, 09 Dec 2021 02:03:31 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=yL2dr
+        E9LrYFJdmC80fn3NF3BkfEsK3wrZa9/rZM+w9Y=; b=l0OT/Bna29VPy1QXKyzi0
+        +elBQMwWVgQ7cUSR0AKR03geZLesk2BVMUINMUbmlQDo33r+IBEdIkUqNBZrSTJO
+        Yo7I34FF378/yg74iHcOfZtyoF2eiaNUNJZP5Z9JwZEpqUD84awbhb9omKq2fMxi
+        yGnFsYsKFS9DWziJOQGfa0=
+Received: from localhost.localdomain (unknown [218.106.182.227])
+        by smtp4 (Coremail) with SMTP id HNxpCgC323nMpbFhy7IyAw--.49693S4;
+        Thu, 09 Dec 2021 14:44:42 +0800 (CST)
+From:   Jianglei Nie <niejianglei2021@163.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        niejianglei2021@163.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: csiostor: Fix memory leak in csio_wr_eq_destroy()
+Date:   Thu,  9 Dec 2021 14:44:25 +0800
+Message-Id: <20211209064425.123950-1-niejianglei2021@163.com>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: HNxpCgC323nMpbFhy7IyAw--.49693S4
+X-Coremail-Antispam: 1Uf129KBjvJXoW7ZF4kCw4kKrWfJrW5Kr43Awb_yoW8XF47pF
+        WxG34kA3yFq3ZFkry5uanxZF1rta4fX397KFW3Z3sxuF9xXFyDtF1vgrya9ryUKrW8uF15
+        tF4kKFyUA3WUAFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jk4SrUUUUU=
+X-Originating-IP: [218.106.182.227]
+X-CM-SenderInfo: xqlhyxxdqjzvrlsqjii6rwjhhfrp/1tbiWxtkjFSIsfLAZwAAsQ
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: chiminghao <chi.minghao@zte.com.cn>
+Line 715 (#1) calls mempool_alloc() to allocate an element
+from a specific memory pool. When some errors occur, line 727 (#2)
+frees this memory pool but line 731 (#3) does not free it, which will
+lead to a memory leak.
 
-return value form directly instead of
-taking this in another redundant variable.
+We can fix it by calling mempool_free() when the cbfn is not equal to
+NULL and before the function returns 0 in line 732 (#3).
 
-Reported-by: Zeal Robot <zealci@zte.com.cm>
-Signed-off-by: chiminghao <chi.minghao@zte.com.cn>
+705 static int
+706 csio_wr_eq_destroy(struct csio_hw *hw, void *priv, int eq_idx,
+707 		   void (*cbfn) (struct csio_hw *, struct csio_mb *))
+708 {
+710 	struct csio_mb  *mbp;
+
+715 	mbp = mempool_alloc(hw->mb_mempool, GFP_ATOMIC);
+	// #1: allocate memory pool
+716 	if (!mbp)
+717 		return -ENOMEM;
+
+725 	rv = csio_mb_issue(hw, mbp);
+726 	if (rv != 0) {
+727		mempool_free(mbp, hw->mb_mempool);
+		// #2: free memory pool
+728		return rv;
+729 	}
+
+731 	if (cbfn != NULL)
+732 		return 0; // #3: missing free
+
+734 	return csio_wr_eq_destroy_rsp(hw, mbp, eq_idx);
+735 }
+
+Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
 ---
- drivers/scsi/advansys.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/csiostor/csio_wr.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index ace5eff828e9..610c0be1b47b 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -6237,14 +6237,12 @@ AscMsgOutSDTR(ASC_DVC_VAR *asc_dvc, uchar sdtr_period, uchar sdtr_offset)
- static uchar
- AscCalSDTRData(ASC_DVC_VAR *asc_dvc, uchar sdtr_period, uchar syn_offset)
- {
--	uchar byte;
- 	uchar sdtr_period_ix;
+diff --git a/drivers/scsi/csiostor/csio_wr.c b/drivers/scsi/csiostor/csio_wr.c
+index fe0355c964bc..7dcc4fda0483 100644
+--- a/drivers/scsi/csiostor/csio_wr.c
++++ b/drivers/scsi/csiostor/csio_wr.c
+@@ -728,8 +728,10 @@ csio_wr_eq_destroy(struct csio_hw *hw, void *priv, int eq_idx,
+ 		return rv;
+ 	}
  
- 	sdtr_period_ix = AscGetSynPeriodIndex(asc_dvc, sdtr_period);
- 	if (sdtr_period_ix > asc_dvc->max_sdtr_index)
- 		return 0xFF;
--	byte = (sdtr_period_ix << 4) | (syn_offset & ASC_SYN_MAX_OFFSET);
--	return byte;
-+	return (sdtr_period_ix << 4) | (syn_offset & ASC_SYN_MAX_OFFSET);
+-	if (cbfn != NULL)
++	if (cbfn != NULL) {
++		mempool_free(mbp, hw->mb_mempool);
+ 		return 0;
++	}
+ 
+ 	return csio_wr_eq_destroy_rsp(hw, mbp, eq_idx);
  }
- 
- static bool AscSetChipSynRegAtID(PortAddr iop_base, uchar id, uchar sdtr_data)
 -- 
 2.25.1
 
