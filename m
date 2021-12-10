@@ -2,55 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1DBFC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Dec 2021 17:29:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 852A4C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Dec 2021 17:42:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241165AbhLJRdU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Dec 2021 12:33:20 -0500
-Received: from mail-pf1-f178.google.com ([209.85.210.178]:44975 "EHLO
-        mail-pf1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237989AbhLJRdT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2021 12:33:19 -0500
-Received: by mail-pf1-f178.google.com with SMTP id k64so9019740pfd.11;
-        Fri, 10 Dec 2021 09:29:44 -0800 (PST)
+        id S241965AbhLJRpt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Dec 2021 12:45:49 -0500
+Received: from mail-pj1-f43.google.com ([209.85.216.43]:42794 "EHLO
+        mail-pj1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231337AbhLJRps (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2021 12:45:48 -0500
+Received: by mail-pj1-f43.google.com with SMTP id fv9-20020a17090b0e8900b001a6a5ab1392so8117500pjb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2021 09:42:13 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=C29RQmhBlCkkPpuJ/eOeU2rF+9gMdwncIV/icJVqVFM=;
-        b=xTnMw339uMefKqhiBXs0Qbm3Kd3pv1pRZKdlLMegA7b4eEYwG3cJs8aFi/bv4/F6+L
-         Oq0m80eB+ewsVeisNImKuVlZrvrGaOC5+raxl9xmnOT4vUmAQAV5O2IoLrgKUV0Jg+W6
-         zgtY9L5sbMqJg3W82kj4zpwDUCoXSNoTf+CXJ8KO1Qi0eh8jABUJtuntITmh53t2INpI
-         8wFJKxpkSpw4r73k4azz7ENLHftM2IYwpQ7nQGtb08GIYk41uXidVOcHwJLxlorrOpui
-         NwFsvdbf0TUiaBxzJuSBipMfCG/JyMmn1NMUMH0PRHrnMN+Kx7uA8Op2Il2Xt68485A2
-         tn8w==
-X-Gm-Message-State: AOAM533/MRJEJ7V4lGMysqLyb+auggbAG8h+wktGpcXpQl20JdmiJZd/
-        VEVucS80rysxVOfs+tmY5x8=
-X-Google-Smtp-Source: ABdhPJxnPaA1x86sHWiX3QwNKGliVcR0m6wJyrK4PSHjfL6CnHM332Nci95Wz2p6qphK0zmUz2YIAw==
-X-Received: by 2002:a63:5c5f:: with SMTP id n31mr40214965pgm.348.1639157383889;
-        Fri, 10 Dec 2021 09:29:43 -0800 (PST)
+        bh=x4uEfZSH8BdPbBHnokmArRQDG6aG22C+6N361beSqNU=;
+        b=EF9VdcdBtukNzack8r8VlTyiu157FwGo3XYnSxlLjJ1MyY888A2xh4H4r5IigtgxUB
+         h1Xx2a/jxClRuskqDPpyGTZh2mNpdKODsk/s3s2eFHI1U90BHP/QrBoJUfjg7ftnYnyE
+         LU5T8n+BAnyb12qcP9w7t/X9liagWKBIfzeSPi5PVn2EsDB3Rm0/5f2WRzUqJL4FYz7Y
+         eecnyu+DblACgqh19YaNZP/XT+cD/cujlvCNUsMT2U60WglBG+v7Ub2aZe7GnBmyMu9D
+         dyGOk4JoYsZ3pm3V0kKjC7ztLAgFu6GhymVBncbot0GrsVGO7+JBBO1Rs4bP2BtkVCti
+         D9GQ==
+X-Gm-Message-State: AOAM532Xoh+SOhPTkWxCs909AsME1KTU+07Xyoh3Jkl9uPrae0KNkARr
+        Sj5wofVZzx28TEo9pk+6t/aVHyJ9tZU=
+X-Google-Smtp-Source: ABdhPJzbBBecdy5QhjU2tX3Txym/7Vi04x8gb1l2UIP0+ATSbFEjq2fMotsvCSwrjJbcOiPU4GDJRw==
+X-Received: by 2002:a17:903:1c7:b0:141:e630:130c with SMTP id e7-20020a17090301c700b00141e630130cmr77666164plh.80.1639158133170;
+        Fri, 10 Dec 2021 09:42:13 -0800 (PST)
 Received: from ?IPv6:2620:0:1000:2514:85ed:ea0b:339:7b11? ([2620:0:1000:2514:85ed:ea0b:339:7b11])
-        by smtp.gmail.com with ESMTPSA id c3sm3926878pfv.67.2021.12.10.09.29.42
+        by smtp.gmail.com with ESMTPSA id m10sm3114366pgv.75.2021.12.10.09.42.11
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 10 Dec 2021 09:29:43 -0800 (PST)
-Subject: Re: [PATCH v3 3/3] blk-crypto: show crypto capabilities in sysfs
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-mmc@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-References: <20211208013534.136590-1-ebiggers@kernel.org>
- <20211208013534.136590-4-ebiggers@kernel.org>
- <6ff4d074-7508-4f4c-de06-f36899668168@acm.org>
- <YbKT/lcp6iZ+lD4n@sol.localdomain> <YbL2uUqV0GWFOitE@kroah.com>
+        Fri, 10 Dec 2021 09:42:12 -0800 (PST)
+Subject: Re: [PATCH V2] scsi:spraid: initial commit of Ramaxel spraid driver
+To:     Yanling Song <songyl@ramaxel.com>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, yujiang@ramaxel.com
+References: <20211126073310.87683-1-songyl@ramaxel.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <cb29756b-8b21-5b4d-f107-b5573945d7ab@acm.org>
-Date:   Fri, 10 Dec 2021 09:29:41 -0800
+Message-ID: <b5002b52-3654-825c-f94f-f9ade708042e@acm.org>
+Date:   Fri, 10 Dec 2021 09:42:10 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <YbL2uUqV0GWFOitE@kroah.com>
+In-Reply-To: <20211126073310.87683-1-songyl@ramaxel.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -58,18 +52,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/9/21 10:42 PM, Greg Kroah-Hartman wrote:
-> A single hex value makes sense to me.
+On 11/25/21 11:33 PM, Yanling Song wrote:
+> +config RAMAXEL_SPRAID
+> +	tristate "Ramaxel spraid Adapter"
+> +	depends on PCI && SCSI && BLK_DEV_BSGLIB
+> +	depends on ARM64 || X86_64
 
-Hi Greg,
+Why is this driver restricted to ARM64 and X86_64 systems? What prevents
+compilation of this driver on other CPU architectures?
 
-I'm not enthusiast about this approach because:
-(a) A single hex value can be confused with a number. Reporting a bitfield in
-     hex format is not sufficient to prevent confusion with a number.
-(b) No other block layer sysfs attribute follows this encoding scheme.
-(c) This encoding enforces the restriction that data unit sizes are a power of
-     two. Is there anything fundamental in encryption that restricts data unit
-     sizes to a power of two? I don't know the answer myself.
+> +	help
+> +	  This driver supports Ramaxel spraid driver.
+
+The help text is too short. Please add one or two sentences about the interface
+type of this RAID controller (PCIe?) and also about the storage media supported
+by this RAID controller (SAS? SATA? any other?).
+
+> +struct spraid_bsg_request {
+> +	u32  msgcode;
+> +	u32 control;
+> +	union {
+> +		struct spraid_passthru_common_cmd admcmd;
+> +		struct spraid_ioq_passthru_cmd    ioqcmd;
+> +	};
+> +};
+
+Definitions like the above are required by user space software that uses the
+BSG interface and hence should be moved into a header file under include/uapi/.
+See e.g. include/uapi/scsi/scsi_bsg_ufs.h.
 
 Thanks,
 
