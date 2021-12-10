@@ -2,95 +2,165 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AE51C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Dec 2021 10:44:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E83CDC43217
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Dec 2021 11:26:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238452AbhLJKsR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Dec 2021 05:48:17 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4243 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238383AbhLJKsR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2021 05:48:17 -0500
-Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4J9SCq6nGXz686Sr;
-        Fri, 10 Dec 2021 18:42:47 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Fri, 10 Dec 2021 11:44:41 +0100
-Received: from [10.47.85.63] (10.47.85.63) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Fri, 10 Dec
- 2021 10:44:40 +0000
-Subject: Re: [PATCH] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
-To:     <Ajish.Koshy@microchip.com>, <jinpu.wang@cloud.ionos.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <Viswas.G@microchip.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>
-References: <1637940933-107862-1-git-send-email-john.garry@huawei.com>
- <a93da7a3-9cbe-b278-36ce-1ac860ad43d6@huawei.com>
- <PH0PR11MB51122D76F40E164C31AFEE54EC719@PH0PR11MB5112.namprd11.prod.outlook.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <eb82b0ab-912a-4879-f1b2-d5cbef5bfc41@huawei.com>
-Date:   Fri, 10 Dec 2021 10:44:15 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S240312AbhLJLa2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Dec 2021 06:30:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41902 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234694AbhLJLa1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2021 06:30:27 -0500
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04985C061746;
+        Fri, 10 Dec 2021 03:26:53 -0800 (PST)
+Received: by mail-pg1-x52a.google.com with SMTP id r5so7806846pgi.6;
+        Fri, 10 Dec 2021 03:26:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=oNMML2GUfpRe4KuxNkgjDIBCEtPq+5IBWg/SvCiB1ac=;
+        b=R6WJg/vOJke+Pss70tPbsPfFF/c3xP//0lNWb4hUhYl4MWKxQP2AhRoJk4Y5bJnZp1
+         KlS/DCpvqpFeiAygTjN3XgOkI4wsSUC3pOrCoqxfXll66oNqjjEsxdBGCU8QLOGpiVFR
+         LWobxq8LFE1rEMc9YMoXunbOVZdz+3AjoVc8Kg1y1K0br5h1EYdR+RZpCv+3N4AQ+bZY
+         pcM/MyWJuqJ15I3uei6a2bY9gaYAbKfpGIxypgOKVezQsvr67voKcAS9cTyw+4bd89zI
+         U6kMYbLLJuqyUsx1sojCQ4Giu6rXvLiH2AL0GvH1cco0m27EzFRtcTcBh4LPEZ09Zf0b
+         hZFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=oNMML2GUfpRe4KuxNkgjDIBCEtPq+5IBWg/SvCiB1ac=;
+        b=oe7DT9hup1Ybt4K9Aw9x06z2lhJGiSASd1LxlOnE2k9YU4hB0jN/LiknrD8f2M/6AK
+         7iS8Sm46A5/1wVwUtFD6107X5ucOVPCXTy/FiU6uaVQdd4zXZ9UTVUI7WV8uNCPIzGzp
+         mrpLvHAkEs+yS09Y91czkXNubyyZ1f/tuFAfhmCLS984zYwU4EGkkLHjvK/BVgDmnZVm
+         6wtpJz4QBmrvtiTOGQDfgoAzkX+0o1lnP23vXGKmY6qYuhvKVH2xm9JIuvwXWrkouDT6
+         1ZwrP+NQoCCdy9KqByzC3tyZDdv6e8Jo+Up+/HJFFk80TZC3gyxADcKlaKkPBjDZzJuG
+         ngXw==
+X-Gm-Message-State: AOAM530xXfVP52+SZ3J9blf3A0aqSjz4GJiqQOovt0Bzr+SVXxnEvPW6
+        9sTbn5ljHkE46HgFsdLAIOw=
+X-Google-Smtp-Source: ABdhPJwHRIt+DqTuxKr3Ov92YpyxCIqQ63650YjNIjSjqT5l4iFIeahNGLj6YxvmmYkMJGFzIrL5ng==
+X-Received: by 2002:a63:d753:: with SMTP id w19mr5091188pgi.174.1639135612496;
+        Fri, 10 Dec 2021 03:26:52 -0800 (PST)
+Received: from ?IPV6:2404:f801:0:5:8000::50b? ([2404:f801:9000:1a:efea::50b])
+        by smtp.gmail.com with ESMTPSA id on6sm16041313pjb.47.2021.12.10.03.26.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 10 Dec 2021 03:26:52 -0800 (PST)
+Message-ID: <e4125f7b-fdd9-dc0d-63d0-93d841dbb3c3@gmail.com>
+Date:   Fri, 10 Dec 2021 19:26:40 +0800
 MIME-Version: 1.0
-In-Reply-To: <PH0PR11MB51122D76F40E164C31AFEE54EC719@PH0PR11MB5112.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH V6 2/5] x86/hyper-v: Add hyperv Isolation VM check in the
+ cc_platform_has()
 Content-Language: en-US
+To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "mingo@redhat.com" <mingo@redhat.com>,
+        "bp@alien8.de" <bp@alien8.de>,
+        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+        "x86@kernel.org" <x86@kernel.org>, "hpa@zytor.com" <hpa@zytor.com>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>
+Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        vkuznets <vkuznets@redhat.com>,
+        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
+        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+        "hch@lst.de" <hch@lst.de>, "joro@8bytes.org" <joro@8bytes.org>,
+        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
+        "dave.hansen@intel.com" <dave.hansen@intel.com>
+References: <20211207075602.2452-1-ltykernel@gmail.com>
+ <20211207075602.2452-3-ltykernel@gmail.com>
+ <MWHPR21MB1593F014EC440F5DEDCFDDFFD7709@MWHPR21MB1593.namprd21.prod.outlook.com>
+From:   Tianyu Lan <ltykernel@gmail.com>
+In-Reply-To: <MWHPR21MB1593F014EC440F5DEDCFDDFFD7709@MWHPR21MB1593.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.85.63]
-X-ClientProxiedBy: lhreml716-chm.china.huawei.com (10.201.108.67) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/12/2021 10:23, Ajish.Koshy@microchip.com wrote:
-> Hi John,
-
-Please config your editor to wrap at ~72 characters and don't top-post.
-
-> 
-> In my humble opinion what we observed very earlier was with respect smp_request()/response() crash and this patch resolved it. Given that the issue was not only specific to ARM, issue was observed on x86 too with IOMMU enabled. Device discovery went fine post application of this patch on x86.
-> 
-> What we are observing right now on error handling/timeouts for commands on drives will be altogether different issue that needs separate debugging on ARM platform with separate patch since this is a very initial execution of pm80xx driver on ARM platform.
-> 
-> This patch is acceptable. Let me know your further views.
-> 
-
-As I mentioned earlier about this patch, a v2 is needed as we need 
-kmap_atomic() in both cases. But I would rather resolve all issues 
-before getting that merged - it has been broken this way for a long time.
-
-So I mentioned a new issue in my response to Damien - maxcpus=1 on the 
-command line crashes on boot. I can imagine that x86 also has that issue.
-
-As for the timeouts, why would the FW not respond in the way I 
-described? I would always expect a completion, even for erroneous 
-commands. Maybe it is an interrupt issue in the driver. Is there some 
-diagnostics I can check - there seems to be a lot of "stuff" in the 
-sysfs scsi_host folder.
-
-Thanks,
-John
-
-> Thanks,
-> Ajish
-> 
-> On 26/11/2021 15:35, John Garry wrote:
->>        /*
->> @@ -4280,8 +4283,9 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
->>                pm8001_ha->smp_exp_mode = SMP_INDIRECT;
+On 12/10/2021 4:38 AM, Michael Kelley (LINUX) wrote:
+> From: Tianyu Lan <ltykernel@gmail.com> Sent: Monday, December 6, 2021 11:56 PM
 >>
+>> Hyper-V provides Isolation VM which has memory encrypt support. Add
+>> hyperv_cc_platform_has() and return true for check of GUEST_MEM_ENCRYPT
+>> attribute.
 >>
->> -     tmp_addr = cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_req));
->> -     preq_dma_addr = (char *)phys_to_virt(tmp_addr);
->> +     smp_req = &task->smp_task.smp_req;
->> +     to = kmap(sg_page(smp_req));
-> This should be a kmap_atomic() as well, as I see the following for when
-> CONFIG_DEBUG_ATOMIC_SLEEP is enabled:
+>> Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
+>> ---
+>> Change since v3:
+>> 	* Change code style of checking GUEST_MEM attribute in the
+>> 	  hyperv_cc_platform_has().
+>> ---
+>>   arch/x86/kernel/cc_platform.c | 8 ++++++++
+>>   1 file changed, 8 insertions(+)
+>>
+>> diff --git a/arch/x86/kernel/cc_platform.c b/arch/x86/kernel/cc_platform.c
+>> index 03bb2f343ddb..47db88c275d5 100644
+>> --- a/arch/x86/kernel/cc_platform.c
+>> +++ b/arch/x86/kernel/cc_platform.c
+>> @@ -11,6 +11,7 @@
+>>   #include <linux/cc_platform.h>
+>>   #include <linux/mem_encrypt.h>
+>>
+>> +#include <asm/mshyperv.h>
+>>   #include <asm/processor.h>
+>>
+>>   static bool __maybe_unused intel_cc_platform_has(enum cc_attr attr)
+>> @@ -58,9 +59,16 @@ static bool amd_cc_platform_has(enum cc_attr attr)
+>>   #endif
+>>   }
+>>
+>> +static bool hyperv_cc_platform_has(enum cc_attr attr)
+>> +{
+>> +	return attr == CC_ATTR_GUEST_MEM_ENCRYPT;
+>> +}
+>>
+>>   bool cc_platform_has(enum cc_attr attr)
+>>   {
+>> +	if (hv_is_isolation_supported())
+>> +		return hyperv_cc_platform_has(attr);
+>> +
+>>   	if (sme_me_mask)
+>>   		return amd_cc_platform_has(attr);
+>>
+> 
+> Throughout Linux kernel code, there are about 20 calls to cc_platform_has()
+> with CC_ATTR_GUEST_MEM_ENCRYPT as the argument.  The original code
+> (from v1 of this patch set) only dealt with the call in sev_setup_arch().   But
+> with this patch, all the other calls that previously returned "false" will now
+> return "true" in a Hyper-V Isolated VM.  I didn't try to analyze all these other
+> calls, so I think there's an open question about whether this is the behavior
+> we want.
+> 
+
+CC_ATTR_GUEST_MEM_ENCRYPT is for SEV support so far. Hyper-V Isolation
+VM is based on SEV or software memory encrypt. Most checks can be 
+reused. The difference is that SEV code use encrypt bit in the page
+table to encrypt and decrypt memory while Hyper-V uses vTOM. But the sev
+memory encrypt mask "sme_me_mask" is unset in the Hyper-V Isolation VM
+where claims sev and sme are unsupported. The rest of checks for mem enc
+bit are still safe. So reuse CC_ATTR_GUEST_MEM_ENCRYPT for Hyper-V.
+
 
