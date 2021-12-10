@@ -2,65 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4BC1C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Dec 2021 17:45:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4672DC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Dec 2021 17:53:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244661AbhLJRs6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Dec 2021 12:48:58 -0500
-Received: from sin.source.kernel.org ([145.40.73.55]:52386 "EHLO
-        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240884AbhLJRs5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2021 12:48:57 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 6BC45CE2C34;
-        Fri, 10 Dec 2021 17:45:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EF9DC00446;
-        Fri, 10 Dec 2021 17:45:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639158318;
-        bh=h2+tsYbJOupsl375+icjqBHrs1cW+BMfkxLDD2UUNjc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PREYSS3TNe1zdeN12rSffhatLuWwieDm/d6zoldD+m6/eJKQUOmMQyMOlmpDi2eXr
-         S4qKoLFiIro1Cqh/SUVwQMR/+Y7USkq6r4/20tv8hmMY1s4OqntEeTXQUgEu1V75P9
-         kmGVRc2Jnt+J19PE3547Tt1XR5PMTMzqR1+kr3T0+f3aZSnQnMMNFQxbwTyI25BG54
-         HurnMHdeP/AJWMIOtrINJJ6TssmfEI6hSsP+vceGE/rX87Kl4lsjIT/SDpG5LQBOAO
-         xVdjd4I71vg8kO8qc/nsu2TLDpcjefIBLkkGt1ag3SIHHzt0ALntatttaKK27+NZYO
-         I+LqcuN0mcZrw==
-Date:   Fri, 10 Dec 2021 09:45:16 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-mmc@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 3/3] blk-crypto: show crypto capabilities in sysfs
-Message-ID: <YbOSLC9SNelqwD+g@sol.localdomain>
-References: <20211208013534.136590-1-ebiggers@kernel.org>
- <20211208013534.136590-4-ebiggers@kernel.org>
- <6ff4d074-7508-4f4c-de06-f36899668168@acm.org>
- <YbKT/lcp6iZ+lD4n@sol.localdomain>
- <YbL2uUqV0GWFOitE@kroah.com>
- <cb29756b-8b21-5b4d-f107-b5573945d7ab@acm.org>
+        id S244846AbhLJR5Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Dec 2021 12:57:24 -0500
+Received: from smtp05.smtpout.orange.fr ([80.12.242.127]:60025 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241133AbhLJR5W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2021 12:57:22 -0500
+Received: from ubuntu-CJ.passengers.t19.sncf ([109.190.253.13])
+        by smtp.orange.fr with ESMTPA
+        id vk5Vm4O22OvR0vk5WmaHTK; Fri, 10 Dec 2021 18:53:46 +0100
+X-ME-Helo: ubuntu-CJ.passengers.t19.sncf
+X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
+X-ME-Date: Fri, 10 Dec 2021 18:53:46 +0100
+X-ME-IP: 109.190.253.13
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     james.smart@broadcom.com, ram.vegesna@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, hare@suse.de,
+        dwagner@suse.de
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH v2] scsi: elx: efct: Avoid a useless memset
+Date:   Fri, 10 Dec 2021 18:53:35 +0100
+Message-Id: <9be7d5beb437583f8d975d168ac5c3e32fb6e465.1639158677.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cb29756b-8b21-5b4d-f107-b5573945d7ab@acm.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Dec 10, 2021 at 09:29:41AM -0800, Bart Van Assche wrote:
-> (c) This encoding enforces the restriction that data unit sizes are a power of
->     two. Is there anything fundamental in encryption that restricts data unit
->     sizes to a power of two? I don't know the answer myself.
+'io->sgl' is kzalloced just a few lines above. There is no need to memset
+it another time.
 
-Well, the data unit size has to evenly divide the size of the request (for
-requests that have an encryption context which specifies that data unit size).
-So if the data unit size was, say, 1536 bytes, then all requests would have to
-be multiples of 1536 bytes.  That has a factor of 3 in it, so it would be
-impossible to make any power-of-2 size request.  That sounds pretty impractical;
-it's hard to see how and why we would ever support such a thing.
+While at it change a kzalloc into an equivalent kcalloc to increase the
+semantic and avoid an open coded arithmetic in a memory allocation
+statement.
 
-- Eric
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+v1 --> v2: s/kzalloc/kcalloc/
+
+ drivers/scsi/elx/efct/efct_io.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/elx/efct/efct_io.c b/drivers/scsi/elx/efct/efct_io.c
+index 71e21655916a..109483f3e3df 100644
+--- a/drivers/scsi/elx/efct/efct_io.c
++++ b/drivers/scsi/elx/efct/efct_io.c
+@@ -56,13 +56,12 @@ efct_io_pool_create(struct efct *efct, u32 num_sgl)
+ 		}
+ 
+ 		/* Allocate SGL */
+-		io->sgl = kzalloc(sizeof(*io->sgl) * num_sgl, GFP_KERNEL);
++		io->sgl = kcalloc(num_sgl, sizeof(*io->sgl), GFP_KERNEL);
+ 		if (!io->sgl) {
+ 			efct_io_pool_free(io_pool);
+ 			return NULL;
+ 		}
+ 
+-		memset(io->sgl, 0, sizeof(*io->sgl) * num_sgl);
+ 		io->sgl_allocated = num_sgl;
+ 		io->sgl_count = 0;
+ 
+-- 
+2.32.0
+
