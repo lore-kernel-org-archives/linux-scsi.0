@@ -2,85 +2,65 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 852A4C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Dec 2021 17:42:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4BC1C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Dec 2021 17:45:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241965AbhLJRpt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Dec 2021 12:45:49 -0500
-Received: from mail-pj1-f43.google.com ([209.85.216.43]:42794 "EHLO
-        mail-pj1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231337AbhLJRps (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2021 12:45:48 -0500
-Received: by mail-pj1-f43.google.com with SMTP id fv9-20020a17090b0e8900b001a6a5ab1392so8117500pjb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2021 09:42:13 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=x4uEfZSH8BdPbBHnokmArRQDG6aG22C+6N361beSqNU=;
-        b=EF9VdcdBtukNzack8r8VlTyiu157FwGo3XYnSxlLjJ1MyY888A2xh4H4r5IigtgxUB
-         h1Xx2a/jxClRuskqDPpyGTZh2mNpdKODsk/s3s2eFHI1U90BHP/QrBoJUfjg7ftnYnyE
-         LU5T8n+BAnyb12qcP9w7t/X9liagWKBIfzeSPi5PVn2EsDB3Rm0/5f2WRzUqJL4FYz7Y
-         eecnyu+DblACgqh19YaNZP/XT+cD/cujlvCNUsMT2U60WglBG+v7Ub2aZe7GnBmyMu9D
-         dyGOk4JoYsZ3pm3V0kKjC7ztLAgFu6GhymVBncbot0GrsVGO7+JBBO1Rs4bP2BtkVCti
-         D9GQ==
-X-Gm-Message-State: AOAM532Xoh+SOhPTkWxCs909AsME1KTU+07Xyoh3Jkl9uPrae0KNkARr
-        Sj5wofVZzx28TEo9pk+6t/aVHyJ9tZU=
-X-Google-Smtp-Source: ABdhPJzbBBecdy5QhjU2tX3Txym/7Vi04x8gb1l2UIP0+ATSbFEjq2fMotsvCSwrjJbcOiPU4GDJRw==
-X-Received: by 2002:a17:903:1c7:b0:141:e630:130c with SMTP id e7-20020a17090301c700b00141e630130cmr77666164plh.80.1639158133170;
-        Fri, 10 Dec 2021 09:42:13 -0800 (PST)
-Received: from ?IPv6:2620:0:1000:2514:85ed:ea0b:339:7b11? ([2620:0:1000:2514:85ed:ea0b:339:7b11])
-        by smtp.gmail.com with ESMTPSA id m10sm3114366pgv.75.2021.12.10.09.42.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 10 Dec 2021 09:42:12 -0800 (PST)
-Subject: Re: [PATCH V2] scsi:spraid: initial commit of Ramaxel spraid driver
-To:     Yanling Song <songyl@ramaxel.com>, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, yujiang@ramaxel.com
-References: <20211126073310.87683-1-songyl@ramaxel.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <b5002b52-3654-825c-f94f-f9ade708042e@acm.org>
-Date:   Fri, 10 Dec 2021 09:42:10 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S244661AbhLJRs6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Dec 2021 12:48:58 -0500
+Received: from sin.source.kernel.org ([145.40.73.55]:52386 "EHLO
+        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240884AbhLJRs5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2021 12:48:57 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 6BC45CE2C34;
+        Fri, 10 Dec 2021 17:45:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EF9DC00446;
+        Fri, 10 Dec 2021 17:45:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1639158318;
+        bh=h2+tsYbJOupsl375+icjqBHrs1cW+BMfkxLDD2UUNjc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PREYSS3TNe1zdeN12rSffhatLuWwieDm/d6zoldD+m6/eJKQUOmMQyMOlmpDi2eXr
+         S4qKoLFiIro1Cqh/SUVwQMR/+Y7USkq6r4/20tv8hmMY1s4OqntEeTXQUgEu1V75P9
+         kmGVRc2Jnt+J19PE3547Tt1XR5PMTMzqR1+kr3T0+f3aZSnQnMMNFQxbwTyI25BG54
+         HurnMHdeP/AJWMIOtrINJJ6TssmfEI6hSsP+vceGE/rX87Kl4lsjIT/SDpG5LQBOAO
+         xVdjd4I71vg8kO8qc/nsu2TLDpcjefIBLkkGt1ag3SIHHzt0ALntatttaKK27+NZYO
+         I+LqcuN0mcZrw==
+Date:   Fri, 10 Dec 2021 09:45:16 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-mmc@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v3 3/3] blk-crypto: show crypto capabilities in sysfs
+Message-ID: <YbOSLC9SNelqwD+g@sol.localdomain>
+References: <20211208013534.136590-1-ebiggers@kernel.org>
+ <20211208013534.136590-4-ebiggers@kernel.org>
+ <6ff4d074-7508-4f4c-de06-f36899668168@acm.org>
+ <YbKT/lcp6iZ+lD4n@sol.localdomain>
+ <YbL2uUqV0GWFOitE@kroah.com>
+ <cb29756b-8b21-5b4d-f107-b5573945d7ab@acm.org>
 MIME-Version: 1.0
-In-Reply-To: <20211126073310.87683-1-songyl@ramaxel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cb29756b-8b21-5b4d-f107-b5573945d7ab@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/25/21 11:33 PM, Yanling Song wrote:
-> +config RAMAXEL_SPRAID
-> +	tristate "Ramaxel spraid Adapter"
-> +	depends on PCI && SCSI && BLK_DEV_BSGLIB
-> +	depends on ARM64 || X86_64
+On Fri, Dec 10, 2021 at 09:29:41AM -0800, Bart Van Assche wrote:
+> (c) This encoding enforces the restriction that data unit sizes are a power of
+>     two. Is there anything fundamental in encryption that restricts data unit
+>     sizes to a power of two? I don't know the answer myself.
 
-Why is this driver restricted to ARM64 and X86_64 systems? What prevents
-compilation of this driver on other CPU architectures?
+Well, the data unit size has to evenly divide the size of the request (for
+requests that have an encryption context which specifies that data unit size).
+So if the data unit size was, say, 1536 bytes, then all requests would have to
+be multiples of 1536 bytes.  That has a factor of 3 in it, so it would be
+impossible to make any power-of-2 size request.  That sounds pretty impractical;
+it's hard to see how and why we would ever support such a thing.
 
-> +	help
-> +	  This driver supports Ramaxel spraid driver.
-
-The help text is too short. Please add one or two sentences about the interface
-type of this RAID controller (PCIe?) and also about the storage media supported
-by this RAID controller (SAS? SATA? any other?).
-
-> +struct spraid_bsg_request {
-> +	u32  msgcode;
-> +	u32 control;
-> +	union {
-> +		struct spraid_passthru_common_cmd admcmd;
-> +		struct spraid_ioq_passthru_cmd    ioqcmd;
-> +	};
-> +};
-
-Definitions like the above are required by user space software that uses the
-BSG interface and hence should be moved into a header file under include/uapi/.
-See e.g. include/uapi/scsi/scsi_bsg_ufs.h.
-
-Thanks,
-
-Bart.
+- Eric
