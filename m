@@ -2,79 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71772C433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Dec 2021 10:50:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CAB7C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Dec 2021 20:19:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230386AbhLKKuW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Dec 2021 05:50:22 -0500
-Received: from sin.source.kernel.org ([145.40.73.55]:53448 "EHLO
-        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229977AbhLKKuW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Dec 2021 05:50:22 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id C2591CE2F5A;
-        Sat, 11 Dec 2021 10:50:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EA3EC341C6;
-        Sat, 11 Dec 2021 10:50:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1639219817;
-        bh=oULXXNjKX1XrkECFAxfwuHzkSGlYBJuKuwLL+fq0ybU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lCuk5L40IwsyzelUSyACjQrrJkVNXgI7MGWK/RCMTsn5u/O9rRUVhOJ34Lqzsly46
-         6NBR8M2iFMo8pKARNaMazD1OxhxP/1QUcP2QbAWTGyX1r42djjr35cR1irS1793dDg
-         ihHd4lnlq3G2z6rhWuquWigmawyvNOrI6iYk4bEM=
-Date:   Sat, 11 Dec 2021 11:50:11 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Eric Biggers <ebiggers@kernel.org>, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 3/3] blk-crypto: show crypto capabilities in sysfs
-Message-ID: <YbSCYyAv1SmYy7mz@kroah.com>
-References: <20211208013534.136590-1-ebiggers@kernel.org>
- <20211208013534.136590-4-ebiggers@kernel.org>
- <6ff4d074-7508-4f4c-de06-f36899668168@acm.org>
- <YbKT/lcp6iZ+lD4n@sol.localdomain>
- <YbL2uUqV0GWFOitE@kroah.com>
- <cb29756b-8b21-5b4d-f107-b5573945d7ab@acm.org>
+        id S230243AbhLKUTU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Dec 2021 15:19:20 -0500
+Received: from xmbg8.mail.qq.com ([116.128.173.90]:60513 "EHLO
+        xmbg8.mail.qq.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229591AbhLKUTU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Dec 2021 15:19:20 -0500
+X-Greylist: delayed 3605 seconds by postgrey-1.27 at vger.kernel.org; Sat, 11 Dec 2021 15:19:20 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
+        s=s201512; t=1639253955;
+        bh=c7iaH1wEpw1P7r58WklCov2S3G3TXz1K2JhYBGQ3gN4=;
+        h=From:To:Cc:Subject:Date;
+        b=MS6kLW5E83ue+2v3yQY6F7eBABQmvl37opvi/cgF6hwnN3+MBu1EiRa59CNNk1Kzp
+         cVdeaUfnb0XZcqHSBJl7BqrG/OHih/ulpgmyDabpgjAY7WdYNibd5hs4B58mJMz5cX
+         TAZ0ognpnjroOXpMv1REFD80aMddmEfvTMcoqbM8=
+Received: from localhost.localdomain ([43.227.138.48])
+        by newxmesmtplogicsvrszc9.qq.com (NewEsmtp) with SMTP
+        id 3F02327D; Sun, 12 Dec 2021 02:15:48 +0800
+X-QQ-mid: xmsmtpt1639246548tmpnv3l5j
+Message-ID: <tencent_D3914A6FFF832049CC70B9411CAD1492E108@qq.com>
+X-QQ-XMAILINFO: M1Qh2uBElWf6sZ58vtZPlhFctg9RlJPqCKfR6ZWs/ZKZ2eh1LPsrea4jNgB9nr
+         K8+UveBsFAdjd4RS72SFxw3VVh2cV+rI8iBln4IkHIgr0SdBQN5yxx9zdVYj6eug2OXtrm4R3ofh
+         /hGQ6oGtYkResDigJZdJhVSW/GG7Jp+gkKqob/OJaiq8ZJrbDI69PAYq2cclMId/STgFUUOLkAgN
+         Ckmre+6NDXlxMx10p1hnnvc+31gAF/e/iH8JJlrMqfRh88nNUEvDqPdOzAz7KqKMH5t+SCBS+5O8
+         Iint8OIkz3fI5YOHpN81+LXMWNTDNCP5/DX753rqFn39J8iU9Ean9Gm4qdnkhIlY+42lg0EYeV+n
+         px+QKi9fWqGQdnO1Xo99arLhp2kpQWp94m1iLmjw+/Wxpf8Fro5YQYgIX0GYtdzlOc7ucYal//zP
+         Ob8hQnCr3bU6HVamUp3lWfJF+c/3x20jfkhET6gfNLjnHLZxjXIW7DxZwpSDf/gqu0jaem4amz+p
+         vcz1vKhG2NzoTpsw8GkdV4uCdBE2esDa4I17pyfiBe7o7wrvETGvdytmYqqDIAbsFUUMC1fJxQGZ
+         U266P6lpl60oVAkLPFa3JS9F6/laDpj4WG5ruGYBMxz4KT5fgggYzcrDb7ZCHBUdOvPVegyMKwGS
+         D+JjmEfC07qNqkqrFbW4tRsQuu7oM5nNt8+JqSLpyU/J79hR+8FouRAmSOan152bdP7g4AkJEvn9
+         vZF+Xw0O/vlILFF8zEKpSZ/ocgZXCUnWQpHF6lHxEoBbuidaoIXWJZ7cDi3Wz7u3pcxJqDYaV8pP
+         HrggQxZSv+oMgSCaRyiA1ZYs5NXxHDNFm0asSYuccaYbEFq0J8fj6xZzem1EqJw+IQfgR0nTZV1C
+         acliaqhNW8e0uJxDjUt9g=
+From:   xkernel <xkernel.wang@foxmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        xkernel <xkernel.wang@foxmail.com>
+Subject: [PATCH] scsi: ufs: ufshcd-pltfrm: check the return value of kstrdup()
+Date:   Sun, 12 Dec 2021 02:14:16 +0800
+X-OQ-MSGID: <20211211181416.1133-1-xkernel.wang@foxmail.com>
+X-Mailer: git-send-email 2.33.0.windows.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cb29756b-8b21-5b4d-f107-b5573945d7ab@acm.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Dec 10, 2021 at 09:29:41AM -0800, Bart Van Assche wrote:
-> On 12/9/21 10:42 PM, Greg Kroah-Hartman wrote:
-> > A single hex value makes sense to me.
-> 
-> Hi Greg,
-> 
-> I'm not enthusiast about this approach because:
-> (a) A single hex value can be confused with a number. Reporting a bitfield in
->     hex format is not sufficient to prevent confusion with a number.
+kstrdup() can return NULL if some internal memory errors happen, so it
+is better to check the return value of it.
 
-Each sysfs file has their own "units" or values, or whatever.  So a hex
-number or bitfield or something else is fine.
+Signed-off-by: xkernel <xkernel.wang@foxmail.com>
+---
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-Again, single value, no need to parse, is the key here.
-
-> (b) No other block layer sysfs attribute follows this encoding scheme.
-
-Then follow what they do.  Do they have multiple values in a single
-file?  If so, they are broken and we should change that.
-
-> (c) This encoding enforces the restriction that data unit sizes are a power of
->     two. Is there anything fundamental in encryption that restricts data unit
->     sizes to a power of two? I don't know the answer myself.
-
-Again, you all can pick the rules you want for this file, if you want to
-have bitfields, wonderful!  If you want to make it an enum, wonderful!
-
-thanks,
-
-greg k-h
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 8859c13..32e7bd3 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -89,9 +89,15 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ 			goto out;
+ 		}
+ 
++		clki->name = kstrdup(name, GFP_KERNEL);
++		if (!clki->name) {
++			ret = -ENOMEM;
++			devm_kfree(dev, clki);
++			goto out;
++		}
++
+ 		clki->min_freq = clkfreq[i];
+ 		clki->max_freq = clkfreq[i+1];
+-		clki->name = kstrdup(name, GFP_KERNEL);
+ 		if (!strcmp(name, "ref_clk"))
+ 			clki->keep_link_active = true;
+ 		dev_dbg(dev, "%s: min %u max %u name %s\n", "freq-table-hz",
+@@ -127,6 +133,10 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 		return -ENOMEM;
+ 
+ 	vreg->name = kstrdup(name, GFP_KERNEL);
++	if (!vreg->name) {
++		devm_kfree(dev, vreg);
++		return -ENOMEM;
++	}
+ 
+ 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
+ 	if (of_property_read_u32(np, prop_name, &vreg->max_uA)) {
+-- 
