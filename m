@@ -2,50 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE948C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Dec 2021 00:19:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 402A7C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Dec 2021 00:26:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345409AbhLKAWx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Dec 2021 19:22:53 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:28211 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243906AbhLKAWx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2021 19:22:53 -0500
+        id S1345458AbhLKA3w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Dec 2021 19:29:52 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:7352 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345450AbhLKA3v (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2021 19:29:51 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1639181957; x=1670717957;
+  t=1639182375; x=1670718375;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=1JMi8GF/GdmfDK5lGfdKv4uXnJ+Ek48oE7Kl6zbTBdA=;
-  b=e8RpIWfVzhqKUEvfr3oXMEZmtvsKi76QYg1AN88NfE/ZpcvKTFElwRmH
-   +0tkWePeaQuM+GnjS/4r3emPlRIACLYfv2Sp5GuTfWpCZ95qHCieTIuc7
-   cnIbQWPQMvdIA8Fz/7qhDOkVZ1+hJBMWtLXVx6ZtXYNyzzvQ5Zwe84e0+
-   xT16z7UbLNlzj4Cwq23rIrJPKX6YaVfPjIl1sHXF+gmr/acHeT7gPSd3v
-   uL5XMAQk0dZVp3UyEfECu5uaPBUj/j6xweC+wl+FQQXQCC1sH9haSzzGP
-   pDNlgW/iuNKiatMqY5slLGts/xmkTNL/ZOC3Se45yn/kgyEhdxhcFbajt
+  bh=94QWSZFzxy1R2Fj13jTboWw8zFWwlV1v+/xq4GrJQzk=;
+  b=UKR5FemQVLsqfvx80OUzcxstSwJ/3zNNGdaMCMrlgutI1OV2m1LlYv3T
+   MbwOmelblpySKjQ03jljDdRrwvYPDP0TgW7o7RMQMpYTkSjJ3wuKUiTS9
+   7eH0gqPYqjeIndE7u2UrfTmDaLHIuiarQHDp8SiGkOwmSIVLUgiKCTa0D
+   uw5mtARWHFWNIJAkMfHy5vg7DwInykJm34IsAEgWazHWM82zUDW8aISfV
+   z6lfVDuTHuvkDNvfpo+UpByVG5M1zeYaKCtazGx7jpPfaGcPQWioCwEbH
+   4S0u3ow92CVQ7M2hxYv91Z+AoCtE1wA0Qr+x5PMDiYNNsHDX5Pdcp+8aG
    A==;
 X-IronPort-AV: E=Sophos;i="5.88,197,1635177600"; 
-   d="scan'208";a="299825234"
+   d="scan'208";a="187981373"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Dec 2021 08:19:17 +0800
-IronPort-SDR: e0mzILDKO+ZMuM5q6yraFY9Q8eOO9T1/vbDLoTzybeJGhjill6oLdZWeaZn9L3PgRTp2BLPT4v
- kLzn4kDh2icU6MNF3PCJ6Z3er9u4aoot8laJtr1qAvHvGq8oKn95zfnWsMpQUYNLmZPnhLA3RS
- 5gL7/Or5iUXXlK2ntTMFhpuPJVXc+nIRus6L6JXCRx1mdSsQDnu8OGuo67IYs52VUDOqMS3O4w
- Iztf4xujB0Acf2iNT3/YlQIsptFBYXMPU+3TqphCNUa8xXdQjnKIAlHm5xVpDG+y0n+TPOhMWZ
- Ecm3cCqH29qowapoIWm/PY7z
+  by ob1.hgst.iphmx.com with ESMTP; 11 Dec 2021 08:26:14 +0800
+IronPort-SDR: vR8qUSvpUjht34UhyBcXRp+rNN8He3MAPcOC9vBrEjkAubbfOHpH2VzTUrRwWFvzf7V91URXau
+ ZFXPBC1P7yyocVOfYT1zGGOCs4Su+4vdElHoKEq9yrG2hkf+MPy3ydQhFTMUHySizFnhfi073K
+ C3XQNsPwZJQspM/YRRKqjDZqYDUjqX6jlWFsfAWGuMsqeUXqt4oQz6u7XvNFxVNsSgMX/O3hFn
+ y6nGQKfdAev0IlaaVM38ZJsot3uGM7ICVu8UhWsXFvzXsEopuP+gJ2aHg0aYVBBwfCRbtH1cO1
+ BPTCCTfFYBXH2054GKCr6kx1
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 15:53:48 -0800
-IronPort-SDR: 4cQS+VNPWl4cQLQBqjPWl/0Hm3fzu70UNNrUEokC/aUyp0ZHdf5oUIagyTpcdhTlz0k5K1T+4E
- jUumAO37vIAvLFAFxLd0pAm68Zoz5KjIk8D5ik5V4qoniF4hLIvlpdtaVPMOMz20BNpctHxuBw
- dG+XfY7XqRkD2OJthB423UJ8BotlqvjBOJbU9XlR1rS9gmlToKUVPgZZY2di9v7B4cVGyqTRKp
- vv/DEElZ/6Vi6RUY1ymBPw/MQh+0bzBDlz+a05aji77pBbpN9Blo9fuwZOfuZHiH90sZrPJTLW
- xr4=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 16:00:46 -0800
+IronPort-SDR: koOopTjy7BWjkd0+Xqfi9yQwmzV4DOBzAeWU/mPrcWiYSWAVeIrKPD0AQuoOUf5Y7wPOVu9bh6
+ heF4+nmBH0WqJ20JlCG3ZBnlbm6DIQYtb0agQGR5Y/Nq8tE3KWKQo5/sPVPG87vXqL3Kxyd6r/
+ wAAIeuU6jBSWCG+Q6CPa7tfES0Y4j5WNKBVjLOMDDBCdjqyiZv5xyJ3YTh1mne3JUUr1XYcXvF
+ yAUtu7cwMas+xE5bhSkxUUd9+YPT9hkkMI7Po0vgTjhTyXsoaPFUMjHTMhCIkH2U9bE0xGfJ9n
+ qos=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 16:19:17 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 16:26:16 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J9pKw5jVBz1Rwns
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2021 16:19:16 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J9pTz0Snhz1Rwnv
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2021 16:26:15 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -53,225 +53,192 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1639181955; x=1641773956; bh=1JMi8GF/GdmfDK5lGfdKv4uXnJ+Ek48oE7K
-        l6zbTBdA=; b=c2h2XqTFpf5K0TBduGv1sm90JBjjy2CxvJl2JyAk6xGsU8Fpblp
-        GBb+S1CNRLyEqFNngLOkqsFetESlUZpG6dnTXYQl1mqfJWPJ0TRNOPFz+gSHybB2
-        VbxHtSDbGzTgjPtgr22QJc2qHN2xkDa4uMWTqkeS2aaPD6zHEzsJgLVQ7L0rJG5+
-        ko35siN4tI+zeftJXSnEmMY+4Bnuc/XkBeqhrCpRGV0sMF4uahkP7Uqz535fnATZ
-        0YDxGjFpFhdBA7VMoyz3QHV9gvR6DTTfAhnvu3UT8XIcytW15Kq0J7vvpiY0fFB/
-        KBb+rP0KsGUqetd5I3nw7UI7wjFDK1XadDA==
+        1639182374; x=1641774375; bh=94QWSZFzxy1R2Fj13jTboWw8zFWwlV1v+/x
+        q4GrJQzk=; b=FsAzhQq/IocQRTrNM0JBss43bH7keAxiX4qYYhLXeGeNjT/RmWs
+        pfnJoXEBcPvjfU2gNc1sfNA9ExIs3B0C0uBVy39Vy+XAUQ/Eqjp2jL/907CQ8Dc/
+        4vUYMYEWA9DMlSnjPMtQR8ipPT34dbUnLBwczdZM0QBERl/MOVWIBAV5Ljv9CJmJ
+        B4KR0hmYwl4eaN7khMGez9FarxRus4v7aA7lL5vhkqdxg8NGUyiHWq3JY02GnynX
+        urPgNGn90virx3vESaAqZlMuDKlapKbfvqJ2Bu52ynCcb5whnzZIQzq2fC5fvRdg
+        6Da0PgU8jH41yFpjXgKmqjHe9E2KDCU+ITQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Q3QlQPnGmYWo for <linux-scsi@vger.kernel.org>;
-        Fri, 10 Dec 2021 16:19:15 -0800 (PST)
+        with ESMTP id Uc3rDhi4WqzJ for <linux-scsi@vger.kernel.org>;
+        Fri, 10 Dec 2021 16:26:14 -0800 (PST)
 Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J9pKs6pPYz1RtVG;
-        Fri, 10 Dec 2021 16:19:13 -0800 (PST)
-Message-ID: <f0f82067-f9d1-0f22-0202-ed11bf08b48c@opensource.wdc.com>
-Date:   Sat, 11 Dec 2021 09:19:12 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J9pTw6NKqz1RtVG;
+        Fri, 10 Dec 2021 16:26:12 -0800 (PST)
+Message-ID: <5d1b0c7c-90c6-8aba-3153-29df6eac865d@opensource.wdc.com>
+Date:   Sat, 11 Dec 2021 09:26:11 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.4.0
-Subject: Re: [PATCH] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
+Subject: Re: [PATCH v2] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, Ajish.Koshy@microchip.com
-Cc:     jinpu.wang@cloud.ionos.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, Viswas.G@microchip.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Niklas.Cassel@wdc.com, Vasanthalakshmi.Tharmarajan@microchip.com
-References: <1637940933-107862-1-git-send-email-john.garry@huawei.com>
- <PH0PR11MB51123148E4932FE1C64F8052EC669@PH0PR11MB5112.namprd11.prod.outlook.com>
- <a60318ef-dc19-a146-5ac3-16eae38b8c37@huawei.com>
- <Ya4PAu4Xj8UGHEV7@x1-carbon>
- <PH0PR11MB5112E2E7D00D95F32C86677AEC6E9@PH0PR11MB5112.namprd11.prod.outlook.com>
- <6ee6fe1b-e811-cada-0c18-78149c313358@huawei.com>
- <PH0PR11MB51120361EB6F6931CCE023D6EC709@PH0PR11MB5112.namprd11.prod.outlook.com>
- <f41d2bed-f320-1b70-7d63-fe77caa2534d@huawei.com>
- <6ed96184-6291-ad37-0241-00a5389293e6@opensource.wdc.com>
- <24a9ac51-ce60-b883-2284-023c703a7885@huawei.com>
- <5dfd6c4b-dd10-c9b5-7efb-82a11613fdd4@opensource.wdc.com>
- <a4b2bf44-ef21-6cc8-f79f-d0e41c8f037f@huawei.com>
+To:     John Garry <john.garry@huawei.com>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     Viswas.G@microchip.com, Ajish.Koshy@microchip.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <1639158706-18446-1-git-send-email-john.garry@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital
-In-Reply-To: <a4b2bf44-ef21-6cc8-f79f-d0e41c8f037f@huawei.com>
+In-Reply-To: <1639158706-18446-1-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/12/10 19:35, John Garry wrote:
-> On 09/12/2021 23:55, Damien Le Moal wrote:
->>> Earlier today it was the mount command which was hanging. From debugging
->>> that, I found that the very first SSP command when mounting is sent the
->>> HW successfully but no completion interrupt ever occurs there - I really
->>> don't know why. Other SSP commands complete successfully before this and
->>> after (TMFs in the error handling), including ones which have sgls.
->>>
->>> sda is a SAS drive, but I think SATA has the same issue - I was just
->>> looking at sda.
->>>
->>> One thing I noticed in the driver is that it uses mb() in between
->>> writing to the DMA memory and initiating the HW - I don't think mb is
->>> strong enough. However I don't think that is my issue - it wouldn't fail
->>> reliably if it was.
->> Weird. 
+On 2021/12/11 2:51, John Garry wrote:
+> The driver supports a "direct" mode of operation, where the SMP req frame
+> is directly copied into the command payload (and vice-versa for the SMP
+> resp).
 > 
-> Yeah, quite strange.
+> To get at the SMP req frame data in the scatterlist the driver uses
+> phys_to_virt() on the DMA mapped memory dma_addr_t . This is broken,
+> and subsequently crashes as follows when an IOMMU is enabled:
 > 
-> I will also note that these earlier logs are also red flags, which I 
-> have not investigated:
+>  Unable to handle kernel paging request at virtual address
+> ffff0000fcebfb00
+> 	...
+>  pc : pm80xx_chip_smp_req+0x2d0/0x3d0
+>  lr : pm80xx_chip_smp_req+0xac/0x3d0
+>  pm80xx_chip_smp_req+0x2d0/0x3d0
+>  pm8001_task_exec.constprop.0+0x368/0x520
+>  pm8001_queue_command+0x1c/0x30
+>  smp_execute_task_sg+0xdc/0x204
+>  sas_discover_expander.part.0+0xac/0x6cc
+>  sas_discover_root_expander+0x8c/0x150
+>  sas_discover_domain+0x3ac/0x6a0
+>  process_one_work+0x1d0/0x354
+>  worker_thread+0x13c/0x470
+>  kthread+0x17c/0x190
+>  ret_from_fork+0x10/0x20
+>  Code: 371806e1 910006d6 6b16033f 54000249 (38766b05)
+>  ---[ end trace b91d59aaee98ea2d ]---
+> note: kworker/u192:0[7] exited with preempt_count 1
 > 
-> [87.288239] sas: target proto 0x0 at 500e004aaaaaaa1f:0x10 not handled
-> [87.294793] sas: ex 500e004aaaaaaa1f phy16 failed to discover
+> Instead use kmap_atomic().
 > 
->> I do not have an arm host to test. Could it be that the card FW is
->> crashing ?
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+> Difference to v1:
+> - use kmap_atomic() in both locations
 > 
-> But the later TMFs seem to succeed, so I doubt it's crashing. I did 
-> wonder if it's going into some low-power/idle mode and just not 
-> responding, but not sure on that.
-> 
->> Can you recover from the above ? 
-> 
-> It never really recovers and is always caught up in some error handling.
-> 
->> Or do you have to power cycle for
->> the HDD to be accessible again ?
-> 
-> Power cycle is necessary to recover as we can't remove the driver when 
-> it is in error handling
-> 
->>
->> Other possibility may be an IRQ controller issue with the platform ?
->>
-> 
-> Highly unlikely. I did wonder if the interrupts are properly allocated 
-> and requested, and they look ok from /proc/interrupts
-> 
-> I also tried limiting the CPUs we bring up to a single CPU and so that 
-> we only use a single MSIx and a single HW queue, and now get this crash:
-> 
-> [7.775168] loop: module loaded
-> [7.783226] pm80xx 0000:04:00.0: Adding to iommu group 0
-> [7.795787] pm80xx 0000:04:00.0: pm80xx: driver version 0.1.40
-> [7.806789] pm80xx 0000:04:00.0: enabling device (0140 -> 0142)
-> [7.818910] :: pm8001_pci_alloc  530:Setting link rate to default value
-> [8.866618] scsi host0: pm80xx
-> [8.879056] pm80xx0:: process_oq  4169:Firmware Fatal error! Regval:0xc0f
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index b9f6d83ff380..bed4ab071de5 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -3053,7 +3053,6 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>  	struct smp_completion_resp *psmpPayload;
+>  	struct task_status_struct *ts;
+>  	struct pm8001_device *pm8001_dev;
+> -	char *pdma_respaddr = NULL;
+>  
+>  	psmpPayload = (struct smp_completion_resp *)(piomb + 4);
+>  	status = le32_to_cpu(psmpPayload->status);
+> @@ -3080,19 +3079,23 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>  		if (pm8001_dev)
+>  			atomic_dec(&pm8001_dev->running_req);
+>  		if (pm8001_ha->smp_exp_mode == SMP_DIRECT) {
+> +			struct scatterlist *sg_resp = &t->smp_task.smp_resp;
+> +			u8 *payload;
+> +			void *to;
+> +
+>  			pm8001_dbg(pm8001_ha, IO,
+>  				   "DIRECT RESPONSE Length:%d\n",
+>  				   param);
+> -			pdma_respaddr = (char *)(phys_to_virt(cpu_to_le64
+> -						((u64)sg_dma_address
+> -						(&t->smp_task.smp_resp))));
+> +			to = kmap_atomic(sg_page(sg_resp));
+> +			payload = to + sg_resp->offset;
+>  			for (i = 0; i < param; i++) {
+> -				*(pdma_respaddr+i) = psmpPayload->_r_a[i];
+> +				*(payload + i) = psmpPayload->_r_a[i];
+>  				pm8001_dbg(pm8001_ha, IO,
+>  					   "SMP Byte%d DMA data 0x%x psmp 0x%x\n",
+> -					   i, *(pdma_respaddr + i),
+> +					   i, *(payload + i),
+>  					   psmpPayload->_r_a[i]);
+>  			}
+> +			kunmap_atomic(to);
+>  		}
+>  		break;
+>  	case IO_ABORTED:
+> @@ -4236,14 +4239,14 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>  	struct sas_task *task = ccb->task;
+>  	struct domain_device *dev = task->dev;
+>  	struct pm8001_device *pm8001_dev = dev->lldd_dev;
+> -	struct scatterlist *sg_req, *sg_resp;
+> +	struct scatterlist *sg_req, *sg_resp, *smp_req;
+>  	u32 req_len, resp_len;
+>  	struct smp_req smp_cmd;
+>  	u32 opc;
+>  	struct inbound_queue_table *circularQ;
+> -	char *preq_dma_addr = NULL;
+> -	__le64 tmp_addr;
+>  	u32 i, length;
+> +	u8 *payload;
+> +	u8 *to;
+>  
+>  	memset(&smp_cmd, 0, sizeof(smp_cmd));
+>  	/*
+> @@ -4280,8 +4283,9 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>  		pm8001_ha->smp_exp_mode = SMP_INDIRECT;
+>  
+>  
+> -	tmp_addr = cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_req));
+> -	preq_dma_addr = (char *)phys_to_virt(tmp_addr);
+> +	smp_req = &task->smp_task.smp_req;
+> +	to = kmap_atomic(sg_page(smp_req));
+> +	payload = to + smp_req->offset;
+>  
+>  	/* INDIRECT MODE command settings. Use DMA */
+>  	if (pm8001_ha->smp_exp_mode == SMP_INDIRECT) {
+> @@ -4289,7 +4293,7 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>  		/* for SPCv indirect mode. Place the top 4 bytes of
+>  		 * SMP Request header here. */
+>  		for (i = 0; i < 4; i++)
+> -			smp_cmd.smp_req16[i] = *(preq_dma_addr + i);
+> +			smp_cmd.smp_req16[i] = *(payload + i);
+>  		/* exclude top 4 bytes for SMP req header */
+>  		smp_cmd.long_smp_req.long_req_addr =
+>  			cpu_to_le64((u64)sg_dma_address
+> @@ -4320,20 +4324,20 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>  		pm8001_dbg(pm8001_ha, IO, "SMP REQUEST DIRECT MODE\n");
+>  		for (i = 0; i < length; i++)
+>  			if (i < 16) {
+> -				smp_cmd.smp_req16[i] = *(preq_dma_addr+i);
+> +				smp_cmd.smp_req16[i] = *(payload+i);
 
-I have an old-ish Adaptec card that throws something similar at me if I connect
-a host-managed SMR drive to the HBA. After that message, nothing works at all so
-in my case I suspect that the FW gets into a really bad state/crashes.
+Maybe add spacs around the "+" as you did above ?
 
-> [8.885842] pm80xx0:: print_scratchpad_registers 
-> 4130:MSGU_SCRATCH_PAD_0: 0x40002000
-> [8.893661] pm80xx0:: print_scratchpad_registers 
-> 4132:MSGU_SCRATCH_PAD_1:0xc0f
-> [8.900958] pm80xx0:: print_scratchpad_registers 
-> 4134:MSGU_SCRATCH_PAD_2: 0x0
-> [8.908169] pm80xx0:: print_scratchpad_registers 
-> 4136:MSGU_SCRATCH_PAD_3: 0x30000000
-> [8.915986] pm80xx0:: print_scratchpad_registers 
-> 4138:MSGU_HOST_SCRATCH_PAD_0: 0x0
-> [8.923630] pm80xx0:: print_scratchpad_registers 
-> 4140:MSGU_HOST_SCRATCH_PAD_1: 0x0
-> [8.931274] pm80xx0:: print_scratchpad_registers 
-> 4142:MSGU_HOST_SCRATCH_PAD_2: 0x0
-> [8.938917] pm80xx0:: print_scratchpad_registers 
-> 4144:MSGU_HOST_SCRATCH_PAD_3: 0x0
-> [8.946561] pm80xx0:: print_scratchpad_registers 
-> 4146:MSGU_HOST_SCRATCH_PAD_4: 0x0
-> [8.954205] pm80xx0:: print_scratchpad_registers 
-> 4148:MSGU_HOST_SCRATCH_PAD_5: 0x0
-> [8.961849] pm80xx0:: print_scratchpad_registers 
-> 4150:MSGU_RSVD_SCRATCH_PAD_0: 0x0
-> [8.969493] pm80xx0:: print_scratchpad_registers 
-> 4152:MSGU_RSVD_SCRATCH_PAD_1: 0x0
-> [8.977143] Unable to handle kernel NULL pointer dereference at virtual 
-> address 0000000000000018
+>  				pm8001_dbg(pm8001_ha, IO,
+>  					   "Byte[%d]:%x (DMA data:%x)\n",
+>  					   i, smp_cmd.smp_req16[i],
+> -					   *(preq_dma_addr));
+> +					   *(payload));
+>  			} else {
+> -				smp_cmd.smp_req[i] = *(preq_dma_addr+i);
+> +				smp_cmd.smp_req[i] = *(payload+i);
 
-Is this with or without your phys_to_virt() dma/iommu fix patch ?
-I do remember seeing lots of crashes/hangs with that old-ish Adaptec HBA on x86
-host. I can try again to see if the errors are similar. I definitely hit the
-iommu problem with that card as I had to boot with iommu=off to, well, be able
-to boot :)
+same comment
 
-Next time I go to the lab, I will plug this card again to test with your iommu
-patch.
+>  				pm8001_dbg(pm8001_ha, IO,
+>  					   "Byte[%d]:%x (DMA data:%x)\n",
+>  					   i, smp_cmd.smp_req[i],
+> -					   *(preq_dma_addr));
+> +					   *(payload));
+>  			}
+>  	}
+> -
+> +	kunmap_atomic(to);
+>  	build_smp_cmd(pm8001_dev->device_id, smp_cmd.tag,
+>  				&smp_cmd, pm8001_ha->smp_exp_mode, length);
+>  	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &smp_cmd,
 
-> [8.994782] Mem abort info:
-> [8.997565]   ESR = 0x96000004
-> [9.006782]   EC = 0x25: DABT (current EL), IL = 32 bits
-> [9.018781]   SET = 0, FnV = 0
-> [9.021824]   EA = 0, S1PTW = 0
-> [9.030797]   FSC = 0x04: level 0 translation fault
-> [9.038794] Data abort info:
-> [9.041662]   ISV = 0, ISS = 0x00000004
-> [9.050781]   CM = 0, WnR = 0
-> [9.053737] [0000000000000018] user address but active_mm is swapper
-> [9.070782] Internal error: Oops: 96000004 [#1] PREEMPT SMP
-> [9.076343] Modules linked in:
-> [9.079387] CPU: 0 PID: 20 Comm: kworker/0:2 Not tainted 
-> 5.16.0-rc4-00002-ge23d68774178-dirty #328
-> [9.088333] Hardware name: Huawei D06 /D06, BIOS Hisilicon D06 UEFI RC0 - 
-> V1.16.01 03/15/2019
-> [9.096844] Workqueue: pm80xx pm8001_work_fn
-> [9.101108] pstate: 00400009 (nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-> [9.108057] pc : pm8001_work_fn+0x298/0x690
-> [9.112229] lr : process_one_work+0x1d0/0x354
-> [9.116574] sp : ffff800012d23d50
-> [9.119876] x29: ffff800012d23d50 x28: 0000000000000000 x27: 0000000000000000
-> [9.127000] x26: ffff8000117e8bc0 x25: ffff8000113aaeb0 x24: ffff00209d4b0000
-> [9.134124] x23: ffff0020ad23b280 x22: ffff00209d4b8000 x21: 0000000000000001
-> [9.141249] x20: 0000000000000000 x19: 0000000000000038 x18: 0000000000000000
-> [9.148373] x17: 4441505f48435441 x16: 5243535f44565352 x15: 000000052ff6b548
-> [9.155496] x14: 0000000000000018 x13: 0000000000000018 x12: 0000000000000000
-> [9.162620] x11: 0000000000000014 x10: 00000000000009a0 x9 : ffff002086ef6074
-> [9.169743] x8 : fefefefefefefeff x7 : 0000000000000018 x6 : ffff002086ef6074
-> [9.176867] x5 : 0000787830386d70 x4 : ffff00209d5e0000 x3 : 0000000000000000
-> [9.183990] x2 : ffff00209d5e0038 x1 : ffff800010a20120 x0 : 0000000000000051
-> [9.191114] Call trace:
-> [9.193547]  pm8001_work_fn+0x298/0x690
-> [9.197372]  process_one_work+0x1d0/0x354
-> [9.201369]  worker_thread+0x13c/0x470
-> [9.205105]  kthread+0x17c/0x190
-> [9.208321]  ret_from_fork+0x10/0x20
-> [9.211886] Code: 17fffff1 310006bf 54fffde0 f9400c54 (f9400e80)
-> [9.217968] ---[ end trace de649a9be2843866 ]---
-> [9.339812] pm80xx0:: process_oq  4169:Firmware Fatal error! Regval:0xc0f
-> [9.346602] pm80xx0:: print_scratchpad_registers 
-> 4130:MSGU_SCRATCH_PAD_0: 0x40002000
-> [9.354420] pm80xx0:: print_scratchpad_registers 
-> 4132:MSGU_SCRATCH_PAD_1:0xc0f
-> [9.361717] pm80xx0:: print_scratchpad_registers 
-> 4134:MSGU_SCRATCH_PAD_2: 0x0
-> [9.368927] pm80xx0:: print_scratchpad_registers 
-> 4136:MSGU_SCRATCH_PAD_3: 0x30000000
-> [9.376744] pm80xx0:: print_scratchpad_registers 
-> 4138:MSGU_HOST_SCRATCH_PAD_0: 0x0
-> [9.384388] pm80xx0:: print_scratchpad_registers 
-> 4140:MSGU_HOST_SCRATCH_PAD_1: 0x0
-> [9.392032] pm80xx0:: print_scratchpad_registers 
-> 4142:MSGU_HOST_SCRATCH_PAD_2: 0x0
-> [9.399676] pm80xx0:: print_scratchpad_registers 
-> 4144:MSGU_HOST_SCRATCH_PAD_3: 0x0
-> [9.407319] pm80xx0:: print_scratchpad_registers 
-> 4146:MSGU_HOST_SCRATCH_PAD_4: 0x0
-> [9.414963] pm80xx0:: print_scratchpad_registers 
-> 4148:MSGU_HOST_SCRATCH_PAD_5: 0x0
-> [9.422607] pm80xx0:: print_scratchpad_registers 
-> 4150:MSGU_RSVD_SCRATCH_PAD_0: 0x0
-> [9.430251] pm80xx0:: print_scratchpad_registers 
-> 4152:MSGU_RSVD_SCRATCH_PAD_1: 0x0
-> [   10.028906] Freeing initrd memory: 413456K
-> 
-> ...
-> 
-> Thanks,
-> John
-
+Otherwise, looks OK to me.
 
 -- 
 Damien Le Moal
