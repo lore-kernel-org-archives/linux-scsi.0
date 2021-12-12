@@ -2,105 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17D00C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 12 Dec 2021 16:06:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF87C433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 12 Dec 2021 22:32:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231585AbhLLQGW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 12 Dec 2021 11:06:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34816 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231533AbhLLQGW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Dec 2021 11:06:22 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01939C061714
-        for <linux-scsi@vger.kernel.org>; Sun, 12 Dec 2021 08:06:22 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id BC45EB80CF0
-        for <linux-scsi@vger.kernel.org>; Sun, 12 Dec 2021 16:06:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 7ABB9C341C6
-        for <linux-scsi@vger.kernel.org>; Sun, 12 Dec 2021 16:06:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639325179;
-        bh=jtd+8pQDS3obxHYfMS6o527wxu4xNW8UVQcQEmkxOqM=;
-        h=From:To:Subject:Date:From;
-        b=URmAYpMY0VIYFedq0WGHL0jZrtwB/rmUpniUMUZwGPSXRQ18t+G2Lwr5MMuHGvNIZ
-         kEKQ6b5/7l25skCmnwxkXUDgMZZjb3tb/uBA/iy03HMYjZhslQYVS6FCU4F940lDXB
-         KfpgQik5xnrUSAlfD1Lw3gwalJZ/RZhYLK+TGa8bnmjbe8GqBL9jWo86AUrP4WdEku
-         hfybNtmJYLoREWUKHRyDAqIEDxbywtnJuOewbYWkLUidFo5xOUK4dap4QJ+rbPPG4H
-         BTjLGvWMxD4MhwgNZkUQD00gwT66UYoFfsnHcrZzDmKuXpgB/O+TAX7IFCw4OhinH1
-         4YLPzpTtV36kQ==
-Received: by pdx-korg-bugzilla-2.web.codeaurora.org (Postfix, from userid 48)
-        id 5DC8760FF0; Sun, 12 Dec 2021 16:06:19 +0000 (UTC)
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215311] New: Support ATA command passthrough for iSCSI -> SATA
-Date:   Sun, 12 Dec 2021 16:06:19 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: enhancement
-X-Bugzilla-Who: nfxjfg@googlemail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression
-Message-ID: <bug-215311-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S229866AbhLLWcg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 12 Dec 2021 17:32:36 -0500
+Received: from mail-pj1-f47.google.com ([209.85.216.47]:45804 "EHLO
+        mail-pj1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229838AbhLLWcg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Dec 2021 17:32:36 -0500
+Received: by mail-pj1-f47.google.com with SMTP id f18-20020a17090aa79200b001ad9cb23022so11851208pjq.4;
+        Sun, 12 Dec 2021 14:32:36 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=YLklU4oFNgyfFShNVsJ5OR2Z3x8Eo2vngmE71GDUBdY=;
+        b=DAjLrqrxgWsHDOTrgTVvNoVNTf2gXJUy1T/26ABVenIDU5rpjmW6dVDeluP0YXS7qR
+         Pkj7qSEj8bW2jLODiKFOpWJmKNz4pKJgq/1as+gQo1uJCIhIKOj9xoi1805hqLxv3EZt
+         QonM4jntZ+bd7TLHYkAN+zT1Mi7HIWqiiJyk0VjvSwhGqjg0lvw3fZFbDOKadDPFFutK
+         yNq9RW28eMfRm3tvkpYUOTayml+ofhBSaq0ElH1ZfdEqWb7EjP/pZ0zFWaA5qDm7fOBv
+         vP0rhrJvAqT+bCVGAylMMjTlSZWv9wAmvHyKoNeQzSOw6NU3/KfVjJXk0piotuvmFprP
+         R6DA==
+X-Gm-Message-State: AOAM531wtQA4miHvkeSRdvZiRjKHscc3ms0J5TztYCICY7TIV0OneKH8
+        I5Lq6MsnaPulRMEDWFOSmkb4LuYYUeg=
+X-Google-Smtp-Source: ABdhPJwBdXx9HhcuFHhMCBuNtlvcNvUDDg6ymTawszqasA5PDaE/kixMuN6iWYC5UAT25hfvhfVW2Q==
+X-Received: by 2002:a17:902:7c8a:b0:143:bb4a:7bb3 with SMTP id y10-20020a1709027c8a00b00143bb4a7bb3mr92411776pll.46.1639348356102;
+        Sun, 12 Dec 2021 14:32:36 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id k91sm4827964pja.19.2021.12.12.14.32.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 12 Dec 2021 14:32:35 -0800 (PST)
+Message-ID: <89507f40-257d-9a17-231b-78460c3141a5@acm.org>
+Date:   Sun, 12 Dec 2021 14:32:33 -0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.2
+Subject: Re: [PATCH] scsi: ufs: ufshcd-pltfrm: check the return value of
+ kstrdup()
+Content-Language: en-US
+To:     xkernel <xkernel.wang@foxmail.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <tencent_D3914A6FFF832049CC70B9411CAD1492E108@qq.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <tencent_D3914A6FFF832049CC70B9411CAD1492E108@qq.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215311
+On 12/11/21 10:14, xkernel wrote:
+> kstrdup() can return NULL if some internal memory errors happen, so it
+> is better to check the return value of it.
+> 
+> Signed-off-by: xkernel <xkernel.wang@foxmail.com>
 
-            Bug ID: 215311
-           Summary: Support ATA command passthrough for iSCSI -> SATA
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 5.10.x
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: enhancement
-          Priority: P1
-         Component: SCSI
-          Assignee: linux-scsi@vger.kernel.org
-          Reporter: nfxjfg@googlemail.com
-        Regression: No
+Is xkernel the name of a person or the name of a robot? Patches should 
+be signed by a person even if these have been generated by a robot.
 
-This would be a nice feature for using smartctl over iSCSI (where the targe=
-t is
-a SATA disk). So far, this seems to be needed in the iSCSI target
-implementation or another part of the target's SCSI layer or SATA glue code=
-. I
-can actually send ATA passthrough commands (0x85) from a Linux initiator, j=
-ust
-the target rejects them as invalid or unknown.
+> +		clki->name = kstrdup(name, GFP_KERNEL);
+> +		if (!clki->name) {
+> +			ret = -ENOMEM;
+> +			devm_kfree(dev, clki);
+> +			goto out;
+> +		}
 
-Hints which subsystem or even source file would handle this would be nice t=
-oo,
-maybe I could attempt a patch (though somewhat unlikely I would succeed).
+Is the devm_kfree() call necessary? Is it useful?
 
-Does iSCSI+SATA really work by translating SCSI commands to ATA commands? C=
-razy
-world if that's correct.
+Thanks,
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are the assignee for the bug.=
+Bart.
