@@ -2,77 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF87C433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 12 Dec 2021 22:32:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3AF6C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Dec 2021 02:00:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229866AbhLLWcg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 12 Dec 2021 17:32:36 -0500
-Received: from mail-pj1-f47.google.com ([209.85.216.47]:45804 "EHLO
-        mail-pj1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229838AbhLLWcg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Dec 2021 17:32:36 -0500
-Received: by mail-pj1-f47.google.com with SMTP id f18-20020a17090aa79200b001ad9cb23022so11851208pjq.4;
-        Sun, 12 Dec 2021 14:32:36 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=YLklU4oFNgyfFShNVsJ5OR2Z3x8Eo2vngmE71GDUBdY=;
-        b=DAjLrqrxgWsHDOTrgTVvNoVNTf2gXJUy1T/26ABVenIDU5rpjmW6dVDeluP0YXS7qR
-         Pkj7qSEj8bW2jLODiKFOpWJmKNz4pKJgq/1as+gQo1uJCIhIKOj9xoi1805hqLxv3EZt
-         QonM4jntZ+bd7TLHYkAN+zT1Mi7HIWqiiJyk0VjvSwhGqjg0lvw3fZFbDOKadDPFFutK
-         yNq9RW28eMfRm3tvkpYUOTayml+ofhBSaq0ElH1ZfdEqWb7EjP/pZ0zFWaA5qDm7fOBv
-         vP0rhrJvAqT+bCVGAylMMjTlSZWv9wAmvHyKoNeQzSOw6NU3/KfVjJXk0piotuvmFprP
-         R6DA==
-X-Gm-Message-State: AOAM531wtQA4miHvkeSRdvZiRjKHscc3ms0J5TztYCICY7TIV0OneKH8
-        I5Lq6MsnaPulRMEDWFOSmkb4LuYYUeg=
-X-Google-Smtp-Source: ABdhPJwBdXx9HhcuFHhMCBuNtlvcNvUDDg6ymTawszqasA5PDaE/kixMuN6iWYC5UAT25hfvhfVW2Q==
-X-Received: by 2002:a17:902:7c8a:b0:143:bb4a:7bb3 with SMTP id y10-20020a1709027c8a00b00143bb4a7bb3mr92411776pll.46.1639348356102;
-        Sun, 12 Dec 2021 14:32:36 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id k91sm4827964pja.19.2021.12.12.14.32.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 12 Dec 2021 14:32:35 -0800 (PST)
-Message-ID: <89507f40-257d-9a17-231b-78460c3141a5@acm.org>
-Date:   Sun, 12 Dec 2021 14:32:33 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.2
-Subject: Re: [PATCH] scsi: ufs: ufshcd-pltfrm: check the return value of
- kstrdup()
-Content-Language: en-US
-To:     xkernel <xkernel.wang@foxmail.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <tencent_D3914A6FFF832049CC70B9411CAD1492E108@qq.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <tencent_D3914A6FFF832049CC70B9411CAD1492E108@qq.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        id S230523AbhLMCAD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 12 Dec 2021 21:00:03 -0500
+Received: from out203-205-221-231.mail.qq.com ([203.205.221.231]:39490 "EHLO
+        out203-205-221-231.mail.qq.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229436AbhLMCAC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 12 Dec 2021 21:00:02 -0500
+X-Greylist: delayed 114250 seconds by postgrey-1.27 at vger.kernel.org; Sun, 12 Dec 2021 21:00:02 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
+        s=s201512; t=1639360800;
+        bh=wzS2xWxHM5A13F3v6NonK+vEbuO0WWSCa0N4yWUEdjs=;
+        h=From:To:Cc:Subject:Date;
+        b=JEqCyDk2OAccZXFycP52Na49GQDeMj3jArhcxLAHFW0XAo9kWEuMsVyb/kr1vskGz
+         Sd5yqZWjSsHmswrSfGzt7JfWtz3yU5378VGXVwfXDeV4ts9XOb4O39HMtmKbJAlNhS
+         hbNuKfnUCo+yv3suJsfD5yS/wfdBPVFOYNhwTesw=
+X-QQ-FEAT: oHWrrGTW1dB69m49duS3mdhuyhfj4A9h
+X-QQ-SSF: 00000000000000F000000000000000Z
+X-QQ-XMAILINFO: NwIPvWX4YDagat/12IputSOyaxDs/aXfb8URbK/DtpGvQV74EVVAF2nwQYH53N
+         THujscHl/HKbOon3MEbX94+kIXbIVK/KDF7EMreHOghpuW8cY4GtCqQBLyEgDWRNWNFHzt3ohG1x9
+         a9EEu81s0VrmwRrJFaTzJHrVkkSkv+BSh3UhhAWTyL2ORlWepzf4zoe/Qoe7i6t8ofF2FC9ye5DrE
+         mtkxecfs88E+4ulp6bZQUOCHSoz0V9yqjLrj0h45Qk4yF1FStkzRbMPXf017Aarz/sfX5Kkn5C+7z
+         aUOMWwJJamjd/m3++isc5HVWp+W2bzJsX+9NW+9J+ggAvxfb4pnksEb+fiJlMJ4zWDRF3INYDP26h
+         7S6uka05Uz+g39Nh47UDjbaLx7IKgONHJAZtFp6Vf8WAIHYzzEfMboUPGwnfhrq7atPMYuTb2pZNb
+         pqQX0BGUkpIioHCPt/xf/TpAvsvegoRKW5Rm2obnMnTmDyio670szqwJrnGdP1SBmw/enAPWWdfJ4
+         1x2EQYTmRuFEkEqx4rdSQ7dJujV0x+h7hGF24VN9OlU570BmGLtxf+KNxfGlx8VoNEl9vgqCeAgG9
+         rq8F6efj+T86uLNSG6iVekSiNmD6/xCkwa/6IuLwkbOMRKsSbJTeXv3XoJUBCbM80HnvPtmna/2WB
+         rZHPaROqk6N9JZ+IvGCA8BVw9uXtFqqs9wXFuljFMmKrY3Pkt1zX0lmPpOCIw9bi6kt9pU9j1rr/N
+         r5grxPeBSUpoiaTm5PqJG4L3PxSjzR79LKQju+6w2czono18D82uVBNmUme1Z4Rx4B80aGZDNyIRL
+         TcyAWAX6xiVSAmTxdRiLfUi6RFrwt2OR6fOcT8N2IdySpQryCxVp1R8=
+X-HAS-ATTACH: no
+X-QQ-BUSINESS-ORIGIN: 2
+X-Originating-IP: 223.75.155.17
+X-QQ-STYLE: 
+X-QQ-mid: webmail813t1639360609t9919530
+From:   "=?ISO-8859-1?B?WGlhb2tlIFdhbmc=?=" <xkernel.wang@foxmail.com>
+To:     "=?ISO-8859-1?B?QmFydCBWYW4gQXNzY2hl?=" <bvanassche@acm.org>,
+        "=?ISO-8859-1?B?amVqYg==?=" <jejb@linux.ibm.com>,
+        "=?ISO-8859-1?B?bWFydGluLnBldGVyc2Vu?=" <martin.petersen@oracle.com>
+Cc:     "=?ISO-8859-1?B?bGludXgtc2NzaQ==?=" <linux-scsi@vger.kernel.org>,
+        "=?ISO-8859-1?B?bGludXgta2VybmVs?=" <linux-kernel@vger.kernel.org>,
+        "=?ISO-8859-1?B?YWxpbS5ha2h0YXI=?=" <alim.akhtar@samsung.com>,
+        "=?ISO-8859-1?B?YXZyaS5hbHRtYW4=?=" <avri.altman@wdc.com>
+Subject: Re: [PATCH] scsi: ufs: ufshcd-pltfrm: check the return value of kstrdup()
+Mime-Version: 1.0
+Content-Type: text/plain;
+        charset="ISO-8859-1"
+Content-Transfer-Encoding: base64
+Date:   Mon, 13 Dec 2021 09:56:49 +0800
+X-Priority: 3
+Message-ID: <tencent_29819C31A7E71A71105124840B2855FD970A@qq.com>
+X-QQ-MIME: TCMime 1.0 by Tencent
+X-Mailer: QQMail 2.x
+X-QQ-Mailer: QQMail 2.x
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/11/21 10:14, xkernel wrote:
-> kstrdup() can return NULL if some internal memory errors happen, so it
-> is better to check the return value of it.
-> 
-> Signed-off-by: xkernel <xkernel.wang@foxmail.com>
+T24gMTIvMTIvMjEgMjI6MzIsIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToKPiBJcyB4a2VybmVs
+IHRoZSBuYW1lIG9mIGEgcGVyc29uIG9yIHRoZSBuYW1lIG9mIGEgcm9ib3Q/IFBhdGNoZXMg
+c2hvdWxkIAo+IGJlIHNpZ25lZCBieSBhIHBlcnNvbiBldmVuIGlmIHRoZXNlIGhhdmUgYmVl
+biBnZW5lcmF0ZWQgYnkgYSByb2JvdC4KPgo+ID4gKwkJY2xraS0+bmFtZSA9IGtzdHJkdXAo
+bmFtZSwgR0ZQX0tFUk5FTCk7Cj4gPiArCQlpZiAoIWNsa2ktPm5hbWUpIHsKPiA+ICsJCQly
+ZXQgPSAtRU5PTUVNOwo+ID4gKwkJCWRldm1fa2ZyZWUoZGV2LCBjbGtpKTsKPiA+ICsJCQln
+b3RvIG91dDsKPiA+ICsJCX0KPgo+IElzIHRoZSBkZXZtX2tmcmVlKCkgY2FsbCBuZWNlc3Nh
+cnk/IElzIGl0IHVzZWZ1bD8KCk5vdGU6IHRoZSBsYXN0IG1haWwgc2VlbXMgZmFpbCBiZWNh
+dXNlIG9mIHRoZSBodG1sIGNvbnRlbnQuCgpTb3JyeSBhYm91dCB0aGF0LCB4a2VybmVsIGlz
+IG15IEVuZ2xpc2ggbmFtZSBJIG5hbWVkIG15c2VsZiwgbXkgZnVsbApuYW1lIGluIENoaW5l
+c2UgZm9ybWF0IGlzICJYaWFva2UgV2FuZyIuIFRoYW5rIHlvdSBmb3IgeW91cgpzdWdnZXN0
+aW9uLCBJIHdpbGwgY29uc2lkZXIgdXNpbmcgbXkgb2ZmaWNpYWwgbmFtZSBpbiB0aGUgZnV0
+dXJlLgoKY2xraSBpcyBhbGxvY2F0ZWQgb24gYWJvdmUgb2Yga3N0cmR1cCgpLCBsaW5lIDg2
+LTkwLCBhbmQgaWYgY2xraSBpcyBOVUxMCndpbGwgcmV0dXJuIC1FTk9NRU0gd2hpY2ggaXMg
+dGhlIHNhbWUgcmV0dXJuIHZhbHVlIHdpdGggdGhlIHBhdGNoLiBTbwpJIHRoaW5rIGNsa2kg
+c2hvdWxkIGJlIGZyZWVkIHRvIHByZXZlbnQgcG90ZW50aWFsIG1lbW9yeSBsZWFrOgo+CQlj
+bGtpID0gZGV2bV9remFsbG9jKGRldiwgc2l6ZW9mKCpjbGtpKSwgR0ZQX0tFUk5FTCk7Cj4J
+CWlmICghY2xraSkgewo+CQkJcmV0ID0gLUVOT01FTTsKPgkJCWdvdG8gb3V0Owo+CQl9Cgp2
+cmVnIGlzIGluIHNpbWlsYXIgY2FzZS4=
 
-Is xkernel the name of a person or the name of a robot? Patches should 
-be signed by a person even if these have been generated by a robot.
-
-> +		clki->name = kstrdup(name, GFP_KERNEL);
-> +		if (!clki->name) {
-> +			ret = -ENOMEM;
-> +			devm_kfree(dev, clki);
-> +			goto out;
-> +		}
-
-Is the devm_kfree() call necessary? Is it useful?
-
-Thanks,
-
-Bart.
