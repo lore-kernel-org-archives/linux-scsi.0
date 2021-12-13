@@ -2,212 +2,174 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47B24C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Dec 2021 22:39:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B12BC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Dec 2021 23:01:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243672AbhLMWjG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Dec 2021 17:39:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42536 "EHLO
+        id S237816AbhLMXBD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Dec 2021 18:01:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243648AbhLMWjF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Dec 2021 17:39:05 -0500
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA80EC061574
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2021 14:39:04 -0800 (PST)
-Received: by mail-pf1-x434.google.com with SMTP id n26so16238520pff.3
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2021 14:39:04 -0800 (PST)
+        with ESMTP id S237229AbhLMXBC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Dec 2021 18:01:02 -0500
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19CD0C061574;
+        Mon, 13 Dec 2021 15:01:02 -0800 (PST)
+Received: by mail-wr1-x431.google.com with SMTP id q3so29556449wru.5;
+        Mon, 13 Dec 2021 15:01:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=0MT/vHE1ydzFe9PN6Wp2UZVjSoHcS4dYEtLHlHKEEAM=;
-        b=YGvnvAuqro151EfwgJKAALvz+kJyqgCsgO5oXMZXTc4McLwsP+2Tt2nK/DxNVgXIAe
-         88rUvAL023ldcNApa6EZUZZQCMnNDs8r5Ga8v5HlbnaHudKIDV+KjxVwtgN7uOXFaIbQ
-         a7dRHSLnBFZJQxNZRAjXvCiVr8o65n5n0D94g=
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Ephq20rQt+MOngFtWVtlg58TGs+92rcxlnvsoir2Wzs=;
+        b=nPstnvqAz4ADugRknu1btzvImsrQCxQ7Pzz6SqBDP739cRCnOX9JpmB97V1i17T4d6
+         nroPOYJg5SXIamySda/Z3Rxs/+g/QjftOA8uZso7drWOScZqTrgFPNfgcv/nLpjiF5hR
+         z/gNDuUjviON9CrLzb2ZQuIdm61jXwlqYTvSrKpstW/4u9ngBtKcGq1Mz/fBqVVOiobS
+         rbcZKUn3cEMqOUeP8DNP9H0W6sdOhvCC237jThL3aVNQmpxUPgcP4E4r83w+9E468vgX
+         Ebno+MN8h6vsBorqmv/fwy6Bo2xgrAegyoJ0sLQ8L/ONimfiOkEPeWcFvBi7NQcBLlsJ
+         qfXA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=0MT/vHE1ydzFe9PN6Wp2UZVjSoHcS4dYEtLHlHKEEAM=;
-        b=PPkRr1LczIPguTrOQC/jneuCEYz+BxrmEGxdYucZu8pGew7i/1Lff96pIWufh1pdtn
-         x+gqG0WEVzbQal/tJJIK+v+NmkqKemxmnVbafsEs5ZJOZ/UDCSYdJOYBrcU7qk5FJviX
-         gfHt0C8nr3URNZCS5uu2FYb5ROG+ogZspP4NfsTjFt4HEc/3MTFng/t2D8RJqTjfJ2ry
-         /AgN3mavt4DKJx3LnXK/DnK+VKHx+kGSm3VaUVa2GB6UEIIdo07IWu5aGXGiGhllU5Tf
-         3b+OyOFvlX9ikDCqIZRDggc7XCYiBDUrFJ5MpXCdjgzjvrCw0gBbJlEpoN5fCK9cFftb
-         3Lyw==
-X-Gm-Message-State: AOAM5338CO51XfL+qAzqn35obaOMIlofhgomsdmISB5INnFYOWZpxcQW
-        JXXtrKBlFk2HYfmmyu3CYJRhoudJiO+c9g==
-X-Google-Smtp-Source: ABdhPJyA0kifmlmp09ULzUkVNS3B5zsL46YKdL6X5gUXjzYwPTvQUN8jwmFIq+nNLfPBsfjYFryetQ==
-X-Received: by 2002:aa7:9a04:0:b0:4a2:ebcd:89a with SMTP id w4-20020aa79a04000000b004a2ebcd089amr981317pfj.60.1639435144258;
-        Mon, 13 Dec 2021 14:39:04 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id t13sm13181529pfl.98.2021.12.13.14.39.03
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Ephq20rQt+MOngFtWVtlg58TGs+92rcxlnvsoir2Wzs=;
+        b=vx/DvhoECRfmk3xyIrRgRV4m3k1cI+Jw3+tBdcmyKwQLWmsysI6UOICJHhFYb1a8lx
+         22QGXzQFaSPWDT0yC9Ur6ObB+VlGRBgf7kJDj4par+7+UvRYQgGEy6E9/j60fYiwBKDI
+         TKq5FWiEjvF1XADx6ZWU1HMLgLrrv+uweaZC2BJrX1E5j61fWlvswruwDMKzsOw7r5eZ
+         ZD55YL2wH9yxbw6hjgGQaQd+b1hRHAqYRnCA5fZPaLmH+eQOD7JWqOY5hyyzag3rXx4n
+         dXxwh9E2tJ6OMVlYkBQ5K4eWnCA4KK/OpJae0rdyntPdThXJTH1pf28Dx00id9ZNlnDx
+         ExJA==
+X-Gm-Message-State: AOAM533+SJND+ePSCFf1HcjIyQ8ytoS0s9075t67YT2PX5jDGZOHfuqC
+        7k9DpPhRJdskC0iTXe74V8U=
+X-Google-Smtp-Source: ABdhPJzfPUaWZPuCTRu1sm4F76wU/r8aqtJ7gNV47GaoyKf5G1YNNvGbWhnrJBIoGtrMkUw9gqI69w==
+X-Received: by 2002:adf:c5d1:: with SMTP id v17mr1498475wrg.571.1639436460592;
+        Mon, 13 Dec 2021 15:01:00 -0800 (PST)
+Received: from ubuntu-laptop.speedport.ip (p200300e94714d5665ac960fd9f7a69e0.dip0.t-ipconnect.de. [2003:e9:4714:d566:5ac9:60fd:9f7a:69e0])
+        by smtp.gmail.com with ESMTPSA id q26sm12025586wrc.39.2021.12.13.15.00.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Dec 2021 14:39:03 -0800 (PST)
-From:   Kees Cook <keescook@chromium.org>
-To:     linux-hardening@vger.kernel.org
-Cc:     Kees Cook <keescook@chromium.org>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 15/17] scsi: lpfc: Use struct_group() to initialize struct lpfc_cgn_info
-Date:   Mon, 13 Dec 2021 14:33:29 -0800
-Message-Id: <20211213223331.135412-16-keescook@chromium.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20211213223331.135412-1-keescook@chromium.org>
-References: <20211213223331.135412-1-keescook@chromium.org>
+        Mon, 13 Dec 2021 15:01:00 -0800 (PST)
+From:   Bean Huo <huobean@gmail.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org, daejun7.park@samsung.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v1] scsi: ufs: Fix deadlock issue in ufshcd_wait_for_doorbell_clr()
+Date:   Tue, 14 Dec 2021 00:00:45 +0100
+Message-Id: <20211213230045.492994-1-huobean@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4872; h=from:subject; bh=b7Gop8YkIsZSGaBsGHz+xW8brMLq6H3enGBmwNbBTro=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBht8o6LbqKmAkUNnfmlrw0b7QUEamBgQovX0V9gsVd 8MY1kVOJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYbfKOgAKCRCJcvTf3G3AJtVLD/ 4k62/NuNCnXqabCvHr68q+AQ5zUtY0Xz+S6EU7HgUfTO6Qj6pdWIgl8Mai8sy4Taa+YO0pHT6Gq+hl HTnevazuz76atJOM+gpoVzm0wMuthUzVGIGM9nEv+tB97wdj60ofuJDubae4PNalUR/ttfanHLDefZ JX8TPos1tsLQhPIaKPabzrILLazhZfO0ZagZXPvF45qVuRzLBzjZG0jR+LIvNEw0kuSGcgrFgNnYND 9Lb6hWwrfE8wqnKpcO/JliZ7eXMe8tfVaeZ7KgKwqgCuOMVvSuQJ+bygomAZCCT2jluKGyBpy41bf5 4AhWN1xssa9laAbpaK2Ma/5cMhcWSmHrDZ4gkqHrtpufJjetO1nTDTQRjNMPHlZWx7PUZZd+Gzyb6n lh6bZpRFit8dBAutA2Mi76C0o/qMZxe4L2BumDDP/ycfl5DIzRYgKreOS7iYuatlSM2EqbT3K8+j0f QqxtlMHGeq/MKQ0jCUTP/cztyBExbc5PMJBJnx/K9voPhhTuTT71YXFG4wIpBFTJRoVTgANamLxDAk rA7jLMZV+mzP5jLjaZn5SCyhXb5h3/IHo3wTpYMHM6YmQXK1tj8aLJwk0doq88iT5pdE1r7bfbNNj2 IvJvSrVVaBmMQAg1qmmgy47/ukFQ3EgACgaCJvChAxaaCJpvq8brRmRGhUNQ==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memset(), avoid intentionally writing across
-neighboring fields.
+From: Bean Huo <beanhuo@micron.com>
 
-Add struct_group() to mark "stat" region of struct lpfc_cgn_info that
-should be initialized to zero, and refactor the "data" region memset()
-to wipe everything up to the cgn_stats region.
+Call shost_for_each_device() with host->host_lock is held will cause
+a deadlock situation, which will cause the system to stall (the log
+as follow). Fix this issue by narrowing the scope of the lock.
 
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
+stalls on CPUs/tasks:
+all trace:
+__switch_to+0x120/0x170
+0xffff800011643998
+ask dump for CPU 5:
+ask:kworker/u16:2   state:R  running task     stack:    0 pid:   80 ppid:     2 flags:0x0000000a
+orkqueue: events_unbound async_run_entry_fn
+all trace:
+__switch_to+0x120/0x170
+0x0
+ask dump for CPU 6:
+ask:kworker/u16:6   state:R  running task     stack:    0 pid:  164 ppid:     2 flags:0x0000000a
+orkqueue: events_unbound async_run_entry_fn
+all trace:
+__switch_to+0x120/0x170
+0xffff54e7c4429f80
+ask dump for CPU 7:
+ask:kworker/u16:4   state:R  running task     stack:    0 pid:  153 ppid:     2 flags:0x0000000a
+orkqueue: events_unbound async_run_entry_fn
+all trace:
+__switch_to+0x120/0x170
+blk_mq_run_hw_queue+0x34/0x110
+blk_mq_sched_insert_request+0xb0/0x120
+blk_execute_rq_nowait+0x68/0x88
+blk_execute_rq+0x4c/0xd8
+__scsi_execute+0xec/0x1d0
+scsi_vpd_inquiry+0x84/0xf0
+scsi_get_vpd_buf+0x34/0xb8
+scsi_attach_vpd+0x34/0x140
+scsi_probe_and_add_lun+0xa6c/0xab8
+__scsi_scan_target+0x438/0x4f8
+scsi_scan_channel+0x6c/0xa8
+scsi_scan_host_selected+0xf0/0x150
+do_scsi_scan_host+0x88/0x90
+scsi_scan_host+0x1b4/0x1d0
+ufshcd_async_scan+0x248/0x310
+async_run_entry_fn+0x30/0x178
+process_one_work+0x1e8/0x368
+worker_thread+0x40/0x478
+kthread+0x174/0x180
+ret_from_fork+0x10/0x20
+
+Fixes: 8d077ede48c1 ("scsi: ufs: Optimize the command queueing code")
+Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/lpfc/lpfc.h      | 90 +++++++++++++++++------------------
- drivers/scsi/lpfc/lpfc_init.c |  4 +-
- 2 files changed, 46 insertions(+), 48 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 3faadcfcdcbb..4878c94761f9 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -496,52 +496,50 @@ struct lpfc_cgn_info {
- 	__le32   cgn_alarm_hr[24];
- 	__le32   cgn_alarm_day[LPFC_MAX_CGN_DAYS];
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 6dd517267f1b..15333a327b93 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1099,19 +1099,21 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+ 	ktime_t start;
  
--	/* Start of congestion statistics */
--	uint8_t  cgn_stat_npm;		/* Notifications per minute */
+ 	ufshcd_hold(hba, false);
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	/*
+ 	 * Wait for all the outstanding tasks/transfer requests.
+ 	 * Verify by checking the doorbell registers are clear.
+ 	 */
+ 	start = ktime_get();
+ 	do {
++		spin_lock_irqsave(hba->host->host_lock, flags);
+ 		if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
+ 			ret = -EBUSY;
++			spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 			goto out;
+ 		}
 -
--	/* Start Time */
--	uint8_t  cgn_stat_month;
--	uint8_t  cgn_stat_day;
--	uint8_t  cgn_stat_year;
--	uint8_t  cgn_stat_hour;
--	uint8_t  cgn_stat_minute;
--	uint8_t  cgn_pad2[2];
--
--	__le32   cgn_notification;
--	__le32   cgn_peer_notification;
--	__le32   link_integ_notification;
--	__le32   delivery_notification;
--
--	uint8_t  cgn_stat_cgn_month; /* Last congestion notification FPIN */
--	uint8_t  cgn_stat_cgn_day;
--	uint8_t  cgn_stat_cgn_year;
--	uint8_t  cgn_stat_cgn_hour;
--	uint8_t  cgn_stat_cgn_min;
--	uint8_t  cgn_stat_cgn_sec;
--
--	uint8_t  cgn_stat_peer_month; /* Last peer congestion FPIN */
--	uint8_t  cgn_stat_peer_day;
--	uint8_t  cgn_stat_peer_year;
--	uint8_t  cgn_stat_peer_hour;
--	uint8_t  cgn_stat_peer_min;
--	uint8_t  cgn_stat_peer_sec;
--
--	uint8_t  cgn_stat_lnk_month; /* Last link integrity FPIN */
--	uint8_t  cgn_stat_lnk_day;
--	uint8_t  cgn_stat_lnk_year;
--	uint8_t  cgn_stat_lnk_hour;
--	uint8_t  cgn_stat_lnk_min;
--	uint8_t  cgn_stat_lnk_sec;
--
--	uint8_t  cgn_stat_del_month; /* Last delivery notification FPIN */
--	uint8_t  cgn_stat_del_day;
--	uint8_t  cgn_stat_del_year;
--	uint8_t  cgn_stat_del_hour;
--	uint8_t  cgn_stat_del_min;
--	uint8_t  cgn_stat_del_sec;
--#define LPFC_CGN_STAT_SIZE	48
--#define LPFC_CGN_DATA_SIZE	(sizeof(struct lpfc_cgn_info) -  \
--				LPFC_CGN_STAT_SIZE - sizeof(uint32_t))
-+	struct_group(cgn_stat,
-+		uint8_t  cgn_stat_npm;		/* Notifications per minute */
+ 		tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
 +
-+		/* Start Time */
-+		uint8_t  cgn_stat_month;
-+		uint8_t  cgn_stat_day;
-+		uint8_t  cgn_stat_year;
-+		uint8_t  cgn_stat_hour;
-+		uint8_t  cgn_stat_minute;
-+		uint8_t  cgn_pad2[2];
-+
-+		__le32   cgn_notification;
-+		__le32   cgn_peer_notification;
-+		__le32   link_integ_notification;
-+		__le32   delivery_notification;
-+
-+		uint8_t  cgn_stat_cgn_month; /* Last congestion notification FPIN */
-+		uint8_t  cgn_stat_cgn_day;
-+		uint8_t  cgn_stat_cgn_year;
-+		uint8_t  cgn_stat_cgn_hour;
-+		uint8_t  cgn_stat_cgn_min;
-+		uint8_t  cgn_stat_cgn_sec;
-+
-+		uint8_t  cgn_stat_peer_month; /* Last peer congestion FPIN */
-+		uint8_t  cgn_stat_peer_day;
-+		uint8_t  cgn_stat_peer_year;
-+		uint8_t  cgn_stat_peer_hour;
-+		uint8_t  cgn_stat_peer_min;
-+		uint8_t  cgn_stat_peer_sec;
-+
-+		uint8_t  cgn_stat_lnk_month; /* Last link integrity FPIN */
-+		uint8_t  cgn_stat_lnk_day;
-+		uint8_t  cgn_stat_lnk_year;
-+		uint8_t  cgn_stat_lnk_hour;
-+		uint8_t  cgn_stat_lnk_min;
-+		uint8_t  cgn_stat_lnk_sec;
-+
-+		uint8_t  cgn_stat_del_month; /* Last delivery notification FPIN */
-+		uint8_t  cgn_stat_del_day;
-+		uint8_t  cgn_stat_del_year;
-+		uint8_t  cgn_stat_del_hour;
-+		uint8_t  cgn_stat_del_min;
-+		uint8_t  cgn_stat_del_sec;
-+	);
+ 		tr_pending = ufshcd_pending_cmds(hba);
+ 		if (!tm_doorbell && !tr_pending) {
+ 			timeout = false;
+@@ -1120,7 +1122,6 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+ 			break;
+ 		}
  
- 	__le32   cgn_info_crc;
- #define LPFC_CGN_CRC32_MAGIC_NUMBER	0x1EDC6F41
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 2fe7d9d885d9..c18000d05379 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -13483,7 +13483,7 @@ lpfc_init_congestion_buf(struct lpfc_hba *phba)
- 	phba->cgn_evt_minute = 0;
- 	phba->hba_flag &= ~HBA_CGN_DAY_WRAP;
+-		spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 		schedule();
+ 		if (ktime_to_us(ktime_sub(ktime_get(), start)) >
+ 		    wait_timeout_us) {
+@@ -1132,7 +1133,6 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+ 			 */
+ 			do_last_check = true;
+ 		}
+-		spin_lock_irqsave(hba->host->host_lock, flags);
+ 	} while (tm_doorbell || tr_pending);
  
--	memset(cp, 0xff, LPFC_CGN_DATA_SIZE);
-+	memset(cp, 0xff, offsetof(struct lpfc_cgn_info, cgn_stat));
- 	cp->cgn_info_size = cpu_to_le16(LPFC_CGN_INFO_SZ);
- 	cp->cgn_info_version = LPFC_CGN_INFO_V3;
- 
-@@ -13542,7 +13542,7 @@ lpfc_init_congestion_stat(struct lpfc_hba *phba)
- 		return;
- 
- 	cp = (struct lpfc_cgn_info *)phba->cgn_i->virt;
--	memset(&cp->cgn_stat_npm, 0, LPFC_CGN_STAT_SIZE);
-+	memset(&cp->cgn_stat, 0, sizeof(cp->cgn_stat));
- 
- 	ktime_get_real_ts64(&cmpl_time);
- 	time64_to_tm(cmpl_time.tv_sec, 0, &broken);
+ 	if (timeout) {
+@@ -1142,7 +1142,6 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+ 		ret = -EBUSY;
+ 	}
+ out:
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	ufshcd_release(hba);
+ 	return ret;
+ }
 -- 
-2.30.2
+2.25.1
 
