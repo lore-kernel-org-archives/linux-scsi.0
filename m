@@ -2,211 +2,243 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8131DC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Dec 2021 16:56:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B4C7C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Dec 2021 22:01:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241249AbhLMQ4r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Dec 2021 11:56:47 -0500
-Received: from mail-dm6nam11lp2177.outbound.protection.outlook.com ([104.47.57.177]:18764
-        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S241224AbhLMQ4o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Dec 2021 11:56:44 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=UB+OrO2PBs9yc8JKNKwgjXfFBf7EofDbtU4bgabdcEf+wtRZMJjOWDhsAwi3j6QrMbXZsT4UEzf3dMxUMrh+YA1QbSFSeph6AfHVwsCdWD1/yuPlNXwOdPCkSomwZ70IdAgsjYPPNzDcQm99jBequrwI8/Obv/cn1K1NHNXpaKel4mYtWwM/y3PHu7QIrtWuB8uhVL+EBRy89DU9Cf/JNGzM4elE3AoRe0DT9M8ZqL7DWYrAnIT2GCbflbI5Vt3FPWWkvRU7gG+RMSnJ/2QYGuhLF+Drw9kzRd7H8fUNFGcCbs2HB8YJsQ9sspYKWZ1tC7/qxndRnN3xuw1Hkh7fHw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Vowl/On6xbtDSDaqK1juomqGWTRu6Mu3TLXtVf4Gvyo=;
- b=HbzNJbFBr5Q8Hra+iJRj+yDrengr/APRFaBVbXMG/CPAiNaAISPvYcWLNlKjyB/oJ8YIzRVPXyyCtzfB1MPRyMROb7ZNEfd/+GcgQmJxzGmErXmdDapNSK8E8Tu68TF5p+ZzlDtyyFSm2HjunRhSe0eLT43HYbdyNb+MoI5QBqXGNFsqUnjBiLsNMb1zWVn+i7FxMAa1yG+7HQeUnZMd6D8Gfblug3knoCbHVFyzL8gzqhnMozgqL5w1dUa6VprKwWhp8By/GIPYT0MgRw3jiwhN256NxvwgSnWEq7go0MaQTAv5SZfqYzFQmZVFvAHVmC/4eDmJfYrMQ/Io9DD6fg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Vowl/On6xbtDSDaqK1juomqGWTRu6Mu3TLXtVf4Gvyo=;
- b=fV34wNcOuBnlgZlE6+bnwNA8eZEfiXGRhp7J0dgbfGnWD361vPqVhkrNJ02Rl4jtksilPMSKC1wO/odxXtvU1UZu9stznKha3S8ng7yGVR6Q4s3EsO8HlHxFzzrvDkyWDMJorNh9YFhpyBtOfK/Ng6Dq+XaNK8Qk69e4CNf10CU=
-Received: from MN2PR21MB1295.namprd21.prod.outlook.com (2603:10b6:208:3e::25)
- by BN7PR21MB1732.namprd21.prod.outlook.com (2603:10b6:406:ad::31) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4823.6; Mon, 13 Dec
- 2021 16:56:30 +0000
-Received: from MN2PR21MB1295.namprd21.prod.outlook.com
- ([fe80::8c70:eedb:b406:726]) by MN2PR21MB1295.namprd21.prod.outlook.com
- ([fe80::8c70:eedb:b406:726%8]) with mapi id 15.20.4801.010; Mon, 13 Dec 2021
- 16:56:30 +0000
-From:   Haiyang Zhang <haiyangz@microsoft.com>
-To:     Tianyu Lan <ltykernel@gmail.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "bp@alien8.de" <bp@alien8.de>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "x86@kernel.org" <x86@kernel.org>, "hpa@zytor.com" <hpa@zytor.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "Michael Kelley (LINUX)" <mikelley@microsoft.com>
-CC:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "hch@lst.de" <hch@lst.de>, "joro@8bytes.org" <joro@8bytes.org>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-Subject: RE: [PATCH V7 5/5] net: netvsc: Add Isolation VM support for netvsc
- driver
-Thread-Topic: [PATCH V7 5/5] net: netvsc: Add Isolation VM support for netvsc
- driver
-Thread-Index: AQHX7/EWMl5F6LxDHkely1IHtTPBiqwwpHUA
-Date:   Mon, 13 Dec 2021 16:56:30 +0000
-Message-ID: <MN2PR21MB129599B0242599704B82433CCA749@MN2PR21MB1295.namprd21.prod.outlook.com>
-References: <20211213071407.314309-1-ltykernel@gmail.com>
- <20211213071407.314309-6-ltykernel@gmail.com>
-In-Reply-To: <20211213071407.314309-6-ltykernel@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=9e602df1-03ad-49c5-a979-13134afc720b;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-12-13T16:55:02Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: cc92fa70-e668-4fae-a26a-08d9be598307
-x-ms-traffictypediagnostic: BN7PR21MB1732:EE_
-x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
-x-microsoft-antispam-prvs: <BN7PR21MB17327513C01A52B61B1D0D78CA749@BN7PR21MB1732.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:2733;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: k5s/T/hDITtzZI4lkN4MoVemWYBhlmTOTi9rC5TkIA37tI4klodhR6zG/k33GgD/ikHRmyHyTFoGOCwniEy55lCgC+bsEq/NC/Y+JX9bu09TKn4RDyoHTF8X/gAnmNajdm8xKs14V5yTt04uWEVmT6Y2BhUDZRiwN0K25qDiXpFfScMwqLPq6iJwaVB7atRACHxsJCC8I6/Pwyy7spWlyTqNGvs6Iz2gkS88TH7te7MGRa85hOv/Ey7KGAK7Wok16ZfcJ8puHGbKB41AEBqN/mEMv2zNchm3yDKtq/gbJM0ONSm+bqSsiC1lMRMxo8ZGEcLneHex/VzhJuPGS4dpVcn+UFyqXFQIGnopSDQ+YKyhT9P6iSfsRREOjTJFX/iU3HZ6uIUbNBve0Q/6X5rO6mDhQ/zu9u/PMGtYYVFx3qrLWNDGd84rXgQizZ4f9Izr50CJWCMI0q04Jwvd0QtQ97qK8Dvz38j48pBCeoT5Q2153vNX6NJ474lDYXLX3NepkQWK/LH+Z5aLMamx9kbNf9e7kHwzZRt9ndrGdFHWDH/2WPFlBDufqn6/CKUA/zsD6ale24AKk9MWdOv6cRMba9ulOIxGfetQVQCOf6ZThBlbkS6/HZlhaBbenmO4/lhJKmi3R2tVy0GXCJk3zLY0K2/GOoK2QVoVs5QWHOK3gko0CADbLtu2IPKrMoJJnGCFEBdg/SxjWy7CGVncAmObHuA4DU7lvxLAPqYcEolbW7LjDBRY/cLB/q5VHeShPpSNtHqFrJzP2dz2T92+/nVgCA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR21MB1295.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(316002)(38100700002)(55016003)(110136005)(8676002)(83380400001)(8936002)(5660300002)(6636002)(66446008)(64756008)(66556008)(66476007)(4326008)(52536014)(7416002)(76116006)(66946007)(54906003)(7406005)(2906002)(122000001)(9686003)(10290500003)(71200400001)(508600001)(8990500004)(26005)(186003)(921005)(38070700005)(82950400001)(53546011)(6506007)(33656002)(7696005)(86362001)(82960400001)(20210929001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?TwaKfmUanuDMbus0Exj7pzUSUTcPeIWuciUoqDU+xdw4VStLBtK6oA81Cf+y?=
- =?us-ascii?Q?CCNa1nQ1DihkHk57k1EHixgUJJsbcAfFfWDU8RETtaUlr1YjZ2ZNr+sXJ3qp?=
- =?us-ascii?Q?s+1ya3Wj0CUQFOnFPEnZkbF0pqKvkCm99GeaX8RzVsQlsuzu7gvw2zUJt5om?=
- =?us-ascii?Q?yzt7gSyi4BqUvbyPfMXvGz38nGT8gLSs3H0Ae7RDGcwQfy88FZeBcHuisf66?=
- =?us-ascii?Q?zb/OyClA8hPUzDtf9fwNY+OTuWyxb6AQNMKN6ilRQjz3FcnkuuSfkFBTPke5?=
- =?us-ascii?Q?22xmq26BsOBdxrYcM4Cbz/F/dhAr9PZsvboFtsnHronWPDWv8ndS9ZABGrPy?=
- =?us-ascii?Q?mR8DXn1CXNF+AU3FzWnF+OZwfiAuyDN7uUN+GbMwQoC9hNcuB2D1SJfW7LBz?=
- =?us-ascii?Q?zriv/bHzhyRdIj0U+TIKkOKKikBFzdpLDuYCplUzP6lXxfBsQ16iKc/v90zh?=
- =?us-ascii?Q?hWg/sVTxbK55vza+MnseoHsreYpCNxnrSmsa4wXKk2fNyaAhPwzz3hUEbdis?=
- =?us-ascii?Q?+pX8XD84Ev/FjsdRGoyW622c9l56QobMN29BbJuGHCW33Lfds3rrJt0Kb2Eb?=
- =?us-ascii?Q?5owNrYp7s/sQmONqj5dzhNCjydomH397QHr6iIxvNbL8uukowLeXh71fTGEM?=
- =?us-ascii?Q?DPTYIvPsMZLc+i5itl3YWQEBY/Jtu0CluW/+ItNxcGsrOswL0Rc2YNkedjYJ?=
- =?us-ascii?Q?N67dthzXNeA/XpaZlH8wQe2ZTm+w+3mcPgInL4AuYc2CDjrrxFW6In92Hac2?=
- =?us-ascii?Q?SMA8hxSj41CN6s7G1ElrNBoYJIMUTJKvBfXFljzrXvEgnDvQkw8FHgjnm5rd?=
- =?us-ascii?Q?vtEdcjKdaO85Je/qWKKeIoAz+kC2AlB4SOakWtSa9j5mdkYVzDW8J9ri5B+5?=
- =?us-ascii?Q?SFOzSj1CKOn1TQ54Rmd2wG4y58t27QE4c/I5Xh8/+0Vzhx3xqTGo5JwHU/QZ?=
- =?us-ascii?Q?OVS0HwPwxMnnbZW8igAgeCKAxwhUkg35gLeDFFMraasSJrBd2uLrDh/oQJln?=
- =?us-ascii?Q?PSxLQEXCTM6+J9kI/qjSyXO0gGn4IwsIZz+sFczeABG9G8eu6DfjF+hHSUil?=
- =?us-ascii?Q?Yd+Y2IJa4CZR60D8KTY0qhtksO/cQ/Ms1pFpmKbvI2T1Ev/88QLHQJFOpjiQ?=
- =?us-ascii?Q?lGGG2ZqBpZkR2ckG0kWT145UspIdorHi+JERAfIfCZZved8hc3NlpAPWhlxV?=
- =?us-ascii?Q?wCKiOcDugmI2WW02Jztp3rbilTevg8DugybDY8p0NKiPHePZuDZZ0XN+9trK?=
- =?us-ascii?Q?5uOOkjwLVyzeSELbreqREc3bxlX1dwqInCsRU6inofeWtsbkESEUP4EHDtmc?=
- =?us-ascii?Q?Ps80hAFyxUvTp993WAQRO81JC+UdRf9X8OfC+bvOsRXbHHQ1UiLKKnpPL8Mn?=
- =?us-ascii?Q?F5w3nCsEw+sD8FfqOgZb5JwvKBbbLe+97ikpiLbrCIV5fCj5JLcUi05Y3mLU?=
- =?us-ascii?Q?vWAelqncvrq2efWGNyqLxREWMhuIY+QFdsCaUuAqZzwFOV5fPLSECQssT9++?=
- =?us-ascii?Q?GLZdmZ2VUHc3j19i00LcfTU7fpdcFIJcbDe9O9gipCSF7F6OiBFWZEXO1bd9?=
- =?us-ascii?Q?QtFoO2rh34/EYmQjR73yg7U/fx6j3SDuG4VoxZEvH9LvtlbEfi/hWBzkKJ/K?=
- =?us-ascii?Q?Jg=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S239330AbhLMWBP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Dec 2021 17:01:15 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:62684 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233094AbhLMWBO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Dec 2021 17:01:14 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1639432874; x=1670968874;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=CTDDzkkzYAXHAdfrMIkUFsLaarbAPdQQeDjaiAyU1DQ=;
+  b=lwlqbyxEdbgU4RiWUzJ2+ik+ai8xHa1XRSlKiIgqEi25PO9Pzz+FRtWQ
+   /WRh7tdwA+NO2kMPk/24uxd5pNGF/4dUdrChqDZ8Rj1FueSdST0Znkto0
+   +hQs1ujk80jljk6UAKBGTiji4f1GoPs5zGXPliDZLjC6P2QnzyjOXTXe2
+   GEv4GWxDLn6EFShnIs3qIB7gSgTAh4rSjZxChYU0TbfQXXhrp6kTPVxMj
+   ym/LtU02mK4ApleMiLh7xTSMiWUCYMulA3feHup5quV2aES20KWihU8CH
+   Veejg/kcCG7xSiinEVzfsHrFSXQU/dF7WkiRlvNoM1P/1zd6E9hXkTa7I
+   w==;
+X-IronPort-AV: E=Sophos;i="5.88,203,1635177600"; 
+   d="scan'208";a="192941058"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 14 Dec 2021 06:01:13 +0800
+IronPort-SDR: YX6VWgsS+35MfTlFZT7puYN8n2kspF3XQYtpJ5owAI0jNVy+M+wTcNGKSjZPhZtJVe1cZz77h1
+ ofxLDDwo0W4i3d9LsHsudTZ73L7Udum997h/cU/VGzV3Y6zgQSgb6xkrigK/TL3SBM2l75bExL
+ p8C10xZXwI0cDgFeXwYyr92kecGYhab0rfY79Rm05LZjvFDQDdplnfr1AJ2r+Mugj1hmGOkcFb
+ 4zr6+wvGhMafiQ97LPPXH4F7dfvSrurv4zs2XAT35dqDSyTsBAfk9BHOAXH6ZlXwSrepaTFUyY
+ 46ntsV/PTmCvBxPmBfyGYVxj
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2021 13:35:39 -0800
+IronPort-SDR: KjZgzae+DyOmcHPZTgBKefg5aJjuy0sEQPvM2d0fnwpixeRz1dW9wcw9ljfXxqZv7Gly5ncNyu
+ sqHzBGRxrb2vFXkHuWHI3Xf3YE6jTOgcpmlRX+f+4rAKt4XIa9E8IHORywUeMbG7z8gKg/o+Di
+ rBw+s8nvuqV+CZmYuW8UUNsegRVP6vy6cvMifMTvU33hul9G8QbOPpCFyOKIAnTeNlz88oAu4g
+ MVMgYWtWRgOd/mv1f5No4p+KxRz63vBBkKoptp/8k9PIAxUxiSXxlJDUxJGXOs2ETYi1w2/H51
+ sYs=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2021 14:01:13 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JCb7F36q7z1Rwnx
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2021 14:01:13 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1639432872; x=1642024873; bh=CTDDzkkzYAXHAdfrMIkUFsLaarbAPdQQeDj
+        aiAyU1DQ=; b=IzEhidLnt8vtEeWRNRazt5e/syrNrRWuiRUx4ET7mtZ2wtCkAuf
+        yjtqcc9PUM7T3HN7V70If1LyhV+eqYKNTYx1syXbTTQion37LyR9Ef8GGSC8uBhJ
+        mlchI8E8TknntPsZ5QihM5Rzd59pkPjWHGBxu8p0Y8MaKtJhF01yFcmFLdcxjETS
+        b/+oEEElbl4XjlbxootYh9t36tQLu8zSTuGDj/1BsoCM95BG2GCOqXloe57QhsQk
+        GBAuXxYQmHsI59Is+PpMWjknERpmM78Ql3NHqGP5h4PE+TBChpGdT4/jdYW1vB/g
+        3EFBbW2t5leC5d4pFDerhuHQyGreYd4nSow==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id s8Siel4QIL3C for <linux-scsi@vger.kernel.org>;
+        Mon, 13 Dec 2021 14:01:12 -0800 (PST)
+Received: from [10.225.54.48] (unknown [10.225.54.48])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JCb7C1YRgz1RtVG;
+        Mon, 13 Dec 2021 14:01:11 -0800 (PST)
+Message-ID: <edcdd00e-a3c9-5f48-6b62-e314452812cd@opensource.wdc.com>
+Date:   Tue, 14 Dec 2021 07:01:10 +0900
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR21MB1295.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cc92fa70-e668-4fae-a26a-08d9be598307
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Dec 2021 16:56:30.7618
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: B/9za8DDfD2vda/khn+g0NK/zy3hzMZ29hJwT3Z7l8EWuo76RhQ+mI6qE5hm9XbGWM3u4sCcVUizTvN/OF2k1A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR21MB1732
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.4.0
+Subject: Re: [PATCH v3] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     Viswas.G@microchip.com, Ajish.Koshy@microchip.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <1639390248-213603-1-git-send-email-john.garry@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital
+In-Reply-To: <1639390248-213603-1-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2021/12/13 19:10, John Garry wrote:
+> The driver supports a "direct" mode of operation, where the SMP req frame
+> is directly copied into the command payload (and vice-versa for the SMP
+> resp).
+> 
+> To get at the SMP req frame data in the scatterlist the driver uses
+> phys_to_virt() on the DMA mapped memory dma_addr_t . This is broken,
+> and subsequently crashes as follows when an IOMMU is enabled:
+> 
+>  Unable to handle kernel paging request at virtual address
+> ffff0000fcebfb00
+> 	...
+>  pc : pm80xx_chip_smp_req+0x2d0/0x3d0
+>  lr : pm80xx_chip_smp_req+0xac/0x3d0
+>  pm80xx_chip_smp_req+0x2d0/0x3d0
+>  pm8001_task_exec.constprop.0+0x368/0x520
+>  pm8001_queue_command+0x1c/0x30
+>  smp_execute_task_sg+0xdc/0x204
+>  sas_discover_expander.part.0+0xac/0x6cc
+>  sas_discover_root_expander+0x8c/0x150
+>  sas_discover_domain+0x3ac/0x6a0
+>  process_one_work+0x1d0/0x354
+>  worker_thread+0x13c/0x470
+>  kthread+0x17c/0x190
+>  ret_from_fork+0x10/0x20
+>  Code: 371806e1 910006d6 6b16033f 54000249 (38766b05)
+>  ---[ end trace b91d59aaee98ea2d ]---
+> note: kworker/u192:0[7] exited with preempt_count 1
+> 
+> Instead use kmap_atomic().
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> --
+> Difference to v1:
+> - use kmap_atomic() in both locations
+> Difference to  v2:
+> - add whitespace around arithmetic (Damien)
+> 
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index b9f6d83ff380..2101fc5761c3 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -3053,7 +3053,6 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>  	struct smp_completion_resp *psmpPayload;
+>  	struct task_status_struct *ts;
+>  	struct pm8001_device *pm8001_dev;
+> -	char *pdma_respaddr = NULL;
+>  
+>  	psmpPayload = (struct smp_completion_resp *)(piomb + 4);
+>  	status = le32_to_cpu(psmpPayload->status);
+> @@ -3080,19 +3079,23 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>  		if (pm8001_dev)
+>  			atomic_dec(&pm8001_dev->running_req);
+>  		if (pm8001_ha->smp_exp_mode == SMP_DIRECT) {
+> +			struct scatterlist *sg_resp = &t->smp_task.smp_resp;
+> +			u8 *payload;
+> +			void *to;
+> +
+>  			pm8001_dbg(pm8001_ha, IO,
+>  				   "DIRECT RESPONSE Length:%d\n",
+>  				   param);
+> -			pdma_respaddr = (char *)(phys_to_virt(cpu_to_le64
+> -						((u64)sg_dma_address
+> -						(&t->smp_task.smp_resp))));
+> +			to = kmap_atomic(sg_page(sg_resp));
+> +			payload = to + sg_resp->offset;
+>  			for (i = 0; i < param; i++) {
+> -				*(pdma_respaddr+i) = psmpPayload->_r_a[i];
+> +				*(payload + i) = psmpPayload->_r_a[i];
+>  				pm8001_dbg(pm8001_ha, IO,
+>  					   "SMP Byte%d DMA data 0x%x psmp 0x%x\n",
+> -					   i, *(pdma_respaddr + i),
+> +					   i, *(payload + i),
+>  					   psmpPayload->_r_a[i]);
+>  			}
+> +			kunmap_atomic(to);
+>  		}
+>  		break;
+>  	case IO_ABORTED:
+> @@ -4236,14 +4239,14 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>  	struct sas_task *task = ccb->task;
+>  	struct domain_device *dev = task->dev;
+>  	struct pm8001_device *pm8001_dev = dev->lldd_dev;
+> -	struct scatterlist *sg_req, *sg_resp;
+> +	struct scatterlist *sg_req, *sg_resp, *smp_req;
+>  	u32 req_len, resp_len;
+>  	struct smp_req smp_cmd;
+>  	u32 opc;
+>  	struct inbound_queue_table *circularQ;
+> -	char *preq_dma_addr = NULL;
+> -	__le64 tmp_addr;
+>  	u32 i, length;
+> +	u8 *payload;
+> +	u8 *to;
+>  
+>  	memset(&smp_cmd, 0, sizeof(smp_cmd));
+>  	/*
+> @@ -4280,8 +4283,9 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>  		pm8001_ha->smp_exp_mode = SMP_INDIRECT;
+>  
+>  
+> -	tmp_addr = cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_req));
+> -	preq_dma_addr = (char *)phys_to_virt(tmp_addr);
+> +	smp_req = &task->smp_task.smp_req;
+> +	to = kmap_atomic(sg_page(smp_req));
+> +	payload = to + smp_req->offset;
+>  
+>  	/* INDIRECT MODE command settings. Use DMA */
+>  	if (pm8001_ha->smp_exp_mode == SMP_INDIRECT) {
+> @@ -4289,7 +4293,7 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>  		/* for SPCv indirect mode. Place the top 4 bytes of
+>  		 * SMP Request header here. */
+>  		for (i = 0; i < 4; i++)
+> -			smp_cmd.smp_req16[i] = *(preq_dma_addr + i);
+> +			smp_cmd.smp_req16[i] = *(payload + i);
+>  		/* exclude top 4 bytes for SMP req header */
+>  		smp_cmd.long_smp_req.long_req_addr =
+>  			cpu_to_le64((u64)sg_dma_address
+> @@ -4320,20 +4324,20 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>  		pm8001_dbg(pm8001_ha, IO, "SMP REQUEST DIRECT MODE\n");
+>  		for (i = 0; i < length; i++)
+>  			if (i < 16) {
+> -				smp_cmd.smp_req16[i] = *(preq_dma_addr+i);
+> +				smp_cmd.smp_req16[i] = *(payload + i);
+>  				pm8001_dbg(pm8001_ha, IO,
+>  					   "Byte[%d]:%x (DMA data:%x)\n",
+>  					   i, smp_cmd.smp_req16[i],
+> -					   *(preq_dma_addr));
+> +					   *(payload));
+>  			} else {
+> -				smp_cmd.smp_req[i] = *(preq_dma_addr+i);
+> +				smp_cmd.smp_req[i] = *(payload + i);
+>  				pm8001_dbg(pm8001_ha, IO,
+>  					   "Byte[%d]:%x (DMA data:%x)\n",
+>  					   i, smp_cmd.smp_req[i],
+> -					   *(preq_dma_addr));
+> +					   *(payload));
+>  			}
+>  	}
+> -
+> +	kunmap_atomic(to);
+>  	build_smp_cmd(pm8001_dev->device_id, smp_cmd.tag,
+>  				&smp_cmd, pm8001_ha->smp_exp_mode, length);
+>  	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &smp_cmd,
+
+Looks good to me.
+
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
 
-> -----Original Message-----
-> From: Tianyu Lan <ltykernel@gmail.com>
-> Sent: Monday, December 13, 2021 2:14 AM
-> To: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang <haiyangz@microsoft.=
-com>; Stephen
-> Hemminger <sthemmin@microsoft.com>; wei.liu@kernel.org; Dexuan Cui <decui=
-@microsoft.com>;
-> tglx@linutronix.de; mingo@redhat.com; bp@alien8.de; dave.hansen@linux.int=
-el.com;
-> x86@kernel.org; hpa@zytor.com; davem@davemloft.net; kuba@kernel.org; jejb=
-@linux.ibm.com;
-> martin.petersen@oracle.com; arnd@arndb.de; hch@infradead.org; m.szyprowsk=
-i@samsung.com;
-> robin.murphy@arm.com; thomas.lendacky@amd.com; Tianyu Lan <Tianyu.Lan@mic=
-rosoft.com>;
-> Michael Kelley (LINUX) <mikelley@microsoft.com>
-> Cc: iommu@lists.linux-foundation.org; linux-arch@vger.kernel.org; linux-
-> hyperv@vger.kernel.org; linux-kernel@vger.kernel.org; linux-scsi@vger.ker=
-nel.org;
-> netdev@vger.kernel.org; vkuznets <vkuznets@redhat.com>; brijesh.singh@amd=
-.com;
-> konrad.wilk@oracle.com; hch@lst.de; joro@8bytes.org; parri.andrea@gmail.c=
-om;
-> dave.hansen@intel.com
-> Subject: [PATCH V7 5/5] net: netvsc: Add Isolation VM support for netvsc =
-driver
->=20
-> From: Tianyu Lan <Tianyu.Lan@microsoft.com>
->=20
-> In Isolation VM, all shared memory with host needs to mark visible
-> to host via hvcall. vmbus_establish_gpadl() has already done it for
-> netvsc rx/tx ring buffer. The page buffer used by vmbus_sendpacket_
-> pagebuffer() stills need to be handled. Use DMA API to map/umap
-> these memory during sending/receiving packet and Hyper-V swiotlb
-> bounce buffer dma address will be returned. The swiotlb bounce buffer
-> has been masked to be visible to host during boot up.
->=20
-> rx/tx ring buffer is allocated via vzalloc() and they need to be
-> mapped into unencrypted address space(above vTOM) before sharing
-> with host and accessing. Add hv_map/unmap_memory() to map/umap rx
-> /tx ring buffer.
->=20
-> Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
-> ---
-> Change since v3:
->        * Replace HV_HYP_PAGE_SIZE with PAGE_SIZE and virt_to_hvpfn()
->          with vmalloc_to_pfn() in the hv_map_memory()
->=20
-> Change since v2:
->        * Add hv_map/unmap_memory() to map/umap rx/tx ring buffer.
-> ---
->  arch/x86/hyperv/ivm.c             |  28 ++++++
->  drivers/hv/hv_common.c            |  11 +++
->  drivers/net/hyperv/hyperv_net.h   |   5 ++
->  drivers/net/hyperv/netvsc.c       | 136 +++++++++++++++++++++++++++++-
->  drivers/net/hyperv/netvsc_drv.c   |   1 +
->  drivers/net/hyperv/rndis_filter.c |   2 +
->  include/asm-generic/mshyperv.h    |   2 +
->  include/linux/hyperv.h            |   5 ++
->  8 files changed, 187 insertions(+), 3 deletions(-)
->=20
-
-Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+-- 
+Damien Le Moal
+Western Digital Research
