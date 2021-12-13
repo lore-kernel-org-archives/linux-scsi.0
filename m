@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D56DAC43217
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Dec 2021 07:14:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF1C7C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Dec 2021 07:14:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231248AbhLMHOV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Dec 2021 02:14:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49814 "EHLO
+        id S232417AbhLMHO1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Dec 2021 02:14:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229836AbhLMHOU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Dec 2021 02:14:20 -0500
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59077C06173F;
-        Sun, 12 Dec 2021 23:14:20 -0800 (PST)
-Received: by mail-pj1-x1035.google.com with SMTP id gt5so11229691pjb.1;
-        Sun, 12 Dec 2021 23:14:20 -0800 (PST)
+        with ESMTP id S232340AbhLMHOY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Dec 2021 02:14:24 -0500
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3ED6C06173F;
+        Sun, 12 Dec 2021 23:14:23 -0800 (PST)
+Received: by mail-pj1-x1033.google.com with SMTP id gf14-20020a17090ac7ce00b001a7a2a0b5c3so13959670pjb.5;
+        Sun, 12 Dec 2021 23:14:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=UfuTaJDyXzWWoDYpJEZSIO5JTCFYXSinj9/66++nx+8=;
-        b=RZ0YY+OjZHDPoom122dz/JrubEt5dlGUC6OFfP4osjDd9rIXLDP06olqgI1BIaJMep
-         kMALBWOtjoDYEk7G2/NWri/6CYjTHBH8WpjIXAvLqvzecxg0T1wABbrWy2j70yN/ZnDW
-         Q3BVQcLOF5xUtk1ic8okW3uixLUoeKltjcsXNdp0ehE3FdBs2M6KTlZ2j/DmikpmShKa
-         g2n70MTxmRobd3Xagotay0kyXpJswrV1BoY/3CtcWLgJBTX1T1n4GAnioELXVkmmX4kX
-         PO9BleMTznOu0XaJwSo9ZWTgZuUiZfIRcB4aqw5+E4+0G61nu/9fQ65nzlK0k+fryyyL
-         5pLQ==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=LTLz7GgAX11MfClfWm4VByenkQJ5cwVcinYkI0CYydg=;
+        b=eIBO98gr6cqdhEubdZxn7qJbRXcsGJcQJKCTBTWQMyIeHrNp5xrHWYdAoKYNVGEidJ
+         LFwP3LjGoL5tFuzB2FoB5YpZg5bwVmowqjbEIb8AsmhZerCmxw86+voMBrO3FdsH4LZ1
+         v8oAohgYKdqLsMvZ/GTDqezGmPqe06lPPdMYJ8kKDtdDCRGI+T2u1D6j25qAwdvo7zlI
+         679EHAHUZ/Q7woRuLMzvvmv9YQOH/DT1Dkg52bG9+CtfhWhBq/5McohZ6K/5TT2Unmva
+         iRnNz4FNW2NV5wXk4ssnY1Wipt5DNixWOWnYmq/MRnkkFwLm0dKEKvTE3IQj4PHbr8gx
+         d9CQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=UfuTaJDyXzWWoDYpJEZSIO5JTCFYXSinj9/66++nx+8=;
-        b=0P2MtlSuSYvjpoOTjUlQ2ATKavhAAx7md2yltCTLEzZHCQaeVRacOQ/RsOxh/gA8nZ
-         hUJ/A9IJDQLGkMgQ4ufWoeWSxW3D2Ui1OOE1DvRC7X1rH4LTiPMOZBT4mHkJM+BVHwDH
-         +KO4xONIcTuUjDxvMeYZtJdV4ZMCrQHqY/wl+esLrDizImvDv8gqE3PfFsghg28A6cNn
-         A8KjHmPc0Jt/c/iepfSeJXOV/D6vMG/yPafRwqrbhNQ/vO8wARmweE5VbmDComXqW1qI
-         B2Dv6YFeDGOmA86+m8pCag1oFSbVsqwgnoa3xgkCjW4UKUAviONNEXngDQTCxUEtokFW
-         EOJA==
-X-Gm-Message-State: AOAM533joHvE4X7MJ9kX1dOH8b15GEQK5PeLfAulVPeyP2/GPW4x878f
-        raSHpc81Kxi0bPQ+2YlTft8=
-X-Google-Smtp-Source: ABdhPJwRsynwa0p4Q+W3Ffv/Pbq1OH3Vp7CAdAtnzgtPcoNFneam7RHH/ich5nSp4fignTT/cNGGhw==
-X-Received: by 2002:a17:902:7616:b0:143:a8cd:ef0 with SMTP id k22-20020a170902761600b00143a8cd0ef0mr93169802pll.48.1639379659905;
-        Sun, 12 Dec 2021 23:14:19 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=LTLz7GgAX11MfClfWm4VByenkQJ5cwVcinYkI0CYydg=;
+        b=vZGaqqu7ea7Ea3vNtiv0X7mx2IcN99tqz/kdBxfWE4Jy5LsxMGtNwS3QRMY8Ld/HEn
+         hLmAtbo1pgqWlpEKge2+rhxzLXgYfvqyvTCnIJW/qGYPbxOgAqWftpR7eRGijf/zrHbq
+         3X/unmaOpep8JCrbZaV+OCwNYULp4nftKMp+I/bkDgy1lbMS91/hOUUH7WXhclXTtwCR
+         O3QTWnNeKChhlShkdnQ1Evw79GnYlDFqGGHnqXYDobyuojpv/AwZaxqsrbE9LP+K/joJ
+         kn5pBpXYV1BOiPbnDPRMKUEbZYPQcutNZaalTRq/rN9Ga95agsQbee0VHKhrHHUWJ4wx
+         8N5Q==
+X-Gm-Message-State: AOAM531QVeqLGvaSclXqYY5EL4sbBrNO5VFwGiXSLPQ1r7eU/Jq8WdlV
+        RwqZVOSlrkdXFq6HgENU/m0=
+X-Google-Smtp-Source: ABdhPJwyUng+IRJS7MH80C/GEuQWaWTRNRKCx4z2HRH688KUyKHYm7NSiU3shK/X0mt0z+tL2buWiw==
+X-Received: by 2002:a17:902:c947:b0:141:e7f6:d688 with SMTP id i7-20020a170902c94700b00141e7f6d688mr92839450pla.56.1639379663188;
+        Sun, 12 Dec 2021 23:14:23 -0800 (PST)
 Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:36:a586:a4cb:7d3:4f27])
-        by smtp.gmail.com with ESMTPSA id qe12sm6079401pjb.29.2021.12.12.23.14.18
+        by smtp.gmail.com with ESMTPSA id qe12sm6079401pjb.29.2021.12.12.23.14.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 12 Dec 2021 23:14:19 -0800 (PST)
+        Sun, 12 Dec 2021 23:14:22 -0800 (PST)
 From:   Tianyu Lan <ltykernel@gmail.com>
 To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
         wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
@@ -62,10 +62,12 @@ Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
         vkuznets@redhat.com, brijesh.singh@amd.com, konrad.wilk@oracle.com,
         hch@lst.de, joro@8bytes.org, parri.andrea@gmail.com,
         dave.hansen@intel.com
-Subject: [PATCH V7 0/5] x86/Hyper-V: Add Hyper-V Isolation VM support(Second part)
-Date:   Mon, 13 Dec 2021 02:14:01 -0500
-Message-Id: <20211213071407.314309-1-ltykernel@gmail.com>
+Subject: [PATCH V7 2/5] x86/hyper-v: Add hyperv Isolation VM check in the cc_platform_has()
+Date:   Mon, 13 Dec 2021 02:14:03 -0500
+Message-Id: <20211213071407.314309-3-ltykernel@gmail.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20211213071407.314309-1-ltykernel@gmail.com>
+References: <20211213071407.314309-1-ltykernel@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -74,94 +76,57 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-Hyper-V provides two kinds of Isolation VMs. VBS(Virtualization-based
-security) and AMD SEV-SNP unenlightened Isolation VMs. This patchset
-is to add support for these Isolation VM support in Linux.
+Hyper-V provides Isolation VM for confidential computing support and
+guest memory is encrypted in it. Places checking cc_platform_has()
+with GUEST_MEM_ENCRYPT attr should return "True" in Isolation vm. e.g,
+swiotlb bounce buffer size needs to adjust according to memory size
+in the sev_setup_arch(). Add GUEST_MEM_ENCRYPT check for Hyper-V Isolation
+VM.
 
-The memory of these vms are encrypted and host can't access guest
-memory directly. Hyper-V provides new host visibility hvcall and
-the guest needs to call new hvcall to mark memory visible to host
-before sharing memory with host. For security, all network/storage
-stack memory should not be shared with host and so there is bounce
-buffer requests.
-
-Vmbus channel ring buffer already plays bounce buffer role because
-all data from/to host needs to copy from/to between the ring buffer
-and IO stack memory. So mark vmbus channel ring buffer visible.
-
-For SNP isolation VM, guest needs to access the shared memory via
-extra address space which is specified by Hyper-V CPUID HYPERV_CPUID_
-ISOLATION_CONFIG. The access physical address of the shared memory
-should be bounce buffer memory GPA plus with shared_gpa_boundary
-reported by CPUID.
-
-This patchset is to enable swiotlb bounce buffer for netvsc/storvsc
-drivers in Isolation VM.
-
+Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
+---
 Change since v6:
-        * Fix compile error in hv_init.c and mshyperv.c when swiotlb
-	  is not enabled.
-	* Change the order in the cc_platform_has() and check sev first. 
-
-Change sicne v5:
-        * Modify "Swiotlb" to "swiotlb" in commit log.
-	* Remove CONFIG_HYPERV check in the hyperv_cc_platform_has()
-
-Change since v4:
-	* Remove Hyper-V IOMMU IOMMU_INIT_FINISH related functions
-	  and set SWIOTLB_FORCE and swiotlb_unencrypted_base in the
-	  ms_hyperv_init_platform(). Call swiotlb_update_mem_attributes()
-	  in the hyperv_init().
+	* Change the order in the cc_platform_has() and check sev first.
 
 Change since v3:
-	* Fix boot up failure on the host with mem_encrypt=on.
-	  Move calloing of set_memory_decrypted() back from
-	  swiotlb_init_io_tlb_mem to swiotlb_late_init_with_tbl()
-	  and rmem_swiotlb_device_init().
 	* Change code style of checking GUEST_MEM attribute in the
 	  hyperv_cc_platform_has().
-	* Add comment in pci-swiotlb-xen.c to explain why add
-	  dependency between hyperv_swiotlb_detect() and pci_
-	  xen_swiotlb_detect().
-	* Return directly when fails to allocate Hyper-V swiotlb
-	  buffer in the hyperv_iommu_swiotlb_init().
+---
+ arch/x86/kernel/cc_platform.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Change since v2:
-	* Remove Hyper-V dma ops and dma_alloc/free_noncontiguous. Add
-	  hv_map/unmap_memory() to map/umap netvsc rx/tx ring into extra
-	  address space.
-	* Leave mem->vaddr in swiotlb code with phys_to_virt(mem->start)
-	  when fail to remap swiotlb memory.
-
-Change since v1:
-	* Add Hyper-V Isolation support check in the cc_platform_has()
-	  and return true for guest memory encrypt attr.
-	* Remove hv isolation check in the sev_setup_arch()
-
-Tianyu Lan (5):
-  swiotlb: Add swiotlb bounce buffer remap function for HV IVM
-  x86/hyper-v: Add hyperv Isolation VM check in the cc_platform_has()
-  hyper-v: Enable swiotlb bounce buffer for Isolation VM
-  scsi: storvsc: Add Isolation VM support for storvsc driver
-  net: netvsc: Add Isolation VM support for netvsc driver
-
- arch/x86/hyperv/hv_init.c         |  12 +++
- arch/x86/hyperv/ivm.c             |  28 ++++++
- arch/x86/kernel/cc_platform.c     |   8 ++
- arch/x86/kernel/cpu/mshyperv.c    |  15 +++-
- drivers/hv/hv_common.c            |  11 +++
- drivers/hv/vmbus_drv.c            |   4 +
- drivers/net/hyperv/hyperv_net.h   |   5 ++
- drivers/net/hyperv/netvsc.c       | 136 +++++++++++++++++++++++++++++-
- drivers/net/hyperv/netvsc_drv.c   |   1 +
- drivers/net/hyperv/rndis_filter.c |   2 +
- drivers/scsi/storvsc_drv.c        |  37 ++++----
- include/asm-generic/mshyperv.h    |   2 +
- include/linux/hyperv.h            |   6 ++
- include/linux/swiotlb.h           |   6 ++
- kernel/dma/swiotlb.c              |  43 +++++++++-
- 15 files changed, 294 insertions(+), 22 deletions(-)
-
+diff --git a/arch/x86/kernel/cc_platform.c b/arch/x86/kernel/cc_platform.c
+index 03bb2f343ddb..6cb3a675e686 100644
+--- a/arch/x86/kernel/cc_platform.c
++++ b/arch/x86/kernel/cc_platform.c
+@@ -11,6 +11,7 @@
+ #include <linux/cc_platform.h>
+ #include <linux/mem_encrypt.h>
+ 
++#include <asm/mshyperv.h>
+ #include <asm/processor.h>
+ 
+ static bool __maybe_unused intel_cc_platform_has(enum cc_attr attr)
+@@ -58,12 +59,19 @@ static bool amd_cc_platform_has(enum cc_attr attr)
+ #endif
+ }
+ 
++static bool hyperv_cc_platform_has(enum cc_attr attr)
++{
++	return attr == CC_ATTR_GUEST_MEM_ENCRYPT;
++}
+ 
+ bool cc_platform_has(enum cc_attr attr)
+ {
+ 	if (sme_me_mask)
+ 		return amd_cc_platform_has(attr);
+ 
++	if (hv_is_isolation_supported())
++		return hyperv_cc_platform_has(attr);
++
+ 	return false;
+ }
+ EXPORT_SYMBOL_GPL(cc_platform_has);
 -- 
 2.25.1
 
