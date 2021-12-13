@@ -2,136 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E815C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Dec 2021 11:21:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE61C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Dec 2021 12:24:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235311AbhLMLVO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Dec 2021 06:21:14 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4261 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235250AbhLMLVN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Dec 2021 06:21:13 -0500
-Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JCJv764Qfz67ySK;
-        Mon, 13 Dec 2021 19:19:47 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Mon, 13 Dec 2021 12:21:11 +0100
-Received: from [10.47.83.94] (10.47.83.94) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2308.20; Mon, 13 Dec
- 2021 11:21:10 +0000
-Subject: Re: [PATCH 11/15] scsi: libsas: Refactor out
- sas_queue_deferred_work()
-To:     chenxiang <chenxiang66@hisilicon.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
-References: <1637117108-230103-1-git-send-email-chenxiang66@hisilicon.com>
- <1637117108-230103-12-git-send-email-chenxiang66@hisilicon.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <29a7ccb2-9b25-5da7-2a3e-609718593ecd@huawei.com>
-Date:   Mon, 13 Dec 2021 11:20:50 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S231716AbhLMMYW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Dec 2021 07:24:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38240 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229766AbhLMMYW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Dec 2021 07:24:22 -0500
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E322CC061574
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2021 04:24:21 -0800 (PST)
+Received: by mail-pj1-x1031.google.com with SMTP id iq11so11749218pjb.3
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2021 04:24:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ekrnPRHrLftlhoBTlCEJVwtbo//rAs/3u/OFtBV1tEQ=;
+        b=en0Pmq0rlrpk08BUiqUWxOgy2ofSZ7roz66DQXnBS9ttJ+uj+fLfLXNbetl0OxgqZl
+         JRDPjwVsYq9CGwfs3GfAmIMvy+ZuqXMlnBR/vrr7YH6ZUabGBF/mxggAW1bioxflC0hl
+         Sg3f6xLR1HRNqm6v9UnprCJFgewZ5MVtrXj+M=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ekrnPRHrLftlhoBTlCEJVwtbo//rAs/3u/OFtBV1tEQ=;
+        b=GrfiTCzuUbrTja3LSlr7dL6AHSIVs7N9mr5qM+fB6r75daLIb2rUSRqzvlNS4b4LYW
+         3RREbxE74uh5tmpQ14YR5WzqKBO+l/TQxzq7fnKy5+/QRTqvbLKxUiHa2ufrqdzZpcgx
+         s4hyZ3osNmVIfjJiH4IwEI9aZMLgFG5SCnE+YdEsJYnmNUGS+8VMWK7puQfNTCXaPdhr
+         /F+7/2B15hND+z6E1V/X2KME2QjcWtutzuBvxIpz/h0owTctHwNouCVVxxBYxY6LSgUD
+         o/XhlUaOouD6NuM0JqLwAeQbjIaFyqaAAsIhdh9ovBvBvOtbJwPsAGCHuY4zesKYkHcn
+         d4ig==
+X-Gm-Message-State: AOAM530J6C/W6RuQJtR8+LhvZrRFkGqfFXZezS4EStUMpFt/NBUs41nX
+        KY61jBnNVolczfXKVlHBUkFK6STf6axDqSeL7UEeWw==
+X-Google-Smtp-Source: ABdhPJx1rArQEFg+RdfAXzmSe+VaAiCYbcSVvj05yVHi07KM7/4A79XDB51/nnqrBkYUoaUDmV/VERcuKckhJx0de3Q=
+X-Received: by 2002:a17:90b:2290:: with SMTP id kx16mr43922503pjb.193.1639398261073;
+ Mon, 13 Dec 2021 04:24:21 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1637117108-230103-12-git-send-email-chenxiang66@hisilicon.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.83.94]
-X-ClientProxiedBy: lhreml701-chm.china.huawei.com (10.201.108.50) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+References: <20210921184600.64427-1-kashyap.desai@broadcom.com>
+ <20210921184600.64427-3-kashyap.desai@broadcom.com> <yq1h7dw6qsx.fsf@ca-mkp.ca.oracle.com>
+ <9e544200d3c6e879ed1f655f0f1ab0db@mail.gmail.com> <yq1fssn16rp.fsf@ca-mkp.ca.oracle.com>
+ <41d922ea207d661046d4febca5872aae@mail.gmail.com>
+In-Reply-To: <41d922ea207d661046d4febca5872aae@mail.gmail.com>
+From:   Sumit Saxena <sumit.saxena@broadcom.com>
+Date:   Mon, 13 Dec 2021 17:53:54 +0530
+Message-ID: <CAL2rwxrjm-kd3H1f0d3CakQNULgdbhwo2s=Cd1X4d3u+OnGYVA@mail.gmail.com>
+Subject: Re: [mpi3mr] RE: [PATCH 2/7] miscdevice: adding support for MPI3MR_MINOR(243)
+To:     Kashyap Desai <kashyap.desai@broadcom.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Steve Hagan <steve.hagan@broadcom.com>,
+        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Please consider these:
+Hi Martin,
 
-On 17/11/2021 02:45, chenxiang wrote:
+We are working on adding bsg interface support in mpi3mr driver. In
+bsg, we can use SG_IO command type for synchronous ioctls,
+but I don't see the infrastructure for asynchronous commands. I
+searched a bit around it and noticed that "poll" interface was
+supported
+earlier but removed through this patch-
+https://www.spinics.net/lists/kernel/msg2853766.html
 
-I'd have "scsi: libsas: Refactor sas_queue_deferred_work()"
-
-> From: Xiang Chen <chenxiang66@hisilicon.com>
-> 
-> In the 2rd part of function __sas_drain_work, it queues defer work. And it
-> will be used in other places, so refactor out sas_queue_deferred_work().
-
-The second part of the function __sas_drain_work() queues the deferred 
-work. This functionality would be duplicated in other places, so factor 
-out into sas_queue_deferred_work().
+We have a requirement wherein the userland application/daemon
+waits/listens for asynchronous driver/firmware events.
+With driver IOCTLs, we were using the "fasync" interface for this. How
+can we achieve the same with bsg interface ?
 
 Thanks,
-John
+Sumit
 
-> 
-> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-> Reviewed-by: John Garry <john.garry@huawei.com>
-> ---
->   drivers/scsi/libsas/sas_event.c    | 25 ++++++++++++++-----------
->   drivers/scsi/libsas/sas_internal.h |  1 +
->   2 files changed, 15 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-> index af605620ea13..01e544ca518a 100644
-> --- a/drivers/scsi/libsas/sas_event.c
-> +++ b/drivers/scsi/libsas/sas_event.c
-> @@ -41,12 +41,23 @@ static int sas_queue_event(int event, struct sas_work *work,
->   	return rc;
->   }
->   
-> -
-> -void __sas_drain_work(struct sas_ha_struct *ha)
-> +void sas_queue_deferred_work(struct sas_ha_struct *ha)
->   {
->   	struct sas_work *sw, *_sw;
->   	int ret;
->   
-> +	spin_lock_irq(&ha->lock);
-> +	list_for_each_entry_safe(sw, _sw, &ha->defer_q, drain_node) {
-> +		list_del_init(&sw->drain_node);
-> +		ret = sas_queue_work(ha, sw);
-> +		if (ret != 1)
-> +			sas_free_event(to_asd_sas_event(&sw->work));
-> +	}
-> +	spin_unlock_irq(&ha->lock);
-> +}
-> +
-> +void __sas_drain_work(struct sas_ha_struct *ha)
-> +{
->   	set_bit(SAS_HA_DRAINING, &ha->state);
->   	/* flush submitters */
->   	spin_lock_irq(&ha->lock);
-> @@ -55,16 +66,8 @@ void __sas_drain_work(struct sas_ha_struct *ha)
->   	drain_workqueue(ha->event_q);
->   	drain_workqueue(ha->disco_q);
->   
-> -	spin_lock_irq(&ha->lock);
->   	clear_bit(SAS_HA_DRAINING, &ha->state);
-> -	list_for_each_entry_safe(sw, _sw, &ha->defer_q, drain_node) {
-> -		list_del_init(&sw->drain_node);
-> -		ret = sas_queue_work(ha, sw);
-> -		if (ret != 1)
-> -			sas_free_event(to_asd_sas_event(&sw->work));
-> -
-> -	}
-> -	spin_unlock_irq(&ha->lock);
-> +	sas_queue_deferred_work(ha);
->   }
->   
->   int sas_drain_work(struct sas_ha_struct *ha)
-> diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-> index ad9764a976c3..acd515c01861 100644
-> --- a/drivers/scsi/libsas/sas_internal.h
-> +++ b/drivers/scsi/libsas/sas_internal.h
-> @@ -57,6 +57,7 @@ void sas_unregister_ports(struct sas_ha_struct *sas_ha);
->   
->   void sas_disable_revalidation(struct sas_ha_struct *ha);
->   void sas_enable_revalidation(struct sas_ha_struct *ha);
-> +void sas_queue_deferred_work(struct sas_ha_struct *ha);
->   void __sas_drain_work(struct sas_ha_struct *ha);
->   
->   void sas_deform_port(struct asd_sas_phy *phy, int gone);
-> 
-
+On Fri, Oct 29, 2021 at 12:04 AM Kashyap Desai
+<kashyap.desai@broadcom.com> wrote:
+>
+> >
+> >
+> > Kashyap,
+> >
+> > > Immediately dropping ioctl support will create lots of issues for
+> > > Development/Test (within a org + OEM testing).  How about accepting
+> > > updated ioctl patch-set after reviewed-by tag (which will not use
+> > > static MAJOR number) for time being ?
+> >
+> > If we were to introduce an ioctl interface for mpi3mr we would never be
+> able
+> > to deprecate it without breaking existing applications.
+>
+> Martin -
+>
+> Understood that best case scenario is not to have IOCTL interface code at
+> all in kernel tree (for new drivers), but we need this interface to be
+> there for couple of
+> months.
+> As of now, There is only in-house application development happened on
+> <mpi3mr> since product is under development and OEM has access to the h/w
+> for pre-GA testing.
+> We are also planning to document such interface change for those who wants
+> to develop their own application in future.  Most of the application which
+> need interopt check of ioctl vs bsg will be Broadcom in-house and we are
+> planning to take care the same.
+>
+> How about providing unlocked_ioctl under module parameter  ?  By default
+> parameter will be OFF (this will avoid interopt issue as you mentioned)
+> and at least user who really have dependency on Test vehicle for time
+> being can enable it.
+> Once <bsg> interface is available, we will remove whole IOCTL code from
+> tree.
+>
+>
+> Kashyap
+> >
+> > While I appreciate that it is inconvenient to have to update your
+> tooling, this is
+> > the only chance we have to get the interface right.
+> >
+> > --
+> > Martin K. Petersen    Oracle Linux Engineering
