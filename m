@@ -2,82 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59872C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 04:41:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BE56C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 04:41:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229583AbhLNElD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Dec 2021 23:41:03 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:36282 "EHLO
+        id S229604AbhLNElI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Dec 2021 23:41:08 -0500
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:37138 "EHLO
         mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229518AbhLNElA (ORCPT
+        by vger.kernel.org with ESMTP id S229528AbhLNElB (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Dec 2021 23:41:00 -0500
+        Mon, 13 Dec 2021 23:41:01 -0500
 Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BE2O1jA005506;
-        Tue, 14 Dec 2021 04:40:57 GMT
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BE2iCRh005519;
+        Tue, 14 Dec 2021 04:40:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=h/Mky9KhdcsSZAGpTnYmQ2cyEra7+cJI4aG0SSlbyAw=;
- b=INSDnolF0TzwyxHV9IMPK6XVXlejwIcKXL0gHsqlKHGmgn7JbVhJkoLIkSkJpKLXCrjG
- dtX/R8zCsA0SfqBw9bO1G1uDAqJ9dVrzyjWHrb7laoiEBsyr3ozvigUniII0nMru4DYl
- a5KMC5ljxuCwK+zphtZUKV2faTJfK5X0Fd3XzJxLxZvOJGcjV9rrfkb3W+ZloRhXF31Z
- vv/UTo7ms3MX49A3MUyEhrvbixI3/9jNDgXyoHhBGaHerNmsam1V87uBATtBm7jgoJHx
- o2oDMRS6sKZIdEwVj6mXGGPa5bT2iXEdCf39GQ29ARpaYVu9FhSFTTUY0piwxerj1Vi5 kw== 
+ bh=SzZs7XgDeRMA0edwg2i6CHfW1XMdqNO/KmcAN4lwWZY=;
+ b=KZiu7f84oNg2g9dy3nsDH09QPiJDHqzbJLWjfZ/YzO9G2WSVbNQL/Cc49TX4neQwTTFx
+ zCpaMeTK/COC85nYMrqS7oddG2VKrcyZmbexZhDvxw1rYe6lyV4UuosVhVA+2gj3ZOjq
+ NJC5tESfHFkAH9s/Dnl518M/znVCh/Guio3DW0hZoWifXpTBPL0FwPO9oP6wrsEiJWg5
+ MPdqzN7qV2ARV2d4m8mlk5roy9qxyi7kDxoDcERJ1l/nZHLh0xmGPWBuvjOUChonlPEl
+ QpGp/+/dRXjLeRkFUGQoMyn5HBgn1B0ICQUkWKEMWA8OscAsZNLBBKavU/h8/sVUg4CB aQ== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3cx56u2asg-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3cx56u2asj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Dec 2021 04:40:56 +0000
+        Tue, 14 Dec 2021 04:40:58 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BE4ZXmN032358;
-        Tue, 14 Dec 2021 04:40:55 GMT
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BE4ZXHT032388;
+        Tue, 14 Dec 2021 04:40:57 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3030.oracle.com with ESMTP id 3cvh3wp5be-1
+        by userp3030.oracle.com with ESMTP id 3cvh3wp5c1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Dec 2021 04:40:55 +0000
+        Tue, 14 Dec 2021 04:40:57 +0000
 Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 1BE4aj9A034843;
-        Tue, 14 Dec 2021 04:40:55 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 1BE4aj9E034843;
+        Tue, 14 Dec 2021 04:40:56 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by userp3030.oracle.com with ESMTP id 3cvh3wp5ab-3;
-        Tue, 14 Dec 2021 04:40:54 +0000
+        by userp3030.oracle.com with ESMTP id 3cvh3wp5ab-5;
+        Tue, 14 Dec 2021 04:40:56 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.ibm.com, john.garry@huawei.com,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
+To:     Florian Fainelli <f.fainelli@gmail.com>,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] scsi: hisi_sas: Use devm_bitmap_zalloc() when applicable
-Date:   Mon, 13 Dec 2021 23:40:49 -0500
-Message-Id: <163945683291.11687.2480317688241626115.b4-ty@oracle.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "supporter:QLOGIC QL41xxx ISCSI DRIVER" 
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        "open list:QLOGIC QL41xxx ISCSI DRIVER" <linux-scsi@vger.kernel.org>,
+        Nilesh Javali <njavali@marvell.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: [PATCH v2 0/2] SYSFS_FLAG_FW_SEL_BOOT formatting fixes
+Date:   Mon, 13 Dec 2021 23:40:51 -0500
+Message-Id: <163945683292.11687.11917660920609079321.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <4afa3f71e66c941c660627c7f5b0223b51968ebb.1637961191.git.christophe.jaillet@wanadoo.fr>
-References: <4afa3f71e66c941c660627c7f5b0223b51968ebb.1637961191.git.christophe.jaillet@wanadoo.fr>
+In-Reply-To: <20211130203813.12138-1-f.fainelli@gmail.com>
+References: <20211130203813.12138-1-f.fainelli@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: 5hNP_JKoSyqai_S3HvOIQfFMO92ETEy3
-X-Proofpoint-GUID: 5hNP_JKoSyqai_S3HvOIQfFMO92ETEy3
+X-Proofpoint-ORIG-GUID: KTz-cqCY-RZ1dC8UU9k5aGdSck_Eipld
+X-Proofpoint-GUID: KTz-cqCY-RZ1dC8UU9k5aGdSck_Eipld
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 26 Nov 2021 22:15:21 +0100, Christophe JAILLET wrote:
+On Tue, 30 Nov 2021 12:38:11 -0800, Florian Fainelli wrote:
 
-> 'hisi_hba->slot_index_tags' is a bitmap. So use 'devm_bitmap_zalloc()' to
-> simplify code, improve the semantic and avoid some open-coded arithmetic
-> in allocator arguments.
+> This patch series aligns the formatting of SYSFS_FLAG_FW_SEL_BOOT
+> between qedi and qla4xxx.
 > 
+> Changes in v2:
 > 
+> - fixed incorrect format in second hunk of qla4xxx
+> 
+> [...]
 
 Applied to 5.17/scsi-queue, thanks!
 
-[1/3] scsi: hisi_sas: Use devm_bitmap_zalloc() when applicable
-      https://git.kernel.org/mkp/scsi/c/54585ec62fbd
-[2/3] scsi: hisi_sas: Remove some useless code in 'hisi_sas_alloc()'
-      https://git.kernel.org/mkp/scsi/c/d43efddf6271
-[3/3] scsi: hisi_sas: Use non-atomic bitmap functions when possible
-      https://git.kernel.org/mkp/scsi/c/4d6942e2666e
+[1/2] scsi: qedi: Fix SYSFS_FLAG_FW_SEL_BOOT formatting
+      https://git.kernel.org/mkp/scsi/c/9f9b7fa946be
+[2/2] scsi: qla4xxx: Format SYSFS_FLAG_FW_SEL_BOOT as byte
+      https://git.kernel.org/mkp/scsi/c/74d801525385
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
