@@ -2,90 +2,151 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56D2AC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 09:19:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12296C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 11:11:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232183AbhLNJTK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Dec 2021 04:19:10 -0500
-Received: from mail-m975.mail.163.com ([123.126.97.5]:50887 "EHLO
-        mail-m975.mail.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230383AbhLNJTK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 04:19:10 -0500
-X-Greylist: delayed 904 seconds by postgrey-1.27 at vger.kernel.org; Tue, 14 Dec 2021 04:19:09 EST
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=LgBp9
-        9KE97lkefxq811mzJ7dGlgzx0T3MUWZy5bxN1A=; b=BSp6oIvf6V4znGycN/NXE
-        8khl1ZO+Db8qZUEijrbLtT/H0PjsCmryXT5BMaDuTVZ7cQb2zdRI/T42rH98fUMc
-        Mezk7cKWRm8Kj/ST/V4V/J2zpAWDVhvvp2HGlX5eHPuHvkWBhjI4Kk6EWIvEIu0D
-        4wc19XJK6g41b4DW+1bYrE=
-Received: from localhost.localdomain (unknown [36.112.214.113])
-        by smtp5 (Coremail) with SMTP id HdxpCgBnMiXrXbhheRXWBQ--.25889S4;
-        Tue, 14 Dec 2021 17:03:54 +0800 (CST)
-From:   Jianglei Nie <niejianglei2021@163.com>
-To:     jinpu.wang@cloud.ionos.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jianglei Nie <niejianglei2021@163.com>
-Subject: [PATCH] scsi: pm8001: Fix memory leak in pm8001_send_abort_all()
-Date:   Tue, 14 Dec 2021 17:03:37 +0800
-Message-Id: <20211214090337.29156-1-niejianglei2021@163.com>
-X-Mailer: git-send-email 2.25.1
+        id S233448AbhLNLLq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Dec 2021 06:11:46 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:38608 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229502AbhLNLLm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 06:11:42 -0500
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id 5578D1F37C;
+        Tue, 14 Dec 2021 11:11:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1639480301; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=UI7E9YaxqXRWd4aYGhXKP+x+evRGUMLUBEiz/8kze70=;
+        b=oDBnPWBLj+MjeDWWSbO2j64TSV2j4jR6IuEGy8A99Q5tRV9mScDhYh23iw5l6D7yZF2sSn
+        AqfhYuWwHt1SVyZClHVPMWXRGPy1i4unHDGwM242nNMdnxboIAW7RaUzvY0Bc8BdehJnFr
+        EsQ3JU9lV1rbnZSo/mX/9ydM4o8uoKE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1639480301;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=UI7E9YaxqXRWd4aYGhXKP+x+evRGUMLUBEiz/8kze70=;
+        b=scvaA46e63hjZRMikDL23XHGGd2V0m5Co0KlCDuobhsZJyvMkJEg5QSqadEPnFhVYRYONB
+        Q6zaZ/3GV9G+0sAw==
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id 4EF41A3B81;
+        Tue, 14 Dec 2021 11:11:41 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 17828)
+        id 4110D5192149; Tue, 14 Dec 2021 12:11:41 +0100 (CET)
+From:   Daniel Wagner <dwagner@suse.de>
+To:     linux-scsi@vger.kernel.org
+Cc:     Nilesh Javali <njavali@marvell.com>, linux-kernel@vger.kernel.org,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Hannes Reinecke <hare@suse.de>, Daniel Wagner <dwagner@suse.de>
+Subject: [PATCH v3] qla2xxx: synchronize rport dev_loss_tmo setting
+Date:   Tue, 14 Dec 2021 12:11:39 +0100
+Message-Id: <20211214111139.52503-1-dwagner@suse.de>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: HdxpCgBnMiXrXbhheRXWBQ--.25889S4
-X-Coremail-Antispam: 1Uf129KBjvJXoWxJry7Xr47trW8Gr4DJr4Utwb_yoW8XF13pF
-        Z7ZF12kr4UJa10gwsxAanrXwnYv3yxK34UCFW8Z3s09FW3XFW0qFyIvrW2qr1xJrykCF17
-        XFyDWFsrWFyDZr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jqdgAUUUUU=
-X-Originating-IP: [36.112.214.113]
-X-CM-SenderInfo: xqlhyxxdqjzvrlsqjii6rwjhhfrp/1tbiWxppjFSIsjnzDgAAsO
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In line 1767, sas_alloc_slow_task() allocates and initializes a
-sas_task structure. When some errors occur, line 1778 and line
-1795 forget to free this structure, which will lead to a memory leak.
-There is a similar snippet of code in the same file (in function
-pm8001_send_read_log) as allocating and initializing in line 1812
-as well as releasing the memory in line 1822 and line 1867.
+From: Hannes Reinecke <hare@suse.de>
 
-We can fix it by calling sas_free_task() when the res and ret is true
-and before the function returns.
+Currently, the dev_loss_tmo setting is only ever used for SCSI
+devices. This patch reshuffles initialisation such that the SCSI
+remote ports are registered before the NVMe ones, allowing the
+dev_loss_tmo setting to be synchronized between SCSI and NVMe.
 
-Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Daniel Wagner <dwagner@suse.de>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+We have this patch in our kernels for a while and it works
+fine.
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 124cb69740c6..25045a91620e 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1774,8 +1774,10 @@ static void pm8001_send_abort_all(struct pm8001_hba_info *pm8001_ha,
- 	task->task_done = pm8001_task_done;
+v3:
+ - added additional check if fcport pointer is valid in
+   qla2x00_set_rport_loss_tmo (crash reported)
+
+v2:
+ - https://lore.kernel.org/linux-scsi/20210702092052.93202-1-dwagner@suse.de/
+ - fixed build failure for !NVME_FC reported by lkp
+
+v1:
+ - https://lore.kernel.org/linux-scsi/20210609094956.11286-1-dwagner@suse.de/
+ - initial version
  
- 	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
--	if (res)
-+	if (res) {
-+		sas_free_task(task);
- 		return;
-+	}
- 
- 	ccb = &pm8001_ha->ccb_info[ccb_tag];
- 	ccb->device = pm8001_ha_dev;
-@@ -1791,8 +1793,10 @@ static void pm8001_send_abort_all(struct pm8001_hba_info *pm8001_ha,
- 
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &task_abort,
- 			sizeof(task_abort), 0);
--	if (ret)
-+	if (ret) {
-+		sas_free_task(task);
- 		pm8001_tag_free(pm8001_ha, ccb_tag);
-+	}
- 
+ drivers/scsi/qla2xxx/qla_attr.c |  6 ++++++
+ drivers/scsi/qla2xxx/qla_init.c | 10 +++-------
+ drivers/scsi/qla2xxx/qla_nvme.c |  5 ++++-
+ 3 files changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 032efb294ee5..db55737000ab 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2700,7 +2700,13 @@ qla2x00_get_starget_port_id(struct scsi_target *starget)
+ static inline void
+ qla2x00_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
+ {
++	fc_port_t *fcport = *(fc_port_t **)rport->dd_data;
++
+ 	rport->dev_loss_tmo = timeout ? timeout : 1;
++
++	if (IS_ENABLED(CONFIG_NVME_FC) && fcport && fcport->nvme_remote_port)
++		nvme_fc_set_remoteport_devloss(fcport->nvme_remote_port,
++					       rport->dev_loss_tmo);
  }
  
+ static void
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 070b636802d0..1fe4966fc2f6 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5828,13 +5828,6 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 
+ 	qla2x00_dfs_create_rport(vha, fcport);
+ 
+-	if (NVME_TARGET(vha->hw, fcport)) {
+-		qla_nvme_register_remote(vha, fcport);
+-		qla2x00_set_fcport_disc_state(fcport, DSC_LOGIN_COMPLETE);
+-		qla2x00_set_fcport_state(fcport, FCS_ONLINE);
+-		return;
+-	}
+-
+ 	qla24xx_update_fcport_fcp_prio(vha, fcport);
+ 
+ 	switch (vha->host->active_mode) {
+@@ -5856,6 +5849,9 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 		break;
+ 	}
+ 
++	if (NVME_TARGET(vha->hw, fcport))
++		qla_nvme_register_remote(vha, fcport);
++
+ 	qla2x00_set_fcport_state(fcport, FCS_ONLINE);
+ 
+ 	if (IS_IIDMA_CAPABLE(vha->hw) && vha->hw->flags.gpsc_supported) {
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 138ffdb5c92c..e22ec7cb65db 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -43,7 +43,7 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
+ 	req.port_name = wwn_to_u64(fcport->port_name);
+ 	req.node_name = wwn_to_u64(fcport->node_name);
+ 	req.port_role = 0;
+-	req.dev_loss_tmo = 0;
++	req.dev_loss_tmo = fcport->dev_loss_tmo;
+ 
+ 	if (fcport->nvme_prli_service_param & NVME_PRLI_SP_INITIATOR)
+ 		req.port_role = FC_PORT_ROLE_NVME_INITIATOR;
+@@ -70,6 +70,9 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
+ 		return ret;
+ 	}
+ 
++	nvme_fc_set_remoteport_devloss(fcport->nvme_remote_port,
++				       fcport->dev_loss_tmo);
++
+ 	if (fcport->nvme_prli_service_param & NVME_PRLI_SP_SLER)
+ 		ql_log(ql_log_info, vha, 0x212a,
+ 		       "PortID:%06x Supports SLER\n", req.port_id);
 -- 
-2.25.1
+2.29.2
 
