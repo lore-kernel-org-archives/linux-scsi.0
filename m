@@ -2,97 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1AB6C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 04:55:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7BD2C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 04:57:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229707AbhLNEzx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Dec 2021 23:55:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42918 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbhLNEzx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Dec 2021 23:55:53 -0500
-Received: from mail-il1-x136.google.com (mail-il1-x136.google.com [IPv6:2607:f8b0:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD414C061574;
-        Mon, 13 Dec 2021 20:55:52 -0800 (PST)
-Received: by mail-il1-x136.google.com with SMTP id h16so16812272ila.4;
-        Mon, 13 Dec 2021 20:55:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=AsBIaAHTm+Ce33MAqe66+oomMTkEdHoRvuk0H6tZ+NE=;
-        b=cD+W6ePgo75qRGasOjN9FhQ4FCFCH19enVfosGXH94vAoDJ/G17yaDdfWfUTMdXZAj
-         MC2BYkY4Sg1cBEfCyN6B4z9zu4KasJALpaw3SldVPb3SQdJdXXhuTSpp6XMlLEOWZP7e
-         N1rJOr05XMIEL65cvKFGzMv0wuKL2atJMOSr0V08HY3m4DWAB42SBSOLIYTU0Y0C/pbz
-         JKE8Wip2Uem8W+prRGuoRo/orCmP3U2RkcS/REfkKGvE3N3CJVUI7LFKvqNPfieTBfsu
-         CT+kO0A18hEokyKp+lgaDn6uijPqxq+E7yCkQQt1Tv1cmGHmAzMgViqrB5kZbtpu9Exu
-         faVg==
+        id S229723AbhLNE5f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Dec 2021 23:57:35 -0500
+Received: from mail-pj1-f47.google.com ([209.85.216.47]:38635 "EHLO
+        mail-pj1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229436AbhLNE5e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Dec 2021 23:57:34 -0500
+Received: by mail-pj1-f47.google.com with SMTP id p18-20020a17090ad31200b001a78bb52876so16255629pju.3
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2021 20:57:34 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=AsBIaAHTm+Ce33MAqe66+oomMTkEdHoRvuk0H6tZ+NE=;
-        b=mGoGbyg2UVYyz7oVccdpFMUidCJl4izDi6CHFi8Yz5mo8natu+2Q265SOSeJqUfam8
-         5g/IS7eJmMw3hnE85GG8eCmgJyToWAzs6GoV4QmdBV5i38oAEOuGh4AogxFAmtrC1ThC
-         z4IXLDhv341k+rMTeBVSUBa0WdWn9R7giL3Qcow1XX8qWfj2FFgt6Jd6tyAkK1fpgB84
-         gYfeZWVEAhIkDHmy5MPZ8dZtSgHF0MLowiek/zC4kqk575yFoMorOyzUCFKHHHYgnqCO
-         hMEWEj1wxN4aJqd26MqE1TPCzro3dfk+JKaNVBtxau4PXqp0PJVQ0qot0SDvEpNhIFKL
-         tjzQ==
-X-Gm-Message-State: AOAM532aWzGnrnTl0Z+fKt0SUq243W1wdvw2xU4rZmG7cfpD3HpnKhv6
-        3MlqBwHwy9uAhfdf3zskJJXZQnT1oruFXE8QSE0=
-X-Google-Smtp-Source: ABdhPJwN0GwUrv+tFszZzEtRYNAsVMZvAO4GU0eSGkyt7eALSk/ZyZYwc7teP8wcDzkxuPP+ftM9vmA8tAQhEXblMRY=
-X-Received: by 2002:a92:c56c:: with SMTP id b12mr2005122ilj.237.1639457751563;
- Mon, 13 Dec 2021 20:55:51 -0800 (PST)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=kkIWdnahLKDzpJwevwHjndA2Aq1tRoyLTG9GfY2DuMI=;
+        b=VrBb5HWVkDmeupUp7/M74PMoUgCooY4YZqAlDoVBidsTJpx4hjMbmfVpUIA8lfbKFU
+         37fKIeeiTxLnlbPdADECkeFpclOM/fY50x2gAbEm3sQgQxbOgwUX82L7H77cOQqyls+R
+         iHFTPoGpJXwLV3SMMKunFsOga1rjL6E524a59mrYzJ6wuQnQVEYyG0TjPrd9mrp2fh4u
+         A5Yhg/NX4U62X1WTMOTpqDI1XwUSPUy58COtW6cJFN78pkMbZSw3y2GBZevQtgVJ/YjN
+         FWu2k72cvn7nFJ8+f7mhRYlPxJbXXM2X+XW4v1aD2yPQkndOCt31NaAktOUtcvCgX+Oo
+         qUew==
+X-Gm-Message-State: AOAM531RDvmrH/ZySOhVZPDbv61pY7srcdOPAUgkww8wPUPYYqowrPlW
+        SygqIwUlG5KYSSmPCV02Li4=
+X-Google-Smtp-Source: ABdhPJxHzBVxMI0oEbn1lfPUSxxgSFxYNk4nS4oWAUrn3N5pN0j15VOyJaQe1JEaITvkVz5BqahzHg==
+X-Received: by 2002:a17:90b:4f86:: with SMTP id qe6mr3195350pjb.224.1639457854167;
+        Mon, 13 Dec 2021 20:57:34 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id gk13sm431168pjb.43.2021.12.13.20.57.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 13 Dec 2021 20:57:33 -0800 (PST)
+Message-ID: <701e993f-0b74-204a-1b07-306c13820fa9@acm.org>
+Date:   Mon, 13 Dec 2021 20:57:31 -0800
 MIME-Version: 1.0
-References: <20211213230045.492994-1-huobean@gmail.com> <101fa5ba-6d74-6c51-aaa2-e6c6d98f6bc7@acm.org>
-In-Reply-To: <101fa5ba-6d74-6c51-aaa2-e6c6d98f6bc7@acm.org>
-From:   John Stultz <john.stultz@linaro.org>
-Date:   Mon, 13 Dec 2021 20:55:39 -0800
-Message-ID: <CANcMJZCDe5fL0qYjgmDWJeHWjNYY0pzZ6TcNJ_nzdzR1VKjCug@mail.gmail.com>
-Subject: Re: [PATCH v1] scsi: ufs: Fix deadlock issue in ufshcd_wait_for_doorbell_clr()
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org,
-        daejun7.park@samsung.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH v4 16/17] scsi: ufs: Optimize the command queueing code
+Content-Language: en-US
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org, Asutosh Das <asutoshd@codeaurora.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Keoseong Park <keosung.park@samsung.com>
+References: <20211203231950.193369-1-bvanassche@acm.org>
+ <20211203231950.193369-17-bvanassche@acm.org> <YbgX5qZ4VFXPqnnr@ripper>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <YbgX5qZ4VFXPqnnr@ripper>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Dec 13, 2021 at 8:15 PM Bart Van Assche <bvanassche@acm.org> wrote:
->
-> On 12/13/21 3:00 PM, Bean Huo wrote:
-> > Call shost_for_each_device() with host->host_lock is held will cause
-> > a deadlock situation, which will cause the system to stall (the log
-> > as follow). Fix this issue by narrowing the scope of the lock.
->
-> Hi Bean,
->
-> As you probably know I do not have access to a test setup that supports clock
-> scaling. Has the following patch been considered?
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 6d692aae67ce..244eddf0caf8 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1084,7 +1084,9 @@ static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
->         struct scsi_device *sdev;
->         u32 pending = 0;
->
-> -       shost_for_each_device(sdev, hba->host)
-> +       lockdep_assert_held(hba->host->host_lock);
-> +
-> +       __shost_for_each_device(sdev, hba->host)
->                 pending += sbitmap_weight(&sdev->budget_map);
+On 12/13/21 20:04, Bjorn Andersson wrote:
+> Can you please help me understand what I'm missing? Or how you tested
+> this?
 
-We hit the same issue today as well, and this solution works on db845c.
+Hi Bjorn,
 
-Reported-by: YongQin Liu <yongqin.liu@linaro.org>
-Reported-by: Amit Pundir <amit.pundir@linaro.org>
-Tested-by: John Stultz <john.stultz@linaro.org>
+Unfortunately I don't have access to a test setup with a Qualcomm 
+chipset. Please help verifying whether this patch is sufficient as a fix 
+(see also 
+https://lore.kernel.org/linux-scsi/101fa5ba-6d74-6c51-aaa2-e6c6d98f6bc7@acm.org/):
 
-thanks
--john
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 6d692aae67ce..244eddf0caf8 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1084,7 +1084,9 @@ static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
+   	struct scsi_device *sdev;
+   	u32 pending = 0;
+
+-	shost_for_each_device(sdev, hba->host)
++	lockdep_assert_held(hba->host->host_lock);
++
++	__shost_for_each_device(sdev, hba->host)
+   		pending += sbitmap_weight(&sdev->budget_map);
+
+   	return pending;
+
+Thanks,
+
+Bart.
