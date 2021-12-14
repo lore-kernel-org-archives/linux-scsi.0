@@ -2,244 +2,229 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAD20C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 18:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8618BC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 18:41:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237080AbhLNSfn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Dec 2021 13:35:43 -0500
-Received: from mail-eus2azlp17010006.outbound.protection.outlook.com ([40.93.12.6]:40655
-        "EHLO na01-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229517AbhLNSfm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Dec 2021 13:35:42 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jTzroPUAWlig2Mq1z64KHZky12s6Sp/jmDdgsCZegk5jfg3Qqcs2yCcmpkkMXl2lUuQPvbIwbGxDicLWCsFxJYyvpQeuyHrbMqzD4SxVneFALJtXNq4+GSCb6UY0mmburqc47er4dTtwNVE3ADukKh7X/nmG8ze0DQnzVGTMd3uuKrBfRu+zMBLtYKm3E6VYzQp/mBTYNZT2KEszPfo06wUXEAX9R+ZBuO3qBK5W2aiQzy4G0dcC+ZPZeWMCHhl2yrgc/L+K5UXqNG7F+vUrecehe+RAnkwu3EqFgjl6vluV3iGZKBv110uLXftn5PlnUPIBbeqCiDqlUAUomHzTag==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=fCqJ65rAGJ8t36bAwkGlABLkhqtrZ/HHn/H1zS9yd0Q=;
- b=nF+x9x2xhtFpfSGBp2iTxOCeXjsNQm3Ov/otu4ozwR3abj8NchCiMawUMLCTmHoDxuMCCItWKRK1dOR/BV1a2P2ZnRIrA6QKP1ui0oFHWcVfHNgVDaCPokeUGI2808c1AXz9Yp6hP+dHTfOITlLt6/kf/eRIAB7j9FBtakpElb1FvU3YOCXBZiR6r2mj230/K/xlqVUWhCWC6BBpYjFpmqbbi6IU4e69bJ61HD2uhc/9sofNGYNmPl71y/P8/TpreuJTQO8qW3LfRXakrJBT5UBnLTZ62V3vZs7YiUmyoG6SdiQ3Sh2/0+Vd0yJG/oKLG3N5TKQmIhUO6sVCGZZJzg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fCqJ65rAGJ8t36bAwkGlABLkhqtrZ/HHn/H1zS9yd0Q=;
- b=BDLsbWM4B4/EBdThn7H+it35hu2cIuR7ze+qNV2874Gk+VmJroDEuJ52OO510UbloWM4ycTPsdNwOcdO1SjuKi5HBqFsa1tDBRR183Yz1m6zlSBZj3eQevSDuZFh7NUqmMDIVITg2TGSO4mvo8IziegSxX8motV8rLCG0CEmAMU=
-Received: from MWHPR21MB1593.namprd21.prod.outlook.com (2603:10b6:301:7c::11)
- by BN6PR21MB0276.namprd21.prod.outlook.com (2603:10b6:404:9b::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4823.6; Tue, 14 Dec
- 2021 18:35:35 +0000
-Received: from MWHPR21MB1593.namprd21.prod.outlook.com
- ([fe80::e9ea:fc3b:df77:af3e]) by MWHPR21MB1593.namprd21.prod.outlook.com
- ([fe80::e9ea:fc3b:df77:af3e%6]) with mapi id 15.20.4823.005; Tue, 14 Dec 2021
- 18:35:34 +0000
-From:   "Michael Kelley (LINUX)" <mikelley@microsoft.com>
-To:     Tianyu Lan <ltykernel@gmail.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "bp@alien8.de" <bp@alien8.de>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "x86@kernel.org" <x86@kernel.org>, "hpa@zytor.com" <hpa@zytor.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>
-CC:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "hch@lst.de" <hch@lst.de>, "joro@8bytes.org" <joro@8bytes.org>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-Subject: RE: [PATCH V7 0/5] x86/Hyper-V: Add Hyper-V Isolation VM
- support(Second part)
-Thread-Topic: [PATCH V7 0/5] x86/Hyper-V: Add Hyper-V Isolation VM
- support(Second part)
-Thread-Index: AQHX7/EPrVKNVndzlEOmds811YMwUawyUrQg
-Date:   Tue, 14 Dec 2021 18:35:34 +0000
-Message-ID: <MWHPR21MB159370A7BC145DA18D0CA938D7759@MWHPR21MB1593.namprd21.prod.outlook.com>
-References: <20211213071407.314309-1-ltykernel@gmail.com>
-In-Reply-To: <20211213071407.314309-1-ltykernel@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=bf8d5b8d-2191-425c-955b-76a1ecaafd20;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-12-14T18:34:57Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: f52d8092-05a0-4e0b-031f-08d9bf30845f
-x-ms-traffictypediagnostic: BN6PR21MB0276:EE_
-x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
-x-microsoft-antispam-prvs: <BN6PR21MB0276E21F560411CE14ECE28FD7759@BN6PR21MB0276.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:2512;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: V51gMJtHBb94j6r3ENHQ0cnmlcr8O+CE+qZzFCeyLMt42uLIORt8ZdebQv+dveY8uA4EA2RAJg1tFlh6ke3Z59typE/PT0Q6/MKqfHb8HD93SDBQDGovMZd8SRuIBcGeBeVwggJ++4Xti2HnxvOIncDvKwg1Sn1CY1j6bnbwS7l+q3f8dKIVWn12Tz11BeiDr1gR7Q3hYm5GVP9WWC4oMC9KhLqP7oOmwV5bbWZUtaDptoY52u3gW21JsFlcuzCGdOEM7BcaU3WP3vrNbcvIs/Y9Oc6RDIxWkLeiQydUNOcyf2TEeVGVuhnrZny8sxIDGHlnQJSAE6oySxhY5xLGSJpAyYBh+/gauruE/V9GVRTgBe+mrLB7pYpuENBj8pd1NdMLMMi+NhMbe8esX/at5//z07rNg5hrVywourt/VI8+iWIBG7bxf30vG7NMNsTx/1ATklC+MTf33Uk5w9rKIQE8e0FmP7FMH2345HgRYqNImeGcN8S4s7MTyXslLiDZ6qycbPjdS+YJsX2jmccwRLGXpsfXNeX0H4jvNByG6HgZphaWb1ox0LPMILQmWHnh9kIzsRvuq8VIZXu3vubG+Nb5O9oiX0w4kGNYbV22XuF26VYWfY3NZCGI8Nx7wdYmnMv+c0bjmNFKBRZO1bD6Ry2hio6CivrsBn4bDXzLHuCHnXsr1eTCY3/DS2hOvIbYOSZRSLkyy/7cPRpXEzlKbPifLGtx5WdJSrmidu0i4u2j7IK6lovNmQL9CxI/k2iL8f7Qp91XYsmVCM7Y3AapPg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR21MB1593.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(26005)(54906003)(9686003)(76116006)(6636002)(38100700002)(71200400001)(122000001)(66946007)(508600001)(8990500004)(10290500003)(86362001)(316002)(186003)(7696005)(6506007)(110136005)(8936002)(8676002)(2906002)(5660300002)(7416002)(38070700005)(921005)(83380400001)(7406005)(55016003)(33656002)(82960400001)(82950400001)(52536014)(66446008)(64756008)(66556008)(66476007)(4326008)(20210929001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?fJ3k3OiLzR0X/HgMljlbzJ1mmnNBNEJcQ18jf5ANKSbEfIbojAFk2kXQGmP1?=
- =?us-ascii?Q?Fq+7/NVWMq6BRAqyce7idQ0Ffm98vtYZZasgxIygFsQipEFQtuy3yNCsJZ2C?=
- =?us-ascii?Q?Sv/6rmZVy6NbPBfThPlmO/rFkwItHjHe3DZquQf59TQZPehhr0x0xIjxCb3V?=
- =?us-ascii?Q?4SVN5u4EL0w8/O1bKZ3aDtYlAYlFy66vXPEfO0cam9yeOFx7xaRoXO7uUjMC?=
- =?us-ascii?Q?xw7dHCjH/P09FMbuHXwiXdgPTWOjMSGiDh9hqrhfowBgc7JG+u0O87Xv4Ivh?=
- =?us-ascii?Q?GqO8w9Gy1XTZhZzh3DgPGaQ5HPNsGymwDMdIUqZsSfaiMrhPLE88U45xAzvq?=
- =?us-ascii?Q?LjdFX5+lWfQmHX8WoCYZpy+dPFydwbMN0NIY3R2KtbuogiWXFaOyB5/gErcy?=
- =?us-ascii?Q?ce1QHNdUGtY2Jsy9e+S3FMiO8y5iKYP3Hk3EbKkPhsHqM+HZUdGuKWOqXOgs?=
- =?us-ascii?Q?ux4OXDQ/kOKdf+Y6BiNqCO3A5nrjV+vnkbmq5pjxOWdxh6SZhlPxx2577xLW?=
- =?us-ascii?Q?K0T4eKIlaKQJPvi0Bti55rgg8PqpxIQO5qv83yGgkcEDhDHE9YtHJn/WeRan?=
- =?us-ascii?Q?lE7e3XgSwGpuywjwWqUWIeogb0OU8MZ3ADE9cw2bBQ1OanfIC+8AUtlTwS0y?=
- =?us-ascii?Q?VvIBTbvlEp8fsxJUNgYVC4MOTM7u7NZsOSm6ZFZnOPyNfPl7YUe6wogIyc1T?=
- =?us-ascii?Q?n/37Fij7eFV4yLCszzu8ciNoAoGInyF2Yv68eTlmvFs9oLVyoygT61ANjOe/?=
- =?us-ascii?Q?U+FAJGZZhy0Hj2x0rkHfKk+z8mrjYw21Rip03LF+C2ykvXNLGKzPImPTtoKu?=
- =?us-ascii?Q?70yjUJYrINsITGKHbn2tVsiaYD0AL42bRTXf3e7yVSSlOEiTyEbA8vRDFtm2?=
- =?us-ascii?Q?95VMWlGgrnOrGNT31JuOVjdnlGzu2lzQA0qJSAk9BwzPMfkx/+MsQrwOHrQh?=
- =?us-ascii?Q?WPLVfUFXbPnPUll8yY18a1IDsGeC/h8GSioWrMxCFXcfeFYsI2SlDAZFO1HE?=
- =?us-ascii?Q?CxQY7AErSCmh1StGFPC2RfIvPo/FBGGPccEO2c5SBlTbXLA3241nJq0WpQXa?=
- =?us-ascii?Q?3nF2e3c/6sArtUCMFQFs3P5Dvb+v6AxDMF+Loi4hkwC3LPwDO7lJQ8IpmKrB?=
- =?us-ascii?Q?s6DDFVjnGzZRAyKmzP9FK77IzUw+niArOOJvdUErdPJ+e3Wge9FzzY9oUtRJ?=
- =?us-ascii?Q?9S51S3zsF/c/3jJhqAMRYeUGO0EZuP7OEEe5P3bdtRnTyjnsbFnt5dtRLC86?=
- =?us-ascii?Q?v1oj3Hqxwi8MByamaXuLArVJoAcDQLEc9Gsw6MQrE0BazaZLTBb5hAbfjjGg?=
- =?us-ascii?Q?aUm4x6AZYiJvuWiqt6H+6Y4kef/Qfp4Cja5q94XjUqc38grSC9xnfv1ila2D?=
- =?us-ascii?Q?4WfFCd4xZm1+/WqIQUL5OvjEM7lt1Lpa94h/sbtHRoizqyWUHU2pmIJFfT/a?=
- =?us-ascii?Q?5LEj9vhlcMFaeIAPn6uJgW41D0HgsfFzAhPLhqeG0Fbi0onbm7ekgMN/dQtK?=
- =?us-ascii?Q?2OUeYFcLK5lDFOVWYDoUBKEWwBSEO4YEySI00dVkkDE0ybiCo1YxAK6A0z2W?=
- =?us-ascii?Q?OuZssNKcfuoETvv7IgTfzc+B6fT/E71RNaGp4/uypcqiEVT9VTKldrvMNcMa?=
- =?us-ascii?Q?s08vhdVANBn/4HIGDQBeognN2FAjss98Dd/HSwxgiCqFODoy82gHovwwQmqk?=
- =?us-ascii?Q?BCRNXw=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S237080AbhLNSlR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Dec 2021 13:41:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36132 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237065AbhLNSlR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 13:41:17 -0500
+Received: from mail-qv1-xf32.google.com (mail-qv1-xf32.google.com [IPv6:2607:f8b0:4864:20::f32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C327C06173E
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2021 10:41:17 -0800 (PST)
+Received: by mail-qv1-xf32.google.com with SMTP id i12so18081421qvh.11
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2021 10:41:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=WON+ErZ0AZmFaxybB002PvtrOAiFXyUoDekWPa8ylv8=;
+        b=ZRTuxP8qMiyc9brqLaUfGzRVpTMVcBGH1tMMqfKXbwxIW0d0DOfxNxWdEDGf7B1BPs
+         YlqgHCcC0aJ6L1GRBPL/b+XqZtGrWY/1TO1N1cXUwEFtsILwjkC+7NdOJTJF5pOpPcVT
+         WvbP1/YOXVXp29fVptsweSbw1PT7wopz6oiY8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=WON+ErZ0AZmFaxybB002PvtrOAiFXyUoDekWPa8ylv8=;
+        b=NxIYrrjULTD4N+hQXsoK44Rj6Gl3DZNK7te3dsPyMf2SUArdEpH9zmxew/xUgP/V6e
+         4mDHUEuB7zJ2MfZcekUTzuW0UAdG36/gLCDewa4ZSFGEuue3TxvCuM0VaOfoC4rq+E4m
+         RF2vhLSie8JRHaNwY84nWrtCJ3pEHQSro7CrljeSz03podGxSvnK7xR5Pjhkg1rLSPMJ
+         8mOG2IDGVaa+ul6MT8HOnJiFx0lqUV+MQLCM+MPmXwdDEgaqZmrYdMK/PwIC78Zy5+Wk
+         cAhQHtOOHKt0azO5RqoLpGah/yKtMxTuxn/RfRaYxMjYY3kA2H/qx2U7ARSrUYFtCmpC
+         RXDQ==
+X-Gm-Message-State: AOAM53341NYKvEeqd0fkLKh81UpEgP2eBqiTkInZry5sH1af4jr6nTHA
+        A8NL3Vk/DumW3v8dZ3Y75YRgMCqEG/loUQWrmpuQcw==
+X-Google-Smtp-Source: ABdhPJzdWdT6fkUlsCkUoy0Cm/mlOpmp5mPLdWalI2L8LEaklpwBLhB0XgwKmsngd1yv+VSkDnA3FFUd0DiFzXTHCys=
+X-Received: by 2002:a05:6214:21e3:: with SMTP id p3mr7244873qvj.93.1639507275925;
+ Tue, 14 Dec 2021 10:41:15 -0800 (PST)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+References: <20210906065003.439019-1-ming.lei@redhat.com>
+In-Reply-To: <20210906065003.439019-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR21MB1593.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f52d8092-05a0-4e0b-031f-08d9bf30845f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Dec 2021 18:35:34.7390
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: U1liVnPOvSufH3aLWzkbjCKqmM209WOYN+gNvxg0vRrMYhm5c2jbCQzZn/gSn3Cw++y6ihrMwZ2bZTKIqV8jxgqYdb/BZrw7Cd9CzRBqLFU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR21MB0276
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQCw9RdeG8B11ACtJOqN2MhOUMiBIa6AQIaA
+Date:   Wed, 15 Dec 2021 00:11:13 +0530
+Message-ID: <0d8666c9983158a4954f30f6b429e797@mail.gmail.com>
+Subject: RE: [PATCH] blk-mq: avoid to iterate over stale request
+To:     Ming Lei <ming.lei@redhat.com>, luojiaxing <luojiaxing@huawei.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.garry@huawei.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000cfec3b05d31f88bd"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tianyu Lan <ltykernel@gmail.com> Sent: Sunday, December 12, 2021 11:1=
-4 PM
->=20
-> Hyper-V provides two kinds of Isolation VMs. VBS(Virtualization-based
-> security) and AMD SEV-SNP unenlightened Isolation VMs. This patchset
-> is to add support for these Isolation VM support in Linux.
->=20
-> The memory of these vms are encrypted and host can't access guest
-> memory directly. Hyper-V provides new host visibility hvcall and
-> the guest needs to call new hvcall to mark memory visible to host
-> before sharing memory with host. For security, all network/storage
-> stack memory should not be shared with host and so there is bounce
-> buffer requests.
->=20
-> Vmbus channel ring buffer already plays bounce buffer role because
-> all data from/to host needs to copy from/to between the ring buffer
-> and IO stack memory. So mark vmbus channel ring buffer visible.
->=20
-> For SNP isolation VM, guest needs to access the shared memory via
-> extra address space which is specified by Hyper-V CPUID HYPERV_CPUID_
-> ISOLATION_CONFIG. The access physical address of the shared memory
-> should be bounce buffer memory GPA plus with shared_gpa_boundary
-> reported by CPUID.
->=20
-> This patchset is to enable swiotlb bounce buffer for netvsc/storvsc
-> drivers in Isolation VM.
->=20
-> Change since v6:
->         * Fix compile error in hv_init.c and mshyperv.c when swiotlb
-> 	  is not enabled.
-> 	* Change the order in the cc_platform_has() and check sev first.
->=20
-> Change sicne v5:
->         * Modify "Swiotlb" to "swiotlb" in commit log.
-> 	* Remove CONFIG_HYPERV check in the hyperv_cc_platform_has()
->=20
-> Change since v4:
-> 	* Remove Hyper-V IOMMU IOMMU_INIT_FINISH related functions
-> 	  and set SWIOTLB_FORCE and swiotlb_unencrypted_base in the
-> 	  ms_hyperv_init_platform(). Call swiotlb_update_mem_attributes()
-> 	  in the hyperv_init().
->=20
-> Change since v3:
-> 	* Fix boot up failure on the host with mem_encrypt=3Don.
-> 	  Move calloing of set_memory_decrypted() back from
-> 	  swiotlb_init_io_tlb_mem to swiotlb_late_init_with_tbl()
-> 	  and rmem_swiotlb_device_init().
-> 	* Change code style of checking GUEST_MEM attribute in the
-> 	  hyperv_cc_platform_has().
-> 	* Add comment in pci-swiotlb-xen.c to explain why add
-> 	  dependency between hyperv_swiotlb_detect() and pci_
-> 	  xen_swiotlb_detect().
-> 	* Return directly when fails to allocate Hyper-V swiotlb
-> 	  buffer in the hyperv_iommu_swiotlb_init().
->=20
-> Change since v2:
-> 	* Remove Hyper-V dma ops and dma_alloc/free_noncontiguous. Add
-> 	  hv_map/unmap_memory() to map/umap netvsc rx/tx ring into extra
-> 	  address space.
-> 	* Leave mem->vaddr in swiotlb code with phys_to_virt(mem->start)
-> 	  when fail to remap swiotlb memory.
->=20
-> Change since v1:
-> 	* Add Hyper-V Isolation support check in the cc_platform_has()
-> 	  and return true for guest memory encrypt attr.
-> 	* Remove hv isolation check in the sev_setup_arch()
->=20
-> Tianyu Lan (5):
->   swiotlb: Add swiotlb bounce buffer remap function for HV IVM
->   x86/hyper-v: Add hyperv Isolation VM check in the cc_platform_has()
->   hyper-v: Enable swiotlb bounce buffer for Isolation VM
->   scsi: storvsc: Add Isolation VM support for storvsc driver
->   net: netvsc: Add Isolation VM support for netvsc driver
->=20
->  arch/x86/hyperv/hv_init.c         |  12 +++
->  arch/x86/hyperv/ivm.c             |  28 ++++++
->  arch/x86/kernel/cc_platform.c     |   8 ++
->  arch/x86/kernel/cpu/mshyperv.c    |  15 +++-
->  drivers/hv/hv_common.c            |  11 +++
->  drivers/hv/vmbus_drv.c            |   4 +
->  drivers/net/hyperv/hyperv_net.h   |   5 ++
->  drivers/net/hyperv/netvsc.c       | 136 +++++++++++++++++++++++++++++-
->  drivers/net/hyperv/netvsc_drv.c   |   1 +
->  drivers/net/hyperv/rndis_filter.c |   2 +
->  drivers/scsi/storvsc_drv.c        |  37 ++++----
->  include/asm-generic/mshyperv.h    |   2 +
->  include/linux/hyperv.h            |   6 ++
->  include/linux/swiotlb.h           |   6 ++
->  kernel/dma/swiotlb.c              |  43 +++++++++-
->  15 files changed, 294 insertions(+), 22 deletions(-)
->=20
+--000000000000cfec3b05d31f88bd
+Content-Type: text/plain; charset="UTF-8"
+
++ John Garry
+
+> blk-mq can't run allocating driver tag and updating ->rqs[tag]
+atomically,
+> meantime blk-mq doesn't clear ->rqs[tag] after the driver tag is
+released.
+>
+> So there is chance to iterating over one stale request just after the
+tag is
+> allocated and before updating ->rqs[tag].
+>
+> scsi_host_busy_iter() calls scsi_host_check_in_flight() to count scsi
+in-flight
+> requests after scsi host is blocked, so no new scsi command can be
+marked as
+> SCMD_STATE_INFLIGHT. However, driver tag allocation still can be run by
+blk-
+> mq core. One request is marked as SCMD_STATE_INFLIGHT, but this request
+> may have been kept in another slot of ->rqs[], meantime the slot can be
+> allocated out but ->rqs[] isn't updated yet. Then this in-flight request
+is
+> counted twice as SCMD_STATE_INFLIGHT. This way causes trouble in
+handling
+> scsi error.
+
+Hi Ming,
+
+We found similar issue on RHEL8.5 (kernel  does not have this patch in
+discussion.). Issue reproduced on 5.15 kernel as well.
+I understood this commit will fix specific race condition and avoid
+reading incorrect host_busy value.
+As per commit message - That incorrect host_busy will be just transient.
+If we read after some delay, correct host_busy count will be available.
+Right ?
+
+In my case (I am using shared host tag enabled driver), it is not race
+condition issue but stale rqs[] entries create permanent incorrect count
+of host_busy.
+Example - There are two pending IOs. This IOs are timed out. Bitmap of
+pending IO is tag#5 (actually belongs to hctx0), tag#10 (actually belongs
+to hctx1).  Note  - This is a shared bit map.
+If hctx0 has same address of the request at 5th and 10th index, we will
+count total 2 inflight commands instead of 1 from hctx0 context + From
+hctx1 context, we will count 1 inflight command = Total is 3.
+Even though we read after some delay, host_busy will be incorrect. We
+expect host_busy = 2 but it will return 3.
+
+This patch fix my issue explained above for shared host-tag case.  I am
+confused reading the commit message. You may not have intentionally fix
+the issue as I explained but indirectly it fixes my issue. Am I correct ?
+
+What was an issue reported by Luojiaxiang ? I am interested to know if
+issue reported by Luojiaxiang had shared host tagset enabled ?
+
+Kashyap
+
+>
+> Fixes the issue by not iterating over stale request.
+>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Reported-by: luojiaxing <luojiaxing@huawei.com>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  block/blk-mq-tag.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c index
+> 86f87346232a..ff5caeb82542 100644
+> --- a/block/blk-mq-tag.c
+> +++ b/block/blk-mq-tag.c
+> @@ -208,7 +208,7 @@ static struct request
+> *blk_mq_find_and_get_req(struct blk_mq_tags *tags,
+>
+>  	spin_lock_irqsave(&tags->lock, flags);
+>  	rq = tags->rqs[bitnr];
+> -	if (!rq || !refcount_inc_not_zero(&rq->ref))
+> +	if (!rq || rq->tag != bitnr || !refcount_inc_not_zero(&rq->ref))
+>  		rq = NULL;
+>  	spin_unlock_irqrestore(&tags->lock, flags);
+>  	return rq;
 > --
-> 2.25.1
+> 2.31.1
 
-For the entire series,
+--000000000000cfec3b05d31f88bd
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
-
+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
+P3lSxcw4Cg90iKHqfpwLnGNc9AGXHMxUCukpnAHRlivljilKHMx1ymb180BLmtF+ZLm6KrFLQWzB
+4KeiUOMtKM13wJrQubqTeZgB1XA+89jeLYlxagVsMyksdwIDAQABo4IB2zCCAdcwDgYDVR0PAQH/
+BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9i
+YWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUF
+BzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xv
+YmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
+Oi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAlBgNV
+HREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAf
+BgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUkTOZp9jXE3yPj4ieKeDT
+OiNyCtswDQYJKoZIhvcNAQELBQADggEBABG1KCh7cLjStywh4S37nKE1eE8KPyAxDzQCkhxYLBVj
+gnnhaLmEOayEucPAsM1hCRAm/vR3RQ27lMXBGveCHaq9RZkzTjGSbzr8adOGK3CluPrasNf5StX3
+GSk4HwCapA39BDUrhnc/qG5vHwLrgA1jwAvSy8e/vn4F4h+KPrPoFNd1OnCafedbuiEXTqTkn5Rk
+vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
+MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
+MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
+VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMjixw9cZ1cHhThIs7Ybwww4Rc4N
+97/jW5sYYE87qB/SMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MTIxNDE4NDExNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
+AwQCATANBgkqhkiG9w0BAQEFAASCAQCrFk06dTFxk/XiSwI9jsoLS66pOC1IqBi7yCzKYSnC8Djy
+KYLyQZaBjCT3zA8G5VcElQBd8MT780gO0OU8Sy+oplAFi+WHIdLTvrKrqbVDaEgZbQqtutfnpkLG
+D/wGoX9chKF21NaoiLuJPEOKw0MGf9EY95e5REILIjDLdA7xgyV1tUwZU6E5PLzYw76Wwp639QNe
+JkG4U9sFQ/00CGsHCAdxpjf73ca+7uvrFx5P+eXKYpc/pv/BQ9XzQeEcVGHZ1SugRWb1xhs8rw7z
+TnN6RxgbdiHlDGrhtWlfAzo8hkwIjIawoSW8bSPh6phy3tfH6erEMxcWFDMpZJTbIo5X
+--000000000000cfec3b05d31f88bd--
