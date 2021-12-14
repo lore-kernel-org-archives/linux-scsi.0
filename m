@@ -2,86 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD170C43217
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 07:30:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12514C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 08:40:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229698AbhLNHaI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Dec 2021 02:30:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48934 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbhLNHaI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 02:30:08 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B5B3C061574;
-        Mon, 13 Dec 2021 23:30:08 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C60A0B8172C;
-        Tue, 14 Dec 2021 07:30:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF1BEC34601;
-        Tue, 14 Dec 2021 07:30:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1639467005;
-        bh=gYFpfKygjkNh+QfJantXcHERF69BkSPMM6cmh874rnc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SD5hx1FaZwNj01InPHHFaDdQnqhMzJi+lQVgODEm+DdNMKzVcZ/Y5yK7oQtvj3omC
-         ao5tBlDCQL5A2+kLrBk+vP/toEkQ+EHGL43lCit8pkdduOl/4PxxiroLUtUcCMNVeL
-         4KaGTK8nTFQbiRXUgoSxSfoqCa1pmu3OHQs03IrQ=
-Date:   Tue, 14 Dec 2021 08:29:59 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Eric Biggers <ebiggers@kernel.org>, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 3/3] blk-crypto: show crypto capabilities in sysfs
-Message-ID: <YbhH9z/hVg+RsWhL@kroah.com>
-References: <20211208013534.136590-1-ebiggers@kernel.org>
- <20211208013534.136590-4-ebiggers@kernel.org>
- <6ff4d074-7508-4f4c-de06-f36899668168@acm.org>
- <YbKT/lcp6iZ+lD4n@sol.localdomain>
- <YbL2uUqV0GWFOitE@kroah.com>
- <cb29756b-8b21-5b4d-f107-b5573945d7ab@acm.org>
- <YbSCYyAv1SmYy7mz@kroah.com>
- <a4b285ba-4a46-c94b-444e-d3c4f42c42c5@acm.org>
+        id S231890AbhLNIkl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Dec 2021 03:40:41 -0500
+Received: from mail.thebizzie.pl ([192.236.147.111]:41056 "EHLO
+        mail.thebizzie.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231877AbhLNIkk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 03:40:40 -0500
+X-Greylist: delayed 498 seconds by postgrey-1.27 at vger.kernel.org; Tue, 14 Dec 2021 03:40:40 EST
+Received: by mail.thebizzie.pl (Postfix, from userid 1002)
+        id 5707E181464; Tue, 14 Dec 2021 08:31:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=thebizzie.pl; s=mail;
+        t=1639470741; bh=kU+//Lu71IqgcFfjayWXuIc0mZtoyrYJc2YuqyU8eS8=;
+        h=Date:From:To:Subject:From;
+        b=iQc9YHQ6AGUwsgtSadHaIy2NxttxU4Y8r/2SAQrg/9JLcQOpAWOBu/uxVz35Vm51v
+         80crqxSIHL88EK3BbodkvkVn5RGlmHOxQoUd2etGS+UXcXVo3lmzeX20A5woiD6KWk
+         3EoW5AGeHtk/kL4N4/YMsSM8eHoDVRLCHMYRkJEw3GS6WfTvxYabx4ttADk9dooyU1
+         DEi6EAzZejxDh1lR+DAy70hhof0t4flrBOi+OU4QtZWIO7PoQnabo68I51UmDgeS89
+         D0ezRoemzF4RrS/XEUXgVdAwkwPj+CwsPKREfXO9k5a2z5Cnx+sM78ve2l6XAw09u/
+         hws/K4nVZOqxw==
+Received: by mail.thebizzie.pl for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2021 08:31:44 GMT
+Message-ID: <20211214074500-0.1.7.207.0.64uzryq5aq@thebizzie.pl>
+Date:   Tue, 14 Dec 2021 08:31:44 GMT
+From:   "Mateusz Adamczyk" <mateusz.adamczyk@thebizzie.pl>
+To:     <linux-scsi@vger.kernel.org>
+Subject: Wycena paneli fotowoltaicznych
+X-Mailer: mail.thebizzie.pl
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a4b285ba-4a46-c94b-444e-d3c4f42c42c5@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Dec 13, 2021 at 09:04:29PM -0800, Bart Van Assche wrote:
-> On 12/11/21 02:50, Greg Kroah-Hartman wrote:
-> > On Fri, Dec 10, 2021 at 09:29:41AM -0800, Bart Van Assche wrote:
-> > > (b) No other block layer sysfs attribute follows this encoding scheme.
-> > 
-> > Then follow what they do.  Do they have multiple values in a single
-> > file?  If so, they are broken and we should change that.
-> 
-> Hi Greg,
-> 
-> The only other block layer sysfs attribute I know of that reports multiple
-> values is the queue/scheduler attribute. Here is an example of the output
-> that can be produced by reading that attribute:
-> 
-> # cat /sys/block/sda/queue/scheduler
-> [mq-deadline] kyber bfq none
+Dzie=C5=84 dobry,
 
-That's fine, there is no problem there.
+dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
+irm=C4=85.
 
-That output is the "correct" way to show a list of options and the one
-that is currently selected in a sysfs file as I thought I said earlier
-in this thread.
+=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
+ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
 
-> I don't think that changing the behavior of that attribute is an option
-> because that would break existing user space software, e.g. the
-> https://github.com/osandov/blktests/ test suite.
+Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
+ropozycji?
 
-Very true, do not change this file format.
 
-thanks,
-
-greg k-h
+Pozdrawiam,
+Mateusz Adamczyk
