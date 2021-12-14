@@ -2,151 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12296C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 11:11:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2533C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 11:52:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233448AbhLNLLq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Dec 2021 06:11:46 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:38608 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229502AbhLNLLm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 06:11:42 -0500
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 5578D1F37C;
-        Tue, 14 Dec 2021 11:11:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1639480301; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=UI7E9YaxqXRWd4aYGhXKP+x+evRGUMLUBEiz/8kze70=;
-        b=oDBnPWBLj+MjeDWWSbO2j64TSV2j4jR6IuEGy8A99Q5tRV9mScDhYh23iw5l6D7yZF2sSn
-        AqfhYuWwHt1SVyZClHVPMWXRGPy1i4unHDGwM242nNMdnxboIAW7RaUzvY0Bc8BdehJnFr
-        EsQ3JU9lV1rbnZSo/mX/9ydM4o8uoKE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1639480301;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=UI7E9YaxqXRWd4aYGhXKP+x+evRGUMLUBEiz/8kze70=;
-        b=scvaA46e63hjZRMikDL23XHGGd2V0m5Co0KlCDuobhsZJyvMkJEg5QSqadEPnFhVYRYONB
-        Q6zaZ/3GV9G+0sAw==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 4EF41A3B81;
-        Tue, 14 Dec 2021 11:11:41 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 17828)
-        id 4110D5192149; Tue, 14 Dec 2021 12:11:41 +0100 (CET)
-From:   Daniel Wagner <dwagner@suse.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     Nilesh Javali <njavali@marvell.com>, linux-kernel@vger.kernel.org,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Hannes Reinecke <hare@suse.de>, Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH v3] qla2xxx: synchronize rport dev_loss_tmo setting
-Date:   Tue, 14 Dec 2021 12:11:39 +0100
-Message-Id: <20211214111139.52503-1-dwagner@suse.de>
-X-Mailer: git-send-email 2.29.2
+        id S231641AbhLNLwi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Dec 2021 06:52:38 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4274 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229648AbhLNLwh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 06:52:37 -0500
+Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JCxTT3J31z67vF1;
+        Tue, 14 Dec 2021 19:48:13 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Tue, 14 Dec 2021 12:52:35 +0100
+Received: from [10.47.83.94] (10.47.83.94) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2308.20; Tue, 14 Dec
+ 2021 11:52:34 +0000
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 00/15] Add runtime PM support for libsas
+To:     chenxiang <chenxiang66@hisilicon.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
+References: <1637117108-230103-1-git-send-email-chenxiang66@hisilicon.com>
+Message-ID: <71fd6690-8fc3-896a-ddab-9a46fb79e929@huawei.com>
+Date:   Tue, 14 Dec 2021 11:52:11 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1637117108-230103-1-git-send-email-chenxiang66@hisilicon.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.83.94]
+X-ClientProxiedBy: lhreml701-chm.china.huawei.com (10.201.108.50) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.de>
+On 17/11/2021 02:44, chenxiang wrote:
+> From: Xiang Chen<chenxiang66@hisilicon.com>
+> 
 
-Currently, the dev_loss_tmo setting is only ever used for SCSI
-devices. This patch reshuffles initialisation such that the SCSI
-remote ports are registered before the NVMe ones, allowing the
-dev_loss_tmo setting to be synchronized between SCSI and NVMe.
+Please consider this rewrite:
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
----
-We have this patch in our kernels for a while and it works
-fine.
+Currently the HiSilicon SAS controller v3 hw driver supports runtime PM. 
+However a number of corner-case bugs have been reported for this 
+feature. These include:
+a. If a directly-attached disk is removed when the host is suspended a 
+system hang may occur during resume. libsas drains events after resuming 
+the host. Draining the events causes a deadlock as we need to ensure 
+that the host is resumed for some libsas events processing, however the 
+resume process will not complete until all events are processed.
+b. If a disk is attached to an expander when the host is suspended then 
+this new disk will not be detected when active again.
+c. The host controller may not resume from suspension when sending SMP IOs.
+d. If a phy comes up when resuming the host controller then we may get a 
+deadlock from processing of events DISCE_DISCOVER_DOMAIN and 
+PORTE_BYTES_DMAED.
+e. Similar to d., the work of PORTE_BROADCAST_RCVD and PORTE_BYTES_DMAED 
+may deadlock.
 
-v3:
- - added additional check if fcport pointer is valid in
-   qla2x00_set_rport_loss_tmo (crash reported)
+This series addresses those issues, briefly described as follows:
+a. As far as we can see, this drain is unneeded, so conditionally remove.
+b. Just insert broadcast events to revalidate the topology.
+c. and e. When processing any events from the LLD, make libsas keep the 
+host active until finished processing all work related to that original 
+event.
+d. Defer phyup event processing in case described.
 
-v2:
- - https://lore.kernel.org/linux-scsi/20210702092052.93202-1-dwagner@suse.de/
- - fixed build failure for !NVME_FC reported by lkp
 
-v1:
- - https://lore.kernel.org/linux-scsi/20210609094956.11286-1-dwagner@suse.de/
- - initial version
- 
- drivers/scsi/qla2xxx/qla_attr.c |  6 ++++++
- drivers/scsi/qla2xxx/qla_init.c | 10 +++-------
- drivers/scsi/qla2xxx/qla_nvme.c |  5 ++++-
- 3 files changed, 13 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 032efb294ee5..db55737000ab 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -2700,7 +2700,13 @@ qla2x00_get_starget_port_id(struct scsi_target *starget)
- static inline void
- qla2x00_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
- {
-+	fc_port_t *fcport = *(fc_port_t **)rport->dd_data;
-+
- 	rport->dev_loss_tmo = timeout ? timeout : 1;
-+
-+	if (IS_ENABLED(CONFIG_NVME_FC) && fcport && fcport->nvme_remote_port)
-+		nvme_fc_set_remoteport_devloss(fcport->nvme_remote_port,
-+					       rport->dev_loss_tmo);
- }
- 
- static void
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 070b636802d0..1fe4966fc2f6 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5828,13 +5828,6 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
- 
- 	qla2x00_dfs_create_rport(vha, fcport);
- 
--	if (NVME_TARGET(vha->hw, fcport)) {
--		qla_nvme_register_remote(vha, fcport);
--		qla2x00_set_fcport_disc_state(fcport, DSC_LOGIN_COMPLETE);
--		qla2x00_set_fcport_state(fcport, FCS_ONLINE);
--		return;
--	}
--
- 	qla24xx_update_fcport_fcp_prio(vha, fcport);
- 
- 	switch (vha->host->active_mode) {
-@@ -5856,6 +5849,9 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
- 		break;
- 	}
- 
-+	if (NVME_TARGET(vha->hw, fcport))
-+		qla_nvme_register_remote(vha, fcport);
-+
- 	qla2x00_set_fcport_state(fcport, FCS_ONLINE);
- 
- 	if (IS_IIDMA_CAPABLE(vha->hw) && vha->hw->flags.gpsc_supported) {
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 138ffdb5c92c..e22ec7cb65db 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -43,7 +43,7 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
- 	req.port_name = wwn_to_u64(fcport->port_name);
- 	req.node_name = wwn_to_u64(fcport->node_name);
- 	req.port_role = 0;
--	req.dev_loss_tmo = 0;
-+	req.dev_loss_tmo = fcport->dev_loss_tmo;
- 
- 	if (fcport->nvme_prli_service_param & NVME_PRLI_SP_INITIATOR)
- 		req.port_role = FC_PORT_ROLE_NVME_INITIATOR;
-@@ -70,6 +70,9 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
- 		return ret;
- 	}
- 
-+	nvme_fc_set_remoteport_devloss(fcport->nvme_remote_port,
-+				       fcport->dev_loss_tmo);
-+
- 	if (fcport->nvme_prli_service_param & NVME_PRLI_SP_SLER)
- 		ql_log(ql_log_info, vha, 0x212a,
- 		       "PortID:%06x Supports SLER\n", req.port_id);
--- 
-2.29.2
+> Right now hisi_sas driver has already supported runtime PM, and it works
+> well on base functions. But for some exception situations, there are some
+> issues related to libsas layer:
+> - Remove a directly attached disk when sas host is suspended, a hang will
+> occur in the resume process, patch 1~2 solve the issue;
+> - Insert a new disk (for expander) during suspended, and the disk is not
+> revalidated when resuming sas host, patch 4~7 solve the issue;
+> - SMP IOs from libsas may be sending when sas host is suspended, so resume
+> sas host when sending SMP IOs in patch 9;
+> - New phyup may occur during the process of resuming controller, then work
+> of DISCE_DISCOVER_DOMAIN of a new phy and work PORTE_BYTES_DMAED of suspended
+> phy are blocked by each other, so defer works of new phys during suspend
+> in patch 10~12;
+> - Work PORTE_BROADCAST_RCVD and PORTE_BYTES_DMAED are in the same
+> workqueue, but it is possible that they are blocked by each other,
+> so keep sas host active until finished some work in patch 14.
+> 
+> And patch 3 which is related to scsi/block PM is from Alan Stern
+> (https://lore.kernel.org/linux-scsi/20210714161027.GC380727@rowland.harvard.edu/)
 
