@@ -2,156 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F5A8C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 13:19:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B64CC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 15:05:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234322AbhLNNT5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Dec 2021 08:19:57 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:39060 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232033AbhLNNT5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 08:19:57 -0500
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 5D4A921124;
-        Tue, 14 Dec 2021 13:19:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1639487996; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tWHVxcdFcBgER4PZS8F9yn2nv8ZByotPQ0jfapHHvmY=;
-        b=2Q+Cf2oTkVB48167Jr8ziICrnwp5PdQWs3C0plCa2pPKmXZ4XBaooKhqgk7jhjA+wxhu+4
-        g/iDxA+Nia1NMAG6vCiwss8n6gDd1r1eBW+BgjeM+7HsKTwdH9WXuW+H6WBT7APWekdf+2
-        ghaMazGZR51TaI/Glu/agkWXQ9VdJ00=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1639487996;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tWHVxcdFcBgER4PZS8F9yn2nv8ZByotPQ0jfapHHvmY=;
-        b=r+0/9Tt1xWs/FE+9VAI0WfxDQX5xlMLcudjQqL3XiypD26KcKYN/eIXHaClUUVyfAUBOyK
-        4SbNOVPKS3eAqnDg==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 55C2BA3B84;
-        Tue, 14 Dec 2021 13:19:56 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 17828)
-        id 47764519214E; Tue, 14 Dec 2021 14:19:56 +0100 (CET)
-From:   Daniel Wagner <dwagner@suse.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH] lpfc: Reintroduce old IRQ probe logic
-Date:   Tue, 14 Dec 2021 14:19:55 +0100
-Message-Id: <20211214131955.76858-1-dwagner@suse.de>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210618085257.ouah6xsjv3akkjhz@beryllium.lan>
-References: <20210618085257.ouah6xsjv3akkjhz@beryllium.lan>
+        id S235154AbhLNPF1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Dec 2021 10:05:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40846 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232989AbhLNPFT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 10:05:19 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86AF6C061397;
+        Tue, 14 Dec 2021 07:04:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=qM3BdsaT/L84lBv+p9s7oavmQoACJ0UenogZIBw0Rzc=; b=T7ExDwUuFaOCaHYrh1uuxkBiON
+        5mBpX8Rt6gm39rmpZojDreW2aGB7o+VIjDi3S1mrTqf6AxiV+BDXBQlqq8wATGRWvkyIUNWxgmngi
+        /0QU8bhbtzrkoxHP9TZrDVhI5RxGVVdWjZ3HPSby5KFM9YnmM7efWHGiuNLHAqYwm1QunyNZ19zZ9
+        hHCGHLLLiukX2bZmgDRFUAocA4HmHEOiRP2RjWn/3fScxJhn8gdj6oPOOXc/rTVJPPNbZN2ExlotV
+        LASw4X5V/NIZ3C6NE5JDIyqDhwkuii0fk+og+QovQnTEm+1r/luOUMxjlwv0K83Vg40D3db7IE6oG
+        cctuLZeQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mx9M5-00EZhX-PK; Tue, 14 Dec 2021 15:04:37 +0000
+Date:   Tue, 14 Dec 2021 07:04:37 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
+        Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>
+Subject: Re: [PATCH] block: reduce kblockd_mod_delayed_work_on() CPU
+ consumption
+Message-ID: <YbiyhcbZmnNbed3O@infradead.org>
+References: <bc529a3e-31d5-c266-8633-91095b346b19@kernel.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bc529a3e-31d5-c266-8633-91095b346b19@kernel.dk>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This brings back the original probing logic by adding the dropped code
-to lpfc_sli_hba_setup().
+On Tue, Dec 14, 2021 at 07:53:46AM -0700, Jens Axboe wrote:
+> Dexuan reports that he's seeing spikes of very heavy CPU utilization when
+> running 24 disks and using the 'none' scheduler. This happens off the
+> flush path, because SCSI requires the queue to be restarted async, and
+> hence we're hammering on mod_delayed_work_on() to ensure that the work
+> item gets run appropriately.
+> 
+> What we care about here is that the queue is run, and we don't need to
+> repeatedly re-arm the timer associated with the delayed work item. If we
+> check if the work item is pending upfront, then we don't really need to do
+> anything else. This is safe as theh work pending bit is cleared before a
+> work item is started.
+> 
+> The only potential caveat here is if we have callers with wildly different
+> timeouts specified. That's generally not the case, so don't think we need
+> to care for that case.
 
-Fixes: d2f2547efd39 ("scsi: lpfc: Fix auto sli_mode and its effect on CONFIG_PORT for SLI3")
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
----
-Hi James,
+So why not do a non-delayed queue_work for that case?  Might be good
+to get the scsi and workqueue maintaines involved to understand the
+issue a bit better first.
 
-after a back and forth, this version of the patch 'fixes' the problem
-with older hardware. I just post for reference.
-
-Daniel
-
-See also:
-https://lore.kernel.org/linux-scsi/20210618085257.ouah6xsjv3akkjhz@beryllium.lan/
-
- drivers/scsi/lpfc/lpfc_attr.c |  2 +-
- drivers/scsi/lpfc/lpfc_init.c |  8 ++++++--
- drivers/scsi/lpfc/lpfc_sli.c  | 34 +++++++++++++++++++++++++++++++++-
- 3 files changed, 40 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 7a7f17d71811..5730ac6462fa 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3632,7 +3632,7 @@ unsigned long lpfc_no_hba_reset[MAX_HBAS_NO_RESET] = {
- module_param_array(lpfc_no_hba_reset, ulong, &lpfc_no_hba_reset_cnt, 0444);
- MODULE_PARM_DESC(lpfc_no_hba_reset, "WWPN of HBAs that should not be reset");
- 
--LPFC_ATTR(sli_mode, 3, 3, 3,
-+LPFC_ATTR(sli_mode, 3, 0, 3,
- 	"SLI mode selector: 3 - select SLI-3");
- 
- LPFC_ATTR_R(enable_npiv, 1, 0, 1,
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 2fe7d9d885d9..3f3734127a7f 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -12112,8 +12112,12 @@ lpfc_sli_enable_intr(struct lpfc_hba *phba, uint32_t cfg_mode)
- 
- 	/* Need to issue conf_port mbox cmd before conf_msi mbox cmd */
- 	retval = lpfc_sli_config_port(phba, LPFC_SLI_REV3);
--	if (retval)
--		return intr_mode;
-+	if (retval) {
-+		/* Try SLI-2 before erroring out */
-+		retval = lpfc_sli_config_port(phba, LPFC_SLI_REV2);
-+		if (retval)
-+			return intr_mode;
-+	}
- 	phba->hba_flag &= ~HBA_NEEDS_CFG_PORT;
- 
- 	if (cfg_mode == 2) {
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 513a78d08b1d..5f32b5243302 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -5602,7 +5602,39 @@ lpfc_sli_hba_setup(struct lpfc_hba *phba)
- 
- 	/* Enable ISR already does config_port because of config_msi mbx */
- 	if (phba->hba_flag & HBA_NEEDS_CFG_PORT) {
--		rc = lpfc_sli_config_port(phba, LPFC_SLI_REV3);
-+		int mode = 3;
-+
-+		switch (phba->cfg_sli_mode) {
-+		case 2:
-+			if (phba->cfg_enable_npiv) {
-+				lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
-+						"1824 NPIV enabled: Override sli_mode "
-+						"parameter (%d) to auto (0).\n",
-+						phba->cfg_sli_mode);
-+				break;
-+			}
-+			mode = 2;
-+			break;
-+		case 0:
-+		case 3:
-+			break;
-+		default:
-+			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
-+					"1819 Unrecognized sli_mode parameter: %d.\n",
-+					phba->cfg_sli_mode);
-+			break;
-+		}
-+
-+		rc = lpfc_sli_config_port(phba, mode);
-+
-+		if (rc && phba->cfg_sli_mode == 3)
-+			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
-+					"1820 Unable to select SLI-3.  "
-+					"Not supported by adapter.\n");
-+		if (rc && mode != 2)
-+			rc = lpfc_sli_config_port(phba, 2);
-+		else if (rc && mode == 2)
-+			rc = lpfc_sli_config_port(phba, 3);
- 		if (rc)
- 			return -EIO;
- 		phba->hba_flag &= ~HBA_NEEDS_CFG_PORT;
--- 
-2.29.2
-
+> 
+> Reported-by: Dexuan Cui <decui@microsoft.com>
+> Link: https://lore.kernel.org/linux-block/BYAPR21MB1270C598ED214C0490F47400BF719@BYAPR21MB1270.namprd21.prod.outlook.com/
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> 
+> ---
+> 
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 1378d084c770..4584fe709c15 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -1484,7 +1484,16 @@ EXPORT_SYMBOL(kblockd_schedule_work);
+>  int kblockd_mod_delayed_work_on(int cpu, struct delayed_work *dwork,
+>  				unsigned long delay)
+>  {
+> -	return mod_delayed_work_on(cpu, kblockd_workqueue, dwork, delay);
+> +	/*
+> +	 * Avoid hammering on work addition, if the work item is already
+> +	 * pending. This is safe the work pending state is cleared before
+> +	 * the work item is started, so if we see it set, then we know that
+> +	 * whatever was previously queued on the block side will get run by
+> +	 * an existing pending work item.
+> +	 */
+> +	if (!work_pending(&dwork->work))
+> +		return mod_delayed_work_on(cpu, kblockd_workqueue, dwork, delay);
+> +	return true;
+>  }
+>  EXPORT_SYMBOL(kblockd_mod_delayed_work_on);
+>  
+> -- 
+> Jens Axboe
+> 
+---end quoted text---
