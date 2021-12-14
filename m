@@ -2,224 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC77DC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 04:03:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A183FC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 04:31:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233537AbhLNEDj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Dec 2021 23:03:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59732 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230376AbhLNEDi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Dec 2021 23:03:38 -0500
-Received: from mail-oi1-x236.google.com (mail-oi1-x236.google.com [IPv6:2607:f8b0:4864:20::236])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92E79C061574
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2021 20:03:38 -0800 (PST)
-Received: by mail-oi1-x236.google.com with SMTP id o4so25837853oia.10
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2021 20:03:38 -0800 (PST)
+        id S233828AbhLNEbK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Dec 2021 23:31:10 -0500
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:49110 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229513AbhLNEbJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 13 Dec 2021 23:31:09 -0500
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BE2B8Go004563;
+        Tue, 14 Dec 2021 04:31:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=9qxChM2q+0MSkO9SS53NHir9yM6D7aCN8NCdEcioHm0=;
+ b=iBTO/4eJ63X28ubvFD2ZPFADqgAOBOKome9kATJ69kNBTBOTLh9C4+uCJdLK+IUK10uN
+ LCqMK16u+cDJYWB+VxDgwyz/liI9hsM1mwKz0xVzlzjl5PC7S1EWAv+yLmLiWfdRrH5N
+ YHosg2/myfxCrVDyvK2ahodvHFtk1IncXzZlz9lHYNv79wiO5V2oodKoWzui3i56+rs3
+ 2chaTN3YDVf2y55GfFahV3lVc849n3KpISBUoDMX7LyeMp3x36A7UX3wm5jWXhqU9eyu
+ 06/6hhHm2XRt7dJ5WQRJtnBgT6UdNs6StBPee4peB46PR1hxMuI5AyQjwjcmnIzCKGD3 3g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3cx3mrtp9f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 14 Dec 2021 04:31:06 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BE4P2t4149900;
+        Tue, 14 Dec 2021 04:31:05 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2177.outbound.protection.outlook.com [104.47.59.177])
+        by userp3020.oracle.com with ESMTP id 3cvnep91md-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 14 Dec 2021 04:31:05 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=OdAMHFF0oee9ROk2/iIJlm4L8NBn0c28O1lxlmt26iiYC9nj1PQouVHpLQE/+15jBD9J3YPCfEy1YeWnkTAlN4ZAJWv303mmTN2cHaVNcIvZPcn1hM/4bApHlKGjlEfSjVaDSMjuGXTT6E1zNQIMMIRMPrXpE6J29jTHHf3XCYQmaNGtFZeRpLNBtuujiF8rriOD1LUNvBlAfNl2adYTFqBzs01SyKty5aXYaiNUjq1X8ujNS5PynvxOzEJlq0BORR6W68kNHDm0mCFJG810uYtFR5QtbhEQNaT94Jd4EhUfwl/c1J/6IUO6WH8jE0SvHp3fmI0xilYJ6wth855YOA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=9qxChM2q+0MSkO9SS53NHir9yM6D7aCN8NCdEcioHm0=;
+ b=JIGOo2CbnA1fk1rJeGayCCgNTHBWhI4HfFBuJ9of2srkyNee0+uuleIwt+MPH9N+JcPvKJmZivUkkBCX7w0p582aMxrQ+d+RyECP/4YDtMIBq48KA9racMgy5pzgJXIhSdM9ZjNZaVmPdQMokJSPEynlnHEy/rxSta1nTXqBnSfCWqwxIL83wFCQGmhXGP+XYdIl87a6HAQEqsiX+fMNhknVwWx3CqTt1sIW1PcZ/PU2kyeuKrhJSfnVmtORUX7jK5+vOuTKAkfICUKkrAVczbGl1nLxmvkZDArjVakUp7jT6r9hfjcdcTola++rTY+Pn6plzf99wcPNnsAZundLGw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=i32icve8673k720YVo1tKB1l/xkhbldeyR+7P4jn/Qs=;
-        b=jm8bh1arndyqhAZcdKJ+tHUAoPq4qNPxV90AMeD+23/Cf+bG9wb2opLubaAAYigwYs
-         m9s06OBJVDsw9mc7vFQG2Vcgae83SfbosyuCqyFDKaKQHhKwjMsA4zzi5xdwjC6j76Bt
-         3W5qZWqp8kvHtKyAO/7yNjaSkIBlS0vASLdYHe+DDXdIofgBo4p9bD0k913WloqPuJ3m
-         MtJZ4OnHgApKuX+mUHoVodI+kP7NqqHNxpETkcyEay55QFA/3xkCbImY2OYh7Qr6tAI+
-         3YQNP+MUt14qXl5U2bxKYsiZaUB2iS+gqSDK4N4/oAcc976ftY/svIputZ88t9YjKA3G
-         8XUQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=i32icve8673k720YVo1tKB1l/xkhbldeyR+7P4jn/Qs=;
-        b=EyFg8z12Qzg42mmmd1GNcR+lmDEypSkWWVKmZU2Vf0IvtiT63i6Dmokg1YCPJLWssR
-         K7FFEWrkIV5/oN+WRcV3Vh/1Abjglxo/7BcXJ7CNugpILzyt4XaQ5I4/vFPQdnIM/NII
-         8VN1F4LaCrgmbWmiRT09MFd9H2D8Oq9h1FNpFFiuer+BzC23K2k10066IEMVZuXVakfT
-         +yxIK+WqUuzjyBpi0nq0t5wHJNQk9b+Jh+0pMGe+wmQJ/eh9M7uiZZ3/b7hMSOI7KiV3
-         GOK9keu0rRrZLOvQbYaWrFbuDqP+eEZv5vFOLIiN4QwJ3DllaEnulmowhUP5ZE7vNDFc
-         +Ikg==
-X-Gm-Message-State: AOAM531NKGOLz7TrWbcIpOay2bS2PkvmuCd1fK66ZKGu5zmx/185pCaR
-        US/FvC7vKqn537fXFxMlUKI0Pg==
-X-Google-Smtp-Source: ABdhPJwZmgx7IoMGORd9bjU+cMDyFXOOVlvH2QlSqRcUWEiYEhTMuHrcsKToT+9ZGF2//Sxd8LJ55Q==
-X-Received: by 2002:a05:6808:1589:: with SMTP id t9mr31767818oiw.108.1639454617839;
-        Mon, 13 Dec 2021 20:03:37 -0800 (PST)
-Received: from ripper (104-57-184-186.lightspeed.austtx.sbcglobal.net. [104.57.184.186])
-        by smtp.gmail.com with ESMTPSA id l24sm2500229oou.20.2021.12.13.20.03.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Dec 2021 20:03:37 -0800 (PST)
-Date:   Mon, 13 Dec 2021 20:04:54 -0800
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org, Asutosh Das <asutoshd@codeaurora.org>,
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9qxChM2q+0MSkO9SS53NHir9yM6D7aCN8NCdEcioHm0=;
+ b=Pj6hqUxVqlEGqE5Ll4RAKeKzWwMkeBsQjcTvT9oHtXEtqruixYePGOKuOfMroAHRVa/yoTc35OdrmzbtASaeANHUPyKfmjOu7JDaagKjLWn1pODrfGmPN7iMj2a3l7xD01ds45ZS7WtVyvYoe23I3YBkEQFHoTThf4P+noDA938=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH7PR10MB5771.namprd10.prod.outlook.com (2603:10b6:510:127::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4778.12; Tue, 14 Dec
+ 2021 04:31:03 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::f4fb:f2ea:bda5:441e]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::f4fb:f2ea:bda5:441e%6]) with mapi id 15.20.4778.018; Tue, 14 Dec 2021
+ 04:31:03 +0000
+To:     Kees Cook <keescook@chromium.org>
+Cc:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Keoseong Park <keosung.park@samsung.com>
-Subject: Re: [PATCH v4 16/17] scsi: ufs: Optimize the command queueing code
-Message-ID: <YbgX5qZ4VFXPqnnr@ripper>
-References: <20211203231950.193369-1-bvanassche@acm.org>
- <20211203231950.193369-17-bvanassche@acm.org>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: lpfc: Use struct_group() to initialize struct
+ lpfc_cgn_info
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1y24nolj8.fsf@ca-mkp.ca.oracle.com>
+References: <20211208195957.1603092-1-keescook@chromium.org>
+Date:   Mon, 13 Dec 2021 23:31:01 -0500
+In-Reply-To: <20211208195957.1603092-1-keescook@chromium.org> (Kees Cook's
+        message of "Wed, 8 Dec 2021 11:59:57 -0800")
+Content-Type: text/plain
+X-ClientProxiedBy: BLAPR03CA0032.namprd03.prod.outlook.com
+ (2603:10b6:208:32d::7) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211203231950.193369-17-bvanassche@acm.org>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 5426f79e-a3f9-47bd-0544-08d9beba89ac
+X-MS-TrafficTypeDiagnostic: PH7PR10MB5771:EE_
+X-Microsoft-Antispam-PRVS: <PH7PR10MB577176FBADC3F7917D46B2F58E759@PH7PR10MB5771.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3173;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 7YS/EZ7jGU4hewrPVk+ECW1uZLdVYJaeFn9XKkWR+ZGFDN01iAEdHV5PdiGdTDKzwGtBPukyxOUlaJhJuDyzYxKbOdD9Opfs0WhRmlpZkZzND1U5Ty8Dj5O2/nVISnEz6YMO7vNPag9Vigjsq9omLgkmpF2R96Djv7ev+QfHb5XRNHsvuZFLp1Il4uAvJ5pn1zSwmxg+LY72zwfyIpt/ZD9g7FdM2wUvtiofUWo6smd9IxUB4LY/o2U3JsIxfZeuJC7beLg2SdTgRgLc8dzKH1VDU4+hWcQwQlcqYByAAWwvaUGQQDlCnUmh5Xe3jTALX1SfJZEBR+HDQI6s/U4lnFFyD/7ucZDiuNp49coRKlPB/FsWumF7+0QVoC0e71ePuOhebVm6vuEb6Yq79rf22dqo6pbJUhXetWNb9m6TLfJbD/scIwikj3UpQI7g6wZ4aDFJdLZJo2GMrktVab6OStbGoBY1GZwdPm5aHKzWfl77ZLtzAR73XqDiUa0n8eknQpUHyQEjtsHWs8nYbQ4atH8w2Y+AVOAhsHr1y3/JkSm0RXn9fn6FN/iMAo5B7SMPwPx4GarivZpm/+xaLQmqjacxq0vvQurOnGAeFj6P3E07FWN/G/zhhS0wQvi4PiqhZ/0dDTr5YvFJWz5/tk12pi7Kdmc0vExWar0Mpz+9HnM4iP8FGkBQR9QuOKO5a85nfSa1PsK6V+UBO/9vHf0XOA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(2906002)(508600001)(38100700002)(6512007)(8936002)(36916002)(66476007)(52116002)(5660300002)(66946007)(66556008)(86362001)(6486002)(38350700002)(8676002)(54906003)(6916009)(316002)(186003)(6506007)(26005)(4326008)(558084003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?szJrhBmKI1nwQA3/LQmOH5Gkn0yumnC1nbeGO4o4jnbPSx78n3ZMQRV+1seL?=
+ =?us-ascii?Q?CeU2GuBvRRL9HgBL4hDyohFLQfUF8/0dlPDT4WV713byHlVXrg2VzykAGUBX?=
+ =?us-ascii?Q?VX4EWwbWE4fJTr0UDGA4qmnnI6niohW/xB4n/eGt7RiRlQ538ea+BFcGfrVN?=
+ =?us-ascii?Q?9nXg/kumP4By9dzMhLOi8KSL2yXImSQX2dNrI68q4sWh4Cy033Ppu7Q1ZWPg?=
+ =?us-ascii?Q?jorBh26ilbBKxEHPoFipdY4iaLKxWu+nFEbDnFOWLKGbwLCF+0g6n9UfBG6y?=
+ =?us-ascii?Q?IpzXHaAZR3TNUQLT+zJdAQNsD5Qi2SppQDfaY5g/4Q5vuoNeAXl/U7Xbzp9C?=
+ =?us-ascii?Q?sT3h9vusErBrTcbGxsPCF3icW9XcoxHDM0SNYdpXGeXvmJ9byCim0OA3C/TR?=
+ =?us-ascii?Q?J/hTNubGd3cfJyE4YvU19E2A7YJ/ciQWXLI+Qh3trJvmz9ICYc88VDTHu8St?=
+ =?us-ascii?Q?LI6IktLQc0T18VpGS4S1RQADM++hUOgp2MH08jqkdRaKrwupM2mkSOsCHHo9?=
+ =?us-ascii?Q?hNogQB1NK+mxLuAOAYlrUwN6Mlmt4Kv9lhDrOowQAQ/V53+dG/Ke4StWKft/?=
+ =?us-ascii?Q?P6EiKpkt6Saui6uwkZ/n896hTXh2K8VKRGQ9xOGuZkpe6D8klQrSP0ikyrTM?=
+ =?us-ascii?Q?lvEaItf6iQmZuzh9oLjHHH1V4SjgBKNIZy1zuWoucRj7bIcMVNB8n+ZX7fDH?=
+ =?us-ascii?Q?bgd4r3npCrQKx4is+OFzjOoZiIR3WjaUCzfBGo+bDbFf9KRV60XeB09hSHfB?=
+ =?us-ascii?Q?ySPH1yk+Zq8EZ+eGP5bE+7NnA2WkN7+vFE0+UWRlQBCWxWhI2lJwrxpi1PA4?=
+ =?us-ascii?Q?R9/wzxjCjR8Um9I9qDucJQ61Faq9ikjgSPZPVFlLe9aUEr0uoHvQa8cC+e7i?=
+ =?us-ascii?Q?9/SMjxAYCKTUsLIEpzpj21v07NUqwW59nOKPWd2eemLnbMjDwL85DvuxT9kI?=
+ =?us-ascii?Q?zlGV0wkO7Rvt9lbwEw3IeMU5RmcoYfRw9FdRf0+CfBnd+ChsPRS0HCoPhpUB?=
+ =?us-ascii?Q?epdynJryrKC4Y4Xdye3Y68LlnGGVjllZ73tDlg4aHcqdOLLe0D0Uhy/dMhKA?=
+ =?us-ascii?Q?ooXLqWHOhqiutLdiecRpHSI0Lr0LyZH1TfZYF49JDcauWrztOEjDE7YmZ3UV?=
+ =?us-ascii?Q?4gyhDk3PKrub9jfrK/RV84uE/1L9qASW8rSTPbICvp7K4KvyoQhLWox91xCh?=
+ =?us-ascii?Q?Ik6hxZ5ONfRbapfZ4ldIxgnA8nnnXywBInmJeF965vXyn9fqlqrHVCX8MdIM?=
+ =?us-ascii?Q?i8jKUkIqpPzvE0ENP8UDyU4hgqyRTPawChyyUyRHCZqsXFGPxGxUvFvNLMlM?=
+ =?us-ascii?Q?O4+Lz8ojGBM5miauj9VQ6pUPfP3XR4AAnftInx5UtdGlPJsVqcqt8/NAionP?=
+ =?us-ascii?Q?XzMNVn29eY0Fq3lAjl9m4ISQ9fnY1nIrl5qSyoca2Tr2lbp+wesoZgdeN7oj?=
+ =?us-ascii?Q?vlbyBbx3wL2gF4tATucL+ZEIS3qQ5PMHVY4dnK5AHg59SY8nzQJDv9v6lC12?=
+ =?us-ascii?Q?ST+lQtEx5oixOUyzOdmHtIPvZQGzjnOXzPuSO9PkBRurPMBxbJglfKlIqWbM?=
+ =?us-ascii?Q?jjZ1DlAzG9lVPg6NpfhQ4KYgzJT/7cjh9IXVoh6dszFqvMua1p4nlJDOQX69?=
+ =?us-ascii?Q?RLPN68OmzVLACJLhXTOq3bA22Z7D4WTTSE66y7rRxdpf3rdzxOecFp+utgA7?=
+ =?us-ascii?Q?n5hqmg=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5426f79e-a3f9-47bd-0544-08d9beba89ac
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Dec 2021 04:31:03.3676
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: FgA8gpbZVqiQ/uCKkOBXMw8y0gcFI7j3BqqxPMD8iU6Phx5Vr9jGTxhrxMM31HbrXv0fmpfprYQoiRXpSjHe2CAF0bin+XSgYBMNA+Ahoac=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB5771
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10197 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
+ malwarescore=0 bulkscore=0 spamscore=0 mlxlogscore=898 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2110150000 definitions=main-2112140022
+X-Proofpoint-ORIG-GUID: kiqt4-Go3OkIT0JvKHbJSjzQGJcYHEaW
+X-Proofpoint-GUID: kiqt4-Go3OkIT0JvKHbJSjzQGJcYHEaW
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri 03 Dec 15:19 PST 2021, Bart Van Assche wrote:
 
-> Remove the clock scaling lock from ufshcd_queuecommand() since it is a
-> performance bottleneck. Instead check the SCSI device budget bitmaps in
-> the code that waits for ongoing ufshcd_queuecommand() calls. A bit is
-> set in sdev->budget_map just before scsi_queue_rq() is called and a bit
-> is cleared from that bitmap if scsi_queue_rq() does not submit the
-> request or after the request has finished. See also the
-> blk_mq_{get,put}_dispatch_budget() calls in the block layer.
-> 
-> There is no risk for a livelock since the block layer delays queue
-> reruns if queueing a request fails because the SCSI host has been
-> blocked.
-> 
+Kees,
 
-This patch landed between next-20211203 and today's (20211210)
-linux-next/master and prevents all Qualcomm boards I've tested to boot.
+> In preparation for FORTIFY_SOURCE performing compile-time and run-time
+> field bounds checking for memset(), avoid intentionally writing across
+> neighboring fields.
 
-Sometimes it locks up right around probe, sometimes I actually get some
-partitions, but attempts to then access the storage media (e.g. fdisk
--l) results in one or more of my CPUs to be unresponsive.
+Applied to 5.17/scsi-staging, thanks!
 
-> Cc: Asutosh Das (asd) <asutoshd@codeaurora.org>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 33 +++++++++++++++++++++++----------
->  drivers/scsi/ufs/ufshcd.h |  1 +
->  2 files changed, 24 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 9f0a1f637030..650dddf960c2 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1070,13 +1070,31 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
->  	return false;
->  }
->  
-> +/*
-> + * Determine the number of pending commands by counting the bits in the SCSI
-> + * device budget maps. This approach has been selected because a bit is set in
-> + * the budget map before scsi_host_queue_ready() checks the host_self_blocked
-> + * flag. The host_self_blocked flag can be modified by calling
-> + * scsi_block_requests() or scsi_unblock_requests().
-> + */
-> +static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
-> +{
-> +	struct scsi_device *sdev;
-> +	u32 pending = 0;
-> +
-> +	shost_for_each_device(sdev, hba->host)
-
-As far as I can tell, this will crab walk across hba->host->__devices,
-while grabbing:
-
-        spin_lock_irqsave(shost->host_lock, flags);
-
-which afaict is:
-
-        spin_lock_irqsave(hba->host->host_lock, flags);
-
-
-
-> +		pending += sbitmap_weight(&sdev->budget_map);
-> +
-> +	return pending;
-> +}
-> +
->  static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
->  					u64 wait_timeout_us)
->  {
->  	unsigned long flags;
->  	int ret = 0;
->  	u32 tm_doorbell;
-> -	u32 tr_doorbell;
-> +	u32 tr_pending;
->  	bool timeout = false, do_last_check = false;
->  	ktime_t start;
->  
-> @@ -1094,8 +1112,8 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
-
-But just before entering this loop you do:
-
-        spin_lock_irqsave(hba->host->host_lock, flags);
-
-In other words, you're taking the same spinlock twice, while being in
-ufshcd_scsi_block_requests(). To me this seems that if we ever enter
-this code path (i.e. try to do clock scaling) we will deadlock one CPU.
-
-Can you please help me understand what I'm missing? Or how you tested
-this?
-
-Thanks,
-Bjorn
-
->  		}
->  
->  		tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
-> -		tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> -		if (!tm_doorbell && !tr_doorbell) {
-> +		tr_pending = ufshcd_pending_cmds(hba);
-> +		if (!tm_doorbell && !tr_pending) {
->  			timeout = false;
->  			break;
->  		} else if (do_last_check) {
-> @@ -1115,12 +1133,12 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
->  			do_last_check = true;
->  		}
->  		spin_lock_irqsave(hba->host->host_lock, flags);
-> -	} while (tm_doorbell || tr_doorbell);
-> +	} while (tm_doorbell || tr_pending);
->  
->  	if (timeout) {
->  		dev_err(hba->dev,
->  			"%s: timedout waiting for doorbell to clear (tm=0x%x, tr=0x%x)\n",
-> -			__func__, tm_doorbell, tr_doorbell);
-> +			__func__, tm_doorbell, tr_pending);
->  		ret = -EBUSY;
->  	}
->  out:
-> @@ -2681,9 +2699,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
->  
->  	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
->  
-> -	if (!down_read_trylock(&hba->clk_scaling_lock))
-> -		return SCSI_MLQUEUE_HOST_BUSY;
-> -
->  	/*
->  	 * Allows the UFS error handler to wait for prior ufshcd_queuecommand()
->  	 * calls.
-> @@ -2772,8 +2787,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
->  out:
->  	rcu_read_unlock();
->  
-> -	up_read(&hba->clk_scaling_lock);
-> -
->  	if (ufs_trigger_eh()) {
->  		unsigned long flags;
->  
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 8e942762e668..88c20f3608c2 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -778,6 +778,7 @@ struct ufs_hba_monitor {
->   * @clk_list_head: UFS host controller clocks list node head
->   * @pwr_info: holds current power mode
->   * @max_pwr_info: keeps the device max valid pwm
-> + * @clk_scaling_lock: used to serialize device commands and clock scaling
->   * @desc_size: descriptor sizes reported by device
->   * @urgent_bkops_lvl: keeps track of urgent bkops level for device
->   * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
-> 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
