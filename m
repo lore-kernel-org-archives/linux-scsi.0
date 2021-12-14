@@ -2,102 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B64CC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 15:05:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B940FC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 15:10:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235154AbhLNPF1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Dec 2021 10:05:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40846 "EHLO
+        id S233286AbhLNPK3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Dec 2021 10:10:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232989AbhLNPFT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 10:05:19 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86AF6C061397;
-        Tue, 14 Dec 2021 07:04:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=qM3BdsaT/L84lBv+p9s7oavmQoACJ0UenogZIBw0Rzc=; b=T7ExDwUuFaOCaHYrh1uuxkBiON
-        5mBpX8Rt6gm39rmpZojDreW2aGB7o+VIjDi3S1mrTqf6AxiV+BDXBQlqq8wATGRWvkyIUNWxgmngi
-        /0QU8bhbtzrkoxHP9TZrDVhI5RxGVVdWjZ3HPSby5KFM9YnmM7efWHGiuNLHAqYwm1QunyNZ19zZ9
-        hHCGHLLLiukX2bZmgDRFUAocA4HmHEOiRP2RjWn/3fScxJhn8gdj6oPOOXc/rTVJPPNbZN2ExlotV
-        LASw4X5V/NIZ3C6NE5JDIyqDhwkuii0fk+og+QovQnTEm+1r/luOUMxjlwv0K83Vg40D3db7IE6oG
-        cctuLZeQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mx9M5-00EZhX-PK; Tue, 14 Dec 2021 15:04:37 +0000
-Date:   Tue, 14 Dec 2021 07:04:37 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
-        Tejun Heo <tj@kernel.org>,
-        Lai Jiangshan <jiangshanlai@gmail.com>
-Subject: Re: [PATCH] block: reduce kblockd_mod_delayed_work_on() CPU
- consumption
-Message-ID: <YbiyhcbZmnNbed3O@infradead.org>
-References: <bc529a3e-31d5-c266-8633-91095b346b19@kernel.dk>
+        with ESMTP id S233120AbhLNPK2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 10:10:28 -0500
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FC83C061574;
+        Tue, 14 Dec 2021 07:10:28 -0800 (PST)
+Received: by mail-pj1-x102e.google.com with SMTP id y14-20020a17090a2b4e00b001a5824f4918so17363353pjc.4;
+        Tue, 14 Dec 2021 07:10:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=5LsH1waqw8lf+SoXbADAabkmN/ADSpKyyJbEXGWJEL8=;
+        b=fU2wEAKHPuxZxhFtbASWPKU9FQq3ou7kEnNHZBLoq6y724COW08FeRchE3Huxz37Om
+         CPXq6r6swOc/swqLjBdMJYbmxvBFtgiccMq9ooJomvA/hy0VH1H1EZ/eK2/wN1bdUsRq
+         j7tTCOTtor2s3A6FPCSL2IiV3tkHZSARzlYJGmqass3vee1FqyfNHwjhXhg7u82AbELx
+         LnFw5r9QTtdOFnz29DGMIMLgNxkUq6sXszY+X4Uyx5UyLipEWMPdpkDhg1Sp84eqDPrN
+         U+eauFRM+4zIo/xVIqbzneHUy6rM+sOv4mTG0FOfd+5qo3qNN+TLaKO9v36Zys48CdOK
+         7TRw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=5LsH1waqw8lf+SoXbADAabkmN/ADSpKyyJbEXGWJEL8=;
+        b=VLPDnEfUPS1bpRzUvq4ILPICsqNl0rKLPCZnoUOkPJ0luQQ6p15GRMpqkAIE1fUiw/
+         XaL/2V4ykqpKEp5tB3BO3q9CghzmYcaoDyAGAim7LXz67uZCHGZv6Zm/KncbcKnmIhW0
+         gvqP8F7Pu7cGtXYiT4C6yPK+/3gG5xmABMWp0LA9yE8q1Mc5JOV7g8A4V5OAjXKCYFwR
+         vhzNOMblYNTRrr0QzyC++OFrDn2Y3zTJpQUcnxOZvfbn+LQ+lYIu5XnQJLPwc/C97zI4
+         FpslaQaXahCmAq7jTj1YyjEACaGmrNhZnI5BxIQrtJl6T7H0xmmE/+F/FmftjB8WU6Xg
+         bUSA==
+X-Gm-Message-State: AOAM533RFMht238D3t32LgC/lnvS8A5TWy3AkYABGmx86guY1QlMXFFg
+        pLnFuWQZSe7Xneexmgi/IzM=
+X-Google-Smtp-Source: ABdhPJxG9SXepBLOOP05pg7fGekyEizZJ8FSFvEkI1UpNGitO5QRVoZ2ECLIxt8yeQ43KT3baSEZdA==
+X-Received: by 2002:a17:902:8d8a:b0:143:bb4a:d1a with SMTP id v10-20020a1709028d8a00b00143bb4a0d1amr6117720plo.1.1639494628194;
+        Tue, 14 Dec 2021 07:10:28 -0800 (PST)
+Received: from [192.168.1.26] (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
+        by smtp.gmail.com with ESMTPSA id na15sm3138133pjb.31.2021.12.14.07.10.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Dec 2021 07:10:27 -0800 (PST)
+Message-ID: <e8655acc-e21f-b876-9d0c-790a0ee809d7@gmail.com>
+Date:   Tue, 14 Dec 2021 07:10:26 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bc529a3e-31d5-c266-8633-91095b346b19@kernel.dk>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH] scsi: lpfc: Terminate string in
+ lpfc_debugfs_nvmeio_trc_write()
+Content-Language: en-US
+To:     Dan Carpenter <dan.carpenter@oracle.com>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+References: <20211214070527.GA27934@kili>
+From:   James Smart <jsmart2021@gmail.com>
+In-Reply-To: <20211214070527.GA27934@kili>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Dec 14, 2021 at 07:53:46AM -0700, Jens Axboe wrote:
-> Dexuan reports that he's seeing spikes of very heavy CPU utilization when
-> running 24 disks and using the 'none' scheduler. This happens off the
-> flush path, because SCSI requires the queue to be restarted async, and
-> hence we're hammering on mod_delayed_work_on() to ensure that the work
-> item gets run appropriately.
+On 12/13/2021 11:05 PM, Dan Carpenter wrote:
+> The "mybuf" string comes from the user, so we need to ensure that it is
+> NUL terminated.
 > 
-> What we care about here is that the queue is run, and we don't need to
-> repeatedly re-arm the timer associated with the delayed work item. If we
-> check if the work item is pending upfront, then we don't really need to do
-> anything else. This is safe as theh work pending bit is cleared before a
-> work item is started.
-> 
-> The only potential caveat here is if we have callers with wildly different
-> timeouts specified. That's generally not the case, so don't think we need
-> to care for that case.
-
-So why not do a non-delayed queue_work for that case?  Might be good
-to get the scsi and workqueue maintaines involved to understand the
-issue a bit better first.
-
-> 
-> Reported-by: Dexuan Cui <decui@microsoft.com>
-> Link: https://lore.kernel.org/linux-block/BYAPR21MB1270C598ED214C0490F47400BF719@BYAPR21MB1270.namprd21.prod.outlook.com/
-> Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> 
+> Fixes: bd2cdd5e400f ("scsi: lpfc: NVME Initiator: Add debugfs support")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > ---
+>   drivers/scsi/lpfc/lpfc_debugfs.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 1378d084c770..4584fe709c15 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -1484,7 +1484,16 @@ EXPORT_SYMBOL(kblockd_schedule_work);
->  int kblockd_mod_delayed_work_on(int cpu, struct delayed_work *dwork,
->  				unsigned long delay)
->  {
-> -	return mod_delayed_work_on(cpu, kblockd_workqueue, dwork, delay);
-> +	/*
-> +	 * Avoid hammering on work addition, if the work item is already
-> +	 * pending. This is safe the work pending state is cleared before
-> +	 * the work item is started, so if we see it set, then we know that
-> +	 * whatever was previously queued on the block side will get run by
-> +	 * an existing pending work item.
-> +	 */
-> +	if (!work_pending(&dwork->work))
-> +		return mod_delayed_work_on(cpu, kblockd_workqueue, dwork, delay);
-> +	return true;
->  }
->  EXPORT_SYMBOL(kblockd_mod_delayed_work_on);
->  
-> -- 
-> Jens Axboe
-> 
----end quoted text---
+
+Thanks Dan. Looks Good.
+
+Reviewed-by: James Smart <jsmart2021@gmail.com>
+
+-- james
