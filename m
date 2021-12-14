@@ -2,83 +2,214 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 857EAC43217
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 05:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DA5EC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 07:04:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229782AbhLNFEf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Dec 2021 00:04:35 -0500
-Received: from mail-pl1-f176.google.com ([209.85.214.176]:47023 "EHLO
-        mail-pl1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229775AbhLNFEd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 00:04:33 -0500
-Received: by mail-pl1-f176.google.com with SMTP id p18so12712660plf.13;
-        Mon, 13 Dec 2021 21:04:32 -0800 (PST)
+        id S231272AbhLNHEU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Dec 2021 02:04:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43140 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229979AbhLNHET (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 02:04:19 -0500
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44381C061574
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2021 23:04:19 -0800 (PST)
+Received: by mail-ed1-x533.google.com with SMTP id x15so60695304edv.1
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2021 23:04:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=L9jxTk8Oq9Ml0Qe9k0yTl7QSoV5iDa8z2SU+R+w0fKE=;
+        b=ZTQF0ERXsGbSr8qFOAK4z9gw37T0U2RZHHLhVGCEUSTJ+qDDyBypPbGcieVl4idF9V
+         BY3SYNfsj4vItCyJHmxS2FF4iATeYnwI5E+dwXa2Ki2krmYZ7BVLremsNBmRqemwTAvZ
+         X37dnZKbmmnXAm43ra0OkVUoZpMTblppfmEE5XkpBiuwtnrANXFbQZmDJj5L5lcjBsM+
+         4iWQgc+YDlcztADcwHnNyYrgRRcgeASimHyAqt0gQBqbsINDVMM1Fg5mqNwIYrzbF7qg
+         zH5pN/eZHtw3rR8Ztx8mME6T9IYTfurwUlWkD4MU64WRn0x1mKzeF5hXgK5QUU1iy6Ti
+         3pQQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=c2eV4osFi0ukdYwPMjLg4N3OH2klHkHbVnzvE6IHZ0A=;
-        b=wEqEV+/9CiNSZYZGSClvtFvEZalNUojZKZ8P8ayPuH+rE0zK0mAOAOx+wejIDryIYW
-         Xwqb/jaaxisYe8FhrUD9u6hbsjm01W9NTjt/KrU1DfC0LG0/yoA/8ZQgDrrpBJseIWS2
-         mWkR6q+5D0MtR5namKw9PrjYWDSVp5NsRa7Nk2ngu9cpjmtGdkUOr/m0oIPSWW/Ff1s8
-         gQNUkoBHRuX0moXura+ciwLptS7U/O4/bhbW4IFaQnVNqLbFzs4O3d61yjLtYtwSiMfo
-         j0ryFnaYBPXDmRHxHtmkObbFYvsqCtFfxsC8bqanTuYS+2NbOUUTcgNkH0yOlmbvZHYv
-         NV/Q==
-X-Gm-Message-State: AOAM533XgXoDd+09MvA8mPVBxyFp3+wRmP1GD87w4XHYPiZIPDKd0Mqd
-        Aqm2thvZjDhTq16EYH1AdpI=
-X-Google-Smtp-Source: ABdhPJwtMlRpUdDYK54zZy9LApP/DL9N5L+IrnomqaNOXiFC+OMI9PifWtvDjkZweUk0AUMLjAtr2A==
-X-Received: by 2002:a17:902:9f98:b0:144:e777:f88e with SMTP id g24-20020a1709029f9800b00144e777f88emr3021815plq.31.1639458272383;
-        Mon, 13 Dec 2021 21:04:32 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id me3sm688683pjb.35.2021.12.13.21.04.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Dec 2021 21:04:31 -0800 (PST)
-Message-ID: <a4b285ba-4a46-c94b-444e-d3c4f42c42c5@acm.org>
-Date:   Mon, 13 Dec 2021 21:04:29 -0800
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=L9jxTk8Oq9Ml0Qe9k0yTl7QSoV5iDa8z2SU+R+w0fKE=;
+        b=69D7uozCamW0O0mehK6ccyZ6FyUGdwrivcmSmpWt8r4waNz7w2jmD3W5aWh5S+fJqA
+         AAOGgC6GjbvjAVQYyQRp4wCG5IufPUE/Bh+Y2bGfqT5SQ6f8iI+SjXQMXMVFt97BkK/k
+         N7piLkl/ctiHH6K6fLqTJb2NgXxWZ/QeB2cyyDiuEHgBoTqCdtvOkh8JNdgIuO0sQFaT
+         +hWYlhpgJsYg0sG8cTyxANP462dWR6cyi3iUFUeJwdcZVxQTo3ynLuaZbmJ7zy1INl5P
+         DRGuVKLhWbzJeS6x8duuRy0YoovJ/g+RObkOD/Z5acXG8kHWaTVFi8Qd0mNk4q+0JMs5
+         IAyw==
+X-Gm-Message-State: AOAM53331lmqQ16k6Vuh4psSIpu68Mp52RXmnolkU11Qg02N5SJHR8Zn
+        fS5zSxTBUBtUYnApSq5FZS1RUClbB2QhyQ/dWEcqGUJJxis=
+X-Google-Smtp-Source: ABdhPJyH2we1BAqKPlIszha4Yp8d9EPCWmgxYenyH8yHdpKgWJEM4xZxThghjTN644G+udyKStYikz4xSJpflrf6gBA=
+X-Received: by 2002:a17:907:9607:: with SMTP id gb7mr3800574ejc.441.1639465457820;
+ Mon, 13 Dec 2021 23:04:17 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH v3 3/3] blk-crypto: show crypto capabilities in sysfs
-Content-Language: en-US
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Eric Biggers <ebiggers@kernel.org>, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-References: <20211208013534.136590-1-ebiggers@kernel.org>
- <20211208013534.136590-4-ebiggers@kernel.org>
- <6ff4d074-7508-4f4c-de06-f36899668168@acm.org>
- <YbKT/lcp6iZ+lD4n@sol.localdomain> <YbL2uUqV0GWFOitE@kroah.com>
- <cb29756b-8b21-5b4d-f107-b5573945d7ab@acm.org> <YbSCYyAv1SmYy7mz@kroah.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <YbSCYyAv1SmYy7mz@kroah.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <1639390248-213603-1-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1639390248-213603-1-git-send-email-john.garry@huawei.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Tue, 14 Dec 2021 08:04:07 +0100
+Message-ID: <CAMGffEmp1KbJ0v-wwOYMUbCx4pqXrvr-2rerUw=8NpwBCQsyKQ@mail.gmail.com>
+Subject: Re: [PATCH v3] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
+To:     John Garry <john.garry@huawei.com>
+Cc:     jinpu.wang@ionos.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, Viswas.G@microchip.com,
+        Ajish.Koshy@microchip.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, damien.lemoal@opensource.wdc.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/11/21 02:50, Greg Kroah-Hartman wrote:
-> On Fri, Dec 10, 2021 at 09:29:41AM -0800, Bart Van Assche wrote:
->> (b) No other block layer sysfs attribute follows this encoding scheme.
-> 
-> Then follow what they do.  Do they have multiple values in a single
-> file?  If so, they are broken and we should change that.
+On Mon, Dec 13, 2021 at 11:16 AM John Garry <john.garry@huawei.com> wrote:
+>
+> The driver supports a "direct" mode of operation, where the SMP req frame
+> is directly copied into the command payload (and vice-versa for the SMP
+> resp).
+>
+> To get at the SMP req frame data in the scatterlist the driver uses
+> phys_to_virt() on the DMA mapped memory dma_addr_t . This is broken,
+> and subsequently crashes as follows when an IOMMU is enabled:
+>
+>  Unable to handle kernel paging request at virtual address
+> ffff0000fcebfb00
+>         ...
+>  pc : pm80xx_chip_smp_req+0x2d0/0x3d0
+>  lr : pm80xx_chip_smp_req+0xac/0x3d0
+>  pm80xx_chip_smp_req+0x2d0/0x3d0
+>  pm8001_task_exec.constprop.0+0x368/0x520
+>  pm8001_queue_command+0x1c/0x30
+>  smp_execute_task_sg+0xdc/0x204
+>  sas_discover_expander.part.0+0xac/0x6cc
+>  sas_discover_root_expander+0x8c/0x150
+>  sas_discover_domain+0x3ac/0x6a0
+>  process_one_work+0x1d0/0x354
+>  worker_thread+0x13c/0x470
+>  kthread+0x17c/0x190
+>  ret_from_fork+0x10/0x20
+>  Code: 371806e1 910006d6 6b16033f 54000249 (38766b05)
+>  ---[ end trace b91d59aaee98ea2d ]---
+> note: kworker/u192:0[7] exited with preempt_count 1
+>
+> Instead use kmap_atomic().
+>
+> Signed-off-by: John Garry <john.garry@huawei.com>
+Thanks for the fix.
+looks good to me too.
 
-Hi Greg,
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
 
-The only other block layer sysfs attribute I know of that reports 
-multiple values is the queue/scheduler attribute. Here is an example of 
-the output that can be produced by reading that attribute:
-
-# cat /sys/block/sda/queue/scheduler
-[mq-deadline] kyber bfq none
-
-I don't think that changing the behavior of that attribute is an option 
-because that would break existing user space software, e.g. the 
-https://github.com/osandov/blktests/ test suite.
-
-Thanks,
-
-Bart.
+> --
+> Difference to v1:
+> - use kmap_atomic() in both locations
+> Difference to  v2:
+> - add whitespace around arithmetic (Damien)
+>
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index b9f6d83ff380..2101fc5761c3 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -3053,7 +3053,6 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>         struct smp_completion_resp *psmpPayload;
+>         struct task_status_struct *ts;
+>         struct pm8001_device *pm8001_dev;
+> -       char *pdma_respaddr = NULL;
+>
+>         psmpPayload = (struct smp_completion_resp *)(piomb + 4);
+>         status = le32_to_cpu(psmpPayload->status);
+> @@ -3080,19 +3079,23 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>                 if (pm8001_dev)
+>                         atomic_dec(&pm8001_dev->running_req);
+>                 if (pm8001_ha->smp_exp_mode == SMP_DIRECT) {
+> +                       struct scatterlist *sg_resp = &t->smp_task.smp_resp;
+> +                       u8 *payload;
+> +                       void *to;
+> +
+>                         pm8001_dbg(pm8001_ha, IO,
+>                                    "DIRECT RESPONSE Length:%d\n",
+>                                    param);
+> -                       pdma_respaddr = (char *)(phys_to_virt(cpu_to_le64
+> -                                               ((u64)sg_dma_address
+> -                                               (&t->smp_task.smp_resp))));
+> +                       to = kmap_atomic(sg_page(sg_resp));
+> +                       payload = to + sg_resp->offset;
+>                         for (i = 0; i < param; i++) {
+> -                               *(pdma_respaddr+i) = psmpPayload->_r_a[i];
+> +                               *(payload + i) = psmpPayload->_r_a[i];
+>                                 pm8001_dbg(pm8001_ha, IO,
+>                                            "SMP Byte%d DMA data 0x%x psmp 0x%x\n",
+> -                                          i, *(pdma_respaddr + i),
+> +                                          i, *(payload + i),
+>                                            psmpPayload->_r_a[i]);
+>                         }
+> +                       kunmap_atomic(to);
+>                 }
+>                 break;
+>         case IO_ABORTED:
+> @@ -4236,14 +4239,14 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>         struct sas_task *task = ccb->task;
+>         struct domain_device *dev = task->dev;
+>         struct pm8001_device *pm8001_dev = dev->lldd_dev;
+> -       struct scatterlist *sg_req, *sg_resp;
+> +       struct scatterlist *sg_req, *sg_resp, *smp_req;
+>         u32 req_len, resp_len;
+>         struct smp_req smp_cmd;
+>         u32 opc;
+>         struct inbound_queue_table *circularQ;
+> -       char *preq_dma_addr = NULL;
+> -       __le64 tmp_addr;
+>         u32 i, length;
+> +       u8 *payload;
+> +       u8 *to;
+>
+>         memset(&smp_cmd, 0, sizeof(smp_cmd));
+>         /*
+> @@ -4280,8 +4283,9 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>                 pm8001_ha->smp_exp_mode = SMP_INDIRECT;
+>
+>
+> -       tmp_addr = cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_req));
+> -       preq_dma_addr = (char *)phys_to_virt(tmp_addr);
+> +       smp_req = &task->smp_task.smp_req;
+> +       to = kmap_atomic(sg_page(smp_req));
+> +       payload = to + smp_req->offset;
+>
+>         /* INDIRECT MODE command settings. Use DMA */
+>         if (pm8001_ha->smp_exp_mode == SMP_INDIRECT) {
+> @@ -4289,7 +4293,7 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>                 /* for SPCv indirect mode. Place the top 4 bytes of
+>                  * SMP Request header here. */
+>                 for (i = 0; i < 4; i++)
+> -                       smp_cmd.smp_req16[i] = *(preq_dma_addr + i);
+> +                       smp_cmd.smp_req16[i] = *(payload + i);
+>                 /* exclude top 4 bytes for SMP req header */
+>                 smp_cmd.long_smp_req.long_req_addr =
+>                         cpu_to_le64((u64)sg_dma_address
+> @@ -4320,20 +4324,20 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+>                 pm8001_dbg(pm8001_ha, IO, "SMP REQUEST DIRECT MODE\n");
+>                 for (i = 0; i < length; i++)
+>                         if (i < 16) {
+> -                               smp_cmd.smp_req16[i] = *(preq_dma_addr+i);
+> +                               smp_cmd.smp_req16[i] = *(payload + i);
+>                                 pm8001_dbg(pm8001_ha, IO,
+>                                            "Byte[%d]:%x (DMA data:%x)\n",
+>                                            i, smp_cmd.smp_req16[i],
+> -                                          *(preq_dma_addr));
+> +                                          *(payload));
+>                         } else {
+> -                               smp_cmd.smp_req[i] = *(preq_dma_addr+i);
+> +                               smp_cmd.smp_req[i] = *(payload + i);
+>                                 pm8001_dbg(pm8001_ha, IO,
+>                                            "Byte[%d]:%x (DMA data:%x)\n",
+>                                            i, smp_cmd.smp_req[i],
+> -                                          *(preq_dma_addr));
+> +                                          *(payload));
+>                         }
+>         }
+> -
+> +       kunmap_atomic(to);
+>         build_smp_cmd(pm8001_dev->device_id, smp_cmd.tag,
+>                                 &smp_cmd, pm8001_ha->smp_exp_mode, length);
+>         rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &smp_cmd,
+> --
+> 2.26.2
+>
