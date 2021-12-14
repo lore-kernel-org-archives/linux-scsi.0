@@ -2,174 +2,156 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D15EC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 12:34:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F5A8C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 13:19:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231996AbhLNMes (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Dec 2021 07:34:48 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4275 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230023AbhLNMer (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 07:34:47 -0500
-Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JCyQ74NXHz67tlm;
-        Tue, 14 Dec 2021 20:30:23 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Tue, 14 Dec 2021 13:34:45 +0100
-Received: from [10.47.83.94] (10.47.83.94) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2308.20; Tue, 14 Dec
- 2021 12:34:44 +0000
-Subject: Re: [PATCH 14/15] scsi: libsas: Keep sas host active until finished
- some work
-To:     chenxiang <chenxiang66@hisilicon.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
-References: <1637117108-230103-1-git-send-email-chenxiang66@hisilicon.com>
- <1637117108-230103-15-git-send-email-chenxiang66@hisilicon.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <c05f5d30-bc2a-6933-4f27-589242fb84d4@huawei.com>
-Date:   Tue, 14 Dec 2021 12:34:21 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S234322AbhLNNT5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Dec 2021 08:19:57 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:39060 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232033AbhLNNT5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 08:19:57 -0500
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 5D4A921124;
+        Tue, 14 Dec 2021 13:19:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1639487996; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=tWHVxcdFcBgER4PZS8F9yn2nv8ZByotPQ0jfapHHvmY=;
+        b=2Q+Cf2oTkVB48167Jr8ziICrnwp5PdQWs3C0plCa2pPKmXZ4XBaooKhqgk7jhjA+wxhu+4
+        g/iDxA+Nia1NMAG6vCiwss8n6gDd1r1eBW+BgjeM+7HsKTwdH9WXuW+H6WBT7APWekdf+2
+        ghaMazGZR51TaI/Glu/agkWXQ9VdJ00=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1639487996;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=tWHVxcdFcBgER4PZS8F9yn2nv8ZByotPQ0jfapHHvmY=;
+        b=r+0/9Tt1xWs/FE+9VAI0WfxDQX5xlMLcudjQqL3XiypD26KcKYN/eIXHaClUUVyfAUBOyK
+        4SbNOVPKS3eAqnDg==
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id 55C2BA3B84;
+        Tue, 14 Dec 2021 13:19:56 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 17828)
+        id 47764519214E; Tue, 14 Dec 2021 14:19:56 +0100 (CET)
+From:   Daniel Wagner <dwagner@suse.de>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Daniel Wagner <dwagner@suse.de>
+Subject: [PATCH] lpfc: Reintroduce old IRQ probe logic
+Date:   Tue, 14 Dec 2021 14:19:55 +0100
+Message-Id: <20211214131955.76858-1-dwagner@suse.de>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210618085257.ouah6xsjv3akkjhz@beryllium.lan>
+References: <20210618085257.ouah6xsjv3akkjhz@beryllium.lan>
 MIME-Version: 1.0
-In-Reply-To: <1637117108-230103-15-git-send-email-chenxiang66@hisilicon.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.83.94]
-X-ClientProxiedBy: lhreml701-chm.china.huawei.com (10.201.108.50) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Please consider som rewrite:
+This brings back the original probing logic by adding the dropped code
+to lpfc_sli_hba_setup().
 
-On 17/11/2021 02:45, chenxiang wrote:
+Fixes: d2f2547efd39 ("scsi: lpfc: Fix auto sli_mode and its effect on CONFIG_PORT for SLI3")
+Signed-off-by: Daniel Wagner <dwagner@suse.de>
+---
+Hi James,
 
-"scsi: libsas: Keep sas host active until finished some work" -> "scsi: 
-libsas: Keep host active while processing events"
+after a back and forth, this version of the patch 'fixes' the problem
+with older hardware. I just post for reference.
 
-> From: Xiang Chen <chenxiang66@hisilicon.com>
-> 
-> For those works from event queue, if executing them such as
-> PORTE_BROADCAST_RCVD when sas host is suspended, it will resume sas host
-> firstly as SMP IOs are sent in the process. So phyup will occur and it
-> will call work PORTE_BYTES_DMAED. But the original work (such as
-> PORTE_BROADCAST_RCVD) and the work PORTE_BYTES_DMAED are in the same
-> singlethread workqueue, so the complete of original work waits for
-> the complete of work PORTE_BYTES_DMAED while the complete of work
-> PORTE_BYTES_DMAED wait for the complete of original and it is blocked.
-> 
-> So call pm_runtime_get_noresume() to keep sas host active until
-> finished those works.
-Processing events such as PORTE_BROADCAST_RCVD may cause dependency 
-issues for runtime power management support.
+Daniel
 
-Such a problem would be that handling a PORTE_BROADCAST_RCVD event 
-requires that the host is resumed to send SMP commands. However, in 
-resuming the host, the phyup events generated from re-enabling the phys 
-are processed in the same workqueue as the original PORTE_BROADCAST_RCVD 
-event. As such, the host will never finish resuming (as it waits for the 
-phyup event processing), and then the PORTE_BROADCAST_RCVD event cannot 
-be processed as the SMP commands are blocked, and so we have a deadlock.
+See also:
+https://lore.kernel.org/linux-scsi/20210618085257.ouah6xsjv3akkjhz@beryllium.lan/
 
-Solve this problem by ensuring that libsas keeps the host active until 
-completely finished processing phy or port events, such as 
-PORTE_BYTES_DMAED. As such, we don't have to worry about resuming the 
-host for processing individual SMP commands in this example.
+ drivers/scsi/lpfc/lpfc_attr.c |  2 +-
+ drivers/scsi/lpfc/lpfc_init.c |  8 ++++++--
+ drivers/scsi/lpfc/lpfc_sli.c  | 34 +++++++++++++++++++++++++++++++++-
+ 3 files changed, 40 insertions(+), 4 deletions(-)
 
-> 
-> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-> Reviewed-by: John Garry <john.garry@huawei.com>
-> ---
->   drivers/scsi/libsas/sas_event.c | 24 +++++++++++++++++++++---
->   1 file changed, 21 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-> index 626ef96b9348..3613b9b315bc 100644
-> --- a/drivers/scsi/libsas/sas_event.c
-> +++ b/drivers/scsi/libsas/sas_event.c
-> @@ -50,8 +50,10 @@ void sas_queue_deferred_work(struct sas_ha_struct *ha)
->   	list_for_each_entry_safe(sw, _sw, &ha->defer_q, drain_node) {
->   		list_del_init(&sw->drain_node);
->   		ret = sas_queue_work(ha, sw);
-> -		if (ret != 1)
-> +		if (ret != 1) {
-> +			pm_runtime_put(ha->dev);
->   			sas_free_event(to_asd_sas_event(&sw->work));
-> +		}
->   	}
->   	spin_unlock_irq(&ha->lock);
->   }
-> @@ -126,16 +128,22 @@ void sas_enable_revalidation(struct sas_ha_struct *ha)
->   static void sas_port_event_worker(struct work_struct *work)
->   {
->   	struct asd_sas_event *ev = to_asd_sas_event(work);
-> +	struct asd_sas_phy *phy = ev->phy;
-> +	struct sas_ha_struct *ha = phy->ha;
->   
->   	sas_port_event_fns[ev->event](work);
-> +	pm_runtime_put(ha->dev);
->   	sas_free_event(ev);
->   }
->   
->   static void sas_phy_event_worker(struct work_struct *work)
->   {
->   	struct asd_sas_event *ev = to_asd_sas_event(work);
-> +	struct asd_sas_phy *phy = ev->phy;
-> +	struct sas_ha_struct *ha = phy->ha;
->   
->   	sas_phy_event_fns[ev->event](work);
-> +	pm_runtime_put(ha->dev);
->   	sas_free_event(ev);
->   }
->   
-> @@ -170,14 +178,19 @@ int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
->   	if (!ev)
->   		return -ENOMEM;
->   
-> +	/* Call pm_runtime_put() with pairs in sas_port_event_worker() */
-> +	pm_runtime_get_noresume(ha->dev);
-> +
->   	INIT_SAS_EVENT(ev, sas_port_event_worker, phy, event);
->   
->   	if (sas_defer_event(phy, ev))
->   		return 0;
->   
->   	ret = sas_queue_event(event, &ev->work, ha);
-> -	if (ret != 1)
-> +	if (ret != 1) {
-> +		pm_runtime_put(ha->dev);
->   		sas_free_event(ev);
-> +	}
->   
->   	return ret;
->   }
-> @@ -196,14 +209,19 @@ int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
->   	if (!ev)
->   		return -ENOMEM;
->   
-> +	/* Call pm_runtime_put() with pairs in sas_phy_event_worker() */
-> +	pm_runtime_get_noresume(ha->dev);
-> +
->   	INIT_SAS_EVENT(ev, sas_phy_event_worker, phy, event);
->   
->   	if (sas_defer_event(phy, ev))
->   		return 0;
->   
->   	ret = sas_queue_event(event, &ev->work, ha);
-> -	if (ret != 1)
-> +	if (ret != 1) {
-> +		pm_runtime_put(ha->dev);
->   		sas_free_event(ev);
-> +	}
->   
->   	return ret;
->   }
-> 
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 7a7f17d71811..5730ac6462fa 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -3632,7 +3632,7 @@ unsigned long lpfc_no_hba_reset[MAX_HBAS_NO_RESET] = {
+ module_param_array(lpfc_no_hba_reset, ulong, &lpfc_no_hba_reset_cnt, 0444);
+ MODULE_PARM_DESC(lpfc_no_hba_reset, "WWPN of HBAs that should not be reset");
+ 
+-LPFC_ATTR(sli_mode, 3, 3, 3,
++LPFC_ATTR(sli_mode, 3, 0, 3,
+ 	"SLI mode selector: 3 - select SLI-3");
+ 
+ LPFC_ATTR_R(enable_npiv, 1, 0, 1,
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 2fe7d9d885d9..3f3734127a7f 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -12112,8 +12112,12 @@ lpfc_sli_enable_intr(struct lpfc_hba *phba, uint32_t cfg_mode)
+ 
+ 	/* Need to issue conf_port mbox cmd before conf_msi mbox cmd */
+ 	retval = lpfc_sli_config_port(phba, LPFC_SLI_REV3);
+-	if (retval)
+-		return intr_mode;
++	if (retval) {
++		/* Try SLI-2 before erroring out */
++		retval = lpfc_sli_config_port(phba, LPFC_SLI_REV2);
++		if (retval)
++			return intr_mode;
++	}
+ 	phba->hba_flag &= ~HBA_NEEDS_CFG_PORT;
+ 
+ 	if (cfg_mode == 2) {
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 513a78d08b1d..5f32b5243302 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -5602,7 +5602,39 @@ lpfc_sli_hba_setup(struct lpfc_hba *phba)
+ 
+ 	/* Enable ISR already does config_port because of config_msi mbx */
+ 	if (phba->hba_flag & HBA_NEEDS_CFG_PORT) {
+-		rc = lpfc_sli_config_port(phba, LPFC_SLI_REV3);
++		int mode = 3;
++
++		switch (phba->cfg_sli_mode) {
++		case 2:
++			if (phba->cfg_enable_npiv) {
++				lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
++						"1824 NPIV enabled: Override sli_mode "
++						"parameter (%d) to auto (0).\n",
++						phba->cfg_sli_mode);
++				break;
++			}
++			mode = 2;
++			break;
++		case 0:
++		case 3:
++			break;
++		default:
++			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
++					"1819 Unrecognized sli_mode parameter: %d.\n",
++					phba->cfg_sli_mode);
++			break;
++		}
++
++		rc = lpfc_sli_config_port(phba, mode);
++
++		if (rc && phba->cfg_sli_mode == 3)
++			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
++					"1820 Unable to select SLI-3.  "
++					"Not supported by adapter.\n");
++		if (rc && mode != 2)
++			rc = lpfc_sli_config_port(phba, 2);
++		else if (rc && mode == 2)
++			rc = lpfc_sli_config_port(phba, 3);
+ 		if (rc)
+ 			return -EIO;
+ 		phba->hba_flag &= ~HBA_NEEDS_CFG_PORT;
+-- 
+2.29.2
 
