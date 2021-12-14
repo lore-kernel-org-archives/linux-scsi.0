@@ -2,144 +2,174 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8CB0C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 12:05:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D15EC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 12:34:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233796AbhLNMFy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Dec 2021 07:05:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55400 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231710AbhLNMFx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 07:05:53 -0500
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83C97C061574;
-        Tue, 14 Dec 2021 04:05:53 -0800 (PST)
-Received: by mail-wm1-x336.google.com with SMTP id k37-20020a05600c1ca500b00330cb84834fso16093897wms.2;
-        Tue, 14 Dec 2021 04:05:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=AisZhSfFVt6KKMPS8LBovqjr8Zf98fAlDJTnHrMPr4Y=;
-        b=P3/LXQsafEeJG/gYJu0k44bwPuJDR03YUKJkWdBTwtbf1OSi3iCpeVOs+0wXS6FyxE
-         ZELDMmPo8vSb21JGNvk6BhOrd+NYBW6lAqgz61p4A1CpIYZL6THqT7lF+2ASy3GOg2NN
-         qAYfG/2wXOg0XPztIhEAzdrPfiMM3Chsn/wTjaA2KcXWERfkro/QxWXA2En7c+VazE56
-         LYjHc7BgtO30dPFFdtzQhSZgWNBRHbIzjbzG0HGV9EZJs/6Ire172HNGEbe78v5ROoj6
-         HJ4QF1DjT+6AxS2nKVcjPhyQ0aBHS8qQovR7POR2vp1CR19xvlz/LxvMIToYTB47fi7g
-         ow1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=AisZhSfFVt6KKMPS8LBovqjr8Zf98fAlDJTnHrMPr4Y=;
-        b=Yr0nVqDAFNWpBgJBrrGT+LPVvU3fRspxmJu56GrzIATEPDWN4BMZhRWyvEsu1Qq1TG
-         yiwldtyjuygwcHi2TVvcEzZfLb5QfQHJC+3ruhGZcX3Cdg9b/TvFMJEpPCONFNn2EJAi
-         YOG6yazD/rmNn3m66t43GB7hoq4wyXgAy1V0lD/pVXkEn7rchPvrct1LMcY1OMK3LLdT
-         MseEM9d46mL+Kwd9AaL8g5Oczo8wC8c5EufWl/r59S77ftaxLYm+ASx6Mf11vfgEVwPN
-         M72VNIMF4iRCJb+eaGeOZnf24DFhgp4sU9FeyoWlFj1IseS3BhkGY8TrxK7cygd96B/B
-         pFbA==
-X-Gm-Message-State: AOAM5336I2ePsbDHawa/olRpK+ZfQl+A5moTScacz2zW3en+YatFrLFk
-        MB+GPc4bo990VkDKJG2+0SI=
-X-Google-Smtp-Source: ABdhPJyeRfA2JXgEYx8w7LpEPczhty92Xbahhzsxj6gtEk34EQ/Z/IcFDkktWfIeKI9w5QCUobwJng==
-X-Received: by 2002:a1c:f70c:: with SMTP id v12mr6439093wmh.18.1639483552144;
-        Tue, 14 Dec 2021 04:05:52 -0800 (PST)
-Received: from ubuntu-laptop.speedport.ip (p200300e94714d5665ac960fd9f7a69e0.dip0.t-ipconnect.de. [2003:e9:4714:d566:5ac9:60fd:9f7a:69e0])
-        by smtp.gmail.com with ESMTPSA id b6sm2235154wmq.45.2021.12.14.04.05.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Dec 2021 04:05:51 -0800 (PST)
-From:   Bean Huo <huobean@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        YongQin Liu <yongqin.liu@linaro.org>,
-        Amit Pundir <amit.pundir@linaro.org>,
-        John Stultz <john.stultz@linaro.org>
-Subject: [PATCH v2] scsi: ufs: Fix deadlock issue in ufshcd_wait_for_doorbell_clr()
-Date:   Tue, 14 Dec 2021 13:05:37 +0100
-Message-Id: <20211214120537.531628-1-huobean@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        id S231996AbhLNMes (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Dec 2021 07:34:48 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4275 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230023AbhLNMer (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 07:34:47 -0500
+Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JCyQ74NXHz67tlm;
+        Tue, 14 Dec 2021 20:30:23 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Tue, 14 Dec 2021 13:34:45 +0100
+Received: from [10.47.83.94] (10.47.83.94) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2308.20; Tue, 14 Dec
+ 2021 12:34:44 +0000
+Subject: Re: [PATCH 14/15] scsi: libsas: Keep sas host active until finished
+ some work
+To:     chenxiang <chenxiang66@hisilicon.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
+References: <1637117108-230103-1-git-send-email-chenxiang66@hisilicon.com>
+ <1637117108-230103-15-git-send-email-chenxiang66@hisilicon.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <c05f5d30-bc2a-6933-4f27-589242fb84d4@huawei.com>
+Date:   Tue, 14 Dec 2021 12:34:21 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1637117108-230103-15-git-send-email-chenxiang66@hisilicon.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.83.94]
+X-ClientProxiedBy: lhreml701-chm.china.huawei.com (10.201.108.50) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+Please consider som rewrite:
 
-Call shost_for_each_device() with holding host->host_lock will cause
-a deadlock situation, which will cause the system to stall (the log
-as follow). Fix this issue by using __shost_for_each_device() in
-ufshcd_pending_cmds().
+On 17/11/2021 02:45, chenxiang wrote:
 
-stalls on CPUs/tasks:
-all trace:
-__switch_to+0x120/0x170
-0xffff800011643998
-ask dump for CPU 5:
-ask:kworker/u16:2   state:R  running task     stack:    0 pid:   80 ppid:     2 flags:0x0000000a
-orkqueue: events_unbound async_run_entry_fn
-all trace:
-__switch_to+0x120/0x170
-0x0
-ask dump for CPU 6:
-ask:kworker/u16:6   state:R  running task     stack:    0 pid:  164 ppid:     2 flags:0x0000000a
-orkqueue: events_unbound async_run_entry_fn
-all trace:
-__switch_to+0x120/0x170
-0xffff54e7c4429f80
-ask dump for CPU 7:
-ask:kworker/u16:4   state:R  running task     stack:    0 pid:  153 ppid:     2 flags:0x0000000a
-orkqueue: events_unbound async_run_entry_fn
-all trace:
-__switch_to+0x120/0x170
-blk_mq_run_hw_queue+0x34/0x110
-blk_mq_sched_insert_request+0xb0/0x120
-blk_execute_rq_nowait+0x68/0x88
-blk_execute_rq+0x4c/0xd8
-__scsi_execute+0xec/0x1d0
-scsi_vpd_inquiry+0x84/0xf0
-scsi_get_vpd_buf+0x34/0xb8
-scsi_attach_vpd+0x34/0x140
-scsi_probe_and_add_lun+0xa6c/0xab8
-__scsi_scan_target+0x438/0x4f8
-scsi_scan_channel+0x6c/0xa8
-scsi_scan_host_selected+0xf0/0x150
-do_scsi_scan_host+0x88/0x90
-scsi_scan_host+0x1b4/0x1d0
-ufshcd_async_scan+0x248/0x310
-async_run_entry_fn+0x30/0x178
-process_one_work+0x1e8/0x368
-worker_thread+0x40/0x478
-kthread+0x174/0x180
-ret_from_fork+0x10/0x20
+"scsi: libsas: Keep sas host active until finished some work" -> "scsi: 
+libsas: Keep host active while processing events"
 
-Fixes: 8d077ede48c1 ("scsi: ufs: Optimize the command queueing code")
-Reported-by: YongQin Liu <yongqin.liu@linaro.org>
-Reported-by: Amit Pundir <amit.pundir@linaro.org>
-Tested-by: John Stultz <john.stultz@linaro.org>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/scsi/ufs/ufshcd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> From: Xiang Chen <chenxiang66@hisilicon.com>
+> 
+> For those works from event queue, if executing them such as
+> PORTE_BROADCAST_RCVD when sas host is suspended, it will resume sas host
+> firstly as SMP IOs are sent in the process. So phyup will occur and it
+> will call work PORTE_BYTES_DMAED. But the original work (such as
+> PORTE_BROADCAST_RCVD) and the work PORTE_BYTES_DMAED are in the same
+> singlethread workqueue, so the complete of original work waits for
+> the complete of work PORTE_BYTES_DMAED while the complete of work
+> PORTE_BYTES_DMAED wait for the complete of original and it is blocked.
+> 
+> So call pm_runtime_get_noresume() to keep sas host active until
+> finished those works.
+Processing events such as PORTE_BROADCAST_RCVD may cause dependency 
+issues for runtime power management support.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 6dd517267f1b..fbebb8309ef7 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1082,7 +1082,8 @@ static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
- 	struct scsi_device *sdev;
- 	u32 pending = 0;
- 
--	shost_for_each_device(sdev, hba->host)
-+	lockdep_assert_held(hba->host->host_lock);
-+	__shost_for_each_device(sdev, hba->host)
- 		pending += sbitmap_weight(&sdev->budget_map);
- 
- 	return pending;
--- 
-2.25.1
+Such a problem would be that handling a PORTE_BROADCAST_RCVD event 
+requires that the host is resumed to send SMP commands. However, in 
+resuming the host, the phyup events generated from re-enabling the phys 
+are processed in the same workqueue as the original PORTE_BROADCAST_RCVD 
+event. As such, the host will never finish resuming (as it waits for the 
+phyup event processing), and then the PORTE_BROADCAST_RCVD event cannot 
+be processed as the SMP commands are blocked, and so we have a deadlock.
+
+Solve this problem by ensuring that libsas keeps the host active until 
+completely finished processing phy or port events, such as 
+PORTE_BYTES_DMAED. As such, we don't have to worry about resuming the 
+host for processing individual SMP commands in this example.
+
+> 
+> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+> Reviewed-by: John Garry <john.garry@huawei.com>
+> ---
+>   drivers/scsi/libsas/sas_event.c | 24 +++++++++++++++++++++---
+>   1 file changed, 21 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
+> index 626ef96b9348..3613b9b315bc 100644
+> --- a/drivers/scsi/libsas/sas_event.c
+> +++ b/drivers/scsi/libsas/sas_event.c
+> @@ -50,8 +50,10 @@ void sas_queue_deferred_work(struct sas_ha_struct *ha)
+>   	list_for_each_entry_safe(sw, _sw, &ha->defer_q, drain_node) {
+>   		list_del_init(&sw->drain_node);
+>   		ret = sas_queue_work(ha, sw);
+> -		if (ret != 1)
+> +		if (ret != 1) {
+> +			pm_runtime_put(ha->dev);
+>   			sas_free_event(to_asd_sas_event(&sw->work));
+> +		}
+>   	}
+>   	spin_unlock_irq(&ha->lock);
+>   }
+> @@ -126,16 +128,22 @@ void sas_enable_revalidation(struct sas_ha_struct *ha)
+>   static void sas_port_event_worker(struct work_struct *work)
+>   {
+>   	struct asd_sas_event *ev = to_asd_sas_event(work);
+> +	struct asd_sas_phy *phy = ev->phy;
+> +	struct sas_ha_struct *ha = phy->ha;
+>   
+>   	sas_port_event_fns[ev->event](work);
+> +	pm_runtime_put(ha->dev);
+>   	sas_free_event(ev);
+>   }
+>   
+>   static void sas_phy_event_worker(struct work_struct *work)
+>   {
+>   	struct asd_sas_event *ev = to_asd_sas_event(work);
+> +	struct asd_sas_phy *phy = ev->phy;
+> +	struct sas_ha_struct *ha = phy->ha;
+>   
+>   	sas_phy_event_fns[ev->event](work);
+> +	pm_runtime_put(ha->dev);
+>   	sas_free_event(ev);
+>   }
+>   
+> @@ -170,14 +178,19 @@ int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
+>   	if (!ev)
+>   		return -ENOMEM;
+>   
+> +	/* Call pm_runtime_put() with pairs in sas_port_event_worker() */
+> +	pm_runtime_get_noresume(ha->dev);
+> +
+>   	INIT_SAS_EVENT(ev, sas_port_event_worker, phy, event);
+>   
+>   	if (sas_defer_event(phy, ev))
+>   		return 0;
+>   
+>   	ret = sas_queue_event(event, &ev->work, ha);
+> -	if (ret != 1)
+> +	if (ret != 1) {
+> +		pm_runtime_put(ha->dev);
+>   		sas_free_event(ev);
+> +	}
+>   
+>   	return ret;
+>   }
+> @@ -196,14 +209,19 @@ int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
+>   	if (!ev)
+>   		return -ENOMEM;
+>   
+> +	/* Call pm_runtime_put() with pairs in sas_phy_event_worker() */
+> +	pm_runtime_get_noresume(ha->dev);
+> +
+>   	INIT_SAS_EVENT(ev, sas_phy_event_worker, phy, event);
+>   
+>   	if (sas_defer_event(phy, ev))
+>   		return 0;
+>   
+>   	ret = sas_queue_event(event, &ev->work, ha);
+> -	if (ret != 1)
+> +	if (ret != 1) {
+> +		pm_runtime_put(ha->dev);
+>   		sas_free_event(ev);
+> +	}
+>   
+>   	return ret;
+>   }
+> 
 
