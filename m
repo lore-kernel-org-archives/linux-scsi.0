@@ -2,52 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12514C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 08:40:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56D2AC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Dec 2021 09:19:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231890AbhLNIkl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Dec 2021 03:40:41 -0500
-Received: from mail.thebizzie.pl ([192.236.147.111]:41056 "EHLO
-        mail.thebizzie.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231877AbhLNIkk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 03:40:40 -0500
-X-Greylist: delayed 498 seconds by postgrey-1.27 at vger.kernel.org; Tue, 14 Dec 2021 03:40:40 EST
-Received: by mail.thebizzie.pl (Postfix, from userid 1002)
-        id 5707E181464; Tue, 14 Dec 2021 08:31:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=thebizzie.pl; s=mail;
-        t=1639470741; bh=kU+//Lu71IqgcFfjayWXuIc0mZtoyrYJc2YuqyU8eS8=;
-        h=Date:From:To:Subject:From;
-        b=iQc9YHQ6AGUwsgtSadHaIy2NxttxU4Y8r/2SAQrg/9JLcQOpAWOBu/uxVz35Vm51v
-         80crqxSIHL88EK3BbodkvkVn5RGlmHOxQoUd2etGS+UXcXVo3lmzeX20A5woiD6KWk
-         3EoW5AGeHtk/kL4N4/YMsSM8eHoDVRLCHMYRkJEw3GS6WfTvxYabx4ttADk9dooyU1
-         DEi6EAzZejxDh1lR+DAy70hhof0t4flrBOi+OU4QtZWIO7PoQnabo68I51UmDgeS89
-         D0ezRoemzF4RrS/XEUXgVdAwkwPj+CwsPKREfXO9k5a2z5Cnx+sM78ve2l6XAw09u/
-         hws/K4nVZOqxw==
-Received: by mail.thebizzie.pl for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2021 08:31:44 GMT
-Message-ID: <20211214074500-0.1.7.207.0.64uzryq5aq@thebizzie.pl>
-Date:   Tue, 14 Dec 2021 08:31:44 GMT
-From:   "Mateusz Adamczyk" <mateusz.adamczyk@thebizzie.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: Wycena paneli fotowoltaicznych
-X-Mailer: mail.thebizzie.pl
+        id S232183AbhLNJTK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Dec 2021 04:19:10 -0500
+Received: from mail-m975.mail.163.com ([123.126.97.5]:50887 "EHLO
+        mail-m975.mail.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230383AbhLNJTK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2021 04:19:10 -0500
+X-Greylist: delayed 904 seconds by postgrey-1.27 at vger.kernel.org; Tue, 14 Dec 2021 04:19:09 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=LgBp9
+        9KE97lkefxq811mzJ7dGlgzx0T3MUWZy5bxN1A=; b=BSp6oIvf6V4znGycN/NXE
+        8khl1ZO+Db8qZUEijrbLtT/H0PjsCmryXT5BMaDuTVZ7cQb2zdRI/T42rH98fUMc
+        Mezk7cKWRm8Kj/ST/V4V/J2zpAWDVhvvp2HGlX5eHPuHvkWBhjI4Kk6EWIvEIu0D
+        4wc19XJK6g41b4DW+1bYrE=
+Received: from localhost.localdomain (unknown [36.112.214.113])
+        by smtp5 (Coremail) with SMTP id HdxpCgBnMiXrXbhheRXWBQ--.25889S4;
+        Tue, 14 Dec 2021 17:03:54 +0800 (CST)
+From:   Jianglei Nie <niejianglei2021@163.com>
+To:     jinpu.wang@cloud.ionos.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jianglei Nie <niejianglei2021@163.com>
+Subject: [PATCH] scsi: pm8001: Fix memory leak in pm8001_send_abort_all()
+Date:   Tue, 14 Dec 2021 17:03:37 +0800
+Message-Id: <20211214090337.29156-1-niejianglei2021@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: HdxpCgBnMiXrXbhheRXWBQ--.25889S4
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJry7Xr47trW8Gr4DJr4Utwb_yoW8XF13pF
+        Z7ZF12kr4UJa10gwsxAanrXwnYv3yxK34UCFW8Z3s09FW3XFW0qFyIvrW2qr1xJrykCF17
+        XFyDWFsrWFyDZr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jqdgAUUUUU=
+X-Originating-IP: [36.112.214.113]
+X-CM-SenderInfo: xqlhyxxdqjzvrlsqjii6rwjhhfrp/1tbiWxppjFSIsjnzDgAAsO
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+In line 1767, sas_alloc_slow_task() allocates and initializes a
+sas_task structure. When some errors occur, line 1778 and line
+1795 forget to free this structure, which will lead to a memory leak.
+There is a similar snippet of code in the same file (in function
+pm8001_send_read_log) as allocating and initializing in line 1812
+as well as releasing the memory in line 1822 and line 1867.
 
-dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
-irm=C4=85.
+We can fix it by calling sas_free_task() when the res and ret is true
+and before the function returns.
 
-=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
-ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
+Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
+---
+ drivers/scsi/pm8001/pm8001_hwi.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
-ropozycji?
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 124cb69740c6..25045a91620e 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -1774,8 +1774,10 @@ static void pm8001_send_abort_all(struct pm8001_hba_info *pm8001_ha,
+ 	task->task_done = pm8001_task_done;
+ 
+ 	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
+-	if (res)
++	if (res) {
++		sas_free_task(task);
+ 		return;
++	}
+ 
+ 	ccb = &pm8001_ha->ccb_info[ccb_tag];
+ 	ccb->device = pm8001_ha_dev;
+@@ -1791,8 +1793,10 @@ static void pm8001_send_abort_all(struct pm8001_hba_info *pm8001_ha,
+ 
+ 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &task_abort,
+ 			sizeof(task_abort), 0);
+-	if (ret)
++	if (ret) {
++		sas_free_task(task);
+ 		pm8001_tag_free(pm8001_ha, ccb_tag);
++	}
+ 
+ }
+ 
+-- 
+2.25.1
 
-
-Pozdrawiam,
-Mateusz Adamczyk
