@@ -2,96 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73333C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Dec 2021 01:21:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 337CBC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Dec 2021 07:22:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232565AbhLPBVJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Dec 2021 20:21:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60906 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbhLPBVI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Dec 2021 20:21:08 -0500
-Received: from mail-qt1-x832.google.com (mail-qt1-x832.google.com [IPv6:2607:f8b0:4864:20::832])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EC75C061574;
-        Wed, 15 Dec 2021 17:21:08 -0800 (PST)
-Received: by mail-qt1-x832.google.com with SMTP id o17so23886073qtk.1;
-        Wed, 15 Dec 2021 17:21:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=pdEv0OCuEaZxcoDSUkQ+CoSfgNw3rkzYB10lIPbj9x0=;
-        b=A8kNMpS6daY2UKVU7D8VCJYJlv3FDB73Z9ONm7GwJLYkOejaK+up8rT0b2gLvGkWPq
-         Spv7d9NJuVFUOM1XQvitRyCDZZupNJljpARd/Gy7hA9MidKQcBqbh/W5J984Mb+F7yzT
-         PPARQSPMZNLLMJxUwx88I99vfYxWDBlrEfNNOGPVij2B5lDLOMaMWXbQih1n/RZqU2OC
-         c0NBVCGT9ozm4X3e/cbqutjPgKjgrgwZVwD4pDL4/9Bei9YzThiZ+f0n0XARQXG6j810
-         Ecaz44Ajv8kcLVSc5NKgzsX/t4nUYFxdp4IRWrhSUxzm9zy9M4sbEJMWnPtBh6wiE1EZ
-         UU+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=pdEv0OCuEaZxcoDSUkQ+CoSfgNw3rkzYB10lIPbj9x0=;
-        b=5sEOW+VXS3+UbMc4+GfooN6Nowyeb6qZTt7TJjKSztFZWt05m1E3MYlSCHHpe7e/zF
-         sKhnAj5R6B15DdL7yki3n3LfoKbQi0mt2uvVxFITrEiVlA7Dc2NnjzzVJ6KDgMK1iFeR
-         IqAMppV0hRI58GjS9G1OPcCNMKcdnxNuNCh7jq3NSqbmXEZVBOpNNEJJXoMApNexsoVj
-         UUbaqVrHJsoEIQijUqCIL1l5cHJ+pwwEa3c3viW9t90dGqFAGH6YN50o5Kukry/t7AtR
-         pWYPwnrgsTXJOD8Dy3gqg4wfY1zv2Ep2MSxwkJd19Ce0QEL/OAIMl5u5ZzZgHCJ/wm/i
-         SgdQ==
-X-Gm-Message-State: AOAM531SUuo7TGXAAvYiN6VN7P9Olt2I5hPHIkrb8cR1K2O7ozEO2p1p
-        9g/4z5GNtlUfnpnEWW9GmKc=
-X-Google-Smtp-Source: ABdhPJx5RAjZNWxl0FR/7JgigyFsgj66NN05WmUj31G0aHTCkD1JYqOWrAggGIYPVQiQWAEvqzy7wQ==
-X-Received: by 2002:ac8:59ce:: with SMTP id f14mr15075718qtf.30.1639617667387;
-        Wed, 15 Dec 2021 17:21:07 -0800 (PST)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id r16sm2029147qkp.42.2021.12.15.17.21.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Dec 2021 17:21:06 -0800 (PST)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: deng.changcheng@zte.com.cn
-To:     kashyap.desai@broadcom.com
-Cc:     sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Changcheng Deng <deng.changcheng@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi: megaraid_sas: use max() to make code cleaner
-Date:   Thu, 16 Dec 2021 01:21:00 +0000
-Message-Id: <20211216012100.446477-1-deng.changcheng@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        id S231972AbhLPHWn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Dec 2021 02:22:43 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:45220 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231388AbhLPHWn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Dec 2021 02:22:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1639639363;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Gh7OfxB6gHNNIY1MGf+TNdGG2hD+gXIjCaTRnCEV9Xc=;
+        b=CEtRMdTZQUiBGAuB8iSmIiLXq8T8M6RIZiYR1CjeEbVNfEA+y7+eXmruK0Mqd+gJOo5wa3
+        6Zz5Y43f0Xsqsd3puN28Sg/WSwE5CxfAuhh6T4K5y24uM57SNl0LUKmBAnqD/6kSd02v2E
+        MF6DM3uyF35RF29kAjGjh8DUGTQFTuQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-622-f-ujoBuZPmif9U0Fx45zQA-1; Thu, 16 Dec 2021 02:22:39 -0500
+X-MC-Unique: f-ujoBuZPmif9U0Fx45zQA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 643618042F6;
+        Thu, 16 Dec 2021 07:22:38 +0000 (UTC)
+Received: from T590 (ovpn-8-20.pek2.redhat.com [10.72.8.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A8CF47EBDD;
+        Thu, 16 Dec 2021 07:22:15 +0000 (UTC)
+Date:   Thu, 16 Dec 2021 15:22:09 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Dexuan Cui <decui@microsoft.com>, linux-scsi@vger.kernel.org,
+        Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>
+Subject: Re: [PATCH] block: reduce kblockd_mod_delayed_work_on() CPU
+ consumption
+Message-ID: <YbrpIQUs4WOhyiIX@T590>
+References: <bc529a3e-31d5-c266-8633-91095b346b19@kernel.dk>
+ <YbiyhcbZmnNbed3O@infradead.org>
+ <53b6fac0-10cb-80ab-16e7-ee851b720d5e@kernel.dk>
+ <883ad44e-8421-1cb5-f3f4-4a8d193e2d5a@acm.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <883ad44e-8421-1cb5-f3f4-4a8d193e2d5a@acm.org>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Changcheng Deng <deng.changcheng@zte.com.cn>
+On Wed, Dec 15, 2021 at 09:40:38AM -0800, Bart Van Assche wrote:
+> On 12/14/21 7:59 AM, Jens Axboe wrote:
+> > On 12/14/21 8:04 AM, Christoph Hellwig wrote:
+> > > So why not do a non-delayed queue_work for that case?  Might be good
+> > > to get the scsi and workqueue maintaines involved to understand the
+> > > issue a bit better first.
+> > 
+> > We can probably get by with doing just that, and just ignore if a delayed
+> > work timer is already running.
+> > 
+> > Dexuan, can you try this one?
+> > 
+> > diff --git a/block/blk-core.c b/block/blk-core.c
+> > index 1378d084c770..c1833f95cb97 100644
+> > --- a/block/blk-core.c
+> > +++ b/block/blk-core.c
+> > @@ -1484,6 +1484,8 @@ EXPORT_SYMBOL(kblockd_schedule_work);
+> >   int kblockd_mod_delayed_work_on(int cpu, struct delayed_work *dwork,
+> >   				unsigned long delay)
+> >   {
+> > +	if (!delay)
+> > +		return queue_work_on(cpu, kblockd_workqueue, &dwork->work);
+> >   	return mod_delayed_work_on(cpu, kblockd_workqueue, dwork, delay);
+> >   }
+> >   EXPORT_SYMBOL(kblockd_mod_delayed_work_on);
+> 
+> As Christoph already mentioned, it would be great to receive feedback from the
+> workqueue maintainer about this patch since I'm not aware of other kernel code
+> that queues delayed_work in a similar way.
+> Regarding the feedback from the view of the SCSI subsystem: I'd like to see the
+> block layer core track whether or not a queue needs to be run such that the
+> scsi_run_queue_async() call can be removed from scsi_end_request(). No such call
 
-Use max() in order to make code cleaner.
+scsi_run_queue_async() is just for handling restart from running out of
+scsi's device queue limit, which shouldn't be hot now, and it is for
+handling scsi's own queue limit.
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Changcheng Deng <deng.changcheng@zte.com.cn>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+> was present in the original conversion of the SCSI core from the legacy block
+> layer to blk-mq. See also commit d285203cf647 ("scsi: add support for a blk-mq
+> based I/O path.").
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 82e1e24257bc..095275aca139 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5995,10 +5995,7 @@ megasas_alloc_irq_vectors(struct megasas_instance *instance)
- 			instance->msix_vectors - instance->iopoll_q_count,
- 			i, instance->iopoll_q_count);
- 
--	if (i > 0)
--		instance->msix_vectors = i;
--	else
--		instance->msix_vectors = 0;
-+	instance->msix_vectors = max(i, 0);
- 
- 	if (instance->smp_affinity_enable)
- 		megasas_set_high_iops_queue_affinity_and_hint(instance);
--- 
-2.25.1
+That isn't true, see scsi_next_command()->scsi_run_queue().
+
+
+Thanks,
+Ming
 
