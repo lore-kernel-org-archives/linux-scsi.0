@@ -2,85 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3493C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Dec 2021 04:05:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAA89C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Dec 2021 18:02:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232684AbhLQEFA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Dec 2021 23:05:00 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:40466 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232624AbhLQEEw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Dec 2021 23:04:52 -0500
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BH2X4T8004122;
-        Fri, 17 Dec 2021 04:04:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=47mkUn5AIE/gaIz5Xk8dghf/d3/VjCK/LqtvQA/k/gk=;
- b=vBORmk6TUjVAe/N3VTkmAn1iUXC3E5PjTb/8pkip43+Fe4IRWclzawYLlu1X7HtsLZoB
- 89Z9NetZghoKJsAJ7C+/6mxj6as5cIj2EeQDq32/VjF4j3fm18at3uaTVgIG+92eKr5b
- cL89kCTyCpoPrlgRxBOJq7EnHwHYahOoVctAVY7107rjz5/m/mGOobd8eJb29XTtUHMM
- rwKBjUkThPyUWxR05DMlszcGVtOwi/6uiIJq4UMNpPhAD7c5GHMqPkzs9i6fgLNq/y+v
- NYUgzTFfVZrDR7I30/ybBqd2n0dtVutgBT8XuhdiVTnm6uR81Sb7oVgahsgyBe+hCmpR Pw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3cykmcmkgf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Dec 2021 04:04:47 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BH40jfb154622;
-        Fri, 17 Dec 2021 04:04:46 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3030.oracle.com with ESMTP id 3cvh436dvk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Dec 2021 04:04:46 +0000
-Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 1BH44icm167096;
-        Fri, 17 Dec 2021 04:04:46 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by userp3030.oracle.com with ESMTP id 3cvh436duh-3;
-        Fri, 17 Dec 2021 04:04:46 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     James Smart <james.smart@broadcom.com>,
-        Kees Cook <keescook@chromium.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-kernel@vger.kernel.org,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH] scsi: lpfc: Use struct_group() to initialize struct lpfc_cgn_info
-Date:   Thu, 16 Dec 2021 23:04:42 -0500
-Message-Id: <163971367435.637.14441712327828336248.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20211208195957.1603092-1-keescook@chromium.org>
-References: <20211208195957.1603092-1-keescook@chromium.org>
+        id S236402AbhLQSCI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Dec 2021 13:02:08 -0500
+Received: from mail-wr1-f44.google.com ([209.85.221.44]:37873 "EHLO
+        mail-wr1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235822AbhLQSCH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Dec 2021 13:02:07 -0500
+Received: by mail-wr1-f44.google.com with SMTP id t26so5589424wrb.4;
+        Fri, 17 Dec 2021 10:02:06 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=oMu9apPBaIi5tnaaEn/7B+TGrd8QQOY69E+E1XVDBJI=;
+        b=rQiiVzDgUTRI5Aw4FhDYAb1jNDiVSrnyY735WPIpQ2mHwSdIBpd61t4lV18ihtqCBX
+         g9Qp7v51MbxDsvkU1GA+VRskJPURthVlBDgaY2QeB5EkrKJxlRAyrWV8d+GwaY7dQ8DN
+         Pjzq3e6X8UFatGKwaCWmKM5CcCUreAJjHSP/kcm6cJiMdQFxjsMYQ9z/ZQLtb6TBYAcZ
+         OWbBNR/Eg2dur7qP9TfmcXZOI5SPC2B7HVT7Y49LTvXOpA82vDv8yXOsMA9mnxDqbN1l
+         M6awgz6LRSxEBMCsyVYgkArezUopkBDeTmAq74gH8IEH6ISd6hpLsITLAEpuSTqsuIig
+         nIzg==
+X-Gm-Message-State: AOAM5303ZUM9l8KtGH77J5dONtbP0JmE18td727pFB/XOgwugalr59Ea
+        ujbaw5AiV2ZPZQwFG0UTi3g=
+X-Google-Smtp-Source: ABdhPJxZW9VkgRs6Fqo+bYWZVKfD8ydQU1cDhNtoIVkXQmcCzITHgxDeT8/9Q5qOUz6j3QSv/dbrVg==
+X-Received: by 2002:a5d:58f2:: with SMTP id f18mr3409586wrd.98.1639764125887;
+        Fri, 17 Dec 2021 10:02:05 -0800 (PST)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id d2sm7663606wmb.31.2021.12.17.10.02.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Dec 2021 10:02:05 -0800 (PST)
+Date:   Fri, 17 Dec 2021 18:02:03 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     Tianyu Lan <ltykernel@gmail.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
+        x86@kernel.org, hpa@zytor.com, davem@davemloft.net,
+        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        arnd@arndb.de, hch@infradead.org, m.szyprowski@samsung.com,
+        robin.murphy@arm.com, thomas.lendacky@amd.com,
+        Tianyu.Lan@microsoft.com, michael.h.kelley@microsoft.com,
+        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        vkuznets@redhat.com, brijesh.singh@amd.com, konrad.wilk@oracle.com,
+        hch@lst.de, joro@8bytes.org, parri.andrea@gmail.com,
+        dave.hansen@intel.com
+Subject: Re: [PATCH V7 0/5] x86/Hyper-V: Add Hyper-V Isolation VM
+ support(Second part)
+Message-ID: <20211217180203.sb4av3a7ezqmtvu6@liuwe-devbox-debian-v2>
+References: <20211213071407.314309-1-ltykernel@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: 6yjbvYlfNEKDGgBhzbA7FIUKZnHGi540
-X-Proofpoint-GUID: 6yjbvYlfNEKDGgBhzbA7FIUKZnHGi540
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211213071407.314309-1-ltykernel@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 8 Dec 2021 11:59:57 -0800, Kees Cook wrote:
-
-> In preparation for FORTIFY_SOURCE performing compile-time and run-time
-> field bounds checking for memset(), avoid intentionally writing across
-> neighboring fields.
+On Mon, Dec 13, 2021 at 02:14:01AM -0500, Tianyu Lan wrote:
+> From: Tianyu Lan <Tianyu.Lan@microsoft.com>
+[...]
 > 
-> Add struct_group() to mark "stat" region of struct lpfc_cgn_info that
-> should be initialized to zero, and refactor the "data" region memset()
-> to wipe everything up to the cgn_stats region.
+> Tianyu Lan (5):
+>   swiotlb: Add swiotlb bounce buffer remap function for HV IVM
+>   x86/hyper-v: Add hyperv Isolation VM check in the cc_platform_has()
+>   hyper-v: Enable swiotlb bounce buffer for Isolation VM
+>   scsi: storvsc: Add Isolation VM support for storvsc driver
+>   net: netvsc: Add Isolation VM support for netvsc driver
 > 
-> [...]
 
-Applied to 5.17/scsi-queue, thanks!
+Applied to hyperv-next. Thanks.
 
-[1/1] scsi: lpfc: Use struct_group() to initialize struct lpfc_cgn_info
-      https://git.kernel.org/mkp/scsi/c/532adda9f405
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Wei.
