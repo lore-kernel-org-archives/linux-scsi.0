@@ -2,79 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C99C5C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Dec 2021 04:04:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4473C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Dec 2021 04:04:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232644AbhLQEEy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Dec 2021 23:04:54 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:37494 "EHLO
+        id S232662AbhLQEE4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Dec 2021 23:04:56 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:39388 "EHLO
         mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232618AbhLQEEt (ORCPT
+        by vger.kernel.org with ESMTP id S232621AbhLQEEv (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Dec 2021 23:04:49 -0500
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BH2Xq4j004108;
-        Fri, 17 Dec 2021 04:04:46 GMT
+        Thu, 16 Dec 2021 23:04:51 -0500
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BH2LUTs031677;
+        Fri, 17 Dec 2021 04:04:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=aXD2TQuu+MvQo6xdgMJWtTovEFO9lrrSGnIaTpWiZr4=;
- b=I6v5o/kTmdEVN8ry5X9VlgHk3+hXSIeikVdTtIOokWiw2ca9/COYTPO1pks4qL+weQYh
- bcLEYRSWOMDJD3keephYjOZd3BpldTB1cVyWRJ2h4ZC5CRTAIeU59SQPhl0VFpg+sX8k
- 0CMCoLAIba0X29nGGIGWgoNw5awdoWPTouwmTx6TVeiiRAnG1uvMqqB98vxTanh3P9z0
- mmnHbn5uXIucrJFuVBWJpiOfOr6cbFa5lC8jH5f7g9xVjZuCtQh31b9kBROfkwuOIJdb
- BtuvfM7vAhUWNKiN8duvScCg4vExHF3UkHiglb7QZzq8LwBLaH5LOQDeRs/DBC3qjBSG mQ== 
+ bh=62+KeCfEEt4IN0B9vvQrHbqGz7S9naXKNwImC4Q1HhI=;
+ b=lsXrhwJXgeI9pvxMAafVPnJx/PsJDeqM/MRp7fSeeLt1LCgLRMWINUOzJb3HvZ3kauyP
+ agE787yrnjaAJfUf7itRolNe9GBOsZrbpaV4WbiFPXxsxwkCayN3dee6MhcIBpG/+7/v
+ SfdKvQaggwhaMJesuy3Cr3pGsq+n7hYSWngGbXbXVRL+qSaVi/chuPs5lYqYtIfTUDjf
+ FGXPU/PNtb2zab6a8wQwSx9Z9Di2dkgnsqH2ysN/qJcJnrw+yUknr9YKk6tePtA5eI1M
+ rhCJqE6dm6IpbtyjJosHV4Ggn21h3XbhVanpZbrzgH43BjI3LDzxfJw3BIy00VYAs4Xz cw== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3cykmcmkge-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3cykmbmq9f-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Dec 2021 04:04:46 +0000
+        Fri, 17 Dec 2021 04:04:48 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BH40hVA154441;
-        Fri, 17 Dec 2021 04:04:45 GMT
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BH40jhZ154638;
+        Fri, 17 Dec 2021 04:04:47 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3030.oracle.com with ESMTP id 3cvh436duw-1
+        by userp3030.oracle.com with ESMTP id 3cvh436dw9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Dec 2021 04:04:45 +0000
+        Fri, 17 Dec 2021 04:04:47 +0000
 Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 1BH44ici167096;
-        Fri, 17 Dec 2021 04:04:44 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 1BH44ico167096;
+        Fri, 17 Dec 2021 04:04:47 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by userp3030.oracle.com with ESMTP id 3cvh436duh-1;
-        Fri, 17 Dec 2021 04:04:44 +0000
+        by userp3030.oracle.com with ESMTP id 3cvh436duh-4;
+        Fri, 17 Dec 2021 04:04:47 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     don.brace@microchip.com, jejb@linux.ibm.com,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     James Smart <james.smart@broadcom.com>,
+        Kees Cook <keescook@chromium.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        storagedev@microchip.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: hpsa: Remove an unused variable in 'hpsa_update_scsi_devices()'
-Date:   Thu, 16 Dec 2021 23:04:40 -0500
-Message-Id: <163971367437.637.18022597359309025330.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-kernel@vger.kernel.org,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: lpfc: Use struct_group to isolate cast to larger object
+Date:   Thu, 16 Dec 2021 23:04:43 -0500
+Message-Id: <163971367437.637.1523954588992475904.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <9f80ea569867b5f7ae1e0f99d656e5a8bacad34e.1639084205.git.christophe.jaillet@wanadoo.fr>
-References: <9f80ea569867b5f7ae1e0f99d656e5a8bacad34e.1639084205.git.christophe.jaillet@wanadoo.fr>
+In-Reply-To: <20211203223351.107323-1-keescook@chromium.org>
+References: <20211203223351.107323-1-keescook@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: QY48Zus_s-waqmI-H6srCMDwVt_ET--e
-X-Proofpoint-GUID: QY48Zus_s-waqmI-H6srCMDwVt_ET--e
+X-Proofpoint-ORIG-GUID: W7HNAG-oaZzf8oPHrOu5l8Xg8OxZc45-
+X-Proofpoint-GUID: W7HNAG-oaZzf8oPHrOu5l8Xg8OxZc45-
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 9 Dec 2021 22:11:56 +0100, Christophe JAILLET wrote:
+On Fri, 3 Dec 2021 14:33:51 -0800, Kees Cook wrote:
 
-> 'lunzerobits' is unused. Remove it.
+> When building under -Warray-bounds, a warning is generated when casting
+> a u32 into MAILBOX_t (which is larger). This warning is conservative, but
+> it's not an unreasonable change to make to improve future robustness. Use
+> a tagged struct_group that can refer to either the specific fields or
+> the first u32 separately, silencing this warning:
 > 
-> This a left over of commit 2d62a33e05d4("hpsa: eliminate fake lun0
-> enclosures")
+> drivers/scsi/lpfc/lpfc_sli.c: In function 'lpfc_reset_barrier':
+> drivers/scsi/lpfc/lpfc_sli.c:4787:29: error: array subscript 'MAILBOX_t[0]' is partly outside array bounds of 'volatile uint32_t[1]' {aka 'volatile unsigned int[1]'} [-Werror=array-bounds]
+>  4787 |         ((MAILBOX_t *)&mbox)->mbxCommand = MBX_KILL_BOARD;
+>       |                             ^~
+> drivers/scsi/lpfc/lpfc_sli.c:4752:27: note: while referencing 'mbox'
+>  4752 |         volatile uint32_t mbox;
+>       |                           ^~~~
 > 
-> 
+> [...]
 
 Applied to 5.17/scsi-queue, thanks!
 
-[1/1] scsi: hpsa: Remove an unused variable in 'hpsa_update_scsi_devices()'
-      https://git.kernel.org/mkp/scsi/c/8c2d04551545
+[1/1] scsi: lpfc: Use struct_group to isolate cast to larger object
+      https://git.kernel.org/mkp/scsi/c/c167dd0b2a7a
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
