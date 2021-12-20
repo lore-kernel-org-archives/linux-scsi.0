@@ -2,126 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD78AC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC55CC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233419AbhLTOEH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Dec 2021 09:04:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51554 "EHLO
+        id S233422AbhLTOEJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Dec 2021 09:04:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233400AbhLTOEG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:06 -0500
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E61EC061574
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:06 -0800 (PST)
-Received: by mail-pj1-x102f.google.com with SMTP id b1-20020a17090a990100b001b14bd47532so9766635pjp.0
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:06 -0800 (PST)
+        with ESMTP id S233434AbhLTOEJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:09 -0500
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA739C06173E
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:08 -0800 (PST)
+Received: by mail-pf1-x432.google.com with SMTP id t19so2500090pfg.9
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=SL8i7XmSZcKv1Hv6hamucXEmBU/IT42I6bam5bGlLD4=;
-        b=Hy/t8mwCK/l+x4JK/BfQgMX1larR9n+XCBlb4s84/HSsyty6J6yC2GfjjFPF7aWOkT
-         YhaxjtK//F3OdBnxAJKFMnZtzsnjwwQy5adoJmXGUsoQGwMNr6OtnH3BkWebKnRGSzcI
-         1d7S3U6Zl84HVEC6uSFxTYpxd8D64LVfgkxcs=
+        bh=mlSbVmUwv/P1PUYulzRkPSeWe8nDbEA3qxvd5sKzOk0=;
+        b=TXxKiH8+mCJgqgnBUYmPHNNNu3G5HThYMieGsO49AmyZs7tG6grWaGMb68XxsMs0sg
+         wAIuNxBEUM4bNHb+nYCDFzKV7QFbFqcEjCK5tkcs/7cyEy9W01rmCWEqEOtoBmwwp4BQ
+         xD7Eh6ou+U09EhJ/+GeLc3vZ+E4XSoy5WLids=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=SL8i7XmSZcKv1Hv6hamucXEmBU/IT42I6bam5bGlLD4=;
-        b=7gztMDVtD0YSekL3MKem2hooUN6HTX8MgwbPwkRGVejBD1I1l3AAjNZKUAKOWUOiKK
-         NAYqokq03s8DIpAK5qFbhHysGJFmCkxPFgKLYy52hHlFmA7U22sQlEMYwIDIs0q6ewSX
-         ZcWrj20vc8YuWP1ny5u+DIGwVsCJYMomCVH7qXZQ2omEtOpY1zwa5oGl7WF+chxTwhoA
-         nuY152sXju5C/ayPwhHQe34AgziV9J7UePmyXf6rneI5/1jQiOXknBvu1FetwNI7jAY2
-         MKasy9YkuIaG0s3Hdd9bJpRMOWfQKHITGWGcOVAo7nymlg1okDc1MJcEgveIPNizODJM
-         I7TQ==
-X-Gm-Message-State: AOAM531308QaGDIsaMA7utNrLhzA9NS3i6JUh/tpjIc/qrFVEKkygZ/t
-        tQWMFdtHfSy/ef4TPj6ivrkbiX517+Rbl9BaVpdALHLSq0nGMC5vO5FxfD2YBjVlFvNmWu+V0JQ
-        f1yvNOeHm+tX6TvbaxHVLzoCTYR5oF2n0vS1kM0RL4xZPlyPSa3K79w8JpPI1xyPBUTwYG5lIRV
-        u2kcaHeJ20
-X-Google-Smtp-Source: ABdhPJx7LpZkrRuWc/7OkjXozWtHNfa2iV/e4kz5R5PZHMJm2xoYNbWy9k4GAld8pGWUvUqaFBmhcQ==
-X-Received: by 2002:a17:902:7b8d:b0:143:95e3:7dc0 with SMTP id w13-20020a1709027b8d00b0014395e37dc0mr17145490pll.21.1640009045376;
-        Mon, 20 Dec 2021 06:04:05 -0800 (PST)
+        bh=mlSbVmUwv/P1PUYulzRkPSeWe8nDbEA3qxvd5sKzOk0=;
+        b=EaDTI0B2rKW3HhHvjccTy8NSjctqwWHVuCeSk6Aj3Xx/zBFtHsUM45CZ3ROSQ8rcET
+         6mE0NdKjHRbGGum0gp/01RgEAxW7rrnv/qypbB2zIWFbjqyjSvtBm0AnwszVi3YfHVgV
+         gVkIsaGhgG/bv9wdrs8csJay4WruLoWKkQc6V9Dq2PdLED2oAFy/m3bmfjRW5JkjDZIH
+         utlCy/DTQ6e7qzbqnveA6qQn5xjYpB8h3QQEru2DVwiz7BHzvWvLChz10n6RHB4owgjX
+         rW7t29ZJNl2CEhtEUqQBneZObOJfJWLh8QZx2cqlf5+ECJhdD0a3HZd5isa31KyTSFl3
+         Y3Jw==
+X-Gm-Message-State: AOAM531Y6s8PlCDMjXxeQfQ4pM7ZhlNQdqQLLM5+vfX77LbipW0ZhO60
+        50WU3teZMe+OhKFY8qiSUHYCU3el5y6wgRcQ0OZbOHlyD/Ws9sEpi84zkJ9W/7khaFWLAMBHWXW
+        qiAuFQ9Bzza4SmZaHmKT9xAaEnFQgdYIgtiF3jlx09H9c7kEqLqv9/imK0j1Ap2liD6XRfWxlxp
+        qOgViggGsM
+X-Google-Smtp-Source: ABdhPJzrerjnxOTOliPdvSTEPVVbcBmEfVhq9+XuP2bOtuD4p54bu9YsyxVesoEYeNbHBDmcikHKfQ==
+X-Received: by 2002:a63:dc0b:: with SMTP id s11mr15141254pgg.272.1640009047845;
+        Mon, 20 Dec 2021 06:04:07 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.03
+        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Dec 2021 06:04:04 -0800 (PST)
+        Mon, 20 Dec 2021 06:04:07 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 02/25] mpi3mr: replace spin_lock with spin_lock_irqsave
-Date:   Mon, 20 Dec 2021 19:41:36 +0530
-Message-Id: <20211220141159.16117-3-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 03/25] mpi3mr: Don't reset IOC if cmnds flush with reset status
+Date:   Mon, 20 Dec 2021 19:41:37 +0530
+Message-Id: <20211220141159.16117-4-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 References: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000009b9ba505d3945c48"
+        boundary="000000000000c1068a05d3945c07"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000009b9ba505d3945c48
+--000000000000c1068a05d3945c07
 Content-Transfer-Encoding: 8bit
 
-Use spin_lock_irqsave instead of spin_lock while acquiring
-reply_free_queue_lock & sbq_lock locks.
+Don't issue the soft reset if internal commands are
+flushed out with reset status. Soft reset needs to be
+issued only if commands are really timed out.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
  drivers/scsi/mpi3mr/mpi3mr_fw.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c |  5 +++--
+ 2 files changed, 9 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index aa5d877..61dcacd 100644
+index 61dcacd..4ce79d7 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -124,8 +124,9 @@ static void mpi3mr_repost_reply_buf(struct mpi3mr_ioc *mrioc,
- 	u64 reply_dma)
- {
- 	u32 old_idx = 0;
-+	unsigned long flags;
+@@ -1947,8 +1947,9 @@ static int mpi3mr_sync_timestamp(struct mpi3mr_ioc *mrioc)
+ 	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
+ 		ioc_err(mrioc, "Issue IOUCTL time_stamp: command timed out\n");
+ 		mrioc->init_cmds.is_waiting = 0;
+-		mpi3mr_soft_reset_handler(mrioc,
+-		    MPI3MR_RESET_FROM_TSU_TIMEOUT, 1);
++		if (!(mrioc->init_cmds.state & MPI3MR_CMD_RESET))
++			mpi3mr_soft_reset_handler(mrioc,
++			    MPI3MR_RESET_FROM_TSU_TIMEOUT, 1);
+ 		retval = -1;
+ 		goto out_unlock;
+ 	}
+@@ -2827,8 +2828,9 @@ int mpi3mr_send_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
+ 	    (MPI3MR_INTADMCMD_TIMEOUT * HZ));
+ 	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
+ 		ioc_err(mrioc, "Issue EvtNotify: command timed out\n");
+-		mpi3mr_soft_reset_handler(mrioc,
+-		    MPI3MR_RESET_FROM_EVTACK_TIMEOUT, 1);
++		if (!(mrioc->init_cmds.state & MPI3MR_CMD_RESET))
++			mpi3mr_soft_reset_handler(mrioc,
++			    MPI3MR_RESET_FROM_EVTACK_TIMEOUT, 1);
+ 		retval = -1;
+ 		goto out_unlock;
+ 	}
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index fe10f25..ce75503 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -2659,8 +2659,9 @@ static int mpi3mr_issue_tm(struct mpi3mr_ioc *mrioc, u8 tm_type,
+ 		ioc_err(mrioc, "%s :Issue TM: command timed out\n", __func__);
+ 		drv_cmd->is_waiting = 0;
+ 		retval = -1;
+-		mpi3mr_soft_reset_handler(mrioc,
+-		    MPI3MR_RESET_FROM_TM_TIMEOUT, 1);
++		if (!(drv_cmd->state & MPI3MR_CMD_RESET))
++			mpi3mr_soft_reset_handler(mrioc,
++			    MPI3MR_RESET_FROM_TM_TIMEOUT, 1);
+ 		goto out_unlock;
+ 	}
  
--	spin_lock(&mrioc->reply_free_queue_lock);
-+	spin_lock_irqsave(&mrioc->reply_free_queue_lock, flags);
- 	old_idx  =  mrioc->reply_free_queue_host_index;
- 	mrioc->reply_free_queue_host_index = (
- 	    (mrioc->reply_free_queue_host_index ==
-@@ -134,15 +135,16 @@ static void mpi3mr_repost_reply_buf(struct mpi3mr_ioc *mrioc,
- 	mrioc->reply_free_q[old_idx] = cpu_to_le64(reply_dma);
- 	writel(mrioc->reply_free_queue_host_index,
- 	    &mrioc->sysif_regs->reply_free_host_index);
--	spin_unlock(&mrioc->reply_free_queue_lock);
-+	spin_unlock_irqrestore(&mrioc->reply_free_queue_lock, flags);
- }
- 
- void mpi3mr_repost_sense_buf(struct mpi3mr_ioc *mrioc,
- 	u64 sense_buf_dma)
- {
- 	u32 old_idx = 0;
-+	unsigned long flags;
- 
--	spin_lock(&mrioc->sbq_lock);
-+	spin_lock_irqsave(&mrioc->sbq_lock, flags);
- 	old_idx  =  mrioc->sbq_host_index;
- 	mrioc->sbq_host_index = ((mrioc->sbq_host_index ==
- 	    (mrioc->sense_buf_q_sz - 1)) ? 0 :
-@@ -150,7 +152,7 @@ void mpi3mr_repost_sense_buf(struct mpi3mr_ioc *mrioc,
- 	mrioc->sense_buf_q[old_idx] = cpu_to_le64(sense_buf_dma);
- 	writel(mrioc->sbq_host_index,
- 	    &mrioc->sysif_regs->sense_buffer_free_host_index);
--	spin_unlock(&mrioc->sbq_lock);
-+	spin_unlock_irqrestore(&mrioc->sbq_lock, flags);
- }
- 
- static void mpi3mr_print_event_data(struct mpi3mr_ioc *mrioc,
 -- 
 2.27.0
 
 
---0000000000009b9ba505d3945c48
+--000000000000c1068a05d3945c07
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -192,13 +195,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIB3F/ho3yCaHAFkOlEBk
-B9BKpBjnjgGq1tBbXAe97sdMMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMTIyMDE0MDQwNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIAEAEkm6zwvD4+/fAks7
+6K3oeIE5Oq9eQJCzfr8hjsTfMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMTIyMDE0MDQwOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBOqRfjtusNAKNEVPSjQ1+qbpOdYv/zTPgRiG7y
-1JFEFxaWAa8gpyiKzqrAS5UYLBE5uSZOz4ZCMZA0c3Q9xWeNnAtiurfc4busraNnigMUiuGGAZwj
-8g0NjLj5kDR4bFCwb6nhwresR1denTMNsLcRJJWqyKKR9U3A6Nm7GU+KSNOAGYVfX+eXR+GSw0Kf
-dZdRZ+K178gEDm4DHbd/dT7ZJhHToxGhVI5YK3F+wf9WrTpG1fovgLM/pN+CFMsDN7m53jR1/5me
-4V2a62nvditFoNArPtWsauiJBUdXWX+6IBBKR0qh+BHFucDBehutQmE2rfSjK7NgESiBLGnb+sVZ
---0000000000009b9ba505d3945c48--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQB9Nh0FYAGoLyN4egwgmAQdGstNljkSRuO8DSUK
+H6mDdxydl3ECTh13e3HjHl2cUPVvIJCD+yj5of0gRtMdQCKJJanSBztNTQqJhImPz+ab8BOsLY7p
+Iz8LjmooWzcYDYCrrXMae3E3HWuphQKGOmJhWLTg9HHVm3HZB3xDGkx2xvHn3biwBhYe1otFwr3y
+CzsHZoofVVjadwqfj9v7ma7089bIJrSgTLXz3B+AAVc4fFQvQ1QTO7ozkWQEpprYiZPd5F7H7e2f
+cGADCWX58X/5+QO4feUOtbxtO5dcvtr5mhkhBI44rEjwLGfIfcNY2joumeDHvMQT9mQNuGo7l1kg
+--000000000000c1068a05d3945c07--
