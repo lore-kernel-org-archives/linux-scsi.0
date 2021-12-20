@@ -2,265 +2,296 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB0BC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC8D4C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229721AbhLTOEi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Dec 2021 09:04:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51674 "EHLO
+        id S229554AbhLTOEk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Dec 2021 09:04:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233469AbhLTOE3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:29 -0500
-Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 553FCC06173E
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:29 -0800 (PST)
-Received: by mail-pg1-x52a.google.com with SMTP id 200so9489442pgg.3
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:29 -0800 (PST)
+        with ESMTP id S233449AbhLTOEc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:32 -0500
+Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBAD0C061574
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:31 -0800 (PST)
+Received: by mail-pg1-x533.google.com with SMTP id l10so9489357pgm.7
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=W4fapNrUv1kEeKxZ+r46ZkxcAJHVg2vG3VTG22cKMIs=;
-        b=cx95o1m5bIElMO0SIAZGX5JFwoPJojXQRRFv8/qZKUlwj2HcCSgPTLemFQTj+pKK8U
-         HFxYX1KaEiJdAhw/b53bGqROvjaGheZWhNOkxqO6/k+6HIrRLXDSE1PgRRjk6EGKM/9D
-         XvKCyVAY2itjBT4L6eaTkH//o3f4tWsMYmDoc=
+        bh=BxWaGoOOXuE/kKsgfo6Nu6kv5cdw8K4G7hex2rrHxmo=;
+        b=PN/AJBEhlsf4WitmdsRsSanYGt7JrukcnPbNuyf/qkRcEku/BjK8gg3VxrYbFKo9uE
+         eAoW0dyWmfiWOSmhKv0hFM7wp7U/TxcfKXNYII90zammDR9WwZTrHc5XUVZUq5a0nQ/Y
+         pieZBEKT0OVJA0ZY1dfWM/pCFZ7ZSEKhFefYY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=W4fapNrUv1kEeKxZ+r46ZkxcAJHVg2vG3VTG22cKMIs=;
-        b=BGJRNPL2nrJlT/flrFmRXFozDwBxdcWgpAD+O2ygzoHdJD1Apno1jFdmDDX9A4qZVS
-         zGkT8HMUBwB+OhxUns/ZMAv+xh98yzYK7glkZhgXqCMWhXSsP4LbFhakIz7hI1Qy/ZSj
-         RSm4rvUAbFxMJK5CoPvCUSigd793zxWz0/E88orLhExe+vwYxueDDwVsmWDYR1IjAm+r
-         1QQ962a3e/1Ju7kJsVE6cdeeQ97tV+BSThYLMnpLM7+6yU5NpvAiN8W/B6RHbj2ukBWK
-         Q3VMCgEqExpHbV6+oyfQ+1Dq/rpN+3PxJ/ahFcd8acBhwSOmILA5Z2Jaw0xz7oTr3R4n
-         hUTw==
-X-Gm-Message-State: AOAM5300ecljgftecneH+B6SZ0mq5Fxc+R8oXcYUcqujgGpbZd1jiJxG
-        8CnMyGOKQSdKRDcZkWS4QWkZNv3qbHBLCebkq3UZZhspUbFn7iOFGypk2Uc40pqfldjnQnI0Yb6
-        pAjeDaxYiXjrdpgwvf+tDClZ7k1FsW8U8859DGlrT+v6nWzdVkExXLNc22W/t3vi3DiAJMPD6SS
-        MXBcY+8z7Z
-X-Google-Smtp-Source: ABdhPJw6t1Rn6BxhTbBhcJh/4VqU8B4LYIfrRW9Ni9MaQn/Q7RgnDBSU6UrqKZ6o3PiD/4tZvY0Ggg==
-X-Received: by 2002:a63:5f0a:: with SMTP id t10mr15561022pgb.11.1640009068390;
-        Mon, 20 Dec 2021 06:04:28 -0800 (PST)
+        bh=BxWaGoOOXuE/kKsgfo6Nu6kv5cdw8K4G7hex2rrHxmo=;
+        b=17miHxY1rWnsyP6cbTpWh6P/Jvi6OkxazX0XtGe9BGDvtcUawMs5cMIA5YEWccQTdc
+         w8gbyr0gahLACNUgWZHVvvdfVCArXsCRMBiSOUW7IBXUOsly6h9n1vYj28OzFnirIrjM
+         O7St4ch7L7XCnsN6NLGfxuGfagTQUiC09E36rXYmlgeWQRMncn7fsm7LpC072ABDX2l2
+         +/thNDNpB/O8+oMcELg1JkrDq/6sOHqPNEkr2X8maXrQYmbEhXaftWL33Ypg90ByW3rx
+         aCN2VjRmn3lGKEayAFtxcHjl6LkW8sh9P2MY5Jf3RPx8T19oTcSY+5/ADovhZzG4QCAl
+         qmvQ==
+X-Gm-Message-State: AOAM5339BkavnLRF/jpkIT3QJSKsm/epYWY2/s33hRXvUiTr3aRSnkYU
+        zNxG+FbErceTy+hgUroPfHhq4dvsAQeAAvRxNGS7Igfzrb/OBaH/E4lX3yjU385I4O4bjFfLcPG
+        YaMcBRVpYxH0X9JvvShfgsGyEvRt4t7PUpzvBXOq02J+loXkyQXKoWFeAeVmc5DN88uuuJRhBXj
+        a7NPvjyJiB
+X-Google-Smtp-Source: ABdhPJyZrixSvSvF0kgbhuLG/H0nrLaFU4KoGTgxW/q97OrCacs/XROQ2qgjUH/xQcIu3G6jfS2sEg==
+X-Received: by 2002:a63:751a:: with SMTP id q26mr15202855pgc.529.1640009070621;
+        Mon, 20 Dec 2021 06:04:30 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.26
+        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Dec 2021 06:04:27 -0800 (PST)
+        Mon, 20 Dec 2021 06:04:30 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 12/25] mpi3mr: code refactor of IOC init patch - part1
-Date:   Mon, 20 Dec 2021 19:41:46 +0530
-Message-Id: <20211220141159.16117-13-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 13/25] mpi3mr: code refactor of IOC init patch - part2
+Date:   Mon, 20 Dec 2021 19:41:47 +0530
+Message-Id: <20211220141159.16117-14-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 References: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000fa4a3f05d3945d2d"
+        boundary="0000000000001d742f05d3945ecb"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000fa4a3f05d3945d2d
+--0000000000001d742f05d3945ecb
 Content-Transfer-Encoding: 8bit
 
-- Separate out reply and sense buffers allocation and
-initialization into two routines and call only
-initialization routine while issuing the IOC Init
-request message.
-
-- Also move out the event enable logic to a separate
-function.
+Move out the IOC initialization's bring up
+logic to mpi3mr_bring_ioc_ready routine.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 107 ++++++++++++++++++++++----------
- 1 file changed, 73 insertions(+), 34 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 167 +++++++++++++++++---------------
+ 1 file changed, 89 insertions(+), 78 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index b6d4e9d..f7cdb21 100644
+index f7cdb21..163e8b9 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2555,10 +2555,9 @@ static int mpi3mr_alloc_reply_sense_bufs(struct mpi3mr_ioc *mrioc)
+@@ -10,6 +10,10 @@
+ #include "mpi3mr.h"
+ #include <linux/io-64-nonatomic-lo-hi.h>
+ 
++static int
++mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type, u32 reset_reason);
++static int mpi3mr_setup_admin_qpair(struct mpi3mr_ioc *mrioc);
++
+ #if defined(writeq) && defined(CONFIG_64BIT)
+ static inline void mpi3mr_writeq(__u64 b, volatile void __iomem *addr)
+ {
+@@ -992,26 +996,105 @@ static int mpi3mr_issue_and_process_mur(struct mpi3mr_ioc *mrioc,
+  * Set Enable IOC bit in IOC configuration register and wait for
+  * the controller to become ready.
+  *
+- * Return: 0 on success, -1 on failure.
++ * Return: 0 on success, appropriate error on failure.
+  */
+ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
+ {
+-	u32 ioc_config, timeout;
+-	enum mpi3mr_iocstate current_state;
++	u32 ioc_config, ioc_status, timeout;
++	int retval = 0;
++	enum mpi3mr_iocstate ioc_state;
++	u64 base_info;
+ 
++	ioc_status = readl(&mrioc->sysif_regs->ioc_status);
++	ioc_config = readl(&mrioc->sysif_regs->ioc_configuration);
++	base_info = lo_hi_readq(&mrioc->sysif_regs->ioc_information);
++	ioc_info(mrioc, "ioc_status(0x%08x), ioc_config(0x%08x), ioc_info(0x%016llx) at the bringup\n",
++	    ioc_status, ioc_config, base_info);
++
++	/*The timeout value is in 2sec unit, changing it to seconds*/
++	mrioc->ready_timeout =
++	    ((base_info & MPI3_SYSIF_IOC_INFO_LOW_TIMEOUT_MASK) >>
++	    MPI3_SYSIF_IOC_INFO_LOW_TIMEOUT_SHIFT) * 2;
++
++	ioc_info(mrioc, "ready timeout: %d seconds\n", mrioc->ready_timeout);
++
++	ioc_state = mpi3mr_get_iocstate(mrioc);
++	ioc_info(mrioc, "controller is in %s state during detection\n",
++	    mpi3mr_iocstate_name(ioc_state));
++
++	if (ioc_state == MRIOC_STATE_BECOMING_READY ||
++	    ioc_state == MRIOC_STATE_RESET_REQUESTED) {
++		timeout = mrioc->ready_timeout * 10;
++		do {
++			msleep(100);
++		} while (--timeout);
++
++		ioc_state = mpi3mr_get_iocstate(mrioc);
++		ioc_info(mrioc,
++		    "controller is in %s state after waiting to reset\n",
++		    mpi3mr_iocstate_name(ioc_state));
++	}
++
++	if (ioc_state == MRIOC_STATE_READY) {
++		ioc_info(mrioc, "issuing message unit reset (MUR) to bring to reset state\n");
++		retval = mpi3mr_issue_and_process_mur(mrioc,
++		    MPI3MR_RESET_FROM_BRINGUP);
++		ioc_state = mpi3mr_get_iocstate(mrioc);
++		if (retval)
++			ioc_err(mrioc,
++			    "message unit reset failed with error %d current state %s\n",
++			    retval, mpi3mr_iocstate_name(ioc_state));
++	}
++	if (ioc_state != MRIOC_STATE_RESET) {
++		mpi3mr_print_fault_info(mrioc);
++		ioc_info(mrioc, "issuing soft reset to bring to reset state\n");
++		retval = mpi3mr_issue_reset(mrioc,
++		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET,
++		    MPI3MR_RESET_FROM_BRINGUP);
++		if (retval) {
++			ioc_err(mrioc,
++			    "soft reset failed with error %d\n", retval);
++			goto out_failed;
++		}
++	}
++	ioc_state = mpi3mr_get_iocstate(mrioc);
++	if (ioc_state != MRIOC_STATE_RESET) {
++		ioc_err(mrioc,
++		    "cannot bring controller to reset state, current state: %s\n",
++		    mpi3mr_iocstate_name(ioc_state));
++		goto out_failed;
++	}
++	mpi3mr_clear_reset_history(mrioc);
++	retval = mpi3mr_setup_admin_qpair(mrioc);
++	if (retval) {
++		ioc_err(mrioc, "failed to setup admin queues: error %d\n",
++		    retval);
++		goto out_failed;
++	}
++
++	ioc_info(mrioc, "bringing controller to ready state\n");
+ 	ioc_config = readl(&mrioc->sysif_regs->ioc_configuration);
+ 	ioc_config |= MPI3_SYSIF_IOC_CONFIG_ENABLE_IOC;
+ 	writel(ioc_config, &mrioc->sysif_regs->ioc_configuration);
+ 
+ 	timeout = mrioc->ready_timeout * 10;
+ 	do {
+-		current_state = mpi3mr_get_iocstate(mrioc);
+-		if (current_state == MRIOC_STATE_READY)
++		ioc_state = mpi3mr_get_iocstate(mrioc);
++		if (ioc_state == MRIOC_STATE_READY) {
++			ioc_info(mrioc,
++			    "successfully transistioned to %s state\n",
++			    mpi3mr_iocstate_name(ioc_state));
+ 			return 0;
++		}
+ 		msleep(100);
+ 	} while (--timeout);
+ 
+-	return -1;
++out_failed:
++	ioc_state = mpi3mr_get_iocstate(mrioc);
++	ioc_err(mrioc,
++	    "failed to bring to ready state,  current state: %s\n",
++	    mpi3mr_iocstate_name(ioc_state));
++	return retval;
+ }
+ 
+ /**
+@@ -3372,10 +3455,6 @@ static int mpi3mr_enable_events(struct mpi3mr_ioc *mrioc)
+ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 init_type)
  {
  	int retval = 0;
- 	u32 sz, i;
--	dma_addr_t phy_addr;
- 
- 	if (mrioc->init_cmds.reply)
--		goto post_reply_sbuf;
-+		return retval;
- 
- 	mrioc->init_cmds.reply = kzalloc(mrioc->facts.reply_sz, GFP_KERNEL);
- 	if (!mrioc->init_cmds.reply)
-@@ -2651,7 +2650,28 @@ static int mpi3mr_alloc_reply_sense_bufs(struct mpi3mr_ioc *mrioc)
- 	if (!mrioc->sense_buf_q)
- 		goto out_failed;
- 
--post_reply_sbuf:
-+	return retval;
-+
-+out_failed:
-+	retval = -1;
-+	return retval;
-+}
-+
-+/**
-+ * mpimr_initialize_reply_sbuf_queues - initialize reply sense
-+ * buffers
-+ * @mrioc: Adapter instance reference
-+ *
-+ * Helper function to initialize reply and sense buffers along
-+ * with some debug prints.
-+ *
-+ * Return:  None.
-+ */
-+static void mpimr_initialize_reply_sbuf_queues(struct mpi3mr_ioc *mrioc)
-+{
-+	u32 sz, i;
-+	dma_addr_t phy_addr;
-+
- 	sz = mrioc->num_reply_bufs * mrioc->facts.reply_sz;
- 	ioc_info(mrioc,
- 	    "reply buf pool(0x%p): depth(%d), frame_size(%d), pool_size(%d kB), reply_dma(0x%llx)\n",
-@@ -2684,11 +2704,6 @@ post_reply_sbuf:
- 	    i < mrioc->num_sense_bufs; i++, phy_addr += MPI3MR_SENSE_BUF_SZ)
- 		mrioc->sense_buf_q[i] = cpu_to_le64(phy_addr);
- 	mrioc->sense_buf_q[i] = cpu_to_le64(0);
--	return retval;
--
--out_failed:
--	retval = -1;
--	return retval;
- }
- 
- /**
-@@ -2715,6 +2730,8 @@ static int mpi3mr_issue_iocinit(struct mpi3mr_ioc *mrioc)
- 		retval = -1;
- 		goto out;
- 	}
-+	mpimr_initialize_reply_sbuf_queues(mrioc);
-+
- 	drv_info->information_length = cpu_to_le32(data_len);
- 	strscpy(drv_info->driver_signature, "Broadcom", sizeof(drv_info->driver_signature));
- 	strscpy(drv_info->os_name, utsname()->sysname, sizeof(drv_info->os_name));
-@@ -2784,6 +2801,13 @@ static int mpi3mr_issue_iocinit(struct mpi3mr_ioc *mrioc)
- 		goto out_unlock;
- 	}
- 
-+	mrioc->reply_free_queue_host_index = mrioc->num_reply_bufs;
-+	writel(mrioc->reply_free_queue_host_index,
-+	    &mrioc->sysif_regs->reply_free_host_index);
-+
-+	mrioc->sbq_host_index = mrioc->num_sense_bufs;
-+	writel(mrioc->sbq_host_index,
-+	    &mrioc->sysif_regs->sense_buffer_free_host_index);
- out_unlock:
- 	mrioc->init_cmds.state = MPI3MR_CMD_NOTUSED;
- 	mutex_unlock(&mrioc->init_cmds.mutex);
-@@ -3291,6 +3315,44 @@ out_failed:
- 	return retval;
- }
- 
-+/**
-+ * mpi3mr_enable_events - Enable required events
-+ * @mrioc: Adapter instance reference
-+ *
-+ * This routine unmasks the events required by the driver by
-+ * sennding appropriate event mask bitmapt through an event
-+ * notification request.
-+ *
-+ * Return: 0 on success and non-zero on failure.
-+ */
-+static int mpi3mr_enable_events(struct mpi3mr_ioc *mrioc)
-+{
-+	int retval = 0;
-+	u32  i;
-+
-+	for (i = 0; i < MPI3_EVENT_NOTIFY_EVENTMASK_WORDS; i++)
-+		mrioc->event_masks[i] = -1;
-+
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_DEVICE_ADDED);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_DEVICE_INFO_CHANGED);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_DEVICE_STATUS_CHANGE);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DISCOVERY);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_BROADCAST_PRIMITIVE);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_ENUMERATION);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_CABLE_MGMT);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_ENERGY_PACK_CHANGE);
-+
-+	retval = mpi3mr_issue_event_notification(mrioc);
-+	if (retval)
-+		ioc_err(mrioc, "failed to issue event notification %d\n",
-+		    retval);
-+	return retval;
-+}
-+
- /**
-  * mpi3mr_init_ioc - Initialize the controller
-  * @mrioc: Adapter instance reference
-@@ -3313,7 +3375,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 init_type)
- 	enum mpi3mr_iocstate ioc_state;
- 	u64 base_info;
- 	u32 timeout;
--	u32 ioc_status, ioc_config, i;
-+	u32 ioc_status, ioc_config;
+-	enum mpi3mr_iocstate ioc_state;
+-	u64 base_info;
+-	u32 timeout;
+-	u32 ioc_status, ioc_config;
  	struct mpi3_ioc_facts_data facts_data;
  
  	mrioc->irqpoll_sleep = MPI3MR_IRQ_POLL_SLEEP;
-@@ -3455,13 +3517,6 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 init_type)
- 		    retval);
- 		goto out_failed;
- 	}
--	mrioc->reply_free_queue_host_index = mrioc->num_reply_bufs;
--	writel(mrioc->reply_free_queue_host_index,
--	    &mrioc->sysif_regs->reply_free_host_index);
--
--	mrioc->sbq_host_index = mrioc->num_sense_bufs;
--	writel(mrioc->sbq_host_index,
--	    &mrioc->sysif_regs->sense_buffer_free_host_index);
- 
- 	retval = mpi3mr_print_pkg_ver(mrioc);
- 	if (retval) {
-@@ -3494,25 +3549,9 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 init_type)
- 		goto out_failed;
+@@ -3390,74 +3469,6 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 init_type)
+ 		}
  	}
  
--	for (i = 0; i < MPI3_EVENT_NOTIFY_EVENTMASK_WORDS; i++)
--		mrioc->event_masks[i] = -1;
+-	ioc_status = readl(&mrioc->sysif_regs->ioc_status);
+-	ioc_config = readl(&mrioc->sysif_regs->ioc_configuration);
 -
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_DEVICE_ADDED);
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_DEVICE_INFO_CHANGED);
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_DEVICE_STATUS_CHANGE);
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE);
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_TOPOLOGY_CHANGE_LIST);
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DISCOVERY);
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR);
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_BROADCAST_PRIMITIVE);
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST);
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_ENUMERATION);
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_CABLE_MGMT);
--	mpi3mr_unmask_events(mrioc, MPI3_EVENT_ENERGY_PACK_CHANGE);
+-	ioc_info(mrioc, "SOD status %x configuration %x\n",
+-	    ioc_status, ioc_config);
 -
--	retval = mpi3mr_issue_event_notification(mrioc);
-+	retval = mpi3mr_enable_events(mrioc);
+-	base_info = lo_hi_readq(&mrioc->sysif_regs->ioc_information);
+-	ioc_info(mrioc, "SOD base_info %llx\n",	base_info);
+-
+-	/*The timeout value is in 2sec unit, changing it to seconds*/
+-	mrioc->ready_timeout =
+-	    ((base_info & MPI3_SYSIF_IOC_INFO_LOW_TIMEOUT_MASK) >>
+-	    MPI3_SYSIF_IOC_INFO_LOW_TIMEOUT_SHIFT) * 2;
+-
+-	ioc_info(mrioc, "IOC ready timeout %d\n", mrioc->ready_timeout);
+-
+-	ioc_state = mpi3mr_get_iocstate(mrioc);
+-	ioc_info(mrioc, "IOC in %s state during detection\n",
+-	    mpi3mr_iocstate_name(ioc_state));
+-
+-	if (ioc_state == MRIOC_STATE_BECOMING_READY ||
+-	    ioc_state == MRIOC_STATE_RESET_REQUESTED) {
+-		timeout = mrioc->ready_timeout * 10;
+-		do {
+-			msleep(100);
+-		} while (--timeout);
+-
+-		ioc_state = mpi3mr_get_iocstate(mrioc);
+-		ioc_info(mrioc,
+-		    "IOC in %s state after waiting for reset time\n",
+-		    mpi3mr_iocstate_name(ioc_state));
+-	}
+-
+-	if (ioc_state == MRIOC_STATE_READY) {
+-		retval = mpi3mr_issue_and_process_mur(mrioc,
+-		    MPI3MR_RESET_FROM_BRINGUP);
+-		if (retval) {
+-			ioc_err(mrioc, "Failed to MU reset IOC error %d\n",
+-			    retval);
+-		}
+-		ioc_state = mpi3mr_get_iocstate(mrioc);
+-	}
+-	if (ioc_state != MRIOC_STATE_RESET) {
+-		mpi3mr_print_fault_info(mrioc);
+-		retval = mpi3mr_issue_reset(mrioc,
+-		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET,
+-		    MPI3MR_RESET_FROM_BRINGUP);
+-		if (retval) {
+-			ioc_err(mrioc,
+-			    "%s :Failed to soft reset IOC error %d\n",
+-			    __func__, retval);
+-			goto out_failed;
+-		}
+-	}
+-	ioc_state = mpi3mr_get_iocstate(mrioc);
+-	if (ioc_state != MRIOC_STATE_RESET) {
+-		retval = -1;
+-		ioc_err(mrioc, "Cannot bring IOC to reset state\n");
+-		goto out_failed;
+-	}
+-
+-	retval = mpi3mr_setup_admin_qpair(mrioc);
+-	if (retval) {
+-		ioc_err(mrioc, "Failed to setup admin Qs: error %d\n",
+-		    retval);
+-		goto out_failed;
+-	}
+-
+ 	retval = mpi3mr_bring_ioc_ready(mrioc);
  	if (retval) {
--		ioc_err(mrioc, "Failed to issue event notification %d\n",
-+		ioc_err(mrioc, "failed to enable events %d\n",
- 		    retval);
- 		goto out_failed;
- 	}
+ 		ioc_err(mrioc, "Failed to bring ioc ready: error %d\n",
 -- 
 2.27.0
 
 
---000000000000fa4a3f05d3945d2d
+--0000000000001d742f05d3945ecb
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -331,13 +362,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDxo1aN+XAsHSQNneoOw
-JZ1s8yEKn8H0zzRaUDJwJwGZMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMTIyMDE0MDQyOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDz3Ft7bKTbJQM345sCO
+18qdU8MTRYi5Atb8MsWuVfItMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMTIyMDE0MDQzMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCu+bLCFQF/W1tBDON7sm+lc0/Rex+VyiNTRICc
-zepK+sZhTk5lvL+fFrGYjrZuqX7hA2FSZgJXaE90PgbEu0qjpE8H9VNSXx8Ukl7tLPixIlRjkrG+
-BLGipNSd6drdciPjAEFu02+M7oJDVZSQklX9OIYep2WeY4WVVoy5k4X+6VOpqD1yKsZJSGeqTBZg
-FIfniks4KFBAWimEb08EX/cNzSGTMAbmnBRY4HIj2kF9iFkksCBO0qvNzMnGiA1vJLemsRSU5zoj
-KX2jc6IY2f8fE8np0KCJNI4QcTtPgdwcMICOLtOuBA+xkWgcmx3Zbaz46E2D1aXd/TZDgmvQoSRS
---000000000000fa4a3f05d3945d2d--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBkP/G8CzgsxfKHo1V49GMtdDOg9fkefOg4dHTB
+qjaKKJW3/I0zrGBaqqQF9bTgrTLpsOerKyy4EmBCqDsh7JZd6lM0uAmZJnmxBnnszKlTIUzupGq/
+SM0V1UAbvlyu4uupFOZP/G0ruFOr8s4E1NQkXr/OUN9FRqQ9ufwzduhSUAf4gruEMFhKNyEezCSH
+ZxFbu3ku4pqudxeLbzWUqVkdpfPKRdRBTL6Q6+r4Wc0YuKTi2SGEKELn9OPZczqmfW4Dnm/IwV04
+TKawsbI0Yu16u2Unp+4UW+wjo5chTX3ssJyHOIjl4G8VDwUwFVsX6P78U7b39pM4Vjyzgu5b3eME
+--0000000000001d742f05d3945ecb--
