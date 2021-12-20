@@ -2,324 +2,508 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0DC7C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A27FC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232240AbhLTOEr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S229644AbhLTOEr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 20 Dec 2021 09:04:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51732 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbhLTOEl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:41 -0500
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9144C06173E
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:40 -0800 (PST)
-Received: by mail-pg1-x52c.google.com with SMTP id r138so9468043pgr.13
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:40 -0800 (PST)
+        with ESMTP id S233456AbhLTOEo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:44 -0500
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2570C06173F
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:43 -0800 (PST)
+Received: by mail-pj1-x102c.google.com with SMTP id lr15-20020a17090b4b8f00b001b19671cbebso4439592pjb.1
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=n9PwOpcnb6Fkn0c2AjAMOkxIYiAwL5ct6ODl0noOYWs=;
-        b=SpXtpJ7GMHHhpaN6VRhzX4zDyw1THmRBwlydoGRFHOUy+6kimYVWErnu+pdMni4FmU
-         +tVT/yaFNToj0UUKAR2DUxWYflj5Qr5iB2SQdcwrJaaveAc58G1MuNQmgaXA27P2Q/X/
-         ssGTQfpGb5YE1f/weYlN/GUI0T7333VGjeD3M=
+        bh=PTJ97rgkvY7Y8POCU/LTgzQbSJimLRw18qyaoWRtTmE=;
+        b=g/meLerxFwCxAQhg1/OvTYY7wVyWw1VSQ0D/UMYSFMprQHp7NVDy2jfusRdml+0y6C
+         NxiSWJ2sYcA3/vlR07Znw0r4aS8T3FWeFASSYBMUHRHs9Dop00vJte4skl2irQr+6Spe
+         kdY6oTa8E8lztbn832VIirXViadicUmAtZEjg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=n9PwOpcnb6Fkn0c2AjAMOkxIYiAwL5ct6ODl0noOYWs=;
-        b=2g3IxrPmZhItS4IzvzO3nC4THVrlk/MDu0z9CaRfcf7IWbvdiOeV7xxccsSNxdIjgd
-         6QsItQOJHcR/zR7XBsZRI63ptVAaiX5RqpPdGan4Opu3IVwQddcOWwASr/yGOvol1o5F
-         fmiiO6gXpGd/QACIS99BMWaP2e9g4OXXAFTzGe987g/0KJ/Vwqd28pru80CKAmopP6bc
-         r1TV8QI2QdCeThloFiuGs/FXlyN12JaPK0Yd4dlRuCdANW0RBwoDOql1XzROsNRKU3e3
-         YYxZKkCA2gAkTOcEA/0ctmtqpe0LSZGUkNnKSmqfNtNzx98rrwUA45cNzY6hVldVXARb
-         0wbw==
-X-Gm-Message-State: AOAM533YsMw1T9F8+bmzkZd5ICOiopE+rgVj71xKe4wPLlsGn0AEnk1S
-        F6xlNarzIa59+adfrpDmNWFsbbYEntSzwNlLdiB6umWTBcWd1ZvruR8RoIXiqzjKuIeaWvRoZRY
-        g+ZI9wwHa6QYdXY+rH25yP4nvJr3Yx6p3Hdy2bdBkaNIVLMkxz5FZdWdd1GmGjhUt0lV6yzBPe8
-        jsIBkF2L80
-X-Google-Smtp-Source: ABdhPJwU68+Jmhg9InsfHgb5nEJp+4dRI0oSLjx3kg6wvVCBYjiYJIj6KaSyGg2PMeGIT0g++qyQjg==
-X-Received: by 2002:a65:58ca:: with SMTP id e10mr15230696pgu.116.1640009079827;
-        Mon, 20 Dec 2021 06:04:39 -0800 (PST)
+        bh=PTJ97rgkvY7Y8POCU/LTgzQbSJimLRw18qyaoWRtTmE=;
+        b=S7yvNcEwlXb3vd0cq+uvjhwx+L0CuQ98dEukHoR1alh1zUmWOQbHBPp7yrBvq117Oq
+         EmF32EPY55xhLDmw3SWIsLfAqy9W+laFh3m/SsHMmi4OTOAIXuRiG4+yqlk4EL2NB0qR
+         lKDjuP9/hP/r9Fr4aEgUaMHzHlTU9iNu7xT+JAnGofnjRn7sIXiGWaCMGnLPiaqhU4+f
+         jWjJvl8kc7+ao09FCaIt6EP3133xkWfYuewLPtPlVinJtMZ2XYJN/w5TTWyyCz1MvQGU
+         MYHMNfEphEx7jOWcjsBcHnBFHlyqDt7MAGetxhxvcN98YNz1WR0Vxbj4VfB5h0jPBE0N
+         Dtkw==
+X-Gm-Message-State: AOAM531jUDJG0yYX7OLJUpjUz2QXX4ZXMiWxZWZUyFynfv06+WfhnqXG
+        slzCw1QggwtT3901xpDCwPOyu7hUL/CgZCBbjoAymMrgpBhOLLEWIf1VZebcoosqnStiQBIggwj
+        HhAARKhMiOmZ221dqNtIEONVNJJanupDRwEQrwMbchlEPR/fAEo3Fm5PkiiGRG8qy74u1Zsk9Wk
+        7pksrwfWNj
+X-Google-Smtp-Source: ABdhPJyBF+Rz2jOYfB0dH4OKF/rMWLxuBI0SvI0jDV/XI2oDAUDVngF5SP1vVk2ps3bjD908ZOtV5A==
+X-Received: by 2002:a17:902:ed52:b0:148:da08:9a6 with SMTP id y18-20020a170902ed5200b00148da0809a6mr66709plb.89.1640009082011;
+        Mon, 20 Dec 2021 06:04:42 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.37
+        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Dec 2021 06:04:39 -0800 (PST)
+        Mon, 20 Dec 2021 06:04:41 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 17/25] mpi3mr: Gracefully handle online FW update operation
-Date:   Mon, 20 Dec 2021 19:41:51 +0530
-Message-Id: <20211220141159.16117-18-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 18/25] mpi3mr: Add Event acknowledgment logic
+Date:   Mon, 20 Dec 2021 19:41:52 +0530
+Message-Id: <20211220141159.16117-19-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 References: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000aa503b05d3945eb0"
+        boundary="000000000000cc363005d3945ec1"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000aa503b05d3945eb0
+--000000000000cc363005d3945ec1
 Content-Transfer-Encoding: 8bit
 
-The driver is enhanced to gracefully handle discrepancies in
-certain key data sizes between firmware update operations as
-mentioned below,
-- The driver displays an error message and marks the controller
-as unrecoverable if the firmware reports ReplyFrameSize that
-is greater than the current ReplyFrameSize.
-- If the firmware reports ReplyFrameSize greater than the
-current ReplyFrameSize then the driver uses the current
-ReplyFrameSize while copying the reply messages.
-- The driver displays an error message and marks the controller
-as unrecoverable if the firmware reports
-MaxOperationalReplyQueues less than the currently allocated
-operational reply queues count.
-- If the firmware reports MaxOperationalReplyQueues that is
-greater than the currently allocated operational reply queue
-count then the driver ignores the new increased value and
-uses the previously allocated number of operational queues
-only.
-- If the firmware reports MaxDevHandle greater than the
-previously used MaxDevHandle value after a reset then the
-driver re-allocates the 'device remove pending bitmap'
-buffer with the newer size using krealloc().
+Add Event acknowledgment logic.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |   1 +
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 109 ++++++++++++++++++++++++++------
- 2 files changed, 92 insertions(+), 18 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    |  30 +++++-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |  48 +++++++++-
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 158 +++++++++++++++++++++++++++++++-
+ 3 files changed, 224 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index b24efe2..24b65bb 100644
+index 24b65bb..2602957 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -752,6 +752,7 @@ struct mpi3mr_ioc {
- 	dma_addr_t reply_buf_dma_max_address;
+@@ -96,7 +96,11 @@ extern int prot_mask;
+ #define MPI3MR_HOSTTAG_DEVRMCMD_MAX	(MPI3MR_HOSTTAG_DEVRMCMD_MIN + \
+ 						MPI3MR_NUM_DEVRMCMD - 1)
  
- 	u16 reply_free_qsz;
-+	u16 reply_sz;
- 	struct dma_pool *reply_free_q_pool;
- 	__le64 *reply_free_q;
- 	dma_addr_t reply_free_q_dma;
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 4d048e5..4050195 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -13,6 +13,8 @@
- static int
- mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type, u32 reset_reason);
- static int mpi3mr_setup_admin_qpair(struct mpi3mr_ioc *mrioc);
-+static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_ioc_facts_data *facts_data);
+-#define MPI3MR_INTERNAL_CMDS_RESVD     MPI3MR_HOSTTAG_DEVRMCMD_MAX
++#define MPI3MR_INTERNAL_CMDS_RESVD	MPI3MR_HOSTTAG_DEVRMCMD_MAX
++#define MPI3MR_NUM_EVTACKCMD		4
++#define MPI3MR_HOSTTAG_EVTACKCMD_MIN	(MPI3MR_HOSTTAG_DEVRMCMD_MAX + 1)
++#define MPI3MR_HOSTTAG_EVTACKCMD_MAX	(MPI3MR_HOSTTAG_EVTACKCMD_MIN + \
++					MPI3MR_NUM_EVTACKCMD - 1)
  
- #if defined(writeq) && defined(CONFIG_64BIT)
- static inline void mpi3mr_writeq(__u64 b, volatile void __iomem *addr)
-@@ -376,7 +378,7 @@ static void mpi3mr_process_admin_reply_desc(struct mpi3mr_ioc *mrioc,
- 			if (def_reply) {
- 				cmdptr->state |= MPI3MR_CMD_REPLY_VALID;
- 				memcpy((u8 *)cmdptr->reply, (u8 *)def_reply,
--				    mrioc->facts.reply_sz);
-+				    mrioc->reply_sz);
- 			}
- 			if (cmdptr->is_waiting) {
- 				complete(&cmdptr->done);
-@@ -996,6 +998,66 @@ static int mpi3mr_issue_and_process_mur(struct mpi3mr_ioc *mrioc,
- 	return retval;
- }
+ /* Reduced resource count definition for crash kernel */
+ #define MPI3MR_HOST_IOS_KDUMP		128
+@@ -674,11 +678,15 @@ struct scmd_priv {
+  * @chain_buf_lock: Chain buffer list lock
+  * @host_tm_cmds: Command tracker for task management commands
+  * @dev_rmhs_cmds: Command tracker for device removal commands
++ * @evtack_cmds: Command tracker for event ack commands
+  * @devrem_bitmap_sz: Device removal bitmap size
+  * @devrem_bitmap: Device removal bitmap
+  * @dev_handle_bitmap_sz: Device handle bitmap size
+  * @removepend_bitmap: Remove pending bitmap
+  * @delayed_rmhs_list: Delayed device removal list
++ * @evtack_cmds_bitmap_sz: Event Ack bitmap size
++ * @evtack_cmds_bitmap: Event Ack bitmap
++ * @delayed_evtack_cmds_list: Delayed event acknowledgment list
+  * @ts_update_counter: Timestamp update counter
+  * @reset_in_progress: Reset in progress flag
+  * @unrecoverable: Controller unrecoverable flag
+@@ -800,11 +808,15 @@ struct mpi3mr_ioc {
+ 
+ 	struct mpi3mr_drv_cmd host_tm_cmds;
+ 	struct mpi3mr_drv_cmd dev_rmhs_cmds[MPI3MR_NUM_DEVRMCMD];
++	struct mpi3mr_drv_cmd evtack_cmds[MPI3MR_NUM_EVTACKCMD];
+ 	u16 devrem_bitmap_sz;
+ 	void *devrem_bitmap;
+ 	u16 dev_handle_bitmap_sz;
+ 	void *removepend_bitmap;
+ 	struct list_head delayed_rmhs_list;
++	u16 evtack_cmds_bitmap_sz;
++	void *evtack_cmds_bitmap;
++	struct list_head delayed_evtack_cmds_list;
+ 
+ 	u32 ts_update_counter;
+ 	u8 reset_in_progress;
+@@ -862,6 +874,18 @@ struct delayed_dev_rmhs_node {
+ 	u8 iou_rc;
+ };
  
 +/**
-+ * mpi3mr_revalidate_factsdata - validate IOCFacts parameters
-+ * during reset/resume
-+ * @mrioc: Adapter instance reference
-+ *
-+ * Return zero if the new IOCFacts parameters value is compatible with
-+ * older values else return -EPERM
++ * struct delayed_evt_ack_node - Delayed event ack node
++ * @list: list head
++ * @event: MPI3 event ID
++ * @event_ctx: event context
 + */
-+static int
-+mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
-+{
-+	u16 dev_handle_bitmap_sz;
-+	void *removepend_bitmap;
++struct delayed_evt_ack_node {
++	struct list_head list;
++	u8 event;
++	u32 event_ctx;
++};
 +
-+	if (mrioc->facts.reply_sz > mrioc->reply_sz) {
-+		ioc_err(mrioc,
-+		    "cannot increase reply size from %d to %d\n",
-+		    mrioc->reply_sz, mrioc->facts.reply_sz);
-+		return -EPERM;
-+	}
-+
-+	if (mrioc->facts.max_op_reply_q < mrioc->num_op_reply_q) {
-+		ioc_err(mrioc,
-+		    "cannot reduce number of operational reply queues from %d to %d\n",
-+		    mrioc->num_op_reply_q,
-+		    mrioc->facts.max_op_reply_q);
-+		return -EPERM;
-+	}
-+
-+	if (mrioc->facts.max_op_req_q < mrioc->num_op_req_q) {
-+		ioc_err(mrioc,
-+		    "cannot reduce number of operational request queues from %d to %d\n",
-+		    mrioc->num_op_req_q, mrioc->facts.max_op_req_q);
-+		return -EPERM;
-+	}
-+
-+	dev_handle_bitmap_sz = mrioc->facts.max_devhandle / 8;
-+	if (mrioc->facts.max_devhandle % 8)
-+		dev_handle_bitmap_sz++;
-+	if (dev_handle_bitmap_sz > mrioc->dev_handle_bitmap_sz) {
-+		removepend_bitmap = krealloc(mrioc->removepend_bitmap,
-+		    dev_handle_bitmap_sz, GFP_KERNEL);
-+		if (!removepend_bitmap) {
-+			ioc_err(mrioc,
-+			    "failed to increase removepend_bitmap sz from: %d to %d\n",
-+			    mrioc->dev_handle_bitmap_sz, dev_handle_bitmap_sz);
-+			return -EPERM;
-+		}
-+		memset(removepend_bitmap + mrioc->dev_handle_bitmap_sz, 0,
-+		    dev_handle_bitmap_sz - mrioc->dev_handle_bitmap_sz);
-+		mrioc->removepend_bitmap = removepend_bitmap;
-+		ioc_info(mrioc,
-+		    "increased dev_handle_bitmap_sz from %d to %d\n",
-+		    mrioc->dev_handle_bitmap_sz, dev_handle_bitmap_sz);
-+		mrioc->dev_handle_bitmap_sz = dev_handle_bitmap_sz;
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  * mpi3mr_bring_ioc_ready - Bring controller to ready state
-  * @mrioc: Adapter instance reference
-@@ -1854,8 +1916,13 @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
- 	    mrioc->intr_info_count - mrioc->op_reply_q_offset;
- 	if (!mrioc->num_queues)
- 		mrioc->num_queues = min_t(int, num_queues, msix_count_op_q);
--	num_queues = mrioc->num_queues;
--	ioc_info(mrioc, "Trying to create %d Operational Q pairs\n",
-+	/*
-+	 * During reset set the num_queues to the number of queues
-+	 * that was set before the reset.
-+	 */
-+	num_queues = mrioc->num_op_reply_q ?
-+	    mrioc->num_op_reply_q : mrioc->num_queues;
-+	ioc_info(mrioc, "trying to create %d operational queue pairs\n",
- 	    num_queues);
+ int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_cleanup_resources(struct mpi3mr_ioc *mrioc);
+ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc);
+@@ -898,7 +922,7 @@ void mpi3mr_ioc_disable_intr(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_ioc_enable_intr(struct mpi3mr_ioc *mrioc);
  
- 	if (!mrioc->req_qinfo) {
-@@ -2447,6 +2514,7 @@ static int mpi3mr_issue_iocfacts(struct mpi3mr_ioc *mrioc,
- 		goto out_unlock;
+ enum mpi3mr_iocstate mpi3mr_get_iocstate(struct mpi3mr_ioc *mrioc);
+-int mpi3mr_send_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
++int mpi3mr_process_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
+ 			  u32 event_ctx);
+ 
+ void mpi3mr_wait_for_host_io(struct mpi3mr_ioc *mrioc, u32 timeout);
+@@ -906,7 +930,7 @@ void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_flush_host_io(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_invalidate_devhandles(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_rfresh_tgtdevs(struct mpi3mr_ioc *mrioc);
+-void mpi3mr_flush_delayed_rmhs_list(struct mpi3mr_ioc *mrioc);
++void mpi3mr_flush_delayed_cmd_lists(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code);
+ void mpi3mr_print_fault_info(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 4050195..b513dca 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -312,6 +312,12 @@ mpi3mr_get_drv_cmd(struct mpi3mr_ioc *mrioc, u16 host_tag,
+ 		return &mrioc->dev_rmhs_cmds[idx];
  	}
- 	memcpy(facts_data, (u8 *)data, data_len);
-+	mpi3mr_process_factsdata(mrioc, facts_data);
- out_unlock:
- 	mrioc->init_cmds.state = MPI3MR_CMD_NOTUSED;
- 	mutex_unlock(&mrioc->init_cmds.mutex);
-@@ -2593,12 +2661,6 @@ static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
- 	ioc_info(mrioc, "DMA mask %d InitialPE status 0x%x\n",
- 	    mrioc->facts.dma_mask, (facts_flags &
- 	    MPI3_IOCFACTS_FLAGS_INITIAL_PORT_ENABLE_MASK));
--
--	mrioc->max_host_ios = mrioc->facts.max_reqs - MPI3MR_INTERNAL_CMDS_RESVD;
--
--	if (reset_devices)
--		mrioc->max_host_ios = min_t(int, mrioc->max_host_ios,
--		    MPI3MR_HOST_IOS_KDUMP);
+ 
++	if (host_tag >= MPI3MR_HOSTTAG_EVTACKCMD_MIN &&
++	    host_tag <= MPI3MR_HOSTTAG_EVTACKCMD_MAX) {
++		idx = host_tag - MPI3MR_HOSTTAG_EVTACKCMD_MIN;
++		return &mrioc->evtack_cmds[idx];
++	}
++
+ 	return NULL;
  }
  
- /**
-@@ -2618,18 +2680,18 @@ static int mpi3mr_alloc_reply_sense_bufs(struct mpi3mr_ioc *mrioc)
- 	if (mrioc->init_cmds.reply)
- 		return retval;
- 
--	mrioc->init_cmds.reply = kzalloc(mrioc->facts.reply_sz, GFP_KERNEL);
-+	mrioc->init_cmds.reply = kzalloc(mrioc->reply_sz, GFP_KERNEL);
- 	if (!mrioc->init_cmds.reply)
- 		goto out_failed;
- 
- 	for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++) {
--		mrioc->dev_rmhs_cmds[i].reply = kzalloc(mrioc->facts.reply_sz,
-+		mrioc->dev_rmhs_cmds[i].reply = kzalloc(mrioc->reply_sz,
- 		    GFP_KERNEL);
- 		if (!mrioc->dev_rmhs_cmds[i].reply)
+@@ -2691,6 +2697,13 @@ static int mpi3mr_alloc_reply_sense_bufs(struct mpi3mr_ioc *mrioc)
  			goto out_failed;
  	}
  
--	mrioc->host_tm_cmds.reply = kzalloc(mrioc->facts.reply_sz, GFP_KERNEL);
-+	mrioc->host_tm_cmds.reply = kzalloc(mrioc->reply_sz, GFP_KERNEL);
++	for (i = 0; i < MPI3MR_NUM_EVTACKCMD; i++) {
++		mrioc->evtack_cmds[i].reply = kzalloc(mrioc->reply_sz,
++		    GFP_KERNEL);
++		if (!mrioc->evtack_cmds[i].reply)
++			goto out_failed;
++	}
++
+ 	mrioc->host_tm_cmds.reply = kzalloc(mrioc->reply_sz, GFP_KERNEL);
  	if (!mrioc->host_tm_cmds.reply)
  		goto out_failed;
- 
-@@ -2655,7 +2717,7 @@ static int mpi3mr_alloc_reply_sense_bufs(struct mpi3mr_ioc *mrioc)
- 	mrioc->sense_buf_q_sz = mrioc->num_sense_bufs + 1;
- 
- 	/* reply buffer pool, 16 byte align */
--	sz = mrioc->num_reply_bufs * mrioc->facts.reply_sz;
-+	sz = mrioc->num_reply_bufs * mrioc->reply_sz;
- 	mrioc->reply_buf_pool = dma_pool_create("reply_buf pool",
- 	    &mrioc->pdev->dev, sz, 16, 0);
- 	if (!mrioc->reply_buf_pool) {
-@@ -2731,10 +2793,10 @@ static void mpimr_initialize_reply_sbuf_queues(struct mpi3mr_ioc *mrioc)
- 	u32 sz, i;
- 	dma_addr_t phy_addr;
- 
--	sz = mrioc->num_reply_bufs * mrioc->facts.reply_sz;
-+	sz = mrioc->num_reply_bufs * mrioc->reply_sz;
- 	ioc_info(mrioc,
- 	    "reply buf pool(0x%p): depth(%d), frame_size(%d), pool_size(%d kB), reply_dma(0x%llx)\n",
--	    mrioc->reply_buf, mrioc->num_reply_bufs, mrioc->facts.reply_sz,
-+	    mrioc->reply_buf, mrioc->num_reply_bufs, mrioc->reply_sz,
- 	    (sz / 1024), (unsigned long long)mrioc->reply_buf_dma);
- 	sz = mrioc->reply_free_qsz * 8;
- 	ioc_info(mrioc,
-@@ -2754,7 +2816,7 @@ static void mpimr_initialize_reply_sbuf_queues(struct mpi3mr_ioc *mrioc)
- 
- 	/* initialize Reply buffer Queue */
- 	for (i = 0, phy_addr = mrioc->reply_buf_dma;
--	    i < mrioc->num_reply_bufs; i++, phy_addr += mrioc->facts.reply_sz)
-+	    i < mrioc->num_reply_bufs; i++, phy_addr += mrioc->reply_sz)
- 		mrioc->reply_free_q[i] = cpu_to_le64(phy_addr);
- 	mrioc->reply_free_q[i] = cpu_to_le64(0);
- 
-@@ -3459,7 +3521,13 @@ retry_init:
+@@ -2711,6 +2724,14 @@ static int mpi3mr_alloc_reply_sense_bufs(struct mpi3mr_ioc *mrioc)
+ 	if (!mrioc->devrem_bitmap)
  		goto out_failed;
+ 
++	mrioc->evtack_cmds_bitmap_sz = MPI3MR_NUM_EVTACKCMD / 8;
++	if (MPI3MR_NUM_EVTACKCMD % 8)
++		mrioc->evtack_cmds_bitmap_sz++;
++	mrioc->evtack_cmds_bitmap = kzalloc(mrioc->evtack_cmds_bitmap_sz,
++	    GFP_KERNEL);
++	if (!mrioc->evtack_cmds_bitmap)
++		goto out_failed;
++
+ 	mrioc->num_reply_bufs = mrioc->facts.max_reqs + MPI3MR_NUM_EVT_REPLIES;
+ 	mrioc->reply_free_qsz = mrioc->num_reply_bufs + 1;
+ 	mrioc->num_sense_bufs = mrioc->facts.max_reqs / MPI3MR_SENSEBUF_FACTOR;
+@@ -3030,17 +3051,17 @@ out:
+ }
+ 
+ /**
+- * mpi3mr_send_event_ack - Send event acknowledgment
++ * mpi3mr_process_event_ack - Process event acknowledgment
+  * @mrioc: Adapter instance reference
+  * @event: MPI3 event ID
+- * @event_ctx: Event context
++ * @event_ctx: event context
+  *
+  * Send event acknowledgment through admin queue and wait for
+  * it to complete.
+  *
+  * Return: 0 on success, non-zero on failures.
+  */
+-int mpi3mr_send_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
++int mpi3mr_process_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
+ 	u32 event_ctx)
+ {
+ 	struct mpi3_event_ack_request evtack_req;
+@@ -3803,8 +3824,13 @@ void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
+ 		for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++)
+ 			memset(mrioc->dev_rmhs_cmds[i].reply, 0,
+ 			    sizeof(*mrioc->dev_rmhs_cmds[i].reply));
++		for (i = 0; i < MPI3MR_NUM_EVTACKCMD; i++)
++			memset(mrioc->evtack_cmds[i].reply, 0,
++			    sizeof(*mrioc->evtack_cmds[i].reply));
+ 		memset(mrioc->removepend_bitmap, 0, mrioc->dev_handle_bitmap_sz);
+ 		memset(mrioc->devrem_bitmap, 0, mrioc->devrem_bitmap_sz);
++		memset(mrioc->evtack_cmds_bitmap, 0,
++		    mrioc->evtack_cmds_bitmap_sz);
  	}
  
--	mpi3mr_process_factsdata(mrioc, &facts_data);
-+	mrioc->max_host_ios = mrioc->facts.max_reqs - MPI3MR_INTERNAL_CMDS_RESVD;
-+
-+	if (reset_devices)
-+		mrioc->max_host_ios = min_t(int, mrioc->max_host_ios,
-+		    MPI3MR_HOST_IOS_KDUMP);
-+
-+	mrioc->reply_sz = mrioc->facts.reply_sz;
+ 	for (i = 0; i < mrioc->num_queues; i++) {
+@@ -3898,12 +3924,20 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
+ 	kfree(mrioc->host_tm_cmds.reply);
+ 	mrioc->host_tm_cmds.reply = NULL;
  
- 	retval = mpi3mr_check_reset_dma_mask(mrioc);
- 	if (retval) {
-@@ -3582,7 +3650,12 @@ retry_init:
- 		goto out_failed;
- 	}
- 
--	mpi3mr_process_factsdata(mrioc, &facts_data);
-+	dprint_reset(mrioc, "validating ioc_facts\n");
-+	retval = mpi3mr_revalidate_factsdata(mrioc);
-+	if (retval) {
-+		ioc_err(mrioc, "failed to revalidate ioc_facts data\n");
-+		goto out_failed_noretry;
++	for (i = 0; i < MPI3MR_NUM_EVTACKCMD; i++) {
++		kfree(mrioc->evtack_cmds[i].reply);
++		mrioc->evtack_cmds[i].reply = NULL;
 +	}
++
+ 	kfree(mrioc->removepend_bitmap);
+ 	mrioc->removepend_bitmap = NULL;
  
- 	mpi3mr_print_ioc_info(mrioc);
+ 	kfree(mrioc->devrem_bitmap);
+ 	mrioc->devrem_bitmap = NULL;
  
++	kfree(mrioc->evtack_cmds_bitmap);
++	mrioc->evtack_cmds_bitmap = NULL;
++
+ 	kfree(mrioc->chain_bitmap);
+ 	mrioc->chain_bitmap = NULL;
+ 
+@@ -4079,6 +4113,11 @@ static void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc)
+ 		cmdptr = &mrioc->dev_rmhs_cmds[i];
+ 		mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
+ 	}
++
++	for (i = 0; i < MPI3MR_NUM_EVTACKCMD; i++) {
++		cmdptr = &mrioc->evtack_cmds[i];
++		mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
++	}
+ }
+ 
+ /**
+@@ -4176,10 +4215,11 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 		goto out;
+ 	}
+ 
+-	mpi3mr_flush_delayed_rmhs_list(mrioc);
++	mpi3mr_flush_delayed_cmd_lists(mrioc);
+ 	mpi3mr_flush_drv_cmds(mrioc);
+ 	memset(mrioc->devrem_bitmap, 0, mrioc->devrem_bitmap_sz);
+ 	memset(mrioc->removepend_bitmap, 0, mrioc->dev_handle_bitmap_sz);
++	memset(mrioc->evtack_cmds_bitmap, 0, mrioc->evtack_cmds_bitmap_sz);
+ 	mpi3mr_cleanup_fwevt_list(mrioc);
+ 	mpi3mr_flush_host_io(mrioc);
+ 	mpi3mr_invalidate_devhandles(mrioc);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 38e1043..728d6ce 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -34,6 +34,9 @@ MODULE_PARM_DESC(logging_level,
+ 	" bits for enabling additional logging info (default=0)");
+ 
+ /* Forward declarations*/
++static void mpi3mr_send_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
++	struct mpi3mr_drv_cmd *cmdparam, u32 event_ctx);
++
+ /**
+  * mpi3mr_host_tag_for_scmd - Get host tag for a scmd
+  * @mrioc: Adapter instance reference
+@@ -1336,7 +1339,7 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 
+ evt_ack:
+ 	if (fwevt->send_ack)
+-		mpi3mr_send_event_ack(mrioc, fwevt->event_id,
++		mpi3mr_process_event_ack(mrioc, fwevt->event_id,
+ 		    fwevt->evt_ctx);
+ out:
+ 	/* Put fwevt reference count to neutralize kref_init increment */
+@@ -1400,24 +1403,33 @@ static int mpi3mr_create_tgtdev(struct mpi3mr_ioc *mrioc,
+ }
+ 
+ /**
+- * mpi3mr_flush_delayed_rmhs_list - Flush pending commands
++ * mpi3mr_flush_delayed_cmd_lists - Flush pending commands
+  * @mrioc: Adapter instance reference
+  *
+- * Flush pending commands in the delayed removal handshake list
+- * due to a controller reset or driver removal as a cleanup.
++ * Flush pending commands in the delayed lists due to a
++ * controller reset or driver removal as a cleanup.
+  *
+  * Return: Nothing
+  */
+-void mpi3mr_flush_delayed_rmhs_list(struct mpi3mr_ioc *mrioc)
++void mpi3mr_flush_delayed_cmd_lists(struct mpi3mr_ioc *mrioc)
+ {
+ 	struct delayed_dev_rmhs_node *_rmhs_node;
++	struct delayed_evt_ack_node *_evtack_node;
+ 
++	dprint_reset(mrioc, "flushing delayed dev_remove_hs commands\n");
+ 	while (!list_empty(&mrioc->delayed_rmhs_list)) {
+ 		_rmhs_node = list_entry(mrioc->delayed_rmhs_list.next,
+ 		    struct delayed_dev_rmhs_node, list);
+ 		list_del(&_rmhs_node->list);
+ 		kfree(_rmhs_node);
+ 	}
++	dprint_reset(mrioc, "flushing delayed event ack commands\n");
++	while (!list_empty(&mrioc->delayed_evtack_cmds_list)) {
++		_evtack_node = list_entry(mrioc->delayed_evtack_cmds_list.next,
++		    struct delayed_evt_ack_node, list);
++		list_del(&_evtack_node->list);
++		kfree(_evtack_node);
++	}
+ }
+ 
+ /**
+@@ -1633,6 +1645,141 @@ out_failed:
+ 	clear_bit(cmd_idx, mrioc->devrem_bitmap);
+ }
+ 
++/**
++ * mpi3mr_complete_evt_ack - event ack request completion
++ * @mrioc: Adapter instance reference
++ * @drv_cmd: Internal command tracker
++ *
++ * This is the completion handler for non blocking event
++ * acknowledgment sent to the firmware and this will issue any
++ * pending event acknowledgment request.
++ *
++ * Return: Nothing
++ */
++static void mpi3mr_complete_evt_ack(struct mpi3mr_ioc *mrioc,
++	struct mpi3mr_drv_cmd *drv_cmd)
++{
++	u16 cmd_idx = drv_cmd->host_tag - MPI3MR_HOSTTAG_EVTACKCMD_MIN;
++	struct delayed_evt_ack_node *delayed_evtack = NULL;
++
++	if (drv_cmd->ioc_status != MPI3_IOCSTATUS_SUCCESS) {
++		dprint_event_th(mrioc,
++		    "immediate event ack failed with ioc_status(0x%04x) log_info(0x%08x)\n",
++		    (drv_cmd->ioc_status & MPI3_IOCSTATUS_STATUS_MASK),
++		    drv_cmd->ioc_loginfo);
++	}
++
++	if (!list_empty(&mrioc->delayed_evtack_cmds_list)) {
++		delayed_evtack =
++			list_entry(mrioc->delayed_evtack_cmds_list.next,
++			    struct delayed_evt_ack_node, list);
++		mpi3mr_send_event_ack(mrioc, delayed_evtack->event, drv_cmd,
++		    delayed_evtack->event_ctx);
++		list_del(&delayed_evtack->list);
++		kfree(delayed_evtack);
++		return;
++	}
++	drv_cmd->state = MPI3MR_CMD_NOTUSED;
++	drv_cmd->callback = NULL;
++	clear_bit(cmd_idx, mrioc->evtack_cmds_bitmap);
++}
++
++/**
++ * mpi3mr_send_event_ack - Issue event acknwoledgment request
++ * @mrioc: Adapter instance reference
++ * @event: MPI3 event id
++ * @cmdparam: Internal command tracker
++ * @event_ctx: event context
++ *
++ * Issues event acknowledgment request to the firmware if there
++ * is a free command to send the event ack else it to a pend
++ * list so that it will be processed on a completion of a prior
++ * event acknowledgment .
++ *
++ * Return: Nothing
++ */
++static void mpi3mr_send_event_ack(struct mpi3mr_ioc *mrioc, u8 event,
++	struct mpi3mr_drv_cmd *cmdparam, u32 event_ctx)
++{
++	struct mpi3_event_ack_request evtack_req;
++	int retval = 0;
++	u8 retrycount = 5;
++	u16 cmd_idx = MPI3MR_NUM_EVTACKCMD;
++	struct mpi3mr_drv_cmd *drv_cmd = cmdparam;
++	struct delayed_evt_ack_node *delayed_evtack = NULL;
++
++	if (drv_cmd) {
++		dprint_event_th(mrioc,
++		    "sending delayed event ack in the top half for event(0x%02x), event_ctx(0x%08x)\n",
++		    event, event_ctx);
++		goto issue_cmd;
++	}
++	dprint_event_th(mrioc,
++	    "sending event ack in the top half for event(0x%02x), event_ctx(0x%08x)\n",
++	    event, event_ctx);
++	do {
++		cmd_idx = find_first_zero_bit(mrioc->evtack_cmds_bitmap,
++		    MPI3MR_NUM_EVTACKCMD);
++		if (cmd_idx < MPI3MR_NUM_EVTACKCMD) {
++			if (!test_and_set_bit(cmd_idx,
++			    mrioc->evtack_cmds_bitmap))
++				break;
++			cmd_idx = MPI3MR_NUM_EVTACKCMD;
++		}
++	} while (retrycount--);
++
++	if (cmd_idx >= MPI3MR_NUM_EVTACKCMD) {
++		delayed_evtack = kzalloc(sizeof(*delayed_evtack),
++		    GFP_ATOMIC);
++		if (!delayed_evtack)
++			return;
++		INIT_LIST_HEAD(&delayed_evtack->list);
++		delayed_evtack->event = event;
++		delayed_evtack->event_ctx = event_ctx;
++		list_add_tail(&delayed_evtack->list,
++		    &mrioc->delayed_evtack_cmds_list);
++		dprint_event_th(mrioc,
++		    "event ack in the top half for event(0x%02x), event_ctx(0x%08x) is postponed\n",
++		    event, event_ctx);
++		return;
++	}
++	drv_cmd = &mrioc->evtack_cmds[cmd_idx];
++
++issue_cmd:
++	cmd_idx = drv_cmd->host_tag - MPI3MR_HOSTTAG_EVTACKCMD_MIN;
++
++	memset(&evtack_req, 0, sizeof(evtack_req));
++	if (drv_cmd->state & MPI3MR_CMD_PENDING) {
++		dprint_event_th(mrioc,
++		    "sending event ack failed due to command in use\n");
++		goto out;
++	}
++	drv_cmd->state = MPI3MR_CMD_PENDING;
++	drv_cmd->is_waiting = 0;
++	drv_cmd->callback = mpi3mr_complete_evt_ack;
++	evtack_req.host_tag = cpu_to_le16(drv_cmd->host_tag);
++	evtack_req.function = MPI3_FUNCTION_EVENT_ACK;
++	evtack_req.event = event;
++	evtack_req.event_context = cpu_to_le32(event_ctx);
++	retval = mpi3mr_admin_request_post(mrioc, &evtack_req,
++	    sizeof(evtack_req), 1);
++	if (retval) {
++		dprint_event_th(mrioc,
++		    "posting event ack request is failed\n");
++		goto out_failed;
++	}
++
++	dprint_event_th(mrioc,
++	    "event ack in the top half for event(0x%02x), event_ctx(0x%08x) is posted\n",
++	    event, event_ctx);
++out:
++	return;
++out_failed:
++	drv_cmd->state = MPI3MR_CMD_NOTUSED;
++	drv_cmd->callback = NULL;
++	clear_bit(cmd_idx, mrioc->evtack_cmds_bitmap);
++}
++
+ /**
+  * mpi3mr_pcietopochg_evt_th - PCIETopologyChange evt tophalf
+  * @mrioc: Adapter instance reference
+@@ -3773,6 +3920,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	INIT_LIST_HEAD(&mrioc->fwevt_list);
+ 	INIT_LIST_HEAD(&mrioc->tgtdev_list);
+ 	INIT_LIST_HEAD(&mrioc->delayed_rmhs_list);
++	INIT_LIST_HEAD(&mrioc->delayed_evtack_cmds_list);
+ 
+ 	mutex_init(&mrioc->reset_mutex);
+ 	mpi3mr_init_drv_cmd(&mrioc->init_cmds, MPI3MR_HOSTTAG_INITCMDS);
 -- 
 2.27.0
 
 
---000000000000aa503b05d3945eb0
+--000000000000cc363005d3945ec1
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -390,13 +574,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINGvhbF7dXAqR0Dyokfe
-VC5kF+AEkaQZhk8b8gr6V5YAMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMTIyMDE0MDQ0MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPAckd4NaedVMtA54dKk
+AJ34UUft0IH5Uu5oF+jg6CylMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMTIyMDE0MDQ0MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBmEtY6l5RO8w45kLp6qlBL/wUGD237+7vN8rDM
-Hhp8HDtWLvxSyVpIrU6+VDHOYsPRrC/kIP6yRDBvhw12Di/nPLsUvdrkXpp8t3QEpb3bi+Q3016g
-E//aLdB+LCx9L+TtMDrCv6CkkWvnbbtb/A6RnIJD8tR4UkOV9rdAvcUFAeZiZNWQaHCVrunkKq/s
-QbVyrdUE4Rk2VA0JmbfP/wtDcMDd1MvVToU0/199SCHo4d7bJz2Z3gL/pVPuUEuL+xbBCUhxTKPN
-1Mb59mq+81YOYVTcV0s8nJMnQKr4hQEyHZAjLbq+aGJIefrUs3QI+5dM0IvMPd2vAO0EalT63Wv4
---000000000000aa503b05d3945eb0--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCBkKH4hXX+gHJ2VfUzzLI0MTFzHYwJ6JS+rAER
+Y0UMpseqHvxuHtZRM1tf/+xisI8iLrAIxCkINNjyD4JT4KZ+0WfOBL23u47lJbqP9Awlfs635/kG
+Su67gsKKvbImJNjM56OqnoEb3+zLiNxzv/Ow8JBi1J4zTHkXgcItecydXsuDxm/VC9WfQLv6bhSo
+RP41IDGDA+sNNrgvCgu20grbPQAAF6JfmM4NE+JHnzZ1MBeU9NWzL16L5fA68fZzm5Z97nnSS+DE
+jEZl/25RrGxR5s98YTbKFQqje2a7G6YqESb8L7Qy4g2KwMdZj60XEh8A+nol+otiPzpEnYaN3Gdj
+--000000000000cc363005d3945ec1--
