@@ -2,306 +2,200 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4566DC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD636C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229488AbhLTOEs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Dec 2021 09:04:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51754 "EHLO
+        id S232683AbhLTOEw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Dec 2021 09:04:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233467AbhLTOEp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:45 -0500
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAD9CC061401
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:45 -0800 (PST)
-Received: by mail-pf1-x431.google.com with SMTP id b22so4047822pfb.5
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:45 -0800 (PST)
+        with ESMTP id S233422AbhLTOEs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:48 -0500
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1371C061574
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:47 -0800 (PST)
+Received: by mail-pj1-x102a.google.com with SMTP id n15-20020a17090a160f00b001a75089daa3so12960883pja.1
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=unjv1E3D2Lr0uwOMu9VzUQYiA+hYGGK3M1mGVQfrqEs=;
-        b=gN2vOMKGM/pO79vuxq4SLfFm6KYVAhfrB5OLdh3fkI0I3a64vATwycypPQuTk0TLNl
-         QGUKvbM1kMOVcT4RAfzNvMpr81kHUfIqLG14ChGENU+ApMc++OY0CdKkWLWh5rfZPv2U
-         AjCdyd8Juea8Q3E7v9XOgMFDgzdVr/060eNA0=
+        bh=+Vf+KANpCllkkrCYBRkSA7RkQSZifac+u/ZU5nKKXec=;
+        b=Lp0hqg3xgHzfuOPBfv8fIGjKa3+bxptv2i4LQG58j8D5zghkA3QpA8hbVZlkBA7282
+         aCxL4b+RP0lvSQCoBjRfPHqSlBTdeZnfFPFhzv5VA9a3XboSg+/1ahkB/soZdfJZrmfT
+         xUZjfwHT7C7jJqF2JWwrZd7Oqh9ICfW8ld+cQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=unjv1E3D2Lr0uwOMu9VzUQYiA+hYGGK3M1mGVQfrqEs=;
-        b=TrH1TaKP0qLttprneM0/Dwhyfpz6UeNPO+pQPJ5fJTQ/GRGM9IV70+X4Ym4yIHz5xk
-         8AW6zYZqA3irM/ONVX0M+KsrflvwZC+fAguvGu4304OUgklTzK35oELhoNjNH3rBNmhZ
-         MV4O1yzphoWemJocFyOoCtMQghTyRYEvQYb8XU6eWH/J6seWXSNwNYALXrgucQMCs+F4
-         aTTXdV0iQSFY0Z+HnPXh45MJH6ZhyEHZRj/3KTqsA2mNqUfpH561AZrDhaRC25zEndSl
-         Mdd9AnaqgeItq6PcHtmOTm8A8yHwUxOHtwm1BZNitUA382yv6rUDwbbymkhmaqgHLJBO
-         MoqA==
-X-Gm-Message-State: AOAM5300Tj2Jm+xVRgbeijRU1WYZUEq7dZ5kyrtMVBu4i3eykeJgHH6R
-        fdov0ljMOU7q2ylwivkqid3D2jbjjRp4iAfdE1kMGRmKodLfMoTjsEojzUmHVjtJbtUB1eAyP/G
-        pDJ7dnc7gXs7dCaGuTMhAf6eJpzi2KmN98NmYdQpM0Z6KOUNT/lxBZ8kZ3GLSQesihrfvmYsTKR
-        LIERA013vY
-X-Google-Smtp-Source: ABdhPJwvNFbO9P4hYLdctAoAhKdBCvRHo+kKbk5o/mnop3JgUQYJV68PG148Egy48WeIwdnKZzYzag==
-X-Received: by 2002:a62:83c3:0:b0:4ba:bb14:4bf7 with SMTP id h186-20020a6283c3000000b004babb144bf7mr8589092pfe.32.1640009084642;
-        Mon, 20 Dec 2021 06:04:44 -0800 (PST)
+        bh=+Vf+KANpCllkkrCYBRkSA7RkQSZifac+u/ZU5nKKXec=;
+        b=6Q8XQJ3faBobOEN//uXSgP0C1wEm8rw7sBMXj/fcnxKcy8Im1ya4cXpM8ot1c5GqaZ
+         aWzo3cP4Ff78dZXAXXJgsS2yUiOdUvpqR+6IYQGhfXR6qrkYq+ANFmXTgt/oxmIusEET
+         DApUeaLzzBl5FG2kZMNbAJYfSRvvjdwaNqCgb7W+K2zTIXSf/aRBCASfa7RXYCebJf6V
+         +dfUmajztkRqIcVUPc1KtYtIrJorN1O/8qayNd47s7e5/kvpM2644XdT72EhVdbJ81SH
+         DrasOCRtSZjDWNSjhGFqmKuU1cDKA1ZiKmy+m4/dRdglgoi9P00aL7dmT+3N/LHXbyGP
+         qxYw==
+X-Gm-Message-State: AOAM5314uZtKNfzoBWlfaqMfs7PmLD8X4rscVT2bijwgIYpmWtEuJdLf
+        Rm9LzyB5fe9rUsmfjtjG/Q20fMCwWm8B0JJ4/yKyl+ydIP35ci2ziqWyefWmoXD1cwYl8TYYVaX
+        3SEKojaccBo39wwAW/JdvxqV0kiybmtdrCOaWF0TtrQ3QaA6yYmolNo2EGkvsNuV5JHDm/V69Fr
+        7iLeRhqmg+
+X-Google-Smtp-Source: ABdhPJzzDSz715DN6LLs74a8LRKSbkyc4noMj1SGL28W5pjUGbJ4aLUV0Z5Ad6nmVatrntb/9FhDGw==
+X-Received: by 2002:a17:902:7007:b0:143:c6e8:4117 with SMTP id y7-20020a170902700700b00143c6e84117mr16982991plk.55.1640009086819;
+        Mon, 20 Dec 2021 06:04:46 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.42
+        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Dec 2021 06:04:43 -0800 (PST)
+        Mon, 20 Dec 2021 06:04:46 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 19/25] mpi3mr: Add support Prepare for Reset event
-Date:   Mon, 20 Dec 2021 19:41:53 +0530
-Message-Id: <20211220141159.16117-20-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 20/25] mpi3mr: Print cable mngnt and temp threshold events
+Date:   Mon, 20 Dec 2021 19:41:54 +0530
+Message-Id: <20211220141159.16117-21-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 References: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000f4509505d3945e21"
+        boundary="00000000000012f93505d3945f77"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000f4509505d3945e21
+--00000000000012f93505d3945f77
 Content-Transfer-Encoding: 8bit
 
-The IOC sends a Prepare for Reset Event to the host to prepare
-for a Soft Reset. This event data has below two reason codes,
-1. Start - The host is expected to gracefully quiesce all
-I/O within approximately 1 second.
-2. Abort - The IOC is requesting to abort a previous
-Prepare for Reset Event request. Normal I/O may be resumed.
+Print cable management & temperature threshold events data.
+
+Also used vendor id & device id macro definitions from
+MPI3 headers.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  6 +++
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 83 ++++++++++++++++++++-------------
- drivers/scsi/mpi3mr/mpi3mr_os.c | 40 ++++++++++++++++
- 3 files changed, 96 insertions(+), 33 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |  1 +
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 75 +++++++++++++++++++++++++++++++--
+ 2 files changed, 73 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 2602957..8dd669f 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -114,6 +114,7 @@ extern int prot_mask;
- #define MPI3MR_TSUPDATE_INTERVAL		900
- #define MPI3MR_DEFAULT_SHUTDOWN_TIME		120
- #define	MPI3MR_RAID_ERRREC_RESET_TIMEOUT	180
-+#define MPI3MR_PREPARE_FOR_RESET_TIMEOUT	180
- #define MPI3MR_RESET_ACK_TIMEOUT		30
- 
- #define MPI3MR_WATCHDOG_INTERVAL		1000 /* in milli seconds */
-@@ -693,6 +694,8 @@ struct scmd_priv {
-  * @prev_reset_result: Result of previous reset
-  * @reset_mutex: Controller reset mutex
-  * @reset_waitq: Controller reset  wait queue
-+ * @prepare_for_reset: Prepare for reset event received
-+ * @prepare_for_reset_timeout_counter: Prepare for reset timeout
-  * @diagsave_timeout: Diagnostic information save timeout
-  * @logging_level: Controller debug logging level
-  * @flush_io_count: I/O count to flush after reset
-@@ -825,6 +828,9 @@ struct mpi3mr_ioc {
- 	struct mutex reset_mutex;
- 	wait_queue_head_t reset_waitq;
- 
-+	u8 prepare_for_reset;
-+	u16 prepare_for_reset_timeout_counter;
-+
- 	u16 diagsave_timeout;
- 	int logging_level;
- 	u16 flush_io_count;
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index b513dca..d5f7f58 100644
+index d5f7f58..1cbc732 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2262,7 +2262,8 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 	    container_of(work, struct mpi3mr_ioc, watchdog_work.work);
- 	unsigned long flags;
- 	enum mpi3mr_iocstate ioc_state;
--	u32 fault, host_diagnostic;
-+	u32 fault, host_diagnostic, ioc_status;
-+	u32 reset_reason = MPI3MR_RESET_FROM_FAULT_WATCH;
- 
- 	if (mrioc->reset_in_progress || mrioc->unrecoverable)
- 		return;
-@@ -2272,43 +2273,55 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 		mpi3mr_sync_timestamp(mrioc);
- 	}
- 
-+	if ((mrioc->prepare_for_reset) &&
-+	    ((mrioc->prepare_for_reset_timeout_counter++) >=
-+	     MPI3MR_PREPARE_FOR_RESET_TIMEOUT)) {
-+		mpi3mr_soft_reset_handler(mrioc,
-+		    MPI3MR_RESET_FROM_CIACTVRST_TIMER, 1);
-+		return;
-+	}
-+
-+	ioc_status = readl(&mrioc->sysif_regs->ioc_status);
-+	if (ioc_status & MPI3_SYSIF_IOC_STATUS_RESET_HISTORY) {
-+		mpi3mr_soft_reset_handler(mrioc, MPI3MR_RESET_FROM_FIRMWARE, 0);
-+		return;
-+	}
-+
- 	/*Check for fault state every one second and issue Soft reset*/
- 	ioc_state = mpi3mr_get_iocstate(mrioc);
--	if (ioc_state == MRIOC_STATE_FAULT) {
--		fault = readl(&mrioc->sysif_regs->fault) &
--		    MPI3_SYSIF_FAULT_CODE_MASK;
--		host_diagnostic = readl(&mrioc->sysif_regs->host_diagnostic);
--		if (host_diagnostic & MPI3_SYSIF_HOST_DIAG_SAVE_IN_PROGRESS) {
--			if (!mrioc->diagsave_timeout) {
--				mpi3mr_print_fault_info(mrioc);
--				ioc_warn(mrioc, "Diag save in progress\n");
--			}
--			if ((mrioc->diagsave_timeout++) <=
--			    MPI3_SYSIF_DIAG_SAVE_TIMEOUT)
--				goto schedule_work;
--		} else
--			mpi3mr_print_fault_info(mrioc);
--		mrioc->diagsave_timeout = 0;
-+	if (ioc_state != MRIOC_STATE_FAULT)
-+		goto schedule_work;
- 
--		if (fault == MPI3_SYSIF_FAULT_CODE_POWER_CYCLE_REQUIRED) {
--			ioc_info(mrioc,
--			    "Factory Reset fault occurred marking controller as unrecoverable"
--			    );
--			mrioc->unrecoverable = 1;
--			goto out;
-+	fault = readl(&mrioc->sysif_regs->fault) & MPI3_SYSIF_FAULT_CODE_MASK;
-+	host_diagnostic = readl(&mrioc->sysif_regs->host_diagnostic);
-+	if (host_diagnostic & MPI3_SYSIF_HOST_DIAG_SAVE_IN_PROGRESS) {
-+		if (!mrioc->diagsave_timeout) {
-+			mpi3mr_print_fault_info(mrioc);
-+			ioc_warn(mrioc, "diag save in progress\n");
- 		}
-+		if ((mrioc->diagsave_timeout++) <= MPI3_SYSIF_DIAG_SAVE_TIMEOUT)
-+			goto schedule_work;
-+	}
- 
--		if ((fault == MPI3_SYSIF_FAULT_CODE_DIAG_FAULT_RESET) ||
--		    (fault == MPI3_SYSIF_FAULT_CODE_SOFT_RESET_IN_PROGRESS) ||
--		    (mrioc->reset_in_progress))
--			goto out;
--		if (fault == MPI3_SYSIF_FAULT_CODE_CI_ACTIVATION_RESET)
--			mpi3mr_soft_reset_handler(mrioc,
--			    MPI3MR_RESET_FROM_CIACTIV_FAULT, 0);
--		else
--			mpi3mr_soft_reset_handler(mrioc,
--			    MPI3MR_RESET_FROM_FAULT_WATCH, 0);
-+	mpi3mr_print_fault_info(mrioc);
-+	mrioc->diagsave_timeout = 0;
-+
-+	switch (fault) {
-+	case MPI3_SYSIF_FAULT_CODE_POWER_CYCLE_REQUIRED:
-+		ioc_info(mrioc,
-+		    "controller requires system power cycle, marking controller as unrecoverable\n");
-+		mrioc->unrecoverable = 1;
-+		return;
-+	case MPI3_SYSIF_FAULT_CODE_SOFT_RESET_IN_PROGRESS:
-+		return;
-+	case MPI3_SYSIF_FAULT_CODE_CI_ACTIVATION_RESET:
-+		reset_reason = MPI3MR_RESET_FROM_CIACTIV_FAULT;
-+		break;
-+	default:
-+		break;
- 	}
-+	mpi3mr_soft_reset_handler(mrioc, reset_reason, 0);
-+	return;
- 
- schedule_work:
- 	spin_lock_irqsave(&mrioc->watchdog_lock, flags);
-@@ -2317,7 +2330,6 @@ schedule_work:
- 		    &mrioc->watchdog_work,
- 		    msecs_to_jiffies(MPI3MR_WATCHDOG_INTERVAL));
- 	spin_unlock_irqrestore(&mrioc->watchdog_lock, flags);
--out:
- 	return;
- }
- 
-@@ -3488,6 +3500,7 @@ static int mpi3mr_enable_events(struct mpi3mr_ioc *mrioc)
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_SAS_BROADCAST_PRIMITIVE);
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST);
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PCIE_ENUMERATION);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PREPARE_FOR_RESET);
+@@ -3503,6 +3503,7 @@ static int mpi3mr_enable_events(struct mpi3mr_ioc *mrioc)
+ 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PREPARE_FOR_RESET);
  	mpi3mr_unmask_events(mrioc, MPI3_EVENT_CABLE_MGMT);
  	mpi3mr_unmask_events(mrioc, MPI3_EVENT_ENERGY_PACK_CHANGE);
++	mpi3mr_unmask_events(mrioc, MPI3_EVENT_TEMP_THRESHOLD);
  
-@@ -4223,6 +4236,10 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	mpi3mr_cleanup_fwevt_list(mrioc);
- 	mpi3mr_flush_host_io(mrioc);
- 	mpi3mr_invalidate_devhandles(mrioc);
-+	if (mrioc->prepare_for_reset) {
-+		mrioc->prepare_for_reset = 0;
-+		mrioc->prepare_for_reset_timeout_counter = 0;
-+	}
- 	mpi3mr_memset_buffers(mrioc);
- 	retval = mpi3mr_reinit_ioc(mrioc, 0);
- 	if (retval) {
+ 	retval = mpi3mr_issue_event_notification(mrioc);
+ 	if (retval)
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 728d6ce..192986f 100644
+index 192986f..d893c6d 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -1988,6 +1988,40 @@ out:
- 		mpi3mr_tgtdev_put(tgtdev);
+@@ -2051,6 +2051,66 @@ static void mpi3mr_energypackchg_evt_th(struct mpi3mr_ioc *mrioc,
+ 	mrioc->facts.shutdown_timeout = shutdown_timeout;
  }
  
 +/**
-+ * mpi3mr_preparereset_evt_th - Prepare for reset event tophalf
++ * mpi3mr_tempthreshold_evt_th - Temp threshold event tophalf
 + * @mrioc: Adapter instance reference
 + * @event_reply: event data
 + *
-+ * Blocks and unblocks host level I/O based on the reason code
++ * Displays temperature threshold event details and fault code
++ * if any is hit due to temperature exceeding threshold.
 + *
 + * Return: Nothing
 + */
-+static void mpi3mr_preparereset_evt_th(struct mpi3mr_ioc *mrioc,
++static void mpi3mr_tempthreshold_evt_th(struct mpi3mr_ioc *mrioc,
 +	struct mpi3_event_notification_reply *event_reply)
 +{
-+	struct mpi3_event_data_prepare_for_reset *evtdata =
-+	    (struct mpi3_event_data_prepare_for_reset *)event_reply->event_data;
++	struct mpi3_event_data_temp_threshold *evtdata =
++	    (struct mpi3_event_data_temp_threshold *)event_reply->event_data;
 +
-+	if (evtdata->reason_code == MPI3_EVENT_PREPARE_RESET_RC_START) {
-+		dprint_event_th(mrioc,
-+		    "prepare for reset event top half with rc=start\n");
-+		if (mrioc->prepare_for_reset)
-+			return;
-+		mrioc->prepare_for_reset = 1;
-+		mrioc->prepare_for_reset_timeout_counter = 0;
-+	} else if (evtdata->reason_code == MPI3_EVENT_PREPARE_RESET_RC_ABORT) {
-+		dprint_event_th(mrioc,
-+		    "prepare for reset top half with rc=abort\n");
-+		mrioc->prepare_for_reset = 0;
-+		mrioc->prepare_for_reset_timeout_counter = 0;
++	ioc_err(mrioc, "Temperature threshold levels %s%s%s exceeded for sensor: %d !!! Current temperature in Celsius: %d\n",
++	    (le16_to_cpu(evtdata->status) & 0x1) ? "Warning " : " ",
++	    (le16_to_cpu(evtdata->status) & 0x2) ? "Critical " : " ",
++	    (le16_to_cpu(evtdata->status) & 0x4) ? "Fatal " : " ", evtdata->sensor_num,
++	    le16_to_cpu(evtdata->current_temperature));
++	mpi3mr_print_fault_info(mrioc);
++}
++
++/**
++ * mpi3mr_cablemgmt_evt_th - Cable management event tophalf
++ * @mrioc: Adapter instance reference
++ * @event_reply: event data
++ *
++ * Displays Cable manegemt event details.
++ *
++ * Return: Nothing
++ */
++static void mpi3mr_cablemgmt_evt_th(struct mpi3mr_ioc *mrioc,
++	struct mpi3_event_notification_reply *event_reply)
++{
++	struct mpi3_event_data_cable_management *evtdata =
++	    (struct mpi3_event_data_cable_management *)event_reply->event_data;
++
++	switch (evtdata->status) {
++	case MPI3_EVENT_CABLE_MGMT_STATUS_INSUFFICIENT_POWER:
++	{
++		ioc_info(mrioc, "An active cable with receptacle_id %d cannot be powered.\n"
++		    "Devices connected to this cable are not detected.\n"
++		    "This cable requires %d mW of power.\n",
++		    evtdata->receptacle_id,
++		    le32_to_cpu(evtdata->active_cable_power_requirement));
++		break;
 +	}
-+	if ((event_reply->msg_flags & MPI3_EVENT_NOTIFY_MSGFLAGS_ACK_MASK)
-+	    == MPI3_EVENT_NOTIFY_MSGFLAGS_ACK_REQUIRED)
-+		mpi3mr_send_event_ack(mrioc, event_reply->event, NULL,
-+		    le32_to_cpu(event_reply->event_context));
++	case MPI3_EVENT_CABLE_MGMT_STATUS_DEGRADED:
++	{
++		ioc_info(mrioc, "A cable with receptacle_id %d is not running at optimal speed\n",
++		    evtdata->receptacle_id);
++		break;
++	}
++	default:
++		break;
++	}
 +}
 +
  /**
-  * mpi3mr_energypackchg_evt_th - Energy pack change evt tophalf
+  * mpi3mr_os_handle_events - Firmware event handler
   * @mrioc: Adapter instance reference
-@@ -2075,6 +2109,12 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
- 		mpi3mr_pcietopochg_evt_th(mrioc, event_reply);
+@@ -2125,9 +2185,18 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 		mpi3mr_energypackchg_evt_th(mrioc, event_reply);
  		break;
  	}
-+	case MPI3_EVENT_PREPARE_FOR_RESET:
++	case MPI3_EVENT_TEMP_THRESHOLD:
 +	{
-+		mpi3mr_preparereset_evt_th(mrioc, event_reply);
-+		ack_req = 0;
++		mpi3mr_tempthreshold_evt_th(mrioc, event_reply);
 +		break;
 +	}
- 	case MPI3_EVENT_DEVICE_INFO_CHANGED:
++	case MPI3_EVENT_CABLE_MGMT:
++	{
++		mpi3mr_cablemgmt_evt_th(mrioc, event_reply);
++		break;
++	}
+ 	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
+ 	case MPI3_EVENT_SAS_DISCOVERY:
+-	case MPI3_EVENT_CABLE_MGMT:
+ 	case MPI3_EVENT_SAS_DEVICE_DISCOVERY_ERROR:
+ 	case MPI3_EVENT_SAS_BROADCAST_PRIMITIVE:
+ 	case MPI3_EVENT_PCIE_ENUMERATION:
+@@ -4247,8 +4316,8 @@ static int mpi3mr_resume(struct pci_dev *pdev)
+ 
+ static const struct pci_device_id mpi3mr_pci_id_table[] = {
  	{
- 		process_evt_bh = 1;
+-		PCI_DEVICE_SUB(PCI_VENDOR_ID_LSI_LOGIC, 0x00A5,
+-		    PCI_ANY_ID, PCI_ANY_ID)
++		PCI_DEVICE_SUB(MPI3_MFGPAGE_VENDORID_BROADCOM,
++		    MPI3_MFGPAGE_DEVID_SAS4116, PCI_ANY_ID, PCI_ANY_ID)
+ 	},
+ 	{ 0 }
+ };
 -- 
 2.27.0
 
 
---000000000000f4509505d3945e21
+--00000000000012f93505d3945f77
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -372,13 +266,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHmXEApN2ImxMN2BD25c
-O9m/YvJmBL2/eaHhj3wHTRItMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMTIyMDE0MDQ0NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPLbvkh5Sh6uqCa1RCLs
+iGt4wQDy6qOUPBlTWbrg2H8oMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMTIyMDE0MDQ0N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDEzUBxVopmSn7spQ8N9r0Oa8g0OYBG0Cj8K0cy
-63Jd4By5s9NQBgKf0kDIvjcckJo8hxZhfS/8hOMD+SkuS03EqH+SVwAYOJleWydGWIK1k41oHzPb
-zSjgoDlFZS1lcroxTGgvrodVWB3OLBSrNX06T9TxPEv3FgMMBRRhagdSB+2usTr5K11N8T34jB/1
-upHaxw1uOokoQk3JQ88bx1aYV6VVX9fRAUuMPVCNK2RcJ9z9U9AGv1PUzHiKYKInW2Sv6ag0j+6o
-8QzkCFoY1lsaD0+KT7pzGmPv2Dk9EuFXCg+jyV6CT/vsBRMJEK+S25ZHGIyQk0DmGQtJSg1p2V0i
---000000000000f4509505d3945e21--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBaFAvHhrH5GoXeqiHcOGA0D4DPCifEUK8pUPjg
+xhsSEX2nv+kk4k786Nt9cQF8uBotzhnRI1KfSScmM8RmM+wSTu2+XmJO5+Ll18hVOwgPBqOejCnj
+P27mpixZ1w1ndY+kNF9inMYMXpj2b5USRnsETyPArWI7YYHnWpUVt4kYPOByOkqfPESyOC2UqWtI
+P7jWbnmVjk5nZq3KqoB9ihXW0KYF/uTm/xhHsu8iYNkZQ/oHhLfNeV6lXrA/SIqCLmfbWsqD4XeN
+JFnInx+It9L3A2IfQAXj8YWt4USf4sDy4AILZETn2hzDWDK8Gn0tdxLKUdZzHvgOgBo9gP/Fi+iP
+--00000000000012f93505d3945f77--
