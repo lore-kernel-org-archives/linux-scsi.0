@@ -2,113 +2,236 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87A62C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 025B7C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233373AbhLTOEC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Dec 2021 09:04:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51536 "EHLO
+        id S233408AbhLTOEE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Dec 2021 09:04:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233404AbhLTOEB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:01 -0500
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9528EC06173F
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:01 -0800 (PST)
-Received: by mail-pg1-x534.google.com with SMTP id a23so9489626pgm.4
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:01 -0800 (PST)
+        with ESMTP id S233404AbhLTOEE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:04 -0500
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6C3DC061574
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:03 -0800 (PST)
+Received: by mail-pf1-x42e.google.com with SMTP id v11so5638183pfu.2
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=hpBB3MWucIKAbtf+Ad2pJCvALeaNVHfWmXVpAkzgeZc=;
-        b=LjpBd3eKgYUyLkWksEcy0AFOZaruqnj2wLVM07y0gAt7CovOc9bMMlvYs9AgP/y1de
-         16tFpHrGal1p0hT/neiG1TSuBFXv/vQlruX3ixATAFRptmwOVPbeS9mGusqgTTsZ4iFh
-         EutnD2VhU+w6aIh4Vd5aH5BOhg6Ptev5YgJNg=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version;
+        bh=/SdJHiAbb7WIOgehbVUNue7aYUoDGxZ5gTvy9HY6RCM=;
+        b=DTn0Lb2/ru7dPta3eQ1htTgyl0fgHr+rZzyNGO7k3DoDUSvKRTglEuLnJ58GQnM2fn
+         Zvtq/E5grWwPBAxz817uLySEdd7yXqSNYNZVnQoVaVc3liZz8WRM4dTXFrZUP/sT63sD
+         5+OW0qrwpEndTZGdwaRHDqIpH4qxj7hikyMxc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=hpBB3MWucIKAbtf+Ad2pJCvALeaNVHfWmXVpAkzgeZc=;
-        b=XTDfTsGwZBWiqFV+Gx25B1aWd9WAr5STff6caL2RmdbEzBACwrGqYlyEwXKTUa2IgM
-         j55qoLevK2yltonEgpoZgjR+XOXoY+9JE1RkKsS3JTVfq+rlQ7HiN57o4X6e098w3/gV
-         YvRWsoXqFrhgJLyf9ZKMzfhFAaFg86roKKOtBjJkUEqYpmr8ehzMP3Q5aLC6tVC9+klX
-         Ed9m1l8sLdQnRcuLT2Pvzr8FeKzvahqpKhZnEthz8qVf952U3x9NpR0AsLkBM3uJ8aqy
-         jQUdU3vw31g2UyYnRqEQoT6KG5twpSa2+UV6qu/2ydHcCihJAO/PReiQEs584wJOwmMb
-         gWfQ==
-X-Gm-Message-State: AOAM530X08anNknyT0sLyNmWkKMGxC3ChOuUsxUgqpTJOE2qZCsuv/bl
-        rf5zhcYRHKLV+65PjhTvRPJmXzTNeLEzu85D2NOhRUjeZFnKkt4ZKkqkrF5xd87GY5KqXmF+hSd
-        01TWlKn9sTbkBr5KPa0TJgsKAzn3xJl41hSWSStcERCzsk9/HEP3/SwjTeGoc/fTj69SBdAMXaE
-        7uo1Kr1Uu9
-X-Google-Smtp-Source: ABdhPJyi3V5msyfFfQQokd3W0hJE6sRb/tOTnYneN3zKuuQtKc8UtxNh3YLuigjv1ljwvMjLfzKBLg==
-X-Received: by 2002:a05:6a00:c88:b0:4ba:96e9:ffdc with SMTP id a8-20020a056a000c8800b004ba96e9ffdcmr12089042pfv.33.1640009040536;
-        Mon, 20 Dec 2021 06:04:00 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version;
+        bh=/SdJHiAbb7WIOgehbVUNue7aYUoDGxZ5gTvy9HY6RCM=;
+        b=bN82dKwRSDe0MuEuwwRFkkvEDBHQIqBrS8q37XOqNOyEOrm7eCyiSZOJnbmmNbsc68
+         OJItD1QNlBjPxQ2xgsWgCvwPwwesV8v3qkuP2+PM2qTNWR0732sIcPmq4brvsEqyPWbL
+         rkwEHwarCsWAj6iZG1i7A7OE/RF/woMgD7YdOwT8JEeM9vYvarm7HAg01SW7uEqzoRXu
+         8osWk/1+hQ55e7KcljabyrM+Fol/NoMD2TtcIkub6sKptBxo8xEzn59c71Zdzcl8Lcf5
+         4SKybVxGI05/xTnIPw+bOB4enk5cUSG/Nmy3c9drdozAJl9I9bGaykq7cAJoAKo688jE
+         MwVQ==
+X-Gm-Message-State: AOAM531c4tmFx6nh0tjqMQNp8FgoqvcPb7EJROqtVMGmGUEcxnMZ75k6
+        XXaRrsUSP8jnjM0+uXPgpdXHsKFmvyyAQsjZw2Cbij3c9aDkUUjQOKxuBDgmd1eL9MBC5sI//kR
+        mr/+JGUnKcAxJVtgIDbRmWi+BHqhKldboyNPXcppDQRwXRu1ivCIyokFrsXuDAu8fb7tf0Xnj4p
+        2E4Srz6LXw
+X-Google-Smtp-Source: ABdhPJy8uisA1yOwhcPpCof9imU8LvxHcfbOGayLx44WHMlMgI/sRzEgAlZty+JUfjMkElSVC3Lq9g==
+X-Received: by 2002:a05:6a00:124d:b0:4ad:574d:4d2f with SMTP id u13-20020a056a00124d00b004ad574d4d2fmr164443pfi.24.1640009042897;
+        Mon, 20 Dec 2021 06:04:02 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.03.57
+        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Dec 2021 06:03:59 -0800 (PST)
+        Mon, 20 Dec 2021 06:04:02 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 00/25] mpi3mr: driver fixes and enhancements
-Date:   Mon, 20 Dec 2021 19:41:34 +0530
-Message-Id: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 01/25] mpi3mr: Add debug APIs based on logging_level bits
+Date:   Mon, 20 Dec 2021 19:41:35 +0530
+Message-Id: <20211220141159.16117-2-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
+References: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000052150905d3945c10"
+        boundary="000000000000761a3105d3945c16"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000052150905d3945c10
+--000000000000761a3105d3945c16
 Content-Transfer-Encoding: 8bit
 
-This patchset contains genenic driver bug fixes and few
-enhancements. 
+Add debug print functions which will print messages based
+on logging_level bits enabled.
 
-Sreekanth Reddy (25):
-  mpi3mr: Add debug APIs based on logging_level bits
-  mpi3mr: replace spin_lock with spin_lock_irqsave
-  mpi3mr: Don't reset IOC if cmnds flush with reset status
-  mpi3mr: Update MPI3 headers - part1
-  mpi3mr: Update MPI3 headers - part2
-  mpi3mr: Add support for PCIe Managed Switch SES device
-  mpi3mr: Do access status validation before adding devices
-  mpi3mr: Increase internal cmnds timeout to 60s
-  mpi3mr: Handling unaligned PLL in unmap cmnds
-  mpi3mr: Display IOC firmware package version
-  mpi3mr: Fault IOC when internal commands gets timeout
-  mpi3mr: code refactor of IOC init patch - part1
-  mpi3mr: code refactor of IOC init patch - part2
-  mpi3mr: Handle offline FW activation in graceful manner
-  mpi3mr: Add IOC reinit function
-  mpi3mr: Detect async reset occurred in firmware
-  mpi3mr: Gracefully handle online FW update operation
-  mpi3mr: Add Event acknowledgment logic
-  mpi3mr: Add support Prepare for Reset event
-  mpi3mr: Print cable mngnt and temp threshold events
-  mpi3mr: Add iouring interface support in io-polled mode
-  mpi3mr: use TM response codes from MPI3 headers
-  mpi3mr: Enhanced Task Management Support Reply handling
-  mpi3mr: Fixes around reply request queues
-  mpi3mr: Bump driver version to 8.0.0.61.0
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_debug.h | 133 +++++++++++++++++++++++------
+ 1 file changed, 109 insertions(+), 24 deletions(-)
 
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      |  603 +++++++--
- drivers/scsi/mpi3mr/mpi/mpi30_image.h     |   59 +-
- drivers/scsi/mpi3mr/mpi/mpi30_init.h      |   15 +-
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       |  128 +-
- drivers/scsi/mpi3mr/mpi/mpi30_sas.h       |   14 +
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h |   31 +-
- drivers/scsi/mpi3mr/mpi3mr.h              |  126 +-
- drivers/scsi/mpi3mr/mpi3mr_debug.h        |  133 +-
- drivers/scsi/mpi3mr/mpi3mr_fw.c           | 1451 ++++++++++++++-------
- drivers/scsi/mpi3mr/mpi3mr_os.c           |  771 +++++++++--
- 10 files changed, 2488 insertions(+), 843 deletions(-)
-
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_debug.h b/drivers/scsi/mpi3mr/mpi3mr_debug.h
+index c085bb0..cef61c5 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_debug.h
++++ b/drivers/scsi/mpi3mr/mpi3mr_debug.h
+@@ -14,27 +14,20 @@
+ /*
+  * debug levels
+  */
+-#define MPI3_DEBUG			0x00000001
+-#define MPI3_DEBUG_MSG_FRAME		0x00000002
+-#define MPI3_DEBUG_SG			0x00000004
+-#define MPI3_DEBUG_EVENTS		0x00000008
+-#define MPI3_DEBUG_EVENT_WORK_TASK	0x00000010
+-#define MPI3_DEBUG_INIT			0x00000020
+-#define MPI3_DEBUG_EXIT			0x00000040
+-#define MPI3_DEBUG_FAIL			0x00000080
+-#define MPI3_DEBUG_TM			0x00000100
+-#define MPI3_DEBUG_REPLY		0x00000200
+-#define MPI3_DEBUG_HANDSHAKE		0x00000400
+-#define MPI3_DEBUG_CONFIG		0x00000800
+-#define MPI3_DEBUG_DL			0x00001000
+-#define MPI3_DEBUG_RESET		0x00002000
+-#define MPI3_DEBUG_SCSI			0x00004000
+-#define MPI3_DEBUG_IOCTL		0x00008000
+-#define MPI3_DEBUG_CSMISAS		0x00010000
+-#define MPI3_DEBUG_SAS			0x00020000
+-#define MPI3_DEBUG_TRANSPORT		0x00040000
+-#define MPI3_DEBUG_TASK_SET_FULL	0x00080000
+-#define MPI3_DEBUG_TRIGGER_DIAG		0x00200000
++
++#define MPI3_DEBUG_EVENT		0x00000001
++#define MPI3_DEBUG_EVENT_WORK_TASK	0x00000002
++#define MPI3_DEBUG_INIT		0x00000004
++#define MPI3_DEBUG_EXIT		0x00000008
++#define MPI3_DEBUG_TM			0x00000010
++#define MPI3_DEBUG_RESET		0x00000020
++#define MPI3_DEBUG_SCSI_ERROR		0x00000040
++#define MPI3_DEBUG_REPLY		0x00000080
++#define MPI3_DEBUG_IOCTL_ERROR		0x00008000
++#define MPI3_DEBUG_IOCTL_INFO		0x00010000
++#define MPI3_DEBUG_SCSI_INFO		0x00020000
++#define MPI3_DEBUG			0x01000000
++#define MPI3_DEBUG_SG			0x02000000
+ 
+ 
+ /*
+@@ -50,11 +43,103 @@
+ #define ioc_info(ioc, fmt, ...) \
+ 	pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__)
+ 
++#define dprint(ioc, fmt, ...) \
++	do { \
++		if (ioc->logging_level & MPI3_DEBUG) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
++	} while (0)
++
++#define dprint_event_th(ioc, fmt, ...) \
++	do { \
++		if (ioc->logging_level & MPI3_DEBUG_EVENT) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
++	} while (0)
++
++#define dprint_event_bh(ioc, fmt, ...) \
++	do { \
++		if (ioc->logging_level & MPI3_DEBUG_EVENT_WORK_TASK) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
++	} while (0)
++
++#define dprint_init(ioc, fmt, ...) \
++	do { \
++		if (ioc->logging_level & MPI3_DEBUG_INIT) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
++	} while (0)
++
++#define dprint_exit(ioc, fmt, ...) \
++	do { \
++		if (ioc->logging_level & MPI3_DEBUG_EXIT) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
++	} while (0)
++
++#define dprint_tm(ioc, fmt, ...) \
++	do { \
++		if (ioc->logging_level & MPI3_DEBUG_TM) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
++	} while (0)
++
++#define dprint_reply(ioc, fmt, ...) \
++	do { \
++		if (ioc->logging_level & MPI3_DEBUG_REPLY) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
++	} while (0)
++
++#define dprint_reset(ioc, fmt, ...) \
++	do { \
++		if (ioc->logging_level & MPI3_DEBUG_RESET) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
++	} while (0)
++
++#define dprint_scsi_info(ioc, fmt, ...) \
++	do { \
++		if (ioc->logging_level & MPI3_DEBUG_SCSI_INFO) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
++	} while (0)
++
++#define dprint_scsi_err(ioc, fmt, ...) \
++	do { \
++		if (ioc->logging_level & MPI3_DEBUG_SCSI_ERROR) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
++	} while (0)
++
++#define dprint_scsi_command(ioc, SCMD, LOG_LEVEL) \
++	do { \
++		if (ioc->logging_level & LOG_LEVEL) \
++			scsi_print_command(SCMD); \
++	} while (0)
++
++
++#define dprint_ioctl_info(ioc, fmt, ...) \
++	do { \
++		if (ioc->logging_level & MPI3_DEBUG_IOCTL_INFO) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
++	} while (0)
+ 
+-#define dbgprint(IOC, FMT, ...) \
++#define dprint_ioctl_err(ioc, fmt, ...) \
+ 	do { \
+-		if (IOC->logging_level & MPI3_DEBUG) \
+-			pr_info("%s: " FMT, (IOC)->name, ##__VA_ARGS__); \
++		if (ioc->logging_level & MPI3_DEBUG_IOCTL_ERROR) \
++			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
+ 	} while (0)
+ 
+ #endif /* MPT3SAS_DEBUG_H_INCLUDED */
++
++/**
++ * dprint_dump_req - print message frame contents
++ * @req: pointer to message frame
++ * @sz: number of dwords
++ */
++static inline void
++dprint_dump_req(void *req, int sz)
++{
++	int i;
++	__le32 *mfp = (__le32 *)req;
++
++	pr_info("request:\n\t");
++	for (i = 0; i < sz; i++) {
++		if (i && ((i % 8) == 0))
++			pr_info("\n\t");
++		pr_info("%08x ", le32_to_cpu(mfp[i]));
++	}
++	pr_info("\n");
++}
 -- 
 2.27.0
 
 
---00000000000052150905d3945c10
+--000000000000761a3105d3945c16
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -179,13 +302,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIM6s363Y8jvo7nalv4sv
-r9n+y+PeIcM1M0/kXUOEy7WzMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMTIyMDE0MDQwMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFXNoi6MSSLpUdqHD1Ld
+vEQUEzI6BKqQ+IEw/JfwBLb5MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMTIyMDE0MDQwM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDHYG+jT7vgbh+6fhOwNwognrDT5kJBg70PR39j
-0eg614jEOHUnYKry0E317GetweVGJmmubSZJQEzpDHZOA+Uz32BNamRhQ14ogUs5ciaLwBvEReZ1
-3ee92OOZw7CTNVWqaz+gafOcbGRERaBQNrUhrHBNLPmQ0N31NL7JPdMRQGyxNNKpAA9FwnQRpWKN
-vMZu7H0hkOO67vS/cf/ncAEefY/kU56YO5NU85fSnAVGAL0tSR7TLsM2S60niLLi4WNteJMbUmdQ
-/M4/TXG04MdzqEHx77PJlgPYBnIarfJckvRynJtzJeQmj5zzrzVdtub132/CNHjrs4cK2BN3mFUO
---00000000000052150905d3945c10--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCCQ+5p4fgvcds26Vez4uKIPiD+uORhea3C8AeM
+NjcRt71p/oscXRw9GhZekZssBMmEs/GxxdKRvW6yx2FejdnUsRt08s4MrfUVPfn6q447CeHK21bo
+DGyfp1kJ30wTK2Q23Bvcr1DocfyzWp7ZWTCIDFaYSfjwFsOn5YiKvCM6XkZUVmWPBkXCFFX3K+LV
+TJfPEDJCA2iy78qG9PNGkhTh8hhw3jW/xU4SZpjquye+xrzHmZ/LkJPRzSj5kwbqyuPLXsABCAiP
+eDVaPVW3jzBy25xZV5e0hFjPe4ddygX2CAJsHc3kTjT0TuS0ZRTwgUmPBnX0iUPLoeUaxY8i/Cng
+--000000000000761a3105d3945c16--
