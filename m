@@ -2,138 +2,161 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7186DC433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1659C433EF
 	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233448AbhLTOEY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Dec 2021 09:04:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51630 "EHLO
+        id S232683AbhLTOEZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Dec 2021 09:04:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233445AbhLTOEV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:21 -0500
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9BCEC061574
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:20 -0800 (PST)
-Received: by mail-pl1-x62c.google.com with SMTP id x15so7806719plg.1
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:20 -0800 (PST)
+        with ESMTP id S233452AbhLTOEX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:23 -0500
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9D37C06173F
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:22 -0800 (PST)
+Received: by mail-pg1-x535.google.com with SMTP id k4so9489201pgb.8
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=E8SKM0GuzfjjpX7cd+/mVCJWJgjh00csaRPJLamdcVQ=;
-        b=TKf6nCrXR8a1p33Do78o8Rhgmm63Gg1vm3JzPZFAm1H184/GKiPacLyoubowI2Lw5P
-         a+IEHdSwsxnpMqKpG9CUEV2UehiX1VD/o1ayBkh4uiWKxxiREps5dyzfa1lCLESaPyrn
-         uRwttyZ7Gqig1EBnyFxDSVv5izBDbFXO5zuyM=
+        bh=54nQQal7gZO2EC6fSgoUKGMRJXZNVg+VcDigyuC9B0s=;
+        b=LX8GdRmXtwOaneEFf2aDNRKh2opwGaH6BRD977inDS9A1MsQEkOkUOCWZGwWeYaZSk
+         XWp54LM8xCP0yYbeYlEMoQ5GsAhXwCycyoXCbEf4QKTvyPbcKFjCo+hOisae591rzecX
+         vm1pDTvnUCeuf70LiEHFz6DCYhUBmHh35/2Gc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=E8SKM0GuzfjjpX7cd+/mVCJWJgjh00csaRPJLamdcVQ=;
-        b=SilycsU4pnN5i9Ugha/ygfIPONVd9FC05OgDs4ATu8OrhY/Dfw0i9wdhuANUbArqzY
-         kz306S84p8KnR733Y8ix5o36AX0iyaAbiKlu17h0tSaYjtVCf96ZaKekFIpOMYehjaCV
-         2/UnDa74TJ1dSA49w6kcsSbGQav6/09Q0t8Dcc5jisP5JLWvC9JRf4vJ2ZQqNLRoAg82
-         g4/h/SkqYhgquKmU7sdOcGRqor7IZveNuncGTlN7Y+M5bzHBZmBEV8Fcb/fStG0YvWaZ
-         naVTF7ToKyX4VvemBBprf5/jwEBRbFFHKZMXt7UKkM0rDPXbkR7QgqRD91q5xPbXilO5
-         upGA==
-X-Gm-Message-State: AOAM530GkWD/LNYkbH5mHjy6HyzUWRedTN230RevBbzKkASl/WF4HPch
-        cvKocOURjOgN5iKvSgdvYgsNhqQLagIAr718PgyghkC9FOkDIStSkurZXzoJDKkgI7F1XyzP2QM
-        Fqw9b+tA35WGDEcOjvS/b1oTv1xw7giqEO52Mn2HTAVdVBE6E9JdobXgKL3io04HfaAQ5wLOJVc
-        s12tqwRhqr
-X-Google-Smtp-Source: ABdhPJzmdRhIJp/8hqgvlaFgb4kXHeTINQPnWzWyIa219zgumLd+56fmqlq/VL5HdLki1RBmZAcymQ==
-X-Received: by 2002:a17:902:b197:b0:148:a2e8:2c59 with SMTP id s23-20020a170902b19700b00148a2e82c59mr16848482plr.168.1640009059852;
-        Mon, 20 Dec 2021 06:04:19 -0800 (PST)
+        bh=54nQQal7gZO2EC6fSgoUKGMRJXZNVg+VcDigyuC9B0s=;
+        b=FgQCYYEMTiWwlN5AJzoAhorsXrCEXnYPw4dK97e2Aj4R6QzurEvmqq2/9jRa9rxBxC
+         bdy9J511dDR1mqwA7hlK+pxIt3zKvNC6gw+nYUFPCv2NUv7iqDG/r4S4ceOBHRAby05K
+         6oXJDP1+XCYX1aF06krUYczSQrvoIVlsEZJTMtc/o26DqpiEuoo3+koZzRABx+SLqJ/Y
+         xZKOA2a14JJmB69K1nIy82LjwHkVRRc4SaZ1jKpXKjXr2X1gzWngz6Uzbc5emrA72PDT
+         nOCEedjQYdzk4m0G7rx0kAkQhuVR6IB5wrWbqHLmaYDK7XSSoS/Bqm2YqZ68jzvREyJj
+         astw==
+X-Gm-Message-State: AOAM533Ux99LgpJ6eJ0CoV4hW+2Ickqx1R3yOlveDtvdn58M9JomKf9O
+        M1+DkpgACe/dzuonN/8nJgS1QgI0zoGCUOBYMylKeULpiviHAaJ2mfjWA8Gi52t9LuPe6HOB+aK
+        AlLNrM8mfVUtG7bFjclQN6Glkav1NrFjZsTnpCOTumrfvirrRAa9uKtbvt57mHQPEPa9bVZ2Bjd
+        MbynoRszqO
+X-Google-Smtp-Source: ABdhPJyq4Ci+cXOZijpmk66ihpOALfrZajIgaSoJhMplfSUMwMb23j/y/hAgHuKkZkAaZRGusEHU/A==
+X-Received: by 2002:a63:7981:: with SMTP id u123mr15089516pgc.360.1640009061869;
+        Mon, 20 Dec 2021 06:04:21 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.17
+        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Dec 2021 06:04:18 -0800 (PST)
+        Mon, 20 Dec 2021 06:04:21 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 08/25] mpi3mr: Increase internal cmnds timeout to 60s
-Date:   Mon, 20 Dec 2021 19:41:42 +0530
-Message-Id: <20211220141159.16117-9-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 09/25] mpi3mr: Handling unaligned PLL in unmap cmnds
+Date:   Mon, 20 Dec 2021 19:41:43 +0530
+Message-Id: <20211220141159.16117-10-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 References: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000785ed205d3945db3"
+        boundary="00000000000097f03605d3945d2d"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000785ed205d3945db3
+--00000000000097f03605d3945d2d
 Content-Transfer-Encoding: 8bit
 
-- Increase internal command timeouts to 60 seconds,
-- Enabled 16 device removal handshake processing
-  in parallel in the device removal handshake infrastructure.
+Below special handling is needed for UNMAP commands issued to
+NVMe drives,
+
+- On B0 boards, if the parameter list length is greater
+than 24 and not 16byte multiple then truncate the
+parameter list length to 16byte multiple.
+
+- on A0 boards, if the parameter list length is greater
+than block descriptor data length + 8 then truncate the
+parameter list length to block descriptor data length + 8
+value.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    | 8 ++++----
- drivers/scsi/mpi3mr/mpi3mr_os.c | 7 +++++--
- 2 files changed, 9 insertions(+), 6 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 36 ++++++++++++++++++++++++---------
+ 1 file changed, 26 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index fe3cfd5..fdbedf2 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -91,7 +91,7 @@ extern int prot_mask;
- #define MPI3MR_HOSTTAG_IOCTLCMDS	2
- #define MPI3MR_HOSTTAG_BLK_TMS		5
- 
--#define MPI3MR_NUM_DEVRMCMD		1
-+#define MPI3MR_NUM_DEVRMCMD		16
- #define MPI3MR_HOSTTAG_DEVRMCMD_MIN	(MPI3MR_HOSTTAG_BLK_TMS + 1)
- #define MPI3MR_HOSTTAG_DEVRMCMD_MAX	(MPI3MR_HOSTTAG_DEVRMCMD_MIN + \
- 						MPI3MR_NUM_DEVRMCMD - 1)
-@@ -102,10 +102,10 @@ extern int prot_mask;
- #define MPI3MR_HOST_IOS_KDUMP		128
- 
- /* command/controller interaction timeout definitions in seconds */
--#define MPI3MR_INTADMCMD_TIMEOUT		10
-+#define MPI3MR_INTADMCMD_TIMEOUT		60
- #define MPI3MR_PORTENABLE_TIMEOUT		300
--#define MPI3MR_ABORTTM_TIMEOUT			30
--#define MPI3MR_RESETTM_TIMEOUT			30
-+#define MPI3MR_ABORTTM_TIMEOUT			60
-+#define MPI3MR_RESETTM_TIMEOUT			60
- #define MPI3MR_RESET_HOST_IOWAIT_TIMEOUT	5
- #define MPI3MR_TSUPDATE_INTERVAL		900
- #define MPI3MR_DEFAULT_SHUTDOWN_TIME		120
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 2fe7fcb..e961bb2 100644
+index e961bb2..2a153df 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -877,9 +877,11 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
- 			    le32_to_cpu(pcieinf->maximum_data_transfer_size);
- 			tgtdev->dev_spec.pcie_inf.pgsz = pcieinf->page_size;
- 			tgtdev->dev_spec.pcie_inf.reset_to =
--			    pcieinf->controller_reset_to;
-+			    max_t(u8, pcieinf->controller_reset_to,
-+			     MPI3MR_INTADMCMD_TIMEOUT);
- 			tgtdev->dev_spec.pcie_inf.abort_to =
--			    pcieinf->nvme_abort_to;
-+			    max_t(u8, pcieinf->nvme_abort_to,
-+			    MPI3MR_INTADMCMD_TIMEOUT);
- 		}
- 		if (tgtdev->dev_spec.pcie_inf.mdts > (1024 * 1024))
- 			tgtdev->dev_spec.pcie_inf.mdts = (1024 * 1024);
-@@ -3597,6 +3599,7 @@ static struct scsi_host_template mpi3mr_driver_template = {
- 	 */
- 	.max_sectors			= 2048,
- 	.cmd_per_lun			= MPI3MR_MAX_CMDS_LUN,
-+	.max_segment_size		= 0xffffffff,
- 	.track_queue_depth		= 1,
- 	.cmd_size			= sizeof(struct scmd_priv),
- };
+@@ -3344,9 +3344,22 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
+ 	struct scsi_cmnd *scmd)
+ {
+ 	unsigned char *buf;
+-	u16 param_len, desc_len;
+-
+-	param_len = get_unaligned_be16(scmd->cmnd + 7);
++	u16 param_len, desc_len, trunc_param_len;
++
++	trunc_param_len = param_len = get_unaligned_be16(scmd->cmnd + 7);
++
++	if (mrioc->pdev->revision) {
++		if ((param_len > 24) && ((param_len - 8) & 0xF)) {
++			trunc_param_len -= (param_len - 8) & 0xF;
++			dprint_scsi_command(mrioc, scmd, MPI3_DEBUG_SCSI_ERROR);
++			dprint_scsi_err(mrioc,
++			    "truncating param_len from (%d) to (%d)\n",
++			    param_len, trunc_param_len);
++			put_unaligned_be16(trunc_param_len, scmd->cmnd + 7);
++			dprint_scsi_command(mrioc, scmd, MPI3_DEBUG_SCSI_ERROR);
++		}
++		return false;
++	}
+ 
+ 	if (!param_len) {
+ 		ioc_warn(mrioc,
+@@ -3406,12 +3419,12 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
+ 	}
+ 
+ 	if (param_len > (desc_len + 8)) {
++		trunc_param_len = desc_len + 8;
+ 		scsi_print_command(scmd);
+-		ioc_warn(mrioc,
+-		    "%s: Truncating param_len(%d) to desc_len+8(%d)\n",
+-		    __func__, param_len, (desc_len + 8));
+-		param_len = desc_len + 8;
+-		put_unaligned_be16(param_len, scmd->cmnd + 7);
++		dprint_scsi_err(mrioc,
++		    "truncating param_len(%d) to desc_len+8(%d)\n",
++		    param_len, trunc_param_len);
++		put_unaligned_be16(trunc_param_len, scmd->cmnd + 7);
+ 		scsi_print_command(scmd);
+ 	}
+ 
+@@ -3466,6 +3479,7 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 	u32 scsiio_flags = 0;
+ 	struct request *rq = scsi_cmd_to_rq(scmd);
+ 	int iprio_class;
++	u8 is_pcie_dev = 0;
+ 
+ 	sdev_priv_data = scmd->device->hostdata;
+ 	if (!sdev_priv_data || !sdev_priv_data->tgt_priv_data) {
+@@ -3510,8 +3524,10 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 		goto out;
+ 	}
+ 
+-	if ((scmd->cmnd[0] == UNMAP) &&
+-	    (stgt_priv_data->dev_type == MPI3_DEVICE_DEVFORM_PCIE) &&
++	if (stgt_priv_data->dev_type == MPI3_DEVICE_DEVFORM_PCIE)
++		is_pcie_dev = 1;
++	if ((scmd->cmnd[0] == UNMAP) && is_pcie_dev &&
++	    (mrioc->pdev->device == MPI3_MFGPAGE_DEVID_SAS4116) &&
+ 	    mpi3mr_check_return_unmap(mrioc, scmd))
+ 		goto out;
+ 
 -- 
 2.27.0
 
 
---000000000000785ed205d3945db3
+--00000000000097f03605d3945d2d
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -204,13 +227,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICFMHQCQXc+z0VPDFj9i
-zEaK97zFhykw7B6N68jfhVScMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMTIyMDE0MDQyMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIC1NGefkjaMOmUnHpS+d
+tYztR8oxZq8dIS8UqHsOgXBxMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMTIyMDE0MDQyMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBqIzCnVyBuLn+MVJS8Ju096i0IqSABx+Whbdmm
-mIGhMuMCz5f7xAf5BQ+L3xs/euRW/QM/wHaVcZYOuOolrMafM4zIRI8f6V0gwf2ADSOzy8AGnwT2
-7oUvgJHDT09jjLSGX0O+B3ugS+9wQUQpzk05L9gxENm9M3w3gukbomd+SBuPMSby6zzNi70PvFDZ
-PRhcvFELsxu2hg/IoMjlSDoXLAXDuod/Id7Ne0Aaegk1B+fWVWAccQ5/Gp4jYOPbpn5b+mqffvGM
-UzTQc3ZFx7LBtk4ePMporQwzTh/SMDMjCVLhMfFfNZouzf/PvFaHmGSD9Yywv/XaChHLBuO7YH3l
---000000000000785ed205d3945db3--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCLcC8zhdPHhkx0KuoboikvbO6iQ2R3ad5xHPjk
+9QDIjC55cUJgHvEI6hdgkn/CR4Sw/5s8kONXu9phBdpWu8WE3rSbgBy4FcwqIRRbSoYYeZ3QuKW9
+f1MREAnsx3GeYLHF7iHZOLzG5scbBLkMZj/HxtQMX4C9gRHe71UFlvqWzuV5VGn6J4Os7q+ffsir
+ohTP1Cucc7UvQdYl0B+FByO14GhWHKokSKX+EK6dskIwBy8cVT72kQ+GWvjdQbe217/KUuvWLLP+
+bPSGaiJBlvD09JZGXwm2NcfwUQmwTdJeYD4m6YE1ZrsQ0pGzVfuFRc6ZAizVcp6tqkszln4+WPad
+--00000000000097f03605d3945d2d--
