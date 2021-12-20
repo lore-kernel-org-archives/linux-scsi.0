@@ -2,29 +2,30 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FE6DC4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF3BDC433FE
 	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 11:26:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231815AbhLTL0w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S231816AbhLTL0w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 20 Dec 2021 06:26:52 -0500
-Received: from szxga03-in.huawei.com ([45.249.212.189]:30142 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231789AbhLTL0u (ORCPT
+Received: from szxga02-in.huawei.com ([45.249.212.188]:28331 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231785AbhLTL0u (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 06:26:50 -0500
-Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4JHcgL6v6kz8vyT;
-        Mon, 20 Dec 2021 19:24:30 +0800 (CST)
+Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4JHcjb0GSGzbjZk;
+        Mon, 20 Dec 2021 19:26:27 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  dggeme756-chm.china.huawei.com (10.3.19.102) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.20; Mon, 20 Dec 2021 19:26:49 +0800
+ 15.1.2308.20; Mon, 20 Dec 2021 19:26:48 +0800
 From:   chenxiang <chenxiang66@hisilicon.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
-Subject: [PATCH v2 05/15] scsi: hisi_sas: Fix some issues related to asd_sas_port->phy_list
-Date:   Mon, 20 Dec 2021 19:21:28 +0800
-Message-ID: <1639999298-244569-6-git-send-email-chenxiang66@hisilicon.com>
+        <john.garry@huawei.com>, Alan Stern <stern@rowland.harvard.edu>,
+        Xiang Chen <chenxiang66@hisilicon.com>
+Subject: [PATCH v2 03/15] scsi/block PM: Always set request queue runtime active in blk_post_runtime_resume()
+Date:   Mon, 20 Dec 2021 19:21:26 +0800
+Message-ID: <1639999298-244569-4-git-send-email-chenxiang66@hisilicon.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1639999298-244569-1-git-send-email-chenxiang66@hisilicon.com>
 References: <1639999298-244569-1-git-send-email-chenxiang66@hisilicon.com>
@@ -38,69 +39,115 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 
-Most places that use asd_sas_port->phy_list are protected by spinlock
-asd_sas_port->phy_list_lock, but there are some places which lack of it
-in hisi_sas driver, so add it in function hisi_sas_refresh_port_id() when
-accessing asd_sas_port->phy_list. But it has a risk that list mutates while
-dropping the lock at the same time in function
-hisi_sas_send_ata_reset_each_phy(), so read asd_sas_port->phy_mask
-instead of accessing asd_sas_port->phy_list to avoid the risk.
+John Garry reported a deadlock that occurs when trying to access a
+runtime-suspended SATA device.  For obscure reasons, the rescan
+procedure causes the link to be hard-reset, which disconnects the
+device.
 
+The rescan tries to carry out a runtime resume when accessing the
+device.  scsi_rescan_device() holds the SCSI device lock and won't
+release it until it can put commands onto the device's block queue.
+This can't happen until the queue is successfully runtime-resumed or
+the device is unregistered.  But the runtime resume fails because the
+device is disconnected, and __scsi_remove_device() can't do the
+unregistration because it can't get the device lock.
+
+The best way to resolve this deadlock appears to be to allow the block
+queue to start running again even after an unsuccessful runtime
+resume.  The idea is that the driver or the SCSI error handler will
+need to be able to use the queue to resolve the runtime resume
+failure.
+
+This patch removes the err argument to blk_post_runtime_resume() and
+makes the routine act as though the resume was successful always.
+This fixes the deadlock.
+
+Reported-and-tested-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Acked-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Fixes: e27829dc92e5 ("scsi: serialize ->rescan against ->remove")
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ block/blk-pm.c         | 22 +++++++---------------
+ drivers/scsi/scsi_pm.c |  2 +-
+ include/linux/blk-pm.h |  2 +-
+ 3 files changed, 9 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index ad64ccd41420..051092e294f7 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1428,11 +1428,13 @@ static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba)
- 		sas_port = device->port;
- 		port = to_hisi_sas_port(sas_port);
+diff --git a/block/blk-pm.c b/block/blk-pm.c
+index 17bd020268d4..2dad62cc1572 100644
+--- a/block/blk-pm.c
++++ b/block/blk-pm.c
+@@ -163,27 +163,19 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
+ /**
+  * blk_post_runtime_resume - Post runtime resume processing
+  * @q: the queue of the device
+- * @err: return value of the device's runtime_resume function
+  *
+  * Description:
+- *    Update the queue's runtime status according to the return value of the
+- *    device's runtime_resume function. If the resume was successful, call
+- *    blk_set_runtime_active() to do the real work of restarting the queue.
++ *    For historical reasons, this routine merely calls blk_set_runtime_active()
++ *    to do the real work of restarting the queue.  It does this regardless of
++ *    whether the device's runtime-resume succeeded; even if it failed the
++ *    driver or error handler will need to communicate with the device.
+  *
+  *    This function should be called near the end of the device's
+  *    runtime_resume callback.
+  */
+-void blk_post_runtime_resume(struct request_queue *q, int err)
++void blk_post_runtime_resume(struct request_queue *q)
+ {
+-	if (!q->dev)
+-		return;
+-	if (!err) {
+-		blk_set_runtime_active(q);
+-	} else {
+-		spin_lock_irq(&q->queue_lock);
+-		q->rpm_status = RPM_SUSPENDED;
+-		spin_unlock_irq(&q->queue_lock);
+-	}
++	blk_set_runtime_active(q);
+ }
+ EXPORT_SYMBOL(blk_post_runtime_resume);
  
-+		spin_lock(&sas_port->phy_list_lock);
- 		list_for_each_entry(sas_phy, &sas_port->phy_list, port_phy_el)
- 			if (state & BIT(sas_phy->id)) {
- 				phy = sas_phy->lldd_phy;
- 				break;
- 			}
-+		spin_unlock(&sas_port->phy_list_lock);
+@@ -201,7 +193,7 @@ EXPORT_SYMBOL(blk_post_runtime_resume);
+  * runtime PM status and re-enable peeking requests from the queue. It
+  * should be called before first request is added to the queue.
+  *
+- * This function is also called by blk_post_runtime_resume() for successful
++ * This function is also called by blk_post_runtime_resume() for
+  * runtime resumes.  It does everything necessary to restart the queue.
+  */
+ void blk_set_runtime_active(struct request_queue *q)
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 0e841e8761c5..d581613d87c7 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -180,7 +180,7 @@ static int sdev_runtime_resume(struct device *dev)
+ 	blk_pre_runtime_resume(sdev->request_queue);
+ 	if (pm && pm->runtime_resume)
+ 		err = pm->runtime_resume(dev);
+-	blk_post_runtime_resume(sdev->request_queue, err);
++	blk_post_runtime_resume(sdev->request_queue);
  
- 		if (phy) {
- 			port->id = phy->port_id;
-@@ -1509,22 +1511,25 @@ static void hisi_sas_send_ata_reset_each_phy(struct hisi_hba *hisi_hba,
- 	struct ata_link *link;
- 	u8 fis[20] = {0};
- 	u32 state;
-+	int i;
- 
- 	state = hisi_hba->hw->get_phys_state(hisi_hba);
--	list_for_each_entry(sas_phy, &sas_port->phy_list, port_phy_el) {
-+	for (i = 0; i < hisi_hba->n_phy; i++) {
- 		if (!(state & BIT(sas_phy->id)))
- 			continue;
-+		if (!(sas_port->phy_mask & BIT(i)))
-+			continue;
- 
- 		ata_for_each_link(link, ap, EDGE) {
- 			int pmp = sata_srst_pmp(link);
- 
--			tmf_task.phy_id = sas_phy->id;
-+			tmf_task.phy_id = i;
- 			hisi_sas_fill_ata_reset_cmd(link->device, 1, pmp, fis);
- 			rc = hisi_sas_exec_internal_tmf_task(device, fis, s,
- 							     &tmf_task);
- 			if (rc != TMF_RESP_FUNC_COMPLETE) {
- 				dev_err(dev, "phy%d ata reset failed rc=%d\n",
--					sas_phy->id, rc);
-+					i, rc);
- 				break;
- 			}
- 		}
+ 	return err;
+ }
+diff --git a/include/linux/blk-pm.h b/include/linux/blk-pm.h
+index b80c65aba249..2580e05a8ab6 100644
+--- a/include/linux/blk-pm.h
++++ b/include/linux/blk-pm.h
+@@ -14,7 +14,7 @@ extern void blk_pm_runtime_init(struct request_queue *q, struct device *dev);
+ extern int blk_pre_runtime_suspend(struct request_queue *q);
+ extern void blk_post_runtime_suspend(struct request_queue *q, int err);
+ extern void blk_pre_runtime_resume(struct request_queue *q);
+-extern void blk_post_runtime_resume(struct request_queue *q, int err);
++extern void blk_post_runtime_resume(struct request_queue *q);
+ extern void blk_set_runtime_active(struct request_queue *q);
+ #else
+ static inline void blk_pm_runtime_init(struct request_queue *q,
 -- 
 2.33.0
 
