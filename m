@@ -2,161 +2,293 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1659C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F95EC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 14:04:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232683AbhLTOEZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Dec 2021 09:04:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51642 "EHLO
+        id S232785AbhLTOEa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Dec 2021 09:04:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233452AbhLTOEX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:23 -0500
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9D37C06173F
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:22 -0800 (PST)
-Received: by mail-pg1-x535.google.com with SMTP id k4so9489201pgb.8
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:22 -0800 (PST)
+        with ESMTP id S232762AbhLTOE1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 09:04:27 -0500
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49D33C06173E
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:27 -0800 (PST)
+Received: by mail-pg1-x530.google.com with SMTP id g2so6912239pgo.9
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2021 06:04:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=54nQQal7gZO2EC6fSgoUKGMRJXZNVg+VcDigyuC9B0s=;
-        b=LX8GdRmXtwOaneEFf2aDNRKh2opwGaH6BRD977inDS9A1MsQEkOkUOCWZGwWeYaZSk
-         XWp54LM8xCP0yYbeYlEMoQ5GsAhXwCycyoXCbEf4QKTvyPbcKFjCo+hOisae591rzecX
-         vm1pDTvnUCeuf70LiEHFz6DCYhUBmHh35/2Gc=
+        bh=cX7d0v6QwKQnbEZByyK3jRW5OekuhQCymDRiBXkfm1s=;
+        b=g1ZR1Wrw09vIhfIa77xxv5PWO1i5IJjeyEZh1fbZPIyQpLzlXzOD+lfSTZchYomcs8
+         ZVOcORCS3nzBjAyc+dr2WUNXWMFmIayOqhtt6lvv3eQJMmN4PJjyOPCjUn/I825bxfMe
+         ck0QTGWgdlyFzT3Ke5y0ZL1DTSHFP3vCe08Q4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=54nQQal7gZO2EC6fSgoUKGMRJXZNVg+VcDigyuC9B0s=;
-        b=FgQCYYEMTiWwlN5AJzoAhorsXrCEXnYPw4dK97e2Aj4R6QzurEvmqq2/9jRa9rxBxC
-         bdy9J511dDR1mqwA7hlK+pxIt3zKvNC6gw+nYUFPCv2NUv7iqDG/r4S4ceOBHRAby05K
-         6oXJDP1+XCYX1aF06krUYczSQrvoIVlsEZJTMtc/o26DqpiEuoo3+koZzRABx+SLqJ/Y
-         xZKOA2a14JJmB69K1nIy82LjwHkVRRc4SaZ1jKpXKjXr2X1gzWngz6Uzbc5emrA72PDT
-         nOCEedjQYdzk4m0G7rx0kAkQhuVR6IB5wrWbqHLmaYDK7XSSoS/Bqm2YqZ68jzvREyJj
-         astw==
-X-Gm-Message-State: AOAM533Ux99LgpJ6eJ0CoV4hW+2Ickqx1R3yOlveDtvdn58M9JomKf9O
-        M1+DkpgACe/dzuonN/8nJgS1QgI0zoGCUOBYMylKeULpiviHAaJ2mfjWA8Gi52t9LuPe6HOB+aK
-        AlLNrM8mfVUtG7bFjclQN6Glkav1NrFjZsTnpCOTumrfvirrRAa9uKtbvt57mHQPEPa9bVZ2Bjd
-        MbynoRszqO
-X-Google-Smtp-Source: ABdhPJyq4Ci+cXOZijpmk66ihpOALfrZajIgaSoJhMplfSUMwMb23j/y/hAgHuKkZkAaZRGusEHU/A==
-X-Received: by 2002:a63:7981:: with SMTP id u123mr15089516pgc.360.1640009061869;
-        Mon, 20 Dec 2021 06:04:21 -0800 (PST)
+        bh=cX7d0v6QwKQnbEZByyK3jRW5OekuhQCymDRiBXkfm1s=;
+        b=SL5t6Q8/iOCB4vWDZjxuTakuy06wxe4QI8RJj0suq+PNXWPJF3cORAeC+CxuyCifep
+         Czf8tpqRAH+5qBTamKH/12L+fmSbvMMpAemVyFH3ZQLEoEnIu9Gd7VWupp5pUptZ0whS
+         qI/x+rs7xkwepXuKT+wNGR95smVdjpjht5Wzk5TxCuPqIER5GwiAtiTHfwQCcqq9D4pV
+         0NO9d9L8MWS+kDuDGc35GdAoYR3dA8DVKYoDiiY0AzI66g2lob7M3z3CQ7SZlfMLVW8P
+         6QzkklRLzMCaD32NNCWe83p4OPCm4qepaVgTHe42LOvduzg5wLZDwSpjooWoG5Nzg60F
+         pOZA==
+X-Gm-Message-State: AOAM532jZ/WfivJpFubQjdMZZQQAEHvIUlEwQeymd+Lrqyk23ZaNNX8g
+        OoWT43DBjnM5X/DRsPp2fYc0y4dEDWsVM6DHNuzrlb2I8pT88eYmV5AeOGsNqAEOjrmnS7KZtAg
+        sBRnYa90CUM2LnHaUcDwFOqAlN2wSrG8aVn7zP0a/tIy+eIFUcXwYNQ/e42fhNqWlhV6PXv2yZM
+        2Zs6ztp4JQ
+X-Google-Smtp-Source: ABdhPJwU0vcUTy5BIolyD3zWjwkGy7skHiJy7if+Bjxl30Nap80tAf1AvNZz5jPscE4KKVDNazKJnQ==
+X-Received: by 2002:a63:180b:: with SMTP id y11mr15447600pgl.317.1640009066340;
+        Mon, 20 Dec 2021 06:04:26 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.20
+        by smtp.gmail.com with ESMTPSA id b4sm5434180pjm.17.2021.12.20.06.04.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Dec 2021 06:04:21 -0800 (PST)
+        Mon, 20 Dec 2021 06:04:25 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 09/25] mpi3mr: Handling unaligned PLL in unmap cmnds
-Date:   Mon, 20 Dec 2021 19:41:43 +0530
-Message-Id: <20211220141159.16117-10-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 11/25] mpi3mr: Fault IOC when internal commands gets timeout
+Date:   Mon, 20 Dec 2021 19:41:45 +0530
+Message-Id: <20211220141159.16117-12-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 References: <20211220141159.16117-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000097f03605d3945d2d"
+        boundary="000000000000db74dc05d3945d6b"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000097f03605d3945d2d
+--000000000000db74dc05d3945d6b
 Content-Transfer-Encoding: 8bit
 
-Below special handling is needed for UNMAP commands issued to
-NVMe drives,
-
-- On B0 boards, if the parameter list length is greater
-than 24 and not 16byte multiple then truncate the
-parameter list length to 16byte multiple.
-
-- on A0 boards, if the parameter list length is greater
-than block descriptor data length + 8 then truncate the
-parameter list length to block descriptor data length + 8
-value.
+Save snapdump and fault the controller with the given
+reason code if it is already not in the fault or not in
+asynchronous reset. So that soft reset is issued
+from the watchdog thread.  This will also be used
+to handle initialization time faults/resets/timeout
+as in those cases immediate soft reset invocation is
+not required.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 36 ++++++++++++++++++++++++---------
- 1 file changed, 26 insertions(+), 10 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    |   1 +
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 114 ++++++++++++++++++--------------
+ 2 files changed, 67 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index e961bb2..2a153df 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3344,9 +3344,22 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
- 	struct scsi_cmnd *scmd)
- {
- 	unsigned char *buf;
--	u16 param_len, desc_len;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index fdbedf2..55a07f9 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -916,5 +916,6 @@ void mpi3mr_flush_host_io(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_invalidate_devhandles(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_rfresh_tgtdevs(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_flush_delayed_rmhs_list(struct mpi3mr_ioc *mrioc);
++void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code);
+ 
+ #endif /*MPI3MR_H_INCLUDED*/
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 6b534ed..b6d4e9d 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1391,13 +1391,9 @@ static int mpi3mr_delete_op_reply_q(struct mpi3mr_ioc *mrioc, u16 qidx)
+ 	wait_for_completion_timeout(&mrioc->init_cmds.done,
+ 	    (MPI3MR_INTADMCMD_TIMEOUT * HZ));
+ 	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
+-		ioc_err(mrioc, "Issue DelRepQ: command timed out\n");
+-		mpi3mr_set_diagsave(mrioc);
+-		mpi3mr_issue_reset(mrioc,
+-		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
++		ioc_err(mrioc, "delete reply queue timed out\n");
++		mpi3mr_check_rh_fault_ioc(mrioc,
+ 		    MPI3MR_RESET_FROM_DELREPQ_TIMEOUT);
+-		mrioc->unrecoverable = 1;
 -
--	param_len = get_unaligned_be16(scmd->cmnd + 7);
-+	u16 param_len, desc_len, trunc_param_len;
+ 		retval = -1;
+ 		goto out_unlock;
+ 	}
+@@ -1617,12 +1613,9 @@ static int mpi3mr_create_op_reply_q(struct mpi3mr_ioc *mrioc, u16 qidx)
+ 	wait_for_completion_timeout(&mrioc->init_cmds.done,
+ 	    (MPI3MR_INTADMCMD_TIMEOUT * HZ));
+ 	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
+-		ioc_err(mrioc, "CreateRepQ: command timed out\n");
+-		mpi3mr_set_diagsave(mrioc);
+-		mpi3mr_issue_reset(mrioc,
+-		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
++		ioc_err(mrioc, "create reply queue timed out\n");
++		mpi3mr_check_rh_fault_ioc(mrioc,
+ 		    MPI3MR_RESET_FROM_CREATEREPQ_TIMEOUT);
+-		mrioc->unrecoverable = 1;
+ 		retval = -1;
+ 		goto out_unlock;
+ 	}
+@@ -1724,12 +1717,9 @@ static int mpi3mr_create_op_req_q(struct mpi3mr_ioc *mrioc, u16 idx,
+ 	wait_for_completion_timeout(&mrioc->init_cmds.done,
+ 	    (MPI3MR_INTADMCMD_TIMEOUT * HZ));
+ 	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
+-		ioc_err(mrioc, "CreateReqQ: command timed out\n");
+-		mpi3mr_set_diagsave(mrioc);
+-		if (mpi3mr_issue_reset(mrioc,
+-		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
+-		    MPI3MR_RESET_FROM_CREATEREQQ_TIMEOUT))
+-			mrioc->unrecoverable = 1;
++		ioc_err(mrioc, "create request queue timed out\n");
++		mpi3mr_check_rh_fault_ioc(mrioc,
++		    MPI3MR_RESET_FROM_CREATEREQQ_TIMEOUT);
+ 		retval = -1;
+ 		goto out_unlock;
+ 	}
+@@ -1902,6 +1892,42 @@ out:
+ 	return retval;
+ }
+ 
++/**
++ * mpi3mr_check_rh_fault_ioc - check reset history and fault
++ * controller
++ * @mrioc: Adapter instance reference
++ * @reason_code, reason code for the fault.
++ *
++ * This routine will save snapdump and fault the controller with
++ * the given reason code if it is not already in the fault or
++ * not asynchronosuly reset. This will be used to handle
++ * initilaization time faults/resets/timeout as in those cases
++ * immediate soft reset invocation is not required.
++ *
++ * Return:  None.
++ */
++void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code)
++{
++	u32 ioc_status, host_diagnostic, timeout;
 +
-+	trunc_param_len = param_len = get_unaligned_be16(scmd->cmnd + 7);
-+
-+	if (mrioc->pdev->revision) {
-+		if ((param_len > 24) && ((param_len - 8) & 0xF)) {
-+			trunc_param_len -= (param_len - 8) & 0xF;
-+			dprint_scsi_command(mrioc, scmd, MPI3_DEBUG_SCSI_ERROR);
-+			dprint_scsi_err(mrioc,
-+			    "truncating param_len from (%d) to (%d)\n",
-+			    param_len, trunc_param_len);
-+			put_unaligned_be16(trunc_param_len, scmd->cmnd + 7);
-+			dprint_scsi_command(mrioc, scmd, MPI3_DEBUG_SCSI_ERROR);
-+		}
-+		return false;
++	ioc_status = readl(&mrioc->sysif_regs->ioc_status);
++	if ((ioc_status & MPI3_SYSIF_IOC_STATUS_RESET_HISTORY) ||
++	    (ioc_status & MPI3_SYSIF_IOC_STATUS_FAULT)) {
++		mpi3mr_print_fault_info(mrioc);
++		return;
 +	}
- 
- 	if (!param_len) {
- 		ioc_warn(mrioc,
-@@ -3406,12 +3419,12 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
++	mpi3mr_set_diagsave(mrioc);
++	mpi3mr_issue_reset(mrioc, MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
++	    reason_code);
++	timeout = MPI3_SYSIF_DIAG_SAVE_TIMEOUT * 10;
++	do {
++		host_diagnostic = readl(&mrioc->sysif_regs->host_diagnostic);
++		if (!(host_diagnostic & MPI3_SYSIF_HOST_DIAG_SAVE_IN_PROGRESS))
++			break;
++		msleep(100);
++	} while (--timeout);
++}
++
+ /**
+  * mpi3mr_sync_timestamp - Issue time stamp sync request
+  * @mrioc: Adapter reference
+@@ -2025,6 +2051,8 @@ static int mpi3mr_print_pkg_ver(struct mpi3mr_ioc *mrioc)
+ 	    (MPI3MR_INTADMCMD_TIMEOUT * HZ));
+ 	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
+ 		ioc_err(mrioc, "get package version timed out\n");
++		mpi3mr_check_rh_fault_ioc(mrioc,
++		    MPI3MR_RESET_FROM_GETPKGVER_TIMEOUT);
+ 		retval = -1;
+ 		goto out_unlock;
  	}
- 
- 	if (param_len > (desc_len + 8)) {
-+		trunc_param_len = desc_len + 8;
- 		scsi_print_command(scmd);
--		ioc_warn(mrioc,
--		    "%s: Truncating param_len(%d) to desc_len+8(%d)\n",
--		    __func__, param_len, (desc_len + 8));
--		param_len = desc_len + 8;
--		put_unaligned_be16(param_len, scmd->cmnd + 7);
-+		dprint_scsi_err(mrioc,
-+		    "truncating param_len(%d) to desc_len+8(%d)\n",
-+		    param_len, trunc_param_len);
-+		put_unaligned_be16(trunc_param_len, scmd->cmnd + 7);
- 		scsi_print_command(scmd);
+@@ -2344,12 +2372,9 @@ static int mpi3mr_issue_iocfacts(struct mpi3mr_ioc *mrioc,
+ 	wait_for_completion_timeout(&mrioc->init_cmds.done,
+ 	    (MPI3MR_INTADMCMD_TIMEOUT * HZ));
+ 	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
+-		ioc_err(mrioc, "Issue IOCFacts: command timed out\n");
+-		mpi3mr_set_diagsave(mrioc);
+-		mpi3mr_issue_reset(mrioc,
+-		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
++		ioc_err(mrioc, "ioc_facts timed out\n");
++		mpi3mr_check_rh_fault_ioc(mrioc,
+ 		    MPI3MR_RESET_FROM_IOCFACTS_TIMEOUT);
+-		mrioc->unrecoverable = 1;
+ 		retval = -1;
+ 		goto out_unlock;
  	}
- 
-@@ -3466,6 +3479,7 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
- 	u32 scsiio_flags = 0;
- 	struct request *rq = scsi_cmd_to_rq(scmd);
- 	int iprio_class;
-+	u8 is_pcie_dev = 0;
- 
- 	sdev_priv_data = scmd->device->hostdata;
- 	if (!sdev_priv_data || !sdev_priv_data->tgt_priv_data) {
-@@ -3510,8 +3524,10 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
- 		goto out;
+@@ -2743,12 +2768,9 @@ static int mpi3mr_issue_iocinit(struct mpi3mr_ioc *mrioc)
+ 	wait_for_completion_timeout(&mrioc->init_cmds.done,
+ 	    (MPI3MR_INTADMCMD_TIMEOUT * HZ));
+ 	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
+-		mpi3mr_set_diagsave(mrioc);
+-		mpi3mr_issue_reset(mrioc,
+-		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
++		mpi3mr_check_rh_fault_ioc(mrioc,
+ 		    MPI3MR_RESET_FROM_IOCINIT_TIMEOUT);
+-		mrioc->unrecoverable = 1;
+-		ioc_err(mrioc, "Issue IOCInit: command timed out\n");
++		ioc_err(mrioc, "ioc_init timed out\n");
+ 		retval = -1;
+ 		goto out_unlock;
  	}
+@@ -2839,12 +2861,9 @@ static int mpi3mr_issue_event_notification(struct mpi3mr_ioc *mrioc)
+ 	wait_for_completion_timeout(&mrioc->init_cmds.done,
+ 	    (MPI3MR_INTADMCMD_TIMEOUT * HZ));
+ 	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
+-		ioc_err(mrioc, "Issue EvtNotify: command timed out\n");
+-		mpi3mr_set_diagsave(mrioc);
+-		mpi3mr_issue_reset(mrioc,
+-		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
++		ioc_err(mrioc, "event notification timed out\n");
++		mpi3mr_check_rh_fault_ioc(mrioc,
+ 		    MPI3MR_RESET_FROM_EVTNOTIFY_TIMEOUT);
+-		mrioc->unrecoverable = 1;
+ 		retval = -1;
+ 		goto out_unlock;
+ 	}
+@@ -3051,29 +3070,28 @@ int mpi3mr_issue_port_enable(struct mpi3mr_ioc *mrioc, u8 async)
+ 		ioc_err(mrioc, "Issue PortEnable: Admin Post failed\n");
+ 		goto out_unlock;
+ 	}
+-	if (!async) {
+-		wait_for_completion_timeout(&mrioc->init_cmds.done,
+-		    (pe_timeout * HZ));
+-		if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
+-			ioc_err(mrioc, "Issue PortEnable: command timed out\n");
+-			retval = -1;
+-			mrioc->scan_failed = MPI3_IOCSTATUS_INTERNAL_ERROR;
+-			mpi3mr_set_diagsave(mrioc);
+-			mpi3mr_issue_reset(mrioc,
+-			    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
+-			    MPI3MR_RESET_FROM_PE_TIMEOUT);
+-			mrioc->unrecoverable = 1;
+-			goto out_unlock;
+-		}
+-		mpi3mr_port_enable_complete(mrioc, &mrioc->init_cmds);
++	if (async) {
++		mutex_unlock(&mrioc->init_cmds.mutex);
++		goto out;
+ 	}
++
++	wait_for_completion_timeout(&mrioc->init_cmds.done, (pe_timeout * HZ));
++	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
++		ioc_err(mrioc, "port enable timed out\n");
++		retval = -1;
++		mpi3mr_check_rh_fault_ioc(mrioc, MPI3MR_RESET_FROM_PE_TIMEOUT);
++		goto out_unlock;
++	}
++	mpi3mr_port_enable_complete(mrioc, &mrioc->init_cmds);
++
+ out_unlock:
++	mrioc->init_cmds.state = MPI3MR_CMD_NOTUSED;
+ 	mutex_unlock(&mrioc->init_cmds.mutex);
+ out:
+ 	return retval;
+ }
  
--	if ((scmd->cmnd[0] == UNMAP) &&
--	    (stgt_priv_data->dev_type == MPI3_DEVICE_DEVFORM_PCIE) &&
-+	if (stgt_priv_data->dev_type == MPI3_DEVICE_DEVFORM_PCIE)
-+		is_pcie_dev = 1;
-+	if ((scmd->cmnd[0] == UNMAP) && is_pcie_dev &&
-+	    (mrioc->pdev->device == MPI3_MFGPAGE_DEVID_SAS4116) &&
- 	    mpi3mr_check_return_unmap(mrioc, scmd))
- 		goto out;
- 
+-/* Protocol type to name mapper structure*/
++/* Protocol type to name mapper structure */
+ static const struct {
+ 	u8 protocol;
+ 	char *name;
 -- 
 2.27.0
 
 
---00000000000097f03605d3945d2d
+--000000000000db74dc05d3945d6b
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -227,13 +359,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIC1NGefkjaMOmUnHpS+d
-tYztR8oxZq8dIS8UqHsOgXBxMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMTIyMDE0MDQyMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMYKsyGWj5Dz8aTDtdqN
+gSLAh7I+WLvCHF4m6GHDKsTiMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMTIyMDE0MDQyNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCLcC8zhdPHhkx0KuoboikvbO6iQ2R3ad5xHPjk
-9QDIjC55cUJgHvEI6hdgkn/CR4Sw/5s8kONXu9phBdpWu8WE3rSbgBy4FcwqIRRbSoYYeZ3QuKW9
-f1MREAnsx3GeYLHF7iHZOLzG5scbBLkMZj/HxtQMX4C9gRHe71UFlvqWzuV5VGn6J4Os7q+ffsir
-ohTP1Cucc7UvQdYl0B+FByO14GhWHKokSKX+EK6dskIwBy8cVT72kQ+GWvjdQbe217/KUuvWLLP+
-bPSGaiJBlvD09JZGXwm2NcfwUQmwTdJeYD4m6YE1ZrsQ0pGzVfuFRc6ZAizVcp6tqkszln4+WPad
---00000000000097f03605d3945d2d--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCkSAMdP07EfGrl+v5lIU2TyFLTNdvRIAPuBCZt
+CYkkqRrN3MZWzMnMZqLUZYZoEWuL83GMDHOLFEoEJlcuQ5b7PqFlzvZFpCiXUUYDnpLT2x9VRrlY
+3K57qozz7RvjmT7Q3h0h3I/bx2dEfGZQ5QLDbI85VDHfGZ9RFA8nWm69i8Y5iywg8QTBmfKli6fz
+CjBPTAjhe3kOuY7U4W6mcKWiU59PtuQVIX84YHE8x8B/zQVekdWC4ydnsYdldvukwRRy/MWtCNyk
+EWpt+YwomWoFE6dIvQd6/2QgXSaxZ9ylk/eZ/6HlfDAcOoRa9zKwKrFKktNnfsBMwjhV6+Oz+Act
+--000000000000db74dc05d3945d6b--
