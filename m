@@ -2,35 +2,32 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFD07C43219
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Dec 2021 01:58:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC813C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Dec 2021 02:00:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232475AbhLUB6f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Dec 2021 20:58:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44548 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232598AbhLUB6S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 20:58:18 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6B81C061746;
-        Mon, 20 Dec 2021 17:58:17 -0800 (PST)
+        id S234145AbhLUCAJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Dec 2021 21:00:09 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:33860 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232757AbhLUB7b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 20:59:31 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7CA0761371;
-        Tue, 21 Dec 2021 01:58:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED7C0C36AE9;
-        Tue, 21 Dec 2021 01:58:15 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 20605B810D9;
+        Tue, 21 Dec 2021 01:59:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E95FBC36AED;
+        Tue, 21 Dec 2021 01:59:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640051896;
-        bh=C+yDw/PsblUElPVFax4a5BPOcLhsHieUdHL+7+2f258=;
+        s=k20201202; t=1640051968;
+        bh=TAzXiSXldUDzDRYabJb9uvPoArf77XzfBfgN1MRt48Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GCcP3GNg6od3P1DHhKGxvfDZ8EUvmBkfYl2n3H4oySLZ4xgR8k0Vpd6FPdq1uklSs
-         ReA/4qqEvUE8F0FKJ4QAjpIOD3hzj4fqTUpz7HF2lBVURzbP0CleUN9oS5+YWA3rS5
-         a+y4CQDfcVEqrRjR9Bazrev80yMlujDsUFTquFfjZvFAXp0vqcmXRazSjX3/oOvEog
-         SAHNyeQRlTrsioL6CsRAZg4qEjJSQNAIzfO5NCmjfwq82u8Q19QalRPw8P7btqVfkk
-         OxfZMoponxFXtuAqd03lUMNe/sb2g8SJGJyiDAnZLU1sb0FZpdttuMzh0EnDf7dllu
-         IlZsPYeLuSIKw==
+        b=AcxtbYTT8Pl2uzGKWg+ycnitj9El+Z7svymX06tvIEYjFwiCFeDtEjdNL7SjATPys
+         EiMLEvsPycKjnbCOqLuLh7g+Mo8Fhab4/UHXeXK9OQlim1b8ZE4UIWVZgD11Cx1++k
+         SUtpLC8A89DiI3bFCIUzfz6WWTZMsAwcQpKi7u/Mt0l9kZ47yoIHzAOXupl7PN0tSm
+         9DUYpyzNfmSu5TU8GjzRxG5g37YaVebXMa1jNnO5Y2+77sy/zsXHgDAl5CJfFTJODM
+         Dy+QhHe2zqL/m50YRBYUzjCK7OXhdyHyNM0jrOY7gn7gYUcMxsc7oF9ga7Ko7NUhxu
+         CbwbV8nK0wnDQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     John Garry <john.garry@huawei.com>,
@@ -38,12 +35,12 @@ Cc:     John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
         jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 14/29] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
-Date:   Mon, 20 Dec 2021 20:57:35 -0500
-Message-Id: <20211221015751.116328-14-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 09/19] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
+Date:   Mon, 20 Dec 2021 20:59:04 -0500
+Message-Id: <20211221015914.116767-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20211221015751.116328-1-sashal@kernel.org>
-References: <20211221015751.116328-1-sashal@kernel.org>
+In-Reply-To: <20211221015914.116767-1-sashal@kernel.org>
+References: <20211221015914.116767-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -102,10 +99,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 21 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index ed02e1aaf868c..3c74aea53c18b 100644
+index a203a4fc2674a..4badd2ad2a460 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3053,7 +3053,6 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+@@ -2965,7 +2965,6 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
  	struct smp_completion_resp *psmpPayload;
  	struct task_status_struct *ts;
  	struct pm8001_device *pm8001_dev;
@@ -113,7 +110,7 @@ index ed02e1aaf868c..3c74aea53c18b 100644
  
  	psmpPayload = (struct smp_completion_resp *)(piomb + 4);
  	status = le32_to_cpu(psmpPayload->status);
-@@ -3080,19 +3079,23 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+@@ -2992,19 +2991,23 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
  		if (pm8001_dev)
  			atomic_dec(&pm8001_dev->running_req);
  		if (pm8001_ha->smp_exp_mode == SMP_DIRECT) {
@@ -142,7 +139,7 @@ index ed02e1aaf868c..3c74aea53c18b 100644
  		}
  		break;
  	case IO_ABORTED:
-@@ -4232,14 +4235,14 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+@@ -4133,14 +4136,14 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
  	struct sas_task *task = ccb->task;
  	struct domain_device *dev = task->dev;
  	struct pm8001_device *pm8001_dev = dev->lldd_dev;
@@ -160,7 +157,7 @@ index ed02e1aaf868c..3c74aea53c18b 100644
  
  	memset(&smp_cmd, 0, sizeof(smp_cmd));
  	/*
-@@ -4276,8 +4279,9 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+@@ -4177,8 +4180,9 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
  		pm8001_ha->smp_exp_mode = SMP_INDIRECT;
  
  
@@ -172,7 +169,7 @@ index ed02e1aaf868c..3c74aea53c18b 100644
  
  	/* INDIRECT MODE command settings. Use DMA */
  	if (pm8001_ha->smp_exp_mode == SMP_INDIRECT) {
-@@ -4285,7 +4289,7 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+@@ -4186,7 +4190,7 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
  		/* for SPCv indirect mode. Place the top 4 bytes of
  		 * SMP Request header here. */
  		for (i = 0; i < 4; i++)
@@ -181,7 +178,7 @@ index ed02e1aaf868c..3c74aea53c18b 100644
  		/* exclude top 4 bytes for SMP req header */
  		smp_cmd.long_smp_req.long_req_addr =
  			cpu_to_le64((u64)sg_dma_address
-@@ -4316,20 +4320,20 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+@@ -4217,20 +4221,20 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
  		pm8001_dbg(pm8001_ha, IO, "SMP REQUEST DIRECT MODE\n");
  		for (i = 0; i < length; i++)
  			if (i < 16) {
