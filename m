@@ -2,187 +2,211 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AB0BC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Dec 2021 21:25:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFD07C43219
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Dec 2021 01:58:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230466AbhLTVZd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Dec 2021 16:25:33 -0500
-Received: from de-smtp-delivery-102.mimecast.com ([194.104.109.102]:35755 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230336AbhLTVZd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Dec 2021 16:25:33 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1640035532;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=oc64vDlzs4VCZAGMe9Kv5NpOl5G0FIQkgsXzogfEYFk=;
-        b=WgaUouDIWw4mz2FXDTyCFhOGbrvTuu9n9Z9qfVx5S6CdQcv2rRMbOeYYAbiUTRc/Jt0yCz
-        x6XdkYB5gdPji+UVeyOht1+KML9xOxcG662y1sC4h1+CP2Eoh3bMQJu/ZFEbNpLdSzzn5R
-        kCfq/GxdZ+7dS1F7j9hGxLy1YHeSpvw=
-Received: from EUR01-VE1-obe.outbound.protection.outlook.com
- (mail-ve1eur01lp2058.outbound.protection.outlook.com [104.47.1.58]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- de-mta-27-6rdeFfEIObGLj09LLAevVw-1; Mon, 20 Dec 2021 22:25:31 +0100
-X-MC-Unique: 6rdeFfEIObGLj09LLAevVw-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ggaocVR102XNcoK7c4HvJ1RL/haD0RcdVDKfBkndaFSPuqB2uV85B94ZveycBKaJxYpQETkYiSpTxvgUYjaG7WQTMtB31IQ92jNXViYCHk9JBu8FAgoOM96c3eEIkvpnGmb/PQqG5f7RCz50vlByx50XewfIiHjCNS3Neha0o8bbUTwIR6fj+VfNNYB0hccqaq/hE9lh7+dXjZAWtgOMpjz4kMtkJVeVW/BQdE5YVqdotsS6r59elWvHhTBUBFezdLUj2sV+UplM6/z57IPJUXMXi9JydtiRfseC/Y25DxPz18L8z7i7aMAEzcEblHUMmzt8gUWPr+64QXYAMdis1Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=oc64vDlzs4VCZAGMe9Kv5NpOl5G0FIQkgsXzogfEYFk=;
- b=ffbObGHqhQsNJMdRcWitUqVQi22Gkajqm+RYqjrJcX5YSKWsw9KTGw2qTZzY8+Jm1VzeAwxwGzLkm/8TX614uOembqytnMXGsSMrHSQT4Tu3HAka4YU8ArPKFbgumoamPMiKamsf7lCkLh5Vld85WwgP69z4mMdzFMJD6jcV85iLp+YeA94BfiF40g5kYs03y8NqebFb+UY/ID7QCZvCmurpQXrL8c6lFyN9aJIPQlcVdYqcc9fjWdXCA3LY261m73Rg5Blr8SOqMLJ0ZAd1TlMh6BVWqIYxmwV9ZyVmtb50w1JPlvMbQjiHG6bR0OH/Z5CdZdgJ0fkrl8HQHmVGsQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=suse.com;
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
- by AM6PR04MB5928.eurprd04.prod.outlook.com (2603:10a6:20b:a3::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4801.17; Mon, 20 Dec
- 2021 21:25:29 +0000
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::a1b8:1377:d500:aa46]) by AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::a1b8:1377:d500:aa46%6]) with mapi id 15.20.4801.020; Mon, 20 Dec 2021
- 21:25:29 +0000
-Subject: Re: [PATCH] libiscsi: fix UAF when iscsi_conn_get_param and
- iscsi_conn_teardown concurrent
-To:     lixiaokeng <lixiaokeng@huawei.com>, cleech@redhat.com,
-        linux-scsi@vger.kernel.org
-Cc:     linfeilong <linfeilong@huawei.com>
-References: <046ec8a0-ce95-d3fc-3235-666a7c65b224@huawei.com>
-From:   Lee Duncan <lduncan@suse.com>
-Message-ID: <b4556b30-7418-03f1-155b-7fd8daeedf91@suse.com>
-Date:   Mon, 20 Dec 2021 13:25:25 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
-In-Reply-To: <046ec8a0-ce95-d3fc-3235-666a7c65b224@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AM6P192CA0005.EURP192.PROD.OUTLOOK.COM
- (2603:10a6:209:83::18) To AM5PR04MB3089.eurprd04.prod.outlook.com
- (2603:10a6:206:b::28)
+        id S232475AbhLUB6f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Dec 2021 20:58:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44548 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232598AbhLUB6S (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2021 20:58:18 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6B81C061746;
+        Mon, 20 Dec 2021 17:58:17 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7CA0761371;
+        Tue, 21 Dec 2021 01:58:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED7C0C36AE9;
+        Tue, 21 Dec 2021 01:58:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1640051896;
+        bh=C+yDw/PsblUElPVFax4a5BPOcLhsHieUdHL+7+2f258=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=GCcP3GNg6od3P1DHhKGxvfDZ8EUvmBkfYl2n3H4oySLZ4xgR8k0Vpd6FPdq1uklSs
+         ReA/4qqEvUE8F0FKJ4QAjpIOD3hzj4fqTUpz7HF2lBVURzbP0CleUN9oS5+YWA3rS5
+         a+y4CQDfcVEqrRjR9Bazrev80yMlujDsUFTquFfjZvFAXp0vqcmXRazSjX3/oOvEog
+         SAHNyeQRlTrsioL6CsRAZg4qEjJSQNAIzfO5NCmjfwq82u8Q19QalRPw8P7btqVfkk
+         OxfZMoponxFXtuAqd03lUMNe/sb2g8SJGJyiDAnZLU1sb0FZpdttuMzh0EnDf7dllu
+         IlZsPYeLuSIKw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     John Garry <john.garry@huawei.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 14/29] scsi: pm8001: Fix phys_to_virt() usage on dma_addr_t
+Date:   Mon, 20 Dec 2021 20:57:35 -0500
+Message-Id: <20211221015751.116328-14-sashal@kernel.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20211221015751.116328-1-sashal@kernel.org>
+References: <20211221015751.116328-1-sashal@kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: eab3fc39-c9b3-4888-388e-08d9c3ff3f1b
-X-MS-TrafficTypeDiagnostic: AM6PR04MB5928:EE_
-X-Microsoft-Antispam-PRVS: <AM6PR04MB592864F8F99790B96A847B1FDA7B9@AM6PR04MB5928.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:37;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: tU2KbCNtLmN1IUZnJK+KlAdFPdiDawn8cGpCwSW8AWax7yaIbng41j0mq5CStGbiDRMYpTW0odw/Q8BPAc8VbvRaZ4NgAS7gmce0I0Pjcg20bn/gEXb0e5Pj/f7+ORscjBaxvgSpJ/Oe0gVAWcXg6YGyPPNftQpBkEAnzxhv1cklINoQn4aw2fyTPUptuJovFSns66glVLb7PVvB6I6ViUqsULxXUsymb0A8NEUR4RiAJNnI6F5YJs3WK652L9xfGXJluAf/n3om4v4w+K+RK1IERh9h8iutpBHTbw8gYLhPvm771qfmWvC21yRk6987162+0MR+7ftAS5B4dCiB30QL5fay9oVa578Aw1MGY1pvZtvo1SY1nvp9i8NtQPHeEOrF+yvTcS4RZ3pzSvvoqf4TRScX/t+TL3FQ6jnEvndW7kC/ndFHH1rXGlzp46Au0bHW4k9SzB7ODlomnLbokhrSy4WLi3e9VhVJNu4xMASNBfjcqztEXbjYt3gSCMcDdNSGV/i7GQvxB25pmoS0PeW+TvI5HIUuaapt2/cG2Gmwpufqm1g/Hj2kkwQKYxTW9S34Jdzf0HPeYKThGIo7e/rQMpjLcrng+7Z5Qo/4oG9Xouxoo+FQCr7wqxgMtRWyrxzQGDbhbTIqo9ehWVMvsFaXEnGI9yzxo29f9cwgYg4BJ2t97GwSsiAJleaMyydGLXXEhvStl1IU7C9KaEvV+yuWv1wvyYVL6nY/8aXu25Y=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(6486002)(2906002)(5660300002)(38100700002)(316002)(31696002)(86362001)(31686004)(66556008)(36756003)(2616005)(66476007)(4326008)(8936002)(83380400001)(66946007)(508600001)(6666004)(186003)(6512007)(26005)(6506007)(53546011)(8676002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?ZTlJRDRFSzBGT3hUUHNVVnJEdXkzUDhScS9lMjA0aXc0VnFOUFpFQXRwYVdQ?=
- =?utf-8?B?S0RyM2pRby9wVFpxd2hXZHJvaE5zb0tZMm1KYStweWpoODNrYm1qeGc1ZHNi?=
- =?utf-8?B?VHhmc05hN2h5UFNVR3pjbEVLRC8rT0FvU2dDdmRaVW12WjFQM1JFZ0FIcU80?=
- =?utf-8?B?ZkM4NDcwVzhWUVBIdmpyWnlnbGpRcHBCZ3VJMnRNaXpLdUR2MTJiL3dsRVZt?=
- =?utf-8?B?SWI1MGprUFpwYmxZbnE3bEMxRkdHYVUxU1N2bll0bkVJT2htM1RkUWFVcUdW?=
- =?utf-8?B?VHk1ZHMraEdwNCtYSTRIMDlFNENWbVFZQ0QrM2o2eFFqclpzaXVJeGxZQ2FK?=
- =?utf-8?B?aDQwM0FXRFhtMjI2NGNRVFpIUXJIZDd4SUZJTy9oTW5kQ2ZlWjR4UnFzK0lH?=
- =?utf-8?B?aGRNWkVLT2IxZDkwdGdHazZlamgxLzE5SXdjVEFYaEhxL1U5ZTdYTWZnZGdj?=
- =?utf-8?B?UTVVVlk3UmlEdkoybzd6ZGFUZUMwSDFLVko3bXV1dDdJUG9IdURKRlRrajU5?=
- =?utf-8?B?NzNLMzFxYUFhYzJ0VTF0eGR1R1ZacTdtNjFEczNYQWtqQ0p2QlI1cHZFRU5Z?=
- =?utf-8?B?ZzVZRVM0RmRsT2p2TytlR3licU90ck1NRk9ja2xQM3AwYmpGTGhwM053NE1I?=
- =?utf-8?B?anptbklWbndVRDVzc3ZGQisyZmcxdUNhV0VZSjY3S3lXanpndUNkYjl3dmRx?=
- =?utf-8?B?NkhBNlJGTFJZZm1QRmlwR1dlUjU1S2ZDU1IwSjJRREhNT3pZZGpEd3VVanl3?=
- =?utf-8?B?VVNKM0cra3FmY0twek45ZVVCRWRNRklXUW9IM1NRV0VZRDQvbnZOdkJIbUdS?=
- =?utf-8?B?ZWtWNDZJSU9LUHh2eks3QzBPL2s4VW50VmxScEFGOWpwa1lnbGsyOXdCaGMw?=
- =?utf-8?B?Vm9VeWR5cVNXUTBobGpVYWEyL3ZSZ2R0VFVDMWhNc2ZTNG5VczhJUzlwbUFY?=
- =?utf-8?B?YUZRbEQ4OUZMUjlXM3dPZER5Wm9HdFdURFJyZExsVFdiRk5TZjNqSnpWVmRy?=
- =?utf-8?B?NTFBQkRxcjRoVTNSR1JwV2JyT1hQcUs5TDdSNXpVcS9DU1dTeEVsemw5Umg2?=
- =?utf-8?B?RVN1TU9pTEZRdHM2TTVPcXhLUVEwblphSWRadGpvRFJvOEtEelVCTXVMdE1G?=
- =?utf-8?B?Yk4wZytoVU4xc252ODBCNXNZNytHYThvaER5TVRyTVpMNkJqODhPY2lwUmor?=
- =?utf-8?B?SW1mUy9zQ0dVZjJHTGhMb1pxejBkNTIrTnd3bCtiNW05MEN2MXY3eEFLTVpl?=
- =?utf-8?B?ZVlBdFRMTTZ1OG9CZFhPWFZmMTArVnJGL3FQZ25RQk9lTUpwSlk2THpxQlhj?=
- =?utf-8?B?Z2JqVHM0MnRHb3Q5QWxpbDhUNWREc0ZVc0NNaG8xOS9sZlp5NDVaTEdKa0t3?=
- =?utf-8?B?bDZDYWFaaTZGT25BZXlObEJUZkdzaE9mSXV0WXhpMFNqNUQ0bHFrQWYrbEgr?=
- =?utf-8?B?bUNQK1dEbGxFYXFQREpyRHYvODF5elJMVklXSitmOWcyRkJ3MUdxRHpsVDU3?=
- =?utf-8?B?MWpuc2U4N2NqQnJJRzljK0dsNGxYUHpZbThXZkQwdlZpZGZHTVovYWxkeHZK?=
- =?utf-8?B?ZzM4OW9OM2QzSU9MbnZvM05tL2FjVmV1TGI0bXJxOEx6UzJ0SjNFZmU1NkpX?=
- =?utf-8?B?ZCs3aEEvcjBYMTFoTGJBS0NEYTVGZDU5bzdEbHgzRDlhSnExT3hJNm1KdjVO?=
- =?utf-8?B?cE5RMUJRMUhGamlwNmMyYXNxY3ZjMmVyaUJ5dmJRUmFLRlVQT3BMeXlRbFR6?=
- =?utf-8?B?cjFxVEM4bUhWaU9zRDJpOEhrdHEzL2VLWUxZbDY0T0JQcjRDZHQ0c3VQRHNF?=
- =?utf-8?B?SlVwb1VGVjVWRGhTa1YxZUJCYVBBeHJzSGRMM2Z5OUVXaE1CaUw2akExOGl0?=
- =?utf-8?B?bDZvdTlOMHdETklrMTRoRG5mbVNsQmxHZi9TalJWamVXR05yaDVHajgzVGwr?=
- =?utf-8?B?QUJ4d3pqNnpmOFpWZDVVajh3TnY1ZlEvTU53b25MMFBLV1B6NW5HOStHTWhV?=
- =?utf-8?B?Sm1DbFBKUlpUdHJzcU9wS3duOTZFY09tUUtrY1RlemVrYTBrRHlaMnptdnhZ?=
- =?utf-8?B?QmZQeTB0UFhieW5VWm5yS0djRVVKQy80NmZUeWlBNTd3cTd3Wk5rM0JWRTcw?=
- =?utf-8?B?YUZSTU14ZVZUYzlKVitwbzZYN2ZrK2ZRd0kyWXdRYk1wVjJPZEF2Q1g1QTAy?=
- =?utf-8?Q?BH8PiMog5a3ULcSANvS60wE=3D?=
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: eab3fc39-c9b3-4888-388e-08d9c3ff3f1b
-X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Dec 2021 21:25:29.4179
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: L9UqChna/sjU+6oBacU071nw2fvsRvKWetcAUoeGBakhRe5nk0qJru/hRGy2qTv+vWaLuLtVAR7sOUL9OyxHuQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB5928
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/20/21 3:39 AM, lixiaokeng wrote:
-> |- iscsi_if_destroy_conn            |-dev_attr_show
->  |-iscsi_conn_teardown
->   |-spin_lock_bh                     |-iscsi_sw_tcp_conn_get_param
-> 
->   |-kfree(conn->persistent_address)   |-iscsi_conn_get_param
->   |-kfree(conn->local_ipaddr)
->                                        ==>|-read persistent_address
->                                        ==>|-read local_ipaddr
->   |-spin_unlock_bh
-> 
-> when iscsi_conn_teardown and iscsi_conn_get_param happen in parallel,
-> may trigger UAF issues.
-> 
-> Signed-off-by: Lixiaokeng<lixiaokeng@huawei.com>
-> Signed-off-by: Linfeilong<linfeilong@huawei.com>
-> Reported-by: Lu Tixiong<lutianxiong@huawei.com>
-> ---
->  drivers/scsi/libiscsi.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 284b939fb1ea..059dae8909ee 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -3100,6 +3100,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
->  {
->  	struct iscsi_conn *conn = cls_conn->dd_data;
->  	struct iscsi_session *session = conn->session;
-> +	char *tmp_persistent_address = conn->persistent_address;
-> +	char *tmp_local_ipaddr = conn->local_ipaddr;
-> 
->  	del_timer_sync(&conn->transport_timer);
-> 
-> @@ -3121,8 +3123,6 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
->  	spin_lock_bh(&session->frwd_lock);
->  	free_pages((unsigned long) conn->data,
->  		   get_order(ISCSI_DEF_MAX_RECV_SEG_LEN));
-> -	kfree(conn->persistent_address);
-> -	kfree(conn->local_ipaddr);
->  	/* regular RX path uses back_lock */
->  	spin_lock_bh(&session->back_lock);
->  	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
-> @@ -3134,6 +3134,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
->  	mutex_unlock(&session->eh_mutex);
-> 
->  	iscsi_destroy_conn(cls_conn);
-> +	kfree(tmp_persistent_address);
-> +	kfree(tmp_local_ipaddr);
->  }
->  EXPORT_SYMBOL_GPL(iscsi_conn_teardown);
-> 
+From: John Garry <john.garry@huawei.com>
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+[ Upstream commit 2fe24343922e0428fb68674a4fae099171141bc7 ]
+
+The driver supports a "direct" mode of operation, where the SMP req frame
+is directly copied into the command payload (and vice-versa for the SMP
+resp).
+
+To get at the SMP req frame data in the scatterlist the driver uses
+phys_to_virt() on the DMA mapped memory dma_addr_t . This is broken, and
+subsequently crashes as follows when an IOMMU is enabled:
+
+ Unable to handle kernel paging request at virtual address
+ffff0000fcebfb00
+	...
+ pc : pm80xx_chip_smp_req+0x2d0/0x3d0
+ lr : pm80xx_chip_smp_req+0xac/0x3d0
+ pm80xx_chip_smp_req+0x2d0/0x3d0
+ pm8001_task_exec.constprop.0+0x368/0x520
+ pm8001_queue_command+0x1c/0x30
+ smp_execute_task_sg+0xdc/0x204
+ sas_discover_expander.part.0+0xac/0x6cc
+ sas_discover_root_expander+0x8c/0x150
+ sas_discover_domain+0x3ac/0x6a0
+ process_one_work+0x1d0/0x354
+ worker_thread+0x13c/0x470
+ kthread+0x17c/0x190
+ ret_from_fork+0x10/0x20
+ Code: 371806e1 910006d6 6b16033f 54000249 (38766b05)
+ ---[ end trace b91d59aaee98ea2d ]---
+note: kworker/u192:0[7] exited with preempt_count 1
+
+Instead use kmap_atomic().
+
+--
+Difference to v1:
+- use kmap_atomic() in both locations
+Difference to  v2:
+- add whitespace around arithmetic (Damien)
+
+Link: https://lore.kernel.org/r/1639390248-213603-1-git-send-email-john.garry@huawei.com
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/pm8001/pm80xx_hwi.c | 38 ++++++++++++++++++--------------
+ 1 file changed, 21 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index ed02e1aaf868c..3c74aea53c18b 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -3053,7 +3053,6 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	struct smp_completion_resp *psmpPayload;
+ 	struct task_status_struct *ts;
+ 	struct pm8001_device *pm8001_dev;
+-	char *pdma_respaddr = NULL;
+ 
+ 	psmpPayload = (struct smp_completion_resp *)(piomb + 4);
+ 	status = le32_to_cpu(psmpPayload->status);
+@@ -3080,19 +3079,23 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		if (pm8001_dev)
+ 			atomic_dec(&pm8001_dev->running_req);
+ 		if (pm8001_ha->smp_exp_mode == SMP_DIRECT) {
++			struct scatterlist *sg_resp = &t->smp_task.smp_resp;
++			u8 *payload;
++			void *to;
++
+ 			pm8001_dbg(pm8001_ha, IO,
+ 				   "DIRECT RESPONSE Length:%d\n",
+ 				   param);
+-			pdma_respaddr = (char *)(phys_to_virt(cpu_to_le64
+-						((u64)sg_dma_address
+-						(&t->smp_task.smp_resp))));
++			to = kmap_atomic(sg_page(sg_resp));
++			payload = to + sg_resp->offset;
+ 			for (i = 0; i < param; i++) {
+-				*(pdma_respaddr+i) = psmpPayload->_r_a[i];
++				*(payload + i) = psmpPayload->_r_a[i];
+ 				pm8001_dbg(pm8001_ha, IO,
+ 					   "SMP Byte%d DMA data 0x%x psmp 0x%x\n",
+-					   i, *(pdma_respaddr + i),
++					   i, *(payload + i),
+ 					   psmpPayload->_r_a[i]);
+ 			}
++			kunmap_atomic(to);
+ 		}
+ 		break;
+ 	case IO_ABORTED:
+@@ -4232,14 +4235,14 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+ 	struct sas_task *task = ccb->task;
+ 	struct domain_device *dev = task->dev;
+ 	struct pm8001_device *pm8001_dev = dev->lldd_dev;
+-	struct scatterlist *sg_req, *sg_resp;
++	struct scatterlist *sg_req, *sg_resp, *smp_req;
+ 	u32 req_len, resp_len;
+ 	struct smp_req smp_cmd;
+ 	u32 opc;
+ 	struct inbound_queue_table *circularQ;
+-	char *preq_dma_addr = NULL;
+-	__le64 tmp_addr;
+ 	u32 i, length;
++	u8 *payload;
++	u8 *to;
+ 
+ 	memset(&smp_cmd, 0, sizeof(smp_cmd));
+ 	/*
+@@ -4276,8 +4279,9 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+ 		pm8001_ha->smp_exp_mode = SMP_INDIRECT;
+ 
+ 
+-	tmp_addr = cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_req));
+-	preq_dma_addr = (char *)phys_to_virt(tmp_addr);
++	smp_req = &task->smp_task.smp_req;
++	to = kmap_atomic(sg_page(smp_req));
++	payload = to + smp_req->offset;
+ 
+ 	/* INDIRECT MODE command settings. Use DMA */
+ 	if (pm8001_ha->smp_exp_mode == SMP_INDIRECT) {
+@@ -4285,7 +4289,7 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+ 		/* for SPCv indirect mode. Place the top 4 bytes of
+ 		 * SMP Request header here. */
+ 		for (i = 0; i < 4; i++)
+-			smp_cmd.smp_req16[i] = *(preq_dma_addr + i);
++			smp_cmd.smp_req16[i] = *(payload + i);
+ 		/* exclude top 4 bytes for SMP req header */
+ 		smp_cmd.long_smp_req.long_req_addr =
+ 			cpu_to_le64((u64)sg_dma_address
+@@ -4316,20 +4320,20 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+ 		pm8001_dbg(pm8001_ha, IO, "SMP REQUEST DIRECT MODE\n");
+ 		for (i = 0; i < length; i++)
+ 			if (i < 16) {
+-				smp_cmd.smp_req16[i] = *(preq_dma_addr+i);
++				smp_cmd.smp_req16[i] = *(payload + i);
+ 				pm8001_dbg(pm8001_ha, IO,
+ 					   "Byte[%d]:%x (DMA data:%x)\n",
+ 					   i, smp_cmd.smp_req16[i],
+-					   *(preq_dma_addr));
++					   *(payload));
+ 			} else {
+-				smp_cmd.smp_req[i] = *(preq_dma_addr+i);
++				smp_cmd.smp_req[i] = *(payload + i);
+ 				pm8001_dbg(pm8001_ha, IO,
+ 					   "Byte[%d]:%x (DMA data:%x)\n",
+ 					   i, smp_cmd.smp_req[i],
+-					   *(preq_dma_addr));
++					   *(payload));
+ 			}
+ 	}
+-
++	kunmap_atomic(to);
+ 	build_smp_cmd(pm8001_dev->device_id, smp_cmd.tag,
+ 				&smp_cmd, pm8001_ha->smp_exp_mode, length);
+ 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &smp_cmd,
+-- 
+2.34.1
 
