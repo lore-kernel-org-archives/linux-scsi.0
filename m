@@ -2,43 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19ADFC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Dec 2021 14:29:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA67BC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Dec 2021 06:24:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238460AbhLUO3E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Dec 2021 09:29:04 -0500
-Received: from verein.lst.de ([213.95.11.211]:47017 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233837AbhLUO3D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Dec 2021 09:29:03 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 1656468AFE; Tue, 21 Dec 2021 15:29:00 +0100 (CET)
-Date:   Tue, 21 Dec 2021 15:28:59 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Yang Yingliang <yangyingliang@huawei.com>
-Cc:     linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, hch@lst.de, james.smart@broadcom.com,
-        martin.petersen@oracle.com
-Subject: Re: [PATCH -next] scsi: efct: Use GFP_ATOMIC under spin lock
-Message-ID: <20211221142859.GA30187@lst.de>
-References: <20211221113706.329791-1-yangyingliang@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211221113706.329791-1-yangyingliang@huawei.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+        id S242747AbhLVGYw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Dec 2021 01:24:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36688 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233176AbhLVGYw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Dec 2021 01:24:52 -0500
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF311C061574;
+        Tue, 21 Dec 2021 22:24:51 -0800 (PST)
+Received: by mail-pl1-x630.google.com with SMTP id q17so1107830plr.11;
+        Tue, 21 Dec 2021 22:24:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=vP1LOViFn0+7V0Z8YFpxh/XwEIUum39ijaW3BebLLxI=;
+        b=fagiSX0TlmeVqPVl5MegpvdJMrKjEx47q+BE0Uo/MmVO64pFRvoE3+1lcwGvPDWaoc
+         /QeDAOQ9H+Sae1Yom3iXDYGAHBiO2SkkOK4PbA+owI7UBxwh0mouiwNJnKF4E0FYo+aL
+         niNCwmOvBEWDJ5cUk1VzGCyRWrQVpxZwW+HfARrnv0rzKtmg7y5fZnq1lGyOtBvGOQ2P
+         A75tHkBbFDLYUIihoTwALQD//WrtURNpY2TPJVwQVUgsVAmNnL/EQFd/SkvNPJNOemKf
+         GchWJmHPPF5qAMA/pgciCDbnVz52zgkbTvS5+YU9EohPOwCe8Ju7SpZBN1VMvbr2EAJi
+         RRqQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=vP1LOViFn0+7V0Z8YFpxh/XwEIUum39ijaW3BebLLxI=;
+        b=3RXiDDYN+jiZnnHcSFJCFXz2vOWYdOmLwLqbXLRjYFXfiH2kcMGOlkHAt8SZzfq7NX
+         tzs8SvV4Wf8wlRYx85XpyetgSx7vC5O8VSHV6ZMBjMbpLLnz5mjkHVj1iA0nvevV4ceq
+         dFCiaKdFLgS4K70Il+JVqaYnZJdRcLLDZpGiAEiehnHcnNeKNLyDZnAekesOQVCkG5lF
+         To3lsgF9MqY7KDogKl7AwlLqSMqONPZDVqsOCLSotxvT5/pz7E0NSX2ERRU0Xrbl8ABY
+         /SJIeyXs+B/vuBKPNS4C5lbpIsS8pZdxCKSqKfvFUvNZ0H6yKt85ad2hrJvPKpipMDNe
+         aRlA==
+X-Gm-Message-State: AOAM533cuC/AKpXCw3694/Nsz1+dW9Uu5XGfYbe6w+CiqpqXxCHP+6MY
+        lnrTxUBDz31p2RreZfdNgJs=
+X-Google-Smtp-Source: ABdhPJzrFTfdWCZJJj7PQimEL7SGlhd9TvjzNv+9aMRbe+1PjRHxoh7SdCQwTik/GTySzujwK6NFaw==
+X-Received: by 2002:a17:90a:ab0f:: with SMTP id m15mr1881870pjq.91.1640154291500;
+        Tue, 21 Dec 2021 22:24:51 -0800 (PST)
+Received: from localhost.localdomain ([159.226.95.43])
+        by smtp.googlemail.com with ESMTPSA id j20sm4109730pjl.3.2021.12.21.22.24.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Dec 2021 22:24:51 -0800 (PST)
+From:   Miaoqian Lin <linmq006@gmail.com>
+Cc:     linmq006@gmail.com, Stanley Chu <stanley.chu@mediatek.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-scsi@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH] scsi: ufs: ufs-mediatek : Fix NULL vs IS_ERR checking in ufs_mtk_init_va09_pwr_ctrl
+Date:   Wed, 22 Dec 2021 06:24:44 +0000
+Message-Id: <20211222062444.16144-1-linmq006@gmail.com>
+X-Mailer: git-send-email 2.17.1
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Dec 21, 2021 at 07:37:06PM +0800, Yang Yingliang wrote:
-> A spin lock is taken here so we should use GFP_ATOMIC.
-> 
-> Fixes: efac162a4e4d ("scsi: efct: Don't pass GFP_DMA to dma_alloc_coherent()")
+The function regulator_get() return error pointer,
+use IS_ERR() to check if has error.
 
-No, it does not fix that commit.  The driver did sleeping allocations
-even before the commit.
+Signed-off-by: Miaoqian Lin <linmq006@gmail.com>
+---
+ drivers/scsi/ufs/ufs-mediatek.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-But wher is "here"?  Can we look into not holding that lock over an
-allocation if it is preferable?  If not we should at least pass down
-the gfp_flags so that only the caller(s) that can't sleep pass GFP_ATOMIC.
+diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+index 5393b5c9dd9c..86a938075f30 100644
+--- a/drivers/scsi/ufs/ufs-mediatek.c
++++ b/drivers/scsi/ufs/ufs-mediatek.c
+@@ -557,7 +557,7 @@ static void ufs_mtk_init_va09_pwr_ctrl(struct ufs_hba *hba)
+ 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+ 
+ 	host->reg_va09 = regulator_get(hba->dev, "va09");
+-	if (!host->reg_va09)
++	if (IS_ERR(host->reg_va09))
+ 		dev_info(hba->dev, "failed to get va09");
+ 	else
+ 		host->caps |= UFS_MTK_CAP_VA09_PWR_CTRL;
+-- 
+2.17.1
+
