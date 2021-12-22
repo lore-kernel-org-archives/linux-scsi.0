@@ -2,51 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA67BC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Dec 2021 06:24:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B5F9C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Dec 2021 06:48:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242747AbhLVGYw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Dec 2021 01:24:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36688 "EHLO
+        id S242815AbhLVGsm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Dec 2021 01:48:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233176AbhLVGYw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Dec 2021 01:24:52 -0500
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF311C061574;
-        Tue, 21 Dec 2021 22:24:51 -0800 (PST)
-Received: by mail-pl1-x630.google.com with SMTP id q17so1107830plr.11;
-        Tue, 21 Dec 2021 22:24:51 -0800 (PST)
+        with ESMTP id S233215AbhLVGsl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Dec 2021 01:48:41 -0500
+Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0905FC06173F
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Dec 2021 22:48:41 -0800 (PST)
+Received: by mail-lj1-x234.google.com with SMTP id u22so2182175lju.7
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Dec 2021 22:48:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id;
-        bh=vP1LOViFn0+7V0Z8YFpxh/XwEIUum39ijaW3BebLLxI=;
-        b=fagiSX0TlmeVqPVl5MegpvdJMrKjEx47q+BE0Uo/MmVO64pFRvoE3+1lcwGvPDWaoc
-         /QeDAOQ9H+Sae1Yom3iXDYGAHBiO2SkkOK4PbA+owI7UBxwh0mouiwNJnKF4E0FYo+aL
-         niNCwmOvBEWDJ5cUk1VzGCyRWrQVpxZwW+HfARrnv0rzKtmg7y5fZnq1lGyOtBvGOQ2P
-         A75tHkBbFDLYUIihoTwALQD//WrtURNpY2TPJVwQVUgsVAmNnL/EQFd/SkvNPJNOemKf
-         GchWJmHPPF5qAMA/pgciCDbnVz52zgkbTvS5+YU9EohPOwCe8Ju7SpZBN1VMvbr2EAJi
-         RRqQ==
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=NSkDFoSerZVrmpLUilEfV8Ju2E4v5m7ZKobzRBew9sw=;
+        b=mEC1KfAwMvoAoyjVKDIGpaOLh80+Y/8/xezFZ1BLp994C5sEoKe3q3md8D4fzDyDbk
+         FloATRehA0zl19Me9KCKvGjRSoAM9nD2q5Y9g8wdVB20G7bMA2NlXZNjYSbnpj96VGts
+         DKRPGYXR9DbMka+rF+2fpac9vkLiM3thWRWls=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=vP1LOViFn0+7V0Z8YFpxh/XwEIUum39ijaW3BebLLxI=;
-        b=3RXiDDYN+jiZnnHcSFJCFXz2vOWYdOmLwLqbXLRjYFXfiH2kcMGOlkHAt8SZzfq7NX
-         tzs8SvV4Wf8wlRYx85XpyetgSx7vC5O8VSHV6ZMBjMbpLLnz5mjkHVj1iA0nvevV4ceq
-         dFCiaKdFLgS4K70Il+JVqaYnZJdRcLLDZpGiAEiehnHcnNeKNLyDZnAekesOQVCkG5lF
-         To3lsgF9MqY7KDogKl7AwlLqSMqONPZDVqsOCLSotxvT5/pz7E0NSX2ERRU0Xrbl8ABY
-         /SJIeyXs+B/vuBKPNS4C5lbpIsS8pZdxCKSqKfvFUvNZ0H6yKt85ad2hrJvPKpipMDNe
-         aRlA==
-X-Gm-Message-State: AOAM533cuC/AKpXCw3694/Nsz1+dW9Uu5XGfYbe6w+CiqpqXxCHP+6MY
-        lnrTxUBDz31p2RreZfdNgJs=
-X-Google-Smtp-Source: ABdhPJzrFTfdWCZJJj7PQimEL7SGlhd9TvjzNv+9aMRbe+1PjRHxoh7SdCQwTik/GTySzujwK6NFaw==
-X-Received: by 2002:a17:90a:ab0f:: with SMTP id m15mr1881870pjq.91.1640154291500;
-        Tue, 21 Dec 2021 22:24:51 -0800 (PST)
-Received: from localhost.localdomain ([159.226.95.43])
-        by smtp.googlemail.com with ESMTPSA id j20sm4109730pjl.3.2021.12.21.22.24.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Dec 2021 22:24:51 -0800 (PST)
-From:   Miaoqian Lin <linmq006@gmail.com>
-Cc:     linmq006@gmail.com, Stanley Chu <stanley.chu@mediatek.com>,
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=NSkDFoSerZVrmpLUilEfV8Ju2E4v5m7ZKobzRBew9sw=;
+        b=6xP84bdeSewfTcIFJKX8GaWMeopuMpi/gbLmmubHX7leeGFh6CRN1tF+9xABWwcCvS
+         HpvmoTGTNegBAaP11nwyEEDHZEhHBeBtWxgAUximCKY/V5lOSTLGJrRixozYjw/H+/Ny
+         XvCd4ptru0PCeDhncoiJMPLrhaj/yAgOebcg0w4qZm0cM7HSFr+k/3w7/MtUgw4PNG+p
+         EN50bXEjG+sbkCBJ+IOGqzQO9BSOZibLlJbVp0F5j6Yah+2Z+3GkgKaUccAcb1RDgOFq
+         16L9+rgAX6fC9+U4it57abg0OBb3z2xdGedqGPH4vbTWue9JOShBYaB2wXcueDZMCFf4
+         hGqw==
+X-Gm-Message-State: AOAM532xyno/aDi/meUTT4hGCKTY0Uii9yxXmUlG9hgXQXU+e1JeAwEP
+        TJFF4doaEqJfuPsSywqBE8sagN7HCFzuO6RNdkcHZw==
+X-Google-Smtp-Source: ABdhPJwYuCHiq0ppLpf4B056P0N88O5bHGRzhgw4jU3lnH8UCjNrBnXr/enwCxheyjFZfYfLP7YvdLpHLB7uLjwdqdE=
+X-Received: by 2002:a2e:aa14:: with SMTP id bf20mr1254932ljb.376.1640155719274;
+ Tue, 21 Dec 2021 22:48:39 -0800 (PST)
+MIME-Version: 1.0
+References: <20211222062444.16144-1-linmq006@gmail.com>
+In-Reply-To: <20211222062444.16144-1-linmq006@gmail.com>
+From:   Chen-Yu Tsai <wenst@chromium.org>
+Date:   Wed, 22 Dec 2021 14:48:28 +0800
+Message-ID: <CAGXv+5GF1WOeXVtnknAa4GYXE3Hd-UzcCBCyQzT6KY3tJCrVGA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: ufs: ufs-mediatek : Fix NULL vs IS_ERR checking in ufs_mtk_init_va09_pwr_ctrl
+To:     Miaoqian Lin <linmq006@gmail.com>
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -54,36 +56,20 @@ Cc:     linmq006@gmail.com, Stanley Chu <stanley.chu@mediatek.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
         linux-scsi@vger.kernel.org, linux-mediatek@lists.infradead.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] scsi: ufs: ufs-mediatek : Fix NULL vs IS_ERR checking in ufs_mtk_init_va09_pwr_ctrl
-Date:   Wed, 22 Dec 2021 06:24:44 +0000
-Message-Id: <20211222062444.16144-1-linmq006@gmail.com>
-X-Mailer: git-send-email 2.17.1
-To:     unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function regulator_get() return error pointer,
-use IS_ERR() to check if has error.
+On Wed, Dec 22, 2021 at 2:25 PM Miaoqian Lin <linmq006@gmail.com> wrote:
+>
+> The function regulator_get() return error pointer,
+> use IS_ERR() to check if has error.
+>
+> Signed-off-by: Miaoqian Lin <linmq006@gmail.com>
 
-Signed-off-by: Miaoqian Lin <linmq006@gmail.com>
----
- drivers/scsi/ufs/ufs-mediatek.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Please add
 
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index 5393b5c9dd9c..86a938075f30 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -557,7 +557,7 @@ static void ufs_mtk_init_va09_pwr_ctrl(struct ufs_hba *hba)
- 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
- 
- 	host->reg_va09 = regulator_get(hba->dev, "va09");
--	if (!host->reg_va09)
-+	if (IS_ERR(host->reg_va09))
- 		dev_info(hba->dev, "failed to get va09");
- 	else
- 		host->caps |= UFS_MTK_CAP_VA09_PWR_CTRL;
--- 
-2.17.1
+Fixes: cf137b3ea49a ("scsi: ufs-mediatek: Support VA09 regulator operations")
 
+so that the patch has a chance to get picked into stable.
