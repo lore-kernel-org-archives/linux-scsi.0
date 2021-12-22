@@ -2,68 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E09CC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Dec 2021 09:22:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B790EC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Dec 2021 09:37:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239569AbhLVJWv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Dec 2021 04:22:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48736 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232601AbhLVJWv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Dec 2021 04:22:51 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6CA7C061574
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Dec 2021 01:22:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=9LQ+wonqxtl/isdk2vaWdJAjCLjF+g1UID+/Wk34n0o=; b=HkOaub9eKBpfKuinr0y1rNGwA8
-        3XKzlrNXvY6+2yZyatXxZUgbOln1QqyiH0qhMlMlh9z15IAn2Dx3eNVx8E86Ky+wUtR4gKlfGNv99
-        s+c+ms8UaddlFVfyOLpvX+04FKhhhl+x+Ewz/FrL4S8ry1D/NhXqNybTpXnvBQrsE6I6tmu4HFQfX
-        2n2DimQ3BKOpfqfYTjeOPMithmUsyeflZmaV+ZfF1YkDFUkOk+pJs06DJWCLWQL0vpUUjKh3hwid7
-        HGSHd0PoqtZjeZYHhdUbhETF2JazUa5j/lta3bC+GLjSxdFaIG3vWRBu4ApL+CiDXgkWbuEjnd+6g
-        ckB+XxgQ==;
-Received: from [2001:4bb8:190:3b1b:96b5:489:ff97:f4cf] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mzxpg-003F0S-MZ; Wed, 22 Dec 2021 09:22:48 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org
-Subject: [PATCH] pmcraid: don't use GFP_DMA in pmcraid_alloc_sglist
-Date:   Wed, 22 Dec 2021 10:22:47 +0100
-Message-Id: <20211222092247.928711-1-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
+        id S239887AbhLVJhN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Dec 2021 04:37:13 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:39291 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229987AbhLVJhN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Dec 2021 04:37:13 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1640165832;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZnAhI9l0yG82YEc6qpX6FpGYnYS2Hfg91/2R99xF2QA=;
+        b=bZ1lOLxmci587ob3Ln3AtaqbeHB5SA4rLnznSoM6ymuxrOPpUT7qgn+GcYuXJuOhSqMEjm
+        inNZKZ+X/dY6yi1FtAV4apEVvAiFzW/sNbrAMS6IV9fGUkkEtca6eyOKNk+rIu+akPFvjv
+        7VXHurh+a9aNuK+5vQ8oX7L5VJCLo6o=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-270-Nl1vhYf1MsK4pRQm3IWRsQ-1; Wed, 22 Dec 2021 04:37:11 -0500
+X-MC-Unique: Nl1vhYf1MsK4pRQm3IWRsQ-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 463AF1006AA4;
+        Wed, 22 Dec 2021 09:37:10 +0000 (UTC)
+Received: from localhost (ovpn-13-187.pek2.redhat.com [10.72.13.187])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B0034101E7E1;
+        Wed, 22 Dec 2021 09:37:09 +0000 (UTC)
+Date:   Wed, 22 Dec 2021 17:37:07 +0800
+From:   Baoquan He <bhe@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2] sr: don't use GFP_DMA
+Message-ID: <20211222093707.GA23698@MiWiFi-R3L-srv>
+References: <20211222090842.920724-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211222090842.920724-1-hch@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver doesn't express DMA addressing limitation under 32-bits
-anywhere else, so remove the spurious GFP_DMA allocation.
+Hi Christoph,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/pmcraid.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On 12/22/21 at 10:08am, Christoph Hellwig wrote:
+> The allocated buffers are used as a command payload, for which the block
+> layer and/or DMA API do the proper bounce buffering if needed.
+> 
+> Reported-by: Baoquan He <bhe@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+> 
+> Changes since v1:
+>  - also cover the two callsites in sr_vendor.c
+> 
+> Diffstat:
+>  drivers/scsi/sr.c        | 2 +-
+>  drivers/scsi/sr_vendor.c | 4 ++--
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index 14c122839c409..f925b1f1f9ada 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -855,7 +855,7 @@ static void get_capabilities(struct scsi_cd *cd)
+>  
+>  
+>  	/* allocate transfer buffer */
+> -	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+> +	buffer = kmalloc(512, GFP_KERNEL);
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 2fe7a0019fff2..928532180d323 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -3221,8 +3221,8 @@ static struct pmcraid_sglist *pmcraid_alloc_sglist(int buflen)
- 		return NULL;
- 
- 	sglist->order = order;
--	sgl_alloc_order(buflen, order, false,
--			GFP_KERNEL | GFP_DMA | __GFP_ZERO, &sglist->num_sg);
-+	sgl_alloc_order(buflen, order, false, GFP_KERNEL | __GFP_ZERO,
-+			&sglist->num_sg);
- 
- 	return sglist;
- }
--- 
-2.30.2
+Thanks a lot for doing this. When I browsed the code path, I come to
+blk_rq_map_kern() but I am not sure if blk_queue_may_bounce() is true in
+the sr_probe() case, then it may enter into bio_map_kern().
+
+Next I will post my original patchset to mute the allocation failure if
+it's requesting page from DMA zone and DMA zone has no managed page. And
+meanwhile, I will try to collect those places of kmalloc(GFP_DMA) into a
+RFC mail, see if we can change them one by one. Anyone can pick one
+place to fix if interested or knowing it well. Finally, we can remove the
+need of dma-kmalloc() as people suggested. Any comment?
+
+For this patch, it's an awesome start, thx.
+
+Reviewed-by: Baoquan He <bhe@redhat.com>
+
+
+>  	if (!buffer) {
+>  		sr_printk(KERN_ERR, cd, "out of memory.\n");
+>  		return;
+> diff --git a/drivers/scsi/sr_vendor.c b/drivers/scsi/sr_vendor.c
+> index 1f988a1b9166f..a61635326ae0a 100644
+> --- a/drivers/scsi/sr_vendor.c
+> +++ b/drivers/scsi/sr_vendor.c
+> @@ -131,7 +131,7 @@ int sr_set_blocklength(Scsi_CD *cd, int blocklength)
+>  	if (cd->vendor == VENDOR_TOSHIBA)
+>  		density = (blocklength > 2048) ? 0x81 : 0x83;
+>  
+> -	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+> +	buffer = kmalloc(512, GFP_KERNEL);
+>  	if (!buffer)
+>  		return -ENOMEM;
+>  
+> @@ -179,7 +179,7 @@ int sr_cd_check(struct cdrom_device_info *cdi)
+>  	if (cd->cdi.mask & CDC_MULTI_SESSION)
+>  		return 0;
+>  
+> -	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+> +	buffer = kmalloc(512, GFP_KERNEL);
+>  	if (!buffer)
+>  		return -ENOMEM;
+>  
+> -- 
+> 2.30.2
+> 
 
