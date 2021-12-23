@@ -2,81 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05C49C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Dec 2021 05:09:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21ADDC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Dec 2021 05:09:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236186AbhLWFJc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Dec 2021 00:09:32 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:37662 "EHLO
+        id S237131AbhLWFJg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Dec 2021 00:09:36 -0500
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:41602 "EHLO
         mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235176AbhLWFJb (ORCPT
+        by vger.kernel.org with ESMTP id S235176AbhLWFJf (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Dec 2021 00:09:31 -0500
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BN0FYxs006038;
-        Thu, 23 Dec 2021 05:09:26 GMT
+        Thu, 23 Dec 2021 00:09:35 -0500
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BN19KBP017247;
+        Thu, 23 Dec 2021 05:09:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=FDWwdngnvPH/Wvq/ezAVHj1XYTtbmZ3sfJ0Mbe+YuRE=;
- b=cJhGVdPGaEg8sCtNRVfBcoNS7BLj0sL267IbtQtHVCEecC0w9MLBbNOUKv51RkKn8qu8
- jsPGZZYB2N/S7lIIyWCgA6B1pXnzzhP3S7d9emqV1/aJBL8eM5UbWhwsCBFQXOx96ift
- 00qX3HNJUItlsyRzfCTFKDLochILP1VvIXCCSSN54/5jitSCMEh8OHFkhjDEe6JBt3n5
- i7D9rLJK04ri5IF1gN5oF4WeWCju8uknIkQkmA/Hde4wh+9Q+IUJZcEyyoa2EhtIpH23
- /b/3C0Mx4lxGOcQh2Mn3OtfMSr/hePocmVITN6wemc4IRPPJa357RpgOxMEJfU1gnwBN nw== 
+ bh=+Uab6mKxODba9/IzOWCrlLSwqNC+svV8Lz4jtF9aIzw=;
+ b=mEJ+8m0XwLwvhTnYXkJnYFCdNpFNIaVfiHyzKYbaF6BxHzX1LjRd5xrrOjyTxYllGlRZ
+ bwZl+Tl4bVYR6d9PCepZE6y3uLgQfENp7vF73FOB4qyqKjp1hDbJoO3H8xoTCYB4d1gn
+ ooKpcpARBZZSNcfljJqDbvji6eJqW7qKmZvlzR20mtfyeg2KY2nLiB1EVby6HxkhCCZ2
+ paAA+mX8oZtZ5DLDR6pm73V0amQ/KYPWKfGGe8a5kAspl4Nze1fOJqght6y4/2hRjshY
+ CTlZxptp2LHiXpuJW7d7BUPP7VeqzHySRn5et03D8XtEPihOx9PFYepPrzuIEvTZnva8 gQ== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3d2udcfs3j-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3d4f6w08gy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Dec 2021 05:09:26 +0000
+        Thu, 23 Dec 2021 05:09:28 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BN50vTK102222;
-        Thu, 23 Dec 2021 05:09:25 GMT
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BN50vQQ102185;
+        Thu, 23 Dec 2021 05:09:28 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3020.oracle.com with ESMTP id 3d17f68vdr-1
+        by aserp3020.oracle.com with ESMTP id 3d17f68vee-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Dec 2021 05:09:25 +0000
+        Thu, 23 Dec 2021 05:09:27 +0000
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 1BN59OTc125399;
-        Thu, 23 Dec 2021 05:09:24 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 1BN59OTi125399;
+        Thu, 23 Dec 2021 05:09:27 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by aserp3020.oracle.com with ESMTP id 3d17f68vdd-1;
-        Thu, 23 Dec 2021 05:09:24 +0000
+        by aserp3020.oracle.com with ESMTP id 3d17f68vdd-4;
+        Thu, 23 Dec 2021 05:09:27 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, Daniel Wagner <dwagner@suse.de>
+To:     jejb@linux.ibm.com, John Garry <john.garry@huawei.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        linux-kernel@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3] qla2xxx: synchronize rport dev_loss_tmo setting
-Date:   Thu, 23 Dec 2021 00:09:20 -0500
-Message-Id: <164023594701.4594.3994093759396390802.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linuxarm@huawei.com,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/8] hisi_sas: Some misc patches
+Date:   Thu, 23 Dec 2021 00:09:23 -0500
+Message-Id: <164023594702.4594.9733277772140278376.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20211214111139.52503-1-dwagner@suse.de>
-References: <20211214111139.52503-1-dwagner@suse.de>
+In-Reply-To: <1639579061-179473-1-git-send-email-john.garry@huawei.com>
+References: <1639579061-179473-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: NbFOlJI6VQrgrU3gI98Qz09y5mXlhsoM
-X-Proofpoint-GUID: NbFOlJI6VQrgrU3gI98Qz09y5mXlhsoM
+X-Proofpoint-GUID: tOiWKWfJS_Pc1L6V9IhdywE5CoGqL79H
+X-Proofpoint-ORIG-GUID: tOiWKWfJS_Pc1L6V9IhdywE5CoGqL79H
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 14 Dec 2021 12:11:39 +0100, Daniel Wagner wrote:
+On Wed, 15 Dec 2021 22:37:33 +0800, John Garry wrote:
 
-> From: Hannes Reinecke <hare@suse.de>
+> This is a small series of misc patches. Please consider for 5.17.
 > 
-> Currently, the dev_loss_tmo setting is only ever used for SCSI
-> devices. This patch reshuffles initialisation such that the SCSI
-> remote ports are registered before the NVMe ones, allowing the
-> dev_loss_tmo setting to be synchronized between SCSI and NVMe.
+> Briefly the series covers:
+> - Factoring out the common and internal abort delivery code
+> - Fix some races with controller reset (again!)
+> - Fix out-of-order interrupt handling on FPGA
 > 
 > [...]
 
 Applied to 5.17/scsi-queue, thanks!
 
-[1/1] qla2xxx: synchronize rport dev_loss_tmo setting
-      https://git.kernel.org/mkp/scsi/c/baea0e833f76
+[1/8] scsi: hisi_sas: Start delivery hisi_sas_task_exec() directly
+      https://git.kernel.org/mkp/scsi/c/0e4620856b89
+[2/8] scsi: hisi_sas: Make internal abort have no task proto
+      https://git.kernel.org/mkp/scsi/c/934385a4fd59
+[3/8] scsi: hisi_sas: Pass abort structure for internal abort
+      https://git.kernel.org/mkp/scsi/c/08c61b5d902b
+[4/8] scsi: hisi_sas: Factor out task prep and delivery code
+      https://git.kernel.org/mkp/scsi/c/dc313f6b125b
+[5/8] scsi: hisi_sas: Prevent parallel controller reset and control phy command
+      https://git.kernel.org/mkp/scsi/c/20c634932ae8
+[6/8] scsi: hisi_sas: Prevent parallel FLR and controller reset
+      https://git.kernel.org/mkp/scsi/c/16775db613c2
+[7/8] scsi: hisi_sas: Fix phyup timeout on FPGA
+      https://git.kernel.org/mkp/scsi/c/37310bad7fa6
+[8/8] scsi: libsas: Decode SAM status and host byte codes
+      https://git.kernel.org/mkp/scsi/c/4be6181fea1d
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
