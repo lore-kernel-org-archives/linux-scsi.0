@@ -2,45 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6570AC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Dec 2021 06:34:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C57C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Dec 2021 08:01:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235483AbhLWGew (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Dec 2021 01:34:52 -0500
-Received: from verein.lst.de ([213.95.11.211]:52790 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232444AbhLWGet (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Dec 2021 01:34:49 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id D92A168AFE; Thu, 23 Dec 2021 07:34:46 +0100 (CET)
-Date:   Thu, 23 Dec 2021 07:34:46 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Jackie Liu <liuyun01@kylinos.cn>
-Subject: Re: [PATCH] scsi: bsg: Ignore bsg queue registration failures again
-Message-ID: <20211223063446.GA4005@lst.de>
-References: <20211222165427.1855582-1-linux@roeck-us.net>
+        id S242774AbhLWIBA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Dec 2021 03:01:00 -0500
+Received: from mail.BETTERBIZ.PL ([45.86.209.138]:59616 "EHLO
+        mail.betterbiz.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242759AbhLWIA7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Dec 2021 03:00:59 -0500
+Received: by mail.betterbiz.pl (Postfix, from userid 1001)
+        id 1BD3482B45; Thu, 23 Dec 2021 02:46:00 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=betterbiz.pl; s=mail;
+        t=1640245887; bh=07NAgW1e0WiNB9zqagiM2BnwZfWBCpNa2E4+ccxBPgw=;
+        h=Date:From:To:Subject:From;
+        b=O15Yu3PDchU+P3mwPJyTVPn1Px9b3OOnrI7Oa4GDN+xNAIWOPWRq4e5rx7HECQFDd
+         JDbjA41xgbULxPTREXEd3NdTc3O97xwgXkWIQ1i6CtDX244A/2NsHNUzJryBqbRqNg
+         dpKTAhUqrvAsDOZNhd4IoM55C4HqCb1LaB6uNs9ggzOK/lYztbbhMXapM+xbta/OyN
+         AJdCML2J/eeTQdWhXyBRJ3dgkZ9RoACasC60SgOS3u3oTQpdZ0fMza9dJZB5nS9HHy
+         1hVS2WnoVkGsWo9BfjKU4xQ4t3OtUnwQl461sKAYQhiuyfu320T1/IYr3mHDlGQA43
+         BY7AbkKuVfxGg==
+Received: by mail.betterbiz.pl for <linux-scsi@vger.kernel.org>; Thu, 23 Dec 2021 07:45:53 GMT
+Message-ID: <20211223024500-0.1.f.10od.0.hrad7f9w9j@betterbiz.pl>
+Date:   Thu, 23 Dec 2021 07:45:53 GMT
+From:   "Jakub Daroch" <jakub.daroch@betterbiz.pl>
+To:     <linux-scsi@vger.kernel.org>
+Subject: Wycena paneli fotowoltaicznych
+X-Mailer: mail.betterbiz.pl
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211222165427.1855582-1-linux@roeck-us.net>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 22, 2021 at 08:54:27AM -0800, Guenter Roeck wrote:
-> Since commit 5f7cf82c1d73 ("scsi: bsg: Fix errno when
-> scsi_bsg_register_queue() fails"), errors from registering the bsg queue
-> are no longer ignored but returned to the caller. At the same time, the
-> comment in the code still states that errors are ignored. On top of that,
-> the message preporting the problem is printed as dev_info, not dev_err.
-> Both suggest that errors from bsg queue registrations should indeed be
-> ignored.
+Dzie=C5=84 dobry,
 
-But there is no good reason to ignore it.  The proper fix is to fully
-handle the errors.
+dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
+irm=C4=85.
+
+=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
+ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
+
+Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
+ropozycji?
+
+
+Pozdrawiam,
+Jakub Daroch
