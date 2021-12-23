@@ -2,85 +2,66 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AEA3C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Dec 2021 05:09:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63D49C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Dec 2021 06:11:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346210AbhLWFJn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Dec 2021 00:09:43 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:17426 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237188AbhLWFJm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Dec 2021 00:09:42 -0500
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BN0JQvW016934;
-        Thu, 23 Dec 2021 05:09:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=OMvW6eO+PlYGQA9n9eHRPOe3ElC9aaRa9SFIhD8SZcI=;
- b=GhGyOUAivpddHjHv6AewkztRa1FEB4JEQGIUNDFz3wcPPdJFt0VOMB6w2IStZjlYsHBH
- Ev/z9r6ZmLhm2ZoGgVcj+CGX727BhTR2LOBSL+uIwj+yxCoxVGOuUTXg7glMZi7IDaNM
- eDYm2LaSFkb2sotJTYzV8+QgGkSMCrE87pZNq/QGBXBeLepkL5/qrtqxF8vVfKy1DzFG
- cu2cdhT1GXcz7UC4ZUtGSDVH9WVvfv0V6lOS/LReps8C7yJYMqOivt+IJJo8SGUBwHGM
- qLAGgAlblNBmjjWXyR2fuQHXCLyBin/hOCD4clLU8MjF42ybU4/F3D8j7k8xaeQvUa9S zw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3d46qn1ne3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Dec 2021 05:09:28 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BN50vOT102251;
-        Thu, 23 Dec 2021 05:09:27 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3020.oracle.com with ESMTP id 3d17f68veb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 23 Dec 2021 05:09:27 +0000
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 1BN59OTg125399;
-        Thu, 23 Dec 2021 05:09:26 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by aserp3020.oracle.com with ESMTP id 3d17f68vdd-3;
-        Thu, 23 Dec 2021 05:09:26 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     beanhuo@micron.com, stanley.chu@mediatek.com, cang@codeaurora.org,
-        bvanassche@acm.org, avri.altman@wdc.com, alim.akhtar@samsung.com,
-        tomas.winkler@intel.com, asutoshd@codeaurora.org,
-        Bean Huo <huobean@gmail.com>, jejb@linux.ibm.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Amit Pundir <amit.pundir@linaro.org>,
-        John Stultz <john.stultz@linaro.org>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        YongQin Liu <yongqin.liu@linaro.org>
-Subject: Re: [PATCH v2] scsi: ufs: Fix deadlock issue in ufshcd_wait_for_doorbell_clr()
-Date:   Thu, 23 Dec 2021 00:09:22 -0500
-Message-Id: <164023594702.4594.97056831726187754.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20211214120537.531628-1-huobean@gmail.com>
-References: <20211214120537.531628-1-huobean@gmail.com>
+        id S1346557AbhLWGLX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Dec 2021 01:11:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47750 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1346538AbhLWGLX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Dec 2021 01:11:23 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 942B1C061401
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Dec 2021 22:11:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=N17ssC11wD/HHc4p4+p26hQSDYOU0PCLETkulQhmRu0=; b=3YVObeoTkHVabPu+f8eP4evdpo
+        RJBOlq6HxVYqDDrZzxYJ8VixNdvDxZkbE7aO/PcDrPb5usosHIZaLawYDZTDe46eqar6XpT3fF2RN
+        Aef6T+OG4EUA4Dr229P2+xD/8MovwgdzFKt3MSjYVNQqu9uxOPRoPAgtNqo2O3AFn5G2FC6mSsUv6
+        9VPe6Dh1LaU3Cwv4RE6G0JKkQeQZZDe17bW3wCJsL4rv1MrgHUqWoSvqCeNGkIhoFj+/yL/mt/b7R
+        ZI6DR0n7wETguD25ilS4jMDIacnFizR5DWvosjLhxXAqQ2agKwhBllHJ5c56BRk9enWEW8Cl65wBt
+        mo3Jv2Ew==;
+Received: from [2601:1c0:6280:3f0::aa0b] (helo=bombadil.infradead.org)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1n0HJx-00Bur6-Rl; Thu, 23 Dec 2021 06:11:21 +0000
+From:   Randy Dunlap <rdunlap@infradead.org>
+To:     linux-scsi@vger.kernel.org
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: aacraid: fix spelling of "its"
+Date:   Wed, 22 Dec 2021 22:11:19 -0800
+Message-Id: <20211223061119.18304-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: VnYxAGQiFM4wiqX4YeIxK0F0JtQP86IK
-X-Proofpoint-GUID: VnYxAGQiFM4wiqX4YeIxK0F0JtQP86IK
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 14 Dec 2021 13:05:37 +0100, Bean Huo wrote:
+Use the possessive "its" instead of the contraction "it's" in
+user messages.
 
-> From: Bean Huo <beanhuo@micron.com>
-> 
-> Call shost_for_each_device() with holding host->host_lock will cause
-> a deadlock situation, which will cause the system to stall (the log
-> as follow). Fix this issue by using __shost_for_each_device() in
-> ufshcd_pending_cmds().
-> 
-> [...]
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+---
+ drivers/scsi/aacraid/aachba.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Applied to 5.17/scsi-queue, thanks!
-
-[1/1] scsi: ufs: Fix deadlock issue in ufshcd_wait_for_doorbell_clr()
-      https://git.kernel.org/mkp/scsi/c/99c66a8868e3
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+--- linux-next-20211222.orig/drivers/scsi/aacraid/aachba.c
++++ linux-next-20211222/drivers/scsi/aacraid/aachba.c
+@@ -271,7 +271,7 @@ MODULE_PARM_DESC(msi, "IRQ handling."
+ 	" 0=PIC(default), 1=MSI, 2=MSI-X)");
+ module_param(startup_timeout, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(startup_timeout, "The duration of time in seconds to wait for"
+-	" adapter to have it's kernel up and\n"
++	" adapter to have its kernel up and\n"
+ 	"running. This is typically adjusted for large systems that do not"
+ 	" have a BIOS.");
+ module_param(aif_timeout, int, S_IRUGO|S_IWUSR);
