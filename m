@@ -2,73 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 661B8C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Dec 2021 11:58:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6967C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Dec 2021 12:02:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352624AbhLXL6v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Dec 2021 06:58:51 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4324 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232442AbhLXL6u (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Dec 2021 06:58:50 -0500
-Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JL5B34JLpz67kT0;
-        Fri, 24 Dec 2021 19:56:11 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.20; Fri, 24 Dec 2021 12:58:42 +0100
-Received: from [10.195.32.200] (10.195.32.200) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Fri, 24 Dec 2021 11:58:42 +0000
-Subject: Re: [issue report] pm8001 issues (was driver crashes with IOMMU
- enabled)
-From:   John Garry <john.garry@huawei.com>
-To:     Jinpu Wang <jinpu.wang@ionos.com>,
-        Viswas G <Viswas.G@microchip.com>,
-        Ajish Koshy <Ajish.Koshy@microchip.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "vishakhavc@google.com" <vishakhavc@google.com>,
-        <ipylypiv@google.com>, <Ruksar.devadi@microchip.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-References: <894f766f-74b7-62b1-f6d2-82ac85b6478f@huawei.com>
- <CAMGffEkvrAxhrsL=azkVzQHHyDczZwJ3uiNWydSA6o2K+Xh_Jw@mail.gmail.com>
- <00505633-c8c0-8213-8909-482bf43661cd@huawei.com>
- <1cc92b2d-3670-7843-d68a-06fe68521d24@huawei.com>
-Message-ID: <fd0eafc6-9443-fe5e-2c2f-91d6bbe8b174@huawei.com>
-Date:   Fri, 24 Dec 2021 11:58:40 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S1352629AbhLXMC2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Dec 2021 07:02:28 -0500
+Received: from szxga01-in.huawei.com ([45.249.212.187]:15972 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232442AbhLXMC1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Dec 2021 07:02:27 -0500
+Received: from canpemm500007.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4JL5FX5y1mzVflm;
+        Fri, 24 Dec 2021 19:59:12 +0800 (CST)
+Received: from localhost (10.174.179.215) by canpemm500007.china.huawei.com
+ (7.192.104.62) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Fri, 24 Dec
+ 2021 20:02:24 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     <kys@microsoft.com>, <haiyangz@microsoft.com>,
+        <sthemmin@microsoft.com>, <wei.liu@kernel.org>,
+        <decui@microsoft.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <mikelley@microsoft.com>,
+        <Tianyu.Lan@microsoft.com>, <longli@microsoft.com>
+CC:     <linux-hyperv@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH -next] scsi: storvsc: Fix unsigned comparison to zero
+Date:   Fri, 24 Dec 2021 20:02:16 +0800
+Message-ID: <20211224120216.35896-1-yuehaibing@huawei.com>
+X-Mailer: git-send-email 2.10.2.windows.1
 MIME-Version: 1.0
-In-Reply-To: <1cc92b2d-3670-7843-d68a-06fe68521d24@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.32.200]
-X-ClientProxiedBy: lhreml729-chm.china.huawei.com (10.201.108.80) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
+Content-Type: text/plain
+X-Originating-IP: [10.174.179.215]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ canpemm500007.china.huawei.com (7.192.104.62)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 24/12/2021 09:02, John Garry wrote:
-> + some recent contributors
-> 
-> Hi microchip guys,
-> 
-> Do you have any idea on the 2x outstanding issues I reported for the 
-> pm8001 driver:
-> a. my arm system goes into a continuous cycle of SCSI error handling for 
-> this scsi host
-> b. maxcpus=1 on commandline crashes during bootup on my arm system - I 
-> assume that x86 is same also
+The unsigned variable sg_count is being assigned a return value
+from the call to scsi_dma_map() that can return -ENOMEM.
 
-commit 05c6c029a44d ("scsi: pm80xx: Increase number of supported queues
-") looks to cause this issue.
+Fixes: 743b237c3a7b ("scsi: storvsc: Add Isolation VM support for storvsc driver")
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/scsi/storvsc_drv.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Problem a. still exists prior to this.
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index ae293600d799..072c752a8c36 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1837,7 +1837,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 		unsigned int hvpg_count = HVPFN_UP(offset_in_hvpg + length);
+ 		struct scatterlist *sg;
+ 		unsigned long hvpfn, hvpfns_to_add;
+-		int j, i = 0;
++		int sg_cnt, j, i = 0;
+ 
+ 		if (hvpg_count > MAX_PAGE_BUFFER_COUNT) {
+ 
+@@ -1851,11 +1851,11 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 		payload->range.len = length;
+ 		payload->range.offset = offset_in_hvpg;
+ 
+-		sg_count = scsi_dma_map(scmnd);
+-		if (sg_count < 0)
++		sg_cnt = scsi_dma_map(scmnd);
++		if (sg_cnt < 0)
+ 			return SCSI_MLQUEUE_DEVICE_BUSY;
+ 
+-		for_each_sg(sgl, sg, sg_count, j) {
++		for_each_sg(sgl, sg, sg_cnt, j) {
+ 			/*
+ 			 * Init values for the current sgl entry. hvpfns_to_add
+ 			 * is in units of Hyper-V size pages. Handling the
+-- 
+2.17.1
 
-Thanks,
-John
