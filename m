@@ -2,116 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15288C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Dec 2021 22:56:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D0D6C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Dec 2021 00:34:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233913AbhL0W4g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Dec 2021 17:56:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50818 "EHLO
+        id S234173AbhL1AeK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Dec 2021 19:34:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229643AbhL0W4g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Dec 2021 17:56:36 -0500
-Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90487C06173E;
-        Mon, 27 Dec 2021 14:56:35 -0800 (PST)
-Received: by mail-wr1-x42c.google.com with SMTP id v11so34802412wrw.10;
-        Mon, 27 Dec 2021 14:56:35 -0800 (PST)
+        with ESMTP id S231514AbhL1AeK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Dec 2021 19:34:10 -0500
+Received: from mail-qt1-x82e.google.com (mail-qt1-x82e.google.com [IPv6:2607:f8b0:4864:20::82e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C7DAC06173E
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Dec 2021 16:34:10 -0800 (PST)
+Received: by mail-qt1-x82e.google.com with SMTP id a1so14826358qtx.11
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Dec 2021 16:34:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:content-language:to:cc:from
-         :subject:content-transfer-encoding;
-        bh=URhz0YsteZlx1hDMRx5/texcvutOxraW5DqUGA1+YcI=;
-        b=oUrTIqoWBLZ/jYR9iGh+rFnFzFlLYOlxA7gGIO12p7G84l2MnjgS7drovNOFpLwxd1
-         slxtGrXIYbybDRlfktTlefHq/B1ycFhYOeRqe52/f9gU5MJ4+1eDIzfRGeM3w3jTQ8oQ
-         haaQx+WRkjmiI6Phr8rARLI2/dA8Y4ZdxARIVgmxY/g0sUA5+qU7DKic20QhHVV8wPGL
-         uGCeToOoO2UxwmE4m825z9EQ/3dnhJPWBnil7itdAXWTyGklqucCsuc2YkxVG7szDaEI
-         qxs9sRQENdDYCk68Ah5eMgqS9sYw5KVyT7QflJyIjjaykqE05pes+ZvHJDUyD4ukU007
-         I/cA==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=jPjkEqGp5XuQYZEfLNQHPR01/l5pdWTL62Z1KwvFYaw=;
+        b=dwkWkuXhdMoMt8oUNUr1f+b8G6Lrhg5RGuOWZU7Nhjxju7vVYtJdiTCLdUdA7yuUWe
+         5yn5GuCd9jg5iQGUW4vCQnvr3X8xvy5H4Wp+7VOSjMt4G1vTFmWCtR1ZnMxB1y08Z75x
+         kDz0pij4ROroGBm+y9lrazU1jdsfM2zI9INPOqv3K3QrqFfuvoiBNPFbllSo0KF1u+26
+         WQeaLnyHqBTNBEtHxdZnSdWWsqK3pYkaTrsQUm70JoSCLtkibtYq/4jnNg91TDQUP69J
+         Da8ophTXGplaSkoG5cpdgNLsYFBcBozHvrD+5PBEhIPhICRt+qVfUpTs1noK9SbdMod+
+         NJmA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent
-         :content-language:to:cc:from:subject:content-transfer-encoding;
-        bh=URhz0YsteZlx1hDMRx5/texcvutOxraW5DqUGA1+YcI=;
-        b=UThKUGNMlGAXSzN0cZ525cgd6voH0gtCYXCOUzAht6w70rICrbsJBtheR45lum31QO
-         4VzxlA/n402YaXeNjp20KvZiKLl1y574SLXCVUVyl8zVtvT77kI44PkRAKpI02i7z7X7
-         +ZJQFOd9qA3Ag2IOmpxFb4+/ScGVdLKhaEsEFI25hUs/MpfeorFxh8L1TKIvGXmcUmIl
-         4vXHLa+lybqed+S11GwxImFeFD4gYm+n7QHIkBRtZOQzgMYJXsCQzImYR6ZzbtVAIBZD
-         j7WMF9VZULLErJKmBr9yg1VscguW6AMwovWPJNOjaE0Tuc7H4zw5VEhV90xWdXEGskW5
-         AP0g==
-X-Gm-Message-State: AOAM532s+hhhl/93yTm/+jEQxx34W+l1z8KP1UpNt6XHwR95DzmDX+Vw
-        aAShceobAdJV3tZDYDt0hDg=
-X-Google-Smtp-Source: ABdhPJxLoJhhXfJSvF2baLGQq2xFCFNF57ccLafHmsZporC0gskHyW2nEL2jZjnZKAP7ZEXf18pd2g==
-X-Received: by 2002:adf:ec85:: with SMTP id z5mr14013781wrn.568.1640645793730;
-        Mon, 27 Dec 2021 14:56:33 -0800 (PST)
-Received: from [192.168.0.209] (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.googlemail.com with ESMTPSA id u12sm16244849wrf.60.2021.12.27.14.56.32
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=jPjkEqGp5XuQYZEfLNQHPR01/l5pdWTL62Z1KwvFYaw=;
+        b=uq9myiLJwBt2oyausMv7QJiHzZjTjmLezhlCtX3pNqyoPWFmu3UnK55YMwNo/OxVs5
+         VeY1WbwO7pfG7nCNqom2GxnwInKraZ+WPIgWNHquOHcafvKGJ82rOPM4zCg/YNIHD0hv
+         CpSoStSdyL/oM7+Mh4Y+avs65VneWcunC08watus4bCTZyQb+qip21Fi0fDKVSLhpv7B
+         iNxIo+MODYBNYwSqDd82zxI22A4PkQ/MAbKSl8J/G/g9pDO8/M0k8xTl/42YLhiK4No5
+         GBiMxD4HbV2VAPHAZ+KoseVFDeiQKny0isojabJNh4LQzOQQWr/R/2+1LG1x3hCn8YEF
+         +Bug==
+X-Gm-Message-State: AOAM5324+mI6G+BOX3NLUxzX1cTDa4ITO/Gz9Yo0Dt38FmAhUQzd/z2M
+        Cx1xC5z9B8rDgdFmdS/6ZMq9MWYpzPE=
+X-Google-Smtp-Source: ABdhPJxDd2/PspvZvYgSy/dSff71XLXVs/63PFO2ju+k8G72iQQ9sO+IxVdwMMa9FinA0EOYJoYr5A==
+X-Received: by 2002:ac8:7d08:: with SMTP id g8mr16181581qtb.573.1640651649330;
+        Mon, 27 Dec 2021 16:34:09 -0800 (PST)
+Received: from oc6857751186.ibm.com (c-24-20-51-242.hsd1.or.comcast.net. [24.20.51.242])
+        by smtp.gmail.com with ESMTPSA id j20sm15491645qko.117.2021.12.27.16.34.08
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Dec 2021 14:56:33 -0800 (PST)
-Message-ID: <c27a4f9b-e468-93a2-c14d-20f45a5a103b@gmail.com>
-Date:   Mon, 27 Dec 2021 22:56:32 +0000
+        Mon, 27 Dec 2021 16:34:09 -0800 (PST)
+Subject: Re: [PATCH] sr: don't use GFP_DMA in get_capabilities
+To:     Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, bhe@redhat.com
+References: <20211222090159.916428-1-hch@lst.de>
+From:   Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
+Message-ID: <9e512d2b-8467-9a6f-734c-eb6df37d5d69@gmail.com>
+Date:   Mon, 27 Dec 2021 16:34:06 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.0
+In-Reply-To: <20211222090159.916428-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-To:     Xiang Chen <chenxiang66@hisilicon.com>
-Cc:     John Garry <john.garry@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From:   "Colin King (gmail)" <colin.i.king@gmail.com>
-Subject: re: scsi: hisi_sas: Fix some issues related to,
- asd_sas_port->phy_list
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On 12/22/21 1:01 AM, Christoph Hellwig wrote:
+> The allocated buffer is used as a command payload, for which the block
+> layer and/or DMA API do the proper bounce buffering if needed.
+> 
+> Reported-by: Baoquan He <bhe@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/scsi/sr.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index 14c122839c409..f925b1f1f9ada 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -855,7 +855,7 @@ static void get_capabilities(struct scsi_cd *cd)
+>  
+>  
+>  	/* allocate transfer buffer */
+> -	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+> +	buffer = kmalloc(512, GFP_KERNEL);
+>  	if (!buffer) {
+>  		sr_printk(KERN_ERR, cd, "out of memory.\n");
 
-Static analysis with clang-scan has found a dereference of an 
-uninitialized pointer in drivers/scsi/hisi_sas/hisi_sas_main.c 
-introduced by the following recent commit:
+A separate trivial cleanup is the unnecessary memory allocation failure message
+here since the mm layer will already report such things.
 
-commit 29e2bac87421c613782ccb510c76c5efbecac0cf
-Author: Xiang Chen <chenxiang66@hisilicon.com>
-Date:   Mon Dec 20 19:21:28 2021 +0800
+-Tyrel
 
-     scsi: hisi_sas: Fix some issues related to asd_sas_port->phy_list
+>  		return;
+> 
 
-The issue is as follows:
-
-static void hisi_sas_send_ata_reset_each_phy(struct hisi_hba *hisi_hba,
-                                              struct asd_sas_port *sas_port,
-                                              struct domain_device *device)
-{
-         struct hisi_sas_tmf_task tmf_task = { .force_phy = 1 };
-         struct ata_port *ap = device->sata_dev.ap;
-         struct device *dev = hisi_hba->dev;
-         int s = sizeof(struct host_to_dev_fis);
-         int rc = TMF_RESP_FUNC_FAILED;
-         struct asd_sas_phy *sas_phy;
-
-sas_phy is not initialized ^
-
-         struct ata_link *link;
-         u8 fis[20] = {0};
-         u32 state;
-         int i;
-
-         state = hisi_hba->hw->get_phys_state(hisi_hba);
-         for (i = 0; i < hisi_hba->n_phy; i++) {
-                 if (!(state & BIT(sas_phy->id)))
-                         continue;
-
-sas_phy is being dereferenced
-
-The commit referenced above removed the statement:
-
-    list_for_each_entry(sas_phy, &sas_port->phy_list, port_phy_el)
-
-
-..that set sas_phy. Now we don't have this, so sas_phy is not initialized.
-
-Colin
