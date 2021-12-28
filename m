@@ -2,196 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B12EC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Dec 2021 02:03:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B43B2C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Dec 2021 02:10:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234500AbhL1CDy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Dec 2021 21:03:54 -0500
-Received: from szxga01-in.huawei.com ([45.249.212.187]:34850 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232334AbhL1CDx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Dec 2021 21:03:53 -0500
-Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4JNHrD4wptzccDH;
-        Tue, 28 Dec 2021 10:03:24 +0800 (CST)
-Received: from [10.40.193.166] (10.40.193.166) by
- dggeme756-chm.china.huawei.com (10.3.19.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.20; Tue, 28 Dec 2021 10:03:51 +0800
-Subject: Re: [PATCH v2 05/15] scsi: hisi_sas: Fix some issues related to
- asd_sas_port->phy_list
-To:     Nathan Chancellor <nathan@kernel.org>,
-        <martin.petersen@oracle.com>, <john.garry@huawei.com>
-References: <1639999298-244569-1-git-send-email-chenxiang66@hisilicon.com>
- <1639999298-244569-6-git-send-email-chenxiang66@hisilicon.com>
- <Ycn3FoW9eOZNFMiL@archlinux-ax161>
-CC:     <jejb@linux.ibm.com>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>, <llvm@lists.linux.dev>,
-        <colin.i.king@gmail.com>
-From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
-Message-ID: <3d20171c-f5ac-d01e-9f0e-ba51835d68f0@hisilicon.com>
-Date:   Tue, 28 Dec 2021 10:03:51 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.2.0
+        id S234577AbhL1CKL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Dec 2021 21:10:11 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:43708 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232504AbhL1CKJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Dec 2021 21:10:09 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1B799B8117D;
+        Tue, 28 Dec 2021 02:10:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C19A8C36AEA;
+        Tue, 28 Dec 2021 02:09:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1640657404;
+        bh=SWYw07zmaaDNu+bU6UjWMUGttSEKl48ssAwYr917Irk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=AP7PTZtlYcp1DDFFD9oOox44rlGILxnZhjrWGoppO9nx889cG994Anev93Fi8avnE
+         QKDjPgXQd+0j5ryyJUZRF2fBwkLwO80XrnSF/7Fx+x50yneeRCMv+6NTewDTm+M3mY
+         UmjlUI3lKpBa+eY+azArRNs2im3Ff4KiJ7Zi2yf5dhhdWeFi5sankCfKs3hH/NkcWY
+         C3nDae4xyYfSY866Hl7iueZkbXg7sQjQFFHeioueEr+2zR+wkgXwGDiPuaIoio9xml
+         rwSFGRLZ2Ry45efsPcHYEzY5Wj/FdpgdsOlVeG8/L54LBpew0o0F/pJgWb5CCAbMPX
+         5d9alQgd1Ngqw==
+Date:   Tue, 28 Dec 2021 03:09:46 +0100
+From:   Mauro Carvalho Chehab <mchehab@kernel.org>
+To:     Niklas Schnelle <schnelle@linux.ibm.com>
+Cc:     Arnd Bergmann <arnd@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        John Garry <john.garry@huawei.com>,
+        Nick Hu <nickhu@andestech.com>,
+        Greentime Hu <green.hu@gmail.com>,
+        Vincent Chen <deanbo422@gmail.com>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Ian Abbott <abbotti@mev.co.uk>,
+        H Hartley Sweeten <hsweeten@visionengravers.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Jean Delvare <jdelvare@suse.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Karsten Keil <isdn@linux-pingi.de>,
+        Hans Verkuil <hverkuil-cisco@xs4all.nl>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Michael Grzeschik <m.grzeschik@pengutronix.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Tony Nguyen <anthony.l.nguyen@intel.com>,
+        Kalle Valo <kvalo@kernel.org>, Jouni Malinen <j@w1.fi>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Mark Brown <broonie@kernel.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Teddy Wang <teddy.wang@siliconmotion.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Forest Bond <forest@alittletooquiet.net>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, linux-kernel@vger.kernel.org,
+        linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-riscv@lists.infradead.org, linux-csky@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-gpio@vger.kernel.org,
+        linux-hwmon@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-input@vger.kernel.org, netdev@vger.kernel.org,
+        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        linux-wireless@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
+        linux-spi@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-staging@lists.linux.dev, linux-serial@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-watchdog@vger.kernel.org,
+        alsa-devel@alsa-project.org
+Subject: Re: [RFC 01/32] Kconfig: introduce and depend on LEGACY_PCI
+Message-ID: <20211228030946.65932d2e@coco.lan>
+In-Reply-To: <20211227164317.4146918-2-schnelle@linux.ibm.com>
+References: <20211227164317.4146918-1-schnelle@linux.ibm.com>
+        <20211227164317.4146918-2-schnelle@linux.ibm.com>
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.30; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-In-Reply-To: <Ycn3FoW9eOZNFMiL@archlinux-ax161>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.40.193.166]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggeme756-chm.china.huawei.com (10.3.19.102)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Em Mon, 27 Dec 2021 17:42:46 +0100
+Niklas Schnelle <schnelle@linux.ibm.com> escreveu:
 
-Hi Nathan and Colin,
-Thank you for your report.
+> Introduce a new LEGACY_PCI Kconfig option which gates support for legacy
+> PCI devices including those attached to a PCI-to-PCI Express bridge and
+> PCI Express devices using legacy I/O spaces. Note that this is different
+> from non PCI uses of I/O ports such as by ACPI.
+> 
+> Add dependencies on LEGACY_PCI for all PCI drivers which only target
+> legacy PCI devices and ifdef legacy PCI specific functions in ata
+> handling.
+> 
+> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+> Signed-off-by: Arnd Bergmann <arnd@kernel.org>
+> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> ---
+>  drivers/ata/Kconfig                          | 34 ++++++++--------
+>  drivers/ata/ata_generic.c                    |  3 +-
+>  drivers/ata/libata-sff.c                     |  2 +
+>  drivers/comedi/Kconfig                       | 42 +++++++++++++++++++
+>  drivers/gpio/Kconfig                         |  2 +-
+>  drivers/hwmon/Kconfig                        |  6 +--
+>  drivers/i2c/busses/Kconfig                   | 24 +++++------
+>  drivers/input/gameport/Kconfig               |  4 +-
+>  drivers/isdn/hardware/mISDN/Kconfig          | 14 +++----
 
-在 2021/12/28 1:25, Nathan Chancellor 写道:
-> Hi Xiang,
->
-> On Mon, Dec 20, 2021 at 07:21:28PM +0800, chenxiang wrote:
->> From: Xiang Chen <chenxiang66@hisilicon.com>
->>
->> Most places that use asd_sas_port->phy_list are protected by spinlock
->> asd_sas_port->phy_list_lock, but there are some places which lack of it
->> in hisi_sas driver, so add it in function hisi_sas_refresh_port_id() when
->> accessing asd_sas_port->phy_list. But it has a risk that list mutates while
->> dropping the lock at the same time in function
->> hisi_sas_send_ata_reset_each_phy(), so read asd_sas_port->phy_mask
->> instead of accessing asd_sas_port->phy_list to avoid the risk.
->>
->> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
->> Acked-by: John Garry <john.garry@huawei.com>
->> ---
->>   drivers/scsi/hisi_sas/hisi_sas_main.c | 11 ++++++++---
->>   1 file changed, 8 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
->> index ad64ccd41420..051092e294f7 100644
->> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
->> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
->> @@ -1428,11 +1428,13 @@ static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba)
->>   		sas_port = device->port;
->>   		port = to_hisi_sas_port(sas_port);
->>   
->> +		spin_lock(&sas_port->phy_list_lock);
->>   		list_for_each_entry(sas_phy, &sas_port->phy_list, port_phy_el)
->>   			if (state & BIT(sas_phy->id)) {
->>   				phy = sas_phy->lldd_phy;
->>   				break;
->>   			}
->> +		spin_unlock(&sas_port->phy_list_lock);
->>   
->>   		if (phy) {
->>   			port->id = phy->port_id;
->> @@ -1509,22 +1511,25 @@ static void hisi_sas_send_ata_reset_each_phy(struct hisi_hba *hisi_hba,
->>   	struct ata_link *link;
->>   	u8 fis[20] = {0};
->>   	u32 state;
->> +	int i;
->>   
->>   	state = hisi_hba->hw->get_phys_state(hisi_hba);
->> -	list_for_each_entry(sas_phy, &sas_port->phy_list, port_phy_el) {
->> +	for (i = 0; i < hisi_hba->n_phy; i++) {
->>   		if (!(state & BIT(sas_phy->id)))
->>   			continue;
->> +		if (!(sas_port->phy_mask & BIT(i)))
->> +			continue;
->>   
->>   		ata_for_each_link(link, ap, EDGE) {
->>   			int pmp = sata_srst_pmp(link);
->>   
->> -			tmf_task.phy_id = sas_phy->id;
->> +			tmf_task.phy_id = i;
->>   			hisi_sas_fill_ata_reset_cmd(link->device, 1, pmp, fis);
->>   			rc = hisi_sas_exec_internal_tmf_task(device, fis, s,
->>   							     &tmf_task);
->>   			if (rc != TMF_RESP_FUNC_COMPLETE) {
->>   				dev_err(dev, "phy%d ata reset failed rc=%d\n",
->> -					sas_phy->id, rc);
->> +					i, rc);
->>   				break;
->>   			}
->>   		}
->> -- 
->> 2.33.0
->>
->>
-> Please ignore this if it was already reported, I do not see any reports
-> of it on lore.kernel.org nor a commit fixing it in Martin's tree.
->
-> This commit as commit 29e2bac87421 ("scsi: hisi_sas: Fix some issues
-> related to asd_sas_port->phy_list") in -next causes the following clang
-> warning, which will break the build under -Werror:
->
-> drivers/scsi/hisi_sas/hisi_sas_main.c:1536:21: error: variable 'sas_phy' is uninitialized when used here [-Werror,-Wuninitialized]
->                  if (!(state & BIT(sas_phy->id)))
->                                    ^~~~~~~
-> ./include/vdso/bits.h:7:30: note: expanded from macro 'BIT'
-> #define BIT(nr)                 (UL(1) << (nr))
->                                             ^~
-> drivers/scsi/hisi_sas/hisi_sas_main.c:1528:29: note: initialize the variable 'sas_phy' to silence this warning
->          struct asd_sas_phy *sas_phy;
->                                     ^
->                                      = NULL
-> 1 error generated.
->
-> It seems like this variable is entirely unused now, should it be removed
-> along with this check?
->
+>  drivers/media/cec/platform/Kconfig           |  2 +-
+>  drivers/media/pci/dm1105/Kconfig             |  2 +-
+>  drivers/media/radio/Kconfig                  |  2 +-
 
-Right, it needs to be removed as the additional check is enough.
+Not sure what you meant by "legacy I/O spaces" on this patch. 
+I mean, I would expect non-PCIe devices - like bttv and other
+devices developed at the past millennium or so to be "legacy",
+but at least on media, it is touching some drivers that aren't
+that old, while keeping the really old ones untouched. Instead,
+it is touching a driver developed in 2017 plus two other ones
+that are a way newer than other drivers.
 
-@Martin and @John Garry, could you have a review and consider to merge 
-following patch ?
+The support for the Bt8xx chipset, in particular, is really 
+weird, as a sound driver for such chipset:
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
-Date: Tue, 28 Dec 2021 09:40:01 +0800
-Subject: [PATCH] scsi: libsas: Remove unused variable and check in function
-  hisi_sas_send_ata_reset_each_phy()
+> @@ -172,6 +177,7 @@ config SND_AZT3328
+>  
+>  config SND_BT87X
+>  	tristate "Bt87x Audio Capture"
+> +	depends on LEGACY_PCI
+>  	select SND_PCM
+>  	help
+>  	  If you want to record audio from TV cards based on
 
-In commit 29e2bac87421 ("scsi: hisi_sas: Fix some issues related to
-asd_sas_port->phy_list"), we use asd_sas_port->phy_mask instead of
-accessing asd_sas_port->phy_list, and it is enough to use
-asd_sas_port->phy_mask to check the state of phy, so removing the
-old and unused check.
+was marked as dependent of LEGACY_PCI, while the DVB and V4L2 ones 
+weren't.
 
-Fixes: 29e2bac87421 ("scsi: hisi_sas: Fix some issues related to 
-asd_sas_port->phy_list")
-Reported-by: Nathan Chancellor <nathan@kernel.org>
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
----
-  drivers/scsi/hisi_sas/hisi_sas_main.c | 5 -----
-  1 file changed, 5 deletions(-)
+Sounds confusing to me, as the PCI bridge used by a Bt87x device 
+should be the same for all three subdevices.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c 
-b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index f46f679fe825..a05ec7aece5a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1525,16 +1525,11 @@ static void 
-hisi_sas_send_ata_reset_each_phy(struct hisi_hba *hisi_hba,
-         struct device *dev = hisi_hba->dev;
-         int s = sizeof(struct host_to_dev_fis);
-         int rc = TMF_RESP_FUNC_FAILED;
--       struct asd_sas_phy *sas_phy;
-         struct ata_link *link;
-         u8 fis[20] = {0};
--       u32 state;
-         int i;
+I'm confused...
 
--       state = hisi_hba->hw->get_phys_state(hisi_hba);
-         for (i = 0; i < hisi_hba->n_phy; i++) {
--               if (!(state & BIT(sas_phy->id)))
--                       continue;
-                 if (!(sas_port->phy_mask & BIT(i)))
-                         continue;
-
---
-2.33.0
-
-
-
+Regards,
+Mauro
