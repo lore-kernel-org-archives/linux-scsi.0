@@ -2,163 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B43B2C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Dec 2021 02:10:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07F43C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Dec 2021 03:03:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234577AbhL1CKL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Dec 2021 21:10:11 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:43708 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232504AbhL1CKJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Dec 2021 21:10:09 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1B799B8117D;
-        Tue, 28 Dec 2021 02:10:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C19A8C36AEA;
-        Tue, 28 Dec 2021 02:09:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640657404;
-        bh=SWYw07zmaaDNu+bU6UjWMUGttSEKl48ssAwYr917Irk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=AP7PTZtlYcp1DDFFD9oOox44rlGILxnZhjrWGoppO9nx889cG994Anev93Fi8avnE
-         QKDjPgXQd+0j5ryyJUZRF2fBwkLwO80XrnSF/7Fx+x50yneeRCMv+6NTewDTm+M3mY
-         UmjlUI3lKpBa+eY+azArRNs2im3Ff4KiJ7Zi2yf5dhhdWeFi5sankCfKs3hH/NkcWY
-         C3nDae4xyYfSY866Hl7iueZkbXg7sQjQFFHeioueEr+2zR+wkgXwGDiPuaIoio9xml
-         rwSFGRLZ2Ry45efsPcHYEzY5Wj/FdpgdsOlVeG8/L54LBpew0o0F/pJgWb5CCAbMPX
-         5d9alQgd1Ngqw==
-Date:   Tue, 28 Dec 2021 03:09:46 +0100
-From:   Mauro Carvalho Chehab <mchehab@kernel.org>
-To:     Niklas Schnelle <schnelle@linux.ibm.com>
-Cc:     Arnd Bergmann <arnd@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        John Garry <john.garry@huawei.com>,
-        Nick Hu <nickhu@andestech.com>,
-        Greentime Hu <green.hu@gmail.com>,
-        Vincent Chen <deanbo422@gmail.com>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Ian Abbott <abbotti@mev.co.uk>,
-        H Hartley Sweeten <hsweeten@visionengravers.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Karsten Keil <isdn@linux-pingi.de>,
-        Hans Verkuil <hverkuil-cisco@xs4all.nl>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Michael Grzeschik <m.grzeschik@pengutronix.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        Kalle Valo <kvalo@kernel.org>, Jouni Malinen <j@w1.fi>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Mark Brown <broonie@kernel.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Teddy Wang <teddy.wang@siliconmotion.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Forest Bond <forest@alittletooquiet.net>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>, linux-kernel@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org, linux-csky@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-hwmon@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-input@vger.kernel.org, netdev@vger.kernel.org,
-        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        linux-wireless@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
-        linux-spi@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-staging@lists.linux.dev, linux-serial@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-watchdog@vger.kernel.org,
-        alsa-devel@alsa-project.org
-Subject: Re: [RFC 01/32] Kconfig: introduce and depend on LEGACY_PCI
-Message-ID: <20211228030946.65932d2e@coco.lan>
-In-Reply-To: <20211227164317.4146918-2-schnelle@linux.ibm.com>
-References: <20211227164317.4146918-1-schnelle@linux.ibm.com>
-        <20211227164317.4146918-2-schnelle@linux.ibm.com>
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.30; x86_64-redhat-linux-gnu)
+        id S234651AbhL1DDy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Dec 2021 22:03:54 -0500
+Received: from mailgw.kylinos.cn ([123.150.8.42]:41483 "EHLO nksmu.kylinos.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S234588AbhL1DDy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 27 Dec 2021 22:03:54 -0500
+X-UUID: 8dc7fd443744488e88793d9421bfb8fe-20211228
+X-CPASD-INFO: 9af1861e893444019b80aa99608abe28@grGgUWVoX5VkWXWAg3d7a1mTaGCRjVm
+        IeGpYkZCVXliVhH5xTWJsXVKBfG5QZWNdYVN_eGpQYl9gZFB5i3-XblBgXoZgUZB3iKOgUWhkYQ==
+X-CPASD-FEATURE: 0.0
+X-CLOUD-ID: 9af1861e893444019b80aa99608abe28
+X-CPASD-SUMMARY: SIP:-1,APTIP:-2.0,KEY:0.0,FROMBLOCK:1,EXT:0.0,OB:0.0,URL:-5,T
+        VAL:173.0,ESV:0.0,ECOM:-5.0,ML:0.0,FD:0.0,CUTS:147.0,IP:-2.0,MAL:0.0,ATTNUM:0
+        .0,PHF:-5.0,PHC:-5.0,SPF:4.0,EDMS:-3,IPLABEL:4488.0,FROMTO:0,AD:0,FFOB:0.0,CF
+        OB:0.0,SPC:0.0,SIG:-5,AUF:102,DUF:28286,ACD:146,DCD:248,SL:0,AG:0,CFC:0.483,C
+        FSR:0.052,UAT:0,RAF:0,VERSION:2.3.4
+X-CPASD-ID: 8dc7fd443744488e88793d9421bfb8fe-20211228
+X-CPASD-BLOCK: 1000
+X-CPASD-STAGE: 1, 1
+X-UUID: 8dc7fd443744488e88793d9421bfb8fe-20211228
+X-User: yinxiujiang@kylinos.cn
+Received: from localhost.localdomain [(118.26.139.139)] by nksmu.kylinos.cn
+        (envelope-from <yinxiujiang@kylinos.cn>)
+        (Generic MTA)
+        with ESMTP id 1729494983; Tue, 28 Dec 2021 11:16:21 +0800
+From:   Yin Xiujiang <yinxiujiang@kylinos.cn>
+To:     skashyap@marvell.com, jhasan@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, yinxiujiang@kylinos.cn
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: bnx2fc: fix double free of skb in bnx2fc_rcv
+Date:   Tue, 28 Dec 2021 11:03:35 +0800
+Message-Id: <20211228030335.1330070-1-yinxiujiang@kylinos.cn>
+X-Mailer: git-send-email 2.30.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Em Mon, 27 Dec 2021 17:42:46 +0100
-Niklas Schnelle <schnelle@linux.ibm.com> escreveu:
+In `bnx2fc_rcv`,if skb_share_check() return NULL,
+the variable skb would be freed but not set to NULL,
+then it would be freed  in `goto err` again.
 
-> Introduce a new LEGACY_PCI Kconfig option which gates support for legacy
-> PCI devices including those attached to a PCI-to-PCI Express bridge and
-> PCI Express devices using legacy I/O spaces. Note that this is different
-> from non PCI uses of I/O ports such as by ACPI.
-> 
-> Add dependencies on LEGACY_PCI for all PCI drivers which only target
-> legacy PCI devices and ifdef legacy PCI specific functions in ata
-> handling.
-> 
-> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-> Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> ---
->  drivers/ata/Kconfig                          | 34 ++++++++--------
->  drivers/ata/ata_generic.c                    |  3 +-
->  drivers/ata/libata-sff.c                     |  2 +
->  drivers/comedi/Kconfig                       | 42 +++++++++++++++++++
->  drivers/gpio/Kconfig                         |  2 +-
->  drivers/hwmon/Kconfig                        |  6 +--
->  drivers/i2c/busses/Kconfig                   | 24 +++++------
->  drivers/input/gameport/Kconfig               |  4 +-
->  drivers/isdn/hardware/mISDN/Kconfig          | 14 +++----
+Signed-off-by: Yin Xiujiang <yinxiujiang@kylinos.cn>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
->  drivers/media/cec/platform/Kconfig           |  2 +-
->  drivers/media/pci/dm1105/Kconfig             |  2 +-
->  drivers/media/radio/Kconfig                  |  2 +-
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 71fa62bd3083..07a91b1f05a2 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -432,7 +432,6 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+ 	struct fcoe_ctlr *ctlr;
+ 	struct fcoe_rcv_info *fr;
+ 	struct fcoe_percpu_s *bg;
+-	struct sk_buff *tmp_skb;
+ 
+ 	interface = container_of(ptype, struct bnx2fc_interface,
+ 				 fcoe_packet_type);
+@@ -444,11 +443,10 @@ static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
+ 		goto err;
+ 	}
+ 
+-	tmp_skb = skb_share_check(skb, GFP_ATOMIC);
+-	if (!tmp_skb)
++	skb = skb_share_check(skb, GFP_ATOMIC);
++	if (unlikely(!skb))
+ 		goto err;
+ 
+-	skb = tmp_skb;
+ 
+ 	if (unlikely(eth_hdr(skb)->h_proto != htons(ETH_P_FCOE))) {
+ 		printk(KERN_ERR PFX "bnx2fc_rcv: Wrong FC type frame\n");
+-- 
+2.30.0
 
-Not sure what you meant by "legacy I/O spaces" on this patch. 
-I mean, I would expect non-PCIe devices - like bttv and other
-devices developed at the past millennium or so to be "legacy",
-but at least on media, it is touching some drivers that aren't
-that old, while keeping the really old ones untouched. Instead,
-it is touching a driver developed in 2017 plus two other ones
-that are a way newer than other drivers.
-
-The support for the Bt8xx chipset, in particular, is really 
-weird, as a sound driver for such chipset:
-
-> @@ -172,6 +177,7 @@ config SND_AZT3328
->  
->  config SND_BT87X
->  	tristate "Bt87x Audio Capture"
-> +	depends on LEGACY_PCI
->  	select SND_PCM
->  	help
->  	  If you want to record audio from TV cards based on
-
-was marked as dependent of LEGACY_PCI, while the DVB and V4L2 ones 
-weren't.
-
-Sounds confusing to me, as the PCI bridge used by a Bt87x device 
-should be the same for all three subdevices.
-
-I'm confused...
-
-Regards,
-Mauro
