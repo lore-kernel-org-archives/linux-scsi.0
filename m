@@ -2,155 +2,66 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7C23C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Dec 2021 14:56:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1B4FC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Dec 2021 17:51:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230460AbhLaO4K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 31 Dec 2021 09:56:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48206 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229474AbhLaO4J (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Dec 2021 09:56:09 -0500
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B702C061574;
-        Fri, 31 Dec 2021 06:56:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1640962568;
-        bh=sDai55vfi8ztIwHwG9CiB/YlU4KFnOQV47quuAy+nuU=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=pbowBHYbfUcMRZav89vd7x8Rr3BTP+uX2npGdNo3xAQmXpnLKG6LQ+3dugNPnt9Li
-         CsYeMiU1zihVDee16iyhTVknYCM/W5wEoh85WK9aFoa4EqELqTnlfFuONVemKD2gJJ
-         y68cLJ+9VYzMvJsPR3b6QItNXDiQ/QoQt/Tc9074=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id F006A1280F65;
-        Fri, 31 Dec 2021 09:56:08 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id mAXCex0LrNwd; Fri, 31 Dec 2021 09:56:08 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1640962568;
-        bh=sDai55vfi8ztIwHwG9CiB/YlU4KFnOQV47quuAy+nuU=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=pbowBHYbfUcMRZav89vd7x8Rr3BTP+uX2npGdNo3xAQmXpnLKG6LQ+3dugNPnt9Li
-         CsYeMiU1zihVDee16iyhTVknYCM/W5wEoh85WK9aFoa4EqELqTnlfFuONVemKD2gJJ
-         y68cLJ+9VYzMvJsPR3b6QItNXDiQ/QoQt/Tc9074=
-Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::c447])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        id S230300AbhLaRvP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 31 Dec 2021 12:51:15 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:41796 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230239AbhLaRvO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Dec 2021 12:51:14 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 757D21280DCE;
-        Fri, 31 Dec 2021 09:56:08 -0500 (EST)
-Message-ID: <9a2406164955ce9a1eea3f3accd33a9b9400ccca.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.16-rc7
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 29B7261807;
+        Fri, 31 Dec 2021 17:51:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 9488CC36AE9;
+        Fri, 31 Dec 2021 17:51:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1640973073;
+        bh=6PkSYquBgI3pcJl8OCxkf0gBtPFILILoRjQLS2v0FKE=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=CSAEqja1ZdKi7gkxlQGiOKjW8BId/eeSoo1HPaL2vy1HIH61xoy3U8JHRHfc+PlxS
+         Z83PvwyK5NMeBPBJTWfbS7yQtO8XREJ+9bRQDjKFr2lEORFII44nbaz2za6d1rG7Gc
+         vxxTKTl3E873ZTk8iGnlKLf+VWZdsmekPUI0f5tcX716tYVdW+XG10Magwwpn7SqdJ
+         LfLybfx/deT+Hh1IEDsHnhgSEFMurofl9H5cURb25+aW/onC6X2HjoSCIeMjJ/LZzB
+         G+paFz4uTp7kaA6L+/UFb5BHt2RFVk/5xFUFprDheAXFtftHTP2gArJuYRcZ6pxrIU
+         MtaIE303M8qhw==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 84804C32795;
+        Fri, 31 Dec 2021 17:51:13 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 5.16-rc7
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <9a2406164955ce9a1eea3f3accd33a9b9400ccca.camel@HansenPartnership.com>
+References: <9a2406164955ce9a1eea3f3accd33a9b9400ccca.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <9a2406164955ce9a1eea3f3accd33a9b9400ccca.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 142c779d05d1fef75134c3cb63f52ccbc96d9e1f
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: e46227bf3899eb21d738aa8ef2ec0f598dc70f7a
+Message-Id: <164097307353.20293.14242954237513746148.pr-tracker-bot@kernel.org>
+Date:   Fri, 31 Dec 2021 17:51:13 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 31 Dec 2021 09:56:07 -0500
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Three fixes, all in drivers.  The lpfc one doesn't look exploitable,
-but nasty things could happen in string operations if mybuf ends up
-with an on stack unterminated string.
+The pull request you sent on Fri, 31 Dec 2021 09:56:07 -0500:
 
-The patch is available here:
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/e46227bf3899eb21d738aa8ef2ec0f598dc70f7a
 
-The short changelog is:
+Thank you!
 
-Alexey Makhalov (1):
-      scsi: vmw_pvscsi: Set residual data length conditionally
-
-Dan Carpenter (1):
-      scsi: lpfc: Terminate string in lpfc_debugfs_nvmeio_trc_write()
-
-Lixiaokeng (1):
-      scsi: libiscsi: Fix UAF in iscsi_conn_get_param()/iscsi_conn_teardown()
-
-And the diffstat:
-
- drivers/scsi/libiscsi.c          | 6 ++++--
- drivers/scsi/lpfc/lpfc_debugfs.c | 4 ++--
- drivers/scsi/vmw_pvscsi.c        | 7 +++++--
- 3 files changed, 11 insertions(+), 6 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 284b939fb1ea..059dae8909ee 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -3100,6 +3100,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- {
- 	struct iscsi_conn *conn = cls_conn->dd_data;
- 	struct iscsi_session *session = conn->session;
-+	char *tmp_persistent_address = conn->persistent_address;
-+	char *tmp_local_ipaddr = conn->local_ipaddr;
- 
- 	del_timer_sync(&conn->transport_timer);
- 
-@@ -3121,8 +3123,6 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- 	spin_lock_bh(&session->frwd_lock);
- 	free_pages((unsigned long) conn->data,
- 		   get_order(ISCSI_DEF_MAX_RECV_SEG_LEN));
--	kfree(conn->persistent_address);
--	kfree(conn->local_ipaddr);
- 	/* regular RX path uses back_lock */
- 	spin_lock_bh(&session->back_lock);
- 	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
-@@ -3134,6 +3134,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- 	mutex_unlock(&session->eh_mutex);
- 
- 	iscsi_destroy_conn(cls_conn);
-+	kfree(tmp_persistent_address);
-+	kfree(tmp_local_ipaddr);
- }
- EXPORT_SYMBOL_GPL(iscsi_conn_teardown);
- 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index bd6d459afce5..08b2e85dcd7d 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -2954,8 +2954,8 @@ lpfc_debugfs_nvmeio_trc_write(struct file *file, const char __user *buf,
- 	char mybuf[64];
- 	char *pbuf;
- 
--	if (nbytes > 64)
--		nbytes = 64;
-+	if (nbytes > 63)
-+		nbytes = 63;
- 
- 	memset(mybuf, 0, sizeof(mybuf));
- 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index c2ba65224633..1f037b8ab904 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -586,9 +586,12 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
- 			 * Commands like INQUIRY may transfer less data than
- 			 * requested by the initiator via bufflen. Set residual
- 			 * count to make upper layer aware of the actual amount
--			 * of data returned.
-+			 * of data returned. There are cases when controller
-+			 * returns zero dataLen with non zero data - do not set
-+			 * residual count in that case.
- 			 */
--			scsi_set_resid(cmd, scsi_bufflen(cmd) - e->dataLen);
-+			if (e->dataLen && (e->dataLen < scsi_bufflen(cmd)))
-+				scsi_set_resid(cmd, scsi_bufflen(cmd) - e->dataLen);
- 			cmd->result = (DID_OK << 16);
- 			break;
- 
-
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
