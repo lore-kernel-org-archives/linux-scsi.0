@@ -2,119 +2,155 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9A2CC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Dec 2021 14:55:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7C23C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Dec 2021 14:56:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230453AbhLaOzM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 31 Dec 2021 09:55:12 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34844 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S229474AbhLaOzL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 31 Dec 2021 09:55:11 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BVE7PIF002945;
-        Fri, 31 Dec 2021 14:55:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=rAL1c/LW3RqyI8qBquY8tmfePAKq2eTxx9ygA8WbUV4=;
- b=dZHTg0bupItea1j4Dkvnq13fnOpwP1ubaWGfSdw7VvkfsF9ewpdE4bErNlVKGKm+BiVk
- nuuPa/BGPFjcpi87YYDAg2+CmoH6pSAwgfBnSZ4phjVcyY7QbZvyffnnoJ45tDxLvpKM
- TCDa2S4e9MWjT/owUuCQfx98L5OClO6/H2EkW2U1MTvjbtPwo9/5K22WTmv2S8ikwK5n
- f+yXLmRYLBs1MRqUgoWqQGUoKENMmfzXXbOI6bJyfvBsStdDnlAzGQ4+nMbKug1FUlu9
- fP52dd0ohg/q2YAM79AOij5eDFYhVATtTMoYPbUMxMd/sepC0cOD7p3kRSt+Ef4tLCVH MA== 
-Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3d9tme97cv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 31 Dec 2021 14:55:06 +0000
-Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BVEh7sa014214;
-        Fri, 31 Dec 2021 14:55:05 GMT
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-        by ppma01dal.us.ibm.com with ESMTP id 3d5txd53dj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 31 Dec 2021 14:55:05 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BVEt2oF27263436
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 31 Dec 2021 14:55:02 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 588BA78069;
-        Fri, 31 Dec 2021 14:55:02 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 5FBC77805F;
-        Fri, 31 Dec 2021 14:55:01 +0000 (GMT)
-Received: from jarvis.int.hansenpartnership.com (unknown [9.163.16.130])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Fri, 31 Dec 2021 14:55:01 +0000 (GMT)
-Message-ID: <fca6717d704ffa33cfd9d3cba519da8705195858.camel@linux.ibm.com>
-Subject: Re: [PATCH] scsi: lpfc: Terminate string in
- lpfc_debugfs_nvmeio_trc_write()
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Dan Carpenter <dan.carpenter@oracle.com>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Date:   Fri, 31 Dec 2021 09:55:00 -0500
-In-Reply-To: <20211214070527.GA27934@kili>
-References: <20211214070527.GA27934@kili>
+        id S230460AbhLaO4K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 31 Dec 2021 09:56:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48206 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229474AbhLaO4J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Dec 2021 09:56:09 -0500
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B702C061574;
+        Fri, 31 Dec 2021 06:56:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1640962568;
+        bh=sDai55vfi8ztIwHwG9CiB/YlU4KFnOQV47quuAy+nuU=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=pbowBHYbfUcMRZav89vd7x8Rr3BTP+uX2npGdNo3xAQmXpnLKG6LQ+3dugNPnt9Li
+         CsYeMiU1zihVDee16iyhTVknYCM/W5wEoh85WK9aFoa4EqELqTnlfFuONVemKD2gJJ
+         y68cLJ+9VYzMvJsPR3b6QItNXDiQ/QoQt/Tc9074=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id F006A1280F65;
+        Fri, 31 Dec 2021 09:56:08 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id mAXCex0LrNwd; Fri, 31 Dec 2021 09:56:08 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1640962568;
+        bh=sDai55vfi8ztIwHwG9CiB/YlU4KFnOQV47quuAy+nuU=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=pbowBHYbfUcMRZav89vd7x8Rr3BTP+uX2npGdNo3xAQmXpnLKG6LQ+3dugNPnt9Li
+         CsYeMiU1zihVDee16iyhTVknYCM/W5wEoh85WK9aFoa4EqELqTnlfFuONVemKD2gJJ
+         y68cLJ+9VYzMvJsPR3b6QItNXDiQ/QoQt/Tc9074=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::c447])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 757D21280DCE;
+        Fri, 31 Dec 2021 09:56:08 -0500 (EST)
+Message-ID: <9a2406164955ce9a1eea3f3accd33a9b9400ccca.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.16-rc7
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Fri, 31 Dec 2021 09:56:07 -0500
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: y89eHcrpjrzar0v_GrAvFoK2A2ZcQ0J2
-X-Proofpoint-ORIG-GUID: y89eHcrpjrzar0v_GrAvFoK2A2ZcQ0J2
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
- definitions=2021-12-31_05,2021-12-30_02,2021-12-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- impostorscore=0 spamscore=0 priorityscore=1501 mlxlogscore=999
- suspectscore=0 mlxscore=0 phishscore=0 adultscore=0 clxscore=1011
- bulkscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2110150000 definitions=main-2112310063
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2021-12-14 at 10:05 +0300, Dan Carpenter wrote:
-> The "mybuf" string comes from the user, so we need to ensure that it
-> is NUL terminated.
-> 
-> Fixes: bd2cdd5e400f ("scsi: lpfc: NVME Initiator: Add debugfs
-> support")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
->  drivers/scsi/lpfc/lpfc_debugfs.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c
-> b/drivers/scsi/lpfc/lpfc_debugfs.c
-> index 21152c9a96ef..30fac2f6fb06 100644
-> --- a/drivers/scsi/lpfc/lpfc_debugfs.c
-> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-> @@ -2954,8 +2954,8 @@ lpfc_debugfs_nvmeio_trc_write(struct file
-> *file, const char __user *buf,
->  	char mybuf[64];
->  	char *pbuf;
->  
-> -	if (nbytes > 64)
-> -		nbytes = 64;
-> +	if (nbytes > 63)
-> +		nbytes = 63;
+Three fixes, all in drivers.  The lpfc one doesn't look exploitable,
+but nasty things could happen in string operations if mybuf ends up
+with an on stack unterminated string.
 
-Just for future reference, next time could we do
+The patch is available here:
 
-if (nbytes > sizeof(mybuf) - 1)
-        nbytes = sizeof(mybuf) - 1;
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-just so we minimize the possibility of screw ups in the unlikely event
-that someone reduces the size of the mybuf array?
+The short changelog is:
+
+Alexey Makhalov (1):
+      scsi: vmw_pvscsi: Set residual data length conditionally
+
+Dan Carpenter (1):
+      scsi: lpfc: Terminate string in lpfc_debugfs_nvmeio_trc_write()
+
+Lixiaokeng (1):
+      scsi: libiscsi: Fix UAF in iscsi_conn_get_param()/iscsi_conn_teardown()
+
+And the diffstat:
+
+ drivers/scsi/libiscsi.c          | 6 ++++--
+ drivers/scsi/lpfc/lpfc_debugfs.c | 4 ++--
+ drivers/scsi/vmw_pvscsi.c        | 7 +++++--
+ 3 files changed, 11 insertions(+), 6 deletions(-)
+
+With full diff below.
 
 James
 
+---
+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 284b939fb1ea..059dae8909ee 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -3100,6 +3100,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+ {
+ 	struct iscsi_conn *conn = cls_conn->dd_data;
+ 	struct iscsi_session *session = conn->session;
++	char *tmp_persistent_address = conn->persistent_address;
++	char *tmp_local_ipaddr = conn->local_ipaddr;
+ 
+ 	del_timer_sync(&conn->transport_timer);
+ 
+@@ -3121,8 +3123,6 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+ 	spin_lock_bh(&session->frwd_lock);
+ 	free_pages((unsigned long) conn->data,
+ 		   get_order(ISCSI_DEF_MAX_RECV_SEG_LEN));
+-	kfree(conn->persistent_address);
+-	kfree(conn->local_ipaddr);
+ 	/* regular RX path uses back_lock */
+ 	spin_lock_bh(&session->back_lock);
+ 	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
+@@ -3134,6 +3134,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+ 	mutex_unlock(&session->eh_mutex);
+ 
+ 	iscsi_destroy_conn(cls_conn);
++	kfree(tmp_persistent_address);
++	kfree(tmp_local_ipaddr);
+ }
+ EXPORT_SYMBOL_GPL(iscsi_conn_teardown);
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index bd6d459afce5..08b2e85dcd7d 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -2954,8 +2954,8 @@ lpfc_debugfs_nvmeio_trc_write(struct file *file, const char __user *buf,
+ 	char mybuf[64];
+ 	char *pbuf;
+ 
+-	if (nbytes > 64)
+-		nbytes = 64;
++	if (nbytes > 63)
++		nbytes = 63;
+ 
+ 	memset(mybuf, 0, sizeof(mybuf));
+ 
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index c2ba65224633..1f037b8ab904 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -586,9 +586,12 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
+ 			 * Commands like INQUIRY may transfer less data than
+ 			 * requested by the initiator via bufflen. Set residual
+ 			 * count to make upper layer aware of the actual amount
+-			 * of data returned.
++			 * of data returned. There are cases when controller
++			 * returns zero dataLen with non zero data - do not set
++			 * residual count in that case.
+ 			 */
+-			scsi_set_resid(cmd, scsi_bufflen(cmd) - e->dataLen);
++			if (e->dataLen && (e->dataLen < scsi_bufflen(cmd)))
++				scsi_set_resid(cmd, scsi_bufflen(cmd) - e->dataLen);
+ 			cmd->result = (DID_OK << 16);
+ 			break;
+ 
 
