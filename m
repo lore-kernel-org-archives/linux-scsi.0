@@ -2,66 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1B4FC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Dec 2021 17:51:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D28C433EF
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Jan 2022 23:32:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230300AbhLaRvP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 31 Dec 2021 12:51:15 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:41796 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230239AbhLaRvO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Dec 2021 12:51:14 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 29B7261807;
-        Fri, 31 Dec 2021 17:51:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 9488CC36AE9;
-        Fri, 31 Dec 2021 17:51:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640973073;
-        bh=6PkSYquBgI3pcJl8OCxkf0gBtPFILILoRjQLS2v0FKE=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=CSAEqja1ZdKi7gkxlQGiOKjW8BId/eeSoo1HPaL2vy1HIH61xoy3U8JHRHfc+PlxS
-         Z83PvwyK5NMeBPBJTWfbS7yQtO8XREJ+9bRQDjKFr2lEORFII44nbaz2za6d1rG7Gc
-         vxxTKTl3E873ZTk8iGnlKLf+VWZdsmekPUI0f5tcX716tYVdW+XG10Magwwpn7SqdJ
-         LfLybfx/deT+Hh1IEDsHnhgSEFMurofl9H5cURb25+aW/onC6X2HjoSCIeMjJ/LZzB
-         G+paFz4uTp7kaA6L+/UFb5BHt2RFVk/5xFUFprDheAXFtftHTP2gArJuYRcZ6pxrIU
-         MtaIE303M8qhw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 84804C32795;
-        Fri, 31 Dec 2021 17:51:13 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 5.16-rc7
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <9a2406164955ce9a1eea3f3accd33a9b9400ccca.camel@HansenPartnership.com>
-References: <9a2406164955ce9a1eea3f3accd33a9b9400ccca.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <9a2406164955ce9a1eea3f3accd33a9b9400ccca.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 142c779d05d1fef75134c3cb63f52ccbc96d9e1f
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: e46227bf3899eb21d738aa8ef2ec0f598dc70f7a
-Message-Id: <164097307353.20293.14242954237513746148.pr-tracker-bot@kernel.org>
-Date:   Fri, 31 Dec 2021 17:51:13 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S229979AbiABXcy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Jan 2022 18:32:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41948 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229683AbiABXcx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Jan 2022 18:32:53 -0500
+X-Greylist: delayed 554 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 02 Jan 2022 15:32:53 PST
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8BBC9C061785;
+        Sun,  2 Jan 2022 15:32:53 -0800 (PST)
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id 8CA9A92009C; Mon,  3 Jan 2022 00:23:36 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id 8598892009B;
+        Sun,  2 Jan 2022 23:23:36 +0000 (GMT)
+Date:   Sun, 2 Jan 2022 23:23:36 +0000 (GMT)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     Khalid Aziz <khalid@gonehiking.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+cc:     Christoph Hellwig <hch@lst.de>, Nix <nix@esperi.org.uk>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 0/3] Bring the BusLogic host bus adapter driver up to
+ Y2021
+Message-ID: <alpine.DEB.2.21.2201020010540.56863@angie.orcam.me.uk>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 31 Dec 2021 09:56:07 -0500:
+Hi,
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+ Or was it Y2022?
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/e46227bf3899eb21d738aa8ef2ec0f598dc70f7a
+ Anyway, here's v3 of the series, with original patches 1/5 and 2/5 
+removed as they have since gone in (thanks!).  No code or description 
+change with the remaining patches, just a mechanical regeneration, except 
+for Nick's Tested-by annotation for 3/3 (thanks!).  Parts of the original 
+cover letter follow that are still relevant, for reference.
 
-Thank you!
+ So we are here owing to Christoph's recent ISA bounce buffering sweep: 
+<https://lore.kernel.org/linux-scsi/20210331073001.46776-1-hch@lst.de/T/#m981284e74e93216626a0728ce1601ca18fca92e8> 
+which has prompted me to verify the current version of Linux with my old 
+server, which has been long equipped with venerable Linux 2.6.18 and which 
+I now have available for general experimenting, and the BusLogic BT-958 
+PCI SCSI host bus adapter the server has used for 20-something years now. 
+This revealed an issue with the BusLogic driver.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+ It has become obvious the BusLogic driver would have been non-functional, 
+should I have upgraded the kernel, at least with this configuration for 
+some 8 years now, and the underlying cause has been a long-known issue 
+with the MultiMaster firmware I have dealt with already, back in 2003.  
+To put it short the firmware cannot cope with commands that request an 
+allocation length exceeding the length of actual data returned.
+
+ I have originally observed it with a LOG SENSE command in the course of 
+investigating why smartmontools bring the system to a death, and worked it 
+around: <https://sourceforge.net/p/smartmontools/mailman/message/4993087/> 
+by issuing the command twice, first just to obtain the allocation length 
+required.  As it turns out we need a similar workaround in the kernel now.
+
+ But in the course of investigating this issue I have discovered there is 
+a second bottom to it and hence I have prepared follow-up changes to 
+address problems with our handling of Vital Product Data INQUIRY pages.
+
+ See individual change descriptions for further details.
+
+ Any questions, comments, concerns still?  Otherwise please apply.
+
+  Maciej
