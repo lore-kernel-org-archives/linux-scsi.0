@@ -2,29 +2,32 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03420C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Jan 2022 14:22:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4507AC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Jan 2022 14:23:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233530AbiACOWz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Jan 2022 09:22:55 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:53832 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233532AbiACOWf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2022 09:22:35 -0500
+        id S231575AbiACOXm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Jan 2022 09:23:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37446 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233600AbiACOXM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2022 09:23:12 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96689C06179B;
+        Mon,  3 Jan 2022 06:23:11 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3A5BE60FA2;
-        Mon,  3 Jan 2022 14:22:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02126C36AED;
-        Mon,  3 Jan 2022 14:22:33 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 14262CE1105;
+        Mon,  3 Jan 2022 14:23:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF146C36AEB;
+        Mon,  3 Jan 2022 14:23:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1641219754;
-        bh=ANoc2P3PKF78Aw0vx5vO+sdAaWuMjpHWxwAQ1v3mjog=;
+        s=korg; t=1641219788;
+        bh=q1y2rSOGp+yLXZH6g3odHuz0Pl79A/Cg7YjxsfUUMMk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IeYpYZe25rRHFcUY3tf0TIcGETxlVLrZYz058khT6jbStqHoo+MMtJBhQmJqeV2QJ
-         a1sVb36Hw/1LkKR1e1xbryQW7BFjuSswOL5gQYBTnaD9GUZRpNTvnaoZV5EOQoqVgC
-         v8QItPpIAgm2i6seDggXJDapsM6SKhid7jev39Rc=
+        b=ArsvPRyUyfdnlf56CVAEKp2QktJhUttrsW6/OFlorzIF7K2qUQFOQUJNgfaAdM0Sl
+         UIxNafzhVyV1WbClLKEYMg7fRyncS7DaBCSi5qFObrpFeBZ1apw9dBLAkajn+ui8mK
+         azDzQegjsP3URS7Gw7DYvzUFlMtH7UIdD3crDPyc=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -35,12 +38,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         linux-scsi@vger.kernel.org, Alexey Makhalov <amakhalov@vmware.com>,
         Shmulik Ladkani <shmulik.ladkani@gmail.com>
-Subject: [PATCH 4.9 10/13] scsi: vmw_pvscsi: Set residual data length conditionally
-Date:   Mon,  3 Jan 2022 15:21:26 +0100
-Message-Id: <20220103142052.291553274@linuxfoundation.org>
+Subject: [PATCH 4.14 15/19] scsi: vmw_pvscsi: Set residual data length conditionally
+Date:   Mon,  3 Jan 2022 15:21:32 +0100
+Message-Id: <20220103142052.567975725@linuxfoundation.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220103142051.979780231@linuxfoundation.org>
-References: <20220103142051.979780231@linuxfoundation.org>
+In-Reply-To: <20220103142052.068378906@linuxfoundation.org>
+References: <20220103142052.068378906@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -98,7 +101,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/drivers/scsi/vmw_pvscsi.c
 +++ b/drivers/scsi/vmw_pvscsi.c
-@@ -581,9 +581,12 @@ static void pvscsi_complete_request(stru
+@@ -578,9 +578,12 @@ static void pvscsi_complete_request(stru
  			 * Commands like INQUIRY may transfer less data than
  			 * requested by the initiator via bufflen. Set residual
  			 * count to make upper layer aware of the actual amount
