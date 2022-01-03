@@ -2,29 +2,29 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBED1C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Jan 2022 14:26:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72385C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Jan 2022 14:29:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233695AbiACO0R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Jan 2022 09:26:17 -0500
-Received: from sin.source.kernel.org ([145.40.73.55]:47206 "EHLO
-        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233713AbiACOZo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2022 09:25:44 -0500
+        id S234158AbiACO30 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Jan 2022 09:29:26 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:58436 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233020AbiACO2K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2022 09:28:10 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 70B69CE110C;
-        Mon,  3 Jan 2022 14:25:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42139C36AF0;
-        Mon,  3 Jan 2022 14:25:40 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D2ACF61073;
+        Mon,  3 Jan 2022 14:28:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E757C36AED;
+        Mon,  3 Jan 2022 14:28:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1641219940;
+        s=korg; t=1641220089;
         bh=q1y2rSOGp+yLXZH6g3odHuz0Pl79A/Cg7YjxsfUUMMk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DQ4iX9MTPcFqfWbr5JNWIJrijarpNGGtKuZk6wfrk56X6LCR0TTCI3/1fiwVUlcm5
-         S/Kc3nbakv75P09k7oCrGkcl6/I1IxhniXU+gTRmVQBJ26LX+XaAfsAPoqYN9bJGL5
-         Dkj5wPj8asIJKBau3VGeiLIxOWL2CI3EKIikeKzE=
+        b=Nt/YjmCSqo9afWCzana4RYMx9wDe51x7RaLNK09VzkMU3oNTlKwMoJxZ/9ReG+uTl
+         M8aP2IuoGLen+C/iw1eDx6vLHupgeQMNB8pB/56m5i4r/clby75CQ8DXXgLttB2T/M
+         tThGaWODi/8So3KDDqNQtDmNbwDfOw2T1+MIACKI=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -35,12 +35,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         linux-scsi@vger.kernel.org, Alexey Makhalov <amakhalov@vmware.com>,
         Shmulik Ladkani <shmulik.ladkani@gmail.com>
-Subject: [PATCH 4.19 24/27] scsi: vmw_pvscsi: Set residual data length conditionally
-Date:   Mon,  3 Jan 2022 15:24:04 +0100
-Message-Id: <20220103142052.939806904@linuxfoundation.org>
+Subject: [PATCH 5.4 33/37] scsi: vmw_pvscsi: Set residual data length conditionally
+Date:   Mon,  3 Jan 2022 15:24:11 +0100
+Message-Id: <20220103142052.896574663@linuxfoundation.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220103142052.162223000@linuxfoundation.org>
-References: <20220103142052.162223000@linuxfoundation.org>
+In-Reply-To: <20220103142051.883166998@linuxfoundation.org>
+References: <20220103142051.883166998@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
