@@ -2,29 +2,29 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C7DC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Jan 2022 14:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03420C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Jan 2022 14:22:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233427AbiACOWK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Jan 2022 09:22:10 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:53198 "EHLO
+        id S233530AbiACOWz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Jan 2022 09:22:55 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:53832 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233344AbiACOWB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2022 09:22:01 -0500
+        with ESMTP id S233532AbiACOWf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2022 09:22:35 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CFDF461123;
-        Mon,  3 Jan 2022 14:22:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9191AC36AEB;
-        Mon,  3 Jan 2022 14:21:59 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3A5BE60FA2;
+        Mon,  3 Jan 2022 14:22:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02126C36AED;
+        Mon,  3 Jan 2022 14:22:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1641219720;
-        bh=rd0WVawf953idvX8fi20k96QxEQvSJsS1VT2btlhDs8=;
+        s=korg; t=1641219754;
+        bh=ANoc2P3PKF78Aw0vx5vO+sdAaWuMjpHWxwAQ1v3mjog=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vJuvixu3Ip7whsbxKjbrIaKLbxw/EDFsEJl28PdlAc1+YeriwtCbfr5U/ic/8dORC
-         ctwTbNEAy0Lbz+UW7ER4DgFxY/d6nilivMBXngUwUhrXP+KfK9iDP7cqqcmTecUv/z
-         J84KVsHzpkNgwfF3Wn2zfD388aMO/XTXXCRYfzYs=
+        b=IeYpYZe25rRHFcUY3tf0TIcGETxlVLrZYz058khT6jbStqHoo+MMtJBhQmJqeV2QJ
+         a1sVb36Hw/1LkKR1e1xbryQW7BFjuSswOL5gQYBTnaD9GUZRpNTvnaoZV5EOQoqVgC
+         v8QItPpIAgm2i6seDggXJDapsM6SKhid7jev39Rc=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -35,12 +35,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         linux-scsi@vger.kernel.org, Alexey Makhalov <amakhalov@vmware.com>,
         Shmulik Ladkani <shmulik.ladkani@gmail.com>
-Subject: [PATCH 4.4 08/11] scsi: vmw_pvscsi: Set residual data length conditionally
-Date:   Mon,  3 Jan 2022 15:21:19 +0100
-Message-Id: <20220103142051.040932170@linuxfoundation.org>
+Subject: [PATCH 4.9 10/13] scsi: vmw_pvscsi: Set residual data length conditionally
+Date:   Mon,  3 Jan 2022 15:21:26 +0100
+Message-Id: <20220103142052.291553274@linuxfoundation.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220103142050.763904028@linuxfoundation.org>
-References: <20220103142050.763904028@linuxfoundation.org>
+In-Reply-To: <20220103142051.979780231@linuxfoundation.org>
+References: <20220103142051.979780231@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -98,7 +98,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/drivers/scsi/vmw_pvscsi.c
 +++ b/drivers/scsi/vmw_pvscsi.c
-@@ -562,9 +562,12 @@ static void pvscsi_complete_request(stru
+@@ -581,9 +581,12 @@ static void pvscsi_complete_request(stru
  			 * Commands like INQUIRY may transfer less data than
  			 * requested by the initiator via bufflen. Set residual
  			 * count to make upper layer aware of the actual amount
