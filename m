@@ -2,32 +2,32 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7248C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Jan 2022 17:31:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48921C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Jan 2022 17:32:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235646AbiACRbe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Jan 2022 12:31:34 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:38826 "EHLO
+        id S236044AbiACRcY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Jan 2022 12:32:24 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:38740 "EHLO
         ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235638AbiACRao (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2022 12:30:44 -0500
+        with ESMTP id S233790AbiACRbV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2022 12:31:21 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3F5F3B81071;
-        Mon,  3 Jan 2022 17:30:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBAC8C36AED;
-        Mon,  3 Jan 2022 17:30:40 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 43733B81082;
+        Mon,  3 Jan 2022 17:31:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61375C36AED;
+        Mon,  3 Jan 2022 17:31:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641231042;
-        bh=T5mVZxCsINiWAaVvpGFhIa51X5dboMG8f6te8Ga/uWw=;
+        s=k20201202; t=1641231079;
+        bh=4EGK0cupgO/Up7OJsS5Gs0mvmW5A5oCJMYw8CH+TD0M=;
         h=From:To:Cc:Subject:Date:From;
-        b=DAu6FA+uOBwtWM0u90FZ4q9gzxoKNB39evcOF40QwY9or+B5LS4la721VuvLkJj3g
-         9IqGlRzV+BPDMvEINPEzkPCO9C5zPLgRQVLiWBWfuG3z8hd7VirAa9ypFuUu8jszL7
-         cpFa8T5i/XusTsG68OeBGLObekvKxnWAkCHUu9LuF4ffKrBxRL+VKw9eOqqAJZZvRk
-         ndn7EvMsOZTK82aGjxy/o4PAxUlDDMElT1Z8WbkifDKZLfXEmxicCmaqb4TLuPGVkg
-         O6+liNBgVUVRE4157diUESP5DfTQ2M7uFiuhMPxD0N/7bxlaPv5uqT7dmDfPzH75hO
-         oTg6Ld6Yf2xqQ==
+        b=L1Xmr4Ax6o+iaGXEGrX2jq1EAY7opkvZWc6Ra/g92y60JzxEKiS5fFlFplALkozRg
+         LFOaCbTJ4O/U6bENVIlZvk3ma3qFwtjHZjfHKRTkXFd+khsnE8q5c1AkQkEvKTQZ5S
+         Pf6YsTqG02XJq/mL5phPPgWHTQmLrPPnUMXmfnLh8211RWB/XmlFsBs4Gfw+aCa7kD
+         FFDOwNh13nojYJznkWjw/oVCSxNhp0fabWLNSw3WlFNbNAykVK0DMAH0P0Upa7oFpW
+         vyywqaBJ+zd7Ql74IJnveWgwRqW9j7Rva0hD5okmi7mKr/SS8BGQq27MKnFUZ+qtE6
+         4dplIaGVCN2mA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Lixiaokeng <lixiaokeng@huawei.com>,
@@ -39,9 +39,9 @@ Cc:     Lixiaokeng <lixiaokeng@huawei.com>,
         Sasha Levin <sashal@kernel.org>, cleech@redhat.com,
         jejb@linux.ibm.com, open-iscsi@googlegroups.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 1/4] scsi: libiscsi: Fix UAF in iscsi_conn_get_param()/iscsi_conn_teardown()
-Date:   Mon,  3 Jan 2022 12:30:36 -0500
-Message-Id: <20220103173039.1613564-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 1/4] scsi: libiscsi: Fix UAF in iscsi_conn_get_param()/iscsi_conn_teardown()
+Date:   Mon,  3 Jan 2022 12:31:02 -0500
+Message-Id: <20220103173105.1613707-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
 X-stable: review
@@ -81,10 +81,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index f3dfec02abecc..ebf3a277d8bba 100644
+index 0713d02cf1126..b1ef1aa4dd44b 100644
 --- a/drivers/scsi/libiscsi.c
 +++ b/drivers/scsi/libiscsi.c
-@@ -2991,6 +2991,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+@@ -2994,6 +2994,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
  {
  	struct iscsi_conn *conn = cls_conn->dd_data;
  	struct iscsi_session *session = conn->session;
@@ -93,7 +93,7 @@ index f3dfec02abecc..ebf3a277d8bba 100644
  
  	del_timer_sync(&conn->transport_timer);
  
-@@ -3012,8 +3014,6 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+@@ -3015,8 +3017,6 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
  	spin_lock_bh(&session->frwd_lock);
  	free_pages((unsigned long) conn->data,
  		   get_order(ISCSI_DEF_MAX_RECV_SEG_LEN));
@@ -102,7 +102,7 @@ index f3dfec02abecc..ebf3a277d8bba 100644
  	/* regular RX path uses back_lock */
  	spin_lock_bh(&session->back_lock);
  	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
-@@ -3025,6 +3025,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
+@@ -3028,6 +3028,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
  	mutex_unlock(&session->eh_mutex);
  
  	iscsi_destroy_conn(cls_conn);
