@@ -2,139 +2,225 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD169C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jan 2022 11:38:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18DBFC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jan 2022 12:10:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232419AbiADLiv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Jan 2022 06:38:51 -0500
-Received: from szxga01-in.huawei.com ([45.249.212.187]:16685 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232415AbiADLiu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2022 06:38:50 -0500
-Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4JSrBz1xZ2zZds4;
-        Tue,  4 Jan 2022 19:35:23 +0800 (CST)
-Received: from [10.40.193.166] (10.40.193.166) by
- dggeme756-chm.china.huawei.com (10.3.19.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.20; Tue, 4 Jan 2022 19:38:49 +0800
-Subject: Re: [PATCH v2 05/15] scsi: hisi_sas: Fix some issues related to
- asd_sas_port->phy_list
-To:     John Garry <john.garry@huawei.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-References: <1639999298-244569-1-git-send-email-chenxiang66@hisilicon.com>
- <1639999298-244569-6-git-send-email-chenxiang66@hisilicon.com>
- <Ycn3FoW9eOZNFMiL@archlinux-ax161>
- <3d20171c-f5ac-d01e-9f0e-ba51835d68f0@hisilicon.com>
- <1aae302f-08d9-87e8-6e0f-4b146de8d9c9@huawei.com>
-CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "llvm@lists.linux.dev" <llvm@lists.linux.dev>,
-        "colin.i.king@gmail.com" <colin.i.king@gmail.com>
-From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
-Message-ID: <ad62d555-971b-8868-3c9f-be68b485a17d@hisilicon.com>
-Date:   Tue, 4 Jan 2022 19:38:48 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.2.0
+        id S232904AbiADMKX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Jan 2022 07:10:23 -0500
+Received: from szxga08-in.huawei.com ([45.249.212.255]:31068 "EHLO
+        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231607AbiADMKW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2022 07:10:22 -0500
+Received: from dggpemm500021.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4JSrvL40dPz1DKST;
+        Tue,  4 Jan 2022 20:06:54 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500021.china.huawei.com (7.185.36.109) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Tue, 4 Jan 2022 20:10:20 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Tue, 4 Jan 2022 20:10:19 +0800
+Subject: Re: [PATCH] scsi: Do not break scan luns loop if add single lun
+ failed
+To:     Steffen Maier <maier@linux.ibm.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "Nilesh Javali" <njavali@marvell.com>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Martin Wilck <martin.wilck@suse.com>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Ming Lei <ming.lei@redhat.com>
+CC:     Zhiqiang Liu <liuzhiqiang26@huawei.com>,
+        Feilong Lin <linfeilong@huawei.com>, Wu Bo <wubo40@huawei.com>
+References: <20211225232911.1117843-1-haowenchao@huawei.com>
+ <aa72bd76-2af5-202d-8a2c-afb5a700b6c0@linux.ibm.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+Message-ID: <3aa3ea7e-334c-6382-88f9-34eaa6b355fe@huawei.com>
+Date:   Tue, 4 Jan 2022 20:10:19 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
 MIME-Version: 1.0
-In-Reply-To: <1aae302f-08d9-87e8-6e0f-4b146de8d9c9@huawei.com>
+In-Reply-To: <aa72bd76-2af5-202d-8a2c-afb5a700b6c0@linux.ibm.com>
 Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.40.193.166]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggeme756-chm.china.huawei.com (10.3.19.102)
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi John,
-
-
-在 2022/1/4 18:02, John Garry 写道:
+On 2021/12/31 1:55, Steffen Maier wrote:
+> On 12/26/21 00:29, Wenchao Hao wrote:
+>> Failed to add a single lun does not mean all luns are unaccessible,
+>> if we break the scan luns loop, the other luns reported by REPORT LUNS
+>> command would not be probed any more.
 >>
->> @Martin and @John Garry, could you have a review and consider to merge
->> following patch ?
->
-> This series has not made it to Martin's 5.17 queue, but I suggest that 
-> you send it as a patch in case it does.
+>> In this case, we might loss some luns which are accessible.
+> 
+> Could you please add more details about the specific use case, where 
+> this actually was a problem, for my understanding?
+> 
 
-Ok, i will send it as a patch.
+When REPORT LUNS returns 4 luns which are lun0, lun1, lun2 and lun3.
+If lun1 becomes inaccessible during the scan flow, 
+scsi_probe_and_add_lun() for lun1 would failed, lun2 and lun3 are still 
+accessible. scsi_report_lun_scan() would print error log and return 0, 
+and scsi_sequential_lun_scan() would not be called.
 
->
+In this scenario, lun2 and lun3 would not been probed and added any 
+more, so we loss them.
+
 >>
->> From: Xiang Chen <chenxiang66@hisilicon.com>
->> Date: Tue, 28 Dec 2021 09:40:01 +0800
->> Subject: [PATCH] scsi: libsas: Remove unused variable and check in 
->> function
->>    hisi_sas_send_ata_reset_each_phy()
->
-> please try to condense these subjects, like just "Remove broken legacy 
-> code in hisi_sas_send_ata_reset_each_phy()"
->
-> Or at least remove "function", as this is obvious
-
-I will remove "function".
-
->
->>
->> In commit 29e2bac87421 ("scsi: hisi_sas: Fix some issues related to
->> asd_sas_port->phy_list"), we use asd_sas_port->phy_mask instead of
->> accessing asd_sas_port->phy_list, and it is enough to use
->> asd_sas_port->phy_mask to check the state of phy, so removing the
->
-> /s/removing/remove/
-
-Ok
-
->
->> old and unused check.
->>
->> Fixes: 29e2bac87421 ("scsi: hisi_sas: Fix some issues related to
->> asd_sas_port->phy_list")
->> Reported-by: Nathan Chancellor <nathan@kernel.org>
->
-> Colin King also reported this, so please add him.
-
-Right, i will add him.
-
->
->> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+>> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
 >> ---
->>    drivers/scsi/hisi_sas/hisi_sas_main.c | 5 -----
->>    1 file changed, 5 deletions(-)
+>>   drivers/scsi/scsi_scan.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
 >>
->> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c
->> b/drivers/scsi/hisi_sas/hisi_sas_main.c
->> index f46f679fe825..a05ec7aece5a 100644
->> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
->> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
->> @@ -1525,16 +1525,11 @@ static void
->> hisi_sas_send_ata_reset_each_phy(struct hisi_hba *hisi_hba,
->>           struct device *dev = hisi_hba->dev;
->>           int s = sizeof(struct host_to_dev_fis);
->>           int rc = TMF_RESP_FUNC_FAILED;
->> -       struct asd_sas_phy *sas_phy;
->>           struct ata_link *link;
->>           u8 fis[20] = {0};
->> -       u32 state;
->>           int i;
+>> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+>> index 23e1c0acdeae..fee7ce082103 100644
+>> --- a/drivers/scsi/scsi_scan.c
+>> +++ b/drivers/scsi/scsi_scan.c
+>> @@ -1476,13 +1476,13 @@ static int scsi_report_lun_scan(struct 
+>> scsi_target *starget, blist_flags_t bflag
+>>                   lun, NULL, NULL, rescan, NULL);
+>>               if (res == SCSI_SCAN_NO_RESPONSE) {
+>>                   /*
+>> -                 * Got some results, but now none, abort.
+>> +                 * Got some results, but now none, abort this lun
+> 
+> abort => skip ?
+
+Yes, "skip" looks better than "abort".
+
+> 
+>>                    */
+>>                   sdev_printk(KERN_ERR, sdev,
+>>                       "Unexpected response"
+>>                       " from lun %llu while scanning, scan"
+>>                       " aborted\n", (unsigned long long)lun);
+> 
+> That message would no longer be correct with your change, as it would 
+> not abort the scan any more.
+
+I would change "abort" to "skip" which makes it better.
+
+> 
+>> -                break;
+>> +                continue;
+>>               }
+>>           }
+>>       }
+> 
+> 
+> Wouldn't this change existing semantics for LLDDs intentionally 
+> returning -ENXIO from their slave_alloc() callback in certain cases?:
+> 
+> 
+
+Yes, it would print error message like "Unexpected response ..." for 
+every failed lun. I think it's reasonable, so we can know every failed 
+lun in one scan flow.
+
+>> static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+> ...
+>>     if (shost->hostt->slave_alloc) {
+>>         ret = shost->hostt->slave_alloc(sdev);
+>>         if (ret) {
+>>             /*
+>>              * if LLDD reports slave not present, don't clutter
+>>              * console with alloc failure messages
+>>              */
+>>             if (ret == -ENXIO)
+>>                 display_failure_msg = 0;
+>>             goto out_device_destroy;
+> ...
+>> out_device_destroy:
+>>     __scsi_remove_device(sdev);
+>> out:
+>>     if (display_failure_msg)
+>>         printk(ALLOC_FAILURE_MSG, __func__);
+>>     return NULL;
+> 
+> 
+> scsi_probe_and_add_lun() [such as called by scsi_report_lun_scan() for 
+> the case at hand] converts this case into a SCSI_SCAN_NO_RESPONSE return 
+> value.
+> 
+>> static int scsi_probe_and_add_lun(struct scsi_target *starget,
+> ...
+>>     int res = SCSI_SCAN_NO_RESPONSE, result_len = 256;
+> ...
+>>         sdev = scsi_alloc_sdev(starget, lun, hostdata);
+>>     if (!sdev)
+>>         goto out;
+> ...
+>>  out:
+>>     return res;
+> 
+> 
+> Such as being used by zfcp:
+> 
+>> static int zfcp_scsi_slave_alloc(struct scsi_device *sdev)
+>> {
+> ...
+>>     unit = zfcp_unit_find(port, zfcp_scsi_dev_lun(sdev));
+>>     if (unit)
+>>         put_device(&unit->dev);
 >>
->> -       state = hisi_hba->hw->get_phys_state(hisi_hba);
->>           for (i = 0; i < hisi_hba->n_phy; i++) {
->> -               if (!(state & BIT(sas_phy->id)))
->> -                       continue;
->>                   if (!(sas_port->phy_mask & BIT(i)))
->>                           continue;
+>>     if (!unit && !(allow_lun_scan && npiv)) {
+>>         put_device(&port->dev);
+>>         return -ENXIO;
+>                        ^^^^^^
+> 
+> which implements an initiator-based LUN masking that is necessary for 
+> shared HBAs virtualized without NPIV.
+> https://www.ibm.com/docs/en/linux-on-systems?topic=devices-manually-configured-fcp-luns 
+> 
+> 
+> While things might still work, as zfcp now "just" gets (much) more 
+> callbacks to slave_alloc() it has to end with -ENXIO, the user may get 
+> flooded with the error(!) sdev_printk on "Unexpected response from LUN 
+> ..." in scsi_report_lun_scan().
+> In the worst case, we could get this message now 64k - 1 times in a zfcp 
+> scenario connected to IBM DS8000 storage being able to map (all) 64k 
+> volumes to a single initiator (HBA), where the user via zfcp sysfs 
+> decided to use only the first lun reported (for the vHBA).
+> 
+
+64k - 1 times error log seems terrible. While I do not understand what 
+"where the user via zfcp sysfs decided to use only the first lun 
+reported (for the vHBA)" means.
+
+Why would all luns slave_alloc() failed? This don't seem like a normal 
+scenario.
+
+> Other LLLDs also seem to intentionally return -ENXIO from slave_alloc() 
+> callbacks, such as but not limited to lpfc or qla2xxx:
+> 
+>> int fc_slave_alloc(struct scsi_device *sdev)
+>> {
+>>     struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
 >>
->> -- 
->> 2.33.0
+>>     if (!rport || fc_remote_port_chkready(rport))
+>>         return -ENXIO;
+> 
+>> static int
+>> qla2xxx_slave_alloc(struct scsi_device *sdev)
+>> {
+>>     struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
 >>
->>
->>
->
-> .
->
+>>     if (!rport || fc_remote_port_chkready(rport))
+>>         return -ENXIO;
+> 
+> 
 
