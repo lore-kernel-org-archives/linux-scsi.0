@@ -2,125 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 588E1C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jan 2022 22:06:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 126C1C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jan 2022 22:08:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235164AbiADWGa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Jan 2022 17:06:30 -0500
-Received: from out03.mta.xmission.com ([166.70.13.233]:43610 "EHLO
-        out03.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229984AbiADWG2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2022 17:06:28 -0500
-Received: from in02.mta.xmission.com ([166.70.13.52]:60612)
-        by out03.mta.xmission.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <ebiederm@xmission.com>)
-        id 1n4rwg-00GRl6-My; Tue, 04 Jan 2022 15:06:18 -0700
-Received: from ip68-110-24-146.om.om.cox.net ([68.110.24.146]:39706 helo=email.froward.int.ebiederm.org.xmission.com)
-        by in02.mta.xmission.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <ebiederm@xmission.com>)
-        id 1n4rwe-00AJrs-EY; Tue, 04 Jan 2022 15:06:18 -0700
-From:   ebiederm@xmission.com (Eric W. Biederman)
-To:     "Theodore Ts'o" <tytso@mit.edu>
-Cc:     Walt Drummond <walt@drummond.us>, aacraid@microsemi.com,
-        viro@zeniv.linux.org.uk, anna.schumaker@netapp.com, arnd@arndb.de,
-        bsegall@google.com, bp@alien8.de, chuck.lever@oracle.com,
-        bristot@redhat.com, dave.hansen@linux.intel.com,
-        dwmw2@infradead.org, dietmar.eggemann@arm.com, dinguyen@kernel.org,
-        geert@linux-m68k.org, gregkh@linuxfoundation.org, hpa@zytor.com,
-        idryomov@gmail.com, mingo@redhat.com, yzaikin@google.com,
-        ink@jurassic.park.msu.ru, jejb@linux.ibm.com, jmorris@namei.org,
-        bfields@fieldses.org, jlayton@kernel.org, jirislaby@kernel.org,
-        john.johansen@canonical.com, juri.lelli@redhat.com,
-        keescook@chromium.org, mcgrof@kernel.org,
-        martin.petersen@oracle.com, mattst88@gmail.com, mgorman@suse.de,
-        oleg@redhat.com, pbonzini@redhat.com, peterz@infradead.org,
-        rth@twiddle.net, richard@nod.at, serge@hallyn.com,
-        rostedt@goodmis.org, tglx@linutronix.de,
-        trond.myklebust@hammerspace.com, vincent.guittot@linaro.org,
-        x86@kernel.org, linux-kernel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, kvm@vger.kernel.org,
-        linux-alpha@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-m68k@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org
-References: <20220103181956.983342-1-walt@drummond.us>
-        <87iluzidod.fsf@email.froward.int.ebiederm.org>
-        <YdSzjPbVDVGKT4km@mit.edu>
-Date:   Tue, 04 Jan 2022 16:05:26 -0600
-In-Reply-To: <YdSzjPbVDVGKT4km@mit.edu> (Theodore Ts'o's message of "Tue, 4
-        Jan 2022 15:52:28 -0500")
-Message-ID: <87pmp79mxl.fsf@email.froward.int.ebiederm.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        id S235201AbiADWId (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Jan 2022 17:08:33 -0500
+Received: from slot0.jllresort.com ([62.197.136.5]:44115 "EHLO
+        slot0.jllresort.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235189AbiADWId (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2022 17:08:33 -0500
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; s=dkim; d=jllresort.com;
+ h=Reply-To:From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding; i=ele.mon@jllresort.com;
+ bh=BwiGAJWzsKTECKjF2sIWA3FxnHk=;
+ b=paL/qBGIUlz+e3gQ+JHl6OMRyg8MgNUYRwoUl/9QWpN2KvIcy5Oop6j8xy3MnPX01XoOY0YsOJyv
+   dtEpV7B0jnFy168H80VLVHKrCckUB/jBRBfyIy9qeBTXbW17GppyVRWDK9oc/klVryCscrUaYkl1
+   jdYA3D62UZSYL33N291zSLO3lRBSWIPKAXq47R6JMXpPB841LLgVeDnpoq9ht2VslrtXkFZx/P11
+   49jKZj91g73ZPTYV5et9Cx9gYqA75kMH2GvVhwG5BGZFv1nfm5dL2h58dX34RWRfQCbKAgUsGrJW
+   ZmBfaGvQEFzPlRMQqllw7WLITzzOiH1Agrbu4A==
+DomainKey-Signature: a=rsa-sha1; c=nofws; q=dns; s=dkim; d=jllresort.com;
+ b=U1NNHyI8emleBYUzvyge7Lz/Bv2NcZq2SGqDlMRxjCEAblWmMzBQ2cB9RerY43tECTRvwUCksNSw
+   i9wCKUoln9AHVuliLYCKB9cOEsOI27pxT92D1lAEA02kuGiPxcxMkKpp2ZBGxiKwswSrO21ymA+U
+   tKBpcZF4OAQEDj45F7KYVsbddStRAjJmpkoDlmhENXGFiR91e5uMZk4OwXGcu54/YfUHsd+LHD0s
+   oWWtJVnbojI5M0li7RZlxJjxBOIF94KcqviEV5lVnMojU0f/4KFcjERrYA8ZrU+kMxkJD/4HgsoJ
+   7/Y287s3/kwIonEHHl5wvLiTf/iOmEl63PLIZQ==;
+Reply-To: ayvazmustafa231@gmail.com
+From:   ele.mon@jllresort.com
+To:     linux-scsi@vger.kernel.org
+Subject: Attention:
+Date:   4 Jan 2022 23:08:21 +0100
+Message-ID: <20220104230821.72636CC747B9CBA8@jllresort.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-XM-SPF: eid=1n4rwe-00AJrs-EY;;;mid=<87pmp79mxl.fsf@email.froward.int.ebiederm.org>;;;hst=in02.mta.xmission.com;;;ip=68.110.24.146;;;frm=ebiederm@xmission.com;;;spf=neutral
-X-XM-AID: U2FsdGVkX1+pTOQLVEgfzdSQ3AESBxxTFfoB2eTGC7k=
-X-SA-Exim-Connect-IP: 68.110.24.146
-X-SA-Exim-Mail-From: ebiederm@xmission.com
-Subject: Re: [RFC PATCH 0/8] signals: Support more than 64 signals
-X-SA-Exim-Version: 4.2.1 (built Sat, 08 Feb 2020 21:53:50 +0000)
-X-SA-Exim-Scanned: Yes (on in02.mta.xmission.com)
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-"Theodore Ts'o" <tytso@mit.edu> writes:
+Greetings to you linux-scsi,
 
-> On Tue, Jan 04, 2022 at 12:00:34PM -0600, Eric W. Biederman wrote:
->> I dug through the previous conversations and there is a little debate
->> about what makes sense for SIGPWR to do by default.  Alan Cox remembered
->> SIGPWR was sent when the power was restored, so ignoring SIGPWR by
->> default made sense.  Ted Tso pointed out a different scenario where it
->> was reasonable for SIGPWR to be a terminating signal.
->> 
->> So far no one has actually found any applications that will regress if
->> SIGPWR becomes ignored by default.  Furthermore on linux SIGPWR is only
->> defined to be sent to init, and init ignores all signals by default so
->> in practice SIGPWR is ignored by the only process that receives it
->> currently.
->
-> As it turns out, systemd does *not* ignore SIGPWR.  Instead, it will
-> initiate the sigpwr target.  From the systemd.special man page:
->
->        sigpwr.target
->            A special target that is started when systemd receives the
->            SIGPWR process signal, which is normally sent by the kernel
->            or UPS daemons when power fails.
->
-> And child processes of systemd are not ignoring SIGPWR.  Instead, they
-> are getting terminated.
->
-> <tytso@cwcc>
-> 41% /bin/sleep 50 &
-> [1] 180671
-> <tytso@cwcc>
-> 42% kill -PWR 180671
-> [1]+  Power failure           /bin/sleep 50
+I was wondering if you got my previous email? I have been trying=20
+to reach you by email linux-scsi@vger.kernel.org, kindly get back=20
+to me swiftly, it is very important.
 
-
-That is all as expected, and does not demonstrate a regression would
-happen if SIGPWR were to treat SIG_DFL as SIG_IGN, as SIGWINCH, SIGCONT,
-SIGCHLD, SIGURG do.  It does show there is the possibility of problems.
-
-The practical question is does anything send SIGPWR to anything besides
-init, and expect the process to handle SIGPWR or terminate?
-
-Possibly easier to implement (if people desire) is to simply send
-SIGCONT with an si_code that indicates someone pressed the VSTATUS
-key.  We have a per signal 32bit si_code space so that should
-be comparatively easy.
-
-> I claim, though, that we could implement VSTATUS without implenting
-> the SIGINFO part of the feature.
-
-I agree that is the place to start.  And if we aren't going to use
-SIGINFO perhaps we could have an equally good notification method
-if anyone wants one.  Say call an ioctl and get an fd that can
-be read when a VSTATUS request comes in.
-
-SIGINFO vs SIGCONT vs a fd vs something else is something we can sort
-out when people get interested in modifying userspace.
-
-Eric
+Thanks
+Mustafa Ayvaz
+Email: mustafa.ayvaz@ayvazburosu.com
