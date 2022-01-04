@@ -2,84 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5B0FC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jan 2022 13:52:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A85D8C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jan 2022 16:48:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233839AbiADNwu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Jan 2022 08:52:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45526 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229535AbiADNwu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2022 08:52:50 -0500
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C4295C061761;
-        Tue,  4 Jan 2022 05:52:49 -0800 (PST)
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 0F67392009C; Tue,  4 Jan 2022 14:52:48 +0100 (CET)
+        id S235495AbiADQsA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Jan 2022 11:48:00 -0500
+Received: from mailout.easymail.ca ([64.68.200.34]:34786 "EHLO
+        mailout.easymail.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235478AbiADQsA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2022 11:48:00 -0500
+X-Greylist: delayed 503 seconds by postgrey-1.27 at vger.kernel.org; Tue, 04 Jan 2022 11:47:59 EST
 Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 0BBB192009B;
-        Tue,  4 Jan 2022 13:52:48 +0000 (GMT)
-Date:   Tue, 4 Jan 2022 13:52:47 +0000 (GMT)
-From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-cc:     Douglas Gilbert <dgilbert@interlog.com>,
-        Khalid Aziz <khalid@gonehiking.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Christoph Hellwig <hch@lst.de>, Nix <nix@esperi.org.uk>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 3/3] scsi: Set allocation length to 255 for ATA
- Information VPD page
-In-Reply-To: <yq1tuek347m.fsf@ca-mkp.ca.oracle.com>
-Message-ID: <alpine.DEB.2.21.2201032324230.56863@angie.orcam.me.uk>
-References: <alpine.DEB.2.21.2201020010540.56863@angie.orcam.me.uk> <alpine.DEB.2.21.2201020030130.56863@angie.orcam.me.uk> <d9eaa1f8-7abb-645b-d624-5069205c6983@interlog.com> <alpine.DEB.2.21.2201032017290.56863@angie.orcam.me.uk>
- <yq1tuek347m.fsf@ca-mkp.ca.oracle.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        by mailout.easymail.ca (Postfix) with ESMTP id 5EFADC7F1A;
+        Tue,  4 Jan 2022 16:39:35 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at emo01-pco.easydns.vpn
+Received: from mailout.easymail.ca ([127.0.0.1])
+        by localhost (emo01-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 3SsEdDYT7Fnq; Tue,  4 Jan 2022 16:39:35 +0000 (UTC)
+Received: from mail.gonehiking.org (c-24-9-64-241.hsd1.co.comcast.net [24.9.64.241])
+        by mailout.easymail.ca (Postfix) with ESMTPA id 13D47C7EDF;
+        Tue,  4 Jan 2022 16:39:35 +0000 (UTC)
+Received: from [192.168.1.4] (internal [192.168.1.4])
+        by mail.gonehiking.org (Postfix) with ESMTP id 1AE7F3EF3C;
+        Tue,  4 Jan 2022 09:39:33 -0700 (MST)
+Message-ID: <a6a99a33-9124-bbc5-610b-a67d7af76c4a@gonehiking.org>
+Date:   Tue, 4 Jan 2022 09:39:33 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v3 1/3] scsi: Provide for avoiding trailing allocation
+ length with VPD inquiries
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>,
+        "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc:     Khalid Aziz <khalid@gonehiking.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Nix <nix@esperi.org.uk>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <alpine.DEB.2.21.2201020010540.56863@angie.orcam.me.uk>
+ <alpine.DEB.2.21.2201020021000.56863@angie.orcam.me.uk>
+ <20220103082338.GA28606@lst.de>
+From:   Khalid Aziz and Shuah Khan <azizkhan@gonehiking.org>
+In-Reply-To: <20220103082338.GA28606@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Martin,
+On 1/3/22 01:23, Christoph Hellwig wrote:
+> On Sun, Jan 02, 2022 at 11:23:45PM +0000, Maciej W. Rozycki wrote:
+>> Allow SCSI hosts to request avoiding trailing allocation length with VPD
+>> inquiries, and use the mechanism to work around an issue with at least
+>> some BusLogic MultiMaster host bus adapters and observed with the BT-958
+>> model specifically where issuing commands that return less data than
+>> provided for causes fatal failures:
+> Wouldn't it make more sesnse to hide this quirk insde of
+> scsi_vpd_inquiry to also handle the scsi_get_vpd_buf case?  Something
+> like:
+>
+>
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 211aace69c22c..194a51f772aaa 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -289,8 +289,8 @@ EXPORT_SYMBOL(scsi_track_queue_full);
+>    *
+>    * Returns size of the vpd page on success or a negative error number.
+>    */
+> -static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+> -							u8 page, unsigned len)
+> +static int __scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+> +		u8 page, unsigned len)
+>   {
+>   	int result;
+>   	unsigned char cmd[16];
+> @@ -321,6 +321,20 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+>   	return get_unaligned_be16(&buffer[2]) + 4;
+>   }
+>   
+> +static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+> +		u8 page, unsigned len)
+> +{
+> +	if (sdev->host->no_trailing_allocation_length) {
+> +		int ret = __scsi_vpd_inquiry(sdev, buffer, page, min(4U, len));
+> +
+> +		if (ret < 4)
+> +			return ret;
+> +		len = min_t(unsigned int, ret, len);
+> +	}
+> +
+> +	return __scsi_vpd_inquiry(sdev, buffer, page, len);
+> +}
+> +
+>   /**
+>    * scsi_get_vpd_page - Get Vital Product Data from a SCSI device
+>    * @sdev: The device to ask
 
-> >  So I do have all the reasons to conclude this value has indeed been 
-> > arbitrarily chosen, don't I?
-> 
-> The SAT spec defines the contents of the first part of the page. The
-> trailing 512 bytes are defined in the ATA spec.
+This is certainly better. It consolidates all the special cases for 
+getting VPD pages in one location and ensures no cases are missed.
 
- I think that would best be reflected in code somehow as lone `64' doesn't 
-say anything really.
-
-> > If you insist that the value of 64 stay, then please come up with a
-> > suitable macro name to define along with SCSI_VPD_PG_LEN that reflects
-> > the meaning of 64 in this context and I'll be happy to update 3/3
-> > accordingly, but please explain why the value of 64 is any better than
-> > 255 here and the inconsistency with the buffer size justified.
-> 
-> Can please you try the following patch?
-
- I have tried it and it's neutral, that is with 1/3 applied the HBA still 
-works and with 1/3 removed it still breaks (2/3 and 3/3 obviously don't 
-build anymore).  Unsurprisingly, as it's the call to `scsi_get_vpd_page' 
-rather than `scsi_get_vpd_buf' that causes an issue here.
-
- I think the latter function isn't called in my setup, and it's not clear 
-to me anymore after so long why I didn't poke at it.  It looks to me like 
-the `retry_pg' code there can be gone now with your update in place as it 
-duplicates buffer sizing, and with that included it'll be a nice clean-up.
-
- NB you'll need to adjust drivers/scsi/mpt3sas/mpt3sas_scsih.c accordingly 
-if we are to move forward with this change, as it's another user of the 
-SCSI_VPD_PG_LEN macro.
-
- Given what has been said in the discussion so far would you consider 2/3
-and 3/3 unnecessary?  In the course of verifying your change I have looked 
-through our code again and found that inline magic numbers are there in 
-several though not all places where `scsi_get_vpd_page' gets called, so I 
-think it would make sense to get rid of them all at once with a single 
-self-contained change.
-
- Thank you for your input and the extra fix.
-
-  Maciej
+--
+Khalid
