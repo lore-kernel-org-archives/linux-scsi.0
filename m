@@ -2,83 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5294AC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jan 2022 12:32:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42BE9C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Jan 2022 12:47:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231168AbiADMcH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Jan 2022 07:32:07 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:57636 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229502AbiADMcF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2022 07:32:05 -0500
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 905E8210F4;
-        Tue,  4 Jan 2022 12:32:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1641299524; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=63PgnDy0vksVcPjH47T2ppO8gcC9J5ZqGLrn6SMb7HY=;
-        b=xxeMQ2PUbKPMtJvGeq5CyirVPnG1mTSTFYLgqeVCHx8KErhazeqz/ff8KTDWmQOi/4LB+9
-        DVLMDEGFdj+aKpJzjO/LwfnXoMlHWmC4c0qTUWUkLR0nWLg3J+EyvixZNTEcKamhX/inOL
-        naphBYMvHwd6LJybI14vFEFhFqnyX4E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1641299524;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=63PgnDy0vksVcPjH47T2ppO8gcC9J5ZqGLrn6SMb7HY=;
-        b=OS1Ymnec3YmcKFTd2CBJ3l1RNJ+ljP9FZtcBIPniU8xlbG6Mwd1uJ2UpDp9pIb7HVs+VfR
-        ZiiBpP/RPHM/GjCg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7F99213B08;
-        Tue,  4 Jan 2022 12:32:04 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id wnQPH0Q+1GFPVwAAMHmgww
-        (envelope-from <dwagner@suse.de>); Tue, 04 Jan 2022 12:32:04 +0000
-Date:   Tue, 4 Jan 2022 13:32:04 +0100
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Saurav Kashyap <skashyap@marvell.com>
-Cc:     Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: Re: [PATCH 02/16] qla2xxx: Implement ref count for srb
-Message-ID: <20220104123204.tkfn5jfknhns67i3@carbon.lan>
-References: <20211224070712.17905-1-njavali@marvell.com>
- <20211224070712.17905-3-njavali@marvell.com>
- <02990604-CC38-42ED-B3D6-11CCA0C5D43E@oracle.com>
- <DM6PR18MB30347380BBCF7EAF7EDA92C1D2499@DM6PR18MB3034.namprd18.prod.outlook.com>
+        id S232032AbiADMr1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Jan 2022 07:47:27 -0500
+Received: from szxga02-in.huawei.com ([45.249.212.188]:17322 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231926AbiADMr1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2022 07:47:27 -0500
+Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4JSsmw0sTTz9s1j;
+        Tue,  4 Jan 2022 20:46:24 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ dggeme756-chm.china.huawei.com (10.3.19.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.20; Tue, 4 Jan 2022 20:47:25 +0800
+From:   chenxiang <chenxiang66@hisilicon.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <john.garry@huawei.com>, <nathan@kernel.org>,
+        <colin.i.king@gmail.com>, Xiang Chen <chenxiang66@hisilicon.com>
+Subject: [PATCH] scsi: hisi_sas: Remove unused variable and check in hisi_sas_send_ata_reset_each_phy()
+Date:   Tue, 4 Jan 2022 20:42:06 +0800
+Message-ID: <1641300126-53574-1-git-send-email-chenxiang66@hisilicon.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DM6PR18MB30347380BBCF7EAF7EDA92C1D2499@DM6PR18MB3034.namprd18.prod.outlook.com>
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggeme756-chm.china.huawei.com (10.3.19.102)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jan 03, 2022 at 03:56:06AM +0000, Saurav Kashyap wrote:
-> > > -	sp->free(sp);
-> > > +	/* ref: INIT */
-> > 
-> > IMO, There is no need for this comment spread in this patch. Please explain If
-> > you think there is need for comment.
-> 
-> <SK> Thanks for the review. The sp reference can be taken and released on various paths. These comments make 
-> life simpler during some ref issue and also make code more understandable. For various scenarios, this comments
-> helps in determining final reference count and check if its released properly or not.
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-I think the better way to address is to get Sebastian's patch working:
+In commit 29e2bac87421 ("scsi: hisi_sas: Fix some issues related to
+asd_sas_port->phy_list"), we use asd_sas_port->phy_mask instead of
+accessing asd_sas_port->phy_list, and it is enough to use
+asd_sas_port->phy_mask to check the state of phy, so remove the unused
+check and variable.
 
-https://lore.kernel.org/all/20131103193308.GA20998@linutronix.de/
+Fixes: 29e2bac87421 ("scsi: hisi_sas: Fix some issues related to asd_sas_port->phy_list")
+Reported-by: Nathan Chancellor <nathan@kernel.org>
+Reported-by: Colin King <colin.i.king@gmail.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-Daniel
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index f46f679fe825..a05ec7aece5a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1525,16 +1525,11 @@ static void hisi_sas_send_ata_reset_each_phy(struct hisi_hba *hisi_hba,
+ 	struct device *dev = hisi_hba->dev;
+ 	int s = sizeof(struct host_to_dev_fis);
+ 	int rc = TMF_RESP_FUNC_FAILED;
+-	struct asd_sas_phy *sas_phy;
+ 	struct ata_link *link;
+ 	u8 fis[20] = {0};
+-	u32 state;
+ 	int i;
+ 
+-	state = hisi_hba->hw->get_phys_state(hisi_hba);
+ 	for (i = 0; i < hisi_hba->n_phy; i++) {
+-		if (!(state & BIT(sas_phy->id)))
+-			continue;
+ 		if (!(sas_port->phy_mask & BIT(i)))
+ 			continue;
+ 
+-- 
+2.33.0
+
