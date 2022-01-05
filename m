@@ -2,309 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B607CC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jan 2022 17:36:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 001DCC41535
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jan 2022 17:42:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242365AbiAERgg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Jan 2022 12:36:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56836 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242361AbiAERgf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2022 12:36:35 -0500
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C05AC061212
-        for <linux-scsi@vger.kernel.org>; Wed,  5 Jan 2022 09:36:35 -0800 (PST)
-Received: by mail-pl1-x629.google.com with SMTP id z3so110695plg.8
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Jan 2022 09:36:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=UlDyQSfZH97+YSOXX0OoVP/OqcWQnYb38Gvp9Yo2/W0=;
-        b=CYToiqUrNG3t3x39vLyMisao1WjgLJw0g2VmSXl2v82QK8IjZKQltcCkddvWZrhsJ0
-         uGlpnBLdlTrJp7gEpD1vVsfLfU/sNu+CLemkhe6qrqOxkPhYGtO7IFWXkqk5eXFSw34v
-         P3UucZWCN39FnL4LzccNJ5nbXrXuRxXcQLMRY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=UlDyQSfZH97+YSOXX0OoVP/OqcWQnYb38Gvp9Yo2/W0=;
-        b=jXtUw9Bx/5KWzwf6uzFnffY5W0NCkZ+a9wvtlyGscTR0/g3FlANKQKXcSp0UN9pNFc
-         dNxN3LpeZ3+fAgbUQMBS1Cn8iEagKdUK/d1nSFR3XxazPWJdtZRaZt7nzVq8qTq08X0J
-         ys+AWD4Txa1q2YSyyt38lLnGvup/esN80pwjunCI4XarNi870fuWn1vpoNnRAWEaY5pY
-         jmYDTvakO4zmTeNGD5ftC3DzQF9G2lTMXfapldzJt/Gsp1QHfZc0abUO9i2hf74Um5df
-         sEroPdFmsbnAyuD8e1IJXf3zE6QuCyyHAMMDwHP2ZHTxT35cA9Kzq4rBAIrQtITXO8Tg
-         QdoA==
-X-Gm-Message-State: AOAM530FoDd+gICp+kJ6wlzvFFAcsGNNG8snTmLJebF1n1vW8/QA1BOn
-        siJ5tTifeJ8w2tU6WjYlIVxHb9vtwHLQYA==
-X-Google-Smtp-Source: ABdhPJxRAvesKc77wiFyz23fyuXHgHsmrfIZycg9eOtRUOAcEQtVNM/mW0s1X/aWw9HMHp0TJM/6RQ==
-X-Received: by 2002:a17:902:ea02:b0:149:473f:ca35 with SMTP id s2-20020a170902ea0200b00149473fca35mr55049525plg.99.1641404195156;
-        Wed, 05 Jan 2022 09:36:35 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id o34sm22926834pgl.33.2022.01.05.09.36.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Jan 2022 09:36:34 -0800 (PST)
-From:   Kees Cook <keescook@chromium.org>
-To:     Kashyap Desai <kashyap.desai@broadcom.com>
-Cc:     Kees Cook <keescook@chromium.org>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        id S242452AbiAERml (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Jan 2022 12:42:41 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4352 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242412AbiAERmi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2022 12:42:38 -0500
+Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JTcDP1FRwz67w73;
+        Thu,  6 Jan 2022 01:39:17 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Wed, 5 Jan 2022 18:42:31 +0100
+Received: from [10.47.27.56] (10.47.27.56) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Wed, 5 Jan
+ 2022 17:42:28 +0000
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [RFC 01/32] Kconfig: introduce and depend on LEGACY_PCI
+To:     Niklas Schnelle <schnelle@linux.ibm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        "Arnd Bergmann" <arnd@arndb.de>
+CC:     Hans Verkuil <hverkuil-cisco@xs4all.nl>,
+        Ettore Chimenti <ek5.chimenti@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Arnd Bergmann <arnd@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Nick Hu <nickhu@andestech.com>,
+        Greentime Hu <green.hu@gmail.com>,
+        Vincent Chen <deanbo422@gmail.com>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        "Palmer Dabbelt" <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "Ian Abbott" <abbotti@mev.co.uk>,
+        H Hartley Sweeten <hsweeten@visionengravers.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Jean Delvare <jdelvare@suse.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        "Karsten Keil" <isdn@linux-pingi.de>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Michael Grzeschik <m.grzeschik@pengutronix.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        "Jakub Kicinski" <kuba@kernel.org>,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Tony Nguyen <anthony.l.nguyen@intel.com>,
+        Kalle Valo <kvalo@kernel.org>, Jouni Malinen <j@w1.fi>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: [PATCH][RESEND] scsi: megaraid: Avoid mismatched storage type sizes
-Date:   Wed,  5 Jan 2022 09:36:33 -0800
-Message-Id: <20220105173633.2421129-1-keescook@chromium.org>
-X-Mailer: git-send-email 2.30.2
+        Hannes Reinecke <hare@suse.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        Mark Brown <broonie@kernel.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        "Teddy Wang" <teddy.wang@siliconmotion.com>,
+        Forest Bond <forest@alittletooquiet.net>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "Wim Van Sebroeck" <wim@linux-watchdog.org>,
+        Jaroslav Kysela <perex@perex.cz>,
+        "Takashi Iwai" <tiwai@suse.com>, <linux-kernel@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-riscv@lists.infradead.org>, <linux-csky@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-gpio@vger.kernel.org>,
+        <linux-hwmon@vger.kernel.org>, <linux-i2c@vger.kernel.org>,
+        <linux-input@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-media@vger.kernel.org>, <MPT-FusionLinux.pdl@broadcom.com>,
+        <linux-scsi@vger.kernel.org>, <intel-wired-lan@lists.osuosl.org>,
+        <linux-wireless@vger.kernel.org>, <megaraidlinux.pdl@broadcom.com>,
+        <linux-spi@vger.kernel.org>, <linux-fbdev@vger.kernel.org>,
+        <linux-serial@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+        <linux-watchdog@vger.kernel.org>
+References: <20211229160317.GA1681139@bhelgaas>
+ <e0877e91d7d50299ea5a3ffcee2cf1016458ce10.camel@linux.ibm.com>
+Message-ID: <3f39d8a2-2e57-a671-2926-eb4f2bf20c76@huawei.com>
+Date:   Wed, 5 Jan 2022 17:42:16 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7461; h=from:subject; bh=yCVF/dR75zh7pN1scPMv4U3tXSsTcbBV/KYX9KngEWY=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBh1dcgvp5F9LNf7Zt07G6F92kvoKo8Do3EicDHawzQ Z02EgniJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYdXXIAAKCRCJcvTf3G3AJsYxD/ 9TmyIV365IN5cHqKQsIt3+8vCbIV+iJQlKSIz8zTcIYFM9Az9UKzROZa4HgsUVsrfYbS7HxxE4YNvk SNbwBWUD/yk6M5nX7mzgeiqYy7x80aBH4+nFwr9IjQXuBeqTiHBdHa6uB2RK6ar0jfwMspijvPIMRW 6xDVNRgfAxsudy0yyufNPhfuJDdo2y/gII3FKafq62MklNbGXrZlzSQdN9SXIIc9h9gx/a5Uxvxdhg 9uxPrKyY2NcPVnANztsgW5MGDR64jr/VAWopirT9QagpgojMPD0wtmaWvZAR4wUHQ7qIyUTm7RGbQv YY34QvAVpdUZ5QcrCt5azihTurS2ilZTjII8wsggEWp2PsFD8x1iWsQ441Jd95FHZ805Y1SM7bxB0n i2nWNwneedallbaK9xICcfPC6hyPKBQceGOV+ZVw4PnNqTzbwkP3yBemxH8kkLjj1RaduMucQwZvEv 5dpscpuaBBqyOlGHcReCIwBcOH/gMlgi+mcWLXyLccH70RNOHk7aawrw39TJqQ79RGpP1BbR89GVlA Yg2k/8XvjBWIxiBLruCupRqauQEAazc0rp/EAt6GzXKGxawhMYSvjwxNC5lv3gIxeFBWS54b+APPQ7 xfpb1hPg820N8pcroNGZZ1C0d1RdDhBE+jl8NE3LP4DBDC5Mu64KafG+7Njg==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <e0877e91d7d50299ea5a3ffcee2cf1016458ce10.camel@linux.ibm.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.27.56]
+X-ClientProxiedBy: lhreml736-chm.china.huawei.com (10.201.108.87) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove needless use of mbox_t, replacing with just struct
-mbox_out. Silences compiler warnings under a -Warray-bounds build:
+On 29/12/2021 16:55, Niklas Schnelle wrote:
+> On Wed, 2021-12-29 at 10:03 -0600, Bjorn Helgaas wrote:
+>> On Wed, Dec 29, 2021 at 01:12:07PM +0100, Mauro Carvalho Chehab wrote:
+>>> Em Wed, 29 Dec 2021 12:45:38 +0100
+>>> Niklas Schnelle<schnelle@linux.ibm.com>  escreveu:
+>>>> ...
+>>>> I do think we agree that once done correctly there is value in
+>>>> such an option independent of HAS_IOPORT only gating inb() etc uses.
+>> I'm not sure I'm convinced about this.  For s390, you could do this
+>> patch series, where you don't define inb() at all, and you add new
+>> dependencies to prevent compile errors.  Or you could define inb() to
+>> return ~0, which is what happens on other platforms when the device is
+>> not present.
+>>
+>>> Personally, I don't see much value on a Kconfig var for legacy PCI I/O
+>>> space. From maintenance PoV, bots won't be triggered if someone use
+>>> HAS_IOPORT instead of the PCI specific one - or vice-versa. So, we
+>>> could end having a mix of both at the wrong places, in long term.
+>>>
+>>> Also, assuming that PCIe hardware will some day abandon support for
+>>> "legacy" PCI I/O space, I guess some runtime logic would be needed,
+>>> in order to work with both kinds of PCIe controllers. So, having a
+>>> Kconfig option won't help much, IMO.
+>>>
+>>> So, my personal preference would be to have just one Kconfig var, but
+>>> I'm ok if the PCI maintainers decide otherwise.
+>> I don't really like the "LEGACY_PCI" Kconfig option.  "Legacy" just
+>> means something old and out of favor; it doesn't say*what*  that
+>> something is.
+>>
+>> I think you're specifically interested in I/O port space usage, and it
+>> seems that you want all PCI drivers that*only*  use I/O port space to
+>> depend on LEGACY_PCI?  Drivers that can use either I/O or memory
+>> space or both would not depend on LEGACY_PCI?  This seems a little
+>> murky and error-prone.
+> I'd like to hear Arnd's opinion on this but you're the PCI maintainer
+> so of course your buy-in would be quite important for such an option.
+> 
 
-drivers/scsi/megaraid.c: In function 'megaraid_probe_one':
-drivers/scsi/megaraid.c:3615:30: error: array subscript 'mbox_t[0]' is partly outside array bounds of 'unsigned char[15]' [-Werror=array-bounds]
- 3615 |         mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-      |         ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/megaraid.c:3599:23: note: while referencing 'raw_mbox'
- 3599 |         unsigned char raw_mbox[sizeof(struct mbox_out)];
-      |                       ^~~~~~~~
+Hi Niklas,
 
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: megaraidlinux.pdl@broadcom.com
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
-Original patch sent here:
-https://lore.kernel.org/lkml/20211203091424.3355371-1-keescook@chromium.org/
----
- drivers/scsi/megaraid.c | 84 +++++++++++++++++------------------------
- 1 file changed, 34 insertions(+), 50 deletions(-)
+I can't see the value in the LEGACY_PCI config - however I don't really 
+understand Arnd's original intention.
 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 0d31d7a5e335..bf987f3a7f3f 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -192,23 +192,21 @@ mega_query_adapter(adapter_t *adapter)
- {
- 	dma_addr_t	prod_info_dma_handle;
- 	mega_inquiry3	*inquiry3;
--	u8	raw_mbox[sizeof(struct mbox_out)];
--	mbox_t	*mbox;
-+	struct mbox_out	mbox;
-+	u8	*raw_mbox = (u8 *)&mbox;
- 	int	retval;
- 
- 	/* Initialize adapter inquiry mailbox */
- 
--	mbox = (mbox_t *)raw_mbox;
--
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	/*
- 	 * Try to issue Inquiry3 command
- 	 * if not succeeded, then issue MEGA_MBOXCMD_ADAPTERINQ command and
- 	 * update enquiry3 structure
- 	 */
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
- 
- 	inquiry3 = (mega_inquiry3 *)adapter->mega_buffer;
- 
-@@ -232,10 +230,10 @@ mega_query_adapter(adapter_t *adapter)
- 
- 		inq = &ext_inq->raid_inq;
- 
--		mbox->m_out.xferaddr = (u32)dma_handle;
-+		mbox.xferaddr = (u32)dma_handle;
- 
- 		/*issue old 0x04 command to adapter */
--		mbox->m_out.cmd = MEGA_MBOXCMD_ADPEXTINQ;
-+		mbox.cmd = MEGA_MBOXCMD_ADPEXTINQ;
- 
- 		issue_scb_block(adapter, raw_mbox);
- 
-@@ -262,7 +260,7 @@ mega_query_adapter(adapter_t *adapter)
- 						      sizeof(mega_product_info),
- 						      DMA_FROM_DEVICE);
- 
--		mbox->m_out.xferaddr = prod_info_dma_handle;
-+		mbox.xferaddr = prod_info_dma_handle;
- 
- 		raw_mbox[0] = FC_NEW_CONFIG;	/* i.e. mbox->cmd=0xA1 */
- 		raw_mbox[2] = NC_SUBOP_PRODUCT_INFO;	/* i.e. 0x0E */
-@@ -3569,16 +3567,14 @@ mega_n_to_m(void __user *arg, megacmd_t *mc)
- static int
- mega_is_bios_enabled(adapter_t *adapter)
- {
--	unsigned char	raw_mbox[sizeof(struct mbox_out)];
--	mbox_t	*mbox;
--
--	mbox = (mbox_t *)raw_mbox;
-+	struct mbox_out mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
- 
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
- 
- 	raw_mbox[0] = IS_BIOS_ENABLED;
- 	raw_mbox[2] = GET_BIOS;
-@@ -3600,13 +3596,11 @@ mega_is_bios_enabled(adapter_t *adapter)
- static void
- mega_enum_raid_scsi(adapter_t *adapter)
- {
--	unsigned char raw_mbox[sizeof(struct mbox_out)];
--	mbox_t *mbox;
-+	struct mbox_out mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 	int i;
- 
--	mbox = (mbox_t *)raw_mbox;
--
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	/*
- 	 * issue command to find out what channels are raid/scsi
-@@ -3616,7 +3610,7 @@ mega_enum_raid_scsi(adapter_t *adapter)
- 
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
- 
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
- 
- 	/*
- 	 * Non-ROMB firmware fail this command, so all channels
-@@ -3655,23 +3649,21 @@ static void
- mega_get_boot_drv(adapter_t *adapter)
- {
- 	struct private_bios_data	*prv_bios_data;
--	unsigned char	raw_mbox[sizeof(struct mbox_out)];
--	mbox_t	*mbox;
-+	struct mbox_out mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 	u16	cksum = 0;
- 	u8	*cksum_p;
- 	u8	boot_pdrv;
- 	int	i;
- 
--	mbox = (mbox_t *)raw_mbox;
--
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	raw_mbox[0] = BIOS_PVT_DATA;
- 	raw_mbox[2] = GET_BIOS_PVT_DATA;
- 
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
- 
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
- 
- 	adapter->boot_ldrv_enabled = 0;
- 	adapter->boot_ldrv = 0;
-@@ -3721,13 +3713,11 @@ mega_get_boot_drv(adapter_t *adapter)
- static int
- mega_support_random_del(adapter_t *adapter)
- {
--	unsigned char raw_mbox[sizeof(struct mbox_out)];
--	mbox_t *mbox;
-+	struct mbox_out mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 	int rval;
- 
--	mbox = (mbox_t *)raw_mbox;
--
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	/*
- 	 * issue command
-@@ -3750,13 +3740,11 @@ mega_support_random_del(adapter_t *adapter)
- static int
- mega_support_ext_cdb(adapter_t *adapter)
- {
--	unsigned char raw_mbox[sizeof(struct mbox_out)];
--	mbox_t *mbox;
-+	struct mbox_out mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 	int rval;
- 
--	mbox = (mbox_t *)raw_mbox;
--
--	memset(&mbox->m_out, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 	/*
- 	 * issue command to find out if controller supports extended CDBs.
- 	 */
-@@ -3865,16 +3853,14 @@ mega_do_del_logdrv(adapter_t *adapter, int logdrv)
- static void
- mega_get_max_sgl(adapter_t *adapter)
- {
--	unsigned char	raw_mbox[sizeof(struct mbox_out)];
--	mbox_t	*mbox;
-+	struct mbox_out	mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 
--	mbox = (mbox_t *)raw_mbox;
--
--	memset(mbox, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
- 
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
- 
- 	raw_mbox[0] = MAIN_MISC_OPCODE;
- 	raw_mbox[2] = GET_MAX_SG_SUPPORT;
-@@ -3888,7 +3874,7 @@ mega_get_max_sgl(adapter_t *adapter)
- 	}
- 	else {
- 		adapter->sglen = *((char *)adapter->mega_buffer);
--		
-+
- 		/*
- 		 * Make sure this is not more than the resources we are
- 		 * planning to allocate
-@@ -3910,16 +3896,14 @@ mega_get_max_sgl(adapter_t *adapter)
- static int
- mega_support_cluster(adapter_t *adapter)
- {
--	unsigned char	raw_mbox[sizeof(struct mbox_out)];
--	mbox_t	*mbox;
--
--	mbox = (mbox_t *)raw_mbox;
-+	struct mbox_out	mbox;
-+	unsigned char	*raw_mbox = (u8 *)&mbox;
- 
--	memset(mbox, 0, sizeof(raw_mbox));
-+	memset(&mbox, 0, sizeof(mbox));
- 
- 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
- 
--	mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
-+	mbox.xferaddr = (u32)adapter->buf_dma_handle;
- 
- 	/*
- 	 * Try to get the initiator id. This command will succeed iff the
--- 
-2.30.2
+It was written that it would allow us to control "whether we have any 
+pre-PCIe devices or those PCIe drivers that need PIO accessors other 
+than ioport_map()/pci_iomap()".
 
+However I just don't see why CONFIG_PCI=y and CONFIG_HAS_IOPORT=y aren't 
+always the gating factor here. Arnd?
+
+Thanks,
+John
