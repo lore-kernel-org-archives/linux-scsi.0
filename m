@@ -2,80 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5987FC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jan 2022 12:23:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C25C5C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jan 2022 13:03:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239986AbiAEMXt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Jan 2022 07:23:49 -0500
-Received: from mail-wr1-f54.google.com ([209.85.221.54]:43744 "EHLO
-        mail-wr1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229997AbiAEMXs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2022 07:23:48 -0500
-Received: by mail-wr1-f54.google.com with SMTP id o3so24436981wrh.10;
-        Wed, 05 Jan 2022 04:23:47 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=3vGTuWVHs0jAZJPZmVYXJHdNt84L1PDEmSZR/VjnEFM=;
-        b=kLJZFrw/CkL13K1UhXaXfjPYBUz8yi5UCt9bxk5MghqFMhJci9HPWEHy8HPiual5XZ
-         nPi1tAHciUAi0Z/+8q/lC14q54uTONBUSnqTPiWe8Hw7/zlCkKZRY1WVAd8BrkPcjB/w
-         mpDzEtoHPjERAFcis7ndhd7lcqG366Uw7Lpj7r8YWWHzLBLgrYnZt2H1Ize3qv0UkdfK
-         dSbReiGxY0sjrDYMGTVMo8s3rog8o73dST3MsrcGQFyotaS4Yv6FcD9SEJfQhyKf55z1
-         lFcR8Bd5M93bztavw/SoAFyCeU/WXgIE2sGodk9rV0A3Q9d9kCP//sF26/Voj2A0DqGg
-         wgIQ==
-X-Gm-Message-State: AOAM530qOskZlq9P43XhqO6f9lSgoThN/fEkEh7n/iW1PTvN7I6zaApI
-        2WJAGu9MDuLKmjeXczIa5tM=
-X-Google-Smtp-Source: ABdhPJytrxWG4YRfNcP5E3R86MxwQk61VG41q2ECBIwykw2jHAbzUhtzIKzidXOJ6z7sJGugTa1KFw==
-X-Received: by 2002:adf:fbcf:: with SMTP id d15mr34871393wrs.132.1641385427221;
-        Wed, 05 Jan 2022 04:23:47 -0800 (PST)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id l14sm36041756wrr.53.2022.01.05.04.23.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Jan 2022 04:23:46 -0800 (PST)
-Date:   Wed, 5 Jan 2022 12:23:45 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     YueHaibing <yuehaibing@huawei.com>, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
-        decui@microsoft.com, jejb@linux.ibm.com, mikelley@microsoft.com,
-        Tianyu.Lan@microsoft.com, longli@microsoft.com,
-        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 -next] scsi: storvsc: Fix unsigned comparison to zero
-Message-ID: <20220105122345.f5qlp5ftirglk7og@liuwe-devbox-debian-v2>
-References: <20211227040311.54584-1-yuehaibing@huawei.com>
- <yq135m2zqw1.fsf@ca-mkp.ca.oracle.com>
+        id S236734AbiAENDp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Jan 2022 08:03:45 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:35076 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236072AbiAENDn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2022 08:03:43 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 8267D210FE;
+        Wed,  5 Jan 2022 13:03:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1641387822; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=wcCd8soW8YUI2USGRy0PwEKRq3k0dLxX0CR7sVs0Otc=;
+        b=VjXbd0NHfsK+jxGFDEyAZyga6cMXVzhtrmZnX+4XQQqpBswiz3/R9QpE0RYkw173nZAkom
+        EdYfmW6ouuXT2fbbbpbdokq1Ua5GWCMvhNQporPJqQqnJgO8G/RD9cxsj87lUOXe+hA/kC
+        w/VrRsT2biHJcy63VR73gDZxaTOqCRQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1641387822;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=wcCd8soW8YUI2USGRy0PwEKRq3k0dLxX0CR7sVs0Otc=;
+        b=2ivFEjBG5iorrpE7lu5XUdUApmpHTvNXuGgZArrEhDENgx4i1TDTbn/b7bKW0nmP/9+kG5
+        XcoL58+bZJ0ZPuCQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6B50513BD9;
+        Wed,  5 Jan 2022 13:03:42 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id +LI3GS6X1WHKJwAAMHmgww
+        (envelope-from <dmueller@suse.de>); Wed, 05 Jan 2022 13:03:42 +0000
+From:   =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>
+To:     linux-scsi@vger.kernel.org
+Cc:     =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>
+Subject: [PATCH] qla2xxx: fix error status checking in qla24xx_modify_vp_config()
+Date:   Wed,  5 Jan 2022 14:03:37 +0100
+Message-Id: <20220105130337.31758-1-dmueller@suse.de>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq135m2zqw1.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jan 05, 2022 at 12:41:31AM -0500, Martin K. Petersen wrote:
-> 
-> YueHaibing,
-> 
-> > The unsigned variable sg_count is being assigned a return value
-> > from the call to scsi_dma_map() that can return -ENOMEM.
-> >
-> > Fixes: 743b237c3a7b ("scsi: storvsc: Add Isolation VM support for
-> > storvsc driver")
-> 
-> This should probably go through the Hyper-V tree - I presume that's
-> where the offending commit is sitting?
+The function was checking vpmod->comp_status and reported it as error
+status, which is however already checked a few lines below.
 
-Hi Martin
+Guessing from other occurrences it was supposed to check entry_status
+instead.
 
-I will pick this up.
+Fixes: 2c3dfe3f6ad8 ("[SCSI] qla2xxx: add support for NPIV")
+Signed-off-by: Dirk Müller <dmueller@suse.de>
+---
+ drivers/scsi/qla2xxx/qla_mbx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-Wei.
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 10d2655ef676..e0dce38b65cf 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -4253,7 +4253,7 @@ qla24xx_modify_vp_config(scsi_qla_host_t *vha)
+ 	if (rval != QLA_SUCCESS) {
+ 		ql_dbg(ql_dbg_mbx, vha, 0x10bd,
+ 		    "Failed to issue VP config IOCB (%x).\n", rval);
+-	} else if (vpmod->comp_status != 0) {
++	} else if (vpmod->entry_status != 0) {
+ 		ql_dbg(ql_dbg_mbx, vha, 0x10be,
+ 		    "Failed to complete IOCB -- error status (%x).\n",
+ 		    vpmod->comp_status);
+-- 
+2.34.1
 
-> 
-> Otherwise I can take this after -rc1 is out.
-> 
-> -- 
-> Martin K. Petersen	Oracle Linux Engineering
