@@ -2,131 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31B19C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jan 2022 11:28:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5987FC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jan 2022 12:23:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235451AbiAEL23 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Jan 2022 06:28:29 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4349 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233838AbiAEL23 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2022 06:28:29 -0500
-Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JTRxf2fn9z67nQW;
-        Wed,  5 Jan 2022 19:25:58 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Wed, 5 Jan 2022 12:28:26 +0100
-Received: from [10.47.27.56] (10.47.27.56) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Wed, 5 Jan
- 2022 11:28:25 +0000
-Subject: Re: [PATCH RFT] scsi: pm8001: Fix FW crash for maxcpus=1
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>, <Ajish.Koshy@microchip.com>,
-        <Viswas.G@microchip.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <vishakhavc@google.com>, <ipylypiv@google.com>,
-        <Ruksar.devadi@microchip.com>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>
-References: <1641320780-81620-1-git-send-email-john.garry@huawei.com>
- <d2d3c903-fb91-e218-9e0a-aeb2ff9e401a@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <2746563e-28ce-b328-3494-f91ace1599f1@huawei.com>
-Date:   Wed, 5 Jan 2022 11:28:14 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S239986AbiAEMXt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Jan 2022 07:23:49 -0500
+Received: from mail-wr1-f54.google.com ([209.85.221.54]:43744 "EHLO
+        mail-wr1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229997AbiAEMXs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2022 07:23:48 -0500
+Received: by mail-wr1-f54.google.com with SMTP id o3so24436981wrh.10;
+        Wed, 05 Jan 2022 04:23:47 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=3vGTuWVHs0jAZJPZmVYXJHdNt84L1PDEmSZR/VjnEFM=;
+        b=kLJZFrw/CkL13K1UhXaXfjPYBUz8yi5UCt9bxk5MghqFMhJci9HPWEHy8HPiual5XZ
+         nPi1tAHciUAi0Z/+8q/lC14q54uTONBUSnqTPiWe8Hw7/zlCkKZRY1WVAd8BrkPcjB/w
+         mpDzEtoHPjERAFcis7ndhd7lcqG366Uw7Lpj7r8YWWHzLBLgrYnZt2H1Ize3qv0UkdfK
+         dSbReiGxY0sjrDYMGTVMo8s3rog8o73dST3MsrcGQFyotaS4Yv6FcD9SEJfQhyKf55z1
+         lFcR8Bd5M93bztavw/SoAFyCeU/WXgIE2sGodk9rV0A3Q9d9kCP//sF26/Voj2A0DqGg
+         wgIQ==
+X-Gm-Message-State: AOAM530qOskZlq9P43XhqO6f9lSgoThN/fEkEh7n/iW1PTvN7I6zaApI
+        2WJAGu9MDuLKmjeXczIa5tM=
+X-Google-Smtp-Source: ABdhPJytrxWG4YRfNcP5E3R86MxwQk61VG41q2ECBIwykw2jHAbzUhtzIKzidXOJ6z7sJGugTa1KFw==
+X-Received: by 2002:adf:fbcf:: with SMTP id d15mr34871393wrs.132.1641385427221;
+        Wed, 05 Jan 2022 04:23:47 -0800 (PST)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id l14sm36041756wrr.53.2022.01.05.04.23.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Jan 2022 04:23:46 -0800 (PST)
+Date:   Wed, 5 Jan 2022 12:23:45 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     YueHaibing <yuehaibing@huawei.com>, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
+        decui@microsoft.com, jejb@linux.ibm.com, mikelley@microsoft.com,
+        Tianyu.Lan@microsoft.com, longli@microsoft.com,
+        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 -next] scsi: storvsc: Fix unsigned comparison to zero
+Message-ID: <20220105122345.f5qlp5ftirglk7og@liuwe-devbox-debian-v2>
+References: <20211227040311.54584-1-yuehaibing@huawei.com>
+ <yq135m2zqw1.fsf@ca-mkp.ca.oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <d2d3c903-fb91-e218-9e0a-aeb2ff9e401a@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.27.56]
-X-ClientProxiedBy: lhreml736-chm.china.huawei.com (10.201.108.87) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq135m2zqw1.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 05/01/2022 04:03, Damien Le Moal wrote:
-> On 1/5/22 03:26, John Garry wrote:
->> According to the comment in check_fw_ready() we should not check the
->> IOP1_READY field in register SCRATCH_PAD_1 for 8008 or 8009 controllers.
->>
->> However we check this very field in process_oq() for processing the highest
->> index interrupt vector. Change that function to not check IOP1_READY for
->> those mentioned controllers, but do check ILA_READY in both cases.
->>
->> The reason I assume that this was not hit earlier was because we always
->> allocated 64 MSI(X), and just did not pass the vector index check in
->> process_oq(), i.e.  the handler never ran for vector index 63.
->>
->> Signed-off-by: John Garry<john.garry@huawei.com>
->>
->> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
->> index 2101fc5761c3..77b8bb30615b 100644
->> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
->> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
->> @@ -4162,9 +4162,16 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
->>   	u32 regval;
->>   
->>   	if (vec == (pm8001_ha->max_q_num - 1)) {
->> +		u32 mipsall_ready;
->> +
->> +		if ((pm8001_ha->chip_id == chip_8008) ||
->> +		    (pm8001_ha->chip_id == chip_8009))
-> nit: no need for the inner brackets here.
-
-ok, I can fix that.
-
-But I would also like opinion from microchip guys/maintainer on why this 
-code is here at all. Seems strange in the way we check in this register 
-in the interrupt handler for only a specific vector and, also, why we 
-check at all in an interrupt handler.
+On Wed, Jan 05, 2022 at 12:41:31AM -0500, Martin K. Petersen wrote:
 > 
->> +			mipsall_ready = SCRATCH_PAD_MIPSALL_READY_8PORT;
->> +		else
->> +			mipsall_ready = SCRATCH_PAD_MIPSALL_READY_16PORT;
->> +
->>   		regval = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
->> -		if ((regval & SCRATCH_PAD_MIPSALL_READY) !=
->> -					SCRATCH_PAD_MIPSALL_READY) {
->> +		if ((regval & mipsall_ready) != mipsall_ready) {
->>   			pm8001_ha->controller_fatal_error = true;
->>   			pm8001_dbg(pm8001_ha, FAIL,
->>   				   "Firmware Fatal error! Regval:0x%x\n",
->> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
->> index c7e5d93bea92..c41ed039c92a 100644
->> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
->> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
->> @@ -1405,8 +1405,12 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
->>   #define SCRATCH_PAD_BOOT_LOAD_SUCCESS	0x0
->>   #define SCRATCH_PAD_IOP0_READY		0xC00
->>   #define SCRATCH_PAD_IOP1_READY		0x3000
->> -#define SCRATCH_PAD_MIPSALL_READY	(SCRATCH_PAD_IOP1_READY | \
->> +#define SCRATCH_PAD_MIPSALL_READY_16PORT	(SCRATCH_PAD_IOP1_READY | \
->>   					SCRATCH_PAD_IOP0_READY | \
->> +					SCRATCH_PAD_ILA_READY | \
->> +					SCRATCH_PAD_RAAE_READY)
->> +#define SCRATCH_PAD_MIPSALL_READY_8PORT	(SCRATCH_PAD_IOP0_READY | \
->> +					SCRATCH_PAD_ILA_READY | \
->>   					SCRATCH_PAD_RAAE_READY)
->>   
->>   /* boot loader state */
-> Otherwise, looks OK to me.
-> I tested with and without max_cpus=1 with a ATTO Technology, Inc.
-> ExpressSAS 12Gb/s SAS/SATA HBA (rev 06) adapter and everything is OK.
-> That adapter uses chip_8072 though, not 8008 or 8009.
+> YueHaibing,
 > 
-> Feel free to add:
+> > The unsigned variable sg_count is being assigned a return value
+> > from the call to scsi_dma_map() that can return -ENOMEM.
+> >
+> > Fixes: 743b237c3a7b ("scsi: storvsc: Add Isolation VM support for
+> > storvsc driver")
 > 
-> Reviewed-by: Damien Le Moal<damien.lemoal@opensource.wdc.com>
-> Tested-by: Damien Le Moal<damien.lemoal@opensource.wdc.com>
+> This should probably go through the Hyper-V tree - I presume that's
+> where the offending commit is sitting?
 
-Thanks!
+Hi Martin
 
-john
+I will pick this up.
 
+Thanks,
+Wei.
+
+> 
+> Otherwise I can take this after -rc1 is out.
+> 
+> -- 
+> Martin K. Petersen	Oracle Linux Engineering
