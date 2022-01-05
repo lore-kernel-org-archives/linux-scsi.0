@@ -2,149 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C10E0C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jan 2022 05:53:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FEA3C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Jan 2022 06:20:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237578AbiAEFxS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Jan 2022 00:53:18 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:3178 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235987AbiAEFxR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2022 00:53:17 -0500
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 204Nio4o008994;
-        Wed, 5 Jan 2022 05:53:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2021-07-09;
- bh=8tbkI0p5SaKxtbs6J3fXO1WT4TuMjaIBylSH2OFO7MQ=;
- b=ZCySVc3QpVq1/o7dCuq7ji7ELPls504H0dxUlv0HlMQJ5jDGCtEa8XQ2itzS174P0Gd9
- +lWvz+sF7+nOkwvA6Yh7fwcjhiL64bPq48Hrxfvy+Td1vxeZLr5bIpTOZr5S4O01geZf
- A+xioRBSbWf+AjtsCis4B0Z+LCRx9dwR2vveMfLhm+0gfs7YqWRhwQoz6JtFUjF08uO8
- 3jn6hH6lF1MaeMbnjfv43rLVtye0xUDSRjkcp/ujJZnPbdfdBVNG+IQRyOFcI+fPvYBo
- rIUi2FDBddNpD27znzRUjZV9r0oVMavz6nxDbWDDzPm3v5OzPJhwymsZqVDFYY16MZKF nA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dc9d934w2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Jan 2022 05:53:14 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 2055pkHV031424;
-        Wed, 5 Jan 2022 05:53:13 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2175.outbound.protection.outlook.com [104.47.56.175])
-        by userp3030.oracle.com with ESMTP id 3dac2xqks5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Jan 2022 05:53:13 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=N+bThYKBM9i5U49R/7D1WMnXf5NBPI7sChrl2b9bCK3r1tLXIVSW30Fdb5PDl+cxNvUljEsfpUPgE2dUiGftvGA9gAbi8XD8zGzIoIVgEOpS+bMEvJuoKwREGiYlLRPmKiRqtyVOl8oHwzhQXNXaGhc4dZz3nHNP+wcNkmL5YEbcKpmjBjhJSZEKDzTCPxUPvIJRdTRn+iZs2CukMPaeYIr5dvWph0hnSqCR4p331BGB7OL9q1tGpMAdV88HjIFw9aru5WvcZQd1frhqVYk20YpLO0ecoFbxsTxfZNvOALtla9yn4vM2CS/b5P4Ce2CfFpTHM5uq698Fa4njYSXzlg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8tbkI0p5SaKxtbs6J3fXO1WT4TuMjaIBylSH2OFO7MQ=;
- b=eFCPLT/ALuZMxx0OKONJkWT8i3oA7b2Lc07Nn7h/k2JqShqc1czN/xcm2Pllzn28PlU4LImOgWtdSaFUxNG8bOajA5XC9JISaC9H9Cjsn404a3kJBC5Y04PvBTAPdhtavjmz6cvrvUSfFIR9wt2frkgp4Tvh5JjnKt1BeWhQ8w0iYrNeg1X8Kf2ms+B1X3s21O3wO+oxdK2bUe/2+SaXoNbq65YCP8kX44ksS/VEi/NTkqTcUZz5FO/Y+11ulv48azrYQ+q8Oy+V1OSLxAVn0ya3l5+u0DFELAfLtiRjstxt7mAupUv5tDZOjXgRI6ewAGU8iOJLKeY9piaOvomwvA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        id S230300AbiAEGUH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Jan 2022 01:20:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43946 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229861AbiAEGUG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2022 01:20:06 -0500
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34E5BC061761
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Jan 2022 22:20:06 -0800 (PST)
+Received: by mail-ed1-x535.google.com with SMTP id o6so157747045edc.4
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Jan 2022 22:20:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8tbkI0p5SaKxtbs6J3fXO1WT4TuMjaIBylSH2OFO7MQ=;
- b=Vb6QENpClSdfcucFjCgTMrQ80qjc/jzA7V+nzHP/lqG05EMlrsNE06HyhpI9bQ3gU2JmVBWl9zGq4CckjVOdvGSvN/VmlZSohv3p5zIkfjC5lD8ZkwFLcVk0Dvxm1oHHFHAlWMXO6qGmpQ6HmoLA5IvW/UACw7hMjB8Engyo7uY=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH7PR10MB5746.namprd10.prod.outlook.com (2603:10b6:510:126::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4844.15; Wed, 5 Jan
- 2022 05:53:11 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::1053:7ae3:932b:f166]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::1053:7ae3:932b:f166%5]) with mapi id 15.20.4844.016; Wed, 5 Jan 2022
- 05:53:11 +0000
-To:     Ajish Koshy <Ajish.Koshy@microchip.com>
-Cc:     <linux-scsi@vger.kernel.org>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Viswas.G@microchip.com>, "Jinpu Wang" <jinpu.wang@cloud.ionos.com>
-Subject: Re: [PATCH] scsi: pm80xx: port reset timeout error handling
- correction.
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1wnjeybid.fsf@ca-mkp.ca.oracle.com>
-References: <20211228111753.10802-1-Ajish.Koshy@microchip.com>
-Date:   Wed, 05 Jan 2022 00:53:09 -0500
-In-Reply-To: <20211228111753.10802-1-Ajish.Koshy@microchip.com> (Ajish Koshy's
-        message of "Tue, 28 Dec 2021 16:47:53 +0530")
-Content-Type: text/plain
-X-ClientProxiedBy: MN2PR16CA0052.namprd16.prod.outlook.com
- (2603:10b6:208:234::21) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        d=ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=dbwTz/U9/kWTiksfN1CoupuNfs/1Lt4uudOM9uQsZCE=;
+        b=dG/26lZ8NH9gLB3fm3/m7tfsEjTP2NVwcM/Fr2kPqEvf6Sd+jipdXgYIFknK+SAcIA
+         XPfMvEvB7DyVmDXjZuAx4zCz16gyJTYqfeTbUJkRjA0iXlpxrmu2pt5wxLqAReW9na8d
+         5s5mcQgWuItLFpZu9ziRdCcdyZo5+Xa72rSYqrRPKfaTd3hy3Bd9KAQEUIhGGAhLbJxm
+         dluZsq8ND9ZKT6LwQZE4eBmo0D4J6ZJ70dMxP4tLnFQCGmrGLPDgqsRNN77Zn6+luyQf
+         xxGcSk5wxx+iWR4TYTXHp4kTPwUChgm6w3WNT/bqqp0c1PHg6MBflBR0vf/1VZF0kMi2
+         AB+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=dbwTz/U9/kWTiksfN1CoupuNfs/1Lt4uudOM9uQsZCE=;
+        b=PLDaSHkpE/pBOEvo8qlPTrT92lUhg4aJUglMUslMU2/6AfYIZWZ2Xo9Wpm4kRxKVeo
+         EBqm5JBn32crxk4/i74lznaAtyW+7BUVJXrn4oBNgdgvJMWzh3rXlakojko+DE8NJ4A1
+         mLrhjWfXsLiQ59welK3ffKiibO6AISokkTI4RLGidGtP36hgbVh2cPncUHZBl9ZEJCa2
+         2Wb1aVE8+P23rsRLPf37WM+IPT/RedT+9Xw3VVY/oV8jUU3gJBuyRU6QSrW3pl2tGy21
+         EA4pA2vaR6XM0QUfVJGI6X2gtYgC2sTqaNHGR/JD6P798tsh+t0tiKr/DOgrN6iOVj69
+         SZ7Q==
+X-Gm-Message-State: AOAM533/8qAA2SypO+d7RX0i1MfNrIUJ+fVSfFwXxBYGavzNxWc17V3w
+        i/PU2NGZYmNExGYZth41IOz0l1S8Ufi/UEK1cMyjQw==
+X-Google-Smtp-Source: ABdhPJwSY87aq5HBOiAkdF22qh60t9SJtmxrO3wrMubRMxSHqo5xsmEeLRJkmvwKaApzT+QG1wRn4ISj29lJ6YwRDzs=
+X-Received: by 2002:a05:6402:50c8:: with SMTP id h8mr49873878edb.210.1641363604703;
+ Tue, 04 Jan 2022 22:20:04 -0800 (PST)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 8a648e52-4ef8-423c-b242-08d9d00fa7de
-X-MS-TrafficTypeDiagnostic: PH7PR10MB5746:EE_
-X-Microsoft-Antispam-PRVS: <PH7PR10MB57467BE83F92F82F795DBEBF8E4B9@PH7PR10MB5746.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5516;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ddDqLl6KR9SUtmC7G/sbmxN6dGDohJiGFxAcZTK7HNWb6dS1q+zm2WNxfP+XDDzVFUtdVkdNgXSXR97qFCpY4IuZnTbr7SAoCrD82eY1Oa/kCO4dgHQyAHJ1HeRewtBSil7QH+EDt+hlg6435lAYwtF+7frYfqca5GgV9mp6VVV/AcaKJwhfBTEYBxRzzcBaHCI/6r5XD2Ek5iEbvhwz1zL//yoBmrnAhmTL4PN39OYhuvxlGpuxLf0nxlDt/BP3TBswXzMsZ8t/BKJpLYlHYOU/iYTRAXddeMGUfjiZ2WB2JewaOk45I6mBUMa+s2lMdktTe0/lACg+8CA06YPcxeUu50qHr9J171txKM37nPxb4Xv9td5q/Aj5gCN9gkUr6VkC1VIhCBI2kDnvBpaVpA2zfs6YjjGA1i+jGqLDZ0F822PmQOi0jr/h6ImBfL1IbBnP3qkyjmhXfmUIN0h5DmVWcYO3xjdViyz6obBN130a6hxS5gtjZlzqwk229wCZ9XwTg9guYecRq7KiEU0vEqYhBVjtaGKP3TJ6lwa49XlXWkv09xTSeGUtZfYrfc2Ufpoi++f+Pjq1BcoSlgzQCYV4Vuf0CkeL/LLIrXUz7Tqn3uX8ANeMscXbkhceyJupNC2WcGoQcWXsZ/5sYnr4dhAZfGcWlsq0nuaFRvj6mQz+xbo5FtwO1S53BJGGvJD0TZetVy0Y3CEUTbjUwjItvg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(26005)(38350700002)(316002)(5660300002)(8936002)(558084003)(8676002)(6512007)(186003)(508600001)(6506007)(38100700002)(54906003)(66556008)(66476007)(66946007)(52116002)(2906002)(6486002)(6916009)(36916002)(4326008)(86362001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?9RWeNZH/U1925gK/IqkLgzbw/2ndWLdBNhP6uZ2k+10uhqaHr0Z16TuBSjV2?=
- =?us-ascii?Q?rgfVk5GAVHtZek+YyJ4sO9183OJomo8+3HeZDBL/4YQmvIOtouCZsV9rx13C?=
- =?us-ascii?Q?hyX068rSzMMedMc8/Rk4tSv186qDl7sVktenEiTtwesUFh+/EDMVKrcVAUNA?=
- =?us-ascii?Q?F7PVaHvXR8hf9WWfPXGSF8mUzg155U9K4PAKHDJUHOOglLxtISQke5LZHC2+?=
- =?us-ascii?Q?4/RLYhGOn3/FhmuY0a8ZWOoButBIdtNushQGUxZfptunD8t4huy8QeAVuDwr?=
- =?us-ascii?Q?lDkIMkibBQYxA9jAB2sCy1msYEj6M+irA4U6DaHBA/PK4H2c/H7LHJi59tfw?=
- =?us-ascii?Q?4i73Vs7Aqms/E2Du3qdml2Ef7Tvu8uK8HMZ0j+0kIUs0gC5oXVFItWdPH6Mx?=
- =?us-ascii?Q?9sOmajARflnPvyrsyiTn6wa0vsGWA50gzssc4N1xuF/tqsnl76Tj7TjYpyzW?=
- =?us-ascii?Q?Bzpz9Cgpp9mYKieQKW+kWILDYgL/z+9GYYaxjEeOIIjevII0GUT9SNxACAW9?=
- =?us-ascii?Q?+m7jFkvKHvrIss9jzEmRiobJR1ZqV86YG1Sn173lbc9XSxGOYuER9dvDzh6Z?=
- =?us-ascii?Q?l8liAsn/I1sgYHJPKzyoJ4CL/7hNnRYsxF3ZsPVWYtPzzS1e49fcjGhqWozy?=
- =?us-ascii?Q?y2B7aMpLHkbBns/MddedtpQ873ueVGJ5sQjHpEd19ReW01tk+lK7jDeKUcq4?=
- =?us-ascii?Q?YfZPDY2kttjTSjQ95beVblqhzly5dMFowrRyFxdvuCcfXWTtyQSQq06rpGJj?=
- =?us-ascii?Q?alyaD9I4x6yl7yDezQN31Sw63uTWJ05FJEHTP82CZDPWUxQUTVpKKtrOmnYU?=
- =?us-ascii?Q?vrdgao1WCgE0kSXPIKZ51XIPFlMmkzXEqUjBOoxC0BDf7CbVe0scujGQzqBn?=
- =?us-ascii?Q?QnU+bMOZO3Y7kfawdzw9/fAJ3AH0Ab4p+4UnKrldXQf74YjWo2fkGbQYZJXM?=
- =?us-ascii?Q?Ym1ZfGtekQQOdP/FzfhmqisdJM4qiM98e02WaeXhUzG90f6pOPVU5TEE6W+I?=
- =?us-ascii?Q?QVney0ar4EPSjP+F52dTPWcnl0b45M2PPTFxDOR83VFDXV9d3fByX5an1DVM?=
- =?us-ascii?Q?5HMPHFwWpaVkfXDBOs8pNq3R5tlf6zB5Oplr0E+lOxX3IaFZBHuMK6ik4fPb?=
- =?us-ascii?Q?3abIatnUVY9xXwObLFoBOR0/9XIBCeQFQhe9CfE/a4V4/tIEYBHACqYGXVB1?=
- =?us-ascii?Q?QAOk7jUfDdsbqW5XcURp9ub4ocKaujbWCtkn+rXs5vfEnh4W0K5ArKPxGKAO?=
- =?us-ascii?Q?ijTTdqny77BYlOBWcn4XEyHjLlQT3ptrYqrtSpDeWGIDoAPBOH0VSoIPy6SA?=
- =?us-ascii?Q?4oagqpIgHu9LLDU5dLXyFVV2TokAaDMsdf2h42Qj+J0wvSM5Hq3bBeZgTKo6?=
- =?us-ascii?Q?1mjn13ZAvvJ4O00MK6KL44I7lxrACcMFO/tBpIoFkFKTzz5Xo4zR8MeP6ZwZ?=
- =?us-ascii?Q?Yt9kgt2PBfY7Qr19+fmBdgRUgNm9HDzxR2oFUxDoThfy0i/sA03B4nJO8oKB?=
- =?us-ascii?Q?xNYJXuua3MaBSc0E0TpzQ/inT6JPTiV3kCNpyH6nUv2FO/Ym2NHXebEAqVac?=
- =?us-ascii?Q?FANMj05v74n4RuNzQo/e2ETa9fFSGB+1lu9r9oQEvB8MIlzyYLLCxpqOAtTU?=
- =?us-ascii?Q?13hsTEAPIqNQSFdCqbt+8VTSUTu8yGWSH195jx5u7UrtuhMjj5Qme80qXbnG?=
- =?us-ascii?Q?cbTazw=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8a648e52-4ef8-423c-b242-08d9d00fa7de
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jan 2022 05:53:11.0987
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: DwZFgIirmFUPZdmQD0iCB3umfzhvqkshN5ewDxOBOUC3dewKZi/z8xBVkxC5gEdETlty4+nbK7kuQ3i2b6EeCNkYiBPLoQ3AvtzO7ycKgUQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB5746
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10217 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
- suspectscore=0 spamscore=0 phishscore=0 malwarescore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
- definitions=main-2201050039
-X-Proofpoint-ORIG-GUID: 17jpdLYLjQhVkCr9v9OeiuiUrrCagjVs
-X-Proofpoint-GUID: 17jpdLYLjQhVkCr9v9OeiuiUrrCagjVs
+References: <20211228111753.10802-1-Ajish.Koshy@microchip.com>
+In-Reply-To: <20211228111753.10802-1-Ajish.Koshy@microchip.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Wed, 5 Jan 2022 07:19:53 +0100
+Message-ID: <CAMGffEnufGurL0FYetFKGe+ZpuEuwf69z1Hccn9Ppb+tQyT7Zg@mail.gmail.com>
+Subject: Re: [PATCH] scsi: pm80xx: port reset timeout error handling correction.
+To:     Ajish Koshy <Ajish.Koshy@microchip.com>
+Cc:     linux-scsi@vger.kernel.org,
+        Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com,
+        Jinpu Wang <jinpu.wang@ionos.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Ajish,
 
-Ajish,
 
+On Tue, Dec 28, 2021 at 12:15 PM Ajish Koshy <Ajish.Koshy@microchip.com> wrote:
+>
 > Error handling steps were not in sequence as per the programmers
 > manual. Expected sequence:
+>  -PHY_DOWN (PORT_IN_RESET)
+>  -PORT_RESET_TIMER_TMO
+>  -Host aborts pending I/Os
+>  -Host deregister the device
+>  -Host sends HW_EVENT_PHY_DOWN ack
 
-Applied to 5.17/scsi-staging, thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Just to make sure, does the same sequence work for old pm8001 chip?
+>
+> Earlier, we were sending HW_EVENT_PHY_DOWN ack first and then
+> deregister the device.
+>
+> Signed-off-by: Ajish Koshy <Ajish.Koshy@microchip.com>
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_sas.c | 7 ++++++-
+>  drivers/scsi/pm8001/pm8001_sas.h | 3 +++
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 7 +++++--
+>  3 files changed, 14 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index c9a16eef38c1..160ee8b228c9 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -1199,7 +1199,7 @@ int pm8001_abort_task(struct sas_task *task)
+>         struct pm8001_device *pm8001_dev;
+>         struct pm8001_tmf_task tmf_task;
+>         int rc = TMF_RESP_FUNC_FAILED, ret;
+> -       u32 phy_id;
+> +       u32 phy_id, port_id;
+>         struct sas_task_slow slow_task;
+>
+>         if (unlikely(!task || !task->lldd_task || !task->dev))
+> @@ -1246,6 +1246,7 @@ int pm8001_abort_task(struct sas_task *task)
+>                         DECLARE_COMPLETION_ONSTACK(completion_reset);
+>                         DECLARE_COMPLETION_ONSTACK(completion);
+>                         struct pm8001_phy *phy = pm8001_ha->phy + phy_id;
+> +                       port_id = phy->port->port_id;
+>
+>                         /* 1. Set Device state as Recovery */
+>                         pm8001_dev->setds_completion = &completion;
+> @@ -1297,6 +1298,10 @@ int pm8001_abort_task(struct sas_task *task)
+>                                                 PORT_RESET_TMO);
+>                                 if (phy->port_reset_status == PORT_RESET_TMO) {
+>                                         pm8001_dev_gone_notify(dev);
+> +                                       PM8001_CHIP_DISP->hw_event_ack_req(
+> +                                               pm8001_ha, 0,
+> +                                               0x07, /*HW_EVENT_PHY_DOWN ack*/
+> +                                               port_id, phy_id, 0, 0);
+>                                         goto out;
+>                                 }
+>                         }
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index 83eec16d021d..a17da1cebce1 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -216,6 +216,9 @@ struct pm8001_dispatch {
+>                 u32 state);
+>         int (*sas_re_init_req)(struct pm8001_hba_info *pm8001_ha);
+>         int (*fatal_errors)(struct pm8001_hba_info *pm8001_ha);
+> +       void (*hw_event_ack_req)(struct pm8001_hba_info *pm8001_ha,
+> +               u32 Qnum, u32 SEA, u32 port_id, u32 phyId, u32 param0,
+> +               u32 param1);
+>  };
+>
+>  struct pm8001_chip_info {
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index 0849ecc913c7..97750d0ebee9 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -3709,8 +3709,10 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>                 break;
+>         case HW_EVENT_PORT_RESET_TIMER_TMO:
+>                 pm8001_dbg(pm8001_ha, MSG, "HW_EVENT_PORT_RESET_TIMER_TMO\n");
+> -               pm80xx_hw_event_ack_req(pm8001_ha, 0, HW_EVENT_PHY_DOWN,
+> -                       port_id, phy_id, 0, 0);
+> +               if (!pm8001_ha->phy[phy_id].reset_completion) {
+> +                       pm80xx_hw_event_ack_req(pm8001_ha, 0, HW_EVENT_PHY_DOWN,
+> +                               port_id, phy_id, 0, 0);
+> +               }
+>                 sas_phy_disconnected(sas_phy);
+>                 phy->phy_attached = 0;
+>                 sas_notify_port_event(sas_phy, PORTE_LINK_RESET_ERR,
+> @@ -5051,4 +5053,5 @@ const struct pm8001_dispatch pm8001_80xx_dispatch = {
+>         .fw_flash_update_req    = pm8001_chip_fw_flash_update_req,
+>         .set_dev_state_req      = pm8001_chip_set_dev_state_req,
+>         .fatal_errors           = pm80xx_fatal_errors,
+> +       .hw_event_ack_req       = pm80xx_hw_event_ack_req,
+>  };
+> --
+> 2.27.0
+>
