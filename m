@@ -2,127 +2,209 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 515DFC3525A
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jan 2022 18:14:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD1B1C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jan 2022 19:48:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242590AbiAFSOR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Jan 2022 13:14:17 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:57816 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241192AbiAFSOM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2022 13:14:12 -0500
+        id S243438AbiAFTsC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Jan 2022 14:48:02 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:34368 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243403AbiAFTsB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2022 14:48:01 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4870561D17;
-        Thu,  6 Jan 2022 18:14:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A780C36AEB;
-        Thu,  6 Jan 2022 18:14:10 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1BCAEB82390;
+        Thu,  6 Jan 2022 19:48:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89D1BC36AE3;
+        Thu,  6 Jan 2022 19:47:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641492850;
-        bh=pk9c3vFsS24A9H9YRNmuoLU04tTgveyiSfxz/RguLrg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=tWL9ah320xPJ7ZLvQrLFkjIeV1LTlPrJ2qSY/t0fKFbU+5MxnpWBBUesVfIjO0xOO
-         l+Yvi8TANgRjNK2vReZYRlLqehfzP4qE2oNJarfvWixIS0OfQkuKWpI6rrQEfWGn25
-         oroVHI/IQA8JEpMkHqxWMkHxAKg+IVXn/Zqji7RoVtpWyymeRt5WcM4qay0A7EFOWe
-         jnI4JpbaAmAttF9a/Yhl/wWUUgx6A1s8zF9Wpc8ft5Y9hFSMLv91rRujQQ/od6scnA
-         LsHiF+8iYMGoQ6RcvIn/+ZU8WqHN0Y3LnsXMJdYHRbXi/+K/WGfnGi+pM9zExj10bs
-         +smYL/+iBYHZg==
-Date:   Thu, 6 Jan 2022 12:14:09 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     John Garry <john.garry@huawei.com>
-Cc:     Niklas Schnelle <schnelle@linux.ibm.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Hans Verkuil <hverkuil-cisco@xs4all.nl>,
-        Ettore Chimenti <ek5.chimenti@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Arnd Bergmann <arnd@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Nick Hu <nickhu@andestech.com>,
-        Greentime Hu <green.hu@gmail.com>,
-        Vincent Chen <deanbo422@gmail.com>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Ian Abbott <abbotti@mev.co.uk>,
-        H Hartley Sweeten <hsweeten@visionengravers.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Karsten Keil <isdn@linux-pingi.de>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Michael Grzeschik <m.grzeschik@pengutronix.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        Kalle Valo <kvalo@kernel.org>, Jouni Malinen <j@w1.fi>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Mark Brown <broonie@kernel.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Teddy Wang <teddy.wang@siliconmotion.com>,
-        Forest Bond <forest@alittletooquiet.net>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>, linux-kernel@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org, linux-csky@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-hwmon@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-input@vger.kernel.org, netdev@vger.kernel.org,
-        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        linux-wireless@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
-        linux-spi@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-serial@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-watchdog@vger.kernel.org
-Subject: Re: [RFC 01/32] Kconfig: introduce and depend on LEGACY_PCI
-Message-ID: <20220106181409.GA297735@bhelgaas>
+        s=k20201202; t=1641498478;
+        bh=qG4P24v3rmLtQVZ3+9ve8/eqf1rVrXsPHnG9nhgApC0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KrJ0kcx0NyoXAwr90aY0RBzRaQre/3bXHridHFAgDUq9ZXQt7ScnYGEouRVmTHaCS
+         chWRZ2HIE+AOIQO7mR71i2psYYeUUVms2cUZs2oJ1auYHkguHNanzBbARYsTUyhfta
+         qRRATijRtCLfxbK6gskf7D0HWlsfyYRc+5jcyFxX+DdRniNa/e8RhFroTngeOFt1yE
+         nwD1YIbg3DWXjc2+9wKbSmwQS2Q+a3HUqUjGf7qdMunErvKGTG0GBN3Qye2/yY5IKF
+         EPm4u7ZWGRbhuCEDngy3AOSrHenY7DbYOLUXOSjzSjBZJNSd+XQUNCEwmBTrfL7/46
+         fQQbrcBPdiiIw==
+Date:   Thu, 6 Jan 2022 11:47:57 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Gaurav Kashyap <quic_gaurkash@quicinc.com>
+Cc:     linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, thara.gopinath@linaro.org,
+        quic_neersoni@quicinc.com, dineshg@quicinc.com
+Subject: Re: [PATCH 00/10] Add wrapped key support for Qualcomm ICE
+Message-ID: <YddHbRx2UGeAOhji@sol.localdomain>
+References: <20211206225725.77512-1-quic_gaurkash@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <74bf4fde-3972-1c36-ca04-58089da0d82b@huawei.com>
+In-Reply-To: <20211206225725.77512-1-quic_gaurkash@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jan 06, 2022 at 05:41:00PM +0000, John Garry wrote:
-> On 05/01/2022 19:47, Bjorn Helgaas wrote:
+Hi Gaurav,
 
-> > IMO inb() should
-> > be present but do something innocuous like return ~0, as it would if
-> > I/O port space is supported but there's no device at that address.
-> > 
-> > [1]https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/megaraid.c?id=v5.15#n4210
-> > 
-> 
-> That driver would prob not be used on systems which does not support PIO,
-> and so could have a HAS_IOPORT dependency. But it is not strictly necessary.
+On Mon, Dec 06, 2021 at 02:57:15PM -0800, Gaurav Kashyap wrote:
+> Testing:
+> Test platform: SM8350 HDK/MTP
+> Engineering trustzone image (based on sm8350) is required to test
+> this feature. This is because of version changes of HWKM.
+> HWKM version 2 and moving forward has a lot of restrictions on the
+> key management due to which the launched SM8350 solution (based on v1)
+> cannot be used and some modifications are required in trustzone.
 
-I don't want the path of "this driver isn't needed because the device
-is unlikely to be used on this arch."
+I've been trying to test this patchset on a SM8350 HDK using the TrustZone image
+you provided, but it's not completely working yet.
 
-Maybe it's not _always_ possible, but if the device can be plugged
-into the platform, I think we should be able to build the driver for
-it.
+This is the kernel branch I'm using:
+https://git.kernel.org/pub/scm/fs/fscrypt/fscrypt.git/log/?h=wip-wrapped-keys.
+It has my v4 patchset with your patchset rebased on top of it, some qcom_scm.c
+fixes I had to make (see below), and some extra logging messages.
 
-If the device requires I/O port space and the platform doesn't support
-it, the PCI core or the driver should detect that and give a useful
-diagnostic.
+This is how I'm building and booting a kernel on the board:
+https://github.com/ebiggers/fscryptctl/blob/wip-wrapped-keys/scripts/sm8350-buildkernel.sh
 
-Bjorn
+And this is the test script I'm running:
+https://github.com/ebiggers/fscryptctl/blob/wip-wrapped-keys/scripts/wrappedkey-test.sh.
+It imports or generates a hardware-wrapped key, then tries to set up a directory
+on an ext4 filesystem that is encrypted with that key.   This uses new
+'fscryptctl' commands to access the new blk-crypto ioctls; the version of
+'fscryptctl' on the branch the scripts are on has all the needed changes.
+
+QCOM_SCM_ES_IMPORT_ICE_KEY, QCOM_SCM_ES_GENERATE_ICE_KEY,
+QCOM_SCM_ES_PREPARE_ICE_KEY, all seem to work.  However,
+QCOM_SCM_ES_DERIVE_SW_SECRET doesn't work; it always returns -EINVAL.
+
+For example:
+
+Importing hardware-wrapped key
+[  187.606109] blk-crypto: entering BLKCRYPTOCREATEKEY
+[  187.611648] calling QCOM_SCM_ES_IMPORT_ICE_KEY; raw_key=5858585858585858585858585858585858585858585858585858585858585858
+[  187.628180] QCOM_SCM_ES_IMPORT_ICE_KEY succeeded; longterm_wrapped_key=fab51aa07fb6c2bf2fea60a8120e8d35a9e53865b594e0fb6279e7951a34864591f1c1c4e26f9421039377c1ac311ff9241a0152030000000000000000000000
+[  187.646433] blk-crypto: exiting BLKCRYPTOCREATEKEY; ret=0
+Preparing hardware-wrapped key
+[  187.653129] blk-crypto: entering BLKCRYPTOPREPAREKEY
+[  187.660356] calling QCOM_SCM_ES_PREPARE_ICE_KEY; longterm_wrapped_key=fab51aa07fb6c2bf2fea60a8120e8d35a9e53865b594e0fb6279e7951a34864591f1c1c4e26f9421039377c1ac311ff9241a0152030000000000000000000000
+[  187.680420] QCOM_SCM_ES_PREPARE_ICE_KEY succeeded; ephemeral_wrapped_key=1fbf5d501854858d6faaf52c9d22bebc576012e40485ba75e7d19e88f74b3400eb1a8836e28232939e990df6007659b1241a0152030000000000000000000000
+[  187.698791] blk-crypto: exiting BLKCRYPTOPREPAREKEY; ret=0
+Adding hardware-wrapped key
+[  187.705515] calling blk_crypto_derive_sw_secret(); wrapped_key_size=68
+[  187.714075] in qti_ice_derive_sw_secret()
+[  187.718212] calling qti_ice_hwkm_init()
+[  187.722157] calling qti_ice_hwkm_init_sequence(version=1)
+[  187.727715] setting standard mode
+[  187.731134] checking BIST status
+[  187.734464] configuring ICE registers
+[  187.738230] disabling CRC check
+[  187.741479] setting RSP_FIFO_FULL bit
+[  187.745247] calling qcom_scm_derive_sw_secret()
+[  187.749920] calling QCOM_SCM_ES_DERIVE_SW_SECRET; wrapped_key=1fbf5d501854858d6faaf52c9d22bebc576012e40485ba75e7d19e88f74b3400eb1a8836e28232939e990df6007659b1241a0152030000000000000000000000, secret_size=32
+[  187.768834] QCOM_SCM_ES_DERIVE_SW_SECRET failed with error -22
+[  187.774838] blk_crypto_derive_sw_secret() returned -22
+error: adding key to /mnt: Invalid argument
+
+
+You can see that the wrapped_key being passed to QCOM_SCM_ES_DERIVE_SW_SECRET
+matches the ephemeral_wrapped_key that was returned earlier by
+QCOM_SCM_ES_PREPARE_ICE_KEY, and that secret_size is 32.  So the arguments are
+as expected.  However, QCOM_SCM_ES_DERIVE_SW_SECRET still fails.
+
+This still occurs if QCOM_SCM_ES_GENERATE_ICE_KEY is used instead of
+QCOM_SCM_ES_IMPORT_ICE_KEY.
+
+Have you tested that QCOM_SCM_ES_DERIVE_SW_SECRET is working properly?
+
+For reference, these are the fixes I had to apply to qcom_scm.c to get things
+working until that point.  This included fixing the direction of the first
+arguments to the SCM calls, and fixing the return values.  Note, I also tested
+leaving QCOM_SCM_ES_DERIVE_SW_SECRET using QCOM_SCM_RO instead of QCOM_SCM_RW,
+but the result was still the same --- it still returned -EINVAL.
+
+diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+index d57f52015640..002b57a1473d 100644
+--- a/drivers/firmware/qcom_scm.c
++++ b/drivers/firmware/qcom_scm.c
+@@ -1087,7 +1087,7 @@ int qcom_scm_derive_sw_secret(const u8 *wrapped_key, u32 wrapped_key_size,
+ 	struct qcom_scm_desc desc = {
+ 		.svc = QCOM_SCM_SVC_ES,
+ 		.cmd =  QCOM_SCM_ES_DERIVE_SW_SECRET,
+-		.arginfo = QCOM_SCM_ARGS(4, QCOM_SCM_RO,
++		.arginfo = QCOM_SCM_ARGS(4, QCOM_SCM_RW,
+ 					 QCOM_SCM_VAL, QCOM_SCM_RW,
+ 					 QCOM_SCM_VAL),
+ 		.args[1] = wrapped_key_size,
+@@ -1148,7 +1148,7 @@ EXPORT_SYMBOL(qcom_scm_derive_sw_secret);
+  * This SCM calls adds support for the generate key IOCTL to interface
+  * with the secure environment to generate and return a wrapped key..
+  *
+- * Return: 0 on success; -errno on failure.
++ * Return: size of the resulting key on success; -errno on failure.
+  */
+ int qcom_scm_generate_ice_key(u8 *longterm_wrapped_key,
+ 			    u32 longterm_wrapped_key_size)
+@@ -1188,7 +1188,7 @@ int qcom_scm_generate_ice_key(u8 *longterm_wrapped_key,
+ 	dma_free_coherent(__scm->dev, longterm_wrapped_key_size,
+ 			  longterm_wrapped_keybuf, longterm_wrapped_key_phys);
+ 
+-	return ret;
++	return ret ?: longterm_wrapped_key_size;
+ }
+ EXPORT_SYMBOL(qcom_scm_generate_ice_key);
+ 
+@@ -1209,7 +1209,7 @@ EXPORT_SYMBOL(qcom_scm_generate_ice_key);
+  * with the secure environment to rewrap the wrapped key with an
+  * ephemeral wrapping key.
+  *
+- * Return: 0 on success; -errno on failure.
++ * Return: size of the resulting key on success; -errno on failure.
+  */
+ int qcom_scm_prepare_ice_key(const u8 *longterm_wrapped_key,
+ 			     u32 longterm_wrapped_key_size,
+@@ -1219,7 +1219,7 @@ int qcom_scm_prepare_ice_key(const u8 *longterm_wrapped_key,
+ 	struct qcom_scm_desc desc = {
+ 		.svc = QCOM_SCM_SVC_ES,
+ 		.cmd =  QCOM_SCM_ES_PREPARE_ICE_KEY,
+-		.arginfo = QCOM_SCM_ARGS(4, QCOM_SCM_RO,
++		.arginfo = QCOM_SCM_ARGS(4, QCOM_SCM_RW,
+ 					 QCOM_SCM_VAL, QCOM_SCM_RW,
+ 					 QCOM_SCM_VAL),
+ 		.args[1] = longterm_wrapped_key_size,
+@@ -1270,7 +1270,7 @@ int qcom_scm_prepare_ice_key(const u8 *longterm_wrapped_key,
+ 	dma_free_coherent(__scm->dev, longterm_wrapped_key_size,
+ 			  longterm_wrapped_keybuf, longterm_wrapped_key_phys);
+ 
+-	return ret;
++	return ret ?: ephemeral_wrapped_key_size;
+ }
+ EXPORT_SYMBOL(qcom_scm_prepare_ice_key);
+ 
+@@ -1289,7 +1289,7 @@ EXPORT_SYMBOL(qcom_scm_prepare_ice_key);
+  * the secure environment to import a raw key and generate a longterm
+  * wrapped key.
+  *
+- * Return: 0 on success; -errno on failure.
++ * Return: size of the resulting key on success; -errno on failure.
+  */
+ int qcom_scm_import_ice_key(const u8 *imported_key, u32 imported_key_size,
+ 			    u8 *longterm_wrapped_key,
+@@ -1298,7 +1298,7 @@ int qcom_scm_import_ice_key(const u8 *imported_key, u32 imported_key_size,
+ 	struct qcom_scm_desc desc = {
+ 		.svc = QCOM_SCM_SVC_ES,
+ 		.cmd =  QCOM_SCM_ES_IMPORT_ICE_KEY,
+-		.arginfo = QCOM_SCM_ARGS(4, QCOM_SCM_RO,
++		.arginfo = QCOM_SCM_ARGS(4, QCOM_SCM_RW,
+ 					 QCOM_SCM_VAL, QCOM_SCM_RW,
+ 					 QCOM_SCM_VAL),
+ 		.args[1] = imported_key_size,
+@@ -1344,7 +1344,7 @@ int qcom_scm_import_ice_key(const u8 *imported_key, u32 imported_key_size,
+ 	dma_free_coherent(__scm->dev, imported_key_size, imported_keybuf,
+ 			  imported_key_phys);
+ 
+-	return ret;
++	return ret ?: longterm_wrapped_key_size;
+ }
+ EXPORT_SYMBOL(qcom_scm_import_ice_key);
