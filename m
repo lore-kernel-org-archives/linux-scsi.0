@@ -2,112 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D41EFC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jan 2022 16:33:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B57C4167E
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jan 2022 17:41:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230525AbiAFQda (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Jan 2022 11:33:30 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:46608 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230168AbiAFQda (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2022 11:33:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1641486809;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Ze42arU5bQVcYtb1c/tnKRMpZHPg8kUMfotWmxjwT6A=;
-        b=U6ToPcwRl1wlkOGEa1mQXfmlXB76BHLcTOHbkbylPDUSWC7CLMnnkF55B0gWRiEgdxFcJJ
-        9dXU6glKNXCEMH7j/f4psbZ0TFMsubhOuqfAhCVJen2IyZts3mkzUVS8+6mA4Tp7ukmK0s
-        d3sRH+bmAVr4PzdQbV/EJl7LJ4CfKDg=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-537-heNnJkT2PHG_gmxrilukdA-1; Thu, 06 Jan 2022 11:33:26 -0500
-X-MC-Unique: heNnJkT2PHG_gmxrilukdA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D700F107B0EF;
-        Thu,  6 Jan 2022 16:33:24 +0000 (UTC)
-Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3023A7E666;
-        Thu,  6 Jan 2022 16:33:09 +0000 (UTC)
-Date:   Fri, 7 Jan 2022 00:33:05 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Martin Wilck <martin.wilck@suse.com>
-Cc:     "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>,
-        "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>,
-        "suganath-prabu.subramani@broadcom.com" 
+        id S242152AbiAFRl0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Jan 2022 12:41:26 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4360 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241966AbiAFRlY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2022 12:41:24 -0500
+Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JVD6c3dG6z67wb3;
+        Fri,  7 Jan 2022 01:36:24 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Thu, 6 Jan 2022 18:41:19 +0100
+Received: from [10.47.27.56] (10.47.27.56) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Thu, 6 Jan
+ 2022 17:41:15 +0000
+Subject: Re: [RFC 01/32] Kconfig: introduce and depend on LEGACY_PCI
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     Niklas Schnelle <schnelle@linux.ibm.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Hans Verkuil <hverkuil-cisco@xs4all.nl>,
+        Ettore Chimenti <ek5.chimenti@gmail.com>,
+        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+        Arnd Bergmann <arnd@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Nick Hu <nickhu@andestech.com>,
+        Greentime Hu <green.hu@gmail.com>,
+        Vincent Chen <deanbo422@gmail.com>,
+        "Paul Walmsley" <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
+        "Damien Le Moal" <damien.lemoal@opensource.wdc.com>,
+        Ian Abbott <abbotti@mev.co.uk>,
+        "H Hartley Sweeten" <hsweeten@visionengravers.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Jean Delvare <jdelvare@suse.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Karsten Keil <isdn@linux-pingi.de>,
+        "Sathya Prakash" <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>,
-        "hare@suse.de" <hare@suse.de>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Subject: Re: mpt3sas fails to allocate budget_map and detects no devices
-Message-ID: <YdcZwVUFGUPgkbLn@T590>
-References: <be78dc2cfeecaafd171060fbebda2d268d2a94e5.camel@suse.com>
- <YdZcABq/pxMMh3X0@T590>
- <5a450cdadbffed9c5ce39bc7d58bcf4e541f3b53.camel@suse.com>
- <YdcEJngPYrZk691Q@T590>
- <97be83524e1ee6776a4c1261bf4c1b17a8b75f12.camel@suse.com>
- <YdcNrSJJGllQzWOB@T590>
- <5fffbc9191d1f1b3db1d51ce991591c9c6d91785.camel@suse.com>
+        Michael Grzeschik <m.grzeschik@pengutronix.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        "Jakub Kicinski" <kuba@kernel.org>,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Tony Nguyen <anthony.l.nguyen@intel.com>,
+        Kalle Valo <kvalo@kernel.org>, Jouni Malinen <j@w1.fi>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        Mark Brown <broonie@kernel.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        "Teddy Wang" <teddy.wang@siliconmotion.com>,
+        Forest Bond <forest@alittletooquiet.net>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "Wim Van Sebroeck" <wim@linux-watchdog.org>,
+        Jaroslav Kysela <perex@perex.cz>,
+        "Takashi Iwai" <tiwai@suse.com>, <linux-kernel@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-riscv@lists.infradead.org>, <linux-csky@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-gpio@vger.kernel.org>,
+        <linux-hwmon@vger.kernel.org>, <linux-i2c@vger.kernel.org>,
+        <linux-input@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-media@vger.kernel.org>, <MPT-FusionLinux.pdl@broadcom.com>,
+        <linux-scsi@vger.kernel.org>, <intel-wired-lan@lists.osuosl.org>,
+        <linux-wireless@vger.kernel.org>, <megaraidlinux.pdl@broadcom.com>,
+        <linux-spi@vger.kernel.org>, <linux-fbdev@vger.kernel.org>,
+        <linux-serial@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+        <linux-watchdog@vger.kernel.org>
+References: <20220105194748.GA215560@bhelgaas>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <74bf4fde-3972-1c36-ca04-58089da0d82b@huawei.com>
+Date:   Thu, 6 Jan 2022 17:41:00 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <5fffbc9191d1f1b3db1d51ce991591c9c6d91785.camel@suse.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <20220105194748.GA215560@bhelgaas>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.27.56]
+X-ClientProxiedBy: lhreml736-chm.china.huawei.com (10.201.108.87) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jan 06, 2022 at 04:19:03PM +0000, Martin Wilck wrote:
-> On Thu, 2022-01-06 at 23:41 +0800, Ming Lei wrote:
-> > On Thu, Jan 06, 2022 at 03:22:53PM +0000, Martin Wilck wrote:
-> > > > 
-> > > > I'd suggest to fix mpt3sas for avoiding this memory waste.
-> > > 
-> > > Let's wait for Sreekanth's comment on that.
-> > > 
-> > > mpt3sas is not the only driver using a low value. Qlogic drivers
-> > > set
-> > > cmd_per_lun=3, for example (with 3, our logic would use shift=6, so
-> > > the
-> > > issue I observed wouldn't occur - but it would be prone to cache
-> > > line
-> > > bouncing).
-> > 
-> > But qlogic has smaller .can_queue which looks at most 512, .can_queue
-> > is
-> > the depth for allocating sbitmap, since each sdev->queue_depth is <=
-> > .can_queue.
+On 05/01/2022 19:47, Bjorn Helgaas wrote:
+>>>>>   ok if the PCI maintainers decide otherwise.
+>>>> I don't really like the "LEGACY_PCI" Kconfig option.  "Legacy" just
+>>>> means something old and out of favor; it doesn't say*what*  that
+>>>> something is.
+>>>>
+>>>> I think you're specifically interested in I/O port space usage, and it
+>>>> seems that you want all PCI drivers that*only*  use I/O port space to
+>>>> depend on LEGACY_PCI?  Drivers that can use either I/O or memory
+>>>> space or both would not depend on LEGACY_PCI?  This seems a little
+>>>> murky and error-prone.
+>>> I'd like to hear Arnd's opinion on this but you're the PCI maintainer
+>>> so of course your buy-in would be quite important for such an option.
+> I'd like to hear Arnd's opinion, too.  If we do add LEGACY_PCI, I
+> think we need a clear guide for when to use it, e.g., "a PCI driver
+> that uses inb() must depend on LEGACY_PCI" or whatever it is.
 > 
-> I'm seeing here (on an old kernel, admittedly) cmd_per_lun=3 and
-> can_queue=2038 for qla2xxx and cmd_per_lun=3 and can_queue=5884 for
-> lpfc. Both drivers change the queue depth for devices to 64 in their
-> slave_configure() methods.
+> I must be missing something because I don't see what we gain from
+> this.  We have PCI drivers, e.g., megaraid [1], for devices that have
+> either MEM or I/O BARs.  I think we want to build drivers like that on
+> any arch that supports PCI.
 > 
-> Many drivers do this, as it's recommended in scsi_host.h. That's quite
-> bad in view of the current bitmap allocation logic - we lay out the
-> bitmap assuming the depth used will be cmd_per_lun, but that doesn't
-> match the actual depth when the device comes online. For qla2xxx, it
-> means that we'd allocate the sbitmap with shift=6 (64 bits per word),
-> thus using just a single cache line for 64 requests. Shift=4 (16 bits
-> per word) would be the default shift for depth 64.
+> If the arch doesn't support I/O port space, devices that only have I/O
+> BARs won't work, of course, and hopefully the PCI core and driver can
+> figure that out and gracefully fail the probe.
 > 
-> Am I misreading the code? Perhaps we should only allocate a preliminary
-> sbitmap in scsi_alloc_sdev, and reallocate it after slave_configure()
-> has been called, to get the shift right for the driver's default
-> settings?
+> But that same driver should still work with devices that have MEM
+> BARs.  If inb() isn't always present, I guess we could litter these
+> drivers with #ifdefs, but that would be pretty ugly. 
 
-That looks fine to reallocate it after ->slave_configure() returns,
-but we need to freeze the request queue for avoiding any in-flight
-scsi command. At that time, freeze should be quick enough.
+There were some ifdefs added to the 8250 drivers in Arnd's original 
+patch [0], but it does not seem included here.
 
+Niklas, what happened to the 8250 and the other driver changes?
+
+[0] 
+https://lore.kernel.org/lkml/CAK8P3a0MNbx-iuzW_-=0ab6-TTZzwV-PT_6gAC1Gp5PgYyHcrA@mail.gmail.com/
+
+> IMO inb() should
+> be present but do something innocuous like return ~0, as it would if
+> I/O port space is supported but there's no device at that address.
+> 
+> [1]https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/megaraid.c?id=v5.15#n4210
+> 
+
+That driver would prob not be used on systems which does not support 
+PIO, and so could have a HAS_IOPORT dependency. But it is not strictly 
+necessary.
+
+Anyway, it would be good to have an idea of how much ifdeffery is 
+required in drivers.
 
 Thanks,
-Ming
-
+John
