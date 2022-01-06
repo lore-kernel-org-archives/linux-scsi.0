@@ -2,115 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B463C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jan 2022 15:41:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21C82C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jan 2022 15:49:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240557AbiAFPlq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Jan 2022 10:41:46 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:32367 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229726AbiAFPlp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2022 10:41:45 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1641483705;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=1Rdwgz0CQlOzRHMovvYXy5MGRSx4SdMh0JUg/KZW/Vw=;
-        b=MnDB9yvTLWVW53frgoGmn0Zf37Ni8Wff8gDIiMu5W16N8s+shLsQ3X4q3dgZA1+bo7lxNF
-        DnalRM3hX66sJoF4INbhtFnDK0QbUcOFUNNxQenW4lsndzS0jIyczXxLFwl6ftCx4j91OP
-        EKDqobbBb+/rV/t8dLhhTPKe4HtS5tU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-155-xTNa5uZnPl-QgvL8AB42fA-1; Thu, 06 Jan 2022 10:41:44 -0500
-X-MC-Unique: xTNa5uZnPl-QgvL8AB42fA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C4FC693922;
-        Thu,  6 Jan 2022 15:41:42 +0000 (UTC)
-Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4959D6784B;
-        Thu,  6 Jan 2022 15:41:37 +0000 (UTC)
-Date:   Thu, 6 Jan 2022 23:41:33 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Martin Wilck <martin.wilck@suse.com>
-Cc:     "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>,
-        "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>,
-        "suganath-prabu.subramani@broadcom.com" 
-        <suganath-prabu.subramani@broadcom.com>,
-        "hare@suse.de" <hare@suse.de>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Subject: Re: mpt3sas fails to allocate budget_map and detects no devices
-Message-ID: <YdcNrSJJGllQzWOB@T590>
-References: <be78dc2cfeecaafd171060fbebda2d268d2a94e5.camel@suse.com>
- <YdZcABq/pxMMh3X0@T590>
- <5a450cdadbffed9c5ce39bc7d58bcf4e541f3b53.camel@suse.com>
- <YdcEJngPYrZk691Q@T590>
- <97be83524e1ee6776a4c1261bf4c1b17a8b75f12.camel@suse.com>
+        id S240683AbiAFPtk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Jan 2022 10:49:40 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4357 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230138AbiAFPtk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2022 10:49:40 -0500
+Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JV9gc3BhMz67bFG;
+        Thu,  6 Jan 2022 23:46:20 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Thu, 6 Jan 2022 16:49:37 +0100
+Received: from [10.47.27.56] (10.47.27.56) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Thu, 6 Jan
+ 2022 15:49:36 +0000
+Subject: Re: [issue report] pm8001 issues (was driver crashes with IOMMU
+ enabled)
+To:     <Ajish.Koshy@microchip.com>, <jinpu.wang@ionos.com>,
+        <Viswas.G@microchip.com>
+CC:     <linux-scsi@vger.kernel.org>, <vishakhavc@google.com>,
+        <ipylypiv@google.com>, <Ruksar.devadi@microchip.com>,
+        <damien.lemoal@opensource.wdc.com>,
+        <Vasanthalakshmi.Tharmarajan@microchip.com>
+References: <894f766f-74b7-62b1-f6d2-82ac85b6478f@huawei.com>
+ <CAMGffEkvrAxhrsL=azkVzQHHyDczZwJ3uiNWydSA6o2K+Xh_Jw@mail.gmail.com>
+ <00505633-c8c0-8213-8909-482bf43661cd@huawei.com>
+ <1cc92b2d-3670-7843-d68a-06fe68521d24@huawei.com>
+ <fd0eafc6-9443-fe5e-2c2f-91d6bbe8b174@huawei.com>
+ <PH0PR11MB5112EBE80F9A4AD199866CA7EC429@PH0PR11MB5112.namprd11.prod.outlook.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <0cc0c435-b4f2-9c76-258d-865ba50a29dd@huawei.com>
+Date:   Thu, 6 Jan 2022 15:49:22 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <97be83524e1ee6776a4c1261bf4c1b17a8b75f12.camel@suse.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <PH0PR11MB5112EBE80F9A4AD199866CA7EC429@PH0PR11MB5112.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.27.56]
+X-ClientProxiedBy: lhreml736-chm.china.huawei.com (10.201.108.87) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jan 06, 2022 at 03:22:53PM +0000, Martin Wilck wrote:
-> On Thu, 2022-01-06 at 23:00 +0800, Ming Lei wrote:
-> > On Thu, Jan 06, 2022 at 10:26:01AM +0000, Martin Wilck wrote:
-> > 
-> > > 
-> > > Alternatively, we could inhibit increasing the device queue depth
-> > > above
-> > > a certain multiple of cmd_per_lun, and size the sbitmap by that
-> > > limit.
-> > > My gut feeling says that if cmd_per_lun == 7, it makes sense to use
-> > > a
-> > > limit of 32. That way the bitmap would fit into 2 pages; we'd still
-> > > waste a lot, but it wouldn't matter much in absolute numbers. 
-> > > Thus we could forbid increasing the queue depth to more than the
-> > > power
-> > > of 2 above 4*cmd_per_lun. Does this make sense?
-> > 
-> > I'd suggest to fix mpt3sas for avoiding this memory waste.
+On 27/12/2021 13:26, Ajish.Koshy@microchip.com wrote:
+> Regarding maxcpus=1 issue, will check and try to reproduce the
+> same on x86 server.
 > 
-> Let's wait for Sreekanth's comment on that.
-> 
-> mpt3sas is not the only driver using a low value. Qlogic drivers set
-> cmd_per_lun=3, for example (with 3, our logic would use shift=6, so the
-> issue I observed wouldn't occur - but it would be prone to cache line
-> bouncing).
+> And for ARM issues, need to check internally as it was never
+> tested for the same.
 
-But qlogic has smaller .can_queue which looks at most 512, .can_queue is
-the depth for allocating sbitmap, since each sdev->queue_depth is <=
-.can_queue.
+I have found another issue. There is a potential use-after-free in 
+pm8001_task_exec():
 
-> 
-> > > (*) this calculation ignores the use of sb->map[i].depth. Taking it
-> > > into account wouldn't change much.
-> > 
-> > Yeah, I have actually one patch to remove sb->map[].depth, which can
-> > reduce each map's size by 1/3.
-> 
-> That sounds like a great idea to me. I've also been wondering whether
+static int pm8001_task_exec()
+{
+	...
+	case SAS_PROTOCOL_SSP:
+	atomic_inc(&pm8001_dev->running_req);
+	if (is_tmf)
+		rc = pm8001_task_prep_ssp_tm(...);
+	else
+		rc = pm8001_task_prep_ssp(pm8001_ha, ccb);
+	break;
+	...
 
-I will post the patch after running some benchmark to make sure no
-performance regression.
+	if (rc) {
+		pm8001_dbg(pm8001_ha, IO, "rc is %x\n", rc);
+		atomic_dec(&pm8001_dev->running_req);
+		goto err_out_tag;
+	}
+	/* TODO: select normal or high priority */
+	spin_lock(&t->task_state_lock); ****
+	t->task_state_flags |= SAS_TASK_AT_INITIATOR;
+	spin_unlock(&t->task_state_lock);
+	...
+}
 
-> it wouldn't be possible to use more than a single word in a cache line
-> (given a high-enough number of cache lines).
 
-It seems possible to use more than one single word in one map in case
-that depth is high enough, so it is still nothing to with this case.
-
+Once the task is dispatched to HW at ****, it is completed async, i.e. 
+it may be completed and freed at any point, even before the dispatch 
+function returns. So it is illegal to touch the task at this point and 
+the task state must be updated before final dispatch to the HW. If you 
+enable KASAN you will prob see it yell like I saw.
 
 Thanks,
-Ming
-
+john
