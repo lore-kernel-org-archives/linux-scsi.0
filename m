@@ -2,182 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85D19C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jan 2022 14:11:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 856AAC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jan 2022 15:01:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239704AbiAFOLZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Jan 2022 09:11:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53072 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239599AbiAFOLY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2022 09:11:24 -0500
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7ABCDC061245
-        for <linux-scsi@vger.kernel.org>; Thu,  6 Jan 2022 06:11:24 -0800 (PST)
-Received: by mail-ed1-x533.google.com with SMTP id b13so9848562edd.8
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Jan 2022 06:11:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=8g4XRT7rWmM80EWeJhLTDWCOopUiX4fpxmTW0mMu6h4=;
-        b=SwM+3x1KxwqhQAJ5JP80gv0sEubSJYSl17+bbtEoWWprc9lJEyrTe6n190lRZqo6GY
-         /9I1jKTOa/p5rYp2CxIjM5YpQfvW55doJW2dmurrVKhMMFr2cPcGqWYEt1kkV9xiH+m0
-         qbmGuJJi4wFR8/SieyzIRfYk0ja+uwbDHrKy7OuRhwsYTQESNq/7rPv4LFhNvzvd6PRJ
-         mWbqiS/WPt49J7J1zetqtIaQuyHvYT4v7Pu7v/FIrY6t2ybd+rb/EjbqYbG+rm6IapL1
-         LacypXHGvf6Wt24yWGfVXTQqVz53zljTYnfmeRoDPjKLbGYv5uhCPP+vlzvqtQxiYC3C
-         svQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8g4XRT7rWmM80EWeJhLTDWCOopUiX4fpxmTW0mMu6h4=;
-        b=dcTXV9/TeTHWPX9rcQvnxVqEp/GUxIPFI3KUGXCtmEScZk2JBGF/8MaG0DX3aIgr/u
-         HfkmnWF8bgwKJ/bex4dnjcIsLH7ufL3YdjhHb6kfR7XrCpyRv/sONBg7UDzMkV3+9B8O
-         S5Xn3zV//Ou51n6kbw7v3frzCu18fFv5mnn9ajgqw1xHMJwa5OB37egQZWn1BHTGhcol
-         J9oMuEHaE5K95yChjr5C/a9fSlPtzdysUBpa0ESGUtqWl2i8e8YLF+F6zA5b4jfJww9J
-         xoVNsDIkuWLLmnOMssIjnIA9hefP7OS3lP8QdYkHC1EFgYMEwjD+l2bCV28AU/jxPQqA
-         LwTQ==
-X-Gm-Message-State: AOAM533PL2SiM/522pFVEUv0AhQXJ30QhDwv3EFehJU4+zAYntFRGwjJ
-        T7P+Y3fINdvC4w/9Vearaw7knzaBlKqjgjXH/egrTJTpje0=
-X-Google-Smtp-Source: ABdhPJxv0YtJmRgNQV/3UY1K1ro/9vMStm2nvfVDxBK0UxnZ3nB6u74hGMA7/IZDSO/LFq3hnpVnulk8zNYnvGng6ng=
-X-Received: by 2002:a17:907:7295:: with SMTP id dt21mr45922826ejc.441.1641478282847;
- Thu, 06 Jan 2022 06:11:22 -0800 (PST)
+        id S240289AbiAFPBL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Jan 2022 10:01:11 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:43411 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S240274AbiAFPBK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2022 10:01:10 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1641481269;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=6wiDPhVilpsI7z5s2ufrl4VWXcGYyJazVed9MxpqocQ=;
+        b=Q3JmiTq0SzrlFWFoQes92sGfrbwEZyXUq16zBxOqype4Yr1LSz8FTxoYoHakYGGnaubSar
+        5q1fC8JZGg+mh089vOzLXo4Jl1Vuc6TTJBQsprn6wyowd0auwC1OcwXCp++ah4Nx+MsMBT
+        Y/GHM4inSKYBwIV8xPkWJhEA2FOxf1g=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-465-GvNrwfXFNf-JD0hMn9NMdQ-1; Thu, 06 Jan 2022 10:01:06 -0500
+X-MC-Unique: GvNrwfXFNf-JD0hMn9NMdQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B89388015CD;
+        Thu,  6 Jan 2022 15:01:04 +0000 (UTC)
+Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 721F778AB8;
+        Thu,  6 Jan 2022 15:00:58 +0000 (UTC)
+Date:   Thu, 6 Jan 2022 23:00:54 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Martin Wilck <martin.wilck@suse.com>
+Cc:     "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>,
+        "suganath-prabu.subramani@broadcom.com" 
+        <suganath-prabu.subramani@broadcom.com>,
+        "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>,
+        "hare@suse.de" <hare@suse.de>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Subject: Re: mpt3sas fails to allocate budget_map and detects no devices
+Message-ID: <YdcEJngPYrZk691Q@T590>
+References: <be78dc2cfeecaafd171060fbebda2d268d2a94e5.camel@suse.com>
+ <YdZcABq/pxMMh3X0@T590>
+ <5a450cdadbffed9c5ce39bc7d58bcf4e541f3b53.camel@suse.com>
 MIME-Version: 1.0
-References: <20211228111753.10802-1-Ajish.Koshy@microchip.com>
- <CAMGffEnufGurL0FYetFKGe+ZpuEuwf69z1Hccn9Ppb+tQyT7Zg@mail.gmail.com> <PH0PR11MB511212DDDA9FE8F980888AFBEC4C9@PH0PR11MB5112.namprd11.prod.outlook.com>
-In-Reply-To: <PH0PR11MB511212DDDA9FE8F980888AFBEC4C9@PH0PR11MB5112.namprd11.prod.outlook.com>
-From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Thu, 6 Jan 2022 15:11:12 +0100
-Message-ID: <CAMGffE=TAL0TfFmfjMOg+rWf7B_NoPig6HNzUTGEAp9=4N01iQ@mail.gmail.com>
-Subject: Re: [PATCH] scsi: pm80xx: port reset timeout error handling correction.
-To:     Ajish.Koshy@microchip.com
-Cc:     linux-scsi@vger.kernel.org,
-        Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <5a450cdadbffed9c5ce39bc7d58bcf4e541f3b53.camel@suse.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jan 6, 2022 at 2:12 PM <Ajish.Koshy@microchip.com> wrote:
->
-> Hi Jinpu,
->
-> > Hi Ajish,
-> >
-> >
-> > On Tue, Dec 28, 2021 at 12:15 PM Ajish Koshy <Ajish.Koshy@microchip.com>
-> > wrote:
-> > >
-> > > Error handling steps were not in sequence as per the programmers
-> > > manual. Expected sequence:
-> > >  -PHY_DOWN (PORT_IN_RESET)
-> > >  -PORT_RESET_TIMER_TMO
-> > >  -Host aborts pending I/Os
-> > >  -Host deregister the device
-> > >  -Host sends HW_EVENT_PHY_DOWN ack
-> >
-> > Just to make sure, does the same sequence work for old pm8001 chip?
->
-> Currently this code is modified and executed based on 8006 controller.
-> I need to check with team members about the this sequence on old
-> controller pm8001 chip.
-Thanks & Regards
->
-> > >
-> > > Earlier, we were sending HW_EVENT_PHY_DOWN ack first and then
-> > > deregister the device.
-> > >
-> > > Signed-off-by: Ajish Koshy <Ajish.Koshy@microchip.com>
-> > > Signed-off-by: Viswas G <Viswas.G@microchip.com>
-> > > ---
-> > >  drivers/scsi/pm8001/pm8001_sas.c | 7 ++++++-
-> > > drivers/scsi/pm8001/pm8001_sas.h | 3 +++
-> > > drivers/scsi/pm8001/pm80xx_hwi.c | 7 +++++--
-> > >  3 files changed, 14 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/drivers/scsi/pm8001/pm8001_sas.c
-> > > b/drivers/scsi/pm8001/pm8001_sas.c
-> > > index c9a16eef38c1..160ee8b228c9 100644
-> > > --- a/drivers/scsi/pm8001/pm8001_sas.c
-> > > +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> > > @@ -1199,7 +1199,7 @@ int pm8001_abort_task(struct sas_task *task)
-> > >         struct pm8001_device *pm8001_dev;
-> > >         struct pm8001_tmf_task tmf_task;
-> > >         int rc = TMF_RESP_FUNC_FAILED, ret;
-> > > -       u32 phy_id;
-> > > +       u32 phy_id, port_id;
-> > >         struct sas_task_slow slow_task;
-> > >
-> > >         if (unlikely(!task || !task->lldd_task || !task->dev)) @@
-> > > -1246,6 +1246,7 @@ int pm8001_abort_task(struct sas_task *task)
-> > >                         DECLARE_COMPLETION_ONSTACK(completion_reset);
-> > >                         DECLARE_COMPLETION_ONSTACK(completion);
-> > >                         struct pm8001_phy *phy = pm8001_ha->phy +
-> > > phy_id;
-> > > +                       port_id = phy->port->port_id;
-> > >
-> > >                         /* 1. Set Device state as Recovery */
-> > >                         pm8001_dev->setds_completion = &completion; @@
-> > > -1297,6 +1298,10 @@ int pm8001_abort_task(struct sas_task *task)
-> > >                                                 PORT_RESET_TMO);
-> > >                                 if (phy->port_reset_status == PORT_RESET_TMO) {
-> > >                                         pm8001_dev_gone_notify(dev);
-> > > +                                       PM8001_CHIP_DISP->hw_event_ack_req(
-> > > +                                               pm8001_ha, 0,
-> > > +                                               0x07, /*HW_EVENT_PHY_DOWN ack*/
-> > > +                                               port_id, phy_id, 0,
-> > > + 0);
-> > >                                         goto out;
-> > >                                 }
-> > >                         }
-> > > diff --git a/drivers/scsi/pm8001/pm8001_sas.h
-> > > b/drivers/scsi/pm8001/pm8001_sas.h
-> > > index 83eec16d021d..a17da1cebce1 100644
-> > > --- a/drivers/scsi/pm8001/pm8001_sas.h
-> > > +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> > > @@ -216,6 +216,9 @@ struct pm8001_dispatch {
-> > >                 u32 state);
-> > >         int (*sas_re_init_req)(struct pm8001_hba_info *pm8001_ha);
-> > >         int (*fatal_errors)(struct pm8001_hba_info *pm8001_ha);
-> > > +       void (*hw_event_ack_req)(struct pm8001_hba_info *pm8001_ha,
-> > > +               u32 Qnum, u32 SEA, u32 port_id, u32 phyId, u32 param0,
-> > > +               u32 param1);
-> > >  };
-> > >
-> > >  struct pm8001_chip_info {
-> > > diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c
-> > > b/drivers/scsi/pm8001/pm80xx_hwi.c
-> > > index 0849ecc913c7..97750d0ebee9 100644
-> > > --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> > > +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> > > @@ -3709,8 +3709,10 @@ static int mpi_hw_event(struct
-> > pm8001_hba_info *pm8001_ha, void *piomb)
-> > >                 break;
-> > >         case HW_EVENT_PORT_RESET_TIMER_TMO:
-> > >                 pm8001_dbg(pm8001_ha, MSG,
-> > "HW_EVENT_PORT_RESET_TIMER_TMO\n");
-> > > -               pm80xx_hw_event_ack_req(pm8001_ha, 0,
-> > HW_EVENT_PHY_DOWN,
-> > > -                       port_id, phy_id, 0, 0);
-> > > +               if (!pm8001_ha->phy[phy_id].reset_completion) {
-> > > +                       pm80xx_hw_event_ack_req(pm8001_ha, 0,
-> > HW_EVENT_PHY_DOWN,
-> > > +                               port_id, phy_id, 0, 0);
-> > > +               }
-> > >                 sas_phy_disconnected(sas_phy);
-> > >                 phy->phy_attached = 0;
-> > >                 sas_notify_port_event(sas_phy, PORTE_LINK_RESET_ERR,
-> > > @@ -5051,4 +5053,5 @@ const struct pm8001_dispatch
-> > pm8001_80xx_dispatch = {
-> > >         .fw_flash_update_req    = pm8001_chip_fw_flash_update_req,
-> > >         .set_dev_state_req      = pm8001_chip_set_dev_state_req,
-> > >         .fatal_errors           = pm80xx_fatal_errors,
-> > > +       .hw_event_ack_req       = pm80xx_hw_event_ack_req,
-> > >  };
-> > > --
-> > > 2.27.0
-> > >
->
-> Thanks,
-> Ajish
+On Thu, Jan 06, 2022 at 10:26:01AM +0000, Martin Wilck wrote:
+> On Thu, 2022-01-06 at 11:03 +0800, Ming Lei wrote:
+> > On Wed, Jan 05, 2022 at 06:00:41PM +0000, Martin Wilck wrote:
+> > > Hello Ming, Sreekanth,
+> > > 
+> > > I'm observing a problem where mpt3sas fails to allocate the
+> > > budget_map
+> > > for any SCSI device, because attempted allocation is larger than
+> > > the
+> > > maximum possible. The issue is caused by the logic used in
+> > > 020b0f0a3192
+> > > ("scsi: core: Replace sdev->device_busy with sbitmap") 
+> > > to calculate the bitmap size. This is observed with 5.16-rc8.
+> > > 
+> > > The controller at hand has properties can_queue=29865 and
+> > > cmd_per_lun=7. The way these parameters are used in
+> > > scsi_alloc_sdev()->
+> > 
+> > That two parameter looks bad, can_queue is too big, however
+> > cmd_per_lun
+> > is so small.
+> 
+> Right. @Sreekanth, can you comment on that?
+> 
+> > > sbitmap_init_node(), this results in an sbitmap with 29865 maps,
+> > > where
+> > > only a single bit is used per map. On x86_64, this results in an
+> > > attempt to allocate 29865 * 192 =  5734080 bytes for the sbitmap,
+> > > which
+> > > is larger than  PAGE_SIZE * (1 << (MAX_ORDER - 1)), and fails.
+> > 
+> > Bart has posted one patch for fixing the issue:
+> > 
+> > https://lore.kernel.org/linux-scsi/20211203231950.193369-2-bvanassche@acm.org/
+> > 
+> > but it isn't merged yet.
+> 
+> Thanks a lot for pointing that out. I had a faint remembrance of it but
+> failed to locate it yesterday.
+> 
+> This fixes the allocation failure, but not the fact that for
+> cmd_per_lun = 7 (hard-coded in mpt3sas) only a single bit per sbitmap
+> is used and the resulting relation between allocated and used memory is
+> ridiculous. We'd still allocate 200kiB or 48 contiguous pages, out of
+> which no more than 2048 bits / 256 bytes would be used (*); iow at
+> least 99.87% of the allocated memory would be wasted. In the default
+> case (queue depth left unchanged), we'd use only 2 bytes, and waste
+> 99.9989%.
+
+The problem is that mpt3sas uses very weird .can_queue and .cmd_per_lun,
+which shouldn't be common.
+
+If .cmd_per_lun is too small, we have to spread the bits among as much
+as possible cache lines for avoiding cache line ping-pong, and this kind
+of sbitmap principle isn't wrong.
+
+Also we may reduce max queue depth of 1024 too, usually we don't need so
+big queue depth to saturate one SSD, and the number should be based on
+nvme's setting.
+
+> 
+> When calculating the sbitmap shift, would you agree that it makes sense
+> to start with the desired number of separate cache lines, as my
+> proposed patch did? The core sbitmap code assumes that 4-8 separate
+> cache lines are a reasonable value for moderate (4 <= d <= 512) bitmap
+> depth. I believe we should aim for that in the SCSI code, too.
+
+Here the actual depth is .cmd_per_lun(7) which is too small, so each
+bit may have to consume one standalone cache line.
+
+> Admittedly, the backside of that is that in the default case (queue
+> depth unchaged), only a single cache line would be used in the mpt3sas
+> scenario.
+> 
+> Alternatively, we could inhibit increasing the device queue depth above
+> a certain multiple of cmd_per_lun, and size the sbitmap by that limit.
+> My gut feeling says that if cmd_per_lun == 7, it makes sense to use a
+> limit of 32. That way the bitmap would fit into 2 pages; we'd still
+> waste a lot, but it wouldn't matter much in absolute numbers. 
+> Thus we could forbid increasing the queue depth to more than the power
+> of 2 above 4*cmd_per_lun. Does this make sense?
+
+I'd suggest to fix mpt3sas for avoiding this memory waste.
+
+> 
+> Regards
+> Martin
+> 
+> (*) this calculation ignores the use of sb->map[i].depth. Taking it
+> into account wouldn't change much.
+
+Yeah, I have actually one patch to remove sb->map[].depth, which can
+reduce each map's size by 1/3.
+
+
+
+Thanks,
+Ming
+
