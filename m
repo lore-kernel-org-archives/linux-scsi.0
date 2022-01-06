@@ -2,146 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93AB2C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Jan 2022 23:59:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84E7BC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Jan 2022 08:03:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343651AbiAFX7l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Jan 2022 18:59:41 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:18924 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343644AbiAFX7k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2022 18:59:40 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1641513581; x=1673049581;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=CGRxrRXJyLQDHZtwUobuOfhQN8/+ZhzK98hmu5M2wss=;
-  b=iYQXSLnDnoaim5EvNZA8f3vAZlxnYKj0YoZkQbqy05rwrOAnU1wYHNsf
-   CtKoYYDjBZ0IsVQRJgd/pnDS1EWJ4FC3ThNGS90iiFUKGZSTNCjhlCHaZ
-   fACezccRgSi0imFS72CjaLZ8rzxQQCNi9zVbZK13JaRMWSjFaPV69TJTe
-   Ret/ZbSLU/rXKFxzf4+2p3wR0DMzetpNZ8JtiAdLHrhREN5Jgi3CQ/gBm
-   rR0oHztHK8alHTv74nsOZPS9JLOFXIqDuWBxNS/e9AWNbFOgJu5405hRn
-   SaR3LBYIyyyqWbfMVsoeXoWdGVQkVAO+df15E7TXCglkUoidBmeWltZ4q
-   A==;
-X-IronPort-AV: E=Sophos;i="5.88,268,1635177600"; 
-   d="scan'208";a="190901262"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Jan 2022 07:59:40 +0800
-IronPort-SDR: aGHuu/JDrSAhww6Y/8S0Yb0Du4bRYJ3yvogmx3hhm5rfh3jWSbIbDNyZniLFoG8TsKgPWWVZp8
- bCzfP/0a0kAdKYwqBG8qY3l1qES1j9OOmI+btLxMyxna9F/ZeajiMf0DYQwPFn2UuX399ylm6h
- FS6clfd5rBnTPrWMLWF+q4q4iCAMeuEqScL4PpR1ZH4wxMgEyBuO2wylO2NwtGrOx5ZkezqDej
- 0tWHYqHhe3pdmuHqWJSQWzzomj/aemE6mWgS7osrdKu6CfjJ40C18GqGD3zsj+MKjG688jxhe3
- znZYBgW7M3JpjaCJ9jFJqkoF
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jan 2022 15:33:29 -0800
-IronPort-SDR: lPBRt+ex/RxPRfAMdmQHZgcSJqiNkCbeES+fIiF+LNUM/Mh09FuijXcWu2wneH1uDa4VMOd+Si
- F9OIbLNgbGk1s+OCq7fK39tngw+yQtYDVILZGiSgjI4kD141PZ2TuuWqW0wQR+mTLK9VBWv6OH
- uwoTlTg84HFHPFEwVIcx4aWkPXqsyYbkgwa6qQqU2r1vGjiEpHiHFQg8AFtMTutYDMJarzT3w5
- 91OIv+I3+PI6OfFelW4q9lsJfSW/ggF47FhAVGFtCbWvIzlWw6hBbxC8y5m3IUuAl2N2YEqjx9
- a7I=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jan 2022 15:59:41 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JVNcq3MPHz1VSkk
-        for <linux-scsi@vger.kernel.org>; Thu,  6 Jan 2022 15:59:39 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1641513578; x=1644105579; bh=CGRxrRXJyLQDHZtwUobuOfhQN8/+ZhzK98h
-        mu5M2wss=; b=J58rzMQ3yq+u4f0FtWPAfw4k9B2pIlitFh0RkxggEp21gHqfEXQ
-        jiK6TaaOoYj9vdaJ/6ndIdv3GUtZGWEKaHTRxB764nYqqLFsChF93r/hfelzppuf
-        KTfokToP13Z4KzM0yLQq5wS8gL8QAId+oGMOfhDfd634wdrnOE86uo95w5gzkkDB
-        g2hS8ejvrASszcrYmeC8nrHZdX+n8Tvxfw6K2sT6WVrqdeKqvgyoTU5aJa8rZjiG
-        e9FMZ90wTWkr+ayV/afVDWSiUT71NyXjMoGGSkHcn/aeH6V284dpg0gPX5JILtp+
-        nzbCl4T954/WEc1BLwuuV1iZfxV3IxQ77+g==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id GogjYIUlgNOE for <linux-scsi@vger.kernel.org>;
-        Thu,  6 Jan 2022 15:59:38 -0800 (PST)
-Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JVNcn0L0Vz1VSkV;
-        Thu,  6 Jan 2022 15:59:36 -0800 (PST)
-Message-ID: <31ff2ee7-3e49-70bd-3f37-702d4e6c85a5@opensource.wdc.com>
-Date:   Fri, 7 Jan 2022 08:59:35 +0900
+        id S1345296AbiAGIDm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Jan 2022 03:03:42 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:31441 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235692AbiAGIDl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jan 2022 03:03:41 -0500
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220107080339epoutp046f01932046b3ba3f1a02e9466ec551b0~H7lC9MNwE2591525915epoutp04Z
+        for <linux-scsi@vger.kernel.org>; Fri,  7 Jan 2022 08:03:39 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220107080339epoutp046f01932046b3ba3f1a02e9466ec551b0~H7lC9MNwE2591525915epoutp04Z
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1641542619;
+        bh=gnQx+Skwvcz67HwZPZedRVNzu5VwA38Z33/H7k1Y1LQ=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=RlnjnpjBfSd3WUqnBrpKBXKeWvc3p6RbLCALkDD9Og2K2Ncxv46eCfTP4RYB8tYHu
+         RgfDPu8v57Sd8oaeJrGdYWIkVtQA3QBvRqFACZSkaUZYw+3oQBQDDtEi+6lfePVfsp
+         FrINxSPgZTGE9blrBUi6s6S4Yk0WNOgqNog2/uu8=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20220107080338epcas2p4f3c86f595c063b869991fa6fff3c1ff3~H7lCQmJ2k1858718587epcas2p4g;
+        Fri,  7 Jan 2022 08:03:38 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.90]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4JVbMF1ytDz4x9QL; Fri,  7 Jan
+        2022 08:03:37 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        44.D7.12141.4D3F7D16; Fri,  7 Jan 2022 17:03:32 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+        20220107080332epcas2p216d8123df110623b4287ebf6879f745f~H7k8UWBRZ0040200402epcas2p26;
+        Fri,  7 Jan 2022 08:03:32 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220107080332epsmtrp1b38096a14322a1eb5b97538ae09a1639~H7k8TE6ya1456714567epsmtrp1-;
+        Fri,  7 Jan 2022 08:03:32 +0000 (GMT)
+X-AuditID: b6c32a48-d5dff70000002f6d-d0-61d7f3d42624
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        66.8F.08738.4D3F7D16; Fri,  7 Jan 2022 17:03:32 +0900 (KST)
+Received: from rack03.dsn.sec.samsung.com (unknown [12.36.155.109]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20220107080332epsmtip2a28c2edaa072593503d07b866de2f34c~H7k8BQFLe1978619786epsmtip2x;
+        Fri,  7 Jan 2022 08:03:32 +0000 (GMT)
+From:   SEO HOYOUNG <hy50.seo@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kwmad.kim@samsung.com, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
+        grant.jung@samsung.com, junwoo80.lee@samsung.com,
+        bhoon95.kim@samsung.com
+Cc:     SEO HOYOUNG <hy50.seo@samsung.com>
+Subject: [PATCH v1] scsi: ufs: modify Tactive time setting conditions
+Date:   Fri,  7 Jan 2022 04:48:04 +0900
+Message-Id: <20220106194804.23892-1-hy50.seo@samsung.com>
+X-Mailer: git-send-email 2.26.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.4.1
-Subject: Re: [PATCH RFT] scsi: pm8001: Fix FW crash for maxcpus=1
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, Ajish.Koshy@microchip.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        jinpu.wang@cloud.ionos.com, Viswas.G@microchip.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        vishakhavc@google.com, ipylypiv@google.com,
-        Ruksar.devadi@microchip.com,
-        Vasanthalakshmi.Tharmarajan@microchip.com
-References: <1641320780-81620-1-git-send-email-john.garry@huawei.com>
- <d2d3c903-fb91-e218-9e0a-aeb2ff9e401a@opensource.wdc.com>
- <2746563e-28ce-b328-3494-f91ace1599f1@huawei.com>
- <PH0PR11MB5112F9E9BB9F029DB9A67739EC4C9@PH0PR11MB5112.namprd11.prod.outlook.com>
- <c19c2b0b-d502-b393-db8a-cb5c57c00feb@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital
-In-Reply-To: <c19c2b0b-d502-b393-db8a-cb5c57c00feb@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrKJsWRmVeSWpSXmKPExsWy7bCmqe6Vz9cTDc6et7Z4MG8bm8XethPs
+        Fi9/XmWzOPiwk8Xi69JnrBbTPvxktvi0fhmrxa+/69ktVi9+wGKx6MY2Jotdf5uZLG5uOcpi
+        cXnXHDaL7us72CyWH//H5MDvcfmKt8flvl4mjwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNo
+        P9DNFMARlW2TkZqYklqkkJqXnJ+SmZduq+QdHO8cb2pmYKhraGlhrqSQl5ibaqvk4hOg65aZ
+        A3S8kkJZYk4pUCggsbhYSd/Opii/tCRVISO/uMRWKbUgJafAvECvODG3uDQvXS8vtcTK0MDA
+        yBSoMCE7Y9rrjUwFszgq3m34z9TA+IGti5GDQ0LARGJvq1oXIxeHkMAORonjV+axQjifGCX2
+        rzoB5XxmlGj+tZy9i5ETrGPH6nuMEIldjBJ7J5xnh3B+MErc61zJBFLFJqAhsebYISaQhIjA
+        LSaJ/XfaWEESzAJqEp/vLmMBsYUFXCV+XTzBDGKzCKhKXFj0HSzOK2ApcejCFUaIdfISixp+
+        M0HEBSVOznzCAjFHXqJ562xmkAUSAnM5JHb+/wt1n4vEj+Mn2SBsYYlXx7dAxaUkXva3sUM0
+        NDNKrJ85hwnCmcIoMffZU1aIKmOJWc/aGUFhwyygKbF+lz4kmJQljtyCWswn0XEYZBdImFei
+        o00IolFJ4szc21BhCYmDs3Mgwh4Ss7csB5snJBAr8fWe5gRG+VlInpmF5JlZCFsXMDKvYhRL
+        LSjOTU8tNiowgUdqcn7uJkZw+tXy2ME4++0HvUOMTByMhxglOJiVRHin7r2WKMSbklhZlVqU
+        H19UmpNafIjRFBi8E5mlRJPzgRkgryTe0MTSwMTMzNDcyNTAXEmc1ytlQ6KQQHpiSWp2ampB
+        ahFMHxMHp1QD06wjVxmzd7LV/3Dwkcq0qY9x6Jx5n1PT9i9zxLQg/oWXRRdvSOrpnFtxWWR9
+        v5Dewu1xV1dV55o4q1dFvX96chJXTc396rg32edOb73F9kOTecobSa+VdmaGExatqWSs0Xy2
+        0yjr1ms/Tv8dx9Te5m+NnnB0aeTSLX4F//Zc8ql5cl5//9XdVp4xBm/k3E0c3rf/VrNfs+rr
+        xiNy5trrJKsfm2x9tbz5sFZ6fvPsve+Tnk74yCkc7l3oWCOmveGbx/nvV3rrmhWaX21iebzX
+        /fiL3F2+h3pebVrssb74FNPp062FX1rMnf2nMNuUTbl/de+5f1zTsnn6atqX39t3pfpbjvea
+        ST8UW4JrtIR/FyixFGckGmoxFxUnAgCtt0tUSAQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrGLMWRmVeSWpSXmKPExsWy7bCSvO6Vz9cTDfb/kbF4MG8bm8XethPs
+        Fi9/XmWzOPiwk8Xi69JnrBbTPvxktvi0fhmrxa+/69ktVi9+wGKx6MY2Jotdf5uZLG5uOcpi
+        cXnXHDaL7us72CyWH//H5MDvcfmKt8flvl4mjwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNo
+        P9DNFMARxWWTkpqTWZZapG+XwJUx7fVGpoJZHBXvNvxnamD8wNbFyMkhIWAisWP1PcYuRi4O
+        IYEdjBL9R+8wQSQkJP4vboKyhSXutxxhhSj6xihx9NAmVpAEm4CGxJpjh5hAEiICb5gkLu86
+        wQySYBZQk/h8dxkLiC0s4Crx6yJEnEVAVeLCou9gcV4BS4lDF64wQmyQl1jU8JsJIi4ocXLm
+        ExaIOfISzVtnM09g5JuFJDULSWoBI9MqRsnUguLc9NxiwwKjvNRyveLE3OLSvHS95PzcTYzg
+        qNDS2sG4Z9UHvUOMTByMhxglOJiVRHin7r2WKMSbklhZlVqUH19UmpNafIhRmoNFSZz3QtfJ
+        eCGB9MSS1OzU1ILUIpgsEwenVAPTIr6rbxfE8T3PObbL0SHncPo0yWt39O/8emazlK3vvJ7c
+        Ge91O3cYqUXLvvqj23iozJjjf+6jGtdDR9ekqitnbGV8z+m6z7jAMPTa174AEy7laR8bmwSK
+        Y7bqXm+x9UwtqWavPLaOT6JUcpp/18Fww4fLyyd8bVw3w4PN2NdK17rgc5+ayBmn83o+AXIl
+        a11vde9I5NJsKFxQvezDh333jXX+aobJdlzNqNOVqzPICNpw0nP1jkb3fdM93WI/fRStdJky
+        z/nOnMZfu5riXPfqXtbsM9ta2+v3oyLIZeHuhDWzmvw0n107rlAeHr9cbdmFW0+2srzqmNW7
+        uyX197PApKVifQ+4RJMigidO2K3EUpyRaKjFXFScCADYJSXj+QIAAA==
+X-CMS-MailID: 20220107080332epcas2p216d8123df110623b4287ebf6879f745f
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220107080332epcas2p216d8123df110623b4287ebf6879f745f
+References: <CGME20220107080332epcas2p216d8123df110623b4287ebf6879f745f@epcas2p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/01/07 0:32, John Garry wrote:
-> On 06/01/2022 13:03, Ajish.Koshy@microchip.com wrote:
->>>   only a specific vector and, also, why we check at all in
->>> an interrupt handler.
->> Here is my initial understanding so far based on the code
->> and data sheet
->>
->> 1. Controller has the capability to communicate
->> to the host about fatal error condition via configured
->> interrupt vector MSI/MSI-X.
->> 2. This capability is achieved by setting two fields
->>   a. Enable Controller Fatal error notification
->>      Dowrd 0x1C, Bit[0].
->>      1 - Enable; 0 - Disable
->>      Code: pm8001_ha->main_cfg_tbl.pm80xx_tbl.
->>      fatal_err_interrupt = 0x01;
->>   b. Fatal Error Interrupt Vector Dword 0x1C, bit[15:8]
->>      This parameter configures which interrupt vector
->>      is used to notify the host of the fatal error.
->>      Code: /* Update Fatal error interrupt vector */
->>      pm8001_ha->main_cfg_tbl.pm80xx_tbl.
->>      fatal_err_interrupt |=
->>      ((pm8001_ha->max_q_num - 1) << 8);
->>
->> Probably this will be the reason why we check
->> the vector in process_oq() for processing
->> controller fatal error
->>
->> if (vec == (pm8001_ha->max_q_num - 1)) {
->>   
->> Please do let me know if it helped in clarification.
->>
-> 
-> Sounds reasonable. And we only discover the issue for 8008/8009 now as 
-> we have that (pm8001_ha->max_q_num - 1) vector being used for standard IO.
-> 
-> So let me know of any other issue, otherwise I'll send a v2 with the 
-> coding style fixup.
+The Tactive time determine the waiting time before burst
+at hibern8 exit and is determined by H/W at linkup state
+However, in the case of samsung devices, guided host's Tactive time +100us
+for stability.
+If the HCI's Tactive time is equal or greater than the device, +100us should be set.
 
-And maybe add comments about the above so that the information does not get lost ?
+Change-Id: Ie9b502c69264d3e5931ee8b515388094441fa065
+Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> Thanks,
-> John
-
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 1049e41abd5b..460d2b440d2e 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7815,7 +7815,7 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
+ 	peer_pa_tactivate_us = peer_pa_tactivate *
+ 			     gran_to_us_table[peer_granularity - 1];
+ 
+-	if (pa_tactivate_us > peer_pa_tactivate_us) {
++	if (pa_tactivate_us >= peer_pa_tactivate_us) {
+ 		u32 new_peer_pa_tactivate;
+ 
+ 		new_peer_pa_tactivate = pa_tactivate_us /
 -- 
-Damien Le Moal
-Western Digital Research
+2.26.0
+
