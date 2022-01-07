@@ -2,135 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87461C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Jan 2022 09:54:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FD30C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Jan 2022 10:37:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346548AbiAGJy6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Jan 2022 04:54:58 -0500
-Received: from mailout4.samsung.com ([203.254.224.34]:43011 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237126AbiAGJy5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jan 2022 04:54:57 -0500
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220107095454epoutp0464ea31767eae560a0f2daf34cc5a0922~H9GLxgJte3119931199epoutp04O
-        for <linux-scsi@vger.kernel.org>; Fri,  7 Jan 2022 09:54:54 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220107095454epoutp0464ea31767eae560a0f2daf34cc5a0922~H9GLxgJte3119931199epoutp04O
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1641549295;
-        bh=0EUpvzWXJPRM0Kl1jaYy3rZSClH2Bw4XoaVDqebiRPQ=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=mDdC8POIGqyF4U4igFsHDkRf2syDG1WwYN8eE0Zq5LVT4rH9Sqltq8bCVb+/44rJu
-         K1JB0pNEqOF/Od/zJTxMEmmnKY+/dgGg0o5aJ19uAdHUPJDR1XHgrqm8dbldtMIeYz
-         z6JqSO2N7u7fWfqCrv+wL+WAm5w5XZgXdgoazDeQ=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20220107095453epcas2p1c06b86c0c701148537d7a09c7a66a292~H9GKwaxUU0991109911epcas2p1k;
-        Fri,  7 Jan 2022 09:54:53 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.99]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4JVdqc4ltkz4x9Py; Fri,  7 Jan
-        2022 09:54:52 +0000 (GMT)
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        DA.07.51767.CED08D16; Fri,  7 Jan 2022 18:54:52 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-        20220107095451epcas2p2d06b23e50cbd46e910532e2d9078c912~H9GI5LPY53119431194epcas2p2i;
-        Fri,  7 Jan 2022 09:54:51 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220107095451epsmtrp1e0ab28c947ac4d7c557b4ce11f03be7f~H9GI4ObQm1528415284epsmtrp1B;
-        Fri,  7 Jan 2022 09:54:51 +0000 (GMT)
-X-AuditID: b6c32a45-447ff7000000ca37-7c-61d80dec3783
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        03.0C.08738.BED08D16; Fri,  7 Jan 2022 18:54:51 +0900 (KST)
-Received: from rack03.dsn.sec.samsung.com (unknown [12.36.155.109]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20220107095451epsmtip244aebc901a71c08ef2e5019042e54a4b~H9GIsE-l21849418494epsmtip2k;
-        Fri,  7 Jan 2022 09:54:51 +0000 (GMT)
-From:   SEO HOYOUNG <hy50.seo@samsung.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org
-Cc:     SEO HOYOUNG <hy50.seo@samsung.com>
-Subject: [PATCH v2] scsi: ufs: modify Tactive time setting conditions
-Date:   Fri,  7 Jan 2022 06:39:24 +0900
-Message-Id: <20220106213924.186263-1-hy50.seo@samsung.com>
-X-Mailer: git-send-email 2.26.0
+        id S1346948AbiAGKg7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Jan 2022 05:36:59 -0500
+Received: from angie.orcam.me.uk ([78.133.224.34]:38658 "EHLO
+        angie.orcam.me.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1346805AbiAGKgu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jan 2022 05:36:50 -0500
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id 02B749200B3; Fri,  7 Jan 2022 11:36:46 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id F2A7B92009D;
+        Fri,  7 Jan 2022 10:36:46 +0000 (GMT)
+Date:   Fri, 7 Jan 2022 10:36:46 +0000 (GMT)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+cc:     Douglas Gilbert <dgilbert@interlog.com>,
+        Khalid Aziz <khalid@gonehiking.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Christoph Hellwig <hch@lst.de>, Nix <nix@esperi.org.uk>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] scsi: Set allocation length to 255 for ATA
+ Information VPD page
+In-Reply-To: <yq1lezty169.fsf@ca-mkp.ca.oracle.com>
+Message-ID: <alpine.DEB.2.21.2201070039040.56863@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2201020010540.56863@angie.orcam.me.uk> <alpine.DEB.2.21.2201020030130.56863@angie.orcam.me.uk> <d9eaa1f8-7abb-645b-d624-5069205c6983@interlog.com> <alpine.DEB.2.21.2201032017290.56863@angie.orcam.me.uk> <yq1tuek347m.fsf@ca-mkp.ca.oracle.com>
+ <alpine.DEB.2.21.2201032324230.56863@angie.orcam.me.uk> <yq1tuej1j22.fsf@ca-mkp.ca.oracle.com> <yq1lezty169.fsf@ca-mkp.ca.oracle.com>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrIJsWRmVeSWpSXmKPExsWy7bCmhe4b3huJBid2K1o8mLeNzWJv2wl2
-        i5c/r7JZHHzYyWIx7cNPZotP65exWqxe/IDFYtGNbUwWl3fNYbPovr6DzWL58X9MDtwel694
-        e1zu62XymLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2A91MARxR2TYZqYkpqUUKqXnJ+SmZ
-        eem2St7B8c7xpmYGhrqGlhbmSgp5ibmptkouPgG6bpk5QIcqKZQl5pQChQISi4uV9O1sivJL
-        S1IVMvKLS2yVUgtScgrMC/SKE3OLS/PS9fJSS6wMDQyMTIEKE7Izlt7oYS14yl5xrmsfcwPj
-        XrYuRk4OCQETiT19TUA2F4eQwA5Gia3L/zKBJIQEPjFKTJpSC5H4zCgx+coBJpiOx4sfMUIk
-        djFKbJj/iR3C+cEosb/rGSNIFZuAhsSaY4eYQBIiAt8YJRb/fQHWziygJvH57jIWEFtYwFVi
-        z5dLrCA2i4CqxM3+12A1vAJWEmv71rJArJOXWNTwGyouKHFy5hMWiDnyEs1bZzODLJAQ+Msu
-        0b97J9AgDiDHRWLRhyqIXmGJV8e3sEPYUhIv+9vYIeqbGSXWz5zDBOFMYZSY++wpK0SVscSs
-        Z+2MIIOYBTQl1u/Sh5ipLHHkFtRePomOw3/ZIcK8Eh1tQhCNShJn5t6GCktIHJydAxH2kJgy
-        ZzcrJERjJQ5/fsI4gVF+FpJnZiF5ZhbC2gWMzKsYxVILinPTU4uNCgzhkZqcn7uJEZxWtVx3
-        ME5++0HvECMTB+MhRgkOZiUR3ql7ryUK8aYkVlalFuXHF5XmpBYfYjQFBu9EZinR5HxgYs8r
-        iTc0sTQwMTMzNDcyNTBXEuf1StmQKCSQnliSmp2aWpBaBNPHxMEp1cDEwrzb+nOAgWmNyeSL
-        4d+j1j5h1RVSmfkkNphpmXTmdM15AuZ2ksylB1zY/dZ6Wtc4XWY+zpp+ZnoJ14vv+z5Ymu1+
-        LevPeHny59hjN+dMvRupHujJXmnzO+nGo3qu57qbFz36sF16r8mL/TM/c1i4nGStNVF4vmr6
-        b5m3FUs02BQUkidWnZx4NLriROFCp3vcWvukd8jWWuyRFW89yD2x2mvy0x2zNp4R7Oqv+TLn
-        w/8zj4ze7jsrIRK1Y+2vlyZNlX5qaSsOsU3peLzOze7VdaYDInd500SfSvhdXCfGx7GncfrS
-        aZNcbV6xftr6/bhxFBPHTvukXq+fGrnZnFI733AujnK997Z14rro2jolJZbijERDLeai4kQA
-        8cK0WjQEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrELMWRmVeSWpSXmKPExsWy7bCSvO5r3huJBt035CwezNvGZrG37QS7
-        xcufV9ksDj7sZLGY9uEns8Wn9ctYLVYvfsBisejGNiaLy7vmsFl0X9/BZrH8+D8mB26Py1e8
-        PS739TJ5TFh0gNHj+/oONo+PT2+xePRtWcXo8XmTnEf7gW6mAI4oLpuU1JzMstQifbsEroyl
-        N3pYC56yV5zr2sfcwLiXrYuRk0NCwETi8eJHjF2MXBxCAjsYJR50dLNAJCQk/i9uYoKwhSXu
-        txxhhSj6xiix5c9vsASbgIbEmmOHmEASIgJNTBIbPt8H62YWUJP4fHcZmC0s4Cqx58slVhCb
-        RUBV4mb/a7BmXgEribV9a6G2yUssavgNFReUODnzCdQceYnmrbOZJzDyzUKSmoUktYCRaRWj
-        ZGpBcW56brFhgVFearlecWJucWleul5yfu4mRnCwa2ntYNyz6oPeIUYmDsZDjBIczEoivFP3
-        XksU4k1JrKxKLcqPLyrNSS0+xCjNwaIkznuh62S8kEB6YklqdmpqQWoRTJaJg1Oqgals4u/L
-        u+/df3uwo+69luHDNz2Rxwrc1FyOesTdlLpcUrbh8gXmuVLrduU5iaj7uYnyhF1vV1jAm/3D
-        kvPJRIPwpZc35klc7WL1P3733Tw/U7MHi5TW58x83LhGq+JE2cP5fUFyj5Pe7ImYdug316Hr
-        eeoORtdrV2xYcXPvgZQXQfbbrITFLSMW3I9wEFr2OMdrdtBs/4qYG+tfxwc98rpySzn2/J/i
-        vHkJvEUxvW+vLOTn8qnPPX1sXq3Imy+yboLihwWFvrjNnqZ0JqFZ4Jy857bFr3ycZu5Z/Hz/
-        pvcWH9zc5rzTdOm/WLk56PC7l6JsHTz2h/ZOehX4yfXK5DUdU7+ZHN79V1jvT6fJ9uKXSizF
-        GYmGWsxFxYkAz5nEBuUCAAA=
-X-CMS-MailID: 20220107095451epcas2p2d06b23e50cbd46e910532e2d9078c912
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220107095451epcas2p2d06b23e50cbd46e910532e2d9078c912
-References: <CGME20220107095451epcas2p2d06b23e50cbd46e910532e2d9078c912@epcas2p2.samsung.com>
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The Tactive time determine the waiting time before burst
-at hibern8 exit and is determined by H/W at linkup state
-However, in the case of samsung devices, guided host's Tactive time
-+100us for stability.
-If the HCI's Tactive time is equal or greater than the device,
-+100us should be set.
+Martin,
 
-Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> > Oh, you'll also need a follow-on patch that uses the cached ATA
+> > Information VPD page. I'll try to get my full series out today.
+> 
+> I would really appreciate it if you would be willing give this a whirl:
+> 
+> 	https://git.kernel.org/mkp/h/5.18/discovery
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1049e41abd5b..460d2b440d2e 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7815,7 +7815,7 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
- 	peer_pa_tactivate_us = peer_pa_tactivate *
- 			     gran_to_us_table[peer_granularity - 1];
- 
--	if (pa_tactivate_us > peer_pa_tactivate_us) {
-+	if (pa_tactivate_us >= peer_pa_tactivate_us) {
- 		u32 new_peer_pa_tactivate;
- 
- 		new_peer_pa_tactivate = pa_tactivate_us /
--- 
-2.26.0
+ I have tried your tree and it does not clobber the HBA anymore, however 
+partitions (of the MS-DOS type) are not recognised with any of the disks 
+including one holding the root device, so the system fails to mount the 
+root filesystem and therefore does not complete booting:
 
+VFS: Cannot open root device "802" or unknown-block(8,2): error -6
+Please append a correct "root=" boot option; here are the available partitions:
+0800        17921835 sda
+ driver: sd
+0810        35843686 sdb
+ driver: sd
+0830          239816 sdd
+ driver: sd
+0b00         1048575 sr0
+ driver: sr
+Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(8,2)
+
+-- is that expected?
+
+ Here's the relevant part of the boot log:
+
+scsi host0: BusLogic BT-958
+scsi 0:0:0:0: Direct-Access     IBM      DDYS-T18350M     SA5A PQ: 0 ANSI: 3
+scsi 0:0:1:0: Direct-Access     SEAGATE  ST336607LW       0006 PQ: 0 ANSI: 3
+scsi 0:0:4:0: Sequential-Access HP       C5683A           C908 PQ: 0 ANSI: 2
+scsi 0:0:5:0: Direct-Access     IOMEGA   ZIP 100          E.08 PQ: 0 ANSI: 2
+st: Version 20160209, fixed bufsize 32768, s/g segs 256
+st 0:0:4:0: Attached scsi tape st0
+st 0:0:4:0: st0: try direct i/o: yes (alignment 4 B)
+sd 0:0:0:0: [sda] 35843670 512-byte logical blocks: (18.4 GB/17.1 GiB)
+sd 0:0:5:0: [sdc] Media removed, stopped polling
+sd 0:0:1:0: [sdb] 71687372 512-byte logical blocks: (36.7 GB/34.2 GiB)
+sd 0:0:5:0: [sdc] Attached SCSI removable disk
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:1:0: [sdb] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: cb 00 00 08
+sd 0:0:1:0: [sdb] Mode Sense: ab 00 10 08
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sda: detected capacity change from 0 to 35843670
+sd 0:0:0:0: [sda] Attached SCSI disk
+sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA
+sdb: detected capacity change from 0 to 71687372
+sd 0:0:1:0: [sdb] Attached SCSI disk
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+sd 0:0:1:0: Attached scsi generic sg1 type 0
+st 0:0:4:0: Attached scsi generic sg2 type 1
+sd 0:0:5:0: Attached scsi generic sg3 type 0
+
+while upon a succesful boot with the upstream kernel (and my patch(es) 
+applied) it looks like:
+
+scsi host0: BusLogic BT-958
+scsi 0:0:0:0: Direct-Access     IBM      DDYS-T18350M     SA5A PQ: 0 ANSI: 3
+scsi 0:0:1:0: Direct-Access     SEAGATE  ST336607LW       0006 PQ: 0 ANSI: 3
+scsi 0:0:4:0: Sequential-Access HP       C5683A           C908 PQ: 0 ANSI: 2
+scsi 0:0:5:0: Direct-Access     IOMEGA   ZIP 100          E.08 PQ: 0 ANSI: 2
+st: Version 20160209, fixed bufsize 32768, s/g segs 256
+st 0:0:4:0: Attached scsi tape st0
+st 0:0:4:0: st0: try direct i/o: yes (alignment 4 B)
+sd 0:0:0:0: [sda] 35843670 512-byte logical blocks: (18.4 GB/17.1 GiB)
+sd 0:0:5:0: [sdc] Media removed, stopped polling
+sd 0:0:1:0: [sdb] 71687372 512-byte logical blocks: (36.7 GB/34.2 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:1:0: [sdb] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: cb 00 00 08
+sd 0:0:1:0: [sdb] Mode Sense: ab 00 10 08
+sd 0:0:5:0: [sdc] Attached SCSI removable disk
+sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdb: sdb1 sdb2
+sd 0:0:1:0: [sdb] Attached SCSI disk
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 sda10 >
+sd 0:0:0:0: [sda] Attached SCSI disk
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+sd 0:0:1:0: Attached scsi generic sg1 type 0
+st 0:0:4:0: Attached scsi generic sg2 type 1
+sd 0:0:5:0: Attached scsi generic sg3 type 0
+
+The failure is not specific to this HBA as `hdd' is a PATA device and it 
+doesn't get its partitions scanned either.
+
+ There's no significant difference between the two .config files:
+
+--- ../linux-macro/.config
++++ .config
+@@ -1,6 +1,6 @@
+ #
+ # Automatically generated file; DO NOT EDIT.
+-# Linux/i386 5.16.0-rc7 Kernel Configuration
++# Linux/i386 5.16.0-rc1 Kernel Configuration
+ #
+ CONFIG_CC_VERSION_TEXT="i386-linux-gnu-gcc (GCC) 11.0.0 20200919 (experimental)"
+ CONFIG_CC_IS_GCC=y
+@@ -518,7 +518,6 @@
+ CONFIG_HAVE_ARCH_MMAP_RND_BITS=y
+ CONFIG_HAVE_EXIT_THREAD=y
+ CONFIG_ARCH_MMAP_RND_BITS=8
+-CONFIG_PAGE_SIZE_LESS_THAN_64KB=y
+ CONFIG_ISA_BUS_API=y
+ CONFIG_CLONE_BACKWARDS=y
+ CONFIG_OLD_SIGSUSPEND3=y
+@@ -1061,7 +1060,6 @@
+ # CONFIG_SCSI_MPI3MR is not set
+ # CONFIG_SCSI_SMARTPQI is not set
+ # CONFIG_SCSI_UFSHCD is not set
+-# CONFIG_SCSI_UFS_HWMON is not set
+ # CONFIG_SCSI_HPTIOP is not set
+ CONFIG_SCSI_BUSLOGIC=y
+ # CONFIG_SCSI_FLASHPOINT is not set
+
+ Shall I try anything else?
+
+  Maciej
