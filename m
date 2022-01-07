@@ -2,134 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFA74C4167D
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Jan 2022 17:16:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DB88C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Jan 2022 19:30:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348537AbiAGRQs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Jan 2022 12:16:48 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4373 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348501AbiAGRQp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jan 2022 12:16:45 -0500
-Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JVqWg6H9Pz67ZhV;
-        Sat,  8 Jan 2022 01:11:43 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Fri, 7 Jan 2022 18:16:40 +0100
-Received: from [10.47.89.210] (10.47.89.210) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Fri, 7 Jan
- 2022 17:16:37 +0000
-Subject: Re: [RFC 01/32] Kconfig: introduce and depend on LEGACY_PCI
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     Niklas Schnelle <schnelle@linux.ibm.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Hans Verkuil <hverkuil-cisco@xs4all.nl>,
-        Ettore Chimenti <ek5.chimenti@gmail.com>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-        Arnd Bergmann <arnd@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Nick Hu <nickhu@andestech.com>,
-        Greentime Hu <green.hu@gmail.com>,
-        Vincent Chen <deanbo422@gmail.com>,
-        "Paul Walmsley" <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
-        "Damien Le Moal" <damien.lemoal@opensource.wdc.com>,
-        Ian Abbott <abbotti@mev.co.uk>,
-        "H Hartley Sweeten" <hsweeten@visionengravers.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Karsten Keil <isdn@linux-pingi.de>,
-        "Sathya Prakash" <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Michael Grzeschik <m.grzeschik@pengutronix.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        "Jakub Kicinski" <kuba@kernel.org>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        Kalle Valo <kvalo@kernel.org>, Jouni Malinen <j@w1.fi>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        Mark Brown <broonie@kernel.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        "Teddy Wang" <teddy.wang@siliconmotion.com>,
-        Forest Bond <forest@alittletooquiet.net>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        "Wim Van Sebroeck" <wim@linux-watchdog.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        "Takashi Iwai" <tiwai@suse.com>, <linux-kernel@vger.kernel.org>,
-        <linux-arch@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-riscv@lists.infradead.org>, <linux-csky@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <linux-gpio@vger.kernel.org>,
-        <linux-hwmon@vger.kernel.org>, <linux-i2c@vger.kernel.org>,
-        <linux-input@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-media@vger.kernel.org>, <MPT-FusionLinux.pdl@broadcom.com>,
-        <linux-scsi@vger.kernel.org>, <intel-wired-lan@lists.osuosl.org>,
-        <linux-wireless@vger.kernel.org>, <megaraidlinux.pdl@broadcom.com>,
-        <linux-spi@vger.kernel.org>, <linux-fbdev@vger.kernel.org>,
-        <linux-serial@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-        <linux-watchdog@vger.kernel.org>
-References: <20220106181409.GA297735@bhelgaas>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <b0e772ed-4c21-3d5a-d890-aba05c41904c@huawei.com>
-Date:   Fri, 7 Jan 2022 17:16:23 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S232496AbiAGTau (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Jan 2022 14:30:50 -0500
+Received: from mx.cs.msu.ru ([188.44.42.42]:53104 "EHLO mail.cs.msu.ru"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S232106AbiAGTar (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 7 Jan 2022 14:30:47 -0500
+X-Greylist: delayed 515 seconds by postgrey-1.27 at vger.kernel.org; Fri, 07 Jan 2022 14:30:44 EST
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cs.msu.ru;
+        s=dkim; h=Subject:In-Reply-To:Content-Type:MIME-Version:References:Message-ID
+        :Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=CAj6ZvCGsPU1I8LtRSp3RhetGGO18H0jd7c6GnJn/AI=; b=Tmtwzq882fuqOFkgczsh/hVTJV
+        vjYXVLuJSb3ebjGHUX/IMLewO/j7T7pru2BtNUWx1U0M9+uf4naJNbstc4a4hV627q9Fmvp2M8WVB
+        rrPobMbnO55k1E282B+ZDvv2xnqKt+6vi2dm/N58n2PoB9yvml12ZZi653qVVPbFvBrQ1N3Cb1Mlt
+        VpFJqmRvAKdp7QhJGXuWQmopkT9Zg4uypDmWsHhYSHIs2H59UUqr6Mb685+Z5ze6ULlPQQej9nGSV
+        Up77CfcM/pPZTa0PvLewaq5PkmdXAK939R648+o8vCCb1GgM/jYykm3sn1Pe3d2AL16FSeIumeX9/
+        Rgr2mlbw==;
+Received: from [37.204.119.143] (port=58124 helo=cello)
+        by mail.cs.msu.ru with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+        (Exim 4.94.2 (FreeBSD))
+        (envelope-from <ar@cs.msu.ru>)
+        id 1n5uvJ-00092m-Js; Fri, 07 Jan 2022 22:29:15 +0300
+Date:   Fri, 7 Jan 2022 22:29:12 +0300
+From:   Arseny Maslennikov <ar@cs.msu.ru>
+To:     Walt Drummond <walt@drummond.us>
+Cc:     Theodore Ts'o <tytso@mit.edu>,
+        "Eric W. Biederman" <ebiederm@xmission.com>, aacraid@microsemi.com,
+        viro@zeniv.linux.org.uk, anna.schumaker@netapp.com, arnd@arndb.de,
+        bsegall@google.com, bp@alien8.de, chuck.lever@oracle.com,
+        bristot@redhat.com, dave.hansen@linux.intel.com,
+        dwmw2@infradead.org, dietmar.eggemann@arm.com, dinguyen@kernel.org,
+        geert@linux-m68k.org, gregkh@linuxfoundation.org, hpa@zytor.com,
+        idryomov@gmail.com, mingo@redhat.com, yzaikin@google.com,
+        ink@jurassic.park.msu.ru, jejb@linux.ibm.com, jmorris@namei.org,
+        bfields@fieldses.org, jlayton@kernel.org, jirislaby@kernel.org,
+        john.johansen@canonical.com, juri.lelli@redhat.com,
+        keescook@chromium.org, mcgrof@kernel.org,
+        martin.petersen@oracle.com, mattst88@gmail.com, mgorman@suse.de,
+        oleg@redhat.com, pbonzini@redhat.com, peterz@infradead.org,
+        rth@twiddle.net, richard@nod.at, serge@hallyn.com,
+        rostedt@goodmis.org, tglx@linutronix.de,
+        trond.myklebust@hammerspace.com, vincent.guittot@linaro.org,
+        x86@kernel.org, linux-kernel@vger.kernel.org,
+        ceph-devel@vger.kernel.org, kvm@vger.kernel.org,
+        linux-alpha@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-m68k@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org
+Message-ID: <YdiUiHAhLyfgpvVY@cello>
+References: <20220103181956.983342-1-walt@drummond.us>
+ <87iluzidod.fsf@email.froward.int.ebiederm.org>
+ <YdSzjPbVDVGKT4km@mit.edu>
+ <87pmp79mxl.fsf@email.froward.int.ebiederm.org>
+ <YdTI16ZxFFNco7rH@mit.edu>
+ <CADCN6nzT-Dw-AabtwWrfVRDd5HzMS3EOy8WkeomicJF07nQyoA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20220106181409.GA297735@bhelgaas>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.89.210]
-X-ClientProxiedBy: lhreml745-chm.china.huawei.com (10.201.108.195) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="jM/2AY6iSqMbsk1G"
+Content-Disposition: inline
+In-Reply-To: <CADCN6nzT-Dw-AabtwWrfVRDd5HzMS3EOy8WkeomicJF07nQyoA@mail.gmail.com>
+OpenPGP: url=http://grep.cs.msu.ru/~ar/pgp-key.asc
+X-SA-Exim-Connect-IP: 37.204.119.143
+X-SA-Exim-Mail-From: ar@cs.msu.ru
+Subject: Re: [RFC PATCH 0/8] signals: Support more than 64 signals
+X-SA-Exim-Version: 4.2.1
+X-SA-Exim-Scanned: No (on mail.cs.msu.ru); Unknown failure
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 06/01/2022 18:14, Bjorn Helgaas wrote:
->> That driver would prob not be used on systems which does not support PIO,
->> and so could have a HAS_IOPORT dependency. But it is not strictly necessary.
-> I don't want the path of "this driver isn't needed because the device
-> is unlikely to be used on this arch."
 
-Sure, that was just a one off example. As I mentioned before, I think 
-that Arnd already did most of the ifdeffery work, but it was not 
-included in this series.
+--jM/2AY6iSqMbsk1G
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> 
-> Maybe it's not_always_  possible, but if the device can be plugged
-> into the platform, I think we should be able to build the driver for
-> it.
-> 
-> If the device requires I/O port space and the platform doesn't support
-> it, the PCI core or the driver should detect that and give a useful
-> diagnostic.
-> 
+On Tue, Jan 04, 2022 at 02:31:44PM -0800, Walt Drummond wrote:
+> The only standard tools that support SIGINFO are sleep, dd and ping,
+> (and kill, for obvious reasons) so it's not like there's a vast hole
+> in the tooling or something, nor is there a large legacy software base
+> just waiting for SIGINFO to appear.   So while I very much enjoyed
+> figuring out how to make SIGINFO work ...
 
-I'm not sure what the driver can say apart from -ENODEV. Or IO port 
-management in resource.c could warn for requesting IO port region when 
-it's unsupported.
+As far as I recall, GNU make on *BSD does support SIGINFO (Not a
+standard tool, but obviously an established one).
 
-Anyway, this same conversion was had with Linus before I got involved. 
-If you think it is worth discussing again then I suppose the authors 
-here need to gain consensus.
+The developers of strace have expressed interest in SIGINFO support
+to print tracer status messages (unfortunately, not on a public list).
+Computational software can use this instead of stderr progress spam, if
+run in an interactive fashion on a terminal, as it frequently is. There
+is a user base, it's just not very vocal on kernel lists. :)
 
-Thanks,
-John
+--jM/2AY6iSqMbsk1G
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEE56JD3UKTLEu/ddrm9dQjyAYL01AFAmHYlIMACgkQ9dQjyAYL
+01A2JA/+L9JwmjJHTVt97zLB/gp/798jHIH5xpSIqAGns8OfFkzQ95dxlpb2U9vw
+QnNRixTQzfe+GISVL0FKMOQnAodV/FiSCGQU3ebudcPQXtrGtYHUT8Ijz9WL8+pR
+LEbZvDDW4JT2N8sGVcsiAtSER9kHRUpdNBPCdIxURmQf0Fgjj16cYV/cr3j8NQpw
+uXKAulKoHIWjD84jc1douEnwo6Eij7QA7nZ1N4PLesZ6cdPxLpKYMR7bWbf9r5Fd
+B6C8jKZKl+eETWJx7ECQ/z2BBeUNw1bwUK8F0MgF+Kb01V29ouGaB2eUP4JhBH1b
+zBhEM+N1dYjc3gzDDTJHURS0lm9Pzcg1Dj4nRYVEYbddU3wNd/kYPQIk+BmWoUH8
+h6xtMYCT3k+hL6Y59LVXra23PpktJljTFtMI8DXYmuJS+yy+dV7g1rn4Ui9FmF7B
+UmI4khTwZV2TQ1C0LsSuzwkBm71S27ziqmKVTci0hmzEFalls/Mr2rAP7dSwK4FE
+3kjQxOPKuiSgwV2+Odw4M6JQKChplAVOy6dzr8QIq3ULzaMoZ4LxX4JhvqvaK/0w
+vqRxoJ/OmC/pbHdVM/h7OnsS0t67UnlO8zJwuOAn03S7mpo67HZ/xKHCsJctF4Ca
+cwRnCVEeiYv1kjA2YEbjg9uohTtnfysNsoVA+rE7TNEqeWb4r1c=
+=ueZJ
+-----END PGP SIGNATURE-----
+
+--jM/2AY6iSqMbsk1G--
