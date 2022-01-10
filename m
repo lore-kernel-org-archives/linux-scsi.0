@@ -2,76 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57890C43217
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 22:05:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAE60C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 22:05:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345163AbiAJWFD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Jan 2022 17:05:03 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:28940 "EHLO
+        id S1345196AbiAJWFH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jan 2022 17:05:07 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:35276 "EHLO
         mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1345157AbiAJWE6 (ORCPT
+        by vger.kernel.org with ESMTP id S1345176AbiAJWFB (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Jan 2022 17:04:58 -0500
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20AJlelZ021735;
-        Mon, 10 Jan 2022 22:04:54 GMT
+        Mon, 10 Jan 2022 17:05:01 -0500
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20AJlXia026175;
+        Mon, 10 Jan 2022 22:04:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=FC/fHcE+YZOPK3IoUVnYLEpKAYyryx34fbjLUOzUG2E=;
- b=oQZv82MgqlVR6HBatObO/pSmC5l3F8kwaPXzYQpY+jKvvtzulCPMJDjqeZfSJm9vRIfy
- 0FP4eYTyuNOFjmEr8IgTY2iKjtnr3WQaIDCCji7uSQUmVgXO1KzOiRrJ+beomhhPlM4A
- 3DdWyI0a6yRQOqL7iALoZOjnJ3I4SlW/UfOVwRxuHuqePURMEM4G9LY28RLPB8G0ecBJ
- fPjTGqQKIYrEXFFY8IeO5S+DdRDGD5mxHm8CwXHn/WayzurQaYVY/3cajVUimgYpxi1x
- uURQsLNsevxRyvhwN2cC4QE0HPrT+uj4DiwstquMypDoMQtJW/7LeqiccEpZIMdr14Ji SA== 
+ bh=4in3AMt3jaCUmPeKg8seTKw1eAv3x+yzF7EJj+rf53M=;
+ b=PFaMcr7OaVJA5SF6f2IHSpRInJe/i2XPc9t+zcMKs1FaQlkYG/9PwswIjLk+GnBBvwZH
+ XuBeA5W5raaPTduuf53zX+3ytT/y6gekP+6mx4nG4nFFNpy7EQsue4mqAs1ncyeUlcJT
+ Dht+TINdfGLFSdYErZgbIy1t2ejKHBCBuW7lLK1j7BOu02aBF5yqKXk2oldo1BcyLUES
+ SnYOwHY3LP6kTky53kBNi2ammVrnePTzvdCnaOyMN2TDI36Lg3qcQlzDT26kfoTfoSYq
+ xpDgMpn1HkVGRZ/Jh19nS3/n2WBMvTgu5KqSYEouk8cO0dyiB8u2lkbPJZv2629a1WF4 /Q== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dgmk99hhs-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dgjtg9svw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Jan 2022 22:04:54 +0000
+        Mon, 10 Jan 2022 22:04:56 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20ALtvSD138985;
-        Mon, 10 Jan 2022 22:04:53 GMT
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20ALtvFV138983;
+        Mon, 10 Jan 2022 22:04:55 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3020.oracle.com with ESMTP id 3df2e3vqx5-1
+        by aserp3020.oracle.com with ESMTP id 3df2e3vqyn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Jan 2022 22:04:53 +0000
+        Mon, 10 Jan 2022 22:04:55 +0000
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20AM4iCC174082;
-        Mon, 10 Jan 2022 22:04:53 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20AM4iCG174082;
+        Mon, 10 Jan 2022 22:04:55 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by aserp3020.oracle.com with ESMTP id 3df2e3vqp8-8;
-        Mon, 10 Jan 2022 22:04:52 +0000
+        by aserp3020.oracle.com with ESMTP id 3df2e3vqp8-10;
+        Mon, 10 Jan 2022 22:04:54 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
+To:     Yang Li <yang.lee@linux.alibaba.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Subject: Re: [PATCH] scsi: aacraid: fix spelling of "its"
-Date:   Mon, 10 Jan 2022 17:04:40 -0500
-Message-Id: <164182835584.13635.17053434981605031244.b4-ty@oracle.com>
+        kashyap.desai@broadcom.com, linux-scsi@vger.kernel.org,
+        jejb@linux.ibm.com, sumit.saxena@broadcom.com,
+        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        mpi3mr-linuxdrv.pdl@broadcom.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -next] scsi: mpi3mr: Fix formatting problems in some kernel-doc comments
+Date:   Mon, 10 Jan 2022 17:04:42 -0500
+Message-Id: <164182835585.13635.8928543266313865543.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20211223061119.18304-1-rdunlap@infradead.org>
-References: <20211223061119.18304-1-rdunlap@infradead.org>
+In-Reply-To: <20211231082350.19315-1-yang.lee@linux.alibaba.com>
+References: <20211231082350.19315-1-yang.lee@linux.alibaba.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: z-mznXZxQhdifS1WHMgMAK6DwVpt1DSa
-X-Proofpoint-ORIG-GUID: z-mznXZxQhdifS1WHMgMAK6DwVpt1DSa
+X-Proofpoint-GUID: I6zea8lgF9fdojf7dHMGCrY_oq1XVq7S
+X-Proofpoint-ORIG-GUID: I6zea8lgF9fdojf7dHMGCrY_oq1XVq7S
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 22 Dec 2021 22:11:19 -0800, Randy Dunlap wrote:
+On Fri, 31 Dec 2021 16:23:50 +0800, Yang Li wrote:
 
-> Use the possessive "its" instead of the contraction "it's" in
-> user messages.
+> Remove some warnings found by running scripts/kernel-doc,
+> which is caused by using 'make W=1'.
+> drivers/scsi/mpi3mr/mpi3mr_fw.c:2188: warning: Function parameter or
+> member 'reason_code' not described in 'mpi3mr_check_rh_fault_ioc'
+> drivers/scsi/mpi3mr/mpi3mr_fw.c:3650: warning: Excess function parameter
+> 'init_type' description in 'mpi3mr_init_ioc'
+> drivers/scsi/mpi3mr/mpi3mr_fw.c:4177: warning: bad line
 > 
-> 
+> [...]
 
 Applied to 5.17/scsi-queue, thanks!
 
-[1/1] scsi: aacraid: fix spelling of "its"
-      https://git.kernel.org/mkp/scsi/c/4d516e495235
+[1/1] scsi: mpi3mr: Fix formatting problems in some kernel-doc comments
+      https://git.kernel.org/mkp/scsi/c/3bb3c24e268a
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
