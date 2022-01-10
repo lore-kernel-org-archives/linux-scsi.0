@@ -2,64 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C3BAC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 16:36:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB80C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 16:44:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237563AbiAJQgK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Jan 2022 11:36:10 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4378 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237564AbiAJQgK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2022 11:36:10 -0500
-Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JXfX45CW0z68BWh;
-        Tue, 11 Jan 2022 00:33:24 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Mon, 10 Jan 2022 17:36:07 +0100
-Received: from [10.47.24.251] (10.47.24.251) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Mon, 10 Jan
- 2022 16:36:07 +0000
-Subject: Re: [bug report] scsi: hisi_sas: Fix some issues related to
- asd_sas_port->phy_list
-To:     Dan Carpenter <dan.carpenter@oracle.com>,
-        <chenxiang66@hisilicon.com>
-CC:     <linux-scsi@vger.kernel.org>
-References: <20220110125428.GA5230@kili>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <eca7784c-2c05-9c8e-e563-610aafbd1b17@huawei.com>
-Date:   Mon, 10 Jan 2022 16:35:51 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S237665AbiAJQoX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jan 2022 11:44:23 -0500
+Received: from verein.lst.de ([213.95.11.211]:39328 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231379AbiAJQoV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 10 Jan 2022 11:44:21 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 1AEF868BEB; Mon, 10 Jan 2022 17:44:18 +0100 (CET)
+Date:   Mon, 10 Jan 2022 17:44:17 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     hch@lst.de, "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Hannes Reinecke <hare@suse.com>, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: pmcraid: Fix memory allocation in
+ 'pmcraid_alloc_sglist()'
+Message-ID: <20220110164417.GA7133@lst.de>
+References: <11a1bc98501de37baa5bcd10b61136f6e450b82e.1641816080.git.christophe.jaillet@wanadoo.fr>
 MIME-Version: 1.0
-In-Reply-To: <20220110125428.GA5230@kili>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.24.251]
-X-ClientProxiedBy: lhreml743-chm.china.huawei.com (10.201.108.193) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <11a1bc98501de37baa5bcd10b61136f6e450b82e.1641816080.git.christophe.jaillet@wanadoo.fr>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/01/2022 12:54, Dan Carpenter wrote:
-> Hello Xiang Chen,
+On Mon, Jan 10, 2022 at 01:02:53PM +0100, Christophe JAILLET wrote:
+> When the scatter list is allocated in 'pmcraid_alloc_sglist()', the
+> corresponding pointer should be stored in 'scatterlist' within the
+> 'pmcraid_sglist' structure. Otherwise, 'scatterlist' is NULL.
 > 
-> The patch 29e2bac87421: "scsi: hisi_sas: Fix some issues related to
-> asd_sas_port->phy_list" from Dec 20, 2021, leads to the following
-> Smatch static checker warning:
+> This leads to a potential memory leak and NULL pointer dereference.
 > 
-> 	drivers/scsi/hisi_sas/hisi_sas_main.c:1536 hisi_sas_send_ata_reset_each_phy()
-> 	error: potentially dereferencing uninitialized 'sas_phy'.
+> Fixes: ed4414cef2ad ("scsi: pmcraid: Use sgl_alloc_order() and sgl_free_order()")
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> ---
+> This patch is completely speculative and untested.
+> 
+> Should it be correct, I think that their should be some trouble somewhere.
+> Either NULL pointer dereference or incorrect behavior.
+> The patch that introduced this potential bug is from 2018-02. So, this
+> should have been spotted earlier.
+> 
+> So unless this driver is mostly unused, this looks odd to me.
+> Feedback appreciated.
 
-Hi Dan,
+The whole passthrough ioctl path looks completely broken to me.  For
+example it dma maps the scatterlist and after that copies data to it,
+which is prohibited by the DMA API contract.
 
-Thanks for the notice. This should now be fixed on Martin's 5.17 staging 
-branch. 
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=5.17/scsi-staging&id=5d9224fb076e9a2023e0b06d6a164d644612c0c0
+So I'd be tempted to just remove the PMCRAID_PASSTHROUGH_IOCTL ioctl
+implementation entirely, and if users for it do pop up we should
+reimplement it using the proper block layer request mapping helpers.
 
-Thanks!
+If for some reason we don't want that and just fix the obvious
+problem without a way to test for it, your patch looks good to me:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
