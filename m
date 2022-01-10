@@ -2,89 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96621C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 22:05:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58617C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 22:05:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345172AbiAJWFA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Jan 2022 17:05:00 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:23724 "EHLO
+        id S1345155AbiAJWFB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jan 2022 17:05:01 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:24564 "EHLO
         mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1345138AbiAJWE4 (ORCPT
+        by vger.kernel.org with ESMTP id S1345143AbiAJWE4 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 10 Jan 2022 17:04:56 -0500
 Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20AJlWkx020711;
-        Mon, 10 Jan 2022 22:04:53 GMT
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20AJlela021735;
+        Mon, 10 Jan 2022 22:04:55 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=N7Dxf+DcwX9/Y/Jtfs2m8P2aqSA45sl7OZmw324ZcVA=;
- b=E885sKdeaP/MrpylFeeO9IYgaE04mVwhv9KPEN6yflg9LGTC1+ntpkRfR5ZAlHr3IBMf
- 3Wl21UuOOfsBMqgen3Yfbyb3Y5XIRGOH8UkotK8PJmgOyKFbUJXwAkM4a6lHhlz397b+
- DVsvd9ARnJmelehoNHRdbNesb36QrQmDMhUuND6qlkgPEvwHNuaEJqnTQ1CTcrreuavY
- STT/A4RSqdi4dySsciu5w4I+9eywhpS4yHm76mWPfvt/mM8+Rtu7awbOMsoIOYO9rcZI
- Y7mr8MUC3dUJ6S8Dx6shBEdVWPMx9OLZu5FRfxfDHcGryRUgbyAtkOLXP78tEodaq3Qi cg== 
+ bh=gQQabLp6+mBl1RSvdIlzoe4vLiWSTWdX5a8ghYEimxU=;
+ b=MGwEWJel7pkIWfJwReAFQVPO3Y+NeGXjsXG9d0TTyL0WqvJKT++vdoubzq6h0Hb6pYYX
+ Xv1piNg1q6DW8KJvW4HDuJWNXz1zxroGxti7FzrO0lLwHJf8mY6q1N2tSaDAZUA5GVTi
+ O+guD5uJIDmpH4uc4chaFYyY1ZR7cH4QcKnnGh/YqEx9RqP3Np/hWl3Glrws94H9ut8T
+ 6CnpE41ptZCyz8mI0zpwxPCwwyLhv9oHUn/idfCCeCzXRL7yKINITr0MV09qnYpr04eu
+ 9fO9RhrcUtX6wTuHAmQaKTRGkwLScv3Y1M0zyB2wZ0i3SeheZhlSOBjXQGYU62Wcdh5Q KA== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dgmk99hhq-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dgmk99hht-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Jan 2022 22:04:53 +0000
+        Mon, 10 Jan 2022 22:04:55 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20ALtw6V139092;
-        Mon, 10 Jan 2022 22:04:52 GMT
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20ALtvjc138957;
+        Mon, 10 Jan 2022 22:04:54 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3020.oracle.com with ESMTP id 3df2e3vqwd-1
+        by aserp3020.oracle.com with ESMTP id 3df2e3vqxn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Jan 2022 22:04:52 +0000
+        Mon, 10 Jan 2022 22:04:54 +0000
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20AM4iCA174082;
-        Mon, 10 Jan 2022 22:04:52 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20AM4iCE174082;
+        Mon, 10 Jan 2022 22:04:53 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by aserp3020.oracle.com with ESMTP id 3df2e3vqp8-7;
-        Mon, 10 Jan 2022 22:04:51 +0000
+        by aserp3020.oracle.com with ESMTP id 3df2e3vqp8-9;
+        Mon, 10 Jan 2022 22:04:53 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Kees Cook <keescook@chromium.org>,
-        Kashyap Desai <kashyap.desai@broadcom.com>
+To:     linux-scsi@vger.kernel.org,
+        Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-hardening@vger.kernel.org,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        megaraidlinux.pdl@broadcom.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH][RESEND] scsi: megaraid: Avoid mismatched storage type sizes
-Date:   Mon, 10 Jan 2022 17:04:39 -0500
-Message-Id: <164182835586.13635.12443651708409705777.b4-ty@oracle.com>
+        Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com
+Subject: Re: [PATCH] mpt3sas: Update Persistent Trigger Pages from SysFs interface.
+Date:   Mon, 10 Jan 2022 17:04:41 -0500
+Message-Id: <164182835584.13635.6581726885981924375.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220105173633.2421129-1-keescook@chromium.org>
-References: <20220105173633.2421129-1-keescook@chromium.org>
+In-Reply-To: <20211227053055.289537-1-suganath-prabu.subramani@broadcom.com>
+References: <20211227053055.289537-1-suganath-prabu.subramani@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: wYHm0wyjssySoI76BHzSt0AUqnoe7zVd
-X-Proofpoint-ORIG-GUID: wYHm0wyjssySoI76BHzSt0AUqnoe7zVd
+X-Proofpoint-GUID: coGjLpDMbhUTRxZwLiP2u8T5y0lxBRXP
+X-Proofpoint-ORIG-GUID: coGjLpDMbhUTRxZwLiP2u8T5y0lxBRXP
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 5 Jan 2022 09:36:33 -0800, Kees Cook wrote:
+On Mon, 27 Dec 2021 11:00:55 +0530, Suganath Prabu S wrote:
 
-> Remove needless use of mbox_t, replacing with just struct
-> mbox_out. Silences compiler warnings under a -Warray-bounds build:
+> Updates sysfs provided trigger values into the corresponding
+> persistent trigger pages. otherwise sysfs updated trigger
+> entries are not persistent across system reboot.
 > 
-> drivers/scsi/megaraid.c: In function 'megaraid_probe_one':
-> drivers/scsi/megaraid.c:3615:30: error: array subscript 'mbox_t[0]' is partly outside array bounds of 'unsigned char[15]' [-Werror=array-bounds]
->  3615 |         mbox->m_out.xferaddr = (u32)adapter->buf_dma_handle;
->       |         ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/megaraid.c:3599:23: note: while referencing 'raw_mbox'
->  3599 |         unsigned char raw_mbox[sizeof(struct mbox_out)];
->       |                       ^~~~~~~~
 > 
-> [...]
 
 Applied to 5.17/scsi-queue, thanks!
 
-[1/1] scsi: megaraid: Avoid mismatched storage type sizes
-      https://git.kernel.org/mkp/scsi/c/315d049ad195
+[1/1] mpt3sas: Update Persistent Trigger Pages from SysFs interface.
+      https://git.kernel.org/mkp/scsi/c/9211faa39a03
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
