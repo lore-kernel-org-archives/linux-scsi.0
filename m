@@ -2,46 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 288E7C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 07:51:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76961C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 08:50:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241150AbiAJHvU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Jan 2022 02:51:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52772 "EHLO
+        id S241870AbiAJIua (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jan 2022 03:50:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240799AbiAJHr5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2022 02:47:57 -0500
+        with ESMTP id S241909AbiAJIsy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2022 03:48:54 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8168C061763;
-        Sun,  9 Jan 2022 23:41:09 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0553C029818;
+        Mon, 10 Jan 2022 00:47:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=kj6fiL329W/gAp0XpvM7fyTCis
-        t47te0E/tG9jMJ+w32Gkchb73gXsjWLQ0rrK7Buyg0MOJiLGuhTLN8zQ5lREW8tJ6UDGwFEtxaGWT
-        ghnBBQ5fpNry5qp4EeAlGF5NN2aWbxEmvNeVHDUNW/BG9oAGkazLfHLyzTorkVFAsA1hgT2kOoiK8
-        4caUHudyQVEC2QAJ9gdwKTI75FA8u6kUzu1Btc7OL6bM88JgrXjksHSAID0cNQrYuGqT3SNQb+Hbg
-        KZIhvfZtF4Ojq3dcSuN9c1hD2Of80wm70vXlf78Kiqsp0J0A/gknhlChLLFdXDYHaflpib1r2EPMv
-        cZ0809yg==;
+        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=JThY5n2aZqqSAJY3Gi4ldy3lih
+        jPofFJR0LS1z5fCv8YUr1kzrNeA3wqeX8yt+7Bv6em2oEnt9p8qumhe0fcQdxK0qQyHKkAcdNBw+L
+        8pJAxJwKd6Fls9uQiJestGOIkGLofNdoGihISpyGHQs3eJ8F8ItbUpd4jLXYMZNsxYfUbM0RP1as5
+        D2RSktOH+40ms3mnMCA7keInrO/+h427z5grS7Tc3O6BkSQg4Ud+JJih/lBryENXdw3CljfUu+h6d
+        X/tdONRkGuyYVa2Oa9rqK+3y+QeY6jN8Jpeyd9oayAVvUtXyULYTUV5Tv3LrJzuSJv3WR/5+mQiQX
+        tFrQ76gA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1n6pIf-009gCn-6X; Mon, 10 Jan 2022 07:41:05 +0000
-Date:   Sun, 9 Jan 2022 23:41:05 -0800
+        id 1n6qKZ-00A16q-TU; Mon, 10 Jan 2022 08:47:07 +0000
+Date:   Mon, 10 Jan 2022 00:47:07 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc:     James Smart <james.smart@broadcom.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: Re: [PATCH] scsi: efct: Remove useless DMA-32 fallback configuration
-Message-ID: <YdvjEU8US+eFR/mi@infradead.org>
-References: <958bcb2a6e86344c14f38369e8e7079615a2b0e3.1641754613.git.christophe.jaillet@wanadoo.fr>
+Cc:     arnd@arndb.de, hch@infradead.org, akpm@linux-foundation.org,
+        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH 10/16] scsi: message: fusion: Remove usage of the
+ deprecated "pci-dma-compat.h" API
+Message-ID: <Ydvyix40L8Q6sObF@infradead.org>
+References: <cover.1641500561.git.christophe.jaillet@wanadoo.fr>
+ <e38e897fbd3314718315b0e357c824e3f01775d6.1641500561.git.christophe.jaillet@wanadoo.fr>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <958bcb2a6e86344c14f38369e8e7079615a2b0e3.1641754613.git.christophe.jaillet@wanadoo.fr>
+In-Reply-To: <e38e897fbd3314718315b0e357c824e3f01775d6.1641500561.git.christophe.jaillet@wanadoo.fr>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
