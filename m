@@ -2,70 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0989FC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 11:26:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DA49C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 11:56:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244710AbiAJL0s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Jan 2022 06:26:48 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:20941 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S244671AbiAJL0a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Jan 2022 06:26:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1641813988;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=FV5WIRsqm0pwBXS3k6O6n4ImctAVE3Kzf+EYc9TxZLA=;
-        b=c58zz6MDcmZi48CyRWZ/3nZagAat5vWzCR+qZcCCKP+n2YXs5O57n5+hZJknMP1rOpSCCh
-        lP0EkzwYV148WUcVz7CCncs+r0p2w295SqB7Fu0UtgP1r9Iyc+X8lB6spXE0yvp7hrWcIz
-        mFznac0c029AUYJElfXTgWzUXfQYOFQ=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-483-6NiW1TebPkG2o6uBcI2SJA-1; Mon, 10 Jan 2022 06:19:28 -0500
-X-MC-Unique: 6NiW1TebPkG2o6uBcI2SJA-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A1A4B1015DA0;
-        Mon, 10 Jan 2022 11:19:26 +0000 (UTC)
-Received: from raketa (unknown [10.40.192.203])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9B9AB7B6C5;
-        Mon, 10 Jan 2022 11:19:24 +0000 (UTC)
-Date:   Mon, 10 Jan 2022 12:19:21 +0100
-From:   Maurizio Lombardi <mlombard@redhat.com>
-To:     Yang Yingliang <yangyingliang@huawei.com>
-Cc:     linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, hch@lst.de, james.smart@broadcom.com,
-        martin.petersen@oracle.com
-Subject: Re: [PATCH -next] scsi: efct: don't use GFP_KERNEL under spin lock
-Message-ID: <20220110111921.GA91632@raketa>
-References: <20220110111838.965480-1-yangyingliang@huawei.com>
+        id S245063AbiAJL4O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jan 2022 06:56:14 -0500
+Received: from mail-wr1-f49.google.com ([209.85.221.49]:43546 "EHLO
+        mail-wr1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239786AbiAJL4L (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2022 06:56:11 -0500
+Received: by mail-wr1-f49.google.com with SMTP id o3so26250437wrh.10;
+        Mon, 10 Jan 2022 03:56:10 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=5JGHooFXj2iz4QcgazfHEbKsX6GW7+vX5suOZ5p/SDM=;
+        b=B5auyrNEqwfRdl75fjeIdWOx2w9nxkmZf4CQcNfYir5X0gmUHUOv6jeGh7AYkmKEyn
+         oB83vsX7g+7J3fXCFCVyozb9ZnJ3alrjuOsIErhjparEPhGDCfXwSV855vSaquEtMNLg
+         mb9k1P858V8IG8Bf5uQ644STdsSkYoQszKiuVh5nKnyeYL6JfkWV0zKJ+r0ix7zwAvl8
+         FWC4Qu8Jh5mv9ehA6BsO5ju5bClVUwBsD3hc90H5LHM8e1fHfGTqUjn9VjE+Fcn0UaTC
+         JjGKz4+A7FMLc/fBGLPxKyitei5Hldk3gGQ9mPRPX9U/wSwPAjWLBrbac+y+f9fV+E+f
+         OctA==
+X-Gm-Message-State: AOAM531+hO+HvqfU71aFVgiTTDC18OoW2RnRdMGntVYpOs6lD6m8h49s
+        nzOhtzXvqnGFByxJm5w9iCw=
+X-Google-Smtp-Source: ABdhPJxZBnLQMX3PWtG+rxuni0SASXbD4BM0W6Jr8VzSIuO8sHUMTwXE4vb7scyOzRBBUjBISGyLpA==
+X-Received: by 2002:a5d:5847:: with SMTP id i7mr50225249wrf.450.1641815770104;
+        Mon, 10 Jan 2022 03:56:10 -0800 (PST)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id x21sm6307469wmc.24.2022.01.10.03.56.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Jan 2022 03:56:09 -0800 (PST)
+Date:   Mon, 10 Jan 2022 11:56:08 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     Juan Vazquez <juvazq@linux.microsoft.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, mikelley@microsoft.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, tianyu.lan@microsoft.com,
+        longli@microsoft.com
+Subject: Re: [PATCH] scsi: storvsc: Fix storvsc_queuecommand() memory leak
+Message-ID: <20220110115608.sdsbnof5gtc6gu74@liuwe-devbox-debian-v2>
+References: <20220109001758.6401-1-juvazq@linux.microsoft.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220110111838.965480-1-yangyingliang@huawei.com>
-User-Agent: Mutt/1.14.7 (f34d0909) (2020-08-29)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <20220109001758.6401-1-juvazq@linux.microsoft.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jan 10, 2022 at 07:18:38PM +0800, Yang Yingliang wrote:
-> +	spin_lock_irqsave(&node->els_ios_lock, flags);
+On Sat, Jan 08, 2022 at 04:17:58PM -0800, Juan Vazquez wrote:
+> Fix possible memory leak in error path of storvsc_queuecommand() when
+> DMA mapping fails.
+> 
+> Fixes: 743b237c3a7b ("scsi: storvsc: Add Isolation VM support for storvsc driver")
+> Signed-off-by: Juan Vazquez <juvazq@linux.microsoft.com>
+
+Martin, I can pick this up since the offending commit is not yet in
+Linus' tree.
+
+Tianyu, Long and Michael, the change makes sense to me but can you give
+an ack or review here?
+
+> ---
+>  drivers/scsi/storvsc_drv.c | 17 ++++++++++++-----
+>  1 file changed, 12 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 2273b843d9d2..9a0bba5a51a7 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1850,8 +1850,10 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+>  		payload->range.offset = offset_in_hvpg;
+>  
+>  		sg_count = scsi_dma_map(scmnd);
+> -		if (sg_count < 0)
+> -			return SCSI_MLQUEUE_DEVICE_BUSY;
+> +		if (sg_count < 0) {
+> +			ret = SCSI_MLQUEUE_DEVICE_BUSY;
+> +			goto err_free_payload;
+> +		}
+>  
+>  		for_each_sg(sgl, sg, sg_count, j) {
+>  			/*
+> @@ -1886,13 +1888,18 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+>  	put_cpu();
+>  
+>  	if (ret == -EAGAIN) {
+> -		if (payload_sz > sizeof(cmd_request->mpb))
+> -			kfree(payload);
+>  		/* no more space */
+> -		return SCSI_MLQUEUE_DEVICE_BUSY;
+> +		ret = SCSI_MLQUEUE_DEVICE_BUSY;
+> +		goto err_free_payload;
+>  	}
+>  
+>  	return 0;
 > +
->  	if (els) {
->  		/* initialize fields */
->  		els->els_retries_remaining = EFC_FC_ELS_DEFAULT_RETRIES;
-
-If the els pointer is NULL you will lock the spinlock and disable the interrupts
-for no reason, maybe you can just protect the list_add_tail()?
-
-+spin_lock_irqsave(&node->els_ios_lock, flags);
- list_add_tail(&els->list_entry, &node->els_ios_list);
-+spin_unlock_irqrestore(&node->els_ios_lock, flags);
-
-Maurizio
-
+> +err_free_payload:
+> +	if (payload_sz > sizeof(cmd_request->mpb))
+> +		kfree(payload);
+> +
+> +	return ret;
+>  }
+>  
+>  static struct scsi_host_template scsi_driver = {
+> -- 
+> 2.32.0
+> 
