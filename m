@@ -2,83 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAE60C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 22:05:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9AA9C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 22:05:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345196AbiAJWFH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Jan 2022 17:05:07 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:35276 "EHLO
+        id S1345133AbiAJWFI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jan 2022 17:05:08 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:39442 "EHLO
         mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1345176AbiAJWFB (ORCPT
+        by vger.kernel.org with ESMTP id S1345164AbiAJWFD (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Jan 2022 17:05:01 -0500
+        Mon, 10 Jan 2022 17:05:03 -0500
 Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20AJlXia026175;
-        Mon, 10 Jan 2022 22:04:56 GMT
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20AJlXiX026175;
+        Mon, 10 Jan 2022 22:04:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=4in3AMt3jaCUmPeKg8seTKw1eAv3x+yzF7EJj+rf53M=;
- b=PFaMcr7OaVJA5SF6f2IHSpRInJe/i2XPc9t+zcMKs1FaQlkYG/9PwswIjLk+GnBBvwZH
- XuBeA5W5raaPTduuf53zX+3ytT/y6gekP+6mx4nG4nFFNpy7EQsue4mqAs1ncyeUlcJT
- Dht+TINdfGLFSdYErZgbIy1t2ejKHBCBuW7lLK1j7BOu02aBF5yqKXk2oldo1BcyLUES
- SnYOwHY3LP6kTky53kBNi2ammVrnePTzvdCnaOyMN2TDI36Lg3qcQlzDT26kfoTfoSYq
- xpDgMpn1HkVGRZ/Jh19nS3/n2WBMvTgu5KqSYEouk8cO0dyiB8u2lkbPJZv2629a1WF4 /Q== 
+ bh=0Y6UNwICeH/WJtgeIs8Sdtx8ICiDFJgumYqTlaUdJ1g=;
+ b=T2uSNYNlAxKyunBbTGQ98xKphfxw3w2PWgLyhdd7UQIR+i16avaePS4spFFCPXy70sHB
+ BTU1/Jnjbd6p1ADJYMsWp13OOaXwc2NfDlZMYSIFIZsvliHuCXXx8LXModUzcIMrGL+e
+ dL688YjGRykXxHnKb65YD0UDqLD57Qxt3OmBf8H5AQ5j2dUWrPZ2g0+X2SQxLf+Y+yAx
+ AWGDrqrqcroI4nhZH8e0zC14sPVcCWkNgG02Lme/noW4SOJpR9nK0jvyYLn0ieiJQRcn
+ E5qQTjnhZ+ldEKYxcrf/b00xLDrrmjkAUTH0Tba9NsaJja60xcdhHk9YsIah/Vo7u8uo 3w== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dgjtg9svw-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dgjtg9svc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Jan 2022 22:04:56 +0000
+        Mon, 10 Jan 2022 22:04:48 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20ALtvFV138983;
-        Mon, 10 Jan 2022 22:04:55 GMT
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20ALtv7Q139010;
+        Mon, 10 Jan 2022 22:04:47 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3020.oracle.com with ESMTP id 3df2e3vqyn-1
+        by aserp3020.oracle.com with ESMTP id 3df2e3vqsp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Jan 2022 22:04:55 +0000
+        Mon, 10 Jan 2022 22:04:47 +0000
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20AM4iCG174082;
-        Mon, 10 Jan 2022 22:04:55 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20AM4iC2174082;
+        Mon, 10 Jan 2022 22:04:46 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by aserp3020.oracle.com with ESMTP id 3df2e3vqp8-10;
-        Mon, 10 Jan 2022 22:04:54 +0000
+        by aserp3020.oracle.com with ESMTP id 3df2e3vqp8-3;
+        Mon, 10 Jan 2022 22:04:46 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Yang Li <yang.lee@linux.alibaba.com>
+To:     jejb@linux.ibm.com, chenxiang <chenxiang66@hisilicon.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        kashyap.desai@broadcom.com, linux-scsi@vger.kernel.org,
-        jejb@linux.ibm.com, sumit.saxena@broadcom.com,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        mpi3mr-linuxdrv.pdl@broadcom.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -next] scsi: mpi3mr: Fix formatting problems in some kernel-doc comments
-Date:   Mon, 10 Jan 2022 17:04:42 -0500
-Message-Id: <164182835585.13635.8928543266313865543.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, john.garry@huawei.com,
+        colin.i.king@gmail.com, nathan@kernel.org, linuxarm@huawei.com
+Subject: Re: [PATCH] scsi: hisi_sas: Remove unused variable and check in hisi_sas_send_ata_reset_each_phy()
+Date:   Mon, 10 Jan 2022 17:04:35 -0500
+Message-Id: <164182835585.13635.6252474337803323006.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20211231082350.19315-1-yang.lee@linux.alibaba.com>
-References: <20211231082350.19315-1-yang.lee@linux.alibaba.com>
+In-Reply-To: <1641300126-53574-1-git-send-email-chenxiang66@hisilicon.com>
+References: <1641300126-53574-1-git-send-email-chenxiang66@hisilicon.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: I6zea8lgF9fdojf7dHMGCrY_oq1XVq7S
-X-Proofpoint-ORIG-GUID: I6zea8lgF9fdojf7dHMGCrY_oq1XVq7S
+X-Proofpoint-GUID: FWI9fUYvTxRtpPNFeA2LUh3sVk2XkZri
+X-Proofpoint-ORIG-GUID: FWI9fUYvTxRtpPNFeA2LUh3sVk2XkZri
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 31 Dec 2021 16:23:50 +0800, Yang Li wrote:
+On Tue, 4 Jan 2022 20:42:06 +0800, chenxiang wrote:
 
-> Remove some warnings found by running scripts/kernel-doc,
-> which is caused by using 'make W=1'.
-> drivers/scsi/mpi3mr/mpi3mr_fw.c:2188: warning: Function parameter or
-> member 'reason_code' not described in 'mpi3mr_check_rh_fault_ioc'
-> drivers/scsi/mpi3mr/mpi3mr_fw.c:3650: warning: Excess function parameter
-> 'init_type' description in 'mpi3mr_init_ioc'
-> drivers/scsi/mpi3mr/mpi3mr_fw.c:4177: warning: bad line
+> From: Xiang Chen <chenxiang66@hisilicon.com>
+> 
+> In commit 29e2bac87421 ("scsi: hisi_sas: Fix some issues related to
+> asd_sas_port->phy_list"), we use asd_sas_port->phy_mask instead of
+> accessing asd_sas_port->phy_list, and it is enough to use
+> asd_sas_port->phy_mask to check the state of phy, so remove the unused
+> check and variable.
 > 
 > [...]
 
 Applied to 5.17/scsi-queue, thanks!
 
-[1/1] scsi: mpi3mr: Fix formatting problems in some kernel-doc comments
-      https://git.kernel.org/mkp/scsi/c/3bb3c24e268a
+[1/1] scsi: hisi_sas: Remove unused variable and check in hisi_sas_send_ata_reset_each_phy()
+      https://git.kernel.org/mkp/scsi/c/5d9224fb076e
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
