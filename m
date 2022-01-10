@@ -2,89 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE910C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 05:03:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 288E7C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 07:51:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238599AbiAJFDO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Jan 2022 00:03:14 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:26538 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238496AbiAJFDC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Jan 2022 00:03:02 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 209KQlqo023499
-        for <linux-scsi@vger.kernel.org>; Sun, 9 Jan 2022 21:03:01 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=n2R6jl6x3PTVbuE7/Dd51zhysv9HUIPbdLshAq1KlXk=;
- b=bMqv2rMqHLZ+GKaw33q2L0P60qCSvUERWQWqaEj8fcoBl/QLhurm2JP9KoS4jRUiRYZo
- ZhHEdF4OCVgeVXQQjUDoLtnwGi8g2//NapoA0aZJl33qc4eHMBaGr+WDDRjP+VZU/c1W
- fFVcG6UcboH+RfjyOKBTJ/Gl1eMXDrTLe5ywpLZzGvV2dK4+UNVmyJ55uftFP8VwFsw2
- r5RsLRcF2hDCKLfstSjymNH4W/ZPgYUmXfO5nTA3tr6BAvGlZu2JAVqN7/YVwFYZMbZN
- S7U2Zp+2zg3yqOxWQqlI+tV1K3cAavbt4GJ+z0H/R178MuOOBrp+f04S1OryRMEuz2Gf kw== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3dfy8nhjf0-10
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Sun, 09 Jan 2022 21:03:01 -0800
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sun, 9 Jan
- 2022 21:02:56 -0800
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
- Transport; Sun, 9 Jan 2022 21:02:56 -0800
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id DD3163F70A7;
-        Sun,  9 Jan 2022 21:02:55 -0800 (PST)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 20A52thN004061;
-        Sun, 9 Jan 2022 21:02:55 -0800
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 20A52tsQ004060;
-        Sun, 9 Jan 2022 21:02:55 -0800
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v2 17/17] qla2xxx: Update version to 10.02.07.300-k
-Date:   Sun, 9 Jan 2022 21:02:18 -0800
-Message-ID: <20220110050218.3958-18-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20220110050218.3958-1-njavali@marvell.com>
-References: <20220110050218.3958-1-njavali@marvell.com>
+        id S241150AbiAJHvU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jan 2022 02:51:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52772 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240799AbiAJHr5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2022 02:47:57 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8168C061763;
+        Sun,  9 Jan 2022 23:41:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=kj6fiL329W/gAp0XpvM7fyTCis
+        t47te0E/tG9jMJ+w32Gkchb73gXsjWLQ0rrK7Buyg0MOJiLGuhTLN8zQ5lREW8tJ6UDGwFEtxaGWT
+        ghnBBQ5fpNry5qp4EeAlGF5NN2aWbxEmvNeVHDUNW/BG9oAGkazLfHLyzTorkVFAsA1hgT2kOoiK8
+        4caUHudyQVEC2QAJ9gdwKTI75FA8u6kUzu1Btc7OL6bM88JgrXjksHSAID0cNQrYuGqT3SNQb+Hbg
+        KZIhvfZtF4Ojq3dcSuN9c1hD2Of80wm70vXlf78Kiqsp0J0A/gknhlChLLFdXDYHaflpib1r2EPMv
+        cZ0809yg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1n6pIf-009gCn-6X; Mon, 10 Jan 2022 07:41:05 +0000
+Date:   Sun, 9 Jan 2022 23:41:05 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     James Smart <james.smart@broadcom.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: Re: [PATCH] scsi: efct: Remove useless DMA-32 fallback configuration
+Message-ID: <YdvjEU8US+eFR/mi@infradead.org>
+References: <958bcb2a6e86344c14f38369e8e7079615a2b0e3.1641754613.git.christophe.jaillet@wanadoo.fr>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-GUID: -rEpFPcCCj0363y9XJ4GtFF8zZIY9Y9R
-X-Proofpoint-ORIG-GUID: -rEpFPcCCj0363y9XJ4GtFF8zZIY9Y9R
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
- definitions=2022-01-10_01,2022-01-07_01,2021-12-02_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <958bcb2a6e86344c14f38369e8e7079615a2b0e3.1641754613.git.christophe.jaillet@wanadoo.fr>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
----
- drivers/scsi/qla2xxx/qla_version.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Looks good,
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 27e440f8a702..913d454f4949 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -6,9 +6,9 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "10.02.07.200-k"
-+#define QLA2XXX_VERSION      "10.02.07.300-k"
- 
- #define QLA_DRIVER_MAJOR_VER	10
- #define QLA_DRIVER_MINOR_VER	2
- #define QLA_DRIVER_PATCH_VER	7
--#define QLA_DRIVER_BETA_VER	200
-+#define QLA_DRIVER_BETA_VER	300
--- 
-2.23.1
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
