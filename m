@@ -2,58 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D43B8C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 12:00:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04BA7C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 12:03:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245128AbiAJMAM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Jan 2022 07:00:12 -0500
-Received: from angie.orcam.me.uk ([78.133.224.34]:38782 "EHLO
-        angie.orcam.me.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245221AbiAJMAI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2022 07:00:08 -0500
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id CACA692009C; Mon, 10 Jan 2022 13:00:03 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id C4C2292009B;
-        Mon, 10 Jan 2022 12:00:03 +0000 (GMT)
-Date:   Mon, 10 Jan 2022 12:00:03 +0000 (GMT)
-From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-cc:     Douglas Gilbert <dgilbert@interlog.com>,
-        Khalid Aziz <khalid@gonehiking.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Christoph Hellwig <hch@lst.de>, Nix <nix@esperi.org.uk>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 3/3] scsi: Set allocation length to 255 for ATA
- Information VPD page
-In-Reply-To: <yq1sftzwstk.fsf@ca-mkp.ca.oracle.com>
-Message-ID: <alpine.DEB.2.21.2201090342130.56863@angie.orcam.me.uk>
-References: <alpine.DEB.2.21.2201020010540.56863@angie.orcam.me.uk> <alpine.DEB.2.21.2201020030130.56863@angie.orcam.me.uk> <d9eaa1f8-7abb-645b-d624-5069205c6983@interlog.com> <alpine.DEB.2.21.2201032017290.56863@angie.orcam.me.uk> <yq1tuek347m.fsf@ca-mkp.ca.oracle.com>
- <alpine.DEB.2.21.2201032324230.56863@angie.orcam.me.uk> <yq1tuej1j22.fsf@ca-mkp.ca.oracle.com> <yq1lezty169.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2201070039040.56863@angie.orcam.me.uk> <yq1sftzwstk.fsf@ca-mkp.ca.oracle.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        id S245214AbiAJMDm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jan 2022 07:03:42 -0500
+Received: from smtp01.smtpout.orange.fr ([80.12.242.123]:55863 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S245199AbiAJMDf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2022 07:03:35 -0500
+Received: from pop-os.home ([90.11.185.88])
+        by smtp.orange.fr with ESMTPA
+        id 6tOcndEAwLyIy6tOdnXf7n; Mon, 10 Jan 2022 13:03:32 +0100
+X-ME-Helo: pop-os.home
+X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
+X-ME-Date: Mon, 10 Jan 2022 13:03:32 +0100
+X-ME-IP: 90.11.185.88
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     hch@lst.de, "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Hannes Reinecke <hare@suse.com>
+Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH v2] scsi: pmcraid: Fix memory allocation in 'pmcraid_alloc_sglist()'
+Date:   Mon, 10 Jan 2022 13:02:53 +0100
+Message-Id: <11a1bc98501de37baa5bcd10b61136f6e450b82e.1641816080.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Martin,
+When the scatter list is allocated in 'pmcraid_alloc_sglist()', the
+corresponding pointer should be stored in 'scatterlist' within the
+'pmcraid_sglist' structure. Otherwise, 'scatterlist' is NULL.
 
-> > however partitions (of the MS-DOS type) are not recognised with any of
-> > the disks including one holding the root device, so the system fails
-> > to mount the root filesystem and therefore does not complete booting:
-> 
-> My mistake. An unrelated change to the revalidate logic in the last
-> patch. Fixed and pushed.
+This leads to a potential memory leak and NULL pointer dereference.
 
- No worries, I'm glad I helped catch it early.  This version boots 
-multi-user.
+Fixes: ed4414cef2ad ("scsi: pmcraid: Use sgl_alloc_order() and sgl_free_order()")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+This patch is completely speculative and untested.
 
-> For your Mylex issue I believe the first patch in the series is all
-> that's needed:
-> 
-> 06a471da0937 ("scsi: core: Query VPD size before getting full page")
+Should it be correct, I think that their should be some trouble somewhere.
+Either NULL pointer dereference or incorrect behavior.
+The patch that introduced this potential bug is from 2018-02. So, this
+should have been spotted earlier.
 
- It is.  Thanks for sorting out this issue!
+So unless this driver is mostly unused, this looks odd to me.
+Feedback appreciated.
 
-  Maciej
+Review with care!
+
+v2: synch with -next-20220110
+---
+ drivers/scsi/pmcraid.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 928532180d32..e314ea133827 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -3221,8 +3221,9 @@ static struct pmcraid_sglist *pmcraid_alloc_sglist(int buflen)
+ 		return NULL;
+ 
+ 	sglist->order = order;
+-	sgl_alloc_order(buflen, order, false, GFP_KERNEL | __GFP_ZERO,
+-			&sglist->num_sg);
++	sglist->scatterlist = sgl_alloc_order(buflen, order, false,
++					      GFP_KERNEL | __GFP_ZERO,
++					      &sglist->num_sg);
+ 
+ 	return sglist;
+ }
+-- 
+2.32.0
+
