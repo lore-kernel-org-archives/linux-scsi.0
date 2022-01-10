@@ -2,226 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 882E0C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 02:59:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1964CC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 05:02:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238275AbiAJC7Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Jan 2022 21:59:24 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:38020 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238272AbiAJC7X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jan 2022 21:59:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1641783561;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=1qsVRCGINFxG1uoQFIbSbogfeREV/xKD6CIV4zZBvqE=;
-        b=dLmB3WpzXl5eMncKfxc8UCOZ0Y4iFDgZVIL3zmAwkGRgnNATy48InD6YFZwDbcbfX41WTS
-        dJXeOrggCY7w4CI23s92+hwLc8PuWCJV686aVNkGX0QJa0PuRDThfELPckxYf9NPnKNVfk
-        8L0UrZLgtWDYmwe9ybWIBjOyDRiTou8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-595-JP5UK2u8OGCJvWR8lsbE3Q-1; Sun, 09 Jan 2022 21:59:20 -0500
-X-MC-Unique: JP5UK2u8OGCJvWR8lsbE3Q-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 69E9380D680;
-        Mon, 10 Jan 2022 02:59:18 +0000 (UTC)
-Received: from T590 (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id E83275BE19;
-        Mon, 10 Jan 2022 02:59:07 +0000 (UTC)
-Date:   Mon, 10 Jan 2022 10:59:02 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Martin Wilck <martin.wilck@suse.com>
-Cc:     "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>,
-        "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>,
-        "suganath-prabu.subramani@broadcom.com" 
-        <suganath-prabu.subramani@broadcom.com>,
-        "hare@suse.de" <hare@suse.de>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Subject: Re: mpt3sas fails to allocate budget_map and detects no devices
-Message-ID: <Ydug9nWg4loEVkJw@T590>
-References: <be78dc2cfeecaafd171060fbebda2d268d2a94e5.camel@suse.com>
- <YdZcABq/pxMMh3X0@T590>
- <5a450cdadbffed9c5ce39bc7d58bcf4e541f3b53.camel@suse.com>
- <YdcEJngPYrZk691Q@T590>
- <97be83524e1ee6776a4c1261bf4c1b17a8b75f12.camel@suse.com>
- <YdcNrSJJGllQzWOB@T590>
- <5fffbc9191d1f1b3db1d51ce991591c9c6d91785.camel@suse.com>
- <YdcZwVUFGUPgkbLn@T590>
+        id S231487AbiAJFCo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jan 2022 00:02:44 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48696 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229752AbiAJFCo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 10 Jan 2022 00:02:44 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 209LQldu021579
+        for <linux-scsi@vger.kernel.org>; Sun, 9 Jan 2022 21:02:43 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=uLvmzH59XlTPl654IlNNMWX3cJK7rGJlm64k0J2JHh0=;
+ b=L6Tbt+gruZCm3GeWC67iC8CyzeDKCz7YKYXT/Cm9z0uIIjrCAfCWYth5pz5CnajmzRyc
+ 3PacZTKyVFkfkA7dotKbMXHVuLiMXP7DUsqGFYN4cbBWgWSZsepegtzurBOxSGdSM9Mc
+ DS+5djE6g973mK3S9eOiYuAGTNNd+uIrFhrzWbrwlBqeBow2lnhQWd82mk+NeMzrHUrP
+ xuVUoKK+2BRibU2wcuUcFr4VbMf04nobRatbCDpTLQ03Yvt4Migsr5Kkn8ZX14h5eoKi
+ 9TaY/cUA1BalP9ebikC6jekuWD+Df3piog5sIyFVXD8mIYQ6PrNXA/Mm06nDXnfvdo1V /g== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3dfy8nhjed-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Sun, 09 Jan 2022 21:02:43 -0800
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sun, 9 Jan
+ 2022 21:02:41 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Sun, 9 Jan 2022 21:02:41 -0800
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 833FB3F705C;
+        Sun,  9 Jan 2022 21:02:41 -0800 (PST)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 20A52XHk003993;
+        Sun, 9 Jan 2022 21:02:33 -0800
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 20A52IZO003992;
+        Sun, 9 Jan 2022 21:02:18 -0800
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH v2 00/17] qla2xxx misc bug fixes and features
+Date:   Sun, 9 Jan 2022 21:02:01 -0800
+Message-ID: <20220110050218.3958-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <YdcZwVUFGUPgkbLn@T590>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Type: text/plain
+X-Proofpoint-GUID: Zo9RclcSs6hAJ81ucGXAzcD-tLOxZN2l
+X-Proofpoint-ORIG-GUID: Zo9RclcSs6hAJ81ucGXAzcD-tLOxZN2l
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
+ definitions=2022-01-10_01,2022-01-07_01,2021-12-02_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jan 07, 2022 at 12:33:05AM +0800, Ming Lei wrote:
-> On Thu, Jan 06, 2022 at 04:19:03PM +0000, Martin Wilck wrote:
-> > On Thu, 2022-01-06 at 23:41 +0800, Ming Lei wrote:
-> > > On Thu, Jan 06, 2022 at 03:22:53PM +0000, Martin Wilck wrote:
-> > > > > 
-> > > > > I'd suggest to fix mpt3sas for avoiding this memory waste.
-> > > > 
-> > > > Let's wait for Sreekanth's comment on that.
-> > > > 
-> > > > mpt3sas is not the only driver using a low value. Qlogic drivers
-> > > > set
-> > > > cmd_per_lun=3, for example (with 3, our logic would use shift=6, so
-> > > > the
-> > > > issue I observed wouldn't occur - but it would be prone to cache
-> > > > line
-> > > > bouncing).
-> > > 
-> > > But qlogic has smaller .can_queue which looks at most 512, .can_queue
-> > > is
-> > > the depth for allocating sbitmap, since each sdev->queue_depth is <=
-> > > .can_queue.
-> > 
-> > I'm seeing here (on an old kernel, admittedly) cmd_per_lun=3 and
-> > can_queue=2038 for qla2xxx and cmd_per_lun=3 and can_queue=5884 for
-> > lpfc. Both drivers change the queue depth for devices to 64 in their
-> > slave_configure() methods.
-> > 
-> > Many drivers do this, as it's recommended in scsi_host.h. That's quite
-> > bad in view of the current bitmap allocation logic - we lay out the
-> > bitmap assuming the depth used will be cmd_per_lun, but that doesn't
-> > match the actual depth when the device comes online. For qla2xxx, it
-> > means that we'd allocate the sbitmap with shift=6 (64 bits per word),
-> > thus using just a single cache line for 64 requests. Shift=4 (16 bits
-> > per word) would be the default shift for depth 64.
-> > 
-> > Am I misreading the code? Perhaps we should only allocate a preliminary
-> > sbitmap in scsi_alloc_sdev, and reallocate it after slave_configure()
-> > has been called, to get the shift right for the driver's default
-> > settings?
-> 
-> That looks fine to reallocate it after ->slave_configure() returns,
-> but we need to freeze the request queue for avoiding any in-flight
-> scsi command. At that time, freeze should be quick enough.
+Martin,
 
-Hello Martin Wilck,
+Please apply the qla2xxx driver misc bug fixes and features to the scsi
+tree at your earliest convenience.
 
-Can you test the following change and report back the result?
+Thanks,
+Nilesh
 
-From 480a61a85e9669d3487ebee8db3d387df79279fc Mon Sep 17 00:00:00 2001
-From: Ming Lei <ming.lei@redhat.com>
-Date: Mon, 10 Jan 2022 10:26:59 +0800
-Subject: [PATCH] scsi: core: reallocate scsi device's budget map if default
- queue depth is changed
+Arun Easi (1):
+  qla2xxx: Fix device reconnect in loop topology
 
-Martin reported that sdev->queue_depth can often be changed in
-->slave_configure(), and now we uses ->cmd_per_lun as initial queue
-depth for setting up sdev->budget_map. And some extreme ->cmd_per_lun
-or ->can_queue won't be used at default actually, if we they are used
-to allocate sdev->budget_map, huge memory may be consumed just because
-of bad ->cmd_per_lun.
+Bikash Hazarika (1):
+  qla2xxx: Show wrong FDMI data for 64G adaptor
 
-Fix the issue by reallocating sdev->budget_map after ->slave_configure()
-returns, at that time, queue_depth should be much more reasonable.
+Daniel Wagner (1):
+  qla2xxx: Refactor asynchronous command initialization
 
-Reported-by: Martin Wilck <martin.wilck@suse.com>
-Suggested-by: Martin Wilck <martin.wilck@suse.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi_scan.c | 56 ++++++++++++++++++++++++++++++++++++----
- 1 file changed, 51 insertions(+), 5 deletions(-)
+Joe Carnuccio (3):
+  qla2xxx: Fix T10 PI tag escape and IP guard options for 28XX adapters
+  qla2xxx: Add devid's and conditionals for 28xx
+  qla2xxx: check for firmware dump already collected
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 23e1c0acdeae..9593c9111611 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -214,6 +214,48 @@ static void scsi_unlock_floptical(struct scsi_device *sdev,
- 			 SCSI_TIMEOUT, 3, NULL);
- }
- 
-+static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
-+					unsigned int depth)
-+{
-+	int new_shift = sbitmap_calculate_shift(depth);
-+	bool need_alloc = !sdev->budget_map.map;
-+	bool need_free = false;
-+	int ret;
-+	struct sbitmap sb_back;
-+
-+	/*
-+	 * realloc if new shift is calculated, which is caused by setting
-+	 * up one new default queue depth after calling ->slave_configure
-+	 */
-+	if (!need_alloc && new_shift != sdev->budget_map.shift)
-+		need_alloc = need_free = true;
-+
-+	if (!need_alloc)
-+		return 0;
-+
-+	/*
-+	 * Request queue has to be freezed for reallocating budget map,
-+	 * and here disk isn't added yet, so freezing is pretty fast
-+	 */
-+	if (need_free) {
-+		blk_mq_freeze_queue(sdev->request_queue);
-+		sb_back = sdev->budget_map;
-+	}
-+	ret = sbitmap_init_node(&sdev->budget_map,
-+				scsi_device_max_queue_depth(sdev),
-+				new_shift, GFP_KERNEL,
-+				sdev->request_queue->node, false, true);
-+	if (need_free) {
-+		if (ret)
-+			sdev->budget_map = sb_back;
-+		else
-+			sbitmap_free(&sb_back);
-+		ret = 0;
-+		blk_mq_unfreeze_queue(sdev->request_queue);
-+	}
-+	return ret;
-+}
-+
- /**
-  * scsi_alloc_sdev - allocate and setup a scsi_Device
-  * @starget: which target to allocate a &scsi_device for
-@@ -306,11 +348,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	 * default device queue depth to figure out sbitmap shift
- 	 * since we use this queue depth most of times.
- 	 */
--	if (sbitmap_init_node(&sdev->budget_map,
--				scsi_device_max_queue_depth(sdev),
--				sbitmap_calculate_shift(depth),
--				GFP_KERNEL, sdev->request_queue->node,
--				false, true)) {
-+	if (scsi_realloc_sdev_budget_map(sdev, depth)) {
- 		put_device(&starget->dev);
- 		kfree(sdev);
- 		goto out;
-@@ -1017,6 +1055,14 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 			}
- 			return SCSI_SCAN_NO_RESPONSE;
- 		}
-+
-+		/*
-+		 * queue_depth is often changed in ->slave_configure, so
-+		 * setup budget map again for getting better memory uses
-+		 * since memory consumption of the map depends on queue
-+		 * depth heavily
-+		 */
-+		scsi_realloc_sdev_budget_map(sdev, sdev->queue_depth);
- 	}
- 
- 	if (sdev->scsi_level >= SCSI_3)
+Nilesh Javali (2):
+  qla2xxx: fix warning for missing error code
+  qla2xxx: Update version to 10.02.07.300-k
+
+Quinn Tran (6):
+  qla2xxx: fix stuck session in gpdb
+  qla2xxx: Fix warning message due to adisc is being flush
+  qla2xxx: Fix premature hw access after pci error
+  qla2xxx: Fix scheduling while atomic
+  qla2xxx: add retry for exec fw
+  qla2xxx: edif: Fix clang warning
+
+Saurav Kashyap (2):
+  qla2xxx: Implement ref count for srb
+  qla2xxx: Suppress a kernel complaint in qla_create_qpair()
+
+Shreyas Deodhar (1):
+  qla2xxx: Add ql2xnvme_queues module param to configure number of NVME
+    queues
+
+v1->v2:
+- update author of patch 13/17, 15/17 and 16/17
+- add Fixes tag to 15/17 patch
+- separate out the hunk as a separate commit to form patch 16/17
+- add detailed description to patch 02/17
+- add Reviewed-by tags
+
+ drivers/scsi/qla2xxx/qla_attr.c    |   7 +-
+ drivers/scsi/qla2xxx/qla_bsg.c     |   6 +-
+ drivers/scsi/qla2xxx/qla_def.h     |  17 ++-
+ drivers/scsi/qla2xxx/qla_edif.c    |  25 +++-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   5 +-
+ drivers/scsi/qla2xxx/qla_gs.c      | 155 +++++++++++-----------
+ drivers/scsi/qla2xxx/qla_init.c    | 199 ++++++++++++++++-------------
+ drivers/scsi/qla2xxx/qla_inline.h  |   2 +
+ drivers/scsi/qla2xxx/qla_iocb.c    |  70 ++++++----
+ drivers/scsi/qla2xxx/qla_mbx.c     |  37 ++++--
+ drivers/scsi/qla2xxx/qla_mid.c     |   9 +-
+ drivers/scsi/qla2xxx/qla_mr.c      |  11 +-
+ drivers/scsi/qla2xxx/qla_nvme.c    |  16 ++-
+ drivers/scsi/qla2xxx/qla_nvme.h    |   4 +
+ drivers/scsi/qla2xxx/qla_os.c      |  40 +++++-
+ drivers/scsi/qla2xxx/qla_sup.c     |   4 +-
+ drivers/scsi/qla2xxx/qla_target.c  |  14 +-
+ drivers/scsi/qla2xxx/qla_tmpl.c    |   9 +-
+ drivers/scsi/qla2xxx/qla_version.h |   4 +-
+ 19 files changed, 389 insertions(+), 245 deletions(-)
+
+
+base-commit: 4be6181fea1dbfd21a8d73f69d87a6cae2d3023d
 -- 
-2.31.1
-
-
-
--- 
-Ming
+2.23.1
 
