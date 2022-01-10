@@ -2,79 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F85FC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 20:21:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B1F6C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 22:04:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343528AbiAJUVe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Jan 2022 15:21:34 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4386 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241448AbiAJUVd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2022 15:21:33 -0500
-Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JXlX70QDSz67DWp;
-        Tue, 11 Jan 2022 04:18:47 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Mon, 10 Jan 2022 21:21:30 +0100
-Received: from [10.47.24.251] (10.47.24.251) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Mon, 10 Jan
- 2022 20:21:29 +0000
-Subject: Re: [issue report] pm8001 issues (was driver crashes with IOMMU
- enabled)
-To:     <Ajish.Koshy@microchip.com>, <jinpu.wang@ionos.com>,
-        <Viswas.G@microchip.com>
-CC:     <linux-scsi@vger.kernel.org>, <vishakhavc@google.com>,
-        <ipylypiv@google.com>, <Ruksar.devadi@microchip.com>,
-        <damien.lemoal@opensource.wdc.com>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>
-References: <894f766f-74b7-62b1-f6d2-82ac85b6478f@huawei.com>
- <CAMGffEkvrAxhrsL=azkVzQHHyDczZwJ3uiNWydSA6o2K+Xh_Jw@mail.gmail.com>
- <00505633-c8c0-8213-8909-482bf43661cd@huawei.com>
- <1cc92b2d-3670-7843-d68a-06fe68521d24@huawei.com>
- <fd0eafc6-9443-fe5e-2c2f-91d6bbe8b174@huawei.com>
- <PH0PR11MB5112EBE80F9A4AD199866CA7EC429@PH0PR11MB5112.namprd11.prod.outlook.com>
- <0cc0c435-b4f2-9c76-258d-865ba50a29dd@huawei.com>
- <PH0PR11MB5112F2D4A506B0FE6DC5B01BEC4D9@PH0PR11MB5112.namprd11.prod.outlook.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <34319d65-104d-55a0-175d-96cf3f0aea89@huawei.com>
-Date:   Mon, 10 Jan 2022 20:21:13 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S242683AbiAJWEt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jan 2022 17:04:49 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:9524 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230413AbiAJWEs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 10 Jan 2022 17:04:48 -0500
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20AJlXiW026175;
+        Mon, 10 Jan 2022 22:04:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2021-07-09;
+ bh=5/Xlk6IYk+oHf/bV37gJghV5gNwHBOgklZq7o0jMl6M=;
+ b=HhoKSEd5xsY1fWE0Jt5yk0Oi24+A4aNVILAaaLFFtQK5BtKrv/Gnlma7MLmNIAzTPH68
+ hu+ZFkbzxDOb21NdV+KgThG06LePnOTfU6IGhVhgyoggZvu3gUvbB/mjaRYuScoJ3Fjj
+ sxlsU8LXvE9ha1tAhd9kodJ9rH5LBPUC577YW0c9LLfrpLbkg5JOFmI3vjCGIVmLd51a
+ STdTmbfR/eGHBt+/7JxDnjgtGHxswCd5/v9e0mZ8XsZpBKdhahiVxkav9f9ujdRLuhZp
+ 8GGcAWg+eOXdy1B2QUmOMReEQFuIHkGIRrsEjf2qQHJ04JFreP3Cp1vk5iy1q3Vt6Zdh Yw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dgjtg9sva-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 10 Jan 2022 22:04:45 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20ALtvTD138972;
+        Mon, 10 Jan 2022 22:04:44 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by aserp3020.oracle.com with ESMTP id 3df2e3vqq4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 10 Jan 2022 22:04:44 +0000
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20AM4iBw174082;
+        Mon, 10 Jan 2022 22:04:44 GMT
+Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
+        by aserp3020.oracle.com with ESMTP id 3df2e3vqp8-1;
+        Mon, 10 Jan 2022 22:04:44 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linux-scsi@vger.kernel.org, Ajish Koshy <Ajish.Koshy@microchip.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com,
+        Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Subject: Re: [PATCH] scsi: pm80xx: port reset timeout error handling correction.
+Date:   Mon, 10 Jan 2022 17:04:33 -0500
+Message-Id: <164182835585.13635.17385390679327751458.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20211228111753.10802-1-Ajish.Koshy@microchip.com>
+References: <20211228111753.10802-1-Ajish.Koshy@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <PH0PR11MB5112F2D4A506B0FE6DC5B01BEC4D9@PH0PR11MB5112.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.24.251]
-X-ClientProxiedBy: lhreml743-chm.china.huawei.com (10.201.108.193) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: AaXrTA6ZL0y7IBZHx_Y2zhUbyosCPORR
+X-Proofpoint-ORIG-GUID: AaXrTA6ZL0y7IBZHx_Y2zhUbyosCPORR
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 07/01/2022 11:12, Ajish.Koshy@microchip.com wrote:
->> Once the task is dispatched to HW at ****, it is completed async, i.e.
->> it may be completed and freed at any point, even before the dispatch
->> function returns. So it is illegal to touch the task at this point and the task
->> state must be updated before final dispatch to the HW. If you enable KASAN
->> you will prob see it yell like I saw.
->>
-> I too have similar thought here. After dispatch to HW, no point to touch the
-> task state. But since the code is in IO path, may need further testing.
+On Tue, 28 Dec 2021 16:47:53 +0530, Ajish Koshy wrote:
+
+> Error handling steps were not in sequence as per the programmers
+> manual. Expected sequence:
+>  -PHY_DOWN (PORT_IN_RESET)
+>  -PORT_RESET_TIMER_TMO
+>  -Host aborts pending I/Os
+>  -Host deregister the device
+>  -Host sends HW_EVENT_PHY_DOWN ack
 > 
+> [...]
 
-Hi,
+Applied to 5.17/scsi-queue, thanks!
 
-Have you made any progress on the hang which I see on my arm64 system?
+[1/1] scsi: pm80xx: port reset timeout error handling correction.
+      https://git.kernel.org/mkp/scsi/c/ee05cb71f9f7
 
-I think that you said that you can also see it on an arm64 system - 
-would that be with a similar card to mine? I think mine is 8008/9
-
-I have tested some older kernels and v4.11 seems much better.
-
-Thanks,
-John
+-- 
+Martin K. Petersen	Oracle Linux Engineering
