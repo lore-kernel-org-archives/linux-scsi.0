@@ -2,81 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9AA9C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 22:05:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BBC9C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 22:05:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345133AbiAJWFI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Jan 2022 17:05:08 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:39442 "EHLO
+        id S1345209AbiAJWFk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Jan 2022 17:05:40 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:30892 "EHLO
         mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1345164AbiAJWFD (ORCPT
+        by vger.kernel.org with ESMTP id S241701AbiAJWFd (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Jan 2022 17:05:03 -0500
+        Mon, 10 Jan 2022 17:05:33 -0500
 Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20AJlXiX026175;
-        Mon, 10 Jan 2022 22:04:48 GMT
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20AJlXpW026179;
+        Mon, 10 Jan 2022 22:04:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=0Y6UNwICeH/WJtgeIs8Sdtx8ICiDFJgumYqTlaUdJ1g=;
- b=T2uSNYNlAxKyunBbTGQ98xKphfxw3w2PWgLyhdd7UQIR+i16avaePS4spFFCPXy70sHB
- BTU1/Jnjbd6p1ADJYMsWp13OOaXwc2NfDlZMYSIFIZsvliHuCXXx8LXModUzcIMrGL+e
- dL688YjGRykXxHnKb65YD0UDqLD57Qxt3OmBf8H5AQ5j2dUWrPZ2g0+X2SQxLf+Y+yAx
- AWGDrqrqcroI4nhZH8e0zC14sPVcCWkNgG02Lme/noW4SOJpR9nK0jvyYLn0ieiJQRcn
- E5qQTjnhZ+ldEKYxcrf/b00xLDrrmjkAUTH0Tba9NsaJja60xcdhHk9YsIah/Vo7u8uo 3w== 
+ bh=wGcp09mZhBF7/XPqabHSsScYVXwvFU4zogbZn4w8Jo0=;
+ b=PNfrIQhmeMKNdwfaq2NsaMvc3xhsBkg0/e7HzhwUVUUB1UVsdQZsyYJ9WtwT8AQtttKM
+ AWLDmE3MBPSg+jxO9CMOLlfatAH9EkxhhhECk9B5TonY0bg+nufI+1kco0OmDuqybW9C
+ fpY35MtNVPS4QlswoHqHxoXuen55mKBCSx/UVJhBcn80lUfcXn154sUQgvWhbTFhnpmg
+ 7r+ANABR0R0kVw52lzlTSnFfLelUNUnFxQ2UZWUDIl0vtGjA0EsQMLdCrGZq7T7GLIwv
+ q5IPM3FrGckq6VOCs6veKNbHCmOIVb+Bwi2/WezWLnAIAal9Q2khT04+PZiZ78pYBiIi Dg== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dgjtg9svc-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dgjtg9svh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Jan 2022 22:04:48 +0000
+        Mon, 10 Jan 2022 22:04:51 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20ALtv7Q139010;
-        Mon, 10 Jan 2022 22:04:47 GMT
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20ALtvuh139009;
+        Mon, 10 Jan 2022 22:04:51 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3020.oracle.com with ESMTP id 3df2e3vqsp-1
+        by aserp3020.oracle.com with ESMTP id 3df2e3vqv5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Jan 2022 22:04:47 +0000
+        Mon, 10 Jan 2022 22:04:50 +0000
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20AM4iC2174082;
-        Mon, 10 Jan 2022 22:04:46 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20AM4iC8174082;
+        Mon, 10 Jan 2022 22:04:50 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by aserp3020.oracle.com with ESMTP id 3df2e3vqp8-3;
-        Mon, 10 Jan 2022 22:04:46 +0000
+        by aserp3020.oracle.com with ESMTP id 3df2e3vqp8-6;
+        Mon, 10 Jan 2022 22:04:50 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.ibm.com, chenxiang <chenxiang66@hisilicon.com>
+To:     Jiasheng Jiang <jiasheng@iscas.ac.cn>, jejb@linux.ibm.com,
+        skashyap@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
+        jhasan@marvell.com, linux@armlinux.org.uk
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, john.garry@huawei.com,
-        colin.i.king@gmail.com, nathan@kernel.org, linuxarm@huawei.com
-Subject: Re: [PATCH] scsi: hisi_sas: Remove unused variable and check in hisi_sas_send_ata_reset_each_phy()
-Date:   Mon, 10 Jan 2022 17:04:35 -0500
-Message-Id: <164182835585.13635.6252474337803323006.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH] scsi: qedf: potential dereference of null pointer
+Date:   Mon, 10 Jan 2022 17:04:38 -0500
+Message-Id: <164182835583.13635.8893897852615126704.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <1641300126-53574-1-git-send-email-chenxiang66@hisilicon.com>
-References: <1641300126-53574-1-git-send-email-chenxiang66@hisilicon.com>
+In-Reply-To: <20211216101449.375953-1-jiasheng@iscas.ac.cn>
+References: <20211216101449.375953-1-jiasheng@iscas.ac.cn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: FWI9fUYvTxRtpPNFeA2LUh3sVk2XkZri
-X-Proofpoint-ORIG-GUID: FWI9fUYvTxRtpPNFeA2LUh3sVk2XkZri
+X-Proofpoint-GUID: zmYrn3xPA90eC91y0V1gBAtVbL4Ywu8X
+X-Proofpoint-ORIG-GUID: zmYrn3xPA90eC91y0V1gBAtVbL4Ywu8X
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 4 Jan 2022 20:42:06 +0800, chenxiang wrote:
+On Thu, 16 Dec 2021 18:14:49 +0800, Jiasheng Jiang wrote:
 
-> From: Xiang Chen <chenxiang66@hisilicon.com>
+> The return value of dma_alloc_coherent() needs to be checked.
+> To avoid use of null pointer in case of the failure of alloc.
 > 
-> In commit 29e2bac87421 ("scsi: hisi_sas: Fix some issues related to
-> asd_sas_port->phy_list"), we use asd_sas_port->phy_mask instead of
-> accessing asd_sas_port->phy_list, and it is enough to use
-> asd_sas_port->phy_mask to check the state of phy, so remove the unused
-> check and variable.
 > 
-> [...]
 
 Applied to 5.17/scsi-queue, thanks!
 
-[1/1] scsi: hisi_sas: Remove unused variable and check in hisi_sas_send_ata_reset_each_phy()
-      https://git.kernel.org/mkp/scsi/c/5d9224fb076e
+[1/1] scsi: qedf: potential dereference of null pointer
+      https://git.kernel.org/mkp/scsi/c/aa7069d840da
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
