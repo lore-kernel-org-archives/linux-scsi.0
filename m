@@ -2,189 +2,226 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF3F5C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 02:05:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 882E0C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Jan 2022 02:59:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238161AbiAJCFe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Jan 2022 21:05:34 -0500
-Received: from mailout2.samsung.com ([203.254.224.25]:30115 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238148AbiAJCFb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jan 2022 21:05:31 -0500
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220110020528epoutp02ee3b70459e74de8f2393f75651a6a3a7~IxoK560J41991619916epoutp02v
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2022 02:05:28 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220110020528epoutp02ee3b70459e74de8f2393f75651a6a3a7~IxoK560J41991619916epoutp02v
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1641780328;
-        bh=zNXUGQ2tuUM1GeexQGYxYdVoXMlQO/tYPjm37Z6s7xw=;
-        h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=HRccBuu2NzOhzb2YyQWlouOTaBNosq0ppM0ivgrhgPiC7bjthM6s7WnQPal+N92w8
-         konxy0ptc4kd6eEtNfDW9iowVNxNOsSO1kUHczDJCdGmi+T3tVfNgYYOwlcvi23TPH
-         8Ko64hUYJ+GJI0Di7lX5pGnUfBvCVH2SdRdKFNSI=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20220110020528epcas2p1ea8b8c39d2912eb84819653fba7475fb~IxoKMMrhT1788117881epcas2p1_;
-        Mon, 10 Jan 2022 02:05:28 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.88]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4JXHGV5v9Vz4x9Qd; Mon, 10 Jan
-        2022 02:05:22 +0000 (GMT)
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        35.20.51767.D549BD16; Mon, 10 Jan 2022 11:05:17 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20220110020517epcas2p351eb1e0b96a4b9955cf92a4327a82d56~IxoABXgNS1731717317epcas2p3a;
-        Mon, 10 Jan 2022 02:05:17 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220110020517epsmtrp19f61cfff8233bf72cbc264231ff1bc57~IxoAADLY51631416314epsmtrp1G;
-        Mon, 10 Jan 2022 02:05:17 +0000 (GMT)
-X-AuditID: b6c32a45-c69bba800000ca37-7f-61db945d92a8
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        E8.21.29871.C549BD16; Mon, 10 Jan 2022 11:05:17 +0900 (KST)
-Received: from KORDO040863 (unknown [12.36.185.126]) by epsmtip2.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20220110020517epsmtip22e2f707b7f8696e522809bb01875b060~Ixn-zNN_c2155621556epsmtip2b;
-        Mon, 10 Jan 2022 02:05:17 +0000 (GMT)
-From:   =?UTF-8?B?7ISc7Zi47JiB?= <hy50.seo@samsung.com>
-To:     "'Avri Altman'" <Avri.Altman@wdc.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
-        <asutoshd@codeaurora.org>, <cang@codeaurora.org>,
-        <bvanassche@acm.org>
-In-Reply-To: <DM6PR04MB657535F7CC817A0E2893F668FC4D9@DM6PR04MB6575.namprd04.prod.outlook.com>
-Subject: RE: [PATCH v2] scsi: ufs: modify Tactive time setting conditions
-Date:   Mon, 10 Jan 2022 11:05:16 +0900
-Message-ID: <000401d805c6$8329ae40$897d0ac0$@samsung.com>
+        id S238275AbiAJC7Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 9 Jan 2022 21:59:24 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:38020 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S238272AbiAJC7X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Jan 2022 21:59:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1641783561;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=1qsVRCGINFxG1uoQFIbSbogfeREV/xKD6CIV4zZBvqE=;
+        b=dLmB3WpzXl5eMncKfxc8UCOZ0Y4iFDgZVIL3zmAwkGRgnNATy48InD6YFZwDbcbfX41WTS
+        dJXeOrggCY7w4CI23s92+hwLc8PuWCJV686aVNkGX0QJa0PuRDThfELPckxYf9NPnKNVfk
+        8L0UrZLgtWDYmwe9ybWIBjOyDRiTou8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-595-JP5UK2u8OGCJvWR8lsbE3Q-1; Sun, 09 Jan 2022 21:59:20 -0500
+X-MC-Unique: JP5UK2u8OGCJvWR8lsbE3Q-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 69E9380D680;
+        Mon, 10 Jan 2022 02:59:18 +0000 (UTC)
+Received: from T590 (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E83275BE19;
+        Mon, 10 Jan 2022 02:59:07 +0000 (UTC)
+Date:   Mon, 10 Jan 2022 10:59:02 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Martin Wilck <martin.wilck@suse.com>
+Cc:     "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>,
+        "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>,
+        "suganath-prabu.subramani@broadcom.com" 
+        <suganath-prabu.subramani@broadcom.com>,
+        "hare@suse.de" <hare@suse.de>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Subject: Re: mpt3sas fails to allocate budget_map and detects no devices
+Message-ID: <Ydug9nWg4loEVkJw@T590>
+References: <be78dc2cfeecaafd171060fbebda2d268d2a94e5.camel@suse.com>
+ <YdZcABq/pxMMh3X0@T590>
+ <5a450cdadbffed9c5ce39bc7d58bcf4e541f3b53.camel@suse.com>
+ <YdcEJngPYrZk691Q@T590>
+ <97be83524e1ee6776a4c1261bf4c1b17a8b75f12.camel@suse.com>
+ <YdcNrSJJGllQzWOB@T590>
+ <5fffbc9191d1f1b3db1d51ce991591c9c6d91785.camel@suse.com>
+ <YdcZwVUFGUPgkbLn@T590>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 14.0
-Thread-Index: AQF2Kk2TqRw63Mnhf/Wn1AdBL3QQDAKhhYJeAZr8dqys/UWZMA==
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrIJsWRmVeSWpSXmKPExsWy7bCmhW7slNuJBm/fy1g8mLeNzWJv2wl2
-        i5c/r7JZHHzYyWIx7cNPZotP65exWiy6sY3J4vKuOWwW3dd3sFksP/6PyYHL4/IVb4/Lfb1M
-        HhMWHWD0+L6+g83j49NbLB59W1YxenzeJOfRfqCbKYAjKtsmIzUxJbVIITUvOT8lMy/dVsk7
-        ON453tTMwFDX0NLCXEkhLzE31VbJxSdA1y0zB+hGJYWyxJxSoFBAYnGxkr6dTVF+aUmqQkZ+
-        cYmtUmpBSk6BeYFecWJucWleul5eaomVoYGBkSlQYUJ2Rs/61WwFr8Uqjq49z9jAuFGwi5GT
-        Q0LARGLF2amsXYxcHEICOxglXi/aAeV8YpRY/nAXC0iVkMA3Ron9XdEwHf+bPkAV7WWU2LXq
-        HTtE0UtGiX/na0BsNgFTib5tK1hBbBGBWUwS8xs9QWxOgViJxcs+MYHYwgKeEvePH2DsYuTg
-        YBFQlTh+vhgkzCtgKbHp83VWCFtQ4uTMJ2A3MAtoSyxb+JoZ4gYFiR1nX4O1igg4SSx9qQdR
-        IiIxu7ONGeQ0CYEtHBI7p+5ihKh3kfg4eS8rhC0s8er4FnYIW0riZX8bO0RDM6PE+plzmCCc
-        KYwSc589heowlpj1rB1sG7OApsT6XfogpoSAssSRW1C38Ul0HP7LDhHmlehoE4JoVJI4M/c2
-        VFhC4uDsHIiwh8SUObtZJzAqzkLy5CwkT85C8s0shLULGFlWMYqlFhTnpqcWGxUYwmM6OT93
-        EyM47Wq57mCc/PaD3iFGJg7GQ4wSHMxKIrx7L9xKFOJNSaysSi3Kjy8qzUktPsRoCgz1icxS
-        osn5wMSfVxJvaGJpYGJmZmhuZGpgriTO65WyIVFIID2xJDU7NbUgtQimj4mDU6qBybsh4Hvs
-        f1F5xUX3lt18u1VfN2GWgErb7/sB69PFVzQVLT785hKrxy1H1kjtB2LPciSeFrwNmbz6xvGq
-        1Vd67UN6JRjTb33LVtls9Cuu26f12tKfHz5+Kv/lKHF6auTyvYcfnm8XPcHUO329IOvLGv+0
-        qTcCf9c/5mbf2l82OSHkG5+u3Rzex1LtGqsSxQrCpz9r4bzJocs77dSPQHOp9RNPMcbdreau
-        Ypq3N1KKOcg3ybyL67eOdDdbw5FVXYwflu8xY1GfaSWo8vSG7kTHdx9Df8ued08K/9b690hf
-        /dVLqQc1535nj1+UE751j4HLGRnn2PagvyFN1sfnmGs2ibfcqF3zYs2JJTZTdd60KLEUZyQa
-        ajEXFScCALwolO5EBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprCIsWRmVeSWpSXmKPExsWy7bCSvG7slNuJBuuXMFk8mLeNzWJv2wl2
-        i5c/r7JZHHzYyWIx7cNPZotP65exWiy6sY3J4vKuOWwW3dd3sFksP/6PyYHL4/IVb4/Lfb1M
-        HhMWHWD0+L6+g83j49NbLB59W1YxenzeJOfRfqCbKYAjissmJTUnsyy1SN8ugSvj4Nmr7AXr
-        xCre3z/A2sD4SaCLkZNDQsBE4n/TB9YuRi4OIYHdjBK7uvYyQSQkJP4vboKyhSXutxyBKnrO
-        KNG38i8bSIJNwFSib9sKsISIwDImiQ8nz0BV3WWU6HlyEKyKUyBWYvGyT2CjhAU8Je4fP8DY
-        xcjBwSKgKnH8fDFImFfAUmLT5+usELagxMmZT1hAbGYBbYneh62MMPayha+ZIS5SkNhx9jXY
-        GBEBJ4mlL/UgSkQkZne2MU9gFJqFZNIsJJNmIZk0C0nLAkaWVYySqQXFuem5xYYFhnmp5XrF
-        ibnFpXnpesn5uZsYwRGnpbmDcfuqD3qHGJk4GA8xSnAwK4nw7r1wK1GINyWxsiq1KD++qDQn
-        tfgQozQHi5I474Wuk/FCAumJJanZqakFqUUwWSYOTqkGJqW3N9/WFT77nPHWff4fO47Mf4aZ
-        ic+zDV8997Lf+n3aLYWoS0lrv5/529HIc2TztCWtKkHzjx373xxT9ke1RHfZhwWXj32yLJlo
-        v/P37OhTTumfpL4cOhWjGc71tvHTu7s/zxzI33qycLIys4zKTr6yhE+PGLkb33O0ez/4VXf2
-        gHTrQtnmSi2mpWGrT9+oaPV/Z7F5rrXPNpXGdIl49tOvJ1x8U7zfaf6Rqfe0X0TY8GUf+bRj
-        mtvcvnsaKX+Ci5tOpq0SMbV4//p5nrJnzf49+1WtbtSkO5VN//hPz9ColzFbe2ljhF8k95eC
-        /Qpss+cKrMhqUKtvy5oT+liSsXjDZs6H3Bvvunz7flniIpsSS3FGoqEWc1FxIgBt+KGlJwMA
-        AA==
-X-CMS-MailID: 20220110020517epcas2p351eb1e0b96a4b9955cf92a4327a82d56
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220107095451epcas2p2d06b23e50cbd46e910532e2d9078c912
-References: <CGME20220107095451epcas2p2d06b23e50cbd46e910532e2d9078c912@epcas2p2.samsung.com>
-        <20220106213924.186263-1-hy50.seo@samsung.com>
-        <DM6PR04MB657535F7CC817A0E2893F668FC4D9@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <YdcZwVUFGUPgkbLn@T590>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
-If register =22UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE=22 quirk,
-using this Tact time function.
-And I mean all Samsung device use UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE quirk =
-below this. so I told that.
-static struct ufs_dev_fix ufs_fixups=5B=5D =3D =7B                   =20
-         /* UFS cards deviations table */                     =20
-         UFS_FIX(UFS_VENDOR_MICRON, UFS_ANY_MODEL,            =20
-                 UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM =7C          =20
-                 UFS_DEVICE_QUIRK_SWAP_L2P_ENTRY_FOR_HPB_READ),
-         UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,           =20
-                 UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM =7C          =20
-                 UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE =7C
+On Fri, Jan 07, 2022 at 12:33:05AM +0800, Ming Lei wrote:
+> On Thu, Jan 06, 2022 at 04:19:03PM +0000, Martin Wilck wrote:
+> > On Thu, 2022-01-06 at 23:41 +0800, Ming Lei wrote:
+> > > On Thu, Jan 06, 2022 at 03:22:53PM +0000, Martin Wilck wrote:
+> > > > > 
+> > > > > I'd suggest to fix mpt3sas for avoiding this memory waste.
+> > > > 
+> > > > Let's wait for Sreekanth's comment on that.
+> > > > 
+> > > > mpt3sas is not the only driver using a low value. Qlogic drivers
+> > > > set
+> > > > cmd_per_lun=3, for example (with 3, our logic would use shift=6, so
+> > > > the
+> > > > issue I observed wouldn't occur - but it would be prone to cache
+> > > > line
+> > > > bouncing).
+> > > 
+> > > But qlogic has smaller .can_queue which looks at most 512, .can_queue
+> > > is
+> > > the depth for allocating sbitmap, since each sdev->queue_depth is <=
+> > > .can_queue.
+> > 
+> > I'm seeing here (on an old kernel, admittedly) cmd_per_lun=3 and
+> > can_queue=2038 for qla2xxx and cmd_per_lun=3 and can_queue=5884 for
+> > lpfc. Both drivers change the queue depth for devices to 64 in their
+> > slave_configure() methods.
+> > 
+> > Many drivers do this, as it's recommended in scsi_host.h. That's quite
+> > bad in view of the current bitmap allocation logic - we lay out the
+> > bitmap assuming the depth used will be cmd_per_lun, but that doesn't
+> > match the actual depth when the device comes online. For qla2xxx, it
+> > means that we'd allocate the sbitmap with shift=6 (64 bits per word),
+> > thus using just a single cache line for 64 requests. Shift=4 (16 bits
+> > per word) would be the default shift for depth 64.
+> > 
+> > Am I misreading the code? Perhaps we should only allocate a preliminary
+> > sbitmap in scsi_alloc_sdev, and reallocate it after slave_configure()
+> > has been called, to get the shift right for the driver's default
+> > settings?
+> 
+> That looks fine to reallocate it after ->slave_configure() returns,
+> but we need to freeze the request queue for avoiding any in-flight
+> scsi command. At that time, freeze should be quick enough.
 
-Other vendors can use it if necessary.
-And for stability, the device tact time must be longer than host tact time.
-(I already check Major device vendors)
-That's reason why use this function.
-But the Host tact time and Device tact time same, stability may not be sati=
-sfied.
-So I changed this way
+Hello Martin Wilck,
 
-Thanks,
-HOYOUNG.
+Can you test the following change and report back the result?
 
-> -----Original Message-----
-> From: Avri Altman =5Bmailto:Avri.Altman=40wdc.com=5D
-> Sent: Friday, January 7, 2022 7:57 PM
-> To: SEO HOYOUNG; linux-scsi=40vger.kernel.org; linux-kernel=40vger.kernel=
-.org;
-> alim.akhtar=40samsung.com; jejb=40linux.ibm.com; martin.petersen=40oracle=
-.com;
-> beanhuo=40micron.com; asutoshd=40codeaurora.org; cang=40codeaurora.org;
-> bvanassche=40acm.org
-> Subject: RE: =5BPATCH v2=5D scsi: ufs: modify Tactive time setting condit=
-ions
->=20
-> > The Tactive time determine the waiting time before burst at hibern8
-> > exit and is determined by H/W at linkup state However, in the case of
-> > samsung devices, guided host's Tactive time
-> > +100us for stability.
-> > If the HCI's Tactive time is equal or greater than the device,
-> > +100us should be set.
-> This way you are changing this for everyone - not just for Samsung.
-> e.g. Qualcomm are using this quirk as well for WDC devices.
->=20
-> Thanks,
-> Avri
->=20
-> >
-> > Signed-off-by: SEO HOYOUNG <hy50.seo=40samsung.com>
-> > ---
-> >  drivers/scsi/ufs/ufshcd.c =7C 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index 1049e41abd5b..460d2b440d2e 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > =40=40 -7815,7 +7815,7 =40=40 static int
-> > ufshcd_quirk_tune_host_pa_tactivate(struct
-> > ufs_hba *hba)
-> >         peer_pa_tactivate_us =3D peer_pa_tactivate *
-> >                              gran_to_us_table=5Bpeer_granularity - 1=5D=
-;
-> >
-> > -       if (pa_tactivate_us > peer_pa_tactivate_us) =7B
-> > +       if (pa_tactivate_us >=3D peer_pa_tactivate_us) =7B
-> >                 u32 new_peer_pa_tactivate;
-> >
-> >                 new_peer_pa_tactivate =3D pa_tactivate_us /
-> > --
-> > 2.26.0
+From 480a61a85e9669d3487ebee8db3d387df79279fc Mon Sep 17 00:00:00 2001
+From: Ming Lei <ming.lei@redhat.com>
+Date: Mon, 10 Jan 2022 10:26:59 +0800
+Subject: [PATCH] scsi: core: reallocate scsi device's budget map if default
+ queue depth is changed
 
+Martin reported that sdev->queue_depth can often be changed in
+->slave_configure(), and now we uses ->cmd_per_lun as initial queue
+depth for setting up sdev->budget_map. And some extreme ->cmd_per_lun
+or ->can_queue won't be used at default actually, if we they are used
+to allocate sdev->budget_map, huge memory may be consumed just because
+of bad ->cmd_per_lun.
+
+Fix the issue by reallocating sdev->budget_map after ->slave_configure()
+returns, at that time, queue_depth should be much more reasonable.
+
+Reported-by: Martin Wilck <martin.wilck@suse.com>
+Suggested-by: Martin Wilck <martin.wilck@suse.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/scsi/scsi_scan.c | 56 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 51 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 23e1c0acdeae..9593c9111611 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -214,6 +214,48 @@ static void scsi_unlock_floptical(struct scsi_device *sdev,
+ 			 SCSI_TIMEOUT, 3, NULL);
+ }
+ 
++static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
++					unsigned int depth)
++{
++	int new_shift = sbitmap_calculate_shift(depth);
++	bool need_alloc = !sdev->budget_map.map;
++	bool need_free = false;
++	int ret;
++	struct sbitmap sb_back;
++
++	/*
++	 * realloc if new shift is calculated, which is caused by setting
++	 * up one new default queue depth after calling ->slave_configure
++	 */
++	if (!need_alloc && new_shift != sdev->budget_map.shift)
++		need_alloc = need_free = true;
++
++	if (!need_alloc)
++		return 0;
++
++	/*
++	 * Request queue has to be freezed for reallocating budget map,
++	 * and here disk isn't added yet, so freezing is pretty fast
++	 */
++	if (need_free) {
++		blk_mq_freeze_queue(sdev->request_queue);
++		sb_back = sdev->budget_map;
++	}
++	ret = sbitmap_init_node(&sdev->budget_map,
++				scsi_device_max_queue_depth(sdev),
++				new_shift, GFP_KERNEL,
++				sdev->request_queue->node, false, true);
++	if (need_free) {
++		if (ret)
++			sdev->budget_map = sb_back;
++		else
++			sbitmap_free(&sb_back);
++		ret = 0;
++		blk_mq_unfreeze_queue(sdev->request_queue);
++	}
++	return ret;
++}
++
+ /**
+  * scsi_alloc_sdev - allocate and setup a scsi_Device
+  * @starget: which target to allocate a &scsi_device for
+@@ -306,11 +348,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	 * default device queue depth to figure out sbitmap shift
+ 	 * since we use this queue depth most of times.
+ 	 */
+-	if (sbitmap_init_node(&sdev->budget_map,
+-				scsi_device_max_queue_depth(sdev),
+-				sbitmap_calculate_shift(depth),
+-				GFP_KERNEL, sdev->request_queue->node,
+-				false, true)) {
++	if (scsi_realloc_sdev_budget_map(sdev, depth)) {
+ 		put_device(&starget->dev);
+ 		kfree(sdev);
+ 		goto out;
+@@ -1017,6 +1055,14 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 			}
+ 			return SCSI_SCAN_NO_RESPONSE;
+ 		}
++
++		/*
++		 * queue_depth is often changed in ->slave_configure, so
++		 * setup budget map again for getting better memory uses
++		 * since memory consumption of the map depends on queue
++		 * depth heavily
++		 */
++		scsi_realloc_sdev_budget_map(sdev, sdev->queue_depth);
+ 	}
+ 
+ 	if (sdev->scsi_level >= SCSI_3)
+-- 
+2.31.1
+
+
+
+-- 
+Ming
 
