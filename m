@@ -2,65 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBCC7C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Jan 2022 05:54:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6412EC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Jan 2022 07:51:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347323AbiAKFyy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Jan 2022 00:54:54 -0500
-Received: from mail-m2836.qiye.163.com ([103.74.28.36]:23724 "EHLO
-        mail-m2836.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231807AbiAKFyx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jan 2022 00:54:53 -0500
-Received: from localhost.localdomain (unknown [218.94.118.90])
-        by mail-m2836.qiye.163.com (Hmail) with ESMTPA id 10C0EC00D6;
-        Tue, 11 Jan 2022 13:45:49 +0800 (CST)
-From:   mingzhe.zou@easystack.cn
-To:     martin.petersen@oracle.com
-Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH] target: make sure the np under each tpg is unique
-Date:   Tue, 11 Jan 2022 13:45:48 +0800
-Message-Id: <20220111054548.19479-1-mingzhe.zou@easystack.cn>
-X-Mailer: git-send-email 2.17.1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgPGg8OCBgUHx5ZQUlOS1dZCBgUCR5ZQVlLVUtZV1
-        kWDxoPAgseWUFZKDYvK1lXWShZQUlCN1dZLVlBSVdZDwkaFQgSH1lBWUNPHhhWQk9JHRlMSB8ZHk
-        MfVRkRExYaEhckFA4PWVdZFhoPEhUdFFlBWVVLWQY+
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6PEk6TSo4NjIyDT8SMQwPKEw*
-        VjoKFAtVSlVKTU9KQ0xCQk9CT01NVTMWGhIXVRYSFRwBEx5VARQOOx4aCAIIDxoYEFUYFUVZV1kS
-        C1lBWUlKQ1VCT1VKSkNVQktZV1kIAVlBSk5MTTcG
-X-HM-Tid: 0a7e47abcf86841ekuqw10c0ec00d6
+        id S1348704AbiAKHvC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Jan 2022 02:51:02 -0500
+Received: from mail.BETTERBIZ.PL ([45.86.209.138]:54360 "EHLO
+        mail.betterbiz.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235893AbiAKHvB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jan 2022 02:51:01 -0500
+Received: by mail.betterbiz.pl (Postfix, from userid 1001)
+        id 2C39482C07; Tue, 11 Jan 2022 02:45:51 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=betterbiz.pl; s=mail;
+        t=1641887461; bh=07NAgW1e0WiNB9zqagiM2BnwZfWBCpNa2E4+ccxBPgw=;
+        h=Date:From:To:Subject:From;
+        b=F9p69lv+Eb7ZeHeDJaMEsWS7wzca0tJZiRCiVp88aSpbC539p0cF868IyNnPBk21k
+         Qwfu7aJTY1l2W+PZQDV3IDgmT4ICMmo804DoYRHo2YRXGT1TnvMC9FhcizLxptLLRd
+         v4l0l6iK/Nkt8K+3If+Dy8Cf5rXuEGs8P3UPbp4swEvgVS9IgSAiHgjK+/EfylvTON
+         g8jQUO3dWMr1VQCx+lKzYHPA/NKx6Ik7ZHYLfS6DKQpL2vqSjQN9pSJ0RSg9fimxUu
+         9CoCVEOnKuMxZqAlSa0Vip/XwYXgQ3SVox8P01Za4c22S3iRul5IcowEoiFGRwbDk0
+         p3/8dSrN21zEg==
+Received: by mail.betterbiz.pl for <linux-scsi@vger.kernel.org>; Tue, 11 Jan 2022 07:45:45 GMT
+Message-ID: <20220111024500-0.1.o.10od.0.m8cbgm65bg@betterbiz.pl>
+Date:   Tue, 11 Jan 2022 07:45:45 GMT
+From:   "Jakub Daroch" <jakub.daroch@betterbiz.pl>
+To:     <linux-scsi@vger.kernel.org>
+Subject: Wycena paneli fotowoltaicznych
+X-Mailer: mail.betterbiz.pl
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ZouMingzhe <mingzhe.zou@easystack.cn>
+Dzie=C5=84 dobry,
 
-iscsit_tpg_check_network_portal() has two-layer for loop, and
-should return true When a match is found. Then, the tpg loop
-will still continue after break the tpg_np loop. If this tpg_np
-is not the last, the match value will be changed.
+dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
+irm=C4=85.
 
-This patch break all loops after finding a match, and make sure
-the np under each tpg is unique.
+=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
+ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
 
-Signed-off-by: ZouMingzhe <mingzhe.zou@easystack.cn>
----
- drivers/target/iscsi/iscsi_target_tpg.c | 3 +++
- 1 file changed, 3 insertions(+)
+Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
+ropozycji?
 
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
-index 8075f60fd02c..2d5cf1714ae0 100644
---- a/drivers/target/iscsi/iscsi_target_tpg.c
-+++ b/drivers/target/iscsi/iscsi_target_tpg.c
-@@ -443,6 +443,9 @@ static bool iscsit_tpg_check_network_portal(
- 				break;
- 		}
- 		spin_unlock(&tpg->tpg_np_lock);
-+
-+		if (match)
-+			break;
- 	}
- 	spin_unlock(&tiqn->tiqn_tpg_lock);
- 
--- 
-2.17.1
 
+Pozdrawiam,
+Jakub Daroch
