@@ -2,81 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B12CC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jan 2022 03:39:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A252C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jan 2022 08:05:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234465AbiALDjo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Jan 2022 22:39:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42344 "EHLO
+        id S1351367AbiALIFF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Jan 2022 03:05:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350489AbiALDjk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jan 2022 22:39:40 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25B63C06173F
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Jan 2022 19:39:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=pBnTP7X2DUB9o2j3BVpZPhTLXUAIKk3J69KQa6Or3Ks=; b=UnuDuZRIJ3aO6PfBDxGc6JVnoz
-        nTs6JBE2zEwcykqQh4LuMzSXhPVTiMIH1LvF+bCt6mHl6oRo2S5U2FrSqAsatje8HrReaGp+/yJ+6
-        vXBfuyjaoV1auyaMuA6Cl7ZPozsLTkIeJFIi0ViPp7OfPf4SqA9OKMIWAthYY7mynKjR0PMZoOjyP
-        jA84oxswUivkTnfKmnJrgliBQ62aaFbKxGZaWb9V/hO63kd1ggLN2iPoLdaXGkC4tEU45fhd5OiLg
-        xPsKUIP+5Ydsoz8nN4gfRymY7K/5o+dSVtMwmw+q4Q0T6UrmJ8WZAMGJi6pyRvTkiVxt2i5gmWmEc
-        PHViQCpQ==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1n7UU4-0012Fa-Dc; Wed, 12 Jan 2022 03:39:36 +0000
-Date:   Tue, 11 Jan 2022 19:39:36 -0800
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Douglas Gilbert <dgilbert@interlog.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com
-Subject: Re: [PATCH 1/9] scsi_debug: address races following module load
-Message-ID: <Yd5NeJKdKx32lemQ@bombadil.infradead.org>
-References: <20211231020829.29147-1-dgilbert@interlog.com>
- <20211231020829.29147-2-dgilbert@interlog.com>
+        with ESMTP id S237577AbiALIFF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jan 2022 03:05:05 -0500
+Received: from mail-qt1-x832.google.com (mail-qt1-x832.google.com [IPv6:2607:f8b0:4864:20::832])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A774DC06173F;
+        Wed, 12 Jan 2022 00:05:04 -0800 (PST)
+Received: by mail-qt1-x832.google.com with SMTP id y17so2131533qtx.9;
+        Wed, 12 Jan 2022 00:05:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=mX58k7wGho97Y8qH2nxAgkm3miNmVOmu/qIE3BiGfD8=;
+        b=pVYyM7tn4EJ9mmnoSSYJUqh+HgkZToErbRTUapxwbADX0u4WL8CdKvGaDX7I9cgRur
+         fAfWEM1PazmPDwPxQipDkOlDHqm9sBLkpvUsdwSbnOZnSfTo4qqqYH/CMefQVNJb3CSi
+         j7Hi44/MtLxQh50UMwBN84/GFoRHSh5LTDdnmgElfrtj0z6cKruhMkK+PdFG1fLMbD/L
+         aAG+hkECI+SVgr7RnhvaTneNbDSLQiMi8q+eluRBoXI1zYk+gUsfdR3qkf1zxjwFd2I2
+         W8XqFHBsJGwla525sO09ACNtd2352DBy8ac/qxTwPAL4CKYbNGrOGfprtxn3HRmJWV+i
+         CEhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=mX58k7wGho97Y8qH2nxAgkm3miNmVOmu/qIE3BiGfD8=;
+        b=4k/OwWiAWQhqm5ki+pq8M4I9L5MW8xg81D+eIQxouFsCwlWR1DTxyyF7DIym4DgQp1
+         PfOctol6bsvvluntoMo0/1BSfJEx7wfxF3rvrtiOh4aJTaR8OWQk7uPd252sbhULaTVC
+         Xfgsln0Ugti/NUjz4vRpksbudFGG8H8EHFJghvIo5RmprnUc4bXWz/1GPLkPKIavqe2U
+         X501c5D8Em2asFszQstL3jC9nNWGg4TFW9nCYaPL8mkYGzUQda2WKJmgwunETtlbk5O5
+         3eE/yiL/H1NvzEdYkYKniE2yDrSCt1DxeTVf3YVyYlkgb6hgmXclqTahqw/Sxtrz2+xf
+         ca5g==
+X-Gm-Message-State: AOAM530G0xSY2HyOg3jSRHqPzsT4r0LSqqYZbRSzJJOUSvYmXCNOxl9j
+        5/IKZuFNSPR3F4ntTNjVKdo=
+X-Google-Smtp-Source: ABdhPJxVnEJK5emKrDFsqI7mB9uRjjKSWfAoMptS80gvdL4Kc8qcxPPrrAFDosjbt9WvKK1jIizFSA==
+X-Received: by 2002:ac8:4e4f:: with SMTP id e15mr6654074qtw.168.1641974703918;
+        Wed, 12 Jan 2022 00:05:03 -0800 (PST)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id d11sm8035371qtj.4.2022.01.12.00.05.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Jan 2022 00:05:03 -0800 (PST)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: chi.minghao@zte.com.cn
+To:     sathya.prakash@broadcom.com
+Cc:     sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Minghao Chi <chi.minghao@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>, CGEL ZTE <cgel.zte@gmail.com>
+Subject: [PATCH] drivers/message/fusion: remove redundant rc variable
+Date:   Wed, 12 Jan 2022 08:04:57 +0000
+Message-Id: <20220112080457.667063-1-chi.minghao@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211231020829.29147-2-dgilbert@interlog.com>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Dec 30, 2021 at 09:08:21PM -0500, Douglas Gilbert wrote:
-> This patch was developed several months ago after discussions with
-> Luis Chamberlain. It may have been overtaken by more recent work
-> by Luis.
+From: Minghao Chi <chi.minghao@zte.com.cn>
 
-Yeah well pretty much I ended up concluding that even though the driver
-*can* be sloppy ultimately we expose tons of knobs through userspace to
-easily bump module refcounts at userpace's whim's. For instance a
-userspace loop issuing open() on any block driver will bump the module
-refcnt. A simple reproducer is provided through korg#214015 [0], see
-busy-open-block-device-sleep.c, you run that while running the test
-script. In short userspace's simple open() triggers blkdev_open() and
-that bumps the module refcnt. This means the module refcnt is finicky.
+Return value from mptctl_do_mpt_command() directly instead
+of taking this in another redundant variable.
 
-In so far as a fix is concerned, you have to consider that long ago this
-race was considered theoretical, and we had in-kernel support to wait
-to get the refcnt to 0 before unloading a module. That code proved
-complex, and since the race was theoretical it was removed. The race is
-clearly possible with any block driver, and therefore any type of driver
-too, and so the fix really is to implement a proper patient module
-remover in userspace.
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
+Signed-off-by: CGEL ZTE <cgel.zte@gmail.com>
+---
+ drivers/message/fusion/mptctl.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-I already implemented and posted patches for kmod for this, they are in
-review. In the meantime we have needed to also open code solutions for
-fstests and blktest while kmod is not released yet with the new changes.
-I already posted patches for both, and fstests has this fix merged a
-while ago. Blktests folks just need to finish testing things and merge
-the changes.
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index ae433c150b37..dd1170cde5a8 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -1696,8 +1696,6 @@ mptctl_mpt_command (MPT_ADAPTER *ioc, unsigned long arg)
+ {
+ 	struct mpt_ioctl_command __user *uarg = (void __user *) arg;
+ 	struct mpt_ioctl_command  karg;
+-	int		rc;
+-
+ 
+ 	if (copy_from_user(&karg, uarg, sizeof(struct mpt_ioctl_command))) {
+ 		printk(KERN_ERR MYNAM "%s@%d::mptctl_mpt_command - "
+@@ -1706,9 +1704,7 @@ mptctl_mpt_command (MPT_ADAPTER *ioc, unsigned long arg)
+ 		return -EFAULT;
+ 	}
+ 
+-	rc = mptctl_do_mpt_command (ioc, karg, &uarg->MF);
+-
+-	return rc;
++	return mptctl_do_mpt_command(ioc, karg, &uarg->MF);
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+-- 
+2.25.1
 
-All that said, drivers can certainly be enhanced to reduce these sorts
-of races too. It is all driver specific and so outside of the scope of
-generic drivers.
-
-[0] https://bugzilla.kernel.org/show_bug.cgi?id=214015
-
-  Luis
