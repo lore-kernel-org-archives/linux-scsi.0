@@ -2,92 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 296EBC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jan 2022 01:17:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17AD2C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Jan 2022 02:28:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347629AbiALBRD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Jan 2022 20:17:03 -0500
-Received: from out4436.biz.mail.alibaba.com ([47.88.44.36]:37767 "EHLO
-        out4436.biz.mail.alibaba.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1347624AbiALBRC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 Jan 2022 20:17:02 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R191e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e01424;MF=yang.lee@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0V1c8Chh_1641950209;
-Received: from localhost(mailfrom:yang.lee@linux.alibaba.com fp:SMTPD_---0V1c8Chh_1641950209)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Wed, 12 Jan 2022 09:16:50 +0800
-From:   Yang Li <yang.lee@linux.alibaba.com>
-To:     sathya.prakash@broadcom.com
-Cc:     sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Yang Li <yang.lee@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH -next] scsi: message: fusion: Fix returned errno code
-Date:   Wed, 12 Jan 2022 09:16:48 +0800
-Message-Id: <20220112011648.110287-1-yang.lee@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        id S1348708AbiALC2j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Jan 2022 21:28:39 -0500
+Received: from szxga02-in.huawei.com ([45.249.212.188]:17340 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1348713AbiALC2j (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jan 2022 21:28:39 -0500
+Received: from dggpemm500021.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4JYWg547Nzz9s7h;
+        Wed, 12 Jan 2022 10:27:29 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500021.china.huawei.com (7.185.36.109) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Wed, 12 Jan 2022 10:28:37 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Wed, 12 Jan 2022 10:28:36 +0800
+Subject: Re: [PATCH] scsi: Do not break scan luns loop if add single lun
+ failed
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     Zhiqiang Liu <liuzhiqiang26@huawei.com>,
+        Wenchao Hao <haowenchao@huawei.com>
+References: <20211225232911.1117843-1-haowenchao@huawei.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+Message-ID: <5ec37028-052c-3851-6a89-983ab5ed4ae2@huawei.com>
+Date:   Wed, 12 Jan 2022 10:28:36 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211225232911.1117843-1-haowenchao@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The callers of initChainBuffers() and PrimeIocFifos() only
-cares about gross success/failure, but we still might as well
-resolve the following smatch warnings and fix the other error
-paths as well:
+On 2021/12/26 7:29, Wenchao Hao wrote:
+> Failed to add a single lun does not mean all luns are unaccessible,
+> if we break the scan luns loop, the other luns reported by REPORT LUNS
+> command would not be probed any more.
+> 
+> In this case, we might loss some luns which are accessible.
+> 
+> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+> ---
+>   drivers/scsi/scsi_scan.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 23e1c0acdeae..fee7ce082103 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1476,13 +1476,13 @@ static int scsi_report_lun_scan(struct scsi_target *starget, blist_flags_t bflag
+>   				lun, NULL, NULL, rescan, NULL);
+>   			if (res == SCSI_SCAN_NO_RESPONSE) {
+>   				/*
+> -				 * Got some results, but now none, abort.
+> +				 * Got some results, but now none, abort this lun
+>   				 */
+>   				sdev_printk(KERN_ERR, sdev,
+>   					"Unexpected response"
+>   					" from lun %llu while scanning, scan"
+>   					" aborted\n", (unsigned long long)lun);
+> -				break;
+> +				continue;
+>   			}
+>   		}
+>   	}
+> 
 
-drivers/message/fusion/mptbase.c:4330 initChainBuffers() warn: returning
--1 instead of -ENOMEM is sloppy
-drivers/message/fusion/mptbase.c:4404 initChainBuffers() warn: returning
--1 instead of -ENOMEM is sloppy
-
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
----
- drivers/message/fusion/mptbase.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index e90adfa57950..2c6ebc324bf8 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -4327,14 +4327,14 @@ initChainBuffers(MPT_ADAPTER *ioc)
- 		sz = ioc->req_depth * sizeof(int);
- 		mem = kmalloc(sz, GFP_ATOMIC);
- 		if (mem == NULL)
--			return -1;
-+			return -ENOMEM;
- 
- 		ioc->ReqToChain = (int *) mem;
- 		dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "ReqToChain alloc  @ %p, sz=%d bytes\n",
- 			 	ioc->name, mem, sz));
- 		mem = kmalloc(sz, GFP_ATOMIC);
- 		if (mem == NULL)
--			return -1;
-+			return -ENOMEM;
- 
- 		ioc->RequestNB = (int *) mem;
- 		dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "RequestNB alloc  @ %p, sz=%d bytes\n",
-@@ -4401,7 +4401,7 @@ initChainBuffers(MPT_ADAPTER *ioc)
- 	if (ioc->ChainToChain == NULL) {
- 		mem = kmalloc(sz, GFP_ATOMIC);
- 		if (mem == NULL)
--			return -1;
-+			return -ENOMEM;
- 
- 		ioc->ChainToChain = (int *) mem;
- 		dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "ChainToChain alloc @ %p, sz=%d bytes\n",
-@@ -4440,7 +4440,7 @@ PrimeIocFifos(MPT_ADAPTER *ioc)
- 
- 	if (ioc->reply_frames == NULL) {
- 		if ( (num_chain = initChainBuffers(ioc)) < 0)
--			return -1;
-+			return -ENOMEM;
- 		/*
- 		 * 1078 errata workaround for the 36GB limitation
- 		 */
--- 
-2.20.1.7.g153144c
-
+ping ...
