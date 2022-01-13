@@ -2,384 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80CF7C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Jan 2022 20:22:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A391C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Jan 2022 23:25:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232974AbiAMUWp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Jan 2022 15:22:45 -0500
-Received: from bedivere.hansenpartnership.com ([96.44.175.130]:36392 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232597AbiAMUWo (ORCPT
+        id S238197AbiAMXZ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Jan 2022 18:25:26 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:35018 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235310AbiAMXZZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Jan 2022 15:22:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1642105364;
-        bh=4yb8S0SxF8mGdKyBVLWgGJ233ht8yYKx9q1qC9d0u4g=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=pvvFblrbu95wmakZe5SvH+BjyayKoLzQypb5jGk7L4TNBxagpgnIBUvlryudbUF4F
-         RDLb4cwxwwJp5hmSbYA5+JK/qS5Dx0uOqmxS9QX6tDRUlmwsfORuDmZlu+tMMDABZ1
-         VxM5AkQT5/6Xj6bMmUz45hNyCUQocC+VMiAc3iLo=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 7385C1280E57;
-        Thu, 13 Jan 2022 15:22:44 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 725_tg9aG2Ea; Thu, 13 Jan 2022 15:22:44 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1642105364;
-        bh=4yb8S0SxF8mGdKyBVLWgGJ233ht8yYKx9q1qC9d0u4g=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=pvvFblrbu95wmakZe5SvH+BjyayKoLzQypb5jGk7L4TNBxagpgnIBUvlryudbUF4F
-         RDLb4cwxwwJp5hmSbYA5+JK/qS5Dx0uOqmxS9QX6tDRUlmwsfORuDmZlu+tMMDABZ1
-         VxM5AkQT5/6Xj6bMmUz45hNyCUQocC+VMiAc3iLo=
-Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        Thu, 13 Jan 2022 18:25:25 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1642116324;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=/cYjdYc1cOu2NaGMgT2On4jE9UFJ7SNdWKgu/5ofk7U=;
+        b=hjHdGyk7Bk3gEdwJQrys2TNLZljqpAvByHzZa+mPduYomFtChlNmNr21eJywMgZSPaNsAF
+        hZzCDQlTXB+7r95ZFud7Z6GuCtULzaCKJo5IrIN3XNHZoWYXA0pxx7mevTVYVs5lYL9mQN
+        aW2pUtYGngjQhv7wx9oJ6jPZ7e5Hv+c=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-516-R0N9NBi0MV28KfAFG6CeqQ-1; Thu, 13 Jan 2022 18:25:21 -0500
+X-MC-Unique: R0N9NBi0MV28KfAFG6CeqQ-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id E1F4A1280E1C;
-        Thu, 13 Jan 2022 15:22:43 -0500 (EST)
-Message-ID: <31f8716fbb4f1e2a332b2b3e3243a170e8b01145.camel@HansenPartnership.com>
-Subject: [GIT PULL] first round of SCSI updates for the 5.15+ merge window
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Thu, 13 Jan 2022 15:22:42 -0500
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8F1121083F66;
+        Thu, 13 Jan 2022 23:25:20 +0000 (UTC)
+Received: from jmeneghi.bos.com (unknown [10.22.17.136])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4E87F1042A9C;
+        Thu, 13 Jan 2022 23:25:14 +0000 (UTC)
+From:   John Meneghini <jmeneghi@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org,
+        GR-QLogic-Storage-Upstream@marvell.com, mlombard@redhat.com,
+        skashyap@marvell.com
+Subject: [PATCH] scsi: bnx2fc: flush destroy_work queue before calling bnx2fc_interface_put
+Date:   Thu, 13 Jan 2022 18:24:56 -0500
+Message-Id: <20220113232456.230749-1-jmeneghi@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This series consists of the usual driver updates (ufs, pm80xx, lpfc,
-mpi3mr, mpt3sas, hisi_sas, libsas) and minor updates and bug
-fixes.  The most impactful change is likely the switch from GFP_DMA to
-GFP_KERNEL in a bunch of drivers, but even that shouldn't affect too
-many people.
+  The bnx2fc_destroy functions are removing the interface before calling
+  destroy_work. This results multiple WARNings from sysfs_remove_group
+  as the controller rport device attributes are removed to early.
 
-The patch is available here:
+  The problem is easily reproducible with the following steps.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+  Example:
 
-Adrian Hunter (4):
-      scsi: ufs: ufs-pci: Add support for Intel ADL
-      scsi: ufs: Let devices remain runtime suspended during system suspend
-      scsi: ufs: core: Fix another task management completion race
-      scsi: ufs: core: Fix task management completion timeout race
+    $ dmesg -w &
+    $ systemctl enable --now fcoe
+    $ fipvlan -s -c ens2f1
+    $ fcoeadm -d ens2f1.802
+    [  583.464488] host2: libfc: Link down on port (7500a1)
+    [  583.472651] bnx2fc: 7500a1 - rport not created Yet!!
+    [  583.490468] ------------[ cut here ]------------
+    [  583.538725] sysfs group 'power' not found for kobject 'rport-2:0-0'
+    [  583.568814] WARNING: CPU: 3 PID: 192 at fs/sysfs/group.c:279 sysfs_remove_group+0x6f/0x80
+    [  583.607130] Modules linked in: dm_service_time 8021q garp mrp stp llc bnx2fc cnic uio rpcsec_gss_krb5 auth_rpcgss nfsv4 ...
+    [  583.942994] CPU: 3 PID: 192 Comm: kworker/3:2 Kdump: loaded Not tainted 5.14.0-39.el9.x86_64 #1
+    [  583.984105] Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
+    [  584.016535] Workqueue: fc_wq_2 fc_rport_final_delete [scsi_transport_fc]
+    [  584.050691] RIP: 0010:sysfs_remove_group+0x6f/0x80
+    [  584.074725] Code: ff 5b 48 89 ef 5d 41 5c e9 ee c0 ff ff 48 89 ef e8 f6 b8 ff ff eb d1 49 8b 14 24 48 8b 33 48 c7 c7 ...
+    [  584.162586] RSP: 0018:ffffb567c15afdc0 EFLAGS: 00010282
+    [  584.188225] RAX: 0000000000000000 RBX: ffffffff8eec4220 RCX: 0000000000000000
+    [  584.221053] RDX: ffff8c1586ce84c0 RSI: ffff8c1586cd7cc0 RDI: ffff8c1586cd7cc0
+    [  584.255089] RBP: 0000000000000000 R08: 0000000000000000 R09: ffffb567c15afc00
+    [  584.287954] R10: ffffb567c15afbf8 R11: ffffffff8fbe7f28 R12: ffff8c1486326400
+    [  584.322356] R13: ffff8c1486326480 R14: ffff8c1483a4a000 R15: 0000000000000004
+    [  584.355379] FS:  0000000000000000(0000) GS:ffff8c1586cc0000(0000) knlGS:0000000000000000
+    [  584.394419] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+    [  584.421123] CR2: 00007fe95a6f7840 CR3: 0000000107674002 CR4: 00000000000606e0
+    [  584.454888] Call Trace:
+    [  584.466108]  device_del+0xb2/0x3e0
+    [  584.481701]  device_unregister+0x13/0x60
+    [  584.501306]  bsg_unregister_queue+0x5b/0x80
+    [  584.522029]  bsg_remove_queue+0x1c/0x40
+    [  584.541884]  fc_rport_final_delete+0xf3/0x1d0 [scsi_transport_fc]
+    [  584.573823]  process_one_work+0x1e3/0x3b0
+    [  584.592396]  worker_thread+0x50/0x3b0
+    [  584.609256]  ? rescuer_thread+0x370/0x370
+    [  584.628877]  kthread+0x149/0x170
+    [  584.643673]  ? set_kthread_struct+0x40/0x40
+    [  584.662909]  ret_from_fork+0x22/0x30
+    [  584.680002] ---[ end trace 53575ecefa942ece ]---
 
-Alan Stern (1):
-      scsi: block: pm: Always set request queue runtime active in blk_post_runtime_resume()
+Signed-off-by: John Meneghini <jmeneghi@redhat.com>
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Bart Van Assche (31):
-      scsi: ufs: Implement polling support
-      scsi: ufs: Optimize the command queueing code
-      scsi: ufs: Stop using the clock scaling lock in the error handler
-      scsi: ufs: Fix a kernel crash during shutdown
-      scsi: ufs: Improve SCSI abort handling further
-      scsi: ufs: Introduce ufshcd_release_scsi_cmd()
-      scsi: ufs: Remove the 'update_scaling' local variable
-      scsi: ufs: Remove hba->cmd_queue
-      scsi: ufs: Fix a deadlock in the error handler
-      scsi: ufs: Rework ufshcd_change_queue_depth()
-      scsi: ufs: Remove ufshcd_any_tag_in_use()
-      scsi: ufs: Fix race conditions related to driver data
-      scsi: ufs: Remove dead code
-      scsi: ufs: Remove the sdev_rpmb member
-      scsi: ufs: Remove is_rpmb_wlun()
-      scsi: ufs: Rename a function argument
-      scsi: core: Fix scsi_device_max_queue_depth()
-      scsi: Remove superfluous #include <linux/async.h> directives
-      scsi: pmcraid: Fix a kernel-doc warning
-      scsi: pm8001: Fix kernel-doc warnings
-      scsi: megaraid: Fix a kernel-doc warning
-      scsi: initio: Fix a kernel-doc warning
-      scsi: dc395x: Fix a kernel-doc warning
-      scsi: bfa: Declare 'bfad_im_vport_attrs' static
-      scsi: atp870u: Fix a kernel-doc warning
-      scsi: a100u2w: Fix a kernel-doc warning
-      scsi: core: Show SCMD_LAST in text form
-      scsi: core: Declare 'scsi_scan_type' static
-      scsi: core: Suppress a kernel-doc warning
-      scsi: core: Remove Scsi_Host.shost_dev_attr_groups
-      scsi: ufs: core: Improve SCSI abort handling
-
-Bean Huo (2):
-      scsi: ufs: core: Fix deadlock issue in ufshcd_wait_for_doorbell_clr()
-      scsi: ufs: ufshpb: Fix warning in ufshpb_set_hpb_read_to_upiu()
-
-Changyuan Lyu (2):
-      scsi: pm80xx: Add pm80xx_mpi_build_cmd() tracepoint
-      scsi: pm80xx: Add tracepoints
-
-Christoph Hellwig (8):
-      scsi: pmcraid: Don't use GFP_DMA in pmcraid_alloc_sglist()
-      scsi: snic: Don't use GFP_DMA in snic_queue_report_tgt_req()
-      scsi: myrs: Don't use GFP_DMA
-      scsi: myrb: Don't use GFP_DMA in myrb_pdev_slave_alloc()
-      scsi: initio: Don't use GFP_DMA in initio_probe_one()
-      scsi: sr: Don't use GFP_DMA
-      scsi: ch: Don't use GFP_DMA
-      scsi: efct: Don't pass GFP_DMA to dma_alloc_coherent()
-
-Christophe JAILLET (4):
-      scsi: hpsa: Remove an unused variable in hpsa_update_scsi_devices()
-      scsi: hisi_sas: Use non-atomic bitmap functions when possible
-      scsi: hisi_sas: Remove some useless code in hisi_sas_alloc()
-      scsi: hisi_sas: Use devm_bitmap_zalloc() when applicable
-
-Chunguang Xu (1):
-      scsi: core: Use eh_timeout for START STOP UNIT
-
-Colin Ian King (1):
-      scsi: mptfusion: Remove redundant variable r
-
-Dan Carpenter (2):
-      scsi: target: configfs: Delete unnecessary checks for NULL
-      scsi: qla2xxx: edif: Fix off by one bug in qla_edif_app_getfcinfo()
-
-Ewan D. Milne (2):
-      scsi: core: Simplify control flow in scmd_eh_abort_handler()
-      scsi: qla2xxx: Fix mailbox direction flags in qla2xxx_get_adapter_id()
-
-Florian Fainelli (3):
-      scsi: qla4xxx: Format SYSFS_FLAG_FW_SEL_BOOT as byte
-      scsi: qedi: Fix SYSFS_FLAG_FW_SEL_BOOT formatting
-      scsi: qedi: Remove set but unused 'page' variable
-
-Geert Uytterhoeven (2):
-      scsi: ufs: Fix double space in SCSI_UFS_HWMON description
-      scsi: ufs: Wrap Universal Flash Storage drivers in SCSI_UFSHCD
-
-George Kennedy (2):
-      scsi: scsi_debug: Sanity check block descriptor length in resp_mode_select()
-      scsi: scsi_debug: Fix type in min_t to avoid stack OOB
-
-Hannes Reinecke (1):
-      scsi: qla2xxx: Synchronize rport dev_loss_tmo setting
-
-Igor Pylypiv (5):
-      scsi: pm80xx: Do not call scsi_remove_host() in pm8001_alloc()
-      scsi: pm80xx: Use bitmap_zalloc() for tags bitmap allocation
-      scsi: pm80xx: Update WARN_ON check in pm8001_mpi_build_cmd()
-      scsi: pm80xx: Do not check the address-of value for NULL
-      scsi: pm80xx: Apply byte mask for phy ID in mpi_phy_start_resp()
-
-James Smart (10):
-      scsi: lpfc: Update lpfc version to 14.0.0.4
-      scsi: lpfc: Add additional debugfs support for CMF
-      scsi: lpfc: Cap CMF read bytes to MBPI
-      scsi: lpfc: Adjust CMF total bytes and rxmonitor
-      scsi: lpfc: Trigger SLI4 firmware dump before doing driver cleanup
-      scsi: lpfc: Fix NPIV port deletion crash
-      scsi: lpfc: Fix lpfc_force_rscn ndlp kref imbalance
-      scsi: lpfc: Change return code on I/Os received during link bounce
-      scsi: lpfc: Fix leaked lpfc_dmabuf mbox allocations with NPIV
-      scsi: lpfc: Fix non-recovery of remote ports following an unsolicited LOGO
-
-John Garry (7):
-      scsi: Revert "scsi: hisi_sas: Filter out new PHY up events during suspend"
-      scsi: libsas: Don't always drain event workqueue for HA resume
-      scsi: libsas: Decode SAM status and host byte codes
-      scsi: hisi_sas: Factor out task prep and delivery code
-      scsi: hisi_sas: Pass abort structure for internal abort
-      scsi: hisi_sas: Make internal abort have no task proto
-      scsi: hisi_sas: Start delivery hisi_sas_task_exec() directly
-
-Kees Cook (2):
-      scsi: lpfc: Use struct_group to isolate cast to larger object
-      scsi: lpfc: Use struct_group() to initialize struct lpfc_cgn_info
-
-Manish Rangankar (1):
-      scsi: qedi: Fix cmd_cleanup_cmpl counter mismatch issue
-
-Mike Christie (4):
-      scsi: core: sysfs: Fix setting device state to SDEV_RUNNING
-      scsi: target: core: Use RCU helpers for INQUIRY t10_alua_tg_pt_gp
-      scsi: core: sysfs: Fix hang when device state is set via sysfs
-      scsi: iscsi: Unblock session then wake up error handler
-
-Niklas Cassel (2):
-      scsi: sd_zbc: Clean up sd_zbc_parse_report() setting of wp
-      scsi: sd_zbc: Simplify zone full condition check
-
-Qi Liu (3):
-      scsi: hisi_sas: Fix phyup timeout on FPGA
-      scsi: hisi_sas: Prevent parallel FLR and controller reset
-      scsi: hisi_sas: Prevent parallel controller reset and control phy command
-
-Roman Bolshakov (1):
-      scsi: qla2xxx: Format log strings only if needed
-
-Sebastian Andrzej Siewior (1):
-      scsi: be2iscsi: Remove maintainers
-
-Shin'ichiro Kawasaki (2):
-      scsi: scsi_debug: Fix buffer size of REPORT ZONES command
-      scsi: scsi_debug: Zero clear zones at reset write pointer
-
-Sreekanth Reddy (28):
-      scsi: mpi3mr: Bump driver version to 8.0.0.61.0
-      scsi: mpi3mr: Fixes around reply request queues
-      scsi: mpi3mr: Enhanced Task Management Support Reply handling
-      scsi: mpi3mr: Use TM response codes from MPI3 headers
-      scsi: mpi3mr: Add io_uring interface support in I/O-polled mode
-      scsi: mpi3mr: Print cable mngnt and temp threshold events
-      scsi: mpi3mr: Support Prepare for Reset event
-      scsi: mpi3mr: Add Event acknowledgment logic
-      scsi: mpi3mr: Gracefully handle online FW update operation
-      scsi: mpi3mr: Detect async reset that occurred in firmware
-      scsi: mpi3mr: Add IOC reinit function
-      scsi: mpi3mr: Handle offline FW activation in graceful manner
-      scsi: mpi3mr: Code refactor of IOC init - part2
-      scsi: mpi3mr: Code refactor of IOC init - part1
-      scsi: mpi3mr: Fault IOC when internal command gets timeout
-      scsi: mpi3mr: Display IOC firmware package version
-      scsi: mpi3mr: Handle unaligned PLL in unmap cmnds
-      scsi: mpi3mr: Increase internal cmnds timeout to 60s
-      scsi: mpi3mr: Do access status validation before adding devices
-      scsi: mpi3mr: Add support for PCIe Managed Switch SES device
-      scsi: mpi3mr: Update MPI3 headers - part2
-      scsi: mpi3mr: Update MPI3 headers - part1
-      scsi: mpi3mr: Don't reset IOC if cmnds flush with reset status
-      scsi: mpi3mr: Replace spin_lock() with spin_lock_irqsave()
-      scsi: mpi3mr: Add debug APIs based on logging_level bits
-      scsi: mpt3sas: Fix incorrect system timestamp
-      scsi: mpt3sas: Fix system going into read-only mode
-      scsi: mpt3sas: Fix kernel panic during drive powercycle test
-
-Xiang Chen (12):
-      scsi: hisi_sas: Use autosuspend for the host controller
-      scsi: libsas: Keep host active while processing events
-      scsi: hisi_sas: Keep controller active between ISR of phyup and the event being processed
-      scsi: libsas: Defer works of new phys during suspend
-      scsi: libsas: Refactor sas_queue_deferred_work()
-      scsi: libsas: Add flag SAS_HA_RESUMING
-      scsi: libsas: Resume host while sending SMP I/Os
-      scsi: hisi_sas: Add more logs for runtime suspend/resume
-      scsi: libsas: Insert PORTE_BROADCAST_RCVD event for resuming host
-      scsi: mvsas: Add spin_lock/unlock() to protect asd_sas_port->phy_list
-      scsi: hisi_sas: Fix some issues related to asd_sas_port->phy_list
-      scsi: libsas: Add spin_lock/unlock() to protect asd_sas_port->phy_list
-
-Ye Guojin (1):
-      scsi: ufs: ufs-mediatek: Add put_device() after of_find_device_by_node()
-
-And the diffstat:
-
- MAINTAINERS                                  |    2 -
- block/blk-pm.c                               |   22 +-
- drivers/message/fusion/mptbase.c             |    6 +-
- drivers/scsi/a100u2w.c                       |    2 -
- drivers/scsi/atp870u.c                       |    1 -
- drivers/scsi/bfa/bfad_attr.c                 |    2 +-
- drivers/scsi/ch.c                            |    6 +-
- drivers/scsi/dc395x.c                        |    3 +-
- drivers/scsi/elx/efct/efct_driver.c          |    2 +-
- drivers/scsi/elx/efct/efct_hw.c              |   10 +-
- drivers/scsi/elx/efct/efct_io.c              |    2 +-
- drivers/scsi/elx/libefc/efc_cmds.c           |    4 +-
- drivers/scsi/elx/libefc/efc_els.c            |    4 +-
- drivers/scsi/elx/libefc_sli/sli4.c           |   14 +-
- drivers/scsi/hisi_sas/hisi_sas.h             |    7 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c        |  396 ++++---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c       |   35 +-
- drivers/scsi/hosts.c                         |   15 +-
- drivers/scsi/hpsa.c                          |    2 -
- drivers/scsi/initio.c                        |    5 +-
- drivers/scsi/libsas/sas_discover.c           |    1 -
- drivers/scsi/libsas/sas_event.c              |   77 +-
- drivers/scsi/libsas/sas_expander.c           |    3 +
- drivers/scsi/libsas/sas_init.c               |   49 +-
- drivers/scsi/libsas/sas_internal.h           |    2 +
- drivers/scsi/libsas/sas_scsi_host.c          |    7 +-
- drivers/scsi/lpfc/lpfc.h                     |   97 +-
- drivers/scsi/lpfc/lpfc_attr.c                |   62 +-
- drivers/scsi/lpfc/lpfc_debugfs.c             |   27 +-
- drivers/scsi/lpfc/lpfc_debugfs.h             |    2 +-
- drivers/scsi/lpfc/lpfc_els.c                 |   31 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c             |   10 +-
- drivers/scsi/lpfc/lpfc_hw.h                  |   29 +-
- drivers/scsi/lpfc/lpfc_init.c                |   41 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c           |    6 +
- drivers/scsi/lpfc/lpfc_scsi.c                |    8 +-
- drivers/scsi/lpfc/lpfc_sli.c                 |   38 +-
- drivers/scsi/lpfc/lpfc_version.h             |    2 +-
- drivers/scsi/lpfc/lpfc_vport.c               |   83 +-
- drivers/scsi/megaraid/megaraid_mbox.c        |    1 -
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h         |  603 +++++++++--
- drivers/scsi/mpi3mr/mpi/mpi30_image.h        |   59 +-
- drivers/scsi/mpi3mr/mpi/mpi30_init.h         |   15 +-
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h          |  128 ++-
- drivers/scsi/mpi3mr/mpi/mpi30_pci.h          |   44 +
- drivers/scsi/mpi3mr/mpi/mpi30_sas.h          |   14 +
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h    |   31 +-
- drivers/scsi/mpi3mr/mpi3mr.h                 |  126 ++-
- drivers/scsi/mpi3mr/mpi3mr_debug.h           |  133 ++-
- drivers/scsi/mpi3mr/mpi3mr_fw.c              | 1451 +++++++++++++++++---------
- drivers/scsi/mpi3mr/mpi3mr_os.c              |  771 +++++++++++---
- drivers/scsi/mpt3sas/mpt3sas_base.c          |    4 +-
- drivers/scsi/mpt3sas/mpt3sas_base.h          |    4 +
- drivers/scsi/mpt3sas/mpt3sas_scsih.c         |   59 +-
- drivers/scsi/mvsas/mv_sas.c                  |    5 +
- drivers/scsi/myrb.c                          |    2 +-
- drivers/scsi/myrs.c                          |   10 +-
- drivers/scsi/pm8001/Makefile                 |    7 +-
- drivers/scsi/pm8001/pm8001_ctl.c             |   24 +-
- drivers/scsi/pm8001/pm8001_hwi.c             |   33 +-
- drivers/scsi/pm8001/pm8001_init.c            |   10 +-
- drivers/scsi/pm8001/pm8001_sas.c             |   16 +
- drivers/scsi/pm8001/pm80xx_hwi.c             |   38 +-
- drivers/scsi/pm8001/pm80xx_tracepoints.c     |   10 +
- drivers/scsi/pm8001/pm80xx_tracepoints.h     |  113 ++
- drivers/scsi/pmcraid.c                       |    5 +-
- drivers/scsi/qedi/qedi_fw.c                  |   37 +-
- drivers/scsi/qedi/qedi_iscsi.c               |    2 +-
- drivers/scsi/qedi/qedi_iscsi.h               |    2 +-
- drivers/scsi/qedi/qedi_main.c                |    8 +-
- drivers/scsi/qla2xxx/qla_attr.c              |    6 +
- drivers/scsi/qla2xxx/qla_dbg.c               |    3 +
- drivers/scsi/qla2xxx/qla_edif.c              |    2 +-
- drivers/scsi/qla2xxx/qla_init.c              |   10 +-
- drivers/scsi/qla2xxx/qla_mbx.c               |    6 +-
- drivers/scsi/qla2xxx/qla_nvme.c              |    5 +-
- drivers/scsi/qla4xxx/ql4_os.c                |    4 +-
- drivers/scsi/scsi.c                          |    5 +-
- drivers/scsi/scsi_debug.c                    |   45 +-
- drivers/scsi/scsi_debugfs.c                  |    1 +
- drivers/scsi/scsi_error.c                    |  112 +-
- drivers/scsi/scsi_pm.c                       |    3 +-
- drivers/scsi/scsi_priv.h                     |    3 +-
- drivers/scsi/scsi_scan.c                     |    4 +-
- drivers/scsi/scsi_sysfs.c                    |   37 +-
- drivers/scsi/scsi_transport_iscsi.c          |    6 +-
- drivers/scsi/sd.c                            |    1 -
- drivers/scsi/sd_zbc.c                        |    6 +-
- drivers/scsi/snic/snic_disc.c                |    2 +-
- drivers/scsi/sr.c                            |    2 +-
- drivers/scsi/sr_vendor.c                     |    4 +-
- drivers/scsi/ufs/Kconfig                     |   15 +-
- drivers/scsi/ufs/tc-dwc-g210-pci.c           |    1 -
- drivers/scsi/ufs/ufs-exynos.c                |    4 +-
- drivers/scsi/ufs/ufs-hisi.c                  |    8 +-
- drivers/scsi/ufs/ufs-mediatek.c              |    1 +
- drivers/scsi/ufs/ufshcd-pci.c                |   20 +-
- drivers/scsi/ufs/ufshcd-pltfrm.c             |    2 -
- drivers/scsi/ufs/ufshcd.c                    |  354 ++++---
- drivers/scsi/ufs/ufshcd.h                    |   20 +-
- drivers/scsi/ufs/ufshpb.c                    |    3 +-
- drivers/target/target_core_fabric_configfs.c |   16 +-
- drivers/target/target_core_spc.c             |   14 +-
- include/linux/blk-pm.h                       |    2 +-
- include/scsi/libsas.h                        |    2 +
- include/scsi/scsi_host.h                     |    6 -
- 106 files changed, 3889 insertions(+), 1726 deletions(-)
- create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_pci.h
- create mode 100644 drivers/scsi/pm8001/pm80xx_tracepoints.c
- create mode 100644 drivers/scsi/pm8001/pm80xx_tracepoints.h
-
-James
-
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 71fa62bd3083..6e7e40e8ce4a 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -1215,8 +1215,10 @@ static int bnx2fc_vport_destroy(struct fc_vport *vport)
+ 	mutex_unlock(&n_port->lp_mutex);
+ 	bnx2fc_free_vport(interface->hba, port->lport);
+ 	bnx2fc_port_shutdown(port->lport);
+-	bnx2fc_interface_put(interface);
+ 	queue_work(bnx2fc_wq, &port->destroy_work);
++	flush_work(&port->destroy_work);
++	bnx2fc_interface_put(interface);
++
+ 	return 0;
+ }
+ 
+@@ -1653,8 +1655,9 @@ static void __bnx2fc_destroy(struct bnx2fc_interface *interface)
+ 	bnx2fc_interface_cleanup(interface);
+ 	bnx2fc_stop(interface);
+ 	list_del(&interface->list);
+-	bnx2fc_interface_put(interface);
+ 	queue_work(bnx2fc_wq, &port->destroy_work);
++	flush_work(&port->destroy_work);
++	bnx2fc_interface_put(interface);
+ }
+ 
+ /**
+-- 
+2.27.0
 
