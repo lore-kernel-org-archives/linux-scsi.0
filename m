@@ -2,88 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72DB9C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Jan 2022 14:18:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 315ABC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Jan 2022 15:56:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235624AbiAMOSV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Jan 2022 09:18:21 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4411 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231591AbiAMOSU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jan 2022 09:18:20 -0500
-Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JZRNj1FkQz67wr8;
-        Thu, 13 Jan 2022 22:18:13 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Thu, 13 Jan 2022 15:18:18 +0100
-Received: from [10.47.88.157] (10.47.88.157) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Thu, 13 Jan
- 2022 14:18:17 +0000
-Subject: Re: [issue report] pm8001 issues (was driver crashes with IOMMU
- enabled)
-To:     <Ajish.Koshy@microchip.com>, <jinpu.wang@ionos.com>,
-        <Viswas.G@microchip.com>
-CC:     <linux-scsi@vger.kernel.org>, <vishakhavc@google.com>,
-        <ipylypiv@google.com>, <Ruksar.devadi@microchip.com>,
-        <damien.lemoal@opensource.wdc.com>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>
-References: <894f766f-74b7-62b1-f6d2-82ac85b6478f@huawei.com>
- <CAMGffEkvrAxhrsL=azkVzQHHyDczZwJ3uiNWydSA6o2K+Xh_Jw@mail.gmail.com>
- <00505633-c8c0-8213-8909-482bf43661cd@huawei.com>
- <1cc92b2d-3670-7843-d68a-06fe68521d24@huawei.com>
- <fd0eafc6-9443-fe5e-2c2f-91d6bbe8b174@huawei.com>
- <PH0PR11MB5112EBE80F9A4AD199866CA7EC429@PH0PR11MB5112.namprd11.prod.outlook.com>
- <0cc0c435-b4f2-9c76-258d-865ba50a29dd@huawei.com>
- <PH0PR11MB5112F2D4A506B0FE6DC5B01BEC4D9@PH0PR11MB5112.namprd11.prod.outlook.com>
- <34319d65-104d-55a0-175d-96cf3f0aea89@huawei.com>
- <PH0PR11MB511238B8FF7B44C375DDDFADEC519@PH0PR11MB5112.namprd11.prod.outlook.com>
- <75d042c1-cee5-ce91-e1cb-9e2b7bb1ce72@huawei.com>
- <PH0PR11MB5112E3E9787F20EDEB58D481EC539@PH0PR11MB5112.namprd11.prod.outlook.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <05bec388-946d-057d-20d7-67ebe5f2cfdf@huawei.com>
-Date:   Thu, 13 Jan 2022 14:17:53 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S236389AbiAMP4F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Jan 2022 10:56:05 -0500
+Received: from [194.99.46.92] ([194.99.46.92]:59251 "EHLO
+        slot0.bluewaterleisure.com" rhost-flags-FAIL-FAIL-OK-OK)
+        by vger.kernel.org with ESMTP id S236386AbiAMP4F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Jan 2022 10:56:05 -0500
+X-Greylist: delayed 611 seconds by postgrey-1.27 at vger.kernel.org; Thu, 13 Jan 2022 10:56:04 EST
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; s=dkim; d=bluewaterleisure.com;
+ h=Reply-To:From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding; i=ker.mon@bluewaterleisure.com;
+ bh=513kKpLBwz7MJWRrM65xj+B8f14=;
+ b=e40/ssVs1zVig5N80ftv7SQzWskYkzRn9hJ11UjbuiO20Ebj8UazdyvMpheZsbT32q1Tc2PMygWU
+   ibJpUvcQqmdIVbrjNeQY2JYSI9/L0/0uCnA3Mg8x5BoifocNbUM4w2aUFfDKa8rXwSj1Uak4Nm72
+   +MR09pr4dxRCtWtQQ1E6JJwK8tt1qWGEslSeqJXD9yBch8PebMcN+dA8Nqtd3HQ0MIZGJKZv86Oq
+   esqUfCtfZfYpQtmF24VgRxR7zTsrYWW8dSsvRePzCuHVS1PCyk6DGiyj2OFBMkVF+JnrtDz7TtLm
+   9LLi7ZTA6+8UZAEyFDstXL6ZVQiABdoYsY+Hhg==
+DomainKey-Signature: a=rsa-sha1; c=nofws; q=dns; s=dkim; d=bluewaterleisure.com;
+ b=TJXCd7DNXbd7RGyoMLuE+o4JNFupaBzUJxNjzxm75s9zoSm5+nPChpuv5lOHj54syXVxe+1/AsKP
+   0YL5xeK7JQpJpaHw2Ac+1Nj0QMOqbhSQwh+cQXhKfI0QzTxSXW5pLxji54MQinJZ/rcphhTfa0IQ
+   WWXipDUfsVpqAHVnros/qsvyZMseV5UZ+GBDviWjJWz9OVZ2R4nSz82J/Q+JRmYp4O/Jfb+kAr3D
+   wNOmCpDqDuXn+K8AqKxhIjOy7KSkqUWNpTPHwhewwVbyAjXWSr88dfDbg57tk+xafIAXRUkJXA/R
+   tlPNaLJ2nNDUD9RU5ZWVX+1VI2NSK2dEmLtodA==;
+Reply-To: mustafa.ayvaz@ayvazburosu.com
+From:   "Barrister Mustafa" <ker.mon@bluewaterleisure.com>
+To:     linux-scsi@vger.kernel.org
+Subject: Achtung:
+Date:   13 Jan 2022 16:36:24 +0100
+Message-ID: <20220113163624.DB1A1E09CA35E6F5@bluewaterleisure.com>
 MIME-Version: 1.0
-In-Reply-To: <PH0PR11MB5112E3E9787F20EDEB58D481EC539@PH0PR11MB5112.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.47.88.157]
-X-ClientProxiedBy: lhreml714-chm.china.huawei.com (10.201.108.65) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13/01/2022 12:52, Ajish.Koshy@microchip.com wrote:
+Dear linux-scsi,
 
-Hi Ajish,
+Ich bin Barrister Mustafa Ayvaz, ein pers=C3=B6nlicher Anwalt des=20
+verstorbenen Mr.
+Anderson, der an der Coronavirus-Krankheit starb, die er
+w=C3=A4hrend seiner Gesch=C3=A4ftsreise in China unter Vertrag genommen.=20=
 
->>   From an earlier mail [0] I got the impression that you tested on an arm
->> platform – did you?
-> Yes, with respect to my previous mail update, at that time got the chance to
-> load the driver on ARM server/enclosure connected in one of our tester's
-> arm server after attaching the controller card.
-> There this error handling issue was observed.
-> 
-> The card/driver was never tested or validated on ARM server before,
-> was curious to see the behavior for the first time. Whereas driver
-> loads smoothly on x86 server.
-> 
-> Currently busy with some other issues, debugging on ARM server is not
-> planned for now.
-> 
+Ich m=C3=B6chte, dass Sie freundlich sind und mit mir=20
+zusammenarbeiten, um das Geld zu sichern, das er hier in der=20
+T=C3=BCrkei auf der Bank hinterlassen hat, das sind drei Millionen=20
+dreihundertneunzigtausend Dollar.
 
-OK, since you do see this same/similar issue with another card on arm 
-then I think that it is safe to assume that it is a driver issue.
+Ich habe nach den n=C3=A4chsten Angeh=C3=B6rigen meines Verstorbenen=20
+gesucht
+Kunde, sind aber gescheitert, da ich seinen aktuellen Wohnsitz=20
+nicht habe
+und Kontaktdaten. Auf der Suche bin ich auf dich gesto=C3=9Fen
+Profil mit dem gleichen Nachnamen und am gleichen Ort mit
+die n=C3=A4chsten Angeh=C3=B6rigen. Ich habe mich entschieden, dich zu=20
+kontaktieren und dich als den
+Bonafide n=C3=A4chster Verwandter.
 
-If you can share the dmesg on the arm machine then at least that would 
-be helpful.
+Ich erbitte Ihre Zustimmung, Sie als N=C3=A4chsten meiner Verwandten=20
+hervorzubringen
+verstorbener Kunde, da Sie beide denselben Nachnamen tragen. Der
+das Geld wird dann an Sie als Beg=C3=BCnstigten =C3=BCberwiesen und
+geteilt gem=C3=A4=C3=9F einem vorgeschlagenen Sharing-Muster/Verh=C3=A4ltni=
+s von=20
+60:40
+das sind 60 % f=C3=BCr mich und 40 % f=C3=BCr dich. Freundlich
+kontaktieren Sie mich sofort f=C3=BCr weitere Informationen.
 
-Thanks,
-John
+Danach schicke ich Ihnen die Details der Transaktion
+wird beginnen, Kontaktieren Sie mich f=C3=BCr weitere Informationen=20
+=C3=BCber mein
+E-Mail-Adressen unten.
+
+Gr=C3=BC=C3=9Fe
+Mustafa Ayvaz
+
+E-Mail: mustafa.ayvaz@ayvazburosu.com
+oder
+ayvazmustafa231@gmail.com
