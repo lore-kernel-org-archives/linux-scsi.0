@@ -2,297 +2,188 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8F79C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Jan 2022 22:02:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A84BC433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 15 Jan 2022 04:01:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230056AbiANWCz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Jan 2022 17:02:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41730 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229980AbiANWCy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jan 2022 17:02:54 -0500
-Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4AF0C061574
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2022 14:02:53 -0800 (PST)
-Received: by mail-lf1-x132.google.com with SMTP id m3so20551817lfu.0
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2022 14:02:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=SQJKHgpaQGdOto3knhZ4v2hslJZP/7R/oEdeUY+LBNw=;
-        b=QEKdTjaMi5jYUL7SI8RMSXiqiME7n4We3ITn6Ctsxu4sq9IE/LOo1SA9Nw7xQxfZu3
-         M+NmCZUNq/EDv582ODgqOFNTpfeyLM1uvIff5uhXehPagVVNeZD7jIJw8fFs2BahHcLe
-         wEJLcjQLLB5uHZzMWCdwsKAzgxlFTV8fT+fsU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=SQJKHgpaQGdOto3knhZ4v2hslJZP/7R/oEdeUY+LBNw=;
-        b=lTCQorGsOuN63kdFSdoVIaGS2GFXQxq1+n+0Fqcklft8iJFgv+2k//OAqw8g8NG9Uw
-         GZTZBwBvHNXKQ6sGlxXwV4F7tE/kvOECVfMbp5KW4PX6LyDC7CLHChs7ZkEghiTBySDO
-         cnMkrXlMyH1d8xAHrBjRqF2R2DmXHNQ35WTzKPHn6vxpkvs7RkbX+jUEn/6VOZ/r2rB9
-         ELYIm041H6N76hno3KUS53t+PIvUWskxGENF1a+VPwdUD+BuQFXVFf/hJe/U/Hmyq/OI
-         A4T/YdFvPwrVGuAE0HnpiqGhAtpkm+xDdsceNC3En7CNZ1KuY/pk3IPEPVJpqO9N8ToQ
-         qO3w==
-X-Gm-Message-State: AOAM531jpcNx7JSWiPDOJD6ikQZu60YL5M0GBJbkO3WUOXqQEqCS7Y1e
-        Xrxg/5dsU+gS4ngdl7uWHR18apMdPRZ2xxk+9qCauEImDin8lJb0
-X-Google-Smtp-Source: ABdhPJzHyNqsM+vZVC/ml0I5+eT8o4CoczlHpm/5H71LExnWlrgqghr5CHxPQwOoGQ3911urdj5h2DzZI2zgEKSGjVY=
-X-Received: by 2002:a2e:a4a7:: with SMTP id g7mr2667772ljm.93.1642197771878;
- Fri, 14 Jan 2022 14:02:51 -0800 (PST)
-MIME-Version: 1.0
-From:   Brian Bunker <brian@purestorage.com>
-Date:   Fri, 14 Jan 2022 14:02:41 -0800
-Message-ID: <CAHZQxyKNqnFro33VrirfkdS8ZNga9vWwJDDu8gQtRdr-yW57iQ@mail.gmail.com>
-Subject: [PATCH] scsi: scsi_scan purge devices no longer in reported LUN list
+        id S232338AbiAOEBJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Jan 2022 23:01:09 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:42157 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232332AbiAOEBH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Jan 2022 23:01:07 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1642219266;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=wud2rs14ZF1prvGoS/djlh4/NOp7NyfwlxRJwSrHKLE=;
+        b=crMjiTAXYO/ix0Oo+Oam8VQaRkvBhxU4YnH4vVERoOYi/NvUwUPw1uhMW+lb94avwLfxMw
+        3eRRZip2yKzOjU+aJllyEiLP5LGuZ9Cp7PTWiS7ALB4oCkotHVKuHni2s9FG+OE+I2HrYr
+        QqMS1vOrHUIjAw7zqpDkDiUtvWZ2fns=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-391-Oyl71GGDP1GB2tyW0sLS3g-1; Fri, 14 Jan 2022 23:01:05 -0500
+X-MC-Unique: Oyl71GGDP1GB2tyW0sLS3g-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E2BC918397A7;
+        Sat, 15 Jan 2022 04:01:03 +0000 (UTC)
+Received: from jmeneghi.bos.com (unknown [10.22.17.136])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3DB7856F8F;
+        Sat, 15 Jan 2022 04:01:03 +0000 (UTC)
+From:   John Meneghini <jmeneghi@redhat.com>
 To:     linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Cc:     linux-kernel@vger.kernel.org,
+        GR-QLogic-Storage-Upstream@marvell.com, mlombard@redhat.com,
+        skashyap@marvell.com, guazhang@redhat.com
+Subject: [PATCH v3] scsi: bnx2fc: flush destroy_work queue before calling bnx2fc_interface_put
+Date:   Fri, 14 Jan 2022 23:00:44 -0500
+Message-Id: <20220115040044.1013475-1-jmeneghi@redhat.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When a new volume is added to an ACL list for a host and a unit
-attention is posted for that host ASC=0x3f ASCQ=0x0e, REPORTED LUNS
-DATA HAS CHANGED, devices are created if the udev rule is active:
+  The bnx2fc_destroy functions are removing the interface before calling
+  destroy_work. This results multiple WARNings from sysfs_remove_group
+  as the controller rport device attributes are removed to early.
 
-ACTION=="change", SUBSYSTEM=="scsi",
-ENV{SDEV_UA}=="REPORTED_LUNS_DATA_HAS_CHANGED",
-RUN+="scan-scsi-target $env{DEVPATH}"
+  Replace the fcoe_port's destroy_work queue.  It's not needed.
 
-However when a volume is deleted from the ACL list for a host, those
-devices are not deleted. They are orphaned. I am showing multpath
-output to show the connected devices pre-removal from the ACL list and
-post:
+  The problem is easily reproducible with the following steps.
 
-Before:
-[root@init501-9 rules.d]# multipath -ll
-3624a9370d5779477e526433100011019 dm-2 PURE    ,FlashArray
-size=2.0T features='0' hwhandler='1 alua' wp=rw
-`-+- policy='service-time 0' prio=50 status=active
- |- 0:0:1:1 sdb 8:16 active ready running
- |- 7:0:1:1 sdc 8:32 active ready running
- |- 8:0:1:1 sdd 8:48 active ready running
- `- 9:0:1:1 sde 8:64 active ready running
+  Example:
 
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdb
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E526433100011019
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdc
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E526433100011019
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdd
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E526433100011019
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sde
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E526433100011019
+    $ dmesg -w &
+    $ systemctl enable --now fcoe
+    $ fipvlan -s -c ens2f1
+    $ fcoeadm -d ens2f1.802
+    [  583.464488] host2: libfc: Link down on port (7500a1)
+    [  583.472651] bnx2fc: 7500a1 - rport not created Yet!!
+    [  583.490468] ------------[ cut here ]------------
+    [  583.538725] sysfs group 'power' not found for kobject 'rport-2:0-0'
+    [  583.568814] WARNING: CPU: 3 PID: 192 at fs/sysfs/group.c:279 sysfs_remove_group+0x6f/0x80
+    [  583.607130] Modules linked in: dm_service_time 8021q garp mrp stp llc bnx2fc cnic uio rpcsec_gss_krb5 auth_rpcgss nfsv4 ...
+    [  583.942994] CPU: 3 PID: 192 Comm: kworker/3:2 Kdump: loaded Not tainted 5.14.0-39.el9.x86_64 #1
+    [  583.984105] Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
+    [  584.016535] Workqueue: fc_wq_2 fc_rport_final_delete [scsi_transport_fc]
+    [  584.050691] RIP: 0010:sysfs_remove_group+0x6f/0x80
+    [  584.074725] Code: ff 5b 48 89 ef 5d 41 5c e9 ee c0 ff ff 48 89 ef e8 f6 b8 ff ff eb d1 49 8b 14 24 48 8b 33 48 c7 c7 ...
+    [  584.162586] RSP: 0018:ffffb567c15afdc0 EFLAGS: 00010282
+    [  584.188225] RAX: 0000000000000000 RBX: ffffffff8eec4220 RCX: 0000000000000000
+    [  584.221053] RDX: ffff8c1586ce84c0 RSI: ffff8c1586cd7cc0 RDI: ffff8c1586cd7cc0
+    [  584.255089] RBP: 0000000000000000 R08: 0000000000000000 R09: ffffb567c15afc00
+    [  584.287954] R10: ffffb567c15afbf8 R11: ffffffff8fbe7f28 R12: ffff8c1486326400
+    [  584.322356] R13: ffff8c1486326480 R14: ffff8c1483a4a000 R15: 0000000000000004
+    [  584.355379] FS:  0000000000000000(0000) GS:ffff8c1586cc0000(0000) knlGS:0000000000000000
+    [  584.394419] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+    [  584.421123] CR2: 00007fe95a6f7840 CR3: 0000000107674002 CR4: 00000000000606e0
+    [  584.454888] Call Trace:
+    [  584.466108]  device_del+0xb2/0x3e0
+    [  584.481701]  device_unregister+0x13/0x60
+    [  584.501306]  bsg_unregister_queue+0x5b/0x80
+    [  584.522029]  bsg_remove_queue+0x1c/0x40
+    [  584.541884]  fc_rport_final_delete+0xf3/0x1d0 [scsi_transport_fc]
+    [  584.573823]  process_one_work+0x1e3/0x3b0
+    [  584.592396]  worker_thread+0x50/0x3b0
+    [  584.609256]  ? rescuer_thread+0x370/0x370
+    [  584.628877]  kthread+0x149/0x170
+    [  584.643673]  ? set_kthread_struct+0x40/0x40
+    [  584.662909]  ret_from_fork+0x22/0x30
+    [  584.680002] ---[ end trace 53575ecefa942ece ]---
 
-After:
-[root@init501-9 rules.d]# multipath -ll
-3624a9370d5779477e526433100011019 dm-2 PURE    ,FlashArray
-size=2.0T features='0' hwhandler='1 alua' wp=rw
-`-+- policy='service-time 0' prio=0 status=enabled
- |- 0:0:1:1 sdb 8:16 failed faulty running
- |- 7:0:1:1 sdc 8:32 failed faulty running
- |- 8:0:1:1 sdd 8:48 failed faulty running
- `- 9:0:1:1 sde 8:64 failed faulty running
-[root@init501-9 rules.d]# sg_map -i -x
-/dev/sg0  1 0 0 0  0  /dev/sda  ATA       TOSHIBA THNSNH25  N101
-/dev/sg1  0 0 1 1  0  /dev/sdb
-/dev/sg2  7 0 1 1  0  /dev/sdc
-/dev/sg3  8 0 1 1  0  /dev/sdd
-/dev/sg4  9 0 1 1  0  /dev/sde
+Fixes: 0cbf32e1681d ("[SCSI] bnx2fc: Avoid calling bnx2fc_if_destroy with unnecessary locks")
+Tested-by: Guangwu Zhang <guazhang@redhat.com>
+Signed-off-by: John Meneghini <jmeneghi@redhat.com>
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 20 +++++---------------
+ 1 file changed, 5 insertions(+), 15 deletions(-)
 
-Now if a new volume is connected, different serial number same LUN, it
-will use those orphaned devices:
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 71fa62bd3083..9be273c320e2 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -82,7 +82,7 @@ static int bnx2fc_bind_pcidev(struct bnx2fc_hba *hba);
+ static void bnx2fc_unbind_pcidev(struct bnx2fc_hba *hba);
+ static struct fc_lport *bnx2fc_if_create(struct bnx2fc_interface *interface,
+ 				  struct device *parent, int npiv);
+-static void bnx2fc_destroy_work(struct work_struct *work);
++static void bnx2fc_port_destroy(struct fcoe_port *port);
+ 
+ static struct bnx2fc_hba *bnx2fc_hba_lookup(struct net_device *phys_dev);
+ static struct bnx2fc_interface *bnx2fc_interface_lookup(struct net_device
+@@ -907,9 +907,6 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 				__bnx2fc_destroy(interface);
+ 		}
+ 		mutex_unlock(&bnx2fc_dev_lock);
+-
+-		/* Ensure ALL destroy work has been completed before return */
+-		flush_workqueue(bnx2fc_wq);
+ 		return;
+ 
+ 	default:
+@@ -1215,8 +1212,8 @@ static int bnx2fc_vport_destroy(struct fc_vport *vport)
+ 	mutex_unlock(&n_port->lp_mutex);
+ 	bnx2fc_free_vport(interface->hba, port->lport);
+ 	bnx2fc_port_shutdown(port->lport);
++	bnx2fc_port_destroy(port);
+ 	bnx2fc_interface_put(interface);
+-	queue_work(bnx2fc_wq, &port->destroy_work);
+ 	return 0;
+ }
+ 
+@@ -1525,7 +1522,6 @@ static struct fc_lport *bnx2fc_if_create(struct bnx2fc_interface *interface,
+ 	port->lport = lport;
+ 	port->priv = interface;
+ 	port->get_netdev = bnx2fc_netdev;
+-	INIT_WORK(&port->destroy_work, bnx2fc_destroy_work);
+ 
+ 	/* Configure fcoe_port */
+ 	rc = bnx2fc_lport_config(lport);
+@@ -1653,8 +1649,8 @@ static void __bnx2fc_destroy(struct bnx2fc_interface *interface)
+ 	bnx2fc_interface_cleanup(interface);
+ 	bnx2fc_stop(interface);
+ 	list_del(&interface->list);
++	bnx2fc_port_destroy(port);
+ 	bnx2fc_interface_put(interface);
+-	queue_work(bnx2fc_wq, &port->destroy_work);
+ }
+ 
+ /**
+@@ -1694,15 +1690,12 @@ static int bnx2fc_destroy(struct net_device *netdev)
+ 	return rc;
+ }
+ 
+-static void bnx2fc_destroy_work(struct work_struct *work)
++static void bnx2fc_port_destroy(struct fcoe_port *port)
+ {
+-	struct fcoe_port *port;
+ 	struct fc_lport *lport;
+ 
+-	port = container_of(work, struct fcoe_port, destroy_work);
+ 	lport = port->lport;
+-
+-	BNX2FC_HBA_DBG(lport, "Entered bnx2fc_destroy_work\n");
++	BNX2FC_HBA_DBG(lport, "Entered %s, destroying lport %p\n", __func__, lport);
+ 
+ 	bnx2fc_if_destroy(lport);
+ }
+@@ -2556,9 +2549,6 @@ static void bnx2fc_ulp_exit(struct cnic_dev *dev)
+ 			__bnx2fc_destroy(interface);
+ 	mutex_unlock(&bnx2fc_dev_lock);
+ 
+-	/* Ensure ALL destroy work has been completed before return */
+-	flush_workqueue(bnx2fc_wq);
+-
+ 	bnx2fc_ulp_stop(hba);
+ 	/* unregister cnic device */
+ 	if (test_and_clear_bit(BNX2FC_CNIC_REGISTERED, &hba->reg_with_cnic))
+-- 
+2.27.0
 
-[root@init501-9 rules.d]# multipath -ll
-3624a9370d5779477e526433100011019 dm-2 PURE    ,FlashArray
-size=2.0T features='0' hwhandler='1 alua' wp=rw
-`-+- policy='service-time 0' prio=50 status=active
- |- 0:0:1:1 sdb 8:16 active ready running
- |- 7:0:1:1 sdc 8:32 active ready running
- |- 8:0:1:1 sdd 8:48 active ready running
- `- 9:0:1:1 sde 8:64 active ready running
-
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdb
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101A
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdc
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101A
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdd
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101A
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sde
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101A
-
-This situation becomes more problematic if multiple target devices are
-presenting the same volume and each target device has its own ACL
-management, we can end up in situations where some paths have one
-serial number and some have another.
-
-[root@init501-9 rules.d]# multipath -ll
-3624a9370d5779477e52643310001101b dm-2 PURE    ,FlashArray
-size=2.0T features='0' hwhandler='1 alua' wp=rw
-`-+- policy='service-time 0' prio=50 status=active
- |- 0:0:0:1 sdf 8:80  active ready running
- |- 7:0:0:1 sdg 8:96  active ready running
- |- 8:0:0:1 sdh 8:112 active ready running
- |- 9:0:0:1 sdi 8:128 active ready running
- |- 0:0:1:1 sdb 8:16  active ready running
- |- 7:0:1:1 sdc 8:32  active ready running
- |- 8:0:1:1 sdd 8:48  active ready running
- `- 9:0:1:1 sde 8:64  active ready running
-
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdb
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101B
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdc
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101B
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdd
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101B
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sde
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101B
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdf
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101C
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdg
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101C
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdh
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101C
-[root@init501-9 rules.d]# sg_inq -p 0x80 /dev/sdi
-VPD INQUIRY: Unit serial number page
- Unit serial number: D5779477E52643310001101C
-
-I understand that this situation can be avoided with a rescan that
-purges stale disks when an ACL is removed like rescan-scsi-bus.sh -r.
-But the ACL removal itself does initiate a rescan, it is just that
-rescan doesn't have the ability to purge devices whose LUNs are no
-longer returned in the reported LUN list.
-
-Signed-off-by: Seamus Conorr <jsconnor@purestorage.com>
-Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
-Signed-off-by: Krishna Kant <yokim@purestorage.com>
-__
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index c7080454aea9..cfc6c3cc2996 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -220,6 +220,7 @@ static struct {
-       {"PIONEER", "CD-ROM DRM-624X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-       {"Promise", "VTrak E610f", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
-       {"Promise", "", NULL, BLIST_SPARSELUN},
-+       {"PURE", "FlashArray", "*", BLIST_REMOVE_STALE},
-       {"QEMU", "QEMU CD-ROM", NULL, BLIST_SKIP_VPD_PAGES},
-       {"QNAP", "iSCSI Storage", NULL, BLIST_MAX_1024},
-       {"SYNOLOGY", "iSCSI Storage", NULL, BLIST_MAX_1024},
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3520b9384428..15f6d8a9b61b 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1102,6 +1102,7 @@ static int scsi_probe_and_add_lun(struct
-scsi_target *starget,
-        */
-       sdev = scsi_device_lookup_by_target(starget, lun);
-       if (sdev) {
-+               sdev->in_lun_list = 1;
-               if (rescan != SCSI_SCAN_INITIAL || !scsi_device_created(sdev)) {
-                       SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
-                               "scsi scan: device exists on %s\n",
-@@ -1198,6 +1199,7 @@ static int scsi_probe_and_add_lun(struct
-scsi_target *starget,
-       }
-
-       res = scsi_add_lun(sdev, result, &bflags, shost->async_scan);
-+       sdev->in_lun_list = 1;
-       if (res == SCSI_SCAN_LUN_PRESENT) {
-               if (bflags & BLIST_KEY) {
-                       sdev->lockable = 0;
-@@ -1309,6 +1311,23 @@ static void scsi_sequential_lun_scan(struct
-scsi_target *starget,
-                       return;
-}
-
-+static void
-+_reset_lun_list(struct scsi_device *sdev, void *data)
-+{
-+       if (sdev->is_visible) {
-+               sdev->in_lun_list = 0;
-+       }
-+}
-+
-+static void
-+_remove_stale_devices(struct scsi_device *sdev, void *data)
-+{
-+       if (sdev->in_lun_list || sdev->is_visible == 0)
-+               return;
-+       __scsi_remove_device(sdev);
-+       sdev_printk(KERN_INFO, sdev, "lun_scan: Stale\n");
-+}
-+
-/**
- * scsi_report_lun_scan - Scan using SCSI REPORT LUN results
- * @starget: which target
-@@ -1373,6 +1392,9 @@ static int scsi_report_lun_scan(struct
-scsi_target *starget, blist_flags_t bflag
-               }
-       }
-
-+       if (bflags & BLIST_REMOVE_STALE)
-+               starget_for_each_device(starget, NULL, _reset_lun_list);
-+
-       /*
-        * Allocate enough to hold the header (the same size as one scsi_lun)
-        * plus the number of luns we are requesting.  511 was the default
-@@ -1487,6 +1509,9 @@ static int scsi_report_lun_scan(struct
-scsi_target *starget, blist_flags_t bflag
-               }
-       }
-
-+       if (bflags & BLIST_REMOVE_STALE)
-+               starget_for_each_device(starget, NULL, _remove_stale_devices);
-+
- out_err:
-       kfree(lun_data);
- out:
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index ab7557d84f75..c5446ee73af6 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -206,6 +206,7 @@ struct scsi_device {
-       unsigned rpm_autosuspend:1;     /* Enable runtime autosuspend at device
-                                        * creation time */
-       unsigned ignore_media_change:1; /* Ignore MEDIA CHANGE on resume */
-+       unsigned in_lun_list:1;         /* contained in report luns response */
-
-       unsigned int queue_stopped;     /* request queue is quiesced */
-       bool offline_already;           /* Device offline message logged */
-diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-index 5d14adae21c7..2e620ca2b7bc 100644
---- a/include/scsi/scsi_devinfo.h
-+++ b/include/scsi/scsi_devinfo.h
-@@ -68,8 +68,10 @@
-#define BLIST_RETRY_ITF                ((__force blist_flags_t)(1ULL << 32))
-/* Always retry ABORTED_COMMAND with ASC 0xc1 */
-#define BLIST_RETRY_ASC_C1     ((__force blist_flags_t)(1ULL << 33))
-+/* Remove devices no longer in reported luns data */
-+#define BLIST_REMOVE_STALE      ((__force blist_flags_t)(1ULL << 34))
-
--#define __BLIST_LAST_USED BLIST_RETRY_ASC_C1
-+#define __BLIST_LAST_USED BLIST_REMOVE_STALE
-
-#define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
-                              (__force blist_flags_t) \
-
-
-
-
---
-Brian Bunker
-PURE Storage, Inc.
-brian@purestorage.com
