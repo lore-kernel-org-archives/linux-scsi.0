@@ -2,43 +2,44 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 985B5C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 17:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A9CAC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 17:01:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241613AbiAQRAU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Jan 2022 12:00:20 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:47824 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241443AbiAQQ74 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 11:59:56 -0500
+        id S241851AbiAQRBV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Jan 2022 12:01:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44984 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241713AbiAQRAf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 12:00:35 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B93AC0613E3;
+        Mon, 17 Jan 2022 09:00:29 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 10E12B81147;
-        Mon, 17 Jan 2022 16:59:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B76E7C36AE3;
-        Mon, 17 Jan 2022 16:59:52 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BCB9B611CA;
+        Mon, 17 Jan 2022 17:00:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B445C36AED;
+        Mon, 17 Jan 2022 17:00:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642438793;
-        bh=dFxVt+CCaKAIh5laUX5e+SmQL/wfV4Qkpyftoa/psZU=;
+        s=k20201202; t=1642438829;
+        bh=UAjvnhTZ2Yn5EHOvdWzEPrFzvMqBIFWTeR/luTOCF24=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EfsBXn7iq4tRF84/rYjsfJ0OJUU1Yfgg0+fRnf4t6eGw6abvitpl6Nv9qy/6SDIaY
-         ahDEjJxCYq4fOmWKuFsL2d4Ccniv4v7XPOeNk6dzRnromYcISyt/JFmPNEXr41oqHC
-         v/S5UqPW8A1GAaTmMLOAUHXrg7T9pCSPnQHbGvnJ1b7FVYc81/ecCexv4iPHapQnWd
-         YnV2YgvQWrt1gdG6t21PeRDSwQrEKOyRjxXnG3mgT9FEr001ogN41Cb+EbB52X4iYV
-         7KVpuCTPqFdYgQ4D5pUVrK3PhuOscRvkYgrw4pzoMvpQsFfCiTnm+URpO3C6tUWB1a
-         dxNkqNsRy7o5w==
+        b=g0U8L+Gom+mdi9kd2eqlr8nu5NvTRT1eOmsAjyzD+wzsrEYBj+9Srck6EMNpFAY1F
+         oqgmW3bfBeHFLsUr1Da9keAN/iUBk5eWMnMUqQXYrcybnJPcokbvs7Gv6r7L/y7G8v
+         KHgV6IsW2z8nCVIQeazUnd6+YvC8sz6VFkwr/4FsTnHENCubhzgNlUKLLp1xyC/dew
+         tPplOBQKIY6G+qi2GG0tdy4moPEbyKJbY37Q2xeBfQyut1yFYiNhlZ3RryoUgVJG4Q
+         l5mp+6+GOktGeEj5SaU24gNQDGIcwdKNygDItAxdSErnrnTTx9IkPnAidHXIIe9ifr
+         rls/cnZtJLNpw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Qi Liu <liuqi115@huawei.com>, John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 24/52] scsi: lpfc: Trigger SLI4 firmware dump before doing driver cleanup
-Date:   Mon, 17 Jan 2022 11:58:25 -0500
-Message-Id: <20220117165853.1470420-24-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.16 37/52] scsi: hisi_sas: Prevent parallel FLR and controller reset
+Date:   Mon, 17 Jan 2022 11:58:38 -0500
+Message-Id: <20220117165853.1470420-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220117165853.1470420-1-sashal@kernel.org>
 References: <20220117165853.1470420-1-sashal@kernel.org>
@@ -50,186 +51,95 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Qi Liu <liuqi115@huawei.com>
 
-[ Upstream commit 7dd2e2a923173d637c272e483966be8e96a72b64 ]
+[ Upstream commit 16775db613c2bdea09705dcb876942c0641a1098 ]
 
-Extraneous teardown routines are present in the firmware dump path causing
-altered states in firmware captures.
+If we issue a controller reset command during executing a FLR a hung task
+may be found:
 
-When a firmware dump is requested via sysfs, trigger the dump immediately
-without tearing down structures and changing adapter state.
+ Call trace:
+  __switch_to+0x158/0x1cc
+  __schedule+0x2e8/0x85c
+  schedule+0x7c/0x110
+  schedule_timeout+0x190/0x1cc
+  __down+0x7c/0xd4
+  down+0x5c/0x7c
+  hisi_sas_task_exec+0x510/0x680 [hisi_sas_main]
+  hisi_sas_queue_command+0x24/0x30 [hisi_sas_main]
+  smp_execute_task_sg+0xf4/0x23c [libsas]
+  sas_smp_phy_control+0x110/0x1e0 [libsas]
+  transport_sas_phy_reset+0xc8/0x190 [libsas]
+  phy_reset_work+0x2c/0x40 [libsas]
+  process_one_work+0x1dc/0x48c
+  worker_thread+0x15c/0x464
+  kthread+0x160/0x170
+  ret_from_fork+0x10/0x18
 
-The driver shall rely on pre-existing firmware error state clean up
-handlers to restore the adapter.
+This is a race condition which occurs when the FLR completes first.
 
-Link: https://lore.kernel.org/r/20211204002644.116455-6-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Here the host HISI_SAS_RESETTING_BIT flag out gets of sync as
+HISI_SAS_RESETTING_BIT is not always cleared with the hisi_hba.sem held, so
+now only set/unset HISI_SAS_RESETTING_BIT under hisi_hba.sem .
+
+Link: https://lore.kernel.org/r/1639579061-179473-7-git-send-email-john.garry@huawei.com
+Signed-off-by: Qi Liu <liuqi115@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc.h         |  2 +-
- drivers/scsi/lpfc/lpfc_attr.c    | 62 ++++++++++++++++++++------------
- drivers/scsi/lpfc/lpfc_hbadisc.c |  8 ++++-
- drivers/scsi/lpfc/lpfc_sli.c     |  6 ----
- 4 files changed, 48 insertions(+), 30 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 8 +++++---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 1 +
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 2f8e6d0a926fe..54c58392fd5d0 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -1023,7 +1023,6 @@ struct lpfc_hba {
- #define HBA_DEVLOSS_TMO         0x2000 /* HBA in devloss timeout */
- #define HBA_RRQ_ACTIVE		0x4000 /* process the rrq active list */
- #define HBA_IOQ_FLUSH		0x8000 /* FCP/NVME I/O queues being flushed */
--#define HBA_FW_DUMP_OP		0x10000 /* Skips fn reset before FW dump */
- #define HBA_RECOVERABLE_UE	0x20000 /* Firmware supports recoverable UE */
- #define HBA_FORCED_LINK_SPEED	0x40000 /*
- 					 * Firmware supports Forced Link Speed
-@@ -1040,6 +1039,7 @@ struct lpfc_hba {
- #define HBA_HBEAT_TMO		0x8000000 /* HBEAT initiated after timeout */
- #define HBA_FLOGI_OUTSTANDING	0x10000000 /* FLOGI is outstanding */
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index f206c433de325..8a13bc08d6575 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1581,7 +1581,6 @@ void hisi_sas_controller_reset_prepare(struct hisi_hba *hisi_hba)
+ {
+ 	struct Scsi_Host *shost = hisi_hba->shost;
  
-+	struct completion *fw_dump_cmpl; /* cmpl event tracker for fw_dump */
- 	uint32_t fcp_ring_in_use; /* When polling test if intr-hndlr active*/
- 	struct lpfc_dmabuf slim2p;
+-	down(&hisi_hba->sem);
+ 	hisi_hba->phy_state = hisi_hba->hw->get_phys_state(hisi_hba);
  
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index dd4c51b6ef4e2..7a7f17d71811b 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -1709,25 +1709,25 @@ lpfc_sli4_pdev_reg_request(struct lpfc_hba *phba, uint32_t opcode)
- 	before_fc_flag = phba->pport->fc_flag;
- 	sriov_nr_virtfn = phba->cfg_sriov_nr_virtfn;
+ 	scsi_block_requests(shost);
+@@ -1606,9 +1605,9 @@ void hisi_sas_controller_reset_done(struct hisi_hba *hisi_hba)
+ 	if (hisi_hba->reject_stp_links_msk)
+ 		hisi_sas_terminate_stp_reject(hisi_hba);
+ 	hisi_sas_reset_init_all_devices(hisi_hba);
+-	up(&hisi_hba->sem);
+ 	scsi_unblock_requests(shost);
+ 	clear_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags);
++	up(&hisi_hba->sem);
  
--	/* Disable SR-IOV virtual functions if enabled */
--	if (phba->cfg_sriov_nr_virtfn) {
--		pci_disable_sriov(pdev);
--		phba->cfg_sriov_nr_virtfn = 0;
--	}
-+	if (opcode == LPFC_FW_DUMP) {
-+		init_completion(&online_compl);
-+		phba->fw_dump_cmpl = &online_compl;
-+	} else {
-+		/* Disable SR-IOV virtual functions if enabled */
-+		if (phba->cfg_sriov_nr_virtfn) {
-+			pci_disable_sriov(pdev);
-+			phba->cfg_sriov_nr_virtfn = 0;
-+		}
+ 	hisi_sas_rescan_topology(hisi_hba, hisi_hba->phy_state);
+ }
+@@ -1619,8 +1618,11 @@ static int hisi_sas_controller_prereset(struct hisi_hba *hisi_hba)
+ 	if (!hisi_hba->hw->soft_reset)
+ 		return -1;
  
--	if (opcode == LPFC_FW_DUMP)
--		phba->hba_flag |= HBA_FW_DUMP_OP;
-+		status = lpfc_do_offline(phba, LPFC_EVT_OFFLINE);
- 
--	status = lpfc_do_offline(phba, LPFC_EVT_OFFLINE);
-+		if (status != 0)
-+			return status;
- 
--	if (status != 0) {
--		phba->hba_flag &= ~HBA_FW_DUMP_OP;
--		return status;
-+		/* wait for the device to be quiesced before firmware reset */
-+		msleep(100);
- 	}
- 
--	/* wait for the device to be quiesced before firmware reset */
--	msleep(100);
--
- 	reg_val = readl(phba->sli4_hba.conf_regs_memmap_p +
- 			LPFC_CTL_PDEV_CTL_OFFSET);
- 
-@@ -1756,24 +1756,42 @@ lpfc_sli4_pdev_reg_request(struct lpfc_hba *phba, uint32_t opcode)
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 				"3153 Fail to perform the requested "
- 				"access: x%x\n", reg_val);
-+		if (phba->fw_dump_cmpl)
-+			phba->fw_dump_cmpl = NULL;
- 		return rc;
- 	}
- 
- 	/* keep the original port state */
--	if (before_fc_flag & FC_OFFLINE_MODE)
--		goto out;
--
--	init_completion(&online_compl);
--	job_posted = lpfc_workq_post_event(phba, &status, &online_compl,
--					   LPFC_EVT_ONLINE);
--	if (!job_posted)
-+	if (before_fc_flag & FC_OFFLINE_MODE) {
-+		if (phba->fw_dump_cmpl)
-+			phba->fw_dump_cmpl = NULL;
- 		goto out;
+-	if (test_and_set_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags))
++	down(&hisi_hba->sem);
++	if (test_and_set_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags)) {
++		up(&hisi_hba->sem);
+ 		return -1;
 +	}
  
--	wait_for_completion(&online_compl);
-+	/* Firmware dump will trigger an HA_ERATT event, and
-+	 * lpfc_handle_eratt_s4 routine already handles bringing the port back
-+	 * online.
-+	 */
-+	if (opcode == LPFC_FW_DUMP) {
-+		wait_for_completion(phba->fw_dump_cmpl);
-+	} else  {
-+		init_completion(&online_compl);
-+		job_posted = lpfc_workq_post_event(phba, &status, &online_compl,
-+						   LPFC_EVT_ONLINE);
-+		if (!job_posted)
-+			goto out;
+ 	if (hisi_sas_debugfs_enable && hisi_hba->debugfs_itct[0].itct)
+ 		hisi_hba->hw->debugfs_snapshot_regs(hisi_hba);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 0ef6c21bf0811..11a44d9dd9b2d 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -4848,6 +4848,7 @@ static void hisi_sas_reset_prepare_v3_hw(struct pci_dev *pdev)
+ 	int rc;
  
-+		wait_for_completion(&online_compl);
-+	}
- out:
- 	/* in any case, restore the virtual functions enabled as before */
- 	if (sriov_nr_virtfn) {
-+		/* If fw_dump was performed, first disable to clean up */
-+		if (opcode == LPFC_FW_DUMP) {
-+			pci_disable_sriov(pdev);
-+			phba->cfg_sriov_nr_virtfn = 0;
-+		}
-+
- 		sriov_err =
- 			lpfc_sli_probe_sriov_nr_virtfn(phba, sriov_nr_virtfn);
- 		if (!sriov_err)
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 9fe6e5b386ce3..5e54ec503f18b 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -869,10 +869,16 @@ lpfc_work_done(struct lpfc_hba *phba)
- 	if (phba->pci_dev_grp == LPFC_PCI_DEV_OC)
- 		lpfc_sli4_post_async_mbox(phba);
+ 	dev_info(dev, "FLR prepare\n");
++	down(&hisi_hba->sem);
+ 	set_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags);
+ 	hisi_sas_controller_reset_prepare(hisi_hba);
  
--	if (ha_copy & HA_ERATT)
-+	if (ha_copy & HA_ERATT) {
- 		/* Handle the error attention event */
- 		lpfc_handle_eratt(phba);
- 
-+		if (phba->fw_dump_cmpl) {
-+			complete(phba->fw_dump_cmpl);
-+			phba->fw_dump_cmpl = NULL;
-+		}
-+	}
-+
- 	if (ha_copy & HA_MBATT)
- 		lpfc_sli_handle_mb_event(phba);
- 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 5dedb3de271d8..513a78d08b1d5 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -5046,12 +5046,6 @@ lpfc_sli4_brdreset(struct lpfc_hba *phba)
- 	phba->fcf.fcf_flag = 0;
- 	spin_unlock_irq(&phba->hbalock);
- 
--	/* SLI4 INTF 2: if FW dump is being taken skip INIT_PORT */
--	if (phba->hba_flag & HBA_FW_DUMP_OP) {
--		phba->hba_flag &= ~HBA_FW_DUMP_OP;
--		return rc;
--	}
--
- 	/* Now physically reset the device */
- 	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 			"0389 Performing PCI function reset!\n");
 -- 
 2.34.1
 
