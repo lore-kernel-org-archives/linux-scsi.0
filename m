@@ -2,52 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 885D5C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 10:31:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD6B6C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 10:39:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238610AbiAQKbP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Jan 2022 05:31:15 -0500
-Received: from mailout4.samsung.com ([203.254.224.34]:46982 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238599AbiAQKbO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 05:31:14 -0500
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220117103111epoutp04e9f2b29a4f25b18e8a5ad6dacdb232b1~LCCtZN5_Y0927209272epoutp04O
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Jan 2022 10:31:11 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220117103111epoutp04e9f2b29a4f25b18e8a5ad6dacdb232b1~LCCtZN5_Y0927209272epoutp04O
+        id S238669AbiAQKjX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Jan 2022 05:39:23 -0500
+Received: from mailout2.samsung.com ([203.254.224.25]:16160 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235751AbiAQKjT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 05:39:19 -0500
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220117103917epoutp026e96d0053e366956f05a843b9f04e44c~LCJyVU2391942619426epoutp02R
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Jan 2022 10:39:17 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220117103917epoutp026e96d0053e366956f05a843b9f04e44c~LCJyVU2391942619426epoutp02R
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1642415471;
-        bh=oOUoKZ4pBdpP3x9g04SzNvA59acLArOtLwiamwa5u8Y=;
+        s=mail20170921; t=1642415957;
+        bh=qAxRXAVOoR5rxjQDd6H+GW5zXL4yoyJW/bykpq4XSAc=;
         h=From:To:Cc:Subject:Date:References:From;
-        b=AbHYzrg01olZMFkbzgOM0Gsj2ypi0y0ioxPU2rkQwQrjyn9jxzE/fsAY4MVcLcl4p
-         +DMh+R8n8Eq9z+xz1A27mjDh/6aeFvP2uqZVSCeIcosNrie/6YW4WtsPIYg5XtrOnq
-         GJjRjC4A0VogpMpI23TzudYkx4t3KgT0ZqPBmg34=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20220117103110epcas2p4560f82a9c2500bf27e23583ee619a0ea~LCCs1l4VG0461104611epcas2p4C;
-        Mon, 17 Jan 2022 10:31:10 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.98]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4Jcp8r1ZWgz4x9QB; Mon, 17 Jan
-        2022 10:31:08 +0000 (GMT)
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        6F.02.51767.C6545E16; Mon, 17 Jan 2022 19:31:08 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20220117103107epcas2p3d7223ff63f6cb575316695cc8fb155a4~LCCp1i35u1059510595epcas2p3w;
-        Mon, 17 Jan 2022 10:31:07 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220117103107epsmtrp11f0ad2c19eb0d7e15dd4eb4be200dcc0~LCCp0lKq31325113251epsmtrp1D;
-        Mon, 17 Jan 2022 10:31:07 +0000 (GMT)
-X-AuditID: b6c32a45-45dff7000000ca37-f0-61e5456c6e47
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        4E.CF.29871.B6545E16; Mon, 17 Jan 2022 19:31:07 +0900 (KST)
+        b=GHlJ4ezbj9pMM8TrMgNlAq9IxNDSghu25xe4ouVFYwOamcw6BJqAPs3XNFf0Lsyxd
+         utsEZ8cVMZCGYnVxQfmQqGB+9R4oJ0DSsBUx7yI+iKx1iS6+YNg8m6h/Wcb9SHhOKz
+         1NMOraCU76/8VZPHKrFA0Yl3yrYxBdfNbTWF7ue4=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20220117103917epcas2p39348b04df96edce656259cc3f694c198~LCJxqnuJs1776617766epcas2p3R;
+        Mon, 17 Jan 2022 10:39:17 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.90]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4JcpL92DPDz4x9QF; Mon, 17 Jan
+        2022 10:39:13 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        2F.EA.10014.D2745E16; Mon, 17 Jan 2022 19:38:37 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20220117103912epcas2p41c5d54a9242e46264c4e388a1db27f6b~LCJtEpawP0119501195epcas2p4D;
+        Mon, 17 Jan 2022 10:39:12 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220117103912epsmtrp25ef658e6770ced49f2c6a7c7d0b26283~LCJtDecT42156421564epsmtrp2D;
+        Mon, 17 Jan 2022 10:39:12 +0000 (GMT)
+X-AuditID: b6c32a47-473ff7000000271e-60-61e5472dc65a
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        AB.91.08738.F4745E16; Mon, 17 Jan 2022 19:39:11 +0900 (KST)
 Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20220117103107epsmtip24a13e2628164eb1e8d0470e292916b88~LCCpkjdYe0105301053epsmtip2I;
-        Mon, 17 Jan 2022 10:31:07 +0000 (GMT)
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20220117103911epsmtip1dd3e04416bb200443fbb741fad9412a1~LCJsyYYhq2600326003epsmtip1K;
+        Mon, 17 Jan 2022 10:39:11 +0000 (GMT)
 From:   Kiwoong Kim <kwmad.kim@samsung.com>
 To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
@@ -56,82 +56,79 @@ To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         hy50.seo@samsung.com, sh425.lee@samsung.com,
         bhoon95.kim@samsung.com, vkumar.1997@samsung.com
 Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v1] scsi: ufs: use an generic error code in
- ufshcd_set_dev_pwr_mode
-Date:   Mon, 17 Jan 2022 19:29:21 +0900
-Message-Id: <1642415361-140388-1-git-send-email-kwmad.kim@samsung.com>
+Subject: [PATCH v1] scsi: ufs: see link lost as fatal
+Date:   Mon, 17 Jan 2022 19:37:26 +0900
+Message-Id: <1642415846-141110-1-git-send-email-kwmad.kim@samsung.com>
 X-Mailer: git-send-email 2.7.4
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpnk+LIzCtJLcpLzFFi42LZdljTXDfH9WmiwfRbHBYnn6xhs3gwbxub
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmphk+LIzCtJLcpLzFFi42LZdljTQlfX/WmiwaVlshYnn6xhs3gwbxub
         xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i+XH/zFZ
         dN29wWix9N9bFos79z+yOPB7XO7rZfJYvOclk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5
         tB/oZgrgiMq2yUhNTEktUkjNS85PycxLt1XyDo53jjc1MzDUNbS0MFdSyEvMTbVVcvEJ0HXL
         zAG6XkmhLDGnFCgUkFhcrKRvZ1OUX1qSqpCRX1xiq5RakJJTYF6gV5yYW1yal66Xl1piZWhg
-        YGQKVJiQnfF6Uhd7QQN7xfI10g2MV1m7GDk5JARMJHbs7QSyuTiEBHYwSmxdd5wFwvnEKLHh
-        fg8jhPONUeL4jC0sMC3vF/5gh0jsZZSYdn0fVMsPRolV7YvAqtgENCWe3pzKBGKLCFxnkpi3
-        PQPEZhZQl9g14QRYXFggVKKp5R2YzSKgKrGleS0ziM0r4Cax4tJNRohtchI3z3UygyyQEPjL
-        LtGy6SgTRMJF4vqfOVAnCUu8Or6FHcKWknjZ38YO0dDMKLFzdyNU9xRGiSX7P0BVGUvMetYO
-        tIID6CRNifW79EFMCQFliSO3WCAO5ZPoOPyXHSLMK9HRJgTRqCzxa9JkqNskJWbevAM10EPi
-        1LJ7YLaQQKzEy28bWCYwys5CmL+AkXEVo1hqQXFuemqxUYEhPJaS83M3MYJTpJbrDsbJbz/o
-        HWJk4mA8xCjBwawkwnuM+0miEG9KYmVValF+fFFpTmrxIUZTYIBNZJYSTc4HJum8knhDE0sD
-        EzMzQ3MjUwNzJXFer5QNiUIC6YklqdmpqQWpRTB9TBycUg1MZV9/PWbouHW819PGnXFxbp2n
-        oNncJpk5LCHGCre9ZBoEc3pLqizsROL59osf/2ow2aBB6L3OZLXur9923V5wdebE4Oeyt8zV
-        QmSXsPTy5FxaI5TP7GUsp3Bkg7u/V1GYw9w95TyVIvIed3bWXeu2LjvtfzK1UfxaTNLcrmcu
-        YmbbdJ8FPyy+X6H9I1QprPnNTT+VrdsuannceXCO5+O5wrOmAg8z/rS/2PF2p9hMvnf83P/K
-        xLknMvZ4fXzvluhrOYmjui2D12G98OtpH1N+LWu1fqM5a8nCOWsYm3gzux4ue3umnncqy/za
-        tNTWSMslqSfet3afYnpsP6lF9uV15mTlXctaryUZlzK3f1RiKc5INNRiLipOBACdpmpCGgQA
-        AA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGLMWRmVeSWpSXmKPExsWy7bCSvG6269NEg5abMhYnn6xhs3gwbxub
-        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i+XH/zFZ
-        dN29wWix9N9bFos79z+yOPB7XO7rZfJYvOclk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5
-        tB/oZgrgiOKySUnNySxLLdK3S+DKeD2pi72ggb1i+RrpBsarrF2MnBwSAiYS7xf+YO9i5OIQ
-        EtjNKLF7Uy8TREJS4sTO54wQtrDE/ZYjrBBF3xgl9jxvYwNJsAloSjy9OZUJJCEi8JJJ4sWc
-        NWAJZgF1iV0TToBNEhYIlri/dRMziM0ioCqxpXktmM0r4Cax4tJNqA1yEjfPdTJPYORZwMiw
-        ilEytaA4Nz232LDAMC+1XK84Mbe4NC9dLzk/dxMjOGi1NHcwbl/1Qe8QIxMH4yFGCQ5mJRHe
-        Y9xPEoV4UxIrq1KL8uOLSnNSiw8xSnOwKInzXug6GS8kkJ5YkpqdmlqQWgSTZeLglGpgMns8
-        UWwPS92k2+u3z2GtXWjkMfWW7jHZ/IWqWupS377EXk/cHrx/bmr6vnPV+gX3Xj56+iTtWOTa
-        6rJIxY78aeX3T257xnfnQdWPKleD68Kfih9VPWDuY3Fcf/yVZGVZwo0Pl51lRZYs67XjOsr5
-        PlHvvq1hxtMZ/b/611UtOeZX+zdxi5lmTI7qI965aXp7H0sF3Pn3tvqO29QHDCuczS7U7GKR
-        CHAKWbvXTm+RYfG9trbWFNNiH4Hv1074rap0/VNev1PjnMiVmbdn/fkytWWvTcCFYK/zO57L
-        51zv/Mhw71WmtYVSgkBifsIpvjD5RXuEYrU/5N3x2PXNfFoHt7NZzaeLdpGzRdayFfLoKLEU
-        ZyQaajEXFScCAKD+/TXJAgAA
-X-CMS-MailID: 20220117103107epcas2p3d7223ff63f6cb575316695cc8fb155a4
+        YGQKVJiQnXHz/XT2gpVsFSc7DBoYp7J2MXJwSAiYSLy+pt/FyMUhJLCDUeLm9YWMXYycQM4n
+        Rom1K4sgEp8ZJW6tuMwGkgBpeH57JRtEYhejxIpFDxghnB+MEvfOLwNrZxPQlHh6cyoTiC0i
+        cJ1JYt72DBCbWUBdYteEE2BxYQFTiUkzD4PVswioSqxcv58ZxOYVcJPY0rCOCWKbnMTNc53M
+        IAskBBo5JC7fgbhPQsBFYtq1/+wQtrDEq+NboGwpic/v9rJBNDQzSuzc3QjVPYVRYsn+D1BV
+        xhKznrUzgkKAGejU9bv0IYGhLHHkFgvEoXwSHYf/skOEeSU62oQgGpUlfk2aDHWCpMTMm3eg
+        SjwkXjS4QkIuVuJGz17GCYyysxDGL2BkXMUollpQnJueWmxUYAyPouT83E2M4OSo5b6Dccbb
+        D3qHGJk4GA8xSnAwK4nwHuN+kijEm5JYWZValB9fVJqTWnyI0RQYXhOZpUST84HpOa8k3tDE
+        0sDEzMzQ3MjUwFxJnNcrZUOikEB6YklqdmpqQWoRTB8TB6dUA1P17NcPvqjr7DVSncBgNCWQ
+        6a6MWcsGuX98a+V0V3Gl3Z08W+t+kq7ljfY5qqyq59sOSrLVP39b/k/O6/XR7QGB34WFVwnf
+        ObNtttOFqdfZ/1Rd2PW94Z6qsFMXv9jsl/Zrlj1VCJ6qyufifLDz2Mm7taGeCm2m5j/1L3Wc
+        28Xc96gxMGJaW0+zRvIHV4lla2ddNdn2kX/x2b/9Czlu22y6tlLuzKcDb35IdC2dn3W+7+jP
+        itnB36s2JXvNbfRwzdkW/kGdW7N1y/a33C2vvd2SQ/mWC59K7cv+tU3Tg0ly+zu7Kxa/nDev
+        fHVI505L+Nea/Metq045fxB4tPWehf79B0khQizbLa5Ib/pWfH+rEktxRqKhFnNRcSIAfXYQ
+        hRcEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGLMWRmVeSWpSXmKPExsWy7bCSnK6/+9NEg23PLC1OPlnDZvFg3jY2
+        i5c/r7JZHHzYyWLxdekzVotP65exWqxe/IDFYtGNbUwWN7ccZbG4vGsOm0X39R1sFsuP/2Oy
+        6Lp7g9Fi6b+3LBZ37n9kceD3uNzXy+SxeM9LJo8Jiw4wenxf38Hm8fHpLRaPvi2rGD0+b5Lz
+        aD/QzRTAEcVlk5Kak1mWWqRvl8CVcfP9dPaClWwVJzsMGhinsnYxcnJICJhIPL+9kq2LkYtD
+        SGAHo8S7aY8ZIRKSEid2PoeyhSXutxxhhSj6xijx49ArdpAEm4CmxNObU5lAEiICL5kkXsxZ
+        wwaSYBZQl9g14QQTiC0sYCoxaeZhsEksAqoSK9fvZwaxeQXcJLY0rGOC2CAncfNcJ/MERp4F
+        jAyrGCVTC4pz03OLDQuM8lLL9YoTc4tL89L1kvNzNzGCg1ZLawfjnlUf9A4xMnEwHmKU4GBW
+        EuE9xv0kUYg3JbGyKrUoP76oNCe1+BCjNAeLkjjvha6T8UIC6YklqdmpqQWpRTBZJg5OqQYm
+        gVzWc2Hx+9s62V3+qqbO4g1N8N67a+3Czoidh+UFfaYluz8J6GzYfyiyewOfuaX/9L+X4wN1
+        Jm+/XPJjQ/oMnj9PZqUsN7xaOoPRT3bTwc43r1sePn5+VNbQ6uUmKcOf/6t38s2J25CWfOlA
+        au/SeguPjo39zXbZLeqdV59J3Ivvd9twqsVyf/WBZ/Fr/95Xyfld4BETpHJoucvy27/Mrzg/
+        udesfVaykeNMVr3xWe8Pi+pmStx5sSqjgXvz8rs9yv87T/Exf+PYXVOcfsKJT33P9zz5PTVv
+        mu8H7I8ymKnd4XVtZ4lKgNyy2KPTWg4F39i1l+Wrw+/cSz3tm5dwRt6+eTFC9Up/xdJLjxwu
+        KrEUZyQaajEXFScCAG6dDMvJAgAA
+X-CMS-MailID: 20220117103912epcas2p41c5d54a9242e46264c4e388a1db27f6b
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 CMS-TYPE: 102P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220117103107epcas2p3d7223ff63f6cb575316695cc8fb155a4
-References: <CGME20220117103107epcas2p3d7223ff63f6cb575316695cc8fb155a4@epcas2p3.samsung.com>
+X-CMS-RootMailID: 20220117103912epcas2p41c5d54a9242e46264c4e388a1db27f6b
+References: <CGME20220117103912epcas2p41c5d54a9242e46264c4e388a1db27f6b@epcas2p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The return value of ufshcd_set_dev_pwr_mode is given to
-device pm core. However, the function currently returns a result
-in scsi command and the device pm core doesn't understand it.
-It might lead to unexpected behaviors of user land. I found
-the return value led to platform reset in Android.
-
-This patch is to use an generic code for SSU failures.
+This event is raised when link is lost as specified
+in UFSHCI spec. At the time, initializing UFS interface
+needs to be done.
 
 Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/ufs/ufshci.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1049e41..a60816c 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8669,6 +8669,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 			    pwr_mode, ret);
- 		if (ret > 0 && scsi_sense_valid(&sshdr))
- 			scsi_print_sense_hdr(sdp, NULL, &sshdr);
-+		ret = -EIO;
- 	}
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index 6a295c8..a7ff0e5 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -142,7 +142,8 @@ static inline u32 ufshci_version(u32 major, u32 minor)
+ #define INT_FATAL_ERRORS	(DEVICE_FATAL_ERROR |\
+ 				CONTROLLER_FATAL_ERROR |\
+ 				SYSTEM_BUS_FATAL_ERROR |\
+-				CRYPTO_ENGINE_FATAL_ERROR)
++				CRYPTO_ENGINE_FATAL_ERROR |\
++				UIC_LINK_LOST)
  
- 	if (!ret)
+ /* HCS - Host Controller Status 30h */
+ #define DEVICE_PRESENT				0x1
 -- 
 2.7.4
 
