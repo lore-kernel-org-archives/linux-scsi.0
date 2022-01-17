@@ -2,46 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB96EC4321E
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 17:01:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF89FC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 17:03:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241958AbiAQRBo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Jan 2022 12:01:44 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:50464 "EHLO
+        id S242344AbiAQRDv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Jan 2022 12:03:51 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:51978 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241391AbiAQRAq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 12:00:46 -0500
+        with ESMTP id S241799AbiAQRCO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 12:02:14 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4148A6119C;
-        Mon, 17 Jan 2022 17:00:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E494C36AE3;
-        Mon, 17 Jan 2022 17:00:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6AE4A6119F;
+        Mon, 17 Jan 2022 17:02:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA9BFC36AED;
+        Mon, 17 Jan 2022 17:02:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642438845;
-        bh=LTV0XAwMy9g8Y7DFWmRAMBCvbCPAanzUK5p1srS9zEc=;
+        s=k20201202; t=1642438932;
+        bh=Y4ZVPC9JgMkic69D/SYjuLk7XJOUJS7KtSR9xJSVSd8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QibmRls15K4BRCAstVKHO8Haf6btaoOgPWD3W0aed4kEiJn5IOZBcEMVR7w5XXCHu
-         AY0Niqhj7zVqYjHm1bSVW53/+mSQ3sqGDlaCj89SIZm1sMdh34Px63rOjP6d0oJu+w
-         1GWzsJY1ZOkaqCJI6utvKovtF37le4OmKyhNiK5KZzf4tMAd/4eaOUaWxA3GwfBXJh
-         /omf+RUGiE5nqLlWVesm4jj3qO8U9tDTEn2OQU2fh/ObHHiEz37NO1q7vd4z+HGIA4
-         qyUMhz4GuokhloST9HclXAUjVXde2mBnXtu0zm7mGSIfNw9gSIw8UNTlq/lXyqOfX7
-         BQITVEFWDu1wQ==
+        b=ZlqYiDUhQIT+4m6A1zV31wcVHltE5Np7uuqmGm5BnAQZ+8WyzNXKtVwcS6SPbRY5H
+         irx2EhzWJnq0S9mSxl+GIojZOdCrodKoy6wfF2tJHahmf3njxkRBXo4/84bDC86ZAt
+         B9CsIpd6v6IO3zlQ5mKgKdtXz6nFvbrrnT5/MNSOB1EgjTcZJTIg/XIN9aN+kJS7j0
+         r8QkJgsKv70zxlsQaAAxADoRUDV5cFSNXyZMzucnWsjiDbzMAvo39sUIJGIIDW1I3+
+         QcM1JnZLxbZY0kpLsAprq9SuVGsPyllRHdwWO/8ieqPPgtxFMN1XfWfbXGyfWGNH6G
+         CShwsTeiV2S2A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        jejb@linux.ibm.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 42/52] scsi: mpi3mr: Fixes around reply request queues
-Date:   Mon, 17 Jan 2022 11:58:43 -0500
-Message-Id: <20220117165853.1470420-42-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 20/44] scsi: lpfc: Fix leaked lpfc_dmabuf mbox allocations with NPIV
+Date:   Mon, 17 Jan 2022 12:01:03 -0500
+Message-Id: <20220117170127.1471115-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220117165853.1470420-1-sashal@kernel.org>
-References: <20220117165853.1470420-1-sashal@kernel.org>
+In-Reply-To: <20220117170127.1471115-1-sashal@kernel.org>
+References: <20220117170127.1471115-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -50,60 +50,119 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 243bcc8efdb1f44b1a1d415e6821a246714c68ce ]
+[ Upstream commit f0d3919697492950f57a26a1093aee53880d669d ]
 
-Set reply queue depth of 1K for B0 and 4K for A0.
+During rmmod testing, messages appeared indicating lpfc_mbuf_pool entries
+were still busy. This situation was only seen doing rmmod after at least 1
+vport (NPIV) instance was created and destroyed. The number of messages
+scaled with the number of vports created.
 
-While freeing the segmented request queues use the actual queue depth that
-is used while creating them.
+When a vport is created, it can receive a PLOGI from another initiator
+Nport.  When this happens, the driver prepares to ack the PLOGI and
+prepares an RPI for registration (via mbx cmd) which includes an mbuf
+allocation. During the unsolicited PLOGI processing and after the RPI
+preparation, the driver recognizes it is one of the vport instances and
+decides to reject the PLOGI. During the LS_RJT preparation for the PLOGI,
+the mailbox struct allocated for RPI registration is freed, but the mbuf
+that was also allocated is not released.
 
-Link: https://lore.kernel.org/r/20211220141159.16117-25-sreekanth.reddy@broadcom.com
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Fix by freeing the mbuf with the mailbox struct in the LS_RJT path.
+
+As part of the code review to figure the issue out a couple of other areas
+where found that also would not have released the mbuf. Those are cleaned
+up as well.
+
+Link: https://lore.kernel.org/r/20211204002644.116455-2-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    | 3 ++-
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 4 +++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c       | 6 +++++-
+ drivers/scsi/lpfc/lpfc_init.c      | 8 ++++++--
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 6 ++++++
+ 3 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 9787b53a2b598..2cc42432bd0c0 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -79,7 +79,8 @@ extern int prot_mask;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index f7197b7161d52..6d7b9571f5c03 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -6877,6 +6877,7 @@ static int
+ lpfc_get_rdp_info(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context)
+ {
+ 	LPFC_MBOXQ_t *mbox = NULL;
++	struct lpfc_dmabuf *mp;
+ 	int rc;
  
- /* Operational queue management definitions */
- #define MPI3MR_OP_REQ_Q_QD		512
--#define MPI3MR_OP_REP_Q_QD		4096
-+#define MPI3MR_OP_REP_Q_QD		1024
-+#define MPI3MR_OP_REP_Q_QD4K		4096
- #define MPI3MR_OP_REQ_Q_SEG_SIZE	4096
- #define MPI3MR_OP_REP_Q_SEG_SIZE	4096
- #define MPI3MR_MAX_SEG_LIST_SIZE	4096
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index aa5d877df6f83..2daf633ea2955 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -1278,7 +1278,7 @@ static void mpi3mr_free_op_req_q_segments(struct mpi3mr_ioc *mrioc, u16 q_idx)
- 			mrioc->op_reply_qinfo[q_idx].q_segment_list = NULL;
- 		}
- 	} else
--		size = mrioc->req_qinfo[q_idx].num_requests *
-+		size = mrioc->req_qinfo[q_idx].segment_qd *
- 		    mrioc->facts.op_req_sz;
+ 	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+@@ -6892,8 +6893,11 @@ lpfc_get_rdp_info(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context)
+ 	mbox->mbox_cmpl = lpfc_mbx_cmpl_rdp_page_a0;
+ 	mbox->ctx_ndlp = (struct lpfc_rdp_context *)rdp_context;
+ 	rc = lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT);
+-	if (rc == MBX_NOT_FINISHED)
++	if (rc == MBX_NOT_FINISHED) {
++		mp = (struct lpfc_dmabuf *)mbox->ctx_buf;
++		lpfc_mbuf_free(phba, mp->virt, mp->phys);
+ 		goto issue_mbox_fail;
++	}
  
- 	for (j = 0; j < mrioc->req_qinfo[q_idx].num_segments; j++) {
-@@ -1565,6 +1565,8 @@ static int mpi3mr_create_op_reply_q(struct mpi3mr_ioc *mrioc, u16 qidx)
+ 	return 0;
  
- 	reply_qid = qidx + 1;
- 	op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD;
-+	if (!mrioc->pdev->revision)
-+		op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD4K;
- 	op_reply_q->ci = 0;
- 	op_reply_q->ephase = 1;
- 	atomic_set(&op_reply_q->pend_ios, 0);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 0fee8d590b0c4..2bbd1be6cc5d4 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -5314,8 +5314,10 @@ lpfc_sli4_async_link_evt(struct lpfc_hba *phba,
+ 	 */
+ 	if (!(phba->hba_flag & HBA_FCOE_MODE)) {
+ 		rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
+-		if (rc == MBX_NOT_FINISHED)
++		if (rc == MBX_NOT_FINISHED) {
++			lpfc_mbuf_free(phba, mp->virt, mp->phys);
+ 			goto out_free_dmabuf;
++		}
+ 		return;
+ 	}
+ 	/*
+@@ -6266,8 +6268,10 @@ lpfc_sli4_async_fc_evt(struct lpfc_hba *phba, struct lpfc_acqe_fc_la *acqe_fc)
+ 	}
+ 
+ 	rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
+-	if (rc == MBX_NOT_FINISHED)
++	if (rc == MBX_NOT_FINISHED) {
++		lpfc_mbuf_free(phba, mp->virt, mp->phys);
+ 		goto out_free_dmabuf;
++	}
+ 	return;
+ 
+ out_free_dmabuf:
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 27263f02ab9f6..7d717a4ac14d1 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -322,6 +322,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ {
+ 	struct lpfc_hba    *phba = vport->phba;
+ 	struct lpfc_dmabuf *pcmd;
++	struct lpfc_dmabuf *mp;
+ 	uint64_t nlp_portwwn = 0;
+ 	uint32_t *lp;
+ 	IOCB_t *icmd;
+@@ -571,6 +572,11 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		 * a default RPI.
+ 		 */
+ 		if (phba->sli_rev == LPFC_SLI_REV4) {
++			mp = (struct lpfc_dmabuf *)login_mbox->ctx_buf;
++			if (mp) {
++				lpfc_mbuf_free(phba, mp->virt, mp->phys);
++				kfree(mp);
++			}
+ 			mempool_free(login_mbox, phba->mbox_mem_pool);
+ 			login_mbox = NULL;
+ 		} else {
 -- 
 2.34.1
 
