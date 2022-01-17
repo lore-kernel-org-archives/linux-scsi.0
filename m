@@ -2,81 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ED0FC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 09:02:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 297FCC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 09:28:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233581AbiAQJCQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Jan 2022 04:02:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48094 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233580AbiAQJCK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 04:02:10 -0500
-Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F860C06173F;
-        Mon, 17 Jan 2022 01:02:08 -0800 (PST)
-Received: by mail-wm1-x335.google.com with SMTP id p18so18707740wmg.4;
-        Mon, 17 Jan 2022 01:02:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=pKQyE8WmRVKRRSfCnHXiQ2iVbjjWgAi/p8fAcfN9+Bw=;
-        b=YffBhN651/Z0BklBOyvA5ZOyGu8rIBJ8+YLlWg9M5uzMmi3n/Ak+YV9GY055jAmx71
-         jd/YTSomGNRGaf7STMxfmc+MUVl/vNg5HUCaqfi8thzuZvr08jlzhVo+ra2zq8ZTMhYX
-         0GaNUMsAh/p2ww0u5GsePmMY5qI5AQ0lSPDLNiMlg9cRqp7nYNUX+nENOeHvw0bKxEsU
-         1LpRSC0G0L1X8JsfrlTkHQ7Ib8bPiUuUzvlZP4L3R+F+o2QyyOqSSPjMSZ5wKmi8MPjE
-         ojYQVV/sbjRl9UGzxDug3wohHgwKdYsuCYgOHLAJIGasNTTX85gbMtJeKU7zv041mW8Y
-         EKXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=pKQyE8WmRVKRRSfCnHXiQ2iVbjjWgAi/p8fAcfN9+Bw=;
-        b=KG0Q89WRqnbYUsBDWd0q76V5T3+U+BclrmUUtec2bmTIhj1+G4FIzeTqlsUo2mn64b
-         MBfHcRxZXUd+M5ig5tKFg5mDhb3XkXcJvdhjttyFHo/sKkkEzcAPlVnhve5/n5pFaztm
-         U39Ipir++clrnqbuIB78ZoUZPB37qCHJlUHo2pOSLqTkugy11D2EuVzcH7MLMWKGiqXi
-         VHpTHHXykuE1xiAY/FzY0TqIV8V3UD/Lan3jyfTOOc1NWTmxLoHzpto7losoSAauZpix
-         c7SCM4G/98NuUc2n3zCv02OqshK+RU5UV+1JP3xW/wTBW0KE59hDmwZ9VOJmRMnZy7Gv
-         cyJg==
-X-Gm-Message-State: AOAM5330SPNxl03FcDCUz7QIwe+qHdzpauIJMbEaQqdJnNFxd/ApfJAA
-        7tkhBo6ehyC0ujOn4YwOdKE=
-X-Google-Smtp-Source: ABdhPJzSDquw+wIa3NNFcJih60Yz+qeM+h3FbVeoZHjlghC05OVNb9akOnxnKBfuR2cLfo0iwApWcQ==
-X-Received: by 2002:a5d:6dd1:: with SMTP id d17mr19500538wrz.520.1642410127168;
-        Mon, 17 Jan 2022 01:02:07 -0800 (PST)
-Received: from ubuntu-laptop (p4fd59309.dip0.t-ipconnect.de. [79.213.147.9])
-        by smtp.googlemail.com with ESMTPSA id f9sm14810512wry.115.2022.01.17.01.02.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Jan 2022 01:02:06 -0800 (PST)
-Message-ID: <ea4c2c5b0495b3ee1a637a59f6ff5da754d8a8b3.camel@gmail.com>
-Subject: Re: [PATCH v2] scsi: ufs: ufshcd-pltfrm: check the return value of
- devm_kstrdup()
-From:   Bean Huo <huobean@gmail.com>
-To:     xkernel.wang@foxmail.com, bvanassche@acm.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Mon, 17 Jan 2022 10:02:05 +0100
-In-Reply-To: <tencent_4257E15D4A94FF9020DDCC4BB9B21C041408@qq.com>
-References: <tencent_4257E15D4A94FF9020DDCC4BB9B21C041408@qq.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5-0ubuntu1 
+        id S235688AbiAQJ2g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Jan 2022 04:28:36 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4414 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233366AbiAQJ2f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 04:28:35 -0500
+Received: from fraeml744-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Jcmj71Jybz67jS1;
+        Mon, 17 Jan 2022 17:25:31 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml744-chm.china.huawei.com (10.206.15.225) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Mon, 17 Jan 2022 10:28:33 +0100
+Received: from [10.47.83.126] (10.47.83.126) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Mon, 17 Jan
+ 2022 09:28:32 +0000
+Subject: Re: [PATCH] scsi: hisi_sas: Remove useless DMA-32 fallback
+ configuration
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>
+References: <1bf2d3660178b0e6f172e5208bc0bd68d31d9268.1642237482.git.christophe.jaillet@wanadoo.fr>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <b7e68ce9-cca0-a5d7-0bd6-82cf597b9619@huawei.com>
+Date:   Mon, 17 Jan 2022 09:28:06 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
+In-Reply-To: <1bf2d3660178b0e6f172e5208bc0bd68d31d9268.1642237482.git.christophe.jaillet@wanadoo.fr>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.83.126]
+X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 2022-01-16 at 11:06 +0800, xkernel.wang@foxmail.com wrote:
-> From: Xiaoke Wang <xkernel.wang@foxmail.com>
+On 15/01/2022 09:05, Christophe JAILLET wrote:
+> As stated in [1], dma_set_mask() with a 64-bit mask never fails if
+> dev->dma_mask is non-NULL.
+> So, if it fails, the 32 bits case will also fail for the same reason.
 > 
+> Simplify code and remove some dead code accordingly.
 > 
+> [1]: https://lore.kernel.org/linux-kernel/YL3vSPK5DXTNvgdx@infradead.org/#t
 > 
-> devm_kstrdup() returns pointer to allocated string on success,
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+
+Great, you got both callsites:
+
+Acked-by: John Garry <john.garry@huawei.com>
+
+> ---
+>   drivers/scsi/hisi_sas/hisi_sas_main.c  | 3 ---
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 --
+>   2 files changed, 5 deletions(-)
 > 
-> NULL on failure. So it is better to check the return value of it.
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> index a05ec7aece5a..2f53a2ee024a 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> @@ -2666,9 +2666,6 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+>   		goto err_out;
+>   
+>   	error = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
+> -	if (error)
+> -		error = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
+> -
+>   	if (error) {
+>   		dev_err(dev, "No usable DMA addressing method\n");
+>   		goto err_out;
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> index a45ef9a5e12e..a01a3a7b706b 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> @@ -4695,8 +4695,6 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>   		goto err_out;
+>   
+>   	rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+> -	if (rc)
+> -		rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+>   	if (rc) {
+>   		dev_err(dev, "No usable DMA addressing method\n");
+>   		rc = -ENODEV;
 > 
-> 
-> 
-> Signed-off-by: Xiaoke Wang <xkernel.wang@foxmail.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
 
