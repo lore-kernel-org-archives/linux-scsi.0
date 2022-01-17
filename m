@@ -2,98 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 297FCC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 09:28:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 885D5C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 10:31:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235688AbiAQJ2g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Jan 2022 04:28:36 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4414 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233366AbiAQJ2f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 04:28:35 -0500
-Received: from fraeml744-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Jcmj71Jybz67jS1;
-        Mon, 17 Jan 2022 17:25:31 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml744-chm.china.huawei.com (10.206.15.225) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Mon, 17 Jan 2022 10:28:33 +0100
-Received: from [10.47.83.126] (10.47.83.126) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Mon, 17 Jan
- 2022 09:28:32 +0000
-Subject: Re: [PATCH] scsi: hisi_sas: Remove useless DMA-32 fallback
- configuration
-To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>
-References: <1bf2d3660178b0e6f172e5208bc0bd68d31d9268.1642237482.git.christophe.jaillet@wanadoo.fr>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <b7e68ce9-cca0-a5d7-0bd6-82cf597b9619@huawei.com>
-Date:   Mon, 17 Jan 2022 09:28:06 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
-MIME-Version: 1.0
-In-Reply-To: <1bf2d3660178b0e6f172e5208bc0bd68d31d9268.1642237482.git.christophe.jaillet@wanadoo.fr>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.83.126]
-X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
+        id S238610AbiAQKbP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Jan 2022 05:31:15 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:46982 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238599AbiAQKbO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 05:31:14 -0500
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220117103111epoutp04e9f2b29a4f25b18e8a5ad6dacdb232b1~LCCtZN5_Y0927209272epoutp04O
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Jan 2022 10:31:11 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220117103111epoutp04e9f2b29a4f25b18e8a5ad6dacdb232b1~LCCtZN5_Y0927209272epoutp04O
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1642415471;
+        bh=oOUoKZ4pBdpP3x9g04SzNvA59acLArOtLwiamwa5u8Y=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=AbHYzrg01olZMFkbzgOM0Gsj2ypi0y0ioxPU2rkQwQrjyn9jxzE/fsAY4MVcLcl4p
+         +DMh+R8n8Eq9z+xz1A27mjDh/6aeFvP2uqZVSCeIcosNrie/6YW4WtsPIYg5XtrOnq
+         GJjRjC4A0VogpMpI23TzudYkx4t3KgT0ZqPBmg34=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20220117103110epcas2p4560f82a9c2500bf27e23583ee619a0ea~LCCs1l4VG0461104611epcas2p4C;
+        Mon, 17 Jan 2022 10:31:10 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.98]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4Jcp8r1ZWgz4x9QB; Mon, 17 Jan
+        2022 10:31:08 +0000 (GMT)
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        6F.02.51767.C6545E16; Mon, 17 Jan 2022 19:31:08 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20220117103107epcas2p3d7223ff63f6cb575316695cc8fb155a4~LCCp1i35u1059510595epcas2p3w;
+        Mon, 17 Jan 2022 10:31:07 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220117103107epsmtrp11f0ad2c19eb0d7e15dd4eb4be200dcc0~LCCp0lKq31325113251epsmtrp1D;
+        Mon, 17 Jan 2022 10:31:07 +0000 (GMT)
+X-AuditID: b6c32a45-45dff7000000ca37-f0-61e5456c6e47
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        4E.CF.29871.B6545E16; Mon, 17 Jan 2022 19:31:07 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20220117103107epsmtip24a13e2628164eb1e8d0470e292916b88~LCCpkjdYe0105301053epsmtip2I;
+        Mon, 17 Jan 2022 10:31:07 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, adrian.hunter@intel.com, sc.suh@samsung.com,
+        hy50.seo@samsung.com, sh425.lee@samsung.com,
+        bhoon95.kim@samsung.com, vkumar.1997@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v1] scsi: ufs: use an generic error code in
+ ufshcd_set_dev_pwr_mode
+Date:   Mon, 17 Jan 2022 19:29:21 +0900
+Message-Id: <1642415361-140388-1-git-send-email-kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpnk+LIzCtJLcpLzFFi42LZdljTXDfH9WmiwfRbHBYnn6xhs3gwbxub
+        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i+XH/zFZ
+        dN29wWix9N9bFos79z+yOPB7XO7rZfJYvOclk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5
+        tB/oZgrgiMq2yUhNTEktUkjNS85PycxLt1XyDo53jjc1MzDUNbS0MFdSyEvMTbVVcvEJ0HXL
+        zAG6XkmhLDGnFCgUkFhcrKRvZ1OUX1qSqpCRX1xiq5RakJJTYF6gV5yYW1yal66Xl1piZWhg
+        YGQKVJiQnfF6Uhd7QQN7xfI10g2MV1m7GDk5JARMJHbs7QSyuTiEBHYwSmxdd5wFwvnEKLHh
+        fg8jhPONUeL4jC0sMC3vF/5gh0jsZZSYdn0fVMsPRolV7YvAqtgENCWe3pzKBGKLCFxnkpi3
+        PQPEZhZQl9g14QRYXFggVKKp5R2YzSKgKrGleS0ziM0r4Cax4tJNRohtchI3z3UygyyQEPjL
+        LtGy6SgTRMJF4vqfOVAnCUu8Or6FHcKWknjZ38YO0dDMKLFzdyNU9xRGiSX7P0BVGUvMetYO
+        tIID6CRNifW79EFMCQFliSO3WCAO5ZPoOPyXHSLMK9HRJgTRqCzxa9JkqNskJWbevAM10EPi
+        1LJ7YLaQQKzEy28bWCYwys5CmL+AkXEVo1hqQXFuemqxUYEhPJaS83M3MYJTpJbrDsbJbz/o
+        HWJk4mA8xCjBwawkwnuM+0miEG9KYmVValF+fFFpTmrxIUZTYIBNZJYSTc4HJum8knhDE0sD
+        EzMzQ3MjUwNzJXFer5QNiUIC6YklqdmpqQWpRTB9TBycUg1MZV9/PWbouHW819PGnXFxbp2n
+        oNncJpk5LCHGCre9ZBoEc3pLqizsROL59osf/2ow2aBB6L3OZLXur9923V5wdebE4Oeyt8zV
+        QmSXsPTy5FxaI5TP7GUsp3Bkg7u/V1GYw9w95TyVIvIed3bWXeu2LjvtfzK1UfxaTNLcrmcu
+        YmbbdJ8FPyy+X6H9I1QprPnNTT+VrdsuannceXCO5+O5wrOmAg8z/rS/2PF2p9hMvnf83P/K
+        xLknMvZ4fXzvluhrOYmjui2D12G98OtpH1N+LWu1fqM5a8nCOWsYm3gzux4ue3umnncqy/za
+        tNTWSMslqSfet3afYnpsP6lF9uV15mTlXctaryUZlzK3f1RiKc5INNRiLipOBACdpmpCGgQA
+        AA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGLMWRmVeSWpSXmKPExsWy7bCSvG6269NEg5abMhYnn6xhs3gwbxub
+        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i+XH/zFZ
+        dN29wWix9N9bFos79z+yOPB7XO7rZfJYvOclk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5
+        tB/oZgrgiOKySUnNySxLLdK3S+DKeD2pi72ggb1i+RrpBsarrF2MnBwSAiYS7xf+YO9i5OIQ
+        EtjNKLF7Uy8TREJS4sTO54wQtrDE/ZYjrBBF3xgl9jxvYwNJsAloSjy9OZUJJCEi8JJJ4sWc
+        NWAJZgF1iV0TToBNEhYIlri/dRMziM0ioCqxpXktmM0r4Cax4tJNqA1yEjfPdTJPYORZwMiw
+        ilEytaA4Nz232LDAMC+1XK84Mbe4NC9dLzk/dxMjOGi1NHcwbl/1Qe8QIxMH4yFGCQ5mJRHe
+        Y9xPEoV4UxIrq1KL8uOLSnNSiw8xSnOwKInzXug6GS8kkJ5YkpqdmlqQWgSTZeLglGpgMns8
+        UWwPS92k2+u3z2GtXWjkMfWW7jHZ/IWqWupS377EXk/cHrx/bmr6vnPV+gX3Xj56+iTtWOTa
+        6rJIxY78aeX3T257xnfnQdWPKleD68Kfih9VPWDuY3Fcf/yVZGVZwo0Pl51lRZYs67XjOsr5
+        PlHvvq1hxtMZ/b/611UtOeZX+zdxi5lmTI7qI965aXp7H0sF3Pn3tvqO29QHDCuczS7U7GKR
+        CHAKWbvXTm+RYfG9trbWFNNiH4Hv1074rap0/VNev1PjnMiVmbdn/fkytWWvTcCFYK/zO57L
+        51zv/Mhw71WmtYVSgkBifsIpvjD5RXuEYrU/5N3x2PXNfFoHt7NZzaeLdpGzRdayFfLoKLEU
+        ZyQaajEXFScCAKD+/TXJAgAA
+X-CMS-MailID: 20220117103107epcas2p3d7223ff63f6cb575316695cc8fb155a4
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
 X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220117103107epcas2p3d7223ff63f6cb575316695cc8fb155a4
+References: <CGME20220117103107epcas2p3d7223ff63f6cb575316695cc8fb155a4@epcas2p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 15/01/2022 09:05, Christophe JAILLET wrote:
-> As stated in [1], dma_set_mask() with a 64-bit mask never fails if
-> dev->dma_mask is non-NULL.
-> So, if it fails, the 32 bits case will also fail for the same reason.
-> 
-> Simplify code and remove some dead code accordingly.
-> 
-> [1]: https://lore.kernel.org/linux-kernel/YL3vSPK5DXTNvgdx@infradead.org/#t
-> 
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+The return value of ufshcd_set_dev_pwr_mode is given to
+device pm core. However, the function currently returns a result
+in scsi command and the device pm core doesn't understand it.
+It might lead to unexpected behaviors of user land. I found
+the return value led to platform reset in Android.
 
-Great, you got both callsites:
+This patch is to use an generic code for SSU failures.
 
-Acked-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> ---
->   drivers/scsi/hisi_sas/hisi_sas_main.c  | 3 ---
->   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 --
->   2 files changed, 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> index a05ec7aece5a..2f53a2ee024a 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -2666,9 +2666,6 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
->   		goto err_out;
->   
->   	error = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
-> -	if (error)
-> -		error = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
-> -
->   	if (error) {
->   		dev_err(dev, "No usable DMA addressing method\n");
->   		goto err_out;
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> index a45ef9a5e12e..a01a3a7b706b 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> @@ -4695,8 +4695,6 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->   		goto err_out;
->   
->   	rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-> -	if (rc)
-> -		rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
->   	if (rc) {
->   		dev_err(dev, "No usable DMA addressing method\n");
->   		rc = -ENODEV;
-> 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 1049e41..a60816c 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8669,6 +8669,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 			    pwr_mode, ret);
+ 		if (ret > 0 && scsi_sense_valid(&sshdr))
+ 			scsi_print_sense_hdr(sdp, NULL, &sshdr);
++		ret = -EIO;
+ 	}
+ 
+ 	if (!ret)
+-- 
+2.7.4
 
