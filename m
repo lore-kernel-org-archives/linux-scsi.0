@@ -2,44 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5173C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 17:11:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FED4C43219
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Jan 2022 17:11:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242178AbiAQRLR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Jan 2022 12:11:17 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:56658 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241838AbiAQRI0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 12:08:26 -0500
+        id S242164AbiAQRLS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Jan 2022 12:11:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46234 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243474AbiAQRJu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2022 12:09:50 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53999C0613AB;
+        Mon, 17 Jan 2022 09:05:44 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A7140B81155;
-        Mon, 17 Jan 2022 17:08:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E991C36AE7;
-        Mon, 17 Jan 2022 17:08:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3586961277;
+        Mon, 17 Jan 2022 17:05:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAD1AC36AE3;
+        Mon, 17 Jan 2022 17:05:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642439303;
-        bh=1WUYU2h+Ihp81t3u07UTnT8V09OXmsMPudnXV6CtIy8=;
+        s=k20201202; t=1642439143;
+        bh=SO3cHiV5I28ThnTZPDoMcc4LPiomENv4E0MOcsvj+qg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=b4hqjg1XqBet+tDJ+wM5VSFUtZFJXrf5VJTVv/mpUbp+Wv65MgUwLWd/DskMtSgtD
-         mc/qiioUUAzQLcTW6CP7pJsDDvDF1pc4yn2Zs0zvnF1IsZvP1T65F60OJAgW7PE5VK
-         IsVBELla3G3JORXSJhOS4EbCdd4AVTecE9o2ttBU9MJf64jdcsJoxqY1smLRUdz8bQ
-         gPv427Mrz+9WxVY8feTEcA9Ot1971TtpPfcRWRnKtDFD5S8Tt4EQsPv1HaH61hjWX0
-         kZdCkifm1zJ3oUBGjpUslYQbQcBRIv7WPJycVLWfVLUbRGjdN5XArDoAEWBYfmLhPY
-         HZqgqkiRBOgyA==
+        b=sJcJIIEid/EfbanXpKggk1RfLS6WCNG3QHPJPvu5h0kksFHs7WLXae6R61PdkQvV4
+         h2n9lYsladeMdk8nMjPUcn0ZB/xEdUBUI3bSnwLqdEkpCbzONb1mTbzaKjBTdq+yx3
+         qznytfCbapKid+Td03P4qva5GUSDHjOBubUPenQstXohEwqgU2V4gcUgcB2ciTFFwj
+         fZgTK9VFt0E6zRirWtxuq9jOnEqSXNNLv+ERLJLevgdRzQJ2Ym/zrBiBli/H498ToU
+         mflEL16ilfrpxRA6cMMkYulTJA7XZDsIq+M9JdnitCOVf8YfoiBfUXhVRW1X6OnQTa
+         KC8AEUCoxnT2g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>, Baoquan He <bhe@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 12/12] scsi: sr: Don't use GFP_DMA
-Date:   Mon, 17 Jan 2022 12:07:56 -0500
-Message-Id: <20220117170757.1473318-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 20/21] scsi: sr: Don't use GFP_DMA
+Date:   Mon, 17 Jan 2022 12:04:52 -0500
+Message-Id: <20220117170454.1472347-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220117170757.1473318-1-sashal@kernel.org>
-References: <20220117170757.1473318-1-sashal@kernel.org>
+In-Reply-To: <20220117170454.1472347-1-sashal@kernel.org>
+References: <20220117170454.1472347-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -67,10 +70,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index df019b78d9f79..e26d6cc3c8716 100644
+index 279dea628620d..310da62cda263 100644
 --- a/drivers/scsi/sr.c
 +++ b/drivers/scsi/sr.c
-@@ -883,7 +883,7 @@ static void get_capabilities(struct scsi_cd *cd)
+@@ -887,7 +887,7 @@ static void get_capabilities(struct scsi_cd *cd)
  
  
  	/* allocate transfer buffer */
@@ -80,19 +83,19 @@ index df019b78d9f79..e26d6cc3c8716 100644
  		sr_printk(KERN_ERR, cd, "out of memory.\n");
  		return;
 diff --git a/drivers/scsi/sr_vendor.c b/drivers/scsi/sr_vendor.c
-index 11a238cb22223..629bfe1b20263 100644
+index b9db2ec6d0361..996bccadd3866 100644
 --- a/drivers/scsi/sr_vendor.c
 +++ b/drivers/scsi/sr_vendor.c
-@@ -118,7 +118,7 @@ int sr_set_blocklength(Scsi_CD *cd, int blocklength)
+@@ -113,7 +113,7 @@ int sr_set_blocklength(Scsi_CD *cd, int blocklength)
+ 	if (cd->vendor == VENDOR_TOSHIBA)
  		density = (blocklength > 2048) ? 0x81 : 0x83;
- #endif
  
 -	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
 +	buffer = kmalloc(512, GFP_KERNEL);
  	if (!buffer)
  		return -ENOMEM;
  
-@@ -166,7 +166,7 @@ int sr_cd_check(struct cdrom_device_info *cdi)
+@@ -161,7 +161,7 @@ int sr_cd_check(struct cdrom_device_info *cdi)
  	if (cd->cdi.mask & CDC_MULTI_SESSION)
  		return 0;
  
