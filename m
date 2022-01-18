@@ -2,98 +2,185 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E60EC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Jan 2022 15:49:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B499CC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Jan 2022 16:58:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346021AbiARPti (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Jan 2022 10:49:38 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4427 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346016AbiARPth (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jan 2022 10:49:37 -0500
-Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JdY5J6zFkz67hFv;
-        Tue, 18 Jan 2022 23:45:40 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.21; Tue, 18 Jan 2022 16:49:35 +0100
-Received: from [10.47.94.101] (10.47.94.101) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Tue, 18 Jan
- 2022 15:49:34 +0000
-Subject: Re: [issue report] pm8001 issues (was driver crashes with IOMMU
- enabled)
-To:     <Ajish.Koshy@microchip.com>, <jinpu.wang@ionos.com>,
-        <Viswas.G@microchip.com>
-CC:     <linux-scsi@vger.kernel.org>, <vishakhavc@google.com>,
-        <ipylypiv@google.com>, <Ruksar.devadi@microchip.com>,
-        <damien.lemoal@opensource.wdc.com>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>
-References: <894f766f-74b7-62b1-f6d2-82ac85b6478f@huawei.com>
- <CAMGffEkvrAxhrsL=azkVzQHHyDczZwJ3uiNWydSA6o2K+Xh_Jw@mail.gmail.com>
- <00505633-c8c0-8213-8909-482bf43661cd@huawei.com>
- <1cc92b2d-3670-7843-d68a-06fe68521d24@huawei.com>
- <fd0eafc6-9443-fe5e-2c2f-91d6bbe8b174@huawei.com>
- <PH0PR11MB5112EBE80F9A4AD199866CA7EC429@PH0PR11MB5112.namprd11.prod.outlook.com>
- <0cc0c435-b4f2-9c76-258d-865ba50a29dd@huawei.com>
- <PH0PR11MB5112F2D4A506B0FE6DC5B01BEC4D9@PH0PR11MB5112.namprd11.prod.outlook.com>
- <34319d65-104d-55a0-175d-96cf3f0aea89@huawei.com>
- <PH0PR11MB511238B8FF7B44C375DDDFADEC519@PH0PR11MB5112.namprd11.prod.outlook.com>
- <75d042c1-cee5-ce91-e1cb-9e2b7bb1ce72@huawei.com>
- <PH0PR11MB5112E3E9787F20EDEB58D481EC539@PH0PR11MB5112.namprd11.prod.outlook.com>
- <05bec388-946d-057d-20d7-67ebe5f2cfdf@huawei.com>
- <PH0PR11MB5112CBA1FFB800289710BBC0EC579@PH0PR11MB5112.namprd11.prod.outlook.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <a8d13d70-226c-16eb-6007-2102d3f8bb26@huawei.com>
-Date:   Tue, 18 Jan 2022 15:49:02 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
-MIME-Version: 1.0
-In-Reply-To: <PH0PR11MB5112CBA1FFB800289710BBC0EC579@PH0PR11MB5112.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
+        id S243835AbiARQ6R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Jan 2022 11:58:17 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:14802 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231494AbiARQ6O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Jan 2022 11:58:14 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20IExTxr032520;
+        Tue, 18 Jan 2022 16:58:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : content-transfer-encoding : mime-version; s=pp1;
+ bh=fN+4VdW7csDQnRSvc2zhuXQDipHsikrdQ2xEWTx8DYs=;
+ b=nQhgb6epA81zqx4s7oAg6V3vpCLHvNLtmA5wMZ0gcNwnjnuqbEgz7HSEk3NN7bVBJV+P
+ LBfmAdZSu7PgI39Zh+hscU/ZXMCmEzkWgptYcF1tARhZBAvKDtMuiYsGmOBgnH7veEN/
+ QF1Wf3vOnZMzr0E6R999wwU6ryuXiCKXHXuuIuT5gGs+P7kF4lNM1IFOl3R+5u4lh47v
+ izkvxTzZMHIWJN0m+OrkEX2BirfegK/sXyLnlycF24C6Uwnx85DJVP/jp2M5H2sqftgt
+ onzZ0otCjYSO0hzZK9hyuLOtAthGCHXL4DEc2ZPCqb1BBtH8l4NssnCnlEDvtcs0q9qV pw== 
+Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3dnxfgw5ut-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 18 Jan 2022 16:58:11 +0000
+Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
+        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 20IGuxeK029377;
+        Tue, 18 Jan 2022 16:58:09 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma03fra.de.ibm.com with ESMTP id 3dknwad7n5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 18 Jan 2022 16:58:08 +0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 20IGw5SJ44892606
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 18 Jan 2022 16:58:05 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id CCA10A4055;
+        Tue, 18 Jan 2022 16:58:05 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8577CA405B;
+        Tue, 18 Jan 2022 16:58:05 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Tue, 18 Jan 2022 16:58:05 +0000 (GMT)
+From:   Steffen Maier <maier@linux.ibm.com>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>
+Subject: [PATCH] zfcp: fix failed recovery on gone remote port with non-NPIV FCP devices
+Date:   Tue, 18 Jan 2022 17:58:03 +0100
+Message-Id: <20220118165803.3667947-1-maier@linux.ibm.com>
+X-Mailer: git-send-email 2.32.0
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: W40AfIHTNYURBVoYb_i_SYHhdWW8IRw0
+X-Proofpoint-ORIG-GUID: W40AfIHTNYURBVoYb_i_SYHhdWW8IRw0
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.47.94.101]
-X-ClientProxiedBy: lhreml736-chm.china.huawei.com (10.201.108.87) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.816,Hydra:6.0.425,FMLib:17.11.62.513
+ definitions=2022-01-18_04,2022-01-18_01,2021-12-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 bulkscore=0
+ phishscore=0 spamscore=0 priorityscore=1501 mlxscore=0 malwarescore=0
+ suspectscore=0 mlxlogscore=999 clxscore=1015 lowpriorityscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2110150000 definitions=main-2201180101
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Ajish,
+Suppose we have an environment with a number of non-NPIV FCP devices
+(virtual HBAs / FCP devices / zfcp "adapter"s) sharing the same physical
+FCP channel (HBA port) and its I_T nexus. Plus a number of storage target
+ports zoned to such shared channel. Now one target port logs out of the
+fabric causing an RSCN. Zfcp reacts with an ADISC ELS and subsequent port
+recovery depending on the ADISC result. This happens on all such FCP
+devices (in different Linux images) concurrently as they all receive a copy
+of this RSCN. In the following we look at one of those FCP devices.
 
->>
->>>>    From an earlier mail [0] I got the impression that you tested on an
->>>> arm platform – did you?
->>> Yes, with respect to my previous mail update, at that time got the
->>> chance to load the driver on ARM server/enclosure connected in one of
->>> our tester's arm server after attaching the controller card.
->>> There this error handling issue was observed.
->>>
->>> The card/driver was never tested or validated on ARM server before,
->>> was curious to see the behavior for the first time. Whereas driver
->>> loads smoothly on x86 server.
->>>
->>> Currently busy with some other issues, debugging on ARM server is not
->>> planned for now.
->>>
->> OK, since you do see this same/similar issue with another card on arm then I
->> think that it is safe to assume that it is a driver issue.
->>
->> If you can share the dmesg on the arm machine then at least that would be
->> helpful.
-> Right now the arm configuration is not available. Will be difficult
-> to get dmesg.
+Requests other than FSF_QTCB_FCP_CMND can be slow until they get a
+response.
 
-By adding (enabling) a tonne of debug logs in the the driver and 
-enabling heavy kernel debug config options mount+umount works reliably. 
-So it looks like a timing issue / memory barrier issue - yuck. Since the 
-issue is so reliably produced it seems unlikely to be a barrier issue.
+Depending on which requests are affected by slow responses, there are
+different recovery outcomes. Here we want to fix failed recoveries on
+port or adapter level by avoiding recovery requests that can be slow.
 
-There are lots of files in the shost sysfs folder - can any of these be 
-used to help debug?
+We need the cached N_Port_ID for the remote port "link" test with ADISC.
+Just before sending the ADISC, we now intentionally forget the old cached
+N_Port_ID. The idea is that on receiving an RSCN for a port, we have to
+assume that any cached information about this port is stale.
+This forces a fresh new GID_PN [FC-GS] nameserver lookup on any subsequent
+recovery for the same port. Since we typically can still communicate with
+the nameserver efficiently, we now reach steady state quicker: Either the
+nameserver still does not know about the port so we stop recovery, or the
+nameserver already knows the port potentially with a new N_Port_ID and we
+can successfully and quickly perform open port recovery.
+For the one case, where ADISC returns successfully, we re-initialize
+port->d_id because that case does not involve any port recovery.
 
-Thanks,
-John
+This also solves a problem if the storage WWPN quickly logs into the fabric
+again but with a different N_Port_ID. Such as on virtual WWPN takeover
+during target NPIV failover.
+[https://www.redbooks.ibm.com/abstracts/redp5477.html]
+In that case the RSCN from the storage FDISC was ignored by zfcp and we
+could not successfully recover the failover. On some later failback
+on the storage, we could have been lucky if the virtual WWPN
+got the same old N_Port_ID from the SAN switch as we still had cached.
+Then the related RSCN triggered a successful port reopen recovery.
+However, there is no guarantee to get the same N_Port_ID on NPIV FDISC.
+
+Even though NPIV-enabled FCP devices are not affected by this problem, this
+code change optimizes recovery time for gone remote ports as a side effect.
+The timely drop of cached N_Port_IDs prevents unnecessary slow open port
+attempts.
+
+While the problem might have been in code before v2.6.32 commit
+799b76d09aee ("[SCSI] zfcp: Decouple gid_pn requests from erp")
+this fix depends on the gid_pn_work introduced with that commit,
+so we mark it as culprit to satisfy fix dependencies.
+
+Note: Point-to-point remote port is already handled separately and gets
+its N_Port_ID from the cached peer_d_id. So resetting port->d_id in
+general does not affect PtP.
+
+Suggested-by: Benjamin Block <bblock@linux.ibm.com>
+Fixes: 799b76d09aee ("[SCSI] zfcp: Decouple gid_pn requests from erp")
+Cc: <stable@vger.kernel.org> #2.6.32+
+Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+Signed-off-by: Steffen Maier <maier@linux.ibm.com>
+---
+ drivers/s390/scsi/zfcp_fc.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
+index d24cafe02708..511bf8e0a436 100644
+--- a/drivers/s390/scsi/zfcp_fc.c
++++ b/drivers/s390/scsi/zfcp_fc.c
+@@ -521,6 +521,8 @@ static void zfcp_fc_adisc_handler(void *data)
+ 		goto out;
+ 	}
+ 
++	/* re-init to undo drop from zfcp_fc_adisc() */
++	port->d_id = ntoh24(adisc_resp->adisc_port_id);
+ 	/* port is good, unblock rport without going through erp */
+ 	zfcp_scsi_schedule_rport_register(port);
+  out:
+@@ -534,6 +536,7 @@ static int zfcp_fc_adisc(struct zfcp_port *port)
+ 	struct zfcp_fc_req *fc_req;
+ 	struct zfcp_adapter *adapter = port->adapter;
+ 	struct Scsi_Host *shost = adapter->scsi_host;
++	u32 d_id;
+ 	int ret;
+ 
+ 	fc_req = kmem_cache_zalloc(zfcp_fc_req_cache, GFP_ATOMIC);
+@@ -558,7 +561,15 @@ static int zfcp_fc_adisc(struct zfcp_port *port)
+ 	fc_req->u.adisc.req.adisc_cmd = ELS_ADISC;
+ 	hton24(fc_req->u.adisc.req.adisc_port_id, fc_host_port_id(shost));
+ 
+-	ret = zfcp_fsf_send_els(adapter, port->d_id, &fc_req->ct_els,
++	d_id = port->d_id; /* remember as destination for send els below */
++	/*
++	 * Force fresh GID_PN lookup on next port recovery.
++	 * Must happen after request setup and before sending request,
++	 * to prevent race with port->d_id re-init in zfcp_fc_adisc_handler().
++	 */
++	port->d_id = 0;
++
++	ret = zfcp_fsf_send_els(adapter, d_id, &fc_req->ct_els,
+ 				ZFCP_FC_CTELS_TMO);
+ 	if (ret)
+ 		kmem_cache_free(zfcp_fc_req_cache, fc_req);
+
+base-commit: 2576e153cd982d540b212e989458edc42ad1b390
+-- 
+2.32.0
+
