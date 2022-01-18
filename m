@@ -2,120 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12186C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Jan 2022 12:20:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D93C3C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Jan 2022 15:22:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240901AbiARMUZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Jan 2022 07:20:25 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4426 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239364AbiARMUZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jan 2022 07:20:25 -0500
-Received: from fraeml742-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JdSSs1NS0z67wFn;
-        Tue, 18 Jan 2022 20:17:17 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml742-chm.china.huawei.com (10.206.15.223) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 18 Jan 2022 13:20:22 +0100
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 18 Jan 2022 12:20:18 +0000
-From:   John Garry <john.garry@huawei.com>
-To:     <jinpu.wang@cloud.ionos.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>,
-        <Ajish.Koshy@microchip.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <Viswas.G@microchip.com>, <vishakhavc@google.com>,
-        <ipylypiv@google.com>, <Ruksar.devadi@microchip.com>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH v2] scsi: pm8001: Fix bogus FW crash for maxcpus=1
-Date:   Tue, 18 Jan 2022 20:15:05 +0800
-Message-ID: <1642508105-95432-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        id S236062AbiARPW3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Jan 2022 10:22:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40878 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235669AbiARPW3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jan 2022 10:22:29 -0500
+Received: from mail-io1-xd31.google.com (mail-io1-xd31.google.com [IPv6:2607:f8b0:4864:20::d31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5B1AC061574
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Jan 2022 07:22:28 -0800 (PST)
+Received: by mail-io1-xd31.google.com with SMTP id i82so25947382ioa.8
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Jan 2022 07:22:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=hXIeWmjxOK+9ShgeBWJ8rEVKQBcOGCL48jeDuXezmn8=;
+        b=Zpvbp76JPx/QLp8J9GgAaAK0UniPcmLhIeeEPYGAiYwa2frSjsP8FYTEV3k0Hx5TbG
+         t5nWWA3SSqJChGNJOKbYt6QwXrD+1r7FOkQe2+nm4TtVLzoJLNYNOcWdCoXvCDsomBVZ
+         rzLLLISq46qGL9tHtu33KiNbaANW9l/JXZ9qY142JzJPHc6q2KZamGlaE833ZZbaELXi
+         g85VP+kC/3FTVtHKAE5zYwd5qiJ2bTPzpJtU62z9NNnnuUrdLVFTXpcSxJxbf5d8bJu3
+         5mmPBUfcWCtQvVp2C+mKkPc3vr3LbwF32dktabhx/+4l6dnUThpf6/KJQBUUsgmqsJpN
+         XNgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=hXIeWmjxOK+9ShgeBWJ8rEVKQBcOGCL48jeDuXezmn8=;
+        b=dfJJ90WbU+g5LcU/D4C3NTJ/ZQaanIYMF4FeLL5JtBoFB3lG1LJU1xi0tZSdnv6o99
+         R90gli0eNpO+/Mt3iZPRiCptfEAIhRLaYKxk9ho2gpbZd1fs2u08JBxrZOV+biqXgpx1
+         DpJvtp8bLTU1a6x/2+I22HHAAX6JQ297wXU4m5e6uAAJR6Ezrckv6qgebQE3Up3KZldu
+         sYkJxZGtVhFS4N0LzsZh3iiWmDIgxFldDcU/J/HbGIMthJs7SPBHfY53pBtEpFcH6Gpg
+         ad5vQJmOKqpvZorLIZ6kDdiwZofO7awqPbTJE9c9Fe0RRN6GL6MUT16JxnB5eQ9oft86
+         6x2w==
+X-Gm-Message-State: AOAM5312r1OxlGF5QfGgNVhAKOYry4pwJOWor7+xthxL7j2oYKjbGteD
+        WlU6iyiEgbnG0VbNdhIrGqnyRrcXif+d2Y3+3qRJOD9QDnk=
+X-Google-Smtp-Source: ABdhPJx10uRCxDYuOzPd1VT6LusjnAkTbHhUHqeeOvqoTsYiimU9pmi5jZsQ+ZSoLNiHMU/W5t40KogF4blH5EtrkN8=
+X-Received: by 2002:a5e:9315:: with SMTP id k21mr12866258iom.195.1642519348345;
+ Tue, 18 Jan 2022 07:22:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+From:   Sven Hugi <hugi.sven@gmail.com>
+Date:   Tue, 18 Jan 2022 16:22:17 +0100
+Message-ID: <CAFrqyV4COFCGCRN3bXjoSnudMtr0JhhFviUj8QtEZfJq4ZxinA@mail.gmail.com>
+Subject: Samsung t5 / t3 problem with ncq trim
+To:     linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-According to the comment in check_fw_ready() we should not check the
-IOP1_READY field in register SCRATCH_PAD_1 for 8008 or 8009 controllers.
+Hello
 
-However we check this very field in process_oq() for processing the highest
-index interrupt vector. The highest interrupt vector is checked as the FW
-is programmed to signal fatal errors through this irq.
+I hope, that this is the correct mailinglist... if not, pls let me know...
 
-Change that function to not check IOP1_READY for those mentioned
-controllers, but do check ILA_READY in both cases.
+So, it seams, that there is a problem with the samsung t5 and t3,
+those ssds are just samsung 850 with an usb-c adapter.
+I wrote a mail to linux-ide, but Damien Le Moal suggested to me to
+write it to the maintainer of uas.c...
+My idea was to patch this in the ata_device_blacklist in
+libata-core.c, but since this seams not to be the solution, i have no
+idea how to do it...
+So, it would be nice, if someone how knows what he is doing could have
+a look at it.
 
-The reason I assume that this was not hit earlier was because we always
-allocated 64 MSI(X), and just did not pass the vector index check in
-process_oq(), i.e.  the handler never ran for vector index 63.
+Sorry for my poor english.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Tested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
----
-Changes from v1:
-- Improve coding style (Damien)
-- Add comment and commit message info about checking fatal vector (Damien)
-- Change patch subject to mention "bogus"
-- Add tags (thanks!)
+I hope this helps somehow to fix the problem.
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 97750d0ebee9..8a0e5e30b23b 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -4148,10 +4148,22 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
- 	u32 ret = MPI_IO_STATUS_FAIL;
- 	u32 regval;
- 
-+	/*
-+	 * Fatal errors are programmed to be signalled in irq vector
-+	 * pm8001_ha->max_q_num - 1 through pm8001_ha->main_cfg_tbl.pm80xx_tbl.
-+	 * fatal_err_interrupt
-+	 */
- 	if (vec == (pm8001_ha->max_q_num - 1)) {
-+		u32 mipsall_ready;
-+
-+		if (pm8001_ha->chip_id == chip_8008 ||
-+		    pm8001_ha->chip_id == chip_8009)
-+			mipsall_ready = SCRATCH_PAD_MIPSALL_READY_8PORT;
-+		else
-+			mipsall_ready = SCRATCH_PAD_MIPSALL_READY_16PORT;
-+
- 		regval = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
--		if ((regval & SCRATCH_PAD_MIPSALL_READY) !=
--					SCRATCH_PAD_MIPSALL_READY) {
-+		if ((regval & mipsall_ready) != mipsall_ready) {
- 			pm8001_ha->controller_fatal_error = true;
- 			pm8001_dbg(pm8001_ha, FAIL,
- 				   "Firmware Fatal error! Regval:0x%x\n",
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index c7e5d93bea92..c41ed039c92a 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -1405,8 +1405,12 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
- #define SCRATCH_PAD_BOOT_LOAD_SUCCESS	0x0
- #define SCRATCH_PAD_IOP0_READY		0xC00
- #define SCRATCH_PAD_IOP1_READY		0x3000
--#define SCRATCH_PAD_MIPSALL_READY	(SCRATCH_PAD_IOP1_READY | \
-+#define SCRATCH_PAD_MIPSALL_READY_16PORT	(SCRATCH_PAD_IOP1_READY | \
- 					SCRATCH_PAD_IOP0_READY | \
-+					SCRATCH_PAD_ILA_READY | \
-+					SCRATCH_PAD_RAAE_READY)
-+#define SCRATCH_PAD_MIPSALL_READY_8PORT	(SCRATCH_PAD_IOP0_READY | \
-+					SCRATCH_PAD_ILA_READY | \
- 					SCRATCH_PAD_RAAE_READY)
- 
- /* boot loader state */
--- 
-2.26.2
+Best regards
 
+Sven Hugi
