@@ -2,185 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B499CC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Jan 2022 16:58:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE436C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Jan 2022 00:40:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243835AbiARQ6R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Jan 2022 11:58:17 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:14802 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231494AbiARQ6O (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Jan 2022 11:58:14 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20IExTxr032520;
-        Tue, 18 Jan 2022 16:58:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : content-transfer-encoding : mime-version; s=pp1;
- bh=fN+4VdW7csDQnRSvc2zhuXQDipHsikrdQ2xEWTx8DYs=;
- b=nQhgb6epA81zqx4s7oAg6V3vpCLHvNLtmA5wMZ0gcNwnjnuqbEgz7HSEk3NN7bVBJV+P
- LBfmAdZSu7PgI39Zh+hscU/ZXMCmEzkWgptYcF1tARhZBAvKDtMuiYsGmOBgnH7veEN/
- QF1Wf3vOnZMzr0E6R999wwU6ryuXiCKXHXuuIuT5gGs+P7kF4lNM1IFOl3R+5u4lh47v
- izkvxTzZMHIWJN0m+OrkEX2BirfegK/sXyLnlycF24C6Uwnx85DJVP/jp2M5H2sqftgt
- onzZ0otCjYSO0hzZK9hyuLOtAthGCHXL4DEc2ZPCqb1BBtH8l4NssnCnlEDvtcs0q9qV pw== 
-Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3dnxfgw5ut-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 18 Jan 2022 16:58:11 +0000
-Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 20IGuxeK029377;
-        Tue, 18 Jan 2022 16:58:09 GMT
-Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
-        by ppma03fra.de.ibm.com with ESMTP id 3dknwad7n5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 18 Jan 2022 16:58:08 +0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 20IGw5SJ44892606
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 18 Jan 2022 16:58:05 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id CCA10A4055;
-        Tue, 18 Jan 2022 16:58:05 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8577CA405B;
-        Tue, 18 Jan 2022 16:58:05 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 18 Jan 2022 16:58:05 +0000 (GMT)
-From:   Steffen Maier <maier@linux.ibm.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>
-Subject: [PATCH] zfcp: fix failed recovery on gone remote port with non-NPIV FCP devices
-Date:   Tue, 18 Jan 2022 17:58:03 +0100
-Message-Id: <20220118165803.3667947-1-maier@linux.ibm.com>
-X-Mailer: git-send-email 2.32.0
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: W40AfIHTNYURBVoYb_i_SYHhdWW8IRw0
-X-Proofpoint-ORIG-GUID: W40AfIHTNYURBVoYb_i_SYHhdWW8IRw0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        id S1349264AbiASAkj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Jan 2022 19:40:39 -0500
+Received: from mail-pf1-f178.google.com ([209.85.210.178]:43959 "EHLO
+        mail-pf1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237177AbiASAki (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jan 2022 19:40:38 -0500
+Received: by mail-pf1-f178.google.com with SMTP id 78so897298pfu.10;
+        Tue, 18 Jan 2022 16:40:38 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=y1bB9qyB9ag+6vVeCbo5dc/vKI8cQJOaLo3No5lo+P8=;
+        b=nFktyUeZe2dimPnhcBmfxGMeVDN0egPAjVC6dYLCiOq507ZkdflG+vozxy2cL8/bUc
+         bfkdhD1HGwUi/BgITtLH93O93yl+SHYxOaTTYW+UkonnuiNzOB1vbWbL2/aKHSPfIwYS
+         vZgXRikX5POcYINrbLJlaF9pB3p3arl4p0X9UZKBr1UeRgtpeNT1YrVu7Hnrf7h6+ojc
+         u3gNY36CQBH15FWwT49+ZuFWUu8oEmpwX0Opj1zgUph+icA6C8s0P+Uao8QjkQC43mwc
+         pPbIjYQ/e3C7tK/GueUB2nWLel8Uuk1q2EwEwYs2x5zUcPNjhAex6Oa16ZjEeXWQ3/dc
+         4KEg==
+X-Gm-Message-State: AOAM532uwS1QYb4vcWuIl/JQLtmD42Zey5xtRLRHaKqXFDadgzvMDtMW
+        ft7I2BJzN9/CsghB1eGrVFM=
+X-Google-Smtp-Source: ABdhPJyoQQyu2Kg3q/7UKht4R4f/SQHNde7SFhs3HlxWVBvjcMqUU9INJhDiOzzaGyx/xetX8i19lA==
+X-Received: by 2002:a62:b503:0:b0:4bc:657e:cfa6 with SMTP id y3-20020a62b503000000b004bc657ecfa6mr28067825pfe.25.1642552837400;
+        Tue, 18 Jan 2022 16:40:37 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id q18sm19461083pfn.50.2022.01.18.16.40.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 18 Jan 2022 16:40:36 -0800 (PST)
+Message-ID: <f68bd8fa-e848-df11-1493-aff82911eb2c@acm.org>
+Date:   Tue, 18 Jan 2022 16:40:33 -0800
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.816,Hydra:6.0.425,FMLib:17.11.62.513
- definitions=2022-01-18_04,2022-01-18_01,2021-12-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 bulkscore=0
- phishscore=0 spamscore=0 priorityscore=1501 mlxscore=0 malwarescore=0
- suspectscore=0 mlxlogscore=999 clxscore=1015 lowpriorityscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2110150000 definitions=main-2201180101
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH v1] scsi: ufs: see link lost as fatal
+Content-Language: en-US
+To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, adrian.hunter@intel.com, sc.suh@samsung.com,
+        hy50.seo@samsung.com, sh425.lee@samsung.com,
+        bhoon95.kim@samsung.com, vkumar.1997@samsung.com
+References: <CGME20220117103912epcas2p41c5d54a9242e46264c4e388a1db27f6b@epcas2p4.samsung.com>
+ <1642415846-141110-1-git-send-email-kwmad.kim@samsung.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1642415846-141110-1-git-send-email-kwmad.kim@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Suppose we have an environment with a number of non-NPIV FCP devices
-(virtual HBAs / FCP devices / zfcp "adapter"s) sharing the same physical
-FCP channel (HBA port) and its I_T nexus. Plus a number of storage target
-ports zoned to such shared channel. Now one target port logs out of the
-fabric causing an RSCN. Zfcp reacts with an ADISC ELS and subsequent port
-recovery depending on the ADISC result. This happens on all such FCP
-devices (in different Linux images) concurrently as they all receive a copy
-of this RSCN. In the following we look at one of those FCP devices.
+On 1/17/22 02:37, Kiwoong Kim wrote:
+> This event is raised when link is lost as specified
+> in UFSHCI spec. At the time, initializing UFS interface
+> needs to be done.
+> 
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+>   drivers/scsi/ufs/ufshci.h | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+> index 6a295c8..a7ff0e5 100644
+> --- a/drivers/scsi/ufs/ufshci.h
+> +++ b/drivers/scsi/ufs/ufshci.h
+> @@ -142,7 +142,8 @@ static inline u32 ufshci_version(u32 major, u32 minor)
+>   #define INT_FATAL_ERRORS	(DEVICE_FATAL_ERROR |\
+>   				CONTROLLER_FATAL_ERROR |\
+>   				SYSTEM_BUS_FATAL_ERROR |\
+> -				CRYPTO_ENGINE_FATAL_ERROR)
+> +				CRYPTO_ENGINE_FATAL_ERROR |\
+> +				UIC_LINK_LOST)
+>   
+>   /* HCS - Host Controller Status 30h */
+>   #define DEVICE_PRESENT				0x1
 
-Requests other than FSF_QTCB_FCP_CMND can be slow until they get a
-response.
+A patch description should not only explain what is changed but also why
+a change is being made. Will the above patch cause the UFS error handler
+to trigger a controller reset after the link has been lost? I'm missing
+an explanation of why that change is necessary and also of why that
+change is the right thing to do. All I found in the UFSHCI specification
+about link loss is the following: "UIC Link Lost Status Enable (ULLSE): 
+When set and IS.ULLS is set, the controller shall generate an 
+interrupt." and also "UIC Link Lost Status (ULLS): This indicates a 
+condition where remote end is trying to reestablish a link and the link 
+is lost. This bit corresponds to the UniPro DME_LINKLOST.ind SAP primitive."
 
-Depending on which requests are affected by slow responses, there are
-different recovery outcomes. Here we want to fix failed recoveries on
-port or adapter level by avoiding recovery requests that can be slow.
+Did I perhaps overlook something?
 
-We need the cached N_Port_ID for the remote port "link" test with ADISC.
-Just before sending the ADISC, we now intentionally forget the old cached
-N_Port_ID. The idea is that on receiving an RSCN for a port, we have to
-assume that any cached information about this port is stale.
-This forces a fresh new GID_PN [FC-GS] nameserver lookup on any subsequent
-recovery for the same port. Since we typically can still communicate with
-the nameserver efficiently, we now reach steady state quicker: Either the
-nameserver still does not know about the port so we stop recovery, or the
-nameserver already knows the port potentially with a new N_Port_ID and we
-can successfully and quickly perform open port recovery.
-For the one case, where ADISC returns successfully, we re-initialize
-port->d_id because that case does not involve any port recovery.
+Thanks,
 
-This also solves a problem if the storage WWPN quickly logs into the fabric
-again but with a different N_Port_ID. Such as on virtual WWPN takeover
-during target NPIV failover.
-[https://www.redbooks.ibm.com/abstracts/redp5477.html]
-In that case the RSCN from the storage FDISC was ignored by zfcp and we
-could not successfully recover the failover. On some later failback
-on the storage, we could have been lucky if the virtual WWPN
-got the same old N_Port_ID from the SAN switch as we still had cached.
-Then the related RSCN triggered a successful port reopen recovery.
-However, there is no guarantee to get the same N_Port_ID on NPIV FDISC.
-
-Even though NPIV-enabled FCP devices are not affected by this problem, this
-code change optimizes recovery time for gone remote ports as a side effect.
-The timely drop of cached N_Port_IDs prevents unnecessary slow open port
-attempts.
-
-While the problem might have been in code before v2.6.32 commit
-799b76d09aee ("[SCSI] zfcp: Decouple gid_pn requests from erp")
-this fix depends on the gid_pn_work introduced with that commit,
-so we mark it as culprit to satisfy fix dependencies.
-
-Note: Point-to-point remote port is already handled separately and gets
-its N_Port_ID from the cached peer_d_id. So resetting port->d_id in
-general does not affect PtP.
-
-Suggested-by: Benjamin Block <bblock@linux.ibm.com>
-Fixes: 799b76d09aee ("[SCSI] zfcp: Decouple gid_pn requests from erp")
-Cc: <stable@vger.kernel.org> #2.6.32+
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
----
- drivers/s390/scsi/zfcp_fc.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
-index d24cafe02708..511bf8e0a436 100644
---- a/drivers/s390/scsi/zfcp_fc.c
-+++ b/drivers/s390/scsi/zfcp_fc.c
-@@ -521,6 +521,8 @@ static void zfcp_fc_adisc_handler(void *data)
- 		goto out;
- 	}
- 
-+	/* re-init to undo drop from zfcp_fc_adisc() */
-+	port->d_id = ntoh24(adisc_resp->adisc_port_id);
- 	/* port is good, unblock rport without going through erp */
- 	zfcp_scsi_schedule_rport_register(port);
-  out:
-@@ -534,6 +536,7 @@ static int zfcp_fc_adisc(struct zfcp_port *port)
- 	struct zfcp_fc_req *fc_req;
- 	struct zfcp_adapter *adapter = port->adapter;
- 	struct Scsi_Host *shost = adapter->scsi_host;
-+	u32 d_id;
- 	int ret;
- 
- 	fc_req = kmem_cache_zalloc(zfcp_fc_req_cache, GFP_ATOMIC);
-@@ -558,7 +561,15 @@ static int zfcp_fc_adisc(struct zfcp_port *port)
- 	fc_req->u.adisc.req.adisc_cmd = ELS_ADISC;
- 	hton24(fc_req->u.adisc.req.adisc_port_id, fc_host_port_id(shost));
- 
--	ret = zfcp_fsf_send_els(adapter, port->d_id, &fc_req->ct_els,
-+	d_id = port->d_id; /* remember as destination for send els below */
-+	/*
-+	 * Force fresh GID_PN lookup on next port recovery.
-+	 * Must happen after request setup and before sending request,
-+	 * to prevent race with port->d_id re-init in zfcp_fc_adisc_handler().
-+	 */
-+	port->d_id = 0;
-+
-+	ret = zfcp_fsf_send_els(adapter, d_id, &fc_req->ct_els,
- 				ZFCP_FC_CTELS_TMO);
- 	if (ret)
- 		kmem_cache_free(zfcp_fc_req_cache, fc_req);
-
-base-commit: 2576e153cd982d540b212e989458edc42ad1b390
--- 
-2.32.0
-
+Bart.
