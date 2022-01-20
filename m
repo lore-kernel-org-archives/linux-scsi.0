@@ -2,197 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B407C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jan 2022 15:42:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1933C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jan 2022 17:57:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346970AbiATPmw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Jan 2022 10:42:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49350 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231997AbiATPmt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jan 2022 10:42:49 -0500
-Received: from mail-il1-x12f.google.com (mail-il1-x12f.google.com [IPv6:2607:f8b0:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55878C061574
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jan 2022 07:42:49 -0800 (PST)
-Received: by mail-il1-x12f.google.com with SMTP id h30so5279535ila.12
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jan 2022 07:42:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=jMAXp8VnJ+IjrL7hVaglVCWV4wV0hn0vEve751/W+rU=;
-        b=nVcSSBaM3ZuKAcRq9/OQDjMZEWp4t4qYoLb0nNSz5P7hfy3qHR4O5y1zGNbNQ+QjBm
-         /sFSFDt5hBGrvCD0bz46yTd9Dk+z5GqKlCFPGY4Eq35j2KLMlrt67U9Xd7ZD/INKWj/v
-         Cye0DralLEN5qZJETwXDBqEj8+0opAjO5b0nTtfTV1rRG+9222kg3dTRCcTyGYEezj9T
-         byfm2mPvBG5ybVgNG9dZrqb/OhfObOZCvJks2t3hgCVmLmqMugMCGKGh4wfoBI+J7eKi
-         ZN1Cz3/vfsiCvcF6h7jySlJUF0wDBd8qdWRMPT75qT1f630QKW9xuc3m2NWko29cllZL
-         4XPg==
+        id S233163AbiATR5Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Jan 2022 12:57:25 -0500
+Received: from mail-pg1-f180.google.com ([209.85.215.180]:44861 "EHLO
+        mail-pg1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232955AbiATR5X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jan 2022 12:57:23 -0500
+Received: by mail-pg1-f180.google.com with SMTP id h23so5908404pgk.11
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Jan 2022 09:57:23 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=jMAXp8VnJ+IjrL7hVaglVCWV4wV0hn0vEve751/W+rU=;
-        b=gLa6e166jMtgK2Uc/VaZ+n6KPzZ+rx2aeIpFqxRwnajk0qU2nWUuBRwmd0VbsbT3Fb
-         mpbTe4/gNaloGJF+Ff6OIMnu9QxClfW8mbomwXoEeJYQ4GL8OfJ53CxaRU7efuOWp174
-         YrjZlR8ubA2AQEix8pYdvdTcl6VQJ7xvgifdV9zEEfxa4ojr0OOSMEoTJ1xDIxrkBc6q
-         5LkQzHle6qyhkIP7JLwx4/6TzZLgLiKOprtRlXI9xKXPJuTTB7yy19LdPIyxwfWqjBca
-         8tIZIv/Tr7SzUiEbgMBR3pl6ySrgQ8ICyYN2HhwChMkNE0QqC9ztL7MOutYt02Xt4FFv
-         DdlA==
-X-Gm-Message-State: AOAM53224dgPKUATeRfsIDiGDcJi++Sxw4lFLzRS/27FU2UyyQFdDIEj
-        VaPXBucazRsd6ePkXnx20+u5I1KvzBWoWGioppU=
-X-Google-Smtp-Source: ABdhPJxYhhU0oz7mpWXma6CvAezwScSOA3ZBfX26hz9SACKBna3pXmDNqQiNpDPdWjDGY8O/OHfr8xvDJitgXMUcHPY=
-X-Received: by 2002:a92:6406:: with SMTP id y6mr20235826ilb.179.1642693368714;
- Thu, 20 Jan 2022 07:42:48 -0800 (PST)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=oeBPR4x52Of7BnYyAIppMpv6TJ8VY84+EN9xyBRZwjQ=;
+        b=YfMbzqHMVsZLvdvIgaCUjsL22L13TSs+SXyiHk2MOqWnmjxC5GzNv00JJQ2DGX5tOO
+         Pom1VZsr67n1neM4SLOViljh4t1hb488bxs+/cEBqSzidOsRi6W1k6P+i3CdN8ECT6WU
+         Nk2XDiR0sPy8pkVKUfmICr1gLrobzSL1Y4a8VahtSBKwURh5j4bZJYWaTGtgWWhTMqFn
+         zJv8I8jWVIxZU6Sx3BkrUk7sG13kCtoreq1lvI4bqeGqZzjvf04o9/gIxy5+2QPyVTGa
+         aKTEjUVbo9RzO9HwTQnMvfgfeOfUWB1wIJk3kBT3b7vV4DY3UxStuQFdUrACrRaWQ2j1
+         4ERA==
+X-Gm-Message-State: AOAM531hUU+m78HnbFipNKYe/Q7i80knBV29ppFrxPSIaGE7N9lH6gmF
+        xy09DlmLaKZowFgysFBwKWEdZoitUZc=
+X-Google-Smtp-Source: ABdhPJyYj4s0Ec80EpsyaXNjWr2ubxM7q2v34ABgitJZs3qBSBlCsjnAo1n4bN/KZf7QaBiHD1LyrQ==
+X-Received: by 2002:a05:6a00:174f:b0:4c2:3cc8:d7c2 with SMTP id j15-20020a056a00174f00b004c23cc8d7c2mr33659613pfc.81.1642701442548;
+        Thu, 20 Jan 2022 09:57:22 -0800 (PST)
+Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id m15sm2985188pgs.32.2022.01.20.09.57.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 20 Jan 2022 09:57:21 -0800 (PST)
+Message-ID: <cbd41ae3-2b31-381a-6f07-58603a318961@acm.org>
+Date:   Thu, 20 Jan 2022 09:57:20 -0800
 MIME-Version: 1.0
-References: <CAFrqyV4COFCGCRN3bXjoSnudMtr0JhhFviUj8QtEZfJq4ZxinA@mail.gmail.com>
- <yq1tue0mn3l.fsf@ca-mkp.ca.oracle.com> <CAFrqyV59OHp3mWLg87wuymJTBXG2i_QwZjUFNtrB4cpt98tgaw@mail.gmail.com>
- <yq1lezbk7v7.fsf@ca-mkp.ca.oracle.com> <CAFrqyV5O5u3_BsrOY_E2qfSNWfz5CS0-bymMDGPx00y-f5SezA@mail.gmail.com>
- <yq1tudzidng.fsf@ca-mkp.ca.oracle.com> <CAFrqyV6hhTDW9m+azsLGth+Jok=KFc+pkoGnTrsr5qDCazY-Kg@mail.gmail.com>
-In-Reply-To: <CAFrqyV6hhTDW9m+azsLGth+Jok=KFc+pkoGnTrsr5qDCazY-Kg@mail.gmail.com>
-From:   Sven Hugi <hugi.sven@gmail.com>
-Date:   Thu, 20 Jan 2022 16:42:37 +0100
-Message-ID: <CAFrqyV4n8r6TwNsETfVTv+F_nn8Hg=HuZ6OHgmG_HxPVcvfPzA@mail.gmail.com>
-Subject: Re: Samsung t5 / t3 problem with ncq trim
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.1
+Subject: Re: [PATCH v1] scsi: ufs: use an generic error code in
+ ufshcd_set_dev_pwr_mode
+Content-Language: en-US
+To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
+        sc.suh@samsung.com, hy50.seo@samsung.com, sh425.lee@samsung.com,
+        bhoon95.kim@samsung.com, vkumar.1997@samsung.com
+References: <CGME20220117103107epcas2p3d7223ff63f6cb575316695cc8fb155a4@epcas2p3.samsung.com>
+ <1642415361-140388-1-git-send-email-kwmad.kim@samsung.com>
+ <3bb0f5ad-2cea-2509-a9e1-d8ed159bd875@acm.org>
+ <000001d80da8$9e987cd0$dbc97670$@samsung.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <000001d80da8$9e987cd0$dbc97670$@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-so:
+On 1/19/22 18:51, Kiwoong Kim wrote:
+>>> @@ -8669,6 +8669,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba
+>> *hba,
+>>>    			    pwr_mode, ret);
+>>>    		if (ret > 0 && scsi_sense_valid(&sshdr))
+>>>    			scsi_print_sense_hdr(sdp, NULL, &sshdr);
+>>> +		ret = -EIO;
+>>>    	}
+>>>
+>>>    	if (!ret)
+>>
+>> Shouldn't "ret = -EIO" only be executed if ret > 0? Additionally, please
+>> update the documentation of ufshcd_set_dev_pwr_mode(). I'm referring to
+>> the following comment: "Returns non-zero if failed to set the requested
+>> power mode".
+>>
+>> Thanks,
+>>
+>> Bart.
+> 
+> scsi_execute returns cmd->result(int type) but I think there is no case that the valaue is negative
+> because all values defined for its most significant byte, i.e. driver byte, are smaller than 0x80.
+> And I understand the 'ret > 0' presents that something wrong happens during the process.
+> 
+> So I'm not sure if 'ret = -EIO;' should be executed under 'ret > 0'.
 
- -> sudo sg_inq sda
-standard INQUIRY:
-  PQual=0  Device_type=0  RMB=0  LU_CONG=0  version=0x06  [SPC-4]
-  [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=2
-  SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  [BQue=0]
-  EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
-  [RelAdr=0]  WBus16=0  Sync=0  [Linked=0]  [TranDis=0]  CmdQue=1
-  [SPI: Clocking=0x0  QAS=0  IUS=0]
-    length=76 (0x4c)   Peripheral device type: disk
- Vendor identification: Samsung
- Product identification: Portable SSD T5
- Product revision level: 0
- Unit serial number: D3A3D7654321
+I think that scsi_execute() can return a negative value. From 
+__scsi_execute():
 
- -> sudo sg_readcap -l sda
-Read Capacity results:
-   Protection: prot_en=0, p_type=0, p_i_exponent=0
-   Logical block provisioning: lbpme=0, lbprz=0
-   Last LBA=976773167 (0x3a38602f), Number of logical blocks=976773168
-   Logical block length=512 bytes
+	req = scsi_alloc_request(sdev->request_queue,
+			data_direction == DMA_TO_DEVICE ?
+			REQ_OP_DRV_OUT : REQ_OP_DRV_IN,
+			rq_flags & RQF_PM ? BLK_MQ_REQ_PM : 0);
+	if (IS_ERR(req))
+		return PTR_ERR(req);
 
+As you probably know PTR_ERR() returns a negative error code if IS_ERR() 
+returns true.
 
-   Logical blocks per physical block exponent=0
-   Lowest aligned LBA=0
-Hence:
-   Device size: 500107862016 bytes, 476940.0 MiB, 500.11 GB
+Thanks,
 
- -> sudo sg_vpd -p bl sda
-Block limits VPD page (SBC):
-  Write same non-zero (WSNZ): 0
-  Maximum compare and write length: 0 blocks [Command not implemented]
-  Optimal transfer length granularity: 1 blocks
-  Maximum transfer length: 65535 blocks
-  Optimal transfer length: 65535 blocks
-  Maximum prefetch transfer length: 65535 blocks
-  Maximum unmap LBA count: 4194240
-  Maximum unmap block descriptor count: 1
-  Optimal unmap granularity: 1 blocks
-  Unmap granularity alignment valid: false
-  Unmap granularity alignment: 0 [invalid]
-  Maximum write same length: 0 blocks [not reported]
-  Maximum atomic transfer length: 0 blocks [not reported]
-  Atomic alignment: 0 [unaligned atomic writes permitted]
-  Atomic transfer length granularity: 0 [no granularity requirement
-  Maximum atomic transfer length with atomic boundary: 0 blocks [not reported]
-  Maximum atomic boundary size: 0 blocks [can only write atomic 1 block]
-
- -> sudo sg_vpd -p lbpv sda
-Logical block provisioning VPD page (SBC):
-  Unmap command supported (LBPU): 1
-  Write same (16) with unmap bit supported (LBPWS): 0
-  Write same (10) with unmap bit supported (LBPWS10): 0
-  Logical block provisioning read zeros (LBPRZ): 0
-  Anchored LBAs supported (ANC_SUP): 0
-  Threshold exponent: 0 [threshold sets not supported]
-  Descriptor present (DP): 0
-  Minimum percentage: 0 [not reported]
-  Provisioning type: 0 (not known or fully provisioned)
-  Threshold percentage: 0 [percentages not supported]
-
-lbpme=0...
-so, i guess it's not because of trim...
-
-Am Do., 20. Jan. 2022 um 00:02 Uhr schrieb Sven Hugi <hugi.sven@gmail.com>:
->
-> Hello Martin
->
-> Thx, i will test that tomorow and send you the result.
-> Best case would be, that i got 2 bad SSDs and there is nothing to patch.
-> But 2 bad SSDs, in this case i should play in the lottery...
->
-> Anyways, we know that the t3 definitely does not have this issue...
->
-> Best regards
->
-> Sven Hugi
->
-> Am Mi., 19. Jan. 2022 um 23:38 Uhr schrieb Martin K. Petersen
-> <martin.petersen@oracle.com>:
-> >
-> >
-> > Sven,
-> >
-> > > The 850 had a problem with ncq trim, disks randomly died and got slow
-> > > af with linux.
-> >
-> > The NCQ quirk does not apply in your case since the drive is attached to
-> > Linux via UAS. The UAS-SATA bridge drive may or may not be using NCQ
-> > when talking to the drive; we have no way of knowing or influencing that
-> > decision, that's all internal to the drive. We only see what is
-> > presented on its external USB interface.
-> >
-> > I don't have a T5 so I don't know about that. But I do have a T3 and it
-> > does not report LBPME which is the SCSI way of saying the drive supports
-> > TRIM. So Linux isn't even going to attempt to TRIM the drive in this
-> > configuration.
-> >
-> > You are welcome to send the output of the following commands:
-> >
-> > # sg_inq /dev/sdN
-> >
-> > # sg_readcap -l /dev/sdN
-> >
-> > # sg_vpd -p bl /dev/sdN
-> >
-> > # sg_vpd -p lbpv /dev/sdN
-> >
-> > for your T5 so we can see what it reports. But with respect to the
-> > queued TRIM issue, there isn't really anything that can be done from the
-> > Linux side since this is all internal to the device.
-> >
-> > Had the mSATA drive been directly attached to a SATA controller and not
-> > a UAS-to-SATA bridge things would have been different. The special
-> > handling of the 850 in libata is meant to address the scenario where
-> > Linux is talking to the SATA drive directly. In that configuration the
-> > decision about whether to queue or not queue the DSM TRIM operation lies
-> > with Linux.
-> >
-> > --
-> > Martin K. Petersen      Oracle Linux Engineering
->
->
->
-> --
-> Sven Hugi
->
-> github.com/ExtraTNT
-
-
-
--- 
-Sven Hugi
-
-github.com/ExtraTNT
+Bart.
