@@ -2,150 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 150ADC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jan 2022 02:51:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC0DAC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Jan 2022 02:54:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244391AbiATCvc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Jan 2022 21:51:32 -0500
-Received: from mailout2.samsung.com ([203.254.224.25]:49689 "EHLO
+        id S1358224AbiATCyy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Jan 2022 21:54:54 -0500
+Received: from mailout2.samsung.com ([203.254.224.25]:52785 "EHLO
         mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230154AbiATCvb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jan 2022 21:51:31 -0500
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220120025129epoutp023847694cab001538e9bd69feef5bf249~L2tMx2SNT1244412444epoutp02g
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jan 2022 02:51:29 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220120025129epoutp023847694cab001538e9bd69feef5bf249~L2tMx2SNT1244412444epoutp02g
+        with ESMTP id S1358222AbiATCyx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jan 2022 21:54:53 -0500
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220120025451epoutp02d270218eeecdf7ccda7e3180007d10bc~L2wJKIPX-1295712957epoutp02S
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Jan 2022 02:54:51 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220120025451epoutp02d270218eeecdf7ccda7e3180007d10bc~L2wJKIPX-1295712957epoutp02S
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1642647089;
-        bh=6v1DbUHoAni8eiXbPHbpCUbTZkXT8iKtg6QKxiegaYY=;
-        h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=sMiMHsPI84Gvn/0Q9+iazUqq6XfZm2c23t1i0mfCKOm9vKf5/3OYaFg6pi1rXjr+X
-         HvMFK+yFE1fsaEdoE9DvIurWhNpFpG5VO5ZWDfZQtDXf/ZO/4/pmY4uGYlLDuUvbiz
-         xmzV6t03n52hqvZHrSAZJHaTHxPqQY+PfXFuGfvc=
+        s=mail20170921; t=1642647292;
+        bh=XQPpNCY6o9L6wI8RYMdTURx1HEPzXmGZ/31T3HsHNBE=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=XuYyB/SWmB9PwMxgBX1NOV5gn//jsX47Ou9dajYJSM5+NB85Gx6acZa9rhvK6OLMQ
+         6T4F3ayhsjABXnHfau3O48gZ3bCaiBfz8kFANNraWO3+9CoIyHBW1DAPnpUqSTwwez
+         h1ns/QV31bwS3WLaA43VwACzPSvuFsqdn6dLXUHY=
 Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
         epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20220120025129epcas2p20b47936e4f4bf210dc9df094eb10189a~L2tMWWXT02904029040epcas2p2e;
-        Thu, 20 Jan 2022 02:51:29 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.98]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4JfRq36Vjtz4x9Q5; Thu, 20 Jan
-        2022 02:51:27 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        B3.9B.10018.59DC8E16; Thu, 20 Jan 2022 11:48:53 +0900 (KST)
+        20220120025450epcas2p23ebf0d86750b3ec8db6dd97c618c1b93~L2wIMPy141051510515epcas2p2o;
+        Thu, 20 Jan 2022 02:54:50 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.90]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4JfRtw0qJdz4x9QC; Thu, 20 Jan
+        2022 02:54:48 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        53.5C.51767.7FEC8E16; Thu, 20 Jan 2022 11:54:48 +0900 (KST)
 Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20220120025127epcas2p34ef71e7051606df008267df74a31815d~L2tKwffPF0992309923epcas2p3N;
-        Thu, 20 Jan 2022 02:51:27 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
+        20220120025447epcas2p119e36c27179527429e4df7cbee87dd84~L2wEnnY0K0835608356epcas2p1I;
+        Thu, 20 Jan 2022 02:54:47 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
         epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220120025127epsmtrp2ba4c575a7cd31220fe5f8c60c0b13abd~L2tKv0fyz2814228142epsmtrp2c;
-        Thu, 20 Jan 2022 02:51:27 +0000 (GMT)
-X-AuditID: b6c32a46-a25ff70000002722-c9-61e8cd95cda3
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        1B.F8.08738.F2EC8E16; Thu, 20 Jan 2022 11:51:27 +0900 (KST)
-Received: from KORCO011456 (unknown [12.36.185.54]) by epsmtip2.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20220120025127epsmtip232828f03422f6cbb774b33a97a690aea~L2tKkJ4WY2456824568epsmtip2c;
-        Thu, 20 Jan 2022 02:51:27 +0000 (GMT)
-From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
-To:     "'Bart Van Assche'" <bvanassche@acm.org>,
-        <linux-scsi@vger.kernel.org>, <sc.suh@samsung.com>,
-        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>,
-        <bhoon95.kim@samsung.com>, <vkumar.1997@samsung.com>
-In-Reply-To: <3bb0f5ad-2cea-2509-a9e1-d8ed159bd875@acm.org>
-Subject: RE: [PATCH v1] scsi: ufs: use an generic error code in
+        20220120025447epsmtrp202dc6963bbd2992684618addf1c19bc5~L2wEmqevl2886928869epsmtrp2b;
+        Thu, 20 Jan 2022 02:54:47 +0000 (GMT)
+X-AuditID: b6c32a45-447ff7000000ca37-22-61e8cef74d7e
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        19.98.29871.6FEC8E16; Thu, 20 Jan 2022 11:54:46 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20220120025446epsmtip172d3861e3b08138334a0d633e2d0575c~L2wEVThQr0968309683epsmtip1k;
+        Thu, 20 Jan 2022 02:54:46 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, adrian.hunter@intel.com, sc.suh@samsung.com,
+        hy50.seo@samsung.com, sh425.lee@samsung.com,
+        bhoon95.kim@samsung.com, vkumar.1997@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v2] scsi: ufs: use an generic error code in
  ufshcd_set_dev_pwr_mode
-Date:   Thu, 20 Jan 2022 11:51:27 +0900
-Message-ID: <000001d80da8$9e987cd0$dbc97670$@samsung.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQFcFW0MD/41ZuhWiwfo7q9IaGBfeAIxMRR3AZIYxmqtRQh70A==
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupjk+LIzCtJLcpLzFFi42LZdljTVHfq2ReJBvs28Vl8XfqM1WLah5/M
-        FqsXP2Cx6L6+g82i6+4NRoul/96yWNy5/5HFgd3j8hVvj74tqxg9Pm+SC2COyrbJSE1MSS1S
-        SM1Lzk/JzEu3VfIOjneONzUzMNQ1tLQwV1LIS8xNtVVy8QnQdcvMAdqtpFCWmFMKFApILC5W
-        0rezKcovLUlVyMgvLrFVSi1IySkwL9ArTswtLs1L18tLLbEyNDAwMgUqTMjO2LjtKlPBQY6K
-        xctaWRoY97N1MXJySAiYSGy6vZu5i5GLQ0hgB6PE5Eu3mSCcT4wSK3ZPY4RwPjNKnFu6nxWm
-        5deZtWwQiV2MEmtffYZyXjBKfDm7kQmkik1AW2Law92sIAkRgdOMEr0Lr7F3MXJwcApYS6xd
-        GQ9SIywQKfHsyWtGEJtFQFVi3+z1YEfxClhKXFm3lwnCFpQ4OfMJC4jNDDRz2cLXzBBXKEj8
-        fLoM7CIRASeJg4samCFqRCRmd7aBPSQh8JVd4uCjg1ANLhKrLlxmgbCFJV4d38IOYUtJfH63
-        lw2ioZlRYufuRqjuKYwSS/Z/gKoylpj1rJ0R5ANmAU2J9bv0QUwJAWWJI7egjuOT6Dj8lx0i
-        zCvR0SYE0ags8WvSZEYIW1Ji5s07UAM9JE4tu8c+gVFxFpI3ZyF5cxaSd2Yh7F3AyLKKUSy1
-        oDg3PbXYqMAIHt3J+bmbGMEJU8ttB+OUtx/0DjEycTAeYpTgYFYS4ZWqf5YoxJuSWFmVWpQf
-        X1Sak1p8iNEUGPATmaVEk/OBKTuvJN7QxNLAxMzM0NzI1MBcSZzXK2VDopBAemJJanZqakFq
-        EUwfEwenVAOTuT4XS9MTfgbXnhc1ckYx8mLHVnS7rOacufDnY5VpRasuxK8818W0+3bQ/Jq1
-        V6eqf7zMXGN4a3L32dRLW+9MW9tuptDjKlHeXyt4e6Fz7ZnFM05eM1Z5nc9cNtV5qkVGZ1qg
-        ybLw1m1frKYsYrun8uVP/9oJa8tu2qYFi6+4cMEohMvtR37Di5uHDKaH/Wq9fdSdI85YaCoP
-        +6Mm7hMe21anHa7X2/u66sbBtU4f5WovOTglu/7YVSJ1Kst096IPb/7MY6lmVnqpdbEicp+a
-        4y/tpxL9grqdCRNsmcSMlm5LNFTVOmhtKXA3JaJhjWLDmS+6GXc67Hunn1i3a8NclwP8sZdn
-        L5ExvKv/7JaoEktxRqKhFnNRcSIAf+lgDyEEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrLLMWRmVeSWpSXmKPExsWy7bCSvK7+uReJBn82yFp8XfqM1WLah5/M
-        FqsXP2Cx6L6+g82i6+4NRoul/96yWNy5/5HFgd3j8hVvj74tqxg9Pm+SC2CO4rJJSc3JLEst
-        0rdL4MpofXWcsWA9R8WOzq2MDYwr2boYOTkkBEwkfp1ZC2RzcQgJ7GCUePTwOBNEQlLixM7n
-        jBC2sMT9liOsEEXPGCW+/b3LApJgE9CWmPZwN1hCROAyo8Tp/gtQVccZJc72zWLuYuTg4BSw
-        lli7Mh6kQVggXGLn91Ngq1kEVCX2zV4PZvMKWEpcWbeXCcIWlDg58wnYAmagBU9vPoWzly18
-        zQxxkYLEz6fLWEFsEQEniYOLGpghakQkZne2MU9gFJqFZNQsJKNmIRk1C0nLAkaWVYySqQXF
-        uem5xYYFRnmp5XrFibnFpXnpesn5uZsYwTGipbWDcc+qD3qHGJk4GA8xSnAwK4nwStU/SxTi
-        TUmsrEotyo8vKs1JLT7EKM3BoiTOe6HrZLyQQHpiSWp2ampBahFMlomDU6qB6cDJuhXqe6Xu
-        cPvlCf/5wKf64V7Wi71nv0rdFfWoKXspaLoz6kVzNFOxloN/wYw06T9adyeEO96S5nuf7yU2
-        vfwYn/wGqf12p7U6tkQH/rJrSL2TtY5hl21qrhnL0aijop5/vyy52VkRev/Tykly+0tS9j6Y
-        qig913SDBs+cnILXRS4StlVXF8hYLj3Syflgx3WDqTP3ztj6Q+vNyw3vvyxx83fn8sxau311
-        4+4m7gemJfUCbYqnF2fNurbqINsPdsuHcdd8uYM3b76Vo/fhVM+tibu/tC1PCPv4ZWu5oNvy
-        ft846QlX62fsFm3m8kny2Dwx3Ug0/lPJBRu2SbUThb3eLv2T1qa69n1Wm+3/RUosxRmJhlrM
-        RcWJAChq5iEAAwAA
-X-CMS-MailID: 20220120025127epcas2p34ef71e7051606df008267df74a31815d
+Date:   Thu, 20 Jan 2022 11:52:55 +0900
+Message-Id: <1642647175-189097-1-git-send-email-kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupgk+LIzCtJLcpLzFFi42LZdljTTPfHuReJBr92MVqcfLKGzeLBvG1s
+        Fi9/XmWzOPiwk8Xi69JnrBaf1i9jtVi9+AGLxaIb25gsbm45ymJxedccNovu6zvYLJYf/8dk
+        0XX3BqPF0n9vWSzu3P/I4sDvcbmvl8lj8Z6XTB4TFh1g9Pi+voPN4+PTWywefVtWMXp83iTn
+        0X6gmymAIyrbJiM1MSW1SCE1Lzk/JTMv3VbJOzjeOd7UzMBQ19DSwlxJIS8xN9VWycUnQNct
+        MwfoeiWFssScUqBQQGJxsZK+nU1RfmlJqkJGfnGJrVJqQUpOgXmBXnFibnFpXrpeXmqJlaGB
+        gZEpUGFCdsaM2x0sBbvZK34vX87SwNjK1sXIySEhYCKxdfEqxi5GLg4hgR2MEs2P1rNCOJ8Y
+        JWbu62aGcL4xSryd/o0FpuXwhdVsEIm9jBKta+YwQTg/GCU+LpvLCFLFJqAp8fTmVCYQW0Tg
+        OpPEvO0ZIDazgLrErgknwOLCAqES7/9B2CwCqhLnr/xhB7F5BdwkviybAXWgnMTNc51gZ0gI
+        /GWXWDFjJyNEwkXiwvl+JghbWOLV8S3sELaUxOd3e9kgGpoZJXbuboTqnsIosWT/B6gqY4lZ
+        z9qBJnEAnaQpsX6XPogpIaAsceQWC8ShfBIdh/+yQ4R5JTrahCAalSV+TZoMdYKkxMybd6AG
+        ekgsvHsVrFVIIFZiwbzZzBMYZWchzF/AyLiKUSy1oDg3PbXYqMAQHk3J+bmbGMFJUst1B+Pk
+        tx/0DjEycTAeYpTgYFYS4ZWqf5YoxJuSWFmVWpQfX1Sak1p8iNEUGGATmaVEk/OBaTqvJN7Q
+        xNLAxMzM0NzI1MBcSZzXK2VDopBAemJJanZqakFqEUwfEwenVANTzeTlQfdfijpGvjj4Xfai
+        X/kWHrFMRvFf7Hz9ng6OKuF6oU2bTBr102XkrwQ9m7rB7BEL+4Kvtaoht99V/ksKWS9YX1M6
+        Q3rr/GSDglj1a2smxt2yZn/cmqLo8V5p+YSvV9ul9ggGZ5cfdMnpYXY9nXaGg7XT0lvAr8ZO
+        8PDzx/vToiK/MxzcfVX0f0vlNyYV1+nrDBVW/d4kpdzUm7rw8NSTvaoLJFLnem+KkTPsuXnD
+        dU34caetz988v/X/qU+fVWnz9vDXHEq+1/KN2358iIpoEj8vN/fn5789BRsFVkvabXPKjeGu
+        KT3xc8eEBd7fZ+nc7E0/9urq+onbt7d9OcwkW2welXI13a9FSlyJpTgj0VCLuag4EQDZj1q7
+        GwQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrOLMWRmVeSWpSXmKPExsWy7bCSnO63cy8SDb6csrY4+WQNm8WDedvY
+        LF7+vMpmcfBhJ4vF16XPWC0+rV/GarF68QMWi0U3tjFZ3NxylMXi8q45bBbd13ewWSw//o/J
+        ouvuDUaLpf/esljcuf+RxYHf43JfL5PH4j0vmTwmLDrA6PF9fQebx8ent1g8+rasYvT4vEnO
+        o/1AN1MARxSXTUpqTmZZapG+XQJXxozbHSwFu9krfi9fztLA2MrWxcjJISFgInH4wmogm4tD
+        SGA3o8S+Bw1QCUmJEzufM0LYwhL3W46wQhR9Y5Q4PekoWIJNQFPi6c2pTCAJEYGXTBIv5qwB
+        62YWUJfYNeEEE4gtLBAscXDVI7AGFgFVifNX/rCD2LwCbhJfls2A2iYncfNcJ/MERp4FjAyr
+        GCVTC4pz03OLDQsM81LL9YoTc4tL89L1kvNzNzGCw1ZLcwfj9lUf9A4xMnEwHmKU4GBWEuGV
+        qn+WKMSbklhZlVqUH19UmpNafIhRmoNFSZz3QtfJeCGB9MSS1OzU1ILUIpgsEwenVAOTpbFd
+        R8vqdtbAw6VvDj22rdiY+uxwsOu91zpn1+1xt/ZmnH2Yzdg+Y7KU8re8tjnrjVj2GR0+uqB3
+        8h2FmbbPl01Tya/99NGBzdKE8dyMa2riAq6zO9RzKirfvLDvkDJimv13m8nxi291lUKDXvWq
+        uc5ymDd95s5L+yrc9H3WZTIyLn27QDU0/dBh5/Sfh7PS955VnlSTdpZZiXHXl9iQ81sq0ibu
+        /Vihr1cQdE5rQ+Z5BnYRmdWTHwqbp0u+/P5cY+G+lfLx7XKuAbpawtsF8oLUJdJ6JXdvkV6e
+        Pv/fHLY/Tj/Wy2o2H/zXbNzkdWH1cvY2mVaOh2ZZn9PCN3me11g8TdZlZooYn/8+SyklluKM
+        REMt5qLiRADBig9dygIAAA==
+X-CMS-MailID: 20220120025447epcas2p119e36c27179527429e4df7cbee87dd84
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 CMS-TYPE: 102P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220117103107epcas2p3d7223ff63f6cb575316695cc8fb155a4
-References: <CGME20220117103107epcas2p3d7223ff63f6cb575316695cc8fb155a4@epcas2p3.samsung.com>
-        <1642415361-140388-1-git-send-email-kwmad.kim@samsung.com>
-        <3bb0f5ad-2cea-2509-a9e1-d8ed159bd875@acm.org>
+X-CMS-RootMailID: 20220120025447epcas2p119e36c27179527429e4df7cbee87dd84
+References: <CGME20220120025447epcas2p119e36c27179527429e4df7cbee87dd84@epcas2p1.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > =40=40 -8669,6 +8669,7 =40=40 static int ufshcd_set_dev_pwr_mode(struct=
- ufs_hba
-> *hba,
-> >   			    pwr_mode, ret);
-> >   		if (ret > 0 && scsi_sense_valid(&sshdr))
-> >   			scsi_print_sense_hdr(sdp, NULL, &sshdr);
-> > +		ret =3D -EIO;
-> >   	=7D
-> >
-> >   	if (=21ret)
->=20
-> Shouldn't =22ret =3D -EIO=22 only be executed if ret > 0? Additionally, p=
-lease
-> update the documentation of ufshcd_set_dev_pwr_mode(). I'm referring to
-> the following comment: =22Returns non-zero if failed to set the requested
-> power mode=22.
->=20
-> Thanks,
->=20
-> Bart.
+v1 -> v2: modify the comment of ufshcd_set_dev_pwr_mode
 
-scsi_execute returns cmd->result(int type) but I think there is no case tha=
-t the valaue is negative
-because all values defined for its most significant byte, i.e. driver byte,=
- are smaller than 0x80.
-And I understand the 'ret > 0' presents that something wrong happens during=
- the process.
+The return value of ufshcd_set_dev_pwr_mode is given to
+device pm core. However, the function currently returns a result
+in scsi command and the device pm core doesn't understand it.
+It might lead to unexpected behaviors of user land. I found
+the return value led to platform reset in Android.
 
-So I'm not sure if 'ret =3D -EIO;' should be executed under 'ret > 0'.
+This patch is to use an generic code for SSU failures.
 
---
-=23define DRIVER_BUSY         0x01
-=23define DRIVER_SOFT         0x02
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-And for the comment, I got it.
-
-Thanks
-Kiwoong
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 1049e41..a60816c 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8669,6 +8669,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 			    pwr_mode, ret);
+ 		if (ret > 0 && scsi_sense_valid(&sshdr))
+ 			scsi_print_sense_hdr(sdp, NULL, &sshdr);
++		ret = -EIO;
+ 	}
+ 
+ 	if (!ret)
+-- 
+2.7.4
 
