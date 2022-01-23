@@ -2,106 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E622C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jan 2022 18:43:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0FFCC433F5
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jan 2022 21:03:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239959AbiAWSnN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Jan 2022 13:43:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53694 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239954AbiAWSmK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jan 2022 13:42:10 -0500
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22CDDC06173B;
-        Sun, 23 Jan 2022 10:42:10 -0800 (PST)
-Received: by mail-pj1-x102c.google.com with SMTP id d15-20020a17090a110f00b001b4e7d27474so14270046pja.2;
-        Sun, 23 Jan 2022 10:42:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:subject:date:message-id:in-reply-to:references:mime-version
-         :content-transfer-encoding;
-        bh=GndtSn11kZKp8gPiAnYtAF0D1ExNO7oxGiuzzMjH66E=;
-        b=BCY8BFgQYJuoXKOVV9p7rADrcLbaR8XwOD2oDh49UsHvgwjsHzRqmVsA58kTvbMC52
-         8JK4BMrp4oZfp3fXguYb/3lGTDBa79/2a2dIP0EYqWSBlrHq6Q1+lWRisPqcd8kiwU0n
-         NPAE97Kv0/tSwl1szc7CNNNEDeP3vnAGePfb1sRIXNHsvVq//ZdFKZvSrgBsOfnP584S
-         XvRmz/4ORGJRhEHl2lHJCyNgfxlXqpkwXextNWwwAIASqn5NxAhQPNubJtagwZsHxm8g
-         v/3WdP4q4IDpdGmg4yIOJm3LL/ymjzOiEu9TOP39Q8wNTbN+vnWyGAj8b/VaQE3Hwxm5
-         JWYQ==
+        id S240181AbiAWVDA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Jan 2022 16:03:00 -0500
+Received: from mail-pl1-f174.google.com ([209.85.214.174]:34721 "EHLO
+        mail-pl1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240098AbiAWVDA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jan 2022 16:03:00 -0500
+Received: by mail-pl1-f174.google.com with SMTP id l17so7476051plg.1
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Jan 2022 13:02:59 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=GndtSn11kZKp8gPiAnYtAF0D1ExNO7oxGiuzzMjH66E=;
-        b=PAH95OcIOJauGinXVTdq3le7/k+ZaeU8AHRhsVmPawHQVJu3i1+K6VUZbi/hzXvqYM
-         ZNpPYRN+ELCzqX7vNJ17I8G1NX3uODS8f0S713Q2wZMO5D9Jq+wWARwStJE0eL6XWOWO
-         JnLb8wrynFEJlxdVBd/Khve57orDBpSR1ClrlSd2zACrUVdLwOXghoXCySLNMVLJ65oa
-         Ye0LnD9vNHNs7GsIGKYWtlAHIcxKPxWD7RQkV2yKUSAAvOxIjviI+ABcSFST81W7DkhU
-         dPddtS43vAA0MJV4m+lG2G7s/NREEnWpOsvPTlUPEiC/QRpDZpl7iuNzzDOIvYp5Y/6I
-         VZig==
-X-Gm-Message-State: AOAM533Ey+Ojucb3IXUvOW0kP3ZyH+g5WRSmz8DLOVIooKVfIomYhhRk
-        7KwiTv5vXH3cs8aeenStDLk=
-X-Google-Smtp-Source: ABdhPJw+B3WUB7yJ66uYnzJyrxSdBb4KzZWDTZMEioY+/QPO87Cj291gr3eP/fRZPxVluYuKiQlMrA==
-X-Received: by 2002:a17:90a:7101:: with SMTP id h1mr9564886pjk.93.1642963329571;
-        Sun, 23 Jan 2022 10:42:09 -0800 (PST)
-Received: from localhost (searspoint.nvidia.com. [216.228.112.21])
-        by smtp.gmail.com with ESMTPSA id c8sm14352243pfl.122.2022.01.23.10.42.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 Jan 2022 10:42:09 -0800 (PST)
-From:   Yury Norov <yury.norov@gmail.com>
-To:     Yury Norov <yury.norov@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        David Laight <David.Laight@aculab.com>,
-        Joe Perches <joe@perches.com>, Dennis Zhou <dennis@kernel.org>,
-        Emil Renner Berthing <kernel@esmil.dk>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Matti Vaittinen <matti.vaittinen@fi.rohmeurope.com>,
-        Alexey Klimov <aklimov@redhat.com>,
-        linux-kernel@vger.kernel.org,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH 45/54] scsi: replace cpumask_weight with cpumask_weight_gt
-Date:   Sun, 23 Jan 2022 10:39:16 -0800
-Message-Id: <20220123183925.1052919-46-yury.norov@gmail.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220123183925.1052919-1-yury.norov@gmail.com>
-References: <20220123183925.1052919-1-yury.norov@gmail.com>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=khD+AXGrp6/T8DJe1/NemytIh9G5AL7RmCdnHa1/TKg=;
+        b=fdf9jS3iM1MF1TII+CeavsWstf4xV2bXbxy/piJq9MLha0+IJSr1pKnurAPJmo+nlD
+         983JGp1cM7HngkFlGjbroRcoA+TSPx7rwWpB8laF4PF1E21hqi0A1b4muC6vOrs3+BHr
+         eLaOKXVWb3ENBj1ADWr1VIKXVmaXhvo1xWY5/H/lqlbBYZBEuqw8Q1DtKdBKIK68ugfe
+         HQWvOO47xlxSNp5exjYFdUxZXmt2QM2cZbry7c4VhKD9HZvDCNjUpUczsO7mEi8X/eRW
+         AY6Cluw6JxclAnMORYpxHk5CaBP6Hh+ztfxxnj3/XQYJMwlb5S/LjpmXI6oNgF5C/k8r
+         +SKQ==
+X-Gm-Message-State: AOAM5306zpLnXKfjaCVRCQtAnt4heEP+XSfeeKOIJHmPrP3ySpPbRZBX
+        9Hp+53fBzBrb6NoB7zAcV/w4/duxzLRqJg==
+X-Google-Smtp-Source: ABdhPJwi2a6YZ/iS6fDTnV0DKeQ3NZfqYTDtQIm2YRsWWf8aUqtNGkRRk5cy7KP+U/68ZPODlHXhQQ==
+X-Received: by 2002:a17:90a:5417:: with SMTP id z23mr10224337pjh.158.1642971779359;
+        Sun, 23 Jan 2022 13:02:59 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id kx11sm10368729pjb.1.2022.01.23.13.02.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 23 Jan 2022 13:02:58 -0800 (PST)
+Message-ID: <5c075996-4d08-5296-510d-310b952e5eac@acm.org>
+Date:   Sun, 23 Jan 2022 13:02:57 -0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH] scsi: print actual pointer addresses if using scsi debug
+ logging
+Content-Language: en-US
+To:     John Pittman <jpittman@redhat.com>,
+        Steffen Maier <maier@linux.ibm.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        jejb@linux.ibm.com, dgilbert <dgilbert@interlog.com>,
+        David Jeffery <djeffery@redhat.com>,
+        Laurence Oberman <loberman@redhat.com>,
+        linux-scsi@vger.kernel.org
+References: <20220121164938.18190-1-jpittman@redhat.com>
+ <b4faa458-5f0c-cc19-05f4-22305b4942d1@linux.ibm.com>
+ <CA+RJvhzVLXGLE0SDYO8mEYR4GEXwPJNkzbVJCJF2KcV3td+vAQ@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CA+RJvhzVLXGLE0SDYO8mEYR4GEXwPJNkzbVJCJF2KcV3td+vAQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-lpfc_cpuhp_get_eq() calls cpumask_weight() to compare the weight of
-cpumask with a given number. We can do it more efficiently with
-cpumask_weight_gt because conditional cpumask_weight may stop
-traversing the cpumask earlier, as soon as condition is met.
+On 1/21/22 11:17, John Pittman wrote:
+> Thanks for looking Steffen.  I failed to notice the no_hash_pointers
+> option.  I do think it would be a reasonable convenience for debug
+> scsi logging to print the actual address without having to go through
+> the trouble of rebooting enabling the no_hash_pointers parameter then
+> rebooting again to disable afterward.  Perhaps the system is a
+> production box that can't be rebooted. Maybe an additional sysctl to
+> enable no_hash_pointers would be reasonable?  That way it could be
+> changed online?  Thanks again.
 
-Signed-off-by: Yury Norov <yury.norov@gmail.com>
----
- drivers/scsi/lpfc/lpfc_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Are SCSI command pointers really useful to anyone? How about modifying 
+the debug statements such that the SCSI command tags are reported 
+instead of the SCSI command pointers? There is a 1:1 correspondence 
+between the values returned by blk_mq_unique_tag() and the SCSI command 
+pointers.
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index a56f01f659f8..325e9004dacd 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -12643,7 +12643,7 @@ lpfc_cpuhp_get_eq(struct lpfc_hba *phba, unsigned int cpu,
- 		 * gone offline yet, we need >1.
- 		 */
- 		cpumask_and(tmp, maskp, cpu_online_mask);
--		if (cpumask_weight(tmp) > 1)
-+		if (cpumask_weight_gt(tmp, 1))
- 			continue;
- 
- 		/* Now that we have an irq to shutdown, get the eq
--- 
-2.30.2
-
+Bart.
