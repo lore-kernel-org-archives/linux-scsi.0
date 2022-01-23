@@ -2,78 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0FFCC433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jan 2022 21:03:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B97DC433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jan 2022 22:57:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240181AbiAWVDA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Jan 2022 16:03:00 -0500
-Received: from mail-pl1-f174.google.com ([209.85.214.174]:34721 "EHLO
-        mail-pl1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240098AbiAWVDA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jan 2022 16:03:00 -0500
-Received: by mail-pl1-f174.google.com with SMTP id l17so7476051plg.1
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Jan 2022 13:02:59 -0800 (PST)
+        id S240355AbiAWW53 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Jan 2022 17:57:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53524 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230018AbiAWW52 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jan 2022 17:57:28 -0500
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12863C06173B;
+        Sun, 23 Jan 2022 14:57:28 -0800 (PST)
+Received: by mail-pf1-x42c.google.com with SMTP id p37so14132381pfh.4;
+        Sun, 23 Jan 2022 14:57:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=9YpaDt/y2c3/dUeLfnG7ff++Dq8k/QrMoesYhtwfYz8=;
+        b=Jfeb4woSg0fNp15ri+VhTahx4p/I7+BmYJyNeRGYFOZj95O0pE1gVvRWV37IdkkIYe
+         jmuMkmRhYFCOD3Glzleex6r/2wUIuW5kSMZy+6QXteITDA6IRhwxpigS+GhREnjisD8l
+         RcQJGjjyoIfneXHi3ZrZ0kEiCJjhV3og9L6Bw9O+n+iXbrMDPqdSiYE2tY7Isyot1yd0
+         mfPAgcYMX9x+waOCI+La4lqNCU3n5Bm1afnSTFeZBh/d9Vz1LPG1D5SFgSxgpC/TChYJ
+         x2raLsi0iOZyIuIHHjO/PTzSA2+5Np6tbET2kAWJLAqaxOzPtuVBJK7PU7UnD6ZG8xnJ
+         jmvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=khD+AXGrp6/T8DJe1/NemytIh9G5AL7RmCdnHa1/TKg=;
-        b=fdf9jS3iM1MF1TII+CeavsWstf4xV2bXbxy/piJq9MLha0+IJSr1pKnurAPJmo+nlD
-         983JGp1cM7HngkFlGjbroRcoA+TSPx7rwWpB8laF4PF1E21hqi0A1b4muC6vOrs3+BHr
-         eLaOKXVWb3ENBj1ADWr1VIKXVmaXhvo1xWY5/H/lqlbBYZBEuqw8Q1DtKdBKIK68ugfe
-         HQWvOO47xlxSNp5exjYFdUxZXmt2QM2cZbry7c4VhKD9HZvDCNjUpUczsO7mEi8X/eRW
-         AY6Cluw6JxclAnMORYpxHk5CaBP6Hh+ztfxxnj3/XQYJMwlb5S/LjpmXI6oNgF5C/k8r
-         +SKQ==
-X-Gm-Message-State: AOAM5306zpLnXKfjaCVRCQtAnt4heEP+XSfeeKOIJHmPrP3ySpPbRZBX
-        9Hp+53fBzBrb6NoB7zAcV/w4/duxzLRqJg==
-X-Google-Smtp-Source: ABdhPJwi2a6YZ/iS6fDTnV0DKeQ3NZfqYTDtQIm2YRsWWf8aUqtNGkRRk5cy7KP+U/68ZPODlHXhQQ==
-X-Received: by 2002:a17:90a:5417:: with SMTP id z23mr10224337pjh.158.1642971779359;
-        Sun, 23 Jan 2022 13:02:59 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id kx11sm10368729pjb.1.2022.01.23.13.02.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 23 Jan 2022 13:02:58 -0800 (PST)
-Message-ID: <5c075996-4d08-5296-510d-310b952e5eac@acm.org>
-Date:   Sun, 23 Jan 2022 13:02:57 -0800
+        bh=9YpaDt/y2c3/dUeLfnG7ff++Dq8k/QrMoesYhtwfYz8=;
+        b=fLWvkuLGOyFHfPEG9uvQ7my4B25EWcT39KljBc5aJDvxj9WXvOuOFAe+fuUCXmfQgq
+         xSsFHOZUTUn3HxYHEaejmXh5DZBMZZCMuF22HXpiJJ8V2su/HX9/gRoTDaV3k3TEStCc
+         YsM5whmLfVY2AY+F1gYPSYRtwq5wdDe8yRXGQokBzBSufNvcf/T+0vdxy7Kl8aBm7xd4
+         7eyf+/+EhIKeTIYhbhLcgvEW2+74JSO8T0QCUJ0tY4yBAmI4o2MPolB2Uy3MjXPIrsWD
+         WyuGKEX8WJ3451W3hgPswbrGoMYBEOHKJrqlrg9kIoY3La5DC/CQvc11uIPLPhlFxSB8
+         GumA==
+X-Gm-Message-State: AOAM530k5k3GAZ+EAxz851o+9/8TgfJqvlrugtgC35DQ6oASaBFno19d
+        FwPmBl+gb6OtoOzi+cOCMw0=
+X-Google-Smtp-Source: ABdhPJxiWeo8n8WyuKjPy1UxzAv9V5Jbbx4IUyYLBfi0hHSzMZiEVOvgyaOaqn4JQPTyvpAi/jKoXA==
+X-Received: by 2002:a63:541a:: with SMTP id i26mr330814pgb.322.1642978647379;
+        Sun, 23 Jan 2022 14:57:27 -0800 (PST)
+Received: from tong-desktop.local (99-105-211-126.lightspeed.sntcca.sbcglobal.net. [99.105.211.126])
+        by smtp.googlemail.com with ESMTPSA id w1sm1826881pfg.162.2022.01.23.14.57.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 23 Jan 2022 14:57:26 -0800 (PST)
+From:   Tong Zhang <ztong0001@gmail.com>
+To:     Hannes Reinecke <hare@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Tong Zhang <ztong0001@gmail.com>
+Subject: [PATCH v1] scsi: myrs: fix crash on error case
+Date:   Sun, 23 Jan 2022 14:57:17 -0800
+Message-Id: <20220123225717.1069538-1-ztong0001@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH] scsi: print actual pointer addresses if using scsi debug
- logging
-Content-Language: en-US
-To:     John Pittman <jpittman@redhat.com>,
-        Steffen Maier <maier@linux.ibm.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        jejb@linux.ibm.com, dgilbert <dgilbert@interlog.com>,
-        David Jeffery <djeffery@redhat.com>,
-        Laurence Oberman <loberman@redhat.com>,
-        linux-scsi@vger.kernel.org
-References: <20220121164938.18190-1-jpittman@redhat.com>
- <b4faa458-5f0c-cc19-05f4-22305b4942d1@linux.ibm.com>
- <CA+RJvhzVLXGLE0SDYO8mEYR4GEXwPJNkzbVJCJF2KcV3td+vAQ@mail.gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CA+RJvhzVLXGLE0SDYO8mEYR4GEXwPJNkzbVJCJF2KcV3td+vAQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/21/22 11:17, John Pittman wrote:
-> Thanks for looking Steffen.  I failed to notice the no_hash_pointers
-> option.  I do think it would be a reasonable convenience for debug
-> scsi logging to print the actual address without having to go through
-> the trouble of rebooting enabling the no_hash_pointers parameter then
-> rebooting again to disable afterward.  Perhaps the system is a
-> production box that can't be rebooted. Maybe an additional sysctl to
-> enable no_hash_pointers would be reasonable?  That way it could be
-> changed online?  Thanks again.
+In myrs_detect(), cs->disable_intr is NULL when privdata->hw_init() fail
+with non-zero. In this case, myrs_cleanup(cs) will call a NULL ptr and
+crash kernel.
 
-Are SCSI command pointers really useful to anyone? How about modifying 
-the debug statements such that the SCSI command tags are reported 
-instead of the SCSI command pointers? There is a 1:1 correspondence 
-between the values returned by blk_mq_unique_tag() and the SCSI command 
-pointers.
+[    1.105606] myrs 0000:00:03.0: Unknown Initialization Error 5A
+[    1.105872] myrs 0000:00:03.0: Failed to initialize Controller
+[    1.106082] BUG: kernel NULL pointer dereference, address: 0000000000000000
+[    1.110774] Call Trace:
+[    1.110950]  myrs_cleanup+0xe4/0x150 [myrs]
+[    1.111135]  myrs_probe.cold+0x91/0x56a [myrs]
+[    1.111302]  ? DAC960_GEM_intr_handler+0x1f0/0x1f0 [myrs]
+[    1.111500]  local_pci_probe+0x48/0x90
 
-Bart.
+Signed-off-by: Tong Zhang <ztong0001@gmail.com>
+---
+ drivers/scsi/myrs.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
+index 253ceca54a84..7eb8c39da366 100644
+--- a/drivers/scsi/myrs.c
++++ b/drivers/scsi/myrs.c
+@@ -2267,7 +2267,8 @@ static void myrs_cleanup(struct myrs_hba *cs)
+ 	myrs_unmap(cs);
+ 
+ 	if (cs->mmio_base) {
+-		cs->disable_intr(cs);
++		if (cs->disable_intr)
++			cs->disable_intr(cs);
+ 		iounmap(cs->mmio_base);
+ 		cs->mmio_base = NULL;
+ 	}
+-- 
+2.25.1
+
