@@ -2,136 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FCE9C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jan 2022 14:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDB56C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jan 2022 15:42:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238283AbiAXOvi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jan 2022 09:51:38 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:20717 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238118AbiAXOvh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Jan 2022 09:51:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643035897;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=+1jqT3LbjlOuLyo0cMqyWpnoJ+Se41HIEzTNCOpBhUk=;
-        b=Xpx4sRVTkIbWbz1NKVHuZicIeZltX8sjvTwRkA7+Is2n5TQFFR/5mLfFG+zLUgj6OFyml4
-        WFrgS5JD48hon3VBIC1NhQTS6XN1+qj1N2eKlpsMNvzE9zgcJwVWc31mIoloM+LSyGRsku
-        8ZPDA/HQP1g06RD6nRnVKbx9lfKXvLA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-554-_-98kE0PMzurRtwPWJghzg-1; Mon, 24 Jan 2022 09:51:31 -0500
-X-MC-Unique: _-98kE0PMzurRtwPWJghzg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B9723101F7A3;
-        Mon, 24 Jan 2022 14:51:30 +0000 (UTC)
-Received: from jmeneghi.bos.com (unknown [10.22.34.217])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 948CF84A0E;
-        Mon, 24 Jan 2022 14:51:21 +0000 (UTC)
-From:   John Meneghini <jmeneghi@redhat.com>
-To:     skashyap@marvell.com
-Cc:     njavali@marvell.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        GR-QLogic-Storage-Upstream@marvell.com, mlombard@redhat.com,
-        guazhang@redhat.com
-Subject: [PATCH] scsi: bnx2fc: make bnx2fc_recv_frame mp safe
-Date:   Mon, 24 Jan 2022 09:51:10 -0500
-Message-Id: <20220124145110.442335-1-jmeneghi@redhat.com>
+        id S240632AbiAXPm6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jan 2022 10:42:58 -0500
+Received: from mga07.intel.com ([134.134.136.100]:22288 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231203AbiAXPm4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Jan 2022 10:42:56 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1643038976; x=1674574976;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=o7lH/4xup0K6KID7TsgwO6gKu75g/dBARvlYR98pp6s=;
+  b=UKijXZJV2ye52eQyWejgDlCs3boqNsEn5hs9RA1wTenwI/yD1HDvtVVC
+   7idgVRTUW+OrYuZFxItT5eSYJr4U/Jrhpl9R4gQWbseooLc5b0EpevvoV
+   svUOhiWN3HzxMkHH4ZUsyG+WVuQA5vj9buJGwFFhxhodw5EOerGNKuiii
+   xiSYl8dYsZPk32ycC2IeHr5ajQ4rTw7mb0BV0+qhekj/pAaD2eD/wzadj
+   ilWphMJF0ci9f4fNH9HhUSdufTsgmZmZ1leYqzWkQXKfxHBsD68XGhmgn
+   PTNgf9nBmShUCsbDtQlNmW36JWxGbuXaH9ih+33rcxQo6VoCp7U2LE/sb
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10236"; a="309391920"
+X-IronPort-AV: E=Sophos;i="5.88,311,1635231600"; 
+   d="scan'208";a="309391920"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jan 2022 07:42:56 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,311,1635231600"; 
+   d="scan'208";a="476758918"
+Received: from lkp-server01.sh.intel.com (HELO 276f1b88eecb) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 24 Jan 2022 07:42:53 -0800
+Received: from kbuild by 276f1b88eecb with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1nC1Ua-000IXj-Hi; Mon, 24 Jan 2022 15:42:52 +0000
+Date:   Mon, 24 Jan 2022 23:42:43 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     SEO HOYOUNG <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org
+Subject: Re: [PATCH v1] scsi: ufs: disable auto hibern8 while entering suspend
+Message-ID: <202201242333.B4Rc0F9H-lkp@intel.com>
+References: <20220123234044.163394-1-hy50.seo@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220123234044.163394-1-hy50.seo@samsung.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-    Running tests with a debug kernel shows that bnx2fc_recv_frame is
-    modifying the per_cpu lport stats counters in a non-mpsafe way.
-    Just boot a debug kernel and run the bnx2fc driver with the hardware
-    enabled.
+Hi SEO,
 
-    [ 1391.699147] BUG: using smp_processor_id() in preemptible [00000000] code: bnx2fc_
-    [ 1391.699160] caller is bnx2fc_recv_frame+0xbf9/0x1760 [bnx2fc]
-    [ 1391.699174] CPU: 2 PID: 4355 Comm: bnx2fc_l2_threa Kdump: loaded Tainted: G    B
-    [ 1391.699180] Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
-    [ 1391.699183] Call Trace:
-    [ 1391.699188]  dump_stack_lvl+0x57/0x7d
-    [ 1391.699198]  check_preemption_disabled+0xc8/0xd0
-    [ 1391.699205]  bnx2fc_recv_frame+0xbf9/0x1760 [bnx2fc]
-    [ 1391.699215]  ? do_raw_spin_trylock+0xb5/0x180
-    [ 1391.699221]  ? bnx2fc_npiv_create_vports.isra.0+0x4e0/0x4e0 [bnx2fc]
-    [ 1391.699229]  ? bnx2fc_l2_rcv_thread+0xb7/0x3a0 [bnx2fc]
-    [ 1391.699240]  bnx2fc_l2_rcv_thread+0x1af/0x3a0 [bnx2fc]
-    [ 1391.699250]  ? bnx2fc_ulp_init+0xc0/0xc0 [bnx2fc]
-    [ 1391.699258]  kthread+0x364/0x420
-    [ 1391.699263]  ? _raw_spin_unlock_irq+0x24/0x50
-    [ 1391.699268]  ? set_kthread_struct+0x100/0x100
-    [ 1391.699273]  ret_from_fork+0x22/0x30
+Thank you for the patch! Perhaps something to improve:
 
-    To fix the problem: restore the old get_cpu/put_cpu code with some
-    modifications to reduce the size of the critical section.
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linux/master linus/master v5.17-rc1 next-20220124]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-Fixes: d576a5e80cd0 ("bnx2fc: Improve stats update mechanism")
-Tested-by: Guangwu Zhang <guazhang@redhat.com>
-Signed-off-by: John Meneghini <jmeneghi@redhat.com>
+url:    https://github.com/0day-ci/linux/commits/SEO-HOYOUNG/scsi-ufs-disable-auto-hibern8-while-entering-suspend/20220124-195745
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+config: hexagon-randconfig-r005-20220124 (https://download.01.org/0day-ci/archive/20220124/202201242333.B4Rc0F9H-lkp@intel.com/config)
+compiler: clang version 14.0.0 (https://github.com/llvm/llvm-project 2e58a18910867ba6795066e044293e6daf89edf5)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/0day-ci/linux/commit/07442fb1071785299ef4ec421a37874e0d84babf
+        git remote add linux-review https://github.com/0day-ci/linux
+        git fetch --no-tags linux-review SEO-HOYOUNG/scsi-ufs-disable-auto-hibern8-while-entering-suspend/20220124-195745
+        git checkout 07442fb1071785299ef4ec421a37874e0d84babf
+        # save the config file to linux build tree
+        mkdir build_dir
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=hexagon SHELL=/bin/bash drivers/scsi/ufs/
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/scsi/ufs/ufshcd.c:4207:6: warning: no previous prototype for function 'ufshcd_auto_hibern8_disable' [-Wmissing-prototypes]
+   void ufshcd_auto_hibern8_disable(struct ufs_hba *hba)
+        ^
+   drivers/scsi/ufs/ufshcd.c:4207:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   void ufshcd_auto_hibern8_disable(struct ufs_hba *hba)
+   ^
+   static 
+   1 warning generated.
+
+
+vim +/ufshcd_auto_hibern8_disable +4207 drivers/scsi/ufs/ufshcd.c
+
+  4206	
+> 4207	void ufshcd_auto_hibern8_disable(struct ufs_hba *hba)
+  4208	{
+  4209		unsigned long flags;
+  4210	
+  4211		if (!ufshcd_is_auto_hibern8_supported(hba))
+  4212			return;
+  4213	
+  4214		spin_lock_irqsave(hba->host->host_lock, flags);
+  4215		ufshcd_writel(hba, 0, REG_AUTO_HIBERNATE_IDLE_TIMER);
+  4216		spin_unlock_irqrestore(hba->host->host_lock, flags);
+  4217	}
+  4218	
+
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 71fa62bd3083..e41a94dc2d1f 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -508,7 +508,8 @@ static int bnx2fc_l2_rcv_thread(void *arg)
- 
- static void bnx2fc_recv_frame(struct sk_buff *skb)
- {
--	u32 fr_len;
-+	u64 crc_err;
-+	u32 fr_len, fr_crc;
- 	struct fc_lport *lport;
- 	struct fcoe_rcv_info *fr;
- 	struct fc_stats *stats;
-@@ -542,6 +543,11 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 	skb_pull(skb, sizeof(struct fcoe_hdr));
- 	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
- 
-+	stats = per_cpu_ptr(lport->stats, get_cpu());
-+	stats->RxFrames++;
-+	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
-+	put_cpu();
-+
- 	fp = (struct fc_frame *)skb;
- 	fc_frame_init(fp);
- 	fr_dev(fp) = lport;
-@@ -624,16 +630,15 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 		return;
- 	}
- 
--	stats = per_cpu_ptr(lport->stats, smp_processor_id());
--	stats->RxFrames++;
--	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
-+	fr_crc = le32_to_cpu(fr_crc(fp));
- 
--	if (le32_to_cpu(fr_crc(fp)) !=
--			~crc32(~0, skb->data, fr_len)) {
--		if (stats->InvalidCRCCount < 5)
-+	if (unlikely(fr_crc != ~crc32(~0, skb->data, fr_len))) {
-+		stats = per_cpu_ptr(lport->stats, get_cpu());
-+		crc_err = (stats->InvalidCRCCount++);
-+		put_cpu();
-+		if (crc_err < 5)
- 			printk(KERN_WARNING PFX "dropping frame with "
- 			       "CRC error\n");
--		stats->InvalidCRCCount++;
- 		kfree_skb(skb);
- 		return;
- 	}
--- 
-2.27.0
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
