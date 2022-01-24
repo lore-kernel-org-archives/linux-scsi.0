@@ -2,92 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B601C43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F221C4167E
 	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 00:31:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358973AbiAYAbD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Jan 2022 19:31:03 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:57562 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1848368AbiAXXWX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Jan 2022 18:22:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643066541;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=roW5J7iac8fftPWGb47ZXrc4wN3kazKOO4vYqBt3HH8=;
-        b=ineuYYKczVF+fO4MQrIA0o/XW8PxdDvym72CC1C8ai8sl4HVFu9cR4rDcSQNwnguMfJHAP
-        8X/5nmjEXFpE4xCMfOqBE916j6/+wsF4bK87hXjK3wBZ8mR3BGAQdCi5oWXjqcYbi8iLcn
-        ARyfceat1e3rGdJrCdKwY5kVy/2i/Z8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-444-LxYTban4Na-bPjpDFcffpg-1; Mon, 24 Jan 2022 18:22:18 -0500
-X-MC-Unique: LxYTban4Na-bPjpDFcffpg-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S3410917AbiAYAbO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jan 2022 19:31:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35868 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2374421AbiAYARC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jan 2022 19:17:02 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A198AC02B8D4;
+        Mon, 24 Jan 2022 14:03:51 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5AE4F1006AA8;
-        Mon, 24 Jan 2022 23:22:17 +0000 (UTC)
-Received: from T590 (ovpn-8-21.pek2.redhat.com [10.72.8.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 442025ED55;
-        Mon, 24 Jan 2022 23:21:59 +0000 (UTC)
-Date:   Tue, 25 Jan 2022 07:21:55 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH V2 09/13] scsi: force unfreezing queue into atomic mode
-Message-ID: <Ye80kxTBojm6GN8k@T590>
-References: <20220122111054.1126146-1-ming.lei@redhat.com>
- <20220122111054.1126146-10-ming.lei@redhat.com>
- <20220124131516.GH27269@lst.de>
+        by ams.source.kernel.org (Postfix) with ESMTPS id 67163B80CCF;
+        Mon, 24 Jan 2022 22:03:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D571FC340E4;
+        Mon, 24 Jan 2022 22:03:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1643061829;
+        bh=xrwemF3DoaZJ3THX4M5sDEyymgR1OJsmnN+8J59590A=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ISJiKyxxFowPXIBWWiPDolNLtJNFOguGCeoc7oUL5TCgnV4fJO+brTfSXz7JFTeDX
+         HtCvbWJ6PHsp6/6UMOJAOnVD9+kxn3mnLceBX6kTuorlJwT23mbldhnua5m53/nhGA
+         tOfk7uG+SIVGyGrO9diUepvGo47ymC6jjeTNm9ZDgnBZNpVYR8I8li2ZX1DbsZKzWb
+         aTYx96+KhUmG0rtTf2EiczL/gKnZNqV4t2FIqsyCZLTfff3a2VDygyKRPL7vBfIylY
+         tlMMSeX8xC4B7VkVN2TPZXzpzoFKfK9lRYcWE53uo/+fUH5jMl0qqTJIMNlF1fI9Ai
+         VQ5ik8h7M8LCA==
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-block@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v4 1/3] block: simplify calling convention of elv_unregister_queue()
+Date:   Mon, 24 Jan 2022 13:59:36 -0800
+Message-Id: <20220124215938.2769-2-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220124215938.2769-1-ebiggers@kernel.org>
+References: <20220124215938.2769-1-ebiggers@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220124131516.GH27269@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jan 24, 2022 at 02:15:16PM +0100, Christoph Hellwig wrote:
-> On Sat, Jan 22, 2022 at 07:10:50PM +0800, Ming Lei wrote:
-> > In scsi_disk_release() request queue is frozen for clearing
-> > disk->private_data, and there can't be any FS IO issued to
-> > this queue, and only private passthrough request will be handled, so
-> > force unfreezing queue into atomic mode.
-> > 
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > ---
-> >  drivers/scsi/sd.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index 0e73c3f2f381..27f04c860f00 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -3670,7 +3670,7 @@ static void scsi_disk_release(struct device *dev)
-> >  	 * in case multiple processes open a /dev/sd... node concurrently.
-> >  	 */
-> >  	blk_mq_freeze_queue(q);
-> > -	blk_mq_unfreeze_queue(q);
-> > +	__blk_mq_unfreeze_queue(q, true);
-> 
-> I think the right thing here is to drop the freeze/unfreeze pair.
-> Now that del_gendisk properly freezes the queue, we don't need this
-> protection as the issue that Bart fixed with it can't happen any more.
+From: Eric Biggers <ebiggers@google.com>
 
-As you see, the last patch removes freeze/unfreeze pair in del_gendisk(),
-which looks not very useful: it can't drain IO on bio based driver, and
-del_gendisk() is supposed to provide consistent behavior for both request
-and bio based driver.
+Make elv_unregister_queue() a no-op if q->elevator is NULL or is not
+registered.
 
+This simplifies the existing callers, as well as the future caller in
+the error path of blk_register_queue().
 
-Thanks,
-Ming
+Also don't bother checking whether q is NULL, since it never is.
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ block/blk-sysfs.c | 3 +--
+ block/elevator.c  | 8 ++++----
+ 2 files changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 9f32882ceb2f6..a02b42ad9a6e0 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -960,8 +960,7 @@ void blk_unregister_queue(struct gendisk *disk)
+ 	blk_trace_remove_sysfs(disk_to_dev(disk));
+ 
+ 	mutex_lock(&q->sysfs_lock);
+-	if (q->elevator)
+-		elv_unregister_queue(q);
++	elv_unregister_queue(q);
+ 	disk_unregister_independent_access_ranges(disk);
+ 	mutex_unlock(&q->sysfs_lock);
+ 	mutex_unlock(&q->sysfs_dir_lock);
+diff --git a/block/elevator.c b/block/elevator.c
+index ec98aed39c4f5..b062c5bc10b9a 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -516,9 +516,11 @@ int elv_register_queue(struct request_queue *q, bool uevent)
+ 
+ void elv_unregister_queue(struct request_queue *q)
+ {
++	struct elevator_queue *e = q->elevator;
++
+ 	lockdep_assert_held(&q->sysfs_lock);
+ 
+-	if (q) {
++	if (e && e->registered) {
+ 		struct elevator_queue *e = q->elevator;
+ 
+ 		kobject_uevent(&e->kobj, KOBJ_REMOVE);
+@@ -593,9 +595,7 @@ int elevator_switch_mq(struct request_queue *q,
+ 	lockdep_assert_held(&q->sysfs_lock);
+ 
+ 	if (q->elevator) {
+-		if (q->elevator->registered)
+-			elv_unregister_queue(q);
+-
++		elv_unregister_queue(q);
+ 		ioc_clear_queue(q);
+ 		blk_mq_sched_free_rqs(q);
+ 		elevator_exit(q);
+-- 
+2.34.1
 
