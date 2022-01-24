@@ -2,99 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B97DC433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Jan 2022 22:57:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 902ACC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Jan 2022 06:49:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240355AbiAWW53 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Jan 2022 17:57:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53524 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230018AbiAWW52 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jan 2022 17:57:28 -0500
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12863C06173B;
-        Sun, 23 Jan 2022 14:57:28 -0800 (PST)
-Received: by mail-pf1-x42c.google.com with SMTP id p37so14132381pfh.4;
-        Sun, 23 Jan 2022 14:57:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=9YpaDt/y2c3/dUeLfnG7ff++Dq8k/QrMoesYhtwfYz8=;
-        b=Jfeb4woSg0fNp15ri+VhTahx4p/I7+BmYJyNeRGYFOZj95O0pE1gVvRWV37IdkkIYe
-         jmuMkmRhYFCOD3Glzleex6r/2wUIuW5kSMZy+6QXteITDA6IRhwxpigS+GhREnjisD8l
-         RcQJGjjyoIfneXHi3ZrZ0kEiCJjhV3og9L6Bw9O+n+iXbrMDPqdSiYE2tY7Isyot1yd0
-         mfPAgcYMX9x+waOCI+La4lqNCU3n5Bm1afnSTFeZBh/d9Vz1LPG1D5SFgSxgpC/TChYJ
-         x2raLsi0iOZyIuIHHjO/PTzSA2+5Np6tbET2kAWJLAqaxOzPtuVBJK7PU7UnD6ZG8xnJ
-         jmvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=9YpaDt/y2c3/dUeLfnG7ff++Dq8k/QrMoesYhtwfYz8=;
-        b=fLWvkuLGOyFHfPEG9uvQ7my4B25EWcT39KljBc5aJDvxj9WXvOuOFAe+fuUCXmfQgq
-         xSsFHOZUTUn3HxYHEaejmXh5DZBMZZCMuF22HXpiJJ8V2su/HX9/gRoTDaV3k3TEStCc
-         YsM5whmLfVY2AY+F1gYPSYRtwq5wdDe8yRXGQokBzBSufNvcf/T+0vdxy7Kl8aBm7xd4
-         7eyf+/+EhIKeTIYhbhLcgvEW2+74JSO8T0QCUJ0tY4yBAmI4o2MPolB2Uy3MjXPIrsWD
-         WyuGKEX8WJ3451W3hgPswbrGoMYBEOHKJrqlrg9kIoY3La5DC/CQvc11uIPLPhlFxSB8
-         GumA==
-X-Gm-Message-State: AOAM530k5k3GAZ+EAxz851o+9/8TgfJqvlrugtgC35DQ6oASaBFno19d
-        FwPmBl+gb6OtoOzi+cOCMw0=
-X-Google-Smtp-Source: ABdhPJxiWeo8n8WyuKjPy1UxzAv9V5Jbbx4IUyYLBfi0hHSzMZiEVOvgyaOaqn4JQPTyvpAi/jKoXA==
-X-Received: by 2002:a63:541a:: with SMTP id i26mr330814pgb.322.1642978647379;
-        Sun, 23 Jan 2022 14:57:27 -0800 (PST)
-Received: from tong-desktop.local (99-105-211-126.lightspeed.sntcca.sbcglobal.net. [99.105.211.126])
-        by smtp.googlemail.com with ESMTPSA id w1sm1826881pfg.162.2022.01.23.14.57.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 Jan 2022 14:57:26 -0800 (PST)
-From:   Tong Zhang <ztong0001@gmail.com>
-To:     Hannes Reinecke <hare@kernel.org>,
+        id S235540AbiAXGtJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Jan 2022 01:49:09 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:57110 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229788AbiAXGtI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jan 2022 01:49:08 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 535FC1F380;
+        Mon, 24 Jan 2022 06:49:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1643006947; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=xJg+IkXmgmP8g2ybnmPsLzGXCdIpMZLvBP0eNdIIUPI=;
+        b=hSZmjxvgFvGZOYQllLY4BjoLLu/r1S+gdrnJntoFQz+JB1A4h/JEe4Gp3htth1MJgfLUEi
+        qiMs5Z6LvDr2GFpByStxqMOALM6vWNbelgLzRJbMQjM987Dw+Ex7VsNIBXIzU7aaVfFqeM
+        XJfqN68u3ZWKhZIJM35dTCgxN2HCMRs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1643006947;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=xJg+IkXmgmP8g2ybnmPsLzGXCdIpMZLvBP0eNdIIUPI=;
+        b=Z7O58UE1FYqMKgeUCSKcmZD+5ch1dGpVqnv62l6kvEmPkVuq0U5k4wdyTKaG3MFgrwZCJs
+        IXtYUM0uOF8aaiDQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 134E71332F;
+        Mon, 24 Jan 2022 06:49:07 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id SKX+AeNL7mFWegAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 24 Jan 2022 06:49:07 +0000
+Message-ID: <b41aa99d-baf2-0fef-6d01-454a3b8213d2@suse.de>
+Date:   Mon, 24 Jan 2022 07:49:06 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH v1] scsi: myrs: fix crash on error case
+Content-Language: en-US
+To:     Tong Zhang <ztong0001@gmail.com>,
+        Hannes Reinecke <hare@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Tong Zhang <ztong0001@gmail.com>
-Subject: [PATCH v1] scsi: myrs: fix crash on error case
-Date:   Sun, 23 Jan 2022 14:57:17 -0800
-Message-Id: <20220123225717.1069538-1-ztong0001@gmail.com>
-X-Mailer: git-send-email 2.25.1
-MIME-Version: 1.0
+References: <20220123225717.1069538-1-ztong0001@gmail.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20220123225717.1069538-1-ztong0001@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In myrs_detect(), cs->disable_intr is NULL when privdata->hw_init() fail
-with non-zero. In this case, myrs_cleanup(cs) will call a NULL ptr and
-crash kernel.
+On 1/23/22 23:57, Tong Zhang wrote:
+> In myrs_detect(), cs->disable_intr is NULL when privdata->hw_init() fail
+> with non-zero. In this case, myrs_cleanup(cs) will call a NULL ptr and
+> crash kernel.
+> 
+> [    1.105606] myrs 0000:00:03.0: Unknown Initialization Error 5A
+> [    1.105872] myrs 0000:00:03.0: Failed to initialize Controller
+> [    1.106082] BUG: kernel NULL pointer dereference, address: 0000000000000000
+> [    1.110774] Call Trace:
+> [    1.110950]  myrs_cleanup+0xe4/0x150 [myrs]
+> [    1.111135]  myrs_probe.cold+0x91/0x56a [myrs]
+> [    1.111302]  ? DAC960_GEM_intr_handler+0x1f0/0x1f0 [myrs]
+> [    1.111500]  local_pci_probe+0x48/0x90
+> 
+> Signed-off-by: Tong Zhang <ztong0001@gmail.com>
+> ---
+>   drivers/scsi/myrs.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
+> index 253ceca54a84..7eb8c39da366 100644
+> --- a/drivers/scsi/myrs.c
+> +++ b/drivers/scsi/myrs.c
+> @@ -2267,7 +2267,8 @@ static void myrs_cleanup(struct myrs_hba *cs)
+>   	myrs_unmap(cs);
+>   
+>   	if (cs->mmio_base) {
+> -		cs->disable_intr(cs);
+> +		if (cs->disable_intr)
+> +			cs->disable_intr(cs);
+>   		iounmap(cs->mmio_base);
+>   		cs->mmio_base = NULL;
+>   	}
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-[    1.105606] myrs 0000:00:03.0: Unknown Initialization Error 5A
-[    1.105872] myrs 0000:00:03.0: Failed to initialize Controller
-[    1.106082] BUG: kernel NULL pointer dereference, address: 0000000000000000
-[    1.110774] Call Trace:
-[    1.110950]  myrs_cleanup+0xe4/0x150 [myrs]
-[    1.111135]  myrs_probe.cold+0x91/0x56a [myrs]
-[    1.111302]  ? DAC960_GEM_intr_handler+0x1f0/0x1f0 [myrs]
-[    1.111500]  local_pci_probe+0x48/0x90
+Cheers,
 
-Signed-off-by: Tong Zhang <ztong0001@gmail.com>
----
- drivers/scsi/myrs.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
-index 253ceca54a84..7eb8c39da366 100644
---- a/drivers/scsi/myrs.c
-+++ b/drivers/scsi/myrs.c
-@@ -2267,7 +2267,8 @@ static void myrs_cleanup(struct myrs_hba *cs)
- 	myrs_unmap(cs);
- 
- 	if (cs->mmio_base) {
--		cs->disable_intr(cs);
-+		if (cs->disable_intr)
-+			cs->disable_intr(cs);
- 		iounmap(cs->mmio_base);
- 		cs->mmio_base = NULL;
- 	}
+Hannes
 -- 
-2.25.1
-
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
