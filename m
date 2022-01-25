@@ -2,87 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43896C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 05:44:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD6A5C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 05:46:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236207AbiAYFor (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 00:44:47 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:16942 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235623AbiAYFlo (ORCPT
+        id S237717AbiAYFqA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 00:46:00 -0500
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:31400 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235409AbiAYFkz (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Jan 2022 00:41:44 -0500
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20P4emRw005953;
-        Tue, 25 Jan 2022 05:41:39 GMT
+        Tue, 25 Jan 2022 00:40:55 -0500
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20P1VRwS019388;
+        Tue, 25 Jan 2022 05:40:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=Gb5xYRcTvDL82zLNU4ufie4IQp23BbDAPogYfnIbPr4=;
- b=pb3X0gbMnN7IPWbexRbiNt9UMrG+URe9PCrvQHKuEh69mijql+GcqbOTrWIY9iRPseIC
- 5F1fFf0uwefdJO/dxHfC8xQz+LD8zs91BZGNQPM1ENOs4DnmogSSc30U5b6+Nw0ZwJ/g
- T0VXEIOddKWKJYqkj4k+iHv1zVVkxhWkPxRGhk5+TamIHMrL7eDIMVkECcqpavobnHPr
- WVm4RR0WxX7R0zLP7D6Jwy1XnQ3jB0Y4A/HVHUdfi5j0CA/ehlR+M+dqN1N+TCk4q3eJ
- QmYrUothXDvyb3JO/281Vh5EK7GU7XD6oI26wMS799uv7pKPz7kSLFHjcGfKEyDaRJny HQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dsxaaa1bu-1
+ bh=LZnB4L07KX57W1nMkDDt+14Tce7jS78AInJQ9XIn0JA=;
+ b=a1XlucWmtEK0B0zfylAZIH+2vDa8Z9PyRPgAxAyGpaDuE2zuCCwOjKqIPxyRGsgcMdDB
+ AG9c1OGS+/Nt3yfG6XfDfFLvVS2RkIKbLUouFodWxiZ9f0BMmIaePlX+SnFk8k4OQ4uj
+ pq59t8veCB3190LQyTmetwd034x8Pcp9SDDURwKDhci6s020IUPAJCYEzDdyTU8vL5Oc
+ HCTBq+Csc1RFyJ8Z0UDQ7W8jiVZdokPbmo+j8OvFndXn2mEcaBWl7vXjSQf50pFweC8e
+ bjlCikElctuTMSiVKKtgtxyePTVlGrc0RqanEDJuNxqDHbaN9HPcgeHqzQFUKt0HQX6j 5Q== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dsy7asxpg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Jan 2022 05:41:39 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20P5ePUc145364;
-        Tue, 25 Jan 2022 05:41:38 GMT
+        Tue, 25 Jan 2022 05:40:50 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20P5auwX172061;
+        Tue, 25 Jan 2022 05:40:49 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3020.oracle.com with ESMTP id 3drbcn1sw4-1
+        by userp3030.oracle.com with ESMTP id 3dr71x1shf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Jan 2022 05:41:38 +0000
-Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20P5fW7D149214;
-        Tue, 25 Jan 2022 05:41:37 GMT
+        Tue, 25 Jan 2022 05:40:49 +0000
+Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20P5embe181395;
+        Tue, 25 Jan 2022 05:40:48 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by userp3020.oracle.com with ESMTP id 3drbcn1ss0-4;
-        Tue, 25 Jan 2022 05:41:37 +0000
+        by userp3030.oracle.com with ESMTP id 3dr71x1sgc-1;
+        Tue, 25 Jan 2022 05:40:48 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Tong Zhang <ztong0001@gmail.com>,
+To:     Adam Radford <aradford@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@kernel.org>,
-        linux-kernel@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v1] scsi: myrs: fix crash on error case
-Date:   Tue, 25 Jan 2022 00:41:31 -0500
-Message-Id: <164308927349.18787.5117723366670318865.b4-ty@oracle.com>
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] scsi: 3w-sas: Remove useless DMA-32 fallback configuration
+Date:   Tue, 25 Jan 2022 00:40:37 -0500
+Message-Id: <164308671272.32373.7479857078284374730.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220123225717.1069538-1-ztong0001@gmail.com>
-References: <20220123225717.1069538-1-ztong0001@gmail.com>
+In-Reply-To: <dbbe8671ca760972d80f8d35f3170b4609bee368.1642236763.git.christophe.jaillet@wanadoo.fr>
+References: <dbbe8671ca760972d80f8d35f3170b4609bee368.1642236763.git.christophe.jaillet@wanadoo.fr>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: NgnwCp9j4awYqYIU00erXzpt0ccGIzXr
-X-Proofpoint-ORIG-GUID: NgnwCp9j4awYqYIU00erXzpt0ccGIzXr
+X-Proofpoint-GUID: wfgt_y3oIB8nlCN-vsMWRsww0p-0Ae3t
+X-Proofpoint-ORIG-GUID: wfgt_y3oIB8nlCN-vsMWRsww0p-0Ae3t
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 23 Jan 2022 14:57:17 -0800, Tong Zhang wrote:
+On Sat, 15 Jan 2022 09:53:03 +0100, Christophe JAILLET wrote:
 
-> In myrs_detect(), cs->disable_intr is NULL when privdata->hw_init() fail
-> with non-zero. In this case, myrs_cleanup(cs) will call a NULL ptr and
-> crash kernel.
+> As stated in [1], dma_set_mask() with a 64-bit mask never fails if
+> dev->dma_mask is non-NULL.
+> So, if it fails, the 32 bits case will also fail for the same reason.
 > 
-> [    1.105606] myrs 0000:00:03.0: Unknown Initialization Error 5A
-> [    1.105872] myrs 0000:00:03.0: Failed to initialize Controller
-> [    1.106082] BUG: kernel NULL pointer dereference, address: 0000000000000000
-> [    1.110774] Call Trace:
-> [    1.110950]  myrs_cleanup+0xe4/0x150 [myrs]
-> [    1.111135]  myrs_probe.cold+0x91/0x56a [myrs]
-> [    1.111302]  ? DAC960_GEM_intr_handler+0x1f0/0x1f0 [myrs]
-> [    1.111500]  local_pci_probe+0x48/0x90
+> Simplify code and remove some dead code accordingly.
+> 
+> [1]: https://lore.kernel.org/linux-kernel/YL3vSPK5DXTNvgdx@infradead.org/#t
 > 
 > [...]
 
 Applied to 5.17/scsi-fixes, thanks!
 
-[1/1] scsi: myrs: fix crash on error case
-      https://git.kernel.org/mkp/scsi/c/4db09593af0b
+[1/1] scsi: 3w-sas: Remove useless DMA-32 fallback configuration
+      https://git.kernel.org/mkp/scsi/c/fb8d5ea8fd90
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
