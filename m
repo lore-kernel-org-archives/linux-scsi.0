@@ -2,78 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AADE3C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 05:44:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1D23C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 05:44:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236166AbiAYFog (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 00:44:36 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:54778 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235525AbiAYFlT (ORCPT
+        id S236192AbiAYFom (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 00:44:42 -0500
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:20784 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235626AbiAYFls (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Jan 2022 00:41:19 -0500
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20P1i5Yh016125;
-        Tue, 25 Jan 2022 05:41:08 GMT
+        Tue, 25 Jan 2022 00:41:48 -0500
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20P1bXsa001332;
+        Tue, 25 Jan 2022 05:41:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=N2EF81Bf5CfQnrO58+azCItXag2lwc0+0KRtkDVi7cg=;
- b=kGLJwlyGLP/skLCo53TLQXhRP6dfmhA6Eb0lVKNNOmkw64R9cnd5OLexwDgpf8lA/Can
- lKJuLCxewXiJ1zd0KkH5MTifhP44Pk8Pu/pYGVOa04KrakTRxa2MNQp3u45F6NGCBpmb
- vld7e3dLl5ZVWeiiIgAIS1fIwfd8VVQQyAv5nJxczfUR/tXCjdax2DwdlWNVseUU6gEM
- xFoB0ceY4fH8oy5NZ3J0ABTGqob4Hdk1dSjfd4K894tP/e/90ChtXmjH5e88BT/U7EAX
- 9XqqqbVTQZd5vnnvRRQvrfhBJrp42FeGX51x9gEUUAYT8389TW7xiOBOiV8hCScFZ5I1 fA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dsxvfhw4h-1
+ bh=mjM+Nm44oOV34gDRMPqiFvM8QA1bcvWWmTThMa0QDH4=;
+ b=myAomR0InR33n2Tj+jKexIdOOVND1cx6jVZqL/pE7QtncNsPuCoT1SLYFzIUHqcI26Wt
+ q947oj1+AbOdQ+zF4BDWbYg4sSr6/Y0hZxVeL74hFI0uQvVLo4Os2cHGmqCdkBT8ufBM
+ IIxteJg9nY6eO16uPt0YzofqWqPkM6mbzTmbwf1Cu88TF9UTlc7b5uxF2fyRCes92GIF
+ +3i4/8MCa8btOzvMD0CFw2JnvA8VsBXrGaGt2gbnde8FUiTpsRK1V8JkBoRpkIXlSl1w
+ pHwiB603rmIXqXm4qdPyz5th2FyiYIzerYmhqNcvcPbgCQMN3Li/M+4eX+nDyTHK/SM4 PA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dsy9s1ut8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Jan 2022 05:41:08 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20P5euTq181698;
-        Tue, 25 Jan 2022 05:41:07 GMT
+        Tue, 25 Jan 2022 05:41:38 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20P5eP2H145458;
+        Tue, 25 Jan 2022 05:41:37 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3030.oracle.com with ESMTP id 3dr71x1stm-1
+        by userp3020.oracle.com with ESMTP id 3drbcn1sv8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Jan 2022 05:41:07 +0000
-Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20P5evOj181790;
-        Tue, 25 Jan 2022 05:41:06 GMT
+        Tue, 25 Jan 2022 05:41:37 +0000
+Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20P5fW7B149214;
+        Tue, 25 Jan 2022 05:41:36 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by userp3030.oracle.com with ESMTP id 3dr71x1sgc-10;
-        Tue, 25 Jan 2022 05:41:06 +0000
+        by userp3020.oracle.com with ESMTP id 3drbcn1ss0-3;
+        Tue, 25 Jan 2022 05:41:36 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Yang Yingliang <yangyingliang@huawei.com>,
-        target-devel@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>, hch@lst.de,
-        james.smart@broadcom.com
-Subject: Re: [PATCH -next v2] scsi: efct: don't use GFP_KERNEL under spin lock
-Date:   Tue, 25 Jan 2022 00:40:46 -0500
-Message-Id: <164308671269.32373.10524301439896995179.b4-ty@oracle.com>
+To:     cang@codeaurora.org, avri.altman@wdc.com, sc.suh@samsung.com,
+        beanhuo@micron.com, bhoon95.kim@samsung.com,
+        Kiwoong Kim <kwmad.kim@samsung.com>, vkumar.1997@samsung.com,
+        hy50.seo@samsung.com, jejb@linux.ibm.com, adrian.hunter@intel.com,
+        alim.akhtar@samsung.com, sh425.lee@samsung.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3] scsi: ufs: use an generic error code in ufshcd_set_dev_pwr_mode
+Date:   Tue, 25 Jan 2022 00:41:30 -0500
+Message-Id: <164308927348.18787.13724566963992033005.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220111012441.3232527-1-yangyingliang@huawei.com>
-References: <20220111012441.3232527-1-yangyingliang@huawei.com>
+In-Reply-To: <1642743182-54098-1-git-send-email-kwmad.kim@samsung.com>
+References: <CGME20220121053455epcas2p4f2710091dc5f722a220be91243c60eed@epcas2p4.samsung.com> <1642743182-54098-1-git-send-email-kwmad.kim@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: CY8ERybcboHaOPIs-nApS0Mb3ADNm0iq
-X-Proofpoint-ORIG-GUID: CY8ERybcboHaOPIs-nApS0Mb3ADNm0iq
+X-Proofpoint-GUID: Xvq_4z0n5FyFToJjS71gT_NmdpXb9Zyb
+X-Proofpoint-ORIG-GUID: Xvq_4z0n5FyFToJjS71gT_NmdpXb9Zyb
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 11 Jan 2022 09:24:41 +0800, Yang Yingliang wrote:
+On Fri, 21 Jan 2022 14:33:02 +0900, Kiwoong Kim wrote:
 
-> GFP_KERNEL/GFP_DMA can't be used under a spin lock, according the
-> comment of els_ios_lock, it's used to protect els ios list, so we
-> can move down the spin lock to avoid using this flag under the lock.
+> v2 -> v3: change the value of ret only if it's positive
+> v1 -> v2: modify the comment of ufshcd_set_dev_pwr_mode
 > 
+> The return value of ufshcd_set_dev_pwr_mode is given to
+> device pm core. However, the function currently returns a result
+> in scsi command and the device pm core doesn't understand it.
+> It might lead to unexpected behaviors of user land. I found
+> the return value led to platform reset in Android.
 > 
+> [...]
 
 Applied to 5.17/scsi-fixes, thanks!
 
-[1/1] scsi: efct: don't use GFP_KERNEL under spin lock
-      https://git.kernel.org/mkp/scsi/c/61263b3a11a2
+[1/1] scsi: ufs: use an generic error code in ufshcd_set_dev_pwr_mode
+      https://git.kernel.org/mkp/scsi/c/ad6c8a426446
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
