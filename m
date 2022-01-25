@@ -2,151 +2,161 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFDFAC43217
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 17:35:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9D4FC43217
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 19:28:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356212AbiAYRen (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 12:34:43 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:37134 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1588384AbiAYRdC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Jan 2022 12:33:02 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643131981;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=hHrbMaICyVWZJZVuCs/Sc0unbjuRdIuWQiuze8whQJY=;
-        b=Lfj+hvtBq2fAum6Ch/KcNUdzyRv+WO15P0rWIOW0bXjxcuzVhuG6JJYgld+z0yBGVJKkMZ
-        DMwv0J6wQ635cLctfVece7s0tm5DohrLzE05lPr20TooKc1mTTyNBW0ET1hV9OB7ms3rMk
-        2Nd2HU9mSjyBcx5W4mcRMmCvdJCmgC0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-634-uXO9vnS6NjyFGN3gckN4iA-1; Tue, 25 Jan 2022 12:32:58 -0500
-X-MC-Unique: uXO9vnS6NjyFGN3gckN4iA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 00FD81006AA6;
-        Tue, 25 Jan 2022 17:32:57 +0000 (UTC)
-Received: from [10.22.34.217] (unknown [10.22.34.217])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8097E22DEB;
-        Tue, 25 Jan 2022 17:32:55 +0000 (UTC)
-Message-ID: <e8a62329-12d1-048a-9968-abefc978a49a@redhat.com>
-Date:   Tue, 25 Jan 2022 12:32:54 -0500
+        id S230038AbiAYT2h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 14:28:37 -0500
+Received: from mail-pl1-f175.google.com ([209.85.214.175]:35700 "EHLO
+        mail-pl1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229950AbiAYT2c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2022 14:28:32 -0500
+Received: by mail-pl1-f175.google.com with SMTP id d18so7633582plg.2;
+        Tue, 25 Jan 2022 11:28:32 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Rkz5i91jrZJto37j3RGSd05f/eRfvo2BCm796nin8Vs=;
+        b=XRSGOlm1VFqT3avvfzptjdr/V8D9yTVMulgMxGpZ7G7ejzNVUmBrSCSSzGdQIbyBGA
+         wLOATfMRkgFf7AKjLokOWmvQ71CTQzSyBSMu32dH9GIJwiRDS5KY51i2SYfY0XPneHL/
+         ryCWbdsIcvWIxwUcQruluk6MN1ULgD5779AyhvV50OPqRmw+gqJ494us1srnl3Ds/4Tw
+         FA+szLQkz+NTKT5gBSs8lhlo3if8ALpz98+fE8QN7vc+AWMtHB22xJKpNFyz/WEPjT5a
+         EUJbOhxxGarJRbtGkRONvQB963Qct9mbEQnP1NF+wi7cC9Cppqh/vlLxWz03d0sdhqgn
+         bGnA==
+X-Gm-Message-State: AOAM533sXRFtcUNigiJ0DQlIB32sZGa/bv9zSZa0r8EZkSOwfSQbHV9n
+        CPnYdKZ9giKc43jEewCH4OA=
+X-Google-Smtp-Source: ABdhPJyeNd/r+jQn3mMtMf9He8DTH104dq3dEwAvQtFQxWx1zXikeSDUCeamDKcdFDb0ku5F8bxZDQ==
+X-Received: by 2002:a17:902:6bc9:b0:149:fdf1:f031 with SMTP id m9-20020a1709026bc900b00149fdf1f031mr19734916plt.58.1643138906187;
+        Tue, 25 Jan 2022 11:28:26 -0800 (PST)
+Received: from localhost ([2601:647:5b00:ece0:aab:34ff:52ca:a7a5])
+        by smtp.gmail.com with ESMTPSA id qe15sm1162214pjb.47.2022.01.25.11.28.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Jan 2022 11:28:25 -0800 (PST)
+Date:   Tue, 25 Jan 2022 11:28:24 -0800
+From:   Moritz Fischer <mdf@kernel.org>
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     arnd@arndb.de, hch@infradead.org, akpm@linux-foundation.org,
+        rth@twiddle.net, ink@jurassic.park.msu.ru, mattst88@gmail.com,
+        mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
+        davem@davemloft.net, airlied@linux.ie, vkoul@kernel.org,
+        hao.wu@intel.com, trix@redhat.com, mdf@kernel.org,
+        yilun.xu@intel.com, awalls@md.metrocast.net, mchehab@kernel.org,
+        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, mporter@kernel.crashing.org,
+        alex.bou9@gmail.com, bhelgaas@google.com,
+        linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        sparclinux@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-fpga@vger.kernel.org, linux-media@vger.kernel.org,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH 00/16] Remove usage of the deprecated "pci-dma-compat.h"
+ API
+Message-ID: <YfBPWB9m5TWcZuFY@epycbox.lan>
+References: <cover.1641500561.git.christophe.jaillet@wanadoo.fr>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH] scsi: bnx2fc: make bnx2fc_recv_frame mp safe
-Content-Language: en-US
-From:   John Meneghini <jmeneghi@redhat.com>
-To:     skashyap@marvell.com, njavali@marvell.com, mlombard@redhat.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <20220124145110.442335-1-jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <20220124145110.442335-1-jmeneghi@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1641500561.git.christophe.jaillet@wanadoo.fr>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Can I please get a review and approval for this patch?
-
-I'd like this to get into v5.17-rc2
+On Thu, Jan 06, 2022 at 10:45:13PM +0100, Christophe JAILLET wrote:
+> This serie axes all the remaining usages of the deprecated "pci-dma-compat.h"
+> API.
+> 
+> All these patches have already been posted.
+> 
+> They have been generated with a coccinelle script.
+> The tricky parts are patches that use dma_alloc_coherent() because the correct
+> GFP flag has to be used in place of the previous embedded GFP_ATOMIC.
+> 
+> Patches 1-3 are already Reviewed. References to the corresponding mail is
+> given below the ---
+> 
+> Patch 1-2,4-10 are just generated from the coccinelle script. Only too long
+> lines have been hand modified. dma_alloc_coherent() modification are NOT part
+> of these patches.
+> 
+> Patch 3 also includes some 'dma_set_mask_and_coherent()' instead of
+> 'pci_set_dma_mask()/pci_set_consistent_dma_mask()'.
+> I've left this additional modification because it was reviewed with it.
+> 
+> Patch 10-15 are the tricky parts. Explanation of which GFP flag is the right one
+> is given in each patch. It has been divided in several patches to ease review.
+> 
+> Patch 15 is the only one I'm slighly unsure with. The old code was using a
+> GFP_USER flag in the function. I'm not familiar with it.
+> I *guess*  that GFP_KERNEL is fine, but maybe it should also be GFP_USER or left
+> as GFP_ATOMIC so that nothing is changed.
+> 
+> Patch 16 is the last step that remove "pci-dma-compat.h" and its only usage.
+> 
+> 
+> All patches, exept 1-2,6 that are architecture specific, have been compile tested.
+> 
+> 
+> After all that, a few rst files, 1 or 2 strings in error messages and some
+> error branching labels should still need some attention. 
+> This is some minor issues.
+> 
+> 
+> Only the cover letter is sent to every one. Each patch is sent to the
+> corresponding maintainer(s) + Andrew Morton, Christoph Hellwig and Arnd Bergmann.
+> 
+> 
+> Best regards.
+> 
+> 
+> Christophe JAILLET (16):
+>   alpha: Remove usage of the deprecated "pci-dma-compat.h" API
+>   floppy: Remove usage of the deprecated "pci-dma-compat.h" API
+>   fpga: dfl: pci: Remove usage of the deprecated "pci-dma-compat.h" API
+>   media: Remove usage of the deprecated "pci-dma-compat.h" API
+>   agp/intel: Remove usage of the deprecated "pci-dma-compat.h" API
+>   sparc: Remove usage of the deprecated "pci-dma-compat.h" API
+>   dmaengine: pch_dma: Remove usage of the deprecated "pci-dma-compat.h"
+>     API
+>   rapidio/tsi721: Remove usage of the deprecated "pci-dma-compat.h" API
+>   media: v4l2-pci-skeleton: Remove usage of the deprecated
+>     "pci-dma-compat.h" API
+>   scsi: message: fusion: Remove usage of the deprecated
+>     "pci-dma-compat.h" API
+>   scsi: mptbase: Use dma_alloc_coherent() in 'mpt_alloc_fw_memory()'
+>   scsi: mptbase: Use dma_alloc_coherent()
+>   scsi: mptsas: Use dma_alloc_coherent() in
+>     mptsas_exp_repmanufacture_info()
+>   scsi: mptsas: Use dma_alloc_coherent()
+>   scsi: mptctl: Use dma_alloc_coherent()
+>   PCI: Remove usage of the deprecated "pci-dma-compat.h" API
+> 
+>  arch/alpha/include/asm/floppy.h     |   7 +-
+>  arch/alpha/kernel/pci_iommu.c       |  12 +--
+>  arch/powerpc/include/asm/floppy.h   |   8 +-
+>  arch/sparc/kernel/ioport.c          |   2 +-
+>  drivers/char/agp/intel-gtt.c        |  26 ++---
+>  drivers/dma/pch_dma.c               |   2 +-
+>  drivers/fpga/dfl-pci.c              |  14 +--
+>  drivers/media/pci/cx18/cx18-queue.h |   6 +-
+>  drivers/media/pci/ivtv/ivtv-queue.h |  25 +++--
+>  drivers/media/pci/ivtv/ivtv-udma.h  |   8 +-
+>  drivers/message/fusion/mptbase.c    | 149 ++++++++++++++++------------
+>  drivers/message/fusion/mptctl.c     |  82 +++++++++------
+>  drivers/message/fusion/mptlan.c     |  90 +++++++++--------
+>  drivers/message/fusion/mptsas.c     |  94 +++++++++---------
+>  drivers/rapidio/devices/tsi721.c    |   8 +-
+>  include/linux/pci-dma-compat.h      | 129 ------------------------
+>  include/linux/pci.h                 |   3 -
+>  samples/v4l/v4l2-pci-skeleton.c     |   2 +-
+>  18 files changed, 289 insertions(+), 378 deletions(-)
+>  delete mode 100644 include/linux/pci-dma-compat.h
+> 
+> -- 
+> 2.32.0
+> 
+Applied [03/16] to linux-fpga for-next.
 
 Thanks,
-
-/John
-
-
-On 1/24/22 09:51, John Meneghini wrote:
->      Running tests with a debug kernel shows that bnx2fc_recv_frame is
->      modifying the per_cpu lport stats counters in a non-mpsafe way.
->      Just boot a debug kernel and run the bnx2fc driver with the hardware
->      enabled.
-> 
->      [ 1391.699147] BUG: using smp_processor_id() in preemptible [00000000] code: bnx2fc_
->      [ 1391.699160] caller is bnx2fc_recv_frame+0xbf9/0x1760 [bnx2fc]
->      [ 1391.699174] CPU: 2 PID: 4355 Comm: bnx2fc_l2_threa Kdump: loaded Tainted: G    B
->      [ 1391.699180] Hardware name: HP ProLiant DL120 G7, BIOS J01 07/01/2013
->      [ 1391.699183] Call Trace:
->      [ 1391.699188]  dump_stack_lvl+0x57/0x7d
->      [ 1391.699198]  check_preemption_disabled+0xc8/0xd0
->      [ 1391.699205]  bnx2fc_recv_frame+0xbf9/0x1760 [bnx2fc]
->      [ 1391.699215]  ? do_raw_spin_trylock+0xb5/0x180
->      [ 1391.699221]  ? bnx2fc_npiv_create_vports.isra.0+0x4e0/0x4e0 [bnx2fc]
->      [ 1391.699229]  ? bnx2fc_l2_rcv_thread+0xb7/0x3a0 [bnx2fc]
->      [ 1391.699240]  bnx2fc_l2_rcv_thread+0x1af/0x3a0 [bnx2fc]
->      [ 1391.699250]  ? bnx2fc_ulp_init+0xc0/0xc0 [bnx2fc]
->      [ 1391.699258]  kthread+0x364/0x420
->      [ 1391.699263]  ? _raw_spin_unlock_irq+0x24/0x50
->      [ 1391.699268]  ? set_kthread_struct+0x100/0x100
->      [ 1391.699273]  ret_from_fork+0x22/0x30
-> 
->      To fix the problem: restore the old get_cpu/put_cpu code with some
->      modifications to reduce the size of the critical section.
-> 
-> Fixes: d576a5e80cd0 ("bnx2fc: Improve stats update mechanism")
-> Tested-by: Guangwu Zhang <guazhang@redhat.com>
-> Signed-off-by: John Meneghini <jmeneghi@redhat.com>
-> ---
->   drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 21 +++++++++++++--------
->   1 file changed, 13 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> index 71fa62bd3083..e41a94dc2d1f 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> @@ -508,7 +508,8 @@ static int bnx2fc_l2_rcv_thread(void *arg)
->   
->   static void bnx2fc_recv_frame(struct sk_buff *skb)
->   {
-> -	u32 fr_len;
-> +	u64 crc_err;
-> +	u32 fr_len, fr_crc;
->   	struct fc_lport *lport;
->   	struct fcoe_rcv_info *fr;
->   	struct fc_stats *stats;
-> @@ -542,6 +543,11 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
->   	skb_pull(skb, sizeof(struct fcoe_hdr));
->   	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
->   
-> +	stats = per_cpu_ptr(lport->stats, get_cpu());
-> +	stats->RxFrames++;
-> +	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
-> +	put_cpu();
-> +
->   	fp = (struct fc_frame *)skb;
->   	fc_frame_init(fp);
->   	fr_dev(fp) = lport;
-> @@ -624,16 +630,15 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
->   		return;
->   	}
->   
-> -	stats = per_cpu_ptr(lport->stats, smp_processor_id());
-> -	stats->RxFrames++;
-> -	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
-> +	fr_crc = le32_to_cpu(fr_crc(fp));
->   
-> -	if (le32_to_cpu(fr_crc(fp)) !=
-> -			~crc32(~0, skb->data, fr_len)) {
-> -		if (stats->InvalidCRCCount < 5)
-> +	if (unlikely(fr_crc != ~crc32(~0, skb->data, fr_len))) {
-> +		stats = per_cpu_ptr(lport->stats, get_cpu());
-> +		crc_err = (stats->InvalidCRCCount++);
-> +		put_cpu();
-> +		if (crc_err < 5)
->   			printk(KERN_WARNING PFX "dropping frame with "
->   			       "CRC error\n");
-> -		stats->InvalidCRCCount++;
->   		kfree_skb(skb);
->   		return;
->   	}
-
+Moritz
