@@ -2,85 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07CEDC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 05:44:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CB54C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 05:44:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236079AbiAYFoL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 00:44:11 -0500
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:49062 "EHLO
+        id S236143AbiAYFoZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 00:44:25 -0500
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:51278 "EHLO
         mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235486AbiAYFlM (ORCPT
+        by vger.kernel.org with ESMTP id S235514AbiAYFlM (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 25 Jan 2022 00:41:12 -0500
 Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20P1p4TA016140;
-        Tue, 25 Jan 2022 05:41:06 GMT
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20P1i5Yf016125;
+        Tue, 25 Jan 2022 05:41:02 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=Exo/EjFE8TXvAv+/JMTp26v6d/zU4zSiJaNlQN+iXFY=;
- b=cpKNiIEx3PiqIbMlj4qWa3jCzgRRr7znjE0D5rd3iqSwil1Lg5W8Yq7tjYWgwNoWk5ho
- q/LiqFn6gMiHDF1wPl7/+naEaZjzFnRcHmRwSh0NhkPjdB0Sw4iat/aNeUn/1jReQqVX
- uhSwhRVEutmqFV00eMo7hwjZn6k0QQ9kum5mN54r/WEgrmKShhLKkGfww2Zl/G4ohkgu
- /fXWTbFLCdZocAhJXA7K3LWsYmJ7OHhdAy9keAJROApu5NNX2cryEh6CbacQR/T0AiTe
- 9/rGJJWk/xTIXnvsBxud8UhGXCbJWWsj8LkFwYcmUtxHMvyqYXf4W8H4jPdntkbNqQw3 8w== 
+ bh=hn4alr1qgwLUbeh7Pc2bg7Lxe9jmoANUClkdYn0J8bg=;
+ b=dXp4NYEw5xq8WJj6h5lJ3deGWtu8eHZCSwa6X2rHPbPQupuKcyEJVKXFw61rHlvQ1lhG
+ fiXrr54iRSmLkLseStjWswNOZkfF1/SmedfI+SWw2z0arojvNSKMV/5isdcRUHVoccIS
+ R+7DO60TmgjVpqgQ8mNgY268h/EMGxSScf6NZh1Tf47F6j4l8VF3vaxGzxjW1HhUr7cV
+ Ad8FAbPCdqAnkBU883PWsQxR190yO/reLL+15AvpW0uJvXjotb+mjxNwjORWoXcqaIci
+ ww+IOm1Uy3bza/r2mh/HBPmfRJHPBAnbZmqrOI2sLnUChswd6Z5xGnTED09mLuVt6+lq Qw== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3dsxvfhw49-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3dsxvfhw42-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Jan 2022 05:41:05 +0000
+        Tue, 25 Jan 2022 05:41:02 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20P5evWU181750;
-        Tue, 25 Jan 2022 05:41:04 GMT
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 20P5eu1i181678;
+        Tue, 25 Jan 2022 05:41:01 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3030.oracle.com with ESMTP id 3dr71x1ssj-1
+        by userp3030.oracle.com with ESMTP id 3dr71x1sq3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Jan 2022 05:41:04 +0000
+        Tue, 25 Jan 2022 05:41:01 +0000
 Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20P5evOf181790;
-        Tue, 25 Jan 2022 05:41:04 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 20P5evOZ181790;
+        Tue, 25 Jan 2022 05:41:00 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by userp3030.oracle.com with ESMTP id 3dr71x1sgc-8;
-        Tue, 25 Jan 2022 05:41:04 +0000
+        by userp3030.oracle.com with ESMTP id 3dr71x1sgc-5;
+        Tue, 25 Jan 2022 05:41:00 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Nilesh Javali <njavali@marvell.com>
+To:     jinpu.wang@cloud.ionos.com, Ajish.Koshy@microchip.com,
+        damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com,
+        John Garry <john.garry@huawei.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        GR-QLogic-Storage-Upstream@marvell.com, loberman@redhat.com,
-        linux-scsi@vger.kernel.org, jpittman@redhat.com
-Subject: Re: [PATCH 0/3] qedf misc bug fixes
-Date:   Tue, 25 Jan 2022 00:40:44 -0500
-Message-Id: <164308671270.32373.8038545840370572527.b4-ty@oracle.com>
+        Ruksar.devadi@microchip.com, ipylypiv@google.com,
+        linux-kernel@vger.kernel.org, vishakhavc@google.com,
+        linux-scsi@vger.kernel.org, Viswas.G@microchip.com,
+        Vasanthalakshmi.Tharmarajan@microchip.com
+Subject: Re: [PATCH v2] scsi: pm8001: Fix bogus FW crash for maxcpus=1
+Date:   Tue, 25 Jan 2022 00:40:41 -0500
+Message-Id: <164308671270.32373.5920693563555904240.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220117135311.6256-1-njavali@marvell.com>
-References: <20220117135311.6256-1-njavali@marvell.com>
+In-Reply-To: <1642508105-95432-1-git-send-email-john.garry@huawei.com>
+References: <1642508105-95432-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: KLnF9JLZ6qPg1COUFUyyaMbuMdiKie-t
-X-Proofpoint-ORIG-GUID: KLnF9JLZ6qPg1COUFUyyaMbuMdiKie-t
+X-Proofpoint-GUID: X-sdo9Btk-_sfYVUqJKYHRyOfGgdwebL
+X-Proofpoint-ORIG-GUID: X-sdo9Btk-_sfYVUqJKYHRyOfGgdwebL
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 17 Jan 2022 05:53:08 -0800, Nilesh Javali wrote:
+On Tue, 18 Jan 2022 20:15:05 +0800, John Garry wrote:
 
-> Martin,
+> According to the comment in check_fw_ready() we should not check the
+> IOP1_READY field in register SCRATCH_PAD_1 for 8008 or 8009 controllers.
 > 
-> Please apply the qedf driver misc bug fixes to the scsi tree
-> at your earliest convenience.
-> 
-> Thanks,
-> Nilesh
+> However we check this very field in process_oq() for processing the highest
+> index interrupt vector. The highest interrupt vector is checked as the FW
+> is programmed to signal fatal errors through this irq.
 > 
 > [...]
 
 Applied to 5.17/scsi-fixes, thanks!
 
-[1/3] qedf: Add stag_work to all the vports
-      https://git.kernel.org/mkp/scsi/c/b70a99fd1328
-[2/3] qedf: Fix refcount issue when LOGO is received during TMF
-      https://git.kernel.org/mkp/scsi/c/5239ab63f17c
-[3/3] qedf: Change context reset messages to ratelimited
-      https://git.kernel.org/mkp/scsi/c/64fd4af6274e
+[1/1] scsi: pm8001: Fix bogus FW crash for maxcpus=1
+      https://git.kernel.org/mkp/scsi/c/62afb379a0fe
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
