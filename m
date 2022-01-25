@@ -2,183 +2,224 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 991F1C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 08:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CDB9C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 08:40:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379021AbiAYIiJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 03:38:09 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:60952 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1451168AbiAYIfh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Jan 2022 03:35:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643099736;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=jmdE/FyqqZW/h993WVIcmcL0hdVF9fjW8merVZKPk2A=;
-        b=ftBjBuvUvTjm5FBcg3RBjBcdTfpXw4+6SGm/8V9KUadIweVNUJI0Cw0NRyB/lIeXN3N5wF
-        yMuB0tSWgJylM7hRE+IUpqG078F1cORFeFMh17DFuWoET8mXrwx7NMx87uBWPB+akt4MqG
-        jAIDcR+SQNJGTXEY3QgEa2uLzjK55ek=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-582-OMpK3gLvO4-6Wz2gTuw3GA-1; Tue, 25 Jan 2022 03:35:32 -0500
-X-MC-Unique: OMpK3gLvO4-6Wz2gTuw3GA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AE4E539392;
-        Tue, 25 Jan 2022 08:35:31 +0000 (UTC)
-Received: from T590 (ovpn-8-22.pek2.redhat.com [10.72.8.22])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 122D462D6C;
-        Tue, 25 Jan 2022 08:35:13 +0000 (UTC)
-Date:   Tue, 25 Jan 2022 16:35:08 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH V2 05/13] block: only account passthrough IO from
- userspace
-Message-ID: <Ye+2PHFyY/xNmMzB@T590>
-References: <20220122111054.1126146-1-ming.lei@redhat.com>
- <20220122111054.1126146-6-ming.lei@redhat.com>
- <20220124130555.GD27269@lst.de>
- <Ye8xleeYZfmwA3D7@T590>
- <20220125061634.GA26495@lst.de>
- <20220125071906.GA27674@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220125071906.GA27674@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+        id S1447378AbiAYIkq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 03:40:46 -0500
+Received: from mail-m2836.qiye.163.com ([103.74.28.36]:52710 "EHLO
+        mail-m2836.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1451020AbiAYIim (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2022 03:38:42 -0500
+Received: from localhost.localdomain (unknown [218.94.118.90])
+        by mail-m2836.qiye.163.com (Hmail) with ESMTPA id 7E8BEC030E;
+        Tue, 25 Jan 2022 16:38:22 +0800 (CST)
+From:   mingzhe.zou@easystack.cn
+To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, mingzhe.zou@easystack.cn
+Subject: [PATCH] target: add iscsi/cpus_allowed_list in configfs
+Date:   Tue, 25 Jan 2022 16:38:21 +0800
+Message-Id: <20220125083821.18225-1-mingzhe.zou@easystack.cn>
+X-Mailer: git-send-email 2.17.1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgPGg8OCBgUHx5ZQUlOS1dZCBgUCR5ZQVlLVUtZV1
+        kWDxoPAgseWUFZKDYvK1lXWShZQUlCN1dZLVlBSVdZDwkaFQgSH1lBWUJJGktWSBgdSxhKTx5KSk
+        lNVRkRExYaEhckFA4PWVdZFhoPEhUdFFlBWVVLWQY+
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6NDo6FDo5QzIwLyoOHygwOT0M
+        PhIwFE1VSlVKTU9IS0JCQktISk1LVTMWGhIXVRYSFRwBEx5VARQOOx4aCAIIDxoYEFUYFUVZV1kS
+        C1lBWUlKQ1VCT1VKSkNVQktZV1kIAVlBTEpMSDcG
+X-HM-Tid: 0a7e9062d3a5841ekuqw7e8bec030e
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jan 25, 2022 at 08:19:06AM +0100, Christoph Hellwig wrote:
-> On Tue, Jan 25, 2022 at 07:16:34AM +0100, Christoph Hellwig wrote:
-> > So why not key off accouning off "rq->bio && rq->bio->bi_bdev"
-> > and remove the need for the flag and the second half of the assignment
-> > above?  That is much less error probe and removes code size.
-> 
-> Something like this, lightly tested:
-> 
-> ---
-> From 5499d013341b492899d1fecde7680ff8ebd232e9 Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Tue, 25 Jan 2022 07:29:06 +0100
-> Subject: block: remove the part field from struct request
-> 
-> All file system I/O and most userspace passthrough bios have bi_bdev set.
-> Switch I/O accounting to directly use the bio and stop copying it into a
-> separate struct request field.
-> 
-> This changes behavior in that e.g. /dev/sgX requests are not accounted
-> to the gendisk for the SCSI disk any more, which is the correct thing to
-> do as they never went through that gendisk, and fixes a potential race
-> when the disk driver is unbound while /dev/sgX I/O is in progress.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/blk-merge.c      | 12 ++++++------
->  block/blk-mq.c         | 32 +++++++++++++-------------------
->  block/blk.h            |  6 +++---
->  include/linux/blk-mq.h |  1 -
->  4 files changed, 22 insertions(+), 29 deletions(-)
-> 
-> diff --git a/block/blk-merge.c b/block/blk-merge.c
-> index 4de34a332c9fd..43e46ea2f0152 100644
-> --- a/block/blk-merge.c
-> +++ b/block/blk-merge.c
-> @@ -739,11 +739,11 @@ void blk_rq_set_mixed_merge(struct request *rq)
->  
->  static void blk_account_io_merge_request(struct request *req)
->  {
-> -	if (blk_do_io_stat(req)) {
-> -		part_stat_lock();
-> -		part_stat_inc(req->part, merges[op_stat_group(req_op(req))]);
-> -		part_stat_unlock();
-> -	}
-> +	if (!blk_do_io_stat(req))
-> +		return;
-> +	part_stat_lock();
-> +	part_stat_inc(req->bio->bi_bdev, merges[op_stat_group(req_op(req))]);
-> +	part_stat_unlock();
->  }
->  
->  static enum elv_merge blk_try_req_merge(struct request *req,
-> @@ -947,7 +947,7 @@ static void blk_account_io_merge_bio(struct request *req)
->  		return;
->  
->  	part_stat_lock();
-> -	part_stat_inc(req->part, merges[op_stat_group(req_op(req))]);
-> +	part_stat_inc(req->bio->bi_bdev, merges[op_stat_group(req_op(req))]);
->  	part_stat_unlock();
->  }
->  
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index f3bf3358a3bb2..01b3862347965 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -132,10 +132,12 @@ static bool blk_mq_check_inflight(struct request *rq, void *priv,
->  {
->  	struct mq_inflight *mi = priv;
->  
-> -	if ((!mi->part->bd_partno || rq->part == mi->part) &&
-> -	    blk_mq_rq_state(rq) == MQ_RQ_IN_FLIGHT)
-> -		mi->inflight[rq_data_dir(rq)]++;
-> +	if (blk_mq_rq_state(rq) != MQ_RQ_IN_FLIGHT)
-> +		return true;
-> +	if (mi->part->bd_partno && rq->bio && rq->bio->bi_bdev != mi->part)
-> +		return true;
->  
-> +	mi->inflight[rq_data_dir(rq)]++;
->  	return true;
->  }
->  
-> @@ -331,7 +333,6 @@ void blk_rq_init(struct request_queue *q, struct request *rq)
->  	rq->tag = BLK_MQ_NO_TAG;
->  	rq->internal_tag = BLK_MQ_NO_TAG;
->  	rq->start_time_ns = ktime_get_ns();
-> -	rq->part = NULL;
->  	blk_crypto_rq_set_defaults(rq);
->  }
->  EXPORT_SYMBOL(blk_rq_init);
-> @@ -368,7 +369,6 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
->  		rq->start_time_ns = ktime_get_ns();
->  	else
->  		rq->start_time_ns = 0;
-> -	rq->part = NULL;
->  #ifdef CONFIG_BLK_RQ_ALLOC_TIME
->  	rq->alloc_time_ns = alloc_time_ns;
->  #endif
-> @@ -687,11 +687,11 @@ static void req_bio_endio(struct request *rq, struct bio *bio,
->  
->  static void blk_account_io_completion(struct request *req, unsigned int bytes)
->  {
-> -	if (req->part && blk_do_io_stat(req)) {
-> +	if (blk_do_io_stat(req)) {
->  		const int sgrp = op_stat_group(req_op(req));
->  
->  		part_stat_lock();
-> -		part_stat_add(req->part, sectors[sgrp], bytes >> 9);
-> +		part_stat_add(req->bio->bi_bdev, sectors[sgrp], bytes >> 9);
->  		part_stat_unlock();
->  	}
->  }
-> @@ -859,11 +859,12 @@ EXPORT_SYMBOL_GPL(blk_update_request);
->  static void __blk_account_io_done(struct request *req, u64 now)
->  {
->  	const int sgrp = op_stat_group(req_op(req));
-> +	struct block_device *bdev = req->bio->bi_bdev;
+From: Mingzhe Zou <mingzhe.zou@easystack.cn>
 
-Then you need to move account_io_done before calling blk_update_request().
+The RX/TX threads for iSCSI connection can be scheduled to
+any online cpus, and will not be rescheduled.
 
+If bind other heavy load threads with iSCSI connection
+RX/TX thread to the same cpu, the iSCSI performance will
+be worse.
 
-thanks,
-Ming
+This patch add iscsi/cpus_allowed_list in configfs. The
+available cpus set of iSCSI connection RX/TX threads is
+allowed_cpus & online_cpus. If it is modified, all RX/TX
+threads will be rescheduled.
+
+Signed-off-by: Mingzhe Zou <mingzhe.zou@easystack.cn>
+---
+ drivers/target/iscsi/iscsi_target.c          | 21 ++++++++++--
+ drivers/target/iscsi/iscsi_target.h          | 17 ++++++++++
+ drivers/target/iscsi/iscsi_target_configfs.c | 34 ++++++++++++++++++++
+ drivers/target/iscsi/iscsi_target_login.c    |  7 ++++
+ include/target/iscsi/iscsi_target_core.h     |  1 +
+ 5 files changed, 78 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 2c54c5d8412d..a18d3fc3cfd1 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -693,6 +693,11 @@ static int __init iscsi_target_init_module(void)
+ 	mutex_init(&auth_id_lock);
+ 	idr_init(&tiqn_idr);
+ 
++	/*
++	 * allow all cpus run iscsi_ttx and iscsi_trx
++	 */
++	cpumask_setall(&__iscsi_allowed_cpumask);
++
+ 	ret = target_register_template(&iscsi_ops);
+ 	if (ret)
+ 		goto out;
+@@ -3587,6 +3592,15 @@ static int iscsit_send_reject(
+ void iscsit_thread_get_cpumask(struct iscsi_conn *conn)
+ {
+ 	int ord, cpu;
++	cpumask_t conn_allowed_cpumask;
++
++	/*
++	 * The available cpus set of iSCSI connection's RX/TX threads
++	 */
++	cpumask_and(&conn_allowed_cpumask,
++		&__iscsi_allowed_cpumask,
++		cpu_online_mask);
++
+ 	/*
+ 	 * bitmap_id is assigned from iscsit_global->ts_bitmap from
+ 	 * within iscsit_start_kthreads()
+@@ -3595,8 +3609,9 @@ void iscsit_thread_get_cpumask(struct iscsi_conn *conn)
+ 	 * iSCSI connection's RX/TX threads will be scheduled to
+ 	 * execute upon.
+ 	 */
+-	ord = conn->bitmap_id % cpumask_weight(cpu_online_mask);
+-	for_each_online_cpu(cpu) {
++	cpumask_clear(conn->conn_cpumask);
++	ord = conn->bitmap_id % cpumask_weight(&conn_allowed_cpumask);
++	for_each_cpu(cpu, &conn_allowed_cpumask) {
+ 		if (ord-- == 0) {
+ 			cpumask_set_cpu(cpu, conn->conn_cpumask);
+ 			return;
+@@ -3821,6 +3836,7 @@ int iscsi_target_tx_thread(void *arg)
+ 		 * Ensure that both TX and RX per connection kthreads
+ 		 * are scheduled to run on the same CPU.
+ 		 */
++		iscsit_thread_reschedule(conn);
+ 		iscsit_thread_check_cpumask(conn, current, 1);
+ 
+ 		wait_event_interruptible(conn->queues_wq,
+@@ -3966,6 +3982,7 @@ static void iscsit_get_rx_pdu(struct iscsi_conn *conn)
+ 		 * Ensure that both TX and RX per connection kthreads
+ 		 * are scheduled to run on the same CPU.
+ 		 */
++		iscsit_thread_reschedule(conn);
+ 		iscsit_thread_check_cpumask(conn, current, 0);
+ 
+ 		memset(&iov, 0, sizeof(struct kvec));
+diff --git a/drivers/target/iscsi/iscsi_target.h b/drivers/target/iscsi/iscsi_target.h
+index b35a96ded9c1..cb97a316d76d 100644
+--- a/drivers/target/iscsi/iscsi_target.h
++++ b/drivers/target/iscsi/iscsi_target.h
+@@ -57,4 +57,21 @@ extern struct kmem_cache *lio_r2t_cache;
+ extern struct ida sess_ida;
+ extern struct mutex auth_id_lock;
+ 
++extern cpumask_t __iscsi_allowed_cpumask;
++
++static inline void iscsit_thread_reschedule(struct iscsi_conn *conn)
++{
++	/*
++	 * If __iscsi_allowed_cpumask modified, reschedule iSCSI connection's
++	 * RX/TX threads update conn->allowed_cpumask.
++	 */
++	if (!cpumask_equal(&__iscsi_allowed_cpumask, conn->allowed_cpumask)) {
++		iscsit_thread_get_cpumask(conn);
++		conn->conn_tx_reset_cpumask = 1;
++		conn->conn_rx_reset_cpumask = 1;
++		cpumask_copy(conn->allowed_cpumask,
++			&__iscsi_allowed_cpumask);
++	}
++}
++
+ #endif   /*** ISCSI_TARGET_H ***/
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index 2a9de24a8bbe..dc12b1695838 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -1127,8 +1127,42 @@ static ssize_t lio_target_wwn_lio_version_show(struct config_item *item,
+ 
+ CONFIGFS_ATTR_RO(lio_target_wwn_, lio_version);
+ 
++cpumask_t __iscsi_allowed_cpumask;
++
++static ssize_t lio_target_wwn_cpus_allowed_list_show(
++		struct config_item *item, char *page)
++{
++	return sprintf(page, "%*pbl\n",
++		cpumask_pr_args(&__iscsi_allowed_cpumask));
++}
++
++static ssize_t lio_target_wwn_cpus_allowed_list_store(
++		struct config_item *item, const char *page, size_t count)
++{
++	int ret;
++	char *orig;
++	cpumask_t new_allowed_cpumask;
++
++	orig = kstrdup(page, GFP_KERNEL);
++	if (!orig)
++		return -ENOMEM;
++
++	cpumask_clear(&new_allowed_cpumask);
++	ret = cpulist_parse(orig, &new_allowed_cpumask);
++
++	kfree(orig);
++	if (ret != 0)
++		return ret;
++
++	cpumask_copy(&__iscsi_allowed_cpumask, &new_allowed_cpumask);
++	return count;
++}
++
++CONFIGFS_ATTR(lio_target_wwn_, cpus_allowed_list);
++
+ static struct configfs_attribute *lio_target_wwn_attrs[] = {
+ 	&lio_target_wwn_attr_lio_version,
++	&lio_target_wwn_attr_cpus_allowed_list,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index 1a9c50401bdb..910f35e4648a 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -1129,8 +1129,15 @@ static struct iscsi_conn *iscsit_alloc_conn(struct iscsi_np *np)
+ 		goto free_conn_ops;
+ 	}
+ 
++	if (!zalloc_cpumask_var(&conn->allowed_cpumask, GFP_KERNEL)) {
++		pr_err("Unable to allocate conn->allowed_cpumask\n");
++		goto free_conn_cpumask;
++	}
++
+ 	return conn;
+ 
++free_conn_cpumask:
++	free_cpumask_var(conn->allowed_cpumask);
+ free_conn_ops:
+ 	kfree(conn->conn_ops);
+ put_transport:
+diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+index 1eccb2ac7d02..c5e9cad187cf 100644
+--- a/include/target/iscsi/iscsi_target_core.h
++++ b/include/target/iscsi/iscsi_target_core.h
+@@ -580,6 +580,7 @@ struct iscsi_conn {
+ 	struct ahash_request	*conn_tx_hash;
+ 	/* Used for scheduling TX and RX connection kthreads */
+ 	cpumask_var_t		conn_cpumask;
++	cpumask_var_t		allowed_cpumask;
+ 	unsigned int		conn_rx_reset_cpumask:1;
+ 	unsigned int		conn_tx_reset_cpumask:1;
+ 	/* list_head of struct iscsi_cmd for this connection */
+-- 
+2.17.1
 
