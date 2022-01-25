@@ -2,161 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9D4FC43217
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 19:28:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57A68C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 19:36:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230038AbiAYT2h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 14:28:37 -0500
-Received: from mail-pl1-f175.google.com ([209.85.214.175]:35700 "EHLO
-        mail-pl1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229950AbiAYT2c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2022 14:28:32 -0500
-Received: by mail-pl1-f175.google.com with SMTP id d18so7633582plg.2;
-        Tue, 25 Jan 2022 11:28:32 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=Rkz5i91jrZJto37j3RGSd05f/eRfvo2BCm796nin8Vs=;
-        b=XRSGOlm1VFqT3avvfzptjdr/V8D9yTVMulgMxGpZ7G7ejzNVUmBrSCSSzGdQIbyBGA
-         wLOATfMRkgFf7AKjLokOWmvQ71CTQzSyBSMu32dH9GIJwiRDS5KY51i2SYfY0XPneHL/
-         ryCWbdsIcvWIxwUcQruluk6MN1ULgD5779AyhvV50OPqRmw+gqJ494us1srnl3Ds/4Tw
-         FA+szLQkz+NTKT5gBSs8lhlo3if8ALpz98+fE8QN7vc+AWMtHB22xJKpNFyz/WEPjT5a
-         EUJbOhxxGarJRbtGkRONvQB963Qct9mbEQnP1NF+wi7cC9Cppqh/vlLxWz03d0sdhqgn
-         bGnA==
-X-Gm-Message-State: AOAM533sXRFtcUNigiJ0DQlIB32sZGa/bv9zSZa0r8EZkSOwfSQbHV9n
-        CPnYdKZ9giKc43jEewCH4OA=
-X-Google-Smtp-Source: ABdhPJyeNd/r+jQn3mMtMf9He8DTH104dq3dEwAvQtFQxWx1zXikeSDUCeamDKcdFDb0ku5F8bxZDQ==
-X-Received: by 2002:a17:902:6bc9:b0:149:fdf1:f031 with SMTP id m9-20020a1709026bc900b00149fdf1f031mr19734916plt.58.1643138906187;
-        Tue, 25 Jan 2022 11:28:26 -0800 (PST)
-Received: from localhost ([2601:647:5b00:ece0:aab:34ff:52ca:a7a5])
-        by smtp.gmail.com with ESMTPSA id qe15sm1162214pjb.47.2022.01.25.11.28.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Jan 2022 11:28:25 -0800 (PST)
-Date:   Tue, 25 Jan 2022 11:28:24 -0800
-From:   Moritz Fischer <mdf@kernel.org>
-To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc:     arnd@arndb.de, hch@infradead.org, akpm@linux-foundation.org,
-        rth@twiddle.net, ink@jurassic.park.msu.ru, mattst88@gmail.com,
-        mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
-        davem@davemloft.net, airlied@linux.ie, vkoul@kernel.org,
-        hao.wu@intel.com, trix@redhat.com, mdf@kernel.org,
-        yilun.xu@intel.com, awalls@md.metrocast.net, mchehab@kernel.org,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, mporter@kernel.crashing.org,
-        alex.bou9@gmail.com, bhelgaas@google.com,
-        linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        sparclinux@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-fpga@vger.kernel.org, linux-media@vger.kernel.org,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH 00/16] Remove usage of the deprecated "pci-dma-compat.h"
- API
-Message-ID: <YfBPWB9m5TWcZuFY@epycbox.lan>
-References: <cover.1641500561.git.christophe.jaillet@wanadoo.fr>
+        id S230307AbiAYTgG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 14:36:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52060 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230315AbiAYTfp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2022 14:35:45 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BC2DC061755;
+        Tue, 25 Jan 2022 11:35:30 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 01B78B819D9;
+        Tue, 25 Jan 2022 19:35:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91FC3C340E6;
+        Tue, 25 Jan 2022 19:35:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1643139327;
+        bh=2SKgMeaepEa/3fqmOk3qpuRploR2lWhnOwQ1mCTG4l8=;
+        h=Date:From:To:Cc:Subject:From;
+        b=svmfcgT96x5RmVksMCBJvYdIuMEaOvAt+P5FqTHqYL1XJONcH3ydicPxs5N35LEUb
+         9cCSgKfYet6QPhmh/03Vx6xIZ55/j/ULba+Iua+QuhGaVVDLRZeN7rV/tVP2t0wjEu
+         yVV7a48kjsXtLdRBUsbPDT81z5jHvlR39f5tYG9h95l7tjJp47S1hSZJ8aGaRz2XKI
+         mXkwr3J4wJSeZaWQOaQtZpuXupwcELyp+qlp/Au30u+qNuAaLkmAypZ/wC8WSrFbl9
+         5OQmfLCr4mb4wox0Sd9B2Vi2HYPOBD0/RpCDgc/PFD+oNGC4Zh7njIlUZhxhEuA/dZ
+         L+gUhbJCnczXA==
+Date:   Tue, 25 Jan 2022 13:42:13 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH][next] scsi: storvsc: Use struct_size() helper in
+ storvsc_queuecommand()
+Message-ID: <20220125194213.GA74670@embeddedor>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cover.1641500561.git.christophe.jaillet@wanadoo.fr>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jan 06, 2022 at 10:45:13PM +0100, Christophe JAILLET wrote:
-> This serie axes all the remaining usages of the deprecated "pci-dma-compat.h"
-> API.
-> 
-> All these patches have already been posted.
-> 
-> They have been generated with a coccinelle script.
-> The tricky parts are patches that use dma_alloc_coherent() because the correct
-> GFP flag has to be used in place of the previous embedded GFP_ATOMIC.
-> 
-> Patches 1-3 are already Reviewed. References to the corresponding mail is
-> given below the ---
-> 
-> Patch 1-2,4-10 are just generated from the coccinelle script. Only too long
-> lines have been hand modified. dma_alloc_coherent() modification are NOT part
-> of these patches.
-> 
-> Patch 3 also includes some 'dma_set_mask_and_coherent()' instead of
-> 'pci_set_dma_mask()/pci_set_consistent_dma_mask()'.
-> I've left this additional modification because it was reviewed with it.
-> 
-> Patch 10-15 are the tricky parts. Explanation of which GFP flag is the right one
-> is given in each patch. It has been divided in several patches to ease review.
-> 
-> Patch 15 is the only one I'm slighly unsure with. The old code was using a
-> GFP_USER flag in the function. I'm not familiar with it.
-> I *guess*  that GFP_KERNEL is fine, but maybe it should also be GFP_USER or left
-> as GFP_ATOMIC so that nothing is changed.
-> 
-> Patch 16 is the last step that remove "pci-dma-compat.h" and its only usage.
-> 
-> 
-> All patches, exept 1-2,6 that are architecture specific, have been compile tested.
-> 
-> 
-> After all that, a few rst files, 1 or 2 strings in error messages and some
-> error branching labels should still need some attention. 
-> This is some minor issues.
-> 
-> 
-> Only the cover letter is sent to every one. Each patch is sent to the
-> corresponding maintainer(s) + Andrew Morton, Christoph Hellwig and Arnd Bergmann.
-> 
-> 
-> Best regards.
-> 
-> 
-> Christophe JAILLET (16):
->   alpha: Remove usage of the deprecated "pci-dma-compat.h" API
->   floppy: Remove usage of the deprecated "pci-dma-compat.h" API
->   fpga: dfl: pci: Remove usage of the deprecated "pci-dma-compat.h" API
->   media: Remove usage of the deprecated "pci-dma-compat.h" API
->   agp/intel: Remove usage of the deprecated "pci-dma-compat.h" API
->   sparc: Remove usage of the deprecated "pci-dma-compat.h" API
->   dmaengine: pch_dma: Remove usage of the deprecated "pci-dma-compat.h"
->     API
->   rapidio/tsi721: Remove usage of the deprecated "pci-dma-compat.h" API
->   media: v4l2-pci-skeleton: Remove usage of the deprecated
->     "pci-dma-compat.h" API
->   scsi: message: fusion: Remove usage of the deprecated
->     "pci-dma-compat.h" API
->   scsi: mptbase: Use dma_alloc_coherent() in 'mpt_alloc_fw_memory()'
->   scsi: mptbase: Use dma_alloc_coherent()
->   scsi: mptsas: Use dma_alloc_coherent() in
->     mptsas_exp_repmanufacture_info()
->   scsi: mptsas: Use dma_alloc_coherent()
->   scsi: mptctl: Use dma_alloc_coherent()
->   PCI: Remove usage of the deprecated "pci-dma-compat.h" API
-> 
->  arch/alpha/include/asm/floppy.h     |   7 +-
->  arch/alpha/kernel/pci_iommu.c       |  12 +--
->  arch/powerpc/include/asm/floppy.h   |   8 +-
->  arch/sparc/kernel/ioport.c          |   2 +-
->  drivers/char/agp/intel-gtt.c        |  26 ++---
->  drivers/dma/pch_dma.c               |   2 +-
->  drivers/fpga/dfl-pci.c              |  14 +--
->  drivers/media/pci/cx18/cx18-queue.h |   6 +-
->  drivers/media/pci/ivtv/ivtv-queue.h |  25 +++--
->  drivers/media/pci/ivtv/ivtv-udma.h  |   8 +-
->  drivers/message/fusion/mptbase.c    | 149 ++++++++++++++++------------
->  drivers/message/fusion/mptctl.c     |  82 +++++++++------
->  drivers/message/fusion/mptlan.c     |  90 +++++++++--------
->  drivers/message/fusion/mptsas.c     |  94 +++++++++---------
->  drivers/rapidio/devices/tsi721.c    |   8 +-
->  include/linux/pci-dma-compat.h      | 129 ------------------------
->  include/linux/pci.h                 |   3 -
->  samples/v4l/v4l2-pci-skeleton.c     |   2 +-
->  18 files changed, 289 insertions(+), 378 deletions(-)
->  delete mode 100644 include/linux/pci-dma-compat.h
-> 
-> -- 
-> 2.32.0
-> 
-Applied [03/16] to linux-fpga for-next.
+Make use of the struct_size() helper instead of an open-coded version,
+in order to avoid any potential type mistakes or integer overflows that,
+in the worst scenario, could lead to heap overflows.
 
-Thanks,
-Moritz
+Also, address the following sparse warnings:
+drivers/scsi/storvsc_drv.c:1843:39: warning: using sizeof on a flexible structure
+
+Link: https://github.com/KSPP/linux/issues/174
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+ drivers/scsi/storvsc_drv.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 9a0bba5a51a7..89c20dfc6609 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1755,7 +1755,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 	struct scatterlist *sgl;
+ 	struct vmscsi_request *vm_srb;
+ 	struct vmbus_packet_mpb_array  *payload;
+-	u32 payload_sz;
++	size_t payload_sz;
+ 	u32 length;
+ 
+ 	if (vmstor_proto_version <= VMSTOR_PROTO_VERSION_WIN8) {
+@@ -1839,8 +1839,8 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 
+ 		if (hvpg_count > MAX_PAGE_BUFFER_COUNT) {
+ 
+-			payload_sz = (hvpg_count * sizeof(u64) +
+-				      sizeof(struct vmbus_packet_mpb_array));
++			payload_sz = struct_size(payload, range.pfn_array,
++						 hvpg_count);
+ 			payload = kzalloc(payload_sz, GFP_ATOMIC);
+ 			if (!payload)
+ 				return SCSI_MLQUEUE_DEVICE_BUSY;
+-- 
+2.27.0
+
