@@ -2,90 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2595AC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 09:12:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC9D7C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 09:19:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1456606AbiAYJMD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 04:12:03 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:25558 "EHLO
+        id S1349164AbiAYJT6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 04:19:58 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:39744 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1453719AbiAYIze (ORCPT
+        by vger.kernel.org with ESMTP id S1456220AbiAYJKD (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Jan 2022 03:55:34 -0500
+        Tue, 25 Jan 2022 04:10:03 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643100932;
+        s=mimecast20190719; t=1643101800;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=qbUXbdIpxR2xFT2q0NmyKpU21hdp1+TV9GE31xW0gGk=;
-        b=Ow4CuFlhdlXFdtjy+bY9zf+jnQO5VBenrfEbLHLeEVChgNyp4k75tbS4Gx5bx+flCkqZ+W
-        fJkXAFQULrbDBC4NM0f780BXVF6MvZPoKWrLonaojGqyv87sZGPUBKynxhrFxPZV+NufvG
-        oqfnqs7yNkyItiWVOzzVXBonW3pgcjg=
+        bh=xIYDHT/wi2RbZuBVptrIISb//TVLfsExKGTY/EiU5iA=;
+        b=f3ujSgXHvQXKMS0tjr+UorXcm+VIAnMCRustvfrmat3jbrkI0aC8h9lTXR3YQvwOyZkmv2
+        owOcBb5addlUv4WSZQhrl6wcyL/Ji0vU30CccBj1pjaneSRWU7V20bCxTv4WkeodzKDHNE
+        /sY39Zo5t9iWOdflwO76vDkXlFGRSZo=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-597-sZYhBf1lO---MmiEipssQg-1; Tue, 25 Jan 2022 03:55:31 -0500
-X-MC-Unique: sZYhBf1lO---MmiEipssQg-1
+ us-mta-382-_N3xcEKzNiyevSWK1dOi3g-1; Tue, 25 Jan 2022 04:09:57 -0500
+X-MC-Unique: _N3xcEKzNiyevSWK1dOi3g-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EEB19190A7A4;
-        Tue, 25 Jan 2022 08:55:29 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 494E52F25;
+        Tue, 25 Jan 2022 09:09:56 +0000 (UTC)
 Received: from T590 (ovpn-8-22.pek2.redhat.com [10.72.8.22])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 098C01F30C;
-        Tue, 25 Jan 2022 08:54:48 +0000 (UTC)
-Date:   Tue, 25 Jan 2022 16:54:43 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 01EEE1F2E7;
+        Tue, 25 Jan 2022 09:09:47 +0000 (UTC)
+Date:   Tue, 25 Jan 2022 17:09:42 +0800
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH V2 09/13] scsi: force unfreezing queue into atomic mode
-Message-ID: <Ye+605vZEyx3ofi2@T590>
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH V2 05/13] block: only account passthrough IO from
+ userspace
+Message-ID: <Ye++VmBkg0I8Lq8+@T590>
 References: <20220122111054.1126146-1-ming.lei@redhat.com>
- <20220122111054.1126146-10-ming.lei@redhat.com>
- <20220124131516.GH27269@lst.de>
- <Ye80kxTBojm6GN8k@T590>
- <20220125072739.GA27777@lst.de>
+ <20220122111054.1126146-6-ming.lei@redhat.com>
+ <20220124130555.GD27269@lst.de>
+ <Ye8xleeYZfmwA3D7@T590>
+ <20220125061634.GA26495@lst.de>
+ <20220125071906.GA27674@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220125072739.GA27777@lst.de>
+In-Reply-To: <20220125071906.GA27674@lst.de>
 X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jan 25, 2022 at 08:27:39AM +0100, Christoph Hellwig wrote:
-> On Tue, Jan 25, 2022 at 07:21:55AM +0800, Ming Lei wrote:
-> > > > @@ -3670,7 +3670,7 @@ static void scsi_disk_release(struct device *dev)
-> > > >  	 * in case multiple processes open a /dev/sd... node concurrently.
-> > > >  	 */
-> > > >  	blk_mq_freeze_queue(q);
-> > > > -	blk_mq_unfreeze_queue(q);
-> > > > +	__blk_mq_unfreeze_queue(q, true);
-> > > 
-> > > I think the right thing here is to drop the freeze/unfreeze pair.
-> > > Now that del_gendisk properly freezes the queue, we don't need this
-> > > protection as the issue that Bart fixed with it can't happen any more.
-> > 
-> > As you see, the last patch removes freeze/unfreeze pair in del_gendisk(),
-> > which looks not very useful: it can't drain IO on bio based driver, and
-> > del_gendisk() is supposed to provide consistent behavior for both request
-> > and bio based driver.
+On Tue, Jan 25, 2022 at 08:19:06AM +0100, Christoph Hellwig wrote:
+> On Tue, Jan 25, 2022 at 07:16:34AM +0100, Christoph Hellwig wrote:
+> > So why not key off accouning off "rq->bio && rq->bio->bi_bdev"
+> > and remove the need for the flag and the second half of the assignment
+> > above?  That is much less error probe and removes code size.
 > 
-> So what is the advantage of trying to remove the freeze from where
-> it belongs (common unregister code) while keeping it where it is a bandaid
-> (driver specific unregister code)?
+> Something like this, lightly tested:
+> 
 
-freeze in common unregister code is actually not good, because it provide
-nothing for bio based driver, so we can't move blk-cgroup shutdown into
-del_gendisk. Also we can't move elevator shutdown to del_gendisk for
-similar reason.
+Follows another simple way by accounting all request with bio attached,
+except for requests with kernel buffer.
 
-Secondly freeze is pretty slow in percpu mode, so why slow down removing every
-disk just for scsi's bandaid?
+
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 4526adde0156..1210b51c62ae 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -630,6 +630,8 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+ 	struct bio *bio;
+ 	int ret;
+ 
++	rq->rq_flags &= ~RQF_IO_STAT;
++
+ 	if (len > (queue_max_hw_sectors(q) << 9))
+ 		return -EINVAL;
+ 	if (!len || !kbuf)
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 72ae9955cf27..eac589d2c340 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -903,7 +903,7 @@ static void __blk_account_io_start(struct request *rq)
+ 	/* passthrough requests can hold bios that do not have ->bi_bdev set */
+ 	if (rq->bio && rq->bio->bi_bdev)
+ 		rq->part = rq->bio->bi_bdev;
+-	else if (rq->q->disk)
++	else if (rq->q->disk && rq->bio)
+ 		rq->part = rq->q->disk->part0;
+ 
+ 	part_stat_lock();
 
 
 Thanks,
