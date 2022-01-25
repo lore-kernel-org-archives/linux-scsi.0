@@ -2,60 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 588FDC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 13:40:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55A0AC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 14:10:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1443433AbiAYNkG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 08:40:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53608 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1386420AbiAYNhs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2022 08:37:48 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CBB1C061748;
-        Tue, 25 Jan 2022 05:37:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=hIWwu7CZHoqXC33UGi3MUTqAEWUOsFTRpTUBCT7WnHs=; b=V1Pkn7653tgtgPGveH+VmAJb8P
-        JneUFzY5tzZW+hK5YC2E4wglaygLKzwoMcKLLqpmH3STe/DK3eT8OP+WqgPHOB8YFR2NPOR4jD4iu
-        jgncI+6thbj9FCmzMg7gRrHxfIwHj378nk9L8aD35LRNJH4gs3B0Gt9bvN1bLBauzDKWXSe0QgG7I
-        yUBQ/Dog3pZd1e6UX/qmuMe8lAzx6sfFBNY4ozLo6M2uRqmSj4FkcKoaxv/AFyojnPe7ttY6TIvVI
-        uVs0aY5l2tTXy/RvhvtisYr7YaTfCC9i1+pv6slMX668samW7c52CBb2yuWKoKvaAeqC1fsHL1B9z
-        Zn2SZc1Q==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nCM0k-002rKG-AM; Tue, 25 Jan 2022 13:37:26 +0000
-Date:   Tue, 25 Jan 2022 13:37:26 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     John Garry <john.garry@huawei.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        artur.paszkiewicz@intel.com, jinpu.wang@cloud.ionos.com,
-        chenxiang66@hisilicon.com, Ajish.Koshy@microchip.com,
-        yanaijie@huawei.com, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com, liuqi115@huawei.com, Viswas.G@microchip.com,
-        damien.lemoal@opensource.wdc.com
+        id S1386289AbiAYOKQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 09:10:16 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4511 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1386082AbiAYOFx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2022 09:05:53 -0500
+Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JjpSq2Dnpz67ZkT;
+        Tue, 25 Jan 2022 22:02:19 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Tue, 25 Jan 2022 15:05:44 +0100
+Received: from [10.47.95.36] (10.47.95.36) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Tue, 25 Jan
+ 2022 14:05:43 +0000
 Subject: Re: [PATCH 05/16] scsi: libsas: Add struct sas_tmf_task
-Message-ID: <Ye/9Fs+JrtlMC+Mb@casper.infradead.org>
+To:     Matthew Wilcox <willy@infradead.org>
+CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <artur.paszkiewicz@intel.com>, <jinpu.wang@cloud.ionos.com>,
+        <chenxiang66@hisilicon.com>, <Ajish.Koshy@microchip.com>,
+        <yanaijie@huawei.com>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>, <liuqi115@huawei.com>,
+        <Viswas.G@microchip.com>, <damien.lemoal@opensource.wdc.com>
 References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
  <1643110372-85470-6-git-send-email-john.garry@huawei.com>
+ <Ye/9Fs+JrtlMC+Mb@casper.infradead.org>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <6b31b15c-98d9-ee07-0092-cbcc5f5c71fe@huawei.com>
+Date:   Tue, 25 Jan 2022 14:05:11 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1643110372-85470-6-git-send-email-john.garry@huawei.com>
+In-Reply-To: <Ye/9Fs+JrtlMC+Mb@casper.infradead.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.95.36]
+X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jan 25, 2022 at 07:32:41PM +0800, John Garry wrote:
-> Some of the LLDDs which use libsas have their own definition of a struct
-> to hold TMF info, so add a common struct for libsas.
-> 
-> Also add an interim force phy id field for hisi_sas driver, which will be
-> removed once the STP "TMF" code is factored out.
-> 
-> Even though some LLDDs (pm8001) use a u32 for the tag, u16 should be
-> enough.
+On 25/01/2022 13:37, Matthew Wilcox wrote:
+>> Also add an interim force phy id field for hisi_sas driver, which will be
+>> removed once the STP "TMF" code is factored out.
+>>
+>> Even though some LLDDs (pm8001) use a u32 for the tag, u16 should be
+>> enough.
+> ... because pm8001 limits the number of tags to 1024.
+> .
 
-... because pm8001 limits the number of tags to 1024.
+Sure, but the pm8001 HW does has a 32b field, which is strange as the 
+SAS spec defines a 16b field in the task management Function information 
+unit "tag of task to be managed" field.
+
+Thanks,
+John
