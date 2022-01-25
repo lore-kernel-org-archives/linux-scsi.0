@@ -2,26 +2,26 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB98C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 11:44:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77855C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 11:44:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346819AbiAYLok (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 06:44:40 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4493 "EHLO
+        id S1382921AbiAYLoo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 06:44:44 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4495 "EHLO
         frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1382067AbiAYLin (ORCPT
+        with ESMTP id S1382095AbiAYLin (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2022 06:38:43 -0500
-Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JjlBs34Sdz687G4;
-        Tue, 25 Jan 2022 19:35:01 +0800 (CST)
+Received: from fraeml708-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JjlGW6D7Gz685YM;
+        Tue, 25 Jan 2022 19:38:11 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
+ fraeml708-chm.china.huawei.com (10.206.15.36) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 25 Jan 2022 12:38:26 +0100
+ 15.1.2308.21; Tue, 25 Jan 2022 12:38:33 +0100
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 25 Jan 2022 11:38:22 +0000
+ 15.1.2308.21; Tue, 25 Jan 2022 11:38:30 +0000
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
         <artur.paszkiewicz@intel.com>, <jinpu.wang@cloud.ionos.com>,
@@ -31,9 +31,9 @@ CC:     <yanaijie@huawei.com>, <linux-doc@vger.kernel.org>,
         <linuxarm@huawei.com>, <liuqi115@huawei.com>,
         <Viswas.G@microchip.com>, <damien.lemoal@opensource.wdc.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH 01/16] scsi: libsas: Use enum for response frame DATAPRES field
-Date:   Tue, 25 Jan 2022 19:32:37 +0800
-Message-ID: <1643110372-85470-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 03/16] scsi: hisi_sas: Delete unused I_T_NEXUS_RESET_PHYUP_TIMEOUT
+Date:   Tue, 25 Jan 2022 19:32:39 +0800
+Message-ID: <1643110372-85470-4-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
 References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
@@ -47,46 +47,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As defined in table 126 of the SAS spec 1.1, use an enum for the DATAPRES
-field, which makes reading the code easier.
+There is no user, so delete it.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/libsas/sas_task.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_task.c b/drivers/scsi/libsas/sas_task.c
-index 2966ead1d421..7240fd22b154 100644
---- a/drivers/scsi/libsas/sas_task.c
-+++ b/drivers/scsi/libsas/sas_task.c
-@@ -7,6 +7,12 @@
- #include <scsi/sas.h>
- #include <scsi/libsas.h>
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index f014e458edbb..61414a308906 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1801,8 +1801,6 @@ static int hisi_sas_abort_task_set(struct domain_device *device, u8 *lun)
+ 	return rc;
+ }
  
-+enum {
-+	NO_DATA = 0,
-+	RESPONSE_DATA = 1,
-+	SENSE_DATA = 2,
-+};
-+
- /* fill task_status_struct based on SSP response frame */
- void sas_ssp_task_response(struct device *dev, struct sas_task *task,
- 			   struct ssp_response_iu *iu)
-@@ -15,11 +21,11 @@ void sas_ssp_task_response(struct device *dev, struct sas_task *task,
- 
- 	tstat->resp = SAS_TASK_COMPLETE;
- 
--	if (iu->datapres == 0)
-+	if (iu->datapres == NO_DATA)
- 		tstat->stat = iu->status;
--	else if (iu->datapres == 1)
-+	else if (iu->datapres == RESPONSE_DATA)
- 		tstat->stat = iu->resp_data[3];
--	else if (iu->datapres == 2) {
-+	else if (iu->datapres == SENSE_DATA) {
- 		tstat->stat = SAS_SAM_STAT_CHECK_CONDITION;
- 		tstat->buf_valid_size =
- 			min_t(int, SAS_STATUS_BUF_SIZE,
+-#define I_T_NEXUS_RESET_PHYUP_TIMEOUT  (2 * HZ)
+-
+ static int hisi_sas_debug_I_T_nexus_reset(struct domain_device *device)
+ {
+ 	struct sas_phy *local_phy = sas_get_local_phy(device);
 -- 
 2.26.2
 
