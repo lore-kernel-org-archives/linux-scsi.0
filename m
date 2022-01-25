@@ -2,54 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06AF1C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF64C433FE
 	for <linux-scsi@archiver.kernel.org>; Tue, 25 Jan 2022 12:14:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352775AbiAYMOG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 07:14:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33946 "EHLO
+        id S1355833AbiAYMOZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 07:14:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1444546AbiAYMK4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2022 07:10:56 -0500
-Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 353DBC061757
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jan 2022 04:09:13 -0800 (PST)
-Received: by mail-ed1-x535.google.com with SMTP id n10so46678302edv.2
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Jan 2022 04:09:13 -0800 (PST)
+        with ESMTP id S1444678AbiAYMLB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2022 07:11:01 -0500
+Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D43C7C06175C
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Jan 2022 04:10:43 -0800 (PST)
+Received: by mail-ej1-x62b.google.com with SMTP id ka4so30323076ejc.11
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Jan 2022 04:10:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=4wac7eCHjjoR27WE2JN+TT1tiH9/RFWfh6DHtSMCbJY=;
-        b=J7o0o2udCFzNmRR9YWC0vB4fyZreNAYvCBo9+zv+4nhaBY5BCjzDDvpHeeYovjmxTX
-         G4PQoRM6+Fpr66xhNXnwHREbR3OWYxr0kx236kE4aYuScTYvnvw2q4j9IYqRL3w1Lchj
-         3QsRukt2RjMs9rVmBKv88ymKCXy/9Hwt3DA4a+3oOSIrKoGHIbD2K7+pGGJZ09skGLsy
-         YJJLvvSKGSqxYnkkKlk/nya3Ohh9gwDGk+aoDSvA4yv40KNd2g7iZzSrC1/meRGxF3gR
-         TSMknyPokHu8qWHjKJ2EBGgQlrSjbgpTFLalVi9tg3W2ugI/sIca2VLmEYRedUULS162
-         ECCg==
+        bh=E2Or7EOuVFAWdSwKGqZnK74jkCaCCYypnTmbKSXvhDk=;
+        b=eajOZBVMkXgp8q2tQR0NvldNEACMoGcRWQz4sT7LkkL+9fay1LIewB3BXBniT1+4Hu
+         ug0e9p2E+cJk06nbOWX0ebHaL2ILYT7g6W5cFUUJXz6ljvHONM90lbkP30XLdVCo2FaH
+         w4txMZT7RBKEV0TcXJKNKrKhm86rT48U48kbgCQEFb+Dl4MFzocH4kpd8ltCze9YwpfH
+         Y7ERPmnb7JzqNrb7WkbfDUkvJTPcWD/Ve60ytDu3s9OK48R4jIv1waifH87y7MCFGfQ0
+         Q2kNUB+8m1DkMuBtUu6gs0qt0fYs6RigpCoKBKj15UQsr1+Ka74QU//DnDgVFZ0X2hYz
+         GOdw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=4wac7eCHjjoR27WE2JN+TT1tiH9/RFWfh6DHtSMCbJY=;
-        b=JIaq6fEkewXzfUirga47Blc2PyJ16lH2kyBOc4oHSYAQORm8lCZJKaW5Jt/j5ydHoe
-         2jz1aU9qULJdDxTwUcMEtw50GHjjsd6M6w1BM0e49FsB3fy+R2+07UkwLhUKsI2RMKHz
-         Jeht4F3ApbrBxBW9whgFYkdAUd75l5r0xwGRzxCMsr0YMsuIqrq9b+5zN+WdHLak1H+4
-         Jhp0hFNSe5m5YwhX726ZIRBasLTf5LJBpJ1u4UPKkx7RtWfjSMfr80FzytCi04SFJnPd
-         vAPa/W+bfKlvPgLccgyX8280ieyS27llRsddQxFr/CknSUMo55D6R4crTwIUdjdph0tI
-         X1dQ==
-X-Gm-Message-State: AOAM531hQFwtB3ya0S5D7sILRWoCWhRFe0FJWXYVyOknOZ9oDfmu+nzt
-        GnTbWMNh0dU+oDmiJJpazlIgVBuddGW/tqBABw3+FA==
-X-Google-Smtp-Source: ABdhPJwFUNiPQ6ZMa5gM27wXDKRyeO/swCb4JPc+zt+CzKu5kWIFe759qCovWCs/xFBi1bad/SiqdukSSjUzYElMdAM=
-X-Received: by 2002:a05:6402:195:: with SMTP id r21mr19944269edv.174.1643112551677;
- Tue, 25 Jan 2022 04:09:11 -0800 (PST)
+        bh=E2Or7EOuVFAWdSwKGqZnK74jkCaCCYypnTmbKSXvhDk=;
+        b=qG4IzxwdV26N7sykoKFWik2g9/RzuhTdYwrrUiYnF1yPiw2uGl8emAeZW43RJhWnR2
+         dkcuCnBNXDQ/A0wObhFCYUbiZc1AGZ2LaB4yOAJ9eDlgFHxoNTrXSWrGQXSKMgS1T2z+
+         ACxXHXxaX5uh4jP0rkrUKI0qBhBx3jhD5YuhF0L2NtXaInIDxo93ymnAQc6bpceS0sKZ
+         TYEXy0OS0Jey4nBh4xmg17ih9izTF+wN209d6jscNZ56alwiOwIlaKu7H1sL9W5lNGc4
+         STGesPzQzSQja1J0Bpk1q8yAFQq0g2Ax1C6eN94Dhk7tZckxWW8m8IObraPIReywj/K4
+         KUuQ==
+X-Gm-Message-State: AOAM530wMFNSivOTOkWdcFGaNyuOpUpD3fN/2OKicFiUq+njSSURgmTA
+        3Ta/+tCPo9ni5mPesvvhFH7PyuUnHDJzWoL2CwBSVQ==
+X-Google-Smtp-Source: ABdhPJzqhDBNaDbY3FnQwZiIXxBTm6b7O6lM49HJyRnPwcvicTcxqP1cxpduVqiYq5cznKXAtxAZuKhRsB1ImLIAQFs=
+X-Received: by 2002:a17:907:3f84:: with SMTP id hr4mr16354442ejc.443.1643112642469;
+ Tue, 25 Jan 2022 04:10:42 -0800 (PST)
 MIME-Version: 1.0
-References: <1643110372-85470-1-git-send-email-john.garry@huawei.com> <1643110372-85470-3-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1643110372-85470-3-git-send-email-john.garry@huawei.com>
+References: <1643110372-85470-1-git-send-email-john.garry@huawei.com> <1643110372-85470-4-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1643110372-85470-4-git-send-email-john.garry@huawei.com>
 From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Tue, 25 Jan 2022 13:09:00 +0100
-Message-ID: <CAMGffEmDKBVT=VP4UEa9qUoTaTqTnuBKyEKCqngXOYLu9uG=9A@mail.gmail.com>
-Subject: Re: [PATCH 02/16] scsi: libsas: Delete lldd_clear_aca callback
+Date:   Tue, 25 Jan 2022 13:10:31 +0100
+Message-ID: <CAMGffEmofF+yhT1Lt8jZp-06+GLXOmNo3SEdNg5VWX0TnzCrPA@mail.gmail.com>
+Subject: Re: [PATCH 03/16] scsi: hisi_sas: Delete unused I_T_NEXUS_RESET_PHYUP_TIMEOUT
 To:     John Garry <john.garry@huawei.com>
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         artur.paszkiewicz@intel.com, jinpu.wang@ionos.com,
@@ -65,281 +65,28 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Tue, Jan 25, 2022 at 12:38 PM John Garry <john.garry@huawei.com> wrote:
 >
-> This callback is never called, so remove support.
+> There is no user, so delete it.
 >
 > Signed-off-by: John Garry <john.garry@huawei.com>
-Indeed.
 Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
 Thx!
 > ---
->  Documentation/scsi/libsas.rst         |  2 --
->  drivers/scsi/aic94xx/aic94xx.h        |  1 -
->  drivers/scsi/aic94xx/aic94xx_init.c   |  1 -
->  drivers/scsi/aic94xx/aic94xx_tmf.c    |  9 ---------
->  drivers/scsi/hisi_sas/hisi_sas_main.c | 12 ------------
->  drivers/scsi/isci/init.c              |  1 -
->  drivers/scsi/isci/task.c              | 18 ------------------
->  drivers/scsi/isci/task.h              |  4 ----
->  drivers/scsi/mvsas/mv_init.c          |  1 -
->  drivers/scsi/mvsas/mv_sas.c           | 11 -----------
->  drivers/scsi/mvsas/mv_sas.h           |  1 -
->  drivers/scsi/pm8001/pm8001_init.c     |  1 -
->  drivers/scsi/pm8001/pm8001_sas.c      |  8 --------
->  drivers/scsi/pm8001/pm8001_sas.h      |  1 -
->  include/scsi/libsas.h                 |  1 -
->  15 files changed, 72 deletions(-)
+>  drivers/scsi/hisi_sas/hisi_sas_main.c | 2 --
+>  1 file changed, 2 deletions(-)
 >
-> diff --git a/Documentation/scsi/libsas.rst b/Documentation/scsi/libsas.rst
-> index 6589dfefbc02..305a253d5c3b 100644
-> --- a/Documentation/scsi/libsas.rst
-> +++ b/Documentation/scsi/libsas.rst
-> @@ -207,7 +207,6 @@ Management Functions (TMFs) described in SAM::
->         /* Task Management Functions. Must be called from process context. */
->         int (*lldd_abort_task)(struct sas_task *);
->         int (*lldd_abort_task_set)(struct domain_device *, u8 *lun);
-> -       int (*lldd_clear_aca)(struct domain_device *, u8 *lun);
->         int (*lldd_clear_task_set)(struct domain_device *, u8 *lun);
->         int (*lldd_I_T_nexus_reset)(struct domain_device *);
->         int (*lldd_lu_reset)(struct domain_device *, u8 *lun);
-> @@ -262,7 +261,6 @@ can look like this (called last thing from probe())
->
->             my_ha->sas_ha.lldd_abort_task     = my_abort_task;
->             my_ha->sas_ha.lldd_abort_task_set = my_abort_task_set;
-> -           my_ha->sas_ha.lldd_clear_aca      = my_clear_aca;
->             my_ha->sas_ha.lldd_clear_task_set = my_clear_task_set;
->             my_ha->sas_ha.lldd_I_T_nexus_reset= NULL; (2)
->             my_ha->sas_ha.lldd_lu_reset       = my_lu_reset;
-> diff --git a/drivers/scsi/aic94xx/aic94xx.h b/drivers/scsi/aic94xx/aic94xx.h
-> index 8f24180646c2..f595bc2ee45e 100644
-> --- a/drivers/scsi/aic94xx/aic94xx.h
-> +++ b/drivers/scsi/aic94xx/aic94xx.h
-> @@ -60,7 +60,6 @@ void asd_set_dmamode(struct domain_device *dev);
->  /* ---------- TMFs ---------- */
->  int  asd_abort_task(struct sas_task *);
->  int  asd_abort_task_set(struct domain_device *, u8 *lun);
-> -int  asd_clear_aca(struct domain_device *, u8 *lun);
->  int  asd_clear_task_set(struct domain_device *, u8 *lun);
->  int  asd_lu_reset(struct domain_device *, u8 *lun);
->  int  asd_I_T_nexus_reset(struct domain_device *dev);
-> diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-> index 7a78606598c4..954d0c5ae2e2 100644
-> --- a/drivers/scsi/aic94xx/aic94xx_init.c
-> +++ b/drivers/scsi/aic94xx/aic94xx_init.c
-> @@ -960,7 +960,6 @@ static struct sas_domain_function_template aic94xx_transport_functions = {
->
->         .lldd_abort_task        = asd_abort_task,
->         .lldd_abort_task_set    = asd_abort_task_set,
-> -       .lldd_clear_aca         = asd_clear_aca,
->         .lldd_clear_task_set    = asd_clear_task_set,
->         .lldd_I_T_nexus_reset   = asd_I_T_nexus_reset,
->         .lldd_lu_reset          = asd_lu_reset,
-> diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
-> index 0eb6e206a2b4..0ff0d6506ccf 100644
-> --- a/drivers/scsi/aic94xx/aic94xx_tmf.c
-> +++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
-> @@ -644,15 +644,6 @@ int asd_abort_task_set(struct domain_device *dev, u8 *lun)
->         return res;
->  }
->
-> -int asd_clear_aca(struct domain_device *dev, u8 *lun)
-> -{
-> -       int res = asd_initiate_ssp_tmf(dev, lun, TMF_CLEAR_ACA, 0);
-> -
-> -       if (res == TMF_RESP_FUNC_COMPLETE)
-> -               asd_clear_nexus_I_T_L(dev, lun);
-> -       return res;
-> -}
-> -
->  int asd_clear_task_set(struct domain_device *dev, u8 *lun)
->  {
->         int res = asd_initiate_ssp_tmf(dev, lun, TMF_CLEAR_TASK_SET, 0);
 > diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> index a05ec7aece5a..f014e458edbb 100644
+> index f014e458edbb..61414a308906 100644
 > --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 > +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -1801,17 +1801,6 @@ static int hisi_sas_abort_task_set(struct domain_device *device, u8 *lun)
+> @@ -1801,8 +1801,6 @@ static int hisi_sas_abort_task_set(struct domain_device *device, u8 *lun)
 >         return rc;
 >  }
 >
-> -static int hisi_sas_clear_aca(struct domain_device *device, u8 *lun)
-> -{
-> -       struct hisi_sas_tmf_task tmf_task;
-> -       int rc;
+> -#define I_T_NEXUS_RESET_PHYUP_TIMEOUT  (2 * HZ)
 > -
-> -       tmf_task.tmf = TMF_CLEAR_ACA;
-> -       rc = hisi_sas_debug_issue_ssp_tmf(device, lun, &tmf_task);
-> -
-> -       return rc;
-> -}
-> -
->  #define I_T_NEXUS_RESET_PHYUP_TIMEOUT  (2 * HZ)
->
 >  static int hisi_sas_debug_I_T_nexus_reset(struct domain_device *device)
-> @@ -2341,7 +2330,6 @@ static struct sas_domain_function_template hisi_sas_transport_ops = {
->         .lldd_control_phy       = hisi_sas_control_phy,
->         .lldd_abort_task        = hisi_sas_abort_task,
->         .lldd_abort_task_set    = hisi_sas_abort_task_set,
-> -       .lldd_clear_aca         = hisi_sas_clear_aca,
->         .lldd_I_T_nexus_reset   = hisi_sas_I_T_nexus_reset,
->         .lldd_lu_reset          = hisi_sas_lu_reset,
->         .lldd_query_task        = hisi_sas_query_task,
-> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-> index aade707c5553..e294d5d961eb 100644
-> --- a/drivers/scsi/isci/init.c
-> +++ b/drivers/scsi/isci/init.c
-> @@ -193,7 +193,6 @@ static struct sas_domain_function_template isci_transport_ops  = {
->         /* Task Management Functions. Must be called from process context. */
->         .lldd_abort_task        = isci_task_abort_task,
->         .lldd_abort_task_set    = isci_task_abort_task_set,
-> -       .lldd_clear_aca         = isci_task_clear_aca,
->         .lldd_clear_task_set    = isci_task_clear_task_set,
->         .lldd_I_T_nexus_reset   = isci_task_I_T_nexus_reset,
->         .lldd_lu_reset          = isci_task_lu_reset,
-> diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-> index 3fd88d72a0c0..403bfee34d84 100644
-> --- a/drivers/scsi/isci/task.c
-> +++ b/drivers/scsi/isci/task.c
-> @@ -625,24 +625,6 @@ int isci_task_abort_task_set(
->  }
->
->
-> -/**
-> - * isci_task_clear_aca() - This function is one of the SAS Domain Template
-> - *    functions. This is one of the Task Management functoins called by libsas.
-> - * @d_device: This parameter specifies the domain device associated with this
-> - *    request.
-> - * @lun: This parameter specifies the lun       associated with this request.
-> - *
-> - * status, zero indicates success.
-> - */
-> -int isci_task_clear_aca(
-> -       struct domain_device *d_device,
-> -       u8 *lun)
-> -{
-> -       return TMF_RESP_FUNC_FAILED;
-> -}
-> -
-> -
-> -
->  /**
->   * isci_task_clear_task_set() - This function is one of the SAS Domain Template
->   *    functions. This is one of the Task Management functoins called by libsas.
-> diff --git a/drivers/scsi/isci/task.h b/drivers/scsi/isci/task.h
-> index cae168b8916f..f96633fa6939 100644
-> --- a/drivers/scsi/isci/task.h
-> +++ b/drivers/scsi/isci/task.h
-> @@ -140,10 +140,6 @@ int isci_task_abort_task_set(
->         struct domain_device *d_device,
->         u8 *lun);
->
-> -int isci_task_clear_aca(
-> -       struct domain_device *d_device,
-> -       u8 *lun);
-> -
->  int isci_task_clear_task_set(
->         struct domain_device *d_device,
->         u8 *lun);
-> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> index dcae2d4464f9..21429e3a3632 100644
-> --- a/drivers/scsi/mvsas/mv_init.c
-> +++ b/drivers/scsi/mvsas/mv_init.c
-> @@ -64,7 +64,6 @@ static struct sas_domain_function_template mvs_transport_ops = {
->
->         .lldd_abort_task        = mvs_abort_task,
->         .lldd_abort_task_set    = mvs_abort_task_set,
-> -       .lldd_clear_aca         = mvs_clear_aca,
->         .lldd_clear_task_set    = mvs_clear_task_set,
->         .lldd_I_T_nexus_reset   = mvs_I_T_nexus_reset,
->         .lldd_lu_reset          = mvs_lu_reset,
-> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-> index 1e52bc7febfa..fd273c3e069e 100644
-> --- a/drivers/scsi/mvsas/mv_sas.c
-> +++ b/drivers/scsi/mvsas/mv_sas.c
-> @@ -1553,17 +1553,6 @@ int mvs_abort_task_set(struct domain_device *dev, u8 *lun)
->         return rc;
->  }
->
-> -int mvs_clear_aca(struct domain_device *dev, u8 *lun)
-> -{
-> -       int rc = TMF_RESP_FUNC_FAILED;
-> -       struct mvs_tmf_task tmf_task;
-> -
-> -       tmf_task.tmf = TMF_CLEAR_ACA;
-> -       rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
-> -
-> -       return rc;
-> -}
-> -
->  int mvs_clear_task_set(struct domain_device *dev, u8 *lun)
 >  {
->         int rc = TMF_RESP_FUNC_FAILED;
-> diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-> index 8ff976c9967e..fa654c73beee 100644
-> --- a/drivers/scsi/mvsas/mv_sas.h
-> +++ b/drivers/scsi/mvsas/mv_sas.h
-> @@ -441,7 +441,6 @@ int mvs_scan_finished(struct Scsi_Host *shost, unsigned long time);
->  int mvs_queue_command(struct sas_task *task, gfp_t gfp_flags);
->  int mvs_abort_task(struct sas_task *task);
->  int mvs_abort_task_set(struct domain_device *dev, u8 *lun);
-> -int mvs_clear_aca(struct domain_device *dev, u8 *lun);
->  int mvs_clear_task_set(struct domain_device *dev, u8 * lun);
->  void mvs_port_formed(struct asd_sas_phy *sas_phy);
->  void mvs_port_deformed(struct asd_sas_phy *sas_phy);
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index d8a2121cb8d9..b8cf1bae4040 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -123,7 +123,6 @@ static struct sas_domain_function_template pm8001_transport_ops = {
->
->         .lldd_abort_task        = pm8001_abort_task,
->         .lldd_abort_task_set    = pm8001_abort_task_set,
-> -       .lldd_clear_aca         = pm8001_clear_aca,
->         .lldd_clear_task_set    = pm8001_clear_task_set,
->         .lldd_I_T_nexus_reset   = pm8001_I_T_nexus_reset,
->         .lldd_lu_reset          = pm8001_lu_reset,
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-> index 160ee8b228c9..4368122ab475 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -1357,14 +1357,6 @@ int pm8001_abort_task_set(struct domain_device *dev, u8 *lun)
->         return pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
->  }
->
-> -int pm8001_clear_aca(struct domain_device *dev, u8 *lun)
-> -{
-> -       struct pm8001_tmf_task tmf_task;
-> -
-> -       tmf_task.tmf = TMF_CLEAR_ACA;
-> -       return pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
-> -}
-> -
->  int pm8001_clear_task_set(struct domain_device *dev, u8 *lun)
->  {
->         struct pm8001_tmf_task tmf_task;
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-> index a17da1cebce1..3ea53a0d0cc1 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.h
-> +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -649,7 +649,6 @@ int pm8001_scan_finished(struct Scsi_Host *shost, unsigned long time);
->  int pm8001_queue_command(struct sas_task *task, gfp_t gfp_flags);
->  int pm8001_abort_task(struct sas_task *task);
->  int pm8001_abort_task_set(struct domain_device *dev, u8 *lun);
-> -int pm8001_clear_aca(struct domain_device *dev, u8 *lun);
->  int pm8001_clear_task_set(struct domain_device *dev, u8 *lun);
->  int pm8001_dev_found(struct domain_device *dev);
->  void pm8001_dev_gone(struct domain_device *dev);
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index 698f2032807b..d59618898619 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -637,7 +637,6 @@ struct sas_domain_function_template {
->         /* Task Management Functions. Must be called from process context. */
->         int (*lldd_abort_task)(struct sas_task *);
->         int (*lldd_abort_task_set)(struct domain_device *, u8 *lun);
-> -       int (*lldd_clear_aca)(struct domain_device *, u8 *lun);
->         int (*lldd_clear_task_set)(struct domain_device *, u8 *lun);
->         int (*lldd_I_T_nexus_reset)(struct domain_device *);
->         int (*lldd_ata_check_ready)(struct domain_device *);
+>         struct sas_phy *local_phy = sas_get_local_phy(device);
 > --
 > 2.26.2
 >
