@@ -2,82 +2,170 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 507A2C2BA4C
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jan 2022 19:09:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2162FC63684
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jan 2022 19:54:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232557AbiAZTJ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jan 2022 14:09:28 -0500
-Received: from mail-pg1-f178.google.com ([209.85.215.178]:45612 "EHLO
-        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229791AbiAZTJ2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2022 14:09:28 -0500
-Received: by mail-pg1-f178.google.com with SMTP id z131so221054pgz.12
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jan 2022 11:09:27 -0800 (PST)
+        id S244591AbiAZTy5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Jan 2022 14:54:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50318 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229772AbiAZTy4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2022 14:54:56 -0500
+Received: from mail-qv1-xf2c.google.com (mail-qv1-xf2c.google.com [IPv6:2607:f8b0:4864:20::f2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42790C061748
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jan 2022 11:54:56 -0800 (PST)
+Received: by mail-qv1-xf2c.google.com with SMTP id h16so804675qvk.10
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jan 2022 11:54:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=toxicpanda-com.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :content-transfer-encoding;
+        bh=/b9yrYylsR3IXw2MBkgKmnslMTaks1EUQq+pWFo3vMU=;
+        b=jIM+Tc+JfN7AxN6yCV944hevmEwbziOmVrsSDKFKhxcK5czEdfwuGa1+JKEm5p153D
+         slLmda6m/yCZO8ZIHlLZl6IqweIwHdlxDpwmS9sacFA2fhuXmFY8LEFoX+85O/+Bx4OE
+         iGciw+hNYyVKtUVlJOaV2lZ+sKD0MAsMcI/LQl+lQZdZ70jf6CnR8vIw7OtQFvUwfrZJ
+         lhlzFUgt9mOyvy8aEn4Oyx65EgV/2T/N1fYGTTkn2R2iHkCpwr0QXQR7i6xi6krzpt4Q
+         B7QgV0Cbl2yPbyxMuyZmyWX6EsCRk/5btemPGasR9kB/RKqdVkmYF45VVp+Q7EiGvBjs
+         T3MQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=rSzmF8E2CuZeFJAitvzT7tX0h6phubpSSTno0fsio3g=;
-        b=b6MZ03hzTBniTTZxni4jjcvv+xORX2EEgJGoQNLLMehDKRBll55a0moHzmS4NwUxhU
-         ylEjRneKL4qtbG5Da/u6n+5dlyQzKpzgnw0A7n5VcwveBsNhFAXT2sqzqAjqnLo17tY1
-         qtFCrq+dbDqCgrI0plXtdwopO1v7OXq6O4o3qc3M0bkLkfypLj4U5xDNC+I8jhBkLVGr
-         VTb8zPWugFO1lnH5Al49BdIsca+czc9eY5h09RVlT+QAEWwM7QPG54aC2OhFDpNOFLjn
-         2E7nSgXSvlgG1xbzulbAb7ybHQLZhlOLNybmUlA/vyjygFCGxVFqT10PLDqoSR3Dlwrl
-         /V6A==
-X-Gm-Message-State: AOAM532MZ5s/8sJTCrxjXUAqcn2QyHy/rrGhAK/DdlbSIAvjPiQaGikF
-        zaaCvtBgzhx/h222cyJYoxlspLxd6/8=
-X-Google-Smtp-Source: ABdhPJypOk8LwjqiR0QtAHIu/ofXdX8+/hy7k2AWY+hAYz/l3hI/BTtcgypjLjEJAJ9VJrJxgCkC3A==
-X-Received: by 2002:a05:6a00:1a4f:b0:4c9:e7b7:d84b with SMTP id h15-20020a056a001a4f00b004c9e7b7d84bmr12669225pfv.61.1643224167445;
-        Wed, 26 Jan 2022 11:09:27 -0800 (PST)
-Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id b9sm2833376pfm.154.2022.01.26.11.09.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 26 Jan 2022 11:09:26 -0800 (PST)
-Message-ID: <960b813a-0e65-c542-420b-7314d329f390@acm.org>
-Date:   Wed, 26 Jan 2022 11:09:24 -0800
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:content-transfer-encoding;
+        bh=/b9yrYylsR3IXw2MBkgKmnslMTaks1EUQq+pWFo3vMU=;
+        b=zgI2XMaQoLSSzb+IniPFe8o89curvDuHXshNM/v5vWSXt8jPcsX3Rl1XWwWo2ov6uK
+         CrCadSYWeU95nalhz2jPgNR//mrnb7dy3zm5wLifu/VHcEVThgIGeYKiRMLo65Nz3cZ0
+         +1xIdBUWl6IFE2e6Wiii1GK0jvW1q0jnbVOsUKnHd2a15c7GpbUmwe9WLc9dcDO+T8VN
+         7EjZzJd21UQT83yCN0SIo9J1y/C8n6GsfD13MR+fssNxPt6yAV5lmPeij94QKMdyCcXS
+         s3li8NIeC7BLKGSzJpJ3uxhFnz5ejJCXQI05d7g3pH5SAG4NNjetiDgoFYXlU+NtvAHk
+         hytw==
+X-Gm-Message-State: AOAM533zZLRsvr2vT08iPYQEw179T5sFkbuqbsvfmamzQFbQ1I5Yrnk5
+        4WoamUIlzKKNeQ22RyNra0LS7Zx67Co52g==
+X-Google-Smtp-Source: ABdhPJzDiy8lWJPalTqmHodK4vLPsn5OI+iOGQeHou4Hn9uAp27KEpv7ql8yuu4Af0KUxh9Hg0NE3g==
+X-Received: by 2002:a05:6214:e45:: with SMTP id o5mr364368qvc.10.1643226894754;
+        Wed, 26 Jan 2022 11:54:54 -0800 (PST)
+Received: from localhost (cpe-174-109-172-136.nc.res.rr.com. [174.109.172.136])
+        by smtp.gmail.com with ESMTPSA id bs33sm148633qkb.103.2022.01.26.11.54.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 26 Jan 2022 11:54:54 -0800 (PST)
+Date:   Wed, 26 Jan 2022 14:54:53 -0500
+From:   Josef Bacik <josef@toxicpanda.com>
+To:     lsf-pc@lists.linuxfoundation.org
+Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, bpf@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: LSF/MM/BPF: 2022: Call for Proposals
+Message-ID: <YfGnDRM/Pe4jzbSr@localhost.localdomain>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.1
-Subject: Re: [PATCH] scsi: core: reallocate scsi device's budget map if
- default queue depth is changed
-Content-Language: en-US
-To:     Ming Lei <ming.lei@redhat.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     Martin Wilck <martin.wilck@suse.com>,
-        Martin Wilck <mwilck@suse.com>
-References: <20220126041756.297658-1-ming.lei@redhat.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220126041756.297658-1-ming.lei@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/25/22 20:17, Ming Lei wrote:
-> +static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
-> +					unsigned int depth)
-> +{
-> +	int new_shift = sbitmap_calculate_shift(depth);
-> +	bool need_alloc = !sdev->budget_map.map;
-> +	bool need_free = false;
-> +	int ret;
-> +	struct sbitmap sb_back;
+The annual Linux Storage, Filesystem, Memory Management, and BPF
+(LSF/MM/BPF) Summit for 2022 will be held from May 2 to May 4 at The
+Margaritaville Resort Palm Springs in Palm Springs, California.
+LSF/MM/BPF is an invitation-only technical workshop to map out
+improvements to the Linux storage, filesystem, BPF, and memory
+management subsystems that will make their way into the mainline kernel
+within the coming years.
 
-To me the variable name "sb_back" looks confusing. Consider renaming 
-this variable into "sb_backup" or "previous_sb".
+COVID is at the front of our minds as we attempt to put together the
+best and safest conference we can arrange.  The logistics of how to hold
+an in person event will change and evolve as we get closer to the actual
+date, but rest assured we will do everything recommended by public
+health officials.
 
-> +	/*
-> +	 * Request queue has to be freezed for reallocating budget map,
-                                    ^^^^^^^
-                                    frozen?
-> +	 * and here disk isn't added yet, so freezing is pretty fast
-> +	 */
+LSF/MM/BPF 2022 will be a three day, stand-alone conference with four
+subsystem-specific tracks, cross-track discussions, as well as BoF and
+hacking sessions.
 
-Otherwise this patch looks good to me.
+On behalf of the committee I am issuing a call for agenda proposals
+that are suitable for cross-track discussion as well as technical
+subjects for the breakout sessions.
 
-Thanks,
+If advance notice is required for visa applications then please point
+that out in your proposal or request to attend, and submit the topic as
+soon as possible.
 
-Bart.
+This years instructions are similar to our previous attempts.  We're
+asking that you please let us know you want to be invited by March 1,
+2022.  We realize that travel is an ever changing target, but it helps
+us get an idea of possible attendance numbers.  Clearly things can and
+will change, so consider the request to attend deadline more about
+planning and less about concrete plans.
+
+1) Fill out the following Google form to request attendance and
+suggest any topics
+
+	https://forms.gle/uD5tbZYGpaRXPnE19
+
+In previous years we have accidentally missed people's attendance
+requests because they either didn't cc lsf-pc@ or we simply missed them
+in the flurry of emails we get.  Our community is large and our
+volunteers are busy, filling this out will help us make sure we don't
+miss anybody.
+
+2) Proposals for agenda topics should still be sent to the following
+lists to allow for discussion among your peers.  This will help us
+figure out which topics are important for the agenda.
+
+        lsf-pc@lists.linux-foundation.org
+
+and CC the mailing lists that are relevant for the topic in question:
+
+        FS:     linux-fsdevel@vger.kernel.org
+        MM:     linux-mm@kvack.org
+        Block:  linux-block@vger.kernel.org
+        ATA:    linux-ide@vger.kernel.org
+        SCSI:   linux-scsi@vger.kernel.org
+        NVMe:   linux-nvme@lists.infradead.org
+        BPF:    bpf@vger.kernel.org
+
+Please tag your proposal with [LSF/MM/BPF TOPIC] to make it easier to
+track. In addition, please make sure to start a new thread for each
+topic rather than following up to an existing one. Agenda topics and
+attendees will be selected by the program committee, but the final
+agenda will be formed by consensus of the attendees on the day.
+
+We will try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes
+at the venue.
+
+For discussion leaders, slides and visualizations are encouraged to
+outline the subject matter and focus the discussions. Please refrain
+from lengthy presentations and talks; the sessions are supposed to be
+interactive, inclusive discussions.
+
+There will be no recording or audio bridge. However, we expect that
+written minutes will be published as we did in previous years:
+
+2019: https://lwn.net/Articles/lsfmm2019/
+
+2018: https://lwn.net/Articles/lsfmm2018/
+
+2017: https://lwn.net/Articles/lsfmm2017/
+
+2016: https://lwn.net/Articles/lsfmm2016/
+
+2015: https://lwn.net/Articles/lsfmm2015/
+
+2014: http://lwn.net/Articles/LSFMM2014/
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+        lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+        Josef Bacik (Filesystems)
+        Amir Goldstein (Filesystems)
+        Martin K. Petersen (Storage)
+        Omar Sandoval (Storage)
+        Michal Hocko (MM)
+        Dan Williams (MM)
+        Alexei Starovoitov (BPF)
+        Daniel Borkmann (BPF)
