@@ -2,129 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CF7CC3525A
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jan 2022 01:22:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64BD1C5AC75
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jan 2022 01:26:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235829AbiAZBWe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 20:22:34 -0500
-Received: from mailgw01.mediatek.com ([60.244.123.138]:41892 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235789AbiAZBWc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2022 20:22:32 -0500
-X-UUID: b68215f317e8436093934fc8cc4202cc-20220126
-X-UUID: b68215f317e8436093934fc8cc4202cc-20220126
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 428989841; Wed, 26 Jan 2022 09:22:29 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Wed, 26 Jan 2022 09:22:28 +0800
-Received: from mtksdccf07 (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 26 Jan 2022 09:22:28 +0800
-Message-ID: <40986ecb6c81812a1e1ab24d93e46eda75974c4e.camel@mediatek.com>
-Subject: Re: [PATCH v2] scsi: ufs: disable auto hibern8 while entering
- suspend
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     SEO HOYOUNG <hy50.seo@samsung.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
-        <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
-        <asutoshd@codeaurora.org>, <cang@codeaurora.org>,
-        <bvanassche@acm.org>, <bhoon95.kim@samsung.com>,
-        <kwmad.kim@samsung.com>
-CC:     kernel test robot <lkp@intel.com>, <peter.wang@mediatek.com>
-Date:   Wed, 26 Jan 2022 09:22:28 +0800
-In-Reply-To: <20220124180637.160524-1-hy50.seo@samsung.com>
-References: <CGME20220125062155epcas2p15da28303164091b1bf5a00dcf99fe59b@epcas2p1.samsung.com>
-         <20220124180637.160524-1-hy50.seo@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+        id S235846AbiAZB0D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 20:26:03 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:23950 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232531AbiAZB0C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Jan 2022 20:26:02 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643160362;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Dgl7eHDXxIR3cG6ko/Vb1Y4EDtbBcCShRJOKmtmL6eA=;
+        b=UJ/ymM0HLY8qOuJRGc2qUvw2f+wNYgYlSnHHaN/YLmHS8Y4gs7WK4bzsrGU6oToqzqUSyO
+        G4XE7gS5/Ih0qcQA2B3gifMiGP4qv7GhRmg6eTWH43LZfJk2Fo24Cfq44qNvOP8vPdIlEp
+        oN3tkUFfgdxCqMBrudNZ+ifoDAO1ebg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-619-linFexfQNSKl4NRGtU7agw-1; Tue, 25 Jan 2022 20:25:58 -0500
+X-MC-Unique: linFexfQNSKl4NRGtU7agw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4421E80D690;
+        Wed, 26 Jan 2022 01:25:57 +0000 (UTC)
+Received: from T590 (ovpn-8-23.pek2.redhat.com [10.72.8.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 291F81000358;
+        Wed, 26 Jan 2022 01:25:51 +0000 (UTC)
+Date:   Wed, 26 Jan 2022 09:25:46 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Martin Wilck <martin.wilck@suse.com>
+Cc:     "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>,
+        "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>,
+        "suganath-prabu.subramani@broadcom.com" 
+        <suganath-prabu.subramani@broadcom.com>,
+        "hare@suse.de" <hare@suse.de>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Subject: Re: mpt3sas fails to allocate budget_map and detects no devices
+Message-ID: <YfCjGrZFsIfe+m94@T590>
+References: <YdZcABq/pxMMh3X0@T590>
+ <5a450cdadbffed9c5ce39bc7d58bcf4e541f3b53.camel@suse.com>
+ <YdcEJngPYrZk691Q@T590>
+ <97be83524e1ee6776a4c1261bf4c1b17a8b75f12.camel@suse.com>
+ <YdcNrSJJGllQzWOB@T590>
+ <5fffbc9191d1f1b3db1d51ce991591c9c6d91785.camel@suse.com>
+ <YdcZwVUFGUPgkbLn@T590>
+ <Ydug9nWg4loEVkJw@T590>
+ <419311a6df021b0ba7b7e710caeb7e649ce8eeb1.camel@suse.com>
+ <53cb63b07b187ed608d9c93bbde11d1c8953113c.camel@suse.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-MTK:  N
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <53cb63b07b187ed608d9c93bbde11d1c8953113c.camel@suse.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Hoyoung,
+On Tue, Jan 25, 2022 at 04:29:37PM +0000, Martin Wilck wrote:
+> On Wed, 2022-01-12 at 17:59 +0100, Martin Wilck wrote:
+> > On Mon, 2022-01-10 at 10:59 +0800, Ming Lei wrote:
+> > > 
+> > > Hello Martin Wilck,
+> > > 
+> > > Can you test the following change and report back the result?
+> > > 
+> > > From 480a61a85e9669d3487ebee8db3d387df79279fc Mon Sep 17 00:00:00
+> > > 2001
+> > > From: Ming Lei <ming.lei@redhat.com>
+> > > Date: Mon, 10 Jan 2022 10:26:59 +0800
+> > > Subject: [PATCH] scsi: core: reallocate scsi device's budget map if
+> > > default
+> > >  queue depth is changed
+> > > 
+> > > Martin reported that sdev->queue_depth can often be changed in
+> > > ->slave_configure(), and now we uses ->cmd_per_lun as initial queue
+> > > depth for setting up sdev->budget_map. And some extreme -
+> > > >cmd_per_lun
+> > > or ->can_queue won't be used at default actually, if we they are
+> > > used
+> > > to allocate sdev->budget_map, huge memory may be consumed just
+> > > because
+> > > of bad ->cmd_per_lun.
+> > > 
+> > > Fix the issue by reallocating sdev->budget_map after -
+> > > > slave_configure()
+> > > returns, at that time, queue_depth should be much more reasonable.
+> > > 
+> > > Reported-by: Martin Wilck <martin.wilck@suse.com>
+> > > Suggested-by: Martin Wilck <martin.wilck@suse.com>
+> > > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > 
+> > This looks good. I added a few pr_infos, and for the strange mpt3sas
+> > devices I reported, I get this:
+> > 
+> > # first allocation with depth=7 (cmds_per_lun)
+> > Jan 12 17:05:52 localhost kernel: scsi_realloc_sdev_budget_map: 7 0-
+> > >0 
+> >    (these numbers are: depth old_shift->new_shift)
+> > Jan 12 17:05:52 localhost kernel: scsi_realloc_sdev_budget_map:
+> > map_nr = 1024
+> > 
+> > # after slave_alloc() with depth 254
+> > Jan 12 17:05:52 localhost kernel: scsi_realloc_sdev_budget_map: 254
+> > 0->5
+> > Jan 12 17:05:52 localhost kernel: scsi_realloc_sdev_budget_map:
+> > map_nr = 32
+> > 
+> > So the depth changed from 7 to 254, the shift from 0 to 5, and the
+> > memory size of the
+> > sbitmap was reduced by a factor of 32. Nice!
+> > 
+> > Tested-by: Martin Wilck <mwilck@suse.com>
+> > Reviewed-by: Martin Wilck <mwilck@suse.com>
+> 
+> So, how do we proceed with this patch?
 
-On Tue, 2022-01-25 at 03:06 +0900, SEO HOYOUNG wrote:
-> v1-> v2: fixed no previous prototype warning
-> Reported-by: kernel test robot <lkp@intel.com>
-> 
-> All warnings (new ones prefixed by >>):
-> > > drivers/scsi/ufs/ufshcd.c:4207:6: warning: no previous prototype 
-> 
-> for 'ufshcd_auto_hibern8_disable' [-Wmissing-prototypes]
-> 4207 | void ufshcd_auto_hibern8_disable(struct ufs_hba *hba)
-> 
-> If using auto hibern8 mode, need to disable auto hibern8 while
-> entering suspend.
-> When using auto hibern8 mode, it does not seem right to send a uic
-> command
+Looks 5.18/scsi is open now, I will submit one formal patch on linux-scsi
+soon.
 
-The UFSHCI spec does not mention the above rule.
-Why would you need to disable AH8 before using UIC command to enter H8?
 
-> for entry into hibern8 in the next
-> line(ufshcd_lik_state_transition(..))
-> It seem right to send after disable auto hibern8.
-> 
-> In addition, if the auto hibern8 mode supported, it is enabled in
-> resume.
-> So it seems that it will be paired only when auto hibern8 is disabled
-> while entering suspend.
-> 
-> Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 460d2b440d2e..a6edbbd8ca2c 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -254,6 +254,7 @@ static void
-> ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
->  static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool
-> enable);
->  static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
->  static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
-> +static void ufshcd_auto_hibern8_disable(struct ufs_hba *hba);
->  
->  static inline void ufshcd_enable_irq(struct ufs_hba *hba)
->  {
-> @@ -4204,6 +4205,18 @@ void ufshcd_auto_hibern8_update(struct ufs_hba
-> *hba, u32 ahit)
->  }
->  EXPORT_SYMBOL_GPL(ufshcd_auto_hibern8_update);
->  
-> +static void ufshcd_auto_hibern8_disable(struct ufs_hba *hba)
-> +{
-> +	unsigned long flags;
-> +
-> +	if (!ufshcd_is_auto_hibern8_supported(hba))
-> +		return;
-> +
-> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	ufshcd_writel(hba, 0, REG_AUTO_HIBERNATE_IDLE_TIMER);
-> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +}
-> +
->  void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)
->  {
->  	unsigned long flags;
-> @@ -8925,6 +8938,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba
-> *hba, enum ufs_pm_op pm_op)
->  	 * with the link off, so do not check for bkops.
->  	 */
->  	check_for_bkops = !ufshcd_is_ufs_dev_deepsleep(hba);
-> +	ufshcd_auto_hibern8_disable(hba);
->  	ret = ufshcd_link_state_transition(hba, req_link_state,
-> check_for_bkops);
->  	if (ret)
->  		goto set_dev_active;
+Thanks,
+Ming
 
