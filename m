@@ -2,170 +2,196 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2162FC63684
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jan 2022 19:54:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 690F7C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jan 2022 22:48:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244591AbiAZTy5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jan 2022 14:54:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50318 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229772AbiAZTy4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2022 14:54:56 -0500
-Received: from mail-qv1-xf2c.google.com (mail-qv1-xf2c.google.com [IPv6:2607:f8b0:4864:20::f2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42790C061748
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jan 2022 11:54:56 -0800 (PST)
-Received: by mail-qv1-xf2c.google.com with SMTP id h16so804675qvk.10
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jan 2022 11:54:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
-         :content-transfer-encoding;
-        bh=/b9yrYylsR3IXw2MBkgKmnslMTaks1EUQq+pWFo3vMU=;
-        b=jIM+Tc+JfN7AxN6yCV944hevmEwbziOmVrsSDKFKhxcK5czEdfwuGa1+JKEm5p153D
-         slLmda6m/yCZO8ZIHlLZl6IqweIwHdlxDpwmS9sacFA2fhuXmFY8LEFoX+85O/+Bx4OE
-         iGciw+hNYyVKtUVlJOaV2lZ+sKD0MAsMcI/LQl+lQZdZ70jf6CnR8vIw7OtQFvUwfrZJ
-         lhlzFUgt9mOyvy8aEn4Oyx65EgV/2T/N1fYGTTkn2R2iHkCpwr0QXQR7i6xi6krzpt4Q
-         B7QgV0Cbl2yPbyxMuyZmyWX6EsCRk/5btemPGasR9kB/RKqdVkmYF45VVp+Q7EiGvBjs
-         T3MQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:content-transfer-encoding;
-        bh=/b9yrYylsR3IXw2MBkgKmnslMTaks1EUQq+pWFo3vMU=;
-        b=zgI2XMaQoLSSzb+IniPFe8o89curvDuHXshNM/v5vWSXt8jPcsX3Rl1XWwWo2ov6uK
-         CrCadSYWeU95nalhz2jPgNR//mrnb7dy3zm5wLifu/VHcEVThgIGeYKiRMLo65Nz3cZ0
-         +1xIdBUWl6IFE2e6Wiii1GK0jvW1q0jnbVOsUKnHd2a15c7GpbUmwe9WLc9dcDO+T8VN
-         7EjZzJd21UQT83yCN0SIo9J1y/C8n6GsfD13MR+fssNxPt6yAV5lmPeij94QKMdyCcXS
-         s3li8NIeC7BLKGSzJpJ3uxhFnz5ejJCXQI05d7g3pH5SAG4NNjetiDgoFYXlU+NtvAHk
-         hytw==
-X-Gm-Message-State: AOAM533zZLRsvr2vT08iPYQEw179T5sFkbuqbsvfmamzQFbQ1I5Yrnk5
-        4WoamUIlzKKNeQ22RyNra0LS7Zx67Co52g==
-X-Google-Smtp-Source: ABdhPJzDiy8lWJPalTqmHodK4vLPsn5OI+iOGQeHou4Hn9uAp27KEpv7ql8yuu4Af0KUxh9Hg0NE3g==
-X-Received: by 2002:a05:6214:e45:: with SMTP id o5mr364368qvc.10.1643226894754;
-        Wed, 26 Jan 2022 11:54:54 -0800 (PST)
-Received: from localhost (cpe-174-109-172-136.nc.res.rr.com. [174.109.172.136])
-        by smtp.gmail.com with ESMTPSA id bs33sm148633qkb.103.2022.01.26.11.54.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Jan 2022 11:54:54 -0800 (PST)
-Date:   Wed, 26 Jan 2022 14:54:53 -0500
-From:   Josef Bacik <josef@toxicpanda.com>
-To:     lsf-pc@lists.linuxfoundation.org
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, bpf@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: LSF/MM/BPF: 2022: Call for Proposals
-Message-ID: <YfGnDRM/Pe4jzbSr@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+        id S230157AbiAZWsE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Jan 2022 17:48:04 -0500
+Received: from mailout3.samsung.com ([203.254.224.33]:57607 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230122AbiAZWsD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2022 17:48:03 -0500
+Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220126224802epoutp030969c2d12b342c99370283dc091469f6~N85ofz6EQ1240112401epoutp03V
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jan 2022 22:48:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220126224802epoutp030969c2d12b342c99370283dc091469f6~N85ofz6EQ1240112401epoutp03V
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1643237282;
+        bh=cAy0eaNlYkL9KOyKZ0ePr7Lr3HmKsDoqPXCM/xP8opE=;
+        h=Subject:Reply-To:From:To:Date:References:From;
+        b=rBfFGnFYHHv8QiQ4F76oTRD0u8zMn1AvQdZ8+06E4xvitUBeDFVKFVI7pgqRCevBW
+         spUER6tmAaQuk4IWq2Kj2HPfwcL/rwO9jHLFSwbISKJOXGLKFVPUYoYuWGmrAckj09
+         jnNTzZEHnx46K/ImYgjH5FBN5PlOlQszzqt4IEeQ=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas3p3.samsung.com (KnoxPortal) with ESMTP id
+        20220126224801epcas3p381da17853a0da81b4fe6d5f410a484d9~N85oFYTyv0942709427epcas3p3s;
+        Wed, 26 Jan 2022 22:48:01 +0000 (GMT)
+Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp1.localdomain
+        (Postfix) with ESMTP id 4Jkf4x67z0z4x9QB; Wed, 26 Jan 2022 22:48:01 +0000
+        (GMT)
+Mime-Version: 1.0
+Subject: [PATCH] scsi: ufs: Add checking lifetime attribute for WriteBooster
+Reply-To: j-young.choi@samsung.com
+Sender: Jinyoung CHOI <j-young.choi@samsung.com>
+From:   Jinyoung CHOI <j-young.choi@samsung.com>
+To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <1891546521.01643237281916.JavaMail.epsvc@epcpadp4>
+Date:   Wed, 26 Jan 2022 20:25:55 +0900
+X-CMS-MailID: 20220126112555epcms2p6eebb1afe9566747ca4aeb23fc3ef033e
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20220126104125epcms2p50afb250190ffc3f2dc7b16df31757c94
+References: <CGME20220126104125epcms2p50afb250190ffc3f2dc7b16df31757c94@epcms2p6>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The annual Linux Storage, Filesystem, Memory Management, and BPF
-(LSF/MM/BPF) Summit for 2022 will be held from May 2 to May 4 at The
-Margaritaville Resort Palm Springs in Palm Springs, California.
-LSF/MM/BPF is an invitation-only technical workshop to map out
-improvements to the Linux storage, filesystem, BPF, and memory
-management subsystems that will make their way into the mainline kernel
-within the coming years.
+Because WB performs write in SLC mode, it is difficult to use WB
+infinitely.
 
-COVID is at the front of our minds as we attempt to put together the
-best and safest conference we can arrange.  The logistics of how to hold
-an in person event will change and evolve as we get closer to the actual
-date, but rest assured we will do everything recommended by public
-health officials.
+Vendors can set the Lifetime limit value to the device.
+If Lifetime exceeds the limit value, the device itself can disable the
+WB feature.
 
-LSF/MM/BPF 2022 will be a three day, stand-alone conference with four
-subsystem-specific tracks, cross-track discussions, as well as BoF and
-hacking sessions.
+WB feature supports "bWriteBoosterBufferLifeTimeEst (IDN = 1E)" attribute.
 
-On behalf of the committee I am issuing a call for agenda proposals
-that are suitable for cross-track discussion as well as technical
-subjects for the breakout sessions.
+With Lifetime exceeding the limit value,
+the current driver continuously performs the following query.
 
-If advance notice is required for visa applications then please point
-that out in your proposal or request to attend, and submit the topic as
-soon as possible.
+	- Write Flag: WB_ENABLE / DISABLE
+	- Read attr: Available Buffer Size
+	- Read attr: Current Buffer Size
 
-This years instructions are similar to our previous attempts.  We're
-asking that you please let us know you want to be invited by March 1,
-2022.  We realize that travel is an ever changing target, but it helps
-us get an idea of possible attendance numbers.  Clearly things can and
-will change, so consider the request to attend deadline more about
-planning and less about concrete plans.
+This patch recognizes that WriteBooster is no longer supported by the device,
+and prevent unnecessary query issues.
 
-1) Fill out the following Google form to request attendance and
-suggest any topics
+Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
+---
+ drivers/scsi/ufs/ufs.h    |  6 +++++
+ drivers/scsi/ufs/ufshcd.c | 52 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 58 insertions(+)
 
-	https://forms.gle/uD5tbZYGpaRXPnE19
-
-In previous years we have accidentally missed people's attendance
-requests because they either didn't cc lsf-pc@ or we simply missed them
-in the flurry of emails we get.  Our community is large and our
-volunteers are busy, filling this out will help us make sure we don't
-miss anybody.
-
-2) Proposals for agenda topics should still be sent to the following
-lists to allow for discussion among your peers.  This will help us
-figure out which topics are important for the agenda.
-
-        lsf-pc@lists.linux-foundation.org
-
-and CC the mailing lists that are relevant for the topic in question:
-
-        FS:     linux-fsdevel@vger.kernel.org
-        MM:     linux-mm@kvack.org
-        Block:  linux-block@vger.kernel.org
-        ATA:    linux-ide@vger.kernel.org
-        SCSI:   linux-scsi@vger.kernel.org
-        NVMe:   linux-nvme@lists.infradead.org
-        BPF:    bpf@vger.kernel.org
-
-Please tag your proposal with [LSF/MM/BPF TOPIC] to make it easier to
-track. In addition, please make sure to start a new thread for each
-topic rather than following up to an existing one. Agenda topics and
-attendees will be selected by the program committee, but the final
-agenda will be formed by consensus of the attendees on the day.
-
-We will try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes
-at the venue.
-
-For discussion leaders, slides and visualizations are encouraged to
-outline the subject matter and focus the discussions. Please refrain
-from lengthy presentations and talks; the sessions are supposed to be
-interactive, inclusive discussions.
-
-There will be no recording or audio bridge. However, we expect that
-written minutes will be published as we did in previous years:
-
-2019: https://lwn.net/Articles/lsfmm2019/
-
-2018: https://lwn.net/Articles/lsfmm2018/
-
-2017: https://lwn.net/Articles/lsfmm2017/
-
-2016: https://lwn.net/Articles/lsfmm2016/
-
-2015: https://lwn.net/Articles/lsfmm2015/
-
-2014: http://lwn.net/Articles/LSFMM2014/
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-        lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-        Josef Bacik (Filesystems)
-        Amir Goldstein (Filesystems)
-        Martin K. Petersen (Storage)
-        Omar Sandoval (Storage)
-        Michal Hocko (MM)
-        Dan Williams (MM)
-        Alexei Starovoitov (BPF)
-        Daniel Borkmann (BPF)
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 0bfdca3e648e..4a00c24a3209 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -43,6 +43,12 @@
+ /* WriteBooster buffer is available only for the logical unit from 0 to 7 */
+ #define UFS_UPIU_MAX_WB_LUN_ID	8
+ 
++/*
++ * WriteBooster buffer lifetime has a limit setted by vendor.
++ * If it is over the limit, WriteBooster feature will be disabled.
++ */
++#define UFS_WB_EXCEED_LIFETIME		0x0B
++
+ /* Well known logical unit id in LUN field of UPIU */
+ enum {
+ 	UFS_UPIU_REPORT_LUNS_WLUN	= 0x81,
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 460d2b440d2e..6088af45633b 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5778,6 +5778,47 @@ static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
+ 	return false;
+ }
+ 
++static void ufshcd_wb_force_disable(struct ufs_hba *hba)
++{
++	if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
++		ufshcd_wb_toggle_flush(hba, false);
++
++	ufshcd_wb_toggle_flush_during_h8(hba, false);
++	ufshcd_wb_toggle(hba, false);
++	hba->caps &= ~UFSHCD_CAP_WB_EN;
++
++	dev_info(hba->dev, "%s: WB force disabled\n", __func__);
++}
++
++static bool ufshcd_is_wb_buf_lifetime_available(struct ufs_hba *hba)
++{
++	u32 lifetime;
++	int ret;
++	u8 index;
++
++	index = ufshcd_wb_get_query_index(hba);
++	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++				      QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST,
++				      index, 0, &lifetime);
++	if (ret) {
++		dev_err(hba->dev,
++			"%s: bWriteBoosterBufferLifeTimeEst read failed %d\n",
++			__func__, ret);
++		return false;
++	}
++
++	if (lifetime == UFS_WB_EXCEED_LIFETIME) {
++		dev_err(hba->dev, "%s: WB buf lifetime is exhausted 0x%0.2X\n",
++			__func__, lifetime);
++		return false;
++	}
++
++	dev_dbg(hba->dev, "%s: WB buf lifetime is 0x%0.2X\n",
++		__func__, lifetime);
++
++	return true;
++}
++
+ static bool ufshcd_wb_need_flush(struct ufs_hba *hba)
+ {
+ 	int ret;
+@@ -5786,6 +5827,12 @@ static bool ufshcd_wb_need_flush(struct ufs_hba *hba)
+ 
+ 	if (!ufshcd_is_wb_allowed(hba))
+ 		return false;
++
++	if (!ufshcd_is_wb_buf_lifetime_available(hba)) {
++		ufshcd_wb_force_disable(hba);
++		return false;
++	}
++
+ 	/*
+ 	 * The ufs device needs the vcc to be ON to flush.
+ 	 * With user-space reduction enabled, it's enough to enable flush
+@@ -7486,6 +7533,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
+ 
+ 	if (!ufshcd_is_wb_allowed(hba))
+ 		return;
++
+ 	/*
+ 	 * Probe WB only for UFS-2.2 and UFS-3.1 (and later) devices or
+ 	 * UFS devices with quirk UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES
+@@ -7537,6 +7585,10 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
+ 		if (!d_lu_wb_buf_alloc)
+ 			goto wb_disabled;
+ 	}
++
++	if (!ufshcd_is_wb_buf_lifetime_available(hba))
++		goto wb_disabled;
++
+ 	return;
+ 
+ wb_disabled:
+-- 
+2.25.1
