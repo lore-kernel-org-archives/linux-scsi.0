@@ -2,77 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CBCEC5AC75
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jan 2022 01:43:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F146C2BA4C
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jan 2022 04:18:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235931AbiAZBnD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Jan 2022 20:43:03 -0500
-Received: from mailgw.kylinos.cn ([123.150.8.42]:5332 "EHLO nksmu.kylinos.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S235863AbiAZBnC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Jan 2022 20:43:02 -0500
-X-UUID: 0210256d97bd42a4a8887a9e4d1cccef-20220126
-X-CPASD-INFO: 88fb96bf2ded4c56ad9dbd597cdd4cbc@gYiggmZokJZehKewg6aAcIGVaZSSkFW
-        IeZ2ElGKTjoOVhH5xTWJsXVKBfG5QZWNdYVN_eGpQYl9gZFB5i3-XblBgXoZgUZB3h3qggmlkkg==
-X-CPASD-FEATURE: 0.0
-X-CLOUD-ID: 88fb96bf2ded4c56ad9dbd597cdd4cbc
-X-CPASD-SUMMARY: SIP:-1,APTIP:-2.0,KEY:0.0,FROMBLOCK:1,EXT:0.0,OB:0.0,URL:-5,T
-        VAL:173.0,ESV:0.0,ECOM:-5.0,ML:0.0,FD:0.0,CUTS:113.0,IP:-2.0,MAL:0.0,ATTNUM:0
-        .0,PHF:-5.0,PHC:-5.0,SPF:4.0,EDMS:-3,IPLABEL:4488.0,FROMTO:0,AD:0,FFOB:0.0,CF
-        OB:0.0,SPC:0.0,SIG:-5,AUF:104,DUF:31763,ACD:175,DCD:277,SL:0,AG:0,CFC:0.229,C
-        FSR:0.148,UAT:0,RAF:0,VERSION:2.3.4
-X-CPASD-ID: 0210256d97bd42a4a8887a9e4d1cccef-20220126
-X-CPASD-BLOCK: 1000
-X-CPASD-STAGE: 1, 1
-X-UUID: 0210256d97bd42a4a8887a9e4d1cccef-20220126
-X-User: yinxiujiang@kylinos.cn
-Received: from localhost.localdomain [(118.26.139.139)] by nksmu.kylinos.cn
-        (envelope-from <yinxiujiang@kylinos.cn>)
-        (Generic MTA)
-        with ESMTP id 1017235085; Wed, 26 Jan 2022 09:55:38 +0800
-From:   Yin Xiujiang <yinxiujiang@kylinos.cn>
-To:     skashyap@marvell.com, jhasan@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: bnx2fc: Make use of the helper macro kthread_run()
-Date:   Wed, 26 Jan 2022 09:42:48 +0800
-Message-Id: <20220126014248.466806-1-yinxiujiang@kylinos.cn>
-X-Mailer: git-send-email 2.30.0
+        id S229980AbiAZESS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Jan 2022 23:18:18 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:24535 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229945AbiAZESR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Jan 2022 23:18:17 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643170696;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=SUUM6jGslVVwhrB9UtuUB5cDCg5zctJX5ZC6nGINX4A=;
+        b=Y1WSklnAB/LOEiifEkyrVWo/oQx77or6xounXxe098h0rcncrqi0NUhRyi0s+6Z5yz85oo
+        t5Tblj2fdUvlfCL3Ipg7BqF/6gOjE9VVdZZE3W+9Rqnjy0M8H/Cd+UyK8uS538ZEeXcEES
+        st0A1iprTcPLgB+Lt0D2EFbB0tIKWUU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-611-1uCk7YILN4K0ZoOGxV-9UQ-1; Tue, 25 Jan 2022 23:18:15 -0500
+X-MC-Unique: 1uCk7YILN4K0ZoOGxV-9UQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CC37480D680;
+        Wed, 26 Jan 2022 04:18:13 +0000 (UTC)
+Received: from localhost (ovpn-8-23.pek2.redhat.com [10.72.8.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 17C7261082;
+        Wed, 26 Jan 2022 04:18:09 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     Ming Lei <ming.lei@redhat.com>,
+        Martin Wilck <martin.wilck@suse.com>,
+        Martin Wilck <mwilck@suse.com>
+Subject: [PATCH] scsi: core: reallocate scsi device's budget map if default queue depth is changed
+Date:   Wed, 26 Jan 2022 12:17:56 +0800
+Message-Id: <20220126041756.297658-1-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Repalce kthread_create/wake_up_process() with kthread_run()
-to simplify the code.
+Martin reported that sdev->queue_depth can often be changed in
+->slave_configure(), and now we uses ->cmd_per_lun as initial queue
+depth for setting up sdev->budget_map. And some extreme ->cmd_per_lun
+or ->can_queue won't be used at default actually, if they are used to
+allocate sdev->budget_map, huge memory may be consumed just because
+of bad ->cmd_per_lun.
 
-Signed-off-by: Yin Xiujiang <yinxiujiang@kylinos.cn>
+Fix the issue by reallocating sdev->budget_map after ->slave_configure()
+returns, at that time, queue_depth should be much more reasonable.
+
+Reported-by: Martin Wilck <martin.wilck@suse.com>
+Suggested-by: Martin Wilck <martin.wilck@suse.com>
+Tested-by: Martin Wilck <mwilck@suse.com>
+Reviewed-by: Martin Wilck <mwilck@suse.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/scsi_scan.c | 56 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 51 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 71fa62bd3083..5edc2b812646 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -2723,14 +2723,13 @@ static int __init bnx2fc_mod_init(void)
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 3520b9384428..ce5d659d762c 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -214,6 +214,48 @@ static void scsi_unlock_floptical(struct scsi_device *sdev,
+ 			 SCSI_TIMEOUT, 3, NULL);
+ }
  
- 	bg = &bnx2fc_global;
- 	skb_queue_head_init(&bg->fcoe_rx_list);
--	l2_thread = kthread_create(bnx2fc_l2_rcv_thread,
-+	l2_thread = kthread_run(bnx2fc_l2_rcv_thread,
- 				   (void *)bg,
- 				   "bnx2fc_l2_thread");
- 	if (IS_ERR(l2_thread)) {
- 		rc = PTR_ERR(l2_thread);
- 		goto free_wq;
++static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
++					unsigned int depth)
++{
++	int new_shift = sbitmap_calculate_shift(depth);
++	bool need_alloc = !sdev->budget_map.map;
++	bool need_free = false;
++	int ret;
++	struct sbitmap sb_back;
++
++	/*
++	 * realloc if new shift is calculated, which is caused by setting
++	 * up one new default queue depth after calling ->slave_configure
++	 */
++	if (!need_alloc && new_shift != sdev->budget_map.shift)
++		need_alloc = need_free = true;
++
++	if (!need_alloc)
++		return 0;
++
++	/*
++	 * Request queue has to be freezed for reallocating budget map,
++	 * and here disk isn't added yet, so freezing is pretty fast
++	 */
++	if (need_free) {
++		blk_mq_freeze_queue(sdev->request_queue);
++		sb_back = sdev->budget_map;
++	}
++	ret = sbitmap_init_node(&sdev->budget_map,
++				scsi_device_max_queue_depth(sdev),
++				new_shift, GFP_KERNEL,
++				sdev->request_queue->node, false, true);
++	if (need_free) {
++		if (ret)
++			sdev->budget_map = sb_back;
++		else
++			sbitmap_free(&sb_back);
++		ret = 0;
++		blk_mq_unfreeze_queue(sdev->request_queue);
++	}
++	return ret;
++}
++
+ /**
+  * scsi_alloc_sdev - allocate and setup a scsi_Device
+  * @starget: which target to allocate a &scsi_device for
+@@ -306,11 +348,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	 * default device queue depth to figure out sbitmap shift
+ 	 * since we use this queue depth most of times.
+ 	 */
+-	if (sbitmap_init_node(&sdev->budget_map,
+-				scsi_device_max_queue_depth(sdev),
+-				sbitmap_calculate_shift(depth),
+-				GFP_KERNEL, sdev->request_queue->node,
+-				false, true)) {
++	if (scsi_realloc_sdev_budget_map(sdev, depth)) {
+ 		put_device(&starget->dev);
+ 		kfree(sdev);
+ 		goto out;
+@@ -1017,6 +1055,14 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 			}
+ 			return SCSI_SCAN_NO_RESPONSE;
+ 		}
++
++		/*
++		 * queue_depth is often changed in ->slave_configure, so
++		 * setup budget map again for getting better memory uses
++		 * since memory consumption of the map depends on queue
++		 * depth heavily
++		 */
++		scsi_realloc_sdev_budget_map(sdev, sdev->queue_depth);
  	}
--	wake_up_process(l2_thread);
- 	spin_lock_bh(&bg->fcoe_rx_list.lock);
- 	bg->kthread = l2_thread;
- 	spin_unlock_bh(&bg->fcoe_rx_list.lock);
+ 
+ 	if (sdev->scsi_level >= SCSI_3)
 -- 
-2.30.0
+2.31.1
 
