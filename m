@@ -2,47 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9711C28CF5
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jan 2022 16:37:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 507A2C2BA4C
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Jan 2022 19:09:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243170AbiAZQhe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jan 2022 11:37:34 -0500
-Received: from verein.lst.de ([213.95.11.211]:40700 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243168AbiAZQhb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Jan 2022 11:37:31 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 500F768AFE; Wed, 26 Jan 2022 17:37:28 +0100 (CET)
-Date:   Wed, 26 Jan 2022 17:37:28 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH V2 05/13] block: only account passthrough IO from
- userspace
-Message-ID: <20220126163728.GA31935@lst.de>
-References: <Ye8xleeYZfmwA3D7@T590> <20220125061634.GA26495@lst.de> <20220125071906.GA27674@lst.de> <Ye++VmBkg0I8Lq8+@T590> <20220126055003.GA21089@lst.de> <YfD2YNRf+lhe5BcU@T590> <20220126081052.GA23154@lst.de> <YfEHcs6psrBqFu3l@T590> <20220126084950.GA23957@lst.de> <YfEbbPr1Q5Ci48cg@T590>
+        id S232557AbiAZTJ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Jan 2022 14:09:28 -0500
+Received: from mail-pg1-f178.google.com ([209.85.215.178]:45612 "EHLO
+        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229791AbiAZTJ2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2022 14:09:28 -0500
+Received: by mail-pg1-f178.google.com with SMTP id z131so221054pgz.12
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jan 2022 11:09:27 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=rSzmF8E2CuZeFJAitvzT7tX0h6phubpSSTno0fsio3g=;
+        b=b6MZ03hzTBniTTZxni4jjcvv+xORX2EEgJGoQNLLMehDKRBll55a0moHzmS4NwUxhU
+         ylEjRneKL4qtbG5Da/u6n+5dlyQzKpzgnw0A7n5VcwveBsNhFAXT2sqzqAjqnLo17tY1
+         qtFCrq+dbDqCgrI0plXtdwopO1v7OXq6O4o3qc3M0bkLkfypLj4U5xDNC+I8jhBkLVGr
+         VTb8zPWugFO1lnH5Al49BdIsca+czc9eY5h09RVlT+QAEWwM7QPG54aC2OhFDpNOFLjn
+         2E7nSgXSvlgG1xbzulbAb7ybHQLZhlOLNybmUlA/vyjygFCGxVFqT10PLDqoSR3Dlwrl
+         /V6A==
+X-Gm-Message-State: AOAM532MZ5s/8sJTCrxjXUAqcn2QyHy/rrGhAK/DdlbSIAvjPiQaGikF
+        zaaCvtBgzhx/h222cyJYoxlspLxd6/8=
+X-Google-Smtp-Source: ABdhPJypOk8LwjqiR0QtAHIu/ofXdX8+/hy7k2AWY+hAYz/l3hI/BTtcgypjLjEJAJ9VJrJxgCkC3A==
+X-Received: by 2002:a05:6a00:1a4f:b0:4c9:e7b7:d84b with SMTP id h15-20020a056a001a4f00b004c9e7b7d84bmr12669225pfv.61.1643224167445;
+        Wed, 26 Jan 2022 11:09:27 -0800 (PST)
+Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id b9sm2833376pfm.154.2022.01.26.11.09.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 26 Jan 2022 11:09:26 -0800 (PST)
+Message-ID: <960b813a-0e65-c542-420b-7314d329f390@acm.org>
+Date:   Wed, 26 Jan 2022 11:09:24 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YfEbbPr1Q5Ci48cg@T590>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.1
+Subject: Re: [PATCH] scsi: core: reallocate scsi device's budget map if
+ default queue depth is changed
+Content-Language: en-US
+To:     Ming Lei <ming.lei@redhat.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     Martin Wilck <martin.wilck@suse.com>,
+        Martin Wilck <mwilck@suse.com>
+References: <20220126041756.297658-1-ming.lei@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220126041756.297658-1-ming.lei@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jan 26, 2022 at 05:59:08PM +0800, Ming Lei wrote:
-> nvme just sets part0 to rq->bio, which is fine since nvme doesn't
-> support partial completion.
-> 
-> The simplest way could be to assign bio->bi_bdev with q->disk->part0 in both
-> bio_copy_user_iov() and bio_map_user_iov(), which should cover most of cases.
-> Given user io is always on device instead of partition even though the
-> command is sent via partition bdev.
+On 1/25/22 20:17, Ming Lei wrote:
+> +static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
+> +					unsigned int depth)
+> +{
+> +	int new_shift = sbitmap_calculate_shift(depth);
+> +	bool need_alloc = !sdev->budget_map.map;
+> +	bool need_free = false;
+> +	int ret;
+> +	struct sbitmap sb_back;
 
-This would be easiest, but it would also assign them when called from
-the SG driver.  And that means these I/Os could be in flight when
-detaching a SCSI ULP.  At least without the freeze in del_gendisk
-(or the local one in case of the sd driver).
+To me the variable name "sb_back" looks confusing. Consider renaming 
+this variable into "sb_backup" or "previous_sb".
+
+> +	/*
+> +	 * Request queue has to be freezed for reallocating budget map,
+                                    ^^^^^^^
+                                    frozen?
+> +	 * and here disk isn't added yet, so freezing is pretty fast
+> +	 */
+
+Otherwise this patch looks good to me.
+
+Thanks,
+
+Bart.
