@@ -2,267 +2,187 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27B24C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 12:56:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D01BC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 13:18:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236245AbiA0M4A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jan 2022 07:56:00 -0500
-Received: from szxga03-in.huawei.com ([45.249.212.189]:32126 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229689AbiA0M4A (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 07:56:00 -0500
-Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Jl0qs2nGfz8wYh;
-        Thu, 27 Jan 2022 20:52:57 +0800 (CST)
-Received: from [10.40.193.166] (10.40.193.166) by
- dggeme756-chm.china.huawei.com (10.3.19.102) with Microsoft SMTP Server
+        id S241624AbiA0NSc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jan 2022 08:18:32 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4525 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236333AbiA0NSb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 08:18:31 -0500
+Received: from fraeml706-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Jl1Nr253cz686Hf;
+        Thu, 27 Jan 2022 21:18:04 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.21; Thu, 27 Jan 2022 20:55:55 +0800
-Subject: Re: [PATCH 06/16] scsi: libsas: Add sas_task.tmf
-To:     John Garry <john.garry@huawei.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <artur.paszkiewicz@intel.com>,
-        <jinpu.wang@cloud.ionos.com>, <Ajish.Koshy@microchip.com>
-References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
- <1643110372-85470-7-git-send-email-john.garry@huawei.com>
-CC:     <yanaijie@huawei.com>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>, <liuqi115@huawei.com>,
-        <Viswas.G@microchip.com>, <damien.lemoal@opensource.wdc.com>
-From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
-Message-ID: <e349aedb-71ad-8bf2-d3c3-920a83a56eae@hisilicon.com>
-Date:   Thu, 27 Jan 2022 20:55:55 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.2.0
+ 15.1.2308.21; Thu, 27 Jan 2022 14:18:28 +0100
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Thu, 27 Jan 2022 13:18:26 +0000
+From:   John Garry <john.garry@huawei.com>
+To:     <jinpu.wang@cloud.ionos.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>,
+        <Ajish.Koshy@microchip.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <Viswas.G@microchip.com>, <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH 0/3] scsi: pm8001: Documentation and use-after-free fixes
+Date:   Thu, 27 Jan 2022 21:12:49 +0800
+Message-ID: <1643289172-165636-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-In-Reply-To: <1643110372-85470-7-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.40.193.166]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggeme756-chm.china.huawei.com (10.3.19.102)
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+A few fixes:
+- Remedy make W=1 warning for undescribed param
+- 2x use-after-free fixes for these KASAN warnings:
 
+TMF timeout:
+389.780822] ==================================================================
+[  389.780828] BUG: KASAN: use-after-free in mpi_ssp_completion+0xb8/0xd20
+[  389.780845] Read of size 8 at addr ffff0020ccb50268 by task swapper/6/0
+[  389.780851]
+[  389.780854] CPU: 6 PID: 0 Comm: swapper/6 Not tainted 5.17.0-rc1-11819-gb4fa2357aff7 #1077
+[  389.780862] Hardware name: Huawei D06 /D06, BIOS Hisilicon D06 UEFI RC0 - V1.16.01 03/15/2019 
+[  389.780867] Call trace:
+[  389.780870]  dump_backtrace.part.0+0x1d4/0x1e0
+[  389.780880]  show_stack+0x1c/0x6c 
+[  389.780888]  dump_stack_lvl+0x68/0x84 
+[  389.780897]  print_address_description.constprop.0+0x74/0x2d8 
+[  389.780905]  kasan_report+0x1e4/0x250 
+[  389.780913]  __asan_load8+0x98/0xd4
+[  389.780920]  mpi_ssp_completion+0xb8/0xd20
+[  389.780927]  process_oq+0x7ec/0x3fec   
+[  389.780935]  pm80xx_chip_isr+0x74/0xe0
+[  389.780942]  pm8001_tasklet+0x64/0x80 
+[  389.780948]  tasklet_action_common.constprop.0+0x1c4/0x1d0
+[  389.780957]  tasklet_action+0x2c/0x40 
+[  389.780964]  __do_softirq+0x1b0/0x3f8 
+[  389.780969]  __irq_exit_rcu+0x160/0x180
+[  389.780976]  irq_exit_rcu+0x14/0x20
+[  389.780983]  el1_interrupt+0x38/0x80   
+[  389.780992]  el1h_64_irq_handler+0x1c/0x2c
+[  389.780998]  el1h_64_irq+0x78/0x7c
+[  389.781004]  arch_local_irq_enable+0xc/0x20
+[  389.781012]  default_idle_call+0x30/0x6c   
+[  389.781020]  do_idle+0x2ec/0x370   
+[  389.781027]  cpu_startup_entry+0x2c/0x80   
+[  389.781034]  secondary_start_kernel+0x240/0x28c
+[  389.781041]  __secondary_switched+0x94/0x98
+[  389.781051]
+[  389.781053] Allocated by task 629:
+[  389.781057]  kasan_save_stack+0x30/0x60
+[  389.781065]  __kasan_slab_alloc+0x70/0x94 
+[  389.781071]  kmem_cache_alloc+0x16c/0x2fc 
+[  389.781078]  sas_alloc_slow_task+0x38/0x250
+[  389.781086]  pm8001_exec_internal_tmf_task.constprop.0+0xf0/0x430 
+[  389.781093]  pm8001_abort_task+0x59c/0x810
+[  389.781100]  sas_scsi_recover_host+0xafc/0x1090
+[  389.781108]  scsi_error_handler+0x138/0x5f0
+[  389.781114]  kthread+0x18c/0x194   
+[  389.781123]  ret_from_fork+0x10/0x20   
+[  389.781129]
+[  389.781131] Freed by task 629:
+[  389.781134]  kasan_save_stack+0x30/0x60
+[  389.781141]  kasan_set_track+0x30/0x44
+[  389.781147]  kasan_set_free_info+0x2c/0x50
+[  389.781155]  __kasan_slab_free+0xf0/0x140 
+[  389.781161]  slab_free_freelist_hook+0x70/0x1f0
+[  389.781167]  kmem_cache_free+0xb4/0x2e0
+[  389.781173]  sas_free_task+0x3c/0x50   
+[  389.781179]  pm8001_exec_internal_tmf_task.constprop.0+0x2b4/0x430
+[  389.781186]  pm8001_abort_task+0x59c/0x810
+[  389.781193]  sas_scsi_recover_host+0xafc/0x1090
+[  389.781201]  scsi_error_handler+0x138/0x5f0
+[  389.781207]  kthread+0x18c/0x194   
+[  389.781213]  ret_from_fork+0x10/0x20   
 
-ÔÚ 2022/1/25 19:32, John Garry Ð´µÀ:
-> Add a pointer to a sas_tmf_task to the sas_task struct, as this will be
-> used when the common LLDD TMF code is factored out.
->
-> Also set it for the LLDDs to store per-sas_task TMF info.
->
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> ---
->   drivers/scsi/hisi_sas/hisi_sas_main.c | 25 +++++++++---------------
->   drivers/scsi/mvsas/mv_sas.c           | 15 ++++++--------
->   drivers/scsi/pm8001/pm8001_sas.c      | 28 ++++++++++-----------------
->   include/scsi/libsas.h                 |  1 +
->   4 files changed, 26 insertions(+), 43 deletions(-)
->
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> index db6f8ea7864d..4f146aa50423 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -400,8 +400,7 @@ void hisi_sas_task_deliver(struct hisi_hba *hisi_hba,
->   			   struct hisi_sas_slot *slot,
->   			   struct hisi_sas_dq *dq,
->   			   struct hisi_sas_device *sas_dev,
-> -			   struct hisi_sas_internal_abort *abort,
-> -			   struct sas_tmf_task *tmf)
-> +			   struct hisi_sas_internal_abort *abort)
->   {
->   	struct hisi_sas_cmd_hdr *cmd_hdr_base;
->   	int dlvry_queue_slot, dlvry_queue;
-> @@ -427,8 +426,6 @@ void hisi_sas_task_deliver(struct hisi_hba *hisi_hba,
->   	cmd_hdr_base = hisi_hba->cmd_hdr[dlvry_queue];
->   	slot->cmd_hdr = &cmd_hdr_base[dlvry_queue_slot];
->   
-> -	slot->tmf = tmf;
-> -	slot->is_internal = tmf;
+Regular task timeout:
+[   85.361540] Allocated by task 829:  
+[   85.366754] CPU: 23 PID: 0 Comm: swapper/23 Not tainted 5.17.0-rc1-11821-g49f9b9c16c23 #1079
+[   85.373181]  kasan_save_stack+0x30/0x60 
+[   85.379401] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 251 tries: 1   
+[   85.379522] Hardware name: Huawei D06 /D06, BIOS Hisilicon D06 UEFI RC0 - V1.16.01 03/15/2019   
+[   85.386384]  __kasan_slab_alloc+0x70/0x94   
+[   85.391598] Call trace: 
+[   85.398025]  kmem_cache_alloc+0x18c/0x4dc   
+[   85.404713]  dump_backtrace.part.0+0x1d8/0x1ec  
+[   85.409665]  sas_alloc_task+0x28/0x70   
+[   85.411145]  show_stack+0x1c/0x6c   
+[   85.416097]  sas_queuecommand+0x174/0x360   
+[   85.422699]  dump_stack_lvl+0x8c/0xb8   
+[   85.429822]  scsi_queue_rq+0x848/0x11c0 
+[   85.435035]  dump_stack+0x20/0x3c   
+[   85.441463]  blk_mq_dispatch_rq_list+0x328/0xd10
+[   85.447804]  spin_dump+0xd4/0xec
+[   85.454667]  __blk_mq_sched_dispatch_requests+0x14c/0x224   
+[   85.459879]  do_raw_spin_lock+0x204/0x230   
+[   85.466307]  blk_mq_sched_dispatch_requests+0x60/0xa0   
+[   85.472648]  _raw_spin_lock_irqsave+0xb4/0x110  
+[   85.479510]  __blk_mq_run_hw_queue+0xc8/0x230   
+[   85.484723]  mpi_ssp_completion+0x264/0xd00 
+[   85.491151]  blk_mq_run_work_fn+0x30/0x40   
+[   85.497492]  process_oq+0x7e4/0x3f14
+[   85.504354]  process_one_work+0x508/0xbdc   
+[   85.509567]  pm80xx_chip_isr+0x74/0xe0  
+[   85.515994]  worker_thread+0xac/0x760   
+[   85.522335]  pm8001_tasklet+0x64/0x7c   
+[   85.529197]  kthread+0x1a4/0x1b0
+[   85.534410]  tasklet_action_common.constprop.0+0x1c8/0x1e0  
+[   85.540837]  ret_from_fork+0x10/0x20
+[   85.547178]  tasklet_action+0x2c/0x40   
+[   85.554040] 
+[   85.559252]  __do_softirq+0x2a4/0x890   
+[   85.565680] Freed by task 630:  
+[   85.572021]  __irq_exit_rcu+0x248/0x280 
+[   85.578883]  kasan_save_stack+0x30/0x60 
+[   85.584095]  irq_exit_rcu+0x18/0x4c 
+[   85.590523]  kasan_set_track+0x30/0x44  
+[   85.596864]  el1_interrupt+0x38/0x80
+[   85.603726]  kasan_set_free_info+0x2c/0x50  
+[   85.608938]  el1h_64_irq_handler+0x1c/0x30  
+[   85.615366]  __kasan_slab_free+0xf0/0x140   
+[   85.621708]  el1h_64_irq+0x78/0x7c  
+[   85.628570]  slab_free_freelist_hook+0x70/0x20c 
+[   85.633782]  arch_local_irq_enable+0xc/0x20 
+[   85.640210]  kmem_cache_free+0x100/0x420
+[   85.646550]  default_idle_call+0x74/0x114   
+[   85.653412]  sas_free_task+0x3c/0x50
+[   85.658624]  do_idle+0x314/0x3a0
+[   85.665052]  sas_end_task+0x8c/0x200
+[   85.671392]  cpu_startup_entry+0x28/0x90
+[   85.678254]  sas_eh_finish_cmd+0x6c/0x108   
+[   85.683466]  secondary_start_kernel+0x248/0x29c 
+[   85.689894]  sas_scsi_recover_host+0xb6c/0x10ac 
+[   85.696235]  __secondary_switched+0x94/0x98 
+[   85.703097]  scsi_error_handler+0x16c/0x644 
+[   92.741029]  kthread+0x1a4/0x1b0
+[   92.744253]  ret_from_fork+0x10/0x20
 
-In kernel 5.17-rc1(with above two lines on), it seems there is a issue 
-for ata disk reset command as tmf = null while it is internal command.
+Patch 1/3 conflicts with [0]. I will update that series to support the
+changes here.
 
->   	task->lldd_task = slot;
->   
->   	memset(slot->cmd_hdr, 0, sizeof(struct hisi_sas_cmd_hdr));
-> @@ -471,8 +468,7 @@ void hisi_sas_task_deliver(struct hisi_hba *hisi_hba,
->   	spin_unlock(&dq->lock);
->   }
->   
-> -static int hisi_sas_task_exec(struct sas_task *task, gfp_t gfp_flags,
-> -			      struct sas_tmf_task *tmf)
-> +static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
->   {
->   	int n_elem = 0, n_elem_dif = 0, n_elem_req = 0;
->   	struct domain_device *device = task->dev;
-> @@ -583,11 +579,11 @@ static int hisi_sas_task_exec(struct sas_task *task, gfp_t gfp_flags,
->   	slot->task = task;
->   	slot->port = port;
->   
-> -	slot->tmf = tmf;
-> -	slot->is_internal = tmf;
-> +	slot->tmf = task->tmf;
-> +	slot->is_internal = task->tmf;
->   
->   	/* protect task_prep and start_delivery sequence */
-> -	hisi_sas_task_deliver(hisi_hba, slot, dq, sas_dev, NULL, tmf);
-> +	hisi_sas_task_deliver(hisi_hba, slot, dq, sas_dev, NULL);
->   
->   	return 0;
->   
-> @@ -1115,11 +1111,6 @@ static void hisi_sas_dev_gone(struct domain_device *device)
->   	up(&hisi_hba->sem);
->   }
->   
-> -static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
-> -{
-> -	return hisi_sas_task_exec(task, gfp_flags, NULL);
-> -}
-> -
->   static int hisi_sas_phy_set_linkrate(struct hisi_hba *hisi_hba, int phy_no,
->   			struct sas_phy_linkrates *r)
->   {
-> @@ -1273,7 +1264,9 @@ static int hisi_sas_exec_internal_tmf_task(struct domain_device *device,
->   		task->slow_task->timer.expires = jiffies + TASK_TIMEOUT;
->   		add_timer(&task->slow_task->timer);
->   
-> -		res = hisi_sas_task_exec(task, GFP_KERNEL, tmf);
-> +		task->tmf = tmf;
-> +
-> +		res = hisi_sas_queue_command(task, GFP_KERNEL);
->   		if (res) {
->   			del_timer_sync(&task->slow_task->timer);
->   			dev_err(dev, "abort tmf: executing internal task failed: %d\n",
-> @@ -2054,7 +2047,7 @@ hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, int device_id,
->   	slot->port = port;
->   	slot->is_internal = true;
->   
-> -	hisi_sas_task_deliver(hisi_hba, slot, dq, sas_dev, abort, NULL);
-> +	hisi_sas_task_deliver(hisi_hba, slot, dq, sas_dev, abort);
->   
->   	return 0;
->   
-> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-> index 22bffaaf2eb0..5105d55eb00c 100644
-> --- a/drivers/scsi/mvsas/mv_sas.c
-> +++ b/drivers/scsi/mvsas/mv_sas.c
-> @@ -840,14 +840,14 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
->   	return rc;
->   }
->   
-> -static int mvs_task_exec(struct sas_task *task, gfp_t gfp_flags,
-> -				struct completion *completion, int is_tmf,
-> -				struct sas_tmf_task *tmf)
-> +int mvs_queue_command(struct sas_task *task, gfp_t gfp_flags)
->   {
->   	struct mvs_info *mvi = NULL;
->   	u32 rc = 0;
->   	u32 pass = 0;
->   	unsigned long flags = 0;
-> +	struct sas_tmf_task *tmf = task->tmf;
-> +	int is_tmf = !!task->tmf;
->   
->   	mvi = ((struct mvs_device *)task->dev->lldd_dev)->mvi_info;
->   
-> @@ -864,11 +864,6 @@ static int mvs_task_exec(struct sas_task *task, gfp_t gfp_flags,
->   	return rc;
->   }
->   
-> -int mvs_queue_command(struct sas_task *task, gfp_t gfp_flags)
-> -{
-> -	return mvs_task_exec(task, gfp_flags, NULL, 0, NULL);
-> -}
-> -
->   static void mvs_slot_free(struct mvs_info *mvi, u32 rx_desc)
->   {
->   	u32 slot_idx = rx_desc & RXQ_SLOT_MASK;
-> @@ -1300,7 +1295,9 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
->   		task->slow_task->timer.expires = jiffies + MVS_TASK_TIMEOUT*HZ;
->   		add_timer(&task->slow_task->timer);
->   
-> -		res = mvs_task_exec(task, GFP_KERNEL, NULL, 1, tmf);
-> +		task->tmf = tmf;
-> +
-> +		res = mvs_queue_command(task, GFP_KERNEL);
->   
->   		if (res) {
->   			del_timer(&task->slow_task->timer);
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-> index 0a3701d97549..323b172243b8 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -371,15 +371,14 @@ static int sas_find_local_port_id(struct domain_device *dev)
->   
->   #define DEV_IS_GONE(pm8001_dev)	\
->   	((!pm8001_dev || (pm8001_dev->dev_type == SAS_PHY_UNUSED)))
-> +
->   /**
-> -  * pm8001_task_exec - queue the task(ssp, smp && ata) to the hardware.
-> +  * pm8001_queue_command - register for upper layer used, all IO commands sent
-> +  * to HBA are from this interface.
->     * @task: the task to be execute.
-> -  * @gfp_flags: gfp_flags.
-> -  * @is_tmf: if it is task management task.
-> -  * @tmf: the task management IU
-> +  * @gfp_flags: gfp_flags
->     */
-> -static int pm8001_task_exec(struct sas_task *task,
-> -	gfp_t gfp_flags, int is_tmf, struct sas_tmf_task *tmf)
-> +int pm8001_queue_command(struct sas_task *task, gfp_t gfp_flags)
->   {
->   	struct domain_device *dev = task->dev;
->   	struct pm8001_hba_info *pm8001_ha;
-> @@ -390,6 +389,8 @@ static int pm8001_task_exec(struct sas_task *task,
->   	u32 tag = 0xdeadbeef, rc = 0, n_elem = 0;
->   	unsigned long flags = 0;
->   	enum sas_protocol task_proto = t->task_proto;
-> +	struct sas_tmf_task *tmf = task->tmf;
-> +	int is_tmf = !!task->tmf;
->   
->   	if (!dev->port) {
->   		struct task_status_struct *tsm = &t->task_status;
-> @@ -507,17 +508,6 @@ static int pm8001_task_exec(struct sas_task *task,
->   	return rc;
->   }
->   
-> -/**
-> -  * pm8001_queue_command - register for upper layer used, all IO commands sent
-> -  * to HBA are from this interface.
-> -  * @task: the task to be execute.
-> -  * @gfp_flags: gfp_flags
-> -  */
-> -int pm8001_queue_command(struct sas_task *task, gfp_t gfp_flags)
-> -{
-> -	return pm8001_task_exec(task, gfp_flags, 0, NULL);
-> -}
-> -
->   /**
->     * pm8001_ccb_task_free - free the sg for ssp and smp command, free the ccb.
->     * @pm8001_ha: our hba card information
-> @@ -752,7 +742,9 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
->   		task->slow_task->timer.expires = jiffies + PM8001_TASK_TIMEOUT*HZ;
->   		add_timer(&task->slow_task->timer);
->   
-> -		res = pm8001_task_exec(task, GFP_KERNEL, 1, tmf);
-> +		task->tmf = tmf;
-> +
-> +		res = pm8001_queue_command(task, GFP_KERNEL);
->   
->   		if (res) {
->   			del_timer(&task->slow_task->timer);
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index 30b9afec1e1d..802b4e04e3a1 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -611,6 +611,7 @@ struct sas_task {
->   	void   *lldd_task;	  /* for use by LLDDs */
->   	void   *uldd_task;
->   	struct sas_task_slow *slow_task;
-> +	struct sas_tmf_task *tmf;
->   };
->   
->   struct sas_task_slow {
+[0] https://lore.kernel.org/linux-scsi/b49f8c20-355b-42f4-1910-4cb7b8e1b7fb@opensource.wdc.com/T/#mb2dd87f254e9318c4139805acd1b008b011e3075
+
+John Garry (3):
+  scsi: pm8001: Fix warning for undescribed param in process_one_iomb()
+  scsi: pm8001: Fix use-after-free for aborted TMF sas_task
+  scsi: pm8001: Fix use-after-free for aborted SSP/STP sas_task
+
+ drivers/scsi/pm8001/pm8001_sas.c | 5 +++++
+ drivers/scsi/pm8001/pm80xx_hwi.c | 5 +++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+-- 
+2.26.2
 
