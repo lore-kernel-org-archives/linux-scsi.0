@@ -2,31 +2,31 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BC74C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 10:21:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D532C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 10:23:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239233AbiA0KVw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jan 2022 05:21:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47124 "EHLO
+        id S239277AbiA0KX0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jan 2022 05:23:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239231AbiA0KVs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 05:21:48 -0500
+        with ESMTP id S235053AbiA0KXZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 05:23:25 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D12BCC061753;
-        Thu, 27 Jan 2022 02:21:47 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D24B0C061714;
+        Thu, 27 Jan 2022 02:23:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=R3ojr29O/pnkbjSF7P2EfjftoM
-        jth1c8+5SASDR8JwQet5+gXYrFP6rDb0ac2kgFXyCBAqYB0HjXyZNf0LCsX4VU6jDs5sKS5Up2ZhS
-        CeSgBTNjZkz5dJ4fpf1mk8EBa+0xrTZBGGW2w4x8Aa7TWt91UoR1QLq4JySGLDwOF4QWgRQ5OkBKC
-        tlLVFPU8WQcQ3I2fnT/90FR5d6KPp4Cpt9xKpzUEIyQn9Nrd+HHcG3iLmphQUfbxg9DqEQXhvutFv
-        w3rAeaL7cEpO4Zdth+BFyv0AOk0U9mrIsSThqdtYpZ920fU0K3dfC+xfSF2jfqu+OsYcjX2fyKaz2
-        LkzCVHqw==;
+        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=xA/Nm1HxjAuAFi+nvGjJlicElu
+        ArAD2JNlbz8rIhUODHPKjHzLQ7YZy65pcC5CSjx9xZMNhiXEYS0dqDQqS9B2zGvZg6PEs8X/lHa/h
+        LKWGFJo5I81/vQwkWjFXMXKHN+tAAhXyTgsXxftg7H2F5brJ1loQM2QRt1A183a6MccQGJGbx+l9b
+        wq8YofbokEhbgexYUwC3Zfav6ULV6Tfg5MLsnjaZHTVDgMzrww9XwItQmdS+IX0MqmKF3iU6WITbB
+        9oQmV6LA30UdDYhz1X6FGHKAy+Hrs+ky1BKpM0vNNXqm+csMVVwHcUiMfMpXGQEErc6pd7nYsQky+
+        fKim68hw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nD1uP-00F8Qu-1L; Thu, 27 Jan 2022 10:21:41 +0000
-Date:   Thu, 27 Jan 2022 02:21:41 -0800
+        id 1nD1vx-00F8iN-Lv; Thu, 27 Jan 2022 10:23:17 +0000
+Date:   Thu, 27 Jan 2022 02:23:17 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     John Garry <john.garry@huawei.com>
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -36,14 +36,14 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         linuxarm@huawei.com, liuqi115@huawei.com, Viswas.G@microchip.com,
         damien.lemoal@opensource.wdc.com
-Subject: Re: [PATCH 05/16] scsi: libsas: Add struct sas_tmf_task
-Message-ID: <YfJyNZ4M8WAr5lXq@infradead.org>
+Subject: Re: [PATCH 06/16] scsi: libsas: Add sas_task.tmf
+Message-ID: <YfJylZRig98ZEIhI@infradead.org>
 References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
- <1643110372-85470-6-git-send-email-john.garry@huawei.com>
+ <1643110372-85470-7-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1643110372-85470-6-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1643110372-85470-7-git-send-email-john.garry@huawei.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
