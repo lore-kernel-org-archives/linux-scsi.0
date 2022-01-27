@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 486C1C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 09:08:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F8FEC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 09:12:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238217AbiA0JI3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jan 2022 04:08:29 -0500
-Received: from smtpbguseast3.qq.com ([54.243.244.52]:51641 "EHLO
-        smtpbguseast3.qq.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238215AbiA0JI2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 04:08:28 -0500
-X-QQ-mid: bizesmtp2t1643274495tyh25xokj
+        id S232457AbiA0JMb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jan 2022 04:12:31 -0500
+Received: from smtpbgjp3.qq.com ([54.92.39.34]:34003 "EHLO smtpbgjp3.qq.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234880AbiA0JMa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Jan 2022 04:12:30 -0500
+X-QQ-mid: bizesmtp54t1643274737tnh7xl4d
 Received: from localhost.localdomain (unknown [58.240.82.166])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 27 Jan 2022 17:08:08 +0800 (CST)
+        id ; Thu, 27 Jan 2022 17:12:11 +0800 (CST)
 X-QQ-SSF: 0140000000200090E000C00A0000000
-X-QQ-FEAT: TskX/GkkryBPF5HT0HtElpIA2By6DbVGrlZBlksv/OSb1ADRISEZBY7nx878I
-        p1NVq/zYH9i4AZJrcRVPtAWnot/SnvtEI1zRyJHwd2jUGAde8dvgP9kqTazKIwQIfXr60vS
-        se60qq76pZOowKThJYNnLF+n8+fQ5dRB0QUMQIrfOTOmp5dZOsH27YltfXWsz9/ihVAdKU8
-        zWGj4pjowRG1HSmzqc8n9RKt17YbdNTCHXQlP4he81tWMzq1s3e0vVIYb/X1Ggg6ltHjN4p
-        6NujUGwzqqfEfK3KhF+e9xjIH3xUaq7ZIwdnGr6+5H9UMKFy66Dt0TgA6X+zLwYfbK0nfMQ
-        wKjYZwa4+Sgj7b74hTOG/YG8oJhHFz0ieqOtLRhrwQQF/7/Ry8=
+X-QQ-FEAT: F3yR32iATbjWw3acDtsfp2HLqnilxm49/4xuiIAVnD3g9W5QKpqaUyV3Lkk6W
+        GRHy/Z/TKb4rTYjEmDW/4bTNTdYtPjiVTdxpR3fJkmD5jxHf55vczWMU1TKeLG+bS2qg34p
+        oXrvYyWnob/at2T9ngNQV+dHympfswqSoQLwtmOwDlZ4N58gZh+A+1FBUpfJSk2aQX9AFAq
+        6BcI1OWr/5nv8fuVRU4bSdtYiTlwYBIbH7YnbjB/Sh7m4ZXbdKG9HZhd4kcFD7Miact+6gP
+        beikY47ZSxYMJ9tMuVcAIrZxqhYSln7ymbG4ntqkxzPwI/+Z1At6Kd/GL23LxJIzVkcRZnk
+        oLYqJ4J/hEIwOLDpaM/Q91vzWiAvM5Z9Us9A37dR66jYSdju+I=
 X-QQ-GoodBg: 2
 From:   tangmeng <tangmeng@uniontech.com>
 To:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     tangmeng <tangmeng@uniontech.com>
 Subject: [PATCH v2] scsi: sr: Improve the judgment statement
-Date:   Thu, 27 Jan 2022 17:08:06 +0800
-Message-Id: <20220127090806.8201-1-tangmeng@uniontech.com>
+Date:   Thu, 27 Jan 2022 17:11:36 +0800
+Message-Id: <20220127091136.9658-1-tangmeng@uniontech.com>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:uniontech.com:qybgforeign:qybgforeign6
+Feedback-ID: bizesmtp:uniontech.com:qybgforeign:qybgforeign7
 X-QQ-Bgrelay: 1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
