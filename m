@@ -2,97 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 437CDC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 13:18:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2D85C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 14:14:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241634AbiA0NSl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jan 2022 08:18:41 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4528 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241651AbiA0NSi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 08:18:38 -0500
-Received: from fraeml703-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Jl1Nz3N3Lz688KK;
-        Thu, 27 Jan 2022 21:18:11 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml703-chm.china.huawei.com (10.206.15.52) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.21; Thu, 27 Jan 2022 14:18:35 +0100
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Thu, 27 Jan 2022 13:18:33 +0000
-From:   John Garry <john.garry@huawei.com>
-To:     <jinpu.wang@cloud.ionos.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>,
-        <Ajish.Koshy@microchip.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <Viswas.G@microchip.com>, <chenxiang66@hisilicon.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH 3/3] scsi: pm8001: Fix use-after-free for aborted SSP/STP sas_task
-Date:   Thu, 27 Jan 2022 21:12:52 +0800
-Message-ID: <1643289172-165636-4-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1643289172-165636-1-git-send-email-john.garry@huawei.com>
-References: <1643289172-165636-1-git-send-email-john.garry@huawei.com>
+        id S237406AbiA0OOL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jan 2022 09:14:11 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:37020 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233597AbiA0OOK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 09:14:10 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 778FF1F3A9;
+        Thu, 27 Jan 2022 14:14:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1643292849; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=tWcwS6ED/mkktDY/ojoagNo8BtKt7JYQJADnHylBU+s=;
+        b=V4BnBxjjcYfbadAi40py9ZPm+V11ElIB1CgkXOFsYWVoSLSDjZUx6R3+tplOlM0r1w38no
+        SieBpy5WjXC3mDRl8Vxdp2Ma+q1Pfy9A3OXYYcTQRsJf0a3evUVUMMR1BMkhxE2iacmV/r
+        BuPp/uwS5pSW2Es+SJCj47z7fbPwt3w=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 322FB13BE5;
+        Thu, 27 Jan 2022 14:14:09 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id p4inCbGo8mEMOQAAMHmgww
+        (envelope-from <mwilck@suse.com>); Thu, 27 Jan 2022 14:14:09 +0000
+From:   mwilck@suse.com
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
+Cc:     linux-scsi@vger.kernel.org, Martin Wilck <mwilck@suse.com>
+Subject: [PATCH] scsi: make "access_state" sysfs attribute always visible
+Date:   Thu, 27 Jan 2022 15:13:51 +0100
+Message-Id: <20220127141351.30706-1-mwilck@suse.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Currently a use-after-free may occur if a sas_task is aborted by the upper
-layer before we handle the IO completion in mpi_ssp_completion() or
-mpi_sata_completion().
+From: Martin Wilck <mwilck@suse.com>
 
-In this case, the following are the two steps in handling those IO
-completions:
-- call complete() to inform the upper layer handler of completion of
-  the IO
-- release driver resources associated with the sas_task in
-  pm8001_ccb_task_free() call
+If a SCSI device handler module is loaded after some SCSI devices
+have already been probed (e.g. via request_module() by dm-multipath),
+the "access_state" and "preferred_path" sysfs attributes remain invisible for
+these devices, although the handler is attached and live. The reason is
+that the visibility is only checked when the sysfs attribute group is
+first created. This results in an inconsistent user experience depending
+on the load order of SCSI low-level drivers vs. device handler modules.
 
-When complete() is called, the upper layer may free the sas_task. As such,
-we should not touch the associated sas_task afterwards, but we do so in
-the pm8001_ccb_task_free() call.
+This patch changes user space API: attempting to read the "access_state"
+or "preferred_path" attributes will now result in -EINVAL rather than
+-ENODEV for devices that have no device handler, and tests for the existence
+of these attributes will have a different result.
 
-Fix by swapping the complete() and pm8001_ccb_task_free() calls ordering.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_sysfs.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index ce38a2298e75..1134e86ac928 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -2185,9 +2185,9 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		pm8001_dbg(pm8001_ha, FAIL,
- 			   "task 0x%p done with io_status 0x%x resp 0x%x stat 0x%x but aborted by upper layer!\n",
- 			   t, status, ts->resp, ts->stat);
-+		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
- 		if (t->slow_task)
- 			complete(&t->slow_task->completion);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
- 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-@@ -2794,9 +2794,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha,
- 		pm8001_dbg(pm8001_ha, FAIL,
- 			   "task 0x%p done with io_status 0x%x resp 0x%x stat 0x%x but aborted by upper layer!\n",
- 			   t, status, ts->resp, ts->stat);
-+		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
- 		if (t->slow_task)
- 			complete(&t->slow_task->completion);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
- 		spin_unlock_irqrestore(&circularQ->oq_lock,
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index f1e0c131b77c..226a50944c00 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1228,14 +1228,6 @@ static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
+ 	    !sdev->host->hostt->change_queue_depth)
+ 		return 0;
+ 
+-#ifdef CONFIG_SCSI_DH
+-	if (attr == &dev_attr_access_state.attr &&
+-	    !sdev->handler)
+-		return 0;
+-	if (attr == &dev_attr_preferred_path.attr &&
+-	    !sdev->handler)
+-		return 0;
+-#endif
+ 	return attr->mode;
+ }
+ 
 -- 
-2.26.2
+2.34.1
 
