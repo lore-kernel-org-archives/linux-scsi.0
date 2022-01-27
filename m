@@ -2,50 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B815BC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 23:08:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B993C43219
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 23:09:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239780AbiA0XIC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jan 2022 18:08:02 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:27044 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231733AbiA0XIB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 18:08:01 -0500
+        id S1344742AbiA0XJQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jan 2022 18:09:16 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:8172 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1343934AbiA0XIz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 18:08:55 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1643324881; x=1674860881;
+  t=1643324935; x=1674860935;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=RIc1G0jfMqESjsX/4a2c2KpqW6LjEkfd3i3QcfNLq/g=;
-  b=g1pCKuF8QkATRKeP3LxjfKGRdLMqvqXF4g2urDxk3vmCeFuHO+TKLTOG
-   uj4KoxoZer6EeqK7mKzLdnMSzuE0VlOGwYZmFHbINrCWXKCtqdPNdLmoi
-   Qbok82mL0AZORBHE3nhCqdO4LASEADVsdZK8tgvCyfOSobmnXzFRujrHd
-   QxMm/dkiNx23EIZZ8t1yBvSi84JsDf1V1M1Cx5sLNzd9E38Se2jvlUtSb
-   ng0Brrd4ibJteX9s2ars2oVq2jEWLGcZDV4cnTBV51u9nldCPdBE4DvoQ
-   vahdd52YGR2Ds5JmTBZpTtF3CptZJpIkBWL0g451ZHDJZAktce0HYM81a
+  bh=sIQFZUU2YtYKz8AVEUJwYWDyx6QIOXw3eZJaDURUMqM=;
+  b=F5JrP9ebaJQciCawm6BbEgxvdSv/PfTsbecx9zmAPtGoLfDEv+zAr5zU
+   SGXU1SQljrKvwWKbvjQPREAugHdC/aDkE9MikLQr3Yz1E8UqRUGO5HX/T
+   N1Yd0X3USNUBtwMLWSpFSx5cTHHQLIcMwvlSPGwCqZgLPk+SFbmp3iLiH
+   whGMo1IJHyDGkF1hSaBaxucY+7Ujg3iHDhOxOaijjmsHqHaVDifIerCda
+   bYQYZeinla5O46PbCrw6qHwwAOwk1RFSLSZPYX5rFwk3UMWef0fgjUsNO
+   PGF7nzPSZfqElqp+aSte1wFv1cYZ8HjhjgYhGjCFShGAD92jSg8ft0JR1
    g==;
 X-IronPort-AV: E=Sophos;i="5.88,321,1635177600"; 
-   d="scan'208";a="190525323"
+   d="scan'208";a="303450890"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2022 07:08:01 +0800
-IronPort-SDR: rAOGnb/v8DPMf4QZMs3ocL4ICOj6ORUnFTnZ9bQck9b0TNeikDXBpNDuxGl1wH5oGx5DAzff1h
- tIroVVvsst8KnHqcwQtA3wUFpDqSaVk4wtY0IbrLC57I6dXcVmI/T6TQvZlA6zY7Iv6vvC1t+j
- w+PhTofZyef9WEEumT6DYmRmKySnLhIlXp94dFLgn0U2vZkC0GMUXH3ieIvH7A85sw4/xna7uq
- fnPe5r8nxVbqfZwQbpCbZNbBgri8dc9myKYjeSqBI9GjxbUIh6DYyf5tCMZGyn3cV7pPR8O9MS
- eqYlZdRGdJiFRWsyomxKjKgC
+  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2022 07:08:50 +0800
+IronPort-SDR: wnrWJr5qpQyn0DzE5B+Nm4kUSJWB83jPQM5iLnvPXoOw0bUAApaN4RFWNSnxq0tmMVHn9ae5d4
+ u+/BiQFn09ZnrJ5RsxTkWIDw1dH5Zf9pUfsJeqqHmv1IAXzLEMLm7qRCdfrgiVB/y0f5QKnssO
+ Dz/rr9IihpqQOPq9K3YPHSs5ka4TaXZQvCC1PZ17MCWq6lTFu4nNAv3Xfy6RMlCAb0uo7wd3vh
+ xiNo137O+s6BLYrXRxwS2S5QXPXixOpjNHYAhz+2gZAeg7K/KZjEIpGuEIkHcDpqWB0jX5oS27
+ pgPS1zbal4lXcle7DzKZGBsf
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2022 14:40:04 -0800
-IronPort-SDR: us/QJQQIPBtHP7H60BW5GZvQRtWTpwvkkSR0LyiT7NzRXcJTJWS5d4viKGiuD4WYY4FlBVqZDV
- 8HA4wDTnK2Vl+tN8uanyhASxp5KbO97zHM08RwlKCEgobjwYYEOiWQOEUR15jo3BVJBjGhocA0
- Y8S3/LwcSzK0FCVTh5B4o5oKQXik+yM3uCSoy4B9IrA5EeOFMSeKnkBF3iMsR47XdTjN7iEGS/
- 0l/wXsG+Mta+ioJ//D3p5sA/ZG3nVxhhUXbbukTJFdRe5nzAuN8q9pzDsnskYpWKQIHcCrupWz
- JPc=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2022 14:40:53 -0800
+IronPort-SDR: PWZkFPe+jazd9eIzF6CY1XgcZRet/N8i5GpMtz8DF/5VJFXwoGBeuojpydyCBECtrGrySRTtsA
+ 8AOzaDRjla1Vgbo92oSojP3eDdX/Lf6OZCY7zr1DneDPdO331VY5Ypt8pn55ScPXwtJtX28wu5
+ KZh9P7oPk+LBLa/p5aAw/ueueMaT1sUYtrJqVUg5UjY1xSlbfTZSM80lOX6MDk/UaoSeyrtBxH
+ 9gyzXZVhs4sYNqJmGpLgR7zWGimbVBwg/n7Mb6wRjmghGWtJvI8sresgloRMZRyB/yek0f2NoA
+ 5lI=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2022 15:08:01 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2022 15:08:50 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JlGTX73Vmz1SVnx
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Jan 2022 15:08:00 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JlGVT3WPRz1SVp5
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Jan 2022 15:08:49 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -53,27 +53,27 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1643324880; x=1645916881; bh=RIc1G0jfMqESjsX/4a2c2KpqW6LjEkfd3i3
-        QcfNLq/g=; b=I+8FNWGWJ/4MlV/z/th2/1EineZqntzCdjD1+SdzBRZmleDIasU
-        bDQHm2D3NYjKWvvl7CP3MGFkpk50BSKIdgdpnDDD2k5ag+1jVp/eA7j0i8a6w59z
-        ooUI+8JdH3Df02k9FxqaRt/DZp4KFOrK03D0VTm+psD1UCCZ5jmlNDll9dKF6Bn+
-        rpVGWQ3hj3eHNz/juwNltJAuRiZFSHsXqL/lo/5+cVViCYFI6ttU2yc/TNrvF1He
-        0CaT/njGqMqyEl7WmRJXWbOact3UD1oxAc2gtOSca0ice30aYLMyt6ak+SAqWbd8
-        rbs6ZBWWS5OFBv5v6vtPbF2uLe8WfREwEuw==
+        1643324928; x=1645916929; bh=sIQFZUU2YtYKz8AVEUJwYWDyx6QIOXw3eZJ
+        aDURUMqM=; b=r/zy/W7ckZnVRMM3jvoBp/4D6npgXj3O/z+pF5uUJ7sAfz0vQcs
+        V4HcSmvhSb6Oq7pGCysGglhogFn7qup6m9CJDfec6hC7zN3hHZ+HtMU29LbI9A5+
+        q0gBAOFqXJg+KjdYXlUQZ8SFJsT/I1yR4yfkMnFPHvnYAjpl4WDG+icYBSShJxc8
+        0i34GgHY/ieyCdDL1kJlCs0a1unP3tfXDy5g9QTmkU+B6jNJhSbdsO/+2pnTXjNw
+        MPDBFgF2+Tj4XTMtrq5GugxKj1Y2a+th1mwRCckd3MxJDLWx/7+rPG56J3+oTW4k
+        SsJ3pG+uWjlbvOgCbq3Evw1oY2v9w/Oj86Q==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id fx1c5MnfRBpg for <linux-scsi@vger.kernel.org>;
-        Thu, 27 Jan 2022 15:08:00 -0800 (PST)
+        with ESMTP id WtKbkw7Qp7-Z for <linux-scsi@vger.kernel.org>;
+        Thu, 27 Jan 2022 15:08:48 -0800 (PST)
 Received: from [10.225.163.58] (unknown [10.225.163.58])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JlGTW0WqXz1RvlN;
-        Thu, 27 Jan 2022 15:07:58 -0800 (PST)
-Message-ID: <6e698ebf-e592-dd44-95a2-8d86416277f7@opensource.wdc.com>
-Date:   Fri, 28 Jan 2022 08:07:57 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JlGVR3tzfz1RvlN;
+        Thu, 27 Jan 2022 15:08:47 -0800 (PST)
+Message-ID: <ab547eb4-d97d-45e0-207a-8b660c6e96bd@opensource.wdc.com>
+Date:   Fri, 28 Jan 2022 08:08:46 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH 2/3] scsi: pm8001: Fix use-after-free for aborted TMF
+Subject: Re: [PATCH 3/3] scsi: pm8001: Fix use-after-free for aborted SSP/STP
  sas_task
 Content-Language: en-US
 To:     John Garry <john.garry@huawei.com>, jinpu.wang@cloud.ionos.com,
@@ -82,10 +82,10 @@ To:     John Garry <john.garry@huawei.com>, jinpu.wang@cloud.ionos.com,
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Viswas.G@microchip.com, chenxiang66@hisilicon.com
 References: <1643289172-165636-1-git-send-email-john.garry@huawei.com>
- <1643289172-165636-3-git-send-email-john.garry@huawei.com>
+ <1643289172-165636-4-git-send-email-john.garry@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <1643289172-165636-3-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1643289172-165636-4-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -93,47 +93,54 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 1/27/22 22:12, John Garry wrote:
-> Currently a use-after-free may occur if a TMF sas_task is aborted before
-> we handle the IO completion in mpi_ssp_completion(). The abort occurs due
-> to timeout.
+> Currently a use-after-free may occur if a sas_task is aborted by the upper
+> layer before we handle the IO completion in mpi_ssp_completion() or
+> mpi_sata_completion().
 > 
-> When the timeout occurs, the SAS_TASK_STATE_ABORTED flag is set and the
-> sas_task is freed in pm8001_exec_internal_tmf_task().
+> In this case, the following are the two steps in handling those IO
+> completions:
+> - call complete() to inform the upper layer handler of completion of
+>   the IO
+> - release driver resources associated with the sas_task in
+>   pm8001_ccb_task_free() call
 > 
-> However, if the IO completion occurs later, the IO completion still thinks
-> that the sas_task is available. Fix this by clearing the ccb->task if
-> the TMF times out - the IO completion handler does nothing if this pointer
-> is cleared.
+> When complete() is called, the upper layer may free the sas_task. As such,
+> we should not touch the associated sas_task afterwards, but we do so in
+> the pm8001_ccb_task_free() call.
+> 
+> Fix by swapping the complete() and pm8001_ccb_task_free() calls ordering.
 > 
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> Note: For hisi_sas driver we already do something similar. However there
-> we also flush the completion queue interrupt to ensure that there is no
-> race in clearing the task pointer. Please advise if/how something similar
-> can be done here.
-> 
->  drivers/scsi/pm8001/pm8001_sas.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-> index 160ee8b228c9..32edda3e55c6 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -769,8 +769,13 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
->  		res = -TMF_RESP_FUNC_FAILED;
->  		/* Even TMF timed out, return direct. */
->  		if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
-> +			struct pm8001_ccb_info *ccb = task->lldd_task;
-> +
->  			pm8001_dbg(pm8001_ha, FAIL, "TMF task[%x]timeout.\n",
->  				   tmf->tmf);
-> +
-> +			if (ccb)
-> +				ccb->task = NULL;
->  			goto ex_err;
->  		}
->  
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index ce38a2298e75..1134e86ac928 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -2185,9 +2185,9 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>  		pm8001_dbg(pm8001_ha, FAIL,
+>  			   "task 0x%p done with io_status 0x%x resp 0x%x stat 0x%x but aborted by upper layer!\n",
+>  			   t, status, ts->resp, ts->stat);
+> +		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+>  		if (t->slow_task)
+>  			complete(&t->slow_task->completion);
+> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+>  	} else {
+>  		spin_unlock_irqrestore(&t->task_state_lock, flags);
+>  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+> @@ -2794,9 +2794,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha,
+>  		pm8001_dbg(pm8001_ha, FAIL,
+>  			   "task 0x%p done with io_status 0x%x resp 0x%x stat 0x%x but aborted by upper layer!\n",
+>  			   t, status, ts->resp, ts->stat);
+> +		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+>  		if (t->slow_task)
+>  			complete(&t->slow_task->completion);
+> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+>  	} else {
+>  		spin_unlock_irqrestore(&t->task_state_lock, flags);
+>  		spin_unlock_irqrestore(&circularQ->oq_lock,
 
 Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
