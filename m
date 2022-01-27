@@ -2,94 +2,202 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B8EBC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 20:23:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AFE2C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 22:38:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244247AbiA0UXH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jan 2022 15:23:07 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:37802 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237950AbiA0UXF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 15:23:05 -0500
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id DE93E21709;
-        Thu, 27 Jan 2022 20:23:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1643314983; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=SVm8997DjNMwDI21VCkNecCNpTNF5IPazMgfFtRBUT8=;
-        b=E7TI3Zg55si8VTjxEqYqZbAPyyTineyU3J2zTCoopUJvvOI+TzXxfJK50IvVjLhvrUU7Ut
-        LMVImsnq69G4AuYcZUiPtFCbAI5hPT7+r369bWflCYLUjXbFWhRAzbfQ0DgBAmNQzzKxVN
-        Z/0DVesUcPrTRsjs3pil1tTxMWb4CQo=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9308C13C7C;
-        Thu, 27 Jan 2022 20:23:03 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id Lc5mISf/8mEMZQAAMHmgww
-        (envelope-from <mwilck@suse.com>); Thu, 27 Jan 2022 20:23:03 +0000
-Message-ID: <d623c8be9062fd07fa9f5c1d8c9f921e2857ab37.camel@suse.com>
-Subject: Re: [RFC PATCH] scsi: make "access_state" sysfs attribute always
- visible
-From:   Martin Wilck <mwilck@suse.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
-Cc:     linux-scsi@vger.kernel.org
-Date:   Thu, 27 Jan 2022 21:23:02 +0100
-In-Reply-To: <4aa8727e-a183-a1f9-8291-624ecb5e6d25@acm.org>
-References: <20220125162441.2226-1-mwilck@suse.com>
-         <4aa8727e-a183-a1f9-8291-624ecb5e6d25@acm.org>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.42.3 
+        id S235160AbiA0WiP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jan 2022 17:38:15 -0500
+Received: from wnew2-smtp.messagingengine.com ([64.147.123.27]:56987 "EHLO
+        wnew2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231520AbiA0WiP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Jan 2022 17:38:15 -0500
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
+        by mailnew.west.internal (Postfix) with ESMTP id 9C4BA2B00384;
+        Thu, 27 Jan 2022 17:38:13 -0500 (EST)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute2.internal (MEProxy); Thu, 27 Jan 2022 17:38:14 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:from:from
+        :in-reply-to:in-reply-to:message-id:mime-version:references
+        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=wcr9somIvzZFXM+do
+        LeomZA5zif3KjUFitVyFvJeDYo=; b=Th8UCnAWUfFBauUeRu2r8tL4o/qjWFXUs
+        uJjCsIczCIR7m69lw4gcRi3cHWCHzzC1QQKuFLTFPv0YnqVi1xYyYAfnwhn06jqw
+        7uKcU+w3jzQMl+2YhuVYJzIBHGbtNFDDJF4Dt8MyuyWrjCUwAoUI86TxUlrljsu4
+        o2B3OC13bZ5JEqE02ZVHipmOwadF1NQwqu7oouT8kNj0nvKl24Ny3BVWOUBx8QkC
+        F7gGuSyN3QPZYT04TAQ3v8meFfDMy/GNhT0OmXbhk7FH7XLZgkCA5THYqNfDxvMG
+        Ntej5cBSoZJJKYvvigCUu1ZSuPm3/IDbkRZXYtpC+wGjpHgxzd+mA==
+X-ME-Sender: <xms:1B7zYYVxtd6YEbVnm-4_RCT2C4zKEKMnwFXqMfGOt1upUktoUa_mCA>
+    <xme:1B7zYcnv0Bs3WSo_nVJzSlt-NTiRd8gH3boPstx5drM1FCQAV8OuXZzJrl5OYu8hE
+    88uWCfqQ7AC64PHKgQ>
+X-ME-Received: <xmr:1B7zYcYGEeLRYRQS40-jvSKOLJhHEff8R-Jo-xZSr3-9h3WUOueXMAWjjO70k3K57TsUBN8BdSKd3qrbGxrxoOXz1P4YP9CDe40>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddrfeefgdduieegucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvffujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhnucfv
+    hhgrihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrth
+    htvghrnhepffduhfegfedvieetudfgleeugeehkeekfeevfffhieevteelvdfhtdevffet
+    uedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfh
+    hthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgh
+X-ME-Proxy: <xmx:1B7zYXUywcSuvw1OihWbbXsVHwS0F2KDJIYb0lYQxQ3JfPiwzQMIQw>
+    <xmx:1B7zYSlet4_9vf9KIwN0mL5LDMnM-LS3lc3mv8XtdMW-tEbPM_SQ7Q>
+    <xmx:1B7zYceJXsy-LSX_JAVQ4HiCZESHrHn1H1T3OIjooV6CuF4gImx8UQ>
+    <xmx:1R7zYXjai1E_HJPafK1KO4xThwjq_dU2IjnZ92Ve_7bG49kMyY4asU6_RMw>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 27 Jan 2022 17:38:09 -0500 (EST)
+Date:   Fri, 28 Jan 2022 09:37:58 +1100 (AEDT)
+From:   Finn Thain <fthain@linux-m68k.org>
+To:     Tom Rix <trix@redhat.com>
+cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, nathan@kernel.org,
+        ndesaulniers@google.com, megaraidlinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev
+Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
+In-Reply-To: <20220127151945.1244439-1-trix@redhat.com>
+Message-ID: <953eb015-4b78-f7b-5dc1-6491c6bf27e@linux-m68k.org>
+References: <20220127151945.1244439-1-trix@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2022-01-27 at 09:28 -0800, Bart Van Assche wrote:
-> On 1/25/22 08:24, mwilck@suse.com wrote:
-> > From: Martin Wilck <mwilck@suse.com>
-> > 
-> > If a SCSI device handler module is loaded after some SCSI devices
-> > have already been probed (e.g. via request_module() by dm-
-> > multipath),
-> > the "access_state" and "preferred_path" sysfs attributes remain
-> > invisible for
-> > these devices, although the handler is attached and live. The
-> > reason is
-> > that the visibility is only checked when the sysfs attribute group
-> > is
-> > first created. This results in an inconsistent user experience
-> > depending
-> > on the load order of SCSI low-level drivers vs. device handler
-> > modules.
+
+On Thu, 27 Jan 2022, trix@redhat.com wrote:
+
+> From: Tom Rix <trix@redhat.com>
 > 
-> Isn't this something that should be fixed in the sysfs code rather
-> than 
-> in the SCSI core? If this issue affects SCSI I assume that it will
-> also 
-> affect other sysfs users.
+> checkpatch reports several hundred formatting errors. Run these files 
+> through clang-format and knock off some of them.
+> 
 
-Well, there's sysfs_update_groups() which could be used for this
-purpose in principle, I suppose. But there's no API for calling it in
-the driver core (there is no device_update_groups() or or
-device_update_attrs()), probably for good reason. 
-Making the attribute visible even if there's no device handler is
-simpler, and less error-prone.
+That method seems like a good recipe for endless churn unless checkpatch 
+and clang-format really agree about these style rules.
 
-IOW, I agree with Hannes.
+Why use checkpatch to assess code style, if we could simply diff the 
+existing source with the output from clang-format... but it seems that 
+clang-format harms readability, makes indentation errors and uses 
+inconsistent style rules. Some examples:
 
-Regards,
-Martin
+>  static unsigned short int max_sectors_per_io = MAX_SECTORS_PER_IO;
+>  module_param(max_sectors_per_io, ushort, 0);
+> -MODULE_PARM_DESC(max_sectors_per_io, "Maximum number of sectors per I/O request (default=MAX_SECTORS_PER_IO=128)");
+> -
+> +MODULE_PARM_DESC(
+> +	max_sectors_per_io,
+> +	"Maximum number of sectors per I/O request (default=MAX_SECTORS_PER_IO=128)");
+>  
+>  static unsigned short int max_mbox_busy_wait = MBOX_BUSY_WAIT;
+>  module_param(max_mbox_busy_wait, ushort, 0);
+> -MODULE_PARM_DESC(max_mbox_busy_wait, "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
+> +MODULE_PARM_DESC(
+> +	max_mbox_busy_wait,
+> +	"Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
+>  
 
+This code is longer for no real improvement.
 
+>  
+>  /*
+>   * The File Operations structure for the serial/ioctl interface of the driver
+>   */
+>  static const struct file_operations megadev_fops = {
+> -	.owner		= THIS_MODULE,
+> -	.unlocked_ioctl	= megadev_unlocked_ioctl,
+> -	.open		= megadev_open,
+> -	.llseek		= noop_llseek,
+> +	.owner = THIS_MODULE,
+> +	.unlocked_ioctl = megadev_unlocked_ioctl,
+> +	.open = megadev_open,
+> +	.llseek = noop_llseek,
+>  };
+>  
+>  /*
+
+Readability loss.
+
+> -		prod_info_dma_handle = dma_map_single(&adapter->dev->dev,
+> -						      (void *)&adapter->product_info,
+> -						      sizeof(mega_product_info),
+> -						      DMA_FROM_DEVICE);
+> +		prod_info_dma_handle = dma_map_single(
+> +			&adapter->dev->dev, (void *)&adapter->product_info,
+> +			sizeof(mega_product_info), DMA_FROM_DEVICE);
+>  
+
+Note the orphaned first parameter and odd indentation.
+
+>  
+>  static DEF_SCSI_QCMD(megaraid_queue)
+>  
+> -/**
+> +	/**
+>   * mega_allocate_scb()
+>   * @adapter: pointer to our soft state
+>   * @cmd: scsi command from the mid-layer
+
+Indentation error.
+
+> @@ -418,15 +409,14 @@ static DEF_SCSI_QCMD(megaraid_queue)
+>   * Allocate a SCB structure. This is the central structure for controller
+>   * commands.
+>   */
+> -static inline scb_t *
+> -mega_allocate_scb(adapter_t *adapter, struct scsi_cmnd *cmd)
+> +	static inline scb_t *mega_allocate_scb(adapter_t *adapter,
+> +					       struct scsi_cmnd *cmd)
+>  {
+>  	struct list_head *head = &adapter->free_list;
+
+Same.
+
+> @@ -586,26 +568,25 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cmd, int *busy)
+>  
+>  		ldrv_num = mega_get_ldrv_num(adapter, cmd, channel);
+>  
+> -
+>  		max_ldrv_num = (adapter->flag & BOARD_40LD) ?
+> -			MAX_LOGICAL_DRIVES_40LD : MAX_LOGICAL_DRIVES_8LD;
+> +				       MAX_LOGICAL_DRIVES_40LD :
+> +					     MAX_LOGICAL_DRIVES_8LD;
+>  
+
+Churn, if not readability loss. Note the indentation change here is 
+inconsistent with the indentation change noted above.
+
+>  			 * 6-byte READ(0x08) or WRITE(0x0A) cdb
+>  			 */
+> -			if( cmd->cmd_len == 6 ) {
+> -				mbox->m_out.numsectors = (u32) cmd->cmnd[4];
+> -				mbox->m_out.lba =
+> -					((u32)cmd->cmnd[1] << 16) |
+> -					((u32)cmd->cmnd[2] << 8) |
+> -					(u32)cmd->cmnd[3];
+> +			if (cmd->cmd_len == 6) {
+> +				mbox->m_out.numsectors = (u32)cmd->cmnd[4];
+> +				mbox->m_out.lba = ((u32)cmd->cmnd[1] << 16) |
+> +						  ((u32)cmd->cmnd[2] << 8) |
+> +						  (u32)cmd->cmnd[3];
+>  
+>  				mbox->m_out.lba &= 0x1FFFFF;
+>  
+
+Here, the orphaned term is moved up, next to the =. And yet,
+
+>  
+>  			/* Calculate Scatter-Gather info */
+> -			mbox->m_out.numsgelements = mega_build_sglist(adapter, scb,
+> -					(u32 *)&mbox->m_out.xferaddr, &seg);
+> +			mbox->m_out.numsgelements =
+> +				mega_build_sglist(adapter, scb,
+> +						  (u32 *)&mbox->m_out.xferaddr,
+> +						  &seg);
+>  
+>  			return scb;
+>  
+
+... here the first term is moved down and orphaned, which is another 
+inconsistency.
