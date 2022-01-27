@@ -2,94 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2853C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 10:47:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BBFFC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 11:31:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239623AbiA0KrD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jan 2022 05:47:03 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4523 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239595AbiA0Kq7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 05:46:59 -0500
-Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Jky2023Tvz6H8Vl;
-        Thu, 27 Jan 2022 18:46:32 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Thu, 27 Jan 2022 11:46:56 +0100
-Received: from [10.47.26.192] (10.47.26.192) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 27 Jan
- 2022 10:46:55 +0000
-Subject: Re: [PATCH 08/16] scsi: libsas: Add sas_execute_ssp_tmf()
-To:     Christoph Hellwig <hch@infradead.org>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <artur.paszkiewicz@intel.com>, <jinpu.wang@cloud.ionos.com>,
-        <chenxiang66@hisilicon.com>, <Ajish.Koshy@microchip.com>,
-        <yanaijie@huawei.com>, <linux-doc@vger.kernel.org>,
+        id S240393AbiA0Lbt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jan 2022 06:31:49 -0500
+Received: from szxga03-in.huawei.com ([45.249.212.189]:32125 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240384AbiA0Lbs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 06:31:48 -0500
+Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.54])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Jkyym27Hmz8wgG;
+        Thu, 27 Jan 2022 19:28:48 +0800 (CST)
+Received: from [10.40.193.166] (10.40.193.166) by
+ dggeme756-chm.china.huawei.com (10.3.19.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.21; Thu, 27 Jan 2022 19:31:46 +0800
+Subject: Re: [PATCH 01/16] scsi: libsas: Use enum for response frame DATAPRES
+ field
+To:     John Garry <john.garry@huawei.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <artur.paszkiewicz@intel.com>,
+        <jinpu.wang@cloud.ionos.com>, <Ajish.Koshy@microchip.com>
+References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
+ <1643110372-85470-2-git-send-email-john.garry@huawei.com>
+CC:     <yanaijie@huawei.com>, <linux-doc@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <linuxarm@huawei.com>, <liuqi115@huawei.com>,
         <Viswas.G@microchip.com>, <damien.lemoal@opensource.wdc.com>
-References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
- <1643110372-85470-9-git-send-email-john.garry@huawei.com>
- <YfJy26K2zTxbVjDK@infradead.org>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <442fa3a6-3e6b-0a5e-47a4-87fcfc696f8b@huawei.com>
-Date:   Thu, 27 Jan 2022 10:46:22 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
+Message-ID: <4a2986a4-8293-2a25-8ee1-109ff8aa0bc3@hisilicon.com>
+Date:   Thu, 27 Jan 2022 19:31:46 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
 MIME-Version: 1.0
-In-Reply-To: <YfJy26K2zTxbVjDK@infradead.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.26.192]
-X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
+In-Reply-To: <1643110372-85470-2-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.40.193.166]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggeme756-chm.china.huawei.com (10.3.19.102)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27/01/2022 10:24, Christoph Hellwig wrote:
-> On Tue, Jan 25, 2022 at 07:32:44PM +0800, John Garry wrote:
->> Add a function to issue an SSP TMF.
->>
->> Add a temp prototype to keep make W=1 happy.
->>
->> Signed-off-by: John Garry <john.garry@huawei.com>
->> ---
->>   drivers/scsi/libsas/sas_scsi_host.c | 20 ++++++++++++++++++++
->>   1 file changed, 20 insertions(+)
->>
->> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
->> index 93ca6da63104..cfdf4a031be0 100644
->> --- a/drivers/scsi/libsas/sas_scsi_host.c
->> +++ b/drivers/scsi/libsas/sas_scsi_host.c
->> @@ -938,6 +938,11 @@ int sas_execute_tmf(struct domain_device *device, void *parameter,
->>   		task->dev = device;
->>   		task->task_proto = device->tproto;
->>   
->> +		if (dev_is_sata(device)) {
->> +		} else {
->> +			memcpy(&task->ssp_task, parameter, para_len);
->> +		}
-> 
-> This looks strange,
-> 
+Hi John,
 
-I'm trying to be too cute. I did this as I add in the 'if' part in a 
-later patch.
 
-In hindsight, I don't think it's a good practice and I'll code as suggested.
+在 2022/1/25 19:32, John Garry 写道:
+> As defined in table 126 of the SAS spec 1.1, use an enum for the DATAPRES
+> field, which makes reading the code easier.
+>
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>   drivers/scsi/libsas/sas_task.c | 12 +++++++++---
+>   1 file changed, 9 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/libsas/sas_task.c b/drivers/scsi/libsas/sas_task.c
+> index 2966ead1d421..7240fd22b154 100644
+> --- a/drivers/scsi/libsas/sas_task.c
+> +++ b/drivers/scsi/libsas/sas_task.c
+> @@ -7,6 +7,12 @@
+>   #include <scsi/sas.h>
+>   #include <scsi/libsas.h>
+>   
+> +enum {
+> +	NO_DATA = 0,
+> +	RESPONSE_DATA = 1,
+> +	SENSE_DATA = 2,
+> +};
+> +
 
- >  why not:
-> 		if (!dev_is_sata(device))
-> 			memcpy(&task->ssp_task, parameter, para_len);
-> .
-> 
+I find that iu->datapres is also used in other drivers with 0/1/2, and 
+maybe it is worth to replace all of them with those enum.
 
-Thanks,
-John
+   2    290 
+/home/chenxiang/kernel_next/kernel-dev/drivers/scsi/aic94xx/aic94xx_tmf.c 
+<<<unknown>>>
+              if (ru->datapres == 1)
+5   1055 
+/home/chenxiang/kernel_next/kernel-dev/drivers/scsi/isci/request.c 
+<<<unknown>>>
+              if (datapres == 1 || datapres == 2) {
+    6   1740 
+/home/chenxiang/kernel_next/kernel-dev/drivers/scsi/isci/request.c 
+<<<unknown>>>
+              if (resp_iu->datapres == 0x01 ||
+    7   1741 
+/home/chenxiang/kernel_next/kernel-dev/drivers/scsi/isci/request.c 
+<<<unknown>>>
+                  resp_iu->datapres == 0x02) {
+  17   1641 
+/home/chenxiang/kernel_next/kernel-dev/drivers/scsi/mvsas/mv_sas.c 
+<<<unknown>>>
+              iu->datapres = 2;
+
+>   /* fill task_status_struct based on SSP response frame */
+>   void sas_ssp_task_response(struct device *dev, struct sas_task *task,
+>   			   struct ssp_response_iu *iu)
+> @@ -15,11 +21,11 @@ void sas_ssp_task_response(struct device *dev, struct sas_task *task,
+>   
+>   	tstat->resp = SAS_TASK_COMPLETE;
+>   
+> -	if (iu->datapres == 0)
+> +	if (iu->datapres == NO_DATA)
+>   		tstat->stat = iu->status;
+> -	else if (iu->datapres == 1)
+> +	else if (iu->datapres == RESPONSE_DATA)
+>   		tstat->stat = iu->resp_data[3];
+> -	else if (iu->datapres == 2) {
+> +	else if (iu->datapres == SENSE_DATA) {
+>   		tstat->stat = SAS_SAM_STAT_CHECK_CONDITION;
+>   		tstat->buf_valid_size =
+>   			min_t(int, SAS_STATUS_BUF_SIZE,
+
+
 
