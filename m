@@ -2,61 +2,61 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA132C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 00:01:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D692C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 00:04:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233609AbiA0ABR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Jan 2022 19:01:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50728 "EHLO
+        id S233717AbiA0AEC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Jan 2022 19:04:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233602AbiA0ABP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2022 19:01:15 -0500
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34FD7C061757;
-        Wed, 26 Jan 2022 16:01:14 -0800 (PST)
-Received: by mail-pf1-x433.google.com with SMTP id u130so1123441pfc.2;
-        Wed, 26 Jan 2022 16:01:14 -0800 (PST)
+        with ESMTP id S229839AbiA0AEB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2022 19:04:01 -0500
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60C97C06161C;
+        Wed, 26 Jan 2022 16:04:01 -0800 (PST)
+Received: by mail-pj1-x1029.google.com with SMTP id r59so1134059pjg.4;
+        Wed, 26 Jan 2022 16:04:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=lJg34UXavo+BCA7CJbZaK2UMuPsocHL4tImngrho0Cw=;
-        b=DzOwhAFAqsmZE8JYLDDnJes5OALer0ARpR6/Wl08rkeNbGjzAqxvWZn/0QKeQiUAi3
-         c6q1lc87oouSG94PVNTPEMQJnY6O0jk79naLBftevX+KYl5BBR4SAbtqd2Nl1W+IIgrm
-         Y4Exjv7B+9rzqzIQeNxcpiai63RP0oLLN/rmgCqa9pFiilNyu9tqLs3cveVReQY2TXB3
-         eCBw2DJXqNJ6Zc/ezeDYGSLOPO9BCPAS8AD2rZC57ZpeXM+c8Yxb9eTPgMb1Haue7A14
-         /wRf2yJgiHw/Z0UULaKSpJPP9x2Rykwjmw5XjXsw1lLgm16xnPl65d6DAyjuFhghEW5B
-         SPAQ==
+        bh=OuIniMVIxxilYOA1dxjmUwo8IvZPISl5pXlBuNuLVGc=;
+        b=j3YxHjYez8flBa7zFpCry1yfDvWQpY6Nvvn+oHnQOoK3DlF2FJx+8jDLIPgI3oa8wh
+         GINxp/XeSstTkGas4VFObFwMjC/BA1v8Vo5OVtbAodJSuvOJuZuftTglp1Z9Mox1rbiR
+         26bEUtL9zXATb9uKJfYjTfLYYA9wmb0XGMYcLGGzlXfebzO6BVjL27ivK7fycktakZEM
+         FKkevyQGy/DbayKDXb8m8VSKU73uUZX9WQLL57/Xmrio81DvzxM+ZdFgCPmexhDPOFaG
+         YwU+dh3l21Lyyx1XnMp+/cpmQKBFqbo0Ji7dRLA++L4ce/MZiY+uuJNFXFoba+EvoK4U
+         +45Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=lJg34UXavo+BCA7CJbZaK2UMuPsocHL4tImngrho0Cw=;
-        b=G4OjPbwfqOlBljfyVruh5/wT+SXSjsZbbOJl0aH/X/14AsKwMC0aDYlFmGrB4cYWIv
-         qUlxU9VVyeaqMFdVGr8WS8yupl74pgJB3anhriMd1BQfbP/EFKLXhYw0yC0sDDNYJVfq
-         wHQUD/6EO2PeGfsAc9X6T9wODUehdL27E67tYwtFYvJWrwibOHaH/zrjqQHq0Ai99Zz3
-         N/NUTfDo8UUcEej6sHkShOvWPM/1hRvDmqBpQTYZcIQNeyuOgdgtijL7is1CXH9Q9UOB
-         FVC0xvZCweQmicG5pbV8kG/2OBXcp3cY7IanYyNwpJt6b6Azt+gPe/25e76iDnFnbEtr
-         DJHQ==
-X-Gm-Message-State: AOAM5327csxCH5Bw/adGoYWrAmbmzmRlAZg1FSpVIm2uX6EgEAiLWYps
-        yj8wrjN7INT8IR2JSgC/Kbs=
-X-Google-Smtp-Source: ABdhPJx6XxFGHOcuTGOvCwpS9bcS4x7uyZ8hAU0+dQS1s0A9vw/uNd/pBD9T2FB6J+jgs/6JqCqLIA==
-X-Received: by 2002:a05:6a00:984:: with SMTP id u4mr822601pfg.67.1643241673776;
-        Wed, 26 Jan 2022 16:01:13 -0800 (PST)
+        bh=OuIniMVIxxilYOA1dxjmUwo8IvZPISl5pXlBuNuLVGc=;
+        b=H7VB2HV/70mSBPLQg5+V8oe25p/TTDd4v90rl6DtB3Qb/vJbFZTOpmw5L2rOf9z9/H
+         K9dcZyA+AO8rsQH0yXNAK0jHiN2j5MtEvbf8HmIIwJA+ag2itG+Y9TKzFdMZlwEMnTEU
+         ZxZOnrOZ9TtbpSRhPQNlxOApaQLyQ/j+oMDG3iDceHlOM4eu1i7ugeC4t0Rsyn6nyXUD
+         kIUU8DXZ+w73UfGE4gBZMwapHpja3MBlKP/QyaApnWQjAGrfDHKQ04w06a0jtBBm4FWF
+         lF6x99cM8bqGMABTTDzBNFbj3RM3fzu24UjhAHuoWZ+oOX+RCd06NlclM5hU2omiyWb0
+         RCFw==
+X-Gm-Message-State: AOAM533AEJpJBTEahv3OkkV9MPcOsg6ISc9dW/e2YBRALSClA6FNNvOo
+        RPes5QTfcCi++73AN1toInc=
+X-Google-Smtp-Source: ABdhPJzU1PUrR3Ra11EPkRBHZmULKaRoo8rtOxWrNTjBEUpTUHfu7DEpoUefmtcjGXv25Elm2mnLOg==
+X-Received: by 2002:a17:902:9689:: with SMTP id n9mr1076339plp.33.1643241840933;
+        Wed, 26 Jan 2022 16:04:00 -0800 (PST)
 Received: from localhost.localdomain (192.243.120.23.16clouds.com. [192.243.120.23])
-        by smtp.gmail.com with ESMTPSA id g5sm306510pjj.36.2022.01.26.16.01.09
+        by smtp.gmail.com with ESMTPSA id f9sm17408932pgf.94.2022.01.26.16.03.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Jan 2022 16:01:13 -0800 (PST)
+        Wed, 26 Jan 2022 16:04:00 -0800 (PST)
 From:   davidcomponentone@gmail.com
-To:     jejb@linux.ibm.com
-Cc:     davidcomponentone@gmail.com, martin.petersen@oracle.com,
-        yang.guang5@zte.com.cn, yuyufen@huawei.com,
-        thunder.leizhen@huawei.com, bvanassche@acm.org,
+To:     anil.gurumurthy@qlogic.com
+Cc:     davidcomponentone@gmail.com, sudarsana.kalluru@qlogic.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yang Guang <yang.guang5@zte.com.cn>,
         Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi: mvsas: replace snprintf with sysfs_emit
-Date:   Thu, 27 Jan 2022 08:00:59 +0800
-Message-Id: <c1711f7cf251730a8ceb5bdfc313bf85662b3395.1643182948.git.yang.guang5@zte.com.cn>
+Subject: [PATCH] scsi: bfa: replace snprintf with sysfs_emit
+Date:   Thu, 27 Jan 2022 08:03:46 +0800
+Message-Id: <def83ff75faec64ba592b867a8499b1367bae303.1643181468.git.yang.guang5@zte.com.cn>
 X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -67,9 +67,29 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 From: Yang Guang <yang.guang5@zte.com.cn>
 
 coccinelle report:
-./drivers/scsi/mvsas/mv_init.c:699:8-16:
+./drivers/scsi/bfa/bfad_attr.c:908:8-16:
 WARNING: use scnprintf or sprintf
-./drivers/scsi/mvsas/mv_init.c:747:8-16:
+./drivers/scsi/bfa/bfad_attr.c:860:8-16:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/bfa/bfad_attr.c:888:8-16:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/bfa/bfad_attr.c:853:8-16:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/bfa/bfad_attr.c:808:8-16:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/bfa/bfad_attr.c:728:8-16:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/bfa/bfad_attr.c:822:8-16:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/bfa/bfad_attr.c:927:9-17:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/bfa/bfad_attr.c:900:8-16:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/bfa/bfad_attr.c:874:8-16:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/bfa/bfad_attr.c:714:8-16:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/bfa/bfad_attr.c:839:8-16:
 WARNING: use scnprintf or sprintf
 
 Use sysfs_emit instead of scnprintf or sprintf makes more sense.
@@ -78,31 +98,128 @@ Reported-by: Zeal Robot <zealci@zte.com.cn>
 Signed-off-by: Yang Guang <yang.guang5@zte.com.cn>
 Signed-off-by: David Yang <davidcomponentone@gmail.com>
 ---
- drivers/scsi/mvsas/mv_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/bfa/bfad_attr.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index dcae2d4464f9..44df7c03aab8 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -696,7 +696,7 @@ static struct pci_driver mvs_pci_driver = {
- static ssize_t driver_version_show(struct device *cdev,
- 				   struct device_attribute *attr, char *buffer)
- {
--	return snprintf(buffer, PAGE_SIZE, "%s\n", DRV_VERSION);
-+	return sysfs_emit(buffer, "%s\n", DRV_VERSION);
+diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+index f46989bd083c..5a85401e9e2d 100644
+--- a/drivers/scsi/bfa/bfad_attr.c
++++ b/drivers/scsi/bfa/bfad_attr.c
+@@ -711,7 +711,7 @@ bfad_im_serial_num_show(struct device *dev, struct device_attribute *attr,
+ 	char serial_num[BFA_ADAPTER_SERIAL_NUM_LEN];
+ 
+ 	bfa_get_adapter_serial_num(&bfad->bfa, serial_num);
+-	return snprintf(buf, PAGE_SIZE, "%s\n", serial_num);
++	return sysfs_emit(buf, "%s\n", serial_num);
  }
  
- static DEVICE_ATTR_RO(driver_version);
-@@ -744,7 +744,7 @@ static ssize_t interrupt_coalescing_store(struct device *cdev,
- static ssize_t interrupt_coalescing_show(struct device *cdev,
- 					 struct device_attribute *attr, char *buffer)
- {
--	return snprintf(buffer, PAGE_SIZE, "%d\n", interrupt_coalescing);
-+	return sysfs_emit(buffer, "%d\n", interrupt_coalescing);
+ static ssize_t
+@@ -725,7 +725,7 @@ bfad_im_model_show(struct device *dev, struct device_attribute *attr,
+ 	char model[BFA_ADAPTER_MODEL_NAME_LEN];
+ 
+ 	bfa_get_adapter_model(&bfad->bfa, model);
+-	return snprintf(buf, PAGE_SIZE, "%s\n", model);
++	return sysfs_emit(buf, "%s\n", model);
  }
  
- static DEVICE_ATTR_RW(interrupt_coalescing);
+ static ssize_t
+@@ -805,7 +805,7 @@ bfad_im_model_desc_show(struct device *dev, struct device_attribute *attr,
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+ 			"Invalid Model");
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n", model_descr);
++	return sysfs_emit(buf, "%s\n", model_descr);
+ }
+ 
+ static ssize_t
+@@ -819,7 +819,7 @@ bfad_im_node_name_show(struct device *dev, struct device_attribute *attr,
+ 	u64        nwwn;
+ 
+ 	nwwn = bfa_fcs_lport_get_nwwn(port->fcs_port);
+-	return snprintf(buf, PAGE_SIZE, "0x%llx\n", cpu_to_be64(nwwn));
++	return sysfs_emit(buf, "0x%llx\n", cpu_to_be64(nwwn));
+ }
+ 
+ static ssize_t
+@@ -836,7 +836,7 @@ bfad_im_symbolic_name_show(struct device *dev, struct device_attribute *attr,
+ 	bfa_fcs_lport_get_attr(&bfad->bfa_fcs.fabric.bport, &port_attr);
+ 	strlcpy(symname, port_attr.port_cfg.sym_name.symname,
+ 			BFA_SYMNAME_MAXLEN);
+-	return snprintf(buf, PAGE_SIZE, "%s\n", symname);
++	return sysfs_emit(buf, "%s\n", symname);
+ }
+ 
+ static ssize_t
+@@ -850,14 +850,14 @@ bfad_im_hw_version_show(struct device *dev, struct device_attribute *attr,
+ 	char hw_ver[BFA_VERSION_LEN];
+ 
+ 	bfa_get_pci_chip_rev(&bfad->bfa, hw_ver);
+-	return snprintf(buf, PAGE_SIZE, "%s\n", hw_ver);
++	return sysfs_emit(buf, "%s\n", hw_ver);
+ }
+ 
+ static ssize_t
+ bfad_im_drv_version_show(struct device *dev, struct device_attribute *attr,
+ 				char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%s\n", BFAD_DRIVER_VERSION);
++	return sysfs_emit(buf, "%s\n", BFAD_DRIVER_VERSION);
+ }
+ 
+ static ssize_t
+@@ -871,7 +871,7 @@ bfad_im_optionrom_version_show(struct device *dev,
+ 	char optrom_ver[BFA_VERSION_LEN];
+ 
+ 	bfa_get_adapter_optrom_ver(&bfad->bfa, optrom_ver);
+-	return snprintf(buf, PAGE_SIZE, "%s\n", optrom_ver);
++	return sysfs_emit(buf, "%s\n", optrom_ver);
+ }
+ 
+ static ssize_t
+@@ -885,7 +885,7 @@ bfad_im_fw_version_show(struct device *dev, struct device_attribute *attr,
+ 	char fw_ver[BFA_VERSION_LEN];
+ 
+ 	bfa_get_adapter_fw_ver(&bfad->bfa, fw_ver);
+-	return snprintf(buf, PAGE_SIZE, "%s\n", fw_ver);
++	return sysfs_emit(buf, "%s\n", fw_ver);
+ }
+ 
+ static ssize_t
+@@ -897,7 +897,7 @@ bfad_im_num_of_ports_show(struct device *dev, struct device_attribute *attr,
+ 			(struct bfad_im_port_s *) shost->hostdata[0];
+ 	struct bfad_s *bfad = im_port->bfad;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n",
++	return sysfs_emit(buf, "%d\n",
+ 			bfa_get_nports(&bfad->bfa));
+ }
+ 
+@@ -905,7 +905,7 @@ static ssize_t
+ bfad_im_drv_name_show(struct device *dev, struct device_attribute *attr,
+ 				char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%s\n", BFAD_DRIVER_NAME);
++	return sysfs_emit(buf, "%s\n", BFAD_DRIVER_NAME);
+ }
+ 
+ static ssize_t
+@@ -924,14 +924,14 @@ bfad_im_num_of_discovered_ports_show(struct device *dev,
+ 	rports = kcalloc(nrports, sizeof(struct bfa_rport_qualifier_s),
+ 			 GFP_ATOMIC);
+ 	if (rports == NULL)
+-		return snprintf(buf, PAGE_SIZE, "Failed\n");
++		return sysfs_emit(buf, "Failed\n");
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	bfa_fcs_lport_get_rport_quals(port->fcs_port, rports, &nrports);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 	kfree(rports);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", nrports);
++	return sysfs_emit(buf, "%d\n", nrports);
+ }
+ 
+ static          DEVICE_ATTR(serial_number, S_IRUGO,
 -- 
 2.30.2
 
