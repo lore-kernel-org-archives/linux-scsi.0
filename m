@@ -2,114 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FB50C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 16:02:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57382C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 17:19:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243356AbiA0QCe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jan 2022 11:02:34 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4529 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243346AbiA0QCc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 11:02:32 -0500
-Received: from fraeml705-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Jl5231lyPz6H8Xr;
-        Fri, 28 Jan 2022 00:02:03 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml705-chm.china.huawei.com (10.206.15.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.21; Thu, 27 Jan 2022 17:02:28 +0100
-Received: from [10.47.26.192] (10.47.26.192) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 27 Jan
- 2022 16:02:27 +0000
-Subject: Re: [PATCH 06/16] scsi: libsas: Add sas_task.tmf
-To:     "chenxiang (M)" <chenxiang66@hisilicon.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "artur.paszkiewicz@intel.com" <artur.paszkiewicz@intel.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>,
-        "Ajish.Koshy@microchip.com" <Ajish.Koshy@microchip.com>
-CC:     yanaijie <yanaijie@huawei.com>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "liuqi (BA)" <liuqi115@huawei.com>,
-        "Viswas.G@microchip.com" <Viswas.G@microchip.com>,
-        "damien.lemoal@opensource.wdc.com" <damien.lemoal@opensource.wdc.com>
-References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
- <1643110372-85470-7-git-send-email-john.garry@huawei.com>
- <e349aedb-71ad-8bf2-d3c3-920a83a56eae@hisilicon.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <6b31c696-9808-764b-489b-4d2de91051b9@huawei.com>
-Date:   Thu, 27 Jan 2022 16:01:52 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S244458AbiA0RTr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jan 2022 12:19:47 -0500
+Received: from mail-pj1-f41.google.com ([209.85.216.41]:34725 "EHLO
+        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242179AbiA0RTq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 12:19:46 -0500
+Received: by mail-pj1-f41.google.com with SMTP id l24-20020a17090aec1800b001b55738f633so5512532pjy.1
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Jan 2022 09:19:46 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=haguw7H7MAwxfuq316VyqQ9YBJdcgPd0gYRQZ7OQpPk=;
+        b=pMeL1KDif0QWe1dwoqcFNjxOgkCJ/hMhuLKP8Xs6M/n4CDyyGKIWPfb4W1AwNKZto/
+         tFPZ5j8h4UIQE3cv8v1+lnb3Qw14KrxdKNE0NC+y3NbNTI/MoiDbadbJmAEKT4lrLKlE
+         ELoVi0URGONuY1vmj4DVGEuYNz0916th4Iw44kuDIApjWVhBCY5FpczQ2cs7SeuYnehu
+         7CeivKWoqsj7Uc608srGAsyDID7T4yx5tOXx4/tIo7Whj/+Mu5ACVYk23GaVqA1KT6nK
+         NYvpJvNCkrGto8mB0bDWI/T/2RPfsm6i0/CIz/Vlnsu7p6WHKDNGWlOgy6t2K6DkW6nW
+         qmAg==
+X-Gm-Message-State: AOAM530h4f87ZpO92pE1iZ/fb4BjOOJPTz7wwLrfMiSoR7qUwxQ/EYB3
+        iSxGfImX7wSG6OIouiY+YDs=
+X-Google-Smtp-Source: ABdhPJweC8G2tuIKJa7rhucBGG6gwY0rbcI2utGPLxZ7vUrO2JtVDsACCpesGpJnkXJJUsBVRuHIiw==
+X-Received: by 2002:a17:903:1207:: with SMTP id l7mr4048575plh.19.1643303985659;
+        Thu, 27 Jan 2022 09:19:45 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id i14sm5465523pgh.42.2022.01.27.09.19.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 27 Jan 2022 09:19:45 -0800 (PST)
+Message-ID: <531f08fb-b49b-91bf-8e8a-52492e69d6b9@acm.org>
+Date:   Thu, 27 Jan 2022 09:19:43 -0800
 MIME-Version: 1.0
-In-Reply-To: <e349aedb-71ad-8bf2-d3c3-920a83a56eae@hisilicon.com>
-Content-Type: text/plain; charset="gbk"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH V2] scsi: core: reallocate scsi device's budget map if
+ default queue depth is changed
 Content-Language: en-US
+To:     Ming Lei <ming.lei@redhat.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     Martin Wilck <martin.wilck@suse.com>,
+        Martin Wilck <mwilck@suse.com>
+References: <20220127153733.409132-1-ming.lei@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220127153733.409132-1-ming.lei@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.26.192]
-X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27/01/2022 12:55, chenxiang (M) wrote:
->> -	slot->tmf = tmf;
->> -	slot->is_internal = tmf;
-> In kernel 5.17-rc1(with above two lines on), it seems there is a issue
-> for ata disk reset command as tmf = null while it is internal command.
-
-ok, thanks for the notice. Would this fix it:
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c 
-b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index a05ec7aece5a..0e12c9329ee5 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -427,8 +427,6 @@ void hisi_sas_task_deliver(struct hisi_hba *hisi_hba,
-  	cmd_hdr_base = hisi_hba->cmd_hdr[dlvry_queue];
-  	slot->cmd_hdr = &cmd_hdr_base[dlvry_queue_slot];
-
--	slot->tmf = tmf;
--	slot->is_internal = tmf;
-  	task->lldd_task = slot;
-
-  	memset(slot->cmd_hdr, 0, sizeof(struct hisi_sas_cmd_hdr));
-@@ -1380,12 +1378,13 @@ static int hisi_sas_softreset_ata_disk(struct 
-domain_device *device)
-  	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
-  	struct device *dev = hisi_hba->dev;
-  	int s = sizeof(struct host_to_dev_fis);
-+	struct hisi_sas_tmf_task tmf = {};
-
-  	ata_for_each_link(link, ap, EDGE) {
-  		int pmp = sata_srst_pmp(link);
-
-  		hisi_sas_fill_ata_reset_cmd(link->device, 1, pmp, fis);
--		rc = hisi_sas_exec_internal_tmf_task(device, fis, s, NULL);
-+		rc = hisi_sas_exec_internal_tmf_task(device, fis, s, &tmf);
-  		if (rc != TMF_RESP_FUNC_COMPLETE)
-  			break;
-  	}
-@@ -1396,7 +1395,7 @@ static int hisi_sas_softreset_ata_disk(struct 
-domain_device *device)
-
-  			hisi_sas_fill_ata_reset_cmd(link->device, 0, pmp, fis);
-  			rc = hisi_sas_exec_internal_tmf_task(device, fis,
--							     s, NULL);
-+							     s, &tmf);
-  			if (rc != TMF_RESP_FUNC_COMPLETE)
-  				dev_err(dev, "ata disk %016llx de-reset failed\n",
-  					SAS_ADDR(device->sas_addr));
-
+On 1/27/22 07:37, Ming Lei wrote:
+> Martin reported that sdev->queue_depth can often be changed in
+> ->slave_configure(), and now we uses ->cmd_per_lun as initial queue
+> depth for setting up sdev->budget_map. And some extreme ->cmd_per_lun
+> or ->can_queue won't be used at default actually, if they are used to
+> allocate sdev->budget_map, huge memory may be consumed just because
+> of bad ->cmd_per_lun.
 > 
->>    	task->lldd_task = slot;
->>    
+> Fix the issue by reallocating sdev->budget_map after ->slave_configure()
+> returns, at that time, queue_depth should be much more reasonable.
 
-
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
