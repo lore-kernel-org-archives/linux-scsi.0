@@ -2,85 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F8FEC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 09:12:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE7B8C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 10:18:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232457AbiA0JMb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jan 2022 04:12:31 -0500
-Received: from smtpbgjp3.qq.com ([54.92.39.34]:34003 "EHLO smtpbgjp3.qq.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234880AbiA0JMa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Jan 2022 04:12:30 -0500
-X-QQ-mid: bizesmtp54t1643274737tnh7xl4d
-Received: from localhost.localdomain (unknown [58.240.82.166])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 27 Jan 2022 17:12:11 +0800 (CST)
-X-QQ-SSF: 0140000000200090E000C00A0000000
-X-QQ-FEAT: F3yR32iATbjWw3acDtsfp2HLqnilxm49/4xuiIAVnD3g9W5QKpqaUyV3Lkk6W
-        GRHy/Z/TKb4rTYjEmDW/4bTNTdYtPjiVTdxpR3fJkmD5jxHf55vczWMU1TKeLG+bS2qg34p
-        oXrvYyWnob/at2T9ngNQV+dHympfswqSoQLwtmOwDlZ4N58gZh+A+1FBUpfJSk2aQX9AFAq
-        6BcI1OWr/5nv8fuVRU4bSdtYiTlwYBIbH7YnbjB/Sh7m4ZXbdKG9HZhd4kcFD7Miact+6gP
-        beikY47ZSxYMJ9tMuVcAIrZxqhYSln7ymbG4ntqkxzPwI/+Z1At6Kd/GL23LxJIzVkcRZnk
-        oLYqJ4J/hEIwOLDpaM/Q91vzWiAvM5Z9Us9A37dR66jYSdju+I=
-X-QQ-GoodBg: 2
-From:   tangmeng <tangmeng@uniontech.com>
-To:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     tangmeng <tangmeng@uniontech.com>
-Subject: [PATCH v2] scsi: sr: Improve the judgment statement
-Date:   Thu, 27 Jan 2022 17:11:36 +0800
-Message-Id: <20220127091136.9658-1-tangmeng@uniontech.com>
-X-Mailer: git-send-email 2.20.1
+        id S239107AbiA0KSW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jan 2022 05:18:22 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4521 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239096AbiA0KSR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 05:18:17 -0500
+Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JkxNs6Bv2z6H8Vc;
+        Thu, 27 Jan 2022 18:17:49 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.21; Thu, 27 Jan 2022 11:18:14 +0100
+Received: from [10.47.26.192] (10.47.26.192) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 27 Jan
+ 2022 10:18:13 +0000
+Subject: Re: [PATCH 00/16] scsi: libsas and users: Factor out LLDD TMF code
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <artur.paszkiewicz@intel.com>, <jinpu.wang@cloud.ionos.com>,
+        <chenxiang66@hisilicon.com>, <Ajish.Koshy@microchip.com>
+CC:     <yanaijie@huawei.com>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>, <liuqi115@huawei.com>,
+        <Viswas.G@microchip.com>
+References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
+ <1893d9ef-042b-af3b-74ea-dd4d0210c493@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <14df160f-c0f2-cc9f-56d4-8eda67969e0b@huawei.com>
+Date:   Thu, 27 Jan 2022 10:17:39 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:uniontech.com:qybgforeign:qybgforeign7
-X-QQ-Bgrelay: 1
+In-Reply-To: <1893d9ef-042b-af3b-74ea-dd4d0210c493@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.26.192]
+X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The previous code has a less-than-perfect usage of judgment syntax.
+On 27/01/2022 06:37, Damien Le Moal wrote:
 
-When the med->media_event_code value is equal to 2 or 3, the same
-value is returned, so it would be better to combine the implementation
-statements when the med->media_event_code value is equal to 2 or 3.
+Hi Damien,
 
-Moreover, when a variable is equal to multiple values, it is better
-to use a switch judgment statement.
+> I did some light testing of this series (boot + some fio runs) and
+> everything looks good using my "ATTO Technology, Inc. ExpressSAS 12Gb/s
+> SAS/SATA HBA (rev 06)" HBA (x86_64 host).
 
-Signed-off-by: tangmeng <tangmeng@uniontech.com>
----
- drivers/scsi/sr.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+Yeah, unfortunately these steps prob won't exercise much of the code 
+changes here since I figure error handling would not kick in.
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index f925b1f1f9ad..610baa630067 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -222,12 +222,16 @@ static unsigned int sr_get_events(struct scsi_device *sdev)
- 	if (eh->nea || eh->notification_class != 0x4)
- 		return 0;
- 
--	if (med->media_event_code == 1)
-+	switch (med->media_event_code) {
-+	case 1:
- 		return DISK_EVENT_EJECT_REQUEST;
--	else if (med->media_event_code == 2)
--		return DISK_EVENT_MEDIA_CHANGE;
--	else if (med->media_event_code == 3)
-+	case 2:
-+	case 3:
- 		return DISK_EVENT_MEDIA_CHANGE;
-+	default:
-+		break;
-+	}
-+
- 	return 0;
- }
- 
--- 
-2.20.1
+However using this same adapter type on my arm64 system has error 
+handling kick in almost straight away - and the handling looks sane. A 
+silver lining, I suppose ..
 
+> 
+> Of note is that "make W=1 M=drivers/scsi" complains with:
+> 
+> drivers/scsi/pm8001/pm80xx_hwi.c:3938: warning: Function parameter or
+> member 'circularQ' not described in 'process_one_iomb'
 
+That's per-existing. I'll send a patch for that now along with another 
+fix I found for that driver. ....
 
+> 
+> And sparse/make C=1 complains about:
+> 
+> drivers/scsi/libsas/sas_port.c:77:13: warning: context imbalance in
+> 'sas_form_port' - different lock contexts for basic block
+
+I think it's talking about the port->phy_list_lock usage - it prob 
+doesn't like segments where we fall out a loop with the lock held (which 
+was grabbed in the loop). Anyway it looks ok. Maybe we can improve this.
+
+> 
+> But I have not checked if it is something that your series touch.
+> 
+> And there is a ton of complaints about __le32 use in the pm80xx code...
+> I can try to have a look at these if you want, on top of your series.
+
+I really need to get make C=1 working for me - it segfaults in any env I 
+have :(
+
+Thanks,
+John
