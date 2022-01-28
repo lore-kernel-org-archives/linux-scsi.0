@@ -2,148 +2,224 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B993C43219
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Jan 2022 23:09:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E96C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jan 2022 00:33:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344742AbiA0XJQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Jan 2022 18:09:16 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:8172 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343934AbiA0XIz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2022 18:08:55 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1643324935; x=1674860935;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=sIQFZUU2YtYKz8AVEUJwYWDyx6QIOXw3eZJaDURUMqM=;
-  b=F5JrP9ebaJQciCawm6BbEgxvdSv/PfTsbecx9zmAPtGoLfDEv+zAr5zU
-   SGXU1SQljrKvwWKbvjQPREAugHdC/aDkE9MikLQr3Yz1E8UqRUGO5HX/T
-   N1Yd0X3USNUBtwMLWSpFSx5cTHHQLIcMwvlSPGwCqZgLPk+SFbmp3iLiH
-   whGMo1IJHyDGkF1hSaBaxucY+7Ujg3iHDhOxOaijjmsHqHaVDifIerCda
-   bYQYZeinla5O46PbCrw6qHwwAOwk1RFSLSZPYX5rFwk3UMWef0fgjUsNO
-   PGF7nzPSZfqElqp+aSte1wFv1cYZ8HjhjgYhGjCFShGAD92jSg8ft0JR1
-   g==;
-X-IronPort-AV: E=Sophos;i="5.88,321,1635177600"; 
-   d="scan'208";a="303450890"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2022 07:08:50 +0800
-IronPort-SDR: wnrWJr5qpQyn0DzE5B+Nm4kUSJWB83jPQM5iLnvPXoOw0bUAApaN4RFWNSnxq0tmMVHn9ae5d4
- u+/BiQFn09ZnrJ5RsxTkWIDw1dH5Zf9pUfsJeqqHmv1IAXzLEMLm7qRCdfrgiVB/y0f5QKnssO
- Dz/rr9IihpqQOPq9K3YPHSs5ka4TaXZQvCC1PZ17MCWq6lTFu4nNAv3Xfy6RMlCAb0uo7wd3vh
- xiNo137O+s6BLYrXRxwS2S5QXPXixOpjNHYAhz+2gZAeg7K/KZjEIpGuEIkHcDpqWB0jX5oS27
- pgPS1zbal4lXcle7DzKZGBsf
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2022 14:40:53 -0800
-IronPort-SDR: PWZkFPe+jazd9eIzF6CY1XgcZRet/N8i5GpMtz8DF/5VJFXwoGBeuojpydyCBECtrGrySRTtsA
- 8AOzaDRjla1Vgbo92oSojP3eDdX/Lf6OZCY7zr1DneDPdO331VY5Ypt8pn55ScPXwtJtX28wu5
- KZh9P7oPk+LBLa/p5aAw/ueueMaT1sUYtrJqVUg5UjY1xSlbfTZSM80lOX6MDk/UaoSeyrtBxH
- 9gyzXZVhs4sYNqJmGpLgR7zWGimbVBwg/n7Mb6wRjmghGWtJvI8sresgloRMZRyB/yek0f2NoA
- 5lI=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2022 15:08:50 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JlGVT3WPRz1SVp5
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Jan 2022 15:08:49 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1643324928; x=1645916929; bh=sIQFZUU2YtYKz8AVEUJwYWDyx6QIOXw3eZJ
-        aDURUMqM=; b=r/zy/W7ckZnVRMM3jvoBp/4D6npgXj3O/z+pF5uUJ7sAfz0vQcs
-        V4HcSmvhSb6Oq7pGCysGglhogFn7qup6m9CJDfec6hC7zN3hHZ+HtMU29LbI9A5+
-        q0gBAOFqXJg+KjdYXlUQZ8SFJsT/I1yR4yfkMnFPHvnYAjpl4WDG+icYBSShJxc8
-        0i34GgHY/ieyCdDL1kJlCs0a1unP3tfXDy5g9QTmkU+B6jNJhSbdsO/+2pnTXjNw
-        MPDBFgF2+Tj4XTMtrq5GugxKj1Y2a+th1mwRCckd3MxJDLWx/7+rPG56J3+oTW4k
-        SsJ3pG+uWjlbvOgCbq3Evw1oY2v9w/Oj86Q==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id WtKbkw7Qp7-Z for <linux-scsi@vger.kernel.org>;
-        Thu, 27 Jan 2022 15:08:48 -0800 (PST)
-Received: from [10.225.163.58] (unknown [10.225.163.58])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JlGVR3tzfz1RvlN;
-        Thu, 27 Jan 2022 15:08:47 -0800 (PST)
-Message-ID: <ab547eb4-d97d-45e0-207a-8b660c6e96bd@opensource.wdc.com>
-Date:   Fri, 28 Jan 2022 08:08:46 +0900
+        id S232332AbiA1Aco (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Jan 2022 19:32:44 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:59484 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229650AbiA1Acn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Jan 2022 19:32:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643329962;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=QxwT0p8jQCZb+gDYDDAwQr1KnfSYAuazHgIfPZ6mp0Y=;
+        b=bYZTMqReYLcs2dCuD5EalOTxEeYoMF7K9w3rUraLfFjdd3wq/WT0CC3BPk65sRH3DdiGZb
+        Jz70cKjH3o3uZdccPb1PlTq7lZ3xJrBxBF3RsUzgVtMI9Bx1yqj4C+El8HfWhK1SrDqyOM
+        sQ9ZD0tjzdOMOBiIcMmivBzQKt/hsEQ=
+Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com
+ [209.85.210.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-483-IgfTuUB_OVSJ2JiYnAIdIA-1; Thu, 27 Jan 2022 19:32:41 -0500
+X-MC-Unique: IgfTuUB_OVSJ2JiYnAIdIA-1
+Received: by mail-ot1-f70.google.com with SMTP id h17-20020a9d7991000000b0059b4230fc63so2421780otm.13
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Jan 2022 16:32:41 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=QxwT0p8jQCZb+gDYDDAwQr1KnfSYAuazHgIfPZ6mp0Y=;
+        b=UME4tGHlQf0O049ApFhXYTMR21M64UmDAuKg00LbATdomNkeMMLSLnZV9cUkMMFJ7g
+         1QwjxnZT7AHnDYb5hk9RtI/sy/3AXjSFEJqLlKbJ75Hdb6xKY1WvXCeKCB5QbWEo0L0M
+         Au4HeySdRSCdx8BwwvuXaTJfbGncngLGYt+749Kl9xPF9yoNd+DPhr8eoCseWdI19U05
+         Cc//eWn+X+E9I4JUIMMYs/xWX8OyZIpJdhHC2b7+g5WJdi+EcSexDnligCofIMZ+N2dh
+         46uEs35qEoiA51c8Ezs11tHQ5fTSTGKpxKR2iteDnlwjmGJ6cQFtqGbhjTLvQsf3BVGZ
+         GMGA==
+X-Gm-Message-State: AOAM533PCBhx2ZNigBMXUm5bctHhPTRqNdvJaQmJ1ySb4ETTVfAMl5bG
+        DKG29KGYXKkwdhYLgiCyXRvwmFOjix/3pXEt0KLKMS3/4K0fwjhMJftN1HtSTMvKLHRf1dbAuml
+        r2E3D4KgTV8jFW6s0svIB/Q==
+X-Received: by 2002:a4a:b787:: with SMTP id a7mr3106253oop.85.1643329960832;
+        Thu, 27 Jan 2022 16:32:40 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwF4iZ8xzJp9ZMKoGlSFxuWfDOTK7MBV3+iSOO5oBeoOMi/8a1yzMEOflCdZN68H6r2hM3ikw==
+X-Received: by 2002:a4a:b787:: with SMTP id a7mr3106237oop.85.1643329960607;
+        Thu, 27 Jan 2022 16:32:40 -0800 (PST)
+Received: from localhost.localdomain (024-205-208-113.res.spectrum.com. [24.205.208.113])
+        by smtp.gmail.com with ESMTPSA id o22sm9333917oor.34.2022.01.27.16.32.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 27 Jan 2022 16:32:40 -0800 (PST)
+Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
+To:     Nick Desaulniers <ndesaulniers@google.com>,
+        Finn Thain <fthain@linux-m68k.org>,
+        Miguel Ojeda <ojeda@kernel.org>
+Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, nathan@kernel.org,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev,
+        Joe Perches <joe@perches.com>
+References: <20220127151945.1244439-1-trix@redhat.com>
+ <953eb015-4b78-f7b-5dc1-6491c6bf27e@linux-m68k.org>
+ <CAKwvOdnWHVV+3s8SO=Q8FfZ7hVekRVDL5q+7CwAk_z44xaex8w@mail.gmail.com>
+From:   Tom Rix <trix@redhat.com>
+Message-ID: <fb308f51-f16b-3d9b-80c2-180940236b00@redhat.com>
+Date:   Thu, 27 Jan 2022 16:32:37 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH 3/3] scsi: pm8001: Fix use-after-free for aborted SSP/STP
- sas_task
+In-Reply-To: <CAKwvOdnWHVV+3s8SO=Q8FfZ7hVekRVDL5q+7CwAk_z44xaex8w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, jinpu.wang@cloud.ionos.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        Ajish.Koshy@microchip.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Viswas.G@microchip.com, chenxiang66@hisilicon.com
-References: <1643289172-165636-1-git-send-email-john.garry@huawei.com>
- <1643289172-165636-4-git-send-email-john.garry@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <1643289172-165636-4-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/27/22 22:12, John Garry wrote:
-> Currently a use-after-free may occur if a sas_task is aborted by the upper
-> layer before we handle the IO completion in mpi_ssp_completion() or
-> mpi_sata_completion().
-> 
-> In this case, the following are the two steps in handling those IO
-> completions:
-> - call complete() to inform the upper layer handler of completion of
->   the IO
-> - release driver resources associated with the sas_task in
->   pm8001_ccb_task_free() call
-> 
-> When complete() is called, the upper layer may free the sas_task. As such,
-> we should not touch the associated sas_task afterwards, but we do so in
-> the pm8001_ccb_task_free() call.
-> 
-> Fix by swapping the complete() and pm8001_ccb_task_free() calls ordering.
-> 
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> ---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index ce38a2298e75..1134e86ac928 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -2185,9 +2185,9 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->  		pm8001_dbg(pm8001_ha, FAIL,
->  			   "task 0x%p done with io_status 0x%x resp 0x%x stat 0x%x but aborted by upper layer!\n",
->  			   t, status, ts->resp, ts->stat);
-> +		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->  		if (t->slow_task)
->  			complete(&t->slow_task->completion);
-> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->  	} else {
->  		spin_unlock_irqrestore(&t->task_state_lock, flags);
->  		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-> @@ -2794,9 +2794,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha,
->  		pm8001_dbg(pm8001_ha, FAIL,
->  			   "task 0x%p done with io_status 0x%x resp 0x%x stat 0x%x but aborted by upper layer!\n",
->  			   t, status, ts->resp, ts->stat);
-> +		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->  		if (t->slow_task)
->  			complete(&t->slow_task->completion);
-> -		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->  	} else {
->  		spin_unlock_irqrestore(&t->task_state_lock, flags);
->  		spin_unlock_irqrestore(&circularQ->oq_lock,
 
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+On 1/27/22 2:47 PM, Nick Desaulniers wrote:
+> + Miguel (the clang-format maintainer), Joe (checkpatch maintainer)
+> These criticisms are worth reviewing.
+>
+> On Thu, Jan 27, 2022 at 2:38 PM Finn Thain <fthain@linux-m68k.org> wrote:
+>>
+>> On Thu, 27 Jan 2022, trix@redhat.com wrote:
+>>
+>>> From: Tom Rix <trix@redhat.com>
+>>>
+>>> checkpatch reports several hundred formatting errors. Run these files
+>>> through clang-format and knock off some of them.
+>>>
+>> That method seems like a good recipe for endless churn unless checkpatch
+>> and clang-format really agree about these style rules.
+>>
+>> Why use checkpatch to assess code style, if we could simply diff the
+>> existing source with the output from clang-format... but it seems that
+>> clang-format harms readability, makes indentation errors and uses
+>> inconsistent style rules. Some examples:
 
--- 
-Damien Le Moal
-Western Digital Research
+Problems with clang-format should be fixed, I'll take a look.
+
+I was reviewing this file for another issue and could not get past how 
+horredously bad it was and really did not want to manually fix the 400+ 
+formatting errors.  I will drop this patch and use the use these files 
+to verify the .clang-format .
+
+Tom
+
+>>
+>>>   static unsigned short int max_sectors_per_io = MAX_SECTORS_PER_IO;
+>>>   module_param(max_sectors_per_io, ushort, 0);
+>>> -MODULE_PARM_DESC(max_sectors_per_io, "Maximum number of sectors per I/O request (default=MAX_SECTORS_PER_IO=128)");
+>>> -
+>>> +MODULE_PARM_DESC(
+>>> +     max_sectors_per_io,
+>>> +     "Maximum number of sectors per I/O request (default=MAX_SECTORS_PER_IO=128)");
+>>>
+>>>   static unsigned short int max_mbox_busy_wait = MBOX_BUSY_WAIT;
+>>>   module_param(max_mbox_busy_wait, ushort, 0);
+>>> -MODULE_PARM_DESC(max_mbox_busy_wait, "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
+>>> +MODULE_PARM_DESC(
+>>> +     max_mbox_busy_wait,
+>>> +     "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
+>>>
+>> This code is longer for no real improvement.
+>>
+>>>   /*
+>>>    * The File Operations structure for the serial/ioctl interface of the driver
+>>>    */
+>>>   static const struct file_operations megadev_fops = {
+>>> -     .owner          = THIS_MODULE,
+>>> -     .unlocked_ioctl = megadev_unlocked_ioctl,
+>>> -     .open           = megadev_open,
+>>> -     .llseek         = noop_llseek,
+>>> +     .owner = THIS_MODULE,
+>>> +     .unlocked_ioctl = megadev_unlocked_ioctl,
+>>> +     .open = megadev_open,
+>>> +     .llseek = noop_llseek,
+>>>   };
+>>>
+>>>   /*
+>> Readability loss.
+>>
+>>> -             prod_info_dma_handle = dma_map_single(&adapter->dev->dev,
+>>> -                                                   (void *)&adapter->product_info,
+>>> -                                                   sizeof(mega_product_info),
+>>> -                                                   DMA_FROM_DEVICE);
+>>> +             prod_info_dma_handle = dma_map_single(
+>>> +                     &adapter->dev->dev, (void *)&adapter->product_info,
+>>> +                     sizeof(mega_product_info), DMA_FROM_DEVICE);
+>>>
+>> Note the orphaned first parameter and odd indentation.
+>>
+>>>   static DEF_SCSI_QCMD(megaraid_queue)
+>>>
+>>> -/**
+>>> +     /**
+>>>    * mega_allocate_scb()
+>>>    * @adapter: pointer to our soft state
+>>>    * @cmd: scsi command from the mid-layer
+>> Indentation error.
+>>
+>>> @@ -418,15 +409,14 @@ static DEF_SCSI_QCMD(megaraid_queue)
+>>>    * Allocate a SCB structure. This is the central structure for controller
+>>>    * commands.
+>>>    */
+>>> -static inline scb_t *
+>>> -mega_allocate_scb(adapter_t *adapter, struct scsi_cmnd *cmd)
+>>> +     static inline scb_t *mega_allocate_scb(adapter_t *adapter,
+>>> +                                            struct scsi_cmnd *cmd)
+>>>   {
+>>>        struct list_head *head = &adapter->free_list;
+>> Same.
+>>
+>>> @@ -586,26 +568,25 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cmd, int *busy)
+>>>
+>>>                ldrv_num = mega_get_ldrv_num(adapter, cmd, channel);
+>>>
+>>> -
+>>>                max_ldrv_num = (adapter->flag & BOARD_40LD) ?
+>>> -                     MAX_LOGICAL_DRIVES_40LD : MAX_LOGICAL_DRIVES_8LD;
+>>> +                                    MAX_LOGICAL_DRIVES_40LD :
+>>> +                                          MAX_LOGICAL_DRIVES_8LD;
+>>>
+>> Churn, if not readability loss. Note the indentation change here is
+>> inconsistent with the indentation change noted above.
+>>
+>>>                         * 6-byte READ(0x08) or WRITE(0x0A) cdb
+>>>                         */
+>>> -                     if( cmd->cmd_len == 6 ) {
+>>> -                             mbox->m_out.numsectors = (u32) cmd->cmnd[4];
+>>> -                             mbox->m_out.lba =
+>>> -                                     ((u32)cmd->cmnd[1] << 16) |
+>>> -                                     ((u32)cmd->cmnd[2] << 8) |
+>>> -                                     (u32)cmd->cmnd[3];
+>>> +                     if (cmd->cmd_len == 6) {
+>>> +                             mbox->m_out.numsectors = (u32)cmd->cmnd[4];
+>>> +                             mbox->m_out.lba = ((u32)cmd->cmnd[1] << 16) |
+>>> +                                               ((u32)cmd->cmnd[2] << 8) |
+>>> +                                               (u32)cmd->cmnd[3];
+>>>
+>>>                                mbox->m_out.lba &= 0x1FFFFF;
+>>>
+>> Here, the orphaned term is moved up, next to the =. And yet,
+>>
+>>>                        /* Calculate Scatter-Gather info */
+>>> -                     mbox->m_out.numsgelements = mega_build_sglist(adapter, scb,
+>>> -                                     (u32 *)&mbox->m_out.xferaddr, &seg);
+>>> +                     mbox->m_out.numsgelements =
+>>> +                             mega_build_sglist(adapter, scb,
+>>> +                                               (u32 *)&mbox->m_out.xferaddr,
+>>> +                                               &seg);
+>>>
+>>>                        return scb;
+>>>
+>> ... here the first term is moved down and orphaned, which is another
+>> inconsistency.
+>
+>
+
