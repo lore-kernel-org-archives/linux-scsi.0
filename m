@@ -2,76 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA7A2C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jan 2022 19:12:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BBB2C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jan 2022 19:20:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350834AbiA1TMD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Jan 2022 14:12:03 -0500
-Received: from relay027.a.hostedemail.com ([64.99.140.27]:63735 "EHLO
-        relay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233548AbiA1TMD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jan 2022 14:12:03 -0500
-Received: from omf18.hostedemail.com (a10.router.float.18 [10.200.18.1])
-        by unirelay01.hostedemail.com (Postfix) with ESMTP id CA844607AA;
-        Fri, 28 Jan 2022 19:11:58 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf18.hostedemail.com (Postfix) with ESMTPA id 5CD0635;
-        Fri, 28 Jan 2022 19:11:43 +0000 (UTC)
-Message-ID: <e3ae392a16491b9ddeb1f0b2b74fdf05628b1996.camel@perches.com>
-Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
-From:   Joe Perches <joe@perches.com>
-To:     Tom Rix <trix@redhat.com>, Bart Van Assche <bvanassche@acm.org>,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, nathan@kernel.org,
-        ndesaulniers@google.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
-Date:   Fri, 28 Jan 2022 11:11:55 -0800
-In-Reply-To: <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com>
-References: <20220127151945.1244439-1-trix@redhat.com>
-         <d26d4bd8-b5e1-f4d5-b563-9bc4dd384ff8@acm.org>
-         <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.40.4-1ubuntu2 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Rspamd-Queue-Id: 5CD0635
-X-Stat-Signature: 8653peheyynksmpug8otea4tq5jr88xn
-X-Rspamd-Server: rspamout07
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX1+tojhrHoxBG59eMTBbAjVdRtmbSPVhEWY=
-X-HE-Tag: 1643397103-49658
+        id S1350892AbiA1TUq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Jan 2022 14:20:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54198 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1350879AbiA1TUp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jan 2022 14:20:45 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23DF6C061714;
+        Fri, 28 Jan 2022 11:20:45 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D6F3FB826EA;
+        Fri, 28 Jan 2022 19:20:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id AC77AC340E7;
+        Fri, 28 Jan 2022 19:20:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1643397642;
+        bh=7sRkAAw9Yg5eEaEDz/4DdtSYTtwMEyuPQdQ6JclzmM4=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=u+rAy8iX5iDr0KE3bWPi4YqoOeGgr+8C0eGPom7XO4ELCOjEiBkjhWVBlqrAYeVTY
+         u7GikVqEABPOzXdRtti9izREMpBt1AEe79YrU19rAq85S5GSTr3317N2iHCrwCd+mq
+         513PqlkB4aEXHJxV8LmEdvI0lXDVDcDxr0lBKDtOzQNF9TxBwVjXKEpWvPqgxE3eR0
+         A/e29h7Io/wABvUId91CGWyD3/Mcwm2swExIK2wpPZ5NsRZm0kH+RVrQMzJTn8dNnm
+         ufUHBMjxbTM6c11JshC1BROv6aAIXOHYB8u6/hR9qsb4oAUikJDZ9hLdHFSGpFPpca
+         h4PihEu6Aqo7Q==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 9C096F6079F;
+        Fri, 28 Jan 2022 19:20:42 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 5.17-rc1
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <ebd76be7c06fd3f8f888094fb2dd8e138fe97b33.camel@HansenPartnership.com>
+References: <ebd76be7c06fd3f8f888094fb2dd8e138fe97b33.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <ebd76be7c06fd3f8f888094fb2dd8e138fe97b33.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 4db09593af0b0b4d7d4805ebb3273df51d7cc30d
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 169387e2aa291a4e3cb856053730fe99d6cec06f
+Message-Id: <164339764263.2973.8302135137345133481.pr-tracker-bot@kernel.org>
+Date:   Fri, 28 Jan 2022 19:20:42 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2022-01-28 at 09:59 -0800, Tom Rix wrote:
-> On 1/28/22 9:42 AM, Bart Van Assche wrote:
-> > On 1/27/22 07:19, trix@redhat.com wrote:
-> > > From: Tom Rix <trix@redhat.com>
-> > > 
-> > > checkpatch reports several hundred formatting errors.
-> > > Run these files through clang-format and knock off
-> > > some of them.
-> > 
-> > Isn't this the kind of patches that carries more risk than value?
+The pull request you sent on Fri, 28 Jan 2022 12:14:52 -0500:
 
-Risk for whitespace style reformatting patches is quite low.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Nominally, clang-format changes should not produce a different
-compiled object file unless __LINE__/__DATE__/__TIME__ style
-changes occur.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/169387e2aa291a4e3cb856053730fe99d6cec06f
 
-If it does, the clang-format tool is broken.
+Thank you!
 
-> > Additionally, this patch conflicts with a patch series that I plan to 
-> > post soon.
-[]
-> Long term, it would be good have a reliable way to automatically fix 
-> either new files or really broken old files.
-
-That's really a maintainer preference no?
-
-Especially so for any automation.
-
-
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
