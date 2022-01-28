@@ -2,114 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BEBCC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jan 2022 08:41:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1F10C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jan 2022 09:09:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238423AbiA1IlW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Jan 2022 03:41:22 -0500
-Received: from relay036.a.hostedemail.com ([64.99.140.36]:62202 "EHLO
-        relay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231660AbiA1IlW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jan 2022 03:41:22 -0500
-Received: from omf02.hostedemail.com (a10.router.float.18 [10.200.18.1])
-        by unirelay12.hostedemail.com (Postfix) with ESMTP id 3A86E12033B;
-        Fri, 28 Jan 2022 08:41:20 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf02.hostedemail.com (Postfix) with ESMTPA id AF44C80014;
-        Fri, 28 Jan 2022 08:40:52 +0000 (UTC)
-Message-ID: <7bff2de309384b7c9ee71ad90881d1e0bbe0a781.camel@perches.com>
-Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
-From:   Joe Perches <joe@perches.com>
-To:     Tom Rix <trix@redhat.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Finn Thain <fthain@linux-m68k.org>,
-        Miguel Ojeda <ojeda@kernel.org>
-Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, nathan@kernel.org,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
-Date:   Fri, 28 Jan 2022 00:41:10 -0800
-In-Reply-To: <c801989d-5f3e-84d2-24a0-7022be70da98@redhat.com>
-References: <20220127151945.1244439-1-trix@redhat.com>
-         <953eb015-4b78-f7b-5dc1-6491c6bf27e@linux-m68k.org>
-         <CAKwvOdnWHVV+3s8SO=Q8FfZ7hVekRVDL5q+7CwAk_z44xaex8w@mail.gmail.com>
-         <fb308f51-f16b-3d9b-80c2-180940236b00@redhat.com>
-         <5554a75f65fddab4de60d61fd503fe73773dafbb.camel@perches.com>
-         <c801989d-5f3e-84d2-24a0-7022be70da98@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.40.4-1ubuntu2 
+        id S1347485AbiA1JJo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Jan 2022 04:09:44 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4538 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347477AbiA1JJn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jan 2022 04:09:43 -0500
+Received: from fraeml734-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JlWlh0fLrz67xNW;
+        Fri, 28 Jan 2022 17:06:08 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml734-chm.china.huawei.com (10.206.15.215) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Fri, 28 Jan 2022 10:09:41 +0100
+Received: from [10.47.26.192] (10.47.26.192) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 28 Jan
+ 2022 09:09:40 +0000
+Subject: Re: [PATCH 00/16] scsi: libsas and users: Factor out LLDD TMF code
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <artur.paszkiewicz@intel.com>, <jinpu.wang@cloud.ionos.com>,
+        <chenxiang66@hisilicon.com>, <Ajish.Koshy@microchip.com>
+CC:     <yanaijie@huawei.com>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>, <liuqi115@huawei.com>,
+        <Viswas.G@microchip.com>
+References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
+ <1893d9ef-042b-af3b-74ea-dd4d0210c493@opensource.wdc.com>
+ <14df160f-c0f2-cc9f-56d4-8eda67969e0b@huawei.com>
+ <a8fae323-1877-058a-b03e-d175a725213f@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <a2de1656-b1ec-2fb7-caab-657e27dacb48@huawei.com>
+Date:   Fri, 28 Jan 2022 09:09:03 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Stat-Signature: ee1qasspf45yao75rasduwrdbsym8kor
-X-Rspamd-Server: rspamout01
-X-Rspamd-Queue-Id: AF44C80014
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX1/s1CB6P0Qi+bndabNk32vMkM+MW6PtAhg=
-X-HE-Tag: 1643359252-762821
+In-Reply-To: <a8fae323-1877-058a-b03e-d175a725213f@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.26.192]
+X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2022-01-27 at 21:31 -0800, Tom Rix wrote:
-> On 1/27/22 6:43 PM, Joe Perches wrote:
-> > On Thu, 2022-01-27 at 16:32 -0800, Tom Rix wrote:
-> > > On 1/27/22 2:47 PM, Nick Desaulniers wrote:
-> > > > + Miguel (the clang-format maintainer), Joe (checkpatch maintainer)
-> > > > These criticisms are worth reviewing.
-> > > > 
-> > > > On Thu, Jan 27, 2022 at 2:38 PM Finn Thain <fthain@linux-m68k.org> wrote:
-> > > > > On Thu, 27 Jan 2022, trix@redhat.com wrote:
-> > > > > 
-> > > > > > From: Tom Rix <trix@redhat.com>
-> > > > > > 
-> > > > > > checkpatch reports several hundred formatting errors. Run these files
-> > > > > > through clang-format and knock off some of them.
-> > > > > > 
-> > > > > That method seems like a good recipe for endless churn unless checkpatch
-> > > > > and clang-format really agree about these style rules.
-> > > > > 
-> > > > > Why use checkpatch to assess code style, if we could simply diff the
-> > > > > existing source with the output from clang-format... but it seems that
-> > > > > clang-format harms readability, makes indentation errors and uses
-> > > > > inconsistent style rules. Some examples:
-> > > Problems with clang-format should be fixed, I'll take a look.
-> > > 
-> > > I was reviewing this file for another isseue and could not get past how
-> > > horredously bad it was and really did not want to manually fix the 400+
-> > > formatting errors.  I will drop this patch and use the use these files
-> > > to verify the .clang-format .
-> > I think this is more an issue with clang-format than with checkpatch.
-> > 
-> > If you have specific issues with what checkpatch reports for this
-> > file (or any other file), let me know.
+On 28/01/2022 06:37, Damien Le Moal wrote:
+
+Hi Damien,
+
+>> However using this same adapter type on my arm64 system has error
+>> handling kick in almost straight away - and the handling looks sane. A
+>> silver lining, I suppose ..
+> I ran some more tests. In particular, I ran libzbc compliance tests on a
+> 20TB SMR drives. All tests pass with 5.17-rc1, but after applying your
+> series, I see command timeout that take forever to recover from, with
+> the drive revalidation failing after that.
 > 
-> Yes, I agree. Its a clang-format problem.
+> [  385.102073] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+> [  385.108026] sas: sas_scsi_find_task: aborting task 0x000000007068ed73
+> [  405.561099] pm80xx0:: pm8001_exec_internal_task_abort  757:TMF task
+> timeout.
+> [  405.568236] sas: sas_scsi_find_task: task 0x000000007068ed73 is aborted
+> [  405.574930] sas: sas_eh_handle_sas_errors: task 0x000000007068ed73 is
+> aborted
+> [  411.192602] ata21.00: qc timeout (cmd 0xec)
+> [  431.672122] pm80xx0:: pm8001_exec_internal_task_abort  757:TMF task
+> timeout.
+> [  431.679282] ata21.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> [  431.685544] ata21.00: revalidation failed (errno=-5)
+> [  441.911948] ata21.00: qc timeout (cmd 0xec)
+> [  462.391545] pm80xx0:: pm8001_exec_internal_task_abort  757:TMF task
+> timeout.
+> [  462.398696] ata21.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> [  462.404992] ata21.00: revalidation failed (errno=-5)
+> [  492.598769] ata21.00: qc timeout (cmd 0xec)
+> ...
 > 
-> I will be looking to minimize the .clang-format settings to only those 
-> that agree with checkpatch.
+> So there is a problem. Need to dig into this. I see this issue only with
+> libzbc passthrough tests. fio runs with libaio are fine.
+
+Thanks for the notice. I think that I also saw a hang, but, IIRC, it 
+happened on mainline for me - but it's hard to know if I broke something 
+if it is already broke in another way. That is why I wanted this card 
+working properly...
+
+Anyway, I will investigate more.
+
 > 
-> Then add settings back in later if their problems can be worked out.
+>>> And sparse/make C=1 complains about:
+>>>
+>>> drivers/scsi/libsas/sas_port.c:77:13: warning: context imbalance in
+>>> 'sas_form_port' - different lock contexts for basic block
+>> I think it's talking about the port->phy_list_lock usage - it prob
+>> doesn't like segments where we fall out a loop with the lock held (which
+>> was grabbed in the loop). Anyway it looks ok. Maybe we can improve this.
+>>
+>>> But I have not checked if it is something that your series touch.
+>>>
+>>> And there is a ton of complaints about __le32 use in the pm80xx code...
+>>> I can try to have a look at these if you want, on top of your series.
+>> I really need to get make C=1 working for me - it segfaults in any env I
+>> have:(
+> I now have a 12 patch series that fixes*all*  the sparse warnings. Some
+> of the fixes were trivial, but most of them are simply hard bugs with
+> the handling of le32 struct field values. There is no way that this
+> driver is working as-is on big-endian machines. Some calculations are
+> actually done using cpu_to_le32() values !
 
-Another option would be to use:
+Great, I'll have a look when you send them.
 
-	./scripts/checkpatch.pl -f --fix[-inplace] [--types=<list>] <files>
+> 
+> But even though these fixes should have essentially no effect on
+> little-endian x86_64, with my series applied, I see the same command
+> timeout problem as with your libsas update, and both series together
+> result in the same timeout issue too.
+> 
+> So it looks like "fixing" the code actually is revealing some other bug
+> that was previously hidden... This will take some time to debug.
+> 
+> Another problem I noticed: doing "rmmod pm80xx; modprobe pm80xx" result
+> in a failure of device scans. I get loops of "link is slow to respond
+> ->reset". For the above tests, I had to reboot every time I changed the
+> driver module code. Another thing to look at.
 
-where types is an optional list of specific things to change
+Sounds odd, I would expect everything runs from afresh when insmod.
 
-see:
-	./scripts/checkpatch.pl --list-types --verbose
-
-to show the possible types.
-
-Only some of these types can be changed with --fix or --fix-inplace
-
-If using checkpatch to change formatting, it sometimes can be useful
-to run checkpatch --fix multiple times on the same file as a
-checkpatch --fix can create a change than checkpatch will suggest
-should itself be fixed.
-
-Of course another option is to do nothing as many will complain,
-sometimes senselessly, about 'churn'.
-
-
-
+Thanks,
+John
