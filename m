@@ -2,120 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFA8EC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jan 2022 08:13:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BEBCC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jan 2022 08:41:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347212AbiA1INC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Jan 2022 03:13:02 -0500
-Received: from szxga03-in.huawei.com ([45.249.212.189]:32127 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236744AbiA1INB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jan 2022 03:13:01 -0500
-Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4JlVVw0glDz8wNq;
-        Fri, 28 Jan 2022 16:10:00 +0800 (CST)
-Received: from [10.40.193.166] (10.40.193.166) by
- dggeme756-chm.china.huawei.com (10.3.19.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.21; Fri, 28 Jan 2022 16:12:59 +0800
-Subject: Re: [PATCH 00/16] scsi: libsas and users: Factor out LLDD TMF code
-To:     John Garry <john.garry@huawei.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <artur.paszkiewicz@intel.com>,
-        <jinpu.wang@cloud.ionos.com>, <Ajish.Koshy@microchip.com>
-References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
-CC:     <yanaijie@huawei.com>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>, <liuqi115@huawei.com>,
-        <Viswas.G@microchip.com>, <damien.lemoal@opensource.wdc.com>
-From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
-Message-ID: <8285a1ba-9626-ddcb-d270-d543bf9df50b@hisilicon.com>
-Date:   Fri, 28 Jan 2022 16:12:58 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.2.0
+        id S238423AbiA1IlW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Jan 2022 03:41:22 -0500
+Received: from relay036.a.hostedemail.com ([64.99.140.36]:62202 "EHLO
+        relay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231660AbiA1IlW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jan 2022 03:41:22 -0500
+Received: from omf02.hostedemail.com (a10.router.float.18 [10.200.18.1])
+        by unirelay12.hostedemail.com (Postfix) with ESMTP id 3A86E12033B;
+        Fri, 28 Jan 2022 08:41:20 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf02.hostedemail.com (Postfix) with ESMTPA id AF44C80014;
+        Fri, 28 Jan 2022 08:40:52 +0000 (UTC)
+Message-ID: <7bff2de309384b7c9ee71ad90881d1e0bbe0a781.camel@perches.com>
+Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
+From:   Joe Perches <joe@perches.com>
+To:     Tom Rix <trix@redhat.com>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Finn Thain <fthain@linux-m68k.org>,
+        Miguel Ojeda <ojeda@kernel.org>
+Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, nathan@kernel.org,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
+Date:   Fri, 28 Jan 2022 00:41:10 -0800
+In-Reply-To: <c801989d-5f3e-84d2-24a0-7022be70da98@redhat.com>
+References: <20220127151945.1244439-1-trix@redhat.com>
+         <953eb015-4b78-f7b-5dc1-6491c6bf27e@linux-m68k.org>
+         <CAKwvOdnWHVV+3s8SO=Q8FfZ7hVekRVDL5q+7CwAk_z44xaex8w@mail.gmail.com>
+         <fb308f51-f16b-3d9b-80c2-180940236b00@redhat.com>
+         <5554a75f65fddab4de60d61fd503fe73773dafbb.camel@perches.com>
+         <c801989d-5f3e-84d2-24a0-7022be70da98@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.40.4-1ubuntu2 
 MIME-Version: 1.0
-In-Reply-To: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset="gbk"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.40.193.166]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggeme756-chm.china.huawei.com (10.3.19.102)
-X-CFilter-Loop: Reflected
+X-Stat-Signature: ee1qasspf45yao75rasduwrdbsym8kor
+X-Rspamd-Server: rspamout01
+X-Rspamd-Queue-Id: AF44C80014
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-Session-ID: U2FsdGVkX1/s1CB6P0Qi+bndabNk32vMkM+MW6PtAhg=
+X-HE-Tag: 1643359252-762821
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi John,
+On Thu, 2022-01-27 at 21:31 -0800, Tom Rix wrote:
+> On 1/27/22 6:43 PM, Joe Perches wrote:
+> > On Thu, 2022-01-27 at 16:32 -0800, Tom Rix wrote:
+> > > On 1/27/22 2:47 PM, Nick Desaulniers wrote:
+> > > > + Miguel (the clang-format maintainer), Joe (checkpatch maintainer)
+> > > > These criticisms are worth reviewing.
+> > > > 
+> > > > On Thu, Jan 27, 2022 at 2:38 PM Finn Thain <fthain@linux-m68k.org> wrote:
+> > > > > On Thu, 27 Jan 2022, trix@redhat.com wrote:
+> > > > > 
+> > > > > > From: Tom Rix <trix@redhat.com>
+> > > > > > 
+> > > > > > checkpatch reports several hundred formatting errors. Run these files
+> > > > > > through clang-format and knock off some of them.
+> > > > > > 
+> > > > > That method seems like a good recipe for endless churn unless checkpatch
+> > > > > and clang-format really agree about these style rules.
+> > > > > 
+> > > > > Why use checkpatch to assess code style, if we could simply diff the
+> > > > > existing source with the output from clang-format... but it seems that
+> > > > > clang-format harms readability, makes indentation errors and uses
+> > > > > inconsistent style rules. Some examples:
+> > > Problems with clang-format should be fixed, I'll take a look.
+> > > 
+> > > I was reviewing this file for another isseue and could not get past how
+> > > horredously bad it was and really did not want to manually fix the 400+
+> > > formatting errors.  I will drop this patch and use the use these files
+> > > to verify the .clang-format .
+> > I think this is more an issue with clang-format than with checkpatch.
+> > 
+> > If you have specific issues with what checkpatch reports for this
+> > file (or any other file), let me know.
+> 
+> Yes, I agree. Its a clang-format problem.
+> 
+> I will be looking to minimize the .clang-format settings to only those 
+> that agree with checkpatch.
+> 
+> Then add settings back in later if their problems can be worked out.
+
+Another option would be to use:
+
+	./scripts/checkpatch.pl -f --fix[-inplace] [--types=<list>] <files>
+
+where types is an optional list of specific things to change
+
+see:
+	./scripts/checkpatch.pl --list-types --verbose
+
+to show the possible types.
+
+Only some of these types can be changed with --fix or --fix-inplace
+
+If using checkpatch to change formatting, it sometimes can be useful
+to run checkpatch --fix multiple times on the same file as a
+checkpatch --fix can create a change than checkpatch will suggest
+should itself be fixed.
+
+Of course another option is to do nothing as many will complain,
+sometimes senselessly, about 'churn'.
 
 
-ÔÚ 2022/1/25 19:32, John Garry Ð´µÀ:
-> The LLDD TMF code is almost identical between hisi_sas, pm8001, and mvsas
-> drivers.
->
-> This series factors out that code into libsas, thus reducing much
-> duplication and giving a net reduction of ~250 LoC.
->
-> There are some subtle differences between the core TMF handler and each
-> of the LLDDs old implementation, so any review and testing is appreciated.
->
-> Some other minor patches are thrown in:
-> - Delete unused macro in hisi_sas driver
-> - Delete unused libsas callback
-> - Add enum for response frame datapres field
->
-> I have another follow-up series to factor out the internal abort code,
-> which is common to hisi_sas and pm8001 drivers.
->
-> Based on v5.17-rc1
-
-We have a full test on this patchset on KunPeng920 (for hisi_sas part), 
-and all of those testcases are passed, so please feel free to add :
-Tested-by: liyihang6@hisilicon.com
-
-
-> John Garry (16):
->    scsi: libsas: Use enum for response frame DATAPRES field
->    scsi: libsas: Delete lldd_clear_aca callback
->    scsi: hisi_sas: Delete unused I_T_NEXUS_RESET_PHYUP_TIMEOUT
->    scsi: libsas: Move SMP task handlers to core
->    scsi: libsas: Add struct sas_tmf_task
->    scsi: libsas: Add sas_task.tmf
->    scsi: libsas: Add sas_execute_tmf()
->    scsi: libsas: Add sas_execute_ssp_tmf()
->    scsi: libsas: Add TMF handler exec complete callback
->    scsi: libsas: Add TMF handler aborted callback
->    scsi: libsas: Add sas_abort_task_set()
->    scsi: libsas: Add sas_clear_task_set()
->    scsi: libsas: Add sas_lu_reset()
->    scsi: libsas: Add sas_query_task()
->    scsi: libsas: Add sas_abort_task()
->    scsi: libsas: Add sas_execute_ata_cmd()
->
->   Documentation/scsi/libsas.rst          |   2 -
->   drivers/scsi/aic94xx/aic94xx.h         |   1 -
->   drivers/scsi/aic94xx/aic94xx_init.c    |   1 -
->   drivers/scsi/aic94xx/aic94xx_tmf.c     |   9 -
->   drivers/scsi/hisi_sas/hisi_sas.h       |   9 +-
->   drivers/scsi/hisi_sas/hisi_sas_main.c  | 235 ++++---------------------
->   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   2 +-
->   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   9 +-
->   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |   2 +-
->   drivers/scsi/isci/init.c               |   1 -
->   drivers/scsi/isci/task.c               |  18 --
->   drivers/scsi/isci/task.h               |   4 -
->   drivers/scsi/libsas/sas_ata.c          |   8 +
->   drivers/scsi/libsas/sas_expander.c     |  24 +--
->   drivers/scsi/libsas/sas_internal.h     |   6 +
->   drivers/scsi/libsas/sas_scsi_host.c    | 220 +++++++++++++++++++++++
->   drivers/scsi/libsas/sas_task.c         |  12 +-
->   drivers/scsi/mvsas/mv_defs.h           |   5 -
->   drivers/scsi/mvsas/mv_init.c           |   5 +-
->   drivers/scsi/mvsas/mv_sas.c            | 177 +------------------
->   drivers/scsi/mvsas/mv_sas.h            |   3 -
->   drivers/scsi/pm8001/pm8001_hwi.c       |   4 +-
->   drivers/scsi/pm8001/pm8001_init.c      |   4 +-
->   drivers/scsi/pm8001/pm8001_sas.c       | 180 +++----------------
->   drivers/scsi/pm8001/pm8001_sas.h       |  13 +-
->   include/scsi/libsas.h                  |  23 ++-
->   26 files changed, 353 insertions(+), 624 deletions(-)
->
 
