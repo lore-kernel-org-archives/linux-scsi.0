@@ -2,53 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2ED0C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jan 2022 22:21:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77BA4C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Jan 2022 22:22:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351476AbiA1WVf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Jan 2022 17:21:35 -0500
-Received: from mail-pf1-f174.google.com ([209.85.210.174]:37625 "EHLO
-        mail-pf1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351583AbiA1WVV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jan 2022 17:21:21 -0500
-Received: by mail-pf1-f174.google.com with SMTP id a19so1482626pfx.4
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jan 2022 14:21:21 -0800 (PST)
+        id S1351338AbiA1WV7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Jan 2022 17:21:59 -0500
+Received: from mail-pj1-f54.google.com ([209.85.216.54]:50707 "EHLO
+        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S245100AbiA1WVZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jan 2022 17:21:25 -0500
+Received: by mail-pj1-f54.google.com with SMTP id o11so7822242pjf.0
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jan 2022 14:21:25 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=xzD3KLKWe4KJb3/aMz15sgXEpd0TUJKAazzrYUWCaDE=;
-        b=zVZDdwA5C8lolGmkyZvwrKZ/mA9ZoNC6n96VXwj/RUhT3COFDbpeU3AKE8sxwg3tUX
-         vwgHyK34iLsAr8cQu1T6NFoV8widIdiRwfCHPZnIfldImBIxF5CBjG5HaN/jviFjx027
-         wy2K72NhZjA9TVGVtjGjDYxwTXNempinOIz8Pew7log8cd25Sb/YPxmI+2kQffOPkcdC
-         1fZlvOJ/2O99q/qu022195kDF6jg3OhNl8ij4I0ncgljwC9I0BHdKk/+Lz60CN5S0Laa
-         JiCm9zKQ4ySSbEMadbKR1L54mwHe5ZUTuTxeKejhK3zaPBxFKRGvEM+5VDSGeFq9Qpk+
-         lO5Q==
-X-Gm-Message-State: AOAM5331WaQX6y+jmEqX8sCx4nv+EpPIws3pp5rHID8DBac5CLCtyRGk
-        8RPI5moNDmz3V3/hB0Ylr7c=
-X-Google-Smtp-Source: ABdhPJxdnz4mn45vLr3dbEk9uyu9MkDTs4cHWVqwqq0TMdYsVrgbNTW0hAN/qgBNNJGYpbIwL/Z63w==
-X-Received: by 2002:a05:6a00:1382:: with SMTP id t2mr9929827pfg.31.1643408480445;
-        Fri, 28 Jan 2022 14:21:20 -0800 (PST)
+        bh=qQkrgIwM3fN7ciPYMrcsr0hfS+57KteoRGnK782T2go=;
+        b=YtWLupiPMIRER3oRhLPNv4NOyE/s0p9nZ5pVvSzovYLkhOWsCVLMnu+j7wZTXygpZY
+         SECglPJjDBoy1ACIvPb1kfwMiYDgNf7SIbUGUumg/eV114qwPZ76tJKculYN4DXxzIu0
+         VGO6xhKnECodW5aoqSid+nUQ+7fLHzUW2qI9i5VbTfDJl+TZcU5/tER2wtbWdrItci+X
+         D02v+ZTAI0nnjKnybiKsJrV8X+6GG+xyYFobEp825j4FMcgU0K4+19sIm5Fy9KHDDtLc
+         AlbxCGn9sGTSDb6DcTgUEMH5im1kv0IQpkM3cvb3GdRZZBhJ0h36gqzcTE+aN0RLK66K
+         3iDw==
+X-Gm-Message-State: AOAM532e5RglnP9maQoSgKM3gCfqa9mpPwSoxoulTh0mwdF4y4sNeT4j
+        qjrnx1hUycvhDlYgDTUaR1E=
+X-Google-Smtp-Source: ABdhPJwL/DTb+Fys9SZoCataiTV6IdwIF+Z/BSn3MLiIGko6j2634r5jPD5ncrvC+iB81QTRjKOOWg==
+X-Received: by 2002:a17:90b:78c:: with SMTP id l12mr21822826pjz.73.1643408484400;
+        Fri, 28 Jan 2022 14:21:24 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id t2sm7787931pfg.207.2022.01.28.14.21.18
+        by smtp.gmail.com with ESMTPSA id t2sm7787931pfg.207.2022.01.28.14.21.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Jan 2022 14:21:19 -0800 (PST)
+        Fri, 28 Jan 2022 14:21:23 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Nilesh Javali <njavali@marvell.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
-        Karen Xie <kxie@chelsio.com>,
-        Ketan Mukadam <ketan.mukadam@broadcom.com>,
-        Max Gurtovoy <mgurtovoy@nvidia.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
+        Hannes Reinecke <hare@suse.de>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        Javed Hasan <jhasan@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        GR-QLogic-Storage-Upstream@marvell.com
-Subject: [PATCH 22/44] iscsi: Stop using the SCSI pointer
-Date:   Fri, 28 Jan 2022 14:18:47 -0800
-Message-Id: <20220128221909.8141-23-bvanassche@acm.org>
+        Satish Kharat <satishkh@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>
+Subject: [PATCH 24/44] libfc: Stop using the SCSI pointer
+Date:   Fri, 28 Jan 2022 14:18:49 -0800
+Message-Id: <20220128221909.8141-25-bvanassche@acm.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220128221909.8141-1-bvanassche@acm.org>
 References: <20220128221909.8141-1-bvanassche@acm.org>
@@ -58,367 +56,418 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of storing the iSCSI task pointer and the session age in the SCSI
-pointer, use command-private variables. This patch prepares for removal of
+Move the fc_fcp_pkt pointer, the residual length and the SCSI status into
+the new data structure libfc_cmd_priv. This patch prepares for removal of
 the SCSI pointer from struct scsi_cmnd.
 
-The list of iSCSI drivers has been obtained as follows:
-$ git grep -lw iscsi_host_alloc
-drivers/infiniband/ulp/iser/iscsi_iser.c
-drivers/scsi/be2iscsi/be_main.c
-drivers/scsi/bnx2i/bnx2i_iscsi.c
-drivers/scsi/cxgbi/libcxgbi.c
-drivers/scsi/iscsi_tcp.c
-drivers/scsi/libiscsi.c
-drivers/scsi/qedi/qedi_main.c
-drivers/scsi/qla4xxx/ql4_os.c
-include/scsi/libiscsi.h
+The libfc users have been identified as follows:
 
-Note: it is not clear to me how the qla4xxx driver can work without this
-patch since it uses the scsi_cmnd::SCp.ptr member for two different
-purposes:
-- The qla4xxx driver uses this member to store a struct srb pointer.
-- libiscsi uses this member to store a struct iscsi_task pointer.
+$ git grep -lw 'libfc_host_alloc' | grep -v /libfc
+drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+drivers/scsi/fcoe/fcoe.c
+drivers/scsi/fnic/fnic_main.c
+drivers/scsi/qedf/qedf_main.c
 
-Cc: Lee Duncan <lduncan@suse.com>
-Cc: Chris Leech <cleech@redhat.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>
-Cc: Nilesh Javali <njavali@marvell.com>
-Cc: Manish Rangankar <mrangankar@marvell.com>
-Cc: Karen Xie <kxie@chelsio.com>
-Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Saurav Kashyap <skashyap@marvell.com>
+Cc: Javed Hasan <jhasan@marvell.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.c |  1 +
- drivers/scsi/be2iscsi/be_main.c          |  3 ++-
- drivers/scsi/bnx2i/bnx2i_iscsi.c         |  1 +
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.c       |  1 +
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c       |  1 +
- drivers/scsi/iscsi_tcp.c                 |  1 +
- drivers/scsi/libiscsi.c                  | 22 ++++++++++++----------
- drivers/scsi/qedi/qedi_fw.c              |  2 +-
- drivers/scsi/qedi/qedi_iscsi.c           |  1 +
- drivers/scsi/qla4xxx/ql4_def.h           | 13 ++++++++++---
- drivers/scsi/qla4xxx/ql4_os.c            | 13 +++++++------
- include/scsi/libiscsi.h                  | 12 ++++++++++++
- 12 files changed, 50 insertions(+), 21 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc.h      | 10 ++++++++--
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |  1 +
+ drivers/scsi/bnx2fc/bnx2fc_io.c   | 20 ++++++++++----------
+ drivers/scsi/fcoe/fcoe.c          |  1 +
+ drivers/scsi/fnic/fnic.h          |  1 +
+ drivers/scsi/libfc/fc_fcp.c       | 26 +++++++++++---------------
+ drivers/scsi/qedf/qedf.h          | 11 ++++++++++-
+ drivers/scsi/qedf/qedf_io.c       | 16 ++++++++--------
+ drivers/scsi/qedf/qedf_main.c     |  3 ++-
+ include/scsi/libfc.h              | 11 +++++++++++
+ 10 files changed, 63 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index 07e47021a71f..f8d0bab4424c 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -971,6 +971,7 @@ static struct scsi_host_template iscsi_iser_sht = {
- 	.proc_name              = "iscsi_iser",
- 	.this_id                = -1,
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index b4cea8b06ea1..08deed26c51e 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -137,8 +137,6 @@
+ #define BNX2FC_FW_TIMEOUT		(3 * HZ)
+ #define PORT_MAX			2
+ 
+-#define CMD_SCSI_STATUS(Cmnd)		((Cmnd)->SCp.Status)
+-
+ /* FC FCP Status */
+ #define	FC_GOOD				0
+ 
+@@ -493,7 +491,15 @@ struct bnx2fc_unsol_els {
+ 	struct work_struct unsol_els_work;
+ };
+ 
++struct bnx2fc_priv {
++	struct libfc_cmd_priv libfc_data; /* must be the first member */
++	struct bnx2fc_cmd *io_req;
++};
+ 
++static inline struct bnx2fc_priv *bnx2fc_priv(struct scsi_cmnd *cmd)
++{
++	return scsi_cmd_priv(cmd);
++}
+ 
+ struct bnx2fc_cmd *bnx2fc_cmd_alloc(struct bnx2fc_rport *tgt);
+ struct bnx2fc_cmd *bnx2fc_elstm_alloc(struct bnx2fc_rport *tgt, int type);
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 71fa62bd3083..26d2a2eda295 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2980,6 +2980,7 @@ static struct scsi_host_template bnx2fc_shost_template = {
  	.track_queue_depth	= 1,
-+	.cmd_size		= sizeof(struct iscsi_cmd),
+ 	.slave_configure	= bnx2fc_slave_configure,
+ 	.shost_groups		= bnx2fc_host_groups,
++	.cmd_size		= sizeof(struct bnx2fc_priv),
  };
  
- static struct iscsi_transport iscsi_iser_transport = {
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index ab55681145f8..3bb0adefbe06 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -218,7 +218,7 @@ static char const *cqe_desc[] = {
+ static struct libfc_function_template bnx2fc_libfc_fcn_templ = {
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index b9114113ee73..a1d0f7d34466 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -204,7 +204,7 @@ static void bnx2fc_scsi_done(struct bnx2fc_cmd *io_req, int err_code)
+ 		sc_cmd, host_byte(sc_cmd->result), sc_cmd->retries,
+ 		sc_cmd->allowed);
+ 	scsi_set_resid(sc_cmd, scsi_bufflen(sc_cmd));
+-	sc_cmd->SCp.ptr = NULL;
++	bnx2fc_priv(sc_cmd)->io_req = NULL;
+ 	scsi_done(sc_cmd);
+ }
  
- static int beiscsi_eh_abort(struct scsi_cmnd *sc)
- {
--	struct iscsi_task *abrt_task = (struct iscsi_task *)sc->SCp.ptr;
-+	struct iscsi_task *abrt_task = iscsi_cmd(sc)->task;
- 	struct iscsi_cls_session *cls_session;
- 	struct beiscsi_io_task *abrt_io_task;
- 	struct beiscsi_conn *beiscsi_conn;
-@@ -403,6 +403,7 @@ static struct scsi_host_template beiscsi_sht = {
- 	.cmd_per_lun = BEISCSI_CMD_PER_LUN,
- 	.vendor_id = SCSI_NL_VID_TYPE_PCI | BE_VENDOR_ID,
- 	.track_queue_depth = 1,
-+	.cmd_size = sizeof(struct iscsi_cmd),
- };
+@@ -765,7 +765,7 @@ static int bnx2fc_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+ 	task = &(task_page[index]);
+ 	bnx2fc_init_mp_task(io_req, task);
  
- static struct scsi_transport_template *beiscsi_scsi_transport;
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index e21b053b4f3e..fe86fd61a995 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -2268,6 +2268,7 @@ static struct scsi_host_template bnx2i_host_template = {
- 	.sg_tablesize		= ISCSI_MAX_BDS_PER_CMD,
- 	.shost_groups		= bnx2i_dev_groups,
- 	.track_queue_depth	= 1,
-+	.cmd_size		= sizeof(struct iscsi_cmd),
- };
+-	sc_cmd->SCp.ptr = (char *)io_req;
++	bnx2fc_priv(sc_cmd)->io_req = io_req;
  
- struct iscsi_transport bnx2i_iscsi_transport = {
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-index f949a4e00783..ff9d4287937a 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-@@ -98,6 +98,7 @@ static struct scsi_host_template cxgb3i_host_template = {
- 	.dma_boundary	= PAGE_SIZE - 1,
- 	.this_id	= -1,
- 	.track_queue_depth = 1,
-+	.cmd_size	= sizeof(struct iscsi_cmd),
- };
+ 	/* Obtain free SQ entry */
+ 	spin_lock_bh(&tgt->tgt_lock);
+@@ -1147,7 +1147,7 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
+ 	BNX2FC_TGT_DBG(tgt, "Entered bnx2fc_eh_abort\n");
  
- static struct iscsi_transport cxgb3i_iscsi_transport = {
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index efb3e2b3398e..53d91bf9c12a 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -116,6 +116,7 @@ static struct scsi_host_template cxgb4i_host_template = {
- 	.dma_boundary	= PAGE_SIZE - 1,
- 	.this_id	= -1,
- 	.track_queue_depth = 1,
-+	.cmd_size	= sizeof(struct iscsi_cmd),
- };
- 
- static struct iscsi_transport cxgb4i_iscsi_transport = {
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 1bc37593c88f..9fee70d6434a 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -1007,6 +1007,7 @@ static struct scsi_host_template iscsi_sw_tcp_sht = {
- 	.proc_name		= "iscsi_tcp",
- 	.this_id		= -1,
- 	.track_queue_depth	= 1,
-+	.cmd_size		= sizeof(struct iscsi_cmd),
- };
- 
- static struct iscsi_transport iscsi_sw_tcp_transport = {
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 059dae8909ee..0337f7888ebe 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -462,7 +462,7 @@ static void iscsi_free_task(struct iscsi_task *task)
- 
- 	if (sc) {
- 		/* SCSI eh reuses commands to verify us */
--		sc->SCp.ptr = NULL;
-+		iscsi_cmd(sc)->task = NULL;
- 		/*
- 		 * queue command may call this to free the task, so
- 		 * it will decide how to return sc to scsi-ml.
-@@ -1344,10 +1344,10 @@ struct iscsi_task *iscsi_itt_to_ctask(struct iscsi_conn *conn, itt_t itt)
- 	if (!task || !task->sc)
- 		return NULL;
- 
--	if (task->sc->SCp.phase != conn->session->age) {
-+	if (iscsi_cmd(task->sc)->age != conn->session->age) {
- 		iscsi_session_printk(KERN_ERR, conn->session,
- 				  "task's session age %d, expected %d\n",
--				  task->sc->SCp.phase, conn->session->age);
-+				  iscsi_cmd(task->sc)->age, conn->session->age);
- 		return NULL;
+ 	spin_lock_bh(&tgt->tgt_lock);
+-	io_req = (struct bnx2fc_cmd *)sc_cmd->SCp.ptr;
++	io_req = bnx2fc_priv(sc_cmd)->io_req;
+ 	if (!io_req) {
+ 		/* Command might have just completed */
+ 		printk(KERN_ERR PFX "eh_abort: io_req is NULL\n");
+@@ -1572,7 +1572,7 @@ void bnx2fc_process_tm_compl(struct bnx2fc_cmd *io_req,
+ 		printk(KERN_ERR PFX "tmf's fc_hdr r_ctl = 0x%x\n",
+ 			fc_hdr->fh_r_ctl);
+ 	}
+-	if (!sc_cmd->SCp.ptr) {
++	if (!bnx2fc_priv(sc_cmd)->io_req) {
+ 		printk(KERN_ERR PFX "tm_compl: SCp.ptr is NULL\n");
+ 		return;
+ 	}
+@@ -1609,7 +1609,7 @@ void bnx2fc_process_tm_compl(struct bnx2fc_cmd *io_req,
+ 		return;
  	}
  
-@@ -1645,8 +1645,8 @@ static inline struct iscsi_task *iscsi_alloc_task(struct iscsi_conn *conn,
- 			 (void *) &task, sizeof(void *)))
- 		return NULL;
+-	sc_cmd->SCp.ptr = NULL;
++	bnx2fc_priv(sc_cmd)->io_req = NULL;
+ 	scsi_done(sc_cmd);
  
--	sc->SCp.phase = conn->session->age;
--	sc->SCp.ptr = (char *) task;
-+	iscsi_cmd(sc)->age = conn->session->age;
-+	iscsi_cmd(sc)->task = task;
+ 	kref_put(&io_req->refcount, bnx2fc_cmd_release);
+@@ -1773,8 +1773,8 @@ static void bnx2fc_parse_fcp_rsp(struct bnx2fc_cmd *io_req,
+ 		io_req->fcp_resid = fcp_rsp->fcp_resid;
  
- 	refcount_set(&task->refcount, 1);
- 	task->state = ISCSI_TASK_PENDING;
-@@ -1683,7 +1683,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
- 	struct iscsi_task *task = NULL;
+ 	io_req->scsi_comp_flags = rsp_flags;
+-	CMD_SCSI_STATUS(sc_cmd) = io_req->cdb_status =
+-				fcp_rsp->scsi_status_code;
++	bnx2fc_priv(sc_cmd)->libfc_data.status = io_req->cdb_status =
++		fcp_rsp->scsi_status_code;
  
- 	sc->result = 0;
--	sc->SCp.ptr = NULL;
-+	iscsi_cmd(sc)->task = NULL;
+ 	/* Fetch fcp_rsp_info and fcp_sns_info if available */
+ 	if (num_rq) {
+@@ -1946,7 +1946,7 @@ void bnx2fc_process_scsi_cmd_compl(struct bnx2fc_cmd *io_req,
+ 	/* parse fcp_rsp and obtain sense data from RQ if available */
+ 	bnx2fc_parse_fcp_rsp(io_req, fcp_rsp, num_rq, rq_data);
  
- 	ihost = shost_priv(host);
- 
-@@ -1997,7 +1997,7 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
- 
- 	spin_lock_bh(&session->frwd_lock);
- 	spin_lock(&session->back_lock);
--	task = (struct iscsi_task *)sc->SCp.ptr;
-+	task = iscsi_cmd(sc)->task;
- 	if (!task) {
- 		/*
- 		 * Raced with completion. Blk layer has taken ownership
-@@ -2260,7 +2260,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 	 * if session was ISCSI_STATE_IN_RECOVERY then we may not have
- 	 * got the command.
- 	 */
--	if (!sc->SCp.ptr) {
-+	if (!iscsi_cmd(sc)->task) {
- 		ISCSI_DBG_EH(session, "sc never reached iscsi layer or "
- 				      "it completed.\n");
- 		spin_unlock_bh(&session->frwd_lock);
-@@ -2273,7 +2273,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 	 * then let the host reset code handle this
- 	 */
- 	if (!session->leadconn || session->state != ISCSI_STATE_LOGGED_IN ||
--	    sc->SCp.phase != session->age) {
-+	    iscsi_cmd(sc)->age != session->age) {
- 		spin_unlock_bh(&session->frwd_lock);
- 		mutex_unlock(&session->eh_mutex);
- 		ISCSI_DBG_EH(session, "failing abort due to dropped "
-@@ -2282,7 +2282,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
+-	if (!sc_cmd->SCp.ptr) {
++	if (!bnx2fc_priv(sc_cmd)->io_req) {
+ 		printk(KERN_ERR PFX "SCp.ptr is NULL\n");
+ 		return;
  	}
+@@ -2018,7 +2018,7 @@ void bnx2fc_process_scsi_cmd_compl(struct bnx2fc_cmd *io_req,
+ 			io_req->fcp_status);
+ 		break;
+ 	}
+-	sc_cmd->SCp.ptr = NULL;
++	bnx2fc_priv(sc_cmd)->io_req = NULL;
+ 	scsi_done(sc_cmd);
+ 	kref_put(&io_req->refcount, bnx2fc_cmd_release);
+ }
+@@ -2044,7 +2044,7 @@ int bnx2fc_post_io_req(struct bnx2fc_rport *tgt,
+ 	io_req->port = port;
+ 	io_req->tgt = tgt;
+ 	io_req->data_xfer_len = scsi_bufflen(sc_cmd);
+-	sc_cmd->SCp.ptr = (char *)io_req;
++	bnx2fc_priv(sc_cmd)->io_req = io_req;
  
- 	spin_lock(&session->back_lock);
--	task = (struct iscsi_task *)sc->SCp.ptr;
-+	task = iscsi_cmd(sc)->task;
- 	if (!task || !task->sc) {
- 		/* task completed before time out */
- 		ISCSI_DBG_EH(session, "sc completed while abort in progress\n");
-@@ -2792,6 +2792,8 @@ struct Scsi_Host *iscsi_host_alloc(struct scsi_host_template *sht,
- 	struct Scsi_Host *shost;
- 	struct iscsi_host *ihost;
+ 	stats = per_cpu_ptr(lport->stats, get_cpu());
+ 	if (sc_cmd->sc_data_direction == DMA_FROM_DEVICE) {
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 6415f88738ad..44ca6110213c 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -277,6 +277,7 @@ static struct scsi_host_template fcoe_shost_template = {
+ 	.sg_tablesize = SG_ALL,
+ 	.max_sectors = 0xffff,
+ 	.track_queue_depth = 1,
++	.cmd_size = sizeof(struct libfc_cmd_priv),
+ };
  
-+	WARN_ON_ONCE(sht->cmd_size < sizeof(struct iscsi_cmd));
+ /**
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index aa07189fb5fb..6ab444650f02 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -93,6 +93,7 @@
+  * These fields are locked by the hashed io_req_lock.
+  */
+ struct fnic_cmd_priv {
++	struct libfc_cmd_priv libfc_data; /* must be the first member */
+ 	struct fnic_io_req *io_req;
+ 	enum fnic_ioreq_state state;
+ 	u32 flags;
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 871b11edb586..bce90eb56c9c 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -45,14 +45,10 @@ static struct kmem_cache *scsi_pkt_cachep;
+ #define FC_SRB_READ		(1 << 1)
+ #define FC_SRB_WRITE		(1 << 0)
+ 
+-/*
+- * The SCp.ptr should be tested and set under the scsi_pkt_queue lock
+- */
+-#define CMD_SP(Cmnd)		    ((struct fc_fcp_pkt *)(Cmnd)->SCp.ptr)
+-#define CMD_ENTRY_STATUS(Cmnd)	    ((Cmnd)->SCp.have_data_in)
+-#define CMD_COMPL_STATUS(Cmnd)	    ((Cmnd)->SCp.this_residual)
+-#define CMD_SCSI_STATUS(Cmnd)	    ((Cmnd)->SCp.Status)
+-#define CMD_RESID_LEN(Cmnd)	    ((Cmnd)->SCp.buffers_residual)
++static struct libfc_cmd_priv *libfc_priv(struct scsi_cmnd *cmd)
++{
++	return scsi_cmd_priv(cmd);
++}
+ 
+ /**
+  * struct fc_fcp_internal - FCP layer internal data
+@@ -1137,7 +1133,7 @@ static int fc_fcp_pkt_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp)
+ 	unsigned long flags;
+ 	int rc;
+ 
+-	fsp->cmd->SCp.ptr = (char *)fsp;
++	libfc_priv(fsp->cmd)->fsp = fsp;
+ 	fsp->cdb_cmd.fc_dl = htonl(fsp->data_len);
+ 	fsp->cdb_cmd.fc_flags = fsp->req_flags & ~FCP_CFL_LEN_MASK;
+ 
+@@ -1150,7 +1146,7 @@ static int fc_fcp_pkt_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp)
+ 	rc = lport->tt.fcp_cmd_send(lport, fsp, fc_fcp_recv);
+ 	if (unlikely(rc)) {
+ 		spin_lock_irqsave(&si->scsi_queue_lock, flags);
+-		fsp->cmd->SCp.ptr = NULL;
++		libfc_priv(fsp->cmd)->fsp = NULL;
+ 		list_del(&fsp->list);
+ 		spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
+ 	}
+@@ -1983,7 +1979,7 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 		fc_fcp_can_queue_ramp_up(lport);
+ 
+ 	sc_cmd = fsp->cmd;
+-	CMD_SCSI_STATUS(sc_cmd) = fsp->cdb_status;
++	libfc_priv(sc_cmd)->status = fsp->cdb_status;
+ 	switch (fsp->status_code) {
+ 	case FC_COMPLETE:
+ 		if (fsp->cdb_status == 0) {
+@@ -1992,7 +1988,7 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 			 */
+ 			sc_cmd->result = DID_OK << 16;
+ 			if (fsp->scsi_resid)
+-				CMD_RESID_LEN(sc_cmd) = fsp->scsi_resid;
++				libfc_priv(sc_cmd)->resid_len = fsp->scsi_resid;
+ 		} else {
+ 			/*
+ 			 * transport level I/O was ok but scsi
+@@ -2025,7 +2021,7 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 			 */
+ 			FC_FCP_DBG(fsp, "Returning DID_ERROR to scsi-ml "
+ 				   "due to FC_DATA_UNDRUN (scsi)\n");
+-			CMD_RESID_LEN(sc_cmd) = fsp->scsi_resid;
++			libfc_priv(sc_cmd)->resid_len = fsp->scsi_resid;
+ 			sc_cmd->result = (DID_ERROR << 16) | fsp->cdb_status;
+ 		}
+ 		break;
+@@ -2085,7 +2081,7 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 
+ 	spin_lock_irqsave(&si->scsi_queue_lock, flags);
+ 	list_del(&fsp->list);
+-	sc_cmd->SCp.ptr = NULL;
++	libfc_priv(sc_cmd)->fsp = NULL;
+ 	spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
+ 	scsi_done(sc_cmd);
+ 
+@@ -2121,7 +2117,7 @@ int fc_eh_abort(struct scsi_cmnd *sc_cmd)
+ 
+ 	si = fc_get_scsi_internal(lport);
+ 	spin_lock_irqsave(&si->scsi_queue_lock, flags);
+-	fsp = CMD_SP(sc_cmd);
++	fsp = libfc_priv(sc_cmd)->fsp;
+ 	if (!fsp) {
+ 		/* command completed while scsi eh was setting up */
+ 		spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
+diff --git a/drivers/scsi/qedf/qedf.h b/drivers/scsi/qedf/qedf.h
+index ca987451b17e..abb0c26da36e 100644
+--- a/drivers/scsi/qedf/qedf.h
++++ b/drivers/scsi/qedf/qedf.h
+@@ -91,7 +91,6 @@ enum qedf_ioreq_event {
+ #define FC_GOOD		0
+ #define FCOE_FCP_RSP_FLAGS_FCP_RESID_OVER	(0x1<<2)
+ #define FCOE_FCP_RSP_FLAGS_FCP_RESID_UNDER	(0x1<<3)
+-#define CMD_SCSI_STATUS(Cmnd)			((Cmnd)->SCp.Status)
+ #define FCOE_FCP_RSP_FLAGS_FCP_RSP_LEN_VALID	(0x1<<0)
+ #define FCOE_FCP_RSP_FLAGS_FCP_SNS_LEN_VALID	(0x1<<1)
+ struct qedf_ioreq {
+@@ -189,6 +188,16 @@ struct qedf_ioreq {
+ 	unsigned int alloc;
+ };
+ 
++struct qedf_cmd_priv {
++	struct libfc_cmd_priv	libfc_data; /* must be the first member */
++	struct qedf_ioreq	*io_req;
++};
 +
- 	shost = scsi_host_alloc(sht, sizeof(struct iscsi_host) + dd_data_size);
- 	if (!shost)
- 		return NULL;
-diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-index 5916ed7662d5..d3170f2d023b 100644
---- a/drivers/scsi/qedi/qedi_fw.c
-+++ b/drivers/scsi/qedi/qedi_fw.c
-@@ -603,7 +603,7 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
- 		goto error;
++static inline struct qedf_cmd_priv *qedf_priv(struct scsi_cmnd *cmd)
++{
++	return scsi_cmd_priv(cmd);
++}
++
+ extern struct workqueue_struct *qedf_io_wq;
+ 
+ struct qedf_rport {
+diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
+index 99a56ca1fb16..293f830b184d 100644
+--- a/drivers/scsi/qedf/qedf_io.c
++++ b/drivers/scsi/qedf/qedf_io.c
+@@ -857,7 +857,7 @@ int qedf_post_io_req(struct qedf_rport *fcport, struct qedf_ioreq *io_req)
+ 
+ 	/* Initialize rest of io_req fileds */
+ 	io_req->data_xfer_len = scsi_bufflen(sc_cmd);
+-	sc_cmd->SCp.ptr = (char *)io_req;
++	qedf_priv(sc_cmd)->io_req = io_req;
+ 	io_req->sge_type = QEDF_IOREQ_FAST_SGE; /* Assume fast SGL by default */
+ 
+ 	/* Record which cpu this request is associated with */
+@@ -1065,7 +1065,7 @@ static void qedf_parse_fcp_rsp(struct qedf_ioreq *io_req,
+ 		io_req->fcp_resid = fcp_rsp->fcp_resid;
+ 
+ 	io_req->scsi_comp_flags = rsp_flags;
+-	CMD_SCSI_STATUS(sc_cmd) = io_req->cdb_status =
++	qedf_priv(sc_cmd)->libfc_data.status = io_req->cdb_status =
+ 	    fcp_rsp->scsi_status_code;
+ 
+ 	if (rsp_flags &
+@@ -1150,7 +1150,7 @@ void qedf_scsi_completion(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
+ 		return;
  	}
  
 -	if (!sc_cmd->SCp.ptr) {
-+	if (!iscsi_cmd(sc_cmd)->task) {
- 		QEDI_WARN(&qedi->dbg_ctx,
- 			  "SCp.ptr is NULL, returned in another context.\n");
- 		goto error;
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 282ecb4e39bb..8196f89f404e 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -59,6 +59,7 @@ struct scsi_host_template qedi_host_template = {
- 	.dma_boundary = QEDI_HW_DMA_BOUNDARY,
- 	.cmd_per_lun = 128,
- 	.shost_groups = qedi_shost_groups,
-+	.cmd_size = sizeof(struct iscsi_cmd),
++	if (!qedf_priv(sc_cmd)->io_req) {
+ 		QEDF_WARN(&(qedf->dbg_ctx), "SCp.ptr is NULL, returned in "
+ 		    "another context.\n");
+ 		return;
+@@ -1312,7 +1312,7 @@ void qedf_scsi_completion(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
+ 	clear_bit(QEDF_CMD_OUTSTANDING, &io_req->flags);
+ 
+ 	io_req->sc_cmd = NULL;
+-	sc_cmd->SCp.ptr =  NULL;
++	qedf_priv(sc_cmd)->io_req =  NULL;
+ 	scsi_done(sc_cmd);
+ 	kref_put(&io_req->refcount, qedf_release_cmd);
+ }
+@@ -1354,7 +1354,7 @@ void qedf_scsi_done(struct qedf_ctx *qedf, struct qedf_ioreq *io_req,
+ 		goto bad_scsi_ptr;
+ 	}
+ 
+-	if (!sc_cmd->SCp.ptr) {
++	if (!qedf_priv(sc_cmd)->io_req) {
+ 		QEDF_WARN(&(qedf->dbg_ctx), "SCp.ptr is NULL, returned in "
+ 		    "another context.\n");
+ 		return;
+@@ -1409,7 +1409,7 @@ void qedf_scsi_done(struct qedf_ctx *qedf, struct qedf_ioreq *io_req,
+ 		qedf_trace_io(io_req->fcport, io_req, QEDF_IO_TRACE_RSP);
+ 
+ 	io_req->sc_cmd = NULL;
+-	sc_cmd->SCp.ptr = NULL;
++	qedf_priv(sc_cmd)->io_req = NULL;
+ 	scsi_done(sc_cmd);
+ 	kref_put(&io_req->refcount, qedf_release_cmd);
+ 	return;
+@@ -2432,8 +2432,8 @@ int qedf_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+ 		 (tm_flags == FCP_TMF_TGT_RESET) ? "TARGET RESET" :
+ 		 "LUN RESET");
+ 
+-	if (sc_cmd->SCp.ptr) {
+-		io_req = (struct qedf_ioreq *)sc_cmd->SCp.ptr;
++	if (qedf_priv(sc_cmd)->io_req) {
++		io_req = qedf_priv(sc_cmd)->io_req;
+ 		ref_cnt = kref_read(&io_req->refcount);
+ 		QEDF_ERR(NULL,
+ 			 "orig io_req = %p xid = 0x%x ref_cnt = %d.\n",
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index cdc66e2a9488..05b609a0e80d 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -740,7 +740,7 @@ static int qedf_eh_abort(struct scsi_cmnd *sc_cmd)
+ 	}
+ 
+ 
+-	io_req = (struct qedf_ioreq *)sc_cmd->SCp.ptr;
++	io_req = qedf_priv(sc_cmd)->io_req;
+ 	if (!io_req) {
+ 		QEDF_ERR(&qedf->dbg_ctx,
+ 			 "sc_cmd not queued with lld, sc_cmd=%p op=0x%02x, port_id=%06x\n",
+@@ -996,6 +996,7 @@ static struct scsi_host_template qedf_host_template = {
+ 	.sg_tablesize = QEDF_MAX_BDS_PER_CMD,
+ 	.can_queue = FCOE_PARAMS_NUM_TASKS,
+ 	.change_queue_depth = scsi_change_queue_depth,
++	.cmd_size = sizeof(struct qedf_cmd_priv),
  };
  
- static void qedi_conn_free_login_resources(struct qedi_ctx *qedi,
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 69a590546bf9..a122909169ee 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -216,11 +216,18 @@
- #define IDC_COMP_TOV			5
- #define LINK_UP_COMP_TOV		30
+ static int qedf_get_paged_crc_eof(struct sk_buff *skb, int tlen)
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index eeb8d689ff6b..5ae6d504e835 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -351,6 +351,15 @@ struct fc_fcp_pkt {
+ 	struct completion tm_done;
+ } ____cacheline_aligned_in_smp;
  
--#define CMD_SP(Cmnd)			((Cmnd)->SCp.ptr)
-+struct qla4xxx_cmd_priv {
-+	struct iscsi_cmd iscsi_data; /* must be the first member */
-+	struct srb *srb;
++/*
++ * @fsp should be tested and set under the scsi_pkt_queue lock
++ */
++struct libfc_cmd_priv {
++	struct fc_fcp_pkt *fsp;
++	u32 resid_len;
++	u8 status;
 +};
 +
-+static inline struct qla4xxx_cmd_priv *qla4xxx_cmd_priv(struct scsi_cmnd *cmd)
-+{
-+	return scsi_cmd_priv(cmd);
-+}
- 
  /*
-- * SCSI Request Block structure	 (srb)	that is placed
-- * on cmd->SCp location of every I/O	 [We have 22 bytes available]
-+ * SCSI Request Block structure (srb) that is associated with each scsi_cmnd.
-  */
- struct srb {
- 	struct list_head list;	/* (8)	 */
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 0ae936d839f1..d64eda961412 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -226,6 +226,7 @@ static struct scsi_host_template qla4xxx_driver_template = {
- 	.name			= DRIVER_NAME,
- 	.proc_name		= DRIVER_NAME,
- 	.queuecommand		= qla4xxx_queuecommand,
-+	.cmd_size		= sizeof(struct qla4xxx_cmd_priv),
+  * Structure and function definitions for managing Fibre Channel Exchanges
+  * and Sequences
+@@ -862,6 +871,8 @@ libfc_host_alloc(struct scsi_host_template *sht, int priv_size)
+ 	struct fc_lport *lport;
+ 	struct Scsi_Host *shost;
  
- 	.eh_abort_handler	= qla4xxx_eh_abort,
- 	.eh_device_reset_handler = qla4xxx_eh_device_reset,
-@@ -4054,7 +4055,7 @@ static struct srb* qla4xxx_get_new_srb(struct scsi_qla_host *ha,
- 	srb->ddb = ddb_entry;
- 	srb->cmd = cmd;
- 	srb->flags = 0;
--	CMD_SP(cmd) = (void *)srb;
-+	qla4xxx_cmd_priv(cmd)->srb = srb;
- 
- 	return srb;
- }
-@@ -4067,7 +4068,7 @@ static void qla4xxx_srb_free_dma(struct scsi_qla_host *ha, struct srb *srb)
- 		scsi_dma_unmap(cmd);
- 		srb->flags &= ~SRB_DMA_VALID;
- 	}
--	CMD_SP(cmd) = NULL;
-+	qla4xxx_cmd_priv(cmd)->srb = NULL;
- }
- 
- void qla4xxx_srb_compl(struct kref *ref)
-@@ -4640,7 +4641,7 @@ static int qla4xxx_cmd_wait(struct scsi_qla_host *ha)
- 			 * the scsi/block layer is going to prevent
- 			 * the tag from being released.
- 			 */
--			if (cmd != NULL && CMD_SP(cmd))
-+			if (cmd != NULL && qla4xxx_cmd_priv(cmd)->srb)
- 				break;
- 		}
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
-@@ -9079,7 +9080,7 @@ struct srb *qla4xxx_del_from_active_array(struct scsi_qla_host *ha,
- 	if (!cmd)
- 		return srb;
- 
--	srb = (struct srb *)CMD_SP(cmd);
-+	srb = qla4xxx_cmd_priv(cmd)->srb;
- 	if (!srb)
- 		return srb;
- 
-@@ -9121,7 +9122,7 @@ static int qla4xxx_eh_wait_on_command(struct scsi_qla_host *ha,
- 
- 	do {
- 		/* Checking to see if its returned to OS */
--		rp = (struct srb *) CMD_SP(cmd);
-+		rp = qla4xxx_cmd_priv(cmd)->srb;
- 		if (rp == NULL) {
- 			done++;
- 			break;
-@@ -9215,7 +9216,7 @@ static int qla4xxx_eh_abort(struct scsi_cmnd *cmd)
- 	}
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
--	srb = (struct srb *) CMD_SP(cmd);
-+	srb = qla4xxx_cmd_priv(cmd)->srb;
- 	if (!srb) {
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 		ql4_printk(KERN_INFO, ha, "scsi%ld:%d:%llu: Specified command has already completed.\n",
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 4ee233e5a6ff..cb805ed9cbf1 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -19,6 +19,7 @@
- #include <linux/refcount.h>
- #include <scsi/iscsi_proto.h>
- #include <scsi/iscsi_if.h>
-+#include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_transport_iscsi.h>
- 
- struct scsi_transport_template;
-@@ -152,6 +153,17 @@ static inline bool iscsi_task_is_completed(struct iscsi_task *task)
- 	       task->state == ISCSI_TASK_ABRT_SESS_RECOV;
- }
- 
-+/* Private data associated with struct scsi_cmnd. */
-+struct iscsi_cmd {
-+	struct iscsi_task	*task;
-+	int			age;
-+};
++	WARN_ON_ONCE(sht->cmd_size < sizeof(struct libfc_cmd_priv));
 +
-+static inline struct iscsi_cmd *iscsi_cmd(struct scsi_cmnd *cmd)
-+{
-+	return scsi_cmd_priv(cmd);
-+}
-+
- /* Connection's states */
- enum {
- 	ISCSI_CONN_INITIAL_STAGE,
+ 	shost = scsi_host_alloc(sht, sizeof(*lport) + priv_size);
+ 	if (!shost)
+ 		return NULL;
