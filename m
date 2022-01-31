@@ -2,63 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B3FBC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Jan 2022 22:39:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EA37C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Jan 2022 22:46:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234387AbiAaWjj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Jan 2022 17:39:39 -0500
-Received: from wout3-smtp.messagingengine.com ([64.147.123.19]:51895 "EHLO
+        id S234042AbiAaWqL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Jan 2022 17:46:11 -0500
+Received: from wout3-smtp.messagingengine.com ([64.147.123.19]:55585 "EHLO
         wout3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234386AbiAaWjj (ORCPT
+        by vger.kernel.org with ESMTP id S229870AbiAaWqK (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Jan 2022 17:39:39 -0500
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-        by mailout.west.internal (Postfix) with ESMTP id 4CBA23201F4E;
-        Mon, 31 Jan 2022 17:39:38 -0500 (EST)
+        Mon, 31 Jan 2022 17:46:10 -0500
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailout.west.internal (Postfix) with ESMTP id E4DA4320157F;
+        Mon, 31 Jan 2022 17:46:09 -0500 (EST)
 Received: from mailfrontend1 ([10.202.2.162])
-  by compute5.internal (MEProxy); Mon, 31 Jan 2022 17:39:38 -0500
+  by compute4.internal (MEProxy); Mon, 31 Jan 2022 17:46:10 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:cc:content-type:date:date:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
         :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
-        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=/8EmfSqmsfyNQCo3V
-        oI1/sSW41d6SJ7d8EH9C1o0+NA=; b=AgvRDdToIKq54R8bKDMkF5TEjU8BQVUvd
-        zjNjDqBcwqXc2D5OKaE0xse2LTl89ybugoRjSoTdMF/CrCL2TvKjnPFlz7Kji4/5
-        gvxozjT98KG5SBv9LMLSWRdMlUfStaXEmWl4vIjAdFODJmP59eALz8lXskPtOZJ+
-        6uvxXmttcAFyzYnhPIUK1It0+SnHT1iJoobQIgyheybwRo+CzeZ/Vokv7KM1+B9V
-        +yxs87n9LKztH8FHrNXUcwZP0xw9FE/PEkpmj4E78G/klyDcNbMfUm6kCMcjY1sG
-        Wlu0CLTB4CS6c31nXe5ciuCrZrJVdldcf8L4SecMSzwzmFEd9SnxQ==
-X-ME-Sender: <xms:KWX4Yck3zdiN5C58iitdBOBVXDJAJROWg9ubwiJWqQ0BU9OV8kJIew>
-    <xme:KWX4Yb1ywbK2wz5z6alPXPPND2hKjsjQcRHgfOYU8G-hlJoyo747C2V-2NmyvBY18
-    KIMyY7G9gZrmpoeE9g>
-X-ME-Received: <xmr:KWX4YaoAEI1uvqnat2awyxRZpDghSLVwMReICmoYDpnNTWo8EJdxG9hGDvHzkU8zm3Nqw7rJN5NFfl5xRmHlxS73kcHlnijNK0Q>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddrgedvucetufdoteggodetrfdotffvucfrrh
-    hofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgenuceurghi
-    lhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurh
-    epfffhvffujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhnucfvhhgrihhn
-    uceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrthhtvghrnh
-    epffduhfegfedvieetudfgleeugeehkeekfeevfffhieevteelvdfhtdevffetuedunecu
-    vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfhhthhgrih
-    hnsehlihhnuhigqdhmieekkhdrohhrgh
-X-ME-Proxy: <xmx:KWX4YYlwBL6yzsu6GBwoP-2-LNBMx2PdZVjw5pCT0R75dpPgwX9ecw>
-    <xmx:KWX4Ya3Ejq1HVCnu5Rm6wkgERbrKv21r0Dn03ARQ6SaKuBSf35zBEA>
-    <xmx:KWX4YfvH3wCBRNdky2ZpqcfyU_9hcc6dmrFRY2QP5nMdyImFtFnXjg>
-    <xmx:KWX4YdSvzC0nuEROrpvd_BvqUvguQsTt_H4ANT-m9bOLwOJa6W9_Vg>
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=xnO7MpxS5kw0NEx/J
+        v9loL7S9u2FAsl+pHT+s814Kzw=; b=nipNWD6L+cRREmZYrCMOoByA0aYSeiD+R
+        3bdhWfxkWlisenJ7K94CJ+xnBbkuWdwxuuB9Bave1XeoUHap1T1A/AdwQBPUZoAQ
+        MVhMyFoeWBj54wqtu0ICqNQ3gDSyBIftUYrFnoSj7OK289SD1I2lktN2x6yzV9ww
+        HlAMeuMdygTIc4VSLpv82LfAX34yESpKUGqBTX7T2/jIyBWXz/JyDgp/3CbDkAFy
+        ximmZucG0UhFJ8sjldA5DgVeTk7BPwNjZ/LwdPUsmdebTP7mBvprkZ3uzEezcvEU
+        2go1B9El9HSwzJqKEk5i3IKO1VN04WCf7Iau04dMbyi2IaZfHVY0A==
+X-ME-Sender: <xms:sWb4YXNv843b8AtvpzQwUFmvan7JDwSMP7uRXiDnHW9T2O8_QQ06hA>
+    <xme:sWb4YR_iweZTKYH72bvPbcZLX6SasUVLSAoO2FnwpazGN2uzbd9J0qyVfZuemtoPS
+    H13H75a1SMmYpWw8NI>
+X-ME-Received: <xmr:sWb4YWR5qb8Um6tZOGSLuA2Y3qDy85WXp2arRGN3tDpuXvhALj_kKBY_4ooD70LEjJXQUmnPQfcyJdvOciaxnYJ8MlWusO7g_xQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddrgedvgddtvdcutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpeffhffvufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcuvfhh
+    rghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrghtth
+    gvrhhnpeffudfhgeefvdeitedugfelueegheekkeefveffhfeiveetledvhfdtveffteeu
+    udenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehfth
+    hhrghinheslhhinhhugidqmheikehkrdhorhhg
+X-ME-Proxy: <xmx:sWb4YbvzS8Pm5MuAw3mx8bWQELJXCsq8S7kz9A5pId2NmKyrq-TWqg>
+    <xmx:sWb4YfeM-Hpoy45GVPFEvU3w-rKWGxlM_L7C6GNLgAoj2AQ2WMVCVQ>
+    <xmx:sWb4YX2LFFFtD1nikOwC2fquWm1PEFArRAt5zDEAS5MTRsJUymNM1Q>
+    <xmx:sWb4YXGbidN8mh98NPE2yiCjQ6LZ_PN3gXcJFUwQjKkoBJNy_AXsAw>
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 31 Jan 2022 17:39:34 -0500 (EST)
-Date:   Tue, 1 Feb 2022 09:39:30 +1100 (AEDT)
+ 31 Jan 2022 17:46:07 -0500 (EST)
+Date:   Tue, 1 Feb 2022 09:46:04 +1100 (AEDT)
 From:   Finn Thain <fthain@linux-m68k.org>
 To:     Bart Van Assche <bvanassche@acm.org>
 cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
-        Ondrej Zary <linux@rainbow-software.org>,
-        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-scsi@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH 05/44] NCR5380: Move the SCSI pointer to private command
- data
-In-Reply-To: <20220128221909.8141-6-bvanassche@acm.org>
-Message-ID: <f8dc3a5f-55a7-6cc-b210-d0cd1b7a96c2@linux-m68k.org>
-References: <20220128221909.8141-1-bvanassche@acm.org> <20220128221909.8141-6-bvanassche@acm.org>
+Subject: Re: [PATCH 16/44] esp_scsi: Stop using the SCSI pointer
+In-Reply-To: <20220128221909.8141-17-bvanassche@acm.org>
+Message-ID: <a33be8ce-6f5d-6b97-2b69-3f3326c51b1f@linux-m68k.org>
+References: <20220128221909.8141-1-bvanassche@acm.org> <20220128221909.8141-17-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
@@ -67,86 +64,57 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Fri, 28 Jan 2022, Bart Van Assche wrote:
 
-> diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
-> index 845bd2423e66..adaf131aea4d 100644
-> --- a/drivers/scsi/NCR5380.h
-> +++ b/drivers/scsi/NCR5380.h
-> @@ -227,9 +227,17 @@ struct NCR5380_hostdata {
+> Set .cmd_size in the SCSI host template instead of using the SCSI pointer
+> from struct scsi_cmnd. This patch prepares for removal of the SCSI pointer
+> from struct scsi_cmnd.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/esp_scsi.c | 1 +
+>  drivers/scsi/esp_scsi.h | 3 ++-
+>  2 files changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+> index 57787537285a..9dfdca5b31e7 100644
+> --- a/drivers/scsi/esp_scsi.c
+> +++ b/drivers/scsi/esp_scsi.c
+> @@ -2678,6 +2678,7 @@ struct scsi_host_template scsi_esp_template = {
+>  	.sg_tablesize		= SG_ALL,
+>  	.max_sectors		= 0xffff,
+>  	.skip_settle_delay	= 1,
+> +	.cmd_size		= sizeof(struct esp_cmd_priv),
 >  };
+>  EXPORT_SYMBOL(scsi_esp_template);
 >  
->  struct NCR5380_cmd {
-> +	struct scsi_pointer scsi_pointer;
->  	struct list_head list;
+> diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+> index 446a3d18c022..c73760d3cf83 100644
+> --- a/drivers/scsi/esp_scsi.h
+> +++ b/drivers/scsi/esp_scsi.h
+> @@ -262,7 +262,8 @@ struct esp_cmd_priv {
+>  	struct scatterlist	*cur_sg;
+>  	int			tot_residue;
 >  };
->  
-> +static inline struct scsi_pointer *NCR5380_scsi_pointer(struct scsi_cmnd *cmd)
-> +{
-> +	struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
+> -#define ESP_CMD_PRIV(CMD)	((struct esp_cmd_priv *)(&(CMD)->SCp))
 > +
-> +	return &ncmd->scsi_pointer;
-> +}
-> +
->  #define NCR5380_PIO_CHUNK_SIZE		256
+> +#define ESP_CMD_PRIV(cmd)	((struct esp_cmd_priv *)scsi_cmd_priv(cmd))
 >  
->  /* Time limit (ms) to poll registers when IRQs are disabled, e.g. during PDMA */
+>  /* NOTE: this enum is ordered based on chip features! */
+>  enum esp_rev {
+> 
 
-I think this patch series is a good idea but poorly executed.
+After that, you're free to do this:
 
-Firstly, scsi_pointer has long been the name of a struct. It's confusing 
-to see that name re-used for variables and functions. Moreover, it was 
-always a lousy name (for anything).
-
-Regarding code style, this is legacy code i.e. it pre-dates the ban on 
-mixed letter case. (I'm using the word legacy after the dictionary 
-definition and not as a kind of weasel word intended to mean deprecated.)
-
-Mixed case names like "BAZ5000_cmd" would be frowned upon for new code but 
-this is not new code. So why not just use the name SCp for variables which 
-serve the same purpose that the SCp struct did?
-
-IOW, I would prefer to read the following, because SCp presumably means 
-"Scsi Command Private data" whereas "scsi_pointer" means nothing to me.
-
---- a/drivers/scsi/NCR5380.h
-+++ b/drivers/scsi/NCR5380.h
-@@ -227,9 +227,17 @@ struct NCR5380_hostdata {
- };
-   
- struct NCR5380_cmd {
-+     struct scsi_pointer SCp;
-      struct list_head list;
- };
-   
-+static inline struct scsi_pointer *NCR5380_to_SCp(struct scsi_cmnd *cmd)
-+{
-+     struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
-+     
-+     return &ncmd->SCp;
-+}
-+ 
- #define NCR5380_PIO_CHUNK_SIZE               256
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index bb88995a12c7..4934a5490716 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -2746,9 +2746,6 @@ static struct spi_function_template esp_transport_ops = {
  
- /* Time limit (ms) to poll registers when IRQs are disabled, e.g. during PDMA */
-diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index e9d0d99abc86..61fd3244a4ce 100644
---- a/drivers/scsi/atari_scsi.c
-+++ b/drivers/scsi/atari_scsi.c
-@@ -538,7 +538,8 @@ static int falcon_classify_cmd(struct scsi_cmnd *cmd)
- static int atari_scsi_dma_xfer_len(struct NCR5380_hostdata *hostdata,
-                                    struct scsi_cmnd *cmd)
+ static int __init esp_init(void)
  {
--       int wanted_len = cmd->SCp.this_residual;
-+       struct scsi_pointer *SCp = NCR5380_to_SCp(cmd);
-+       int wanted_len = SCp->this_residual;
-        int possible_len, limit;
- 
-        if (wanted_len < DMA_MIN_SIZE)
-@@ -610,7 +611,8 @@ static int atari_scsi_dma_xfer_len(struct NCR5380_hostdata *hostdata,
-        }
- 
-        /* Last step: apply the hard limit on DMA transfers */
--       limit = (atari_dma_buffer && !STRAM_ADDR(virt_to_phys(cmd->SCp.ptr))) ?
-+       limit = (atari_dma_buffer && !STRAM_ADDR(virt_to_phys(SCp->ptr))) ?
-                    STRAM_BUFFER_SIZE : 255*512;
-        if (possible_len > limit)
-                possible_len = limit;
+-	BUILD_BUG_ON(sizeof(struct scsi_pointer) <
+-		     sizeof(struct esp_cmd_priv));
+-
+ 	esp_transport_template = spi_attach_transport(&esp_transport_ops);
+ 	if (!esp_transport_template)
+ 		return -ENODEV;
