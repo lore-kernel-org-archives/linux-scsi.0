@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CED76C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 21:49:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B79BFC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 21:49:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235633AbiBAVs7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Feb 2022 16:48:59 -0500
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:19958 "EHLO
+        id S235798AbiBAVtF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Feb 2022 16:49:05 -0500
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:24331 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235681AbiBAVs7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 16:48:59 -0500
+        with ESMTP id S235681AbiBAVtE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 16:49:04 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1643752139; x=1675288139;
+  t=1643752144; x=1675288144;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=d4qmYxC+2pSAN2U2kE8TvUuaRcJQTWkrVblstSBcc3Q=;
-  b=W4Z9qfdsFz/v0IsOtKiR1FdRLjmkABNiNfXz9EnhrcNkwO/7XklLmqv6
-   NEfSh644eWxYnLA9H0w3W5YXYNGSjfjX1yktkTBb2N/ZJKmIxkdWULwV5
-   aE9Tk1bXI3xVTGgCh4jWpLv15q8XyfoRLPveB3aQcL8UH3DHSPvKa2YX2
-   5KXH16BqIHdePNva7xrHZ1QuMhtKRPLaN60VPJHSr7gfC/4I8mzpLKNwh
-   +40Lf0rFE+9GinZkS7nqQN+Llg5iKf5u0ZBlmb103FHDrtaZk02qhuaVw
-   ko+CnWdB+zaqP6K82A+d0DpAROsCk8rUWAgeuPwuAk/BnC21Y3CgOnd5y
-   w==;
-IronPort-SDR: 2GQQFaDxGp414F3VhqnhozMh+mXnREZxOBGtPs/YQZkn5WgiVhVS8YjXb4ESYSoMRvIHGqsjg5
- vn6JyF+MPK4QaSHWiInyYh0e+KomsNeWqHDInM2ZscQ8apFJLF9BFLVI8bwYrEz0YDprtAb6Xz
- DDp7mk3dDQK+n223V+2u6fgqP77QsXyYFC70XJ3tsEhpet/mOQwAwPdrBUAKRgnA1727FXk6OR
- ZzJ3xvtOvum990rP+yYqSTv4dI/RBhkozbOz+kgshgwRQHDajQmH5PBXd5hLncyuQAxksyci/6
- sRV8c9HJXLVWhpG+Zm/GQ0QL
+  bh=vUA+jNzZpOc9M6v/r997xoceaLfTlf0TsKVQm2oh7aY=;
+  b=UOX+DIMJC9cGS8/2GouliRzN+ITWHxjk0ZAL1Or3Scx2xtPtUxxDZL3w
+   vLwVqdgiSEDfvJ7R78yzu+M1K1qRn7ctwuRwu+wU1B2Dh6jn2xkglMygg
+   bnvtOat48P7hbltmG24F2/eTex0MsL8IWiC+uOFQegF7NHD6vxgx4gJ/R
+   uvT0UVxJ4efdHj20syHFwoIZ9/BS33Eux1jMOChdnAmFooupTMqSxAHUm
+   8A8Ot6Hj3K1OmF5f81HZ7j22qz7bqyQrPJ38OgWZymtj9BUuyLp8rGTHa
+   wRovjVufw4YWfjOkTChd5D2CL8L2A1ZVi/yJACMIReugAonPMc5W3YAmq
+   A==;
+IronPort-SDR: rcNhhH+NOBtxorrEiNiD7/S4oDw6hVAQDq6TF8Eqk62PhBz5nZygANptBjSTsufHV8fooX7PfV
+ 0/12FagiuXcNso5PcYGMBx31BwunO+TBuae+NKBuEuv2m0Dz7QxnFyeghhF76AxL1XTJf46xyv
+ n8H1EwGG4fH6oyhpLO8THGGOReg1CTUklBBWeMSKr/CgNueXn6bDsgTjOVIA6MDHRLbbqtQgWE
+ iGBAPZK/dE8Fy+718yc+cL11Q3C5ObCVcXq9veB9WXtgbcxKpyXlyBRcGnSx1uGSo7E6zt1mKC
+ +ekkqbMRmXihsT2MM9s6SPSb
 X-IronPort-AV: E=Sophos;i="5.88,335,1635231600"; 
-   d="scan'208";a="152163289"
+   d="scan'208";a="144582923"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 01 Feb 2022 14:48:59 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 01 Feb 2022 14:49:03 -0700
+Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.17; Tue, 1 Feb 2022 14:48:58 -0700
-Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex01.mchp-main.com
- (10.10.85.143) with Microsoft SMTP Server id 15.1.2375.17 via Frontend
- Transport; Tue, 1 Feb 2022 14:48:58 -0700
+ 15.1.2375.17; Tue, 1 Feb 2022 14:49:03 -0700
+Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex02.mchp-main.com
+ (10.10.85.144) with Microsoft SMTP Server id 15.1.2375.17 via Frontend
+ Transport; Tue, 1 Feb 2022 14:49:03 -0700
 Received: from brunhilda.pdev.net (localhost [127.0.0.1])
-        by brunhilda.pdev.net (Postfix) with ESMTP id 84AB670236E;
-        Tue,  1 Feb 2022 15:48:58 -0600 (CST)
-Subject: [PATCH 14/18] smartpqi: fix NUMA node not updated during init
+        by brunhilda.pdev.net (Postfix) with ESMTP id 8F38070236E;
+        Tue,  1 Feb 2022 15:49:03 -0600 (CST)
+Subject: [PATCH 15/18] smartpqi: fix BUILD_BUG_ON() statements
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -52,8 +52,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Tue, 1 Feb 2022 15:48:58 -0600
-Message-ID: <164375213850.440833.5243014942807747074.stgit@brunhilda.pdev.net>
+Date:   Tue, 1 Feb 2022 15:49:03 -0600
+Message-ID: <164375214355.440833.13129778749209816497.stgit@brunhilda.pdev.net>
 In-Reply-To: <164375113574.440833.13174600317115819605.stgit@brunhilda.pdev.net>
 References: <164375113574.440833.13174600317115819605.stgit@brunhilda.pdev.net>
 User-Agent: StGit/1.4.dev36+g39bf3b02665a
@@ -66,53 +66,77 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Mike McGowen <Mike.McGowen@microchip.com>
 
-Correct NUMA node association when calling pqi_pci_probe().
+Add calls to the functions at the beginning driver initialization.
 
-In the function pqi_pci_probe(), the driver makes an OS call to
-get the NUMA node associated with a controller. If the call returns
-that there is no associated node, the driver attempts to set it to
-node 0. The problem is that a different local variable (cp_node)
-was being used to do this, but the original local variable (node)
-was still being used in the call to pqi_alloc_ctrl_info().
-
-The value of "node" is not updated if the conditional after
-the call to dev_to_node() evaluates to TRUE.
+The BUILD_BUG_ON() statements that are currently in functions named
+verify_structures() in the modules smartpqi_init.c and smartpqi_sis.c
+do not work as currently implemented.
 
 Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Signed-off-by: Mike McGowen <Mike.McGowen@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    5 ++++-
+ drivers/scsi/smartpqi/smartpqi_sis.c  |    2 +-
+ drivers/scsi/smartpqi/smartpqi_sis.h  |    1 +
+ 3 files changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 76ad919b0812..d886a9c860af 100644
+index d886a9c860af..29cef682bde9 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -8811,7 +8811,7 @@ static int pqi_pci_probe(struct pci_dev *pci_dev,
- 	const struct pci_device_id *id)
- {
+@@ -54,6 +54,7 @@ MODULE_DESCRIPTION("Driver for Microchip Smart Family Controller version "
+ MODULE_VERSION(DRIVER_VERSION);
+ MODULE_LICENSE("GPL");
+ 
++static void pqi_verify_structures(void);
+ static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info,
+ 	enum pqi_ctrl_shutdown_reason ctrl_shutdown_reason);
+ static void pqi_ctrl_offline_worker(struct work_struct *work);
+@@ -9703,6 +9704,8 @@ static int __init pqi_init(void)
  	int rc;
--	int node, cp_node;
-+	int node;
- 	struct pqi_ctrl_info *ctrl_info;
  
- 	pqi_print_ctrl_info(pci_dev, id);
-@@ -8830,10 +8830,10 @@ static int pqi_pci_probe(struct pci_dev *pci_dev,
+ 	pr_info(DRIVER_NAME "\n");
++	pqi_verify_structures();
++	sis_verify_structures();
  
- 	node = dev_to_node(&pci_dev->dev);
- 	if (node == NUMA_NO_NODE) {
--		cp_node = cpu_to_node(0);
--		if (cp_node == NUMA_NO_NODE)
--			cp_node = 0;
--		set_dev_node(&pci_dev->dev, cp_node);
-+		node = cpu_to_node(0);
-+		if (node == NUMA_NO_NODE)
-+			node = 0;
-+		set_dev_node(&pci_dev->dev, node);
- 	}
+ 	pqi_sas_transport_template = sas_attach_transport(&pqi_sas_transport_functions);
+ 	if (!pqi_sas_transport_template)
+@@ -9726,7 +9729,7 @@ static void __exit pqi_cleanup(void)
+ module_init(pqi_init);
+ module_exit(pqi_cleanup);
  
- 	ctrl_info = pqi_alloc_ctrl_info(node);
+-static void __attribute__((unused)) verify_structures(void)
++static void pqi_verify_structures(void)
+ {
+ 	BUILD_BUG_ON(offsetof(struct pqi_ctrl_registers,
+ 		sis_host_to_ctrl_doorbell) != 0x20);
+diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
+index e176a1a0534d..afc27adf68e9 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sis.c
++++ b/drivers/scsi/smartpqi/smartpqi_sis.c
+@@ -479,7 +479,7 @@ int sis_wait_for_fw_triage_completion(struct pqi_ctrl_info *ctrl_info)
+ 	return rc;
+ }
+ 
+-static void __attribute__((unused)) verify_structures(void)
++void sis_verify_structures(void)
+ {
+ 	BUILD_BUG_ON(offsetof(struct sis_base_struct,
+ 		revision) != 0x0);
+diff --git a/drivers/scsi/smartpqi/smartpqi_sis.h b/drivers/scsi/smartpqi/smartpqi_sis.h
+index bd92ff49f385..5f3575261a8e 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sis.h
++++ b/drivers/scsi/smartpqi/smartpqi_sis.h
+@@ -12,6 +12,7 @@
+ #if !defined(_SMARTPQI_SIS_H)
+ #define _SMARTPQI_SIS_H
+ 
++void sis_verify_structures(void);
+ int sis_wait_for_ctrl_ready(struct pqi_ctrl_info *ctrl_info);
+ int sis_wait_for_ctrl_ready_resume(struct pqi_ctrl_info *ctrl_info);
+ bool sis_is_firmware_running(struct pqi_ctrl_info *ctrl_info);
 
 
