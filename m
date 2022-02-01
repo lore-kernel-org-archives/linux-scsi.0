@@ -2,156 +2,156 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB92AC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 13:47:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 607C3C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 17:53:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238862AbiBANrE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Feb 2022 08:47:04 -0500
-Received: from mga14.intel.com ([192.55.52.115]:22012 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230213AbiBANrD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Feb 2022 08:47:03 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1643723223; x=1675259223;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=zhANCAVRPMJKtTyZJ596l8+I84NvbmfarsdAm14y2lU=;
-  b=UYGenkS6sE45CvZW4dpddxiZlDGOHQ1XPVp6LK05NiASG3aEJy8IstpS
-   l62F/cSDVGKmMqHn8w8qwCW3QhaJNr3eVh5/J2Tb6PmrCZanpTQdMcwgH
-   m4CwgSCogmQSZGuumLVViPzaFao8mBnUpbelyApL0kVzDMNaXXXDp7WgB
-   QnE3Tiiy0kUSdJdnKtDwBVastuMUvRnMXmBk5s7GmVU6GL7zyG2lSKkyD
-   P1ckrLl1BfYA8c11nQkIDBybfebAekwtaqlVbzgzKbmsORx+iMTmS1x4F
-   Eem9/9nvmICboJkaVd6sdlb5K7VVi8Di4Vx5I+Etn0izXr0ZbxdVI5W7V
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10244"; a="247908769"
-X-IronPort-AV: E=Sophos;i="5.88,334,1635231600"; 
-   d="scan'208";a="247908769"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Feb 2022 05:46:46 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,334,1635231600"; 
-   d="scan'208";a="768931254"
-Received: from lkp-server01.sh.intel.com (HELO 276f1b88eecb) ([10.239.97.150])
-  by fmsmga006.fm.intel.com with ESMTP; 01 Feb 2022 05:46:44 -0800
-Received: from kbuild by 276f1b88eecb with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nEtUZ-000TKI-Ta; Tue, 01 Feb 2022 13:46:43 +0000
-Date:   Tue, 1 Feb 2022 21:46:18 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Douglas Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc:     kbuild-all@lists.01.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, hare@suse.de, bvanassche@acm.org,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Bodo Stroesser <bostroesser@gmail.com>
-Subject: Re: [PATCH v7 1/4] sgl_alloc_order: remove 4 GiB limit
-Message-ID: <202202012125.JGVcLupw-lkp@intel.com>
-References: <20220201034915.183117-2-dgilbert@interlog.com>
+        id S233089AbiBARxM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Feb 2022 12:53:12 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:37888 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230439AbiBARxM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 12:53:12 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643737991;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type;
+        bh=V5NHgeX6svdBwQCb1eVFS9MJBKrQn2fbOOGJZHfo6Es=;
+        b=SAiappObODgCwkLV/qwNtFyH1K6sNmWUwWT5OdJRu6UWVNvilVam4LtMCyS9G3qDN6aID9
+        TEpcGiGdYM39eQIa4sX0/5qgJU6lkRizE2GgF/QZ3yJlPnL2e6tZV850+RZXKzL/kXtjKH
+        vgbMiGq3oNR6rSe3+FwFyOQu4YVb700=
+Received: from mail-lf1-f69.google.com (mail-lf1-f69.google.com
+ [209.85.167.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-583-CjbtAs8KMM2blbJ_wdqYrg-1; Tue, 01 Feb 2022 12:53:10 -0500
+X-MC-Unique: CjbtAs8KMM2blbJ_wdqYrg-1
+Received: by mail-lf1-f69.google.com with SMTP id z13-20020a056512376d00b0043793efa5f6so6235127lft.18
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Feb 2022 09:53:10 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=V5NHgeX6svdBwQCb1eVFS9MJBKrQn2fbOOGJZHfo6Es=;
+        b=4UZRf7ytp9NnjFqQwNFXRrBEAfLIAPWACV3fGjpsmRyVRl7kyjjoHkce/ItmgobWcd
+         KRomipd24/hGrPTFvCptPUCVSAcrhmnf0Kuu00hrlk94apKJTZelcMBUm8IyVBYiKgGu
+         VKjyXx//fWOb4uvuBapk6AwvbbjaaQ3pJSNbDx2vDzrVsgJJGh5EKLZamx0ehlwZNe9J
+         qTy3B2ako9aeUVvJo3gg8ytIUA5bHnJNGiaSe+Ud2FDV48p635ZVvyk+jxNHpIw9KOTP
+         68i1MNuuWPSnnAB4ttwZ3jC6dobP9U5MKJcTdLFP4XTHfycSeyhky7cK6nmTUMkyX7vc
+         tLdQ==
+X-Gm-Message-State: AOAM532CQxfy8p46C5MIi8dkBwZg4ud7woKxvH3B3tABkWS1LsRjfCIV
+        n2NDCL8frh/Di3GYtorD1OxWxJJuGXT8pZK6Ctyw3HQE0VQDIl8TZQYi4p2Fh1ZknmdemvDYoTr
+        QW5lMwY0oOWfgS+b5SNw1rky36oa8aawl772++A==
+X-Received: by 2002:a05:6512:33d1:: with SMTP id d17mr12381325lfg.455.1643737988835;
+        Tue, 01 Feb 2022 09:53:08 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJw2SPx0T8oEVwuxIc+4WVcIa0MnN/RqpYwuQxm4H2vie7ZEKEg1aDBPv+faV036uE+y6cmhTwOnp0W8jjOF7I4=
+X-Received: by 2002:a05:6512:33d1:: with SMTP id d17mr12381302lfg.455.1643737988506;
+ Tue, 01 Feb 2022 09:53:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220201034915.183117-2-dgilbert@interlog.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+From:   Ewan Milne <emilne@redhat.com>
+Date:   Tue, 1 Feb 2022 12:52:57 -0500
+Message-ID: <CAGtn9rmosXZtSgn24gFNYTzkFrHgY+pQBNTiP-3N6-a8OX+HzA@mail.gmail.com>
+Subject: scsi-staging crashing on boot
+To:     linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Douglas,
+Anybody else hit this?  We are seeing a crash right after boot.
+Machine has an Emulex HBA, we don't see this on a similar machine w/Qlogic.
 
-Thank you for the patch! Yet something to improve:
+This was detected w/automation, we'll try backing out the last commit (below)
 
-[auto build test ERROR on linus/master]
-[also build test ERROR on v5.17-rc2 next-20220131]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+[   29.339684] general protection fault, probably for non-canonical
+address 0xdead00000000012a: 0000 [#1] PREEMPT SMP PTI
+[   29.340245] CPU: 23 PID: 0 Comm: swapper/23 Tainted: G S
+    5.17.0-rc1 #1
+[   29.340649] Hardware name: HP ProLiant DL360 Gen9, BIOS P89 07/20/2015
+[   29.340975] RIP: 0010:run_timer_softirq+0x137/0x420
+[   29.341611] Code: 83 ed 01 4c 8d 64 c4 08 49 8b 04 24 48 85 c0 74
+db 4d 8b 3c 24 4d 89 7e 08 66 90 49 8b 07 49 8b 57 08 48 89 02 48 85
+c0 74 04 <48> 89 50 08 49 c7 47 08 00 00 00 00 4d 8b 6f 18 4c 89 f7 48
+b8 22
+[   29.342903] RSP: 0000:ffffb930067c0f08 EFLAGS: 00010086
+[   29.343182] RAX: dead000000000122 RBX: 0000000000000000 RCX: 0000000000000200
+[   29.343924] RDX: ffffb930067c0f10 RSI: ffff964c9fce0340 RDI: ffff964c9fce0368
+[   29.344692] RBP: 00000000fffbde00 R08: 0000000000000000 R09: 0000000000000000
+[   29.345446] R10: 0000000000000000 R11: 0000000000000000 R12: ffffb930067c0f10
+[   29.346164] R13: ffffffff974060c8 R14: ffff964c9fce0340 R15: ffff9644c8866950
+[   29.346918] FS:  0000000000000000(0000) GS:ffff964c9fcc0000(0000)
+knlGS:0000000000000000
+[   29.347316] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   29.347979] CR2: 00007f763b35e630 CR3: 0000000882010004 CR4: 00000000001706e0
+[   29.348697] Call Trace:
+[   29.348853]  <IRQ>
+[   29.349326]  ? recalibrate_cpu_khz+0x10/0x10
+[   29.349928]  ? ktime_get+0x3e/0xa0
+[   29.350469]  ? sched_clock_cpu+0xb/0xc0
+[   29.350674]  __do_softirq+0xfa/0x2f7
+[   29.350904]  irq_exit_rcu+0xc1/0xf0
+[   29.351445]  sysvec_apic_timer_interrupt+0x9e/0xc0
+[   29.352054]  </IRQ>
+[   29.352524]  <TASK>
+[   29.353000]  asm_sysvec_apic_timer_interrupt+0x12/0x20
+[   29.353273] RIP: 0010:cpuidle_enter_state+0xd6/0x380
+[   29.353542] Code: 49 89 c4 0f 1f 44 00 00 31 ff e8 45 8a 96 ff 45
+84 ff 74 12 9c 58 f6 c4 02 0f 85 64 02 00 00 31 ff e8 9e 63 9d ff fb
+45 85 f6 <0f> 88 12 01 00 00 49 63 d6 4c 2b 24 24 48 8d 04 52 48 8d 04
+82 49
+[   29.354821] RSP: 0000:ffffb930063bbe80 EFLAGS: 00000202
+[   29.355084] RAX: ffff964c9fcc0000 RBX: 0000000000000002 RCX: 000000000000001f
+[   29.355826] RDX: 00000006d4c7b9d9 RSI: ffffffff97177efb RDI: ffffffff97149f37
+[   29.356538] RBP: ffffd92fffcc0000 R08: 0000000000000004 R09: 000000000002f880
+[   29.357321] R10: 0000086674b91b40 R11: ffff964c9fceed84 R12: 00000006d4c7b9d9
+[   29.358041] R13: ffffffff978d49a0 R14: 0000000000000002 R15: 0000000000000000
+[   29.358769]  cpuidle_enter+0x29/0x40
+[   29.358979]  do_idle+0x261/0x2b0
+[   29.359515]  cpu_startup_entry+0x19/0x20
+[   29.359718]  start_secondary+0x114/0x150
+[   29.359946]  secondary_startup_64_no_verify+0xd5/0xdb
+[   29.360221]  </TASK>
+[   29.360352] Modules linke
+[   32.033645] R13: ffffffff974060c8 R14: ffff964c9fce0340 R15: ffff9644c8866950
+[   32.033645] FS:  0000000000000000(0000) GS:ffff964c9fcc0000(0000)
+knlGS:0000000000000000
+[   32.033647] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   32.033648] CR2: 00007f763b35e630 CR3: 0000000882010004 CR4: 00000000001706e0
+[   32.033649] Kernel panic - not syncing: Fatal exception in interrupt
+[   32.102100] Kernel Offset: 0x14e00000 from 0xffffffff81000000
+(relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+[   32.366547] ---[ end Kernel panic - not syncing: Fatal exception in
+interrupt ]---
 
-url:    https://github.com/0day-ci/linux/commits/Douglas-Gilbert/scatterlist-add-new-capabilities/20220201-115047
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git 26291c54e111ff6ba87a164d85d4a4e134b7315c
-config: i386-randconfig-a003-20220131 (https://download.01.org/0day-ci/archive/20220201/202202012125.JGVcLupw-lkp@intel.com/config)
-compiler: gcc-9 (Debian 9.3.0-22) 9.3.0
-reproduce (this is a W=1 build):
-        # https://github.com/0day-ci/linux/commit/be1e80a043970c400c00709be739ab26f931331a
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Douglas-Gilbert/scatterlist-add-new-capabilities/20220201-115047
-        git checkout be1e80a043970c400c00709be739ab26f931331a
-        # save the config file to linux build tree
-        mkdir build_dir
-        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash
+I notice the commit at the HEAD affected lpfc:
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+commit d1d87c33f47dc69f948d51dcfed344e34c75c406 (HEAD -> staging,
+origin/staging, origin/for-next, origin/5.18/scsi-staging)
+Author: Minghao Chi (CGEL ZTE) <chi.minghao@zte.com.cn>
+Date:   Thu Jan 27 01:43:30 2022 +0000
 
-All errors (new ones prefixed by >>):
+    scsi: lpfc: Remove redundant flush_workqueue() call
 
-   ld: lib/scatterlist.o: in function `sgl_alloc_order':
->> lib/scatterlist.c:612: undefined reference to `__udivdi3'
+    destroy_workqueue() already drains the queue before destroying it, so there
+    is no need to flush it explicitly.
 
+    Remove the redundant flush_workqueue() call.
 
-vim +612 lib/scatterlist.c
+    Link: https://lore.kernel.org/r/20220127014330.1185114-1-chi.minghao@zte.com.cn
+    Reported-by: Zeal Robot <zealci@zte.com.cn>
+    Signed-off-by: Minghao Chi (CGEL ZTE) <chi.minghao@zte.com.cn>
+    Signed-off-by: CGEL ZTE <cgel.zte@gmail.com>
+    Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-   586	
-   587	/**
-   588	 * sgl_alloc_order - allocate a scatterlist with equally sized elements each
-   589	 *		     of which has 2^@order continuous pages
-   590	 * @length: Length in bytes of the scatterlist. Must be at least one
-   591	 * @order:  Second argument for alloc_pages(). Each sgl element size will
-   592	 *	    be (PAGE_SIZE*2^@order) bytes. @order must not exceed 16.
-   593	 * @chainable: Whether or not to allocate an extra element in the scatterlist
-   594	 *	       for scatterlist chaining purposes
-   595	 * @gfp: Memory allocation flags
-   596	 * @nent_p: [out] Number of entries in the scatterlist that have pages.
-   597	 *		  Ignored if @nent_p is NULL.
-   598	 *
-   599	 * Returns: A pointer to an initialized scatterlist or %NULL upon failure.
-   600	 */
-   601	struct scatterlist *sgl_alloc_order(unsigned long long length,
-   602					    unsigned int order, bool chainable,
-   603					    gfp_t gfp, unsigned int *nent_p)
-   604	{
-   605		struct scatterlist *sgl, *sg;
-   606		struct page *page;
-   607		unsigned int nent, nalloc;
-   608		u32 elem_len;
-   609	
-   610		if (length >> (PAGE_SHIFT + order) >= UINT_MAX)
-   611			return NULL;
- > 612		nent = DIV_ROUND_UP(length, PAGE_SIZE << order);
-   613	
-   614		if (chainable) {
-   615			if (check_add_overflow(nent, 1U, &nalloc))
-   616				return NULL;
-   617		} else {
-   618			nalloc = nent;
-   619		}
-   620		sgl = kmalloc_array(nalloc, sizeof(struct scatterlist),
-   621				    gfp & ~GFP_DMA);
-   622		if (!sgl)
-   623			return NULL;
-   624	
-   625		sg_init_table(sgl, nalloc);
-   626		sg = sgl;
-   627		while (length) {
-   628			elem_len = min_t(u64, length, PAGE_SIZE << order);
-   629			page = alloc_pages(gfp, order);
-   630			if (!page) {
-   631				sgl_free_order(sgl, order);
-   632				return NULL;
-   633			}
-   634	
-   635			sg_set_page(sg, page, elem_len, 0);
-   636			length -= elem_len;
-   637			sg = sg_next(sg);
-   638		}
-   639		WARN_ONCE(length, "length = %lld\n", length);
-   640		if (nent_p)
-   641			*nent_p = nent;
-   642		return sgl;
-   643	}
-   644	EXPORT_SYMBOL(sgl_alloc_order);
-   645	
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index a56f01f659f8..f49ff18cb252 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8546,7 +8546,6 @@ static void
+ lpfc_unset_driver_resource_phase2(struct lpfc_hba *phba)
+ {
+        if (phba->wq) {
+-               flush_workqueue(phba->wq);
+                destroy_workqueue(phba->wq);
+                phba->wq = NULL;
+        }
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+-Ewan
+
