@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 609E4C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 21:48:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EB3FC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 21:48:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236463AbiBAVsj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Feb 2022 16:48:39 -0500
+        id S235481AbiBAVso (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Feb 2022 16:48:44 -0500
 Received: from esa.microchip.iphmx.com ([68.232.153.233]:31008 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236420AbiBAVsj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 16:48:39 -0500
+        with ESMTP id S235300AbiBAVso (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 16:48:44 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1643752119; x=1675288119;
+  t=1643752124; x=1675288124;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=DEZbWvlQ/b7VBOwfF76O610SkYzx53clfPETm3e6phs=;
-  b=tR7t/N4QvS6ffh8P/++Pl3eDqFrbP4gknHuoBYW5hdnSAi7r/ZD9kelM
-   tUstb6AS8yVxrbhGwjzowEaZcd22DTzBQO0TIyGzYfyIcVRZ3G+9jP2qD
-   0HFBzn1b1UMvM3lQlQ/oAyg1mdYR/vAFP6XEddzBbLC4s0+pNzzcCk/3m
-   prauAo52UCbK2rEW1j//AZPWmhG89XVNqB8ON/xaFzezU0uMhenJiSdkv
-   drjtGCylfrHb0VnP7MKM0KL7i7dpr2LMLHNMlLfYCIhnShT+qtgSfCsF8
-   x6ZD+j80LYQBXryk0M6T2967eYNOZK0fuLRsAKjqQHBLC1QxpIlbg00xm
-   Q==;
-IronPort-SDR: kVkdxCXPYTyLpW/SkgnTPB1qpbBL4sV5NWARI+1ru2m1mEFAZFNvF12epl2aIwkplcs+7W7T8V
- KIO3O/oh7BAIoF4VD0nMoNO+PzWTs5IIXeC0vauFKbllXzfb5ZHbBTL8hMYrPeWT54iJ23hUsA
- D8923uGz4QPEDxeLBks33JJe8TsP4tGko29B+MNFidUSMJEnMTAObCLIfoGwrP/Ud9YxPERSk3
- gBgy46rBekdLbHM3KFxCAwAj48agd0lPY3u0vikn8Wmty/y8D9HprJBhvTmgMr7YDvits9EouL
- 2+4Jr2teyyeGddqmHQg59B74
+  bh=55GNMhVo0eq8tWzrWM4uU9abRD43u7HxSrKCAQWIO74=;
+  b=IoXu9qZxcz7/GuBz5KF94+BvLEmtq28p2kW3Foguy7HU2hNzDLXiHgGW
+   BP/j0Ws8TZX7tx5ZqG2hO0Cr7a6t9aiOuGmBwd73wGaXTd0/7rirW4EN7
+   fZFZwH4wtk8DFirNlyrHCHq5RXrmQnyMrknyaRSMLXH/rlv+FtBE8bTDJ
+   h9BnpGFAegQ7bBR64i20dJfRD6bcNdsvwYU4Wk42EgN71Op8raoWHHgT6
+   Fq8bMNBpV+8N3aX7nMHDMGp3xmdE8QhluRWFzNRWPGqF09B1GKuQc6AS+
+   RGbbIu/HQXPFoI1XPn7Nr8g/Z78WdZHS67/ZhtigT/wP017OEsMPpggQ5
+   w==;
+IronPort-SDR: 322xLewW2QjTHhLVpITwcdd/lLJWoFhrEBLeFackYE6pd04t66xGFrR4uueedvd4WY9qRa/7IN
+ bCEAsh2wp/06/5DeQeYjz46RUFHFZSozy03EPmiuvkmrXmzlnaxauiDchx5LmoZAQYpeIU06Sw
+ xb8TLOfjva/fsyCjWfXJYuO2AtdxJC19FUnOCe/lWue0YXmUI2l6bLuMbZ+v7OBUolIc569AgP
+ n9RvJa2loS5yg5NpQI+vclEkGnOguGLPtTnMiDgdbsEgDePORXBu0wROkY6S0LUFgmPD+dfTxq
+ DI4iFVHgERZz6ZMrU7RWaqyh
 X-IronPort-AV: E=Sophos;i="5.88,335,1635231600"; 
-   d="scan'208";a="151639093"
+   d="scan'208";a="151639105"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 01 Feb 2022 14:48:38 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
+  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 01 Feb 2022 14:48:44 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
  chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.17; Tue, 1 Feb 2022 14:48:38 -0700
-Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.2375.17 via Frontend
- Transport; Tue, 1 Feb 2022 14:48:38 -0700
+ 15.1.2375.17; Tue, 1 Feb 2022 14:48:43 -0700
+Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex03.mchp-main.com
+ (10.10.85.151) with Microsoft SMTP Server id 15.1.2375.17 via Frontend
+ Transport; Tue, 1 Feb 2022 14:48:43 -0700
 Received: from brunhilda.pdev.net (localhost [127.0.0.1])
-        by brunhilda.pdev.net (Postfix) with ESMTP id 5AF7270236E;
-        Tue,  1 Feb 2022 15:48:38 -0600 (CST)
-Subject: [PATCH 10/18] smartpqi: update volume size after expansion
+        by brunhilda.pdev.net (Postfix) with ESMTP id 655A970236E;
+        Tue,  1 Feb 2022 15:48:43 -0600 (CST)
+Subject: [PATCH 11/18] smartpqi: fix kdump issue when ctrl is locked up
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -52,8 +52,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Tue, 1 Feb 2022 15:48:38 -0600
-Message-ID: <164375211833.440833.17023155389220583731.stgit@brunhilda.pdev.net>
+Date:   Tue, 1 Feb 2022 15:48:43 -0600
+Message-ID: <164375212337.440833.11955356190354940369.stgit@brunhilda.pdev.net>
 In-Reply-To: <164375113574.440833.13174600317115819605.stgit@brunhilda.pdev.net>
 References: <164375113574.440833.13174600317115819605.stgit@brunhilda.pdev.net>
 User-Agent: StGit/1.4.dev36+g39bf3b02665a
@@ -66,108 +66,90 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
 
-Rescan devices after volume expansion.
+Avoid dropping into shell if the controller is in locked up state.
 
-After modifying logical volume size, lsblk command still shows up
-previous size of logical volume.
+Driver issues SIS soft reset to bring back the controller to SIS mode
+while OS boots into kdump mode.
 
-When driver gets any event from f/w, driver schedules rescan worker
-with delay of 10 seconds.
+If the controller is in lockup state, SIS soft reset does not work.
 
-If array expansion is so quick and gets complete in a second,
-driver could not catch logical volume expansion due to worker delay.
-
-Since driver does not detect volume expansion, driver would not call
-rescan device to update new size to the OS.
+Since the controller lockup code has not been cleared, driver considers
+the firmware is no longer up and running. Driver returns back an error
+code to OS and the kdump fails.
 
 Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
 Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |    1 +
- drivers/scsi/smartpqi/smartpqi_init.c |   20 ++++++++++++--------
- 2 files changed, 13 insertions(+), 8 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |   39 +++++++++++++++++++--------------
+ 1 file changed, 23 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 81ec5fbf570a..4f6e48854c66 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -1322,6 +1322,7 @@ struct pqi_ctrl_info {
- 	bool		controller_online;
- 	bool		block_requests;
- 	bool		scan_blocked;
-+	u8		logical_volume_rescan_needed : 1;
- 	u8		inbound_spanning_supported : 1;
- 	u8		outbound_spanning_supported : 1;
- 	u8		pqi_mode_enabled : 1;
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index ab12507da436..de53180fab9c 100644
+index de53180fab9c..8bd4de6306db 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2015,8 +2015,8 @@ static void pqi_dev_info(struct pqi_ctrl_info *ctrl_info,
- 
- /* Assumes the SCSI device list lock is held. */
- 
--static void pqi_scsi_update_device(struct pqi_scsi_dev *existing_device,
--	struct pqi_scsi_dev *new_device)
-+static void pqi_scsi_update_device(struct pqi_ctrl_info *ctrl_info,
-+	struct pqi_scsi_dev *existing_device, struct pqi_scsi_dev *new_device)
- {
- 	existing_device->device_type = new_device->device_type;
- 	existing_device->bus = new_device->bus;
-@@ -2026,9 +2026,8 @@ static void pqi_scsi_update_device(struct pqi_scsi_dev *existing_device,
- 		existing_device->target_lun_valid = true;
- 	}
- 
--	if ((existing_device->volume_status == CISS_LV_QUEUED_FOR_EXPANSION ||
--		existing_device->volume_status == CISS_LV_UNDERGOING_EXPANSION) &&
--		new_device->volume_status == CISS_LV_OK)
-+	if (pqi_is_logical_device(existing_device) &&
-+		ctrl_info->logical_volume_rescan_needed)
- 		existing_device->rescan = true;
- 
- 	/* By definition, the scsi3addr and wwid fields are already the same. */
-@@ -2146,7 +2145,7 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 			 */
- 			device->new_device = false;
- 			matching_device->device_gone = false;
--			pqi_scsi_update_device(matching_device, device);
-+			pqi_scsi_update_device(ctrl_info, matching_device, device);
- 			break;
- 		case DEVICE_NOT_FOUND:
- 			/*
-@@ -2218,8 +2217,8 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 	}
- 
- 	/*
--	 * Notify the SCSI ML if the queue depth of any existing device has
--	 * changed.
-+	 * Notify the SML of any existing device changes such as;
-+	 * queue depth, device size.
- 	 */
- 	list_for_each_entry(device, &ctrl_info->scsi_device_list, scsi_device_list_entry) {
- 		if (device->sdev && device->queue_depth != device->advertised_queue_depth) {
-@@ -2248,6 +2247,9 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 			}
- 		}
- 	}
-+
-+	ctrl_info->logical_volume_rescan_needed = false;
-+
+@@ -7986,6 +7986,21 @@ static int pqi_force_sis_mode(struct pqi_ctrl_info *ctrl_info)
+ 	return pqi_revert_to_sis_mode(ctrl_info);
  }
  
- static inline bool pqi_is_supported_device(struct pqi_scsi_dev *device)
-@@ -3703,6 +3705,8 @@ static void pqi_event_worker(struct work_struct *work)
- 			} else {
- 				ack_event = true;
- 				rescan_needed = true;
-+				if (event->event_type == PQI_EVENT_TYPE_LOGICAL_DEVICE)
-+					ctrl_info->logical_volume_rescan_needed = true;
- 			}
- 			if (ack_event)
- 				pqi_acknowledge_event(ctrl_info, event);
++static void pqi_perform_lockup_action(void)
++{
++	switch (pqi_lockup_action) {
++	case PANIC:
++		panic("FATAL: Smart Family Controller lockup detected");
++		break;
++	case REBOOT:
++		emergency_restart();
++		break;
++	case NONE:
++	default:
++		break;
++	}
++}
++
+ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	int rc;
+@@ -8010,8 +8025,15 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ 	 * commands.
+ 	 */
+ 	rc = sis_wait_for_ctrl_ready(ctrl_info);
+-	if (rc)
++	if (rc) {
++		if (reset_devices) {
++			dev_err(&ctrl_info->pci_dev->dev,
++				"kdump init failed with error %d\n", rc);
++			pqi_lockup_action = REBOOT;
++			pqi_perform_lockup_action();
++		}
+ 		return rc;
++	}
+ 
+ 	/*
+ 	 * Get the controller properties.  This allows us to determine
+@@ -8736,21 +8758,6 @@ static int pqi_ofa_ctrl_restart(struct pqi_ctrl_info *ctrl_info, unsigned int de
+ 	return pqi_ctrl_init_resume(ctrl_info);
+ }
+ 
+-static void pqi_perform_lockup_action(void)
+-{
+-	switch (pqi_lockup_action) {
+-	case PANIC:
+-		panic("FATAL: Smart Family Controller lockup detected");
+-		break;
+-	case REBOOT:
+-		emergency_restart();
+-		break;
+-	case NONE:
+-	default:
+-		break;
+-	}
+-}
+-
+ static struct pqi_raid_error_info pqi_ctrl_offline_raid_error_info = {
+ 	.data_out_result = PQI_DATA_IN_OUT_HARDWARE_ERROR,
+ 	.status = SAM_STAT_CHECK_CONDITION,
 
 
