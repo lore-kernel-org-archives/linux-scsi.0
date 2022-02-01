@@ -2,45 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F3A9C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 18:32:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBF1DC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 18:33:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238568AbiBASck (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Feb 2022 13:32:40 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:32446 "EHLO
+        id S240640AbiBASdh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Feb 2022 13:33:37 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:22709 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238583AbiBASci (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 13:32:38 -0500
+        by vger.kernel.org with ESMTP id S241837AbiBASdf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 13:33:35 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643740358;
+        s=mimecast20190719; t=1643740415;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=e2+kPpQkeGwptu2FIiaGFwmP+bRttMDFCpZIexnY/bA=;
-        b=EcaZdOk/1tRuIrRlncytvL9meoi4R9YeIJtybg77flcnxt/SpQq+3X6IOWLSJ8KiOj78XT
-        ryM7RIoD5ffKE5ABYeykPeFVIxW4Xpdq2vvRunImsFNMiTt5wrsgzSLwuf4geD9Suw8k7m
-        WWcdZnCQvZmqGO2DKaE5ZiAvBHy76nU=
+        bh=//kog2s09td3mH9/Rkgjf+3auO0U/6/qyxFnJYJIMUo=;
+        b=aXXNP4GM4X+dOVF54aG6rEdDzDlSLdDDg9Xa2tYPWpeBwteOdcEf2CsDGm/zQjEL7V166E
+        +YdTlIUnfRx2GbcXt30eCAqPelfc0Z6Sil7A8bMG7ysLmD35Goh7ohgACOSTL/9dFhc1+K
+        lPa6zOEGUwFyQN59HkRPCpzoMmkjjfw=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-46-zM0pccnlOqul8pTSNwqcUg-1; Tue, 01 Feb 2022 13:32:33 -0500
-X-MC-Unique: zM0pccnlOqul8pTSNwqcUg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-17-0hEBCDwdMPmLt4hplaJ1vA-1; Tue, 01 Feb 2022 13:33:32 -0500
+X-MC-Unique: 0hEBCDwdMPmLt4hplaJ1vA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 49F171091DA1;
-        Tue,  1 Feb 2022 18:32:30 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CDF811927820;
+        Tue,  1 Feb 2022 18:33:20 +0000 (UTC)
 Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id EF3FC84783;
-        Tue,  1 Feb 2022 18:32:29 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2752234D41;
+        Tue,  1 Feb 2022 18:33:13 +0000 (UTC)
 Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 211IWTvb019426;
-        Tue, 1 Feb 2022 13:32:29 -0500
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 211IXCsI019523;
+        Tue, 1 Feb 2022 13:33:12 -0500
 Received: from localhost (mpatocka@localhost)
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 211IWTjA019422;
-        Tue, 1 Feb 2022 13:32:29 -0500
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 211IXCnq019519;
+        Tue, 1 Feb 2022 13:33:12 -0500
 X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
-Date:   Tue, 1 Feb 2022 13:32:29 -0500 (EST)
+Date:   Tue, 1 Feb 2022 13:33:12 -0500 (EST)
 From:   Mikulas Patocka <mpatocka@redhat.com>
 X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
 To:     =?ISO-8859-15?Q?Javier_Gonz=E1lez?= <javier@javigon.com>
@@ -69,398 +69,325 @@ cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
         "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
         "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.com" <jack@suse.com>,
         Kanchan Joshi <joshi.k@samsung.com>
-Subject: [RFC PATCH 1/3] block: add copy offload support
+Subject: [RFC PATCH 2/3] nvme: add copy offload support
 In-Reply-To: <alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com>
-Message-ID: <alpine.LRH.2.02.2202011331570.22481@file01.intranet.prod.int.rdu2.redhat.com>
+Message-ID: <alpine.LRH.2.02.2202011332330.22481@file01.intranet.prod.int.rdu2.redhat.com>
 References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com> <20220201102122.4okwj2gipjbvuyux@mpHalley-2> <alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com>
 User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
 MIME-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add generic copy offload support to the block layer.
+This patch adds copy offload support to the nvme host driver.
 
-We add two new bio types: REQ_OP_COPY_READ_TOKEN and
-REQ_OP_COPY_WRITE_TOKEN. Their bio vector has one entry - a page
-containing the token.
-
-When we need to copy data, we send REQ_OP_COPY_READ_TOKEN to the source
-device and then we send REQ_OP_COPY_WRITE_TOKEN to the destination device.
-
-This patch introduces a new ioctl BLKCOPY that submits the copy operation.
-BLKCOPY argument has four 64-bit numbers - source offset, destination
-offset and length. The last number is returned by the ioctl and it is the
-number of bytes that were actually copied.
-
-For in-kernel users, we introduce a function blkdev_issue_copy.
-
-Copying may fail anytime, the caller is required to fallback to explicit
-copy.
+The function nvme_setup_read_token stores namespace and location in the
+token and the function nvme_setup_write_token retrieves information from
+the token and submits the copy command to the device.
 
 Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
 ---
- block/blk-core.c          |    7 +++
- block/blk-lib.c           |   89 ++++++++++++++++++++++++++++++++++++++++++++++
- block/blk-settings.c      |   12 ++++++
- block/blk-sysfs.c         |    7 +++
- block/blk.h               |    3 +
- block/ioctl.c             |   56 ++++++++++++++++++++++++++++
- include/linux/blk_types.h |    4 ++
- include/linux/blkdev.h    |   18 +++++++++
- include/uapi/linux/fs.h   |    1 
- 9 files changed, 197 insertions(+)
+ drivers/nvme/host/core.c   |   94 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/nvme/host/fc.c     |    5 ++
+ drivers/nvme/host/nvme.h   |    1 
+ drivers/nvme/host/pci.c    |    5 ++
+ drivers/nvme/host/rdma.c   |    5 ++
+ drivers/nvme/host/tcp.c    |    5 ++
+ drivers/nvme/target/loop.c |    5 ++
+ include/linux/nvme.h       |   33 +++++++++++++++
+ 8 files changed, 153 insertions(+)
 
-Index: linux-2.6/block/blk-settings.c
+Index: linux-2.6/drivers/nvme/host/core.c
 ===================================================================
---- linux-2.6.orig/block/blk-settings.c	2022-01-26 19:12:30.000000000 +0100
-+++ linux-2.6/block/blk-settings.c	2022-01-27 20:43:27.000000000 +0100
-@@ -57,6 +57,7 @@ void blk_set_default_limits(struct queue
- 	lim->misaligned = 0;
- 	lim->zoned = BLK_ZONED_NONE;
- 	lim->zone_write_granularity = 0;
-+	lim->max_copy_sectors = 0;
- }
- EXPORT_SYMBOL(blk_set_default_limits);
- 
-@@ -365,6 +366,17 @@ void blk_queue_zone_write_granularity(st
- EXPORT_SYMBOL_GPL(blk_queue_zone_write_granularity);
- 
- /**
-+ * blk_queue_max_copy_sectors - set maximum copy offload sectors for the queue
-+ * @q:  the request queue for the device
-+ * @size:  the maximum copy offload sectors
-+ */
-+void blk_queue_max_copy_sectors(struct request_queue *q, unsigned int size)
-+{
-+	q->limits.max_copy_sectors = size;
-+}
-+EXPORT_SYMBOL_GPL(blk_queue_max_copy_sectors);
-+
-+/**
-  * blk_queue_alignment_offset - set physical block alignment offset
-  * @q:	the request queue for the device
-  * @offset: alignment offset in bytes
-Index: linux-2.6/include/linux/blkdev.h
-===================================================================
---- linux-2.6.orig/include/linux/blkdev.h	2022-01-26 19:12:30.000000000 +0100
-+++ linux-2.6/include/linux/blkdev.h	2022-01-29 17:46:03.000000000 +0100
-@@ -103,6 +103,7 @@ struct queue_limits {
- 	unsigned int		discard_granularity;
- 	unsigned int		discard_alignment;
- 	unsigned int		zone_write_granularity;
-+	unsigned int		max_copy_sectors;
- 
- 	unsigned short		max_segments;
- 	unsigned short		max_integrity_segments;
-@@ -706,6 +707,7 @@ extern void blk_queue_max_zone_append_se
- extern void blk_queue_physical_block_size(struct request_queue *, unsigned int);
- void blk_queue_zone_write_granularity(struct request_queue *q,
- 				      unsigned int size);
-+void blk_queue_max_copy_sectors(struct request_queue *q, unsigned int size);
- extern void blk_queue_alignment_offset(struct request_queue *q,
- 				       unsigned int alignment);
- void disk_update_readahead(struct gendisk *disk);
-@@ -862,6 +864,10 @@ extern int __blkdev_issue_zeroout(struct
- extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, unsigned flags);
- 
-+extern int blkdev_issue_copy(struct block_device *bdev1, sector_t sector1,
-+		      struct block_device *bdev2, sector_t sector2,
-+		      sector_t nr_sects, sector_t *copied, gfp_t gfp_mask);
-+
- static inline int sb_issue_discard(struct super_block *sb, sector_t block,
- 		sector_t nr_blocks, gfp_t gfp_mask, unsigned long flags)
- {
-@@ -1001,6 +1007,18 @@ bdev_zone_write_granularity(struct block
- 	return queue_zone_write_granularity(bdev_get_queue(bdev));
+--- linux-2.6.orig/drivers/nvme/host/core.c	2022-02-01 18:34:19.000000000 +0100
++++ linux-2.6/drivers/nvme/host/core.c	2022-02-01 18:34:19.000000000 +0100
+@@ -975,6 +975,85 @@ static inline blk_status_t nvme_setup_rw
+ 	return 0;
  }
  
-+static inline unsigned int
-+queue_max_copy_sectors(const struct request_queue *q)
++struct nvme_copy_token {
++	char subsys[4];
++	struct nvme_ns *ns;
++	u64 src_sector;
++	u64 sectors;
++};
++
++static inline blk_status_t nvme_setup_read_token(struct nvme_ns *ns, struct request *req)
 +{
-+	return q->limits.max_copy_sectors;
++	struct bio *bio = req->bio;
++	struct nvme_copy_token *token = page_to_virt(bio->bi_io_vec[0].bv_page) + bio->bi_io_vec[0].bv_offset;
++	memcpy(token->subsys, "nvme", 4);
++	token->ns = ns;
++	token->src_sector = bio->bi_iter.bi_sector;
++	token->sectors = bio->bi_iter.bi_size >> 9;
++	return 0;
 +}
 +
-+static inline unsigned int
-+bdev_max_copy_sectors(struct block_device *bdev)
++static inline blk_status_t nvme_setup_write_token(struct nvme_ns *ns,
++		struct request *req, struct nvme_command *cmnd)
 +{
-+	return queue_max_copy_sectors(bdev_get_queue(bdev));
-+}
++	sector_t src_sector, dst_sector, n_sectors;
++	u64 src_lba, dst_lba, n_lba;
 +
- static inline int queue_alignment_offset(const struct request_queue *q)
- {
- 	if (q->limits.misaligned)
-Index: linux-2.6/block/blk-sysfs.c
-===================================================================
---- linux-2.6.orig/block/blk-sysfs.c	2022-01-26 19:12:30.000000000 +0100
-+++ linux-2.6/block/blk-sysfs.c	2022-01-26 19:12:30.000000000 +0100
-@@ -230,6 +230,11 @@ static ssize_t queue_zone_write_granular
- 	return queue_var_show(queue_zone_write_granularity(q), page);
- }
- 
-+static ssize_t queue_max_copy_sectors_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(queue_max_copy_sectors(q), page);
-+}
++	unsigned n_descriptors, i;
++	struct nvme_copy_desc *descriptors;
 +
- static ssize_t queue_zone_append_max_show(struct request_queue *q, char *page)
- {
- 	unsigned long long max_sectors = q->limits.max_zone_append_sectors;
-@@ -591,6 +596,7 @@ QUEUE_RO_ENTRY(queue_write_same_max, "wr
- QUEUE_RO_ENTRY(queue_write_zeroes_max, "write_zeroes_max_bytes");
- QUEUE_RO_ENTRY(queue_zone_append_max, "zone_append_max_bytes");
- QUEUE_RO_ENTRY(queue_zone_write_granularity, "zone_write_granularity");
-+QUEUE_RO_ENTRY(queue_max_copy_sectors, "max_copy_sectors");
- 
- QUEUE_RO_ENTRY(queue_zoned, "zoned");
- QUEUE_RO_ENTRY(queue_nr_zones, "nr_zones");
-@@ -647,6 +653,7 @@ static struct attribute *queue_attrs[] =
- 	&queue_write_zeroes_max_entry.attr,
- 	&queue_zone_append_max_entry.attr,
- 	&queue_zone_write_granularity_entry.attr,
-+	&queue_max_copy_sectors_entry.attr,
- 	&queue_nonrot_entry.attr,
- 	&queue_zoned_entry.attr,
- 	&queue_nr_zones_entry.attr,
-Index: linux-2.6/include/linux/blk_types.h
-===================================================================
---- linux-2.6.orig/include/linux/blk_types.h	2022-01-06 18:55:01.000000000 +0100
-+++ linux-2.6/include/linux/blk_types.h	2022-01-29 17:47:44.000000000 +0100
-@@ -371,6 +371,10 @@ enum req_opf {
- 	/* reset all the zone present on the device */
- 	REQ_OP_ZONE_RESET_ALL	= 17,
- 
-+	/* copy offload bios */
-+	REQ_OP_COPY_READ_TOKEN	= 18,
-+	REQ_OP_COPY_WRITE_TOKEN	= 19,
++	struct bio *bio = req->bio;
++	struct nvme_copy_token *token = page_to_virt(bio->bi_io_vec[0].bv_page) + bio->bi_io_vec[0].bv_offset;
++	if (unlikely(memcmp(token->subsys, "nvme", 4)))
++		return BLK_STS_NOTSUPP;
++	if (unlikely(token->ns != ns))
++		return BLK_STS_NOTSUPP;
 +
- 	/* Driver private requests */
- 	REQ_OP_DRV_IN		= 34,
- 	REQ_OP_DRV_OUT		= 35,
-Index: linux-2.6/block/blk-lib.c
-===================================================================
---- linux-2.6.orig/block/blk-lib.c	2021-08-18 13:59:55.000000000 +0200
-+++ linux-2.6/block/blk-lib.c	2022-01-30 17:33:04.000000000 +0100
-@@ -440,3 +440,92 @@ retry:
- 	return ret;
- }
- EXPORT_SYMBOL(blkdev_issue_zeroout);
++	src_sector = token->src_sector;
++	dst_sector = bio->bi_iter.bi_sector;
++	n_sectors = token->sectors;
++	if (WARN_ON(n_sectors != bio->bi_iter.bi_size >> 9))
++		return BLK_STS_NOTSUPP;
 +
-+static void bio_wake_completion(struct bio *bio)
-+{
-+	struct completion *comp = bio->bi_private;
-+	complete(comp);
-+}
++	src_lba = nvme_sect_to_lba(ns, src_sector);
++	dst_lba = nvme_sect_to_lba(ns, dst_sector);
++	n_lba = nvme_sect_to_lba(ns, n_sectors);
 +
-+int blkdev_issue_copy(struct block_device *bdev1, sector_t sector1,
-+		      struct block_device *bdev2, sector_t sector2,
-+		      sector_t nr_sects, sector_t *copied, gfp_t gfp_mask)
-+{
-+	struct page *token;
-+	sector_t m;
-+	int r = 0;
-+	struct completion comp;
++	if (unlikely(nvme_lba_to_sect(ns, src_lba) != src_sector) ||
++	    unlikely(nvme_lba_to_sect(ns, dst_lba) != dst_sector) ||
++	    unlikely(nvme_lba_to_sect(ns, n_lba) != n_sectors))
++		return BLK_STS_NOTSUPP;
 +
-+	*copied = 0;
++	if (WARN_ON(!n_lba))
++		return BLK_STS_NOTSUPP;
 +
-+	m = min(bdev_max_copy_sectors(bdev1), bdev_max_copy_sectors(bdev2));
-+	if (!m)
-+		return -EOPNOTSUPP;
-+	m = min(m, (sector_t)round_down(UINT_MAX, PAGE_SIZE) >> 9);
++	n_descriptors = (n_lba + 0xffff) / 0x10000;
++	descriptors = kzalloc(n_descriptors * sizeof(struct nvme_copy_desc), GFP_ATOMIC | __GFP_NOWARN);
++	if (unlikely(!descriptors))
++		return BLK_STS_RESOURCE;
 +
-+	if (unlikely(bdev_read_only(bdev2)))
-+		return -EPERM;
++	memset(cmnd, 0, sizeof(*cmnd));
++	cmnd->copy.opcode = nvme_cmd_copy;
++	cmnd->copy.nsid = cpu_to_le32(ns->head->ns_id);
++	cmnd->copy.sdlba = cpu_to_le64(dst_lba);
++	cmnd->copy.length = n_descriptors - 1;
 +
-+	token = alloc_page(gfp_mask);
-+	if (unlikely(!token))
-+		return -ENOMEM;
-+
-+	while (nr_sects) {
-+		struct bio *read_bio, *write_bio;
-+		sector_t this_step = min(nr_sects, m);
-+
-+		read_bio = bio_alloc(gfp_mask, 1);
-+		if (unlikely(!read_bio)) {
-+			r = -ENOMEM;
-+			break;
-+		}
-+		bio_set_op_attrs(read_bio, REQ_OP_COPY_READ_TOKEN, REQ_NOMERGE);
-+		bio_set_dev(read_bio, bdev1);
-+		__bio_add_page(read_bio, token, PAGE_SIZE, 0);
-+		read_bio->bi_iter.bi_sector = sector1;
-+		read_bio->bi_iter.bi_size = this_step << 9;
-+		read_bio->bi_private = &comp;
-+		read_bio->bi_end_io = bio_wake_completion;
-+		init_completion(&comp);
-+		submit_bio(read_bio);
-+		wait_for_completion(&comp);
-+		if (unlikely(read_bio->bi_status != BLK_STS_OK)) {
-+			r = blk_status_to_errno(read_bio->bi_status);
-+			bio_put(read_bio);
-+			break;
-+		}
-+		bio_put(read_bio);
-+
-+		write_bio = bio_alloc(gfp_mask, 1);
-+		if (unlikely(!write_bio)) {
-+			r = -ENOMEM;
-+			break;
-+		}
-+		bio_set_op_attrs(write_bio, REQ_OP_COPY_WRITE_TOKEN, REQ_NOMERGE);
-+		bio_set_dev(write_bio, bdev2);
-+		__bio_add_page(write_bio, token, PAGE_SIZE, 0);
-+		write_bio->bi_iter.bi_sector = sector2;
-+		write_bio->bi_iter.bi_size = this_step << 9;
-+		write_bio->bi_private = &comp;
-+		write_bio->bi_end_io = bio_wake_completion;
-+		reinit_completion(&comp);
-+		submit_bio(write_bio);
-+		wait_for_completion(&comp);
-+		if (unlikely(write_bio->bi_status != BLK_STS_OK)) {
-+			r = blk_status_to_errno(write_bio->bi_status);
-+			bio_put(write_bio);
-+			break;
-+		}
-+		bio_put(write_bio);
-+
-+		sector1 += this_step;
-+		sector2 += this_step;
-+		nr_sects -= this_step;
-+		*copied += this_step;
++	for (i = 0; i < n_descriptors; i++) {
++		u64 this_step = min(n_lba, (u64)0x10000);
++		descriptors[i].slba = cpu_to_le64(src_lba);
++		descriptors[i].length = cpu_to_le16(this_step - 1);
++		src_lba += this_step;
++		n_lba -= this_step;
 +	}
 +
-+	__free_page(token);
++	req->special_vec.bv_page = virt_to_page(descriptors);
++	req->special_vec.bv_offset = offset_in_page(descriptors);
++	req->special_vec.bv_len = n_descriptors * sizeof(struct nvme_copy_desc);
++	req->rq_flags |= RQF_SPECIAL_PAYLOAD;
 +
-+	return r;
-+}
-+EXPORT_SYMBOL(blkdev_issue_copy);
-Index: linux-2.6/block/ioctl.c
-===================================================================
---- linux-2.6.orig/block/ioctl.c	2022-01-24 15:10:40.000000000 +0100
-+++ linux-2.6/block/ioctl.c	2022-01-30 13:43:35.000000000 +0100
-@@ -165,6 +165,60 @@ fail:
- 	return err;
- }
- 
-+static int blk_ioctl_copy(struct block_device *bdev, fmode_t mode,
-+		unsigned long arg)
-+{
-+	uint64_t range[4];
-+	uint64_t start1, start2, end1, end2, len;
-+	sector_t copied = 0;
-+	struct inode *inode = bdev->bd_inode;
-+	int err;
-+
-+	if (!(mode & FMODE_WRITE)) {
-+		err = -EBADF;
-+		goto fail1;
-+	}
-+
-+	if (copy_from_user(range, (void __user *)arg, 24)) {
-+		err = -EFAULT;
-+		goto fail1;
-+	}
-+
-+	start1 = range[0];
-+	start2 = range[1];
-+	len = range[2];
-+	end1 = start1 + len - 1;
-+	end2 = start2 + len - 1;
-+
-+	if ((start1 | start2 | len) & 511)
-+		return -EINVAL;
-+	if (end1 >= (uint64_t)bdev_nr_bytes(bdev))
-+		return -EINVAL;
-+	if (end2 >= (uint64_t)bdev_nr_bytes(bdev))
-+		return -EINVAL;
-+	if (end1 < start1)
-+		return -EINVAL;
-+	if (end2 < start2)
-+		return -EINVAL;
-+
-+	filemap_invalidate_lock(inode->i_mapping);
-+	err = truncate_bdev_range(bdev, mode, start2, end2);
-+	if (err)
-+		goto fail2;
-+
-+	err = blkdev_issue_copy(bdev, start1 >> 9, bdev, start2 >> 9, len >> 9, &copied, GFP_KERNEL);
-+
-+fail2:
-+	filemap_invalidate_unlock(inode->i_mapping);
-+
-+fail1:
-+	range[3] = (uint64_t)copied << 9;
-+	if (copy_to_user((void __user *)(arg + 24), &range[3], 8))
-+		err = -EFAULT;
-+
-+	return err;
++	return 0;
 +}
 +
- static int put_ushort(unsigned short __user *argp, unsigned short val)
+ void nvme_cleanup_cmd(struct request *req)
  {
- 	return put_user(val, argp);
-@@ -459,6 +513,8 @@ static int blkdev_common_ioctl(struct bl
- 		return blk_ioctl_zeroout(bdev, mode, arg);
- 	case BLKGETDISKSEQ:
- 		return put_u64(argp, bdev->bd_disk->diskseq);
-+	case BLKCOPY:
-+		return blk_ioctl_copy(bdev, mode, arg);
- 	case BLKREPORTZONE:
- 		return blkdev_report_zones_ioctl(bdev, mode, cmd, arg);
- 	case BLKRESETZONE:
-Index: linux-2.6/include/uapi/linux/fs.h
-===================================================================
---- linux-2.6.orig/include/uapi/linux/fs.h	2021-09-23 17:07:02.000000000 +0200
-+++ linux-2.6/include/uapi/linux/fs.h	2022-01-27 19:05:46.000000000 +0100
-@@ -185,6 +185,7 @@ struct fsxattr {
- #define BLKROTATIONAL _IO(0x12,126)
- #define BLKZEROOUT _IO(0x12,127)
- #define BLKGETDISKSEQ _IOR(0x12,128,__u64)
-+#define BLKCOPY _IO(0x12,129)
- /*
-  * A jump here: 130-136 are reserved for zoned block devices
-  * (see uapi/linux/blkzoned.h)
-Index: linux-2.6/block/blk.h
-===================================================================
---- linux-2.6.orig/block/blk.h	2022-01-24 15:10:40.000000000 +0100
-+++ linux-2.6/block/blk.h	2022-01-29 18:10:28.000000000 +0100
-@@ -288,6 +288,9 @@ static inline bool blk_may_split(struct
- 	case REQ_OP_WRITE_ZEROES:
- 	case REQ_OP_WRITE_SAME:
- 		return true; /* non-trivial splitting decisions */
-+	case REQ_OP_COPY_READ_TOKEN:
-+	case REQ_OP_COPY_WRITE_TOKEN:
-+		return false;
- 	default:
- 		break;
- 	}
-Index: linux-2.6/block/blk-core.c
-===================================================================
---- linux-2.6.orig/block/blk-core.c	2022-01-24 15:10:40.000000000 +0100
-+++ linux-2.6/block/blk-core.c	2022-02-01 15:53:39.000000000 +0100
-@@ -124,6 +124,8 @@ static const char *const blk_op_name[] =
- 	REQ_OP_NAME(ZONE_APPEND),
- 	REQ_OP_NAME(WRITE_SAME),
- 	REQ_OP_NAME(WRITE_ZEROES),
-+	REQ_OP_NAME(COPY_READ_TOKEN),
-+	REQ_OP_NAME(COPY_WRITE_TOKEN),
- 	REQ_OP_NAME(DRV_IN),
- 	REQ_OP_NAME(DRV_OUT),
- };
-@@ -758,6 +760,11 @@ noinline_for_stack bool submit_bio_check
- 		if (!q->limits.max_write_zeroes_sectors)
- 			goto not_supported;
+ 	if (req->rq_flags & RQF_SPECIAL_PAYLOAD) {
+@@ -1032,6 +1111,12 @@ blk_status_t nvme_setup_cmd(struct nvme_
+ 	case REQ_OP_ZONE_APPEND:
+ 		ret = nvme_setup_rw(ns, req, cmd, nvme_cmd_zone_append);
  		break;
 +	case REQ_OP_COPY_READ_TOKEN:
++		ret = nvme_setup_read_token(ns, req);
++		break;
 +	case REQ_OP_COPY_WRITE_TOKEN:
-+		if (!q->limits.max_copy_sectors)
-+			goto not_supported;
++		ret = nvme_setup_write_token(ns, req, cmd);
 +		break;
  	default:
- 		break;
- 	}
+ 		WARN_ON_ONCE(1);
+ 		return BLK_STS_IOERR;
+@@ -1865,6 +1950,8 @@ static void nvme_update_disk_info(struct
+ 	blk_queue_max_write_zeroes_sectors(disk->queue,
+ 					   ns->ctrl->max_zeroes_sectors);
+ 
++	blk_queue_max_copy_sectors(disk->queue, ns->ctrl->max_copy_sectors);
++
+ 	set_disk_ro(disk, (id->nsattr & NVME_NS_ATTR_RO) ||
+ 		test_bit(NVME_NS_FORCE_RO, &ns->flags));
+ }
+@@ -2891,6 +2978,12 @@ static int nvme_init_non_mdts_limits(str
+ 	else
+ 		ctrl->max_zeroes_sectors = 0;
+ 
++	if (ctrl->oncs & NVME_CTRL_ONCS_COPY) {
++		ctrl->max_copy_sectors = 1U << 24;
++	} else {
++		ctrl->max_copy_sectors = 0;
++	}
++
+ 	if (nvme_ctrl_limited_cns(ctrl))
+ 		return 0;
+ 
+@@ -4716,6 +4809,7 @@ static inline void _nvme_check_size(void
+ {
+ 	BUILD_BUG_ON(sizeof(struct nvme_common_command) != 64);
+ 	BUILD_BUG_ON(sizeof(struct nvme_rw_command) != 64);
++	BUILD_BUG_ON(sizeof(struct nvme_copy_command) != 64);
+ 	BUILD_BUG_ON(sizeof(struct nvme_identify) != 64);
+ 	BUILD_BUG_ON(sizeof(struct nvme_features) != 64);
+ 	BUILD_BUG_ON(sizeof(struct nvme_download_firmware) != 64);
+Index: linux-2.6/drivers/nvme/host/nvme.h
+===================================================================
+--- linux-2.6.orig/drivers/nvme/host/nvme.h	2022-02-01 18:34:19.000000000 +0100
++++ linux-2.6/drivers/nvme/host/nvme.h	2022-02-01 18:34:19.000000000 +0100
+@@ -277,6 +277,7 @@ struct nvme_ctrl {
+ #ifdef CONFIG_BLK_DEV_ZONED
+ 	u32 max_zone_append;
+ #endif
++	u32 max_copy_sectors;
+ 	u16 crdt[3];
+ 	u16 oncs;
+ 	u16 oacs;
+Index: linux-2.6/include/linux/nvme.h
+===================================================================
+--- linux-2.6.orig/include/linux/nvme.h	2022-02-01 18:34:19.000000000 +0100
++++ linux-2.6/include/linux/nvme.h	2022-02-01 18:34:19.000000000 +0100
+@@ -335,6 +335,8 @@ enum {
+ 	NVME_CTRL_ONCS_WRITE_ZEROES		= 1 << 3,
+ 	NVME_CTRL_ONCS_RESERVATIONS		= 1 << 5,
+ 	NVME_CTRL_ONCS_TIMESTAMP		= 1 << 6,
++	NVME_CTRL_ONCS_VERIFY			= 1 << 7,
++	NVME_CTRL_ONCS_COPY			= 1 << 8,
+ 	NVME_CTRL_VWC_PRESENT			= 1 << 0,
+ 	NVME_CTRL_OACS_SEC_SUPP                 = 1 << 0,
+ 	NVME_CTRL_OACS_DIRECTIVES		= 1 << 5,
+@@ -704,6 +706,7 @@ enum nvme_opcode {
+ 	nvme_cmd_resv_report	= 0x0e,
+ 	nvme_cmd_resv_acquire	= 0x11,
+ 	nvme_cmd_resv_release	= 0x15,
++	nvme_cmd_copy		= 0x19,
+ 	nvme_cmd_zone_mgmt_send	= 0x79,
+ 	nvme_cmd_zone_mgmt_recv	= 0x7a,
+ 	nvme_cmd_zone_append	= 0x7d,
+@@ -872,6 +875,35 @@ enum {
+ 	NVME_RW_DTYPE_STREAMS		= 1 << 4,
+ };
+ 
++struct nvme_copy_command {
++	__u8			opcode;
++	__u8			flags;
++	__u16			command_id;
++	__le32			nsid;
++	__u64			rsvd2;
++	__le64			metadata;
++	union nvme_data_ptr	dptr;
++	__le64			sdlba;
++	__u8			length;
++	__u8			control2;
++	__le16			control;
++	__le32			dspec;
++	__le32			reftag;
++	__le16			apptag;
++	__le16			appmask;
++};
++
++struct nvme_copy_desc {
++	__u64			rsvd;
++	__le64			slba;
++	__le16			length;
++	__u16			rsvd2;
++	__u32			rsvd3;
++	__le32			reftag;
++	__le16			apptag;
++	__le16			appmask;
++};
++
+ struct nvme_dsm_cmd {
+ 	__u8			opcode;
+ 	__u8			flags;
+@@ -1441,6 +1473,7 @@ struct nvme_command {
+ 	union {
+ 		struct nvme_common_command common;
+ 		struct nvme_rw_command rw;
++		struct nvme_copy_command copy;
+ 		struct nvme_identify identify;
+ 		struct nvme_features features;
+ 		struct nvme_create_cq create_cq;
+Index: linux-2.6/drivers/nvme/host/pci.c
+===================================================================
+--- linux-2.6.orig/drivers/nvme/host/pci.c	2022-02-01 18:34:19.000000000 +0100
++++ linux-2.6/drivers/nvme/host/pci.c	2022-02-01 18:34:19.000000000 +0100
+@@ -949,6 +949,11 @@ static blk_status_t nvme_queue_rq(struct
+ 	struct nvme_iod *iod = blk_mq_rq_to_pdu(req);
+ 	blk_status_t ret;
+ 
++	if (unlikely((req->cmd_flags & REQ_OP_MASK) == REQ_OP_COPY_READ_TOKEN)) {
++		blk_mq_end_request(req, BLK_STS_OK);
++		return BLK_STS_OK;
++	}
++
+ 	/*
+ 	 * We should not need to do this, but we're still using this to
+ 	 * ensure we can drain requests on a dying queue.
+Index: linux-2.6/drivers/nvme/host/fc.c
+===================================================================
+--- linux-2.6.orig/drivers/nvme/host/fc.c	2022-02-01 18:34:19.000000000 +0100
++++ linux-2.6/drivers/nvme/host/fc.c	2022-02-01 18:34:19.000000000 +0100
+@@ -2780,6 +2780,11 @@ nvme_fc_queue_rq(struct blk_mq_hw_ctx *h
+ 	u32 data_len;
+ 	blk_status_t ret;
+ 
++	if (unlikely((rq->cmd_flags & REQ_OP_MASK) == REQ_OP_COPY_READ_TOKEN)) {
++		blk_mq_end_request(rq, BLK_STS_OK);
++		return BLK_STS_OK;
++	}
++
+ 	if (ctrl->rport->remoteport.port_state != FC_OBJSTATE_ONLINE ||
+ 	    !nvme_check_ready(&queue->ctrl->ctrl, rq, queue_ready))
+ 		return nvme_fail_nonready_command(&queue->ctrl->ctrl, rq);
+Index: linux-2.6/drivers/nvme/host/rdma.c
+===================================================================
+--- linux-2.6.orig/drivers/nvme/host/rdma.c	2022-02-01 18:34:19.000000000 +0100
++++ linux-2.6/drivers/nvme/host/rdma.c	2022-02-01 18:34:19.000000000 +0100
+@@ -2048,6 +2048,11 @@ static blk_status_t nvme_rdma_queue_rq(s
+ 	blk_status_t ret;
+ 	int err;
+ 
++	if (unlikely((rq->cmd_flags & REQ_OP_MASK) == REQ_OP_COPY_READ_TOKEN)) {
++		blk_mq_end_request(rq, BLK_STS_OK);
++		return BLK_STS_OK;
++	}
++
+ 	WARN_ON_ONCE(rq->tag < 0);
+ 
+ 	if (!nvme_check_ready(&queue->ctrl->ctrl, rq, queue_ready))
+Index: linux-2.6/drivers/nvme/host/tcp.c
+===================================================================
+--- linux-2.6.orig/drivers/nvme/host/tcp.c	2022-02-01 18:34:19.000000000 +0100
++++ linux-2.6/drivers/nvme/host/tcp.c	2022-02-01 18:34:19.000000000 +0100
+@@ -2372,6 +2372,11 @@ static blk_status_t nvme_tcp_queue_rq(st
+ 	bool queue_ready = test_bit(NVME_TCP_Q_LIVE, &queue->flags);
+ 	blk_status_t ret;
+ 
++	if (unlikely((rq->cmd_flags & REQ_OP_MASK) == REQ_OP_COPY_READ_TOKEN)) {
++		blk_mq_end_request(rq, BLK_STS_OK);
++		return BLK_STS_OK;
++	}
++
+ 	if (!nvme_check_ready(&queue->ctrl->ctrl, rq, queue_ready))
+ 		return nvme_fail_nonready_command(&queue->ctrl->ctrl, rq);
+ 
+Index: linux-2.6/drivers/nvme/target/loop.c
+===================================================================
+--- linux-2.6.orig/drivers/nvme/target/loop.c	2022-02-01 18:34:19.000000000 +0100
++++ linux-2.6/drivers/nvme/target/loop.c	2022-02-01 18:34:19.000000000 +0100
+@@ -138,6 +138,11 @@ static blk_status_t nvme_loop_queue_rq(s
+ 	bool queue_ready = test_bit(NVME_LOOP_Q_LIVE, &queue->flags);
+ 	blk_status_t ret;
+ 
++	if (unlikely((req->cmd_flags & REQ_OP_MASK) == REQ_OP_COPY_READ_TOKEN)) {
++		blk_mq_end_request(req, BLK_STS_OK);
++		return BLK_STS_OK;
++	}
++
+ 	if (!nvme_check_ready(&queue->ctrl->ctrl, req, queue_ready))
+ 		return nvme_fail_nonready_command(&queue->ctrl->ctrl, req);
+ 
 
