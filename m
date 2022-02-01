@@ -2,105 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61CEFC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 19:18:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60F99C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 19:26:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240146AbiBATSt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Feb 2022 14:18:49 -0500
-Received: from mail-pg1-f173.google.com ([209.85.215.173]:44606 "EHLO
-        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242361AbiBATSt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 14:18:49 -0500
-Received: by mail-pg1-f173.google.com with SMTP id h23so16223472pgk.11;
-        Tue, 01 Feb 2022 11:18:44 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=NRC1O6LjHoTRFcyJrr+TbaOvQh6OliquRDaYmBL6vQo=;
-        b=1P//Eph80WwsbujlE3jVFShWweV+3UkgMOULsYevKn0KhVw8VtjXybVr4xhOVHnghP
-         KjG/v2XqnilDGuQQaPad01V8vXn9qT8AN3XtsHCrkvGIA1h/fhwTd6lowqPOLlFIOE3E
-         9knxRRXT6LiRvhPb9BSVWBYbKl4Mv6ceg6Bs+NAzd3/6KMrNLiE2y3pQXqlAXCHvIi6S
-         Bi6DeDYI9hjYBlYZXPM1zPr8efrsm84GeIt4HAJ9ZL5lR/hq3YYVNAWm8j9fOkDhqfr2
-         fQJi6B/6A9qR16AuPxMTtXY2xRJ9SoPCQqUd3CnaHTfwe4ytJIl40w89M3wkQd6kHW86
-         mkjw==
-X-Gm-Message-State: AOAM532lLZMcR1WVZgnR2+NrwV4B2CXvONh2gj+XYBqkaIJCQNQIjCEM
-        E9lXAZZuX3C1m25NhVojYqw=
-X-Google-Smtp-Source: ABdhPJzdZuuT3zl/4KWMi39wXS4EFCvsDMKJDeuJ1g6HI0TEGyb2bJY3A35suFFqhBI5SCopxvLvag==
-X-Received: by 2002:a63:9307:: with SMTP id b7mr22131054pge.616.1643743123461;
-        Tue, 01 Feb 2022 11:18:43 -0800 (PST)
-Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id nv13sm4083647pjb.17.2022.02.01.11.18.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Feb 2022 11:18:42 -0800 (PST)
-Message-ID: <efd2e976-4d2d-178e-890d-9bde1a89c47f@acm.org>
-Date:   Tue, 1 Feb 2022 11:18:41 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [RFC PATCH 1/3] block: add copy offload support
-Content-Language: en-US
-To:     Mikulas Patocka <mpatocka@redhat.com>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        id S242339AbiBAT0V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Feb 2022 14:26:21 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:60824 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234151AbiBAT0T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 14:26:19 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643743578;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=V6LHo6un10Hww5UkITIYZqx0hJ95mxjwPuv4ZEQNJOo=;
+        b=QhKV1hxFV4DrLCMpruu0+ZiccX445AEbzWn+MHs66zuJfOY679hgGer5AybNlfY125+iZu
+        btPS7vmOnsNziR1ps24VwRu/loc9wvcuaPHOVLzFySZYqiZ9yJrlG0Py9Wc0xVwycTpTBb
+        42VG01jzErjaIN/b+5XwyOJrvAvFovE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-619-M3lC_SoeOUSu4g4fX1B8yw-1; Tue, 01 Feb 2022 14:26:13 -0500
+X-MC-Unique: M3lC_SoeOUSu4g4fX1B8yw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 06EAD1091DA0;
+        Tue,  1 Feb 2022 19:26:12 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 73DEA5D6BA;
+        Tue,  1 Feb 2022 19:25:59 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 211JPwaE023932;
+        Tue, 1 Feb 2022 14:25:58 -0500
+Received: from localhost (mpatocka@localhost)
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 211JPwim023928;
+        Tue, 1 Feb 2022 14:25:58 -0500
+X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
+Date:   Tue, 1 Feb 2022 14:25:58 -0500 (EST)
+From:   Mikulas Patocka <mpatocka@redhat.com>
+X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
+To:     Bart Van Assche <bvanassche@acm.org>
+cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "dm-devel@redhat.com" <dm-devel@redhat.com>,
         "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>
-References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com>
- <20220201102122.4okwj2gipjbvuyux@mpHalley-2>
- <alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com>
- <alpine.LRH.2.02.2202011331570.22481@file01.intranet.prod.int.rdu2.redhat.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <alpine.LRH.2.02.2202011331570.22481@file01.intranet.prod.int.rdu2.redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: Re: [RFC PATCH 2/3] nvme: add copy offload support
+In-Reply-To: <1380d0e4-032d-133b-4ebb-f10d85e39800@acm.org>
+Message-ID: <alpine.LRH.2.02.2202011421320.21843@file01.intranet.prod.int.rdu2.redhat.com>
+References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com> <20220201102122.4okwj2gipjbvuyux@mpHalley-2> <alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com> <alpine.LRH.2.02.2202011332330.22481@file01.intranet.prod.int.rdu2.redhat.com>
+ <1380d0e4-032d-133b-4ebb-f10d85e39800@acm.org>
+User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/1/22 10:32, Mikulas Patocka wrote:
->   /**
-> + * blk_queue_max_copy_sectors - set maximum copy offload sectors for the queue
-> + * @q:  the request queue for the device
-> + * @size:  the maximum copy offload sectors
-> + */
-> +void blk_queue_max_copy_sectors(struct request_queue *q, unsigned int size)
-> +{
-> +	q->limits.max_copy_sectors = size;
-> +}
-> +EXPORT_SYMBOL_GPL(blk_queue_max_copy_sectors);
 
-Please either change the unit of 'size' into bytes or change its type 
-into sector_t.
 
-> +extern int blkdev_issue_copy(struct block_device *bdev1, sector_t sector1,
-> +		      struct block_device *bdev2, sector_t sector2,
-> +		      sector_t nr_sects, sector_t *copied, gfp_t gfp_mask);
-> +
+On Tue, 1 Feb 2022, Bart Van Assche wrote:
 
-Only supporting copying between contiguous LBA ranges seems restrictive 
-to me. I expect garbage collection by filesystems for UFS devices to 
-perform better if multiple LBA ranges are submitted as a single SCSI 
-XCOPY command.
+> On 2/1/22 10:33, Mikulas Patocka wrote:
+> > +static inline blk_status_t nvme_setup_read_token(struct nvme_ns *ns, struct
+> > request *req)
+> > +{
+> > +	struct bio *bio = req->bio;
+> > +	struct nvme_copy_token *token =
+> > page_to_virt(bio->bi_io_vec[0].bv_page) + bio->bi_io_vec[0].bv_offset;
+> 
+> Hmm ... shouldn't this function use bvec_kmap_local() instead of
+> page_to_virt()?
+> 
+> Thanks,
+> 
+> Bart.
 
-A general comment about the approach: encoding the LBA range information 
-in a bio payload is not compatible with bio splitting. How can the dm 
-driver implement copy offloading without the ability to split copy 
-offload bio's?
+.bv_page is allocated only in blkdev_issue_copy with alloc_page. So, 
+page_to_virt works.
 
-> +int blkdev_issue_copy(struct block_device *bdev1, sector_t sector1,
-> +		      struct block_device *bdev2, sector_t sector2,
-> +		      sector_t nr_sects, sector_t *copied, gfp_t gfp_mask)
-> +{
-> +	struct page *token;
-> +	sector_t m;
-> +	int r = 0;
-> +	struct completion comp;
+But you are right that bvec_kmap_local may be nicer.
 
-Consider using DECLARE_COMPLETION_ONSTACK() instead of a separate 
-declaration and init_completion() call.
+Mikulas
 
-Thanks,
-
-Bart.
