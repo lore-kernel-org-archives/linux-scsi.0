@@ -2,80 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F005C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 18:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CE62C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 18:32:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241892AbiBASQu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Feb 2022 13:16:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49480 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241854AbiBASPd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 13:15:33 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2CC4C061757
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Feb 2022 10:15:33 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S231693AbiBAScQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Feb 2022 13:32:16 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:38339 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231515AbiBAScP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 13:32:15 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643740335;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=TZGPu0c4d8zM+GPEdhVnS2gfnUOmYVJ4nIlDhy1/n6A=;
+        b=i9qm8iN/taRdnfPDsgjB54DeUy5lJnjIAlg5rCJ1WwXEJeCkMeprLHc4Mfh469SoMLj3vs
+        3yFBVbvFQyTIs55g0EVJkgnVxNIoTFJxtEpGlTP13lu11HMnelwtXFLwd0M+VDzv3VUntM
+        cbmDpkS+zPL82PMT0GCJReDDrlg4a24=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-451-_BYmkupWO1qxJJWnnqHHaw-1; Tue, 01 Feb 2022 13:32:12 -0500
+X-MC-Unique: _BYmkupWO1qxJJWnnqHHaw-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 52F24613F7
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Feb 2022 18:15:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id BA434C340F3
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Feb 2022 18:15:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643739332;
-        bh=s74a3nOHIjj6AhpozJokRUttRnWbnHfkMNIWmnu9DAg=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=POYsG4xPuxni3aA3WOstIBHlcA0PMfeGHspUlvgwbsOiyd1E1j6WwIXZ+chilMmym
-         YiqucWK9oT2xMNamRZd9L9s7PdHytXGo+T0t1bnq6V6CfLYleCqQGcOOFQR8H8ptnk
-         5Bv78KW9zol8RjXMY0pcRrKLGCs4lkD2PGfSUY4yJ3cuEUgPyA+LpNZFMEMXv0ZWA3
-         ZigHGgphhv05aCtT2SoBd5lTYWummVnxqvwdMz9M24hZU6rfrl/WPnm+dDONas9oqq
-         41Z9V/ALgDh5Kn4zzs/3/Sgw9AV8ud0BqrvbvvMuA0vD2aq0c+IrhUbPrx8RVVTpHM
-         ayutPSRt5I8OA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id A6F5CC05FCB; Tue,  1 Feb 2022 18:15:32 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215353] VMWare LVM partitions not recognized, sees base disk,
- fails to Boot
-Date:   Tue, 01 Feb 2022 18:15:32 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-dc395x@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: toracat@elrepo.org
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: CODE_FIX
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-dc395x@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215353-11613-zAyt0W5KNe@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215353-11613@https.bugzilla.kernel.org/>
-References: <bug-215353-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7A8E82F7DF;
+        Tue,  1 Feb 2022 18:32:07 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A93EA798D8;
+        Tue,  1 Feb 2022 18:31:52 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 211IVqOM019366;
+        Tue, 1 Feb 2022 13:31:52 -0500
+Received: from localhost (mpatocka@localhost)
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 211IVpQx019362;
+        Tue, 1 Feb 2022 13:31:51 -0500
+X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
+Date:   Tue, 1 Feb 2022 13:31:51 -0500 (EST)
+From:   Mikulas Patocka <mpatocka@redhat.com>
+X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
+To:     =?ISO-8859-15?Q?Javier_Gonz=E1lez?= <javier@javigon.com>
+cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "msnitzer@redhat.com >> msnitzer@redhat.com" <msnitzer@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "martin.petersen@oracle.com >> Martin K. Petersen" 
+        <martin.petersen@oracle.com>,
+        "roland@purestorage.com" <roland@purestorage.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "kbus @imap.gmail.com>> Keith Busch" <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
+        "zach.brown@ni.com" <zach.brown@ni.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
+        "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.com" <jack@suse.com>,
+        Kanchan Joshi <joshi.k@samsung.com>
+Subject: [RFC PATCH 0/3] NVMe copy offload patches
+In-Reply-To: <20220201102122.4okwj2gipjbvuyux@mpHalley-2>
+Message-ID: <alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com>
+References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com> <20220201102122.4okwj2gipjbvuyux@mpHalley-2>
+User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
 MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215353
+Hi
 
---- Comment #9 from Akemi Yagi (toracat@elrepo.org) ---
-This bug affects RHEL-9 (beta). A bug report submitted and being tracked:
+Here I'm submitting the first version of NVMe copy offload patches as a
+request for comment. They use the token-based approach as we discussed on
+the phone call.
 
-https://bugzilla.redhat.com/show_bug.cgi?id=3D2048178
+The first patch adds generic copy offload support to the block layer - it
+adds two new bio types (REQ_OP_COPY_READ_TOKEN and
+REQ_OP_COPY_WRITE_TOKEN) and a new ioctl BLKCOPY and a kernel function
+blkdev_issue_copy.
 
-Unfortunately it was made private, so not visible publicly.
+The second patch adds copy offload support to the NVMe subsystem.
 
---=20
-You may reply to this email to add a comment.
+The third patch implements a "nvme-debug" driver - it is similar to
+"scsi-debug", it simulates a nvme host controller, it keeps data in memory
+and it supports copy offload according to NVMe Command Set Specification
+1.0a. (there are no hardware or software implementations supporting copy
+offload so far, so I implemented it in nvme-debug)
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+TODO:
+* implement copy offload in device mapper linear target
+* implement copy offload in software NVMe target driver
+* make it possible to complete REQ_OP_COPY_WRITE_TOKEN bios asynchronously
+* should we use copy_file_range instead of a new ioctl?
+
+How to test this:
+* apply the three patches
+* select CONFIG_NVME_DEBUG
+* compile the kernel
+* modprobe nvme-debug; nvme connect -t debug -a 123 -n 456
+* issue the BLKCOPY ioctl on /dev/nvme0n1, for example, you can use this
+  program:
+  http://people.redhat.com/~mpatocka/patches/kernel/xcopy/example/blkcopy.c
+
+Mikulas
+
