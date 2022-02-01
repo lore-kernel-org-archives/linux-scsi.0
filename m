@@ -2,202 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3752C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 03:49:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2325C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Feb 2022 09:16:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233130AbiBADtb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Jan 2022 22:49:31 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:32849 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232689AbiBADt3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Jan 2022 22:49:29 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 25AB32041AF;
-        Tue,  1 Feb 2022 04:49:27 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id UQU7f0mfQ1O7; Tue,  1 Feb 2022 04:49:25 +0100 (CET)
-Received: from xtwo70.bingwo.ca (host-45-78-195-155.dyn.295.ca [45.78.195.155])
-        by smtp.infotech.no (Postfix) with ESMTPA id 7D2942041BB;
-        Tue,  1 Feb 2022 04:49:21 +0100 (CET)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        bvanassche@acm.org, Bodo Stroesser <bostroesser@gmail.com>,
-        David Disseldorp <ddiss@suse.de>
-Subject: [PATCH v7 3/4] scatterlist: add sgl_equal_sgl() function
-Date:   Mon, 31 Jan 2022 22:49:14 -0500
-Message-Id: <20220201034915.183117-4-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220201034915.183117-1-dgilbert@interlog.com>
-References: <20220201034915.183117-1-dgilbert@interlog.com>
+        id S235880AbiBAJQG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Feb 2022 04:16:06 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:10002 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230264AbiBAJQF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2022 04:16:05 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1643706965; x=1675242965;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=JzprWdLhIPcHHt1EkqND9KCFy8vhH2cjjfpWc44sKdw=;
+  b=OrgXtMZxabVQRhxD2hgqNHqJsIlXyzqZN9d0njvjZo+aur6gW8VQAJdo
+   +SEllXTxuPBTJd/OnMAclpn5kuX1vnz43gJ5/G2Vvixs/VskHkRFKItb/
+   dDc9VRTYj/iQBLueB66RcgWKvELgO0jRWwA58YkjAMJRSZ6xVOsuAle7b
+   /jZS7VG9j+gWueSHiDM36EbRHXI+R+yP8USHiWTcFXjyJd/jFubOOLxC1
+   2i/KW8PyRmVwwBmSVXY/1biNUP/cJiVXMsRnT6HTnS2zCjYorutNEgz0n
+   2HJ0u/l9xzRbi1EHQXh0BIVNrUJsR4492lFNrF9GYINL8s/pYImcOgDBf
+   w==;
+X-IronPort-AV: E=Sophos;i="5.88,333,1635177600"; 
+   d="scan'208";a="196672815"
+Received: from mail-dm6nam11lp2171.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.171])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Feb 2022 17:16:04 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=DLvjjYCo+bzfGjnTSy6n/1BbvuD8QEpsesJS06IhR5diC40x1seXHMklKum6NQXBCbZEfnBafcEkXRMfXyWg8RUUsGsXEHF/7l/EpFTXAgCZp3+5+J29tKA2zBEVzWt+45gP2KVDAfZtbfXahQRqj7X9ql4vDxAtPZGig/J8jHen0qfNxE1rhpF/yggu93H4W+phIIA+Ms1GbKDaeFsPmslhvJHRaQcAzbE6QtlOp5trAs7xD40mKjpoVnufF7Cyl/PTXV5CrrPZbAGzD609hBdjR8uF5Ej7OhqiDltSCqjMGrEE2F+JO3C/Ar6RO9IL0/lroyuPvxINRvWfkAXJeg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=JzprWdLhIPcHHt1EkqND9KCFy8vhH2cjjfpWc44sKdw=;
+ b=UDYyuCmu848NJWCFn2i0sHPwdWPBtpgnvvF/iRQCjMv9zoHNYQIvsGd5biXTEysf1VCrAmq5al48i9QOv5ebbFE1gSom3dGVSmhxe/eZLLAF0kRakjYJQkOLJ2lTGgUG3QtU+px+WxHLr/Tk/k9PtT4T1I+ZzehTsn6pYp1Zkn/RfrPObf5BfPbRCWWFamRK0oiwF/XHwZV32cL561Y1m/YKZnaT403Ij2QDU9z6jusWrOf8nxBdcojrn7V5m2TGe6H3wBFmmldLXB0/wkp9O5TbKWE6i9y4IE0i7R63iHwf7JTmZ1wRk3zub4Kz/T5y4cN6OdFF1WDNxDSx9B2w/Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=JzprWdLhIPcHHt1EkqND9KCFy8vhH2cjjfpWc44sKdw=;
+ b=jkhZ1RC5Zg+mHvDswb0gfgTjjQ+kG34COT+4rNUY+7++0pRS4AzH1giJlKjLCCrnsMduDBJTDB5FGuGRSX6n3FKn/+BVRmKpa7NbSjMAbqRZJPRhNkavT+3qI0piQfZYV+BpvItbCpeLpbIQ4huwRZYfk0KAHOoatFFXVlOkW+8=
+Received: from PH0PR04MB7416.namprd04.prod.outlook.com (2603:10b6:510:12::17)
+ by CO6PR04MB7777.namprd04.prod.outlook.com (2603:10b6:5:354::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4930.17; Tue, 1 Feb
+ 2022 09:16:03 +0000
+Received: from PH0PR04MB7416.namprd04.prod.outlook.com
+ ([fe80::8d9e:d733:bca6:bc0f]) by PH0PR04MB7416.namprd04.prod.outlook.com
+ ([fe80::8d9e:d733:bca6:bc0f%5]) with mapi id 15.20.4930.022; Tue, 1 Feb 2022
+ 09:16:03 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     "bvanassche@acm.org" <bvanassche@acm.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "sudarsana.kalluru@qlogic.com" <sudarsana.kalluru@qlogic.com>,
+        "anil.gurumurthy@qlogic.com" <anil.gurumurthy@qlogic.com>
+Subject: Re: [PATCH 13/44] bfa: Stop using the SCSI pointer
+Thread-Topic: [PATCH 13/44] bfa: Stop using the SCSI pointer
+Thread-Index: AQHYFJVacFuVKvVTbEiG11DkkDBn0Kx89HwAgABvnwCAAQtkAA==
+Date:   Tue, 1 Feb 2022 09:16:03 +0000
+Message-ID: <ce022efdf9cf54fe571fb56ed76a104c77402502.camel@wdc.com>
+References: <20220128221909.8141-1-bvanassche@acm.org>
+         <20220128221909.8141-14-bvanassche@acm.org>
+         <737e4d80bd7843284825e4e7664f17fed8f488a0.camel@wdc.com>
+         <ff9c4010-3dbd-83a8-50b4-d4070f0d11ea@acm.org>
+In-Reply-To: <ff9c4010-3dbd-83a8-50b4-d4070f0d11ea@acm.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Evolution 3.42.3 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 0d40b8d4-9f8a-4bf7-ac0f-08d9e5637869
+x-ms-traffictypediagnostic: CO6PR04MB7777:EE_
+x-microsoft-antispam-prvs: <CO6PR04MB7777672997EB769C9E96A0759B269@CO6PR04MB7777.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:6790;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: he7yTgFSLw6znrsHcCxyAGmcMpcSQYM4fKPTVyU5h+VPrj/kcfO7I6da8q+geCqcqM0Wbs6aIY6mCuQvvO6zd5ukA+NyIwhPy5Qxm7PkGxbhxSM91W7wno7N2waE89oUIXZMkBGPeaeGJCFw6ikszOPUMIA0qazmP9ahl6TfG3IrCXrvbmfP9lAIXXQZaGfdFninFyE3WI1kIoaLQDiD2RYQGfh1OyHD6/9/17+P8nb3rdB7cptrmNG59guNTT8vaE4w8Ui+dOYTuFy1Scen8dLWZ/p+wUbqEKQm3jRGG2r0+DuPUv2Tw/HvBlZd4ikt5kn9k84ERRz9eeNRCBqqrlXwFGdqi8+1FTg/orSSSQaXIkycevWT0TQ8le9xRFLYrJ2Tj1s4znLP9T3vwdiA+VaUxSlRQglfHcJqOyXOFQr9MNt2WxB0d0JxTOJ++Me9G2CZpujrxUCDqgwSniriOYo9LuUj3GadCD5ZWbFQYdPCSIdzmQ5m4KwynqIuqObaefTzxwJHiordl4ySI6uCeSh/Ivj/EZFJJQTosv2AmF87k/MYbrxRSYxXAMSAJ/QzMrgc3UBO5v9szHCt5CixwEvLEg5SCZMCBwVaOyXehN7EgSPkDUKcMYJ3RHzrJ5iCsV5LnzsHLOYofJhxpd1IsovItdLzH5Ai/mVt8h085pP+nhNSOEuNgZQ3GfW9/Kgcrrl2fffrqL6632qyHXLg6A==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7416.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(186003)(2906002)(6506007)(26005)(53546011)(2616005)(5660300002)(6512007)(38100700002)(91956017)(122000001)(4744005)(76116006)(316002)(82960400001)(6486002)(86362001)(508600001)(54906003)(110136005)(71200400001)(4326008)(8936002)(36756003)(8676002)(66446008)(64756008)(66476007)(66946007)(66556008)(38070700005)(20210929001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?UTBOeEwvWWt2cVMrb1RCR29HY1BWSG8rUXFTb3BYeUp1cmlaaUNPWFNmc1Nt?=
+ =?utf-8?B?QmJFSGpJaWV2SEdxVWdhS3hmd0xjZU9FSDFHSzhjSi9sZVVZODQ3S3FBeXZ4?=
+ =?utf-8?B?Yk9hZmxzODVWY0VIMjZCQWhWdVdtVWI3YWJzclgrV1o4My81ZXZvY0c1NnJV?=
+ =?utf-8?B?aGV4NnlNWWNuTk5jNTRlV2tCS0s5aUZYZEgwOGVSRjNWS1JCYVRqdjRENHZY?=
+ =?utf-8?B?a1dJd1BmV2JwV0xxcWRoaFYySzBibmZadXBRWkVyK1k5RTFjZEhLNlBHNnA4?=
+ =?utf-8?B?Mm8wR0pheVdRaU1Md2xVTHIzVzJObHIxVWN3SzBnMWVUVmdKZkprWVNvUGtB?=
+ =?utf-8?B?d0UrbnI3SW4vQ084M0dDUlY5ZUR5VHZzeEJDK094VVFlZ1REZW5zK3kwU3FI?=
+ =?utf-8?B?ekh4anlwUzdzTk1uYWkxeW9nekFXMDNIZ3FzYTdkV2phbkFwUEo0TXlBc3JX?=
+ =?utf-8?B?cU5kUXAyaWErZlNNYjFLamUrTDA2RTRsT2NTbFRoTXJ6UlRnYTBvL0V5OEtN?=
+ =?utf-8?B?N0hIbHRSMWZ0WjkwY3hRUVBkVDlCcHBFRS8xTTIvS25FM3g1dFZ2QytpRElS?=
+ =?utf-8?B?WkMyUUFUY0ZKclFQaVpITFJLWmdFRXVBQ09PQkwvbXY1NG9ERm1mN3VzUUVr?=
+ =?utf-8?B?WWtHdWp5TU1mc3lyck9tRjYzblNnR3hWcWdueDVseWRSYS9uOE9FQVRTQzFY?=
+ =?utf-8?B?cE1lYzgyRktkS2JhOGd4bFdmUWpkS0JaKy94M245REo5MFB3VjBLeWEvYWJa?=
+ =?utf-8?B?YTVMU09tN3pqSldBdzNCbVpxK1ljR2NSc3hHS1VKMndVOWJyREVXSjhKTWQx?=
+ =?utf-8?B?Nnk3UjdpalNQWENCSjhoOTQ2dlNaYWpkT1VSTGViUVdJZCtLSzlKbFhRRHdJ?=
+ =?utf-8?B?WDg5cmJjWmd4R0ZqZkJOY282K1pXM1I5SHR6aG40YXQ4N0s5anBKaFhsNFZD?=
+ =?utf-8?B?T0JSc1lITWVkV0xWdXIzVkc4YlhWamVRU2lyaFRmSUxJOWk0WG4xZjRXWmdR?=
+ =?utf-8?B?N0lEajdJS2ZKMEdzZElad0k3a1JDTHBjR0diM2d2emlnMXJpQnk1TVNmbW5q?=
+ =?utf-8?B?L0ZTTS9nTXdhY0t0dFcrREsxYUQxcXpMclp6cUwzbkoxYXgwbHdkQi9ub2U1?=
+ =?utf-8?B?RzZrOGw1ejNyYktnSlV4NXdsNmFxMU5WZFpzTzRNejFDWWRhTkcxUE5KVEVo?=
+ =?utf-8?B?RGp1L2IwZ2tSRnZWdGJxY0pkdW5BMHhrdWRCRTY3Tm81amh0b2x5d2ZHVTR2?=
+ =?utf-8?B?UXlBMUxxTnM5UE56MSs4dkxXbmR2VXdGYkFWa1ovV2ZFOUFtejBobUp3eVdr?=
+ =?utf-8?B?UkpwWXc1aEtRSENyOEFpWjVKY205dzVnRG4zOGI2TVNpNUpiZHFFbkIrM0Rh?=
+ =?utf-8?B?cjdMK1F5REdmdWpBUVRUM3h2eWVZSFZEL3ZoNkduSGRXc2l3c0VvZUp4YlJo?=
+ =?utf-8?B?cC9LTTBUTVROWXdOeUhRR1RkRTJqR0ZKTkJIWVNEbmVFckFNbHhYOGlXcVUz?=
+ =?utf-8?B?Vjh3QWxLSmVPaUdUUDRpc1Y4RUwyRllzdy9hSDFkNytSeGVvMzNLbVQwODRq?=
+ =?utf-8?B?REdEeEU4eUtYcHkvV25PVG9GVWpWWE82d0NmK3UvUStpcHVVUFcwRE5IeWNv?=
+ =?utf-8?B?aGFkSjh1ZHRJd3VaMW9scStIeTNMTEJkUU1aUEcwcVZvNmpnTmxseFppUnBu?=
+ =?utf-8?B?a1ZScEZ1aGdzYVNqQkw0YktDckZ1UXpuMVJoWmdJYkZzc0Zqb1pZcFU1L3FP?=
+ =?utf-8?B?TVNia1Jsa2oxb05uVzVlUjloeFJFWThvaHVodHVHZWN1NkRSMnM0a1hqM2dk?=
+ =?utf-8?B?bUZKZVdhUW9kb292bG1XQ2Q5cVdUTWU1RnVPUCtFbjhaMEJVQ3R0OSs1NG0x?=
+ =?utf-8?B?L0RjL0ZpZllwaDhwNGttL0p0WFlWZ0JpTUNqVERoMS9uQ3RYSFgrR0JaK3g1?=
+ =?utf-8?B?b2dFM05wekNBSm0zdTNPbU85UUo1L2tyVjRIRUJMZlVzaFM4cUxSWlIzSUVx?=
+ =?utf-8?B?WDlsK25RR1QvTGpTNDUyV1Y0ZDF4QUtZZnVCc1k3NXFvbzVNUjFnNFZSTVMw?=
+ =?utf-8?B?TVVWNk5kMlVzQXFzZHUwMTNHc1dhbEE4VExmTkNlUDZLdEdNSDVPRDVwWTdZ?=
+ =?utf-8?B?UjJDbTA4N3pWTm1qWXFONXVvc0hXZTZLODZBaWhYSFFiUXNuS2hlYkJTL1Q0?=
+ =?utf-8?B?TDgwaitKejNNRUtmWU5LWmFYMnllSUVXMWJ3T1A0NlowZitTSDNickpvLy9K?=
+ =?utf-8?Q?DW3OlINvAlj1Gpvywa2YhSO4OJ/zKaj04dQlhvCZKk=3D?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <3D864E76F93E484DBBBD96F0C7F280BC@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7416.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0d40b8d4-9f8a-4bf7-ac0f-08d9e5637869
+X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Feb 2022 09:16:03.3100
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: skNYGB/fdsnzBVpf3L7HdPMRVnx3a+e3cce+xkAFmTIT/Cx4iwk07EYx2j8OhqYAK2dxQ5i9ka0ks2EGZ3TWvIlYdEMs1GtHTYO39eIGRHI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR04MB7777
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-After enabling copies between scatter gather lists (sgl_s), another
-storage related operation is to compare two sgl_s for equality. This
-new function is designed to partially implement NVMe's Compare
-command and the SCSI VERIFY(BYTCHK=1) command. Like memcmp() this
-function begins scanning at the start (of each sgl) and returns
-false on the first miscompare and stops comparing.
-
-The sgl_equal_sgl_idx() function additionally yields the index (i.e.
-byte position) of the first miscompare. The additional parameter,
-miscompare_idx, is a pointer. If it is non-NULL and a miscompare is
-detected (i.e. the function returns false) then the byte index of
-the first miscompare is written to *miscompare_idx. Knowing the
-location of the first miscompare is needed to implement properly
-the SCSI COMPARE AND WRITE command.
-
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
-Reviewed-by: David Disseldorp <ddiss@suse.de>
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- include/linux/scatterlist.h |   8 +++
- lib/scatterlist.c           | 110 ++++++++++++++++++++++++++++++++++++
- 2 files changed, 118 insertions(+)
-
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index 1291ff63fe83..a96874a8b791 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -380,6 +380,14 @@ size_t sgl_copy_sgl(struct scatterlist *d_sgl, unsigned int d_nents, off_t d_ski
- 		    struct scatterlist *s_sgl, unsigned int s_nents, off_t s_skip,
- 		    size_t n_bytes);
- 
-+bool sgl_equal_sgl(struct scatterlist *x_sgl, unsigned int x_nents, off_t x_skip,
-+		   struct scatterlist *y_sgl, unsigned int y_nents, off_t y_skip,
-+		   size_t n_bytes);
-+
-+bool sgl_equal_sgl_idx(struct scatterlist *x_sgl, unsigned int x_nents, off_t x_skip,
-+		       struct scatterlist *y_sgl, unsigned int y_nents, off_t y_skip,
-+		       size_t n_bytes, size_t *miscompare_idx);
-+
- /*
-  * Maximum number of entries that will be allocated in one piece, if
-  * a list larger than this is required then chaining will be utilized.
-diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index d4d56eece250..1fb14b2e320a 100644
---- a/lib/scatterlist.c
-+++ b/lib/scatterlist.c
-@@ -1161,3 +1161,113 @@ size_t sgl_copy_sgl(struct scatterlist *d_sgl, unsigned int d_nents, off_t d_ski
- 	return offset;
- }
- EXPORT_SYMBOL(sgl_copy_sgl);
-+
-+/**
-+ * sgl_equal_sgl_idx - check if x and y (both sgl_s) compare equal, report
-+ *		       index for first unequal bytes
-+ * @x_sgl:		 x (left) sgl
-+ * @x_nents:		 Number of SG entries in x (left) sgl
-+ * @x_skip:		 Number of bytes to skip in x (left) before starting
-+ * @y_sgl:		 y (right) sgl
-+ * @y_nents:		 Number of SG entries in y (right) sgl
-+ * @y_skip:		 Number of bytes to skip in y (right) before starting
-+ * @n_bytes:		 The (maximum) number of bytes to compare
-+ * @miscompare_idx:	 if return is false, index of first miscompare written
-+ *			 to this pointer (if non-NULL). Value will be < n_bytes
-+ *
-+ * Returns:
-+ *   true if x and y compare equal before x, y or n_bytes is exhausted.
-+ *   Otherwise on a miscompare, returns false (and stops comparing). If return
-+ *   is false and miscompare_idx is non-NULL, then index of first miscompared
-+ *   byte written to *miscompare_idx.
-+ *
-+ * Notes:
-+ *   x and y are symmetrical: they can be swapped and the result is the same.
-+ *
-+ *   Implementation is based on memcmp(). x and y segments may overlap.
-+ *
-+ *   The notes in sgl_copy_sgl() about large sgl_s _applies here as well.
-+ *
-+ **/
-+bool sgl_equal_sgl_idx(struct scatterlist *x_sgl, unsigned int x_nents, off_t x_skip,
-+		       struct scatterlist *y_sgl, unsigned int y_nents, off_t y_skip,
-+		       size_t n_bytes, size_t *miscompare_idx)
-+{
-+	bool equ = true;
-+	size_t len;
-+	size_t offset = 0;
-+	struct sg_mapping_iter x_iter, y_iter;
-+
-+	if (n_bytes == 0)
-+		return true;
-+	sg_miter_start(&x_iter, x_sgl, x_nents, SG_MITER_ATOMIC | SG_MITER_FROM_SG);
-+	sg_miter_start(&y_iter, y_sgl, y_nents, SG_MITER_ATOMIC | SG_MITER_FROM_SG);
-+	if (!sg_miter_skip(&x_iter, x_skip))
-+		goto fini;
-+	if (!sg_miter_skip(&y_iter, y_skip))
-+		goto fini;
-+
-+	while (offset < n_bytes) {
-+		if (!sg_miter_next(&x_iter))
-+			break;
-+		if (!sg_miter_next(&y_iter))
-+			break;
-+		len = min3(x_iter.length, y_iter.length, n_bytes - offset);
-+
-+		equ = !memcmp(x_iter.addr, y_iter.addr, len);
-+		if (!equ)
-+			goto fini;
-+		offset += len;
-+		/* LIFO order is important when SG_MITER_ATOMIC is used */
-+		y_iter.consumed = len;
-+		sg_miter_stop(&y_iter);
-+		x_iter.consumed = len;
-+		sg_miter_stop(&x_iter);
-+	}
-+fini:
-+	if (miscompare_idx && !equ) {
-+		u8 *xp = x_iter.addr;
-+		u8 *yp = y_iter.addr;
-+		u8 *x_endp;
-+
-+		for (x_endp = xp + len ; xp < x_endp; ++xp, ++yp) {
-+			if (*xp != *yp)
-+				break;
-+		}
-+		*miscompare_idx = offset + len - (x_endp - xp);
-+	}
-+	sg_miter_stop(&y_iter);
-+	sg_miter_stop(&x_iter);
-+	return equ;
-+}
-+EXPORT_SYMBOL(sgl_equal_sgl_idx);
-+
-+/**
-+ * sgl_equal_sgl - check if x and y (both sgl_s) compare equal
-+ * @x_sgl:		 x (left) sgl
-+ * @x_nents:		 Number of SG entries in x (left) sgl
-+ * @x_skip:		 Number of bytes to skip in x (left) before starting
-+ * @y_sgl:		 y (right) sgl
-+ * @y_nents:		 Number of SG entries in y (right) sgl
-+ * @y_skip:		 Number of bytes to skip in y (right) before starting
-+ * @n_bytes:		 The (maximum) number of bytes to compare
-+ *
-+ * Returns:
-+ *   true if x and y compare equal before x, y or n_bytes is exhausted.
-+ *   Otherwise on a miscompare, returns false (and stops comparing).
-+ *
-+ * Notes:
-+ *   x and y are symmetrical: they can be swapped and the result is the same.
-+ *
-+ *   Implementation is based on memcmp(). x and y segments may overlap.
-+ *
-+ *   The notes in sgl_copy_sgl() about large sgl_s _applies here as well.
-+ *
-+ **/
-+bool sgl_equal_sgl(struct scatterlist *x_sgl, unsigned int x_nents, off_t x_skip,
-+		   struct scatterlist *y_sgl, unsigned int y_nents, off_t y_skip,
-+		   size_t n_bytes)
-+{
-+	return sgl_equal_sgl_idx(x_sgl, x_nents, x_skip, y_sgl, y_nents, y_skip, n_bytes, NULL);
-+}
-+EXPORT_SYMBOL(sgl_equal_sgl);
--- 
-2.25.1
-
+T24gTW9uLCAyMDIyLTAxLTMxIGF0IDA5OjE5IC0wODAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
+DQo+IE9uIDEvMzEvMjIgMDI6MzksIEpvaGFubmVzIFRodW1zaGlybiB3cm90ZToNCj4gPiBPbiBG
+cmksIDIwMjItMDEtMjggYXQgMTQ6MTggLTA4MDAsIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4g
+PiANCj4gPiA+ICvCoMKgwqDCoMKgwqDCoHdxID0gYmZhZF9wcml2KGNtbmQpLT53cTsNCj4gPiA+
+ICvCoMKgwqDCoMKgwqDCoGJmYWRfcHJpdihjbW5kKS0+d3EgPSBOVUxMOw0KPiA+IA0KPiA+IENh
+bid0IHRoaXMgYmUgc2hvcnRlbmVkIHRvDQo+ID4gwqAgDQo+ID4gwqDCoMKgwqDCoMKgwqDCoHdx
+ID0geGhjZyhiZmFkX3ByaXYoY21uZCktPndxLCBOVUxMKTsNCj4gDQo+IEluIHRoaXMgcGF0Y2gg
+c2VyaWVzIG15IGdvYWwgd2FzIHRvIGludHJvZHVjZSBhcyBmZXcgZnVuY3Rpb25hbA0KPiBjaGFu
+Z2VzIA0KPiBhcyBwb3NzaWJsZSBpbiBsZWdhY3kgZHJpdmVycy4gVGhlIHhjaGcoKSBhbHRlcm5h
+dGl2ZSBsb29rcyB2YWxpZCB0bw0KPiBtZSANCj4gYnV0IHdvdWxkIGludm9sdmUgYSBmdW5jdGlv
+bmFsIGNoYW5nZSwgbmFtZWx5IGNoYW5naW5nIG5vbi1hdG9taWMgDQo+IGluc3RydWN0aW9ucyBp
+bnRvIGFuIGF0b21pYyBpbnN0cnVjdGlvbi4gRG8geW91IHdhbnQgbWUgdG8gbWFrZSB0aGF0DQo+
+IGNoYW5nZT8NCg0KDQpVcCB0byB5b3UuIFlvdSdyZSBjb21wbGV0ZWx5IHJpZ2h0IGluIHRoYXQg
+aXQncyBhIGZ1bmN0aW9uYWwgY2hhbmdlDQooYXRvbWljIHZzIG5vbi1hdG9taWMpIGFuZCBJJ3Zl
+IG9ubHkgY29uY2VudHJhdGVkIG9uIHRoZSBjb21wYWN0bmVzcyBvZg0KdGhlIGNvZGUgaGVyZS4N
+Cg==
