@@ -2,44 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B309C43219
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:31:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AE4FC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:31:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354542AbiBCUbz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 15:31:55 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:34354 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354212AbiBCUbO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:31:14 -0500
+        id S1354545AbiBCUb6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 15:31:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57720 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1354229AbiBCUbL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:31:11 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78A28C0613E5;
+        Thu,  3 Feb 2022 12:31:03 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1895CB835A4;
-        Thu,  3 Feb 2022 20:31:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D7CFC340E8;
-        Thu,  3 Feb 2022 20:31:10 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 39D6BB835A4;
+        Thu,  3 Feb 2022 20:31:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B19C0C340E8;
+        Thu,  3 Feb 2022 20:30:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643920271;
-        bh=WoggJfzxZcsMjHbc6cnyNwotPtNHvkZ1EEsQdBd98pI=;
+        s=k20201202; t=1643920261;
+        bh=Y4I1XbzZkketrSB1+LOJA9GxTunIlw/Msl9gsyKUgh8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JzeXohw1OAujYRIx3j/FOaGx7WYwkKHztNReDLfCkyp8en+iWm/bvTY8xjSQr5308
-         CwzG7Fz0sNWiPSB8jq2atSaILyd2isTsGNKRTkko++yb+Wsti8l4paq4U00kMgiAVB
-         C3sGpn5PgN9HVXBViW2sncoAuthZsDU+HFYkiRvX9gy6JvcJi7Q584TjkMQ/kdx9pi
-         NfVbxocdwRKYOzBRHM3TenhT9HSbgqS1EwbrkWtSmj4Aw/y5h/iZMynuQLZmnMx9xo
-         24/d7PBZ9+K/2sFns9BG9v6JBWQvNt5vXcQBu/j4ABR8RywGk1Vit/n2fXWWn6hfhq
-         l3QHhPWvAQHNA==
+        b=AyVxNekBCByjnqztyEEJrtkHz+l7kWg3RICfjXxAxjObjvyPZiU3yX3ucg1IOEBVO
+         unbowsMJe+4edrIUBKtYz3cYvsTdTl68fdqbOvSHv81rGlXTfLu3qzC/yqG5KfK4LB
+         CEfrP3hhaTK0CVZep4EUe6XtmM3Ab7cKLZ/zYhDiRuxx0Ti458n+EE+TH1hpYMXVJ1
+         cCDtu+UpxqfetKWpxyGGgf+0I5wHQ9QVg1xS5S+kFyKLPdFXgAncVzrlGW0Lfcqd5p
+         9PXnrtgJAL8vs35h97in1PG6ifglrR5Drj27LM4DBCYOvaoR0DnLaXZPcuui0qtzKq
+         Jme6ER4D6A+3Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     Xiaoke Wang <xkernel.wang@foxmail.com>,
+        Bean Huo <beanhuo@micron.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        beanhuo@micron.com, avri.altman@wdc.com, daejun7.park@samsung.com,
-        adrian.hunter@intel.com, cang@codeaurora.org,
-        asutoshd@codeaurora.org, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 32/52] scsi: ufs: Use generic error code in ufshcd_set_dev_pwr_mode()
-Date:   Thu,  3 Feb 2022 15:29:26 -0500
-Message-Id: <20220203202947.2304-32-sashal@kernel.org>
+        bvanassche@acm.org, stanley.chu@mediatek.com,
+        srinivas.kandagatla@linaro.org, s.shtylyov@omprussia.ru,
+        huyue2@yulong.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.16 27/52] scsi: ufs: ufshcd-pltfrm: Check the return value of devm_kstrdup()
+Date:   Thu,  3 Feb 2022 15:29:21 -0500
+Message-Id: <20220203202947.2304-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220203202947.2304-1-sashal@kernel.org>
 References: <20220203202947.2304-1-sashal@kernel.org>
@@ -51,53 +54,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kiwoong Kim <kwmad.kim@samsung.com>
+From: Xiaoke Wang <xkernel.wang@foxmail.com>
 
-[ Upstream commit ad6c8a426446873febc98140d81d5353f8c0825b ]
+[ Upstream commit a65b32748f4566f986ba2495a8236c141fa42a26 ]
 
-The return value of ufshcd_set_dev_pwr_mode() is passed to device PM
-core. However, the function currently returns a SCSI result which the PM
-core doesn't understand.  This might lead to unexpected behaviors in
-userland; a platform reset was observed in Android.
+devm_kstrdup() returns pointer to allocated string on success, NULL on
+failure. So it is better to check the return value of it.
 
-Use a generic error code for SSU failures.
-
-Link: https://lore.kernel.org/r/1642743182-54098-1-git-send-email-kwmad.kim@samsung.com
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Link: https://lore.kernel.org/r/tencent_4257E15D4A94FF9020DDCC4BB9B21C041408@qq.com
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Xiaoke Wang <xkernel.wang@foxmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c94377aa82739..ec7d7e01231d7 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8587,7 +8587,7 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
-  * @pwr_mode: device power mode to set
-  *
-  * Returns 0 if requested power mode is set successfully
-- * Returns non-zero if failed to set the requested power mode
-+ * Returns < 0 if failed to set the requested power mode
-  */
- static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 				     enum ufs_dev_pwr_mode pwr_mode)
-@@ -8641,8 +8641,11 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 		sdev_printk(KERN_WARNING, sdp,
- 			    "START_STOP failed for power mode: %d, result %x\n",
- 			    pwr_mode, ret);
--		if (ret > 0 && scsi_sense_valid(&sshdr))
--			scsi_print_sense_hdr(sdp, NULL, &sshdr);
-+		if (ret > 0) {
-+			if (scsi_sense_valid(&sshdr))
-+				scsi_print_sense_hdr(sdp, NULL, &sshdr);
-+			ret = -EIO;
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 8b16bbbcb806c..87975d1a21c8b 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -92,6 +92,11 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ 		clki->min_freq = clkfreq[i];
+ 		clki->max_freq = clkfreq[i+1];
+ 		clki->name = devm_kstrdup(dev, name, GFP_KERNEL);
++		if (!clki->name) {
++			ret = -ENOMEM;
++			goto out;
 +		}
- 	}
++
+ 		if (!strcmp(name, "ref_clk"))
+ 			clki->keep_link_active = true;
+ 		dev_dbg(dev, "%s: min %u max %u name %s\n", "freq-table-hz",
+@@ -127,6 +132,8 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 		return -ENOMEM;
  
- 	if (!ret)
+ 	vreg->name = devm_kstrdup(dev, name, GFP_KERNEL);
++	if (!vreg->name)
++		return -ENOMEM;
+ 
+ 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
+ 	if (of_property_read_u32(np, prop_name, &vreg->max_uA)) {
 -- 
 2.34.1
 
