@@ -2,240 +2,229 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81B25C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 06:45:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84C0FC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 06:50:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242665AbiBCGpB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 01:45:01 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:50395 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242238AbiBCGo7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 01:44:59 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1643870701; x=1675406701;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=doLpfpkYW1YGuLOwSI4dKr9c41mgmxRpkkdENy5US1c=;
-  b=mULkQ79f4ECgCl3BZCEnsjH3uO/u8bova2jcbXH71b2n02TkeweiqR+h
-   NqkmEeST/Vub5Gx4+H19Dqng7zrcFN5kjdI9y+wQV4tqS/aNJBqHHjMzk
-   DKBWhNJvRCW6/phcYrVCl2Gso+DeMuJtVlwxQFcX/eA9H0rMKTHLrAUgK
-   ySnkBQegqLWPANzgvGSw2ety7XUsJikzwsdI91ggjzG/g2DUIsUzkoMOe
-   GhQqJX9H9aHcw2Ke2Nk1kjgpgRdQ0tp6jChVKf7eK545EumepSmHF2uXj
-   SY/11V6ELgcd5L87tYivVLEYBqXnkzB9vh8bzQK1VUqOVPLGPEwYwn+Pb
-   g==;
-X-IronPort-AV: E=Sophos;i="5.88,339,1635177600"; 
-   d="scan'208";a="193034094"
-Received: from mail-sn1anam02lp2048.outbound.protection.outlook.com (HELO NAM02-SN1-obe.outbound.protection.outlook.com) ([104.47.57.48])
-  by ob1.hgst.iphmx.com with ESMTP; 03 Feb 2022 14:44:54 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HNA8p6h832kclQCM3tUgm96QRDOjWrgN12gDMFLeRtY7pk34gYoKAZZsmSnrs3EKfFEvCoRUTJHGwbJpt7EyVpBDHL3E9yrXFIxiry6rzes/s3YormuTfZYb0qZmBRhgCSHZQbLQyIKsSAy3JkqJZLSvChac8oEm5g2R16smoyIkk3OTtTdwkL36niMBorR96yIxYQmchNaLUqDyupYwaBNioidrjnZPKhW2TJfijDwLpNktyClv9iRA5CsNXcXPyL16q3dApiXDhV8nTw033+VEuWGbY0lMdgjyHJ+OrtAvGT+kO3DsobQbUW6is92Ju8TBS8jgQtt+mNgoCxpI+A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=doLpfpkYW1YGuLOwSI4dKr9c41mgmxRpkkdENy5US1c=;
- b=h01KVTSx2oiQOokzvXJHYlkZtufyzjDCoCwYagDM1p8v46JHJNxqGW3ODlukD2cJNE2ZOPjp7ATWP+VdGg592RYMdGQ954nOq1ad6kK2JXSLRf3ofMImtaBWkLffmAgwA4mBaYG4YKDaJIKRTam+Iy0X5NSpoA/IJsHbW6unGySOJivQpmMJF8SaOkgp12Kq7RkAelLDaNJEWE2lxbVAgwOfL/W2LZpMeqzyFd9JHw/zs4C5y6NE0NP5oA4ajnW29+/MdGIJdvIKt7+vHljKxruZ52i0mXHc4kJwiuvBRcxuinbjY5bpFrTydqaEyRKMgoFz41J9yEyC2UrP0KEiXg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=doLpfpkYW1YGuLOwSI4dKr9c41mgmxRpkkdENy5US1c=;
- b=dk+rnsdjvv7toSia7Iv/tdZoggtI7g5AG7+PNtDsoIstCjgB7Zgmsi193XnKO6w4CUDgH8aeLdugRW3+XgYxjA5RXyqb4wzCKrCyzMXhqFfh5ruQS8ZLWDa891RyAOUWEr9WRI7e2G3Mfni6P+z7X1zYYNdseI0msBKHuAk6+k0=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- SN4PR0401MB3712.namprd04.prod.outlook.com (2603:10b6:803:49::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4930.20; Thu, 3 Feb
- 2022 06:44:50 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::14b1:1b88:427:df7]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::14b1:1b88:427:df7%4]) with mapi id 15.20.4930.022; Thu, 3 Feb 2022
- 06:44:50 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Hoyoung SEO <hy50.seo@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "bhoon95.kim@samsung.com" <bhoon95.kim@samsung.com>,
-        "kwmad.kim@samsung.com" <kwmad.kim@samsung.com>
-CC:     'kernel test robot' <lkp@intel.com>
-Subject: RE: [PATCH v2] scsi: ufs: disable auto hibern8 while entering suspend
-Thread-Topic: [PATCH v2] scsi: ufs: disable auto hibern8 while entering
+        id S238539AbiBCGux (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 01:50:53 -0500
+Received: from mailout1.samsung.com ([203.254.224.24]:10217 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345962AbiBCGuw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 01:50:52 -0500
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220203065051epoutp01e42d987713f1537204ac43d8ac8e3c73~QNALtiHBs1285712857epoutp01Z
+        for <linux-scsi@vger.kernel.org>; Thu,  3 Feb 2022 06:50:51 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220203065051epoutp01e42d987713f1537204ac43d8ac8e3c73~QNALtiHBs1285712857epoutp01Z
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1643871051;
+        bh=GFCY1tZ1AIJ8hE+w2hnX+TfdMOn7RoV+7kO+jFiS83g=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=txoBtIo54o1hN9BAtB2mArFVm9F76Ry3z9SOcTMANEIng6oxDT4Zt2vd3VT4KhAMU
+         23cDRvFviqAsAPWp3WIax9S3tg/kwarrwdFRMAj7538GH71q8SMo9KM5r7PvPayq5O
+         IOgjzecL2MFqKtdqs6HeGdO3cHgwnzMfshDTmSKk=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+        20220203065050epcas5p32dca94e6b4ba0f994efb2bed0753debd~QNALFZBXL0397203972epcas5p3O;
+        Thu,  3 Feb 2022 06:50:50 +0000 (GMT)
+Received: from epsmges5p3new.samsung.com (unknown [182.195.38.174]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4Jq8Sj0zLmz4x9Pv; Thu,  3 Feb
+        2022 06:50:45 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        38.5D.05590.44B7BF16; Thu,  3 Feb 2022 15:50:45 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+        20220203065044epcas5p24fa5e0ab1fea2ed1ac4c9f9d59f6a1ef~QNAFdHFni2015920159epcas5p2U;
+        Thu,  3 Feb 2022 06:50:44 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220203065044epsmtrp2abf5c3db5927ad31a0515b4f730f6a78~QNAFbVB3P1092710927epsmtrp2R;
+        Thu,  3 Feb 2022 06:50:44 +0000 (GMT)
+X-AuditID: b6c32a4b-723ff700000015d6-c6-61fb7b440b9e
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        B7.2F.08738.44B7BF16; Thu,  3 Feb 2022 15:50:44 +0900 (KST)
+Received: from alimakhtar03 (unknown [107.122.12.5]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220203065041epsmtip13dab49a01e94489e44568515c6147826~QNACdyyIN1013310133epsmtip1m;
+        Thu,  3 Feb 2022 06:50:41 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Hoyoung SEO'" <hy50.seo@samsung.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
+        <asutoshd@codeaurora.org>, <cang@codeaurora.org>,
+        <bvanassche@acm.org>, <bhoon95.kim@samsung.com>,
+        <kwmad.kim@samsung.com>
+Cc:     "'kernel test robot'" <lkp@intel.com>
+In-Reply-To: <12a201d81892$c8123d40$5836b7c0$@samsung.com>
+Subject: RE: [PATCH v2] scsi: ufs: disable auto hibern8 while entering
  suspend
-Thread-Index: AQIlzz+JKCbQP4e9lbbSHSqpu8nHvgHyie3oAmFa8EWrtq73AIAMOI6wgABtFVA=
-Date:   Thu, 3 Feb 2022 06:44:50 +0000
-Message-ID: <DM6PR04MB6575A9D9D81F0195E81282F9FC289@DM6PR04MB6575.namprd04.prod.outlook.com>
+Date:   Thu, 3 Feb 2022 12:20:38 +0530
+Message-ID: <066101d818ca$5dba71f0$192f55d0$@samsung.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQIlzz+JKCbQP4e9lbbSHSqpu8nHvgHyie3oAmFa8EUCXuTdUKuwXzjw
+Content-Language: en-us
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Te0xTVxzHc25vb1uTzrsK41DdVhpNgI3SjhYvjOKyMXcV4xqN/OG2sBt6
+        V7DPtcVtjC1EwmMgKCbDrFOBthTpltUAIVhsRF6CnZmAbMgjQRQXOiVAmQTZ2Foubvz3Ob/z
+        /f4e58FlCfyYkJtnsNJmA6UTY9vQ9p64+IR3v1yjpJNPWYSvdIBDzK2OYsSN+9+gxJ+Nj9hE
+        7cIqi1jyuNjED45plLCPtSPEvbY+lBjxXsCIyt86MCJQPIMRTTfXkbf45MjdTHKkugohHdfm
+        EPKsvQuQK55yjFycHUfJ6jY3IIMtr5BlXZWIindcm5ZLU2raLKINOUZ1nkGjFGcezX4nW5Es
+        lSXIUoi9YpGB0tNKccYhVcL+PF2ob7HoJKXLD4VUlMUiTkxPMxvzrbQo12ixKsW0Sa0zyU0S
+        C6W35Bs0EgNtTZVJpW8oQsKPtbntyy2IqV/5+cUnA6AItL5ZAXhciMvhr4t+dgXYxhXgnQB2
+        TnVjzGIJwJLzfiysEuBBAKeu6J87umZnUUbkBXBi6AGLWcwB2BSYBWEVhifADkfpRqoI/DYC
+        76/+yApvsPA4WG97jIaZh6fCR39dZod5B66C9YGRDTOK74bVd/7e0PDxFFj0pB8w/CIc/O4h
+        yuR5Dboa/mAxLYng6qxrI08Evh9O2IKbmig419fLCTcB8TEubB57gDGGDDj9LLDJO2DgZhuH
+        YSEMzvtCcW6ItfC0N4kJF8LGS/0ow/tg190LaFgSnsXjTWRKvQCr1h4ijJMPy0sFjHoPLJ4f
+        3XTuhDWVlWyGSfhTkRc9C2JsWwazbRnMtmUA2//F6gHqBtG0yaLX0BaFKclAf/bffecY9S1g
+        41XHZ3aAmekFSTdAuKAbQC5LHMH3NaxQAr6a+qKANhuzzfk62tINFKHTrmEJI3OMoW9hsGbL
+        5ClSeXJysjwlKVkmjuLf0lyhBLiGstJamjbR5uc+hMsTFiGlruUzK2CRd9S9+P5S/XDr5FSt
+        LzL94j+OT89EdpRw+cHltdhi59JL239OOWY8eCDD6VGsNRt8g/7E8/6PjuxLb+j0v42fTI3N
+        0j6OyGhqVBRGRxzzxookQuV68/z1wTxTnbuqyfX6J4WTvaqhPbflJXkcH/9W33DLVwPfDt8p
+        Gws6ya+1T2XRkzsPXrXLY4qjcn+xIQucivyYlZdPlfTu1q4df/XqjQLBiYHGyzUf9PlKxj50
+        XasV6Na/L8YrXey46z1qT1bNCXf9eLZjJmv8XpbPXXqI7cQLeOfK644s2N/rSdt+eBctGXqW
+        Xuatm7A7FaNBhJN56dTeXerW308HxKgll5LFs8wW6l+9Dc+BXgQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGIsWRmVeSWpSXmKPExsWy7bCSnK5L9e9Eg7dThC32tp1gt3j58yqb
+        xcGHnSwWX5c+Y7WY9uEns8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i1fNj9gs
+        lh//x+TA63H5irfH5b5eJo/Fe14yeUxYdIDR4/v6DjaPj09vsXj0bVnF6PF5k5xH+4FupgDO
+        KC6blNSczLLUIn27BK6Ml63TGQtW6FTMvfKGqYHxiEoXIyeHhICJxIGnT1m6GLk4hAR2MEpc
+        vXufHSIhLXF94wQoW1hi5b/n7BBFzxkljk1exQqSYBPQldixuI0NJCEicJtJ4kPbZ7AEs4Cm
+        xIJZb6DG/mSUmP9jHwtIglPASuLZnxVgRcICfhJtXx+CxVkEVCT6LvwFs3kFLCUa3h5jhLAF
+        JU7OfMICMVRb4unNp3D2soWvmSHOU5D4+XQZ2EwRATeJ27M+Q9WIS7w8eoR9AqPwLCSjZiEZ
+        NQvJqFlIWhYwsqxilEwtKM5Nzy02LDDKSy3XK07MLS7NS9dLzs/dxAiOWi2tHYx7Vn3QO8TI
+        xMF4iFGCg1lJhHfvwu+JQrwpiZVVqUX58UWlOanFhxilOViUxHkvdJ2MFxJITyxJzU5NLUgt
+        gskycXBKNTC5RD/0vy9fa+UeHxNv76jj8kfy3wW3sgmT2nYu6jrHqPbA7q9/U3JVHutd0c+f
+        P/xZNVnSeP5NlZNBfe2akfxyq05ffZrwnaGlOnirQWGi/P1Zgcu8hTOdfwk9vV4nNd9dQ/tF
+        2aGvy/6FXY0IsftQLqjAZyYtOu/ZIdaEZY4Ty6bHW1xdW+DlofOufpVDosuJufOtjx9m0OP/
+        ciVRv27j0vLnmcsmpmpu9j24em5IuxuzxsHr/1769go0+jxOUmt2OxE07fhSyTPHjz85raY2
+        K9ix7uS7xKidPSL7H0kwris3TVGdVyPz4d2ze565+ZeUFmbOn/Mjt8zgVdy609tdInjVJAub
+        tTJ2Tpq3+L8SS3FGoqEWc1FxIgA3Q0oHSQMAAA==
+X-CMS-MailID: 20220203065044epcas5p24fa5e0ab1fea2ed1ac4c9f9d59f6a1ef
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220125062155epcas2p15da28303164091b1bf5a00dcf99fe59b
 References: <CGME20220125062155epcas2p15da28303164091b1bf5a00dcf99fe59b@epcas2p1.samsung.com>
         <20220124180637.160524-1-hy50.seo@samsung.com>
-        <40986ecb6c81812a1e1ab24d93e46eda75974c4e.camel@mediatek.com>
-  <12a201d81892$c8123d40$5836b7c0$@samsung.com>
-In-Reply-To: <12a201d81892$c8123d40$5836b7c0$@samsung.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 7bd667a4-29cb-4a5e-0ce7-08d9e6e0ad94
-x-ms-traffictypediagnostic: SN4PR0401MB3712:EE_
-x-microsoft-antispam-prvs: <SN4PR0401MB371215B5094572BE0BF40B50FC289@SN4PR0401MB3712.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: TW44NyciArfF6F1veA4Vb/hmTfMILcWuvKldCizItNnHoXAhkcmQFH0H8IZg8lcxRiHLLxXx/5ltkrULgIfUbVdWDLd73GrE+GAy2FLP2nNWufZ8GWFQvr/bseJ20FYay4qbcgJA99T7ESxeceg10Xpnf8zVurxQS+XPqcw7KPvuhxCUTfO4NZp+WgSYyMykYPQesJgfubbb5izDc/YImIwTUYrlqxMyk03n5d80MDuPBxoJelMs0NfXJE7HoKgwWTf2MCDp7pGp9YPZa7/zSkotr5Ti5d0nS38G6atKwkRCrdxUdCJZGYlZPTvQ1eGUERVMM3Nuetkl0GuAbMTemWknfMf2tafprS3PshbYnAEG6x5iYdeKXEtpO70JI1EJNO3OzCEEwsbWHQ9wbUdSP/nHD0Vh75s5MzOH9DOPVg5qO1yUlusbZL61Z1k9h5sqbiWhzUSBATpw6yOgO5ifhxheCghydpRbaTF+XFqKngKCeeNl5q29hGga5CVSbkPowQmIYxM1rbDjXgTCbaYm6cB59yAuCAy1r6xQNJ6Z/0GUATgV8/YWA7uN93vGeH6UltX7LclHISZwSQ5FZQy7Sdn5LOMOvY6H7Q5k2JcnHAPm5TdvgTtrZZoMSxwSzYoPMfGAmSZmB6f9/DfwK12kAioMDyPgnncbs0BfjF9c9U+Wwqnt2aS6PZYL/pPONzfXoqdv/xFLZoTAUh0UF1ziAKTyylkkS0+0d99cdyBPwrc=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(9686003)(53546011)(6506007)(82960400001)(7696005)(2906002)(508600001)(15650500001)(71200400001)(66446008)(26005)(122000001)(8676002)(55016003)(64756008)(8936002)(66476007)(66556008)(66946007)(33656002)(921005)(76116006)(38070700005)(316002)(4326008)(186003)(38100700002)(7416002)(52536014)(86362001)(83380400001)(110136005)(5660300002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?WUFaZC82dGVueTFKNUlYR0VIM3pIRUZNQTk2SVJUZXlmKzVRaVI5Nk56dlp0?=
- =?utf-8?B?V2F3RTd6a3MwdVBtYmhRd0IvQnM0WEc0RHlYbUFvbW8ySVVwa1htNkM1TnM0?=
- =?utf-8?B?Ykd1c1BraU0xRU1ESytXbGxlN2hvbU9NWFNYQmJaYnFPeW9MaE1CNHVhZlMv?=
- =?utf-8?B?SkV4YUtjNUY5OThNQjgxUU1GZHZjeWpZVVNrTlFPV0pTQWpaM2hkUDB6UHU1?=
- =?utf-8?B?aThyT0pJeVRkNlh2a0hvaWVqMHVyQURFYWI1enpreWg4WmZ2L2JoRDkvVkZN?=
- =?utf-8?B?c05EejVQUzlCU2hJRjRoV2hzcEtDMjRCc0UzclF0OVRrUGs1bDFyVlFSQmlp?=
- =?utf-8?B?b21FMEcycytqZTRxWkpOZ3lVZTRqZFoyVjhWdGxqSTcvN01hWlY3dlhqVnZt?=
- =?utf-8?B?YTNuR09RTmpCU096QU9sNE5YclJOa01xaFo4Q1EyWGR0ZGloZlZZS3hkbnBj?=
- =?utf-8?B?WFRLM2hXclU2WmJId3pDVlJ4UjNPandYOCs4RHpFVzRSSmVSMEx3M1l5OVdz?=
- =?utf-8?B?TVZDOElpL21YanhHMGFXdk9YVUhKK0tTSmZaNStlMG9YV1NhNEpOeU5jTFdq?=
- =?utf-8?B?UjBqV0ozc2o3UEw5aG9LQXluRHEwcnFJNFVUcjdxb1FqSnZCaWNPVTZqU0ll?=
- =?utf-8?B?Ym4wZkpvenlhOFpJcjVrak56ZHdBVGQ2TXhtNVlPbnpuaTkvZi9wblk3UjQ1?=
- =?utf-8?B?U0ZHVzNzYVM1S21zVnAzbzliTnVhdXh1cEhJUVEwbEhpRnRhc0dNQVN3cFQ2?=
- =?utf-8?B?eHNSZ0liUjdEdVZldFNxYitjc0x6UHA2TnI0aUw3YmdrREdDU1RPVDlDNUJF?=
- =?utf-8?B?TEw5VE92WmZJT1Y0MHJBNHljSFFtNGx4ZE5oMjNxVWJ4ZEJqNldnRFN6YnA0?=
- =?utf-8?B?bkN0UW5hWVpjdlpva0RDM3BRL2plQUwzRjcxZzNYL2oxSmx1aTY5MkZDcnBU?=
- =?utf-8?B?SVNxTC9wdVlTazY4dU42amRQSENad3NGNkc2TUVSS3h2LzBaQXhpSFFLZnpl?=
- =?utf-8?B?MnZyeElVcDZUMUlTMHlPZXNsY21HTzlINlRUTldJU3BObVFidjF1OEx6dDEz?=
- =?utf-8?B?ck1VWlFXL3lBNW9nMm1EZWovQ0VuNDA4TUZmblhFM01DOGw4WFQwZGZiaTVw?=
- =?utf-8?B?TnVPbmNoZ1ZBd2d0eU9NZFBWWkw3eEUvQ2prVjJBbTRySFN6OXd0VWd0NEdk?=
- =?utf-8?B?QVlkOE1wVzh4dkJrU1ZPa25VQm40V3p1OFVxaURVOXJLUTZTcWdUVUVHLzVF?=
- =?utf-8?B?a3Q2aVlpVk1VR2F2U3hqSlJJaXdNT045bFhoNllibTNPMXlHQTN0TmwzdDJi?=
- =?utf-8?B?T1Mxb0oreTBqZitrNnN1cVY2dUNRaEJDeGNzbzZLSm1pNUh4UUp1R2FTTCt0?=
- =?utf-8?B?OHFvZUpZZGgzMFRYMkJhNWpvbzN0OWw0dlRFSDllSmxPV2dXMlowcHNtZEVY?=
- =?utf-8?B?aGp2dnZYdzNJc1o5bEFhTHE4bXoyNmxEeWtoMVp0SXhJYmt0WFk3dEo3Nk10?=
- =?utf-8?B?SGora2lnV0NjUDVBZFRYRjJLKzJHaWdhejdjYkRYSXNVcTgvNjdHZWlPcXpK?=
- =?utf-8?B?Tzl1SHBYVmRRT0xtNW12R2o3V2R5MStlRUt6VlV4dHlVUTlCZ0xTZ2VOS1hp?=
- =?utf-8?B?VWg1bU9jcThSd21jb09QeERlWEx1OElOcnhVeHBRUTMwSTVOODJCdmdOdk44?=
- =?utf-8?B?elgraHVmaC9OWjhEOVFkSkxMRVlINVBlbkhDUnhVVjRmU1k0QWROUmYxNzA2?=
- =?utf-8?B?OWYzZnlORWE0T2JYNGF2elBRNERzK3ZhaGpZbzZEUExWYitSdk9mVzN6SmlB?=
- =?utf-8?B?QjNUVW56blppN1BlSndQMWVJZ0lpUk9WWDU2NDVIWmpIbGEySWpTemFBeDAr?=
- =?utf-8?B?RW0zMTNiNWRNZHhtcURuTWUyS2hMcHRsZ1IwV3FvbXJoaVpaWHAzMko1aWV2?=
- =?utf-8?B?Q0VlMVlEVmJVM1pzVUpIc2FJVTBoL3hWYmpGTnpyZDJtaEJMc0RqMTR2MjMz?=
- =?utf-8?B?L2FzM0FyYW1rZUYrbHk5ejF0K2tYYytSck0yU080MC9ub05wVm1mUGpoL2ov?=
- =?utf-8?B?Qnl4VGltc2ZEdGVHMVpKL0RsOWNXd0c4dnhZU01iNVpkQmpoRWY1Y09vTWdB?=
- =?utf-8?B?bjNCOS85NjZpK0w0VVFKSnlHbkIwWUZNUEh0RUZQYllhUmFXNnJoSEFSalk2?=
- =?utf-8?B?M1E9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7bd667a4-29cb-4a5e-0ce7-08d9e6e0ad94
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Feb 2022 06:44:50.8221
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 8nMSMjsuLee4A5H9m3fRZgFPBmhNOFG+Tkyu6xRLPprCWk+NH3t8vkDvGs18wVB2NozwzFBg4jhj06eVwe0Qxg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3712
+        <40986ecb6c81812a1e1ab24d93e46eda75974c4e.camel@mediatek.com> 
+        <12a201d81892$c8123d40$5836b7c0$@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiBIaSwNCj4gUGxlYXNlIGNoZWNrIHRoaXMgcGF0Y2guDQo+IElmIHRoZXJlIGlzIGFueSBvdGhl
-ciBvcGluaW9uLCBwbGVhc2UgZ2l2ZSBtZSBjb21tZW50cyBUaGFua3MNCj4gDQo+ID4gLS0tLS1P
-cmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiBGcm9tOiDshJztmLjsmIEgW21haWx0bzpoeTUwLnNl
-b0BzYW1zdW5nLmNvbV0NCj4gPiBTZW50OiBXZWRuZXNkYXksIEphbnVhcnkgMjYsIDIwMjIgMjoz
-NSBQTQ0KPiA+IFRvOiAnbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcnOyAnbGludXgta2VybmVs
-QHZnZXIua2VybmVsLm9yZyc7DQo+ID4gJ2FsaW0uYWtodGFyQHNhbXN1bmcuY29tJzsgJ2F2cmku
-YWx0bWFuQHdkYy5jb20nOw0KPiA+ICdqZWpiQGxpbnV4LmlibS5jb20nOyAnbWFydGluLnBldGVy
-c2VuQG9yYWNsZS5jb20nOw0KPiA+ICdiZWFuaHVvQG1pY3Jvbi5jb20nOyAnYXN1dG9zaGRAY29k
-ZWF1cm9yYS5vcmcnOw0KPiA+ICdjYW5nQGNvZGVhdXJvcmEub3JnJzsgJ2J2YW5hc3NjaGVAYWNt
-Lm9yZyc7DQo+ICdiaG9vbjk1LmtpbUBzYW1zdW5nLmNvbSc7ICdrd21hZC5raW1Ac2Ftc3VuZy5j
-b20nDQo+ID4gQ2M6ICdrZXJuZWwgdGVzdCByb2JvdCcNCj4gPiBTdWJqZWN0OiBSRTogW1BBVENI
-IHYyXSBzY3NpOiB1ZnM6IGRpc2FibGUgYXV0byBoaWJlcm44IHdoaWxlIGVudGVyaW5nDQo+ID4g
-c3VzcGVuZA0KPiA+DQo+ID4gSGksDQo+ID4gSSB0aGluayBjb250ZW50IGlzIGxhY2tpbmcgaW4g
-dGhlIFVGU0hDSSBzcGVjLg0KPiA+IEluIHRoZSBwcm9jZXNzLCBBSDggaXMgaW4gb3BlcmF0aW9u
-LCBhbmQgaXQgc2VlbXMgdGhhdCBzZW5kaW5nIHRoZQ0KPiA+IGNvbW1hbmQNCj4gPiBoaWJlcm44
-IGJ5IG1hbnVhbCBoYXMgYSBkZWZlYXQuDQo+ID4gSSBkb24ndCBrbm93IHdoYXQgdGhlIGFsbCBo
-Y2kgdmVuZG9yJ3MgaGFyZHdhcmUgZGVzaWduIHdpbGwgYmUsIGJ1dA0KPiA+IHRoZXJlIGlzIGEg
-cG9zc2liaWxpdHkgdGhhdCBhaDggYW5kIG1hbnVhbCBoaWJlcm44IG1heSBvdmVybGFwLg0KPiA+
-IFNvIGlmIGlzIG9wZXJhdGluZyBpbiBhaDgsIGl0IGlzIHRob3VnaHQgdGhhdCBpdCB3aWxsIGJl
-IHNhZmVyIHRvDQo+ID4gZGlzYWJsZQ0KPiA+IGFoOCBiZWZvcmUgc2VuZGluZyBoaWJlcm44IGNv
-bW1hbmQuDQpIaSwNClRoYW5rIHlvdSBmb3IgeW91ciBwYXRjaC4NCk1heWJlIGJldHRlciB0byBw
-cm9tb3RlIHlvdXIgaWRlYSBpbiBKRURFQyBmaXJzdC4NCg0KVGhhbmtzLA0KQXZyaQ0KPiA+DQo+
-ID4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogU3RhbmxleSBDaHUg
-W21haWx0bzpzdGFubGV5LmNodUBtZWRpYXRlay5jb21dDQo+ID4gPiBTZW50OiBXZWRuZXNkYXks
-IEphbnVhcnkgMjYsIDIwMjIgMTA6MjIgQU0NCj4gPiA+IFRvOiBTRU8gSE9ZT1VORzsgbGludXgt
-c2NzaUB2Z2VyLmtlcm5lbC5vcmc7DQo+ID4gPiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3Jn
-OyBhbGltLmFraHRhckBzYW1zdW5nLmNvbTsNCj4gPiA+IGF2cmkuYWx0bWFuQHdkYy5jb207IGpl
-amJAbGludXguaWJtLmNvbTsNCj4gbWFydGluLnBldGVyc2VuQG9yYWNsZS5jb207DQo+ID4gPiBi
-ZWFuaHVvQG1pY3Jvbi5jb207IGFzdXRvc2hkQGNvZGVhdXJvcmEub3JnOw0KPiBjYW5nQGNvZGVh
-dXJvcmEub3JnOw0KPiA+ID4gYnZhbmFzc2NoZUBhY20ub3JnOyBiaG9vbjk1LmtpbUBzYW1zdW5n
-LmNvbTsNCj4ga3dtYWQua2ltQHNhbXN1bmcuY29tDQo+ID4gPiBDYzoga2VybmVsIHRlc3Qgcm9i
-b3Q7IHBldGVyLndhbmdAbWVkaWF0ZWsuY29tDQo+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIIHYy
-XSBzY3NpOiB1ZnM6IGRpc2FibGUgYXV0byBoaWJlcm44IHdoaWxlDQo+ID4gPiBlbnRlcmluZyBz
-dXNwZW5kDQo+ID4gPg0KPiA+ID4gSGkgSG95b3VuZywNCj4gPiA+DQo+ID4gPiBPbiBUdWUsIDIw
-MjItMDEtMjUgYXQgMDM6MDYgKzA5MDAsIFNFTyBIT1lPVU5HIHdyb3RlOg0KPiA+ID4gPiB2MS0+
-IHYyOiBmaXhlZCBubyBwcmV2aW91cyBwcm90b3R5cGUgd2FybmluZw0KPiA+ID4gPiBSZXBvcnRl
-ZC1ieToga2VybmVsIHRlc3Qgcm9ib3QgPGxrcEBpbnRlbC5jb20+DQo+ID4gPiA+DQo+ID4gPiA+
-IEFsbCB3YXJuaW5ncyAobmV3IG9uZXMgcHJlZml4ZWQgYnkgPj4pOg0KPiA+ID4gPiA+ID4gZHJp
-dmVycy9zY3NpL3Vmcy91ZnNoY2QuYzo0MjA3OjY6IHdhcm5pbmc6IG5vIHByZXZpb3VzDQo+ID4g
-PiA+ID4gPiBwcm90b3R5cGUNCj4gPiA+ID4NCj4gPiA+ID4gZm9yICd1ZnNoY2RfYXV0b19oaWJl
-cm44X2Rpc2FibGUnIFstV21pc3NpbmctcHJvdG90eXBlc10NCj4gPiA+ID4gNDIwNyB8IHZvaWQg
-dWZzaGNkX2F1dG9faGliZXJuOF9kaXNhYmxlKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ID4gPiA+
-DQo+ID4gPiA+IElmIHVzaW5nIGF1dG8gaGliZXJuOCBtb2RlLCBuZWVkIHRvIGRpc2FibGUgYXV0
-byBoaWJlcm44IHdoaWxlDQo+ID4gPiA+IGVudGVyaW5nIHN1c3BlbmQuDQo+ID4gPiA+IFdoZW4g
-dXNpbmcgYXV0byBoaWJlcm44IG1vZGUsIGl0IGRvZXMgbm90IHNlZW0gcmlnaHQgdG8gc2VuZCBh
-IHVpYw0KPiA+ID4gPiBjb21tYW5kDQo+ID4gPg0KPiA+ID4gVGhlIFVGU0hDSSBzcGVjIGRvZXMg
-bm90IG1lbnRpb24gdGhlIGFib3ZlIHJ1bGUuDQo+ID4gPiBXaHkgd291bGQgeW91IG5lZWQgdG8g
-ZGlzYWJsZSBBSDggYmVmb3JlIHVzaW5nIFVJQyBjb21tYW5kIHRvIGVudGVyDQo+IEg4Pw0KPiA+
-ID4NCj4gPiA+ID4gZm9yIGVudHJ5IGludG8gaGliZXJuOCBpbiB0aGUgbmV4dA0KPiA+ID4gPiBs
-aW5lKHVmc2hjZF9saWtfc3RhdGVfdHJhbnNpdGlvbiguLikpDQo+ID4gPiA+IEl0IHNlZW0gcmln
-aHQgdG8gc2VuZCBhZnRlciBkaXNhYmxlIGF1dG8gaGliZXJuOC4NCj4gPiA+ID4NCj4gPiA+ID4g
-SW4gYWRkaXRpb24sIGlmIHRoZSBhdXRvIGhpYmVybjggbW9kZSBzdXBwb3J0ZWQsIGl0IGlzIGVu
-YWJsZWQgaW4NCj4gPiA+ID4gcmVzdW1lLg0KPiA+ID4gPiBTbyBpdCBzZWVtcyB0aGF0IGl0IHdp
-bGwgYmUgcGFpcmVkIG9ubHkgd2hlbiBhdXRvIGhpYmVybjggaXMNCj4gPiA+ID4gZGlzYWJsZWQg
-d2hpbGUgZW50ZXJpbmcgc3VzcGVuZC4NCj4gPiA+ID4NCj4gPiA+ID4gU2lnbmVkLW9mZi1ieTog
-U0VPIEhPWU9VTkcgPGh5NTAuc2VvQHNhbXN1bmcuY29tPg0KPiA+ID4gPiAtLS0NCj4gPiA+ID4g
-IGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgfCAxNCArKysrKysrKysrKysrKw0KPiA+ID4gPiAg
-MSBmaWxlIGNoYW5nZWQsIDE0IGluc2VydGlvbnMoKykNCj4gPiA+ID4NCj4gPiA+ID4gZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hj
-ZC5jDQo+ID4gPiA+IGluZGV4IDQ2MGQyYjQ0MGQyZS4uYTZlZGJiZDhjYTJjIDEwMDY0NA0KPiA+
-ID4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+ID4gPiA+ICsrKyBiL2RyaXZl
-cnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gPiA+ID4gQEAgLTI1NCw2ICsyNTQsNyBAQCBzdGF0aWMg
-dm9pZA0KPiA+ID4gPiB1ZnNoY2Rfd2JfdG9nZ2xlX2ZsdXNoX2R1cmluZ19oOChzdHJ1Y3QgdWZz
-X2hiYSAqaGJhLCBib29sIHNldCk7DQo+ID4gPiA+IHN0YXRpYyBpbmxpbmUgdm9pZCB1ZnNoY2Rf
-d2JfdG9nZ2xlX2ZsdXNoKHN0cnVjdCB1ZnNfaGJhICpoYmEsDQo+ID4gPiA+IGJvb2wgZW5hYmxl
-KTsgIHN0YXRpYyB2b2lkIHVmc2hjZF9oYmFfdnJlZ19zZXRfbHBtKHN0cnVjdCB1ZnNfaGJhDQo+
-ID4gPiA+ICpoYmEpOyBzdGF0aWMgdm9pZCB1ZnNoY2RfaGJhX3ZyZWdfc2V0X2hwbShzdHJ1Y3Qg
-dWZzX2hiYSAqaGJhKTsNCj4gPiA+ID4gK3N0YXRpYyB2b2lkIHVmc2hjZF9hdXRvX2hpYmVybjhf
-ZGlzYWJsZShzdHJ1Y3QgdWZzX2hiYSAqaGJhKTsNCj4gPiA+ID4NCj4gPiA+ID4gIHN0YXRpYyBp
-bmxpbmUgdm9pZCB1ZnNoY2RfZW5hYmxlX2lycShzdHJ1Y3QgdWZzX2hiYSAqaGJhKSAgeyBAQA0K
-PiA+ID4gPiAtNDIwNCw2ICs0MjA1LDE4IEBAIHZvaWQgdWZzaGNkX2F1dG9faGliZXJuOF91cGRh
-dGUoc3RydWN0DQo+IHVmc19oYmENCj4gPiA+ID4gKmhiYSwgdTMyIGFoaXQpICB9DQo+IEVYUE9S
-VF9TWU1CT0xfR1BMKHVmc2hjZF9hdXRvX2hpYmVybjhfdXBkYXRlKTsNCj4gPiA+ID4NCj4gPiA+
-ID4gK3N0YXRpYyB2b2lkIHVmc2hjZF9hdXRvX2hpYmVybjhfZGlzYWJsZShzdHJ1Y3QgdWZzX2hi
-YSAqaGJhKSB7DQo+ID4gPiA+ICt1bnNpZ25lZCBsb25nIGZsYWdzOw0KPiA+ID4gPiArDQo+ID4g
-PiA+ICsgaWYgKCF1ZnNoY2RfaXNfYXV0b19oaWJlcm44X3N1cHBvcnRlZChoYmEpKQ0KPiA+ID4g
-PiArICAgICAgICAgcmV0dXJuOw0KPiA+ID4gPiArDQo+ID4gPiA+ICsgc3Bpbl9sb2NrX2lycXNh
-dmUoaGJhLT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsNCj4gPiA+ID4gKyB1ZnNoY2Rfd3JpdGVs
-KGhiYSwgMCwgUkVHX0FVVE9fSElCRVJOQVRFX0lETEVfVElNRVIpOw0KPiA+ID4gPiArIHNwaW5f
-dW5sb2NrX2lycXJlc3RvcmUoaGJhLT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsgfQ0KPiA+ID4g
-PiArDQo+ID4gPiA+ICB2b2lkIHVmc2hjZF9hdXRvX2hpYmVybjhfZW5hYmxlKHN0cnVjdCB1ZnNf
-aGJhICpoYmEpICB7DQo+ID4gPiA+ICAgdW5zaWduZWQgbG9uZyBmbGFnczsNCj4gPiA+ID4gQEAg
-LTg5MjUsNiArODkzOCw3IEBAIHN0YXRpYyBpbnQgX191ZnNoY2Rfd2xfc3VzcGVuZChzdHJ1Y3QN
-Cj4gPiA+ID4gdWZzX2hiYSAqaGJhLCBlbnVtIHVmc19wbV9vcCBwbV9vcCkNCj4gPiA+ID4gICAg
-KiB3aXRoIHRoZSBsaW5rIG9mZiwgc28gZG8gbm90IGNoZWNrIGZvciBia29wcy4NCj4gPiA+ID4g
-ICAgKi8NCj4gPiA+ID4gICBjaGVja19mb3JfYmtvcHMgPSAhdWZzaGNkX2lzX3Vmc19kZXZfZGVl
-cHNsZWVwKGhiYSk7DQo+ID4gPiA+ICsgdWZzaGNkX2F1dG9faGliZXJuOF9kaXNhYmxlKGhiYSk7
-DQo+ID4gPiA+ICAgcmV0ID0gdWZzaGNkX2xpbmtfc3RhdGVfdHJhbnNpdGlvbihoYmEsIHJlcV9s
-aW5rX3N0YXRlLA0KPiA+ID4gPiBjaGVja19mb3JfYmtvcHMpOw0KPiA+ID4gPiAgIGlmIChyZXQp
-DQo+ID4gPiA+ICAgICAgICAgICBnb3RvIHNldF9kZXZfYWN0aXZlOw0KPiANCj4gDQoNCg==
+Hi Hoyoung
+
+>-----Original Message-----
+>From: Hoyoung SEO =5Bmailto:hy50.seo=40samsung.com=5D
+>Sent: Thursday, February 3, 2022 5:43 AM
+>To: linux-scsi=40vger.kernel.org; linux-kernel=40vger.kernel.org;
+>alim.akhtar=40samsung.com; avri.altman=40wdc.com; jejb=40linux.ibm.com;
+>martin.petersen=40oracle.com; beanhuo=40micron.com;
+>asutoshd=40codeaurora.org; cang=40codeaurora.org; bvanassche=40acm.org;
+>bhoon95.kim=40samsung.com; kwmad.kim=40samsung.com
+>Cc: 'kernel test robot' <lkp=40intel.com>
+>Subject: RE: =5BPATCH v2=5D scsi: ufs: disable auto hibern8 while entering=
+ suspend
+>
+>Hi,
+>Please check this patch.
+>If there is any other opinion, please give me comments Thanks
+>
+>> -----Original Message-----
+>> From: =EC=84=9C=ED=98=B8=EC=98=81=20=5Bmailto:hy50.seo=40samsung.com=5D=
+=0D=0A>>=20Sent:=20Wednesday,=20January=2026,=202022=202:35=20PM=0D=0A>>=20=
+To:=20'linux-scsi=40vger.kernel.org';=20'linux-kernel=40vger.kernel.org';=
+=0D=0A>>=20'alim.akhtar=40samsung.com';=20'avri.altman=40wdc.com';=0D=0A>>=
+=20'jejb=40linux.ibm.com';=20'martin.petersen=40oracle.com';=0D=0A>>=20'bea=
+nhuo=40micron.com';=20'asutoshd=40codeaurora.org';=0D=0A>>=20'cang=40codeau=
+rora.org';=20'bvanassche=40acm.org';=0D=0A>'bhoon95.kim=40samsung.com';=20'=
+kwmad.kim=40samsung.com'=0D=0A>>=20Cc:=20'kernel=20test=20robot'=0D=0A>>=20=
+Subject:=20RE:=20=5BPATCH=20v2=5D=20scsi:=20ufs:=20disable=20auto=20hibern8=
+=20while=20entering=0D=0A>>=20suspend=0D=0A>>=0D=0A>>=20Hi,=0D=0A>>=20I=20t=
+hink=20content=20is=20lacking=20in=20the=20UFSHCI=20spec.=0D=0A>>=20In=20th=
+e=20process,=20AH8=20is=20in=20operation,=20and=20it=20seems=20that=20sendi=
+ng=20the=0D=0A>>=20command=0D=0A>>=20hibern8=20by=20manual=20has=20a=20defe=
+at.=0D=0A>>=20I=20don't=20know=20what=20the=20all=20hci=20vendor's=20hardwa=
+re=20design=20will=20be,=20but=0D=0A>>=20there=20is=20a=20possibility=20tha=
+t=20ah8=20and=20manual=20hibern8=20may=20overlap.=0D=0A>>=20So=20if=20is=20=
+operating=20in=20ah8,=20it=20is=20thought=20that=20it=20will=20be=20safer=
+=20to=0D=0A>>=20disable=0D=0A>>=20ah8=20before=20sending=20hibern8=20comman=
+d.=0D=0A>>=0D=0AI=20am=20not=20sure,=20if=20this=20problem=20is=20generic=
+=20and=20faced=20by=20all=20other=20UFS=20vendors.=0D=0AIf=20not,=20how=20a=
+bout=20having=20a=20vendor=20specific=20call=20back=20for=20your=20platform=
+=20only?=0D=0AJust=20a=20thought.=0D=0A=0D=0A>>=20>=20-----Original=20Messa=
+ge-----=0D=0A>>=20>=20From:=20Stanley=20Chu=20=5Bmailto:stanley.chu=40media=
+tek.com=5D=0D=0A>>=20>=20Sent:=20Wednesday,=20January=2026,=202022=2010:22=
+=20AM=0D=0A>>=20>=20To:=20SEO=20HOYOUNG;=20linux-scsi=40vger.kernel.org;=0D=
+=0A>>=20>=20linux-kernel=40vger.kernel.org;=20alim.akhtar=40samsung.com;=0D=
+=0A>>=20>=20avri.altman=40wdc.com;=20jejb=40linux.ibm.com;=0D=0A>martin.pet=
+ersen=40oracle.com;=0D=0A>>=20>=20beanhuo=40micron.com;=20asutoshd=40codeau=
+rora.org;=0D=0A>cang=40codeaurora.org;=0D=0A>>=20>=20bvanassche=40acm.org;=
+=20bhoon95.kim=40samsung.com;=0D=0A>kwmad.kim=40samsung.com=0D=0A>>=20>=20C=
+c:=20kernel=20test=20robot;=20peter.wang=40mediatek.com=0D=0A>>=20>=20Subje=
+ct:=20Re:=20=5BPATCH=20v2=5D=20scsi:=20ufs:=20disable=20auto=20hibern8=20wh=
+ile=0D=0A>>=20>=20entering=20suspend=0D=0A>>=20>=0D=0A>>=20>=20Hi=20Hoyoung=
+,=0D=0A>>=20>=0D=0A>>=20>=20On=20Tue,=202022-01-25=20at=2003:06=20+0900,=20=
+SEO=20HOYOUNG=20wrote:=0D=0A>>=20>=20>=20v1->=20v2:=20fixed=20no=20previous=
+=20prototype=20warning=0D=0A>>=20>=20>=20Reported-by:=20kernel=20test=20rob=
+ot=20<lkp=40intel.com>=0D=0A>>=20>=20>=0D=0A>>=20>=20>=20All=20warnings=20(=
+new=20ones=20prefixed=20by=20>>):=0D=0A>>=20>=20>=20>=20>=20drivers/scsi/uf=
+s/ufshcd.c:4207:6:=20warning:=20no=20previous=0D=0A>>=20>=20>=20>=20>=20pro=
+totype=0D=0A>>=20>=20>=0D=0A>>=20>=20>=20for=20'ufshcd_auto_hibern8_disable=
+'=20=5B-Wmissing-prototypes=5D=0D=0A>>=20>=20>=204207=20=7C=20void=20ufshcd=
+_auto_hibern8_disable(struct=20ufs_hba=20*hba)=0D=0A>>=20>=20>=0D=0A>>=20>=
+=20>=20If=20using=20auto=20hibern8=20mode,=20need=20to=20disable=20auto=20h=
+ibern8=20while=0D=0A>>=20>=20>=20entering=20suspend.=0D=0A>>=20>=20>=20When=
+=20using=20auto=20hibern8=20mode,=20it=20does=20not=20seem=20right=20to=20s=
+end=20a=20uic=0D=0A>>=20>=20>=20command=0D=0A>>=20>=0D=0A>>=20>=20The=20UFS=
+HCI=20spec=20does=20not=20mention=20the=20above=20rule.=0D=0A>>=20>=20Why=
+=20would=20you=20need=20to=20disable=20AH8=20before=20using=20UIC=20command=
+=20to=20enter=0D=0A>H8?=0D=0A>>=20>=0D=0A>>=20>=20>=20for=20entry=20into=20=
+hibern8=20in=20the=20next=0D=0A>>=20>=20>=20line(ufshcd_lik_state_transitio=
+n(..))=0D=0A>>=20>=20>=20It=20seem=20right=20to=20send=20after=20disable=20=
+auto=20hibern8.=0D=0A>>=20>=20>=0D=0A>>=20>=20>=20In=20addition,=20if=20the=
+=20auto=20hibern8=20mode=20supported,=20it=20is=20enabled=20in=0D=0A>>=20>=
+=20>=20resume.=0D=0A>>=20>=20>=20So=20it=20seems=20that=20it=20will=20be=20=
+paired=20only=20when=20auto=20hibern8=20is=0D=0A>>=20>=20>=20disabled=20whi=
+le=20entering=20suspend.=0D=0A>>=20>=20>=0D=0A>>=20>=20>=20Signed-off-by:=
+=20SEO=20HOYOUNG=20<hy50.seo=40samsung.com>=0D=0A>>=20>=20>=20---=0D=0A>>=
+=20>=20>=20=20drivers/scsi/ufs/ufshcd.c=20=7C=2014=20++++++++++++++=0D=0A>>=
+=20>=20>=20=201=20file=20changed,=2014=20insertions(+)=0D=0A>>=20>=20>=0D=
+=0A>>=20>=20>=20diff=20--git=20a/drivers/scsi/ufs/ufshcd.c=20b/drivers/scsi=
+/ufs/ufshcd.c=0D=0A>>=20>=20>=20index=20460d2b440d2e..a6edbbd8ca2c=20100644=
+=0D=0A>>=20>=20>=20---=20a/drivers/scsi/ufs/ufshcd.c=0D=0A>>=20>=20>=20+++=
+=20b/drivers/scsi/ufs/ufshcd.c=0D=0A>>=20>=20>=20=40=40=20-254,6=20+254,7=
+=20=40=40=20static=20void=0D=0A>>=20>=20>=20ufshcd_wb_toggle_flush_during_h=
+8(struct=20ufs_hba=20*hba,=20bool=20set);=0D=0A>>=20>=20>=20static=20inline=
+=20void=20ufshcd_wb_toggle_flush(struct=20ufs_hba=20*hba,=0D=0A>>=20>=20>=
+=20bool=20enable);=20=20static=20void=20ufshcd_hba_vreg_set_lpm(struct=20uf=
+s_hba=0D=0A>>=20>=20>=20*hba);=20static=20void=20ufshcd_hba_vreg_set_hpm(st=
+ruct=20ufs_hba=20*hba);=0D=0A>>=20>=20>=20+static=20void=20ufshcd_auto_hibe=
+rn8_disable(struct=20ufs_hba=20*hba);=0D=0A>>=20>=20>=0D=0A>>=20>=20>=20=20=
+static=20inline=20void=20ufshcd_enable_irq(struct=20ufs_hba=20*hba)=20=20=
+=7B=20=40=40=0D=0A>>=20>=20>=20-4204,6=20+4205,18=20=40=40=20void=20ufshcd_=
+auto_hibern8_update(struct=20ufs_hba=0D=0A>>=20>=20>=20*hba,=20u32=20ahit)=
+=20=20=7D=0D=0A>EXPORT_SYMBOL_GPL(ufshcd_auto_hibern8_update);=0D=0A>>=20>=
+=20>=0D=0A>>=20>=20>=20+static=20void=20ufshcd_auto_hibern8_disable(struct=
+=20ufs_hba=20*hba)=20=7B=0D=0A>>=20>=20>=20+=09unsigned=20long=20flags;=0D=
+=0A>>=20>=20>=20+=0D=0A>>=20>=20>=20+=09if=20(=21ufshcd_is_auto_hibern8_sup=
+ported(hba))=0D=0A>>=20>=20>=20+=09=09return;=0D=0A>>=20>=20>=20+=0D=0A>>=
+=20>=20>=20+=09spin_lock_irqsave(hba->host->host_lock,=20flags);=0D=0A>>=20=
+>=20>=20+=09ufshcd_writel(hba,=200,=20REG_AUTO_HIBERNATE_IDLE_TIMER);=0D=0A=
+>>=20>=20>=20+=09spin_unlock_irqrestore(hba->host->host_lock,=20flags);=20=
+=7D=0D=0A>>=20>=20>=20+=0D=0A>>=20>=20>=20=20void=20ufshcd_auto_hibern8_ena=
+ble(struct=20ufs_hba=20*hba)=20=20=7B=0D=0A>>=20>=20>=20=20=09unsigned=20lo=
+ng=20flags;=0D=0A>>=20>=20>=20=40=40=20-8925,6=20+8938,7=20=40=40=20static=
+=20int=20__ufshcd_wl_suspend(struct=0D=0A>>=20>=20>=20ufs_hba=20*hba,=20enu=
+m=20ufs_pm_op=20pm_op)=0D=0A>>=20>=20>=20=20=09=20*=20with=20the=20link=20o=
+ff,=20so=20do=20not=20check=20for=20bkops.=0D=0A>>=20>=20>=20=20=09=20*/=0D=
+=0A>>=20>=20>=20=20=09check_for_bkops=20=3D=20=21ufshcd_is_ufs_dev_deepslee=
+p(hba);=0D=0A>>=20>=20>=20+=09ufshcd_auto_hibern8_disable(hba);=0D=0A>>=20>=
+=20>=20=20=09ret=20=3D=20ufshcd_link_state_transition(hba,=20req_link_state=
+,=0D=0A>>=20>=20>=20check_for_bkops);=0D=0A>>=20>=20>=20=20=09if=20(ret)=0D=
+=0A>>=20>=20>=20=20=09=09goto=20set_dev_active;=0D=0A>=0D=0A>=0D=0A=0D=0A=
+=0D=0A
