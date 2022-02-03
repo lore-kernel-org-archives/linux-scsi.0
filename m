@@ -2,211 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E218C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 15:56:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13CF3C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 16:06:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352032AbiBCP4E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 10:56:04 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:4668 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238210AbiBCP4A (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 10:56:00 -0500
-Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JqNY72zWQz67MpP;
-        Thu,  3 Feb 2022 23:55:23 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Thu, 3 Feb 2022 16:55:58 +0100
-Received: from [10.47.89.50] (10.47.89.50) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 3 Feb
- 2022 15:55:50 +0000
-Message-ID: <098f988e-1f12-c412-3111-60393dfe0f0b@huawei.com>
-Date:   Thu, 3 Feb 2022 15:55:22 +0000
+        id S1352123AbiBCQGl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 11:06:41 -0500
+Received: from mail-pl1-f179.google.com ([209.85.214.179]:41517 "EHLO
+        mail-pl1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229993AbiBCQGk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 11:06:40 -0500
+Received: by mail-pl1-f179.google.com with SMTP id z5so2520817plg.8;
+        Thu, 03 Feb 2022 08:06:40 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=CQl5z9carncWUpCNFDhmSPdjShzBxxx7Om9xnHB+4lM=;
+        b=gOjLlieapzUWlzb3LSnLiE1R6OdidnGchKr7V2soKZ8Ucoc1kHmqGwylRS6X3P+La/
+         70egDDwyncV/ZihJvll8zR8zvw+avm7A2DpuGjdoRe5y3DXh0jMggo1dHOU3TNYDPrZl
+         zYJ5mMg1L9SuKQ00P4QqbPlrTYTXsAKbpUlPW/padiFobSudhqyD+Tokgn7UJ5vrEoLR
+         awm2aMS5NZ4Kisjl6US9wSZmEn33y5PwrPWvEetusXWmdo0yBHXlA47HGlg0H7Ck8/jd
+         sXvJ1hUURopw3jSTKGvcfP/VwtMoDoUTbxPrVwlfNreFFu8jFXUy9+oPQnbjCGoliN6M
+         Hfpw==
+X-Gm-Message-State: AOAM533qMihY3l+srdqrn82qmonz8ZD3ZbAxmQvAdurpIA+w0tUe1tNd
+        WDW5wVitchC6ORvjhttHofA=
+X-Google-Smtp-Source: ABdhPJzhK8+95Srk1qUADNs99c7AM9hHsV465MsjDTT3FGN90VtQxc49I1xXzkBKwhRQs7yApS+AYA==
+X-Received: by 2002:a17:903:2305:: with SMTP id d5mr35376153plh.122.1643904399872;
+        Thu, 03 Feb 2022 08:06:39 -0800 (PST)
+Received: from garbanzo (136-24-173-63.cab.webpass.net. [136.24.173.63])
+        by smtp.gmail.com with ESMTPSA id t7sm28321189pfj.138.2022.02.03.08.06.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Feb 2022 08:06:37 -0800 (PST)
+Date:   Thu, 3 Feb 2022 08:06:33 -0800
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Adam Manzanares <a.manzanares@samsung.com>
+Cc:     Mikulas Patocka <mpatocka@redhat.com>,
+        Javier =?utf-8?B?R29uesOhbGV6?= <javier@javigon.com>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "msnitzer@redhat.com >> msnitzer@redhat.com" <msnitzer@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "martin.petersen@oracle.com >> Martin K. Petersen" 
+        <martin.petersen@oracle.com>,
+        "roland@purestorage.com" <roland@purestorage.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "kbus @imap.gmail.com>> Keith Busch" <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
+        "zach.brown@ni.com" <zach.brown@ni.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
+        "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.com" <jack@suse.com>,
+        Kanchan Joshi <joshi.k@samsung.com>
+Subject: Re: [RFC PATCH 3/3] nvme: add the "debug" host driver
+Message-ID: <20220203160633.rdwovqoxlbr3nu5u@garbanzo>
+References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com>
+ <20220201102122.4okwj2gipjbvuyux@mpHalley-2>
+ <alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com>
+ <CGME20220201183359uscas1p2d7e48dc4cafed3df60c304a06f2323cd@uscas1p2.samsung.com>
+ <alpine.LRH.2.02.2202011333160.22481@file01.intranet.prod.int.rdu2.redhat.com>
+ <20220202060154.GA120951@bgt-140510-bm01>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 00/16] scsi: libsas and users: Factor out LLDD TMF code
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <artur.paszkiewicz@intel.com>, <jinpu.wang@cloud.ionos.com>,
-        <chenxiang66@hisilicon.com>, <Ajish.Koshy@microchip.com>
-CC:     <yanaijie@huawei.com>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>, <liuqi115@huawei.com>,
-        <Viswas.G@microchip.com>
-References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
- <1893d9ef-042b-af3b-74ea-dd4d0210c493@opensource.wdc.com>
- <14df160f-c0f2-cc9f-56d4-8eda67969e0b@huawei.com>
- <a8fae323-1877-058a-b03e-d175a725213f@opensource.wdc.com>
- <a2de1656-b1ec-2fb7-caab-657e27dacb48@huawei.com>
- <49da4d80-5cc3-35c3-ccaa-6def8165eb65@huawei.com>
- <59a198a8-1d87-bc09-d2d8-2d495ed74c16@opensource.wdc.com>
-In-Reply-To: <59a198a8-1d87-bc09-d2d8-2d495ed74c16@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.47.89.50]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220202060154.GA120951@bgt-140510-bm01>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 03/02/2022 09:44, Damien Le Moal wrote:
+On Wed, Feb 02, 2022 at 06:01:13AM +0000, Adam Manzanares wrote:
+> BTW I think having the target code be able to implement simple copy without 
+> moving data over the fabric would be a great way of showing off the command.
 
-Hi Damien,
+Do you mean this should be implemented instead as a fabrics backend
+instead because fabrics already instantiates and creates a virtual
+nvme device? And so this would mean less code?
 
->>>> [  385.102073] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
->>>> [  385.108026] sas: sas_scsi_find_task: aborting task 0x000000007068ed73
->>>> [  405.561099] pm80xx0:: pm8001_exec_internal_task_abort  757:TMF task
-
-Contrary to mentioning TMF in the log, this is not a TMF but rather an 
-internal abort timing out. I don't think that this should ever happen. 
-This command should just abort pending IO commands in the controller and 
-not send anything to the target. So for this to timeout means a HW fault 
-or driver bug. And I did not touch this code for pm8001.
-
->>>> timeout.
->>>> [  405.568236] sas: sas_scsi_find_task: task 0x000000007068ed73 is
->>>> aborted
->>>> [  405.574930] sas: sas_eh_handle_sas_errors: task 0x000000007068ed73 is
->>>> aborted
->>>> [  411.192602] ata21.00: qc timeout (cmd 0xec)
->>>> [  431.672122] pm80xx0:: pm8001_exec_internal_task_abort  757:TMF task
->>>> timeout.
->>>> [  431.679282] ata21.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>> [  431.685544] ata21.00: revalidation failed (errno=-5)
->>>> [  441.911948] ata21.00: qc timeout (cmd 0xec)
->>>> [  462.391545] pm80xx0:: pm8001_exec_internal_task_abort  757:TMF task
->>>> timeout.
->>>> [  462.398696] ata21.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>> [  462.404992] ata21.00: revalidation failed (errno=-5)
->>>> [  492.598769] ata21.00: qc timeout (cmd 0xec)
->>>> ...
->>>>
-
-Do you have a fuller dmesg with my series?
-
-...
-
->> }
->> - res = -TMF_RESP_FUNC_FAILED;
->> + res = TMF_RESP_FUNC_FAILED;
->>
->> That's effectively the same as what I have in this series in
->> sas_execute_tmf().
->>
->> However your testing is a SATA device, which I'll check further.
-> This did not help. Still seeing 100% reproducible hangs.
-
-OK, but I think that we should also have this change as the mainline 
-codes looks broken to be begin with:
-
---->8 ---
-
-[PATCH] scsi: libsas: Handle all errors in sas_scsi_find_task()
-
-LLDD TMFs callbacks may return linux or other error codes instead of TMF
-codes. This may cause problems in sas_scsi_find_task() ->
-.lldd_query_task(), as only TMF codes are handled there. As such, we may
-not return a task_disposition type. Function sas_eh_handle_sas_errors() 
-only handles that type, and may exit error
-handling early for unrecognised types.
-
-So use TASK_ABORT_FAILED for non-TMF types returned from
-.lldd_query_task(), on the assumption that the command may still be 
-alive and error handling should be escalated.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
-
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c 
-b/drivers/scsi/libsas/sas_scsi_host.c
-index 53d8b7ede0cd..02274f471308 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -316,8 +316,11 @@ static enum task_disposition 
-sas_scsi_find_task(struct sas_task *task)
-  				pr_notice("%s: task 0x%p failed to abort\n",
-  					  __func__, task);
-  				return TASK_ABORT_FAILED;
-+			default:
-+				pr_notice("%s: task 0x%p result code %d not handled, assuming 
-failed\n",
-+					  __func__, task, res);
-+				return TASK_ABORT_FAILED;
-  			}
--
-  		}
-  	}
-  	return res;
-
----8< ----
-
-> 
-> I did a lot of testing/digging today, 
-
-Thanks for the effort!
-
- > and the hang cause seems to be
- > missing task completions.
-> At random, a task times out as its completion
-
-That sounds fimilar to my general issue running this driver on an arm64 
-host...
-
-> does not come, and subsequent abort trial for the task fail, revalidate
-> fails
-
-I assume SMP IOs fail if revalidation fails - if this is the case, then 
-the controller seems to be in bad state.
-
-> and the device is dropped (capacity goes to 0). But at that point,
-> doing rmmod/modprobe to reset the device does not work. sync cache
-> command issued at rmmod time never completes. I end up needing to power
-> cycle the machine every time...
-> 
-> No clue about the root cause yet, but it definitely seem to be related
-> to NCQ/high QD operation. If I force my tests to use non-NCQ commands,
-> everything is fine and the tests run to completion without any issue.
-> 
-> I wonder if their is a tag management bug somewhere...
-
-Maybe. Not sure.
-
-On a related point, Hannes' change here could avoid it:
-
-https://lore.kernel.org/linux-scsi/20210222132405.91369-32-hare@suse.de/
-
-> 
-> I did stumble on something very ugly in libsas too: sas_ata_qc_issue()
-> drops and retake the ata port lock. No other ATA driver do that since
-> the ata completion also take that lock. The ata port lock is taken
-> before ata_qc_issue() is called with IRQ disabled (spin_lock_irqsave()).
-> So doing a spin_unlock()/spin_lock() in sas_ata_qc_issue() (called from
-> ata_qc_issue()) seems like a very bad idea. I removed that and
-> everything work the same way (the lld execute does not sleep). But that
-> did not solve the hang problem.
-
-I would need to check why this is done again. Before my time...
-
-> 
-> Of note is this is all with your libsas patches applied. Without the
-> patches, I have KASAN screaming at me about use-after-free in completion
-> context. With your patches, KASAN is silent.
-> 
-> Another thing: this driver does not allow changing the max qd... Very
-> annoying.
-> 
-> echo 1 > /sys/block/sdX/device/queue_depth
-> 
-> has no effect. QD stays at 32 for an ATA drive. Need to look into that too.
-
-I had a look at this. It seems that we fail in 
-__ata_change_queue_depth() -> ata_scsi_find_dev() returning NULL.
-
-Thanks again for your effort, I will continue to look.
-
-john
+  Luis
