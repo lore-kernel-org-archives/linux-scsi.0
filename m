@@ -2,50 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25980C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 06:52:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87711C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 06:53:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241260AbiBCGw5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 01:52:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39374 "EHLO
+        id S241903AbiBCGxR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 01:53:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39446 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231546AbiBCGw5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 01:52:57 -0500
+        with ESMTP id S241737AbiBCGxQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 01:53:16 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E190C061714;
-        Wed,  2 Feb 2022 22:52:57 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59FD2C061714;
+        Wed,  2 Feb 2022 22:53:15 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id DB3B7B8332E;
-        Thu,  3 Feb 2022 06:52:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F697C340EF;
-        Thu,  3 Feb 2022 06:52:54 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 22C64B8332E;
+        Thu,  3 Feb 2022 06:53:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D305DC340EF;
+        Thu,  3 Feb 2022 06:53:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643871174;
-        bh=bQxNuzvd1NM85jWwBcGAqaV6HQIXXxsxaFuHH++hW7E=;
+        s=k20201202; t=1643871192;
+        bh=WenU48FmCsRXtCZxwexU9p6lhljp4WYlPcsszw9XORU=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=iPbpEmktfL9wAfd2rEXXQYwp598ykoFr0shqwRD1nhljEPqm+HwJiO/RRKiQrBSjt
-         kKkX0vDfM9P85hrn24JsdN0FB+hnSG5L/JsDcP/1HuvSZblcNw5QzTZ2EHSSmE/rxV
-         K5ORVz1Ix49xspsShyowknTYrcaFY7XXiwuUIQcS03QSN7E8F6eRU6dbfm3qMplrzr
-         6RV76AVCnbpqW3HZHjEIrVi4j1VLWrimfdLituSgy1AtFBUycK7+VuLYIuJcaG+EXl
-         7rXDBI235wStl7I+3ehox9dtxhEiWv5esbeNIUpwsTlgxi7soKGu/eujK7GdFG1glL
-         IM/RmMpwWqInA==
-Received: by mail-yb1-f178.google.com with SMTP id k31so6012672ybj.4;
-        Wed, 02 Feb 2022 22:52:54 -0800 (PST)
-X-Gm-Message-State: AOAM532iwNB+3mUTmNjOzwLdLg1x4NcUObLskZCeyFR8g+ygmymBGT2G
-        BAnGwugmYC/bSzevUv0eGTR2yQWx4iYwvn+FTNM=
-X-Google-Smtp-Source: ABdhPJzwJ0DbTYyJkcuswrMZpwnbGZY1uWmUwDdpvFt/VC5AfRTLfAZVuYfLI6fv7rEIORSNR7KZqGQLnPzqXKEmQ4A=
-X-Received: by 2002:a05:6902:5:: with SMTP id l5mr666337ybh.558.1643871173727;
- Wed, 02 Feb 2022 22:52:53 -0800 (PST)
+        b=u8ie2rEBIQdJaxU79YHCXi6gou+iDilTeSl6MgVjVWLTdf1AO4P6YS2IyJdAqASdQ
+         WjZK+Pb1uMJCGqW6t1W0MQA9Ru1gR+0XcI5DpPHYw7Kbt4Ld9siOhS0Jj5gzhdZ+Sp
+         o+vpBSBjIoFBpR5y/7cYDc3vkuE0lvMqmcSMpMyvw86/AlhSRrreyrSeISVNIwCNKJ
+         FD0aOalNKdC5TQAf1sCmxSz4LAAHAk9oUcBqc5fkBDR2gQzqd2IOBB3xxuHdmOPHFp
+         6X7OXvVXaAl+tdqzcWUHHjeMvkANo1p7+TsrEve/fH0ZRWhmguum86JYh6W24HbU19
+         cIkkX2DEHjFcw==
+Received: by mail-yb1-f171.google.com with SMTP id j2so6183024ybu.0;
+        Wed, 02 Feb 2022 22:53:12 -0800 (PST)
+X-Gm-Message-State: AOAM533BNcNT0fNVUiHMIaXcd4v7jH7p3R7WsmtN6r7icuYiR5K086W2
+        5HwvyQmBRCZoUxsuM4iUq+OjxJrTM6XNiF7Eqz8=
+X-Google-Smtp-Source: ABdhPJxXg9DvcWV8iQ1KPhbXDWRUr0+104btYSUwLMFt3E//vBO5JRslLV5mg7SE57M2ExF+aMnB5AT0v36QJMgc0us=
+X-Received: by 2002:a25:27c8:: with SMTP id n191mr14920691ybn.670.1643871192015;
+ Wed, 02 Feb 2022 22:53:12 -0800 (PST)
 MIME-Version: 1.0
-References: <20220203064009.1795344-1-song@kernel.org> <20220203064009.1795344-2-song@kernel.org>
-In-Reply-To: <20220203064009.1795344-2-song@kernel.org>
+References: <20220203064009.1795344-1-song@kernel.org> <20220203064009.1795344-3-song@kernel.org>
+In-Reply-To: <20220203064009.1795344-3-song@kernel.org>
 From:   Song Liu <song@kernel.org>
-Date:   Wed, 2 Feb 2022 22:52:42 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW6PNaYUb5xDxPX_gX=2fZdiRURRos5sT_Tsbngon1+eKw@mail.gmail.com>
-Message-ID: <CAPhsuW6PNaYUb5xDxPX_gX=2fZdiRURRos5sT_Tsbngon1+eKw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] block: introduce BLK_STS_OFFLINE
+Date:   Wed, 2 Feb 2022 22:53:01 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5DitVaUG-z35Si0bMERQdGAF60Tj3nD7DwmKhZVxs9AA@mail.gmail.com>
+Message-ID: <CAPhsuW5DitVaUG-z35Si0bMERQdGAF60Tj3nD7DwmKhZVxs9AA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] scsi: use BLK_STS_OFFLINE for not fully online devices
 To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 Cc:     Kernel Team <kernel-team@fb.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -60,49 +60,30 @@ CC linux-block (it was a typo in the original email)
 
 On Wed, Feb 2, 2022 at 10:40 PM Song Liu <song@kernel.org> wrote:
 >
-> Currently, drivers reports BLK_STS_IOERR for devices that are not full
-> online or being removed. This behavior could cause confusion for users,
-> as they are not really I/O errors from the device.
+> The new error message for such case looks like
 >
-> Solve this issue with a new state BLK_STS_OFFLINE, which reports "device
-> offline error" in dmesg instead of "I/O error".
+> [  172.809565] device offline error, dev sda, sector 3138208 ...
+>
+> which will not be confused with regular I/O error (BLK_STS_IOERR).
 >
 > Signed-off-by: Song Liu <song@kernel.org>
 > ---
->  block/blk-core.c          | 1 +
->  include/linux/blk_types.h | 7 +++++++
->  2 files changed, 8 insertions(+)
+>  drivers/scsi/scsi_lib.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 61f6a0dc4511..24035dd2eef1 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -164,6 +164,7 @@ static const struct {
->         [BLK_STS_RESOURCE]      = { -ENOMEM,    "kernel resource" },
->         [BLK_STS_DEV_RESOURCE]  = { -EBUSY,     "device resource" },
->         [BLK_STS_AGAIN]         = { -EAGAIN,    "nonblocking retry" },
-> +       [BLK_STS_OFFLINE]       = { -EIO,       "device offline" },
->
->         /* device mapper special case, should not leak out: */
->         [BLK_STS_DM_REQUEUE]    = { -EREMCHG, "dm internal retry" },
-> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-> index fe065c394fff..5561e58d158a 100644
-> --- a/include/linux/blk_types.h
-> +++ b/include/linux/blk_types.h
-> @@ -153,6 +153,13 @@ typedef u8 __bitwise blk_status_t;
->   */
->  #define BLK_STS_ZONE_ACTIVE_RESOURCE   ((__force blk_status_t)16)
->
-> +/*
-> + * BLK_STS_OFFLINE is returned from the driver when the target device is offline
-> + * or is being taken offline. This could help differentiate the case where a
-> + * device is intentionally being shut down from a real I/O error.
-> + */
-> +#define BLK_STS_OFFLINE                ((__force blk_status_t)17)
-> +
->  /**
->   * blk_path_error - returns true if error may be path related
->   * @error: status the request was completed with
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 0a70aa763a96..e30bc51578e9 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1276,7 +1276,7 @@ scsi_device_state_check(struct scsi_device *sdev, struct request *req)
+>                  * power management commands.
+>                  */
+>                 if (req && !(req->rq_flags & RQF_PM))
+> -                       return BLK_STS_IOERR;
+> +                       return BLK_STS_OFFLINE;
+>                 return BLK_STS_OK;
+>         }
+>  }
 > --
 > 2.30.2
 >
