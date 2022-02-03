@@ -2,41 +2,44 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA0EC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B309C43219
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:31:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354250AbiBCUbx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 15:31:53 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:36648 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354399AbiBCUbS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:31:18 -0500
+        id S1354542AbiBCUbz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 15:31:55 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:34354 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1354212AbiBCUbO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:31:14 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CC1A561A5C;
-        Thu,  3 Feb 2022 20:31:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48240C340F0;
-        Thu,  3 Feb 2022 20:31:16 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1895CB835A4;
+        Thu,  3 Feb 2022 20:31:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D7CFC340E8;
+        Thu,  3 Feb 2022 20:31:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643920277;
-        bh=JVnRg65Qwa1/CD39njIMCAjJPJZ+EuC+Z6Vt+4qdiKQ=;
+        s=k20201202; t=1643920271;
+        bh=WoggJfzxZcsMjHbc6cnyNwotPtNHvkZ1EEsQdBd98pI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZkK9ed94kKDbdXahWNegg56NkWzGaBg5YrmzCvMr8Mq8d6uu33heyZAwlU/VQLbeZ
-         mKmBhiI4yck3y+2pyb54RsWPzpA/e3rsVJoMtOuezAQljhK+DaETygNG0NOXkRm+YW
-         jsHOsgcnY9mtOsD8QFDu0sRfi1zrABqWGi0zWAfTMX9ps9fuk4OE3k9Xn/RBGonIN/
-         3rwSIbz3MI04+n9GZFkLiSdcx93JqH1HHITxej5Qtq3v5AYwbtHJGUW7jLAXpkmp76
-         /u4bEdS9lJPOM261fXE5BtrQ/su91mNoQtVf53Xzaoc9+6nyLnQeUXGW8mbebDexrO
-         oA+idKiRlJNcg==
+        b=JzeXohw1OAujYRIx3j/FOaGx7WYwkKHztNReDLfCkyp8en+iWm/bvTY8xjSQr5308
+         CwzG7Fz0sNWiPSB8jq2atSaILyd2isTsGNKRTkko++yb+Wsti8l4paq4U00kMgiAVB
+         C3sGpn5PgN9HVXBViW2sncoAuthZsDU+HFYkiRvX9gy6JvcJi7Q584TjkMQ/kdx9pi
+         NfVbxocdwRKYOzBRHM3TenhT9HSbgqS1EwbrkWtSmj4Aw/y5h/iZMynuQLZmnMx9xo
+         24/d7PBZ9+K/2sFns9BG9v6JBWQvNt5vXcQBu/j4ABR8RywGk1Vit/n2fXWWn6hfhq
+         l3QHhPWvAQHNA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tong Zhang <ztong0001@gmail.com>, Hannes Reinecke <hare@suse.de>,
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, hare@kernel.org,
-        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 34/52] scsi: myrs: Fix crash in error case
-Date:   Thu,  3 Feb 2022 15:29:28 -0500
-Message-Id: <20220203202947.2304-34-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        beanhuo@micron.com, avri.altman@wdc.com, daejun7.park@samsung.com,
+        adrian.hunter@intel.com, cang@codeaurora.org,
+        asutoshd@codeaurora.org, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.16 32/52] scsi: ufs: Use generic error code in ufshcd_set_dev_pwr_mode()
+Date:   Thu,  3 Feb 2022 15:29:26 -0500
+Message-Id: <20220203202947.2304-32-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220203202947.2304-1-sashal@kernel.org>
 References: <20220203202947.2304-1-sashal@kernel.org>
@@ -48,46 +51,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tong Zhang <ztong0001@gmail.com>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
 
-[ Upstream commit 4db09593af0b0b4d7d4805ebb3273df51d7cc30d ]
+[ Upstream commit ad6c8a426446873febc98140d81d5353f8c0825b ]
 
-In myrs_detect(), cs->disable_intr is NULL when privdata->hw_init() fails
-with non-zero. In this case, myrs_cleanup(cs) will call a NULL ptr and
-crash the kernel.
+The return value of ufshcd_set_dev_pwr_mode() is passed to device PM
+core. However, the function currently returns a SCSI result which the PM
+core doesn't understand.  This might lead to unexpected behaviors in
+userland; a platform reset was observed in Android.
 
-[    1.105606] myrs 0000:00:03.0: Unknown Initialization Error 5A
-[    1.105872] myrs 0000:00:03.0: Failed to initialize Controller
-[    1.106082] BUG: kernel NULL pointer dereference, address: 0000000000000000
-[    1.110774] Call Trace:
-[    1.110950]  myrs_cleanup+0xe4/0x150 [myrs]
-[    1.111135]  myrs_probe.cold+0x91/0x56a [myrs]
-[    1.111302]  ? DAC960_GEM_intr_handler+0x1f0/0x1f0 [myrs]
-[    1.111500]  local_pci_probe+0x48/0x90
+Use a generic error code for SSU failures.
 
-Link: https://lore.kernel.org/r/20220123225717.1069538-1-ztong0001@gmail.com
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Tong Zhang <ztong0001@gmail.com>
+Link: https://lore.kernel.org/r/1642743182-54098-1-git-send-email-kwmad.kim@samsung.com
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/myrs.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
-index 6ea323e9a2e34..f6dbc8f2f60a3 100644
---- a/drivers/scsi/myrs.c
-+++ b/drivers/scsi/myrs.c
-@@ -2269,7 +2269,8 @@ static void myrs_cleanup(struct myrs_hba *cs)
- 	myrs_unmap(cs);
- 
- 	if (cs->mmio_base) {
--		cs->disable_intr(cs);
-+		if (cs->disable_intr)
-+			cs->disable_intr(cs);
- 		iounmap(cs->mmio_base);
- 		cs->mmio_base = NULL;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c94377aa82739..ec7d7e01231d7 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8587,7 +8587,7 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
+  * @pwr_mode: device power mode to set
+  *
+  * Returns 0 if requested power mode is set successfully
+- * Returns non-zero if failed to set the requested power mode
++ * Returns < 0 if failed to set the requested power mode
+  */
+ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 				     enum ufs_dev_pwr_mode pwr_mode)
+@@ -8641,8 +8641,11 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 		sdev_printk(KERN_WARNING, sdp,
+ 			    "START_STOP failed for power mode: %d, result %x\n",
+ 			    pwr_mode, ret);
+-		if (ret > 0 && scsi_sense_valid(&sshdr))
+-			scsi_print_sense_hdr(sdp, NULL, &sshdr);
++		if (ret > 0) {
++			if (scsi_sense_valid(&sshdr))
++				scsi_print_sense_hdr(sdp, NULL, &sshdr);
++			ret = -EIO;
++		}
  	}
+ 
+ 	if (!ret)
 -- 
 2.34.1
 
