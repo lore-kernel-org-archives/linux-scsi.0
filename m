@@ -2,222 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D159C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 09:44:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D04BC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 13:47:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233648AbiBCJor (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 04:44:47 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:33449 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230255AbiBCJoq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 04:44:46 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1643881486; x=1675417486;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=0MsgAbh4rKd/AIf146X9JE/f/GdvqrG2XuzNyTCdjlY=;
-  b=PQRiP6ti9KIUvAIsUCi4pcvTHMarPbsxseITgIGvzr5cG6KK6s+Q+6yU
-   BBwh5IlAYrbEapevYAsaB9wwhAzisugcIRIc/BNzz0776qNPwHmOCAPu6
-   HQ/SshFqf45yk1DNYaXML1R/sytKM0G4hBy9HfmUCxTcEzw7NcAIh96kt
-   eTQBR0R8s77IkJdBjTvugHIKOG/d9oR8POqEbktrLrRR9LwYh9lgC8AU4
-   rUwOO4nFJLecmjPmyzC70uG4IHeJ4pWSwCGkanA77iXyzD6YHKnKZpgTt
-   5T/m7jxsHMu9qvZ41KEaGn9UkLty0uw3cs6k53/9VlN1OTrxcemJE3EM6
-   w==;
-X-IronPort-AV: E=Sophos;i="5.88,339,1635177600"; 
-   d="scan'208";a="303965959"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 03 Feb 2022 17:44:40 +0800
-IronPort-SDR: fDqIN+FvjSC9hNIUxdrbGuTRrWhXU5yE9pTfge2lfzvXBHvcAjWdqHqJEQ/+83FYvuV5RvWnuO
- kEz+/lMD65lEQ0FKUOBoRD8TTkgdEXVZ9AHJirFnIYooZXH2tZSjD5OEJcysJ7gM4DQE2s7zum
- xP1ncMqBovuna3NVMRQwCz7LPFQCvga73THNV8li/OhiMXMWu7tqpRtO/8lW2GZ8mMZ5jv8n2o
- XTZETDRp+1jKFAGochXxKdmsoGFo49Q3ZV5IYIiJ07hE1o6VpJQG+MYhT9aptJP1V+qEVUmVYO
- UqGwJg2lh8NhDPMkFTLxPqXw
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Feb 2022 01:16:35 -0800
-IronPort-SDR: ypAQsoZMTrzZEklvlhNiCYiGmj29oMaOFZkbH7byiufV7jpMa8WD9DHc+CY3vvWVX/4OhOjk8Z
- LEmmQlyl65w9RvecW6Ptr/SMF8FRO+B+plaGYGAjJamBCoPoiftz/Lr2FW3gFuogTNVMvHBolh
- nfvSp0uPieOIgO/WOwlCgztbhOaYItPN47BKM8IwdumGJNFlKZIUPjKlbSemhZUihAtui6qqIZ
- 5vGp5NhIX5z6UgrUlGfHy1gxYypsbqwCNe6GkdszXQGzRMqNAU35B1CAQDYnqYRjDItlOaYaOB
- qrU=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Feb 2022 01:44:39 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JqDKL2NlGz1SVp1
-        for <linux-scsi@vger.kernel.org>; Thu,  3 Feb 2022 01:44:38 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1643881477; x=1646473478; bh=0MsgAbh4rKd/AIf146X9JE/f/GdvqrG2Xuz
-        NyTCdjlY=; b=KjeOCQ3pxKjRqFH2gcgCuVolPqLaUgQ4kN+pR/wcJu4dLeBEfZx
-        zbjNWPVbgSWDAj3NShyvcEMBpqHR0R9m328b4mPN+NAM24aFvnzl1wLEVzaYK0iQ
-        ZPotoS4w5S1/p+qFaFnYDv6OC6fs4hp2MkgqnQDDldB7Jya1JgmRdInmd7ufaHPn
-        qHK26RLiA1mamuE20a1Vo93j5Hb6BiNY6QOIdDP5rMC4yv9CNP93s0XGLvP2BJer
-        wCUH5I6qpK0F6DJRGT5DkLZwi1xVT9lyW9xZfTykSXPfJvhRo/wo5nECBNFwyzq5
-        AvcbHZlX8gGz8ypFQs0Cywdd8fbJutuLhvA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id hlYEvG_mFZp3 for <linux-scsi@vger.kernel.org>;
-        Thu,  3 Feb 2022 01:44:37 -0800 (PST)
-Received: from [10.225.163.63] (unknown [10.225.163.63])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JqDKG6bG9z1Rwrw;
-        Thu,  3 Feb 2022 01:44:34 -0800 (PST)
-Message-ID: <59a198a8-1d87-bc09-d2d8-2d495ed74c16@opensource.wdc.com>
-Date:   Thu, 3 Feb 2022 18:44:33 +0900
+        id S241277AbiBCNrH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 08:47:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47594 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230098AbiBCNrH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 08:47:07 -0500
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7120FC06173B
+        for <linux-scsi@vger.kernel.org>; Thu,  3 Feb 2022 05:47:07 -0800 (PST)
+Received: by mail-pj1-x1029.google.com with SMTP id o16-20020a17090aac1000b001b62f629953so10046885pjq.3
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Feb 2022 05:47:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=4lH2VgPBXYRbIhRugnUOELNcQmdFJ96oasF65A9Co/Q=;
+        b=4PvRoUTgpElxfl/Go44GA2aaNrScwzjhcWR99CInOd7e1l5EZj2NAPZZIURjbYZWzq
+         JtR4InT15njGIPaeLn+76hBlX6Oj7FO5myCTILI5SEAI3/gIokoEiWOHaoJT6RNGDm96
+         s2bh9qgnzvypbzsa9RP63SfDS1nnQubTIGSEnGf1vodzaMwigBHzudA4gjkp3N9XWzvy
+         P8UQ5jLKH/idWYjzg8PayenbtEK3naZXT1nDMuqUMFNg5U1/LOK+E3dXKDGio2da+mkF
+         INbaGB56lah1TXPk3PpUQB2mts4P/srDseppvn0Ndo9Y024IUTCmG2/xlEabHKBXz4ou
+         fF7g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=4lH2VgPBXYRbIhRugnUOELNcQmdFJ96oasF65A9Co/Q=;
+        b=peULauTGy5I8UDj91ipUbWTvY5t/2p5AmRfrp3nrevCpkZ8kl/YI40NIkWL2xSmcLS
+         OXBTnEKVwQmYIEr9eudOxjmTqvX1gD60HOiDP/vQ6v1FuHBXxUKo7REIod3dFov2/0eG
+         qxH5/TBjseKW70sHiGP5p35bT4+Y17h1iMP0F5luu7FgjtZdW1DYgOWTDnHegEtTgZou
+         EN9AwiT13ud+526Xc3oiwDwSLkNlaib8vcJuUIbxebEADaqZBgfEVQT4K4uq8ofUwzG1
+         XqhNMdPFzWRyLDhn5zxW6Jl1PyCPK7C4hymNx87rKWeszUkaxWmTnnFDvr37tv4lBV7b
+         80aQ==
+X-Gm-Message-State: AOAM532Vly+MAquCNw4YI8HLDobeQfugOkfveUEYI2Tv1oLfLnAQxRfQ
+        z4jTBfvxk1Wlexe7bus1whG4zQ==
+X-Google-Smtp-Source: ABdhPJy4n/BftDa7LWNvKG9wfAOMBEYieimwvOR+N8ucNn6mXZkLOo/h1yGZrveoUe6eZYLz9PpZEQ==
+X-Received: by 2002:a17:902:d50f:: with SMTP id b15mr1634677plg.54.1643896026771;
+        Thu, 03 Feb 2022 05:47:06 -0800 (PST)
+Received: from [192.168.1.116] ([66.219.217.159])
+        by smtp.gmail.com with ESMTPSA id e3sm22669698pgc.41.2022.02.03.05.47.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 03 Feb 2022 05:47:06 -0800 (PST)
+Subject: Re: [PATCH 1/2] block: introduce BLK_STS_OFFLINE
+To:     Hannes Reinecke <hare@suse.de>, Song Liu <song@kernel.org>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Cc:     Kernel Team <kernel-team@fb.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20220203064009.1795344-1-song@kernel.org>
+ <20220203064009.1795344-2-song@kernel.org>
+ <CAPhsuW6PNaYUb5xDxPX_gX=2fZdiRURRos5sT_Tsbngon1+eKw@mail.gmail.com>
+ <f7489746-b8fb-bc9a-a706-e5926fa9e325@suse.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <27583256-dc7d-74bd-115c-b0c835cd5c1b@kernel.dk>
+Date:   Thu, 3 Feb 2022 06:47:05 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH 00/16] scsi: libsas and users: Factor out LLDD TMF code
+In-Reply-To: <f7489746-b8fb-bc9a-a706-e5926fa9e325@suse.de>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, artur.paszkiewicz@intel.com,
-        jinpu.wang@cloud.ionos.com, chenxiang66@hisilicon.com,
-        Ajish.Koshy@microchip.com
-Cc:     yanaijie@huawei.com, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com, liuqi115@huawei.com, Viswas.G@microchip.com
-References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
- <1893d9ef-042b-af3b-74ea-dd4d0210c493@opensource.wdc.com>
- <14df160f-c0f2-cc9f-56d4-8eda67969e0b@huawei.com>
- <a8fae323-1877-058a-b03e-d175a725213f@opensource.wdc.com>
- <a2de1656-b1ec-2fb7-caab-657e27dacb48@huawei.com>
- <49da4d80-5cc3-35c3-ccaa-6def8165eb65@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <49da4d80-5cc3-35c3-ccaa-6def8165eb65@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/1/22 00:58, John Garry wrote:
-> On 28/01/2022 09:09, John Garry wrote:
->>> I ran some more tests. In particular, I ran libzbc compliance tests o=
-n a
->>> 20TB SMR drives. All tests pass with 5.17-rc1, but after applying you=
-r
->>> series, I see command timeout that take forever to recover from, with
->>> the drive revalidation failing after that.
->>>
->>> [=C2=A0 385.102073] sas: Enter sas_scsi_recover_host busy: 1 failed: =
-1
->>> [=C2=A0 385.108026] sas: sas_scsi_find_task: aborting task 0x00000000=
-7068ed73
->>> [=C2=A0 405.561099] pm80xx0:: pm8001_exec_internal_task_abort=C2=A0 7=
-57:TMF task
->>> timeout.
->>> [=C2=A0 405.568236] sas: sas_scsi_find_task: task 0x000000007068ed73 =
-is=20
->>> aborted
->>> [=C2=A0 405.574930] sas: sas_eh_handle_sas_errors: task 0x00000000706=
-8ed73 is
->>> aborted
->>> [=C2=A0 411.192602] ata21.00: qc timeout (cmd 0xec)
->>> [=C2=A0 431.672122] pm80xx0:: pm8001_exec_internal_task_abort=C2=A0 7=
-57:TMF task
->>> timeout.
->>> [=C2=A0 431.679282] ata21.00: failed to IDENTIFY (I/O error, err_mask=
-=3D0x4)
->>> [=C2=A0 431.685544] ata21.00: revalidation failed (errno=3D-5)
->>> [=C2=A0 441.911948] ata21.00: qc timeout (cmd 0xec)
->>> [=C2=A0 462.391545] pm80xx0:: pm8001_exec_internal_task_abort=C2=A0 7=
-57:TMF task
->>> timeout.
->>> [=C2=A0 462.398696] ata21.00: failed to IDENTIFY (I/O error, err_mask=
-=3D0x4)
->>> [=C2=A0 462.404992] ata21.00: revalidation failed (errno=3D-5)
->>> [=C2=A0 492.598769] ata21.00: qc timeout (cmd 0xec)
->>> ...
->>>
->>> So there is a problem. Need to dig into this. I see this issue only w=
-ith
->>> libzbc passthrough tests. fio runs with libaio are fine.
+On 2/3/22 12:24 AM, Hannes Reinecke wrote:
+> On 2/3/22 07:52, Song Liu wrote:
+>> CC linux-block (it was a typo in the original email)
 >>
->> Thanks for the notice. I think that I also saw a hang, but, IIRC, it=20
->> happened on mainline for me - but it's hard to know if I broke somethi=
-ng=20
->> if it is already broke in another way. That is why I wanted this card=20
->> working properly...
->=20
-> Hi Damien,
->=20
->  From testing mainline, I can see a hang on my arm64 system for SAS=20
-> disks. I think that the reason is the we don't finish some commands in=20
-> EH properly for pm8001:
-> - In EH, we attempt to abort the task in sas_scsi_find_task() ->=20
-> lldd_abort_task()
-> The default return from pm8001_exec_internal_tmf_task() is=20
-> -TMF_RESP_FUNC_FAILED, so if the TMF does not execute properly we retur=
-n=20
-> this value
-> - sas_scsi_find_task() cannot handle -TMF_RESP_FUNC_FAILED, and returns=
-=20
-> -TMF_RESP_FUNC_FAILED directly to sas_eh_handle_sas_errors(), which,=20
-> again, does not handle -TMF_RESP_FUNC_FAILED. So we don't progress to=20
-> ever finish the comand.
->=20
-> This looks like the correct fix for mainline:
->=20
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -766,7 +766,7 @@ static int pm8001_exec_internal_tmf_task(struct=20
-> domain_device *dev,
-> pm8001_dev, DS_OPERATIONAL);
-> wait_for_completion(&completion_setstate);
-> }
-> - res =3D -TMF_RESP_FUNC_FAILED;
-> + res =3D TMF_RESP_FUNC_FAILED;
->=20
-> That's effectively the same as what I have in this series in=20
-> sas_execute_tmf().
->=20
-> However your testing is a SATA device, which I'll check further.
+>> On Wed, Feb 2, 2022 at 10:40 PM Song Liu <song@kernel.org> wrote:
+>>>
+>>> Currently, drivers reports BLK_STS_IOERR for devices that are not full
+>>> online or being removed. This behavior could cause confusion for users,
+>>> as they are not really I/O errors from the device.
+>>>
+>>> Solve this issue with a new state BLK_STS_OFFLINE, which reports "device
+>>> offline error" in dmesg instead of "I/O error".
+>>>
+>>> Signed-off-by: Song Liu <song@kernel.org>
+>>> ---
+>>>   block/blk-core.c          | 1 +
+>>>   include/linux/blk_types.h | 7 +++++++
+>>>   2 files changed, 8 insertions(+)
+>>>
+>>> diff --git a/block/blk-core.c b/block/blk-core.c
+>>> index 61f6a0dc4511..24035dd2eef1 100644
+>>> --- a/block/blk-core.c
+>>> +++ b/block/blk-core.c
+>>> @@ -164,6 +164,7 @@ static const struct {
+>>>          [BLK_STS_RESOURCE]      = { -ENOMEM,    "kernel resource" },
+>>>          [BLK_STS_DEV_RESOURCE]  = { -EBUSY,     "device resource" },
+>>>          [BLK_STS_AGAIN]         = { -EAGAIN,    "nonblocking retry" },
+>>> +       [BLK_STS_OFFLINE]       = { -EIO,       "device offline" },
+>>>
+>>>          /* device mapper special case, should not leak out: */
+>>>          [BLK_STS_DM_REQUEUE]    = { -EREMCHG, "dm internal retry" },
+>>> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+>>> index fe065c394fff..5561e58d158a 100644
+>>> --- a/include/linux/blk_types.h
+>>> +++ b/include/linux/blk_types.h
+>>> @@ -153,6 +153,13 @@ typedef u8 __bitwise blk_status_t;
+>>>    */
+>>>   #define BLK_STS_ZONE_ACTIVE_RESOURCE   ((__force blk_status_t)16)
+>>>
+>>> +/*
+>>> + * BLK_STS_OFFLINE is returned from the driver when the target device is offline
+>>> + * or is being taken offline. This could help differentiate the case where a
+>>> + * device is intentionally being shut down from a real I/O error.
+>>> + */
+>>> +#define BLK_STS_OFFLINE                ((__force blk_status_t)17)
+>>> +
+>>>   /**
+>>>    * blk_path_error - returns true if error may be path related
+>>>    * @error: status the request was completed with
+>>> --
+>>> 2.30.2
+>>>
+> Please do not overload EIO here.
+> EIO already is a catch-all error if we don't know any better, but for 
+> the 'device offline' case we do (or rather should).
+> Please map it onto 'ENODEV' or 'ENXIO'.
 
-This did not help. Still seeing 100% reproducible hangs.
+It's deliberately EIO as not to force a change in behavior. I don't mind
+using something else, but that should be a separate change then.
 
-I did a lot of testing/digging today, and the hang cause seems to be
-missing task completions. At random, a task times out as its completion
-does not come, and subsequent abort trial for the task fail, revalidate
-fails and the device is dropped (capacity goes to 0). But at that point,
-doing rmmod/modprobe to reset the device does not work. sync cache
-command issued at rmmod time never completes. I end up needing to power
-cycle the machine every time...
+-- 
+Jens Axboe
 
-No clue about the root cause yet, but it definitely seem to be related
-to NCQ/high QD operation. If I force my tests to use non-NCQ commands,
-everything is fine and the tests run to completion without any issue.
-
-I wonder if their is a tag management bug somewhere...
-
-I did stumble on something very ugly in libsas too: sas_ata_qc_issue()
-drops and retake the ata port lock. No other ATA driver do that since
-the ata completion also take that lock. The ata port lock is taken
-before ata_qc_issue() is called with IRQ disabled (spin_lock_irqsave()).
-So doing a spin_unlock()/spin_lock() in sas_ata_qc_issue() (called from
-ata_qc_issue()) seems like a very bad idea. I removed that and
-everything work the same way (the lld execute does not sleep). But that
-did not solve the hang problem.
-
-Of note is this is all with your libsas patches applied. Without the
-patches, I have KASAN screaming at me about use-after-free in completion
-context. With your patches, KASAN is silent.
-
-Another thing: this driver does not allow changing the max qd... Very
-annoying.
-
-echo 1 > /sys/block/sdX/device/queue_depth
-
-has no effect. QD stays at 32 for an ATA drive. Need to look into that to=
-o.
-
-
---=20
-Damien Le Moal
-Western Digital Research
