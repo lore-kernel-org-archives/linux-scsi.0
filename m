@@ -2,49 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52814C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:32:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EE5BC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:35:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351006AbiBCUcm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 15:32:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57604 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354501AbiBCUbr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:31:47 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCB7AC06175D;
-        Thu,  3 Feb 2022 12:31:16 -0800 (PST)
+        id S1355165AbiBCUfD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 15:35:03 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:36244 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1354643AbiBCUdm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:33:42 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 52BE761A5C;
-        Thu,  3 Feb 2022 20:31:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81919C340E8;
-        Thu,  3 Feb 2022 20:31:14 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 8E3B2B835A9;
+        Thu,  3 Feb 2022 20:33:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9B9DC340E8;
+        Thu,  3 Feb 2022 20:33:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643920275;
-        bh=cfXOxnZgcPdfoYQeHM0c0yyXmHPUq5UCgsWsGd9TXlo=;
+        s=k20201202; t=1643920420;
+        bh=Y4I1XbzZkketrSB1+LOJA9GxTunIlw/Msl9gsyKUgh8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HBdMEAYyY9/WblwtthYrRq5u0G3IL5xpzCL1izPZsbmJlCpbglHNWzlvnnln0PPPN
-         BtjE7/omMxmsIZ0tqpL5zHRMLkxKZVZ7EGcbrRl1jYogC5V1MXZg/ts4BzlCSSGvQX
-         mKAI14eQdOOID2LBN/alyJfLp+WbzklfIol/Zha1ha8WOz2P7utes5P9XKNW6n2sNG
-         CGF3/3+nwiy0tEmD6aOTTxMV4QvLl6WHalS1/5xwfQ/dUGXPfE+Bx7G5I+eFJZQYnh
-         lZwI5reHZlqfnWaO+F+chwJLd+J6PN6Jiqqfnntgw85PeAUHCOQZH+Yn0Jc+wCD7Rt
-         tdZ4IR4wOkBdg==
+        b=tV5OxCNbVUmXyMeCjkcqrGJijUkfygCsLAdJcrUhnHBdVqcybLRceA5exWe5jC8oW
+         rF4msIOK2Ja0x6kcNUI9EKxD12hbdo/4SelCt7zNQmfDCekf2yzAGCgJe+qXq4NbBs
+         bjZcQp9DRArx6eyW/ttUXGOW04Xmpx+howysXjgtABQ9PfcL3T5dzjIWyxp7+6+Bzl
+         MzEjqDU3EXjSryUJasQcUcejeMsgSkKFJhmNPucpqqgq40a+43ByJYC4KYycDIbZvf
+         SHrHKX8bZTEnY3DvtPmfVb0xryqiba3hZWIhG92UADFldFtZ249ducJjTr1jc7FH+s
+         X4P8cx4KDvSgw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>,
+Cc:     Xiaoke Wang <xkernel.wang@foxmail.com>,
+        Bean Huo <beanhuo@micron.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        bvanassche@acm.org, Avri.Altman@wdc.com, beanhuo@micron.com,
-        gustavoars@kernel.org, cang@codeaurora.org, caleb@connolly.tech,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 33/52] scsi: ufs: Treat link loss as fatal error
-Date:   Thu,  3 Feb 2022 15:29:27 -0500
-Message-Id: <20220203202947.2304-33-sashal@kernel.org>
+        bvanassche@acm.org, stanley.chu@mediatek.com, avri.altman@wdc.com,
+        s.shtylyov@omprussia.ru, srinivas.kandagatla@linaro.org,
+        huyue2@yulong.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 24/41] scsi: ufs: ufshcd-pltfrm: Check the return value of devm_kstrdup()
+Date:   Thu,  3 Feb 2022 15:32:28 -0500
+Message-Id: <20220203203245.3007-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220203202947.2304-1-sashal@kernel.org>
-References: <20220203202947.2304-1-sashal@kernel.org>
+In-Reply-To: <20220203203245.3007-1-sashal@kernel.org>
+References: <20220203203245.3007-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,39 +51,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kiwoong Kim <kwmad.kim@samsung.com>
+From: Xiaoke Wang <xkernel.wang@foxmail.com>
 
-[ Upstream commit c99b9b2301492b665b6e51ba6c06ec362eddcd10 ]
+[ Upstream commit a65b32748f4566f986ba2495a8236c141fa42a26 ]
 
-This event is raised when link is lost as specified in UFSHCI spec and that
-means communication is not possible. Thus initializing UFS interface needs
-to be done.
+devm_kstrdup() returns pointer to allocated string on success, NULL on
+failure. So it is better to check the return value of it.
 
-Make UFS driver considers Link Lost as fatal in the INT_FATAL_ERRORS
-mask. This will trigger a host reset whenever a link lost interrupt occurs.
-
-Link: https://lore.kernel.org/r/1642743475-54275-1-git-send-email-kwmad.kim@samsung.com
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Link: https://lore.kernel.org/r/tencent_4257E15D4A94FF9020DDCC4BB9B21C041408@qq.com
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Xiaoke Wang <xkernel.wang@foxmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshci.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 6a295c88d850f..a7ff0e5b54946 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -142,7 +142,8 @@ static inline u32 ufshci_version(u32 major, u32 minor)
- #define INT_FATAL_ERRORS	(DEVICE_FATAL_ERROR |\
- 				CONTROLLER_FATAL_ERROR |\
- 				SYSTEM_BUS_FATAL_ERROR |\
--				CRYPTO_ENGINE_FATAL_ERROR)
-+				CRYPTO_ENGINE_FATAL_ERROR |\
-+				UIC_LINK_LOST)
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 8b16bbbcb806c..87975d1a21c8b 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -92,6 +92,11 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ 		clki->min_freq = clkfreq[i];
+ 		clki->max_freq = clkfreq[i+1];
+ 		clki->name = devm_kstrdup(dev, name, GFP_KERNEL);
++		if (!clki->name) {
++			ret = -ENOMEM;
++			goto out;
++		}
++
+ 		if (!strcmp(name, "ref_clk"))
+ 			clki->keep_link_active = true;
+ 		dev_dbg(dev, "%s: min %u max %u name %s\n", "freq-table-hz",
+@@ -127,6 +132,8 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 		return -ENOMEM;
  
- /* HCS - Host Controller Status 30h */
- #define DEVICE_PRESENT				0x1
+ 	vreg->name = devm_kstrdup(dev, name, GFP_KERNEL);
++	if (!vreg->name)
++		return -ENOMEM;
+ 
+ 	snprintf(prop_name, MAX_PROP_SIZE, "%s-max-microamp", name);
+ 	if (of_property_read_u32(np, prop_name, &vreg->max_uA)) {
 -- 
 2.34.1
 
