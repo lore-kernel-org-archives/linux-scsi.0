@@ -2,42 +2,43 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8C1CC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:35:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5512DC4167B
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:36:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354692AbiBCUfb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 15:35:31 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:39656 "EHLO
+        id S241751AbiBCUgF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 15:36:05 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:40104 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354466AbiBCUdg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:33:36 -0500
+        with ESMTP id S1354921AbiBCUd6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:33:58 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 76C3061A56;
-        Thu,  3 Feb 2022 20:33:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05EE6C340E8;
-        Thu,  3 Feb 2022 20:33:34 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 15DBA61ACF;
+        Thu,  3 Feb 2022 20:33:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C79CC340E8;
+        Thu,  3 Feb 2022 20:33:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643920415;
-        bh=/T57QsHEXzWRyz9ngAgfSuXzq9rnlQ9xNPWF7J/q3zk=;
+        s=k20201202; t=1643920435;
+        bh=Fgi/+hxCzJCbjcXLhLAZXPVXkEfPoMdz56AP0nfmSjQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KBrtZX0mfbUpDovOGXd6uVvXKLe3P2g8AFZgAPQKqYmuXSrO9Iwutni1GcHIfE/qK
-         DqyZpYRNQbUc9sdX3rc7tibq/I/lEpC0UwKbNRr0DcnHOMlttDQ/6zAh359AwaLRFE
-         RS54UE6eaH5z9YqvzfrCO37CmlF017jbj8Nqow0U7j50fpbjmqjitx3F/nWprsF3pG
-         KxQORtL0qXPY/7T3q7IcT+M8aKRCXSS4sfY7wxY+/ufQKYEzX8Sn4DEwCeOQheI5OH
-         q5+U0j1/NtYmbwfpSLeJuJkkaAF2Oa/538mqt0Xj/OQjiK7UMXuEz9Np5nM+iMpRiE
-         lwHc7xIFTRgCA==
+        b=QqEvZQqxH7wdMHlt8zZD1ina2jDS04AjNOVGq9tlHRMkvDserP+q5FmTU+KJpj3kx
+         08PRxfSa7s8s6XrKVb03Ue8yuccTwdceXpDLUEbLrZoH1B6mFKjf3e+TV9F8ltxu1t
+         3U4vUVQ/4ah8YKFS65/Jh+P4bjrLIIOctKVvu3ZUQmfjxzxm9mmn1DhqYgc4LDE23H
+         rBYrkV1irq1FMNC/z296YkXYE9OM++HDXxcWxbAORwLdbOp1BHmCGG9iX7Yp1OjgMV
+         8i8sK80XfevUV97mZgQ7hj89MrI2JxkIYopHtQbCru4+I8sen68fCbY3/d6ggVcORT
+         vgt88fdMsXaGg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     ZouMingzhe <mingzhe.zou@easystack.cn>,
-        Mike Christie <michael.christie@oracle.com>,
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 23/41] scsi: target: iscsi: Make sure the np under each tpg is unique
-Date:   Thu,  3 Feb 2022 15:32:27 -0500
-Message-Id: <20220203203245.3007-23-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        Avri.Altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com,
+        gustavoars@kernel.org, caleb@connolly.tech, cang@codeaurora.org,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 30/41] scsi: ufs: Treat link loss as fatal error
+Date:   Thu,  3 Feb 2022 15:32:34 -0500
+Message-Id: <20220203203245.3007-30-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220203203245.3007-1-sashal@kernel.org>
 References: <20220203203245.3007-1-sashal@kernel.org>
@@ -49,41 +50,39 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ZouMingzhe <mingzhe.zou@easystack.cn>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
 
-[ Upstream commit a861790afaa8b6369eee8a88c5d5d73f5799c0c6 ]
+[ Upstream commit c99b9b2301492b665b6e51ba6c06ec362eddcd10 ]
 
-iscsit_tpg_check_network_portal() has nested for_each loops and is supposed
-to return true when a match is found. However, the tpg loop will still
-continue after existing the tpg_np loop. If this tpg_np is not the last the
-match value will be changed.
+This event is raised when link is lost as specified in UFSHCI spec and that
+means communication is not possible. Thus initializing UFS interface needs
+to be done.
 
-Break the outer loop after finding a match and make sure the np under each
-tpg is unique.
+Make UFS driver considers Link Lost as fatal in the INT_FATAL_ERRORS
+mask. This will trigger a host reset whenever a link lost interrupt occurs.
 
-Link: https://lore.kernel.org/r/20220111054742.19582-1-mingzhe.zou@easystack.cn
-Signed-off-by: ZouMingzhe <mingzhe.zou@easystack.cn>
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Link: https://lore.kernel.org/r/1642743475-54275-1-git-send-email-kwmad.kim@samsung.com
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/iscsi/iscsi_target_tpg.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/ufs/ufshci.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
-index 8075f60fd02c3..2d5cf1714ae05 100644
---- a/drivers/target/iscsi/iscsi_target_tpg.c
-+++ b/drivers/target/iscsi/iscsi_target_tpg.c
-@@ -443,6 +443,9 @@ static bool iscsit_tpg_check_network_portal(
- 				break;
- 		}
- 		spin_unlock(&tpg->tpg_np_lock);
-+
-+		if (match)
-+			break;
- 	}
- 	spin_unlock(&tiqn->tiqn_tpg_lock);
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index de95be5d11d4e..3ed60068c4ea6 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -142,7 +142,8 @@ static inline u32 ufshci_version(u32 major, u32 minor)
+ #define INT_FATAL_ERRORS	(DEVICE_FATAL_ERROR |\
+ 				CONTROLLER_FATAL_ERROR |\
+ 				SYSTEM_BUS_FATAL_ERROR |\
+-				CRYPTO_ENGINE_FATAL_ERROR)
++				CRYPTO_ENGINE_FATAL_ERROR |\
++				UIC_LINK_LOST)
  
+ /* HCS - Host Controller Status 30h */
+ #define DEVICE_PRESENT				0x1
 -- 
 2.34.1
 
