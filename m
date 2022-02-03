@@ -2,45 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04BD7C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:31:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA0EC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354049AbiBCUbt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 15:31:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57706 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354203AbiBCUbL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:31:11 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1084C06177D;
-        Thu,  3 Feb 2022 12:30:59 -0800 (PST)
+        id S1354250AbiBCUbx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 15:31:53 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:36648 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1354399AbiBCUbS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:31:18 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6D0DCB835A3;
-        Thu,  3 Feb 2022 20:30:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C4E3C340E8;
-        Thu,  3 Feb 2022 20:30:56 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CC1A561A5C;
+        Thu,  3 Feb 2022 20:31:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48240C340F0;
+        Thu,  3 Feb 2022 20:31:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643920257;
-        bh=/T57QsHEXzWRyz9ngAgfSuXzq9rnlQ9xNPWF7J/q3zk=;
+        s=k20201202; t=1643920277;
+        bh=JVnRg65Qwa1/CD39njIMCAjJPJZ+EuC+Z6Vt+4qdiKQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jrI7CHBdPFVcKKxETuBIvpbNx+f526nfhYSNNuckE7OKpohhvmXKh8KQYBmKVF7w6
-         /gj5J+V2X8Sy5NbY96DRgUE0ED/c1N7+DfAsfq7cdm4hjlDuG8zd90XC0WqZNX9eeh
-         gKO7K+TyPDZEbRsLXTkrtJSsOO8qoKa1e57NArY6vAgHtCND8Ra/Pw4HcDASdEELSY
-         DLVJbZYFjgU3psD9TDcK+3ZT6kY+j9y/3hrv7JQEsle+5yD1hZK5QjaqqO2dUBVCVB
-         PyqkwINmCewFig7HWiGR9+ao476ccNGH/Nau/GtuwORC4c7yMpzvwjgfCnuYBkFXFk
-         PHO2wud5CgDWg==
+        b=ZkK9ed94kKDbdXahWNegg56NkWzGaBg5YrmzCvMr8Mq8d6uu33heyZAwlU/VQLbeZ
+         mKmBhiI4yck3y+2pyb54RsWPzpA/e3rsVJoMtOuezAQljhK+DaETygNG0NOXkRm+YW
+         jsHOsgcnY9mtOsD8QFDu0sRfi1zrABqWGi0zWAfTMX9ps9fuk4OE3k9Xn/RBGonIN/
+         3rwSIbz3MI04+n9GZFkLiSdcx93JqH1HHITxej5Qtq3v5AYwbtHJGUW7jLAXpkmp76
+         /u4bEdS9lJPOM261fXE5BtrQ/su91mNoQtVf53Xzaoc9+6nyLnQeUXGW8mbebDexrO
+         oA+idKiRlJNcg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     ZouMingzhe <mingzhe.zou@easystack.cn>,
-        Mike Christie <michael.christie@oracle.com>,
+Cc:     Tong Zhang <ztong0001@gmail.com>, Hannes Reinecke <hare@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 26/52] scsi: target: iscsi: Make sure the np under each tpg is unique
-Date:   Thu,  3 Feb 2022 15:29:20 -0500
-Message-Id: <20220203202947.2304-26-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, hare@kernel.org,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.16 34/52] scsi: myrs: Fix crash in error case
+Date:   Thu,  3 Feb 2022 15:29:28 -0500
+Message-Id: <20220203202947.2304-34-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220203202947.2304-1-sashal@kernel.org>
 References: <20220203202947.2304-1-sashal@kernel.org>
@@ -52,41 +48,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ZouMingzhe <mingzhe.zou@easystack.cn>
+From: Tong Zhang <ztong0001@gmail.com>
 
-[ Upstream commit a861790afaa8b6369eee8a88c5d5d73f5799c0c6 ]
+[ Upstream commit 4db09593af0b0b4d7d4805ebb3273df51d7cc30d ]
 
-iscsit_tpg_check_network_portal() has nested for_each loops and is supposed
-to return true when a match is found. However, the tpg loop will still
-continue after existing the tpg_np loop. If this tpg_np is not the last the
-match value will be changed.
+In myrs_detect(), cs->disable_intr is NULL when privdata->hw_init() fails
+with non-zero. In this case, myrs_cleanup(cs) will call a NULL ptr and
+crash the kernel.
 
-Break the outer loop after finding a match and make sure the np under each
-tpg is unique.
+[    1.105606] myrs 0000:00:03.0: Unknown Initialization Error 5A
+[    1.105872] myrs 0000:00:03.0: Failed to initialize Controller
+[    1.106082] BUG: kernel NULL pointer dereference, address: 0000000000000000
+[    1.110774] Call Trace:
+[    1.110950]  myrs_cleanup+0xe4/0x150 [myrs]
+[    1.111135]  myrs_probe.cold+0x91/0x56a [myrs]
+[    1.111302]  ? DAC960_GEM_intr_handler+0x1f0/0x1f0 [myrs]
+[    1.111500]  local_pci_probe+0x48/0x90
 
-Link: https://lore.kernel.org/r/20220111054742.19582-1-mingzhe.zou@easystack.cn
-Signed-off-by: ZouMingzhe <mingzhe.zou@easystack.cn>
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Link: https://lore.kernel.org/r/20220123225717.1069538-1-ztong0001@gmail.com
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Tong Zhang <ztong0001@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/iscsi/iscsi_target_tpg.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/myrs.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
-index 8075f60fd02c3..2d5cf1714ae05 100644
---- a/drivers/target/iscsi/iscsi_target_tpg.c
-+++ b/drivers/target/iscsi/iscsi_target_tpg.c
-@@ -443,6 +443,9 @@ static bool iscsit_tpg_check_network_portal(
- 				break;
- 		}
- 		spin_unlock(&tpg->tpg_np_lock);
-+
-+		if (match)
-+			break;
- 	}
- 	spin_unlock(&tiqn->tiqn_tpg_lock);
+diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
+index 6ea323e9a2e34..f6dbc8f2f60a3 100644
+--- a/drivers/scsi/myrs.c
++++ b/drivers/scsi/myrs.c
+@@ -2269,7 +2269,8 @@ static void myrs_cleanup(struct myrs_hba *cs)
+ 	myrs_unmap(cs);
  
+ 	if (cs->mmio_base) {
+-		cs->disable_intr(cs);
++		if (cs->disable_intr)
++			cs->disable_intr(cs);
+ 		iounmap(cs->mmio_base);
+ 		cs->mmio_base = NULL;
+ 	}
 -- 
 2.34.1
 
