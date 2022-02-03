@@ -2,43 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9A9CC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8C1CC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 20:35:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354145AbiBCUfW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 15:35:22 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:39844 "EHLO
+        id S1354692AbiBCUfb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 15:35:31 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:39656 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354175AbiBCUdo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:33:44 -0500
+        with ESMTP id S1354466AbiBCUdg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 15:33:36 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 164DE61AD1;
-        Thu,  3 Feb 2022 20:33:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69738C340EF;
-        Thu,  3 Feb 2022 20:33:42 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 76C3061A56;
+        Thu,  3 Feb 2022 20:33:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05EE6C340E8;
+        Thu,  3 Feb 2022 20:33:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643920423;
-        bh=Oy4O9eJpPPDoYiB9FaeYRy2AABGKw16p2flSZjl9+1g=;
+        s=k20201202; t=1643920415;
+        bh=/T57QsHEXzWRyz9ngAgfSuXzq9rnlQ9xNPWF7J/q3zk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fu2GceTCL4qLCV3dxpwzQZ4i18n37irv8/tXe06BWihyBjfsIqRqG/OV/XSoPtrMb
-         ouKTp3g6mCIYQQfMpA+G7kqaOtkDm9aagYRKCiciktNfeWw8U0zJJGQd+PTMNa+Eic
-         L7WPXzgwX7eIsgibZtNF812s0FEnJkczVuGgYJQyj8DdfvkWhLxBzwumwBe6ej/eVQ
-         ivqHgOMRk1eZ9Vp0cFnV4bKIE8bPNGjH4sbq/W4mlHorS83pTQZpXfEur9Q7rHzrPZ
-         ThGU3zh4qg55c9YW2AUOwvN8UrGz5l9/ScL0maV4fIqaRVBp6gkZxxmMNjjU+s3rAK
-         K4FDjX7utUQMA==
+        b=KBrtZX0mfbUpDovOGXd6uVvXKLe3P2g8AFZgAPQKqYmuXSrO9Iwutni1GcHIfE/qK
+         DqyZpYRNQbUc9sdX3rc7tibq/I/lEpC0UwKbNRr0DcnHOMlttDQ/6zAh359AwaLRFE
+         RS54UE6eaH5z9YqvzfrCO37CmlF017jbj8Nqow0U7j50fpbjmqjitx3F/nWprsF3pG
+         KxQORtL0qXPY/7T3q7IcT+M8aKRCXSS4sfY7wxY+/ufQKYEzX8Sn4DEwCeOQheI5OH
+         q5+U0j1/NtYmbwfpSLeJuJkkaAF2Oa/538mqt0Xj/OQjiK7UMXuEz9Np5nM+iMpRiE
+         lwHc7xIFTRgCA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Saurav Kashyap <skashyap@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
+Cc:     ZouMingzhe <mingzhe.zou@easystack.cn>,
+        Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jhasan@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 26/41] scsi: qedf: Fix refcount issue when LOGO is received during TMF
-Date:   Thu,  3 Feb 2022 15:32:30 -0500
-Message-Id: <20220203203245.3007-26-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 23/41] scsi: target: iscsi: Make sure the np under each tpg is unique
+Date:   Thu,  3 Feb 2022 15:32:27 -0500
+Message-Id: <20220203203245.3007-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220203203245.3007-1-sashal@kernel.org>
 References: <20220203203245.3007-1-sashal@kernel.org>
@@ -50,69 +49,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <skashyap@marvell.com>
+From: ZouMingzhe <mingzhe.zou@easystack.cn>
 
-[ Upstream commit 5239ab63f17cee643bd4bf6addfedebaa7d4f41e ]
+[ Upstream commit a861790afaa8b6369eee8a88c5d5d73f5799c0c6 ]
 
-Hung task call trace was seen during LOGO processing.
+iscsit_tpg_check_network_portal() has nested for_each loops and is supposed
+to return true when a match is found. However, the tpg loop will still
+continue after existing the tpg_np loop. If this tpg_np is not the last the
+match value will be changed.
 
-[  974.309060] [0000:00:00.0]:[qedf_eh_device_reset:868]: 1:0:2:0: LUN RESET Issued...
-[  974.309065] [0000:00:00.0]:[qedf_initiate_tmf:2422]: tm_flags 0x10 sc_cmd 00000000c16b930f op = 0x2a target_id = 0x2 lun=0
-[  974.309178] [0000:00:00.0]:[qedf_initiate_tmf:2431]: portid=016900 tm_flags =LUN RESET
-[  974.309222] [0000:00:00.0]:[qedf_initiate_tmf:2438]: orig io_req = 00000000ec78df8f xid = 0x180 ref_cnt = 1.
-[  974.309625] host1: rport 016900: Received LOGO request while in state Ready
-[  974.309627] host1: rport 016900: Delete port
-[  974.309642] host1: rport 016900: work event 3
-[  974.309644] host1: rport 016900: lld callback ev 3
-[  974.313243] [0000:61:00.2]:[qedf_execute_tmf:2383]:1: fcport is uploading, not executing flush.
-[  974.313295] [0000:61:00.2]:[qedf_execute_tmf:2400]:1: task mgmt command success...
-[  984.031088] INFO: task jbd2/dm-15-8:7645 blocked for more than 120 seconds.
-[  984.031136]       Not tainted 4.18.0-305.el8.x86_64 #1
+Break the outer loop after finding a match and make sure the np under each
+tpg is unique.
 
-[  984.031166] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  984.031209] jbd2/dm-15-8    D    0  7645      2 0x80004080
-[  984.031212] Call Trace:
-[  984.031222]  __schedule+0x2c4/0x700
-[  984.031230]  ? unfreeze_partials.isra.83+0x16e/0x1a0
-[  984.031233]  ? bit_wait_timeout+0x90/0x90
-[  984.031235]  schedule+0x38/0xa0
-[  984.031238]  io_schedule+0x12/0x40
-[  984.031240]  bit_wait_io+0xd/0x50
-[  984.031243]  __wait_on_bit+0x6c/0x80
-[  984.031248]  ? free_buffer_head+0x21/0x50
-[  984.031251]  out_of_line_wait_on_bit+0x91/0xb0
-[  984.031257]  ? init_wait_var_entry+0x50/0x50
-[  984.031268]  jbd2_journal_commit_transaction+0x112e/0x19f0 [jbd2]
-[  984.031280]  kjournald2+0xbd/0x270 [jbd2]
-[  984.031284]  ? finish_wait+0x80/0x80
-[  984.031291]  ? commit_timeout+0x10/0x10 [jbd2]
-[  984.031294]  kthread+0x116/0x130
-[  984.031300]  ? kthread_flush_work_fn+0x10/0x10
-[  984.031305]  ret_from_fork+0x1f/0x40
-
-There was a ref count issue when LOGO is received during TMF. This leads to
-one of the I/Os hanging with the driver. Fix the ref count.
-
-Link: https://lore.kernel.org/r/20220117135311.6256-3-njavali@marvell.com
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Link: https://lore.kernel.org/r/20220111054742.19582-1-mingzhe.zou@easystack.cn
+Signed-off-by: ZouMingzhe <mingzhe.zou@easystack.cn>
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedf/qedf_io.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/target/iscsi/iscsi_target_tpg.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index 3404782988d58..bb5761ed3f511 100644
---- a/drivers/scsi/qedf/qedf_io.c
-+++ b/drivers/scsi/qedf/qedf_io.c
-@@ -2257,6 +2257,7 @@ int qedf_initiate_cleanup(struct qedf_ioreq *io_req,
- 	    io_req->tm_flags == FCP_TMF_TGT_RESET) {
- 		clear_bit(QEDF_CMD_OUTSTANDING, &io_req->flags);
- 		io_req->sc_cmd = NULL;
-+		kref_put(&io_req->refcount, qedf_release_cmd);
- 		complete(&io_req->tm_done);
+diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+index 8075f60fd02c3..2d5cf1714ae05 100644
+--- a/drivers/target/iscsi/iscsi_target_tpg.c
++++ b/drivers/target/iscsi/iscsi_target_tpg.c
+@@ -443,6 +443,9 @@ static bool iscsit_tpg_check_network_portal(
+ 				break;
+ 		}
+ 		spin_unlock(&tpg->tpg_np_lock);
++
++		if (match)
++			break;
  	}
+ 	spin_unlock(&tiqn->tiqn_tpg_lock);
  
 -- 
 2.34.1
