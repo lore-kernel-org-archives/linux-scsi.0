@@ -2,74 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A99E5C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 22:30:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F18C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 22:50:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355594AbiBCWaq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 17:30:46 -0500
-Received: from mail-pg1-f181.google.com ([209.85.215.181]:36451 "EHLO
-        mail-pg1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229910AbiBCWaq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 17:30:46 -0500
-Received: by mail-pg1-f181.google.com with SMTP id h125so3470881pgc.3;
-        Thu, 03 Feb 2022 14:30:46 -0800 (PST)
+        id S1355888AbiBCWuB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 17:50:01 -0500
+Received: from mail-pg1-f180.google.com ([209.85.215.180]:36722 "EHLO
+        mail-pg1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231437AbiBCWuA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 17:50:00 -0500
+Received: by mail-pg1-f180.google.com with SMTP id h125so3506658pgc.3;
+        Thu, 03 Feb 2022 14:50:00 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=7laOSOTRIKfgB81WkljSRpQ1Qs5RJtS6DOO8SbNq8dc=;
-        b=BpCsZUz/REWiArgCBhrtz9TK5CEWRkECOccUnxyK8n29TywMgI1ZAmvktvvRxOY5Do
-         4x+VSUl/nhbVl+1LgP7ewIb8GVvJtS1TOM7QPnRmi3xGubgH0P2V4vCPkjiEfOjV3AXZ
-         6+eUH9bmeSX4VQDndXoJYAvfTmAmIi9j7tRPrjL56TvZjLn+cbcWKxP3jF8MpRb9GZ3l
-         TnkuLOxsKeEjupabhKiVaidsHVTkoguEZ9ujFVlhSfOw/faMUWzBIhG083LkIeJLvG7J
-         s8qswxPKmXokcNxBeCvcoi+lFVTaLSvgpoFEsOqm3S9hVNk6wrASeEsM/ivpt+k3yW59
-         QCYw==
-X-Gm-Message-State: AOAM531K3y5IDWqkcPByk/xUAsP6FYVOEPjX25bsKU8EXHMV+byZa16k
-        rxeXfBI9dCPrXk5S4jbMA1OkrkH1W7k=
-X-Google-Smtp-Source: ABdhPJwsmUgNHSp9NKx8vcK4gareU4i+aBqbeCkiE0fyUloViWGqIdpZzEwCDfLPGyVjD0z8dWE/+A==
-X-Received: by 2002:a05:6a00:228e:: with SMTP id f14mr244581pfe.16.1643927445629;
-        Thu, 03 Feb 2022 14:30:45 -0800 (PST)
+        bh=gxtKotbKYVVDliBEkS/8NGZxxXzsaCF/Ghrn8g2asII=;
+        b=LIIPVp0HL8qiKEreu3/+nk642YQe6WGAc9utl7oIW3tRE8j/olOD0PUdoHZMrEtKjc
+         TiMttlExwij87RhkRkisLxjSZSNf/NFcEkwOLXXRSjKqPdcDLBGdGNhAcju/DdEaVK5Z
+         r0EqWCHpB+ZfQM0CQJH1KJu59B+M4xWmS6dTX8E3K1ofY3uX0VBFWRQLHCHeILBkUHDb
+         C1Dye9evBJ80xxNMp7f4THh9bAfsUyuyu36zX1CRXO+JdOZ6fLx0k8Q2vnQo58CXnSD7
+         Gq5F01muUosFoeKB/oHLKQvy+RvV21GFlx8Qxz1sA1jxgjQvsls9UBLVgrudCnHXtkFt
+         CbtQ==
+X-Gm-Message-State: AOAM533G1JdQ5yQrRVyIREcEWDpIiKbUcuEQbz7u4jnaavpYE0FsS3Ve
+        Mju7voYEhl3Fw57xL/KPjBM=
+X-Google-Smtp-Source: ABdhPJxbVDWLXFrYyts1WDQEZT5xMfsQOnoKDmtKT7LXmg2Sy357f0iLUMQzn3wbo7lsO987Ifcecw==
+X-Received: by 2002:a63:91c3:: with SMTP id l186mr225003pge.558.1643928600285;
+        Thu, 03 Feb 2022 14:50:00 -0800 (PST)
 Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id f3sm43443pfe.43.2022.02.03.14.30.44
+        by smtp.gmail.com with ESMTPSA id h11sm48342pfe.214.2022.02.03.14.49.58
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 03 Feb 2022 14:30:45 -0800 (PST)
-Message-ID: <086ce37e-22d1-a07e-7de5-7cfd927a5c8d@acm.org>
-Date:   Thu, 3 Feb 2022 14:30:43 -0800
+        Thu, 03 Feb 2022 14:49:59 -0800 (PST)
+Message-ID: <a2ec9086-72d2-4a4e-c4fa-fe53bf5ba092@acm.org>
+Date:   Thu, 3 Feb 2022 14:49:57 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH v2 1/2] scsi: Add scsi_done_direct() for immediate
- completion.
+Subject: Re: [RFC PATCH 1/3] block: add copy offload support
 Content-Language: en-US
-To:     Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc:     linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        usb-storage@lists.one-eyed-alien.net,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20220201210954.570896-1-sebastian@breakpoint.cc>
- <20220201210954.570896-2-sebastian@breakpoint.cc>
- <c8402f76-7397-77c3-232c-c825c52ea826@acm.org> <YfwxJPUFCo5/55yI@flow>
- <Yfw7JaszshmfYa1d@flow>
+To:     Mikulas Patocka <mpatocka@redhat.com>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com>
+ <20220201102122.4okwj2gipjbvuyux@mpHalley-2>
+ <alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com>
+ <alpine.LRH.2.02.2202011331570.22481@file01.intranet.prod.int.rdu2.redhat.com>
+ <efd2e976-4d2d-178e-890d-9bde1a89c47f@acm.org>
+ <alpine.LRH.2.02.2202031310530.28604@file01.intranet.prod.int.rdu2.redhat.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <Yfw7JaszshmfYa1d@flow>
+In-Reply-To: <alpine.LRH.2.02.2202031310530.28604@file01.intranet.prod.int.rdu2.redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/3/22 12:29, Sebastian Andrzej Siewior wrote:
-> Let me see what I can do.
+On 2/3/22 10:50, Mikulas Patocka wrote:
+> On Tue, 1 Feb 2022, Bart Van Assche wrote:
+>> On 2/1/22 10:32, Mikulas Patocka wrote:
+>>>    /**
+>>> + * blk_queue_max_copy_sectors - set maximum copy offload sectors for the
+>>> queue
+>>> + * @q:  the request queue for the device
+>>> + * @size:  the maximum copy offload sectors
+>>> + */
+>>> +void blk_queue_max_copy_sectors(struct request_queue *q, unsigned int size)
+>>> +{
+>>> +	q->limits.max_copy_sectors = size;
+>>> +}
+>>> +EXPORT_SYMBOL_GPL(blk_queue_max_copy_sectors);
+>>
+>> Please either change the unit of 'size' into bytes or change its type into
+>> sector_t.
 > 
-> Something like this perhaps? The compiler not inline
-> scsi_done_internal() so we maybe provide scsi_done() / _direct() as
-> static inlines?
+> blk_queue_chunk_sectors, blk_queue_max_discard_sectors,
+> blk_queue_max_write_same_sectors, blk_queue_max_write_zeroes_sectors,
+> blk_queue_max_zone_append_sectors also have the unit of sectors and the
+> argument is "unsigned int". Should blk_queue_max_copy_sectors be
+> different?
 
-In general declaring a static function inline in a .c file is frowned 
-upon but I think in this case we should do that. With that change 
-applied, feel free to add:
+As far as I know using the type sector_t for variables that represent a 
+number of sectors is a widely followed convention:
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+$ git grep -w sector_t | wc -l
+2575
+
+I would appreciate it if that convention would be used consistently, 
+even if that means modifying existing code.
+
+Thanks,
+
+Bart.
