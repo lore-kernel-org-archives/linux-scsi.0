@@ -2,106 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EAE3C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 16:52:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25B1BC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Feb 2022 16:53:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352441AbiBCQwo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Feb 2022 11:52:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34540 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229983AbiBCQwo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 11:52:44 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F338C061714;
-        Thu,  3 Feb 2022 08:52:44 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2D7046155C;
-        Thu,  3 Feb 2022 16:52:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA6E2C340E8;
-        Thu,  3 Feb 2022 16:52:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643907162;
-        bh=iaJxhtwIma6dUrbx3J2yiskIUAG+/AQHCMEnNS5R1Zo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ObXVLD8ZVfN8qLcAA/cwoT+F0WWY34fjcADHx5mxOicfMCp8LmOGroDLA0lzLs2+b
-         Szc599IvtTtOtG5u3jWUjJia4KUNl++iTz8H9EtbTS8+8ihtbUNLjCQz8bBNy6zEhW
-         tJ/k1LRfKEKD/xNnBjpj1Y90bf9/d8eACkulsewXmQ+dI70vPQfQJJe38hpojfYcBi
-         +cYzFIxxxvCItLLi907bFuQgWEak+eRpVROajgoWHfmOqFSCwPBJWZbiAfVVIc1bgQ
-         ocAeiEZLhJSmQ3RJ2JgSQsCmFy6VhcH9r3hvQ/7f6brbnG7hwKcBtPGM+YF8UnNvux
-         WHcaWzUgxRwag==
-Date:   Thu, 3 Feb 2022 08:52:38 -0800
-From:   Keith Busch <kbusch@kernel.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier@javigon.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "msnitzer@redhat.com >> msnitzer@redhat.com" <msnitzer@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "martin.petersen@oracle.com >> Martin K. Petersen" 
-        <martin.petersen@oracle.com>,
-        "roland@purestorage.com" <roland@purestorage.com>,
-        Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
-        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
-        "zach.brown@ni.com" <zach.brown@ni.com>,
-        "osandov@fb.com" <osandov@fb.com>,
-        "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "josef@toxicpanda.com" <josef@toxicpanda.com>,
-        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
-        "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.com" <jack@suse.com>,
-        Kanchan Joshi <joshi.k@samsung.com>
-Subject: Re: [RFC PATCH 3/3] nvme: add the "debug" host driver
-Message-ID: <20220203165238.GA142129@dhcp-10-100-145-180.wdc.com>
-References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com>
- <20220201102122.4okwj2gipjbvuyux@mpHalley-2>
- <alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com>
- <alpine.LRH.2.02.2202011333160.22481@file01.intranet.prod.int.rdu2.redhat.com>
- <270f30df-f14c-b9e4-253f-bff047d32ff0@nvidia.com>
- <20220203153843.szbd4n65ru4fx5hx@garbanzo>
+        id S1352445AbiBCQxo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Feb 2022 11:53:44 -0500
+Received: from mail-pj1-f42.google.com ([209.85.216.42]:33317 "EHLO
+        mail-pj1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236276AbiBCQxn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2022 11:53:43 -0500
+Received: by mail-pj1-f42.google.com with SMTP id cq9-20020a17090af98900b001b8262fe2d5so4291182pjb.0;
+        Thu, 03 Feb 2022 08:53:43 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=1tNWfA/BVq4Pu1brgQQg4f3LF0dBzZzJ2dAGAeOLqHU=;
+        b=5t2iNKY3+lJnRzJ10/4094uGxw8wFiGq73W61LsZisxIsUe7O/o92BTkb6UOjaw96O
+         SW91Vy5cBSlzFwxf8RB6n4qwAqkHAbBCpmA0E8zT/kcUAyA38iRFqx4KJ/s9inQEjFdn
+         rpn6ngtjcKl9JpZHhxLQhtGJ3u1M6CqrLbKLarfRdh6xpX6h1f4gBQnSXgUqBLn+qJdE
+         GPvE3WVYmRgpXmZHEIeTuP3zxQj+IM0QXbgrPj514QgG9PVG6ZDcOtBY78RxC1RqYQ18
+         QBSeVEU6YE5cBqDq/MafUBMYdMweXk91dJAflVxVa0qlQD7pEjgd51BnlZSq3AchtpVo
+         ZyTw==
+X-Gm-Message-State: AOAM533Iz9q0bznZ+HzClLu4Q4o1jCXIBcdx8eyF5PdBMBunwQaWcNIa
+        SwEhr8mgrJGtRNPX3dcmRnqK07o8r7WC8A==
+X-Google-Smtp-Source: ABdhPJz+d63k2s99MW2oUwmpMARz0qQsAzk0eI0/7mWE/6YWan2johV6nwuipVWV6RGsUrE/Pg5Ipg==
+X-Received: by 2002:a17:90a:ba89:: with SMTP id t9mr14653181pjr.21.1643907223251;
+        Thu, 03 Feb 2022 08:53:43 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id r7sm2417544pjp.2.2022.02.03.08.53.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 03 Feb 2022 08:53:42 -0800 (PST)
+Message-ID: <54be0878-a7da-cc8a-3efc-1bb0c53caf47@acm.org>
+Date:   Thu, 3 Feb 2022 08:53:40 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220203153843.szbd4n65ru4fx5hx@garbanzo>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH v2] scsi: ufs: disable auto hibern8 while entering suspend
+Content-Language: en-US
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        'Hoyoung SEO' <hy50.seo@samsung.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org,
+        bhoon95.kim@samsung.com, kwmad.kim@samsung.com
+Cc:     'kernel test robot' <lkp@intel.com>
+References: <CGME20220125062155epcas2p15da28303164091b1bf5a00dcf99fe59b@epcas2p1.samsung.com>
+ <20220124180637.160524-1-hy50.seo@samsung.com>
+ <40986ecb6c81812a1e1ab24d93e46eda75974c4e.camel@mediatek.com>
+ <12a201d81892$c8123d40$5836b7c0$@samsung.com>
+ <066101d818ca$5dba71f0$192f55d0$@samsung.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <066101d818ca$5dba71f0$192f55d0$@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Feb 03, 2022 at 07:38:43AM -0800, Luis Chamberlain wrote:
-> On Wed, Feb 02, 2022 at 08:00:12AM +0000, Chaitanya Kulkarni wrote:
-> > Mikulas,
-> > 
-> > On 2/1/22 10:33 AM, Mikulas Patocka wrote:
-> > > External email: Use caution opening links or attachments
-> > > 
-> > > 
-> > > This patch adds a new driver "nvme-debug". It uses memory as a backing
-> > > store and it is used to test the copy offload functionality.
-> > > 
-> > > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> > > 
-> > 
-> > 
-> > NVMe Controller specific memory backed features needs to go into
-> > QEMU which are targeted for testing and debugging, just like what
-> > we have done for NVMe ZNS QEMU support and not in kernel.
-> > 
-> > I don't see any special reason to make copy offload an exception.
-> 
-> One can instantiate scsi devices with qemu by using fake scsi devices,
-> but one can also just use scsi_debug to do the same. I see both efforts
-> as desirable, so long as someone mantains this.
-> 
-> For instance, blktests uses scsi_debug for simplicity.
-> 
-> In the end you decide what you want to use.
+On 2/2/22 22:50, Alim Akhtar wrote:
+> I am not sure, if this problem is generic and faced by all other UFS vendors.
+> If not, how about having a vendor specific call back for your platform only?
+> Just a thought.
 
-Can we use the nvme-loop target instead?
+I agree with the above. Since the code change does not follow from the 
+spec, it should be guarded with a check for a new quirk flag.
+
+Thanks,
+
+Bart.
