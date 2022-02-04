@@ -2,122 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9803DC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Feb 2022 13:12:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66FE0C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Feb 2022 13:34:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350855AbiBDNM5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Feb 2022 08:12:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57550 "EHLO
+        id S234886AbiBDNeE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Feb 2022 08:34:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349939AbiBDNM5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2022 08:12:57 -0500
-Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17ED6C061714
-        for <linux-scsi@vger.kernel.org>; Fri,  4 Feb 2022 05:12:57 -0800 (PST)
-Received: by mail-wr1-x436.google.com with SMTP id s10so8672530wra.5
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Feb 2022 05:12:57 -0800 (PST)
+        with ESMTP id S230466AbiBDNeE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2022 08:34:04 -0500
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00C42C061714
+        for <linux-scsi@vger.kernel.org>; Fri,  4 Feb 2022 05:34:04 -0800 (PST)
+Received: by mail-pl1-x630.google.com with SMTP id y17so5149175plg.7
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Feb 2022 05:34:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=WZbYJHNx4029ps/19+h4CZdnYRI6KHcst/wEtS01Jdo=;
-        b=TyKyYZByUE3jpVhuJ9mUwyFUGomBVpvNhaiNWGG0w8Al4uf8yFaqLcjbyfFqgnDNoP
-         yiWyyUpqTstnRV+wIfXZX/rn/TeYTqDp4fjcuBCCa4JWw+Kn8zz/iqTrP176FbTG6J0x
-         MiPupOe4nw0D20+TId1bYsLwFp9jqAWbuc9vd8yFc7mUjVtD4A/aWnrEX/43zbReKfzD
-         3IX3QySKKUj+lUPiW2C7dWFlq07dtljJy+pq7oQglrIK0Mu7hUpL5boWgKRCk4BYOmpY
-         FT62jyWUULzQYJZehkxDNW/SoB+KSFiMI2hvg499iZuKm87zKXvFh46Ew5B6+TkA5Uld
-         5bBg==
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=KWj5VHbmtPCAG80WBX4yW0jMIjhI+i8MGje98xVpJ28=;
+        b=J0H1WlwC0P37XJGQ80pvU6MOXxkQhBt8I8jYBfMI4Ak4jZTB2jdXIyOEE9Kllnlosl
+         x9hSWRjBcJabIqRFmAa0jW6HQxN6K09LfSnx2stfcfoHwdOShgYR4VS9L68fEQryHmcI
+         o1oi+IOQjRfyeD34mj6H+wgZH5o8zcR1bHhXTsZTR3oxryEKBgD2/L9Ne08APK8zUMF7
+         W1cTkxcnoxIyNsDpKJkZ+Iq3r8wtZV9a4WDe+F7RXXyDrO6kc2ga0WrjZ62WMMZ3Ucna
+         bkc9AWj5Fv6K4yZk5HMlpeORWYohWortqx1DTQD5l4yq0v2of1uD5ZuntPINz58Pqcx0
+         JQwQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=WZbYJHNx4029ps/19+h4CZdnYRI6KHcst/wEtS01Jdo=;
-        b=0Y7lf1ykFyQmgg7KrdGFxGE5NBBZr2DElHnVvU/rZo89ZyEaV69gOrU7Ki3MIQsJh5
-         GyIv7rJ9qtldhWGhk0OVa9t4xhQQquU+Rlu2jzKd3nEQJXaJmNH4Vmm6eOvWa0zIZu1f
-         y5G0IEq3J4ZSM4ZT0jwkwn5PdEsYeIDiCMsI3Fmfg3BQ6p9jXAnfENdR5zO+YiU2jcNw
-         eE3+6gplpC5uFk+uqfwMP/XfFX2PBEiALW+oTGSaFylvWzI4Nu6drek5RLqT3wjAtJCm
-         wtpI6BonZSrBgWw/SCRzrbKQwiC6BUiyZXJoypFv08WuHdYoPKfqd95w4RFInG6PiLBT
-         +7tg==
-X-Gm-Message-State: AOAM532mcCr24ogGNpHqm6NZ7YbLviqQWuoQyV0empYqTfoGlOyAm63m
-        wFWTji6YPxhnnsfVoK3n+srTkA==
-X-Google-Smtp-Source: ABdhPJyBJFSfzOskZ3dK5bvmtr+IRWoECNPyqbHGeLbc83XvlzGW98cyZv7ax19uTaCxEIMTvLe9BQ==
-X-Received: by 2002:a5d:694d:: with SMTP id r13mr2443227wrw.453.1643980375586;
-        Fri, 04 Feb 2022 05:12:55 -0800 (PST)
-Received: from localhost.localdomain (laubervilliers-658-1-213-31.w90-63.abo.wanadoo.fr. [90.63.244.31])
-        by smtp.googlemail.com with ESMTPSA id p42sm9645343wms.28.2022.02.04.05.12.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Feb 2022 05:12:55 -0800 (PST)
-From:   Corentin Labbe <clabbe@baylibre.com>
-To:     don.brace@microchip.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        storagedev@microchip.com, Corentin Labbe <clabbe@baylibre.com>
-Subject: [PATCH] scsi: hpsa: prevent hpsa to severly delay boot
-Date:   Fri,  4 Feb 2022 13:12:47 +0000
-Message-Id: <20220204131247.1684875-1-clabbe@baylibre.com>
-X-Mailer: git-send-email 2.25.1
+        bh=KWj5VHbmtPCAG80WBX4yW0jMIjhI+i8MGje98xVpJ28=;
+        b=Z5rY2p6koP5U0wO8yd6eRmuojNLaPfi1zQ4Y1hfYc3giMh13YSdireavFzHYGCg2+S
+         gAluC7vz6O8Kbbayscgr5tyYeSjU2q5GzgA+3Qo1qGoe9l7pU1FHGTbynZC6kqPq//yq
+         OikOKkYOTO9qijGQxqNGylb1PrbnsstDf+y3m1Jznm+6mW3GBf/E8NlGHNyGWZwKulPy
+         xD8PY9CauMY0Fk8C1R6HhWwwdLi5ZoECC4YRyDy6Xv5U9qZIFtl0AOMEEb5l5fqZDkp7
+         /3l7J2eO+r6QeBSX7etyF5rRPEDfyhuOIjsA9aL4YP85r2jAMZMcDFD6pt6UGhgUCOAU
+         DWRQ==
+X-Gm-Message-State: AOAM531KjfpHn1HUZclYqpUd5H2DajFVeAu3RG+QKiX3vV1frRSzAFfw
+        Xx7DSbFT6lOfMKQlSxzOyWKlY0yCr/1R8g==
+X-Google-Smtp-Source: ABdhPJxj+mWKk80hBHd+iZIf+Sws1xCuDe5XG9c0N/wSw4I51o6nz5iMnvsk4OFG8pEwrP+T/IACJA==
+X-Received: by 2002:a17:90b:3511:: with SMTP id ls17mr3138025pjb.241.1643981643450;
+        Fri, 04 Feb 2022 05:34:03 -0800 (PST)
+Received: from [192.168.1.116] ([66.219.217.159])
+        by smtp.gmail.com with ESMTPSA id f8sm2818712pfv.24.2022.02.04.05.34.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 04 Feb 2022 05:34:03 -0800 (PST)
+Subject: Re: [RFC PATCH 1/3] block: add copy offload support
+To:     Mikulas Patocka <mpatocka@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com>
+ <20220201102122.4okwj2gipjbvuyux@mpHalley-2>
+ <alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com>
+ <alpine.LRH.2.02.2202011331570.22481@file01.intranet.prod.int.rdu2.redhat.com>
+ <efd2e976-4d2d-178e-890d-9bde1a89c47f@acm.org>
+ <alpine.LRH.2.02.2202031310530.28604@file01.intranet.prod.int.rdu2.redhat.com>
+ <a2ec9086-72d2-4a4e-c4fa-fe53bf5ba092@acm.org>
+ <alpine.LRH.2.02.2202040657060.19134@file01.intranet.prod.int.rdu2.redhat.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <2c33ecab-7154-a476-8038-451e37785201@kernel.dk>
+Date:   Fri, 4 Feb 2022 06:34:02 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <alpine.LRH.2.02.2202040657060.19134@file01.intranet.prod.int.rdu2.redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On my HPE Proliant microserver gen 10+, modprobing hpsa lead to:
-hpsa 0000:01:00.7: unrecognized board ID: 0x00e41590
-hpsa 0000:01:00.7: unrecognized board ID: 0x00e41590
-hpsa 0000:01:00.7: can't disable ASPM; OS doesnt't have ASPM control
-hpsa 0000:01:00.7: board not ready, timed out.
+On 2/4/22 5:09 AM, Mikulas Patocka wrote:
+> 
+> 
+> On Thu, 3 Feb 2022, Bart Van Assche wrote:
+> 
+>> On 2/3/22 10:50, Mikulas Patocka wrote:
+>>> On Tue, 1 Feb 2022, Bart Van Assche wrote:
+>>>> On 2/1/22 10:32, Mikulas Patocka wrote:
+>>>>>    /**
+>>>>> + * blk_queue_max_copy_sectors - set maximum copy offload sectors for
+>>>>> the
+>>>>> queue
+>>>>> + * @q:  the request queue for the device
+>>>>> + * @size:  the maximum copy offload sectors
+>>>>> + */
+>>>>> +void blk_queue_max_copy_sectors(struct request_queue *q, unsigned int
+>>>>> size)
+>>>>> +{
+>>>>> +	q->limits.max_copy_sectors = size;
+>>>>> +}
+>>>>> +EXPORT_SYMBOL_GPL(blk_queue_max_copy_sectors);
+>>>>
+>>>> Please either change the unit of 'size' into bytes or change its type into
+>>>> sector_t.
+>>>
+>>> blk_queue_chunk_sectors, blk_queue_max_discard_sectors,
+>>> blk_queue_max_write_same_sectors, blk_queue_max_write_zeroes_sectors,
+>>> blk_queue_max_zone_append_sectors also have the unit of sectors and the
+>>> argument is "unsigned int". Should blk_queue_max_copy_sectors be
+>>> different?
+>>
+>> As far as I know using the type sector_t for variables that represent a number
+>> of sectors is a widely followed convention:
+>>
+>> $ git grep -w sector_t | wc -l
+>> 2575
+>>
+>> I would appreciate it if that convention would be used consistently, even if
+>> that means modifying existing code.
+>>
+>> Thanks,
+>>
+>> Bart.
+> 
+> Changing the sector limit variables in struct queue_limits from
+> unsigned int to sector_t would increase the size of the structure and
+> its cache footprint.
+> 
+> And we can't send bios larger than 4GiB anyway because bi_size is
+> 32-bit.
+> 
+> Jens, what do you think about it? Should the sectors limits be
+> sector_t?
 
-And the boot is severly delayed until the timeout.
+Why make it larger than it needs to?
 
-The controller is HPE Smart Array S100i SR Gen10
-
-I have tried to add (naivly) to struct board_type products:
-	{0x00e41590, "Smart Array S100i SR Gen10", &SA5_access},
-but the board still time out.
-
-With further search, I found that the S100i seems to be a fake SW RAID controller usefull for windows only.
-
-So I use the following patch to fix the boot stuck.
-
-Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
----
- drivers/scsi/hpsa.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a47bcce3c9c7..dbc753a30500 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -231,6 +231,7 @@ static struct board_type products[] = {
- 	{0x007D1590, "HP Storage P1228 Array Controller", &SA5_access},
- 	{0x00881590, "HP Storage P1228e Array Controller", &SA5_access},
- 	{0x333f103c, "HP StorageWorks 1210m Array Controller", &SA5_access},
-+	{0x00e41590, "Smart Array S100i SR Gen10", NULL},
- 	{0xFFFF103C, "Unknown Smart Array", &SA5_access},
- };
- 
-@@ -7554,6 +7555,10 @@ static int hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id,
- 		*legacy_board = false;
- 	for (i = 0; i < ARRAY_SIZE(products); i++)
- 		if (*board_id == products[i].board_id) {
-+			if (!products[i].access) {
-+				dev_info(&pdev->dev, "This is a SW RAID controller for windows only\n");
-+				return -ENODEV;
-+			}
- 			if (products[i].access != &SA5A_access &&
- 			    products[i].access != &SA5B_access)
- 				return i;
-@@ -8676,7 +8681,8 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	rc = hpsa_lookup_board_id(pdev, &board_id, NULL);
- 	if (rc < 0) {
--		dev_warn(&pdev->dev, "Board ID not found\n");
-+		if (rc != -ENODEV)
-+			dev_warn(&pdev->dev, "Board ID not found\n");
- 		return rc;
- 	}
- 
 -- 
-2.25.1
+Jens Axboe
 
