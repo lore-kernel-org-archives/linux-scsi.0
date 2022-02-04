@@ -2,116 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EEDDC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Feb 2022 12:09:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9803DC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Feb 2022 13:12:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358551AbiBDMJ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Feb 2022 07:09:29 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:28282 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1356841AbiBDMJY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2022 07:09:24 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643976564;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Ug0j2D3hPaBD8ARb0/WmIlQ1wD9LKsRfGtTL8Fytta4=;
-        b=WPUX+zsSmsvJz4UKkhwUZcJh8wQu2k77XLVdlfXuIE1nlpmd+RfeZMOVL70nelWviAuOhv
-        i0mN1i6obCsL+YZGiz/yuYsbWW48RYz+9+Qt8jCeCaxFJI9Mklxx8Mh+oYJV9bbRLe22pQ
-        AXKnJdNZlZU1MxrCsgU5MDaYzvXSZOo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-548-F7yHxsWwMP2s-ecdrp4ehg-1; Fri, 04 Feb 2022 07:09:19 -0500
-X-MC-Unique: F7yHxsWwMP2s-ecdrp4ehg-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B182B8145E0;
-        Fri,  4 Feb 2022 12:09:17 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 914F178A9E;
-        Fri,  4 Feb 2022 12:09:09 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 214C99wH019986;
-        Fri, 4 Feb 2022 07:09:09 -0500
-Received: from localhost (mpatocka@localhost)
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 214C97pr019978;
-        Fri, 4 Feb 2022 07:09:07 -0500
-X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
-Date:   Fri, 4 Feb 2022 07:09:07 -0500 (EST)
-From:   Mikulas Patocka <mpatocka@redhat.com>
-X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: [RFC PATCH 1/3] block: add copy offload support
-In-Reply-To: <a2ec9086-72d2-4a4e-c4fa-fe53bf5ba092@acm.org>
-Message-ID: <alpine.LRH.2.02.2202040657060.19134@file01.intranet.prod.int.rdu2.redhat.com>
-References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com> <20220201102122.4okwj2gipjbvuyux@mpHalley-2> <alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com> <alpine.LRH.2.02.2202011331570.22481@file01.intranet.prod.int.rdu2.redhat.com>
- <efd2e976-4d2d-178e-890d-9bde1a89c47f@acm.org> <alpine.LRH.2.02.2202031310530.28604@file01.intranet.prod.int.rdu2.redhat.com> <a2ec9086-72d2-4a4e-c4fa-fe53bf5ba092@acm.org>
-User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
+        id S1350855AbiBDNM5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Feb 2022 08:12:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57550 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1349939AbiBDNM5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2022 08:12:57 -0500
+Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17ED6C061714
+        for <linux-scsi@vger.kernel.org>; Fri,  4 Feb 2022 05:12:57 -0800 (PST)
+Received: by mail-wr1-x436.google.com with SMTP id s10so8672530wra.5
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Feb 2022 05:12:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baylibre-com.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=WZbYJHNx4029ps/19+h4CZdnYRI6KHcst/wEtS01Jdo=;
+        b=TyKyYZByUE3jpVhuJ9mUwyFUGomBVpvNhaiNWGG0w8Al4uf8yFaqLcjbyfFqgnDNoP
+         yiWyyUpqTstnRV+wIfXZX/rn/TeYTqDp4fjcuBCCa4JWw+Kn8zz/iqTrP176FbTG6J0x
+         MiPupOe4nw0D20+TId1bYsLwFp9jqAWbuc9vd8yFc7mUjVtD4A/aWnrEX/43zbReKfzD
+         3IX3QySKKUj+lUPiW2C7dWFlq07dtljJy+pq7oQglrIK0Mu7hUpL5boWgKRCk4BYOmpY
+         FT62jyWUULzQYJZehkxDNW/SoB+KSFiMI2hvg499iZuKm87zKXvFh46Ew5B6+TkA5Uld
+         5bBg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=WZbYJHNx4029ps/19+h4CZdnYRI6KHcst/wEtS01Jdo=;
+        b=0Y7lf1ykFyQmgg7KrdGFxGE5NBBZr2DElHnVvU/rZo89ZyEaV69gOrU7Ki3MIQsJh5
+         GyIv7rJ9qtldhWGhk0OVa9t4xhQQquU+Rlu2jzKd3nEQJXaJmNH4Vmm6eOvWa0zIZu1f
+         y5G0IEq3J4ZSM4ZT0jwkwn5PdEsYeIDiCMsI3Fmfg3BQ6p9jXAnfENdR5zO+YiU2jcNw
+         eE3+6gplpC5uFk+uqfwMP/XfFX2PBEiALW+oTGSaFylvWzI4Nu6drek5RLqT3wjAtJCm
+         wtpI6BonZSrBgWw/SCRzrbKQwiC6BUiyZXJoypFv08WuHdYoPKfqd95w4RFInG6PiLBT
+         +7tg==
+X-Gm-Message-State: AOAM532mcCr24ogGNpHqm6NZ7YbLviqQWuoQyV0empYqTfoGlOyAm63m
+        wFWTji6YPxhnnsfVoK3n+srTkA==
+X-Google-Smtp-Source: ABdhPJyBJFSfzOskZ3dK5bvmtr+IRWoECNPyqbHGeLbc83XvlzGW98cyZv7ax19uTaCxEIMTvLe9BQ==
+X-Received: by 2002:a5d:694d:: with SMTP id r13mr2443227wrw.453.1643980375586;
+        Fri, 04 Feb 2022 05:12:55 -0800 (PST)
+Received: from localhost.localdomain (laubervilliers-658-1-213-31.w90-63.abo.wanadoo.fr. [90.63.244.31])
+        by smtp.googlemail.com with ESMTPSA id p42sm9645343wms.28.2022.02.04.05.12.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Feb 2022 05:12:55 -0800 (PST)
+From:   Corentin Labbe <clabbe@baylibre.com>
+To:     don.brace@microchip.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        storagedev@microchip.com, Corentin Labbe <clabbe@baylibre.com>
+Subject: [PATCH] scsi: hpsa: prevent hpsa to severly delay boot
+Date:   Fri,  4 Feb 2022 13:12:47 +0000
+Message-Id: <20220204131247.1684875-1-clabbe@baylibre.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On my HPE Proliant microserver gen 10+, modprobing hpsa lead to:
+hpsa 0000:01:00.7: unrecognized board ID: 0x00e41590
+hpsa 0000:01:00.7: unrecognized board ID: 0x00e41590
+hpsa 0000:01:00.7: can't disable ASPM; OS doesnt't have ASPM control
+hpsa 0000:01:00.7: board not ready, timed out.
 
+And the boot is severly delayed until the timeout.
 
-On Thu, 3 Feb 2022, Bart Van Assche wrote:
+The controller is HPE Smart Array S100i SR Gen10
 
-> On 2/3/22 10:50, Mikulas Patocka wrote:
-> > On Tue, 1 Feb 2022, Bart Van Assche wrote:
-> > > On 2/1/22 10:32, Mikulas Patocka wrote:
-> > > >    /**
-> > > > + * blk_queue_max_copy_sectors - set maximum copy offload sectors for
-> > > > the
-> > > > queue
-> > > > + * @q:  the request queue for the device
-> > > > + * @size:  the maximum copy offload sectors
-> > > > + */
-> > > > +void blk_queue_max_copy_sectors(struct request_queue *q, unsigned int
-> > > > size)
-> > > > +{
-> > > > +	q->limits.max_copy_sectors = size;
-> > > > +}
-> > > > +EXPORT_SYMBOL_GPL(blk_queue_max_copy_sectors);
-> > > 
-> > > Please either change the unit of 'size' into bytes or change its type into
-> > > sector_t.
-> > 
-> > blk_queue_chunk_sectors, blk_queue_max_discard_sectors,
-> > blk_queue_max_write_same_sectors, blk_queue_max_write_zeroes_sectors,
-> > blk_queue_max_zone_append_sectors also have the unit of sectors and the
-> > argument is "unsigned int". Should blk_queue_max_copy_sectors be
-> > different?
-> 
-> As far as I know using the type sector_t for variables that represent a number
-> of sectors is a widely followed convention:
-> 
-> $ git grep -w sector_t | wc -l
-> 2575
-> 
-> I would appreciate it if that convention would be used consistently, even if
-> that means modifying existing code.
-> 
-> Thanks,
-> 
-> Bart.
+I have tried to add (naivly) to struct board_type products:
+	{0x00e41590, "Smart Array S100i SR Gen10", &SA5_access},
+but the board still time out.
 
-Changing the sector limit variables in struct queue_limits from unsigned 
-int to sector_t would increase the size of the structure and its cache 
-footprint.
+With further search, I found that the S100i seems to be a fake SW RAID controller usefull for windows only.
 
-And we can't send bios larger than 4GiB anyway because bi_size is 32-bit.
+So I use the following patch to fix the boot stuck.
 
-Jens, what do you think about it? Should the sectors limits be sector_t?
+Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
+---
+ drivers/scsi/hpsa.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Mikulas
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index a47bcce3c9c7..dbc753a30500 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -231,6 +231,7 @@ static struct board_type products[] = {
+ 	{0x007D1590, "HP Storage P1228 Array Controller", &SA5_access},
+ 	{0x00881590, "HP Storage P1228e Array Controller", &SA5_access},
+ 	{0x333f103c, "HP StorageWorks 1210m Array Controller", &SA5_access},
++	{0x00e41590, "Smart Array S100i SR Gen10", NULL},
+ 	{0xFFFF103C, "Unknown Smart Array", &SA5_access},
+ };
+ 
+@@ -7554,6 +7555,10 @@ static int hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id,
+ 		*legacy_board = false;
+ 	for (i = 0; i < ARRAY_SIZE(products); i++)
+ 		if (*board_id == products[i].board_id) {
++			if (!products[i].access) {
++				dev_info(&pdev->dev, "This is a SW RAID controller for windows only\n");
++				return -ENODEV;
++			}
+ 			if (products[i].access != &SA5A_access &&
+ 			    products[i].access != &SA5B_access)
+ 				return i;
+@@ -8676,7 +8681,8 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	rc = hpsa_lookup_board_id(pdev, &board_id, NULL);
+ 	if (rc < 0) {
+-		dev_warn(&pdev->dev, "Board ID not found\n");
++		if (rc != -ENODEV)
++			dev_warn(&pdev->dev, "Board ID not found\n");
+ 		return rc;
+ 	}
+ 
+-- 
+2.25.1
 
