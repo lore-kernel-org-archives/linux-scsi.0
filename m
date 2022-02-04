@@ -2,168 +2,156 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04981C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Feb 2022 06:28:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4BCFC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Feb 2022 07:14:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234257AbiBDG2m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Feb 2022 01:28:42 -0500
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:8271 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243983AbiBDG2m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2022 01:28:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1643956121; x=1675492121;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=XY7HM1Ns7hm2Ldhsemh6j5ncCcWBc54JkxLeU7W/o3w=;
-  b=WjueqhXlfDDgoL6+iANgkOVfKYC5DJbA9mwI3+/d+o3tJE2LsDTUL+F+
-   MbrWrSJiHZBZIZEl8umussbDbeinTJvtclGzsk64IiFDoz+nJ4Ki3/6Ql
-   bDFKLJ/Iy0jZ8x3wy2pj+2ngnoqBdT5Hatb92NFDsh44MwAuwV/dqPkmg
-   umxhtw5o6ZdxlN/5MwRIi7fSrYEZDOoggd+2WS+oJRdyilk4i5Eb3UQeJ
-   2iuOPmxYgfdde2+6NHmMxVwovHnY9n4w7dRMlBAsPT6NwDTpemN4afTaV
-   SwMwYyoLrhGhQG3ky72Pd2YBWbMSP0/JCzUamM+r8fsDjDVlkl87OPm2C
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.88,341,1635177600"; 
-   d="scan'208";a="196957613"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 04 Feb 2022 14:28:40 +0800
-IronPort-SDR: mJhWgS+Az4LHYsmoXUcyP0Sebg1XGSpJGH12Mt77AYU0SmMCcAvWFdramk2ZryvyJoa6PGPdcF
- L/dliHbL8d1WnY7y4rUo/O7PWdH6D00smmqYj70av57aPpsXmZSCRRYzvYxcrWpc819Myb6+Ck
- eMiClh9xLNjHwaNzPbmr4eIayAeqnID9aMspxRCHGod57UXAFZCK148X934tvl1YR/ApWi9cRG
- amB3+1cE76e+BbUsktPEcMjRyOaCXxLrB7U+WwaFjpMvDabtg118BEXQjYtogKsJGPCWSSQjDq
- 2lvupkYk3eSAWVF5GV6g7S69
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Feb 2022 22:01:48 -0800
-IronPort-SDR: CofeiL0TTjozBhtC0k0b787iMlGJbGex1T8G7hlhHKYZQTwxTPU7L0lokQbK2GL58EwUUE3tCb
- 0KuEE9A+xi2ycOS9bpjvIAnXvUfzj+ICeZK/fAdEg0O+8+VMa+F86OS2CmImB0RXePw+tCiBqG
- vdVeac26kxi6noQQ1KX5v2ua2zDs7FRkwo2Srpbn4ubGw9SN06OU/wkbiwKkFOGd2XXjQmfsIa
- aanta63nqr97NLwHkA78rJrN1QIdyK45kXSJoqnkc4m4mtOsf8Sr0L+HqumsHd61vYTsms5R3l
- PHg=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Feb 2022 22:28:42 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Jqlwn0xM8z1VSkj
-        for <linux-scsi@vger.kernel.org>; Thu,  3 Feb 2022 22:28:41 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1643956119; x=1646548120; bh=XY7HM1Ns7hm2Ldhsemh6j5ncCcWBc54JkxL
-        eU7W/o3w=; b=Vy1JQI4M/p1RM6pYjkGTdHayEVDerzZzeQKwGTfze/XnWDZgKtC
-        452KAtRCJmmt2/PoJYUSFE5uhvagAB3Aq1Fktw/41WmPj8t5pXf1u0eCtiVdkYqj
-        101uSyKbmZmftoezDdZsx8NMUv2/vmFsInUBB/0WSQbmeVoYYQ5A4gIGMf0IckqC
-        4kAcyV9l8+HvrKY/u5XCSrb2iOQhmd++vpkqueu5mnX/ad80yJuRsm3HZ3dA9vXV
-        aH3mjv/PXZ2R3eiDFD/wY6bfvhEKTK1baWpKRVPShwdOOm725/z3JLVgHG4+2+Qw
-        VDs6oFM1RR6Yb3d/5JyVazRxgVSzUUtx8QQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ywxg80dKGb5g for <linux-scsi@vger.kernel.org>;
-        Thu,  3 Feb 2022 22:28:39 -0800 (PST)
-Received: from [10.225.163.63] (unknown [10.225.163.63])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Jqlwf4v8pz1Rwrw;
-        Thu,  3 Feb 2022 22:28:34 -0800 (PST)
-Message-ID: <2bbed027-b9a1-e5db-3a3d-90c40af49e09@opensource.wdc.com>
-Date:   Fri, 4 Feb 2022 15:28:33 +0900
+        id S1347693AbiBDHOP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Feb 2022 02:14:15 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:36434 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236288AbiBDHOO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2022 02:14:14 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 36F6D1F382;
+        Fri,  4 Feb 2022 07:14:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1643958853; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=w0z1xqNv58wHsgTP5BtV6Kz+OJ4pwfGyWhXTmETsnrg=;
+        b=QtIy/vLQb1gMmnvnGfSVzhSx2K85WdjoPOsCDAcNuXzNpNvUXcZQ51W2okJCCcps0g3jvT
+        ppPTjNG70qTYXaOf8Y0IK+PbuAidd57cf6aTCKyANDBsSZ1mgGl31kanpoNWh8NkipjMq8
+        2RT/7Hj4ogwi4bE/8Q0ufpHwMNNZrIQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1643958853;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=w0z1xqNv58wHsgTP5BtV6Kz+OJ4pwfGyWhXTmETsnrg=;
+        b=jNhvRFgoU47j6An68pv1mqmB/wvHP8Z9skc+Q++b9bqv/J+AS9vrJWqw/bImUBvuBfBpYB
+        gb7o7IETDs9ipQBg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1F0B11331A;
+        Fri,  4 Feb 2022 07:14:12 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id RfK0BUTS/GE+QgAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 04 Feb 2022 07:14:12 +0000
+Message-ID: <54575500-129d-b879-fcc9-1e3eb09b7c44@suse.de>
+Date:   Fri, 4 Feb 2022 08:14:11 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [RFC PATCH 3/3] nvme: add the "debug" host driver
+ Thunderbird/91.4.0
+Subject: Re: [PATCH 1/2] block: introduce BLK_STS_OFFLINE
 Content-Language: en-US
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Adam Manzanares <a.manzanares@samsung.com>
-Cc:     Luis Chamberlain <mcgrof@kernel.org>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Keith Busch <kbusch@kernel.org>,
+To:     Song Liu <songliubraving@fb.com>, Jens Axboe <axboe@kernel.dk>
+Cc:     Song Liu <song@kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        =?UTF-8?Q?Javier_Gonz=c3=a1lez?= <javier@javigon.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "msnitzer@redhat.com >> msnitzer@redhat.com" <msnitzer@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "martin.petersen@oracle.com >> Martin K. Petersen" 
-        <martin.petersen@oracle.com>,
-        "roland@purestorage.com" <roland@purestorage.com>,
-        Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
-        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
-        "zach.brown@ni.com" <zach.brown@ni.com>,
-        "osandov@fb.com" <osandov@fb.com>,
-        "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "josef@toxicpanda.com" <josef@toxicpanda.com>,
-        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
-        "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.com" <jack@suse.com>,
-        Kanchan Joshi <joshi.k@samsung.com>
-References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com>
- <20220201102122.4okwj2gipjbvuyux@mpHalley-2>
- <alpine.LRH.2.02.2202011327350.22481@file01.intranet.prod.int.rdu2.redhat.com>
- <alpine.LRH.2.02.2202011333160.22481@file01.intranet.prod.int.rdu2.redhat.com>
- <270f30df-f14c-b9e4-253f-bff047d32ff0@nvidia.com>
- <20220203153843.szbd4n65ru4fx5hx@garbanzo>
- <CGME20220203165248uscas1p1f0459e548743e6be26d13d3ed8aa4902@uscas1p1.samsung.com>
- <20220203165238.GA142129@dhcp-10-100-145-180.wdc.com>
- <20220203195155.GB249665@bgt-140510-bm01>
- <863d85e3-9a93-4d8c-cf04-88090eb4cc02@nvidia.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <863d85e3-9a93-4d8c-cf04-88090eb4cc02@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Kernel Team <Kernel-team@fb.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20220203064009.1795344-1-song@kernel.org>
+ <20220203064009.1795344-2-song@kernel.org>
+ <CAPhsuW6PNaYUb5xDxPX_gX=2fZdiRURRos5sT_Tsbngon1+eKw@mail.gmail.com>
+ <f7489746-b8fb-bc9a-a706-e5926fa9e325@suse.de>
+ <27583256-dc7d-74bd-115c-b0c835cd5c1b@kernel.dk>
+ <C3D342B9-C4D0-4C3A-9582-EB15A5F5D7FF@fb.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <C3D342B9-C4D0-4C3A-9582-EB15A5F5D7FF@fb.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/4/22 12:12, Chaitanya Kulkarni wrote:
+On 2/3/22 18:23, Song Liu wrote:
+> Hi Hannes and Jens,
 > 
->>>> One can instantiate scsi devices with qemu by using fake scsi devices,
->>>> but one can also just use scsi_debug to do the same. I see both efforts
->>>> as desirable, so long as someone mantains this.
->>>>
-> 
-> Why do you think both efforts are desirable ?
-
-When testing code using the functionality, it is far easier to get said
-functionality doing a simple "modprobe" rather than having to setup a
-VM. C.f. running blktests or fstests.
-
-So personally, I also think it would be great to have a kernel-based
-emulation of copy offload. And that should be very easy to implement
-with the fabric code. Then loopback onto a nullblk device and you get a
-quick and easy to setup copy-offload device that can even be of the ZNS
-variant if you want since nullblk supports zones.
-
-> 
-> NVMe ZNS QEMU implementation proved to be perfect and works just
-> fine for testing, copy offload is not an exception.
-> 
->>>> For instance, blktests uses scsi_debug for simplicity.
->>>>
->>>> In the end you decide what you want to use.
->>>
->>> Can we use the nvme-loop target instead?
+>> On Feb 3, 2022, at 5:47 AM, Jens Axboe <axboe@kernel.dk> wrote:
 >>
->> I am advocating for this approach as well. It presentas a virtual nvme
->> controller already.
+>> On 2/3/22 12:24 AM, Hannes Reinecke wrote:
+>>> On 2/3/22 07:52, Song Liu wrote:
+>>>> CC linux-block (it was a typo in the original email)
+>>>>
+>>>> On Wed, Feb 2, 2022 at 10:40 PM Song Liu <song@kernel.org> wrote:
+>>>>>
+>>>>> Currently, drivers reports BLK_STS_IOERR for devices that are not full
+>>>>> online or being removed. This behavior could cause confusion for users,
+>>>>> as they are not really I/O errors from the device.
+>>>>>
+>>>>> Solve this issue with a new state BLK_STS_OFFLINE, which reports "device
+>>>>> offline error" in dmesg instead of "I/O error".
+>>>>>
+>>>>> Signed-off-by: Song Liu <song@kernel.org>
+>>>>> ---
+>>>>>   block/blk-core.c          | 1 +
+>>>>>   include/linux/blk_types.h | 7 +++++++
+>>>>>   2 files changed, 8 insertions(+)
+>>>>>
+>>>>> diff --git a/block/blk-core.c b/block/blk-core.c
+>>>>> index 61f6a0dc4511..24035dd2eef1 100644
+>>>>> --- a/block/blk-core.c
+>>>>> +++ b/block/blk-core.c
+>>>>> @@ -164,6 +164,7 @@ static const struct {
+>>>>>          [BLK_STS_RESOURCE]      = { -ENOMEM,    "kernel resource" },
+>>>>>          [BLK_STS_DEV_RESOURCE]  = { -EBUSY,     "device resource" },
+>>>>>          [BLK_STS_AGAIN]         = { -EAGAIN,    "nonblocking retry" },
+>>>>> +       [BLK_STS_OFFLINE]       = { -EIO,       "device offline" },
+>>>>>
+>>>>>          /* device mapper special case, should not leak out: */
+>>>>>          [BLK_STS_DM_REQUEUE]    = { -EREMCHG, "dm internal retry" },
+>>>>> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+>>>>> index fe065c394fff..5561e58d158a 100644
+>>>>> --- a/include/linux/blk_types.h
+>>>>> +++ b/include/linux/blk_types.h
+>>>>> @@ -153,6 +153,13 @@ typedef u8 __bitwise blk_status_t;
+>>>>>    */
+>>>>>   #define BLK_STS_ZONE_ACTIVE_RESOURCE   ((__force blk_status_t)16)
+>>>>>
+>>>>> +/*
+>>>>> + * BLK_STS_OFFLINE is returned from the driver when the target device is offline
+>>>>> + * or is being taken offline. This could help differentiate the case where a
+>>>>> + * device is intentionally being shut down from a real I/O error.
+>>>>> + */
+>>>>> +#define BLK_STS_OFFLINE                ((__force blk_status_t)17)
+>>>>> +
+>>>>>   /**
+>>>>>    * blk_path_error - returns true if error may be path related
+>>>>>    * @error: status the request was completed with
+>>>>> --
+>>>>> 2.30.2
+>>>>>
+>>> Please do not overload EIO here.
+>>> EIO already is a catch-all error if we don't know any better, but for
+>>> the 'device offline' case we do (or rather should).
+>>> Please map it onto 'ENODEV' or 'ENXIO'.
 >>
+>> It's deliberately EIO as not to force a change in behavior. I don't mind
+>> using something else, but that should be a separate change then.
 > 
-> It does that assuming underlying block device such as null_blk or
-> QEMU implementation supports required features not to bloat the the
-> NVMeOF target.
+> Thanks for these feedbacks. Shall I send v2 with an extra patch that
+> changes EIO to ENODEV/ENXIO? Or shall we do that in a follow up patch?
+> Also, any preference between ENODEV and ENXIO?
 > 
-> -ck
-> 
-> 
+Please make it an addtional patch, and use ENODEV as a return value.
+For this patch you can add:
 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
+Cheers,
+
+Hannes
 -- 
-Damien Le Moal
-Western Digital Research
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
