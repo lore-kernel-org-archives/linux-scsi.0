@@ -2,242 +2,211 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA110C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Feb 2022 11:27:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2680CC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Feb 2022 11:34:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358373AbiBDL1w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Feb 2022 06:27:52 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:31153 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235838AbiBDL1v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2022 06:27:51 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1643974071; x=1675510071;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=4oT3kO7idKuxI/WBc6gpRwbrYnMZASbJD3/zTJR4xr8=;
-  b=lKhOl2YCjbG41Wb/mNvLy3qd2POEJKfJh9okSWFOlmN/kKpCqYGS9OFI
-   JMm3Lv83XUhosQvFhDQIaBAM91BGTk3TlmU2Eqksv40fssspX1scrBXdS
-   PXCxRpsLCTsK4Y+4c2Vp0dVJAgfb8xzg8RirDmFcc9W7Jp6S9Ufw7nu7R
-   iuCiursdfAZLCS/qvJxHuhQJv2SllDGsDa/ta0tW6iPQvVcn9xHNtPO4S
-   +RiGo5Tm3RafOKckgqJdHt8si1303gQWVnXm+ssTiEmZyrBFH97gOXjF8
-   ZMKgi/VFU2GN/nQo2cZNHvngu3yXJTGwMQ+i0N4qtLOK6k0xc/7hou3SE
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.88,342,1635177600"; 
-   d="scan'208";a="191096825"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 04 Feb 2022 19:27:51 +0800
-IronPort-SDR: z6chxLyWViZUbETNRxQJ72bcfbtQcCYig6+gzs1hC7nN+SBYcjbYoJGD59xMt01UWj/rpOXLAF
- qe3rh0PF+7h9j+lCElkQxknpPq9pjxU3FmEvdkTRhgsvQWA6dagXWLaMXWySD2ZszvLPPxjpIi
- 4KEUFTjgruHdzazaO7nPf09Hx/fgnWfSv0vEjq+oK7cE3fddX4Uy1PIIIJuBSBHsbfQ9c2lj1R
- sqevOZOzEUL3otU5LuwSxRWxCDT+9IE2Un845sk/Xyocu8Odp0zy66lYefGyUc3gUTPeRerkl/
- 3maSUw7aodEkqCIjwxWV/jZ6
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2022 03:00:57 -0800
-IronPort-SDR: xqEPdPFkXNSul2quB5qGqcVkIAWC5WU9GwJoaMZTqvAgP8BYwYpKJfNuNy0Pn7XI6CVY0C8S4a
- t2jwGK1e8RbM6zVLfQJQOdY/QKppf2EjSJdv7JC007T4vusiZYg/yxLUg6EdRCKUCmc/Mk+qd3
- nOfp9iuXNj9pvLfnXfQahUY+Dl29U+HOkRwR4XlpX6wrcL8kR34qi7UzMdAjJE03HHXciYVn30
- mzRhA2ti/6MIjXNC81EpiSCg2bB7BJ8UBWJlpENPA9/6RHHZXu54BF9BK/imFAIVXLaPZa5WJU
- 8Sw=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2022 03:27:51 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JqtYy332Cz1SVp5
-        for <linux-scsi@vger.kernel.org>; Fri,  4 Feb 2022 03:27:50 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1643974069; x=1646566070; bh=4oT3kO7idKuxI/WBc6gpRwbrYnMZASbJD3/
-        zTJR4xr8=; b=CWYZLUnXALPwYORPL9cnl/0n4lB5vnZiQ7uEM8R+h9vq0rf53wS
-        95oBTBomiTC2lfaX2meHJtypav0dibLWMp/jv3VUeNYJJQ+EVq0GIQlPtU/MhTvE
-        Gigi4hlqK3iGv5cDi7W8XwPl+/3/7662bC9mbMBRCIgaC4Q5x1IA7eqxjKo/hh2F
-        n7aSnfIh9l5ZDLHQ31oQ1m71MgOPvKaVOFDBolr56Z6FZTxdC9MOcLzxmn5XFRbe
-        18xg1ldN1lny+Q37MBnz1EC2aczk5nQ7RcVo522P1IoubfL2S2mni+A4mqsijcVR
-        ViyTx6jRKj+iP1Bp2Gk/2zdl+ZBNg8f/9Kg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id baYN49upv6pG for <linux-scsi@vger.kernel.org>;
-        Fri,  4 Feb 2022 03:27:49 -0800 (PST)
-Received: from [10.225.163.63] (unknown [10.225.163.63])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JqtYt6mbbz1Rwrw;
-        Fri,  4 Feb 2022 03:27:46 -0800 (PST)
-Message-ID: <2bd15f44-0b56-b6e0-8ef8-c33ba9ee7caa@opensource.wdc.com>
-Date:   Fri, 4 Feb 2022 20:27:45 +0900
+        id S1358341AbiBDLe1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Feb 2022 06:34:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34904 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1358418AbiBDLe1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2022 06:34:27 -0500
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA6B4C06173E
+        for <linux-scsi@vger.kernel.org>; Fri,  4 Feb 2022 03:34:26 -0800 (PST)
+Received: by mail-ed1-x532.google.com with SMTP id n10so12525926edv.2
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Feb 2022 03:34:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=javigon-com.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=TQF1/AEnbtmUHa3FAuw6nQDJrxJFCv8yYCIQAgYMNR0=;
+        b=0ajy+8v/jsBfgGk6bMpBUIYinieWtgCd8llUbf5/SfFTr0L10wjL33Esd6+WVS2q2E
+         xqEgoNZe7p3DDKol3CMhwf6WG1KmRbyJSWkBOeMknNl1IAqw9zmfsPqxwZTokejNvsaj
+         zdGTtDXMNUShvYojokoJIIsbJr7NlUheT5MdHDTN78S9Ni0fp/PrLAyDtP4PDwuqrShn
+         5EhDoOXXJRrQzt9eDOHS8+XTN9x+8QFTmbmumY1rXqKeQxIRyNW3KKZbTdh2twSt76Kw
+         X+vs/lT5ri3RBBbCqns98AWJt8C/8UJqJgAsRxcw8Y2AxPDbi7jLb7/51n6gXs8g6W8N
+         8K1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=TQF1/AEnbtmUHa3FAuw6nQDJrxJFCv8yYCIQAgYMNR0=;
+        b=6k+hZnHESTsWLq9J5qSZfbV4p15155rUKMNwK0+8WPDXchQMkbmJwYPiyHcfTegGJN
+         J4ORWXPUtw2GobWVD4mjM1AL6QVYyGwA05Ze96x4NB7mvcVvkxtTqdk/QEPetFKuK67F
+         /yJwVAV5IprT98P7c/+P2IhP16a316C1slF3+ieaPae2dJprzXGQSY7E6GbNqIG8r6ao
+         oXLjkWBt7a8/WW8/iUzwsv489aHiFPPF/OJxDnRIQTdxkSTb3QYAosi9CbSaUwOTNQyT
+         /XGQiaBDoZ0jXGgHAr7DOFRCil1KhMAFIxzssn2L4jZVA1dWUSO2Q7+PZb2ouHhhRuXD
+         Ekcw==
+X-Gm-Message-State: AOAM532wqe4cJRE1Jd43LCksIetKf2NDltXJz0KFYW3qijaurVwoynrb
+        b0cBsr0rt0WdDsR4x/Apkgr3EQ==
+X-Google-Smtp-Source: ABdhPJyHnNd9ApX9T3hNeWQ8SqCfGSdnwH7VDzen0VyUwGIsxdXYZM95bCYkUb7xHMbslFw5zjsfww==
+X-Received: by 2002:a05:6402:2691:: with SMTP id w17mr2622163edd.126.1643974464821;
+        Fri, 04 Feb 2022 03:34:24 -0800 (PST)
+Received: from localhost (5.186.121.195.cgn.fibianet.dk. [5.186.121.195])
+        by smtp.gmail.com with ESMTPSA id z8sm556366ejc.151.2022.02.04.03.34.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Feb 2022 03:34:24 -0800 (PST)
+Date:   Fri, 4 Feb 2022 12:34:23 +0100
+From:   Javier =?utf-8?B?R29uesOhbGV6?= <javier@javigon.com>
+To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Mikulas Patocka <mpatocka@redhat.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Keith Busch <kbusch@kernel.org>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "msnitzer@redhat.com >> msnitzer@redhat.com" <msnitzer@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "martin.petersen@oracle.com >> Martin K. Petersen" 
+        <martin.petersen@oracle.com>,
+        "roland@purestorage.com" <roland@purestorage.com>,
+        Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
+        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
+        "zach.brown@ni.com" <zach.brown@ni.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
+        "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.com" <jack@suse.com>,
+        Kanchan Joshi <joshi.k@samsung.com>
+Subject: Re: [RFC PATCH 3/3] nvme: add the "debug" host driver
+Message-ID: <20220204113423.jmynvz4w5u6wdban@ArmHalley.local>
+References: <270f30df-f14c-b9e4-253f-bff047d32ff0@nvidia.com>
+ <20220203153843.szbd4n65ru4fx5hx@garbanzo>
+ <CGME20220203165248uscas1p1f0459e548743e6be26d13d3ed8aa4902@uscas1p1.samsung.com>
+ <20220203165238.GA142129@dhcp-10-100-145-180.wdc.com>
+ <20220203195155.GB249665@bgt-140510-bm01>
+ <863d85e3-9a93-4d8c-cf04-88090eb4cc02@nvidia.com>
+ <2bbed027-b9a1-e5db-3a3d-90c40af49e09@opensource.wdc.com>
+ <9d5d0b50-2936-eac3-12d3-a309389e03bf@nvidia.com>
+ <20220204082445.hczdiy2uhxfi3x2g@ArmHalley.local>
+ <4d5410a5-93c3-d73c-6aeb-2c1c7f940963@nvidia.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH 00/16] scsi: libsas and users: Factor out LLDD TMF code
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, artur.paszkiewicz@intel.com,
-        jinpu.wang@cloud.ionos.com, chenxiang66@hisilicon.com,
-        Ajish.Koshy@microchip.com
-Cc:     yanaijie@huawei.com, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com, liuqi115@huawei.com, Viswas.G@microchip.com
-References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
- <1893d9ef-042b-af3b-74ea-dd4d0210c493@opensource.wdc.com>
- <14df160f-c0f2-cc9f-56d4-8eda67969e0b@huawei.com>
- <a8fae323-1877-058a-b03e-d175a725213f@opensource.wdc.com>
- <a2de1656-b1ec-2fb7-caab-657e27dacb48@huawei.com>
- <49da4d80-5cc3-35c3-ccaa-6def8165eb65@huawei.com>
- <59a198a8-1d87-bc09-d2d8-2d495ed74c16@opensource.wdc.com>
- <098f988e-1f12-c412-3111-60393dfe0f0b@huawei.com>
- <f3362c6f-b4b6-2914-0652-d786e19b6b03@opensource.wdc.com>
- <62e56609-7026-93a1-a446-a6fd68328653@opensource.wdc.com>
- <e8af9d55-bf36-faa0-defb-3a9a4931826e@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <e8af9d55-bf36-faa0-defb-3a9a4931826e@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <4d5410a5-93c3-d73c-6aeb-2c1c7f940963@nvidia.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/4/22 19:36, John Garry wrote:
-> On 04/02/2022 03:02, Damien Le Moal wrote:
->>> The inconsistency is this line says:
->>> [  137.193944] pm80xx0:: pm80xx_chip_sata_req  4581:no data
->>> Which seems to be sensical for NCQ_NON_DATA command, but then, this line
->>> seems wrong:
->>> [  137.228015] pm80xx0:: mpi_sata_completion  2515:FPDMA len = 8
+On 04.02.2022 09:58, Chaitanya Kulkarni wrote:
+>On 2/4/22 12:24 AM, Javier González wrote:
+>> On 04.02.2022 07:58, Chaitanya Kulkarni wrote:
+>>> On 2/3/22 22:28, Damien Le Moal wrote:
+>>>> On 2/4/22 12:12, Chaitanya Kulkarni wrote:
+>>>>>
+>>>>>>>> One can instantiate scsi devices with qemu by using fake scsi
+>>>>>>>> devices,
+>>>>>>>> but one can also just use scsi_debug to do the same. I see both
+>>>>>>>> efforts
+>>>>>>>> as desirable, so long as someone mantains this.
+>>>>>>>>
+>>>>>
+>>>>> Why do you think both efforts are desirable ?
+>>>>
+>>>> When testing code using the functionality, it is far easier to get said
+>>>> functionality doing a simple "modprobe" rather than having to setup a
+>>>> VM. C.f. running blktests or fstests.
+>>>>
 >>>
->>> I need to go and check the specs what the FIS reply format is for
->>> NCQ_NON_DATA.
+>>> agree on simplicity but then why do we have QEMU implementations for
+>>> the NVMe features (e.g. ZNS, NVMe Simple Copy) ? we can just build
+>>> memoery backed NVMeOF test target for NVMe controller features.
 >>>
->>>
->>> [  137.187184] pm80xx0:: pm8001_queue_command  408:pm8001_task_exec device
->>> [  137.193944] pm80xx0:: pm80xx_chip_sata_req  4581:no data
->>> [  137.199339] pm80xx0:: pm80xx_chip_sata_req  4682:Sending Normal SATA
->>> command 0x63 inb 4
->>> [  137.207577] pm80xx0:: pm8001_mpi_msg_consume  1446:: CI=46 PI=47
->>> msgHeader=8104200d
->>> [  137.215399] pm80xx0:: mpi_sata_completion  2481:IO_SUCCESS
->>> [  137.220961] pm80xx0:: mpi_sata_completion  2503:SAS_PROTO_RESPONSE
->>> len = 20
->>> [  137.228015] pm80xx0:: mpi_sata_completion  2515:FPDMA len = 8
->>> [  137.233878] pm80xx0:: pm8001_mpi_msg_free_set  1403: CI=47 PI=47
->>> [  137.236696] pm80xx0:: pm8001_queue_command  408:pm8001_task_exec device
->>> [  137.247102] pm80xx0:: pm80xx_chip_sata_req  4585:DMA
->>> [  137.252186] pm80xx0:: pm80xx_chip_sata_req  4593:FPDMA
->>> [  137.257400] pm80xx0:: pm80xx_chip_sata_req  4682:Sending Normal SATA
->>> command 0x65 inb f
->>> [  167.506280] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
->>> [  167.512363] sas: sas_scsi_find_task: aborting task 0x00000000aa372627
->>> [  167.519049] pm80xx0:: pm8001_chip_abort_task  4607:cmd_tag = 2, abort
->>> task tag = 0x1
->>> [  187.969173] pm80xx0:: pm8001_exec_internal_task_abort  753:TMF task
->>> timeout.
-> 
-> As I mentioned, having this fail is a red flag. If I was pushed to guess 
-> what has happened, I'd say the FW is faulting due to some erroneous 
-> driver behaviour.
-
-I am still thinking that there is something wrong with the handling of
-NCQ NON DATA command. There are several places where the code determines
-non-data vs pio vs dma vs fpdma (ncq), and NCQ NON DATA always falls in
-the fpdma bucket, which is wrong.
-
->> This is the submission path, not completion. The code is:
+>>> Also, recognizing the simplicity I proposed initially NVMe ZNS
+>>> fabrics based emulation over QEMU (I think I still have initial state
+>>> machine implementation code for ZNS somewhere), those were "nacked" for
+>>> the right reason, since we've decided go with QEMU and use that as a
+>>> primary platform for testing, so I failed to understand what has
+>>> changed.. since given that QEMU already supports NVMe simple copy ...
 >>
->> (gdb) list *(pm8001_queue_command+0x842)
->> 0x3d42 is in pm8001_queue_command (drivers/scsi/pm8001/pm8001_sas.c:491).
->> 486				atomic_dec(&pm8001_dev->running_req);
->> 487				goto err_out_tag;
->> 488			}
->> 489			/* TODO: select normal or high priority */
->> 490			spin_lock(&t->task_state_lock);
->> 491			t->task_state_flags |= SAS_TASK_AT_INITIATOR;
->> 492			spin_unlock(&t->task_state_lock);
->> 493		} while (0);
->> 494		rc = 0;
->> 495		goto out_done;
+>> I was not part of this conversation, but as I see it each approach give
+>> a benefit. QEMU is fantastic for compliance testing and I am not sure
+>> you get the same level of command analysis anywhere else; at least not
+>> without writing dedicated code for this in a target.
 >>
->> So the task is already completed when the submission path tries to set
->> the state flag ? Debugging...
-> 
-> Yeah, that's how it looks.
-> 
-> I already mentioned this problem here:
-> 
-> https://lore.kernel.org/linux-scsi/0cc0c435-b4f2-9c76-258d-865ba50a29dd@huawei.com/
-> 
-> Maybe we should just fix it now to rule it out of possibly causing other 
-> issues... I was reluctant to fix it as many places seems to need to be 
-> touched. Let me check it.
+>> This said, when we want to test for race conditions, QEMU is very slow.
+>
+>Can you please elaborate the scenario and numbers for slowness of QEMU?
 
-Here is my current fix:
+QEMU is an emulator, not a simulator. So we will not be able to stress
+the host stack in the same way the null_blk device does. If we want to
+test code in the NVMe driver then we need a way to have the equivalent
+to the null_blk in NVMe. It seems like the nvme-loop target can achieve
+this.
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c
-b/drivers/scsi/pm8001/pm8001_sas.c
-index 1b95c73d12d1..16c101577dd3 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -453,13 +453,18 @@ int pm8001_queue_command(struct sas_task *task,
-gfp_t gfp_flags)
-                ccb->ccb_tag = tag;
-                ccb->task = t;
-                ccb->device = pm8001_dev;
-+
-+               /* TODO: select normal or high priority */
-+               atomic_inc(&pm8001_dev->running_req);
-+               spin_lock(&t->task_state_lock);
-+               t->task_state_flags |= SAS_TASK_AT_INITIATOR;
-+               spin_unlock(&t->task_state_lock);
-+
-                switch (task_proto) {
-                case SAS_PROTOCOL_SMP:
--                       atomic_inc(&pm8001_dev->running_req);
-                        rc = pm8001_task_prep_smp(pm8001_ha, ccb);
-                        break;
-                case SAS_PROTOCOL_SSP:
--                       atomic_inc(&pm8001_dev->running_req);
-                        if (is_tmf)
-                                rc = pm8001_task_prep_ssp_tm(pm8001_ha,
-                                        ccb, tmf);
-@@ -468,7 +473,6 @@ int pm8001_queue_command(struct sas_task *task,
-gfp_t gfp_flags)
-                        break;
-                case SAS_PROTOCOL_SATA:
-                case SAS_PROTOCOL_STP:
--                       atomic_inc(&pm8001_dev->running_req);
-                        rc = pm8001_task_prep_ata(pm8001_ha, ccb);
-                        break;
-                default:
-@@ -480,13 +484,12 @@ int pm8001_queue_command(struct sas_task *task,
-gfp_t gfp_flags)
+Does this answer your concern?
 
-                if (rc) {
-                        pm8001_dbg(pm8001_ha, IO, "rc is %x\n", rc);
-+                       spin_lock(&t->task_state_lock);
-+                       t->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
-+                       spin_unlock(&t->task_state_lock);
-                        atomic_dec(&pm8001_dev->running_req);
-                        goto err_out_tag;
-                }
--               /* TODO: select normal or high priority */
--               spin_lock(&t->task_state_lock);
--               t->task_state_flags |= SAS_TASK_AT_INITIATOR;
--               spin_unlock(&t->task_state_lock);
-        } while (0);
-        rc = 0;
-        goto out_done;
+>
+>For race conditions testing we can build error injection framework
+>around the code implementation which present in kernel everywhere.
 
-With this, No KASAN complaint. I will send a proper patch ASAP.
+True. This is also a good way to do this.
 
-Of note is that I cannot see what the flag SAS_TASK_AT_INITIATOR is for.
-It is set and unset only, never tested anywhere in libsas nor pm8001
-driver. This flag seems totally useless to me, unless this is something
-that the HW can see ?
 
--- 
-Damien Le Moal
-Western Digital Research
+>
+>> For a software-only solution, we have experimented with something
+>> similar to the nvme-debug code tha Mikulas is proposing. Adam pointed to
+>> the nvme-loop target as an alternative and this seems to work pretty
+>> nicely. I do not believe there should be many changes to support copy
+>> offload using this.
+>>
+>
+>If QEMU is so incompetent then we need to add every big feature into
+>the NVMeOF test target so that we can test it better ? is that what
+>you are proposing ? since if we implement one feature, it will be
+>hard to nack any new features that ppl will come up with
+>same rationale "with QEMU being slow and hard to test race
+>conditions etc .."
+
+In my opinion, if people want this and is willing to maintain it, there
+is a case for it.
+
+>
+>and if that is the case why we don't have ZNS NVMeOF target
+>memory backed emulation ? Isn't that a bigger and more
+>complicated feature than Simple Copy where controller states
+>are involved with AENs ?
+
+I think this is a good idea.
+
+>
+>ZNS kernel code testing is also done on QEMU, I've also fixed
+>bugs in the ZNS kernel code which are discovered on QEMU and I've not
+>seen any issues with that. Given that simple copy feature is way smaller
+>than ZNS it will less likely to suffer from slowness and etc (listed
+>above) in QEMU.
+
+QEMU is super useful: it is easy and it help identifying many issues.
+But it is for compliance, not for performance. There was an effort to
+make FEMU, but this seems to be an abandoned project.
+
+>
+>my point is if we allow one, we will be opening floodgates and we need
+>to be careful not to bloat the code unless it is _absolutely
+>necessary_ which I don't think it is based on the simple copy
+>specification.
+
+I understand, and this is a very valid point. It seems like the
+nvme-loop device can give a lot of what we need; all the necessary extra
+logic can go into the null_blk and then we do not need NVMe specific
+code.
+
+Do you see any inconvenient with this approach?
+
+
+>
+>> So in my view having both is not replication and it gives more
+>> flexibility for validation, which I believe it is always good.
+>>
+>
