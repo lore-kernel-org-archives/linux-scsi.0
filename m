@@ -2,199 +2,252 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38973C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Feb 2022 07:41:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4224C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Feb 2022 09:27:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376677AbiBEHld (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 5 Feb 2022 02:41:33 -0500
-Received: from mailout1.samsung.com ([203.254.224.24]:50116 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242235AbiBEHld (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Feb 2022 02:41:33 -0500
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220205074131epoutp013bb04575c85dab93888ee5f0ab021daf~Q0_-zuKkF0882508825epoutp01G
-        for <linux-scsi@vger.kernel.org>; Sat,  5 Feb 2022 07:41:31 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220205074131epoutp013bb04575c85dab93888ee5f0ab021daf~Q0_-zuKkF0882508825epoutp01G
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1644046891;
-        bh=Z6M+dfMopclig4NKfROarEUPiNhyq+VID9hbdnT6TFU=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=iXlueJeo9TmOmbMn6AKNbwMTDFyC7uKT//ZEFgkZHrwZcBHSW/gbcg+hGVS3KXz4r
-         eYfE1+T3EXXHCWAsIv0cC7IHBAlpfpwHVS4czImV85oQrn459349FkczCVWXFp3lDu
-         RcFS3w6PI7sLFgMBmMDq6GvFMGBM+dM7aGB5Sphc=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20220205074130epcas2p2255aefe3fd092519611b94c32ec6ac4b~Q0_-IEfdr0419704197epcas2p2D;
-        Sat,  5 Feb 2022 07:41:30 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.90]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4JrPVK2Hhrz4x9Pw; Sat,  5 Feb
-        2022 07:41:29 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        8D.41.10018.A492EF16; Sat,  5 Feb 2022 16:37:47 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
-        20220205074128epcas2p40901c37a7328e825d8697f8d3269edba~Q0_9JRrJO1874818748epcas2p4n;
-        Sat,  5 Feb 2022 07:41:28 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220205074128epsmtrp2ddc66177b0322d1997beda37f9b553fd~Q0_9Ex9dD1972219722epsmtrp2m;
-        Sat,  5 Feb 2022 07:41:28 +0000 (GMT)
-X-AuditID: b6c32a46-a25ff70000002722-df-61fe294a9c86
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        69.73.08738.82A2EF16; Sat,  5 Feb 2022 16:41:28 +0900 (KST)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20220205074128epsmtip20cc86693488816c39065618fe7f185c9~Q0_84dX9k1888118881epsmtip2f;
-        Sat,  5 Feb 2022 07:41:28 +0000 (GMT)
-From:   Kiwoong Kim <kwmad.kim@samsung.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        cang@codeaurora.org, adrian.hunter@intel.com, sc.suh@samsung.com,
-        hy50.seo@samsung.com, sh425.lee@samsung.com,
-        bhoon95.kim@samsung.com, vkumar.1997@samsung.com
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling isn't
- supported.
-Date:   Sat,  5 Feb 2022 16:39:20 +0900
-Message-Id: <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
-X-Mailer: git-send-email 2.7.4
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmphk+LIzCtJLcpLzFFi42LZdljTVNdb81+iwZt9jBYnn6xhs3gwbxub
-        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i+XH/zFZ
-        dN29wWix9N9bFos79z+yOPB7XO7rZfJYvOclk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5
-        tB/oZgrgiMq2yUhNTEktUkjNS85PycxLt1XyDo53jjc1MzDUNbS0MFdSyEvMTbVVcvEJ0HXL
-        zAG6XkmhLDGnFCgUkFhcrKRvZ1OUX1qSqpCRX1xiq5RakJJTYF6gV5yYW1yal66Xl1piZWhg
-        YGQKVJiQnbFofi9LwXLJihMHrjA2MC4Q7WLk5JAQMJE4eugwYxcjF4eQwA5GibV9jcwQzidG
-        ial3OtkhnM+MEq37WllhWj73LGOCSOxilFj+5SALhPODUeLG7zOMIFVsApoST29OZQKxRQSu
-        M0nM254BYjMLqEvsmnACLC4sECmxccJ9sHoWAVWJNd+ugtm8Aq4Sf5a/hdomJ3HzXCczhN3K
-        IXH5lRmE7SIx7ctUFghbWOLV8S3sELaUxOd3e9m6GDmA7GKJTfvkQW6TEGhglFjyaTNUvbHE
-        rGftjCA1zEB3rt+lD1GuLHHkFgvElXwSHYf/skOEeSU62oQgGpUlfk2azAhhS0rMvHkHqsRD
-        onNRFkhYSCBW4u2+fYwTGGVnIYxfwMi4ilEstaA4Nz212KjACB5Fyfm5mxjByVHLbQfjlLcf
-        9A4xMnEwHmKU4GBWEuHNnvY7UYg3JbGyKrUoP76oNCe1+BCjKTCwJjJLiSbnA9NzXkm8oYml
-        gYmZmaG5kamBuZI4r1fKhkQhgfTEktTs1NSC1CKYPiYOTqkGJhmprmMna86JrOX9umT+nx9P
-        du7bKr0wc+vfWwIee7o6xGLbGLZ8Wh7DMFfyfOuEHzIiqYbFySbvJ4bd/byEefJiY763TouS
-        Hwgrzlr1yrWXVcOObePTZsvnsbJKUzeVnZL4XhBzN7XyjlYiW1Vdm2Xvi+xZp03ZfPzzNtz0
-        2rXe5SeHdTiHReCM5S63As/FKm8w23K83WrjwQTJ2SZJMjVK55/cX1I6YWvf076e9rsrdP5E
-        i1w5qd2uZdb/Jbja3Pm529Tq1Xv7tsZVPPgRfKf5sPadGeeOued1yWtsW85+sD9FPt34h8Rb
-        XXEDBe3bCU+XqSoftVN5eNTVXqdtaxvj6QNdDyYqlxy/9OxHjBJLcUaioRZzUXEiANLNBQoX
-        BAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGLMWRmVeSWpSXmKPExsWy7bCSvK6G1r9Eg8YueYuTT9awWTyYt43N
-        4uXPq2wWBx92slh8XfqM1eLT+mWsFqsXP2CxWHRjG5PFzS1HWSwu75rDZtF9fQebxfLj/5gs
-        uu7eYLRY+u8ti8Wd+x9ZHPg9Lvf1Mnks3vOSyWPCogOMHt/Xd7B5fHx6i8Wjb8sqRo/Pm+Q8
-        2g90MwVwRHHZpKTmZJalFunbJXBlLJrfy1KwXLLixIErjA2MC0S7GDk5JARMJD73LGMCsYUE
-        djBKzGzlgohLSpzY+ZwRwhaWuN9yhLWLkQuo5hujxOyTzcwgCTYBTYmnN6cygSREBF4ySbyY
-        s4YNJMEsoC6xa8IJsKnCAuESvas2soDYLAKqEmu+XQWbyivgKvFn+VtWiA1yEjfPdTJPYORZ
-        wMiwilEytaA4Nz232LDAKC+1XK84Mbe4NC9dLzk/dxMjOGi1tHYw7ln1Qe8QIxMH4yFGCQ5m
-        JRHe7Gm/E4V4UxIrq1KL8uOLSnNSiw8xSnOwKInzXug6GS8kkJ5YkpqdmlqQWgSTZeLglGpg
-        qj3Q8GbvBlGvM6YdT/r3PzwYyiDCs3PflOuXLe/7ipwSLFXdop3EUx6U+Ee3hFf3zytZhmd3
-        H/5MXCcT1LJs6cslH0pD+LY5bJ3Lfk5t+7SY1jjfgooV/2qm3Xq/SZxvx2zbFerzF6/dllez
-        LPjs1fIkA75vLJoOK5RnsMlMubZ3f929e1aTbq8+cazrfvvqVfeuqNgt2GT6+kUa64GjL7v+
-        123YsKB0luiHCRLGHEyTeZf/vndchbn1/7Wp0dcviK9uMZScd1Dr2bpP9dbbP3geuqZuFFUt
-        1ZSyKcpMY4HL7lO5DREpKtVmwX5zFO5qfm6Xc8hwqW3dP/nuZG0Zs7VVprHbG37sumPteX1K
-        83MlluKMREMt5qLiRAB1qHgjyQIAAA==
-X-CMS-MailID: 20220205074128epcas2p40901c37a7328e825d8697f8d3269edba
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220205074128epcas2p40901c37a7328e825d8697f8d3269edba
-References: <CGME20220205074128epcas2p40901c37a7328e825d8697f8d3269edba@epcas2p4.samsung.com>
+        id S1351153AbiBEJ1n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 5 Feb 2022 04:27:43 -0500
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:1044 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S238571AbiBEJ1m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Feb 2022 04:27:42 -0500
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 2158dfaM032440;
+        Sat, 5 Feb 2022 09:27:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : content-type : mime-version; s=corp-2021-07-09;
+ bh=lyOywd0D/DUM3oV2xv5PohkwGvXxvrVvn/ZjFs0LPb4=;
+ b=FY794mRudc1V1thN1WMuPpxfJ2AxqfRQA+1X2VZjXLHZjEV5QEM+tsq8Imf9obBP9++d
+ 8FM/CkKFV28peHVOsyB8NXgZxr1rXr+SwUJC8zz+t3eIOgOkW79cwjZZX5qtceKHGDy7
+ 5zCh/+Zk+rO2jL2sXQ78cetU8759yc8ARypFCQewYDJc788u89YYezcVsxwTnQYqdH4I
+ 2ujXQaDnS9ao+DQQppfUM54LqawTW//Cp1fQ0wk/kiq6B9TvIsH3ZRVDodYGwzxbYJWo
+ vHsWRMtkYELqh/E6z+p9Pop1it6m1kX2Phs3maaGjaEqc+SQZCtKUBxqE1BjsIvNz2O8 tw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3e1h4b0j5p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 05 Feb 2022 09:27:39 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 2159PbDH016945;
+        Sat, 5 Feb 2022 09:27:38 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2175.outbound.protection.outlook.com [104.47.55.175])
+        by userp3030.oracle.com with ESMTP id 3e1ebtmtgf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 05 Feb 2022 09:27:38 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=OR+Ylw0it5zMihWDFOktRPOZ0SjuvtaNNWZZBhs4372bkfC1RbglYpNjbvLbnnieIkISmgh+/WyVd0tY1DjFXj6VZF/n96FiUMrumoAPAOjgoXxt+NBlmCKkVYM6KjPvB3cof06c2LN29VNSlAuk3Mw2Vz3GsMneBuLQGlZFErYlxVphQXJxBODIEtVwIcc7l8u8wJclWG0WSLKNchKnI/5Gtvo8M49pgSi6LhpZV2Yb1xGGMoYcCBP7dtJ2fwjfbvZy8DQ0GwSXFO43aT9Vb4mLEQC5xn8sSBHEmunATu6K1WEAJiXRDTD4GzddrkbNTJDHZRHOBDpnSlqoqUW8eA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=lyOywd0D/DUM3oV2xv5PohkwGvXxvrVvn/ZjFs0LPb4=;
+ b=meiVQI21B9tbmf7qDhF7cWyzhFWOynPlDanDlJ6bRUv1cFRgzIDJhc52fHyoIF/+Ye20GqlhHFA4FctAMg0uU31dI0LlU709mu5P7leCbd46/nD7gapGjaryVE5wIILKE69zgqCM++/vOBGl+Tk2LbKutsgU77dd7LoWR1kbsxKv6VbIWgzfhU7i2SvnpuCTWaJH83CaKrnSFcMHoZ1o94SyHdipqnHutDTYBhjDhcsZbE2UK6U6sLw+3b9DJw9zHu6bRfCHR0pvJu0W8uKoqob4uT+lIMJlPgd0YdcYVWEfL2GD9dNxZo9F2xADUj0SMp60dxI5osefOdUVsqUeNw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lyOywd0D/DUM3oV2xv5PohkwGvXxvrVvn/ZjFs0LPb4=;
+ b=l452vjq5fhMa12R1oH5mDrDXTJ6vgMDFqXbpo47uMBzsXAnjAYNIGaW8pRst5g+h3LJ0X7usZ5ij9Ztsr/mdDRFSJLLHumgTLw4tRstYmnXE577mMQ8vyIJFaReGHxqu5SZDIPjiK61aLST1d387pgCoXXkajzfISRz4NzxPX5w=
+Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
+ (2603:10b6:301:2d::28) by DM6PR10MB2953.namprd10.prod.outlook.com
+ (2603:10b6:5:6a::18) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12; Sat, 5 Feb
+ 2022 09:27:36 +0000
+Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
+ ([fe80::e5a5:8f49:7ec4:b7b8]) by MWHPR1001MB2365.namprd10.prod.outlook.com
+ ([fe80::e5a5:8f49:7ec4:b7b8%5]) with mapi id 15.20.4951.017; Sat, 5 Feb 2022
+ 09:27:36 +0000
+Date:   Sat, 5 Feb 2022 12:27:22 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Saurav Kashyap <skashyap@marvell.com>,
+        "Dupuis, Chad" <chad.dupuis@cavium.com>
+Cc:     Javed Hasan <jhasan@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Nilesh Javali <nilesh.javali@cavium.com>,
+        Arun Easi <arun.easi@cavium.com>,
+        Manish Rangankar <manish.rangankar@cavium.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: qedf: fix race in qedf_alloc_cmd()
+Message-ID: <20220205092722.GA15425@kili>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-ClientProxiedBy: ZR0P278CA0026.CHEP278.PROD.OUTLOOK.COM
+ (2603:10a6:910:1c::13) To MWHPR1001MB2365.namprd10.prod.outlook.com
+ (2603:10b6:301:2d::28)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 9099728c-b2fd-4aeb-f32b-08d9e889beac
+X-MS-TrafficTypeDiagnostic: DM6PR10MB2953:EE_
+X-Microsoft-Antispam-PRVS: <DM6PR10MB2953BD1C9B0F0411F15AA71C8E2A9@DM6PR10MB2953.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Dq/ePXQnkTG8rsY31POS8y0fujvCCS90aWeMWV2+gzg8W6/fX+SH3hzHZM/zL07HKfEUMd5TnlK986JHlmLX7MCJCNU53mnYa6rI/TaNh7dmSEfrfmSaot5pkS//tjtwJk6C/xX/1a39GWpAATmBCfwbMlgwN2nA2Jkh7hySo3W0VOK1PFKMC0fhyPLIz0atz86qRrZ5OAy28lKcczNJ0Rifj4o3QVS7RfzrLBUeWcRV791Ub44MCD9UtVmwcJ1OY6v7LhytBCxqMFXxuuOkW1hnl2tLyGiihXI3MtxiFmFf7tF2shi1h8zHdQfgtEiocfIr/+SQlHpAoxHnZ2tekNeqBPXRYK9z+pO9juE5LeJGKxEfh+4A04m8INg3AdXJhmAeO7keqHzRNVQNusgve4wPghcpLplicSqwqgQ7AOr+9y9TQzqUifdaHdZAniNNWSBhSgmLYTI71Qytjj9l+EMORuCIDN8Ooo79S4qnL/Qp9Pxfb3AHkgiP9vvUrBL3LXpdXQSE4u+xPqL0dBbPz9VbY4wf52Rf3k17hDdb9uwtGh4i+MxAEsmlyyOdef9mRDeZBnkSWCv/FYJ7VB70AkysndQTOuPmkgMatiZ4wVD4/ZLjLHvqiRvIgtnlfrqdv/cMiw2Xa+lDYF8uXtrLNVyT0960+1XapoCUA8iClS6tKhq51HA5Q4GorMD87yVXZrjN2qbtngDMpB6BVXS5tA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1001MB2365.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(7916004)(366004)(2906002)(83380400001)(52116002)(44832011)(6666004)(7416002)(186003)(33716001)(6506007)(26005)(66556008)(4326008)(66476007)(38100700002)(9686003)(5660300002)(54906003)(66946007)(8676002)(33656002)(86362001)(508600001)(6486002)(110136005)(316002)(38350700002)(8936002)(6512007)(1076003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?hvRFtQaq2R4+23/nyVkE3ZA/1XbRqz+s/Spps4+6NKz4LbPzhNFWxowAuJOS?=
+ =?us-ascii?Q?JxVVYAd1K+6afW+duMzvN0JDPs5T8GAXo0txsTRxiPwfccuuxNo5yrMF/omN?=
+ =?us-ascii?Q?5RcfL2r2L7RHmDZHAVxAKsw6dk0pmv+uFjruBjE3ooaySTtLxK4viF1Fg//f?=
+ =?us-ascii?Q?nBtHMDyjmCU6AwdikBRB8tLfiRNzQlG7LijPL5g4ykrSti13wqFVEBzJAI5T?=
+ =?us-ascii?Q?sF1M5qFLJd8sjIEZZBrzYJSJHGiXSnyVzWeBdCQre4l9KLNPNqeFaMjaxYHZ?=
+ =?us-ascii?Q?N11sFx4T4+suQ8t/Ge5ckgPjNwWj2sdX/k8aZKIN07qVG0jHEvrOB1OTGghO?=
+ =?us-ascii?Q?8tPZ04tU763dIfXhBNkLgTVupoQD6dMNGjnUDBZs4Lln50v6AJTpiuO1xfxU?=
+ =?us-ascii?Q?QkIvYaS+ZCaU8oU7pUYkT3wiXO4NTfgZvMV9ajRTbYMtgLRd8gcH13RtUht1?=
+ =?us-ascii?Q?WHxeo/3dRhcJ07mlYppswVt6gCwHfiV5mkSDAbpGJ7kGEnxuXY49p2o81IVK?=
+ =?us-ascii?Q?sTJCqZ5XG7ylSBDjyZyFY7SlNYdVKE3LKB/Gnh6/2gNkuD81BEoNShpQW3PP?=
+ =?us-ascii?Q?EfVICRZ7tE6sDxj9BdtR9O7A5r14hxARIbHZDISMq8XJUo/miJPu7oZnZgbd?=
+ =?us-ascii?Q?Ao6CeEp/wp1cDBajb4YuCm0jRECdtCHTCOk6NmdWnvlOQxcO1sqNzQV0j66f?=
+ =?us-ascii?Q?mP82cfpGs/QAMSahicLvjYFGKf8gv3jVCEUQCZb9g9sxV/Z0CmQVgea/1V3m?=
+ =?us-ascii?Q?HKSHQLp/P967P8bMf3QF4RGnOUoqyjUnMEgH+04v5RJ6zP2eDekUtFoLBCvA?=
+ =?us-ascii?Q?KsHgWDygCQlGavzlsUByNxcBp691Y6Y3KPVd4lHyaQiI/x38Xw3cOtVWjXVf?=
+ =?us-ascii?Q?BtL110pCEDm8H/hw0BLeR0EjXMRLvwmTG/jW/rjb0uzb0cPKOkT8pdm/9uN8?=
+ =?us-ascii?Q?BtpWLi5APxXhrXAjYMmHupLTcVoV/8eQm+91prDZlrFIODrX/i1GRS/kgBPJ?=
+ =?us-ascii?Q?4jLY45aEe4y/xO+Xc8DCuGYzcbPa/L8vjctko0sMKn4uJRMPSQD2v+BiFxT7?=
+ =?us-ascii?Q?asGHfmdbudqepNdhcxarEvVadqbeFh8Tp6Uue/nF8HFZp3KqySP1FZBunMQm?=
+ =?us-ascii?Q?B3TYNWRxPxKTJXcB51E9c9Vwostson4Izv9y51bbBVVIlf92HdaPTXVfM8Ur?=
+ =?us-ascii?Q?YX2GG4zAsw8F+GGlZk2dZzfKluCUnYxxaKg0+OytthQHCKEqmR4uEOOF6J4k?=
+ =?us-ascii?Q?eE/Hum0hozCi0RouSyOinAQhRGaVVW0hPDmFtPqBurra4yu2ayekSZ58scUy?=
+ =?us-ascii?Q?2n6pJj6GxNIDc46wolL71UQgQRDJo0hQ0k3z4W91dA5ueZ1GjSW8UF5Tze+w?=
+ =?us-ascii?Q?iRHnwZer8JbMU1bZNPglXnoFBIFIRYhNikE50Z8tBY8Jv3qCM5MImzkAr9mT?=
+ =?us-ascii?Q?w1ngidRGeCJWiPYGK9bCB0PSzbnzN1+JNOl1wWln2YEDNubdcvQZXQjOToCZ?=
+ =?us-ascii?Q?j8bYcU4WRj9FqOTdOmeQ6PYWH4/cARozIpB5IgTCm9WIh0RsMzRtdhbBk3Ou?=
+ =?us-ascii?Q?P/Bp/cpZi+j+WNB7smvJdHJywuL/kSvpxlaKVT5ia4Oi6m2nxn6x5djTireH?=
+ =?us-ascii?Q?m5Nc2R6TOS9+wL0NcRVaDrjePuwcUla00gp2uzhY0SzvYbtOnmRcH+aLGF5A?=
+ =?us-ascii?Q?5Lx8qQ=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9099728c-b2fd-4aeb-f32b-08d9e889beac
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR1001MB2365.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Feb 2022 09:27:35.9773
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: TmlYx5kry08AkMnj5mM46MNV2ewgBeDCJ9jyFmXZVQDN4W9JqG3k4B86NQtfIFFW0grLEMxu/ZPP9bLN0YWJRbvCkIretT8oQCWAUQS0caU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB2953
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10248 signatures=673430
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 suspectscore=0
+ mlxlogscore=999 mlxscore=0 adultscore=0 malwarescore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
+ definitions=main-2202050063
+X-Proofpoint-GUID: C4zY_pZ6rpH2l5pOgze_aDHp_uOq4Q0N
+X-Proofpoint-ORIG-GUID: C4zY_pZ6rpH2l5pOgze_aDHp_uOq4Q0N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-clk_scaling_lock is to prevent from running clkscaling related operations
-with others which might be affected by the operations concurrently.
-I think it looks hardware specific.
-If the feature isn't supported, I think there is no reasonto prevent from
-running other functions, such as ufshcd_queuecommand and
-ufshcd_exec_dev_cmd, concurrently.
+The code tests whether there are any free_sqes at the start of the
+function but does not update the accounting until later.  This
+leaves a window where there is only one sqe available and two threads
+could call qedf_alloc_cmd() at the same time and both succeeed.  Even
+worse, now if more callers call qedf_alloc_cmd() instead of saying there
+is -1 sqes available it will say there is a non-zero number available
+and allow it.
 
-So I add a condition at some points protecting with clk_scaling_lock.
+The second problem with code is at the end of the function, if "bd_tbl"
+is NULL, then the qedf_release_cmd() function will handle some of the
+other accounting like "fcport->num_active_ios" and
+"cmd_mgr->free_list_cnt" but it does not reset free_sqes back to what
+it was.  So that is a resource leak.
 
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+This patch is based on review and I am not able to test it.  My main
+concern with this patch is I may be wrong with paragraph 2 which means
+that my patch would just exchange one bug for a different bug.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 460d2b4..8471c90 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2980,7 +2980,8 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 	/* Protects use of hba->reserved_slot. */
- 	lockdep_assert_held(&hba->dev_cmd.lock);
+This really requires someone who understands the code deeply to review
+it.
+
+And alternative would be to deliberately leave the potential resource
+leak and only fix the race condition.  In other words, if bd_tbl is NULL
+then goto out_failed instead of out_inc.
+
+ drivers/scsi/qedf/qedf_io.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
+index fab43dabe5b3..83b68583230a 100644
+--- a/drivers/scsi/qedf/qedf_io.c
++++ b/drivers/scsi/qedf/qedf_io.c
+@@ -302,16 +302,12 @@ struct qedf_ioreq *qedf_alloc_cmd(struct qedf_rport *fcport, u8 cmd_type)
+ 	struct qedf_ioreq *io_req = NULL;
+ 	struct io_bdt *bd_tbl;
+ 	u16 xid;
+-	uint32_t free_sqes;
+ 	int i;
+ 	unsigned long flags;
  
--	down_read(&hba->clk_scaling_lock);
-+	if (ufshcd_is_clkscaling_supported(hba))
-+		down_read(&hba->clk_scaling_lock);
- 
- 	lrbp = &hba->lrb[tag];
- 	WARN_ON(lrbp->cmd);
-@@ -2998,7 +2999,8 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
- 
- out:
--	up_read(&hba->clk_scaling_lock);
-+	if (ufshcd_is_clkscaling_supported(hba))
-+		up_read(&hba->clk_scaling_lock);
- 	return err;
- }
- 
-@@ -6014,7 +6016,8 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
- 		if (ufshcd_is_clkscaling_supported(hba) &&
- 		    hba->clk_scaling.is_enabled)
- 			ufshcd_suspend_clkscaling(hba);
--		ufshcd_clk_scaling_allow(hba, false);
-+		if (ufshcd_is_clkscaling_supported(hba))
-+			ufshcd_clk_scaling_allow(hba, false);
- 	}
- 	ufshcd_scsi_block_requests(hba);
- 	/* Drain ufshcd_queuecommand() */
-@@ -6247,7 +6250,8 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		 * Hold the scaling lock just in case dev cmds
- 		 * are sent via bsg and/or sysfs.
- 		 */
--		down_write(&hba->clk_scaling_lock);
-+		if (ufshcd_is_clkscaling_supported(hba))
-+			down_write(&hba->clk_scaling_lock);
- 		hba->force_pmc = true;
- 		pmc_err = ufshcd_config_pwr_mode(hba, &(hba->pwr_info));
- 		if (pmc_err) {
-@@ -6257,7 +6261,8 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		}
- 		hba->force_pmc = false;
- 		ufshcd_print_pwr_info(hba);
--		up_write(&hba->clk_scaling_lock);
-+		if (ufshcd_is_clkscaling_supported(hba))
-+			up_write(&hba->clk_scaling_lock);
- 		spin_lock_irqsave(hba->host->host_lock, flags);
+-	free_sqes = atomic_read(&fcport->free_sqes);
+-
+-	if (!free_sqes) {
++	if (atomic_dec_if_positive(&fcport->free_sqes) < 0) {
+ 		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_IO,
+-		    "Returning NULL, free_sqes=%d.\n ",
+-		    free_sqes);
++		    "Returning NULL, no free_sqes.\n ");
+ 		goto out_failed;
  	}
  
-@@ -6753,7 +6758,8 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 	/* Protects use of hba->reserved_slot. */
- 	lockdep_assert_held(&hba->dev_cmd.lock);
+@@ -321,7 +317,7 @@ struct qedf_ioreq *qedf_alloc_cmd(struct qedf_rport *fcport, u8 cmd_type)
+ 		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_IO,
+ 		    "Returning NULL, num_active_ios=%d.\n",
+ 		    atomic_read(&fcport->num_active_ios));
+-		goto out_failed;
++		goto out_inc;
+ 	}
  
--	down_read(&hba->clk_scaling_lock);
-+	if (ufshcd_is_clkscaling_supported(hba))
-+		down_read(&hba->clk_scaling_lock);
+ 	/* Limit global TIDs certain tasks */
+@@ -329,7 +325,7 @@ struct qedf_ioreq *qedf_alloc_cmd(struct qedf_rport *fcport, u8 cmd_type)
+ 		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_IO,
+ 		    "Returning NULL, free_list_cnt=%d.\n",
+ 		    atomic_read(&cmd_mgr->free_list_cnt));
+-		goto out_failed;
++		goto out_inc;
+ 	}
  
- 	lrbp = &hba->lrb[tag];
- 	WARN_ON(lrbp->cmd);
-@@ -6822,7 +6828,8 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
- 				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
+ 	spin_lock_irqsave(&cmd_mgr->lock, flags);
+@@ -346,7 +342,7 @@ struct qedf_ioreq *qedf_alloc_cmd(struct qedf_rport *fcport, u8 cmd_type)
  
--	up_read(&hba->clk_scaling_lock);
-+	if (ufshcd_is_clkscaling_supported(hba))
-+		up_read(&hba->clk_scaling_lock);
- 	return err;
- }
+ 	if (i == FCOE_PARAMS_NUM_TASKS) {
+ 		spin_unlock_irqrestore(&cmd_mgr->lock, flags);
+-		goto out_failed;
++		goto out_inc;
+ 	}
  
+ 	if (test_bit(QEDF_CMD_DIRTY, &io_req->flags))
+@@ -360,7 +356,6 @@ struct qedf_ioreq *qedf_alloc_cmd(struct qedf_rport *fcport, u8 cmd_type)
+ 	spin_unlock_irqrestore(&cmd_mgr->lock, flags);
+ 
+ 	atomic_inc(&fcport->num_active_ios);
+-	atomic_dec(&fcport->free_sqes);
+ 	xid = io_req->xid;
+ 	atomic_dec(&cmd_mgr->free_list_cnt);
+ 
+@@ -381,7 +376,7 @@ struct qedf_ioreq *qedf_alloc_cmd(struct qedf_rport *fcport, u8 cmd_type)
+ 	if (bd_tbl == NULL) {
+ 		QEDF_ERR(&(qedf->dbg_ctx), "bd_tbl is NULL, xid=%x.\n", xid);
+ 		kref_put(&io_req->refcount, qedf_release_cmd);
+-		goto out_failed;
++		goto out_inc;
+ 	}
+ 	bd_tbl->io_req = io_req;
+ 	io_req->cmd_type = cmd_type;
+@@ -394,6 +389,8 @@ struct qedf_ioreq *qedf_alloc_cmd(struct qedf_rport *fcport, u8 cmd_type)
+ 
+ 	return io_req;
+ 
++out_inc:
++	atomic_inc(&fcport->free_sqes);
+ out_failed:
+ 	/* Record failure for stats and return NULL to caller */
+ 	qedf->alloc_failures++;
 -- 
-2.7.4
+2.20.1
 
