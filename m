@@ -2,146 +2,148 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35FC7C43217
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Feb 2022 13:50:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AE32C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Feb 2022 14:54:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233950AbiBGNuL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Feb 2022 08:50:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51664 "EHLO
+        id S236659AbiBGOwf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Feb 2022 09:52:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1448795AbiBGNN2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2022 08:13:28 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E54F5C0401ED
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Feb 2022 05:13:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644239601; x=1675775601;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=+21Yyghs+bY9yok1fzjGL7GBXTYblCJPLUpgvVaqhd0=;
-  b=kutalAyAt5BXYUHXKUqJ/M1FoipuNdka+y2BDTtAc393VQ5wecqV4stf
-   cJfFXbSdnzm34ZztD2qUO6ydU/2z8jx96LmX+pubZFMXbvTvNVIPN3ji5
-   aVwMmz3HqrDpZ0YwlqNen633OtOb3y+6OCYJiUV1BuUmfyXzvhwoVfIDk
-   ManUFtS8L1fUaZ9AUWQydlPQVLU3efLeONUr6xdANPe0VzhqtwSorp8EW
-   +Kv3RZaf6pz3WEK7KUCxC8/QZyEEazs2YGh3Kv5nSpA0/4Zn52EGQBrSR
-   5CKQySyTUC6qx1CfCjyyBIZFkv8sZv0Cx75YZbF0CCLxrF7EgtweApySj
-   w==;
-X-IronPort-AV: E=Sophos;i="5.88,349,1635177600"; 
-   d="scan'208";a="197144057"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2022 21:13:20 +0800
-IronPort-SDR: qq0IUDOJPWTW8l+Lm1FEyMrbvw1DqmStP/4ks0r31G4pJ/aRRnEhSVMHjZfFtL0NEpWhqpGFbM
- 8eEKSw/Vmv+AJ67XS5K9kQm+Ad3MFsvCU+0MBWf1CKqfl8BA52cDHWaUg5RSs9Bx47JFeoBmGa
- pawSeY3BfCyeewj7U6KvOe2YLLlfiimW8R0fP01DqwmyHpTSnXLCQwX9j4yd0hrVVm4KjiTynb
- FVYFHjA77Vamas4mTCW0Xkt/rNo92A0fwU8t0S1SRVh3Tg1FWLwg+3oAgNNyvuFW8f56StJIz5
- coFz/Q0AzyDEqj378Bylyeng
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2022 04:46:23 -0800
-IronPort-SDR: NxtZqTin+6mKHAt3XVDisJrLIRfdm7KqEeXhPdBV1OeDawZyTIW7v1jPZz7Na0dLxcrJBasTMb
- 5ytFV49MKQT6bUqnb7DNZAghzNrgs61LaTMQjw7WIByPqqnA4b7Lf+omvUclBuZ0Nuo2fvqrmb
- OXe/WPY3/L+vtlWq7AysOXlVNpLBSelEenfmW7cCMTS1eBXMs6I4EkVHBqyj5k7XzNnO/lYaNI
- qV6BKlZBecXxuVuw2G4Hq3U+G6r6uPT9ClZAVM45rpep9cZeBij+tOf6T2ZopWRwi3J1PsuHVF
- 6eY=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2022 05:13:22 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JsmmK5z8gz1SVp5
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Feb 2022 05:13:21 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1644239600; x=1646831601; bh=+21Yyghs+bY9yok1fzjGL7GBXTYblCJPLUp
-        gvVaqhd0=; b=bT71PG1JnGgtpyzgL7ysLwH5cScwUnHimAea8aVkvrXak/d3FIh
-        nR0UIyV0lbhU841TImHZ6+cwvjXsnFHUcIL9B7JHhJ6BndQ/6r25/7pBzWfdsUMX
-        IEipyrvU7INZMPLGz1NGmF0gEB6XNFSwsZFbYcRucios52D3sc7sowhtcvfO8IwO
-        JYYlhSXJVKHInuXdzZus7x/lMCY6myhx7s+mG5m4eoWMVrJ8DM3WKArraKoe7PNF
-        c1gmANPKlp1izojLlvXz3/t54TeOWDcmVaaxHSSmWbuKa7dN814tytmrcB8U+sf0
-        RBIZ05hglZCyfUlPjsTfwfxMHAhQVWBiqYg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id EGUXtRBpnA1J for <linux-scsi@vger.kernel.org>;
-        Mon,  7 Feb 2022 05:13:20 -0800 (PST)
-Received: from [10.225.163.63] (unknown [10.225.163.63])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JsmmG5ddvz1Rwrw;
-        Mon,  7 Feb 2022 05:13:18 -0800 (PST)
-Message-ID: <071c0b1d-32fb-e02f-d4e9-1540701d837b@opensource.wdc.com>
-Date:   Mon, 7 Feb 2022 22:13:17 +0900
+        with ESMTP id S1392405AbiBGOa2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2022 09:30:28 -0500
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEF53C0401C2
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Feb 2022 06:30:27 -0800 (PST)
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220207142316epoutp028e29350ad2c4caf0326cad28618f994f~RhwVayqhB0687906879epoutp02Q
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Feb 2022 14:23:16 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220207142316epoutp028e29350ad2c4caf0326cad28618f994f~RhwVayqhB0687906879epoutp02Q
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1644243796;
+        bh=ngGeLKh/cNFBqZ2ebzcJUg1MB4xMAkdY6dg48NrWGfk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=LX2obe20vhqACGCvai45rIm/5n4ZJuTANSLsjOUud5O65k5c2HZKeXyBQhhewR8Jl
+         sKvRYex+TXss9JKeDLrJTtky4TpI71j1jcDEuHUkkVYKQo0m5qUBnhq/kpNmzVI9MJ
+         02BaX8cdnqXKiUvo9Y6VUlIm7Re5bXfKNWMqR+qk=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20220207142315epcas5p2be6dc0621dddd26ec2b31fe21213bdac~RhwUdb3uA2564925649epcas5p2B;
+        Mon,  7 Feb 2022 14:23:15 +0000 (GMT)
+Received: from epsmges5p1new.samsung.com (unknown [182.195.38.175]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4JspJt0blLz4x9Pr; Mon,  7 Feb
+        2022 14:23:10 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        6B.5F.06423.D4B21026; Mon,  7 Feb 2022 23:23:10 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+        20220207141953epcas5p32ccc3c0bbe642cea074edefcc32302a5~RhtYhzyQR0472404724epcas5p3T;
+        Mon,  7 Feb 2022 14:19:53 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220207141953epsmtrp2942ef1027f5892f95340e5a0f3d86c36~RhtYgd2Ov0696106961epsmtrp2Y;
+        Mon,  7 Feb 2022 14:19:53 +0000 (GMT)
+X-AuditID: b6c32a49-b13ff70000001917-5b-62012b4d1175
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        9E.43.08738.88A21026; Mon,  7 Feb 2022 23:19:53 +0900 (KST)
+Received: from test-zns.sa.corp.samsungelectronics.net (unknown
+        [107.110.206.5]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20220207141949epsmtip13c85572436db3ea86918946d1d20c13b~RhtUwTRkj1635016350epsmtip1f;
+        Mon,  7 Feb 2022 14:19:49 +0000 (GMT)
+From:   Nitesh Shetty <nj.shetty@samsung.com>
+To:     mpatocka@redhat.com
+Cc:     javier@javigon.com, chaitanyak@nvidia.com,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        dm-devel@redhat.com, linux-nvme@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org, axboe@kernel.dk,
+        msnitzer@redhat.com, bvanassche@acm.org,
+        martin.petersen@oracle.com, roland@purestorage.com, hare@suse.de,
+        kbusch@kernel.org, hch@lst.de, Frederick.Knight@netapp.com,
+        zach.brown@ni.com, osandov@fb.com,
+        lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
+        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
+        jack@suse.com, joshi.k@samsung.com, arnav.dawn@samsung.com,
+        nj.shetty@samsung.com
+Subject: [PATCH v2 09/10] dm: Enable copy offload for dm-linear target
+Date:   Mon,  7 Feb 2022 19:43:47 +0530
+Message-Id: <20220207141348.4235-10-nj.shetty@samsung.com>
+X-Mailer: git-send-email 2.30.0-rc0
+In-Reply-To: <20220207141348.4235-1-nj.shetty@samsung.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH 00/16] scsi: libsas and users: Factor out LLDD TMF code
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, artur.paszkiewicz@intel.com,
-        jinpu.wang@cloud.ionos.com, chenxiang66@hisilicon.com,
-        Ajish.Koshy@microchip.com
-Cc:     yanaijie@huawei.com, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com, liuqi115@huawei.com, Viswas.G@microchip.com
-References: <1643110372-85470-1-git-send-email-john.garry@huawei.com>
- <1893d9ef-042b-af3b-74ea-dd4d0210c493@opensource.wdc.com>
- <14df160f-c0f2-cc9f-56d4-8eda67969e0b@huawei.com>
- <a8fae323-1877-058a-b03e-d175a725213f@opensource.wdc.com>
- <a2de1656-b1ec-2fb7-caab-657e27dacb48@huawei.com>
- <49da4d80-5cc3-35c3-ccaa-6def8165eb65@huawei.com>
- <59a198a8-1d87-bc09-d2d8-2d495ed74c16@opensource.wdc.com>
- <098f988e-1f12-c412-3111-60393dfe0f0b@huawei.com>
- <f3362c6f-b4b6-2914-0652-d786e19b6b03@opensource.wdc.com>
- <62e56609-7026-93a1-a446-a6fd68328653@opensource.wdc.com>
- <1114e27f-e6b3-e9b9-a892-f543f4636c4e@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <1114e27f-e6b3-e9b9-a892-f543f4636c4e@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA01Te0xTZxT3u/dyW8iQO8TwSUboarYMCNg6ih8MJnFgrkOgzvHPlsmucFee
+        bdeWbT4COGThIe/HGGY8nCkTCDiQDoSCYNAgYJjQMggICD6oW2HgmAiuK7Q6//udc36/75zf
+        +XK4uOMvHBdunFTFKqRMIp+0IzTX3d/xCvcExwXrJQB1jq/YoPqpfBKVLa3haLFnzgYV5Zdz
+        0Mj8dqQ1nrdBw0/PYGiu2YShzgtFGLpU34ehh7U/AZQ1MIyhjVkh6jP9SaKiXj1A2glP1Knt
+        J1CV+j4H5Yy1kajrsRZHtTf/xVBhpg5Dtys2SKRZr8LR9bs6AtVvIJRxbo2DDN3HglzpkdFQ
+        ujDdyKHTqycJemQomW6uyyLploupdPHvtYDuGE8j6W8H+3C6fPkJSY8N/orRuelGkv7r/gRB
+        a2ZzOfRil46k867UAbHTJwkBsSwTwyp4rDRaFhMnlQTyQ49GfRAl8hUIvYR+aB+fJ2WS2EB+
+        8GGx18G4RPOS+LyvmMRkc0rMKJX8Pe8HKGTJKpYXK1OqAvmsPCZR7iP3VjJJymSpxFvKqvyF
+        AsFekZn4eULs7HIvIX9EfFN67Xs8DZjwbGDLhZQPbMmvJbOBHdeR6gBQN1qJW4JlAPUPDRxL
+        sAJgy8w4eCGZGe+ySq4C2DFpxCxBBgbb/3hirnC5JOUJB0zcTYET5Qw3hjVgk4NTKwTUj1Vw
+        Ngs7qIOw/9Y4sYkJ6i14x9S+he0pf7hSq8Ys3XbDmtkem01sa86vbpRZOa/D/h/mtzBOucH0
+        1vNbc0NKbws1eZWERRwMF55nW53ugIabVzgW7AJXjFrSIsgB8OngNGYJygFML0gnLaz98LfO
+        59imHZxyh01X91jSrrD0ViNm6bwd5q7PWye1h22V8y+nbmiqtj6zC+r/OWPFNJwoLbWxrGsU
+        QE2nligAvIpXHFW84qji/9bVAK8Du1i5MknCKkVyoZT9+uVHR8uSmsHW7XgcagNTM0vevQDj
+        gl4AuTjfyf6NHBPjaB/DnDjJKmRRiuREVtkLROaVF+IuO6Nl5uOTqqKEPn4CH19fXx+/d32F
+        fGf7AcllxpGSMCo2gWXlrOKFDuPauqRhIl1Iw9q5BP+SywtvZg3N9wkCP102tfMGQ0Rr6oJT
+        Orthl8jw/YO2x0S121aDMzJ/Dtwo7gtveDskTnx3ahbnd3RM26Xk5kUdbpyIv6hudObdFquC
+        kOvZ1dH3KIe21A9Tfuz+0rTTZ2E47FG8YaLkdP01qqfsRtqlB0MOzyQU8jjienS6RnNc084c
+        CLinFHwU711fnhomSjp9tmmxOFR2bym+QDL5GASpW/c62YmcxTml0Z9FKG6cigjaltHx4Mjf
+        vLyTwsI1d5HoUKRSHME/YNsZNuj2RfedwH0jRkEK70JZlb4ltApkqn2jv3MwND5rnas5OCuy
+        e21c97HRLTLMcIJPKGMZoQeuUDL/ATJBsrHEBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrGIsWRmVeSWpSXmKPExsWy7bCSnG6nFmOSwdo7zBZ7bn5mtVh9t5/N
+        YtqHn8wW7w8+ZrWY1D+D3eLyEz6Lve9ms1pc+NHIZPF4038miz2LJjFZrFx9lMni+fLFjBad
+        py8wWfx5aGhx9P9bNotJh64xWuy9pW2xZ+9JFov5y56yW3Rf38Fmse/1XmaL5cf/MVlM7LjK
+        ZHFu1h82i22/5zNbHL53lcVi9R8Li9aen+wWr/bHOch6XL7i7TGx+R27R/OCOywel8+Wemxa
+        1cnmsXlJvcfkG8sZPXbfbGDzaDpzlNljxqcvbB7Xz2xn8uhtfsfm8fHpLRaPbQ972T3e77vK
+        5tG3ZRVjgEgUl01Kak5mWWqRvl0CV8bDT4dYCl6wVEw9MJ25gfE/cxcjJ4eEgInEg5v72LoY
+        uTiEBHYwSsw/3sMGkZCUWPb3CFSRsMTKf8/ZIYqamSTeLP4DVMTBwSagLXH6PwdIjYiAuMSf
+        C9sYQWqYBaazSjScuswEkhAWcJM4eeomC4jNIqAqcen/TjCbV8BK4vPyZUwQC5QlFj48yApi
+        cwLFv/2ZxgKxrIFRouHcClaIBkGJkzOfgDUzC8hLNG+dzTyBUWAWktQsJKkFjEyrGCVTC4pz
+        03OLDQuM8lLL9YoTc4tL89L1kvNzNzGCk4KW1g7GPas+6B1iZOJgPMQowcGsJMIr0/0/UYg3
+        JbGyKrUoP76oNCe1+BCjNAeLkjjvha6T8UIC6YklqdmpqQWpRTBZJg5OqQamuSLugvUOQnum
+        7n0VVJr/qeFg0LWK35NshS+d5DcuLPIw27ym5e2XWY+q0/Zp3XTnX5YYdtRzknWzZGRq6Ncm
+        zZkb9EpC2yf835vOsCsgo+Nfn80VnuaPpaFZQW9Wr9ZkjXGX//PJOTnt/2qx2/O3On7g2+i5
+        aFs81yyZu4rT1/7Tlerk3c9+LrOkTfjRhqaXZiJW7yvnGV1is2KYojU99Zu1nktJnoXZ31qr
+        A47sRaH/lvzWruoJ+z/zHfvVNvFL/gsUz5mt638StnLu9V3NfA6tFZ8dBHc2TZvKNqf+l9kH
+        uZkybYGfDRyzurK+vFCe7SGtwiF5zNr8yikm35XVHdLZf3afuv+4XXTJ1KtKLMUZiYZazEXF
+        iQDOaJpbeQMAAA==
+X-CMS-MailID: 20220207141953epcas5p32ccc3c0bbe642cea074edefcc32302a5
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220207141953epcas5p32ccc3c0bbe642cea074edefcc32302a5
+References: <CAOSviJ0HmT9iwdHdNtuZ8vHETCosRMpR33NcYGVWOV0ki3EYgw@mail.gmail.com>
+        <20220207141348.4235-1-nj.shetty@samsung.com>
+        <CGME20220207141953epcas5p32ccc3c0bbe642cea074edefcc32302a5@epcas5p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/7/22 22:09, John Garry wrote:
-> Hi Damien,
-> 
-> On 04/02/2022 03:02, Damien Le Moal wrote:
->> This is the submission path, not completion. The code is:
->>
->> (gdb) list *(pm8001_queue_command+0x842)
->> 0x3d42 is in pm8001_queue_command (drivers/scsi/pm8001/pm8001_sas.c:491).
->> 486				atomic_dec(&pm8001_dev->running_req);
->> 487				goto err_out_tag;
->> 488			}
->> 489			/* TODO: select normal or high priority */
->> 490			spin_lock(&t->task_state_lock);
->> 491			t->task_state_flags |= SAS_TASK_AT_INITIATOR;
->> 492			spin_unlock(&t->task_state_lock);
->> 493		} while (0);
->> 494		rc = 0;
->> 495		goto out_done;
->>
->> So the task is already completed when the submission path tries to set
->> the state flag ? Debugging...
-> 
-> JFYI, I am putting together a patch to drop SAS_TASK_AT_INITIATOR 
-> altogether. I just need to ensure that the logic in the isci code is 
-> correct.
+Setting copy_supported flag to enable offload.
 
-Great. Less dead code for the pm8001 driver :)
+Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+---
+ drivers/md/dm-linear.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I was busy with a nasty libata bug today so I did not continue my
-investigations. Will try tomorrow.
-
-
-> 
-> Thanks,
-> John
-
-
+diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
+index 1b97a11d7151..8910728bc8df 100644
+--- a/drivers/md/dm-linear.c
++++ b/drivers/md/dm-linear.c
+@@ -62,6 +62,7 @@ static int linear_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 	ti->num_secure_erase_bios = 1;
+ 	ti->num_write_same_bios = 1;
+ 	ti->num_write_zeroes_bios = 1;
++	ti->copy_supported = 1;
+ 	ti->private = lc;
+ 	return 0;
+ 
 -- 
-Damien Le Moal
-Western Digital Research
+2.30.0-rc0
+
