@@ -2,54 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D32BC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Feb 2022 22:47:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3045BC4167D
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Feb 2022 01:06:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245028AbiBGWrI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Feb 2022 17:47:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58392 "EHLO
+        id S241866AbiBHBF1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Feb 2022 20:05:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234031AbiBGWrH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2022 17:47:07 -0500
-X-Greylist: delayed 61 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 07 Feb 2022 14:47:07 PST
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01F6AC061A73;
-        Mon,  7 Feb 2022 14:47:06 -0800 (PST)
+        with ESMTP id S238750AbiBGX1E (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2022 18:27:04 -0500
+X-Greylist: delayed 18913 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 07 Feb 2022 15:27:04 PST
+Received: from mga06.intel.com (mga06.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0176DC061355;
+        Mon,  7 Feb 2022 15:27:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1644274027; x=1675810027;
+  t=1644276424; x=1675812424;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=+RZs6m6XmXFfDz+prziCj0X34VKiLQqJEtyqa6G3y5Y=;
-  b=VuYt/Qs/e6oDBrGDBczoJhmRrw52oEFwZgTG8hPmriWuFwtqNH75DBeg
-   a6iMBzAM1JabyF6RdXC738hgTqIYgNTNZ8sWx6l+olxa6inZGSbvpeBbz
-   oHQCkbz7TamtM19MX83/m8OX3y5HIBUbi52Htu/U6fm3v2vNrGb8D8StM
-   05w/VB0cRzyksy/j6KNx1eovdqkN43rb7s7Azn2F9fhW/LUalqgLn8JAF
-   l2emkioCRkwhA//lk1pTQBv9mPwTsWIn9OL/0aMJmnZ++G2J4+KmN2Nq0
-   +ZKv1L8CEtd9Qw6KNHVMGGl9QaJ2Cm0nBCDbxnsBEVh36i2PKi8MjOh9E
-   g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10251"; a="246413382"
+  bh=IwunybhnixPrrYpo9YKYsqV3BW8fxMDBh8jQBLZjjnA=;
+  b=P6bkNCRkyTocikyPQ+74ZBhC4ys22Im9GEzbrdbTeyXlieTuPwDhMc7C
+   a4I+rcQjanMvPo/YMXv/7X8XJswa462rt3TOE8RUMwaaQfFfyMCSJEU0E
+   GTpKRSBK22SB6QI/eOSnmmr55KDOiJQZEMVhjI/sXRxUikyLEPyg+AOof
+   60zjRq7QKcj0r/35cDUUZ0qoapwQ1LzDsvJrtbxA8a0bBZjxDJfMItXo4
+   6CLJWDcLOhnNyHGFF2s0GstdK8OLMopbv5hogImHhflFyLK1ku3a0VnSD
+   3X3ZOkiNyS4fKVUSP8LX+baeUV6M9ET+qNaD8CuT7GDN+qoap5N77U5MF
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10251"; a="309573444"
 X-IronPort-AV: E=Sophos;i="5.88,351,1635231600"; 
-   d="scan'208";a="246413382"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2022 14:46:05 -0800
+   d="scan'208";a="309573444"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2022 15:27:03 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.88,351,1635231600"; 
-   d="scan'208";a="677911526"
+   d="scan'208";a="481746035"
 Received: from lkp-server01.sh.intel.com (HELO 9dd77a123018) ([10.239.97.150])
-  by fmsmga001.fm.intel.com with ESMTP; 07 Feb 2022 14:45:57 -0800
+  by orsmga003.jf.intel.com with ESMTP; 07 Feb 2022 15:27:00 -0800
 Received: from kbuild by 9dd77a123018 with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1nHClh-00013p-3V; Mon, 07 Feb 2022 22:45:57 +0000
-Date:   Tue, 8 Feb 2022 06:45:20 +0800
+        id 1nHDPP-00015f-CT; Mon, 07 Feb 2022 23:26:59 +0000
+Date:   Tue, 8 Feb 2022 07:26:02 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Nitesh Shetty <nj.shetty@samsung.com>, mpatocka@redhat.com
-Cc:     kbuild-all@lists.01.org, javier@javigon.com, chaitanyak@nvidia.com,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        dm-devel@redhat.com, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org, axboe@kernel.dk, msnitzer@redhat.com
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org, javier@javigon.com,
+        chaitanyak@nvidia.com, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, dm-devel@redhat.com,
+        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+        axboe@kernel.dk, msnitzer@redhat.com
 Subject: Re: [PATCH v2 03/10] block: Add copy offload support infrastructure
-Message-ID: <202202080650.48C9Ps00-lkp@intel.com>
+Message-ID: <202202080735.lyaEe5Bq-lkp@intel.com>
 References: <20220207141348.4235-4-nj.shetty@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -72,8 +73,8 @@ https://git-scm.com/docs/git-format-patch]
 
 url:    https://github.com/0day-ci/linux/commits/Nitesh-Shetty/block-make-bio_map_kern-non-static/20220207-231407
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
-config: nios2-randconfig-r001-20220207 (https://download.01.org/0day-ci/archive/20220208/202202080650.48C9Ps00-lkp@intel.com/config)
-compiler: nios2-linux-gcc (GCC) 11.2.0
+config: hexagon-randconfig-r045-20220207 (https://download.01.org/0day-ci/archive/20220208/202202080735.lyaEe5Bq-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 0d8850ae2cae85d49bea6ae0799fa41c7202c05c)
 reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
         chmod +x ~/bin/make.cross
@@ -83,16 +84,21 @@ reproduce (this is a W=1 build):
         git checkout 12a9801a7301f1a1e2ea355c5a4438dab17894cf
         # save the config file to linux build tree
         mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=nios2 SHELL=/bin/bash
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=hexagon SHELL=/bin/bash
 
 If you fix the issue, kindly add following tag as appropriate
 Reported-by: kernel test robot <lkp@intel.com>
 
 All warnings (new ones prefixed by >>):
 
->> block/blk-lib.c:185:5: warning: no previous prototype for 'blk_copy_offload' [-Wmissing-prototypes]
-     185 | int blk_copy_offload(struct block_device *src_bdev, int nr_srcs,
-         |     ^~~~~~~~~~~~~~~~
+>> block/blk-lib.c:185:5: warning: no previous prototype for function 'blk_copy_offload' [-Wmissing-prototypes]
+   int blk_copy_offload(struct block_device *src_bdev, int nr_srcs,
+       ^
+   block/blk-lib.c:185:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   int blk_copy_offload(struct block_device *src_bdev, int nr_srcs,
+   ^
+   static 
+   1 warning generated.
 
 
 vim +/blk_copy_offload +185 block/blk-lib.c
