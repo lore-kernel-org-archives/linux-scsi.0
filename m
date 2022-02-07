@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10B9DC3526C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20440C46467
 	for <linux-scsi@archiver.kernel.org>; Mon,  7 Feb 2022 14:55:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1382642AbiBGOxe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Feb 2022 09:53:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44158 "EHLO
+        id S1382934AbiBGOxh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Feb 2022 09:53:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1392424AbiBGOae (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2022 09:30:34 -0500
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95B9EC0401C5
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Feb 2022 06:30:33 -0800 (PST)
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220207142251epoutp01182231fddc9fb41da0ba09f278347401~Rhv_NQJ8J2458824588epoutp01i
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Feb 2022 14:22:51 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220207142251epoutp01182231fddc9fb41da0ba09f278347401~Rhv_NQJ8J2458824588epoutp01i
+        with ESMTP id S1392457AbiBGOam (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2022 09:30:42 -0500
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DF5CC0401C3
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Feb 2022 06:30:41 -0800 (PST)
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220207142245epoutp0411cc1bc95410665177fa33ab1f39a8cc~Rhv5CCzT01974719747epoutp04H
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Feb 2022 14:22:45 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220207142245epoutp0411cc1bc95410665177fa33ab1f39a8cc~Rhv5CCzT01974719747epoutp04H
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1644243771;
-        bh=KkCjgJ4LgLo+f/FVH53mNh1CtYI5pOktWJbRwNjsgfo=;
+        s=mail20170921; t=1644243765;
+        bh=5QYzt4tRkBvcWsVz03kfAFVzKeqCoxXt7vtpSOslY8I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Z6Esxr663dtxl1QG6hCP2TdFpHRBtgLM2rj9FJ86kdlWXEC87Tf0jbAN+994wsa8U
-         MltexE5ghWM1psp8yTZA4LY7oFw5KWd+KQjNCk2VcoWeE86ZZZKiH8lvwz8cYDZo57
-         cG9a1aZy8GChPfI77+cdiZd1MdbVNSlvMZLu3faw=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-        20220207142250epcas5p4999570d794b5c37c2511d86d0a8b25df~Rhv9YRMKu1958019580epcas5p4U;
-        Mon,  7 Feb 2022 14:22:50 +0000 (GMT)
-Received: from epsmges5p2new.samsung.com (unknown [182.195.38.176]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4JspJQ29FSz4x9Pp; Mon,  7 Feb
-        2022 14:22:46 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        b=YKcOYllGI2msbjFqFXwb+BX8tjaAyU/sA2LYi7LEKeNVDe9loChBLPtbHxgU0gO+V
+         NaMKuGmiovhpnuiS6/pugk6kYqS6myQ1tQg/7+hOOXP6d1lsmHW9OaHAVgV8CQsgNv
+         m1xTROQFvFaH2YHc3cWBeohy0y93FRkzDAqktPCc=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20220207142244epcas5p29a7306d5c7f8e54ea7a493ffcb0fa016~Rhv3nwPUf2954829548epcas5p2e;
+        Mon,  7 Feb 2022 14:22:44 +0000 (GMT)
+Received: from epsmges5p2new.samsung.com (unknown [182.195.38.177]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4JspJG57mjz4x9Pq; Mon,  7 Feb
+        2022 14:22:38 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
         epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        4B.1E.46822.98A21026; Mon,  7 Feb 2022 23:19:53 +0900 (KST)
+        95.1E.46822.28A21026; Mon,  7 Feb 2022 23:19:46 +0900 (KST)
 Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-        20220207141913epcas5p4d41cb549b7cca1ede5c7a66bbd110da0~RhszrWbt50551405514epcas5p4J;
-        Mon,  7 Feb 2022 14:19:13 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+        20220207141901epcas5p162ec2387815be7a1fd67ce0ab7082119~Rhsn75jdi1498914989epcas5p16;
+        Mon,  7 Feb 2022 14:19:01 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
         epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220207141913epsmtrp1cc5b40109b36029682070c02e37408e3~RhszqCwHg0764707647epsmtrp1v;
-        Mon,  7 Feb 2022 14:19:13 +0000 (GMT)
-X-AuditID: b6c32a4a-de5ff7000000b6e6-38-62012a897b1f
+        20220207141901epsmtrp1f9eeb35e5f80b47703f826b47335f7a2~Rhsn6oK7q0764707647epsmtrp1r;
+        Mon,  7 Feb 2022 14:19:01 +0000 (GMT)
+X-AuditID: b6c32a4a-de5ff7000000b6e6-28-62012a82045c
 Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        CC.F3.29871.16A21026; Mon,  7 Feb 2022 23:19:13 +0900 (KST)
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        8D.33.08738.45A21026; Mon,  7 Feb 2022 23:19:00 +0900 (KST)
 Received: from test-zns.sa.corp.samsungelectronics.net (unknown
         [107.110.206.5]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20220207141909epsmtip1bc539555b1896682773c3413941c3e13~Rhsvud4bv0563905639epsmtip1K;
-        Mon,  7 Feb 2022 14:19:09 +0000 (GMT)
+        20220207141856epsmtip1abc84e3ece99ad466b43b11b462c0490~RhskKuvSp0284102841epsmtip1j;
+        Mon,  7 Feb 2022 14:18:56 +0000 (GMT)
 From:   Nitesh Shetty <nj.shetty@samsung.com>
 To:     mpatocka@redhat.com
 Cc:     javier@javigon.com, chaitanyak@nvidia.com,
@@ -64,222 +64,135 @@ Cc:     javier@javigon.com, chaitanyak@nvidia.com,
         lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
         josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
         jack@suse.com, joshi.k@samsung.com, arnav.dawn@samsung.com,
-        nj.shetty@samsung.com, SelvaKumar S <selvakuma.s1@samsung.com>
-Subject: [PATCH v2 02/10] block: Introduce queue limits for copy-offload
- support
-Date:   Mon,  7 Feb 2022 19:43:40 +0530
-Message-Id: <20220207141348.4235-3-nj.shetty@samsung.com>
+        nj.shetty@samsung.com
+Subject: [PATCH v2 00/10] Add Copy offload support
+Date:   Mon,  7 Feb 2022 19:43:38 +0530
+Message-Id: <20220207141348.4235-1-nj.shetty@samsung.com>
 X-Mailer: git-send-email 2.30.0-rc0
-In-Reply-To: <20220207141348.4235-1-nj.shetty@samsung.com>
+In-Reply-To: <CAOSviJ0HmT9iwdHdNtuZ8vHETCosRMpR33NcYGVWOV0ki3EYgw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Te0xTdxTH87u3vbdAwAuC/mTKmgJugCDlUX8wEDfJdqdmIyPRZH8M7uBa
-        GNB2vcWp0whWVN6vgQgE0KlEMIq8FcoQh4SHG4bXYAgiEAYEUNywjLqOUtj873tOPuf3Pef8
-        cgS4VRVpK4iUqViljIkWEaa82odOTq6JzuBr9/qOXahx8BUflT9NJ1Dui2UcLTwY56Os9DwS
-        9UxYIM18AR91a+MxNF6px1Dj1SwM3SxvxdBU6Y8AJXZ2Y0g3Jkat+jkCZbX0A6QZckGNmnYe
-        Kr4xSaLkgXoCNc1qcFTa9g+GMi/2YeiXfB2BaleKcfRwpI+HynUIzWrbCZSQskyimZ++2mdH
-        9/QepDPV8yStLhnm0T2PY+nKskSCrrp2hs7+rRTQDYNxBH22qxWn8xb/JOiBrjqMTlXPE/TL
-        ySEeXTuWStILTX0EnVZdBoKsv4zyi2CZcFYpZGVh8vBImdRfdDA4ZH+It8Rd7Cr2QXtEQhkT
-        w/qLAg8FuX4cGb26KZHwGBMdu5oKYjhOtHuvn1Ieq2KFEXJO5S9iFeHRCi+FG8fEcLEyqZuM
-        VfmK3d09vFfB0KiI5ql0UqHZdTzlQjMvDvQ7JgETAaS8YGvJOJkETAVWVAOA5x6N4MZgEcC4
-        tibMQFlRSwDeO2+zUaFVN/CMkAbAR4NPgBFKwOBopSAJCAQE5QI79QJD2praCnXdtcDA41Qh
-        H8YvT/MMzGbqC1izcMrA8ChHWKQpJA3anPKBN+KyCaOXPbwy9oBv0CaUL1zS5fKMjCVsvzyx
-        pnHqXaiuKVhrGlIjJjAj6RxmLA6Edf0r63oznGmrJo3aFk6nnyeNBckAartGMWOQB6A6Q71u
-        HQCfNL7BDJ3ilBO8c3+3Mb0D5nTcxozOFjB1ZWLdwBzWF21oe3jrTsn6M9tg/+v4dU3D8vwE
-        YNxcL4D6i+lYBhDmvzVR/lsT5f9vXQLwMrCNVXAxUpbzVnjI2O/+++UweUwlWLse5wP1YOzZ
-        C7cWgAlAC4ACXGRtvj1Zz1iZhzMnTrJKeYgyNprlWoD36sozcVubMPnq+clUIWIvH3cviUTi
-        5eMpEYu2mndKKxgrSsqo2CiWVbDKjTpMYGIbhyWvkO0/z037KDj94ZJ9k+GpKXOPmzvcauXM
-        vZmQgNM2Z3YG2HlqAppS9nxmVlNQv2J9bEY3/sPS5Rau88R7p5/v+NBe1JJY5cduaRgquvtB
-        Tr0ue0lbNwD4gSNuB9hFp78q+nP4Lkdi3il61Zab0DHbk2QRWnDTXNjrkFBtudOholcY5MGD
-        M78jTc1SYsdh6dTw07/zXwYXm4y5zf66/fnJ4S2bLnx/Km1QItDfvX4r+P3b2emmufj+zx3H
-        N3V4fPvJMzu4nBr1zSGkd41VHc8L3uuwcEmj4LTWvpmh968dHb36WmT2aYGn5ZGjfoXX7eVm
-        yR/5d16ZtpAGpA0vnn1D/hF2ScTjIhixM67kmH8B8VJersYEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrNIsWRmVeSWpSXmKPExsWy7bCSnG6iFmOSwYL30hZ7bn5mtVh9t5/N
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Te0xbdRTH97u3vS3LileG4QeRjBQ18lzLKP46hpgIy3VjBiJmQpxY4AqE
+        0ta2uEk0wCp78JDCECtsg20MFJi48pBBYVBSAQuIIpThNuW1ORhsPNxAcLWloPvvcx7fc37n
+        /HLYuMMVlgs7SaKk5RKRmEtsZzR1eXj6HPcEsbxu4w6ku7HERDW38glU/HAVRw86J5moMF/D
+        QkNT9qhtvpSJBlcyMTSpNWNId7EQQ9/UGDB0t+oSQKeNgxhaH+cjg3mOQIX6EYDaxryQrq2X
+        gcoqp1kox9RMoPbZNhxVdT/BUMGpYQwNlKwTqGmtDEddt4cZqGYdoazcVRaauf7ea67U0K8H
+        qQLVPItSld9kUEP9qZS2+jRB1VekU2dGqwDVeiODoI73GXBKs7hMUKa+7zEqTzVPUAvTYwyq
+        aTyPRT1oHyaozxuqQbhjdPK+RFoUT8vdaEmcND5JkhDEPfhWzOsxggAe34cvRK9w3SSiFDqI
+        GxIW7rM/SWxZEtftI5E41eIKFykU3N2v7pNLU5W0W6JUoQzi0rJ4scxf5qsQpShSJQm+Elq5
+        l8/j+Qksie8nJ/aXLzJlasdjxdPPZIAp+2xgx4akP/xtZQxY2YFsBbBHH5cNtlt4EcCq3C+B
+        zVgCsOjOKLalGKhpZNoCLQB295gIm5GFwdK6a6xswGYTpBc0mtlWgSPpBNcHmzYq4eQSA46Y
+        SljWwE7SD/7dcW2jKoN8EdYabjGsWg4phI0jobZm7vDCeCfTynZkBDT3nsWtzCGfhb1fTTGs
+        jJO7oKqxFLfWh+QdO3jf1MqwiUPgOdVPm7wTznQ3sGzsAu/ln2DZBDkArvT9jtkMDYAqtYqw
+        ZQXDn3X/YNYX4aQHrGvZbXO7wi9+/BazdbaHeWtTm2vhwObzW+wOa+vKN8s4w5HHmZtMwZb6
+        JsK27AoAF/RH1MCt5KmBSp4aqOT/zuUArwbOtEyRkkArBDI/CX30v0+Ok6ZowcbdeB5oBuN/
+        PPTVA4wN9ACyca4j5/kcs8iBEy/6OI2WS2PkqWJaoQcCy8ILcJfn4qSWw5MoY/j+Qp5/QECA
+        v3BPAJ/rxDEmfCdyIBNESjqZpmW0fEuHse1cMrCs+nc1s7HbPkihL0c8OiTUpWuKfT6bULfx
+        Tt6c2VHuvd/Q7vnGJ2V1rgNeqooJgyv1UuQ7y38tDIah63O1ukCH5q5WY9Wcit/aEP0oInDy
+        annvgOP5ZoM62j8oKpRzjBIHV/odXuOFrom5wihzWthyiuBNXnHtnkuKl+/FuRxF5suclV8O
+        Tc6FCmZ7i4LVL5jPZg6fK9UuO/WduRJzPzI//c/FH+ojT7n2dybG7l0iGavTpo67zidM3le1
+        B3SHjScXnnBCJorc0wvql6Wj/etvezCT3bwrojxK4+UdF2szc46gcC+i54LsU+3jXdsk657c
+        QHr8w9t+aXFOXw/E51ZqYrkMRaKI74nLFaJ/AZLhC3bABAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrBIsWRmVeSWpSXmKPExsWy7bCSnG6IFmOSwetT5hZ7bn5mtVh9t5/N
         YtqHn8wW7w8+ZrWY1D+D3eLyEz6Lve9ms1pc+NHIZPF4038miz2LJjFZrFx9lMni+fLFjBad
         py8wWfx5aGhx9P9bNotJh64xWuy9pW2xZ+9JFov5y56yW3Rf38Fmse/1XmaL5cf/MVlM7LjK
-        ZHFu1h82i22/5zNbHL53lcVi9R8Li9c/TrJZtPb8ZLd4tT/OQc7j8hVvj4nN79g9mhfcYfG4
-        fLbUY9OqTjaPzUvqPSbfWM7osftmA5tH05mjzB4zPn1h87h+ZjuTR2/zOzaPj09vsXhse9jL
-        7vF+31U2j74tqxgDRKK4bFJSczLLUov07RK4Mg4872cv2KtT0dN+gKWB8ZpqFyMnh4SAicSP
-        5t0sXYxcHEICuxkl9m0/wgqRkJRY9vcIM4QtLLHy33N2iKJmJomPz24BJTg42AS0JU7/5wCp
-        EREQl/hzYRsjSA2zwCFWiX/n3oA1CwsESDQdPghmswioSszbO4cdxOYVsJRY1jCZDWKBssTC
-        hwfBFnMKWEl8+zMN6qIGRomGcytYIRoEJU7OfMICYjMLyEs0b53NPIFRYBaS1CwkqQWMTKsY
-        JVMLinPTc4sNCwzzUsv1ihNzi0vz0vWS83M3MYLTg5bmDsbtqz7oHWJk4mA8xCjBwawkwivT
-        /T9RiDclsbIqtSg/vqg0J7X4EKM0B4uSOO+FrpPxQgLpiSWp2ampBalFMFkmDk6pBqZwRslX
-        t5fPeBdUy1+yW8GVm3nXqZ2zvVRZ78//dt314i1GLhYX9aAKhyd5m1982CW9+Omr9FXP7k22
-        NzvDW8g8b0vIn/Jaxc6Tj57sltq0KO8Er0DH/c8M39aKeU+zPaz44f7x74VcIhWbbOvm12wK
-        9zjC82xG4NbWGsW15n+YGU5t8Nqe1Bmy41e1U1C5i+PDLo7PYYw6hxszlCZN0TB/l3TK9Gmi
-        3qlrlsUammqHQgp0vuW6Bj7U8fh1R2HuaxMmUZVG3ttqj+pfXjon83cuj8L1Sak5Asbnt21Y
-        ErB82b+c8PBJ6YbfF85Q9t/MzM638cge4VnyPmF75zwNS3vGul80RNIz7WHGLQbDq2xKLMUZ
-        iYZazEXFiQB+t+O8fgMAAA==
-X-CMS-MailID: 20220207141913epcas5p4d41cb549b7cca1ede5c7a66bbd110da0
+        ZHFu1h82i22/5zNbHL53lcVi9R8Li9aen+wWr/bHOch6XL7i7TGx+R27R/OCOywel8+Wemxa
+        1cnmsXlJvcfkG8sZPXbfbGDzaDpzlNljxqcvbB7Xz2xn8uhtfsfm8fHpLRaPbQ972T3e77vK
+        5tG3ZRVjgEgUl01Kak5mWWqRvl0CV8bZBZ9YCyaIVEx7yt/A+ISvi5GTQ0LAROLc6q2sILaQ
+        wA5Gie1fFCDikhLL/h5hhrCFJVb+e87excgFVNPMJDFz+nGgBg4ONgFtidP/OUBqRATEJf5c
+        2MYIUsMsMJ1VouHUZSaQhLCAkcSvAzvBbBYBVYk1R++ygPTyClhKbL3mCjFfWWLhw4NgN3AK
+        BEr8PzmHGeKeAIk/3x6xg9i8AoISJ2c+AWtlFlCXWD9PCCTMLCAv0bx1NvMERsFZSKpmIVTN
+        QlK1gJF5FaNkakFxbnpusWGBUV5quV5xYm5xaV66XnJ+7iZGcOLQ0trBuGfVB71DjEwcjIcY
+        JTiYlUR4Zbr/JwrxpiRWVqUW5ccXleakFh9ilOZgURLnvdB1Ml5IID2xJDU7NbUgtQgmy8TB
+        KdXANCNoZuKXv03rd85RCvdddpDruUAuz8It5hJubhPTFmqnpWnELnFi/hlsduKkgJ6ka3xB
+        d97lt0wOJ5qleDQllZZ/vb9L+KCcfMHhcvelBs33hbfMMl1c+1dJLVw49FFVytWQ1AeiP51P
+        Jh5ece3bd6b0wtDzPlXJBZkyxznbH3JcjvfqCAnfqrZtR45BtFRv3M1j1veX5hdlBjwvMXHt
+        ZOhZ/cugIrhUq6vl++n1PKvuNPF9XHO3PcpxY1IY/1f5Vx8ta18G1U3sEgx6f2Vm5JUTi0xL
+        L7Vev3S089H2/tADPpNcN0uzuMgofOgOaw8/vJhzvXjDqq1Vp/5v1xZw53i+Ic+abb1Iyp9a
+        uXYlluKMREMt5qLiRACU4PdziwMAAA==
+X-CMS-MailID: 20220207141901epcas5p162ec2387815be7a1fd67ce0ab7082119
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: REQ_APPROVE
 CMS-TYPE: 105P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220207141913epcas5p4d41cb549b7cca1ede5c7a66bbd110da0
+X-CMS-RootMailID: 20220207141901epcas5p162ec2387815be7a1fd67ce0ab7082119
 References: <CAOSviJ0HmT9iwdHdNtuZ8vHETCosRMpR33NcYGVWOV0ki3EYgw@mail.gmail.com>
-        <20220207141348.4235-1-nj.shetty@samsung.com>
-        <CGME20220207141913epcas5p4d41cb549b7cca1ede5c7a66bbd110da0@epcas5p4.samsung.com>
+        <CGME20220207141901epcas5p162ec2387815be7a1fd67ce0ab7082119@epcas5p1.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add device limits as sysfs entries,
-        - copy_offload (READ_WRITE)
-        - max_copy_sectors (READ_ONLY)
-        - max_copy_ranges_sectors (READ_ONLY)
-        - max_copy_nr_ranges (READ_ONLY)
+The patch series covers the points discussed in November 2021 virtual call
+[LSF/MM/BFP TOPIC] Storage: Copy Offload[0].
+We have covered the Initial agreed requirements in this patchset.
+Patchset borrows Mikulas's token based approach for 2 bdev
+implementation.
 
-copy_offload(= 0), is disabled by default. This needs to be enabled if
-copy-offload needs to be used.
-max_copy_sectors = 0, indicates the device doesn't support native copy.
 
-Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
-Signed-off-by: SelvaKumar S <selvakuma.s1@samsung.com>
-Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
----
- block/blk-settings.c   |  4 ++++
- block/blk-sysfs.c      | 51 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h | 12 ++++++++++
- 3 files changed, 67 insertions(+)
+This is on top of our previous patchset v1[1].
+Overall series supports –
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index b880c70e22e4..818454552cf8 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -57,6 +57,10 @@ void blk_set_default_limits(struct queue_limits *lim)
- 	lim->misaligned = 0;
- 	lim->zoned = BLK_ZONED_NONE;
- 	lim->zone_write_granularity = 0;
-+	lim->copy_offload = 0;
-+	lim->max_copy_sectors = 0;
-+	lim->max_copy_nr_ranges = 0;
-+	lim->max_copy_range_sectors = 0;
- }
- EXPORT_SYMBOL(blk_set_default_limits);
- 
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 9f32882ceb2f..dc68ae6b55c9 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -171,6 +171,48 @@ static ssize_t queue_discard_granularity_show(struct request_queue *q, char *pag
- 	return queue_var_show(q->limits.discard_granularity, page);
- }
- 
-+static ssize_t queue_copy_offload_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(q->limits.copy_offload, page);
-+}
-+
-+static ssize_t queue_copy_offload_store(struct request_queue *q,
-+				       const char *page, size_t count)
-+{
-+	unsigned long copy_offload;
-+	ssize_t ret = queue_var_store(&copy_offload, page, count);
-+
-+	if (ret < 0)
-+		return ret;
-+
-+	if (copy_offload && q->limits.max_copy_sectors == 0)
-+		return -EINVAL;
-+
-+	if (copy_offload)
-+		q->limits.copy_offload = BLK_COPY_OFFLOAD;
-+	else
-+		q->limits.copy_offload = 0;
-+
-+	return ret;
-+}
-+
-+static ssize_t queue_max_copy_sectors_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(q->limits.max_copy_sectors, page);
-+}
-+
-+static ssize_t queue_max_copy_range_sectors_show(struct request_queue *q,
-+		char *page)
-+{
-+	return queue_var_show(q->limits.max_copy_range_sectors, page);
-+}
-+
-+static ssize_t queue_max_copy_nr_ranges_show(struct request_queue *q,
-+		char *page)
-+{
-+	return queue_var_show(q->limits.max_copy_nr_ranges, page);
-+}
-+
- static ssize_t queue_discard_max_hw_show(struct request_queue *q, char *page)
- {
- 
-@@ -597,6 +639,11 @@ QUEUE_RO_ENTRY(queue_nr_zones, "nr_zones");
- QUEUE_RO_ENTRY(queue_max_open_zones, "max_open_zones");
- QUEUE_RO_ENTRY(queue_max_active_zones, "max_active_zones");
- 
-+QUEUE_RW_ENTRY(queue_copy_offload, "copy_offload");
-+QUEUE_RO_ENTRY(queue_max_copy_sectors, "max_copy_sectors");
-+QUEUE_RO_ENTRY(queue_max_copy_range_sectors, "max_copy_range_sectors");
-+QUEUE_RO_ENTRY(queue_max_copy_nr_ranges, "max_copy_nr_ranges");
-+
- QUEUE_RW_ENTRY(queue_nomerges, "nomerges");
- QUEUE_RW_ENTRY(queue_rq_affinity, "rq_affinity");
- QUEUE_RW_ENTRY(queue_poll, "io_poll");
-@@ -643,6 +690,10 @@ static struct attribute *queue_attrs[] = {
- 	&queue_discard_max_entry.attr,
- 	&queue_discard_max_hw_entry.attr,
- 	&queue_discard_zeroes_data_entry.attr,
-+	&queue_copy_offload_entry.attr,
-+	&queue_max_copy_sectors_entry.attr,
-+	&queue_max_copy_range_sectors_entry.attr,
-+	&queue_max_copy_nr_ranges_entry.attr,
- 	&queue_write_same_max_entry.attr,
- 	&queue_write_zeroes_max_entry.attr,
- 	&queue_zone_append_max_entry.attr,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index efed3820cbf7..f63ae50f1de3 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -51,6 +51,12 @@ extern struct class block_class;
- /* Doing classic polling */
- #define BLK_MQ_POLL_CLASSIC -1
- 
-+/* Define copy offload options */
-+enum blk_copy {
-+	BLK_COPY_EMULATE = 0,
-+	BLK_COPY_OFFLOAD,
-+};
-+
- /*
-  * Maximum number of blkcg policies allowed to be registered concurrently.
-  * Defined here to simplify include dependency.
-@@ -253,6 +259,10 @@ struct queue_limits {
- 	unsigned int		discard_granularity;
- 	unsigned int		discard_alignment;
- 	unsigned int		zone_write_granularity;
-+	unsigned int            copy_offload;
-+	unsigned int            max_copy_sectors;
-+	unsigned short          max_copy_range_sectors;
-+	unsigned short          max_copy_nr_ranges;
- 
- 	unsigned short		max_segments;
- 	unsigned short		max_integrity_segments;
-@@ -562,6 +572,7 @@ struct request_queue {
- #define QUEUE_FLAG_RQ_ALLOC_TIME 27	/* record rq->alloc_time_ns */
- #define QUEUE_FLAG_HCTX_ACTIVE	28	/* at least one blk-mq hctx is active */
- #define QUEUE_FLAG_NOWAIT       29	/* device supports NOWAIT */
-+#define QUEUE_FLAG_COPY		30	/* supports copy offload */
- 
- #define QUEUE_FLAG_MQ_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_SAME_COMP) |		\
-@@ -585,6 +596,7 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
- #define blk_queue_io_stat(q)	test_bit(QUEUE_FLAG_IO_STAT, &(q)->queue_flags)
- #define blk_queue_add_random(q)	test_bit(QUEUE_FLAG_ADD_RANDOM, &(q)->queue_flags)
- #define blk_queue_discard(q)	test_bit(QUEUE_FLAG_DISCARD, &(q)->queue_flags)
-+#define blk_queue_copy(q)	test_bit(QUEUE_FLAG_COPY, &(q)->queue_flags)
- #define blk_queue_zone_resetall(q)	\
- 	test_bit(QUEUE_FLAG_ZONE_RESETALL, &(q)->queue_flags)
- #define blk_queue_secure_erase(q) \
+1. Driver
+- NVMe Copy command (single NS), including support in nvme-target (for
+	block and file backend)
+
+2. Block layer
+- Block-generic copy (REQ_COPY flag), with interface accommodating
+	two block-devs, and multi-source/destination interface
+- Emulation, when offload is natively absent
+- dm-linear support (for cases not requiring split)
+
+3. User-interface
+- new ioctl
+
+4. In-kernel user
+- dm-kcopyd
+
+[0] https://lore.kernel.org/linux-nvme/CA+1E3rJ7BZ7LjQXXTdX+-0Edz=zT14mmPGMiVCzUgB33C60tbQ@mail.gmail.com/
+[1] https://lore.kernel.org/linux-block/20210817101423.12367-1-selvakuma.s1@samsung.com/
+
+Arnav Dawn (1):
+  nvmet: add copy command support for bdev and file ns
+
+Nitesh Shetty (6):
+  block: Introduce queue limits for copy-offload support
+  block: Add copy offload support infrastructure
+  block: Introduce a new ioctl for copy
+  block: add emulation for copy
+  dm: Add support for copy offload.
+  dm: Enable copy offload for dm-linear target
+
+SelvaKumar S (3):
+  block: make bio_map_kern() non static
+  nvme: add copy support
+  dm kcopyd: use copy offload support
+
+ block/blk-lib.c                   | 335 ++++++++++++++++++++++++++++++
+ block/blk-map.c                   |   2 +-
+ block/blk-settings.c              |   6 +
+ block/blk-sysfs.c                 |  51 +++++
+ block/blk.h                       |   2 +
+ block/ioctl.c                     |  37 ++++
+ drivers/md/dm-kcopyd.c            |  57 ++++-
+ drivers/md/dm-linear.c            |   1 +
+ drivers/md/dm-table.c             |  43 ++++
+ drivers/md/dm.c                   |   6 +
+ drivers/nvme/host/core.c          | 121 ++++++++++-
+ drivers/nvme/host/nvme.h          |   7 +
+ drivers/nvme/host/pci.c           |   9 +
+ drivers/nvme/host/trace.c         |  19 ++
+ drivers/nvme/target/admin-cmd.c   |   8 +-
+ drivers/nvme/target/io-cmd-bdev.c |  66 ++++++
+ drivers/nvme/target/io-cmd-file.c |  48 +++++
+ include/linux/blk_types.h         |  20 ++
+ include/linux/blkdev.h            |  17 ++
+ include/linux/device-mapper.h     |   5 +
+ include/linux/nvme.h              |  43 +++-
+ include/uapi/linux/fs.h           |  23 ++
+ 22 files changed, 912 insertions(+), 14 deletions(-)
+
 -- 
 2.30.0-rc0
 
