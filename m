@@ -2,134 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C03CCC4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Feb 2022 08:27:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E233C4167D
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Feb 2022 10:13:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232879AbiBGI0G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Feb 2022 03:26:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53132 "EHLO
+        id S241744AbiBGKMM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Feb 2022 05:12:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243699AbiBGIP3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2022 03:15:29 -0500
-Received: from out30-57.freemail.mail.aliyun.com (out30-57.freemail.mail.aliyun.com [115.124.30.57])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F283AC043185;
-        Mon,  7 Feb 2022 00:15:27 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=yang.lee@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0V3nfmXb_1644221724;
-Received: from localhost(mailfrom:yang.lee@linux.alibaba.com fp:SMTPD_---0V3nfmXb_1644221724)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Mon, 07 Feb 2022 16:15:24 +0800
-From:   Yang Li <yang.lee@linux.alibaba.com>
-To:     damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com
-Cc:     jinpu.wang@cloud.ionos.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yang Li <yang.lee@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH -next v2] scsi: pm8001: clean up some inconsistent indenting
-Date:   Mon,  7 Feb 2022 16:15:22 +0800
-Message-Id: <20220207081522.12111-1-yang.lee@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        with ESMTP id S1352073AbiBGJ50 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2022 04:57:26 -0500
+Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 655CAC043181;
+        Mon,  7 Feb 2022 01:57:25 -0800 (PST)
+Received: by mail-lj1-x232.google.com with SMTP id z7so18739025ljj.4;
+        Mon, 07 Feb 2022 01:57:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=T8GS9Lx/Nzfe8shyS/bZ6AFUZk8Wg4JdFQgCVTpa/ow=;
+        b=Ed+tt6LNx+FM2iQmQE+1H418+wYp0WiOdsm/3ibcYdtcajjtWUSvy6Zr1lCqSMfdTu
+         MCGxgkD2cpro20lYahzc6+gySNFKYSzKSO0CJ/3bp/V2aQaTtLKDq7WbhGHaKlH3Dc8T
+         sIP68l8ipATIFf7HK9DX9itcJovKwyqQU9ycTeS7sy5cE4a0muJYSKyoYiR3fB31LidS
+         rDL1N1w027ij27ZYE+t0mReXf/jbaNn+T1MWmwy2hHKf+vg1zbOyS09aer9Z5OSQ/Wat
+         /ryVkhvEED6SRdZ4UgDojneyxvtFIWT49X2lXj9lpIjvsz3bly3o+oaxnOI5223H9aQW
+         l/yQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=T8GS9Lx/Nzfe8shyS/bZ6AFUZk8Wg4JdFQgCVTpa/ow=;
+        b=LXiyAbCRKEXVo0rpdXsq4Pg0mQjLCgiZ27gcSiouSuszP/tUT7tMW0kyfcsF3MYD94
+         yW+8G7Is3hh0AUNffW7tqdhb9kmo93m25Wpo9kB0A1WIboATdEz8u8/OACOcCALILH4E
+         3AnCVAR/mBWeGXIrxelfLSsP26/kZUq4FVKWrovcqx4Qr8Y2SW3aIRkUzl9wjeA6BVwv
+         4DKv54dtwcFup6y4VOhjfEoIFXUOKxvv8CMu93+viTN5O0tUCRsl6akB37OTs9792wWq
+         7bhqEuRj/0+gyEDCzdd2+7uQT0Bxkdiz5nzTfFjCfcGW9fxSh5ZfBhzN2RHeL03iwOEy
+         wkPA==
+X-Gm-Message-State: AOAM5322qg7ie2dimaYLiHFmOBIeqnJ/6ifN4EzcqZaU2mhcrHHQwkfF
+        LNOLEkJtSS3U7MT0CrGpsyi5bZoXk7l9IAfspNO/0tFrt4nbLQ==
+X-Google-Smtp-Source: ABdhPJxV5weaU4Xoj+nXg6b8L1jKYRkPcK3VXq+/Al3uXfmdamOSUyvoF17yjujMX3jIRgFIA5NTrgrLqSjbGfGwu24=
+X-Received: by 2002:a05:651c:108:: with SMTP id a8mr8630674ljb.479.1644227843616;
+ Mon, 07 Feb 2022 01:57:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com> <20220201102122.4okwj2gipjbvuyux@mpHalley-2>
+In-Reply-To: <20220201102122.4okwj2gipjbvuyux@mpHalley-2>
+From:   Nitesh Shetty <nitheshshetty@gmail.com>
+Date:   Mon, 7 Feb 2022 15:27:12 +0530
+Message-ID: <CAOSviJ0+97ouVbQpQD1RykdyyM2Z_wVRrQjciizzMPS+pLOEsQ@mail.gmail.com>
+Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+To:     =?UTF-8?Q?Javier_Gonz=C3=A1lez?= <javier@javigon.com>
+Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "msnitzer@redhat.com >> msnitzer@redhat.com" <msnitzer@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "martin.petersen@oracle.com >> Martin K. Petersen" 
+        <martin.petersen@oracle.com>,
+        "roland@purestorage.com" <roland@purestorage.com>,
+        "mpatocka@redhat.com" <mpatocka@redhat.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "kbus >> Keith Busch" <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
+        "zach.brown@ni.com" <zach.brown@ni.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
+        "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.com" <jack@suse.com>,
+        Kanchan Joshi <joshi.k@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Eliminate the follow smatch warning:
-drivers/scsi/pm8001/pm8001_ctl.c:760 pm8001_update_flash() warn:
-inconsistent indenting
+Chaitanya,
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
----
+I would like to join the conversation.
 
-  Changes in v2:
---According to Damien's suggestion
-  1) Start multi-line comments with a line that has only "/*".
-  2) Align the conditions together to make this code more readable.
-  3) Using a local variable for value which is calculated too many times.
+Thanks,
+Nitesh
 
- drivers/scsi/pm8001/pm8001_ctl.c | 61 ++++++++++++++++----------------
- 1 file changed, 31 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 41a63c9b719b..0d9533ba8d27 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -727,6 +727,8 @@ static int pm8001_update_flash(struct pm8001_hba_info *pm8001_ha)
- 	u32		sizeRead = 0;
- 	u32		ret = 0;
- 	u32		length = 1024 * 16 + sizeof(*payload) - 1;
-+	u32		fc_len = 0;
-+	u8		*read_buf;
- 
- 	if (pm8001_ha->fw_image->size < 28) {
- 		pm8001_ha->fw_status = FAIL_FILE_SIZE;
-@@ -755,36 +757,35 @@ static int pm8001_update_flash(struct pm8001_hba_info *pm8001_ha)
- 			fwControl->retcode = 0;/* OUT */
- 			fwControl->offset = loopNumber * IOCTL_BUF_SIZE;/*OUT */
- 
--		/* for the last chunk of data in case file size is not even with
--		4k, load only the rest*/
--		if (((loopcount-loopNumber) == 1) &&
--			((partitionSize + HEADER_LEN) % IOCTL_BUF_SIZE)) {
--			fwControl->len =
--				(partitionSize + HEADER_LEN) % IOCTL_BUF_SIZE;
--			memcpy((u8 *)fwControl->buffer,
--				(u8 *)pm8001_ha->fw_image->data + sizeRead,
--				(partitionSize + HEADER_LEN) % IOCTL_BUF_SIZE);
--			sizeRead +=
--				(partitionSize + HEADER_LEN) % IOCTL_BUF_SIZE;
--		} else {
--			memcpy((u8 *)fwControl->buffer,
--				(u8 *)pm8001_ha->fw_image->data + sizeRead,
--				IOCTL_BUF_SIZE);
--			sizeRead += IOCTL_BUF_SIZE;
--		}
--
--		pm8001_ha->nvmd_completion = &completion;
--		ret = PM8001_CHIP_DISP->fw_flash_update_req(pm8001_ha, payload);
--		if (ret) {
--			pm8001_ha->fw_status = FAIL_OUT_MEMORY;
--			goto out;
--		}
--		wait_for_completion(&completion);
--		if (fwControl->retcode > FLASH_UPDATE_IN_PROGRESS) {
--			pm8001_ha->fw_status = fwControl->retcode;
--			ret = -EFAULT;
--			goto out;
--		}
-+			/*
-+			 * for the last chunk of data in case file size is
-+			 * not even with 4k, load only the rest
-+			 */
-+
-+			fc_len = (partitionSize + HEADER_LEN) % IOCTL_BUF_SIZE;
-+			read_buf  = (u8 *)pm8001_ha->fw_image->data + sizeRead;
-+
-+			if (((loopcount-loopNumber) == 1) && fc_len) {
-+				fwControl->len = fc_len;
-+				memcpy((u8 *)fwControl->buffer, read_buf, fc_len);
-+				sizeRead += fc_len;
-+			} else {
-+				memcpy((u8 *)fwControl->buffer, read_buf, IOCTL_BUF_SIZE);
-+				sizeRead += IOCTL_BUF_SIZE;
-+			}
-+
-+			pm8001_ha->nvmd_completion = &completion;
-+			ret = PM8001_CHIP_DISP->fw_flash_update_req(pm8001_ha, payload);
-+			if (ret) {
-+				pm8001_ha->fw_status = FAIL_OUT_MEMORY;
-+				goto out;
-+			}
-+			wait_for_completion(&completion);
-+			if (fwControl->retcode > FLASH_UPDATE_IN_PROGRESS) {
-+				pm8001_ha->fw_status = fwControl->retcode;
-+				ret = -EFAULT;
-+				goto out;
-+			}
- 		}
- 	}
- out:
--- 
-2.20.1.7.g153144c
-
+On Sun, Feb 6, 2022 at 7:29 PM Javier Gonz=C3=A1lez <javier@javigon.com> wr=
+ote:
+>
+> On 27.01.2022 07:14, Chaitanya Kulkarni wrote:
+> >Hi,
+> >
+> >* Background :-
+> >-----------------------------------------------------------------------
+> >
+> >Copy offload is a feature that allows file-systems or storage devices
+> >to be instructed to copy files/logical blocks without requiring
+> >involvement of the local CPU.
+> >
+> >With reference to the RISC-V summit keynote [1] single threaded
+> >performance is limiting due to Denard scaling and multi-threaded
+> >performance is slowing down due Moore's law limitations. With the rise
+> >of SNIA Computation Technical Storage Working Group (TWG) [2],
+> >offloading computations to the device or over the fabrics is becoming
+> >popular as there are several solutions available [2]. One of the common
+> >operation which is popular in the kernel and is not merged yet is Copy
+> >offload over the fabrics or on to the device.
+> >
+> >* Problem :-
+> >-----------------------------------------------------------------------
+> >
+> >The original work which is done by Martin is present here [3]. The
+> >latest work which is posted by Mikulas [4] is not merged yet. These two
+> >approaches are totally different from each other. Several storage
+> >vendors discourage mixing copy offload requests with regular READ/WRITE
+> >I/O. Also, the fact that the operation fails if a copy request ever
+> >needs to be split as it traverses the stack it has the unfortunate
+> >side-effect of preventing copy offload from working in pretty much
+> >every common deployment configuration out there.
+> >
+> >* Current state of the work :-
+> >-----------------------------------------------------------------------
+> >
+> >With [3] being hard to handle arbitrary DM/MD stacking without
+> >splitting the command in two, one for copying IN and one for copying
+> >OUT. Which is then demonstrated by the [4] why [3] it is not a suitable
+> >candidate. Also, with [4] there is an unresolved problem with the
+> >two-command approach about how to handle changes to the DM layout
+> >between an IN and OUT operations.
+> >
+> >We have conducted a call with interested people late last year since
+> >lack of LSFMMM and we would like to share the details with broader
+> >community members.
+>
+> Chaitanya,
+>
+> I would also like to join the F2F conversation as a follow up of the
+> virtual one last year. We will have a first version of the patches
+> posted in the next few weeks. This will hopefully serve as a good first
+> step.
+>
+> Adding Kanchan to thread too.
+>
+> Javier
