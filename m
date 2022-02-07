@@ -2,97 +2,189 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F12BDC433F5
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Feb 2022 20:32:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1D00C4167B
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Feb 2022 06:03:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240989AbiBFUce (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Feb 2022 15:32:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60002 "EHLO
+        id S232470AbiBGGC3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Feb 2022 01:02:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234660AbiBFUcc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Feb 2022 15:32:32 -0500
-X-Greylist: delayed 546 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 06 Feb 2022 12:32:31 PST
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35D53C06173B
-        for <linux-scsi@vger.kernel.org>; Sun,  6 Feb 2022 12:32:31 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 9E21C210E4;
-        Sun,  6 Feb 2022 20:23:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1644179004; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=Pj2I0rsfuTgQ4bLw61zz9Pz4kkPloZvvSo9ZV3lV6og=;
-        b=QqZxUC3KoVjRNVX+LeMPeQAtLG6AIla4b4OlTH+e8D3ASbpnAM8ZAYV7I7dn//dG6FfVwK
-        sZQpzr0jLvP8oUrm5DlwN2hhGtPBfG4qRpSnaxNDagwj3eDki1OgjILiiN60jT9WXT93dl
-        CzWp+xsjeT6u17b8f9BfF6HdXQ/0YXA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1644179004;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=Pj2I0rsfuTgQ4bLw61zz9Pz4kkPloZvvSo9ZV3lV6og=;
-        b=A1bZeEG0cDALoMlWtSKIP3mjGvTxnORdD0ksGAm8IUUuP0g+YMqWlTw3K4PD7F8hU7b7Kc
-        c7hOzmEulIFbyVAw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7E7A4139EF;
-        Sun,  6 Feb 2022 20:23:24 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 5dYHHjwuAGL+MgAAMHmgww
-        (envelope-from <dmueller@suse.de>); Sun, 06 Feb 2022 20:23:24 +0000
-From:   =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     GR-QLogic-Storage-Upstream@marvell.com,
-        Nilesh Javali <njavali@marvell.com>,
-        James Bottomley <James.Bottomley@SteelEye.com>,
-        =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>
-Subject: [PATCH v2] qla2xxx: fix error status checking in qla24xx_modify_vp_config()
-Date:   Sun,  6 Feb 2022 21:23:11 +0100
-Message-Id: <20220206202311.19392-1-dmueller@suse.de>
-X-Mailer: git-send-email 2.35.1
+        with ESMTP id S239197AbiBGFjO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2022 00:39:14 -0500
+X-Greylist: delayed 3081 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 06 Feb 2022 21:39:13 PST
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9194BC043181;
+        Sun,  6 Feb 2022 21:39:13 -0800 (PST)
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 216Mp8Mm022472;
+        Sun, 6 Feb 2022 20:47:49 -0800
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3e1smr47tm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sun, 06 Feb 2022 20:47:49 -0800
+Received: from m0045851.ppops.net (m0045851.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2174jBUL028894;
+        Sun, 6 Feb 2022 20:47:48 -0800
+Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam08lp2046.outbound.protection.outlook.com [104.47.73.46])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3e1smr47th-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sun, 06 Feb 2022 20:47:48 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=JUs2m6hIE23g5bJzka/bov+EeNKLh17NnE3lnnXCAUVu9C9+bg/RPxQo8htFl8EX+F6omlaEcoIl44rV2ayCj3xICEJrStv2e03y07FSsILrgFGOGaje64KvaWGpEiCJHZvIBTJyZPJjbV1L24NOh1TN5sqA0bgHhJRRlqA495pf05Sfz6TLaH4LMLoYq+kg9drGXjy7pWfXBSG1z/WEWMepTh3veUssrlDPGa8Fh+kSgc7LYHLnUanLe1i9XmLlNc0y+aIZoM4aFOOBNx1Rzr0i+ikUwWh8TeWN9WbN8Jvv1OA8/4Ge5bdV998oKx6oCTvGy5DYG8PWTNoMVSe8VA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Q1frTVwXcftag1/pD3pLmLsICaz8uPGfhCwXbxr63ks=;
+ b=ffeXje0Z3CFqHTjA5TQ590xj6GYn/cwZ2jzIjkz6jcpFabPkD4NjqkzRS+LeUEdq2lWYl6F8LzqEclKlUliaIR4BPBW4Tq52ydC3thlXlFtn3/6BbQdxXcb1GsewpWzDtIoWLvvNofK2Rw2jHgl2v+eS5Q5/F0mF6z2aEb376vFzLkXMbMaxaYt4JlqrC3e19vxUgvy0s8T6PNZTLIm3cxAxx4Kv8A7VmLP3iMuhT3y8hn/IIfJl+dQaajHRhLOL2BSz2YWSB7p87yiI96bKuIwgiIb5nDGM9uoxEaqB8+RrXx873A0h2+f1QJg/blotnhQH7f6ywrZv3UVfrS3U1w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Q1frTVwXcftag1/pD3pLmLsICaz8uPGfhCwXbxr63ks=;
+ b=AY6aw3HPmYWacrPN1nRPx8uaSMgRlSCeHWm4XLwUfQyfQM3WPeosElu7a58i68jt+8pT7RSFK5/4sf75xpLqIdLYWNfYamPQODBEsgT5aDdMqAtPFRSPhqH2YlzygeuWZOU6K7FZz6E3dk62w87nWTWIr9xNfA9tJhg/59eGz0w=
+Received: from CO6PR18MB4419.namprd18.prod.outlook.com (2603:10b6:5:35a::11)
+ by BN8PR18MB2980.namprd18.prod.outlook.com (2603:10b6:408:aa::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.18; Mon, 7 Feb
+ 2022 04:47:44 +0000
+Received: from CO6PR18MB4419.namprd18.prod.outlook.com
+ ([fe80::6472:ed96:1810:fd81]) by CO6PR18MB4419.namprd18.prod.outlook.com
+ ([fe80::6472:ed96:1810:fd81%6]) with mapi id 15.20.4951.018; Mon, 7 Feb 2022
+ 04:47:44 +0000
+From:   Manish Rangankar <mrangankar@marvell.com>
+To:     "cgel.zte@gmail.com" <cgel.zte@gmail.com>
+CC:     GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Minghao Chi (CGEL ZTE)" <chi.minghao@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: RE: [EXT] [PATCH] qedi: Remove redundant 'flush_workqueue()' calls
+Thread-Topic: [EXT] [PATCH] qedi: Remove redundant 'flush_workqueue()' calls
+Thread-Index: AQHYEx7EPHJ+6QFA9kGxpHb8JUgdpqyHlQDQ
+Date:   Mon, 7 Feb 2022 04:47:44 +0000
+Message-ID: <CO6PR18MB44195156F85CBE435DA1D5A3D82C9@CO6PR18MB4419.namprd18.prod.outlook.com>
+References: <20220127013934.1184923-1-chi.minghao@zte.com.cn>
+In-Reply-To: <20220127013934.1184923-1-chi.minghao@zte.com.cn>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 9fbc3a28-f229-4edb-23e7-08d9e9f4fb1e
+x-ms-traffictypediagnostic: BN8PR18MB2980:EE_
+x-microsoft-antispam-prvs: <BN8PR18MB2980DADE79396C43B8711E41D82C9@BN8PR18MB2980.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:339;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: Cacw2HOTb7Wbvzcu0RdU/xxxwxqcIB/khczQzTV3Zay+eH3UVBDCe5FocVr/6xfrX98NrvEkStD+OOPE4s/+9S+VvE5rfoBf7P2T2+2EqFXvVBDj7YhCenugztMLja/ZouKTf1XFGsVWTEFcDkYnX/97x5jSyuZvI6J29LJ+KltKxsTC16kC8E8PRxU9zTIP4o+AusE9EGIYQsFG0XzQisDspOOkS+lsQKQ4wFjKJLns871iZm1yf6sUyq2XXZ4HsIDNz1rPxYVUEkzvOW0sExo1TGTnq97JvxNDD5ZCfc1EIIY5fzbRpLAJhEjY52vrBoY6+oDS3MRq9Gnlw01KSRR+IAoqyUflQ1UqnNI5NfUrvXnS1zr+90lHmhiurNHPj+r/tzbXGvsODrc2cTWAPWQu4BFkpUSvU17eeXxw3QqQRFQ/Q/FuzjeP4RkuqENWFQYs8NlhJj1y5T/ATfZc5ORcpsEuzMIi63dYmMNDT0ULczlIiXFV6j/2KlBGTZ4DeXMzQvjS7mN/GsGhdEJbnjqsTjT0mlL8A3YKpdclNAvlWyYGF7Ze4tl3z5S5ssQowKGeIYviwwWeUz1I9wSEi6leDhhNZm9QaDdl7C3yxyAetYAEw6k+BFiqBYeh/uCoyZ1ufzEyxdnYlhC+rQpPKRcsQYvhxI4BHoK165fMy54dvTBffyiv6/U487rJ0IvF8b+EL6toTPqFcXEUlSxJfQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO6PR18MB4419.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(83380400001)(508600001)(316002)(38100700002)(6916009)(26005)(38070700005)(54906003)(186003)(86362001)(76116006)(52536014)(66946007)(33656002)(5660300002)(6506007)(66476007)(66446008)(7696005)(64756008)(66556008)(2906002)(9686003)(55016003)(71200400001)(53546011)(55236004)(4326008)(122000001)(8676002)(8936002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?me+a5XRz/lWHydhmz0/5m0QIV8nZCUHKzBaLBI1xV9JYcelgspOsxKggCE27?=
+ =?us-ascii?Q?kp52t6kVQCYdR/Th0x6LaJjmohdKooj4P7w+VKYvLmacZX4qFUxxek7KyPVH?=
+ =?us-ascii?Q?xWQg6e16B0YIFuL1EPMTprRRfpTtse5QndmHEre4CXnBc5+/vKwzN9X4Dj8b?=
+ =?us-ascii?Q?4BES0v++/HJLNPAh6Gou386Fmjt0hwxfTUpHsZMTNmC8WeyTWWJeBdHCD6jB?=
+ =?us-ascii?Q?sX5mGmfQ90Ehna2qTWdLuFPxRjo0eMttW8tt7DR+Le4ky20TZ+VF0paxzQt/?=
+ =?us-ascii?Q?M2K+C4cYC+Ro2/iS3WIxFkIPx4Ny414BjysVsXds/MJ/J6q11ch1cbjg70xX?=
+ =?us-ascii?Q?DhY++5vwD6VxZ+FT6X6Jz3irZiKsK14gBKh/rJxgWmBLHEyRXniKOoLbscv0?=
+ =?us-ascii?Q?IgixARtr8fhumuxMiw0pjsPNs/yDro1W6qZR5mRq5hYPW34m192U9LhL+0rQ?=
+ =?us-ascii?Q?E1Q1CP54Qujb30cQ4NAREC58ZDtACtRBmgHbPpUSuLD4KSH0hQWTxsg6OXTO?=
+ =?us-ascii?Q?uJxvaN980oq8iQm2Di7iHviulwaWJIB5ZGCyXTu6aVlSgRLbAJ5zwhexeWp3?=
+ =?us-ascii?Q?fF9kv1T8WFJpybzdxFwEkPgwVFMHJIDGRA3xvwb0LE+XGY+d64HY+/cjHRo1?=
+ =?us-ascii?Q?D9p2xFaduxRpa/PSMbY8YH37uhGVHBfPZ5bznGhyW4sZHw4BgYY9P/MdmEeJ?=
+ =?us-ascii?Q?78QzBWmsoOGziejnWt3lhGSYnpXSt5oyx0Whmbwk7u1+XgkY7iNSHQhqSy6O?=
+ =?us-ascii?Q?MSWOFNhBzsMQoZmE9daVopIBs0hK94BiQK25Xsuh/kN5/XP96XKIv1DeJE3R?=
+ =?us-ascii?Q?Tweqvg+BOpW5msu2Rt9g2VRD8yTCdNznKrsorGIThYJP9/eYzZOOiybfb6V4?=
+ =?us-ascii?Q?FftCCRXjRbR9XT1AU0VtXBbnjWLCREl0kavFfzh5+bl9O4gW91Jk9mU0ioDm?=
+ =?us-ascii?Q?kixaWyKy0HYLisNEeXu54f2wDvaFcXDg7jOI+ZL0CrffUS82Rmq7XAZTAAoF?=
+ =?us-ascii?Q?+X4jY3Wn6yBeeleyjS6aBCy8ak2aBUzpCvE9oziv6FJX2yZFoudXOX0WLHgn?=
+ =?us-ascii?Q?s3VJyCrLqkfAX4Y8mlNKwPm8ep7EunM4cgqmGgQVuws2IEHHxDbLPtzUzC6Q?=
+ =?us-ascii?Q?EME2BFDy6uVAs0CdY4QjVQSjU2XwVOOucLB7uhqccVBZatbDomzV/kfld6eR?=
+ =?us-ascii?Q?LdKHTTr0go35rjF+ChSz9wFVcPxdVxfo7TSXRc6vA7WQYoUKWKALkeMOEQXp?=
+ =?us-ascii?Q?FUvTA5oLObD+al86l0ftiS/IMgYPwi/jsexHk4Nc4e7ZKkG/NY7TLlOMOhGy?=
+ =?us-ascii?Q?gW7LYKkD69q5lFGTt1FxnDvEWv1a4jmjFHS6EJ0vnIkH0UD2SrrpE5Rr2lsS?=
+ =?us-ascii?Q?WeQrkZBZrqDWnH6HpzqYiSJhuKQGNEHrPrUdsf5xdF6s8dHPZ6wuxHO0FWrD?=
+ =?us-ascii?Q?fNeSLcueEGG+Qy2Ka0ubSouxWBxQUUSrWCUu9TQIRWjsRWPQYDAq3Cyj9TmM?=
+ =?us-ascii?Q?eWhmDg4Wld1azZW12EsIDtarqDxbd+vHpKVBo1ZLpOH+JjidKyFBmOS4o0Cw?=
+ =?us-ascii?Q?CB1ubDfM0lN0dIUqKGuwtFjOLLPx6j48bTUYa5BZ9mYRW0CT6CjVmJQeXgcd?=
+ =?us-ascii?Q?ueNgSH4Ww4JjpKXIl6IKRCs=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: marvell.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CO6PR18MB4419.namprd18.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9fbc3a28-f229-4edb-23e7-08d9e9f4fb1e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Feb 2022 04:47:44.2891
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 7jNzwz4W5EIG+7cb3a1pmKDAt1nBv4/Rg0qzyA0UgDAX8XI6iAj2zRrD/e994aPaykKuiGWCi/1FOUnGETtmDw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR18MB2980
+X-Proofpoint-GUID: 86zgT3TPoaStq5cz_qoXbin27gVwmyjs
+X-Proofpoint-ORIG-GUID: xaPvZX3EBdhKnsYOreNB4xemkJ2pPpmO
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.816,Hydra:6.0.425,FMLib:17.11.62.513
+ definitions=2022-02-07_01,2022-02-03_01,2021-12-02_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function was checking vpmod->comp_status and reported it as error
-status, which is however already checked a few lines below.
 
-Guessing from other occurrences it was supposed to check entry_status
-instead.
+> -----Original Message-----
+> From: cgel.zte@gmail.com <cgel.zte@gmail.com>
+> Sent: Thursday, January 27, 2022 7:10 AM
+> To: Nilesh Javali <njavali@marvell.com>
+> Cc: Manish Rangankar <mrangankar@marvell.com>; GR-QLogic-Storage-
+> Upstream <GR-QLogic-Storage-Upstream@marvell.com>; jejb@linux.ibm.com;
+> martin.petersen@oracle.com; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Minghao Chi (CGEL ZTE) <chi.minghao@zte.com.cn>;
+> Zeal Robot <zealci@zte.com.cn>; CGEL ZTE <cgel.zte@gmail.com>
+> Subject: [EXT] [PATCH] qedi: Remove redundant 'flush_workqueue()' calls
+>=20
+> External Email
+>=20
+> ----------------------------------------------------------------------
+> From: "Minghao Chi (CGEL ZTE)" <chi.minghao@zte.com.cn>
+>=20
+> 'destroy_workqueue()' already drains the queue before destroying it, so t=
+here is
+> no need to flush it explicitly.
+>=20
+> Remove the redundant 'flush_workqueue()' calls.
+>=20
+> Reported-by: Zeal Robot <zealci@zte.com.cn>
+> Signed-off-by: Minghao Chi (CGEL ZTE) <chi.minghao@zte.com.cn>
+> Signed-off-by: CGEL ZTE <cgel.zte@gmail.com>
+> ---
+>  drivers/scsi/qedi/qedi_main.c | 2 --
+>  1 file changed, 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.=
+c index
+> 832a856dd367..83ffba7f51da 100644
+> --- a/drivers/scsi/qedi/qedi_main.c
+> +++ b/drivers/scsi/qedi/qedi_main.c
+> @@ -2418,13 +2418,11 @@ static void __qedi_remove(struct pci_dev *pdev,
+> int mode)
+>  		iscsi_host_remove(qedi->shost);
+>=20
+>  		if (qedi->tmf_thread) {
+> -			flush_workqueue(qedi->tmf_thread);
+>  			destroy_workqueue(qedi->tmf_thread);
+>  			qedi->tmf_thread =3D NULL;
+>  		}
+>=20
+>  		if (qedi->offload_thread) {
+> -			flush_workqueue(qedi->offload_thread);
+>  			destroy_workqueue(qedi->offload_thread);
+>  			qedi->offload_thread =3D NULL;
+>  		}
 
-Fixes: 2c3dfe3f6ad8 ("[SCSI] qla2xxx: add support for NPIV")
-Signed-off-by: Dirk Müller <dmueller@suse.de>
----
- drivers/scsi/qla2xxx/qla_mbx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks,
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 10d2655ef676..28fdd80e1e4d 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -4253,10 +4253,10 @@ qla24xx_modify_vp_config(scsi_qla_host_t *vha)
- 	if (rval != QLA_SUCCESS) {
- 		ql_dbg(ql_dbg_mbx, vha, 0x10bd,
- 		    "Failed to issue VP config IOCB (%x).\n", rval);
--	} else if (vpmod->comp_status != 0) {
-+	} else if (vpmod->entry_status != 0) {
- 		ql_dbg(ql_dbg_mbx, vha, 0x10be,
- 		    "Failed to complete IOCB -- error status (%x).\n",
--		    vpmod->comp_status);
-+		    vpmod->entry_status);
- 		rval = QLA_FUNCTION_FAILED;
- 	} else if (vpmod->comp_status != cpu_to_le16(CS_COMPLETE)) {
- 		ql_dbg(ql_dbg_mbx, vha, 0x10bf,
--- 
-2.35.1
-
+Acked-by: Manish Rangankar <mrangankar@marvell.com>
