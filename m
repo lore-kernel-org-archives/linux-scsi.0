@@ -2,147 +2,151 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7077DC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Feb 2022 19:22:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0D66C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Feb 2022 19:22:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1386005AbiBHTW1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Feb 2022 14:22:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34382 "EHLO
+        id S1386005AbiBHTWu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Feb 2022 14:22:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240970AbiBHTWX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 14:22:23 -0500
+        with ESMTP id S1385664AbiBHTWt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 14:22:49 -0500
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDD89C0613CB
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 11:22:22 -0800 (PST)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 218J7rp9026751;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A151DC0613CB
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 11:22:48 -0800 (PST)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 218I3Tvg013064;
         Tue, 8 Feb 2022 19:22:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
  content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=f+FXNdawQ5+RfD3G8VdWjjAjsdhiImi9hgIjQ3ma6FI=;
- b=ISFXRZnHVFFXKRDqteFDJIlu3gUHVozjwKwRm/760fuov0kN6wEelS3TcRlGZEEERHCR
- XCqJ9p2LEHuYcUISxBDrxVVWOPt8Ur8hYdb010mdEan2P2IJEk9/I/9emShFG0bnDxjo
- NhJ99VQxSTZQca2B3LFrVxPvgwnWw2TQsVJKmk6yj5tqMWvRrSWqEIcN+H98PXlGlznu
- fIOUN2f5NXKPtbLds2jDZn1Pfiel+AKpw+tNRMBcPu4LO2SK7SJG31HQ+egns+nxHZSu
- RYAGuBkVROsg6TwCD/I/sY11+VIH67WKtEXpRbVqL/NePDMnHtW+vs3Sep70ldhNMAhx IA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3e3h28jbty-1
+ bh=rmYM8i/37J/WPMewtchDK3qEfyIcxTUryPVnx4ImwGU=;
+ b=z28npF3nee/Z+JmjiNnBDQIpH/hnUQ0bPyhW20UtFMkAnVixbn8GpUIV+T9N52F1cjqR
+ cOnLTh3TUdW7SXHIj6eblHZTVi6wZH2jh3qOrwxnZIxfaW7Pv0VCTuDreMbwN2k4tSXY
+ nbqxwnPehGBDzC+GGekfn165zG6AT4ki2Py2xM+P4Yernd25/YECj5aKda+k5m8c+dCa
+ mjZDx1cIMNFePjBMaQL4x4fmuGlZgJh3gRTrbcr3sQutKIRsYuNC60ocOiSkfA8KddhJ
+ 6y+BUrozZoDUnAF0KjkQMNVdiEgA9xgGy8pv1XhPAzK12Fu/44//bFDMm05aujqD/bpa gw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3e3fpgjhq8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 08 Feb 2022 19:22:18 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 218JG8xd107526;
-        Tue, 8 Feb 2022 19:22:17 GMT
-Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam08lp2170.outbound.protection.outlook.com [104.47.73.170])
-        by userp3020.oracle.com with ESMTP id 3e1jprdme0-1
+        Tue, 08 Feb 2022 19:22:16 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 218JFn6X172194;
+        Tue, 8 Feb 2022 19:22:15 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2100.outbound.protection.outlook.com [104.47.70.100])
+        by userp3030.oracle.com with ESMTP id 3e1ec0xrus-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 08 Feb 2022 19:22:17 +0000
+        Tue, 08 Feb 2022 19:22:14 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=oLhnFTgVvEzxfThFEAh50SCbT6JFuXEkD+hr6AJjMQ+xwihc/SoPl2LbUSo6oYnNsvVWwmEt9fgKe77mQONbVBusN56F2slWCCrc1zdOEQPSPwE+IUq4CEfGM2GG8DPlnvYP1uPwqfR6+1dslQTEixWuGN8O1UP5Z8rCkYbqoFiefUJHOUxUHbFrd1dsF+pU7BpfnhZuGLXpM5u3awKd41+PqHWfEoRHosEwuLZNG3d2pVYgu/w/J2V0boGq07/5ecMxHEUmRIKDJ6Bi2dAA+WhTgsm1UJJcCI28dYLkXT33mo56Vf+F0UzgvFEl3gNONU6mdNujWUEOSdaLkgNPNQ==
+ b=WsjnjcwEGE3IpAUxzxpQ2ek/sW2oc68wPXffs221epY50RTGg+pmxxD6QeohCBqSEX1jOkK9OgkAxDNGDMTMcofapnKDaBuCknUuqz4pASEyLDykv6GiEzJVWv1ohCjad7EcvQc02IKEQiX43Byh6UYlO/v49XchA6UcR0X7GzpCT/4OW6AbNLutKp3j3EIgxaHmXPEZL3ogsT8w1WdOVlspBPoEXKO0CMxRdyoOssdDFWRtUzJ7aSgnNAZ3oU7tbs9IBF2opaMv46breXdvV97zlKYT5xGMEqqHsfhq/4DzxWETqDIMUFs2qahqVrTp/5wiBllGw/4u+wMP7VE6kw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=f+FXNdawQ5+RfD3G8VdWjjAjsdhiImi9hgIjQ3ma6FI=;
- b=FyGeRu7kopdBtzE1w9iWvsmiYzu2aHKBdU4ft0iH4Z8R/o4GWtXTq6ucQarom0f/Gc8NU0HYxqGtaGzad12Vbqy7ccio8/i402ShZqAbe4NNGaxqP64nzpJQTWsuHrOdc6/1A34gagcJOHuwkCe4mmTqXo3eyVCAKijATbbYFFYXtJvEJO3anqwytADvqe+z4CMdO1lN76RB6r+4xvefLQ3jJVn8ZkTfO3JrxHE1zjZXmlYnkxscAhW1mxCzHfT4t9fBnrdXRgZufRCiWwDsOpwtnJ4O5u/Uh5uYCA9LpPhn9oG3QCgnjuSP+WFxTHxav+KwOzu6apXkEiorh5Lxow==
+ bh=rmYM8i/37J/WPMewtchDK3qEfyIcxTUryPVnx4ImwGU=;
+ b=dP02ZJdIIC6JDYX7KOls4jc8skJ2h8cYPuvMfbDcs6A62e1pVs1204IYxuqVdqy+eopcQHAwgt6UWx1C3pwYWq2KY6JctbZsh6Y36w8tI6q/Ts1Zq7TgGGk0+awT0yB1gwPPMCx0AVlHC9mphXdDTnceX4Jj7jh63dR59eblisIyuk467ykyGqZEYNhStO3NNX/ZWj+6ii/5XmxaP50hEnhtIZc0ifNEjHdCDXlA6Env+GDE7BF4s7FBPCWeJnZnNa9rPe5Jpo9/hVcz1sAp7YXAhkqZfSY1Pfr2O6TdJbjq0+7+Y5Knoyf+CjCtB9ZmNgGK8HncMBYmn/KD7n0NnA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=f+FXNdawQ5+RfD3G8VdWjjAjsdhiImi9hgIjQ3ma6FI=;
- b=gFdb9rkJbq9KYb8z3ddKP3dS0NmxlxJldhC/gvW5YIiarAFzTRrKVS+txMgI+q2axtgAPkyn/hZcIqIgAUcKdX2VZM7iHSyM9oclbmMdvcDSIp4SymdWBO5X1PeCA2x9QMW/oTcYuDrWDBFLz04diOyDtEDQuE92A+oqCPRYrRE=
+ bh=rmYM8i/37J/WPMewtchDK3qEfyIcxTUryPVnx4ImwGU=;
+ b=ulcuQ0gYew1Rh4BNeEd4kLBJefbrRUQnXiYOt6/uaYOmBYSYbQycOdGj/W4vFL2luBl4MV04fC90OkQjwa2ycTQkcs7tSXeAAhe+t4pthfxRv3ZTFkc/qW/PmxNUkBdsyjpGikJvpVXwW+QS0469ntBXw92g00E8Ar8r40/P0RU=
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by DM6PR10MB2969.namprd10.prod.outlook.com (2603:10b6:5:6a::10) with
+ by MN2PR10MB3248.namprd10.prod.outlook.com (2603:10b6:208:129::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.11; Tue, 8 Feb
- 2022 19:22:15 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12; Tue, 8 Feb
+ 2022 19:22:11 +0000
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::755b:8fbf:706a:858]) by SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::755b:8fbf:706a:858%4]) with mapi id 15.20.4951.019; Tue, 8 Feb 2022
- 19:22:14 +0000
+ 19:22:11 +0000
 From:   Himanshu Madhani <himanshu.madhani@oracle.com>
 To:     Bart Van Assche <bvanassche@acm.org>
 CC:     Martin Petersen <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Hannes Reinecke <hare@suse.com>,
+        Ondrej Zary <linux@rainbow-software.org>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH v2 02/44] nsp_cs: Use true and false instead of TRUE and
- FALSE
-Thread-Topic: [PATCH v2 02/44] nsp_cs: Use true and false instead of TRUE and
- FALSE
-Thread-Index: AQHYHREvvRxDRbzOsUO6oymTJwhY9KyKCDgA
-Date:   Tue, 8 Feb 2022 19:22:14 +0000
-Message-ID: <B464FC7D-E068-4A6C-9131-4B899D15A68D@oracle.com>
+        Finn Thain <fthain@linux-m68k.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Russell King <linux@armlinux.org.uk>
+Subject: Re: [PATCH v2 04/44] NCR5380: Remove the NCR5380_CMD_SIZE macro
+Thread-Topic: [PATCH v2 04/44] NCR5380: Remove the NCR5380_CMD_SIZE macro
+Thread-Index: AQHYHREfVlNoBywASE+5cc/HnStVC6yKCDSA
+Date:   Tue, 8 Feb 2022 19:22:11 +0000
+Message-ID: <D1D4A081-273E-44F2-9BB7-54F9F033BFFF@oracle.com>
 References: <20220208172514.3481-1-bvanassche@acm.org>
- <20220208172514.3481-3-bvanassche@acm.org>
-In-Reply-To: <20220208172514.3481-3-bvanassche@acm.org>
+ <20220208172514.3481-5-bvanassche@acm.org>
+In-Reply-To: <20220208172514.3481-5-bvanassche@acm.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-mailer: Apple Mail (2.3693.40.0.1.81)
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 78ba7d90-3b34-409b-b336-08d9eb38504b
-x-ms-traffictypediagnostic: DM6PR10MB2969:EE_
-x-microsoft-antispam-prvs: <DM6PR10MB2969C1B33D6F04AA24A46F4BE62D9@DM6PR10MB2969.namprd10.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:2657;
+x-ms-office365-filtering-correlation-id: 14dcbe4f-b189-4121-830e-08d9eb384e6c
+x-ms-traffictypediagnostic: MN2PR10MB3248:EE_
+x-microsoft-antispam-prvs: <MN2PR10MB32488E91F9F7FCACF89FDDE5E62D9@MN2PR10MB3248.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:291;
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: tLxKyL7d3CVk34ORiRU6NOuh8CjVCyZ7JIc7YqJeSF4r+sTIKpCuDy4+n8bm0L0SNfGW1hijY4EEDtNyXMWV8LDepTZyaldCnw0jD8NmgNuFpj/Q/IDRhRhY1FJ2oyJSkyT1FsKV2krLmjmyzrXq+NTspzgDi0tcsjdT/cAWbma58T29Q+eqzeVhgWxkLVvIUmGUuPdSHvLSNzeKP9ouujTakLzSu0TP5ohxsNKsbq03TpDKMld2evMUeZppLFV2eYubyL25c7tGC15fSlxCtzv6PlzaS50vo7aQ2BVCZX6YGE9i3v2fU6PmuTm7WosIY29GGuQVtiNozGoxCvrGZxarzOMRG7FOXO9t7f4bAD71ocKf172CW2Smxg8jLpz1+IROjdbj/SFncAg4QGKBOSmqT3ALKeshPHxN0Iwgn6SHybNUzi3BGh574GXH/eb4qVkP7LaOGuEMWRuo2Agjy0QzNzZ1/2si859lfohMvoQtDaU7SqALJvkMez/ET4J/iAyEKrSHbI8QkO2P9J5+uzHHAkNxTI239eDcbO8OmtprfZnLPL6bCvytlltLVqq0STyOe1FwQbnA8NsJeYJOJ3VhgbUZCjFPAHCZOlENwwurHz8CSfGxWXMCo2EXCouOF0p/2KbZi69ETQLupOCdHL9hUq4IY9k70YHlfrfVOiu/PJLsSM+u9/lgGX1ulrYJ1rgRCNJDuxyc9770YaRPviDnmDi6WtwMhEhEr0jW5lJowwqRDSISKaChQQZM3A2y
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(122000001)(86362001)(38070700005)(66556008)(4326008)(36756003)(91956017)(38100700002)(66946007)(76116006)(8936002)(66446008)(66476007)(54906003)(316002)(6916009)(64756008)(83380400001)(44832011)(6486002)(508600001)(71200400001)(6512007)(2906002)(6506007)(33656002)(2616005)(5660300002)(53546011)(8676002)(26005)(186003)(45980500001);DIR:OUT;SFP:1101;
+x-microsoft-antispam-message-info: P7/v6uaCB3bBlN+lL15xY/8xo7XBJwKSwkCkqtVO3OCf7OT8tbOZ9hqN/FGGuHbqRQScOXbUva3Z5tde2pmDBKLc69GFd0pZ5CKjnZjrGMA6okLZ/VBqxlvQ/gbH9IaXjy2WvRsCrorY+Wb7HrobRYrhTiRB4h7Y6f4ZeRAHDoQ1GFeL9l37HnD5Xn7gJ31vperLlbJYbQSDJQJYqZkZXjnlxfAp8H8ANu1to1rw5JEeCyLmvRDxqcDKRcCXOzWsfq3PFOS897nGqxkH7qyUuq5un37qwBRsAe+SPoLOFdWF16usGWegF9KACFgLOtpdt/m69jo0milBU5XgiaM7uS3ipAJF3o5D1xFhFV0Gprody4eDGXuWSdfp8OiFEfvBk6e1TLdfWufEmm8t58ei+z6KdsxiKBrxk7gjq6fR+KcuoYZ+wj+qg3eCzuDAfFYFWTu97qfzxQqW7BDVMYXWkHUuot6NJxGm1DBJy7oyfu99xEHcjUho+fNVgM5Z5v1BorIo4agb1/DaeQ6DQucDz9ZMdJ6BK2GdlIcz2yChcRoBCKD2HdAzx4063QgTkWrSyDx9E2SK57odfRHFD3Rx0+BV0SK3xQYf3m0TqkZSf+56hw59SkvqhPGk8TDSjiZMJjNg8vtB0KAXykh5mLOMoxFHig9U8sTeC7kQFTrj+ikQxRYkCJhhyPPkm24TmW9zYqcWXpZW+fdAYD6NkUhF/oJ5rBYhRw1LIBhHEe14eijbOr5IYGSfv3CvIYusGtFw
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(33656002)(44832011)(186003)(71200400001)(5660300002)(7416002)(2616005)(4326008)(8676002)(64756008)(66446008)(66476007)(66556008)(6506007)(8936002)(66946007)(6512007)(91956017)(38070700005)(53546011)(76116006)(2906002)(26005)(83380400001)(86362001)(6916009)(508600001)(122000001)(38100700002)(6486002)(316002)(36756003)(54906003)(45980500001);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?k7nWNfAT11UxjOudSOmYZ8+AbaaGdIlnfveO7wRvaS/jrcapKtSlsazendYO?=
- =?us-ascii?Q?ykN2vZkVtA7MzVN9lPabnYJxW74B/J/En9UBWdk+NbkPdGQ3+1OqzJ9bGhle?=
- =?us-ascii?Q?klsrRgKZE3po2wLUpR/TvX6zuhGPLX25ZJnhFLR9g2cUOvgfQwC8qljUIX32?=
- =?us-ascii?Q?e/1K/i+PuUkrNwM4sLIp35z4Vtrl0teS2JqLtj6nf8L1XcackVCG9sAIMzZQ?=
- =?us-ascii?Q?dnfnsbbVmAHUnX+4QeukurqlMa9gnvBN74PZBMcTkjAr31+uCA2knewCxfrf?=
- =?us-ascii?Q?80q0yJX823eDraH3aIz3cQBdcNCGjvziqyEE1hDRPL3MKu816SpQMLl/f4M0?=
- =?us-ascii?Q?atvOp8i8xTLqytSeknaxeWU6c74/0WA+YvtglwNPR52cddDl7Svd7hFn8Fx6?=
- =?us-ascii?Q?qChaKyZmg93xDYklZp6JhPHy10XHIcaWIpYNsWTkUZuvzqLIwkdQBU+Eyzw3?=
- =?us-ascii?Q?kNqNRD+sJWFvT1ZQC6IF8X2KfiwUe63yzt+fR2BkwDyX1BFVR2B66kBj6aOn?=
- =?us-ascii?Q?HLKJJoQyPoLpVh87L65OKFKgek7EEoJgj5CZW7nDdviLCndcS4K1Yi46px4i?=
- =?us-ascii?Q?94B5LGcqdmHI0wmNCKqzobBV8WEvLh1zGVswQx3tYvVnNp71slZx1e1/nZe0?=
- =?us-ascii?Q?vVaBLNqAJktVJEyXDzdCYvoe4oZhnh3OQj+GPa9Pgb3rQCk1m4To4bvfCdWD?=
- =?us-ascii?Q?6tQ0IjWR+Z/Zp+1w6GdNdmB8dLSuqngTH/xP5aHBA4IQTYKYb5qu5T6Gf72k?=
- =?us-ascii?Q?1Pkpv2nc/KDcC3RkptwwxKa5CrawUXnJ4MI0T5d3Va67WUnypekREkB4FSyK?=
- =?us-ascii?Q?53GErZp7SehN8XBuJt64TPoPnVtc5Nf7aZxgMEbsGF1beUlkfyY6N/fwa26e?=
- =?us-ascii?Q?a1Cg62GCy1j7lP8fiZxgBvvyIuDah4RRwbLWKp3KPXtna0y0UWAKo8c+cZn5?=
- =?us-ascii?Q?PpIqei8V1Qj7bLJ3oMnkwM85aIpcWt3xL0ksYEZh0xrUx1JbKsaAYv9l7lAx?=
- =?us-ascii?Q?SB8/NpoUilGV7Ciz9GT3fEoil/6DtQeLmROUQknDypq84jczj0vnZjRJ+QrP?=
- =?us-ascii?Q?6a9kxWR7GFF/zOwx+1qK24q/9D0M94YTwb9jSqQ0Jt3UsDJEEwLigETRhFLF?=
- =?us-ascii?Q?NsTV141uFyQg3cgePPe5G6WmrPQ7nFWeJ606L7GtgBk7buytlIPzmCgnlnlC?=
- =?us-ascii?Q?5z/bzFi5kgmtx+8qpzdk9gYwxKrGdwdn9+0RSjvdI3XpFxcNM7KQv7cF5GJT?=
- =?us-ascii?Q?gdEV4rCnIiI2d+EPSPjYNX5rx+LocPg8SSWqHbEq0c/KOwTYj9G46ScF+yNo?=
- =?us-ascii?Q?ELQzi98N2ZAEMqxVekUX4kNdgb1EQj9rDeex1p4GN7lb/iqDPp9Otr6rHH5o?=
- =?us-ascii?Q?IaJ0etB/QH3exrFgiLn7UCHW9iYdaEK9hsetvDtu+kPqdmBqqDr3JKtfyauW?=
- =?us-ascii?Q?t/rkRoMjkbgsKZ31wEt2A/AK7gCcG3/RqKdTV1s226ZKsfEz6LO+5VOrom7A?=
- =?us-ascii?Q?GRfWskKSbYWsaDQEkQIVo6/zz/Kp/0Z7kL/55BJ20cnoIwopXzKfwd1Bvvfo?=
- =?us-ascii?Q?Kt6iwDNDsEhU+PFsPfWXFwatSVeWre/pHLDaDb9lkMJfHm68IDBLqbvvYFPZ?=
- =?us-ascii?Q?LbUuyhzSEEbVBQOYpywTdB4mC80n9tFW9vUvzAaZl4medJ5Q18bfflcxFxSb?=
- =?us-ascii?Q?R5KiRnts8GVGVJ6BGaIwkM/iPCs=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?nMyEDnCvMHdxbUaibsXfVeneTYBiUfVqv4A1+htR66nTvkh3vnm8a9juxav+?=
+ =?us-ascii?Q?2mYpdNuq6eoZc02lilXgNadVguxDbQT7MVEYDsF4XOLYc2t8yGUHvx/fqREm?=
+ =?us-ascii?Q?Du5O1WGuG4WDyr6xTuyoM7o0ieE/uMoMZj3SC6EZCvEftyJGCkQrTgO3Xiwq?=
+ =?us-ascii?Q?z0/7bhFykaoLKf1s93lHLvmkGp7Mz+k6ShFV9+AlkFW4+trsIEF501sZrg2E?=
+ =?us-ascii?Q?cWqC1R8A89TWVoQY5emBgDd3GxhCHa/KQK0/JbMVsynXW4Wpz5l1o3yo8nHM?=
+ =?us-ascii?Q?YQs/aLylItyVMgkEmwCttIR4N9SiE/2F91ja+FMwSDA5gKpSJlSVydVtgplh?=
+ =?us-ascii?Q?rPHIMm+yv5VmYOBa/ajMSA4kZGjTadXwX17U2uBNFoWk1CZxIymAdFOvUxeJ?=
+ =?us-ascii?Q?+Cxt9UF46RuAm7TBRRUSmtK2SM5UCS14vCsH2Fa4hOvSH03P+XnK8KCHA0o0?=
+ =?us-ascii?Q?gl4jtcr6B92Cey4wq704R/D/UBW/r9Y/BXQSqgK/aKvNGAG2E+y728BFY1wg?=
+ =?us-ascii?Q?xf7MVTEemDBEdUBx25illLc9JOZ5RGHD+sbJ/0/NtJlPJHoRV3yjcfAYb3Qs?=
+ =?us-ascii?Q?mX9dauuVN/gag37HWiyi7prQWDQbXwTsQOLqkBQaMEcTwZEYKQVcwoix0y0W?=
+ =?us-ascii?Q?4ZRfg0BOJoIgQOS3SXm/8LwymIG4w5IroLUGDz52pzv+Uobfw/c+cQX65o4A?=
+ =?us-ascii?Q?lRpW/vGu0hw49aHPsZOZRWRp2x48qp1tbqlNywxynBV4tb7kuo46vn2kd8LY?=
+ =?us-ascii?Q?gPTCEL/eTehqviZL3QVLkF0LJX8+8UDMjZ7X+saLlatCGoQq2PsX1atKYWqr?=
+ =?us-ascii?Q?N9gu0/6Gns4KL75yhFDZD9oPSRhyMuRJMqRCFy+9MNuIwTxwpkBsv6HSDrTK?=
+ =?us-ascii?Q?e7d8n5mrrRP23rLI/RBXwdUzukkgilaj69zHwqgskR03oPwHg1RaeTo2YkuD?=
+ =?us-ascii?Q?YKjecEOxaqvwOP8czB//3RcccAi11TvpMQzfMuXw1qmlhgd3mB4GCIuL8mkz?=
+ =?us-ascii?Q?kqOHo5H6iys966JQi/7XL0coceMexiL/uBS7cUPsWTOU7oEpooX5NdY5dnAq?=
+ =?us-ascii?Q?7Khwva6c+3NvK113eihwuVMI+2054aIeB6ZU//dwYoEw/mwbrTS04X5TYHaM?=
+ =?us-ascii?Q?FlXQ5gE0n8FgvHOtGUYm6TVNwj2QyMBGSiGYydaEjzyZ3uwC1n21lWaxfJn4?=
+ =?us-ascii?Q?Dlcp8LaEjlAlCfJkz4Z/VyDUdT8BzTHqJOt3nKgZhfXzChKTa3ejMLkRFXBz?=
+ =?us-ascii?Q?/zttPgMAgl5LX+//hCnyvsMZ3voTFY0bmd17OAFffwaF2T3ODGYsWZ4MdvS5?=
+ =?us-ascii?Q?ocpSDZVfGHRbwtzboDa2uxL+8ILDjYUvA8B34zA98kvhe5AMjEN+g1Ht6r2U?=
+ =?us-ascii?Q?zTCMfxlPXeg+5nt5OvBTXxpTNcapwqdMWMnQOwznS1F/Umu1MJp+l/l1RfVw?=
+ =?us-ascii?Q?7W+l/nrACuxNiQEmmEHT0W4VUQ4Ajc97KzLXVnGyRBEtmLibfuakMBypvrjC?=
+ =?us-ascii?Q?T7ItHaN88VN/3t2Vq2FyNvLrdTD0o2I8iysYb5ec5qYHspRMzDirEQcmvyT9?=
+ =?us-ascii?Q?BZDdSelZ1sUSimGCDEOivwK1jEetta1QQh4S2lOAI6LyBXJWQzBR1U0F6SVz?=
+ =?us-ascii?Q?rCaDm3VFnTgZ0SWFRgS1xQeWwFFFi7mLSdMBApisI6gFCraJfWhanQ4p8Lji?=
+ =?us-ascii?Q?tt/cTIMe7/pJCPaknJQGEvU1InY=3D?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <4487A75BD510124F8B79A86278BEDEF3@namprd10.prod.outlook.com>
+Content-ID: <F10621FF25F35349966ED14C0746FCAB@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 78ba7d90-3b34-409b-b336-08d9eb38504b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Feb 2022 19:22:14.6376
+X-MS-Exchange-CrossTenant-Network-Message-Id: 14dcbe4f-b189-4121-830e-08d9eb384e6c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Feb 2022 19:22:11.5284
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: yV17W9bAaxPJ4krdheve6E4aYwP5pJ3uOPdoL7rodvq8t2/mFnhXlS7KaaWE402RdhCr+npjIbifGie3aWVYLPDmEfvZf9aNT+iCnxXhGCo=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB2969
+X-MS-Exchange-CrossTenant-userprincipalname: ac3m2VhBZ3lLJBPwGVQ7SRkzU8pC5I592enlA0yWmwm2pIYi3fbUV6CBeGGwEfJrYnAl5El1biW25h9dq5TIohTJzrVs0I+wIp4A+fm5iHs=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR10MB3248
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10252 signatures=673431
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 bulkscore=0
- malwarescore=0 suspectscore=0 phishscore=0 adultscore=0 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 suspectscore=0
+ mlxlogscore=999 mlxscore=0 adultscore=0 malwarescore=0 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
  definitions=main-2202080114
-X-Proofpoint-ORIG-GUID: yEMaizEZw8v23SgyY648CGMa7FlnpSS5
-X-Proofpoint-GUID: yEMaizEZw8v23SgyY648CGMa7FlnpSS5
+X-Proofpoint-GUID: 4ZA5yGnaq123G6jDISe9ETJwICDV7mI6
+X-Proofpoint-ORIG-GUID: 4ZA5yGnaq123G6jDISe9ETJwICDV7mI6
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -151,223 +155,138 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 > On Feb 8, 2022, at 9:24 AM, Bart Van Assche <bvanassche@acm.org> wrote:
 >=20
-> Additionally, change the return type of the functions that always return
-> TRUE from 'int' into 'void'. This patch prepares for removal of the
-> drivers/scsi/scsi.h header file. That header file defines the 'TRUE' and
-> 'FALSE' constants.
+> This makes it easier to find users of the NCR5380_cmd data structure with
+> 'grep'.
 >=20
+> Cc: Finn Thain <fthain@telegraphics.com.au>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Ondrej Zary <linux@rainbow-software.org>
+> Cc: Michael Schmitz <schmitzmic@gmail.com>
 > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
-> drivers/scsi/pcmcia/nsp_cs.c | 43 +++++++++++++++---------------------
-> drivers/scsi/pcmcia/nsp_cs.h |  6 ++---
-> 2 files changed, 21 insertions(+), 28 deletions(-)
+> drivers/scsi/NCR5380.h      | 2 --
+> drivers/scsi/arm/cumana_1.c | 2 +-
+> drivers/scsi/arm/oak.c      | 2 +-
+> drivers/scsi/atari_scsi.c   | 2 +-
+> drivers/scsi/dmx3191d.c     | 2 +-
+> drivers/scsi/g_NCR5380.c    | 2 +-
+> drivers/scsi/mac_scsi.c     | 2 +-
+> drivers/scsi/sun3_scsi.c    | 2 +-
+> 8 files changed, 7 insertions(+), 9 deletions(-)
 >=20
-> diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-> index 92c818a8a84a..a78a86511e94 100644
-> --- a/drivers/scsi/pcmcia/nsp_cs.c
-> +++ b/drivers/scsi/pcmcia/nsp_cs.c
-> @@ -243,7 +243,7 @@ static int nsp_queuecommand_lck(struct scsi_cmnd *SCp=
-nt)
-> 		SCpnt->SCp.buffers_residual =3D 0;
-> 	}
+> diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
+> index 8a3b41932288..845bd2423e66 100644
+> --- a/drivers/scsi/NCR5380.h
+> +++ b/drivers/scsi/NCR5380.h
+> @@ -230,8 +230,6 @@ struct NCR5380_cmd {
+> 	struct list_head list;
+> };
 >=20
-> -	if (nsphw_start_selection(SCpnt) =3D=3D FALSE) {
-> +	if (!nsphw_start_selection(SCpnt)) {
-> 		nsp_dbg(NSP_DEBUG_QUEUECOMMAND, "selection fail");
-> 		SCpnt->result   =3D DID_BUS_BUSY << 16;
-> 		nsp_scsi_done(SCpnt);
-> @@ -263,14 +263,14 @@ static DEF_SCSI_QCMD(nsp_queuecommand)
-> /*
->  * setup PIO FIFO transfer mode and enable/disable to data out
->  */
-> -static void nsp_setup_fifo(nsp_hw_data *data, int enabled)
-> +static void nsp_setup_fifo(nsp_hw_data *data, bool enabled)
-> {
-> 	unsigned int  base =3D data->BaseAddress;
-> 	unsigned char transfer_mode_reg;
->=20
-> 	//nsp_dbg(NSP_DEBUG_DATA_IO, "enabled=3D%d", enabled);
->=20
-> -	if (enabled !=3D FALSE) {
-> +	if (enabled) {
-> 		transfer_mode_reg =3D TRANSFER_GO | BRAIND;
-> 	} else {
-> 		transfer_mode_reg =3D 0;
-> @@ -298,7 +298,7 @@ static void nsphw_init_sync(nsp_hw_data *data)
-> /*
->  * Initialize Ninja hardware
->  */
-> -static int nsphw_init(nsp_hw_data *data)
-> +static void nsphw_init(nsp_hw_data *data)
-> {
-> 	unsigned int base     =3D data->BaseAddress;
->=20
-> @@ -348,15 +348,13 @@ static int nsphw_init(nsp_hw_data *data)
-> 					    SCSI_RESET_IRQ_EI	 );
-> 	nsp_write(base,	      IRQCONTROL,   IRQCONTROL_ALLCLEAR);
->=20
-> -	nsp_setup_fifo(data, FALSE);
+> -#define NCR5380_CMD_SIZE		(sizeof(struct NCR5380_cmd))
 > -
-> -	return TRUE;
-> +	nsp_setup_fifo(data, false);
-> }
+> #define NCR5380_PIO_CHUNK_SIZE		256
 >=20
-> /*
->  * Start selection phase
->  */
-> -static int nsphw_start_selection(struct scsi_cmnd *SCpnt)
-> +static bool nsphw_start_selection(struct scsi_cmnd *SCpnt)
-> {
-> 	unsigned int  host_id	 =3D SCpnt->device->host->this_id;
-> 	unsigned int  base	 =3D SCpnt->device->host->io_port;
-> @@ -370,7 +368,7 @@ static int nsphw_start_selection(struct scsi_cmnd *SC=
-pnt)
-> 	phase =3D nsp_index_read(base, SCSIBUSMON);
-> 	if(phase !=3D BUSMON_BUS_FREE) {
-> 		//nsp_dbg(NSP_DEBUG_RESELECTION, "bus busy");
-> -		return FALSE;
-> +		return false;
-> 	}
+> /* Time limit (ms) to poll registers when IRQs are disabled, e.g. during =
+PDMA */
+> diff --git a/drivers/scsi/arm/cumana_1.c b/drivers/scsi/arm/cumana_1.c
+> index 3fd944374631..5d4f67ba74c0 100644
+> --- a/drivers/scsi/arm/cumana_1.c
+> +++ b/drivers/scsi/arm/cumana_1.c
+> @@ -223,7 +223,7 @@ static struct scsi_host_template cumanascsi_template =
+=3D {
+> 	.sg_tablesize		=3D SG_ALL,
+> 	.cmd_per_lun		=3D 2,
+> 	.proc_name		=3D "CumanaSCSI-1",
+> -	.cmd_size		=3D NCR5380_CMD_SIZE,
+> +	.cmd_size		=3D sizeof(struct NCR5380_cmd),
+> 	.max_sectors		=3D 128,
+> 	.dma_boundary		=3D PAGE_SIZE - 1,
+> };
+> diff --git a/drivers/scsi/arm/oak.c b/drivers/scsi/arm/oak.c
+> index 78f33d57c3e8..f18a0620c808 100644
+> --- a/drivers/scsi/arm/oak.c
+> +++ b/drivers/scsi/arm/oak.c
+> @@ -113,7 +113,7 @@ static struct scsi_host_template oakscsi_template =3D=
+ {
+> 	.cmd_per_lun		=3D 2,
+> 	.dma_boundary		=3D PAGE_SIZE - 1,
+> 	.proc_name		=3D "oakscsi",
+> -	.cmd_size		=3D NCR5380_CMD_SIZE,
+> +	.cmd_size		=3D sizeof(struct NCR5380_cmd),
+> 	.max_sectors		=3D 128,
+> };
 >=20
-> 	/* start arbitration */
-> @@ -390,7 +388,7 @@ static int nsphw_start_selection(struct scsi_cmnd *SC=
-pnt)
-> 	if (!(arbit & ARBIT_WIN)) {
-> 		//nsp_dbg(NSP_DEBUG_RESELECTION, "arbit fail");
-> 		nsp_index_write(base, SETARBIT, ARBIT_FLAG_CLEAR);
-> -		return FALSE;
-> +		return false;
-> 	}
+> diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+> index 95d7a3586083..e9d0d99abc86 100644
+> --- a/drivers/scsi/atari_scsi.c
+> +++ b/drivers/scsi/atari_scsi.c
+> @@ -711,7 +711,7 @@ static struct scsi_host_template atari_scsi_template =
+=3D {
+> 	.this_id		=3D 7,
+> 	.cmd_per_lun		=3D 2,
+> 	.dma_boundary		=3D PAGE_SIZE - 1,
+> -	.cmd_size		=3D NCR5380_CMD_SIZE,
+> +	.cmd_size		=3D sizeof(struct NCR5380_cmd),
+> };
 >=20
-> 	/* assert select line */
-> @@ -409,7 +407,7 @@ static int nsphw_start_selection(struct scsi_cmnd *SC=
-pnt)
-> 	nsp_start_timer(SCpnt, 1000/51);
-> 	data->SelectionTimeOut =3D 1;
+> static int __init atari_scsi_probe(struct platform_device *pdev)
+> diff --git a/drivers/scsi/dmx3191d.c b/drivers/scsi/dmx3191d.c
+> index 6df60b31ecb0..a171ce6b70b2 100644
+> --- a/drivers/scsi/dmx3191d.c
+> +++ b/drivers/scsi/dmx3191d.c
+> @@ -52,7 +52,7 @@ static struct scsi_host_template dmx3191d_driver_templa=
+te =3D {
+> 	.sg_tablesize		=3D SG_ALL,
+> 	.cmd_per_lun		=3D 2,
+> 	.dma_boundary		=3D PAGE_SIZE - 1,
+> -	.cmd_size		=3D NCR5380_CMD_SIZE,
+> +	.cmd_size		=3D sizeof(struct NCR5380_cmd),
+> };
 >=20
-> -	return TRUE;
-> +	return true;
-> }
+> static int dmx3191d_probe_one(struct pci_dev *pdev,
+> diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+> index 7ba3c9312731..5923f86a384e 100644
+> --- a/drivers/scsi/g_NCR5380.c
+> +++ b/drivers/scsi/g_NCR5380.c
+> @@ -702,7 +702,7 @@ static struct scsi_host_template driver_template =3D =
+{
+> 	.sg_tablesize		=3D SG_ALL,
+> 	.cmd_per_lun		=3D 2,
+> 	.dma_boundary		=3D PAGE_SIZE - 1,
+> -	.cmd_size		=3D NCR5380_CMD_SIZE,
+> +	.cmd_size		=3D sizeof(struct NCR5380_cmd),
+> 	.max_sectors		=3D 128,
+> };
 >=20
-> struct nsp_sync_table {
-> @@ -479,7 +477,7 @@ static int nsp_analyze_sdtr(struct scsi_cmnd *SCpnt)
-> 		sync->SyncRegister    =3D 0;
-> 		sync->AckWidth	      =3D 0;
+> diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
+> index 5c808fbc6ce2..71d493a0bb43 100644
+> --- a/drivers/scsi/mac_scsi.c
+> +++ b/drivers/scsi/mac_scsi.c
+> @@ -434,7 +434,7 @@ static struct scsi_host_template mac_scsi_template =
+=3D {
+> 	.sg_tablesize		=3D 1,
+> 	.cmd_per_lun		=3D 2,
+> 	.dma_boundary		=3D PAGE_SIZE - 1,
+> -	.cmd_size		=3D NCR5380_CMD_SIZE,
+> +	.cmd_size		=3D sizeof(struct NCR5380_cmd),
+> 	.max_sectors		=3D 128,
+> };
 >=20
-> -		return FALSE;
-> +		return false;
-> 	}
+> diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+> index f7f724a3ff1d..82a253270c3b 100644
+> --- a/drivers/scsi/sun3_scsi.c
+> +++ b/drivers/scsi/sun3_scsi.c
+> @@ -505,7 +505,7 @@ static struct scsi_host_template sun3_scsi_template =
+=3D {
+> 	.sg_tablesize		=3D 1,
+> 	.cmd_per_lun		=3D 2,
+> 	.dma_boundary		=3D PAGE_SIZE - 1,
+> -	.cmd_size		=3D NCR5380_CMD_SIZE,
+> +	.cmd_size		=3D sizeof(struct NCR5380_cmd),
+> };
 >=20
-> 	sync->SyncRegister    =3D (sync_table->chip_period << SYNCREG_PERIOD_SHI=
-FT) |
-> @@ -488,7 +486,7 @@ static int nsp_analyze_sdtr(struct scsi_cmnd *SCpnt)
->=20
-> 	nsp_dbg(NSP_DEBUG_SYNC, "sync_reg=3D0x%x, ack_width=3D0x%x", sync->SyncR=
-egister, sync->AckWidth);
->=20
-> -	return TRUE;
-> +	return true;
-> }
->=20
->=20
-> @@ -635,7 +633,7 @@ static int nsp_dataphase_bypass(struct scsi_cmnd *SCp=
-nt)
-> 	nsp_dbg(NSP_DEBUG_DATA_IO, "use bypass quirk");
-> 	SCpnt->SCp.phase =3D PH_DATA;
-> 	nsp_pio_read(SCpnt);
-> -	nsp_setup_fifo(data, FALSE);
-> +	nsp_setup_fifo(data, false);
->=20
-> 	return 0;
-> }
-> @@ -643,7 +641,7 @@ static int nsp_dataphase_bypass(struct scsi_cmnd *SCp=
-nt)
-> /*
->  * accept reselection
->  */
-> -static int nsp_reselected(struct scsi_cmnd *SCpnt)
-> +static void nsp_reselected(struct scsi_cmnd *SCpnt)
-> {
-> 	unsigned int  base    =3D SCpnt->device->host->io_port;
-> 	unsigned int  host_id =3D SCpnt->device->host->this_id;
-> @@ -675,8 +673,6 @@ static int nsp_reselected(struct scsi_cmnd *SCpnt)
-> 	bus_reg =3D nsp_index_read(base, SCSIBUSCTRL) & ~(SCSI_BSY | SCSI_ATN);
-> 	nsp_index_write(base, SCSIBUSCTRL, bus_reg);
-> 	nsp_index_write(base, SCSIBUSCTRL, bus_reg | AUTODIRECTION | ACKENB);
-> -
-> -	return TRUE;
-> }
->=20
-> /*
-> @@ -931,7 +927,7 @@ static int nsp_nexus(struct scsi_cmnd *SCpnt)
-> 	}
->=20
-> 	/* setup pdma fifo */
-> -	nsp_setup_fifo(data, TRUE);
-> +	nsp_setup_fifo(data, true);
->=20
-> 	/* clear ack counter */
->  	data->FifoCount =3D 0;
-> @@ -1057,9 +1053,8 @@ static irqreturn_t nspintr(int irq, void *dev_id)
-> 		if (irq_phase & RESELECT_IRQ) {
-> 			nsp_dbg(NSP_DEBUG_INTR, "reselect");
-> 			nsp_write(base, IRQCONTROL, IRQCONTROL_RESELECT_CLEAR);
-> -			if (nsp_reselected(tmpSC) !=3D FALSE) {
-> -				return IRQ_HANDLED;
-> -			}
-> +			nsp_reselected(tmpSC);
-> +			return IRQ_HANDLED;
-> 		}
->=20
-> 		if ((irq_phase & (PHASE_CHANGE_IRQ | LATCHED_BUS_FREE)) =3D=3D 0) {
-> @@ -1215,7 +1210,7 @@ static irqreturn_t nspintr(int irq, void *dev_id)
-> 		//*sync_neg =3D SYNC_NOT_YET;
->=20
-> 		data->MsgLen =3D i =3D 0;
-> -		data->MsgBuffer[i] =3D IDENTIFY(TRUE, lun); i++;
-> +		data->MsgBuffer[i] =3D IDENTIFY(true, lun); i++;
->=20
-> 		if (*sync_neg =3D=3D SYNC_NOT_YET) {
-> 			data->Sync[target].SyncPeriod =3D 0;
-> @@ -1614,9 +1609,7 @@ static int nsp_cs_config(struct pcmcia_device *link=
-)
-> 	nsp_dbg(NSP_DEBUG_INIT, "I/O[0x%x+0x%x] IRQ %d",
-> 		data->BaseAddress, data->NumAddress, data->IrqNumber);
->=20
-> -	if(nsphw_init(data) =3D=3D FALSE) {
-> -		goto cs_failed;
-> -	}
-> +	nsphw_init(data);
->=20
-> 	host =3D nsp_detect(&nsp_driver_template);
->=20
-> diff --git a/drivers/scsi/pcmcia/nsp_cs.h b/drivers/scsi/pcmcia/nsp_cs.h
-> index 665bf8d0faf7..7d5d1a5b36e0 100644
-> --- a/drivers/scsi/pcmcia/nsp_cs.h
-> +++ b/drivers/scsi/pcmcia/nsp_cs.h
-> @@ -304,8 +304,8 @@ static int nsp_eh_host_reset   (struct scsi_cmnd *SCp=
-nt);
-> static int nsp_bus_reset       (nsp_hw_data *data);
->=20
-> /* */
-> -static int  nsphw_init           (nsp_hw_data *data);
-> -static int  nsphw_start_selection(struct scsi_cmnd *SCpnt);
-> +static void nsphw_init           (nsp_hw_data *data);
-> +static bool nsphw_start_selection(struct scsi_cmnd *SCpnt);
-> static void nsp_start_timer      (struct scsi_cmnd *SCpnt, int time);
-> static int  nsp_fifo_count       (struct scsi_cmnd *SCpnt);
-> static void nsp_pio_read         (struct scsi_cmnd *SCpnt);
-> @@ -320,7 +320,7 @@ static int  nsp_expect_signal    (struct scsi_cmnd *S=
-Cpnt,
-> 				  unsigned char  mask);
-> static int  nsp_xfer             (struct scsi_cmnd *SCpnt, int phase);
-> static int  nsp_dataphase_bypass (struct scsi_cmnd *SCpnt);
-> -static int  nsp_reselected       (struct scsi_cmnd *SCpnt);
-> +static void nsp_reselected       (struct scsi_cmnd *SCpnt);
-> static struct Scsi_Host *nsp_detect(struct scsi_host_template *sht);
->=20
-> /* Interrupt handler */
+> static int __init sun3_scsi_probe(struct platform_device *pdev)
 
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
