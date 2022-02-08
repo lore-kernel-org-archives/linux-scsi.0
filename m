@@ -2,49 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13C62C43217
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Feb 2022 17:26:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE1BCC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Feb 2022 17:26:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1384333AbiBHR0b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Feb 2022 12:26:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55856 "EHLO
+        id S1384332AbiBHR0e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Feb 2022 12:26:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1384369AbiBHR0X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 12:26:23 -0500
+        with ESMTP id S1384329AbiBHR0b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 12:26:31 -0500
 Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85154C03FEF8
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 09:26:18 -0800 (PST)
-Received: by mail-pl1-f177.google.com with SMTP id x4so6820298plb.4
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Feb 2022 09:26:18 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 612FDC061579
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 09:26:30 -0800 (PST)
+Received: by mail-pl1-f177.google.com with SMTP id x4so6820751plb.4
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Feb 2022 09:26:30 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=A+44DMy94HOJfP4Bup7v0v6bbrKOue24BlG14X4wjYo=;
-        b=P5ZgEbNi6WkP+srFkmBunj+5cz0TPHsPVNBwBnxvCKqgifl74luRMvOmkM5Whmux0Q
-         hV93Rzsci463A9gBJTqjk4WkShUm9ohM83TDGHUKSOibJlHFylut/h6LwhpT+JnaYpak
-         qtzI4WEYO01AhfI/KiNXDXZlxBoN4CRpc+Uuv/rLFgzhl3FrrL2qpHFOHp2/UIPT1t2z
-         bKFCaF8yaOKlVIORPUV67q30/2bu9fel60PpIF5spW89Ue3w0rxQxl66ZYs2klH+CTax
-         QHonaNX5oSsc0Z6gjQW2GaSMMEfna7bUCrRO3hT0G8OeprOkrD6jMbY6cAE3Q33lk3m/
-         fLzQ==
-X-Gm-Message-State: AOAM533tPEw3+m9eOr6K2M4QcFT8aoYpz8agemB8TAWkle2ZM56n6mzu
-        pHdQpS8KR5lxzrviioOAR4s=
-X-Google-Smtp-Source: ABdhPJwbRbK3m64PKlK9Dxh9AqKjcitDsY32sPrHUz2GtAjNmdbl3EswF9E9EELs65Yry5T9/BvnvA==
-X-Received: by 2002:a17:902:7603:: with SMTP id k3mr5605093pll.166.1644341177717;
-        Tue, 08 Feb 2022 09:26:17 -0800 (PST)
+        bh=ZNQv4C/sGxKI6nIyJlZInd8nUg8qT6I8DFqvcFDnssU=;
+        b=PBuy3LyfvWAl9sGQeWMOBCB/IjXum61lDxOxoyFi2y4VG+dnCf5WSgOMoLXyPLXt7C
+         rqlfaFTpFxnZF7zbgJD+FCqOqh2vKmm1bXWBHN5vKg3cgjcIgWw/KNw3IiQHy/g99WNe
+         g+rZv8Nzk0Y1uIvmNqJcAu3V53mtgrZ/ehh3dq16VP+xR762sxL8vlYTaC4TlCT1q+6C
+         CqTSxaUeCOuMDq/8TU265020FWBPKL/AP9dh1fc4jCs79Sv/C8v5IJu9Ho0NAdWW21Ls
+         7XHVkNu7CFGpbG3CsbH8NIAHrPB/dLWqLCPaRbFFQ/bXyDoMNGMf8AQmRmxzVk0At/wv
+         1fkQ==
+X-Gm-Message-State: AOAM531V6iiHgZhiTsJGW2gPLE8xMnQwXQi/zQapQFh6fGdxacze65kU
+        IqbVvZvJjsRhUyeDQLtMiNs=
+X-Google-Smtp-Source: ABdhPJw33gEmx5ZV7Ihfdb/qoQVYaqIIjuo++vq3olu2s9LAkQTFx0C3RaEWCa8eU9+DVDUnd6dTow==
+X-Received: by 2002:a17:902:ce04:: with SMTP id k4mr5131524plg.131.1644341189784;
+        Tue, 08 Feb 2022 09:26:29 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id q1sm335116pfs.112.2022.02.08.09.26.16
+        by smtp.gmail.com with ESMTPSA id q1sm335116pfs.112.2022.02.08.09.26.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Feb 2022 09:26:17 -0800 (PST)
+        Tue, 08 Feb 2022 09:26:29 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        HighPoint Linux Team <linux@highpoint-tech.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 20/44] hptiop: Stop using the SCSI pointer
-Date:   Tue,  8 Feb 2022 09:24:50 -0800
-Message-Id: <20220208172514.3481-21-bvanassche@acm.org>
+Subject: [PATCH v2 26/44] mac53c94: Move the SCSI pointer to private command data
+Date:   Tue,  8 Feb 2022 09:24:56 -0800
+Message-Id: <20220208172514.3481-27-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220208172514.3481-1-bvanassche@acm.org>
 References: <20220208172514.3481-1-bvanassche@acm.org>
@@ -61,39 +60,110 @@ from struct scsi_cmnd.
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/hptiop.c | 1 +
- drivers/scsi/hptiop.h | 4 ++--
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/mac53c94.c | 24 +++++++++++++-----------
+ drivers/scsi/mac53c94.h | 11 +++++++++++
+ 2 files changed, 24 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index d04245e379d7..f18b770626e6 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -1174,6 +1174,7 @@ static struct scsi_host_template driver_template = {
- 	.slave_configure            = hptiop_slave_config,
- 	.this_id                    = -1,
- 	.change_queue_depth         = hptiop_adjust_disk_queue_depth,
-+	.cmd_size		    = sizeof(struct hpt_cmd_priv),
+diff --git a/drivers/scsi/mac53c94.c b/drivers/scsi/mac53c94.c
+index afa08309de36..f3005b38931f 100644
+--- a/drivers/scsi/mac53c94.c
++++ b/drivers/scsi/mac53c94.c
+@@ -193,7 +193,8 @@ static void mac53c94_interrupt(int irq, void *dev_id)
+ 	struct fsc_state *state = (struct fsc_state *) dev_id;
+ 	struct mac53c94_regs __iomem *regs = state->regs;
+ 	struct dbdma_regs __iomem *dma = state->dma;
+-	struct scsi_cmnd *cmd = state->current_req;
++	struct scsi_cmnd *const cmd = state->current_req;
++	struct scsi_pointer *const scsi_pointer = mac53c94_scsi_pointer(cmd);
+ 	int nb, stat, seq, intr;
+ 	static int mac53c94_errors;
+ 
+@@ -263,10 +264,10 @@ static void mac53c94_interrupt(int irq, void *dev_id)
+ 		/* set DMA controller going if any data to transfer */
+ 		if ((stat & (STAT_MSG|STAT_CD)) == 0
+ 		    && (scsi_sg_count(cmd) > 0 || scsi_bufflen(cmd))) {
+-			nb = cmd->SCp.this_residual;
++			nb = scsi_pointer->this_residual;
+ 			if (nb > 0xfff0)
+ 				nb = 0xfff0;
+-			cmd->SCp.this_residual -= nb;
++			scsi_pointer->this_residual -= nb;
+ 			writeb(nb, &regs->count_lo);
+ 			writeb(nb >> 8, &regs->count_mid);
+ 			writeb(CMD_DMA_MODE + CMD_NOP, &regs->command);
+@@ -293,13 +294,13 @@ static void mac53c94_interrupt(int irq, void *dev_id)
+ 			cmd_done(state, DID_ERROR << 16);
+ 			return;
+ 		}
+-		if (cmd->SCp.this_residual != 0
++		if (scsi_pointer->this_residual != 0
+ 		    && (stat & (STAT_MSG|STAT_CD)) == 0) {
+ 			/* Set up the count regs to transfer more */
+-			nb = cmd->SCp.this_residual;
++			nb = scsi_pointer->this_residual;
+ 			if (nb > 0xfff0)
+ 				nb = 0xfff0;
+-			cmd->SCp.this_residual -= nb;
++			scsi_pointer->this_residual -= nb;
+ 			writeb(nb, &regs->count_lo);
+ 			writeb(nb >> 8, &regs->count_mid);
+ 			writeb(CMD_DMA_MODE + CMD_NOP, &regs->command);
+@@ -321,8 +322,8 @@ static void mac53c94_interrupt(int irq, void *dev_id)
+ 			cmd_done(state, DID_ERROR << 16);
+ 			return;
+ 		}
+-		cmd->SCp.Status = readb(&regs->fifo);
+-		cmd->SCp.Message = readb(&regs->fifo);
++		scsi_pointer->Status = readb(&regs->fifo);
++		scsi_pointer->Message = readb(&regs->fifo);
+ 		writeb(CMD_ACCEPT_MSG, &regs->command);
+ 		state->phase = busfreeing;
+ 		break;
+@@ -330,8 +331,8 @@ static void mac53c94_interrupt(int irq, void *dev_id)
+ 		if (intr != INTR_DISCONNECT) {
+ 			printk(KERN_DEBUG "got intr %x when expected disconnect\n", intr);
+ 		}
+-		cmd_done(state, (DID_OK << 16) + (cmd->SCp.Message << 8)
+-			 + cmd->SCp.Status);
++		cmd_done(state, (DID_OK << 16) + (scsi_pointer->Message << 8)
++			 + scsi_pointer->Status);
+ 		break;
+ 	default:
+ 		printk(KERN_DEBUG "don't know about phase %d\n", state->phase);
+@@ -389,7 +390,7 @@ static void set_dma_cmds(struct fsc_state *state, struct scsi_cmnd *cmd)
+ 	dma_cmd += OUTPUT_LAST - OUTPUT_MORE;
+ 	dcmds[-1].command = cpu_to_le16(dma_cmd);
+ 	dcmds->command = cpu_to_le16(DBDMA_STOP);
+-	cmd->SCp.this_residual = total;
++	mac53c94_scsi_pointer(cmd)->this_residual = total;
+ }
+ 
+ static struct scsi_host_template mac53c94_template = {
+@@ -401,6 +402,7 @@ static struct scsi_host_template mac53c94_template = {
+ 	.this_id	= 7,
+ 	.sg_tablesize	= SG_ALL,
+ 	.max_segment_size = 65535,
++	.cmd_size	= sizeof(struct mac53c94_cmd_priv),
  };
  
- static int hptiop_internal_memalloc_itl(struct hptiop_hba *hba)
-diff --git a/drivers/scsi/hptiop.h b/drivers/scsi/hptiop.h
-index 35184c2008af..363d5a16243f 100644
---- a/drivers/scsi/hptiop.h
-+++ b/drivers/scsi/hptiop.h
-@@ -251,13 +251,13 @@ struct hptiop_request {
- 	int                   index;
- };
+ static int mac53c94_probe(struct macio_dev *mdev, const struct of_device_id *match)
+diff --git a/drivers/scsi/mac53c94.h b/drivers/scsi/mac53c94.h
+index 5df6e81f78a8..37d7d30f42ef 100644
+--- a/drivers/scsi/mac53c94.h
++++ b/drivers/scsi/mac53c94.h
+@@ -212,4 +212,15 @@ struct mac53c94_regs {
+ #define CF4_TEST	0x02
+ #define CF4_BBTE	0x01
  
--struct hpt_scsi_pointer {
-+struct hpt_cmd_priv {
- 	int mapped;
- 	int sgcnt;
- 	dma_addr_t dma_handle;
- };
- 
--#define HPT_SCP(scp) ((struct hpt_scsi_pointer *)&(scp)->SCp)
-+#define HPT_SCP(scp) ((struct hpt_cmd_priv *)scsi_cmd_priv(scp))
- 
- enum hptiop_family {
- 	UNKNOWN_BASED_IOP,
++struct mac53c94_cmd_priv {
++	struct scsi_pointer scsi_pointer;
++};
++
++static inline struct scsi_pointer *mac53c94_scsi_pointer(struct scsi_cmnd *cmd)
++{
++	struct mac53c94_cmd_priv *mcmd = scsi_cmd_priv(cmd);
++
++	return &mcmd->scsi_pointer;
++}
++
+ #endif /* _MAC53C94_H */
