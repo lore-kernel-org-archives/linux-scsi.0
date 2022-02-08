@@ -2,48 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67178C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Feb 2022 17:27:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 349E9C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Feb 2022 17:27:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352745AbiBHR1F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Feb 2022 12:27:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56154 "EHLO
+        id S1384161AbiBHR1G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Feb 2022 12:27:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1384336AbiBHR0w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 12:26:52 -0500
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 077AFC0612BB
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 09:26:47 -0800 (PST)
-Received: by mail-pj1-f49.google.com with SMTP id y15-20020a17090a474f00b001b88562650aso1987794pjg.0
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Feb 2022 09:26:47 -0800 (PST)
+        with ESMTP id S1384339AbiBHR0y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 12:26:54 -0500
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 371A5C061266
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 09:26:52 -0800 (PST)
+Received: by mail-pj1-f45.google.com with SMTP id g15-20020a17090a67cf00b001b7d5b6bedaso3540972pjm.4
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Feb 2022 09:26:52 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qaoXDEZKx9bCyY0KCzfjRftCMBs3KuwbbUIBct9+aHo=;
-        b=d26cG8KOydhZnbHa1h9ZnpkSopKZQr6TcZzxH/Y3RC5fiE9KpNsM5o3LaGcjvacHJ6
-         aafNwGzao8qeicgLaWTbMiX0CY7vjQYB2iYYUrumfiaav0n3vz6SqLM+87LlvdFs7d2g
-         FkKOtdk18XYWIuMnuFhTdFcbLN/2ZyvOGJWiljvj2tz3YvRCF90ZjhFwnmZARiYqGa2v
-         bN7GIOymkglwjUmMYLdsVN63ijKKSbbTvu4nWL5vWGjKCLUQEBEdhSI5EWoC1Af73OIW
-         TXIMbfGv4CZgSbv5cBOsuw7BiEtR58NGuF7KuD+SFZpGiKMEtP0YoJxLg97LEDiztOwq
-         VcTA==
-X-Gm-Message-State: AOAM531k/vZk1Mea7wjWLNgTNlySHq/oCty743+gUhXuKaL/oYg5bbLq
-        dWgJlh970Gu4F5IQ1AiR2jCkAs4CXIq48pN2
-X-Google-Smtp-Source: ABdhPJzvFmUWWoOUrmPho0otJJPyVEk1j/nCAqQclKtJDvJ4O6tmblnnkye2oKhU4S/e3W4OhJY3RA==
-X-Received: by 2002:a17:902:6902:: with SMTP id j2mr5648929plk.141.1644341206367;
-        Tue, 08 Feb 2022 09:26:46 -0800 (PST)
+        bh=EzWP2OcUmUpNS3okRoFAY0jR6PTP8SLWWhXRQKvrbzI=;
+        b=lgX9EKGEI0PHdMZ6U21fi9WnbR4PxR1CVorbR85ouBoirT6VpPGWmj1G/NPtqBmis8
+         yV8xZYCl9Z6xczDNKVRjIY4lA1OMI2FYXTozoWbHim/gqIp6nhlY76kRyhh7cZNxIUzs
+         /1Rm5n7zmH7vpvoxkd0h8w+1JB/SlFmRDQcZfbPKlHw+F6AIgJ14OqJuFSC1QKmF0E5G
+         eC5+KZldSOJtk1bbEH7OKetErP2UsNDZgC8t/JI7ZVfuXetCDInpaSWpd9RVZYriROS4
+         5fcKlIqWb6qAnXP14+OAqrrcNPMiZGir+ad4O2A5wvlkktjlhckjnfu0WrVac5GHYBUX
+         M6cA==
+X-Gm-Message-State: AOAM532L0obeppfOtI3M+ktkb1/Y6gWoov3pdjFDcNE9t3MDbLQN7Ehn
+        f8Ki6T5WqMB1tpA6BkrcUAM=
+X-Google-Smtp-Source: ABdhPJyROxNDcWhZ9rDvV0gW7ao2v31iIBOIlOEMhg7wt1ydu4PyJatwIdQwbP+5SrVI+2Hhtr6Zeg==
+X-Received: by 2002:a17:902:7606:: with SMTP id k6mr5422416pll.56.1644341211429;
+        Tue, 08 Feb 2022 09:26:51 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id q1sm335116pfs.112.2022.02.08.09.26.45
+        by smtp.gmail.com with ESMTPSA id q1sm335116pfs.112.2022.02.08.09.26.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Feb 2022 09:26:45 -0800 (PST)
+        Tue, 08 Feb 2022 09:26:50 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 34/44] sym53c500_cs: Move the SCSI pointer to private command data
-Date:   Tue,  8 Feb 2022 09:25:04 -0800
-Message-Id: <20220208172514.3481-35-bvanassche@acm.org>
+Subject: [PATCH v2 37/44] qla2xxx: Stop using the SCSI pointer
+Date:   Tue,  8 Feb 2022 09:25:07 -0800
+Message-Id: <20220208172514.3481-38-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220208172514.3481-1-bvanassche@acm.org>
 References: <20220208172514.3481-1-bvanassche@acm.org>
@@ -53,163 +57,93 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Set .cmd_size in the SCSI host template instead of using the SCSI pointer
-from struct scsi_cmnd.
+Instead of using the SCp.ptr field to track whether or not a command is
+in flight, use the sp->type field to track this information. sp->type
+must be set for proper operation of the qla2xxx driver. See e.g. the
+switch (sp->type) statement in qla2x00_ct_entry().
+
 This patch prepares for removal of the SCSI pointer from struct scsi_cmnd.
 
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc: Nilesh Javali <njavali@marvell.com>
+Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+Cc: Daniel Wagner <dwagner@suse.de>
+Cc: Ewan D. Milne <emilne@redhat.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/pcmcia/sym53c500_cs.c | 53 ++++++++++++++++++++----------
- 1 file changed, 35 insertions(+), 18 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |  2 --
+ drivers/scsi/qla2xxx/qla_os.c  | 13 +++++--------
+ 2 files changed, 5 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
-index fc93d2a57e1e..298df2180bc7 100644
---- a/drivers/scsi/pcmcia/sym53c500_cs.c
-+++ b/drivers/scsi/pcmcia/sym53c500_cs.c
-@@ -192,6 +192,17 @@ struct sym53c500_data {
- 	int fast_pio;
- };
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 9ebf4a234d9a..064496f9eba3 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -5191,8 +5191,6 @@ struct secure_flash_update_block_pk {
  
-+struct sym53c500_cmd_priv {
-+	struct scsi_pointer scsi_pointer;
-+};
-+
-+static struct scsi_pointer *sym53c500_scsi_pointer(struct scsi_cmnd *cmd)
-+{
-+	struct sym53c500_cmd_priv *scmd = scsi_cmd_priv(cmd);
-+
-+	return &scmd->scsi_pointer;
-+}
-+
- enum Phase {
-     idle,
-     data_out,
-@@ -351,6 +362,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 	struct sym53c500_data *data =
- 	    (struct sym53c500_data *)dev->hostdata;
- 	struct scsi_cmnd *curSC = data->current_SC;
-+	struct scsi_pointer *scsi_pointer = sym53c500_scsi_pointer(curSC);
- 	int fast_pio = data->fast_pio;
+ #define	QLA_DSDS_PER_IOCB	37
  
- 	spin_lock_irqsave(dev->host_lock, flags);
-@@ -397,11 +409,12 @@ SYM53C500_intr(int irq, void *dev_id)
+-#define CMD_SP(Cmnd)		((Cmnd)->SCp.ptr)
+-
+ #define QLA_SG_ALL	1024
  
- 	if (int_reg & 0x20) {		/* Disconnect */
- 		DEB(printk("SYM53C500: disconnect intr received\n"));
--		if (curSC->SCp.phase != message_in) {	/* Unexpected disconnect */
-+		if (scsi_pointer->phase != message_in) {	/* Unexpected disconnect */
- 			curSC->result = DID_NO_CONNECT << 16;
- 		} else {	/* Command complete, return status and message */
--			curSC->result = (curSC->SCp.Status & 0xff)
--			    | ((curSC->SCp.Message & 0xff) << 8) | (DID_OK << 16);
-+			curSC->result = (scsi_pointer->Status & 0xff) |
-+				((scsi_pointer->Message & 0xff) << 8) |
-+				(DID_OK << 16);
- 		}
- 		goto idle_out;
+ enum nexus_wait_type {
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index abcd30917263..6c45379a5306 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -730,7 +730,7 @@ void qla2x00_sp_compl(srb_t *sp, int res)
+ 
+ 	sp->free(sp);
+ 	cmd->result = res;
+-	CMD_SP(cmd) = NULL;
++	sp->type = 0;
+ 	scsi_done(cmd);
+ 	if (comp)
+ 		complete(comp);
+@@ -821,7 +821,7 @@ void qla2xxx_qpair_sp_compl(srb_t *sp, int res)
+ 
+ 	sp->free(sp);
+ 	cmd->result = res;
+-	CMD_SP(cmd) = NULL;
++	sp->type = 0;
+ 	scsi_done(cmd);
+ 	if (comp)
+ 		complete(comp);
+@@ -923,8 +923,6 @@ qla2xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 
+ 	sp->u.scmd.cmd = cmd;
+ 	sp->type = SRB_SCSI_CMD;
+-
+-	CMD_SP(cmd) = (void *)sp;
+ 	sp->free = qla2x00_sp_free_dma;
+ 	sp->done = qla2x00_sp_compl;
+ 
+@@ -1012,7 +1010,6 @@ qla2xxx_mqueuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd,
+ 
+ 	sp->u.scmd.cmd = cmd;
+ 	sp->type = SRB_SCSI_CMD;
+-	CMD_SP(cmd) = (void *)sp;
+ 	sp->free = qla2xxx_qpair_sp_free_dma;
+ 	sp->done = qla2xxx_qpair_sp_compl;
+ 
+@@ -1057,6 +1054,7 @@ qla2x00_eh_wait_on_command(struct scsi_cmnd *cmd)
+ 	unsigned long wait_iter = ABORT_WAIT_ITER;
+ 	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
+ 	struct qla_hw_data *ha = vha->hw;
++	srb_t *sp = scsi_cmd_priv(cmd);
+ 	int ret = QLA_SUCCESS;
+ 
+ 	if (unlikely(pci_channel_offline(ha->pdev)) || ha->flags.eeh_busy) {
+@@ -1065,10 +1063,9 @@ qla2x00_eh_wait_on_command(struct scsi_cmnd *cmd)
+ 		return ret;
  	}
-@@ -412,7 +425,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 			struct scatterlist *sg;
- 			int i;
  
--			curSC->SCp.phase = data_out;
-+			scsi_pointer->phase = data_out;
- 			VDEB(printk("SYM53C500: Data-Out phase\n"));
- 			outb(FLUSH_FIFO, port_base + CMD_REG);
- 			LOAD_DMA_COUNT(port_base, scsi_bufflen(curSC));	/* Max transfer size */
-@@ -431,7 +444,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 			struct scatterlist *sg;
- 			int i;
+-	while (CMD_SP(cmd) && wait_iter--) {
++	while (sp->type && wait_iter--)
+ 		msleep(ABORT_POLLING_PERIOD);
+-	}
+-	if (CMD_SP(cmd))
++	if (sp->type)
+ 		ret = QLA_FUNCTION_FAILED;
  
--			curSC->SCp.phase = data_in;
-+			scsi_pointer->phase = data_in;
- 			VDEB(printk("SYM53C500: Data-In phase\n"));
- 			outb(FLUSH_FIFO, port_base + CMD_REG);
- 			LOAD_DMA_COUNT(port_base, scsi_bufflen(curSC));	/* Max transfer size */
-@@ -446,12 +459,12 @@ SYM53C500_intr(int irq, void *dev_id)
- 		break;
- 
- 	case 0x02:		/* COMMAND */
--		curSC->SCp.phase = command_ph;
-+		scsi_pointer->phase = command_ph;
- 		printk("SYM53C500: Warning: Unknown interrupt occurred in command phase!\n");
- 		break;
- 
- 	case 0x03:		/* STATUS */
--		curSC->SCp.phase = status_ph;
-+		scsi_pointer->phase = status_ph;
- 		VDEB(printk("SYM53C500: Status phase\n"));
- 		outb(FLUSH_FIFO, port_base + CMD_REG);
- 		outb(INIT_CMD_COMPLETE, port_base + CMD_REG);
-@@ -464,22 +477,24 @@ SYM53C500_intr(int irq, void *dev_id)
- 
- 	case 0x06:		/* MESSAGE-OUT */
- 		DEB(printk("SYM53C500: Message-Out phase\n"));
--		curSC->SCp.phase = message_out;
-+		scsi_pointer->phase = message_out;
- 		outb(SET_ATN, port_base + CMD_REG);	/* Reject the message */
- 		outb(MSG_ACCEPT, port_base + CMD_REG);
- 		break;
- 
- 	case 0x07:		/* MESSAGE-IN */
- 		VDEB(printk("SYM53C500: Message-In phase\n"));
--		curSC->SCp.phase = message_in;
-+		scsi_pointer->phase = message_in;
- 
--		curSC->SCp.Status = inb(port_base + SCSI_FIFO);
--		curSC->SCp.Message = inb(port_base + SCSI_FIFO);
-+		scsi_pointer->Status = inb(port_base + SCSI_FIFO);
-+		scsi_pointer->Message = inb(port_base + SCSI_FIFO);
- 
- 		VDEB(printk("SCSI FIFO size=%d\n", inb(port_base + FIFO_FLAGS) & 0x1f));
--		DEB(printk("Status = %02x  Message = %02x\n", curSC->SCp.Status, curSC->SCp.Message));
-+		DEB(printk("Status = %02x  Message = %02x\n",
-+			   scsi_pointer->Status, scsi_pointer->Message));
- 
--		if (curSC->SCp.Message == SAVE_POINTERS || curSC->SCp.Message == DISCONNECT) {
-+		if (scsi_pointer->Message == SAVE_POINTERS ||
-+		    scsi_pointer->Message == DISCONNECT) {
- 			outb(SET_ATN, port_base + CMD_REG);	/* Reject message */
- 			DEB(printk("Discarding SAVE_POINTERS message\n"));
- 		}
-@@ -491,7 +506,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 	return IRQ_HANDLED;
- 
- idle_out:
--	curSC->SCp.phase = idle;
-+	scsi_pointer->phase = idle;
- 	scsi_done(curSC);
- 	goto out;
- }
-@@ -539,6 +554,7 @@ SYM53C500_info(struct Scsi_Host *SChost)
- 
- static int SYM53C500_queue_lck(struct scsi_cmnd *SCpnt)
- {
-+	struct scsi_pointer *scsi_pointer = sym53c500_scsi_pointer(SCpnt);
- 	int i;
- 	int port_base = SCpnt->device->host->io_port;
- 	struct sym53c500_data *data =
-@@ -555,9 +571,9 @@ static int SYM53C500_queue_lck(struct scsi_cmnd *SCpnt)
- 	VDEB(printk("\n"));
- 
- 	data->current_SC = SCpnt;
--	data->current_SC->SCp.phase = command_ph;
--	data->current_SC->SCp.Status = 0;
--	data->current_SC->SCp.Message = 0;
-+	scsi_pointer->phase = command_ph;
-+	scsi_pointer->Status = 0;
-+	scsi_pointer->Message = 0;
- 
- 	/* We are locked here already by the mid layer */
- 	REG0(port_base);
-@@ -671,7 +687,8 @@ static struct scsi_host_template sym53c500_driver_template = {
-      .can_queue			= 1,
-      .this_id			= 7,
-      .sg_tablesize		= 32,
--     .shost_groups		= SYM53C500_shost_groups
-+     .shost_groups		= SYM53C500_shost_groups,
-+     .cmd_size			= sizeof(struct sym53c500_cmd_priv),
- };
- 
- static int SYM53C500_config_check(struct pcmcia_device *p_dev, void *priv_data)
+ 	return ret;
