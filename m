@@ -2,148 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37BF8C4321E
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Feb 2022 22:23:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CB7BC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Feb 2022 22:23:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1386693AbiBHWW6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Feb 2022 17:22:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47210 "EHLO
+        id S1387337AbiBHWW7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Feb 2022 17:22:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1386288AbiBHUAj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 15:00:39 -0500
+        with ESMTP id S1386277AbiBHT62 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 14:58:28 -0500
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DCBAC0613CB
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 12:00:39 -0800 (PST)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 218I4oCl012748;
-        Tue, 8 Feb 2022 20:00:36 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95208C0613CB
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 11:58:27 -0800 (PST)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 218JIk9L007539;
+        Tue, 8 Feb 2022 19:58:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
  content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=6tMeL3b4CWwxclkSrdHW7tVDLLWONu8lgOjP5brX5lU=;
- b=nAM6+/eh0CnPjcoshJ9mzQi3s0drPM9nzXQCusxVyxUVmDgLIwyx54gznA5zCjVM1qzn
- REW5LJi+a6LVbuJLe7AlnhRJSzkcUeIrqhhCm4cd4LPcQaNixWjQGrFC8xaWS6YTibAH
- iDD85tTcqU2HjZ0L9u6NeMXItER1l7WPq2ZMSSweHIsQfquWatZ+iG22EWPIDTci8Xxx
- TXqDVAPrOR9wSGYQxZc4NHWAY/DeVaU5IGOzJ9zcnjqaTK1XkGGLGOu0t+BmHQYhDdQm
- du1sBtZz+GMLBV0ZalAihiz7ZGXN0wlKxekYds0IF2ZlIfztwFqPNiCji+Y/KfVu7kiG TQ== 
+ bh=TO3E4m7OGX5Jl9Hi03D3k22FFllWqtB5kXruKB6PdY0=;
+ b=YXZYdLUF2sUrVZo2DyQ0wqEWwpAepYk/c88UTkK6oXhCj3ONXpK9AAthEBRuGOtQ36dd
+ WsfXjzVhCkI1yJGYFhV960iqjtnVj5lj+Fgc//JCtrfFy9V6Jfz/LAIOEqEiai8KE4QG
+ 1UUeiUENziv4qJz1i5Hs3YJe3B/beNu+otCtuhPz3GBw4RVqEoUQPW9AFR+uePJal4tK
+ n33vc+pe/sP5aGFY2A79Gced4FoevA+SM4DFDVOw8pkJltAxvK10frhcxqvMBao7UWTR
+ ut7VVVbj1gFXBuraKcVd1MlMmGq2Q3OjxzeHLXF1EVSXz40eKMtjWr7JaTXR4IZxsdC3 DA== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3e3fpgjmtc-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3e368tuu4h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 08 Feb 2022 20:00:36 +0000
+        Tue, 08 Feb 2022 19:58:24 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 218Ju72T154785;
-        Tue, 8 Feb 2022 20:00:35 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2170.outbound.protection.outlook.com [104.47.55.170])
-        by aserp3030.oracle.com with ESMTP id 3e1f9fxydn-1
+        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 218Ju7jw154808;
+        Tue, 8 Feb 2022 19:58:23 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2177.outbound.protection.outlook.com [104.47.56.177])
+        by aserp3030.oracle.com with ESMTP id 3e1f9fxujp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 08 Feb 2022 20:00:35 +0000
+        Tue, 08 Feb 2022 19:58:23 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kYsSyNtpGdJs1ih6roQHFSXMWJSm0TfXuZC4MFViyqJOiXd5UJYX4AJxdTZJjILB5L+ChB5NZsv7zVyEnEit0EkQUxDlnu8mW6BGPox7C9r9nsgGUsIty8dHTE5erCY7h9XAN3suurALJwQKBmNEKiDy6wLuPYUR5mye73uqAuMnlZJDsZST3ImJt46j3kPxqBJs0p0C2x5zS3mPiTgh8g0spf4QEkW2b/SdiG1zMojBZj+KGwpIVuVhuHPatR6x+fubUDCldIY3MOGMnIK25R/IgGYc5Dopz8Vk5coBG4Qdjv+ucB4dHM02TjFhpe2O2rCXTAlFfMCl4Q8Oh+z94Q==
+ b=DSoVTpBvjTkrcCaTsujeEycguJuSNYnaSxxTjTZYvunZsWyhJUyezG265AvlQnqM4Qv2c+BeYeoTipsOL3ctWoNIJ1X+f2SP+TZzfvEdyhMG9B1PEuRB7vZgC4y+XoYPcM4XLeBxqwfLxHNlXjt5MOqhXxUG6nfrXpfqQOb1eChIhXhnaVIExNMWYxaIhLgHK8jdInifZrt4mFTk0sI1BJG33pCsI3MZEyNxd/WUad4UGzYTcPvS4p7DT234dXFC3tODLvyNqT5xgwGfzAKtRuP1DdTCEaFNwXVA08g8tLRZ6w5itnatsO8VRcCO0dyuFi8Wd93VOLf1qLV35fchsA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=6tMeL3b4CWwxclkSrdHW7tVDLLWONu8lgOjP5brX5lU=;
- b=RA60wahvUDWMRhLbiJQnkf/GqwNDVq2CO68kTefO6zk+Ig+dtIaGwBvkoGle6f6LFtoXHD9qVSoIMHhzRQDiAbZn9LA/YCzigna8/kdJEEg5bPDJ/IxwdvwwQc4zuerlwrvfwdA8++q/2v+Nk3shJ571n515iDJIzdhi7y9TaBzo7OIqIukPbGAjktqvuTR9Oym9thy7yBewvjPJvY1vUaZ4OZrt7fj4eg13MO+/3MxYoIwjkEShJ84xWvQLIxbTBR01BE06k49wUnZCjmii2syRpJn5oF1QLvBSi/Ze3Fqx5vtTnxASHPDRgwn0uEFIcVEQ3+TxWKswr2D/mDn0Xw==
+ bh=TO3E4m7OGX5Jl9Hi03D3k22FFllWqtB5kXruKB6PdY0=;
+ b=XjZ2bJWRg1Wu1SQKEiRv7FCKTXLXHm0m05BOSjjjWaCRcCCGEadKXuxyhjVEYBsPUZqtlnxc0Y92JnfYg0remEDjNomXCL5dEIHxhdg+nStxGFWosFkJ/PA28VXl6NX3sx++QmqbgezvX9t3Dp9OQgkBn3Y5dMahpLYvsPMV00czoCHGRkTIvTDM2WdeZrJcJCsJ4dgjYfagcrl76t0ueii0zO9HNTLFK4zOkvmOOLfxriQLsyx+1UJ11ZkkJ0psuq7vdxnMo+qTgcSl4Q4gb5g4vfF1HUoBzgYBwEQ87Ma6EhvpacBftlFDK18VFARGwHXKQX7ZJUYZGXwhx/fIBg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6tMeL3b4CWwxclkSrdHW7tVDLLWONu8lgOjP5brX5lU=;
- b=o1HRFUcA5j11WtHITA4rpPYyK4t97EQyX8xcfjHq7ePkI4tm2aAun0LH8jCAKDJlldyioJV60BtqCnC3rb4Wi8Nh+ahPB7sAmM5mTJuEM18exXuPcgu/77qyCGVWJat1ryuAHPPReXdFp2CQM9uc9N4msZeOd7oB94niRYDlCMY=
+ bh=TO3E4m7OGX5Jl9Hi03D3k22FFllWqtB5kXruKB6PdY0=;
+ b=rGq5PaeGk70/4s6pyO5PJHW/Swr/rSorIoP0wG9S3sxoqe9g+igzupA19WCr2r++0hUBeyRgvCjtNStodKE/yNVbm07gkrI8afz8fqhm0SzWNCrrxMgSYae4ciTfBZbFXpjRySuN5PZUGqEdEvX5VAFbrv2c4wx3BItZVZ2Q23s=
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by DS7PR10MB4973.namprd10.prod.outlook.com (2603:10b6:5:38d::21) with
+ by BYAPR10MB2677.namprd10.prod.outlook.com (2603:10b6:a02:b7::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12; Tue, 8 Feb
- 2022 20:00:33 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.11; Tue, 8 Feb
+ 2022 19:58:20 +0000
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::755b:8fbf:706a:858]) by SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::755b:8fbf:706a:858%4]) with mapi id 15.20.4951.019; Tue, 8 Feb 2022
- 20:00:33 +0000
+ 19:58:20 +0000
 From:   Himanshu Madhani <himanshu.madhani@oracle.com>
 To:     Bart Van Assche <bvanassche@acm.org>
 CC:     Martin Petersen <martin.petersen@oracle.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH v2 01/44] ips: Use true and false instead of TRUE and
- FALSE
-Thread-Topic: [PATCH v2 01/44] ips: Use true and false instead of TRUE and
- FALSE
-Thread-Index: AQHYHRENrNcPA6t350aJmr1E6Lchm6yKEuwA
-Date:   Tue, 8 Feb 2022 20:00:33 +0000
-Message-ID: <C87EFB2C-CCC2-4E59-A26D-5751E0706513@oracle.com>
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 08/44] 53c700: Stop clearing SCSI pointer fields
+Thread-Topic: [PATCH v2 08/44] 53c700: Stop clearing SCSI pointer fields
+Thread-Index: AQHYHREot4pWXbQ/c0maq+0GqllRZayKEk2A
+Date:   Tue, 8 Feb 2022 19:58:20 +0000
+Message-ID: <639D1BF7-D14C-4DCD-A342-218108CB377B@oracle.com>
 References: <20220208172514.3481-1-bvanassche@acm.org>
- <20220208172514.3481-2-bvanassche@acm.org>
-In-Reply-To: <20220208172514.3481-2-bvanassche@acm.org>
+ <20220208172514.3481-9-bvanassche@acm.org>
+In-Reply-To: <20220208172514.3481-9-bvanassche@acm.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-mailer: Apple Mail (2.3693.40.0.1.81)
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 80c34c88-ea8b-4823-fe24-08d9eb3daa7b
-x-ms-traffictypediagnostic: DS7PR10MB4973:EE_
-x-microsoft-antispam-prvs: <DS7PR10MB49732F15B5F80952FC6010BFE62D9@DS7PR10MB4973.namprd10.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:5516;
+x-ms-office365-filtering-correlation-id: ffbaf4fc-3f90-42ab-46e1-08d9eb3d5b2b
+x-ms-traffictypediagnostic: BYAPR10MB2677:EE_
+x-microsoft-antispam-prvs: <BYAPR10MB2677CD668A1C886C154A3FD5E62D9@BYAPR10MB2677.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:551;
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: mvXr4kJz3N7SGg6XF2tB2IvDGk0RWMIjld1yTjY2hrt5XWZcipKqcgAqF0/2xZtLaFktPzfq98u4FgASxdYeoYNt411gN+fdweoOsbsmt5txMis6DCRe1e9hBuCyhwXznOQlXhklRg6WrnQK28IotQ4cXvJ6doHPDxp+Asw88T0MRqds/KtVD4OwIdm8L0PTIMXm7vG+ugwpMkPqKXGEPY0Nbqxpqh66sk8tHJ0KVLK2Xb/5+DECI2X3dUbruByxFtpGGpwm+85+ad4OHd7NWMkoVx+Dd11Zf5yw8KERyj7Gv11PhXX32jFJylRScjDrFsnJXAe4AvVdk0MtCM/FeulhPy0TcRkLzr9KhuybuEeUkagN/wlH0Ed9oQW8RMWPj/JtR7Vs7n8A6GHDpX5nDOtryR7Akz/wu1wIu39qmiSa/ElNdGVF1AyFHPArLv4BaTCWXN7yBRIefYU1Evwmvn++Um/7vdgqgyN0dz/cnPQwRyu3d9ECwyJR7H9jygoJf4JZie0j2N9fzQ/FBpkkjLcxjXv0C8dyeYzbKU/Rz50m959n3mbraRhMbPb2t1y6f19UBTp/N9F2JVdeaz06zv0t+T2LpsaLHL0Dax1/Z4PsDmkaM6Mj+qTUikaQ1Ea4dLd5y/fTh/JQe2C+BC+GagsGf//Cr/5bOuo2gDvb7CVBCc08v32TgX1sWaLTB/YGabxMlOcfigMSy/CvcK2tr7TFCXAjUJh1RxqAXHi/hTx/1FVKGdm94ufNUsFEiKWZ
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(44832011)(83380400001)(33656002)(6916009)(54906003)(6506007)(6512007)(508600001)(53546011)(86362001)(4326008)(66946007)(6486002)(71200400001)(76116006)(91956017)(64756008)(8936002)(66556008)(8676002)(66446008)(66476007)(2906002)(186003)(2616005)(38100700002)(122000001)(26005)(38070700005)(5660300002)(36756003)(316002)(45980500001);DIR:OUT;SFP:1101;
+x-microsoft-antispam-message-info: j6L39AnE5/H7DdwoOlPGlt8gr3NsNcJU+899QmXbXdQWUxqqlVoGdBdRmtQbMlRhYb3WZ32kULZMf3+/a9rFt6kE/f4r2/b+0m35Zhz/8VDX306HS6E8wvWY22G0n93XXPalJS3JUeeR5YPs+/uu5kQjXB//DgpIomvpBCjZnyBYxNsmcTWdIDKhLzkbmYOpuudD52Sn6VyrlcshGsAw7THG0Im07jy25AviHqs+wRVJugS88AxC/GB4cKyRvSu/BRUIg9xN7VS8A+YcXGhNr3dHDxef/k2Lpx1Ybdz4B4bV/NIdUFrIrNuDcc0dMBHH9ji69bugNekMilkrMcEJkxCsdpo8fYMLBXVslWM6+iPNdv2hxV6jXZ/3QEQktY6oiBS1YYN0SG8r43MFIyz3Bqba1ViwsdLxpLl+iiVLMzUPxZM60M1RBGiDEiHJCatWUi3NtDnPZoYkIxM/3oPI0ITyFQMXVGdKiqOs3nIjrculxC0j37I3vBGGnqc04RgIYxcwl2bbdyGilDqRUMDuLO5EWQBf7b63t8QTEciUgxUFQUBWSQXCEYSap61s6K4N/HWWodM1AP1IUdE7JMMLoi0yltUsLgQ7RszzAP0Godz5lIc5z9xrQQn4JUejHDv1Yd6kWLxa4oHfAYo1Usn0pSmyXjyrRs63KHqHyY3ckbMe1gQ0NSN5Rq2RbhBQGdOqo62R7jAaKDGtNme2tzYEb0jIHvap/7HIi+ReZi9vrESWDNMUVc8LA+LWc5LNoIun
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(6486002)(2616005)(86362001)(44832011)(2906002)(6506007)(6512007)(53546011)(71200400001)(122000001)(508600001)(33656002)(38100700002)(83380400001)(186003)(26005)(38070700005)(64756008)(5660300002)(8676002)(4326008)(8936002)(91956017)(6916009)(66946007)(66446008)(316002)(76116006)(66476007)(66556008)(54906003)(36756003)(45980500001);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?ygseJrcbqVXwe+Bl+Hsmrb89297srdsyD7BAD9jsNFnmKLpgTp+qStuzb+6/?=
- =?us-ascii?Q?q8OaGvC3SyT+Vc6gWS9nHiBBVRnif3RW93Z5WB5QMLx4cBfs/Z9qu200OBdw?=
- =?us-ascii?Q?PLakh5b8Kr5m3o4EXT+BeBaxoY8MB/MXNGCxTTnlu7wiGbGAvkrZzenhUKel?=
- =?us-ascii?Q?QfsqWghOzchpDFT/hbL69cGtykIVEoDvaFQWHDwp2Chrrim6513bMx7QtBbr?=
- =?us-ascii?Q?+pZ+DOtBEp+ZJ5tbR8mR/ckF/QOQ+HwiD3CGSeUq4nLkt6/TubKyzoMutLHP?=
- =?us-ascii?Q?Av0r6QcNOP/DwoPKX50eCM1CZHB40sbA0C5TAgXqE+QQ4e8NPrVab/5KXnNB?=
- =?us-ascii?Q?CLOTJDpf9ccplUPeSVEiYYbf0t/AA1C6kAVxAcOiLW9a6VHIiwigwnNtwp9Y?=
- =?us-ascii?Q?nNkhXhl++GPQ3nY35Pu6C4mu7mSNJ0qex727+F2OuWVjFyvAIGMKioGKEZSd?=
- =?us-ascii?Q?N8hLVyZBDopecx5u7ebPmVvcfEHuRNDbbz8tdH/yPo8y4gfvARLG9+tAkv8J?=
- =?us-ascii?Q?1pyz3GnDIZHWEKnM43I1MwT342kz/3SjRB8BZT6NGXvETawFn0lR02WwBEZz?=
- =?us-ascii?Q?tZUCgV2Ho9+vYsA/IGGIidqF5+gD6Szts+dZ2AjhwaZ5tOqq0+A55liCr0K+?=
- =?us-ascii?Q?497qY2lI6wnUh0zbJ1j0Rgw63kFwrYxo6PyDfUGdya1VKA47AZhOdA6q4oPc?=
- =?us-ascii?Q?TEE712GIdqwdq4wPWTY1/YMe32nspMoNEAhOMknVIXHDlAURLjD/moFmE+89?=
- =?us-ascii?Q?NKT8GIDe2HViuME9y/FLGUTHsrg6eWf/AKcnm2xT2SbcAhB0X4FDhFUGCn7B?=
- =?us-ascii?Q?uscwhuD+fKlDDE9p9MvnE3GyMUEtEneFWfSBkIIgge1G0CM3i2wezlZbmv8x?=
- =?us-ascii?Q?dKixYeh+Zt2uV954B3TUufdP6aSKDw0GzofcyLDBAWSpQEw9JrY1hGu+rpq+?=
- =?us-ascii?Q?yY3ZRrej17fJ6wyqgpAaBWwgDpc2HkwK89NQQa7AAfkcb1a8Osg/xlncPfjT?=
- =?us-ascii?Q?VPEjA1QSioSTmAC+j1TmkVvCNesVLYNfmnCWoZWLwA2+Qqrer58kobi7a+qf?=
- =?us-ascii?Q?v3wiAvT8SajyAfXU/gNP/uJEFHGFDZhokezCjc60VcB9ELrAuJOAojmnvC8V?=
- =?us-ascii?Q?9eoEPRcHl2Pw3517EEGFU4xBYlgkg54FJ5zwH2boX6zLHS6RKN10YDp+J4u6?=
- =?us-ascii?Q?uM4dzLW15HIeQc+QbMVVcLmC16E4WykPmnOu5pbUnvKYeMWTHykfK8xii/em?=
- =?us-ascii?Q?NTomR+k3oVNMY/kCDR0+hxUC8Afpy1jnKlCtNs8GhujETMNI1iGd8a3c7K85?=
- =?us-ascii?Q?Iuvp8L2hUDwT7ubqbIsLS7ibOc7VEzEOxv+Z20o1YhoLXtupP0lSK1yXkU9H?=
- =?us-ascii?Q?dNcCd0Pvw5XLKZ92kdfOgJ+z4VY5lex7feUldmBDKTR65OtxXAeD+fsStGqR?=
- =?us-ascii?Q?PxJf4TesubBWTTW9yr8g/S0nK2tkiHn5z1id1tllPzb2Ay1BbYDdl25NRCdO?=
- =?us-ascii?Q?8Qg+vOWcYlIB/U30T7MmVZfj2m8XGATVqJ2NKI422B4G1xyhde1PfQR9EAyB?=
- =?us-ascii?Q?6glafeww51fZWXj/94AdsXOuB9siP1jvgsA6Ylh1uX8HUbbUXUWevFc/ZNyX?=
- =?us-ascii?Q?UrQqjJW99fH/HABkDPvkpptzoxrg4tJM8zF4gJRQUKHFDBUagGEDk9F4TVna?=
- =?us-ascii?Q?e3MO2+/0/NhoPbYpScNc325oELk=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?+B3BZaNg6r5OnwoRW5AJfQXGxraW81EbnFoaFdGJoqvzKiq6BVqTmulFr+xz?=
+ =?us-ascii?Q?AtVk9rqiTJRM5V11pU7cZkkagZxU6Z8qgeK/4oVfZBzU5LibqZVB2rvgvz58?=
+ =?us-ascii?Q?ylh2yarJ187LoSx6EqKYGHwaliYW/mA7GXRpQ2/e+JgWIXlJsTAatxVttnZc?=
+ =?us-ascii?Q?AjeBwfSyo0qwIGQ+Eh7fS5LhKmm/TyNhlMf2wfZ0crRsvlgiMHDJSwCjojSA?=
+ =?us-ascii?Q?cmPSXsLRZuujoB4/PRXDpAz+yVBWsHihHRf+z4Qf+bUR1Xk2mPdvS0ATz2Ov?=
+ =?us-ascii?Q?vev0ZLlPlDYDl/rotqnEijw0U+y8Q4GK4lnBOQ8GjOSVqkkV20CtgHwLYvgZ?=
+ =?us-ascii?Q?/RpGnRcGWpQrvclpshp/dyOX7sIV2qboPOkVhdgaP2xAWrRHQaG2SDXydTRJ?=
+ =?us-ascii?Q?yfTP4iKCf4osIHxdoS5Qd4rGpMcNErAW+L+hSa/rIFIqvo//RJrTwPKRFzXl?=
+ =?us-ascii?Q?5V6QU+sHh5/HWSU+ea18SJW08vmaYkV7SeHD8gA+b+OurJ8t8vSJ92u21U4Q?=
+ =?us-ascii?Q?CX9RqpfwZPQQKC/MX0++q6nJz95dTqMvCYLieWgB1mlHnBwFVHJ33ZqEAQ6O?=
+ =?us-ascii?Q?lgJ00IglyoYEk9mORpJzFGRPEPnpFUQ9GAGpkd5kgbYtsJTj2P+p/AQDkfGK?=
+ =?us-ascii?Q?QGz919dDAn9T55T/6ih5zE+nAV8J8uTSt6WW9sNi+WGACMDourje1GDcEfxB?=
+ =?us-ascii?Q?bdeGd7mmA5EkuX7a5JLC/bMogGqmfMi8iLOdCKUAnNznKPLinEe70RMUFZi5?=
+ =?us-ascii?Q?b7Cx1KKNDUB2fWg2fCoAvdfv6qbb1SBhJYqWh9jgBKiAeG07M4EtrL7K+oMv?=
+ =?us-ascii?Q?sZ+vFt7inw+P/4OFf4JD+gISDILg3m0bAk2nXKvYZndYqzlwKMWBbCZvM+2b?=
+ =?us-ascii?Q?AGb4BsLDKVxK7PuIy6NbCirzDw6g61VG3dACPEzkT9/KPupHTQezxIWqfq+x?=
+ =?us-ascii?Q?zGQ3zowv/9AmM3zwIKSK6SXWgGSLCh/DFsY57d66CkaSIppoWZIUoiHc7eUm?=
+ =?us-ascii?Q?GfLF0zsGVp2MQgOpmNOmv8otytSEjcc9reY88e6NawniAhj7bTpHsfm7V6vP?=
+ =?us-ascii?Q?x+PP2qRCZ8JNoOIVwKqv10E+TueldpRNVCLwYV0TIen8hN58JYjwTkwq3VfU?=
+ =?us-ascii?Q?sB44y4sx2TaKr3EG+3epvgdaKO1TZBYcLuyFW1+/tcVsMeKFsEfC8JviXAX8?=
+ =?us-ascii?Q?dgt4RnwqQGrXcUiQXRl3uTc5pjPDT9zpgDifwGh35AQYDdnhRQfVitBl5TII?=
+ =?us-ascii?Q?BKyuFobfqWCbQdCKFmGUWbjOk47WmaVz2TSIwLJfGGeNOPdwQ7oU+26pxmxd?=
+ =?us-ascii?Q?vkiHw9fO8xtuCK37oEm+ACqrvQ/Sni3auzgMwikprVn/M5ALXDhk8T12pmFs?=
+ =?us-ascii?Q?8g31rIsa6zV/q+yFU+geOETFyEaQ35akWkvYHMN28KiBHSUT2e3ZtkzRW+XB?=
+ =?us-ascii?Q?fue+G3LrN0lItg7QRit2t19+UUX+dHBKCgC5zPpFsEaNNil+84bppfEbqi/7?=
+ =?us-ascii?Q?MPRY68c5T9ks/qObuhDsflMexS2NSZXe7QMaoxG692tzzC60UYJh9tp8K+Ns?=
+ =?us-ascii?Q?LdwkR/fT/7BwnuS2/Sxlov/S0fDeDlP1g0pFmgkvexqNyd9yx2Rb0XnV4x5R?=
+ =?us-ascii?Q?k4Rcit2AF+lgaJa9mDYZ9++z/QEk08rup/qMT9k8wfV9Vd55BHBhYjWGiCFf?=
+ =?us-ascii?Q?/M87hZ7lUbiAHbao5+KLRoXR7io=3D?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <F528E671F8FF0C42AFB4F9EEAFB29D04@namprd10.prod.outlook.com>
+Content-ID: <4FF58612B19E2141A2F81C686FDB6BAE@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 80c34c88-ea8b-4823-fe24-08d9eb3daa7b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Feb 2022 20:00:33.4639
+X-MS-Exchange-CrossTenant-Network-Message-Id: ffbaf4fc-3f90-42ab-46e1-08d9eb3d5b2b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Feb 2022 19:58:20.3481
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: PEKpU+8EHGM4sv0HNTQ2GI9t9QkJU8fc9vE6I6XkSnbjageB6xasjwtvjhxjnMmzCZfg+FgwHrKupDGmMXEmJqfy3k6yd7vya27n3zkG34M=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB4973
+X-MS-Exchange-CrossTenant-userprincipalname: xzn5jonlhTY/lpsZph9jsi4ePL9e4Ci/BGBryQr1D3PbgGWtdwL0yVr4kEYtuQVTK562DpdkyztjfELxBWQHBW3fCKJiArCedfULk/Piwao=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2677
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10252 signatures=673431
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 adultscore=0
  mlxlogscore=999 suspectscore=0 mlxscore=0 phishscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
  definitions=main-2202080117
-X-Proofpoint-GUID: qglwDmnYR8qmerGuDpm67zRU_I4MK7r4
-X-Proofpoint-ORIG-GUID: qglwDmnYR8qmerGuDpm67zRU_I4MK7r4
+X-Proofpoint-ORIG-GUID: JVVdqCSd4fFmZoFlt2u1vWt5JyHe8FNr
+X-Proofpoint-GUID: JVVdqCSd4fFmZoFlt2u1vWt5JyHe8FNr
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -152,177 +149,41 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 > On Feb 8, 2022, at 9:24 AM, Bart Van Assche <bvanassche@acm.org> wrote:
 >=20
-> This patch prepares for removal of the drivers/scsi/scsi.h header file.
-> That header file defines the 'TRUE' and 'FALSE' constants.
+> None of the 53c700 drivers uses the SCSI pointer. Hence remove the code
+> from 53c700.c that clears two SCSI pointer fields. The 53c700 drivers are=
+:
+>=20
+> $ git grep -nHE 'include.*53c700'
+> drivers/scsi/53c700.c:132:#include "53c700.h"
+> drivers/scsi/53c700.c:153:#include "53c700_d.h"
+> drivers/scsi/a4000t.c:22:#include "53c700.h"
+> drivers/scsi/bvme6000_scsi.c:23:#include "53c700.h"
+> drivers/scsi/lasi700.c:43:#include "53c700.h"
+> drivers/scsi/mvme16x_scsi.c:23:#include "53c700.h"
+> drivers/scsi/sim710.c:29:#include "53c700.h"
+> drivers/scsi/sni_53c710.c:38:#include "53c700.h"
+> drivers/scsi/zorro7xx.c:25:#include "53c700.h"
 >=20
 > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
-> drivers/scsi/ips.c | 42 ++++++++++++++++++++----------------------
-> 1 file changed, 20 insertions(+), 22 deletions(-)
+> drivers/scsi/53c700.c | 2 --
+> 1 file changed, 2 deletions(-)
 >=20
-> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-> index 498bf04499ce..b3532d290848 100644
-> --- a/drivers/scsi/ips.c
-> +++ b/drivers/scsi/ips.c
-> @@ -655,13 +655,13 @@ ips_release(struct Scsi_Host *sh)
-> 		printk(KERN_WARNING
-> 		       "(%s) release, invalid Scsi_Host pointer.\n", ips_name);
-> 		BUG();
-> -		return (FALSE);
-> +		return false;
-> 	}
+> diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+> index ad4972c0fc53..e1e4f9d10887 100644
+> --- a/drivers/scsi/53c700.c
+> +++ b/drivers/scsi/53c700.c
+> @@ -1791,8 +1791,6 @@ static int NCR_700_queuecommand_lck(struct scsi_cmn=
+d *SCp)
+> 	slot->cmnd =3D SCp;
 >=20
-> 	ha =3D IPS_HA(sh);
+> 	SCp->host_scribble =3D (unsigned char *)slot;
+> -	SCp->SCp.ptr =3D NULL;
+> -	SCp->SCp.buffer =3D NULL;
 >=20
-> 	if (!ha)
-> -		return (FALSE);
-> +		return false;
->=20
-> 	/* flush the cache on the controller */
-> 	scb =3D &ha->scbs[ha->max_cmds - 1];
-> @@ -700,7 +700,7 @@ ips_release(struct Scsi_Host *sh)
->=20
-> 	ips_released_controllers++;
->=20
-> -	return (FALSE);
-> +	return false;
-> }
->=20
-> /************************************************************************=
-****/
-> @@ -949,7 +949,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
-> 			scsi_done(scsi_cmd);
-> 		}
->=20
-> -		ha->active =3D FALSE;
-> +		ha->active =3D false;
-> 		return (FAILED);
-> 	}
->=20
-> @@ -978,7 +978,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
-> 			scsi_done(scsi_cmd);
-> 		}
->=20
-> -		ha->active =3D FALSE;
-> +		ha->active =3D false;
-> 		return (FAILED);
-> 	}
->=20
-> @@ -1291,7 +1291,7 @@ ips_intr_copperhead(ips_ha_t * ha)
-> 		return 0;
-> 	}
->=20
-> -	while (TRUE) {
-> +	while (true) {
-> 		sp =3D &ha->sp;
->=20
-> 		intrstatus =3D (*ha->func.isintr) (ha);
-> @@ -1355,7 +1355,7 @@ ips_intr_morpheus(ips_ha_t * ha)
-> 		return 0;
-> 	}
->=20
-> -	while (TRUE) {
-> +	while (true) {
-> 		sp =3D &ha->sp;
->=20
-> 		intrstatus =3D (*ha->func.isintr) (ha);
-> @@ -3090,8 +3090,8 @@ ipsintr_blocking(ips_ha_t * ha, ips_scb_t * scb)
-> 	METHOD_TRACE("ipsintr_blocking", 2);
->=20
-> 	ips_freescb(ha, scb);
-> -	if ((ha->waitflag =3D=3D TRUE) && (ha->cmd_in_progress =3D=3D scb->cdb[=
-0])) {
-> -		ha->waitflag =3D FALSE;
-> +	if (ha->waitflag && ha->cmd_in_progress =3D=3D scb->cdb[0]) {
-> +		ha->waitflag =3D false;
->=20
-> 		return;
-> 	}
-> @@ -3391,7 +3391,7 @@ ips_send_wait(ips_ha_t * ha, ips_scb_t * scb, int t=
-imeout, int intr)
-> 	METHOD_TRACE("ips_send_wait", 1);
->=20
-> 	if (intr !=3D IPS_FFDC) {	/* Won't be Waiting if this is a Time Stamp */
-> -		ha->waitflag =3D TRUE;
-> +		ha->waitflag =3D true;
-> 		ha->cmd_in_progress =3D scb->cdb[0];
-> 	}
-> 	scb->callback =3D ipsintr_blocking;
-> @@ -3468,10 +3468,8 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
-> 		if (scb->bus > 0) {
-> 			/* Controller commands can't be issued */
-> 			/* to real devices -- fail them        */
-> -			if ((ha->waitflag =3D=3D TRUE) &&
-> -			    (ha->cmd_in_progress =3D=3D scb->cdb[0])) {
-> -				ha->waitflag =3D FALSE;
-> -			}
-> +			if (ha->waitflag && ha->cmd_in_progress =3D=3D scb->cdb[0])
-> +				ha->waitflag =3D false;
->=20
-> 			return (1);
-> 		}
-> @@ -4619,7 +4617,7 @@ ips_poll_for_flush_complete(ips_ha_t * ha)
-> {
-> 	IPS_STATUS cstatus;
->=20
-> -	while (TRUE) {
-> +	while (true) {
-> 	    cstatus.value =3D (*ha->func.statupd) (ha);
->=20
-> 	    if (cstatus.value =3D=3D 0xffffffff)      /* If No Interrupt to proc=
-ess */
-> @@ -5542,26 +5540,26 @@ ips_wait(ips_ha_t * ha, int time, int intr)
-> 	METHOD_TRACE("ips_wait", 1);
->=20
-> 	ret =3D IPS_FAILURE;
-> -	done =3D FALSE;
-> +	done =3D false;
->=20
-> 	time *=3D IPS_ONE_SEC;	/* convert seconds */
->=20
-> 	while ((time > 0) && (!done)) {
-> 		if (intr =3D=3D IPS_INTR_ON) {
-> -			if (ha->waitflag =3D=3D FALSE) {
-> +			if (!ha->waitflag) {
-> 				ret =3D IPS_SUCCESS;
-> -				done =3D TRUE;
-> +				done =3D true;
-> 				break;
-> 			}
-> 		} else if (intr =3D=3D IPS_INTR_IORL) {
-> -			if (ha->waitflag =3D=3D FALSE) {
-> +			if (!ha->waitflag) {
-> 				/*
-> 				 * controller generated an interrupt to
-> 				 * acknowledge completion of the command
-> 				 * and ips_intr() has serviced the interrupt.
-> 				 */
-> 				ret =3D IPS_SUCCESS;
-> -				done =3D TRUE;
-> +				done =3D true;
-> 				break;
-> 			}
->=20
-> @@ -5596,7 +5594,7 @@ ips_write_driver_status(ips_ha_t * ha, int intr)
-> {
-> 	METHOD_TRACE("ips_write_driver_status", 1);
->=20
-> -	if (!ips_readwrite_page5(ha, FALSE, intr)) {
-> +	if (!ips_readwrite_page5(ha, false, intr)) {
-> 		IPS_PRINTK(KERN_WARNING, ha->pcidev,
-> 			   "unable to read NVRAM page 5.\n");
->=20
-> @@ -5634,7 +5632,7 @@ ips_write_driver_status(ips_ha_t * ha, int intr)
-> 	ha->nvram->versioning =3D 0;	/* Indicate the Driver Does Not Support Ver=
-sioning */
->=20
-> 	/* now update the page */
-> -	if (!ips_readwrite_page5(ha, TRUE, intr)) {
-> +	if (!ips_readwrite_page5(ha, true, intr)) {
-> 		IPS_PRINTK(KERN_WARNING, ha->pcidev,
-> 			   "unable to write NVRAM page 5.\n");
->=20
+> #ifdef NCR_700_DEBUG
+> 	printk("53c700: scsi%d, command ", SCp->device->host->host_no);
 
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
