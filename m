@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FC71C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Feb 2022 17:27:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7553CC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Feb 2022 17:27:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1384343AbiBHR1B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Feb 2022 12:27:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56152 "EHLO
+        id S1383810AbiBHR1D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Feb 2022 12:27:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1384348AbiBHR0x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 12:26:53 -0500
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22B70C0612BD
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 09:26:50 -0800 (PST)
-Received: by mail-pj1-f50.google.com with SMTP id c8-20020a17090a674800b001b91184b732so163373pjm.5
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Feb 2022 09:26:50 -0800 (PST)
+        with ESMTP id S1384349AbiBHR0w (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 12:26:52 -0500
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97EA3C0612BC
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 09:26:48 -0800 (PST)
+Received: by mail-pj1-f44.google.com with SMTP id c5-20020a17090a1d0500b001b904a7046dso1086508pjd.1
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Feb 2022 09:26:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=FUMSmSTNBldH6X0/8F9TF0vr2H7VNYIzoorHpNaVeYA=;
-        b=RYHgau7HLlQL80lt8k0ict+s/A8s3zRpDef/I3SIaZ8wjEOXSDuLh5yyeUKDqGE7J/
-         Zzxy6TsEzE3dFNgD+dlRjsIBqVQU5urbIvS0wt8vRrPw2LO875t8NxpGIxa11IlMZTAB
-         bzgFTrTsKmA9WujQh/EkGs2ZdUFMB4Qnz588oe4ixYkPlb1HwLKijwG88UqRvjvtOvgm
-         oKmsD1CwEMcvmx4Oi5iYRSB7qj0YR+ZLqkxymeLTcZ9y2uF2puRbonWOG7aHC2sRH903
-         eRgu95k+lUXRyGDKhVxH2F4oSEeV9pY9V0DFpcxrcS74HAaM/ku9D+jj/fw+Wptmvgrn
-         I9xw==
-X-Gm-Message-State: AOAM531/CGsxwIy5ddH3+N5/bbMH6ixfHI0J5ULsOgbGquJWwKuvCd4R
-        FFTzTUjjndV4QWHaXOdTkTo=
-X-Google-Smtp-Source: ABdhPJysi3COA1AsoV5q+vIW3i/TIWFAblUHPiw5QMIaNRj7LZ7FPBdSW32AONYwL05BEWpHp5CBPg==
-X-Received: by 2002:a17:90b:1c81:: with SMTP id oo1mr2464953pjb.192.1644341209544;
-        Tue, 08 Feb 2022 09:26:49 -0800 (PST)
+        bh=x4ECfeUSWUOV2LLyM0wX8mETjzcUPH9zLtQgvZL878s=;
+        b=7UrxMDm3c7V6gMmMOMvhpMfFfJg/bcSnt7RVD+D3Ccqq+oAFS7LfDavxvHuL/4Q2KJ
+         SFAr1b/FqiM212OlZXguR8OHw6KQy8cm5k/7Va4Rd3EBt4eJNp57Wep8722X+VnRxF/Z
+         FyL6c38RJ1vR37B7m+doCalgLwZJwXmP9Imb3fx/bFUbJHYJq8gUGYjApKUdN+oL5Es9
+         FijXbihmK8ksGFgWIES5pcL5gRZftM9wj0dk8QxvwR5QbDOQZLLzzg1ZB/sA1ocy0zuh
+         Dv6SfMyOAtm81GfUAL5zSDNBFVUmYaMX6PhmOrkqsK4hgGHXK17oQV6sgjWKsunFDxKI
+         Ey+g==
+X-Gm-Message-State: AOAM530zdrENcw6R8JRakOlt3yfwt9gCNlH4IzN+P/7GGoR7D8xf/hM/
+        UaH9DP+cVdOpEN7TvaB3lkfd+22+HcVJuXOj
+X-Google-Smtp-Source: ABdhPJz4dWZYjqI8DxFWPky8UbtpXFkeL5eSzwwfe9ct1OdHXnU/Qy0aedbdN+z4Z6kfXv9z9neCRQ==
+X-Received: by 2002:a17:90a:1688:: with SMTP id o8mr2469104pja.66.1644341207902;
+        Tue, 08 Feb 2022 09:26:47 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id q1sm335116pfs.112.2022.02.08.09.26.48
+        by smtp.gmail.com with ESMTPSA id q1sm335116pfs.112.2022.02.08.09.26.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Feb 2022 09:26:48 -0800 (PST)
+        Tue, 08 Feb 2022 09:26:47 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 36/44] qla1280: Move the SCSI pointer to private command data
-Date:   Tue,  8 Feb 2022 09:25:06 -0800
-Message-Id: <20220208172514.3481-37-bvanassche@acm.org>
+Subject: [PATCH v2 35/44] ppa: Move the SCSI pointer to private command data
+Date:   Tue,  8 Feb 2022 09:25:05 -0800
+Message-Id: <20220208172514.3481-36-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220208172514.3481-1-bvanassche@acm.org>
 References: <20220208172514.3481-1-bvanassche@acm.org>
@@ -60,95 +60,225 @@ from struct scsi_cmnd.
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla1280.c | 21 ++++-----------------
- drivers/scsi/qla1280.h |  3 +--
- 2 files changed, 5 insertions(+), 19 deletions(-)
+ drivers/scsi/ppa.c | 81 ++++++++++++++++++++++++++++------------------
+ 1 file changed, 49 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 1dc56f4c89d8..0ab595c0870a 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -477,13 +477,6 @@ __setup("qla1280=", qla1280_setup);
+diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
+index 003043de23a5..ac948768eba4 100644
+--- a/drivers/scsi/ppa.c
++++ b/drivers/scsi/ppa.c
+@@ -45,6 +45,17 @@ typedef struct {
+ 
+ #include  "ppa.h"
+ 
++struct ppa_cmd_priv {
++	struct scsi_pointer scsi_pointer;
++};
++
++static struct scsi_pointer *ppa_scsi_pointer(struct scsi_cmnd *cmd)
++{
++	struct ppa_cmd_priv *pcmd = scsi_cmd_priv(cmd);
++
++	return &pcmd->scsi_pointer;
++}
++	
+ static inline ppa_struct *ppa_dev(struct Scsi_Host *host)
+ {
+ 	return *(ppa_struct **)&host->hostdata;
+@@ -56,7 +67,7 @@ static void got_it(ppa_struct *dev)
+ {
+ 	dev->base = dev->dev->port->base;
+ 	if (dev->cur_cmd)
+-		dev->cur_cmd->SCp.phase = 1;
++		ppa_scsi_pointer(dev->cur_cmd)->phase = 1;
+ 	else
+ 		wake_up(dev->waiting);
+ }
+@@ -511,13 +522,14 @@ static inline int ppa_send_command(struct scsi_cmnd *cmd)
+  * The driver appears to remain stable if we speed up the parallel port
+  * i/o in this function, but not elsewhere.
+  */
+-static int ppa_completion(struct scsi_cmnd *cmd)
++static int ppa_completion(struct scsi_cmnd *const cmd)
+ {
+ 	/* Return codes:
+ 	 * -1     Error
+ 	 *  0     Told to schedule
+ 	 *  1     Finished data transfer
+ 	 */
++	struct scsi_pointer *scsi_pointer = ppa_scsi_pointer(cmd);
+ 	ppa_struct *dev = ppa_dev(cmd->device->host);
+ 	unsigned short ppb = dev->base;
+ 	unsigned long start_jiffies = jiffies;
+@@ -543,7 +555,7 @@ static int ppa_completion(struct scsi_cmnd *cmd)
+ 		if (time_after(jiffies, start_jiffies + 1))
+ 			return 0;
+ 
+-		if ((cmd->SCp.this_residual <= 0)) {
++		if (scsi_pointer->this_residual <= 0) {
+ 			ppa_fail(dev, DID_ERROR);
+ 			return -1;	/* ERROR_RETURN */
+ 		}
+@@ -572,28 +584,30 @@ static int ppa_completion(struct scsi_cmnd *cmd)
+ 		}
+ 
+ 		/* determine if we should use burst I/O */
+-		fast = (bulk && (cmd->SCp.this_residual >= PPA_BURST_SIZE))
+-		    ? PPA_BURST_SIZE : 1;
++		fast = bulk && scsi_pointer->this_residual >= PPA_BURST_SIZE ?
++			PPA_BURST_SIZE : 1;
+ 
+ 		if (r == (unsigned char) 0xc0)
+-			status = ppa_out(dev, cmd->SCp.ptr, fast);
++			status = ppa_out(dev, scsi_pointer->ptr, fast);
+ 		else
+-			status = ppa_in(dev, cmd->SCp.ptr, fast);
++			status = ppa_in(dev, scsi_pointer->ptr, fast);
+ 
+-		cmd->SCp.ptr += fast;
+-		cmd->SCp.this_residual -= fast;
++		scsi_pointer->ptr += fast;
++		scsi_pointer->this_residual -= fast;
+ 
+ 		if (!status) {
+ 			ppa_fail(dev, DID_BUS_BUSY);
+ 			return -1;	/* ERROR_RETURN */
+ 		}
+-		if (cmd->SCp.buffer && !cmd->SCp.this_residual) {
++		if (scsi_pointer->buffer && !scsi_pointer->this_residual) {
+ 			/* if scatter/gather, advance to the next segment */
+-			if (cmd->SCp.buffers_residual--) {
+-				cmd->SCp.buffer = sg_next(cmd->SCp.buffer);
+-				cmd->SCp.this_residual =
+-				    cmd->SCp.buffer->length;
+-				cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
++			if (scsi_pointer->buffers_residual--) {
++				scsi_pointer->buffer =
++					sg_next(scsi_pointer->buffer);
++				scsi_pointer->this_residual =
++				    scsi_pointer->buffer->length;
++				scsi_pointer->ptr =
++					sg_virt(scsi_pointer->buffer);
+ 			}
+ 		}
+ 		/* Now check to see if the drive is ready to comunicate */
+@@ -658,7 +672,7 @@ static void ppa_interrupt(struct work_struct *work)
+ 	}
  #endif
  
+-	if (cmd->SCp.phase > 1)
++	if (ppa_scsi_pointer(cmd)->phase > 1)
+ 		ppa_disconnect(dev);
  
--/*
-- * We use the scsi_pointer structure that's included with each scsi_command
-- * to overlay our struct srb over it. qla1280_init() checks that a srb is not
-- * bigger than a scsi_pointer.
-- */
--
--#define	CMD_SP(Cmnd)		&Cmnd->SCp
- #define	CMD_CDBLEN(Cmnd)	Cmnd->cmd_len
- #define	CMD_CDBP(Cmnd)		Cmnd->cmnd
- #define	CMD_SNSP(Cmnd)		Cmnd->sense_buffer
-@@ -693,7 +686,7 @@ static int qla1280_queuecommand_lck(struct scsi_cmnd *cmd)
+ 	ppa_pb_dismiss(dev);
+@@ -670,6 +684,7 @@ static void ppa_interrupt(struct work_struct *work)
+ 
+ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
  {
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct scsi_qla_host *ha = (struct scsi_qla_host *)host->hostdata;
--	struct srb *sp = (struct srb *)CMD_SP(cmd);
-+	struct srb *sp = scsi_cmd_priv(cmd);
- 	int status;
++	struct scsi_pointer *scsi_pointer = ppa_scsi_pointer(cmd);
+ 	unsigned short ppb = dev->base;
+ 	unsigned char l = 0, h = 0;
+ 	int retv;
+@@ -680,7 +695,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
+ 	if (dev->failed)
+ 		return 0;
  
- 	sp->cmd = cmd;
-@@ -828,7 +821,7 @@ qla1280_error_action(struct scsi_cmnd *cmd, enum action action)
- 	ENTER("qla1280_error_action");
+-	switch (cmd->SCp.phase) {
++	switch (scsi_pointer->phase) {
+ 	case 0:		/* Phase 0 - Waiting for parport */
+ 		if (time_after(jiffies, dev->jstart + HZ)) {
+ 			/*
+@@ -715,7 +730,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
+ 					return 1;	/* Try again in a jiffy */
+ 				}
+ 			}
+-			cmd->SCp.phase++;
++			scsi_pointer->phase++;
+ 		}
+ 		fallthrough;
  
- 	ha = (struct scsi_qla_host *)(CMD_HOST(cmd)->hostdata);
--	sp = (struct srb *)CMD_SP(cmd);
-+	sp = scsi_cmd_priv(cmd);
- 	bus = SCSI_BUS_32(cmd);
- 	target = SCSI_TCN_32(cmd);
- 	lun = SCSI_LUN_32(cmd);
-@@ -3959,7 +3952,7 @@ __qla1280_print_scsi_cmd(struct scsi_cmnd *cmd)
- 	int i;
- 	ha = (struct scsi_qla_host *)host->hostdata;
+@@ -724,7 +739,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
+ 			ppa_fail(dev, DID_NO_CONNECT);
+ 			return 0;
+ 		}
+-		cmd->SCp.phase++;
++		scsi_pointer->phase++;
+ 		fallthrough;
  
--	sp = (struct srb *)CMD_SP(cmd);
-+	sp = scsi_cmd_priv(cmd);
- 	printk("SCSI Command @= 0x%p, Handle=0x%p\n", cmd, CMD_HANDLE(cmd));
- 	printk("  chan=%d, target = 0x%02x, lun = 0x%02x, cmd_len = 0x%02x\n",
- 	       SCSI_BUS_32(cmd), SCSI_TCN_32(cmd), SCSI_LUN_32(cmd),
-@@ -3979,7 +3972,6 @@ __qla1280_print_scsi_cmd(struct scsi_cmnd *cmd)
- 	   } */
- 	printk("  tag=%d, transfersize=0x%x \n",
- 	       scsi_cmd_to_rq(cmd)->tag, cmd->transfersize);
--	printk("  SP=0x%p\n", CMD_SP(cmd));
- 	printk(" underflow size = 0x%x, direction=0x%x\n",
- 	       cmd->underflow, cmd->sc_data_direction);
- }
-@@ -4139,6 +4131,7 @@ static struct scsi_host_template qla1280_driver_template = {
- 	.can_queue		= MAX_OUTSTANDING_COMMANDS,
- 	.this_id		= -1,
+ 	case 3:		/* Phase 3 - Ready to accept a command */
+@@ -734,21 +749,22 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
+ 
+ 		if (!ppa_send_command(cmd))
+ 			return 0;
+-		cmd->SCp.phase++;
++		scsi_pointer->phase++;
+ 		fallthrough;
+ 
+ 	case 4:		/* Phase 4 - Setup scatter/gather buffers */
+ 		if (scsi_bufflen(cmd)) {
+-			cmd->SCp.buffer = scsi_sglist(cmd);
+-			cmd->SCp.this_residual = cmd->SCp.buffer->length;
+-			cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
++			scsi_pointer->buffer = scsi_sglist(cmd);
++			scsi_pointer->this_residual =
++				scsi_pointer->buffer->length;
++			scsi_pointer->ptr = sg_virt(scsi_pointer->buffer);
+ 		} else {
+-			cmd->SCp.buffer = NULL;
+-			cmd->SCp.this_residual = 0;
+-			cmd->SCp.ptr = NULL;
++			scsi_pointer->buffer = NULL;
++			scsi_pointer->this_residual = 0;
++			scsi_pointer->ptr = NULL;
+ 		}
+-		cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
+-		cmd->SCp.phase++;
++		scsi_pointer->buffers_residual = scsi_sg_count(cmd) - 1;
++		scsi_pointer->phase++;
+ 		fallthrough;
+ 
+ 	case 5:		/* Phase 5 - Data transfer stage */
+@@ -761,7 +777,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
+ 			return 0;
+ 		if (retv == 0)
+ 			return 1;
+-		cmd->SCp.phase++;
++		scsi_pointer->phase++;
+ 		fallthrough;
+ 
+ 	case 6:		/* Phase 6 - Read status/message */
+@@ -798,7 +814,7 @@ static int ppa_queuecommand_lck(struct scsi_cmnd *cmd)
+ 	dev->jstart = jiffies;
+ 	dev->cur_cmd = cmd;
+ 	cmd->result = DID_ERROR << 16;	/* default return code */
+-	cmd->SCp.phase = 0;	/* bus free */
++	ppa_scsi_pointer(cmd)->phase = 0;	/* bus free */
+ 
+ 	schedule_delayed_work(&dev->ppa_tq, 0);
+ 
+@@ -839,7 +855,7 @@ static int ppa_abort(struct scsi_cmnd *cmd)
+ 	 * have tied the SCSI_MESSAGE line high in the interface
+ 	 */
+ 
+-	switch (cmd->SCp.phase) {
++	switch (ppa_scsi_pointer(cmd)->phase) {
+ 	case 0:		/* Do not have access to parport */
+ 	case 1:		/* Have not connected to interface */
+ 		dev->cur_cmd = NULL;	/* Forget the problem */
+@@ -861,7 +877,7 @@ static int ppa_reset(struct scsi_cmnd *cmd)
+ {
+ 	ppa_struct *dev = ppa_dev(cmd->device->host);
+ 
+-	if (cmd->SCp.phase)
++	if (ppa_scsi_pointer(cmd)->phase)
+ 		ppa_disconnect(dev);
+ 	dev->cur_cmd = NULL;	/* Forget the problem */
+ 
+@@ -976,6 +992,7 @@ static struct scsi_host_template ppa_template = {
  	.sg_tablesize		= SG_ALL,
-+	.cmd_size		= sizeof(struct srb),
+ 	.can_queue		= 1,
+ 	.slave_alloc		= ppa_adjust_queue,
++	.cmd_size		= sizeof(struct ppa_cmd_priv),
  };
  
- 
-@@ -4351,12 +4344,6 @@ static struct pci_driver qla1280_pci_driver = {
- static int __init
- qla1280_init(void)
- {
--	if (sizeof(struct srb) > sizeof(struct scsi_pointer)) {
--		printk(KERN_WARNING
--		       "qla1280: struct srb too big, aborting\n");
--		return -EINVAL;
--	}
--
- #ifdef MODULE
- 	/*
- 	 * If we are called as a module, the qla1280 pointer may not be null
-diff --git a/drivers/scsi/qla1280.h b/drivers/scsi/qla1280.h
-index e7820b5bca38..d309e2ca14de 100644
---- a/drivers/scsi/qla1280.h
-+++ b/drivers/scsi/qla1280.h
-@@ -87,8 +87,7 @@
- #define RESPONSE_ENTRY_CNT		63  /* Number of response entries. */
- 
- /*
-- * SCSI Request Block structure  (sp)  that is placed
-- * on cmd->SCp location of every I/O
-+ * SCSI Request Block structure (sp) that occurs after each struct scsi_cmnd.
-  */
- struct srb {
- 	struct list_head list;		/* (8/16) LU queue */
+ /***************************************************************************
