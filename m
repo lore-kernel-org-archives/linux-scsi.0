@@ -2,47 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DAEBC43219
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 18:40:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D4E6C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 18:40:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240132AbiBISkd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Feb 2022 13:40:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53566 "EHLO
+        id S240169AbiBISke (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Feb 2022 13:40:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240229AbiBISkW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2022 13:40:22 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20EA8C03326C;
-        Wed,  9 Feb 2022 10:39:35 -0800 (PST)
+        with ESMTP id S240158AbiBISkY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2022 13:40:24 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A9D0C0401E0;
+        Wed,  9 Feb 2022 10:39:39 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 94C1EB82384;
-        Wed,  9 Feb 2022 18:39:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40096C340E9;
-        Wed,  9 Feb 2022 18:39:32 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3ADC8B82378;
+        Wed,  9 Feb 2022 18:39:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D853BC340E7;
+        Wed,  9 Feb 2022 18:39:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644431973;
-        bh=lBS1PiFdP3yxD/PYLR6hsDp3zi/r/zvvJWP4zHDftYk=;
+        s=k20201202; t=1644431976;
+        bh=6gEPhc6j7K2vr4dJkRBn5zlS3bMBRpwTLNrRjht+vJY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E4/fJfWCPRe+3tKhdIvn5p4zsZvksEfSG856g/jED4VaEwfBye+NZOU8OQEYs3GLF
-         XfPLKRnZQSJcNPaa71OkCgcRXUtg1b33fuh/JnfkrJzB8TgYj1mafKyQg60i3isust
-         gTq51CXiKp9GOaWOKRkH2dSsC6bNqTMLRT2t5LFKW/4hF+evPq5Yi3QFnCTo+7i7PM
-         qztMzIDJ7ModIchaGtPRSsFynjTPRrgcbURtqCpRQkGK0BW8wUKt0hVCFgUVUlUPqa
-         wNfEWbfmkker24vGXV1CDadnnsvybKc7JHuKbW0iSyu24WAxYcGWKP93j1eeucL+3I
-         C0oLYvc1gzwBA==
+        b=OYzZmI/z54AKkJnj96kXn3Sh4nA2ZHNjwbKKmUFVtEo8cUg0Jp2zZ1sM4ukfBx2Eb
+         CXkGJMwAKNmq4lllbmF9HcusXuSlXm5ARJVqP6wOKzOxbgPjlj31rZsVVx/muXT33B
+         dVqaDiNoimvsY61DZ++SvW98SIjRxNnb1ziNXvE0227k++6H1x0i2iYHbdJQElJqYc
+         2cCrYZFoObORUBHalJMcU/pnDofzjec8YTW/Qu2mAPGX6lwgGfLrt40OiSYxP/nUv5
+         foPs60f2wg4ucwjbpEy2c0EZOU7s/dBgnydUP447YXppR1Pf72dTtQuZ2raVkBOM3h
+         HYkNb5Nuf3s2g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Martin Wilck <martin.wilck@suse.com>,
-        Martin Wilck <mwilck@suse.com>,
+Cc:     John Garry <john.garry@huawei.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 22/36] scsi: core: Reallocate device's budget map on queue depth change
-Date:   Wed,  9 Feb 2022 13:37:45 -0500
-Message-Id: <20220209183759.47134-22-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 24/36] scsi: pm8001: Fix use-after-free for aborted SSP/STP sas_task
+Date:   Wed,  9 Feb 2022 13:37:47 -0500
+Message-Id: <20220209183759.47134-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220209183759.47134-1-sashal@kernel.org>
 References: <20220209183759.47134-1-sashal@kernel.org>
@@ -54,118 +53,65 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@redhat.com>
+From: John Garry <john.garry@huawei.com>
 
-[ Upstream commit edb854a3680bacc9ef9b91ec0c5ff6105886f6f3 ]
+[ Upstream commit df7abcaa1246e2537ab4016077b5443bb3c09378 ]
 
-We currently use ->cmd_per_lun as initial queue depth for setting up the
-budget_map. Martin Wilck reported that it is common for the queue_depth to
-be subsequently updated in slave_configure() based on detected hardware
-characteristics.
+Currently a use-after-free may occur if a sas_task is aborted by the upper
+layer before we handle the I/O completion in mpi_ssp_completion() or
+mpi_sata_completion().
 
-As a result, for some drivers, the static host template settings for
-cmd_per_lun and can_queue won't actually get used in practice. And if the
-default values are used to allocate the budget_map, memory may be consumed
-unnecessarily.
+In this case, the following are the two steps in handling those I/O
+completions:
 
-Fix the issue by reallocating the budget_map after ->slave_configure()
-returns. At that time the device queue_depth should accurately reflect what
-the hardware needs.
+ - Call complete() to inform the upper layer handler of completion of
+   the I/O.
 
-Link: https://lore.kernel.org/r/20220127153733.409132-1-ming.lei@redhat.com
-Cc: Bart Van Assche <bvanassche@acm.org>
-Reported-by: Martin Wilck <martin.wilck@suse.com>
-Suggested-by: Martin Wilck <martin.wilck@suse.com>
-Tested-by: Martin Wilck <mwilck@suse.com>
-Reviewed-by: Martin Wilck <mwilck@suse.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+ - Release driver resources associated with the sas_task in
+   pm8001_ccb_task_free() call.
+
+When complete() is called, the upper layer may free the sas_task. As such,
+we should not touch the associated sas_task afterwards, but we do so in the
+pm8001_ccb_task_free() call.
+
+Fix by swapping the complete() and pm8001_ccb_task_free() calls ordering.
+
+Link: https://lore.kernel.org/r/1643289172-165636-4-git-send-email-john.garry@huawei.com
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_scan.c | 55 ++++++++++++++++++++++++++++++++++++----
- 1 file changed, 50 insertions(+), 5 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index fe22191522a3b..7266880c70c21 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -198,6 +198,48 @@ static void scsi_unlock_floptical(struct scsi_device *sdev,
- 			 SCSI_TIMEOUT, 3, NULL);
- }
- 
-+static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
-+					unsigned int depth)
-+{
-+	int new_shift = sbitmap_calculate_shift(depth);
-+	bool need_alloc = !sdev->budget_map.map;
-+	bool need_free = false;
-+	int ret;
-+	struct sbitmap sb_backup;
-+
-+	/*
-+	 * realloc if new shift is calculated, which is caused by setting
-+	 * up one new default queue depth after calling ->slave_configure
-+	 */
-+	if (!need_alloc && new_shift != sdev->budget_map.shift)
-+		need_alloc = need_free = true;
-+
-+	if (!need_alloc)
-+		return 0;
-+
-+	/*
-+	 * Request queue has to be frozen for reallocating budget map,
-+	 * and here disk isn't added yet, so freezing is pretty fast
-+	 */
-+	if (need_free) {
-+		blk_mq_freeze_queue(sdev->request_queue);
-+		sb_backup = sdev->budget_map;
-+	}
-+	ret = sbitmap_init_node(&sdev->budget_map,
-+				scsi_device_max_queue_depth(sdev),
-+				new_shift, GFP_KERNEL,
-+				sdev->request_queue->node, false, true);
-+	if (need_free) {
-+		if (ret)
-+			sdev->budget_map = sb_backup;
-+		else
-+			sbitmap_free(&sb_backup);
-+		ret = 0;
-+		blk_mq_unfreeze_queue(sdev->request_queue);
-+	}
-+	return ret;
-+}
-+
- /**
-  * scsi_alloc_sdev - allocate and setup a scsi_Device
-  * @starget: which target to allocate a &scsi_device for
-@@ -291,11 +333,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	 * default device queue depth to figure out sbitmap shift
- 	 * since we use this queue depth most of times.
- 	 */
--	if (sbitmap_init_node(&sdev->budget_map,
--				scsi_device_max_queue_depth(sdev),
--				sbitmap_calculate_shift(depth),
--				GFP_KERNEL, sdev->request_queue->node,
--				false, true)) {
-+	if (scsi_realloc_sdev_budget_map(sdev, depth)) {
- 		put_device(&starget->dev);
- 		kfree(sdev);
- 		goto out;
-@@ -1001,6 +1039,13 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 			}
- 			return SCSI_SCAN_NO_RESPONSE;
- 		}
-+
-+		/*
-+		 * The queue_depth is often changed in ->slave_configure.
-+		 * Set up budget map again since memory consumption of
-+		 * the map depends on actual queue depth.
-+		 */
-+		scsi_realloc_sdev_budget_map(sdev, sdev->queue_depth);
- 	}
- 
- 	if (sdev->scsi_level >= SCSI_3)
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 733781018c0ba..d430cd83e3981 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -2184,9 +2184,9 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		pm8001_dbg(pm8001_ha, FAIL,
+ 			   "task 0x%p done with io_status 0x%x resp 0x%x stat 0x%x but aborted by upper layer!\n",
+ 			   t, status, ts->resp, ts->stat);
++		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+ 		if (t->slow_task)
+ 			complete(&t->slow_task->completion);
+-		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+ 	} else {
+ 		spin_unlock_irqrestore(&t->task_state_lock, flags);
+ 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+@@ -2801,9 +2801,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha,
+ 		pm8001_dbg(pm8001_ha, FAIL,
+ 			   "task 0x%p done with io_status 0x%x resp 0x%x stat 0x%x but aborted by upper layer!\n",
+ 			   t, status, ts->resp, ts->stat);
++		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+ 		if (t->slow_task)
+ 			complete(&t->slow_task->completion);
+-		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+ 	} else {
+ 		spin_unlock_irqrestore(&t->task_state_lock, flags);
+ 		spin_unlock_irqrestore(&circularQ->oq_lock,
 -- 
 2.34.1
 
