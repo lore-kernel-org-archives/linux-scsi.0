@@ -2,67 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8097C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 04:07:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B41F5C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 04:07:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345370AbiBIEHq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Feb 2022 23:07:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43436 "EHLO
+        id S1345474AbiBIEHr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Feb 2022 23:07:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233416AbiBID0s (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 22:26:48 -0500
-Received: from out1.migadu.com (out1.migadu.com [IPv6:2001:41d0:2:863f::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E3C7C061576;
-        Tue,  8 Feb 2022 19:26:45 -0800 (PST)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1644377202;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=VaP94/CLC7el0s9X3gi0V2qhxQn89+l7bMyYQ/NhPts=;
-        b=sh5lNebjUT9t3zkDF0H4ToUqhauNJkuTi3187kEifAla4nM2lkUWtloIdPxAYu0s0lKZXl
-        fOfD6NcYeMqwGDL3wfjjuTBOT/qy2WNV71Kj2AEuGIruakbaOBwzWIcKTMxEQsXuRoVYyL
-        RqCyyrGnxrI/r0PgmeOre7TxQAUgdIU=
-From:   Cai Huoqing <cai.huoqing@linux.dev>
-To:     cai.huoqing@linux.dev
-Cc:     Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: qla2xxx: Make use of the helper macro LIST_HEAD()
-Date:   Wed,  9 Feb 2022 11:26:14 +0800
-Message-Id: <20220209032614.38190-1-cai.huoqing@linux.dev>
+        with ESMTP id S1347094AbiBIDjb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 22:39:31 -0500
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2058DC06174F;
+        Tue,  8 Feb 2022 19:39:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1644377970; x=1675913970;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=UUr2oeyzfQDDRtI6hlTLxPqoP/+EpMIGE8+TwWUBk0o=;
+  b=ez4stKHhDDVl6yT1xk5D8g+3iUmg6vrCg8TAcWNDTtW/xjyZoVHkRtZ5
+   AkML9UxVY1ZAhD/aTHvD0/3HXMB2dpsSCRydZH82ctlxsBCTB2U96Xgky
+   6CE1Ffq0Udon1BOWvX0OHPNOF3GER6T7MJTggDfsPXGg+ZBoP1ivFgiWr
+   9Lnn0vGK9LR2fXDionZhp+FoMQGhojvuhSQgfNXqQzgFyAM2aPkT8ECtb
+   6PukQzvp23a5vkpBXcCI7xCABAid6MlSUqkj0wlwHZfUEVnV2FJnnBTCw
+   xpNL6Zk1jhro343tWtHiX6vAKur/bWm7Bstd/yrOxlOjFHfvU46ZNM2g1
+   w==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10252"; a="335513823"
+X-IronPort-AV: E=Sophos;i="5.88,354,1635231600"; 
+   d="scan'208";a="335513823"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2022 19:39:29 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,354,1635231600"; 
+   d="scan'208";a="771204809"
+Received: from lkp-server01.sh.intel.com (HELO d95dc2dabeb1) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 08 Feb 2022 19:39:23 -0800
+Received: from kbuild by d95dc2dabeb1 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1nHdpD-0001Al-6Z; Wed, 09 Feb 2022 03:39:23 +0000
+Date:   Wed, 9 Feb 2022 11:39:03 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Nitesh Shetty <nj.shetty@samsung.com>, mpatocka@redhat.com
+Cc:     kbuild-all@lists.01.org, javier@javigon.com, chaitanyak@nvidia.com,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        dm-devel@redhat.com, linux-nvme@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org, axboe@kernel.dk,
+        msnitzer@redhat.com, bvanassche@acm.org,
+        martin.petersen@oracle.com, roland@purestorage.com, hare@suse.de,
+        kbusch@kernel.org, hch@lst.de, Frederick.Knight@netapp.com,
+        zach.brown@ni.com, osandov@fb.com,
+        lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
+        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
+        jack@suse.com, joshi.k@samsung.com, arnav.dawn@samsung.com,
+        nj.shetty@samsung.com
+Subject: Re: [PATCH v2 04/10] block: Introduce a new ioctl for copy
+Message-ID: <202202091048.qDQvi6ab-lkp@intel.com>
+References: <20220207141348.4235-5-nj.shetty@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220207141348.4235-5-nj.shetty@samsung.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace "struct list_head head = LIST_HEAD_INIT(head)" with
-"LIST_HEAD(head)" to simplify the code.
+Hi Nitesh,
 
-Signed-off-by: Cai Huoqing <cai.huoqing@linux.dev>
+Thank you for the patch! Perhaps something to improve:
+
+[auto build test WARNING on axboe-block/for-next]
+[also build test WARNING on next-20220208]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
+
+url:    https://github.com/0day-ci/linux/commits/Nitesh-Shetty/block-make-bio_map_kern-non-static/20220207-231407
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
+config: i386-randconfig-c001 (https://download.01.org/0day-ci/archive/20220209/202202091048.qDQvi6ab-lkp@intel.com/config)
+compiler: gcc-9 (Debian 9.3.0-22) 9.3.0
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+
+cocci warnings: (new ones prefixed by >>)
+>> block/ioctl.c:145:10-17: WARNING opportunity for memdup_user
+
+vim +145 block/ioctl.c
+
+   126	
+   127	static int blk_ioctl_copy(struct block_device *bdev, fmode_t mode,
+   128			unsigned long arg)
+   129	{
+   130		struct copy_range crange, *ranges;
+   131		size_t payload_size = 0;
+   132		int ret;
+   133	
+   134		if (!(mode & FMODE_WRITE))
+   135			return -EBADF;
+   136	
+   137		if (copy_from_user(&crange, (void __user *)arg, sizeof(crange)))
+   138			return -EFAULT;
+   139	
+   140		if (unlikely(!crange.nr_range || crange.reserved || crange.nr_range >= MAX_COPY_NR_RANGE))
+   141			return -EINVAL;
+   142	
+   143		payload_size = (crange.nr_range * sizeof(struct range_entry)) + sizeof(crange);
+   144	
+ > 145		ranges = kmalloc(payload_size, GFP_KERNEL);
+   146		if (!ranges)
+   147			return -ENOMEM;
+   148	
+   149		if (copy_from_user(ranges, (void __user *)arg, payload_size)) {
+   150			ret = -EFAULT;
+   151			goto out;
+   152		}
+   153	
+   154		ret = blkdev_issue_copy(bdev, ranges->nr_range, ranges->range_list, bdev, GFP_KERNEL, 0);
+   155		if (copy_to_user((void __user *)arg, ranges, payload_size))
+   156			ret = -EFAULT;
+   157	out:
+   158		kfree(ranges);
+   159		return ret;
+   160	}
+   161	
+
 ---
- drivers/scsi/qla2xxx/qla_os.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index cff5e4a710d1..63e5858b4038 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -6376,7 +6376,7 @@ qla24xx_free_purex_item(struct purex_item *item)
- 
- void qla24xx_process_purex_list(struct purex_list *list)
- {
--	struct list_head head = LIST_HEAD_INIT(head);
-+	LIST_HEAD(head);
- 	struct purex_item *item, *next;
- 	ulong flags;
- 
--- 
-2.25.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
