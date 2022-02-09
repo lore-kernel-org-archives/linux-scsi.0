@@ -2,147 +2,147 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB7CAC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 18:57:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A6A9C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 18:57:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235219AbiBIS5K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Feb 2022 13:57:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59370 "EHLO
+        id S241299AbiBIS5g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Feb 2022 13:57:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241348AbiBIS4s (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2022 13:56:48 -0500
+        with ESMTP id S238908AbiBIS5D (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2022 13:57:03 -0500
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3FD6C050CFF
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Feb 2022 10:56:14 -0800 (PST)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 219HK0Jl020152;
-        Wed, 9 Feb 2022 18:56:12 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9A17C05CBA2
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Feb 2022 10:57:02 -0800 (PST)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 219HE2rM027620;
+        Wed, 9 Feb 2022 18:56:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
  content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=e/tVanfMfY8R+lGDUiq1Gx+VUvfEeorojz8Aym1zTSQ=;
- b=QDnDrW6mA4l58dERQ9UbrbkiPNBjt482WML10JbnL6ZxDWQ+I26O/EA175mcl8SqQ15k
- c04pRrM3y0asQ0lBgtDxF4bbkCIsQEBTZMnyVeNOWQ+84M0W0KGuHA3f+6SoMJ+M4/dE
- cBrQ5ihksOs4fnOf7I2gSVyewiO4bJtzVSi/O9isajAJXVbX6qcLfsonI4t+azMTNS3w
- FYkR9eotfKZ4fwJXkrOJBfFph9f5t1fjJtrnj0u5F7DkMudYShW2mDuaTY+drToXNr6L
- BFyWEuoH6ZM3b7f0e8SKiK3cAuotiEX3qty3wQXfl0N/MiCdtgy1QxbUQ7OFRWH9WFJh Kw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3e366wxtjw-1
+ bh=GYaX/OvbyqomtkTjpxsk2LnDkjoSjCrdAmkfGYq+owY=;
+ b=aaLRquyogqafi6qcZ9LrKJxSZFaAJ29aaMNatVQAnTTK+aO53x4tvUHZMTfKA1qXxVKj
+ YpHkTTxAdroWxA0WZBQPrulX5Xe+X3oKBAYW5kKYiBzQAvVL5Nmb2UIGRDwkVlNFq8qY
+ OhFviDjGoUBvgYyjRN42rePbyj90su3fJ/Xbidm9UZpovhRMfegPsOl7EZxLZHVMT12j
+ Xo4PXJHez88sX7VUwWRzOkeNvZyT6MCsK8AI8yILGA/hPnAO9TwLqJvpa8m45bdlyPOF
+ IzGDQMS5jM7MbAFJpuOl+/w6N9uYYdC2A/0POInhBwja+9UvExTGxzMysN16vMUM2eGf cw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3e3hdswfvx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Feb 2022 18:56:11 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 219Ipuqa018318;
-        Wed, 9 Feb 2022 18:56:10 GMT
+        Wed, 09 Feb 2022 18:56:55 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 219Ipdu4105668;
+        Wed, 9 Feb 2022 18:56:55 GMT
 Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2171.outbound.protection.outlook.com [104.47.55.171])
-        by userp3030.oracle.com with ESMTP id 3e1ec37j16-1
+        by aserp3020.oracle.com with ESMTP id 3e1h28tah3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Feb 2022 18:56:10 +0000
+        Wed, 09 Feb 2022 18:56:55 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=d/NFP5PfFIQ479G49iWaIai2eEF3aFscCCMLY2sOqD9V+nLn+XJ2s+VuIr9W5rKbdlT1igYxgoSVbw0zCpKPUlmc0sE3l4MKfk+XwLuNN4TYbbtFzRyoV/0LJfufXYD/BWcXRvi8nZu+SR3+r1IHDTUXLPz+DRxgHUiXGO7XA9ngMnykvlLhw0ahEDl7aI30e8FW2X1LhCz5sGosa79gyoeZd/8X1One4H0aKrVyvV2NivoUY2LeBTrspMCTKGDXUfwG04mj0FcBLTuXuz/wBdR3jZ+E0UMbr2LZoZGkdiT2oiWuHDhYgpTb/iD1qGUilAvZTo9uWNvHvY0LnSat4g==
+ b=Obkihv/gKREEl2ghaS5vu7BJF+pQ0oGb1gPZOUPT5/wUrexZOoF2ZHUXSrFLAOP9kIHpj6AMJrUAvB9+XaUdwJzYlF1uKGlerlvHSYyDkaScgO1HbJeydgmCocimihs6zF605lbHrANx3McaEX0WW92RhJwSfo3moivrkABVbi+uoB9jlCOmV2jq5gD/Fru1Xn45f4w12UtB2Fnec8DOA6BbRMAsB393/j3KPn3P1xbc7iVtqluvQeKPPKGVMLGhixraIYtdAj/TK0V0181Vi+cT6IKKaP+t3Nb5JjfNYCFQT9FPOkzclCO01RQh5+XgaNXOsdvU/jJE//Oa7GwgCg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=e/tVanfMfY8R+lGDUiq1Gx+VUvfEeorojz8Aym1zTSQ=;
- b=PzDAD41O8akXF6dlsJyk4J35uBYoNGULSXYvIAy1ZVFs8tnx3qy3yVDaJtI/Vfc1th7djFPHxTiHha6zCY+1+Uk86SkKZg5FvGvy1M5BwRiUTzhAVZ1KARMauD4qHBnywiyY411JZcM6F6gBUjAK3MIC/IYdzz34HAD0NQ5ZMl1JmrYyy95eAZdoUp2HI7JaaHyXcfh4CzHWW06fA0gqiLqi2H5709/KuUaw7v8aBQknLlvwiy3fnf54oboN84sbjc/ad5dv6OlYfOmtytSoRitBW7iIvmLzyN0RxOtQTq6q+iDhZU69Bp8zygnCLlgXXS+jFEA3YF/ehn9aRQ4O/Q==
+ bh=GYaX/OvbyqomtkTjpxsk2LnDkjoSjCrdAmkfGYq+owY=;
+ b=SDYWhVajXDOyvziALK73WgFQmW7Kz+D54ccJRcWaVmLKnN2tKEBRzEO8VSfMS/LIqqZjMgbgf6V5zs8Dzj+KCcyoTYe7du91mmDESm9xUy+lBpJ1964LCW7EpbdXpr8VLQbvFyO3rPEkyBtFoVB8ETzZZiFakkskfJJ7BqcfnD87G3IOxnA9/M6qKctyFjWKpz8ISpKGu/VDaM1rHc5aXjZ7PmrnpcRWeZyqH2WhN86k4kMF7O4NkJxK3Gs68EagGMZP/F3M0MdWzz0jHB4swP2d2OD0CYBypoM9c6UzEVbfqNGUYlabwSDlxA0IhKLgMGiz9xgPUNNGMlAj42PPhQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=e/tVanfMfY8R+lGDUiq1Gx+VUvfEeorojz8Aym1zTSQ=;
- b=TOBXOTHgP7nyswkLoiyuAMZsdfQB+9U2V2Q6m/kQszi9cJbLqy+dUwcy8eKmMMgjtU1C6v5+xp8D+81AOGyom2yG3i8gpPwzyyHxa2Aa041/nIDXs8QP5W2QrOTK2qv6ekyV44aIubtb+fGyG4tNF7kPAB0e2pyI+/t0p+Eod0k=
+ bh=GYaX/OvbyqomtkTjpxsk2LnDkjoSjCrdAmkfGYq+owY=;
+ b=vXWvySw7Ih3+Gm979+nZFsXjZzC1tQ+DIFb575WXAeMhlX1vJzkzZNupmx3Wa+2NpjqcXtl7J/W1c0T/o2IHui9toIQKgKLCrCkifdFx5v6gvinCsWiFrGSKQaOVuSlX78YCbw3zT2ZVRz0788lnr2Xxr7UotVWClIcuojm4oEU=
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
  by MWHPR1001MB2224.namprd10.prod.outlook.com (2603:10b6:301:2e::26) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12; Wed, 9 Feb
- 2022 18:56:07 +0000
+ 2022 18:56:53 +0000
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::755b:8fbf:706a:858]) by SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::755b:8fbf:706a:858%4]) with mapi id 15.20.4951.019; Wed, 9 Feb 2022
- 18:56:07 +0000
+ 18:56:52 +0000
 From:   Himanshu Madhani <himanshu.madhani@oracle.com>
 To:     Bart Van Assche <bvanassche@acm.org>
 CC:     Martin Petersen <martin.petersen@oracle.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH v2 34/44] sym53c500_cs: Move the SCSI pointer to private
- command data
-Thread-Topic: [PATCH v2 34/44] sym53c500_cs: Move the SCSI pointer to private
- command data
-Thread-Index: AQHYHRFCw3O2Rn/Fb0KYznsoURL8TqyLk0GA
-Date:   Wed, 9 Feb 2022 18:56:07 +0000
-Message-ID: <C8C1C434-21A5-41D4-9C84-424DA540E0F1@oracle.com>
+Subject: Re: [PATCH v2 35/44] ppa: Move the SCSI pointer to private command
+ data
+Thread-Topic: [PATCH v2 35/44] ppa: Move the SCSI pointer to private command
+ data
+Thread-Index: AQHYHRFF2rPgYAHdAEqclBHKBW5+8KyLk3YA
+Date:   Wed, 9 Feb 2022 18:56:52 +0000
+Message-ID: <88DC70EF-4725-42B9-A9CD-85ED86F6A31D@oracle.com>
 References: <20220208172514.3481-1-bvanassche@acm.org>
- <20220208172514.3481-35-bvanassche@acm.org>
-In-Reply-To: <20220208172514.3481-35-bvanassche@acm.org>
+ <20220208172514.3481-36-bvanassche@acm.org>
+In-Reply-To: <20220208172514.3481-36-bvanassche@acm.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-mailer: Apple Mail (2.3693.40.0.1.81)
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 329e15fa-75a9-4b67-e6d6-08d9ebfdd4bd
+x-ms-office365-filtering-correlation-id: 4dc84f65-42af-4f3a-b9d7-08d9ebfdefa7
 x-ms-traffictypediagnostic: MWHPR1001MB2224:EE_
-x-microsoft-antispam-prvs: <MWHPR1001MB222411BE8B10C2DE4916BAF1E62E9@MWHPR1001MB2224.namprd10.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:3383;
+x-microsoft-antispam-prvs: <MWHPR1001MB2224293AC602BEE089211585E62E9@MWHPR1001MB2224.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:7219;
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: MEhZ8ZPlvL+mch3xi/r257XtFlqZZhU+39Nj/VP9tb+MMyeNNnPQVYwyBpLaWlXV34JHOAQhroqPDNR9C4cXAtYv3OMa/D9fcWua5sA/cMxWXZTdyNcuGiey1u8VdVtzCwk9fQ4kRGBiGr3KbNSbb6AUBi0Kf2CXBC5WG9aAB20mcnMaP0VycpwK4UO3WKnhXfca/UL5dMi/pAxi3rqU5GYB48AZOn8oq7e/gUrYHSNCdNFQ61v1h2c5B/OxqsPo1mUGDclv5Omx8BUs1ie4awtDSAz9XyHqqfUYHAPnBLJmvgAqZAixgSnl+JxH8o3H6RtUL+14U278UwsChocnTABep8xLY/SBahDU4rrRz0RXzEqav75bLVwKk1VvczOw88YjQzUDBKnV3LyIdZiezzyV01ypYUD9KsFwPqcB+tfjkPfaMUNrMVqETD1mfT9YYTLWqF37gmVvJsSnM36zZl2Jx7z1ar3o4fBiGIFNxI+H1EhlXZ7xxtHrhpmegv/9PYED0hNVEqmRcy4Nol7v0EDZs0XyKcvcCSapUtidBpVPMp6sl7FF6FgkR/oYM1jSX65yn+5fGDzRiX7XqR41t36dEtkGzkVnrTGNwdhPT4CcMQIleK4BQPChJb+SPj6R4b9H9G/CyUlFIO6HacFx55apKNMauIAmBHs/F3BgoZ4VCWSsKzJ88EopsCw8bjQz8ROBrSWCrN+1dEpC1OsTyu8UEI1svzrOngI9GXi8A+xHk6V8OOo973Gqg10uIpiS
+x-microsoft-antispam-message-info: sKAA2kvlZDHnee9gj8izo3fAoGwSLf1tp0P+GJWY5YeqXzuz1aOK2gjewxJUoInTKrhyHDE8SIMVAuCy8JClNx2jFKk+nJYblauT3q/+j59XClJFBo3BYKYqiPhvd0bUar0xS4B5pkha4uYQUUrL0eqQow0CSj0C/SlPTyzAoT2Q9pRpeDhh2hnTRC7dUGI5r49EKRFc2qIbUuJ6QO6ePBe0s3VxjDKpPSCKJQ5QKkGF8NptyONfn2laxMyscZJlNyIaVEGS8PVADdkzRZaxDfVTuLpNYtcma2H9RimQ4t/p/AaMAS1AsM4Osz3W+K8lH5Kn6bwzl3oMArwpMTVn4CEchBUM2xPhXxXDCwPdNPcBfQ7rhR7dQOkiNX31bOhDDrm9q2Turcru7TcF79ljxv+HhVrt6TbK1vwG/FTpzxabEGf8SwwlhAYXLuCDm2umE+7bFg0bQa1NWdTY2rNlqcqYMtziwtRsRM/wjtjRBhADR2cDmL5bgeOMbpC1CQJ/ersMVK3hr3FIs1TaJNvq1obiWG5y+hCGs3HBAECbVfhVGmmt3QfdBZEFrMIdh5dhNsS9EY9KwEd7/O46Q3XrN8BSM2Pn0dQpXXQIkpFmEwCdHRgWoIXs8oUWWL7bQYcUfoSP3fNG9mR4MZoQPNyw5LQtyeTXVSA+6/qZ8RD7C5FldZ2VE2PVnU0jQLL83qRzEQBr4dq5yCza/OL8/cXmUq0ur9jq/j6amKnuK0xjaprpKWEB7gRjpjtK6XGr/VBe
 x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(76116006)(186003)(122000001)(36756003)(6916009)(33656002)(38070700005)(71200400001)(316002)(66946007)(54906003)(44832011)(38100700002)(2906002)(2616005)(5660300002)(6506007)(6512007)(6486002)(8936002)(86362001)(508600001)(83380400001)(53546011)(91956017)(4326008)(66446008)(66556008)(66476007)(8676002)(64756008)(45980500001);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?nNdStqpd9zNFwKLE75h1JZJXOSZSTtBrt/x5ICcGVk0mzvfX1m7FF+QZTyQw?=
- =?us-ascii?Q?4FQsvpNe/y1ZfGG2Bf+DXiN1AQpNBmVbkkdfr6Gb82RYNCfp8k230EV2vYq+?=
- =?us-ascii?Q?YGdtEcbxtIL3Ekp8P0HfNhd+urnleTV34dt//8jiJpz3jZeUnOUQWino+Rvx?=
- =?us-ascii?Q?3jBt5FWoRc3+OdNHCF/ecf4QrAaA46fZRSXN9+QIidoXd1ZAc48CKXsy3XAC?=
- =?us-ascii?Q?Q8QeAgjX/jQOXfdnH4UBxkZPNQT4JkPbLkHpSQ19BlAuvgJsuVLcYfkKkpXz?=
- =?us-ascii?Q?Y1KZaj6WzHcO3mDOVcKSV5H+HDfkIsn60n55++oQ0v+1nNF4lsXXQseQlO4D?=
- =?us-ascii?Q?8cCfW6VmF9LBbFurMup/mSuD3KfWg6PC/K3gsKO8L3ixjkPcNR63QpgS9BfK?=
- =?us-ascii?Q?KeJw91HWJJHJVgWhFlQANSwG3CFOkPFffX62ks6fs13fGeJ/JkeNixGTdPVF?=
- =?us-ascii?Q?pJx+vcW8ysms+c6JRcm4qE0CsLUapmiwLFWl823VDyBSBRUigvfcjXMW+ysA?=
- =?us-ascii?Q?GIVmSYuespKJ49t1U/TJ68mPViyRPvFqBUgj3W6Evrpqymksk6b3s1u3i8UN?=
- =?us-ascii?Q?XKnOt1U/k1lWaP0LOBXxaHhYsQK6cDwXkjtUtsYNpuDpjTFgVsM4k19buvIN?=
- =?us-ascii?Q?nVk5+PkXPUNsi4GZxXf6WbXKkj4sJCBtTpxX7kd0EXccLJ3n5E4XMnxP3H0m?=
- =?us-ascii?Q?BzCkwiqE0JKiCURw/YjeSI7R3yPMP0FVGewkyc6LVBlThxcsGIcGtNOBFBPH?=
- =?us-ascii?Q?NSCVddKe4Mv3DYkLn/Puazrv4qW8t5CTIRvGB6I0HMRlBenctqucyEQKisNp?=
- =?us-ascii?Q?fTkN9Aq61Mi7dwVFJaeC9j0+fVdowNrf7mCf8Iju1ocNh/EWMfU2DPOR7eRd?=
- =?us-ascii?Q?/ltoX8Wlshn4l5e4XAQiElopEFzT9FwMM5fJImStZtHwk7gHbiIqkc5dTbyd?=
- =?us-ascii?Q?FkStZpbXLfpZbkBcIwIxVV8lHXRqsdgF2DG74IBYRhapJ+xfQ9sGi60hVjJi?=
- =?us-ascii?Q?ku+Y6yRNG8a59hk2jyZnrx2I4BhwMM1sNK7yCfVShVUCAu693sf4wvuQfcoG?=
- =?us-ascii?Q?cTUjyXoRVbwPajYcrpQ0WVd5dcBoDb63RWN4TxcxFVkVHfDxtXO+2ta/b/VB?=
- =?us-ascii?Q?Hp9rPbLUhu+gAkUQBjFV05pFeaPXcz4P8IjY429pow0jVj68fE5I6mn4EVXu?=
- =?us-ascii?Q?7tkxc0yl2EDF9Dog8Yzf1NV58jvKFwhsPndAtzMhQ3gM8eGZYDN2F3ftGEH1?=
- =?us-ascii?Q?TimIOJhWVe/FZTVWBfNjbFmBvhtJ/ComNq0SlqENruN4lHLw9uLrsGDyq+UI?=
- =?us-ascii?Q?XoDDfGZtFGBSZskT+G8fqJyk1YRqEXrgd+sY4+z7pldpO4q/PwFIN51nC5JV?=
- =?us-ascii?Q?3sWCr/tLYbki9fKyIIcuHe8KjNdX5/1LurR7rZskZHrvZ7p8PJ2nKa/LIECW?=
- =?us-ascii?Q?tkuwcPWFtVDa68XrSWfNZr1IFyuIu4zo15Nhx7J1NbQSakkbwMXnPUUvFV53?=
- =?us-ascii?Q?kd8qGxYxkNXbaTBt6si56enjkt9MLnKU3uo8IbFgT6Wl5bbw0IM+C5P+2qjN?=
- =?us-ascii?Q?v/sfV+NGjhYNr3woUYjmcHskBgozPjSD8+1z6H8cOiQqbcpHoloKPSMMHouQ?=
- =?us-ascii?Q?duFM9aOJA76Ivz6TWXE+6MBm2sqB2ySlP+eK5Sa44UKV1N3tcejlSiqXBviY?=
- =?us-ascii?Q?Pto2NQyaWFWaUJ1cJbOAMHIevHEo4Qrw8KZhtDJbqPYCxVN5?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?owJN85WSfMIE7cdZSz4jTephPy2NBlhUfm7pZZdxEgEeezFyWOPZjW5Wbrrz?=
+ =?us-ascii?Q?pT4QFRDWisH3/6VjGqUdqg8yFY0oHgYY3zKo+94rEOBaXmH0I5vNqPMeeXPB?=
+ =?us-ascii?Q?wqC2/mk+hX49KmccIX4CY9DIdKLZFNRraPl1jZHdKOmRynA+AFgnk8eniGSy?=
+ =?us-ascii?Q?pemIZsQ9b9jBOxglOImycapxFYn/1F/AdU268JRnHUAokC3vtBO1kfwOM3Bb?=
+ =?us-ascii?Q?7eD7WbqNC1QEI/unAzo0PAwhNjcm2M9vRg7bSTLOBPZ7hYv1SKLmg2ZGIP0n?=
+ =?us-ascii?Q?9y/1diI8ZcJQ/ZHDgbDD5XIW3ddcjKML6lMD3+/TU2A89EuGkJ0d5gBCmLJm?=
+ =?us-ascii?Q?AQUyVdSxhnY5ni5IeZOBqnkndFmUs0mymyLwQE3EoTPnbx2NexXUWIQq749B?=
+ =?us-ascii?Q?2KcbEblqz0zJaz8tHUk1pDpPjiWE0QlzQYwaNMlhJZPRitfWdGXnTXMsWj5c?=
+ =?us-ascii?Q?EZhvgj9+dqVttsg3BGyd6UyOQEZIGy/I9z7hTMfKZ+hgelDj2eOGRZRlhm4D?=
+ =?us-ascii?Q?l2lchifQhmtlQlyP8GgftsuFWHsN2Q7HkOxzSIlVJ5oaoLfFLsiIMO4+hryq?=
+ =?us-ascii?Q?8fQlxpF+VPS0/z89En0NoUEz9BER+wpiPjuEefViVJXqacQxkhuW4o8CnSMB?=
+ =?us-ascii?Q?PO9H8ObdmNXrtsRIUuCQJ+7d005T2Q01Yhw5Xa1KIvAZOCq9nBTmdqWy4pGU?=
+ =?us-ascii?Q?IWRp8iF4rzWpENRifzDFqLYzTWUL2LvRuBs2FNkocwSvDQD1sEJsqg469Qnh?=
+ =?us-ascii?Q?RyJuaZe0fqCJ7GBU4XceZrUpLNhoOOGdyZOQqyhwu6N82AIoxBY++cGCX6k4?=
+ =?us-ascii?Q?wdLJ6ZCiMpPwi4B2ApssjnlisWV7JVJ7HmQ0z7p1pRV30thV3pxjWuEoPeaU?=
+ =?us-ascii?Q?oP6eUhZSf3c+K9dkJH+BgJBrA04TjDpkFhc0SBRWdGHCcvqUR67xlGfZpRxO?=
+ =?us-ascii?Q?Qt3/q9KlQzOq/igCihB1KRAj1VkiThJtyW18haeZkZ7c/+b8sLSSmdVWxlhI?=
+ =?us-ascii?Q?jQxH2CwEKxxLXkOXOnVWxNrfS7HN/m5E1xM26YSNVfjMrZ9hem5ifFFjPMNj?=
+ =?us-ascii?Q?Mdq+LKn0IU79wIx96fEs++LsiP3dpunzENOiKocxPJ3qcCj8T/VxlwrtNSiV?=
+ =?us-ascii?Q?QS4A+KLiu2ditMLLmqA08lCko9tGxkInfz1ob0EJJ5+V4LvrPEcai9BWK0B0?=
+ =?us-ascii?Q?wGkiILLWwbOjGuqUsh4+Abs0yfCm1yNawG0BaU/UKq/TDxRZQppJWyw0ghoA?=
+ =?us-ascii?Q?/3tflj+1hLru9v7SNtrnzxfcRao+HUzeF6pVehpD1pDWDJQYTc66O08SuqXT?=
+ =?us-ascii?Q?bmwRwODlAoJXXuVb20m4xSjRf7MHQbExDzhFE5tppddUZW7wElTx1cc+uPx/?=
+ =?us-ascii?Q?XruZNjJHQpnjT6NJPtWS56Hy/YFyk4H05NuW+8u3vwLbLeciIvoWvfOKObo5?=
+ =?us-ascii?Q?FWOgdfEpZ/KeiT6rggLU0/3toFvTo6QT4fIz5+eq6346bQ8V12On4Pu2tjcu?=
+ =?us-ascii?Q?cS6CiQVtSYUG5LIDUCPNHeAEQxwBDPYoA1Lq2GGkzi5Bo+OIMFU8cmrqJTyo?=
+ =?us-ascii?Q?GhNE/VgF1RARWXVi5TH2hd9zwEEfvVROI2ojrnxnAiB0+UDYorvJnL1LkGa6?=
+ =?us-ascii?Q?wn8AC+Zz97HkpOUxYKVbFLibbbKQ+sTnmprEhpkXIkrUCvbrUTFJvqPykiDA?=
+ =?us-ascii?Q?Lp8r0sPlD3NKNMbuCBEHACpU9DLE2PRaYudwApuabCWNr8uR?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <119B5947DB7DC8409C13ADCBB98995F7@namprd10.prod.outlook.com>
+Content-ID: <1EDE3D7B8BF8F64C8564F543FC7E103E@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 329e15fa-75a9-4b67-e6d6-08d9ebfdd4bd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Feb 2022 18:56:07.7323
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4dc84f65-42af-4f3a-b9d7-08d9ebfdefa7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Feb 2022 18:56:52.8854
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: jzY6r5xIeTwl4wTi9H0Zi6Pi+tnOpzjQBBuyMup8mHKq26j8RZ7XD8K34h5Z4H37cMfjbGJSuMZ7ADoOqgqsy3f3Zr9sLNTUAzsB0LJu+As=
+X-MS-Exchange-CrossTenant-userprincipalname: UD0otjooH3jrwmJZbsJ82lgpHe0uboN9bKsiNXjBYNl733gQcol3cwnY7s/yucz4OBLbA70rZBAJ5uCKa/BUBXapTtVU3GW+HULeMnCixrc=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR1001MB2224
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10253 signatures=673431
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 suspectscore=0
- mlxlogscore=999 mlxscore=0 adultscore=0 malwarescore=0 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 bulkscore=0
+ phishscore=0 malwarescore=0 mlxlogscore=999 adultscore=0 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
  definitions=main-2202090099
-X-Proofpoint-GUID: jppKiMAyje3sAXVmmfe_tB6uH7t3hFCE
-X-Proofpoint-ORIG-GUID: jppKiMAyje3sAXVmmfe_tB6uH7t3hFCE
+X-Proofpoint-GUID: nDd4gSyEoPgVqVQy1CZnuCyQ1c1ORy8o
+X-Proofpoint-ORIG-GUID: nDd4gSyEoPgVqVQy1CZnuCyQ1c1ORy8o
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -152,177 +152,243 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 > On Feb 8, 2022, at 9:25 AM, Bart Van Assche <bvanassche@acm.org> wrote:
 >=20
 > Set .cmd_size in the SCSI host template instead of using the SCSI pointer
+> from struct scsi_cmnd. This patch prepares for removal of the SCSI pointe=
+r
 > from struct scsi_cmnd.
-> This patch prepares for removal of the SCSI pointer from struct scsi_cmnd=
-.
 >=20
 > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
-> drivers/scsi/pcmcia/sym53c500_cs.c | 53 ++++++++++++++++++++----------
-> 1 file changed, 35 insertions(+), 18 deletions(-)
+> drivers/scsi/ppa.c | 81 ++++++++++++++++++++++++++++------------------
+> 1 file changed, 49 insertions(+), 32 deletions(-)
 >=20
-> diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym=
-53c500_cs.c
-> index fc93d2a57e1e..298df2180bc7 100644
-> --- a/drivers/scsi/pcmcia/sym53c500_cs.c
-> +++ b/drivers/scsi/pcmcia/sym53c500_cs.c
-> @@ -192,6 +192,17 @@ struct sym53c500_data {
-> 	int fast_pio;
-> };
+> diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
+> index 003043de23a5..ac948768eba4 100644
+> --- a/drivers/scsi/ppa.c
+> +++ b/drivers/scsi/ppa.c
+> @@ -45,6 +45,17 @@ typedef struct {
 >=20
-> +struct sym53c500_cmd_priv {
+> #include  "ppa.h"
+>=20
+> +struct ppa_cmd_priv {
 > +	struct scsi_pointer scsi_pointer;
 > +};
 > +
-> +static struct scsi_pointer *sym53c500_scsi_pointer(struct scsi_cmnd *cmd=
-)
+> +static struct scsi_pointer *ppa_scsi_pointer(struct scsi_cmnd *cmd)
 > +{
-> +	struct sym53c500_cmd_priv *scmd =3D scsi_cmd_priv(cmd);
+> +	struct ppa_cmd_priv *pcmd =3D scsi_cmd_priv(cmd);
 > +
-> +	return &scmd->scsi_pointer;
+> +	return &pcmd->scsi_pointer;
 > +}
-> +
-> enum Phase {
->     idle,
->     data_out,
-> @@ -351,6 +362,7 @@ SYM53C500_intr(int irq, void *dev_id)
-> 	struct sym53c500_data *data =3D
-> 	    (struct sym53c500_data *)dev->hostdata;
-> 	struct scsi_cmnd *curSC =3D data->current_SC;
-> +	struct scsi_pointer *scsi_pointer =3D sym53c500_scsi_pointer(curSC);
-> 	int fast_pio =3D data->fast_pio;
->=20
-> 	spin_lock_irqsave(dev->host_lock, flags);
-> @@ -397,11 +409,12 @@ SYM53C500_intr(int irq, void *dev_id)
->=20
-> 	if (int_reg & 0x20) {		/* Disconnect */
-> 		DEB(printk("SYM53C500: disconnect intr received\n"));
-> -		if (curSC->SCp.phase !=3D message_in) {	/* Unexpected disconnect */
-> +		if (scsi_pointer->phase !=3D message_in) {	/* Unexpected disconnect */
-> 			curSC->result =3D DID_NO_CONNECT << 16;
-> 		} else {	/* Command complete, return status and message */
-> -			curSC->result =3D (curSC->SCp.Status & 0xff)
-> -			    | ((curSC->SCp.Message & 0xff) << 8) | (DID_OK << 16);
-> +			curSC->result =3D (scsi_pointer->Status & 0xff) |
-> +				((scsi_pointer->Message & 0xff) << 8) |
-> +				(DID_OK << 16);
-> 		}
-> 		goto idle_out;
-> 	}
-> @@ -412,7 +425,7 @@ SYM53C500_intr(int irq, void *dev_id)
-> 			struct scatterlist *sg;
-> 			int i;
->=20
-> -			curSC->SCp.phase =3D data_out;
-> +			scsi_pointer->phase =3D data_out;
-> 			VDEB(printk("SYM53C500: Data-Out phase\n"));
-> 			outb(FLUSH_FIFO, port_base + CMD_REG);
-> 			LOAD_DMA_COUNT(port_base, scsi_bufflen(curSC));	/* Max transfer size *=
-/
-> @@ -431,7 +444,7 @@ SYM53C500_intr(int irq, void *dev_id)
-> 			struct scatterlist *sg;
-> 			int i;
->=20
-> -			curSC->SCp.phase =3D data_in;
-> +			scsi_pointer->phase =3D data_in;
-> 			VDEB(printk("SYM53C500: Data-In phase\n"));
-> 			outb(FLUSH_FIFO, port_base + CMD_REG);
-> 			LOAD_DMA_COUNT(port_base, scsi_bufflen(curSC));	/* Max transfer size *=
-/
-> @@ -446,12 +459,12 @@ SYM53C500_intr(int irq, void *dev_id)
-> 		break;
->=20
-> 	case 0x02:		/* COMMAND */
-> -		curSC->SCp.phase =3D command_ph;
-> +		scsi_pointer->phase =3D command_ph;
-> 		printk("SYM53C500: Warning: Unknown interrupt occurred in command phase=
-!\n");
-> 		break;
->=20
-> 	case 0x03:		/* STATUS */
-> -		curSC->SCp.phase =3D status_ph;
-> +		scsi_pointer->phase =3D status_ph;
-> 		VDEB(printk("SYM53C500: Status phase\n"));
-> 		outb(FLUSH_FIFO, port_base + CMD_REG);
-> 		outb(INIT_CMD_COMPLETE, port_base + CMD_REG);
-> @@ -464,22 +477,24 @@ SYM53C500_intr(int irq, void *dev_id)
->=20
-> 	case 0x06:		/* MESSAGE-OUT */
-> 		DEB(printk("SYM53C500: Message-Out phase\n"));
-> -		curSC->SCp.phase =3D message_out;
-> +		scsi_pointer->phase =3D message_out;
-> 		outb(SET_ATN, port_base + CMD_REG);	/* Reject the message */
-> 		outb(MSG_ACCEPT, port_base + CMD_REG);
-> 		break;
->=20
-> 	case 0x07:		/* MESSAGE-IN */
-> 		VDEB(printk("SYM53C500: Message-In phase\n"));
-> -		curSC->SCp.phase =3D message_in;
-> +		scsi_pointer->phase =3D message_in;
->=20
-> -		curSC->SCp.Status =3D inb(port_base + SCSI_FIFO);
-> -		curSC->SCp.Message =3D inb(port_base + SCSI_FIFO);
-> +		scsi_pointer->Status =3D inb(port_base + SCSI_FIFO);
-> +		scsi_pointer->Message =3D inb(port_base + SCSI_FIFO);
->=20
-> 		VDEB(printk("SCSI FIFO size=3D%d\n", inb(port_base + FIFO_FLAGS) & 0x1f=
-));
-> -		DEB(printk("Status =3D %02x  Message =3D %02x\n", curSC->SCp.Status, c=
-urSC->SCp.Message));
-> +		DEB(printk("Status =3D %02x  Message =3D %02x\n",
-> +			   scsi_pointer->Status, scsi_pointer->Message));
->=20
-> -		if (curSC->SCp.Message =3D=3D SAVE_POINTERS || curSC->SCp.Message =3D=
-=3D DISCONNECT) {
-> +		if (scsi_pointer->Message =3D=3D SAVE_POINTERS ||
-> +		    scsi_pointer->Message =3D=3D DISCONNECT) {
-> 			outb(SET_ATN, port_base + CMD_REG);	/* Reject message */
-> 			DEB(printk("Discarding SAVE_POINTERS message\n"));
-> 		}
-> @@ -491,7 +506,7 @@ SYM53C500_intr(int irq, void *dev_id)
-> 	return IRQ_HANDLED;
->=20
-> idle_out:
-> -	curSC->SCp.phase =3D idle;
-> +	scsi_pointer->phase =3D idle;
-> 	scsi_done(curSC);
-> 	goto out;
-> }
-> @@ -539,6 +554,7 @@ SYM53C500_info(struct Scsi_Host *SChost)
->=20
-> static int SYM53C500_queue_lck(struct scsi_cmnd *SCpnt)
+> +=09
+> static inline ppa_struct *ppa_dev(struct Scsi_Host *host)
 > {
-> +	struct scsi_pointer *scsi_pointer =3D sym53c500_scsi_pointer(SCpnt);
-> 	int i;
-> 	int port_base =3D SCpnt->device->host->io_port;
-> 	struct sym53c500_data *data =3D
-> @@ -555,9 +571,9 @@ static int SYM53C500_queue_lck(struct scsi_cmnd *SCpn=
-t)
-> 	VDEB(printk("\n"));
+> 	return *(ppa_struct **)&host->hostdata;
+> @@ -56,7 +67,7 @@ static void got_it(ppa_struct *dev)
+> {
+> 	dev->base =3D dev->dev->port->base;
+> 	if (dev->cur_cmd)
+> -		dev->cur_cmd->SCp.phase =3D 1;
+> +		ppa_scsi_pointer(dev->cur_cmd)->phase =3D 1;
+> 	else
+> 		wake_up(dev->waiting);
+> }
+> @@ -511,13 +522,14 @@ static inline int ppa_send_command(struct scsi_cmnd=
+ *cmd)
+>  * The driver appears to remain stable if we speed up the parallel port
+>  * i/o in this function, but not elsewhere.
+>  */
+> -static int ppa_completion(struct scsi_cmnd *cmd)
+> +static int ppa_completion(struct scsi_cmnd *const cmd)
+> {
+> 	/* Return codes:
+> 	 * -1     Error
+> 	 *  0     Told to schedule
+> 	 *  1     Finished data transfer
+> 	 */
+> +	struct scsi_pointer *scsi_pointer =3D ppa_scsi_pointer(cmd);
+> 	ppa_struct *dev =3D ppa_dev(cmd->device->host);
+> 	unsigned short ppb =3D dev->base;
+> 	unsigned long start_jiffies =3D jiffies;
+> @@ -543,7 +555,7 @@ static int ppa_completion(struct scsi_cmnd *cmd)
+> 		if (time_after(jiffies, start_jiffies + 1))
+> 			return 0;
 >=20
-> 	data->current_SC =3D SCpnt;
-> -	data->current_SC->SCp.phase =3D command_ph;
-> -	data->current_SC->SCp.Status =3D 0;
-> -	data->current_SC->SCp.Message =3D 0;
-> +	scsi_pointer->phase =3D command_ph;
-> +	scsi_pointer->Status =3D 0;
-> +	scsi_pointer->Message =3D 0;
+> -		if ((cmd->SCp.this_residual <=3D 0)) {
+> +		if (scsi_pointer->this_residual <=3D 0) {
+> 			ppa_fail(dev, DID_ERROR);
+> 			return -1;	/* ERROR_RETURN */
+> 		}
+> @@ -572,28 +584,30 @@ static int ppa_completion(struct scsi_cmnd *cmd)
+> 		}
 >=20
-> 	/* We are locked here already by the mid layer */
-> 	REG0(port_base);
-> @@ -671,7 +687,8 @@ static struct scsi_host_template sym53c500_driver_tem=
-plate =3D {
->      .can_queue			=3D 1,
->      .this_id			=3D 7,
->      .sg_tablesize		=3D 32,
-> -     .shost_groups		=3D SYM53C500_shost_groups
-> +     .shost_groups		=3D SYM53C500_shost_groups,
-> +     .cmd_size			=3D sizeof(struct sym53c500_cmd_priv),
+> 		/* determine if we should use burst I/O */
+> -		fast =3D (bulk && (cmd->SCp.this_residual >=3D PPA_BURST_SIZE))
+> -		    ? PPA_BURST_SIZE : 1;
+> +		fast =3D bulk && scsi_pointer->this_residual >=3D PPA_BURST_SIZE ?
+> +			PPA_BURST_SIZE : 1;
+>=20
+> 		if (r =3D=3D (unsigned char) 0xc0)
+> -			status =3D ppa_out(dev, cmd->SCp.ptr, fast);
+> +			status =3D ppa_out(dev, scsi_pointer->ptr, fast);
+> 		else
+> -			status =3D ppa_in(dev, cmd->SCp.ptr, fast);
+> +			status =3D ppa_in(dev, scsi_pointer->ptr, fast);
+>=20
+> -		cmd->SCp.ptr +=3D fast;
+> -		cmd->SCp.this_residual -=3D fast;
+> +		scsi_pointer->ptr +=3D fast;
+> +		scsi_pointer->this_residual -=3D fast;
+>=20
+> 		if (!status) {
+> 			ppa_fail(dev, DID_BUS_BUSY);
+> 			return -1;	/* ERROR_RETURN */
+> 		}
+> -		if (cmd->SCp.buffer && !cmd->SCp.this_residual) {
+> +		if (scsi_pointer->buffer && !scsi_pointer->this_residual) {
+> 			/* if scatter/gather, advance to the next segment */
+> -			if (cmd->SCp.buffers_residual--) {
+> -				cmd->SCp.buffer =3D sg_next(cmd->SCp.buffer);
+> -				cmd->SCp.this_residual =3D
+> -				    cmd->SCp.buffer->length;
+> -				cmd->SCp.ptr =3D sg_virt(cmd->SCp.buffer);
+> +			if (scsi_pointer->buffers_residual--) {
+> +				scsi_pointer->buffer =3D
+> +					sg_next(scsi_pointer->buffer);
+> +				scsi_pointer->this_residual =3D
+> +				    scsi_pointer->buffer->length;
+> +				scsi_pointer->ptr =3D
+> +					sg_virt(scsi_pointer->buffer);
+> 			}
+> 		}
+> 		/* Now check to see if the drive is ready to comunicate */
+> @@ -658,7 +672,7 @@ static void ppa_interrupt(struct work_struct *work)
+> 	}
+> #endif
+>=20
+> -	if (cmd->SCp.phase > 1)
+> +	if (ppa_scsi_pointer(cmd)->phase > 1)
+> 		ppa_disconnect(dev);
+>=20
+> 	ppa_pb_dismiss(dev);
+> @@ -670,6 +684,7 @@ static void ppa_interrupt(struct work_struct *work)
+>=20
+> static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
+> {
+> +	struct scsi_pointer *scsi_pointer =3D ppa_scsi_pointer(cmd);
+> 	unsigned short ppb =3D dev->base;
+> 	unsigned char l =3D 0, h =3D 0;
+> 	int retv;
+> @@ -680,7 +695,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cm=
+nd *cmd)
+> 	if (dev->failed)
+> 		return 0;
+>=20
+> -	switch (cmd->SCp.phase) {
+> +	switch (scsi_pointer->phase) {
+> 	case 0:		/* Phase 0 - Waiting for parport */
+> 		if (time_after(jiffies, dev->jstart + HZ)) {
+> 			/*
+> @@ -715,7 +730,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cm=
+nd *cmd)
+> 					return 1;	/* Try again in a jiffy */
+> 				}
+> 			}
+> -			cmd->SCp.phase++;
+> +			scsi_pointer->phase++;
+> 		}
+> 		fallthrough;
+>=20
+> @@ -724,7 +739,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cm=
+nd *cmd)
+> 			ppa_fail(dev, DID_NO_CONNECT);
+> 			return 0;
+> 		}
+> -		cmd->SCp.phase++;
+> +		scsi_pointer->phase++;
+> 		fallthrough;
+>=20
+> 	case 3:		/* Phase 3 - Ready to accept a command */
+> @@ -734,21 +749,22 @@ static int ppa_engine(ppa_struct *dev, struct scsi_=
+cmnd *cmd)
+>=20
+> 		if (!ppa_send_command(cmd))
+> 			return 0;
+> -		cmd->SCp.phase++;
+> +		scsi_pointer->phase++;
+> 		fallthrough;
+>=20
+> 	case 4:		/* Phase 4 - Setup scatter/gather buffers */
+> 		if (scsi_bufflen(cmd)) {
+> -			cmd->SCp.buffer =3D scsi_sglist(cmd);
+> -			cmd->SCp.this_residual =3D cmd->SCp.buffer->length;
+> -			cmd->SCp.ptr =3D sg_virt(cmd->SCp.buffer);
+> +			scsi_pointer->buffer =3D scsi_sglist(cmd);
+> +			scsi_pointer->this_residual =3D
+> +				scsi_pointer->buffer->length;
+> +			scsi_pointer->ptr =3D sg_virt(scsi_pointer->buffer);
+> 		} else {
+> -			cmd->SCp.buffer =3D NULL;
+> -			cmd->SCp.this_residual =3D 0;
+> -			cmd->SCp.ptr =3D NULL;
+> +			scsi_pointer->buffer =3D NULL;
+> +			scsi_pointer->this_residual =3D 0;
+> +			scsi_pointer->ptr =3D NULL;
+> 		}
+> -		cmd->SCp.buffers_residual =3D scsi_sg_count(cmd) - 1;
+> -		cmd->SCp.phase++;
+> +		scsi_pointer->buffers_residual =3D scsi_sg_count(cmd) - 1;
+> +		scsi_pointer->phase++;
+> 		fallthrough;
+>=20
+> 	case 5:		/* Phase 5 - Data transfer stage */
+> @@ -761,7 +777,7 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cm=
+nd *cmd)
+> 			return 0;
+> 		if (retv =3D=3D 0)
+> 			return 1;
+> -		cmd->SCp.phase++;
+> +		scsi_pointer->phase++;
+> 		fallthrough;
+>=20
+> 	case 6:		/* Phase 6 - Read status/message */
+> @@ -798,7 +814,7 @@ static int ppa_queuecommand_lck(struct scsi_cmnd *cmd=
+)
+> 	dev->jstart =3D jiffies;
+> 	dev->cur_cmd =3D cmd;
+> 	cmd->result =3D DID_ERROR << 16;	/* default return code */
+> -	cmd->SCp.phase =3D 0;	/* bus free */
+> +	ppa_scsi_pointer(cmd)->phase =3D 0;	/* bus free */
+>=20
+> 	schedule_delayed_work(&dev->ppa_tq, 0);
+>=20
+> @@ -839,7 +855,7 @@ static int ppa_abort(struct scsi_cmnd *cmd)
+> 	 * have tied the SCSI_MESSAGE line high in the interface
+> 	 */
+>=20
+> -	switch (cmd->SCp.phase) {
+> +	switch (ppa_scsi_pointer(cmd)->phase) {
+> 	case 0:		/* Do not have access to parport */
+> 	case 1:		/* Have not connected to interface */
+> 		dev->cur_cmd =3D NULL;	/* Forget the problem */
+> @@ -861,7 +877,7 @@ static int ppa_reset(struct scsi_cmnd *cmd)
+> {
+> 	ppa_struct *dev =3D ppa_dev(cmd->device->host);
+>=20
+> -	if (cmd->SCp.phase)
+> +	if (ppa_scsi_pointer(cmd)->phase)
+> 		ppa_disconnect(dev);
+> 	dev->cur_cmd =3D NULL;	/* Forget the problem */
+>=20
+> @@ -976,6 +992,7 @@ static struct scsi_host_template ppa_template =3D {
+> 	.sg_tablesize		=3D SG_ALL,
+> 	.can_queue		=3D 1,
+> 	.slave_alloc		=3D ppa_adjust_queue,
+> +	.cmd_size		=3D sizeof(struct ppa_cmd_priv),
 > };
 >=20
-> static int SYM53C500_config_check(struct pcmcia_device *p_dev, void *priv=
-_data)
+> /************************************************************************=
+***
 
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
