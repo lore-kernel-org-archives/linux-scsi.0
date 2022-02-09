@@ -2,102 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A62D0C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 08:24:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7CDCC43219
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 08:28:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236276AbiBIIYY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Feb 2022 03:24:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33376 "EHLO
+        id S241273AbiBII2m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Feb 2022 03:28:42 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:35990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235192AbiBIIYX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2022 03:24:23 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5995C0613CA
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Feb 2022 00:24:27 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 2D1FB1F383;
-        Wed,  9 Feb 2022 08:24:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1644395066; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=PoPW09pN018WaLb48sZnle+ZVnwC50dmeq/nmZnjtzM=;
-        b=zowFGUDt/nSFjgX/fYr0SPnh6dBx6alNEfPkmB77LXsNo9bGMv6CHGZjEF0jTmkHM/QUGP
-        p3qSJBsddMtYQSnl1Cy+aua9p2Yl5GGyPebaYkujysxX+wRaFDZD7R+27UHRDg52C/57rX
-        LpesPAeS8TvX3xnMXbWRKXJwkX/X+oM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1644395066;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=PoPW09pN018WaLb48sZnle+ZVnwC50dmeq/nmZnjtzM=;
-        b=hFF+0T1WZIh8QE9HxiVW2Jkadp0OYagToszMArqUmF8fqruJT1srHWZcA1psYPkBkiPb2I
-        +rZGNYpnGVQGeDDg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 5B70F139D1;
-        Wed,  9 Feb 2022 08:24:25 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id MUC3FTl6A2LBIgAAMHmgww
-        (envelope-from <hare@suse.de>); Wed, 09 Feb 2022 08:24:25 +0000
-Message-ID: <6411a7a6-4d2f-8074-f995-399ef8ec449e@suse.de>
-Date:   Wed, 9 Feb 2022 09:24:23 +0100
+        with ESMTP id S238708AbiBII2j (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2022 03:28:39 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D17BC05CBB4;
+        Wed,  9 Feb 2022 00:28:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=OEk2XaHb/rIimZjLxXur2nVVRIHACoTITsr2juHinrU=; b=IWwc9YcE+T5I1KZX+iZQFBfo8s
+        KqCPMQVK2jizPUXyJzEj5gFfV2vJjVKBTqkaYzxbZ0FmcN8NyTvegdeaeG0kQG5Cmw3jDEcu+iAAN
+        Mtdb5PFwL/3TYzxq9Xncw6uNog4v729g/7S19ffEiK6ua785n8bH1lwlEOMw+UznkTm//CaQ3vuNl
+        htQXLe8Vmsehp6tMVwAYl6EdfWOlpivdIiP3Un+S3aIHQdK5FAHEKGMWZJtxqtQ/7M6XrXeY3ebk9
+        U5DfMStSECKMOWMIwFNYgq23XBgRG0tXdj6m645JXOssrtce9mvxDHVB/pjjweJUDr18JDFzyMhzu
+        hi8lCXpA==;
+Received: from [2001:4bb8:188:3efc:ea2:7599:7eeb:4b5a] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nHiL4-00Gc81-RG; Wed, 09 Feb 2022 08:28:35 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     axboe@kernel.dk, martin.petersen@oracle.com,
+        philipp.reisner@linbit.com, lars.ellenberg@linbit.com,
+        target-devel@vger.kernel.org, haris.iqbal@ionos.com,
+        jinpu.wang@ionos.com, manoj@linux.ibm.com, mrochs@linux.ibm.com,
+        ukrishn@linux.ibm.com
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        drbd-dev@lists.linbit.com, dm-devel@redhat.com
+Subject: [PATCH 1/7] cxlflash: query write_zeroes limit for zeroing
+Date:   Wed,  9 Feb 2022 09:28:22 +0100
+Message-Id: <20220209082828.2629273-2-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220209082828.2629273-1-hch@lst.de>
+References: <20220209082828.2629273-1-hch@lst.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH v2 37/44] qla2xxx: Stop using the SCSI pointer
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20220208172514.3481-1-bvanassche@acm.org>
- <20220208172514.3481-38-bvanassche@acm.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220208172514.3481-38-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/8/22 18:25, Bart Van Assche wrote:
-> Instead of using the SCp.ptr field to track whether or not a command is
-> in flight, use the sp->type field to track this information. sp->type
-> must be set for proper operation of the qla2xxx driver. See e.g. the
-> switch (sp->type) statement in qla2x00_ct_entry().
-> 
-> This patch prepares for removal of the SCSI pointer from struct scsi_cmnd.
-> 
-> Cc: Nilesh Javali <njavali@marvell.com>
-> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
-> Cc: Daniel Wagner <dwagner@suse.de>
-> Cc: Ewan D. Milne <emilne@redhat.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/qla2xxx/qla_def.h |  2 --
->   drivers/scsi/qla2xxx/qla_os.c  | 13 +++++--------
->   2 files changed, 5 insertions(+), 10 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+The write_same and write_zeroes limits for SCSI are effectively the
+same, so the current code works just fine.  But we plan to remove
+REQ_OP_WRITE_SAME support, so switch to quering the write zeroes
+limit for a zeroing WRITE SAME operation.
 
-Cheers,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/cxlflash/vlun.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Hannes
+diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
+index 01917b28cdb65..5c74dc7c22889 100644
+--- a/drivers/scsi/cxlflash/vlun.c
++++ b/drivers/scsi/cxlflash/vlun.c
+@@ -430,8 +430,8 @@ static int write_same16(struct scsi_device *sdev,
+ 	struct device *dev = &cfg->dev->dev;
+ 	const u32 s = ilog2(sdev->sector_size) - 9;
+ 	const u32 to = sdev->request_queue->rq_timeout;
+-	const u32 ws_limit = blk_queue_get_max_sectors(sdev->request_queue,
+-						       REQ_OP_WRITE_SAME) >> s;
++	const u32 ws_limit =
++		sdev->request_queue->limits.max_write_zeroes_sectors >> s;
+ 
+ 	cmd_buf = kzalloc(CMD_BUFSIZE, GFP_KERNEL);
+ 	scsi_cmd = kzalloc(MAX_COMMAND_SIZE, GFP_KERNEL);
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.30.2
+
