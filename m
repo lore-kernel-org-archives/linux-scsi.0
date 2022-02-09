@@ -2,86 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B83C4C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 03:13:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8097C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 04:07:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245314AbiBIDNK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Feb 2022 22:13:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38372 "EHLO
+        id S1345370AbiBIEHq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Feb 2022 23:07:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245442AbiBIDMv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 22:12:51 -0500
-Received: from relay3.hostedemail.com (relay3.hostedemail.com [64.99.140.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32EADC0613CC
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 19:12:48 -0800 (PST)
-Received: from omf19.hostedemail.com (a10.router.float.18 [10.200.18.1])
-        by unirelay12.hostedemail.com (Postfix) with ESMTP id 900DA120CE6;
-        Wed,  9 Feb 2022 03:12:46 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf19.hostedemail.com (Postfix) with ESMTPA id CB22120026;
-        Wed,  9 Feb 2022 03:12:44 +0000 (UTC)
-Message-ID: <f4b63b5a4177e38dd80f102f87bbec3ea77d9fe8.camel@perches.com>
-Subject: Re: [PATCH] scsi: csiostor: replace snprintf with sysfs_emit
-From:   Joe Perches <joe@perches.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        davidcomponentone@gmail.com, jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, bvanassche@acm.org,
-        yang.guang5@zte.com.cn, jiapeng.chong@linux.alibaba.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zeal Robot <zealci@zte.com.cn>
-Date:   Tue, 08 Feb 2022 19:12:43 -0800
-In-Reply-To: <148a5448-71f1-4f39-834b-eb9283de0bfb@opensource.wdc.com>
-References: <d711ec5a5f416204079155666d2de49d43070897.1644287527.git.yang.guang5@zte.com.cn>
-         <148a5448-71f1-4f39-834b-eb9283de0bfb@opensource.wdc.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.40.4-1ubuntu2 
+        with ESMTP id S233416AbiBID0s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 22:26:48 -0500
+Received: from out1.migadu.com (out1.migadu.com [IPv6:2001:41d0:2:863f::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E3C7C061576;
+        Tue,  8 Feb 2022 19:26:45 -0800 (PST)
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1644377202;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=VaP94/CLC7el0s9X3gi0V2qhxQn89+l7bMyYQ/NhPts=;
+        b=sh5lNebjUT9t3zkDF0H4ToUqhauNJkuTi3187kEifAla4nM2lkUWtloIdPxAYu0s0lKZXl
+        fOfD6NcYeMqwGDL3wfjjuTBOT/qy2WNV71Kj2AEuGIruakbaOBwzWIcKTMxEQsXuRoVYyL
+        RqCyyrGnxrI/r0PgmeOre7TxQAUgdIU=
+From:   Cai Huoqing <cai.huoqing@linux.dev>
+To:     cai.huoqing@linux.dev
+Cc:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: qla2xxx: Make use of the helper macro LIST_HEAD()
+Date:   Wed,  9 Feb 2022 11:26:14 +0800
+Message-Id: <20220209032614.38190-1-cai.huoqing@linux.dev>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Stat-Signature: 8gchddikwsrfirqmowadkhtbrfngo7uf
-X-Rspamd-Server: rspamout03
-X-Rspamd-Queue-Id: CB22120026
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX18+kwIE1/o3TfCnWkTjoHV4vtyCYF4Lx6w=
-X-HE-Tag: 1644376364-883225
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2022-02-09 at 11:36 +0900, Damien Le Moal wrote:
-> On 2/9/22 09:40, davidcomponentone@gmail.com wrote:
-> > From: Yang Guang <yang.guang5@zte.com.cn>
-> > 
-> > coccinelle report:
-> > ./drivers/scsi/csiostor/csio_scsi.c:1433:8-16:
-> > WARNING: use scnprintf or sprintf
-> > ./drivers/scsi/csiostor/csio_scsi.c:1369:9-17:
-> > WARNING: use scnprintf or sprintf
-> > ./drivers/scsi/csiostor/csio_scsi.c:1479:8-16:
-> > WARNING: use scnprintf or sprintf
-> > 
-> > Use sysfs_emit instead of scnprintf or sprintf makes more sense.
-[]
-> > diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-[]
-> > @@ -1366,9 +1366,9 @@ csio_show_hw_state(struct device *dev,
-> >  	struct csio_hw *hw = csio_lnode_to_hw(ln);
-> >  
-> >  	if (csio_is_hw_ready(hw))
-> > -		return snprintf(buf, PAGE_SIZE, "ready\n");
-> > +		return sysfs_emit(buf, "ready\n");
-> >  	else
-> > -		return snprintf(buf, PAGE_SIZE, "not ready\n");
-> > +		return sysfs_emit(buf, "not ready\n");
-> 
-> While at it, you could remove the useless "else" above.
+Replace "struct list_head head = LIST_HEAD_INIT(head)" with
+"LIST_HEAD(head)" to simplify the code.
 
-Or not.  It's fine as is.  It's just a style preference.
+Signed-off-by: Cai Huoqing <cai.huoqing@linux.dev>
+---
+ drivers/scsi/qla2xxx/qla_os.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Another style option would be to use a ?: like any of
-
-	return sysfs_emit(buf, "%sready\n", csio_is_hw_ready(hw) ? "" : "not ");
-or
-	return sysfs_emit(buf, "%s\n", csio_is_hw_ready(hw) ? "ready" : "not ready");
-or
-	return sysfs_emit(buf, csio_is_hw_ready(hw) ? "ready\n" : "not ready\n");
-
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index cff5e4a710d1..63e5858b4038 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -6376,7 +6376,7 @@ qla24xx_free_purex_item(struct purex_item *item)
+ 
+ void qla24xx_process_purex_list(struct purex_list *list)
+ {
+-	struct list_head head = LIST_HEAD_INIT(head);
++	LIST_HEAD(head);
+ 	struct purex_item *item, *next;
+ 	ulong flags;
+ 
+-- 
+2.25.1
 
