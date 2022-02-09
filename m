@@ -2,140 +2,159 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C22AC433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C98CC433F5
 	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 02:39:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234714AbiBICjN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Feb 2022 21:39:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44794 "EHLO
+        id S234679AbiBICjM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Feb 2022 21:39:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238304AbiBIArE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 19:47:04 -0500
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A1C0C061576;
-        Tue,  8 Feb 2022 16:47:04 -0800 (PST)
-Received: by mail-pj1-x1036.google.com with SMTP id a11-20020a17090a740b00b001b8b506c42fso3640519pjg.0;
-        Tue, 08 Feb 2022 16:47:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=lQBeYPP3NnoU0nAcxubYc/fkF2bkRNl0GYFbA4mk8ZU=;
-        b=OufpY1qBhQPYKc9mNTnWn90fki/xDDQ3xfTi7TPwURnoUuuoTGxiZ9aJIYK4EZcxjq
-         Dt+qVDsIPeZQWPtUgc7sxRPoq+OrNoKZM8/V/KSBR8wHBWKU9rTArB7LSFD3C9pxt1G9
-         mzghIJ/3sCXuCgtp6VQwq9bSrpJ+0Mo/ndSYdB3kR/bVeInr/FH2twCxPeAFeYcTotC4
-         uIhDYsblK86LtMU8LXm+RPbLg5HAsIjQuM97uu4XTZtWY4v8pHqytH+YJrm+aGk/eeuz
-         yfHytX8BIpriEDLMO2ots5x3HNgxvU/6rRYc9aYFzW6TAy9ZnbmUal/KO8ttkz5pBQKC
-         3w5g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=lQBeYPP3NnoU0nAcxubYc/fkF2bkRNl0GYFbA4mk8ZU=;
-        b=fw1+yHaF+ERoypJwTTCVmVE9u3vWi9agDvCB+iC1H7PpGht3ZGhn1BrR0BvfYdcl8w
-         L4jDQy7qDae88rhnsqrNykt24MUNYi5HG6ZL/823w8vll45VjVl5MrTw6JMSOF6m19nF
-         4cue5jqZLAv/JOer7yCQBu9LFdLuTNJ+ONSg5/AplstCzXQbrJoMDs83V333UEdr6BJ8
-         x+LYwwRKaJQ9EUPktg0vUv2ajtbUppqThi/CHINfra5UYAkltL+sxpsrzKZQwKZWjdwU
-         qf6wzGU/OeGqacRTS/+3vSBwtQv7/bmGdwM0O5T8pFF3m+CU+QhrIQuZFClqXHarQzmc
-         5V1A==
-X-Gm-Message-State: AOAM530ydzJKimwQVB8JFjZZSQDjy7fngalhMcIHJ8zIEYEIPQzyHi1b
-        UxPXzyoQQMLIxMV00AJ7w8Nduc77nRM=
-X-Google-Smtp-Source: ABdhPJx8Yk0nRxg3jcilweQYnJwaZcdG071f3ShvgtMH2GzIudEZAehF3vdI9wnlrXRRxLi1rxAliw==
-X-Received: by 2002:a17:90a:ad81:: with SMTP id s1mr652078pjq.194.1644367623817;
-        Tue, 08 Feb 2022 16:47:03 -0800 (PST)
-Received: from localhost.localdomain (192.243.120.166.16clouds.com. [192.243.120.166])
-        by smtp.gmail.com with ESMTPSA id s32sm10977754pfw.80.2022.02.08.16.47.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Feb 2022 16:47:03 -0800 (PST)
-From:   davidcomponentone@gmail.com
-To:     ketan.mukadam@broadcom.com
-Cc:     davidcomponentone@gmail.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Yang Guang <yang.guang5@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi: be2iscsi: replace snprintf with sysfs_emit
-Date:   Wed,  9 Feb 2022 08:46:51 +0800
-Message-Id: <610469dfb2cc5a4569c6b3c5105ea204b1a540b0.1644284406.git.yang.guang5@zte.com.cn>
-X-Mailer: git-send-email 2.30.2
+        with ESMTP id S236825AbiBICgM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 21:36:12 -0500
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99700C061353
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 18:36:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1644374176; x=1675910176;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=WZcfzHor8V18qVDf7WVRCiIw8N5Zefnh5RiocBfInSA=;
+  b=eQUrokLyRXoGRoVGlCERQRaBpYDp2r0c5X3Gqeg8m8HRDH0jWznImFiW
+   a6NNcZD8f0ICf1GD/igQ449MQo0PGlaLTyx9llSNc3itLVyexvQCwc4ZW
+   nMnMIJ2ikEncG3ZNfD25cEfurS2mIi4wJZtcNdewEywPq9oKYoSYHjiYo
+   1Ok/rC//8z7PzadIn1iThE7MqZCz+PF5ktwAlTZ1QjmUQfGYzMcrikCZx
+   o5mO8rx3tV6yBvBOH4oLyg6iOV5WjmGRCMz2samr+6OpuBoqgLecexqgF
+   mSfFbFb1Wcb4lLnL11UT3fxxOwO9rlKQGG4B4D/hEj9a+mIMkbfaNN9Fi
+   w==;
+X-IronPort-AV: E=Sophos;i="5.88,354,1635177600"; 
+   d="scan'208";a="193449439"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Feb 2022 10:36:13 +0800
+IronPort-SDR: bADNX1IAXCMAFXOiVV4jyHZFsn4GgIOM8r1hsZSx75XFFyKjSwHT7xGyH8VghzvEM5zUbUnGok
+ AsM+gG9xGCGyVwOhFaatKaqTqrHYxTsnYbc/3lyf+qgun/gpV8ja8OUqqLrBJKTRbqUvOE71+t
+ n26XVfuOcy1g184/j2DmPCJCeOfnZjaAzaV7RatI6qmyL7YIFxSF4YO1fihf9kS8BWOSlJL+zm
+ 8zzQQifsRRpL8yteEJqADxxtHvwM66lYCeeXmiip68ZvXK1P7r58+x4B3mDO3W+m3qsomEEuFC
+ qyhQgF++BUOcVb1+PGzxzTXQ
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2022 18:09:05 -0800
+IronPort-SDR: 5cDy7ehPJMHnZF4gAbAcMsl63TpvOl/SPqDTdfAwMZVdeai99eRaTgevTOF5COZEIlK21AOa8H
+ I+cbJeR21FS+X2Chn53tpZ7t4rQGKjjCouswfPWWYwbIvuIcuA4HwOLRRV3IeLBKK4Re8DXTY4
+ 9vX8LM2AKF6m5CvVM/l4Wn6JjjIymNwsVka0qXmb3WDNSwS/w7K5Oybfynac1HOqeaak7eT5CW
+ kstZPfbXdnrYzdSnAo4vug7gav9ieVPyYuCigQldOeRdUOM9lTw2Hck41s8RNAT2FuuPQBg1ZA
+ Rms=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2022 18:36:06 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JtkX55nvlz1SVp1
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 18:36:05 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1644374163; x=1646966164; bh=WZcfzHor8V18qVDf7WVRCiIw8N5Zefnh5Ri
+        ocBfInSA=; b=qvr1oje8ZXvRsv1k156dL4q9Uq7XkAT/sETGmc16wQ2ftwIRLzC
+        x7e4zoGaRqmIilNGhO/AsUVfd+OA0mCUmOWTlroU+KWVvYmpXPXfExWV3FFzY+df
+        WQ5BbHbjDxmE2yDbPrqGSl4ZZVNKGNo65NYCPiD/MMLm/81py377Hr8BlcnMZVmM
+        SyGodaI183XR26/aoR40alGvNpMtNdVSXthODxlOZkHlhfjNjM8kiRJQ507tHqta
+        b2nMVlcCcCPmPGPd/QNMaixh+0eXicZNtS+Q7+h1tsd2wCykwhQCy1HYWuWd9ruY
+        Dpp5vtIqltc/wA7ueubWlZ5dIkKPvz25ZlQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id SW2NbEcL-4JS for <linux-scsi@vger.kernel.org>;
+        Tue,  8 Feb 2022 18:36:03 -0800 (PST)
+Received: from [10.225.163.67] (unknown [10.225.163.67])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JtkX22GY2z1Rwrw;
+        Tue,  8 Feb 2022 18:36:02 -0800 (PST)
+Message-ID: <148a5448-71f1-4f39-834b-eb9283de0bfb@opensource.wdc.com>
+Date:   Wed, 9 Feb 2022 11:36:00 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH] scsi: csiostor: replace snprintf with sysfs_emit
+Content-Language: en-US
+To:     davidcomponentone@gmail.com, jejb@linux.ibm.com
+Cc:     martin.petersen@oracle.com, bvanassche@acm.org,
+        yang.guang5@zte.com.cn, jiapeng.chong@linux.alibaba.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Zeal Robot <zealci@zte.com.cn>
+References: <d711ec5a5f416204079155666d2de49d43070897.1644287527.git.yang.guang5@zte.com.cn>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <d711ec5a5f416204079155666d2de49d43070897.1644287527.git.yang.guang5@zte.com.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yang Guang <yang.guang5@zte.com.cn>
+On 2/9/22 09:40, davidcomponentone@gmail.com wrote:
+> From: Yang Guang <yang.guang5@zte.com.cn>
+> 
+> coccinelle report:
+> ./drivers/scsi/csiostor/csio_scsi.c:1433:8-16:
+> WARNING: use scnprintf or sprintf
+> ./drivers/scsi/csiostor/csio_scsi.c:1369:9-17:
+> WARNING: use scnprintf or sprintf
+> ./drivers/scsi/csiostor/csio_scsi.c:1479:8-16:
+> WARNING: use scnprintf or sprintf
+> 
+> Use sysfs_emit instead of scnprintf or sprintf makes more sense.
+> 
+> Reported-by: Zeal Robot <zealci@zte.com.cn>
+> Signed-off-by: Yang Guang <yang.guang5@zte.com.cn>
+> Signed-off-by: David Yang <davidcomponentone@gmail.com>
+> ---
+>  drivers/scsi/csiostor/csio_scsi.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+> index 55db02521221..f9b87ae2aa25 100644
+> --- a/drivers/scsi/csiostor/csio_scsi.c
+> +++ b/drivers/scsi/csiostor/csio_scsi.c
+> @@ -1366,9 +1366,9 @@ csio_show_hw_state(struct device *dev,
+>  	struct csio_hw *hw = csio_lnode_to_hw(ln);
+>  
+>  	if (csio_is_hw_ready(hw))
+> -		return snprintf(buf, PAGE_SIZE, "ready\n");
+> +		return sysfs_emit(buf, "ready\n");
+>  	else
+> -		return snprintf(buf, PAGE_SIZE, "not ready\n");
+> +		return sysfs_emit(buf, "not ready\n");
 
-coccinelle report:
-./drivers/scsi/be2iscsi/be_mgmt.c:1251:9-17:
-WARNING: use scnprintf or sprintf
-./drivers/scsi/be2iscsi/be_mgmt.c:1145:8-16:
-WARNING: use scnprintf or sprintf
-./drivers/scsi/be2iscsi/be_mgmt.c:1164:8-16:
-WARNING: use scnprintf or sprintf
-./drivers/scsi/be2iscsi/be_mgmt.c:1280:8-16:
-WARNING: use scnprintf or sprintf
+While at it, you could remove the useless "else" above.
 
-Use sysfs_emit instead of scnprintf or sprintf makes more sense.
+>  }
+>  
+>  /* Device reset */
+> @@ -1430,7 +1430,7 @@ csio_show_dbg_level(struct device *dev,
+>  {
+>  	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+>  
+> -	return snprintf(buf, PAGE_SIZE, "%x\n", ln->params.log_level);
+> +	return sysfs_emit(buf, "%x\n", ln->params.log_level);
+>  }
+>  
+>  /* Store debug level */
+> @@ -1476,7 +1476,7 @@ csio_show_num_reg_rnodes(struct device *dev,
+>  {
+>  	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+>  
+> -	return snprintf(buf, PAGE_SIZE, "%d\n", ln->num_reg_rnodes);
+> +	return sysfs_emit(buf, "%d\n", ln->num_reg_rnodes);
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Yang Guang <yang.guang5@zte.com.cn>
-Signed-off-by: David Yang <davidcomponentone@gmail.com>
----
- drivers/scsi/be2iscsi/be_mgmt.c | 16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
+num_reg_rnodes is uint32_t so the format should use %u.
 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 4e899ec1477d..8b9ace2b3fd3 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1142,7 +1142,7 @@ ssize_t
- beiscsi_drvr_ver_disp(struct device *dev, struct device_attribute *attr,
- 		       char *buf)
- {
--	return snprintf(buf, PAGE_SIZE, BE_NAME "\n");
-+	return sysfs_emit(buf, BE_NAME "\n");
- }
- 
- /**
-@@ -1161,7 +1161,7 @@ beiscsi_fw_ver_disp(struct device *dev, struct device_attribute *attr,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n", phba->fw_ver_str);
-+	return sysfs_emit(buf, "%s\n", phba->fw_ver_str);
- }
- 
- /**
-@@ -1248,16 +1248,14 @@ beiscsi_adap_family_disp(struct device *dev, struct device_attribute *attr,
- 	case BE_DEVICE_ID1:
- 	case OC_DEVICE_ID1:
- 	case OC_DEVICE_ID2:
--		return snprintf(buf, PAGE_SIZE,
--				"Obsolete/Unsupported BE2 Adapter Family\n");
-+		return sysfs_emit(buf, "Obsolete/Unsupported BE2 Adapter Family\n");
- 	case BE_DEVICE_ID2:
- 	case OC_DEVICE_ID3:
--		return snprintf(buf, PAGE_SIZE, "BE3-R Adapter Family\n");
-+		return sysfs_emit(buf, "BE3-R Adapter Family\n");
- 	case OC_SKH_ID1:
--		return snprintf(buf, PAGE_SIZE, "Skyhawk-R Adapter Family\n");
-+		return sysfs_emit(buf, "Skyhawk-R Adapter Family\n");
- 	default:
--		return snprintf(buf, PAGE_SIZE,
--				"Unknown Adapter Family: 0x%x\n", dev_id);
-+		return sysfs_emit(buf, "Unknown Adapter Family: 0x%x\n", dev_id);
- 	}
- }
- 
-@@ -1277,7 +1275,7 @@ beiscsi_phys_port_disp(struct device *dev, struct device_attribute *attr,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "Port Identifier : %u\n",
-+	return sysfs_emit(buf, "Port Identifier : %u\n",
- 			phba->fw_config.phys_port);
- }
- 
+>  }
+>  
+>  static DEVICE_ATTR(num_reg_rnodes, S_IRUGO, csio_show_num_reg_rnodes, NULL);
+
+
 -- 
-2.30.2
-
+Damien Le Moal
+Western Digital Research
