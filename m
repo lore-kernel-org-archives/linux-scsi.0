@@ -2,89 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9697C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 01:26:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5487C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 01:59:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232261AbiBJB0b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Feb 2022 20:26:31 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:52984 "EHLO
+        id S234327AbiBJB7H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Feb 2022 20:59:07 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:33842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232562AbiBJB00 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2022 20:26:26 -0500
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C14E220D6
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Feb 2022 17:26:20 -0800 (PST)
-Received: by mail-pj1-f51.google.com with SMTP id v4so3796045pjh.2
-        for <linux-scsi@vger.kernel.org>; Wed, 09 Feb 2022 17:26:20 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=aNiY/uRaasYGA+3zb+5HYwUD83p+N3/Wgr1xZkcY2cY=;
-        b=IXrx9xLbAgVyij9saBkQPvW0bwt1CRf/O0kGXD803XvETKw4gUzyM87Dzle387MwCh
-         WIGuJkRDcPMe+lXLTS1ioygRYdwrhkPcN8BGa0aDRnsqaZ8zOwM1SNjVZcjfQqsO+CVw
-         sPlctPRTdGxl3ddlQ1ZH5xzRZvtp4CBdUWGgmD6Ax4+syvU2flAA3CZ+8ITgz9I7m5mz
-         mNLcRNSG2XcRJYSbWRoax8ySLfOEUFUZ1yC9I6Jtvkl+mZGKeuSFWMi/o/R3Qa69AgzR
-         2XJ2zGQAHvvw7OhPM1ZvluQtFdq02q7EBR3CdFQVHhg4VLZpkj4GCyx/g5v9tMSeJ6so
-         JfYA==
-X-Gm-Message-State: AOAM531Rrw2Y+2y0tj774SCIsdHd9lhVwfnxCruYT4Sl+Ju9/bbYR2pG
-        CqCfBTkxGmKBZLsh3sgdkXI=
-X-Google-Smtp-Source: ABdhPJxz5FK0Vxx7aQxo29kYZpGPCK1rAVOgaEc1KsVmVWK8YR13R58Z7HncE9K/4eg+ju1EW4LBJw==
-X-Received: by 2002:a17:90b:350c:: with SMTP id ls12mr160937pjb.216.1644456379329;
-        Wed, 09 Feb 2022 17:26:19 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id t2sm20904467pfj.211.2022.02.09.17.26.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 09 Feb 2022 17:26:18 -0800 (PST)
-Message-ID: <8767869c-8fda-b748-1209-6382418d9bdb@acm.org>
-Date:   Wed, 9 Feb 2022 17:26:17 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH v2 22/44] iscsi: Stop using the SCSI pointer
-Content-Language: en-US
-To:     Chris Leech <cleech@redhat.com>, linux-scsi@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Lee Duncan <lduncan@suse.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Nilesh Javali <njavali@marvell.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
-        Karen Xie <kxie@chelsio.com>,
-        Ketan Mukadam <ketan.mukadam@broadcom.com>,
-        Max Gurtovoy <mgurtovoy@nvidia.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
+        with ESMTP id S234083AbiBJB6C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2022 20:58:02 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A80A2B6A8;
+        Wed,  9 Feb 2022 17:44:09 -0800 (PST)
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 219KbNAI017565;
+        Wed, 9 Feb 2022 23:53:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=TWrJe7V8b7P4SgEJomUdsQa1XDxtIcBfokIBJf6ebF8=;
+ b=VM+lN6lRz2vPrMVqeI9dIH5KgC4x5nxqXV+bKPScNx/ONJAFWkimM793DglI9Et7F0eo
+ vUJf6JGrTk5EvOCdNTK11TwoAdDa0rdUdXiJwpdWTH3Zuh0BDAb+yK/HXEhWJH3HAzF0
+ C2YmXgNzxdmU/ATEGxdAFC7Hkg1je3uCcKqScAAq9VOPgS3/2pG0oeM8mfrDveE5GXBA
+ jpF5WywAKvhHXw5mBUgRobUR8maZocY2pVl8NfQHlXOnComC/yGA7W2AWJ3pGVTPdNwe
+ RrEGnAConRTS2AkUNErsZuyEqV7VY63a2Ect/4l6uWFP6e1/ikjxii+S/m6N0MiOE4jY 9g== 
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 3e4kt24gx6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 09 Feb 2022 23:53:25 +0000
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 219NXeML016792;
+        Wed, 9 Feb 2022 23:53:24 GMT
+Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
+        by ppma04wdc.us.ibm.com with ESMTP id 3e2btb8q4c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 09 Feb 2022 23:53:24 +0000
+Received: from b03ledav005.gho.boulder.ibm.com (b03ledav005.gho.boulder.ibm.com [9.17.130.236])
+        by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 219NrNDP31326682
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 9 Feb 2022 23:53:23 GMT
+Received: from b03ledav005.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 76D85BE054;
+        Wed,  9 Feb 2022 23:53:23 +0000 (GMT)
+Received: from b03ledav005.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 198E9BE051;
+        Wed,  9 Feb 2022 23:53:22 +0000 (GMT)
+Received: from oc6857751186.ibm.com (unknown [9.160.68.97])
+        by b03ledav005.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Wed,  9 Feb 2022 23:53:21 +0000 (GMT)
+Subject: Re: [PATCH] scsi: ibmvscsis: Silence -Warray-bounds warning
+To:     Kees Cook <keescook@chromium.org>,
+        Michael Cyr <mikecyr@linux.ibm.com>
+Cc:     Stephen Rothwell <sfr@canb.auug.org.au>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        GR-QLogic-Storage-Upstream@marvell.com
-References: <20220208172514.3481-1-bvanassche@acm.org>
- <20220208172514.3481-23-bvanassche@acm.org>
- <e1b73af8-914c-8289-756a-94c316e5a2f7@redhat.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <e1b73af8-914c-8289-756a-94c316e5a2f7@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+References: <20220208061231.3429486-1-keescook@chromium.org>
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+Message-ID: <53b3e9c5-23c1-3825-8286-b4a65b69067b@linux.ibm.com>
+Date:   Wed, 9 Feb 2022 15:53:21 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+In-Reply-To: <20220208061231.3429486-1-keescook@chromium.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: FZYcKikhTuyVu6wCuSbwt--0m9GwQwIc
+X-Proofpoint-ORIG-GUID: FZYcKikhTuyVu6wCuSbwt--0m9GwQwIc
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.816,Hydra:6.0.425,FMLib:17.11.62.513
+ definitions=2022-02-09_12,2022-02-09_01,2021-12-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ mlxlogscore=999 malwarescore=0 lowpriorityscore=0 adultscore=0
+ impostorscore=0 mlxscore=0 clxscore=1011 phishscore=0 bulkscore=0
+ suspectscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2201110000 definitions=main-2202090123
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/9/22 15:37, Chris Leech wrote:
-> On 2/8/22 9:24 AM, Bart Van Assche wrote:
->> --- a/drivers/scsi/qedi/qedi_fw.c
->> +++ b/drivers/scsi/qedi/qedi_fw.c
->> @@ -603,7 +603,7 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
->>   		goto error;
->>   	}
->>   
->> -	if (!sc_cmd->SCp.ptr) {
->> +	if (!iscsi_cmd(sc_cmd)->task) {
->>   		QEDI_WARN(&qedi->dbg_ctx,
->>   			  "SCp.ptr is NULL, returned in another context.\n");
->>   		goto error;
->> diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
->> index 282ecb4e39bb..8196f89f404e 100644
+On 2/7/22 10:12 PM, Kees Cook wrote:
+> Instead of doing a cast to storage that is too small, add a union for
+> the high 64 bits. Silences the warnings under -Warray-bounds:
 > 
-> Minor nit, but this warning should probably be changed as well.
+> drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function 'ibmvscsis_send_messages':
+> drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:1934:44: error: array subscript 'struct viosrp_crq[0]' is partly outside array bounds of 'u64[1]' {aka 'long long unsigned int[1]'} [-Werror=array-bounds]
+>  1934 |                                         crq->valid = VALID_CMD_RESP_EL;
+>       |                                            ^~
+> drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:1875:13: note: while referencing 'msg_hi'
+>  1875 |         u64 msg_hi = 0;
+>       |             ^~~~~~
+> 
+> There is no change to the resulting binary instructions.
+> 
+> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Link: https://lore.kernel.org/lkml/20220125142430.75c3160e@canb.auug.org.au
+> Cc: Michael Cyr <mikecyr@linux.ibm.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: Tyrel Datwyler <tyreld@linux.ibm.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: target-devel@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c |  9 +++------
 
-Thanks, I will fix the reference to SCp.ptr.
-
-Bart.
+Reviewed-by: Tyrel Datwyler <tyreld@linux.ibm.com>
