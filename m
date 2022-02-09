@@ -2,85 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 092B7C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 00:24:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD928C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 00:41:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234048AbiBIAYg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Feb 2022 19:24:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35992 "EHLO
+        id S240429AbiBIAlJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Feb 2022 19:41:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229956AbiBIAYf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 19:24:35 -0500
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48695C06157B
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Feb 2022 16:24:35 -0800 (PST)
-Received: by mail-pj1-f41.google.com with SMTP id c5-20020a17090a1d0500b001b904a7046dso1972102pjd.1
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Feb 2022 16:24:35 -0800 (PST)
+        with ESMTP id S235164AbiBIAlJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2022 19:41:09 -0500
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68FC0C061576;
+        Tue,  8 Feb 2022 16:41:08 -0800 (PST)
+Received: by mail-pj1-x1034.google.com with SMTP id h14-20020a17090a130e00b001b88991a305so3523057pja.3;
+        Tue, 08 Feb 2022 16:41:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Pa8AxlM1CGVhFlxgAPHks9xGR/UVYqCAV8jsE4HR0c8=;
+        b=WmnBH4aP+hiS3tsbOUMuXayYC75e2ckQtGjf/TAL/S9mLMOX9xmoz1CAXo0FpXgAJ/
+         /0zKypXvDa4QhR9pF4nGbWjdTtf/fQFwy4JG9hZBDnRkKQ1s4DKqmVhJy7q8WYRasX4D
+         7o9Xi05deTz1Xk8rEPE02UuEqT4vimLaQy9U/FViYqEjBlttQDv81oNdn7S9LQ57NQ/l
+         plWT8ndFQFK8uhX9Oc48G7U5boZcJgOQJPPYkTtpjQj4ZFQ/ktshmmAJic8nrkoJZ4i4
+         L3OiDmEoQQ/5GcSQyxa5dyZZpdCnqdfDZlQw2Yyi8MnfL4/rTnBKdFt30zoXyCW1XRtH
+         A77A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=FldS+rOSo1WxI96jAdmEPgEMac4qXzh8efmnm+VNH/w=;
-        b=JtY/sLvmJIa/ovrmmWRZUQF13n38fEa9mH1zUzfAFNvklGUfU5CsR+ehhhBuz7Wgk6
-         Va6UekXjDxkt3QKhBw+JWXjwxdBjkbAd7vB8zwoKqexbf3pPKdaZbFa3Bmb/tz4RjLR2
-         CagkZP0E/d9TvkZbgdpt8xRLaJUkywx7G57CilmIsdXavp5YlTbvO4JwXhSv5vltpMXE
-         Q4Jk7mEBcvwiu+CPOiH8WJVJxXB4zYE4HYDG/QQcxgQC4teAGHQ+kLqEz+ji8J1QY3nq
-         z4UXYkJNxNiFXZXbz2eqeDamEzdi6yHmGeZx0Nhqz1rYHTIJiIm3O+a0DuQyUBoTaOJr
-         htMA==
-X-Gm-Message-State: AOAM533S/GQHq2DZ897RLlMlTT9TZlP1elfELvBEPdQwmet8I/VpMl67
-        X3BQ7+XqDFIKWdPRGVsCEIQ=
-X-Google-Smtp-Source: ABdhPJwh7dUl6LXz+6moE1tgKNP1Rg8hO116SXOog0lPoRYkQfodUiRv7cAD5fRxg4YpC22VLW1Img==
-X-Received: by 2002:a17:90a:5984:: with SMTP id l4mr577314pji.80.1644366274623;
-        Tue, 08 Feb 2022 16:24:34 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id a20sm11037238pfv.150.2022.02.08.16.24.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Feb 2022 16:24:33 -0800 (PST)
-Message-ID: <5d074125-7905-3d81-2b98-5aa152b803de@acm.org>
-Date:   Tue, 8 Feb 2022 16:24:32 -0800
+        bh=Pa8AxlM1CGVhFlxgAPHks9xGR/UVYqCAV8jsE4HR0c8=;
+        b=eZOKmnqZkNcAwpe0xT8oFrgw0nNC1NiRhm+n8zFsgFEdpEU5LrDxNE5sdGM/y/SgJf
+         Yw0kCmw04je7wQUL7bIAI+FSMg94x3u4cvqf67EU21lzqvhshxe5+zYF2pj/l0momPus
+         QKtFkjZvT6N5s8c1qWerq8ytTqB3IwoD2INha/1VRxUqe7EW4nKgr25ZUxnrOQaoUbZI
+         g8tcFxUc3s+o7qvcZXWHgb9Wzfd81jAiWZNaWfnQKAQazEtWEjWBTaNSyekYrZdMqHO1
+         ahSWuYJCeDvw/mp5QhuW81DIngdUXke3E9DUp2Vk66XYJpymB0KYtygP40ImB9ZSkjDx
+         7mKw==
+X-Gm-Message-State: AOAM531QEbMAltRsrNRGXKi3VnlHU6Laz71c/4tR8jNugJuk7G/tW5/k
+        qJrk38H6grOxXHEKPq9sJEc=
+X-Google-Smtp-Source: ABdhPJxJlqqg+xMiTZxH/hFHRvCC3tTmddvN/YF4aXV2IcnfmzlGEvnqlAzb8nncV/EaB/nXYFrFSg==
+X-Received: by 2002:a17:90a:1987:: with SMTP id 7mr470500pji.215.1644367267990;
+        Tue, 08 Feb 2022 16:41:07 -0800 (PST)
+Received: from localhost.localdomain (192.243.120.166.16clouds.com. [192.243.120.166])
+        by smtp.gmail.com with ESMTPSA id nu7sm4357184pjb.30.2022.02.08.16.41.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Feb 2022 16:41:07 -0800 (PST)
+From:   davidcomponentone@gmail.com
+To:     jejb@linux.ibm.com
+Cc:     davidcomponentone@gmail.com, martin.petersen@oracle.com,
+        bvanassche@acm.org, yang.guang5@zte.com.cn,
+        jiapeng.chong@linux.alibaba.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] scsi: csiostor: replace snprintf with sysfs_emit
+Date:   Wed,  9 Feb 2022 08:40:55 +0800
+Message-Id: <d711ec5a5f416204079155666d2de49d43070897.1644287527.git.yang.guang5@zte.com.cn>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH v2 44/44] scsi: core: Remove struct scsi_pointer from
- struct scsi_cmnd
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20220208172514.3481-1-bvanassche@acm.org>
- <20220208172514.3481-45-bvanassche@acm.org>
- <61a02adf-823d-a933-8efd-4e0aa85873d5@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <61a02adf-823d-a933-8efd-4e0aa85873d5@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/8/22 09:54, John Garry wrote:
-> On 08/02/2022 17:25, Bart Van Assche wrote:
->>       /*
->> -     * The following fields can be written to by the host specific code.
->> -     * Everything else should be left alone.
->> +     * The fields below can be modified by the SCSI LLD but the fields
->> +     * above not.
-> 
-> "but the fields above not" - this sounds a bit odd, maybe this is 
-> better: "but the fields above may not be modified"
+From: Yang Guang <yang.guang5@zte.com.cn>
 
-may not -> must not? See also https://en.wiktionary.org/wiki/must_not. 
-Anyway, I can make that change.
+coccinelle report:
+./drivers/scsi/csiostor/csio_scsi.c:1433:8-16:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/csiostor/csio_scsi.c:1369:9-17:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/csiostor/csio_scsi.c:1479:8-16:
+WARNING: use scnprintf or sprintf
 
-> And I don't think that we need to mention SCSI in that comment ..
+Use sysfs_emit instead of scnprintf or sprintf makes more sense.
 
-I can leave the word "SCSI" out.
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Yang Guang <yang.guang5@zte.com.cn>
+Signed-off-by: David Yang <davidcomponentone@gmail.com>
+---
+ drivers/scsi/csiostor/csio_scsi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Thanks,
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 55db02521221..f9b87ae2aa25 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -1366,9 +1366,9 @@ csio_show_hw_state(struct device *dev,
+ 	struct csio_hw *hw = csio_lnode_to_hw(ln);
+ 
+ 	if (csio_is_hw_ready(hw))
+-		return snprintf(buf, PAGE_SIZE, "ready\n");
++		return sysfs_emit(buf, "ready\n");
+ 	else
+-		return snprintf(buf, PAGE_SIZE, "not ready\n");
++		return sysfs_emit(buf, "not ready\n");
+ }
+ 
+ /* Device reset */
+@@ -1430,7 +1430,7 @@ csio_show_dbg_level(struct device *dev,
+ {
+ 	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+ 
+-	return snprintf(buf, PAGE_SIZE, "%x\n", ln->params.log_level);
++	return sysfs_emit(buf, "%x\n", ln->params.log_level);
+ }
+ 
+ /* Store debug level */
+@@ -1476,7 +1476,7 @@ csio_show_num_reg_rnodes(struct device *dev,
+ {
+ 	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", ln->num_reg_rnodes);
++	return sysfs_emit(buf, "%d\n", ln->num_reg_rnodes);
+ }
+ 
+ static DEVICE_ATTR(num_reg_rnodes, S_IRUGO, csio_show_num_reg_rnodes, NULL);
+-- 
+2.30.2
 
-Bart.
