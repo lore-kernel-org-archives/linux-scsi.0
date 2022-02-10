@@ -2,69 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51140C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Feb 2022 23:38:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64195C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 01:21:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230303AbiBIXh5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Feb 2022 18:37:57 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:50194 "EHLO
+        id S230510AbiBJBVg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Feb 2022 20:21:36 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:39782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230339AbiBIXhz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2022 18:37:55 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3780FE0559A2
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Feb 2022 15:37:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1644449877;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=kf3bIlJM2TDn95wMjKX0UZ0D8Tc7kogiS7TleanbveI=;
-        b=RlBOQkmsPA7V6C+1Od1U08RIMRD0VvTHS1lhPWauflJ68e158lbNJRF1d0K7e/xgGcnM2X
-        Wyx+mgtSNIoCiLfwrwNJPBnzk8nU+QhR3TFFE1Qa9DBVd1RWvel5hzJrxY4yNFSdAgtuwg
-        pNxTSPMjQNTkxaWKZ618se30/cl91fk=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-441-tlfjDqk6MM2UoH7VnGGyxA-1; Wed, 09 Feb 2022 18:37:56 -0500
-X-MC-Unique: tlfjDqk6MM2UoH7VnGGyxA-1
-Received: by mail-qv1-f72.google.com with SMTP id jn13-20020ad45ded000000b0042c3394cafaso1687906qvb.22
-        for <linux-scsi@vger.kernel.org>; Wed, 09 Feb 2022 15:37:56 -0800 (PST)
+        with ESMTP id S231332AbiBJBVe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2022 20:21:34 -0500
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1EED765C
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Feb 2022 17:21:35 -0800 (PST)
+Received: by mail-pf1-f172.google.com with SMTP id n23so7519349pfo.1
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Feb 2022 17:21:35 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=kf3bIlJM2TDn95wMjKX0UZ0D8Tc7kogiS7TleanbveI=;
-        b=xhilTjGUKaSa4tb25hvoXSnkq8gjHP3HJ6xrIo0ub8NQ4VljewdK2v1XIFTRlr8GGc
-         16A7dPn9lJO5rcFCxwlOl4nZd24A20KhNNXJVfHy41fvJuUvhQlrPnPLQxNPVkPCo0lf
-         3FZOb1NgQ0/jDvsyexhM7d101GyxN5O2zO6oa9+Ja0kxVueb57NU2BmHeYyuYyRIm0WK
-         B1GrP5wRzYjmOT9jQ+raVdCuVZDbiX4BSJ/X93TF0ti0nTMFiLmzW07ZuS77OMvOf8S+
-         jGE6GA9q3UdX0o+KBTwoxB3f4crmZzL2Hcq42lTFE0c/wNwXiF8cs3suse/4/HrqsHY8
-         qsTg==
-X-Gm-Message-State: AOAM531GbAN0eQ17l0bSslx2FQXVSnLAjejlvkLVb8oozlUNTQTaMrWy
-        1q27UtYHL/DoaIwbLddEI+dv52bAmk0Ow9NJ7JyEhnJL/QgFImF2HAwpmx8aRJm5k++FD24oST7
-        RdjAjHvSDtFOObH2BKg1oPA==
-X-Received: by 2002:a05:620a:f0f:: with SMTP id v15mr2538071qkl.86.1644449875754;
-        Wed, 09 Feb 2022 15:37:55 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxYDc2+ZHw0L5UuBzjnj0j1f0peqC4cQnZS284ucSAK30wz0HsSnroM3XBRreNBSILn/FnZfQ==
-X-Received: by 2002:a05:620a:f0f:: with SMTP id v15mr2538057qkl.86.1644449875567;
-        Wed, 09 Feb 2022 15:37:55 -0800 (PST)
-Received: from [192.168.0.14] (97-120-56-15.ptld.qwest.net. [97.120.56.15])
-        by smtp.gmail.com with ESMTPSA id s11sm10114460qtk.82.2022.02.09.15.37.52
+        bh=O90R81pbTbro5RQNp9EE0oXyhqoyHhftteShHIcnZCE=;
+        b=SeE8Ek6ABiX0sh34S6JHkfwAJFxme+dVPADSaYW1SNsLAb0jCKAQnUlWeP0DrzJx5N
+         GdQM4hm8XzPMqlf31LJz/x6TlYnX37zZz0GQvXsNGWZ95NIw/ueKeb3QoThE2M4dtAp6
+         9KrCIfXREG7ESIRGP/eGNm0owV8/ek8oLuegSYqQ+poYYYM2dNjgw8noAKQVPEm5yrNR
+         lovUfngoXSr1ebhywrYd/BNEqpvttdpNmHGt+gPYrXwbUChWoH4jHliRJa0k1VdyP3gq
+         zLgZ6YFDhoXxrqY5OuYhSzzFlTUiLMRmdmFsKHeB6Ua5C6GZoUtpN/+DzYiTHJIAIxkD
+         xKDw==
+X-Gm-Message-State: AOAM533IOq2noeZTeqs8lhOkJ4enddSJa38DyBUPc+Y9MbuzGviqHXMn
+        N50WrSg36Xow0/EuDJzavf4=
+X-Google-Smtp-Source: ABdhPJxeShc9krPi+/AJQoaafQNLuVRz7+vZXdgqYjt4p2Uyql+uthbKnJmFJRXMk3fLGjfriRR+qQ==
+X-Received: by 2002:a63:5545:: with SMTP id f5mr4143256pgm.157.1644456094252;
+        Wed, 09 Feb 2022 17:21:34 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id v9sm21398559pfu.60.2022.02.09.17.21.31
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 09 Feb 2022 15:37:54 -0800 (PST)
-Message-ID: <e1b73af8-914c-8289-756a-94c316e5a2f7@redhat.com>
-Date:   Wed, 9 Feb 2022 15:37:51 -0800
+        Wed, 09 Feb 2022 17:21:33 -0800 (PST)
+Message-ID: <f1c433ba-ace4-33ee-a2d5-ae17de658302@acm.org>
+Date:   Wed, 9 Feb 2022 17:21:31 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
+ Thunderbird/91.5.1
 Subject: Re: [PATCH v2 22/44] iscsi: Stop using the SCSI pointer
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Lee Duncan <lduncan@suse.com>,
+To:     Mike Christie <michael.christie@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Lee Duncan <lduncan@suse.com>,
+        Chris Leech <cleech@redhat.com>,
         Sagi Grimberg <sagi@grimberg.me>,
         Nilesh Javali <njavali@marvell.com>,
         Manish Rangankar <mrangankar@marvell.com>,
@@ -76,34 +59,45 @@ Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         GR-QLogic-Storage-Upstream@marvell.com
 References: <20220208172514.3481-1-bvanassche@acm.org>
  <20220208172514.3481-23-bvanassche@acm.org>
-From:   Chris Leech <cleech@redhat.com>
-In-Reply-To: <20220208172514.3481-23-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
+ <51f46665-694e-27c4-3fdc-59339d51d54e@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <51f46665-694e-27c4-3fdc-59339d51d54e@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/8/22 9:24 AM, Bart Van Assche wrote:
-> Instead of storing the iSCSI task pointer and the session age in the SCSI
-> pointer, use command-private variables. This patch prepares for removal of
-> the SCSI pointer from struct scsi_cmnd.
+On 2/9/22 13:24, Mike Christie wrote:
+> On 2/8/22 11:24 AM, Bart Van Assche wrote:
+ >> [ ... ]
+> qla4xxx doesn't use libiscsi for scsi_cmd based IO. It has it's own
+> queuecommand, completion path and error handlers, because it offloads
+> the entire scsi cmd operation.
+> 
+> It only uses libiscsi for iscsi passthrough IO which doesn't use the
+> scsi_cmnd.
+> 
+>>   static void qedi_conn_free_login_resources(struct qedi_ctx *qedi,
+>> diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+>> index 69a590546bf9..a122909169ee 100644
+>> --- a/drivers/scsi/qla4xxx/ql4_def.h
+>> +++ b/drivers/scsi/qla4xxx/ql4_def.h
+>> @@ -216,11 +216,18 @@
+>>   #define IDC_COMP_TOV			5
+>>   #define LINK_UP_COMP_TOV		30
+>>   
+>> -#define CMD_SP(Cmnd)			((Cmnd)->SCp.ptr)
+>> +struct qla4xxx_cmd_priv {
+>> +	struct iscsi_cmd iscsi_data; /* must be the first member */
+>> +	struct srb *srb;
+>> +};
+> 
+> So you don't need the iscsi_cmd above.
 
-> --- a/drivers/scsi/qedi/qedi_fw.c
-> +++ b/drivers/scsi/qedi/qedi_fw.c
-> @@ -603,7 +603,7 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
->  		goto error;
->  	}
->  
-> -	if (!sc_cmd->SCp.ptr) {
-> +	if (!iscsi_cmd(sc_cmd)->task) {
->  		QEDI_WARN(&qedi->dbg_ctx,
->  			  "SCp.ptr is NULL, returned in another context.\n");
->  		goto error;
-> diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-> index 282ecb4e39bb..8196f89f404e 100644
+Thanks for the feedback Mike. However, leaving out struct iscsi_cmd from 
+the above data structure is something I'm nervous about because if there 
+would be any code in the qla4xxx driver that calls a libiscsi function 
+that writes into struct iscsi_cmd then that would trigger data corruption.
 
-Minor nit, but this warning should probably be changed as well.
-
-- Chris Leech
-
+Bart.
