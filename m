@@ -2,72 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81281C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 09:48:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9489AC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 09:48:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238992AbiBJJsq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Feb 2022 04:48:46 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36274 "EHLO
+        id S238983AbiBJJss (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Feb 2022 04:48:48 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238777AbiBJJsg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 04:48:36 -0500
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C7681DD
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:38 -0800 (PST)
-Received: by mail-pf1-x42c.google.com with SMTP id d187so9247382pfa.10
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:38 -0800 (PST)
+        with ESMTP id S237797AbiBJJsk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 04:48:40 -0500
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CCB81D4
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:42 -0800 (PST)
+Received: by mail-pf1-x42a.google.com with SMTP id i6so7368524pfc.9
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=qlV21y0vM/YFJarEmfFOG4wH8qa/dBQdeOZa2DaVXm4=;
-        b=Md2kFUtpuCaVXnKay6TWqRPmUxOhJyhDMrwW/pqk5f8//uJoYBjf1O7NVpQvI3yVVx
-         On0cxr/vOvZwySuemF86pbPXdVZ/NHHMWQvRw9H4m/Z4TJN4+NvAejJzMf70WMvzkBqw
-         bubX+EJ4E/a3QuoLIEQWAXZ7Emx9W8eh7uWYk=
+        bh=72h5WKPlkHO5ooGhzFkIaNBrS5n0zDZmOPiouj12v/I=;
+        b=Nsud+txbKDubfQlH1ulTvEFb0/Cpz1q+liWobej9mF65N3jTotE52LrPKGHH6FYhm9
+         Ke0NHaC22xi5BosUUOUyHffiucETYEB31NNtBDl0SLkcIk6vrIBO8RUSAounscmiVNke
+         vVP2yc6jvlg8XH3S56Kize/gaUNVqdpAbH/90=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=qlV21y0vM/YFJarEmfFOG4wH8qa/dBQdeOZa2DaVXm4=;
-        b=C9zWz2N8VV+1UxQvdmmMBCnaaDIAKvj/bQfF0Hlwuk/3cGakqPJ/dUXCmtFNJde4el
-         GI3Z9zmEBevo8kE3uazWnaaikQzmWD7tfKIZXAv0aRVMSp5HiAzbGUXNvceKecxCbUJs
-         fDMgAHqKAV/2eOPpHKhEpRjLxGIj6FL8yPVNTdI92dRdk1xeToTi/e+yOjNbCA2359uE
-         FskQn2jMOQx1wppZka5zguvesPP7J0z8Gn8xMI+nNmPF0UcTDPViiIcfbmM6D4m4+N7I
-         VN+aWffIGUVDIoR+KRQOt2HHedJbnwidF2/C+srj/5lDPvIQ9XZ+uWoFvIa2ujFCIbBU
-         qp8A==
-X-Gm-Message-State: AOAM531C3qOzyX0aEmQHmjdQ4YjeZNmBnBG50nWmej+MMgtQjLvUOoIv
-        z6VgZmaKjrE/zn7Gn4PmqjwH0Y1db9ulBly2lUGWHNZhYCv7wj3nkB3J9jHjgZZCuP7PeZr8hj2
-        NMYN/MUPTe2gP2QXFudeXvyxdvCUJjusUvc9HzU4MrSBEfnFu4wX4+EOfaYVpQ2i9YhhUsWt8N/
-        6lg3N/xknK5SE=
-X-Google-Smtp-Source: ABdhPJxL5lnkNzAU+ROqeBGazzBySmdRMzRcJW0kBjT/nBTbSJW/+tWqRrTY9kuZ8boa9ypELx34rg==
-X-Received: by 2002:a63:d145:: with SMTP id c5mr5496435pgj.217.1644486517095;
-        Thu, 10 Feb 2022 01:48:37 -0800 (PST)
+        bh=72h5WKPlkHO5ooGhzFkIaNBrS5n0zDZmOPiouj12v/I=;
+        b=Sro2Zlq+PtjuM51j6S/Nh8noJLfklAP/uX5T5zdexLmtELSQO21abwOYTojOixxEqx
+         v9aS9Keqh+jkeNLOLFZrW4flJup19bnI4w5JTmOz2bARvx4I8qLkRHK7rIbfEdtoC5/A
+         hur3PioG2JvaMsjGwEPXWwBV7D1ZV2+VVZ2yEwhQNXBNkx8SyRaIi0Bp+FPezMhVcU+Y
+         SDIe+dFYfblTNjdoxp3tHhcoMnpamvs/tWmaBGlXq3H8zj1Xbe1zQks0AD8oCaBKo6aZ
+         teYpFR0R0PkmhhLr14mxvxdMPFrd2NSQOkDUICKNJeh1IiFklI3WKEFeKIKi1V1KpDVb
+         l+bg==
+X-Gm-Message-State: AOAM531pSKs5io/CUqdputr4OqnULNStQ0oZUnfEiRhWwc50Q+XXrvBM
+        /SOLW6/321xfPtbPHsQ/7RgJ/WlYT+BL+hGOrNAiodbFLXZjVpb/NlXJRiRb0ietTJ3DuB/nYF5
+        6mjXvAjS4iaTaFBrzGSDgc4yu+5v0Y3emGrdyGBM0m6Ojzk7XY2EVutYATnqyHKeCM2DcH/R2VE
+        THfwMxEhtVIc8=
+X-Google-Smtp-Source: ABdhPJyAmUzm8IzkY4zDwIyd+ijkaB5CYAGTH1hbXsWOz6AKQlNcaFNUeHm4TWTWv5g0xMjUGTcJfw==
+X-Received: by 2002:a63:d546:: with SMTP id v6mr5383758pgi.171.1644486521197;
+        Thu, 10 Feb 2022 01:48:41 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id o21sm23706698pfu.100.2022.02.10.01.48.35
+        by smtp.gmail.com with ESMTPSA id o21sm23706698pfu.100.2022.02.10.01.48.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Feb 2022 01:48:36 -0800 (PST)
+        Thu, 10 Feb 2022 01:48:40 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 2/9] mpi3mr: Fix print proper pending IO count
-Date:   Thu, 10 Feb 2022 15:28:10 +0530
-Message-Id: <20220210095817.22828-3-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 4/9] mpi3mr: Fix hibernation issue
+Date:   Thu, 10 Feb 2022 15:28:12 +0530
+Message-Id: <20220210095817.22828-5-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220210095817.22828-1-sreekanth.reddy@broadcom.com>
 References: <20220210095817.22828-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000b870b305d7a6da4a"
+        boundary="000000000000f567d105d7a6dae3"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000b870b305d7a6da4a
+--000000000000f567d105d7a6dae3
 Content-Transfer-Encoding: 8bit
 
-Print proper pending IO count after issuing
-target reset TM operation.
+Hibernation operation fails when it is issued for
+second time. This is getting failed as driver is
+trying to release IOC's PCI resources after
+setting it's power state to D3 state.
+
+So, Set the IOC's power state to D3 only after releasing
+the IOC's PCI resources.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
@@ -75,23 +80,24 @@ Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 90911ea..cfa7801 100644
+index 3eac18b..43e5cc6 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3452,7 +3452,7 @@ static int mpi3mr_eh_target_reset(struct scsi_cmnd *scmd)
- 	if (stgt_priv_data->pend_count) {
- 		sdev_printk(KERN_INFO, scmd->device,
- 		    "%s: target has %d pending commands, target reset is failed\n",
--		    mrioc->name, sdev_priv_data->pend_count);
-+		    mrioc->name, stgt_priv_data->pend_count);
- 		goto out;
- 	}
+@@ -4473,8 +4473,8 @@ static int mpi3mr_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	ioc_info(mrioc, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
+ 	    pdev, pci_name(pdev), device_state);
+ 	pci_save_state(pdev);
+-	pci_set_power_state(pdev, device_state);
+ 	mpi3mr_cleanup_resources(mrioc);
++	pci_set_power_state(pdev, device_state);
  
+ 	return 0;
+ }
 -- 
 2.27.0
 
 
---000000000000b870b305d7a6da4a
+--000000000000f567d105d7a6dae3
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -162,13 +168,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIL2cjh9GAB5afi8iYLyy
-/y0EkZV1hXUi3YiRvs3O767sMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDIxMDA5NDgzN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMLe0kO/AlAKWZ/zGO2+
+SuzO+9xA2hwZ0x3xjo+BVMN2MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDIxMDA5NDg0MVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBmqAxbTJCFrbLAqsclyT+FqHD+Lb2IQlFSh4ln
-xWgYPoaP6CMfPPjAu4nE2OYKT3GN91hbUlzrxAUI9KrLk7voE+P+1tQBtY9zx1E7ZcPTSFjW0Ba+
-mcjYIhdPKheBSaLjRhWsF2sWxISw3zsSGhyeVrDAVjitLy7FKRIrTiLeFhbAySjMc4blOCsWhiK1
-I35xyQNu+zap7secf7pIfwmlzivtohnyoZsSEjpVaDiDPzFWpGrnfQd3jgFnOZLB7Vh6wmYiNSdQ
-hrh6ZvTFAQqQ6VbMEWO/1iMtJycDng/1QgZv0EQz/LTe7JkinVDvsIEWtG40JlpyOgzTxyzVu4/z
---000000000000b870b305d7a6da4a--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC993qK+6yloOg201j3o/5ResEDX9zdh0bCVNYT
+68Mk7LYGrTfH9vIC5SQ+T3Dp6g5NTP4Vp4NUy3WfCtteCP+IezHyGP1JrK6WwWjr+p16nX6mm6r4
+PD/NysyV5QVj+QmuDQ+LZCNgGCx4sJ5HoKqtXbLh3vFlBWlb2Y8+t04zBZz4PE+fa4r9Yh65Qpty
+LnD1LDOno72TfsQYqQH3oEBB5FD6wjGbJAEibG6yT1ED+5a+wtsCWBcgpw+nsijg03GUgy6xqK4Y
+ppjqM7yU5vYkqYvRUOiv9cxFX230vEa+3/FIxk8n6GjcXByb/qz0ZOs1jCoUhbMgx/x6Pr7fvDrG
+--000000000000f567d105d7a6dae3--
