@@ -2,97 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18860C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 23:54:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1045C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 00:24:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345911AbiBJXyo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Feb 2022 18:54:44 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55220 "EHLO
+        id S1346285AbiBKAYk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Feb 2022 19:24:40 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240464AbiBJXyn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 18:54:43 -0500
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 653ED5F75
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 15:54:43 -0800 (PST)
-Received: by mail-pf1-f175.google.com with SMTP id i6so11241943pfc.9
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 15:54:43 -0800 (PST)
+        with ESMTP id S1346239AbiBKAYj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 19:24:39 -0500
+Received: from mail-io1-xd36.google.com (mail-io1-xd36.google.com [IPv6:2607:f8b0:4864:20::d36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE7462735;
+        Thu, 10 Feb 2022 16:24:39 -0800 (PST)
+Received: by mail-io1-xd36.google.com with SMTP id d188so9541410iof.7;
+        Thu, 10 Feb 2022 16:24:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:subject:date:message-id:in-reply-to:references:mime-version
+         :content-transfer-encoding;
+        bh=QAzv4ww8wIlL+as7782AHbg1vH8P76wooakjw6i+3Lc=;
+        b=eXLLwoHPmmMGbzE7v0/eoXuOPxdUXwkX/S1PRH7+XaWXBdBlZ2LApOHE3iMbfl1Kr1
+         4GwEpbo6DXk12uqn0CKDnMRhKWqc5E3xyz9NlalC6BgjOF5wKrnvMhCPW9SSAhlLLl6m
+         SJ7sEazoSG1wTfj/t9S8PKfHMcLUmvpTj5Pc0aeefCRDO6tqtR1xpZoio2/j0k8YYyxX
+         zEBfNvS1zpcUSSWrMuGVBIRyH8o5iTxni7dpOaIzvLu25KQaD405JzCGbLLWDXy3I+2R
+         RrwzKsgeq5+sh8lMKFvhc8G58okPUNcmv6K7HmZ88pG7t1Y1PPc1VwW9SLPBecuQ6xwT
+         /6zg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=JG1MbaPxwIDbfxyEq1zkFWxL1MhRXlNL1bqKQrf+SAo=;
-        b=RLu4mp2HZZx0m64UzFuCjkEQ9dVHmuGQdEN64x/POONpg0jCFHhzunzjZoG61FKWxz
-         uGQ2SfV0cO9W/hqs3KPTR0BXL02ph0oagciJ3NuoiliJL4LfDPvgItT1NDcEltl+viWW
-         Zvm/6nPCOFBdJlO3SpycXIjg3UfwGwnkp6YA9d44Jsn3/hHSJV3Bp4ML7BJM3cHZst8t
-         ptwpXKvs82Qm927Z2CuJxB+ddRyj597hfpnS6jWJqiFRpa9u9Xy1nmLUKMUbfIz4ZOiN
-         bJv3uOq4H2oADkQ5FwqXUXjDExZkLWRcJLFQrV60jblMDXL0Ul9YC1U1KQ+Jnd8rTuTU
-         LLvA==
-X-Gm-Message-State: AOAM532w/JBaAczICUTyYMAhnTugH/alpvdbiQVXuY112kSs1L4udgeh
-        NYe+T9b3GSR73symwxXMn16iMbJ33KtlfQ==
-X-Google-Smtp-Source: ABdhPJz/uUvR2ogqMz5EHt/4xlEUnrUOjEznHOOLtMhz5DZG0wotnQ4PPAxKq69+Vx/Ez0V12iENtw==
-X-Received: by 2002:a05:6a00:1696:: with SMTP id k22mr5603241pfc.54.1644537282490;
-        Thu, 10 Feb 2022 15:54:42 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id g12sm23490055pfm.119.2022.02.10.15.54.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Feb 2022 15:54:41 -0800 (PST)
-Message-ID: <acf81166-75f9-ded9-a6ab-e9fe77f56cb7@acm.org>
-Date:   Thu, 10 Feb 2022 15:54:40 -0800
+        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=QAzv4ww8wIlL+as7782AHbg1vH8P76wooakjw6i+3Lc=;
+        b=hTsQWyDyKSbu3ZwsEqV2Lzfe8WDWkNt0zcrOhzoUd/fBQGfNHGuJBM+0ezQFO1d8Vw
+         JiJkQor5dpMBA28s2VCM6IETHnXcBobFa2WgdXi9SYoF52ZOi7CLmV1/R7xChSTSgIBk
+         2vIW1WItHEmbEACEi7K6cMoCzdApArl0lABv0RwuQXlYiPbgaX4ptBXDaXCmzn9BN/iH
+         b56qic+7F/HGQ9Q1uvGmbzmQ/k3Cc21qdMQQclMZD/HAGlfn65Lup4hlmJB2/UjssJYm
+         srlWKE1ZeMliouUCh0LXo2Q551VVmkzL8kjChTXs4+xLscfuflTJv+xOgDWtSd7I12f4
+         G0nQ==
+X-Gm-Message-State: AOAM530PwIyTAlaANtjaQJSyBWmEiboBl4iYqctO07BibVncQK6WLvfl
+        1VlMk/tXepdhJS0eAS7TQ94=
+X-Google-Smtp-Source: ABdhPJzat5BMCPgkejoDjmOJcB5P48ExVxXh+fEyDvvDxqoIGAU7OXeWm93caqoE2/ZSItwt5e3CXA==
+X-Received: by 2002:a6b:ed06:: with SMTP id n6mr5210030iog.88.1644539079119;
+        Thu, 10 Feb 2022 16:24:39 -0800 (PST)
+Received: from localhost ([12.28.44.171])
+        by smtp.gmail.com with ESMTPSA id b5sm6780043ilr.0.2022.02.10.16.24.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Feb 2022 16:24:38 -0800 (PST)
+From:   Yury Norov <yury.norov@gmail.com>
+To:     Yury Norov <yury.norov@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        David Laight <David.Laight@aculab.com>,
+        Joe Perches <joe@perches.com>, Dennis Zhou <dennis@kernel.org>,
+        Emil Renner Berthing <kernel@esmil.dk>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Matti Vaittinen <matti.vaittinen@fi.rohmeurope.com>,
+        Alexey Klimov <aklimov@redhat.com>,
+        linux-kernel@vger.kernel.org,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH 42/49] scsi: lpfc: replace cpumask_weight with cpumask_weight_gt
+Date:   Thu, 10 Feb 2022 14:49:26 -0800
+Message-Id: <20220210224933.379149-43-yury.norov@gmail.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20220210224933.379149-1-yury.norov@gmail.com>
+References: <20220210224933.379149-1-yury.norov@gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH v2 21/44] imm: Move the SCSI pointer to private command
- data
-Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20220208172514.3481-1-bvanassche@acm.org>
- <20220208172514.3481-22-bvanassche@acm.org>
- <9a73879b-cc52-0db3-5fe6-d3226ad709fc@suse.de>
- <05d0a3ab-ac64-5f59-8e4f-25cff2c8ce8a@acm.org>
- <4f4c4e13-52e8-12d8-6a8a-49d0ce45ce92@suse.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <4f4c4e13-52e8-12d8-6a8a-49d0ce45ce92@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/9/22 23:42, Hannes Reinecke wrote:
-> On 2/9/22 19:27, Bart Van Assche wrote:
->> On 2/8/22 23:58, Hannes Reinecke wrote:
->>> On 2/8/22 18:24, Bart Van Assche wrote:
->>>> +struct imm_cmd_priv {
->>>> +    struct scsi_pointer scsi_pointer;
->>>> +};
->>>> +
->>> Why the indirection?
->>> You can use 'struct scsi_pointer' directly as payload, no?
->>
->> The indirection makes it easy to add more private command data in the 
->> future. However, I don't have a strong opinion about this. I can 
->> remove the indirection if you prefer this?
->>
-> 
-> That argument would be true for drivers under active development, but 
-> these are ancient drivers which are in maintenance mode (at best).
-> 
-> I'd be surprised if we need to add more stuff to command payload.
-> 
-> Except the host_scribble bit; in the future we might be wanting to
-> remove it in favour of the command payload, too.
-> 
-> But imm is not one of them, so we should be using 'struct scsi_pointer' 
-> as the command payload directly.
+lpfc_cpuhp_get_eq() calls cpumask_weight() to compare the weight of
+cpumask with a given number. We can do it more efficiently with
+cpumask_weight_gt because conditional cpumask_weight may stop
+traversing the cpumask earlier, as soon as condition is (or can't be) met.
 
-I will use struct scsi_pointer directly in drivers that do not use 
-host_scribble.
+Signed-off-by: Yury Norov <yury.norov@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f5c363f663f6..35688427cb7f 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -12642,7 +12642,7 @@ lpfc_cpuhp_get_eq(struct lpfc_hba *phba, unsigned int cpu,
+ 		 * gone offline yet, we need >1.
+ 		 */
+ 		cpumask_and(tmp, maskp, cpu_online_mask);
+-		if (cpumask_weight(tmp) > 1)
++		if (cpumask_weight_gt(tmp, 1))
+ 			continue;
+ 
+ 		/* Now that we have an irq to shutdown, get the eq
+-- 
+2.32.0
 
-Bart.
