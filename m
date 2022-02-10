@@ -2,96 +2,308 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 764B9C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 09:48:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BA98C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 09:48:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238983AbiBJJsf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Feb 2022 04:48:35 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36240 "EHLO
+        id S238985AbiBJJsg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Feb 2022 04:48:36 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238777AbiBJJsd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 04:48:33 -0500
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F940138
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:34 -0800 (PST)
-Received: by mail-pf1-x434.google.com with SMTP id a39so8432177pfx.7
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:34 -0800 (PST)
+        with ESMTP id S238982AbiBJJsf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 04:48:35 -0500
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 106E8138
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:36 -0800 (PST)
+Received: by mail-pf1-x436.google.com with SMTP id u16so3584616pfg.3
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=ebEwHMBcahyaOVv6fTtPnBnxYLevkOhFiuUwWL0AnLw=;
-        b=bzDJPEns6eQxoGt+9+U7/mRcE2FjJiZH8sjUUAnMDm8mdH7YMLDy+Np5zfYN/Rnt1C
-         5UlB4mT9VnLjmMkGDvyojPunk0YqHt8vjWfTXGO27HEz1BLepHryTsrq8A3Fl4809xko
-         u0mAV/rSjNMQ1oBMVut32Ekh+fi3+PDvgbR6k=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version;
+        bh=Q547jMa4UA53t4ZYNiYRJ4odOz+LQPcghzvQ+7qW/uk=;
+        b=Ub7gbKDAjQ51y5+ALxa2pWeKgZNMk0xpNWVTJ6+lI5JhEvF6w4Pj46n6gKHhh3Gwbh
+         1T7JU80mpgou1bCrrpH7vaNvWfoe1zFyKmNO+gErjJreDg/rrJ/LvMftLRUe8IpVx0lT
+         QnTaR88hcssC/CoF3gV+RvqoRzRw05+o39z08=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=ebEwHMBcahyaOVv6fTtPnBnxYLevkOhFiuUwWL0AnLw=;
-        b=ZDLBoSfuaEpHWh4D3NPNdrErYnADzecBd9dbLNICjtprO6P5LwIFo5a7Yo+UskWWDu
-         UVT6wCYQ+t2E+sBbFWnIFQdBViknucNIaosM0YAFsg+yzYYIwYqVINOsZgW3vByZezrg
-         3ss8XPysLxL5GbdZKWlVpkzj/yoAAjCOP20HcH1cC9VvJJTYZO5GcbXU1wAbnr8zjQzP
-         fk3JUhWVOko9Mm5Qggq/KqWF35NX3wVVPlcbfqnxHKt0ldi2+2cRjQW5f48Be/6tR0Cn
-         G9z5CXU4nYMWEAy4YuhPRsFimHsXVf7ZLXexd0iIoHyJrGxAR8SEsoMZ1v3B1YyUzWD0
-         IP7Q==
-X-Gm-Message-State: AOAM530flQWfnFOdDoTcY7P7S0StViTAIiVVhSCKvW6JXDMImYIPPey/
-        KsK+atvP+wH1+Wze0AH1Ikr9FyK69cQnoRCtvWORevixgxJnWkGeVVJKoF0TC7l8kaO4U1kArEg
-        X81DBOAq4/h1l3qaFAd9W7RgqsvuW4YfUkgbXeBQrjmzPEHpqNQiHMTlJCTn8WH/hd8YfC9Xkhw
-        ynnP4Q14tKqqw=
-X-Google-Smtp-Source: ABdhPJwfE4qqxPrlXQhn1gwxyBaWpaPDXL2u1Nob+Re6+VgXVobmIkLnBWHNn5J4j+1c86fRe23qJg==
-X-Received: by 2002:a63:2c0c:: with SMTP id s12mr5481076pgs.331.1644486512994;
-        Thu, 10 Feb 2022 01:48:32 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version;
+        bh=Q547jMa4UA53t4ZYNiYRJ4odOz+LQPcghzvQ+7qW/uk=;
+        b=NSU38s9C4bSEhtgLqoerWfrg6i33evKKqjBGTYKfbNHBOuxTFIa1JnWKBO9mZ9n3nV
+         hpMkJpgANRUWPSVTxjlMJgthf0PSDzuwRYaKFdl4SfZ16cY/6rB+ucycZrs7BSWjaQkg
+         /DOB/Uyu5QKQ20yFNOIj9nBS6dhJkXp1FT3d+n0JtcFZQNC91N4eXQVwSEF65RronIz5
+         sBe404Xh/mfpL6spUQlhXq0ZNEVFXJQMHRerlc4TqOO9erN/39JwFLEPSDGfhuWC8rkW
+         O8UzACrfZ4HhmLrz49KAjEZj69XZAmfLBuaPPiDkVSDDDD1K+aKjyGUskzpYhumy/6tW
+         orug==
+X-Gm-Message-State: AOAM531SH5BtiS3SSSzSZ+BogZNofTdD789nt/agYHBDUEO5bchL5m27
+        fAWp2z6UOI5AZ71+OIpeCL45zBB9ugcF7hdw4zNn0lPeq0oD3t2qzguFsZ6MJbNQfH9/7tHl6mv
+        rBqYBVvgHbU5jOWpa0uZ0uPkv6NG6A3LSBWIKmGdTNQMLxu/2RPsKZgaRA8jv2q0iYjvNNYhDfC
+        olietJon9srXk=
+X-Google-Smtp-Source: ABdhPJxH/X2EYCFZffoZON2PVsUnNopxDjXMqSpgYlLrJRPirrPH+E3So6GSuH9JMOqKkEuoAkxKGQ==
+X-Received: by 2002:a05:6a00:198a:: with SMTP id d10mr6776571pfl.2.1644486515004;
+        Thu, 10 Feb 2022 01:48:35 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id o21sm23706698pfu.100.2022.02.10.01.48.30
+        by smtp.gmail.com with ESMTPSA id o21sm23706698pfu.100.2022.02.10.01.48.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Feb 2022 01:48:32 -0800 (PST)
+        Thu, 10 Feb 2022 01:48:34 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 0/9] mpi3mr: Bug fixes
-Date:   Thu, 10 Feb 2022 15:28:08 +0530
-Message-Id: <20220210095817.22828-1-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 1/9] mpi3mr: Fix deadlock while canceling the fw event
+Date:   Thu, 10 Feb 2022 15:28:09 +0530
+Message-Id: <20220210095817.22828-2-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20220210095817.22828-1-sreekanth.reddy@broadcom.com>
+References: <20220210095817.22828-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000007ccfcd05d7a6da85"
+        boundary="00000000000099ee8f05d7a6da17"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000007ccfcd05d7a6da85
+--00000000000099ee8f05d7a6da17
 Content-Transfer-Encoding: 8bit
 
-This patch set contains bug fixes for some of the
-mpi3mr driver bugs. 
+During controller reset, the driver tries to flush all
+the pending firmware event works from worker queue that are queued
+prior to the reset. However, if any work is waiting for
+device addition/removal operation to be completed at the
+SML then a deadlock is observed. This is due to the reason that
+the controller reset is waiting for the device addition/removal
+to be completed and the device/addition removal is waiting for
+the controller reset to be completed.
 
-Sreekanth Reddy (9):
-  mpi3mr: Fix deadlock while canceling the fw event
-  mpi3mr: Fix print proper pending IO count
-  mpi3mr: update MPI3 headers
-  mpi3mr: Fix hibernation issue
-  mpi3mr: Fix cmnd getting marked as inuse forever
-  mpi3mr: Fix report actual data transfer sz
-  mpi3mr: Update the copyright year
-  mpi3mr: Fix memory leaks
-  mpi3mr: Bump driver version to 8.0.0.68.0
+So, to limit this deadlock, continue with the controller reset
+handling without canceling the work which is waiting for
+device addition/removal operation to complete at SML.
 
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 122 +++++++++++------
- drivers/scsi/mpi3mr/mpi/mpi30_init.h      |   3 +
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       |  46 +++----
- drivers/scsi/mpi3mr/mpi/mpi30_pci.h       |   3 +-
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h |   8 +-
- drivers/scsi/mpi3mr/mpi3mr.h              |  10 +-
- drivers/scsi/mpi3mr/mpi3mr_debug.h        |   2 +-
- drivers/scsi/mpi3mr/mpi3mr_fw.c           |  12 +-
- drivers/scsi/mpi3mr/mpi3mr_os.c           | 159 ++++++++++++++--------
- 9 files changed, 232 insertions(+), 133 deletions(-)
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr.h    |   4 ++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |   2 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 106 ++++++++++++++++++++++++++------
+ 3 files changed, 91 insertions(+), 21 deletions(-)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index fc4eaf6..d892ade 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -866,6 +866,8 @@ struct mpi3mr_ioc {
+  * @send_ack: Event acknowledgment required or not
+  * @process_evt: Bottomhalf processing required or not
+  * @evt_ctx: Event context to send in Ack
++ * @pending_at_sml: waiting for device add/remove API to complete
++ * @discard: discard this event
+  * @ref_count: kref count
+  * @event_data: Actual MPI3 event data
+  */
+@@ -877,6 +879,8 @@ struct mpi3mr_fwevt {
+ 	bool send_ack;
+ 	bool process_evt;
+ 	u32 evt_ctx;
++	bool pending_at_sml;
++	bool discard;
+ 	struct kref ref_count;
+ 	char event_data[0] __aligned(4);
+ };
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 15bdc21..7193b98 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -4353,8 +4353,8 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 	memset(mrioc->devrem_bitmap, 0, mrioc->devrem_bitmap_sz);
+ 	memset(mrioc->removepend_bitmap, 0, mrioc->dev_handle_bitmap_sz);
+ 	memset(mrioc->evtack_cmds_bitmap, 0, mrioc->evtack_cmds_bitmap_sz);
+-	mpi3mr_cleanup_fwevt_list(mrioc);
+ 	mpi3mr_flush_host_io(mrioc);
++	mpi3mr_cleanup_fwevt_list(mrioc);
+ 	mpi3mr_invalidate_devhandles(mrioc);
+ 	if (mrioc->prepare_for_reset) {
+ 		mrioc->prepare_for_reset = 0;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 284117d..90911ea 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -285,6 +285,35 @@ static struct mpi3mr_fwevt *mpi3mr_dequeue_fwevt(
+ 	return fwevt;
+ }
+ 
++/**
++ * mpi3mr_cancel_work - cancel firmware event
++ * @fwevt: fwevt object which needs to be canceled
++ *
++ * Return: Nothing.
++ */
++static void mpi3mr_cancel_work(struct mpi3mr_fwevt *fwevt)
++{
++	/*
++	 * Wait on the fwevt to complete. If this returns 1, then
++	 * the event was never executed.
++	 *
++	 * If it did execute, we wait for it to finish, and the put will
++	 * happen from mpi3mr_process_fwevt()
++	 */
++	if (cancel_work_sync(&fwevt->work)) {
++		/*
++		 * Put fwevt reference count after
++		 * dequeuing it from worker queue
++		 */
++		mpi3mr_fwevt_put(fwevt);
++		/*
++		 * Put fwevt reference count to neutralize
++		 * kref_init increment
++		 */
++		mpi3mr_fwevt_put(fwevt);
++	}
++}
++
+ /**
+  * mpi3mr_cleanup_fwevt_list - Cleanup firmware event list
+  * @mrioc: Adapter instance reference
+@@ -302,28 +331,25 @@ void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc)
+ 	    !mrioc->fwevt_worker_thread)
+ 		return;
+ 
+-	while ((fwevt = mpi3mr_dequeue_fwevt(mrioc)) ||
+-	    (fwevt = mrioc->current_event)) {
++	while ((fwevt = mpi3mr_dequeue_fwevt(mrioc)))
++		mpi3mr_cancel_work(fwevt);
++
++	if (mrioc->current_event) {
++		fwevt = mrioc->current_event;
+ 		/*
+-		 * Wait on the fwevt to complete. If this returns 1, then
+-		 * the event was never executed, and we need a put for the
+-		 * reference the work had on the fwevt.
+-		 *
+-		 * If it did execute, we wait for it to finish, and the put will
+-		 * happen from mpi3mr_process_fwevt()
++		 * Don't call cancel_work_sync() API for the
++		 * fwevt work if the controller reset is
++		 * get called as part of processing the
++		 * same fwevt work (or) when worker thread is
++		 * waiting for device add/remove APIs to complete.
++		 * Otherwise we will see deadlock.
+ 		 */
+-		if (cancel_work_sync(&fwevt->work)) {
+-			/*
+-			 * Put fwevt reference count after
+-			 * dequeuing it from worker queue
+-			 */
+-			mpi3mr_fwevt_put(fwevt);
+-			/*
+-			 * Put fwevt reference count to neutralize
+-			 * kref_init increment
+-			 */
+-			mpi3mr_fwevt_put(fwevt);
++		if (current_work() == &fwevt->work || fwevt->pending_at_sml) {
++			fwevt->discard = 1;
++			return;
+ 		}
++
++		mpi3mr_cancel_work(fwevt);
+ 	}
+ }
+ 
+@@ -690,6 +716,24 @@ static struct mpi3mr_tgt_dev  *__mpi3mr_get_tgtdev_from_tgtpriv(
+ 	return tgtdev;
+ }
+ 
++/**
++ * mpi3mr_print_device_event_notice - print notice related to post processing of
++ *					device event after controller reset.
++ *
++ * @mrioc: Adapter instance reference
++ * @device_add: true for device add event and false for device removal event
++ *
++ * Return: None.
++ */
++static void mpi3mr_print_device_event_notice(struct mpi3mr_ioc *mrioc,
++	bool device_add)
++{
++	ioc_notice(mrioc, "Device %s was under process before the reset and\n",
++	    (device_add ? "addition" : "removal"));
++	ioc_notice(mrioc, "completed after reset, verify whether the exposed devices\n");
++	ioc_notice(mrioc, "are matched with attached devices for correctness\n");
++}
++
+ /**
+  * mpi3mr_remove_tgtdev_from_host - Remove dev from upper layers
+  * @mrioc: Adapter instance reference
+@@ -714,8 +758,17 @@ static void mpi3mr_remove_tgtdev_from_host(struct mpi3mr_ioc *mrioc,
+ 	}
+ 
+ 	if (tgtdev->starget) {
++		if (mrioc->current_event)
++			mrioc->current_event->pending_at_sml = 1;
+ 		scsi_remove_target(&tgtdev->starget->dev);
+ 		tgtdev->host_exposed = 0;
++		if (mrioc->current_event) {
++			mrioc->current_event->pending_at_sml = 0;
++			if (mrioc->current_event->discard) {
++				mpi3mr_print_device_event_notice(mrioc, false);
++				return;
++			}
++		}
+ 	}
+ 	ioc_info(mrioc, "%s :Removed handle(0x%04x), wwid(0x%016llx)\n",
+ 	    __func__, tgtdev->dev_handle, (unsigned long long)tgtdev->wwid);
+@@ -749,11 +802,20 @@ static int mpi3mr_report_tgtdev_to_host(struct mpi3mr_ioc *mrioc,
+ 	}
+ 	if (!tgtdev->host_exposed && !mrioc->reset_in_progress) {
+ 		tgtdev->host_exposed = 1;
++		if (mrioc->current_event)
++			mrioc->current_event->pending_at_sml = 1;
+ 		scsi_scan_target(&mrioc->shost->shost_gendev, 0,
+ 		    tgtdev->perst_id,
+ 		    SCAN_WILD_CARD, SCSI_SCAN_INITIAL);
+ 		if (!tgtdev->starget)
+ 			tgtdev->host_exposed = 0;
++		if (mrioc->current_event) {
++			mrioc->current_event->pending_at_sml = 0;
++			if (mrioc->current_event->discard) {
++				mpi3mr_print_device_event_notice(mrioc, true);
++				goto out;
++			}
++		}
+ 	}
+ out:
+ 	if (tgtdev)
+@@ -1193,6 +1255,8 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_sastopochg_evt_debug(mrioc, event_data);
+ 
+ 	for (i = 0; i < event_data->num_entries; i++) {
++		if (fwevt->discard)
++			return;
+ 		handle = le16_to_cpu(event_data->phy_entry[i].attached_dev_handle);
+ 		if (!handle)
+ 			continue;
+@@ -1324,6 +1388,8 @@ static void mpi3mr_pcietopochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_pcietopochg_evt_debug(mrioc, event_data);
+ 
+ 	for (i = 0; i < event_data->num_entries; i++) {
++		if (fwevt->discard)
++			return;
+ 		handle =
+ 		    le16_to_cpu(event_data->port_entry[i].attached_dev_handle);
+ 		if (!handle)
+@@ -1362,8 +1428,8 @@ static void mpi3mr_pcietopochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_fwevt *fwevt)
+ {
+-	mrioc->current_event = fwevt;
+ 	mpi3mr_fwevt_del_from_list(mrioc, fwevt);
++	mrioc->current_event = fwevt;
+ 
+ 	if (mrioc->stop_drv_processing)
+ 		goto out;
 -- 
 2.27.0
 
 
---0000000000007ccfcd05d7a6da85
+--00000000000099ee8f05d7a6da17
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -162,13 +374,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIF5Um2Mp0XF+C+Iao1gh
-paMdWN2Tw8cLN5e7q5ujuW0pMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDIxMDA5NDgzM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJp/7/GvFu34J16tBYkq
+m29rkfV7G6zB5kT7DWWjTwUbMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDIxMDA5NDgzNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAOtxD9j6JaZ0+vSFzxYAv/qc+/ikqg8mDkOYrb
-WKIfsVZHDPTGZQc+nwnm3KZU5ziAoMjlydsk4NQUS30sX1pLbt6gtOdRl9j6x8BDopUX4RuAe+zi
-O/EVilQQi/M/HLVjo00uwcEAa3kb4plYScxEzELIOIWjwP+/Il/3eovzTMyu6yK+D4ZEKEZV6ynh
-ndtuETfRYGb1nogLwrlttakVfRJ5sMBhCz692E3vSvwbOkSxalZ3meUVzhu92p+PNDB+1R88A3qy
-CDMRIG0K6BT1t2Yam7f/ueL20G16Tm7flpgy/11ou67aCAZi2V3KtKIdlPDc1osPjzFdoXBOagob
---0000000000007ccfcd05d7a6da85--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQACnFjC7mD7/HQuhd4DFnWiaqlXNRQ0zp36jFUJ
+d4lVF4plmxDtZtXq4FDjEFR8SLlv/gfznpEAkMeBFJF4hIsIqWcjZ21ZhPhkErkmnpsWWvFhfHol
+1JoQ7RGCOLzFi3wN/FAH0CwyDKCLhux+9HvQkWTv1yv2wdxiElfJZ6E4GOg+lAl18AkB/LsZo4zS
+3NIjKVM7eoqYeKzWg7vGtD6rqGnUr44YKk5ZjZQ721mpl7TORWL+gV2tjH0ql5kH6bXBESSL1yNr
+Rp2UJWcE7YSy9+9yAT80VBHSsgOkrR8CGGaH4ESW+GxY7Az/3XdROlr0PiLAXqp9pKMNhKTJzoVp
+--00000000000099ee8f05d7a6da17--
