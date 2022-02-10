@@ -2,74 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D272C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 11:43:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F4B4C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 11:43:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241116AbiBJLnA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Feb 2022 06:43:00 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:42956 "EHLO
+        id S241084AbiBJLnB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Feb 2022 06:43:01 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:42906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241167AbiBJLms (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 06:42:48 -0500
+        with ESMTP id S241154AbiBJLmp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 06:42:45 -0500
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 849EA102D
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 03:42:49 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E444C1019
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 03:42:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644493370; x=1676029370;
+  t=1644493367; x=1676029367;
   h=from:to:subject:date:message-id:in-reply-to:references:
    mime-version:content-transfer-encoding;
-  bh=+J8FxMhXR8JWNegw+xYbyFv9L2V5iQzskG8x+OQmcLU=;
-  b=ag4Dnl9Z42CH74xPsgpJggRiQiWL6XR3v8OuxyXkvWg0G9NBEWBxXBDd
-   Ww4DcCVI+1L9LcAtul5ILDcARpDHK7LGt7Gl0M5luWfVfC9Rihb0wnJ12
-   mRg3GIkDDM66FHyy7iUF0jf51QuN5+8AFmL3Q9/ng1fLzLYrjppV40IDR
-   rKxh71KDmOhi5cXFc3AP0gITSJSMxQiiah5WtWcGKuChOsR49c3TFNRRv
-   s7wWHX38HVfvL0BhlfjSA6Tq3XdUbB8ZMlQgG7mVEHkrnhPMqOFiQ1MF0
-   UhJyPHX8iGLUGAvA/6TFg1ElXY5Ubs8/r3Auje40/E/2yKD+LHAEUG2or
-   w==;
+  bh=q29mMJqlbDLunlNIuDMRbjAb6cPg/7LfvEGK91gjkoQ=;
+  b=F8v7vvlr1jtQ5/4K/yVlStHg9GPyjo7KRJEnD6Imlf/2o7RGZ01VjIPb
+   Af8mdPe0Ea20jGwld1VnAli8V4T/1GYMsfPEE297UcGVWiAV2o7H+TbBX
+   SzZzYueb+tLWDBOXiYfayguAG/d646avwIXSCZyZ4k+ukDlce0yhmK6I3
+   ED5D7CBGbkuoLEEa7BBt92LFQefT9EmiKdtmatmmRYh3ABWnx4qV01bnw
+   W3k0Q9OD2vaIf3qQL3tEeSaeXQTfiglgHV0s3pHkKWgTYY2MbanCg7Uoy
+   LI+pm66aDN/ZH0dBJWSZu/aRsAT26CY806zLvFV1Jta/6Yxvna7A9R4uu
+   g==;
 X-IronPort-AV: E=Sophos;i="5.88,358,1635177600"; 
-   d="scan'208";a="193575672"
+   d="scan'208";a="193575665"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 10 Feb 2022 19:42:50 +0800
-IronPort-SDR: gJ0WNMk5OiUGjMMRaxMNF3LjhmjiyAdoBwNePOxpclsQLSXiRyXgBPzueB1WM7NaAn7v3JVm39
- 8kN9tbFoSO3LDHAKeb3LLiERWMlP1cK+HDdJPmaYonAmNf+dGesEHbUcoJKVzFQCaObrfHUgRi
- 7+hqlTpKF/0lm/2GCfO2Ock7jtHK7s5NUOP9ocuPP28hAIF8Nb/as+lDMW1BmEKCIDl2pW7X4v
- /qRUu2hLtbaMqBaU1uLr4Bx+j0mQI/PGcMrnhk3BofeeuNOdWaA6RDK0nzLT5f0tSgotj2DW7/
- TUhpAIx7J2cffBarcz76djat
+  by ob1.hgst.iphmx.com with ESMTP; 10 Feb 2022 19:42:47 +0800
+IronPort-SDR: f7Sc/hwBlP1qBRI8SQeQJAytklw/MsOzyyc9V+3u1iNFMOZGpnCN/7AL+jaxdawfr34jSyLz9b
+ JfhdW82OuyB9YNTn8FKw8M7KLYU8RL2QtZnMU2Dbb18s1sdljlSj4h+gQugl1OUz+bf56upUHI
+ rwic7XnIbXHFpCrm5Q4/AA2bil+0jqxpb6geCEtXDCdzfrN/f2KoRR4qkRux1NIjpC+7sYPi+r
+ uhjptALafCegkCKjTEHuEiPojXUrza1dEfDCOBxRl7dru/iIT1s7/TJjIGKQb+a2DVVJ7fRGRd
+ qCDj+XhXTUk6bDQcokuy8iNd
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2022 03:15:46 -0800
-IronPort-SDR: f5VHWXWV9TqF2h/fTktrGMy6s2FoKPpEEKdiKKDvarGkoKAbqTSlR6LKHtWMVP9i8Zv6on4A5T
- 1tzNgiC6Lv/jpSNauhB2I1I7H7do6M15A/odoACjmj3TTrh4sdm4B8FdhbhvqQ0k7Vm7kEEcAT
- uikazlotwD5LPfvIv7Um8p7ZWmV3Fc27TypxSQI30DgAG81eU3p7XrKDPhB1P9TqevsQ3QYYen
- DxHD2Uf7krNOLT3YJgtmdCgJcfu9glpqkduFvjUD0Seiu3cCpE28/fMisuYQIw7f11jq8jRSN4
- 5YY=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2022 03:15:43 -0800
+IronPort-SDR: qSKaA2RuqO/yfxwLRQdYsvZqxSXRN1NccyI+upChv8M79ZtWUIlHcHDBr40GZYE1sqTW9wMcA4
+ CXXN1O2bc9mL/TwyR70a5rIhjEcBjZflJB9zmhTik2zLtylbdOznMoQ0ftmbhTa/0oGJq8IJn4
+ kYJwBdXfHiDmXNba0ixYfPu6priJGkXrUeE8iiGEZg0wVGc/1EH9Y0fkMPALC104Vy3JG97zYo
+ NNZWzyJBnChitEA14rNS9Z+eKztFoe2WrGGdzNBAsM559p2lxSiG8T7rT79ZxDnWalv5vqx6CY
+ LCc=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2022 03:42:50 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2022 03:42:47 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JvZcT0X3Pz1Rwrw
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 03:42:49 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JvZcQ3kBcz1SVny
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 03:42:46 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1644493368; x=1647085369; bh=+J8FxMhXR8JWNegw+x
-        YbyFv9L2V5iQzskG8x+OQmcLU=; b=eYG9CiXWVd1RTjEbwsuo7cVvhpnWoRydVN
-        Dckd/KipAzXxGeU2ZFilTrL1rHNcTlwq5PKO7nKqkaFewmZFR4VqGlFaIX2wu2NI
-        yiYNqnkSBWQB0emaYKRlzOZv7RvmAcXLnq02Ki3uv40pClmKfrIafzsk/dON3RY0
-        1ZYmGaW88ppW5tTe2sggQZVL86XfsOtfDZ1ZWx/TSuOFnnEiqi/7TEJ6y7Xkl1wc
-        tmlsOwtpRG4YPOr13vYN2Q47OOeSQkO1si9D1gN2UkXzWM/c91ZH92odnLQZR+ea
-        rPAOqVFX/UElE0Naahjj9wAZHQZaKWsaIMtZB7r3nVeq6rTffvfg==
+        :from; s=dkim; t=1644493366; x=1647085367; bh=q29mMJqlbDLunlNIuD
+        MRbjAb6cPg/7LfvEGK91gjkoQ=; b=UOwD3gqHVpke8O4siGF+E+CWKKt6+US6rx
+        7r9VZpzQzk4arrLRYX/MtOxlRp2wB+qgj/KPXizpkHjxMNAHhxBw08anwRpweQvD
+        VmzuKKVza6GvSY1wjnaeUvjik2Wkcf/N40ueINvCWfPMpFsmVyuAFuGE3qVjD8g+
+        WGxMoHDz9eO9SeQOfuJpHbT6k1AF6FREANOLwm2vLK5ACEMGY3CSdnnMwafA2XqV
+        cZCdJoeJMZB7vxTetJvaSCiwqKwVBlCsl5lDfgb5mlC9wpNUM3mDC6Zg0q4/wOKD
+        4XaGRhrLfIZ4Fw+S4T5X58uL6HyplyOMQ7M8qPRoyaZOWPiejJ2w==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id fpaiGLRrjPyT for <linux-scsi@vger.kernel.org>;
-        Thu, 10 Feb 2022 03:42:48 -0800 (PST)
+        with ESMTP id xYAFKWVTL-y5 for <linux-scsi@vger.kernel.org>;
+        Thu, 10 Feb 2022 03:42:46 -0800 (PST)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JvZcR4htyz1SHwl;
-        Thu, 10 Feb 2022 03:42:47 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JvZcP11w3z1SHwl;
+        Thu, 10 Feb 2022 03:42:44 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -77,9 +77,9 @@ To:     linux-scsi@vger.kernel.org,
         Xiang Chen <chenxiang66@hisilicon.com>,
         Jason Yan <yanaijie@huawei.com>,
         Luo Jiaxing <luojiaxing@huawei.com>
-Subject: [PATCH 20/20] scsi: pm8001: fix abort all task initialization
-Date:   Thu, 10 Feb 2022 20:42:18 +0900
-Message-Id: <20220210114218.632725-21-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH 18/20] scsi: pm8001: fix NCQ NON DATA command completion handling
+Date:   Thu, 10 Feb 2022 20:42:16 +0900
+Message-Id: <20220210114218.632725-19-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220210114218.632725-1-damien.lemoal@opensource.wdc.com>
 References: <20220210114218.632725-1-damien.lemoal@opensource.wdc.com>
@@ -89,99 +89,55 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In pm80xx_send_abort_all(), the n_elem field of the ccb used is not
-initialized to 0. This missing initialization sometimes lead to the
-task completion path seeing the ccb with a non-zero n_elem resulting in
-the execution of invalid dma_unmap_sg() calls in pm8001_ccb_task_free(),
-causing a crash such as:
+NCQ NON DATA is an NCQ command with the DMA_NONE DMA direction and so a
+register-device-to-host-FIS response is expected for it.
 
-[  197.676341] RIP: 0010:iommu_dma_unmap_sg+0x6d/0x280
-[  197.700204] RSP: 0018:ffff889bbcf89c88 EFLAGS: 00010012
-[  197.705485] RAX: dffffc0000000000 RBX: 0000000000000000 RCX: ffffffff8=
-3d0bda0
-[  197.712687] RDX: 0000000000000002 RSI: 0000000000000000 RDI: ffff88810=
-dffc0d0
-[  197.719887] RBP: 0000000000000000 R08: 0000000000000000 R09: ffff8881c=
-790098b
-[  197.727089] R10: ffffed1038f20131 R11: 0000000000000001 R12: 000000000=
-0000000
-[  197.734296] R13: ffff88810dffc0d0 R14: 0000000000000010 R15: 000000000=
-0000000
-[  197.741493] FS:  0000000000000000(0000) GS:ffff889bbcf80000(0000) knlG=
-S:0000000000000000
-[  197.749659] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  197.755459] CR2: 00007f16c1b42734 CR3: 0000000004814000 CR4: 000000000=
-0350ee0
-[  197.762656] Call Trace:
-[  197.765127]  <IRQ>
-[  197.767162]  pm8001_ccb_task_free+0x5f1/0x820 [pm80xx]
-[  197.772364]  ? do_raw_spin_unlock+0x54/0x220
-[  197.776680]  pm8001_mpi_task_abort_resp+0x2ce/0x4f0 [pm80xx]
-[  197.782406]  process_oq+0xe85/0x7890 [pm80xx]
-[  197.786817]  ? lock_acquire+0x194/0x490
-[  197.790697]  ? handle_irq_event+0x10e/0x1b0
-[  197.794920]  ? mpi_sata_completion+0x2d70/0x2d70 [pm80xx]
-[  197.800378]  ? __wake_up_bit+0x100/0x100
-[  197.804340]  ? lock_is_held_type+0x98/0x110
-[  197.808565]  pm80xx_chip_isr+0x94/0x130 [pm80xx]
-[  197.813243]  tasklet_action_common.constprop.0+0x24b/0x2f0
-[  197.818785]  __do_softirq+0x1b5/0x82d
-[  197.822485]  ? do_raw_spin_unlock+0x54/0x220
-[  197.826799]  __irq_exit_rcu+0x17e/0x1e0
-[  197.830678]  irq_exit_rcu+0xa/0x20
-[  197.834114]  common_interrupt+0x78/0x90
-[  197.840051]  </IRQ>
-[  197.844236]  <TASK>
-[  197.848397]  asm_common_interrupt+0x1e/0x40
+However, for an IO_SUCCESS case, mpi_sata_completion() expects a
+set-device-bits-FIS for any ata task with an use_ncq field true, which
+includes NCQ NON DATA commands.
 
-Avoid this issue by always initializing the ccb n_elem field to 0 in
-pm8001_send_abort_all(), pm8001_send_read_log() and
-pm80xx_send_abort_all().
+Fix this to correctly treat NCQ NON DATA commands as non-data by also
+testing for the DMA_NONE DMA direction.
 
-Fixes: c6b9ef5779c3 ("[SCSI] pm80xx: NCQ error handling changes")
+Fixes: dbf9bfe61571 ("[SCSI] pm8001: add SAS/SATA HBA driver")
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c | 2 ++
- drivers/scsi/pm8001/pm80xx_hwi.c | 1 +
- 2 files changed, 3 insertions(+)
+ drivers/scsi/pm8001/pm8001_hwi.c | 3 ++-
+ drivers/scsi/pm8001/pm80xx_hwi.c | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm800=
 1_hwi.c
-index 8095eb0b04f7..d853e8d0195a 100644
+index 9d982eb970fe..8095eb0b04f7 100644
 --- a/drivers/scsi/pm8001/pm8001_hwi.c
 +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1788,6 +1788,7 @@ static void pm8001_send_abort_all(struct pm8001_hba=
-_info *pm8001_ha,
- 	ccb->device =3D pm8001_ha_dev;
- 	ccb->ccb_tag =3D ccb_tag;
- 	ccb->task =3D task;
-+	ccb->n_elem =3D 0;
-=20
- 	circularQ =3D &pm8001_ha->inbnd_q_tbl[0];
-=20
-@@ -1849,6 +1850,7 @@ static void pm8001_send_read_log(struct pm8001_hba_=
-info *pm8001_ha,
- 	ccb->device =3D pm8001_ha_dev;
- 	ccb->ccb_tag =3D ccb_tag;
- 	ccb->task =3D task;
-+	ccb->n_elem =3D 0;
- 	pm8001_ha_dev->id |=3D NCQ_READ_LOG_FLAG;
- 	pm8001_ha_dev->id |=3D NCQ_2ND_RLE_FLAG;
-=20
+@@ -2418,7 +2418,8 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
+ha, void *piomb)
+ 				len =3D sizeof(struct pio_setup_fis);
+ 				pm8001_dbg(pm8001_ha, IO,
+ 					   "PIO read len =3D %d\n", len);
+-			} else if (t->ata_task.use_ncq) {
++			} else if (t->ata_task.use_ncq &&
++				   t->data_dir !=3D DMA_NONE) {
+ 				len =3D sizeof(struct set_dev_bits_fis);
+ 				pm8001_dbg(pm8001_ha, IO, "FPDMA len =3D %d\n",
+ 					   len);
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80x=
 x_hwi.c
-index 4d88c0dbcefc..902af4eefa26 100644
+index 44071a97d23b..4d88c0dbcefc 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -1801,6 +1801,7 @@ static void pm80xx_send_abort_all(struct pm8001_hba=
-_info *pm8001_ha,
- 	ccb->device =3D pm8001_ha_dev;
- 	ccb->ccb_tag =3D ccb_tag;
- 	ccb->task =3D task;
-+	ccb->n_elem =3D 0;
-=20
- 	circularQ =3D &pm8001_ha->inbnd_q_tbl[0];
-=20
+@@ -2510,7 +2510,8 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
+ha,
+ 				len =3D sizeof(struct pio_setup_fis);
+ 				pm8001_dbg(pm8001_ha, IO,
+ 					   "PIO read len =3D %d\n", len);
+-			} else if (t->ata_task.use_ncq) {
++			} else if (t->ata_task.use_ncq &&
++				   t->data_dir !=3D DMA_NONE) {
+ 				len =3D sizeof(struct set_dev_bits_fis);
+ 				pm8001_dbg(pm8001_ha, IO, "FPDMA len =3D %d\n",
+ 					   len);
 --=20
 2.34.1
 
