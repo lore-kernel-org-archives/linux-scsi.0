@@ -2,102 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9489AC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 09:48:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E4FEC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 09:48:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238983AbiBJJss (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Feb 2022 04:48:48 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36308 "EHLO
+        id S239037AbiBJJst (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Feb 2022 04:48:49 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237797AbiBJJsk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 04:48:40 -0500
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CCB81D4
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:42 -0800 (PST)
-Received: by mail-pf1-x42a.google.com with SMTP id i6so7368524pfc.9
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:42 -0800 (PST)
+        with ESMTP id S238491AbiBJJsq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 04:48:46 -0500
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F40371BC
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:47 -0800 (PST)
+Received: by mail-pf1-x433.google.com with SMTP id x15so6850525pfr.5
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=72h5WKPlkHO5ooGhzFkIaNBrS5n0zDZmOPiouj12v/I=;
-        b=Nsud+txbKDubfQlH1ulTvEFb0/Cpz1q+liWobej9mF65N3jTotE52LrPKGHH6FYhm9
-         Ke0NHaC22xi5BosUUOUyHffiucETYEB31NNtBDl0SLkcIk6vrIBO8RUSAounscmiVNke
-         vVP2yc6jvlg8XH3S56Kize/gaUNVqdpAbH/90=
+        bh=O+b9cp3RL5VkRqc9DVo+Wrj2nI+LAbLyjvyuoHxSj8o=;
+        b=JDX3CZjvjg5tHViNcyJiioBgJY+KvRZFEBOirPbUuJp+fx/ZbrwI3TngBNSsMiCl6R
+         32cuPtWB/9auoXA7e+gjOTGLwVao6xzSTGBqxCWL9QOiPVxoNnTUp2ED06jdLDE00yJy
+         uzpY/qzhfR+21emsKnnLKDdVU4uDaheao6O7A=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=72h5WKPlkHO5ooGhzFkIaNBrS5n0zDZmOPiouj12v/I=;
-        b=Sro2Zlq+PtjuM51j6S/Nh8noJLfklAP/uX5T5zdexLmtELSQO21abwOYTojOixxEqx
-         v9aS9Keqh+jkeNLOLFZrW4flJup19bnI4w5JTmOz2bARvx4I8qLkRHK7rIbfEdtoC5/A
-         hur3PioG2JvaMsjGwEPXWwBV7D1ZV2+VVZ2yEwhQNXBNkx8SyRaIi0Bp+FPezMhVcU+Y
-         SDIe+dFYfblTNjdoxp3tHhcoMnpamvs/tWmaBGlXq3H8zj1Xbe1zQks0AD8oCaBKo6aZ
-         teYpFR0R0PkmhhLr14mxvxdMPFrd2NSQOkDUICKNJeh1IiFklI3WKEFeKIKi1V1KpDVb
-         l+bg==
-X-Gm-Message-State: AOAM531pSKs5io/CUqdputr4OqnULNStQ0oZUnfEiRhWwc50Q+XXrvBM
-        /SOLW6/321xfPtbPHsQ/7RgJ/WlYT+BL+hGOrNAiodbFLXZjVpb/NlXJRiRb0ietTJ3DuB/nYF5
-        6mjXvAjS4iaTaFBrzGSDgc4yu+5v0Y3emGrdyGBM0m6Ojzk7XY2EVutYATnqyHKeCM2DcH/R2VE
-        THfwMxEhtVIc8=
-X-Google-Smtp-Source: ABdhPJyAmUzm8IzkY4zDwIyd+ijkaB5CYAGTH1hbXsWOz6AKQlNcaFNUeHm4TWTWv5g0xMjUGTcJfw==
-X-Received: by 2002:a63:d546:: with SMTP id v6mr5383758pgi.171.1644486521197;
-        Thu, 10 Feb 2022 01:48:41 -0800 (PST)
+        bh=O+b9cp3RL5VkRqc9DVo+Wrj2nI+LAbLyjvyuoHxSj8o=;
+        b=7oSlCc0r1X1L4Z528cWtar4/bmETku4TR0q4yu/8Uvz6TXN/321LntTtT/3sX2beqO
+         WuUE8DBB//35QxA4D3vp/iToGym6h/r+bT7HbrCKgVYgrMngr6NmFdf7FqB5ehA+hzDp
+         neywudcI2J9sf3JIeMFRkJ5EYsyvfmpU7HK+zGC+8qS6ov7r+vg+gfOTD/SXspAIwc4y
+         hg6vpioNENhjqO/ikcl7bE8oH8Nes7c9LpmCKmh9zAu02Vd+v5VAwB6+jcPLPgDvIReA
+         PP49yI363X94QCEi5YdwlXhrDNbv/BZSdbCLktw57clGowcLoET6YG497oQ8rYIgCkar
+         9xZw==
+X-Gm-Message-State: AOAM530ekua2dhOM8A0gF5bFNQ7vI96egs7Rw3qSwiLNoL4o965FXfmR
+        tJYzQC1JXFHOjeItxMwsS96vfRLca3N89SpqsDt4DDrhDhFF83xKvq2XHd1dOyJU5XKQK0eehox
+        9O9GNcxiv152TD52km7TVR8VcSGHfM0Dn0ArMmq+oKLFKlE7ICBjPU90+/inn6Ej5kdLOSJNzc3
+        kTM981f4G3RRc=
+X-Google-Smtp-Source: ABdhPJwKtpkJRDAeFVK6FLn6bT0wto0jp1E9g9GTKyjpBYdDMe/MQXeQQeTMw2emLsct5VAJpsjqYw==
+X-Received: by 2002:a62:ddcb:: with SMTP id w194mr6819233pff.12.1644486527102;
+        Thu, 10 Feb 2022 01:48:47 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id o21sm23706698pfu.100.2022.02.10.01.48.39
+        by smtp.gmail.com with ESMTPSA id o21sm23706698pfu.100.2022.02.10.01.48.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Feb 2022 01:48:40 -0800 (PST)
+        Thu, 10 Feb 2022 01:48:46 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 4/9] mpi3mr: Fix hibernation issue
-Date:   Thu, 10 Feb 2022 15:28:12 +0530
-Message-Id: <20220210095817.22828-5-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 7/9] mpi3mr: Update the copyright year
+Date:   Thu, 10 Feb 2022 15:28:15 +0530
+Message-Id: <20220210095817.22828-8-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220210095817.22828-1-sreekanth.reddy@broadcom.com>
 References: <20220210095817.22828-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000f567d105d7a6dae3"
+        boundary="00000000000050556105d7a6db50"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000f567d105d7a6dae3
+--00000000000050556105d7a6db50
 Content-Transfer-Encoding: 8bit
 
-Hibernation operation fails when it is issued for
-second time. This is getting failed as driver is
-trying to release IOC's PCI resources after
-setting it's power state to D3 state.
-
-So, Set the IOC's power state to D3 only after releasing
-the IOC's PCI resources.
+Update the copyright year to 2017-2022.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr.h       | 2 +-
+ drivers/scsi/mpi3mr/mpi3mr_debug.h | 2 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c    | 2 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c    | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index d892ade..4669773 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -2,7 +2,7 @@
+ /*
+  * Driver for Broadcom MPI3 Storage Controllers
+  *
+- * Copyright (C) 2017-2021 Broadcom Inc.
++ * Copyright (C) 2017-2022 Broadcom Inc.
+  *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
+  *
+  */
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_debug.h b/drivers/scsi/mpi3mr/mpi3mr_debug.h
+index cef61c5..c798244 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_debug.h
++++ b/drivers/scsi/mpi3mr/mpi3mr_debug.h
+@@ -2,7 +2,7 @@
+ /*
+  * Driver for Broadcom MPI3 Storage Controllers
+  *
+- * Copyright (C) 2017-2021 Broadcom Inc.
++ * Copyright (C) 2017-2022 Broadcom Inc.
+  *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
+  *
+  */
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index f7dc755..f148446 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -2,7 +2,7 @@
+ /*
+  * Driver for Broadcom MPI3 Storage Controllers
+  *
+- * Copyright (C) 2017-2021 Broadcom Inc.
++ * Copyright (C) 2017-2022 Broadcom Inc.
+  *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
+  *
+  */
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 3eac18b..43e5cc6 100644
+index dd15c1f..6a3a309 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -4473,8 +4473,8 @@ static int mpi3mr_suspend(struct pci_dev *pdev, pm_message_t state)
- 	ioc_info(mrioc, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
- 	    pdev, pci_name(pdev), device_state);
- 	pci_save_state(pdev);
--	pci_set_power_state(pdev, device_state);
- 	mpi3mr_cleanup_resources(mrioc);
-+	pci_set_power_state(pdev, device_state);
- 
- 	return 0;
- }
+@@ -2,7 +2,7 @@
+ /*
+  * Driver for Broadcom MPI3 Storage Controllers
+  *
+- * Copyright (C) 2017-2021 Broadcom Inc.
++ * Copyright (C) 2017-2022 Broadcom Inc.
+  *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
+  *
+  */
 -- 
 2.27.0
 
 
---000000000000f567d105d7a6dae3
+--00000000000050556105d7a6db50
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -168,13 +203,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMLe0kO/AlAKWZ/zGO2+
-SuzO+9xA2hwZ0x3xjo+BVMN2MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDIxMDA5NDg0MVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPPbDOf3c6c+QMpztKqr
+N65Mf6OAM2DD86R6Z4KC8IXIMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDIxMDA5NDg0N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC993qK+6yloOg201j3o/5ResEDX9zdh0bCVNYT
-68Mk7LYGrTfH9vIC5SQ+T3Dp6g5NTP4Vp4NUy3WfCtteCP+IezHyGP1JrK6WwWjr+p16nX6mm6r4
-PD/NysyV5QVj+QmuDQ+LZCNgGCx4sJ5HoKqtXbLh3vFlBWlb2Y8+t04zBZz4PE+fa4r9Yh65Qpty
-LnD1LDOno72TfsQYqQH3oEBB5FD6wjGbJAEibG6yT1ED+5a+wtsCWBcgpw+nsijg03GUgy6xqK4Y
-ppjqM7yU5vYkqYvRUOiv9cxFX230vEa+3/FIxk8n6GjcXByb/qz0ZOs1jCoUhbMgx/x6Pr7fvDrG
---000000000000f567d105d7a6dae3--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBBllpxlJVDPucldb1uJ5QUO32PzLKjTE/Z+fIP
+/4pnm18TTlu9uAETmcWZBPHV/Q3zcIWvlWFOA6y6HqEZTcITDpvXRUKIggy6Z2lefh3xtaxkSr1m
+kahJKyrqJf1jSoG0ZesmGSJmjsQk2feXDTAhOCYpLT7EDyaWUQNavOewRprlI0Y+DThz/ACuxulf
+B/z3BzvkLRJfHMPNgeudWBKZv4vjIXVQiE7E7VGi6vyhVLvA6F7Vgt82WHb9ifNia83gRKxx9x6f
+oY8ZImrFAm2P0F66tJQvSfW+y6mQCTvZiY6k27B3LCvDtEh2Tw4LYjl8o2HM/KBxJlDoQUpz0TE/
+--00000000000050556105d7a6db50--
