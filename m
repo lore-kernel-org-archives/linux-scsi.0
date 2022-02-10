@@ -2,226 +2,173 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A70FC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 08:31:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 764B9C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Feb 2022 09:48:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237464AbiBJIbl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Feb 2022 03:31:41 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:60914 "EHLO
+        id S238983AbiBJJsf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Feb 2022 04:48:35 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234948AbiBJIbk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 03:31:40 -0500
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FCDF1128;
-        Thu, 10 Feb 2022 00:31:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1644481901; x=1676017901;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=8c00mtbRrdA18FyTX012jqJDs1wrgVfFCJpPUSIXoOg=;
-  b=kIaWDprOJ97uL3HXho1jQnTXl9egIlImJKQv4Q4EYGozZgcs8CUF2hYJ
-   HMBCjXQyTDiOts33c7LCStVk+P51p3WbcsWo4vUUgyFDqFPtyis3pbK9H
-   pRss22b87SaV4BtqFPyHzOmyHiEaWvR9rR0KFlFzA1tfDd2+oKyiVJr5+
-   GIoiMBXPsasDZUztzRUVjzPyhKDQ2ZaW+Q/izG3uZEznlpA3mJMMDEm7m
-   s4OYh4P6SksnbDglqdT6Parlr07NKxKwbvbo6T/2vW0gC0hDJXnX9tIea
-   Vm2oFc88E9t6vr8ZhzkVsLZby0wvcPCxG7VKvVlMAuKHxLf9zDM0opful
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10253"; a="248273487"
-X-IronPort-AV: E=Sophos;i="5.88,358,1635231600"; 
-   d="scan'208";a="248273487"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2022 00:31:41 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,358,1635231600"; 
-   d="scan'208";a="629615271"
-Received: from lkp-server01.sh.intel.com (HELO d95dc2dabeb1) ([10.239.97.150])
-  by fmsmga002.fm.intel.com with ESMTP; 10 Feb 2022 00:31:34 -0800
-Received: from kbuild by d95dc2dabeb1 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nI4rW-0002yF-8m; Thu, 10 Feb 2022 08:31:34 +0000
-Date:   Thu, 10 Feb 2022 16:31:10 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Nitesh Shetty <nj.shetty@samsung.com>, mpatocka@redhat.com
-Cc:     kbuild-all@lists.01.org, javier@javigon.com, chaitanyak@nvidia.com,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        dm-devel@redhat.com, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org, axboe@kernel.dk,
-        msnitzer@redhat.com, bvanassche@acm.org,
-        martin.petersen@oracle.com, roland@purestorage.com, hare@suse.de,
-        kbusch@kernel.org, hch@lst.de, Frederick.Knight@netapp.com,
-        zach.brown@ni.com, osandov@fb.com,
-        lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
-        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
-        jack@suse.com, joshi.k@samsung.com, arnav.dawn@samsung.com,
-        nj.shetty@samsung.com
-Subject: Re: [PATCH v2 07/10] nvmet: add copy command support for bdev and
- file ns
-Message-ID: <202202101647.VtWTgalm-lkp@intel.com>
-References: <20220207141348.4235-8-nj.shetty@samsung.com>
+        with ESMTP id S238777AbiBJJsd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2022 04:48:33 -0500
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F940138
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:34 -0800 (PST)
+Received: by mail-pf1-x434.google.com with SMTP id a39so8432177pfx.7
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Feb 2022 01:48:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=ebEwHMBcahyaOVv6fTtPnBnxYLevkOhFiuUwWL0AnLw=;
+        b=bzDJPEns6eQxoGt+9+U7/mRcE2FjJiZH8sjUUAnMDm8mdH7YMLDy+Np5zfYN/Rnt1C
+         5UlB4mT9VnLjmMkGDvyojPunk0YqHt8vjWfTXGO27HEz1BLepHryTsrq8A3Fl4809xko
+         u0mAV/rSjNMQ1oBMVut32Ekh+fi3+PDvgbR6k=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=ebEwHMBcahyaOVv6fTtPnBnxYLevkOhFiuUwWL0AnLw=;
+        b=ZDLBoSfuaEpHWh4D3NPNdrErYnADzecBd9dbLNICjtprO6P5LwIFo5a7Yo+UskWWDu
+         UVT6wCYQ+t2E+sBbFWnIFQdBViknucNIaosM0YAFsg+yzYYIwYqVINOsZgW3vByZezrg
+         3ss8XPysLxL5GbdZKWlVpkzj/yoAAjCOP20HcH1cC9VvJJTYZO5GcbXU1wAbnr8zjQzP
+         fk3JUhWVOko9Mm5Qggq/KqWF35NX3wVVPlcbfqnxHKt0ldi2+2cRjQW5f48Be/6tR0Cn
+         G9z5CXU4nYMWEAy4YuhPRsFimHsXVf7ZLXexd0iIoHyJrGxAR8SEsoMZ1v3B1YyUzWD0
+         IP7Q==
+X-Gm-Message-State: AOAM530flQWfnFOdDoTcY7P7S0StViTAIiVVhSCKvW6JXDMImYIPPey/
+        KsK+atvP+wH1+Wze0AH1Ikr9FyK69cQnoRCtvWORevixgxJnWkGeVVJKoF0TC7l8kaO4U1kArEg
+        X81DBOAq4/h1l3qaFAd9W7RgqsvuW4YfUkgbXeBQrjmzPEHpqNQiHMTlJCTn8WH/hd8YfC9Xkhw
+        ynnP4Q14tKqqw=
+X-Google-Smtp-Source: ABdhPJwfE4qqxPrlXQhn1gwxyBaWpaPDXL2u1Nob+Re6+VgXVobmIkLnBWHNn5J4j+1c86fRe23qJg==
+X-Received: by 2002:a63:2c0c:: with SMTP id s12mr5481076pgs.331.1644486512994;
+        Thu, 10 Feb 2022 01:48:32 -0800 (PST)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id o21sm23706698pfu.100.2022.02.10.01.48.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Feb 2022 01:48:32 -0800 (PST)
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH 0/9] mpi3mr: Bug fixes
+Date:   Thu, 10 Feb 2022 15:28:08 +0530
+Message-Id: <20220210095817.22828-1-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220207141348.4235-8-nj.shetty@samsung.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000007ccfcd05d7a6da85"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Nitesh,
+--0000000000007ccfcd05d7a6da85
+Content-Transfer-Encoding: 8bit
 
-Thank you for the patch! Perhaps something to improve:
+This patch set contains bug fixes for some of the
+mpi3mr driver bugs. 
 
-[auto build test WARNING on axboe-block/for-next]
-[also build test WARNING on linus/master v5.17-rc3 next-20220209]
-[cannot apply to device-mapper-dm/for-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+Sreekanth Reddy (9):
+  mpi3mr: Fix deadlock while canceling the fw event
+  mpi3mr: Fix print proper pending IO count
+  mpi3mr: update MPI3 headers
+  mpi3mr: Fix hibernation issue
+  mpi3mr: Fix cmnd getting marked as inuse forever
+  mpi3mr: Fix report actual data transfer sz
+  mpi3mr: Update the copyright year
+  mpi3mr: Fix memory leaks
+  mpi3mr: Bump driver version to 8.0.0.68.0
 
-url:    https://github.com/0day-ci/linux/commits/Nitesh-Shetty/block-make-bio_map_kern-non-static/20220207-231407
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
-config: arm64-randconfig-s032-20220207 (https://download.01.org/0day-ci/archive/20220210/202202101647.VtWTgalm-lkp@intel.com/config)
-compiler: aarch64-linux-gcc (GCC) 11.2.0
-reproduce:
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # apt-get install sparse
-        # sparse version: v0.6.4-dirty
-        # https://github.com/0day-ci/linux/commit/6bb6ea64499e1ac27975e79bb2eee89f07861893
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Nitesh-Shetty/block-make-bio_map_kern-non-static/20220207-231407
-        git checkout 6bb6ea64499e1ac27975e79bb2eee89f07861893
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=arm64 SHELL=/bin/bash drivers/nvme/target/
+ drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 122 +++++++++++------
+ drivers/scsi/mpi3mr/mpi/mpi30_init.h      |   3 +
+ drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       |  46 +++----
+ drivers/scsi/mpi3mr/mpi/mpi30_pci.h       |   3 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_transport.h |   8 +-
+ drivers/scsi/mpi3mr/mpi3mr.h              |  10 +-
+ drivers/scsi/mpi3mr/mpi3mr_debug.h        |   2 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c           |  12 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c           | 159 ++++++++++++++--------
+ 9 files changed, 232 insertions(+), 133 deletions(-)
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+-- 
+2.27.0
 
 
-sparse warnings: (new ones prefixed by >>)
->> drivers/nvme/target/io-cmd-bdev.c:52:25: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted __le32 [usertype] mcl @@     got restricted __le64 [usertype] @@
-   drivers/nvme/target/io-cmd-bdev.c:52:25: sparse:     expected restricted __le32 [usertype] mcl
-   drivers/nvme/target/io-cmd-bdev.c:52:25: sparse:     got restricted __le64 [usertype]
->> drivers/nvme/target/io-cmd-bdev.c:53:27: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted __le16 [usertype] mssrl @@     got restricted __le32 [usertype] @@
-   drivers/nvme/target/io-cmd-bdev.c:53:27: sparse:     expected restricted __le16 [usertype] mssrl
-   drivers/nvme/target/io-cmd-bdev.c:53:27: sparse:     got restricted __le32 [usertype]
->> drivers/nvme/target/io-cmd-bdev.c:55:26: sparse: sparse: incorrect type in assignment (different base types) @@     expected unsigned char [usertype] msrc @@     got restricted __le16 @@
-   drivers/nvme/target/io-cmd-bdev.c:55:26: sparse:     expected unsigned char [usertype] msrc
-   drivers/nvme/target/io-cmd-bdev.c:55:26: sparse:     got restricted __le16
-   drivers/nvme/target/io-cmd-bdev.c:58:34: sparse: sparse: incorrect type in assignment (different base types) @@     expected unsigned char [usertype] msrc @@     got restricted __le16 @@
-   drivers/nvme/target/io-cmd-bdev.c:58:34: sparse:     expected unsigned char [usertype] msrc
-   drivers/nvme/target/io-cmd-bdev.c:58:34: sparse:     got restricted __le16
-   drivers/nvme/target/io-cmd-bdev.c:59:35: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted __le16 [usertype] mssrl @@     got restricted __le32 [usertype] @@
-   drivers/nvme/target/io-cmd-bdev.c:59:35: sparse:     expected restricted __le16 [usertype] mssrl
-   drivers/nvme/target/io-cmd-bdev.c:59:35: sparse:     got restricted __le32 [usertype]
->> drivers/nvme/target/io-cmd-bdev.c:61:35: sparse: sparse: cast to restricted __le32
->> drivers/nvme/target/io-cmd-bdev.c:61:35: sparse: sparse: cast from restricted __le16
-   drivers/nvme/target/io-cmd-bdev.c:61:33: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted __le32 [usertype] mcl @@     got restricted __le64 [usertype] @@
-   drivers/nvme/target/io-cmd-bdev.c:61:33: sparse:     expected restricted __le32 [usertype] mcl
-   drivers/nvme/target/io-cmd-bdev.c:61:33: sparse:     got restricted __le64 [usertype]
-   drivers/nvme/target/io-cmd-bdev.c:65:34: sparse: sparse: incorrect type in assignment (different base types) @@     expected unsigned char [usertype] msrc @@     got restricted __le16 @@
-   drivers/nvme/target/io-cmd-bdev.c:65:34: sparse:     expected unsigned char [usertype] msrc
-   drivers/nvme/target/io-cmd-bdev.c:65:34: sparse:     got restricted __le16
-   drivers/nvme/target/io-cmd-bdev.c:66:35: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted __le16 [usertype] mssrl @@     got restricted __le32 [usertype] @@
-   drivers/nvme/target/io-cmd-bdev.c:66:35: sparse:     expected restricted __le16 [usertype] mssrl
-   drivers/nvme/target/io-cmd-bdev.c:66:35: sparse:     got restricted __le32 [usertype]
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast to restricted __le32
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast from restricted __le16
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast to restricted __le32
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast from restricted __le16
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast to restricted __le32
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast from restricted __le16
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast to restricted __le32
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast from restricted __le16
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast to restricted __le32
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast from restricted __le16
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast to restricted __le32
-   drivers/nvme/target/io-cmd-bdev.c:68:35: sparse: sparse: cast from restricted __le16
-   drivers/nvme/target/io-cmd-bdev.c:68:33: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted __le32 [usertype] mcl @@     got restricted __le64 [usertype] @@
-   drivers/nvme/target/io-cmd-bdev.c:68:33: sparse:     expected restricted __le32 [usertype] mcl
-   drivers/nvme/target/io-cmd-bdev.c:68:33: sparse:     got restricted __le64 [usertype]
---
->> drivers/nvme/target/admin-cmd.c:533:26: sparse: sparse: incorrect type in assignment (different base types) @@     expected unsigned char [usertype] msrc @@     got restricted __le16 @@
-   drivers/nvme/target/admin-cmd.c:533:26: sparse:     expected unsigned char [usertype] msrc
-   drivers/nvme/target/admin-cmd.c:533:26: sparse:     got restricted __le16
->> drivers/nvme/target/admin-cmd.c:534:27: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted __le16 [usertype] mssrl @@     got restricted __le32 [usertype] @@
-   drivers/nvme/target/admin-cmd.c:534:27: sparse:     expected restricted __le16 [usertype] mssrl
-   drivers/nvme/target/admin-cmd.c:534:27: sparse:     got restricted __le32 [usertype]
->> drivers/nvme/target/admin-cmd.c:535:27: sparse: sparse: cast to restricted __le32
->> drivers/nvme/target/admin-cmd.c:535:27: sparse: sparse: cast from restricted __le16
->> drivers/nvme/target/admin-cmd.c:535:25: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted __le32 [usertype] mcl @@     got restricted __le64 [usertype] @@
-   drivers/nvme/target/admin-cmd.c:535:25: sparse:     expected restricted __le32 [usertype] mcl
-   drivers/nvme/target/admin-cmd.c:535:25: sparse:     got restricted __le64 [usertype]
+--0000000000007ccfcd05d7a6da85
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-vim +52 drivers/nvme/target/io-cmd-bdev.c
-
-    11	
-    12	void nvmet_bdev_set_limits(struct block_device *bdev, struct nvme_id_ns *id)
-    13	{
-    14		const struct queue_limits *ql = &bdev_get_queue(bdev)->limits;
-    15		/* Number of logical blocks per physical block. */
-    16		const u32 lpp = ql->physical_block_size / ql->logical_block_size;
-    17		/* Logical blocks per physical block, 0's based. */
-    18		const __le16 lpp0b = to0based(lpp);
-    19	
-    20		/*
-    21		 * For NVMe 1.2 and later, bit 1 indicates that the fields NAWUN,
-    22		 * NAWUPF, and NACWU are defined for this namespace and should be
-    23		 * used by the host for this namespace instead of the AWUN, AWUPF,
-    24		 * and ACWU fields in the Identify Controller data structure. If
-    25		 * any of these fields are zero that means that the corresponding
-    26		 * field from the identify controller data structure should be used.
-    27		 */
-    28		id->nsfeat |= 1 << 1;
-    29		id->nawun = lpp0b;
-    30		id->nawupf = lpp0b;
-    31		id->nacwu = lpp0b;
-    32	
-    33		/*
-    34		 * Bit 4 indicates that the fields NPWG, NPWA, NPDG, NPDA, and
-    35		 * NOWS are defined for this namespace and should be used by
-    36		 * the host for I/O optimization.
-    37		 */
-    38		id->nsfeat |= 1 << 4;
-    39		/* NPWG = Namespace Preferred Write Granularity. 0's based */
-    40		id->npwg = lpp0b;
-    41		/* NPWA = Namespace Preferred Write Alignment. 0's based */
-    42		id->npwa = id->npwg;
-    43		/* NPDG = Namespace Preferred Deallocate Granularity. 0's based */
-    44		id->npdg = to0based(ql->discard_granularity / ql->logical_block_size);
-    45		/* NPDG = Namespace Preferred Deallocate Alignment */
-    46		id->npda = id->npdg;
-    47		/* NOWS = Namespace Optimal Write Size */
-    48		id->nows = to0based(ql->io_opt / ql->logical_block_size);
-    49	
-    50		/*Copy limits*/
-    51		if (ql->max_copy_sectors) {
-  > 52			id->mcl = cpu_to_le64((ql->max_copy_sectors << 9) / ql->logical_block_size);
-  > 53			id->mssrl = cpu_to_le32((ql->max_copy_range_sectors << 9) /
-    54					ql->logical_block_size);
-  > 55			id->msrc = to0based(ql->max_copy_nr_ranges);
-    56		} else {
-    57			if (ql->zoned == BLK_ZONED_NONE) {
-    58				id->msrc = to0based(BIO_MAX_VECS);
-    59				id->mssrl = cpu_to_le32(
-    60						(BIO_MAX_VECS << PAGE_SHIFT) / ql->logical_block_size);
-  > 61				id->mcl = cpu_to_le64(le32_to_cpu(id->mssrl) * BIO_MAX_VECS);
-    62	#ifdef CONFIG_BLK_DEV_ZONED
-    63			} else {
-    64				/* TODO: get right values for zoned device */
-    65				id->msrc = to0based(BIO_MAX_VECS);
-    66				id->mssrl = cpu_to_le32(min((BIO_MAX_VECS << PAGE_SHIFT),
-    67						ql->chunk_sectors) / ql->logical_block_size);
-    68				id->mcl = cpu_to_le64(min(le32_to_cpu(id->mssrl) * BIO_MAX_VECS,
-    69							ql->chunk_sectors));
-    70	#endif
-    71			}
-    72		}
-    73	}
-    74	
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+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
+5AGo2E3pe+2yEgkxKvM2fnniZHUiSjbrfKk6nl9RIXPOKUP5HntZFdA5XuNYXWM+HPs3O0AJwBm/
+VCZsZtkjVjxeBmTXiXDnxytdsHdGrHGymPfjJYatDu6d1KRVDlMCAwEAAaOCAd0wggHZMA4GA1Ud
+DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
+Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
+BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
+Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
+aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
+JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
+BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUClVHbAvhzGT8
+s2/6xOf58NkGMQ8wDQYJKoZIhvcNAQELBQADggEBAENRsP1H3calKC2Sstg/8li8byKiqljCFkfi
+IhcJsjPOOR9UZnMFxAoH/s2AlM7mQDR7rZ2MxRuUnIa6Cp5W5w1lUJHktjCUHnQq5nIAZ9GH5SDY
+pgzbFsoYX8U2QCmkAC023FF++ZDJuc9aj0R/nhABxmUYErIze2jV/VO8Pj7TnCrBONZ/Qvf8G5CQ
+X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
+eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
+Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
+MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIF5Um2Mp0XF+C+Iao1gh
+paMdWN2Tw8cLN5e7q5ujuW0pMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDIxMDA5NDgzM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAOtxD9j6JaZ0+vSFzxYAv/qc+/ikqg8mDkOYrb
+WKIfsVZHDPTGZQc+nwnm3KZU5ziAoMjlydsk4NQUS30sX1pLbt6gtOdRl9j6x8BDopUX4RuAe+zi
+O/EVilQQi/M/HLVjo00uwcEAa3kb4plYScxEzELIOIWjwP+/Il/3eovzTMyu6yK+D4ZEKEZV6ynh
+ndtuETfRYGb1nogLwrlttakVfRJ5sMBhCz692E3vSvwbOkSxalZ3meUVzhu92p+PNDB+1R88A3qy
+CDMRIG0K6BT1t2Yam7f/ueL20G16Tm7flpgy/11ou67aCAZi2V3KtKIdlPDc1osPjzFdoXBOagob
+--0000000000007ccfcd05d7a6da85--
