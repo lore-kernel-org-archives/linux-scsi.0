@@ -2,49 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2528DC433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A640C433F5
 	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 22:34:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354161AbiBKWek (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Feb 2022 17:34:40 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34474 "EHLO
+        id S1354162AbiBKWel (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Feb 2022 17:34:41 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354147AbiBKWea (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 17:34:30 -0500
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F8AED55
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:28 -0800 (PST)
-Received: by mail-pl1-f169.google.com with SMTP id x3so5783277pll.3
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:28 -0800 (PST)
+        with ESMTP id S1354156AbiBKWed (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 17:34:33 -0500
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59804D5D
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:31 -0800 (PST)
+Received: by mail-pl1-f172.google.com with SMTP id w20so5758198plq.12
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:31 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=KZRyurWwIUCUHUSCOl7sC1WUzmpUgrP0RhTAYS0PbCg=;
-        b=lZq1yhaNVujzufeOSImA0RijVVMj8Mv37mvNArwvahwB33IgFsnZ9Irrp6p/+xBi3o
-         WTJy3zuEzJbP4gyWBqpnaS2x2QLK4s0LtXVddA0veIYsOqWgbkM4N2fePxomes9eVrY1
-         XLO/ZOh91v1G8oFlBMMJUbl76nhlfgqtOccVAqAjrbWyqRMDG5oIJK5+lS9jplphnp34
-         QqbDvtEamMEKeqTvu3hwoVE3qQlvE2z5uGdIoJ/al+1VDwlDuEkg8AztS14m+Iw4zZOw
-         jW0O0m2Mm1mAfOJxO6+J+iBKhoE3f7vFlJcVknnBLGb+Q4tD54zasiFOp5rjBYhOEpbk
-         qdRA==
-X-Gm-Message-State: AOAM5317o6URdYySFad0RmyTGITSXJUyzUUJ0/UU7L35J5YLKyqfFEXO
-        86Q7J/4FD4W5Doc7pGxJ5Rw=
-X-Google-Smtp-Source: ABdhPJxbzevkrudNgKUuWeGWOMlua8YN8cDBOgzhIyzyhMSsXAB+4ZZJr76i667xAbycp3h1tXmkzg==
-X-Received: by 2002:a17:902:e74b:: with SMTP id p11mr3677487plf.115.1644618867412;
-        Fri, 11 Feb 2022 14:34:27 -0800 (PST)
+        bh=cxknL8rORaVxDDihqRXFx1elb8NLsNOt5DCGPmZQq24=;
+        b=uhMjcHUr6atfvYwR7uTmQfsTbH2Rl6xIWTQXRp4z+KpksQQd40hpzIfybFvkOw0Kms
+         jFTArrL8jYCDsE4qWeuP5zHEsGDA09pTuBoDv5wvd8M/bUbQ7uqfLNgJMUYmfyIMpctR
+         dVEnKrBjTiUnQgYMjeHWnKazWryeDVrNgZObdnrT13tPfpE/T4R//ZwlJMNl+xzBBcLk
+         IoLKIX8WjKFYBpJdufPI9AkB13eDv09kv8p9UNU0IQFcxy2w+/I6azQmls5SnrWenxzu
+         /JfpC5FcOAESuub71jnp8yXEsHavYye2DLvfnXAcMEyTa0GIWaejeEu3/pjs51HtUQrn
+         tTeg==
+X-Gm-Message-State: AOAM533HrM+3CDdvRjktW7c8qEmOAb8Og2J3r+y67p3crGZMnMv3SEF7
+        ZP+YcvYSzHtZK1+pUIg9kuQ=
+X-Google-Smtp-Source: ABdhPJwz6b+GFCw852Ct5R8LvNnCQZWgTRdVriM0WlbA1V7iNldgKNZn/hjre1/Y0E7zU5N7XNHHhw==
+X-Received: by 2002:a17:902:bd0a:: with SMTP id p10mr3500236pls.159.1644618870719;
+        Fri, 11 Feb 2022 14:34:30 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id n13sm6296733pjq.13.2022.02.11.14.34.26
+        by smtp.gmail.com with ESMTPSA id n13sm6296733pjq.13.2022.02.11.14.34.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Feb 2022 14:34:26 -0800 (PST)
+        Fri, 11 Feb 2022 14:34:30 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Hannes Reinecke <hare@suse.de>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 38/48] scsi: sym53c500_cs: Move the SCSI pointer to private command data
-Date:   Fri, 11 Feb 2022 14:32:37 -0800
-Message-Id: <20220211223247.14369-39-bvanassche@acm.org>
+Subject: [PATCH v3 40/48] scsi: qla1280: Move the SCSI pointer to private command data
+Date:   Fri, 11 Feb 2022 14:32:39 -0800
+Message-Id: <20220211223247.14369-41-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220211223247.14369-1-bvanassche@acm.org>
 References: <20220211223247.14369-1-bvanassche@acm.org>
@@ -55,157 +56,103 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Set .cmd_size in the SCSI host template instead of using the SCSI pointer
+from struct scsi_cmnd. This patch prepares for removal of the SCSI pointer
 from struct scsi_cmnd.
-This patch prepares for removal of the SCSI pointer from struct scsi_cmnd.
 
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/pcmcia/sym53c500_cs.c | 47 ++++++++++++++++++------------
- 1 file changed, 29 insertions(+), 18 deletions(-)
+ drivers/scsi/qla1280.c | 21 ++++-----------------
+ drivers/scsi/qla1280.h |  3 +--
+ 2 files changed, 5 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
-index fc93d2a57e1e..c4a838635893 100644
---- a/drivers/scsi/pcmcia/sym53c500_cs.c
-+++ b/drivers/scsi/pcmcia/sym53c500_cs.c
-@@ -192,6 +192,11 @@ struct sym53c500_data {
- 	int fast_pio;
- };
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 1dc56f4c89d8..0ab595c0870a 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -477,13 +477,6 @@ __setup("qla1280=", qla1280_setup);
+ #endif
  
-+static struct scsi_pointer *sym53c500_scsi_pointer(struct scsi_cmnd *cmd)
-+{
-+	return scsi_cmd_priv(cmd);
-+}
-+
- enum Phase {
-     idle,
-     data_out,
-@@ -351,6 +356,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 	struct sym53c500_data *data =
- 	    (struct sym53c500_data *)dev->hostdata;
- 	struct scsi_cmnd *curSC = data->current_SC;
-+	struct scsi_pointer *scsi_pointer = sym53c500_scsi_pointer(curSC);
- 	int fast_pio = data->fast_pio;
  
- 	spin_lock_irqsave(dev->host_lock, flags);
-@@ -397,11 +403,12 @@ SYM53C500_intr(int irq, void *dev_id)
- 
- 	if (int_reg & 0x20) {		/* Disconnect */
- 		DEB(printk("SYM53C500: disconnect intr received\n"));
--		if (curSC->SCp.phase != message_in) {	/* Unexpected disconnect */
-+		if (scsi_pointer->phase != message_in) {	/* Unexpected disconnect */
- 			curSC->result = DID_NO_CONNECT << 16;
- 		} else {	/* Command complete, return status and message */
--			curSC->result = (curSC->SCp.Status & 0xff)
--			    | ((curSC->SCp.Message & 0xff) << 8) | (DID_OK << 16);
-+			curSC->result = (scsi_pointer->Status & 0xff) |
-+				((scsi_pointer->Message & 0xff) << 8) |
-+				(DID_OK << 16);
- 		}
- 		goto idle_out;
- 	}
-@@ -412,7 +419,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 			struct scatterlist *sg;
- 			int i;
- 
--			curSC->SCp.phase = data_out;
-+			scsi_pointer->phase = data_out;
- 			VDEB(printk("SYM53C500: Data-Out phase\n"));
- 			outb(FLUSH_FIFO, port_base + CMD_REG);
- 			LOAD_DMA_COUNT(port_base, scsi_bufflen(curSC));	/* Max transfer size */
-@@ -431,7 +438,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 			struct scatterlist *sg;
- 			int i;
- 
--			curSC->SCp.phase = data_in;
-+			scsi_pointer->phase = data_in;
- 			VDEB(printk("SYM53C500: Data-In phase\n"));
- 			outb(FLUSH_FIFO, port_base + CMD_REG);
- 			LOAD_DMA_COUNT(port_base, scsi_bufflen(curSC));	/* Max transfer size */
-@@ -446,12 +453,12 @@ SYM53C500_intr(int irq, void *dev_id)
- 		break;
- 
- 	case 0x02:		/* COMMAND */
--		curSC->SCp.phase = command_ph;
-+		scsi_pointer->phase = command_ph;
- 		printk("SYM53C500: Warning: Unknown interrupt occurred in command phase!\n");
- 		break;
- 
- 	case 0x03:		/* STATUS */
--		curSC->SCp.phase = status_ph;
-+		scsi_pointer->phase = status_ph;
- 		VDEB(printk("SYM53C500: Status phase\n"));
- 		outb(FLUSH_FIFO, port_base + CMD_REG);
- 		outb(INIT_CMD_COMPLETE, port_base + CMD_REG);
-@@ -464,22 +471,24 @@ SYM53C500_intr(int irq, void *dev_id)
- 
- 	case 0x06:		/* MESSAGE-OUT */
- 		DEB(printk("SYM53C500: Message-Out phase\n"));
--		curSC->SCp.phase = message_out;
-+		scsi_pointer->phase = message_out;
- 		outb(SET_ATN, port_base + CMD_REG);	/* Reject the message */
- 		outb(MSG_ACCEPT, port_base + CMD_REG);
- 		break;
- 
- 	case 0x07:		/* MESSAGE-IN */
- 		VDEB(printk("SYM53C500: Message-In phase\n"));
--		curSC->SCp.phase = message_in;
-+		scsi_pointer->phase = message_in;
- 
--		curSC->SCp.Status = inb(port_base + SCSI_FIFO);
--		curSC->SCp.Message = inb(port_base + SCSI_FIFO);
-+		scsi_pointer->Status = inb(port_base + SCSI_FIFO);
-+		scsi_pointer->Message = inb(port_base + SCSI_FIFO);
- 
- 		VDEB(printk("SCSI FIFO size=%d\n", inb(port_base + FIFO_FLAGS) & 0x1f));
--		DEB(printk("Status = %02x  Message = %02x\n", curSC->SCp.Status, curSC->SCp.Message));
-+		DEB(printk("Status = %02x  Message = %02x\n",
-+			   scsi_pointer->Status, scsi_pointer->Message));
- 
--		if (curSC->SCp.Message == SAVE_POINTERS || curSC->SCp.Message == DISCONNECT) {
-+		if (scsi_pointer->Message == SAVE_POINTERS ||
-+		    scsi_pointer->Message == DISCONNECT) {
- 			outb(SET_ATN, port_base + CMD_REG);	/* Reject message */
- 			DEB(printk("Discarding SAVE_POINTERS message\n"));
- 		}
-@@ -491,7 +500,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 	return IRQ_HANDLED;
- 
- idle_out:
--	curSC->SCp.phase = idle;
-+	scsi_pointer->phase = idle;
- 	scsi_done(curSC);
- 	goto out;
- }
-@@ -539,6 +548,7 @@ SYM53C500_info(struct Scsi_Host *SChost)
- 
- static int SYM53C500_queue_lck(struct scsi_cmnd *SCpnt)
+-/*
+- * We use the scsi_pointer structure that's included with each scsi_command
+- * to overlay our struct srb over it. qla1280_init() checks that a srb is not
+- * bigger than a scsi_pointer.
+- */
+-
+-#define	CMD_SP(Cmnd)		&Cmnd->SCp
+ #define	CMD_CDBLEN(Cmnd)	Cmnd->cmd_len
+ #define	CMD_CDBP(Cmnd)		Cmnd->cmnd
+ #define	CMD_SNSP(Cmnd)		Cmnd->sense_buffer
+@@ -693,7 +686,7 @@ static int qla1280_queuecommand_lck(struct scsi_cmnd *cmd)
  {
-+	struct scsi_pointer *scsi_pointer = sym53c500_scsi_pointer(SCpnt);
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct scsi_qla_host *ha = (struct scsi_qla_host *)host->hostdata;
+-	struct srb *sp = (struct srb *)CMD_SP(cmd);
++	struct srb *sp = scsi_cmd_priv(cmd);
+ 	int status;
+ 
+ 	sp->cmd = cmd;
+@@ -828,7 +821,7 @@ qla1280_error_action(struct scsi_cmnd *cmd, enum action action)
+ 	ENTER("qla1280_error_action");
+ 
+ 	ha = (struct scsi_qla_host *)(CMD_HOST(cmd)->hostdata);
+-	sp = (struct srb *)CMD_SP(cmd);
++	sp = scsi_cmd_priv(cmd);
+ 	bus = SCSI_BUS_32(cmd);
+ 	target = SCSI_TCN_32(cmd);
+ 	lun = SCSI_LUN_32(cmd);
+@@ -3959,7 +3952,7 @@ __qla1280_print_scsi_cmd(struct scsi_cmnd *cmd)
  	int i;
- 	int port_base = SCpnt->device->host->io_port;
- 	struct sym53c500_data *data =
-@@ -555,9 +565,9 @@ static int SYM53C500_queue_lck(struct scsi_cmnd *SCpnt)
- 	VDEB(printk("\n"));
+ 	ha = (struct scsi_qla_host *)host->hostdata;
  
- 	data->current_SC = SCpnt;
--	data->current_SC->SCp.phase = command_ph;
--	data->current_SC->SCp.Status = 0;
--	data->current_SC->SCp.Message = 0;
-+	scsi_pointer->phase = command_ph;
-+	scsi_pointer->Status = 0;
-+	scsi_pointer->Message = 0;
- 
- 	/* We are locked here already by the mid layer */
- 	REG0(port_base);
-@@ -671,7 +681,8 @@ static struct scsi_host_template sym53c500_driver_template = {
-      .can_queue			= 1,
-      .this_id			= 7,
-      .sg_tablesize		= 32,
--     .shost_groups		= SYM53C500_shost_groups
-+     .shost_groups		= SYM53C500_shost_groups,
-+     .cmd_size			= sizeof(struct scsi_pointer),
+-	sp = (struct srb *)CMD_SP(cmd);
++	sp = scsi_cmd_priv(cmd);
+ 	printk("SCSI Command @= 0x%p, Handle=0x%p\n", cmd, CMD_HANDLE(cmd));
+ 	printk("  chan=%d, target = 0x%02x, lun = 0x%02x, cmd_len = 0x%02x\n",
+ 	       SCSI_BUS_32(cmd), SCSI_TCN_32(cmd), SCSI_LUN_32(cmd),
+@@ -3979,7 +3972,6 @@ __qla1280_print_scsi_cmd(struct scsi_cmnd *cmd)
+ 	   } */
+ 	printk("  tag=%d, transfersize=0x%x \n",
+ 	       scsi_cmd_to_rq(cmd)->tag, cmd->transfersize);
+-	printk("  SP=0x%p\n", CMD_SP(cmd));
+ 	printk(" underflow size = 0x%x, direction=0x%x\n",
+ 	       cmd->underflow, cmd->sc_data_direction);
+ }
+@@ -4139,6 +4131,7 @@ static struct scsi_host_template qla1280_driver_template = {
+ 	.can_queue		= MAX_OUTSTANDING_COMMANDS,
+ 	.this_id		= -1,
+ 	.sg_tablesize		= SG_ALL,
++	.cmd_size		= sizeof(struct srb),
  };
  
- static int SYM53C500_config_check(struct pcmcia_device *p_dev, void *priv_data)
+ 
+@@ -4351,12 +4344,6 @@ static struct pci_driver qla1280_pci_driver = {
+ static int __init
+ qla1280_init(void)
+ {
+-	if (sizeof(struct srb) > sizeof(struct scsi_pointer)) {
+-		printk(KERN_WARNING
+-		       "qla1280: struct srb too big, aborting\n");
+-		return -EINVAL;
+-	}
+-
+ #ifdef MODULE
+ 	/*
+ 	 * If we are called as a module, the qla1280 pointer may not be null
+diff --git a/drivers/scsi/qla1280.h b/drivers/scsi/qla1280.h
+index e7820b5bca38..d309e2ca14de 100644
+--- a/drivers/scsi/qla1280.h
++++ b/drivers/scsi/qla1280.h
+@@ -87,8 +87,7 @@
+ #define RESPONSE_ENTRY_CNT		63  /* Number of response entries. */
+ 
+ /*
+- * SCSI Request Block structure  (sp)  that is placed
+- * on cmd->SCp location of every I/O
++ * SCSI Request Block structure (sp) that occurs after each struct scsi_cmnd.
+  */
+ struct srb {
+ 	struct list_head list;		/* (8/16) LU queue */
