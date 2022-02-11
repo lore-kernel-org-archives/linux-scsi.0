@@ -2,53 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 727BDC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 22:34:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 310F0C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 22:34:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354146AbiBKWeZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Feb 2022 17:34:25 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34408 "EHLO
+        id S240439AbiBKWe0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Feb 2022 17:34:26 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354075AbiBKWeW (ORCPT
+        with ESMTP id S1354077AbiBKWeW (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 17:34:22 -0500
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AEC9D5D
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:14 -0800 (PST)
-Received: by mail-pl1-f176.google.com with SMTP id c3so5785563pls.5
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:14 -0800 (PST)
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51687D5F
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:16 -0800 (PST)
+Received: by mail-pf1-f172.google.com with SMTP id y5so18662484pfe.4
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:16 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=u/qBRBLM1r2yTY4VduEFKfWhYTThTW41WBM80pT8DTc=;
-        b=alQgAup4NSL0n7eBJWV/5ExxBdVYSMMWnVrrg9hSC1ckxzcftI1os8Wf9rOTWzxfG/
-         E2uBOuJ+7ymwsmsLZLn8M16b19ORgCeKuHYHAqfGFXBa6IHRnmOUJjGSibNlqlRQ9VrW
-         lH8QVkBbTR0TCEi17V1SAkrfXgkNh+4wIDe+MW3ruePeIEYLHv3QL21q6CdWqJNk/pyl
-         n5N348fHf8/DnsQse7FunFgfujqa78cdC38MZXHcicb4C/yRjgFk/KiE3foPe50gzR73
-         lO3IUtX/yaDGP4r/ogGiaKytac18dHToxtXboVKHOF90tbCNyijjUG4dP/uNKNqONZ/W
-         9TLQ==
-X-Gm-Message-State: AOAM530DxJ0TWw/oUxhkzGb4nDIALcxEKrR612pdhWgIsBky7gIxJjgn
-        t+0h51sIyhPk6SLaeF02mes=
-X-Google-Smtp-Source: ABdhPJx9Mv5yPEcO0G8UCTxla5zG5H7QBUQdWQZLvUM20i/MTEwHGl25r5tH3zuUFIdESzCtzr8e5Q==
-X-Received: by 2002:a17:902:bb97:: with SMTP id m23mr3426256pls.151.1644618854023;
-        Fri, 11 Feb 2022 14:34:14 -0800 (PST)
+        bh=8KYU+BdU6PlksD78VB0yUTvt/EaDu45QnauSkwKpQfw=;
+        b=KtoBDGyKJnmNza8Dym6mrRD+EKc667ZwxVei5h2Ispo6jd0X3DYEMMAdHbuejBfySR
+         ElxLO/hYHz2VCTMjhxYeFaDYyYAMi7mcraKYZYjBYwDr5ybOCiHPByla8364qX3FObNO
+         BSraynIae4mZuCYaGiDzrlN6BCYB4yJR2In9LJsoE8WmFZfq2jPik6Gbx+fuUQMTTdBO
+         XDb3gh/rfNBsRslTg9yI0p/UadZC/traBbWXRmXFPJcgUEbsBUvSuA0OuhAvQRwl1om8
+         VHCfSbllyK9NNxm/RPD5W1IVAEZR0/Kk4nA01424QzTxQtkXVebMOQkgwfezQSV1U0iP
+         z/8g==
+X-Gm-Message-State: AOAM533G3Yi/QTr13BI/R38q+KfIkLn49sAFGyjHiGqv5+RCAxxzqFdB
+        z14Fsmawt9GHbhEcrbXGNeQ=
+X-Google-Smtp-Source: ABdhPJzSsGKbMeM3jtxCBIGc+R3THOamRZ1rS454pxwQugtti9LG1V58WesAtKr+t3GOKGuyTVt4gw==
+X-Received: by 2002:a05:6a00:1382:: with SMTP id t2mr3780859pfg.31.1644618855681;
+        Fri, 11 Feb 2022 14:34:15 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id n13sm6296733pjq.13.2022.02.11.14.34.12
+        by smtp.gmail.com with ESMTPSA id n13sm6296733pjq.13.2022.02.11.14.34.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Feb 2022 14:34:13 -0800 (PST)
+        Fri, 11 Feb 2022 14:34:15 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Hannes Reinecke <hare@suse.de>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 32/48] scsi: megasas: Stop using the SCSI pointer
-Date:   Fri, 11 Feb 2022 14:32:31 -0800
-Message-Id: <20220211223247.14369-33-bvanassche@acm.org>
+Subject: [PATCH v3 33/48] scsi: mesh: Move the SCSI pointer to private command data
+Date:   Fri, 11 Feb 2022 14:32:32 -0800
+Message-Id: <20220211223247.14369-34-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220211223247.14369-1-bvanassche@acm.org>
 References: <20220211223247.14369-1-bvanassche@acm.org>
@@ -63,150 +59,102 @@ from struct scsi_cmnd. This patch prepares for removal of the SCSI pointer
 from struct scsi_cmnd.
 
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        | 12 ++++++++++++
- drivers/scsi/megaraid/megaraid_sas_base.c   |  8 ++++----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 15 ++++++++-------
- 3 files changed, 24 insertions(+), 11 deletions(-)
+ drivers/scsi/mesh.c | 20 +++++++++++++-------
+ drivers/scsi/mesh.h | 11 +++++++++++
+ 2 files changed, 24 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 2c9d1b796475..611871ef15b5 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -18,6 +18,8 @@
- #ifndef LSI_MEGARAID_SAS_H
- #define LSI_MEGARAID_SAS_H
- 
-+#include <scsi/scsi_cmnd.h>
+diff --git a/drivers/scsi/mesh.c b/drivers/scsi/mesh.c
+index ca133e0a140a..de9ae36def42 100644
+--- a/drivers/scsi/mesh.c
++++ b/drivers/scsi/mesh.c
+@@ -586,10 +586,12 @@ static void mesh_done(struct mesh_state *ms, int start_next)
+ 	ms->current_req = NULL;
+ 	tp->current_req = NULL;
+ 	if (cmd) {
++		struct scsi_pointer *scsi_pointer = mesh_scsi_pointer(cmd);
 +
- /*
-  * MegaRAID SAS Driver meta data
-  */
-@@ -2594,6 +2596,16 @@ struct megasas_cmd {
- 	};
+ 		set_host_byte(cmd, ms->stat);
+-		set_status_byte(cmd, cmd->SCp.Status);
++		set_status_byte(cmd, scsi_pointer->Status);
+ 		if (ms->stat == DID_OK)
+-			scsi_msg_to_host_byte(cmd, cmd->SCp.Message);
++			scsi_msg_to_host_byte(cmd, scsi_pointer->Message);
+ 		if (DEBUG_TARGET(cmd)) {
+ 			printk(KERN_DEBUG "mesh_done: result = %x, data_ptr=%d, buflen=%d\n",
+ 			       cmd->result, ms->data_ptr, scsi_bufflen(cmd));
+@@ -603,7 +605,7 @@ static void mesh_done(struct mesh_state *ms, int start_next)
+ 			}
+ #endif
+ 		}
+-		cmd->SCp.this_residual -= ms->data_ptr;
++		scsi_pointer->this_residual -= ms->data_ptr;
+ 		scsi_done(cmd);
+ 	}
+ 	if (start_next) {
+@@ -1171,7 +1173,7 @@ static void handle_msgin(struct mesh_state *ms)
+ 	if (ms->n_msgin < msgin_length(ms))
+ 		goto reject;
+ 	if (cmd)
+-		cmd->SCp.Message = code;
++		mesh_scsi_pointer(cmd)->Message = code;
+ 	switch (code) {
+ 	case COMMAND_COMPLETE:
+ 		break;
+@@ -1262,7 +1264,7 @@ static void set_dma_cmds(struct mesh_state *ms, struct scsi_cmnd *cmd)
+ 	if (cmd) {
+ 		int nseg;
+ 
+-		cmd->SCp.this_residual = scsi_bufflen(cmd);
++		mesh_scsi_pointer(cmd)->this_residual = scsi_bufflen(cmd);
+ 
+ 		nseg = scsi_dma_map(cmd);
+ 		BUG_ON(nseg < 0);
+@@ -1592,10 +1594,13 @@ static void cmd_complete(struct mesh_state *ms)
+ 			break;
+ 		case statusing:
+ 			if (cmd) {
+-				cmd->SCp.Status = mr->fifo;
++				struct scsi_pointer *scsi_pointer =
++					mesh_scsi_pointer(cmd);
++
++				scsi_pointer->Status = mr->fifo;
+ 				if (DEBUG_TARGET(cmd))
+ 					printk(KERN_DEBUG "mesh: status is %x\n",
+-					       cmd->SCp.Status);
++					       scsi_pointer->Status);
+ 			}
+ 			ms->msgphase = msg_in;
+ 			break;
+@@ -1837,6 +1842,7 @@ static struct scsi_host_template mesh_template = {
+ 	.sg_tablesize			= SG_ALL,
+ 	.cmd_per_lun			= 2,
+ 	.max_segment_size		= 65535,
++	.cmd_size			= sizeof(struct mesh_cmd_priv),
  };
  
-+struct megasas_cmd_priv {
-+	void	*cmd_priv;
-+	u8	status;
+ static int mesh_probe(struct macio_dev *mdev, const struct of_device_id *match)
+diff --git a/drivers/scsi/mesh.h b/drivers/scsi/mesh.h
+index ee53c05ace95..1afa8b37295b 100644
+--- a/drivers/scsi/mesh.h
++++ b/drivers/scsi/mesh.h
+@@ -8,6 +8,17 @@
+ #ifndef _MESH_H
+ #define _MESH_H
+ 
++struct mesh_cmd_priv {
++	struct scsi_pointer scsi_pointer;
 +};
 +
-+static inline struct megasas_cmd_priv *megasas_priv(struct scsi_cmnd *cmd)
++static inline struct scsi_pointer *mesh_scsi_pointer(struct scsi_cmnd *cmd)
 +{
-+	return scsi_cmd_priv(cmd);
++	struct mesh_cmd_priv *mcmd = scsi_cmd_priv(cmd);
++
++	return &mcmd->scsi_pointer;
 +}
 +
- #define MAX_MGMT_ADAPTERS		1024
- #define MAX_IOCTL_SGE			16
- 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 82e1e24257bc..8bf72dbc33b7 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1760,7 +1760,7 @@ megasas_build_and_issue_cmd(struct megasas_instance *instance,
- 		goto out_return_cmd;
- 
- 	cmd->scmd = scmd;
--	scmd->SCp.ptr = (char *)cmd;
-+	megasas_priv(scmd)->cmd_priv = cmd;
- 
- 	/*
- 	 * Issue the command to the FW
-@@ -2992,11 +2992,10 @@ megasas_dump_reg_set(void __iomem *reg_set)
- void
- megasas_dump_fusion_io(struct scsi_cmnd *scmd)
- {
--	struct megasas_cmd_fusion *cmd;
-+	struct megasas_cmd_fusion *cmd = megasas_priv(scmd)->cmd_priv;
- 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
- 	struct megasas_instance *instance;
- 
--	cmd = (struct megasas_cmd_fusion *)scmd->SCp.ptr;
- 	instance = (struct megasas_instance *)scmd->device->host->hostdata;
- 
- 	scmd_printk(KERN_INFO, scmd,
-@@ -3518,6 +3517,7 @@ static struct scsi_host_template megasas_template = {
- 	.mq_poll = megasas_blk_mq_poll,
- 	.change_queue_depth = scsi_change_queue_depth,
- 	.max_segment_size = 0xffffffff,
-+	.cmd_size = sizeof(struct megasas_cmd_priv),
- };
- 
- /**
-@@ -3601,7 +3601,7 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 	cmd->retry_for_fw_reset = 0;
- 
- 	if (cmd->scmd)
--		cmd->scmd->SCp.ptr = NULL;
-+		megasas_priv(cmd->scmd)->cmd_priv = NULL;
- 
- 	switch (hdr->cmd) {
- 	case MFI_CMD_INVALID:
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index fc90a0a687b5..c72364864bf4 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2915,7 +2915,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 				get_updated_dev_handle(instance,
- 					&fusion->load_balance_info[device_id],
- 					&io_info, local_map_ptr);
--			scp->SCp.Status |= MEGASAS_LOAD_BALANCE_FLAG;
-+			megasas_priv(scp)->status |= MEGASAS_LOAD_BALANCE_FLAG;
- 			cmd->pd_r1_lb = io_info.pd_after_lb;
- 			if (instance->adapter_type >= VENTURA_SERIES)
- 				rctx_g35->span_arm = io_info.span_arm;
-@@ -2923,7 +2923,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 				rctx->span_arm = io_info.span_arm;
- 
- 		} else
--			scp->SCp.Status &= ~MEGASAS_LOAD_BALANCE_FLAG;
-+			megasas_priv(scp)->status &= ~MEGASAS_LOAD_BALANCE_FLAG;
- 
- 		if (instance->adapter_type >= VENTURA_SERIES)
- 			cmd->r1_alt_dev_handle = io_info.r1_alt_dev_handle;
-@@ -3293,7 +3293,7 @@ megasas_build_io_fusion(struct megasas_instance *instance,
- 	io_request->SenseBufferLength = SCSI_SENSE_BUFFERSIZE;
- 
- 	cmd->scmd = scp;
--	scp->SCp.ptr = (char *)cmd;
-+	megasas_priv(scp)->cmd_priv = cmd;
- 
- 	return 0;
- }
-@@ -3489,7 +3489,7 @@ megasas_complete_r1_command(struct megasas_instance *instance,
- 		if (instance->ldio_threshold &&
- 		    megasas_cmd_type(scmd_local) == READ_WRITE_LDIO)
- 			atomic_dec(&instance->ldio_outstanding);
--		scmd_local->SCp.ptr = NULL;
-+		megasas_priv(scmd_local)->cmd_priv = NULL;
- 		megasas_return_cmd_fusion(instance, cmd);
- 		scsi_dma_unmap(scmd_local);
- 		megasas_sdev_busy_dec(instance, scmd_local);
-@@ -3613,12 +3613,13 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 		case MPI2_FUNCTION_SCSI_IO_REQUEST:  /*Fast Path IO.*/
- 			/* Update load balancing info */
- 			if (fusion->load_balance_info &&
--			    (cmd_fusion->scmd->SCp.Status &
-+			    (megasas_priv(cmd_fusion->scmd)->status &
- 			    MEGASAS_LOAD_BALANCE_FLAG)) {
- 				device_id = MEGASAS_DEV_INDEX(scmd_local);
- 				lbinfo = &fusion->load_balance_info[device_id];
- 				atomic_dec(&lbinfo->scsi_pending_cmds[cmd_fusion->pd_r1_lb]);
--				cmd_fusion->scmd->SCp.Status &= ~MEGASAS_LOAD_BALANCE_FLAG;
-+				megasas_priv(cmd_fusion->scmd)->status &=
-+					~MEGASAS_LOAD_BALANCE_FLAG;
- 			}
- 			fallthrough;	/* and complete IO */
- 		case MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST: /* LD-IO Path */
-@@ -3630,7 +3631,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 				if (instance->ldio_threshold &&
- 				    (megasas_cmd_type(scmd_local) == READ_WRITE_LDIO))
- 					atomic_dec(&instance->ldio_outstanding);
--				scmd_local->SCp.ptr = NULL;
-+				megasas_priv(scmd_local)->cmd_priv = NULL;
- 				megasas_return_cmd_fusion(instance, cmd_fusion);
- 				scsi_dma_unmap(scmd_local);
- 				megasas_sdev_busy_dec(instance, scmd_local);
+ /*
+  * Registers in the MESH controller.
+  */
