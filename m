@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC37DC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 22:34:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA777C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 22:34:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346657AbiBKWeo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1345891AbiBKWeo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 11 Feb 2022 17:34:44 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34400 "EHLO
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354152AbiBKWei (ORCPT
+        with ESMTP id S1354164AbiBKWei (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 17:34:38 -0500
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB4F6D64
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:34 -0800 (PST)
-Received: by mail-pj1-f51.google.com with SMTP id a11-20020a17090a740b00b001b8b506c42fso13315569pjg.0
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:34 -0800 (PST)
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90430D68
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:36 -0800 (PST)
+Received: by mail-pf1-f171.google.com with SMTP id 9so15764467pfx.12
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 14:34:36 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=8cAj+tJuPIKozznNrLmzscvz/gVTHABu45oATBtvY+g=;
-        b=w95Hq2EIgZgpSTxnqAvzrwCWXXfIrocJLc6VZ7jph8QR5FYq1ke8UXGaTV6hxmvM7b
-         ZPdM/ZCdr/E6VoSY6BDX8gDp9MZp6Jz7eu5K6gapGTWWZ773GBS9knRYuwAhKUrhfkqj
-         sCxSlO9NJGxpqMTzNadhtXwfrFU4hbp8wtxBxHTBgCD22h9JZ4n/HtaVsKzlCq04vmfT
-         n3zBya08qm9ebe8DKBKpDiNutlvUbigZYrAsNAlBF79OisRMmBmfUlP8K5cUWU1lcGa7
-         IDRp9+lAC5QjUbTkOUH+rWdAAMF0ro2MLjucnL0MeYdI6S/4OEY7MZ2OIezywy9ZIZom
-         XQkg==
-X-Gm-Message-State: AOAM530oCXfYs3wz6nbJZ/d9zZeAjBvLwouNPb7v71S+hWpYBkNKEhl1
-        15h0V0zZgEhHIamDvaCSyQw=
-X-Google-Smtp-Source: ABdhPJx+H0eAtmMPFpTdcXsIzB/PBOwfpZHPugtUm2kBPJFDr2e9cLFoBSzvrKGBWgIuij446EUDYA==
-X-Received: by 2002:a17:90b:2516:: with SMTP id ns22mr2585253pjb.242.1644618874293;
-        Fri, 11 Feb 2022 14:34:34 -0800 (PST)
+        bh=wWx0oD4y/h5fR0o1HnTS+lemIDFT4V4tl6fYkeJP2UA=;
+        b=gR6s1xfWliH2WGynEVBzOChK1m6FMr9JMyLWLPoxbKkSSOgtvUpVT+sp6SSIW1eUFc
+         dmoehiC9uttdXGKemXu05kH05eistOxsXepQQ8DrSmUcNYy6qWGNmuvJzavEKb86MaSC
+         9CGfpTbvOJGtW+86zqnEMbiv8C/Rsp7RAeq9n27Xf599l2hu2N/Yob6v6ibfVWkRwzoR
+         csM5qK33zs7gtvqp4z7Dao4jyOFTorbJNAS3buoVdpTDwYQ8dpc1iGws+wnO4T0TLonj
+         x+Fv37XAvKaS79B+/mYue+SWqss8Bjvw9XZTGM3wbtWeGUovE0wzw0gvHea18C9rdf4E
+         Go3A==
+X-Gm-Message-State: AOAM533ykuHpRdE+9apoF1HczVuKMUrdGhkJ7AKDNsTh2HBaUv7Lvpez
+        s5QsdClqaqJ9HCDXHjP5/ug=
+X-Google-Smtp-Source: ABdhPJwhyBrUUm+SEASY7hEtsS5FCZe8JHYV8of6PurKjGVIYoRva/ufL+LffTxeDK20Z7jLKSvEvw==
+X-Received: by 2002:a62:b605:: with SMTP id j5mr3664072pff.25.1644618875943;
+        Fri, 11 Feb 2022 14:34:35 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id n13sm6296733pjq.13.2022.02.11.14.34.32
+        by smtp.gmail.com with ESMTPSA id n13sm6296733pjq.13.2022.02.11.14.34.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Feb 2022 14:34:33 -0800 (PST)
+        Fri, 11 Feb 2022 14:34:35 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Hannes Reinecke <hare@suse.de>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Don Brace <don.brace@microchip.com>,
+        Matthew Wilcox <willy@infradead.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 42/48] scsi: smartpqi: Stop using the SCSI pointer
-Date:   Fri, 11 Feb 2022 14:32:41 -0800
-Message-Id: <20220211223247.14369-43-bvanassche@acm.org>
+Subject: [PATCH v3 43/48] scsi: sym53c8xx_2: Move the SCSI pointer to private command data
+Date:   Fri, 11 Feb 2022 14:32:42 -0800
+Message-Id: <20220211223247.14369-44-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220211223247.14369-1-bvanassche@acm.org>
 References: <20220211223247.14369-1-bvanassche@acm.org>
@@ -65,52 +65,35 @@ Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index f0897d587454..74426974309f 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -54,6 +54,15 @@ MODULE_DESCRIPTION("Driver for Microchip Smart Family Controller version "
- MODULE_VERSION(DRIVER_VERSION);
- MODULE_LICENSE("GPL");
- 
-+struct pqi_cmd_priv {
-+	int this_residual;
-+};
-+
-+static struct pqi_cmd_priv *pqi_cmd_priv(struct scsi_cmnd *cmd)
-+{
-+	return scsi_cmd_priv(cmd);
-+}
-+
- static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info,
- 	enum pqi_ctrl_shutdown_reason ctrl_shutdown_reason);
- static void pqi_ctrl_offline_worker(struct work_struct *work);
-@@ -5555,7 +5564,7 @@ static void pqi_aio_io_complete(struct pqi_io_request *io_request,
- 	scsi_dma_unmap(scmd);
- 	if (io_request->status == -EAGAIN || pqi_raid_bypass_retry_needed(io_request)) {
- 		set_host_byte(scmd, DID_IMM_RETRY);
--		scmd->SCp.this_residual++;
-+		pqi_cmd_priv(scmd)->this_residual++;
- 	}
- 
- 	pqi_free_io_request(io_request);
-@@ -5779,7 +5788,7 @@ static inline bool pqi_is_bypass_eligible_request(struct scsi_cmnd *scmd)
- 	if (blk_rq_is_passthrough(scsi_cmd_to_rq(scmd)))
- 		return false;
- 
--	return scmd->SCp.this_residual == 0;
-+	return pqi_cmd_priv(scmd)->this_residual == 0;
- }
- 
- /*
-@@ -7159,6 +7168,7 @@ static struct scsi_host_template pqi_driver_template = {
- 	.map_queues = pqi_map_queues,
- 	.sdev_groups = pqi_sdev_groups,
- 	.shost_groups = pqi_shost_groups,
-+	.cmd_size = sizeof(struct pqi_cmd_priv),
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index b04bfde65e3f..2e2852bd5860 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -118,7 +118,7 @@ struct sym_ucmd {		/* Override the SCSI pointer structure */
+ 	struct completion *eh_done;		/* SCSI error handling */
  };
  
- static int pqi_register_scsi(struct pqi_ctrl_info *ctrl_info)
+-#define SYM_UCMD_PTR(cmd)  ((struct sym_ucmd *)(&(cmd)->SCp))
++#define SYM_UCMD_PTR(cmd)  ((struct sym_ucmd *)scsi_cmd_priv(cmd))
+ #define SYM_SOFTC_PTR(cmd) sym_get_hcb(cmd->device->host)
+ 
+ /*
+@@ -127,7 +127,6 @@ struct sym_ucmd {		/* Override the SCSI pointer structure */
+ void sym_xpt_done(struct sym_hcb *np, struct scsi_cmnd *cmd)
+ {
+ 	struct sym_ucmd *ucmd = SYM_UCMD_PTR(cmd);
+-	BUILD_BUG_ON(sizeof(struct scsi_pointer) < sizeof(struct sym_ucmd));
+ 
+ 	if (ucmd->eh_done)
+ 		complete(ucmd->eh_done);
+@@ -1630,6 +1629,7 @@ static struct scsi_host_template sym2_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= "sym53c8xx",
+ 	.info			= sym53c8xx_info, 
++	.cmd_size		= sizeof(struct sym_ucmd),
+ 	.queuecommand		= sym53c8xx_queue_command,
+ 	.slave_alloc		= sym53c8xx_slave_alloc,
+ 	.slave_configure	= sym53c8xx_slave_configure,
