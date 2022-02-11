@@ -2,222 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09527C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 09:24:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15A71C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 11:10:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242615AbiBKJYK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Feb 2022 04:24:10 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39050 "EHLO
+        id S1349340AbiBKLKq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Feb 2022 06:10:46 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:37936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229462AbiBKJYJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 04:24:09 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 061F6B81
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 01:24:08 -0800 (PST)
-Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Jw7Tl74bKz686xP;
-        Fri, 11 Feb 2022 17:23:55 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Fri, 11 Feb 2022 10:24:04 +0100
-Received: from [10.47.86.199] (10.47.86.199) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 11 Feb
- 2022 09:24:03 +0000
-Message-ID: <af3b0aff-3e43-5a1f-0d98-f68b9100090e@huawei.com>
-Date:   Fri, 11 Feb 2022 09:24:02 +0000
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH 00/20] libsas and pm8001 fixes
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
-        "Jason Yan" <yanaijie@huawei.com>
-References: <20220210114218.632725-1-damien.lemoal@opensource.wdc.com>
- <b3efd3cf-e36b-9594-06b8-9772bb525e00@huawei.com>
- <ea6b25db-d4da-bab5-8bf2-ec5024c95f89@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <ea6b25db-d4da-bab5-8bf2-ec5024c95f89@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.86.199]
-X-ClientProxiedBy: lhreml711-chm.china.huawei.com (10.201.108.62) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
+        with ESMTP id S1349203AbiBKLKp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 06:10:45 -0500
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C00CBE5D
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 03:10:43 -0800 (PST)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220211111040epoutp036084ce2165425c06ea333088f9b97ecf~SttU_53Qa1542815428epoutp03d
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 11:10:40 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220211111040epoutp036084ce2165425c06ea333088f9b97ecf~SttU_53Qa1542815428epoutp03d
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1644577840;
+        bh=/QqAj4sBooVJtWFQuaex7gP6M60iq909aZ1ni0qhM34=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=TmPHJjXOcDXAmkZtOEBpUXSQf8a0VavCwmwC3dRqeFl2zh3OjXjYQVHwLm0w1rCDK
+         J6F5DfBy40gv/WcSUK7RIhne2lnxa9gynNkIWUdAd47ekJqfok7gmXgT6VNcMMOLSu
+         C4eAn6JnixkpoW/FNf8XLdsBWq8AJLZZOOKe2P3w=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20220211111040epcas2p21ac27e4037466e7bddfd390edc5643df~SttUUWROv2496924969epcas2p2d;
+        Fri, 11 Feb 2022 11:10:40 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.89]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4Jw9rr4PLvz4x9Pt; Fri, 11 Feb
+        2022 11:10:36 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        5E.98.51767.C2446026; Fri, 11 Feb 2022 20:10:36 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20220211111036epcas2p49318d038042b4b56d374a11999cc1d64~SttQf4stM2585225852epcas2p4_;
+        Fri, 11 Feb 2022 11:10:36 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220211111036epsmtrp2eb8b5781e25efffb96f272d99cd883f1~SttQe5O_Q2422524225epsmtrp2L;
+        Fri, 11 Feb 2022 11:10:36 +0000 (GMT)
+X-AuditID: b6c32a45-447ff7000000ca37-d5-6206442c1ba0
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        CD.33.29871.B2446026; Fri, 11 Feb 2022 20:10:35 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20220211111035epsmtip1a2ef5627ab9f837a7c9d982048a2dfe6~SttQQFFXS0789707897epsmtip1a;
+        Fri, 11 Feb 2022 11:10:35 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, adrian.hunter@intel.com, sc.suh@samsung.com,
+        hy50.seo@samsung.com, sh425.lee@samsung.com,
+        bhoon95.kim@samsung.com, vkumar.1997@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v1] scsi: ufs: exclude UECxx from SFR dump list
+Date:   Fri, 11 Feb 2022 20:08:21 +0900
+Message-Id: <1644577701-40884-1-git-send-email-kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpik+LIzCtJLcpLzFFi42LZdljTQlfHhS3JYMNHSYuTT9awWTyYt43N
+        4uXPq2wWBx92slh8XfqM1eLT+mWsFqsXP2CxWHRjG5PFzS1HWSwu75rDZtF9fQebxfLj/5gs
+        uu7eYLRY+u8ti8Wd+x9ZHPg9Lvf1Mnks3vOSyWPCogOMHt/Xd7B5fHx6i8Wjb8sqRo/Pm+Q8
+        2g90MwVwRGXbZKQmpqQWKaTmJeenZOal2yp5B8c7x5uaGRjqGlpamCsp5CXmptoqufgE6Lpl
+        5gBdr6RQlphTChQKSCwuVtK3synKLy1JVcjILy6xVUotSMkpMC/QK07MLS7NS9fLSy2xMjQw
+        MDIFKkzIzujZfYGt4CZXxYPXMxgbGI9zdDFyckgImEjcntbG1MXIxSEksINR4uLpmSwgCSGB
+        T4wSJy5YQyS+MUrc/rWEEaZjRvtrRojEXkaJW0saodp/MEqc+n+IFaSKTUBT4unNqUwgtojA
+        dSaJedszQGxmAXWJXRNOgMWFBewljpz9zNbFyMHBIqAqcW1hGEiYV8BVovHUaXaIZXISN891
+        MkPYjRwSV7eHQdguEnu2XGaBsIUlXh3fAlUvJfH53V6wkRICxRKb9smDnCYh0MAoseTTZqh6
+        Y4lZz9oZQWqYgc5cv0sfolxZ4sgtFogj+SQ6Dv9lhwjzSnS0CUE0Kkv8mjQZGgqSEjNv3oFa
+        6iEx59gmsIFCArESDyYoTGCUnYUwfgEj4ypGsdSC4tz01GKjAkN4BCXn525iBCdGLdcdjJPf
+        ftA7xMjEwXiIUYKDWUmEd8UN1iQh3pTEyqrUovz4otKc1OJDjKbAsJrILCWanA9MzXkl8YYm
+        lgYmZmaG5kamBuZK4rxeKRsShQTSE0tSs1NTC1KLYPqYODilGphCo34v3WpUeuj4e95Dd96E
+        8G7gdFSYN0sLmD0ucd3UKjUVm565YMF5tZsuj5JqQmZo5vMJPu9YwfuXkXe6pMsPpYOlR+y0
+        9gVMfX2jk+nJnLpoY9eef+7Stx/UTZsmf9/cqaCxYu/BinWcMS2pH3Q3RPMy2B48PcHOZNft
+        dZlKwoZbczb/rFeIaHFXtrjGsjcw0ogz2bHI8Ir154KTC04FT5v0+zgn6w6+XzJ2Hx49Xpbp
+        /Nxocd9KbW2JtuNB4t1f5ITOTYmQOdHz6/ZDEXbetC7+k791g99H6J28wrCBLU3S/Z5t14V/
+        BxfblrB9Y7w1YbLtiqbrUfWbjn2Z3iyi3y6s58HULPDv6YKH+5RYijMSDbWYi4oTAZg60/IV
+        BAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGLMWRmVeSWpSXmKPExsWy7bCSnK62C1uSwZ7llhYnn6xhs3gwbxub
+        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i+XH/zFZ
+        dN29wWix9N9bFos79z+yOPB7XO7rZfJYvOclk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5
+        tB/oZgrgiOKySUnNySxLLdK3S+DK6Nl9ga3gJlfFg9czGBsYj3N0MXJySAiYSMxof83YxcjF
+        ISSwm1Hi/9HNjBAJSYkTO59D2cIS91uOsEIUfWOUuLXkMgtIgk1AU+LpzalMIAkRgZdMEi/m
+        rGEDSTALqEvsmnCCCcQWFrCXOHL2M1Ccg4NFQFXi2sIwkDCvgKtE46nT7BAL5CRunutknsDI
+        s4CRYRWjZGpBcW56brFhgWFearlecWJucWleul5yfu4mRnDQamnuYNy+6oPeIUYmDsZDjBIc
+        zEoivCtusCYJ8aYkVlalFuXHF5XmpBYfYpTmYFES573QdTJeSCA9sSQ1OzW1ILUIJsvEwSnV
+        wLRw0yadEwr+e4WM/kSre3pzCT5bYSP6883OuJXWt8UZVr34rjqRf8c3peKnN53lt1/kPZsR
+        FDppkd4+A6u5ugd2RQQdtz0vuidB2fp94tO4/t/3fheKHDNx57auXR6372F2TchHu8+3bMxi
+        38qlbA5dx1OnzGpsnsXCUv7ngHcQx/4lCkI3zh8W9VOvUqqoNtx45s7Ci2bu6oL5H1s/Cdp6
+        CDCEbJtiYSq07M5U/USFiUE7JhhMTDdZtjYkinvpSr2k0qd5TbbL7fgWyD24GLfloV60wd/c
+        tfn38yZd/Vai3c3yXs5wo0tS3Ee7V2fWfdBcc9i7YnL76bcdYrfkJjjHm28Tymjd+sFROfhV
+        hhJLcUaioRZzUXEiAGNmB4fJAgAA
+X-CMS-MailID: 20220211111036epcas2p49318d038042b4b56d374a11999cc1d64
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
 X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220211111036epcas2p49318d038042b4b56d374a11999cc1d64
+References: <CGME20220211111036epcas2p49318d038042b4b56d374a11999cc1d64@epcas2p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/02/2022 22:44, Damien Le Moal wrote:
+These are ROC type things that means their values
+are cleared when the SFRs are read.
+They are usually read in ISR when an UIC error occur.
+Thus, their values would be zero at many cases. And
+there might be a little bit risky when they are read to
+be cleared before the ISR reads them, e.g. the case that
+a command is timed-out, ufshcd_dump_regs is called in
+ufshcd_abort and an UIC error occurs at the nearly
+same time. In this case, ISR will be called but UFS error handler
+will not be scheduled.
+This patch is to make UFS driver not read those SFRs in the
+dump function, i.e. ufshcd_dump_regs.
 
-Hi Damien,
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
->>> Note that without these patches, libzbc test suite result in the
->>> controller hanging, or in kernel crashes.
->> Unfortunately I still see the hang on my arm64 system with this series:(
-> That is unfortunate. Any particular command sequence triggering the hang
-> ? Or is it random ? What workload are you running ?
-> 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 460d2b4..8b65c081 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -115,8 +115,12 @@ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+ 	if (!regs)
+ 		return -ENOMEM;
+ 
+-	for (pos = 0; pos < len; pos += 4)
++	for (pos = 0; pos < len; pos += 4) {
++		if (pos >= REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER	&&
++		    pos <= REG_UIC_ERROR_CODE_DME)
++			continue;
+ 		regs[pos / 4] = ufshcd_readl(hba, offset + pos);
++	}
+ 
+ 	ufshcd_hex_dump(prefix, regs, len);
+ 	kfree(regs);
+-- 
+2.7.4
 
-mount/unmount fails mostly even after as few as one attempt, but then 
-even fdisk -l fails sometimes:
-
-root@(none)$ fdisk -l
-[   97.924789] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
-[   97.930652] sas: sas_scsi_find_task: aborting task 0x(____ptrval____)
-[   97.937149] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   97.943232] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   97.952020] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   97.958099] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   97.966881] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   97.972961] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   97.981737] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   97.991241] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.000752] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.010223] pm80xx0:: pm8001_abort_task  1345:rc= -5
-[   98.015180] sas: sas_scsi_find_task: querying task 0x(____ptrval____)
-[   98.021645] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.027725] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.036495] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.042574] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.051344] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.057423] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.066154] pm80xx: rc= -5
-[   98.068854] sas: sas_scsi_find_task: aborting task 0x(____ptrval____)
-[   98.075331] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.081411] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.090192] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.096271] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.105053] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.111132] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.119909] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.129414] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.138919] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.148388] pm80xx0:: pm8001_abort_task  1345:rc= -5
-[   98.153345] sas: sas_scsi_find_task: querying task 0x(____ptrval____)
-[   98.159812] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.165892] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.174661] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.180741] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.189511] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.195590] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.204320] pm80xx: rc= -5
-[   98.207019] sas: sas_scsi_find_task: aborting task 0x(____ptrval____)
-[   98.213497] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.219577] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.228359] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.234438] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.243220] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.249299] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.258075] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.267580] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.277085] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.286554] pm80xx0:: pm8001_abort_task  1345:rc= -5
-[   98.291510] sas: sas_scsi_find_task: querying task 0x(____ptrval____)
-[   98.297978] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.304059] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.312827] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.318906] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.327677] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.333756] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.342487] pm80xx: rc= -5
-[   98.345186] sas: sas_scsi_find_task: aborting task 0x(____ptrval____)
-[   98.351664] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.357743] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.366525] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.372604] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.381386] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.387465] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.396230] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.405734] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.415239] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.424709] pm80xx0:: pm8001_abort_task  1345:rc= -5
-[   98.429665] sas: sas_scsi_find_task: querying task 0x(____ptrval____)
-[   98.436133] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.442213] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.450982] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.457061] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.465825] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.471904] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.480629] pm80xx: rc= -5
-[   98.483327] sas: sas_scsi_find_task: aborting task 0x(____ptrval____)
-[   98.489800] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.495880] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.504661] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.510740] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.519523] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.525602] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.534372] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.543877] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.553382] pm80xx0:: pm8001_mpi_task_abort_resp  3682:task abort 
-failed status 0x6 ,tag = 0x2, scp= 0x0
-[   98.562851] pm80xx0:: pm8001_abort_task  1345:rc= -5
-[   98.567807] sas: sas_scsi_find_task: querying task 0x(____ptrval____)
-[   98.574275] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.580355] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.589124] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.595203] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.603968] pm80xx0:: mpi_ssp_completion  1937:sas IO status 0x3b
-[   98.610047] pm80xx0:: mpi_ssp_completion  1948:SAS Address of IO 
-Failure Drive:5000c500a7babc61
-[   98.618778] pm80xx: rc= -5
-[   98.621505] sas: --- Exit sas_scsi_recover_host: busy: 1 failed: 1 
-tries: 1
-
-Sometimes I get TMF timeouts, which is a bad situation. I guess it's a 
-subtle driver bug, but where ....?
-
-BTW, this following log needs removal/fixing at some stage by someone:
-
-[   98.480629] pm80xx: rc= -5
-
-It's from pm8001_query_task().
-
-Thanks,
-John
