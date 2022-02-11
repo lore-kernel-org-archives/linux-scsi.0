@@ -2,172 +2,577 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6F34C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 12:19:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B87A6C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 12:25:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344514AbiBKMTa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Feb 2022 07:19:30 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59128 "EHLO
+        id S1349957AbiBKMZJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Feb 2022 07:25:09 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:33724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232345AbiBKMT3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 07:19:29 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61A0DEB0;
-        Fri, 11 Feb 2022 04:19:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644581966; x=1676117966;
-  h=from:to:subject:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version;
-  bh=jL5Uq01kiosSNM97rM4IUqwPdNATuI3xWB8twXYYQiQ=;
-  b=YXYzXG5Ug3UQ5rqRIfe8ivwY+k6uOTso1MrhbAvevDKyXacZz6rQyyX4
-   oEMuJ7D9poJuP3dz90zJIe9fNJAPbtEhQhLdBIE87FkbWz5yZfZOwQp9a
-   DHVQyUdnk4TLh+1UrEpWKajNyb6+RV73qevAOtTr3Gh8xK50RdMfYimyi
-   QxYsRRpLU/YPDP2dtnR1WhWjtldy0rOTRPW3/0l7cpXJh3/60fW7ZnBr/
-   it2osA0zkYc3LiXn9ei3+WYOWd0hGRyzkerLquThszgTiJsSEiM5WSBGL
-   eqcc5AE3h9TTa12DAbb1DRgvazs6oxY+enuceLZpJy2ODlaDXPgsb0+NE
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.88,360,1635177600"; 
-   d="scan'208";a="192690606"
-Received: from mail-bn8nam12lp2175.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.175])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Feb 2022 20:19:25 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=S5IcJ8Iqegn/+3Al+/tP1FJQgjYwFwyMR3C7XwF46tn5fWbqtfmLhXpA4JmZFboamax5Xs/dCIIqJjc8XBFCITOvnt3kF9t52Uwe9o8e5Alb7KwzhHA29v33SNME42OmFDtnUnFT6BftRX4QVcenfvLHLLnFmIqsxY4kaNOXTq0yVbI07B7aR1toXrJAARea2CceIIvhJFps1i5E205TohM7I44hgxHqgJnMpQU4S5L3s8TiERkF6W/kVrt02Q8wqBqGA5ElK60Ffsnl2Uw550UWKhQm0QXM7aeya2Fhv5CWDHgXmWpyqN/aXiH0BrUQxV401oqqr/hQlQF0B+7hTA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jL5Uq01kiosSNM97rM4IUqwPdNATuI3xWB8twXYYQiQ=;
- b=Qx6szm7whJxOduBbDAkGbCtCI5Ouecc6HuCfwgnNSaXOMfP7SUYXNRVHp9CFHO1Im+O0NaDX/SwL0gRDBiyNb0nQ6Hti3mENUlDJbY3hLu+ZOTMY18sHF72xDojtBq5JE6deDUYjxkMY8EFD4/hCgcldfep+YW9otSGIajZVEk6sRNj2HbSimZSq8sNBcnkhLuncPVLhzXXWnT366pGEVu+WBW6j69Uc5ig4smz0VgdqTfRf3z1JJIz/dBZVGAuR/+csU8N5A5wd/zLodiuajm5fTn4cQGP/7UcLzEyDwqZiaJ8SMYsoLEJEh7K6l1nNhXlULun4wFIhDWCRpGlAVw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jL5Uq01kiosSNM97rM4IUqwPdNATuI3xWB8twXYYQiQ=;
- b=ev9UR2dBF+kaveNzg8os2sZxeVogE5rJ6lOLDKX30V9NjM3fCxkXsCeXDTPlxPgLYKGFEPmcsHcxbg/Ma7sVZVTShHFDjqrI1y8tXVLK8DiypLRnKHhKtK3QSuYW2Iag4jXi+sTVV8WkBfPXGd5TZxaE0mmYTRQKwTOqSe0p8wk=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- BN6PR04MB0437.namprd04.prod.outlook.com (2603:10b6:404:96::11) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4951.16; Fri, 11 Feb 2022 12:19:24 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::14b1:1b88:427:df7]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::14b1:1b88:427:df7%6]) with mapi id 15.20.4951.019; Fri, 11 Feb 2022
- 12:19:24 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Kiwoong Kim <kwmad.kim@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "sc.suh@samsung.com" <sc.suh@samsung.com>,
-        "hy50.seo@samsung.com" <hy50.seo@samsung.com>,
-        "sh425.lee@samsung.com" <sh425.lee@samsung.com>,
-        "bhoon95.kim@samsung.com" <bhoon95.kim@samsung.com>,
-        "vkumar.1997@samsung.com" <vkumar.1997@samsung.com>
-Subject: RE: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling
- isn't supported.
-Thread-Topic: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling
- isn't supported.
-Thread-Index: AQHYGmPQ8Ff+rACVsk6i/i0BNavg3ayGLxRwgAd2vYCAAKg24A==
-Date:   Fri, 11 Feb 2022 12:19:24 +0000
-Message-ID: <DM6PR04MB6575CA688DFBCAF84F39F9D1FC309@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <CGME20220205074128epcas2p40901c37a7328e825d8697f8d3269edba@epcas2p4.samsung.com>
-        <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
-        <DM6PR04MB657519E60FAFA19434531CE2FC2B9@DM6PR04MB6575.namprd04.prod.outlook.com>
- <007101d81eed$4d120a60$e7361f20$@samsung.com>
-In-Reply-To: <007101d81eed$4d120a60$e7361f20$@samsung.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 467fc05b-0d52-4844-504e-08d9ed58bdb1
-x-ms-traffictypediagnostic: BN6PR04MB0437:EE_
-x-microsoft-antispam-prvs: <BN6PR04MB043748C429C1DDAF26727BBDFC309@BN6PR04MB0437.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:8273;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: ExR2+JKjlgDUX6s/P0qlHQVxKS95JaVyPeb4KSUydi3iuTuPMtLW3WuqQoCeYstJacXVL99eFmGowgeHxjMAI9eEfFxztzm2rGM0JQvvacLye5Jdpq06I8hPCCe0dLZhupqvG/CKNglCweOlPm8ZSJCkk41dOLxcAH3UHj4lGttOxv+COfLivH79PIl6ahNJlDajqdF2+hq1m8DF/rt1n1v37lEZ/ezR+htOdAlALtS9aKwf4itjvwdi55lL9tu68sAtWUdBpurVvaCBo+tBRVzFs06cuvE7R3cp+YhE64kaBAEsoADxPSzSbNBtiDjD7x4ojs0UBr1zd0TH5UBEcuXkPpMEtqsiwIqeC3CYuPBI6iZibXlDb1yZpOQsCisYUYcRvBOih6bUv07yW/5B5DnAIgmno1eq9XDgNtPyIeCzSpB0M66LVDbU70iIODNu28EZ2eEYttJzTyMTJh7aNOAta8liGDlnX3ERI/L72+eidQNohgghuTuE1S8Ki5yh1ohjQVPuyv9f88pfinXuoDDlwPcXKEGDpnv2ThqffPWm1sBsxreNgwPWci/jNPPD4P4/2A98ST6pgYK4gaIx86lmxgXW0XtBSPc9SaHvFTkh1dFN47KpT6q+Jm6fWT7Ds5FSmECitrUXWQ+nrsDPuCwbT5QYF6XMo66ZYAl+HOb6rdsyMyNeIi4jpbu5zyZd8KKASFcJ8m/O1ryudIAcEbg9Q+87hT91Zl7ia4azlj4=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(26005)(4744005)(7696005)(6506007)(316002)(83380400001)(5660300002)(86362001)(33656002)(38100700002)(7416002)(55016003)(110136005)(122000001)(66446008)(71200400001)(38070700005)(52536014)(2906002)(8936002)(8676002)(186003)(82960400001)(508600001)(66946007)(66476007)(64756008)(921005)(66556008)(76116006)(9686003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?bm4zY2tTTEdEVVBtYXowbVdzL0duYnBvVHJ2WWVlWHdpbm5IVUYva21UN0Ju?=
- =?utf-8?B?aW5LeGt2aVZURHZ1Wk5Lam5OOHVTakoxTElnRjZYMzFNT0FWYlVML2ZiRXF0?=
- =?utf-8?B?dmk3L1ZjTXZUcm1rVjduUXU3a2J5TFlkQlZqME52bHhSVUN4R21CVkFCSE1X?=
- =?utf-8?B?bXJhdlRvM09yWkRZak81SDllK0s5RGRkbkRxeXdPWXY3NHRkUk5KdEhIUmxl?=
- =?utf-8?B?Zld3NjBLZ25qenplamNRQzhneEt4THFRREtxay9sTXAyWmF5ZjVXK0E5cHFI?=
- =?utf-8?B?VDdQVFhsVmdZaE9EeVRSZkZEeVVHVm9leW1pRVp3VkFvSU16YzBuMHQzMGEz?=
- =?utf-8?B?d2xrdFBNa3hseThkWHBUNzl4QkNkWXIzbmF2S1RVb2FxSVdXSUVFdmxueDhD?=
- =?utf-8?B?c3ZVb0Y3QTJlaExQbnFBS1ZDUWM1bFN4MFo3clk1bFBkMnJJcTlrZlUvRUVZ?=
- =?utf-8?B?RUhuSE5vOXZKbnBMaW9EcEFHS2tYa1ZWbUxLS3NpL0pmSmE2MGVUbXBDWUYz?=
- =?utf-8?B?dkRDS0tpOVkzNm9oelAwWnM0UnVqRmNEZTlzMkNwZFYvWGNLM1pIaTVCamg2?=
- =?utf-8?B?V1Ftc3UvL2dJSS96MnZ3RUtqZDFKbTZYbmdvM085NFZvUlYzTENqUjRicnF5?=
- =?utf-8?B?K0VnU09UZ21RdWJSS3QyTWtPMXlPeUQyODBObkF5T29ycmhWZ3ZUdS9lenIv?=
- =?utf-8?B?Yk92QWYrVWFJNUdlU1FoWVAwbDA5VHNoM29RWmNVY01aQ2lDbjVjRmwxcERQ?=
- =?utf-8?B?azg4dWtMK2gvSStrc2RWU3IzdC9KN1p0SGNYcWFtL0NaRURWd1B2SnFmVGxD?=
- =?utf-8?B?akhEZ3BzcUJPVURFNjk2NE9yeWJOQWh0MGZrSVRzUVFhR2tOUlgweDVhei9s?=
- =?utf-8?B?SmVaQnlNQXJkVENvWFkxRXpYZktubk1ENmg5emRVMjltLy8wNStJQndYZjNR?=
- =?utf-8?B?YVI4bHRFblJURC9wYklza3FhN1cwUTdYUmlnMUFDTlU2Q0daaUxPRkFERjJI?=
- =?utf-8?B?TkxSUmZadm5sVFV1MG80elpCc253QkZkUTVOcXRCTXI4VnVvR1NKNU4vV0p4?=
- =?utf-8?B?ZG1UZXhuR3NrdjIvYzdzR1doS20wWmx1WWtjNHBsUk1TLzhPaTNQNEhzQVBN?=
- =?utf-8?B?ZWRkSHJ2eFE5V1VjUXlyRFdMcVFOZTM5UmluVmFwcFhTUUtkdXBiNWF4MTF1?=
- =?utf-8?B?T04xcnNmMGlBZGtXSnJjVFJ6M1UxOCtYdVhDV1VGZnU3SWdDcHNCS1d0YXJZ?=
- =?utf-8?B?K1VlRVJHNnBEQzhqZ1J3czVOWG1lcUF1QzRHWG1HQnZxNlJ3QW1va0F4ZkJU?=
- =?utf-8?B?akhVUkRXZzdXZWF4OVlsc2ZvQmZBS3ZJb1A4V0hramtkWnpXMko0WjlDcVow?=
- =?utf-8?B?QzNnYTJncFN6am9DcTRua2wzSHMzeG5OUzhXN2NDckkzbVZTd2Y4VVVXaWZ5?=
- =?utf-8?B?TWVyeXFkZDRwajk2ZGtoMVVBcVBmcVhJc210dTRyMmZ0amQ2cDUxWDBGUzZJ?=
- =?utf-8?B?SDcvT3Nkd0VrZm9CSldNN3RIOXFGZEp5MTdnK20vVkFScUR5Uzd5aTBsUWtC?=
- =?utf-8?B?MVpkYXJMeFBFRUExZEw3aUN1R05SSmZXK3Nsdi9hU1JQZ1FIdHZSUFZpNVp0?=
- =?utf-8?B?Tk9jU2cvUEU0bEtVSGpKVGpVbWlFSk16Qk5tWnRtcUUwNkRzc2ZGODNxWTRB?=
- =?utf-8?B?dkRFTGI3ZE1nRmZDM3Y2VjV5WFg5L3lLTEN0bWdsdVdGNU1yeVJHNnZhbXJn?=
- =?utf-8?B?T2tmdmVGcmFMTlBlWFJDNjJEQmFWVWMremkzNTViSnVhdlZIYThneUoyMHY0?=
- =?utf-8?B?dHYvSjh1V3dsRXlBREdGdUlKa1Y0RW9DTEU3RDJ5WjNiQnJnRk93SnZBajNh?=
- =?utf-8?B?TlZRbURrZS95eFBJZEpucXJCTGJhT0tzOFFkVWlGMmhyem9yOGdYS0o0NlVr?=
- =?utf-8?B?eWM0TWJXOGdxRVpNL3BFanBVaGVzYjJBVFIxL3JUdUpWTWI2UWJRbnNCOVl2?=
- =?utf-8?B?QUFidm5wYUlocFBpdUJoZHFkRDFkNWFLUE50bHJkNXhWSjNWamR1Y1BEZXl3?=
- =?utf-8?B?QU84YUNpUG4wUDFVT1hTQzdTdVowVCtkYWdEZ2FRUUxXOHVnanJ5NEtlbHY3?=
- =?utf-8?B?dzBCbldZYWhmZ0FJUzR6NFJRRDByVWgxTzdnOGJrcytwQ1J3L25vUTJkaUJi?=
- =?utf-8?B?emc9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        with ESMTP id S243940AbiBKMZI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 07:25:08 -0500
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06F17DC3
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 04:25:07 -0800 (PST)
+Received: from fraeml703-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JwCPv6HHSz689Nw;
+        Fri, 11 Feb 2022 20:20:51 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml703-chm.china.huawei.com (10.206.15.52) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.21; Fri, 11 Feb 2022 13:25:04 +0100
+Received: from [10.47.87.89] (10.47.87.89) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 11 Feb
+ 2022 12:25:03 +0000
+Message-ID: <df7b31cc-557d-ce12-dbb7-a2873100a587@huawei.com>
+Date:   Fri, 11 Feb 2022 12:25:03 +0000
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 467fc05b-0d52-4844-504e-08d9ed58bdb1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Feb 2022 12:19:24.3961
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: kk4v7Iw6wG6qoqAXYm4UEu4pqNlwW86XtiRhuZFaU3pdhz5jJEXJ1TQulzqIvsnfhJ4L04/1uUTmzXBdHjP5/g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR04MB0437
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.1
+Subject: Re: [PATCH v2 23/24] scsi: pm8001: Introduce ccb alloc/free helpers
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Xiang Chen <chenxiang66@hisilicon.com>,
+        "Jason Yan" <yanaijie@huawei.com>,
+        Luo Jiaxing <luojiaxing@huawei.com>
+References: <20220211073704.963993-1-damien.lemoal@opensource.wdc.com>
+ <20220211073704.963993-24-damien.lemoal@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <20220211073704.963993-24-damien.lemoal@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.87.89]
+X-ClientProxiedBy: lhreml727-chm.china.huawei.com (10.201.108.78) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiA+ID4gSSB0aGluayBpdCBsb29rcyBoYXJkd2FyZSBzcGVjaWZpYy4NCj4gPiA+IElmIHRoZSBm
-ZWF0dXJlIGlzbid0IHN1cHBvcnRlZCwgSSB0aGluayB0aGVyZSBpcyBubyByZWFzb250byBwcmV2
-ZW50DQo+ID4gPiBmcm9tDQo+ID4NCj4gPiBeXl4gcmVhc29uIHRvDQo+ID4NCj4gPiA+IHJ1bm5p
-bmcgb3RoZXIgZnVuY3Rpb25zLCBzdWNoIGFzIHVmc2hjZF9xdWV1ZWNvbW1hbmQgYW5kDQo+ID4g
-SXQgaXMgbm8gbG9uZ2VyIHVzZWQgaW4gcXVldWVjb21tYW5kIHNpbmNlIDU2NzVjMzgxZWE1MSBh
-bmQNCj4gPiA4ZDA3N2VkZTQ4YzENCj4gDQo+IFllYWgsIHlvdSdyZSByaWdodC4gSXQncyBqdXN0
-IGFuIGV4YW1wbGUuIEkganVzdCB3YW50IHRvIHRlbGwgdGhhdCB0aGUgbG9jayBhbHNvDQo+IHBy
-b3RlY3RzIHRoaW5ncyB0aGF0IGFyZSBub3QgcmVsYXRlZCB3aXRoIGNsayBzY2FsaW5nIGRpcmVj
-dGx5Lg0KT0suDQoNCj4gDQo+ID4NCj4gPiA+IHVmc2hjZF9leGVjX2Rldl9jbWQsIGNvbmN1cnJl
-bnRseS4NCj4gPiA+DQo+ID4gPiBTbyBJIGFkZCBhIGNvbmRpdGlvbiBhdCBzb21lIHBvaW50cyBw
-cm90ZWN0aW5nIHdpdGggY2xrX3NjYWxpbmdfbG9jay4NCj4gPiBCdXQgeW91IHN0aWxsIG5lZWQg
-YSB3YXkgdG8gc2VyaWFsaXplIGRldmljZSBtYW5hZ2VtZW50IGNvbW1hbmRzLg0KPiA+DQo+ID4g
-VGhhbmtzLA0KPiA+IEF2cmkNCj4gDQo+IFRoZSBkZXYgY21kIGV4ZWN1dGlvbiBwZXJpb2QgaXMg
-cHJvdGVjdGVkIGJ5IG11dGV4Lg0KPiBBbmQgYWN0dWFsIHJpbmdpbmcgYSBkb29yYmVsbCBpcyBw
-cm90ZWN0ZWQgYnkgc3BpbiBsb2NrLg0KPiANCj4gSXMgdGhlcmUgYW5vdGhlciByZWFzb24gdG8g
-bmVlZCBjbGtfc2NhbGluZ19sb2NrIGV2ZW4gd2l0aCBpdD8NClJpZ2h0Lg0KDQpBY2tlZC1ieTog
-QXZyaSBBbHRtYW4gPGF2cmkuYWx0bWFuQHdkYy5jb20+DQoNCj4gDQo+IFRoYW5rcy4NCj4gS2l3
-b29uZyBLaW0NCj4gDQoNCg==
+On 11/02/2022 07:37, Damien Le Moal wrote:
+> Introduce the pm8001_ccb_alloc() and pm8001_ccb_free() helpers to
+> replace the typical code pattern:
+> 
+> 	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
+> 	...
+> 	ccb = &pm8001_ha->ccb_info[ccb_tag];
+> 	ccb->device = pm8001_ha_dev;
+> 	ccb->ccb_tag = ccb_tag;
+> 	ccb->task = task;
+> 	ccb->n_elem = 0;
+> 
+> With a simpler single function call:
+> 
+> 	ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_ha_dev, task);
+> 
+> The pm8001_ccb_alloc() helper ensures that all fields of the ccb info
+> structure for the newly allocated tag are all initialized, except the
+> buf_prd field. All call site of the pm8001_tag_alloc() function that
+> use the ccb info associated with the allocated tag are converted to use
+> the new helpers.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> ---
+>   drivers/scsi/pm8001/pm8001_hwi.c | 153 ++++++++++++++-----------------
+>   drivers/scsi/pm8001/pm8001_sas.c |  37 +++-----
+>   drivers/scsi/pm8001/pm8001_sas.h |  33 +++++++
+>   drivers/scsi/pm8001/pm80xx_hwi.c |  66 ++++++-------
+>   4 files changed, 141 insertions(+), 148 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+> index d853e8d0195a..8c4cf4e254ba 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -1757,8 +1757,6 @@ int pm8001_handle_event(struct pm8001_hba_info *pm8001_ha, void *data,
+>   static void pm8001_send_abort_all(struct pm8001_hba_info *pm8001_ha,
+>   		struct pm8001_device *pm8001_ha_dev)
+>   {
+> -	int res;
+> -	u32 ccb_tag;
+>   	struct pm8001_ccb_info *ccb;
+>   	struct sas_task *task = NULL;
+>   	struct task_abort_req task_abort;
+> @@ -1780,28 +1778,26 @@ static void pm8001_send_abort_all(struct pm8001_hba_info *pm8001_ha,
+>   
+>   	task->task_done = pm8001_task_done;
+>   
+> -	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
+> -	if (res)
+> +	ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_ha_dev, task);
+> +	if (!ccb) {
+> +		pm8001_dbg(pm8001_ha, FAIL, "cannot allocate tag !!!\n");
+
+Should we print this always and move it into pm8001_ccb_alloc()?
+
+> +		sas_free_task(task);
+>   		return;
+> -
+> -	ccb = &pm8001_ha->ccb_info[ccb_tag];
+> -	ccb->device = pm8001_ha_dev;
+> -	ccb->ccb_tag = ccb_tag;
+> -	ccb->task = task;
+> -	ccb->n_elem = 0;
+> +	}
+>   
+>   	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>   
+>   	memset(&task_abort, 0, sizeof(task_abort));
+>   	task_abort.abort_all = cpu_to_le32(1);
+>   	task_abort.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
+> -	task_abort.tag = cpu_to_le32(ccb_tag);
+> +	task_abort.tag = cpu_to_le32(ccb->ccb_tag);
+>   
+>   	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &task_abort,
+>   			sizeof(task_abort), 0);
+> -	if (ret)
+> -		pm8001_tag_free(pm8001_ha, ccb_tag);
+> -
+> +	if (ret) {
+> +		sas_free_task(task);
+> +		pm8001_ccb_free(pm8001_ha, ccb);
+> +	}
+>   }
+>   
+>   static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
+> @@ -1809,7 +1805,6 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
+>   {
+>   	struct sata_start_req sata_cmd;
+>   	int res;
+> -	u32 ccb_tag;
+>   	struct pm8001_ccb_info *ccb;
+>   	struct sas_task *task = NULL;
+>   	struct host_to_dev_fis fis;
+> @@ -1825,20 +1820,13 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
+>   	}
+>   	task->task_done = pm8001_task_done;
+>   
+> -	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
+> -	if (res) {
+> -		sas_free_task(task);
+> -		pm8001_dbg(pm8001_ha, FAIL, "cannot allocate tag !!!\n");
+> -		return;
+> -	}
+> -
+> -	/* allocate domain device by ourselves as libsas
+> -	 * is not going to provide any
+> -	*/
+> +	/*
+> +	 * Allocate domain device by ourselves as libsas is not going to
+> +	 * provide any.
+> +	 */
+>   	dev = kzalloc(sizeof(struct domain_device), GFP_ATOMIC);
+>   	if (!dev) {
+>   		sas_free_task(task);
+> -		pm8001_tag_free(pm8001_ha, ccb_tag);
+>   		pm8001_dbg(pm8001_ha, FAIL,
+>   			   "Domain device cannot be allocated\n");
+>   		return;
+> @@ -1846,11 +1834,14 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
+>   	task->dev = dev;
+>   	task->dev->lldd_dev = pm8001_ha_dev;
+>   
+> -	ccb = &pm8001_ha->ccb_info[ccb_tag];
+> -	ccb->device = pm8001_ha_dev;
+> -	ccb->ccb_tag = ccb_tag;
+> -	ccb->task = task;
+> -	ccb->n_elem = 0;
+> +	ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_ha_dev, task);
+> +	if (!ccb) {
+> +		pm8001_dbg(pm8001_ha, FAIL, "cannot allocate tag !!!\n");
+> +		sas_free_task(task);
+> +		kfree(dev);
+> +		return;
+> +	}
+> +
+>   	pm8001_ha_dev->id |= NCQ_READ_LOG_FLAG;
+>   	pm8001_ha_dev->id |= NCQ_2ND_RLE_FLAG;
+>   
+> @@ -1865,7 +1856,7 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
+>   	fis.lbal = 0x10;
+>   	fis.sector_count = 0x1;
+>   
+> -	sata_cmd.tag = cpu_to_le32(ccb_tag);
+> +	sata_cmd.tag = cpu_to_le32(ccb->ccb_tag);
+>   	sata_cmd.device_id = cpu_to_le32(pm8001_ha_dev->device_id);
+>   	sata_cmd.ncqtag_atap_dir_m = cpu_to_le32((0x1 << 7) | (0x5 << 9));
+>   	memcpy(&sata_cmd.sata_fis, &fis, sizeof(struct host_to_dev_fis));
+> @@ -1874,7 +1865,7 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
+>   			sizeof(sata_cmd), 0);
+>   	if (res) {
+>   		sas_free_task(task);
+> -		pm8001_tag_free(pm8001_ha, ccb_tag);
+> +		pm8001_ccb_free(pm8001_ha, ccb);
+>   		kfree(dev);
+>   	}
+>   }
+> @@ -4433,7 +4424,7 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
+>   	u32 stp_sspsmp_sata = 0x4;
+>   	struct inbound_queue_table *circularQ;
+>   	u32 linkrate, phy_id;
+> -	int rc, tag = 0xdeadbeef;
+> +	int rc;
+>   	struct pm8001_ccb_info *ccb;
+>   	u8 retryFlag = 0x1;
+>   	u16 firstBurstSize = 0;
+> @@ -4444,13 +4435,11 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
+
+I think that this needs to be fixed to release the ccb when 
+pm8001_mip_build_cmd() fails (not shown).
+
+>   	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>   
+>   	memset(&payload, 0, sizeof(payload));
+> -	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> -	if (rc)
+> -		return rc;
+> -	ccb = &pm8001_ha->ccb_info[tag];
+> -	ccb->device = pm8001_dev;
+> -	ccb->ccb_tag = tag;
+> -	payload.tag = cpu_to_le32(tag);
+> +	ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_dev, NULL);
+> +	if (!ccb)
+> +		return SAS_QUEUE_FULL;
+> +
+> +	payload.tag = cpu_to_le32(ccb->ccb_tag);
+>   	if (flag == 1)
+>   		stp_sspsmp_sata = 0x02; /*direct attached sata */
+>   	else {
+> @@ -4642,7 +4631,6 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>   	u32 opc = OPC_INB_GET_NVMD_DATA;
+>   	u32 nvmd_type;
+>   	int rc;
+> -	u32 tag;
+>   	struct pm8001_ccb_info *ccb;
+>   	struct inbound_queue_table *circularQ;
+>   	struct get_nvm_data_req nvmd_req;
+> @@ -4657,15 +4645,15 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>   	fw_control_context->len = ioctl_payload->rd_length;
+>   	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>   	memset(&nvmd_req, 0, sizeof(nvmd_req));
+> -	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> -	if (rc) {
+> +
+> +	ccb = pm8001_ccb_alloc(pm8001_ha, NULL, NULL);
+> +	if (!ccb) {
+>   		kfree(fw_control_context);
+> -		return rc;
+> +		return -EBUSY;
+>   	}
+> -	ccb = &pm8001_ha->ccb_info[tag];
+> -	ccb->ccb_tag = tag;
+>   	ccb->fw_control_context = fw_control_context;
+> -	nvmd_req.tag = cpu_to_le32(tag);
+> +
+> +	nvmd_req.tag = cpu_to_le32(ccb->ccb_tag);
+>   
+>   	switch (nvmd_type) {
+>   	case TWI_DEVICE: {
+> @@ -4726,7 +4714,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>   			sizeof(nvmd_req), 0);
+>   	if (rc) {
+>   		kfree(fw_control_context);
+> -		pm8001_tag_free(pm8001_ha, tag);
+> +		pm8001_ccb_free(pm8001_ha, ccb);
+>   	}
+>   	return rc;
+>   }
+> @@ -4737,7 +4725,6 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>   	u32 opc = OPC_INB_SET_NVMD_DATA;
+>   	u32 nvmd_type;
+>   	int rc;
+> -	u32 tag;
+>   	struct pm8001_ccb_info *ccb;
+>   	struct inbound_queue_table *circularQ;
+>   	struct set_nvm_data_req nvmd_req;
+> @@ -4753,15 +4740,15 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>   		&ioctl_payload->func_specific,
+>   		ioctl_payload->wr_length);
+>   	memset(&nvmd_req, 0, sizeof(nvmd_req));
+> -	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> -	if (rc) {
+> +
+> +	ccb = pm8001_ccb_alloc(pm8001_ha, NULL, NULL);
+> +	if (!ccb) {
+>   		kfree(fw_control_context);
+>   		return -EBUSY;
+>   	}
+> -	ccb = &pm8001_ha->ccb_info[tag];
+>   	ccb->fw_control_context = fw_control_context;
+> -	ccb->ccb_tag = tag;
+> -	nvmd_req.tag = cpu_to_le32(tag);
+> +
+> +	nvmd_req.tag = cpu_to_le32(ccb->ccb_tag);
+>   	switch (nvmd_type) {
+>   	case TWI_DEVICE: {
+>   		u32 twi_addr, twi_page_size;
+> @@ -4811,7 +4798,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>   			sizeof(nvmd_req), 0);
+>   	if (rc) {
+>   		kfree(fw_control_context);
+> -		pm8001_tag_free(pm8001_ha, tag);
+> +		pm8001_ccb_free(pm8001_ha, ccb);
+>   	}
+>   	return rc;
+>   }
+> @@ -4856,8 +4843,6 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info *pm8001_ha,
+>   	struct fw_flash_updata_info flash_update_info;
+>   	struct fw_control_info *fw_control;
+>   	struct fw_control_ex *fw_control_context;
+> -	int rc;
+> -	u32 tag;
+>   	struct pm8001_ccb_info *ccb;
+>   	void *buffer = pm8001_ha->memoryMap.region[FW_FLASH].virt_ptr;
+>   	dma_addr_t phys_addr = pm8001_ha->memoryMap.region[FW_FLASH].phys_addr;
+> @@ -4881,17 +4866,16 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info *pm8001_ha,
+>   	fw_control_context->virtAddr = buffer;
+>   	fw_control_context->phys_addr = phys_addr;
+>   	fw_control_context->len = fw_control->len;
+> -	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> -	if (rc) {
+> +
+> +	ccb = pm8001_ccb_alloc(pm8001_ha, NULL, NULL);
+> +	if (!ccb) {
+>   		kfree(fw_control_context);
+>   		return -EBUSY;
+>   	}
+> -	ccb = &pm8001_ha->ccb_info[tag];
+>   	ccb->fw_control_context = fw_control_context;
+> -	ccb->ccb_tag = tag;
+> -	rc = pm8001_chip_fw_flash_update_build(pm8001_ha, &flash_update_info,
+> -		tag);
+> -	return rc;
+> +
+> +	return pm8001_chip_fw_flash_update_build(pm8001_ha, &flash_update_info,
+> +						 ccb->ccb_tag);
+
+Same as pm8001_chip_reg_dev_req()
+
+>   }
+>   
+>   ssize_t
+> @@ -4979,24 +4963,21 @@ pm8001_chip_set_dev_state_req(struct pm8001_hba_info *pm8001_ha,
+>   	struct set_dev_state_req payload;
+>   	struct inbound_queue_table *circularQ;
+>   	struct pm8001_ccb_info *ccb;
+> -	int rc;
+> -	u32 tag;
+>   	u32 opc = OPC_INB_SET_DEVICE_STATE;
+> +
+>   	memset(&payload, 0, sizeof(payload));
+> -	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> -	if (rc)
+> +
+> +	ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_dev, NULL);
+> +	if (!ccb)
+>   		return -1;
+> -	ccb = &pm8001_ha->ccb_info[tag];
+> -	ccb->ccb_tag = tag;
+> -	ccb->device = pm8001_dev;
+> +
+>   	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+> -	payload.tag = cpu_to_le32(tag);
+> +	payload.tag = cpu_to_le32(ccb->ccb_tag);
+>   	payload.device_id = cpu_to_le32(pm8001_dev->device_id);
+>   	payload.nds = cpu_to_le32(state);
+> -	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
+> -			sizeof(payload), 0);
+> -	return rc;
+>   
+> +	return pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
+> +				    sizeof(payload), 0);
+
+As above
+
+>   }
+>   
+>   static int
+> @@ -5006,25 +4987,27 @@ pm8001_chip_sas_re_initialization(struct pm8001_hba_info *pm8001_ha)
+>   	struct inbound_queue_table *circularQ;
+>   	struct pm8001_ccb_info *ccb;
+>   	int rc;
+> -	u32 tag;
+>   	u32 opc = OPC_INB_SAS_RE_INITIALIZE;
+> +
+>   	memset(&payload, 0, sizeof(payload));
+> -	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> -	if (rc)
+> +
+> +	ccb = pm8001_ccb_alloc(pm8001_ha, NULL, NULL);
+> +	if (!ccb)
+>   		return -ENOMEM;
+> -	ccb = &pm8001_ha->ccb_info[tag];
+> -	ccb->ccb_tag = tag;
+> +
+>   	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+> -	payload.tag = cpu_to_le32(tag);
+> +
+> +	payload.tag = cpu_to_le32(ccb->ccb_tag);
+>   	payload.SSAHOLT = cpu_to_le32(0xd << 25);
+>   	payload.sata_hol_tmo = cpu_to_le32(80);
+>   	payload.open_reject_cmdretries_data_retries = cpu_to_le32(0xff00ff);
+> +
+>   	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
+> -			sizeof(payload), 0);
+> +				  sizeof(payload), 0);
+>   	if (rc)
+> -		pm8001_tag_free(pm8001_ha, tag);
+> -	return rc;
+> +		pm8001_ccb_free(pm8001_ha, ccb);
+>   
+> +	return rc;
+>   }
+>   
+>   const struct pm8001_dispatch pm8001_8001_dispatch = {
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index 8cd7e7837f41..6b8843344893 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -74,7 +74,7 @@ void pm8001_tag_free(struct pm8001_hba_info *pm8001_ha, u32 tag)
+>     * @pm8001_ha: our hba struct
+>     * @tag_out: the found empty tag .
+>     */
+> -inline int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out)
+> +int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out)
+>   {
+>   	unsigned int tag;
+>   	void *bitmap = pm8001_ha->tags;
+> @@ -383,7 +383,7 @@ static int pm8001_task_exec(struct sas_task *task,
+>   	struct sas_task *t = task;
+>   	struct task_status_struct *ts = &t->task_status;
+>   	struct pm8001_ccb_info *ccb;
+> -	u32 tag = 0xdeadbeef, rc = 0, n_elem;
+> +	u32 rc = 0, n_elem;
+>   	unsigned long flags = 0;
+>   	enum sas_protocol task_proto = t->task_proto;
+>   
+> @@ -424,11 +424,11 @@ static int pm8001_task_exec(struct sas_task *task,
+>   			continue;
+>   		}
+>   
+> -		rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> -		if (rc)
+> +		ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_dev, t);
+> +		if (!ccb) {
+> +			rc = -EBUSY;
+>   			goto err_out;
+> -
+> -		ccb = &pm8001_ha->ccb_info[tag];
+> +		}
+>   
+>   		if (!sas_protocol_ata(task_proto)) {
+>   			if (t->num_scatter) {
+> @@ -438,7 +438,7 @@ static int pm8001_task_exec(struct sas_task *task,
+>   					t->data_dir);
+>   				if (!n_elem) {
+>   					rc = -ENOMEM;
+> -					goto err_out_tag;
+> +					goto err_out_ccb;
+>   				}
+>   			} else {
+>   				n_elem = 0;
+> @@ -449,9 +449,7 @@ static int pm8001_task_exec(struct sas_task *task,
+>   
+>   		t->lldd_task = ccb;
+>   		ccb->n_elem = n_elem;
+> -		ccb->ccb_tag = tag;
+> -		ccb->task = t;
+> -		ccb->device = pm8001_dev;
+> +
+>   		switch (task_proto) {
+>   		case SAS_PROTOCOL_SMP:
+>   			atomic_inc(&pm8001_dev->running_req);
+> @@ -480,7 +478,7 @@ static int pm8001_task_exec(struct sas_task *task,
+>   		if (rc) {
+>   			pm8001_dbg(pm8001_ha, IO, "rc is %x\n", rc);
+>   			atomic_dec(&pm8001_dev->running_req);
+> -			goto err_out_tag;
+> +			goto err_out_ccb;
+>   		}
+>   		/* TODO: select normal or high priority */
+>   		spin_lock(&t->task_state_lock);
+> @@ -490,8 +488,8 @@ static int pm8001_task_exec(struct sas_task *task,
+>   	rc = 0;
+>   	goto out_done;
+>   
+> -err_out_tag:
+> -	pm8001_tag_free(pm8001_ha, tag);
+> +err_out_ccb:
+> +	pm8001_ccb_free(pm8001_ha, ccb);
+>   err_out:
+>   	dev_printk(KERN_ERR, pm8001_ha->dev, "pm8001 exec failed[%d]!\n", rc);
+>   	if (!sas_protocol_ata(task_proto))
+> @@ -816,7 +814,6 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
+>   	u32 task_tag)
+>   {
+>   	int res, retry;
+> -	u32 ccb_tag;
+>   	struct pm8001_ccb_info *ccb;
+>   	struct sas_task *task = NULL;
+>   
+> @@ -832,18 +829,12 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
+>   		task->slow_task->timer.expires = jiffies + PM8001_TASK_TIMEOUT * HZ;
+>   		add_timer(&task->slow_task->timer);
+>   
+> -		res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
+> -		if (res)
+> +		ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_dev, task);
+> +		if (!ccb)
+>   			goto ex_err;
+> -		ccb = &pm8001_ha->ccb_info[ccb_tag];
+> -		ccb->device = pm8001_dev;
+> -		ccb->ccb_tag = ccb_tag;
+> -		ccb->task = task;
+> -		ccb->n_elem = 0;
+>   
+>   		res = PM8001_CHIP_DISP->task_abort(pm8001_ha,
+> -			pm8001_dev, flag, task_tag, ccb_tag);
+> -
+> +			pm8001_dev, flag, task_tag, ccb->ccb_tag);
+>   		if (res) {
+>   			del_timer(&task->slow_task->timer);
+
+We should free the CCB here? I guess that the mainline code is broken :(
+
+>   			pm8001_dbg(pm8001_ha, FAIL, "Executing internal task failed\n");
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index a17da1cebce1..6aafa48bf235 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -738,6 +738,39 @@ void pm8001_free_dev(struct pm8001_device *pm8001_dev);
+>   /* ctl shared API */
+>   extern const struct attribute_group *pm8001_host_groups[];
+>   
+> +/*
+> + * Allocate a new tag and return the corresponding ccb after initializing it.
+> + */
+> +static inline struct pm8001_ccb_info *
+> +pm8001_ccb_alloc(struct pm8001_hba_info *pm8001_ha,
+> +		 struct pm8001_device *dev, struct sas_task *task)
+> +{
+> +	struct pm8001_ccb_info *ccb;
+> +	u32 tag;
+> +
+> +	if (pm8001_tag_alloc(pm8001_ha, &tag))
+> +		return NULL;
+> +
+> +	ccb = &pm8001_ha->ccb_info[tag];
+> +	ccb->task = task;
+> +	ccb->n_elem = 0;
+> +	ccb->ccb_tag = tag;
+> +	ccb->device = dev;
+> +	ccb->fw_control_context = NULL;
+> +	ccb->open_retry = 0;
+
+I'd just memset the whole thing to be sure (paranoid). And I think that 
+we are also missing clearing the ccb_dma_handle.
+
+> +
+> +	return ccb;
+> +}
+> +
+> +/*
+
+Thanks,
+John
