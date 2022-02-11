@@ -2,80 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AABB3C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 23:23:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D13FAC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 23:25:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353966AbiBKXX3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Feb 2022 18:23:29 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54300 "EHLO
+        id S1352244AbiBKXZi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Feb 2022 18:25:38 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229484AbiBKXX2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 18:23:28 -0500
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C733C5F
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 15:23:26 -0800 (PST)
-Received: by mail-pj1-f52.google.com with SMTP id om7so9357531pjb.5
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 15:23:26 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=XEZANdFEPwB7Qp2uGiRFgd1CG/FLMeXDfsr06ypOhpM=;
-        b=NEKiS4nSgPT31lYJOMkM6oW4UJVJRz0ghvJN4kOzr70VgNHdwDswrrM8azwprBS974
-         7/zM0STwZKtp5naOcK7t6guZQOgNEdS1Zn2oKEYuBlIgnF8U0vBQlqnstZz+EGHUlf5L
-         wdzjDE7H1JFxDilxg0GItJi2zBohKR+X0mkwr9rLkMTE0Q1wLUSkTkS0DD1M8HaMopNT
-         YckxJNQpMzseaWRrDifuw+Uz7L0BZbQ9b1meHS6bZSQ+g8qnzIAC+AagfR9eXTNCqqtG
-         1tX8sLZWFqXm6cyoC0Z0rnJd5WKQMhVxmcBKYIYRY9/uRQtCV8D2vmtGEs03Pylp5Gvs
-         zPwg==
-X-Gm-Message-State: AOAM530iIvxC1RDuytqMfwzQ9maU6ydcSReeJL/CAogTtDZdCUCLSonQ
-        mmzyVtUplGC3SSLswc6P6KoVfeU8gXI2Tw==
-X-Google-Smtp-Source: ABdhPJxrpRLZcruSX5Qbj7QOr8SBTrSIifnhD3UcEwR9PWuz3Ka59RGntZsnkOET2NOm8X3weY2tHw==
-X-Received: by 2002:a17:902:e74e:: with SMTP id p14mr3673672plf.95.1644621805645;
-        Fri, 11 Feb 2022 15:23:25 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id y41sm29114744pfa.213.2022.02.11.15.23.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 11 Feb 2022 15:23:24 -0800 (PST)
-Message-ID: <e3580324-6a3c-deb2-30f1-2d39c5ccda88@acm.org>
-Date:   Fri, 11 Feb 2022 15:23:22 -0800
+        with ESMTP id S242803AbiBKXZi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 18:25:38 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B691C5F;
+        Fri, 11 Feb 2022 15:25:36 -0800 (PST)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21BN5Z4T015522;
+        Fri, 11 Feb 2022 23:25:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2021-07-09;
+ bh=5eNJBhDGgq1qZSsKV3Wp4fv3E7MvY1SsyGQyWAIjwSA=;
+ b=khUN/m6mdpSoOsdNAlyCRxlqfg0jla4eAu/GO2HG3GrWNz7WazBAPzKcbyqEUFyY06MW
+ q0AG/K/WEbdvRIDCOdg7H7CT1FO9knawUXJDGJiymOW1WsS8a5bdSgJwp5OZMy3fcQhv
+ fnP63UTckuKhzYvcoPVoJdTsLUn3AZ6ny1CCtKRKlT2Gps4lEB3qpF6l/peGBuCOhk44
+ nYleX0yilHkdWMyA0/35l2XyLQtsCaPtf6Q0gQyGkt4XBYxw5rDihyXUBO8LslrhiIDx
+ +WQagc64Wc8AvFt5Kuga8JbI91YxeyIEGY9wlmcRviXsaGE72awJ6DWDEW/BdYrdIzj8 rQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3e5g98ace3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 11 Feb 2022 23:25:33 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21BNG6uw020666;
+        Fri, 11 Feb 2022 23:25:32 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by userp3020.oracle.com with ESMTP id 3e1jpykk2j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 11 Feb 2022 23:25:32 +0000
+Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 21BNPTtB094578;
+        Fri, 11 Feb 2022 23:25:31 GMT
+Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
+        by userp3020.oracle.com with ESMTP id 3e1jpykk0v-2;
+        Fri, 11 Feb 2022 23:25:31 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     Kees Cook <keescook@chromium.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        linux-hardening@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
+Subject: Re: [PATCH] scsi: mpt3sas: Convert to flexible arrays
+Date:   Fri, 11 Feb 2022 18:25:25 -0500
+Message-Id: <164462189850.7606.6908949862618145181.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20220201223948.1455637-1-keescook@chromium.org>
+References: <20220201223948.1455637-1-keescook@chromium.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH] scsi: ufs: Fix runtime PM messages never-ending cycle
-Content-Language: en-US
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        linux-scsi@vger.kernel.org
-References: <20220211111727.161799-1-adrian.hunter@intel.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220211111727.161799-1-adrian.hunter@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: sGf-vz6rt6-lFfi29dBdIppsmPP0CQdc
+X-Proofpoint-ORIG-GUID: sGf-vz6rt6-lFfi29dBdIppsmPP0CQdc
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/11/22 03:17, Adrian Hunter wrote:
-> Kernel messages produced during runtime PM can cause a never-ending
-> cycle because user space utilities (e.g. journald or rsyslog) write the
-> messages back to storage, causing runtime resume, more messages, and so
-> on.
+On Tue, 1 Feb 2022 14:39:48 -0800, Kees Cook wrote:
+
+> This converts to a flexible array instead of the old-style 1-element
+> arrays. The existing code already did the correct math for finding the
+> size of the resulting flexible array structure, so there is no binary
+> difference.
 > 
-> Messages that tell of things that are expected to happen, are arguably
-> unnecessary, so suppress them.
+> The other two structures converted to use flexible arrays appear to
+> have no users at all.
+> 
+> [...]
 
-Instead of making the logging statements conditional, how about removing 
-the logging statements entirely? That would simplify the code. I don't 
-think the logging statements provide more information than what can 
-already be obtained with ftrace.
+Applied to 5.18/scsi-queue, thanks!
 
-Thanks,
+[1/1] scsi: mpt3sas: Convert to flexible arrays
+      https://git.kernel.org/mkp/scsi/c/d20b3dae630f
 
-Bart.
+-- 
+Martin K. Petersen	Oracle Linux Engineering
