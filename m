@@ -2,149 +2,250 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15A71C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 11:10:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3A66C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 11:17:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349340AbiBKLKq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Feb 2022 06:10:46 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:37936 "EHLO
+        id S234522AbiBKLRe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Feb 2022 06:17:34 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349203AbiBKLKp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 06:10:45 -0500
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C00CBE5D
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 03:10:43 -0800 (PST)
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220211111040epoutp036084ce2165425c06ea333088f9b97ecf~SttU_53Qa1542815428epoutp03d
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 11:10:40 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220211111040epoutp036084ce2165425c06ea333088f9b97ecf~SttU_53Qa1542815428epoutp03d
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1644577840;
-        bh=/QqAj4sBooVJtWFQuaex7gP6M60iq909aZ1ni0qhM34=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=TmPHJjXOcDXAmkZtOEBpUXSQf8a0VavCwmwC3dRqeFl2zh3OjXjYQVHwLm0w1rCDK
-         J6F5DfBy40gv/WcSUK7RIhne2lnxa9gynNkIWUdAd47ekJqfok7gmXgT6VNcMMOLSu
-         C4eAn6JnixkpoW/FNf8XLdsBWq8AJLZZOOKe2P3w=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20220211111040epcas2p21ac27e4037466e7bddfd390edc5643df~SttUUWROv2496924969epcas2p2d;
-        Fri, 11 Feb 2022 11:10:40 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.89]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4Jw9rr4PLvz4x9Pt; Fri, 11 Feb
-        2022 11:10:36 +0000 (GMT)
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        5E.98.51767.C2446026; Fri, 11 Feb 2022 20:10:36 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
-        20220211111036epcas2p49318d038042b4b56d374a11999cc1d64~SttQf4stM2585225852epcas2p4_;
-        Fri, 11 Feb 2022 11:10:36 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220211111036epsmtrp2eb8b5781e25efffb96f272d99cd883f1~SttQe5O_Q2422524225epsmtrp2L;
-        Fri, 11 Feb 2022 11:10:36 +0000 (GMT)
-X-AuditID: b6c32a45-447ff7000000ca37-d5-6206442c1ba0
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        CD.33.29871.B2446026; Fri, 11 Feb 2022 20:10:35 +0900 (KST)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20220211111035epsmtip1a2ef5627ab9f837a7c9d982048a2dfe6~SttQQFFXS0789707897epsmtip1a;
-        Fri, 11 Feb 2022 11:10:35 +0000 (GMT)
-From:   Kiwoong Kim <kwmad.kim@samsung.com>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        cang@codeaurora.org, adrian.hunter@intel.com, sc.suh@samsung.com,
-        hy50.seo@samsung.com, sh425.lee@samsung.com,
-        bhoon95.kim@samsung.com, vkumar.1997@samsung.com
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v1] scsi: ufs: exclude UECxx from SFR dump list
-Date:   Fri, 11 Feb 2022 20:08:21 +0900
-Message-Id: <1644577701-40884-1-git-send-email-kwmad.kim@samsung.com>
-X-Mailer: git-send-email 2.7.4
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpik+LIzCtJLcpLzFFi42LZdljTQlfHhS3JYMNHSYuTT9awWTyYt43N
-        4uXPq2wWBx92slh8XfqM1eLT+mWsFqsXP2CxWHRjG5PFzS1HWSwu75rDZtF9fQebxfLj/5gs
-        uu7eYLRY+u8ti8Wd+x9ZHPg9Lvf1Mnks3vOSyWPCogOMHt/Xd7B5fHx6i8Wjb8sqRo/Pm+Q8
-        2g90MwVwRGXbZKQmpqQWKaTmJeenZOal2yp5B8c7x5uaGRjqGlpamCsp5CXmptoqufgE6Lpl
-        5gBdr6RQlphTChQKSCwuVtK3synKLy1JVcjILy6xVUotSMkpMC/QK07MLS7NS9fLSy2xMjQw
-        MDIFKkzIzujZfYGt4CZXxYPXMxgbGI9zdDFyckgImEjcntbG1MXIxSEksINR4uLpmSwgCSGB
-        T4wSJy5YQyS+MUrc/rWEEaZjRvtrRojEXkaJW0saodp/MEqc+n+IFaSKTUBT4unNqUwgtojA
-        dSaJedszQGxmAXWJXRNOgMWFBewljpz9zNbFyMHBIqAqcW1hGEiYV8BVovHUaXaIZXISN891
-        MkPYjRwSV7eHQdguEnu2XGaBsIUlXh3fAlUvJfH53V6wkRICxRKb9smDnCYh0MAoseTTZqh6
-        Y4lZz9oZQWqYgc5cv0sfolxZ4sgtFogj+SQ6Dv9lhwjzSnS0CUE0Kkv8mjQZGgqSEjNv3oFa
-        6iEx59gmsIFCArESDyYoTGCUnYUwfgEj4ypGsdSC4tz01GKjAkN4BCXn525iBCdGLdcdjJPf
-        ftA7xMjEwXiIUYKDWUmEd8UN1iQh3pTEyqrUovz4otKc1OJDjKbAsJrILCWanA9MzXkl8YYm
-        lgYmZmaG5kamBuZK4rxeKRsShQTSE0tSs1NTC1KLYPqYODilGphCo34v3WpUeuj4e95Dd96E
-        8G7gdFSYN0sLmD0ucd3UKjUVm565YMF5tZsuj5JqQmZo5vMJPu9YwfuXkXe6pMsPpYOlR+y0
-        9gVMfX2jk+nJnLpoY9eef+7Stx/UTZsmf9/cqaCxYu/BinWcMS2pH3Q3RPMy2B48PcHOZNft
-        dZlKwoZbczb/rFeIaHFXtrjGsjcw0ogz2bHI8Ir154KTC04FT5v0+zgn6w6+XzJ2Hx49Xpbp
-        /Nxocd9KbW2JtuNB4t1f5ITOTYmQOdHz6/ZDEXbetC7+k791g99H6J28wrCBLU3S/Z5t14V/
-        BxfblrB9Y7w1YbLtiqbrUfWbjn2Z3iyi3y6s58HULPDv6YKH+5RYijMSDbWYi4oTAZg60/IV
-        BAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGLMWRmVeSWpSXmKPExsWy7bCSnK62C1uSwZ7llhYnn6xhs3gwbxub
-        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i+XH/zFZ
-        dN29wWix9N9bFos79z+yOPB7XO7rZfJYvOclk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5
-        tB/oZgrgiOKySUnNySxLLdK3S+DK6Nl9ga3gJlfFg9czGBsYj3N0MXJySAiYSMxof83YxcjF
-        ISSwm1Hi/9HNjBAJSYkTO59D2cIS91uOsEIUfWOUuLXkMgtIgk1AU+LpzalMIAkRgZdMEi/m
-        rGEDSTALqEvsmnCCCcQWFrCXOHL2M1Ccg4NFQFXi2sIwkDCvgKtE46nT7BAL5CRunutknsDI
-        s4CRYRWjZGpBcW56brFhgWFearlecWJucWleul5yfu4mRnDQamnuYNy+6oPeIUYmDsZDjBIc
-        zEoivCtusCYJ8aYkVlalFuXHF5XmpBYfYpTmYFES573QdTJeSCA9sSQ1OzW1ILUIJsvEwSnV
-        wLRw0yadEwr+e4WM/kSre3pzCT5bYSP6883OuJXWt8UZVr34rjqRf8c3peKnN53lt1/kPZsR
-        FDppkd4+A6u5ugd2RQQdtz0vuidB2fp94tO4/t/3fheKHDNx57auXR6372F2TchHu8+3bMxi
-        38qlbA5dx1OnzGpsnsXCUv7ngHcQx/4lCkI3zh8W9VOvUqqoNtx45s7Ci2bu6oL5H1s/Cdp6
-        CDCEbJtiYSq07M5U/USFiUE7JhhMTDdZtjYkinvpSr2k0qd5TbbL7fgWyD24GLfloV60wd/c
-        tfn38yZd/Vai3c3yXs5wo0tS3Ee7V2fWfdBcc9i7YnL76bcdYrfkJjjHm28Tymjd+sFROfhV
-        hhJLcUaioRZzUXEiAGNmB4fJAgAA
-X-CMS-MailID: 20220211111036epcas2p49318d038042b4b56d374a11999cc1d64
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220211111036epcas2p49318d038042b4b56d374a11999cc1d64
-References: <CGME20220211111036epcas2p49318d038042b4b56d374a11999cc1d64@epcas2p4.samsung.com>
+        with ESMTP id S1349401AbiBKLRd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 06:17:33 -0500
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42D52E87
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 03:17:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1644578252; x=1676114252;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=1TKmoZQ3s9GekwouvTNKpWvxQocchYIj1gO39mSdmnk=;
+  b=gwGZKXC4Af3V+2mVZD6Dpc+yHhxiw133yJktHHJoRcm+bldzDx6ejTvm
+   UDrjSVuexpPI64Zcswl+amwJ4SeYwfJe8dXJj/kf3FxWfO68rRigrbScL
+   4M8RwwccOT8/ulDHudU9CFCvrTTHMx8ASKwAwauOCMKjj+CDmXcte1hFR
+   Y+Of6fdHVpwi8PU63/Dtyg0dfSiX+CnWzkKmWgaNWfRSR9qD9uE4wSmGL
+   lh6UnQZNQ4hc3wp1OxgDU0DRasX+gPMAxZwitqnkfSipjaN0IDFwx1DG2
+   c81dC2WqGzjfZ4SdOVpCPGWJKhBvlh4DXS6LnJ8RQteLKJJdFrxvz2Zk/
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10254"; a="248546056"
+X-IronPort-AV: E=Sophos;i="5.88,360,1635231600"; 
+   d="scan'208";a="248546056"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2022 03:17:31 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,360,1635231600"; 
+   d="scan'208";a="542048610"
+Received: from ahunter-desktop.fi.intel.com ([10.237.72.92])
+  by orsmga008.jf.intel.com with ESMTP; 11 Feb 2022 03:17:28 -0800
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: ufs: Fix runtime PM messages never-ending cycle
+Date:   Fri, 11 Feb 2022 13:17:27 +0200
+Message-Id: <20220211111727.161799-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-These are ROC type things that means their values
-are cleared when the SFRs are read.
-They are usually read in ISR when an UIC error occur.
-Thus, their values would be zero at many cases. And
-there might be a little bit risky when they are read to
-be cleared before the ISR reads them, e.g. the case that
-a command is timed-out, ufshcd_dump_regs is called in
-ufshcd_abort and an UIC error occurs at the nearly
-same time. In this case, ISR will be called but UFS error handler
-will not be scheduled.
-This patch is to make UFS driver not read those SFRs in the
-dump function, i.e. ufshcd_dump_regs.
+Kernel messages produced during runtime PM can cause a never-ending
+cycle because user space utilities (e.g. journald or rsyslog) write the
+messages back to storage, causing runtime resume, more messages, and so
+on.
 
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Messages that tell of things that are expected to happen, are arguably
+unnecessary, so suppress them.
+
+ Example messages from Ubuntu 21.10:
+
+ $ dmesg | tail
+ [ 1620.380071] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate = 0
+ [ 1620.408825] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[4, 4], lane[2, 2], pwr[FAST MODE, FAST MODE], rate = 2
+ [ 1620.409020] ufshcd 0000:00:12.5: ufshcd_find_max_sup_active_icc_level: Regulator capability was not set, actvIccLevel=0
+ [ 1620.409524] sd 0:0:0:0: Power-on or device reset occurred
+ [ 1622.938794] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+ [ 1622.939184] ufs_device_wlun 0:0:0:49488: Power-on or device reset occurred
+ [ 1625.183175] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate = 0
+ [ 1625.208041] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[4, 4], lane[2, 2], pwr[FAST MODE, FAST MODE], rate = 2
+ [ 1625.208311] ufshcd 0000:00:12.5: ufshcd_find_max_sup_active_icc_level: Regulator capability was not set, actvIccLevel=0
+ [ 1625.209035] sd 0:0:0:0: Power-on or device reset occurred
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_error.c  |  9 ++++++--
+ drivers/scsi/sd.c          | 17 ++++++++++----
+ drivers/scsi/ufs/ufshcd.c  | 47 ++++++++++++++++++++++++++++++--------
+ include/scsi/scsi_device.h |  1 +
+ 4 files changed, 58 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 60a6ae9d1219..c944600f7931 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -484,8 +484,13 @@ static void scsi_report_sense(struct scsi_device *sdev,
+ 
+ 		if (sshdr->asc == 0x29) {
+ 			evt_type = SDEV_EVT_POWER_ON_RESET_OCCURRED;
+-			sdev_printk(KERN_WARNING, sdev,
+-				    "Power-on or device reset occurred\n");
++			/*
++			 * Do not print message if it is an expected side-effect
++			 * of runtime PM.
++			 */
++			if (!sdev->no_rst_sense_msg)
++				sdev_printk(KERN_WARNING, sdev,
++					    "Power-on or device reset occurred\n");
+ 		}
+ 
+ 		if (sshdr->asc == 0x2a && sshdr->ascq == 0x01) {
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 62eb9921cc94..fcfbadf1c42a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3742,7 +3742,7 @@ static void sd_shutdown(struct device *dev)
+ 	}
+ }
+ 
+-static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
++static int sd_suspend_common(struct device *dev, bool ignore_stop_errors, bool quiet)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+ 	struct scsi_sense_hdr sshdr;
+@@ -3752,7 +3752,8 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+ 		return 0;
+ 
+ 	if (sdkp->WCE && sdkp->media_present) {
+-		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
++		if (!quiet)
++			sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		ret = sd_sync_cache(sdkp, &sshdr);
+ 
+ 		if (ret) {
+@@ -3774,7 +3775,8 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+ 	}
+ 
+ 	if (sdkp->device->manage_start_stop) {
+-		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
++		if (!quiet)
++			sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		/* an error is not worth aborting a system sleep */
+ 		ret = sd_start_stop_device(sdkp, 0);
+ 		if (ignore_stop_errors)
+@@ -3789,12 +3791,17 @@ static int sd_suspend_system(struct device *dev)
+ 	if (pm_runtime_suspended(dev))
+ 		return 0;
+ 
+-	return sd_suspend_common(dev, true);
++	return sd_suspend_common(dev, true, false);
+ }
+ 
+ static int sd_suspend_runtime(struct device *dev)
+ {
+-	return sd_suspend_common(dev, false);
++	/*
++	 * Do not print messages during runtime PM to avoid never-ending cycles
++	 * of messages written back to storage by user space causing runtime
++	 * resume, causing more messages and so on.
++	 */
++	return sd_suspend_common(dev, false, true);
+ }
+ 
+ static int sd_resume(struct device *dev)
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 460d2b4..8b65c081 100644
+index 50b12d60dc1b..75fc3e15774e 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -115,8 +115,12 @@ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
- 	if (!regs)
- 		return -ENOMEM;
+@@ -585,13 +585,30 @@ static void ufshcd_print_pwr_info(struct ufs_hba *hba)
+ 		"INVALID MODE",
+ 	};
  
--	for (pos = 0; pos < len; pos += 4)
-+	for (pos = 0; pos < len; pos += 4) {
-+		if (pos >= REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER	&&
-+		    pos <= REG_UIC_ERROR_CODE_DME)
-+			continue;
- 		regs[pos / 4] = ufshcd_readl(hba, offset + pos);
+-	dev_err(hba->dev, "%s:[RX, TX]: gear=[%d, %d], lane[%d, %d], pwr[%s, %s], rate = %d\n",
+-		 __func__,
+-		 hba->pwr_info.gear_rx, hba->pwr_info.gear_tx,
+-		 hba->pwr_info.lane_rx, hba->pwr_info.lane_tx,
+-		 names[hba->pwr_info.pwr_rx],
+-		 names[hba->pwr_info.pwr_tx],
+-		 hba->pwr_info.hs_rate);
++	/*
++	 * Do not print messages during runtime PM to avoid never-ending cycles
++	 * of messages written back to storage by user space causing runtime
++	 * resume, causing more messages and so on.
++	 */
++	if (hba->pm_op_in_progress) {
++		dev_dbg(hba->dev,
++			"%s:[RX, TX]: gear=[%d, %d], lane[%d, %d], pwr[%s, %s], rate = %d\n",
++			 __func__,
++			 hba->pwr_info.gear_rx, hba->pwr_info.gear_tx,
++			 hba->pwr_info.lane_rx, hba->pwr_info.lane_tx,
++			 names[hba->pwr_info.pwr_rx],
++			 names[hba->pwr_info.pwr_tx],
++			 hba->pwr_info.hs_rate);
++	} else {
++		dev_err(hba->dev,
++			"%s:[RX, TX]: gear=[%d, %d], lane[%d, %d], pwr[%s, %s], rate = %d\n",
++			 __func__,
++			 hba->pwr_info.gear_rx, hba->pwr_info.gear_tx,
++			 hba->pwr_info.lane_rx, hba->pwr_info.lane_tx,
++			 names[hba->pwr_info.pwr_rx],
++			 names[hba->pwr_info.pwr_tx],
++			 hba->pwr_info.hs_rate);
 +	}
+ }
  
- 	ufshcd_hex_dump(prefix, regs, len);
- 	kfree(regs);
+ static void ufshcd_device_reset(struct ufs_hba *hba)
+@@ -5024,6 +5041,12 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+ 		pm_runtime_get_noresume(&sdev->sdev_gendev);
+ 	else if (ufshcd_is_rpm_autosuspend_allowed(hba))
+ 		sdev->rpm_autosuspend = 1;
++	/*
++	 * Do not print messages during runtime PM to avoid never-ending cycles
++	 * of messages written back to storage by user space causing runtime
++	 * resume, causing more messages and so on.
++	 */
++	sdev->no_rst_sense_msg = 1;
+ 
+ 	ufshcd_crypto_register(hba, q);
+ 
+@@ -7339,8 +7362,14 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+ 
+ 	if (!hba->vreg_info.vcc || !hba->vreg_info.vccq ||
+ 						!hba->vreg_info.vccq2) {
+-		dev_err(hba->dev,
+-			"%s: Regulator capability was not set, actvIccLevel=%d",
++		/*
++		 * Do not print messages during runtime PM to avoid never-ending
++		 * cycles of messages written back to storage by user space
++		 * causing runtime resume, causing more messages and so on.
++		 */
++		if (!hba->pm_op_in_progress)
++			dev_err(hba->dev,
++				"%s: Regulator capability was not set, actvIccLevel=%d",
+ 							__func__, icc_level);
+ 		goto out;
+ 	}
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 647c53b26105..785dbf6e3e24 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -206,6 +206,7 @@ struct scsi_device {
+ 	unsigned rpm_autosuspend:1;	/* Enable runtime autosuspend at device
+ 					 * creation time */
+ 	unsigned ignore_media_change:1; /* Ignore MEDIA CHANGE on resume */
++	unsigned no_rst_sense_msg:1;	/* Do not print reset sense message */
+ 
+ 	unsigned int queue_stopped;	/* request queue is quiesced */
+ 	bool offline_already;		/* Device offline message logged */
 -- 
-2.7.4
+2.25.1
 
