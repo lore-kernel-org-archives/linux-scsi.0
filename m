@@ -2,144 +2,170 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 420ACC433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Feb 2022 04:44:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B6B7C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Feb 2022 06:19:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230114AbiBLEos (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Feb 2022 23:44:48 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:54852 "EHLO
+        id S232216AbiBLGT1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Feb 2022 01:19:27 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229768AbiBLEoq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 23:44:46 -0500
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF67F28E22
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 20:44:43 -0800 (PST)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220212044438epoutp0271473c630939b81dcaac612b5eba7197~S8FjctNkN0221502215epoutp02V
-        for <linux-scsi@vger.kernel.org>; Sat, 12 Feb 2022 04:44:38 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220212044438epoutp0271473c630939b81dcaac612b5eba7197~S8FjctNkN0221502215epoutp02V
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1644641078;
-        bh=dmeKw7sjrH1sYaJQ8rlULXmQM6GP+l0eHhvgAaKtwxc=;
-        h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=CXSyOhb7mmBL1OHHOk4LZlEpiI0qfH3maqQo86aPqP6Zn/gjy1l6sfP/eFfNMhJOW
-         ioWZUl1RvQOXLPyojO9L+64OciH99iPlVTZBfdHkHsDLLtA+PauNLzwJc3v/6UN+Ro
-         bAYw83r35aN7jKUU0qMpmnMRwgsp5guTdgULJKMY=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20220212044437epcas2p1701d7d5aaf742f35af1fa19caaab2576~S8Fie8Pef1074010740epcas2p1s;
-        Sat, 12 Feb 2022 04:44:37 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.92]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4JwdDz5hKHz4x9Py; Sat, 12 Feb
-        2022 04:44:35 +0000 (GMT)
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        DA.65.51767.33B37026; Sat, 12 Feb 2022 13:44:35 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
-        20220212044434epcas2p169d006abc79a6cdcc8eb818231b577fc~S8FgHH7NG1074010740epcas2p1r;
-        Sat, 12 Feb 2022 04:44:34 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220212044434epsmtrp246eeb06fbededf509aa03c48436f9a7d~S8FgDacb72824128241epsmtrp2Z;
-        Sat, 12 Feb 2022 04:44:34 +0000 (GMT)
-X-AuditID: b6c32a45-447ff7000000ca37-62-62073b33d111
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        44.82.08738.23B37026; Sat, 12 Feb 2022 13:44:34 +0900 (KST)
-Received: from KORCO011456 (unknown [10.229.18.123]) by epsmtip2.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20220212044434epsmtip27396de9a97e31c2b074121975d52912a~S8Ff1m9oc1836618366epsmtip2i;
-        Sat, 12 Feb 2022 04:44:34 +0000 (GMT)
-From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
-To:     "'Adrian Hunter'" <adrian.hunter@intel.com>,
-        "'Avri Altman'" <Avri.Altman@wdc.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
-        <cang@codeaurora.org>, <sc.suh@samsung.com>,
-        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>,
-        <bhoon95.kim@samsung.com>, <vkumar.1997@samsung.com>
-In-Reply-To: <3f2938f7-2a9e-60e8-5237-fe7ebc3b4296@intel.com>
-Subject: RE: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling
- isn't supported.
-Date:   Sat, 12 Feb 2022 13:44:34 +0900
-Message-ID: <000001d81fcb$3b962f30$b2c28d90$@samsung.com>
+        with ESMTP id S232070AbiBLGT0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2022 01:19:26 -0500
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8995F2716D
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 22:19:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1644646763; x=1676182763;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=MS6jIKZG/CGTuvzFb1UIhod7mxNMr2z3dkLA7SyXblw=;
+  b=W0VtH8VA8weHZ+VjsmXu2APZnP1l61s/qEUwfIsxD4dGnQva1R0QvSdU
+   TJoK2JjmulPF7e3SNVK4gqCNwnQM4rLbrHGCGlcMYR3xR/zDjoBUNZZSD
+   gMlJ4uE4Zgvn0tUwXGNa+ngbKy+LLRFg+G5rYqx9ElcXFlDIZW9Yg8n5f
+   uuygdULCknTB+3UPalu5wLUKK/fIfifT13tngs5yneyRVYMHnuLU1Y/uu
+   Ib3OszoiFblmM5v3GHeRPcLXpiVRYV8f6xpl+XP6drAHpb1dr4xl9wbh/
+   f9K+8I1pwgMKj5MqFzYfIBDESR7BQ9u9gffdDn17lJrMuntiKNCfwCgrm
+   g==;
+X-IronPort-AV: E=Sophos;i="5.88,363,1635177600"; 
+   d="scan'208";a="304649429"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Feb 2022 14:19:23 +0800
+IronPort-SDR: mAgJ4q37PelPTwRY2urV1Tjh7hgzvYZHCZV0CXEdVmucXrfloOEA4QVolMKBNFXoUbWCaUa1aY
+ G3DHfjkzxlnFU0dziJtOx9A2xit6UBz91Oj4lcomW9xaS4pjNNcOcY8msNkItMg7L8YyqWAEas
+ WM2TIAT4SqwqOnkXoeVCS4I7R7FwOb1y7CE1ra7wQsGW6zBt6CQa1Jy8PjucWSoIAXyiK1Bh7K
+ Sg2//zZAJu3mhcmdoEaC1sfF8bKZf4I6pxMKKIe0REon4MNKaBo90MHFvVtVJ8MG10jqK2pCjW
+ 6ANAG6MlVP4PrOa9kosVaFDu
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2022 21:51:07 -0800
+IronPort-SDR: rN6icWTBx1iZHxjxdT7kD1Xb1ubr8+QJuUwKU/I6AFO0C49O7EGtHR0SDRW3hcZ34LlbgonPRw
+ FX2erMf+0c7cVYbXFCXmz4c6+2AHNv8IsX1r0p6TNCGCoBJES4NmTUSSrrPG8y5C3EIHzKFXzS
+ o5VrXc3JOCu4mRJv8nf82tQZflG9HgAwFYTk2lU/pmWT6s0H9fB9vB2cjht+eiL2H74+3tb6sI
+ 2e5mbHErfA962+cH6mt2l7AqDBZXHSkuSi/4rbgLlZZP+tQmW+QKfOhO/SGAHvM0du76KHGW0p
+ lqQ=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2022 22:19:23 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JwgLL4GtHz1SVp3
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 22:19:22 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1644646761; x=1647238762; bh=MS6jIKZG/CGTuvzFb1UIhod7mxNMr2z3dkL
+        A7SyXblw=; b=krx0B2REW0cANM7dZ6F+qSxsiztT4y4CsqReKRtYOMAkCPu5+3h
+        mMsCBPu4XcfZpnLxrM3aX6j83L1OqCbcELC3hpHNQjnx1ukMuXr46fhtyiF3aHOn
+        y6lI5ogAGQP8gGLHvhUSN7ZZU0uVZmLRtJyWKx5rWUqOzq9Zxxm74nc1d+dOJtZV
+        jkdexuH5ke96x27t+i2wc1lPeZjXj3a+e76HOnsNX3Pq+BKWWxKGXbFUaQI6XyrY
+        ey8nQW7BDdWiB53DUGzIkBGahml8Eo/Foqs3grr9xuKPTeS3KKgFbmIomLUEm8q5
+        XTZoBK3MCV9hpKIEltdSRsFO72t6tp48Evw==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id oBwiCIfj5eQF for <linux-scsi@vger.kernel.org>;
+        Fri, 11 Feb 2022 22:19:21 -0800 (PST)
+Received: from [10.225.163.67] (unknown [10.225.163.67])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JwgLJ702pz1Rwrw;
+        Fri, 11 Feb 2022 22:19:20 -0800 (PST)
+Message-ID: <c88ac83a-1f6a-ca76-68b3-7fde0db42893@opensource.wdc.com>
+Date:   Sat, 12 Feb 2022 15:19:19 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQI4IgZMS69T+T+3eQm0GbWo6Fi0ygFitYZoAa2Aj1kCJc0N+wFVhb0mq5rz/jA=
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBJsWRmVeSWpSXmKPExsWy7bCmma6xNXuSwcunahYnn6xhs3gwbxub
-        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLy7vmsFl0X9/BZrH8+D8mi667Nxgt
-        lv57y2Jx5/5HFgc+j8t9vUwei/e8ZPKYsOgAo8f39R1sHh+f3mLx6NuyitHj8yY5j/YD3UwB
-        HFHZNhmpiSmpRQqpecn5KZl56bZK3sHxzvGmZgaGuoaWFuZKCnmJuam2Si4+AbpumTlAhysp
-        lCXmlAKFAhKLi5X07WyK8ktLUhUy8otLbJVSC1JyCswL9IoTc4tL89L18lJLrAwNDIxMgQoT
-        sjMWvFjIWjCVteLR5tMsDYz/mbsYOTkkBEwktvXOYgWxhQR2MEoc2c/fxcgFZH9ilNh99jgr
-        hPOZUeLKns3sMB1X+88yQiR2MUps65sDVfWSUWLZi7Ngs9gEtCWmPdwNlhARmMksMWHLIbAE
-        p4CtxNd3fUwgtrBArMSN7dfZQGwWAVWJmXvegx3FK2ApMXf7EihbUOLkzCcsIDYz0NBlC19D
-        Ha4g8fPpMrCZIgJ+Eh//tkPViEjM7mxjBlksIXCGQ+LP9rtQd7tIbN51hgXCFpZ4dXwLVFxK
-        4vO7vUBHcADZxRKb9slD9DYwSiz5tBmq3lhi1rN2RpAaZgFNifW79CHKlSWO3IJayyfRcfgv
-        O0SYV6KjTQiiUVni16TJjBC2pMTMm3egSjwkOhdlTWBUnIXkx1lIfpyF5JdZCGsXMLKsYhRL
-        LSjOTU8tNiowhMd1cn7uJkZwktZy3cE4+e0HvUOMTByMhxglOJiVRHhX3GBNEuJNSaysSi3K
-        jy8qzUktPsRoCgz1icxSosn5wDyRVxJvaGJpYGJmZmhuZGpgriTO65WyIVFIID2xJDU7NbUg
-        tQimj4mDU6qB6WRF3K1Y2zdGM+bMm3qTTdLXMjD/lPEZ/fWf7fnydyue1Fn56/Kdy6UzQ09V
-        HDoj89lvgcUpBznnUs+eWT8OLP7h0+3ylSv5j/rZNafZyjLst7g/mXLvRfD12a5VJ+qXlxqn
-        avIEKrzexdN01mB+ftrMFYeWVGpttV8T4e3gpnbx7C8T7e7VsSwHvjW8XijpwvZvpXNs8NPX
-        wSLNETF6PZEbrG317pnvn3ZonjDX6X5Hxn7Xi8Yn+mapTuvNqm+78CNb1IdDt+FtmRhrZA2n
-        CL/1l7Uv5So/5H4/5hIS7c9y7v+ulGvlMr42mor/Z/cXT6l65h5ycs0mwXXFK+4tq/C/yhX2
-        tV3tc/E03jVBSizFGYmGWsxFxYkAzGoKflsEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrNIsWRmVeSWpSXmKPExsWy7bCSvK6RNXuSwZ8+KYuTT9awWTyYt43N
-        4uXPq2wWBx92slh8XfqM1eLT+mWsFqsXP2CxWHRjG5PF5V1z2Cy6r+9gs1h+/B+TRdfdG4wW
-        S/+9ZbG4c/8jiwOfx+W+XiaPxXteMnlMWHSA0eP7+g42j49Pb7F49G1ZxejxeZOcR/uBbqYA
-        jigum5TUnMyy1CJ9uwSujF8f9jAXzGCt+HnhPksDYwNLFyMnh4SAicTV/rOMXYxcHEICOxgl
-        nl+fyQ6RkJQ4sfM5I4QtLHG/5QgrRNFzRok1RxawgiTYBLQlpj3cDZYQEVjOLHFu1yMWiKrj
-        TBIXet+DtXMK2Ep8fdfHBGILC0RLbJ/wE8xmEVCVmLnnPTOIzStgKTF3+xIoW1Di5MwnYPcx
-        A214evMpnL1s4WtmiJMUJH4+XQZ2hYiAn8THv+1QNSISszvbmCcwCs1CMmoWklGzkIyahaRl
-        ASPLKkbJ1ILi3PTcYsMCo7zUcr3ixNzi0rx0veT83E2M4PjU0trBuGfVB71DjEwcjIcYJTiY
-        lUR4V9xgTRLiTUmsrEotyo8vKs1JLT7EKM3BoiTOe6HrZLyQQHpiSWp2ampBahFMlomDU6qB
-        qfVFmujPY8eq/j5T0Zx5/9KytMp3nPt+mF/4188jvtJnv1Vm67drpw64/Nd+8fPV4ZSS2+9F
-        P528/CNg6rSbXu9uvm08JPvHpo1TsdOXmedLZ8PCTt0FFzl0DlZv1mz16HjVeTVtXVbz8hf2
-        xeFpu951CKt+t9jPmcI3YZr2me5D0TfWWGlFm3gtaDn7smHb5YcXc1S+xgZbHPrg8VP+gXKz
-        e3jsZI633BN/bAvM7ntZJVz78oHNv3utq03u9QZxK/PXaNvu0dx60DNYwMxHKP2Lzt72+fZT
-        W1Kvxn3J7agw1br/+OYZA9O/c/kXdDyY8/lkuYJ47Wr39OYVZTv8bbYJKYnV176a8+zN3PdO
-        iUosxRmJhlrMRcWJAJWhqpY+AwAA
-X-CMS-MailID: 20220212044434epcas2p169d006abc79a6cdcc8eb818231b577fc
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220205074128epcas2p40901c37a7328e825d8697f8d3269edba
-References: <CGME20220205074128epcas2p40901c37a7328e825d8697f8d3269edba@epcas2p4.samsung.com>
-        <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
-        <DM6PR04MB657519E60FAFA19434531CE2FC2B9@DM6PR04MB6575.namprd04.prod.outlook.com>
-        <007101d81eed$4d120a60$e7361f20$@samsung.com>
-        <3f2938f7-2a9e-60e8-5237-fe7ebc3b4296@intel.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH 00/20] libsas and pm8001 fixes
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Xiang Chen <chenxiang66@hisilicon.com>,
+        Jason Yan <yanaijie@huawei.com>, Ajish.Koshy@microchip.com
+References: <20220210114218.632725-1-damien.lemoal@opensource.wdc.com>
+ <b3efd3cf-e36b-9594-06b8-9772bb525e00@huawei.com>
+ <ea6b25db-d4da-bab5-8bf2-ec5024c95f89@opensource.wdc.com>
+ <af3b0aff-3e43-5a1f-0d98-f68b9100090e@huawei.com>
+ <db9c1fb7-bc0b-5742-c856-4b739bdfec39@opensource.wdc.com>
+ <f4130aa7-fc02-f71a-7216-9a9f922278bf@huawei.com>
+ <811ad0fb-9fc9-fac3-be78-f2d4d630c378@opensource.wdc.com>
+ <272a19b3-b5d7-f568-83d2-867a07def721@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <272a19b3-b5d7-f568-83d2-867a07def721@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> The error handler really should have exclusive access.  One of the places
-> you change does explain that:
->=20
->  		 * Hold the scaling lock just in case dev cmds
->  		 * are sent via bsg and/or sysfs.
->  		 */
-> -		down_write(&hba->clk_scaling_lock);
-> +		if (ufshcd_is_clkscaling_supported(hba))
-> +			down_write(&hba->clk_scaling_lock);=20
+On 2/11/22 22:54, John Garry wrote:
+> Hi Damien,
+> 
+>>>
+>>>>> Sometimes I get TMF timeouts, which is a bad situation. I guess it's a
+>>>>> subtle driver bug, but where ....?
+>>>> What is the command failing ? Always the same ? Can you try adding scsi
+>>>> trace to see the commands ?
+>>>
+>>> This is the same issue I have had since day #1.
+>>>
+>>> Generally mount/unmount or even fdisk -l fails after booting into
+>>> miniramfs. I wouldn't ever try to boot a distro.
+>>
+>> busybox ?
+>>
+> 
+> Yes
+> 
+>>>
+>>>>
+>>>> If you are "lucky", it is always the same type of command like for the
+>>>> NCQ NON DATA in my case.
+>>>
+>>> I'm just trying SAS disks to start with - so it's an SCSI READ command.
+>>> SATA/STP support is generally never as robust for SAS HBAs (HW and LLD
+>>> bugs are common - as this series is evidence) so I start on something
+>>> more basic - however SATA/STP also has this issue.
+>>>
+>>> The command is sent successfully but just never completes. Then
+>>> sometimes the TMFs for error handling timeout and sometimes succeed. I
+>>> don't have much to do on....
+>>
+>> No SAS bus analyzer lying in a corner of the office ? :)
+>> That could help...
+> 
+> None unfortunately
+> 
+>>
+>> I will go to the office Monday. So I will get a chance to add SAS drives
+>> to my setup to see what I get. I have only tested with SATA until now.
+>> My controller is not the same chip as yours though.
+> 
+> jfyi, Ajish, cc'ed, from microchip says that they see the same issue on 
+> their arm64 system. Unfortunately fixing it is not a priority for them. 
+> So it is something which arm64 is exposing.
+> 
+> And I tried an old kernel - like 4.10 - on the same board and the pm8001 
+> driver was working somewhat reliably (no hangs). It just looks like a 
+> driver issue.
+> 
+> I'll have a look at the driver code again if I get a chance. It might be 
+> a DMA issue.
+
+There is one more thing that I find strange in the driver and that may
+cause problems: tag 0 is a perfectly valid tag value that can be
+returned by pm8001_tag_alloc() since find_first_zero_bit() will return 0
+if the first bit is 0. And yet, there are many places in the driver that
+treat !tag as an error. Extremely weird, if not outright broken...
+
+I patched that and tested and everything seems OK... Could it be that
+you are not seeing some completions because of that ?
+
+I added the patch to my v3. Will send Monday.
 
 
-Yeah.., I saw the comment but didn't get why.
 
-Is there anyone who knows why it's necessary for all SoCs?
-At lease, I know there is no reason to forbid concurrent executions of dev =
-cmd and power mode change.
-
-If there's nothing, how about adding a quick to ignore it?
-
-Thanks.
-Kiwoong Kim
-
+-- 
+Damien Le Moal
+Western Digital Research
