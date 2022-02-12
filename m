@@ -2,171 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8305BC433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Feb 2022 16:41:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6361C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Feb 2022 18:32:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237496AbiBLQll (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Feb 2022 11:41:41 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48450 "EHLO
+        id S230071AbiBLScS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Feb 2022 13:32:18 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229693AbiBLQlj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2022 11:41:39 -0500
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84652B0B;
-        Sat, 12 Feb 2022 08:41:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1644684094;
-        bh=R3T0cPN40hlhc+uEFOnFn93H8zi9jt0XNiexXM9tl8k=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=kSzK7wUjfXdRH/ZSD7l2P8jLnlOFOyKa73ZwyzIbQp6qffAjrCIdHSh3CQckHKrd+
-         ozTuEcpChR8uReRFUSBSA06Djl3/Br1hQKyk1i54KARJ/tHr0sWvyuILr4PVxnPbIo
-         uY3Z8MF8sV5Q/JBe19eh/QiKxCZYRJjeBdJQPxtM=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 20615128075D;
-        Sat, 12 Feb 2022 11:41:34 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 1VXmR3mxNcNu; Sat, 12 Feb 2022 11:41:34 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1644684093;
-        bh=R3T0cPN40hlhc+uEFOnFn93H8zi9jt0XNiexXM9tl8k=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=YGGYbus5beWNugGxToAWwihIyWe466KU302yAyjV2kWLGUmkgkGbiQ0ewsTxDGUmY
-         xxxWwgNwEuLfu2TF4LdrTDr5zERmIy2etvBgkdQgQT3Ujmbk1jqrLp7dHTo4MPoF04
-         l0V7+CAy/QnF9KFOE0lD+jiNfhRskzgAsuZ7f2KA=
-Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::c447])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S230057AbiBLScQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2022 13:32:16 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6FF06007E;
+        Sat, 12 Feb 2022 10:32:12 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 86D611280695;
-        Sat, 12 Feb 2022 11:41:33 -0500 (EST)
-Message-ID: <0da592e3664041ce007c287391cdb40fda2d535e.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.17-rc3
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        by ams.source.kernel.org (Postfix) with ESMTPS id 78C73B8015B;
+        Sat, 12 Feb 2022 18:32:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2D66CC340E7;
+        Sat, 12 Feb 2022 18:32:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644690730;
+        bh=lElWEkK9KVUA3sXaWnjeqA2oDIkSNbK9F3C4lGVBpQg=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=WkrxD9SRCwG682rEr8fQHzUbX7oaDjRMjz16x73idgfle65+bMrq0m9SNu/BX7Mg+
+         QsE+7XWGTTyPYrGaSbTNDtRA7b/gbJ4kvXPQYMesQE8gjK8pMnJcvDHayAwH+qqCEH
+         ho8t3GcFdl1uyrYnq5nzwpDc1kTL0MUqn99VJFZD6+sHmBCe/kg3nlaSpESgw9Plu2
+         +7SYSMcWQ4oxnXZkCT9dG57skoOw8Wr5NgnVD0gkIYX9LHS/RARgwJRsPwR7GaU1ZI
+         btKN00yyiV3KDTInd5ZqzRwUWG4tKMLKdjIU6J6N97Q/kQ6B2yEpIXLNUvDlh5LR8G
+         SDPYhH28oQsaQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 1C57DE5D07D;
+        Sat, 12 Feb 2022 18:32:10 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 5.17-rc3
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <0da592e3664041ce007c287391cdb40fda2d535e.camel@HansenPartnership.com>
+References: <0da592e3664041ce007c287391cdb40fda2d535e.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <0da592e3664041ce007c287391cdb40fda2d535e.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 5852ed2a6a39c862c8a3fdf646e1f4e01b91d710
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: b81b1829e7e39f6cebdf6e4d5484eacbceda8554
+Message-Id: <164469073010.20832.7596619303007411769.pr-tracker-bot@kernel.org>
+Date:   Sat, 12 Feb 2022 18:32:10 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Sat, 12 Feb 2022 11:41:32 -0500
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Two minor fixes in the lpfc driver.  One changing the classification of
-trace messages and the other fixing a build issue when NVME_FC is
-disabled.
+The pull request you sent on Sat, 12 Feb 2022 11:41:32 -0500:
 
-The patch is available here:
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/b81b1829e7e39f6cebdf6e4d5484eacbceda8554
 
-The short changelog is:
+Thank you!
 
-James Smart (2):
-      scsi: lpfc: Reduce log messages seen after firmware download
-      scsi: lpfc: Remove NVMe support if kernel has NVME_FC disabled
-
-And the diffstat:
-
- drivers/scsi/lpfc/lpfc.h      | 13 ++++++++++---
- drivers/scsi/lpfc/lpfc_attr.c |  4 ++--
- drivers/scsi/lpfc/lpfc_init.c |  2 +-
- drivers/scsi/lpfc/lpfc_sli.c  |  8 +++++++-
- 4 files changed, 20 insertions(+), 7 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 4878c94761f9..a1e0a106c132 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -1161,6 +1161,16 @@ struct lpfc_hba {
- 	uint32_t cfg_hostmem_hgp;
- 	uint32_t cfg_log_verbose;
- 	uint32_t cfg_enable_fc4_type;
-+#define LPFC_ENABLE_FCP  1
-+#define LPFC_ENABLE_NVME 2
-+#define LPFC_ENABLE_BOTH 3
-+#if (IS_ENABLED(CONFIG_NVME_FC))
-+#define LPFC_MAX_ENBL_FC4_TYPE LPFC_ENABLE_BOTH
-+#define LPFC_DEF_ENBL_FC4_TYPE LPFC_ENABLE_BOTH
-+#else
-+#define LPFC_MAX_ENBL_FC4_TYPE LPFC_ENABLE_FCP
-+#define LPFC_DEF_ENBL_FC4_TYPE LPFC_ENABLE_FCP
-+#endif
- 	uint32_t cfg_aer_support;
- 	uint32_t cfg_sriov_nr_virtfn;
- 	uint32_t cfg_request_firmware_upgrade;
-@@ -1182,9 +1192,6 @@ struct lpfc_hba {
- 	uint32_t cfg_ras_fwlog_func;
- 	uint32_t cfg_enable_bbcr;	/* Enable BB Credit Recovery */
- 	uint32_t cfg_enable_dpp;	/* Enable Direct Packet Push */
--#define LPFC_ENABLE_FCP  1
--#define LPFC_ENABLE_NVME 2
--#define LPFC_ENABLE_BOTH 3
- 	uint32_t cfg_enable_pbde;
- 	uint32_t cfg_enable_mi;
- 	struct nvmet_fc_target_port *targetport;
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 7a7f17d71811..bac78fbce8d6 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3978,8 +3978,8 @@ LPFC_ATTR_R(nvmet_mrq_post,
-  *                    3 - register both FCP and NVME
-  * Supported values are [1,3]. Default value is 3
-  */
--LPFC_ATTR_R(enable_fc4_type, LPFC_ENABLE_BOTH,
--	    LPFC_ENABLE_FCP, LPFC_ENABLE_BOTH,
-+LPFC_ATTR_R(enable_fc4_type, LPFC_DEF_ENBL_FC4_TYPE,
-+	    LPFC_ENABLE_FCP, LPFC_MAX_ENBL_FC4_TYPE,
- 	    "Enable FC4 Protocol support - FCP / NVME");
- 
- /*
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index a56f01f659f8..558f7d2559c4 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -2104,7 +2104,7 @@ lpfc_handle_eratt_s4(struct lpfc_hba *phba)
- 		}
- 		if (reg_err1 == SLIPORT_ERR1_REG_ERR_CODE_2 &&
- 		    reg_err2 == SLIPORT_ERR2_REG_FW_RESTART) {
--			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
-+			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 					"3143 Port Down: Firmware Update "
- 					"Detected\n");
- 			en_rn_msg = false;
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 1bc0db572d9e..430abebf99f1 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -13363,6 +13363,7 @@ lpfc_sli4_eratt_read(struct lpfc_hba *phba)
- 	uint32_t uerr_sta_hi, uerr_sta_lo;
- 	uint32_t if_type, portsmphr;
- 	struct lpfc_register portstat_reg;
-+	u32 logmask;
- 
- 	/*
- 	 * For now, use the SLI4 device internal unrecoverable error
-@@ -13413,7 +13414,12 @@ lpfc_sli4_eratt_read(struct lpfc_hba *phba)
- 				readl(phba->sli4_hba.u.if_type2.ERR1regaddr);
- 			phba->work_status[1] =
- 				readl(phba->sli4_hba.u.if_type2.ERR2regaddr);
--			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
-+			logmask = LOG_TRACE_EVENT;
-+			if (phba->work_status[0] ==
-+				SLIPORT_ERR1_REG_ERR_CODE_2 &&
-+			    phba->work_status[1] == SLIPORT_ERR2_REG_FW_RESTART)
-+				logmask = LOG_SLI;
-+			lpfc_printf_log(phba, KERN_ERR, logmask,
- 					"2885 Port Status Event: "
- 					"port status reg 0x%x, "
- 					"port smphr reg 0x%x, "
-
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
