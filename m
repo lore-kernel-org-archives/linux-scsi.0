@@ -2,170 +2,300 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B6B7C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Feb 2022 06:19:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD23BC43217
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Feb 2022 11:25:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232216AbiBLGT1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Feb 2022 01:19:27 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48128 "EHLO
+        id S234247AbiBLLZm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Feb 2022 06:25:42 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232070AbiBLGT0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2022 01:19:26 -0500
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8995F2716D
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 22:19:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644646763; x=1676182763;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=MS6jIKZG/CGTuvzFb1UIhod7mxNMr2z3dkLA7SyXblw=;
-  b=W0VtH8VA8weHZ+VjsmXu2APZnP1l61s/qEUwfIsxD4dGnQva1R0QvSdU
-   TJoK2JjmulPF7e3SNVK4gqCNwnQM4rLbrHGCGlcMYR3xR/zDjoBUNZZSD
-   gMlJ4uE4Zgvn0tUwXGNa+ngbKy+LLRFg+G5rYqx9ElcXFlDIZW9Yg8n5f
-   uuygdULCknTB+3UPalu5wLUKK/fIfifT13tngs5yneyRVYMHnuLU1Y/uu
-   Ib3OszoiFblmM5v3GHeRPcLXpiVRYV8f6xpl+XP6drAHpb1dr4xl9wbh/
-   f9K+8I1pwgMKj5MqFzYfIBDESR7BQ9u9gffdDn17lJrMuntiKNCfwCgrm
-   g==;
-X-IronPort-AV: E=Sophos;i="5.88,363,1635177600"; 
-   d="scan'208";a="304649429"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Feb 2022 14:19:23 +0800
-IronPort-SDR: mAgJ4q37PelPTwRY2urV1Tjh7hgzvYZHCZV0CXEdVmucXrfloOEA4QVolMKBNFXoUbWCaUa1aY
- G3DHfjkzxlnFU0dziJtOx9A2xit6UBz91Oj4lcomW9xaS4pjNNcOcY8msNkItMg7L8YyqWAEas
- WM2TIAT4SqwqOnkXoeVCS4I7R7FwOb1y7CE1ra7wQsGW6zBt6CQa1Jy8PjucWSoIAXyiK1Bh7K
- Sg2//zZAJu3mhcmdoEaC1sfF8bKZf4I6pxMKKIe0REon4MNKaBo90MHFvVtVJ8MG10jqK2pCjW
- 6ANAG6MlVP4PrOa9kosVaFDu
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2022 21:51:07 -0800
-IronPort-SDR: rN6icWTBx1iZHxjxdT7kD1Xb1ubr8+QJuUwKU/I6AFO0C49O7EGtHR0SDRW3hcZ34LlbgonPRw
- FX2erMf+0c7cVYbXFCXmz4c6+2AHNv8IsX1r0p6TNCGCoBJES4NmTUSSrrPG8y5C3EIHzKFXzS
- o5VrXc3JOCu4mRJv8nf82tQZflG9HgAwFYTk2lU/pmWT6s0H9fB9vB2cjht+eiL2H74+3tb6sI
- 2e5mbHErfA962+cH6mt2l7AqDBZXHSkuSi/4rbgLlZZP+tQmW+QKfOhO/SGAHvM0du76KHGW0p
- lqQ=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2022 22:19:23 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JwgLL4GtHz1SVp3
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 22:19:22 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1644646761; x=1647238762; bh=MS6jIKZG/CGTuvzFb1UIhod7mxNMr2z3dkL
-        A7SyXblw=; b=krx0B2REW0cANM7dZ6F+qSxsiztT4y4CsqReKRtYOMAkCPu5+3h
-        mMsCBPu4XcfZpnLxrM3aX6j83L1OqCbcELC3hpHNQjnx1ukMuXr46fhtyiF3aHOn
-        y6lI5ogAGQP8gGLHvhUSN7ZZU0uVZmLRtJyWKx5rWUqOzq9Zxxm74nc1d+dOJtZV
-        jkdexuH5ke96x27t+i2wc1lPeZjXj3a+e76HOnsNX3Pq+BKWWxKGXbFUaQI6XyrY
-        ey8nQW7BDdWiB53DUGzIkBGahml8Eo/Foqs3grr9xuKPTeS3KKgFbmIomLUEm8q5
-        XTZoBK3MCV9hpKIEltdSRsFO72t6tp48Evw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id oBwiCIfj5eQF for <linux-scsi@vger.kernel.org>;
-        Fri, 11 Feb 2022 22:19:21 -0800 (PST)
-Received: from [10.225.163.67] (unknown [10.225.163.67])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JwgLJ702pz1Rwrw;
-        Fri, 11 Feb 2022 22:19:20 -0800 (PST)
-Message-ID: <c88ac83a-1f6a-ca76-68b3-7fde0db42893@opensource.wdc.com>
-Date:   Sat, 12 Feb 2022 15:19:19 +0900
+        with ESMTP id S231990AbiBLLZk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2022 06:25:40 -0500
+Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14D3126AD6;
+        Sat, 12 Feb 2022 03:25:37 -0800 (PST)
+Received: by mail-ej1-x62e.google.com with SMTP id p15so27757398ejc.7;
+        Sat, 12 Feb 2022 03:25:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=7SIhUeX2yt0idUDRJKKmAw5gfuLEHOZUKxZ0CAvnkKQ=;
+        b=qzXx3csd9RNDf0yA1DYYLijDmM6LWSt/oPmlFdym5v/OM3V1zPhchWwPa4FyV6QfXZ
+         tFGPnBmObMu62ZBqHpaOCv+h2oia9kLoD/3sBusLQJCueZ79z/JcOCxuwitF6EMjqInY
+         CEgZ2LzNfRsUy9PG2EFccy3NbMcPQ91SxZcheGi+BqXjbho2X651GeAvEaIJjFthHiMJ
+         4xGhc2fg3IcpDPICRzRBUaIZvLlOT2QodI6qSpRNi2Z8qEVy+GweK0PAVYUokpBkLkHA
+         N9zhB5hwVJV9b7G6vNdQgAnn2riQqiWjEjGknz/ya1x98y5XXKTylVzuOUPGBuaf1Jco
+         h8Kg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=7SIhUeX2yt0idUDRJKKmAw5gfuLEHOZUKxZ0CAvnkKQ=;
+        b=5GX3FYDj4yT6ET9ZeytBNMmfrq366HHu61XzKjkEkBY9qg7HgB8UqzFjUEcxU6nHNt
+         8j4DD2rk8Z8xPvFyUkZenFUNtNZIsWX6L43YkJxNjEvTc05QUz0yciwQTvyTVZZBUH98
+         cxlnPhwwS6YctKmnPhTOu5YrgpeflpVYBM0DiBfc2DavQCYZUV7mXpSetYSVbafJu4N4
+         h85WUl02IopHahNmHzL+BY30ORTwc4KBiAJ7KlFkWKxYQFDak++cGfBYpNzar0ZEMYea
+         +igIfGFR0xR5BCMoHkZ5kdhedoVMr3Xtfe9eOCIgJ2J77IFtAXtPBJYBysCxOC6ETgUN
+         bexg==
+X-Gm-Message-State: AOAM530lYpgCBnl/iYoW5GXOROT8uor9UiCz4DUE2AVzdiC2f/dJSEkl
+        czvdTOdecmowtmJm85brL0s=
+X-Google-Smtp-Source: ABdhPJzWitD0hfjXJ8eX/JHLhmT7VkMjcrS0EcKXiLjXUzIVCfyLkx6hDe7qD20rW2rzZQuz4QDvDg==
+X-Received: by 2002:a17:907:970d:: with SMTP id jg13mr4424600ejc.418.1644665135450;
+        Sat, 12 Feb 2022 03:25:35 -0800 (PST)
+Received: from [192.168.178.40] (ipbcc1fa42.dynamic.kabel-deutschland.de. [188.193.250.66])
+        by smtp.gmail.com with ESMTPSA id b15sm500132edd.60.2022.02.12.03.25.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 12 Feb 2022 03:25:34 -0800 (PST)
+Message-ID: <0428d955-e9c7-b632-cb19-102e49cef387@gmail.com>
+Date:   Sat, 12 Feb 2022 12:25:33 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH 00/20] libsas and pm8001 fixes
+Subject: Re: [PATCH] scsi: target: tcmu: Make cmd_ring_size changeable via
+ configfs.
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
-        Jason Yan <yanaijie@huawei.com>, Ajish.Koshy@microchip.com
-References: <20220210114218.632725-1-damien.lemoal@opensource.wdc.com>
- <b3efd3cf-e36b-9594-06b8-9772bb525e00@huawei.com>
- <ea6b25db-d4da-bab5-8bf2-ec5024c95f89@opensource.wdc.com>
- <af3b0aff-3e43-5a1f-0d98-f68b9100090e@huawei.com>
- <db9c1fb7-bc0b-5742-c856-4b739bdfec39@opensource.wdc.com>
- <f4130aa7-fc02-f71a-7216-9a9f922278bf@huawei.com>
- <811ad0fb-9fc9-fac3-be78-f2d4d630c378@opensource.wdc.com>
- <272a19b3-b5d7-f568-83d2-867a07def721@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <272a19b3-b5d7-f568-83d2-867a07def721@huawei.com>
-Content-Type: text/plain; charset=UTF-8
+To:     Guixin Liu <kanie@linux.alibaba.com>, martin.petersen@oracle.com
+Cc:     xiaoguang.wang@linux.alibaba.com, xlpang@linux.alibaba.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1644291974-73531-1-git-send-email-kanie@linux.alibaba.com>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+In-Reply-To: <1644291974-73531-1-git-send-email-kanie@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/11/22 22:54, John Garry wrote:
-> Hi Damien,
+On 08.02.22 04:46, Guixin Liu wrote:
+> Make cmd_ring_size changeable similar to the way it is done for
+> max_data_area_mb, the reason is that our tcmu client will create
+> thousands of tcmu instances, and this will consume lots of mem with
+> default 8Mb cmd ring size for every backstore.
 > 
->>>
->>>>> Sometimes I get TMF timeouts, which is a bad situation. I guess it's a
->>>>> subtle driver bug, but where ....?
->>>> What is the command failing ? Always the same ? Can you try adding scsi
->>>> trace to see the commands ?
->>>
->>> This is the same issue I have had since day #1.
->>>
->>> Generally mount/unmount or even fdisk -l fails after booting into
->>> miniramfs. I wouldn't ever try to boot a distro.
->>
->> busybox ?
->>
+> One can change the value by typing:
+>      echo "cmd_ring_size_mb=N" > control
+> The "N" is a integer between 1 to 8, if set 1, the cmd ring can hold
+> about 6k cmds(tcmu_cmd_entry about 176 byte) at least.
 > 
-> Yes
-> 
->>>
->>>>
->>>> If you are "lucky", it is always the same type of command like for the
->>>> NCQ NON DATA in my case.
->>>
->>> I'm just trying SAS disks to start with - so it's an SCSI READ command.
->>> SATA/STP support is generally never as robust for SAS HBAs (HW and LLD
->>> bugs are common - as this series is evidence) so I start on something
->>> more basic - however SATA/STP also has this issue.
->>>
->>> The command is sent successfully but just never completes. Then
->>> sometimes the TMFs for error handling timeout and sometimes succeed. I
->>> don't have much to do on....
->>
->> No SAS bus analyzer lying in a corner of the office ? :)
->> That could help...
-> 
-> None unfortunately
-> 
->>
->> I will go to the office Monday. So I will get a chance to add SAS drives
->> to my setup to see what I get. I have only tested with SATA until now.
->> My controller is not the same chip as yours though.
-> 
-> jfyi, Ajish, cc'ed, from microchip says that they see the same issue on 
-> their arm64 system. Unfortunately fixing it is not a priority for them. 
-> So it is something which arm64 is exposing.
-> 
-> And I tried an old kernel - like 4.10 - on the same board and the pm8001 
-> driver was working somewhat reliably (no hangs). It just looks like a 
-> driver issue.
-> 
-> I'll have a look at the driver code again if I get a chance. It might be 
-> a DMA issue.
+> The value is printed when doing:
+>      cat info
+> In addition, a new readonly attribute 'cmd_ring_size_mb' returns the
+> value in read.
 
-There is one more thing that I find strange in the driver and that may
-cause problems: tag 0 is a perfectly valid tag value that can be
-returned by pm8001_tag_alloc() since find_first_zero_bit() will return 0
-if the first bit is 0. And yet, there are many places in the driver that
-treat !tag as an error. Extremely weird, if not outright broken...
+Thank you for the patch. This was on my todo list also.
 
-I patched that and tested and everything seems OK... Could it be that
-you are not seeing some completions because of that ?
+> 
+> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+> ---
+>   drivers/target/target_core_user.c | 64 ++++++++++++++++++++++++++++++++++++---
+>   1 file changed, 59 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 7b2a89a..826c1c0 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -64,7 +64,6 @@
+>   #define MB_CMDR_SIZE (8 * 1024 * 1024)
 
-I added the patch to my v3. Will send Monday.
+I'd like to change this to MB_CMDR_SIZE_DEF, since it no longer is
+the fixed size of mailbox plus cmd ring, but the default only.
+
+>   /* Offset of cmd ring is size of mailbox */
+>   #define CMDR_OFF sizeof(struct tcmu_mailbox)
+> -#define CMDR_SIZE (MB_CMDR_SIZE - CMDR_OFF)
+
+Similarly this could become CMDR_SIZE_DEF
+
+>   
+>   /*
+>    * For data area, the default block size is PAGE_SIZE and
+> @@ -133,6 +132,7 @@ struct tcmu_dev {
+>   	struct tcmu_mailbox *mb_addr;
+>   	void *cmdr;
+>   	u32 cmdr_size;
+> +	u32 total_cmdr_size_byte;
+
+Do we really need a new field in tcmu_dev? I think we should avoid it
+since the field cmdr_size holds the same value, just lowered by CMDR_OFF.
+
+>   	u32 cmdr_last_cleaned;
+>   	/* Offset of data area from start of mb */
+>   	/* Must add data_off and mb_addr to get the address */
+> @@ -1617,6 +1617,7 @@ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
+>   
+>   	udev->data_pages_per_blk = DATA_PAGES_PER_BLK_DEF;
+>   	udev->max_blocks = DATA_AREA_PAGES_DEF / udev->data_pages_per_blk;
+> +	udev->total_cmdr_size_byte = MB_CMDR_SIZE;
+
+We could do
+         udev->cmdr_size = CMDR_SIZE_DEF;
+
+>   	udev->data_area_mb = TCMU_PAGES_TO_MBS(DATA_AREA_PAGES_DEF);
+>   
+>   	mutex_init(&udev->cmdr_lock);
+> @@ -2189,7 +2190,7 @@ static int tcmu_configure_device(struct se_device *dev)
+>   		goto err_bitmap_alloc;
+>   	}
+>   
+> -	mb = vzalloc(MB_CMDR_SIZE);
+> +	mb = vzalloc(udev->total_cmdr_size_byte);
+>   	if (!mb) {
+>   		ret = -ENOMEM;
+>   		goto err_vzalloc;
+> @@ -2198,8 +2199,8 @@ static int tcmu_configure_device(struct se_device *dev)
+>   	/* mailbox fits in first part of CMDR space */
+>   	udev->mb_addr = mb;
+>   	udev->cmdr = (void *)mb + CMDR_OFF;
+> -	udev->cmdr_size = CMDR_SIZE;
+> -	udev->data_off = MB_CMDR_SIZE;
+> +	udev->cmdr_size = udev->total_cmdr_size_byte - CMDR_OFF;
+> +	udev->data_off = udev->total_cmdr_size_byte;
+
+CMDR_SIZE would be already set here, so we only would need:
+         udev->data_off = udev->cmdr_size + CMDR_OFF;
+
+>   	data_size = TCMU_MBS_TO_PAGES(udev->data_area_mb) << PAGE_SHIFT;
+>   	udev->mmap_pages = (data_size + MB_CMDR_SIZE) >> PAGE_SHIFT;
+
+I think we have to replace MB_CMDR_SIZE with udev->cmdr_size + CMDR_OFF here.
+Just a few lines below your patch also does not change the line
+         info->mem[0].size = data_size + MB_CMDR_SIZE;
+where the same replacement is needed.
+
+>   	udev->data_blk_size = udev->data_pages_per_blk * PAGE_SIZE;
+> @@ -2401,7 +2402,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
+>   enum {
+>   	Opt_dev_config, Opt_dev_size, Opt_hw_block_size, Opt_hw_max_sectors,
+>   	Opt_nl_reply_supported, Opt_max_data_area_mb, Opt_data_pages_per_blk,
+> -	Opt_err,
+> +	Opt_cmd_ring_size_mb, Opt_err,
+>   };
+>   
+>   static match_table_t tokens = {
+> @@ -2412,6 +2413,7 @@ enum {
+>   	{Opt_nl_reply_supported, "nl_reply_supported=%d"},
+>   	{Opt_max_data_area_mb, "max_data_area_mb=%d"},
+>   	{Opt_data_pages_per_blk, "data_pages_per_blk=%d"},
+> +	{Opt_cmd_ring_size_mb, "cmd_ring_size_mb=%d"},
+>   	{Opt_err, NULL}
+>   };
+>   
+> @@ -2509,6 +2511,41 @@ static int tcmu_set_data_pages_per_blk(struct tcmu_dev *udev, substring_t *arg)
+>   	return ret;
+>   }
+>   
+> +static int tcmu_set_cmd_ring_size_param(struct tcmu_dev *udev, substring_t *arg)
+
+Please remove the "_param" suffix from function name, as the
+other similar set functions don't have it also.
+
+> +{
+> +	int val, ret;
+> +
+> +	ret = match_int(arg, &val);
+> +	if (ret < 0) {
+> +		pr_err("match_int() failed for cmd_ring_size_mb=. Error %d.\n",
+> +		       ret);
+> +		return ret;
+> +	}
+> +
+> +	if (val <= 0) {
+> +		pr_err("Invalid cmd_ring_size_mb %d.\n", val);
+> +		return -EINVAL;
+> +	}
+> +
+> +	mutex_lock(&udev->cmdr_lock);
+> +	if (udev->data_bitmap) {
+> +		pr_err("Cannot set cmd_ring_size_mb after it has been enabled.\n");
+> +		ret = -EINVAL;
+> +		goto unlock;
+> +	}
+> +
+> +	udev->total_cmdr_size_byte = (val << 20);
+> +	if (udev->total_cmdr_size_byte > MB_CMDR_SIZE) {
+
+Would be
+         udev->cmdr_size = (val << 20) - CMDR_OFF;
+         if (val > (MB_CMDR_SIZE_DEF >> 20)) {
+
+Please note: the check you coded is definitely wrong.
+E.g. if someone entered the value 4096, which is 0x1000,
+we would have ended up with udev->total_cmdr_size_byte
+set to 0 ...
+
+> +		pr_err("%d is too large. Adjusting cmd_ring_size_mb to global limit of %u\n",
+> +		       val, (MB_CMDR_SIZE >> 20));
+> +		udev->total_cmdr_size_byte = MB_CMDR_SIZE;
+
+                 udev->cmdr_size = CMDR_SIZE_DEF;
+> +	}
+> +
+> +unlock:
+> +	mutex_unlock(&udev->cmdr_lock);
+> +	return ret;
+> +}
+> +
+>   static ssize_t tcmu_set_configfs_dev_params(struct se_device *dev,
+>   		const char *page, ssize_t count)
+>   {
+> @@ -2563,6 +2600,9 @@ static ssize_t tcmu_set_configfs_dev_params(struct se_device *dev,
+>   		case Opt_data_pages_per_blk:
+>   			ret = tcmu_set_data_pages_per_blk(udev, &args[0]);
+>   			break;
+> +		case Opt_cmd_ring_size_mb:
+> +			ret = tcmu_set_cmd_ring_size_param(udev, &args[0]);
+> +			break;
+>   		default:
+>   			break;
+>   		}
+> @@ -2585,6 +2625,8 @@ static ssize_t tcmu_show_configfs_dev_params(struct se_device *dev, char *b)
+>   	bl += sprintf(b + bl, "Size: %llu ", udev->dev_size);
+>   	bl += sprintf(b + bl, "MaxDataAreaMB: %u ", udev->data_area_mb);
+>   	bl += sprintf(b + bl, "DataPagesPerBlk: %u\n", udev->data_pages_per_blk);
+
+I think we should print all the config values on one line.
+So I'd like to remove the '\n' after DataPagesPerBlk.
+
+> +	bl += sprintf(b + bl, "CmdRingSizeMB: %u\n",
+> +		      (udev->total_cmdr_size_byte >> 20));
+>   
+>   	return bl;
+>   }
+> @@ -3059,6 +3101,17 @@ static ssize_t tcmu_free_kept_buf_store(struct config_item *item, const char *pa
+>   }
+>   CONFIGFS_ATTR_WO(tcmu_, free_kept_buf);
+>   
+> +static ssize_t tcmu_cmd_ring_size_mb_show(struct config_item *item, char *page)
+> +{
+> +	struct se_dev_attrib *da = container_of(to_config_group(item),
+> +						struct se_dev_attrib, da_group);
+> +	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
+> +
+> +	return snprintf(page, PAGE_SIZE, "%u\n",
+> +			(udev->total_cmdr_size_byte >> 20));
+
+			(udev->cmdr_size + CMDR_OFF) >> 20);
+> +}
+> +CONFIGFS_ATTR_RO(tcmu_, cmd_ring_size_mb);
+> +
+
+The attributes block_dev, reset_ring and free_kept_buf belong
+to the separate action attribute group.
+So shouldn't we shift this new attribute up in the code, e.q.
+behind the line "CONFIGFS_ATTR_RO(tcmu_, data_pages_per_blk);"?
 
 
-
--- 
-Damien Le Moal
-Western Digital Research
+>   static struct configfs_attribute *tcmu_attrib_attrs[] = {
+>   	&tcmu_attr_cmd_time_out,
+>   	&tcmu_attr_qfull_time_out,
+> @@ -3069,6 +3122,7 @@ static ssize_t tcmu_free_kept_buf_store(struct config_item *item, const char *pa
+>   	&tcmu_attr_emulate_write_cache,
+>   	&tcmu_attr_tmr_notification,
+>   	&tcmu_attr_nl_reply_supported,
+> +	&tcmu_attr_cmd_ring_size_mb,
+>   	NULL,
+>   };
+>   
