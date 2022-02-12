@@ -2,87 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7D93C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Feb 2022 23:26:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FB13C43219
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Feb 2022 00:20:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354103AbiBKX0L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Feb 2022 18:26:11 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55576 "EHLO
+        id S1354374AbiBLAUO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Feb 2022 19:20:14 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:56210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230324AbiBKX0L (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 18:26:11 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EA68CEC
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2022 15:26:09 -0800 (PST)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21BL0nCj006473;
-        Fri, 11 Feb 2022 23:25:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=owJ3tu1/F71FBoHhBQ75b01xOXRITKgmAvGRJsslMp4=;
- b=k8lLBD2OLCZ34ic9u3rf6UC4oa2q4S++L38joKgivvXSV2RrYuZ/xrp6h+I0toS3LdF6
- 5Ir2w6Des/30WHl3VapBWnuIdhS0WoELkwfJE875516on7XbaoNYnV6jtjy+a9qRoE8F
- ZnfTFbSj8De+eX7MwDNoqzPIinIdJ3SdD675arPn0MvhyC2bTvrPsQutLjbrEzrBk7FP
- MIIKOtAoUeQOdb1whjoIvoqdJlRwTYI6sDe+KakQI9Z3NR22pankV03KnQuXgaIXRW5J
- bV8JbjmUk8hIsP8bTmi/dKF3f0UQpX3SkNHYqwlmrjW8vHHZWsbzjmfAJh+Wb4JKIQd0 rA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3e5t7ks49j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Feb 2022 23:25:53 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21BNG0Sn054981;
-        Fri, 11 Feb 2022 23:25:52 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3030.oracle.com with ESMTP id 3e1ec86pu7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Feb 2022 23:25:52 +0000
-Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 21BNPqED061329;
-        Fri, 11 Feb 2022 23:25:52 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by userp3030.oracle.com with ESMTP id 3e1ec86ptw-1;
-        Fri, 11 Feb 2022 23:25:52 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        baijiaju1990@gmail.com, linux-scsi@vger.kernel.org,
-        jejb@linux.ibm.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        TOTE Robot <oslab@tsinghua.edu.cn>
-Subject: Re: [PATCH 1/1] scsi: qedi: Fix ABBA deadlock in qedi_process_tmf_resp() and qedi_process_cmd_cleanup_resp()
-Date:   Fri, 11 Feb 2022 18:25:50 -0500
-Message-Id: <164462194053.7779.9294330933500010000.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220208185448.6206-1-michael.christie@oracle.com>
-References: <20220208185448.6206-1-michael.christie@oracle.com>
-MIME-Version: 1.0
+        with ESMTP id S242447AbiBLAUN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2022 19:20:13 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CF49D77;
+        Fri, 11 Feb 2022 16:20:11 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CB11461C65;
+        Sat, 12 Feb 2022 00:20:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2E48FC340EB;
+        Sat, 12 Feb 2022 00:20:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644625210;
+        bh=0zIZnmg6cx0oOGvsLFwIZcbJ3GzQws/5gbITP1ynZxE=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=tqAQVvhvpFhnlB/uIOph5mZq3c5vOEOHwkETa7oGTI6aouf7MhFfm95BvE3TwEcYK
+         rsl2FGF7Sayyn0kfvfFT5fbb4L4UxUkI+f6Fn8Xd64nH3ld/qz8ucxOTbCYvBEdjie
+         HkPK3VTza3Im7akOiPU74OZkW6PiX4MXdsfPUq8F0FRilCFmOlHYV8hQ7elzHzRcaN
+         IdnXI9pPm8thVlM5st8fzcCe3l1OjE2Tt/XG64mHhjYWfKcWkEOLUuH6MdPDnfCuud
+         tm13iz21ysklrmpqFeHXWwc2C7n1Ws1gnQSjrNjjAFRzAp2wN8/jGxH04rx8iggaAG
+         kxUXGY6LwrVMQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 13B25E5D09D;
+        Sat, 12 Feb 2022 00:20:10 +0000 (UTC)
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: y_22jFqTu0l_hLK8dojgcxuIyJRvIng4
-X-Proofpoint-ORIG-GUID: y_22jFqTu0l_hLK8dojgcxuIyJRvIng4
+Subject: Re: [PATCH 0/9] use GFP_KERNEL
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <164462521007.28025.17507178732984421339.git-patchwork-notify@kernel.org>
+Date:   Sat, 12 Feb 2022 00:20:10 +0000
+References: <20220210204223.104181-1-Julia.Lawall@inria.fr>
+In-Reply-To: <20220210204223.104181-1-Julia.Lawall@inria.fr>
+To:     Julia Lawall <julia.lawall@inria.fr>
+Cc:     linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        MPT-FusionLinux.pdl@broadcom.com, linux-crypto@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, alsa-devel@alsa-project.org,
+        s.shtylyov@omp.ru, linux-ide@vger.kernel.org,
+        linux-mtd@lists.infradead.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 8 Feb 2022 12:54:48 -0600, Mike Christie wrote:
+Hello:
 
-> This fixes a deadlock added with:
-> commit b40f3894e39e ("scsi: qedi: Complete TMF works before disconnect")
+This patch was applied to netdev/net-next.git (master)
+by Jakub Kicinski <kuba@kernel.org>:
+
+On Thu, 10 Feb 2022 21:42:14 +0100 you wrote:
+> Platform_driver and pci_driver probe functions aren't called with
+> locks held and thus don't need GFP_ATOMIC. Use GFP_KERNEL instead.
 > 
-> Bug description from Jia-Ju Bai <baijiaju1990@gmail.com>
+> All changes have been compile-tested.
 > 
-> qedi_process_tmf_resp()
->   spin_lock(&session->back_lock); --> Line 201 (Lock A)
->   spin_lock(&qedi_conn->tmf_work_lock); --> Line 230 (Lock B)
+> ---
 > 
 > [...]
 
-Applied to 5.17/scsi-fixes, thanks!
+Here is the summary with links:
+  - [1/9] net: moxa: use GFP_KERNEL
+    https://git.kernel.org/netdev/net-next/c/c9ac080b25d9
 
-[1/1] scsi: qedi: Fix ABBA deadlock in qedi_process_tmf_resp() and qedi_process_cmd_cleanup_resp()
-      https://git.kernel.org/mkp/scsi/c/f10f582d2822
-
+You are awesome, thank you!
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
