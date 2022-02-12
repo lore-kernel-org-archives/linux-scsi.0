@@ -2,300 +2,172 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD23BC43217
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Feb 2022 11:25:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10CB4C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Feb 2022 16:31:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234247AbiBLLZm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Feb 2022 06:25:42 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39178 "EHLO
+        id S236823AbiBLQba (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Feb 2022 11:31:30 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:44230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231990AbiBLLZk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2022 06:25:40 -0500
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14D3126AD6;
-        Sat, 12 Feb 2022 03:25:37 -0800 (PST)
-Received: by mail-ej1-x62e.google.com with SMTP id p15so27757398ejc.7;
-        Sat, 12 Feb 2022 03:25:37 -0800 (PST)
+        with ESMTP id S229557AbiBLQb3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2022 11:31:29 -0500
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3BC9197;
+        Sat, 12 Feb 2022 08:31:25 -0800 (PST)
+Received: by mail-pf1-x432.google.com with SMTP id i30so21603739pfk.8;
+        Sat, 12 Feb 2022 08:31:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=7SIhUeX2yt0idUDRJKKmAw5gfuLEHOZUKxZ0CAvnkKQ=;
-        b=qzXx3csd9RNDf0yA1DYYLijDmM6LWSt/oPmlFdym5v/OM3V1zPhchWwPa4FyV6QfXZ
-         tFGPnBmObMu62ZBqHpaOCv+h2oia9kLoD/3sBusLQJCueZ79z/JcOCxuwitF6EMjqInY
-         CEgZ2LzNfRsUy9PG2EFccy3NbMcPQ91SxZcheGi+BqXjbho2X651GeAvEaIJjFthHiMJ
-         4xGhc2fg3IcpDPICRzRBUaIZvLlOT2QodI6qSpRNi2Z8qEVy+GweK0PAVYUokpBkLkHA
-         N9zhB5hwVJV9b7G6vNdQgAnn2riQqiWjEjGknz/ya1x98y5XXKTylVzuOUPGBuaf1Jco
-         h8Kg==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=cgdmAN3a6VJH5GpYyWYOh/m184wyLcFQeLeJ7uRNeRU=;
+        b=VQEwsfd6B9fayCAMRo2RnLrWANS3NJR5d0f70x/7u4VBcqBEFvCcJekuY/IMIRF5q5
+         0h8/sxkJp8oAfQV4PbNm2jpdof3TZm9Trq+bqMfaF0R6CpFarH9uUYb4BDDEnnElVnwE
+         Dxuc8uPQg4ERZ+o809ucxZzFLNH0uqdeKKyrQY2/PkpxVue3vvJe7/N4Clh/ukZ3iJgL
+         gFgG7UZ3N+98a3DyG+V93owsBEIanuJtMfoSkyBgi4x6gBCTCzVghNNfDvRkBWLQk+7H
+         lY8iuyuv9+uIMg2HmAhRRk9q0bkhG0ZQgLH0CHkuedt7hemM8+vEsd04FhdDBFykYtOu
+         nZTw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=7SIhUeX2yt0idUDRJKKmAw5gfuLEHOZUKxZ0CAvnkKQ=;
-        b=5GX3FYDj4yT6ET9ZeytBNMmfrq366HHu61XzKjkEkBY9qg7HgB8UqzFjUEcxU6nHNt
-         8j4DD2rk8Z8xPvFyUkZenFUNtNZIsWX6L43YkJxNjEvTc05QUz0yciwQTvyTVZZBUH98
-         cxlnPhwwS6YctKmnPhTOu5YrgpeflpVYBM0DiBfc2DavQCYZUV7mXpSetYSVbafJu4N4
-         h85WUl02IopHahNmHzL+BY30ORTwc4KBiAJ7KlFkWKxYQFDak++cGfBYpNzar0ZEMYea
-         +igIfGFR0xR5BCMoHkZ5kdhedoVMr3Xtfe9eOCIgJ2J77IFtAXtPBJYBysCxOC6ETgUN
-         bexg==
-X-Gm-Message-State: AOAM530lYpgCBnl/iYoW5GXOROT8uor9UiCz4DUE2AVzdiC2f/dJSEkl
-        czvdTOdecmowtmJm85brL0s=
-X-Google-Smtp-Source: ABdhPJzWitD0hfjXJ8eX/JHLhmT7VkMjcrS0EcKXiLjXUzIVCfyLkx6hDe7qD20rW2rzZQuz4QDvDg==
-X-Received: by 2002:a17:907:970d:: with SMTP id jg13mr4424600ejc.418.1644665135450;
-        Sat, 12 Feb 2022 03:25:35 -0800 (PST)
-Received: from [192.168.178.40] (ipbcc1fa42.dynamic.kabel-deutschland.de. [188.193.250.66])
-        by smtp.gmail.com with ESMTPSA id b15sm500132edd.60.2022.02.12.03.25.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 12 Feb 2022 03:25:34 -0800 (PST)
-Message-ID: <0428d955-e9c7-b632-cb19-102e49cef387@gmail.com>
-Date:   Sat, 12 Feb 2022 12:25:33 +0100
+        bh=cgdmAN3a6VJH5GpYyWYOh/m184wyLcFQeLeJ7uRNeRU=;
+        b=SvyOO3PnOdk2ovkjzz0Mdt7DM+Z9jt1QxDg56YIAyJYvv9Da/DPcPSBEIpcA7I3+gO
+         V0payma/x/roKykTWvvL9AsOnUZEsHoeyxpSFbg5lnHMEnrEuka4dos7odL3tzFHT67z
+         8+Bgt7y1503XOCRkg2uqDs4CVdcvtFVYU4ZFmKUj6w+xMVuTer3NZl8fsXeRJiG68I8n
+         m69LByNbq+Lxw85d0glIOEHyYNCFdnXOKu8RIGPHIzkZI2k8V7sxsYhyDDCPQ7mcqqb8
+         lMQ5kyiIKGXSm9uFcfUAy3VWfzkCsm6JFsb1WbiQKLoo6VrU39paqgAO2JiM8mNyxj2l
+         BXfw==
+X-Gm-Message-State: AOAM533fWhUOKsFZtP6rOL9EKeeXu0kHKhrmj4dSnDulCfn8Z6oakrxb
+        qm14PJKf1qCSs9o+FtU0/RdBk7KjWjY=
+X-Google-Smtp-Source: ABdhPJwiKQxSN4jA70P7H5F54eQQqIY2fbF7ThrkQIzifKifsYhFFfCDWPS4BR0BaQ9T4dFkFgwY5Q==
+X-Received: by 2002:a63:f30e:: with SMTP id l14mr5378723pgh.410.1644683485147;
+        Sat, 12 Feb 2022 08:31:25 -0800 (PST)
+Received: from localhost.localdomain (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
+        by smtp.gmail.com with ESMTPSA id m21sm31652146pfk.26.2022.02.12.08.31.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 12 Feb 2022 08:31:24 -0800 (PST)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>, stable@vger.kernel.org
+Subject: [PATCH] lpfc: fix pt2pt nvme PRLI reject LOGO loop
+Date:   Sat, 12 Feb 2022 08:31:20 -0800
+Message-Id: <20220212163120.15385-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH] scsi: target: tcmu: Make cmd_ring_size changeable via
- configfs.
-Content-Language: en-US
-To:     Guixin Liu <kanie@linux.alibaba.com>, martin.petersen@oracle.com
-Cc:     xiaoguang.wang@linux.alibaba.com, xlpang@linux.alibaba.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <1644291974-73531-1-git-send-email-kanie@linux.alibaba.com>
-From:   Bodo Stroesser <bostroesser@gmail.com>
-In-Reply-To: <1644291974-73531-1-git-send-email-kanie@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 08.02.22 04:46, Guixin Liu wrote:
-> Make cmd_ring_size changeable similar to the way it is done for
-> max_data_area_mb, the reason is that our tcmu client will create
-> thousands of tcmu instances, and this will consume lots of mem with
-> default 8Mb cmd ring size for every backstore.
-> 
-> One can change the value by typing:
->      echo "cmd_ring_size_mb=N" > control
-> The "N" is a integer between 1 to 8, if set 1, the cmd ring can hold
-> about 6k cmds(tcmu_cmd_entry about 176 byte) at least.
-> 
-> The value is printed when doing:
->      cat info
-> In addition, a new readonly attribute 'cmd_ring_size_mb' returns the
-> value in read.
+When connected point to point, the driver does not know the FC4's
+supported by the other end. In Fabrics, it can query the nameserver.
+Thus the driver must send PRLI's for the FC4s it supports and enable
+support based on the acc(ept) or rej(ect) of the respective FC4 PRLI.
+Currently the driver supports SCSI and NVMe PRLI's.
 
-Thank you for the patch. This was on my todo list also.
+Unfortunately, although the behavior is per standard, many devices
+have come to expect only SCSI PRLI's. In this particular example, the
+NVMe PRLI is properly RJT'd but the target decided that it must LOGO after
+seeing the unexpected NVMe PRLI. The LOGO causes the sequence to restart
+and login is now in an infinite failure loop.
 
-> 
-> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-> ---
->   drivers/target/target_core_user.c | 64 ++++++++++++++++++++++++++++++++++++---
->   1 file changed, 59 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> index 7b2a89a..826c1c0 100644
-> --- a/drivers/target/target_core_user.c
-> +++ b/drivers/target/target_core_user.c
-> @@ -64,7 +64,6 @@
->   #define MB_CMDR_SIZE (8 * 1024 * 1024)
+Fix the problem by having the driver, on a pt2pt link, remember NVMe PRLI
+accept or reject status across logout as long as the link stays "up".
+When retrying login, if the prior NVMe PRLI was rejected, it will not be
+sent on the next login.
 
-I'd like to change this to MB_CMDR_SIZE_DEF, since it no longer is
-the fixed size of mailbox plus cmd ring, but the default only.
+Cut against 5.18/scsi-queue
 
->   /* Offset of cmd ring is size of mailbox */
->   #define CMDR_OFF sizeof(struct tcmu_mailbox)
-> -#define CMDR_SIZE (MB_CMDR_SIZE - CMDR_OFF)
+Cc: <stable@vger.kernel.org> # v5.4+
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc.h           |  1 +
+ drivers/scsi/lpfc/lpfc_attr.c      |  3 +++
+ drivers/scsi/lpfc/lpfc_els.c       | 20 +++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  5 +++--
+ 4 files changed, 26 insertions(+), 3 deletions(-)
 
-Similarly this could become CMDR_SIZE_DEF
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index a1e0a106c132..98cabe09c040 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -592,6 +592,7 @@ struct lpfc_vport {
+ #define FC_VPORT_LOGO_RCVD      0x200    /* LOGO received on vport */
+ #define FC_RSCN_DISCOVERY       0x400	 /* Auth all devices after RSCN */
+ #define FC_LOGO_RCVD_DID_CHNG   0x800    /* FDISC on phys port detect DID chng*/
++#define FC_PT2PT_NO_NVME        0x1000   /* Don't send NVME PRLI */
+ #define FC_SCSI_SCAN_TMO        0x4000	 /* scsi scan timer running */
+ #define FC_ABORT_DISCOVERY      0x8000	 /* we want to abort discovery */
+ #define FC_NDISC_ACTIVE         0x10000	 /* NPort discovery active */
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index bac78fbce8d6..fa8415259cb8 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -1315,6 +1315,9 @@ lpfc_issue_lip(struct Scsi_Host *shost)
+ 	pmboxq->u.mb.mbxCommand = MBX_DOWN_LINK;
+ 	pmboxq->u.mb.mbxOwner = OWN_HOST;
+ 
++	if ((vport->fc_flag & FC_PT2PT) && (vport->fc_flag & FC_PT2PT_NO_NVME))
++		vport->fc_flag &= ~FC_PT2PT_NO_NVME;
++
+ 	mbxstatus = lpfc_sli_issue_mbox_wait(phba, pmboxq, LPFC_MBOX_TMO * 2);
+ 
+ 	if ((mbxstatus == MBX_SUCCESS) &&
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index db5ccae1b63d..f936833c9909 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1072,7 +1072,8 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 
+ 		/* FLOGI failed, so there is no fabric */
+ 		spin_lock_irq(shost->host_lock);
+-		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP);
++		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP |
++				    FC_PT2PT_NO_NVME);
+ 		spin_unlock_irq(shost->host_lock);
+ 
+ 		/* If private loop, then allow max outstanding els to be
+@@ -4607,6 +4608,23 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		/* Added for Vendor specifc support
+ 		 * Just keep retrying for these Rsn / Exp codes
+ 		 */
++		if ((vport->fc_flag & FC_PT2PT) &&
++		    cmd == ELS_CMD_NVMEPRLI) {
++			switch (stat.un.b.lsRjtRsnCode) {
++			case LSRJT_UNABLE_TPC:
++			case LSRJT_INVALID_CMD:
++			case LSRJT_LOGICAL_ERR:
++			case LSRJT_CMD_UNSUPPORTED:
++				lpfc_printf_vlog(vport, KERN_WARNING, LOG_ELS,
++						 "0168 NVME PRLI LS_RJT "
++						 "reason %x port doesn't "
++						 "support NVME, disabling NVME\n",
++						 stat.un.b.lsRjtRsnCode);
++				retry = 0;
++				vport->fc_flag |= FC_PT2PT_NO_NVME;
++				goto out_retry;
++			}
++		}
+ 		switch (stat.un.b.lsRjtRsnCode) {
+ 		case LSRJT_UNABLE_TPC:
+ 			/* The driver has a VALID PLOGI but the rport has
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 7d717a4ac14d..fdf5e777bf11 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -1961,8 +1961,9 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
+ 			 * is configured try it.
+ 			 */
+ 			ndlp->nlp_fc4_type |= NLP_FC4_FCP;
+-			if ((vport->cfg_enable_fc4_type == LPFC_ENABLE_BOTH) ||
+-			    (vport->cfg_enable_fc4_type == LPFC_ENABLE_NVME)) {
++			if ((!(vport->fc_flag & FC_PT2PT_NO_NVME)) &&
++			    (vport->cfg_enable_fc4_type == LPFC_ENABLE_BOTH ||
++			    vport->cfg_enable_fc4_type == LPFC_ENABLE_NVME)) {
+ 				ndlp->nlp_fc4_type |= NLP_FC4_NVME;
+ 				/* We need to update the localport also */
+ 				lpfc_nvme_update_localport(vport);
+-- 
+2.26.2
 
->   
->   /*
->    * For data area, the default block size is PAGE_SIZE and
-> @@ -133,6 +132,7 @@ struct tcmu_dev {
->   	struct tcmu_mailbox *mb_addr;
->   	void *cmdr;
->   	u32 cmdr_size;
-> +	u32 total_cmdr_size_byte;
-
-Do we really need a new field in tcmu_dev? I think we should avoid it
-since the field cmdr_size holds the same value, just lowered by CMDR_OFF.
-
->   	u32 cmdr_last_cleaned;
->   	/* Offset of data area from start of mb */
->   	/* Must add data_off and mb_addr to get the address */
-> @@ -1617,6 +1617,7 @@ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
->   
->   	udev->data_pages_per_blk = DATA_PAGES_PER_BLK_DEF;
->   	udev->max_blocks = DATA_AREA_PAGES_DEF / udev->data_pages_per_blk;
-> +	udev->total_cmdr_size_byte = MB_CMDR_SIZE;
-
-We could do
-         udev->cmdr_size = CMDR_SIZE_DEF;
-
->   	udev->data_area_mb = TCMU_PAGES_TO_MBS(DATA_AREA_PAGES_DEF);
->   
->   	mutex_init(&udev->cmdr_lock);
-> @@ -2189,7 +2190,7 @@ static int tcmu_configure_device(struct se_device *dev)
->   		goto err_bitmap_alloc;
->   	}
->   
-> -	mb = vzalloc(MB_CMDR_SIZE);
-> +	mb = vzalloc(udev->total_cmdr_size_byte);
->   	if (!mb) {
->   		ret = -ENOMEM;
->   		goto err_vzalloc;
-> @@ -2198,8 +2199,8 @@ static int tcmu_configure_device(struct se_device *dev)
->   	/* mailbox fits in first part of CMDR space */
->   	udev->mb_addr = mb;
->   	udev->cmdr = (void *)mb + CMDR_OFF;
-> -	udev->cmdr_size = CMDR_SIZE;
-> -	udev->data_off = MB_CMDR_SIZE;
-> +	udev->cmdr_size = udev->total_cmdr_size_byte - CMDR_OFF;
-> +	udev->data_off = udev->total_cmdr_size_byte;
-
-CMDR_SIZE would be already set here, so we only would need:
-         udev->data_off = udev->cmdr_size + CMDR_OFF;
-
->   	data_size = TCMU_MBS_TO_PAGES(udev->data_area_mb) << PAGE_SHIFT;
->   	udev->mmap_pages = (data_size + MB_CMDR_SIZE) >> PAGE_SHIFT;
-
-I think we have to replace MB_CMDR_SIZE with udev->cmdr_size + CMDR_OFF here.
-Just a few lines below your patch also does not change the line
-         info->mem[0].size = data_size + MB_CMDR_SIZE;
-where the same replacement is needed.
-
->   	udev->data_blk_size = udev->data_pages_per_blk * PAGE_SIZE;
-> @@ -2401,7 +2402,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
->   enum {
->   	Opt_dev_config, Opt_dev_size, Opt_hw_block_size, Opt_hw_max_sectors,
->   	Opt_nl_reply_supported, Opt_max_data_area_mb, Opt_data_pages_per_blk,
-> -	Opt_err,
-> +	Opt_cmd_ring_size_mb, Opt_err,
->   };
->   
->   static match_table_t tokens = {
-> @@ -2412,6 +2413,7 @@ enum {
->   	{Opt_nl_reply_supported, "nl_reply_supported=%d"},
->   	{Opt_max_data_area_mb, "max_data_area_mb=%d"},
->   	{Opt_data_pages_per_blk, "data_pages_per_blk=%d"},
-> +	{Opt_cmd_ring_size_mb, "cmd_ring_size_mb=%d"},
->   	{Opt_err, NULL}
->   };
->   
-> @@ -2509,6 +2511,41 @@ static int tcmu_set_data_pages_per_blk(struct tcmu_dev *udev, substring_t *arg)
->   	return ret;
->   }
->   
-> +static int tcmu_set_cmd_ring_size_param(struct tcmu_dev *udev, substring_t *arg)
-
-Please remove the "_param" suffix from function name, as the
-other similar set functions don't have it also.
-
-> +{
-> +	int val, ret;
-> +
-> +	ret = match_int(arg, &val);
-> +	if (ret < 0) {
-> +		pr_err("match_int() failed for cmd_ring_size_mb=. Error %d.\n",
-> +		       ret);
-> +		return ret;
-> +	}
-> +
-> +	if (val <= 0) {
-> +		pr_err("Invalid cmd_ring_size_mb %d.\n", val);
-> +		return -EINVAL;
-> +	}
-> +
-> +	mutex_lock(&udev->cmdr_lock);
-> +	if (udev->data_bitmap) {
-> +		pr_err("Cannot set cmd_ring_size_mb after it has been enabled.\n");
-> +		ret = -EINVAL;
-> +		goto unlock;
-> +	}
-> +
-> +	udev->total_cmdr_size_byte = (val << 20);
-> +	if (udev->total_cmdr_size_byte > MB_CMDR_SIZE) {
-
-Would be
-         udev->cmdr_size = (val << 20) - CMDR_OFF;
-         if (val > (MB_CMDR_SIZE_DEF >> 20)) {
-
-Please note: the check you coded is definitely wrong.
-E.g. if someone entered the value 4096, which is 0x1000,
-we would have ended up with udev->total_cmdr_size_byte
-set to 0 ...
-
-> +		pr_err("%d is too large. Adjusting cmd_ring_size_mb to global limit of %u\n",
-> +		       val, (MB_CMDR_SIZE >> 20));
-> +		udev->total_cmdr_size_byte = MB_CMDR_SIZE;
-
-                 udev->cmdr_size = CMDR_SIZE_DEF;
-> +	}
-> +
-> +unlock:
-> +	mutex_unlock(&udev->cmdr_lock);
-> +	return ret;
-> +}
-> +
->   static ssize_t tcmu_set_configfs_dev_params(struct se_device *dev,
->   		const char *page, ssize_t count)
->   {
-> @@ -2563,6 +2600,9 @@ static ssize_t tcmu_set_configfs_dev_params(struct se_device *dev,
->   		case Opt_data_pages_per_blk:
->   			ret = tcmu_set_data_pages_per_blk(udev, &args[0]);
->   			break;
-> +		case Opt_cmd_ring_size_mb:
-> +			ret = tcmu_set_cmd_ring_size_param(udev, &args[0]);
-> +			break;
->   		default:
->   			break;
->   		}
-> @@ -2585,6 +2625,8 @@ static ssize_t tcmu_show_configfs_dev_params(struct se_device *dev, char *b)
->   	bl += sprintf(b + bl, "Size: %llu ", udev->dev_size);
->   	bl += sprintf(b + bl, "MaxDataAreaMB: %u ", udev->data_area_mb);
->   	bl += sprintf(b + bl, "DataPagesPerBlk: %u\n", udev->data_pages_per_blk);
-
-I think we should print all the config values on one line.
-So I'd like to remove the '\n' after DataPagesPerBlk.
-
-> +	bl += sprintf(b + bl, "CmdRingSizeMB: %u\n",
-> +		      (udev->total_cmdr_size_byte >> 20));
->   
->   	return bl;
->   }
-> @@ -3059,6 +3101,17 @@ static ssize_t tcmu_free_kept_buf_store(struct config_item *item, const char *pa
->   }
->   CONFIGFS_ATTR_WO(tcmu_, free_kept_buf);
->   
-> +static ssize_t tcmu_cmd_ring_size_mb_show(struct config_item *item, char *page)
-> +{
-> +	struct se_dev_attrib *da = container_of(to_config_group(item),
-> +						struct se_dev_attrib, da_group);
-> +	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
-> +
-> +	return snprintf(page, PAGE_SIZE, "%u\n",
-> +			(udev->total_cmdr_size_byte >> 20));
-
-			(udev->cmdr_size + CMDR_OFF) >> 20);
-> +}
-> +CONFIGFS_ATTR_RO(tcmu_, cmd_ring_size_mb);
-> +
-
-The attributes block_dev, reset_ring and free_kept_buf belong
-to the separate action attribute group.
-So shouldn't we shift this new attribute up in the code, e.q.
-behind the line "CONFIGFS_ATTR_RO(tcmu_, data_pages_per_blk);"?
-
-
->   static struct configfs_attribute *tcmu_attrib_attrs[] = {
->   	&tcmu_attr_cmd_time_out,
->   	&tcmu_attr_qfull_time_out,
-> @@ -3069,6 +3122,7 @@ static ssize_t tcmu_free_kept_buf_store(struct config_item *item, const char *pa
->   	&tcmu_attr_emulate_write_cache,
->   	&tcmu_attr_tmr_notification,
->   	&tcmu_attr_nl_reply_supported,
-> +	&tcmu_attr_cmd_ring_size_mb,
->   	NULL,
->   };
->   
