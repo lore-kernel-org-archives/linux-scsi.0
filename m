@@ -2,172 +2,171 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10CB4C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Feb 2022 16:31:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8305BC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Feb 2022 16:41:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236823AbiBLQba (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Feb 2022 11:31:30 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:44230 "EHLO
+        id S237496AbiBLQll (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Feb 2022 11:41:41 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229557AbiBLQb3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2022 11:31:29 -0500
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3BC9197;
-        Sat, 12 Feb 2022 08:31:25 -0800 (PST)
-Received: by mail-pf1-x432.google.com with SMTP id i30so21603739pfk.8;
-        Sat, 12 Feb 2022 08:31:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=cgdmAN3a6VJH5GpYyWYOh/m184wyLcFQeLeJ7uRNeRU=;
-        b=VQEwsfd6B9fayCAMRo2RnLrWANS3NJR5d0f70x/7u4VBcqBEFvCcJekuY/IMIRF5q5
-         0h8/sxkJp8oAfQV4PbNm2jpdof3TZm9Trq+bqMfaF0R6CpFarH9uUYb4BDDEnnElVnwE
-         Dxuc8uPQg4ERZ+o809ucxZzFLNH0uqdeKKyrQY2/PkpxVue3vvJe7/N4Clh/ukZ3iJgL
-         gFgG7UZ3N+98a3DyG+V93owsBEIanuJtMfoSkyBgi4x6gBCTCzVghNNfDvRkBWLQk+7H
-         lY8iuyuv9+uIMg2HmAhRRk9q0bkhG0ZQgLH0CHkuedt7hemM8+vEsd04FhdDBFykYtOu
-         nZTw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=cgdmAN3a6VJH5GpYyWYOh/m184wyLcFQeLeJ7uRNeRU=;
-        b=SvyOO3PnOdk2ovkjzz0Mdt7DM+Z9jt1QxDg56YIAyJYvv9Da/DPcPSBEIpcA7I3+gO
-         V0payma/x/roKykTWvvL9AsOnUZEsHoeyxpSFbg5lnHMEnrEuka4dos7odL3tzFHT67z
-         8+Bgt7y1503XOCRkg2uqDs4CVdcvtFVYU4ZFmKUj6w+xMVuTer3NZl8fsXeRJiG68I8n
-         m69LByNbq+Lxw85d0glIOEHyYNCFdnXOKu8RIGPHIzkZI2k8V7sxsYhyDDCPQ7mcqqb8
-         lMQ5kyiIKGXSm9uFcfUAy3VWfzkCsm6JFsb1WbiQKLoo6VrU39paqgAO2JiM8mNyxj2l
-         BXfw==
-X-Gm-Message-State: AOAM533fWhUOKsFZtP6rOL9EKeeXu0kHKhrmj4dSnDulCfn8Z6oakrxb
-        qm14PJKf1qCSs9o+FtU0/RdBk7KjWjY=
-X-Google-Smtp-Source: ABdhPJwiKQxSN4jA70P7H5F54eQQqIY2fbF7ThrkQIzifKifsYhFFfCDWPS4BR0BaQ9T4dFkFgwY5Q==
-X-Received: by 2002:a63:f30e:: with SMTP id l14mr5378723pgh.410.1644683485147;
-        Sat, 12 Feb 2022 08:31:25 -0800 (PST)
-Received: from localhost.localdomain (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
-        by smtp.gmail.com with ESMTPSA id m21sm31652146pfk.26.2022.02.12.08.31.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 12 Feb 2022 08:31:24 -0800 (PST)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>, stable@vger.kernel.org
-Subject: [PATCH] lpfc: fix pt2pt nvme PRLI reject LOGO loop
-Date:   Sat, 12 Feb 2022 08:31:20 -0800
-Message-Id: <20220212163120.15385-1-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.26.2
+        with ESMTP id S229693AbiBLQlj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2022 11:41:39 -0500
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84652B0B;
+        Sat, 12 Feb 2022 08:41:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1644684094;
+        bh=R3T0cPN40hlhc+uEFOnFn93H8zi9jt0XNiexXM9tl8k=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=kSzK7wUjfXdRH/ZSD7l2P8jLnlOFOyKa73ZwyzIbQp6qffAjrCIdHSh3CQckHKrd+
+         ozTuEcpChR8uReRFUSBSA06Djl3/Br1hQKyk1i54KARJ/tHr0sWvyuILr4PVxnPbIo
+         uY3Z8MF8sV5Q/JBe19eh/QiKxCZYRJjeBdJQPxtM=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 20615128075D;
+        Sat, 12 Feb 2022 11:41:34 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 1VXmR3mxNcNu; Sat, 12 Feb 2022 11:41:34 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1644684093;
+        bh=R3T0cPN40hlhc+uEFOnFn93H8zi9jt0XNiexXM9tl8k=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=YGGYbus5beWNugGxToAWwihIyWe466KU302yAyjV2kWLGUmkgkGbiQ0ewsTxDGUmY
+         xxxWwgNwEuLfu2TF4LdrTDr5zERmIy2etvBgkdQgQT3Ujmbk1jqrLp7dHTo4MPoF04
+         l0V7+CAy/QnF9KFOE0lD+jiNfhRskzgAsuZ7f2KA=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::c447])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 86D611280695;
+        Sat, 12 Feb 2022 11:41:33 -0500 (EST)
+Message-ID: <0da592e3664041ce007c287391cdb40fda2d535e.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.17-rc3
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 12 Feb 2022 11:41:32 -0500
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When connected point to point, the driver does not know the FC4's
-supported by the other end. In Fabrics, it can query the nameserver.
-Thus the driver must send PRLI's for the FC4s it supports and enable
-support based on the acc(ept) or rej(ect) of the respective FC4 PRLI.
-Currently the driver supports SCSI and NVMe PRLI's.
+Two minor fixes in the lpfc driver.  One changing the classification of
+trace messages and the other fixing a build issue when NVME_FC is
+disabled.
 
-Unfortunately, although the behavior is per standard, many devices
-have come to expect only SCSI PRLI's. In this particular example, the
-NVMe PRLI is properly RJT'd but the target decided that it must LOGO after
-seeing the unexpected NVMe PRLI. The LOGO causes the sequence to restart
-and login is now in an infinite failure loop.
+The patch is available here:
 
-Fix the problem by having the driver, on a pt2pt link, remember NVMe PRLI
-accept or reject status across logout as long as the link stays "up".
-When retrying login, if the prior NVMe PRLI was rejected, it will not be
-sent on the next login.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Cut against 5.18/scsi-queue
+The short changelog is:
 
-Cc: <stable@vger.kernel.org> # v5.4+
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+James Smart (2):
+      scsi: lpfc: Reduce log messages seen after firmware download
+      scsi: lpfc: Remove NVMe support if kernel has NVME_FC disabled
+
+And the diffstat:
+
+ drivers/scsi/lpfc/lpfc.h      | 13 ++++++++++---
+ drivers/scsi/lpfc/lpfc_attr.c |  4 ++--
+ drivers/scsi/lpfc/lpfc_init.c |  2 +-
+ drivers/scsi/lpfc/lpfc_sli.c  |  8 +++++++-
+ 4 files changed, 20 insertions(+), 7 deletions(-)
+
+With full diff below.
+
+James
+
 ---
- drivers/scsi/lpfc/lpfc.h           |  1 +
- drivers/scsi/lpfc/lpfc_attr.c      |  3 +++
- drivers/scsi/lpfc/lpfc_els.c       | 20 +++++++++++++++++++-
- drivers/scsi/lpfc/lpfc_nportdisc.c |  5 +++--
- 4 files changed, 26 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index a1e0a106c132..98cabe09c040 100644
+index 4878c94761f9..a1e0a106c132 100644
 --- a/drivers/scsi/lpfc/lpfc.h
 +++ b/drivers/scsi/lpfc/lpfc.h
-@@ -592,6 +592,7 @@ struct lpfc_vport {
- #define FC_VPORT_LOGO_RCVD      0x200    /* LOGO received on vport */
- #define FC_RSCN_DISCOVERY       0x400	 /* Auth all devices after RSCN */
- #define FC_LOGO_RCVD_DID_CHNG   0x800    /* FDISC on phys port detect DID chng*/
-+#define FC_PT2PT_NO_NVME        0x1000   /* Don't send NVME PRLI */
- #define FC_SCSI_SCAN_TMO        0x4000	 /* scsi scan timer running */
- #define FC_ABORT_DISCOVERY      0x8000	 /* we want to abort discovery */
- #define FC_NDISC_ACTIVE         0x10000	 /* NPort discovery active */
+@@ -1161,6 +1161,16 @@ struct lpfc_hba {
+ 	uint32_t cfg_hostmem_hgp;
+ 	uint32_t cfg_log_verbose;
+ 	uint32_t cfg_enable_fc4_type;
++#define LPFC_ENABLE_FCP  1
++#define LPFC_ENABLE_NVME 2
++#define LPFC_ENABLE_BOTH 3
++#if (IS_ENABLED(CONFIG_NVME_FC))
++#define LPFC_MAX_ENBL_FC4_TYPE LPFC_ENABLE_BOTH
++#define LPFC_DEF_ENBL_FC4_TYPE LPFC_ENABLE_BOTH
++#else
++#define LPFC_MAX_ENBL_FC4_TYPE LPFC_ENABLE_FCP
++#define LPFC_DEF_ENBL_FC4_TYPE LPFC_ENABLE_FCP
++#endif
+ 	uint32_t cfg_aer_support;
+ 	uint32_t cfg_sriov_nr_virtfn;
+ 	uint32_t cfg_request_firmware_upgrade;
+@@ -1182,9 +1192,6 @@ struct lpfc_hba {
+ 	uint32_t cfg_ras_fwlog_func;
+ 	uint32_t cfg_enable_bbcr;	/* Enable BB Credit Recovery */
+ 	uint32_t cfg_enable_dpp;	/* Enable Direct Packet Push */
+-#define LPFC_ENABLE_FCP  1
+-#define LPFC_ENABLE_NVME 2
+-#define LPFC_ENABLE_BOTH 3
+ 	uint32_t cfg_enable_pbde;
+ 	uint32_t cfg_enable_mi;
+ 	struct nvmet_fc_target_port *targetport;
 diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index bac78fbce8d6..fa8415259cb8 100644
+index 7a7f17d71811..bac78fbce8d6 100644
 --- a/drivers/scsi/lpfc/lpfc_attr.c
 +++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -1315,6 +1315,9 @@ lpfc_issue_lip(struct Scsi_Host *shost)
- 	pmboxq->u.mb.mbxCommand = MBX_DOWN_LINK;
- 	pmboxq->u.mb.mbxOwner = OWN_HOST;
+@@ -3978,8 +3978,8 @@ LPFC_ATTR_R(nvmet_mrq_post,
+  *                    3 - register both FCP and NVME
+  * Supported values are [1,3]. Default value is 3
+  */
+-LPFC_ATTR_R(enable_fc4_type, LPFC_ENABLE_BOTH,
+-	    LPFC_ENABLE_FCP, LPFC_ENABLE_BOTH,
++LPFC_ATTR_R(enable_fc4_type, LPFC_DEF_ENBL_FC4_TYPE,
++	    LPFC_ENABLE_FCP, LPFC_MAX_ENBL_FC4_TYPE,
+ 	    "Enable FC4 Protocol support - FCP / NVME");
  
-+	if ((vport->fc_flag & FC_PT2PT) && (vport->fc_flag & FC_PT2PT_NO_NVME))
-+		vport->fc_flag &= ~FC_PT2PT_NO_NVME;
-+
- 	mbxstatus = lpfc_sli_issue_mbox_wait(phba, pmboxq, LPFC_MBOX_TMO * 2);
+ /*
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index a56f01f659f8..558f7d2559c4 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -2104,7 +2104,7 @@ lpfc_handle_eratt_s4(struct lpfc_hba *phba)
+ 		}
+ 		if (reg_err1 == SLIPORT_ERR1_REG_ERR_CODE_2 &&
+ 		    reg_err2 == SLIPORT_ERR2_REG_FW_RESTART) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
++			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 					"3143 Port Down: Firmware Update "
+ 					"Detected\n");
+ 			en_rn_msg = false;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 1bc0db572d9e..430abebf99f1 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -13363,6 +13363,7 @@ lpfc_sli4_eratt_read(struct lpfc_hba *phba)
+ 	uint32_t uerr_sta_hi, uerr_sta_lo;
+ 	uint32_t if_type, portsmphr;
+ 	struct lpfc_register portstat_reg;
++	u32 logmask;
  
- 	if ((mbxstatus == MBX_SUCCESS) &&
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index db5ccae1b63d..f936833c9909 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1072,7 +1072,8 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 
- 		/* FLOGI failed, so there is no fabric */
- 		spin_lock_irq(shost->host_lock);
--		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP);
-+		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP |
-+				    FC_PT2PT_NO_NVME);
- 		spin_unlock_irq(shost->host_lock);
- 
- 		/* If private loop, then allow max outstanding els to be
-@@ -4607,6 +4608,23 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		/* Added for Vendor specifc support
- 		 * Just keep retrying for these Rsn / Exp codes
- 		 */
-+		if ((vport->fc_flag & FC_PT2PT) &&
-+		    cmd == ELS_CMD_NVMEPRLI) {
-+			switch (stat.un.b.lsRjtRsnCode) {
-+			case LSRJT_UNABLE_TPC:
-+			case LSRJT_INVALID_CMD:
-+			case LSRJT_LOGICAL_ERR:
-+			case LSRJT_CMD_UNSUPPORTED:
-+				lpfc_printf_vlog(vport, KERN_WARNING, LOG_ELS,
-+						 "0168 NVME PRLI LS_RJT "
-+						 "reason %x port doesn't "
-+						 "support NVME, disabling NVME\n",
-+						 stat.un.b.lsRjtRsnCode);
-+				retry = 0;
-+				vport->fc_flag |= FC_PT2PT_NO_NVME;
-+				goto out_retry;
-+			}
-+		}
- 		switch (stat.un.b.lsRjtRsnCode) {
- 		case LSRJT_UNABLE_TPC:
- 			/* The driver has a VALID PLOGI but the rport has
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 7d717a4ac14d..fdf5e777bf11 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -1961,8 +1961,9 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
- 			 * is configured try it.
- 			 */
- 			ndlp->nlp_fc4_type |= NLP_FC4_FCP;
--			if ((vport->cfg_enable_fc4_type == LPFC_ENABLE_BOTH) ||
--			    (vport->cfg_enable_fc4_type == LPFC_ENABLE_NVME)) {
-+			if ((!(vport->fc_flag & FC_PT2PT_NO_NVME)) &&
-+			    (vport->cfg_enable_fc4_type == LPFC_ENABLE_BOTH ||
-+			    vport->cfg_enable_fc4_type == LPFC_ENABLE_NVME)) {
- 				ndlp->nlp_fc4_type |= NLP_FC4_NVME;
- 				/* We need to update the localport also */
- 				lpfc_nvme_update_localport(vport);
--- 
-2.26.2
+ 	/*
+ 	 * For now, use the SLI4 device internal unrecoverable error
+@@ -13413,7 +13414,12 @@ lpfc_sli4_eratt_read(struct lpfc_hba *phba)
+ 				readl(phba->sli4_hba.u.if_type2.ERR1regaddr);
+ 			phba->work_status[1] =
+ 				readl(phba->sli4_hba.u.if_type2.ERR2regaddr);
+-			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
++			logmask = LOG_TRACE_EVENT;
++			if (phba->work_status[0] ==
++				SLIPORT_ERR1_REG_ERR_CODE_2 &&
++			    phba->work_status[1] == SLIPORT_ERR2_REG_FW_RESTART)
++				logmask = LOG_SLI;
++			lpfc_printf_log(phba, KERN_ERR, logmask,
+ 					"2885 Port Status Event: "
+ 					"port status reg 0x%x, "
+ 					"port smphr reg 0x%x, "
 
