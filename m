@@ -2,74 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AEAAC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 02:19:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4602C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 02:19:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239302AbiBNCUA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 13 Feb 2022 21:20:00 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:40416 "EHLO
+        id S239307AbiBNCUB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 13 Feb 2022 21:20:01 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:40428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239286AbiBNCTw (ORCPT
+        with ESMTP id S239289AbiBNCTw (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Feb 2022 21:19:52 -0500
 Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 853BB5548A
-        for <linux-scsi@vger.kernel.org>; Sun, 13 Feb 2022 18:19:45 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 758A654BF2
+        for <linux-scsi@vger.kernel.org>; Sun, 13 Feb 2022 18:19:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644805184; x=1676341184;
+  t=1644805185; x=1676341185;
   h=from:to:subject:date:message-id:in-reply-to:references:
    mime-version:content-transfer-encoding;
-  bh=pLMCxajGv9sYN0ENqVZLvNwK6KVenET90GZjTnlRS8M=;
-  b=QhxHEmWY7iULY8ho+72Y2Hp3S6KyGk4dzDMmbLES0g7FcK3upCRh0d/6
-   2pQPXfrvoklTo3qPHOT/+DydHgPTMr7DY1wg5g4E9aM6KPbxJRQV97kTJ
-   QXMlrIjbxh5XiKyTOhg0H317h5s0yRKN8UeuKI9k2gD0dWIkGfjqsYtSN
-   u6BR7TiFIx68oPxD4oW60+5DSKpp+UTtcGL139eqaspJNub8HVhV1K38P
-   QjjkzGej+l9jo41DssFihM+Jf2AnHzqe6EcjihYKCGZSksmeW9dktBP5b
-   d9gda+6wF28UzHZwOdTEFF2Q2jkezWZLPkzubkuAR7osyWB5rOBX2SN1B
-   Q==;
+  bh=bHQOfB2LDNW6/HN86h9WS/6qfZKtSpm7HW83n+JZIm0=;
+  b=HbsRFJ+U5/ovRXTJYQ4DPNsVyQloIyWtsiOkMmjgSGFgxxDU2Ws2HMIO
+   oIExxYy95sDVAVF41NS1VhWR0u235ZYKAOKVMOB+vROx0ZU6NiT4MBZrI
+   yzdycREa2mHaIoxvOlRBeW6St8YHRCmkq2js7StEVns/sXvkttWRGd4Ko
+   64qscUAQyyjriPZBDP188r1TFPSeSdbv/GbEPFIzabXcPpNLCKDhkfCLB
+   XfomA7OzWwdm21zqD5TPjUIFxla+g0J2KZOQRNtoXkTv7fT5fVVpdlzSt
+   kt8zptX968o22KZ1tbyVey1C/czCLjcdi3PfY7dONCo3hYj99LaHgw19Q
+   A==;
 X-IronPort-AV: E=Sophos;i="5.88,366,1635177600"; 
-   d="scan'208";a="192819775"
+   d="scan'208";a="192819778"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 14 Feb 2022 10:19:43 +0800
-IronPort-SDR: 7zX4/0V2T/171/UCr3BrWcrDOFePIyXZWCkEASHwlbniBBgQ2FC+ZXID1Uu+GB05d/WsfzXGPt
- I1Vgb5sYX7Dvj6T3kOTazPKFOdVAdohsmANOvuOZZXWyZn+UlTZwFwjrH7e31o3Yd1lBIPOCl+
- 7FHio/2luWsNe2dbU+KDVEVQzktk/AfTp6cHpWNMrrdpPtr6f7oW6B1IUjxcx7EFCXP18aNrLL
- /gqfDtG9UjeDsn0gOBFg0dc+st5meWSV/rDyE+/XKs6uC/UO6OAC/+t3fPnrvy5O03YRwoN7hi
- 3+QGeCjwubJvUsweUTr4a2en
+  by ob1.hgst.iphmx.com with ESMTP; 14 Feb 2022 10:19:44 +0800
+IronPort-SDR: 938wwIiKLbLmzFooRQwhKvidshubN8elfZVKYEAMGTkfisNaYjZtD0mcvYOxSjXIUweMHkg8KU
+ WrZs0mpK+J2UGnYCuLF3tirPwflnfw/A9FeNIoOpYeVt88Bquh7gf7hWnRvVW95RDPgGuqG5KK
+ IOexcrGkF5kt/R1zAWOgdSi3PogUzzxs8BKB4Gs55URLmbkwjq+NGwSbPtdJZexCPLyCTVirjl
+ 4kBvoaKzKjCbCSq/eYfn+vOZkgu2tq4rq8FFfBJPEpuofvNx3GsFU2lZD85gG9de58H5n5r1Ri
+ aME1YRVrx9eWT5r9wzX2CeSH
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2022 17:52:36 -0800
-IronPort-SDR: iCOICaoA/a+MUhFNPX3ClOWhbvgfLPsH6T2Ycan4V/VJPF8gXITl597K8Jrduj+25C5Q4WDfsu
- hEhX9BgyZj/apNhdkkYKiZAAWgUeZZurRz613gMx+RlFEgJjQgvINHkzTKroVPfzVFcxrwRMJ5
- jtLDeUU14+HryxYW8EZQpJ5fMiVkiVwauvCrsM1dFN1wzX6tqX7NLA9d9e0Cyo0V6+8feuEXNu
- ErDpyLjA6VtyJ25OzSTKXfoj4IKS4RIkYFbhrnMd04Pqrw6pkUEl7bEjO68xb0EyfugQZl3XnZ
- Up4=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2022 17:52:37 -0800
+IronPort-SDR: EVV1B6W4CM3dWD3G3AMC+WOuQ61OXJ4jPvI4/Gt733ny5AH5GpbDBGXEwlyDKeY35WIK3mixJA
+ hblXHoJrpa9fr0Y+YbH56durWgDBz+qFGKuV7hBE5VJyeXfYW3maTVLJ1OlYnV7eJ7LKqmMCXB
+ kDT9qryoYIknYDyMjgCARDP5AclQ3aALZgCUjQLKdXfhI8QU53Dr/2eGCEO2q7RPiFnHUWxmWE
+ FubH1AcIE29IcXMDset6v2uoEfIi9heYW+cWj2XZs2DdXGR4W+JRknk0w0sYuELMFylFu/+XZl
+ LC8=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2022 18:19:45 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2022 18:19:46 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Jxnww5Pbmz1SVp2
-        for <linux-scsi@vger.kernel.org>; Sun, 13 Feb 2022 18:19:44 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Jxnwy02sQz1SVp0
+        for <linux-scsi@vger.kernel.org>; Sun, 13 Feb 2022 18:19:46 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1644805184; x=1647397185; bh=pLMCxajGv9sYN0ENqV
-        ZLvNwK6KVenET90GZjTnlRS8M=; b=pAT3d4WjfV47VRFYYx26VrDeUbXlYbeXCW
-        krq5E7jvaFA33t7hLcDNcrTF65bVTl/RY4qApXTLVaXzFfUa48Lrlp2a30wtD2Q4
-        P3DVsRjPz0Q0yikKi0m1jQBskYZyaxso/OqmiWFktd+l+GKcWdqd2TdD3pPs8HbN
-        lgt50c3hTnrOUeLKsr3H9SyTX4QMg9a2WaVPmNDq+1qbkQSWmqotQsHUgzVluHE/
-        LCU75rblwdCd9Z9CT03wd/OjVrT734fLSTiYMXYB+jE7LcQGOrlLjqbvKXoNtp4N
-        fNkgz+CEBOJ9tJosEM3q3s/D+iLYREzd8eVe/xsw1azRkc6TWm8g==
+        :from; s=dkim; t=1644805185; x=1647397186; bh=bHQOfB2LDNW6/HN86h
+        9WS/6qfZKtSpm7HW83n+JZIm0=; b=lk/8OAibGlN2EDaDWl+k1SnvNcUXy2QB/4
+        Joh/ddozIiTZu2l5PURoJMS6cvEUnU0aV0wKyC9Kd3OcOWumpbEHC7HrTvwjXksl
+        H9fDvvEr7XL3eFA0kwK6HqaW1AVjRf98TEseU8z7lPPI3QNfVurEdeBOL6EYxs79
+        Wl6CY4JvrkrhIP+Jv6nGqNxzHAGQhe5hH9Ymi8jwfI0pov2nHFbeq/ibW71sTk6i
+        qBP7YTed9WPEeu1QAhTKHnCeCQCONtstyjv1XIFntcl2m+RVdLTDyshNRLNoGLCh
+        q8E+sAumieoQTRBaH8NenfdWLyvTfdFyRkoUt2tQgNN4w8njQBlA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id jM8d9HiUKyNd for <linux-scsi@vger.kernel.org>;
-        Sun, 13 Feb 2022 18:19:44 -0800 (PST)
+        with ESMTP id XPOVH_KkN_yv for <linux-scsi@vger.kernel.org>;
+        Sun, 13 Feb 2022 18:19:45 -0800 (PST)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Jxnwv03cZz1SHwl;
-        Sun, 13 Feb 2022 18:19:42 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Jxnww3gp7z1SVnx;
+        Sun, 13 Feb 2022 18:19:44 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -77,9 +77,9 @@ To:     linux-scsi@vger.kernel.org,
         Xiang Chen <chenxiang66@hisilicon.com>,
         Jason Yan <yanaijie@huawei.com>,
         Luo Jiaxing <luojiaxing@huawei.com>
-Subject: [PATCH v3 11/31] scsi: pm8001: Fix le32 values handling in pm80xx_chip_sata_req()
-Date:   Mon, 14 Feb 2022 11:17:27 +0900
-Message-Id: <20220214021747.4976-12-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH v3 12/31] scsi: pm8001: Fix use of struct set_phy_profile_req fields
+Date:   Mon, 14 Feb 2022 11:17:28 +0900
+Message-Id: <20220214021747.4976-13-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
 References: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
@@ -89,189 +89,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Make sure that the __le32 fields of struct sata_cmd are manipulated
-after applying the correct endian conversion. That is, use cpu_to_le32()
-for assigning values and le32_to_cpu() for consulting a field value.
-In particular, make sure that the calculations for the 4G boundary check
-are done using CPU endianness and *not* little endian values. With these
-fixes, many sparse warnings are removed.
+In mpi_set_phy_profile_req() and pm8001_set_phy_profile_single(), use
+cpu_to_le32() to initialize the ppc_phyid field of struct
+set_phy_profile_req. Furthermore, fix the definition of the reserved
+field of this structure to be an array of __le32, to match the use of
+cpu_to_le32() when assigning values. These changes remove several sparse
+type warnings.
 
-While at it, fix some code identation and add blank lines after
-variable declarations and in some other places to make this code more
-readable.
-
-Fixes: 0ecdf00ba6e5 ("[SCSI] pm80xx: 4G boundary fix.")
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c | 82 ++++++++++++++++++--------------
- 1 file changed, 45 insertions(+), 37 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 12 +++++++-----
+ drivers/scsi/pm8001/pm80xx_hwi.h |  2 +-
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80x=
 x_hwi.c
-index 0ed4bc114e5e..8ebefdb18c85 100644
+index 8ebefdb18c85..ad2e40425fbf 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -4546,7 +4546,7 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_i=
-nfo *pm8001_ha,
- 	u32 q_index, cpu_id;
- 	struct sata_start_req sata_cmd;
- 	u32 hdr_tag, ncg_tag =3D 0;
--	u64 phys_addr, start_addr, end_addr;
-+	u64 phys_addr, end_addr;
- 	u32 end_addr_high, end_addr_low;
- 	u32 ATAP =3D 0x0;
- 	u32 dir;
-@@ -4607,32 +4607,38 @@ static int pm80xx_chip_sata_req(struct pm8001_hba=
-_info *pm8001_ha,
- 			pm8001_chip_make_sg(task->scatter,
- 						ccb->n_elem, ccb->buf_prd);
- 			phys_addr =3D ccb->ccb_dma_handle;
--			sata_cmd.enc_addr_low =3D lower_32_bits(phys_addr);
--			sata_cmd.enc_addr_high =3D upper_32_bits(phys_addr);
-+			sata_cmd.enc_addr_low =3D
-+				cpu_to_le32(lower_32_bits(phys_addr));
-+			sata_cmd.enc_addr_high =3D
-+				cpu_to_le32(upper_32_bits(phys_addr));
- 			sata_cmd.enc_esgl =3D cpu_to_le32(1 << 31);
- 		} else if (task->num_scatter =3D=3D 1) {
- 			u64 dma_addr =3D sg_dma_address(task->scatter);
--			sata_cmd.enc_addr_low =3D lower_32_bits(dma_addr);
--			sata_cmd.enc_addr_high =3D upper_32_bits(dma_addr);
-+
-+			sata_cmd.enc_addr_low =3D
-+				cpu_to_le32(lower_32_bits(dma_addr));
-+			sata_cmd.enc_addr_high =3D
-+				cpu_to_le32(upper_32_bits(dma_addr));
- 			sata_cmd.enc_len =3D cpu_to_le32(task->total_xfer_len);
- 			sata_cmd.enc_esgl =3D 0;
-+
- 			/* Check 4G Boundary */
--			start_addr =3D cpu_to_le64(dma_addr);
--			end_addr =3D (start_addr + sata_cmd.enc_len) - 1;
--			end_addr_low =3D cpu_to_le32(lower_32_bits(end_addr));
--			end_addr_high =3D cpu_to_le32(upper_32_bits(end_addr));
--			if (end_addr_high !=3D sata_cmd.enc_addr_high) {
-+			end_addr =3D dma_addr + le32_to_cpu(sata_cmd.enc_len) - 1;
-+			end_addr_low =3D lower_32_bits(end_addr);
-+			end_addr_high =3D upper_32_bits(end_addr);
-+			if (end_addr_high !=3D le32_to_cpu(sata_cmd.enc_addr_high)) {
- 				pm8001_dbg(pm8001_ha, FAIL,
- 					   "The sg list address start_addr=3D0x%016llx data_len=3D0x%x end_=
-addr_high=3D0x%08x end_addr_low=3D0x%08x has crossed 4G boundary\n",
--					   start_addr, sata_cmd.enc_len,
-+					   dma_addr,
-+					   le32_to_cpu(sata_cmd.enc_len),
- 					   end_addr_high, end_addr_low);
- 				pm8001_chip_make_sg(task->scatter, 1,
- 					ccb->buf_prd);
- 				phys_addr =3D ccb->ccb_dma_handle;
- 				sata_cmd.enc_addr_low =3D
--					lower_32_bits(phys_addr);
-+					cpu_to_le32(lower_32_bits(phys_addr));
- 				sata_cmd.enc_addr_high =3D
--					upper_32_bits(phys_addr);
-+					cpu_to_le32(upper_32_bits(phys_addr));
- 				sata_cmd.enc_esgl =3D
- 					cpu_to_le32(1 << 31);
- 			}
-@@ -4643,7 +4649,8 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_i=
-nfo *pm8001_ha,
- 			sata_cmd.enc_esgl =3D 0;
- 		}
- 		/* XTS mode. All other fields are 0 */
--		sata_cmd.key_index_mode =3D 0x6 << 4;
-+		sata_cmd.key_index_mode =3D cpu_to_le32(0x6 << 4);
-+
- 		/* set tweak values. Should be the start lba */
- 		sata_cmd.twk_val0 =3D
- 			cpu_to_le32((sata_cmd.sata_fis.lbal_exp << 24) |
-@@ -4669,31 +4676,31 @@ static int pm80xx_chip_sata_req(struct pm8001_hba=
-_info *pm8001_ha,
- 			phys_addr =3D ccb->ccb_dma_handle;
- 			sata_cmd.addr_low =3D lower_32_bits(phys_addr);
- 			sata_cmd.addr_high =3D upper_32_bits(phys_addr);
--			sata_cmd.esgl =3D cpu_to_le32(1 << 31);
-+			sata_cmd.esgl =3D cpu_to_le32(1U << 31);
- 		} else if (task->num_scatter =3D=3D 1) {
- 			u64 dma_addr =3D sg_dma_address(task->scatter);
-+
- 			sata_cmd.addr_low =3D lower_32_bits(dma_addr);
- 			sata_cmd.addr_high =3D upper_32_bits(dma_addr);
- 			sata_cmd.len =3D cpu_to_le32(task->total_xfer_len);
- 			sata_cmd.esgl =3D 0;
-+
- 			/* Check 4G Boundary */
--			start_addr =3D cpu_to_le64(dma_addr);
--			end_addr =3D (start_addr + sata_cmd.len) - 1;
--			end_addr_low =3D cpu_to_le32(lower_32_bits(end_addr));
--			end_addr_high =3D cpu_to_le32(upper_32_bits(end_addr));
-+			end_addr =3D dma_addr + le32_to_cpu(sata_cmd.len) - 1;
-+			end_addr_low =3D lower_32_bits(end_addr);
-+			end_addr_high =3D upper_32_bits(end_addr);
- 			if (end_addr_high !=3D sata_cmd.addr_high) {
- 				pm8001_dbg(pm8001_ha, FAIL,
- 					   "The sg list address start_addr=3D0x%016llx data_len=3D0x%xend_a=
-ddr_high=3D0x%08x end_addr_low=3D0x%08x has crossed 4G boundary\n",
--					   start_addr, sata_cmd.len,
-+					   dma_addr,
-+					   le32_to_cpu(sata_cmd.len),
- 					   end_addr_high, end_addr_low);
- 				pm8001_chip_make_sg(task->scatter, 1,
- 					ccb->buf_prd);
- 				phys_addr =3D ccb->ccb_dma_handle;
--				sata_cmd.addr_low =3D
--					lower_32_bits(phys_addr);
--				sata_cmd.addr_high =3D
--					upper_32_bits(phys_addr);
--				sata_cmd.esgl =3D cpu_to_le32(1 << 31);
-+				sata_cmd.addr_low =3D lower_32_bits(phys_addr);
-+				sata_cmd.addr_high =3D upper_32_bits(phys_addr);
-+				sata_cmd.esgl =3D cpu_to_le32(1U << 31);
- 			}
- 		} else if (task->num_scatter =3D=3D 0) {
- 			sata_cmd.addr_low =3D 0;
-@@ -4701,27 +4708,28 @@ static int pm80xx_chip_sata_req(struct pm8001_hba=
-_info *pm8001_ha,
- 			sata_cmd.len =3D cpu_to_le32(task->total_xfer_len);
- 			sata_cmd.esgl =3D 0;
- 		}
-+
- 		/* scsi cdb */
- 		sata_cmd.atapi_scsi_cdb[0] =3D
- 			cpu_to_le32(((task->ata_task.atapi_packet[0]) |
--			(task->ata_task.atapi_packet[1] << 8) |
--			(task->ata_task.atapi_packet[2] << 16) |
--			(task->ata_task.atapi_packet[3] << 24)));
-+				     (task->ata_task.atapi_packet[1] << 8) |
-+				     (task->ata_task.atapi_packet[2] << 16) |
-+				     (task->ata_task.atapi_packet[3] << 24)));
- 		sata_cmd.atapi_scsi_cdb[1] =3D
- 			cpu_to_le32(((task->ata_task.atapi_packet[4]) |
--			(task->ata_task.atapi_packet[5] << 8) |
--			(task->ata_task.atapi_packet[6] << 16) |
--			(task->ata_task.atapi_packet[7] << 24)));
-+				     (task->ata_task.atapi_packet[5] << 8) |
-+				     (task->ata_task.atapi_packet[6] << 16) |
-+				     (task->ata_task.atapi_packet[7] << 24)));
- 		sata_cmd.atapi_scsi_cdb[2] =3D
- 			cpu_to_le32(((task->ata_task.atapi_packet[8]) |
--			(task->ata_task.atapi_packet[9] << 8) |
--			(task->ata_task.atapi_packet[10] << 16) |
--			(task->ata_task.atapi_packet[11] << 24)));
-+				     (task->ata_task.atapi_packet[9] << 8) |
-+				     (task->ata_task.atapi_packet[10] << 16) |
-+				     (task->ata_task.atapi_packet[11] << 24)));
- 		sata_cmd.atapi_scsi_cdb[3] =3D
- 			cpu_to_le32(((task->ata_task.atapi_packet[12]) |
--			(task->ata_task.atapi_packet[13] << 8) |
--			(task->ata_task.atapi_packet[14] << 16) |
--			(task->ata_task.atapi_packet[15] << 24)));
-+				     (task->ata_task.atapi_packet[13] << 8) |
-+				     (task->ata_task.atapi_packet[14] << 16) |
-+				     (task->ata_task.atapi_packet[15] << 24)));
+@@ -4982,12 +4982,13 @@ static void mpi_set_phy_profile_req(struct pm8001=
+_hba_info *pm8001_ha,
+ 		pm8001_dbg(pm8001_ha, FAIL, "Invalid tag\n");
+ 	circularQ =3D &pm8001_ha->inbnd_q_tbl[0];
+ 	payload.tag =3D cpu_to_le32(tag);
+-	payload.ppc_phyid =3D (((operation & 0xF) << 8) | (phyid  & 0xFF));
++	payload.ppc_phyid =3D
++		cpu_to_le32(((operation & 0xF) << 8) | (phyid  & 0xFF));
+ 	pm8001_dbg(pm8001_ha, INIT,
+ 		   " phy profile command for phy %x ,length is %d\n",
+-		   payload.ppc_phyid, length);
++		   le32_to_cpu(payload.ppc_phyid), length);
+ 	for (i =3D length; i < (length + PHY_DWORD_LENGTH - 1); i++) {
+-		payload.reserved[j] =3D  cpu_to_le32(*((u32 *)buf + i));
++		payload.reserved[j] =3D cpu_to_le32(*((u32 *)buf + i));
+ 		j++;
  	}
+ 	rc =3D pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
+@@ -5027,8 +5028,9 @@ void pm8001_set_phy_profile_single(struct pm8001_hb=
+a_info *pm8001_ha,
+ 	opc =3D OPC_INB_SET_PHY_PROFILE;
 =20
- 	/* Check for read log for failed drive and return */
+ 	payload.tag =3D cpu_to_le32(tag);
+-	payload.ppc_phyid =3D (((SAS_PHY_ANALOG_SETTINGS_PAGE & 0xF) << 8)
+-				| (phy & 0xFF));
++	payload.ppc_phyid =3D
++		cpu_to_le32(((SAS_PHY_ANALOG_SETTINGS_PAGE & 0xF) << 8)
++			    | (phy & 0xFF));
+=20
+ 	for (i =3D 0; i < length; i++)
+ 		payload.reserved[i] =3D cpu_to_le32(*(buf + i));
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80x=
+x_hwi.h
+index c7e5d93bea92..7cb59e38e67a 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -972,7 +972,7 @@ struct dek_mgmt_req {
+ struct set_phy_profile_req {
+ 	__le32	tag;
+ 	__le32	ppc_phyid;
+-	u32	reserved[29];
++	__le32	reserved[29];
+ } __attribute__((packed, aligned(4)));
+=20
+ /**
 --=20
 2.34.1
 
