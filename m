@@ -2,147 +2,186 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0601C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 11:56:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A38CC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 12:19:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352116AbiBNL4T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Feb 2022 06:56:19 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:56430 "EHLO
+        id S1352861AbiBNMTx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Feb 2022 07:19:53 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352095AbiBNL4N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 06:56:13 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 222EDC3A
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2022 03:56:02 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id CCB0D210F1;
-        Mon, 14 Feb 2022 11:56:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1644839760; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Zmi+5ptRw6sGgyRuSw1Ivz6fsUhPb0nBxPJa4jzbXV0=;
-        b=zWj5CRYzzH6o6tuKes+8nNDfzE0eKgl17I04crPssaZUuv1zSSXRXa8RMnnQnroFbP2+FS
-        vU7zg0Hqk0BuHDVcqEgTj/tDTSKFj2smV7eTT3mp98zTy8X01ypLmLeufYXv2Bdl08fCt6
-        sRxeupYqdTiGe+PCQyGftqe2pz9QBEI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1644839760;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Zmi+5ptRw6sGgyRuSw1Ivz6fsUhPb0nBxPJa4jzbXV0=;
-        b=euIwWsV3tT5WDZIK06dPUdZtlGcWjGhD53sF09xQ2CJPcKtoZFgsRK6HdFaTDl9mnMDYIu
-        Fcc06A7GgvW68ZBQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B2FF913AF2;
-        Mon, 14 Feb 2022 11:56:00 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id +aJjK1BDCmKpdQAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 14 Feb 2022 11:56:00 +0000
-Message-ID: <2b079541-4333-535f-3f20-abb3feca85da@suse.de>
-Date:   Mon, 14 Feb 2022 12:55:59 +0100
+        with ESMTP id S240786AbiBNMTw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 07:19:52 -0500
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29C5B488B4
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2022 04:19:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1644841185; x=1676377185;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=tNuBZGGIrokzUo/bvAy9rhBfmTZ4s8ac/9IlWMdoQwM=;
+  b=mOWmL4XSFFM44cWPNsFTRFWusEbvX87lbmY/N0qdovRJPyC9hlogEzF3
+   BQnGuUdTPDoWJ0A/0Af/6MxLWMNRxXGAF1FSuAVsCyX9X6aVQil8RP/AM
+   9W5fhMJmCxHF3bmpggtEGV5ZdWO+y2Zu0P6snaWQVk4ZVY57hkV3LeufA
+   2FYK0KrykWJlqddUai0ezYQbxyD+Evc+/xOC7oU7TIZFbe1RXgbKKBed7
+   7yJTzGH+gi+fw+AUD+sJ7fCIcR0qdAVNfblL7zKQyqg4BkJePTfkDR1oC
+   GL5z13HQiUe+7HLSQUaajbfuE5+UWTz7A6lKw2Yz6WCRbmg8UYy9Vhqe3
+   w==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10257"; a="230715549"
+X-IronPort-AV: E=Sophos;i="5.88,367,1635231600"; 
+   d="scan'208";a="230715549"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Feb 2022 04:19:44 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,367,1635231600"; 
+   d="scan'208";a="775122675"
+Received: from ahunter-desktop.fi.intel.com ([10.237.72.92])
+  by fmsmga005.fm.intel.com with ESMTP; 14 Feb 2022 04:19:42 -0800
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH V2] scsi: ufs: Fix runtime PM messages never-ending cycle
+Date:   Mon, 14 Feb 2022 14:19:41 +0200
+Message-Id: <20220214121941.296034-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH v3 28/48] scsi: libfc: Stop using the SCSI pointer
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Satish Kharat <satishkh@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>
-References: <20220211223247.14369-1-bvanassche@acm.org>
- <20220211223247.14369-29-bvanassche@acm.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220211223247.14369-29-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/11/22 23:32, Bart Van Assche wrote:
-> Move the fc_fcp_pkt pointer, the residual length and the SCSI status into
-> the new data structure libfc_cmd_priv. This patch prepares for removal of
-> the SCSI pointer from struct scsi_cmnd.
-> 
-> The libfc users have been identified as follows:
-> 
-> $ git grep -lw 'libfc_host_alloc' | grep -v /libfc
-> drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> drivers/scsi/fcoe/fcoe.c
-> drivers/scsi/fnic/fnic_main.c
-> drivers/scsi/qedf/qedf_main.c
-> 
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Saurav Kashyap <skashyap@marvell.com>
-> Cc: Javed Hasan <jhasan@marvell.com>
-> Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/bnx2fc/bnx2fc.h      | 10 ++++++++--
->   drivers/scsi/bnx2fc/bnx2fc_fcoe.c |  1 +
->   drivers/scsi/bnx2fc/bnx2fc_io.c   | 24 ++++++++++++------------
->   drivers/scsi/fcoe/fcoe.c          |  1 +
->   drivers/scsi/fnic/fnic.h          |  1 +
->   drivers/scsi/libfc/fc_fcp.c       | 26 +++++++++++---------------
->   drivers/scsi/qedf/qedf.h          | 11 ++++++++++-
->   drivers/scsi/qedf/qedf_io.c       | 24 ++++++++++++------------
->   drivers/scsi/qedf/qedf_main.c     |  3 ++-
->   include/scsi/libfc.h              | 11 +++++++++++
->   10 files changed, 69 insertions(+), 43 deletions(-)
-> 
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-> index b4cea8b06ea1..08deed26c51e 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc.h
-> +++ b/drivers/scsi/bnx2fc/bnx2fc.h
-> @@ -137,8 +137,6 @@
->   #define BNX2FC_FW_TIMEOUT		(3 * HZ)
->   #define PORT_MAX			2
->   
-> -#define CMD_SCSI_STATUS(Cmnd)		((Cmnd)->SCp.Status)
-> -
->   /* FC FCP Status */
->   #define	FC_GOOD				0
->   
-> @@ -493,7 +491,15 @@ struct bnx2fc_unsol_els {
->   	struct work_struct unsol_els_work;
->   };
->   
-> +struct bnx2fc_priv {
-> +	struct libfc_cmd_priv libfc_data; /* must be the first member */
-> +	struct bnx2fc_cmd *io_req;
-> +};
->   
-I had a closer look at the usage of SCp.ptr in the various FCoE drivers, 
-and it turns out that all have their own private use of SCp.ptr.
-The only 'generic' use of SCp.ptr (where it points to 'struct 
-libfc_cmd_priv') is in fcoe/fcoe.c.
-For the others (bnx2fc, qedf, and fnic) they point to their own, 
-private, data structure, and there's no overlap with libfc itself.
-So no need to have a combined structure, and each driver should use
-their own data structure only.
-(IE bnx2fc_priv should just have the 'bnx2fc_cmd' pointer).
+Kernel messages produced during runtime PM can cause a never-ending
+cycle because user space utilities (e.g. journald or rsyslog) write the
+messages back to storage, causing runtime resume, more messages, and so
+on.
 
-Cheers,
+Messages that tell of things that are expected to happen, are arguably
+unnecessary, so suppress them.
 
-Hannes
+ Example messages from Ubuntu 21.10:
+
+ $ dmesg | tail
+ [ 1620.380071] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate = 0
+ [ 1620.408825] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[4, 4], lane[2, 2], pwr[FAST MODE, FAST MODE], rate = 2
+ [ 1620.409020] ufshcd 0000:00:12.5: ufshcd_find_max_sup_active_icc_level: Regulator capability was not set, actvIccLevel=0
+ [ 1620.409524] sd 0:0:0:0: Power-on or device reset occurred
+ [ 1622.938794] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+ [ 1622.939184] ufs_device_wlun 0:0:0:49488: Power-on or device reset occurred
+ [ 1625.183175] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate = 0
+ [ 1625.208041] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[4, 4], lane[2, 2], pwr[FAST MODE, FAST MODE], rate = 2
+ [ 1625.208311] ufshcd 0000:00:12.5: ufshcd_find_max_sup_active_icc_level: Regulator capability was not set, actvIccLevel=0
+ [ 1625.209035] sd 0:0:0:0: Power-on or device reset occurred
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+---
+
+
+Changes in V2:
+
+	Remove offending SCSI messages
+	Use dev_dbg for offending UFSHCD messages
+
+
+ drivers/scsi/scsi_error.c | 10 ++++++++--
+ drivers/scsi/sd.c         |  7 +++++--
+ drivers/scsi/ufs/ufshcd.c | 15 +++++++++++++--
+ 3 files changed, 26 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 60a6ae9d1219..e177dc5cc69a 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -484,8 +484,14 @@ static void scsi_report_sense(struct scsi_device *sdev,
+ 
+ 		if (sshdr->asc == 0x29) {
+ 			evt_type = SDEV_EVT_POWER_ON_RESET_OCCURRED;
+-			sdev_printk(KERN_WARNING, sdev,
+-				    "Power-on or device reset occurred\n");
++			/*
++			 * Do not print a message here because reset can be an
++			 * expected side-effect of runtime PM. Do not print
++			 * messages due to runtime PM to avoid never-ending
++			 * cycles of messages written back to storage by user
++			 * space causing runtime resume, causing more messages
++			 * and so on.
++			 */
+ 		}
+ 
+ 		if (sshdr->asc == 0x2a && sshdr->ascq == 0x01) {
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 62eb9921cc94..18cdf5f9415a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3742,6 +3742,11 @@ static void sd_shutdown(struct device *dev)
+ 	}
+ }
+ 
++/*
++ * Do not print messages during runtime PM to avoid never-ending cycles of
++ * messages written back to storage by user space causing runtime resume,
++ * causing more messages and so on.
++ */
+ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+@@ -3752,7 +3757,6 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+ 		return 0;
+ 
+ 	if (sdkp->WCE && sdkp->media_present) {
+-		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		ret = sd_sync_cache(sdkp, &sshdr);
+ 
+ 		if (ret) {
+@@ -3774,7 +3778,6 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+ 	}
+ 
+ 	if (sdkp->device->manage_start_stop) {
+-		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		/* an error is not worth aborting a system sleep */
+ 		ret = sd_start_stop_device(sdkp, 0);
+ 		if (ignore_stop_errors)
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 50b12d60dc1b..27d5b9f75644 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -585,7 +585,12 @@ static void ufshcd_print_pwr_info(struct ufs_hba *hba)
+ 		"INVALID MODE",
+ 	};
+ 
+-	dev_err(hba->dev, "%s:[RX, TX]: gear=[%d, %d], lane[%d, %d], pwr[%s, %s], rate = %d\n",
++	/*
++	 * Using dev_dbg to avoid messages during runtime PM to avoid
++	 * never-ending cycles of messages written back to storage by user space
++	 * causing runtime resume, causing more messages and so on.
++	 */
++	dev_dbg(hba->dev, "%s:[RX, TX]: gear=[%d, %d], lane[%d, %d], pwr[%s, %s], rate = %d\n",
+ 		 __func__,
+ 		 hba->pwr_info.gear_rx, hba->pwr_info.gear_tx,
+ 		 hba->pwr_info.lane_rx, hba->pwr_info.lane_tx,
+@@ -7339,7 +7344,13 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+ 
+ 	if (!hba->vreg_info.vcc || !hba->vreg_info.vccq ||
+ 						!hba->vreg_info.vccq2) {
+-		dev_err(hba->dev,
++		/*
++		 * Using dev_dbg to avoid messages during runtime PM to avoid
++		 * never-ending cycles of messages written back to storage by
++		 * user space causing runtime resume, causing more messages and
++		 * so on.
++		 */
++		dev_dbg(hba->dev,
+ 			"%s: Regulator capability was not set, actvIccLevel=%d",
+ 							__func__, icc_level);
+ 		goto out;
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+2.25.1
+
