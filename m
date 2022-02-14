@@ -2,86 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EDE7C43219
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 12:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2CB3C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 14:31:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353675AbiBNMzB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Feb 2022 07:55:01 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46082 "EHLO
+        id S1355153AbiBNObn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Feb 2022 09:31:43 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353671AbiBNMy6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 07:54:58 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A04C74C43C;
-        Mon, 14 Feb 2022 04:54:47 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3C9DE61477;
-        Mon, 14 Feb 2022 12:54:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CF1EC340E9;
-        Mon, 14 Feb 2022 12:54:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644843286;
-        bh=r7IKb+9DggDhLCpCMSDE8pe/YCI7ZnVvJgsKsInBzVw=;
-        h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-        b=mCVGimMag96xNclq+j7E0EsD4ZpiDxyO3y5NoNua3NiNEa+QrmFIGzcgzcKj9x12S
-         775RaIrQN/aHejUFADEdR2SBysAJW5H10XNpr+hGflR3j9ZPjmQ/siQwE2MwMH4qDO
-         6fZMib83HiI5Jxgp+CpWr7w+wf44UoTY8D2/m1LtiJ+mKV5qHPIFEzsteNWAyR1XOS
-         A9YRvyU4GEmUDCRZ9yARV3tHO7D3ZM0oqYFYvK2CM5/xi50IjEp+y8DyRj6Wfvv++K
-         brmPnfjgg1rxHtELt5q+qZBRDgxj/eClFlN+oxpiEoTVrfiqbGvfSt6RYBGgcwEmQj
-         C8C0Yhtodp1Jg==
-From:   Mark Brown <broonie@kernel.org>
-To:     Julia Lawall <Julia.Lawall@inria.fr>, linux-scsi@vger.kernel.org
-Cc:     linux-mtd@lists.infradead.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        linux-crypto@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        netdev@vger.kernel.org, linux-media@vger.kernel.org,
-        alsa-devel@alsa-project.org
-In-Reply-To: <20220210204223.104181-1-Julia.Lawall@inria.fr>
-References: <20220210204223.104181-1-Julia.Lawall@inria.fr>
-Subject: Re: (subset) [PATCH 0/9] use GFP_KERNEL
-Message-Id: <164484328403.12994.4553763831627919088.b4-ty@kernel.org>
-Date:   Mon, 14 Feb 2022 12:54:44 +0000
+        with ESMTP id S231570AbiBNObm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 09:31:42 -0500
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8639D41991;
+        Mon, 14 Feb 2022 06:31:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1644849094; x=1676385094;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=TCvN5c5+MpHRPW/ZD+5q8UT9550dKUoLFTp3U6+05Rw=;
+  b=bG/XaRjcqhoc6plrAsdfnY5LAOc5uSPS9WW/kykTzkYNC05VC8VD46/X
+   14ki7lUbxC9D/KusS7sBnztG2WgiLuSd2Pqn1EPXsB6cMvvOpMGQuNsfE
+   naVLnGCaMxjuw7zIpHRTdy7MEcnzRZzLFmpDyQ2+MAaLW1KoPozjwTeVK
+   AhPIbN60dA9IcRGOW/zjcrJ8qdW+J/XXkKvQTKrCwhv8YRr5ypGE9Ga6D
+   rJlp9cfTRVxIbGvCglGqmoxsK5Fa4ICnZJYSsICNlZ9/ENfggjGfsWdfh
+   c2mVmLNPZSK97vYUu1lCWq0rtKskoOuYPXGGGrb0eZdIQXHfPe57q1NB3
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10257"; a="233647302"
+X-IronPort-AV: E=Sophos;i="5.88,368,1635231600"; 
+   d="scan'208";a="233647302"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Feb 2022 06:31:33 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,368,1635231600"; 
+   d="scan'208";a="495679213"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.92]) ([10.237.72.92])
+  by orsmga006.jf.intel.com with ESMTP; 14 Feb 2022 06:31:29 -0800
+Message-ID: <366a3afc-071f-ae77-d06d-25ad750976dc@intel.com>
+Date:   Mon, 14 Feb 2022 16:31:28 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Firefox/91.0 Thunderbird/91.5.0
+Subject: Re: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling
+ isn't supported.
+Content-Language: en-US
+To:     Kiwoong Kim <kwmad.kim@samsung.com>,
+        'Avri Altman' <Avri.Altman@wdc.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com,
+        vkumar.1997@samsung.com
+References: <CGME20220205074128epcas2p40901c37a7328e825d8697f8d3269edba@epcas2p4.samsung.com>
+ <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
+ <DM6PR04MB657519E60FAFA19434531CE2FC2B9@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <007101d81eed$4d120a60$e7361f20$@samsung.com>
+ <3f2938f7-2a9e-60e8-5237-fe7ebc3b4296@intel.com>
+ <000001d81fcb$3b962f30$b2c28d90$@samsung.com>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <000001d81fcb$3b962f30$b2c28d90$@samsung.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 10 Feb 2022 21:42:14 +0100, Julia Lawall wrote:
-> Platform_driver and pci_driver probe functions aren't called with
-> locks held and thus don't need GFP_ATOMIC. Use GFP_KERNEL instead.
+On 12/02/2022 06:44, Kiwoong Kim wrote:
+>> The error handler really should have exclusive access.  One of the places
+>> you change does explain that:
+>>
+>>  		 * Hold the scaling lock just in case dev cmds
+>>  		 * are sent via bsg and/or sysfs.
+>>  		 */
+>> -		down_write(&hba->clk_scaling_lock);
+>> +		if (ufshcd_is_clkscaling_supported(hba))
+>> +			down_write(&hba->clk_scaling_lock); 
 > 
-> All changes have been compile-tested.
 > 
+> Yeah.., I saw the comment but didn't get why.
+> 
+> Is there anyone who knows why it's necessary for all SoCs?
+> At lease, I know there is no reason to forbid concurrent executions of dev cmd and power mode change.
+> 
+> If there's nothing, how about adding a quick to ignore it?
 
-Applied to
+Is it worth it?
 
-   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound.git for-next
-
-Thanks!
-
-[3/9] ASoC: Intel: bytcr_wm5102: use GFP_KERNEL
-      commit: 695c105933cfa04ccf84088342193ae43e37e0f5
-
-All being well this means that it will be integrated into the linux-next
-tree (usually sometime in the next 24 hours) and sent to Linus during
-the next merge window (or sooner if it is a bug fix), however if
-problems are discovered then the patch may be dropped or reverted.
-
-You may get further e-mails resulting from automated or manual testing
-and review of the tree, please engage with people reporting problems and
-send followup patches addressing any issues that are reported if needed.
-
-If any updates are required or you are submitting further changes they
-should be sent as incremental updates against current git, existing
-patches will not be replaced.
-
-Please add any relevant lists and maintainers to the CCs when replying
-to this mail.
-
-Thanks,
-Mark
+The error handler really should have exclusive access.
+Have you considered, for example, races of ufshcd_reset_and restore() and dev commands, tm commands, UIC commands.
+I suspect more locking is needed not less.
