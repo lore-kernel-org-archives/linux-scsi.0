@@ -2,61 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6635DC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 09:25:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5296FC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 09:47:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242944AbiBNJZt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Feb 2022 04:25:49 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39398 "EHLO
+        id S244780AbiBNJry (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Feb 2022 04:47:54 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:44764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242901AbiBNJZo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 04:25:44 -0500
-X-Greylist: delayed 1200 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 14 Feb 2022 01:25:37 PST
-Received: from mail.ruletown.pl (mail.ruletown.pl [192.71.213.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FA6A60A89
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2022 01:25:37 -0800 (PST)
-Received: by mail.ruletown.pl (Postfix, from userid 1001)
-        id 7A21440AF3; Mon, 14 Feb 2022 09:46:05 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ruletown.pl; s=mail;
-        t=1644828376; bh=VNuNg2MzRkdVVfp4kSZZW7SxoKEFGotk5GCW4ktyH/8=;
-        h=Date:From:To:Subject:From;
-        b=I3XTtJSdgdMdTLZPbAOqhoUmxiOZU4vJmO1ajjwhdYZ2K/D3+PLY8K/PhhWHIs8en
-         qiSJTzd1N907OXG4KvptX3S9eAAjxguX7ofRg+MR/j9Q4Y2QVvwu8laSHAivXsIbnI
-         qreAVls4CE/44T5SfrbtCv6rYGV0+ha9JF6ZiFoVHQxJaweWGUF9dJl+nPmrEpvmHw
-         MBQ+2G2yMmvnYdsDxM2TPpzf9DeTgm9sACAd4Js/bAwaJydlFrY3HXWVK1aHTHzVK+
-         z8v8EP9B22divGqTAVytFRB5Hv9MDY8looTgcAvxjv65B/DrqrwJ3kvqc42Pvo6mk8
-         iaDTB2+fK5cEA==
-Received: by mail.ruletown.pl for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2022 08:46:01 GMT
-Message-ID: <20220214084500-0.1.v.207e.0.i8ni58660b@ruletown.pl>
-Date:   Mon, 14 Feb 2022 08:46:01 GMT
-From:   "Filip Ostrowski" <filip.ostrowski@ruletown.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: W sprawie samochodu
-X-Mailer: mail.ruletown.pl
+        with ESMTP id S245345AbiBNJpx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 04:45:53 -0500
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79C1660D9F;
+        Mon, 14 Feb 2022 01:38:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1644831538; x=1676367538;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=0IGPbPVaQO9WmcVVZypsyEn9AxDkiOr4ZxM5KcPK1wc=;
+  b=MVi4kPkioulQr2CO1lP/7xOWSPUzzTsokGKHEhud34EeXYOAiOLJ30LQ
+   y/9BT79qy8PUNiWHJISdv/HMDKoGGKLhkLAncbved2N9/StNILxs5iA0Z
+   L7wqcWxkYvUBZojD6QOwUjGz3MePLkZMFarC/pMx9q4AvmMpodlkbz5YX
+   tuuk7RWf9uFvYw7stYJWJ773eA44roEpDdQzPjwO44duph93rNUhjZ5BH
+   fS5yeyigcYGJg8+65Z28L54tuTFBvu+WKIVip+HrX5M3tc3/hIovrsONY
+   XkCkIWG5QyZfxC8nZdr9wgHXEyYhbgyUo19+Hspka+XoNq8DrDbfLhEsU
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10257"; a="247647693"
+X-IronPort-AV: E=Sophos;i="5.88,367,1635231600"; 
+   d="scan'208";a="247647693"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Feb 2022 01:38:53 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,367,1635231600"; 
+   d="scan'208";a="635052312"
+Received: from lkp-server01.sh.intel.com (HELO d95dc2dabeb1) ([10.239.97.150])
+  by orsmga004.jf.intel.com with ESMTP; 14 Feb 2022 01:38:51 -0800
+Received: from kbuild by d95dc2dabeb1 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1nJXoo-0008M7-E2; Mon, 14 Feb 2022 09:38:50 +0000
+Date:   Mon, 14 Feb 2022 17:38:30 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Guixin Liu <kanie@linux.alibaba.com>, bostroesser@gmail.com,
+        martin.petersen@oracle.com
+Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        xiaoguang.wang@linux.alibaba.com, xlpang@linux.alibaba.com
+Subject: Re: [PATCH V2] scsi: target: tcmu: Make cmd_ring_size changeable via
+ configfs.
+Message-ID: <202202141721.OdtEVrDJ-lkp@intel.com>
+References: <1644808523-21069-1-git-send-email-kanie@linux.alibaba.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1644808523-21069-1-git-send-email-kanie@linux.alibaba.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Hi Guixin,
 
-chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
-, je=C5=9Bli chodzi o system monitoringu GPS.
+Thank you for the patch! Perhaps something to improve:
 
-Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
-e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
-a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on v5.17-rc4 next-20220211]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
-dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
-szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
-mne znaczenie.
+url:    https://github.com/0day-ci/linux/commits/Guixin-Liu/scsi-target-tcmu-Make-cmd_ring_size-changeable-via-configfs/20220214-111810
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+config: xtensa-allyesconfig (https://download.01.org/0day-ci/archive/20220214/202202141721.OdtEVrDJ-lkp@intel.com/config)
+compiler: xtensa-linux-gcc (GCC) 11.2.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/0day-ci/linux/commit/c972a1533164208e331a5a4d34a7ed0bb44b17ba
+        git remote add linux-review https://github.com/0day-ci/linux
+        git fetch --no-tags linux-review Guixin-Liu/scsi-target-tcmu-Make-cmd_ring_size-changeable-via-configfs/20220214-111810
+        git checkout c972a1533164208e331a5a4d34a7ed0bb44b17ba
+        # save the config file to linux build tree
+        mkdir build_dir
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=xtensa SHELL=/bin/bash drivers/
 
-Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
-b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+   drivers/target/target_core_user.c: In function 'tcmu_show_configfs_dev_params':
+>> drivers/target/target_core_user.c:2627:49: warning: format '%lu' expects argument of type 'long unsigned int', but argument 3 has type 'u32' {aka 'unsigned int'} [-Wformat=]
+    2627 |         bl += sprintf(b + bl, "CmdRingSizeMB: %lu\n",
+         |                                               ~~^
+         |                                                 |
+         |                                                 long unsigned int
+         |                                               %u
+    2628 |                       (udev->cmdr_size + CMDR_OFF) >> 20);
+         |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         |                                                    |
+         |                                                    u32 {aka unsigned int}
+   drivers/target/target_core_user.c: In function 'tcmu_cmd_ring_size_mb_show':
+   drivers/target/target_core_user.c:2743:45: warning: format '%lu' expects argument of type 'long unsigned int', but argument 4 has type 'u32' {aka 'unsigned int'} [-Wformat=]
+    2743 |         return snprintf(page, PAGE_SIZE, "%lu\n",
+         |                                           ~~^
+         |                                             |
+         |                                             long unsigned int
+         |                                           %u
+    2744 |                         (udev->cmdr_size + CMDR_OFF) >> 20);
+         |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         |                                                      |
+         |                                                      u32 {aka unsigned int}
 
 
-Pozdrawiam,
-Filip Ostrowski
+vim +2627 drivers/target/target_core_user.c
+
+  2616	
+  2617	static ssize_t tcmu_show_configfs_dev_params(struct se_device *dev, char *b)
+  2618	{
+  2619		struct tcmu_dev *udev = TCMU_DEV(dev);
+  2620		ssize_t bl = 0;
+  2621	
+  2622		bl = sprintf(b + bl, "Config: %s ",
+  2623			     udev->dev_config[0] ? udev->dev_config : "NULL");
+  2624		bl += sprintf(b + bl, "Size: %llu ", udev->dev_size);
+  2625		bl += sprintf(b + bl, "MaxDataAreaMB: %u ", udev->data_area_mb);
+  2626		bl += sprintf(b + bl, "DataPagesPerBlk: %u", udev->data_pages_per_blk);
+> 2627		bl += sprintf(b + bl, "CmdRingSizeMB: %lu\n",
+  2628			      (udev->cmdr_size + CMDR_OFF) >> 20);
+  2629	
+  2630		return bl;
+  2631	}
+  2632	
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
