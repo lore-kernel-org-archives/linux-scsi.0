@@ -2,74 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23DF0C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 02:20:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70639C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 02:23:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239346AbiBNCUv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 13 Feb 2022 21:20:51 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:40794 "EHLO
+        id S235444AbiBNCXa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 13 Feb 2022 21:23:30 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:42538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235569AbiBNCUU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Feb 2022 21:20:20 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 361D755BC7
-        for <linux-scsi@vger.kernel.org>; Sun, 13 Feb 2022 18:20:13 -0800 (PST)
+        with ESMTP id S231635AbiBNCX3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Feb 2022 21:23:29 -0500
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E01950B30
+        for <linux-scsi@vger.kernel.org>; Sun, 13 Feb 2022 18:23:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644805212; x=1676341212;
-  h=from:to:subject:date:message-id:in-reply-to:references:
-   mime-version:content-transfer-encoding;
-  bh=ZZNXcE6N18y2HX8pZrWvNEXQPDGP7fWL/LzC29vZopo=;
-  b=g/EjXGtvVanGaaVfTYk8kIlXPblW5NrIGNhgO1YN2pO/eEEqL2uKTZrY
-   jBOxNz8A05om5lxzsRPKX1B51dEx9CxZ1W4n4cl+pNOt5Onh3CA3iOKHb
-   rs3vGkeIO0mc13CZhIWTzd4OdKAW0zfCwseOMomBDawvQGZO4ICWOzG8L
-   Eu8mikuo8OI92Ld65SMWU9qMbMVAJTv3/ui+J1KrQGnAw05LRnzt2bUbZ
-   5OA/TkFilFEG8qzHDig41P5uVkuKLPQ27Pk4eSj6qZ/veyZ3XSqOHpuxJ
-   2ouLidsbk0zjjtjskYXIMna0d1aTUECxkcsTFYYgmUQuB3cOEau2A3h4G
-   w==;
+  t=1644805402; x=1676341402;
+  h=message-id:date:mime-version:subject:from:to:references:
+   in-reply-to:content-transfer-encoding;
+  bh=WDEkOtqjCuABoESVUOYlNR0OSN8R3EFhvES+XSlxaR8=;
+  b=lQ/2Ns9siikpDHwxt9WZ0ni1TS9tQKWYnVHeQ//KIbvkgMQxXyvpnQXr
+   aqOeJKkuDN8U8/Kf4H6iny2os9gzvGTpa1uergnCj220wA+ls9reGR6Ku
+   3LcBCpMd8YBVU8UVUypaxsa7Nzw6euIH3zmP0f6TXpZ7sU8qgCCWbgqMW
+   e4SU1AcWA19pQXSGtkyvp4DRTsxr5NMTvn8dh73z9UefQ9EnD2ROBsFjF
+   Bq49URd7npGwLMNPoTG/hg53uc28qsAFba8W0vh/pu3ipF/NBD3xzD+4d
+   tnb2ZBsO8MvVZbERus4X9o3D2YbKhnB/R83ngeR8lQ5oF+TYd/FTVm+5g
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.88,366,1635177600"; 
-   d="scan'208";a="192819845"
+   d="scan'208";a="197643433"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 14 Feb 2022 10:20:12 +0800
-IronPort-SDR: SFKmyMUW9PHrvcd09nNijGLYSL9DQ1VODt1G61Teczgp10wLoPMukvW4TaEWCwMhjZYIdiEURv
- flPlpdsiWBAx4KHdTf6oWIAM2U1DKuDCp/zONnC337lhZmn593+GaJq2lpp7zX9Mz3OXpqltYp
- hTSL7/DZDjEM0rmddNguOkAnbnBu9NPtZA4jQPbX7+ZTprlVul43rnJGcDUfahI0NLq7V5JUV5
- lZxCRJLkiv4qGzM51QyeXpW6kJeFTQ/JKMl4G+yCbWu2JVHxCftcCZ3Ou0nEkVVUpDTyLgLpB/
- /b/BvKLdzp7rJjR26oYuVGK7
+  by ob1.hgst.iphmx.com with ESMTP; 14 Feb 2022 10:23:22 +0800
+IronPort-SDR: r7cbE5+dBHs9TSMBHuOWipj32wCvuIKS3KnYDuK7jr7NwLrYC517cgSIplhPmqspcFompwEVR6
+ A/Ap8fWbjt64ttP3TNw1usu1oxHJDIG/Vral4sxovoXP8SgQdBXB4pKfhpOc+iPFwoQTAgDrN8
+ MxVXcu6YsESXE6jrPx5cpUsTsvfpc7t6zCbY60M/ym6YYgWle8nYfh70J5bfe52irEvuq8gHBt
+ 218WKVi7hzySWmoRUL7gPt/2bdH95NBOgmB6e5roW1GDtpfabUl5lHI8Cks3Ovo0pb9c16g+sf
+ 5j2Qa2hz4yvjZfXe+W7QeRfV
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2022 17:53:04 -0800
-IronPort-SDR: RcvH5BTeY63zPAzw7xAKBu9pqgN3nQgAAqTrYnjm3jEZyCGcoZU14qDW2knAh3sKUsphgHlWMG
- E5kr1jP+pCLP3MLuFtvWMcLVc2EVFpcX4/n9zRALGE29WTjNr82J6uA/FnT0sHyR2tFuaxHWkU
- k9mhUus10F5ELFYj7oaH9NXV3JVxj7Xz78+tK6ij0WF8hqOylRwQcFE15FBaIdgkGcIIqPPwIk
- cxYI0LeM7YRCapdNCYdexQ/dACQgB1PR3Vk8APz7oomaXO6HXeSc90AaxI2P5wVs+bxMnZJlBH
- ojA=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2022 17:56:13 -0800
+IronPort-SDR: LuU/025W3uaSdcNZsp16DLi85RrZ5cMW83Uamrhp1lNE+x2B84c7/IaCMGzOuA0A/AQdg3A8zz
+ GgRYW7CN1wsoW8s5scfPCVGVqHfKjE1kiNhOvFgKiodbkc4fseFwsyj+HyAWWZjqxohffwQPHi
+ vbmG0tChIwGw1BWlSy260yHjsbL/C0bKIJtLpp48jCQsvGSOt0XXXpB+rd0ffdzp+k1XXd+lCE
+ 4tzfPK2bZk532xKiyRuOKvbeFDEq84emOWUMjk4bPKWzS1F5I0qAaaGBdfQbIlF2Xwwd59oHr1
+ CkQ=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2022 18:20:13 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2022 18:23:23 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JxnxS5DM7z1SVp0
-        for <linux-scsi@vger.kernel.org>; Sun, 13 Feb 2022 18:20:12 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Jxp162Gc9z1SVnx
+        for <linux-scsi@vger.kernel.org>; Sun, 13 Feb 2022 18:23:22 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1644805211; x=1647397212; bh=ZZNXcE6N18y2HX8pZr
-        WvNEXQPDGP7fWL/LzC29vZopo=; b=kv6A7eDhkIig3f0YDVXf5gwbpRoXlpk0hk
-        u+2q56YlOJjyr9QiroOmgu3W74JquvulghWTK4YQjz7cKOYsaI1x0eO2CkqQT56f
-        bEi5eYf7fyywJl5CnYXNHO33mydMIglIZmOKSKN6AfAT6HNR7/HKusLa7I2X97ht
-        Kj2oreaXsY2JQvBBazQyxzUphL5MVHp9x2olzmF7k8B9z1PfA+x7sVaWe/M66F7M
-        qpCvmoDs11YMBFuEai1Ki5QcRX6IXPmfX95X3HQDv0yMaJP/MgtP+u6Bbu4IqQsm
-        vIaTnWMkwBXRk+RuxLa0IFGW+3wq5fJUds1FmWUTQFIvnu12gXOA==
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:references:to:from:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1644805401; x=1647397402; bh=WDEkOtqjCuABoESVUOYlNR0OSN8R3EFhvES
+        +XSlxaR8=; b=IG445sSiyOW1k+wb4LnDjlc4kPi4X70G1/H54mzPaks1as5GZ6V
+        CabbBM3MooQk6I2zPYVkZrt/ltpflodahPlfo1iDcbbPV9NsZBUdr34LXNaAcdK0
+        bbFWT6xxn04gIAdnvWGNaXCCNCSkIhLUJvSZECrTuaBqn329TTcXg7iLvJvD5VgM
+        LmpAV6+BV7J9UGnyVYTy393+BcwdZoX3oS/7HMchzcu3qSbFajXgLphu1n7eGgCy
+        3osuY2+AK55tDE78SAoI7yALS3+3f8r1zaZG7Xuek9E2Dt2yhbrRl98uIwHO5OZh
+        iVJ4Q8dNbdI3AU670stI0f0wIxCbaDMS0Rw==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id l9mditbLCiZh for <linux-scsi@vger.kernel.org>;
-        Sun, 13 Feb 2022 18:20:11 -0800 (PST)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JxnxQ0h3wz1SVp2;
-        Sun, 13 Feb 2022 18:20:09 -0800 (PST)
+        with ESMTP id uDsJs5O4QpIO for <linux-scsi@vger.kernel.org>;
+        Sun, 13 Feb 2022 18:23:21 -0800 (PST)
+Received: from [10.89.82.198] (c02drav6md6t.dhcp.fujisawa.hgst.com [10.89.82.198])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Jxp145b7rz1Rwrw;
+        Sun, 13 Feb 2022 18:23:20 -0800 (PST)
+Message-ID: <f14056ab-56a3-0d44-fd51-5a6386c60e03@opensource.wdc.com>
+Date:   Mon, 14 Feb 2022 11:23:19 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.6.0
+Subject: Re: [PATCH v3 00/31] libsas and pm8001 fixes
+Content-Language: en-US
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -77,492 +85,107 @@ To:     linux-scsi@vger.kernel.org,
         Xiang Chen <chenxiang66@hisilicon.com>,
         Jason Yan <yanaijie@huawei.com>,
         Luo Jiaxing <luojiaxing@huawei.com>
-Subject: [PATCH v3 31/31] scsi: pm8001: Simplify pm8001_ccb_task_free()
-Date:   Mon, 14 Feb 2022 11:17:47 +0900
-Message-Id: <20220214021747.4976-32-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
 References: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Organization: Western Digital Research
+In-Reply-To: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The task argument of the pm8001_ccb_task_free() function can be infered
-from the ccb argument ccb_task field. So there is no need to have this
-argument. Likewise, the ccb_index argument is always equal to the ccb
-tag field and is not needed either. Remove both arguments and update all
-call sites. The pm8001_ccb_task_free_done() helper is also modified to
-match this change.
+On 2022/02/14 11:17, Damien Le Moal wrote:
+> This first part of this series (patches 1 to 24) fixes handling of NCQ
+> NON DATA commands in libsas and many bugs in the pm8001 driver.
+> 
+> The fixes for the pm8001 driver include:
+> * Suppression of all sparse warnings, fixing along the way many le32
+>   handling bugs for big-endian architectures
+> * Fix handling of NCQ NON DATA commands
+> * Fix of tag values handling (0 *is* a valid tag value)
+> * Fix many tag iand memory leaks in error path
+> * Fix NCQ error recovery (abort all task execution) that was causing a
+>   crash
+> 
+> The second part of the series (patches 25 to 31) iadd a small cleanup of
+> libsas code and many simplifications of the pm8001 driver code.
+> 
+> With these fixes, libzbc test suite passes all test case. This test
+> suite was used with an SMR drive for testing because it generates many
+> NCQ NON DATA commands (for zone management commands) and also generates
+> many NCQ command errors to check ASC/ASCQ returned by the device. With
+> the test suite, the error recovery path was extensively exercised. The
+> same tests were also executed with a SAS SMR drives to exercise the
+> error path.
+> 
+> The patches are based on the 5.18/scsi-staging tree.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c | 48 +++++++++++++++-----------------
- drivers/scsi/pm8001/pm8001_sas.c | 25 ++++++++---------
- drivers/scsi/pm8001/pm8001_sas.h | 12 ++++----
- drivers/scsi/pm8001/pm80xx_hwi.c | 41 ++++++++++++---------------
- 4 files changed, 58 insertions(+), 68 deletions(-)
+Martin,
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm800=
-1_hwi.c
-index 726421311543..d70a38c17544 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1564,11 +1564,11 @@ void pm8001_work_fn(struct work_struct *work)
- 			spin_unlock_irqrestore(&t->task_state_lock, flags1);
- 			pm8001_dbg(pm8001_ha, FAIL, "task 0x%p done with event 0x%x resp 0x%x=
- stat 0x%x but aborted by upper layer!\n",
- 				   t, pw->handler, ts->resp, ts->stat);
--			pm8001_ccb_task_free(pm8001_ha, t, ccb, ccb->ccb_tag);
-+			pm8001_ccb_task_free(pm8001_ha, ccb);
- 			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
- 		} else {
- 			spin_unlock_irqrestore(&t->task_state_lock, flags1);
--			pm8001_ccb_task_free(pm8001_ha, t, ccb, ccb->ccb_tag);
-+			pm8001_ccb_task_free(pm8001_ha, ccb);
- 			mb();/* in order to force CPU ordering */
- 			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
- 			t->task_done(t);
-@@ -1697,8 +1697,7 @@ void pm8001_work_fn(struct work_struct *work)
- 					continue;
- 				}
- 				/*complete sas task and update to top layer */
--				pm8001_ccb_task_free(pm8001_ha, task, ccb,
--						     ccb->ccb_tag);
-+				pm8001_ccb_task_free(pm8001_ha, ccb);
- 				ts->resp =3D SAS_TASK_COMPLETE;
- 				task->task_done(task);
- 			} else if (ccb->ccb_tag !=3D PM8001_INVALID_TAG) {
-@@ -2084,10 +2083,10 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001=
-_ha, void *piomb)
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
- 		pm8001_dbg(pm8001_ha, FAIL, "task 0x%p done with io_status 0x%x resp 0=
-x%x stat 0x%x but aborted by upper layer!\n",
- 			   t, status, ts->resp, ts->stat);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 		mb();/* in order to force CPU ordering */
- 		t->task_done(t);
- 	}
-@@ -2251,10 +2250,10 @@ static void mpi_ssp_event(struct pm8001_hba_info =
-*pm8001_ha, void *piomb)
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
- 		pm8001_dbg(pm8001_ha, FAIL, "task 0x%p done with event 0x%x resp 0x%x =
-stat 0x%x but aborted by upper layer!\n",
- 			   t, event, ts->resp, ts->stat);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 		mb();/* in order to force CPU ordering */
- 		t->task_done(t);
- 	}
-@@ -2480,7 +2479,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
-ha, void *piomb)
- 				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
- 			ts->resp =3D SAS_TASK_UNDELIVERED;
- 			ts->stat =3D SAS_QUEUE_FULL;
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			return;
- 		}
- 		break;
-@@ -2496,7 +2495,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
-ha, void *piomb)
- 				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
- 			ts->resp =3D SAS_TASK_UNDELIVERED;
- 			ts->stat =3D SAS_QUEUE_FULL;
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			return;
- 		}
- 		break;
-@@ -2518,7 +2517,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
-ha, void *piomb)
- 				IO_OPEN_CNX_ERROR_STP_RESOURCES_BUSY);
- 			ts->resp =3D SAS_TASK_UNDELIVERED;
- 			ts->stat =3D SAS_QUEUE_FULL;
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			return;
- 		}
- 		break;
-@@ -2589,7 +2588,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
-ha, void *piomb)
- 				    IO_DS_NON_OPERATIONAL);
- 			ts->resp =3D SAS_TASK_UNDELIVERED;
- 			ts->stat =3D SAS_QUEUE_FULL;
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			return;
- 		}
- 		break;
-@@ -2609,7 +2608,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
-ha, void *piomb)
- 				    IO_DS_IN_ERROR);
- 			ts->resp =3D SAS_TASK_UNDELIVERED;
- 			ts->stat =3D SAS_QUEUE_FULL;
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			return;
- 		}
- 		break;
-@@ -2639,10 +2638,10 @@ mpi_sata_completion(struct pm8001_hba_info *pm800=
-1_ha, void *piomb)
- 		pm8001_dbg(pm8001_ha, FAIL,
- 			   "task 0x%p done with io_status 0x%x resp 0x%x stat 0x%x but aborte=
-d by upper layer!\n",
- 			   t, status, ts->resp, ts->stat);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
--		pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 	}
- }
-=20
-@@ -2734,7 +2733,7 @@ static void mpi_sata_event(struct pm8001_hba_info *=
-pm8001_ha, void *piomb)
- 				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
- 			ts->resp =3D SAS_TASK_COMPLETE;
- 			ts->stat =3D SAS_QUEUE_FULL;
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			return;
- 		}
- 		break;
-@@ -2828,10 +2827,10 @@ static void mpi_sata_event(struct pm8001_hba_info=
- *pm8001_ha, void *piomb)
- 		pm8001_dbg(pm8001_ha, FAIL,
- 			   "task 0x%p done with io_status 0x%x resp 0x%x stat 0x%x but aborte=
-d by upper layer!\n",
- 			   t, event, ts->resp, ts->stat);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
--		pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 	}
- }
-=20
-@@ -3011,12 +3010,10 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001=
-_ha, void *piomb)
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
- 		pm8001_dbg(pm8001_ha, FAIL, "task 0x%p done with io_status 0x%x resp 0=
-x%x stat 0x%x but aborted by upper layer!\n",
- 			   t, status, ts->resp, ts->stat);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
--		mb();/* in order to force CPU ordering */
--		t->task_done(t);
-+		pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 	}
- }
-=20
-@@ -3666,7 +3663,7 @@ int pm8001_mpi_task_abort_resp(struct pm8001_hba_in=
-fo *pm8001_ha, void *piomb)
- 	t->task_state_flags &=3D ~SAS_TASK_STATE_PENDING;
- 	t->task_state_flags |=3D SAS_TASK_STATE_DONE;
- 	spin_unlock_irqrestore(&t->task_state_lock, flags);
--	pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+	pm8001_ccb_task_free(pm8001_ha, ccb);
- 	mb();
-=20
- 	if (pm8001_dev->id & NCQ_ABORT_ALL_FLAG) {
-@@ -4304,12 +4301,11 @@ static int pm8001_chip_sata_req(struct pm8001_hba=
-_info *pm8001_ha,
- 					   "task 0x%p resp 0x%x  stat 0x%x but aborted by upper layer\n",
- 					   task, ts->resp,
- 					   ts->stat);
--				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-+				pm8001_ccb_task_free(pm8001_ha, ccb);
- 			} else {
- 				spin_unlock_irqrestore(&task->task_state_lock,
- 							flags);
--				pm8001_ccb_task_free_done(pm8001_ha, task,
--								ccb, tag);
-+				pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 				return 0;
- 			}
- 		}
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm800=
-1_sas.c
-index 980afde2a0ab..ddcd96e0fd95 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -496,22 +496,21 @@ int pm8001_queue_command(struct sas_task *task, gfp=
-_t gfp_flags)
- /**
-   * pm8001_ccb_task_free - free the sg for ssp and smp command, free the=
- ccb.
-   * @pm8001_ha: our hba card information
--  * @ccb: the ccb which attached to ssp task
--  * @task: the task to be free.
--  * @ccb_idx: ccb index.
-+  * @ccb: the ccb which attached to ssp task to free
-   */
- void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
--	struct sas_task *task, struct pm8001_ccb_info *ccb, u32 ccb_idx)
-+			  struct pm8001_ccb_info *ccb)
- {
-+	struct sas_task *task =3D ccb->task;
- 	struct ata_queued_cmd *qc;
- 	struct pm8001_device *pm8001_dev;
-=20
--	if (!ccb->task)
-+	if (!task)
- 		return;
--	if (!sas_protocol_ata(task->task_proto))
--		if (ccb->n_elem)
--			dma_unmap_sg(pm8001_ha->dev, task->scatter,
--				task->num_scatter, task->data_dir);
-+
-+	if (!sas_protocol_ata(task->task_proto) && ccb->n_elem)
-+		dma_unmap_sg(pm8001_ha->dev, task->scatter,
-+			     task->num_scatter, task->data_dir);
-=20
- 	switch (task->task_proto) {
- 	case SAS_PROTOCOL_SMP:
-@@ -530,12 +529,12 @@ void pm8001_ccb_task_free(struct pm8001_hba_info *p=
-m8001_ha,
- 	}
-=20
- 	if (sas_protocol_ata(task->task_proto)) {
--		// For SCSI/ATA commands uldd_task points to ata_queued_cmd
-+		/* For SCSI/ATA commands uldd_task points to ata_queued_cmd */
- 		qc =3D task->uldd_task;
- 		pm8001_dev =3D ccb->device;
- 		trace_pm80xx_request_complete(pm8001_ha->id,
- 			pm8001_dev ? pm8001_dev->attached_phy : PM8001_MAX_PHYS,
--			ccb_idx, 0 /* ctlr_opcode not known */,
-+			ccb->ccb_tag, 0 /* ctlr_opcode not known */,
- 			qc ? qc->tf.command : 0, // ata opcode
- 			pm8001_dev ? atomic_read(&pm8001_dev->running_req) : -1);
- 	}
-@@ -952,11 +951,11 @@ void pm8001_open_reject_retry(
- 				& SAS_TASK_STATE_ABORTED))) {
- 			spin_unlock_irqrestore(&task->task_state_lock,
- 				flags1);
--			pm8001_ccb_task_free(pm8001_ha, task, ccb, ccb->ccb_tag);
-+			pm8001_ccb_task_free(pm8001_ha, ccb);
- 		} else {
- 			spin_unlock_irqrestore(&task->task_state_lock,
- 				flags1);
--			pm8001_ccb_task_free(pm8001_ha, task, ccb, ccb->ccb_tag);
-+			pm8001_ccb_task_free(pm8001_ha, ccb);
- 			mb();/* in order to force CPU ordering */
- 			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
- 			task->task_done(task);
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm800=
-1_sas.h
-index aec4572906cf..2aab357d9a23 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -641,7 +641,7 @@ int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_h=
-a, u32 *tag_out);
- void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha);
- u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag);
- void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
--	struct sas_task *task, struct pm8001_ccb_info *ccb, u32 ccb_idx);
-+			  struct pm8001_ccb_info *ccb);
- int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 	void *funcdata);
- void pm8001_scan_start(struct Scsi_Host *shost);
-@@ -786,12 +786,12 @@ static inline void pm8001_ccb_free(struct pm8001_hb=
-a_info *pm8001_ha,
- 	pm8001_tag_free(pm8001_ha, tag);
- }
-=20
--static inline void
--pm8001_ccb_task_free_done(struct pm8001_hba_info *pm8001_ha,
--			struct sas_task *task, struct pm8001_ccb_info *ccb,
--			u32 ccb_idx)
-+static inline void pm8001_ccb_task_free_done(struct pm8001_hba_info *pm8=
-001_ha,
-+					     struct pm8001_ccb_info *ccb)
- {
--	pm8001_ccb_task_free(pm8001_ha, task, ccb, ccb_idx);
-+	struct sas_task *task =3D ccb->task;
-+
-+	pm8001_ccb_task_free(pm8001_ha, ccb);
- 	smp_mb(); /*in order to force CPU ordering*/
- 	task->task_done(task);
- }
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80x=
-x_hwi.c
-index c25d2c435f6a..9550c586ff66 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -2159,12 +2159,10 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001=
-_ha, void *piomb)
- 			   t, status, ts->resp, ts->stat);
- 		if (t->slow_task)
- 			complete(&t->slow_task->completion);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
--		mb();/* in order to force CPU ordering */
--		t->task_done(t);
-+		pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 	}
- }
-=20
-@@ -2340,12 +2338,10 @@ static void mpi_ssp_event(struct pm8001_hba_info =
-*pm8001_ha, void *piomb)
- 		pm8001_dbg(pm8001_ha, FAIL,
- 			   "task 0x%p done with event 0x%x resp 0x%x stat 0x%x but aborted by=
- upper layer!\n",
- 			   t, event, ts->resp, ts->stat);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
--		mb();/* in order to force CPU ordering */
--		t->task_done(t);
-+		pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 	}
- }
-=20
-@@ -2579,7 +2575,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
-ha,
- 			ts->stat =3D SAS_QUEUE_FULL;
- 			spin_unlock_irqrestore(&circularQ->oq_lock,
- 					circularQ->lock_flags);
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			spin_lock_irqsave(&circularQ->oq_lock,
- 					circularQ->lock_flags);
- 			return;
-@@ -2599,7 +2595,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
-ha,
- 			ts->stat =3D SAS_QUEUE_FULL;
- 			spin_unlock_irqrestore(&circularQ->oq_lock,
- 					circularQ->lock_flags);
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			spin_lock_irqsave(&circularQ->oq_lock,
- 					circularQ->lock_flags);
- 			return;
-@@ -2627,7 +2623,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
-ha,
- 			ts->stat =3D SAS_QUEUE_FULL;
- 			spin_unlock_irqrestore(&circularQ->oq_lock,
- 					circularQ->lock_flags);
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			spin_lock_irqsave(&circularQ->oq_lock,
- 					circularQ->lock_flags);
- 			return;
-@@ -2702,7 +2698,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
-ha,
- 			ts->stat =3D SAS_QUEUE_FULL;
- 			spin_unlock_irqrestore(&circularQ->oq_lock,
- 					circularQ->lock_flags);
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			spin_lock_irqsave(&circularQ->oq_lock,
- 					circularQ->lock_flags);
- 			return;
-@@ -2726,7 +2722,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
-ha,
- 			ts->stat =3D SAS_QUEUE_FULL;
- 			spin_unlock_irqrestore(&circularQ->oq_lock,
- 					circularQ->lock_flags);
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			spin_lock_irqsave(&circularQ->oq_lock,
- 					circularQ->lock_flags);
- 			return;
-@@ -2762,12 +2758,12 @@ mpi_sata_completion(struct pm8001_hba_info *pm800=
-1_ha,
- 			   t, status, ts->resp, ts->stat);
- 		if (t->slow_task)
- 			complete(&t->slow_task->completion);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
- 		spin_unlock_irqrestore(&circularQ->oq_lock,
- 				circularQ->lock_flags);
--		pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 		spin_lock_irqsave(&circularQ->oq_lock,
- 				circularQ->lock_flags);
- 	}
-@@ -2872,7 +2868,7 @@ static void mpi_sata_event(struct pm8001_hba_info *=
-pm8001_ha,
- 			ts->stat =3D SAS_QUEUE_FULL;
- 			spin_unlock_irqrestore(&circularQ->oq_lock,
- 					circularQ->lock_flags);
--			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+			pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 			spin_lock_irqsave(&circularQ->oq_lock,
- 					circularQ->lock_flags);
- 			return;
-@@ -2982,12 +2978,12 @@ static void mpi_sata_event(struct pm8001_hba_info=
- *pm8001_ha,
- 		pm8001_dbg(pm8001_ha, FAIL,
- 			   "task 0x%p done with io_status 0x%x resp 0x%x stat 0x%x but aborte=
-d by upper layer!\n",
- 			   t, event, ts->resp, ts->stat);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
- 		spin_unlock_irqrestore(&circularQ->oq_lock,
- 				circularQ->lock_flags);
--		pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 		spin_lock_irqsave(&circularQ->oq_lock,
- 				circularQ->lock_flags);
- 	}
-@@ -3196,10 +3192,10 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001=
-_ha, void *piomb)
- 		pm8001_dbg(pm8001_ha, FAIL,
- 			   "task 0x%p done with io_status 0x%x resp 0x%xstat 0x%x but aborted=
- by upper layer!\n",
- 			   t, status, ts->resp, ts->stat);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
--		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-+		pm8001_ccb_task_free(pm8001_ha, ccb);
- 		mb();/* in order to force CPU ordering */
- 		t->task_done(t);
- 	}
-@@ -4715,13 +4711,12 @@ static int pm80xx_chip_sata_req(struct pm8001_hba=
-_info *pm8001_ha,
- 					   "task 0x%p resp 0x%x  stat 0x%x but aborted by upper layer\n",
- 					   task, ts->resp,
- 					   ts->stat);
--				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
-+				pm8001_ccb_task_free(pm8001_ha, ccb);
- 				return 0;
- 			} else {
- 				spin_unlock_irqrestore(&task->task_state_lock,
- 							flags);
--				pm8001_ccb_task_free_done(pm8001_ha, task,
--								ccb, tag);
-+				pm8001_ccb_task_free_done(pm8001_ha, ccb);
- 				atomic_dec(&pm8001_ha_dev->running_req);
- 				return 0;
- 			}
---=20
-2.34.1
+Note that there is a conflict between 5.18/scsi-staging and 5.17-rc3/4 in the
+pm8001 driver. And I need to touch rc3/rc4 code too. Could you rebase scsi-staging ?
 
+Best regards.
+
+> 
+> Changes from v2:
+> * Reorganized the series: fixes first, cleanups second.
+> * Added more bug/leaks fix patches
+> * Addressed Gary's comment for the ccb alloc helper (patch 28)
+> * Rebased (and tested) all patches on 5.18/scsi-staging
+> 
+> Changes from v1:
+> * Added reviewed-by tags
+> * Addressed Christoph's comments on patch 4 and 8
+> * Added patches 21 and 22 to fix 2 additional problems found while
+>   preparing this v2 series
+> * Added patch 23 and 24 to cleanup the code further.
+> 
+> Damien Le Moal (31):
+>   scsi: libsas: Fix sas_ata_qc_issue() handling of NCQ NON DATA commands
+>   scsi: pm8001: Fix __iomem pointer use in pm8001_phy_control()
+>   scsi: pm8001: Fix pm8001_update_flash() local variable type
+>   scsi: pm8001: Fix command initialization in pm80XX_send_read_log()
+>   scsi: pm8001: Fix pm80xx_pci_mem_copy() interface
+>   scsi: pm8001: Fix command initialization in pm8001_chip_ssp_tm_req()
+>   scsi: pm8001: Fix payload initialization in pm80xx_set_thermal_config()
+>   scsi: pm8001: Fix le32 values handling in pm80xx_set_sas_protocol_timer_config()
+>   scsi: pm8001: Fix payload initialization in pm80xx_encrypt_update()
+>   scsi: pm8001: Fix le32 values handling in pm80xx_chip_ssp_io_req()
+>   scsi: pm8001: Fix le32 values handling in pm80xx_chip_sata_req()
+>   scsi: pm8001: Fix use of struct set_phy_profile_req fields
+>   scsi: pm8001: Remove local variable in pm8001_pci_resume()
+>   scsi: pm8001: Fix NCQ NON DATA command task initialization
+>   scsi: pm8001: Fix NCQ NON DATA command completion handling
+>   scsi: pm8001: Fix abort all task initialization
+>   scsi: pm8001: Fix pm8001_tag_alloc() failures handling
+>   scsi: pm8001: Fix pm80xx_chip_phy_ctl_req()
+>   scsi: pm8001: Fix pm8001_mpi_task_abort_resp()
+>   scsi: pm8001: Fix tag values handling
+>   scsi: pm8001: Fix task leak in pm8001_send_abort_all()
+>   scsi: pm8001: Fix tag leaks on error
+>   scsi: pm8001: fix memory leak in pm8001_chip_fw_flash_update_req()
+>   scsi: pm8001: Fix process_one_iomb() kdoc comment
+>   scsi: libsas: Simplify sas_ata_qc_issue() detection of NCQ commands
+>   scsi: pm8001: Simplify pm8001_get_ncq_tag()
+>   scsi: pm8001: Cleanup pm8001_queue_command()
+>   scsi: pm8001: Introduce ccb alloc/free helpers
+>   scsi: pm8001: Simplify pm8001_mpi_build_cmd() interface
+>   scsi: pm8001: Simplify pm8001_task_exec()
+>   scsi: pm8001: Simplify pm8001_ccb_task_free()
+> 
+>  drivers/scsi/libsas/sas_ata.c     |  11 +-
+>  drivers/scsi/pm8001/pm8001_ctl.c  |   5 +-
+>  drivers/scsi/pm8001/pm8001_hwi.c  | 450 ++++++++++++-----------------
+>  drivers/scsi/pm8001/pm8001_init.c |  11 +-
+>  drivers/scsi/pm8001/pm8001_sas.c  | 297 +++++++++----------
+>  drivers/scsi/pm8001/pm8001_sas.h  |  64 ++++-
+>  drivers/scsi/pm8001/pm80xx_hwi.c  | 458 ++++++++++++++----------------
+>  drivers/scsi/pm8001/pm80xx_hwi.h  |   2 +-
+>  8 files changed, 605 insertions(+), 693 deletions(-)
+> 
+
+
+-- 
+Damien Le Moal
+Western Digital Research
