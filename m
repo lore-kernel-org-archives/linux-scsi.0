@@ -2,94 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2CB3C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 14:31:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0EBBC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 16:51:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355153AbiBNObn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Feb 2022 09:31:43 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41488 "EHLO
+        id S237348AbiBNQvU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Feb 2022 11:51:20 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231570AbiBNObm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 09:31:42 -0500
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8639D41991;
-        Mon, 14 Feb 2022 06:31:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1644849094; x=1676385094;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=TCvN5c5+MpHRPW/ZD+5q8UT9550dKUoLFTp3U6+05Rw=;
-  b=bG/XaRjcqhoc6plrAsdfnY5LAOc5uSPS9WW/kykTzkYNC05VC8VD46/X
-   14ki7lUbxC9D/KusS7sBnztG2WgiLuSd2Pqn1EPXsB6cMvvOpMGQuNsfE
-   naVLnGCaMxjuw7zIpHRTdy7MEcnzRZzLFmpDyQ2+MAaLW1KoPozjwTeVK
-   AhPIbN60dA9IcRGOW/zjcrJ8qdW+J/XXkKvQTKrCwhv8YRr5ypGE9Ga6D
-   rJlp9cfTRVxIbGvCglGqmoxsK5Fa4ICnZJYSsICNlZ9/ENfggjGfsWdfh
-   c2mVmLNPZSK97vYUu1lCWq0rtKskoOuYPXGGGrb0eZdIQXHfPe57q1NB3
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10257"; a="233647302"
-X-IronPort-AV: E=Sophos;i="5.88,368,1635231600"; 
-   d="scan'208";a="233647302"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Feb 2022 06:31:33 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,368,1635231600"; 
-   d="scan'208";a="495679213"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.92]) ([10.237.72.92])
-  by orsmga006.jf.intel.com with ESMTP; 14 Feb 2022 06:31:29 -0800
-Message-ID: <366a3afc-071f-ae77-d06d-25ad750976dc@intel.com>
-Date:   Mon, 14 Feb 2022 16:31:28 +0200
+        with ESMTP id S232355AbiBNQvR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 11:51:17 -0500
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEF164705A;
+        Mon, 14 Feb 2022 08:51:09 -0800 (PST)
+Received: by mail-pl1-f179.google.com with SMTP id l8so4987741pls.7;
+        Mon, 14 Feb 2022 08:51:09 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=3yPbiawnoTewdDNHiKDHgRuYxsSFY5JgTKHU0YNYk+4=;
+        b=4ToBIDeI5/xdIALMjKOuXaPD+SkC8KPT4zzXBhm+Q8CF79JyUHA9r8A/C1iDs/fo+C
+         /I+DImQeNpUkWsubaECABbfPrzBG6Xzgah+Emy2sTbIXmxvK138ST+0DUSigBnfhU0uh
+         Y67StdVzyxfKSMCUdhidszgUYJk4TEl+Sub9RRZDzQej2ldMp95Ebh+XLprxs5Yxbn3g
+         Fy02caxtWNl+WXUNDqtNDCXSzbdnwqI0F5GJvrRpt5hS+uBzTeUovg0UL2e6KNKLJ5Cs
+         MzljSmjuov1lLjRKsDspqsts06AzGhgr6Q5u8Awvy2AzSRDo2JNuGNVYRaSRs5EgZ+mN
+         mTMw==
+X-Gm-Message-State: AOAM533PzbB0wJyd+cOApc3R2BoOuikaTgg+ziLZsAfbBD/MuPGWOkUM
+        ERwZ9Rw+trEdNyNInin53ko=
+X-Google-Smtp-Source: ABdhPJwsrKAwDeIspFDEGq40H19o8morxFVhKT7pdp2J4OJhnqcHHcCZhMHedkitoajGiPQ5m2bX2g==
+X-Received: by 2002:a17:90b:295:: with SMTP id az21mr15646456pjb.145.1644857468936;
+        Mon, 14 Feb 2022 08:51:08 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id c12sm39145563pfl.130.2022.02.14.08.51.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 14 Feb 2022 08:51:08 -0800 (PST)
+Message-ID: <974edf4d-37fa-b25a-d0ac-33ac502381d8@acm.org>
+Date:   Mon, 14 Feb 2022 08:51:05 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Firefox/91.0 Thunderbird/91.5.0
-Subject: Re: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling
- isn't supported.
+ Thunderbird/91.5.1
+Subject: Re: [PATCH] [hpsa] Fix the wrong chars in comment section
 Content-Language: en-US
-To:     Kiwoong Kim <kwmad.kim@samsung.com>,
-        'Avri Altman' <Avri.Altman@wdc.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        cang@codeaurora.org, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, bhoon95.kim@samsung.com,
-        vkumar.1997@samsung.com
-References: <CGME20220205074128epcas2p40901c37a7328e825d8697f8d3269edba@epcas2p4.samsung.com>
- <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
- <DM6PR04MB657519E60FAFA19434531CE2FC2B9@DM6PR04MB6575.namprd04.prod.outlook.com>
- <007101d81eed$4d120a60$e7361f20$@samsung.com>
- <3f2938f7-2a9e-60e8-5237-fe7ebc3b4296@intel.com>
- <000001d81fcb$3b962f30$b2c28d90$@samsung.com>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <000001d81fcb$3b962f30$b2c28d90$@samsung.com>
-Content-Type: text/plain; charset=UTF-8
+To:     James Wang <jnwang@linux.alibaba.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        storagedev@microchip.com, martin.petersen@oracle.com,
+        jejb@linux.ibm.com, don.brace@microchip.com
+References: <1644742790-87210-1-git-send-email-jnwang@linux.alibaba.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1644742790-87210-1-git-send-email-jnwang@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/02/2022 06:44, Kiwoong Kim wrote:
->> The error handler really should have exclusive access.  One of the places
->> you change does explain that:
->>
->>  		 * Hold the scaling lock just in case dev cmds
->>  		 * are sent via bsg and/or sysfs.
->>  		 */
->> -		down_write(&hba->clk_scaling_lock);
->> +		if (ufshcd_is_clkscaling_supported(hba))
->> +			down_write(&hba->clk_scaling_lock); 
-> 
-> 
-> Yeah.., I saw the comment but didn't get why.
-> 
-> Is there anyone who knows why it's necessary for all SoCs?
-> At lease, I know there is no reason to forbid concurrent executions of dev cmd and power mode change.
-> 
-> If there's nothing, how about adding a quick to ignore it?
+On 2/13/22 00:59, James Wang wrote:
+>   /* Find and map CISS config table and transfer table
+> -+ * several items must be unmapped (freed) later
+> -+ * */
+> + * several items must be unmapped (freed) later
+> + * */
+>   static int hpsa_find_cfgtables(struct ctlr_info *h)
+>   {
+>   	u64 cfg_offset;
 
-Is it worth it?
+Has this patch been verified with checkpatch? The style of the above 
+comment does not conform to the Linux kernel coding style. Please fix.
 
-The error handler really should have exclusive access.
-Have you considered, for example, races of ufshcd_reset_and restore() and dev commands, tm commands, UIC commands.
-I suspect more locking is needed not less.
+Thanks,
+
+Bart.
