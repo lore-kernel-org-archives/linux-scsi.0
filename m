@@ -2,151 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9AF5C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 22:29:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FDE2C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 22:31:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231861AbiBNW3x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Feb 2022 17:29:53 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41310 "EHLO
+        id S231876AbiBNWbr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Feb 2022 17:31:47 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:42452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230102AbiBNW3w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 17:29:52 -0500
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73C68F70DB
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2022 14:29:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644877783; x=1676413783;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=ocm4l4ax/+is28JMTf6hmBqzFnOZK4K7ZVaXxADc9ac=;
-  b=gHpBdvQ/uv6mIPAI6MW5LFZ71DyJUs178pGrAQURt8aiG5vgKtNa8/Hg
-   bqxO1Do5AA5wl/OuoHpzstmoENiUOpB/4Jm9aCmJCcDRok4UWqHvDefh5
-   ylSy8Z+9Qv2qi8wgY+jVSEZaqxK4+hzgpdNUScC1qQMMsPNiBxrlBodVv
-   DEDWomVWeA+yFTz5vo2U91TIXjGSPiErbChggN/qPtfK41uxDscHgCgLl
-   ri3KqdLEUk6WyraocljsVf+f4n4F17q2wqGMc92nRISlvi0lofcRS71RG
-   KBk4rJTCd+Lop1mdya1zAhIn9shnku2JIRknXpJ8I6f/P8csQX8MCTbEE
-   A==;
-X-IronPort-AV: E=Sophos;i="5.88,368,1635177600"; 
-   d="scan'208";a="191831966"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Feb 2022 06:29:42 +0800
-IronPort-SDR: A2SdBm30P4W3dmDvIJsYS4qDNHvYqcqdivSpwPy7Z9Yk12p1H0dgb4nSGE3MlYg1sf0BWWtj9m
- UTu2xqIKSPJGgeWrsLa8om9WVr9/lG10ZJcWEkTjs8yOkTqI++8G7Rw3SlF7BqRlb/uXLOwjTe
- 5Xf932fYvbQacGF2SHe9f/XGwbcsy1cdaiM58LGZ0JIO3IjzLNwdGg/t425lLsPDrtLFQQtjbD
- NJxGAed4sGLaB/Im7s8Ys1q51VG9bAV7OhGABniqmoBvK34+veDcmyssZJ15YReZUSqc88Tuuu
- mFstHE9Bec0eV0PWBv+U3RtA
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Feb 2022 14:01:24 -0800
-IronPort-SDR: TdV3t2JqufpJCjHNO0a56INy95OVitvm90TYp97dM/c/oeN1otqHpT9l63GDd2inNQvMP/BsBH
- X9wbcjhaHtXyL6wv1tcWnqBnLmOPZSAoxQVxOyipt22CRPlxQEhCPq/e2ltcnP6fzqWI3bbKOM
- 7oQ7kYQPX7NAlNN7XThqvEGhq8Yx9hoC/7UlER4mkYz3PDyOXtR9kHhQ6PbrLbDlW7342+6s0x
- d4EjV4pmmkp3RW6HtQzikKbkuh1zXTD7I4aAwWQkv6N1sXUdZB+C9ijvhzhF8omhMs2lRawz7P
- QOc=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Feb 2022 14:29:43 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JyJn24HJQz1SVp0
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2022 14:29:42 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1644877782; x=1647469783; bh=ocm4l4ax/+is28JMTf6hmBqzFnOZK4K7ZVa
-        XxADc9ac=; b=IAvFLY3JpG+O2C2ddvR+muR2uTqttHlJ/TYNz9fbT3P5/kWGbdX
-        3c3UTI0Zr/Gb9plgiw0UoBmZd6g8xJ+xf3LdIxihurSwJ6jmOXDANCiW3kChpeMs
-        /aD+VAnnCYvXMDoawkjIL3G2Zk5VWmbBnE0q+c447ckVolmNWfBmBlYRO54hwbXB
-        /o4K87XKUw5AWH/yJXPpvKcXEHt7iUCCXZSK+1djUdjLa6Chwy13CD+/LlEoZPif
-        CSnIBJzucpxX4hZpHpOTq/8ORErBy4vvIWhqfMpKmsJ3X1jlIDhHu+AAeDiPVsNr
-        IttLdWRrdR86XleXWKzlrAhiqxz885LCGeA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id TLBj_yIRHrcD for <linux-scsi@vger.kernel.org>;
-        Mon, 14 Feb 2022 14:29:42 -0800 (PST)
-Received: from [10.225.163.73] (unknown [10.225.163.73])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JyJn11TJYz1Rwrw;
-        Mon, 14 Feb 2022 14:29:40 -0800 (PST)
-Message-ID: <768d5978-c699-d882-0a4b-5403b3143aa0@opensource.wdc.com>
-Date:   Tue, 15 Feb 2022 07:29:39 +0900
+        with ESMTP id S230102AbiBNWbp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 17:31:45 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D323713E9C;
+        Mon, 14 Feb 2022 14:31:31 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A0D1EB80C6D;
+        Mon, 14 Feb 2022 22:31:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C2DFC340E9;
+        Mon, 14 Feb 2022 22:31:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644877888;
+        bh=U9FS+HbROd6gXASD/1YFQXlW6ra2q4lCYkPCYYdKZzE=;
+        h=Date:From:To:Cc:Subject:From;
+        b=Lobos/mRirqUrrb/uzx6jBqU9QlkWKLRqWIns9GiMrotTuxIx2uPk8VwRBhvRBNP6
+         5l9MSsfHVd+AG/trcUCUHZ1gVGTmBECg15Fy+FvjZhpmS6BgRUFDXWq7/53xuTwnJk
+         i1gjAzU1emFp2bnoEJamngEaxtOnZUhnjGWyaUgxP2JWrPWPXRQDtWwqdBRVzLIMST
+         +vTDEhugRBS5/qvX3uvImYtXxQg/ahBxIGFKG8TIe/tP+28aKiC76W/pWiaw8cM5c+
+         8OAr2jGYXND6YM48GNK0k0Wz8nISudZGLAjjSmE+7Xtpj2z+x6Zn6iBwmX6Kgt8rn3
+         KMpyKplQQsOYA==
+Date:   Mon, 14 Feb 2022 16:39:03 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org,
+        Nathan Chancellor <nathan@kernel.org>
+Subject: [PATCH v2][next] scsi: fc: Replace one-element arrays with
+ flexible-array members
+Message-ID: <20220214223903.GA859464@embeddedor>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH v3 00/31] libsas and pm8001 fixes
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
-        Jason Yan <yanaijie@huawei.com>
-References: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
- <3e09f069-4f3d-e9a3-717c-ed05c09b99e1@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <3e09f069-4f3d-e9a3-717c-ed05c09b99e1@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/15/22 03:06, John Garry wrote:
-> On 14/02/2022 02:17, Damien Le Moal wrote:
->> This first part of this series (patches 1 to 24) fixes handling of NCQ
->> NON DATA commands in libsas and many bugs in the pm8001 driver.
->>
->> The fixes for the pm8001 driver include:
->> * Suppression of all sparse warnings, fixing along the way many le32
->>    handling bugs for big-endian architectures
->> * Fix handling of NCQ NON DATA commands
->> * Fix of tag values handling (0*is*  a valid tag value)
->> * Fix many tag iand memory leaks in error path
->> * Fix NCQ error recovery (abort all task execution) that was causing a
->>    crash
->>
->> The second part of the series (patches 25 to 31) iadd a small cleanup of
->> libsas code and many simplifications of the pm8001 driver code.
->>
->> With these fixes, libzbc test suite passes all test case. This test
->> suite was used with an SMR drive for testing because it generates many
->> NCQ NON DATA commands (for zone management commands) and also generates
->> many NCQ command errors to check ASC/ASCQ returned by the device. With
->> the test suite, the error recovery path was extensively exercised. The
->> same tests were also executed with a SAS SMR drives to exercise the
->> error path.
->>
->> The patches are based on the 5.18/scsi-staging tree.
-> 
-> Hi Damien,
-> 
-> jfyi, I still see the hang with this series. I don't think that the tag 
-> fixes were relevant unfortunately.
+Use flexible-array members in struct fc_fdmi_attr_entry and
+fs_fdmi_attrs instead of one-element arrays, and refactor the
+code accordingly.
 
-As mentioned above, I did test with a SAS drive too (an SMR one to
-heavily test the error path) and it worked perfectly.
-Note that using Martin's rc1 based scsi-staging tree, I did see a lot of
-KASAN complaints on boot regarding MSI/PCI setup. These warnings are
-gone with rc3/4. What kernel version base are you using ?
+Also, this helps with the ongoing efforts to globally enable
+-Warray-bounds and get us closer to being able to tighten the
+FORTIFY_SOURCE routines on memcpy().
 
-I could not find the ARM board I have in the lab yesterday. Will try
-again to find it and test with it.
+https://github.com/KSPP/linux/issues/79
+https://github.com/ClangBuiltLinux/linux/issues/1590
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+Changes in v2:
+ - Revert changes for _port_ due to protocol definition conflict.
+   Link: https://lore.kernel.org/lkml/22139a80-3f64-1f21-6b5c-65d250bafe09@linux.ibm.com/
+ - Update subject line.
+ - Update changelog text.
 
-> 
-> btw, how about add guys from get_maintainers.pl to lighten the review 
-> workload (and we should have the official maintainer anyway)? There are 
-> quite a few patches now...
+ drivers/scsi/libfc/fc_encode.h | 2 +-
+ include/scsi/fc/fc_ms.h        | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-I did that... I will check again. I may have made mistake creating the
-distribution list.
-
-> 
-> Thanks,
-> John
-
-
+diff --git a/drivers/scsi/libfc/fc_encode.h b/drivers/scsi/libfc/fc_encode.h
+index 74ae7fd15d8d..7dcac3b6baa7 100644
+--- a/drivers/scsi/libfc/fc_encode.h
++++ b/drivers/scsi/libfc/fc_encode.h
+@@ -246,7 +246,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+ 		put_unaligned_be64(lport->wwnn,
+-				   (__be64 *)&entry->value[0]);
++				   (__be64 *)&entry->value);
+ 
+ 		/* Manufacturer */
+ 		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
+diff --git a/include/scsi/fc/fc_ms.h b/include/scsi/fc/fc_ms.h
+index 00191695233a..56a5d2b5a624 100644
+--- a/include/scsi/fc/fc_ms.h
++++ b/include/scsi/fc/fc_ms.h
+@@ -158,7 +158,7 @@ struct fc_fdmi_port_name {
+ struct fc_fdmi_attr_entry {
+ 	__be16		type;
+ 	__be16		len;
+-	__u8		value[1];
++	__u8		value[];
+ } __attribute__((__packed__));
+ 
+ /*
+@@ -166,7 +166,7 @@ struct fc_fdmi_attr_entry {
+  */
+ struct fs_fdmi_attrs {
+ 	__be32				numattrs;
+-	struct fc_fdmi_attr_entry	attr[1];
++	struct fc_fdmi_attr_entry	attr[];
+ } __attribute__((__packed__));
+ 
+ /*
 -- 
-Damien Le Moal
-Western Digital Research
+2.27.0
+
