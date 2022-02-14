@@ -2,87 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66E79C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 18:06:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47D70C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 19:34:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348972AbiBNSGj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Feb 2022 13:06:39 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55138 "EHLO
+        id S229487AbiBNTer (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Feb 2022 14:34:47 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:50104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238603AbiBNSGi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 13:06:38 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E293C60D9A
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2022 10:06:29 -0800 (PST)
-Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JyBwv1CgKz6H7hJ;
-        Tue, 15 Feb 2022 02:06:07 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Mon, 14 Feb 2022 19:06:26 +0100
-Received: from [10.47.81.62] (10.47.81.62) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2308.21; Mon, 14 Feb
- 2022 18:06:25 +0000
-Message-ID: <3e09f069-4f3d-e9a3-717c-ed05c09b99e1@huawei.com>
-Date:   Mon, 14 Feb 2022 18:06:27 +0000
+        with ESMTP id S229450AbiBNTeq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 14:34:46 -0500
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8CDAF68CE;
+        Mon, 14 Feb 2022 11:34:30 -0800 (PST)
+Received: by mail-pf1-f177.google.com with SMTP id i6so29065373pfc.9;
+        Mon, 14 Feb 2022 11:34:30 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=5ExIxNXqqgrHdK1kZ6JH/FGJOcN5wTaLxWYB94zLwWk=;
+        b=3EU9LG1Kf21MXyLc4NsFZzmoEaRNN+UQNVNO5q6K8WbzKRdolHiLMxdJYZW/QScvhl
+         9yo58tdnOMNH4lnBKag3zysL9g+uoeqXDeXTzVzxvKCCxxXIBOE28nDW10VuSMRXGT6g
+         3jwarwuAGQ5WgqMx+enpzdZY7IhEj08NQVBtiAWDw5BxwX4EWSphPs+AaG/8/YcV+BQN
+         qTlqq1lXBhJCW7blE4ZrrEXUz1xbUMHpXtNTQ6ZAg1kk0l7Lb2JUaImGw+gym1KFY++k
+         8lJgAfQkqbq3VZ40JGaXEzqZPbB3V865Ji6gkgiFPNIn52KZhjpSrwxB1OAOUR+MHZHv
+         9Ipg==
+X-Gm-Message-State: AOAM5339661mxmCErrLjjiD6NGjS0dzyXLL+Xlzj/o1eeBlo+lkyOvRp
+        WO6bKPDMB/Nu1PbkcyqxuLg=
+X-Google-Smtp-Source: ABdhPJzgNkJZP+2jVtDP/65BE7x2NnucJrnDd0NwGpVjygZ6+cfDZW7L5nveVzjW6B9J57IdJLVrNQ==
+X-Received: by 2002:a05:6a00:1828:: with SMTP id y40mr176402pfa.15.1644866952957;
+        Mon, 14 Feb 2022 11:29:12 -0800 (PST)
+Received: from ?IPV6:2600:1010:b05a:bf8:cd06:5464:d61e:f6b4? ([2600:1010:b05a:bf8:cd06:5464:d61e:f6b4])
+        by smtp.gmail.com with ESMTPSA id o125sm2883479pfb.116.2022.02.14.11.29.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 14 Feb 2022 11:29:12 -0800 (PST)
+Message-ID: <62a5170b-48c0-a372-5392-08f5112d7a06@acm.org>
+Date:   Mon, 14 Feb 2022 11:29:08 -0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH v3 00/31] libsas and pm8001 fixes
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
-        "Jason Yan" <yanaijie@huawei.com>
-References: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling
+ isn't supported.
+Content-Language: en-US
+To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, adrian.hunter@intel.com, sc.suh@samsung.com,
+        hy50.seo@samsung.com, sh425.lee@samsung.com,
+        bhoon95.kim@samsung.com, vkumar.1997@samsung.com
+References: <CGME20220205074128epcas2p40901c37a7328e825d8697f8d3269edba@epcas2p4.samsung.com>
+ <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.81.62]
-X-ClientProxiedBy: lhreml703-chm.china.huawei.com (10.201.108.52) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/02/2022 02:17, Damien Le Moal wrote:
-> This first part of this series (patches 1 to 24) fixes handling of NCQ
-> NON DATA commands in libsas and many bugs in the pm8001 driver.
+On 2/4/22 23:39, Kiwoong Kim wrote:
+> clk_scaling_lock is to prevent from running clkscaling related operations
+> with others which might be affected by the operations concurrently.
+> I think it looks hardware specific.
+> If the feature isn't supported, I think there is no reasonto prevent from
+> running other functions, such as ufshcd_queuecommand and
+> ufshcd_exec_dev_cmd, concurrently.
 > 
-> The fixes for the pm8001 driver include:
-> * Suppression of all sparse warnings, fixing along the way many le32
->    handling bugs for big-endian architectures
-> * Fix handling of NCQ NON DATA commands
-> * Fix of tag values handling (0*is*  a valid tag value)
-> * Fix many tag iand memory leaks in error path
-> * Fix NCQ error recovery (abort all task execution) that was causing a
->    crash
+> So I add a condition at some points protecting with clk_scaling_lock.
 > 
-> The second part of the series (patches 25 to 31) iadd a small cleanup of
-> libsas code and many simplifications of the pm8001 driver code.
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+>   drivers/scsi/ufs/ufshcd.c | 21 ++++++++++++++-------
+>   1 file changed, 14 insertions(+), 7 deletions(-)
 > 
-> With these fixes, libzbc test suite passes all test case. This test
-> suite was used with an SMR drive for testing because it generates many
-> NCQ NON DATA commands (for zone management commands) and also generates
-> many NCQ command errors to check ASC/ASCQ returned by the device. With
-> the test suite, the error recovery path was extensively exercised. The
-> same tests were also executed with a SAS SMR drives to exercise the
-> error path.
-> 
-> The patches are based on the 5.18/scsi-staging tree.
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 460d2b4..8471c90 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -2980,7 +2980,8 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>   	/* Protects use of hba->reserved_slot. */
+>   	lockdep_assert_held(&hba->dev_cmd.lock);
+>   
+> -	down_read(&hba->clk_scaling_lock);
+> +	if (ufshcd_is_clkscaling_supported(hba))
+> +		down_read(&hba->clk_scaling_lock);
+>   
+>   	lrbp = &hba->lrb[tag];
+>   	WARN_ON(lrbp->cmd);
 
-Hi Damien,
+I don't like this patch at all. This patch makes testing the UFS driver 
+more complicated without having any clear benefit. Additionally, adding 
+if-statements in front of locking makes static source code analysis 
+harder and is an anti-pattern. Please don't do this.
 
-jfyi, I still see the hang with this series. I don't think that the tag 
-fixes were relevant unfortunately.
-
-btw, how about add guys from get_maintainers.pl to lighten the review 
-workload (and we should have the official maintainer anyway)? There are 
-quite a few patches now...
-
-Thanks,
-John
+Bart.
