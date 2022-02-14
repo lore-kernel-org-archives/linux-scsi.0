@@ -2,151 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 414A2C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 21:37:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7CF1C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Feb 2022 21:46:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231171AbiBNVhR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Feb 2022 16:37:17 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48772 "EHLO
+        id S229457AbiBNVq4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Feb 2022 16:46:56 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:37532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231259AbiBNVhQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 16:37:16 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 478FBED958
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2022 13:37:07 -0800 (PST)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21EJR6bT003911;
-        Mon, 14 Feb 2022 20:09:48 GMT
+        with ESMTP id S229441AbiBNVqz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2022 16:46:55 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFB0D119F10
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2022 13:46:46 -0800 (PST)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21EIekRZ028536;
+        Mon, 14 Feb 2022 20:04:11 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
  content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=/FHyB2I5+YzsHjJo1sdWNG2vGFO0nFNwmr//qhAShek=;
- b=alWD5/fvuonizfuNW+lEA+G083wg9BCPzpZObgg2nn5zO+FUDVr2lbYGQjdDrvwsKnsA
- WlAkMbC9pkPhiMn+ezi8F8lKafwz1XPnqDQuFbF6xxBi8jehSFHGCqVjUkVTuD+OoKFE
- GCW70yUmu5RU/I9WlHuvAET+gx7VtTMfwtT8+fYcAHse0gbIAGTtNFvYh9fg4Je1lo9y
- vJcZmekgeWdGRAKFqrUrqeu1ZVtlYxS8b46soRlmbTB5kx2+0PzlOpOJZl0tC4NN2yJ2
- F7BEXTqsoQo5qTzBlU05R6CHJEMCYGg1X+FW2LPnc3+bjF9DmYua9SJ8PJs8lsnmXKR2 jA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3e63ad5m4u-1
+ bh=5vNoko1WBLui3dCVCo6Cuh9SuvrB8faH0BSgoLd/zUo=;
+ b=qHRBA9PBMXfS73j7jkqx4sGWSNuKlbyh5ExCWaYbn4RltymzB2W7d9MPKKz7AHnahksU
+ SLf2o4GnK7A9HcNIlgnIBxp2/nB9/M4eEtAY0Qdm3C90KqWglQWh9bA2T3LQjkSq7en+
+ BdEBZQMv4cjUG2v1v3eZ538t/1K0hiWsJylv7eOGDn9aaVWUjMCuqh5qTuW71A78L3KM
+ P5Wch4eGH7ddqNMkqi+wt0O2wyqtnhPA9Dv8oIvOoCKedY+KeKSOigaSiAHNJ705fJxO
+ xX5eVNSfwMVtB1gWWTtzPs8oOq0viJEa0AbAzJHzPYMMVy9Y4fELzLAOtxKGjtB0UoX3 tA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3e63g15q1u-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Feb 2022 20:09:48 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21EK0Qs5133168;
-        Mon, 14 Feb 2022 20:09:47 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2168.outbound.protection.outlook.com [104.47.56.168])
-        by aserp3030.oracle.com with ESMTP id 3e62xdp4dc-1
+        Mon, 14 Feb 2022 20:04:11 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21EK02v8061096;
+        Mon, 14 Feb 2022 20:04:09 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2170.outbound.protection.outlook.com [104.47.56.170])
+        by aserp3020.oracle.com with ESMTP id 3e6qkx8dsy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Feb 2022 20:09:47 +0000
+        Mon, 14 Feb 2022 20:04:08 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=E+hlrOoRTzR3iC3dkW7cs1cl8zOrIJ2zMaNkdcfXbORlvmnjZV9lzUuZOQcpuMReZdZj2uV8QUJnCtfiP5xuGTQUZ1J9feYkImnxexnaplQk3q8RrmM03mZ10MzPtVs9DduuwrtqJpdo9iE9rmVowqtWcCnGKojC1OsTlZ01l0j1FC98e1QnnhZqQybYWjNTQL+Qk/fvzO+LY+foqR+DLgiUUpMtE4lfWe6njDyVRNhmwfSLe6ysPlVRVye3z+0WnKiIK5E+IrCXLBu2rzhwfZE8BhnRgo1QMJtsjrPjBM4efaZtETU1JehllFuSUXwLyR/4wMg8Jkckm+uHIqqNRw==
+ b=dtvYQkW3xIfCx43uk9/evmuPISusSzT+yQZxpdPJj2VmMbs4OOpPXyKmBz1GQNxVWo80hQ6z7loaFUgULLk4GeajX4nlNIK7dSFZmKoDd/qGYSO5Q37XPDNEZp9KJDBknL2ALB9WDQwMdJfgrenRNS+KfvQz4/lUBE8tDuYEhF5OJjD9DwRP6amAUFspbJL6OUSm21HVPd2NEK4vuQc1OJ9V5Kh7c/Ka/rkqSRmFIDJMqlgn3aGj3BoSrCcBGjuISgcrcMDcIwzQHon5dGwpshHlu82EoRLNNtCq2ZbjIdUMNRjKthXryMgNLsFGtzd1z8ZUCUo1w+S4iYHgOooeJg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/FHyB2I5+YzsHjJo1sdWNG2vGFO0nFNwmr//qhAShek=;
- b=lvhWAg4b34LUzLcG+HlMRjWVWg+qF0J53E/YYYmzzWdz3zKTkchePAqPzrzh2wt9JF2wRw8bDBt8Sh5MEJUVuD8s8LlJSK9wFI7S/ILMyrUfKudjeVH03ap/8YOzvw2heC+t5medDi5fIkRa3bIhPcOwSqgCUk5Olrw4dfCRqKwCjD0o31wAwwnBZ6ur3bQklBCbNdFaDNocFVl/E5R0fvp4Z7d1VawIeHLCp1/Ydi9EOjrYRLRrhsA2iGaT3Ag9Co1bIbp1coKQq3Ouu/On+hdMMFfkQA9IpoobhjTLE27AdO6fpc+ogRsfe/n1CGj+nY0tye9B5Tl7Jaw3bnmpAw==
+ bh=5vNoko1WBLui3dCVCo6Cuh9SuvrB8faH0BSgoLd/zUo=;
+ b=X3OKZEKBQWOMnBc7kt7j9oxCuXkY2sPgL4gKYaY017T7drVdL5uNgXS9i28A0GENx/ZCaefe1Bn31OpXC4HNrnPw57xhAaRCm/DgCg1kQJ0zPxqj7wYOmC4BFLBVo6hui80mS9D3Go60KnPuAnsqy+ADIjplemBzo9MzmOAN8qIpvPoi5Oho80A8DWc3MI6MpD25G8uvcvfzwRf6/vrBQPNA04sv5v4HyTzcAfBtMDb/dhsK/xQEIhXpyKQLsYMreTg8u54DFi4y/o78MCx1BokmTH/DjxtrkxVtCa7tYV94JTMMfpD5Cey4ZmV/5oPpOrCstaaGidX3vDlvRYU35g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/FHyB2I5+YzsHjJo1sdWNG2vGFO0nFNwmr//qhAShek=;
- b=qVTfxoSKdLlnWsfmzeOCSkwWy5TVA6AyOXBUora9EPjsq89hVDP7qk1TrzCNKs5yRUA8G+NQwQ/sJNfNvjyhR9YaQGOHAzfMpHh2JV0xKtWEs9lIRDREvVyk94hdPgGiRXYbcwixyw9OSk/Qmle7p58Iz3SEfK1BKhCNqv8mg8w=
+ bh=5vNoko1WBLui3dCVCo6Cuh9SuvrB8faH0BSgoLd/zUo=;
+ b=s+N44pYo1FcwtGZy6H76IDOgugRkBi7/ofpzvfYCig1QakCmwhMRFCShT9xV28rDyulgEuVAVdjmC3FS7EVvxsyuuLiffDMfK0rq6HbcJBwouViRNxjJAiE6kbkKyx5MaU2NrJwxa+9C4tYH5ZIL+CwG18Jwc3xxqF0lOsP+GCc=
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
  by BN6PR1001MB2212.namprd10.prod.outlook.com (2603:10b6:405:2d::17) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.15; Mon, 14 Feb
- 2022 20:09:45 +0000
+ 2022 20:04:05 +0000
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::98be:91a7:9773:9d39]) by SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::98be:91a7:9773:9d39%4]) with mapi id 15.20.4975.017; Mon, 14 Feb 2022
- 20:09:45 +0000
+ 20:04:05 +0000
 From:   Himanshu Madhani <himanshu.madhani@oracle.com>
 To:     Bart Van Assche <bvanassche@acm.org>
 CC:     Martin Petersen <martin.petersen@oracle.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Finn Thain <fthain@telegraphics.com.au>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Hannes Reinecke <hare@suse.com>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Finn Thain <fthain@linux-m68k.org>,
-        Michael Schmitz <schmitzmic@gmail.com>,
+        John Garry <john.garry@huawei.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH v3 08/48] scsi: NCR5380: Introduce the NCR5380_cmd_priv()
- function
-Thread-Topic: [PATCH v3 08/48] scsi: NCR5380: Introduce the NCR5380_cmd_priv()
- function
-Thread-Index: AQHYH5dlFZGVNVBjUkO+WSq9hPBWzqyTfm4A
-Date:   Mon, 14 Feb 2022 20:09:45 +0000
-Message-ID: <B9F1E0A6-1BDE-4422-9489-215D280C9000@oracle.com>
+Subject: Re: [PATCH v3 04/48] scsi: nsp_cs: Change the return type of two
+ functions into 'void'
+Thread-Topic: [PATCH v3 04/48] scsi: nsp_cs: Change the return type of two
+ functions into 'void'
+Thread-Index: AQHYH5dbFoJVxMj8lE2kCWsGGAUWt6yTfNkA
+Date:   Mon, 14 Feb 2022 20:04:05 +0000
+Message-ID: <CCF8C240-8C13-4C80-AA76-D6B91BA0DBBC@oracle.com>
 References: <20220211223247.14369-1-bvanassche@acm.org>
- <20220211223247.14369-9-bvanassche@acm.org>
-In-Reply-To: <20220211223247.14369-9-bvanassche@acm.org>
+ <20220211223247.14369-5-bvanassche@acm.org>
+In-Reply-To: <20220211223247.14369-5-bvanassche@acm.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-mailer: Apple Mail (2.3693.40.0.1.81)
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 59ad1cf6-3e6d-49b5-0f28-08d9eff5f1e5
+x-ms-office365-filtering-correlation-id: 33ddca2b-8abd-404e-7266-08d9eff52751
 x-ms-traffictypediagnostic: BN6PR1001MB2212:EE_
-x-microsoft-antispam-prvs: <BN6PR1001MB221210D6047D2F19459C9130E6339@BN6PR1001MB2212.namprd10.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:5236;
+x-microsoft-antispam-prvs: <BN6PR1001MB2212C6CB00C3AA80FDF9EA8BE6339@BN6PR1001MB2212.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:2657;
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: bU/ImGiIVGXbbSjMbmryAavrWhVEp3WfgmF0gNT5IlVg13ndIpUYU/mFUpqrqqwxS07flLMtoFXopmr1PlTRv1Id9A4YkfivAtdu7jXHcImvdwNir0eOLM6I6AnkWGl3SxIXaeLwgWVMnNmKB1FW9fYMloZeON5kalvPYXpVpx0oiLsKxsHR7L3GiCvQxpiT8D7Z+6PpDN8jpdhVdMcN8dpucOOm8M6LsXcXS05umBiRIqdVXgGv7C7OhpI2KKf68JYT20YUS2awKXwKT29QUVK0BR9AYpRJZUSytRPmvAgDYJUNHAQoLerL3jMHPIlAW6ymIRT+kliHv4tmT3mKVd1ryc4FbyYa/MKdwGoHJG3Qhe2p6jiCWQDsqwofSrTG+TT6gHlS+NlwB5zfSqJabjSQ9bEu5YGOpeu0krniKxyZ9xfmtp0kSaMC0yVzxZDE65HiBJNDDUECfg6jEb9BavVtXvIpSe+1nn2N/hRiJaao8GTc53Z7ktvr7X8Gq8kRgIXq917RSgIhHyf9ph8Us+our2OSKVw+n2CHxVxIRFmbxk3SoJncuEj8N1bwaKz5SsWDWGi8ITbQK501maI7n35OJvhBF9P517EQUNHvicF6qWQOQOlqIo/Kl5s/R7oCN4Zbtx0PdCZyQXPZ6rcuYCFH7f4gn0hXaCfjEEO4zTnYJZz2GNf7NGvge3nP2x0m3YjyMGOinJMzQNDn5pTxA3Ex5RXVz4NWFDVviqPulX1wkQJdMvdRJm2ggPEAW70f
+x-microsoft-antispam-message-info: MbYapdggjqw3xn8qlruNoDLJSTlP4ekrc7anNX7XGuyP4Mbq/ZB0B4T2xdrroBxbWsEZQbWXWKc+Q7nnX/EJ5XDVTub254GyUnhaHYqL9Bj7nVT2fi5f4Bnp/ED3i9u0dQsTB38tkmD8ln4c09ceNz0khCFPy0CAfrho2J6REfBdsyZM322gACHgb1ATF2NphxKVXdQMNfJ1GtII0qxMV+3WK9sIdQJNIzTQ2A5LlLOjET95PVUprqBVnSs3Ktl9qvBUNG6O2mdGsGtrHl2viKaV6vYcBnpHAjsGbz4s3LjRdkrlGRTS8EIY33/oJDhCV+dQ1iJ5Rcum8LzI23G5ANUldjg1eIL75BsxFXkFZoWbeu+xWd2i+DXS65/6Pyc47wmI+cWIfi30zuxk5DFXN+v8bDThJJl0W0lC5i/CdK5KAUt7v0b0ZcmVqc5slITDQgoGfHYrxnZXOtRfcaTo9DN20Lhml3dUxP7h9WU3Ev4qW9uJkq7InHaFYsFDuO4iE9O7D0vvYGXzOewctzREcT7eQXx9fNvgXdvS/tZH4rWJaueYWg/49jtq9uhulYtSIveZDRMc44iHgXeOfYiBDWb6F5KmJtuh5tCIGCn2aoHaZaCyOaq5dVjbVzKN224Uh3+K82XXHGYIl1jgEe1GaD2V28rdkGzqoqRnqGEw9aisS0CIYqQTgNPL2hAqYsAidlfQLZzvomZoY5lUI1FitB/chahad1iZfrL2zQc/8sc=
 x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(122000001)(71200400001)(38100700002)(38070700005)(44832011)(53546011)(8936002)(6486002)(66946007)(76116006)(66556008)(36756003)(33656002)(8676002)(64756008)(66476007)(508600001)(4326008)(66446008)(91956017)(6506007)(186003)(2616005)(316002)(86362001)(83380400001)(54906003)(2906002)(6916009)(5660300002)(6512007)(45980500001);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?JsM7dZehEzfoBurfZeTM/jowk0VjykMWb2Es8r+kld7jZ/fnt3UQub9GsLZv?=
- =?us-ascii?Q?9yW8mXUKAo3DuHPjQq3uLEB+lJSlOjZCUloCwUObmLSLdY5TwWCXysSp+GhC?=
- =?us-ascii?Q?vWcAGvl5ZGnZ88QbXBCI95H6dlW0vkNMl2AavunZW1nZYUjenTSAWQtvq1wT?=
- =?us-ascii?Q?YfYXhsLO1vM0UlHcBJHnetg87YF5Vy8tRs4c9c2Yfv75j4ibrDsvjhtInVp+?=
- =?us-ascii?Q?l3T36UhIdB26MUBsa4XTvRYw3EU2dloMv5ftI856K1HsjbClslFopL86uBrh?=
- =?us-ascii?Q?0CFcY5z3KRsw912pfDTNAaTXoCCSVZTdQwP93On8DvFkbI9zD3ywHa6V7Sjo?=
- =?us-ascii?Q?eDD0pvRD+L9j1Zly9qdiysJbTsmgDuNiffU2jxj/7u0oJA7wY+lxLcTAeSES?=
- =?us-ascii?Q?eyWXbqcNrcUiao3V43evkoaYs6hl8vdCM924nMm93LPNuHbXnjI+zJ38meKB?=
- =?us-ascii?Q?WWgvLMNKGeOUKit9LUy3jg+OihSHEbTt5uXpq1z4zXyQ8R6ATLbf0dgMIdth?=
- =?us-ascii?Q?GyRdDT8K0bvtLBRRYAlUOzuGosTNZKgVS6MEwC/0CN4jh622k4gcDRccaXrO?=
- =?us-ascii?Q?NvRdaN9u7drzw+Egcj627Q6NcP65lOui29jMc9zI03ldNXsPofJTy9ZrDQp7?=
- =?us-ascii?Q?oLxTkcnRIm9nQfosL7yuocKr6BW5ty/VFju2kIHJLElcHpLg8SGVrGnIUb9B?=
- =?us-ascii?Q?CAnxLJF1rXxA5xDnFAqlLp5h85kC/yXJ57mgG2lHLP+si2fuFmxxi9AJLRnW?=
- =?us-ascii?Q?PJu1i2i5/XoBHIikf77zvfpVotsMjRQ98AubZr7ogtVBO0RSjcmRzzNzBrcc?=
- =?us-ascii?Q?xg0gUGe45vScn5UJLq2CzKs5p5AcqXvVFTdC1wiA55ydJLpq2VbHTZ/e150B?=
- =?us-ascii?Q?1pkMsLozuF+PkgBsCSFHxuucNRc9fx7HNSW6S9GYiRaxORBQY0gjDmLlbQVv?=
- =?us-ascii?Q?oy9nPA5YiyuBcrCBaX3iyVA0G4NPD5vw+1p1FL3kdk8+E5M06iDLfEd6ALo+?=
- =?us-ascii?Q?TgbbpkJ95VsISkZK3//Bny86mEN2meEYEZRxGram2Eo9cay97xPNpPSY1ySG?=
- =?us-ascii?Q?pIdv5SeAu2EyHxE8Or/B5eGpYIybwoNLitwxsiO3NwZJiuLDXUK9ARQOI4ii?=
- =?us-ascii?Q?+f1EPjaypJH/KOUaZwaEvP97W8DWIFLnUpqhkm07BK5Ii6gwd7/wI5Cpj+cj?=
- =?us-ascii?Q?vqpZbR4JCJI34oZ/C1ZSfz+NG9mJEt9BrCRfb+cC1ue5RBGL6dCgQGF9VTKV?=
- =?us-ascii?Q?gmGYI3Fw7u+L3qQ5r3LpcYRHzZSeB4APH9QjSM9/mnFPVa6n0PmijNuWJ/Oe?=
- =?us-ascii?Q?foS91+4bLKD2dbhWYZnQsdc0crCiWCZEBEdu1XUiG3dj//XVV9yBpJAtOWlj?=
- =?us-ascii?Q?mPb+HaeRakgKOHORWglfE6dCeikZh+X1BWALeQNpM9eE9LWG41rENILiyh5P?=
- =?us-ascii?Q?apj3aKWoAm4t0MHAIx/FBMRjh5m7uZ5Vh8MYu3U7ghX2KHrzf7Mhw1LgtAsD?=
- =?us-ascii?Q?9aRvBOvvR36ykndcDlmFw8OeNuGbhbAWdb8N0XDl9BtmQQKJ+kdaFeloqAHJ?=
- =?us-ascii?Q?yJT/pMO2OM+06x0fvpYJQ7JGMSJQiGJJxRAjLuwws4+536wLho4hCKe7UyTp?=
- =?us-ascii?Q?EMLjZQ6fAl1MMEI4hgusigZ4if9cPdPjlUr3cG/9X8w5RN/5FKKVllqP5gms?=
- =?us-ascii?Q?gct5IryPzW07TulLD6JHQXuwmnNsf7u3KJDmjYDq6RWPxqjJ?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?zWmQAjLFSmywVnHgPyFlgBHu9QMDxstuY3E2EXpOdmNY7t6kNVSP3akM/mI+?=
+ =?us-ascii?Q?ZE0YSwHIT92E5UOTCQxo3QR9jR/AfeaIDeuqh9B5u7qyMBd+mU7s2rPcMW59?=
+ =?us-ascii?Q?NYqDoO9uLzkq+oF+y9e8yYRNphm2WLaOXtmElFgSmfV+fjNmScH1cEftzQIC?=
+ =?us-ascii?Q?SjEAZNu06Cs/e5VN7UHvwk+GbXk7TaT/KkEqEgqCl2KsL/mxJj4I8gw6CUx8?=
+ =?us-ascii?Q?Z0dP4/2Fq0WaxrN+oLIG5NJDqzKsZwMPPyjk5CQMQQZXC3iOzrLfF45QfLRT?=
+ =?us-ascii?Q?1i8/TNuCh/jl2L9TxWHqOcplNM2UfHhQgwp3MiLAfA6roSOg3MVvL6/gfvFu?=
+ =?us-ascii?Q?qz/bBd5dWrEyxONa3NN9KNAuufFH0ycx784mAwaT6xJHMxGBZGQ5yClVpG3I?=
+ =?us-ascii?Q?df/+mLSBtnnjHJjPpTVdUVzksjbsAi3gKJWR2nPm3e64fXJ72iTIF9ueYKEn?=
+ =?us-ascii?Q?5/90ioKFrnDCsAmVVCWpfgphw8kPEMQDvPe7eULnCqFw4CjaTdAoY5GDEsBR?=
+ =?us-ascii?Q?CNjj0fk/YmadhJE4vICeQ5kLoOllLjmuifbDsU+7wEy7wqHWBCzjWuC2PcI7?=
+ =?us-ascii?Q?a2jtmaCgKjab1GYFgUUEYEHokncTS65SqwZ/MN/6j8QC8zw82+roQEGCaDAC?=
+ =?us-ascii?Q?Xv6Ak4Zv39lG8ARDPHEkPoBeZf5plto0uNfFhwXvyPrNwNm7qdt+BxhbTUaI?=
+ =?us-ascii?Q?cKrylDXJB0RJEVs15TV1ew/tDZ8PnDBow8LbkXk88fBIe9UmCP2QjkoFAdRE?=
+ =?us-ascii?Q?MzlREJN5szARzOj4alhx10IL0HKI2p7ncAhqRn9QtncUuoWV1n8dN51fhcTN?=
+ =?us-ascii?Q?vBnyhI0YqP/qvfN5SfS+b4b4DdaegqsoGARNg6CrTN9aalskCaNP6NswfuY9?=
+ =?us-ascii?Q?stNOQKgtAHVjdE4Dc+tt6I+GpuaecRWLvQFC6xypTviKlnWVVxXlspbZOpIe?=
+ =?us-ascii?Q?bIKjzg5xac9gnDxiox57KNMTjNeYkTwgyxrmuei97VeuJZ93kMfIHZJE//F4?=
+ =?us-ascii?Q?vXySEMe7FO1ymT3TEz/3AJf0C0ZECdgyEi5hECTKSV9PJ68Yk4JcNXq+vzq6?=
+ =?us-ascii?Q?dKSKAviFg4U7E/llv73vYtzj/4qqPqqKoS2W7pGbyhh9P/G1leylKL8QzBvO?=
+ =?us-ascii?Q?p7h8hKwu9zoNCIfYzOxhhCv2i+XIJiJ3CKUibLaxKjHqhUzKDUEz2cfKUCQe?=
+ =?us-ascii?Q?ym7lRNcccHPlWYjQ39SIaW0VF/2uroXlxN84oXZRj4TEtzs3DmyoczaXcW92?=
+ =?us-ascii?Q?vum8uG79KgTafiO5Jf5VsgscQRSX/9K+/qq9Yes/6eZxSGu5Ewen5szbS1va?=
+ =?us-ascii?Q?seT5nYofVTFLwj4lZL05u8aEXmGoxWGD/PV6qp4/+bekNV75oE+ygZc5yhw5?=
+ =?us-ascii?Q?DYbetw7HK1cBKjj1+B7sVffIjfUaT9oI3vmKwfDzmhACFUf/Ws/50MXCMsju?=
+ =?us-ascii?Q?dnxYJbK7/f7PmL6qyieWNvsA8mxdSeK7077GTV/fc0UZzbBnKNRtryO9sRtH?=
+ =?us-ascii?Q?YM8intwnYGDTx3o8gPJ+LEv0StCgaIYepWb/k8bq+LGpKGh0kaEWJ1Kl0sMW?=
+ =?us-ascii?Q?dpKZMn8WO9/PCwVluBKR7IF+6FBuUPXLmB8MvncqmYRHv/h9scfH3hbXli9l?=
+ =?us-ascii?Q?VvQ9Nt5LKn2Ux6xiQm5AymyqHLzjcHBzzsQgP/IR75vx0LCkx+YAkql3RvrO?=
+ =?us-ascii?Q?vck2UZ3OFTFXJucdxuR+5j1q4qh5IANGiarWaWofDfmKEgd7?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <335FEC71F1EE8C4C8211AADE1673751A@namprd10.prod.outlook.com>
+Content-ID: <D5E6CE742D9FB94DB0EAB0EB69D793F2@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 59ad1cf6-3e6d-49b5-0f28-08d9eff5f1e5
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Feb 2022 20:09:45.2420
+X-MS-Exchange-CrossTenant-Network-Message-Id: 33ddca2b-8abd-404e-7266-08d9eff52751
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Feb 2022 20:04:05.4217
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: M3pDle1B5U2lN6RsYDP7yiLSocwEk6Sy+pvmtV+mdBtVEWNH9Wb70VkGJhF5lg1pewKzwpJrVc69et9JxObAoG8i7q7eez1GsDLWXSsGQ04=
+X-MS-Exchange-CrossTenant-userprincipalname: aJmvyF2eaIv8lTSeekru3wB2NWUzinWNuUhybAmo93SKH+mEYjb7eVixioBRYifNDLZMJLX2KJDEeK31D/uXEuQPdLiopQP0jym0yCGZB14=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR1001MB2212
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10258 signatures=673431
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0 bulkscore=0
- malwarescore=0 adultscore=0 spamscore=0 mlxlogscore=999 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 suspectscore=0
+ phishscore=0 malwarescore=0 mlxscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
  definitions=main-2202140116
-X-Proofpoint-GUID: _AfQyjY2CVcCslA_s4ZPxFGWOKmzNnf3
-X-Proofpoint-ORIG-GUID: _AfQyjY2CVcCslA_s4ZPxFGWOKmzNnf3
+X-Proofpoint-GUID: daHxoKplywZ3NHBJIdUU4krM2srsBTGO
+X-Proofpoint-ORIG-GUID: daHxoKplywZ3NHBJIdUU4krM2srsBTGO
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -155,87 +153,108 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 > On Feb 11, 2022, at 2:32 PM, Bart Van Assche <bvanassche@acm.org> wrote:
 >=20
-> Introduce the NCR5380_cmd_priv() function. This function will allow to
-> access the SCSI pointer in the next patch with a single statement instead=
- of
-> two, e.g. as follows:
+> nsp_reselected() and nsphw_init() always return the same value (TRUE).
+> Hence change the return type of these functions into 'void'.
 >=20
-> 	struct scsi_pointer *scsi_pointer =3D
-> 		&NCR5380_cmd_priv(cmd)->scsi_pointer;
->=20
-> Cc: Finn Thain <fthain@telegraphics.com.au>
 > Cc: Hannes Reinecke <hare@suse.com>
 > Cc: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> Cc: John Garry <john.garry@huawei.com>
 > Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
-> drivers/scsi/NCR5380.c | 8 ++++----
-> drivers/scsi/NCR5380.h | 5 +++++
-> 2 files changed, 9 insertions(+), 4 deletions(-)
+> drivers/scsi/pcmcia/nsp_cs.c | 17 +++++------------
+> drivers/scsi/pcmcia/nsp_cs.h |  4 ++--
+> 2 files changed, 7 insertions(+), 14 deletions(-)
 >=20
-> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-> index 55af3e245a92..6fa5e363945a 100644
-> --- a/drivers/scsi/NCR5380.c
-> +++ b/drivers/scsi/NCR5380.c
-> @@ -564,7 +564,7 @@ static int NCR5380_queue_command(struct Scsi_Host *in=
-stance,
->                                  struct scsi_cmnd *cmd)
+> diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+> index 92c818a8a84a..a5c2dd7ebc16 100644
+> --- a/drivers/scsi/pcmcia/nsp_cs.c
+> +++ b/drivers/scsi/pcmcia/nsp_cs.c
+> @@ -298,7 +298,7 @@ static void nsphw_init_sync(nsp_hw_data *data)
+> /*
+>  * Initialize Ninja hardware
+>  */
+> -static int nsphw_init(nsp_hw_data *data)
+> +static void nsphw_init(nsp_hw_data *data)
 > {
-> 	struct NCR5380_hostdata *hostdata =3D shost_priv(instance);
-> -	struct NCR5380_cmd *ncmd =3D scsi_cmd_priv(cmd);
-> +	struct NCR5380_cmd *ncmd =3D NCR5380_cmd_priv(cmd);
-> 	unsigned long flags;
+> 	unsigned int base     =3D data->BaseAddress;
 >=20
-> #if (NDEBUG & NDEBUG_NO_WRITE)
-> @@ -672,7 +672,7 @@ static struct scsi_cmnd *dequeue_next_cmd(struct Scsi=
-_Host *instance)
-> static void requeue_cmd(struct Scsi_Host *instance, struct scsi_cmnd *cmd=
+> @@ -349,8 +349,6 @@ static int nsphw_init(nsp_hw_data *data)
+> 	nsp_write(base,	      IRQCONTROL,   IRQCONTROL_ALLCLEAR);
+>=20
+> 	nsp_setup_fifo(data, FALSE);
+> -
+> -	return TRUE;
+> }
+>=20
+> /*
+> @@ -643,7 +641,7 @@ static int nsp_dataphase_bypass(struct scsi_cmnd *SCp=
+nt)
+> /*
+>  * accept reselection
+>  */
+> -static int nsp_reselected(struct scsi_cmnd *SCpnt)
+> +static void nsp_reselected(struct scsi_cmnd *SCpnt)
+> {
+> 	unsigned int  base    =3D SCpnt->device->host->io_port;
+> 	unsigned int  host_id =3D SCpnt->device->host->this_id;
+> @@ -675,8 +673,6 @@ static int nsp_reselected(struct scsi_cmnd *SCpnt)
+> 	bus_reg =3D nsp_index_read(base, SCSIBUSCTRL) & ~(SCSI_BSY | SCSI_ATN);
+> 	nsp_index_write(base, SCSIBUSCTRL, bus_reg);
+> 	nsp_index_write(base, SCSIBUSCTRL, bus_reg | AUTODIRECTION | ACKENB);
+> -
+> -	return TRUE;
+> }
+>=20
+> /*
+> @@ -1057,9 +1053,8 @@ static irqreturn_t nspintr(int irq, void *dev_id)
+> 		if (irq_phase & RESELECT_IRQ) {
+> 			nsp_dbg(NSP_DEBUG_INTR, "reselect");
+> 			nsp_write(base, IRQCONTROL, IRQCONTROL_RESELECT_CLEAR);
+> -			if (nsp_reselected(tmpSC) !=3D FALSE) {
+> -				return IRQ_HANDLED;
+> -			}
+> +			nsp_reselected(tmpSC);
+> +			return IRQ_HANDLED;
+> 		}
+>=20
+> 		if ((irq_phase & (PHASE_CHANGE_IRQ | LATCHED_BUS_FREE)) =3D=3D 0) {
+> @@ -1614,9 +1609,7 @@ static int nsp_cs_config(struct pcmcia_device *link=
 )
-> {
-> 	struct NCR5380_hostdata *hostdata =3D shost_priv(instance);
-> -	struct NCR5380_cmd *ncmd =3D scsi_cmd_priv(cmd);
-> +	struct NCR5380_cmd *ncmd =3D NCR5380_cmd_priv(cmd);
+> 	nsp_dbg(NSP_DEBUG_INIT, "I/O[0x%x+0x%x] IRQ %d",
+> 		data->BaseAddress, data->NumAddress, data->IrqNumber);
 >=20
-> 	if (hostdata->sensing =3D=3D cmd) {
-> 		scsi_eh_restore_cmnd(cmd, &hostdata->ses);
-> @@ -1690,7 +1690,7 @@ static void NCR5380_information_transfer(struct Scs=
-i_Host *instance)
-> #endif
+> -	if(nsphw_init(data) =3D=3D FALSE) {
+> -		goto cs_failed;
+> -	}
+> +	nsphw_init(data);
 >=20
-> 	while ((cmd =3D hostdata->connected)) {
-> -		struct NCR5380_cmd *ncmd =3D scsi_cmd_priv(cmd);
-> +		struct NCR5380_cmd *ncmd =3D NCR5380_cmd_priv(cmd);
+> 	host =3D nsp_detect(&nsp_driver_template);
 >=20
-> 		tmp =3D NCR5380_read(STATUS_REG);
-> 		/* We only have a valid SCSI phase when REQ is asserted */
-> @@ -2206,7 +2206,7 @@ static bool list_del_cmd(struct list_head *haystack=
-,
->                          struct scsi_cmnd *needle)
-> {
-> 	if (list_find_cmd(haystack, needle)) {
-> -		struct NCR5380_cmd *ncmd =3D scsi_cmd_priv(needle);
-> +		struct NCR5380_cmd *ncmd =3D NCR5380_cmd_priv(needle);
+> diff --git a/drivers/scsi/pcmcia/nsp_cs.h b/drivers/scsi/pcmcia/nsp_cs.h
+> index 665bf8d0faf7..94c1f6c7c601 100644
+> --- a/drivers/scsi/pcmcia/nsp_cs.h
+> +++ b/drivers/scsi/pcmcia/nsp_cs.h
+> @@ -304,7 +304,7 @@ static int nsp_eh_host_reset   (struct scsi_cmnd *SCp=
+nt);
+> static int nsp_bus_reset       (nsp_hw_data *data);
 >=20
-> 		list_del(&ncmd->list);
-> 		return true;
-> diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
-> index 845bd2423e66..88a1bb41b72e 100644
-> --- a/drivers/scsi/NCR5380.h
-> +++ b/drivers/scsi/NCR5380.h
-> @@ -230,6 +230,11 @@ struct NCR5380_cmd {
-> 	struct list_head list;
-> };
+> /* */
+> -static int  nsphw_init           (nsp_hw_data *data);
+> +static void nsphw_init           (nsp_hw_data *data);
+> static int  nsphw_start_selection(struct scsi_cmnd *SCpnt);
+> static void nsp_start_timer      (struct scsi_cmnd *SCpnt, int time);
+> static int  nsp_fifo_count       (struct scsi_cmnd *SCpnt);
+> @@ -320,7 +320,7 @@ static int  nsp_expect_signal    (struct scsi_cmnd *S=
+Cpnt,
+> 				  unsigned char  mask);
+> static int  nsp_xfer             (struct scsi_cmnd *SCpnt, int phase);
+> static int  nsp_dataphase_bypass (struct scsi_cmnd *SCpnt);
+> -static int  nsp_reselected       (struct scsi_cmnd *SCpnt);
+> +static void nsp_reselected       (struct scsi_cmnd *SCpnt);
+> static struct Scsi_Host *nsp_detect(struct scsi_host_template *sht);
 >=20
-> +static inline struct NCR5380_cmd *NCR5380_cmd_priv(struct scsi_cmnd *cmd=
-)
-> +{
-> +	return scsi_cmd_priv(cmd);
-> +}
-> +
-> #define NCR5380_PIO_CHUNK_SIZE		256
->=20
-> /* Time limit (ms) to poll registers when IRQs are disabled, e.g. during =
-PDMA */
+> /* Interrupt handler */
 
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
