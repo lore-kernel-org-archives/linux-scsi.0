@@ -2,52 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B384C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 18:17:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A580C35278
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 19:13:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242967AbiBOSR4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Feb 2022 13:17:56 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34832 "EHLO
+        id S243455AbiBOTNv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Feb 2022 14:13:51 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241218AbiBOSRw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 13:17:52 -0500
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 813AC119F0C
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 10:17:42 -0800 (PST)
-Received: by mail-pj1-x102d.google.com with SMTP id a11-20020a17090a740b00b001b8b506c42fso3903825pjg.0
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 10:17:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=rU/cr+2YS83r8ZzfG0ihHyfke5lY7dzNO33vRqwTRo0=;
-        b=BbY3zUMbpsKVLuD6QiFaFpnxej58wpxQPVVGisDcf+K+2coTsFmZNXGoWqBeKoLb1x
-         3ZptFg7el6LpqeSuHR1QjwuSCHfpkEX/T+XcjAHpaQzkvx2kHT7d0+kYGoaayuMfQhPV
-         CAs5kcpK7DDzn/NDlTFukbq1xe316LjUYcWLM=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=rU/cr+2YS83r8ZzfG0ihHyfke5lY7dzNO33vRqwTRo0=;
-        b=ImTiLAOO/hmaQe8XU0M0QvmoUz4832sI9N4lvjE8slObZSJgYwUvF+dxxZkAqRynOb
-         sx9SN0MbQBgpt9UPk3P1rHNTlUPTiwMVDOq6aZOVNbdXHzKdTz137vrevrOhord9H2Oi
-         PnT7M7SD9lhL94CyMD4b++dyRAbYRGNAKVcuwXOQR7pIVkm2Vfrzg5MmYNh2u3qKArxN
-         FiU+FVjxozNVFC2vXKRddfjC+e6pIyb6mebslM2KLivNdRyFd8HY7IzvnQGrXLJbAUBv
-         JxOfv0OW+6rzjHtGPIBVhD4OKPkgAEDu4Ospp6ZwDxtOV+65FuLHbwr4U/2IyddsEKHx
-         IwrA==
-X-Gm-Message-State: AOAM532ZBS8MPHSM13NPFXa7sQ8F9KwJqPEwxdGSXXDFnxhZnIGFm1gS
-        AB3DJCcDx/nzZ5pe7E6rYkuc2Q==
-X-Google-Smtp-Source: ABdhPJwjJJkj0fC2gO+FdGjnaisWCk9FKkCf0qazg7PUuY4rrjoW+egyeLOWB+yCEr/MI5qa+9+dbA==
-X-Received: by 2002:a17:902:eb8f:: with SMTP id q15mr235036plg.67.1644949062021;
-        Tue, 15 Feb 2022 10:17:42 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id a186sm3157627pgc.70.2022.02.15.10.17.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Feb 2022 10:17:41 -0800 (PST)
-Date:   Tue, 15 Feb 2022 10:17:40 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+        with ESMTP id S229844AbiBOTNs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 14:13:48 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66F9F107A91;
+        Tue, 15 Feb 2022 11:13:38 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1449BB81C63;
+        Tue, 15 Feb 2022 19:13:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA149C340EB;
+        Tue, 15 Feb 2022 19:13:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644952415;
+        bh=aWKfLj+OcuQ7ORm2NzKcSLdWPXwTMvCyCCSlhItZJdc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Pb9b+lIl3czsbILZx4JGaHKfxai5nhmkbafSdXIePkm1+42+PtZWRvtnxsIxieHjT
+         9ekyHuwvisvcr9fVX07+lClUNa2p0vhktIvKZSAjwuXs2gg0KwuzJxVI1eJwsCEsx9
+         QAqj6xuEKLMkpaRxHB9Jbh5UZNn3lhP/U/32rVpI9FJi1e5LJ0Z2HLVW0p7KctTIZB
+         uH0ohVDX/Qm561zC5FzYDM+alYJWObfXnSGwWXg348TFcT9AqtFzE3U54RAksJmBj5
+         t03G17WjapCI9e95mge26r6O7cubp0cNepLCQdTnroGWEV76h8vqtZwzBmUYMX3S66
+         UcWCeciahTo0A==
+Date:   Tue, 15 Feb 2022 13:21:10 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Kees Cook <keescook@chromium.org>
 Cc:     GR-QLogic-Storage-Upstream@marvell.com,
         linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ia64@vger.kernel.org, linux-s390@vger.kernel.org,
@@ -70,45 +56,50 @@ Cc:     GR-QLogic-Storage-Upstream@marvell.com,
         linux-perf-users@vger.kernel.org, linux-hardening@vger.kernel.org
 Subject: Re: [PATCH][next] treewide: Replace zero-length arrays with
  flexible-array members
-Message-ID: <202202151016.C0471D6E@keescook>
+Message-ID: <20220215192110.GA883653@embeddedor>
 References: <20220215174743.GA878920@embeddedor>
+ <202202151016.C0471D6E@keescook>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220215174743.GA878920@embeddedor>
+In-Reply-To: <202202151016.C0471D6E@keescook>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Feb 15, 2022 at 11:47:43AM -0600, Gustavo A. R. Silva wrote:
-> There is a regular need in the kernel to provide a way to declare
-> having a dynamically sized set of trailing elements in a structure.
-> Kernel code should always use “flexible array members”[1] for these
-> cases. The older style of one-element or zero-length arrays should
-> no longer be used[2].
+On Tue, Feb 15, 2022 at 10:17:40AM -0800, Kees Cook wrote:
+> On Tue, Feb 15, 2022 at 11:47:43AM -0600, Gustavo A. R. Silva wrote:
+> > There is a regular need in the kernel to provide a way to declare
+> > having a dynamically sized set of trailing elements in a structure.
+> > Kernel code should always use “flexible array members”[1] for these
+> > cases. The older style of one-element or zero-length arrays should
+> > no longer be used[2].
+> > 
+> > This code was transformed with the help of Coccinelle:
+> > (next-20220214$ spatch --jobs $(getconf _NPROCESSORS_ONLN) --sp-file script.cocci --include-headers --dir . > output.patch)
+> > 
+> > @@
+> > identifier S, member, array;
+> > type T1, T2;
+> > @@
+> > 
+> > struct S {
+> >   ...
+> >   T1 member;
+> >   T2 array[
+> > - 0
+> >   ];
+> > };
 > 
-> This code was transformed with the help of Coccinelle:
-> (next-20220214$ spatch --jobs $(getconf _NPROCESSORS_ONLN) --sp-file script.cocci --include-headers --dir . > output.patch)
+> These all look trivially correct to me. Only two didn't have the end of
+> the struct visible in the patch, and checking those showed them to be
+> trailing members as well, so:
 > 
-> @@
-> identifier S, member, array;
-> type T1, T2;
-> @@
-> 
-> struct S {
->   ...
->   T1 member;
->   T2 array[
-> - 0
->   ];
-> };
+> Reviewed-by: Kees Cook <keescook@chromium.org>
 
-These all look trivially correct to me. Only two didn't have the end of
-the struct visible in the patch, and checking those showed them to be
-trailing members as well, so:
+I'll add this to my -next tree.
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
-
--- 
-Kees Cook
+Thanks!
+--
+Gustavo
