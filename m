@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55DB3C43219
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 15:28:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D480CC43219
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 15:31:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239917AbiBOP2e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Feb 2022 10:28:34 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49626 "EHLO
+        id S240147AbiBOPbh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Feb 2022 10:31:37 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239913AbiBOP2I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 10:28:08 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23662A8885;
-        Tue, 15 Feb 2022 07:27:39 -0800 (PST)
+        with ESMTP id S240345AbiBOPbR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 10:31:17 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30AE8C3C23;
+        Tue, 15 Feb 2022 07:29:11 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6EE32B81AFE;
-        Tue, 15 Feb 2022 15:27:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19A1FC36AE2;
-        Tue, 15 Feb 2022 15:27:36 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C10B0B81AF1;
+        Tue, 15 Feb 2022 15:29:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DD4AC340EB;
+        Tue, 15 Feb 2022 15:29:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644938857;
-        bh=j5EtwuHZw+bVazccDmsArh2UvLnV4tidZe8OM+9L1uA=;
+        s=k20201202; t=1644938948;
+        bh=SdNN4jzl4yvhBLhVKk+K87AN0l17ZYIZAN236uiFEDI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FOYUI1QwO2tciaUMUa7SYSZ3QaKnLV2AtVVPcNECvV8mWgig1qLiV1O93i5RgWNwZ
-         f1WGMzdh5NMQKd+VuZ4CAWnxmYfiMQuwlMkPE9Gln9nOCRMWkfu6yuhAkcRkANCC/x
-         bqNZh6xk3SAnBu8SjzQPw/UivBIv81BVesN1gRhUtXQ2qDZkgax5i43+QMU+DuSuF/
-         1TlK0U1ya29Kx9jxXdtu3ZxTeRCtCsQ/HGEa9MzDmaykSm/P6Gwvy/VHOeXiOcvncT
-         s3tr9k/SBSEXuTng0CNTsYjWO0M3I4sQOuxXZQmemonQjMaIwIGaPI/s4rcsmkH1u6
-         9EZN9051UMoSw==
+        b=dWlq7mBAo2uEvYvKSsGApn6J2S/Vl8X7lm7GxCO96E3uJoRX0piwNXGCqIvCBA/qt
+         b7Dt01EtSo9ieiy2RePDq5EPufZD4zG4WdtBiaXLAfMmhOfabk5gZoVwfrXUkox0iH
+         IZ8plQFfVO+gjm3+pXEcHeuQ39p7pOsr7YFc0PC+FeO9IGCosHS0n75+Le5BrUBFAe
+         iXkJu1h26NARjEfJQbhd04NBKNACMfPU2yRdmEtqLYyQkN/vflUWnYPo762UjQiUp+
+         IYiqLzQbXSTGbk22S7vw90ERq9lDvEO/Yk1i2O8N2G0c2XVCMpXiy+k2/B5br56YPY
+         ZWQ/iE7pGiScw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
@@ -39,12 +39,12 @@ Cc:     James Smart <jsmart2021@gmail.com>,
         Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
         dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 20/34] scsi: lpfc: Remove NVMe support if kernel has NVME_FC disabled
-Date:   Tue, 15 Feb 2022 10:26:43 -0500
-Message-Id: <20220215152657.580200-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 20/33] scsi: lpfc: Remove NVMe support if kernel has NVME_FC disabled
+Date:   Tue, 15 Feb 2022 10:28:18 -0500
+Message-Id: <20220215152831.580780-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220215152657.580200-1-sashal@kernel.org>
-References: <20220215152657.580200-1-sashal@kernel.org>
+In-Reply-To: <20220215152831.580780-1-sashal@kernel.org>
+References: <20220215152831.580780-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -75,10 +75,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 12 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 54c58392fd5d0..f74a1c09c3518 100644
+index 19fd9d263f47f..f66ba64080a31 100644
 --- a/drivers/scsi/lpfc/lpfc.h
 +++ b/drivers/scsi/lpfc/lpfc.h
-@@ -1165,6 +1165,16 @@ struct lpfc_hba {
+@@ -1163,6 +1163,16 @@ struct lpfc_hba {
  	uint32_t cfg_hostmem_hgp;
  	uint32_t cfg_log_verbose;
  	uint32_t cfg_enable_fc4_type;
@@ -95,7 +95,7 @@ index 54c58392fd5d0..f74a1c09c3518 100644
  	uint32_t cfg_aer_support;
  	uint32_t cfg_sriov_nr_virtfn;
  	uint32_t cfg_request_firmware_upgrade;
-@@ -1186,9 +1196,6 @@ struct lpfc_hba {
+@@ -1184,9 +1194,6 @@ struct lpfc_hba {
  	uint32_t cfg_ras_fwlog_func;
  	uint32_t cfg_enable_bbcr;	/* Enable BB Credit Recovery */
  	uint32_t cfg_enable_dpp;	/* Enable Direct Packet Push */
@@ -106,7 +106,7 @@ index 54c58392fd5d0..f74a1c09c3518 100644
  	uint32_t cfg_enable_mi;
  	struct nvmet_fc_target_port *targetport;
 diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 7a7f17d71811b..bac78fbce8d6e 100644
+index f20c4fe1fb8b9..632b9cdabd14e 100644
 --- a/drivers/scsi/lpfc/lpfc_attr.c
 +++ b/drivers/scsi/lpfc/lpfc_attr.c
 @@ -3978,8 +3978,8 @@ LPFC_ATTR_R(nvmet_mrq_post,
