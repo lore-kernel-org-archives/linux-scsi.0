@@ -2,45 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57CFEC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 08:16:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C7AAC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 08:57:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232193AbiBOIQ5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Feb 2022 03:16:57 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:43904 "EHLO
+        id S232017AbiBOI5p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Feb 2022 03:57:45 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:38252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231612AbiBOIQ4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 03:16:56 -0500
+        with ESMTP id S229997AbiBOI5o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 03:57:44 -0500
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3413F7C16C
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 00:16:46 -0800 (PST)
-Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JyYnN1vpPz67Xgw;
-        Tue, 15 Feb 2022 16:15:52 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CCC689CCA
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 00:57:34 -0800 (PST)
+Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JyZcM5Vvwz67x8s;
+        Tue, 15 Feb 2022 16:53:07 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 15 Feb 2022 09:16:43 +0100
+ fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.21; Tue, 15 Feb 2022 09:57:31 +0100
 Received: from [10.47.81.62] (10.47.81.62) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2308.21; Tue, 15 Feb
- 2022 08:16:43 +0000
-Message-ID: <f2528f26-0231-1a33-94fd-f29c7dd8bfdc@huawei.com>
-Date:   Tue, 15 Feb 2022 08:16:44 +0000
+ 2022 08:57:30 +0000
+Message-ID: <9bfe3d2e-ae47-c114-9fb4-ed48ba116c11@huawei.com>
+Date:   Tue, 15 Feb 2022 08:57:32 +0000
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.1
-Subject: Re: [PATCH v3 00/31] libsas and pm8001 fixes
+Subject: Re: [PATCH v3 30/31] scsi: pm8001: Simplify pm8001_task_exec()
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Xiang Chen <chenxiang66@hisilicon.com>,
-        "Jason Yan" <yanaijie@huawei.com>
+        "Jason Yan" <yanaijie@huawei.com>,
+        Ajish Koshy <Ajish.Koshy@microchip.com>,
+        Viswas G <Viswas.G@microchip.com>, <jinpu.wang@ionos.com>
 References: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
- <3e09f069-4f3d-e9a3-717c-ed05c09b99e1@huawei.com>
- <768d5978-c699-d882-0a4b-5403b3143aa0@opensource.wdc.com>
+ <20220214021747.4976-31-damien.lemoal@opensource.wdc.com>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <768d5978-c699-d882-0a4b-5403b3143aa0@opensource.wdc.com>
+In-Reply-To: <20220214021747.4976-31-damien.lemoal@opensource.wdc.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.47.81.62]
@@ -51,57 +52,245 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/02/2022 22:29, Damien Le Moal wrote:
-> On 2/15/22 03:06, John Garry wrote:
->> On 14/02/2022 02:17, Damien Le Moal wrote:
->>> This first part of this series (patches 1 to 24) fixes handling of NCQ
->>> NON DATA commands in libsas and many bugs in the pm8001 driver.
->>>
->>> The fixes for the pm8001 driver include:
->>> * Suppression of all sparse warnings, fixing along the way many le32
->>>     handling bugs for big-endian architectures
->>> * Fix handling of NCQ NON DATA commands
->>> * Fix of tag values handling (0*is*  a valid tag value)
->>> * Fix many tag iand memory leaks in error path
->>> * Fix NCQ error recovery (abort all task execution) that was causing a
->>>     crash
->>>
->>> The second part of the series (patches 25 to 31) iadd a small cleanup of
->>> libsas code and many simplifications of the pm8001 driver code.
->>>
->>> With these fixes, libzbc test suite passes all test case. This test
->>> suite was used with an SMR drive for testing because it generates many
->>> NCQ NON DATA commands (for zone management commands) and also generates
->>> many NCQ command errors to check ASC/ASCQ returned by the device. With
->>> the test suite, the error recovery path was extensively exercised. The
->>> same tests were also executed with a SAS SMR drives to exercise the
->>> error path.
->>>
->>> The patches are based on the 5.18/scsi-staging tree.
->>
->> Hi Damien,
->>
->> jfyi, I still see the hang with this series. I don't think that the tag
->> fixes were relevant unfortunately.
+On 14/02/2022 02:17, Damien Le Moal wrote:
+> The main part of the pm8001_task_exec() function uses a do {} while(0)
+> loop that is useless and only makes the code harder to read. Remove this
+> loop. Also, the unnecessary local variable t is removed.
+> Additionnally, handling of the running_req counter is fixed to avoid
+> decrementing it without a corresponding incrementation in the case of an
+> invalid task protocol.
 > 
-> As mentioned above, I did test with a SAS drive too (an SMR one to
-> heavily test the error path) and it worked perfectly.
-> Note that using Martin's rc1 based scsi-staging tree, I did see a lot of
-> KASAN complaints on boot regarding MSI/PCI setup. These warnings are
-> gone with rc3/4. What kernel version base are you using ?
 
-I was using mkp 5.18 staging tree from yesterday as baseline:
-https://github.com/hisilicon/kernel-dev/commits/private-topic-sas-5.17-damien-pm8001-v3
+Hi Damien,
 
-If I start using rc4 then I would get conflicts (which obviously would 
-be resolvable easily enough), but I doubt it is an issue (in using rc1).
+I think that this is much improved, but there are still issues with the 
+code but they are outside the scope of your change.
 
+Just some minor comments below.
+
+Regardless,
+
+Reviewed-by: John Garry <john.garry@huawei.com>
+
+> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> ---
+>   drivers/scsi/pm8001/pm8001_sas.c | 160 ++++++++++++++-----------------
+>   1 file changed, 73 insertions(+), 87 deletions(-)
 > 
-> I could not find the ARM board I have in the lab yesterday. Will try
-> again to find it and test with it.
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index 6c4aa04c9144..980afde2a0ab 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -373,32 +373,32 @@ static int sas_find_local_port_id(struct domain_device *dev)
+>     * @is_tmf: if it is task management task.
+>     * @tmf: the task management IU
+>     */
+> -static int pm8001_task_exec(struct sas_task *task,
+> -	gfp_t gfp_flags, int is_tmf, struct pm8001_tmf_task *tmf)
+> +static int pm8001_task_exec(struct sas_task *task, gfp_t gfp_flags, int is_tmf,
+> +			    struct pm8001_tmf_task *tmf)
+>   {
+>   	struct domain_device *dev = task->dev;
+> +	struct pm8001_device *pm8001_dev = dev->lldd_dev;
+>   	struct pm8001_hba_info *pm8001_ha;
+> -	struct pm8001_device *pm8001_dev;
+>   	struct pm8001_port *port = NULL;
+> -	struct sas_task *t = task;
+> -	struct task_status_struct *ts = &t->task_status;
+> +	struct task_status_struct *ts = &task->task_status;
+> +	enum sas_protocol task_proto = task->task_proto;
 
-That would be brilliant if you could. This problem could even be down to 
-defconfig differences (between arm64 and x86_64).
+nit: I think that these can be better arranged in reverse fir-tree 
+style, but no big deal
 
-Thanks,
-John
+>   	struct pm8001_ccb_info *ccb;
+> -	u32 rc = 0, n_elem = 0;
+> -	unsigned long flags = 0;
+> -	enum sas_protocol task_proto = t->task_proto;
+> +	unsigned long flags;
+> +	u32 n_elem = 0;
+> +	int rc = 0;
+>   
+>   	if (!dev->port) {
+>   		ts->resp = SAS_TASK_UNDELIVERED;
+>   		ts->stat = SAS_PHY_DOWN;
+>   		if (dev->dev_type != SAS_SATA_DEV)
+> -			t->task_done(t);
+> +			task->task_done(task);
+>   		return 0;
+>   	}
+>   
+> -	pm8001_ha = pm8001_find_ha_by_dev(task->dev);
+> +	pm8001_ha = pm8001_find_ha_by_dev(dev);
+>   	if (pm8001_ha->controller_fatal_error) {
+>   		ts->resp = SAS_TASK_UNDELIVERED;
+> -		t->task_done(t);
+> +		task->task_done(task);
+>   		return 0;
+>   	}
+>   
+> @@ -406,92 +406,78 @@ static int pm8001_task_exec(struct sas_task *task,
+>   
+>   	spin_lock_irqsave(&pm8001_ha->lock, flags);
+>   
+> -	do {
+> -		dev = t->dev;
+> -		pm8001_dev = dev->lldd_dev;
+> -		port = &pm8001_ha->port[sas_find_local_port_id(dev)];
+> +	pm8001_dev = dev->lldd_dev;
+> +	port = &pm8001_ha->port[sas_find_local_port_id(dev)];
+>   
+> -		if (DEV_IS_GONE(pm8001_dev) || !port->port_attached) {
+> -			ts->resp = SAS_TASK_UNDELIVERED;
+> -			ts->stat = SAS_PHY_DOWN;
+> -			if (sas_protocol_ata(task_proto)) {
+> -				spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+> -				t->task_done(t);
+> -				spin_lock_irqsave(&pm8001_ha->lock, flags);
+> -			} else {
+> -				t->task_done(t);
+> -			}
+> -			continue;
+> +	if (DEV_IS_GONE(pm8001_dev) || !port->port_attached) {
+> +		ts->resp = SAS_TASK_UNDELIVERED;
+> +		ts->stat = SAS_PHY_DOWN;
+> +		if (sas_protocol_ata(task_proto)) {
+> +			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+> +			task->task_done(task);
+> +			spin_lock_irqsave(&pm8001_ha->lock, flags);
+> +		} else {
+> +			task->task_done(task);
+>   		}
+> +		goto unlock;
+> +	}
+>   
+> -		ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_dev, t);
+> -		if (!ccb) {
+> -			rc = -SAS_QUEUE_FULL;
+> -			goto err_out;
+> -		}
+> +	ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_dev, task);
+> +	if (!ccb) {
+> +		rc = -SAS_QUEUE_FULL;
+> +		goto unlock;
+> +	}
+>   
+> -		if (!sas_protocol_ata(task_proto)) {
+> -			if (t->num_scatter) {
+> -				n_elem = dma_map_sg(pm8001_ha->dev,
+> -					t->scatter,
+> -					t->num_scatter,
+> -					t->data_dir);
+> -				if (!n_elem) {
+> -					rc = -ENOMEM;
+> -					goto err_out_ccb;
+> -				}
+> +	if (!sas_protocol_ata(task_proto)) {
+> +		if (task->num_scatter) {
+> +			n_elem = dma_map_sg(pm8001_ha->dev, task->scatter,
+> +					    task->num_scatter, task->data_dir);
+> +			if (!n_elem) {
+> +				rc = -ENOMEM;
+> +				goto ccb_free;
+>   			}
+> -		} else {
+> -			n_elem = t->num_scatter;
+>   		}
+> +	} else {
+> +		n_elem = task->num_scatter;
+> +	}
+>   
+> -		t->lldd_task = ccb;
+> -		ccb->n_elem = n_elem;
+> +	task->lldd_task = ccb;
+> +	ccb->n_elem = n_elem;
+>   
+> -		switch (task_proto) {
+> -		case SAS_PROTOCOL_SMP:
+> -			atomic_inc(&pm8001_dev->running_req);
+> -			rc = pm8001_task_prep_smp(pm8001_ha, ccb);
+> -			break;
+> -		case SAS_PROTOCOL_SSP:
+> -			atomic_inc(&pm8001_dev->running_req);
+> -			if (is_tmf)
+> -				rc = pm8001_task_prep_ssp_tm(pm8001_ha,
+> -					ccb, tmf);
+> -			else
+> -				rc = pm8001_task_prep_ssp(pm8001_ha, ccb);
+> -			break;
+> -		case SAS_PROTOCOL_SATA:
+> -		case SAS_PROTOCOL_STP:
+> -			atomic_inc(&pm8001_dev->running_req);
+> -			rc = pm8001_task_prep_ata(pm8001_ha, ccb);
+> -			break;
+> -		default:
+> -			dev_printk(KERN_ERR, pm8001_ha->dev,
+> -				"unknown sas_task proto: 0x%x\n", task_proto);
+> -			rc = -EINVAL;
+> -			break;
+> -		}
+> +	atomic_inc(&pm8001_dev->running_req);
+>   
+> -		if (rc) {
+> -			pm8001_dbg(pm8001_ha, IO, "rc is %x\n", rc);
+> -			atomic_dec(&pm8001_dev->running_req);
+> -			goto err_out_ccb;
+> -		}
+> -		/* TODO: select normal or high priority */
+> -	} while (0);
+> -	rc = 0;
+> -	goto out_done;
+> +	switch (task_proto) {
+> +	case SAS_PROTOCOL_SMP:
+> +		rc = pm8001_task_prep_smp(pm8001_ha, ccb);
+> +		break;
+> +	case SAS_PROTOCOL_SSP:
+> +		if (is_tmf)
+> +			rc = pm8001_task_prep_ssp_tm(pm8001_ha, ccb, tmf);
+> +		else
+> +			rc = pm8001_task_prep_ssp(pm8001_ha, ccb);
+> +		break;
+> +	case SAS_PROTOCOL_SATA:
+> +	case SAS_PROTOCOL_STP:
+> +		rc = pm8001_task_prep_ata(pm8001_ha, ccb);
+> +		break;
+> +	default:
+> +		dev_printk(KERN_ERR, pm8001_ha->dev,
+> +			   "unknown sas_task proto: 0x%x\n", task_proto);
+> +		rc = -EINVAL;
+> +		break;
+> +	}
+>   
+> -err_out_ccb:
+> -	pm8001_ccb_free(pm8001_ha, ccb);
+> -err_out:
+> -	dev_printk(KERN_ERR, pm8001_ha->dev, "pm8001 exec failed[%d]!\n", rc);
+> -	if (!sas_protocol_ata(task_proto))
+> -		if (n_elem)
+> -			dma_unmap_sg(pm8001_ha->dev, t->scatter, t->num_scatter,
+> -				t->data_dir);
+> -out_done:
+
+I know it's a personal preference, but I preferred the old labels; 
+however I did not like the goto out_done. I think that the old code 
+should just have had 2x spin_unlock_irqrestore + return statements.
+
+> +	if (rc) {
+> +		atomic_dec(&pm8001_dev->running_req);
+> +		if (!sas_protocol_ata(task_proto) && n_elem)
+> +			dma_unmap_sg(pm8001_ha->dev, task->scatter,
+> +				     task->num_scatter, task->data_dir);
+> +ccb_free:
+> +		pm8001_ccb_free(pm8001_ha, ccb);
+> +		dev_err(pm8001_ha->dev, "pm8001 exec failed[%d]!\n", rc);
+
+Comment on current code, so feel free to ignore: pm8001_dbg should be 
+used always (and improved to be able to do so)
+
+> +	}
+> +
+> +unlock:
+>   	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>   	return rc;
+>   }
+
