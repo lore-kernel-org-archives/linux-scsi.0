@@ -2,70 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75025C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 17:06:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C656DC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 17:09:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235971AbiBORG5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Feb 2022 12:06:57 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:33644 "EHLO
+        id S242222AbiBORJq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Feb 2022 12:09:46 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:35570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233335AbiBORG5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 12:06:57 -0500
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A69ABDE7D;
-        Tue, 15 Feb 2022 09:06:47 -0800 (PST)
-Received: by mail-pf1-f179.google.com with SMTP id i6so34013418pfc.9;
-        Tue, 15 Feb 2022 09:06:47 -0800 (PST)
+        with ESMTP id S242215AbiBORJo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 12:09:44 -0500
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA553107091;
+        Tue, 15 Feb 2022 09:09:34 -0800 (PST)
+Received: by mail-pf1-f172.google.com with SMTP id e17so16405430pfv.5;
+        Tue, 15 Feb 2022 09:09:34 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=ps4k0Jak0iBO913tWS9Hiq43T0aZihvh+xceKKZ3IYA=;
-        b=pI6V5aOQZJwQpWfGv22QTfmbUZnJfNxVbsWdrgiApPjTM6moeisz6zQGmrfCEQaibI
-         4m3HtPXZYS15w/+ei5oHURT1i0GyR/rXUKnoOjwvDJx12GpDOo0jzZ9HVBQSJEY1xd7J
-         bRTVtsW4/mZABaqApyNoy3zeHcexfAKPcKyTKdp715H5mHzYjYGvwEvoMvV3nl8pfsNp
-         AfpQHlwXG/f/UE2YcbyAuzqnzZVEkifJEhI7b107h0URf+uP4lZNpv+IuKyrVo8zan05
-         mfyYg9kjLXPDIlqsp/SX3U337FUaOupKzaRbkaNl+m195s7Yly+6dEiMdevJP7IRpsIf
-         0bqQ==
-X-Gm-Message-State: AOAM5314X/uLe64v6BGNep0iyy/Oob9rpWsLLfkdAjLEH8h81T7CKjFL
-        pSvSkSvr5l53InO9jKmFyENnawUSFNgcmw==
-X-Google-Smtp-Source: ABdhPJwrJrd2sw5Oa04ZMGxDcoI9uPlBf6SVwQVhl2Y5pUEBaRc22hjDs8f8FqooEPVoYdSkP52fFA==
-X-Received: by 2002:a63:3285:: with SMTP id y127mr4363927pgy.32.1644944806602;
-        Tue, 15 Feb 2022 09:06:46 -0800 (PST)
+        bh=waumpi9D3AhawuraVenaOvCaaY6ji2zNehq7XYS0irM=;
+        b=s1xylUsUk8tCQqFkuvOCI9ePt9XavjfE1IAQuXCelx30qOn2T6PN6DCL2L687TQuGG
+         jkWG+BTSM4L7AFFxqUTC6xlUuran0Z+fDdEF4M8b+lmg/F15xOmArwEPsws0htJK2EOL
+         lNawDPeg4R+BWa6iErMtmHVRFopKGjM2LoVYRDtYm95qRfuv4Ivc+okBwPix+qtd1dLm
+         AtgQOK4IY4WmKR/CyuZtd640H4xvKAuZ2W50jCMsO2A0BRlpRHU7YJC0KUDSGn9O78Ag
+         PCsN22aOhVLn8QXsiXvppPszyeEWSWMr1cOKSgjBqviMMLRnuCLgvUaHDPysp85lPXz7
+         MCSA==
+X-Gm-Message-State: AOAM531uungCeSTXAyjznZPFhIJSJO0orkIWvZ43zCVw+Nkq6fCjcEoy
+        q0QhwMHX0CMydP7esLImiVRF55SwAgbWqw==
+X-Google-Smtp-Source: ABdhPJwms27th60Cg/9NKcaxQfDpo9oEZNZEBqw6D6VcQXGCD43HEc4AoAXw/TpKwYbLid+AmKbiLg==
+X-Received: by 2002:a63:d815:: with SMTP id b21mr4254601pgh.237.1644944974164;
+        Tue, 15 Feb 2022 09:09:34 -0800 (PST)
 Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id f7sm3731669pfc.0.2022.02.15.09.06.44
+        by smtp.gmail.com with ESMTPSA id kb17sm9540899pjb.1.2022.02.15.09.09.32
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Feb 2022 09:06:45 -0800 (PST)
-Message-ID: <a1d95bcc-2eb8-c038-8ca4-29dfa0c10f5f@acm.org>
-Date:   Tue, 15 Feb 2022 09:06:44 -0800
+        Tue, 15 Feb 2022 09:09:33 -0800 (PST)
+Message-ID: <da58f5c9-74a7-f44c-a8b8-78e694b41ed9@acm.org>
+Date:   Tue, 15 Feb 2022 09:09:31 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.1
-Subject: Re: [PATCH] scsi: ufs: Remove wlun_dev_to_hba()
+Subject: Re: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling
+ isn't supported.
 Content-Language: en-US
-To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20220215114002epcms2p1eb4e53507c96e0f24770af16aedcf5c6@epcms2p1>
- <1891546521.01644927481711.JavaMail.epsvc@epcpadp4>
+To:     Bean Huo <huobean@gmail.com>, Kiwoong Kim <kwmad.kim@samsung.com>,
+        'Adrian Hunter' <adrian.hunter@intel.com>,
+        'Avri Altman' <Avri.Altman@wdc.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com,
+        vkumar.1997@samsung.com
+References: <CGME20220205074128epcas2p40901c37a7328e825d8697f8d3269edba@epcas2p4.samsung.com>
+ <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
+ <DM6PR04MB657519E60FAFA19434531CE2FC2B9@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <007101d81eed$4d120a60$e7361f20$@samsung.com>
+ <3f2938f7-2a9e-60e8-5237-fe7ebc3b4296@intel.com>
+ <000001d81fcb$3b962f30$b2c28d90$@samsung.com>
+ <1cb4db5f707692afedb005e2577f667f5e48e66e.camel@gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1891546521.01644927481711.JavaMail.epsvc@epcpadp4>
+In-Reply-To: <1cb4db5f707692afedb005e2577f667f5e48e66e.camel@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/15/22 03:40, Keoseong Park wrote:
-> Commit edc0596cc04b ("scsi: ufs: core: Stop clearing UNIT ATTENTIONS")
-> removed all callers of wlun_dev_to_hba(). Hence also remove the macro itself.
+On 2/15/22 03:00, Bean Huo wrote:
+> The name of clk_scaling_lock has explained everything, for the platform
+> which doesn't support load-based clk scaling, doesn't need to hold this
+> lock.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Hi Bean,
+
+Have you noticed Adrian's reply? I agree with Adrian that this patch 
+breaks the UFS error handler.
+
+Bart.
+
+
+
