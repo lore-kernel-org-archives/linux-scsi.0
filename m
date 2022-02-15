@@ -2,83 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46467C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 17:15:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17465C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 17:37:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240721AbiBORP5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Feb 2022 12:15:57 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41560 "EHLO
+        id S242674AbiBORh7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Feb 2022 12:37:59 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:42060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235480AbiBORP4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 12:15:56 -0500
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9249711ACED;
-        Tue, 15 Feb 2022 09:15:46 -0800 (PST)
-Received: by mail-pf1-f174.google.com with SMTP id d17so7834162pfl.0;
-        Tue, 15 Feb 2022 09:15:46 -0800 (PST)
+        with ESMTP id S238733AbiBORh6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 12:37:58 -0500
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5525A4EF52;
+        Tue, 15 Feb 2022 09:37:48 -0800 (PST)
+Received: by mail-pf1-f175.google.com with SMTP id i21so34581502pfd.13;
+        Tue, 15 Feb 2022 09:37:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=LOeWWNlHO4AtZ7MgNQfE1a3OysB2klf6boBkFZ8uxlM=;
-        b=xwpTEYIL58wLES6TG/r+iIjr/6/ESsq0VZuLsYb/bzX61ZMopbHjPNkZ/UYW1xIKqm
-         7pfeCvQEoFRu0cI1M3eCdQ3rNv1lUO8NbdYS30VEyPMUXzWQTPqPripZG+Eu3wz/ywko
-         WIug7JQly4Koc0OH/CMMGCmg+9ZlvtDkw2phxEqh2DwiSmrut0vWLhWU6XTV6sYF6diK
-         3MrCFINM9NEz3i/mwshPb3h+9j6QUUSPbmQwXpLwQlvqQUJd0p6oZG2oS5ZoKXZ2pVxH
-         mMSyQwA6HxAD8RIQ2uyJoYPdgixLstrWXhqeyKPBiDfj9rIGoLx0eOaXSevMttxak2xF
-         +51g==
-X-Gm-Message-State: AOAM533pOYVucK0HBxMQD+19Lb67gZrUNX5pBxGLzsCyeqTzBbPFIsN6
-        17GJXy12OTJc1lXML1cYH60=
-X-Google-Smtp-Source: ABdhPJwo+9w+mXNq4JUW14oQEea7jDcOcI9ZAQyy5G7RH7CrGq5eG/xzvhzVB89wxZYY7O8g8H0Zsw==
-X-Received: by 2002:a63:4a65:: with SMTP id j37mr3897610pgl.358.1644945345971;
-        Tue, 15 Feb 2022 09:15:45 -0800 (PST)
+        bh=oXWX0jaQNHFvwdQVtFP6krv3RJnur7U+S/3/43SPpDg=;
+        b=JMAFbJvvRk7zoL9ZZCkE1ZMLufEu7TGRMHlyn2TnW6Vj3ST1qstsemOFQ5Ad21BbG4
+         Z+8omORo/ergcZ2bDfRq4dy/50abIVMV9I1gEshmy19ce6ddeQbJFI+h3Mh9m/dzwgtV
+         WraXoUEIT3hwkQgxfDbmoIFsGOWQuUQ4gucuu29NDO8W3qzbJqrcZTU9fhB8iL0VPXkl
+         c3sKMLbfS/Y+qx6Ejvpn9WGv2AZcLK8du5Z8GjR7g59fzLL2323mmKEb4vDPGAjqw5Jf
+         aVGF66Gg8K53VgQCgCsO5oHaz3SE2rugz1lI7xHGazBuO3mye4LYLV8SgNiSQtpXguXN
+         DnRA==
+X-Gm-Message-State: AOAM530bqbjAO9CIU8twmD6oHkAU7o0EIQxFm1fEXNk7e7Vxzmdu3yDb
+        eB/zt4Y5dOn/NGZ8MDjYk/I=
+X-Google-Smtp-Source: ABdhPJxlCrWNZuGjUj8mtG+WZTgrCvZWeUA6qZVWeZbra0yvA2xyyvFTN6r8ezQWAhBHJO6h+4YM7Q==
+X-Received: by 2002:a05:6a00:1c6e:: with SMTP id s46mr5546027pfw.56.1644946667649;
+        Tue, 15 Feb 2022 09:37:47 -0800 (PST)
 Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id v12sm7567886pfu.155.2022.02.15.09.15.44
+        by smtp.gmail.com with ESMTPSA id d15sm41466850pfu.72.2022.02.15.09.37.46
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Feb 2022 09:15:45 -0800 (PST)
-Message-ID: <6b298597-f3b3-e4a1-c59a-f704ad4c06e5@acm.org>
-Date:   Tue, 15 Feb 2022 09:15:43 -0800
+        Tue, 15 Feb 2022 09:37:47 -0800 (PST)
+Message-ID: <739e4ca0-ec2d-d39a-4c80-2b2e16435f49@acm.org>
+Date:   Tue, 15 Feb 2022 09:37:45 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.1
-Subject: Re: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling
- isn't supported.
+Subject: Re: [PATCH v2] [hpsa] Fix the wrong chars in comment section
 Content-Language: en-US
-To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        cang@codeaurora.org, adrian.hunter@intel.com, sc.suh@samsung.com,
-        hy50.seo@samsung.com, sh425.lee@samsung.com,
-        bhoon95.kim@samsung.com, vkumar.1997@samsung.com
-References: <CGME20220205074128epcas2p40901c37a7328e825d8697f8d3269edba@epcas2p4.samsung.com>
- <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
- <62a5170b-48c0-a372-5392-08f5112d7a06@acm.org>
- <007e01d82231$be8be250$3ba3a6f0$@samsung.com>
+To:     James Wang <jnwang@linux.alibaba.com>, don.brace@microsemi.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
+        esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <974edf4d-37fa-b25a-d0ac-33ac502381d8@acm.org>
+ <1644889961-61470-1-git-send-email-jnwang@linux.alibaba.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <007e01d82231$be8be250$3ba3a6f0$@samsung.com>
+In-Reply-To: <1644889961-61470-1-git-send-email-jnwang@linux.alibaba.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/14/22 22:03, Kiwoong Kim wrote:
-> The benefit that I think is not blocking dev cmd during submitting a scsi cmd.
+On 2/14/22 17:52, James Wang wrote:
+> These '+' should be redundant.
+> 
+> Signed-off-by: James Wang <jnwang@linux.alibaba.com>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Hi Kiwoong,
+Please do NOT add a Reviewed-by tag if a reviewer has not posted that 
+tag himself.
 
-Both ufshcd_exec_dev_cmd() and previous versions of 
-ufshcd_queuecommand() obtain a reader lock on the clock scaling lock so 
-concurrent submission of both command types is allowed. I'm not aware of 
-any version of the UFS driver that serializes device commands against 
-SCSI commands.
+I have the following additional comments on this patch:
+- I am not convinced that this patch is useful since it does not help
+   users of the hpsa driver.
+- The comment still does not conform to the Linux kernel coding style.
+   From coding-style.rst:
 
-Additionally, please take a look at commit 8d077ede48c1 ("scsi: ufs: 
-Optimize the command queueing code"). That patch removes the clock 
-scaling lock from ufshcd_queuecommand().
+The preferred style for long (multi-line) comments is:
 
-Thanks,
+.. code-block:: c
+
+	/*
+	 * This is the preferred style for multi-line
+	 * comments in the Linux kernel source code.
+	 * Please use it consistently.
+	 *
+	 * Description:  A column of asterisks on the left side,
+	 * with beginning and ending almost-blank lines.
+	 */
 
 Bart.
