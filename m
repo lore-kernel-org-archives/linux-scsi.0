@@ -2,66 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E1DFC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 10:55:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF7E1C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 11:00:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231880AbiBOK4A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Feb 2022 05:56:00 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48712 "EHLO
+        id S236807AbiBOLAP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Feb 2022 06:00:15 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:37376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236774AbiBOKzo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 05:55:44 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70D18D76DA
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 02:55:35 -0800 (PST)
-Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4JydJd5ygGz67Lqc;
-        Tue, 15 Feb 2022 18:54:41 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 15 Feb 2022 11:55:33 +0100
-Received: from [10.47.81.62] (10.47.81.62) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2308.21; Tue, 15 Feb
- 2022 10:55:32 +0000
-Message-ID: <51d7c127-f975-14e9-a036-c37416ed8679@huawei.com>
-Date:   Tue, 15 Feb 2022 10:55:34 +0000
+        with ESMTP id S232569AbiBOLAO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 06:00:14 -0500
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8F0BF9562;
+        Tue, 15 Feb 2022 03:00:03 -0800 (PST)
+Received: by mail-ej1-x636.google.com with SMTP id qx21so3585538ejb.13;
+        Tue, 15 Feb 2022 03:00:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:date:in-reply-to:references:user-agent
+         :mime-version:content-transfer-encoding;
+        bh=ghHnLt9KrJYO+G0i0QzfYNVgGr31SkfKmR4sqVkFlfs=;
+        b=Qgc2DVgHtdjILhRGkVrfMOxv9fz1gHVsohxebaioI2GQpfys/aMW1kuUyIfG48kORc
+         g+2QE5e9NYiCG5OaEaL6aq1GQu7ywGewcW954t7/VW9n6UrZSsryS82Faz1Yyp2hUhFS
+         ecuxrTqjq8emgnviOntB956S4OSQaPf8zH4XeL7qL+/C7Xmnm62KDYmfkGwR+NviiVnX
+         NYxqcK5/trQY4oEn611Jv6AAQPtwsC4uRB/J1IvuHh7wAg8OWJ0dYszHwKL3j05Z8z97
+         /+uaTf6kF1gpquLwlZk7MpT4Nw6OjzdJIx+x4bFeikc7pHf1pVYdg9D/+sNJEyZ4Lbzr
+         O3gg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=ghHnLt9KrJYO+G0i0QzfYNVgGr31SkfKmR4sqVkFlfs=;
+        b=1GzBw6ZxrdkykNWanWPsx6mFRKyMSUt13e6qD0juyhesMukWO24snWU8YunsfNC5q0
+         YLHQlEAH0gjx2PxkbACgCE+zCrVxniMpFerxi8iyXXts/FavHlR3vUJAsELFJDas9+HO
+         dLSy6I4ybUIEjBxEeErH7qjrUmWajJuGnvEWb2vW3jwb3pfGyI41KY2zlXnzZA4osspv
+         cPOWTLonNcyxSxvQHYZD0AuTdK/1b0zJTAC0/ed3qvfrOGW+Onmj3sXy1E9m1lscxKkq
+         rVk1pd/qqDx+nZmfRDzmBlBVO3APwpzc1NDdqVFacnAW/tr7bYfVNAsEXuZ48GhAuO/o
+         tRZA==
+X-Gm-Message-State: AOAM530lFNzffTAIRrq0cQtjo4Oec4ie5A0GQr4GKB2feFE95fuStDhI
+        B/AaLk4Cv1IUlWANvZz9vUXUBO/NsMno2A==
+X-Google-Smtp-Source: ABdhPJwj/drfAuAWcIW3L+1EOkn9TG0P70eiS4wI5AnmiJdAA3KfpO1RZpUhHLgClx/hrpcheXMTHA==
+X-Received: by 2002:a17:906:a212:: with SMTP id r18mr2500109ejy.598.1644922802461;
+        Tue, 15 Feb 2022 03:00:02 -0800 (PST)
+Received: from ubuntu-laptop (p4fd5939b.dip0.t-ipconnect.de. [79.213.147.155])
+        by smtp.googlemail.com with ESMTPSA id q8sm5619340edd.10.2022.02.15.03.00.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Feb 2022 03:00:02 -0800 (PST)
+Message-ID: <1cb4db5f707692afedb005e2577f667f5e48e66e.camel@gmail.com>
+Subject: Re: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling
+ isn't supported.
+From:   Bean Huo <huobean@gmail.com>
+To:     Kiwoong Kim <kwmad.kim@samsung.com>,
+        'Adrian Hunter' <adrian.hunter@intel.com>,
+        'Avri Altman' <Avri.Altman@wdc.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com,
+        vkumar.1997@samsung.com
+Date:   Tue, 15 Feb 2022 12:00:00 +0100
+In-Reply-To: <000001d81fcb$3b962f30$b2c28d90$@samsung.com>
+References: <CGME20220205074128epcas2p40901c37a7328e825d8697f8d3269edba@epcas2p4.samsung.com>
+         <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
+         <DM6PR04MB657519E60FAFA19434531CE2FC2B9@DM6PR04MB6575.namprd04.prod.outlook.com>
+         <007101d81eed$4d120a60$e7361f20$@samsung.com>
+         <3f2938f7-2a9e-60e8-5237-fe7ebc3b4296@intel.com>
+         <000001d81fcb$3b962f30$b2c28d90$@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH v3 27/31] scsi: pm8001: Cleanup pm8001_queue_command()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
-        "Jason Yan" <yanaijie@huawei.com>,
-        Luo Jiaxing <luojiaxing@huawei.com>
-References: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
- <20220214021747.4976-28-damien.lemoal@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220214021747.4976-28-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.81.62]
-X-ClientProxiedBy: lhreml703-chm.china.huawei.com (10.201.108.52) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/02/2022 02:17, Damien Le Moal wrote:
-> Avoid repeatedly declaring "struct task_status_struct *ts" to handle
-> error cases by declaring this variable for the entire function scope.
-> This allows simplifying the error cases, and together with the addition
-> of blank lines make the code more readable.
+On Sat, 2022-02-12 at 13:44 +0900, Kiwoong Kim wrote:
+> > The error handler really should have exclusive access.  One of the
+> > places
+> > you change does explain that:
+> > 
+> >  		 * Hold the scaling lock just in case dev cmds
+> >  		 * are sent via bsg and/or sysfs.
+> >  		 */
+> > -		down_write(&hba->clk_scaling_lock);
+> > +		if (ufshcd_is_clkscaling_supported(hba))
+> > +			down_write(&hba->clk_scaling_lock); 
 > 
-> Reviewed-by: John Garry<john.garry@huawei.com>
-> Signed-off-by: Damien Le Moal<damien.lemoal@opensource.wdc.com>
-> ---
+> Yeah.., I saw the comment but didn't get why.
+> 
+> Is there anyone who knows why it's necessary for all SoCs?
+> At lease, I know there is no reason to forbid concurrent executions
+> of dev cmd and power mode change.
+> 
+> If there's nothing, how about adding a quick to ignore it?
+> 
+> Thanks.
+> Kiwoong Kim
+> 
 
-I assume that this can now just be merged with 30/31
+The name of clk_scaling_lock has explained everything, for the platform
+which doesn't support load-based clk scaling, doesn't need to hold this
+lock.
 
-Thanks,
-John
+Acked-by: Bean Huo <beanhuo@micron.com>
+
