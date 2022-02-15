@@ -2,92 +2,165 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0021FC4707A
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 19:24:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB721C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 23:41:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243657AbiBOTZB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Feb 2022 14:25:01 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:58104 "EHLO
+        id S240129AbiBOXlb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Feb 2022 18:41:31 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230290AbiBOTY6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 14:24:58 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B79308566E;
-        Tue, 15 Feb 2022 11:24:47 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 513F3617CB;
-        Tue, 15 Feb 2022 19:24:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8127AC340EB;
-        Tue, 15 Feb 2022 19:24:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644953086;
-        bh=kUCZYr9eynBGfoyFNpGztKhdR0TjeWfPR20goAdEojo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pgheRwOAKjRlXMfJul10RwEjs5CBKHR/i0QEhyIM79774uc0ovg3u5myvyhB8s/qu
-         xkZdoun6Ve/NuXn1+qZDB9F/trYlid+yq9euKiwm3PP7bJ4zoGvDfPTjgfeWCzsH6f
-         Z5GtGABFqXnkSAxbAOokUuetZQuukvg8GogLN1PAUilOeXNWgORbaiYjI/aeCr++5W
-         YWvZj7f6KVH+xfahOEVmZaopl52rdr1jj6eaQg39ut/UgM8cVQWsEKIq8K1eRZzAAa
-         TaPAe7uN1AmbZCmz+9XMV8T/S9ihvGxGOcJfBqdWD8uwk44Sq4S7ITZBKug7wSeC6N
-         S7tHpNRHJfaSA==
-Date:   Tue, 15 Feb 2022 13:32:21 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Leon Romanovsky <leon@kernel.org>
-Cc:     Kees Cook <keescook@chromium.org>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ia64@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
-        linux-um@lists.infradead.org, linux-xtensa@linux-xtensa.org,
-        linux-crypto@vger.kernel.org, intel-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
-        coresight@lists.linaro.org, linux-arm-kernel@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com, netdev@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com,
-        linux-staging@lists.linux.dev,
-        linux-rpi-kernel@lists.infradead.org, sparmaintainer@unisys.com,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-ext4@vger.kernel.org, linux-acpi@vger.kernel.org,
-        devel@acpica.org, linux-arch@vger.kernel.org, linux-mm@kvack.org,
-        greybus-dev@lists.linaro.org, linux-i3c@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        alsa-devel@alsa-project.org, devicetree@vger.kernel.org,
-        linux-perf-users@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH][next] treewide: Replace zero-length arrays with
- flexible-array members
-Message-ID: <20220215193221.GA884407@embeddedor>
-References: <20220215174743.GA878920@embeddedor>
- <202202151016.C0471D6E@keescook>
- <20220215192110.GA883653@embeddedor>
- <Ygv8wY75hNqS7zO6@unreal>
+        with ESMTP id S233625AbiBOXla (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 18:41:30 -0500
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 986C29DD53
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 15:41:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1644968479; x=1676504479;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=fju2+GXQeOEuM4kWm9bpOZFc/KGpl6YJHywCzH/HUd8=;
+  b=U2gTvdscu9PbLWUihNEDrxxvJBcCdXBOfagPVBHRvhQjk/tAMJcHV1kZ
+   9EdarSFulBm4xS6ZCPoU+DpYXAMI+VOGeTHWx5J7QJEwXrRX+NZshjyjL
+   tSVuRceWUQz/M2DTc495/XYS/cGVFXvHShRFVciO6mUHU0ce584nfny7c
+   wdedkYHAA9RkMmTNYb7CjsDQU37dL1F7dz/u/EXZbyRBTnaxjLDTZt6WX
+   XX1hB4NgVz0xyRlYMYaPixOcNm/EAIqGkjLHqfqbgusTLMfrBmt6RfjC+
+   hjPqN1XjnQsiLcpYmRARzgk+ed0klpjAhnslM98+sCj/6pCPHRKSvu98x
+   A==;
+X-IronPort-AV: E=Sophos;i="5.88,371,1635177600"; 
+   d="scan'208";a="191978034"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 16 Feb 2022 07:41:19 +0800
+IronPort-SDR: iHxCb0MH081RgYSwmYuZsGhhAeoT5U0uzwIGk+fD77UwAfP5ai3S41T8Xz41OtlLzpvZ36hkfg
+ 2U8Gf+i0g5/eAdM5+TVA1Z08BTZ7hqvNQyquT2qZuhdpq0dVWcjII5jlfx70zcfyTwJre8W53n
+ GKFBtNMTuAZ0bAfGp7B11KIQh0ZdtVCA0JuBsimkF/s/79Ve98KDIMzE8iKqawlB76DUyknQPg
+ JGcUbqP5cwepzXomLxEwmPV2I7kAqckSiOR7r15Bq90SuaZGVg0xxzrzJrzkg3NMSCFVW5ko2g
+ M97IDYBWo0URlrKvbJ8gRjzH
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2022 15:13:00 -0800
+IronPort-SDR: SEmArUsoqapBobt/YYX1auX8tCSMdF9YyVfylzYNP5XGFBl3HZ38NFK8u8Shh5v+70Tc3ewLAo
+ eBMEvvc2QQkgzVU42dNVDnoM70kBOR3TYLfgN8XdFxIa/RVk+22gz1tvso4t9RhpdiBBSBXxx7
+ 3Eo6mTw6F5Sr6kiDCOkAPAhaLLM4mGUwwTHi1Kmuzxgpc35b6Mi+Hu07xln5awVfRmATTHPB+T
+ QExVMYLs2Kk40bvadkuTtHA2D8+CKwIBnFU+SBP1AREF8+17p1s0/wL9PfuBFTzv64KylKnZQ0
+ 9Gk=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2022 15:41:19 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JyyKB5tmNz1SHwl
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 15:41:18 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1644968478; x=1647560479; bh=fju2+GXQeOEuM4kWm9bpOZFc/KGpl6YJHyw
+        CzH/HUd8=; b=AWYSJn+sa0LJL2BMlZJIxRl42qwnZeTVdTAspvWh2ZZ5zMycTiJ
+        RhPpA6P3POXWHDLN4XbzUY1IpvpyVe1CuRMX0K6N2hJMmQMWu+hByFVJEn+MyVkw
+        BrNUHPz6Hbvc0Wq6L14cGHopzsadhEvmOFfRPCqR1a2HgZ5B+oZDNRMPczFw+Icj
+        QIMmh8DWAGK5x5UrmXOCZWLADOUoDjeweQTf6jXOa4QaFDCUnRKtNK5UO8QeHUra
+        p1+wzj84DC65PYG5ZJ9FgMnn/HFWgm5acRLwSX4TnEHPzV8JaFOXcoPfzOEXz95q
+        Tk8QSDVaClYmSQynTni0YeTXvisKeGQuuvQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id P7TCmpmGH67O for <linux-scsi@vger.kernel.org>;
+        Tue, 15 Feb 2022 15:41:18 -0800 (PST)
+Received: from [10.225.163.73] (unknown [10.225.163.73])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JyyK90PScz1Rwrw;
+        Tue, 15 Feb 2022 15:41:16 -0800 (PST)
+Message-ID: <dbcb628c-faed-c696-ff53-cf9f30593038@opensource.wdc.com>
+Date:   Wed, 16 Feb 2022 08:41:15 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Ygv8wY75hNqS7zO6@unreal>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH v3 28/31] scsi: pm8001: Introduce ccb alloc/free helpers
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Xiang Chen <chenxiang66@hisilicon.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        Luo Jiaxing <luojiaxing@huawei.com>
+References: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
+ <20220214021747.4976-29-damien.lemoal@opensource.wdc.com>
+ <0a0006af-2878-3e6f-dc27-be04d2866fc3@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <0a0006af-2878-3e6f-dc27-be04d2866fc3@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Feb 15, 2022 at 09:19:29PM +0200, Leon Romanovsky wrote:
-> On Tue, Feb 15, 2022 at 01:21:10PM -0600, Gustavo A. R. Silva wrote:
-> > On Tue, Feb 15, 2022 at 10:17:40AM -0800, Kees Cook wrote:
-> > > On Tue, Feb 15, 2022 at 11:47:43AM -0600, Gustavo A. R. Silva wrote:
-> > > 
-> > > These all look trivially correct to me. Only two didn't have the end of
-> > > the struct visible in the patch, and checking those showed them to be
-> > > trailing members as well, so:
-> > > 
-> > > Reviewed-by: Kees Cook <keescook@chromium.org>
-> > 
-> > I'll add this to my -next tree.
+On 2/15/22 20:07, John Garry wrote:
+> On 14/02/2022 02:17, Damien Le Moal wrote:
+>> Introduce the pm8001_ccb_alloc() and pm8001_ccb_free() helpers to
+>> replace the typical code patterns:
+>>
+>> 	res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
+>> 	if (res)
+>> 		...
+>> 	ccb = &pm8001_ha->ccb_info[ccb_tag];
+>> 	ccb->device = pm8001_ha_dev;
+>> 	ccb->ccb_tag = ccb_tag;
+>> 	ccb->task = task;
+>> 	ccb->n_elem = 0;A
 > 
-> I would like to ask you to send mlx5 patch separately to netdev. We are working
-> to delete that file completely and prefer to avoid from unnecessary merge conflicts.
+> nit: stray 'A' character
 
-Oh OK. Sure thing; I will do so.
+Weird... How did this pass compile & test ? Will fix that in v4.
 
-Thanks
---
-Gustavo
+> 
+>>
+>> and
+>>
+>> 	ccb->task = NULL;
+>> 	ccb->ccb_tag = PM8001_INVALID_TAG;
+>> 	pm8001_tag_free(pm8001_ha, tag);
+> 
+> Isn't it possible to do a "memset struct members", such that we order 
+> the members specifically that we can memset(0) a known region? The 
+> advantage is that adding/removing a member does not require much code to 
+> be touched and possibly missed.
+
+Hmmm. I guess we can by moving the buf_prd field at the end of the
+struct. We would still need the ccb_tag initialization though, so I am
+not entirely sure if this is worse it... Will try to see how it looks.
+
+> 
+>>
+>> With the simpler function calls:
+>>
+>> 	ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_ha_dev, task);
+>> 	if (!ccb)
+>> 		...
+>>
+>> and
+>>
+>> 	pm8001_ccb_free(pm8001_ha, ccb);
+>>
+>> The pm8001_ccb_alloc() helper ensures that all fields of the ccb info
+>> structure for the newly allocated tag are all initialized, except the
+>> buf_prd field. The pm8001_ccb_free() helper clears the initialized
+>> fields and the ccb tag to ensure that iteration over the adapter
+>> ccb_info array detects ccbs that are in use.
+> 
+> 
+>>
+>> All call site of the pm8001_tag_alloc() function that use a ccb info
+>> associated with an allocated tag are converted to use the new helpers.
+>>
+>> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+>> ---
+> 
+> The comments are not a show stopper, so:
+> Reviewed-by: John Garry <john.garry@huawei.com>
+> 
+
+
+-- 
+Damien Le Moal
+Western Digital Research
