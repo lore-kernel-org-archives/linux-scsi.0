@@ -2,102 +2,225 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C146C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 03:06:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89C80C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 07:53:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343999AbiBPDHB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Feb 2022 22:07:01 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:56630 "EHLO
+        id S231229AbiBPHxK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Feb 2022 02:53:10 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:60590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237823AbiBPDHB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 22:07:01 -0500
-Received: from mail-qt1-x834.google.com (mail-qt1-x834.google.com [IPv6:2607:f8b0:4864:20::834])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFD2D2A270;
-        Tue, 15 Feb 2022 19:06:49 -0800 (PST)
-Received: by mail-qt1-x834.google.com with SMTP id ca12so895610qtb.4;
-        Tue, 15 Feb 2022 19:06:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=lWbWPRpljqyxUHO/4PPZALOIacGNZAKBTnuOLqqWIhs=;
-        b=Jbs61Yb2r2ZUEIR9A1UgOmQ9u4kR0q9hl/FV0ymx/e9E+nTqShQq/RLj/5lDCk1ib1
-         tOqkro+vkfo26b0R5PUPe/bPO+0KujlmRMMsaNOUFaD+/nVKVogL/m3J8g7luuMswJ0Z
-         cC5xbasFfHLherFK8eQ6P6I74iJBspgHFqC25PZCdzX3sEm2VAOUGbD89IR6sWQjuI4R
-         gKuFoThRa6c2BxfjlBiLVGQoEdbOGJCYr+QlcC+gBgNiCqqFfR+g/7qW212nKoiNTlNn
-         /ZGr5JmidTkzTgMJsnAPE3MzfRXoJ7GMXEm4Eu4bT/ZanDe/kG82eDE/9oNTDabAg5Sc
-         JX6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=lWbWPRpljqyxUHO/4PPZALOIacGNZAKBTnuOLqqWIhs=;
-        b=DtQKCHspkgIo9bWm3BtgmlBCYIqpT5mK/5A70QPbvmp5X4F2YhapVU/lGQOxcl6NOS
-         aCpx7G+DmU09Sv+2kdbKuXFf9mQ+3XzIt17/zXzZ7nwqoYdKeV1tpOEJ99XAEEiMHGJO
-         SRa+elkfxUDq1goreFvjXLGFbM9vLz98ufhaxZiMiHnfxMFfST765i65asLIHSlV7Wh7
-         /NjIrig5ySfS19w61w+QTwXkGSb7R4CPN44BQ94vyKYUaetKq15GCtZafc78LWBhi1EM
-         8hmsTZ0aJdq1vVHfuVkLAONkPohtYcFd9r+kgxkPt8deOfdEB4qImt310UezI846JsMY
-         4f2g==
-X-Gm-Message-State: AOAM5332gpG5qZX5Boj2boy/CVnq1P9j2Ag7mwoAbsS9e+DqGcChQCnB
-        dVQUE7t8Ul7UwDsmFdTCZPTC6fBzeFw=
-X-Google-Smtp-Source: ABdhPJxofywMtYxXGkQSNPL94EkZi7+ZP0qtW5bAL+8Ub19FVxW4Q6TuoIJejiszbdQgnN72rw470g==
-X-Received: by 2002:ac8:5bd1:0:b0:2d0:a800:21c1 with SMTP id b17-20020ac85bd1000000b002d0a80021c1mr735525qtb.446.1644980809109;
-        Tue, 15 Feb 2022 19:06:49 -0800 (PST)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id h13sm9717122qkp.77.2022.02.15.19.06.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Feb 2022 19:06:48 -0800 (PST)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: chi.minghao@zte.com.cn
-To:     sathya.prakash@broadcom.com
-Cc:     sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Minghao Chi <chi.minghao@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] message/fusion: use struct_size over open coded arithmetic
-Date:   Wed, 16 Feb 2022 03:06:41 +0000
-Message-Id: <20220216030641.1839422-1-chi.minghao@zte.com.cn>
+        with ESMTP id S231226AbiBPHxF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 02:53:05 -0500
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE3C4FABE1
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 23:52:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1644997962; x=1676533962;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=F7AMvO2hlDDn6QozkFOiWTZou9tAQmHJMihkvPn2NAY=;
+  b=e7An6E4rkbob5+SZqq0lQXA6sA3n7RFiBjgbyLPrfvkzN4NjiBOqQPTf
+   rSAOhc910fFdq5X6jHXZVy6s2rusBwOCCktCDrj3CgJvaaRl9r1GiJWEa
+   eyK9IURpDm4JuaOIBaTtntU6fucZbcm6uhQeVIAKdUeypoZ1hpUmG+iX6
+   TXshHzP9dh/BTUuU4eLrOLd3j+PKq5XyIeVSCzsif67QVXpM3lXZ5qQV+
+   yjEc9SNLuXDZrY8HmcbjB8QL0rYUtgALBJ3NE5WKmDcZpdCyVcRhGoiWi
+   Qk20zT2eND2uvK3yjnKLBQfgEA0cq6JKKLrTz7IiWjwb1VN+7bEGArhYN
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10259"; a="234084577"
+X-IronPort-AV: E=Sophos;i="5.88,373,1635231600"; 
+   d="scan'208";a="234084577"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2022 23:51:26 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,373,1635231600"; 
+   d="scan'208";a="588262896"
+Received: from ahunter-desktop.fi.intel.com ([10.237.72.92])
+  by fmsmga008.fm.intel.com with ESMTP; 15 Feb 2022 23:51:23 -0800
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH V3] scsi: ufs: Fix runtime PM messages never-ending cycle
+Date:   Wed, 16 Feb 2022 09:51:22 +0200
+Message-Id: <20220216075122.370532-1-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Minghao Chi (CGEL ZTE) <chi.minghao@zte.com.cn>
+Kernel messages produced during runtime PM can cause a never-ending
+cycle because user space utilities (e.g. journald or rsyslog) write the
+messages back to storage, causing runtime resume, more messages, and so
+on.
 
-Replace zero-length array with flexible-array member and make use
-of the struct_size() helper in kzalloc(). For example:
+Messages that tell of things that are expected to happen, are arguably
+unnecessary, so suppress them.
 
-struct fw_event_work {
-	...
-	u8			retries;
-	char			event_data[] __aligned(4);
-};
+UFS driver messages are changes to from dev_err() to dev_dbg() which means
+they will not display unless activated by dynamic debug of building
+with -DDEBUG.
 
-Make use of the struct_size() helper instead of an open-coded version
-in order to avoid any potential type mistakes.
+sd_suspend_common() messages are removed.
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Minghao Chi (CGEL ZTE) <chi.minghao@zte.com.cn>
+scsi_report_sense() "Power-on or device reset occurred" message is
+suppressed only for UFS.  Note, that message appears when the LUN is
+accessed after runtime PM, not during runtime PM.
+
+ Example messages from Ubuntu 21.10:
+
+ $ dmesg | tail
+ [ 1620.380071] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate = 0
+ [ 1620.408825] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[4, 4], lane[2, 2], pwr[FAST MODE, FAST MODE], rate = 2
+ [ 1620.409020] ufshcd 0000:00:12.5: ufshcd_find_max_sup_active_icc_level: Regulator capability was not set, actvIccLevel=0
+ [ 1620.409524] sd 0:0:0:0: Power-on or device reset occurred
+ [ 1622.938794] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+ [ 1622.939184] ufs_device_wlun 0:0:0:49488: Power-on or device reset occurred
+ [ 1625.183175] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate = 0
+ [ 1625.208041] ufshcd 0000:00:12.5: ufshcd_print_pwr_info:[RX, TX]: gear=[4, 4], lane[2, 2], pwr[FAST MODE, FAST MODE], rate = 2
+ [ 1625.208311] ufshcd 0000:00:12.5: ufshcd_find_max_sup_active_icc_level: Regulator capability was not set, actvIccLevel=0
+ [ 1625.209035] sd 0:0:0:0: Power-on or device reset occurred
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 ---
- drivers/message/fusion/mptsas.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 4acd8f9a48e1..c6fb4fd75434 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -5113,7 +5113,7 @@ mptsas_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *reply)
+
+Changes in V3:
+
+	Keep reset sense message for non-UFS devices
+
+Changes in V2:
+
+	Remove offending SCSI messages
+	Use dev_dbg for offending UFSHCD messages
+
+
+ drivers/scsi/scsi_error.c  |  9 +++++++--
+ drivers/scsi/sd.c          |  7 +++++--
+ drivers/scsi/ufs/ufshcd.c  | 21 +++++++++++++++++++--
+ include/scsi/scsi_device.h |  1 +
+ 4 files changed, 32 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 60a6ae9d1219..c944600f7931 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -484,8 +484,13 @@ static void scsi_report_sense(struct scsi_device *sdev,
  
- 	event_data_sz = ((reply->MsgLength * 4) -
- 	    offsetof(EventNotificationReply_t, Data));
--	fw_event = kzalloc(sizeof(*fw_event) + event_data_sz, GFP_ATOMIC);
-+	fw_event = kzalloc(struct_size(fw_event, event_data, event_data_sz), GFP_ATOMIC);
- 	if (!fw_event) {
- 		printk(MYIOC_s_WARN_FMT "%s: failed at (line=%d)\n", ioc->name,
- 		 __func__, __LINE__);
+ 		if (sshdr->asc == 0x29) {
+ 			evt_type = SDEV_EVT_POWER_ON_RESET_OCCURRED;
+-			sdev_printk(KERN_WARNING, sdev,
+-				    "Power-on or device reset occurred\n");
++			/*
++			 * Do not print message if it is an expected side-effect
++			 * of runtime PM.
++			 */
++			if (!sdev->no_rst_sense_msg)
++				sdev_printk(KERN_WARNING, sdev,
++					    "Power-on or device reset occurred\n");
+ 		}
+ 
+ 		if (sshdr->asc == 0x2a && sshdr->ascq == 0x01) {
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 62eb9921cc94..18cdf5f9415a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3742,6 +3742,11 @@ static void sd_shutdown(struct device *dev)
+ 	}
+ }
+ 
++/*
++ * Do not print messages during runtime PM to avoid never-ending cycles of
++ * messages written back to storage by user space causing runtime resume,
++ * causing more messages and so on.
++ */
+ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+@@ -3752,7 +3757,6 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+ 		return 0;
+ 
+ 	if (sdkp->WCE && sdkp->media_present) {
+-		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		ret = sd_sync_cache(sdkp, &sshdr);
+ 
+ 		if (ret) {
+@@ -3774,7 +3778,6 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+ 	}
+ 
+ 	if (sdkp->device->manage_start_stop) {
+-		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		/* an error is not worth aborting a system sleep */
+ 		ret = sd_start_stop_device(sdkp, 0);
+ 		if (ignore_stop_errors)
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 50b12d60dc1b..294e55955a76 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -585,7 +585,12 @@ static void ufshcd_print_pwr_info(struct ufs_hba *hba)
+ 		"INVALID MODE",
+ 	};
+ 
+-	dev_err(hba->dev, "%s:[RX, TX]: gear=[%d, %d], lane[%d, %d], pwr[%s, %s], rate = %d\n",
++	/*
++	 * Using dev_dbg to avoid messages during runtime PM to avoid
++	 * never-ending cycles of messages written back to storage by user space
++	 * causing runtime resume, causing more messages and so on.
++	 */
++	dev_dbg(hba->dev, "%s:[RX, TX]: gear=[%d, %d], lane[%d, %d], pwr[%s, %s], rate = %d\n",
+ 		 __func__,
+ 		 hba->pwr_info.gear_rx, hba->pwr_info.gear_tx,
+ 		 hba->pwr_info.lane_rx, hba->pwr_info.lane_tx,
+@@ -5024,6 +5029,12 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+ 		pm_runtime_get_noresume(&sdev->sdev_gendev);
+ 	else if (ufshcd_is_rpm_autosuspend_allowed(hba))
+ 		sdev->rpm_autosuspend = 1;
++	/*
++	 * Do not print messages during runtime PM to avoid never-ending cycles
++	 * of messages written back to storage by user space causing runtime
++	 * resume, causing more messages and so on.
++	 */
++	sdev->no_rst_sense_msg = 1;
+ 
+ 	ufshcd_crypto_register(hba, q);
+ 
+@@ -7339,7 +7350,13 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+ 
+ 	if (!hba->vreg_info.vcc || !hba->vreg_info.vccq ||
+ 						!hba->vreg_info.vccq2) {
+-		dev_err(hba->dev,
++		/*
++		 * Using dev_dbg to avoid messages during runtime PM to avoid
++		 * never-ending cycles of messages written back to storage by
++		 * user space causing runtime resume, causing more messages and
++		 * so on.
++		 */
++		dev_dbg(hba->dev,
+ 			"%s: Regulator capability was not set, actvIccLevel=%d",
+ 							__func__, icc_level);
+ 		goto out;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 647c53b26105..785dbf6e3e24 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -206,6 +206,7 @@ struct scsi_device {
+ 	unsigned rpm_autosuspend:1;	/* Enable runtime autosuspend at device
+ 					 * creation time */
+ 	unsigned ignore_media_change:1; /* Ignore MEDIA CHANGE on resume */
++	unsigned no_rst_sense_msg:1;	/* Do not print reset sense message */
+ 
+ 	unsigned int queue_stopped;	/* request queue is quiesced */
+ 	bool offline_already;		/* Device offline message logged */
 -- 
 2.25.1
 
