@@ -2,53 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D34C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 21:03:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D90BC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 21:03:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233214AbiBPVDX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Feb 2022 16:03:23 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49266 "EHLO
+        id S233472AbiBPVDY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Feb 2022 16:03:24 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233429AbiBPVDR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 16:03:17 -0500
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CB6220F85F
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:03 -0800 (PST)
-Received: by mail-pj1-f42.google.com with SMTP id a11-20020a17090a740b00b001b8b506c42fso7598462pjg.0
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:03 -0800 (PST)
+        with ESMTP id S233416AbiBPVDV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 16:03:21 -0500
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1939212891
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:07 -0800 (PST)
+Received: by mail-pf1-f175.google.com with SMTP id c4so3172228pfl.7
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:07 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=iiZX6sV4CwW6jvcUw8nIxaJhZYQIR8ZaripFwFVV2nM=;
-        b=rv5a1i5TxFbCdxe6B/17I20hu/DkvX4x6DGfbttfqXFyUSyGYmB2Nr/hDL/j06f9kX
-         XKqm6TRIKSBCPJ4H+u4m3dtCzj/8hngATKg/PrsUi2KvQD752SETcwwrz6GRHYnegOFi
-         2u18iLqWk4w96voQ6uIVZKKaF1m42t5FgQiDm4RMOtxFL3wlMYl3xmFoJnA4+vcyPsbe
-         uoLOahUrRmD+8SfL4tJiRcWtnp1mR/LyTkJjWWnrT1A0gtcXsk5Ocar2R9acHI+1lVdI
-         OXiywbr9Kxf8Q10Bo2l78rKkq+x1HsTwZ5BiM0MWCj+0t2ZMXfcSmr/9cFjjLPUEwLSj
-         gLlg==
-X-Gm-Message-State: AOAM530Bs/JZGPAE0JqoMMzkr5y5/riIlzTBIZIHzbGN43LfRSCDg07X
-        0x0HBiH3TBrTT4fT6Y9Q2kQ=
-X-Google-Smtp-Source: ABdhPJwCTgmFbSM+pq8/hJTMXBidzZ599+lmhk0cJy/BiMqjcUhBC+p/7CP59KIxx+8hfHdMIgaKug==
-X-Received: by 2002:a17:90b:4a11:b0:1b9:9685:eea4 with SMTP id kk17-20020a17090b4a1100b001b99685eea4mr3883403pjb.136.1645045382952;
-        Wed, 16 Feb 2022 13:03:02 -0800 (PST)
+        bh=tiRy83pbS8JbqPhLaht2SxkCi86NZhxk2F+HsvH7mWg=;
+        b=k82/DAq5HCxVG8tHn6BGozRG6EPArAkEGRZDfr1EU0MqQdIXqQh+z/HeQ1aj44Z4CW
+         DfOC14QJK//bUnSrAV1616HQcNCg72Db5rwrPd84nbjjjhhMbtS1oiWMxzhFSS7HJLkH
+         emmzBBmKkeFlxB/0URsXP3Jczjs7R5cVnwGOR9bqWng6htomFiix5/UBhBvGbTP/QDiF
+         aOF22L0yXmF+o84fqn+cNxqc9kGWQ/rzPZc89hMJ/PFzn700OKIPkpjEd3mt36Dt3Rpa
+         OWw/XulbvUhSsRJ5Fcr1cZL3hCjQG1LUR6VSkQsE4ai6SUoZ5cEFwSxnzhssROH3oX81
+         FFdg==
+X-Gm-Message-State: AOAM530tJXwrWNfmegHkE24et8OF6iAUq+KMuDhvC76OCCQFluO2Nlnp
+        HE6FOMl+G8qEfMmPMne7KEE=
+X-Google-Smtp-Source: ABdhPJzzr+RGCX9hXBRdFNVZ1Rcj5OmY5Rtwk88q0Usa8Pkwt08Pwz5KMXr0fZ3Koi91oVaK93CdTw==
+X-Received: by 2002:a05:6a00:13a4:b0:4ce:118f:a822 with SMTP id t36-20020a056a0013a400b004ce118fa822mr5174871pfg.33.1645045387006;
+        Wed, 16 Feb 2022 13:03:07 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id c8sm46591222pfv.57.2022.02.16.13.03.01
+        by smtp.gmail.com with ESMTPSA id c8sm46591222pfv.57.2022.02.16.13.03.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Feb 2022 13:03:02 -0800 (PST)
+        Wed, 16 Feb 2022 13:03:06 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
+        Russell King <linux@armlinux.org.uk>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Finn Thain <fthain@linux-m68k.org>,
-        Michael Schmitz <schmitzmic@gmail.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v4 08/50] scsi: NCR5380: Introduce the NCR5380_cmd_priv() function
-Date:   Wed, 16 Feb 2022 13:01:51 -0800
-Message-Id: <20220216210233.28774-9-bvanassche@acm.org>
+Subject: [PATCH v4 10/50] scsi: arm: Rename arm/scsi.h into arm/arm_scsi.h
+Date:   Wed, 16 Feb 2022 13:01:53 -0800
+Message-Id: <20220216210233.28774-11-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220216210233.28774-1-bvanassche@acm.org>
 References: <20220216210233.28774-1-bvanassche@acm.org>
@@ -58,76 +56,105 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Introduce the NCR5380_cmd_priv() function. This function will allow to
-access the SCSI pointer in the next patch with a single statement instead of
-two, e.g. as follows:
+The new name makes the purpose of this header file more clear and also
+makes it easier to find this header file with grep.
 
-	struct scsi_pointer *scsi_pointer =
-		&NCR5380_cmd_priv(cmd)->scsi_pointer;
-
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Cc: Russell King <linux@armlinux.org.uk>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Cc: Finn Thain <fthain@telegraphics.com.au>
-Cc: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/NCR5380.c | 8 ++++----
- drivers/scsi/NCR5380.h | 5 +++++
- 2 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/scsi/arm/acornscsi.c            | 2 +-
+ drivers/scsi/arm/{scsi.h => arm_scsi.h} | 4 +---
+ drivers/scsi/arm/cumana_2.c             | 2 +-
+ drivers/scsi/arm/eesox.c                | 2 +-
+ drivers/scsi/arm/fas216.c               | 2 +-
+ drivers/scsi/arm/powertec.c             | 2 +-
+ 6 files changed, 6 insertions(+), 8 deletions(-)
+ rename drivers/scsi/arm/{scsi.h => arm_scsi.h} (97%)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 55af3e245a92..6fa5e363945a 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -564,7 +564,7 @@ static int NCR5380_queue_command(struct Scsi_Host *instance,
-                                  struct scsi_cmnd *cmd)
- {
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
--	struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
-+	struct NCR5380_cmd *ncmd = NCR5380_cmd_priv(cmd);
- 	unsigned long flags;
+diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
+index a8a72d822862..38aa9333631b 100644
+--- a/drivers/scsi/arm/acornscsi.c
++++ b/drivers/scsi/arm/acornscsi.c
+@@ -136,7 +136,7 @@
+ #include <scsi/scsi_transport_spi.h>
+ #include "acornscsi.h"
+ #include "msgqueue.h"
+-#include "scsi.h"
++#include "arm_scsi.h"
  
- #if (NDEBUG & NDEBUG_NO_WRITE)
-@@ -672,7 +672,7 @@ static struct scsi_cmnd *dequeue_next_cmd(struct Scsi_Host *instance)
- static void requeue_cmd(struct Scsi_Host *instance, struct scsi_cmnd *cmd)
- {
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
--	struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
-+	struct NCR5380_cmd *ncmd = NCR5380_cmd_priv(cmd);
+ #include <scsi/scsicam.h>
  
- 	if (hostdata->sensing == cmd) {
- 		scsi_eh_restore_cmnd(cmd, &hostdata->ses);
-@@ -1690,7 +1690,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- #endif
+diff --git a/drivers/scsi/arm/scsi.h b/drivers/scsi/arm/arm_scsi.h
+similarity index 97%
+rename from drivers/scsi/arm/scsi.h
+rename to drivers/scsi/arm/arm_scsi.h
+index 4d5ff7b4e864..3eb5c6aa93c9 100644
+--- a/drivers/scsi/arm/scsi.h
++++ b/drivers/scsi/arm/arm_scsi.h
+@@ -1,10 +1,8 @@
+ /* SPDX-License-Identifier: GPL-2.0-only */
+ /*
+- *  linux/drivers/acorn/scsi/scsi.h
+- *
+  *  Copyright (C) 2002 Russell King
+  *
+- *  Commonly used scsi driver functions.
++ *  Commonly used functions by the ARM SCSI-II drivers.
+  */
  
- 	while ((cmd = hostdata->connected)) {
--		struct NCR5380_cmd *ncmd = scsi_cmd_priv(cmd);
-+		struct NCR5380_cmd *ncmd = NCR5380_cmd_priv(cmd);
+ #include <linux/scatterlist.h>
+diff --git a/drivers/scsi/arm/cumana_2.c b/drivers/scsi/arm/cumana_2.c
+index 536d6646e40b..d15053f02472 100644
+--- a/drivers/scsi/arm/cumana_2.c
++++ b/drivers/scsi/arm/cumana_2.c
+@@ -36,7 +36,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include "fas216.h"
+-#include "scsi.h"
++#include "arm_scsi.h"
  
- 		tmp = NCR5380_read(STATUS_REG);
- 		/* We only have a valid SCSI phase when REQ is asserted */
-@@ -2206,7 +2206,7 @@ static bool list_del_cmd(struct list_head *haystack,
-                          struct scsi_cmnd *needle)
- {
- 	if (list_find_cmd(haystack, needle)) {
--		struct NCR5380_cmd *ncmd = scsi_cmd_priv(needle);
-+		struct NCR5380_cmd *ncmd = NCR5380_cmd_priv(needle);
+ #include <scsi/scsicam.h>
  
- 		list_del(&ncmd->list);
- 		return true;
-diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
-index 845bd2423e66..88a1bb41b72e 100644
---- a/drivers/scsi/NCR5380.h
-+++ b/drivers/scsi/NCR5380.h
-@@ -230,6 +230,11 @@ struct NCR5380_cmd {
- 	struct list_head list;
- };
+diff --git a/drivers/scsi/arm/eesox.c b/drivers/scsi/arm/eesox.c
+index ab0f6422a6a9..6f374af9f45f 100644
+--- a/drivers/scsi/arm/eesox.c
++++ b/drivers/scsi/arm/eesox.c
+@@ -42,7 +42,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include "fas216.h"
+-#include "scsi.h"
++#include "arm_scsi.h"
  
-+static inline struct NCR5380_cmd *NCR5380_cmd_priv(struct scsi_cmnd *cmd)
-+{
-+	return scsi_cmd_priv(cmd);
-+}
-+
- #define NCR5380_PIO_CHUNK_SIZE		256
+ #include <scsi/scsicam.h>
  
- /* Time limit (ms) to poll registers when IRQs are disabled, e.g. during PDMA */
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index 0d6df5ebf934..a23e34c9f7de 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -55,7 +55,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include "fas216.h"
+-#include "scsi.h"
++#include "arm_scsi.h"
+ 
+ /* NOTE: SCSI2 Synchronous transfers *require* DMA according to
+  *  the data sheet.  This restriction is crazy, especially when
+diff --git a/drivers/scsi/arm/powertec.c b/drivers/scsi/arm/powertec.c
+index 797568b271e3..7586d2a03812 100644
+--- a/drivers/scsi/arm/powertec.c
++++ b/drivers/scsi/arm/powertec.c
+@@ -27,7 +27,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include "fas216.h"
+-#include "scsi.h"
++#include "arm_scsi.h"
+ 
+ #include <scsi/scsicam.h>
+ 
