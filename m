@@ -2,54 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01259C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 21:03:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB8DC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 21:03:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233504AbiBPVDZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Feb 2022 16:03:25 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49596 "EHLO
+        id S233295AbiBPVD0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Feb 2022 16:03:26 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233460AbiBPVDV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 16:03:21 -0500
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7D6E210AF9
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:05 -0800 (PST)
-Received: by mail-pl1-f179.google.com with SMTP id x4so2965438plb.4
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:05 -0800 (PST)
+        with ESMTP id S233398AbiBPVDW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 16:03:22 -0500
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86D90212E12
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:09 -0800 (PST)
+Received: by mail-pl1-f169.google.com with SMTP id z17so2951105plb.9
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:09 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Jf37RiC7VTWSTTIvoAPn+KulZ/XfV+x9UpQ5CyJbKq8=;
-        b=2a4Gqm4mllhvU+mCmE0vzMGVHIByo+kWYjEJbfUhmCz247X8LE/4aw8hFYYswZ9UDF
-         S4oHZYNXK1uD4jhSuarQfK6KD6R5pmfCVXwG84ofqDWtmQFwgcX2t4Ll1pO+yvBRfGuk
-         1wHcr1qLHoIeIwLw8mI3SW6TnCKvlt79Rm9RkhEedV6lBnjIPDubZjURgOqSKNXK8cPV
-         Ff6/EToEOCZ5U1eAC+ghpmtIYPeS1VoaAJQzW29+rPg++FPyFsw1ue+xVBKBdS1xukCJ
-         tXKTsWD3eCEJ2SU0tizk5Q4ElNyvcdXW6OzzWbVtcsE2EZb0MrEx5AGiKdhs+quVhNVI
-         m/8g==
-X-Gm-Message-State: AOAM532jhRtkZg3/K+5TOtBVyiO2PL4NEu76YrQp1QKOpJr9CLNea4HQ
-        CnZOUw8u8haAGRXshaE6r9w=
-X-Google-Smtp-Source: ABdhPJzwrRVOWBauTmkddQQYTWmH22D4402goyYfxTUG4lCs04oifwCBrieVeRLeeza6Fv/GTjVKfQ==
-X-Received: by 2002:a17:90b:3a85:b0:1b5:58c8:6d87 with SMTP id om5-20020a17090b3a8500b001b558c86d87mr3885919pjb.192.1645045385088;
-        Wed, 16 Feb 2022 13:03:05 -0800 (PST)
+        bh=/Ba4bEJmtkM/3WJAT4TgzDstqDhaDKX2I2VSFRMVcdg=;
+        b=PyDWs+HKRjZ+SpUq0vhXvJqxP94ZiGTHc76wJvuILCpi+OlbZ5/72zquj1FYY6zwcH
+         d0r6goisqLFwpnx5xInLUE2CjlvsVYjMNge6+K/YVNvYOkPGFh1Dn7/7cl2yQeDN369Y
+         u3Jd3O8fIhagQf2A9tkDci7zp0PkD5e4VhPLb0X+v2a4jlLcz8O6f0s4iX4lPeoKHPAT
+         FmwMfbSMC6mC4K0htHPGCO08pKHLtleC1his35qjTVCXbtuUMkmqdfF5tCy/cikaV08/
+         8yLW3hmf0GHc84yXRIVkruTS9Q5mBB5vSybsItvr4oNC0ce0RJh9vbgva5m3BuCcFKC+
+         3LjQ==
+X-Gm-Message-State: AOAM531SoIkAxj/GV5/wXVzFelQhN1WZ7d4QP2oXFhxoORdYKkNuDVFJ
+        s+VHWrmgdmS69UdS9jo6I/Y=
+X-Google-Smtp-Source: ABdhPJwFSAVLI7PziCGNnUcaIUSVPgGNkpmUv3mJQG6+ddUCEHjfM+wsRt148UOeEfrac1xzGyoRQQ==
+X-Received: by 2002:a17:903:3002:b0:14e:e705:cd37 with SMTP id o2-20020a170903300200b0014ee705cd37mr4113071pla.71.1645045388759;
+        Wed, 16 Feb 2022 13:03:08 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id c8sm46591222pfv.57.2022.02.16.13.03.03
+        by smtp.gmail.com with ESMTPSA id c8sm46591222pfv.57.2022.02.16.13.03.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Feb 2022 13:03:04 -0800 (PST)
+        Wed, 16 Feb 2022 13:03:08 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Ondrej Zary <linux@rainbow-software.org>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Hannes Reinecke <hare@suse.de>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Finn Thain <fthain@linux-m68k.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v4 09/50] scsi: NCR5380: Move the SCSI pointer to private command data
-Date:   Wed, 16 Feb 2022 13:01:52 -0800
-Message-Id: <20220216210233.28774-10-bvanassche@acm.org>
+Subject: [PATCH v4 11/50] scsi: arm: Move the SCSI pointer to private command data
+Date:   Wed, 16 Feb 2022 13:01:54 -0800
+Message-Id: <20220216210233.28774-12-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220216210233.28774-1-bvanassche@acm.org>
 References: <20220216210233.28774-1-bvanassche@acm.org>
@@ -59,366 +55,291 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move the SCSI pointer into the NCR5380 private command data instead of
-using the SCSI pointer from struct scsi_cmnd. This patch prepares for
-removal of the SCSI pointer from struct scsi_cmnd. The NCR5380 drivers
-have been identified as follows:
-$ git grep -l '#include.*NCR5380.h'
-drivers/scsi/arm/cumana_1.c
-drivers/scsi/arm/oak.c
-drivers/scsi/atari_scsi.c
-drivers/scsi/dmx3191d.c
-drivers/scsi/g_NCR5380.c
-drivers/scsi/mac_scsi.c
-drivers/scsi/sun3_scsi.c
+Set .cmd_size in the SCSI host template instead of using the SCSI pointer
+from struct scsi_cmnd. This patch prepares for removal of the SCSI pointer
+from struct scsi_cmnd. The ARM SCSI drivers have been identified as follows:
+$ git grep -l '#include.*arm_scsi.h'
+drivers/scsi/arm/acornscsi.c
+drivers/scsi/arm/cumana_2.c
+drivers/scsi/arm/eesox.c
+drivers/scsi/arm/fas216.c
+drivers/scsi/arm/powertec.c
 
-Cc: Finn Thain <fthain@telegraphics.com.au>
-Cc: Ondrej Zary <linux@rainbow-software.org>
-Cc: Michael Schmitz <schmitzmic@gmail.com>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc: Russell King <linux@armlinux.org.uk>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/NCR5380.c    | 89 ++++++++++++++++++++++++---------------
- drivers/scsi/NCR5380.h    |  1 +
- drivers/scsi/atari_scsi.c |  7 ++-
- drivers/scsi/g_NCR5380.c  |  6 ++-
- drivers/scsi/mac_scsi.c   |  7 ++-
- drivers/scsi/sun3_scsi.c  |  4 +-
- 6 files changed, 72 insertions(+), 42 deletions(-)
+ drivers/scsi/arm/acornscsi.c | 20 ++++++++++++--------
+ drivers/scsi/arm/arm_scsi.h  | 33 +++++++++++++++++++++++----------
+ drivers/scsi/arm/fas216.c    | 28 +++++++++++++++++-----------
+ drivers/scsi/arm/fas216.h    |  4 ++++
+ 4 files changed, 56 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 6fa5e363945a..974b15cf8415 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -145,40 +145,47 @@ static void bus_reset_cleanup(struct Scsi_Host *);
- 
- static inline void initialize_SCp(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
+index 38aa9333631b..7602639da9b3 100644
+--- a/drivers/scsi/arm/acornscsi.c
++++ b/drivers/scsi/arm/acornscsi.c
+@@ -729,7 +729,7 @@ intr_ret_t acornscsi_kick(AS_Host *host)
+      */
+     host->scsi.phase = PHASE_CONNECTING;
+     host->SCpnt = SCpnt;
+-    host->scsi.SCp = SCpnt->SCp;
++    host->scsi.SCp = *arm_scsi_pointer(SCpnt);
+     host->dma.xfer_setup = 0;
+     host->dma.xfer_required = 0;
+     host->dma.xfer_done = 0;
+@@ -1424,6 +1424,7 @@ unsigned char acornscsi_readmessagebyte(AS_Host *host)
+ static
+ void acornscsi_message(AS_Host *host)
  {
-+	struct scsi_pointer *scsi_pointer =
-+		&NCR5380_cmd_priv(cmd)->scsi_pointer;
-+
- 	/*
- 	 * Initialize the Scsi Pointer field so that all of the commands in the
- 	 * various queues are valid.
- 	 */
++    struct scsi_pointer *scsi_pointer;
+     unsigned char message[16];
+     unsigned int msgidx = 0, msglen = 1;
  
- 	if (scsi_bufflen(cmd)) {
--		cmd->SCp.buffer = scsi_sglist(cmd);
--		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
--		cmd->SCp.this_residual = cmd->SCp.buffer->length;
-+		scsi_pointer->buffer = scsi_sglist(cmd);
+@@ -1493,8 +1494,9 @@ void acornscsi_message(AS_Host *host)
+ 	 *  the saved data pointer for the current I/O process.
+ 	 */
+ 	acornscsi_dma_cleanup(host);
+-	host->SCpnt->SCp = host->scsi.SCp;
+-	host->SCpnt->SCp.sent_command = 0;
++	scsi_pointer = arm_scsi_pointer(host->SCpnt);
++	*scsi_pointer = host->scsi.SCp;
++	scsi_pointer->sent_command = 0;
+ 	host->scsi.phase = PHASE_MSGIN;
+ 	break;
+ 
+@@ -1509,7 +1511,7 @@ void acornscsi_message(AS_Host *host)
+ 	 *  the present command and status areas.'
+ 	 */
+ 	acornscsi_dma_cleanup(host);
+-	host->scsi.SCp = host->SCpnt->SCp;
++	host->scsi.SCp = *arm_scsi_pointer(host->SCpnt);
+ 	host->scsi.phase = PHASE_MSGIN;
+ 	break;
+ 
+@@ -1809,7 +1811,7 @@ int acornscsi_reconnect_finish(AS_Host *host)
+ 	/*
+ 	 * Restore data pointer from SAVED pointers.
+ 	 */
+-	host->scsi.SCp = host->SCpnt->SCp;
++	host->scsi.SCp = *arm_scsi_pointer(host->SCpnt);
+ #if (DEBUG & (DEBUG_QUEUES|DEBUG_DISCON))
+ 	printk(", data pointers: [%p, %X]",
+ 		host->scsi.SCp.ptr, host->scsi.SCp.this_residual);
+@@ -2408,6 +2410,7 @@ acornscsi_intr(int irq, void *dev_id)
+  */
+ static int acornscsi_queuecmd_lck(struct scsi_cmnd *SCpnt)
+ {
++    struct scsi_pointer *scsi_pointer = arm_scsi_pointer(SCpnt);
+     void (*done)(struct scsi_cmnd *) = scsi_done;
+     AS_Host *host = (AS_Host *)SCpnt->device->host->hostdata;
+ 
+@@ -2423,9 +2426,9 @@ static int acornscsi_queuecmd_lck(struct scsi_cmnd *SCpnt)
+ 
+     SCpnt->host_scribble = NULL;
+     SCpnt->result = 0;
+-    SCpnt->SCp.phase = (int)acornscsi_datadirection(SCpnt->cmnd[0]);
+-    SCpnt->SCp.sent_command = 0;
+-    SCpnt->SCp.scsi_xferred = 0;
++    scsi_pointer->phase = (int)acornscsi_datadirection(SCpnt->cmnd[0]);
++    scsi_pointer->sent_command = 0;
++    scsi_pointer->scsi_xferred = 0;
+ 
+     init_SCp(SCpnt);
+ 
+@@ -2791,6 +2794,7 @@ static struct scsi_host_template acornscsi_template = {
+ 	.cmd_per_lun		= 2,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+ 	.proc_name		= "acornscsi",
++	.cmd_size		= sizeof(struct arm_cmd_priv),
+ };
+ 
+ static int acornscsi_probe(struct expansion_card *ec, const struct ecard_id *id)
+diff --git a/drivers/scsi/arm/arm_scsi.h b/drivers/scsi/arm/arm_scsi.h
+index 3eb5c6aa93c9..ea9fcd92c6de 100644
+--- a/drivers/scsi/arm/arm_scsi.h
++++ b/drivers/scsi/arm/arm_scsi.h
+@@ -9,6 +9,17 @@
+ 
+ #define BELT_AND_BRACES
+ 
++struct arm_cmd_priv {
++	struct scsi_pointer scsi_pointer;
++};
++
++static inline struct scsi_pointer *arm_scsi_pointer(struct scsi_cmnd *cmd)
++{
++	struct arm_cmd_priv *acmd = scsi_cmd_priv(cmd);
++
++	return &acmd->scsi_pointer;
++}
++
+ /*
+  * The scatter-gather list handling.  This contains all
+  * the yucky stuff that needs to be fixed properly.
+@@ -76,16 +87,18 @@ static inline void put_next_SCp_byte(struct scsi_pointer *SCp, unsigned char c)
+ 
+ static inline void init_SCp(struct scsi_cmnd *SCpnt)
+ {
+-	memset(&SCpnt->SCp, 0, sizeof(struct scsi_pointer));
++	struct scsi_pointer *scsi_pointer = arm_scsi_pointer(SCpnt);
++
++	memset(scsi_pointer, 0, sizeof(struct scsi_pointer));
+ 
+ 	if (scsi_bufflen(SCpnt)) {
+ 		unsigned long len = 0;
+ 
+-		SCpnt->SCp.buffer = scsi_sglist(SCpnt);
+-		SCpnt->SCp.buffers_residual = scsi_sg_count(SCpnt) - 1;
+-		SCpnt->SCp.ptr = sg_virt(SCpnt->SCp.buffer);
+-		SCpnt->SCp.this_residual = SCpnt->SCp.buffer->length;
+-		SCpnt->SCp.phase = scsi_bufflen(SCpnt);
++		scsi_pointer->buffer = scsi_sglist(SCpnt);
++		scsi_pointer->buffers_residual = scsi_sg_count(SCpnt) - 1;
 +		scsi_pointer->ptr = sg_virt(scsi_pointer->buffer);
 +		scsi_pointer->this_residual = scsi_pointer->buffer->length;
++		scsi_pointer->phase = scsi_bufflen(SCpnt);
+ 
+ #ifdef BELT_AND_BRACES
+ 		{	/*
+@@ -109,15 +122,15 @@ static inline void init_SCp(struct scsi_cmnd *SCpnt)
+ 				 * FIXME: Totaly naive fixup. We should abort
+ 				 * with error
+ 				 */
+-				SCpnt->SCp.phase =
++				scsi_pointer->phase =
+ 					min_t(unsigned long, len,
+ 					      scsi_bufflen(SCpnt));
+ 			}
+ 		}
+ #endif
  	} else {
--		cmd->SCp.buffer = NULL;
--		cmd->SCp.ptr = NULL;
--		cmd->SCp.this_residual = 0;
-+		scsi_pointer->buffer = NULL;
+-		SCpnt->SCp.ptr = NULL;
+-		SCpnt->SCp.this_residual = 0;
+-		SCpnt->SCp.phase = 0;
 +		scsi_pointer->ptr = NULL;
 +		scsi_pointer->this_residual = 0;
- 	}
- 
--	cmd->SCp.Status = 0;
--	cmd->SCp.Message = 0;
-+	scsi_pointer->Status = 0;
-+	scsi_pointer->Message = 0;
- }
- 
- static inline void advance_sg_buffer(struct scsi_cmnd *cmd)
- {
--	struct scatterlist *s = cmd->SCp.buffer;
--
--	if (!cmd->SCp.this_residual && s && !sg_is_last(s)) {
--		cmd->SCp.buffer = sg_next(s);
--		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
--		cmd->SCp.this_residual = cmd->SCp.buffer->length;
-+	struct scsi_pointer *scsi_pointer =
-+		&NCR5380_cmd_priv(cmd)->scsi_pointer;
-+	struct scatterlist *s = scsi_pointer->buffer;
-+
-+	if (!scsi_pointer->this_residual && s && !sg_is_last(s)) {
-+		scsi_pointer->buffer = sg_next(s);
-+		scsi_pointer->ptr = sg_virt(scsi_pointer->buffer);
-+		scsi_pointer->this_residual = scsi_pointer->buffer->length;
++		scsi_pointer->phase = 0;
  	}
  }
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index a23e34c9f7de..4ce0b2d73614 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -761,7 +761,7 @@ static void fas216_transfer(FAS216_Info *info)
+ 		fas216_log(info, LOG_ERROR, "null buffer passed to "
+ 			   "fas216_starttransfer");
+ 		print_SCp(&info->scsi.SCp, "SCp: ", "\n");
+-		print_SCp(&info->SCpnt->SCp, "Cmnd SCp: ", "\n");
++		print_SCp(arm_scsi_pointer(info->SCpnt), "Cmnd SCp: ", "\n");
+ 		return;
+ 	}
  
- static inline void set_resid_from_SCp(struct scsi_cmnd *cmd)
- {
--	int resid = cmd->SCp.this_residual;
--	struct scatterlist *s = cmd->SCp.buffer;
-+	struct scsi_pointer *scsi_pointer =
-+		&NCR5380_cmd_priv(cmd)->scsi_pointer;
-+	int resid = scsi_pointer->this_residual;
-+	struct scatterlist *s = scsi_pointer->buffer;
+@@ -1011,7 +1011,7 @@ fas216_reselected_intr(FAS216_Info *info)
+ 		/*
+ 		 * Restore data pointer from SAVED data pointer
+ 		 */
+-		info->scsi.SCp = info->SCpnt->SCp;
++		info->scsi.SCp = *arm_scsi_pointer(info->SCpnt);
  
- 	if (s)
- 		while (!sg_is_last(s)) {
-@@ -757,6 +764,7 @@ static void NCR5380_main(struct work_struct *work)
- static void NCR5380_dma_complete(struct Scsi_Host *instance)
+ 		fas216_log(info, LOG_CONNECT, "data pointers: [%p, %X]",
+ 			info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
+@@ -1054,6 +1054,7 @@ fas216_reselected_intr(FAS216_Info *info)
+ 
+ static void fas216_parse_message(FAS216_Info *info, unsigned char *message, int msglen)
  {
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
 +	struct scsi_pointer *scsi_pointer;
- 	int transferred;
- 	unsigned char **data;
- 	int *count;
-@@ -764,7 +772,10 @@ static void NCR5380_dma_complete(struct Scsi_Host *instance)
- 	unsigned char p;
+ 	int i;
  
- 	if (hostdata->read_overruns) {
--		p = hostdata->connected->SCp.phase;
-+		struct scsi_pointer *scsi_pointer =
-+			&NCR5380_cmd_priv(hostdata->connected)->scsi_pointer;
-+
-+		p = scsi_pointer->phase;
- 		if (p & SR_IO) {
- 			udelay(10);
- 			if ((NCR5380_read(BUS_AND_STATUS_REG) &
-@@ -801,8 +812,9 @@ static void NCR5380_dma_complete(struct Scsi_Host *instance)
- 	transferred = hostdata->dma_len - NCR5380_dma_residual(hostdata);
- 	hostdata->dma_len = 0;
+ 	switch (message[0]) {
+@@ -1078,8 +1079,9 @@ static void fas216_parse_message(FAS216_Info *info, unsigned char *message, int
+ 		 * as required by the SCSI II standard.  These always
+ 		 * point to the start of their respective areas.
+ 		 */
+-		info->SCpnt->SCp = info->scsi.SCp;
+-		info->SCpnt->SCp.sent_command = 0;
++		scsi_pointer = arm_scsi_pointer(info->SCpnt);
++		*scsi_pointer = info->scsi.SCp;
++		scsi_pointer->sent_command = 0;
+ 		fas216_log(info, LOG_CONNECT | LOG_MESSAGES | LOG_BUFFER,
+ 			"save data pointers: [%p, %X]",
+ 			info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
+@@ -1092,7 +1094,7 @@ static void fas216_parse_message(FAS216_Info *info, unsigned char *message, int
+ 		/*
+ 		 * Restore current data pointer from SAVED data pointer
+ 		 */
+-		info->scsi.SCp = info->SCpnt->SCp;
++		info->scsi.SCp = *arm_scsi_pointer(info->SCpnt);
+ 		fas216_log(info, LOG_CONNECT | LOG_MESSAGES | LOG_BUFFER,
+ 			"restore data pointers: [%p, 0x%x]",
+ 			info->scsi.SCp.ptr, info->scsi.SCp.this_residual);
+@@ -1770,7 +1772,7 @@ static void fas216_start_command(FAS216_Info *info, struct scsi_cmnd *SCpnt)
+ 	 * claim host busy
+ 	 */
+ 	info->scsi.phase = PHASE_SELECTION;
+-	info->scsi.SCp = SCpnt->SCp;
++	info->scsi.SCp = *arm_scsi_pointer(SCpnt);
+ 	info->SCpnt = SCpnt;
+ 	info->dma.transfer_type = fasdma_none;
  
--	data = (unsigned char **)&hostdata->connected->SCp.ptr;
--	count = &hostdata->connected->SCp.this_residual;
-+	scsi_pointer = &NCR5380_cmd_priv(hostdata->connected)->scsi_pointer;
-+	data = (unsigned char **)&scsi_pointer->ptr;
-+	count = &scsi_pointer->this_residual;
- 	*data += transferred;
- 	*count -= transferred;
+@@ -1849,7 +1851,7 @@ static void fas216_do_bus_device_reset(FAS216_Info *info,
+ 	 * claim host busy
+ 	 */
+ 	info->scsi.phase = PHASE_SELECTION;
+-	info->scsi.SCp = SCpnt->SCp;
++	info->scsi.SCp = *arm_scsi_pointer(SCpnt);
+ 	info->SCpnt = SCpnt;
+ 	info->dma.transfer_type = fasdma_none;
  
-@@ -1487,6 +1499,8 @@ static int NCR5380_transfer_dma(struct Scsi_Host *instance,
- 				unsigned char **data)
+@@ -1999,11 +2001,13 @@ static void fas216_devicereset_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
+ static void fas216_rq_sns_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
+ 			       unsigned int result)
  {
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+	struct scsi_pointer *scsi_pointer =
-+		&NCR5380_cmd_priv(hostdata->connected)->scsi_pointer;
- 	int c = *count;
- 	unsigned char p = *phase;
- 	unsigned char *d = *data;
-@@ -1498,7 +1512,7 @@ static int NCR5380_transfer_dma(struct Scsi_Host *instance,
- 		return -1;
- 	}
++	struct scsi_pointer *scsi_pointer = arm_scsi_pointer(SCpnt);
++
+ 	fas216_log_target(info, LOG_CONNECT, SCpnt->device->id,
+ 		   "request sense complete, result=0x%04x%02x%02x",
+-		   result, SCpnt->SCp.Message, SCpnt->SCp.Status);
++		   result, scsi_pointer->Message, scsi_pointer->Status);
  
--	hostdata->connected->SCp.phase = p;
-+	scsi_pointer->phase = p;
+-	if (result != DID_OK || SCpnt->SCp.Status != SAM_STAT_GOOD)
++	if (result != DID_OK || scsi_pointer->Status != SAM_STAT_GOOD)
+ 		/*
+ 		 * Something went wrong.  Make sure that we don't
+ 		 * have valid data in the sense buffer that could
+@@ -2033,6 +2037,8 @@ static void fas216_rq_sns_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
+ static void
+ fas216_std_done(FAS216_Info *info, struct scsi_cmnd *SCpnt, unsigned int result)
+ {
++	struct scsi_pointer *scsi_pointer = arm_scsi_pointer(SCpnt);
++
+ 	info->stats.fins += 1;
  
- 	if (p & SR_IO) {
- 		if (hostdata->read_overruns)
-@@ -1691,6 +1705,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 	set_host_byte(SCpnt, result);
+@@ -2107,8 +2113,8 @@ fas216_std_done(FAS216_Info *info, struct scsi_cmnd *SCpnt, unsigned int result)
+ 	fas216_log_target(info, LOG_CONNECT, SCpnt->device->id,
+ 			  "requesting sense");
+ 	init_SCp(SCpnt);
+-	SCpnt->SCp.Message = 0;
+-	SCpnt->SCp.Status = 0;
++	scsi_pointer->Message = 0;
++	scsi_pointer->Status = 0;
+ 	SCpnt->host_scribble = (void *)fas216_rq_sns_done;
  
- 	while ((cmd = hostdata->connected)) {
- 		struct NCR5380_cmd *ncmd = NCR5380_cmd_priv(cmd);
-+		struct scsi_pointer *scsi_pointer = &ncmd->scsi_pointer;
+ 	/*
+diff --git a/drivers/scsi/arm/fas216.h b/drivers/scsi/arm/fas216.h
+index abf960487314..08113277a2a9 100644
+--- a/drivers/scsi/arm/fas216.h
++++ b/drivers/scsi/arm/fas216.h
+@@ -312,6 +312,10 @@ typedef struct {
  
- 		tmp = NCR5380_read(STATUS_REG);
- 		/* We only have a valid SCSI phase when REQ is asserted */
-@@ -1712,10 +1727,10 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 				if (count > 0) {
- 					if (cmd->sc_data_direction == DMA_TO_DEVICE)
- 						sun3scsi_dma_send_setup(hostdata,
--						                        cmd->SCp.ptr, count);
-+						                        scsi_pointer->ptr, count);
- 					else
- 						sun3scsi_dma_recv_setup(hostdata,
--						                        cmd->SCp.ptr, count);
-+						                        scsi_pointer->ptr, count);
- 					sun3_dma_setup_done = cmd;
- 				}
- #ifdef SUN3_SCSI_VME
-@@ -1758,8 +1773,8 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 				advance_sg_buffer(cmd);
- 				dsprintk(NDEBUG_INFORMATION, instance,
- 					"this residual %d, sg ents %d\n",
--					cmd->SCp.this_residual,
--					sg_nents(cmd->SCp.buffer));
-+					scsi_pointer->this_residual,
-+					sg_nents(scsi_pointer->buffer));
- 
- 				/*
- 				 * The preferred transfer method is going to be
-@@ -1778,7 +1793,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 				if (transfersize > 0) {
- 					len = transfersize;
- 					if (NCR5380_transfer_dma(instance, &phase,
--					    &len, (unsigned char **)&cmd->SCp.ptr)) {
-+					    &len, (unsigned char **)&scsi_pointer->ptr)) {
- 						/*
- 						 * If the watchdog timer fires, all future
- 						 * accesses to this device will use the
-@@ -1794,13 +1809,13 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 					/* Transfer a small chunk so that the
- 					 * irq mode lock is not held too long.
- 					 */
--					transfersize = min(cmd->SCp.this_residual,
-+					transfersize = min(scsi_pointer->this_residual,
- 							   NCR5380_PIO_CHUNK_SIZE);
- 					len = transfersize;
- 					NCR5380_transfer_pio(instance, &phase, &len,
--					                     (unsigned char **)&cmd->SCp.ptr,
-+					                     (unsigned char **)&scsi_pointer->ptr,
- 							     0);
--					cmd->SCp.this_residual -= transfersize - len;
-+					scsi_pointer->this_residual -= transfersize - len;
- 				}
- #ifdef CONFIG_SUN3
- 				if (sun3_dma_setup_done == cmd)
-@@ -1811,7 +1826,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 				len = 1;
- 				data = &tmp;
- 				NCR5380_transfer_pio(instance, &phase, &len, &data, 0);
--				cmd->SCp.Message = tmp;
-+				scsi_pointer->Message = tmp;
- 
- 				switch (tmp) {
- 				case ABORT:
-@@ -1828,15 +1843,15 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 					hostdata->connected = NULL;
- 					hostdata->busy[scmd_id(cmd)] &= ~(1 << cmd->device->lun);
- 
--					set_status_byte(cmd, cmd->SCp.Status);
-+					set_status_byte(cmd, scsi_pointer->Status);
- 
- 					set_resid_from_SCp(cmd);
- 
- 					if (cmd->cmnd[0] == REQUEST_SENSE)
- 						complete_cmd(instance, cmd);
- 					else {
--						if (cmd->SCp.Status == SAM_STAT_CHECK_CONDITION ||
--						    cmd->SCp.Status == SAM_STAT_COMMAND_TERMINATED) {
-+						if (scsi_pointer->Status == SAM_STAT_CHECK_CONDITION ||
-+						    scsi_pointer->Status == SAM_STAT_COMMAND_TERMINATED) {
- 							dsprintk(NDEBUG_QUEUES, instance, "autosense: adding cmd %p to tail of autosense queue\n",
- 							         cmd);
- 							list_add_tail(&ncmd->list,
-@@ -2000,7 +2015,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
- 				len = 1;
- 				data = &tmp;
- 				NCR5380_transfer_pio(instance, &phase, &len, &data, 0);
--				cmd->SCp.Status = tmp;
-+				scsi_pointer->Status = tmp;
- 				break;
- 			default:
- 				shost_printk(KERN_ERR, instance, "unknown phase\n");
-@@ -2151,6 +2166,8 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
- 
- #ifdef CONFIG_SUN3
- 	if (sun3_dma_setup_done != tmp) {
-+		struct scsi_pointer *scsi_pointer =
-+			&NCR5380_cmd_priv(tmp)->scsi_pointer;
- 		int count;
- 
- 		advance_sg_buffer(tmp);
-@@ -2160,10 +2177,12 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
- 		if (count > 0) {
- 			if (tmp->sc_data_direction == DMA_TO_DEVICE)
- 				sun3scsi_dma_send_setup(hostdata,
--				                        tmp->SCp.ptr, count);
-+				                        scsi_pointer->ptr,
-+							count);
- 			else
- 				sun3scsi_dma_recv_setup(hostdata,
--				                        tmp->SCp.ptr, count);
-+				                        scsi_pointer->ptr,
-+							count);
- 			sun3_dma_setup_done = tmp;
- 		}
- 	}
-diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
-index 88a1bb41b72e..a4291e7c24dd 100644
---- a/drivers/scsi/NCR5380.h
-+++ b/drivers/scsi/NCR5380.h
-@@ -227,6 +227,7 @@ struct NCR5380_hostdata {
- };
- 
- struct NCR5380_cmd {
+ /* driver-private data per SCSI command. */
+ struct fas216_cmd_priv {
++	/*
++	 * @scsi_pointer must be the first member. See also arm_scsi_pointer().
++	 */
 +	struct scsi_pointer scsi_pointer;
- 	struct list_head list;
+ 	void (*scsi_done)(struct scsi_cmnd *cmd);
  };
  
-diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index e9d0d99abc86..17e6a6262abf 100644
---- a/drivers/scsi/atari_scsi.c
-+++ b/drivers/scsi/atari_scsi.c
-@@ -538,7 +538,9 @@ static int falcon_classify_cmd(struct scsi_cmnd *cmd)
- static int atari_scsi_dma_xfer_len(struct NCR5380_hostdata *hostdata,
-                                    struct scsi_cmnd *cmd)
- {
--	int wanted_len = cmd->SCp.this_residual;
-+	struct scsi_pointer *scsi_pointer =
-+		&NCR5380_cmd_priv(cmd)->scsi_pointer;
-+	int wanted_len = scsi_pointer->this_residual;
- 	int possible_len, limit;
- 
- 	if (wanted_len < DMA_MIN_SIZE)
-@@ -610,7 +612,8 @@ static int atari_scsi_dma_xfer_len(struct NCR5380_hostdata *hostdata,
- 	}
- 
- 	/* Last step: apply the hard limit on DMA transfers */
--	limit = (atari_dma_buffer && !STRAM_ADDR(virt_to_phys(cmd->SCp.ptr))) ?
-+	limit = (atari_dma_buffer &&
-+		 !STRAM_ADDR(virt_to_phys(scsi_pointer->ptr))) ?
- 		    STRAM_BUFFER_SIZE : 255*512;
- 	if (possible_len > limit)
- 		possible_len = limit;
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 5923f86a384e..f887ed2e0a8e 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -663,7 +663,9 @@ static inline int generic_NCR5380_psend(struct NCR5380_hostdata *hostdata,
- static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
-                                         struct scsi_cmnd *cmd)
- {
--	int transfersize = cmd->SCp.this_residual;
-+	struct scsi_pointer *scsi_pointer =
-+		&NCR5380_cmd_priv(cmd)->scsi_pointer;
-+	int transfersize = scsi_pointer->this_residual;
- 
- 	if (hostdata->flags & FLAG_NO_PSEUDO_DMA)
- 		return 0;
-@@ -675,7 +677,7 @@ static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
- 	/* Limit PDMA send to 512 B to avoid random corruption on DTC3181E */
- 	if (hostdata->board == BOARD_DTC3181E &&
- 	    cmd->sc_data_direction == DMA_TO_DEVICE)
--		transfersize = min(cmd->SCp.this_residual, 512);
-+		transfersize = min(scsi_pointer->this_residual, 512);
- 
- 	return min(transfersize, DMA_MAX_SIZE);
- }
-diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-index 71d493a0bb43..d44ad35621fb 100644
---- a/drivers/scsi/mac_scsi.c
-+++ b/drivers/scsi/mac_scsi.c
-@@ -404,11 +404,14 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- static int macscsi_dma_xfer_len(struct NCR5380_hostdata *hostdata,
-                                 struct scsi_cmnd *cmd)
- {
-+	struct scsi_pointer *scsi_pointer =
-+		&NCR5380_cmd_priv(cmd)->scsi_pointer;
-+
- 	if (hostdata->flags & FLAG_NO_PSEUDO_DMA ||
--	    cmd->SCp.this_residual < setup_use_pdma)
-+	    scsi_pointer->this_residual < setup_use_pdma)
- 		return 0;
- 
--	return cmd->SCp.this_residual;
-+	return scsi_pointer->this_residual;
- }
- 
- static int macscsi_dma_residual(struct NCR5380_hostdata *hostdata)
-diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
-index 82a253270c3b..3a584a1b7944 100644
---- a/drivers/scsi/sun3_scsi.c
-+++ b/drivers/scsi/sun3_scsi.c
-@@ -334,7 +334,9 @@ static int sun3scsi_dma_residual(struct NCR5380_hostdata *hostdata)
- static int sun3scsi_dma_xfer_len(struct NCR5380_hostdata *hostdata,
-                                  struct scsi_cmnd *cmd)
- {
--	int wanted_len = cmd->SCp.this_residual;
-+	struct scsi_pointer *scsi_pointer =
-+		&NCR5380_cmd_priv(cmd)->scsi_pointer;
-+	int wanted_len = scsi_pointer->this_residual;
- 
- 	if (wanted_len < DMA_MIN_SIZE || blk_rq_is_passthrough(scsi_cmd_to_rq(cmd)))
- 		return 0;
