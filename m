@@ -2,50 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 351C5C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 21:03:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 295E6C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 21:03:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233634AbiBPVDr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Feb 2022 16:03:47 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50954 "EHLO
+        id S233654AbiBPVDs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Feb 2022 16:03:48 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233534AbiBPVDj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 16:03:39 -0500
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E79421FC58
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:24 -0800 (PST)
-Received: by mail-pj1-f54.google.com with SMTP id qe15so3603652pjb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:24 -0800 (PST)
+        with ESMTP id S233619AbiBPVDm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 16:03:42 -0500
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A34B222193
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:29 -0800 (PST)
+Received: by mail-pj1-f42.google.com with SMTP id v5-20020a17090a4ec500b001b8b702df57so7571348pjl.2
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:03:29 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=/EJX+/vkV4EsrKmfGAOP1zH1m5L+rWp/rxO1zE55iJM=;
-        b=rriL9oBzBA5PTyg66PbtmdM4NNVaR8UZnsMqVfuoAUFMkmhsq6PmOkeaTLvj+pthN/
-         mlZujyhP3kCA62cDLRUk3zi1NWcJy6hq7C0j34dl7+n0Ec6QDJVmwcaphBTMOw3Vm1r2
-         LNyqsGMbUcG9rD5uHIrmAPMJ+MYZoW1xadkBbwJGcMP5bUWjdlgGjg/SyxnPQd7ygi9U
-         gTG1ZIArJRrOl2ZVIBim0VhtD5ttM1uLkZzfsWa35V6ER4s7zTu7sGvY15mKf5rob3Tg
-         efElnZa3ibRQC86XaUR8jwdjcFJAk7nwq96U6w49KtgtE6HAWp08FOW1v4GG3y00jen+
-         2jLw==
-X-Gm-Message-State: AOAM533gl44E1P2sWkjBoxkcahGALfYgzp25qM/hEqOVGt3gBhPIf5VF
-        zEGKUD3/8nRIKkEJa6QFGcc=
-X-Google-Smtp-Source: ABdhPJzIVAe0RJQbvT6ZXM+KMPLSZwU/kfomzabCVyinNwsvtdbXazeM7RlKfKXD7qJyUGjDZzRrow==
-X-Received: by 2002:a17:90a:d243:b0:1b9:cbac:a775 with SMTP id o3-20020a17090ad24300b001b9cbaca775mr3885668pjw.196.1645045403590;
-        Wed, 16 Feb 2022 13:03:23 -0800 (PST)
+        bh=cpcKWeF4eOeGIU7dsXHWDuSosdfxHXKOqrJDc3sWxnM=;
+        b=w6nZLYZdE0aHpZP5mJJkjLCPAjM/ZOHl2w7UmoUaMSL8Nw3mqvqHdunE7FYCe5QQq7
+         Qehx2TjUivOw5d3tUsicbEqfYjOBwiKh9EaPRLkvPGf0ySce01motljvZdGDoh6LCl8V
+         MEvxtVB5OWNf0nA7Clmlsic419V7lRoGwXpANWXYj3kZDQD4Z6zwXG0z9/pzOOst9qEr
+         W3i2YXy90AGfufzhs3GASLNE0GOzD7e0nqkS7vXDgNmx1JFiWOhDxiVOQMWeFXt5f0cE
+         5oS0vFgZfbhqFe10fQ7fUM/bVBaKmXN7pMQ+Rveq+O3a0+bwMROilC3LpFkQtW7BWOYT
+         BEMA==
+X-Gm-Message-State: AOAM532R8uUaMlNMew9ZT9tIAsORyILJ2eJGAxsL89dcG/vFPZOK8602
+        JBQg/twouGOCzX322vhXeac=
+X-Google-Smtp-Source: ABdhPJw0LBY4SOy7/F2i2BDodtUp0fGXqf3nPHaG5/5cUVKqIhXYwcK7ldJATRpK4aAGoEZnS4bLdQ==
+X-Received: by 2002:a17:903:120b:b0:14f:14b:3485 with SMTP id l11-20020a170903120b00b0014f014b3485mr4276320plh.18.1645045408717;
+        Wed, 16 Feb 2022 13:03:28 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id c8sm46591222pfv.57.2022.02.16.13.03.22
+        by smtp.gmail.com with ESMTPSA id c8sm46591222pfv.57.2022.02.16.13.03.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Feb 2022 13:03:23 -0800 (PST)
+        Wed, 16 Feb 2022 13:03:28 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Subject: [PATCH v4 18/50] scsi: csio: Stop using the SCSI pointer
-Date:   Wed, 16 Feb 2022 13:02:01 -0800
-Message-Id: <20220216210233.28774-19-bvanassche@acm.org>
+        Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH v4 21/50] scsi: fdomain: Move the SCSI pointer to private command data
+Date:   Wed, 16 Feb 2022 13:02:04 -0800
+Message-Id: <20220216210233.28774-22-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220216210233.28774-1-bvanassche@acm.org>
 References: <20220216210233.28774-1-bvanassche@acm.org>
@@ -61,112 +61,191 @@ from struct scsi_cmnd.
 
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/csiostor/csio_scsi.c | 20 +++++++++++---------
- drivers/scsi/csiostor/csio_scsi.h | 10 ++++++++++
- 2 files changed, 21 insertions(+), 9 deletions(-)
+ drivers/scsi/fdomain.c | 64 ++++++++++++++++++++++++------------------
+ 1 file changed, 36 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 55db02521221..9aafe0002ab1 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -166,7 +166,7 @@ csio_scsi_fcp_cmnd(struct csio_ioreq *req, void *addr)
- 	struct scsi_cmnd *scmnd = csio_scsi_cmnd(req);
- 
- 	/* Check for Task Management */
--	if (likely(scmnd->SCp.Message == 0)) {
-+	if (likely(csio_priv(scmnd)->fc_tm_flags == 0)) {
- 		int_to_scsilun(scmnd->device->lun, &fcp_cmnd->fc_lun);
- 		fcp_cmnd->fc_tm_flags = 0;
- 		fcp_cmnd->fc_cmdref = 0;
-@@ -185,7 +185,7 @@ csio_scsi_fcp_cmnd(struct csio_ioreq *req, void *addr)
- 	} else {
- 		memset(fcp_cmnd, 0, sizeof(*fcp_cmnd));
- 		int_to_scsilun(scmnd->device->lun, &fcp_cmnd->fc_lun);
--		fcp_cmnd->fc_tm_flags = (uint8_t)scmnd->SCp.Message;
-+		fcp_cmnd->fc_tm_flags = csio_priv(scmnd)->fc_tm_flags;
- 	}
- }
- 
-@@ -1855,7 +1855,7 @@ csio_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmnd)
- 
- 	/* Needed during abort */
- 	cmnd->host_scribble = (unsigned char *)ioreq;
--	cmnd->SCp.Message = 0;
-+	csio_priv(cmnd)->fc_tm_flags = 0;
- 
- 	/* Kick off SCSI IO SM on the ioreq */
- 	spin_lock_irqsave(&hw->lock, flags);
-@@ -2026,7 +2026,7 @@ csio_tm_cbfn(struct csio_hw *hw, struct csio_ioreq *req)
- 		      req, req->wr_status);
- 
- 	/* Cache FW return status */
--	cmnd->SCp.Status = req->wr_status;
-+	csio_priv(cmnd)->wr_status = req->wr_status;
- 
- 	/* Special handling based on FCP response */
- 
-@@ -2049,7 +2049,7 @@ csio_tm_cbfn(struct csio_hw *hw, struct csio_ioreq *req)
- 		/* Modify return status if flags indicate success */
- 		if (flags & FCP_RSP_LEN_VAL)
- 			if (rsp_info->rsp_code == FCP_TMF_CMPL)
--				cmnd->SCp.Status = FW_SUCCESS;
-+				csio_priv(cmnd)->wr_status = FW_SUCCESS;
- 
- 		csio_dbg(hw, "TM FCP rsp code: %d\n", rsp_info->rsp_code);
- 	}
-@@ -2125,9 +2125,9 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 
- 	csio_scsi_cmnd(ioreq)	= cmnd;
- 	cmnd->host_scribble	= (unsigned char *)ioreq;
--	cmnd->SCp.Status	= 0;
-+	csio_priv(cmnd)->wr_status = 0;
- 
--	cmnd->SCp.Message	= FCP_TMF_LUN_RESET;
-+	csio_priv(cmnd)->fc_tm_flags = FCP_TMF_LUN_RESET;
- 	ioreq->tmo		= CSIO_SCSI_LUNRST_TMO_MS / 1000;
- 
- 	/*
-@@ -2178,9 +2178,10 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	}
- 
- 	/* LUN reset returned, check cached status */
--	if (cmnd->SCp.Status != FW_SUCCESS) {
-+	if (csio_priv(cmnd)->wr_status != FW_SUCCESS) {
- 		csio_err(hw, "LUN reset failed (%d:%llu), status: %d\n",
--			 cmnd->device->id, cmnd->device->lun, cmnd->SCp.Status);
-+			 cmnd->device->id, cmnd->device->lun,
-+			 csio_priv(cmnd)->wr_status);
- 		goto fail;
- 	}
- 
-@@ -2271,6 +2272,7 @@ struct scsi_host_template csio_fcoe_shost_template = {
- 	.name			= CSIO_DRV_DESC,
- 	.proc_name		= KBUILD_MODNAME,
- 	.queuecommand		= csio_queuecommand,
-+	.cmd_size		= sizeof(struct csio_cmd_priv),
- 	.eh_timed_out		= fc_eh_timed_out,
- 	.eh_abort_handler	= csio_eh_abort_handler,
- 	.eh_device_reset_handler = csio_eh_lun_reset_handler,
-diff --git a/drivers/scsi/csiostor/csio_scsi.h b/drivers/scsi/csiostor/csio_scsi.h
-index 2257c3dcf724..39dda3c88f0d 100644
---- a/drivers/scsi/csiostor/csio_scsi.h
-+++ b/drivers/scsi/csiostor/csio_scsi.h
-@@ -188,6 +188,16 @@ struct csio_scsi_level_data {
- 	uint64_t		oslun;
+diff --git a/drivers/scsi/fdomain.c b/drivers/scsi/fdomain.c
+index 9159b4057c5d..444eac9b2466 100644
+--- a/drivers/scsi/fdomain.c
++++ b/drivers/scsi/fdomain.c
+@@ -115,6 +115,11 @@ struct fdomain {
+ 	struct work_struct work;
  };
  
-+struct csio_cmd_priv {
-+	uint8_t fc_tm_flags;	/* task management flags */
-+	uint16_t wr_status;
-+};
-+
-+static inline struct csio_cmd_priv *csio_priv(struct scsi_cmnd *cmd)
++static struct scsi_pointer *fdomain_scsi_pointer(struct scsi_cmnd *cmd)
 +{
 +	return scsi_cmd_priv(cmd);
 +}
 +
- static inline struct csio_ioreq *
- csio_get_scsi_ioreq(struct csio_scsim *scm)
+ static inline void fdomain_make_bus_idle(struct fdomain *fd)
  {
+ 	outb(0, fd->base + REG_BCTL);
+@@ -263,20 +268,21 @@ static void fdomain_work(struct work_struct *work)
+ 	struct Scsi_Host *sh = container_of((void *)fd, struct Scsi_Host,
+ 					    hostdata);
+ 	struct scsi_cmnd *cmd = fd->cur_cmd;
++	struct scsi_pointer *scsi_pointer = fdomain_scsi_pointer(cmd);
+ 	unsigned long flags;
+ 	int status;
+ 	int done = 0;
+ 
+ 	spin_lock_irqsave(sh->host_lock, flags);
+ 
+-	if (cmd->SCp.phase & in_arbitration) {
++	if (scsi_pointer->phase & in_arbitration) {
+ 		status = inb(fd->base + REG_ASTAT);
+ 		if (!(status & ASTAT_ARB)) {
+ 			set_host_byte(cmd, DID_BUS_BUSY);
+ 			fdomain_finish_cmd(fd);
+ 			goto out;
+ 		}
+-		cmd->SCp.phase = in_selection;
++		scsi_pointer->phase = in_selection;
+ 
+ 		outb(ICTL_SEL | FIFO_COUNT, fd->base + REG_ICTL);
+ 		outb(BCTL_BUSEN | BCTL_SEL, fd->base + REG_BCTL);
+@@ -285,7 +291,7 @@ static void fdomain_work(struct work_struct *work)
+ 		/* Stop arbitration and enable parity */
+ 		outb(ACTL_IRQEN | PARITY_MASK, fd->base + REG_ACTL);
+ 		goto out;
+-	} else if (cmd->SCp.phase & in_selection) {
++	} else if (scsi_pointer->phase & in_selection) {
+ 		status = inb(fd->base + REG_BSTAT);
+ 		if (!(status & BSTAT_BSY)) {
+ 			/* Try again, for slow devices */
+@@ -297,75 +303,75 @@ static void fdomain_work(struct work_struct *work)
+ 			/* Stop arbitration and enable parity */
+ 			outb(ACTL_IRQEN | PARITY_MASK, fd->base + REG_ACTL);
+ 		}
+-		cmd->SCp.phase = in_other;
++		scsi_pointer->phase = in_other;
+ 		outb(ICTL_FIFO | ICTL_REQ | FIFO_COUNT, fd->base + REG_ICTL);
+ 		outb(BCTL_BUSEN, fd->base + REG_BCTL);
+ 		goto out;
+ 	}
+ 
+-	/* cur_cmd->SCp.phase == in_other: this is the body of the routine */
++	/* fdomain_scsi_pointer(cur_cmd)->phase == in_other: this is the body of the routine */
+ 	status = inb(fd->base + REG_BSTAT);
+ 
+ 	if (status & BSTAT_REQ) {
+ 		switch (status & (BSTAT_MSG | BSTAT_CMD | BSTAT_IO)) {
+ 		case BSTAT_CMD:	/* COMMAND OUT */
+-			outb(cmd->cmnd[cmd->SCp.sent_command++],
++			outb(cmd->cmnd[scsi_pointer->sent_command++],
+ 			     fd->base + REG_SCSI_DATA);
+ 			break;
+ 		case 0:	/* DATA OUT -- tmc18c50/tmc18c30 only */
+-			if (fd->chip != tmc1800 && !cmd->SCp.have_data_in) {
+-				cmd->SCp.have_data_in = -1;
++			if (fd->chip != tmc1800 && !scsi_pointer->have_data_in) {
++				scsi_pointer->have_data_in = -1;
+ 				outb(ACTL_IRQEN | ACTL_FIFOWR | ACTL_FIFOEN |
+ 				     PARITY_MASK, fd->base + REG_ACTL);
+ 			}
+ 			break;
+ 		case BSTAT_IO:	/* DATA IN -- tmc18c50/tmc18c30 only */
+-			if (fd->chip != tmc1800 && !cmd->SCp.have_data_in) {
+-				cmd->SCp.have_data_in = 1;
++			if (fd->chip != tmc1800 && !scsi_pointer->have_data_in) {
++				scsi_pointer->have_data_in = 1;
+ 				outb(ACTL_IRQEN | ACTL_FIFOEN | PARITY_MASK,
+ 				     fd->base + REG_ACTL);
+ 			}
+ 			break;
+ 		case BSTAT_CMD | BSTAT_IO:	/* STATUS IN */
+-			cmd->SCp.Status = inb(fd->base + REG_SCSI_DATA);
++			scsi_pointer->Status = inb(fd->base + REG_SCSI_DATA);
+ 			break;
+ 		case BSTAT_MSG | BSTAT_CMD:	/* MESSAGE OUT */
+ 			outb(MESSAGE_REJECT, fd->base + REG_SCSI_DATA);
+ 			break;
+ 		case BSTAT_MSG | BSTAT_CMD | BSTAT_IO:	/* MESSAGE IN */
+-			cmd->SCp.Message = inb(fd->base + REG_SCSI_DATA);
+-			if (cmd->SCp.Message == COMMAND_COMPLETE)
++			scsi_pointer->Message = inb(fd->base + REG_SCSI_DATA);
++			if (scsi_pointer->Message == COMMAND_COMPLETE)
+ 				++done;
+ 			break;
+ 		}
+ 	}
+ 
+-	if (fd->chip == tmc1800 && !cmd->SCp.have_data_in &&
+-	    cmd->SCp.sent_command >= cmd->cmd_len) {
++	if (fd->chip == tmc1800 && !scsi_pointer->have_data_in &&
++	    scsi_pointer->sent_command >= cmd->cmd_len) {
+ 		if (cmd->sc_data_direction == DMA_TO_DEVICE) {
+-			cmd->SCp.have_data_in = -1;
++			scsi_pointer->have_data_in = -1;
+ 			outb(ACTL_IRQEN | ACTL_FIFOWR | ACTL_FIFOEN |
+ 			     PARITY_MASK, fd->base + REG_ACTL);
+ 		} else {
+-			cmd->SCp.have_data_in = 1;
++			scsi_pointer->have_data_in = 1;
+ 			outb(ACTL_IRQEN | ACTL_FIFOEN | PARITY_MASK,
+ 			     fd->base + REG_ACTL);
+ 		}
+ 	}
+ 
+-	if (cmd->SCp.have_data_in == -1) /* DATA OUT */
++	if (scsi_pointer->have_data_in == -1) /* DATA OUT */
+ 		fdomain_write_data(cmd);
+ 
+-	if (cmd->SCp.have_data_in == 1) /* DATA IN */
++	if (scsi_pointer->have_data_in == 1) /* DATA IN */
+ 		fdomain_read_data(cmd);
+ 
+ 	if (done) {
+-		set_status_byte(cmd, cmd->SCp.Status);
++		set_status_byte(cmd, scsi_pointer->Status);
+ 		set_host_byte(cmd, DID_OK);
+-		scsi_msg_to_host_byte(cmd, cmd->SCp.Message);
++		scsi_msg_to_host_byte(cmd, scsi_pointer->Message);
+ 		fdomain_finish_cmd(fd);
+ 	} else {
+-		if (cmd->SCp.phase & disconnect) {
++		if (scsi_pointer->phase & disconnect) {
+ 			outb(ICTL_FIFO | ICTL_SEL | ICTL_REQ | FIFO_COUNT,
+ 			     fd->base + REG_ICTL);
+ 			outb(0, fd->base + REG_BCTL);
+@@ -398,14 +404,15 @@ static irqreturn_t fdomain_irq(int irq, void *dev_id)
+ 
+ static int fdomain_queue(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ {
++	struct scsi_pointer *scsi_pointer = fdomain_scsi_pointer(cmd);
+ 	struct fdomain *fd = shost_priv(cmd->device->host);
+ 	unsigned long flags;
+ 
+-	cmd->SCp.Status		= 0;
+-	cmd->SCp.Message	= 0;
+-	cmd->SCp.have_data_in	= 0;
+-	cmd->SCp.sent_command	= 0;
+-	cmd->SCp.phase		= in_arbitration;
++	scsi_pointer->Status		= 0;
++	scsi_pointer->Message		= 0;
++	scsi_pointer->have_data_in	= 0;
++	scsi_pointer->sent_command	= 0;
++	scsi_pointer->phase		= in_arbitration;
+ 	scsi_set_resid(cmd, scsi_bufflen(cmd));
+ 
+ 	spin_lock_irqsave(sh->host_lock, flags);
+@@ -440,7 +447,7 @@ static int fdomain_abort(struct scsi_cmnd *cmd)
+ 	spin_lock_irqsave(sh->host_lock, flags);
+ 
+ 	fdomain_make_bus_idle(fd);
+-	fd->cur_cmd->SCp.phase |= aborted;
++	fdomain_scsi_pointer(fd->cur_cmd)->phase |= aborted;
+ 
+ 	/* Aborts are not done well. . . */
+ 	set_host_byte(fd->cur_cmd, DID_ABORT);
+@@ -501,6 +508,7 @@ static struct scsi_host_template fdomain_template = {
+ 	.this_id		= 7,
+ 	.sg_tablesize		= 64,
+ 	.dma_boundary		= PAGE_SIZE - 1,
++	.cmd_size		= sizeof(struct scsi_pointer),
+ };
+ 
+ struct Scsi_Host *fdomain_create(int base, int irq, int this_id,
