@@ -2,149 +2,174 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDA82C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 16:42:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECD14C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 17:13:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233943AbiBPQm5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Feb 2022 11:42:57 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54448 "EHLO
+        id S236939AbiBPROB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Feb 2022 12:14:01 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231866AbiBPQm5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 11:42:57 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B10617E96C
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 08:42:44 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id h7-20020a17090a648700b001b927560c2bso2889166pjj.1
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 08:42:44 -0800 (PST)
+        with ESMTP id S236940AbiBPROA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 12:14:00 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 071772A598B;
+        Wed, 16 Feb 2022 09:13:47 -0800 (PST)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21GGw5Kv030414;
+        Wed, 16 Feb 2022 17:13:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ from : subject : to : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=S6hCqgbeYKd54O5IBLhNKYM1KlQyk/ysPaqDSSmzJ6Q=;
+ b=ZZhmx/ZD36aB6AxWAS9AOAteAwy7psZc5Nw7Yrg+VIkL0ljtGRAjrWR1Rl+3m0OZYIov
+ pla19T5Rwr1z4/1fnff9+LXuIF7kAzbUiXp3cHyAP1CxvuRRA2MoCrYE7U/xc0vgIgCT
+ r/XSGzpafU9qxizBK8sfKPKBS/YkTTuBjKpyULwWQ5WWW6wKa7GNi0rqEzgaGZ/G6NK/
+ DUYHK0S07QuzlJuSoh0dc7lIv5LzmAtkgtXh60tWPv9fLG9OB91bLUMw7ozQ9p4qNEL7
+ VuGrdBPBb+tjMfBZnBY6JJ3UuO06SYE+O2kwpxiLaAqllZecd6P28Mq22WL3faoJn8pv mA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3e8nb3jpqb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 16 Feb 2022 17:13:44 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21GHBFpW169726;
+        Wed, 16 Feb 2022 17:13:43 GMT
+Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam08lp2172.outbound.protection.outlook.com [104.47.73.172])
+        by userp3030.oracle.com with ESMTP id 3e8nkya5nr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 16 Feb 2022 17:13:43 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=fpWL9cAUXeANSJbw0A93uxd0LtQ2j9pAYaLqnKY4j4zMtvw75n0+6X7/YknOOixC8O1SFytYZ90VrlaI+ioLYV3aCZnkZD2eG4NspgUTZtDZCYkO0POBcUAsb7PLrQ6Ox/hvtzECtc19f3G4PLsVzKcobtCos3yo+3yFKlxIkR6XlU1S/FcA1VfABYjY9tbAcWtSehtW8R0R+lxV4IA1P1WkdxPQNDgKR/2Gz7ptCnsnZMmWb4HR+gE+BPh9+2hovJBS3utVIYznoLllrHVIlkokHkWMpUDwL9F4AIIVijs6l/ySLur9uV1VMCzavWaGkTb3dk5/W6Ofg7q29oAJlA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=S6hCqgbeYKd54O5IBLhNKYM1KlQyk/ysPaqDSSmzJ6Q=;
+ b=JS6iUe6i87EWWF8gyR0q5mLhqQznPUxUiJ4qfCBWtU2ecqGqFvCXHvGjGL4x8eMRHtM1WWdG2gWWZAwFI9hmbyupR5+xInW9gW+w75BY12o93IF0wkOw1R69N5SPoiGOnuxc+XUx4WJ0N/e3F74vf1dCMEPUm9HSgXl5JXWEL2a+ywFfXh7T6a/UtNGqLsx8BcFTgIJoZWVnZzenxXkdNo5D+XETnxdonxVUIkArBUVAu3NgQ3ttywq8k6G8AEPe5uMDFoS4sr0boO3BZFVvfSSCWSNcxVs0t53yExAfO/oQ5zIGl8nxkYLBXIV2x2ockUw1rEMVjbKYWf9lxdoqcg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=OZpOkof/CGyaDmM5P8LiByNQQAqddDTc7qxmAovk87k=;
-        b=YTQefZm1n6AUYLvZ23JF8+jSV5Zn+Vt9p+sH97gsvDWefckQyvJG5HAyu94yNCXH9W
-         9BX5m7xzBlz032tJvWkaIj7gSezvNh6AQvip5tX6FcFvzVWEV78l5apQ2+gYJuRIabYA
-         5JzZGrxJXkKuLDcIF4Kg1fUtx5lHmah40yvhHpO8PfNuZ0ds5nXHdoRyYLxEdPqBbxkf
-         PvZYLIJrTslHCY1X4XZENnDydNzb8P2R0zvj3JmEhdCdwqtXHtFyJVkw4/0H8bga1RqG
-         tMrWR3nPtOmDQxcKGYu4tPWeQK8LgzdIKUhp24P90FeXcwUveLja+QGecSO1c+qQVgb5
-         HKgA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=OZpOkof/CGyaDmM5P8LiByNQQAqddDTc7qxmAovk87k=;
-        b=L1VJXTukiCs+v11TmScSoQ6kDLTXSWXOtSH9dTfFQVaH/Qn86OX2J8GnB2RnQ/QzAs
-         zUc3m5lb117+1J7Yf75/7/5nUndhSbo4kYr6LzQ3zH6wKx0jAqIm8MF3JoSnlt37fn4U
-         ZnJkJVbp8cM8GLVzL8CK6mdFyQ50lTc9ItToiQvZ4/vzZhdR5MXbjzfhMxGNVGTu1/XM
-         R4k88NRsM/Rh/+PZAxK81HMgukhed8FdLueS0jndkxUYLbUAxta2P4Enr7t5vFEjqUJU
-         oCEO8nzW97BrjO6R2hCGrPxkdJsaIYN6E8iLZO1U5KFyX3JfInOiUi9Iy6ja9lO7KOts
-         Pw/g==
-X-Gm-Message-State: AOAM5338n5vQaspvRvqNE1WZ5k9t2ht6ndA7cwqWukhcHPeFMqkx+4lV
-        OzVMexylFOH+xiE8AnPbfWM=
-X-Google-Smtp-Source: ABdhPJxTi0KdUPKwTvw3K2Afh7CgKaGWn7ARC13HEsv6QMuX+rDhPgGblnTa31cZZMvuHNHtqOvGLA==
-X-Received: by 2002:a17:90b:4a92:b0:1b8:a3c5:1afe with SMTP id lp18-20020a17090b4a9200b001b8a3c51afemr2744580pjb.69.1645029763989;
-        Wed, 16 Feb 2022 08:42:43 -0800 (PST)
-Received: from ELIJAHBAI-MB0.tencent.com ([203.205.141.118])
-        by smtp.gmail.com with ESMTPSA id p16sm5745964pgj.79.2022.02.16.08.42.41
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 16 Feb 2022 08:42:43 -0800 (PST)
-From:   Haimin Zhang <tcs.kernel@gmail.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Cc:     Haimin Zhang <tcs.kernel@gmail.com>,
-        TCS Robot <tcs_robot@tencent.com>
-Subject: [PATCH] scsi: add __GFP_ZERO flag for blk_rq_map_kern in function sg_scsi_ioctl
-Date:   Thu, 17 Feb 2022 00:42:23 +0800
-Message-Id: <20220216164223.55546-1-tcs.kernel@gmail.com>
-X-Mailer: git-send-email 2.30.1 (Apple Git-130)
-MIME-Version: 1.0
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=S6hCqgbeYKd54O5IBLhNKYM1KlQyk/ysPaqDSSmzJ6Q=;
+ b=DcKocTtB8PJ0dQKPl3WzsfoJvmlSYU5y/pykD2gTn7fMpYk8VEo4Hsv84q06MV3USOWMxv2La3GzJAc0flmn2bzLEmJRO7UL7QxJyXPHGfqDUNPcAfc+Fg6vSwBYcSQO9pOHtkh10v8c5t+eb2bpK/fCxCnmfJGbMm36LPkiYcc=
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
+ BL0PR10MB2788.namprd10.prod.outlook.com (2603:10b6:208:79::26) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4975.15; Wed, 16 Feb 2022 17:13:40 +0000
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::3448:8685:9668:b4d5]) by DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::3448:8685:9668:b4d5%5]) with mapi id 15.20.4975.019; Wed, 16 Feb 2022
+ 17:13:40 +0000
+Message-ID: <1ba93dce-7dbe-89da-a026-e8816c678f9b@oracle.com>
+Date:   Wed, 16 Feb 2022 11:13:38 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.0
+From:   Mike Christie <michael.christie@oracle.com>
+Subject: Re: [PATCH] target: add iscsi/cpus_allowed_list in configfs
+To:     Zou Mingzhe <mingzhe.zou@easystack.cn>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <20220125083821.18225-1-mingzhe.zou@easystack.cn>
+ <7234209a-d308-622b-700e-e72907246ff4@oracle.com>
+ <7ff3a449-980e-ab44-42cf-7520a0796483@easystack.cn>
+Content-Language: en-US
+In-Reply-To: <7ff3a449-980e-ab44-42cf-7520a0796483@easystack.cn>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: DM5PR12CA0018.namprd12.prod.outlook.com (2603:10b6:4:1::28)
+ To DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 3a148fca-d51e-4e05-1b44-08d9f16fad6a
+X-MS-TrafficTypeDiagnostic: BL0PR10MB2788:EE_
+X-Microsoft-Antispam-PRVS: <BL0PR10MB278874C3F6AFFA18918A6F5CF1359@BL0PR10MB2788.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: CO/ufk5VN4QqilXKD6U0HHqjNILQDHvF4zYmM/+Junk5t3c0qKjVeSvFjzuMQ9nid0UTD0U5W/2MtMh5QQ6WxxSvMj3R2UdBZG6Lmj4bDf+SNKyf38Lts4YXeHBmFAcGYdpGOX5Xrrk9lVP+h+WQJ/1eENauQ9uThfgFnBONpQM8Zfi9kLyzpJnn96YAAYEExmL/SuSpMMmEkAN0XjjABPJUhQNW/MeF6YkjQ+J6VENnQDR0O62fyX2UHWs0X2dq23cd5yZp3pmgwm0J4GNRZZdImUKQ8BYapQEL9rWYfn+XqLvRAbR2FKs5qxbyLsdFUcpa6a+VsXffuKZFSGh/c2QHQJtond1azSoitNr1ZD51KmuQqvbXCr/uU/AO7bih++iE+VHEwIZwl6Ks/Kf9XsmiMOntIVnConmKJlLhGZwcukyfdtzLY14uKXxDvHFcn6DspZhqksIBfpYXUf4Tj4XJuT2UVgSFqapgat2QlOwlL4XcQZ0VPoYbAwNC8GVt+Sb9ANx9kPkc1/o1YFZdcImmBwaHjKC+fLaP8gpNzUauiNrAV+bg0XhVrQLmNuF2OetCwJCyZVurc8UyOLqmEeXVlURbgZtLIi1Esl964WbAsuSSmYNNL4YviUPtny/XZ8DqOeihY2sTSkyYcq4FsmPm9TKXtLJzjE4IMDESu85hLgIh/8oHni7DxVRCinXw1zQp5iqNMokiPBiQdyF0PmkvxqP4UoFzEfDk55QC4LF0aoy7ybklMHd+Fo6nh+xn
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(86362001)(508600001)(8676002)(66556008)(186003)(66476007)(66946007)(31696002)(6506007)(53546011)(6486002)(6512007)(26005)(316002)(2906002)(38100700002)(31686004)(4744005)(5660300002)(2616005)(36756003)(8936002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?SUE2Q2pPSDAxNDZGMnZ0d2ozVURHVHBMWDV5cENTbUdsZTBTR1ViUmd5MUZk?=
+ =?utf-8?B?a1B4QjR4YnVyU2w1UVB2RHdmNml6VXlzY0R5eXVRNkV4QWtsS281ZGNMbVZ2?=
+ =?utf-8?B?MEc3YnpidUVBczVsc3NjdmFlNlJxODdwYUNpeUlBTjlvVjQ5LzdHMnNOdE0v?=
+ =?utf-8?B?aFA1VmFUM0lmKzZ1VlpWcmJmQXRpT2tpMEk3ZW5Xblh1V2xteFBYdlUrMGgx?=
+ =?utf-8?B?bXpzWVkxWkVoTUh1VDBMWGhrMjBQY0VNTWdidFJzYnJwNFFXcTBSVmhiMjZa?=
+ =?utf-8?B?QkpkaEhpcFdxd2M0bCs1U3lCTTl1OVoxSkRTN01jcjlISFFBVzFaSFhGK1dn?=
+ =?utf-8?B?TVZrOFJNc2tHekRiYzBCK0lVVk5GUHNkYzhXdks3NUZQVTgyNVYvYlZ2bWNt?=
+ =?utf-8?B?OHRzVE12Skx3dG1FeE1xZnlsci8zbktiZWZIc0h3a2ZtUlp3Y0dGa0xuRG4w?=
+ =?utf-8?B?cHdFZ3l0emZEVXlEeGNBZjRwdkdWRFIwZ25weXlxeWp4S1RjV2VJM29MZFph?=
+ =?utf-8?B?MC9nZmdlV3lIREthNTA0U0taVDFwY1lkODB4d1gvVWYyUk8vdnU3S3FtdGlE?=
+ =?utf-8?B?Skk5SjNpYVdxaW1iVVUrNGVvVldkSTBjdko4S1EycGl5MXRwV25BN000Y0J6?=
+ =?utf-8?B?MVg3NFdRSU9SQmxrTUhnTDNmcDRPNEdXT3BNYUtIeVpwbTZudGE5RHo3cTlD?=
+ =?utf-8?B?bHVjQlVDRS8ycTljaHZtV2pCdmJna1RvdzBrV2NraGJveC9nTDJJYUhRZEVs?=
+ =?utf-8?B?NDR4MUJvRTM3U2NpK0NrTTVLaWN5ZHBBLzdZb3dMWUhNekR0UlNqdFdaU2ZI?=
+ =?utf-8?B?N2R0b1U2M3JmY3dVUjR5cktKOGxrQlhUcVl1L3JJVWRIQ2tOZ0RMZjZKQm12?=
+ =?utf-8?B?c2xuck5HR3I0U2c1SGZpWERiRnVjbTAwQWJTejN1MFoydVV1Tml2aFFDMUlw?=
+ =?utf-8?B?UjRHYnV3ZFI1ZStKdTltTXFGczRmUDBiT05aUHhaU0dYYXg0V0wvUHJBS1do?=
+ =?utf-8?B?bEFubEtpc081UjRJTFU3cm9ZSHE1aExweTdWSnhrVGQ5eDJUUVhrSXNSVGt0?=
+ =?utf-8?B?ZjNIdHZ6bXZYRUxyckNleExHZUZ6MW55MzZlbytmekVxSFZVdExRaHlsbWZ3?=
+ =?utf-8?B?N3dsbkNpUGRtOGQybVNwdGNmaWtOSG9GaklOaFFFMUZlOXAyQ1ZaSTArenU2?=
+ =?utf-8?B?Z3dDN2VWVUxnNnRvbGF5M1F5NTlPRjE1LzFsVnpMcDlZa3JGQXI3OWkzbm1O?=
+ =?utf-8?B?Z3gzNlNNZmxydC95TUc1cXdZWEcvTTM1N0ZLRGMyRGIzNHdjOVhueFh5Mmk0?=
+ =?utf-8?B?SWkzS1NBOEVNajZTNWlaYW9ncGVKekNrVlhZb1NoZW5xZmt5SjJSU0ZobVV6?=
+ =?utf-8?B?Z1NwQUhid3NBd3YrWGsvYzRQZmxuckNPc2hhOTVWdm9xQ2RFUnJ0bzhnMmNk?=
+ =?utf-8?B?aVFlYmJCVHV1dnFGWFp6bVE3QmlWZlBBRThFb1UrcXJ3azhhZXlQenlrSWU4?=
+ =?utf-8?B?MDF2NC9PYTBhYXdFQ0N6OXRTZDllVlA4UUc3QTFyc2JQaGZTK2NvelB0a1pi?=
+ =?utf-8?B?TUNIVzNYWTV2OTd2V2ZuYUJtMjVNU0tpNTFpZUFlS3lrSmdZU2VKT2d1K0tD?=
+ =?utf-8?B?ZVB2Qm9MQXJqZlcvSzU3RHJTRGUxY01DcE95YlNOOHg3ejlGUjRpZEZ1NGhT?=
+ =?utf-8?B?WGRDUGNaQUtnN2NmREVCZ1FVd3BZeDhTdU5hdGt4WmdNRWJ5K0RZaWg5cHhx?=
+ =?utf-8?B?c0ZyMVhRck1RbEpISW81THBqTjF4VHpxU3hodzYrcSt2TktaMFFrRXJrTGQy?=
+ =?utf-8?B?dXRqaVYyTkp5clhpcEdhZDE3Nmx1a2xpMWZQSDBLbUk3cDZpbWtiSDR4SVJ1?=
+ =?utf-8?B?VkhVdjBvTFhtOUJQYlN3MVN2c1UwaUluRFl0VE1iUEZVS2FjUDFLTEt1T1dH?=
+ =?utf-8?B?Q2dEU0tNa2hROHpFODZYU1BBZ3AzN3hnUndNck1Xdk9WQURzUDd4eERqUlJa?=
+ =?utf-8?B?aW5RTmtaWlhMcURrRzVnYVJXSnNoSjI0ZjBzZFMrVFVwRVJyZmZXbEhNNmt1?=
+ =?utf-8?B?OC9vS2xnbDl0Y0VqRnNIKzl3YTJXSDhSV2RwcG05NWlDYUJrMFBOVGxXcWMz?=
+ =?utf-8?B?R2ZHQk9NOXIvZjJSZmV4RldIeHRxcFdFMi8xWnpwRjNUeG1SQmgrZFZRMlhu?=
+ =?utf-8?B?UkNUSm1yQk81RGdnWmlHWFNUdjVyaU1WZ0xWTU5nZXFGLzhLeTJ6dk8xa2ln?=
+ =?utf-8?B?aVhjRHVzWTRaUXBuc0dDVUJHRlVRPT0=?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3a148fca-d51e-4e05-1b44-08d9f16fad6a
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Feb 2022 17:13:40.5211
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: tTm+TiygH/jOYvtPGT+e0SQ3sqD90m5mJEIydSUy2ug09q4/JhqRp1bP4c8dkAJFCvYLX9GLfERjVHcvpMYvA4GQGxmuiFSci2PFI5m9/1k=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR10MB2788
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10260 signatures=675971
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 adultscore=0
+ mlxlogscore=999 mlxscore=0 suspectscore=0 spamscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
+ definitions=main-2202160099
+X-Proofpoint-GUID: LDPEMMsKNTjscLh3egH2udGzhe6CBRVG
+X-Proofpoint-ORIG-GUID: LDPEMMsKNTjscLh3egH2udGzhe6CBRVG
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add __GFP_ZERO flag for blk_rq_map_kern in function sg_scsi_ioctl to
-avoid a kernel information leak issue. This issue can cause the content of
-local variable buffer which was passed to function blk_rq_map_kern was
-rewritten. At last, it can be leaked to the user buffer.
+On 2/9/22 5:48 AM, Zou Mingzhe wrote:
+>>>   +cpumask_t __iscsi_allowed_cpumask;
+>> Maybe better to put this in iscsi_target.c with the other vars like
+>> it.
+> 
+> Originally I wanted to put it in struct iscsit_global and use it in iscsit_thread_check_cpumask.
+> 
+> However iscsit_thread_check_cpumask is also called in cxgbit_target.c. I don't know if I also
+> 
+> need to modify cxgbit at the same time, and I only modified two calls in iscsi_target.c. I would
+> 
 
-Reported-by: TCS Robot <tcs_robot@tencent.com>
-Signed-off-by: Haimin Zhang <tcs.kernel@gmail.com>
----
-This can cause a kernel-info-leak problem.
-0. This problem occurred in function scsi_ioctl. If the parameter cmd is SCSI_IOCTL_SEND_COMMAND, the function scsi_ioctl will call sg_scsi_ioctl to further process.
-1. In function sg_scsi_ioctl, it creates a scsi request and calls blk_rq_map_kern to map kernel data to a request.
-3. blq_rq_map_kern calls bio_copy_kern to request a bio.
-4. bio_copy_kern calls alloc_page to request the buffer of a bio. In the case of reading, it wouldn't fill anything into the buffer.
+The new configfs file shows up for software iscsi and cxgb right? If so I think you need to
+modify both, or you end up with a file that returns success but doesn't do anything and it's
+confusing to users. It's also a simple change to cxgb.
 
-```
-__alloc_pages+0xbbf/0x1090 build/../mm/page_alloc.c:5409
-alloc_pages+0x8a5/0xb80
-bio_copy_kern build/../block/blk-map.c:449 [inline]
-blk_rq_map_kern+0x813/0x1400 build/../block/blk-map.c:640
-sg_scsi_ioctl build/../drivers/scsi/scsi_ioctl.c:618 [inline]
-scsi_ioctl+0x40c0/0x4600 build/../drivers/scsi/scsi_ioctl.c:932
-sg_ioctl_common build/../drivers/scsi/sg.c:1112 [inline]
-sg_ioctl+0x3351/0x4c10 build/../drivers/scsi/sg.c:1165
-vfs_ioctl build/../fs/ioctl.c:51 [inline]
-__do_sys_ioctl build/../fs/ioctl.c:874 [inline]
-__se_sys_ioctl+0x2df/0x4a0 build/../fs/ioctl.c:860
-__x64_sys_ioctl+0xd8/0x110 build/../fs/ioctl.c:860
-do_syscall_x64 build/../arch/x86/entry/common.c:51 [inline]
-do_syscall_64+0x54/0xd0 build/../arch/x86/entry/common.c:82
-entry_SYSCALL_64_after_hwframe+0x44/0xae
-```
 
-5. Then this request will be sent to the disk driver. When bio is finished, bio_copy_kern_endio_read will copy the readed content back to parameter data from the bio.
-But if the block driver didn't process this request, the buffer of bio is still unitialized.
+> like to know how to handle in cxgbit_target.c?
+> 
+> I want to move 'static inline void iscsit_thread_check_cpumask' from iscsi_target_core.h to
+> 
+> iscsi_target.c and EXPORT_SYMBOL(iscsit_thread_check_cpumask). Do you agree it?
+> 
 
-```
-memcpy_from_page build/../include/linux/highmem.h:346 [inline]
-memcpy_from_bvec build/../include/linux/bvec.h:207 [inline]
-bio_copy_kern_endio_read+0x4a3/0x620 build/../block/blk-map.c:403
-bio_endio+0xa7f/0xac0 build/../block/bio.c:1491
-req_bio_endio build/../block/blk-mq.c:674 [inline]
-blk_update_request+0x1129/0x22d0 build/../block/blk-mq.c:742
-scsi_end_request+0x119/0xe40 build/../drivers/scsi/scsi_lib.c:543
-scsi_io_completion+0x329/0x810 build/../drivers/scsi/scsi_lib.c:939
-scsi_finish_command+0x6e3/0x700 build/../drivers/scsi/scsi.c:199
-scsi_complete+0x239/0x640 build/../drivers/scsi/scsi_lib.c:1441
-blk_complete_reqs build/../block/blk-mq.c:892 [inline]
-blk_done_softirq+0x189/0x260 build/../block/blk-mq.c:897
-__do_softirq+0x1ee/0x7c5 build/../kernel/softirq.c:558
-```
-
-6. Finally, the internal buffer's content is copied to the user buffer which is specified by the parameter sic->data of sg_scsi_ioctl.
-_copy_to_user+0x1c9/0x270 build/../lib/usercopy.c:33
-copy_to_user build/../include/linux/uaccess.h:209 [inline]
-sg_scsi_ioctl build/../drivers/scsi/scsi_ioctl.c:634 [inline]
-scsi_ioctl+0x44d9/0x4600 build/../drivers/scsi/scsi_ioctl.c:932
-sg_ioctl_common build/../drivers/scsi/sg.c:1112 [inline]
-sg_ioctl+0x3351/0x4c10 build/../drivers/scsi/sg.c:1165
-vfs_ioctl build/../fs/ioctl.c:51 [inline]
-__do_sys_ioctl build/../fs/ioctl.c:874 [inline]
-__se_sys_ioctl+0x2df/0x4a0 build/../fs/ioctl.c:860
-__x64_sys_ioctl+0xd8/0x110 build/../fs/ioctl.c:860
-do_syscall_x64 build/../arch/x86/entry/common.c:51 [inline]
-do_syscall_64+0x54/0xd0 build/../arch/x86/entry/common.c:82
-entry_SYSCALL_64_after_hwframe+0x44/0xae
-
- drivers/scsi/scsi_ioctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index e13fd380deb6..e92836f4bbd6 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -607,7 +607,7 @@ static int sg_scsi_ioctl(struct request_queue *q, fmode_t mode,
- 	}
- 
- 	if (bytes) {
--		err = blk_rq_map_kern(q, rq, buffer, bytes, GFP_NOIO);
-+		err = blk_rq_map_kern(q, rq, buffer, bytes, GFP_NOIO | __GFP_ZERO);
- 		if (err)
- 			goto error;
- 	}
--- 
-2.30.1 (Apple Git-130)
-
+I think that is ok.
