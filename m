@@ -2,40 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46322C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 21:02:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF3B8C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 21:02:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233398AbiBPVDE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Feb 2022 16:03:04 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48408 "EHLO
+        id S233214AbiBPVDJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Feb 2022 16:03:09 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233214AbiBPVDB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 16:03:01 -0500
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B01B207FEF
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:02:49 -0800 (PST)
-Received: by mail-pl1-f171.google.com with SMTP id w20so2940537plq.12
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:02:49 -0800 (PST)
+        with ESMTP id S233368AbiBPVDD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 16:03:03 -0500
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC9D8209D3C
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:02:50 -0800 (PST)
+Received: by mail-pl1-f173.google.com with SMTP id i10so2976410plr.2
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:02:50 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=F6hcTPTAbcTrOtT8jY+FWg4iCNywlNyNbCJma56j84E=;
-        b=ogNEjq/3WCWifbo94M7gUPBZqDs7p0+DHoRhQu8+y1qwycBQxnqLnvjIOMuVhu6Q6Q
-         mjlSN3PdgC1CC2ZpXRt2pWDOEhbmtdLe/uocrZNezS7o/T6WB9ddweC7XhORyLRp+sV9
-         oV5aGmLtG1a+FHIzQsa9J77QAC29JuiCFD69oU9D1322AtU3IoBO6u317wcaNnGYMN8g
-         NtjX9Xx8I+OGaCFHHgwW2rF0vcJvjhZrJ4cL5T6dPhy+VV5ulW+kCeYAtjcRGOkvo3PH
-         V0NrOhj6Gw4vY6iwgFqUZ+jQvEcwJyPAKNwfs8hFuQbaUkjrNZa1paSwybfcQFJaYGFT
-         qxcA==
-X-Gm-Message-State: AOAM5328vsD9EHwa3Woyyn8NbHe1ciu+9+bBayzUsM2E6y96gvLEbsD+
-        n/8tQWGY+EbUXvl1V7Sr+6U=
-X-Google-Smtp-Source: ABdhPJz1XAqFaQl3wKxmcIHPUqUgY15/T7Cb/3SSI4F+/KRC8jhwHt3RTZpPmO+koWPjee3bogWZOg==
-X-Received: by 2002:a17:902:b410:b0:14b:e53:7aa0 with SMTP id x16-20020a170902b41000b0014b0e537aa0mr4307249plr.101.1645045368468;
-        Wed, 16 Feb 2022 13:02:48 -0800 (PST)
+        bh=KnYVhSEwp8HZrTUijCkGbfKURzm28Jjo+1PjtXRA8Y8=;
+        b=3FXHFMWpr5kVnaS15HCW4E+jZbW8hlZQAvtCCpzc9bMl8DYSpFj9brb2r0Q2uFwuz4
+         JAUGCuOjvTjr6ToYLeZrmyKgPC4CtNAdc/GeVvm2k519I8tpP2nZRZW1KBGavoFRdrS7
+         bROpZAJ8Kc3gFC0Btb7VJIBtqiXhZtxCiUjg6MdB8K3fRMahRMnyPNNYrB0XMuxbMrSh
+         Gy7CIN5JNxz9krKzofUF4ZMIgfAKdfwLHdKLr4D+viRfbJgFOjsYPcigypRetpjq8b2e
+         gZQrySnn+ESaXksJS80V88egO4mqcIwekzhpTKAbLCvQr716r2rJihq5swWTTCYnE8fm
+         670g==
+X-Gm-Message-State: AOAM530Jumz0gkgqSr5UXbrV4dE5Tn6PoPBhbU3oTfZRJVD6wtNI63oN
+        LrV4lMqZB41c8e6ZPZyYgAU=
+X-Google-Smtp-Source: ABdhPJzOfYms8Jwa2YELQlCfhncnYu/rhhLFzUBqeh0jYjzCMhlDyij3YXZt+GHJhSZmQysQszMSfA==
+X-Received: by 2002:a17:902:dacd:b0:14f:4e5d:fe0d with SMTP id q13-20020a170902dacd00b0014f4e5dfe0dmr3108978plx.128.1645045370210;
+        Wed, 16 Feb 2022 13:02:50 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id c8sm46591222pfv.57.2022.02.16.13.02.47
+        by smtp.gmail.com with ESMTPSA id c8sm46591222pfv.57.2022.02.16.13.02.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Feb 2022 13:02:47 -0800 (PST)
+        Wed, 16 Feb 2022 13:02:49 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
@@ -43,11 +43,10 @@ Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         John Garry <john.garry@huawei.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v4 03/50] scsi: ips: Use true and false instead of TRUE and FALSE
-Date:   Wed, 16 Feb 2022 13:01:46 -0800
-Message-Id: <20220216210233.28774-4-bvanassche@acm.org>
+Subject: [PATCH v4 04/50] scsi: nsp_cs: Change the return type of two functions into 'void'
+Date:   Wed, 16 Feb 2022 13:01:47 -0800
+Message-Id: <20220216210233.28774-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220216210233.28774-1-bvanassche@acm.org>
 References: <20220216210233.28774-1-bvanassche@acm.org>
@@ -57,8 +56,8 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch prepares for removal of the drivers/scsi/scsi.h header file.
-That header file defines the 'TRUE' and 'FALSE' constants.
+nsp_reselected() and nsphw_init() always return TRUE. Change the return type
+of these functions into 'void'.
 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
@@ -66,138 +65,92 @@ Cc: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Cc: John Garry <john.garry@huawei.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ips.c | 36 +++++++++++++++++-------------------
- 1 file changed, 17 insertions(+), 19 deletions(-)
+ drivers/scsi/pcmcia/nsp_cs.c | 17 +++++------------
+ drivers/scsi/pcmcia/nsp_cs.h |  4 ++--
+ 2 files changed, 7 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 59664e92ec8a..d22ba53d6028 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -945,7 +945,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
- 			scsi_done(scsi_cmd);
- 		}
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index 92c818a8a84a..a5c2dd7ebc16 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -298,7 +298,7 @@ static void nsphw_init_sync(nsp_hw_data *data)
+ /*
+  * Initialize Ninja hardware
+  */
+-static int nsphw_init(nsp_hw_data *data)
++static void nsphw_init(nsp_hw_data *data)
+ {
+ 	unsigned int base     = data->BaseAddress;
  
--		ha->active = FALSE;
-+		ha->active = false;
- 		return (FAILED);
- 	}
+@@ -349,8 +349,6 @@ static int nsphw_init(nsp_hw_data *data)
+ 	nsp_write(base,	      IRQCONTROL,   IRQCONTROL_ALLCLEAR);
  
-@@ -974,7 +974,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
- 			scsi_done(scsi_cmd);
- 		}
+ 	nsp_setup_fifo(data, FALSE);
+-
+-	return TRUE;
+ }
  
--		ha->active = FALSE;
-+		ha->active = false;
- 		return (FAILED);
- 	}
+ /*
+@@ -643,7 +641,7 @@ static int nsp_dataphase_bypass(struct scsi_cmnd *SCpnt)
+ /*
+  * accept reselection
+  */
+-static int nsp_reselected(struct scsi_cmnd *SCpnt)
++static void nsp_reselected(struct scsi_cmnd *SCpnt)
+ {
+ 	unsigned int  base    = SCpnt->device->host->io_port;
+ 	unsigned int  host_id = SCpnt->device->host->this_id;
+@@ -675,8 +673,6 @@ static int nsp_reselected(struct scsi_cmnd *SCpnt)
+ 	bus_reg = nsp_index_read(base, SCSIBUSCTRL) & ~(SCSI_BSY | SCSI_ATN);
+ 	nsp_index_write(base, SCSIBUSCTRL, bus_reg);
+ 	nsp_index_write(base, SCSIBUSCTRL, bus_reg | AUTODIRECTION | ACKENB);
+-
+-	return TRUE;
+ }
  
-@@ -1287,7 +1287,7 @@ ips_intr_copperhead(ips_ha_t * ha)
- 		return 0;
- 	}
- 
--	while (TRUE) {
-+	while (true) {
- 		sp = &ha->sp;
- 
- 		intrstatus = (*ha->func.isintr) (ha);
-@@ -1351,7 +1351,7 @@ ips_intr_morpheus(ips_ha_t * ha)
- 		return 0;
- 	}
- 
--	while (TRUE) {
-+	while (true) {
- 		sp = &ha->sp;
- 
- 		intrstatus = (*ha->func.isintr) (ha);
-@@ -3086,8 +3086,8 @@ ipsintr_blocking(ips_ha_t * ha, ips_scb_t * scb)
- 	METHOD_TRACE("ipsintr_blocking", 2);
- 
- 	ips_freescb(ha, scb);
--	if ((ha->waitflag == TRUE) && (ha->cmd_in_progress == scb->cdb[0])) {
--		ha->waitflag = FALSE;
-+	if (ha->waitflag && ha->cmd_in_progress == scb->cdb[0]) {
-+		ha->waitflag = false;
- 
- 		return;
- 	}
-@@ -3387,7 +3387,7 @@ ips_send_wait(ips_ha_t * ha, ips_scb_t * scb, int timeout, int intr)
- 	METHOD_TRACE("ips_send_wait", 1);
- 
- 	if (intr != IPS_FFDC) {	/* Won't be Waiting if this is a Time Stamp */
--		ha->waitflag = TRUE;
-+		ha->waitflag = true;
- 		ha->cmd_in_progress = scb->cdb[0];
- 	}
- 	scb->callback = ipsintr_blocking;
-@@ -3464,10 +3464,8 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 		if (scb->bus > 0) {
- 			/* Controller commands can't be issued */
- 			/* to real devices -- fail them        */
--			if ((ha->waitflag == TRUE) &&
--			    (ha->cmd_in_progress == scb->cdb[0])) {
--				ha->waitflag = FALSE;
+ /*
+@@ -1057,9 +1053,8 @@ static irqreturn_t nspintr(int irq, void *dev_id)
+ 		if (irq_phase & RESELECT_IRQ) {
+ 			nsp_dbg(NSP_DEBUG_INTR, "reselect");
+ 			nsp_write(base, IRQCONTROL, IRQCONTROL_RESELECT_CLEAR);
+-			if (nsp_reselected(tmpSC) != FALSE) {
+-				return IRQ_HANDLED;
 -			}
-+			if (ha->waitflag && ha->cmd_in_progress == scb->cdb[0])
-+				ha->waitflag = false;
- 
- 			return (1);
++			nsp_reselected(tmpSC);
++			return IRQ_HANDLED;
  		}
-@@ -4615,7 +4613,7 @@ ips_poll_for_flush_complete(ips_ha_t * ha)
- {
- 	IPS_STATUS cstatus;
  
--	while (TRUE) {
-+	while (true) {
- 	    cstatus.value = (*ha->func.statupd) (ha);
+ 		if ((irq_phase & (PHASE_CHANGE_IRQ | LATCHED_BUS_FREE)) == 0) {
+@@ -1614,9 +1609,7 @@ static int nsp_cs_config(struct pcmcia_device *link)
+ 	nsp_dbg(NSP_DEBUG_INIT, "I/O[0x%x+0x%x] IRQ %d",
+ 		data->BaseAddress, data->NumAddress, data->IrqNumber);
  
- 	    if (cstatus.value == 0xffffffff)      /* If No Interrupt to process */
-@@ -5538,26 +5536,26 @@ ips_wait(ips_ha_t * ha, int time, int intr)
- 	METHOD_TRACE("ips_wait", 1);
+-	if(nsphw_init(data) == FALSE) {
+-		goto cs_failed;
+-	}
++	nsphw_init(data);
  
- 	ret = IPS_FAILURE;
--	done = FALSE;
-+	done = false;
+ 	host = nsp_detect(&nsp_driver_template);
  
- 	time *= IPS_ONE_SEC;	/* convert seconds */
+diff --git a/drivers/scsi/pcmcia/nsp_cs.h b/drivers/scsi/pcmcia/nsp_cs.h
+index 665bf8d0faf7..94c1f6c7c601 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.h
++++ b/drivers/scsi/pcmcia/nsp_cs.h
+@@ -304,7 +304,7 @@ static int nsp_eh_host_reset   (struct scsi_cmnd *SCpnt);
+ static int nsp_bus_reset       (nsp_hw_data *data);
  
- 	while ((time > 0) && (!done)) {
- 		if (intr == IPS_INTR_ON) {
--			if (ha->waitflag == FALSE) {
-+			if (!ha->waitflag) {
- 				ret = IPS_SUCCESS;
--				done = TRUE;
-+				done = true;
- 				break;
- 			}
- 		} else if (intr == IPS_INTR_IORL) {
--			if (ha->waitflag == FALSE) {
-+			if (!ha->waitflag) {
- 				/*
- 				 * controller generated an interrupt to
- 				 * acknowledge completion of the command
- 				 * and ips_intr() has serviced the interrupt.
- 				 */
- 				ret = IPS_SUCCESS;
--				done = TRUE;
-+				done = true;
- 				break;
- 			}
+ /* */
+-static int  nsphw_init           (nsp_hw_data *data);
++static void nsphw_init           (nsp_hw_data *data);
+ static int  nsphw_start_selection(struct scsi_cmnd *SCpnt);
+ static void nsp_start_timer      (struct scsi_cmnd *SCpnt, int time);
+ static int  nsp_fifo_count       (struct scsi_cmnd *SCpnt);
+@@ -320,7 +320,7 @@ static int  nsp_expect_signal    (struct scsi_cmnd *SCpnt,
+ 				  unsigned char  mask);
+ static int  nsp_xfer             (struct scsi_cmnd *SCpnt, int phase);
+ static int  nsp_dataphase_bypass (struct scsi_cmnd *SCpnt);
+-static int  nsp_reselected       (struct scsi_cmnd *SCpnt);
++static void nsp_reselected       (struct scsi_cmnd *SCpnt);
+ static struct Scsi_Host *nsp_detect(struct scsi_host_template *sht);
  
-@@ -5592,7 +5590,7 @@ ips_write_driver_status(ips_ha_t * ha, int intr)
- {
- 	METHOD_TRACE("ips_write_driver_status", 1);
- 
--	if (!ips_readwrite_page5(ha, FALSE, intr)) {
-+	if (!ips_readwrite_page5(ha, false, intr)) {
- 		IPS_PRINTK(KERN_WARNING, ha->pcidev,
- 			   "unable to read NVRAM page 5.\n");
- 
-@@ -5630,7 +5628,7 @@ ips_write_driver_status(ips_ha_t * ha, int intr)
- 	ha->nvram->versioning = 0;	/* Indicate the Driver Does Not Support Versioning */
- 
- 	/* now update the page */
--	if (!ips_readwrite_page5(ha, TRUE, intr)) {
-+	if (!ips_readwrite_page5(ha, true, intr)) {
- 		IPS_PRINTK(KERN_WARNING, ha->pcidev,
- 			   "unable to write NVRAM page 5.\n");
- 
+ /* Interrupt handler */
