@@ -2,138 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3263DC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Feb 2022 23:44:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32C01C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 01:28:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244150AbiBOXpH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Feb 2022 18:45:07 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50336 "EHLO
+        id S242809AbiBPB2f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Feb 2022 20:28:35 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230361AbiBOXpF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 18:45:05 -0500
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AD99DAAFE
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 15:44:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644968694; x=1676504694;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=DGGTuN3t0LZjITpYlpEpW7Ii7O/xugmqopM/JiuKHr0=;
-  b=rT64OeXQo1893xiBDxY8NmvFA/EBGTWAAm2g9o5nYyXX2Gv9AeilWxgX
-   iPL7f9XkOsXCkznwXjyqiyKveTYozQ1WTmrCg2AEMglZe+gh8BxNq/lkV
-   mGkShJ85RU54oSj6KJ85sPou6N7u0gQj8KPFw6Xei3JQBnvhHobYZCGB/
-   vSiZNDcV8lYFGXPQDhWoqczptJb+otn1cgTt4QYd5eTZREEfCwU4t6sp+
-   VgzG0S00D6aw/ehaR9kcm8ashu5AEP7EeJ0TSPK6mPAMU3GkB5aVnEtm5
-   /fUDxiQMxDfSCHmzsljjH9rbt1eDOxwkGnwiSQTfKhmt8aJS8KL+Yw2uH
-   g==;
-X-IronPort-AV: E=Sophos;i="5.88,371,1635177600"; 
-   d="scan'208";a="191978219"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Feb 2022 07:44:54 +0800
-IronPort-SDR: LMnJjCJYBpr/XJuuHqkMEjaN2uwc7AUQFO99auKnlEYuO5XEy8UBW6+utBRlgvMMax0Ub1Li7h
- 7qcGo6CxOL8BjM1pXX5ZmnqBhTZsaF59B9vYKEAOy8Hkor2esGb53eJkL12MXYcor0m0wAM8w9
- La3JyaWicUK7X5RI8FKIIOSBZ0g5i0HaEXQMSuw0bOgLHj/uL/EGbn4dILf+uog0o3hhOExpcE
- H2xxQJQodbGg0L8/zyN71TNEz6G6UddzIGTKqi2zG2YhNTirHZCJEiMPFHjiXokfemJuXET/0u
- J0aj0Y3EQu/gFL7hbrSVgcdb
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2022 15:17:42 -0800
-IronPort-SDR: +VGpfYLBAGsDeS299MfuShKXqb5s1yDgZR7f+57jFrv1d2FXxvt4V+XZNRy3yf3RGNtznOzeGO
- 41Sgn+0gfR34BK4VxBin/l1FZvrI1rJdQ8CLRwnc37ro4lES9S7bgUxKZ0Bd76iCqxZWjjqglM
- tKGNRR1XyT393YxCDnMLHNCjZdxRN+Nxk1A5emB1FYwwmx/qtdTQiJ+AY8chahMj8zlsca93hi
- 2QLhpxl4k1zqyA/6Dopv7ypnQWbpQj4QQYYhJQ67IlS9eJVQTMmlTTqIcgC3H6mrFNMSGXsCs+
- wSM=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2022 15:44:54 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JyyPK5Frwz1SVp0
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 15:44:53 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1644968693; x=1647560694; bh=DGGTuN3t0LZjITpYlpEpW7Ii7O/xugmqopM
-        /JiuKHr0=; b=ZQJ9qrcmp0qqKgVl6LH01G/2k0z76+wFJljbTxfoLjSlCbTQsl2
-        I0N+EA3vKt+CIP+b/ajRYStJSZZ8//Qzx1feLigUU7UjLtph2i7dAGXaRB9qHKoe
-        kX3tornKLePmw/A7A2940Zc2taVG+ZVP5FvxqcINphgCMwvKnN4nisRSbnqsYf+6
-        qBvWFOlFUuYM8Oc6b6aQdiRRir37QKRQACa4rxZEHhU9RIgTJTEUJlfbvH3WEU90
-        LQvYFtImYZxx3Xe3M7FeJfYz+PoHCarBqzF4msNixnH0ES6ErBcyt9BgGpyAVyrp
-        lrjiZULGMAgWzsYwZemUhcZ3Fc/9OTiiw6Q==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Sg9fieEd_4Ec for <linux-scsi@vger.kernel.org>;
-        Tue, 15 Feb 2022 15:44:53 -0800 (PST)
-Received: from [10.225.163.73] (unknown [10.225.163.73])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JyyPJ0Cv7z1Rwrw;
-        Tue, 15 Feb 2022 15:44:51 -0800 (PST)
-Message-ID: <67e630db-9a8c-d441-51db-44b1a06db19b@opensource.wdc.com>
-Date:   Wed, 16 Feb 2022 08:44:50 +0900
+        with ESMTP id S237686AbiBPB2f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2022 20:28:35 -0500
+Received: from mail-io1-xd36.google.com (mail-io1-xd36.google.com [IPv6:2607:f8b0:4864:20::d36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43851CA70F
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 17:28:24 -0800 (PST)
+Received: by mail-io1-xd36.google.com with SMTP id m185so575399iof.10
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2022 17:28:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Z2OvqLfZl+hYuGhPphHFvWMwyNyMYmTbKrVX+fI0uIY=;
+        b=l2L0Yq/MmnQcdQdl5uLE3DvfmVZ7xQ4V3ugwUP0tsrPIiMuoraWqh0rh6jrpr+TcwZ
+         D9mw5ki2sJIdwu4PhOvpx0wwmZP8wkKyF9o1q9Jruvrn6CvdwNBxNnCt+jfOmDlqWUOM
+         /gozfRwXNJiZujILSp9Pq4ag51oKWAyTCjO3d1DMPL6c0KiwcdaBVkq6GQ80OCOrrk4E
+         zC6JGM4dsrItJxHHz4RYMA99MUnOvF4trl0RbVx0K6AR/oDO9wi3mG3qnxyFOyn2Jw5X
+         GG3HRF5nUg69B4P4wkJVqqcGhMHW/ORw20nFzsPVN8ea2Xbyp9AAVlZEMJyUNSD761zl
+         EUpg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Z2OvqLfZl+hYuGhPphHFvWMwyNyMYmTbKrVX+fI0uIY=;
+        b=ewaynu2Fflm+LLgkf49r+Xu737dbTT1d3hYEsZnkxaucTXEWQ6+HmQgoSnhJVRxxO+
+         UMXUmE0FcB73KrAZCxFZ9I2+A3aznIfYVcaeMXiCNOGFmnQJO3DtYhhMGDGcwNI64iWC
+         26CEud7Uj+T3S2ZCF216oUmnwldGvAjvIYPKBP1nRV2kKGjKwntj7HeQVeHbflLp1GLO
+         iU3WlbfB7B2zMgJSeqQ6cvYyBhGUQUOYByM6PtKvsJsqW3r1knU/e4jd5t+DP9uX3MXf
+         1jqp9bBJWZRvXWNcVlWHz9Ha0sOM06l9RcaecRGkQCT5jdRso2rvm9uMnC6+L6d5IuiR
+         4STQ==
+X-Gm-Message-State: AOAM5307qFf2vIjUtBLePbV4aMfJ6cpcndTAFu3NQOxC3kwMwi8i0CZP
+        4bdO+KZVJjOlyculuD0HXx7mpw232cZd6QlGAZc=
+X-Google-Smtp-Source: ABdhPJz7DsrPBvGZlDWuLBLGgUZa4AMDb918/ama7iYOx1jfyS9JIKqDPdJqnLBKyunjmRdBHfHe0u8pu28jtx7KyXc=
+X-Received: by 2002:a6b:4f07:0:b0:613:f763:7d67 with SMTP id
+ d7-20020a6b4f07000000b00613f7637d67mr374953iob.4.1644974903589; Tue, 15 Feb
+ 2022 17:28:23 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH v3 20/31] scsi: pm8001: Fix tag values handling
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
-        Jason Yan <yanaijie@huawei.com>, jinpu.wang@ionos.com,
-        Ajish Koshy <Ajish.Koshy@microchip.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>
-References: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
- <20220214021747.4976-21-damien.lemoal@opensource.wdc.com>
- <7672bdd5-e2e9-0716-6487-5e2f76c8269c@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <7672bdd5-e2e9-0716-6487-5e2f76c8269c@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <CAOOPZo4uNCicVmoHa2za0=O1_XiBdtBvTuUzqBTeBc3FmDqEJw@mail.gmail.com>
+ <828ac69a-fe28-0869-bc1f-7fd106dff0aa@oracle.com>
+In-Reply-To: <828ac69a-fe28-0869-bc1f-7fd106dff0aa@oracle.com>
+From:   Zhengyuan Liu <liuzhengyuang521@gmail.com>
+Date:   Wed, 16 Feb 2022 09:28:12 +0800
+Message-ID: <CAOOPZo4Z2x_W7i=Vbnm-SsDgj5PndLVtOz6MqRzQxW-NeBwhRg@mail.gmail.com>
+Subject: Re: Question about iscsi session block
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     linux-scsi@vger.kernel.org,
+        open-iscsi <open-iscsi@googlegroups.com>, dm-devel@redhat.com,
+        lduncan@suse.com, leech@redhat.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/15/22 20:09, John Garry wrote:
-> On 14/02/2022 02:17, Damien Le Moal wrote:
->> @@ -1685,19 +1683,13 @@ void pm8001_work_fn(struct work_struct *work)
->>   		struct task_status_struct *ts;
->>   		struct sas_task *task;
->>   		int i;
->> -		u32 tag, device_id;
->> +		u32 device_id;
->>   
->>   		for (i = 0; ccb = NULL, i < PM8001_MAX_CCB; i++) {
->>   			ccb = &pm8001_ha->ccb_info[i];
->>   			task = ccb->task;
->>   			ts = &task->task_status;
->> -			tag = ccb->ccb_tag;
->> -			/* check if tag is NULL */
->> -			if (!tag) {
->> -				pm8001_dbg(pm8001_ha, FAIL,
->> -					"tag Null\n");
->> -				continue;
->> -			}
->> +
-> 
-> This looks so dodgy that maybe it is intentional. I think experts on 
-> this HW/driver need to check this further.
+On Wed, Feb 16, 2022 at 12:31 AM Mike Christie
+<michael.christie@oracle.com> wrote:
+>
+> On 2/15/22 9:49 AM, Zhengyuan Liu wrote:
+> > Hi, all
+> >
+> > We have an online server which uses multipath + iscsi to attach storage
+> > from Storage Server. There are two NICs on the server and for each it
+> > carries about 20 iscsi sessions and for each session it includes about 50
+> >  iscsi devices (yes, there are totally about 2*20*50=2000 iscsi block devices
+> >  on the server). The problem is: once a NIC gets faulted, it will take too long
+> > (nearly 80s) for multipath to switch to another good NIC link, because it
+> > needs to block all iscsi devices over that faulted NIC firstly. The callstack is
+> >  shown below:
+> >
+> >     void iscsi_block_session(struct iscsi_cls_session *session)
+> >     {
+> >         queue_work(iscsi_eh_timer_workq, &session->block_work);
+> >     }
+> >
+> >  __iscsi_block_session() -> scsi_target_block() -> target_block() ->
+> >   device_block() ->  scsi_internal_device_block() -> scsi_stop_queue() ->
+> >  blk_mq_quiesce_queue()>synchronize_rcu()
+> >
+> > For all sessions and all devices, it was processed sequentially, and we have
+> > traced that for each synchronize_rcu() call it takes about 80ms, so
+> > the total cost
+> > is about 80s (80ms * 20 * 50). It's so long that the application can't
+> > tolerate and
+> > may interrupt service.
+> >
+> > So my question is that can we optimize the procedure to reduce the time cost on
+> > blocking all iscsi devices?  I'm not sure if it is a good idea to increase the
+> > workqueue's max_active of iscsi_eh_timer_workq to improve concurrency.
+>
+> We need a patch, so the unblock call waits/cancels/flushes the block call or
+> they could be running in parallel.
+>
+> I'll send a patchset later today so you can test it.
 
-Well, the tag that was allocated for this task may have been the
-perfectly valid tag 0, so this really looks completely bogus to me, like
-all other tag == 0 checks.
+I'm glad to test once you push the patchset.
 
-Will update the distribution list for v4 to add Jack Wang
-<jinpu.wang@cloud.ionos.com> who is missing.
-
-
-> 
-> Thanks,
-> John
-
-
--- 
-Damien Le Moal
-Western Digital Research
+Thank you, Mike.
