@@ -2,40 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30898C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 21:02:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1725C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Feb 2022 21:02:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233295AbiBPVDC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Feb 2022 16:03:02 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48158 "EHLO
+        id S233360AbiBPVDD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Feb 2022 16:03:03 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232077AbiBPVC6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 16:02:58 -0500
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99C112069A9
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:02:45 -0800 (PST)
-Received: by mail-pf1-f172.google.com with SMTP id d187so3154010pfa.10
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:02:45 -0800 (PST)
+        with ESMTP id S233328AbiBPVDA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2022 16:03:00 -0500
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52ADB207556
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:02:47 -0800 (PST)
+Received: by mail-pl1-f181.google.com with SMTP id l9so2999239plg.0
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 13:02:47 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=k7lGi5V8UE+vYk8leuP3XDOCvMS0Ir4ShlsC6V+WdRQ=;
-        b=vXu9UnULNhy/dC4thSV6RfG/K/iTdOIUaTFxQeKYv/lmGj9JOIUGdLlFdodff4gqjk
-         wagZEEAddp0jlMRhuJeemL2eYsHYlJBhB5i6sS2JDcraT4IdeJvYmj1rBDDuetY75OV4
-         M4ILBu4aGlY6Cr+Pni/kObGgY+jIMQ8em2khkV9xGWowbS8uB/upevmjYCZSb2nSGdKV
-         x7CrjYUUSn57SmMiE2Pw9VIlqIiuoGu3jRX2OsiLn+lfFhPCHMBlxxASjI+Q3x3wd/DK
-         frWe+/FmvVn+ERdUSz48rIL436s1QFBoSkHXSS/8f1N2zuJl8idjg+AmhOvg5r+3/2wO
-         eMVA==
-X-Gm-Message-State: AOAM532SzFrSNNaNPP5z0XMmV9tYOJp52W10tNQenPbvFXZCXEvoo/RF
-        UPJeaxmhpFRFxEdJ+FJoHMclNA3hnt9QWQ==
-X-Google-Smtp-Source: ABdhPJxfH8RDTNg7APZ2jftkCQsAJP7FwubWTRQfbzXvSyv0Hq3ppfEc3pFYT8dQJSUvyoqr0gkWlw==
-X-Received: by 2002:a63:6b8a:0:b0:373:1037:1c65 with SMTP id g132-20020a636b8a000000b0037310371c65mr3744584pgc.7.1645045365025;
-        Wed, 16 Feb 2022 13:02:45 -0800 (PST)
+        bh=f/tyf6xX9BmyWKtKTQi812+2T5RV6GzN1mDcL3nDAAM=;
+        b=6hAR82hAWZd4PNHrfMLzd1iAfLzWoFR552jrELklKBBbEy3VW6VIAeYBukFBDE5qtv
+         +B4bk5orNYGtc3yDK9ChQFimb3+bGsukzLmxlCEKijcQKlR5+VNmjipO+MvuTsK2XZWY
+         DhS/Yzat8TCdMF64YcnNbe/XlSNe/N52OQWWIa7dkhknODzLl0NEQlHl+HAUv8C2gn99
+         cvYK0zNKmyU8f8nvemhJhFBVIj3ZPGi2Ch194EwI0lIptzrO/XpmjOdi5iK7LQUcWb63
+         Eh2YmyeZR+HQZ++nwkXklk55vbbKjdAliCo0bKa9durkOqkk32pgX5smH/NMGutPHR2h
+         8UQQ==
+X-Gm-Message-State: AOAM533Z30MmEaD/OMdMq/nIA5Na86DVMevf3xpFYPBfizvG8upkPzqa
+        3pJ1kVZf/ecY6TQgUjH4re8=
+X-Google-Smtp-Source: ABdhPJzYQd4SxqbrT7IWt3cHaLb4wVWAWIp1Sjc3FSRtn8DGqEPljCh8Hg70J7xlkDLQG/DHsUEQdQ==
+X-Received: by 2002:a17:902:e80f:b0:14d:c482:66a3 with SMTP id u15-20020a170902e80f00b0014dc48266a3mr4269657plg.41.1645045366703;
+        Wed, 16 Feb 2022 13:02:46 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id c8sm46591222pfv.57.2022.02.16.13.02.43
+        by smtp.gmail.com with ESMTPSA id c8sm46591222pfv.57.2022.02.16.13.02.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Feb 2022 13:02:44 -0800 (PST)
+        Wed, 16 Feb 2022 13:02:46 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
@@ -45,9 +45,9 @@ Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         John Garry <john.garry@huawei.com>,
         Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v4 01/50] scsi: ips: Remove an unreachable statement
-Date:   Wed, 16 Feb 2022 13:01:44 -0800
-Message-Id: <20220216210233.28774-2-bvanassche@acm.org>
+Subject: [PATCH v4 02/50] scsi: ips: Change the return type of ips_release() into 'void'
+Date:   Wed, 16 Feb 2022 13:01:45 -0800
+Message-Id: <20220216210233.28774-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220216210233.28774-1-bvanassche@acm.org>
 References: <20220216210233.28774-1-bvanassche@acm.org>
@@ -57,8 +57,8 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Whether or not CONFIG_BUG is enabled, BUG() never returns. Hence, code past
-a BUG() statement is unreachable. Remove one such unreachable statement.
+ips_release() has one caller and that caller ignores the value returned by
+ips_release(). Hence change the return type of that function into 'void'.
 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
@@ -66,18 +66,38 @@ Cc: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Cc: John Garry <john.garry@huawei.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ips.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/ips.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 498bf04499ce..0db35e97ce8f 100644
+index 0db35e97ce8f..59664e92ec8a 100644
 --- a/drivers/scsi/ips.c
 +++ b/drivers/scsi/ips.c
-@@ -655,7 +655,6 @@ ips_release(struct Scsi_Host *sh)
- 		printk(KERN_WARNING
- 		       "(%s) release, invalid Scsi_Host pointer.\n", ips_name);
- 		BUG();
--		return (FALSE);
- 	}
- 
+@@ -638,8 +638,7 @@ ips_setup_funclist(ips_ha_t * ha)
+ /*   Remove a driver                                                        */
+ /*                                                                          */
+ /****************************************************************************/
+-static int
+-ips_release(struct Scsi_Host *sh)
++static void ips_release(struct Scsi_Host *sh)
+ {
+ 	ips_scb_t *scb;
+ 	ips_ha_t *ha;
+@@ -660,7 +659,7 @@ ips_release(struct Scsi_Host *sh)
  	ha = IPS_HA(sh);
+ 
+ 	if (!ha)
+-		return (FALSE);
++		return;
+ 
+ 	/* flush the cache on the controller */
+ 	scb = &ha->scbs[ha->max_cmds - 1];
+@@ -698,8 +697,6 @@ ips_release(struct Scsi_Host *sh)
+ 	scsi_host_put(sh);
+ 
+ 	ips_released_controllers++;
+-
+-	return (FALSE);
+ }
+ 
+ /****************************************************************************/
