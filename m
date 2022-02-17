@@ -2,144 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0E5CC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 08:15:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20C5CC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 08:16:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237333AbiBQIPe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 03:15:34 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:47732 "EHLO
+        id S237382AbiBQIQP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 03:16:15 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236880AbiBQIPd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 03:15:33 -0500
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B85EC284207
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 00:15:18 -0800 (PST)
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220217081512epoutp03ead025083b82b06a25db8cd2bcb3ce86~UhL1eJ2Yx1620716207epoutp03x
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 08:15:12 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220217081512epoutp03ead025083b82b06a25db8cd2bcb3ce86~UhL1eJ2Yx1620716207epoutp03x
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1645085712;
-        bh=PxKHSvSDD9SRnI9pCL+FrHkguRUyZLd5NCaPMnah4+k=;
-        h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=YQYpdFhVQqNaIkRikX2wGeZcg2HvF1ac1PG9QMlwTzDqKanIA2Q/wTlgt+mhvwRZE
-         fz0A84elY8O/8ryWQ9IaTwKVzg9pzY2/HS56radtXMXm6U1DedeSh5mM0Qi0M6J9az
-         FffIkJFFWOw0ryn02dJddGZaEkvUa9DVVAbSNh7g=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20220217081512epcas2p32985d24849fe53ecdd697cd8db726b91~UhL06eHYm2518425184epcas2p3V;
-        Thu, 17 Feb 2022 08:15:12 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.36.90]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4Jzngf1bJzz4x9Pw; Thu, 17 Feb
-        2022 08:15:10 +0000 (GMT)
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        1B.4C.25540.EB10E026; Thu, 17 Feb 2022 17:05:18 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-        20220217081509epcas2p2a9dd27625b58114fa924cca85e4ccb9e~UhLyaMQ2x1998919989epcas2p2C;
-        Thu, 17 Feb 2022 08:15:09 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220217081509epsmtrp1f5be47c91c1e112461276ce17933dd22~UhLyZMFBK0095700957epsmtrp1F;
-        Thu, 17 Feb 2022 08:15:09 +0000 (GMT)
-X-AuditID: b6c32a47-831ff700000063c4-46-620e01be80bc
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        EE.84.29871.D040E026; Thu, 17 Feb 2022 17:15:09 +0900 (KST)
-Received: from KORCO011456 (unknown [10.229.18.123]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20220217081509epsmtip1522d8503416a31cd685378797292d3b7~UhLyM0ISL2286322863epsmtip1P;
-        Thu, 17 Feb 2022 08:15:09 +0000 (GMT)
-From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
-To:     "'Bart Van Assche'" <bvanassche@acm.org>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <beanhuo@micron.com>, <cang@codeaurora.org>,
-        <adrian.hunter@intel.com>, <sc.suh@samsung.com>,
-        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>,
-        <bhoon95.kim@samsung.com>, <vkumar.1997@samsung.com>
-In-Reply-To: <6b298597-f3b3-e4a1-c59a-f704ad4c06e5@acm.org>
-Subject: RE: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling
- isn't supported.
-Date:   Thu, 17 Feb 2022 17:15:09 +0900
-Message-ID: <015701d823d6$7a9e5540$6fdaffc0$@samsung.com>
+        with ESMTP id S237413AbiBQIQN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 03:16:13 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 39FF028421D
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 00:15:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1645085758;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=hJtP7jEv4ikV9cp5j+C2g+EBq5xxWYO9LVDtgaoCRQo=;
+        b=DdFoe+3sTKH4U9DoCb7ir4k3ngsyZVoh+gJ4Li9dJshQ23DDgrVXcfb3zXlfiahA766/Mh
+        /Qo65Z1VBNS0wIDjSrovnh/HMqgszrJ/wg1HVB08ERY9zF3mpRfp0A7V2u+4NVgB81oIXo
+        Wzvlm1WPXUcZ0hQ1CpFKTrYZiAcFV2A=
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
+ [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-510-B_BW9PSdOkaxqeUqx8N8_w-1; Thu, 17 Feb 2022 03:15:56 -0500
+X-MC-Unique: B_BW9PSdOkaxqeUqx8N8_w-1
+Received: by mail-pf1-f199.google.com with SMTP id d16-20020a056a0010d000b004e0204c9753so2838528pfu.7
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 00:15:56 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=hJtP7jEv4ikV9cp5j+C2g+EBq5xxWYO9LVDtgaoCRQo=;
+        b=7Xdp7IgxSX7MXKbzb64RHy4eRSuUtELhUPVHfqWdTcNGR3e9e2w1Ki6M6Ywt5ZzrHo
+         pQ/5AWMhNoXks4Rby/Gbzo5mhrIdyzTAMFHBgil6C9qkNBNbl5olsdJT/qSmBdSl6VIJ
+         UM1htso+JzWutmEZPO1cGgR0ts1DTrZ/mlIcUCFiYR/nmmxDhsn4l95baUHQGCSPxEmc
+         itYfZU1zRVPoJyoAZv4aJ0ftHqUDagKaxmDLXVWPD/aXCkpwaWz3BnVOmf5a0FqhpKnN
+         Ryl9GWO4t2uo2F96slG8662KBD2plZekQvx3KF4pGEKWdrm7Z7ubbkmDm0uiELUEBs+f
+         jw8A==
+X-Gm-Message-State: AOAM5301701Qt6zkhWRhkohpiyQxL2VvnQtzNomf+D3DBFajo4CrIicQ
+        qhLUpjwpm0oGwxPeVzgzeV50Trgd7JbFLLIADH54paNB9C+qHpoToFhUOSqUv0wzEDcDSsQT0eG
+        Ho5uvxgs8EqeItURJgaPJkAhKXm42+0hggHxvyw==
+X-Received: by 2002:a05:6a00:21c6:b0:49f:dcb7:2bf2 with SMTP id t6-20020a056a0021c600b0049fdcb72bf2mr1799051pfj.19.1645085755145;
+        Thu, 17 Feb 2022 00:15:55 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxXtEHGVJshiObUq+pvWFWxLIbPaFex/gDrZcjaB5URECbgGJUUi/yDNlI25Ym/NSwi9Wa0l0rKRpbSaJ8avFM=
+X-Received: by 2002:a05:6a00:21c6:b0:49f:dcb7:2bf2 with SMTP id
+ t6-20020a056a0021c600b0049fdcb72bf2mr1799030pfj.19.1645085754808; Thu, 17 Feb
+ 2022 00:15:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQI4IgZMS69T+T+3eQm0GbWo6Fi0ygFitYZoAW3RkEABzyLjwgIcJuVSq6GJ2YA=
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrAJsWRmVeSWpSXmKPExsWy7bCmme4+Rr4kg/ajRhYnn6xhs3gwbxub
-        xcufV9ksDj7sZLH4uvQZq8W0Dz+ZLT6tX8ZqsXrxAxaLRTe2MVlc3jWHzaL7+g42i+XH/zFZ
-        dN29wWix9N9bFos79z+yOPB7XL7i7XG5r5fJY/Gel0weExYdYPT4vr6DzePj01ssHn1bVjF6
-        fN4k59F+oJspgDMq2yYjNTEltUghNS85PyUzL91WyTs43jne1MzAUNfQ0sJcSSEvMTfVVsnF
-        J0DXLTMH6AMlhbLEnFKgUEBicbGSvp1NUX5pSapCRn5xia1SakFKToF5gV5xYm5xaV66Xl5q
-        iZWhgYGRKVBhQnbGm1tzGQvWsVZs293A3MA4j6WLkZNDQsBEYsHF/exdjFwcQgI7GCVOdb9i
-        hnA+MUocbnsLlfnGKLF21yJ2mJabp1sZIRJ7GSU27/3ICuG8ZJTob7jBBFLFJqAtMe3hbrCE
-        iMB8Zokv5xexgiQ4BawlFrQ2MYLYwgKxEje2X2frYuTgYBFQlVj13QAkzCtgKTHx+m42CFtQ
-        4uTMJ2DHMgvIS2x/O4cZ4goFiZ9Pl7GCtIoI+Ems2WMJUSIiMbuzDewFCYEHHBIHbm+AetRF
-        4saOnWwQtrDEq+NboL6RknjZ38YOMkdCoFhi0z55iN4GRoklnzZD9RpLzHrWzghSwyygKbF+
-        lz5EubLEkVtQl/FJdBz+CzWFV6KjTQiiUVni16TJjBC2pMTMm3egSjwkOhdlTWBUnIXkxVlI
-        XpyF5JdZCGsXMLKsYhRLLSjOTU8tNiowhkd1cn7uJkZw0tZy38E44+0HvUOMTByMhxglOJiV
-        RHg/HORNEuJNSaysSi3Kjy8qzUktPsRoCgzzicxSosn5wLyRVxJvaGJpYGJmZmhuZGpgriTO
-        65WyIVFIID2xJDU7NbUgtQimj4mDU6qBKWzRHGG73xNc29cwbpt0Zr7CGcYPLJP+rLcVae3O
-        dEz4kH7bcm1AvNt/hau579fuuN52KH6LkgW7psI8tvzA5rrioLlpZ2+VyseuU/8Uvi6rXOhG
-        fYHmhR+J6os/9z6P3vMmYN/2Z6ymdi5LJZKndBixl59h3/9bVPar2Yu8tbOmT9kbWjZDk1si
-        oslz1lP/29+lHMPK5UX3Mi9Rm/x41sp2ja1tiyfIxP84tN62leMQ9ye/Z9xeUQr1X5srXhle
-        +SAmtXIKe8aL/kr57i2JImWZr7ZPzDh3ZOq9BTs/8JetPvb/kfqRT9nH+O/8bvZfelKe+b9a
-        SXuJ5P9YAzdtIZ2wE1FPlRqrJi9a8vFduxJLcUaioRZzUXEiAGfSrutjBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrEIsWRmVeSWpSXmKPExsWy7bCSnC4vC1+SwedV8hYnn6xhs3gwbxub
-        xcufV9ksDj7sZLH4uvQZq8W0Dz+ZLT6tX8ZqsXrxAxaLRTe2MVlc3jWHzaL7+g42i+XH/zFZ
-        dN29wWix9N9bFos79z+yOPB7XL7i7XG5r5fJY/Gel0weExYdYPT4vr6DzePj01ssHn1bVjF6
-        fN4k59F+oJspgDOKyyYlNSezLLVI3y6BK+PNrbmMBetYK7btbmBuYJzH0sXIySEhYCJx83Qr
-        YxcjF4eQwG5GiSWX/jFBJCQlTux8zghhC0vcbznCClH0nFFixvGFYN1sAtoS0x7uBkuICGxk
-        lljb9gBq1GImiRN3joGN4hSwlljQ2gQ2SlggWmL7hJ9AcQ4OFgFViVXfDUDCvAKWEhOv72aD
-        sAUlTs58AraAGWhB78NWRghbXmL72znMEBcpSPx8uowVZIyIgJ/Emj2WECUiErM725gnMArN
-        QjJpFpJJs5BMmoWkZQEjyypGydSC4tz03GLDAsO81HK94sTc4tK8dL3k/NxNjOBo1dLcwbh9
-        1Qe9Q4xMHIyHGCU4mJVEeD8c5E0S4k1JrKxKLcqPLyrNSS0+xCjNwaIkznuh62S8kEB6Yklq
-        dmpqQWoRTJaJg1OqgUljh8EzQ2Phw+c2JPyROrIo8Vheb/SRX/9Orrv4SJCXR/3NtIiLVqYp
-        m23Xr9n11PzMpK+MBhYrnZr/zS85FaJf+FLY+9Pi+U93aWROfGV5+6Ear8P3GU2Hfybcer/p
-        5NRa/RqOlsLt24u27NxwpPDyjW/5j8JeMbpIzZ3ueEtc3Wjidm3GcNNX4vsz/l3OZDHlNcjf
-        1r8+44DeloqmuQHFalbhn1S6p37Q2bF/m75wQxHrwd2cAemL6m9K9l4rcTo0Ie2H/rz+G3If
-        Xxp+vHNJvOfuzrme/7fn2m9hFJyeXntIuGWalnMCT49+wm2d3+6Z0zQ0dfXrud9r9ZTob77+
-        6HfLFreJspwfZ/k7m55XYinOSDTUYi4qTgQA7kotv0UDAAA=
-X-CMS-MailID: 20220217081509epcas2p2a9dd27625b58114fa924cca85e4ccb9e
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220205074128epcas2p40901c37a7328e825d8697f8d3269edba
-References: <CGME20220205074128epcas2p40901c37a7328e825d8697f8d3269edba@epcas2p4.samsung.com>
-        <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
-        <62a5170b-48c0-a372-5392-08f5112d7a06@acm.org>
-        <007e01d82231$be8be250$3ba3a6f0$@samsung.com>
-        <6b298597-f3b3-e4a1-c59a-f704ad4c06e5@acm.org>
+From:   Changhui Zhong <czhong@redhat.com>
+Date:   Thu, 17 Feb 2022 16:15:43 +0800
+Message-ID: <CAGVVp+Ue7DLe17a26Q2WG6bQaaCdRdRjmev6G96K3p4oRccgUg@mail.gmail.com>
+Subject: [bug report] BUG: kernel NULL pointer dereference, address:
+ 0000000000000078 on kernel 5.17.0-rc4
+To:     linux-scsi@vger.kernel.org
+Cc:     sumit.saxena@broadcom.com, kashyap.desai@broadcom.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> On 2/14/22 22:03, Kiwoong Kim wrote:
-> > The benefit that I think is not blocking dev cmd during submitting a
-> scsi cmd.
-> 
-> Hi Kiwoong,
-> 
-> Both ufshcd_exec_dev_cmd() and previous versions of
-> ufshcd_queuecommand() obtain a reader lock on the clock scaling lock so
-> concurrent submission of both command types is allowed. I'm not aware of
-> any version of the UFS driver that serializes device commands against SCSI
-> commands.
-> 
-> Additionally, please take a look at commit 8d077ede48c1 ("scsi: ufs:
-> Optimize the command queueing code"). That patch removes the clock scaling
-> lock from ufshcd_queuecommand().
-> 
-> Thanks,
-> 
-> Bart.
+Hello
 
-Okay, I got it.
+Pls help check below BUG which was observed with command "sg_reset -v
+-b /dev/sdb" on upstream kernel-5.17.0-rc4.
+
+thanks
+
+[1]
+
+kernel repo:https://github.com/torvalds/linux.git
+
+[2]
+
+[81753.794722] BUG: kernel NULL pointer dereference, address: 0000000000000078
+[81753.804034] #PF: supervisor read access in kernel mode
+[81753.809765] #PF: error_code(0x0000) - not-present page
+[81753.815496] PGD 0 P4D 0
+[81753.818319] Oops: 0000 [#1] PREEMPT SMP PTI
+[81753.824329] CPU: 0 PID: 34840 Comm: sg_reset Kdump: loaded Not
+tainted 5.17.0-rc4 #1
+[81753.832970] Hardware name: Dell Inc. PowerEdge R730/0599V5, BIOS
+2.4.3 01/17/2017
+[81753.841319] RIP: 0010:scmd_printk+0x98/0x100
+[81753.846084] Code: 65 48 2b 04 25 28 00 00 00 75 0d 48 83 c4 50 5b
+41 5c 41 5d 41 5e 5d c3 e8 e5 ad 39 00 48 8b 83 f8 fe ff ff 8b 8b 18
+ff ff ff <48> 8b 50 78 48 85 d2 74 04 48 83 c2 0c be 80 00 00 00 4c 89
+e7 e8
+[81753.867041] RSP: 0018:ffffc0d4025cfdc0 EFLAGS: 00010286
+[81753.872869] RAX: 0000000000000000 RBX: ffff9bb911569d08 RCX: 00000000ffffffff
+[81753.880831] RDX: 0000000480998000 RSI: ffffffff9110b161 RDI: 00000000000350e0
+[81753.888792] RBP: ffffc0d4025cfe30 R08: 0000000000000080 R09: ffff9bb911569d40
+[81753.896754] R10: 0000000000000022 R11: 0000000000000000 R12: ffff9bb904701000
+[81753.904715] R13: ffffffffc03654be R14: ffffffffc03636f0 R15: ffff9bb911569d08
+[81753.912676] FS:  00007ff22a98e600(0000) GS:ffff9bbc6fc00000(0000)
+knlGS:0000000000000000
+[81753.921704] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[81753.928113] CR2: 0000000000000078 CR3: 0000000103ac0002 CR4: 00000000001706f0
+[81753.936075] Call Trace:
+[81753.938802]  <TASK>
+[81753.941141]  ? cred_has_capability.isra.0+0x78/0x120
+[81753.946687]  megasas_reset_bus_host+0x2d/0xf0 [megaraid_sas]
+[81753.953008]  ? scsi_init_command+0x102/0x1a0
+[81753.957771]  scsi_try_host_reset+0x3a/0xd0
+[81753.962344]  scsi_ioctl_reset+0x220/0x290
+[81753.966817]  blkdev_ioctl+0x13e/0x280
+[81753.970903]  __x64_sys_ioctl+0x82/0xb0
+[81753.975084]  do_syscall_64+0x3b/0x90
+[81753.979073]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[81753.984708] RIP: 0033:0x7ff22a7c6c0b
+[81753.988698] Code: 73 01 c3 48 8b 0d 1d 62 1b 00 f7 d8 64 89 01 48
+83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 10 00 00
+00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d ed 61 1b 00 f7 d8 64 89
+01 48
+[81754.009652] RSP: 002b:00007ffc40e3e7d8 EFLAGS: 00000246 ORIG_RAX:
+0000000000000010
+[81754.018099] RAX: ffffffffffffffda RBX: 0000000000000004 RCX: 00007ff22a7c6c0b
+[81754.026060] RDX: 00007ffc40e3e804 RSI: 0000000000002284 RDI: 0000000000000003
+[81754.034022] RBP: 0000000000000003 R08: 0000000000000003 R09: 0000000000000077
+[81754.041983] R10: 0000000000000063 R11: 0000000000000246 R12: 00007ffc40e3e804
+[81754.049944] R13: 00007ffc40e4081f R14: 000055711a8e290d R15: 000055711a8e4020
+[81754.057906]  </TASK>
+[81754.060339] Modules linked in: rpcsec_gss_krb5 auth_rpcgss nfsv4
+dns_resolver nfs lockd grace fscache netfs sunrpc dm_multipath
+intel_rapl_msr intel_rapl_common sb_edac x86_pkg_temp_thermal
+intel_powerclamp coretemp kvm_intel kvm mgag200 i2c_algo_bit
+drm_shmem_helper drm_kms_helper dell_wmi_descriptor syscopyarea rfkill
+sysfillrect video sysimgblt fb_sys_fops ipmi_ssif cec irqbypass rapl
+intel_cstate dcdbas intel_uncore iTCO_wdt mei_me ipmi_si mxm_wmi mei
+iTCO_vendor_support ses pcspkr enclosure scsi_transport_sas lpc_ich
+ipmi_devintf ipmi_msghandler acpi_power_meter drm fuse xfs libcrc32c
+sd_mod t10_pi sg ahci libahci crct10dif_pclmul crc32_pclmul
+crc32c_intel megaraid_sas libata ghash_clmulni_intel tg3 wmi dm_mirror
+dm_region_hash dm_log dm_mod
+[81754.134169] CR2: 0000000000000078
+
+-- 
+Best Regards,
+  Changhui Zhong
 
