@@ -2,68 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5954DC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 06:13:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA667C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 06:43:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235142AbiBQGOC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 01:14:02 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:37898 "EHLO
+        id S235637AbiBQGoJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 01:44:09 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:45308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230254AbiBQGOC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 01:14:02 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1E7B2A2284;
-        Wed, 16 Feb 2022 22:13:48 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4D0206187C;
-        Thu, 17 Feb 2022 06:13:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09281C340E8;
-        Thu, 17 Feb 2022 06:13:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1645078427;
-        bh=XU8/+T6y9Te4fAEm5lTKGoyHAI0zLBhVl/DOvgsvegA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HbviZq4sfYH0qT4Fj5pJNhPhNa9Dj1X44lE7ldQzZBHvTZ/EfVjHHm3p9YLeTxKXv
-         1hbqWcz3SjUsRWQSMW0MudUt5ePK6DaRMlFurAwS1T6nmyl6Dm1TnM0pqXrdQwJq0a
-         ulYejbbtXiDVyviLQKws8XgegftWQLGSl613Mz1U=
-Date:   Thu, 17 Feb 2022 07:13:44 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Guixin Liu <kanie@linux.alibaba.com>
-Cc:     bostroesser@gmail.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, xiaoguang.wang@linux.alibaba.com,
-        xlpang@linux.alibaba.com
-Subject: Re: [PATCH 1/2] uio: add ioctl to uio
-Message-ID: <Yg3nmK7iWp7FuoOa@kroah.com>
-References: <1645064962-94123-1-git-send-email-kanie@linux.alibaba.com>
+        with ESMTP id S229471AbiBQGoI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 01:44:08 -0500
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA4D2178386;
+        Wed, 16 Feb 2022 22:43:54 -0800 (PST)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id AD69868B05; Thu, 17 Feb 2022 07:43:49 +0100 (CET)
+Date:   Thu, 17 Feb 2022 07:43:49 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        philipp.reisner@linbit.com, lars.ellenberg@linbit.com,
+        target-devel@vger.kernel.org, haris.iqbal@ionos.com,
+        jinpu.wang@ionos.com, manoj@linux.ibm.com, mrochs@linux.ibm.com,
+        ukrishn@linux.ibm.com, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com,
+        dm-devel@redhat.com
+Subject: Re: remove REQ_OP_WRITE_SAME v2
+Message-ID: <20220217064349.GA374@lst.de>
+References: <20220209082828.2629273-1-hch@lst.de> <yq1wni3sz4k.fsf@ca-mkp.ca.oracle.com> <20220210055151.GA3491@lst.de> <2f3f1c98-e013-ee03-2ffb-3a14730b13b9@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1645064962-94123-1-git-send-email-kanie@linux.alibaba.com>
+In-Reply-To: <2f3f1c98-e013-ee03-2ffb-3a14730b13b9@kernel.dk>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Feb 17, 2022 at 10:29:21AM +0800, Guixin Liu wrote:
-> In TCMU, if backstore holds its own userspace buffer, for read cmd, the
-> data needs to be copied from userspace buffer to tcmu data area first,
-> and then needs to be copied from tcmu data area to scsi sgl pages again.
-> 
-> To solve this problem, add ioctl to uio to let userspace backstore can
-> copy data between scsi sgl pages and its own buffer directly.
-> 
-> Reviewed-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
-> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-> ---
->  drivers/uio/uio.c          | 22 ++++++++++++++++++++++
->  include/linux/uio_driver.h |  1 +
+On Wed, Feb 16, 2022 at 08:07:56PM -0700, Jens Axboe wrote:
+> Let's just use the SCSI tree - I didn't check if it throws any conflicts
+> right now, so probably something to check upfront...
 
-No, sorry, thie uio driver will not be adding ioctls to them.  If you
-need an ioctl, then you should not be using the UIO api but rather use a
-custom character driver instead.
+There is a minor conflict because the __blkdev_issue_write_same
+function removed by this series is affected by the blk_next_bio calling
+convention change in the block tree, but the fixup is trivial.
 
-thanks,
-
-greg k-h
+Martin: do you want to fix that up when applying, or do you want me
+to resend?  If you have your discard rework ready you can also send
+that now and I'll rebase on top of that.
