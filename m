@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13E4EC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 19:30:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C03F2C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 19:31:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245201AbiBQTaq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 14:30:46 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50124 "EHLO
+        id S242787AbiBQTcK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 14:32:10 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:52030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244447AbiBQTan (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 14:30:43 -0500
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2BB4149B9B
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 11:30:28 -0800 (PST)
-Received: by mail-ed1-x530.google.com with SMTP id q17so11540931edd.4
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 11:30:28 -0800 (PST)
+        with ESMTP id S230486AbiBQTcJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 14:32:09 -0500
+Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B84215FF9
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 11:31:54 -0800 (PST)
+Received: by mail-ej1-x62b.google.com with SMTP id p15so9638485ejc.7
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 11:31:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=F31HCFvxjXp/zXna7pT2FFmJaYGnEdA0j/j5IxOfv4w=;
-        b=b2miigayC2t3mWOc5iFDBCDgusST0RmmEIXv3ADODJGUPEzWEWJuk06v33/EzeHlan
-         g51eR5zdskdNoMjEcxNRp1cnyibe+4wPocvDsFkiLPJTltn5++OxAsdxgzwAkG+CE6lx
-         jtz82emM76vCrsCcxJNhg2hqOtYCMDOsSAd/ea7aUhI+cW3zAzzq+pO8jpvkD/EarwBU
-         LndWDuSp6IqsGKGUOV+62DB1cMXp30WZK2Xox0wl10H9tqCjOzL0njJGae9wqk6DanhL
-         SRZW7iot8kArmIyfxHe/kk/SWipM304EQbYar1qXahsTIBOLp7FgNZBnNs6s/hbX9zWO
-         O0sQ==
+        bh=voFXABOwSGxYjb4TI6dvVwWzY2QAaDSOqy5C4Qf1+/4=;
+        b=I+ePXy/JzzSOHJlTF+FaQ3qcx0g2YWUKRsU+GPzHW/hcfBmfsHsNK1DUZatQhMeVlK
+         UobQfrPkbXgDZybdGjHWZz8WM9c3v8PfP6HpCIdWoICGKQUmUsTW2L0OByVP3ErDglDF
+         6GSuyhlOePwEqqEBaZrYw9VrNrJZenjGDRuF4Yn7Xx9c9F6gH1/jg859Fbm43M+EmqiN
+         yLHSJut6CHJhIGTKkvjqVXlpTnOaBNpMuip5uL+zJIf171Wz6l0Z+1J3WCZc5ZuT6ZCv
+         /kZ8RemTOnp7/rWY1Pd06ajRNPKxKWsprfnA8ru2LTy/dXwD//YNZ3/9+0VkBSYTE4Q1
+         51Kg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=F31HCFvxjXp/zXna7pT2FFmJaYGnEdA0j/j5IxOfv4w=;
-        b=ivLr0xwqknxSk8jJQR4n9NgJE0qmEQgrOm2OlwP6li8uqHlm5wBolAMM9cstsaLKYT
-         yxShuP1rhmlEKqcLLE6tttWgB7CiraiYDP+t5HPqdFUFdkKzmjURc43Kz92GtwHUyusc
-         LHly5cdmDbm9NEJ6AoMbK3o692/zGyE6l0OA/5/A/1nVz+qUJJY+ivzpGG3qq+gHE6OD
-         /zGRVegam/rEsj9SvAf9gK1abqyat9VG1kLH2PSDsgkAvuJlUKQKqxkxcebL+e4vFsiK
-         z5za+xkIBv0E/GhPb6xm4he1YjSysdsrs7K4x0TOuXdq3clG12C5xJ2HBKVcrH660NuS
-         VHeg==
-X-Gm-Message-State: AOAM530iIA0l2b5eCM4RWmx8JAplbfE5lEdpQMXIACmmVXrI6RTHHUTr
-        GmLWui9+nNAIvum2a45S4fEHxSUei5z+6KaqDQoQyg==
-X-Google-Smtp-Source: ABdhPJxqnaRoIFeoQX4GXZpp9r8T449Q4Zp73Bf8jNp/xkXSPtm/LSN0Lqxy2Yi2QDQeFKSJtJuGOnZvvmGk0Ha833o=
-X-Received: by 2002:a50:9d89:0:b0:410:ff04:5a98 with SMTP id
- w9-20020a509d89000000b00410ff045a98mr4421792ede.404.1645126227364; Thu, 17
- Feb 2022 11:30:27 -0800 (PST)
+        bh=voFXABOwSGxYjb4TI6dvVwWzY2QAaDSOqy5C4Qf1+/4=;
+        b=HqGiSXw9SZIeqj4KwH3ggD6yAclnsItxsNIwDbFLlZta0g/qJdXjrWeUFMNWvLnPqN
+         iiInGpUGzwBsTj5iKFGqnPAp1fa/zJlztgR9tddYgZtqZoT0k1U2meBGzygchMUIkbjx
+         GACl+3NPdarLEDGaniSHYPWXvxppXBYZ2ijvoqMG6x7hxarUvArOGeMp2LNG7zr2cSQQ
+         HVB2YAQinsAbL9xN+VcrLzPAsMlcHu0f+aB9EDJT5LD9il9vly3ZlpETimY28xSQjd54
+         vBrnmcOEYq7g4pwsenMrG9OLE/jBzIJaUGAWpqX6q47WIX/4ubOX2vRcWP/LmPa0UEls
+         Hk8w==
+X-Gm-Message-State: AOAM532n5DN8ZaLKU7pnqoUIioRiPBvSSOdRu0VvBIhPMVlF6WShYNZ8
+        ztBpGEqBJFvTHSgoOeCi8V8lNaXVLF4XV8A+ZzGSQg==
+X-Google-Smtp-Source: ABdhPJzyWjt1Ix0a9BAvgqAC8LLnryvhXtoxhJjXHxZ9uLtDPQOaClV5tTlWzToMQuIshKgsZnq8MzEGcJ3Z3pmoPnw=
+X-Received: by 2002:a17:906:b201:b0:6b5:58c8:e43c with SMTP id
+ p1-20020a170906b20100b006b558c8e43cmr3434661ejz.441.1645126313139; Thu, 17
+ Feb 2022 11:31:53 -0800 (PST)
 MIME-Version: 1.0
-References: <20220217132956.484818-1-damien.lemoal@opensource.wdc.com> <20220217132956.484818-17-damien.lemoal@opensource.wdc.com>
-In-Reply-To: <20220217132956.484818-17-damien.lemoal@opensource.wdc.com>
+References: <20220217132956.484818-1-damien.lemoal@opensource.wdc.com> <20220217132956.484818-18-damien.lemoal@opensource.wdc.com>
+In-Reply-To: <20220217132956.484818-18-damien.lemoal@opensource.wdc.com>
 From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Thu, 17 Feb 2022 20:30:16 +0100
-Message-ID: <CAMGffEnc=p16dihYUQ6wejqYQdvn7rkDhS5DdqWAZvJirarfYw@mail.gmail.com>
-Subject: Re: [PATCH v4 16/31] scsi: pm8001: Fix abort all task initialization
+Date:   Thu, 17 Feb 2022 20:31:42 +0100
+Message-ID: <CAMGffE=UN2YOUHbXNHJa+3-__nfc6m-SnDZXP_Ldx580MKafGw@mail.gmail.com>
+Subject: Re: [PATCH v4 17/31] scsi: pm8001: Fix pm8001_tag_alloc() failures handling
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -67,89 +67,80 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On Thu, Feb 17, 2022 at 2:30 PM Damien Le Moal
 <damien.lemoal@opensource.wdc.com> wrote:
 >
-> In pm80xx_send_abort_all(), the n_elem field of the ccb used is not
-> initialized to 0. This missing initialization sometimes lead to the
-> task completion path seeing the ccb with a non-zero n_elem resulting in
-> the execution of invalid dma_unmap_sg() calls in pm8001_ccb_task_free(),
-> causing a crash such as:
+> In mpi_set_phy_profile_req() and in pm8001_set_phy_profile_single(), if
+> pm8001_tag_alloc() fails to allocate a new tag, a warning message is
+> issued but the uninitialized tag variable is still used to build a
+> command. Avoid this by returning early in case of tag allocation
+> failure.
 >
-> [  197.676341] RIP: 0010:iommu_dma_unmap_sg+0x6d/0x280
-> [  197.700204] RSP: 0018:ffff889bbcf89c88 EFLAGS: 00010012
-> [  197.705485] RAX: dffffc0000000000 RBX: 0000000000000000 RCX: ffffffff83d0bda0
-> [  197.712687] RDX: 0000000000000002 RSI: 0000000000000000 RDI: ffff88810dffc0d0
-> [  197.719887] RBP: 0000000000000000 R08: 0000000000000000 R09: ffff8881c790098b
-> [  197.727089] R10: ffffed1038f20131 R11: 0000000000000001 R12: 0000000000000000
-> [  197.734296] R13: ffff88810dffc0d0 R14: 0000000000000010 R15: 0000000000000000
-> [  197.741493] FS:  0000000000000000(0000) GS:ffff889bbcf80000(0000) knlGS:0000000000000000
-> [  197.749659] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  197.755459] CR2: 00007f16c1b42734 CR3: 0000000004814000 CR4: 0000000000350ee0
-> [  197.762656] Call Trace:
-> [  197.765127]  <IRQ>
-> [  197.767162]  pm8001_ccb_task_free+0x5f1/0x820 [pm80xx]
-> [  197.772364]  ? do_raw_spin_unlock+0x54/0x220
-> [  197.776680]  pm8001_mpi_task_abort_resp+0x2ce/0x4f0 [pm80xx]
-> [  197.782406]  process_oq+0xe85/0x7890 [pm80xx]
-> [  197.786817]  ? lock_acquire+0x194/0x490
-> [  197.790697]  ? handle_irq_event+0x10e/0x1b0
-> [  197.794920]  ? mpi_sata_completion+0x2d70/0x2d70 [pm80xx]
-> [  197.800378]  ? __wake_up_bit+0x100/0x100
-> [  197.804340]  ? lock_is_held_type+0x98/0x110
-> [  197.808565]  pm80xx_chip_isr+0x94/0x130 [pm80xx]
-> [  197.813243]  tasklet_action_common.constprop.0+0x24b/0x2f0
-> [  197.818785]  __do_softirq+0x1b5/0x82d
-> [  197.822485]  ? do_raw_spin_unlock+0x54/0x220
-> [  197.826799]  __irq_exit_rcu+0x17e/0x1e0
-> [  197.830678]  irq_exit_rcu+0xa/0x20
-> [  197.834114]  common_interrupt+0x78/0x90
-> [  197.840051]  </IRQ>
-> [  197.844236]  <TASK>
-> [  197.848397]  asm_common_interrupt+0x1e/0x40
+> Also make sure to always return the error code returned by
+> pm8001_tag_alloc() when this function fails instead of an arbitrary
+> value.
 >
-> Avoid this issue by always initializing the ccb n_elem field to 0 in
-> pm8001_send_abort_all(), pm8001_send_read_log() and
-> pm80xx_send_abort_all().
->
-> Fixes: c6b9ef5779c3 ("[SCSI] pm80xx: NCQ error handling changes")
 > Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Reviewed-by: John Garry <john.garry@huawei.com>
 Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
 thx
 > ---
->  drivers/scsi/pm8001/pm8001_hwi.c | 2 ++
->  drivers/scsi/pm8001/pm80xx_hwi.c | 1 +
->  2 files changed, 3 insertions(+)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index 8149cc0d1ecd..35d62e5c9200 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -1787,6 +1787,7 @@ static void pm8001_send_abort_all(struct pm8001_hba_info *pm8001_ha,
->         ccb->device = pm8001_ha_dev;
->         ccb->ccb_tag = ccb_tag;
->         ccb->task = task;
-> +       ccb->n_elem = 0;
->
->         circularQ = &pm8001_ha->inbnd_q_tbl[0];
->
-> @@ -1848,6 +1849,7 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
->         ccb->device = pm8001_ha_dev;
->         ccb->ccb_tag = ccb_tag;
->         ccb->task = task;
-> +       ccb->n_elem = 0;
->         pm8001_ha_dev->id |= NCQ_READ_LOG_FLAG;
->         pm8001_ha_dev->id |= NCQ_2ND_RLE_FLAG;
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 15 ++++++++++-----
+>  1 file changed, 10 insertions(+), 5 deletions(-)
 >
 > diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index ac2178a13e4c..8fd38e54f07c 100644
+> index 8fd38e54f07c..76260d06b6be 100644
 > --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 > +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -1800,6 +1800,7 @@ static void pm80xx_send_abort_all(struct pm8001_hba_info *pm8001_ha,
->         ccb->device = pm8001_ha_dev;
->         ccb->ccb_tag = ccb_tag;
->         ccb->task = task;
-> +       ccb->n_elem = 0;
+> @@ -1191,7 +1191,7 @@ pm80xx_set_thermal_config(struct pm8001_hba_info *pm8001_ha)
+>         memset(&payload, 0, sizeof(struct set_ctrl_cfg_req));
+>         rc = pm8001_tag_alloc(pm8001_ha, &tag);
+>         if (rc)
+> -               return -1;
+> +               return rc;
 >
 >         circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>         payload.tag = cpu_to_le32(tag);
+> @@ -1240,7 +1240,7 @@ pm80xx_set_sas_protocol_timer_config(struct pm8001_hba_info *pm8001_ha)
+>         rc = pm8001_tag_alloc(pm8001_ha, &tag);
 >
+>         if (rc)
+> -               return -1;
+> +               return rc;
+>
+>         circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>         payload.tag = cpu_to_le32(tag);
+> @@ -1398,7 +1398,7 @@ static int pm80xx_encrypt_update(struct pm8001_hba_info *pm8001_ha)
+>         memset(&payload, 0, sizeof(struct kek_mgmt_req));
+>         rc = pm8001_tag_alloc(pm8001_ha, &tag);
+>         if (rc)
+> -               return -1;
+> +               return rc;
+>
+>         circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>         payload.tag = cpu_to_le32(tag);
+> @@ -4967,8 +4967,11 @@ static void mpi_set_phy_profile_req(struct pm8001_hba_info *pm8001_ha,
+>
+>         memset(&payload, 0, sizeof(payload));
+>         rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> -       if (rc)
+> +       if (rc) {
+>                 pm8001_dbg(pm8001_ha, FAIL, "Invalid tag\n");
+> +               return;
+> +       }
+> +
+>         circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>         payload.tag = cpu_to_le32(tag);
+>         payload.ppc_phyid =
+> @@ -5010,8 +5013,10 @@ void pm8001_set_phy_profile_single(struct pm8001_hba_info *pm8001_ha,
+>         memset(&payload, 0, sizeof(payload));
+>
+>         rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> -       if (rc)
+> +       if (rc) {
+>                 pm8001_dbg(pm8001_ha, INIT, "Invalid tag\n");
+> +               return;
+> +       }
+>
+>         circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>         opc = OPC_INB_SET_PHY_PROFILE;
 > --
 > 2.34.1
 >
