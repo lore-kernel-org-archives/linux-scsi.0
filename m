@@ -2,98 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3C61C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 09:23:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C604C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 10:15:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238616AbiBQJXe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 04:23:34 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:37538 "EHLO
+        id S238927AbiBQKPd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 05:15:33 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237832AbiBQJXc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 04:23:32 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90D716409
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 01:23:18 -0800 (PST)
-Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Jzq991hL9z67nPb;
-        Thu, 17 Feb 2022 17:22:21 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Thu, 17 Feb 2022 10:23:15 +0100
-Received: from [10.47.81.42] (10.47.81.42) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 17 Feb
- 2022 09:23:14 +0000
-Message-ID: <712a4702-8534-fad2-2679-cc5cf62e4a9e@huawei.com>
-Date:   Thu, 17 Feb 2022 09:23:13 +0000
+        with ESMTP id S232768AbiBQKPb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 05:15:31 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDC2A2AAB3D;
+        Thu, 17 Feb 2022 02:15:16 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 45F00B820B3;
+        Thu, 17 Feb 2022 10:15:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40701C340E8;
+        Thu, 17 Feb 2022 10:15:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1645092913;
+        bh=99+3Rkag+n6hqU+y7F8k/uyn3+KPpbhOvvdGy8sTHls=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ayQFuDuCYHMAajv5eGocJAnJGnfoNg+H70bxHXWdGurvTieQ3EP2i/4maqtCWNqIG
+         e06jEgEmbHOLvkbqt0p3kc3JJfhliCN7fbKzxyxnOioJjGnm84JTURvuihnN4Z9XJ5
+         aQ9ITbxRR3HI9kB0fCkULlErOofvD+er7rtqAKrE=
+Date:   Thu, 17 Feb 2022 11:15:11 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Guixin Liu <kanie@linux.alibaba.com>
+Cc:     bostroesser@gmail.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, xiaoguang.wang@linux.alibaba.com,
+        xlpang@linux.alibaba.com
+Subject: Re: [PATCH 2/2] scsi:target:tcmu: reduce once copy by using uio ioctl
+Message-ID: <Yg4gL1tL7yJELNL2@kroah.com>
+References: <1645064962-94123-1-git-send-email-kanie@linux.alibaba.com>
+ <1645064962-94123-2-git-send-email-kanie@linux.alibaba.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH v3 27/31] scsi: pm8001: Cleanup pm8001_queue_command()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
-        "Jason Yan" <yanaijie@huawei.com>
-References: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
- <20220214021747.4976-28-damien.lemoal@opensource.wdc.com>
- <51d7c127-f975-14e9-a036-c37416ed8679@huawei.com>
- <32efd519-3485-ee34-84e2-34a0d8c27e17@opensource.wdc.com>
- <38090771-ad24-1b20-9b79-f7f89d42ea66@huawei.com>
- <37df3c92-c28e-72d4-76d8-33356829af5a@opensource.wdc.com>
- <5a5481af-e975-c6fb-2d48-961769eae551@huawei.com>
- <9c22abeb-1b22-4613-66bc-276aaa4a639c@opensource.wdc.com>
- <e7b5c48b-4217-7247-8bc9-e5f8ae9411ce@huawei.com>
- <e9b40eaf-7aa5-798b-1bde-1a2ce8d83433@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <e9b40eaf-7aa5-798b-1bde-1a2ce8d83433@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.81.42]
-X-ClientProxiedBy: lhreml754-chm.china.huawei.com (10.201.108.204) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1645064962-94123-2-git-send-email-kanie@linux.alibaba.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 17/02/2022 00:12, Damien Le Moal wrote:
->>>> I'll have a look at it. And that is on mainline or mkp-scsi staging, and
->>>> not your patchset.
->>> Are you saying that my patches suppresses the above ? This is submission
->>> path and the dma code seems to complain about alignment... So bad buffer
->>> addresses ?
->> Your series does not suppress it. It doesn't occur often, so I need to
->> check more.
->>
->> I think the issue is that we call dma_map_sg() twice, i.e. ccb never
->> unmapped.
-> That would be a big issue indeed. We could add a flag to CCBs to track
-> the buf_prd DMA mapping state and BUG_ON() when ccb free function is
-> called with the buffer still mapped. That should allow catching this
-> infrequent problem ?
-> 
+On Thu, Feb 17, 2022 at 10:29:22AM +0800, Guixin Liu wrote:
+> --- a/include/uapi/linux/target_core_user.h
+> +++ b/include/uapi/linux/target_core_user.h
+> @@ -185,4 +185,13 @@ enum tcmu_genl_attr {
+>  };
+>  #define TCMU_ATTR_MAX (__TCMU_ATTR_MAX - 1)
+>  
+> +struct tcmu_data_xfer {
+> +	unsigned short cmd_id;
+> +	unsigned long iov_cnt;
+> +	struct iovec __user *iovec;
+> +};
 
-I figured out what is happening here and it does not help solve the 
-mystery of my hang.
+That is no way to define a structure that crosses the user/kernel
+boundry, it just will not work at all, even if we wanted it to :(
 
-Here's the steps:
-a. scsi_cmnd times out
-b. scsi error handling kicks in
-c. libsas attempts to abort the task, which fails
-d. libsas then tries IT nexus reset, which passes
-  - libsas assumes the scsi_cmnd has completed with failure
-e. error handling concludes
-f. scsi midlayer then retries the same scsi_cmnd
-g. since we did not "free" associated ccb earlier or dma unmap at d., 
-the dma unmap on the same scsi_cmnd causes the warn
+sorry,
 
-So the LLD should really free resources and dma unmap at point IT nexus 
-reset completes, but it doesn't. I think in certain conditions dma map 
-should not be done twice.
-
-Anyway, that can be fixed, but I still have the hang :(
-
-Thanks,
-John
+greg k-h
