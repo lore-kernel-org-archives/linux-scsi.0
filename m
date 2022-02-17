@@ -2,120 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE8CCC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 06:56:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27F9DC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 07:05:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235800AbiBQG4U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 01:56:20 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50044 "EHLO
+        id S235877AbiBQHF1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 02:05:27 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230014AbiBQG4T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 01:56:19 -0500
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE66727F298;
-        Wed, 16 Feb 2022 22:56:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1645080965; x=1676616965;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=nbe4Fwiyx8rYqaNPl7hAoUCmlKv54SDhqXwRa/L9Toc=;
-  b=hTdE9UcvGinkNDmcXWf3TcmLw/9RbIRb9Tux8Js3HTMFleG4kwJAHjB1
-   ryD5tnsywx06DLTMp0X1wBnzl2GvRA7Z3qAVoZoQKGM1V8HB4+2agrcxx
-   ZVmlIHaQjBJHOB4crOCkslkyi2Q2CrwuMHhmPMf9Q0uW4X9H/XkVBL2Jy
-   1kax8RMf3bBWzGjQACqBt8tb4wvcKF3OD7GvMVKupmZv9s3NQ5ngx0+NN
-   gEAXxvse09ccffUyP2jyufp4EYmy7nZQtRueIcBIkIovSIDjpv2dSHFO9
-   VMwWXy04ouhCuZMg3VMDgZZjNtKhBTOs1NWYCow0hqKBIFg3etK2k+3le
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10260"; a="231432854"
-X-IronPort-AV: E=Sophos;i="5.88,375,1635231600"; 
-   d="scan'208";a="231432854"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2022 22:56:05 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,375,1635231600"; 
-   d="scan'208";a="625853020"
-Received: from lkp-server01.sh.intel.com (HELO d95dc2dabeb1) ([10.239.97.150])
-  by FMSMGA003.fm.intel.com with ESMTP; 16 Feb 2022 22:56:03 -0800
-Received: from kbuild by d95dc2dabeb1 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nKahu-000BXe-RS; Thu, 17 Feb 2022 06:56:02 +0000
-Date:   Thu, 17 Feb 2022 14:55:47 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Guixin Liu <kanie@linux.alibaba.com>, gregkh@linuxfoundation.org,
-        bostroesser@gmail.com, martin.petersen@oracle.com
-Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        xiaoguang.wang@linux.alibaba.com, xlpang@linux.alibaba.com
-Subject: Re: [PATCH 1/2] uio: add ioctl to uio
-Message-ID: <202202171444.RSO1up2n-lkp@intel.com>
-References: <1645064962-94123-1-git-send-email-kanie@linux.alibaba.com>
+        with ESMTP id S229483AbiBQHF0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 02:05:26 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97FFE19C3D
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 23:05:12 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 3FBD3218E1;
+        Thu, 17 Feb 2022 07:05:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1645081511; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3egtymeWdqKfmqsnSqoq0FpJqROt6n7tR5o/o1TEA9Y=;
+        b=XMoyf1ka3GMvh2HHHMPMhHRaPEV1QM1fFwJaZ7iK5vhNohh0VVxbL+lJUFeQYijNhYJab2
+        QuNCTwfbJBE3X2Ul/ozbglqu0R/OjQc3y3hofMplN+WWDB7Iold03l80zguJkzypT/Bu+Z
+        wMpCVo5sTgs+QkI0+fNqiI+JBgkR+rQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1645081511;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3egtymeWdqKfmqsnSqoq0FpJqROt6n7tR5o/o1TEA9Y=;
+        b=1Vn9DsEFTJDQDpwT4zwRdf0QVNG9zdIR/tV5daul+UfJBYwMNGcaqz89BrDjPWpVXgPEN0
+        dY+zp5/KHGDE44Bw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0A81713B78;
+        Thu, 17 Feb 2022 07:05:11 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id wE/jAKfzDWJXcgAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 17 Feb 2022 07:05:11 +0000
+Message-ID: <35fdeac9-8828-9d89-96cd-67470e771299@suse.de>
+Date:   Thu, 17 Feb 2022 08:05:10 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1645064962-94123-1-git-send-email-kanie@linux.alibaba.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH v4 28/50] scsi: libfc: Stop using the SCSI pointer
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Saurav Kashyap <skashyap@marvell.com>,
+        Javed Hasan <jhasan@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20220216210233.28774-1-bvanassche@acm.org>
+ <20220216210233.28774-29-bvanassche@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20220216210233.28774-29-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Guixin,
+On 2/16/22 22:02, Bart Van Assche wrote:
+> Move the fc_fcp_pkt pointer, the residual length and the SCSI status into
+> the new data structure libfc_cmd_priv. This patch prepares for removal of
+> the SCSI pointer from struct scsi_cmnd.
+> 
+> The user of the libfc data path functions have been identified as follows:
+> $ git grep -lw fc_queuecommand | grep -v scsi/libfc/
+> drivers/scsi/fcoe/fcoe.c
+> 
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Saurav Kashyap <skashyap@marvell.com>
+> Cc: Javed Hasan <jhasan@marvell.com>
+> Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/fcoe/fcoe.c    |  1 +
+>   drivers/scsi/libfc/fc_fcp.c | 26 +++++++++++---------------
+>   include/scsi/libfc.h        |  9 +++++++++
+>   3 files changed, 21 insertions(+), 15 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Thank you for the patch! Perhaps something to improve:
+Cheers,
 
-[auto build test WARNING on char-misc/char-misc-testing]
-[also build test WARNING on mkp-scsi/for-next linux/master linus/master v5.17-rc4 next-20220216]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
-
-url:    https://github.com/0day-ci/linux/commits/Guixin-Liu/uio-add-ioctl-to-uio/20220217-103120
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc.git e6cb9c167eeb8f90ab924666c573e69e85e700a0
-config: arc-randconfig-r035-20220217 (https://download.01.org/0day-ci/archive/20220217/202202171444.RSO1up2n-lkp@intel.com/config)
-compiler: arc-elf-gcc (GCC) 11.2.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/0day-ci/linux/commit/8786f129af888d844bc38ed78db7a6788e45655c
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Guixin-Liu/uio-add-ioctl-to-uio/20220217-103120
-        git checkout 8786f129af888d844bc38ed78db7a6788e45655c
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=arc SHELL=/bin/bash drivers/uio/
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-All warnings (new ones prefixed by >>):
-
->> drivers/uio/uio.c:818:6: warning: no previous prototype for 'uio_ioctl' [-Wmissing-prototypes]
-     818 | long uio_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
-         |      ^~~~~~~~~
-
-
-vim +/uio_ioctl +818 drivers/uio/uio.c
-
-   817	
- > 818	long uio_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
-   819	{
-   820		struct uio_listener *listener = filep->private_data;
-   821		struct uio_device *idev = listener->dev;
-   822		long retval = 0;
-   823	
-   824		mutex_lock(&idev->info_lock);
-   825		if (!idev->info || !idev->info->ioctl) {
-   826			retval = -EINVAL;
-   827			goto out;
-   828		}
-   829	
-   830		retval = idev->info->ioctl(idev->info, cmd, arg);
-   831	out:
-   832		mutex_unlock(&idev->info_lock);
-   833		return retval;
-   834	}
-   835	
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
