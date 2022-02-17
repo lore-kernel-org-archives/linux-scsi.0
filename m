@@ -2,158 +2,164 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39EB0C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 04:31:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6C86C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 05:01:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229874AbiBREb6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 23:31:58 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36500 "EHLO
+        id S230155AbiBRFBP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Feb 2022 00:01:15 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:47818 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229781AbiBREb4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 23:31:56 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E4B22637;
-        Thu, 17 Feb 2022 20:31:40 -0800 (PST)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21I3aRZq029147;
-        Fri, 18 Feb 2022 04:28:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2021-07-09;
- bh=vPTkz/hSktKPdhegba17mYx6OeyYzeNWSaGUwzBhWzU=;
- b=Px1zMnHu8pyQ2MMQUcXYnbwNiM/phkdRhjRnzqWcul1TXu+oPiMoJhHmAM4BvjIbwOLa
- xx1UvdXB3nOBh3hVoTcgy5g1ivTGxujLUabO4nHVAqnPfI2zgZe4ICMeNY0X/wZbBP63
- MBjP7fTzwGmyiChvaPESmBkv0re6jk2JxXbHJ1Ez/43C5zjce0KWMIksxbtV36CZtYMD
- HkPZjj/MAOSwyoumB2Xj/Fir8EOOqgo53ZPi/IpCExAv6vI+3whADSTTpHEGWWLwpPr3
- aiubjxpnubiBGmQcEGO5E1gE4hQM/t6+GxC/xE9tJUotRriUjiHpRpky7GR2LvQDaNya tQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3e8ncb03jv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 18 Feb 2022 04:28:26 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21I4FKtA114071;
-        Fri, 18 Feb 2022 04:28:25 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2177.outbound.protection.outlook.com [104.47.59.177])
-        by userp3030.oracle.com with ESMTP id 3e8nm0mpt4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 18 Feb 2022 04:28:25 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WMNh55lSvLYt/gHdOF4CVpbTtse45bfcNDKyhYRSLSWvvYGOxHKTECiVX+tDyGbO7e3/vgPV6ZUGeWckPAUANhwUxU3zhhRuh8ygvqNlu9VpspJtHnx18y/2t5SsAQpCuhhH+SCo3HdWMSEAxGvk7gVFi7npJOEpSJ1Tu8iZZ1yfX4CkDtQ++RJmkY+JUV8eD4VY6SEHykVYEOz8sMcaj/xOkU8HliUYyQvc/k0bDKkvbpEFGz+oemgwCbuvtvcQaLaeKYCBaQDY6J3wbgVqYKnNWoRfW7FBndHA/1X+KuMiwJgUGgdTWfba8SYqhyW3HVnqzkc7MbyV1XO2IoMSkg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vPTkz/hSktKPdhegba17mYx6OeyYzeNWSaGUwzBhWzU=;
- b=KRqEW7cx+nWNKXzql6iRIjqVOQQPvihlMP+rDAnPr1ii5wFIzh8OZ2ubmn8IyCaW285T10PMc567ygTk6zLb98XqwysqYtjQU1/ieCFserYOP9nfVlDhDvS429SEsrLuMY4pSGGczjVurtvMhLjPmPbS7NSVaum8v+2R5tRQ8qbIDr7DeEbW2+Cg30KMZkUahDhVRpc0nA/AQedoultJiRu+Gl4lj6Ih5Zas7kYfbQxRf/m5I1hG7npKg58L8/uUky39IgxbOKblqrSWIRbTuajIn1r1OgC55A6v7mjehkawbjfAwRjyqZBu4JXObcJAQjvMAjRQKFAITd7JhbOlww==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vPTkz/hSktKPdhegba17mYx6OeyYzeNWSaGUwzBhWzU=;
- b=CFCppLQP0ybjP8jL9hTlbblfgjrUCH/2d+zGG9/ILWnTddz3BvLpb9N1BuPi69B/cae5cB0jd3ViU7wxPmQ2aCS/Vo67IUxZThZcaOEuk+kY76hog6UIAL0D25ocuYehQknVNLPVG1ukdovvDy9/d7aEdTztkIZ0FpWRThlb8sk=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by CH2PR10MB3879.namprd10.prod.outlook.com (2603:10b6:610:f::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4995.17; Fri, 18 Feb
- 2022 04:28:23 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::c9f0:b3fb:25a6:3593]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::c9f0:b3fb:25a6:3593%5]) with mapi id 15.20.4995.016; Fri, 18 Feb 2022
- 04:28:23 +0000
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, artur.paszkiewicz@intel.com,
-        jinpu.wang@cloud.ionos.com, chenxiang66@hisilicon.com, hch@lst.de,
-        Ajish.Koshy@microchip.com, yanaijie@huawei.com,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linuxarm@huawei.com,
-        liuqi115@huawei.com, Viswas.G@microchip.com
-Subject: Re: [PATCH v2 00/18] scsi: libsas and users: Factor out LLDD TMF code
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1ley8iysr.fsf@ca-mkp.ca.oracle.com>
-References: <1645112566-115804-1-git-send-email-john.garry@huawei.com>
-        <5ecf520e-588c-d756-1cb8-2224535b550e@opensource.wdc.com>
-Date:   Thu, 17 Feb 2022 23:28:21 -0500
-In-Reply-To: <5ecf520e-588c-d756-1cb8-2224535b550e@opensource.wdc.com> (Damien
-        Le Moal's message of "Fri, 18 Feb 2022 13:18:49 +0900")
-Content-Type: text/plain
-X-ClientProxiedBy: SN4PR0501CA0010.namprd05.prod.outlook.com
- (2603:10b6:803:40::23) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        with ESMTP id S230369AbiBRFAz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 00:00:55 -0500
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 153682BAA03;
+        Thu, 17 Feb 2022 21:00:38 -0800 (PST)
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220218050036epoutp023b79452c35d4668bac8b1525c55b5a1d~UyLNr7NGA2938129381epoutp02W;
+        Fri, 18 Feb 2022 05:00:36 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220218050036epoutp023b79452c35d4668bac8b1525c55b5a1d~UyLNr7NGA2938129381epoutp02W
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1645160436;
+        bh=mh7UWvxwuvE8bNedSZzRwEQXl6IWDs4xsiiBLIhUrJs=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=eFzp0kt8fRy4Ejk62NXpYAstnS2EQvs2AoO3NjISQEPM4evhbiMX3MPmTEV6P4IBX
+         mwnaSmebWFvVDnOmS+PTFbezpTdZXWZOjn98xMDVAVovbmTckvlvV6OjsaT5Sca/QO
+         glvyySR+b0aMvqITc0DDZF5osxu1Mx9/oKC8VeHA=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20220218050036epcas5p47dc1325db6e412d1dd5615722cab2134~UyLNRTZzn0649606496epcas5p4F;
+        Fri, 18 Feb 2022 05:00:36 +0000 (GMT)
+Received: from epsmges5p1new.samsung.com (unknown [182.195.38.180]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4K0KJV622Hz4x9Pv; Fri, 18 Feb
+        2022 05:00:26 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C1.F4.06423.9E72F026; Fri, 18 Feb 2022 14:00:25 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+        20220217133547epcas5p305c93f10e815e275374ca2f41d75a2aa~Uljuy6HZZ1991119911epcas5p3t;
+        Thu, 17 Feb 2022 13:35:47 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220217133547epsmtrp21569afdc8d19e716eab1f6cdac5f9309~UljuxENvs1692816928epsmtrp2j;
+        Thu, 17 Feb 2022 13:35:47 +0000 (GMT)
+X-AuditID: b6c32a49-b13ff70000001917-2a-620f27e94992
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        F0.3F.29871.23F4E026; Thu, 17 Feb 2022 22:35:46 +0900 (KST)
+Received: from test-zns (unknown [107.110.206.5]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220217133542epsmtip2abd6e670ac9ebfdb75c8f643565fcf05~UljqV5HGc2615626156epsmtip2J;
+        Thu, 17 Feb 2022 13:35:42 +0000 (GMT)
+Date:   Thu, 17 Feb 2022 19:00:46 +0530
+From:   Nitesh Shetty <nj.shetty@samsung.com>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     javier@javigon.com, chaitanyak@nvidia.com,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        dm-devel@redhat.com, linux-nvme@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org, axboe@kernel.dk,
+        msnitzer@redhat.com, bvanassche@acm.org,
+        martin.petersen@oracle.com, hare@suse.de, kbusch@kernel.org,
+        hch@lst.de, Frederick.Knight@netapp.com, osandov@fb.com,
+        lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
+        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
+        jack@suse.com, joshi.k@samsung.com, arnav.dawn@samsung.com,
+        nitheshshetty@gmail.com, SelvaKumar S <selvakuma.s1@samsung.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        James Smart <james.smart@broadcom.com>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 01/10] block: make bio_map_kern() non static
+Message-ID: <20220217133046.GA13770@test-zns>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: af01263d-ff83-4027-829d-08d9f2971962
-X-MS-TrafficTypeDiagnostic: CH2PR10MB3879:EE_
-X-Microsoft-Antispam-PRVS: <CH2PR10MB387916A8B4CBDBDEE39EB6FA8E379@CH2PR10MB3879.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5236;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: xlUM8wBxoWtrTMbXhuk5VUG9vAKMj5gaYwaz4pllMBjPeyv4njl17X/GijIHK5hbc4cIvi0PRoV2hpi/exBHy3jQGsove/n7ruq1+xx5cPEDn+2KmJ3oa1TLUQ9dDy7RRe6N1x9YLu3BM/yp8cL47TH6V6z93jdVQW218dstD/Qm9kh6l8bHV8+zR/lKCpNGt918DkJHVGJeG9HuIPXHgai6KpxxjfN8kBJGg9SnwOUKRt6OwvG/3xpTzT5TfbT8Z/lNgkd7gnFQVWSoL0mSuLTwpVST9VDKBK6oUWG4dgpJu1VTqQN5W1eEEWNwkXxCi9D3r2AisSlk4lY4ZOVRK3X5rOdg9zGGcGJi53kjTEAhtW6MjW4sG/e5rvgUoKW6TXEMHHJspNCzFYen2H5GKqu2bViVsx9+k1w0RRYwxwv7KJVBXm4AAM2dCRqIWqs8cTtfAPG1FzpBGn6xz/tpt76B7QfO6y70Q2uYNk5Rf3GWk+JkpxoqEEMhy/qnuK0zX+H4m1KD6DIlYBH2M+Epn6aaWHZf/ltN64VpDgLGzxetQpqbyAIaLZdnLmU3byWhqa0ak7x3WWze1n2rTqnlcntJD0TSDIxTU4c54WnE66ncgv0uj4hdN/NtMi5Dn/K1ehSfmexAzOjT/IS1GeFoJtPUoi2TNxwsRRYYAEWvwQqvAIWvpyzNp7lJi41VttJHKkzAl4H4gL1S07Dl76jVBA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(508600001)(316002)(6486002)(6506007)(5660300002)(52116002)(7416002)(8936002)(4326008)(36916002)(66946007)(66476007)(66556008)(8676002)(86362001)(4744005)(2906002)(6512007)(26005)(186003)(38100700002)(38350700002)(6916009);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?/Ns84RtjebTXCMePWfyfELg7wdgwN4RJKQ3hxDxqWWGSnnbMZbUfK6XooefB?=
- =?us-ascii?Q?Fch5Gu+R9gchZwf317UY/xcgtNZfIsG/Ste00SSPYpyTo+iPXI8nPYXONdPc?=
- =?us-ascii?Q?/Qfn7NO3A0c/+Tt8uGJ489naRgBx8GfBXKk4a4zGREdiTAH/qZfzzftDrroI?=
- =?us-ascii?Q?Nlm7AO2mELTPo1O6ezLy9sKOsSv5lsVYc4O/c282vppe5rDO82f1CaaMa0lU?=
- =?us-ascii?Q?QEBor+DGjvqovtZaSOKfkPp+pXTTw5gBWdmQdPK8wq8AwOyuiqcFVRuwOHDB?=
- =?us-ascii?Q?24t4Y16TbSESmLAUhlSk2eUHx9gGqb+OUKULPH8Q4qZDU+dDqzXt6hebbcmO?=
- =?us-ascii?Q?z2gWiWDTGZK2gwQlTRnDghwL2/XQEOgLfq9KfQ+h6MPCEVO+idUNU2EUHzmF?=
- =?us-ascii?Q?hcp06etW91lxA/VXsF5bRipT30XLp2mWMTFh+tgav5V+XOIMD8gnwxx7jrSM?=
- =?us-ascii?Q?UVafdUvJTm9ZQt4QDauEDYblnIpe2YbDKeVFiU8hgx+qd7k+x+hh0GWt5xvC?=
- =?us-ascii?Q?cpst0fH7nPyHGK9g8AlWTrHo4yBjC9mZmmp6W2hr1DIiVRwXx22JNT2EtSUO?=
- =?us-ascii?Q?CYgicqk6C7pZ4wVPIk9DHVqF7VCZ3+smdALW3i8+IORmXcSmfOTxOiv2kVIM?=
- =?us-ascii?Q?htknFSbQ5grz6q1txjbTvX1si7hH54GNCZZIYcIOmCji7sCTMy10wA26DhtA?=
- =?us-ascii?Q?Kx31Twiid7P/dpulMZYvPkdomJesk6nbrpafyb4npTUnDKbTg9xOV5cN6cZE?=
- =?us-ascii?Q?MapgxMhvmWfnINXhhymgZhXmhe8S+OdNvdvtpFoqceGEh6RyhFxVjxtmO3ef?=
- =?us-ascii?Q?Lvh/Nd3BDYJqNkY0sFLHEJ9YaYGr4/2XVZaLMkmETu0/ZFi9Txl4WonnVcVA?=
- =?us-ascii?Q?Gyns2xedeL9NMysc13gO2/3m/lIc20WBYC08VvFitPW2RQT73OsG4P/7QO10?=
- =?us-ascii?Q?zd2lgQ22WGO7e3o+jX+QMqANgAUGYH6PQLSS/2XgPtKdm71l7Ae9fcFFJYkK?=
- =?us-ascii?Q?gtlmq5P6hu3+lMHR33CVrGucU+mQAl514ddwssCKoc+hyCp+8bUg3lICe5Uu?=
- =?us-ascii?Q?xEDGDBGRD+n9GoWL3Qe7z7zxPu6jRkypPP1DZwYOWorZfdMKbpH5ajFUdeeZ?=
- =?us-ascii?Q?uNrxKoEWCMhIFoQudS0Ipdif//P+1iShh9F/DUf7TYckGHIRLWjp1yWbQBAf?=
- =?us-ascii?Q?qQVRwRmonR12jkztyk2oB2gG2bmXICvt2f2+txIYbdskLwWKiwpkkCzhC00K?=
- =?us-ascii?Q?oFe2Rl4Vpg3/7ZJWjkEORTqDqJeZzFwiaEOhq1Kz8vmAlYF11ZeEo5GCgVXr?=
- =?us-ascii?Q?Z4ab3SSEBGdOVS0qwwOwfVfha6WjR1lHctCvL1cEuAqHmfLHEC6Sm6CRkM2Z?=
- =?us-ascii?Q?AB4yX3LZEilO5AfiBScs+wqHoUFLObCJ+DJfiDuRmyexHwRXE8jMJf17DE7s?=
- =?us-ascii?Q?pfySFGmvCm+uVWgWn3BwP0CPmPpP9qrtLgS/pq/24VsERAs58a0WV15zL29v?=
- =?us-ascii?Q?wB3eBnEVqM5VVOrV/vndLqQ6EIMxCld+Nm7vAP7bR+b2Yg6iErh+5WVBNeV1?=
- =?us-ascii?Q?If+OSxCJTBmPcGr0lb0N4sLd7FNJ1N1L7fFbBFCHJEkE1UALX4Y/R7wEB9HP?=
- =?us-ascii?Q?uvFQ40iiz6Q1dO0tMieh/VSG8uL5pK5dj4r/rE4q5lfq1gWCD8+cz0SM1Z5k?=
- =?us-ascii?Q?UIYqDQ=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: af01263d-ff83-4027-829d-08d9f2971962
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2022 04:28:23.0286
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +6kVYV2KQyAvKkM3DrsU8hOKQy6Xn+WAsvYH/ZA04IqnVjDCANEVO900vdIpbwfjk4qeA47EOVmsOS/WvJjpG4sDP67bAnbjs19z5+33ooE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB3879
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10261 signatures=677564
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 adultscore=0
- mlxlogscore=999 mlxscore=0 suspectscore=0 spamscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
- definitions=main-2202180023
-X-Proofpoint-ORIG-GUID: _Q9leqTfQ6WONFBHGuShNSzjyN_V1IkE
-X-Proofpoint-GUID: _Q9leqTfQ6WONFBHGuShNSzjyN_V1IkE
+In-Reply-To: <20220217083631.34ii6gqdrknrmufv@garbanzo>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Te0xTVxzHc+69vS246h1QdmTKWJvFqRRa5XHYQJbozPWxDffIFpMNL3Bt
+        FWibPhwj2aTijIhoYYNAZQ63uW5gAME5oJRJHTBEVEQQVF6jzEyhPHwACnQtrYv/fX6/8/29
+        c3i4z21uAG+PQsuqFUyKkPQmzl9cvUr876plCZKG1mBUcakZR/W9DziorO84iQomZnE03jjM
+        QXnHC7mo07YUWewnOOjajB5Dw1UODNX/kIehX8uaMHTX9CNA5lOTGMpqu4ahuSEpanKMkSjP
+        2g3QSJcRQ5Zba1G9pZVAnXXFJPr+5xEuyr5ZQ6KG+xYcmVoWMNRjGAHoinGORDU2PUAX+7sI
+        VH5/nED3Z1pJdOjsI4C+PjrLRVfnWzhviejOG9to40A7Sedm2rl0rbGPS1/tP0vQmSV3CLqz
+        XUdXlWaRdPVP++lvekyANvdmkPSBy004XTj1kKRzMu0kPTlyi6DHG7rIOP+dydFylkli1UGs
+        IlGZtEchixFu+yB+Y3x4hEQqlkahSGGQgkllY4SbtseJN+9JcS5RGLSPSdE5XXGMRiMM3RCt
+        Vuq0bJBcqdHGCFlVUooqTBWiYVI1OoUsRMFq35BKJOvCncJdyfKC2XKgqiXTnnzXTWSAKs4R
+        4MWDVBjsHysijwBvng9lBtCe8afHmALw9JM8wm08BrAjewJ7FtIyN8FxP1gAPHj9AO42/gHw
+        jvUg7lIR1GtwtqrUmYvHI6m1sM3Bc7n9qNdhgyFnMRFOPSKhvjLUxb7URljssHFdzKfE0Hh7
+        CLj5RdhaZCNc7EVFwqdt5xY1AkoEL5xvwVx1IZXvDU+P9gNXLUhtgqZ6tbtRX3ivxa2HVAB8
+        YLeQbn02gDOXBzzBhQBmGjJJtyoWdtTPe7qTQ8tMvmfklTD/UrnHvxTmPLV5/HxYc/IZi+CZ
+        ihJPnuWwe1rvYRrWDUx79jgKYHWOiTCAV4zPTWd8rp6bg2GJeYo0OgfCqZehaYHnxtWwoi60
+        BHBKwXJWpUmVsZpwlVTBfv7/yROVqVVg8Zet2VID+gYnQqwA4wErgDxc6MefaOQn+PCTmC/S
+        WbUyXq1LYTVWEO48Vi4eIEhUOr+pQhsvDYuShEVERIRFrY+QCl/it8kqGR9KxmjZZJZVsepn
+        cRjPKyAD2+vN7JMd7m2P+f2C1eivGzrqM18WAmeTRCtOXz+Jr/uqlhGs/+z97k8NXyZEDjh2
+        H+pM/6s79spHZ2qXCSO38reX7XxnSan+gHLrx4Gn+NF8xy/5d94Ujw3V2ScDE9d1mP2zRvG3
+        ewcDCgSs8pi6790Z9blmETmwP91UUTT4mCq67hu5sXH3ZXlN4IqF4B2vzr1H4nJxdVT8ldvD
+        az55YfPwLr1ZJIjawZ1bkisgTfAPv6wtem/s7/GbGut63+jGNK2m9TBdgjZ8e+OeSTIZu2q+
+        uG9lz8PmcotBVwSSHSpHqXj6w7NxdSFDOb/tHT9xNVkwPBY6X9nOq7blpln7o+82CwmNnJGu
+        wdUa5j+jLjDh7gQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SX0xTZxjG951zenro1ua0MvwAM7K6GaWIQ9n2ZWHqsgsOEqMXBg2ZQJXT
+        QoDa9IBTErdixYx/EatbpDpxQCAUkYkGcLSNLbIOu45GRIoDFmI7hh1tcWPaAGUrbJl3T97n
+        +f2uXgqXXObFUYWqUlajkhdLSQHRMyBN2Lp9n+jIO8333kNd97/HkWn8Dx7qmDxHoq+CIRwF
+        rE94SH/uEh+NeETI7L/MQ64XFRh60r2CIVOTHkPtHYMYmmlrBqj/m3kMVTlcGFqaTkGDK3Mk
+        0tseAeQdNWDI/FiGTOYhAo18d4VEja1ePqoZ6yORxWfGUZs9jCF3vRegnwxLJOrzVAA0MDVK
+        oBu+AIF8L4ZIdPbmAkCVtSE+Gl6283ZvZEYeZjKGX5wkc17n5zN3DJN8ZnjqJsHork0QzIiz
+        jOk2VpHMrZbPmQvuNsD0j2tJ5vSPgzhz6dmfJFOn85PMvPcxwQQso+T+mGxBWj5bXHic1Wzb
+        mScoGGi4T6hD+ImBmueEFtTg1SCKgnQqtC8FedVAQEnofgB7z/vItSIWti7f+3e0DraHZ/hr
+        Iw+AU5W/YZGCoN+GoW7jPwBFkbQMOlaoyDma3gwt9XVYZI/TiyT06hdWRevoj+GVFQ8/koX0
+        Vmj4eRpEsoT+HUCHJ23tLoZDDR4iknE6EbrDs1jEj9PxsC286o+i34eLjturmtfpjfBujx2r
+        B2LDS7ThJdrwP30N4EYQy6q5EmUJl6JOUbGfJnPyEq5MpUw+eqykG6z+T+KWPtBrDCbbAEYB
+        G4AULo0WBq3CIxJhvvxkOas5lqspK2Y5G4inCOl6oat6KFdCK+WlbBHLqlnNfy1GRcVpsc/w
+        1CSbe/8hYP1Qedr10dyGtFD+00Xngz2ST6YDS/qE7WarNlZxfffzJHWaYlMjripIqKUPps8t
+        y75W3j7QfOPo/FNFk+ZiI7dNGOO35pfKWi2db3wR1IWrCPNr4zmppUmmQ8Ge6eN/dc74xh4y
+        lXcyXy3qbErNNs0Krg7vTFC0SB7ZLWepdy/kqpQXK2K4hTx8Ii66K+eUqyPr6r7huCJxRuDb
+        nHi/usvTcvLLtyYaMvf+oMrY5a7VKURqerLO+asoe3TXm69UbZDJ19/d+yxvh1Ee5ZDv6NX6
+        Dp85k16+eJDJmidnnbnlqqz0A36X+MGpwrET7VkfZIgH9RmJIinBFchTEnENJ/8blpJWdq4D
+        AAA=
+X-CMS-MailID: 20220217133547epcas5p305c93f10e815e275374ca2f41d75a2aa
+X-Msg-Generator: CA
+Content-Type: multipart/mixed;
+        boundary="----Fq-YzQe-sCxQ_.ALiW-8FMdnFblVNc8pE5kaYAan9Jc7INV.=_8df09_"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220214080558epcas5p17c1fb3b659b956908ff7215a61bcc0c9
+References: <20220214080002.18381-1-nj.shetty@samsung.com>
+        <CGME20220214080558epcas5p17c1fb3b659b956908ff7215a61bcc0c9@epcas5p1.samsung.com>
+        <20220214080002.18381-2-nj.shetty@samsung.com>
+        <20220217083631.34ii6gqdrknrmufv@garbanzo>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+------Fq-YzQe-sCxQ_.ALiW-8FMdnFblVNc8pE5kaYAan9Jc7INV.=_8df09_
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
 
-Damien,
+On Thu, Feb 17, 2022 at 12:36:31AM -0800, Luis Chamberlain wrote:
+> On Mon, Feb 14, 2022 at 01:29:51PM +0530, Nitesh Shetty wrote:
+> > From: SelvaKumar S <selvakuma.s1@samsung.com>
+> > 
+> > Make bio_map_kern() non static
+> > 
+> > Signed-off-by: SelvaKumar S <selvakuma.s1@samsung.com>
+> > Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+> 
+> This patch makes no sense on its own. I'd just merge it with
+> its first user.
+> 
+>   Luis
+>
 
-> This series and my pm8001 series have a conflict. When applying the
-> pm8001 patches on top of these libsas changes, patch 28 has a fairly
-> easy to resolve conflict. Let me know if you want me to send a v6
-> rebased on top of this.
+acked. I will do it next version.
 
-I'll fix it up.
+--
+Nitesh
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+------Fq-YzQe-sCxQ_.ALiW-8FMdnFblVNc8pE5kaYAan9Jc7INV.=_8df09_
+Content-Type: text/plain; charset="utf-8"
+
+
+------Fq-YzQe-sCxQ_.ALiW-8FMdnFblVNc8pE5kaYAan9Jc7INV.=_8df09_--
