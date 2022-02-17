@@ -2,61 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A5E4C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 17:42:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AD24C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 17:49:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242733AbiBQRnK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 12:43:10 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50854 "EHLO
+        id S243877AbiBQRuK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 12:50:10 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240241AbiBQRnK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 12:43:10 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99F381A2768
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 09:42:55 -0800 (PST)
-Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K02Ff6KHLz67yc1;
-        Fri, 18 Feb 2022 01:41:58 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Thu, 17 Feb 2022 18:42:53 +0100
-Received: from [10.47.86.67] (10.47.86.67) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 17 Feb
- 2022 17:42:53 +0000
-Message-ID: <a7d796d5-40c6-608d-abbe-28bd517a08a2@huawei.com>
-Date:   Thu, 17 Feb 2022 17:42:52 +0000
+        with ESMTP id S237904AbiBQRuJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 12:50:09 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74152291FBF;
+        Thu, 17 Feb 2022 09:49:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=1zFqRS7lGsUI9447tPjr+UyxcPBpVVJrIYKaMONuEZQ=; b=ewn0IO8WBPwCjs00l2ERqN87rx
+        TnPixZQ79w+f2vyXxPD272rHyYhd4n34SnMTkkaAc1lF2qb29ZnhRYcjDLxXkLbhjovlJEeY+ptmq
+        VZUqXNYiMoayFdyqZ/ViOfBwX7Ox/aNAhjSrXbYukmlqJacF3N2uVBdv8r09orglvU0dCQa0Fr+A5
+        lO8Uwv4d3zVKyGthoyN2N4Yn+Atj0F6UAmYuAIFISPxnEbFrbqkak4B3h38opGuCzUCHTOSZyxk1d
+        W6UpYIhwPlgCj9UIURHoiqFAuVPN48BRGsOQljMpo9QxPUnxEq/a6tFKqKHXjgBsK0pmxFKtl2UFC
+        vJAM1VDw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nKkua-00BdTP-0U; Thu, 17 Feb 2022 17:49:48 +0000
+Date:   Thu, 17 Feb 2022 09:49:47 -0800
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>
+Cc:     "hch@lst.de" <hch@lst.de>,
+        "javier@javigon.com" <javier@javigon.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "msnitzer@redhat.com" <msnitzer@redhat.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "hare@suse.de" <hare@suse.de>,
+        "kbusch@kernel.org" <kbusch@kernel.org>,
+        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
+        "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.com" <jack@suse.com>,
+        "joshi.k@samsung.com" <joshi.k@samsung.com>,
+        "arnav.dawn@samsung.com" <arnav.dawn@samsung.com>,
+        "nitheshshetty@gmail.com" <nitheshshetty@gmail.com>,
+        SelvaKumar S <selvakuma.s1@samsung.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        James Smart <james.smart@broadcom.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Nitesh Shetty <nj.shetty@samsung.com>
+Subject: Re: [PATCH v3 02/10] block: Introduce queue limits for copy-offload
+ support
+Message-ID: <Yg6Ku8XqnTjvNCrC@bombadil.infradead.org>
+References: <20220214080002.18381-1-nj.shetty@samsung.com>
+ <CGME20220214080605epcas5p16868dae515a6355cf9fecf22df4f3c3d@epcas5p1.samsung.com>
+ <20220214080002.18381-3-nj.shetty@samsung.com>
+ <20220217090700.b7n33vbkx5s4qbfq@garbanzo>
+ <f0f9317f-839e-2be2-dec6-c5b94d7022b7@nvidia.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH v4 21/31] scsi: pm8001: Fix task leak in
- pm8001_send_abort_all()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>
-CC:     Xiang Chen <chenxiang66@hisilicon.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        Luo Jiaxing <luojiaxing@huawei.com>
-References: <20220217132956.484818-1-damien.lemoal@opensource.wdc.com>
- <20220217132956.484818-22-damien.lemoal@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220217132956.484818-22-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.86.67]
-X-ClientProxiedBy: lhreml714-chm.china.huawei.com (10.201.108.65) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f0f9317f-839e-2be2-dec6-c5b94d7022b7@nvidia.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 17/02/2022 13:29, Damien Le Moal wrote:
-> In pm8001_send_abort_all(), make sure to free the allocated sas task
-> if pm8001_tag_alloc() or pm8001_mpi_build_cmd() fail.
+On Thu, Feb 17, 2022 at 10:16:21AM +0000, Chaitanya Kulkarni wrote:
+> On 2/17/22 1:07 AM, Luis Chamberlain wrote:
+> >> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> >> index efed3820cbf7..792e6d556589 100644
+> >> --- a/include/linux/blkdev.h
+> >> +++ b/include/linux/blkdev.h
+> >> @@ -254,6 +254,13 @@ struct queue_limits {
+> >>   	unsigned int		discard_alignment;
+> >>   	unsigned int		zone_write_granularity;
+> >>   
+> >> +	unsigned long		max_hw_copy_sectors;
+> >> +	unsigned long		max_copy_sectors;
+> >> +	unsigned int		max_hw_copy_range_sectors;
+> >> +	unsigned int		max_copy_range_sectors;
+> >> +	unsigned short		max_hw_copy_nr_ranges;
+> >> +	unsigned short		max_copy_nr_ranges;
+> > 
+> > Before limits start growing more.. I wonder if we should just
+> > stuff hw offload stuff to its own struct within queue_limits.
+> > 
+> > Christoph?
+> > 
 > 
-> Signed-off-by: Damien Le Moal<damien.lemoal@opensource.wdc.com>
+> Potentially use a pointer to structure and maybe make it configurable,
 
-Reviewed-by: John Garry <john.garry@huawei.com>
+Did you mean to make queue limits local or for hw offload and make that
+a pointer? If so that seems odd because even for hw copy offload we
+still need the other limits no?
+
+So what I meant was that struct queue_limits seems to be getting large,
+and that hw copy offload seems like an example use case where we should
+probably use a separate struct for it. And while at it, well, start
+adding kdocs for these things, because, there's tons of things which
+could use kdoc love.
+
+> although I'm not sure about the later part, I'll let Christoph decide
+> that.
+
+  Luis
