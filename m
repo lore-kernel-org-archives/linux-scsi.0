@@ -2,74 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C874DC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 13:31:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29493C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 13:31:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240995AbiBQNbY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 08:31:24 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48780 "EHLO
+        id S240996AbiBQNbZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 08:31:25 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240907AbiBQNbA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 08:31:00 -0500
+        with ESMTP id S240927AbiBQNbC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 08:31:02 -0500
 Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58C1A2AE2BE
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 05:30:46 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B41FD2782B3
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 05:30:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1645104646; x=1676640646;
+  t=1645104647; x=1676640647;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Fo+u3tJIh0jVn7uMv+unetkdnajPsN0MoK2SbdL/JbE=;
-  b=U9OUOLBzFjI2vwL4PmznrDzbPaxaFtOXpNExcW+CpNKXsEoLUnmSIgBZ
-   TvOkgDYZ4oXzGz2lK+ZUVODA6lXlg29iXkATO37Wp7j99Guz29PeUQXMi
-   pa9O0SgnYP8GC/uL38kJyf1T/9t3jr5b8j2s/cnhcM3krbhJ2onHr6dDL
-   528ni47NBmCjOAk0g7iDEYyUJv5WLEGgwHxf0BBQW1Atz10ylsnwkDtz4
-   L3CrzRzLdbAXCOzl7Aag6jdD8ongeY+rrxqd1OvoUIKCGzcpCl/2jUbWM
-   TScoqRN+LVdVyhxVnNd6rvwGhLV+HR45kk6PS+QN+1ru0NP4njFDVy4sR
+  bh=Yb073H/xn2vfr5A6/39r8qdOpwiU1394jDeekoBnKmQ=;
+  b=Ycwa5yIG/kLQXrngi45gCMC/6ef/JyIag2jJWjW1w0C8NnF45mrmR0Po
+   GIuhjXZB4/97top8jaSkg4+gjbpStM2AY0NFW6CXTRrUbjVScLXghWVdk
+   Aq6UaTQ5FlhHO6A0VA1TsLg9Q/Jr93hNLjOh0G14xxLwYtesjUhKtSOEf
+   VVrpiYOUN12Tzbxt8PmHBfIEihup4clc/1FykFpWIpH/3Gefp6S1RUG0c
+   UAs+Tvs4lP7z4emZolM0wliEHLc8lfQjAdww32QmO61XtY7JcyjJHfDdg
+   scV7g5M6kd2sk3Zu8t6gSxhfHrWaDX7oJ08R2nEX5IZdroFf4NGmoT6U9
    w==;
 X-IronPort-AV: E=Sophos;i="5.88,375,1635177600"; 
-   d="scan'208";a="297303253"
+   d="scan'208";a="297303254"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Feb 2022 21:30:45 +0800
-IronPort-SDR: QjAyuL8dfKAS8R4M6JlPio9+ukvZimzEdXjyYy4VHCqQ4sm5r39Bn8WNsb3A+WLYj6of7vqnj/
- itIivWCEy80N26qi1yAdleyTg97KTDlci6oYq5XgmsEm2BgpYw8IT8M3M+DGc3xQrOfaT0Lud1
- NiJ2fJ9SSGe6ze+cq/fFLGw2JrUnT2gPVcN6JSUSPt07ZusOcu+6thXcCe6QTwDo4wFHxMO33B
- M8WxoKgL8M/jWctb7u4t+SWgAedJ1RMfYkuZXkQDRK47VMR3CqxWiNM2Fn8sfqBYWCP7ICS3Xp
- f6DyKBOU9zukjWSaLZsT3ls5
+  by ob1.hgst.iphmx.com with ESMTP; 17 Feb 2022 21:30:47 +0800
+IronPort-SDR: NvGhJiprfgqNyCloW4buZrpDj68mijR3MchI8SEXY4L7wR4vTUr2z3FhhoFmghcA4zRGCtJbFd
+ FuGpycfeLD9UGqhoEPWFczhFypEhu15eSQOj0hyRwx2Dm7zmop9JmNhvkzyStLYsfdJeWscCmx
+ Cb3+a59qsH+tJEC4QPFT9jOTGdabBQfm/2DvXCcAqUTbIHqSbfaJm5DElSU8r2AuXE+5fS82BD
+ vVDhIOd4Af3v5+118y9tfhZP9Zj+VEXJy4UeU2LN0K9iw7XmAWKQ+DB+mTveWVQJDq2Yvfwsl6
+ qctifPN1KY7UerCbXMLOadeq
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 05:02:24 -0800
-IronPort-SDR: OP/deS2KYuujFVXVFcNzyIvfR45ogYYOnmweE8sGvC79PIxhIQ0rYDoZaF29W88xi6bepQRa2S
- Ze944riK67u+FhTW6YWvn5r0EnRWXT2/unfwQ8wBbzZOzwIDGGWIuc6vzC59igoVfhw9z9Yzbg
- ae+f30RjS1E9Yq5eIhsK74kQI2vWFenTHV4h2Qe8VVrxT9G2ZafcsTtaNKB1S1SqbF8e/nNxKd
- v7cvZin5L1uEf0/E1t1gfmjRWHncWEgLTicCvPscykD4hyPsOGbMbdHeYkLxqp+iOEA3spnFB9
- d1c=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 05:02:26 -0800
+IronPort-SDR: gB7VIVOLmf/Auv4H4RPHJ5I4usaVqAFESCP6rfRzuPmwfdXyDsj3/fUJ0Zs6p2+sF9kscyLiSo
+ qkAJzsIOOiWQ4Jn1DFOkVFOZozKWD/KRSiq0wbKP0b0xI7pLM65F5YqVy592bqDD584nuN2acu
+ IW5hkP/jemYHCYO9lebyd4skEGmDxsg32HiEoMW+OpQG7ey3niq0YpFao/HBRLCGU/KX8lOy6l
+ 3AGENPpFWm2AQlm7vDoU9HgVd6hUFATqQMLRP8kkM72lHhZ7nw1J64yf6pmdtKLENVSCS4wh+f
+ tFo=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 05:30:46 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 05:30:47 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Jzwgn4hgsz1SVp1
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 05:30:45 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Jzwgq0VXgz1SVnx
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 05:30:47 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1645104645; x=1647696646; bh=Fo+u3tJIh0jVn7uMv+
-        unetkdnajPsN0MoK2SbdL/JbE=; b=kTkQ8+FzywHs5lVIoiiYejOuJh403YFfyr
-        r4p1jDpqk3s2woM+kFtgZuLZx+VF+sbnQ8jEHR9EQ5Rp2Ly0LkyrZ/nkfe79M1K+
-        P5JCmJa+E4xAXOW4iIFGieWYEXX9f4Qc2aJ/ls5wMfpgf3UzK6opw5yOrIG808Ae
-        Ltd9fDFMoVeiHO/1XfC3ZVMHBaM7KbHHyW3OuFT5/EXeiPHxwRhoddDzjEvE/R4N
-        lGb/okgN3kDJmt4MKkn1twsw/B4Vet7PvNxgbJ11c0ipHKNIhxR6LYOnJG2YFfyq
-        TW7YIdnToWnkGabx9BPDomrbUpw11CRwhKqtsGayh/XSILDOaOMg==
+        :from; s=dkim; t=1645104646; x=1647696647; bh=Yb073H/xn2vfr5A6/3
+        9r8qdOpwiU1394jDeekoBnKmQ=; b=Q/75K0RkZzBvJUSMBd2KG5ajgdYesTx9uC
+        YuIJNz3wW9upHcQA9D7DEpbrbLnX3rfdTvGOAncPE/xGwDJVH7QBGKF7d/bryDPn
+        wdQpOx8YJw8u71c0eXt8U6B52SnbQ2QnLp9whpLLha+WmVAkgH0qzci3PqJstWsG
+        2qkAOAonoRgQ2GDjVqQla34fcjICd6dWaOI7sfsoWi8v6E3BAnkKLJtu7dV5Q/+d
+        ECdokV0U2/xkmTh/HikL4ActEGrM754lsx8dr+vyZ/w5GSp+nEiBzTsZapkoNf9t
+        OGwnbIao9oubwjJNVqFPPQInM5M1R3mGPP8cR4N93XGwQGlxFqHA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 81AO1T90xNaF for <linux-scsi@vger.kernel.org>;
-        Thu, 17 Feb 2022 05:30:45 -0800 (PST)
+        with ESMTP id N-aZ7Z4HuHgM for <linux-scsi@vger.kernel.org>;
+        Thu, 17 Feb 2022 05:30:46 -0800 (PST)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Jzwgl459Kz1Rwrw;
-        Thu, 17 Feb 2022 05:30:43 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Jzwgn3Xjsz1SHwl;
+        Thu, 17 Feb 2022 05:30:45 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -78,9 +78,9 @@ To:     linux-scsi@vger.kernel.org,
 Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
         Jason Yan <yanaijie@huawei.com>,
         Luo Jiaxing <luojiaxing@huawei.com>
-Subject: [PATCH v4 30/31] scsi: pm8001: improve pm80XX_send_abort_all()
-Date:   Thu, 17 Feb 2022 22:29:55 +0900
-Message-Id: <20220217132956.484818-31-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH v4 31/31] scsi: pm8001: Fix pm8001_info() message format
+Date:   Thu, 17 Feb 2022 22:29:56 +0900
+Message-Id: <20220217132956.484818-32-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220217132956.484818-1-damien.lemoal@opensource.wdc.com>
 References: <20220217132956.484818-1-damien.lemoal@opensource.wdc.com>
@@ -90,105 +90,30 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Both pm8001_send_abort_all() and pm80xx_send_abort_all() are called only
-for a non null device with the NCQ_READ_LOG_FLAG set, so remove the
-device check on entry of these functions. Furthermore, setting the
-NCQ_ABORT_ALL_FLAG device id flag and clearing the NCQ_READ_LOG_FLAG is
-always done before calling these functions. Move these operations inside
-the functions.
+Make the driver messages more readable by adding a space after the
+message prefix ":" and removing the extra space between function name
+and line number.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c | 14 ++++----------
- drivers/scsi/pm8001/pm80xx_hwi.c | 16 ++++------------
- 2 files changed, 8 insertions(+), 22 deletions(-)
+ drivers/scsi/pm8001/pm8001_sas.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm800=
-1_hwi.c
-index c2dbadb5d91e..edf83b8a6bd0 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1748,15 +1748,13 @@ static void pm8001_send_abort_all(struct pm8001_h=
-ba_info *pm8001_ha,
- 		struct pm8001_device *pm8001_ha_dev)
- {
- 	struct pm8001_ccb_info *ccb;
--	struct sas_task *task =3D NULL;
-+	struct sas_task *task;
- 	struct task_abort_req task_abort;
- 	u32 opc =3D OPC_INB_SATA_ABORT;
- 	int ret;
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm800=
+1_sas.h
+index 2aab357d9a23..d78e6690333f 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -71,7 +71,7 @@
+ #define PM8001_IOERR_LOGGING	0x200 /* development io err message logging=
+ */
 =20
--	if (!pm8001_ha_dev) {
--		pm8001_dbg(pm8001_ha, FAIL, "dev is null\n");
--		return;
--	}
-+	pm8001_ha_dev->id |=3D NCQ_ABORT_ALL_FLAG;
-+	pm8001_ha_dev->id &=3D ~NCQ_READ_LOG_FLAG;
+ #define pm8001_info(HBA, fmt, ...)					\
+-	pr_info("%s:: %s  %d:" fmt,					\
++	pr_info("%s:: %s %d: " fmt,					\
+ 		(HBA)->name, __func__, __LINE__, ##__VA_ARGS__)
 =20
- 	task =3D sas_alloc_slow_task(GFP_ATOMIC);
- 	if (!task) {
-@@ -2358,11 +2356,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001=
-_ha, void *piomb)
- 			ts->stat =3D SAS_SAM_STAT_GOOD;
- 			/* check if response is for SEND READ LOG */
- 			if (pm8001_dev &&
--				(pm8001_dev->id & NCQ_READ_LOG_FLAG)) {
--				/* set new bit for abort_all */
--				pm8001_dev->id |=3D NCQ_ABORT_ALL_FLAG;
--				/* clear bit for read log */
--				pm8001_dev->id =3D pm8001_dev->id & 0x7FFFFFFF;
-+			    (pm8001_dev->id & NCQ_READ_LOG_FLAG)) {
- 				pm8001_send_abort_all(pm8001_ha, pm8001_dev);
- 				/* Free the tag */
- 				pm8001_tag_free(pm8001_ha, tag);
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80x=
-x_hwi.c
-index b5e1aaa0fd58..9bb31f66db85 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -1761,23 +1761,19 @@ static void pm80xx_send_abort_all(struct pm8001_h=
-ba_info *pm8001_ha,
- 		struct pm8001_device *pm8001_ha_dev)
- {
- 	struct pm8001_ccb_info *ccb;
--	struct sas_task *task =3D NULL;
-+	struct sas_task *task;
- 	struct task_abort_req task_abort;
- 	u32 opc =3D OPC_INB_SATA_ABORT;
- 	int ret;
-=20
--	if (!pm8001_ha_dev) {
--		pm8001_dbg(pm8001_ha, FAIL, "dev is null\n");
--		return;
--	}
-+	pm8001_ha_dev->id |=3D NCQ_ABORT_ALL_FLAG;
-+	pm8001_ha_dev->id &=3D ~NCQ_READ_LOG_FLAG;
-=20
- 	task =3D sas_alloc_slow_task(GFP_ATOMIC);
--
- 	if (!task) {
- 		pm8001_dbg(pm8001_ha, FAIL, "cannot allocate task\n");
- 		return;
- 	}
--
- 	task->task_done =3D pm8001_task_done;
-=20
- 	ccb =3D pm8001_ccb_alloc(pm8001_ha, pm8001_ha_dev, task);
-@@ -2446,11 +2442,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001=
-_ha,
- 			ts->stat =3D SAS_SAM_STAT_GOOD;
- 			/* check if response is for SEND READ LOG */
- 			if (pm8001_dev &&
--				(pm8001_dev->id & NCQ_READ_LOG_FLAG)) {
--				/* set new bit for abort_all */
--				pm8001_dev->id |=3D NCQ_ABORT_ALL_FLAG;
--				/* clear bit for read log */
--				pm8001_dev->id =3D pm8001_dev->id & 0x7FFFFFFF;
-+			    (pm8001_dev->id & NCQ_READ_LOG_FLAG)) {
- 				pm80xx_send_abort_all(pm8001_ha, pm8001_dev);
- 				/* Free the tag */
- 				pm8001_tag_free(pm8001_ha, tag);
+ #define pm8001_dbg(HBA, level, fmt, ...)				\
 --=20
 2.34.1
 
