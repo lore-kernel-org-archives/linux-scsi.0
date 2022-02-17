@@ -2,50 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18270C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 08:36:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2E11C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 09:07:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237849AbiBQIgv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 03:36:51 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:59804 "EHLO
+        id S238396AbiBQJHT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 04:07:19 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:42552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237832AbiBQIgu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 03:36:50 -0500
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FF12B12FA;
-        Thu, 17 Feb 2022 00:36:36 -0800 (PST)
-Received: by mail-pg1-f175.google.com with SMTP id d16so4391979pgd.9;
-        Thu, 17 Feb 2022 00:36:36 -0800 (PST)
+        with ESMTP id S229824AbiBQJHT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 04:07:19 -0500
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F83D3DA5D;
+        Thu, 17 Feb 2022 01:07:04 -0800 (PST)
+Received: by mail-pj1-f42.google.com with SMTP id k60-20020a17090a4cc200b001b932781f3eso5947774pjh.0;
+        Thu, 17 Feb 2022 01:07:04 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=c0pu3AOa7Jqr4q26ebNJ4LdMU0x/lC3tR2Tx7zL6lHg=;
-        b=pYdZ8fd+OgIvMVaBzVXM9G+pee4dw7B6jav7njzVGG9zRRStaVJtSKu6R3V6LclkfX
-         Ndeiic8NjpynUj4xGfFljIXUxiqG1f1MA+k2Zm3yvX7WwZ96JcQZeoIxEMY4F0V7JprR
-         TxbOJm6VWNZNzwnJw1xZ+7OhGCZyYjg2aVVv6sFTj1sJ8Sj7WsWoJn8vD2VK0MjAclW8
-         WdmS8N/kMfc8JraWQq3KXPpVxDAKtTCuOGxy0xHTom0EVvBVVJy+E7s0lgkAs0LoY7vt
-         v9VlWid4k05YYAJSsmO30U6jnxiYHsxrXdpO0gZgo/3mdJfW4+V1mbFPCt7MJ+bQ6pyY
-         B/0g==
-X-Gm-Message-State: AOAM531wihTeLV5VIkH2SHkaIgRHU566d73F7pAM6I5sc+JlJwWYTP1U
-        iwsKYqCQiAYxoTxumUKHy28=
-X-Google-Smtp-Source: ABdhPJxBt7Z+O4vFbpVhfGNT3TGbLxz1vmlCiZLvikj1oSVLWqBDGQ3nJ/8d9qgUnXxcV37sMxYLVg==
-X-Received: by 2002:a05:6a00:23cd:b0:4e1:7ab2:334c with SMTP id g13-20020a056a0023cd00b004e17ab2334cmr2123595pfc.4.1645086995489;
-        Thu, 17 Feb 2022 00:36:35 -0800 (PST)
+        bh=iHftRf/7i/XmxskSM/K/WPxANSIYGKixjpKz8MmDajM=;
+        b=vuV+ddM1WnKP/zToSazgQWPJkDnrkaTz2i/9W3bfVVNDfTCDXDVggn0lXY9Rfju1VB
+         PzMQthvj8FieqS/5RPprlIx5HmrVpanH1Oww4C3Ai6BpU+UbIW31dYiDxwzmp6b5zrTz
+         DJ1BigRjtEIj227Nh0QBEg5ZixFMJpbqXKHHGGaoKCcF9PIxwsX7VZ2tjGJh+L4Ml2s6
+         4KTyZwoDEcPZMKP3U+/xmXyriW/A1zPmsuPKoUv0THVFLqpXUpa73eUWdc4Vozz6LhOD
+         Qax6Pk4wwqvp+rzO34CcS2bcZ/gGJ9+erzkue2RXCOHEJ9wFE28cKXML4TfAjmcXl/kZ
+         RNIg==
+X-Gm-Message-State: AOAM5306rBSzja531hfpdY8T3NaVF9spkiosNdsMmblDNVYott+KeCCc
+        N6KlhzmH+pltFA2Lt5ZsRNk=
+X-Google-Smtp-Source: ABdhPJxA+Rn13F9gCou6v9WFyZVsRSarvAMjLejSWsOqgAvmd/WPGnRZiUrXO0c5nvf+XVq5Joo3eQ==
+X-Received: by 2002:a17:903:1c4:b0:14e:def5:e6bb with SMTP id e4-20020a17090301c400b0014edef5e6bbmr2015834plh.154.1645088823823;
+        Thu, 17 Feb 2022 01:07:03 -0800 (PST)
 Received: from garbanzo (136-24-173-63.cab.webpass.net. [136.24.173.63])
-        by smtp.gmail.com with ESMTPSA id g1sm44078801pfu.32.2022.02.17.00.36.33
+        by smtp.gmail.com with ESMTPSA id n37sm7970590pgl.48.2022.02.17.01.07.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Feb 2022 00:36:34 -0800 (PST)
-Date:   Thu, 17 Feb 2022 00:36:31 -0800
+        Thu, 17 Feb 2022 01:07:03 -0800 (PST)
+Date:   Thu, 17 Feb 2022 01:07:00 -0800
 From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Nitesh Shetty <nj.shetty@samsung.com>
+To:     Nitesh Shetty <nj.shetty@samsung.com>, hch@lst.de
 Cc:     javier@javigon.com, chaitanyak@nvidia.com,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         dm-devel@redhat.com, linux-nvme@lists.infradead.org,
         linux-fsdevel@vger.kernel.org, axboe@kernel.dk,
         msnitzer@redhat.com, bvanassche@acm.org,
         martin.petersen@oracle.com, hare@suse.de, kbusch@kernel.org,
-        hch@lst.de, Frederick.Knight@netapp.com, osandov@fb.com,
+        Frederick.Knight@netapp.com, osandov@fb.com,
         lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
         josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
         jack@suse.com, joshi.k@samsung.com, arnav.dawn@samsung.com,
@@ -57,28 +57,174 @@ Cc:     javier@javigon.com, chaitanyak@nvidia.com,
         Chaitanya Kulkarni <kch@nvidia.com>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 01/10] block: make bio_map_kern() non static
-Message-ID: <20220217083631.34ii6gqdrknrmufv@garbanzo>
+Subject: Re: [PATCH v3 02/10] block: Introduce queue limits for copy-offload
+ support
+Message-ID: <20220217090700.b7n33vbkx5s4qbfq@garbanzo>
 References: <20220214080002.18381-1-nj.shetty@samsung.com>
- <CGME20220214080558epcas5p17c1fb3b659b956908ff7215a61bcc0c9@epcas5p1.samsung.com>
- <20220214080002.18381-2-nj.shetty@samsung.com>
+ <CGME20220214080605epcas5p16868dae515a6355cf9fecf22df4f3c3d@epcas5p1.samsung.com>
+ <20220214080002.18381-3-nj.shetty@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220214080002.18381-2-nj.shetty@samsung.com>
+In-Reply-To: <20220214080002.18381-3-nj.shetty@samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Feb 14, 2022 at 01:29:51PM +0530, Nitesh Shetty wrote:
-> From: SelvaKumar S <selvakuma.s1@samsung.com>
-> 
-> Make bio_map_kern() non static
-> 
-> Signed-off-by: SelvaKumar S <selvakuma.s1@samsung.com>
-> Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+The subject says limits for copy-offload...
 
-This patch makes no sense on its own. I'd just merge it with
-its first user.
+On Mon, Feb 14, 2022 at 01:29:52PM +0530, Nitesh Shetty wrote:
+> Add device limits as sysfs entries,
+>         - copy_offload (RW)
+>         - copy_max_bytes (RW)
+>         - copy_max_hw_bytes (RO)
+>         - copy_max_range_bytes (RW)
+>         - copy_max_range_hw_bytes (RO)
+>         - copy_max_nr_ranges (RW)
+>         - copy_max_nr_ranges_hw (RO)
+
+Some of these seem like generic... and also I see a few more max_hw ones
+not listed above...
+
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> +/**
+> + * blk_queue_max_copy_sectors - set max sectors for a single copy payload
+> + * @q:  the request queue for the device
+> + * @max_copy_sectors: maximum number of sectors to copy
+> + **/
+> +void blk_queue_max_copy_sectors(struct request_queue *q,
+> +		unsigned int max_copy_sectors)
+> +{
+> +	q->limits.max_hw_copy_sectors = max_copy_sectors;
+> +	q->limits.max_copy_sectors = max_copy_sectors;
+> +}
+> +EXPORT_SYMBOL(blk_queue_max_copy_sectors);
+
+Please use EXPORT_SYMBOL_GPL() for all new things.
+
+Why is this setting both? The documentation does't seem to say.
+What's the point?
+
+> +
+> +/**
+> + * blk_queue_max_copy_range_sectors - set max sectors for a single range, in a copy payload
+> + * @q:  the request queue for the device
+> + * @max_copy_range_sectors: maximum number of sectors to copy in a single range
+> + **/
+> +void blk_queue_max_copy_range_sectors(struct request_queue *q,
+> +		unsigned int max_copy_range_sectors)
+> +{
+> +	q->limits.max_hw_copy_range_sectors = max_copy_range_sectors;
+> +	q->limits.max_copy_range_sectors = max_copy_range_sectors;
+> +}
+> +EXPORT_SYMBOL(blk_queue_max_copy_range_sectors);
+
+Same here.
+
+> +/**
+> + * blk_queue_max_copy_nr_ranges - set max number of ranges, in a copy payload
+> + * @q:  the request queue for the device
+> + * @max_copy_nr_ranges: maximum number of ranges
+> + **/
+> +void blk_queue_max_copy_nr_ranges(struct request_queue *q,
+> +		unsigned int max_copy_nr_ranges)
+> +{
+> +	q->limits.max_hw_copy_nr_ranges = max_copy_nr_ranges;
+> +	q->limits.max_copy_nr_ranges = max_copy_nr_ranges;
+> +}
+> +EXPORT_SYMBOL(blk_queue_max_copy_nr_ranges);
+
+Same.
+
+> +
+>  /**
+>   * blk_queue_max_write_same_sectors - set max sectors for a single write same
+>   * @q:  the request queue for the device
+> @@ -541,6 +592,14 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+>  	t->max_segment_size = min_not_zero(t->max_segment_size,
+>  					   b->max_segment_size);
+>  
+> +	t->max_copy_sectors = min(t->max_copy_sectors, b->max_copy_sectors);
+> +	t->max_hw_copy_sectors = min(t->max_hw_copy_sectors, b->max_hw_copy_sectors);
+> +	t->max_copy_range_sectors = min(t->max_copy_range_sectors, b->max_copy_range_sectors);
+> +	t->max_hw_copy_range_sectors = min(t->max_hw_copy_range_sectors,
+> +						b->max_hw_copy_range_sectors);
+> +	t->max_copy_nr_ranges = min(t->max_copy_nr_ranges, b->max_copy_nr_ranges);
+> +	t->max_hw_copy_nr_ranges = min(t->max_hw_copy_nr_ranges, b->max_hw_copy_nr_ranges);
+> +
+>  	t->misaligned |= b->misaligned;
+>  
+>  	alignment = queue_limit_alignment_offset(b, start);
+> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+> index 9f32882ceb2f..9ddd07f142d9 100644
+> --- a/block/blk-sysfs.c
+> +++ b/block/blk-sysfs.c
+> @@ -212,6 +212,129 @@ static ssize_t queue_discard_zeroes_data_show(struct request_queue *q, char *pag
+>  	return queue_var_show(0, page);
+>  }
+>  
+> +static ssize_t queue_copy_offload_show(struct request_queue *q, char *page)
+> +{
+> +	return queue_var_show(blk_queue_copy(q), page);
+> +}
+> +
+> +static ssize_t queue_copy_offload_store(struct request_queue *q,
+> +				       const char *page, size_t count)
+> +{
+> +	unsigned long copy_offload;
+> +	ssize_t ret = queue_var_store(&copy_offload, page, count);
+> +
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	if (copy_offload && !q->limits.max_hw_copy_sectors)
+> +		return -EINVAL;
+
+
+If the kernel schedules, copy_offload may still be true and
+max_hw_copy_sectors may be set to 0. Is that an issue?
+
+> +
+> +	if (copy_offload)
+> +		blk_queue_flag_set(QUEUE_FLAG_COPY, q);
+> +	else
+> +		blk_queue_flag_clear(QUEUE_FLAG_COPY, q);
+
+The flag may be set but the queue flag could be set. Is that an issue?
+
+> @@ -597,6 +720,14 @@ QUEUE_RO_ENTRY(queue_nr_zones, "nr_zones");
+>  QUEUE_RO_ENTRY(queue_max_open_zones, "max_open_zones");
+>  QUEUE_RO_ENTRY(queue_max_active_zones, "max_active_zones");
+>  
+> +QUEUE_RW_ENTRY(queue_copy_offload, "copy_offload");
+> +QUEUE_RO_ENTRY(queue_copy_max_hw, "copy_max_hw_bytes");
+> +QUEUE_RW_ENTRY(queue_copy_max, "copy_max_bytes");
+> +QUEUE_RO_ENTRY(queue_copy_range_max_hw, "copy_max_range_hw_bytes");
+> +QUEUE_RW_ENTRY(queue_copy_range_max, "copy_max_range_bytes");
+> +QUEUE_RO_ENTRY(queue_copy_nr_ranges_max_hw, "copy_max_nr_ranges_hw");
+> +QUEUE_RW_ENTRY(queue_copy_nr_ranges_max, "copy_max_nr_ranges");
+
+Seems like you need to update Documentation/ABI/stable/sysfs-block.
+
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index efed3820cbf7..792e6d556589 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -254,6 +254,13 @@ struct queue_limits {
+>  	unsigned int		discard_alignment;
+>  	unsigned int		zone_write_granularity;
+>  
+> +	unsigned long		max_hw_copy_sectors;
+> +	unsigned long		max_copy_sectors;
+> +	unsigned int		max_hw_copy_range_sectors;
+> +	unsigned int		max_copy_range_sectors;
+> +	unsigned short		max_hw_copy_nr_ranges;
+> +	unsigned short		max_copy_nr_ranges;
+
+Before limits start growing more.. I wonder if we should just
+stuff hw offload stuff to its own struct within queue_limits.
+
+Christoph?
 
   Luis
