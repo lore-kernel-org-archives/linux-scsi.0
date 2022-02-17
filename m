@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99830C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 07:06:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93A15C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 07:06:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235877AbiBQHG2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 02:06:28 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53562 "EHLO
+        id S235894AbiBQHHB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 02:07:01 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229483AbiBQHG2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 02:06:28 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7BCB19C3D
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 23:06:14 -0800 (PST)
+        with ESMTP id S229483AbiBQHHA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 02:07:00 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 591D01A343D
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2022 23:06:44 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id A4AB82177B;
-        Thu, 17 Feb 2022 07:06:13 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 84BBF1F37D;
+        Thu, 17 Feb 2022 07:06:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1645081573; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1645081603; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=gjpN7Z0HOXSktVHsjci3E+p7IYBS2qaaNvweCK/pM8c=;
-        b=JBksoYw7fXWHnm3/9QUCq6q9ubupnw9CC1WgYRfPisZSCbl01y1KxW6IKJPgnpWWhTy1Wx
-        2KMqjo9sjqJl5KPvwIqRYYVjTATNCPD+bIx0ZGFU4+CV6l4oVvbn64hjL8Tv7OKFsfP4kI
-        0UtnQjI1GAHEpWLjO0lt8gdc0S1+NX0=
+        bh=OfkH3W213HeSBIpcwSz3xh2KVlG8KykEKAh1aKlBFaw=;
+        b=swSajMLIqWO+QzGrjeKzSc+ZbcgDtujyaZdnSb2JJODwP8Ahv12c50zDFGdX1sYLA5RU80
+        eAW6CJ/AOOc736pIb/V6juo138fJ8L+xJhGSXO263V5ZF+VSbY0IITksDn17IIA1sj93J3
+        laltRZEGSksPx7ZXE+j5XFsNu+yGL0Y=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1645081573;
+        s=susede2_ed25519; t=1645081603;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=gjpN7Z0HOXSktVHsjci3E+p7IYBS2qaaNvweCK/pM8c=;
-        b=SbbkQjN0+su7BEgypHXaIt/bviYH3ZOVP3lhh6b3sou9/rMNGEb1qw/1AU+29YXdDkoB5C
-        qDlkDG/5n+aNlWBw==
+        bh=OfkH3W213HeSBIpcwSz3xh2KVlG8KykEKAh1aKlBFaw=;
+        b=PkvSjVHKMV8S9zCJRAwxN5prqnT8CCO1y6DyHYfsfK2R+WBGtLUAHnmOBLuw8HjEI0H0CP
+        CQQH6qYHq2cfswBQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6BD3B13B78;
-        Thu, 17 Feb 2022 07:06:13 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 5395013B78;
+        Thu, 17 Feb 2022 07:06:43 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id atFAGeXzDWKncgAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 17 Feb 2022 07:06:13 +0000
-Message-ID: <f3b4075c-6331-0790-aa7b-91c50ec3f401@suse.de>
-Date:   Thu, 17 Feb 2022 08:06:12 +0100
+        id 9gE/EwP0DWLVcgAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 17 Feb 2022 07:06:43 +0000
+Message-ID: <25febc67-9ea9-aa3b-748f-6bd342310855@suse.de>
+Date:   Thu, 17 Feb 2022 08:06:42 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH v4 29/50] scsi: bnx2fc: Stop using the SCSI pointer
+Subject: Re: [PATCH v4 30/50] scsi: qedf: Stop using the SCSI pointer
 Content-Language: en-US
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
@@ -62,9 +62,9 @@ Cc:     linux-scsi@vger.kernel.org, Saurav Kashyap <skashyap@marvell.com>,
         GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
 References: <20220216210233.28774-1-bvanassche@acm.org>
- <20220216210233.28774-30-bvanassche@acm.org>
+ <20220216210233.28774-31-bvanassche@acm.org>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220216210233.28774-30-bvanassche@acm.org>
+In-Reply-To: <20220216210233.28774-31-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -81,10 +81,10 @@ On 2/16/22 22:02, Bart Van Assche wrote:
 > Cc: Hannes Reinecke <hare@suse.de>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->   drivers/scsi/bnx2fc/bnx2fc.h      |  9 +++++++--
->   drivers/scsi/bnx2fc/bnx2fc_fcoe.c |  1 +
->   drivers/scsi/bnx2fc/bnx2fc_io.c   | 23 +++++++++++------------
->   3 files changed, 19 insertions(+), 14 deletions(-)
+>   drivers/scsi/qedf/qedf.h      | 10 +++++++++-
+>   drivers/scsi/qedf/qedf_io.c   | 25 ++++++++++++-------------
+>   drivers/scsi/qedf/qedf_main.c |  3 ++-
+>   3 files changed, 23 insertions(+), 15 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
