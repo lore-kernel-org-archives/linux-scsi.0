@@ -2,195 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B7FAC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 08:08:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2DC3C43217
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Feb 2022 08:13:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236512AbiBQIIY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 03:08:24 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50318 "EHLO
+        id S237331AbiBQINZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 03:13:25 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232802AbiBQIIW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 03:08:22 -0500
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C745627DF3C;
-        Thu, 17 Feb 2022 00:08:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1645085287; x=1676621287;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=1VhacoEn/GVrgLJ8/r7CdUqdxZnPwYJJHumHS8rVU3s=;
-  b=iNBSytUnGytzvJpG7vmE3DhLqlFH9f0T5F59oqoht56JZYgZ8mxXFwsR
-   WErEPsOx9hCezJ3Ip+xGGo+KAg1hAcFzAgG6aPNR4tdw7EHzWAj6TSXWV
-   Pkl5eqfuCp6AG6FT/mVzILQTvMEflAcWio5s/DfaCfL904gihLk5ERozf
-   xz5hx8Rl7Z5o2Lq/fP1l/WkwJo17Cme697xutFNQ2rF5BJsqz4oXDrN12
-   4uNeRh8xw6sdZZZ+QrQr9rRpAToQv48VvGuJHN7IGqyTX+w+HakER7ZhT
-   nkI4MP+zqQ3N00E8n7+VRBXg2jxLUUoR5x53/N9FLbqPG3upqOiTnyE9d
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10260"; a="251019574"
-X-IronPort-AV: E=Sophos;i="5.88,375,1635231600"; 
-   d="scan'208";a="251019574"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 00:08:07 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,375,1635231600"; 
-   d="scan'208";a="776993133"
-Received: from lkp-server01.sh.intel.com (HELO d95dc2dabeb1) ([10.239.97.150])
-  by fmsmga005.fm.intel.com with ESMTP; 17 Feb 2022 00:08:04 -0800
-Received: from kbuild by d95dc2dabeb1 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nKbpc-000BbD-5y; Thu, 17 Feb 2022 08:08:04 +0000
-Date:   Thu, 17 Feb 2022 16:07:28 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Guixin Liu <kanie@linux.alibaba.com>, gregkh@linuxfoundation.org,
-        bostroesser@gmail.com, martin.petersen@oracle.com
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, xiaoguang.wang@linux.alibaba.com,
-        xlpang@linux.alibaba.com
-Subject: Re: [PATCH 2/2] scsi:target:tcmu: reduce once copy by using uio ioctl
-Message-ID: <202202171541.grdjAOIT-lkp@intel.com>
-References: <1645064962-94123-2-git-send-email-kanie@linux.alibaba.com>
+        with ESMTP id S237340AbiBQINX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 03:13:23 -0500
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C31051DA6F
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 00:13:05 -0800 (PST)
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220217081303epoutp0251ef3154034cf10c340be2cb849dd5b4~UhJ9AYPq92444824448epoutp02D
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 08:13:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220217081303epoutp0251ef3154034cf10c340be2cb849dd5b4~UhJ9AYPq92444824448epoutp02D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1645085583;
+        bh=CkVdxlzMdliZMV9QfR+AVMkX96BMbtByMo/P+XXlvBQ=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=qB7Pbyjkqm9FllKqtPwLCwxhzKIkhSv7e0+y1ZhYxFJCDpO8t+dVEdn8UMS9NbK7O
+         rXaV/j3QPmXH9wKTP335B3sEQD7uCcQatnuF95s/mVFzbbnzZ7cG4UdhRMv4cmnb3V
+         ipQMOgcNxfhO0wd1XZN6t4Dd3IS1nVwi9NNdZplI=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20220217081302epcas2p4c769763743bcb16454ae027c4b629391~UhJ8N6qao1133311333epcas2p46;
+        Thu, 17 Feb 2022 08:13:02 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.92]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4Jznd66Nsfz4x9Pq; Thu, 17 Feb
+        2022 08:12:58 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        3B.66.51767.A830E026; Thu, 17 Feb 2022 17:12:58 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
+        20220217081258epcas2p1bf98958f272c660541af370aed799b18~UhJ4JOTO32222622226epcas2p1U;
+        Thu, 17 Feb 2022 08:12:58 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220217081258epsmtrp1af4a766ce4ff4c9e145a36adab31f588~UhJ4AmEXl3184931849epsmtrp1I;
+        Thu, 17 Feb 2022 08:12:58 +0000 (GMT)
+X-AuditID: b6c32a45-45dff7000000ca37-d9-620e038aa170
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        B2.75.08738.A830E026; Thu, 17 Feb 2022 17:12:58 +0900 (KST)
+Received: from KORCO011456 (unknown [10.229.18.123]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220217081257epsmtip18e8e9ee6671e636aba27f08a52bf7769~UhJ3xfZWS2002520025epsmtip1c;
+        Thu, 17 Feb 2022 08:12:57 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Bean Huo'" <huobean@gmail.com>,
+        "'Adrian Hunter'" <adrian.hunter@intel.com>,
+        "'Avri Altman'" <Avri.Altman@wdc.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
+        <cang@codeaurora.org>, <sc.suh@samsung.com>,
+        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>,
+        <bhoon95.kim@samsung.com>, <vkumar.1997@samsung.com>
+In-Reply-To: <1cb4db5f707692afedb005e2577f667f5e48e66e.camel@gmail.com>
+Subject: RE: [PATCH v1] scsi: ufs: remove clk_scaling_lock when clkscaling
+ isn't supported.
+Date:   Thu, 17 Feb 2022 17:12:57 +0900
+Message-ID: <015601d823d6$2c44f5c0$84cee140$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1645064962-94123-2-git-send-email-kanie@linux.alibaba.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQI4IgZMS69T+T+3eQm0GbWo6Fi0ygFitYZoAa2Aj1kCJc0N+wFVhb0mAUlYJFoCaybGMauFZ3Zw
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrMJsWRmVeSWpSXmKPExsWy7bCmqW4XM1+SwbmZlhYnn6xhs3gwbxub
+        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLeacbWCyWL34AYvFohvbmCwu75rDZtF9fQebxfLj/5gs
+        uu7eYLRY+u8ti8Wd+x9ZHPg9Lvf1MnnsnHWX3WPxnpdMHhMWHWD0+L6+g83j49NbLB59W1Yx
+        enzeJOfRfqCbKYAzKtsmIzUxJbVIITUvOT8lMy/dVsk7ON453tTMwFDX0NLCXEkhLzE31VbJ
+        xSdA1y0zB+gFJYWyxJxSoFBAYnGxkr6dTVF+aUmqQkZ+cYmtUmpBSk6BeYFecWJucWleul5e
+        aomVoYGBkSlQYUJ2RvPS68wFv5gqDnxrZmlg3MTUxcjJISFgInGy+RVzFyMXh5DADkaJlh+7
+        GCGcT4wSjyccZ4FwPjNKnHl/nhGmZfmcNqiqXYwS0zpPMEE4L4H6921lBqliE9CWmPZwNytI
+        QkRgN7PE1zWfwNo5BdwlWj53sILYwgKxEje2X2cDsVkEVCV6fs0Cs3kFLCXaF+5kgbAFJU7O
+        fAJmMwMNXbbwNTPEGQoSP58uA5sjIhAl0dDcxghRIyIxu7MN7CMJgTscEhcmvmeFaHCROLvz
+        EZQtLPHq+BZ2CFtK4mV/G5DNAWQXS2zaJw/R28AoseTTZhaIGmOJWc/aGUFqmAU0Jdbv0oco
+        V5Y4cgvqND6JjsN/oabwSnS0CUE0Kkv8mjQZGnCSEjNv3oEq8ZDoXJQ1gVFxFpIfZyH5cRaS
+        X2YhrF3AyLKKUSy1oDg3PbXYqMAQHtnJ+bmbGMGpW8t1B+Pktx/0DjEycTAeYpTgYFYS4f1w
+        kDdJiDclsbIqtSg/vqg0J7X4EKMpMNQnMkuJJucDs0deSbyhiaWBiZmZobmRqYG5kjivV8qG
+        RCGB9MSS1OzU1ILUIpg+Jg5OqQamao6Jt5Ov6J2NbQx9o7324MUN+/e+dGA06ZmQdKjz8d65
+        kR/XHF+dFbAt57/p74VJSlcmf80qadHn9HJanT7LccEpodncv7K3KUTadF7sCnlv9sBGmGWm
+        2rn4MxM+m6mvYuzb6bzF+m59zenCsuUWNfttmF0su+c1q3oauPSJfuNk5ErWuc4o+2mCa0jq
+        Xbk3l+sD+zPr9Rn7jp2YvFckJvdB9tyK7Av2gmGrf0+16Lhce1B4X/aTMEPt0LtBGvWXjDRi
+        /rcov1qQ0aPIe9BORcy1Uz5JqcE8L1ru3w6uhosRdbNfbnys/nse98bCRC2l1zZ7Xkt/fnPX
+        /Y6N9sYDr2cp7mTjaUyLzcg7dFuJpTgj0VCLuag4EQDWFhalZgQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrCIsWRmVeSWpSXmKPExsWy7bCSnG4XM1+Swa5WFouTT9awWTyYt43N
+        4uXPq2wWBx92slh8XfqM1eLT+mWsFnPONjBZrF78gMVi0Y1tTBaXd81hs+i+voPNYvnxf0wW
+        XXdvMFos/feWxeLO/Y8sDvwel/t6mTx2zrrL7rF4z0smjwmLDjB6fF/fwebx8ektFo++LasY
+        PT5vkvNoP9DNFMAZxWWTkpqTWZZapG+XwJWx4PtxloJ/TBWrD81gamDcxNTFyMkhIWAisXxO
+        G2MXIxeHkMAORolLKxYxQyQkJU7sfM4IYQtL3G85wgpiCwk8Z5RYM9kXxGYT0JaY9nA3K0iz
+        iMBpZonZ166zQkzawCyxdeUvsBWcAu4SLZ87wLqFBaIltk/4CRZnEVCV6Pk1iw3E5hWwlGhf
+        uJMFwhaUODnzCZjNDLSh92ErI4y9bOFrqOsUJH4+XQY2U0QgSqKhuQ2qRkRidmcb8wRGoVlI
+        Rs1CMmoWklGzkLQsYGRZxSiZWlCcm55bbFhglJdarlecmFtcmpeul5yfu4kRHLFaWjsY96z6
+        oHeIkYmD8RCjBAezkgjvh4O8SUK8KYmVValF+fFFpTmpxYcYpTlYlMR5L3SdjBcSSE8sSc1O
+        TS1ILYLJMnFwSjUw2f0t5n/edeZlc9Ws/fbl++absgtv333Ps1ZKq5rxkcqZrZ0Ri75EW9lv
+        bd15Zevs+C7FtovHzxycrCA3YbtUmGFw6fnkCt+Zkf4l+9kXRL1vWbLB1mapQG31K/GHp1d9
+        2vV+f92HkIXeLKwzvhm1LXQoyJFQKOidXM2jZGFhPv+wRouc7ten0oz5unsWvbA+f1p5m2iE
+        a0l9xgQl/89+nidq/vQ9cT+23dLvhtPVKqcbYSY/y98V280t9imqE5g/84blvJkbJd/cOGN2
+        sa/152HNJ3/5NTza4wJ1uo/9tvx104O/bSeTrfKX9c0ZUYZWV/9s3nNhxWX2R3Jr+E549E6f
+        bZHczRfleu7d/6g4JZbijERDLeai4kQArTaqL0cDAAA=
+X-CMS-MailID: 20220217081258epcas2p1bf98958f272c660541af370aed799b18
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220205074128epcas2p40901c37a7328e825d8697f8d3269edba
+References: <CGME20220205074128epcas2p40901c37a7328e825d8697f8d3269edba@epcas2p4.samsung.com>
+        <1644046760-83345-1-git-send-email-kwmad.kim@samsung.com>
+        <DM6PR04MB657519E60FAFA19434531CE2FC2B9@DM6PR04MB6575.namprd04.prod.outlook.com>
+        <007101d81eed$4d120a60$e7361f20$@samsung.com>
+        <3f2938f7-2a9e-60e8-5237-fe7ebc3b4296@intel.com>
+        <000001d81fcb$3b962f30$b2c28d90$@samsung.com>
+        <1cb4db5f707692afedb005e2577f667f5e48e66e.camel@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Guixin,
+> The name of clk_scaling_lock has explained everything, for the platform
+> which doesn't support load-based clk scaling, doesn't need to hold this
+> lock.
+>=20
+> Acked-by: Bean Huo <beanhuo=40micron.com>
 
-Thank you for the patch! Perhaps something to improve:
-
-[auto build test WARNING on char-misc/char-misc-testing]
-[also build test WARNING on mkp-scsi/for-next linux/master linus/master v5.17-rc4 next-20220216]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
-
-url:    https://github.com/0day-ci/linux/commits/Guixin-Liu/uio-add-ioctl-to-uio/20220217-103120
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc.git e6cb9c167eeb8f90ab924666c573e69e85e700a0
-config: riscv-randconfig-r042-20220217 (https://download.01.org/0day-ci/archive/20220217/202202171541.grdjAOIT-lkp@intel.com/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 0bad7cb56526f2572c74449fcf97c1fcda42b41d)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install riscv cross compiling tool for clang build
-        # apt-get install binutils-riscv64-linux-gnu
-        # https://github.com/0day-ci/linux/commit/c604d03c2be8ca4b3533bb151bcd2d10379debff
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Guixin-Liu/uio-add-ioctl-to-uio/20220217-103120
-        git checkout c604d03c2be8ca4b3533bb151bcd2d10379debff
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=riscv SHELL=/bin/bash drivers/target/
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-All warnings (new ones prefixed by >>):
-
->> drivers/target/target_core_user.c:1987:6: warning: no previous prototype for function 'tcmu_ioctl_copy_between_sgl_and_iovec' [-Wmissing-prototypes]
-   long tcmu_ioctl_copy_between_sgl_and_iovec(struct tcmu_cmd *tcmu_cmd,
-        ^
-   drivers/target/target_core_user.c:1987:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   long tcmu_ioctl_copy_between_sgl_and_iovec(struct tcmu_cmd *tcmu_cmd,
-   ^
-   static 
->> drivers/target/target_core_user.c:2031:6: warning: no previous prototype for function 'tcmu_ioctl' [-Wmissing-prototypes]
-   long tcmu_ioctl(struct uio_info *info, unsigned int cmd, unsigned long arg)
-        ^
-   drivers/target/target_core_user.c:2031:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   long tcmu_ioctl(struct uio_info *info, unsigned int cmd, unsigned long arg)
-   ^
-   static 
-   2 warnings generated.
+Okay, thank you for your information.
+I still have no idea of why the lock is required for ufshcd_exec_dev_cmd fr=
+om the UFS specification w/o any featuring.
 
 
-vim +/tcmu_ioctl_copy_between_sgl_and_iovec +1987 drivers/target/target_core_user.c
-
-  1986	
-> 1987	long tcmu_ioctl_copy_between_sgl_and_iovec(struct tcmu_cmd *tcmu_cmd,
-  1988				struct iovec __user *uiovec,
-  1989				unsigned long vcnt,
-  1990				bool is_copy_to_sgl)
-  1991	{
-  1992		struct iovec iovstack[UIO_FASTIOV];
-  1993		struct iovec *iov = iovstack;
-  1994		struct iov_iter iter;
-  1995		ssize_t ret;
-  1996		struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
-  1997		struct scatterlist *data_sg, *sg;
-  1998		int i;
-  1999		unsigned int data_nents;
-  2000		long copy_ret = 0;
-  2001	
-  2002		if (se_cmd->se_cmd_flags & SCF_BIDI) {
-  2003			data_sg = se_cmd->t_bidi_data_sg;
-  2004			data_nents = se_cmd->t_bidi_data_nents;
-  2005		} else {
-  2006			data_sg = se_cmd->t_data_sg;
-  2007			data_nents = se_cmd->t_data_nents;
-  2008		}
-  2009	
-  2010		ret = import_iovec(READ, uiovec, vcnt, ARRAY_SIZE(iovstack), &iov, &iter);
-  2011		if (ret < 0) {
-  2012			pr_err("import iovec failed.\n");
-  2013			return -EFAULT;
-  2014		}
-  2015	
-  2016		for_each_sg(data_sg, sg, data_nents, i) {
-  2017			if (is_copy_to_sgl)
-  2018				ret = copy_page_from_iter(sg_page(sg), sg->offset, sg->length, &iter);
-  2019			else
-  2020				ret = copy_page_to_iter(sg_page(sg), sg->offset, sg->length, &iter);
-  2021			if (ret < 0) {
-  2022				pr_err("copy failed.\n");
-  2023				copy_ret = -EFAULT;
-  2024				break;
-  2025			}
-  2026		}
-  2027		kfree(iov);
-  2028		return copy_ret;
-  2029	}
-  2030	
-> 2031	long tcmu_ioctl(struct uio_info *info, unsigned int cmd, unsigned long arg)
-  2032	{
-  2033		struct tcmu_dev *udev = container_of(info, struct tcmu_dev, uio_info);
-  2034		struct tcmu_data_xfer __user *uxfer = (struct tcmu_data_xfer __user *)arg;
-  2035		struct tcmu_data_xfer xfer;
-  2036		struct tcmu_cmd *tcmu_cmd;
-  2037	
-  2038		if (!test_bit(TCMU_DEV_BIT_BYPASS_DATA_AREA, &udev->flags))
-  2039			return -EINVAL;
-  2040	
-  2041		if (copy_from_user(&xfer, uxfer, sizeof(xfer)))
-  2042			return -EFAULT;
-  2043	
-  2044		tcmu_cmd = xa_load(&udev->commands, xfer.cmd_id);
-  2045		if (!tcmu_cmd) {
-  2046			set_bit(TCMU_DEV_BIT_BROKEN, &udev->flags);
-  2047			return -EFAULT;
-  2048		}
-  2049	
-  2050		if (test_bit(TCMU_CMD_BIT_EXPIRED, &tcmu_cmd->flags))
-  2051			return -EFAULT;
-  2052	
-  2053		switch (cmd) {
-  2054		case TCMU_IOCTL_CMD_COPY_TO_SGL:
-  2055			return tcmu_ioctl_copy_between_sgl_and_iovec(tcmu_cmd, xfer.iovec,
-  2056								     xfer.iov_cnt, true);
-  2057		case TCMU_IOCTL_CMD_COPY_FROM_SGL:
-  2058			return tcmu_ioctl_copy_between_sgl_and_iovec(tcmu_cmd, xfer.iovec,
-  2059								     xfer.iov_cnt, false);
-  2060		default:
-  2061			return -EINVAL;
-  2062		}
-  2063	}
-  2064	
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
