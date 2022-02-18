@@ -2,51 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E816DC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 19:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03D8BC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 19:52:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238126AbiBRTwc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Feb 2022 14:52:32 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:52154 "EHLO
+        id S238403AbiBRTwe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Feb 2022 14:52:34 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:52346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238403AbiBRTwZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 14:52:25 -0500
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B68F5293B48
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:52:00 -0800 (PST)
-Received: by mail-pf1-f172.google.com with SMTP id y11so3130243pfa.6
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:52:00 -0800 (PST)
+        with ESMTP id S236037AbiBRTw0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 14:52:26 -0500
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C04DC237FC
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:52:09 -0800 (PST)
+Received: by mail-pj1-f47.google.com with SMTP id h7-20020a17090a648700b001b927560c2bso9502151pjj.1
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:52:09 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Tc5twZAeUFlYiGHnzMUwF6Wqn/lA5wVbiTacuuNXQCw=;
-        b=3w5LzjlSdZR8L3jKqjdelM0yGnMFZaNuNf7pFjf8AzjYQh75565z8Fm0aZbgKU/ibV
-         6ddfEO3U0yn6GCtdLXEJvFz57TfJ//+/VNIsadoZEY/3zRMEOyPUwh61VFVSj2IK48+p
-         P2glQKN07S3ZfWrvDk2wN4DXTQsfACHZ+Vw8Ii92Ch/LOipjTU+unQHoKPX931tNDTFH
-         RjUs0wRKVw+8pv4fXs7oNONffnC3SLO1rdO/6VaFOTh3/fmgYzTyoovO9pShS/oGKp2c
-         syIxFhSmRwaKsZiBkPeUn2I5V+LoO4fH+90TpLrLcQ02ICCXD3xd/oZyj0PdrrdKsVYl
-         +zFQ==
-X-Gm-Message-State: AOAM532NtmenD9omasM8hsBWxj9RwT13NbzxMrUa2hpnYahabkD7EGQl
-        h/MK1pKmxR9BUMz7PYHiekQ=
-X-Google-Smtp-Source: ABdhPJwWfCAm8II8gTBNcx5QcOEIiNGqByhEfRbV9cqHAWjgAI6wDPRRNqgWaDekIkNRMDQJjRO49A==
-X-Received: by 2002:a63:6782:0:b0:342:7457:69a4 with SMTP id b124-20020a636782000000b00342745769a4mr7375430pgc.410.1645213920148;
-        Fri, 18 Feb 2022 11:52:00 -0800 (PST)
+        bh=o/DjmKMEQ/TICGYiG1zbJphAMWsxSd5D/VpqW7WFmMA=;
+        b=NICm2XWp1r/BjPQ1iJoVy8tNCvAcini8dQn0Y2Z/50cyWc6oZUJHq+uTVCiEYOcekQ
+         iQK8oeTIctWIvwj41/nU9UFs+faEArc4De32YHa7Lq1CGaPoaxwypCz1cIsLdzUYjKaD
+         NxiHGobHRqxvVw2Xb1rCivHoaypp8GEAqlfoDvzsa0sFceXT8p6Vh/7/827wZbA76FaC
+         csfywcB7ZDUkFEdSKFTQpag2MRCo3YqBFtsznkyuUco+NlLY2oziM+qUY1UsobgOTc/q
+         X9dcPiS4ZAkPc+cQoenXNgDHjSblcIQ6Vdfouv5daJhyf4obbiO2Kci1CmQyArQDoKC4
+         uFkw==
+X-Gm-Message-State: AOAM532blEhBNAw2WYEZydaZpqKXEqrwaa2F4MKSn5L2wh68r2f+b6EZ
+        nqnQ1E18pulxJLQUbqMrxFI=
+X-Google-Smtp-Source: ABdhPJyg8xeiJ0oeOdbAVFBdxmk82WPM+sVFTo+5lfc0jHeSx+8+84ajd2QUmVYqz2kf5u2MyQ0tKw==
+X-Received: by 2002:a17:90a:8c02:b0:1b8:ed69:c2a7 with SMTP id a2-20020a17090a8c0200b001b8ed69c2a7mr9933280pjo.137.1645213929144;
+        Fri, 18 Feb 2022 11:52:09 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id e15sm3930523pfv.104.2022.02.18.11.51.58
+        by smtp.gmail.com with ESMTPSA id e15sm3930523pfv.104.2022.02.18.11.52.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Feb 2022 11:51:59 -0800 (PST)
+        Fri, 18 Feb 2022 11:52:08 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Hannes Reinecke <hare@suse.de>,
-        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v5 16/49] scsi: bfa: Stop using the SCSI pointer
-Date:   Fri, 18 Feb 2022 11:50:44 -0800
-Message-Id: <20220218195117.25689-17-bvanassche@acm.org>
+Subject: [PATCH v5 19/49] scsi: esp_scsi: Stop using the SCSI pointer
+Date:   Fri, 18 Feb 2022 11:50:47 -0800
+Message-Id: <20220218195117.25689-20-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220218195117.25689-1-bvanassche@acm.org>
 References: <20220218195117.25689-1-bvanassche@acm.org>
@@ -60,126 +59,48 @@ Set .cmd_size in the SCSI host template instead of using the SCSI pointer
 from struct scsi_cmnd. This patch prepares for removal of the SCSI pointer
 from struct scsi_cmnd.
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/bfa/bfad_im.c | 27 ++++++++++++++-------------
- drivers/scsi/bfa/bfad_im.h | 16 ++++++++++++++++
- 2 files changed, 30 insertions(+), 13 deletions(-)
+ drivers/scsi/esp_scsi.c | 4 +---
+ drivers/scsi/esp_scsi.h | 3 ++-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index 759d2bb1ecdd..8419a1a89485 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -150,10 +150,10 @@ bfa_cb_tskim_done(void *bfad, struct bfad_tskim_s *dtsk,
- 	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dtsk;
- 	wait_queue_head_t *wq;
- 
--	cmnd->SCp.Status |= tsk_status << 1;
--	set_bit(IO_DONE_BIT, (unsigned long *)&cmnd->SCp.Status);
--	wq = (wait_queue_head_t *) cmnd->SCp.ptr;
--	cmnd->SCp.ptr = NULL;
-+	bfad_priv(cmnd)->status |= tsk_status << 1;
-+	set_bit(IO_DONE_BIT, &bfad_priv(cmnd)->status);
-+	wq = bfad_priv(cmnd)->wq;
-+	bfad_priv(cmnd)->wq = NULL;
- 
- 	if (wq)
- 		wake_up(wq);
-@@ -259,7 +259,7 @@ bfad_im_target_reset_send(struct bfad_s *bfad, struct scsi_cmnd *cmnd,
- 	 * happens.
- 	 */
- 	cmnd->host_scribble = NULL;
--	cmnd->SCp.Status = 0;
-+	bfad_priv(cmnd)->status = 0;
- 	bfa_itnim = bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
- 	/*
- 	 * bfa_itnim can be NULL if the port gets disconnected and the bfa
-@@ -326,8 +326,8 @@ bfad_im_reset_lun_handler(struct scsi_cmnd *cmnd)
- 	 * if happens.
- 	 */
- 	cmnd->host_scribble = NULL;
--	cmnd->SCp.ptr = (char *)&wq;
--	cmnd->SCp.Status = 0;
-+	bfad_priv(cmnd)->wq = &wq;
-+	bfad_priv(cmnd)->status = 0;
- 	bfa_itnim = bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
- 	/*
- 	 * bfa_itnim can be NULL if the port gets disconnected and the bfa
-@@ -347,10 +347,9 @@ bfad_im_reset_lun_handler(struct scsi_cmnd *cmnd)
- 			    FCP_TM_LUN_RESET, BFAD_LUN_RESET_TMO);
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 
--	wait_event(wq, test_bit(IO_DONE_BIT,
--			(unsigned long *)&cmnd->SCp.Status));
-+	wait_event(wq, test_bit(IO_DONE_BIT, &bfad_priv(cmnd)->status));
- 
--	task_status = cmnd->SCp.Status >> 1;
-+	task_status = bfad_priv(cmnd)->status >> 1;
- 	if (task_status != BFI_TSKIM_STS_OK) {
- 		BFA_LOG(KERN_ERR, bfad, bfa_log_level,
- 			"LUN reset failure, status: %d\n", task_status);
-@@ -381,16 +380,16 @@ bfad_im_reset_target_handler(struct scsi_cmnd *cmnd)
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
- 	itnim = bfad_get_itnim(im_port, starget->id);
- 	if (itnim) {
--		cmnd->SCp.ptr = (char *)&wq;
-+		bfad_priv(cmnd)->wq = &wq;
- 		rc = bfad_im_target_reset_send(bfad, cmnd, itnim);
- 		if (rc == BFA_STATUS_OK) {
- 			/* wait target reset to complete */
- 			spin_unlock_irqrestore(&bfad->bfad_lock, flags);
- 			wait_event(wq, test_bit(IO_DONE_BIT,
--					(unsigned long *)&cmnd->SCp.Status));
-+						&bfad_priv(cmnd)->status));
- 			spin_lock_irqsave(&bfad->bfad_lock, flags);
- 
--			task_status = cmnd->SCp.Status >> 1;
-+			task_status = bfad_priv(cmnd)->status >> 1;
- 			if (task_status != BFI_TSKIM_STS_OK)
- 				BFA_LOG(KERN_ERR, bfad, bfa_log_level,
- 					"target reset failure,"
-@@ -797,6 +796,7 @@ struct scsi_host_template bfad_im_scsi_host_template = {
- 	.name = BFAD_DRIVER_NAME,
- 	.info = bfad_im_info,
- 	.queuecommand = bfad_im_queuecommand,
-+	.cmd_size = sizeof(struct bfad_cmd_priv),
- 	.eh_timed_out = fc_eh_timed_out,
- 	.eh_abort_handler = bfad_im_abort_handler,
- 	.eh_device_reset_handler = bfad_im_reset_lun_handler,
-@@ -819,6 +819,7 @@ struct scsi_host_template bfad_im_vport_template = {
- 	.name = BFAD_DRIVER_NAME,
- 	.info = bfad_im_info,
- 	.queuecommand = bfad_im_queuecommand,
-+	.cmd_size = sizeof(struct bfad_cmd_priv),
- 	.eh_timed_out = fc_eh_timed_out,
- 	.eh_abort_handler = bfad_im_abort_handler,
- 	.eh_device_reset_handler = bfad_im_reset_lun_handler,
-diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
-index 829345b514d1..c03b225ea1ba 100644
---- a/drivers/scsi/bfa/bfad_im.h
-+++ b/drivers/scsi/bfa/bfad_im.h
-@@ -43,6 +43,22 @@ u32 bfad_im_supported_speeds(struct bfa_s *bfa);
-  */
- #define IO_DONE_BIT			0
- 
-+/**
-+ * struct bfad_cmd_priv - private data per SCSI command.
-+ * @status: Lowest bit represents IO_DONE. The next seven bits hold a value of
-+ * type enum bfi_tskim_status.
-+ * @wq: Wait queue used to wait for completion of an operation.
-+ */
-+struct bfad_cmd_priv {
-+	unsigned long status;
-+	wait_queue_head_t *wq;
-+};
-+
-+static inline struct bfad_cmd_priv *bfad_priv(struct scsi_cmnd *cmd)
-+{
-+	return scsi_cmd_priv(cmd);
-+}
-+
- struct bfad_itnim_data_s {
- 	struct bfad_itnim_s *itnim;
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index 57787537285a..64ec6bb84550 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -2678,6 +2678,7 @@ struct scsi_host_template scsi_esp_template = {
+ 	.sg_tablesize		= SG_ALL,
+ 	.max_sectors		= 0xffff,
+ 	.skip_settle_delay	= 1,
++	.cmd_size		= sizeof(struct esp_cmd_priv),
  };
+ EXPORT_SYMBOL(scsi_esp_template);
+ 
+@@ -2739,9 +2740,6 @@ static struct spi_function_template esp_transport_ops = {
+ 
+ static int __init esp_init(void)
+ {
+-	BUILD_BUG_ON(sizeof(struct scsi_pointer) <
+-		     sizeof(struct esp_cmd_priv));
+-
+ 	esp_transport_template = spi_attach_transport(&esp_transport_ops);
+ 	if (!esp_transport_template)
+ 		return -ENODEV;
+diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+index 446a3d18c022..c73760d3cf83 100644
+--- a/drivers/scsi/esp_scsi.h
++++ b/drivers/scsi/esp_scsi.h
+@@ -262,7 +262,8 @@ struct esp_cmd_priv {
+ 	struct scatterlist	*cur_sg;
+ 	int			tot_residue;
+ };
+-#define ESP_CMD_PRIV(CMD)	((struct esp_cmd_priv *)(&(CMD)->SCp))
++
++#define ESP_CMD_PRIV(cmd)	((struct esp_cmd_priv *)scsi_cmd_priv(cmd))
+ 
+ /* NOTE: this enum is ordered based on chip features! */
+ enum esp_rev {
