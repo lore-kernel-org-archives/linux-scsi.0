@@ -2,146 +2,73 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01BCAC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 18:42:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02FACC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 19:43:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239427AbiBRSnD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Feb 2022 13:43:03 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53328 "EHLO
+        id S237617AbiBRTni (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Feb 2022 14:43:38 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:56488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239406AbiBRSm6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 13:42:58 -0500
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1EFD166A43;
-        Fri, 18 Feb 2022 10:42:41 -0800 (PST)
-Received: by mail-pg1-x532.google.com with SMTP id w37so2217446pga.7;
-        Fri, 18 Feb 2022 10:42:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=MTDO2ijH97Okb1V/c6+V1GCrGsDIxaa5nQMyVR65+So=;
-        b=Pc1SubqIG7PeXuoDJlxerZb7XZz2VYt5/HIAP8fhBnPYFUTEbRoPc/hD0zar1bma3V
-         4HokjUXlFlCzkXeRBqZNmGCQ3l8CKYg2jhW1k3CKkxdouixmWBwlfbye2k3T5UVN4AWn
-         52n/4TpQSOJ6fiHWHFjwReUOQC0he3x2HgAi44cVWeTV8w05Sa1D9bOyeAsYJF4B+JWR
-         mBc9C6T9ZP/m0MlZ+TuVliGVdVQimrRNJyC5IpsM6L0bfkOB3XBCD/HU3/YKOhebN7mq
-         J+lsn34usoaevMCZEEoXO5bPVPzQN4y1vAeuDaooWztwMJK90R8IU55MMcJYkL/7yE9H
-         qIww==
+        with ESMTP id S232313AbiBRTni (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 14:43:38 -0500
+Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C8C0E7AF3
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:43:19 -0800 (PST)
+Received: by mail-pg1-f182.google.com with SMTP id 27so3506563pgk.10
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:43:19 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=MTDO2ijH97Okb1V/c6+V1GCrGsDIxaa5nQMyVR65+So=;
-        b=GhXkPohLkACB6+Ol+G9yfDoeZkPN67Lxxf9R/dJ9Itgn4Z84mLaXeAfnLfHqaYQVsM
-         avT1iaQp+/ss5uz8/3OPZP0+rKeRCtSCMTZeExO3db4Z5UJONvglXn6dTSMgxjEkyVNL
-         gTpN/2cLN5Qv3s3GEz8BFpkkDpcnsHWRZdRHgW07PLg8r+ioMPojOBWswwtbaWkPMUwZ
-         PClxteRWwXtY31Gphr4IYpsqdsmgbQjOzqARbSFZzBnoI/7d4VOP/jVRqsVWo9R/7+rJ
-         p9gr2B8kHilWWfs6F9Azb03iWKMQYKqBCoeFfFOyVlAgshhUCwZIpiN58klYpwY1yzCg
-         y2Dw==
-X-Gm-Message-State: AOAM5303tAz8BA0muh0kGAS6TeVVqoS9UjJ2yLRaT353PNb3C+pM+/G7
-        UhxwjefG6KBFys1QWdXSl5M=
-X-Google-Smtp-Source: ABdhPJwlYmGekFiFlVU1QipHTqjBlqB1DVOw04uJcuNNV1Cz3CVl3v/qDadRl9ArZAyNjW9xzofVrg==
-X-Received: by 2002:a65:6e4b:0:b0:373:8350:cef3 with SMTP id be11-20020a656e4b000000b003738350cef3mr7362940pgb.219.1645209761285;
-        Fri, 18 Feb 2022 10:42:41 -0800 (PST)
-Received: from vm-111.3frfxmc3btcupaqenzdpat1uec.xx.internal.cloudapp.net ([13.77.171.140])
-        by smtp.gmail.com with ESMTPSA id m17-20020a17090ab79100b001b89fd7e298sm130132pjr.4.2022.02.18.10.42.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Feb 2022 10:42:40 -0800 (PST)
-From:   "Melanie Plageman (Microsoft)" <melanieplageman@gmail.com>
-To:     mikelley@microsoft.com, jejb@linux.ibm.com, kys@microsoft.com,
-        martin.petersen@oracle.com, mst@redhat.com,
-        benh@kernel.crashing.org, decui@microsoft.com,
-        don.brace@microchip.com, R-QLogic-Storage-Upstream@marvell.com,
-        haiyangz@microsoft.com, jasowang@redhat.com, john.garry@huawei.com,
-        kashyap.desai@broadcom.com, mpe@ellerman.id.au,
-        njavali@marvell.com, pbonzini@redhat.com, paulus@samba.org,
-        sathya.prakash@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        sreekanth.reddy@broadcom.com, stefanha@redhat.com,
-        sthemmin@microsoft.com, suganath-prabu.subramani@broadcom.com,
-        sumit.saxena@broadcom.com, tyreld@linux.ibm.com,
-        wei.liu@kernel.org, linuxppc-dev@lists.ozlabs.org,
-        megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-        storagedev@microchip.com,
-        virtualization@lists.linux-foundation.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
-Cc:     andres@anarazel.de
-Subject: [PATCH RFC v1 5/5] scsi: storvsc: Hardware queues share blk_mq_tags
-Date:   Fri, 18 Feb 2022 18:41:57 +0000
-Message-Id: <20220218184157.176457-6-melanieplageman@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220218184157.176457-1-melanieplageman@gmail.com>
-References: <20220218184157.176457-1-melanieplageman@gmail.com>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=r7YJm91PzKi2mQubZ12ZinrxmxAr3SvQWIBr28eHloM=;
+        b=mxaSRBJ9aS2ajRwSKPzVWhqlHolA1+gfAWyfnKD++fXF3hGeWQDpITGRtxgyqMbVc9
+         9IzPM9SapnCAxQkbsBOr3RjB7jHcNdZP+V8SC3gXsDDQSaw3afjRqj4mc/3SaLclOnA4
+         54Q0Tr5YiPbCqwoOUBQlpHrAesg0o5PDjPlroFCB4q3ZC1wCXRQd63I78FXsb9TY8/Bx
+         dIeuG3MPk/R7eVnfRzCrWZrOqIdZ+HNJBhjq7IOy2pW/f4TRoSiBvHrqzbuA8lQcgiYX
+         0DOXALasITlZsyJ06zW6FUCPTlKghvZ62NQb/vRfJ77hginFGyKPVlPpjctZOlOgC6Xy
+         4GnQ==
+X-Gm-Message-State: AOAM530rkPGUvB2XmFBiHeZV+rwZTdbXuaKtVgrCM23epumL2Fk0LaJM
+        vqa0YLu0UXc0QaGO7ARQZPtooNhSFre8qw==
+X-Google-Smtp-Source: ABdhPJy3IP4L18pFjx2RmbwqouPqste2W+BnwaIQTuAJO1Fp9bj7rqhUWVEB5QwlAwx3/tQgRXCjBw==
+X-Received: by 2002:a05:6a00:1ac6:b0:4bd:140:626c with SMTP id f6-20020a056a001ac600b004bd0140626cmr9116782pfv.7.1645213398574;
+        Fri, 18 Feb 2022 11:43:18 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id j9sm2528633pfj.13.2022.02.18.11.43.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 18 Feb 2022 11:43:17 -0800 (PST)
+Message-ID: <9b52bd97-5535-a5b6-6533-17c196331372@acm.org>
+Date:   Fri, 18 Feb 2022 11:43:16 -0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.1
+Subject: Re: [PATCH v4 00/50] Remove the SCSI pointer from struct scsi_cmnd
+Content-Language: en-US
+To:     Finn Thain <fthain@linux-m68k.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>,
+        Ondrej Zary <linux@zary.sk>
+References: <20220216210233.28774-1-bvanassche@acm.org>
+ <cacca1db-be52-d816-b0b9-e625438ebce@linux-m68k.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <cacca1db-be52-d816-b0b9-e625438ebce@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Decouple the number of tags available from the number of hardware queues
-by sharing a single blk_mq_tags amongst all hardware queues.
+On 2/17/22 16:45, Finn Thain wrote:
+> On Wed, 16 Feb 2022, Bart Van Assche wrote:
+>>    scsi: NCR5380: Introduce the NCR5380_cmd_priv() function
+>>    scsi: NCR5380: Move the SCSI pointer to private command data
+> 
+> Please replace those two patches with the one below. This one is better
+> because it adds less source code, adds less scsi_cmnd private data,
+> updates an overlooked comment, avoids anything like "struct scsi_pointer"
+> and doesn't shadow any local variables.
 
-When storage latency is relatively high, having too many tags available
-can harm the performance of mixed workloads.
-By sharing blk_mq_tags amongst hardware queues, nr_requests can be set
-to the appropriate number of tags for the device.
+Thanks Finn for having written and shared this patch. I will replace the 
+two patches mentioned above as requested.
 
-Signed-off-by: Melanie Plageman <melanieplageman@gmail.com>
----
-As an example, on a 16-core VM coupled with a 1 TiB storage device having a
-combined (VM + disk) max BW of 200 MB/s and IOPS of 5000, configured with 16
-hardware queues and with nr_requests set to 56 and queue_depth set to 15, the
-following fio job description illustrates the benefit of hardware queues sharing
-blk_mq_tags:
-
-[global]
-time_based=1
-ioengine=io_uring
-direct=1
-runtime=60
-
-[read_hogs]
-bs=16k
-iodepth=10000
-rw=randread
-filesize=10G
-numjobs=15
-directory=/mnt/test
-
-[wal]
-bs=8k
-iodepth=3
-filesize=4G
-rw=write
-numjobs=1
-directory=/mnt/test
-
-with hctx_share_tags set, the "wal" job does 271 IOPS, averaging 13120 usec
-completion latency and the "read_hogs" jobs average around 4700 IOPS.
-
-without hctx_share_tags set, the "wal" job does 85 IOPS and averages around
-45308 usec completion latency and the "read_hogs" job average around 4900 IOPS.
-
-Note that reducing nr_requests to a number sufficient to increase WAL IOPS
-results in unacceptably low IOPS for the random reads when only one random read
-job is running.
-
- drivers/scsi/storvsc_drv.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 0ed764bcabab..5048e7fcf959 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1997,6 +1997,7 @@ static struct scsi_host_template scsi_driver = {
- 	.track_queue_depth =	1,
- 	.change_queue_depth =	storvsc_change_queue_depth,
- 	.per_device_tag_set =	1,
-+	.hctx_share_tags = 1,
- };
- 
- enum {
--- 
-2.25.1
-
+Bart.
