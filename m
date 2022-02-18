@@ -2,51 +2,56 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 075E2C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 19:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9010C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 19:51:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238126AbiBRTvy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Feb 2022 14:51:54 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51200 "EHLO
+        id S238265AbiBRTwJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Feb 2022 14:52:09 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238084AbiBRTvs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 14:51:48 -0500
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 212F5D7E
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:51:31 -0800 (PST)
-Received: by mail-pg1-f178.google.com with SMTP id h125so8747767pgc.3
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:51:31 -0800 (PST)
+        with ESMTP id S238280AbiBRTwG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 14:52:06 -0500
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E916291FA5
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:51:42 -0800 (PST)
+Received: by mail-pj1-f49.google.com with SMTP id om7so9449995pjb.5
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:51:42 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=KnYVhSEwp8HZrTUijCkGbfKURzm28Jjo+1PjtXRA8Y8=;
-        b=BHyfku+kHD6dFxjplTQf1Sit1O9zdtYR/eTnQPoyToqieUUAbhQIuKDX0nayuXLjpi
-         9xq6PnQSG4L2j3tpoSrbIOf4Oa/GBQggYFiKtRw938my5NtXahdhipIjEWO8C/m5H/IJ
-         ruLzfvuh8S3DEroRDr6Mfe/I0fLHzwrvXxV93h0TPHVTICmqnTnSji8PvBf7BZE6qIKc
-         wczhGhKPBbgBJVzjMSqS7Ex7EjsEZ5pwYfvnoRVicVMxPF2tJjh/rewmQVLmorwjIkIJ
-         Y0NqHWNclA6i1zvWAzu61Pa3Zsgy/t+cc2TgkYGoQBmmkXiOg7Je/zVMWIrXw+XAP3Rf
-         UmuQ==
-X-Gm-Message-State: AOAM532W7ve2Fgi5GScVGHiqI6zAEKrEiC1nOxbKG5qlzMETdGDMcJaU
-        ybP/Rpe5O0OfuovhI48nwoxaskykhg/0vw==
-X-Google-Smtp-Source: ABdhPJxBPwuoZAX9Ze0c8xa5QVMHDp2PGmlE1wyqM1b1yV7UFZG5Lroa1+S1/qxQq3T9kAbUHllvHA==
-X-Received: by 2002:a05:6a00:815:b0:4c0:2388:73c6 with SMTP id m21-20020a056a00081500b004c0238873c6mr9149899pfk.69.1645213890543;
-        Fri, 18 Feb 2022 11:51:30 -0800 (PST)
+        bh=jMeDqllGrrV3FbKNEHoPaxGteEcY2XkYj7IhwAA65+w=;
+        b=B5dtfw5ovbMUPJuO9z0rZyP1hjiAxFa0fB6FjNd+H5r/yYO/fn5zTnqvWLDngaGlaW
+         YwJoSC97RAjmsXKbeJLaHjqJhzPn12+308tgpIS/T9Hmcm+r+SOd9YHIGV7YHIitt/jo
+         46pnhA7qGVladeKfmrMQMcxnqjZJG/aje3q3Q3C2V8HS4CSmsmAEQhkaJ/h5rgU4xc0k
+         2Um8aX0Qww9ctH6poWO+Rhm+fFCOeg/MfokUMCxHfgSapjglT1EPWiHeazZrReANR0/S
+         3DmVTkMwY4IHu8ToKjZlExmiXf/eENo49NfYd6T4walIiWxsxZdR9Atd4xJCyYdwucwk
+         2DCg==
+X-Gm-Message-State: AOAM533k6yBG09NietUYm6UoP/j4GgOED8nYlYgME6e/YqBRVNhfQZhu
+        P+C+bRklHemwYK02bQo9uJU=
+X-Google-Smtp-Source: ABdhPJytvhgofN2IgBKAyPMOdbGITyJg5oSkylTX23uwBdyv11eQ/XKt+oGEgEf9G/wfitSEKYbLew==
+X-Received: by 2002:a17:902:d202:b0:14e:f6b4:aa0f with SMTP id t2-20020a170902d20200b0014ef6b4aa0fmr8744106ply.104.1645213901692;
+        Fri, 18 Feb 2022 11:51:41 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id e15sm3930523pfv.104.2022.02.18.11.51.28
+        by smtp.gmail.com with ESMTPSA id e15sm3930523pfv.104.2022.02.18.11.51.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Feb 2022 11:51:29 -0800 (PST)
+        Fri, 18 Feb 2022 11:51:40 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        John Garry <john.garry@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v5 04/49] scsi: nsp_cs: Change the return type of two functions into 'void'
-Date:   Fri, 18 Feb 2022 11:50:32 -0800
-Message-Id: <20220218195117.25689-5-bvanassche@acm.org>
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Finn Thain <fthain@linux-m68k.org>,
+        Hannes Reinecke <hare@suse.de>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Hannes Reinecke <hare@suse.com>,
+        Ondrej Zary <linux@rainbow-software.org>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Russell King <linux@armlinux.org.uk>
+Subject: [PATCH v5 07/49] scsi: NCR5380: Remove the NCR5380_CMD_SIZE macro
+Date:   Fri, 18 Feb 2022 11:50:35 -0800
+Message-Id: <20220218195117.25689-8-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220218195117.25689-1-bvanassche@acm.org>
 References: <20220218195117.25689-1-bvanassche@acm.org>
@@ -56,101 +61,130 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-nsp_reselected() and nsphw_init() always return TRUE. Change the return type
-of these functions into 'void'.
+This makes it easier to find users of the NCR5380_cmd data structure with
+'grep'.
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Cc: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Cc: John Garry <john.garry@huawei.com>
+Acked-by: Finn Thain <fthain@linux-m68k.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Cc: Finn Thain <fthain@telegraphics.com.au>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Ondrej Zary <linux@rainbow-software.org>
+Cc: Michael Schmitz <schmitzmic@gmail.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/pcmcia/nsp_cs.c | 17 +++++------------
- drivers/scsi/pcmcia/nsp_cs.h |  4 ++--
- 2 files changed, 7 insertions(+), 14 deletions(-)
+ drivers/scsi/NCR5380.h      | 2 --
+ drivers/scsi/arm/cumana_1.c | 2 +-
+ drivers/scsi/arm/oak.c      | 2 +-
+ drivers/scsi/atari_scsi.c   | 2 +-
+ drivers/scsi/dmx3191d.c     | 2 +-
+ drivers/scsi/g_NCR5380.c    | 2 +-
+ drivers/scsi/mac_scsi.c     | 2 +-
+ drivers/scsi/sun3_scsi.c    | 2 +-
+ 8 files changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index 92c818a8a84a..a5c2dd7ebc16 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -298,7 +298,7 @@ static void nsphw_init_sync(nsp_hw_data *data)
- /*
-  * Initialize Ninja hardware
-  */
--static int nsphw_init(nsp_hw_data *data)
-+static void nsphw_init(nsp_hw_data *data)
- {
- 	unsigned int base     = data->BaseAddress;
+diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
+index 8a3b41932288..845bd2423e66 100644
+--- a/drivers/scsi/NCR5380.h
++++ b/drivers/scsi/NCR5380.h
+@@ -230,8 +230,6 @@ struct NCR5380_cmd {
+ 	struct list_head list;
+ };
  
-@@ -349,8 +349,6 @@ static int nsphw_init(nsp_hw_data *data)
- 	nsp_write(base,	      IRQCONTROL,   IRQCONTROL_ALLCLEAR);
- 
- 	nsp_setup_fifo(data, FALSE);
+-#define NCR5380_CMD_SIZE		(sizeof(struct NCR5380_cmd))
 -
--	return TRUE;
- }
+ #define NCR5380_PIO_CHUNK_SIZE		256
  
- /*
-@@ -643,7 +641,7 @@ static int nsp_dataphase_bypass(struct scsi_cmnd *SCpnt)
- /*
-  * accept reselection
-  */
--static int nsp_reselected(struct scsi_cmnd *SCpnt)
-+static void nsp_reselected(struct scsi_cmnd *SCpnt)
- {
- 	unsigned int  base    = SCpnt->device->host->io_port;
- 	unsigned int  host_id = SCpnt->device->host->this_id;
-@@ -675,8 +673,6 @@ static int nsp_reselected(struct scsi_cmnd *SCpnt)
- 	bus_reg = nsp_index_read(base, SCSIBUSCTRL) & ~(SCSI_BSY | SCSI_ATN);
- 	nsp_index_write(base, SCSIBUSCTRL, bus_reg);
- 	nsp_index_write(base, SCSIBUSCTRL, bus_reg | AUTODIRECTION | ACKENB);
--
--	return TRUE;
- }
+ /* Time limit (ms) to poll registers when IRQs are disabled, e.g. during PDMA */
+diff --git a/drivers/scsi/arm/cumana_1.c b/drivers/scsi/arm/cumana_1.c
+index 3fd944374631..5d4f67ba74c0 100644
+--- a/drivers/scsi/arm/cumana_1.c
++++ b/drivers/scsi/arm/cumana_1.c
+@@ -223,7 +223,7 @@ static struct scsi_host_template cumanascsi_template = {
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= 2,
+ 	.proc_name		= "CumanaSCSI-1",
+-	.cmd_size		= NCR5380_CMD_SIZE,
++	.cmd_size		= sizeof(struct NCR5380_cmd),
+ 	.max_sectors		= 128,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+ };
+diff --git a/drivers/scsi/arm/oak.c b/drivers/scsi/arm/oak.c
+index 78f33d57c3e8..f18a0620c808 100644
+--- a/drivers/scsi/arm/oak.c
++++ b/drivers/scsi/arm/oak.c
+@@ -113,7 +113,7 @@ static struct scsi_host_template oakscsi_template = {
+ 	.cmd_per_lun		= 2,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+ 	.proc_name		= "oakscsi",
+-	.cmd_size		= NCR5380_CMD_SIZE,
++	.cmd_size		= sizeof(struct NCR5380_cmd),
+ 	.max_sectors		= 128,
+ };
  
- /*
-@@ -1057,9 +1053,8 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 		if (irq_phase & RESELECT_IRQ) {
- 			nsp_dbg(NSP_DEBUG_INTR, "reselect");
- 			nsp_write(base, IRQCONTROL, IRQCONTROL_RESELECT_CLEAR);
--			if (nsp_reselected(tmpSC) != FALSE) {
--				return IRQ_HANDLED;
--			}
-+			nsp_reselected(tmpSC);
-+			return IRQ_HANDLED;
- 		}
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index 95d7a3586083..e9d0d99abc86 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -711,7 +711,7 @@ static struct scsi_host_template atari_scsi_template = {
+ 	.this_id		= 7,
+ 	.cmd_per_lun		= 2,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+-	.cmd_size		= NCR5380_CMD_SIZE,
++	.cmd_size		= sizeof(struct NCR5380_cmd),
+ };
  
- 		if ((irq_phase & (PHASE_CHANGE_IRQ | LATCHED_BUS_FREE)) == 0) {
-@@ -1614,9 +1609,7 @@ static int nsp_cs_config(struct pcmcia_device *link)
- 	nsp_dbg(NSP_DEBUG_INIT, "I/O[0x%x+0x%x] IRQ %d",
- 		data->BaseAddress, data->NumAddress, data->IrqNumber);
+ static int __init atari_scsi_probe(struct platform_device *pdev)
+diff --git a/drivers/scsi/dmx3191d.c b/drivers/scsi/dmx3191d.c
+index 6df60b31ecb0..a171ce6b70b2 100644
+--- a/drivers/scsi/dmx3191d.c
++++ b/drivers/scsi/dmx3191d.c
+@@ -52,7 +52,7 @@ static struct scsi_host_template dmx3191d_driver_template = {
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= 2,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+-	.cmd_size		= NCR5380_CMD_SIZE,
++	.cmd_size		= sizeof(struct NCR5380_cmd),
+ };
  
--	if(nsphw_init(data) == FALSE) {
--		goto cs_failed;
--	}
-+	nsphw_init(data);
+ static int dmx3191d_probe_one(struct pci_dev *pdev,
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index 7ba3c9312731..5923f86a384e 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -702,7 +702,7 @@ static struct scsi_host_template driver_template = {
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= 2,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+-	.cmd_size		= NCR5380_CMD_SIZE,
++	.cmd_size		= sizeof(struct NCR5380_cmd),
+ 	.max_sectors		= 128,
+ };
  
- 	host = nsp_detect(&nsp_driver_template);
+diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
+index 5c808fbc6ce2..71d493a0bb43 100644
+--- a/drivers/scsi/mac_scsi.c
++++ b/drivers/scsi/mac_scsi.c
+@@ -434,7 +434,7 @@ static struct scsi_host_template mac_scsi_template = {
+ 	.sg_tablesize		= 1,
+ 	.cmd_per_lun		= 2,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+-	.cmd_size		= NCR5380_CMD_SIZE,
++	.cmd_size		= sizeof(struct NCR5380_cmd),
+ 	.max_sectors		= 128,
+ };
  
-diff --git a/drivers/scsi/pcmcia/nsp_cs.h b/drivers/scsi/pcmcia/nsp_cs.h
-index 665bf8d0faf7..94c1f6c7c601 100644
---- a/drivers/scsi/pcmcia/nsp_cs.h
-+++ b/drivers/scsi/pcmcia/nsp_cs.h
-@@ -304,7 +304,7 @@ static int nsp_eh_host_reset   (struct scsi_cmnd *SCpnt);
- static int nsp_bus_reset       (nsp_hw_data *data);
+diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+index f7f724a3ff1d..82a253270c3b 100644
+--- a/drivers/scsi/sun3_scsi.c
++++ b/drivers/scsi/sun3_scsi.c
+@@ -505,7 +505,7 @@ static struct scsi_host_template sun3_scsi_template = {
+ 	.sg_tablesize		= 1,
+ 	.cmd_per_lun		= 2,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+-	.cmd_size		= NCR5380_CMD_SIZE,
++	.cmd_size		= sizeof(struct NCR5380_cmd),
+ };
  
- /* */
--static int  nsphw_init           (nsp_hw_data *data);
-+static void nsphw_init           (nsp_hw_data *data);
- static int  nsphw_start_selection(struct scsi_cmnd *SCpnt);
- static void nsp_start_timer      (struct scsi_cmnd *SCpnt, int time);
- static int  nsp_fifo_count       (struct scsi_cmnd *SCpnt);
-@@ -320,7 +320,7 @@ static int  nsp_expect_signal    (struct scsi_cmnd *SCpnt,
- 				  unsigned char  mask);
- static int  nsp_xfer             (struct scsi_cmnd *SCpnt, int phase);
- static int  nsp_dataphase_bypass (struct scsi_cmnd *SCpnt);
--static int  nsp_reselected       (struct scsi_cmnd *SCpnt);
-+static void nsp_reselected       (struct scsi_cmnd *SCpnt);
- static struct Scsi_Host *nsp_detect(struct scsi_host_template *sht);
- 
- /* Interrupt handler */
+ static int __init sun3_scsi_probe(struct platform_device *pdev)
