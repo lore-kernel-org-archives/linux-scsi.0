@@ -2,172 +2,203 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE2B0C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 17:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1EEFC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 18:42:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238778AbiBRRze (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Feb 2022 12:55:34 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51606 "EHLO
+        id S239348AbiBRSmm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Feb 2022 13:42:42 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:52102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238779AbiBRRzc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 12:55:32 -0500
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1F8249694
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 09:55:15 -0800 (PST)
-Received: by mail-pl1-x634.google.com with SMTP id l8so7751639pls.7
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 09:55:15 -0800 (PST)
+        with ESMTP id S234252AbiBRSml (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 13:42:41 -0500
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 146F043EDA;
+        Fri, 18 Feb 2022 10:42:24 -0800 (PST)
+Received: by mail-pj1-x1034.google.com with SMTP id v13-20020a17090ac90d00b001b87bc106bdso13092620pjt.4;
+        Fri, 18 Feb 2022 10:42:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=/Y25QePgUHs8nIW8fW4Am6XIlyOdRRLMntnfpkezVmo=;
-        b=T/l7yDDl7yON7yYnWLT8L+sXdjWd36aDBoFrecnsI4YEK6mWQToHnMtoZJwKZUa7x3
-         EHKsG4dqsmqwaShPyJXCJet9rcuS23Mxq41hGc0g7IWZROjephlNUqmv7Eat4X5YELu3
-         W7TVg6YkPcNqCLcJuoaWpuD3mWLh++ZQgzMro=
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Nnqs2i3CbIkQ3bVMxoGrLeUx3g6Lb79sXLNwOk6juzs=;
+        b=Phel3WU2HisZwY9XcLTeu/3s6bfaogdNaZMw3cFp4poK89Xk4YikVwxrutvHeHpHOh
+         Ccn5rX/WDSj03d49PnBE0GDHq145T9nvGaVqGxowpj2SHqUxfDiJwJHeHL114xg4lSux
+         z3iDMh4UCS0cSR4aoSWD1dgr6ydfD5GgP7GS2nGV7A/7uzXVIUMq0HQmP1l4ElOYyO74
+         5gAbfdqjjQcajf4voIeEsb/krvVft8gb9h5iKX+KE0ETK2SysAkeALVHASpf5dN3Zwri
+         aGugr/TycPBhZiKkCryRooTQuOOejpBz31mUeHfuEbHA7+tlgQ6YEJgksyQUu4BxvYdg
+         eX9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=/Y25QePgUHs8nIW8fW4Am6XIlyOdRRLMntnfpkezVmo=;
-        b=ZBIdmvUv6daPABMqo9FixT6+6nShRKMQF7UJ39G3khsnVSTy7IHK5jcVAXIPKhb+Qt
-         3BKjspL/nvp8nRfgBbZR0/QEpOtVw3yHCQcWtbgG1Qk1+4hcaURzLNfQXkq2mHoMf1Gm
-         YUh4O92nwky4uy64uEuhP1O0XM9eM4YAM/AmA9MhsaGSA3/WUgoIfuLp+/i2O7RiKT/S
-         Ymnp3TuNS1jsK14/+RDznXelO3IJkyMZGedV729B1ouqr2fHVF9N6NyoN/XofEiG+RYL
-         k+K11MnrajkYbA6XCCQDdD5Ey+2ei+x+XClXKNO5RNlaMTFQlMKGyz5TqONuO2BirEht
-         J0Ng==
-X-Gm-Message-State: AOAM530crx6/pjt+gnrGKyuzedWVFeBakiuubAWxqM5RWN+jW0oyfBKF
-        HlSYHJDXSleFrmE2SQNYmTPpe73vMOy/ccPv79RCR59AhOyfl9oXEgbwZfSZr64YNUPXVRcjfS3
-        iqMwAkOf9e1CVeq4lu91dSec+tu188Zx5tFpBTZXXxN3BBkdAEJ205MHSk/x4tx3NP+fQJ6aY25
-        ASWZWliX1tf8w=
-X-Google-Smtp-Source: ABdhPJxOWwecHX3Y5qJ1XXeZ7ike6j0XmG9A+WQ0A8gdwSbblUI3vLNE5Y5hz3GgtYKX8dyXYU5LPQ==
-X-Received: by 2002:a17:902:f243:b0:14d:7f7d:6c6b with SMTP id j3-20020a170902f24300b0014d7f7d6c6bmr8570704plc.76.1645206914898;
-        Fri, 18 Feb 2022 09:55:14 -0800 (PST)
-Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id f16sm3948654pfc.110.2022.02.18.09.55.12
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Nnqs2i3CbIkQ3bVMxoGrLeUx3g6Lb79sXLNwOk6juzs=;
+        b=bISRTv/RD1nYdLBaqn2jnzG4rTOYx9+LTriP2vEUJw/HShdg+4XlCanPvsJ+WdTwrl
+         mp6fgsrS+5WvNB17CYFtx0xZJUgfdS5T/9Rd6n4LZHhqt8weGOX9XCscE/hHnMGHcFqj
+         WiXd79uMof0bEAwjrwpIUaQpGOXOOXQOWiaBu9AQpYkTfzcKq66yzCuQqjyM8TfZSw6M
+         IMkQ7/PtrQNo5APe3y06o10kOE0G63jWbNoDRMTbE93lEaYKGvV7lo6nxVl59J521vzT
+         Fbo2SPDGzy6aa/05XUti0x/7UUSX3lzf62eEeV+JIzdDq0o4G95rxc5JJiwAdnHeFpRT
+         22+g==
+X-Gm-Message-State: AOAM532jm80VelhS/jzdpws+Xsx8hKsStBdcw4xy6Alz1cAQaN1wib3/
+        /OMFjS4dwNhcTeCBcbFu6no=
+X-Google-Smtp-Source: ABdhPJzeSsANWmrSK4KLIsv7Vg+I8RcsUoH5th+/D8fOdaSN6gdAokqYefCoEvMQma/L/jFYS34KUg==
+X-Received: by 2002:a17:90b:388d:b0:1b9:950c:f08b with SMTP id mu13-20020a17090b388d00b001b9950cf08bmr13986149pjb.49.1645209743466;
+        Fri, 18 Feb 2022 10:42:23 -0800 (PST)
+Received: from vm-111.3frfxmc3btcupaqenzdpat1uec.xx.internal.cloudapp.net ([13.77.171.140])
+        by smtp.gmail.com with ESMTPSA id m17-20020a17090ab79100b001b89fd7e298sm130132pjr.4.2022.02.18.10.42.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Feb 2022 09:55:13 -0800 (PST)
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH] mpi3mr: Fix flushing !WQ_MEM_RECLAIM events warning
-Date:   Fri, 18 Feb 2022 23:35:15 +0530
-Message-Id: <20220218180515.27455-1-sreekanth.reddy@broadcom.com>
-X-Mailer: git-send-email 2.27.0
+        Fri, 18 Feb 2022 10:42:23 -0800 (PST)
+From:   "Melanie Plageman (Microsoft)" <melanieplageman@gmail.com>
+To:     mikelley@microsoft.com, jejb@linux.ibm.com, kys@microsoft.com,
+        martin.petersen@oracle.com, mst@redhat.com,
+        benh@kernel.crashing.org, decui@microsoft.com,
+        don.brace@microchip.com, R-QLogic-Storage-Upstream@marvell.com,
+        haiyangz@microsoft.com, jasowang@redhat.com, john.garry@huawei.com,
+        kashyap.desai@broadcom.com, mpe@ellerman.id.au,
+        njavali@marvell.com, pbonzini@redhat.com, paulus@samba.org,
+        sathya.prakash@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com,
+        sreekanth.reddy@broadcom.com, stefanha@redhat.com,
+        sthemmin@microsoft.com, suganath-prabu.subramani@broadcom.com,
+        sumit.saxena@broadcom.com, tyreld@linux.ibm.com,
+        wei.liu@kernel.org, linuxppc-dev@lists.ozlabs.org,
+        megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+        storagedev@microchip.com,
+        virtualization@lists.linux-foundation.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
+Cc:     andres@anarazel.de
+Subject: [PATCH RFC v1 0/5] Add SCSI per device tagsets
+Date:   Fri, 18 Feb 2022 18:41:52 +0000
+Message-Id: <20220218184157.176457-1-melanieplageman@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000c652ba05d84e95e8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000c652ba05d84e95e8
-Content-Transfer-Encoding: 8bit
+Currently a single blk_mq_tag_set is associated with a Scsi_Host. When SCSI
+controllers are limited, attaching multiple devices to the same controller is
+required. In cloud environments with relatively high latency persistent storage,
+requiring all devices on a controller to share a single blk_mq_tag_set
+negatively impacts performance.
 
-Fix below warning by not allocating driver's event handling
-worker queue with WQ_MEM_RECLAIM flag enabled.
+For example: a device provisioned with high IOPS and BW limits on the same
+controller as a smaller and slower device can starve the slower device of tags.
+This is especially noticeable when the slower device's workload has low I/O
+depth tasks.
+A common configuration for a journaling database application would be to
+configure all I/O except journaling writes to target one device and target the
+journaling writes to another device. This can decrease transaction commit
+latency and improve performance. However, an I/O-bound database workload, for
+example one with a large number of random reads on the device with high
+provisioned IOPS, can consume all of the tags in the Scsi_Host tag set,
+resulting in poor overall performance as the journaling writes experience high
+latency.
 
-workqueue: WQ_MEM_RECLAIM
-mpi3mr_fwevt_worker [mpi3mr] is flushing !WQ_MEM_RECLAIM events
+Given a 16-core VM with two devices attached to the same controller, the first
+with a combined (VM + disk) provisioned bandwidth of 750 MBps and 18000 IOPS
+mounted at /mnt/big_device and the second with a combined provisioned bandwidth
+of 170 MBps and 3500 IOPS mounted at /mnt/small_device:
 
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
----
- drivers/scsi/mpi3mr/mpi3mr_os.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The following fio job description demonstrates the benefit of per device tag
+sets:
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 68f874b38de8..f7cd70a15ea6 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -4308,7 +4308,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	snprintf(mrioc->fwevt_worker_name, sizeof(mrioc->fwevt_worker_name),
- 	    "%s%d_fwevt_wrkr", mrioc->driver_name, mrioc->id);
- 	mrioc->fwevt_worker_thread = alloc_ordered_workqueue(
--	    mrioc->fwevt_worker_name, WQ_MEM_RECLAIM);
-+	    mrioc->fwevt_worker_name, 0);
- 	if (!mrioc->fwevt_worker_thread) {
- 		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
- 		    __FILE__, __LINE__, __func__);
+[global]
+time_based=1
+ioengine=io_uring
+direct=1
+runtime=1000
+
+[read_hogs]
+bs=16k
+iodepth=10000
+rw=randread
+filesize=10G
+numjobs=32
+directory=/mnt/big_device
+
+[wal]
+bs=8k
+iodepth=3
+filesize=4G
+rw=write
+numjobs=1
+directory=/mnt/small_device
+
+Also note that for this example I have configured:
+small device LUN queue depth: 10
+large device LUN queue depth: 70
+nr_hw_queues: 1
+nr_requests: 170
+
+On master, the sequential write job averages around 5 MBps. The random reads hit
+the provisioned IOPS on both master and with the patch. With the patch for per
+device tag sets, the sequential write job averages 29 MBps -- the same as this
+job running alone on the VM.
+
+Open questions and TODOs:
+
+The following open items are for the "Add per device tag sets" patch:
+
+- show_nr_hw_queues() does not work in this implementation. I wasn't
+  sure how to access the scsi_device to get the blk_mq_tag_set. I also
+  assume there are other sysfs changes that need to be made but I wasn't
+  sure which.
+
+- scsi_host_busy(): I've modified scsi_host_busy() such that, when device
+  tag sets are in use, its remaining callers will iterate over all the
+  attached devices and check their associated blk_mq_tag_sets. I don't
+  know if this is the correct thing to do.
+
+  What does the concept of the host being busy mean with device tag
+  sets? Does it depend on the caller and the context? Should this form a
+  new concept of scsi device busy?
+
+  Also, could this cause deadlocks since this iteration requires the
+  host_lock?
+
+  I assume that there still needs to be a concept of host failed
+  (Scsi_Host->host_failed) even with device tag sets because if all of
+  the inflight requests for a host have failed, then something is
+  probably wrong with the controller?
+
+- scsi_host_queue_ready(): I've modified scsi_host_queue_ready() such
+  that, when device tag sets are in use, it will only check the device
+  tag set when determining starvation. It seemed to me that if a request
+  can only acquire a tag from its target device's tag set, then it
+  doesn't matter if other tag sets on the host have available tags.
+
+Melanie Plageman (Microsoft) (5):
+  scsi: core: Rename host_tagset to hctx_share_tags
+  scsi: map_queues() takes tag set instead of host
+  scsi: core: Add per device tag sets
+  scsi: storvsc: use per device tag sets
+  scsi: storvsc: Hardware queues share blk_mq_tags
+
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c    |  7 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    |  7 +-
+ drivers/scsi/hosts.c                      | 32 ++++++---
+ drivers/scsi/ibmvscsi/ibmvfc.c            |  2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c |  8 ++-
+ drivers/scsi/mpi3mr/mpi3mr_os.c           |  4 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c       |  6 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  9 +--
+ drivers/scsi/qla2xxx/qla_os.c             |  7 +-
+ drivers/scsi/scsi_debug.c                 |  7 +-
+ drivers/scsi/scsi_lib.c                   | 30 +++++---
+ drivers/scsi/scsi_priv.h                  |  2 +-
+ drivers/scsi/scsi_scan.c                  | 30 ++++++--
+ drivers/scsi/scsi_sysfs.c                 | 11 ++-
+ drivers/scsi/smartpqi/smartpqi_init.c     |  7 +-
+ drivers/scsi/storvsc_drv.c                | 86 +++++++++++++++++++++--
+ drivers/scsi/virtio_scsi.c                |  5 +-
+ include/scsi/scsi_device.h                |  1 +
+ include/scsi/scsi_host.h                  | 53 ++++++++++++--
+ include/scsi/scsi_tcq.h                   | 15 ++--
+ 20 files changed, 258 insertions(+), 71 deletions(-)
+
 -- 
-2.27.0
+2.25.1
 
-
---000000000000c652ba05d84e95e8
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-5AGo2E3pe+2yEgkxKvM2fnniZHUiSjbrfKk6nl9RIXPOKUP5HntZFdA5XuNYXWM+HPs3O0AJwBm/
-VCZsZtkjVjxeBmTXiXDnxytdsHdGrHGymPfjJYatDu6d1KRVDlMCAwEAAaOCAd0wggHZMA4GA1Ud
-DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
-Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
-BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
-YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
-Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
-aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
-JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
-BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUClVHbAvhzGT8
-s2/6xOf58NkGMQ8wDQYJKoZIhvcNAQELBQADggEBAENRsP1H3calKC2Sstg/8li8byKiqljCFkfi
-IhcJsjPOOR9UZnMFxAoH/s2AlM7mQDR7rZ2MxRuUnIa6Cp5W5w1lUJHktjCUHnQq5nIAZ9GH5SDY
-pgzbFsoYX8U2QCmkAC023FF++ZDJuc9aj0R/nhABxmUYErIze2jV/VO8Pj7TnCrBONZ/Qvf8G5CQ
-X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
-eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
-Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
-MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEII5jvfmgfHkLRnvC0QYr
-PrT9WmVhv5cU0BB9Yy27A9Y4MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDIxODE3NTUxNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
-BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC2gJVQ2bwbTTXHNmg343rgZQTeC/ataDM1S8z3
-GcZdvJO2iY9PNdzds35gOyukQynVyeN1zWvB3q16DK4xNCl6bImLB9rxdX8rf4FwrWi/0CMKjNev
-9gMbWmrhwFlsirHkJIDkmSoAyPTrV1NR8BPe+esmFFt8B/xSwZlNy407EAA4qikA348l7rWdD2CV
-id/1GWlHafMWeh42CYL2kZblbeTAblT4JxN5je9FnMewrSK8/3LjXtOKJ55OZ8TzQ834JjgtmfMV
-pgPfY7zYnWU8/WhgySC4cnij0AXI6zuzHx+ncv1s0yp2jR1BMAA5Rv+mX5ebVuUqyqwZewODZu0O
---000000000000c652ba05d84e95e8--
