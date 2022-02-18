@@ -2,56 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9010C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 19:51:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA575C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 19:51:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238265AbiBRTwJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Feb 2022 14:52:09 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51654 "EHLO
+        id S238084AbiBRTwH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Feb 2022 14:52:07 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238280AbiBRTwG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 14:52:06 -0500
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E916291FA5
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:51:42 -0800 (PST)
-Received: by mail-pj1-f49.google.com with SMTP id om7so9449995pjb.5
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:51:42 -0800 (PST)
+        with ESMTP id S238121AbiBRTvu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 14:51:50 -0500
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A4CE237FC
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:51:33 -0800 (PST)
+Received: by mail-pl1-f173.google.com with SMTP id 10so7987758plj.1
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:51:33 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=jMeDqllGrrV3FbKNEHoPaxGteEcY2XkYj7IhwAA65+w=;
-        b=B5dtfw5ovbMUPJuO9z0rZyP1hjiAxFa0fB6FjNd+H5r/yYO/fn5zTnqvWLDngaGlaW
-         YwJoSC97RAjmsXKbeJLaHjqJhzPn12+308tgpIS/T9Hmcm+r+SOd9YHIGV7YHIitt/jo
-         46pnhA7qGVladeKfmrMQMcxnqjZJG/aje3q3Q3C2V8HS4CSmsmAEQhkaJ/h5rgU4xc0k
-         2Um8aX0Qww9ctH6poWO+Rhm+fFCOeg/MfokUMCxHfgSapjglT1EPWiHeazZrReANR0/S
-         3DmVTkMwY4IHu8ToKjZlExmiXf/eENo49NfYd6T4walIiWxsxZdR9Atd4xJCyYdwucwk
-         2DCg==
-X-Gm-Message-State: AOAM533k6yBG09NietUYm6UoP/j4GgOED8nYlYgME6e/YqBRVNhfQZhu
-        P+C+bRklHemwYK02bQo9uJU=
-X-Google-Smtp-Source: ABdhPJytvhgofN2IgBKAyPMOdbGITyJg5oSkylTX23uwBdyv11eQ/XKt+oGEgEf9G/wfitSEKYbLew==
-X-Received: by 2002:a17:902:d202:b0:14e:f6b4:aa0f with SMTP id t2-20020a170902d20200b0014ef6b4aa0fmr8744106ply.104.1645213901692;
-        Fri, 18 Feb 2022 11:51:41 -0800 (PST)
+        bh=VTQFdYWzbePqO2QX4ieGC0QWMP0O+/4m+up6UMV8PjI=;
+        b=ogW34cgYktPPEnEfKb1zv1TXbNCWsbiKpcd7bn8Ps64yIWzYbabE1dVH/X0ufJ6oms
+         w98TBGCJzld0CUPla44TbRACrNZp5NTYO8DglS2EGhum9iJzBkOZaeAOVYLJk/t4b0hN
+         UILR5vLXFUX3QBtgkedUzmt1FYEKJSIEoKt+imzUoZ/omLCl1OtKR5LVvv4n3/scf71+
+         nVjxcmITcugmD0FfrmZ46dfFZE4lfxov0cHHxWczFH9FMtpZY2NHxivin5hrTmAdADjE
+         wI1cBnLAvWuYsYLoqgGBPhbRoSJ7PkgpQinXEjkJNDAdllGeFXRi8Lq5Khe1aiAAxy3B
+         H8XA==
+X-Gm-Message-State: AOAM532WkflXWJ5DFdzyv9PjaZUMF3unL/L6x818xJ55Q8yktaa631AD
+        OTjn0LTKwVXhTVb8Ab3ow+4=
+X-Google-Smtp-Source: ABdhPJwYcYQEiXf3V6YLW4zBfdOIB9RMVMfQ201S69LhE9y1vX+UjOlpC7dDeDRiv4pFv/SB8fT28w==
+X-Received: by 2002:a17:90a:aa83:b0:1b9:7c62:61e5 with SMTP id l3-20020a17090aaa8300b001b97c6261e5mr10007853pjq.118.1645213892361;
+        Fri, 18 Feb 2022 11:51:32 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id e15sm3930523pfv.104.2022.02.18.11.51.39
+        by smtp.gmail.com with ESMTPSA id e15sm3930523pfv.104.2022.02.18.11.51.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Feb 2022 11:51:40 -0800 (PST)
+        Fri, 18 Feb 2022 11:51:31 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Finn Thain <fthain@linux-m68k.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Finn Thain <fthain@telegraphics.com.au>,
         Hannes Reinecke <hare@suse.com>,
-        Ondrej Zary <linux@rainbow-software.org>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Russell King <linux@armlinux.org.uk>
-Subject: [PATCH v5 07/49] scsi: NCR5380: Remove the NCR5380_CMD_SIZE macro
-Date:   Fri, 18 Feb 2022 11:50:35 -0800
-Message-Id: <20220218195117.25689-8-bvanassche@acm.org>
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        John Garry <john.garry@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH v5 05/49] scsi: nsp_cs: Use true and false instead of TRUE and FALSE
+Date:   Fri, 18 Feb 2022 11:50:33 -0800
+Message-Id: <20220218195117.25689-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220218195117.25689-1-bvanassche@acm.org>
 References: <20220218195117.25689-1-bvanassche@acm.org>
@@ -61,130 +56,147 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This makes it easier to find users of the NCR5380_cmd data structure with
-'grep'.
+This patch prepares for removal of the drivers/scsi/scsi.h header file. That
+header file defines the 'TRUE' and 'FALSE' constants.
 
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Acked-by: Finn Thain <fthain@linux-m68k.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Cc: Finn Thain <fthain@telegraphics.com.au>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Ondrej Zary <linux@rainbow-software.org>
-Cc: Michael Schmitz <schmitzmic@gmail.com>
+Cc: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc: John Garry <john.garry@huawei.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/NCR5380.h      | 2 --
- drivers/scsi/arm/cumana_1.c | 2 +-
- drivers/scsi/arm/oak.c      | 2 +-
- drivers/scsi/atari_scsi.c   | 2 +-
- drivers/scsi/dmx3191d.c     | 2 +-
- drivers/scsi/g_NCR5380.c    | 2 +-
- drivers/scsi/mac_scsi.c     | 2 +-
- drivers/scsi/sun3_scsi.c    | 2 +-
- 8 files changed, 7 insertions(+), 9 deletions(-)
+ drivers/scsi/pcmcia/nsp_cs.c | 26 +++++++++++++-------------
+ drivers/scsi/pcmcia/nsp_cs.h |  2 +-
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
-index 8a3b41932288..845bd2423e66 100644
---- a/drivers/scsi/NCR5380.h
-+++ b/drivers/scsi/NCR5380.h
-@@ -230,8 +230,6 @@ struct NCR5380_cmd {
- 	struct list_head list;
- };
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index a5c2dd7ebc16..a78a86511e94 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -243,7 +243,7 @@ static int nsp_queuecommand_lck(struct scsi_cmnd *SCpnt)
+ 		SCpnt->SCp.buffers_residual = 0;
+ 	}
  
--#define NCR5380_CMD_SIZE		(sizeof(struct NCR5380_cmd))
--
- #define NCR5380_PIO_CHUNK_SIZE		256
+-	if (nsphw_start_selection(SCpnt) == FALSE) {
++	if (!nsphw_start_selection(SCpnt)) {
+ 		nsp_dbg(NSP_DEBUG_QUEUECOMMAND, "selection fail");
+ 		SCpnt->result   = DID_BUS_BUSY << 16;
+ 		nsp_scsi_done(SCpnt);
+@@ -263,14 +263,14 @@ static DEF_SCSI_QCMD(nsp_queuecommand)
+ /*
+  * setup PIO FIFO transfer mode and enable/disable to data out
+  */
+-static void nsp_setup_fifo(nsp_hw_data *data, int enabled)
++static void nsp_setup_fifo(nsp_hw_data *data, bool enabled)
+ {
+ 	unsigned int  base = data->BaseAddress;
+ 	unsigned char transfer_mode_reg;
  
- /* Time limit (ms) to poll registers when IRQs are disabled, e.g. during PDMA */
-diff --git a/drivers/scsi/arm/cumana_1.c b/drivers/scsi/arm/cumana_1.c
-index 3fd944374631..5d4f67ba74c0 100644
---- a/drivers/scsi/arm/cumana_1.c
-+++ b/drivers/scsi/arm/cumana_1.c
-@@ -223,7 +223,7 @@ static struct scsi_host_template cumanascsi_template = {
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= 2,
- 	.proc_name		= "CumanaSCSI-1",
--	.cmd_size		= NCR5380_CMD_SIZE,
-+	.cmd_size		= sizeof(struct NCR5380_cmd),
- 	.max_sectors		= 128,
- 	.dma_boundary		= PAGE_SIZE - 1,
- };
-diff --git a/drivers/scsi/arm/oak.c b/drivers/scsi/arm/oak.c
-index 78f33d57c3e8..f18a0620c808 100644
---- a/drivers/scsi/arm/oak.c
-+++ b/drivers/scsi/arm/oak.c
-@@ -113,7 +113,7 @@ static struct scsi_host_template oakscsi_template = {
- 	.cmd_per_lun		= 2,
- 	.dma_boundary		= PAGE_SIZE - 1,
- 	.proc_name		= "oakscsi",
--	.cmd_size		= NCR5380_CMD_SIZE,
-+	.cmd_size		= sizeof(struct NCR5380_cmd),
- 	.max_sectors		= 128,
- };
+ 	//nsp_dbg(NSP_DEBUG_DATA_IO, "enabled=%d", enabled);
  
-diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index 95d7a3586083..e9d0d99abc86 100644
---- a/drivers/scsi/atari_scsi.c
-+++ b/drivers/scsi/atari_scsi.c
-@@ -711,7 +711,7 @@ static struct scsi_host_template atari_scsi_template = {
- 	.this_id		= 7,
- 	.cmd_per_lun		= 2,
- 	.dma_boundary		= PAGE_SIZE - 1,
--	.cmd_size		= NCR5380_CMD_SIZE,
-+	.cmd_size		= sizeof(struct NCR5380_cmd),
- };
+-	if (enabled != FALSE) {
++	if (enabled) {
+ 		transfer_mode_reg = TRANSFER_GO | BRAIND;
+ 	} else {
+ 		transfer_mode_reg = 0;
+@@ -348,13 +348,13 @@ static void nsphw_init(nsp_hw_data *data)
+ 					    SCSI_RESET_IRQ_EI	 );
+ 	nsp_write(base,	      IRQCONTROL,   IRQCONTROL_ALLCLEAR);
  
- static int __init atari_scsi_probe(struct platform_device *pdev)
-diff --git a/drivers/scsi/dmx3191d.c b/drivers/scsi/dmx3191d.c
-index 6df60b31ecb0..a171ce6b70b2 100644
---- a/drivers/scsi/dmx3191d.c
-+++ b/drivers/scsi/dmx3191d.c
-@@ -52,7 +52,7 @@ static struct scsi_host_template dmx3191d_driver_template = {
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= 2,
- 	.dma_boundary		= PAGE_SIZE - 1,
--	.cmd_size		= NCR5380_CMD_SIZE,
-+	.cmd_size		= sizeof(struct NCR5380_cmd),
- };
+-	nsp_setup_fifo(data, FALSE);
++	nsp_setup_fifo(data, false);
+ }
  
- static int dmx3191d_probe_one(struct pci_dev *pdev,
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 7ba3c9312731..5923f86a384e 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -702,7 +702,7 @@ static struct scsi_host_template driver_template = {
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= 2,
- 	.dma_boundary		= PAGE_SIZE - 1,
--	.cmd_size		= NCR5380_CMD_SIZE,
-+	.cmd_size		= sizeof(struct NCR5380_cmd),
- 	.max_sectors		= 128,
- };
+ /*
+  * Start selection phase
+  */
+-static int nsphw_start_selection(struct scsi_cmnd *SCpnt)
++static bool nsphw_start_selection(struct scsi_cmnd *SCpnt)
+ {
+ 	unsigned int  host_id	 = SCpnt->device->host->this_id;
+ 	unsigned int  base	 = SCpnt->device->host->io_port;
+@@ -368,7 +368,7 @@ static int nsphw_start_selection(struct scsi_cmnd *SCpnt)
+ 	phase = nsp_index_read(base, SCSIBUSMON);
+ 	if(phase != BUSMON_BUS_FREE) {
+ 		//nsp_dbg(NSP_DEBUG_RESELECTION, "bus busy");
+-		return FALSE;
++		return false;
+ 	}
  
-diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-index 5c808fbc6ce2..71d493a0bb43 100644
---- a/drivers/scsi/mac_scsi.c
-+++ b/drivers/scsi/mac_scsi.c
-@@ -434,7 +434,7 @@ static struct scsi_host_template mac_scsi_template = {
- 	.sg_tablesize		= 1,
- 	.cmd_per_lun		= 2,
- 	.dma_boundary		= PAGE_SIZE - 1,
--	.cmd_size		= NCR5380_CMD_SIZE,
-+	.cmd_size		= sizeof(struct NCR5380_cmd),
- 	.max_sectors		= 128,
- };
+ 	/* start arbitration */
+@@ -388,7 +388,7 @@ static int nsphw_start_selection(struct scsi_cmnd *SCpnt)
+ 	if (!(arbit & ARBIT_WIN)) {
+ 		//nsp_dbg(NSP_DEBUG_RESELECTION, "arbit fail");
+ 		nsp_index_write(base, SETARBIT, ARBIT_FLAG_CLEAR);
+-		return FALSE;
++		return false;
+ 	}
  
-diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
-index f7f724a3ff1d..82a253270c3b 100644
---- a/drivers/scsi/sun3_scsi.c
-+++ b/drivers/scsi/sun3_scsi.c
-@@ -505,7 +505,7 @@ static struct scsi_host_template sun3_scsi_template = {
- 	.sg_tablesize		= 1,
- 	.cmd_per_lun		= 2,
- 	.dma_boundary		= PAGE_SIZE - 1,
--	.cmd_size		= NCR5380_CMD_SIZE,
-+	.cmd_size		= sizeof(struct NCR5380_cmd),
- };
+ 	/* assert select line */
+@@ -407,7 +407,7 @@ static int nsphw_start_selection(struct scsi_cmnd *SCpnt)
+ 	nsp_start_timer(SCpnt, 1000/51);
+ 	data->SelectionTimeOut = 1;
  
- static int __init sun3_scsi_probe(struct platform_device *pdev)
+-	return TRUE;
++	return true;
+ }
+ 
+ struct nsp_sync_table {
+@@ -477,7 +477,7 @@ static int nsp_analyze_sdtr(struct scsi_cmnd *SCpnt)
+ 		sync->SyncRegister    = 0;
+ 		sync->AckWidth	      = 0;
+ 
+-		return FALSE;
++		return false;
+ 	}
+ 
+ 	sync->SyncRegister    = (sync_table->chip_period << SYNCREG_PERIOD_SHIFT) |
+@@ -486,7 +486,7 @@ static int nsp_analyze_sdtr(struct scsi_cmnd *SCpnt)
+ 
+ 	nsp_dbg(NSP_DEBUG_SYNC, "sync_reg=0x%x, ack_width=0x%x", sync->SyncRegister, sync->AckWidth);
+ 
+-	return TRUE;
++	return true;
+ }
+ 
+ 
+@@ -633,7 +633,7 @@ static int nsp_dataphase_bypass(struct scsi_cmnd *SCpnt)
+ 	nsp_dbg(NSP_DEBUG_DATA_IO, "use bypass quirk");
+ 	SCpnt->SCp.phase = PH_DATA;
+ 	nsp_pio_read(SCpnt);
+-	nsp_setup_fifo(data, FALSE);
++	nsp_setup_fifo(data, false);
+ 
+ 	return 0;
+ }
+@@ -927,7 +927,7 @@ static int nsp_nexus(struct scsi_cmnd *SCpnt)
+ 	}
+ 
+ 	/* setup pdma fifo */
+-	nsp_setup_fifo(data, TRUE);
++	nsp_setup_fifo(data, true);
+ 
+ 	/* clear ack counter */
+  	data->FifoCount = 0;
+@@ -1210,7 +1210,7 @@ static irqreturn_t nspintr(int irq, void *dev_id)
+ 		//*sync_neg = SYNC_NOT_YET;
+ 
+ 		data->MsgLen = i = 0;
+-		data->MsgBuffer[i] = IDENTIFY(TRUE, lun); i++;
++		data->MsgBuffer[i] = IDENTIFY(true, lun); i++;
+ 
+ 		if (*sync_neg == SYNC_NOT_YET) {
+ 			data->Sync[target].SyncPeriod = 0;
+diff --git a/drivers/scsi/pcmcia/nsp_cs.h b/drivers/scsi/pcmcia/nsp_cs.h
+index 94c1f6c7c601..7d5d1a5b36e0 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.h
++++ b/drivers/scsi/pcmcia/nsp_cs.h
+@@ -305,7 +305,7 @@ static int nsp_bus_reset       (nsp_hw_data *data);
+ 
+ /* */
+ static void nsphw_init           (nsp_hw_data *data);
+-static int  nsphw_start_selection(struct scsi_cmnd *SCpnt);
++static bool nsphw_start_selection(struct scsi_cmnd *SCpnt);
+ static void nsp_start_timer      (struct scsi_cmnd *SCpnt, int time);
+ static int  nsp_fifo_count       (struct scsi_cmnd *SCpnt);
+ static void nsp_pio_read         (struct scsi_cmnd *SCpnt);
