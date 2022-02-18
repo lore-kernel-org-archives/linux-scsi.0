@@ -2,74 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38403C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 03:15:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 162FDC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 03:15:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231974AbiBRDPu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 22:15:50 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:56684 "EHLO
+        id S231979AbiBRDPx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 22:15:53 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:58550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231883AbiBRDPX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 22:15:23 -0500
+        with ESMTP id S231941AbiBRDPn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 22:15:43 -0500
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6616120F7A
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 19:15:07 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 183631BBF5D
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 19:15:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1645154108; x=1676690108;
+  t=1645154120; x=1676690120;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=g9DqTo9CfqOPxmAnqtDwRWIZjNs6xzEf/L8jfuXNUaI=;
-  b=WRu+a8CvvChIUWDlFWqrHgA+6ybz0o+Ro8Hx7gYm8ax8S2m7bh3iXaWE
-   m57vSOKRHd5sUC3h6Ye0zsJ/JCWLU9dzfC6hb/5SuWZQl/pA3bnj/2fia
-   xMXOcdTnjiqyFeJMWzLM9WhRi5vcKEtSdL2c7JH2sIgvsXzzVvOCivW2N
-   Y8P5L7eA7BRQ3his/8MlVifKrWIT1jthPgzvmu1Xwf+Hg0Bk5Obfm2JZt
-   n33/TDi/osYMZ1X333BUTPEp4C9eY0jcMW2IaGPAmrFxXTFVtpQ48UP5r
-   ba13w5MGwzxqoexeTMFaxGg19qiZ8bd8IqLv1iOvqQW9EoCq1DOm7ciDY
-   w==;
+  bh=nFinQwtMY9NA+m4aufz3pH2lyHwmyuiXD24SymgYwfg=;
+  b=KgocyAX6uhg2jhjsGgxvJDegO4M8C72jYIOvuf5WoLVbp5V+AnpL25hq
+   eCRpzXE+lTUmhhdDNQNihxTaRHH6Zqp0W0fphZO6jh25kx+Uv+zZmpjR1
+   g71VOSVRjS6/hyxN1M5puIOSVbnSmx6x6WbdSMTMTWEqoed6ONLkv/A1/
+   CvzsItoiJsxVnQy6q5e04Fa/qTUzFsTgTDa7W6EFFRf6ZOFwNs7jzUD86
+   6RxbPRJLpWNYdFWw7WOCrsaUQbv8AO9hUSm1jXhbcG/7uuM0GfcivV50N
+   rLyW2Pbt3+5wmVg6nLk3IS7mv/+i8toO2xQBY0YnaZqbFC/jeoOEsZngG
+   g==;
 X-IronPort-AV: E=Sophos;i="5.88,377,1635177600"; 
-   d="scan'208";a="194225774"
+   d="scan'208";a="194225811"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Feb 2022 11:15:07 +0800
-IronPort-SDR: kV9D2AzlVHGvEYovzqMRyrumo71si0EJ+OvP0itlGgnTujlh5ylOoZtHu23Qb/i2Dg5uYDz3HY
- pMNp/5/drSGAEyPhAJQmFnvbN0zxr4xIP8P+Yxknlsk3DHZkJsRPfLFaJiVdScVsIS0qq2+XzQ
- ELTc8ICJV9r12iI85ZhLzjmT1oLXx9OMUzNDP2P+GHink6pnhKrw4U8/+ioWt+i7CTEoANJpI6
- owYEkUffHHcab5sXW+SkszJBNtBexcannd0KU6al2PHfwyPPU7iYoSW964tITfit7ZR24R0kZ4
- wH6XijzP29HRvdh32FtTEFm6
+  by ob1.hgst.iphmx.com with ESMTP; 18 Feb 2022 11:15:18 +0800
+IronPort-SDR: 0Zoaf6f9S8GSGPbaSlr7nmgOm/uwuYi/pCHx5zu4MWD5F9PViLGuZXP06UQLXOhhkDq6cOxguu
+ U4wydVczlLACWDL+C65/3rSKaL+cFNxfU52tmHmqj6UvIfT2qyb6ZWjzGivi+OYsa558cLuYEE
+ KGENZy/8gL2N2APLpj284biGv7E16ffgnLdxPg5IJsq+4jfLNkZa1Rk+MEgljmr1rq/554BgJm
+ +lVUqRdB9yksgOC6JuTkQj9G+ouyqoh7EOkweT8Rm1yUneBjDhvL6TrKAHv5IIwUnjkNyY+3VD
+ 1r9m4uiCo+K1GQYBuF/zgiaD
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 18:46:45 -0800
-IronPort-SDR: MV79fSEVgBlSUUo6BCXuzeUfcRf02oY9KoncmpF5NhRiPYvT6LQWth3tyJ5S5pcKVSy6buuFOf
- hTSqJduBB/tnIqObxn51W3BW5zBhTBhCPjQmSfuIaj63Qd5AAvjktcSUoSl2UDGygW6gQKvO7J
- +Pt7ogcfKeCJSr9yvcFtcEGZSgKWgBZ5aXI2IDnrbh8919oatEBdO48/Ry6RfuQj61aJqrIghA
- l3Cpwgwl0dUavCJgCq0Dh8kO95n0FTD9ExIR0Ejy+23ydt2jqKdPXzbuOcA+f3qmNURB2WNi1l
- BbY=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 18:46:54 -0800
+IronPort-SDR: 7JQsc1E3R4gTnbFJgIOlq78tR+Etj/bzyhwAnM2CgzkJqhbTJKkc9m343SrepP9l5bv4EDqsbM
+ S1pPqy0CdjvptNP9VY8bLYNvjvGz4GL4GmDzhlxKTJRPhoN0l3wmhFKHPMMY9RvlRlkumL58WG
+ SuSZaHyOnmgeRP3GW3GhVEh9xEro0GyhGuCx6D8PApqyWfWj9aMLi8pnoq0n/c8i8YwX5YNkUp
+ NDOvySh468/WI9/I07r+b27uPGGT3cxxK58RKxbip2nQ0+wMNavy3OScQY4Z02P1qTWaQz+9fP
+ iSQ=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 19:15:07 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 19:15:16 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K0Gyz0jBPz1SVp1
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 19:15:07 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K0Gz80yPZz1SVp3
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 19:15:16 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1645154106; x=1647746107; bh=g9DqTo9CfqOPxmAnqt
-        DwRWIZjNs6xzEf/L8jfuXNUaI=; b=dj6Gecc8R/3UpPo1FtadUPPvFLkRJUXOSD
-        YN7EIYdnbWblVpqfdW72E383TWgiX5u0EMipB1PUoe9v8lafx0h9aVDFmd6mm1E9
-        5IAvhZMmc25cPFeHsssxVLBRC9nMdyrT9l9a/n3H4yo+n7jmRoWc8LQ9ZrALM+yb
-        PTbRxpFvP4za006fp8zaZ4rFiQNfZzo69njtEe1FJjI4gCdZf2/Ntwa7J8YbHr3G
-        f1VNpk2cljEKRKQgSR+PzKehNTxJbe150MPhmesXEFdlP/913jr/5mlBYev0Q3lQ
-        48XTqvripf467tR9IL2fE3dBb5EDTK+cIZnN5T4vLtCJBhAVA0TA==
+        :from; s=dkim; t=1645154115; x=1647746116; bh=nFinQwtMY9NA+m4auf
+        z3pH2lyHwmyuiXD24SymgYwfg=; b=aKYECfbYBnroUS+YTME2X79p1bq3FeXKIn
+        i7UubXpnb3GbTlTNcVBLdphhPfpb1m9TsARduppjhuRvgjcaUT6FY5DQ/Opq0cM4
+        vCV2Z6yPrU9OpexOX2qke0JBhXn7gcAciYVTB9ZqKV/Qv6Wvgq2a9ubzWii42hGp
+        RFfiwsGznKEI2JP3whTZ7Hz+ds+VY3rJBppS+Mg7FyPcEYpAqSLzXCqoCcqdb6V8
+        8Q/i7sc1h8XQWMqMvVsShzDDz7I0rkMDjKbN/Uw6jS6ABRqQX+oTFNOYODfPJNe/
+        LNUHYVHn+4Jxy5LXxsWdeSRzcGQ71S2qZsIB/g5jkxYUKJXlKCzg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Ck2_9fVXbWTr for <linux-scsi@vger.kernel.org>;
-        Thu, 17 Feb 2022 19:15:06 -0800 (PST)
+        with ESMTP id Ep2ZHbbHf0Hy for <linux-scsi@vger.kernel.org>;
+        Thu, 17 Feb 2022 19:15:15 -0800 (PST)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K0Gyx4J0Wz1Rwrw;
-        Thu, 17 Feb 2022 19:15:05 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K0Gz56mF1z1Rwrw;
+        Thu, 17 Feb 2022 19:15:13 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -78,9 +78,9 @@ To:     linux-scsi@vger.kernel.org,
 Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
         Jason Yan <yanaijie@huawei.com>,
         Luo Jiaxing <luojiaxing@huawei.com>
-Subject: [PATCH v5 13/31] scsi: pm8001: Remove local variable in pm8001_pci_resume()
-Date:   Fri, 18 Feb 2022 12:14:27 +0900
-Message-Id: <20220218031445.548767-14-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH v5 19/31] scsi: pm8001: Fix tag values handling
+Date:   Fri, 18 Feb 2022 12:14:33 +0900
+Message-Id: <20220218031445.548767-20-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220218031445.548767-1-damien.lemoal@opensource.wdc.com>
 References: <20220218031445.548767-1-damien.lemoal@opensource.wdc.com>
@@ -90,50 +90,319 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In pm8001_pci_resume(), the use of the u32 type for the local variable
-device_state causes a sparse warning:
+The function pm8001_tag_alloc() determines free tags using the function
+find_first_zero_bit() which can return 0 when the first bit of the
+bitmap being inspected is 0. As such, tag 0 is a valid tag value that
+should not be dismissed as invalid. Fix the functions pm8001_work_fn(),
+mpi_sata_completion(), pm8001_mpi_task_abort_resp() and
+pm8001_open_reject_retry() to not dismiss 0 tags as invalid.
 
-warning: incorrect type in assignment (different base types)
-    expected unsigned int [usertype] device_state
-    got restricted pci_power_t [usertype] current_state
-
-Since this variable is used only once in the function, remove it and
-use pdev->current_state directly. While at it, also add a blank line
-after the last local variable declaration.
+The value 0xffffffff is used for invalid tags for unused ccb
+information structures. Add the macro definition PM8001_INVALID_TAG to
+define this value.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
 Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c  | 52 +++++++++++--------------------
+ drivers/scsi/pm8001/pm8001_init.c |  3 +-
+ drivers/scsi/pm8001/pm8001_sas.c  | 13 ++++----
+ drivers/scsi/pm8001/pm8001_sas.h  |  2 ++
+ drivers/scsi/pm8001/pm80xx_hwi.c  |  5 ---
+ 5 files changed, 28 insertions(+), 47 deletions(-)
 
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm800=
+1_hwi.c
+index 5cad5504301e..3dc628b0384d 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -1522,7 +1522,6 @@ void pm8001_work_fn(struct work_struct *work)
+ 	case IO_XFER_ERROR_BREAK:
+ 	{	/* This one stashes the sas_task instead */
+ 		struct sas_task *t =3D (struct sas_task *)pm8001_dev;
+-		u32 tag;
+ 		struct pm8001_ccb_info *ccb;
+ 		struct pm8001_hba_info *pm8001_ha =3D pw->pm8001_ha;
+ 		unsigned long flags, flags1;
+@@ -1544,8 +1543,8 @@ void pm8001_work_fn(struct work_struct *work)
+ 		/* Search for a possible ccb that matches the task */
+ 		for (i =3D 0; ccb =3D NULL, i < PM8001_MAX_CCB; i++) {
+ 			ccb =3D &pm8001_ha->ccb_info[i];
+-			tag =3D ccb->ccb_tag;
+-			if ((tag !=3D 0xFFFFFFFF) && (ccb->task =3D=3D t))
++			if ((ccb->ccb_tag !=3D PM8001_INVALID_TAG) &&
++			    (ccb->task =3D=3D t))
+ 				break;
+ 		}
+ 		if (!ccb) {
+@@ -1566,11 +1565,11 @@ void pm8001_work_fn(struct work_struct *work)
+ 			spin_unlock_irqrestore(&t->task_state_lock, flags1);
+ 			pm8001_dbg(pm8001_ha, FAIL, "task 0x%p done with event 0x%x resp 0x%x=
+ stat 0x%x but aborted by upper layer!\n",
+ 				   t, pw->handler, ts->resp, ts->stat);
+-			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
++			pm8001_ccb_task_free(pm8001_ha, t, ccb, ccb->ccb_tag);
+ 			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		} else {
+ 			spin_unlock_irqrestore(&t->task_state_lock, flags1);
+-			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
++			pm8001_ccb_task_free(pm8001_ha, t, ccb, ccb->ccb_tag);
+ 			mb();/* in order to force CPU ordering */
+ 			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 			t->task_done(t);
+@@ -1579,7 +1578,6 @@ void pm8001_work_fn(struct work_struct *work)
+ 	case IO_XFER_OPEN_RETRY_TIMEOUT:
+ 	{	/* This one stashes the sas_task instead */
+ 		struct sas_task *t =3D (struct sas_task *)pm8001_dev;
+-		u32 tag;
+ 		struct pm8001_ccb_info *ccb;
+ 		struct pm8001_hba_info *pm8001_ha =3D pw->pm8001_ha;
+ 		unsigned long flags, flags1;
+@@ -1613,8 +1611,8 @@ void pm8001_work_fn(struct work_struct *work)
+ 		/* Search for a possible ccb that matches the task */
+ 		for (i =3D 0; ccb =3D NULL, i < PM8001_MAX_CCB; i++) {
+ 			ccb =3D &pm8001_ha->ccb_info[i];
+-			tag =3D ccb->ccb_tag;
+-			if ((tag !=3D 0xFFFFFFFF) && (ccb->task =3D=3D t))
++			if ((ccb->ccb_tag !=3D PM8001_INVALID_TAG) &&
++			    (ccb->task =3D=3D t))
+ 				break;
+ 		}
+ 		if (!ccb) {
+@@ -1685,19 +1683,13 @@ void pm8001_work_fn(struct work_struct *work)
+ 		struct task_status_struct *ts;
+ 		struct sas_task *task;
+ 		int i;
+-		u32 tag, device_id;
++		u32 device_id;
+=20
+ 		for (i =3D 0; ccb =3D NULL, i < PM8001_MAX_CCB; i++) {
+ 			ccb =3D &pm8001_ha->ccb_info[i];
+ 			task =3D ccb->task;
+ 			ts =3D &task->task_status;
+-			tag =3D ccb->ccb_tag;
+-			/* check if tag is NULL */
+-			if (!tag) {
+-				pm8001_dbg(pm8001_ha, FAIL,
+-					"tag Null\n");
+-				continue;
+-			}
++
+ 			if (task !=3D NULL) {
+ 				dev =3D task->dev;
+ 				if (!dev) {
+@@ -1706,10 +1698,11 @@ void pm8001_work_fn(struct work_struct *work)
+ 					continue;
+ 				}
+ 				/*complete sas task and update to top layer */
+-				pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
++				pm8001_ccb_task_free(pm8001_ha, task, ccb,
++						     ccb->ccb_tag);
+ 				ts->resp =3D SAS_TASK_COMPLETE;
+ 				task->task_done(task);
+-			} else if (tag !=3D 0xFFFFFFFF) {
++			} else if (ccb->ccb_tag !=3D PM8001_INVALID_TAG) {
+ 				/* complete the internal commands/non-sas task */
+ 				pm8001_dev =3D ccb->device;
+ 				if (pm8001_dev->dcompletion) {
+@@ -1717,7 +1710,7 @@ void pm8001_work_fn(struct work_struct *work)
+ 					pm8001_dev->dcompletion =3D NULL;
+ 				}
+ 				complete(pm8001_ha->nvmd_completion);
+-				pm8001_tag_free(pm8001_ha, tag);
++				pm8001_tag_free(pm8001_ha, ccb->ccb_tag);
+ 			}
+ 		}
+ 		/* Deregister all the device ids  */
+@@ -2313,11 +2306,6 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001=
+_ha, void *piomb)
+ 	param =3D le32_to_cpu(psataPayload->param);
+ 	tag =3D le32_to_cpu(psataPayload->tag);
+=20
+-	if (!tag) {
+-		pm8001_dbg(pm8001_ha, FAIL, "tag null\n");
+-		return;
+-	}
+-
+ 	ccb =3D &pm8001_ha->ccb_info[tag];
+ 	t =3D ccb->task;
+ 	pm8001_dev =3D ccb->device;
+@@ -3051,7 +3039,7 @@ void pm8001_mpi_set_dev_state_resp(struct pm8001_hb=
+a_info *pm8001_ha,
+ 		   device_id, pds, nds, status);
+ 	complete(pm8001_dev->setds_completion);
+ 	ccb->task =3D NULL;
+-	ccb->ccb_tag =3D 0xFFFFFFFF;
++	ccb->ccb_tag =3D PM8001_INVALID_TAG;
+ 	pm8001_tag_free(pm8001_ha, tag);
+ }
+=20
+@@ -3069,7 +3057,7 @@ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_inf=
+o *pm8001_ha, void *piomb)
+ 				dlen_status);
+ 	}
+ 	ccb->task =3D NULL;
+-	ccb->ccb_tag =3D 0xFFFFFFFF;
++	ccb->ccb_tag =3D PM8001_INVALID_TAG;
+ 	pm8001_tag_free(pm8001_ha, tag);
+ }
+=20
+@@ -3096,7 +3084,7 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm=
+8001_ha, void *piomb)
+ 		 * freed by requesting path anywhere.
+ 		 */
+ 		ccb->task =3D NULL;
+-		ccb->ccb_tag =3D 0xFFFFFFFF;
++		ccb->ccb_tag =3D PM8001_INVALID_TAG;
+ 		pm8001_tag_free(pm8001_ha, tag);
+ 		return;
+ 	}
+@@ -3142,7 +3130,7 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm=
+8001_ha, void *piomb)
+ 	complete(pm8001_ha->nvmd_completion);
+ 	pm8001_dbg(pm8001_ha, MSG, "Get nvmd data complete!\n");
+ 	ccb->task =3D NULL;
+-	ccb->ccb_tag =3D 0xFFFFFFFF;
++	ccb->ccb_tag =3D PM8001_INVALID_TAG;
+ 	pm8001_tag_free(pm8001_ha, tag);
+ }
+=20
+@@ -3555,7 +3543,7 @@ int pm8001_mpi_reg_resp(struct pm8001_hba_info *pm8=
+001_ha, void *piomb)
+ 	}
+ 	complete(pm8001_dev->dcompletion);
+ 	ccb->task =3D NULL;
+-	ccb->ccb_tag =3D 0xFFFFFFFF;
++	ccb->ccb_tag =3D PM8001_INVALID_TAG;
+ 	pm8001_tag_free(pm8001_ha, htag);
+ 	return 0;
+ }
+@@ -3627,7 +3615,7 @@ int pm8001_mpi_fw_flash_update_resp(struct pm8001_h=
+ba_info *pm8001_ha,
+ 	}
+ 	kfree(ccb->fw_control_context);
+ 	ccb->task =3D NULL;
+-	ccb->ccb_tag =3D 0xFFFFFFFF;
++	ccb->ccb_tag =3D PM8001_INVALID_TAG;
+ 	pm8001_tag_free(pm8001_ha, tag);
+ 	complete(pm8001_ha->nvmd_completion);
+ 	return 0;
+@@ -3663,10 +3651,6 @@ int pm8001_mpi_task_abort_resp(struct pm8001_hba_i=
+nfo *pm8001_ha, void *piomb)
+=20
+ 	status =3D le32_to_cpu(pPayload->status);
+ 	tag =3D le32_to_cpu(pPayload->tag);
+-	if (!tag) {
+-		pm8001_dbg(pm8001_ha, FAIL, " TAG NULL. RETURNING !!!\n");
+-		return -1;
+-	}
+=20
+ 	scp =3D le32_to_cpu(pPayload->scp);
+ 	ccb =3D &pm8001_ha->ccb_info[tag];
 diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm80=
 01_init.c
-index d8a2121cb8d9..4b9a26f008a9 100644
+index 4b9a26f008a9..8f44be8364dc 100644
 --- a/drivers/scsi/pm8001/pm8001_init.c
 +++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -1335,13 +1335,13 @@ static int __maybe_unused pm8001_pci_resume(struc=
-t device *dev)
- 	struct pm8001_hba_info *pm8001_ha;
- 	int rc;
- 	u8 i =3D 0, j;
--	u32 device_state;
- 	DECLARE_COMPLETION_ONSTACK(completion);
+@@ -1216,10 +1216,11 @@ pm8001_init_ccb_tag(struct pm8001_hba_info *pm800=
+1_ha, struct Scsi_Host *shost,
+ 			goto err_out;
+ 		}
+ 		pm8001_ha->ccb_info[i].task =3D NULL;
+-		pm8001_ha->ccb_info[i].ccb_tag =3D 0xffffffff;
++		pm8001_ha->ccb_info[i].ccb_tag =3D PM8001_INVALID_TAG;
+ 		pm8001_ha->ccb_info[i].device =3D NULL;
+ 		++pm8001_ha->tags_num;
+ 	}
 +
- 	pm8001_ha =3D sha->lldd_ha;
--	device_state =3D pdev->current_state;
+ 	return 0;
 =20
--	pm8001_info(pm8001_ha, "pdev=3D0x%p, slot=3D%s, resuming from previous =
-operating state [D%d]\n",
--		      pdev, pm8001_ha->name, device_state);
-+	pm8001_info(pm8001_ha,
-+		    "pdev=3D0x%p, slot=3D%s, resuming from previous operating state [D=
-%d]\n",
-+		    pdev, pm8001_ha->name, pdev->current_state);
+ err_out_noccb:
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm800=
+1_sas.c
+index 4ab0ea9483f2..d0f5feb4f2d3 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -563,7 +563,7 @@ void pm8001_ccb_task_free(struct pm8001_hba_info *pm8=
+001_ha,
 =20
- 	rc =3D pci_go_44(pdev);
- 	if (rc)
+ 	task->lldd_task =3D NULL;
+ 	ccb->task =3D NULL;
+-	ccb->ccb_tag =3D 0xFFFFFFFF;
++	ccb->ccb_tag =3D PM8001_INVALID_TAG;
+ 	ccb->open_retry =3D 0;
+ 	pm8001_tag_free(pm8001_ha, ccb_idx);
+ }
+@@ -948,9 +948,11 @@ void pm8001_open_reject_retry(
+ 		struct task_status_struct *ts;
+ 		struct pm8001_device *pm8001_dev;
+ 		unsigned long flags1;
+-		u32 tag;
+ 		struct pm8001_ccb_info *ccb =3D &pm8001_ha->ccb_info[i];
+=20
++		if (ccb->ccb_tag =3D=3D PM8001_INVALID_TAG)
++			continue;
++
+ 		pm8001_dev =3D ccb->device;
+ 		if (!pm8001_dev || (pm8001_dev->dev_type =3D=3D SAS_PHY_UNUSED))
+ 			continue;
+@@ -962,9 +964,6 @@ void pm8001_open_reject_retry(
+ 				continue;
+ 		} else if (pm8001_dev !=3D device_to_close)
+ 			continue;
+-		tag =3D ccb->ccb_tag;
+-		if (!tag || (tag =3D=3D 0xFFFFFFFF))
+-			continue;
+ 		task =3D ccb->task;
+ 		if (!task || !task->task_done)
+ 			continue;
+@@ -984,11 +983,11 @@ void pm8001_open_reject_retry(
+ 				& SAS_TASK_STATE_ABORTED))) {
+ 			spin_unlock_irqrestore(&task->task_state_lock,
+ 				flags1);
+-			pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
++			pm8001_ccb_task_free(pm8001_ha, task, ccb, ccb->ccb_tag);
+ 		} else {
+ 			spin_unlock_irqrestore(&task->task_state_lock,
+ 				flags1);
+-			pm8001_ccb_task_free(pm8001_ha, task, ccb, tag);
++			pm8001_ccb_task_free(pm8001_ha, task, ccb, ccb->ccb_tag);
+ 			mb();/* in order to force CPU ordering */
+ 			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 			task->task_done(task);
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm800=
+1_sas.h
+index a17da1cebce1..1791cdf30276 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -738,6 +738,8 @@ void pm8001_free_dev(struct pm8001_device *pm8001_dev=
+);
+ /* ctl shared API */
+ extern const struct attribute_group *pm8001_host_groups[];
+=20
++#define PM8001_INVALID_TAG	((u32)-1)
++
+ static inline void
+ pm8001_ccb_task_free_done(struct pm8001_hba_info *pm8001_ha,
+ 			struct sas_task *task, struct pm8001_ccb_info *ccb,
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80x=
+x_hwi.c
+index 76260d06b6be..cc46e2013eeb 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -2402,11 +2402,6 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001=
+_ha,
+ 	param =3D le32_to_cpu(psataPayload->param);
+ 	tag =3D le32_to_cpu(psataPayload->tag);
+=20
+-	if (!tag) {
+-		pm8001_dbg(pm8001_ha, FAIL, "tag null\n");
+-		return;
+-	}
+-
+ 	ccb =3D &pm8001_ha->ccb_info[tag];
+ 	t =3D ccb->task;
+ 	pm8001_dev =3D ccb->device;
 --=20
 2.34.1
 
