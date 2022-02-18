@@ -2,48 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC9C8C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 19:53:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A607DC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 19:53:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238479AbiBRTxl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Feb 2022 14:53:41 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:57172 "EHLO
+        id S238562AbiBRTxm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Feb 2022 14:53:42 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:58070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238688AbiBRTxZ (ORCPT
+        with ESMTP id S238544AbiBRTxZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 14:53:25 -0500
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A95C42944FA
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:52:56 -0800 (PST)
-Received: by mail-pj1-f45.google.com with SMTP id b8so9468233pjb.4
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:52:56 -0800 (PST)
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 310CD291FAB
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:53:06 -0800 (PST)
+Received: by mail-pf1-f175.google.com with SMTP id p8so3128284pfh.8
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:53:06 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=A/S3KCrXBTTtSusQUVdYWBf1AOREHH7guodEm933rqA=;
-        b=cjJXmod5ugJceHgypNNnkeDvCH9H6HS1Pa8OhKajh1dlPf7Dk6PIHSL1bHN81IcHE+
-         3me7gNX+xZODbmpYO9XVVMtrDWX/VEMYtBmVzd3BPQZWk9nx+ZOnRs1llCU/VykcrARW
-         Xptc1yIdlNeI0EwJ/OXDQcnbSDBXfloFpGBZOWiK+p+saGZ8r/XduEOHP1DwrfAs5i1J
-         8LOXyOiiRNLrGlxLoePlXhDqpAqeKGRCnU0e8cigQxKoF3nLh/fGPs33OKfAMflFUeoM
-         6qVmiJhOXjgKH/3dWcoMUcf3jJzwct9GDnuNHoBbE6B3UIopXo3GVqQeLJw1zZWwf5Vp
-         +6kg==
-X-Gm-Message-State: AOAM532/b4+SHVJznGNtSMcCht+ui4Hu6QcTi5j62qGGfC1jHbPogwIl
-        6LS+hVL6wwpzaTHuVsPY7B4=
-X-Google-Smtp-Source: ABdhPJz2Wdb6uFsIVSATmqi1QdZYDeRu6x5MSgTK1mtKJRbXwE5kK5sPHGpOme8esMLd4aNtTYP/BA==
-X-Received: by 2002:a17:90b:3148:b0:1b8:c28a:25e7 with SMTP id ip8-20020a17090b314800b001b8c28a25e7mr14029671pjb.234.1645213975924;
-        Fri, 18 Feb 2022 11:52:55 -0800 (PST)
+        bh=nBwtGryv3+hjFI6gPofqHnRhTZ05RYrc/eDIGaEQe1I=;
+        b=vc3Qi/mJm6vYpPEVHpGe0xyUE55yUo8WSpMcjg3/JH0Tc4AQWWLEDxH6T02vRMJPu6
+         NLb5FqqZRjQVD04c71mL5peQzDdivDeXMwTq+Ru0bbzyATnTxG8CiawoWYsPcqHENR8Q
+         BZLEpC+SWsO/SLjbEq4IUsE+f/wPoaXUrRM98L1kEfsMqfC/JZeHzIROIwyUDlt1DSTk
+         4p98EZjsPYh40vhHKSvlPw1BMCBwDiJfgMuoMUVOYjHFJ+ADXJCA7+K8bINPutw8W6WF
+         SSkEtdP9Imxd+zfcWDr1TDU0KX6x0J9md6gTCje0UsA6epTk/PFFpHybOsVfYE9hrjW9
+         OTMA==
+X-Gm-Message-State: AOAM5320ElyhEQVClwhGCKb1WA+1Y0wgWeViZYZSwmWnx71kqj2kQTon
+        4nh4wUpa3JC/0+5FR8vqZBw=
+X-Google-Smtp-Source: ABdhPJzIFyH55+oVhln3+rRy/ExpDUSw/GIqrPpNFVYVhXax4q0rZ3gRDztW7BtG0Qf01Nt88IzsCA==
+X-Received: by 2002:a05:6a00:1787:b0:4c8:aca8:52cd with SMTP id s7-20020a056a00178700b004c8aca852cdmr8961227pfg.10.1645213985583;
+        Fri, 18 Feb 2022 11:53:05 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id e15sm3930523pfv.104.2022.02.18.11.52.54
+        by smtp.gmail.com with ESMTPSA id e15sm3930523pfv.104.2022.02.18.11.53.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Feb 2022 11:52:55 -0800 (PST)
+        Fri, 18 Feb 2022 11:53:04 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Nilesh Javali <njavali@marvell.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Daniel Wagner <dwagner@suse.de>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v5 38/49] scsi: nsp_cs: Move the SCSI pointer to private command data
-Date:   Fri, 18 Feb 2022 11:51:06 -0800
-Message-Id: <20220218195117.25689-39-bvanassche@acm.org>
+Subject: [PATCH v5 42/49] scsi: qla2xxx: Stop using the SCSI pointer
+Date:   Fri, 18 Feb 2022 11:51:10 -0800
+Message-Id: <20220218195117.25689-43-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220218195117.25689-1-bvanassche@acm.org>
 References: <20220218195117.25689-1-bvanassche@acm.org>
@@ -53,554 +58,94 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Set .cmd_size in the SCSI host template instead of using the SCSI pointer
-in struct scsi_cmnd.
+Instead of using the SCp.ptr field to track whether or not a command is
+in flight, use the sp->type field to track this information. sp->type
+must be set for proper operation of the qla2xxx driver. See e.g. the
+switch (sp->type) statement in qla2x00_ct_entry().
+
 This patch prepares for removal of the SCSI pointer from struct scsi_cmnd.
 
+Cc: Nilesh Javali <njavali@marvell.com>
+Cc: Ewan D. Milne <emilne@redhat.com>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Daniel Wagner <dwagner@suse.de>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/pcmcia/nsp_cs.c    | 200 ++++++++++++++++++--------------
- drivers/scsi/pcmcia/nsp_cs.h    |   2 +-
- drivers/scsi/pcmcia/nsp_debug.c |   2 +-
- 3 files changed, 114 insertions(+), 90 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |  2 --
+ drivers/scsi/qla2xxx/qla_os.c  | 13 +++++--------
+ 2 files changed, 5 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index dcffda384eaf..48acab03a8a0 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -70,6 +70,11 @@ static bool       free_ports = 0;
- module_param(free_ports, bool, 0);
- MODULE_PARM_DESC(free_ports, "Release IO ports after configuration? (default: 0 (=no))");
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 47d7fa1c7ae8..174e80fbbdae 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -5201,8 +5201,6 @@ struct secure_flash_update_block_pk {
  
-+static struct scsi_pointer *nsp_priv(struct scsi_cmnd *cmd)
-+{
-+	return scsi_cmd_priv(cmd);
-+}
-+
- static struct scsi_host_template nsp_driver_template = {
- 	.proc_name	         = "nsp_cs",
- 	.show_info		 = nsp_show_info,
-@@ -83,6 +88,7 @@ static struct scsi_host_template nsp_driver_template = {
- 	.this_id		 = NSP_INITIATOR_ID,
- 	.sg_tablesize		 = SG_ALL,
- 	.dma_boundary		 = PAGE_SIZE - 1,
-+	.cmd_size		 = sizeof(struct scsi_pointer),
- };
+ #define	QLA_DSDS_PER_IOCB	37
  
- static nsp_hw_data nsp_data_base; /* attach <-> detect glue */
-@@ -180,8 +186,9 @@ static void nsp_scsi_done(struct scsi_cmnd *SCpnt)
- 	scsi_done(SCpnt);
- }
+-#define CMD_SP(Cmnd)		((Cmnd)->SCp.ptr)
+-
+ #define QLA_SG_ALL	1024
  
--static int nsp_queuecommand_lck(struct scsi_cmnd *SCpnt)
-+static int nsp_queuecommand_lck(struct scsi_cmnd *const SCpnt)
- {
-+	struct scsi_pointer *scsi_pointer = nsp_priv(SCpnt);
- #ifdef NSP_DEBUG
- 	/*unsigned int host_id = SCpnt->device->host->this_id;*/
- 	/*unsigned int base    = SCpnt->device->host->io_port;*/
-@@ -217,11 +224,11 @@ static int nsp_queuecommand_lck(struct scsi_cmnd *SCpnt)
+ enum nexus_wait_type {
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index a4546346c18b..58c83525f006 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -739,7 +739,7 @@ void qla2x00_sp_compl(srb_t *sp, int res)
+ 	/* kref: INIT */
+ 	kref_put(&sp->cmd_kref, qla2x00_sp_release);
+ 	cmd->result = res;
+-	CMD_SP(cmd) = NULL;
++	sp->type = 0;
+ 	scsi_done(cmd);
+ 	if (comp)
+ 		complete(comp);
+@@ -831,7 +831,7 @@ void qla2xxx_qpair_sp_compl(srb_t *sp, int res)
+ 	/* ref: INIT */
+ 	kref_put(&sp->cmd_kref, qla2x00_sp_release);
+ 	cmd->result = res;
+-	CMD_SP(cmd) = NULL;
++	sp->type = 0;
+ 	scsi_done(cmd);
+ 	if (comp)
+ 		complete(comp);
+@@ -934,8 +934,6 @@ qla2xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
  
- 	data->CurrentSC		= SCpnt;
+ 	sp->u.scmd.cmd = cmd;
+ 	sp->type = SRB_SCSI_CMD;
+-
+-	CMD_SP(cmd) = (void *)sp;
+ 	sp->free = qla2x00_sp_free_dma;
+ 	sp->done = qla2x00_sp_compl;
  
--	SCpnt->SCp.Status	= SAM_STAT_CHECK_CONDITION;
--	SCpnt->SCp.Message	= 0;
--	SCpnt->SCp.have_data_in = IO_UNKNOWN;
--	SCpnt->SCp.sent_command = 0;
--	SCpnt->SCp.phase	= PH_UNDETERMINED;
-+	scsi_pointer->Status	   = SAM_STAT_CHECK_CONDITION;
-+	scsi_pointer->Message	   = 0;
-+	scsi_pointer->have_data_in = IO_UNKNOWN;
-+	scsi_pointer->sent_command = 0;
-+	scsi_pointer->phase	   = PH_UNDETERMINED;
- 	scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
+@@ -1025,7 +1023,6 @@ qla2xxx_mqueuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd,
  
- 	/* setup scratch area
-@@ -231,15 +238,15 @@ static int nsp_queuecommand_lck(struct scsi_cmnd *SCpnt)
- 	   SCp.buffers_residual : left buffers in list
- 	   SCp.phase		: current state of the command */
- 	if (scsi_bufflen(SCpnt)) {
--		SCpnt->SCp.buffer	    = scsi_sglist(SCpnt);
--		SCpnt->SCp.ptr		    = BUFFER_ADDR;
--		SCpnt->SCp.this_residual    = SCpnt->SCp.buffer->length;
--		SCpnt->SCp.buffers_residual = scsi_sg_count(SCpnt) - 1;
-+		scsi_pointer->buffer	       = scsi_sglist(SCpnt);
-+		scsi_pointer->ptr	       = BUFFER_ADDR(SCpnt);
-+		scsi_pointer->this_residual    = scsi_pointer->buffer->length;
-+		scsi_pointer->buffers_residual = scsi_sg_count(SCpnt) - 1;
- 	} else {
--		SCpnt->SCp.ptr		    = NULL;
--		SCpnt->SCp.this_residual    = 0;
--		SCpnt->SCp.buffer	    = NULL;
--		SCpnt->SCp.buffers_residual = 0;
-+		scsi_pointer->ptr	       = NULL;
-+		scsi_pointer->this_residual    = 0;
-+		scsi_pointer->buffer	       = NULL;
-+		scsi_pointer->buffers_residual = 0;
+ 	sp->u.scmd.cmd = cmd;
+ 	sp->type = SRB_SCSI_CMD;
+-	CMD_SP(cmd) = (void *)sp;
+ 	sp->free = qla2xxx_qpair_sp_free_dma;
+ 	sp->done = qla2xxx_qpair_sp_compl;
+ 
+@@ -1071,6 +1068,7 @@ qla2x00_eh_wait_on_command(struct scsi_cmnd *cmd)
+ 	unsigned long wait_iter = ABORT_WAIT_ITER;
+ 	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
+ 	struct qla_hw_data *ha = vha->hw;
++	srb_t *sp = scsi_cmd_priv(cmd);
+ 	int ret = QLA_SUCCESS;
+ 
+ 	if (unlikely(pci_channel_offline(ha->pdev)) || ha->flags.eeh_busy) {
+@@ -1079,10 +1077,9 @@ qla2x00_eh_wait_on_command(struct scsi_cmnd *cmd)
+ 		return ret;
  	}
  
- 	if (!nsphw_start_selection(SCpnt)) {
-@@ -353,8 +360,9 @@ static void nsphw_init(nsp_hw_data *data)
- /*
-  * Start selection phase
-  */
--static bool nsphw_start_selection(struct scsi_cmnd *SCpnt)
-+static bool nsphw_start_selection(struct scsi_cmnd *const SCpnt)
- {
-+	struct scsi_pointer *scsi_pointer = nsp_priv(SCpnt);
- 	unsigned int  host_id	 = SCpnt->device->host->this_id;
- 	unsigned int  base	 = SCpnt->device->host->io_port;
- 	unsigned char target	 = scmd_id(SCpnt);
-@@ -372,7 +380,7 @@ static bool nsphw_start_selection(struct scsi_cmnd *SCpnt)
- 
- 	/* start arbitration */
- 	//nsp_dbg(NSP_DEBUG_RESELECTION, "start arbit");
--	SCpnt->SCp.phase = PH_ARBSTART;
-+	scsi_pointer->phase = PH_ARBSTART;
- 	nsp_index_write(base, SETARBIT, ARBIT_GO);
- 
- 	time_out = 1000;
-@@ -392,7 +400,7 @@ static bool nsphw_start_selection(struct scsi_cmnd *SCpnt)
- 
- 	/* assert select line */
- 	//nsp_dbg(NSP_DEBUG_RESELECTION, "assert SEL line");
--	SCpnt->SCp.phase = PH_SELSTART;
-+	scsi_pointer->phase = PH_SELSTART;
- 	udelay(3); /* wait 2.4us */
- 	nsp_index_write(base, SCSIDATALATCH, BIT(host_id) | BIT(target));
- 	nsp_index_write(base, SCSIBUSCTRL,   SCSI_SEL | SCSI_BSY                    | SCSI_ATN);
-@@ -568,8 +576,9 @@ static int nsp_expect_signal(struct scsi_cmnd *SCpnt,
- /*
-  * transfer SCSI message
-  */
--static int nsp_xfer(struct scsi_cmnd *SCpnt, int phase)
-+static int nsp_xfer(struct scsi_cmnd *const SCpnt, int phase)
- {
-+	struct scsi_pointer *scsi_pointer = nsp_priv(SCpnt);
- 	unsigned int  base = SCpnt->device->host->io_port;
- 	nsp_hw_data  *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
- 	char	     *buf  = data->MsgBuffer;
-@@ -587,7 +596,7 @@ static int nsp_xfer(struct scsi_cmnd *SCpnt, int phase)
- 		}
- 
- 		/* if last byte, negate ATN */
--		if (len == 1 && SCpnt->SCp.phase == PH_MSG_OUT) {
-+		if (len == 1 && scsi_pointer->phase == PH_MSG_OUT) {
- 			nsp_index_write(base, SCSIBUSCTRL, AUTODIRECTION | ACKENB);
- 		}
- 
-@@ -608,14 +617,15 @@ static int nsp_xfer(struct scsi_cmnd *SCpnt, int phase)
- /*
-  * get extra SCSI data from fifo
-  */
--static int nsp_dataphase_bypass(struct scsi_cmnd *SCpnt)
-+static int nsp_dataphase_bypass(struct scsi_cmnd *const SCpnt)
- {
-+	struct scsi_pointer *scsi_pointer = nsp_priv(SCpnt);
- 	nsp_hw_data *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
- 	unsigned int count;
- 
- 	//nsp_dbg(NSP_DEBUG_DATA_IO, "in");
- 
--	if (SCpnt->SCp.have_data_in != IO_IN) {
-+	if (scsi_pointer->have_data_in != IO_IN) {
- 		return 0;
- 	}
- 
-@@ -630,7 +640,7 @@ static int nsp_dataphase_bypass(struct scsi_cmnd *SCpnt)
- 	 * data phase skip only occures in case of SCSI_LOW_READ
- 	 */
- 	nsp_dbg(NSP_DEBUG_DATA_IO, "use bypass quirk");
--	SCpnt->SCp.phase = PH_DATA;
-+	scsi_pointer->phase = PH_DATA;
- 	nsp_pio_read(SCpnt);
- 	nsp_setup_fifo(data, false);
- 
-@@ -704,8 +714,9 @@ static int nsp_fifo_count(struct scsi_cmnd *SCpnt)
- /*
-  * read data in DATA IN phase
-  */
--static void nsp_pio_read(struct scsi_cmnd *SCpnt)
-+static void nsp_pio_read(struct scsi_cmnd *const SCpnt)
- {
-+	struct scsi_pointer *scsi_pointer = nsp_priv(SCpnt);
- 	unsigned int  base      = SCpnt->device->host->io_port;
- 	unsigned long mmio_base = SCpnt->device->host->base;
- 	nsp_hw_data  *data      = (nsp_hw_data *)SCpnt->device->host->hostdata;
-@@ -716,24 +727,25 @@ static void nsp_pio_read(struct scsi_cmnd *SCpnt)
- 	ocount = data->FifoCount;
- 
- 	nsp_dbg(NSP_DEBUG_DATA_IO, "in SCpnt=0x%p resid=%d ocount=%d ptr=0x%p this_residual=%d buffers=0x%p nbuf=%d",
--		SCpnt, scsi_get_resid(SCpnt), ocount, SCpnt->SCp.ptr,
--		SCpnt->SCp.this_residual, SCpnt->SCp.buffer,
--		SCpnt->SCp.buffers_residual);
-+		SCpnt, scsi_get_resid(SCpnt), ocount, scsi_pointer->ptr,
-+		scsi_pointer->this_residual, scsi_pointer->buffer,
-+		scsi_pointer->buffers_residual);
- 
- 	time_out = 1000;
- 
- 	while ((time_out-- != 0) &&
--	       (SCpnt->SCp.this_residual > 0 || SCpnt->SCp.buffers_residual > 0 ) ) {
-+	       (scsi_pointer->this_residual > 0 ||
-+		scsi_pointer->buffers_residual > 0)) {
- 
- 		stat = nsp_index_read(base, SCSIBUSMON);
- 		stat &= BUSMON_PHASE_MASK;
- 
- 
- 		res = nsp_fifo_count(SCpnt) - ocount;
--		//nsp_dbg(NSP_DEBUG_DATA_IO, "ptr=0x%p this=0x%x ocount=0x%x res=0x%x", SCpnt->SCp.ptr, SCpnt->SCp.this_residual, ocount, res);
-+		//nsp_dbg(NSP_DEBUG_DATA_IO, "ptr=0x%p this=0x%x ocount=0x%x res=0x%x", scsi_pointer->ptr, scsi_pointer->this_residual, ocount, res);
- 		if (res == 0) { /* if some data available ? */
- 			if (stat == BUSPHASE_DATA_IN) { /* phase changed? */
--				//nsp_dbg(NSP_DEBUG_DATA_IO, " wait for data this=%d", SCpnt->SCp.this_residual);
-+				//nsp_dbg(NSP_DEBUG_DATA_IO, " wait for data this=%d", scsi_pointer->this_residual);
- 				continue;
- 			} else {
- 				nsp_dbg(NSP_DEBUG_DATA_IO, "phase changed stat=0x%x", stat);
-@@ -747,20 +759,21 @@ static void nsp_pio_read(struct scsi_cmnd *SCpnt)
- 			continue;
- 		}
- 
--		res = min(res, SCpnt->SCp.this_residual);
-+		res = min(res, scsi_pointer->this_residual);
- 
- 		switch (data->TransferMode) {
- 		case MODE_IO32:
- 			res &= ~(BIT(1)|BIT(0)); /* align 4 */
--			nsp_fifo32_read(base, SCpnt->SCp.ptr, res >> 2);
-+			nsp_fifo32_read(base, scsi_pointer->ptr, res >> 2);
- 			break;
- 		case MODE_IO8:
--			nsp_fifo8_read (base, SCpnt->SCp.ptr, res     );
-+			nsp_fifo8_read(base, scsi_pointer->ptr, res);
- 			break;
- 
- 		case MODE_MEM32:
- 			res &= ~(BIT(1)|BIT(0)); /* align 4 */
--			nsp_mmio_fifo32_read(mmio_base, SCpnt->SCp.ptr, res >> 2);
-+			nsp_mmio_fifo32_read(mmio_base, scsi_pointer->ptr,
-+					     res >> 2);
- 			break;
- 
- 		default:
-@@ -769,22 +782,23 @@ static void nsp_pio_read(struct scsi_cmnd *SCpnt)
- 		}
- 
- 		nsp_inc_resid(SCpnt, -res);
--		SCpnt->SCp.ptr		 += res;
--		SCpnt->SCp.this_residual -= res;
-+		scsi_pointer->ptr += res;
-+		scsi_pointer->this_residual -= res;
- 		ocount			 += res;
--		//nsp_dbg(NSP_DEBUG_DATA_IO, "ptr=0x%p this_residual=0x%x ocount=0x%x", SCpnt->SCp.ptr, SCpnt->SCp.this_residual, ocount);
-+		//nsp_dbg(NSP_DEBUG_DATA_IO, "ptr=0x%p this_residual=0x%x ocount=0x%x", scsi_pointer->ptr, scsi_pointer->this_residual, ocount);
- 
- 		/* go to next scatter list if available */
--		if (SCpnt->SCp.this_residual	== 0 &&
--		    SCpnt->SCp.buffers_residual != 0 ) {
-+		if (scsi_pointer->this_residual	== 0 &&
-+		    scsi_pointer->buffers_residual != 0 ) {
- 			//nsp_dbg(NSP_DEBUG_DATA_IO, "scatterlist next timeout=%d", time_out);
--			SCpnt->SCp.buffers_residual--;
--			SCpnt->SCp.buffer = sg_next(SCpnt->SCp.buffer);
--			SCpnt->SCp.ptr		 = BUFFER_ADDR;
--			SCpnt->SCp.this_residual = SCpnt->SCp.buffer->length;
-+			scsi_pointer->buffers_residual--;
-+			scsi_pointer->buffer = sg_next(scsi_pointer->buffer);
-+			scsi_pointer->ptr = BUFFER_ADDR(SCpnt);
-+			scsi_pointer->this_residual =
-+				scsi_pointer->buffer->length;
- 			time_out = 1000;
- 
--			//nsp_dbg(NSP_DEBUG_DATA_IO, "page: 0x%p, off: 0x%x", SCpnt->SCp.buffer->page, SCpnt->SCp.buffer->offset);
-+			//nsp_dbg(NSP_DEBUG_DATA_IO, "page: 0x%p, off: 0x%x", scsi_pointer->buffer->page, scsi_pointer->buffer->offset);
- 		}
- 	}
- 
-@@ -792,8 +806,8 @@ static void nsp_pio_read(struct scsi_cmnd *SCpnt)
- 
- 	if (time_out < 0) {
- 		nsp_msg(KERN_DEBUG, "pio read timeout resid=%d this_residual=%d buffers_residual=%d",
--			scsi_get_resid(SCpnt), SCpnt->SCp.this_residual,
--			SCpnt->SCp.buffers_residual);
-+			scsi_get_resid(SCpnt), scsi_pointer->this_residual,
-+			scsi_pointer->buffers_residual);
- 	}
- 	nsp_dbg(NSP_DEBUG_DATA_IO, "read ocount=0x%x", ocount);
- 	nsp_dbg(NSP_DEBUG_DATA_IO, "r cmd=%d resid=0x%x\n", data->CmdId,
-@@ -805,6 +819,7 @@ static void nsp_pio_read(struct scsi_cmnd *SCpnt)
-  */
- static void nsp_pio_write(struct scsi_cmnd *SCpnt)
- {
-+	struct scsi_pointer *scsi_pointer = nsp_priv(SCpnt);
- 	unsigned int  base      = SCpnt->device->host->io_port;
- 	unsigned long mmio_base = SCpnt->device->host->base;
- 	nsp_hw_data  *data      = (nsp_hw_data *)SCpnt->device->host->hostdata;
-@@ -815,14 +830,15 @@ static void nsp_pio_write(struct scsi_cmnd *SCpnt)
- 	ocount	 = data->FifoCount;
- 
- 	nsp_dbg(NSP_DEBUG_DATA_IO, "in fifocount=%d ptr=0x%p this_residual=%d buffers=0x%p nbuf=%d resid=0x%x",
--		data->FifoCount, SCpnt->SCp.ptr, SCpnt->SCp.this_residual,
--		SCpnt->SCp.buffer, SCpnt->SCp.buffers_residual,
-+		data->FifoCount, scsi_pointer->ptr, scsi_pointer->this_residual,
-+		scsi_pointer->buffer, scsi_pointer->buffers_residual,
- 		scsi_get_resid(SCpnt));
- 
- 	time_out = 1000;
- 
- 	while ((time_out-- != 0) &&
--	       (SCpnt->SCp.this_residual > 0 || SCpnt->SCp.buffers_residual > 0)) {
-+	       (scsi_pointer->this_residual > 0 ||
-+		scsi_pointer->buffers_residual > 0)) {
- 		stat = nsp_index_read(base, SCSIBUSMON);
- 		stat &= BUSMON_PHASE_MASK;
- 
-@@ -832,9 +848,9 @@ static void nsp_pio_write(struct scsi_cmnd *SCpnt)
- 			nsp_dbg(NSP_DEBUG_DATA_IO, "phase changed stat=0x%x, res=%d\n", stat, res);
- 			/* Put back pointer */
- 			nsp_inc_resid(SCpnt, res);
--			SCpnt->SCp.ptr		 -= res;
--			SCpnt->SCp.this_residual += res;
--			ocount			 -= res;
-+			scsi_pointer->ptr -= res;
-+			scsi_pointer->this_residual += res;
-+			ocount -= res;
- 
- 			break;
- 		}
-@@ -845,21 +861,22 @@ static void nsp_pio_write(struct scsi_cmnd *SCpnt)
- 			continue;
- 		}
- 
--		res = min(SCpnt->SCp.this_residual, WFIFO_CRIT);
-+		res = min(scsi_pointer->this_residual, WFIFO_CRIT);
- 
--		//nsp_dbg(NSP_DEBUG_DATA_IO, "ptr=0x%p this=0x%x res=0x%x", SCpnt->SCp.ptr, SCpnt->SCp.this_residual, res);
-+		//nsp_dbg(NSP_DEBUG_DATA_IO, "ptr=0x%p this=0x%x res=0x%x", scsi_pointer->ptr, scsi_pointer->this_residual, res);
- 		switch (data->TransferMode) {
- 		case MODE_IO32:
- 			res &= ~(BIT(1)|BIT(0)); /* align 4 */
--			nsp_fifo32_write(base, SCpnt->SCp.ptr, res >> 2);
-+			nsp_fifo32_write(base, scsi_pointer->ptr, res >> 2);
- 			break;
- 		case MODE_IO8:
--			nsp_fifo8_write (base, SCpnt->SCp.ptr, res     );
-+			nsp_fifo8_write(base, scsi_pointer->ptr, res);
- 			break;
- 
- 		case MODE_MEM32:
- 			res &= ~(BIT(1)|BIT(0)); /* align 4 */
--			nsp_mmio_fifo32_write(mmio_base, SCpnt->SCp.ptr, res >> 2);
-+			nsp_mmio_fifo32_write(mmio_base, scsi_pointer->ptr,
-+					      res >> 2);
- 			break;
- 
- 		default:
-@@ -868,18 +885,19 @@ static void nsp_pio_write(struct scsi_cmnd *SCpnt)
- 		}
- 
- 		nsp_inc_resid(SCpnt, -res);
--		SCpnt->SCp.ptr		 += res;
--		SCpnt->SCp.this_residual -= res;
--		ocount			 += res;
-+		scsi_pointer->ptr += res;
-+		scsi_pointer->this_residual -= res;
-+		ocount += res;
- 
- 		/* go to next scatter list if available */
--		if (SCpnt->SCp.this_residual	== 0 &&
--		    SCpnt->SCp.buffers_residual != 0 ) {
-+		if (scsi_pointer->this_residual	== 0 &&
-+		    scsi_pointer->buffers_residual != 0 ) {
- 			//nsp_dbg(NSP_DEBUG_DATA_IO, "scatterlist next");
--			SCpnt->SCp.buffers_residual--;
--			SCpnt->SCp.buffer = sg_next(SCpnt->SCp.buffer);
--			SCpnt->SCp.ptr		 = BUFFER_ADDR;
--			SCpnt->SCp.this_residual = SCpnt->SCp.buffer->length;
-+			scsi_pointer->buffers_residual--;
-+			scsi_pointer->buffer = sg_next(scsi_pointer->buffer);
-+			scsi_pointer->ptr = BUFFER_ADDR(SCpnt);
-+			scsi_pointer->this_residual =
-+				scsi_pointer->buffer->length;
- 			time_out = 1000;
- 		}
- 	}
-@@ -947,6 +965,7 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 	unsigned int   base;
- 	unsigned char  irq_status, irq_phase, phase;
- 	struct scsi_cmnd *tmpSC;
-+	struct scsi_pointer *scsi_pointer;
- 	unsigned char  target, lun;
- 	unsigned int  *sync_neg;
- 	int            i, tmp;
-@@ -1025,9 +1044,10 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 
- 		if(data->CurrentSC != NULL) {
- 			tmpSC = data->CurrentSC;
--			tmpSC->result  = (DID_RESET                   << 16) |
--				         ((tmpSC->SCp.Message & 0xff) <<  8) |
--				         ((tmpSC->SCp.Status  & 0xff) <<  0);
-+			scsi_pointer = nsp_priv(tmpSC);
-+			tmpSC->result = (DID_RESET              << 16) |
-+				((scsi_pointer->Message & 0xff) <<  8) |
-+				((scsi_pointer->Status  & 0xff) <<  0);
- 			nsp_scsi_done(tmpSC);
- 		}
- 		return IRQ_HANDLED;
-@@ -1041,6 +1061,7 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 	}
- 
- 	tmpSC    = data->CurrentSC;
-+	scsi_pointer = nsp_priv(tmpSC);
- 	target   = tmpSC->device->id;
- 	lun      = tmpSC->device->lun;
- 	sync_neg = &(data->Sync[target].SyncNegotiation);
-@@ -1063,7 +1084,7 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 
- 	//show_phase(tmpSC);
- 
--	switch(tmpSC->SCp.phase) {
-+	switch (scsi_pointer->phase) {
- 	case PH_SELSTART:
- 		// *sync_neg = SYNC_NOT_YET;
- 		if ((phase & BUSMON_BSY) == 0) {
-@@ -1086,7 +1107,7 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 		/* attention assert */
- 		//nsp_dbg(NSP_DEBUG_INTR, "attention assert");
- 		data->SelectionTimeOut = 0;
--		tmpSC->SCp.phase       = PH_SELECTED;
-+		scsi_pointer->phase = PH_SELECTED;
- 		nsp_index_write(base, SCSIBUSCTRL, SCSI_ATN);
- 		udelay(1);
- 		nsp_index_write(base, SCSIBUSCTRL, SCSI_ATN | AUTODIRECTION | ACKENB);
-@@ -1115,17 +1136,18 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 	//nsp_dbg(NSP_DEBUG_INTR, "start scsi seq");
- 
- 	/* normal disconnect */
--	if (((tmpSC->SCp.phase == PH_MSG_IN) || (tmpSC->SCp.phase == PH_MSG_OUT)) &&
--	    (irq_phase & LATCHED_BUS_FREE) != 0 ) {
-+	if ((scsi_pointer->phase == PH_MSG_IN ||
-+	     scsi_pointer->phase == PH_MSG_OUT) &&
-+	    (irq_phase & LATCHED_BUS_FREE) != 0) {
- 		nsp_dbg(NSP_DEBUG_INTR, "normal disconnect irq_status=0x%x, phase=0x%x, irq_phase=0x%x", irq_status, phase, irq_phase);
- 
- 		//*sync_neg       = SYNC_NOT_YET;
- 
- 		/* all command complete and return status */
--		if (tmpSC->SCp.Message == COMMAND_COMPLETE) {
--			tmpSC->result = (DID_OK		             << 16) |
--					((tmpSC->SCp.Message & 0xff) <<  8) |
--					((tmpSC->SCp.Status  & 0xff) <<  0);
-+		if (scsi_pointer->Message == COMMAND_COMPLETE) {
-+			tmpSC->result = (DID_OK		        << 16) |
-+				((scsi_pointer->Message & 0xff) <<  8) |
-+				((scsi_pointer->Status  & 0xff) <<  0);
- 			nsp_dbg(NSP_DEBUG_INTR, "command complete result=0x%x", tmpSC->result);
- 			nsp_scsi_done(tmpSC);
- 
-@@ -1154,7 +1176,7 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 			return IRQ_HANDLED;
- 		}
- 
--		tmpSC->SCp.phase = PH_COMMAND;
-+		scsi_pointer->phase = PH_COMMAND;
- 
- 		nsp_nexus(tmpSC);
- 
-@@ -1170,8 +1192,8 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 	case BUSPHASE_DATA_OUT:
- 		nsp_dbg(NSP_DEBUG_INTR, "BUSPHASE_DATA_OUT");
- 
--		tmpSC->SCp.phase        = PH_DATA;
--		tmpSC->SCp.have_data_in = IO_OUT;
-+		scsi_pointer->phase        = PH_DATA;
-+		scsi_pointer->have_data_in = IO_OUT;
- 
- 		nsp_pio_write(tmpSC);
- 
-@@ -1180,8 +1202,8 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 	case BUSPHASE_DATA_IN:
- 		nsp_dbg(NSP_DEBUG_INTR, "BUSPHASE_DATA_IN");
- 
--		tmpSC->SCp.phase        = PH_DATA;
--		tmpSC->SCp.have_data_in = IO_IN;
-+		scsi_pointer->phase        = PH_DATA;
-+		scsi_pointer->have_data_in = IO_IN;
- 
- 		nsp_pio_read(tmpSC);
- 
-@@ -1191,10 +1213,11 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 		nsp_dataphase_bypass(tmpSC);
- 		nsp_dbg(NSP_DEBUG_INTR, "BUSPHASE_STATUS");
- 
--		tmpSC->SCp.phase = PH_STATUS;
-+		scsi_pointer->phase = PH_STATUS;
- 
--		tmpSC->SCp.Status = nsp_index_read(base, SCSIDATAWITHACK);
--		nsp_dbg(NSP_DEBUG_INTR, "message=0x%x status=0x%x", tmpSC->SCp.Message, tmpSC->SCp.Status);
-+		scsi_pointer->Status = nsp_index_read(base, SCSIDATAWITHACK);
-+		nsp_dbg(NSP_DEBUG_INTR, "message=0x%x status=0x%x",
-+			scsi_pointer->Message, scsi_pointer->Status);
- 
- 		break;
- 
-@@ -1204,7 +1227,7 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 			goto timer_out;
- 		}
- 
--		tmpSC->SCp.phase = PH_MSG_OUT;
-+		scsi_pointer->phase = PH_MSG_OUT;
- 
- 		//*sync_neg = SYNC_NOT_YET;
- 
-@@ -1237,7 +1260,7 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 			goto timer_out;
- 		}
- 
--		tmpSC->SCp.phase = PH_MSG_IN;
-+		scsi_pointer->phase = PH_MSG_IN;
- 		nsp_message_in(tmpSC);
- 
- 		/**/
-@@ -1269,9 +1292,10 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 				i += (1 + data->MsgBuffer[i+1]);
- 			}
- 		}
--		tmpSC->SCp.Message = tmp;
-+		scsi_pointer->Message = tmp;
- 
--		nsp_dbg(NSP_DEBUG_INTR, "message=0x%x len=%d", tmpSC->SCp.Message, data->MsgLen);
-+		nsp_dbg(NSP_DEBUG_INTR, "message=0x%x len=%d",
-+			scsi_pointer->Message, data->MsgLen);
- 		show_message(data);
- 
- 		break;
-diff --git a/drivers/scsi/pcmcia/nsp_cs.h b/drivers/scsi/pcmcia/nsp_cs.h
-index 7d5d1a5b36e0..e1ee8ef90ad3 100644
---- a/drivers/scsi/pcmcia/nsp_cs.h
-+++ b/drivers/scsi/pcmcia/nsp_cs.h
-@@ -371,7 +371,7 @@ enum _burst_mode {
- };
- 
- /* scatter-gather table */
--#  define BUFFER_ADDR ((char *)((sg_virt(SCpnt->SCp.buffer))))
-+#define BUFFER_ADDR(SCpnt) ((char *)(sg_virt(nsp_priv(SCpnt)->buffer)))
- 
- #endif  /*__nsp_cs__*/
- /* end */
-diff --git a/drivers/scsi/pcmcia/nsp_debug.c b/drivers/scsi/pcmcia/nsp_debug.c
-index 6aa7d269d3b3..23b68dd26f74 100644
---- a/drivers/scsi/pcmcia/nsp_debug.c
-+++ b/drivers/scsi/pcmcia/nsp_debug.c
-@@ -145,7 +145,7 @@ static void show_command(struct scsi_cmnd *SCpnt)
- 
- static void show_phase(struct scsi_cmnd *SCpnt)
- {
--	int i = SCpnt->SCp.phase;
-+	int i = nsp_scsi_pointer(SCpnt)->phase;
- 
- 	char *ph[] = {
- 		"PH_UNDETERMINED",
+-	while (CMD_SP(cmd) && wait_iter--) {
++	while (sp->type && wait_iter--)
+ 		msleep(ABORT_POLLING_PERIOD);
+-	}
+-	if (CMD_SP(cmd))
++	if (sp->type)
+ 		ret = QLA_FUNCTION_FAILED;
+ 
+ 	return ret;
