@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12960C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 02:08:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46FC7C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 03:12:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231437AbiBRCIp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Feb 2022 21:08:45 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:36384 "EHLO
+        id S231838AbiBRDNM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Feb 2022 22:13:12 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:46800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231424AbiBRCIn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 21:08:43 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47E2510DC
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 18:08:26 -0800 (PST)
+        with ESMTP id S231789AbiBRDNL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2022 22:13:11 -0500
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB49387AC
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 19:12:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1645150106; x=1676686106;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=OLxrZjuW8Qhnm3ktwlDLFitbMj4RJtOfmIPNg5Mcjy0=;
-  b=dYcO6eUT7Jr9IB1Mn7xOI9ZU07pF7hd9AWptSWXS7PjxjlRlCNqLX0/N
-   vUVKTqxWRkJeLeM1EkNjGIFELwQNz0cwQnNWe8rLioa8UxDftPNOaLwG2
-   f+cTYmKNx543gICaGZ1aY/iSoOUsKB7CF71uKtslCIujziY01IndBUqS2
-   nKukUAuJxqnSb6lYRFiLOMQUuKheatVWnWnd3UgNUu/4nXZHgrGDXMsOw
-   4v3Tj59OiP3R8xqKxe2zvvCMnohWhpcX+vd3j5floR4U6fmRAhfyIBLtj
-   Aghnv90tnTVBqZ0htmKkJcK88eItWNPjqKIoKq3x7oyBhLHtfNgOYWug4
-   A==;
+  t=1645153975; x=1676689975;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=VnJd2o5itS/4TPuSd4ZcOr19TSk4abFVlw5aIt3z+1I=;
+  b=jst5ttb+rlzlIxZa8/i1dl6HH62lmCGz1JRLmiEVTKZ3clKnPth0+gOq
+   mP2bfSJrC/5XeTgbFwPgukXvmaeGzV9yXQf09m6HBvKdyFHonHpkX/Toa
+   rMZxFZIbmRWQBxi+fjzl7eJOJ0/9klM21afCvxJBUIQF2zPFmh+5zRG3V
+   c5QUFzNcNLZ4/0SpDR/T4LVykCZQXUICM4q2JLoSBeLK6/KpAl2lXZ49D
+   ws5+RSPRFW/u4N4uPQ5jnxno9r1uq9UfC6z1l+XkksZBO/NCD1JeNE2bO
+   p2XVGNfR5JJh108atPM42QBYtWPFDyi1Xt8do38WoGqI4Bcp92XYMqvR5
+   g==;
 X-IronPort-AV: E=Sophos;i="5.88,377,1635177600"; 
-   d="scan'208";a="297358071"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Feb 2022 10:08:25 +0800
-IronPort-SDR: s/oGO8TMBkJ7An/OsAF7qoRVBpYad6P9UlWzt7lboBztyqcXuT8NYX3hs5S5RWD4Jfx7FAHu5y
- p30UwR0r36/dx+iU1QmNMpcTCKBKywuFVSdsf6kR+fhk3XJpx8RWonvSUvis3axbaoAZypo0fA
- v6bcoEZDmDrqwIgfUT7JEr4KrSGzGQauk6MVPmupHyFlgxQ7HnuoQhLWtOpJGHCUHRz7SKG3wu
- Bl4kbdQboz74NFqJCrKTr9eJ7B3sCTF0YCIpwQhs4Ig1gHpN5D14oAVYkzVy7ih/6ap/leIa77
- 6q7fOPIirKYQ+a0/JOYpREad
+   d="scan'208";a="305149289"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Feb 2022 11:12:54 +0800
+IronPort-SDR: 1ohBqAVRC61yWIYyUQkJVovXK6PkhwJ28LxzCTs+v79OFRaCWYykMxSQgv+24O1fbsceofV3Ng
+ VuyX/AfSdMbVmfaEc4DgDpSk34TPtLs7yHFOHLdjrfGCUAt/18sOres9vJJDmDG7KbzCodIwMw
+ mNK4lHZPwS2heWaSXBF3fYJuUxJwGus+0Qid6VCy03cZNQxnW8qHQDREWNc3xx3IWq9JgpqjyY
+ YZRxvOK98vG1uUeTUVtoI004w/1CnqCioOgKQ8J/MhecluirjexSO6ZxjgPBg3U88s7rMWmR/L
+ 5OcecmGzIyYRx6FHR5FTls2n
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 17:41:10 -0800
-IronPort-SDR: Q98PpxWAmI2a8tkWv3Uq0+DEg0vqNeo+aI2oTJgrbgsnGGXLm7y5E7EyptOt8TZxaYICcIVEQf
- Inwx6Ascz5wq5T14QNbiduoyxTZEJr2QaFZBAxqll+FNLiSHINQzhOCR4LkTnzetRu4p3CRkEx
- t3R6It+i/yXIsCR4LlqnuTeWahjDoLtCfVPQssqPyk1T9n9Ny3JrlEmhSOjH8euYiaW+CyXl3h
- Mfi+DcIw5PE1dBt6onPp+LKvOjluxD/ASt7yytwCu4pMYQDfyTEXUCS/0rQlv5ddiSnaRsYJ7R
- WDA=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 18:45:39 -0800
+IronPort-SDR: G+Uk/myGmORnMeZP73PljvTpua3xdDwDXuZ8isGoEn0ELsLbyWbEDKt9MNl3oviFAOPF9Xuohu
+ brDmuSaaHD9bu0yxNKdLHP4ujjAED+8aRqKZHYwuuG1H28rIV22qR6DQvvfRKd7A4yCuwI5BtX
+ H2ybl9N2n2/Gpqt1z71IHXQxEWGsh9OlPNUsYx0UdvlMXhMUloIu9ZtZaHyyiiGEYfADfC07U3
+ E9RXwmpGN2aUdIbIyrKAlB9T8ixC/vWKDEl25knLl/4IKB9l5zbZr0V70NsG8FZbQl6b6t5bSB
+ wHM=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 18:08:25 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 19:12:54 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K0FV10HJxz1SVnx
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 18:08:25 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K0GwQ1MFFz1SHwl
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2022 19:12:54 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,116 +56,112 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1645150104; x=1647742105; bh=OLxrZjuW8Qhnm3ktwlDLFitbMj4RJtOfmIP
-        Ng5Mcjy0=; b=W4idj1kpPZfxkhPQkoDheHww/uF4mryDZfOaC2czfsxeNRhV62k
-        YOqHK+yr8k5bDXjSN3nZ8HlWdgbuMyWVnu7N4s/FoSc1O7ay2r7JSnE7CA/aPmU0
-        tu1w8CraA/4rS6qWoDN6f/y5QXF/lWeNPJ35/ivZva0JMn9n6NU2aIiDa4OEozTQ
-        f+lxEJluAFPZaZNeOo1nnpFwx27KJPuy2OeVtx4Sd0fP2bNupgRNLNLrUC15z3ot
-        QRUrb3EpiNszpY2QXcuesnkPSNnIl1rLpw7LmQ40I9RY+gFMsWMr+OGeIXwoTgFg
-        wNayRl34sXh+DxzFiUXeYSGicGfvlDlG/0Q==
+        1645153973; x=1647745974; bh=VnJd2o5itS/4TPuSd4ZcOr19TSk4abFVlw5
+        aIt3z+1I=; b=HWE8GomcT6squzgGRBk0J7Kxq1VbQvyhc8vcT1JbDfEbH8NV2dE
+        7U91VqOeCQiiBtPVcrQJ9tv+yCy5YA4YHDseJvWjgudwDiHk5zZX8BKKNmNmwOjW
+        85DGZVvJJEPTi1i1nVhFihWa2tIQrHo5Ny5P41ltGwgfhsyIkO8IgMGISR8x/otJ
+        3zJaiLGX73GMnGyry+lcolqXVmglM04ZW3Ni9jCuc38qSny6b+Z8gtiiqWWD+ij0
+        J1CVQoPNQ0HZXfqgd0DUoVZwl0uja/2eOrptWf23wBVgsFaTdOn4IBt9Di1lueMJ
+        MjT5R4TeUaezlGBBJLQmZWikkNoFlAV6Abg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Qs1NrvSCMSDs for <linux-scsi@vger.kernel.org>;
-        Thu, 17 Feb 2022 18:08:24 -0800 (PST)
+        with ESMTP id hlj0r1o0xI_U for <linux-scsi@vger.kernel.org>;
+        Thu, 17 Feb 2022 19:12:53 -0800 (PST)
 Received: from [10.225.163.78] (unknown [10.225.163.78])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K0FTz0cCLz1Rwrw;
-        Thu, 17 Feb 2022 18:08:22 -0800 (PST)
-Message-ID: <69107c01-7189-0734-ca8f-bde4c3005c88@opensource.wdc.com>
-Date:   Fri, 18 Feb 2022 11:08:21 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K0GwN4LZJz1Rwrw;
+        Thu, 17 Feb 2022 19:12:52 -0800 (PST)
+Message-ID: <04a7d878-f5dc-6058-fc29-c72139d13aa3@opensource.wdc.com>
+Date:   Fri, 18 Feb 2022 12:12:51 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH v4 22/31] scsi: pm8001: Fix tag leaks on error
+Subject: Re: [PATCH v3 27/31] scsi: pm8001: Cleanup pm8001_queue_command()
 Content-Language: en-US
 To:     John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>
-Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        Luo Jiaxing <luojiaxing@huawei.com>
-References: <20220217132956.484818-1-damien.lemoal@opensource.wdc.com>
- <20220217132956.484818-23-damien.lemoal@opensource.wdc.com>
- <98e8fc1f-ef84-f4a4-076d-0424108b5fe1@huawei.com>
+        Xiang Chen <chenxiang66@hisilicon.com>,
+        Jason Yan <yanaijie@huawei.com>
+References: <20220214021747.4976-1-damien.lemoal@opensource.wdc.com>
+ <20220214021747.4976-28-damien.lemoal@opensource.wdc.com>
+ <51d7c127-f975-14e9-a036-c37416ed8679@huawei.com>
+ <32efd519-3485-ee34-84e2-34a0d8c27e17@opensource.wdc.com>
+ <38090771-ad24-1b20-9b79-f7f89d42ea66@huawei.com>
+ <37df3c92-c28e-72d4-76d8-33356829af5a@opensource.wdc.com>
+ <5a5481af-e975-c6fb-2d48-961769eae551@huawei.com>
+ <9c22abeb-1b22-4613-66bc-276aaa4a639c@opensource.wdc.com>
+ <e7b5c48b-4217-7247-8bc9-e5f8ae9411ce@huawei.com>
+ <e9b40eaf-7aa5-798b-1bde-1a2ce8d83433@opensource.wdc.com>
+ <712a4702-8534-fad2-2679-cc5cf62e4a9e@huawei.com>
+ <ba58ea9e-430a-ec22-e67a-ceb632e99f33@opensource.wdc.com>
+ <28cfcd43-e006-ab26-2d58-47384ae49146@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <98e8fc1f-ef84-f4a4-076d-0424108b5fe1@huawei.com>
+In-Reply-To: <28cfcd43-e006-ab26-2d58-47384ae49146@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/18/22 02:41, John Garry wrote:
-> On 17/02/2022 13:29, Damien Le Moal wrote:
->> In pm8001_chip_set_dev_state_req(), pm8001_chip_fw_flash_update_req()
->> and pm8001_chip_reg_dev_req() add missing calls to pm8001_tag_free() to
->> free the allocated tag when pm8001_mpi_build_cmd() fails.
+On 2/17/22 21:49, John Garry wrote:
+>>>>
+>>>
+>>> I figured out what is happening here and it does not help solve the
+>>> mystery of my hang.
+>>>
+>>> Here's the steps:
+>>> a. scsi_cmnd times out
+>>> b. scsi error handling kicks in
+>>> c. libsas attempts to abort the task, which fails
+>>> d. libsas then tries IT nexus reset, which passes
+>>>    - libsas assumes the scsi_cmnd has completed with failure
+>>> e. error handling concludes
+>>> f. scsi midlayer then retries the same scsi_cmnd
+>>> g. since we did not "free" associated ccb earlier or dma unmap at d.,
+>>> the dma unmap on the same scsi_cmnd causes the warn
+>>>
+>>> So the LLD should really free resources and dma unmap at point IT nexus
+>>> reset completes, but it doesn't. I think in certain conditions dma map
+>>> should not be done twice.
+>>>
+>>> Anyway, that can be fixed, but I still have the hang :(
 >>
->> Similarly, in pm8001_exec_internal_task_abort(), if the chip
->> ->task_abort method fails, the tag allocated for the abort request task
->> must be freed. Add the missing call to pm8001_tag_free(). Also remove
->> the useless ex_err label and use "break" instead of "goto" statements
->> in the retry loop.
+>> I guess (a) (cmd timeout) is only the symptom of the hang ? That is, the
+>> hang is causing the timeout ?
+> 
+> Right
+> 
+>> It may be good to turn on scsi trace to see if the command was only
+>> partially done, or not at all, or if it is a non-data command.
 >>
->> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 > 
-> This looks ok, but I think pm80xx_chip_phy_ctl_req() might be missed.
+> I could do that. But I think that the command just does not complete. Or 
+> maybe it is missed.
 > 
-> Apart from that and a nit, below:
-
-[...]
-
->> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
->> index d0f5feb4f2d3..0440777a9135 100644
->> --- a/drivers/scsi/pm8001/pm8001_sas.c
->> +++ b/drivers/scsi/pm8001/pm8001_sas.c
->> @@ -834,7 +834,8 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
->>   
->>   		res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
->>   		if (res)
->> -			goto ex_err;
->> +			break;
->> +
->>   		ccb = &pm8001_ha->ccb_info[ccb_tag];
->>   		ccb->device = pm8001_dev;
->>   		ccb->ccb_tag = ccb_tag;
->> @@ -843,36 +844,38 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
->>   
->>   		res = PM8001_CHIP_DISP->task_abort(pm8001_ha,
->>   			pm8001_dev, flag, task_tag, ccb_tag);
->> -
->>   		if (res) {
->>   			del_timer(&task->slow_task->timer);
->> -			pm8001_dbg(pm8001_ha, FAIL, "Executing internal task failed\n");
->> -			goto ex_err;
->> +			pm8001_dbg(pm8001_ha, FAIL,
->> +				   "Executing internal task failed\n");
->> +			pm8001_tag_free(pm8001_ha, ccb_tag);
->> +			break;
->>   		}
->> +
->>   		wait_for_completion(&task->slow_task->completion);
->>   		res = TMF_RESP_FUNC_FAILED;
->> +
->>   		/* Even TMF timed out, return direct. */
->>   		if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
->>   			pm8001_dbg(pm8001_ha, FAIL, "TMF task timeout.\n");
->> -			goto ex_err;
->> +			break;
->>   		}
+>> And speaking of errors, I am currently testing v4 of my series and
+>> noticed some weird things in the error handling. E.g., with one of the
+>> test executing a report zones command with an LBA out of range, I see this:
+>>
+>> [23962.027105] pm80xx0:: mpi_sata_event  2788:SATA EVENT 0x23
+>> [23962.036099] pm80xx0:: pm80xx_send_read_log  1863:Executing read log end
+>>
 > 
-> nit: these are really separate changes, but this series is so long 
-> already :)
+> I don't know why the driver even does this, but the implementation of 
+> pm80xx_send_read_log() is questionable. It would be nice to not see ATA 
+> code in the driver like this.
 
-As it is better to have fixes and cleanups separated, I moved these
-style changes to another patch and squashed the
-pm80xx_chip_phy_ctl_req() tag leak patch into this one. So patch count
-remains the same.
+I have been thinking about this one. We should be able to avoid this
+read log and rely on libata-eh to do it. All we should need to do is an
+internal abort all without completing the commands. libata will do the
+read log and resend the retry for the failed command (if appropriate)
+and all the other aborted NCQ commands.
 
-Sending v5. All but 2 patches are reviewed now.
+Need to look at how other libsas drivers are handling this. But the
+above should work, I think.
 
-Thanks !
+Not adding this to the current series though :) That will be for another
+patch series.
 
 -- 
 Damien Le Moal
