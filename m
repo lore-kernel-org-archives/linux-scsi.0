@@ -2,53 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA6B8C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 19:53:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AA69C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Feb 2022 19:53:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238872AbiBRTxt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Feb 2022 14:53:49 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:57382 "EHLO
+        id S239031AbiBRTx4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Feb 2022 14:53:56 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:57278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238771AbiBRTxb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 14:53:31 -0500
-Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C409293B6F;
-        Fri, 18 Feb 2022 11:53:11 -0800 (PST)
-Received: by mail-pg1-f170.google.com with SMTP id z4so8723336pgh.12;
-        Fri, 18 Feb 2022 11:53:11 -0800 (PST)
+        with ESMTP id S238654AbiBRTxe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 14:53:34 -0500
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2627129E
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:53:17 -0800 (PST)
+Received: by mail-pj1-f45.google.com with SMTP id v4so9495874pjh.2
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 11:53:17 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=efotMu/0Uf1dkcc1uJu6R6InV4FTKLkaJ5+cOM9IBjM=;
-        b=H6JU+gsrnDLzhBJ9DVjp7UBHpB7Q3ZYrWMv2rTBl0WNgQ2EV+map6sDtB3U49R9s63
-         IWn0YbxHgqlx09l7BO8oyQV/sN9oLC7EMVIAGXEB0p8quHQK3VX+mhFfxotO/uuYMg4D
-         ynIMzdK5c9Dsr5RZmFLrEFeuw9IWcQPCcKv0y2eaENXtJ3VTr0Lb3uwLQP4R9bO9WBWZ
-         gTySoHQYZfBDnKHFcWj4iO7yrVMgIzjE7O76nMayFoFxis4lXd60OMrTjS87FDj+7PZR
-         QZDonnLlVxYkVFhNfbbnXsakcCbKe5t1T6vOaCy7c/iKfQIvZPRzl+27NVgaz2dSnKSc
-         Pveg==
-X-Gm-Message-State: AOAM53314Ip2pwEkLEKA7pv77lMa2THBruNPERCZCX9NG+CCCSE6rhtn
-        7A2LmyTY8ptykDcXsubraEM=
-X-Google-Smtp-Source: ABdhPJzBC5Pa9LwZNXPNUveABs1udiNNXyHxFEbOi46N2HbfL5blS4HnAACiJ1rFGZwQXIFy2OLNLg==
-X-Received: by 2002:a63:6782:0:b0:342:7457:69a4 with SMTP id b124-20020a636782000000b00342745769a4mr7378106pgc.410.1645213990878;
-        Fri, 18 Feb 2022 11:53:10 -0800 (PST)
+        bh=Ik4fUFCkFlenhZPbOaqGtMyvz7ystmwHP7ZXn9Wxrx0=;
+        b=i3rongCj7Xg9NTrwdI6D6edJHOq+jcbcxWKlDINIUkTfFzoFpwixtDbEETrujSyBGN
+         6rV9u+d77qANBkaSNak1mIiIWQLSJN0FKiMfiGGworVH//NCpFbqNsCpwFbHy7z8/Y0G
+         nL6KaoxUd3xykCYTBbV5sA8Q/PC4rBW2NOs4Qi0EQQE+vOI6wJQzR+NiSdYxsGbL5iwa
+         XHQQ2ZHmvmXtPRnpmOoNBJlw9m9rUwIA1/3y901veyzieFqaPEuSkO1MJSqdn+n1U4D3
+         uQQoIZcGhwiUQY4pS7nZw+TPkBInYgdosKeZJNRKEtGtmPPHq67d66dw7RMPDLS6AOT0
+         HM4g==
+X-Gm-Message-State: AOAM531XCvqrJ4pkb7CrbR/Z67QK8EEPK1wbsiMniUhhiMGa2LSgt7s+
+        RRk/3qKgt7xjNTRJDGyOhTI=
+X-Google-Smtp-Source: ABdhPJys5oLq1JWarTJykwGxjuMiR9TAnozz90Guu81RMBNURx0CnsQh4xYFPn/A38f/WEWLkkZTZA==
+X-Received: by 2002:a17:902:860a:b0:14b:341e:5ffb with SMTP id f10-20020a170902860a00b0014b341e5ffbmr8861424plo.6.1645213996551;
+        Fri, 18 Feb 2022 11:53:16 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id e15sm3930523pfv.104.2022.02.18.11.53.09
+        by smtp.gmail.com with ESMTPSA id e15sm3930523pfv.104.2022.02.18.11.53.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Feb 2022 11:53:10 -0800 (PST)
+        Fri, 18 Feb 2022 11:53:15 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        linux-usb@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Oliver Neukum <oneukum@suse.com>,
+        Helge Deller <deller@gmx.de>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Hannes Reinecke <hare@suse.de>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH v5 45/49] scsi: usb: Stop using the SCSI pointer
-Date:   Fri, 18 Feb 2022 11:51:13 -0800
-Message-Id: <20220218195117.25689-46-bvanassche@acm.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH v5 48/49] scsi: zalon: Stop using the SCSI pointer
+Date:   Fri, 18 Feb 2022 11:51:16 -0800
+Message-Id: <20220218195117.25689-49-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220218195117.25689-1-bvanassche@acm.org>
 References: <20220218195117.25689-1-bvanassche@acm.org>
@@ -58,203 +56,117 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Set scsi_host_template.cmd_size instead of using the SCSI pointer for
-storing driver-private data. Change the type of the argument of
-uas_add_work() from struct uas_cmd_info * into struct scsi_cmnd * because
-it is easier to convert a SCSI command pointer into a uas_cmd_info pointer
-than the other way around.
+Set .cmd_size in the SCSI host template instead of using the SCSI pointer
+from struct scsi_cmnd. This patch prepares for removal of the SCSI pointer
+from struct scsi_cmnd.
 
-This patch prepares for removal of the SCSI pointer from struct scsi_cmnd.
-
-Cc: linux-usb@vger.kernel.org
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Acked-by: Oliver Neukum <oneukum@suse.com>
+Cc: Helge Deller <deller@gmx.de>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/usb/storage/uas.c | 43 ++++++++++++++++++---------------------
- 1 file changed, 20 insertions(+), 23 deletions(-)
+ drivers/scsi/ncr53c8xx.c | 22 ++++++++++++----------
+ drivers/scsi/ncr53c8xx.h |  6 ++++++
+ drivers/scsi/zalon.c     |  1 +
+ 3 files changed, 19 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 7f2944729ecd..84dc270f6f73 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -113,7 +113,7 @@ static void uas_do_work(struct work_struct *work)
- 			continue;
- 
- 		cmnd = devinfo->cmnd[i];
--		cmdinfo = (void *)&cmnd->SCp;
-+		cmdinfo = scsi_cmd_priv(cmnd);
- 
- 		if (!(cmdinfo->state & IS_IN_WORK_LIST))
- 			continue;
-@@ -139,10 +139,9 @@ static void uas_scan_work(struct work_struct *work)
- 	dev_dbg(&devinfo->intf->dev, "scan complete\n");
- }
- 
--static void uas_add_work(struct uas_cmd_info *cmdinfo)
-+static void uas_add_work(struct scsi_cmnd *cmnd)
- {
--	struct scsi_pointer *scp = (void *)cmdinfo;
--	struct scsi_cmnd *cmnd = container_of(scp, struct scsi_cmnd, SCp);
-+	struct uas_cmd_info *cmdinfo = scsi_cmd_priv(cmnd);
- 	struct uas_dev_info *devinfo = cmnd->device->hostdata;
- 
- 	lockdep_assert_held(&devinfo->lock);
-@@ -163,7 +162,7 @@ static void uas_zap_pending(struct uas_dev_info *devinfo, int result)
- 			continue;
- 
- 		cmnd = devinfo->cmnd[i];
--		cmdinfo = (void *)&cmnd->SCp;
-+		cmdinfo = scsi_cmd_priv(cmnd);
- 		uas_log_cmd_state(cmnd, __func__, 0);
- 		/* Sense urbs were killed, clear COMMAND_INFLIGHT manually */
- 		cmdinfo->state &= ~COMMAND_INFLIGHT;
-@@ -200,15 +199,14 @@ static void uas_sense(struct urb *urb, struct scsi_cmnd *cmnd)
- static void uas_log_cmd_state(struct scsi_cmnd *cmnd, const char *prefix,
- 			      int status)
- {
--	struct uas_cmd_info *ci = (void *)&cmnd->SCp;
--	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *ci = scsi_cmd_priv(cmnd);
- 
- 	if (status == -ENODEV) /* too late */
- 		return;
- 
- 	scmd_printk(KERN_INFO, cmnd,
- 		    "%s %d uas-tag %d inflight:%s%s%s%s%s%s%s%s%s%s%s%s ",
--		    prefix, status, cmdinfo->uas_tag,
-+		    prefix, status, ci->uas_tag,
- 		    (ci->state & SUBMIT_STATUS_URB)     ? " s-st"  : "",
- 		    (ci->state & ALLOC_DATA_IN_URB)     ? " a-in"  : "",
- 		    (ci->state & SUBMIT_DATA_IN_URB)    ? " s-in"  : "",
-@@ -231,7 +229,7 @@ static void uas_free_unsubmitted_urbs(struct scsi_cmnd *cmnd)
- 	if (!cmnd)
- 		return;
- 
--	cmdinfo = (void *)&cmnd->SCp;
-+	cmdinfo = scsi_cmd_priv(cmnd);
- 
- 	if (cmdinfo->state & SUBMIT_CMD_URB)
- 		usb_free_urb(cmdinfo->cmd_urb);
-@@ -245,7 +243,7 @@ static void uas_free_unsubmitted_urbs(struct scsi_cmnd *cmnd)
- 
- static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- {
--	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *cmdinfo = scsi_cmd_priv(cmnd);
- 	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
- 
- 	lockdep_assert_held(&devinfo->lock);
-@@ -263,13 +261,13 @@ static int uas_try_complete(struct scsi_cmnd *cmnd, const char *caller)
- static void uas_xfer_data(struct urb *urb, struct scsi_cmnd *cmnd,
- 			  unsigned direction)
- {
--	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *cmdinfo = scsi_cmd_priv(cmnd);
- 	int err;
- 
- 	cmdinfo->state |= direction | SUBMIT_STATUS_URB;
- 	err = uas_submit_urbs(cmnd, cmnd->device->hostdata);
- 	if (err) {
--		uas_add_work(cmdinfo);
-+		uas_add_work(cmnd);
- 	}
- }
- 
-@@ -329,7 +327,7 @@ static void uas_stat_cmplt(struct urb *urb)
- 	}
- 
- 	cmnd = devinfo->cmnd[idx];
--	cmdinfo = (void *)&cmnd->SCp;
-+	cmdinfo = scsi_cmd_priv(cmnd);
- 
- 	if (!(cmdinfo->state & COMMAND_INFLIGHT)) {
- 		uas_log_cmd_state(cmnd, "unexpected status cmplt", 0);
-@@ -394,7 +392,7 @@ static void uas_stat_cmplt(struct urb *urb)
- static void uas_data_cmplt(struct urb *urb)
- {
- 	struct scsi_cmnd *cmnd = urb->context;
--	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *cmdinfo = scsi_cmd_priv(cmnd);
- 	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
- 	struct scsi_data_buffer *sdb = &cmnd->sdb;
- 	unsigned long flags;
-@@ -446,7 +444,7 @@ static struct urb *uas_alloc_data_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- 				      enum dma_data_direction dir)
- {
- 	struct usb_device *udev = devinfo->udev;
--	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *cmdinfo = scsi_cmd_priv(cmnd);
- 	struct urb *urb = usb_alloc_urb(0, gfp);
- 	struct scsi_data_buffer *sdb = &cmnd->sdb;
- 	unsigned int pipe = (dir == DMA_FROM_DEVICE)
-@@ -468,7 +466,7 @@ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- 				       struct scsi_cmnd *cmnd)
- {
- 	struct usb_device *udev = devinfo->udev;
--	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *cmdinfo = scsi_cmd_priv(cmnd);
- 	struct urb *urb = usb_alloc_urb(0, gfp);
- 	struct sense_iu *iu;
- 
-@@ -496,7 +494,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- {
- 	struct usb_device *udev = devinfo->udev;
- 	struct scsi_device *sdev = cmnd->device;
--	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *cmdinfo = scsi_cmd_priv(cmnd);
- 	struct urb *urb = usb_alloc_urb(0, gfp);
- 	struct command_iu *iu;
- 	int len;
-@@ -558,7 +556,7 @@ static struct urb *uas_submit_sense_urb(struct scsi_cmnd *cmnd, gfp_t gfp)
- static int uas_submit_urbs(struct scsi_cmnd *cmnd,
- 			   struct uas_dev_info *devinfo)
- {
--	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *cmdinfo = scsi_cmd_priv(cmnd);
- 	struct urb *urb;
- 	int err;
- 
-@@ -637,12 +635,10 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd)
- {
- 	struct scsi_device *sdev = cmnd->device;
- 	struct uas_dev_info *devinfo = sdev->hostdata;
--	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *cmdinfo = scsi_cmd_priv(cmnd);
- 	unsigned long flags;
- 	int idx, err;
- 
--	BUILD_BUG_ON(sizeof(struct uas_cmd_info) > sizeof(struct scsi_pointer));
--
- 	/* Re-check scsi_block_requests now that we've the host-lock */
- 	if (cmnd->device->host->host_self_blocked)
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
-@@ -712,7 +708,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd)
- 			spin_unlock_irqrestore(&devinfo->lock, flags);
- 			return SCSI_MLQUEUE_DEVICE_BUSY;
- 		}
--		uas_add_work(cmdinfo);
-+		uas_add_work(cmnd);
- 	}
- 
- 	devinfo->cmnd[idx] = cmnd;
-@@ -730,7 +726,7 @@ static DEF_SCSI_QCMD(uas_queuecommand)
+diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
+index fc8abe05fa8f..4458449c960b 100644
+--- a/drivers/scsi/ncr53c8xx.c
++++ b/drivers/scsi/ncr53c8xx.c
+@@ -514,30 +514,29 @@ static m_addr_t __vtobus(m_bush_t bush, void *m)
+  *  Deal with DMA mapping/unmapping.
   */
- static int uas_eh_abort_handler(struct scsi_cmnd *cmnd)
+ 
+-/* To keep track of the dma mapping (sg/single) that has been set */
+-#define __data_mapped	SCp.phase
+-#define __data_mapping	SCp.have_data_in
+-
+ static void __unmap_scsi_data(struct device *dev, struct scsi_cmnd *cmd)
  {
--	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
-+	struct uas_cmd_info *cmdinfo = scsi_cmd_priv(cmnd);
- 	struct uas_dev_info *devinfo = (void *)cmnd->device->hostdata;
- 	struct urb *data_in_urb = NULL;
- 	struct urb *data_out_urb = NULL;
-@@ -910,6 +906,7 @@ static struct scsi_host_template uas_host_template = {
- 	.this_id = -1,
- 	.skip_settle_delay = 1,
- 	.dma_boundary = PAGE_SIZE - 1,
-+	.cmd_size = sizeof(struct uas_cmd_info),
+-	switch(cmd->__data_mapped) {
++	struct ncr_cmd_priv *cmd_priv = scsi_cmd_priv(cmd);
++
++	switch(cmd_priv->data_mapped) {
+ 	case 2:
+ 		scsi_dma_unmap(cmd);
+ 		break;
+ 	}
+-	cmd->__data_mapped = 0;
++	cmd_priv->data_mapped = 0;
+ }
+ 
+ static int __map_scsi_sg_data(struct device *dev, struct scsi_cmnd *cmd)
+ {
++	struct ncr_cmd_priv *cmd_priv = scsi_cmd_priv(cmd);
+ 	int use_sg;
+ 
+ 	use_sg = scsi_dma_map(cmd);
+ 	if (!use_sg)
+ 		return 0;
+ 
+-	cmd->__data_mapped = 2;
+-	cmd->__data_mapping = use_sg;
++	cmd_priv->data_mapped = 2;
++	cmd_priv->data_mapping = use_sg;
+ 
+ 	return use_sg;
+ }
+@@ -7854,6 +7853,7 @@ static int ncr53c8xx_slave_configure(struct scsi_device *device)
+ 
+ static int ncr53c8xx_queue_command_lck(struct scsi_cmnd *cmd)
+ {
++     struct ncr_cmd_priv *cmd_priv = scsi_cmd_priv(cmd);
+      void (*done)(struct scsi_cmnd *) = scsi_done;
+      struct ncb *np = ((struct host_data *) cmd->device->host->hostdata)->ncb;
+      unsigned long flags;
+@@ -7864,8 +7864,8 @@ printk("ncr53c8xx_queue_command\n");
+ #endif
+ 
+      cmd->host_scribble = NULL;
+-     cmd->__data_mapped = 0;
+-     cmd->__data_mapping = 0;
++     cmd_priv->data_mapped = 0;
++     cmd_priv->data_mapping = 0;
+ 
+      spin_lock_irqsave(&np->smp_lock, flags);
+ 
+@@ -8085,6 +8085,8 @@ struct Scsi_Host * __init ncr_attach(struct scsi_host_template *tpnt,
+ 	u_long flags = 0;
+ 	int i;
+ 
++	WARN_ON_ONCE(tpnt->cmd_size < sizeof(struct ncr_cmd_priv));
++
+ 	if (!tpnt->name)
+ 		tpnt->name	= SCSI_NCR_DRIVER_NAME;
+ 	if (!tpnt->shost_groups)
+diff --git a/drivers/scsi/ncr53c8xx.h b/drivers/scsi/ncr53c8xx.h
+index fa14b5ca8783..be38c902859e 100644
+--- a/drivers/scsi/ncr53c8xx.h
++++ b/drivers/scsi/ncr53c8xx.h
+@@ -1288,6 +1288,12 @@ struct ncr_device {
+ 	u8 differential;
  };
  
- #define UNUSUAL_DEV(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax, \
++/* To keep track of the dma mapping (sg/single) that has been set */
++struct ncr_cmd_priv {
++	int	data_mapped;
++	int	data_mapping;
++};
++
+ extern struct Scsi_Host *ncr_attach(struct scsi_host_template *tpnt, int unit, struct ncr_device *device);
+ extern void ncr53c8xx_release(struct Scsi_Host *host);
+ irqreturn_t ncr53c8xx_intr(int irq, void *dev_id);
+diff --git a/drivers/scsi/zalon.c b/drivers/scsi/zalon.c
+index f1e5cf8a17d9..22d412cab91d 100644
+--- a/drivers/scsi/zalon.c
++++ b/drivers/scsi/zalon.c
+@@ -81,6 +81,7 @@ lasi_scsi_clock(void * hpa, int defaultclock)
+ static struct scsi_host_template zalon7xx_template = {
+ 	.module		= THIS_MODULE,
+ 	.proc_name	= "zalon7xx",
++	.cmd_size	= sizeof(struct ncr_cmd_priv),
+ };
+ 
+ static int __init
