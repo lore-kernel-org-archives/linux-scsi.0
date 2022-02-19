@@ -2,113 +2,212 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FE44C4332F
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Feb 2022 18:46:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85195C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Feb 2022 20:04:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230022AbiBSSqV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Feb 2022 13:46:21 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:58644 "EHLO
+        id S243135AbiBSUES (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Feb 2022 15:04:18 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242897AbiBSSqT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Feb 2022 13:46:19 -0500
-Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE573178BD0
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2022 10:46:00 -0800 (PST)
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com [209.85.218.69])
+        with ESMTP id S241952AbiBSUER (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Feb 2022 15:04:17 -0500
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 357852F6;
+        Sat, 19 Feb 2022 12:03:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1645301037;
+        bh=vdEUtLDy0jay3RwrfnexOijRWOPdiQT2s7r1SOGKtGI=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=qvv9UJLujWhrHeLnd0WUnHyQED+tWln9aUTrV5SQJQkboU9fgQAqqBzQxwDV3i0xj
+         GSbv+oxuRSDNCLHW4i50PyHYVu15y4OWq36F1clKe3esXzKxo8UShgPH0/NRsHA8zj
+         TUIWP+VlX3FXs+hZfIt8rgsVqUmzrbY0BxsVc34E=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 924F31281204;
+        Sat, 19 Feb 2022 15:03:57 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 2jD3pt-RAHVW; Sat, 19 Feb 2022 15:03:57 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1645301037;
+        bh=vdEUtLDy0jay3RwrfnexOijRWOPdiQT2s7r1SOGKtGI=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=qvv9UJLujWhrHeLnd0WUnHyQED+tWln9aUTrV5SQJQkboU9fgQAqqBzQxwDV3i0xj
+         GSbv+oxuRSDNCLHW4i50PyHYVu15y4OWq36F1clKe3esXzKxo8UShgPH0/NRsHA8zj
+         TUIWP+VlX3FXs+hZfIt8rgsVqUmzrbY0BxsVc34E=
+Received: from jarvis.int.hansenpartnership.com (c-67-166-174-65.hsd1.va.comcast.net [67.166.174.65])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id F2A8C402E6
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2022 18:45:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1645296359;
-        bh=eJ6HQrRnH7eCjaR+k7F77ct8AqISDRTidseB01nTcCM=;
-        h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
-         MIME-Version;
-        b=jW6DWiNMtuUSYkoNS8Z4CjBwgSwZWnHasheVPDyf/SEXPf0Kqd4gz4/uWX93BCqaf
-         DIDAorSTOqikEiiMyiE4zNULFYSjD6OkAVFycqPI4oN6W877AYAueEeY6F4feARK9L
-         T4HdgSqrXn2uQSCYhYgJnSXVAa5TY7aMdSXUil87qLmJ44PMOlwxMIlx8iPp/4mYUn
-         09Z7iFFgJ441Em/zQU7bAS3r2B34T+/WzhiYoWnx0V+sJUfIE7Mazoj1DkkDhnpZie
-         nWiMVywTwJwsiDe1d5kKGB2riGstPaeRPorch0bLSd9kflBBFowD8O+69VKpo1ee4Y
-         rwM1AfU1t1+Wg==
-Received: by mail-ej1-f69.google.com with SMTP id q3-20020a17090676c300b006a9453c33b0so3799406ejn.13
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2022 10:45:58 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=eJ6HQrRnH7eCjaR+k7F77ct8AqISDRTidseB01nTcCM=;
-        b=iv55yGu67X99OwH69FaK3VjcKzhSbl5A+7s42s29PuDYk/8NtoUhqbM/840VzyFcT/
-         2jVU8tjJGzR/pHWcnoBRm0HxxtrI1u6d71mquSx0YZ1c9G95zdTaklEuRfBr1qhsqBCC
-         J7bML+H2aIG6jmZLXf0LUOwpFlksKgZe0FfklkCFFvpDQku/DpBFcq5NhdENoldgG7j9
-         48eqaAvc2rLk6VetGmsh/O8lCnStCJc9JSI/1f9rmATPMf4eRDXEOI4clCijP5Bh3vUH
-         lyraHSDbbLZwX5OcKfWHIZDAe2oEtqQPhY90T6Ga3bOGpKpGJU4OAV0a/m4R0qI3RVbk
-         /M9A==
-X-Gm-Message-State: AOAM5312SNEh3JUz7WzKQF8Kv+hqEIM2xTidjdftFK+5ZXCNSW938qHe
-        sGQd7d90AswqwKVg8OSE0IKlsSQcBF300yJMoZw8VZqKoI4vMb9EmZDXtFKqS+2K+8lhK9Carne
-        9kHgirs+1WLbo6CWWyQl9zLSrvrbcJULfG9DQKh0=
-X-Received: by 2002:aa7:c612:0:b0:40f:2a41:bddb with SMTP id h18-20020aa7c612000000b0040f2a41bddbmr13789842edq.291.1645296358467;
-        Sat, 19 Feb 2022 10:45:58 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJwCUQahoUlw1/KaqiAKlfUzjGeKC0o8en5bVZWTPpKsIDqk+8vzgYr9LfT4H6VG0K4MxnLXbw==
-X-Received: by 2002:aa7:c612:0:b0:40f:2a41:bddb with SMTP id h18-20020aa7c612000000b0040f2a41bddbmr13789828edq.291.1645296358336;
-        Sat, 19 Feb 2022 10:45:58 -0800 (PST)
-Received: from localhost.localdomain (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
-        by smtp.gmail.com with ESMTPSA id j11sm4847509eda.106.2022.02.19.10.45.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 19 Feb 2022 10:45:57 -0800 (PST)
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Wei Xu <xuwei5@hisilicon.com>, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Nishanth Menon <nm@ti.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Tero Kristo <kristo@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Chanho Park <chanho61.park@samsung.com>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Jan Kotas <jank@cadence.com>, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Subject: [RFC PATCH 8/8] arm64: dts: ti: use 'freq-table' in UFS node
-Date:   Sat, 19 Feb 2022 19:45:54 +0100
-Message-Id: <20220219184554.44887-1-krzysztof.kozlowski@canonical.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220219184224.44339-1-krzysztof.kozlowski@canonical.com>
-References: <20220219184224.44339-1-krzysztof.kozlowski@canonical.com>
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 09FA212811BC;
+        Sat, 19 Feb 2022 15:03:56 -0500 (EST)
+Message-ID: <f6af0e7becb42dcf5f52f797c81550bda81c73fb.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.17-rc4
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 19 Feb 2022 15:03:55 -0500
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The 'freq-table-hz' property is deprecated by UFS bindings.
-The uint32-array requires also element to be passed within one <> block.
+Three fixes, all in drivers.  The ufs and qedi fixes are minor; the
+lpfc one is a bit bigger because it involves adding a heuristic to
+detect and deal with common but not standards compliant behaviour.
 
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+James Smart (1):
+      scsi: lpfc: Fix pt2pt NVMe PRLI reject LOGO loop
+
+Jinyoung Choi (1):
+      scsi: ufs: core: Fix divide by zero in ufshcd_map_queues()
+
+Mike Christie (1):
+      scsi: qedi: Fix ABBA deadlock in qedi_process_tmf_resp() and qedi_process_cmd_cleanup_resp()
+
+And the diffstat:
+
+ drivers/scsi/lpfc/lpfc.h           |  1 +
+ drivers/scsi/lpfc/lpfc_attr.c      |  3 +++
+ drivers/scsi/lpfc/lpfc_els.c       | 20 +++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  5 +++--
+ drivers/scsi/qedi/qedi_fw.c        |  6 ++----
+ drivers/scsi/ufs/ufshcd.c          |  2 +-
+ 6 files changed, 29 insertions(+), 8 deletions(-)
+
+With full diffs below.
+
+James
+
 ---
- arch/arm64/boot/dts/ti/k3-j721e-main.dtsi | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi b/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
-index 599861259a30..c3afef0321ae 100644
---- a/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
-+++ b/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
-@@ -1257,7 +1257,9 @@ ufs@4e84000 {
- 			compatible = "cdns,ufshc-m31-16nm", "jedec,ufs-2.0";
- 			reg = <0x0 0x4e84000 0x0 0x10000>;
- 			interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
--			freq-table-hz = <250000000 250000000>, <19200000 19200000>, <19200000 19200000>;
-+			freq-table = <250000000 250000000
-+				      19200000 19200000
-+				      19200000 19200000>;
- 			clocks = <&k3_clks 277 0>, <&k3_clks 277 1>, <&k3_clks 277 1>;
- 			clock-names = "core_clk", "phy_clk", "ref_clk";
- 			dma-coherent;
--- 
-2.32.0
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index a1e0a106c132..98cabe09c040 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -592,6 +592,7 @@ struct lpfc_vport {
+ #define FC_VPORT_LOGO_RCVD      0x200    /* LOGO received on vport */
+ #define FC_RSCN_DISCOVERY       0x400	 /* Auth all devices after RSCN */
+ #define FC_LOGO_RCVD_DID_CHNG   0x800    /* FDISC on phys port detect DID chng*/
++#define FC_PT2PT_NO_NVME        0x1000   /* Don't send NVME PRLI */
+ #define FC_SCSI_SCAN_TMO        0x4000	 /* scsi scan timer running */
+ #define FC_ABORT_DISCOVERY      0x8000	 /* we want to abort discovery */
+ #define FC_NDISC_ACTIVE         0x10000	 /* NPort discovery active */
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index bac78fbce8d6..fa8415259cb8 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -1315,6 +1315,9 @@ lpfc_issue_lip(struct Scsi_Host *shost)
+ 	pmboxq->u.mb.mbxCommand = MBX_DOWN_LINK;
+ 	pmboxq->u.mb.mbxOwner = OWN_HOST;
+ 
++	if ((vport->fc_flag & FC_PT2PT) && (vport->fc_flag & FC_PT2PT_NO_NVME))
++		vport->fc_flag &= ~FC_PT2PT_NO_NVME;
++
+ 	mbxstatus = lpfc_sli_issue_mbox_wait(phba, pmboxq, LPFC_MBOX_TMO * 2);
+ 
+ 	if ((mbxstatus == MBX_SUCCESS) &&
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index db5ccae1b63d..f936833c9909 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1072,7 +1072,8 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 
+ 		/* FLOGI failed, so there is no fabric */
+ 		spin_lock_irq(shost->host_lock);
+-		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP);
++		vport->fc_flag &= ~(FC_FABRIC | FC_PUBLIC_LOOP |
++				    FC_PT2PT_NO_NVME);
+ 		spin_unlock_irq(shost->host_lock);
+ 
+ 		/* If private loop, then allow max outstanding els to be
+@@ -4607,6 +4608,23 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		/* Added for Vendor specifc support
+ 		 * Just keep retrying for these Rsn / Exp codes
+ 		 */
++		if ((vport->fc_flag & FC_PT2PT) &&
++		    cmd == ELS_CMD_NVMEPRLI) {
++			switch (stat.un.b.lsRjtRsnCode) {
++			case LSRJT_UNABLE_TPC:
++			case LSRJT_INVALID_CMD:
++			case LSRJT_LOGICAL_ERR:
++			case LSRJT_CMD_UNSUPPORTED:
++				lpfc_printf_vlog(vport, KERN_WARNING, LOG_ELS,
++						 "0168 NVME PRLI LS_RJT "
++						 "reason %x port doesn't "
++						 "support NVME, disabling NVME\n",
++						 stat.un.b.lsRjtRsnCode);
++				retry = 0;
++				vport->fc_flag |= FC_PT2PT_NO_NVME;
++				goto out_retry;
++			}
++		}
+ 		switch (stat.un.b.lsRjtRsnCode) {
+ 		case LSRJT_UNABLE_TPC:
+ 			/* The driver has a VALID PLOGI but the rport has
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 7d717a4ac14d..fdf5e777bf11 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -1961,8 +1961,9 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
+ 			 * is configured try it.
+ 			 */
+ 			ndlp->nlp_fc4_type |= NLP_FC4_FCP;
+-			if ((vport->cfg_enable_fc4_type == LPFC_ENABLE_BOTH) ||
+-			    (vport->cfg_enable_fc4_type == LPFC_ENABLE_NVME)) {
++			if ((!(vport->fc_flag & FC_PT2PT_NO_NVME)) &&
++			    (vport->cfg_enable_fc4_type == LPFC_ENABLE_BOTH ||
++			    vport->cfg_enable_fc4_type == LPFC_ENABLE_NVME)) {
+ 				ndlp->nlp_fc4_type |= NLP_FC4_NVME;
+ 				/* We need to update the localport also */
+ 				lpfc_nvme_update_localport(vport);
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index 5916ed7662d5..4eb89aa4a39d 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -771,11 +771,10 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 			qedi_cmd->list_tmf_work = NULL;
+ 		}
+ 	}
++	spin_unlock_bh(&qedi_conn->tmf_work_lock);
+ 
+-	if (!found) {
+-		spin_unlock_bh(&qedi_conn->tmf_work_lock);
++	if (!found)
+ 		goto check_cleanup_reqs;
+-	}
+ 
+ 	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
+ 		  "TMF work, cqe->tid=0x%x, tmf flags=0x%x, cid=0x%x\n",
+@@ -806,7 +805,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 	qedi_cmd->state = CLEANUP_RECV;
+ unlock:
+ 	spin_unlock_bh(&conn->session->back_lock);
+-	spin_unlock_bh(&qedi_conn->tmf_work_lock);
+ 	wake_up_interruptible(&qedi_conn->wait_queue);
+ 	return;
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 50b12d60dc1b..9349557b8a01 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2681,7 +2681,7 @@ static int ufshcd_map_queues(struct Scsi_Host *shost)
+ 			break;
+ 		case HCTX_TYPE_READ:
+ 			map->nr_queues = 0;
+-			break;
++			continue;
+ 		default:
+ 			WARN_ON_ONCE(true);
+ 		}
 
