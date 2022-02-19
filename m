@@ -2,106 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32C82C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Feb 2022 00:16:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FAA5C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Feb 2022 07:37:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240325AbiBSAQZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Feb 2022 19:16:25 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:43302 "EHLO
+        id S241654AbiBSHiF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Feb 2022 02:38:05 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235864AbiBSAQY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2022 19:16:24 -0500
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC1AA47AF9
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 16:16:05 -0800 (PST)
-Received: by mail-yb1-xb49.google.com with SMTP id j17-20020a25ec11000000b0061dabf74012so15324462ybh.15
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2022 16:16:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=t1Jpw+ueBOtsD6/0A+P0khb1gbXjD6yCm6h0DxHEboA=;
-        b=pNQnxU1fILXMInmD4uqudCIT7Be0KkI0yr06/vuLrOZKOAyUYFI5sXtwM1+o9RxR72
-         6+ebYk4+o42Gl9qAWaWQYOihlS/TSymMphgi7XQkxBkA5U8rJdkqh0IWAjljDlB/iSjT
-         2wujuIskcm+4sAHbRr24reNg7ddXqEeBUIytY08mqr90KLmzWy86yHNSp7SNHBWl+UXo
-         ooxyWZbuEdFW4Sq6VZVu2Jc3tlrHOXfz56zgD6htJPtNletRcvBlePF6UXy1Ql0iX8eh
-         MZ6TxwA6vE5InaZxmK7u8gqVAC2ChsGBT3EwQLQoJpV4G2Kxd7wvm6D/7CBe3cdcW8l9
-         eYiQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=t1Jpw+ueBOtsD6/0A+P0khb1gbXjD6yCm6h0DxHEboA=;
-        b=Cuh47F4YwkWM92Nygg2lRBZOMZZKkqVdcPRdmL3/sFm3EueePemi3PvvcHgsZc1egi
-         LHeU2LDWHW8sbSJHo7R0gNjianSlzFoedbgg0hrTMmKqzu+Ea/lzP02fLFQ6aI3YjBOA
-         0vPrygzsf3n8gl6zn4SQqnm+3moyGqYkGLZveO9U3jvgdajk2zEbu/DEEQ9+KvOIMlyl
-         Zfh5Gdu08bASWXTcaNXjXQ3Fm2aKmDyqZOK7iuEbafTKd5Qe+ORMPmQZr1bcL3IyVCgL
-         Ilne1/lvrgIBFHxp+qbHK74UrG3NcGECHGihwHcskpWrn1i8MpSsMLvQEkEPAdmMog4+
-         Surw==
-X-Gm-Message-State: AOAM531MTqgExJ5rdtBoKCYTKCOPrevMlZ8pnBWVemkKXLrKyu6w7W57
-        II4ITdFB88KCTtw9see/AMBxOIR2kWI=
-X-Google-Smtp-Source: ABdhPJzC9kF2aqyqMClNmlOiYw6vcsQjNtY3AucQyQXxwhWEncOEjhIW6BZgRa79F/iaudlt/FUR/zaaEd4=
-X-Received: from khazhy-linux.svl.corp.google.com ([2620:15c:2cd:202:7d93:7487:6afd:f5f6])
- (user=khazhy job=sendgmr) by 2002:a25:3b17:0:b0:619:4463:a400 with SMTP id
- i23-20020a253b17000000b006194463a400mr9943708yba.36.1645229764835; Fri, 18
- Feb 2022 16:16:04 -0800 (PST)
-Date:   Fri, 18 Feb 2022 16:16:01 -0800
-Message-Id: <20220219001601.3534043-1-khazhy@google.com>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.35.1.473.g83b2b277ed-goog
-Subject: [PATCH v2] scsi: docs: update notes about scsi_times_out
-From:   Khazhismel Kumykov <khazhy@google.com>
-To:     Jonathan Corbet <corbet@lwn.net>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, bvanassche@acm.org,
-        Hannes Reinecke <hare@suse.com>,
-        Khazhismel Kumykov <khazhy@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S234270AbiBSHiF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Feb 2022 02:38:05 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBD584E3B9;
+        Fri, 18 Feb 2022 23:37:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=h57KiAEVSKkzXdNc8Dx5lCWM++DN28M84mRcDiV5fkY=; b=KsxrcfYaerfj7S4ITWFvQAQ0x6
+        24aeSlzHZ3cmMdzzDJjwD5MH7BiCBtomrZK+sUouoLD9vIJHuUOIq8hNC2rT9TREsjqowo7ZigLPU
+        llG/bACQNWJM62cm7Wc1o0o5yl4BeuJOK1InpRSg6F2nlLE+wMwB6Sr0Gv2APOv6ZKnh4XB2/bx0q
+        pO/NM0jEjfo63HNdo4QypAR7fM098sBkqtoJnexaTDGT2EC9VuGERlxc6rMnA1xJW3+p1h+TLVuCS
+        Lhtn1UlZlZPW5MAURTUYVTtlIOcC7djUDixNNJ6pg7uXqJlAMgXvaRfk2N49sHxK0dt49GFiuTp9+
+        u3rD/Uaw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nLKIh-00GNfs-Pt; Sat, 19 Feb 2022 07:37:03 +0000
+Date:   Fri, 18 Feb 2022 23:37:03 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Melanie Plageman (Microsoft)" <melanieplageman@gmail.com>
+Cc:     mikelley@microsoft.com, jejb@linux.ibm.com, kys@microsoft.com,
+        martin.petersen@oracle.com, mst@redhat.com,
+        benh@kernel.crashing.org, decui@microsoft.com,
+        don.brace@microchip.com, R-QLogic-Storage-Upstream@marvell.com,
+        haiyangz@microsoft.com, jasowang@redhat.com, john.garry@huawei.com,
+        kashyap.desai@broadcom.com, mpe@ellerman.id.au,
+        njavali@marvell.com, pbonzini@redhat.com, paulus@samba.org,
+        sathya.prakash@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com,
+        sreekanth.reddy@broadcom.com, stefanha@redhat.com,
+        sthemmin@microsoft.com, suganath-prabu.subramani@broadcom.com,
+        sumit.saxena@broadcom.com, tyreld@linux.ibm.com,
+        wei.liu@kernel.org, linuxppc-dev@lists.ozlabs.org,
+        megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+        storagedev@microchip.com,
+        virtualization@lists.linux-foundation.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+        andres@anarazel.de
+Subject: Re: [PATCH RFC v1 0/5] Add SCSI per device tagsets
+Message-ID: <YhCeHweaO5ugY5aC@infradead.org>
+References: <20220218184157.176457-1-melanieplageman@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220218184157.176457-1-melanieplageman@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Most importantly: eh_timed_out() is not limited by scmd->allowed,
-and can reset timer forever.
+On Fri, Feb 18, 2022 at 06:41:52PM +0000, Melanie Plageman (Microsoft) wrote:
+> Currently a single blk_mq_tag_set is associated with a Scsi_Host. When SCSI
+> controllers are limited, attaching multiple devices to the same controller is
+> required. In cloud environments with relatively high latency persistent storage,
+> requiring all devices on a controller to share a single blk_mq_tag_set
+> negatively impacts performance.
 
-Fixes: c829c394165f ("[SCSI] FC transport : Avoid device offline cases by stalling aborts until device unblocked")
-
-Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
----
- Documentation/scsi/scsi_eh.rst | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
-
-diff --git a/Documentation/scsi/scsi_eh.rst b/Documentation/scsi/scsi_eh.rst
-index 7d78c2475615..885395dc1f15 100644
---- a/Documentation/scsi/scsi_eh.rst
-+++ b/Documentation/scsi/scsi_eh.rst
-@@ -95,19 +95,18 @@ function
- 
-     - BLK_EH_RESET_TIMER
- 	This indicates that more time is required to finish the
--	command.  Timer is restarted.  This action is counted as a
--	retry and only allowed scmd->allowed + 1(!) times.  Once the
--	limit is reached, action for BLK_EH_DONE is taken instead.
-+	command.  Timer is restarted.
- 
-     - BLK_EH_DONE
-         eh_timed_out() callback did not handle the command.
- 	Step #2 is taken.
- 
-- 2. scsi_abort_command() is invoked to schedule an asynchrous abort.
--    Asynchronous abort are not invoked for commands which the
--    SCSI_EH_ABORT_SCHEDULED flag is set (this indicates that the command
--    already had been aborted once, and this is a retry which failed),
--    or when the EH deadline is expired. In these case Step #3 is taken.
-+ 2. scsi_abort_command() is invoked to schedule an asynchronous abort which may
-+    issue a retry scmd->allowed + 1 times.  Asynchronous aborts are not invoked
-+    for commands for which the SCSI_EH_ABORT_SCHEDULED flag is set (this
-+    indicates that the command already had been aborted once, and this is a
-+    retry which failed), when retries are exceeded, or when the EH deadline is
-+    expired. In these cases Step #3 is taken.
- 
-  3. scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD) is invoked for the
-     command.  See [1-4] for more information.
--- 
-2.35.1.473.g83b2b277ed-goog
-
+So add more controllers instead of completely breaking the architecture.
