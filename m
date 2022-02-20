@@ -2,74 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F239C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 629A7C433F5
 	for <linux-scsi@archiver.kernel.org>; Sun, 20 Feb 2022 03:18:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243119AbiBTDTB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Feb 2022 22:19:01 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48098 "EHLO
+        id S243371AbiBTDTC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Feb 2022 22:19:02 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240322AbiBTDSy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Feb 2022 22:18:54 -0500
+        with ESMTP id S240614AbiBTDSz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Feb 2022 22:18:55 -0500
 Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FE36340D0
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2022 19:18:34 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98C17340D1
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2022 19:18:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1645327113; x=1676863113;
+  t=1645327114; x=1676863114;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=+0OrtXq+6naR0bB1OGjcvN2Cz9hw+Zu3eTf+q2N6Z9w=;
-  b=JgnamMF7pBxN9LkHDWkMZmYV1kyiH0a6rGFkRQsAwNuXlLTpMlahVjnM
-   zwDNN3YX//lEi0RL0gk+yoEkzj9pJ9AH+lQ2VafZkdJzNPvKgOBElyjlj
-   i6ICOYM1F2F1LvKu9cev+ZZVTa5003QjkVYdHkPutFylI9WOFzApq4eM9
-   Dj+O4fKexkhBlcNsakG0W4B6yZG4EGkVmLc7qotu3caQbynEv7KlTGqlP
-   lzKc8FcfdIlfeIskAW8iTidr3I+5alq1ileDSGC5ve7h9BeHuh7jsUBSk
-   72wOmhkNoStUVSrEpHmzr7Y50JBHyZ5IBB73F9oitgtCLyLc3hp/YFqGk
-   Q==;
+  bh=JPPcNbEYri1ah8CSIxH5TG0sGDMY7KcxgAntH1kk7SY=;
+  b=Hjcihd3DMciL0eZBYjVQ7AVgQkxA2emhCfufUWUjLREFbPVl9AlK4w1S
+   1Q+G+gEK0BcMy8iXpdGCYHKaFRUjp6l9qjcI1WUb81scd+spiiGDwj0qm
+   vkcZEhzxwkijj6MgD9i9mci1OXiRGwlKWDo1ZJ8GNJKN4Q09QOf5748ok
+   gj6e/yLPF6QlaeCBd7/9dpC/NwLhaLJeJSVjbHUc87rUjY9SqTeY9H+Fk
+   80COeyhXiDWqh6v1ZTARrAEA4vRxlTyRlHFhZ8gvzh5psEEcclU98jpke
+   YxLxhgIRw74+Tc5+iS20LJeNRy1zhER+G2H92Pofp2EamiI6WYCtUE0rN
+   g==;
 X-IronPort-AV: E=Sophos;i="5.88,382,1635177600"; 
-   d="scan'208";a="193405769"
+   d="scan'208";a="193405772"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Feb 2022 11:18:32 +0800
-IronPort-SDR: w6T7ipiOkPf2YQPQEyL3yalnr5FMTA//Ejp0MTETzVm3ApIPQuUF0qSJjU/WAzfaReZFQe6Rvh
- cd7gob3zTCoFcFwKdcvilkX8jEx5cc4QcK4ymumioyjKvl8/RGJQBYN2CjbvKMbTj+6L3sFIXX
- +VRGDKZL19INoDfIDLEQUq5Hexc4EFy3vHzxxdChNoAPDaPrTd1Vj2dYd6It9aOX1hIhHglQUj
- CyNNLInlVVuKg1vjUuc0Fa0JzaU5VFE19DJVSnibBlQmglW2XcVLJ1E48PPLuNZ2EO90j3zdvQ
- tRvEcCnNb9K5l58VsEz10DS4
+  by ob1.hgst.iphmx.com with ESMTP; 20 Feb 2022 11:18:34 +0800
+IronPort-SDR: BYFzLeNlCL1wjLYMSgLpdPbG0FK4tkZGRVkl2gYHcnNkMWgMLpZwEWGdxmhKC5sIC7JyZIcXMy
+ Y0BO1YCQ7h1L3fv7JJo9ddsNu590UwGcvoa3WDacCWfWcbRH4InOb2fvmhVcNJg/pDo4X0iraq
+ wTf1s6U2LlDMR7/+CKeDUyfDWsflKmaGcEYXMpwBqeQZhsLuVb9t5umWE45gvgEl4WG6xkU7Hh
+ LUZKtLW/BNIPnqaB+u4/AHcQ5XSWkY+/LwT7Bwm2pzWAzjcS3a4FzJpeGFItjDATW5UQ45Q2lL
+ U77ZM5aQ/1IAlnAl7llrimGH
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2022 18:50:09 -0800
-IronPort-SDR: zoaMauOO5/hV7IDeMBLKKkkwm80DeD1nxj4764X4it6OpxyA6gFkXtJhbDn1ZDorxYz7ywfZ72
- SV+yNffCqNlSINIov0DtLx350TTFPxoRN9kJ/QA38U2pruFt//YYdv35DhRHWw8qg7axRdND0O
- H1dRamBQlCrysvXDRQN+Z/XCMyiW/5ZBej5e8VUpVHkC28mTeqsLE35cNPjvcM4d8fB8fNPGtj
- T+lUudupfpE7QemIqFm1xeQIfHxNWjmdXmWYu8wdj4bQ8ZMbhRxNBh4f6fCr/zvMJfDDBHr55A
- x00=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2022 18:50:10 -0800
+IronPort-SDR: N/p2XmbMv0UE1gQvmk0sQXFqm16tegZKy1t07hiX7lPp98Uc/mX7hx2u9NhQjKc/0FIBdiZ86l
+ pK7kJRJI7C8Oje3we47Ilpdblr+tD1BqqckzgHXYTJw6IgHXYX/Q1oSl1hKxsjTSY0yeZR2Fjr
+ gy68BKeqxjnxiGaeyFjBsC+7iI12XzNy0/N+KvncGUGn0Bt1oDApVlEo5qsClvgXZSCYsI/2t4
+ aJWiqOdz4sBiUNhJOolxPAZPVAkzUC6W5Xo6BxyoPuw/1okGfVTX3D4ifvNsuvWfIwCYwfY0/K
+ 8Rc=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2022 19:18:34 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2022 19:18:35 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K1Vy139hBz1SVp4
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2022 19:18:33 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K1Vy26Qpqz1SVnx
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2022 19:18:34 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1645327112; x=1647919113; bh=+0OrtXq+6naR0bB1OG
-        jcvN2Cz9hw+Zu3eTf+q2N6Z9w=; b=E+aDquTbyWFg4tSJAawYa03gzJgEx3/yfH
-        gF2Y6jaACTTdiROff2o59RTpt2uvwmmlDx7HzF0Hfr9V7W+8nvxa1B5tO0SYPvJN
-        nB5CFk/5qq+ta27ABN8uH9PyO4mf+/t7QkU0Ma/IXtglzmIm918LmMtz/lHtM/dr
-        TISxie+qvB71PmHHoPEdAorIiLx8+txL1/AkCzAEoCn51XpkhYFbGGkZ+TDy/VXi
-        lljvGimtOTyLiqZrDY8ZpA4l66JZ508NUkyM1eKk7Gf0hmyD6swUEnmhO2cg08n9
-        BRru+4tFwA64KrFqsNjwzIUZCQaboAnQpMe3KoWz5KSdilE9mgfA==
+        :from; s=dkim; t=1645327114; x=1647919115; bh=JPPcNbEYri1ah8CSIx
+        H5TG0sGDMY7KcxgAntH1kk7SY=; b=ZCHpomEQJpLq5oRWvDhEzYdKRH+VR0UO5X
+        HXXjPnFiLT5ill4I5C5q5M+x1nNeRSRQEK6bHfvkGh50ry9FJASvA/NSK9vydDRL
+        sZY+cQeI4gB8+Lu0p4aUSvXMeMtqgj8ZzglR3sTvMcbYMO97Q2wtuBKtDo9ToRc9
+        3vv1N94kP0Xg/UY6hxB8xhrikvgk5Ia7ESdoYZH3gF2gbThx0Q0ACL/pSN6cBo2+
+        bhcDCSL5sd/DrlDHkmHOL118lXCnzY34CB0haTd+VQQV1JYeiBN/K02Oc8/I1iTK
+        bl9WTLDNJjmI0l4xIar4bzcJEa9zsMVEYMMCn8s5rc0Mq/QAg9MQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id sbhdRSgDuyT6 for <linux-scsi@vger.kernel.org>;
-        Sat, 19 Feb 2022 19:18:32 -0800 (PST)
+        with ESMTP id 8XV060PDCpCJ for <linux-scsi@vger.kernel.org>;
+        Sat, 19 Feb 2022 19:18:34 -0800 (PST)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K1Vxz6DRHz1Rwrw;
-        Sat, 19 Feb 2022 19:18:31 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K1Vy121kSz1Rvlx;
+        Sat, 19 Feb 2022 19:18:33 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -78,9 +78,9 @@ To:     linux-scsi@vger.kernel.org,
 Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
         Jason Yan <yanaijie@huawei.com>,
         Luo Jiaxing <luojiaxing@huawei.com>
-Subject: [PATCH v6 13/31] scsi: pm8001: Remove local variable in pm8001_pci_resume()
-Date:   Sun, 20 Feb 2022 12:17:52 +0900
-Message-Id: <20220220031810.738362-14-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH v6 14/31] scsi: pm8001: Fix NCQ NON DATA command task initialization
+Date:   Sun, 20 Feb 2022 12:17:53 +0900
+Message-Id: <20220220031810.738362-15-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220220031810.738362-1-damien.lemoal@opensource.wdc.com>
 References: <20220220031810.738362-1-damien.lemoal@opensource.wdc.com>
@@ -90,50 +90,97 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In pm8001_pci_resume(), the use of the u32 type for the local variable
-device_state causes a sparse warning:
+In the pm8001_chip_sata_req() and pm80xx_chip_sata_req() functions, all
+tasks with a DMA direction of DMA_NONE (no data transfer) are
+initialized using the ATAP value 0x04. However, NCQ NON DATA commands,
+while being DMA_NONE commands are NCQ commands and need to be
+initialized using the value 0x07 for ATAP, similarly to other NCQ
+commands.
 
-warning: incorrect type in assignment (different base types)
-    expected unsigned int [usertype] device_state
-    got restricted pci_power_t [usertype] current_state
+Make sure that NCQ NON DATA command tasks are initialized similarly to
+other NCQ commands by also testing the task "use_ncq" field in addition
+to the DMA direction. While at it, reorganize the code into a chain of
+if - else if - else to avoid useless affectations and debug messages.
 
-Since this variable is used only once in the function, remove it and
-use pdev->current_state directly. While at it, also add a blank line
-after the last local variable declaration.
-
+Fixes: dbf9bfe61571 ("[SCSI] pm8001: add SAS/SATA HBA driver")
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
 Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c | 14 +++++++-------
+ drivers/scsi/pm8001/pm80xx_hwi.c | 13 ++++++-------
+ 2 files changed, 13 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm80=
-01_init.c
-index d7b95ad4533e..381105286953 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -1336,13 +1336,13 @@ static int __maybe_unused pm8001_pci_resume(struc=
-t device *dev)
- 	struct pm8001_hba_info *pm8001_ha;
- 	int rc;
- 	u8 i =3D 0, j;
--	u32 device_state;
- 	DECLARE_COMPLETION_ONSTACK(completion);
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm800=
+1_hwi.c
+index d80b48e0e41b..c680baa5ef24 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -4265,22 +4265,22 @@ static int pm8001_chip_sata_req(struct pm8001_hba=
+_info *pm8001_ha,
+ 	u32  opc =3D OPC_INB_SATA_HOST_OPSTART;
+ 	memset(&sata_cmd, 0, sizeof(sata_cmd));
+ 	circularQ =3D &pm8001_ha->inbnd_q_tbl[0];
+-	if (task->data_dir =3D=3D DMA_NONE) {
 +
- 	pm8001_ha =3D sha->lldd_ha;
--	device_state =3D pdev->current_state;
++	if (task->data_dir =3D=3D DMA_NONE && !task->ata_task.use_ncq) {
+ 		ATAP =3D 0x04;  /* no data*/
+ 		pm8001_dbg(pm8001_ha, IO, "no data\n");
+ 	} else if (likely(!task->ata_task.device_control_reg_update)) {
+-		if (task->ata_task.dma_xfer) {
++		if (task->ata_task.use_ncq &&
++		    dev->sata_dev.class !=3D ATA_DEV_ATAPI) {
++			ATAP =3D 0x07; /* FPDMA */
++			pm8001_dbg(pm8001_ha, IO, "FPDMA\n");
++		} else if (task->ata_task.dma_xfer) {
+ 			ATAP =3D 0x06; /* DMA */
+ 			pm8001_dbg(pm8001_ha, IO, "DMA\n");
+ 		} else {
+ 			ATAP =3D 0x05; /* PIO*/
+ 			pm8001_dbg(pm8001_ha, IO, "PIO\n");
+ 		}
+-		if (task->ata_task.use_ncq &&
+-			dev->sata_dev.class !=3D ATA_DEV_ATAPI) {
+-			ATAP =3D 0x07; /* FPDMA */
+-			pm8001_dbg(pm8001_ha, IO, "FPDMA\n");
+-		}
+ 	}
+ 	if (task->ata_task.use_ncq && pm8001_get_ncq_tag(task, &hdr_tag)) {
+ 		task->ata_task.fis.sector_count |=3D (u8) (hdr_tag << 3);
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80x=
+x_hwi.c
+index 60c305f987b5..3deb89b11d2f 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -4546,22 +4546,21 @@ static int pm80xx_chip_sata_req(struct pm8001_hba=
+_info *pm8001_ha,
+ 	q_index =3D (u32) (cpu_id) % (pm8001_ha->max_q_num);
+ 	circularQ =3D &pm8001_ha->inbnd_q_tbl[q_index];
 =20
--	pm8001_info(pm8001_ha, "pdev=3D0x%p, slot=3D%s, resuming from previous =
-operating state [D%d]\n",
--		      pdev, pm8001_ha->name, device_state);
-+	pm8001_info(pm8001_ha,
-+		    "pdev=3D0x%p, slot=3D%s, resuming from previous operating state [D=
-%d]\n",
-+		    pdev, pm8001_ha->name, pdev->current_state);
-=20
- 	rc =3D pci_go_44(pdev);
- 	if (rc)
+-	if (task->data_dir =3D=3D DMA_NONE) {
++	if (task->data_dir =3D=3D DMA_NONE && !task->ata_task.use_ncq) {
+ 		ATAP =3D 0x04; /* no data*/
+ 		pm8001_dbg(pm8001_ha, IO, "no data\n");
+ 	} else if (likely(!task->ata_task.device_control_reg_update)) {
+-		if (task->ata_task.dma_xfer) {
++		if (task->ata_task.use_ncq &&
++		    dev->sata_dev.class !=3D ATA_DEV_ATAPI) {
++			ATAP =3D 0x07; /* FPDMA */
++			pm8001_dbg(pm8001_ha, IO, "FPDMA\n");
++		} else if (task->ata_task.dma_xfer) {
+ 			ATAP =3D 0x06; /* DMA */
+ 			pm8001_dbg(pm8001_ha, IO, "DMA\n");
+ 		} else {
+ 			ATAP =3D 0x05; /* PIO*/
+ 			pm8001_dbg(pm8001_ha, IO, "PIO\n");
+ 		}
+-		if (task->ata_task.use_ncq &&
+-		    dev->sata_dev.class !=3D ATA_DEV_ATAPI) {
+-			ATAP =3D 0x07; /* FPDMA */
+-			pm8001_dbg(pm8001_ha, IO, "FPDMA\n");
+-		}
+ 	}
+ 	if (task->ata_task.use_ncq && pm8001_get_ncq_tag(task, &hdr_tag)) {
+ 		task->ata_task.fis.sector_count |=3D (u8) (hdr_tag << 3);
 --=20
 2.34.1
 
