@@ -2,168 +2,191 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 024B4C4332F
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Feb 2022 01:45:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 420F2C433F5
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Feb 2022 03:18:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240694AbiBTBqE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Feb 2022 20:46:04 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:58990 "EHLO
+        id S233167AbiBTDSh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Feb 2022 22:18:37 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243337AbiBTBp6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Feb 2022 20:45:58 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D65B4507C;
-        Sat, 19 Feb 2022 17:45:38 -0800 (PST)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21JKRM9x006833;
-        Sun, 20 Feb 2022 01:44:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2021-07-09;
- bh=GoEyMw/Lh6yYRp8Qmev/8q//qBPwDnF7KPN4vmrbX1M=;
- b=Uzv4+/GhBBpxyfqB072zkmUW/LKj62SCD7tBJ8WD5VjAM4xKn/xabZlS6X3msw9bP6F6
- GngWMDGnfOItTX8Dti7H5cm9Vd+ci3g1Zvzrl687wxGvVHGoAjjmOnPEy5jihvno7a4a
- woPNbgZ7lp/6xSTiQ6BXipnFTokD5iy6OId/6guCJSsO3oq+aDuDz+tq3dBTuCukZOQo
- yPZ49UwwKUqg4fFr/WVj/thOd94vwoIGCIzpgznK8ljtBO6Hsk5lagnqN6U3PCaxMEpL
- Reh7mr2Theh29cyLGFw1DQHj9f0H+s2wuhmCGLm1aR3HjIdhAr6WhSi2mycFmX3zUZA7 XQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3eaq5298fh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 20 Feb 2022 01:44:23 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21K1aKns051888;
-        Sun, 20 Feb 2022 01:44:22 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2177.outbound.protection.outlook.com [104.47.59.177])
-        by aserp3020.oracle.com with ESMTP id 3eb47x7p1a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 20 Feb 2022 01:44:22 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=EyCUS8tVF79+NYl/8uB+MmkJbBXYkkfmUHPqGnDIYzk/X39NkMx/gDOYGu0kOWhOpwER9X/64fOLNuNVRnuDkN9JkNS5e+Cs/7RGm1YoInH/GyZv2SsspONExzgrTf9lXHBFlPXS9AirwWPiLkKpmGtZVtxuTgxBfOVQy6p6M1Rm/3LqfyrLtsRPkO+kyQouLU9GwFJf52RIrjlyWUDzwP8/vnvDr4AqIptLF6LRxEzqps3sWUgn/tcLu4HCNn4UWaAn0+7t+xh2InRcr2ZncQdv3L1rN18G7enbF2xDRSORxz7SvmFsl1onLiuZvrTBmydKO3vsBFynT56/zV8oBQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GoEyMw/Lh6yYRp8Qmev/8q//qBPwDnF7KPN4vmrbX1M=;
- b=LPGYR154Nv/uqgxr03c+2KVkgca21dWNdsZx8FHS+G1gVtmGzTSas8jZntde8yDIVjArrH9+7yVOrC39xPCpV0G6B3eaix98a4U6JBoD5q9QH1+a2W2XkX1HjaTBCAjssmBhzFfysERDGU42Nx4ENi4OBptnzevBqd258NiMdggvlVnfohjI0tnsnfb0WcNwg+xDvjKYpJTWrTj1UhPE7AyX4oC+bwFdXo2yYPuhXhcjf3c1ZH7xNBkKNwsR3OQE3GNo/3MfbLubohCfMhzXKRmJR3dsqGXh+G7ggSXr8IjFD/KC0LtxcznQsltHvv6rgKIf7XRtaBbkAQDcHEShzQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GoEyMw/Lh6yYRp8Qmev/8q//qBPwDnF7KPN4vmrbX1M=;
- b=0VBR1tDdNitEoqTpGtbpNmdNuhUoQPk3B5ICA5ghK8BAzavnfAWFHed8NSNYaSgMvgf/x33+M9nY/3ik5oh1hP7rGEz/LSrT1vIsB+nU5D0/kvx0pYbBuzQLgx6Rgq7PMuy7HlKP4HrSce/abKp/MkspiWlKqJFvxbEJSQMu7DI=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH0PR10MB4502.namprd10.prod.outlook.com (2603:10b6:510:31::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4995.16; Sun, 20 Feb
- 2022 01:44:20 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::c9f0:b3fb:25a6:3593]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::c9f0:b3fb:25a6:3593%5]) with mapi id 15.20.4995.026; Sun, 20 Feb 2022
- 01:44:20 +0000
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     axboe@kernel.dk, martin.petersen@oracle.com,
-        philipp.reisner@linbit.com, lars.ellenberg@linbit.com,
-        target-devel@vger.kernel.org, haris.iqbal@ionos.com,
-        jinpu.wang@ionos.com, manoj@linux.ibm.com, mrochs@linux.ibm.com,
-        ukrishn@linux.ibm.com, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com,
-        dm-devel@redhat.com
-Subject: Re: [PATCH 7/7] block: remove REQ_OP_WRITE_SAME support
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq135kefh5j.fsf@ca-mkp.ca.oracle.com>
-References: <20220209082828.2629273-1-hch@lst.de>
-        <20220209082828.2629273-8-hch@lst.de>
-Date:   Sat, 19 Feb 2022 20:44:18 -0500
-In-Reply-To: <20220209082828.2629273-8-hch@lst.de> (Christoph Hellwig's
-        message of "Wed, 9 Feb 2022 09:28:28 +0100")
-Content-Type: text/plain
-X-ClientProxiedBy: SN4PR0401CA0045.namprd04.prod.outlook.com
- (2603:10b6:803:2a::31) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        with ESMTP id S229570AbiBTDSg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Feb 2022 22:18:36 -0500
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70397340CD
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2022 19:18:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1645327095; x=1676863095;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=imM2XLPuQNqqDele+oBOSkRywJGMm40zxouHcybLwXA=;
+  b=hNVXSfVzAj19UV30m0TRxAi7H8eZblhCirK3itBWYsCHvA9LI97/DALn
+   vX9xiCQZ83+FRmhOrFek+SfQoVYdLSegh7zSrnLSlnxR39Lk90lhww85V
+   UGwadFXoQZJxGhGBuj8gXf/nIa+Zf3hvUIMJumr7z03efOwjk9KA4L+bx
+   /Ba9OUh4oNv4zHdmB6cO8m+PL0shc16wmWMjPyeWa1VitzqV5LoQllO4R
+   mcXaaRKjeZl7XqrR34QMnNyujsK1AfzxdXkDtMi7mv1QChZvNLW7LhJDF
+   EFYf1dgpdQnWwhsc2Jz+UJRHZ9puuoTzw1AXEulkvkb2yoZO62LFD2bN9
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.88,382,1635177600"; 
+   d="scan'208";a="193405722"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 20 Feb 2022 11:18:14 +0800
+IronPort-SDR: E355Dq7RkirdULBYDcGubE5McoOYkhzubvHdvz0hQa0/9z//d6lIJ1y+htnS1CXRbvRyHbQcBb
+ ezi1f2Y1XZfjXom3L1Rc1ZkaGmacWEs9t259uW2fKAuX8atkyayHFXJcfOtnCQQmQhSlAbZFSw
+ EboKcQf7Zc3BaCPJgrqrZazlshuwK7A95VkP/2B3qydy9k9pcf1qAjPbgvMNnk/3is/qMwrjO1
+ uLWbsgMGrTfWKON5PtN7THhcyekaaEPMdZInanDjPOJzPy+NDrFIvOPFl6xFrFPclwjXl2hLXY
+ sMKWYe93aejfdzQbjt5frFbq
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2022 18:49:51 -0800
+IronPort-SDR: BuMpMBf8vhEyb7LAYu2Jy4USu1XNUotQiAm9q09GpBvz4Y1yB+iAHfUJcwP0UvG47o1RmmAOcd
+ JgUTPkx0TEFw4ThFp55xdl8P1oAnX7PL6JFR4LLTCLesTCimMfPXt5QMkwnlVy5sasEHauvpF4
+ ftQQl4v9kPZJWFPm20z8jIm4gVF3QqwmoULbYT29ZCYi35h3Dya8Pb6HFMhIUv4DRKNo4Uiawo
+ 3e6lAnMIufW7Y7y6sdHseEQFYoDPIjAE8zaqIW/3hEk07/PtLha34y/bklxc8OsXDblMj4YMk6
+ Uj0=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2022 19:18:15 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K1Vxg2M8dz1SVp2
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2022 19:18:15 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1645327094;
+         x=1647919095; bh=imM2XLPuQNqqDele+oBOSkRywJGMm40zxouHcybLwXA=; b=
+        da8++69g156hL4csuylKdOcGgrgiAmWTwRE562crc3HPsoJ837zxdpC7iYivg4DV
+        qs1FZxOgXpA9yHiX0gDxwT9oULCZGYjq/Y8DirybFBNWq2Q2dNGUQBWWkRUBB4vS
+        Pq643uUbt0ssTKqQB34r4jUAPl2oazGZJUlvw99PHJAqEAwbnUtpPh7vCtDeCvB5
+        o75300dv8MdgUVdpkUTdoB5O1iShTy894SX21mWpoQf9rstHrCm4ao4XrTq8357x
+        WEmomp3n2fFMSIm8G5oV+QZq0udxI57KcvOIUVYdrPPIgs+aKk+AAy3DxHfoUy+U
+        Gfapo7aq4AvcfvZp7E5W2Q==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id yFIHfPzwusG2 for <linux-scsi@vger.kernel.org>;
+        Sat, 19 Feb 2022 19:18:14 -0800 (PST)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K1Vxd2mKzz1Rvlx;
+        Sat, 19 Feb 2022 19:18:13 -0800 (PST)
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        John Garry <john.garry@huawei.com>
+Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        Luo Jiaxing <luojiaxing@huawei.com>
+Subject: [PATCH v6 00/31] libsas and pm8001 fixes
+Date:   Sun, 20 Feb 2022 12:17:39 +0900
+Message-Id: <20220220031810.738362-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 15466686-29c0-4226-266b-08d9f41283aa
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4502:EE_
-X-Microsoft-Antispam-PRVS: <PH0PR10MB4502035F8FD4645B784D14668E399@PH0PR10MB4502.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: mk5XE/LMrtHaWtjoDaBNV4Nt7vGJ1n7DC9JlupV4etyWVgNTem6/2pKEovthq7n99hWzQilIBohMw9qyFdp+txwemFUvJHWYpS1lOEi8+J7LkHLq9AkOXE3zlREzLWZanq5Fqwi5XFDQxB8MIdVUS26UFxYLMc7+pVoBTH7jB5Tgtd84f6hsdwsvamFNhQvsXUsn417g86jdVWrwseW90lV7ZVEZ9baXaxtx68n7s83M+rrO7SuLjh+SL6wVrr5ZeWQEOpSx5YGvXzvZvQ1BT/Ed0KsFeh8cxWUQwztXnC44ScHnXRTIZzA42X70+jWpipjygmPitlJI+gUztRzess1CTY1yohRNSTUwB2Y9nK2r8DT2kuFGoh5mgdqrpdGGywKpBtaM+X59LQXlrrepG240bi6rtDV77dUAyHVCosG9b33eoPP4SoRQqUw2bhT0WebXkf5XPQW+TqcC0RDLj6/hs/225e2FCDenYo8/qANz/d34zRpZuj7v3n47GD9QNApBMVw4F5Y8QiwA2sYxLO46jeuEqlhcvWgiCNZVOM/9kqL0EbErElsp2yGqRa6KreagHQGFcptRnbNKydqo1Uzv3khpE5JOzGrcdnEHksnKmfjzNn+P+4+AHJoeDNJdUJ9jwzJb3whasH2lBO99sdinUw78L5AePGST7N5kFd4ZU8X30NXyrqhOozHAEADASjW+exoiCXOB3TO+qHno3Q==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(83380400001)(186003)(26005)(38100700002)(38350700002)(6486002)(2906002)(6512007)(86362001)(316002)(8936002)(6916009)(5660300002)(7416002)(4744005)(52116002)(66946007)(508600001)(8676002)(4326008)(66556008)(66476007)(6506007)(36916002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?jU95vCxaEzihp6lWK+gLhHqnyYKuhJY6+WHIe0kVGDMPMixeT0gS+KqxSKEw?=
- =?us-ascii?Q?7KVVaRWs7GNbzLoX+lBf82ak2dlLy0Nl49icIsbzTGc5ypgOAM1FW63q265g?=
- =?us-ascii?Q?/hdhavE8+yox9bGLDSuQzHhWecr8C5adzWl7Ml8EKbDAPkE3ND2I57vglI6+?=
- =?us-ascii?Q?259A1rZOqT5DcENeZlovB79Q1srQO8ZDuRN0X0gQWwZLsbL240s56MkOV67Q?=
- =?us-ascii?Q?orYzTr/Xs7h4kuj9BzRFw3Ph93N+yLsEsHS4GWKeqE3nkmurhE74XxG0AUSc?=
- =?us-ascii?Q?Yz3AUiJ7M3UncviOxLaxcVG3kKFi3I/FIYEoiQBxbpNzH6yUKHvXQDU5Q9sb?=
- =?us-ascii?Q?3MzXdpttEbnWYnSHTdfqJ6eJx68A5j0nOqqQ2I0qIaTTzsAxlN2lOepSPCxY?=
- =?us-ascii?Q?2MTlj2m7zpdvYhUlgAS4DUnThibsOl38Z3M/jKGeuj/R9QMWF8oP9HxNwJT7?=
- =?us-ascii?Q?siDqSR+iukXbThuQiU1dRhmsSNRzibniug4LjhDbKMuliSL80+jXkfXECKUL?=
- =?us-ascii?Q?9HmAhYYyaGQwAYvt4yEnV4EHDCbDihDqi6Jq6zjrEDbGyVZoTebV3VQaHbmd?=
- =?us-ascii?Q?fhX3uIKTzL+nXIdVIOCVSN2RP/jT4zctKZvNls4hoSxj11AprUv6SvlxKCzC?=
- =?us-ascii?Q?wrDz9VsWdmx/UbyfUH0tq8lBR5HhWve8SNI0VKk2GgVYbV7674ZTlSoexhgU?=
- =?us-ascii?Q?+V+qO4KHzzViq4XpeGcFjwvPuWgx1GrHKddhCkV4JIV21jDp4TPQ2d+ExPJH?=
- =?us-ascii?Q?C6txB2gwMGvdohkPkXBqI1JdFE1jT/6a1J2DhT814FcaVundZ1eLlLcJrmqq?=
- =?us-ascii?Q?e1qb0637k2ziu5MtNW1Qp+AsWaBI4IMuEUyt+e035gPcrXmcEbPzVx+urA7Q?=
- =?us-ascii?Q?bxSevyGbj21P7ERlrifvD3qdgDIRvmGifMeKnfa+e2jEJMisF8cOsWYMT9Vq?=
- =?us-ascii?Q?+OBFyvj6jqGrw3Dpp6He5dKVEf/WS3HYzjC3Wp33H0Yqsua7dfMWw9AUniea?=
- =?us-ascii?Q?DsljVDD9CmE8IxQBCg+fvCmvz/XDUrh9c3MxofeaYDMQXxImASHdC36z9m18?=
- =?us-ascii?Q?nImkMo2s0tFEvJ7gNttNqqn3DfXvWhDMP3R+xE4y9F0Rc9QdeseKPwATwk3b?=
- =?us-ascii?Q?Cou3tNT7Mr+V+rH5x14M1P0mx+9oAL3cgO5NRqBzdY6dKgNM9c3YWYHswuaU?=
- =?us-ascii?Q?N94riCZVEAwGOTR6r0Jvk49C+zBMM8DKR2gTuVydPbM1w78sRhiQyKmp6fKh?=
- =?us-ascii?Q?iqHepXVKXNRNsJ3D4si4A1EBC42uew/askCfwp/03TpRhnBf8+WNSolPDgX9?=
- =?us-ascii?Q?t6uWGxPLyKDgiUX2CXxsvvRbkoo7qIFFH6EoZXKga7XUqh3C93yyMGl42DSL?=
- =?us-ascii?Q?0rKilsShMhRdzbM504yB3QO1u8+PHWN1R25RLlbAk924mLknGfVeh/DWM7kv?=
- =?us-ascii?Q?kdWnEpBbop8AG6HbFCd6wCXIXiDBrpUPz/V/pH/Y90iGu9Q44m39IJh2KcnC?=
- =?us-ascii?Q?lkqUs7nKIwEcA8Ts7aloBiYmUiUecsUn/57YFZOam+c4Wf9BtyOxerV9fTQP?=
- =?us-ascii?Q?29IwUImEPGMjKmR5BSCGGTAZZ+47ARUy7PSsjAYpf3wVf+sabkMlz6ki8W2u?=
- =?us-ascii?Q?xm1/ne0zqOpJhUj59RsfaXoghTfn9qdfeGMvme/haf1VOlrWrCBqO6cN2yOU?=
- =?us-ascii?Q?0BHDB0b9BV7KIWe5Y0i2rXWzx84=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 15466686-29c0-4226-266b-08d9f41283aa
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Feb 2022 01:44:20.6284
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fdtYXDcqyrai1DnVnMYuPhSZ4DJqXbLSwoaadvHowRDZNGjcZUCHLtnYb9mHdYyW2OAm/QmHcbrQ/UVSHcqR2q9t6ZZOJG+/PlsWEgp1G98=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4502
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10263 signatures=677614
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0
- mlxlogscore=999 adultscore=0 bulkscore=0 phishscore=0 suspectscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2201110000 definitions=main-2202200008
-X-Proofpoint-GUID: qu4w8eJL-GPCQf5irrJgsFF5PHCiJ2j1
-X-Proofpoint-ORIG-GUID: qu4w8eJL-GPCQf5irrJgsFF5PHCiJ2j1
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This first part of this series (patches 1 to 24) fixes handling of NCQ
+NON DATA commands in libsas and many bugs in the pm8001 driver.
 
-Christoph,
+The fixes for the pm8001 driver include:
+* Suppression of all sparse warnings, fixing along the way many le32
+  handling bugs for big-endian architectures
+* Fix handling of NCQ NON DATA commands
+* Fix of tag values handling (0 *is* a valid tag value)
+* Fix many tag iand memory leaks in error path
+* Fix NCQ error recovery (abort all task execution) that was causing a
+  crash
 
-> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-> index 9f32882ceb2f6..4a5bb47bee3ce 100644
-> --- a/block/blk-sysfs.c
-> +++ b/block/blk-sysfs.c
-> @@ -212,12 +212,6 @@ static ssize_t queue_discard_zeroes_data_show(struct request_queue *q, char *pag
->  	return queue_var_show(0, page);
->  }
->  
-> -static ssize_t queue_write_same_max_show(struct request_queue *q, char *page)
-> -{
-> -	return sprintf(page, "%llu\n",
-> -		(unsigned long long)q->limits.max_write_same_sectors << 9);
-> -}
-> -
+The second part of the series (patches 24 to 31) add a small cleanup of
+libsas code and many simplifications and iomprovements of the pm8001
+driver code.
 
-This tripped one of my test scripts. We should probably return 0 here
-like we did for discard_zeroes_data and leave the sysfs entry in place.
+With these fixes, libzbc test suite passes all test case. This test
+suite was used with an SMR drive for testing because it generates many
+NCQ NON DATA commands (for zone management commands) and also generates
+many NCQ command errors to check ASC/ASCQ returned by the device. With
+the test suite, the error recovery path was extensively exercised. The
+same tests were also executed with a SAS SMR drives to exercise the
+error path.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+The patches are based on the latest 5.18/scsi-staging tree.
+
+Changes from v5:
+* Rebased and retested on top of the latest 5.18/scsi_staging tree
+
+Changes from v4:
+* Extracted code style changes in patch 22 into the new patch 24
+* Squashed patch 18 into patch 22 (now patch 21)
+* Added reviewed-by tags
+
+Changes from v3:
+* Rebase on latest 5.18/scsi-staging tree
+* Dropped former patch 24 (kdoc comment fixed upstream already)
+* Merged former patch 27 and 30
+* Fixed patch 26 commit message
+* Added patches 30 and 31
+* Added reviewed-by tags
+
+Changes from v2:
+* Reorganized the series: fixes first, cleanups second.
+* Added more bug/leaks fix patches
+* Addressed Gary's comment for the ccb alloc helper (patch 28)
+* Rebased (and tested) all patches on 5.18/scsi-staging
+
+Changes from v1:
+* Added reviewed-by tags
+* Addressed Christoph's comments on patch 4 and 8
+* Added patches 21 and 22 to fix 2 additional problems found while
+  preparing this v2 series
+* Added patch 23 and 24 to cleanup the code further.
+
+Damien Le Moal (31):
+  scsi: libsas: Fix sas_ata_qc_issue() handling of NCQ NON DATA commands
+  scsi: pm8001: Fix __iomem pointer use in pm8001_phy_control()
+  scsi: pm8001: Fix pm8001_update_flash() local variable type
+  scsi: pm8001: Fix command initialization in pm80XX_send_read_log()
+  scsi: pm8001: Fix pm80xx_pci_mem_copy() interface
+  scsi: pm8001: Fix command initialization in pm8001_chip_ssp_tm_req()
+  scsi: pm8001: Fix payload initialization in pm80xx_set_thermal_config()
+  scsi: pm8001: Fix le32 values handling in pm80xx_set_sas_protocol_timer=
+_config()
+  scsi: pm8001: Fix payload initialization in pm80xx_encrypt_update()
+  scsi: pm8001: Fix le32 values handling in pm80xx_chip_ssp_io_req()
+  scsi: pm8001: Fix le32 values handling in pm80xx_chip_sata_req()
+  scsi: pm8001: Fix use of struct set_phy_profile_req fields
+  scsi: pm8001: Remove local variable in pm8001_pci_resume()
+  scsi: pm8001: Fix NCQ NON DATA command task initialization
+  scsi: pm8001: Fix NCQ NON DATA command completion handling
+  scsi: pm8001: Fix abort all task initialization
+  scsi: pm8001: Fix pm8001_tag_alloc() failures handling
+  scsi: pm8001: Fix pm8001_mpi_task_abort_resp()
+  scsi: pm8001: Fix tag values handling
+  scsi: pm8001: Fix task leak in pm8001_send_abort_all()
+  scsi: pm8001: Fix tag leaks on error
+  scsi: pm8001: fix memory leak in pm8001_chip_fw_flash_update_req()
+  scsi: libsas: Simplify sas_ata_qc_issue() detection of NCQ commands
+  scsi: pm8001: Cleanup pm8001_exec_internal_task_abort()
+  scsi: pm8001: Simplify pm8001_get_ncq_tag()
+  scsi: pm8001: Introduce ccb alloc/free helpers
+  scsi: pm8001: Simplify pm8001_mpi_build_cmd() interface
+  scsi: pm8001: Simplify pm8001_task_exec()
+  scsi: pm8001: Simplify pm8001_ccb_task_free()
+  scsi: pm8001: improve pm80XX_send_abort_all()
+  scsi: pm8001: Fix pm8001_info() message format
+
+ drivers/scsi/libsas/sas_ata.c     |  11 +-
+ drivers/scsi/pm8001/pm8001_ctl.c  |   5 +-
+ drivers/scsi/pm8001/pm8001_hwi.c  | 458 ++++++++++++-----------------
+ drivers/scsi/pm8001/pm8001_init.c |  11 +-
+ drivers/scsi/pm8001/pm8001_sas.c  | 297 +++++++++----------
+ drivers/scsi/pm8001/pm8001_sas.h  |  66 ++++-
+ drivers/scsi/pm8001/pm80xx_hwi.c  | 467 ++++++++++++++----------------
+ drivers/scsi/pm8001/pm80xx_hwi.h  |   2 +-
+ 8 files changed, 609 insertions(+), 708 deletions(-)
+
+--=20
+2.34.1
+
