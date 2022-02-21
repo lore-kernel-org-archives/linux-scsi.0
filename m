@@ -2,72 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF82DC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Feb 2022 08:37:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEBB3C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Feb 2022 13:14:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343833AbiBUIhW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Feb 2022 03:37:22 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54028 "EHLO
+        id S1358743AbiBUNO6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Feb 2022 08:14:58 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241856AbiBUIhU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Feb 2022 03:37:20 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B163039D;
-        Mon, 21 Feb 2022 00:36:56 -0800 (PST)
-Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K2FsT0hvLz67yS9;
-        Mon, 21 Feb 2022 16:32:13 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Mon, 21 Feb 2022 09:36:54 +0100
-Received: from [10.47.94.94] (10.47.94.94) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Mon, 21 Feb
- 2022 08:36:53 +0000
-Message-ID: <e980945f-b319-a77c-1583-6bdb78297d7c@huawei.com>
-Date:   Mon, 21 Feb 2022 08:36:53 +0000
+        with ESMTP id S1358791AbiBUNOy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Feb 2022 08:14:54 -0500
+Received: from fllv0015.ext.ti.com (fllv0015.ext.ti.com [198.47.19.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39DF21EEE0;
+        Mon, 21 Feb 2022 05:14:28 -0800 (PST)
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 21LDDfnW088797;
+        Mon, 21 Feb 2022 07:13:41 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1645449221;
+        bh=vXu1G0emev+TnkGG5qABAZXlSG+xfFg5QuWYDC2AHek=;
+        h=Date:From:To:CC:Subject:References:In-Reply-To;
+        b=Dsv0NFIKFcID9DYTIhgmbO2DQxxSezhh1ln6oR81gCTGWrdNBtZdwVr6RXFw0Zu+D
+         b0h2t3fENlvfOJnnHPQW02XoYC9hDG1fbYEE0q8uOdf/GQ3eLloxdoTVIzGVOpsHrF
+         jPBp3q/6mkYDibbPuzFybwbnJyfSz9WIkaQN4Lg0=
+Received: from DLEE109.ent.ti.com (dlee109.ent.ti.com [157.170.170.41])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 21LDDfnC096479
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 21 Feb 2022 07:13:41 -0600
+Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE109.ent.ti.com
+ (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14; Mon, 21
+ Feb 2022 07:13:40 -0600
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE111.ent.ti.com
+ (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14 via
+ Frontend Transport; Mon, 21 Feb 2022 07:13:40 -0600
+Received: from localhost (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 21LDDeog070333;
+        Mon, 21 Feb 2022 07:13:40 -0600
+Date:   Mon, 21 Feb 2022 07:13:40 -0600
+From:   Nishanth Menon <nm@ti.com>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Wei Xu <xuwei5@hisilicon.com>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Tero Kristo <kristo@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Chanho Park <chanho61.park@samsung.com>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Jan Kotas <jank@cadence.com>, <linux-scsi@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>
+Subject: Re: [RFC PATCH 8/8] arm64: dts: ti: use 'freq-table' in UFS node
+Message-ID: <20220221131340.q3hjpjevqrfvhggv@specimen>
+References: <20220219184224.44339-1-krzysztof.kozlowski@canonical.com>
+ <20220219184554.44887-1-krzysztof.kozlowski@canonical.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH v2 00/18] scsi: libsas and users: Factor out LLDD TMF code
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-CC:     <jejb@linux.ibm.com>, <artur.paszkiewicz@intel.com>,
-        <jinpu.wang@cloud.ionos.com>, <chenxiang66@hisilicon.com>,
-        <hch@lst.de>, <Ajish.Koshy@microchip.com>, <yanaijie@huawei.com>,
-        <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <liuqi115@huawei.com>, <Viswas.G@microchip.com>
-References: <1645112566-115804-1-git-send-email-john.garry@huawei.com>
- <5ecf520e-588c-d756-1cb8-2224535b550e@opensource.wdc.com>
- <yq15ypail31.fsf@ca-mkp.ca.oracle.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <yq15ypail31.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.94.94]
-X-ClientProxiedBy: lhreml718-chm.china.huawei.com (10.201.108.69) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20220219184554.44887-1-krzysztof.kozlowski@canonical.com>
+User-Agent: NeoMutt/20171215
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 19/02/2022 21:53, Martin K. Petersen wrote:
-> Damien,
+On 19:45-20220219, Krzysztof Kozlowski wrote:
+> The 'freq-table-hz' property is deprecated by UFS bindings.
+> The uint32-array requires also element to be passed within one <> block.
 > 
->> This series and my pm8001 series have a conflict. When applying the
->> pm8001 patches on top of these libsas changes, patch 28 has a fairly
->> easy to resolve conflict. Let me know if you want me to send a v6
->> rebased on top of this.
-> "fairly easy to resolve", huh? Sure, if you manually rework the entire
-> patch.
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+> ---
+>  arch/arm64/boot/dts/ti/k3-j721e-main.dtsi | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> Please send me an updated version of #28. The rest of the series is
-> fine...
+> diff --git a/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi b/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
+> index 599861259a30..c3afef0321ae 100644
+> --- a/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
+> +++ b/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
+> @@ -1257,7 +1257,9 @@ ufs@4e84000 {
+>  			compatible = "cdns,ufshc-m31-16nm", "jedec,ufs-2.0";
+>  			reg = <0x0 0x4e84000 0x0 0x10000>;
+>  			interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
+> -			freq-table-hz = <250000000 250000000>, <19200000 19200000>, <19200000 19200000>;
+> +			freq-table = <250000000 250000000
 
-Thanks Martin and Damien. I'll mention potential conflicts in my cover 
-letters in future to help co-ordinate things better.
+<min max> is much more readable and less error prone in case of a large
+set.
 
-John
+> +				      19200000 19200000
+> +				      19200000 19200000>;
+
+are you sure the removal of the tuple adds value?
+
+>  			clocks = <&k3_clks 277 0>, <&k3_clks 277 1>, <&k3_clks 277 1>;
+>  			clock-names = "core_clk", "phy_clk", "ref_clk";
+>  			dma-coherent;
+> -- 
+> 2.32.0
+> 
+
+-- 
+Regards,
+Nishanth Menon
+Key (0xDDB5849D1736249D)/Fingerprint: F8A2 8693 54EB 8232 17A3  1A34 DDB5 849D 1736 249D
