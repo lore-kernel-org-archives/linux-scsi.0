@@ -2,144 +2,206 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E88B3C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Feb 2022 00:04:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD364C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Feb 2022 00:13:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239014AbiBUAEe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 20 Feb 2022 19:04:34 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:51604 "EHLO
+        id S239104AbiBUANc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Feb 2022 19:13:32 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229604AbiBUAEd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Feb 2022 19:04:33 -0500
-Received: from EUR02-VE1-obe.outbound.protection.outlook.com (mail-eopbgr20122.outbound.protection.outlook.com [40.107.2.122])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F28EA517DA;
-        Sun, 20 Feb 2022 16:04:09 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IzhJ49Z/CVes5m2Jhq41LJ+OLloKfEJ2DI0yQcLvZDrGPVVkfy/a5+qnjSSHvOdssVkxNdqluiPmzzVWRGG6J5iHviR0v1QGmmRPE4KBRtO1TT0FZIBKvAUXOgeuA/qtuLx2Px0O+HBAST8136hdsVPyqQM104e5NLZ1UVi9pvugfGLEts9jE+ZXqIzZUuPEZD4Ug3jqD++VSXULWg0TmOO+X1Q6Hoq4usteaFB8e5gCUw7YQ59xmaprS3zpL9SqnhQYNV06rrOisGEN/6x/QA81fJn4ItBs8YKyJVTepwdV04KD3ViKkff9q7wSCfmSM3nrNxZOr13xnrf13xxelA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nTLIiB/y6mc1vxLwhlpAfK0LDuk+luyjUpB+t8x8Odc=;
- b=RyuQjEhJzDH315IiEcJrae9SdLF7NM7ebSToQ+c1+xnrZ5pNB151oZXT9iDtucM2eaHbnX2Tw0YfIH+DW9Vt8S80dRG3ZrgMvET9jnGSOs48FKq841vqeC/GhCts9cQimqGl4jyRuShsPpuQ5m9nHPfd8gZVMAYgNu8xOGL1q69ZjKHMyvCqikzvUDaKL/w3gU8BA4frIc2uBQDIjSdEBIVXLJMAc7UxBhqnUxPHciAiKtNwrUfUeWMjcB2mr4W89j841evCeMUwURbXP+iBXFNMA40mHUP/IUxRRntcaSMbd19r/AcIPB6bRsyhSGJla0khTIb0t8KEsbjZ/GLZPA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=ugent.be; dmarc=pass action=none header.from=ugent.be;
- dkim=pass header.d=ugent.be; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ugent.be; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nTLIiB/y6mc1vxLwhlpAfK0LDuk+luyjUpB+t8x8Odc=;
- b=eCe/qWOHq9UH9h/o0SHGVkiGRBwus4zJhDn2Fb7HAeB+u3O5cr9XEn9+nMnFnPqF3TRRvVmH/mD8o+QLHmqD2RS7AZNN8SNbPw3Q+VCB8i9wvTgoem805a7NXWGt+nzeI/5qWJrKxUhdoR0P9vzlawUlLmjqDU1b2i7wP+j98/I=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=ugent.be;
-Received: from AM6PR09MB2326.eurprd09.prod.outlook.com (2603:10a6:20b:46::12)
- by PR3PR09MB4395.eurprd09.prod.outlook.com (2603:10a6:102:39::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4995.16; Mon, 21 Feb
- 2022 00:04:07 +0000
-Received: from AM6PR09MB2326.eurprd09.prod.outlook.com
- ([fe80::3538:ffcf:447d:9c2b]) by AM6PR09MB2326.eurprd09.prod.outlook.com
- ([fe80::3538:ffcf:447d:9c2b%4]) with mapi id 15.20.4995.027; Mon, 21 Feb 2022
- 00:04:06 +0000
-Message-ID: <14d6e454-49c3-0a85-68f1-3f003ad032e6@ugent.be>
-Date:   Mon, 21 Feb 2022 01:03:52 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
+        with ESMTP id S229604AbiBUANb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Feb 2022 19:13:31 -0500
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86F6A344D8
+        for <linux-scsi@vger.kernel.org>; Sun, 20 Feb 2022 16:13:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1645402388; x=1676938388;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=lGMmzzlY0lJRAvCgGqxr8sNyXO1+5FsBQVwYorgZuVQ=;
+  b=kxE1BHwN6Lm0PgxP+EpVmXnz++v872aaGyDwUpGxfpm6ee6fBrOp/EF0
+   yzmnwkiTM0FOqRejnuScnlkQOcO1U74jXCv5goD0GBEhYq/g7+vnprVZX
+   x0KXoQH77+XeR8LvcB3/j+ioyP6z9Iii7/ecUhEPZ6z1NXAPEgvzrsRY9
+   fV1lfF7suPbcEmlv/kT1clzIZA4CXK3Pc4Ym7kfyFp/Wy+2ic7hk97F5Z
+   VUMRJylfRcnx8dQquyWPScXRux1rBUwELmFfCTNN6DEX6rQppyiig7PzD
+   BQXGILiiecnen+gkDEiWlYCqY/Y0j1C28LbCLO3zm0npMlEdW09PRUyhR
+   g==;
+X-IronPort-AV: E=Sophos;i="5.88,384,1635177600"; 
+   d="scan'208";a="193474913"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Feb 2022 08:13:08 +0800
+IronPort-SDR: LlPW+TVpyt51S2Iz7AcLthFysOQWqvrpYv9LY+RtEte1mkYl/JxaJVBCrLlkiZqX162Qw2/0y2
+ LXLQFhPBZnNBdR7a/Gb4nfhsqYrKoL8XZSAFkDJtvs4jJNHxO/zBZ1gl54VovWJ038Z0eN0OvO
+ JUwGWMnvE231j7JZ2VjvZLMiRFvSI6HghSw48ca4Fzhl/ZbI78YnlKwN1bkTFP/oX+el/ucX5l
+ 088wPMoceYhn01+zmoftV8ftnCfvNM9inwA5+/s3dxGPMxXH0pgadmwcII4m39ZHsgNXpv1Rlt
+ BW1wt3QV0NhGkuOLyxtpOC/1
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2022 15:44:43 -0800
+IronPort-SDR: j5ZsAeHCIxNbhiRFRTNisBmzwya/Gqz+xHGAQSWK0yhHAJveNQfa+ZvDLFXTHJshXoM5m/Dy1Y
+ FLEHNRHB0Si1TI931QWQKamLk9jfcpcFhD951G3l6McIRSyZaeyrALnMKKOPgnt+pIlRAKzVDm
+ feM10NLwXtEh3OXrbWXoG119ip1nHfVaRB1nyrJQCajT3BmW4Fqw578eNp1akWvkTTsf59zaly
+ qIFnYTTxVMSPVJOjfDFywTxyqtwph+qDDNhLJpk+zsqdkuhcVGWeCuIPcFBkV/z5f3vxcBiH/J
+ XFc=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Feb 2022 16:13:09 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K22nc5FFtz1Rwrw
+        for <linux-scsi@vger.kernel.org>; Sun, 20 Feb 2022 16:13:08 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1645402388; x=1647994389; bh=lGMmzzlY0lJRAvCgGqxr8sNyXO1+5FsBQVw
+        YorgZuVQ=; b=tVF13NnyCTqojBnVrWwsFhvoNh7SgncjnK/QIbUHERm/aBU7+DG
+        dSzeFqaf92ojTgIxh+NqdazG/pnX6MgdMnuOPeGdSHZ7Qe2OHxz7xcyfQNABoKuJ
+        t0rlK1mGz8a555owX1C6mGEMLIqfix6Fl4U2XJVFyd5yaQ9asUE5USm15RrW/Y5+
+        U/5ToY/IUidRnx+XUxCucBtdYe74zNR8dwQtTwMSYfh0cSYW4WDyJxtm41znIx/W
+        cnKDkKDl9gvE1wDkNu8O1PtCIsjEspfSyy7v1dhCNEw5pnFP2e9QPy3Ee/zwNAHY
+        AAclpyvjJoBSYYko8N3yPEJJ3jGc9Soi4ig==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id agV8jAmd8hOv for <linux-scsi@vger.kernel.org>;
+        Sun, 20 Feb 2022 16:13:08 -0800 (PST)
+Received: from [10.89.87.236] (c02drav6md6t.dhcp.fujisawa.hgst.com [10.89.87.236])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K22nb5t65z1Rvlx;
+        Sun, 20 Feb 2022 16:13:07 -0800 (PST)
+Message-ID: <6d2b59af-ae8d-fb8c-cc9c-6ec436d3ffef@opensource.wdc.com>
+Date:   Mon, 21 Feb 2022 09:13:06 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.6.0
+Subject: Re: sd: Unaligned partial completion
 Content-Language: en-US
-To:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-From:   Niels Dossche <niels.dossche@ugent.be>
-Subject: [PATCH] scsi: aacraid: add missing manage_lock on
- management_fib_count
+To:     dgilbert@interlog.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     SCSI development list <linux-scsi@vger.kernel.org>
+References: <ae40bef0-702f-04c4-9219-47502c37d977@interlog.com>
+ <yq11qzyh4zj.fsf@ca-mkp.ca.oracle.com>
+ <22a343a6-f659-3938-b83e-a3842486bbb8@interlog.com>
+ <35b0d7bb-95d0-6c6a-2486-4d1336b9b98f@opensource.wdc.com>
+ <3d57d895-d133-87a5-23a6-721641711000@interlog.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <3d57d895-d133-87a5-23a6-721641711000@interlog.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: PR3P189CA0038.EURP189.PROD.OUTLOOK.COM
- (2603:10a6:102:53::13) To AM6PR09MB2326.eurprd09.prod.outlook.com
- (2603:10a6:20b:46::12)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 6c2e2d67-ce6c-4e53-f325-08d9f4cda5d7
-X-MS-TrafficTypeDiagnostic: PR3PR09MB4395:EE_
-X-Microsoft-Antispam-PRVS: <PR3PR09MB4395272CD3231D0F59BCDFD6883A9@PR3PR09MB4395.eurprd09.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: fn+898kyyMoExPCid999Q5LD98Fe0TkZiv756vIaMS4RBQSbVPPib1XYt1twGqeIk/VshHx5LLDPTEuuhvLNrggVPOo4MdDcRLWbVaPaTrKBQbCNNDKqFy1ao2eSLjiNtvxc9WrIrBtdhPMifc9InfA6eGRQzHjUpCcdgxjZKaLef81gsTBDiPYFsWqhOALCnkzZOZwJS0mxw+5sE5NDa9tMGo5LZqEGNa1a4/PIsHvY0DVo8nMnBCJvKnRvRjWvQQZYPHLmLN1N2I/Xa5ufYghFNMF/PA+Mhy1uBfwSw/JuG25JwXMdUpcc21fdEL2naeJCl+h5MnkxJFbW1a37j4tHYkUs2AKwxysJsdBfgT9J0zRHP+Yzemk3PZctuE621d4741e1xzHTFcWVsaEVtQfOByTwXPY099WrAAcskBU/4tVm/I4AQyPxmMwMS4giGAj7DoU9LwSiXwJAppY87XW2vSArNv826s3D5i+HnQVdjBJUYjkjCMNUpsxFBxJHtcnSHKFRTNmlx2i16VT1glXzNaK/L3grUhpQpfV1+Kmg4fcJn1eq2X5c/5nNDkDP+Dsb1utlGvIIPzREGjFuGug8q86cae2TQ4bEmXh+B3nGvD3uuP/6PAtNvjC0UGMBplJAMX04dh5l8mOJGrKdGZ5eQjqXFwFDo4AWbaJfuvFC53nMddqMB4X4IlnZ3HS3naNFh4fGIp5kNv0ipIRMgI3JHdzo9H+bv/JFfNKHJgU=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM6PR09MB2326.eurprd09.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(316002)(786003)(5660300002)(2616005)(86362001)(6916009)(83380400001)(36756003)(31696002)(186003)(31686004)(6486002)(6506007)(6512007)(6666004)(8676002)(66946007)(66556008)(66476007)(2906002)(44832011)(4744005)(508600001)(4326008)(38100700002)(8936002)(45980500001)(43740500002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?SFM3ZFN2dFdlazJlakpianBzbU92azhBcW5qeDdkZUlPWS90dlFJbmw2cEg0?=
- =?utf-8?B?NUR6YWdSVnV1YlR1dVY4QTlrVnFtL2hjQkFmTmFFb2ZXc3VEQ0p5emorWk1v?=
- =?utf-8?B?cS9NWHd4R0xzNzlVVGxlaXNnbXE5RW41bUU2NlRKa1REd1lSWVA2VkU1S2ti?=
- =?utf-8?B?K0lnaXh1VFkydUVPb0xnYU42ZHhqeUljaEtManpBM0h3Z2ovTFBGQjNYTnV5?=
- =?utf-8?B?WWF5M0x0WW5WVlZFR1JYeFJyT2ZEcDBlVkc0aVFMYnY4RVc5QlQvVzFpZlRN?=
- =?utf-8?B?UE91d01HYjEwMytMSmdaZit0TS9iNEtuNGxwRG5ZckdFVHhacTdXcERhdHpZ?=
- =?utf-8?B?UHdtNkZzNWdJeTZ4dEtXZXVzbncyWkxobGZ4c1FoZEYxYXNrL0RsNlJja2J6?=
- =?utf-8?B?TUJ0VFJ0YURjV2N0ZmZobE9oQmE3eEkzNitZQVExa2JwWm5RWlpLYXJlcG5a?=
- =?utf-8?B?SGEwVVFDSm5lZXI1ZVA0eWh4dmxEZy85UTVBYkQ1eXlzSENRMWxWaWFDaW5F?=
- =?utf-8?B?bUJwK0JvcGdXSVcvT3pTRUNXcWJZSktqOFIyWGNjYkowUG9aQlpqNDJKRVN0?=
- =?utf-8?B?djRGdWk2M1ZqbXk4VERJZ3hWRE5WVElWZk41Syt6bG4vaXBpU0hHTk0zYzNT?=
- =?utf-8?B?Nm1WTE1FYkMvcWRLMmNobXFlejJ1VW81eEVWcHBuNCtlL2daUGJZTFNlTytV?=
- =?utf-8?B?THFyL29yQnZqb2ZLSkhCTnNQeE14b3VlWUZqa1dvd3FDTHY0bDFOamlDS2xT?=
- =?utf-8?B?ai9BUlpRYmVoWnBzcmZ5SVBOeXFuZ3ZUSUxxZXFnVDRzbFhMV1BTeXFDRTA1?=
- =?utf-8?B?Z0s1OEt2WXJLREhtTGxhbk9TRG5wZlpzK1hzTHFFTHFCalBuZUFENlhiR3h2?=
- =?utf-8?B?UWd2Y2dndWU4ZjhxbFVjclkxNE95REZQdjZzNUtqWXdFck1UY243dkRKQkR3?=
- =?utf-8?B?RTJpR2NTMVFkcTdNMDhCVkhBc3lwN1VVUVFsTTJyODZKM0h6Q1I1amRjOXB5?=
- =?utf-8?B?cTRWNU16dE1UM2FveDhKOFN4U2c1dGc4K2FlVzNVQmM0SVJINHU2NVN3WjVE?=
- =?utf-8?B?bm13VERVZktLK2FaUlFkRllOUExPYjRud3JDcnEvN3cwdGlBRDUycUg4bklO?=
- =?utf-8?B?TTRNQUhtUVRJYXdreXdiZHB4OG5zSEJvSUhrVm9PM2YzaHhLS2JxNFIzMjhh?=
- =?utf-8?B?UnBzbysxWG9nWkxIRTVhNThJVW1pR1VZNVNQOURZRCsvL1B2Y2FxZ05vTHFL?=
- =?utf-8?B?YzNyNW9Pb1BBUFFDNFp5YmdIaDhWa2t0QlAyTjdYSkFWai9oMWZ4ZFFSZkVw?=
- =?utf-8?B?amM4NW84TjBxY3RUc0tRdnU5aXRkS3JPSEJtcUowMDRTbHNYaU54TTBCMjVT?=
- =?utf-8?B?cVhxVTRiUU0vUjdSMWhMMDRqSGJtdVRnY3RnTXdHNS9kVFJPZzFmYXFLV0Nu?=
- =?utf-8?B?Q09weTRSd1ZZbEZHVGIwdjhiYTNpNW1UaHczUG13MHJrRExFQXpWSkRFVkVn?=
- =?utf-8?B?L0FwdUVoUGZuQWhnU241U3VkYlNxYjdpYkdmSndNeTBMdmY1OU5DM1VpRnVU?=
- =?utf-8?B?d0FWRlQ0MkR5UTYzS0lhdkRDVCtRN2J6eUNKSkFvZ201anU3d3FmYTg4R3VS?=
- =?utf-8?B?ZitwUXFrN2NsWmJ2MlVrRUNVNExmOTd3U3ZpVEpoWit3ODlJV2ZxT3N0TnhU?=
- =?utf-8?B?bUUrTnloUzQ5NzFjd09icUVHRzN0RktmZlZJMVJ2elFUZkhtTS9UV1NGUVVy?=
- =?utf-8?B?Mko4U2pxMmVXNUNZQW81eUlDL2pNRC9Ya1JCSjdKOG1hdDRvZ1NSdW1rU2hN?=
- =?utf-8?B?dVhFem9ITHBWZ09XYmx2WVk2TlA5UjNZbXFXd3B1YmE2ZStQSE11ZTBXUzNI?=
- =?utf-8?B?dm5VWmFJYXlsQUl2RUNHZFhtSXdadFZNdmMrS1pRRW5mTzlCWlBXWHJzOEtT?=
- =?utf-8?B?OGtYVnpmWitQNXpycDJHTlZQU2lFVVo3SVFzRWlEYWZXYmFMUCtZY3dtSTBM?=
- =?utf-8?B?MnJNYTZJbnZsVnVkVUxVcFVhTm9DM29yejZOWjdZWGpyLy9MZFBmRVdMaTVm?=
- =?utf-8?B?RkxCaXZnMUU3TE4rQ3FncmJ1R2dsSHdCZEhxREdqN1Y1Q0lPOG11aW9VZWZE?=
- =?utf-8?B?WTFwaE13clRVUTNKcUZnQTF6R3RRV2htNUhQNTFkRVZHai8xSWZPWkJNVkJL?=
- =?utf-8?B?S2RlV09xc1hTeFRMUFQzZVpXVXNZbDZHaG5WdWNSakFITWRnZFZuZU5TU0RD?=
- =?utf-8?Q?QeHne9QB8dodRPWlmbv2TaXGVGBmymAk2wBDwXadek=3D?=
-X-OriginatorOrg: ugent.be
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6c2e2d67-ce6c-4e53-f325-08d9f4cda5d7
-X-MS-Exchange-CrossTenant-AuthSource: AM6PR09MB2326.eurprd09.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Feb 2022 00:04:06.9368
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: d7811cde-ecef-496c-8f91-a1786241b99c
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JykuW15WwK7a10aGjm+otXNIfhIXpp7KDifOnrAGb7Gg6OhBsWH82/t9IDgm7ejFZIa8lL80GnskgmW/UozAkw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PR3PR09MB4395
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-All other places modify the management_fib_count under the manage_lock.
-Avoid a possible race condition by also applying that lock in
-aac_src_intr_message.
+On 2022/02/20 16:16, Douglas Gilbert wrote:
+> On 2022-02-19 20:35, Damien Le Moal wrote:
+>> On 2/20/22 09:56, Douglas Gilbert wrote:
+>>> On 2022-02-19 17:46, Martin K. Petersen wrote:
+>>>>
+>>>> Douglas,
+>>>>
+>>>>> What should the sd driver do when it gets the error in the subject
+>>>>> line? Try again, and again, and again, and again ...?
+>>>>>
+>>>>> sd 2:0:1:0: [sdb] Unaligned partial completion (resid=3584, sector_sz=4096)
+>>>>> sd 2:0:1:0: [sdb] tag#407 CDB: Read(16) 88 00 00 00 00 00 00 00 00 00 00 00 00 01 00
+>>>>>
+>>>>> Not very productive, IMO. Perhaps, after say 3 retries getting the
+>>>>> _same_ resid, it might rescan that disk. There is a big hint in the
+>>>>> logged data shown above: trying to READ 1 block (sector_sz=4096) and
+>>>>> getting a resid of 3584. So it got back 512 bytes (again and again
+>>>>> ...). The disk isn't mounted so perhaps it is being prepared. And
+>>>>> maybe that preparation involved a MODE SELECT which changed the LB
+>>>>> size in its block descriptor, prior to a FORMAT UNIT.
+>>>>
+>>>> The kernel doesn't inspect passthrough commands to track whether an
+>>>> application is doing MODE SELECT or FORMAT UNIT. The burden is generally
+>>>> on the application to do the right thing.
+>>>
+>>> No, of course not. But the kernel should inspect all UAs especially the one
+>>> that says: CAPACITY DATA HAS CHANGED !
+>>>
+>>>> I'm assuming we're trying to read the partition table. Did the device
+>>>> somehow get closed between the MODE SELECT and the FORMAT UNIT?
+>>>
+>>> Nope, look up "format corrupt" state in SBC, there is a asc/ascq code for
+>>> that, and it was _not_ reported in this case. The disk was fine after those
+>>> two commands, it was sd or the scsi mid-level that didn't observe the UAs,
+>>> hence the snafu. Sending a READ command after a CAPACITY DATA HAS CHANGE
+>>> UA is "undefined behaviour" as the say in the C/C++ spec.
+>>>
+>>> Also more and more settings in SCSI *** are giving the option to return an
+>>> error (even MEDIUM ERROR) if the initiator is reading a block that has never
+>>> been written. So if the sd driver is looking for a partition table (LBA 0 ?)
+>>> then you have a chicken and egg problem that retrying will not solve.
+>>
+>> It is not the scsi driver looking for partitions. This is generic block
+>> layer code rescanning the partition table together with disk revalidate
+>> after the bdev is closed. The disk revalidate should have caught the
+>> change in LBA size, so it may be that the partition scan is before
+>> revalidate instead of after... That would need checking.
+>>
+>>>>> Another issue with that error message: what does "unaligned" mean in
+>>>>> this context? Surely it is superfluous and "Partial completion" is
+>>>>> more accurate (unless the resid is negative).
+>>>>
+>>>> The "unaligned" term comes from ZBC.
+>>>
+>>> The sd driver should take its lead from SBC, not ZBC.
+>>
+>> It was observed in the past that some HBAs (Broadcom I think it was)
+>> returned a resid not aligned to the LBA size with 4Kn disks, making it
+>> impossible to restart the command to process the reminder of the data.
+> 
+> But restarting the READ of one "logical block" at LBA 0 when the kernel
+> thought that was 4096 bytes and the drive returned 512 bytes is exactly
+> what I observed; again and again.
 
-Signed-off-by: Niels Dossche <niels.dossche@ugent.be>
----
- drivers/scsi/aacraid/src.c | 2 ++
- 1 file changed, 2 insertions(+)
+As I said, it may be because the block layer disk revalidate call and partition
+scan are reversed, or not synchronized, causing the partition scan read to be
+dealt with without the sector size yet being updated in the sd driver. We should
+check the block layer. Will have a look.
 
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 11ef58204e96..ca73439587ed 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -91,7 +91,9 @@ static irqreturn_t aac_src_intr_message(int irq, void *dev_id)
-                                        dev->sync_fib);
-                        spin_lock_irqsave(&dev->sync_fib->event_lock, sflags);
-                        if (dev->sync_fib->flags & FIB_CONTEXT_FLAG_WAIT) {
-+                               spin_lock(&dev->manage_lock);
-                                dev->management_fib_count--;
-+                               spin_unlock(&dev->manage_lock);
-                                complete(&dev->sync_fib->event_wait);
-                        }
-                        spin_unlock_irqrestore(&dev->sync_fib->event_lock,
+> 
+> IMO the kernel should be prepared for surprises when reading LBA 0,
+> such as:
+>    - the block size is not what it was expecting [as in this case]
+>    - that block has never been written and the disk has been told to
+>      return an (IO) error in that case
+> 
+> It is a pity that a SCSI pass-through like the bsg or sg driver cannot
+> establish its own I_T nexus, separate from the I_T nexus that the
+> sd driver uses. The reason is that if an I_T nexus causes a UA (e.g.
+> MODE SELECT change LB size) then the next command (apart from
+> INQUIRY, REPORT LUNS and friends) will _not_ receive that UA. [Other
+> I_T nexi will receive that UA.]
+> 
+>> This problem was especially apparent with ZBC disks writes. > So unaligned here is not just for ZBC disks.
+> 
+> SCSI data-out and data-in transfers are inherently unaligned (or byte
+> aligned) but I suppose the DMA silicon in the HBA may have some
+> alignment requirements.
+
+Sure, I know that. But the kernel never asks for unaligned read/writes and the
+disk will certainly never return a half backed sector for reads or partially
+writes sectors. So getting back a resid that is not aligned on the LBA size is a
+gross bug from the HBA and we should not allow that to go unnoticed.
+
+> 
+>>
+>>>
+>>> Doug Gilbert
+>>>
+>>>
+>>> *** for example, FORMAT UNIT (FFMT=2)
+>>>
+>>
+>>
+> 
+
+
 -- 
-2.35.1
+Damien Le Moal
+Western Digital Research
