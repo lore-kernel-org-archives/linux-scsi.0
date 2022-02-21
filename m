@@ -2,185 +2,366 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E459C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Feb 2022 15:50:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFF60C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Feb 2022 17:09:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379676AbiBUPuy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Feb 2022 10:50:54 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:47548 "EHLO
+        id S237487AbiBURKE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Feb 2022 12:10:04 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:58660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379555AbiBUPuk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Feb 2022 10:50:40 -0500
-Received: from mail-yb1-xb2c.google.com (mail-yb1-xb2c.google.com [IPv6:2607:f8b0:4864:20::b2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9E6924F19
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Feb 2022 07:50:16 -0800 (PST)
-Received: by mail-yb1-xb2c.google.com with SMTP id c6so35279668ybk.3
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Feb 2022 07:50:16 -0800 (PST)
+        with ESMTP id S229865AbiBURKC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Feb 2022 12:10:02 -0500
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A511825EB0;
+        Mon, 21 Feb 2022 09:09:38 -0800 (PST)
+Received: by mail-ej1-x632.google.com with SMTP id qk11so35003185ejb.2;
+        Mon, 21 Feb 2022 09:09:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:cc
-         :content-transfer-encoding;
-        bh=D0WJ4EBeZkkbLtlCeWVpmkouqB1QZAU3gTPtgA4bq9Y=;
-        b=UA/9O+x5p/iV9LrGR7l7s8KGtTTiCHHmXWdY87eUU7L8EURpiwk9qTRSDqMECnJDD1
-         0tZhTqU3EI6Q+UPdCktYjlH50wDQkcHNGboKwWJQJkKfqSRCG4Wkuj7THwkibuUhZgBU
-         EvPvgyB7cKfe7oZeoK04XvWM5NNIW2hNnLJdzLCS++rvKDYRmsmGBT1GElWo0rMRq+t/
-         5/n6SeSb6Bz7BPqreQwuFntseD6CrA4ymseWIE4HJ/MZeZ11I7hqT74J7onWTOfsw6dt
-         OHZKnCvetx3i5HyBMZ3gmgl4oKj3ngtr8VHM07509QgduX+H339n/8JIPdxcq6Cv/Rus
-         S63g==
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=cyJG1ng5cIDTWoYPJyS37QAOhjmcb3ROotgtJ+4lYNs=;
+        b=ifuYrnKxNjhhWVMcRzzhTOfq1f6sCmActOCwfUg6ev9LdEiNnruok/J5006BfGtixM
+         dHgmSpjtujOeSwxjEsFAy1X42OmQaUXH9F8O2t3rkc1+481UAzce/RR1kS/S5de30pVa
+         KwQuRXbzXT22W65jXWTrH6Qgo3xGj66qfyMYwOw6s8q5e4sQicQT8QIY4ZmGxJbN26oV
+         0EegdDbS2b/jOpl5LHDsrdbcLj6eA6GjryFXfH+MAZs96yNzMXnPNM5jAdAZN8qzvqX2
+         qPoDT6KVNOIotWZMiaKDUohoAwb4NQ1D3vQ0kJ+M6yhiBCbcKsQN7l1R5ly03kFQUace
+         U2tg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:cc:content-transfer-encoding;
-        bh=D0WJ4EBeZkkbLtlCeWVpmkouqB1QZAU3gTPtgA4bq9Y=;
-        b=hErIPMfCkHFXGQ2zjrD//Ea2sYLXOZ+XiH+pQZSliEyiverhqiwmeGPZXg2zeDUfbY
-         EYdGAYO4Hk+EvRWDv66Tf5jG4NzawjwSguAO8V91rxd6PsHwWx4vDkKEYUsoPE6VOjWN
-         /d3NiTNUROIMK1WqRJYXr8buO6i7SByQK76jboYPmYeoHX9vUXX90NGF1TdqpVynRyMN
-         XBhGXSNE44d/zo6R3xnN/TVNHXGQ7C1lOch/GYQGrlYCnfBdtiAC1fATJp2aRRc52T78
-         +LmE2HTEEhF6+eQ1nUQw2qs9elCgE/PsGnmCp+/q3ItQ/r3TWBdDkovi1mY6RtW150Qk
-         wwsg==
-X-Gm-Message-State: AOAM530x0DlIQBI8ToEXevgIUwIPfc6QJGHyDGBDO0hq1tgZxxVKdlAz
-        27jL9N53hQOrcOitNzvVaqTb+CG/xVp2ZlhfS3e8q5KNgK8yWg==
-X-Received: by 2002:a25:180b:0:b0:61a:a60:e7b0 with SMTP id
- 11-20020a25180b000000b0061a0a60e7b0mt18989823yby.454.1645458616062; Mon, 21
- Feb 2022 07:50:16 -0800 (PST)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=cyJG1ng5cIDTWoYPJyS37QAOhjmcb3ROotgtJ+4lYNs=;
+        b=v0TDhiRVh4am9RJ4q58EjaUpR2KX4yNZj2ODP4kHWl4I8iEPWugN5eoHGB4dM5/OxW
+         Aoo8P1vVRAlqMfAUh1UPyi4u9YMXrdCfGGUkgBs95/5Zc1CbPgu1uBVeZQkG0A5O0j7b
+         SUfP24sO331QIEINUkUYNAVlnrJIW3EFZMS4cve+5iFETyyze9+sj2Y5uFsLMwpIAV+M
+         Td4cgEIY99yTkq6kpb1k9DC+PE4VifBqnnQaK8RmkzWJ3Ks38v5h+tUq37WM+xIduuIQ
+         4SMpwSzaMDMS1+034ZFoGJtFS382rtNowYz9DrQh32slJIttcQ1rWQU+23gfob4uClCd
+         0ygw==
+X-Gm-Message-State: AOAM533E40lQeVam5F2oK8RliviiAtALf2LU13I6DByFFVII0VLGjY/K
+        AYYrHAuOYjh59lm4LwX4rzQ=
+X-Google-Smtp-Source: ABdhPJwFJLdmJMf/UfyPVtoDzWBj3ajj0vv292xDKJmZ2YMBo+/h0/VtzBhLaRq2z3l7kpA4DCkqAg==
+X-Received: by 2002:a17:906:5a94:b0:6c5:5aa4:da87 with SMTP id l20-20020a1709065a9400b006c55aa4da87mr17109143ejq.381.1645463377025;
+        Mon, 21 Feb 2022 09:09:37 -0800 (PST)
+Received: from [192.168.178.40] (ipbcc1fa42.dynamic.kabel-deutschland.de. [188.193.250.66])
+        by smtp.gmail.com with ESMTPSA id r22sm5383824ejo.48.2022.02.21.09.09.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 21 Feb 2022 09:09:36 -0800 (PST)
+Message-ID: <eb08230b-c9a7-26ed-9431-9be3b9791385@gmail.com>
+Date:   Mon, 21 Feb 2022 18:09:35 +0100
 MIME-Version: 1.0
-References: <CAJWTG89dq0-HDb=hSJMdT5WyArH3dy+SKZNXDEr9WOWsaUsMEg@mail.gmail.com>
- <20220221090558.yvkgw2lujwjodhfi@ws.net.home> <CAJWTG8-yrpLevVALX9ONnQGEgFcytYuhSk4ge_-qyi0tQS0keg@mail.gmail.com>
- <20220221130912.kboxxd2dga7edjkf@work> <YhOlbX0+0SxYl3Dq@T590>
-In-Reply-To: <YhOlbX0+0SxYl3Dq@T590>
-From:   Olaf Fraczyk <olaf.fraczyk@gmail.com>
-Date:   Mon, 21 Feb 2022 16:50:05 +0100
-Message-ID: <CAJWTG8-04u=-CWZ0yUcZXn-4kY2=qGBeEP_n4FMXQcOMiBAwZQ@mail.gmail.com>
-Subject: Re: blkdiscard BLKDISCARD ioctl failed: Remote I/O error
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-To:     unlisted-recipients:; (no To-header on input)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH 2/2] scsi:target:tcmu: reduce once copy by using uio ioctl
+Content-Language: en-US
+To:     Guixin Liu <kanie@linux.alibaba.com>, gregkh@linuxfoundation.org,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, xiaoguang.wang@linux.alibaba.com,
+        xlpang@linux.alibaba.com
+References: <1645064962-94123-1-git-send-email-kanie@linux.alibaba.com>
+ <1645064962-94123-2-git-send-email-kanie@linux.alibaba.com>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+In-Reply-To: <1645064962-94123-2-git-send-email-kanie@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Ming,
+Liu,
 
-You are right.
-I moved the drive to onboard SATA controller and the problem disappeared.
+generally I like ideas to speed up tcmu.
 
-As mpt3sas driver is from ELRepo (RedHat dropped support for this
-controller in RHEL 8.x) I don't know if I should continue it here or
-contact somebody from ELRepo?
+OTOH, since Andy Grover implemented tcmu based on uio device, we are
+restricted to what uio offers. With today's knowledge I think we would
+not use the uio device in tcmu again, but switching away from uio now
+would break existing userspace SW.
 
-Regards,
-Olaf
+Before we start thinking how the same performance gain could be reached
+without a change in uio device, please let me know why you use file
+backend on top of tcmu instead of target_core_file kernel module?
+Wouldn't target_core_file be even faster for your purpose?
+
+Bodo
 
 
-pon., 21 lut 2022 o 15:45 Ming Lei <ming.lei@redhat.com> napisa=C5=82(a):
->
-> On Mon, Feb 21, 2022 at 02:09:12PM +0100, Lukas Czerner wrote:
-> > Hi,
-> >
-> > the problem is definitelly not in util-linux. In kernel there are check=
-s
-> > in place that would prevent proceeding with out of range BLKDISCARD ioc=
-tl,
-> > but that's not what we hit here.
-> >
-> > In the logs below you can see that the actual discard request failed,
-> > but it appears to be well within the device range. I don't know what is
-> > going on, maybe someone in the linux-block have a clue (adding to cc).
-> >
-> > Meanwhile please let us know what kernel version do you have and provid=
-e
-> > a blkparse output of the blkdiscard run. You can do this for example
-> >
-> > blktrace -a discard -d /dev/sdb -o - | \
-> > blkparse -o output -f "%D %2c %8s %5T.%9t %6p %2a %3d %10S + %10U (%4e)=
- [%C]\n" -i -
-> >
-> > then run the blkdiscard and see the content of output file.
-> >
-> > Thanks!
-> > -Lukas
-> >
-> >
-> >
-> > On Mon, Feb 21, 2022 at 01:34:57PM +0100, Olaf Fraczyk wrote:
-> > > Hello,
-> > >
-> > > I had to put the disk in use, and I needed it in MBR format, so I can=
-'t
-> > > create GPT now.
-> > >
-> > > Anyway, the reported size seems to be OK.
-> > >
-> > > I have created 3rd partition to go till the end of the disk, as below=
-:
-> > >
-> > > Device     Boot      Start        End    Sectors   Size Id Type
-> > > /dev/sdb1             2048    4196351    4194304     2G fd Linux raid
-> > > autodetect
-> > > /dev/sdb2          4196352 1874855935 1870659584   892G fd Linux raid
-> > > autodetect
-> > > /dev/sdb3       1874855936 1875385007     529072 258.3M 83 Linux
-> > >
-> > > I can fill it to the last sector using dd without problems:
-> > >
-> > > [root@vh3 ~]# dd if=3D/dev/zero of=3D/dev/sdb3 bs=3D1024 count=3D2645=
-36
-> > > 264536+0 records in
-> > > 264536+0 records out
-> > > 270884864 bytes (271 MB, 258 MiB) copied, 4.81622 s, 56.2 MB/s
-> > >
-> > > When I do blkdiscard:
-> > >
-> > > root@vh3 ~]# blkdiscard -l 264536K /dev/sdb3
-> > > blkdiscard: /dev/sdb3: BLKDISCARD ioctl failed: Remote I/O error
-> > > [root@vh3 ~]# blkdiscard -l 264535K /dev/sdb3
-> > > [root@vh3 ~]#
-> > >
-> > > In the /var/log/messages for the failed discard I get:
-> > > Feb 21 13:19:52 vh3 kernel: sd 1:0:1:0: [sdb] tag#2227 FAILED Result:
-> > > hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE cmd_age=3D0s
-> > > Feb 21 13:19:52 vh3 kernel: sd 1:0:1:0: [sdb] tag#2227 Sense Key : Il=
-legal
-> > > Request [current]
-> > > Feb 21 13:19:52 vh3 kernel: sd 1:0:1:0: [sdb] tag#2227 Add. Sense: Lo=
-gical
-> > > block address out of range
-> > > Feb 21 13:19:52 vh3 kernel: sd 1:0:1:0: [sdb] tag#2227 CDB: Unmap/Rea=
-d
-> > > sub-channel 42 00 00 00 00 00 00 00 18 00
-> > > Feb 21 13:19:52 vh3 kernel: blk_update_request: critical target error=
-, dev
-> > > sdb, sector 1874855936 op 0x3:(DISCARD) flags 0x800 phys_seg 1 prio c=
-lass 0
-> > >
-> > > I have the drive on a SAS controller - mpt3sas driver, LSI SAS2008
->
-> Looks one target issue, CC linux-scsi and mpt3sas guys.
->
-> > > > >
-> > > > > I tried to trim entire drive but I get the following error:
-> > > > > [root@vh3 util-linux-2.38-rc1]# ./blkdiscard /dev/sdb
-> > > > > lt-blkdiscard: /dev/sdb: BLKDISCARD ioctl failed: Remote I/O erro=
-r
-> > > > >
-> > > > > I have done strace and I see:
-> > > > > ioctl(3, BLKGETSIZE64, [960197124096])  =3D 0
-> > > > > ioctl(3, BLKSSZGET, [512])              =3D 0
-> > > > > ioctl(3, BLKDISCARD, [0, 960197124096]) =3D -1 EREMOTEIO (Remote =
-I/O error)
-> > > > >
-> > > > > When I do the same giving length explicitly I get the same error.
-> > > > >
-> > > > > However when I specify the length 512 bytes smaller, it works wit=
-hout a
-> > > > > problem:
-> > > > >
-> > > > > ioctl(3, BLKGETSIZE64, [960197124096])  =3D 0
-> > > > > ioctl(3, BLKSSZGET, [512])              =3D 0
-> > > > > ioctl(3, BLKDISCARD, [0, 960197123584]) =3D 0
->
->
-> Thanks,
-> Ming
->
+
+On 17.02.22 03:29, Guixin Liu wrote:
+> Currently the data needs to be copied twice between sg, tcmu data area and
+> userspace buffer if backstore holds its own userspace buffer, then we can
+> use uio ioctl to copy data between sg and userspace buffer directly to
+> bypass data area to improve performance.
+> 
+> Use tcm_loop and tcmu(backstore is file) to evaluate performance,
+> fio job: fio -filename=/dev/sdb  -direct=1 -size=2G -name=1 -thread
+> -runtime=60 -time_based -rw=randread -numjobs=16 -iodepth=16 -bs=128k
+> 
+> Without this patch:
+>      READ: bw=3539MiB/s (3711MB/s), 207MiB/s-233MiB/s (217MB/s-244MB/s),
+> io=104GiB (111GB), run=30001-30002msec
+> 
+> With this patch:
+>      READ: bw=4420MiB/s (4634MB/s), 274MiB/s-278MiB/s (287MB/s-291MB/s),
+> io=259GiB (278GB), run=60001-60002msec
+> 
+> Reviewed-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+> ---
+>   drivers/target/target_core_user.c     | 171 +++++++++++++++++++++++++++++-----
+>   include/uapi/linux/target_core_user.h |   9 ++
+>   2 files changed, 157 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 7b2a89a..afea088 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -122,6 +122,7 @@ struct tcmu_dev {
+>   #define TCMU_DEV_BIT_BLOCKED 2
+>   #define TCMU_DEV_BIT_TMR_NOTIFY 3
+>   #define TCMU_DEV_BIT_PLUGGED 4
+> +#define TCMU_DEV_BIT_BYPASS_DATA_AREA 5
+>   	unsigned long flags;
+>   
+>   	struct uio_info uio_info;
+> @@ -642,12 +643,17 @@ static struct tcmu_cmd *tcmu_alloc_cmd(struct se_cmd *se_cmd)
+>   	tcmu_cmd->se_cmd = se_cmd;
+>   	tcmu_cmd->tcmu_dev = udev;
+>   
+> -	tcmu_cmd_set_block_cnts(tcmu_cmd);
+> -	tcmu_cmd->dbi = kcalloc(tcmu_cmd->dbi_cnt, sizeof(uint32_t),
+> -				GFP_NOIO);
+> -	if (!tcmu_cmd->dbi) {
+> -		kmem_cache_free(tcmu_cmd_cache, tcmu_cmd);
+> -		return NULL;
+> +	if (!test_bit(TCMU_DEV_BIT_BYPASS_DATA_AREA, &udev->flags)) {
+> +		tcmu_cmd_set_block_cnts(tcmu_cmd);
+> +		tcmu_cmd->dbi = kcalloc(tcmu_cmd->dbi_cnt, sizeof(uint32_t),
+> +					GFP_NOIO);
+> +		if (!tcmu_cmd->dbi) {
+> +			kmem_cache_free(tcmu_cmd_cache, tcmu_cmd);
+> +			return NULL;
+> +		}
+> +	} else {
+> +		tcmu_cmd->dbi_cnt = 0;
+> +		tcmu_cmd->dbi = NULL;
+>   	}
+>   
+>   	return tcmu_cmd;
+> @@ -1093,16 +1099,18 @@ static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
+>   	tcmu_cmd_reset_dbi_cur(tcmu_cmd);
+>   	iov = &entry->req.iov[0];
+>   
+> -	if (se_cmd->data_direction == DMA_TO_DEVICE ||
+> -	    se_cmd->se_cmd_flags & SCF_BIDI)
+> -		scatter_data_area(udev, tcmu_cmd, &iov);
+> -	else
+> -		tcmu_setup_iovs(udev, tcmu_cmd, &iov, se_cmd->data_length);
+> -
+> +	if (!test_bit(TCMU_DEV_BIT_BYPASS_DATA_AREA, &udev->flags)) {
+> +		if (se_cmd->data_direction == DMA_TO_DEVICE ||
+> +		se_cmd->se_cmd_flags & SCF_BIDI)
+> +			scatter_data_area(udev, tcmu_cmd, &iov);
+> +		else
+> +			tcmu_setup_iovs(udev, tcmu_cmd, &iov, se_cmd->data_length);
+> +	}
+>   	entry->req.iov_cnt = iov_cnt - iov_bidi_cnt;
+>   
+>   	/* Handle BIDI commands */
+> -	if (se_cmd->se_cmd_flags & SCF_BIDI) {
+> +	if ((se_cmd->se_cmd_flags & SCF_BIDI)
+> +		&& !test_bit(TCMU_DEV_BIT_BYPASS_DATA_AREA, &udev->flags)) {
+>   		iov++;
+>   		tcmu_setup_iovs(udev, tcmu_cmd, &iov, tcmu_cmd->data_len_bidi);
+>   		entry->req.iov_bidi_cnt = iov_bidi_cnt;
+> @@ -1366,16 +1374,19 @@ static bool tcmu_handle_completion(struct tcmu_cmd *cmd,
+>   		else
+>   			se_cmd->se_cmd_flags |= SCF_TREAT_READ_AS_NORMAL;
+>   	}
+> -	if (se_cmd->se_cmd_flags & SCF_BIDI) {
+> -		/* Get Data-In buffer before clean up */
+> -		gather_data_area(udev, cmd, true, read_len);
+> -	} else if (se_cmd->data_direction == DMA_FROM_DEVICE) {
+> -		gather_data_area(udev, cmd, false, read_len);
+> -	} else if (se_cmd->data_direction == DMA_TO_DEVICE) {
+> -		/* TODO: */
+> -	} else if (se_cmd->data_direction != DMA_NONE) {
+> -		pr_warn("TCMU: data direction was %d!\n",
+> -			se_cmd->data_direction);
+> +
+> +	if (!test_bit(TCMU_DEV_BIT_BYPASS_DATA_AREA, &udev->flags)) {
+> +		if (se_cmd->se_cmd_flags & SCF_BIDI) {
+> +			/* Get Data-In buffer before clean up */
+> +			gather_data_area(udev, cmd, true, read_len);
+> +		} else if (se_cmd->data_direction == DMA_FROM_DEVICE) {
+> +			gather_data_area(udev, cmd, false, read_len);
+> +		} else if (se_cmd->data_direction == DMA_TO_DEVICE) {
+> +			/* TODO: */
+> +		} else if (se_cmd->data_direction != DMA_NONE) {
+> +			pr_warn("TCMU: data direction was %d!\n",
+> +				se_cmd->data_direction);
+> +		}
+>   	}
+>   
+>   done:
+> @@ -1973,6 +1984,84 @@ static int tcmu_release(struct uio_info *info, struct inode *inode)
+>   	return 0;
+>   }
+>   
+> +long tcmu_ioctl_copy_between_sgl_and_iovec(struct tcmu_cmd *tcmu_cmd,
+> +			struct iovec __user *uiovec,
+> +			unsigned long vcnt,
+> +			bool is_copy_to_sgl)
+> +{
+> +	struct iovec iovstack[UIO_FASTIOV];
+> +	struct iovec *iov = iovstack;
+> +	struct iov_iter iter;
+> +	ssize_t ret;
+> +	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
+> +	struct scatterlist *data_sg, *sg;
+> +	int i;
+> +	unsigned int data_nents;
+> +	long copy_ret = 0;
+> +
+> +	if (se_cmd->se_cmd_flags & SCF_BIDI) {
+> +		data_sg = se_cmd->t_bidi_data_sg;
+> +		data_nents = se_cmd->t_bidi_data_nents;
+> +	} else {
+> +		data_sg = se_cmd->t_data_sg;
+> +		data_nents = se_cmd->t_data_nents;
+> +	}
+> +
+> +	ret = import_iovec(READ, uiovec, vcnt, ARRAY_SIZE(iovstack), &iov, &iter);
+> +	if (ret < 0) {
+> +		pr_err("import iovec failed.\n");
+> +		return -EFAULT;
+> +	}
+> +
+> +	for_each_sg(data_sg, sg, data_nents, i) {
+> +		if (is_copy_to_sgl)
+> +			ret = copy_page_from_iter(sg_page(sg), sg->offset, sg->length, &iter);
+> +		else
+> +			ret = copy_page_to_iter(sg_page(sg), sg->offset, sg->length, &iter);
+> +		if (ret < 0) {
+> +			pr_err("copy failed.\n");
+> +			copy_ret = -EFAULT;
+> +			break;
+> +		}
+> +	}
+> +	kfree(iov);
+> +	return copy_ret;
+> +}
+> +
+> +long tcmu_ioctl(struct uio_info *info, unsigned int cmd, unsigned long arg)
+> +{
+> +	struct tcmu_dev *udev = container_of(info, struct tcmu_dev, uio_info);
+> +	struct tcmu_data_xfer __user *uxfer = (struct tcmu_data_xfer __user *)arg;
+> +	struct tcmu_data_xfer xfer;
+> +	struct tcmu_cmd *tcmu_cmd;
+> +
+> +	if (!test_bit(TCMU_DEV_BIT_BYPASS_DATA_AREA, &udev->flags))
+> +		return -EINVAL;
+> +
+> +	if (copy_from_user(&xfer, uxfer, sizeof(xfer)))
+> +		return -EFAULT;
+> +
+> +	tcmu_cmd = xa_load(&udev->commands, xfer.cmd_id);
+> +	if (!tcmu_cmd) {
+> +		set_bit(TCMU_DEV_BIT_BROKEN, &udev->flags);
+> +		return -EFAULT;
+> +	}
+> +
+> +	if (test_bit(TCMU_CMD_BIT_EXPIRED, &tcmu_cmd->flags))
+> +		return -EFAULT;
+> +
+> +	switch (cmd) {
+> +	case TCMU_IOCTL_CMD_COPY_TO_SGL:
+> +		return tcmu_ioctl_copy_between_sgl_and_iovec(tcmu_cmd, xfer.iovec,
+> +							     xfer.iov_cnt, true);
+> +	case TCMU_IOCTL_CMD_COPY_FROM_SGL:
+> +		return tcmu_ioctl_copy_between_sgl_and_iovec(tcmu_cmd, xfer.iovec,
+> +							     xfer.iov_cnt, false);
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +}
+> +
+>   static int tcmu_init_genl_cmd_reply(struct tcmu_dev *udev, int cmd)
+>   {
+>   	struct tcmu_nl_cmd *nl_cmd = &udev->curr_nl_cmd;
+> @@ -2230,6 +2319,7 @@ static int tcmu_configure_device(struct se_device *dev)
+>   	info->mmap = tcmu_mmap;
+>   	info->open = tcmu_open;
+>   	info->release = tcmu_release;
+> +	info->ioctl = tcmu_ioctl;
+>   
+>   	ret = uio_register_device(tcmu_root_device, info);
+>   	if (ret)
+> @@ -2838,6 +2928,40 @@ static ssize_t tcmu_nl_reply_supported_store(struct config_item *item,
+>   }
+>   CONFIGFS_ATTR(tcmu_, nl_reply_supported);
+>   
+> +static ssize_t tcmu_bypass_data_area_show(struct config_item *item, char *page)
+> +{
+> +	struct se_dev_attrib *da = container_of(to_config_group(item),
+> +						struct se_dev_attrib, da_group);
+> +	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
+> +
+> +	if (test_bit(TCMU_DEV_BIT_BYPASS_DATA_AREA, &udev->flags))
+> +		return snprintf(page, PAGE_SIZE, "%s\n", "true");
+> +	else
+> +		return snprintf(page, PAGE_SIZE, "%s\n", "false");
+> +}
+> +
+> +static ssize_t tcmu_bypass_data_area_store(struct config_item *item, const char *page,
+> +					    size_t count)
+> +{
+> +	struct se_dev_attrib *da = container_of(to_config_group(item),
+> +						struct se_dev_attrib, da_group);
+> +	struct tcmu_dev *udev = TCMU_DEV(da->da_dev);
+> +	bool bypass_data_area;
+> +	int ret;
+> +
+> +	ret = strtobool(page, &bypass_data_area);
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	if (bypass_data_area)
+> +		set_bit(TCMU_DEV_BIT_BYPASS_DATA_AREA, &udev->flags);
+> +	else
+> +		clear_bit(TCMU_DEV_BIT_BYPASS_DATA_AREA, &udev->flags);
+> +
+> +	return count;
+> +}
+> +CONFIGFS_ATTR(tcmu_, bypass_data_area);
+> +
+>   static ssize_t tcmu_emulate_write_cache_show(struct config_item *item,
+>   					     char *page)
+>   {
+> @@ -3069,6 +3193,7 @@ static ssize_t tcmu_free_kept_buf_store(struct config_item *item, const char *pa
+>   	&tcmu_attr_emulate_write_cache,
+>   	&tcmu_attr_tmr_notification,
+>   	&tcmu_attr_nl_reply_supported,
+> +	&tcmu_attr_bypass_data_area,
+>   	NULL,
+>   };
+>   
+> diff --git a/include/uapi/linux/target_core_user.h b/include/uapi/linux/target_core_user.h
+> index 27ace51..c02a45e 100644
+> --- a/include/uapi/linux/target_core_user.h
+> +++ b/include/uapi/linux/target_core_user.h
+> @@ -185,4 +185,13 @@ enum tcmu_genl_attr {
+>   };
+>   #define TCMU_ATTR_MAX (__TCMU_ATTR_MAX - 1)
+>   
+> +struct tcmu_data_xfer {
+> +	unsigned short cmd_id;
+> +	unsigned long iov_cnt;
+> +	struct iovec __user *iovec;
+> +};
+> +
+> +#define TCMU_IOCTL_CMD_COPY_TO_SGL      _IOW('T', 0xe0, struct tcmu_data_xfer)
+> +#define TCMU_IOCTL_CMD_COPY_FROM_SGL    _IOW('T', 0xe1, struct tcmu_data_xfer)
+> +
+>   #endif
