@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADFF0C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 15:00:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60CEBC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 15:00:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233082AbiBVPAp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 10:00:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47624 "EHLO
+        id S233120AbiBVPAt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 10:00:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233053AbiBVPAa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 10:00:30 -0500
+        with ESMTP id S233002AbiBVPAj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 10:00:39 -0500
 Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E4A010E064
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 06:59:53 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C14510E073
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 06:59:54 -0800 (PST)
 Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com [209.85.218.71])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id E22BE40253
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 14:59:51 +0000 (UTC)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 4127D3FCAC
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 14:59:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1645541991;
-        bh=1P7qQVIntzoTj3/oLgMEwV7rKt1l7cL2m41gmrqktTo=;
+        s=20210705; t=1645541993;
+        bh=arKzCg0MYWfR0buWW2cokaDng0neBp5ISe/OJX5gEOA=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=bU6JK5adMWxlJBra+LF0Ror6FdImeaukVNNCrbw3yE8hwL6RUZK2oBpGpbE2I4J0G
-         T1n1jVbzQQD+SMc/12x4kD/z7afsVR27irY4K4IKMH08Sa9bFwWMisBQ2tr8D8RgUf
-         b/MA7aVxpbG2YcjZ1M/MO9FhOJLgQxuJv1MeKx6U6Sa0b5CVpzjs/A4jbxT3PFZijN
-         +I2jlBtUmZy9dmaDmymZtGEbLT9YiPktsa/aQsYOBeSCBVrdpV2eHN92EHRisEd0eN
-         rtQvAzzV0oXWPhv8tOSiIOtNBM0jcCo/J3i0/276sR0g6lUAZGuzbbYBGciyBz3M9d
-         jooZCxqpRkBIA==
-Received: by mail-ej1-f71.google.com with SMTP id mp5-20020a1709071b0500b0069f2ba47b20so5803199ejc.19
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 06:59:51 -0800 (PST)
+        b=s79/HWjw0vltJG7esBPEesb9PGJmdud05s/1suoumwCsxcDpTrK3cVJNmIfinD40G
+         GS6DW74tBHkQb2T+oyzJr/2wBMpC8rxZfeaCSK8pC7ee6G3B+jGyfsbyhRMyVA9/fJ
+         j3Mx6fIHDQUqbJRcorO+L2pbi0DjA+pFkqTL3pW1W57cll0x221uz+dJdOjGOecSeq
+         Zcd+YMaPoHCsw9BAOpWyCzqUz/S06RUWLfbmDmnjtuqEh7xSBcahtorqz7f5tnW9VP
+         yC6WB318w+IVwh0SIEzKAsAl61s7Dag5OXBwdzeILsxv9i1vhb0G2dPJ+jDk3CQjlC
+         2X1p7D4pxHj8Q==
+Received: by mail-ej1-f71.google.com with SMTP id 13-20020a170906328d00b006982d0888a4so5826690ejw.9
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 06:59:53 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=1P7qQVIntzoTj3/oLgMEwV7rKt1l7cL2m41gmrqktTo=;
-        b=FHEDbDaDPapfTp6XSoJ7bUwUHt+FSUEPk2aXkOfdaYT3Bz8in/QoRQVt/qaGkTiXgh
-         Wk7YSWtLcvqk9D+j/uaVCyvznGOtpxQeS2ujZ9bIy5gqcYO/e4ceHph/JAqHR0vTchqL
-         wfIiYe9ETkcJFbd6s2Hn55L69LhL1ARK0IW7JbkIgWhxbkukDaqRfeI7tQ4gGA46xtQn
-         ZPP+gLak6o/q0sO21x5VcHysqH/Ni1Gfocg815xzwt3ou258RYq4Rec7CRashP9aQv/v
-         6l1oLr0QbIyilvB/EeuxNimXwE9cljCeGE2cnScaVHcmPTdpN9gyAULRN+YKovhB6FpS
-         HHzw==
-X-Gm-Message-State: AOAM532LGoN1sIip6evEq5jfYOULkcJrt6t70BiCLw5cl3wfTaGCI5gQ
-        O0ba1LcF58hexQ/py/KdgnUz2vnxGa1NLCfVAXOnX3+683uv12RnyGiKyCkh0RQGXR2qLW1ksnQ
-        XUoOEU50v6kLrgNDUwhwZmk5STkooix6AHLvkVLA=
-X-Received: by 2002:a50:e04e:0:b0:410:d961:523a with SMTP id g14-20020a50e04e000000b00410d961523amr27317295edl.223.1645541991396;
-        Tue, 22 Feb 2022 06:59:51 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyUtYJeXKFR/3UPBCev0P+VF4C8MI1ryF08nvFtYgouje4ha2q2QFFwRqFjiPr36iU06TskIg==
-X-Received: by 2002:a50:e04e:0:b0:410:d961:523a with SMTP id g14-20020a50e04e000000b00410d961523amr27317282edl.223.1645541991213;
-        Tue, 22 Feb 2022 06:59:51 -0800 (PST)
+        bh=arKzCg0MYWfR0buWW2cokaDng0neBp5ISe/OJX5gEOA=;
+        b=mcTHhCtv6ff11akzTppzAKBCb7Ze9FtsyQenuaQBnuIrv2VCLGNC/NOwZW0CVYFNmO
+         bnjMNjMGZv6CZC5O+0aFKV7RNRhI3cQD2SgZoTEHS/+V9EBQeE7mfpb7RiHptZPoX1pW
+         gb1/OMCQQL+MQJuIcSvUZtTwdL0YA7teHhpxA62bBbgfrVHYf242zI0jGgC+j+QSDbnm
+         gF+mpmUN+A3vLnTdN8GUrHwzYq3hhFyjVYpcfEPj8zil2AUZZkKhY9fAfkY+XRcEXbhV
+         lmL+nUEx8UbhLuGloTlw2+mIP7ouNOwF5ySjpmQsdqiceEE1ViXKNIccBjANSSncMx7S
+         4omQ==
+X-Gm-Message-State: AOAM530AzMmsFFKuB27NhPWkZIQCA46OFEqb/X7MxoM++8KoFUHBjvbs
+        lskXmikP0c6ptp3Lh+LgDHhPlUSP2UDIlNhUabeg89aONq/MyFNvSNylK2XOsTXWnZg1HcZgGG2
+        e0nAGsLnV770LxGIjxCowvEYqf2Yyop0JKMGSm34=
+X-Received: by 2002:a05:6402:1941:b0:413:2b5f:9074 with SMTP id f1-20020a056402194100b004132b5f9074mr2026077edz.414.1645541992922;
+        Tue, 22 Feb 2022 06:59:52 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyuGCh02ChhaQcgWP8AI9k0NhxlMiAPxSs3pga+zesBZndYOMg1ZtIGJuD44dDaZzrGAARhjg==
+X-Received: by 2002:a05:6402:1941:b0:413:2b5f:9074 with SMTP id f1-20020a056402194100b004132b5f9074mr2026054edz.414.1645541992714;
+        Tue, 22 Feb 2022 06:59:52 -0800 (PST)
 Received: from localhost.localdomain (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
-        by smtp.gmail.com with ESMTPSA id m2sm2467960ejb.20.2022.02.22.06.59.49
+        by smtp.gmail.com with ESMTPSA id m2sm2467960ejb.20.2022.02.22.06.59.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Feb 2022 06:59:50 -0800 (PST)
+        Tue, 22 Feb 2022 06:59:52 -0800 (PST)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
@@ -76,9 +76,9 @@ To:     Alim Akhtar <alim.akhtar@samsung.com>,
         linux-arm-kernel@lists.infradead.org,
         linux-samsung-soc@vger.kernel.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 07/15] dt-bindings: ufs: mediatek,ufs: convert to dtschema
-Date:   Tue, 22 Feb 2022 15:58:46 +0100
-Message-Id: <20220222145854.358646-8-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH v2 08/15] dt-bindings: ufs: snps,tc-dwc-g210: convert to dtschema
+Date:   Tue, 22 Feb 2022 15:58:47 +0100
+Message-Id: <20220222145854.358646-9-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220222145854.358646-1-krzysztof.kozlowski@canonical.com>
 References: <20220222145854.358646-1-krzysztof.kozlowski@canonical.com>
@@ -88,140 +88,105 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Convert the Mediatek Universal Flash Storage (UFS) Controller to DT
+Convert the Synopsys Universal Flash Storage (UFS) Controller to DT
 schema format.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- .../devicetree/bindings/ufs/mediatek,ufs.yaml | 67 +++++++++++++++++++
- .../devicetree/bindings/ufs/ufs-mediatek.txt  | 45 -------------
- 2 files changed, 67 insertions(+), 45 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
- delete mode 100644 Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+ .../bindings/ufs/snps,tc-dwc-g210.yaml        | 51 +++++++++++++++++++
+ .../bindings/ufs/tc-dwc-g210-pltfrm.txt       | 26 ----------
+ 2 files changed, 51 insertions(+), 26 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/snps,tc-dwc-g210.yaml
+ delete mode 100644 Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
 
-diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+diff --git a/Documentation/devicetree/bindings/ufs/snps,tc-dwc-g210.yaml b/Documentation/devicetree/bindings/ufs/snps,tc-dwc-g210.yaml
 new file mode 100644
-index 000000000000..1cf530b5c57d
+index 000000000000..671a70d95138
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-@@ -0,0 +1,67 @@
++++ b/Documentation/devicetree/bindings/ufs/snps,tc-dwc-g210.yaml
+@@ -0,0 +1,51 @@
 +# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
 +%YAML 1.2
 +---
-+$id: http://devicetree.org/schemas/ufs/mediatek,ufs.yaml#
++$id: http://devicetree.org/schemas/ufs/snps,tc-dwc-g210.yaml#
 +$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+title: Mediatek Universal Flash Storage (UFS) Controller
++title: Synopsys DesignWare Universal Flash Storage (UFS) Controller
 +
 +maintainers:
-+  - Stanley Chu <stanley.chu@mediatek.com>
++  - Li Wei <liwei213@huawei.com>
++
++# Select only our matches, not all jedec,ufs
++select:
++  properties:
++    compatible:
++      contains:
++        enum:
++          - snps,dwc-ufshcd-1.40a
++  required:
++    - compatible
 +
 +allOf:
 +  - $ref: ufs-common.yaml
 +
 +properties:
 +  compatible:
-+    enum:
-+      - mediatek,mt8183-ufshci
-+      - mediatek,mt8192-ufshci
-+
-+  clocks:
-+    maxItems: 1
-+
-+  clock-names:
 +    items:
-+      - const: ufs
-+
-+  phys:
-+    maxItems: 1
++      - enum:
++          - snps,g210-tc-6.00-20bit
++          - snps,g210-tc-6.00-40bit
++      - const: snps,dwc-ufshcd-1.40a
++      - const: jedec,ufs-2.0
 +
 +  reg:
 +    maxItems: 1
 +
-+  vcc-supply: true
-+
 +required:
 +  - compatible
-+  - clocks
-+  - clock-names
-+  - phys
 +  - reg
-+  - vcc-supply
 +
 +unevaluatedProperties: false
 +
 +examples:
 +  - |
-+    #include <dt-bindings/clock/mt8183-clk.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        ufs@ff3c0000 {
-+            compatible = "mediatek,mt8183-ufshci";
-+            reg = <0 0x11270000 0 0x2300>;
-+            interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_LOW>;
-+            phys = <&ufsphy>;
-+
-+            clocks = <&infracfg_ao CLK_INFRA_UFS>;
-+            clock-names = "ufs";
-+            freq-table = <0 0>;
-+
-+            vcc-supply = <&mt_pmic_vemc_ldo_reg>;
-+        };
++    ufs@d0000000 {
++        compatible = "snps,g210-tc-6.00-40bit",
++                     "snps,dwc-ufshcd-1.40a",
++                     "jedec,ufs-2.0";
++        reg = <0xd0000000 0x10000>;
++        interrupts = <24>;
 +    };
-diff --git a/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt b/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+diff --git a/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt b/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
 deleted file mode 100644
-index 63a953b672d2..000000000000
---- a/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
+index 71c0777960e9..000000000000
+--- a/Documentation/devicetree/bindings/ufs/tc-dwc-g210-pltfrm.txt
 +++ /dev/null
-@@ -1,45 +0,0 @@
--* Mediatek Universal Flash Storage (UFS) Host Controller
+@@ -1,26 +0,0 @@
+-* Universal Flash Storage (UFS) DesignWare Host Controller
 -
--UFS nodes are defined to describe on-chip UFS hardware macro.
--Each UFS Host Controller should have its own node.
+-DWC_UFS nodes are defined to describe on-chip UFS host controllers and MPHY.
+-Each UFS controller instance should have its own node.
 -
--To bind UFS PHY with UFS host controller, the controller node should
--contain a phandle reference to UFS M-PHY node.
+-Required properties:
+-- compatible	: compatible list must contain the PHY type & version:
+-			"snps,g210-tc-6.00-20bit"
+-			"snps,g210-tc-6.00-40bit"
+-		  complemented with the Controller IP version:
+-			"snps,dwc-ufshcd-1.40a"
+-		  complemented with the JEDEC version:
+-			"jedec,ufs-1.1"
+-			"jedec,ufs-2.0"
 -
--Required properties for UFS nodes:
--- compatible         : Compatible list, contains the following controller:
--                       "mediatek,mt8183-ufshci" for MediaTek UFS host controller
--                       present on MT8183 chipsets.
--                       "mediatek,mt8192-ufshci" for MediaTek UFS host controller
--                       present on MT8192 chipsets.
--- reg                : Address and length of the UFS register set.
--- phys               : phandle to m-phy.
--- clocks             : List of phandle and clock specifier pairs.
--- clock-names        : List of clock input name strings sorted in the same
--                       order as the clocks property. "ufs" is mandatory.
--                       "ufs": ufshci core control clock.
--- freq-table-hz      : Array of <min max> operating frequencies stored in the same
--                       order as the clocks property. If this property is not
--                       defined or a value in the array is "0" then it is assumed
--                       that the frequency is set by the parent clock or a
--                       fixed rate clock source.
--- vcc-supply         : phandle to VCC supply regulator node.
+-- reg		: <registers mapping>
+-- interrupts	: <interrupt mapping for UFS host controller IRQ>
 -
--Example:
--
--	ufsphy: phy@11fa0000 {
--		...
--	};
--
--	ufshci@11270000 {
--		compatible = "mediatek,mt8183-ufshci";
--		reg = <0 0x11270000 0 0x2300>;
--		interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_LOW>;
--		phys = <&ufsphy>;
--
--		clocks = <&infracfg_ao INFRACFG_AO_UFS_CG>;
--		clock-names = "ufs";
--		freq-table-hz = <0 0>;
--
--		vcc-supply = <&mt_pmic_vemc_ldo_reg>;
+-Example for a setup using a 1.40a DWC Controller with a 6.00 G210 40-bit TC:
+-	dwc-ufs@d0000000 {
+-		compatible = "snps,g210-tc-6.00-40bit",
+-			     "snps,dwc-ufshcd-1.40a",
+-			     "jedec,ufs-2.0";
+-		reg = < 0xd0000000 0x10000 >;
+-		interrupts = < 24 >;
 -	};
 -- 
 2.32.0
