@@ -2,87 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5913C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 07:28:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFCF9C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 07:46:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231178AbiBVH2b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 02:28:31 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:48172 "EHLO
+        id S229549AbiBVHq6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 02:46:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231153AbiBVH2a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 02:28:30 -0500
-Received: from out30-56.freemail.mail.aliyun.com (out30-56.freemail.mail.aliyun.com [115.124.30.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8B1493981;
-        Mon, 21 Feb 2022 23:28:04 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04426;MF=jnwang@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0V5BrXYP_1645514881;
-Received: from 30.240.114.128(mailfrom:jnwang@linux.alibaba.com fp:SMTPD_---0V5BrXYP_1645514881)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Tue, 22 Feb 2022 15:28:02 +0800
-Message-ID: <8dc8eb43-b98c-c535-7f9e-a310ccad2a54@linux.alibaba.com>
-Date:   Tue, 22 Feb 2022 15:28:00 +0800
+        with ESMTP id S229545AbiBVHq4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 02:46:56 -0500
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40EE5120E80;
+        Mon, 21 Feb 2022 23:38:38 -0800 (PST)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 0947C67373; Tue, 22 Feb 2022 08:38:33 +0100 (CET)
+Date:   Tue, 22 Feb 2022 08:38:33 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, axboe@kernel.dk,
+        philipp.reisner@linbit.com, lars.ellenberg@linbit.com,
+        target-devel@vger.kernel.org, haris.iqbal@ionos.com,
+        jinpu.wang@ionos.com, manoj@linux.ibm.com, mrochs@linux.ibm.com,
+        ukrishn@linux.ibm.com, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com,
+        dm-devel@redhat.com
+Subject: Re: [PATCH 7/7] block: remove REQ_OP_WRITE_SAME support
+Message-ID: <20220222073833.GA4979@lst.de>
+References: <20220209082828.2629273-1-hch@lst.de> <20220209082828.2629273-8-hch@lst.de> <yq135kefh5j.fsf@ca-mkp.ca.oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.6.1
-Subject: Re: [PATCH v2] [hpsa] Fix the wrong chars in comment section
-To:     Bart Van Assche <bvanassche@acm.org>, don.brace@microsemi.com,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <974edf4d-37fa-b25a-d0ac-33ac502381d8@acm.org>
- <1644889961-61470-1-git-send-email-jnwang@linux.alibaba.com>
- <739e4ca0-ec2d-d39a-4c80-2b2e16435f49@acm.org>
-From:   James Wang <jnwang@linux.alibaba.com>
-In-Reply-To: <739e4ca0-ec2d-d39a-4c80-2b2e16435f49@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq135kefh5j.fsf@ca-mkp.ca.oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Sat, Feb 19, 2022 at 08:44:18PM -0500, Martin K. Petersen wrote:
+> > -static ssize_t queue_write_same_max_show(struct request_queue *q, char *page)
+> > -{
+> > -	return sprintf(page, "%llu\n",
+> > -		(unsigned long long)q->limits.max_write_same_sectors << 9);
+> > -}
+> > -
+> 
+> This tripped one of my test scripts. We should probably return 0 here
+> like we did for discard_zeroes_data and leave the sysfs entry in place.
 
-在 2022/2/16 上午1:37, Bart Van Assche 写道:
-> On 2/14/22 17:52, James Wang wrote:
->> These '+' should be redundant.
->>
->> Signed-off-by: James Wang <jnwang@linux.alibaba.com>
->> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
->
-> Please do NOT add a Reviewed-by tag if a reviewer has not posted that 
-> tag himself.
->
-> I have the following additional comments on this patch:
-> - I am not convinced that this patch is useful since it does not help
->   users of the hpsa driver.
+The maybe fold this in?
 
-Maybe the patch helps the coding style. ;-)
+---
+From eae8e9b8cff5ee8522b00430a4aabd01ebc7c55a Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Tue, 22 Feb 2022 08:35:59 +0100
+Subject: block: restore the write_same_max sysfs attribute
 
-James.W isn't a expert in storage system,  James.B should be;
+Some userspace breaks if this attribute is gone.  Restore it and always
+return 0.
 
-but I have to post the issue what I see as a kernel hacker(junior).
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-sysfs.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 4a5bb47bee3ce..431fdd036f65a 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -212,6 +212,11 @@ static ssize_t queue_discard_zeroes_data_show(struct request_queue *q, char *pag
+ 	return queue_var_show(0, page);
+ }
+ 
++static ssize_t queue_write_same_max_show(struct request_queue *q, char *page)
++{
++	return sprintf(page, "%llu\n", 0ULL);
++}
++
+ static ssize_t queue_write_zeroes_max_show(struct request_queue *q, char *page)
+ {
+ 	return sprintf(page, "%llu\n",
+@@ -581,6 +586,7 @@ QUEUE_RO_ENTRY(queue_discard_max_hw, "discard_max_hw_bytes");
+ QUEUE_RW_ENTRY(queue_discard_max, "discard_max_bytes");
+ QUEUE_RO_ENTRY(queue_discard_zeroes_data, "discard_zeroes_data");
+ 
++QUEUE_RO_ENTRY(queue_write_same_max, "write_same_max_bytes");
+ QUEUE_RO_ENTRY(queue_write_zeroes_max, "write_zeroes_max_bytes");
+ QUEUE_RO_ENTRY(queue_zone_append_max, "zone_append_max_bytes");
+ QUEUE_RO_ENTRY(queue_zone_write_granularity, "zone_write_granularity");
+@@ -636,6 +642,7 @@ static struct attribute *queue_attrs[] = {
+ 	&queue_discard_max_entry.attr,
+ 	&queue_discard_max_hw_entry.attr,
+ 	&queue_discard_zeroes_data_entry.attr,
++	&queue_write_same_max_entry.attr,
+ 	&queue_write_zeroes_max_entry.attr,
+ 	&queue_zone_append_max_entry.attr,
+ 	&queue_zone_write_granularity_entry.attr,
+-- 
+2.30.2
 
-> - The comment still does not conform to the Linux kernel coding style.
->   From coding-style.rst:
->
-OK; I have run the script to check the code style this patch;
-
-I like to imporve this patch again, without reviewed-by;
-
-
-James
-
-
-> The preferred style for long (multi-line) comments is:
->
-> .. code-block:: c
->
->     /*
->      * This is the preferred style for multi-line
->      * comments in the Linux kernel source code.
->      * Please use it consistently.
->      *
->      * Description:  A column of asterisks on the left side,
->      * with beginning and ending almost-blank lines.
->      */
->
-> Bart.
