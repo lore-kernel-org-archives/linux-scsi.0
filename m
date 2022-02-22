@@ -2,118 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B99C4C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 13:36:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2818DC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 14:04:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231172AbiBVNhM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 08:37:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36716 "EHLO
+        id S232613AbiBVOFN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 09:05:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbiBVNhL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 08:37:11 -0500
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8648D8D
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 05:36:40 -0800 (PST)
-Received: by mail-pj1-f51.google.com with SMTP id ci24-20020a17090afc9800b001bc3071f921so2505610pjb.5
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 05:36:40 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:from
-         :subject:to:cc:references:content-language:in-reply-to
-         :content-transfer-encoding;
-        bh=LT7HejzwjBrk3suvkyvTyT0S/5EeRt7U2ag6qdDuIZc=;
-        b=z1LSgxt1GDEQGlWEr6CCejdlXi8Dhn4UvyCfTXw7LWNiaYRgkL7ILvocxFxUVY/+F4
-         QIQnSToY8u3dxnXZpCSPcn1Wb9zBuGhHuT36yn6uphjuuNU7JPJbhuXRhtQYS23kGpVA
-         u6fKrZQByGH1YGln+cOG+NAPdseTCYT/7e09AOvO9TtoMkv8SnCtSauGJfZFIZ7d9WPE
-         lizXgvtxXYA/eq3phBkI4GvwmtaTW++tdKVo+/QF84ynvioodjDHcFjXSnpDsOke/Bqz
-         FFl2o00qZWPHqflfMx6lxqhckUGnpyxUtCAQqBlcmsCtPYI1oNY1qKXzjU/2r98KkY0O
-         ziXA==
-X-Gm-Message-State: AOAM531ox79uJSJy/tn1feDwyOiWkzvQwQAs5Ppdx+/DGydP/fBc8VWy
-        5UOrXQ8hLb9budZJXDMV8qQ=
-X-Google-Smtp-Source: ABdhPJxsy4+eJxDuKwA6r50FsH++l4njAGmfGvkULkCMoVdbq9ljOSzLoPWPIpP3hNAs5LLtngwIBQ==
-X-Received: by 2002:a17:902:7207:b0:14d:938e:a88e with SMTP id ba7-20020a170902720700b0014d938ea88emr22973069plb.42.1645537000042;
-        Tue, 22 Feb 2022 05:36:40 -0800 (PST)
-Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id g1sm15628074pfu.32.2022.02.22.05.36.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Feb 2022 05:36:39 -0800 (PST)
-Message-ID: <ccd1f277-f9f8-cb4a-980e-6f9450f4e145@acm.org>
-Date:   Tue, 22 Feb 2022 05:36:36 -0800
+        with ESMTP id S231978AbiBVOFM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 09:05:12 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4824B15E6E1;
+        Tue, 22 Feb 2022 06:04:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=zaFnzi56l+DVH/tvMxpA/BjkwjsaqH/prQTf/hPo21s=; b=QEcR5noF6Byk3dF4tP5/WDsCIr
+        9rnp3ePh171ejdDc198mQ6aP9UGUR16vlRsxmf2ORuuCMMygtf9T5bzWKIoymlw+UCO5LWfJmqUey
+        zrdLxmaKcnnLAGqDZUYhLI7nYTs7eT2TZSskVBJz+reZpCGN2JUT6y8snPOvlnQE7KnD0jmfFxUWE
+        vISntbBmfVNSs+93owjq9PoMBzMPCgegCjtnY6pLuyuJlmuQC7sGk6UcfPIvZI3ThPkQR4nwlWF6J
+        8HMPmY/FtChGrSMg+jubOFkbyACDAyFeUHc/PrHBi1+mdxKfUszYSUWD4J/BuR/glEpu9XHzR4qhq
+        cnmvfl9g==;
+Received: from [2001:4bb8:198:f8fc:c22a:ebfc:be8d:63c2] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nMVmX-009nOW-F1; Tue, 22 Feb 2022 14:04:45 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: remove struct scsi_request
+Date:   Tue, 22 Feb 2022 15:04:35 +0100
+Message-Id: <20220222140443.589882-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-From:   Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH RFC v1 0/5] Add SCSI per device tagsets
-To:     "Melanie Plageman (Microsoft)" <melanieplageman@gmail.com>
-Cc:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-References: <20220218184157.176457-1-melanieplageman@gmail.com>
-Content-Language: en-US
-In-Reply-To: <20220218184157.176457-1-melanieplageman@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/18/22 10:41, Melanie Plageman (Microsoft) wrote:
-> Currently a single blk_mq_tag_set is associated with a Scsi_Host. When SCSI
-> controllers are limited, attaching multiple devices to the same controller is
-> required. In cloud environments with relatively high latency persistent storage,
-> requiring all devices on a controller to share a single blk_mq_tag_set
-> negatively impacts performance.
-> 
-> For example: a device provisioned with high IOPS and BW limits on the same
-> controller as a smaller and slower device can starve the slower device of tags.
-> This is especially noticeable when the slower device's workload has low I/O
-> depth tasks.
+Hi Martin,
 
-The Cc-list for this patch series is way too long. Cc-ing linux-scsi and
-the most active SCSI contributors would have been sufficient.
+with the recent removal of the REQ_OP_SCSI_{IN,OUT} based passthrough
+from non-scsi drivers, the need for the scsi_request structure went
+away as well.  As all submitters of SCSI passthrough requests are using
+the SCSI midlayer now they can just fill out the scsi_cmnd directly.
 
-Is the reported behavior reproducible with an upstream Linux kernel? I'm
-asking this because I think that the following block layer code should
-prevent the reported starvation:
-
-/*
-  * For shared tag users, we track the number of currently active users
-  * and attempt to provide a fair share of the tag depth for each of them.
-  */
-static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
-				  struct sbitmap_queue *bt)
-{
-	unsigned int depth, users;
-
-	if (!hctx || !(hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED))
-		return true;
-
-	/*
-	 * Don't try dividing an ant
-	 */
-	if (bt->sb.depth == 1)
-		return true;
-
-	if (blk_mq_is_shared_tags(hctx->flags)) {
-		struct request_queue *q = hctx->queue;
-
-		if (!test_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags))
-			return true;
-	} else {
-		if (!test_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
-			return true;
-	}
-
-	users = atomic_read(&hctx->tags->active_queues);
-
-	if (!users)
-		return true;
-
-	/*
-	 * Allow at least some tags
-	 */
-	depth = max((bt->sb.depth + users - 1) / users, 4U);
-	return __blk_mq_active_requests(hctx) < depth;
-}
-
-Bart.
+Diffstat:
+ b/drivers/ata/libata-scsi.c           |    4 -
+ b/drivers/block/pktcdvd.c             |    8 +-
+ b/drivers/cdrom/cdrom.c               |    1 
+ b/drivers/scsi/scsi_bsg.c             |   42 +++++-------
+ b/drivers/scsi/scsi_debugfs.c         |    6 -
+ b/drivers/scsi/scsi_error.c           |   38 +++++-----
+ b/drivers/scsi/scsi_ioctl.c           |   75 +++++++++------------
+ b/drivers/scsi/scsi_lib.c             |  119 ++++++++++++++--------------------
+ b/drivers/scsi/scsi_logging.c         |    5 -
+ b/drivers/scsi/scsi_transport_sas.c   |    1 
+ b/drivers/scsi/sd.c                   |   28 --------
+ b/drivers/scsi/sg.c                   |   44 ++++--------
+ b/drivers/scsi/sr.c                   |   30 ++++----
+ b/drivers/scsi/st.c                   |   30 ++++----
+ b/drivers/scsi/ufs/ufshpb.c           |   22 ++----
+ b/drivers/target/target_core_pscsi.c  |   67 +++++++------------
+ b/drivers/target/target_core_pscsi.h  |    4 -
+ b/drivers/usb/storage/cypress_atacb.c |    1 
+ b/drivers/usb/storage/isd200.c        |    4 -
+ b/include/linux/bsg-lib.h             |    1 
+ b/include/scsi/scsi_cmnd.h            |   16 +---
+ b/include/scsi/scsi_eh.h              |    4 -
+ include/scsi/scsi_request.h           |   31 --------
+ 23 files changed, 225 insertions(+), 356 deletions(-)
