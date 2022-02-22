@@ -2,29 +2,29 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA971C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 12:57:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC7E7C43219
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 12:57:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232159AbiBVM6B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 07:58:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59570 "EHLO
+        id S232166AbiBVM6D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 07:58:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232199AbiBVM5w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 07:57:52 -0500
+        with ESMTP id S232256AbiBVM55 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 07:57:57 -0500
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4F09AC04D;
-        Tue, 22 Feb 2022 04:57:16 -0800 (PST)
-Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K2zgd1lR0z67Ljg;
-        Tue, 22 Feb 2022 20:56:13 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FB55A9E17;
+        Tue, 22 Feb 2022 04:57:28 -0800 (PST)
+Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K2zhB6yDBz67w2G;
+        Tue, 22 Feb 2022 20:56:42 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
+ fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 22 Feb 2022 13:57:14 +0100
+ 15.1.2308.21; Tue, 22 Feb 2022 13:57:26 +0100
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 22 Feb 2022 12:57:11 +0000
+ 15.1.2308.21; Tue, 22 Feb 2022 12:57:22 +0000
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
         <artur.paszkiewicz@intel.com>, <jinpu.wang@cloud.ionos.com>,
@@ -35,9 +35,9 @@ CC:     <Ajish.Koshy@microchip.com>, <yanaijie@huawei.com>,
         <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
         <liuqi115@huawei.com>, <Viswas.G@microchip.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 11/18] scsi: libsas: Add TMF handler exec complete callback
-Date:   Tue, 22 Feb 2022 20:50:52 +0800
-Message-ID: <1645534259-27068-12-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v3 14/18] scsi: libsas: Add sas_clear_task_set()
+Date:   Tue, 22 Feb 2022 20:50:55 +0800
+Message-ID: <1645534259-27068-15-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1645534259-27068-1-git-send-email-john.garry@huawei.com>
 References: <1645534259-27068-1-git-send-email-john.garry@huawei.com>
@@ -51,95 +51,147 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pm8001 TMF handler has some special processing when the TMF completes,
-so add a callback and fill it in for the pm8001 driver.
+Add a generic implementation of clear task set TMF handler, and use in
+LLDDs.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Tested-by: Yihang Li <liyihang6@hisilicon.com>
 Tested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/scsi/libsas/sas_scsi_host.c |  3 +++
- drivers/scsi/pm8001/pm8001_init.c   |  1 +
- drivers/scsi/pm8001/pm8001_sas.c    | 14 ++++++++++++++
- drivers/scsi/pm8001/pm8001_sas.h    |  1 +
- include/scsi/libsas.h               |  3 +++
- 5 files changed, 22 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c |  5 +----
+ drivers/scsi/libsas/sas_scsi_host.c   | 10 ++++++++++
+ drivers/scsi/mvsas/mv_init.c          |  2 +-
+ drivers/scsi/mvsas/mv_sas.c           | 11 -----------
+ drivers/scsi/mvsas/mv_sas.h           |  1 -
+ drivers/scsi/pm8001/pm8001_sas.c      |  4 +---
+ include/scsi/libsas.h                 |  1 +
+ 7 files changed, 14 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 54fe25ddac5b..6826ddfeaca5 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -690,7 +690,6 @@ static int hisi_sas_init_device(struct domain_device *device)
+ {
+ 	int rc = TMF_RESP_FUNC_COMPLETE;
+ 	struct scsi_lun lun;
+-	struct sas_tmf_task tmf_task;
+ 	int retry = HISI_SAS_DISK_RECOVER_CNT;
+ 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+ 	struct device *dev = hisi_hba->dev;
+@@ -700,10 +699,8 @@ static int hisi_sas_init_device(struct domain_device *device)
+ 	case SAS_END_DEVICE:
+ 		int_to_scsilun(0, &lun);
+ 
+-		tmf_task.tmf = TMF_CLEAR_TASK_SET;
+ 		while (retry-- > 0) {
+-			rc = hisi_sas_debug_issue_ssp_tmf(device, lun.scsi_lun,
+-							  &tmf_task);
++			rc = sas_clear_task_set(device, lun.scsi_lun);
+ 			if (rc == TMF_RESP_FUNC_COMPLETE) {
+ 				hisi_sas_release_task(hisi_hba, device);
+ 				break;
 diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index af2dd95a2b28..0f599744738d 100644
+index 06bc7221ac3a..ac669215c3bc 100644
 --- a/drivers/scsi/libsas/sas_scsi_host.c
 +++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -957,6 +957,9 @@ int sas_execute_tmf(struct domain_device *device, void *parameter,
+@@ -1053,6 +1053,16 @@ int sas_abort_task_set(struct domain_device *dev, u8 *lun)
+ }
+ EXPORT_SYMBOL_GPL(sas_abort_task_set);
  
- 		wait_for_completion(&task->slow_task->completion);
- 
-+		if (i->dft->lldd_tmf_exec_complete)
-+			i->dft->lldd_tmf_exec_complete(device);
++int sas_clear_task_set(struct domain_device *dev, u8 *lun)
++{
++	struct sas_tmf_task tmf_task = {
++		.tmf = TMF_CLEAR_TASK_SET,
++	};
 +
- 		res = TMF_RESP_FUNC_FAILED;
++	return sas_execute_ssp_tmf(dev, lun, &tmf_task);
++}
++EXPORT_SYMBOL_GPL(sas_clear_task_set);
++
+ /*
+  * Tell an upper layer that it needs to initiate an abort for a given task.
+  * This should only ever be called by an LLDD.
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 13a002e08a12..d12fb210c868 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -64,7 +64,7 @@ static struct sas_domain_function_template mvs_transport_ops = {
  
- 		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index b8cf1bae4040..8eef8f4de42f 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -128,6 +128,7 @@ static struct sas_domain_function_template pm8001_transport_ops = {
- 	.lldd_lu_reset		= pm8001_lu_reset,
- 	.lldd_query_task	= pm8001_query_task,
- 	.lldd_port_formed	= pm8001_port_formed,
-+	.lldd_tmf_exec_complete = pm8001_setds_completion,
- };
+ 	.lldd_abort_task	= mvs_abort_task,
+ 	.lldd_abort_task_set    = sas_abort_task_set,
+-	.lldd_clear_task_set    = mvs_clear_task_set,
++	.lldd_clear_task_set    = sas_clear_task_set,
+ 	.lldd_I_T_nexus_reset	= mvs_I_T_nexus_reset,
+ 	.lldd_lu_reset 		= mvs_lu_reset,
+ 	.lldd_query_task	= mvs_query_task,
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 0cdbba31f327..37604b1ebd46 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -1536,17 +1536,6 @@ int mvs_abort_task(struct sas_task *task)
+ 	return rc;
+ }
  
- /**
+-int mvs_clear_task_set(struct domain_device *dev, u8 *lun)
+-{
+-	int rc = TMF_RESP_FUNC_FAILED;
+-	struct sas_tmf_task tmf_task;
+-
+-	tmf_task.tmf = TMF_CLEAR_TASK_SET;
+-	rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
+-
+-	return rc;
+-}
+-
+ static int mvs_sata_done(struct mvs_info *mvi, struct sas_task *task,
+ 			u32 slot_idx, int err)
+ {
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index 0bee63596208..509d8f32a04f 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -440,7 +440,6 @@ void mvs_scan_start(struct Scsi_Host *shost);
+ int mvs_scan_finished(struct Scsi_Host *shost, unsigned long time);
+ int mvs_queue_command(struct sas_task *task, gfp_t gfp_flags);
+ int mvs_abort_task(struct sas_task *task);
+-int mvs_clear_task_set(struct domain_device *dev, u8 * lun);
+ void mvs_port_formed(struct asd_sas_phy *sas_phy);
+ void mvs_port_deformed(struct asd_sas_phy *sas_phy);
+ int mvs_dev_found(struct domain_device *dev);
 diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index a53e4b54154f..69da7246ea20 100644
+index 543113564a58..fd86490616e8 100644
 --- a/drivers/scsi/pm8001/pm8001_sas.c
 +++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -1376,3 +1376,17 @@ void pm8001_port_formed(struct asd_sas_phy *sas_phy)
- 	}
- 	sas_port->lldd_port = port;
- }
-+
-+void pm8001_setds_completion(struct domain_device *dev)
-+{
-+	struct pm8001_hba_info *pm8001_ha = pm8001_find_ha_by_dev(dev);
-+	struct pm8001_device *pm8001_dev = dev->lldd_dev;
-+	DECLARE_COMPLETION_ONSTACK(completion_setstate);
-+
-+	if (pm8001_ha->chip_id != chip_8001) {
-+		pm8001_dev->setds_completion = &completion_setstate;
-+		PM8001_CHIP_DISP->set_dev_state_req(pm8001_ha,
-+			pm8001_dev, DS_OPERATIONAL);
-+		wait_for_completion(&completion_setstate);
-+	}
-+}
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 0b1086042ca6..c19c9c80206c 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -742,6 +742,7 @@ pm8001_ccb_task_free_done(struct pm8001_hba_info *pm8001_ha,
- 	smp_mb(); /*in order to force CPU ordering*/
- 	task->task_done(task);
- }
-+void pm8001_setds_completion(struct domain_device *dev);
+@@ -1344,14 +1344,12 @@ int pm8001_abort_task(struct sas_task *task)
  
- #endif
+ int pm8001_clear_task_set(struct domain_device *dev, u8 *lun)
+ {
+-	struct sas_tmf_task tmf_task;
+ 	struct pm8001_device *pm8001_dev = dev->lldd_dev;
+ 	struct pm8001_hba_info *pm8001_ha = pm8001_find_ha_by_dev(dev);
  
+ 	pm8001_dbg(pm8001_ha, EH, "I_T_L_Q clear task set[%x]\n",
+ 		   pm8001_dev->device_id);
+-	tmf_task.tmf = TMF_CLEAR_TASK_SET;
+-	return pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
++	return sas_clear_task_set(dev, lun);
+ }
+ 
+ void pm8001_port_formed(struct asd_sas_phy *sas_phy)
 diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 9c181ebccfee..dd6551e809a0 100644
+index 53fdc18bdd09..f71a47740ff8 100644
 --- a/include/scsi/libsas.h
 +++ b/include/scsi/libsas.h
-@@ -652,6 +652,9 @@ struct sas_domain_function_template {
- 	int (*lldd_lu_reset)(struct domain_device *, u8 *lun);
- 	int (*lldd_query_task)(struct sas_task *);
+@@ -723,6 +723,7 @@ struct sas_phy *sas_get_local_phy(struct domain_device *dev);
+ int sas_request_addr(struct Scsi_Host *shost, u8 *addr);
  
-+	/* Special TMF callbacks */
-+	void (*lldd_tmf_exec_complete)(struct domain_device *dev);
-+
- 	/* Port and Adapter management */
- 	int (*lldd_clear_nexus_port)(struct asd_sas_port *);
- 	int (*lldd_clear_nexus_ha)(struct sas_ha_struct *);
+ int sas_abort_task_set(struct domain_device *dev, u8 *lun);
++int sas_clear_task_set(struct domain_device *dev, u8 *lun);
+ 
+ int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
+ 			  gfp_t gfp_flags);
 -- 
 2.26.2
 
