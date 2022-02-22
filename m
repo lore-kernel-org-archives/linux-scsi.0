@@ -2,167 +2,220 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C8DEC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 09:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1DD4C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 12:42:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229770AbiBVJXz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 04:23:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32854 "EHLO
+        id S230468AbiBVMnV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 07:43:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbiBVJXz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 04:23:55 -0500
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 156D013D92A
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 01:23:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1645521810; x=1677057810;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=FzlRxwjLHk24p5btVZn7u+P9AR4beLCz1OhirLTmN/I=;
-  b=vfbCfQxI0tliogVT07iMVWsyoydyi3Wa1Lo8O/A7MO+WVDED1s2UY57e
-   eFTAFZyLPUk3L3SPz3JOhN7tnqzxJYGVOuwdHK6rMekGDR/Vjx0jUhoFF
-   vYqRemDx9TqRXjPBikFoMJ73F+Bmt63+zh+gRD5nCioTec3r0TusLmD5P
-   m5H/YjoGcN0YBjPB9HZBUOBWalf+fiinMRX0VAAZiLN2CLgtMD0X+yg5a
-   R51pYf/2Zr+g/quInDfGeleHu/yvHYRgw6G2LOe0R5DMznzC/G6zNbkKr
-   itQavyC791dLjhgeZst7Pa8UomfLYgNg5Gb+lnWcP3JJFeQOkCXeRl/p3
-   A==;
-X-IronPort-AV: E=Sophos;i="5.88,387,1635231600"; 
-   d="scan'208";a="163127979"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 22 Feb 2022 02:23:29 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.17; Tue, 22 Feb 2022 02:23:29 -0700
-Received: from localhost (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.2375.17 via Frontend
- Transport; Tue, 22 Feb 2022 02:23:29 -0700
-From:   Ajish Koshy <Ajish.Koshy@microchip.com>
-To:     <linux-scsi@vger.kernel.org>
-CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Viswas.G@microchip.com>, Jinpu Wang <jinpu.wang@cloud.ionos.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: [PATCH v2] scsi: pm80xx: handle non-fatal errors
-Date:   Tue, 22 Feb 2022 14:56:18 +0530
-Message-ID: <20220222092618.108198-1-Ajish.Koshy@microchip.com>
-X-Mailer: git-send-email 2.27.0
+        with ESMTP id S232036AbiBVMnS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 07:43:18 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1599E125CB0;
+        Tue, 22 Feb 2022 04:42:45 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id C38581F39D;
+        Tue, 22 Feb 2022 12:42:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1645533763; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=0rPgnpg+5gQ/8b52Q6pAhqccBeucqyapDk4V0HZ7WlE=;
+        b=PX1WeeyFJawzM1aA4txXUhQ1CEmCwrnwEeVvXxZQLMPWrKyDSc1M7wbxNJq76uHh58fDZt
+        Ijq3tblqE4/v3fMWiMB2wTMic6xohLuTDapLUu3gG26cHzVv+0wj4BywHyfDQThHQ0CsFY
+        BtuM6mDgSzTO/m5Memy3eHOXk30p+vA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1645533763;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=0rPgnpg+5gQ/8b52Q6pAhqccBeucqyapDk4V0HZ7WlE=;
+        b=rBQrYLLWLXVGSzXgo+Ab4OLAQkZEUbDNbH5chqPWgz2bFTabVMyPRsii896UYl70HjEMmu
+        9jCVhQBw8+atbcAg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9EE3B13C1E;
+        Tue, 22 Feb 2022 12:42:43 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id TeIsJkPaFGIeRwAAMHmgww
+        (envelope-from <ppavlu@suse.cz>); Tue, 22 Feb 2022 12:42:43 +0000
+From:   Petr Pavlu <ppavlu@suse.cz>
+To:     martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Petr Pavlu <petr.pavlu@suse.com>
+Subject: [PATCH] target/iscsi: Fix detection of excess number of login exchanges
+Date:   Tue, 22 Feb 2022 13:42:17 +0100
+Message-Id: <20220222124217.21715-1-ppavlu@suse.cz>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Firmware expects host driver to clear scratchpad rsvd 0 register after
-non-fatal error is found.
+From: Petr Pavlu <petr.pavlu@suse.com>
 
-This is done when firmware raises fatal error interrupt and indicates
-non-fatal error. At this point firmware updates scratchpad rsvd 0
-register with non-fatal error value. Here host has to clear the register
-after reading it during non-fatal errors.
+Function iscsi_target_do_login() attempts to cancel a connection when
+a number of login exchanges reaches MAX_LOGIN_PDUS (7). This is done by
+having a local counter and incrementing+checking it as the function
+processes requests in a loop. A problem is that since the login rework in
+back in 2013, the function always processes only a single request and the
+loop is terminated at the end of the first iteration. This means the
+counter reaches only value 1 and any excess number of login requests is
+never rejected.
 
-Renamed
-MSGU_HOST_SCRATCH_PAD_6 to MSGU_SCRATCH_PAD_RSVD_0
-MSGU_HOST_SCRATCH_PAD_7 to MSGU_SCRATCH_PAD_RSVD_1
+Fix the problem by introducing iscsi_login.negotiation_exchanges counter
+and update the logic to count exchanges per each login phase as described
+in RFC 7143:
+> 6.2. Text Mode Negotiation:
+> [...]
+> In the Login Phase (see Section 6.3), every stage is a separate
+> negotiation. [...]
+> [...]
+> An iSCSI initiator or target MAY terminate a negotiation that does
+> not terminate within an implementation-specific reasonable time or
+> number of exchanges but SHOULD allow at least six (6) exchanges.
 
-Signed-off-by: Ajish Koshy <Ajish.Koshy@microchip.com>
-Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Fixes: d381a8010a05 ("iscsi-target: Add login negotiation multi-plexing support")
+Signed-off-by: Petr Pavlu <petr.pavlu@suse.com>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c | 28 ++++++++++++++++++++++------
- drivers/scsi/pm8001/pm80xx_hwi.h |  9 +++++++--
- 2 files changed, 29 insertions(+), 8 deletions(-)
+ drivers/target/iscsi/iscsi_target_nego.c | 92 ++++++++++++------------
+ include/target/iscsi/iscsi_target_core.h |  1 +
+ 2 files changed, 47 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index bbf538fe15b3..9fcc332d685b 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -1552,9 +1552,9 @@ pm80xx_fatal_errors(struct pm8001_hba_info *pm8001_ha)
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index c0ed6f8e5c5b..a5077ea09f6c 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -970,65 +970,65 @@ static int iscsi_target_handle_csg_one(struct iscsi_conn *conn, struct iscsi_log
+ 
+ static int iscsi_target_do_login(struct iscsi_conn *conn, struct iscsi_login *login)
  {
- 	int ret = 0;
- 	u32 scratch_pad_rsvd0 = pm8001_cr32(pm8001_ha, 0,
--					MSGU_HOST_SCRATCH_PAD_6);
-+					    MSGU_SCRATCH_PAD_RSVD_0);
- 	u32 scratch_pad_rsvd1 = pm8001_cr32(pm8001_ha, 0,
--					MSGU_HOST_SCRATCH_PAD_7);
-+					    MSGU_SCRATCH_PAD_RSVD_1);
- 	u32 scratch_pad1 = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
- 	u32 scratch_pad2 = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_2);
- 	u32 scratch_pad3 = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_3);
-@@ -1663,9 +1663,9 @@ pm80xx_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
- 			PCI_VENDOR_ID_ATTO &&
- 			pm8001_ha->pdev->subsystem_vendor != 0) {
- 			ibutton0 = pm8001_cr32(pm8001_ha, 0,
--					MSGU_HOST_SCRATCH_PAD_6);
-+					       MSGU_SCRATCH_PAD_RSVD_0);
- 			ibutton1 = pm8001_cr32(pm8001_ha, 0,
--					MSGU_HOST_SCRATCH_PAD_7);
-+					       MSGU_SCRATCH_PAD_RSVD_1);
- 			if (!ibutton0 && !ibutton1) {
- 				pm8001_dbg(pm8001_ha, FAIL,
- 					   "iButton Feature is not Available!!!\n");
-@@ -4138,9 +4138,9 @@ static void print_scratchpad_registers(struct pm8001_hba_info *pm8001_ha)
- 	pm8001_dbg(pm8001_ha, FAIL, "MSGU_HOST_SCRATCH_PAD_5: 0x%x\n",
- 		   pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_5));
- 	pm8001_dbg(pm8001_ha, FAIL, "MSGU_RSVD_SCRATCH_PAD_0: 0x%x\n",
--		   pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_6));
-+		   pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_RSVD_0));
- 	pm8001_dbg(pm8001_ha, FAIL, "MSGU_RSVD_SCRATCH_PAD_1: 0x%x\n",
--		   pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_7));
-+		   pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_RSVD_1));
- }
+-	int pdu_count = 0;
+ 	struct iscsi_login_req *login_req;
+ 	struct iscsi_login_rsp *login_rsp;
  
- static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
-@@ -4162,6 +4162,22 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
- 			pm8001_handle_event(pm8001_ha, NULL, IO_FATAL_ERROR);
- 			print_scratchpad_registers(pm8001_ha);
- 			return ret;
-+		} else {
-+			/*read scratchpad rsvd 0 register*/
-+			regval = pm8001_cr32(pm8001_ha, 0,
-+					     MSGU_SCRATCH_PAD_RSVD_0);
-+			switch (regval) {
-+			case NON_FATAL_SPBC_LBUS_ECC_ERR:
-+			case NON_FATAL_BDMA_ERR:
-+			case NON_FATAL_THERM_OVERTEMP_ERR:
-+				/*Clear the register*/
-+				pm8001_cw32(pm8001_ha, 0,
-+					    MSGU_SCRATCH_PAD_RSVD_0,
-+					    0x00000000);
-+				break;
-+			default:
-+				break;
-+			}
+ 	login_req = (struct iscsi_login_req *) login->req;
+ 	login_rsp = (struct iscsi_login_rsp *) login->rsp;
+ 
+-	while (1) {
+-		if (++pdu_count > MAX_LOGIN_PDUS) {
+-			pr_err("MAX_LOGIN_PDUS count reached.\n");
+-			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
+-					ISCSI_LOGIN_STATUS_TARGET_ERROR);
++	switch (ISCSI_LOGIN_CURRENT_STAGE(login_req->flags)) {
++	case 0:
++		login_rsp->flags &= ~ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK;
++		if (iscsi_target_handle_csg_zero(conn, login) < 0)
+ 			return -1;
+-		}
+-
+-		switch (ISCSI_LOGIN_CURRENT_STAGE(login_req->flags)) {
+-		case 0:
+-			login_rsp->flags &= ~ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK;
+-			if (iscsi_target_handle_csg_zero(conn, login) < 0)
+-				return -1;
+-			break;
+-		case 1:
+-			login_rsp->flags |= ISCSI_FLAG_LOGIN_CURRENT_STAGE1;
+-			if (iscsi_target_handle_csg_one(conn, login) < 0)
++		break;
++	case 1:
++		login_rsp->flags |= ISCSI_FLAG_LOGIN_CURRENT_STAGE1;
++		if (iscsi_target_handle_csg_one(conn, login) < 0)
++			return -1;
++		if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT) {
++			/*
++			 * Check to make sure the TCP connection has not dropped
++			 * asynchronously while session reinstatement was
++			 * occurring in this kthread context, before
++			 * transitioning to full feature phase operation.
++			 */
++			if (iscsi_target_sk_check_close(conn))
+ 				return -1;
+-			if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT) {
+-				/*
+-				 * Check to make sure the TCP connection has not
+-				 * dropped asynchronously while session reinstatement
+-				 * was occuring in this kthread context, before
+-				 * transitioning to full feature phase operation.
+-				 */
+-				if (iscsi_target_sk_check_close(conn))
+-					return -1;
+ 
+-				login->tsih = conn->sess->tsih;
+-				login->login_complete = 1;
+-				iscsi_target_restore_sock_callbacks(conn);
+-				if (iscsi_target_do_tx_login_io(conn,
+-						login) < 0)
+-					return -1;
+-				return 1;
+-			}
+-			break;
+-		default:
+-			pr_err("Illegal CSG: %d received from"
+-				" Initiator, protocol error.\n",
+-				ISCSI_LOGIN_CURRENT_STAGE(login_req->flags));
+-			break;
++			login->tsih = conn->sess->tsih;
++			login->login_complete = 1;
++			iscsi_target_restore_sock_callbacks(conn);
++			if (iscsi_target_do_tx_login_io(conn, login) < 0)
++				return -1;
++			return 1;
  		}
- 	}
- 	circularQ = &pm8001_ha->outbnd_q_tbl[vec];
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index c7e5d93bea92..f0818540b2cd 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -1366,8 +1366,8 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
- #define MSGU_HOST_SCRATCH_PAD_3			0x60
- #define MSGU_HOST_SCRATCH_PAD_4			0x64
- #define MSGU_HOST_SCRATCH_PAD_5			0x68
--#define MSGU_HOST_SCRATCH_PAD_6			0x6C
--#define MSGU_HOST_SCRATCH_PAD_7			0x70
-+#define MSGU_SCRATCH_PAD_RSVD_0			0x6C
-+#define MSGU_SCRATCH_PAD_RSVD_1			0x70
++		break;
++	default:
++		pr_err("Illegal CSG: %d received from Initiator,"
++			" protocol error.\n",
++			ISCSI_LOGIN_CURRENT_STAGE(login_req->flags));
++		break;
++	}
  
- #define MSGU_SCRATCHPAD1_RAAE_STATE_ERR(x) ((x & 0x3) == 0x2)
- #define MSGU_SCRATCHPAD1_ILA_STATE_ERR(x) (((x >> 2) & 0x3) == 0x2)
-@@ -1435,6 +1435,11 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
- #define SCRATCH_PAD_ERROR_MASK		0xFFFFFC00 /* Error mask bits */
- #define SCRATCH_PAD_STATE_MASK		0x00000003 /* State Mask bits */
- 
-+/*state definition for Scratchpad Rsvd 0, Offset 0x6C, Non-fatal*/
-+#define NON_FATAL_SPBC_LBUS_ECC_ERR	0x70000001
-+#define NON_FATAL_BDMA_ERR		0xE0000001
-+#define NON_FATAL_THERM_OVERTEMP_ERR	0x80000001
+-		if (iscsi_target_do_tx_login_io(conn, login) < 0)
++	if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT)
++		login->negotiation_exchanges = 0;
++	else {
++		login->negotiation_exchanges++;
++		if (login->negotiation_exchanges >= MAX_LOGIN_PDUS) {
++			pr_err("MAX_LOGIN_PDUS count reached.\n");
++			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++					ISCSI_LOGIN_STATUS_TARGET_ERROR);
+ 			return -1;
+-
+-		if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT) {
+-			login_rsp->flags &= ~ISCSI_FLAG_LOGIN_TRANSIT;
+-			login_rsp->flags &= ~ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK;
+ 		}
+-		break;
++	}
 +
- /* main configuration offset - byte offset */
- #define MAIN_SIGNATURE_OFFSET		0x00 /* DWORD 0x00 */
- #define MAIN_INTERFACE_REVISION		0x04 /* DWORD 0x01 */
++	if (iscsi_target_do_tx_login_io(conn, login) < 0)
++		return -1;
++
++	if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT) {
++		login_rsp->flags &= ~ISCSI_FLAG_LOGIN_TRANSIT;
++		login_rsp->flags &= ~ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK;
+ 	}
+ 
+ 	return 0;
+diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+index 1eccb2ac7d02..b6a5e1cf3f77 100644
+--- a/include/target/iscsi/iscsi_target_core.h
++++ b/include/target/iscsi/iscsi_target_core.h
+@@ -705,6 +705,7 @@ struct iscsi_login {
+ 	u32 rsp_length;
+ 	u16 cid;
+ 	u16 tsih;
++	u8 negotiation_exchanges;
+ 	char req[ISCSI_HDR_LEN];
+ 	char rsp[ISCSI_HDR_LEN];
+ 	char *req_buf;
 -- 
-2.27.0
+2.35.1
 
