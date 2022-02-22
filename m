@@ -2,220 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1DD4C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 12:42:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBD91C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 12:56:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230468AbiBVMnV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 07:43:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46862 "EHLO
+        id S232057AbiBVM5B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 07:57:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232036AbiBVMnS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 07:43:18 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1599E125CB0;
-        Tue, 22 Feb 2022 04:42:45 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id C38581F39D;
-        Tue, 22 Feb 2022 12:42:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1645533763; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=0rPgnpg+5gQ/8b52Q6pAhqccBeucqyapDk4V0HZ7WlE=;
-        b=PX1WeeyFJawzM1aA4txXUhQ1CEmCwrnwEeVvXxZQLMPWrKyDSc1M7wbxNJq76uHh58fDZt
-        Ijq3tblqE4/v3fMWiMB2wTMic6xohLuTDapLUu3gG26cHzVv+0wj4BywHyfDQThHQ0CsFY
-        BtuM6mDgSzTO/m5Memy3eHOXk30p+vA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1645533763;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=0rPgnpg+5gQ/8b52Q6pAhqccBeucqyapDk4V0HZ7WlE=;
-        b=rBQrYLLWLXVGSzXgo+Ab4OLAQkZEUbDNbH5chqPWgz2bFTabVMyPRsii896UYl70HjEMmu
-        9jCVhQBw8+atbcAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9EE3B13C1E;
-        Tue, 22 Feb 2022 12:42:43 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id TeIsJkPaFGIeRwAAMHmgww
-        (envelope-from <ppavlu@suse.cz>); Tue, 22 Feb 2022 12:42:43 +0000
-From:   Petr Pavlu <ppavlu@suse.cz>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Petr Pavlu <petr.pavlu@suse.com>
-Subject: [PATCH] target/iscsi: Fix detection of excess number of login exchanges
-Date:   Tue, 22 Feb 2022 13:42:17 +0100
-Message-Id: <20220222124217.21715-1-ppavlu@suse.cz>
-X-Mailer: git-send-email 2.26.2
+        with ESMTP id S229491AbiBVM5B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 07:57:01 -0500
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DCF96548;
+        Tue, 22 Feb 2022 04:56:34 -0800 (PST)
+Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K2zZW4T2yz67ZkT;
+        Tue, 22 Feb 2022 20:51:47 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Tue, 22 Feb 2022 13:56:32 +0100
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Tue, 22 Feb 2022 12:56:28 +0000
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <artur.paszkiewicz@intel.com>, <jinpu.wang@cloud.ionos.com>,
+        <chenxiang66@hisilicon.com>, <damien.lemoal@opensource.wdc.com>,
+        <hch@lst.de>
+CC:     <Ajish.Koshy@microchip.com>, <yanaijie@huawei.com>,
+        <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <liuqi115@huawei.com>, <Viswas.G@microchip.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH v3 00/18] scsi: libsas and users: Factor out LLDD TMF code
+Date:   Tue, 22 Feb 2022 20:50:41 +0800
+Message-ID: <1645534259-27068-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Petr Pavlu <petr.pavlu@suse.com>
+This is just an update of the series to fix a build error, as reported
+here:
+https://lore.kernel.org/lkml/59b538b7-b4c5-8111-d2bf-7fb353ecb19b@huawei.com/
 
-Function iscsi_target_do_login() attempts to cancel a connection when
-a number of login exchanges reaches MAX_LOGIN_PDUS (7). This is done by
-having a local counter and incrementing+checking it as the function
-processes requests in a loop. A problem is that since the login rework in
-back in 2013, the function always processes only a single request and the
-loop is terminated at the end of the first iteration. This means the
-counter reaches only value 1 and any excess number of login requests is
-never rejected.
+Original cover letter is here:
+https://lore.kernel.org/linux-scsi/0d4f988d-881c-3717-f9d8-38739cf17e91@opensource.wdc.com/T/#mcae9d344f2795bdbb8845da29a140b58dbafb6f8
 
-Fix the problem by introducing iscsi_login.negotiation_exchanges counter
-and update the logic to count exchanges per each login phase as described
-in RFC 7143:
-> 6.2. Text Mode Negotiation:
-> [...]
-> In the Login Phase (see Section 6.3), every stage is a separate
-> negotiation. [...]
-> [...]
-> An iSCSI initiator or target MAY terminate a negotiation that does
-> not terminate within an implementation-specific reasonable time or
-> number of exchanges but SHOULD allow at least six (6) exchanges.
+I also included Damien's Tested-by tags.
 
-Fixes: d381a8010a05 ("iscsi-target: Add login negotiation multi-plexing support")
-Signed-off-by: Petr Pavlu <petr.pavlu@suse.com>
----
- drivers/target/iscsi/iscsi_target_nego.c | 92 ++++++++++++------------
- include/target/iscsi/iscsi_target_core.h |  1 +
- 2 files changed, 47 insertions(+), 46 deletions(-)
+Baseline is mkp-scsi 5.18/scsi-staging at ac2beb4e3bd7
 
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index c0ed6f8e5c5b..a5077ea09f6c 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -970,65 +970,65 @@ static int iscsi_target_handle_csg_one(struct iscsi_conn *conn, struct iscsi_log
- 
- static int iscsi_target_do_login(struct iscsi_conn *conn, struct iscsi_login *login)
- {
--	int pdu_count = 0;
- 	struct iscsi_login_req *login_req;
- 	struct iscsi_login_rsp *login_rsp;
- 
- 	login_req = (struct iscsi_login_req *) login->req;
- 	login_rsp = (struct iscsi_login_rsp *) login->rsp;
- 
--	while (1) {
--		if (++pdu_count > MAX_LOGIN_PDUS) {
--			pr_err("MAX_LOGIN_PDUS count reached.\n");
--			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
--					ISCSI_LOGIN_STATUS_TARGET_ERROR);
-+	switch (ISCSI_LOGIN_CURRENT_STAGE(login_req->flags)) {
-+	case 0:
-+		login_rsp->flags &= ~ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK;
-+		if (iscsi_target_handle_csg_zero(conn, login) < 0)
- 			return -1;
--		}
--
--		switch (ISCSI_LOGIN_CURRENT_STAGE(login_req->flags)) {
--		case 0:
--			login_rsp->flags &= ~ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK;
--			if (iscsi_target_handle_csg_zero(conn, login) < 0)
--				return -1;
--			break;
--		case 1:
--			login_rsp->flags |= ISCSI_FLAG_LOGIN_CURRENT_STAGE1;
--			if (iscsi_target_handle_csg_one(conn, login) < 0)
-+		break;
-+	case 1:
-+		login_rsp->flags |= ISCSI_FLAG_LOGIN_CURRENT_STAGE1;
-+		if (iscsi_target_handle_csg_one(conn, login) < 0)
-+			return -1;
-+		if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT) {
-+			/*
-+			 * Check to make sure the TCP connection has not dropped
-+			 * asynchronously while session reinstatement was
-+			 * occurring in this kthread context, before
-+			 * transitioning to full feature phase operation.
-+			 */
-+			if (iscsi_target_sk_check_close(conn))
- 				return -1;
--			if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT) {
--				/*
--				 * Check to make sure the TCP connection has not
--				 * dropped asynchronously while session reinstatement
--				 * was occuring in this kthread context, before
--				 * transitioning to full feature phase operation.
--				 */
--				if (iscsi_target_sk_check_close(conn))
--					return -1;
- 
--				login->tsih = conn->sess->tsih;
--				login->login_complete = 1;
--				iscsi_target_restore_sock_callbacks(conn);
--				if (iscsi_target_do_tx_login_io(conn,
--						login) < 0)
--					return -1;
--				return 1;
--			}
--			break;
--		default:
--			pr_err("Illegal CSG: %d received from"
--				" Initiator, protocol error.\n",
--				ISCSI_LOGIN_CURRENT_STAGE(login_req->flags));
--			break;
-+			login->tsih = conn->sess->tsih;
-+			login->login_complete = 1;
-+			iscsi_target_restore_sock_callbacks(conn);
-+			if (iscsi_target_do_tx_login_io(conn, login) < 0)
-+				return -1;
-+			return 1;
- 		}
-+		break;
-+	default:
-+		pr_err("Illegal CSG: %d received from Initiator,"
-+			" protocol error.\n",
-+			ISCSI_LOGIN_CURRENT_STAGE(login_req->flags));
-+		break;
-+	}
- 
--		if (iscsi_target_do_tx_login_io(conn, login) < 0)
-+	if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT)
-+		login->negotiation_exchanges = 0;
-+	else {
-+		login->negotiation_exchanges++;
-+		if (login->negotiation_exchanges >= MAX_LOGIN_PDUS) {
-+			pr_err("MAX_LOGIN_PDUS count reached.\n");
-+			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
-+					ISCSI_LOGIN_STATUS_TARGET_ERROR);
- 			return -1;
--
--		if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT) {
--			login_rsp->flags &= ~ISCSI_FLAG_LOGIN_TRANSIT;
--			login_rsp->flags &= ~ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK;
- 		}
--		break;
-+	}
-+
-+	if (iscsi_target_do_tx_login_io(conn, login) < 0)
-+		return -1;
-+
-+	if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT) {
-+		login_rsp->flags &= ~ISCSI_FLAG_LOGIN_TRANSIT;
-+		login_rsp->flags &= ~ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK;
- 	}
- 
- 	return 0;
-diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
-index 1eccb2ac7d02..b6a5e1cf3f77 100644
---- a/include/target/iscsi/iscsi_target_core.h
-+++ b/include/target/iscsi/iscsi_target_core.h
-@@ -705,6 +705,7 @@ struct iscsi_login {
- 	u32 rsp_length;
- 	u16 cid;
- 	u16 tsih;
-+	u8 negotiation_exchanges;
- 	char req[ISCSI_HDR_LEN];
- 	char rsp[ISCSI_HDR_LEN];
- 	char *req_buf;
+Damien's following series is based on this series:
+https://lore.kernel.org/linux-scsi/20220220031810.738362-1-damien.lemoal@opensource.wdc.com/T/#t
+
+John Garry (18):
+  scsi: libsas: Handle non-TMF codes in sas_scsi_find_task()
+  scsi: libsas: Use enum for response frame DATAPRES field
+  scsi: libsas: Delete lldd_clear_aca callback
+  scsi: libsas: Delete SAS_SG_ERR
+  scsi: hisi_sas: Delete unused I_T_NEXUS_RESET_PHYUP_TIMEOUT
+  scsi: libsas: Move SMP task handlers to core
+  scsi: libsas: Add struct sas_tmf_task
+  scsi: libsas: Add sas_task.tmf
+  scsi: libsas: Add sas_execute_tmf()
+  scsi: libsas: Add sas_execute_ssp_tmf()
+  scsi: libsas: Add TMF handler exec complete callback
+  scsi: libsas: Add TMF handler aborted callback
+  scsi: libsas: Add sas_abort_task_set()
+  scsi: libsas: Add sas_clear_task_set()
+  scsi: libsas: Add sas_lu_reset()
+  scsi: libsas: Add sas_query_task()
+  scsi: libsas: Add sas_abort_task()
+  scsi: libsas: Add sas_execute_ata_cmd()
+
+ Documentation/scsi/libsas.rst          |   2 -
+ drivers/scsi/aic94xx/aic94xx.h         |   1 -
+ drivers/scsi/aic94xx/aic94xx_init.c    |   1 -
+ drivers/scsi/aic94xx/aic94xx_tmf.c     |  11 +-
+ drivers/scsi/hisi_sas/hisi_sas.h       |   9 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 227 ++++--------------------
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   9 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |   2 +-
+ drivers/scsi/isci/init.c               |   1 -
+ drivers/scsi/isci/request.c            |   7 +-
+ drivers/scsi/isci/task.c               |  18 --
+ drivers/scsi/isci/task.h               |   4 -
+ drivers/scsi/libsas/sas_ata.c          |  10 +-
+ drivers/scsi/libsas/sas_expander.c     |  24 +--
+ drivers/scsi/libsas/sas_internal.h     |   6 +
+ drivers/scsi/libsas/sas_scsi_host.c    | 229 ++++++++++++++++++++++++-
+ drivers/scsi/libsas/sas_task.c         |  14 +-
+ drivers/scsi/mvsas/mv_defs.h           |   5 -
+ drivers/scsi/mvsas/mv_init.c           |   5 +-
+ drivers/scsi/mvsas/mv_sas.c            | 179 +------------------
+ drivers/scsi/mvsas/mv_sas.h            |   3 -
+ drivers/scsi/pm8001/pm8001_hwi.c       |   4 +-
+ drivers/scsi/pm8001/pm8001_init.c      |   5 +-
+ drivers/scsi/pm8001/pm8001_sas.c       | 194 ++++-----------------
+ drivers/scsi/pm8001/pm8001_sas.h       |  14 +-
+ include/scsi/libsas.h                  |  21 ++-
+ include/scsi/sas.h                     |   7 +
+ include/scsi/sas_ata.h                 |   8 +
+ 29 files changed, 382 insertions(+), 640 deletions(-)
+
 -- 
-2.35.1
+2.26.2
 
