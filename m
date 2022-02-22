@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DFAEC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 14:15:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6699C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 14:15:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232700AbiBVOPf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 09:15:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36786 "EHLO
+        id S232741AbiBVOPg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 09:15:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230310AbiBVOPc (ORCPT
+        with ESMTP id S232799AbiBVOPc (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 09:15:32 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E15F16041F;
-        Tue, 22 Feb 2022 06:15:04 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 296C216042B;
+        Tue, 22 Feb 2022 06:15:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=goU22Nk69fNlQzMoLN2QlZz52Zy9ESYhbN9FApBLNk0=; b=qreuLZ1QvSltrcxyBVHTcnOzfv
-        dXaiTyIfPmqoMKpEmF7wS0e9JvQxZPIiA64Bl+7U6Y1dGjUYOy5H2usAqR/tyK9cAZVBXsSWwetio
-        4bfpQKng9QO7wQug0PIUAjhDFJ3TsUzVKg/Bi0+srkAnWAlRgGpNDmoUgIBbCq3mbywfVJ9/gsUcq
-        /Enh3a1lC0CQZ5KP519OWIkVjdvcr+DD4Ra3e/HtCO2H/xjECiSGhlDf1K5SS64E5jdccZIWZ25kx
-        DVbnyl5j+ObcJZJnWa5SQSc5JBSfzBY9+kkeLGQtnFdgQrwBd49n7xlhEiI+e5keqCJe/Iq1g/tRe
-        71/UqpYw==;
+        bh=qlBq0quQBLmflOWrdVNgjhjHl3CU6RGZgtshLkP6Yq8=; b=HE5QfPbJ7pt1ZIDoQuaVMGBQ3E
+        wxdRkVOcC/VESDX5WUBhQZVodmxZtZqv9XY0zft9L/GGadwFeiqe5eNTUpPl94ynR+ymoBaUNsfik
+        pS6rDHquJaa1bM00TyGm96Pm6ekSabuV6DvAEwDQOCHiv2Im34mBnIt4OPRM+52LYkukLUshxMne1
+        Rnaft6ZyIxcvQt/i3tm0zKbxII2uIDlKXHqZjWnVgttcOw12yh13bvUU6vnek6BVl4b7M8yKvnI6E
+        w8U89taI0HzktwRFVosOpDIfJdbn5/eR2fDOdLwvo3ZPDQMj7oKkdCt3rhhkzUvCTqsdarUF1PFH8
+        U4IKmgVw==;
 Received: from [2001:4bb8:198:f8fc:c22a:ebfc:be8d:63c2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nMVwS-009qET-B7; Tue, 22 Feb 2022 14:15:00 +0000
+        id 1nMVwV-009qFN-3P; Tue, 22 Feb 2022 14:15:03 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 03/12] scsi: don't use disk->private_data to find the scsi_driver
-Date:   Tue, 22 Feb 2022 15:14:41 +0100
-Message-Id: <20220222141450.591193-4-hch@lst.de>
+Subject: [PATCH 04/12] sd: make use of ->free_disk to simplify refcounting
+Date:   Tue, 22 Feb 2022 15:14:42 +0100
+Message-Id: <20220222141450.591193-5-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220222141450.591193-1-hch@lst.de>
 References: <20220222141450.591193-1-hch@lst.de>
@@ -45,185 +45,203 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Requiring every ULP to have the scsi_drive as first member of the
-private data is rather fragile and not necessary anyway.  Just use
-the driver hanging off the SCSI device instead.
+Implement the ->free_disk method to to put struct scsi_disk when the last
+gendisk reference count goes away.  This removes the need to clear
+->private_data and thus freeze the queue on unbind.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/sd.c          | 3 +--
- drivers/scsi/sd.h          | 3 +--
- drivers/scsi/sr.c          | 5 ++---
- drivers/scsi/sr.h          | 1 -
- drivers/scsi/st.c          | 1 -
- drivers/scsi/st.h          | 1 -
- include/scsi/scsi_cmnd.h   | 9 ---------
- include/scsi/scsi_driver.h | 9 +++++++--
- 8 files changed, 11 insertions(+), 21 deletions(-)
+ drivers/scsi/sd.c | 89 ++++++++---------------------------------------
+ 1 file changed, 15 insertions(+), 74 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 2d648d27bfd71..2a1e19e871d30 100644
+index 2a1e19e871d30..4eaa5deafc3dc 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -3515,7 +3515,6 @@ static int sd_probe(struct device *dev)
- 	}
+@@ -121,11 +121,6 @@ static void scsi_disk_release(struct device *cdev);
  
- 	sdkp->device = sdp;
--	sdkp->driver = &sd_template;
- 	sdkp->disk = gd;
- 	sdkp->index = index;
- 	sdkp->max_retries = SD_MAX_RETRIES;
-@@ -3548,7 +3547,7 @@ static int sd_probe(struct device *dev)
- 	gd->minors = SD_MINORS;
+ static DEFINE_IDA(sd_index_ida);
  
- 	gd->fops = &sd_fops;
--	gd->private_data = &sdkp->driver;
-+	gd->private_data = sdkp;
- 
- 	/* defaults, until the device tells us otherwise */
- 	sdp->sector_size = 512;
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 2e5932bde43d1..303aa1c23aefb 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -68,7 +68,6 @@ enum {
- };
- 
- struct scsi_disk {
--	struct scsi_driver *driver;	/* always &sd_template */
- 	struct scsi_device *device;
- 	struct device	dev;
- 	struct gendisk	*disk;
-@@ -131,7 +130,7 @@ struct scsi_disk {
- 
- static inline struct scsi_disk *scsi_disk(struct gendisk *disk)
- {
--	return container_of(disk->private_data, struct scsi_disk, driver);
-+	return disk->private_data;
- }
- 
- #define sd_printk(prefix, sdsk, fmt, a...)				\
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index f925b1f1f9ada..569bda76a5175 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -147,7 +147,7 @@ static void sr_kref_release(struct kref *kref);
- 
- static inline struct scsi_cd *scsi_cd(struct gendisk *disk)
- {
--	return container_of(disk->private_data, struct scsi_cd, driver);
-+	return disk->private_data;
- }
- 
- static int sr_runtime_suspend(struct device *dev)
-@@ -692,7 +692,6 @@ static int sr_probe(struct device *dev)
- 
- 	cd->device = sdev;
- 	cd->disk = disk;
--	cd->driver = &sr_template;
- 	cd->capacity = 0x1fffff;
- 	cd->device->changed = 1;	/* force recheck CD type */
- 	cd->media_present = 1;
-@@ -713,7 +712,7 @@ static int sr_probe(struct device *dev)
- 	sr_vendor_init(cd);
- 
- 	set_capacity(disk, cd->capacity);
--	disk->private_data = &cd->driver;
-+	disk->private_data = cd;
- 
- 	if (register_cdrom(disk, &cd->cdi))
- 		goto fail_minor;
-diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
-index 1609f02ed29ac..d80af3fcb6f97 100644
---- a/drivers/scsi/sr.h
-+++ b/drivers/scsi/sr.h
-@@ -32,7 +32,6 @@ struct scsi_device;
- 
- 
- typedef struct scsi_cd {
--	struct scsi_driver *driver;
- 	unsigned capacity;	/* size in blocks                       */
- 	struct scsi_device *device;
- 	unsigned int vendor;	/* vendor code, see sr_vendor.c         */
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index e869e90e05afe..ebe9412c86f43 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4276,7 +4276,6 @@ static int st_probe(struct device *dev)
- 		goto out_buffer_free;
- 	}
- 	kref_init(&tpnt->kref);
--	tpnt->driver = &st_template;
- 
- 	tpnt->device = SDp;
- 	if (SDp->scsi_level <= 2)
-diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index c0ef0d9aaf8a2..7a68eaba7e810 100644
---- a/drivers/scsi/st.h
-+++ b/drivers/scsi/st.h
-@@ -117,7 +117,6 @@ struct scsi_tape_stats {
- 
- /* The tape drive descriptor */
- struct scsi_tape {
--	struct scsi_driver *driver;
- 	struct scsi_device *device;
- 	struct mutex lock;	/* For serialization */
- 	struct completion wait;	/* For SCSI commands */
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 6794d7322cbde..e3a4c67794b14 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -13,7 +13,6 @@
- #include <scsi/scsi_request.h>
- 
- struct Scsi_Host;
--struct scsi_driver;
- 
- /*
-  * MAX_COMMAND_SIZE is:
-@@ -159,14 +158,6 @@ static inline void *scsi_cmd_priv(struct scsi_cmnd *cmd)
- 	return cmd + 1;
- }
- 
--/* make sure not to use it with passthrough commands */
--static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
--{
--	struct request *rq = scsi_cmd_to_rq(cmd);
+-/* This semaphore is used to mediate the 0->1 reference get in the
+- * face of object destruction (i.e. we can't allow a get on an
+- * object after last put) */
+-static DEFINE_MUTEX(sd_ref_mutex);
 -
--	return *(struct scsi_driver **)rq->q->disk->private_data;
+ static struct kmem_cache *sd_cdb_cache;
+ static mempool_t *sd_cdb_pool;
+ static mempool_t *sd_page_pool;
+@@ -663,33 +658,6 @@ static int sd_major(int major_idx)
+ 	}
+ }
+ 
+-static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
+-{
+-	struct scsi_disk *sdkp = NULL;
+-
+-	mutex_lock(&sd_ref_mutex);
+-
+-	if (disk->private_data) {
+-		sdkp = scsi_disk(disk);
+-		if (scsi_device_get(sdkp->device) == 0)
+-			get_device(&sdkp->dev);
+-		else
+-			sdkp = NULL;
+-	}
+-	mutex_unlock(&sd_ref_mutex);
+-	return sdkp;
 -}
 -
- void scsi_done(struct scsi_cmnd *cmd);
+-static void scsi_disk_put(struct scsi_disk *sdkp)
+-{
+-	struct scsi_device *sdev = sdkp->device;
+-
+-	mutex_lock(&sd_ref_mutex);
+-	put_device(&sdkp->dev);
+-	scsi_device_put(sdev);
+-	mutex_unlock(&sd_ref_mutex);
+-}
+-
+ #ifdef CONFIG_BLK_SED_OPAL
+ static int sd_sec_submit(void *data, u16 spsp, u8 secp, void *buffer,
+ 		size_t len, bool send)
+@@ -1418,17 +1386,15 @@ static bool sd_need_revalidate(struct block_device *bdev,
+  **/
+ static int sd_open(struct block_device *bdev, fmode_t mode)
+ {
+-	struct scsi_disk *sdkp = scsi_disk_get(bdev->bd_disk);
+-	struct scsi_device *sdev;
++	struct scsi_disk *sdkp = scsi_disk(bdev->bd_disk);
++	struct scsi_device *sdev = sdkp->device;
+ 	int retval;
  
- extern void scsi_finish_command(struct scsi_cmnd *cmd);
-diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
-index 6dffa8555a390..4ce1988b2ba01 100644
---- a/include/scsi/scsi_driver.h
-+++ b/include/scsi/scsi_driver.h
-@@ -4,11 +4,10 @@
+-	if (!sdkp)
++	if (scsi_device_get(sdev))
+ 		return -ENXIO;
  
- #include <linux/blk_types.h>
- #include <linux/device.h>
-+#include <scsi/scsi_cmnd.h>
+ 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_open\n"));
  
- struct module;
- struct request;
--struct scsi_cmnd;
--struct scsi_device;
+-	sdev = sdkp->device;
+-
+ 	/*
+ 	 * If the device is in error recovery, wait until it is done.
+ 	 * If the device is offline, then disallow any access to it.
+@@ -1473,7 +1439,7 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
+ 	return 0;
  
- struct scsi_driver {
- 	struct device_driver	gendrv;
-@@ -31,4 +30,10 @@ extern int scsi_register_interface(struct class_interface *);
- #define scsi_unregister_interface(intf) \
- 	class_interface_unregister(intf)
+ error_out:
+-	scsi_disk_put(sdkp);
++	scsi_device_put(sdkp->device);
+ 	return retval;	
+ }
  
-+/* make sure not to use it with passthrough commands */
-+static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
+@@ -1502,7 +1468,7 @@ static void sd_release(struct gendisk *disk, fmode_t mode)
+ 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
+ 	}
+ 
+-	scsi_disk_put(sdkp);
++	scsi_device_put(sdkp->device);
+ }
+ 
+ static int sd_getgeo(struct block_device *bdev, struct hd_geometry *geo)
+@@ -1616,7 +1582,7 @@ static int media_not_present(struct scsi_disk *sdkp,
+  **/
+ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+ {
+-	struct scsi_disk *sdkp = scsi_disk_get(disk);
++	struct scsi_disk *sdkp = disk->private_data;
+ 	struct scsi_device *sdp;
+ 	int retval;
+ 	bool disk_changed;
+@@ -1679,7 +1645,6 @@ static unsigned int sd_check_events(struct gendisk *disk, unsigned int clearing)
+ 	 */
+ 	disk_changed = sdp->changed;
+ 	sdp->changed = 0;
+-	scsi_disk_put(sdkp);
+ 	return disk_changed ? DISK_EVENT_MEDIA_CHANGE : 0;
+ }
+ 
+@@ -1887,6 +1852,13 @@ static const struct pr_ops sd_pr_ops = {
+ 	.pr_clear	= sd_pr_clear,
+ };
+ 
++static void scsi_disk_free_disk(struct gendisk *disk)
 +{
-+	return to_scsi_driver(cmd->device->sdev_gendev.driver);
++	struct scsi_disk *sdkp = disk->private_data;
++
++	put_device(&sdkp->dev);
 +}
 +
- #endif /* _SCSI_SCSI_DRIVER_H */
+ static const struct block_device_operations sd_fops = {
+ 	.owner			= THIS_MODULE,
+ 	.open			= sd_open,
+@@ -1898,6 +1870,7 @@ static const struct block_device_operations sd_fops = {
+ 	.unlock_native_capacity	= sd_unlock_native_capacity,
+ 	.report_zones		= sd_zbc_report_zones,
+ 	.get_unique_id		= sd_get_unique_id,
++	.free_disk		= scsi_disk_free_disk,
+ 	.pr_ops			= &sd_pr_ops,
+ };
+ 
+@@ -3623,9 +3596,8 @@ static int sd_probe(struct device *dev)
+  **/
+ static int sd_remove(struct device *dev)
+ {
+-	struct scsi_disk *sdkp;
++	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+ 
+-	sdkp = dev_get_drvdata(dev);
+ 	scsi_autopm_get_device(sdkp->device);
+ 
+ 	device_del(&sdkp->dev);
+@@ -3634,48 +3606,17 @@ static int sd_remove(struct device *dev)
+ 
+ 	free_opal_dev(sdkp->opal_dev);
+ 
+-	mutex_lock(&sd_ref_mutex);
+-	dev_set_drvdata(dev, NULL);
+ 	put_device(&sdkp->dev);
+-	mutex_unlock(&sd_ref_mutex);
+-
+ 	return 0;
+ }
+ 
+-/**
+- *	scsi_disk_release - Called to free the scsi_disk structure
+- *	@dev: pointer to embedded class device
+- *
+- *	sd_ref_mutex must be held entering this routine.  Because it is
+- *	called on last put, you should always use the scsi_disk_get()
+- *	scsi_disk_put() helpers which manipulate the semaphore directly
+- *	and never do a direct put_device.
+- **/
+ static void scsi_disk_release(struct device *dev)
+ {
+ 	struct scsi_disk *sdkp = to_scsi_disk(dev);
+-	struct gendisk *disk = sdkp->disk;
+-	struct request_queue *q = disk->queue;
+ 
+ 	ida_free(&sd_index_ida, sdkp->index);
+-
+-	/*
+-	 * Wait until all requests that are in progress have completed.
+-	 * This is necessary to avoid that e.g. scsi_end_request() crashes
+-	 * due to clearing the disk->private_data pointer. Wait from inside
+-	 * scsi_disk_release() instead of from sd_release() to avoid that
+-	 * freezing and unfreezing the request queue affects user space I/O
+-	 * in case multiple processes open a /dev/sd... node concurrently.
+-	 */
+-	blk_mq_freeze_queue(q);
+-	blk_mq_unfreeze_queue(q);
+-
+-	disk->private_data = NULL;
+-	put_disk(disk);
+ 	put_device(&sdkp->device->sdev_gendev);
+-
+ 	sd_zbc_release_disk(sdkp);
+-
+ 	kfree(sdkp);
+ }
+ 
 -- 
 2.30.2
 
