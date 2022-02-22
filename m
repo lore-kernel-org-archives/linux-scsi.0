@@ -2,119 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EF29C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 14:08:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C3A8C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 14:15:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232146AbiBVOIg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 09:08:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41428 "EHLO
+        id S232139AbiBVOPX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 09:15:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230163AbiBVOIg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 09:08:36 -0500
-Received: from fllv0015.ext.ti.com (fllv0015.ext.ti.com [198.47.19.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABCB513113F;
-        Tue, 22 Feb 2022 06:08:10 -0800 (PST)
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 21ME7MkP005019;
-        Tue, 22 Feb 2022 08:07:22 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1645538842;
-        bh=8HPnjRNTg1rgRuGDrTg7AuCbtaoqyKy2IHjGLaHD7Fs=;
-        h=Date:From:To:CC:Subject:References:In-Reply-To;
-        b=ctwrzo4XA7iB3hzjs0/vCaLdhyfnlm9x8Tdm/vef0FUl6cqTWqKcvKg8na866ipQ3
-         LkfBXKjRm6agy3zbZ0R+Hv1+oLn5AMKHSzkk/YA4GXqoL7gpruaaFDcenNcJOSZymK
-         u2NjCkYLufIp1G3dAt7RFNAxpFND1thYMo9NUp/8=
-Received: from DFLE114.ent.ti.com (dfle114.ent.ti.com [10.64.6.35])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 21ME7MSc086515
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 22 Feb 2022 08:07:22 -0600
-Received: from DFLE115.ent.ti.com (10.64.6.36) by DFLE114.ent.ti.com
- (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14; Tue, 22
- Feb 2022 08:07:21 -0600
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE115.ent.ti.com
- (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14 via
- Frontend Transport; Tue, 22 Feb 2022 08:07:21 -0600
-Received: from localhost (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 21ME7LqE034437;
-        Tue, 22 Feb 2022 08:07:21 -0600
-Date:   Tue, 22 Feb 2022 08:07:21 -0600
-From:   Nishanth Menon <nm@ti.com>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-CC:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Wei Xu <xuwei5@hisilicon.com>, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Tero Kristo <kristo@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Chanho Park <chanho61.park@samsung.com>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Jan Kotas <jank@cadence.com>, <linux-scsi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linux-arm-msm@vger.kernel.org>
-Subject: Re: [RFC PATCH 8/8] arm64: dts: ti: use 'freq-table' in UFS node
-Message-ID: <20220222140721.bzbspfcethml2psm@running>
-References: <20220219184224.44339-1-krzysztof.kozlowski@canonical.com>
- <20220219184554.44887-1-krzysztof.kozlowski@canonical.com>
- <20220221131340.q3hjpjevqrfvhggv@specimen>
- <19705501-2391-14a4-0eac-4b2b647a9735@canonical.com>
+        with ESMTP id S229808AbiBVOPW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 09:15:22 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11A12123BDD;
+        Tue, 22 Feb 2022 06:14:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=IK87WZrhn0r3vKC5FCygifvVB6T195CFnv3iTlwTKtE=; b=2gynWaw4YmHZLcT8LSV26hHufl
+        sF0T5webQKV+t4QT2miaGjDoo4+OOXZIXOEyY3zlS5Cu7r2EKmdrpc7zgg1G+kTnUjvDVWmiEaxWO
+        8bpk/iBFxDLzvImTJsLX4qhri55WTeLXBsTlHtqt2pG8xEhwJF8VwdOeyCh7DjcjH2rlmyiyN4mJC
+        q0zoWwpqf0o+JqfH0ves1XSBrkPjADGR1mA+9RWjGoGokw2W0UpVUivRgnQjM6fVbHGVZburmimQ1
+        nZRE9MbtqQHaULGjor9TaAwbZXojJDuW+kYf164j5UGDuhcIQT9AdOT5LzB7oidvmNLDgcGiRjsO4
+        9gcWY1tg==;
+Received: from [2001:4bb8:198:f8fc:c22a:ebfc:be8d:63c2] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nMVwK-009qAw-43; Tue, 22 Feb 2022 14:14:52 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: move more work to disk_release
+Date:   Tue, 22 Feb 2022 15:14:38 +0100
+Message-Id: <20220222141450.591193-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <19705501-2391-14a4-0eac-4b2b647a9735@canonical.com>
-User-Agent: NeoMutt/20171215
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14:20-20220221, Krzysztof Kozlowski wrote:
-> On 21/02/2022 14:13, Nishanth Menon wrote:
-> > On 19:45-20220219, Krzysztof Kozlowski wrote:
-> >> The 'freq-table-hz' property is deprecated by UFS bindings.
-> >> The uint32-array requires also element to be passed within one <> block.
-> >>
-> >> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-> >> ---
-> >>  arch/arm64/boot/dts/ti/k3-j721e-main.dtsi | 4 +++-
-> >>  1 file changed, 3 insertions(+), 1 deletion(-)
-> >>
-> >> diff --git a/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi b/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
-> >> index 599861259a30..c3afef0321ae 100644
-> >> --- a/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
-> >> +++ b/arch/arm64/boot/dts/ti/k3-j721e-main.dtsi
-> >> @@ -1257,7 +1257,9 @@ ufs@4e84000 {
-> >>  			compatible = "cdns,ufshc-m31-16nm", "jedec,ufs-2.0";
-> >>  			reg = <0x0 0x4e84000 0x0 0x10000>;
-> >>  			interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
-> >> -			freq-table-hz = <250000000 250000000>, <19200000 19200000>, <19200000 19200000>;
-> >> +			freq-table = <250000000 250000000
-> > 
-> > <min max> is much more readable and less error prone in case of a large
-> > set.
-> 
-> Pairs are easily visible if split per line, so readability is similar.
-> Not much is lost.
-> 
-> > 
-> >> +				      19200000 19200000
-> >> +				      19200000 19200000>;
-> > 
-> > are you sure the removal of the tuple adds value?
-> 
-> DT schema requires it, or rather: I do not know how to express uint32
-> tuples in DT schema. All my tries failed.
+Hi all,
 
-https://www.kernel.org/doc/Documentation/devicetree/bindings/opp/opp-v1.yaml
-comes to mind..
+this series resurrects and forward ports ports larger parts of the
+"block: don't drain file system I/O on del_gendisk" series from Ming,
+but does not remove the draining in del_gendisk, but instead the one
+in the sd driver, which always was a bit ad-hoc.  As part of that sd
+and sr are switched to use the new ->free_disk method to avoid having
+to clear disk->private_data and the way to lookup the SCSI ULP is
+cleaned up as well.
 
--- 
-Regards,
-Nishanth Menon
-Key (0xDDB5849D1736249D) / Fingerprint: F8A2 8693 54EB 8232 17A3  1A34 DDB5 849D 1736 249D
+Git branch:
+
+    git://git.infradead.org/users/hch/block.git freeze-5.18
+
+Gitweb:
+
+    http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/freeze-5.18
+
+
+Diffstat:
+ block/blk-core.c           |    7 --
+ block/blk-mq.c             |   10 +--
+ block/blk-sysfs.c          |   25 --------
+ block/blk.h                |    2 
+ block/elevator.c           |    7 +-
+ block/genhd.c              |   43 ++++++++++++++-
+ drivers/scsi/sd.c          |   95 +++++----------------------------
+ drivers/scsi/sd.h          |    3 -
+ drivers/scsi/sr.c          |  129 +++++++++------------------------------------
+ drivers/scsi/sr.h          |    5 -
+ drivers/scsi/st.c          |    1 
+ drivers/scsi/st.h          |    1 
+ include/scsi/scsi_cmnd.h   |    9 ---
+ include/scsi/scsi_driver.h |    9 ++-
+ 14 files changed, 104 insertions(+), 242 deletions(-)
