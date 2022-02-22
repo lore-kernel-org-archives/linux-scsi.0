@@ -2,72 +2,63 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6009CC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 18:32:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAF3DC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 18:33:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235058AbiBVSdE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 13:33:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52700 "EHLO
+        id S234316AbiBVSdt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 13:33:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235013AbiBVSdC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 13:33:02 -0500
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBF531070B9;
-        Tue, 22 Feb 2022 10:32:35 -0800 (PST)
-Received: by mail-pl1-f177.google.com with SMTP id bd1so446346plb.13;
-        Tue, 22 Feb 2022 10:32:35 -0800 (PST)
+        with ESMTP id S235073AbiBVSdl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 13:33:41 -0500
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB9C9171841;
+        Tue, 22 Feb 2022 10:33:07 -0800 (PST)
+Received: by mail-pl1-f171.google.com with SMTP id ay3so7551203plb.1;
+        Tue, 22 Feb 2022 10:33:07 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=Uk23sL6XdP5uOodAkzhoIbLjps/F/rWwEdSM/N8Negs=;
-        b=c2ZJD8zXpgJEexurTDwZEVx21db/u+YbRsvk2Wdo80zdLZlyWyU751aI+Hhq+0zuSC
-         O16UBBwJyeJhsH6xekjmaw9SHIpfHCdjyn3/XHel0FEoJ8kxA318nFLoQ1ziOYSDhQJF
-         VGSCkWWEVTmKRBBiqMeIvnJu4u1Pc7z03KvRf+ibb8Ernr5EaOcnYE5LSNbmxWvoDHVW
-         RXTQfXQuX9cp6BjzlNNBnGw2Cnhi7BlQzlKpIk9kjmMIEuXcFwUXuOOZwMWX71A1oqdf
-         xM/yaQjBgLJBoqjgyaHXRX3yZ6fy+3tiyaE4hvOdM06MVR9qoLcp44kvBzCW16GS2glC
-         aPMQ==
-X-Gm-Message-State: AOAM5320Cxe8LxRbtvqg3y6kDD3O3s2jfLMg4dCoYoxB0NdIIhM8VtpH
-        ISTiXgVRkWSf0QFPIvo2NYqg5GGSYwFN/w==
-X-Google-Smtp-Source: ABdhPJxxy+FMhUzeRzoAW4fLU4Jyu+DAtMa5g9Cau5r9xporSq/MSEwX327uKdn+yq0HKFw2aVg9Dg==
-X-Received: by 2002:a17:902:7d83:b0:14e:f2f4:743 with SMTP id a3-20020a1709027d8300b0014ef2f40743mr24328453plm.107.1645554755212;
-        Tue, 22 Feb 2022 10:32:35 -0800 (PST)
+        bh=9sjZqsZYm/eIw1QilXw043tBBHAHe7duB8HAHszrVGw=;
+        b=f2Yh87p9fP2PPmNupD0Vj74xYgoC+uBcICEwN8j2qDoZtMQZv51jJJb3pixdcPm8Lo
+         ZY/XxnCZKFLEUeWiCF9UQhUFFR7XG03aziopWsJZGjmy6jmUtVmR3j1qG2+hyJNmm3Nf
+         30BpBigylvFLRl7e5Q4w3M9N3mYBPvJcbWO5NpRDe7kB0O5g+AsvckIj9rz7EGWs1FO6
+         TdPGX7zMumZaEleqXCOabBU90hV5u5aSFiiK04RtvFzeE8jHrrZef+8jJE3vYhPco22o
+         2pFTEbS3BgSJJA+9ozWnYVBbPgwxop0tgVvhtaX16ZEkKLv7oWh+PUtfdmqMZuIe2xtJ
+         dYEA==
+X-Gm-Message-State: AOAM533Wa5y1yyIRO7Ghq/qGkF4dgIrmUNrtMARQvvZFBlWR5VYcxzzv
+        ErU+uYGMaFmPyR2+DejgurmTMRO2ZAVAJA==
+X-Google-Smtp-Source: ABdhPJyceFrq8zshYNrqHnAVeV68WpNGp0VZ7u6cgcyBOPOSqdmhZ0xndpx8aHmPCMCc2nbGfMwL3g==
+X-Received: by 2002:a17:902:9a8e:b0:14d:ae35:19f9 with SMTP id w14-20020a1709029a8e00b0014dae3519f9mr24133142plp.66.1645554787177;
+        Tue, 22 Feb 2022 10:33:07 -0800 (PST)
 Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id 16sm21889656pgz.76.2022.02.22.10.32.33
+        by smtp.gmail.com with ESMTPSA id v23-20020a17090a521700b001bbfc181c93sm225378pjh.19.2022.02.22.10.33.05
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Feb 2022 10:32:34 -0800 (PST)
-Message-ID: <beb5eea9-5294-92a3-3dda-a50be71810ec@acm.org>
-Date:   Tue, 22 Feb 2022 10:32:33 -0800
+        Tue, 22 Feb 2022 10:33:06 -0800 (PST)
+Message-ID: <7873b73b-c2ee-81b2-4b70-690ad62037e5@acm.org>
+Date:   Tue, 22 Feb 2022 10:33:05 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.1
-Subject: Re: [PATCH v2] scsi: docs: update notes about scsi_times_out
+Subject: Re: [PATCH 1/8] bsg: don't include scsi_request.h in bsg-lib.h
 Content-Language: en-US
-To:     Khazhismel Kumykov <khazhy@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+To:     Christoph Hellwig <hch@lst.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-References: <20220219001601.3534043-1-khazhy@google.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <20220222140443.589882-1-hch@lst.de>
+ <20220222140443.589882-2-hch@lst.de>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220219001601.3534043-1-khazhy@google.com>
+In-Reply-To: <20220222140443.589882-2-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/18/22 16:16, Khazhismel Kumykov wrote:
-> Most importantly: eh_timed_out() is not limited by scmd->allowed,
-> and can reset timer forever.
-> 
-> Fixes: c829c394165f ("[SCSI] FC transport : Avoid device offline cases by stalling aborts until device unblocked")
-> 
-> Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
-
-No blank line between a "Fixes:" tag and a "Signed-off-by:" tag please. 
-Anyway:
+On 2/22/22 06:04, Christoph Hellwig wrote:
+> There is no need for any of the information from scsi_request.h in
+> bsg-lib.h.
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
