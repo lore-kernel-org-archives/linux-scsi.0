@@ -2,174 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0915FC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 12:59:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B99C4C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 13:36:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231267AbiBVM7y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 07:59:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56516 "EHLO
+        id S231172AbiBVNhM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 08:37:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232225AbiBVM5y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 07:57:54 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 337E9AD127;
-        Tue, 22 Feb 2022 04:57:20 -0800 (PST)
-Received: from fraeml742-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K2zgj1wryz67y8J;
-        Tue, 22 Feb 2022 20:56:17 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml742-chm.china.huawei.com (10.206.15.223) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 22 Feb 2022 13:57:18 +0100
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 22 Feb 2022 12:57:14 +0000
-From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <artur.paszkiewicz@intel.com>, <jinpu.wang@cloud.ionos.com>,
-        <chenxiang66@hisilicon.com>, <damien.lemoal@opensource.wdc.com>,
-        <hch@lst.de>
-CC:     <Ajish.Koshy@microchip.com>, <yanaijie@huawei.com>,
-        <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <liuqi115@huawei.com>, <Viswas.G@microchip.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 12/18] scsi: libsas: Add TMF handler aborted callback
-Date:   Tue, 22 Feb 2022 20:50:53 +0800
-Message-ID: <1645534259-27068-13-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1645534259-27068-1-git-send-email-john.garry@huawei.com>
-References: <1645534259-27068-1-git-send-email-john.garry@huawei.com>
+        with ESMTP id S229453AbiBVNhL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 08:37:11 -0500
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8648D8D
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 05:36:40 -0800 (PST)
+Received: by mail-pj1-f51.google.com with SMTP id ci24-20020a17090afc9800b001bc3071f921so2505610pjb.5
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 05:36:40 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:from
+         :subject:to:cc:references:content-language:in-reply-to
+         :content-transfer-encoding;
+        bh=LT7HejzwjBrk3suvkyvTyT0S/5EeRt7U2ag6qdDuIZc=;
+        b=z1LSgxt1GDEQGlWEr6CCejdlXi8Dhn4UvyCfTXw7LWNiaYRgkL7ILvocxFxUVY/+F4
+         QIQnSToY8u3dxnXZpCSPcn1Wb9zBuGhHuT36yn6uphjuuNU7JPJbhuXRhtQYS23kGpVA
+         u6fKrZQByGH1YGln+cOG+NAPdseTCYT/7e09AOvO9TtoMkv8SnCtSauGJfZFIZ7d9WPE
+         lizXgvtxXYA/eq3phBkI4GvwmtaTW++tdKVo+/QF84ynvioodjDHcFjXSnpDsOke/Bqz
+         FFl2o00qZWPHqflfMx6lxqhckUGnpyxUtCAQqBlcmsCtPYI1oNY1qKXzjU/2r98KkY0O
+         ziXA==
+X-Gm-Message-State: AOAM531ox79uJSJy/tn1feDwyOiWkzvQwQAs5Ppdx+/DGydP/fBc8VWy
+        5UOrXQ8hLb9budZJXDMV8qQ=
+X-Google-Smtp-Source: ABdhPJxsy4+eJxDuKwA6r50FsH++l4njAGmfGvkULkCMoVdbq9ljOSzLoPWPIpP3hNAs5LLtngwIBQ==
+X-Received: by 2002:a17:902:7207:b0:14d:938e:a88e with SMTP id ba7-20020a170902720700b0014d938ea88emr22973069plb.42.1645537000042;
+        Tue, 22 Feb 2022 05:36:40 -0800 (PST)
+Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id g1sm15628074pfu.32.2022.02.22.05.36.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 22 Feb 2022 05:36:39 -0800 (PST)
+Message-ID: <ccd1f277-f9f8-cb4a-980e-6f9450f4e145@acm.org>
+Date:   Tue, 22 Feb 2022 05:36:36 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+From:   Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH RFC v1 0/5] Add SCSI per device tagsets
+To:     "Melanie Plageman (Microsoft)" <melanieplageman@gmail.com>
+Cc:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+References: <20220218184157.176457-1-melanieplageman@gmail.com>
+Content-Language: en-US
+In-Reply-To: <20220218184157.176457-1-melanieplageman@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The hisi_sas and pm8001 TMF handlers have some special processing for when
-the TMF is aborted, so add a callback and fill it in for those drivers.
+On 2/18/22 10:41, Melanie Plageman (Microsoft) wrote:
+> Currently a single blk_mq_tag_set is associated with a Scsi_Host. When SCSI
+> controllers are limited, attaching multiple devices to the same controller is
+> required. In cloud environments with relatively high latency persistent storage,
+> requiring all devices on a controller to share a single blk_mq_tag_set
+> negatively impacts performance.
+> 
+> For example: a device provisioned with high IOPS and BW limits on the same
+> controller as a smaller and slower device can starve the slower device of tags.
+> This is especially noticeable when the slower device's workload has low I/O
+> depth tasks.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Tested-by: Yihang Li <liyihang6@hisilicon.com>
-Tested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
----
- drivers/scsi/hisi_sas/hisi_sas_main.c | 20 ++++++++++++++++++++
- drivers/scsi/libsas/sas_scsi_host.c   |  2 ++
- drivers/scsi/pm8001/pm8001_init.c     |  1 +
- drivers/scsi/pm8001/pm8001_sas.c      |  8 ++++++++
- drivers/scsi/pm8001/pm8001_sas.h      |  1 +
- include/scsi/libsas.h                 |  1 +
- 6 files changed, 33 insertions(+)
+The Cc-list for this patch series is way too long. Cc-ing linux-scsi and
+the most active SCSI contributors would have been sufficient.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index bd40323f7053..21e929c8bdb0 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -666,6 +666,25 @@ static struct hisi_sas_device *hisi_sas_alloc_dev(struct domain_device *device)
- 	return sas_dev;
- }
- 
-+static void hisi_sas_tmf_aborted(struct sas_task *task)
-+{
-+	struct hisi_sas_slot *slot = task->lldd_task;
-+	struct domain_device *device = task->dev;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	struct hisi_hba *hisi_hba = sas_dev->hisi_hba;
-+
-+	if (slot) {
-+		struct hisi_sas_cq *cq =
-+			   &hisi_hba->cq[slot->dlvry_queue];
-+		/*
-+		 * sync irq to avoid free'ing task
-+		 * before using task in IO completion
-+		 */
-+		synchronize_irq(cq->irq_no);
-+		slot->task = NULL;
-+	}
-+}
-+
- #define HISI_SAS_DISK_RECOVER_CNT 3
- static int hisi_sas_init_device(struct domain_device *device)
- {
-@@ -2322,6 +2341,7 @@ static struct sas_domain_function_template hisi_sas_transport_ops = {
- 	.lldd_clear_nexus_ha	= hisi_sas_clear_nexus_ha,
- 	.lldd_port_formed	= hisi_sas_port_formed,
- 	.lldd_write_gpio	= hisi_sas_write_gpio,
-+	.lldd_tmf_aborted	= hisi_sas_tmf_aborted,
- };
- 
- void hisi_sas_init_mem(struct hisi_hba *hisi_hba)
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 0f599744738d..c5d9c6a6b870 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -966,6 +966,8 @@ int sas_execute_tmf(struct domain_device *device, void *parameter,
- 			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
- 				pr_err("TMF task timeout for %016llx and not done\n",
- 				       SAS_ADDR(device->sas_addr));
-+				if (i->dft->lldd_tmf_aborted)
-+					i->dft->lldd_tmf_aborted(task);
- 				break;
- 			}
- 			pr_warn("TMF task timeout for %016llx and done\n",
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 8eef8f4de42f..6a3635c39f6a 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -129,6 +129,7 @@ static struct sas_domain_function_template pm8001_transport_ops = {
- 	.lldd_query_task	= pm8001_query_task,
- 	.lldd_port_formed	= pm8001_port_formed,
- 	.lldd_tmf_exec_complete = pm8001_setds_completion,
-+	.lldd_tmf_aborted	= pm8001_tmf_aborted,
- };
- 
- /**
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 69da7246ea20..a530fb0aaa05 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -1390,3 +1390,11 @@ void pm8001_setds_completion(struct domain_device *dev)
- 		wait_for_completion(&completion_setstate);
- 	}
- }
-+
-+void pm8001_tmf_aborted(struct sas_task *task)
-+{
-+	struct pm8001_ccb_info *ccb = task->lldd_task;
-+
-+	if (ccb)
-+		ccb->task = NULL;
-+}
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index c19c9c80206c..aa018d2d19a3 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -743,6 +743,7 @@ pm8001_ccb_task_free_done(struct pm8001_hba_info *pm8001_ha,
- 	task->task_done(task);
- }
- void pm8001_setds_completion(struct domain_device *dev);
-+void pm8001_tmf_aborted(struct sas_task *task);
- 
- #endif
- 
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index dd6551e809a0..c44de478e314 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -654,6 +654,7 @@ struct sas_domain_function_template {
- 
- 	/* Special TMF callbacks */
- 	void (*lldd_tmf_exec_complete)(struct domain_device *dev);
-+	void (*lldd_tmf_aborted)(struct sas_task *task);
- 
- 	/* Port and Adapter management */
- 	int (*lldd_clear_nexus_port)(struct asd_sas_port *);
--- 
-2.26.2
+Is the reported behavior reproducible with an upstream Linux kernel? I'm
+asking this because I think that the following block layer code should
+prevent the reported starvation:
 
+/*
+  * For shared tag users, we track the number of currently active users
+  * and attempt to provide a fair share of the tag depth for each of them.
+  */
+static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
+				  struct sbitmap_queue *bt)
+{
+	unsigned int depth, users;
+
+	if (!hctx || !(hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED))
+		return true;
+
+	/*
+	 * Don't try dividing an ant
+	 */
+	if (bt->sb.depth == 1)
+		return true;
+
+	if (blk_mq_is_shared_tags(hctx->flags)) {
+		struct request_queue *q = hctx->queue;
+
+		if (!test_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags))
+			return true;
+	} else {
+		if (!test_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
+			return true;
+	}
+
+	users = atomic_read(&hctx->tags->active_queues);
+
+	if (!users)
+		return true;
+
+	/*
+	 * Allow at least some tags
+	 */
+	depth = max((bt->sb.depth + users - 1) / users, 4U);
+	return __blk_mq_active_requests(hctx) < depth;
+}
+
+Bart.
