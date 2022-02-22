@@ -2,38 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2818DC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 14:04:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1242C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 14:04:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232613AbiBVOFN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 09:05:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60004 "EHLO
+        id S232624AbiBVOFR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 09:05:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231978AbiBVOFM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 09:05:12 -0500
+        with ESMTP id S231978AbiBVOFO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 09:05:14 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4824B15E6E1;
-        Tue, 22 Feb 2022 06:04:46 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F6A815F0AD;
+        Tue, 22 Feb 2022 06:04:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=zaFnzi56l+DVH/tvMxpA/BjkwjsaqH/prQTf/hPo21s=; b=QEcR5noF6Byk3dF4tP5/WDsCIr
-        9rnp3ePh171ejdDc198mQ6aP9UGUR16vlRsxmf2ORuuCMMygtf9T5bzWKIoymlw+UCO5LWfJmqUey
-        zrdLxmaKcnnLAGqDZUYhLI7nYTs7eT2TZSskVBJz+reZpCGN2JUT6y8snPOvlnQE7KnD0jmfFxUWE
-        vISntbBmfVNSs+93owjq9PoMBzMPCgegCjtnY6pLuyuJlmuQC7sGk6UcfPIvZI3ThPkQR4nwlWF6J
-        8HMPmY/FtChGrSMg+jubOFkbyACDAyFeUHc/PrHBi1+mdxKfUszYSUWD4J/BuR/glEpu9XHzR4qhq
-        cnmvfl9g==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=bS7ZjGau1mrmDnGlWq1K3rQ3xYky9N8d7X8w0dBKMrM=; b=R3Sblgn5+C5/cyKmHNNA6EqBM4
+        KcBFxKxMWPWdsi2uZ/ujuSjtPYo/U3WgpIFhft9UWTWipqzL4sAOWDL+xm0sUZNLhHOsdkCjGKVJb
+        +BH4eLBRWMJ2dFa+FA8bwxEGs19XVXlIEYNvsm5NHfqn5rXMTeDs/pdToxqIwl0qnv53lnmal3/o0
+        Kb+Q3MDtF4TmT5SbafV6jStRAVBG/b5sBIHeaIDd6WMnlASd1ZSHGiD4IAlJoSoJVuS6ASOoR3+Ro
+        wPJTEtlCWuoURNH4mZV6eWVLFEMy6iMk98tcliLtSKGWmfuLAXnSxGtFERAYJnuKMMLHSRB56r6mv
+        haMW3dEg==;
 Received: from [2001:4bb8:198:f8fc:c22a:ebfc:be8d:63c2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nMVmX-009nOW-F1; Tue, 22 Feb 2022 14:04:45 +0000
+        id 1nMVma-009nOv-9B; Tue, 22 Feb 2022 14:04:48 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: remove struct scsi_request
-Date:   Tue, 22 Feb 2022 15:04:35 +0100
-Message-Id: <20220222140443.589882-1-hch@lst.de>
+Subject: [PATCH 1/8] bsg: don't include scsi_request.h in bsg-lib.h
+Date:   Tue, 22 Feb 2022 15:04:36 +0100
+Message-Id: <20220222140443.589882-2-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220222140443.589882-1-hch@lst.de>
+References: <20220222140443.589882-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
@@ -41,35 +43,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
+There is no need for any of the information from scsi_request.h in
+bsg-lib.h.
 
-with the recent removal of the REQ_OP_SCSI_{IN,OUT} based passthrough
-from non-scsi drivers, the need for the scsi_request structure went
-away as well.  As all submitters of SCSI passthrough requests are using
-the SCSI midlayer now they can just fill out the scsi_cmnd directly.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/linux/bsg-lib.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-Diffstat:
- b/drivers/ata/libata-scsi.c           |    4 -
- b/drivers/block/pktcdvd.c             |    8 +-
- b/drivers/cdrom/cdrom.c               |    1 
- b/drivers/scsi/scsi_bsg.c             |   42 +++++-------
- b/drivers/scsi/scsi_debugfs.c         |    6 -
- b/drivers/scsi/scsi_error.c           |   38 +++++-----
- b/drivers/scsi/scsi_ioctl.c           |   75 +++++++++------------
- b/drivers/scsi/scsi_lib.c             |  119 ++++++++++++++--------------------
- b/drivers/scsi/scsi_logging.c         |    5 -
- b/drivers/scsi/scsi_transport_sas.c   |    1 
- b/drivers/scsi/sd.c                   |   28 --------
- b/drivers/scsi/sg.c                   |   44 ++++--------
- b/drivers/scsi/sr.c                   |   30 ++++----
- b/drivers/scsi/st.c                   |   30 ++++----
- b/drivers/scsi/ufs/ufshpb.c           |   22 ++----
- b/drivers/target/target_core_pscsi.c  |   67 +++++++------------
- b/drivers/target/target_core_pscsi.h  |    4 -
- b/drivers/usb/storage/cypress_atacb.c |    1 
- b/drivers/usb/storage/isd200.c        |    4 -
- b/include/linux/bsg-lib.h             |    1 
- b/include/scsi/scsi_cmnd.h            |   16 +---
- b/include/scsi/scsi_eh.h              |    4 -
- include/scsi/scsi_request.h           |   31 --------
- 23 files changed, 225 insertions(+), 356 deletions(-)
+diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
+index 6b211323a489c..9e97ced2896df 100644
+--- a/include/linux/bsg-lib.h
++++ b/include/linux/bsg-lib.h
+@@ -10,7 +10,6 @@
+ #define _BLK_BSG_
+ 
+ #include <linux/blkdev.h>
+-#include <scsi/scsi_request.h>
+ 
+ struct bsg_job;
+ struct request;
+-- 
+2.30.2
+
