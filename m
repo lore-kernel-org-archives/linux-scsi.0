@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54052C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 14:59:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADFF0C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 15:00:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233079AbiBVPAV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 10:00:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47602 "EHLO
+        id S233082AbiBVPAp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 10:00:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231425AbiBVPAN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 10:00:13 -0500
+        with ESMTP id S233053AbiBVPAa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 10:00:30 -0500
 Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C17AB10DA63
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 06:59:47 -0800 (PST)
-Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com [209.85.218.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E4A010E064
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 06:59:53 -0800 (PST)
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com [209.85.218.71])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 8B8F23FCA4
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 14:59:46 +0000 (UTC)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id E22BE40253
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 14:59:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1645541986;
-        bh=QS6C0GzUsESFnOlW679wMJjG5Id453GO4JtPx943Lak=;
+        s=20210705; t=1645541991;
+        bh=1P7qQVIntzoTj3/oLgMEwV7rKt1l7cL2m41gmrqktTo=;
         h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=MVpTjeTFfq2YaJeNybJBjKmcms2z4Y9uqW33q99pgyfvkVVqxC8VqZoS78b2KT7cC
-         Q7aA/nerYZRDXv10Oj4qwdEhZAV471yti6bNd9310rVP/TJSfxFDGYmHaN5ioAKfuY
-         +PcFkovR9X5mOLU5Lo2kR6OpWcHYI25sMWHhm9c2/Wx0ky+cbYl7vyZBtu8PRJijvc
-         gyNe+lNz0ydAyKsskca3EUpXULO+LyP5i2VK6MW2y4JI0sfWZ30uZOi2jbJkD1oi6G
-         WEWOjM0m3RIYEzCTtknjygYTbQartZGzOjmw23ZWmnQht5nb/4XJ59nyM+G8XNXh8w
-         FA1g4qwhbaZkA==
-Received: by mail-ej1-f72.google.com with SMTP id mp5-20020a1709071b0500b0069f2ba47b20so5803080ejc.19
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 06:59:46 -0800 (PST)
+        b=bU6JK5adMWxlJBra+LF0Ror6FdImeaukVNNCrbw3yE8hwL6RUZK2oBpGpbE2I4J0G
+         T1n1jVbzQQD+SMc/12x4kD/z7afsVR27irY4K4IKMH08Sa9bFwWMisBQ2tr8D8RgUf
+         b/MA7aVxpbG2YcjZ1M/MO9FhOJLgQxuJv1MeKx6U6Sa0b5CVpzjs/A4jbxT3PFZijN
+         +I2jlBtUmZy9dmaDmymZtGEbLT9YiPktsa/aQsYOBeSCBVrdpV2eHN92EHRisEd0eN
+         rtQvAzzV0oXWPhv8tOSiIOtNBM0jcCo/J3i0/276sR0g6lUAZGuzbbYBGciyBz3M9d
+         jooZCxqpRkBIA==
+Received: by mail-ej1-f71.google.com with SMTP id mp5-20020a1709071b0500b0069f2ba47b20so5803199ejc.19
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 06:59:51 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=QS6C0GzUsESFnOlW679wMJjG5Id453GO4JtPx943Lak=;
-        b=X9A78Y8xEBJiexkpPMLQf1FiTtf6GnxgH7OPJygqAiAaSwFaCQsu4xWipXknMNBtOr
-         8L4mWQRM/+/iGaRCVKWKB+RjDXOcUwLbtGUWYCXnt/DiMbZ1lC15Pch/w7jtSHrOeTlj
-         rY0faAIxIbY1RzMDtwni615HrgF3BTxB1n+N6UoViLPf3w+An3Au/6FAB0k4Rd4csQHP
-         1aI4v5kiswKoW52QQPHZjeOPk7ANfpWb/i0Hbi2Und7xEv1vlYkK3+ryDfH2XQSnF+qo
-         suE/Pf53QhnqH2gSbL6rNwt8HgWC1vRaTlb2FHJs/gThrahAOTMLPQg71VxPhZp8bKU8
-         tQoA==
-X-Gm-Message-State: AOAM531mVM3E+umfxfO1qePUVlbY/2O4NKcG7Q9qyEMSssV49czIvGkM
-        RT/KTU4B0HvRzTImOU4LLOnf9DqDCCMF2IITB9PxiH6dcLuAK67OUuJZ384w+cc2sGQxjAIqFul
-        QFq6ktAA2rM3AllCLtidI8G1YKLGXWGqXFgVlDKg=
-X-Received: by 2002:aa7:df12:0:b0:410:a50b:de00 with SMTP id c18-20020aa7df12000000b00410a50bde00mr26955898edy.2.1645541986229;
-        Tue, 22 Feb 2022 06:59:46 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxLhBfWrLlHym0osIm6uJ6NjAAfcWJy5tog0t5Nfvn14lcOwLiw9f5Pm3zKcbnRxuKypKbKmg==
-X-Received: by 2002:aa7:df12:0:b0:410:a50b:de00 with SMTP id c18-20020aa7df12000000b00410a50bde00mr26955872edy.2.1645541986043;
-        Tue, 22 Feb 2022 06:59:46 -0800 (PST)
+        bh=1P7qQVIntzoTj3/oLgMEwV7rKt1l7cL2m41gmrqktTo=;
+        b=FHEDbDaDPapfTp6XSoJ7bUwUHt+FSUEPk2aXkOfdaYT3Bz8in/QoRQVt/qaGkTiXgh
+         Wk7YSWtLcvqk9D+j/uaVCyvznGOtpxQeS2ujZ9bIy5gqcYO/e4ceHph/JAqHR0vTchqL
+         wfIiYe9ETkcJFbd6s2Hn55L69LhL1ARK0IW7JbkIgWhxbkukDaqRfeI7tQ4gGA46xtQn
+         ZPP+gLak6o/q0sO21x5VcHysqH/Ni1Gfocg815xzwt3ou258RYq4Rec7CRashP9aQv/v
+         6l1oLr0QbIyilvB/EeuxNimXwE9cljCeGE2cnScaVHcmPTdpN9gyAULRN+YKovhB6FpS
+         HHzw==
+X-Gm-Message-State: AOAM532LGoN1sIip6evEq5jfYOULkcJrt6t70BiCLw5cl3wfTaGCI5gQ
+        O0ba1LcF58hexQ/py/KdgnUz2vnxGa1NLCfVAXOnX3+683uv12RnyGiKyCkh0RQGXR2qLW1ksnQ
+        XUoOEU50v6kLrgNDUwhwZmk5STkooix6AHLvkVLA=
+X-Received: by 2002:a50:e04e:0:b0:410:d961:523a with SMTP id g14-20020a50e04e000000b00410d961523amr27317295edl.223.1645541991396;
+        Tue, 22 Feb 2022 06:59:51 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyUtYJeXKFR/3UPBCev0P+VF4C8MI1ryF08nvFtYgouje4ha2q2QFFwRqFjiPr36iU06TskIg==
+X-Received: by 2002:a50:e04e:0:b0:410:d961:523a with SMTP id g14-20020a50e04e000000b00410d961523amr27317282edl.223.1645541991213;
+        Tue, 22 Feb 2022 06:59:51 -0800 (PST)
 Received: from localhost.localdomain (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
-        by smtp.gmail.com with ESMTPSA id m2sm2467960ejb.20.2022.02.22.06.59.44
+        by smtp.gmail.com with ESMTPSA id m2sm2467960ejb.20.2022.02.22.06.59.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Feb 2022 06:59:45 -0800 (PST)
+        Tue, 22 Feb 2022 06:59:50 -0800 (PST)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
@@ -76,9 +76,9 @@ To:     Alim Akhtar <alim.akhtar@samsung.com>,
         linux-arm-kernel@lists.infradead.org,
         linux-samsung-soc@vger.kernel.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 04/15] dt-bindings: ufs: drop unused/old ufs-qcom PHY bindings
-Date:   Tue, 22 Feb 2022 15:58:43 +0100
-Message-Id: <20220222145854.358646-5-krzysztof.kozlowski@canonical.com>
+Subject: [PATCH v2 07/15] dt-bindings: ufs: mediatek,ufs: convert to dtschema
+Date:   Tue, 22 Feb 2022 15:58:46 +0100
+Message-Id: <20220222145854.358646-8-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220222145854.358646-1-krzysztof.kozlowski@canonical.com>
 References: <20220222145854.358646-1-krzysztof.kozlowski@canonical.com>
@@ -88,84 +88,140 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The Qualcomm UFS PHY bindings are documented in
-bindings/phy/qcom,qmp-phy.yaml and the compatibles from separate file
-bindings/ufs/ufs-qcom.txt are not used at all.
+Convert the Mediatek Universal Flash Storage (UFS) Controller to DT
+schema format.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
- .../devicetree/bindings/ufs/ufs-qcom.txt      | 63 -------------------
- 1 file changed, 63 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+ .../devicetree/bindings/ufs/mediatek,ufs.yaml | 67 +++++++++++++++++++
+ .../devicetree/bindings/ufs/ufs-mediatek.txt  | 45 -------------
+ 2 files changed, 67 insertions(+), 45 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+ delete mode 100644 Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+new file mode 100644
+index 000000000000..1cf530b5c57d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+@@ -0,0 +1,67 @@
++# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ufs/mediatek,ufs.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Mediatek Universal Flash Storage (UFS) Controller
++
++maintainers:
++  - Stanley Chu <stanley.chu@mediatek.com>
++
++allOf:
++  - $ref: ufs-common.yaml
++
++properties:
++  compatible:
++    enum:
++      - mediatek,mt8183-ufshci
++      - mediatek,mt8192-ufshci
++
++  clocks:
++    maxItems: 1
++
++  clock-names:
++    items:
++      - const: ufs
++
++  phys:
++    maxItems: 1
++
++  reg:
++    maxItems: 1
++
++  vcc-supply: true
++
++required:
++  - compatible
++  - clocks
++  - clock-names
++  - phys
++  - reg
++  - vcc-supply
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/mt8183-clk.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        ufs@ff3c0000 {
++            compatible = "mediatek,mt8183-ufshci";
++            reg = <0 0x11270000 0 0x2300>;
++            interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_LOW>;
++            phys = <&ufsphy>;
++
++            clocks = <&infracfg_ao CLK_INFRA_UFS>;
++            clock-names = "ufs";
++            freq-table = <0 0>;
++
++            vcc-supply = <&mt_pmic_vemc_ldo_reg>;
++        };
++    };
+diff --git a/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt b/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
 deleted file mode 100644
-index fd59f93e9556..000000000000
---- a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+index 63a953b672d2..000000000000
+--- a/Documentation/devicetree/bindings/ufs/ufs-mediatek.txt
 +++ /dev/null
-@@ -1,63 +0,0 @@
--* Qualcomm Technologies Inc Universal Flash Storage (UFS) PHY
+@@ -1,45 +0,0 @@
+-* Mediatek Universal Flash Storage (UFS) Host Controller
 -
--UFSPHY nodes are defined to describe on-chip UFS PHY hardware macro.
--Each UFS PHY node should have its own node.
+-UFS nodes are defined to describe on-chip UFS hardware macro.
+-Each UFS Host Controller should have its own node.
 -
 -To bind UFS PHY with UFS host controller, the controller node should
--contain a phandle reference to UFS PHY node.
+-contain a phandle reference to UFS M-PHY node.
 -
--Required properties:
--- compatible        : compatible list, contains one of the following -
--			"qcom,ufs-phy-qmp-20nm" for 20nm ufs phy,
--			"qcom,ufs-phy-qmp-14nm" for legacy 14nm ufs phy,
--			"qcom,msm8996-ufs-phy-qmp-14nm" for 14nm ufs phy
--			 present on MSM8996 chipset.
--- reg               : should contain PHY register address space (mandatory),
--- reg-names         : indicates various resources passed to driver (via reg proptery) by name.
--                      Required "reg-names" is "phy_mem".
--- #phy-cells        : This property shall be set to 0
--- vdda-phy-supply   : phandle to main PHY supply for analog domain
--- vdda-pll-supply   : phandle to PHY PLL and Power-Gen block power supply
--- clocks	    : List of phandle and clock specifier pairs
--- clock-names       : List of clock input name strings sorted in the same
--		      order as the clocks property. "ref_clk_src", "ref_clk",
--		      "tx_iface_clk" & "rx_iface_clk" are mandatory but
--		      "ref_clk_parent" is optional
--
--Optional properties:
--- vdda-phy-max-microamp : specifies max. load that can be drawn from phy supply
--- vdda-pll-max-microamp : specifies max. load that can be drawn from pll supply
--- vddp-ref-clk-supply   : phandle to UFS device ref_clk pad power supply
--- vddp-ref-clk-max-microamp : specifies max. load that can be drawn from this supply
--- resets : specifies the PHY reset in the UFS controller
+-Required properties for UFS nodes:
+-- compatible         : Compatible list, contains the following controller:
+-                       "mediatek,mt8183-ufshci" for MediaTek UFS host controller
+-                       present on MT8183 chipsets.
+-                       "mediatek,mt8192-ufshci" for MediaTek UFS host controller
+-                       present on MT8192 chipsets.
+-- reg                : Address and length of the UFS register set.
+-- phys               : phandle to m-phy.
+-- clocks             : List of phandle and clock specifier pairs.
+-- clock-names        : List of clock input name strings sorted in the same
+-                       order as the clocks property. "ufs" is mandatory.
+-                       "ufs": ufshci core control clock.
+-- freq-table-hz      : Array of <min max> operating frequencies stored in the same
+-                       order as the clocks property. If this property is not
+-                       defined or a value in the array is "0" then it is assumed
+-                       that the frequency is set by the parent clock or a
+-                       fixed rate clock source.
+-- vcc-supply         : phandle to VCC supply regulator node.
 -
 -Example:
 -
--	ufsphy1: ufsphy@fc597000 {
--		compatible = "qcom,ufs-phy-qmp-20nm";
--		reg = <0xfc597000 0x800>;
--		reg-names = "phy_mem";
--		#phy-cells = <0>;
--		vdda-phy-supply = <&pma8084_l4>;
--		vdda-pll-supply = <&pma8084_l12>;
--		vdda-phy-max-microamp = <50000>;
--		vdda-pll-max-microamp = <1000>;
--		clock-names = "ref_clk_src",
--			"ref_clk_parent",
--			"ref_clk",
--			"tx_iface_clk",
--			"rx_iface_clk";
--		clocks = <&clock_rpm clk_ln_bb_clk>,
--			<&clock_gcc clk_pcie_1_phy_ldo >,
--			<&clock_gcc clk_ufs_phy_ldo>,
--			<&clock_gcc clk_gcc_ufs_tx_cfg_clk>,
--			<&clock_gcc clk_gcc_ufs_rx_cfg_clk>;
--		resets = <&ufshc 0>;
+-	ufsphy: phy@11fa0000 {
+-		...
 -	};
 -
--	ufshc: ufshc@fc598000 {
--		#reset-cells = <1>;
--		...
--		phys = <&ufsphy1>;
--		phy-names = "ufsphy";
+-	ufshci@11270000 {
+-		compatible = "mediatek,mt8183-ufshci";
+-		reg = <0 0x11270000 0 0x2300>;
+-		interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_LOW>;
+-		phys = <&ufsphy>;
+-
+-		clocks = <&infracfg_ao INFRACFG_AO_UFS_CG>;
+-		clock-names = "ufs";
+-		freq-table-hz = <0 0>;
+-
+-		vcc-supply = <&mt_pmic_vemc_ldo_reg>;
 -	};
 -- 
 2.32.0
