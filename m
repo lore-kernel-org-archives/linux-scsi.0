@@ -2,706 +2,166 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59E16C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Feb 2022 02:44:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B24BAC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Feb 2022 02:46:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235444AbiBWCop (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 21:44:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40052 "EHLO
+        id S237671AbiBWCqh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 21:46:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238973AbiBWCoZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 21:44:25 -0500
-Received: from out30-44.freemail.mail.aliyun.com (out30-44.freemail.mail.aliyun.com [115.124.30.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BF298F61C;
-        Tue, 22 Feb 2022 18:39:21 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R871e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04357;MF=jnwang@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0V5FyhHb_1645583935;
-Received: from rsjc10526.et2sqa.tbsite.net(mailfrom:jnwang@linux.alibaba.com fp:SMTPD_---0V5FyhHb_1645583935)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Wed, 23 Feb 2022 10:39:12 +0800
-From:   James Wang <jnwang@linux.alibaba.com>
-To:     don.brace@microsemi.com, jejb@linux.vnet.ibm.com,
-        martin.petersen@oracle.com, esc.storagedev@microsemi.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v3] [hpsa] Improve the coding-style to comment sections
-Date:   Wed, 23 Feb 2022 10:38:55 +0800
-Message-Id: <1645583935-110103-1-git-send-email-jnwang@linux.alibaba.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <739e4ca0-ec2d-d39a-4c80-2b2e16435f49@acm.org>
-References: <739e4ca0-ec2d-d39a-4c80-2b2e16435f49@acm.org>
+        with ESMTP id S237839AbiBWCqa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 21:46:30 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26FB06D3BC;
+        Tue, 22 Feb 2022 18:41:45 -0800 (PST)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21MN0KgS026299;
+        Wed, 23 Feb 2022 02:41:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=dfk7uf3EOkuJNsAdGZZbR/Kn05P1Ig9TjjA0akGndI4=;
+ b=olaelRn219wAMN1BdorFJYxhd3G2c2Ewz8wJsO5Unhhhccjp73Cu/EpAMl9sGP/A9Ax8
+ ZHF4bqGxUKD63DpeZnN0DNPKO61bhW8AG6QQ+Nv3zEL3o3UouGaSsokN9rOopq7yUqzu
+ F53RPA0LqLXd7iymT9+rhvwOf8RLSvh9OsAHzGFY4TDNq3I3/FZtTyI/z0M4P+mzqgdW
+ xcu2N5yQuZf+/2wyHDCetIvmv7YLSpce41wALbIybEJKYQHNFJIEHQZoEXCQBsi3PNmC
+ XBIxPdi49/zCbvyj+rVvk+WaVj69A63QWOCiCmcTzHtWgO+6IXWyigFkUle7z0JwjlRB 3w== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3ecv6etpaf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 23 Feb 2022 02:41:12 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21N2ZaIV032756;
+        Wed, 23 Feb 2022 02:41:11 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2107.outbound.protection.outlook.com [104.47.58.107])
+        by userp3030.oracle.com with ESMTP id 3eannv5ut5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 23 Feb 2022 02:41:11 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=dmVdfsKIJ3JqTQwq/L86u7CaCIFh6pj9oZNVdIHYX6Ezr/IFf2qf1HOmduNdul8NZRw5wn31HDR8dEovo67Kv61yPOQ5EdnvwN1t+oc1Kvgw1lGwaFULMNPRcQyeG+aZyFqyEGbN5YFMvZpxHiAsWMvw5MChdkwJmiYwtCjRg5bPOmfxUm8LZWsjboPEItsnPnqy4hvzaTLDKNtc1M4gS36/8yCl7TCbmZp0N2+2nZxkapieOtGiDLQtkis9G4Qk3Mzha0OPekHCkdwhuytPjx3x7oAB0XWqmGSTFToU8Xnp4iAXiUvsM5DRBJVE3ZkPZTv1PvrKQ3oVWMl8j4WpEQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=dfk7uf3EOkuJNsAdGZZbR/Kn05P1Ig9TjjA0akGndI4=;
+ b=MC7f1ZZB0nZrbxOAvltH20VvnirdKqb+w8jP6HCUBrAvHakkObGZPufNvbVFRfsR65QLKxLF74kAM97KdaYlc4FDBdWTGmvaqWvc7aCZVghORRLPseNl3YiM3oc9QYgTBS8UQHzQ6E5YW3/qldMMJ1TSDeLOWZnKBuoBFZupY2ThgAlpAWidY1j1xvfHMLBK6POLQKgrzy+RuSgmOs7zGyb748NOxudevUEb7O62DKMAptekw1B3yxvFWFHcBjSKpqJosLlThujtsBL4pCXDH8PLkGuawt+XsGYJ39GHuiqX131JEwb/+dE2sHNv9UUtlQ2xt6nldR9rLBROEV10KQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dfk7uf3EOkuJNsAdGZZbR/Kn05P1Ig9TjjA0akGndI4=;
+ b=LJVrMEpIeZ/ksJcSnASW6j/2zb8FQloT2lScQXscJ+GaYlK7x4FdhPNq8M0VWQSDWa1/Y/Sb4zpmW0LkECxwP2K/cxyQR2FMULD+iI69Hm8wCGrumuUwJpNenK/rQkQNkvj/ZFLiCXk+KqTBrj5bqlTVU/db42Li1HOXBFoWJ0o=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by DM6PR10MB2490.namprd10.prod.outlook.com (2603:10b6:5:ae::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4995.24; Wed, 23 Feb
+ 2022 02:41:09 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::c9f0:b3fb:25a6:3593]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::c9f0:b3fb:25a6:3593%5]) with mapi id 15.20.4995.027; Wed, 23 Feb 2022
+ 02:41:09 +0000
+To:     Christian =?utf-8?Q?Gro=C3=9Fegger?= <christian@grossegger.com>
+Cc:     linux-scsi@vger.kernel.org,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sagar Biradar <sagar.biradar@microchip.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Konstantin Khorenko <khorenko@virtuozzo.com>,
+        James Hilliard <james.hilliard1@gmail.com>,
+        Don Brace <don.brace@microchip.com>
+Subject: Re: [PATCH v3 0/1] aacraid: Host adapter Adaptec 6405 constantly
+ resets under high io load
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq135kacnny.fsf@ca-mkp.ca.oracle.com>
+References: <yq15zo86nvk.fsf@oracle.com>
+        <20190819163546.915-1-khorenko@virtuozzo.com>
+        <CADvTj4rVS-wJy1B=dgEO1AOADNYgL3XkZ01Aq=RTfPGEZC+VMA@mail.gmail.com>
+        <ffdb2223-eed3-75b4-a003-4e4c96b49947@grossegger.com>
+Date:   Tue, 22 Feb 2022 21:41:07 -0500
+In-Reply-To: <ffdb2223-eed3-75b4-a003-4e4c96b49947@grossegger.com>
+ ("Christian
+        =?utf-8?Q?Gro=C3=9Fegger=22's?= message of "Mon, 21 Feb 2022 18:34:07
+ +0100")
+Content-Type: text/plain
+X-ClientProxiedBy: BYAPR05CA0087.namprd05.prod.outlook.com
+ (2603:10b6:a03:e0::28) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 5345ac31-df44-4fa6-ffd8-08d9f675f2ad
+X-MS-TrafficTypeDiagnostic: DM6PR10MB2490:EE_
+X-Microsoft-Antispam-PRVS: <DM6PR10MB2490DDBBED4014F82D9C75418E3C9@DM6PR10MB2490.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: TazsNcouQicSTyZcY3/IHh1XKUlmDg3b4eTJMONQpUo779uGqjQFPK3zFAalBkwQ+/vGCMhhZX30jA/PbwPdlV/UBjXV/pJHhk1Txcv3Bk9Il7oUO+4wnv6UdXhYnJSqIgUE5sX7Ss9BAeNANIiG11wyMptatbf0Be99CcWKosYF9PKsRMu2xYcHfHqmYZlTufWlPp5B9lkfJrxSYCzSyxkVsieKGzAV7+a7bSrfaEnSJnm3TvuAJDX9GhSTij0PetPYWICxuFJvO/5C+oAiI653AgnRnblMwu/BrZQNwsRxzggHmqhlL72KWKZbCLCb1J1hEj6cmzzZCCSahAqLErNMDx9o2CMa0wkeLFUBD1O1rSQcAwEG5zGuCW7e5toXHkZs+ARUiVh15/SVL8iS8M+nNL3/FZOuDQD7BoVwYPH2SmHvf41AaK0PhMQRi1h9/wSH7ddYZ/ZX0geKJer/89Mzx3a94DmB5qFPcMJGFwPebjsefILLg06qKqm+UZG/r728Z2XQ275YUZq0FmKZ8lc+rgBJRS4VIlommN90q7Cpg2nMWtu7JevTrjdSad2qV/QsZzM4M677cMA9Ia4Dzblk4pkYqbhvpMJ+EVnrZlieZttrMGOTWnHXeCpcW2BpRqC6Tv3AlsOhGBugRONqsZdneu2opRIWNb+YwpQY3TbxQ+OPJkn6E6LMN7IEFXETVRm633HDHFmhKILFgaEoUw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(54906003)(6916009)(316002)(5660300002)(66556008)(8676002)(38350700002)(66476007)(6506007)(6512007)(52116002)(36916002)(508600001)(6486002)(38100700002)(8936002)(4744005)(2906002)(86362001)(26005)(66946007)(4326008)(186003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?C6kHgSbqFdZe9OJDs4K6MZHggJT/i1TTRGylqNoyOiDFWQzAg+9uXcIUQj1K?=
+ =?us-ascii?Q?U3OvOmzADwcIl+FoAmNlb8094UibtN8h+3qhWRANLUXAt36ylNNMHo2laBEV?=
+ =?us-ascii?Q?1PLzmQRa3EeX6RkwLDbTDR3NxcAoTwoozjLrNBt2agC3+e3KZFVkzOE10p/w?=
+ =?us-ascii?Q?gjbd9EvETVomAR+iZIp9dvjsqQ8//A9E1+S5lYYc+PFURdiwsNWY9V1yEbq0?=
+ =?us-ascii?Q?iyzMb9fCRBqrX0EGqxF6ad2JqLqz+gm6HYOg/ykvcMNAFuBGIeFspev4Cs5t?=
+ =?us-ascii?Q?wwDsc9FqnRnH53T9gipQi3PAXyfVkRqj8sp6vXDszKw5AvbbY/BNgPSk0z+b?=
+ =?us-ascii?Q?73E394jVSi1OFJJ3Q6gnlu1q/j3DmMexuUCjZg7YkFN8navFGca9QDj6eEFp?=
+ =?us-ascii?Q?NUvl+dEW9EDBslATLOJn77zD5mkxZFLwegX9ZlcaxF8p1ogPxlnFcVgPZtDD?=
+ =?us-ascii?Q?Yl4t0cb5cX7k5iS0W5m1FeiuU5cF3JXEKV779ieD9AMfTNhfWR8sS6mRBBW2?=
+ =?us-ascii?Q?aKKpsu3VRv0ZKY7kF7M8JchKKWYh25uqzWrRQjCkNsupbMm5MPIUjdMCHZZQ?=
+ =?us-ascii?Q?equFv11mL94gBX7XMmK6rRT+E995hZUVRTsLUrVmm5xgZZJdItitSjpaOCxw?=
+ =?us-ascii?Q?xuAku43RsqVTN1DBS8SjMFvGRpdf6w2rAdl767iTG3w3ZAXGiv9Fq8FcZ3zD?=
+ =?us-ascii?Q?KRmHVTD9ICqPmEwtSlo5OOEuCXtT9BDm41Hz07dti9mWuedqNKSYpxflCvHm?=
+ =?us-ascii?Q?zRpKq3mNn8kmepdd6/5sTTLTlNds4DzgILqBCZma4kJutRcz4eKBETrFu4ti?=
+ =?us-ascii?Q?kgNc1M6dAjar5CcSz5pk1j7z85efoVxZEWNYqDfLQR9b1dgJ3/30B/yx0Dm7?=
+ =?us-ascii?Q?kkr/ON/W0xweMj/hYid7I8c4eLZkrNfaKzqhGAv+ZDdrz8/TS0I6wUDMMdU/?=
+ =?us-ascii?Q?RSSl2wJy4EsxhtC+BmIySq7/NcOElnEYQEzgerehthzlYbXHT6WalGBqJ8X+?=
+ =?us-ascii?Q?Saqb+N7lfojpAwq2stwyCvwR/mBZrEm1me1GDDtQ93wSKJD7pQwNvJoMMCzX?=
+ =?us-ascii?Q?Y1iFvsTOqjwP+ZtdvndydyRu0LHbXGRtYGiuD5OgvAlB5uOkJRxjZm7OB0Uu?=
+ =?us-ascii?Q?1opbRnlAPL3xPuHjTaRxUODenYKIxB/G/Z8Px7zJ9PQBWO+TY5PG8ik4WSpn?=
+ =?us-ascii?Q?SBBMZunlOgoOCg0LfZZIOP4tnE0z15LxBTj33nW7yx+oAz9OrXHhPIxxbnOa?=
+ =?us-ascii?Q?1+8619N2IuHGwKr0LFT92pGr6YK9gtlFyTFJTDUyxt9wiuwe0G0k66QKIfBp?=
+ =?us-ascii?Q?GrncxnsrC+N3kqQwf67sJ08Q4yLSSEtGvAWr9vbn7mQY0L1XfvxFUNoGRSLr?=
+ =?us-ascii?Q?7L0Yss+XMXuV1JpV0KwVjMnbEyxFtiKcoXBvgcW7Jg8TC8diBeeul/rYlQUL?=
+ =?us-ascii?Q?/GKjo+t6A2mE4wJT/Bs8BZaFTA29PuXiEeKQKAKWzWC9bNAaZCazXxxjMx4r?=
+ =?us-ascii?Q?iURnIPiqkjKNYChLaOME2jQcRberTTY/dydsW67pLeDRbRiuW4YrsKlIVtBe?=
+ =?us-ascii?Q?bxIGiEJqraFdHUmI8dIZn8yhpk91ct9kLOs7ypIDMBVi2Ucy0q3L2pI4u00b?=
+ =?us-ascii?Q?7rF/CcP8v51sY3ZMZ5fkwBuet7p0ee0M8zS/0G8r2weO79xzf3//zBjwWpGK?=
+ =?us-ascii?Q?ecbw2gJH0FntXB2bah2a6fAWdsw=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5345ac31-df44-4fa6-ffd8-08d9f675f2ad
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Feb 2022 02:41:09.3825
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: iSL5Z21BKOG1Advq0+IoqE8IlPcjVG71Rk+697hQGCflgroA9DmCOWZaneKv6UR2oQ/WE6RXwhKtsPcE4Edj9m+88QftnlYS2UkpwQoYy1c=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB2490
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10266 signatures=677939
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 adultscore=0
+ malwarescore=0 phishscore=0 mlxlogscore=934 mlxscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
+ definitions=main-2202230011
+X-Proofpoint-GUID: POQcadUR9enw7ucllo_haykceWAB34Il
+X-Proofpoint-ORIG-GUID: POQcadUR9enw7ucllo_haykceWAB34Il
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-First, I need to fix a mistake in comment lines that
-is lead by "+" in comments, It wouldn't cause the compiler
-warning, but it seems not good;
 
-As the latest coding-style instruction,
-for the multi-line comment is
+Christian,
 
-.. code-block:: c
+> The faulty patch (Commit: 395e5df79a9588abf) from 2017 should be
+> repaired with Konstantin Khorenko (1):
+>
+>   scsi: aacraid: resurrect correct arc ctrl checks for Series-6
 
-        /*
-         * This is the preferred style for multi-line
-         * comments in the Linux kernel source code.
-         * Please use it consistently.
-         *
-         * Description:  A column of asterisks on the left side,
-         * with beginning and ending almost-blank lines.
-         */
+It would be great to get this patch resubmitted by Konstantin and acked
+by Microchip.
 
-But for net/ and drivers/net the perferred style for multi-line is:
+Thanks!
 
-.. code-block:: c
-
-        /* The preferred comment style for files in net/ and drivers/net
-         * looks like this.
-         *
-         * It is nearly the same as the generally preferred comment
-         * style,
-         * but there is no initial almost-blank line.
-         */
-
-For hpsa, there are two types of comment sections in hpsa code,
-I choose the first style for all comment sections;
-
-Signed-off-by: James Wang <jnwang@linux.alibaba.com>
----
- drivers/scsi/hpsa.c | 199 ++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 131 insertions(+), 68 deletions(-)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a47bcce..777eaf7 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -1202,7 +1202,8 @@ static inline int is_scsi_rev_5(struct ctlr_info *h)
- static int hpsa_find_target_lun(struct ctlr_info *h,
- 	unsigned char scsi3addr[], int bus, int *target, int *lun)
- {
--	/* finds an unused bus, target, lun for a new physical device
-+	/* 
-+	 * finds an unused bus, target, lun for a new physical device
- 	 * assumes h->devlock is held
- 	 */
- 	int i, found = 0;
-@@ -1302,7 +1303,8 @@ static int hpsa_scsi_add_entry(struct ctlr_info *h,
- 		/* Logical device, lun is already assigned. */
- 		goto lun_assigned;
- 
--	/* If this device a non-zero lun of a multi-lun device
-+	/* 
-+	 * If this device a non-zero lun of a multi-lun device
- 	 * byte 4 of the 8-byte LUN addr will contain the logical
- 	 * unit no, zero otherwise.
- 	 */
-@@ -1314,7 +1316,8 @@ static int hpsa_scsi_add_entry(struct ctlr_info *h,
- 		goto lun_assigned;
- 	}
- 
--	/* This is a non-zero lun of a multi-lun device.
-+	/* 
-+	 * This is a non-zero lun of a multi-lun device.
- 	 * Search through our list and find the device which
- 	 * has the same 8 byte LUN address, excepting byte 4 and 5.
- 	 * Assign the same bus and target for this new LUN.
-@@ -1493,7 +1496,8 @@ static void fixup_botched_add(struct ctlr_info *h,
- static inline int device_is_the_same(struct hpsa_scsi_dev_t *dev1,
- 	struct hpsa_scsi_dev_t *dev2)
- {
--	/* we compare everything except lun and target as these
-+	/* 
-+	 * we compare everything except lun and target as these
- 	 * are not yet assigned.  Compare parts likely
- 	 * to differ first
- 	 */
-@@ -1517,7 +1521,8 @@ static inline int device_is_the_same(struct hpsa_scsi_dev_t *dev1,
- static inline int device_updated(struct hpsa_scsi_dev_t *dev1,
- 	struct hpsa_scsi_dev_t *dev2)
- {
--	/* Device attributes that can change, but don't mean
-+	/* 
-+	 * Device attributes that can change, but don't mean
- 	 * that the device is a different device, nor that the OS
- 	 * needs to be told anything about the change.
- 	 */
-@@ -1544,7 +1549,8 @@ static inline int device_updated(struct hpsa_scsi_dev_t *dev1,
- 	return 0;
- }
- 
--/* Find needle in haystack.  If exact match found, return DEVICE_SAME,
-+/* 
-+ * Find needle in haystack.  If exact match found, return DEVICE_SAME,
-  * and return needle location in *index.  If scsi3addr matches, but not
-  * vendor, model, serial num, etc. return DEVICE_CHANGED, and return needle
-  * location in *index.
-@@ -1920,7 +1926,8 @@ static void hpsa_remove_device(struct ctlr_info *h,
- static void adjust_hpsa_scsi_table(struct ctlr_info *h,
- 	struct hpsa_scsi_dev_t *sd[], int nsds)
- {
--	/* sd contains scsi3 addresses and devtypes, and inquiry
-+	/* 
-+	 * sd contains scsi3 addresses and devtypes, and inquiry
- 	 * data.  This function takes what's in sd to be the current
- 	 * reality and updates h->dev[] to reflect that reality.
- 	 */
-@@ -1953,7 +1960,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
- 
- 	spin_lock_irqsave(&h->devlock, flags);
- 
--	/* find any devices in h->dev[] that are not in
-+	/* 
-+	 * find any devices in h->dev[] that are not in
- 	 * sd[] and remove them from h->dev[], and for any
- 	 * devices which have changed, remove the old device
- 	 * info and add the new device info.
-@@ -1974,7 +1982,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
- 			changes++;
- 			hpsa_scsi_replace_entry(h, i, sd[entry],
- 				added, &nadded, removed, &nremoved);
--			/* Set it to NULL to prevent it from being freed
-+			/* 
-+			 * Set it to NULL to prevent it from being freed
- 			 * at the bottom of hpsa_update_scsi_devices()
- 			 */
- 			sd[entry] = NULL;
-@@ -1984,7 +1993,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
- 		i++;
- 	}
- 
--	/* Now, make sure every device listed in sd[] is also
-+	/* 
-+	 * Now, make sure every device listed in sd[] is also
- 	 * listed in h->dev[], adding them if they aren't found
- 	 */
- 
-@@ -1992,7 +2002,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
- 		if (!sd[i]) /* if already added above. */
- 			continue;
- 
--		/* Don't add devices which are NOT READY, FORMAT IN PROGRESS
-+		/* 
-+		 * Don't add devices which are NOT READY, FORMAT IN PROGRESS
- 		 * as the SCSI mid-layer does not handle such devices well.
- 		 * It relentlessly loops sending TUR at 3Hz, then READ(10)
- 		 * at 160Hz, and prevents the system from coming up.
-@@ -2036,7 +2047,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
- 
- 	spin_unlock_irqrestore(&h->devlock, flags);
- 
--	/* Monitor devices which are in one of several NOT READY states to be
-+	/* 
-+	 * Monitor devices which are in one of several NOT READY states to be
- 	 * brought online later. This must be done without holding h->devlock,
- 	 * so don't touch h->dev[]
- 	 */
-@@ -2047,7 +2059,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
- 			hpsa_monitor_offline_device(h, sd[i]->scsi3addr);
- 	}
- 
--	/* Don't notify scsi mid layer of any changes the first time through
-+	/* 
-+	 * Don't notify scsi mid layer of any changes the first time through
- 	 * (or if there are no changes) scsi_scan_host will do it later the
- 	 * first time through.
- 	 */
-@@ -2077,7 +2090,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
- 			continue;
- 		dev_warn(&h->pdev->dev,
- 			"addition failed %d, device not added.", rc);
--		/* now we have to remove it from h->dev,
-+		/* 
-+		 * now we have to remove it from h->dev,
- 		 * since it didn't get added to scsi mid layer
- 		 */
- 		fixup_botched_add(h, added[i]);
-@@ -2336,7 +2350,8 @@ static void hpsa_unmap_sg_chain_block(struct ctlr_info *h,
- }
- 
- 
--/* Decode the various types of errors on ioaccel2 path.
-+/* 
-+ * Decode the various types of errors on ioaccel2 path.
-  * Return 1 for any error that should generate a RAID path retry.
-  * Return 0 for errors that don't require a RAID path retry.
-  */
-@@ -2638,7 +2653,8 @@ static void complete_scsi_command(struct CommandList *cp)
- 	if (ei->CommandStatus == 0)
- 		return hpsa_cmd_free_and_done(h, cp, cmd);
- 
--	/* For I/O accelerator commands, copy over some fields to the normal
-+	/* 
-+	 * For I/O accelerator commands, copy over some fields to the normal
- 	 * CISS header used below for error handling.
- 	 */
- 	if (cp->cmd_type == CMD_IOACCEL1) {
-@@ -2651,7 +2667,8 @@ static void complete_scsi_command(struct CommandList *cp)
- 		memcpy(cp->Header.LUN.LunAddrBytes, c->CISS_LUN, 8);
- 		memcpy(cp->Request.CDB, c->CDB, cp->Request.CDBLen);
- 
--		/* Any RAID offload error results in retry which will use
-+		/* 
-+		 * Any RAID offload error results in retry which will use
- 		 * the normal I/O path so the controller can handle whatever's
- 		 * wrong.
- 		 */
-@@ -2696,7 +2713,8 @@ static void complete_scsi_command(struct CommandList *cp)
- 			}
- 			break;
- 		}
--		/* Problem was not a check condition
-+		/* 
-+		 * Problem was not a check condition
- 		 * Pass it up to the upper layers...
- 		 */
- 		if (ei->ScsiStatus) {
-@@ -2710,7 +2728,8 @@ static void complete_scsi_command(struct CommandList *cp)
- 			dev_warn(&h->pdev->dev, "cp %p SCSI status was 0. "
- 				"Returning no connection.\n", cp),
- 
--			/* Ordinarily, this case should never happen,
-+			/* 
-+			 * Ordinarily, this case should never happen,
- 			 * but there is a bug in some released firmware
- 			 * revisions that allows it to happen if, for
- 			 * example, a 4100 backplane loses power and
-@@ -2735,12 +2754,14 @@ static void complete_scsi_command(struct CommandList *cp)
- 	case CMD_INVALID: {
- 		/* print_bytes(cp, sizeof(*cp), 1, 0);
- 		print_cmd(cp); */
--		/* We get CMD_INVALID if you address a non-existent device
-+		/* 
-+		 * We get CMD_INVALID if you address a non-existent device
- 		 * instead of a selection timeout (no response).  You will
- 		 * see this if you yank out a drive, then try to access it.
- 		 * This is kind of a shame because it means that any other
- 		 * CMD_INVALID (e.g. driver bug) will get interpreted as a
--		 * missing target. */
-+		 * missing target. 
-+		 */
- 		cmd->result = DID_NO_CONNECT << 16;
- 	}
- 		break;
-@@ -2786,7 +2807,8 @@ static void complete_scsi_command(struct CommandList *cp)
- 			cmd->result = DID_ERROR << 16;
- 		break;
- 	case CMD_IOACCEL_DISABLED:
--		/* This only handles the direct pass-through case since RAID
-+		/* 
-+		 * This only handles the direct pass-through case since RAID
- 		 * offload is handled above.  Just attempt a retry.
- 		 */
- 		cmd->result = DID_SOFT_ERROR << 16;
-@@ -2959,7 +2981,8 @@ static void hpsa_scsi_interpret_error(struct ctlr_info *h,
- 		hpsa_print_cmd(h, "overrun condition", cp);
- 		break;
- 	case CMD_INVALID: {
--		/* controller unfortunately reports SCSI passthru's
-+		/* 
-+		 * controller unfortunately reports SCSI passthru's
- 		 * to non-existent targets as invalid commands.
- 		 */
- 		hpsa_print_cmd(h, "invalid command", cp);
-@@ -3135,9 +3158,11 @@ static bool hpsa_cmd_dev_match(struct ctlr_info *h, struct CommandList *c,
- 			match = true;
- 		} else {
- 			/* Possible RAID mode -- check each phys dev. */
--			/* FIXME:  Do we need to take out a lock here?  If
-+			/* 
-+			 * FIXME:  Do we need to take out a lock here?  If
- 			 * so, we could just call hpsa_get_pdisk_of_ioaccel2()
--			 * instead. */
-+			 * instead.
-+			 */
- 			for (i = 0; i < dev->nphysical_disks && !match; i++) {
- 				/* FIXME: an alternate test might be
- 				 *
-@@ -3870,7 +3895,8 @@ static int hpsa_get_volume_status(struct ctlr_info *h,
- 	return HPSA_VPD_LV_STATUS_UNSUPPORTED;
- }
- 
--/* Determine offline status of a volume.
-+/* 
-+ * Determine offline status of a volume.
-  * Return either:
-  *  0 (not offline)
-  *  0xff (offline for unknown reasons)
-@@ -4331,7 +4357,8 @@ static bool hpsa_skip_device(struct ctlr_info *h, u8 *lunaddrbytes,
- 
- static void hpsa_update_scsi_devices(struct ctlr_info *h)
- {
--	/* the idea here is we could get notified
-+	/* 
-+	 * the idea here is we could get notified
- 	 * that some devices have changed, so we do a report
- 	 * physical luns and report logical luns cmd, and adjust
- 	 * our list of devices accordingly.
-@@ -4383,7 +4410,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 			__func__);
- 	}
- 
--	/* We might see up to the maximum number of logical and physical disks
-+	/* 
-+	 * We might see up to the maximum number of logical and physical disks
- 	 * plus external target devices, and a device for the local RAID
- 	 * controller.
- 	 */
-@@ -4482,7 +4510,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 
- 		switch (this_device->devtype) {
- 		case TYPE_ROM:
--			/* We don't *really* support actual CD-ROM devices,
-+			/* 
-+			 * We don't *really* support actual CD-ROM devices,
- 			 * just "One Button Disaster Recovery" tape drive
- 			 * which temporarily pretends to be a CD-ROM drive.
- 			 * So we check that the device is really an OBDR tape
-@@ -4517,7 +4546,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 			ncurrent++;
- 			break;
- 		case TYPE_RAID:
--			/* Only present the Smartarray HBA as a RAID controller.
-+			/* 
-+			 * Only present the Smartarray HBA as a RAID controller.
- 			 * If it's a RAID controller other than the HBA itself
- 			 * (an external RAID controller, MSA500 or similar)
- 			 * don't present it.
-@@ -4863,7 +4893,8 @@ static void set_encrypt_ioaccel2(struct ctlr_info *h,
- 	/* Set the encryption enable flag, encoded into direction field. */
- 	cp->direction |= IOACCEL2_DIRECTION_ENCRYPT_MASK;
- 
--	/* Set encryption tweak values based on logical block address
-+	/* 
-+	 * Set encryption tweak values based on logical block address
- 	 * If block size is 512, tweak value is LBA.
- 	 * For other block sizes, tweak is (LBA * block size)/ 512)
- 	 */
-@@ -5257,7 +5288,8 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- 	case HPSA_RAID_0:
- 		break; /* nothing special to do */
- 	case HPSA_RAID_1:
--		/* Handles load balance across RAID 1 members.
-+		/* 
-+		 * Handles load balance across RAID 1 members.
- 		 * (2-drive R1 and R10 with even # of drives.)
- 		 * Appropriate for SSDs, not optimal for HDDs
- 		 * Ensure we have the correct raid_map.
-@@ -5271,7 +5303,8 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- 		dev->offload_to_mirror = !dev->offload_to_mirror;
- 		break;
- 	case HPSA_RAID_ADM:
--		/* Handles N-way mirrors  (R1-ADM)
-+		/* 
-+		 * Handles N-way mirrors  (R1-ADM)
- 		 * and R10 with # of drives divisible by 3.)
- 		 * Ensure we have the correct raid_map.
- 		 */
-@@ -5289,7 +5322,8 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- 			le16_to_cpu(map->layout_map_count) - 1)
- 			? 0 : offload_to_mirror + 1;
- 		dev->offload_to_mirror = offload_to_mirror;
--		/* Avoid direct use of dev->offload_to_mirror within this
-+		/* 
-+		 * Avoid direct use of dev->offload_to_mirror within this
- 		 * function since multiple threads might simultaneously
- 		 * increment it beyond the range of dev->layout_map_count -1.
- 		 */
-@@ -5484,14 +5518,16 @@ static int hpsa_ciss_submit(struct ctlr_info *h,
- 			TYPE_ATTR_DIR(TYPE_CMD, ATTR_SIMPLE, XFER_NONE);
- 		break;
- 	case DMA_BIDIRECTIONAL:
--		/* This can happen if a buggy application does a scsi passthru
-+		/* 
-+		 * This can happen if a buggy application does a scsi passthru
- 		 * and sets both inlen and outlen to non-zero. ( see
- 		 * ../scsi/scsi_ioctl.c:scsi_ioctl_send_command() )
- 		 */
- 
- 		c->Request.type_attr_dir =
- 			TYPE_ATTR_DIR(TYPE_CMD, ATTR_SIMPLE, XFER_RSVD);
--		/* This is technically wrong, and hpsa controllers should
-+		/* 
-+		 * This is technically wrong, and hpsa controllers should
- 		 * reject it with CMD_INVALID, which is the most correct
- 		 * response, but non-fibre backends appear to let it
- 		 * slide by, and give the same results as if this field
-@@ -5788,7 +5824,8 @@ static void hpsa_scan_start(struct Scsi_Host *sh)
- 		h->scan_waiting = 1;
- 		spin_unlock_irqrestore(&h->scan_lock, flags);
- 		wait_event(h->scan_wait_queue, h->scan_finished);
--		/* Note: We don't need to worry about a race between this
-+		/* 
-+		 * Note: We don't need to worry about a race between this
- 		 * thread and driver unload because the midlayer will
- 		 * have incremented the reference count, so unload won't
- 		 * happen if we're in here.
-@@ -6018,7 +6055,8 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
- 	return rc;
- }
- 
--/* Need at least one of these error handlers to keep ../scsi/hosts.c from
-+/* 
-+ * Need at least one of these error handlers to keep ../scsi/hosts.c from
-  * complaining.  Doing a host- or bus-reset can't do anything good here.
-  */
- static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
-@@ -6140,7 +6178,8 @@ static struct CommandList *cmd_tagged_alloc(struct ctlr_info *h,
- 	if (idx < HPSA_NRESERVED_CMDS || idx >= h->nr_cmds) {
- 		dev_err(&h->pdev->dev, "Bad block tag: %d not in [%d..%d]\n",
- 			idx, HPSA_NRESERVED_CMDS, h->nr_cmds - 1);
--		/* The index value comes from the block layer, so if it's out of
-+		/* 
-+		 * The index value comes from the block layer, so if it's out of
- 		 * bounds, it's probably not our bug.
- 		 */
- 		BUG();
-@@ -6688,7 +6727,8 @@ static void hpsa_send_host_reset(struct ctlr_info *h, u8 reset_type)
- 	c->Request.CDB[1] = reset_type; /* fill_cmd defaults to target reset */
- 	c->waiting = NULL;
- 	enqueue_cmd_and_start_io(h, c);
--	/* Don't wait for completion, the reset won't complete.  Don't free
-+	/* 
-+	 * Don't wait for completion, the reset won't complete.  Don't free
- 	 * the command either.  This is the last command we will send before
- 	 * re-initializing everything, so it doesn't matter and won't leak.
- 	 */
-@@ -6984,7 +7024,8 @@ static inline void process_indexed_cmd(struct ctlr_info *h,
- 	}
- }
- 
--/* Some controllers, like p400, will give us one interrupt
-+/* 
-+ * Some controllers, like p400, will give us one interrupt
-  * after a soft reset, even if we turned interrupts off.
-  * Only need to check for this in the hpsa_xxx_discard_completions
-  * functions.
-@@ -7083,7 +7124,8 @@ static irqreturn_t do_hpsa_intr_msi(int irq, void *queue)
- 	return IRQ_HANDLED;
- }
- 
--/* Send a message CDB to the firmware. Careful, this only works
-+/* 
-+ * Send a message CDB to the firmware. Careful, this only works
-  * in simple mode, not performant mode due to the tag lookup.
-  * We only ever use this immediately after a controller reset.
-  */
-@@ -7108,7 +7150,8 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
- 	if (vaddr == NULL)
- 		return -ENOMEM;
- 
--	/* The Inbound Post Queue only accepts 32-bit physical addresses for the
-+	/* 
-+	 * The Inbound Post Queue only accepts 32-bit physical addresses for the
- 	 * CCISS commands, so they must be allocated from the lower 4GiB of
- 	 * memory.
- 	 */
-@@ -7124,7 +7167,8 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
- 		return -ENOMEM;
- 	}
- 
--	/* This must fit, because of the 32-bit consistent DMA mask.  Also,
-+	/* 
-+	 * This must fit, because of the 32-bit consistent DMA mask.  Also,
- 	 * although there's no guarantee, we assume that the address is at
- 	 * least 4-byte aligned (most likely, it's page-aligned).
- 	 */
-@@ -7158,7 +7202,8 @@ static int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
- 
- 	iounmap(vaddr);
- 
--	/* we leak the DMA buffer here ... no choice since the controller could
-+	/* 
-+	 * we leak the DMA buffer here ... no choice since the controller could
- 	 *  still complete the command.
- 	 */
- 	if (i == HPSA_MSG_SEND_RETRY_LIMIT) {
-@@ -7187,14 +7232,16 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
- {
- 
- 	if (use_doorbell) {
--		/* For everything after the P600, the PCI power state method
-+		/* 
-+		 * For everything after the P600, the PCI power state method
- 		 * of resetting the controller doesn't work, so we have this
- 		 * other way using the doorbell register.
- 		 */
- 		dev_info(&pdev->dev, "using doorbell to reset controller\n");
- 		writel(use_doorbell, vaddr + SA5_DOORBELL);
- 
--		/* PMC hardware guys tell us we need a 10 second delay after
-+		/* 
-+		 * PMC hardware guys tell us we need a 10 second delay after
- 		 * doorbell reset and before any attempt to talk to the board
- 		 * at all to ensure that this actually works and doesn't fall
- 		 * over in some weird corner cases.
-@@ -7202,13 +7249,15 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
- 		msleep(10000);
- 	} else { /* Try to do it the PCI power state way */
- 
--		/* Quoting from the Open CISS Specification: "The Power
-+		/* 
-+		 * Quoting from the Open CISS Specification: "The Power
- 		 * Management Control/Status Register (CSR) controls the power
- 		 * state of the device.  The normal operating state is D0,
- 		 * CSR=00h.  The software off state is D3, CSR=03h.  To reset
- 		 * the controller, place the interface device in D3 then to D0,
- 		 * this causes a secondary PCI reset which will reset the
--		 * controller." */
-+		 * controller." 
-+		 */
- 
- 		int rc = 0;
- 
-@@ -7278,7 +7327,8 @@ static int controller_reset_failed(struct CfgTable __iomem *cfgtable)
- 		return -ENOMEM;
- 	driver_ver = old_driver_ver + size;
- 
--	/* After a reset, the 32 bytes of "driver version" in the cfgtable
-+	/* 
-+	 * After a reset, the 32 bytes of "driver version" in the cfgtable
- 	 * should have been changed, otherwise we know the reset failed.
- 	 */
- 	init_driver_version(old_driver_ver, size);
-@@ -7287,7 +7337,8 @@ static int controller_reset_failed(struct CfgTable __iomem *cfgtable)
- 	kfree(old_driver_ver);
- 	return rc;
- }
--/* This does a hard reset of the controller using PCI power management
-+/* 
-+ * This does a hard reset of the controller using PCI power management
-  * states or the using the doorbell register.
-  */
- static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev, u32 board_id)
-@@ -7303,7 +7354,8 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev, u32 board_id)
- 	u32 use_doorbell;
- 	u16 command_register;
- 
--	/* For controllers as old as the P600, this is very nearly
-+	/* 
-+	 * For controllers as old as the P600, this is very nearly
- 	 * the same thing as
- 	 *
- 	 * pci_save_state(pci_dev);
-@@ -7352,7 +7404,8 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev, u32 board_id)
- 	if (rc)
- 		goto unmap_cfgtable;
- 
--	/* If reset via doorbell register is supported, use that.
-+	/* 
-+	 * If reset via doorbell register is supported, use that.
- 	 * There are two such methods.  Favor the newest method.
- 	 */
- 	misc_fw_support = readl(&cfgtable->misc_fw_support);
-@@ -7376,8 +7429,10 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev, u32 board_id)
- 	pci_restore_state(pdev);
- 	pci_write_config_word(pdev, 4, command_register);
- 
--	/* Some devices (notably the HP Smart Array 5i Controller)
--	   need a little pause here */
-+	/* 
-+	 * Some devices (notably the HP Smart Array 5i Controller) 
-+	 * need a little pause here 
-+	 */
- 	msleep(HPSA_POST_RESET_PAUSE_MSECS);
- 
- 	rc = hpsa_wait_for_board_state(pdev, vaddr, BOARD_READY);
-@@ -7407,9 +7462,9 @@ static int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev, u32 board_id)
- }
- 
- /*
-- *  We cannot read the structure directly, for portability we must use
-- *   the io functions.
-- *   This is for debug only.
-+ * We cannot read the structure directly, for portability we must use
-+ *  the io functions.
-+ *  This is for debug only.
-  */
- static void print_cfg_table(struct device *dev, struct CfgTable __iomem *tb)
- {
-@@ -7506,7 +7561,8 @@ static void hpsa_setup_reply_map(struct ctlr_info *h)
- 		h->reply_map[cpu] = 0;
- }
- 
--/* If MSI/MSI-X is supported by the kernel we will try to enable it on
-+/* 
-+ * If MSI/MSI-X is supported by the kernel we will try to enable it on
-  * controllers that are capable. If not, we use legacy INTx mode.
-  */
- static int hpsa_interrupt_mode(struct ctlr_info *h)
-@@ -7640,9 +7696,10 @@ static void hpsa_free_cfgtables(struct ctlr_info *h)
- 	}
- }
- 
--/* Find and map CISS config table and transfer table
--+ * several items must be unmapped (freed) later
--+ * */
-+/* 
-+ * Find and map CISS config table and transfer table
-+ * several items must be unmapped (freed) later.
-+ */
- static int hpsa_find_cfgtables(struct ctlr_info *h)
- {
- 	u64 cfg_offset;
-@@ -7697,7 +7754,8 @@ static void hpsa_get_max_perf_mode_cmds(struct ctlr_info *h)
- 	}
- }
- 
--/* If the controller reports that the total max sg entries is greater than 512,
-+/* 
-+ * If the controller reports that the total max sg entries is greater than 512,
-  * then we know that chained SG blocks work.  (Original smart arrays did not
-  * support chained SG blocks and would return zero for max sg entries.)
-  */
-@@ -7706,7 +7764,8 @@ static int hpsa_supports_chained_sg_blocks(struct ctlr_info *h)
- 	return h->maxsgentries > 512;
- }
- 
--/* Interrogate the hardware for some limits:
-+/* 
-+ * Interrogate the hardware for some limits:
-  * max commands, max SG elements without chaining, and with chaining,
-  * SG chain block size, etc.
-  */
-@@ -7764,7 +7823,8 @@ static inline void hpsa_set_driver_support_bits(struct ctlr_info *h)
- 	writel(driver_support, &(h->cfgtable->driver_support));
- }
- 
--/* Disable DMA prefetch for the P600.  Otherwise an ASIC bug may result
-+/* 
-+ * Disable DMA prefetch for the P600.  Otherwise an ASIC bug may result
-  * in a prefetch beyond physical memory.
-  */
- static inline void hpsa_p600_dma_prefetch_quirk(struct ctlr_info *h)
-@@ -7804,7 +7864,8 @@ static int hpsa_wait_for_mode_change_ack(struct ctlr_info *h)
- 	u32 doorbell_value;
- 	unsigned long flags;
- 
--	/* under certain very rare conditions, this can take awhile.
-+	/* 
-+	 * under certain very rare conditions, this can take awhile.
- 	 * (e.g.: hot replace a failed 144GB drive in a RAID 5 set right
- 	 * as we enter this code.)
- 	 */
-@@ -7974,7 +8035,8 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev, u32 board_id)
- 	if (!reset_devices)
- 		return 0;
- 
--	/* kdump kernel is loading, we don't know in which state is
-+	/* 
-+	 * kdump kernel is loading, we don't know in which state is
- 	 * the pci interface. The dev->enable_cnt is equal zero
- 	 * so we call enable+disable, wait a while and switch it on.
- 	 */
-@@ -8004,7 +8066,8 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev, u32 board_id)
- 	/* Reset the controller with a PCI power-cycle or via doorbell */
- 	rc = hpsa_kdump_hard_reset_controller(pdev, board_id);
- 
--	/* -ENOTSUPP here means we cannot reset the controller
-+	/* 
-+	 * -ENOTSUPP here means we cannot reset the controller
- 	 * but it's already (and still) up and running in
- 	 * "performant mode".  Or, it might be 640x, which can't reset
- 	 * due to concerns about shared bbwc between 6402/6404 pair.
 -- 
-1.8.3.1
-
+Martin K. Petersen	Oracle Linux Engineering
