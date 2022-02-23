@@ -2,142 +2,131 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43F4DC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Feb 2022 08:19:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E25CC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Feb 2022 08:24:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235268AbiBWIT5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Feb 2022 03:19:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33552 "EHLO
+        id S238135AbiBWIYb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Feb 2022 03:24:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232535AbiBWIT4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Feb 2022 03:19:56 -0500
-Received: from mail-il1-x12e.google.com (mail-il1-x12e.google.com [IPv6:2607:f8b0:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95F6F3B019
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2022 00:19:27 -0800 (PST)
-Received: by mail-il1-x12e.google.com with SMTP id y5so2307705ill.13
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2022 00:19:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=rWF249HDw3OSkuca4KRUS0PYLBsXXiRbkPdqsbcD0wQ=;
-        b=OlfIJaepoMaoJdYH69P4QZsBwBVi6yFAFklYp97MukvJ4sziPFlcobU4eYkOZCEk8z
-         3E7JQ7BmaAH2259d201t30ZwScQIuUsxiglUJ3ID7EsmY5hOYdOZOYIZDiWLaa/lKxin
-         WpyG3i8nu2dA7N/WpavNuuiHlTC1Vvod4WqjQz+ds/jyVdVy26Aizz5xyVqkxYQNqNZn
-         zISHHYND4ac9IK+gxX1gTBjDz4Oz6lmkhR2ntazG+ohskUzH0G+zwDlHXOxknrrH9sHy
-         L6XSfiriRKhytRaD8U2eDpF9jiNXGKuv3+aj0yPRfkbwORRDR32WnmVgZ+u8aJHgq99/
-         mI9w==
+        with ESMTP id S235755AbiBWIYa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Feb 2022 03:24:30 -0500
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B3715A590
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2022 00:24:03 -0800 (PST)
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com [209.85.218.71])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id A76B740017
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2022 08:24:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1645604641;
+        bh=OUH0bTj/LUGqclp4FyWkS6uNhE/OcvDSgnjHRV7vNUM=;
+        h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+         In-Reply-To:Content-Type;
+        b=JU82KO191cdrgWJg0J+I4iO3K9Gx66UhqZp8+3CY/Sv5aJlcEnS2LUtq384fzfEYt
+         we8C4pXQL6ljFwxrIy7azBYL7MT2oNy061lxsNG7eyvpj1LL2jiZ2gzT5XPqXghtGR
+         RGX5HmpdQhrnEUkjGP7NQEEZe2B3H6SciC7dNix+sii7FkOOZ3+C3JFffagKNud/Lo
+         gr3Qmxm2jeQ07+eboVA8eSiR4uEt9txcbCJMs4JTx+1jXuD9wMQF/KeBLpC6MgxO2g
+         aHsUqyw3uKyL/4kcRjsFkZO4Pg2k0MdZnmlxweK7CRRAmr9JG63oHDF1T11WBA+FKW
+         lYLt9XaKAdpvw==
+Received: by mail-ej1-f71.google.com with SMTP id kw5-20020a170907770500b006ba314a753eso6756642ejc.21
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2022 00:24:01 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=rWF249HDw3OSkuca4KRUS0PYLBsXXiRbkPdqsbcD0wQ=;
-        b=MW8EOunqs6oEG1myDLdwNNAxLGMMV8mnXBHwiit/Ox3FDViFsCR5GShWk4TQ5Hr7bg
-         e7BiGCtvf/XSxMwk7mou1bzmFPWixFaC/hXG6obv92nmoQv3dGfEcW7GuDZm+uglIezv
-         E7CPHWfnI8gD6G1bpdZ6Bj+EFbQgoV8akcBPr7/W4JBwyWTetBGA0AnN+ycysn3Vn8A3
-         uaPJEPfDLZoGrnkWSfQG3O1Xo/q6XlrDcWnpUbnVKIiQB0WJVxoWUXH8Kr/SmdDqizd3
-         N0Fj020aadMU5FC3IM0m0giYxdreGrCrukai4MwCbyQ8pBFt2RddPYOKlBrWQc3QDcnt
-         +27w==
-X-Gm-Message-State: AOAM533fsNCr8gcSohKGbJNp3JrbBKf1dn0me1QzKGN39GUN/LhEiV09
-        RwqT979mM7s4rRmJfi9x4dwAtyBWPJJ3PaHiUD4=
-X-Google-Smtp-Source: ABdhPJxuNdq10wGLR+JpWVcMhXrVwFV8s5FFrZexOm7pnIeP4Nlgb1zfmeuX792YfdMbMAiZLVNLPBDRI3WUrcWhx7s=
-X-Received: by 2002:a05:6e02:1b0a:b0:2bf:4cbb:4ff4 with SMTP id
- i10-20020a056e021b0a00b002bf4cbb4ff4mr23749284ilv.266.1645604367006; Wed, 23
- Feb 2022 00:19:27 -0800 (PST)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=OUH0bTj/LUGqclp4FyWkS6uNhE/OcvDSgnjHRV7vNUM=;
+        b=jSN4wJYVSsXSpn9lqLVy/ZL8mRWo2ajnbIX1s+SSKQDDLOcTH1yTG1XsxBfMQ/CyPM
+         QaaDzlAh7RrmiphJr0efdl4IjIFqE0k29d4y4yIk5YwdRWYwzoHzBeuoL0IS8h8m5OqT
+         Xo4gLOpk/h4i13EWn30LwjJmPnFJyuwaaTSk7JFlZ1vPUV2ZHD6YOQiYfjEgE++Fd35V
+         HhpXHO38xXe8y4zc6AmIeKf7X0mqOAnKpeoeFXN0riO+IaXmVZavFfj9pJ9Zk94SVLsM
+         EjqmAmrpZg0JGlHzAFqVOvRmv4YjtXyjxD7RngpTF69cZKAJVWp2bXmMJ05dVa9PBg4w
+         vD+Q==
+X-Gm-Message-State: AOAM530qfprAZKdwGFIAUE7gj5IGVLJD00kU+2/IYlT1msrGMVGGojlN
+        Cs0CNKc+WJoDZGQVWQDXeNGM+J4ptZOeRX72KhOqOluxqhdNfadWhZJdE9+FIZNf7+ks2G8NIiy
+        w1xaIF2hiHm3W80NQ6bioKt5Py9Kkahuokobxwx0=
+X-Received: by 2002:a17:906:3109:b0:6cc:7a1:8db0 with SMTP id 9-20020a170906310900b006cc07a18db0mr22106107ejx.266.1645604640501;
+        Wed, 23 Feb 2022 00:24:00 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJzmlOe0uOWGCSaW649hZ3pFA8AEz4z12SvTxoyLOxSd5Mf7R4zHsjAvMUopfEcfA/lfYgjr1A==
+X-Received: by 2002:a17:906:3109:b0:6cc:7a1:8db0 with SMTP id 9-20020a170906310900b006cc07a18db0mr22106094ejx.266.1645604640319;
+        Wed, 23 Feb 2022 00:24:00 -0800 (PST)
+Received: from [192.168.0.125] (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
+        by smtp.gmail.com with ESMTPSA id p16sm1162411ejn.33.2022.02.23.00.23.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Feb 2022 00:23:59 -0800 (PST)
+Message-ID: <968cf18e-af5c-0503-79b1-a622938d4e0a@canonical.com>
+Date:   Wed, 23 Feb 2022 09:23:58 +0100
 MIME-Version: 1.0
-References: <CAFrqyV4COFCGCRN3bXjoSnudMtr0JhhFviUj8QtEZfJq4ZxinA@mail.gmail.com>
- <yq1tue0mn3l.fsf@ca-mkp.ca.oracle.com> <CAFrqyV59OHp3mWLg87wuymJTBXG2i_QwZjUFNtrB4cpt98tgaw@mail.gmail.com>
- <yq1lezbk7v7.fsf@ca-mkp.ca.oracle.com> <CAFrqyV5O5u3_BsrOY_E2qfSNWfz5CS0-bymMDGPx00y-f5SezA@mail.gmail.com>
- <yq1tudzidng.fsf@ca-mkp.ca.oracle.com> <CAFrqyV6hhTDW9m+azsLGth+Jok=KFc+pkoGnTrsr5qDCazY-Kg@mail.gmail.com>
- <CAFrqyV4n8r6TwNsETfVTv+F_nn8Hg=HuZ6OHgmG_HxPVcvfPzA@mail.gmail.com>
- <yq1wnithm6g.fsf@ca-mkp.ca.oracle.com> <CAFrqyV5Pd8LY_wbNOiwjehSURHHmwidW11zjDdRHNBenXrNVaw@mail.gmail.com>
- <b10a0396-8f38-d388-f914-b36178408953@opensource.wdc.com>
-In-Reply-To: <b10a0396-8f38-d388-f914-b36178408953@opensource.wdc.com>
-From:   Sven Hugi <hugi.sven@gmail.com>
-Date:   Wed, 23 Feb 2022 09:19:15 +0100
-Message-ID: <CAFrqyV4PPDwVhbwyT7mo-QswQmruzVXYNRrTL9APQ_j2O36COQ@mail.gmail.com>
-Subject: Re: Samsung t5 / t3 problem with ncq trim
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH v2 09/15] scsi: ufs: deprecate 'freq-table-hz' property
+Content-Language: en-US
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        'Avri Altman' <avri.altman@wdc.com>,
+        'Rob Herring' <robh+dt@kernel.org>,
+        'Andy Gross' <agross@kernel.org>,
+        'Bjorn Andersson' <bjorn.andersson@linaro.org>,
+        'Wei Xu' <xuwei5@hisilicon.com>, 'Nishanth Menon' <nm@ti.com>,
+        'Vignesh Raghavendra' <vigneshr@ti.com>,
+        'Tero Kristo' <kristo@kernel.org>,
+        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
+        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
+        'Jan Kotas' <jank@cadence.com>, 'Li Wei' <liwei213@huawei.com>,
+        'Stanley Chu' <stanley.chu@mediatek.com>,
+        'Yaniv Gardi' <ygardi@codeaurora.org>,
+        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+References: <20220222145854.358646-1-krzysztof.kozlowski@canonical.com>
+ <CGME20220222150007epcas5p22f05e6c8e80a5ad18a9528cd0ead865d@epcas5p2.samsung.com>
+ <20220222145854.358646-10-krzysztof.kozlowski@canonical.com>
+ <0c8b01d8280b$868abc20$93a03460$@samsung.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+In-Reply-To: <0c8b01d8280b$868abc20$93a03460$@samsung.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thx for the tip.
-I was finally able to test it.
-The disk seems to work now correctly.
+On 22/02/2022 17:44, Alim Akhtar wrote:
+> Hi Krzysztof
+> 
+>> -----Original Message-----
+>> From: Krzysztof Kozlowski [mailto:krzysztof.kozlowski@canonical.com]
+>> Sent: Tuesday, February 22, 2022 8:29 PM
+>> To: Alim Akhtar <alim.akhtar@samsung.com>; Avri Altman
+>> <avri.altman@wdc.com>; Rob Herring <robh+dt@kernel.org>; Krzysztof
+>> Kozlowski <krzysztof.kozlowski@canonical.com>; Andy Gross
+>> <agross@kernel.org>; Bjorn Andersson <bjorn.andersson@linaro.org>; Wei
+>> Xu <xuwei5@hisilicon.com>; Nishanth Menon <nm@ti.com>; Vignesh
+>> Raghavendra <vigneshr@ti.com>; Tero Kristo <kristo@kernel.org>; James E.J.
+>> Bottomley <jejb@linux.ibm.com>; Martin K. Petersen
+>> <martin.petersen@oracle.com>; Jan Kotas <jank@cadence.com>; Li Wei
+>> <liwei213@huawei.com>; Stanley Chu <stanley.chu@mediatek.com>; Yaniv
+>> Gardi <ygardi@codeaurora.org>; linux-scsi@vger.kernel.org;
+>> devicetree@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
+>> msm@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-samsung-
+>> soc@vger.kernel.org; linux-mediatek@lists.infradead.org
+>> Subject: [PATCH v2 09/15] scsi: ufs: deprecate 'freq-table-hz' property
+>>
+>> The 'freq-table-hz' is not correct in DT schema, because '-hz' suffix
+> defines
+>> uint32 type, not an array.  Therefore deprecate 'freq-table-hz'
+>> and use 'freq-table' instead.
+>>
+> May be once all the dts change migrate to using 'freq-table', just remove
+> 'freq-table-hz' from driver.
 
-So, i guess i slap the person, who told me, that the disks have new
-firmware on it... xD
-
-Am Sa., 22. Jan. 2022 um 02:05 Uhr schrieb Damien Le Moal
-<damien.lemoal@opensource.wdc.com>:
->
-> On 1/22/22 02:23, Sven Hugi wrote:
-> > Hello Martin
-> >
-> > I just don't get it, why i get the same problems, as reported with the
-> > 850 on the t5...
-> > I mean it's the 2nd t5 i used and i used it on 4 different devices (+
-> > on the school computer).
-> > The t5 i currently have, runs really slow on linux and more or less
-> > without problem on windows, the one i had before behaved really
-> > similar, till it started to corrupt vm's and then also slow down on
-> > windows...
-> > Do you have an idea, what that could be?, or does it sound like i just
-> > got 2 defective disks?
->
-> It may be a drive firmware bug. Note that this article:
->
-> https://www.tomshardware.com/reviews/samsung-t5-portable-ssd,5163-3.html
->
-> mentions a similar performance problems with older versions of the T5
-> that do not have TRIM support. It is mentioned that newer versions have
-> TRIM support though.
->
-> So it may be worthwhile to check if a firmware update is available for
-> your drive.
->
->
-> >
-> > Best regards
-> >
-> > Sven Hugi
-> >
-> > Am Fr., 21. Jan. 2022 um 03:15 Uhr schrieb Martin K. Petersen
-> > <martin.petersen@oracle.com>:
-> >>
-> >>
-> >> Sven,
-> >>
-> >>>  -> sudo sg_readcap -l sda
-> >>> Read Capacity results:
-> >>>    Protection: prot_en=0, p_type=0, p_i_exponent=0
-> >>>    Logical block provisioning: lbpme=0, lbprz=0
-> >>>    Last LBA=976773167 (0x3a38602f), Number of logical blocks=976773168
-> >>>    Logical block length=512 bytes
-> >>
-> >>> lbpme=0...
-> >>> so, i guess it's not because of trim...
-> >>
-> >> Correct, Linux wouldn't be sending trims to that drive.
-> >>
-> >> --
-> >> Martin K. Petersen      Oracle Linux Engineering
-> >
-> >
-> >
->
->
-> --
-> Damien Le Moal
-> Western Digital Research
+At some point in the future 'freq-table-hz' parsing could be removed,
+but now you have both old and new DTS, so it should stay. Also for DTB
+compatibility.
 
 
-
--- 
-Sven Hugi
-
-github.com/ExtraTNT
+Best regards,
+Krzysztof
