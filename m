@@ -2,107 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 717FEC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Feb 2022 23:08:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2191EC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Feb 2022 00:06:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233808AbiBVXIW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Feb 2022 18:08:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35838 "EHLO
+        id S229747AbiBWAG6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Feb 2022 19:06:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231131AbiBVXIV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 18:08:21 -0500
-Received: from wout2-smtp.messagingengine.com (wout2-smtp.messagingengine.com [64.147.123.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03A4C8BF1C;
-        Tue, 22 Feb 2022 15:07:54 -0800 (PST)
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.west.internal (Postfix) with ESMTP id 539063201ECF;
-        Tue, 22 Feb 2022 18:07:52 -0500 (EST)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Tue, 22 Feb 2022 18:07:52 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:from:from
-        :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
-        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=REt9l10PYX2xZE9ln
-        yPPgeY5X7bPaOgLYZ0HVoEzyuQ=; b=WPmVfYgZM4weF/NmmXVaOdC6SS7ALfywf
-        SpX54kiexstX4iGLrAJrL/EiKsomWLjDsHuOu/6DiGXHZmNJHSf8GHQKiJbKFtTC
-        VGKWmvz1Ap9LemoCnFsN9uHcs5cFs301XAAhsSDHO0iBile7O1ILjEJZc/We2eD6
-        UM1pnUXefZ02GmwgzzD6FdLpCEStrfLzp1/AigmVNCF+2miXfTKupZvQq+To0AWr
-        I9/UHGflVev0kUqUygaopNGAPoSs+JMUkAB3WlfphXELOYDkNc905VOMLiewZu0/
-        LffMrx89h9tRM5zzX3rU+8xuUtQ3muunbjCQQ94CKjKdPtK02vdRg==
-X-ME-Sender: <xms:x2wVYqcVhofPy8wS_QIjVPIiT-sDx7bfx1bsZLs7jcKgkWFajRshvw>
-    <xme:x2wVYkNedTtomgfijSZLAKy8ufbFc0bFYUX5y2AtKcUyVJV5J3JlqUYeg5FixBAn2
-    KbRgxi58OriaXedUdo>
-X-ME-Received: <xmr:x2wVYriszbplnFu0UenkfI-mGcByqUUw9i2WD3o8F6_v59wqhJMWBuzLcwi3mHoRGMH7OJ8BozwUBEp6DCWPc3j7y0MJcOIzlGs>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddrkeelgddtgecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpeffhffvufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcuvfhh
-    rghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrghtth
-    gvrhhnpeffudfhgeefvdeitedugfelueegheekkeefveffhfeiveetledvhfdtveffteeu
-    udenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehfth
-    hhrghinheslhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:x2wVYn9GQ2GJSC_Z1K-EpB_lrkS8W0iTy5J8wa5zrT7nuM0SKhciuw>
-    <xmx:x2wVYmviUjZ20LRPuZPO2nyfN0V8GrlYznynY0v9kztKRdZaeNOPqg>
-    <xmx:x2wVYuElQZ7sTQ3JuvbmLppZ_ZXHz0xd9wp7gj2u7eubIMgwlNeYUA>
-    <xmx:x2wVYqIGGvsdN0W0syQElVOzoJ8tdCp5ULb7wazyu9m7zrNUB7aDYw>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 22 Feb 2022 18:07:49 -0500 (EST)
-Date:   Wed, 23 Feb 2022 10:08:08 +1100 (AEDT)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     Christoph Hellwig <hch@infradead.org>
-cc:     "Juergen E. Fischer" <fischer@norbit.de>,
+        with ESMTP id S229544AbiBWAG4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2022 19:06:56 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69FB1344D6
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Feb 2022 16:06:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=FmPtA1MFZVEzbbIV6thV2rAg0Vph8etTxNU5rLmnHRw=; b=Lc8fZJTnzqja/TuhCEC7dYhs+D
+        MkHZks9EIAFuGGBx6dBvCX/pD/QHJJGiO0COy813Vs+3M3Jcp9jgBjOV/ytV27mb2Otr1wHvaG6cj
+        faQOqOBthXHPq710TPCkyR4wCo6XLOV53Im20neaPEKfJgcYWVgHOTzhlS76XBcYR3am3nv3zDkb8
+        iJn0WYsf0z55pGCKHHDSgjFFWCwOmfXlVW5RiAldX25tKkDDp5KKvr8vZ+7js5v4N9byp8ILgOTCx
+        1ysX6qV6HNfzlasaOXgzn8R1c+wHfxuIG4ma4wn9Hx0als8fvdM5HlD4UvZsIHaQC730FfIFsfJ+B
+        QT2+bMuQ==;
+Received: from [2601:1c0:6280:3f0::aa0b] (helo=bombadil.infradead.org)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nMfAl-00C0MU-Qd; Wed, 23 Feb 2022 00:06:23 +0000
+From:   Randy Dunlap <rdunlap@infradead.org>
+To:     linux-scsi@vger.kernel.org
+Cc:     patches@lists.linux.dev, Randy Dunlap <rdunlap@infradead.org>,
+        Igor Zhbanov <i.zhbanov@omprussia.ru>,
+        "Juergen E. Fischer" <fischer@norbit.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] aha152x: Clean up struct scsi_pointer usage
-In-Reply-To: <YhSYDC4YMEx0XCYY@infradead.org>
-Message-ID: <62241a-be3-ed61-965f-afec1452f2c4@linux-m68k.org>
-References: <4e17ff7295a96e31ed21ccb250c65b56c173b530.1645484982.git.fthain@linux-m68k.org> <YhSYDC4YMEx0XCYY@infradead.org>
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: aha152x: fix aha152x_setup() __setup handler return value
+Date:   Tue, 22 Feb 2022 16:06:23 -0800
+Message-Id: <20220223000623.5920-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Christoph,
+__setup() handlers should return 1 if the command line option is handled
+and 0 if not (or maybe never return 0; doing so just pollutes init's
+environment with strings that are not init arguments/parameters).
 
-On Tue, 22 Feb 2022, Christoph Hellwig wrote:
+Return 1 from aha152x_setup() to indicate that the boot option has been
+handled.
 
-> On Tue, Feb 22, 2022 at 10:09:42AM +1100, Finn Thain wrote:
-> > Bring aha152x into line with 10 other drivers which assign
-> > scsi_host_template.cmd_size = sizeof(struct scsi_pointer)
-> > and avoid the "struct foo { struct bar; };" silliness.
-> > 
-> > Remove a pointless scsi_pointer->have_data_in assignment.
-> 
-> I think this going in the wrong direction.  The scsi_pointer should go 
-> away entirelym and the fields actually used by the driver should move 
-> into the aha152x_cmd_priv structure instead.
-> 
-> Same for all other drivers still using the scsi_pointer.
-> 
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Reported-by: Igor Zhbanov <i.zhbanov@omprussia.ru>
+Link: lore.kernel.org/r/64644a2f-4a20-bab3-1e15-3b2cdd0defe3@omprussia.ru
+Cc: "Juergen E. Fischer" <fischer@norbit.de>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+---
+Builds but not tested -- no such hardware.
 
-This patch is addressing an inconsistency in the patches already accepted 
-into 5.18/scsi-staging in Martin's repo.
+ drivers/scsi/aha152x.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-A number of Bart's patches had the same effect as the patch you're 
-objecting to here. Hence,
-
-$ git grep "cmd_size.*scsi_pointer"
-drivers/scsi/a2091.c:               .cmd_size = sizeof(struct scsi_pointer),
-drivers/scsi/a3000.c:	            .cmd_size = sizeof(struct scsi_pointer),
-drivers/scsi/fdomain.c:             .cmd_size = sizeof(struct scsi_pointer),
-drivers/scsi/gvp11.c:	            .cmd_size = sizeof(struct scsi_pointer),
-drivers/scsi/imm.c:                 .cmd_size = sizeof(struct scsi_pointer),
-drivers/scsi/mvme147.c:             .cmd_size = sizeof(struct scsi_pointer),
-drivers/scsi/pcmcia/nsp_cs.c:       .cmd_size = sizeof(struct scsi_pointer),
-drivers/scsi/pcmcia/sym53c500_cs.c: .cmd_size = sizeof(struct scsi_pointer),
-drivers/scsi/ppa.c:                 .cmd_size = sizeof(struct scsi_pointer),
-drivers/scsi/sgiwd93.c:             .cmd_size = sizeof(struct scsi_pointer),
-
-Since that series was very popular with reviewers, and being that this 
-patch is just more of the same, I have no idea as to how to proceed.
-
-Are you asking me to rework Bart's series? Or are you asking Martin to 
-drop it, or both, or neither...
+--- linux-next-20220217.orig/drivers/scsi/aha152x.c
++++ linux-next-20220217/drivers/scsi/aha152x.c
+@@ -3375,13 +3375,11 @@ static int __init aha152x_setup(char *st
+ 	setup[setup_count].synchronous = ints[0] >= 6 ? ints[6] : 1;
+ 	setup[setup_count].delay       = ints[0] >= 7 ? ints[7] : DELAY_DEFAULT;
+ 	setup[setup_count].ext_trans   = ints[0] >= 8 ? ints[8] : 0;
+-	if (ints[0] > 8) {                                                /*}*/
++	if (ints[0] > 8)
+ 		printk(KERN_NOTICE "aha152x: usage: aha152x=<IOBASE>[,<IRQ>[,<SCSI ID>"
+ 		       "[,<RECONNECT>[,<PARITY>[,<SYNCHRONOUS>[,<DELAY>[,<EXT_TRANS>]]]]]]]\n");
+-	} else {
++	else
+ 		setup_count++;
+-		return 0;
+-	}
+ 
+ 	return 1;
+ }
