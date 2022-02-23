@@ -2,49 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7338EC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Feb 2022 07:36:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83141C4167B
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Feb 2022 07:47:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238633AbiBWHgp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Feb 2022 02:36:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59388 "EHLO
+        id S238776AbiBWHre (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Feb 2022 02:47:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232771AbiBWHgo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Feb 2022 02:36:44 -0500
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D6B6710CF;
-        Tue, 22 Feb 2022 23:36:18 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 8185A68AFE; Wed, 23 Feb 2022 08:36:14 +0100 (CET)
-Date:   Wed, 23 Feb 2022 08:36:14 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 01/12] blk-mq: do not include passthrough requests in
- I/O accounting
-Message-ID: <20220223073614.GA32169@lst.de>
-References: <20220222141450.591193-1-hch@lst.de> <20220222141450.591193-2-hch@lst.de> <YhWXFMhdms1QO1dL@T590> <20220223064226.GA31307@lst.de> <YhXb8CrfBqQZhYyZ@T590>
+        with ESMTP id S238749AbiBWHrb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Feb 2022 02:47:31 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABCFD65797;
+        Tue, 22 Feb 2022 23:47:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=iy5Ofm6AWn5S0+TPzZqllkgh84EUFfIT9WUD1UClXn4=; b=KuGl+SxVwgaXgh5hLAVT1UAi4x
+        Mdf6Uz6m2y23+0SrvtSnU9O8BhDGXxKAatQH1UV+1HLTZS6EKiTcNTlvQr6XJI6pv0KEXE3xvFiKZ
+        R/Jky7QdCF8UDa+v3Z/QM6f/ERD1b/x8syFTQf7TpLLbwqST8AacGpmpD66qiLMZMpUOKXyZjimX2
+        dqd43SyR3QIvd4Ydjgs3/d/7SKJAn7H0MEg/DJhCNfnBiuUH1CugGaRKAQv+oCwF98QBvMo4HOU/T
+        ucaRKTd4ozFy8kNCn3ThNjnNyyDuUTB+nnvKoGQIx86jvBLxFv0AD8qU8mHYnOj4lkd3DtKX03IFR
+        DEkug9Yw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nMmLj-00DALX-99; Wed, 23 Feb 2022 07:46:11 +0000
+Date:   Tue, 22 Feb 2022 23:46:11 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     arnd@arndb.de, hch@infradead.org, akpm@linux-foundation.org,
+        rth@twiddle.net, ink@jurassic.park.msu.ru, mattst88@gmail.com,
+        mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
+        davem@davemloft.net, airlied@linux.ie, vkoul@kernel.org,
+        hao.wu@intel.com, trix@redhat.com, mdf@kernel.org,
+        yilun.xu@intel.com, awalls@md.metrocast.net, mchehab@kernel.org,
+        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, mporter@kernel.crashing.org,
+        alex.bou9@gmail.com, bhelgaas@google.com,
+        linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        sparclinux@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-fpga@vger.kernel.org, linux-media@vger.kernel.org,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH 00/16] Remove usage of the deprecated "pci-dma-compat.h"
+ API
+Message-ID: <YhXmQwvjMFPQFPUr@infradead.org>
+References: <cover.1641500561.git.christophe.jaillet@wanadoo.fr>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YhXb8CrfBqQZhYyZ@T590>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <cover.1641500561.git.christophe.jaillet@wanadoo.fr>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Feb 23, 2022 at 03:02:08PM +0800, Ming Lei wrote:
-> There are small amount of in-kernel passthrough requests(admin, or driver
-> private) which shouldn't be accounted, but passthrough RW IO requests from
-> userspace can be lots of, and user may rely on diskstat to account them.
+Hi Christophe,
 
-/dev/sg won't be accounted either.  But most importantly they are
-accounted wrongly: the accounting buckets into read/write/discard.  Any
-most pass through commands are everything but.
+do you know what the state is in current linux-next?
 
-Also the way how this accounting works is completely broken.
-Passthrough requests are sent through a request_queue, and it does
-not make sense to account them to a block_device which sits way about
-that.
+I think we'll just want to queue up anything left at this point in the
+dma-mapping or PCI tree and get it done.
