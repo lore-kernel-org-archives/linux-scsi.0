@@ -2,48 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF20EC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Feb 2022 12:39:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B1F3C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Feb 2022 12:50:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240126AbiBWMkM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Feb 2022 07:40:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50516 "EHLO
+        id S238602AbiBWMua (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Feb 2022 07:50:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236183AbiBWMkL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Feb 2022 07:40:11 -0500
+        with ESMTP id S231601AbiBWMu3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Feb 2022 07:50:29 -0500
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21B28A27A4;
-        Wed, 23 Feb 2022 04:39:44 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00708A88A0
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2022 04:50:01 -0800 (PST)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id A4A4468AA6; Wed, 23 Feb 2022 13:39:40 +0100 (CET)
-Date:   Wed, 23 Feb 2022 13:39:40 +0100
+        id 2D7EF68AA6; Wed, 23 Feb 2022 13:49:56 +0100 (CET)
+Date:   Wed, 23 Feb 2022 13:49:56 +0100
 From:   Christoph Hellwig <hch@lst.de>
-To:     John Garry <john.garry@huawei.com>
+To:     Hannes Reinecke <hare@suse.de>
 Cc:     Christoph Hellwig <hch@lst.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: Re: [PATCH 3/8] scsi: don't memset the entire scsi_cmnd in
- scsi_init_command
-Message-ID: <20220223123940.GA4205@lst.de>
-References: <20220222140443.589882-1-hch@lst.de> <20220222140443.589882-4-hch@lst.de> <f5c2f7e0-6b14-222f-ba16-696b29517296@huawei.com>
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCHv2 00/51] SCSI EH argument reshuffle part II
+Message-ID: <20220223124956.GA4373@lst.de>
+References: <20210817091456.73342-1-hare@suse.de> <20210817121307.GA30436@lst.de> <1b9ad85c-407d-0877-964c-5f685d8cc702@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f5c2f7e0-6b14-222f-ba16-696b29517296@huawei.com>
+In-Reply-To: <1b9ad85c-407d-0877-964c-5f685d8cc702@suse.de>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Feb 23, 2022 at 12:21:10PM +0000, John Garry wrote:
-> I am just wondering did you consider using struct_group() for safety?
->
-> I don't think the scsi_cmnd members have special ordering apart from 
-> co-locating related members.
->
-> Here's how it could look (on top of yours):
+On Tue, Aug 17, 2021 at 02:55:25PM +0200, Hannes Reinecke wrote:
+> On 8/17/21 2:13 PM, Christoph Hellwig wrote:
+> > First, thanks for resurrecting the series.
+> > 
+> > Second, this giant patchbomb is almost impossible to review.  It might
+> > make sense to resend what is the prep patches without the prototype
+> > changes after the first round of review - maybe we can squeeze those
+> > into 5.15 still and do the heavy lifting with another series per
+> > actually changes method or so.
+> > 
+> Sure, can do.
 
-Besides being ugly as hell I don't see the benefit.  Quite contrary,
-a lot of these fields are properly initialized later and we can drop
-the zeroing as well, but I'd rather do that separately and with a proper
-audit.
+Do you have another chunk of these patches ready?  It would be so nice
+to see the EH code finally cleaned up..
