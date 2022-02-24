@@ -2,119 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B90F2C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 09:00:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1082AC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 09:07:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231698AbiBXJBY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Feb 2022 04:01:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56494 "EHLO
+        id S232529AbiBXJIS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Feb 2022 04:08:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231358AbiBXJBX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 04:01:23 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 283D115B3D9
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 01:00:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1645693253;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=TmXcQuSsrm+NZgvxKh/c/Y+56HsYbAsoh2iH7I4Nk5A=;
-        b=J8BWAjQ1PLznGKD4bwY/J6BN7YXpblo/3cCJgZP4luvw6vjZSUE3MA0rn3dutTfZ7mvRkf
-        uAeYSJuk6Dv5X98kfjXV4CJuwOLZT6BvVBzN6+XIJbI2nAofsXlu2c2SemonAVW1N71H4U
-        dkbRirGpdYLef1NV0vCsZyMXrt4egbU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-596-yvmukoBqMxihyMhLaco2yQ-1; Thu, 24 Feb 2022 04:00:51 -0500
-X-MC-Unique: yvmukoBqMxihyMhLaco2yQ-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9EC461091DA1;
-        Thu, 24 Feb 2022 09:00:50 +0000 (UTC)
-Received: from raketa (unknown [10.40.193.156])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7211873DAB;
-        Thu, 24 Feb 2022 09:00:49 +0000 (UTC)
-Date:   Thu, 24 Feb 2022 10:00:46 +0100
-From:   Maurizio Lombardi <mlombard@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     martin.petersen@oracle.com, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] target: allow changing dbroot if there are no registered
- devices
-Message-ID: <20220224090046.GC650728@raketa>
-References: <20220107151054.29734-1-mlombard@redhat.com>
- <e77b17da-f3cd-3a89-c46b-67dadae359ed@oracle.com>
+        with ESMTP id S232524AbiBXJIO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 04:08:14 -0500
+Received: from mail-qv1-xf29.google.com (mail-qv1-xf29.google.com [IPv6:2607:f8b0:4864:20::f29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97B62113AEA;
+        Thu, 24 Feb 2022 01:07:44 -0800 (PST)
+Received: by mail-qv1-xf29.google.com with SMTP id ba20so2565444qvb.1;
+        Thu, 24 Feb 2022 01:07:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dBBa+m5WJxw/OTFjHbJ6+LeZpWFvvqiydygw9xKnoS4=;
+        b=Oc1r7lycBzB3aLDcGUGQxFXlvv19N4fMyOjhtgCRpBK/C7i6dmxBn41c7urKYHy/7Y
+         wMImarxg2DfHr7BAQf/EBepVdRTaJjyUOjmueW+6FfgK1vDuYO0EDesmtqsdFHCTeLJ4
+         bRkrB0Q1mOvAwCbi0VaLO8jV8O4YLiSwo+W+36lTzwn+o6ySkVR9jYwyDTvdl5dZLn88
+         h7yiv5O1qfhMDT/fO4WT/PdXYiAm6lpwJmkXWDW/R3mq67P8iu+/PTrgh7A2IBsaBs3v
+         Y93l+nYGYpLIkXID9oWSYxvstcXwUTSoljipiZu/W5GiaJ2c7tiX/hRfucnqcvr3+xtn
+         obuw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dBBa+m5WJxw/OTFjHbJ6+LeZpWFvvqiydygw9xKnoS4=;
+        b=G2yxsDiGHmroVAfTubKgW+VhgH4AQ0pAHRoCvT13Ovlce5/mLQQTfNEr2fuKnKvLTL
+         OwwLG1S+LVHSBnGnSPygUheA1DKNWYZAn7m4lzOZrNicjjkIQmK2Fhmo48M0YFlY/cZ8
+         hKJzKXsOHX2LL4W9M4jkOe/czRE0T4BuT5qUyUbInSNaNiZB5QJteWRhgevrf0Zz/rOM
+         IjsUKzylgNY6l8YmWHfpjw0X6C5JvxC73gvPsCMrE30nN0N/Q9R6r3+TK/nOLXArCDWG
+         VR/ACr06neDaMBssgjiaWFNSaqKJqBxT04rG9JamY9YprHSELJIQYTim0qD7MyXOsq73
+         urWw==
+X-Gm-Message-State: AOAM533rHKZ5ykrKRFcfvQL7BGhUiuTdsC2ketKKWnEqkvMhjn8ijH85
+        dgebe24s7m7pU9rDtA73+Kk=
+X-Google-Smtp-Source: ABdhPJx0rn7zCTJSTevgT6ltmxUujV0ZykC+hrr/6rizOnVOLzaVlBpjaiaz5XmZbJRqt7I7bndUPA==
+X-Received: by 2002:ac8:7d90:0:b0:2de:7561:b2fc with SMTP id c16-20020ac87d90000000b002de7561b2fcmr1398833qtd.435.1645693663781;
+        Thu, 24 Feb 2022 01:07:43 -0800 (PST)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id bk19sm1053110qkb.125.2022.02.24.01.07.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 24 Feb 2022 01:07:43 -0800 (PST)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: deng.changcheng@zte.com.cn
+To:     njavali@marvell.com
+Cc:     mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Changcheng Deng <deng.changcheng@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] scsi: qla4xxx: Remove unneeded variable
+Date:   Thu, 24 Feb 2022 09:07:35 +0000
+Message-Id: <20220224090735.1967816-1-deng.changcheng@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e77b17da-f3cd-3a89-c46b-67dadae359ed@oracle.com>
-User-Agent: Mutt/1.14.7 (f34d0909) (2020-08-29)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Feb 22, 2022 at 02:57:30PM -0600, Mike Christie wrote:
-> On 1/7/22 9:10 AM, Maurizio Lombardi wrote:
-> > The target driver prevents the users from changing
-> > the database root directory if a target module like ib_srpt has
-> > been registered, this makes it difficult for users to
-> > set their preferred database directory if the module
-> > gets loaded during the system boot.
-> > 
-> > Let the users modify dbroot if there are no registered devices
-> > 
-> > Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-> > ---
-> >  drivers/target/target_core_configfs.c | 20 ++++++++------------
-> >  1 file changed, 8 insertions(+), 12 deletions(-)
-> > 
-> > diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-> > index 023bd4516a68..cba10829e62f 100644
-> > --- a/drivers/target/target_core_configfs.c
-> > +++ b/drivers/target/target_core_configfs.c
-> > @@ -72,6 +72,8 @@ static struct config_group target_core_hbagroup;
-> >  static struct config_group alua_group;
-> >  static struct config_group alua_lu_gps_group;
-> >  
-> > +static unsigned int target_devices;
-> > +
-> >  static inline struct se_hba *
-> >  item_to_hba(struct config_item *item)
-> >  {
-> > @@ -106,38 +108,32 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
-> >  	ssize_t read_bytes;
-> >  	struct file *fp;
-> >  
-> > -	mutex_lock(&g_tf_lock);
-> > -	if (!list_empty(&g_tf_list)) {
-> > -		mutex_unlock(&g_tf_lock);
-> > -		pr_err("db_root: cannot be changed: target drivers registered");
-> > +	if (target_devices) {
-> > +		pr_err("db_root: cannot be changed because it's in use\n");
-> >  		return -EINVAL;
-> >  	}
-> >  
-> 
-> How does the locking work for this patch?
-> 
-> The configfs subsys mutex handles the make and drop callouts below.
-> 
-> For this part though, it didn't look like we are holding the same mutex,
-> so can target_devices increase after we've passed that check? If so, was
-> the idea that it's one of those things where if it races then it doesn't
-> really matter because it's rare and nothing is really hurt?
+From: Changcheng Deng <deng.changcheng@zte.com.cn>
 
-Thanks for the review, Mike.
+Remove unneeded variable used to store return value.
 
-There is, indeed, a small window where a race condition is possible;
-when "target_devices" is 0, a module gets loaded by the kernel and at the same time a userspace process
-writes to dbroot, before the "target_devices" variable gets incremented to 1.
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Changcheng Deng <deng.changcheng@zte.com.cn>
+---
+ drivers/scsi/qla4xxx/ql4_os.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-I guess it's extremely rare but maybe it's better to simply add a "target_devices_lock" mutex
-to be safe.
-
-Maurizio
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index d64eda961412..b49c38416fb9 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -3640,7 +3640,6 @@ static int qla4xxx_copy_to_fwddb_param(struct iscsi_bus_flash_session *sess,
+ 				       struct dev_db_entry *fw_ddb_entry)
+ {
+ 	uint16_t options;
+-	int rc = 0;
+ 
+ 	options = le16_to_cpu(fw_ddb_entry->options);
+ 	SET_BITVAL(conn->is_fw_assigned_ipv6,  options, BIT_11);
+@@ -3739,7 +3738,7 @@ static int qla4xxx_copy_to_fwddb_param(struct iscsi_bus_flash_session *sess,
+ 
+ 	COPY_ISID(fw_ddb_entry->isid, sess->isid);
+ 
+-	return rc;
++	return 0;
+ }
+ 
+ static void qla4xxx_copy_to_sess_conn_params(struct iscsi_conn *conn,
+-- 
+2.25.1
 
