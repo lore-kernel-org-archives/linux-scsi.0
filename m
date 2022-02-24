@@ -2,171 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 373E0C43217
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 08:29:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B90F2C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 09:00:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230190AbiBXI3r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Feb 2022 03:29:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36862 "EHLO
+        id S231698AbiBXJBY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Feb 2022 04:01:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232003AbiBXI3o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 03:29:44 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E3FD277912;
-        Thu, 24 Feb 2022 00:28:54 -0800 (PST)
-Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K45dG5nr9z67y1X;
-        Thu, 24 Feb 2022 16:28:02 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Thu, 24 Feb 2022 09:28:52 +0100
-Received: from [10.47.86.126] (10.47.86.126) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 24 Feb
- 2022 08:28:51 +0000
-Message-ID: <d94e5e8a-9793-ab48-88f8-6f6bb878cecd@huawei.com>
-Date:   Thu, 24 Feb 2022 08:28:48 +0000
+        with ESMTP id S231358AbiBXJBX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 04:01:23 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 283D115B3D9
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 01:00:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1645693253;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=TmXcQuSsrm+NZgvxKh/c/Y+56HsYbAsoh2iH7I4Nk5A=;
+        b=J8BWAjQ1PLznGKD4bwY/J6BN7YXpblo/3cCJgZP4luvw6vjZSUE3MA0rn3dutTfZ7mvRkf
+        uAeYSJuk6Dv5X98kfjXV4CJuwOLZT6BvVBzN6+XIJbI2nAofsXlu2c2SemonAVW1N71H4U
+        dkbRirGpdYLef1NV0vCsZyMXrt4egbU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-596-yvmukoBqMxihyMhLaco2yQ-1; Thu, 24 Feb 2022 04:00:51 -0500
+X-MC-Unique: yvmukoBqMxihyMhLaco2yQ-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9EC461091DA1;
+        Thu, 24 Feb 2022 09:00:50 +0000 (UTC)
+Received: from raketa (unknown [10.40.193.156])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7211873DAB;
+        Thu, 24 Feb 2022 09:00:49 +0000 (UTC)
+Date:   Thu, 24 Feb 2022 10:00:46 +0100
+From:   Maurizio Lombardi <mlombard@redhat.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     martin.petersen@oracle.com, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] target: allow changing dbroot if there are no registered
+ devices
+Message-ID: <20220224090046.GC650728@raketa>
+References: <20220107151054.29734-1-mlombard@redhat.com>
+ <e77b17da-f3cd-3a89-c46b-67dadae359ed@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH 3/8] scsi: don't memset the entire scsi_cmnd in
- scsi_init_command
-To:     Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
-References: <20220222140443.589882-1-hch@lst.de>
- <20220222140443.589882-4-hch@lst.de>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220222140443.589882-4-hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.86.126]
-X-ClientProxiedBy: lhreml752-chm.china.huawei.com (10.201.108.202) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e77b17da-f3cd-3a89-c46b-67dadae359ed@oracle.com>
+User-Agent: Mutt/1.14.7 (f34d0909) (2020-08-29)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 22/02/2022 14:04, Christoph Hellwig wrote:
-> Replace the big fat memset that requires saving and restoring various
-> fields with just initializing those fields that need initialization.
+On Tue, Feb 22, 2022 at 02:57:30PM -0600, Mike Christie wrote:
+> On 1/7/22 9:10 AM, Maurizio Lombardi wrote:
+> > The target driver prevents the users from changing
+> > the database root directory if a target module like ib_srpt has
+> > been registered, this makes it difficult for users to
+> > set their preferred database directory if the module
+> > gets loaded during the system boot.
+> > 
+> > Let the users modify dbroot if there are no registered devices
+> > 
+> > Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> > ---
+> >  drivers/target/target_core_configfs.c | 20 ++++++++------------
+> >  1 file changed, 8 insertions(+), 12 deletions(-)
+> > 
+> > diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+> > index 023bd4516a68..cba10829e62f 100644
+> > --- a/drivers/target/target_core_configfs.c
+> > +++ b/drivers/target/target_core_configfs.c
+> > @@ -72,6 +72,8 @@ static struct config_group target_core_hbagroup;
+> >  static struct config_group alua_group;
+> >  static struct config_group alua_lu_gps_group;
+> >  
+> > +static unsigned int target_devices;
+> > +
+> >  static inline struct se_hba *
+> >  item_to_hba(struct config_item *item)
+> >  {
+> > @@ -106,38 +108,32 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
+> >  	ssize_t read_bytes;
+> >  	struct file *fp;
+> >  
+> > -	mutex_lock(&g_tf_lock);
+> > -	if (!list_empty(&g_tf_list)) {
+> > -		mutex_unlock(&g_tf_lock);
+> > -		pr_err("db_root: cannot be changed: target drivers registered");
+> > +	if (target_devices) {
+> > +		pr_err("db_root: cannot be changed because it's in use\n");
+> >  		return -EINVAL;
+> >  	}
+> >  
 > 
-> All the clearing to 0 ismoved to scsi_prepare_cmd as scsi_ioctl_reset
-
-nit: "is moved"?
-
-> alreadly uses kzalloc to allocate a pre-zeroed command.
+> How does the locking work for this patch?
 > 
-> This is still conservative and can probably be optimizated further.
+> The configfs subsys mutex handles the make and drop callouts below.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> For this part though, it didn't look like we are holding the same mutex,
+> so can target_devices increase after we've passed that check? If so, was
+> the idea that it's one of those things where if it races then it doesn't
+> really matter because it's rare and nothing is really hurt?
 
-FWIW:
+Thanks for the review, Mike.
 
-Reviewed-by: John Garry <john.garry@huawei.com>
+There is, indeed, a small window where a race condition is possible;
+when "target_devices" is 0, a module gets loaded by the kernel and at the same time a userspace process
+writes to dbroot, before the "target_devices" variable gets incremented to 1.
 
-But just a comment below.
+I guess it's extremely rare but maybe it's better to simply add a "target_devices_lock" mutex
+to be safe.
 
-> ---
->   drivers/scsi/scsi_lib.c | 61 ++++++++++++++++++++---------------------
->   1 file changed, 29 insertions(+), 32 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index a1c18ba5e8d38..960795d469d8c 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1163,45 +1163,17 @@ static void scsi_cleanup_rq(struct request *rq)
->   /* Called before a request is prepared. See also scsi_mq_prep_fn(). */
->   void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
->   {
-> -	void *buf = cmd->sense_buffer;
-> -	void *prot = cmd->prot_sdb;
->   	struct request *rq = scsi_cmd_to_rq(cmd);
-> -	unsigned int flags = cmd->flags & SCMD_PRESERVED_FLAGS;
-> -	unsigned long jiffies_at_alloc;
-> -	int retries, to_clear;
-> -	bool in_flight;
-> -	int budget_token = cmd->budget_token;
-> -
-> -	if (!blk_rq_is_passthrough(rq) && !(flags & SCMD_INITIALIZED)) {
-> -		flags |= SCMD_INITIALIZED;
-> +
-> +	if (!blk_rq_is_passthrough(rq) && !(cmd->flags & SCMD_INITIALIZED)) {
-> +		cmd->flags |= SCMD_INITIALIZED;
-
-Maybe I'm being dozy, but isn't this being cleared below *
-
->   		scsi_initialize_rq(rq);
->   	}
->   
-> -	jiffies_at_alloc = cmd->jiffies_at_alloc;
-> -	retries = cmd->retries;
-> -	in_flight = test_bit(SCMD_STATE_INFLIGHT, &cmd->state);
-> -	/*
-> -	 * Zero out the cmd, except for the embedded scsi_request. Only clear
-> -	 * the driver-private command data if the LLD does not supply a
-> -	 * function to initialize that data.
-> -	 */
-> -	to_clear = sizeof(*cmd) - sizeof(cmd->req);
-> -	if (!dev->host->hostt->init_cmd_priv)
-> -		to_clear += dev->host->hostt->cmd_size;
-> -	memset((char *)cmd + sizeof(cmd->req), 0, to_clear);
-> -
->   	cmd->device = dev;
-> -	cmd->sense_buffer = buf;
-> -	cmd->prot_sdb = prot;
-> -	cmd->flags = flags;
-> +	cmd->flags &= SCMD_PRESERVED_FLAGS;
-
-*
-
->   	INIT_LIST_HEAD(&cmd->eh_entry);
->   	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
-> -	cmd->jiffies_at_alloc = jiffies_at_alloc;
-> -	cmd->retries = retries;
-> -	if (in_flight)
-> -		__set_bit(SCMD_STATE_INFLIGHT, &cmd->state);
-> -	cmd->budget_token = budget_token;
-> -
->   }
->   
->   static blk_status_t scsi_setup_scsi_cmnd(struct scsi_device *sdev,
-> @@ -1586,10 +1558,35 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
->   	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
->   	struct scsi_device *sdev = req->q->queuedata;
->   	struct Scsi_Host *shost = sdev->host;
-> +	bool in_flight = test_bit(SCMD_STATE_INFLIGHT, &cmd->state);
->   	struct scatterlist *sg;
->   
->   	scsi_init_command(sdev, cmd);
->   
-> +	cmd->eh_eflags = 0;
-> +	cmd->allowed = 0;
-> +	cmd->prot_type = 0;
-> +	cmd->prot_flags = 0;
-> +	cmd->submitter = 0;
-> +	cmd->cmd_len = 0;
-> +	cmd->cmnd = NULL;
-> +	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
-> +	cmd->underflow = 0;
-> +	cmd->transfersize = 0;
-> +	cmd->host_scribble = NULL;
-> +	cmd->result = 0;
-> +	cmd->extra_len = 0;
-> +	cmd->state = 0;
-> +	if (in_flight)
-> +		__set_bit(SCMD_STATE_INFLIGHT, &cmd->state);
-> +
-> +	/*
-> +	 * Only clear the driver-private command data if the LLD does not supply
-> +	 * a function to initialize that data.
-> +	 */
-> +	if (!shost->hostt->init_cmd_priv)
-> +		memset(cmd + 1, 0, shost->hostt->cmd_size);
-> +
->   	cmd->prot_op = SCSI_PROT_NORMAL;
->   	if (blk_rq_bytes(req))
->   		cmd->sc_data_direction = rq_dma_dir(req);
+Maurizio
 
