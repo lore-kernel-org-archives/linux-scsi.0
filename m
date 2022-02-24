@@ -2,182 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03820C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 15:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A32BCC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 16:27:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231638AbiBXQAO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Feb 2022 11:00:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58502 "EHLO
+        id S229588AbiBXQ1s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Feb 2022 11:27:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232126AbiBXQAM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 11:00:12 -0500
-Received: from mail-qv1-xf2d.google.com (mail-qv1-xf2d.google.com [IPv6:2607:f8b0:4864:20::f2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A1C452E78
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 07:59:28 -0800 (PST)
-Received: by mail-qv1-xf2d.google.com with SMTP id j5so4244305qvs.13
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 07:59:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
-         :content-transfer-encoding;
-        bh=gqOgm8FvfYxrPnxT+G4DW2qNZzJhArG622fIixWhtpg=;
-        b=h5ZN26X5NAmhxjI2cNyZTmm5+2BZQaB4PhQXbBOhwml31PknsRkSxpnie5Pk4e0n8N
-         ucMddJt/VKcrD9FCGE1zCONNj+58mibz9qaTly7ZSs8IOPNpfWSdXIk9bJOyY3v2osKR
-         fbaKNoDJ5JuvmWbPO700vsU0BSR38IoUkcctt81R1wocDgUthuwF+/lFAHdfS3zgLGgC
-         LpHaI3b7NWCQPs6HVwySmgr9xSeRIEpx6+ByISYyqPZ7GlchosjA+y3B47saPKpwOWcA
-         QUFvAm0akg5UlWQlGCmRw+5HXyDvIck88WNhoeWOXMTwVNMR3907iZEJ4Rb23hd08jHx
-         Am1w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:content-transfer-encoding;
-        bh=gqOgm8FvfYxrPnxT+G4DW2qNZzJhArG622fIixWhtpg=;
-        b=t0bKO/u6APVSOaXHJJPZ7rdP6H/Ye1mQGl6aE6g7D3k1ztirohG81zkZ+gqLCkylLe
-         aiCmS7AhUHBegqCJ8ql9uK0a1nP3zsd4SpYmLfRx4NA/pWiSDTiL7OWqokoY5HPScT9u
-         LDvsmxoqkmMjJOyjiVVhUhLerxEwOn12FF9ol7axVUrKpyI+W4sbz1IalztV1prAZ5kN
-         wuuoXv4qKxyrZ8zsIi8QsL5/s0iZ4wVNn+lYV/4Eq6L6ePUIjLVFHyCvLjPa8XQOCFn4
-         lPIRk1Ik1joanZ088pxAvlvi7u4rMYd/aWtF2HzpfXQkgj1hGSiZDPI6YqnK5ZI0HX0V
-         YpcQ==
-X-Gm-Message-State: AOAM531kTE27bWenOXWB4R3JrgGR2AQyUmQtqRstJeQn+ipgBWkHXaL6
-        GWtcjPHiyOP4UyAYaoR9KOfHgQ==
-X-Google-Smtp-Source: ABdhPJyLQ1BrprrPj7Z/ncbZLKkWpbFJ6QCGUwxS4i7cOHcc1fXc5hBuljJyNTFV6nRd3+MQsFxngQ==
-X-Received: by 2002:ac8:578c:0:b0:2de:7281:6234 with SMTP id v12-20020ac8578c000000b002de72816234mr2991255qta.359.1645718365211;
-        Thu, 24 Feb 2022 07:59:25 -0800 (PST)
-Received: from localhost (cpe-174-109-172-136.nc.res.rr.com. [174.109.172.136])
-        by smtp.gmail.com with ESMTPSA id z14sm1739862qtw.56.2022.02.24.07.59.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Feb 2022 07:59:24 -0800 (PST)
-Date:   Thu, 24 Feb 2022 10:59:23 -0500
-From:   Josef Bacik <josef@toxicpanda.com>
-To:     lsf-pc@lists.linuxfoundation.org
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, bpf@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [REMINDER] LSF/MM/BPF: 2022: Call for Proposals
-Message-ID: <YherWymi1E/hP/sS@localhost.localdomain>
+        with ESMTP id S229568AbiBXQ1s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 11:27:48 -0500
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ACAA38BFA;
+        Thu, 24 Feb 2022 08:27:17 -0800 (PST)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 1C17068AFE; Thu, 24 Feb 2022 17:27:13 +0100 (CET)
+Date:   Thu, 24 Feb 2022 17:27:13 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: Re: [PATCH 3/8] scsi: don't memset the entire scsi_cmnd in
+ scsi_init_command
+Message-ID: <20220224162713.GA31469@lst.de>
+References: <20220222140443.589882-1-hch@lst.de> <20220222140443.589882-4-hch@lst.de> <d94e5e8a-9793-ab48-88f8-6f6bb878cecd@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <d94e5e8a-9793-ab48-88f8-6f6bb878cecd@huawei.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A few updates
+On Thu, Feb 24, 2022 at 08:28:48AM +0000, John Garry wrote:
+>> +	if (!blk_rq_is_passthrough(rq) && !(cmd->flags & SCMD_INITIALIZED)) {
+>> +		cmd->flags |= SCMD_INITIALIZED;
+>
+> Maybe I'm being dozy, but isn't this being cleared below *
 
-- The COVID related restrictions can be found here 
+with below you mean the
 
-	https://events.linuxfoundation.org/lsfmm/attend/health-and-safety/
+	cmd->flags &= SCMD_PRESERVED_FLAGS;
 
-- We are working on a virtual component, however it will likely not be
-  interactive, likely just a live stream and then an IRC channel to ask
-  questions through.
-
---- Original email ---
-
-The annual Linux Storage, Filesystem, Memory Management, and BPF
-(LSF/MM/BPF) Summit for 2022 will be held from May 2 to May 4 at The
-Margaritaville Resort Palm Springs in Palm Springs, California.
-LSF/MM/BPF is an invitation-only technical workshop to map out
-improvements to the Linux storage, filesystem, BPF, and memory
-management subsystems that will make their way into the mainline kernel
-within the coming years.
-
-COVID is at the front of our minds as we attempt to put together the
-best and safest conference we can arrange.  The logistics of how to hold
-an in person event will change and evolve as we get closer to the actual
-date, but rest assured we will do everything recommended by public
-health officials.
-
-LSF/MM/BPF 2022 will be a three day, stand-alone conference with four
-subsystem-specific tracks, cross-track discussions, as well as BoF and
-hacking sessions.
-
-On behalf of the committee I am issuing a call for agenda proposals
-that are suitable for cross-track discussion as well as technical
-subjects for the breakout sessions.
-
-If advance notice is required for visa applications then please point
-that out in your proposal or request to attend, and submit the topic as
-soon as possible.
-
-This years instructions are similar to our previous attempts.  We're
-asking that you please let us know you want to be invited by March 1,
-2022.  We realize that travel is an ever changing target, but it helps
-us get an idea of possible attendance numbers.  Clearly things can and
-will change, so consider the request to attend deadline more about
-planning and less about concrete plans.
-
-1) Fill out the following Google form to request attendance and
-suggest any topics
-
-	https://forms.gle/uD5tbZYGpaRXPnE19
-
-In previous years we have accidentally missed people's attendance
-requests because they either didn't cc lsf-pc@ or we simply missed them
-in the flurry of emails we get.  Our community is large and our
-volunteers are busy, filling this out will help us make sure we don't
-miss anybody.
-
-2) Proposals for agenda topics should still be sent to the following
-lists to allow for discussion among your peers.  This will help us
-figure out which topics are important for the agenda.
-
-        lsf-pc@lists.linux-foundation.org
-
-and CC the mailing lists that are relevant for the topic in question:
-
-        FS:     linux-fsdevel@vger.kernel.org
-        MM:     linux-mm@kvack.org
-        Block:  linux-block@vger.kernel.org
-        ATA:    linux-ide@vger.kernel.org
-        SCSI:   linux-scsi@vger.kernel.org
-        NVMe:   linux-nvme@lists.infradead.org
-        BPF:    bpf@vger.kernel.org
-
-Please tag your proposal with [LSF/MM/BPF TOPIC] to make it easier to
-track. In addition, please make sure to start a new thread for each
-topic rather than following up to an existing one. Agenda topics and
-attendees will be selected by the program committee, but the final
-agenda will be formed by consensus of the attendees on the day.
-
-We will try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes
-at the venue.
-
-For discussion leaders, slides and visualizations are encouraged to
-outline the subject matter and focus the discussions. Please refrain
-from lengthy presentations and talks; the sessions are supposed to be
-interactive, inclusive discussions.
-
-There will be no recording or audio bridge. However, we expect that
-written minutes will be published as we did in previous years:
-
-2019: https://lwn.net/Articles/lsfmm2019/
-
-2018: https://lwn.net/Articles/lsfmm2018/
-
-2017: https://lwn.net/Articles/lsfmm2017/
-
-2016: https://lwn.net/Articles/lsfmm2016/
-
-2015: https://lwn.net/Articles/lsfmm2015/
-
-2014: http://lwn.net/Articles/LSFMM2014/
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-        lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-        Josef Bacik (Filesystems)
-        Amir Goldstein (Filesystems)
-        Martin K. Petersen (Storage)
-        Omar Sandoval (Storage)
-        Michal Hocko (MM)
-        Dan Williams (MM)
-        Alexei Starovoitov (BPF)
-        Daniel Borkmann (BPF)
+?  No, that doen't clear the flag, but all the others.
