@@ -2,88 +2,63 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57CAEC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 19:49:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0569EC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 19:59:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234009AbiBXTtg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Feb 2022 14:49:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46328 "EHLO
+        id S233553AbiBXUAA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Feb 2022 15:00:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233235AbiBXTtf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 14:49:35 -0500
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCA15253BF9
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 11:49:03 -0800 (PST)
-Received: by mail-pf1-f177.google.com with SMTP id x18so2772225pfh.5
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 11:49:03 -0800 (PST)
+        with ESMTP id S232905AbiBXUAA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 15:00:00 -0500
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F86E2763F7;
+        Thu, 24 Feb 2022 11:59:30 -0800 (PST)
+Received: by mail-pj1-f54.google.com with SMTP id m22so2956265pja.0;
+        Thu, 24 Feb 2022 11:59:30 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:references:from:in-reply-to
+         :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=JLAJXRAsOA0nPPKQhG1zeuJxEZgiYYAJ+zx+6m7gEos=;
-        b=pldR2J3Dj69KyK6mJEOoAQp7Jk9jp2dih209Q6IZehXAFe6EeqHTA5kE02GrmI6prf
-         b3jcDIkz+recP7BbxOw3Pu1Y0KJ4G7eWrjAYXFBO1/ELw/WzteXq47qQ/c7c3c42oBRx
-         vd8jmGAp1FiZQ4Ova6Wrw+Zty5IHZdTmD8xfwkA1nM90kTs3TllwqOWnZW9Yb3rhPU/M
-         hzYCc5q/z55o7u51GZsfb9WloK6YUuU+rrP/RARiHfGUZQGzB72r2h6f6/+2rJEtavRD
-         4IJ4T8QR4c8bEfgbo65r9um/FtVoAEZUUXBdxWfkCkoElPZnxErx9yQ/htcvucJN/WrV
-         OyTQ==
-X-Gm-Message-State: AOAM532hAizl1FpDqkwVm1KVizZdI0zjAncwu/srI4A922Pg84zvAZkD
-        XWwYvHWTFQc+6U0to7+HiU0=
-X-Google-Smtp-Source: ABdhPJwtKuVwKZXFVtvISCoyfJsGzl/MK23r5BvOjHdnZZdQ/3LtHhb76I6HqCU6WZF/7WQLteKqDg==
-X-Received: by 2002:a65:6093:0:b0:373:9c75:19ec with SMTP id t19-20020a656093000000b003739c7519ecmr3476767pgu.539.1645732143190;
-        Thu, 24 Feb 2022 11:49:03 -0800 (PST)
+        bh=esSTEcxWYlmLPiSWhQ2VfsidNdEYUHFjatWC5lDvwME=;
+        b=JKC3rWXT/VssfEuoTY2bAyZlMx8QEbsF/+agv+oa5zRwUVMnS+oIyOzpAfdxZXBWPS
+         8lqAKGBrjTfOGsrUuAN5uHlRI0SopRKSKD9atTWkA+TSPc5x58yBP5+PQGPAXat/yJUe
+         hB7/HGd19y6iBa2jdPlgT+V/Fm25+IkddhZC2wqMSYFZJ1t+EqdJ9QLYTZquNEjD5pv3
+         QUOKoWX29ol58yXFFoBiXpMN3uU9Oou7UE1Ok+M9b+qGRs/zGFFVWbVnTMK/HbzKaEOP
+         M8vniLbCIqZo6Qzs4aBcuhEy2aWt0os76vJmoWgxaofcP8QFF8eySyXALpoHDB3zKFR5
+         WMyA==
+X-Gm-Message-State: AOAM532aA8Bolz7pfhXpfWsoOeoEeq8zxA09sC43Ai0DDLYnrk+mJuPr
+        Hba7At/NHV3+zUJu8RNQgdYMQGysSepDrQ==
+X-Google-Smtp-Source: ABdhPJzeDm+bjC7Qr7a0yX3vCI+Uk6gyS7nas2k0g65/6PYg4Wro7UcVq9TH6BSOLLkvWZfi7WkqHA==
+X-Received: by 2002:a17:902:70c4:b0:14f:9f56:1228 with SMTP id l4-20020a17090270c400b0014f9f561228mr3988093plt.114.1645732769532;
+        Thu, 24 Feb 2022 11:59:29 -0800 (PST)
 Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id lw12-20020a17090b180c00b001b8a61a0ea5sm162831pjb.38.2022.02.24.11.49.01
+        by smtp.gmail.com with ESMTPSA id s22-20020a056a0008d600b004f0eaa735f2sm311051pfu.57.2022.02.24.11.59.27
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 24 Feb 2022 11:49:02 -0800 (PST)
-Message-ID: <4143bc11-1c0c-e51f-f012-595c59bc8fdd@acm.org>
-Date:   Thu, 24 Feb 2022 11:49:01 -0800
+        Thu, 24 Feb 2022 11:59:28 -0800 (PST)
+Message-ID: <b9c43f2c-5888-41e6-a78f-355ef76121ac@acm.org>
+Date:   Thu, 24 Feb 2022 11:59:26 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH 1/5] scsi: mpt3sas: fix Mpi2SCSITaskManagementRequest_t
- TaskMID handling
+Subject: Re: [PATCH 8/8] scsi: remove <scsi/scsi_request.h>
 Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com
-References: <20220224101129.371905-1-damien.lemoal@opensource.wdc.com>
- <20220224101129.371905-2-damien.lemoal@opensource.wdc.com>
+To:     Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <20220224175552.988286-1-hch@lst.de>
+ <20220224175552.988286-9-hch@lst.de>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220224101129.371905-2-damien.lemoal@opensource.wdc.com>
+In-Reply-To: <20220224175552.988286-9-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/24/22 02:11, Damien Le Moal wrote:
-> diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_init.h b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
-> index 8f1b903fe0a9..80bcf7d83184 100644
-> --- a/drivers/scsi/mpt3sas/mpi/mpi2_init.h
-> +++ b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
-> @@ -428,7 +428,7 @@ typedef struct _MPI2_SCSI_TASK_MANAGE_REQUEST {
->   	U16 Reserved3;		/*0x0A */
->   	U8 LUN[8];		/*0x0C */
->   	U32 Reserved4[7];	/*0x14 */
-> -	U16 TaskMID;		/*0x30 */
-> +	__le16 TaskMID;		/*0x30 */
->   	U16 Reserved5;		/*0x32 */
->   } MPI2_SCSI_TASK_MANAGE_REQUEST,
->   	*PTR_MPI2_SCSI_TASK_MANAGE_REQUEST,
+On 2/24/22 09:55, Christoph Hellwig wrote:
+> This header is empty now except for an include of <linux/blk-mq.h>, so
+> remove it.
 
-Is this change necessary? From drivers/scsi/mpt3sas/mpi/mpi2_type.h:
-
-typedef __le16 U16;
-
-BTW, I think the U16 etc. typedefs should disappear.
-
-Thanks,
-
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
