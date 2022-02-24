@@ -2,43 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26DE9C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 18:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96DDFC4167B
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 18:22:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232583AbiBXSTv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Feb 2022 13:19:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40536 "EHLO
+        id S232869AbiBXSXI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Feb 2022 13:23:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229664AbiBXSTv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 13:19:51 -0500
+        with ESMTP id S232838AbiBXSXG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 13:23:06 -0500
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1323F1E2FFF;
-        Thu, 24 Feb 2022 10:19:19 -0800 (PST)
-Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K4Ldt6Hj4z67wql;
-        Fri, 25 Feb 2022 02:14:26 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAFF54D9F6;
+        Thu, 24 Feb 2022 10:22:35 -0800 (PST)
+Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K4Ljg23Z6z67xMd;
+        Fri, 25 Feb 2022 02:17:43 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
+ fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Thu, 24 Feb 2022 19:19:17 +0100
+ 15.1.2308.21; Thu, 24 Feb 2022 19:22:34 +0100
 Received: from [10.47.86.126] (10.47.86.126) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 24 Feb
- 2022 18:19:16 +0000
-Message-ID: <1231b97e-88aa-1e1b-4fec-9728ce066284@huawei.com>
-Date:   Thu, 24 Feb 2022 18:19:13 +0000
+ 2022 18:22:32 +0000
+Message-ID: <f98235e3-0ddf-2765-971f-4d1e185b9010@huawei.com>
+Date:   Thu, 24 Feb 2022 18:22:31 +0000
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.1
-Subject: Re: [PATCH 3/8] scsi: remove the cmd field from struct scsi_request
-To:     Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>,
-        "Bart Van Assche" <bvanassche@acm.org>
-References: <20220224175552.988286-1-hch@lst.de>
- <20220224175552.988286-4-hch@lst.de>
+Subject: Re: mmotm 2022-02-23-21-20 uploaded
+ [drivers/scsi/hisi_sas/hisi_sas_main.ko]
+To:     Randy Dunlap <rdunlap@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        <broonie@kernel.org>, <mhocko@suse.cz>, <sfr@canb.auug.org.au>,
+        <linux-next@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
+        <mm-commits@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20220224052137.BFB10C340E9@smtp.kernel.org>
+ <52f0922c-143a-8a40-b1e1-23d562ca6f80@infradead.org>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220224175552.988286-4-hch@lst.de>
+In-Reply-To: <52f0922c-143a-8a40-b1e1-23d562ca6f80@infradead.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.47.86.126]
@@ -49,120 +53,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 24/02/2022 17:55, Christoph Hellwig wrote:
-> Now that each scsi_request is backed by a scsi_cmnd, there is no
-> need to indirect the CDB storage.  Change all submitters of SCSI
-> passthrough requests to store the CDB information directly in the
-> scsi_cmnd, and while doing so allocate the full 32 bytes that cover
-> all Linux supported SCSI hosts instead of requiring dynamic allocation
-> for > 16 byte CDBs.  On 64-bit systems this does not change the size of
-> the scsi_cmnd at all, while on 32-bit systems it slightly increases it
-> for now, but that increase will be made up by the removal of the
-> remaining scsi_request fields.
+On 24/02/2022 18:04, Randy Dunlap wrote:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-
-I had just finished going through the v1 of this patch and this seems 
-identical, so, FWIW:
-
-Reviewed-by: John Garry <john.garry@huawei.com>
-
-Just a minor comment below (feel free to ignore).
-
-> ---
->   drivers/ata/libata-scsi.c           |  4 +++-
->   drivers/block/pktcdvd.c             |  6 +++--
->   drivers/scsi/scsi_bsg.c             | 23 +++++++++---------
->   drivers/scsi/scsi_debugfs.c         |  4 +---
->   drivers/scsi/scsi_error.c           | 28 +++++++++++-----------
->   drivers/scsi/scsi_ioctl.c           | 37 +++++++++++++----------------
->   drivers/scsi/scsi_lib.c             | 19 +++++++--------
->   drivers/scsi/scsi_logging.c         |  5 +---
->   drivers/scsi/sd.c                   | 28 +---------------------
->   drivers/scsi/sg.c                   | 30 +++++++++--------------
->   drivers/scsi/sr.c                   | 24 ++++++++++---------
->   drivers/scsi/st.c                   | 12 ++++++----
->   drivers/scsi/ufs/ufshpb.c           | 22 ++++++++---------
->   drivers/target/target_core_pscsi.c  | 12 ++++++----
->   drivers/usb/storage/cypress_atacb.c |  1 -
->   drivers/usb/storage/isd200.c        |  4 ++--
->   include/scsi/scsi_cmnd.h            |  7 +-----
->   include/scsi/scsi_eh.h              |  4 +---
->   include/scsi/scsi_request.h         | 11 ---------
->   19 files changed, 113 insertions(+), 168 deletions(-)
 > 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index ed8be585a98f7..c8283bd4ffd15 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1022,7 +1022,9 @@ void ata_scsi_sdev_config(struct scsi_device *sdev)
->    */
->   bool ata_scsi_dma_need_drain(struct request *rq)
->   {
-> -	return atapi_cmd_type(scsi_req(rq)->cmd[0]) == ATAPI_MISC;
-> +	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
-> +
-> +	return atapi_cmd_type(scmd->cmnd[0]) == ATAPI_MISC;
->   }
->   EXPORT_SYMBOL_GPL(ata_scsi_dma_need_drain);
->   
-> diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
-> index 2b6b70a39e760..42c284b2d7f93 100644
-> --- a/drivers/block/pktcdvd.c
-> +++ b/drivers/block/pktcdvd.c
-> @@ -693,6 +693,7 @@ static void pkt_rbtree_insert(struct pktcdvd_device *pd, struct pkt_rb_node *nod
->   static int pkt_generic_packet(struct pktcdvd_device *pd, struct packet_command *cgc)
->   {
->   	struct request_queue *q = bdev_get_queue(pd->bdev);
-> +	struct scsi_cmnd *scmd;
->   	struct request *rq;
->   	int ret = 0;
->   
-> @@ -700,6 +701,7 @@ static int pkt_generic_packet(struct pktcdvd_device *pd, struct packet_command *
->   			     REQ_OP_DRV_OUT : REQ_OP_DRV_IN, 0);
->   	if (IS_ERR(rq))
->   		return PTR_ERR(rq);
-> +	scmd = blk_mq_rq_to_pdu(rq);
->   
->   	if (cgc->buflen) {
->   		ret = blk_rq_map_kern(q, rq, cgc->buffer, cgc->buflen,
-> @@ -708,8 +710,8 @@ static int pkt_generic_packet(struct pktcdvd_device *pd, struct packet_command *
->   			goto out;
->   	}
->   
-> -	scsi_req(rq)->cmd_len = COMMAND_SIZE(cgc->cmd[0]);
-> -	memcpy(scsi_req(rq)->cmd, cgc->cmd, CDROM_PACKET_SIZE);
-> +	scmd->cmd_len = COMMAND_SIZE(cgc->cmd[0]);
-> +	memcpy(scmd->cmnd, cgc->cmd, CDROM_PACKET_SIZE);
->   
->   	rq->timeout = 60*HZ;
->   	if (cgc->quiet)
-> diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
-> index b7a464383cc0b..f8b65bd75ee10 100644
-> --- a/drivers/scsi/scsi_bsg.c
-> +++ b/drivers/scsi/scsi_bsg.c
-> @@ -13,6 +13,7 @@ static int scsi_bsg_sg_io_fn(struct request_queue *q, struct sg_io_v4 *hdr,
->   		fmode_t mode, unsigned int timeout)
->   {
->   	struct scsi_request *sreq;
-> +	struct scsi_cmnd *scmd;
->   	struct request *rq;
->   	struct bio *bio;
->   	int ret;
-> @@ -33,19 +34,19 @@ static int scsi_bsg_sg_io_fn(struct request_queue *q, struct sg_io_v4 *hdr,
->   
->   	ret = -ENOMEM;
->   	sreq = scsi_req(rq);
-> -	sreq->cmd_len = hdr->request_len;
-> -	if (sreq->cmd_len > BLK_MAX_CDB) {
-> -		sreq->cmd = kzalloc(sreq->cmd_len, GFP_KERNEL);
-> -		if (!sreq->cmd)
-> -			goto out_put_request;
-> +	scmd = blk_mq_rq_to_pdu(rq);
-> +	scmd->cmd_len = hdr->request_len;
-> +	if (scmd->cmd_len > sizeof(scmd->cmnd)) {
+> On 2/23/22 21:21, Andrew Morton wrote:
+>> The mm-of-the-moment snapshot 2022-02-23-21-20 has been uploaded to
+>>
+>>     https://www.ozlabs.org/~akpm/mmotm/
+>>
+>> mmotm-readme.txt says
+>>
+>> README for mm-of-the-moment:
+>>
+>> https://www.ozlabs.org/~akpm/mmotm/
+>>
+>> This is a snapshot of my -mm patch queue.  Uploaded at random hopefully
+>> more than once a week.
+>>
+>> You will need quilt to apply these patches to the latest Linus release (5.x
+>> or 5.x-rcY).  The series file is in broken-out.tar.gz and is duplicated in
+>> https://ozlabs.org/~akpm/mmotm/series
+> 
+> on  i386:
+> 
+> ERROR: modpost: "sas_execute_ata_cmd" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
+> 
+> CONFIG_SCSI_SAS_ATTRS=y
+> CONFIG_SCSI_SAS_LIBSAS=y
+> # CONFIG_SCSI_SAS_ATA is not set
+> CONFIG_SCSI_SAS_HOST_SMP=y
+> 
+> 
 
-You might be able to move this check earlier (before the request 
-allocation), but no big deal.
 
+Hi Randy,
+
+I think that this has already been fixed on Martin's mkp-scsi 5.18 
+staging branch - can you compare?
+
+Thanks,
+John
