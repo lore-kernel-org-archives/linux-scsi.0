@@ -2,74 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C05FC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 23:31:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D0E5C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 23:31:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233960AbiBXXbc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Feb 2022 18:31:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55100 "EHLO
+        id S233982AbiBXXbd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Feb 2022 18:31:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231332AbiBXXbb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 18:31:31 -0500
+        with ESMTP id S233258AbiBXXbc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 18:31:32 -0500
 Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C5C02399D2
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 15:31:00 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81D66186B82
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 15:31:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1645745460; x=1677281460;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=n2RwNwsjFOgtrCAZgCGl+IMKDMb+pbzVSDBukc6MadY=;
-  b=k+0vrZ2ja6NTRnbfASqkilfAJ+58BgPyFTWVXPhD5x5OxIXmxNmwQVi5
-   f+q5UMfIqTRPAq1YbipZyBukJ8+IgcLYrgcyiWDcPaffaUL0BSLui45Jf
-   YFODBJyUcNaPqExj146DdfuMnTSO5h3wvFaDJjtCFlLYmIjGoOUcItFQg
-   WOFWDQgzDY8zT5QECbbPS9UjbRBjqSpOKXSEUlyIUvPKHPPsjRAZSwx1c
-   FzzOvF4DLyI9tyU/9zIs3zpZFAan3r7jvtruqj8x8IgIff3Uxfo1JLpEG
-   TT8WFbGbPB2Yk3hoVcqfU5OCJqtzgLeVdUDN7eQ1kwKOqJVFywycOI3FM
-   A==;
+  t=1645745461; x=1677281461;
+  h=from:to:subject:date:message-id:in-reply-to:references:
+   mime-version:content-transfer-encoding;
+  bh=zdVLbzhYla2YZaTACujeWEbgVYGpiiXXLA0O0Pmn0YY=;
+  b=gQkuQrCKb4/9iKIaWjamb25MPiKzx2NvZcMhdsG0KFtt0ZLS4zVrV+eV
+   nrMNKP2FxL+DY9VkZGSCfDI4119lUA7d1148yv4gCZYxWuDx03QzRbpXL
+   MH7uhI0hlKDPeDu4vUNLEubbS3GNbZh4JrFQKLlN9UZCQ+Vt/UDcl02tT
+   Z1R09iWB0fyKpxZR3TCaI18fiwOS/x1e0CuBdVB7+su3JNMulLyIcCirS
+   +rUJxd81UyTr19eVlCcf5G47cR1lr7IFjiWK4d9RYCQr+0VsLzTHjrmZn
+   H/nD5rZW6FYLXpXR06gkNh0yifkZEOfv/nyJGwzBgLGllWgAy7A2Duvpg
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.90,134,1643644800"; 
-   d="scan'208";a="192821969"
+   d="scan'208";a="192821970"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Feb 2022 07:30:59 +0800
-IronPort-SDR: 7R5/VQ/0Xi7A7J53XCBaIeOpp8vr3pZchT9zKv8kQ9RFyanN2naLkduwFmYVEhAt4ikQEJsTO5
- cpe8zFQPe294Yl72nmK540bpZt/GM7pyqIsbMA5o3GYzT3zRdBaLfiNrHWLRBY3dWftlt5Pm3t
- ViCqCRK8PTBoyUSOY/UnQPC3P9GJ/3l+/bU7RIjcEslxfi0yENnqNRlEC7DOepvB+0IJU6SGb1
- lH3/uZHsFw7qGQYJlWiWCm0VBGfyjf7j7pAfbtFqp16ZJaGWQwsekbmf4jx+MlggRhIbUEaDY8
- bL8OamLQT/kmc+184q1uOCud
+  by ob1.hgst.iphmx.com with ESMTP; 25 Feb 2022 07:31:00 +0800
+IronPort-SDR: zwYaq4yHahh8RhZE0uqojBBIPfxlPNw2ugZP0xI9eRfg282LtbBd9h3bpbfZaOFFig+jVHDjA6
+ AZNYH4rNeEUiKQZdvAMjajY2xSF2bnhCvXfEwxU/yJIV7di2F0BFns+qzxffrVHt8wj/AwVPF+
+ zTMzdAhoWpLE2WgsIFVLv6TZj6pI3g6LgCQ9Lkx9zwZd9UarnzdZube7b3NaQVL9o0f4IbfVat
+ nF67NYoXCqKpxw+leDKyKPP14OzuMzTLX9R3YmE1pv0MFzk3mys/hW8e2g0tXLVV05eJeERdOf
+ PJwX4FwuX9ZK8dwTp+43PFVq
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2022 15:02:29 -0800
-IronPort-SDR: vE1Oh5w47WwTY7ffC+n4zQi3zYuvG3MX91N+C8x6KMFLwwGtSQH0GNGHBQE1niKSPM2AMoIaH0
- aLcgCkIFAtXP79JKUHaB5skVJZJ69JAVT2CspfhQmdvctDYGPCUvwQGM4SLvSyOEEzYPMq2jrc
- efpDmWvXbukRTMxVdg3ZATzZX33IHNMDkZGhOrfFUmOj2vu6OnDX1BqJ3ibCJRCVBz/qKCX822
- EI4T8Sf5lYdWKTvfbI5MIfNaojhurPGNvCqVKro3IlmEMdLOS350N5+9P2ns0Q3nFWxTrJQtG/
- oBs=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2022 15:02:30 -0800
+IronPort-SDR: aDVklyWh+BSemyOSO4/jvCJEHTKUs1AQ5MQfgi7wiS3bQJq3bzjuJ+i82bbYf4ssyMZkMcf/v7
+ 3aj9QkRoKwbRNkGPuu/2Fd28RS47puQCTkSzaWeMzgIWbNQawkEBGK54SoA7qPJYC8Jaqge6PT
+ 8H496AodaaYNp76xjIuhJ6R5a1Rfuw02iaqXxTQF0l7OGHafWNjQB5DYEYbqyBMq/zQFD//uMs
+ RPN+u0vrp3zSH6pILebWzkUKH8rShJYCI6uIZmSyX5tA/zD5jsTRuysxgQCeuo4Jq94K89UZpb
+ FIk=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2022 15:31:00 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2022 15:31:01 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K4Tg71mjvz1SHwl
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 15:30:59 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K4Tg84Swjz1SVp0
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 15:31:00 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1645745458;
-         x=1648337459; bh=n2RwNwsjFOgtrCAZgCGl+IMKDMb+pbzVSDBukc6MadY=; b=
-        m9kF55Mg++jMfMRjf6N1+uJGNgX1Z4vhsbKissl3PryoErGBpH4H4q9E5OyPHZPP
-        /xtd90ybfptG88qjqzQBqlRPxKz+oI1cctwlnMiiq59EAv9mbDXiAI/zsfy07UEG
-        6HFykfy3nSrNJyeV/8iiCs0EfZBKZ3AiJwnFo9y+azDOKxxwdeVuCvgGtzM8OXaM
-        SSLWxkQ43qbnvkKeqfj+ftPoZSYOblTNTaJNLb0sCiT/d9nqy3d4XdgzhYTp2X2b
-        OmP6GbeYbTnNluYe2dGzFhnh3RtxD4/c4CnhiYxQCa1/PhjUz5gM10ukLA3kAujd
-        gTI2Ktc1CUqkVpNMRSOiyg==
+        :references:in-reply-to:x-mailer:message-id:date:subject:to
+        :from; s=dkim; t=1645745460; x=1648337461; bh=zdVLbzhYla2YZaTACu
+        jeWEbgVYGpiiXXLA0O0Pmn0YY=; b=m1fgOPbmSxNtS6ipCY6Wax/FbMLCuFCIic
+        YBnSr6XC2y7r5gK5iOuJsFCtTziAIZSUdorFXcMInAaODnZqdlpSf3sFI0yvhRzO
+        Zv67RSYVyxvTbJierN0aVEA7ec214x+vhgPxUcB44r86EsDc4KG6EVJ36DlZFwfu
+        UAjCG08zlj/8VXF97rr/7dLFvXFRKQTS1dN1s0H/eLRtAdTw8LoxH+M+/jnkjd51
+        bzLSYIxD2rBOL02h7BuJ7McgC8H6g26g7rY+dSowgTlZ1DCS2KDMXwyQnR8Avl1j
+        sjLUM/WGYexkBDwjO2rcwIBIruqVTFMRcdYK2QOA1eup+Dtr1zyA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id NT0Uh1Wj811r for <linux-scsi@vger.kernel.org>;
-        Thu, 24 Feb 2022 15:30:58 -0800 (PST)
+        with ESMTP id X4KEhPwX3qkq for <linux-scsi@vger.kernel.org>;
+        Thu, 24 Feb 2022 15:31:00 -0800 (PST)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K4Tg56bP9z1Rvlx;
-        Thu, 24 Feb 2022 15:30:57 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K4Tg718nNz1Rwrw;
+        Thu, 24 Feb 2022 15:30:59 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -78,41 +78,69 @@ To:     linux-scsi@vger.kernel.org,
         Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>,
         MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v2 0/5] Fix mpt3sas driver sparse warnings
-Date:   Fri, 25 Feb 2022 08:30:51 +0900
-Message-Id: <20220224233056.398054-1-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH v2 1/5] scsi: mpt3sas: fix _ctl_set_task_mid() TaskMID check
+Date:   Fri, 25 Feb 2022 08:30:52 +0900
+Message-Id: <20220224233056.398054-2-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220224233056.398054-1-damien.lemoal@opensource.wdc.com>
+References: <20220224233056.398054-1-damien.lemoal@opensource.wdc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This series fix (remove) all sparse warnings generated when compiling
-the mpt3sas driver. All warnings are related to __iomem access and
-endianness.
+The TaskMID field of struct Mpi2SCSITaskManagementRequest_t is a 16-bits
+little endian value. Fix the search loop in _ctl_set_task_mid() to add
+a cpu_to_le16() conversion before checking the value of TaskMID to avoid
+sparse warnings. While at it, simplify the search loop code to remove an
+unnecessarily complicated if condition.
 
-The series was tested on top of Martin's 5.18/scsi-staging branch with a
-9400-8i HBA with direct attached iSAS and SATA drives. The fixes need
-careful review by the maintainers as there is no documentation clearly
-explaning the proper endianness of the values touched.
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-Changes from v1:
-* Reworked patch 1 to remove the TaskMID field type change and simplify
-  _ctl_set_task_mid() code.
-
-Damien Le Moal (5):
-  scsi: mpt3sas: fix _ctl_set_task_mid() TaskMID check
-  scsi: mpt3sas: Fix writel() use
-  scsi: mpt3sas: fix ioc->base_readl() use
-  scsi: mpt3sas: fix event callback log_code value handling
-  scsi: mpt3sas: fix adapter replyPostRegisterIndex handling
-
- drivers/scsi/mpt3sas/mpt3sas_base.c  | 60 ++++++++++++++++------------
- drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 11 ++---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  6 +--
- 3 files changed, 43 insertions(+), 34 deletions(-)
-
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mp=
+t3sas_ctl.c
+index d92ca140d298..84c87c2c3e7e 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -578,7 +578,7 @@ static int
+ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command=
+ *karg,
+ 	Mpi2SCSITaskManagementRequest_t *tm_request)
+ {
+-	u8 found =3D 0;
++	bool found =3D false;
+ 	u16 smid;
+ 	u16 handle;
+ 	struct scsi_cmnd *scmd;
+@@ -600,6 +600,7 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc, struct=
+ mpt3_ioctl_command *karg,
+ 	handle =3D le16_to_cpu(tm_request->DevHandle);
+ 	for (smid =3D ioc->scsiio_depth; smid && !found; smid--) {
+ 		struct scsiio_tracker *st;
++		__le16 task_mid;
+=20
+ 		scmd =3D mpt3sas_scsih_scsi_lookup_get(ioc, smid);
+ 		if (!scmd)
+@@ -618,10 +619,10 @@ _ctl_set_task_mid(struct MPT3SAS_ADAPTER *ioc, stru=
+ct mpt3_ioctl_command *karg,
+ 		 * first outstanding smid will be picked up.  Otherwise,
+ 		 * targeted smid will be the one.
+ 		 */
+-		if (!tm_request->TaskMID || tm_request->TaskMID =3D=3D st->smid) {
+-			tm_request->TaskMID =3D cpu_to_le16(st->smid);
+-			found =3D 1;
+-		}
++		task_mid =3D cpu_to_le16(st->smid);
++		if (!tm_request->TaskMID)
++			tm_request->TaskMID =3D task_mid;
++		found =3D tm_request->TaskMID =3D=3D task_mid;
+ 	}
+=20
+ 	if (!found) {
 --=20
 2.35.1
 
