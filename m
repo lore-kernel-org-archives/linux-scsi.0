@@ -2,45 +2,44 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D29BC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 13:05:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF9D9C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 13:07:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234784AbiBXNFg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Feb 2022 08:05:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38970 "EHLO
+        id S234825AbiBXNIU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Feb 2022 08:08:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234785AbiBXNFf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 08:05:35 -0500
+        with ESMTP id S234813AbiBXNIT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 08:08:19 -0500
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A4CA37B5A8;
-        Thu, 24 Feb 2022 05:05:06 -0800 (PST)
-Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K4Clg2Fgjz67w62;
-        Thu, 24 Feb 2022 21:03:59 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BCDF230E48;
+        Thu, 24 Feb 2022 05:07:48 -0800 (PST)
+Received: from fraeml706-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K4Cpn543Lz67Lnh;
+        Thu, 24 Feb 2022 21:06:41 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Thu, 24 Feb 2022 14:05:03 +0100
+ fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.21; Thu, 24 Feb 2022 14:07:46 +0100
 Received: from [10.47.86.126] (10.47.86.126) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 24 Feb
- 2022 13:05:02 +0000
-Message-ID: <06714ce6-40cd-653d-4e5f-4bafee355035@huawei.com>
-Date:   Thu, 24 Feb 2022 13:05:01 +0000
+ 2022 13:07:45 +0000
+Message-ID: <93ca25b8-db43-3ce8-0923-3acad41d0856@huawei.com>
+Date:   Thu, 24 Feb 2022 13:07:44 +0000
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.1
-Subject: Re: [PATCH 1/2] scsi: libsas: Make sas_notify_{phy,port}_event()
- return void
+Subject: Re: [PATCH 2/2] scsi: libsas: Use bool for queue_work() return code
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
 CC:     <chenxiang66@hisilicon.com>, <linux-scsi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>
 References: <1645700699-82369-1-git-send-email-john.garry@huawei.com>
- <1645700699-82369-2-git-send-email-john.garry@huawei.com>
- <014a69ed-7a99-2a67-fa3a-947d11601114@opensource.wdc.com>
+ <1645700699-82369-3-git-send-email-john.garry@huawei.com>
+ <4b107020-2494-2470-ba1b-c2000eae1355@opensource.wdc.com>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <014a69ed-7a99-2a67-fa3a-947d11601114@opensource.wdc.com>
+In-Reply-To: <4b107020-2494-2470-ba1b-c2000eae1355@opensource.wdc.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.47.86.126]
@@ -51,31 +50,130 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 24/02/2022 12:43, Damien Le Moal wrote:
-> On 2/24/22 20:04, John Garry wrote:
->> Nobody checks the return codes, so make them return void. Indeed, if the
->> LLDD cannot send an event, nothing much can be done in the LLDD about it.
+>> -int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
+>> +bool sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
+>>   {
+>>   	/* it's added to the defer_q when draining so return succeed */
+>> -	int rc = 1;
+>> +	bool rc = true;
+>>   
+>>   	if (!test_bit(SAS_HA_REGISTERED, &ha->state))
+>> -		return 0;
+>> +		return false;
+>>   
+>>   	if (test_bit(SAS_HA_DRAINING, &ha->state)) {
+>>   		/* add it to the defer list, if not already pending */
+>> @@ -28,11 +28,11 @@ int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
+>>   	return rc;
 > 
-> It really sound like the LLDDs should be fixed to e.g. reset the adapter
-> if things go south with these functions. No sure though.
+> While at it, I would cleanup this function like this:
 
-But this is not an adapter fault. As an example of a scenario which we 
-could be dealing with, it may be that a phyup event occurs in the 
-adapter but libsas cannot allocate memory to process the event. There's 
-not much the adapter/LLDD can do about that (nor does do).
-
-> 
->>
->> Also remove prototype for sas_notify_phy_event() in sas_internal.h, which
->> should not be there.
->>
->> Signed-off-by: John Garry <john.garry@huawei.com>
->> Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
-> 
-> In any case, these changes do not make anything worse :)
-
-Thanks,
+ok, fine
 
 > 
-> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> diff --git a/drivers/scsi/libsas/sas_event.c
+> b/drivers/scsi/libsas/sas_event.c
+> index 3613b9b315bc..38e6e91aaf36 100644
+> --- a/drivers/scsi/libsas/sas_event.c
+> +++ b/drivers/scsi/libsas/sas_event.c
+> @@ -12,20 +12,17 @@
 > 
+>   int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
+>   {
+> -       /* it's added to the defer_q when draining so return succeed */
+> -       int rc = 1;
+> -
+>          if (!test_bit(SAS_HA_REGISTERED, &ha->state))
+> -               return 0;
+> +               return false;
+> 
+>          if (test_bit(SAS_HA_DRAINING, &ha->state)) {
+>                  /* add it to the defer list, if not already pending */
+>                  if (list_empty(&sw->drain_node))
+>                          list_add_tail(&sw->drain_node, &ha->defer_q);
+> -       } else
+> -               rc = queue_work(ha->event_q, &sw->work);
+> +               return true;
+> +       }
+> 
+> -       return rc;
+> +       return queue_work(ha->event_q, &sw->work);
+>   }
+> 
+> No local variable :)
+> 
+>>   }
+>>   
+>> -static int sas_queue_event(int event, struct sas_work *work,
+>> +static bool sas_queue_event(int event, struct sas_work *work,
+>>   			    struct sas_ha_struct *ha)
+>>   {
+>>   	unsigned long flags;
+>> -	int rc;
+>> +	bool rc;
+>>   
+>>   	spin_lock_irqsave(&ha->lock, flags);
+>>   	rc = sas_queue_work(ha, work);
+>> @@ -44,13 +44,12 @@ static int sas_queue_event(int event, struct sas_work *work,
+>>   void sas_queue_deferred_work(struct sas_ha_struct *ha)
+>>   {
+>>   	struct sas_work *sw, *_sw;
+>> -	int ret;
+>>   
+>>   	spin_lock_irq(&ha->lock);
+>>   	list_for_each_entry_safe(sw, _sw, &ha->defer_q, drain_node) {
+>>   		list_del_init(&sw->drain_node);
+>> -		ret = sas_queue_work(ha, sw);
+>> -		if (ret != 1) {
+>> +
+>> +		if (sas_queue_work(ha, sw) == false) {
+> 
+> if (!sas_queue_work(ha, sw)) ?
+
+ok, yeah, that's the pattern I see elsehwhere in the kernel
+
+> 
+>>   			pm_runtime_put(ha->dev);
+>>   			sas_free_event(to_asd_sas_event(&sw->work));
+>>   		}
+>> @@ -170,7 +169,6 @@ void sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
+>>   {
+>>   	struct sas_ha_struct *ha = phy->ha;
+>>   	struct asd_sas_event *ev;
+>> -	int ret;
+>>   
+>>   	BUG_ON(event >= PORT_NUM_EVENTS);
+>>   
+>> @@ -186,8 +184,7 @@ void sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
+>>   	if (sas_defer_event(phy, ev))
+>>   		return;
+>>   
+>> -	ret = sas_queue_event(event, &ev->work, ha);
+>> -	if (ret != 1) {
+>> +	if (sas_queue_event(event, &ev->work, ha) == false) {
+> 
+> Same.
+> 
+>>   		pm_runtime_put(ha->dev);
+>>   		sas_free_event(ev);
+>>   	}
+>> @@ -199,7 +196,6 @@ void sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
+>>   {
+>>   	struct sas_ha_struct *ha = phy->ha;
+>>   	struct asd_sas_event *ev;
+>> -	int ret;
+>>   
+>>   	BUG_ON(event >= PHY_NUM_EVENTS);
+>>   
+>> @@ -215,8 +211,7 @@ void sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
+>>   	if (sas_defer_event(phy, ev))
+>>   		return;
+>>   
+>> -	ret = sas_queue_event(event, &ev->work, ha);
+>> -	if (ret != 1) {
+>> +	if (sas_queue_event(event, &ev->work, ha) == false) {
+> 
+> And again.
+> 
+
+ok, thanks
