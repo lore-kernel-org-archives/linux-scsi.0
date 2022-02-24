@@ -2,136 +2,179 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C16AC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 22:31:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0536DC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 22:50:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234056AbiBXWbi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Feb 2022 17:31:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38544 "EHLO
+        id S234763AbiBXWuh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Feb 2022 17:50:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232184AbiBXWbh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 17:31:37 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 531C049F00
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 14:31:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1645741867; x=1677277867;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=++bDxWyUa0600WILZuVRl5CdN6JHPLb2Cu+YBAzrL0I=;
-  b=d0ibP+jgycRX3ct7EVRpj/3M9peYyLqw2Kin1jGipI1yzRiJpZdVx2v1
-   94s82cS/9JdYURUaAaQhq7HjnLacFPVcDNA2WXasMxjSZFchv5Mbhpnhs
-   AfmOqm7ZhwG3CM9sKoziWHOmBp10CkonfxrjkZB8QsWlXvKwZ/cbjNvY6
-   jeL40xQI68pJEALOlxrO4RJ2gncyVZxqQxrW7+bWJNRjM1wxHwBmAty/2
-   LS0U+MPcZKCy2x7FwmhWzYssmknb/h9qQzpqpXZBdqN2QFCN/MSUvsdQw
-   e0/L/fbdGWCSWWtKqsaK9l8z177DM9dvn1nTsnTLJ+9b4ZS6VTH94FjpX
-   A==;
-X-IronPort-AV: E=Sophos;i="5.90,134,1643644800"; 
-   d="scan'208";a="298014988"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Feb 2022 06:31:06 +0800
-IronPort-SDR: Y2HjSEgjJEWm4IfFdIjrquziTtdCBgJqtzZ8wc8SYxrax/P65HX7LTdyzrX82GrdZkToqfQ2DZ
- U8KUEaKEhn53dZrU0ncBt8DtCMgDZLv+dIpowyljxrBI8beAx8kZebHjgC9EeQO6dLaVmfUVAH
- 3XgqDWM0zPrmhwdGv1gMy/wQsTucK1yRWDIlXcyeStwHvSWwdhRAyQHiPnDi1pvWe2c3btFjmW
- S8UGa7+0bAvvDL76PCPRER8khh+ido/JmYb/pJU5e7Cs+6qadHoKeamnYIbP8j4FJ09AlM2U4Z
- d2RZPZazk3WkKI8BxEXssWUQ
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2022 14:02:36 -0800
-IronPort-SDR: c8re7Y+7jzgeplZ+zo7f0ksj+z3JmVtgiZtnhemJOdYdfrQSrjZowXgzsXphwzC1YPajQWlmWz
- Wo/JMCNBYm/zyZxSk2EyFYI1bICQ0hDqPDP0GXyhA4J5fT7VQ74Ro/DRUDMXgheHqKj8J3oWXb
- Ep4r+izvKZdPMnyERw8MVspyabJf7iILJjXGR33Z57vIWh9uvz+2DLx03j8lcp2FyIiZL7ZDPE
- 79vuz0sdJyJjJK5EjRKh8eK39Q1z0UsYWFGpXQhmAEIBMh2izwnXGsh6g8EJhBbQcUE1vUvJR3
- He8=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Feb 2022 14:31:07 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K4SL14KHXz1SHwl
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 14:31:05 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1645741865; x=1648333866; bh=++bDxWyUa0600WILZuVRl5CdN6JHPLb2Cu+
-        YBAzrL0I=; b=eu7OEt3X4uLHki18rl5ZUIiZ+CH6Bgy2msSpFqYOc/W+Fh6Qqem
-        rvObVY2CRzUeC9975FxRMiUClHe/MSGgG3eX0Cv08MCZSb/VJZTTlqin8vCG+RdE
-        ef7IwQkuwnpjQCq4etyw4u9TkNTNxv0Msc5Wk85IE7As5cYyOdYnvTDi1avIRlOM
-        UyYrJsALxYW86W9k2YG5BrWX64+uab0ThbrvpJPG54ufVR2rFjPcAeUGPiEd0i0K
-        6QNlKWu+ZviwGRaaj5YzkouQGgm7i70WJmDGT8LdphFolDAnRcoNx2NKt7W5Mh+c
-        LrJDaz1IlyL4HLAKbjKW3eJ+UjaF2WqXBDA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id jB4Zi-62U19W for <linux-scsi@vger.kernel.org>;
-        Thu, 24 Feb 2022 14:31:05 -0800 (PST)
-Received: from [10.225.163.81] (unknown [10.225.163.81])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K4SKz6h42z1Rvlx;
-        Thu, 24 Feb 2022 14:31:03 -0800 (PST)
-Message-ID: <c91d1bb9-dd5d-e9be-5c37-405a13e91901@opensource.wdc.com>
-Date:   Fri, 25 Feb 2022 07:31:02 +0900
+        with ESMTP id S230079AbiBXWug (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 17:50:36 -0500
+X-Greylist: delayed 1803 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 24 Feb 2022 14:50:05 PST
+Received: from outgoing-stata.csail.mit.edu (outgoing-stata.csail.mit.edu [128.30.2.210])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C3B51120F7D;
+        Thu, 24 Feb 2022 14:50:05 -0800 (PST)
+Received: from [128.177.79.46] (helo=[10.118.101.22])
+        by outgoing-stata.csail.mit.edu with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.82)
+        (envelope-from <srivatsa@csail.mit.edu>)
+        id 1nNMTe-000HJc-Fb; Thu, 24 Feb 2022 17:20:46 -0500
+Subject: [PATCH v5 3/3] MAINTAINERS: Mark VMware mailing list entries as email
+ aliases
+From:   "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
+To:     jgross@suse.com, x86@kernel.org, pv-drivers@vmware.com,
+        tglx@linutronix.de, bp@alien8.de
+Cc:     Joe Perches <joe@perches.com>, Zack Rusin <zackr@vmware.com>,
+        Nadav Amit <namit@vmware.com>,
+        Vivek Thampi <vithampi@vmware.com>,
+        Vishal Bhakta <vbhakta@vmware.com>,
+        Ronak Doshi <doshir@vmware.com>,
+        linux-graphics-maintainer@vmware.com,
+        dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        linux-input@vger.kernel.org, sdeep@vmware.com, vithampi@vmware.com,
+        amakhalov@vmware.com, keerthanak@vmware.com, srivatsab@vmware.com,
+        anishs@vmware.com, linux-kernel@vger.kernel.org, namit@vmware.com,
+        joe@perches.com, kuba@kernel.org, rostedt@goodmis.org,
+        srivatsa@csail.mit.edu
+Date:   Thu, 24 Feb 2022 14:24:49 -0800
+Message-ID: <164574148378.654750.15832494349474144706.stgit@csail.mit.edu>
+In-Reply-To: <164574138686.654750.10250173565414769119.stgit@csail.mit.edu>
+References: <164574138686.654750.10250173565414769119.stgit@csail.mit.edu>
+User-Agent: StGit/1.4
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH 1/5] scsi: mpt3sas: fix Mpi2SCSITaskManagementRequest_t
- TaskMID handling
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com
-References: <20220224101129.371905-1-damien.lemoal@opensource.wdc.com>
- <20220224101129.371905-2-damien.lemoal@opensource.wdc.com>
- <4143bc11-1c0c-e51f-f012-595c59bc8fdd@acm.org>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <4143bc11-1c0c-e51f-f012-595c59bc8fdd@acm.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/25/22 04:49, Bart Van Assche wrote:
-> On 2/24/22 02:11, Damien Le Moal wrote:
->> diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_init.h b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
->> index 8f1b903fe0a9..80bcf7d83184 100644
->> --- a/drivers/scsi/mpt3sas/mpi/mpi2_init.h
->> +++ b/drivers/scsi/mpt3sas/mpi/mpi2_init.h
->> @@ -428,7 +428,7 @@ typedef struct _MPI2_SCSI_TASK_MANAGE_REQUEST {
->>   	U16 Reserved3;		/*0x0A */
->>   	U8 LUN[8];		/*0x0C */
->>   	U32 Reserved4[7];	/*0x14 */
->> -	U16 TaskMID;		/*0x30 */
->> +	__le16 TaskMID;		/*0x30 */
->>   	U16 Reserved5;		/*0x32 */
->>   } MPI2_SCSI_TASK_MANAGE_REQUEST,
->>   	*PTR_MPI2_SCSI_TASK_MANAGE_REQUEST,
-> 
-> Is this change necessary? From drivers/scsi/mpt3sas/mpi/mpi2_type.h:
-> 
-> typedef __le16 U16;
+From: Srivatsa S. Bhat (VMware) <srivatsa@csail.mit.edu>
 
-Well, sparse seems to not catch that. Without the change, I get
-warnings. Will check again.
+VMware mailing lists in the MAINTAINERS file are private lists meant
+for VMware-internal review/notification for patches to the respective
+subsystems. Anyone can post to these addresses, but there is no public
+read access like open mailing lists, which makes them more like email
+aliases instead (to reach out to reviewers).
 
-> 
-> BTW, I think the U16 etc. typedefs should disappear.
+So update all the VMware mailing list references in the MAINTAINERS
+file to mark them as such, using "R: email-alias@vmware.com".
 
-I agree on that :)
+Signed-off-by: Srivatsa S. Bhat (VMware) <srivatsa@csail.mit.edu>
+Acked-by: Juergen Gross <jgross@suse.com>
+Acked-by: Joe Perches <joe@perches.com>
+Acked-by: Zack Rusin <zackr@vmware.com>
+Cc: Nadav Amit <namit@vmware.com>
+Cc: Vivek Thampi <vithampi@vmware.com>
+Cc: Vishal Bhakta <vbhakta@vmware.com>
+Cc: Ronak Doshi <doshir@vmware.com>
+Cc: pv-drivers@vmware.com
+Cc: linux-graphics-maintainer@vmware.com
+Cc: dri-devel@lists.freedesktop.org
+Cc: linux-rdma@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-input@vger.kernel.org
+---
 
-> 
-> Thanks,
-> 
-> Bart.
+ MAINTAINERS |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 72771881f159..4041edba891d 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6307,8 +6307,8 @@ T:	git git://anongit.freedesktop.org/drm/drm-misc
+ F:	drivers/gpu/drm/vboxvideo/
+ 
+ DRM DRIVER FOR VMWARE VIRTUAL GPU
+-M:	"VMware Graphics" <linux-graphics-maintainer@vmware.com>
+ M:	Zack Rusin <zackr@vmware.com>
++R:	VMware Graphics Reviewers <linux-graphics-maintainer@vmware.com>
+ L:	dri-devel@lists.freedesktop.org
+ S:	Supported
+ T:	git git://anongit.freedesktop.org/drm/drm-misc
+@@ -14611,7 +14611,7 @@ PARAVIRT_OPS INTERFACE
+ M:	Juergen Gross <jgross@suse.com>
+ M:	Srivatsa S. Bhat (VMware) <srivatsa@csail.mit.edu>
+ R:	Alexey Makhalov <amakhalov@vmware.com>
+-M:	"VMware, Inc." <pv-drivers@vmware.com>
++R:	VMware PV-Drivers Reviewers <pv-drivers@vmware.com>
+ L:	virtualization@lists.linux-foundation.org
+ L:	x86@kernel.org
+ S:	Supported
+@@ -20642,7 +20642,7 @@ F:	tools/testing/vsock/
+ 
+ VMWARE BALLOON DRIVER
+ M:	Nadav Amit <namit@vmware.com>
+-M:	"VMware, Inc." <pv-drivers@vmware.com>
++R:	VMware PV-Drivers Reviewers <pv-drivers@vmware.com>
+ L:	linux-kernel@vger.kernel.org
+ S:	Maintained
+ F:	drivers/misc/vmw_balloon.c
+@@ -20650,7 +20650,7 @@ F:	drivers/misc/vmw_balloon.c
+ VMWARE HYPERVISOR INTERFACE
+ M:	Srivatsa S. Bhat (VMware) <srivatsa@csail.mit.edu>
+ M:	Alexey Makhalov <amakhalov@vmware.com>
+-M:	"VMware, Inc." <pv-drivers@vmware.com>
++R:	VMware PV-Drivers Reviewers <pv-drivers@vmware.com>
+ L:	virtualization@lists.linux-foundation.org
+ L:	x86@kernel.org
+ S:	Supported
+@@ -20661,14 +20661,14 @@ F:	arch/x86/kernel/cpu/vmware.c
+ VMWARE PVRDMA DRIVER
+ M:	Bryan Tan <bryantan@vmware.com>
+ M:	Vishnu Dasa <vdasa@vmware.com>
+-M:	VMware PV-Drivers <pv-drivers@vmware.com>
++R:	VMware PV-Drivers Reviewers <pv-drivers@vmware.com>
+ L:	linux-rdma@vger.kernel.org
+ S:	Maintained
+ F:	drivers/infiniband/hw/vmw_pvrdma/
+ 
+ VMware PVSCSI driver
+ M:	Vishal Bhakta <vbhakta@vmware.com>
+-M:	VMware PV-Drivers <pv-drivers@vmware.com>
++R:	VMware PV-Drivers Reviewers <pv-drivers@vmware.com>
+ L:	linux-scsi@vger.kernel.org
+ S:	Maintained
+ F:	drivers/scsi/vmw_pvscsi.c
+@@ -20676,7 +20676,7 @@ F:	drivers/scsi/vmw_pvscsi.h
+ 
+ VMWARE VIRTUAL PTP CLOCK DRIVER
+ M:	Vivek Thampi <vithampi@vmware.com>
+-M:	"VMware, Inc." <pv-drivers@vmware.com>
++R:	VMware PV-Drivers Reviewers <pv-drivers@vmware.com>
+ L:	netdev@vger.kernel.org
+ S:	Supported
+ F:	drivers/ptp/ptp_vmw.c
+@@ -20684,15 +20684,15 @@ F:	drivers/ptp/ptp_vmw.c
+ VMWARE VMCI DRIVER
+ M:	Jorgen Hansen <jhansen@vmware.com>
+ M:	Vishnu Dasa <vdasa@vmware.com>
++R:	VMware PV-Drivers Reviewers <pv-drivers@vmware.com>
+ L:	linux-kernel@vger.kernel.org
+-L:	pv-drivers@vmware.com (private)
+ S:	Maintained
+ F:	drivers/misc/vmw_vmci/
+ 
+ VMWARE VMMOUSE SUBDRIVER
+ M:	Zack Rusin <zackr@vmware.com>
+-M:	"VMware Graphics" <linux-graphics-maintainer@vmware.com>
+-M:	"VMware, Inc." <pv-drivers@vmware.com>
++R:	VMware Graphics Reviewers <linux-graphics-maintainer@vmware.com>
++R:	VMware PV-Drivers Reviewers <pv-drivers@vmware.com>
+ L:	linux-input@vger.kernel.org
+ S:	Maintained
+ F:	drivers/input/mouse/vmmouse.c
+@@ -20700,7 +20700,7 @@ F:	drivers/input/mouse/vmmouse.h
+ 
+ VMWARE VMXNET3 ETHERNET DRIVER
+ M:	Ronak Doshi <doshir@vmware.com>
+-M:	pv-drivers@vmware.com
++R:	VMware PV-Drivers Reviewers <pv-drivers@vmware.com>
+ L:	netdev@vger.kernel.org
+ S:	Maintained
+ F:	drivers/net/vmxnet3/
 
 
--- 
-Damien Le Moal
-Western Digital Research
