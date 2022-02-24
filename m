@@ -2,82 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27AC0C43217
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 18:05:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 993BBC4321E
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Feb 2022 18:16:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232477AbiBXSF2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Feb 2022 13:05:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55716 "EHLO
+        id S232621AbiBXSQh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Feb 2022 13:16:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229662AbiBXSF2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 13:05:28 -0500
-Received: from desiato.infradead.org (desiato.infradead.org [IPv6:2001:8b0:10b:1:d65d:64ff:fe57:4e05])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C45FC674C7;
-        Thu, 24 Feb 2022 10:04:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=Content-Transfer-Encoding:Content-Type
-        :In-Reply-To:From:References:To:Subject:MIME-Version:Date:Message-ID:Sender:
-        Reply-To:Cc:Content-ID:Content-Description;
-        bh=cJwoEaVvvYLAlik9YwBxkUiII/mzymj+DJDxr+/UFjI=; b=kaoXWa9/LCvq/dsK7GYIHAVRqj
-        t6h6MjOTEfYdrxdtvSuX4dAQS79bV95Y9zFfRDQolYgeq38GznJTO27YdmEQ6CUs0pQx1NGBfvZ01
-        q9G6ESlFU28pbqEmlS/csaNof3P44yXN8KrsmwYSnIIRjpWVlnBws3eO+kYS7QMPjMahm8JLEptdM
-        qF93cfb8cmSq1yrMF/Rd5B2XRIqmumgyIx62nupruebgcYIe9tNnBX0mQ4A8CcXKAU6MPlXLzoeyd
-        7Qudpxmr8qnqLceKGlRi1nvcChnRPWX5SfoavOvL77x0Lv/OC1Zu2s4D2AClLJjxAlM+H5JIL6KBE
-        by19IE4Q==;
-Received: from [2601:1c0:6280:3f0::aa0b]
-        by desiato.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nNITw-00Cgl5-K1; Thu, 24 Feb 2022 18:04:48 +0000
-Message-ID: <52f0922c-143a-8a40-b1e1-23d562ca6f80@infradead.org>
-Date:   Thu, 24 Feb 2022 10:04:42 -0800
+        with ESMTP id S232607AbiBXSQg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2022 13:16:36 -0500
+Received: from smtp.smtpout.orange.fr (smtp03.smtpout.orange.fr [80.12.242.125])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55755253172
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2022 10:16:02 -0800 (PST)
+Received: from [192.168.1.18] ([90.126.236.122])
+        by smtp.orange.fr with ESMTPA
+        id NIeQnn7MbrdkGNIeQnJ9oN; Thu, 24 Feb 2022 19:16:00 +0100
+X-ME-Helo: [192.168.1.18]
+X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
+X-ME-Date: Thu, 24 Feb 2022 19:16:00 +0100
+X-ME-IP: 90.126.236.122
+Message-ID: <b3e6a19b-caa0-f58a-1039-02b60b17ed21@wanadoo.fr>
+Date:   Thu, 24 Feb 2022 19:15:38 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: mmotm 2022-02-23-21-20 uploaded
- [drivers/scsi/hisi_sas/hisi_sas_main.ko]
+ Thunderbird/91.5.0
+Subject: Re: [PATCH 00/16] Remove usage of the deprecated "pci-dma-compat.h"
+ API
 Content-Language: en-US
-To:     Andrew Morton <akpm@linux-foundation.org>, broonie@kernel.org,
-        mhocko@suse.cz, sfr@canb.auug.org.au, linux-next@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, mm-commits@vger.kernel.org,
-        linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>
-References: <20220224052137.BFB10C340E9@smtp.kernel.org>
-From:   Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20220224052137.BFB10C340E9@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To:     Arnd Bergmann <arnd@arndb.de>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        David Miller <davem@davemloft.net>,
+        David Airlie <airlied@linux.ie>, Vinod Koul <vkoul@kernel.org>,
+        hao.wu@intel.com, Tom Rix <trix@redhat.com>,
+        Moritz Fischer <mdf@kernel.org>, Xu Yilun <yilun.xu@intel.com>,
+        awalls@md.metrocast.net,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        sreekanth.reddy@broadcom.com,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        Alex Bounine <alex.bou9@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        alpha <linux-alpha@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        dmaengine@vger.kernel.org, linux-fpga@vger.kernel.org,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Kernel Janitors <kernel-janitors@vger.kernel.org>
+References: <cover.1641500561.git.christophe.jaillet@wanadoo.fr>
+ <YhXmQwvjMFPQFPUr@infradead.org>
+ <ddf6010e-417d-8da7-8e11-1b4a55f92fff@wanadoo.fr>
+ <YhckzJp5/x9zW4uQ@infradead.org>
+ <CAK8P3a23Pjm1Btc=mXX=vU4hkNiPqz3+o4=j0FuYKHB7KuMtPg@mail.gmail.com>
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+In-Reply-To: <CAK8P3a23Pjm1Btc=mXX=vU4hkNiPqz3+o4=j0FuYKHB7KuMtPg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
+Le 24/02/2022 à 08:07, Arnd Bergmann a écrit :
+> On Thu, Feb 24, 2022 at 7:25 AM Christoph Hellwig <hch@infradead.org> wrote:
+>> On Wed, Feb 23, 2022 at 09:26:56PM +0100, Christophe JAILLET wrote:
+>>> Patch 01, 04, 05, 06, 08, 09 have not reached -next yet.
+>>> They all still apply cleanly.
+>>>
+>>> 04 has been picked it up for inclusion in the media subsystem for 5.18.
+>>> The other ones all have 1 or more Reviewed-by:/Acked-by: tags.
+>>>
+>>> Patch 16 must be resubmitted to add "#include <linux/dma-mapping.h>" in
+>>> order not to break builds.
+>> So how about this:  I'll pick up 1, 5,6,8 and 9 for the dma-mapping
+>> tree.  After -rc1 when presumably all other patches have reached
+>> mainline your resubmit one with the added include and we finish this
+>> off?
+> Sounds good to me as well.
+>
+>         Arnd
 
-On 2/23/22 21:21, Andrew Morton wrote:
-> The mm-of-the-moment snapshot 2022-02-23-21-20 has been uploaded to
-> 
->    https://www.ozlabs.org/~akpm/mmotm/
-> 
-> mmotm-readme.txt says
-> 
-> README for mm-of-the-moment:
-> 
-> https://www.ozlabs.org/~akpm/mmotm/
-> 
-> This is a snapshot of my -mm patch queue.  Uploaded at random hopefully
-> more than once a week.
-> 
-> You will need quilt to apply these patches to the latest Linus release (5.x
-> or 5.x-rcY).  The series file is in broken-out.tar.gz and is duplicated in
-> https://ozlabs.org/~akpm/mmotm/series
-
-on  i386:
-
-ERROR: modpost: "sas_execute_ata_cmd" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
-
-CONFIG_SCSI_SAS_ATTRS=y
-CONFIG_SCSI_SAS_LIBSAS=y
-# CONFIG_SCSI_SAS_ATA is not set
-CONFIG_SCSI_SAS_HOST_SMP=y
+This is fine for me.
+When all patches have reached -next, I'll re-submit the fixed 16th patch.
 
 
--- 
-~Randy
+Thanks for your assistance for ending this long story :)
+
+CJ
+
