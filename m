@@ -2,170 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 621C9C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Feb 2022 11:03:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 521ABC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Feb 2022 12:52:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239919AbiBYLDt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Feb 2022 06:03:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33064 "EHLO
+        id S240743AbiBYMww (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Feb 2022 07:52:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239913AbiBYLDq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Feb 2022 06:03:46 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27681223219;
-        Fri, 25 Feb 2022 03:03:14 -0800 (PST)
-Received: from fraeml734-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K4mwC4Nk0z683hj;
-        Fri, 25 Feb 2022 18:58:19 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml734-chm.china.huawei.com (10.206.15.215) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Fri, 25 Feb 2022 12:03:12 +0100
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Fri, 25 Feb 2022 11:03:09 +0000
-From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <chenxiang66@hisilicon.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <damien.lemoal@opensource.wdc.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 2/2] scsi: libsas: Use bool for queue_work() return code
-Date:   Fri, 25 Feb 2022 18:57:36 +0800
-Message-ID: <1645786656-221630-3-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1645786656-221630-1-git-send-email-john.garry@huawei.com>
-References: <1645786656-221630-1-git-send-email-john.garry@huawei.com>
+        with ESMTP id S240753AbiBYMwt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Feb 2022 07:52:49 -0500
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06669C4847;
+        Fri, 25 Feb 2022 04:52:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1645793530;
+        bh=9lcoOLsGCXLhkybsvev0q1tU/jL3rCQ5FnCyxRe43og=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=Jd/SsLoPixrR02DgY9hWbozzLSPPbGTNJnOW7wDsw/ZrlZX9EduwaxRHuSJO5jDdl
+         4GLz8WqWjsUHRFAecNL1seO6geNv2sb8+IbG0dcUyhS+YRqJSCrxsqZTT6t21hNJIg
+         qqBYTLJdur5M2gBEV30oIOLZPF68G7Cq+4w2vl4Y=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id F1F4F1280D51;
+        Fri, 25 Feb 2022 07:52:10 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id usP77mWu0meA; Fri, 25 Feb 2022 07:52:10 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1645793530;
+        bh=9lcoOLsGCXLhkybsvev0q1tU/jL3rCQ5FnCyxRe43og=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=Jd/SsLoPixrR02DgY9hWbozzLSPPbGTNJnOW7wDsw/ZrlZX9EduwaxRHuSJO5jDdl
+         4GLz8WqWjsUHRFAecNL1seO6geNv2sb8+IbG0dcUyhS+YRqJSCrxsqZTT6t21hNJIg
+         qqBYTLJdur5M2gBEV30oIOLZPF68G7Cq+4w2vl4Y=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id E1D461280BA6;
+        Fri, 25 Feb 2022 07:52:09 -0500 (EST)
+Message-ID: <c97132f444ddb45dcbd4561df0a0c045dbcc2192.camel@HansenPartnership.com>
+Subject: Re: [REMINDER] LSF/MM/BPF: 2022: Call for Proposals
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Josef Bacik <josef@toxicpanda.com>,
+        lsf-pc@lists.linuxfoundation.org
+Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, bpf@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date:   Fri, 25 Feb 2022 07:52:08 -0500
+In-Reply-To: <YherWymi1E/hP/sS@localhost.localdomain>
+References: <YherWymi1E/hP/sS@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Function queue_work() returns a bool, so use a bool to hold this value
-for the return code from callers, which should make the code a tiny bit
-more clear.
+On Thu, 2022-02-24 at 10:59 -0500, Josef Bacik wrote:
+> A few updates
+> 
+> - The COVID related restrictions can be found here 
+> 
+> 	
+> https://events.linuxfoundation.org/lsfmm/attend/health-and-safety/
+> 
+> - We are working on a virtual component, however it will likely not
+> be interactive, likely just a live stream and then an IRC channel to
+> ask questions through.
 
-Also take this opportunity to condense the code of the those callers, such
-as sas_queue_work(), as suggested by Damien.
+We've been experimenting with hybrid over at plumbers.  Our last
+experiment at LSS in Seattle managed to get us a successful interactive
+two way A/V stream for a live Q and A using Big Blue Button.  We
+collaborated with E3 on this (The standard LF A/V provider for OSS) so
+most likely they'll be who you have in Palm Springs.  We were planning
+to go for another trial at OSS in Austin, but if you'd like to be our
+Guinea Pig, we can put all our infrastructure at your disposal.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/libsas/sas_event.c    | 30 +++++++++++-------------------
- drivers/scsi/libsas/sas_internal.h |  2 +-
- 2 files changed, 12 insertions(+), 20 deletions(-)
+Note, your hotel uplink may not support doing this for all four tracks:
+we estimate the uplink bandwidth requirement at around 10M per track
+dedicated, but we could try it on a single track.
 
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 8ff58fd97837..f3a17191a4fe 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -10,29 +10,26 @@
- #include <scsi/scsi_host.h>
- #include "sas_internal.h"
- 
--int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
-+bool sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw)
- {
--	/* it's added to the defer_q when draining so return succeed */
--	int rc = 1;
--
- 	if (!test_bit(SAS_HA_REGISTERED, &ha->state))
--		return 0;
-+		return false;
- 
- 	if (test_bit(SAS_HA_DRAINING, &ha->state)) {
- 		/* add it to the defer list, if not already pending */
- 		if (list_empty(&sw->drain_node))
- 			list_add_tail(&sw->drain_node, &ha->defer_q);
--	} else
--		rc = queue_work(ha->event_q, &sw->work);
-+		return true;
-+	}
- 
--	return rc;
-+	return queue_work(ha->event_q, &sw->work);
- }
- 
--static int sas_queue_event(int event, struct sas_work *work,
-+static bool sas_queue_event(int event, struct sas_work *work,
- 			    struct sas_ha_struct *ha)
- {
- 	unsigned long flags;
--	int rc;
-+	bool rc;
- 
- 	spin_lock_irqsave(&ha->lock, flags);
- 	rc = sas_queue_work(ha, work);
-@@ -44,13 +41,12 @@ static int sas_queue_event(int event, struct sas_work *work,
- void sas_queue_deferred_work(struct sas_ha_struct *ha)
- {
- 	struct sas_work *sw, *_sw;
--	int ret;
- 
- 	spin_lock_irq(&ha->lock);
- 	list_for_each_entry_safe(sw, _sw, &ha->defer_q, drain_node) {
- 		list_del_init(&sw->drain_node);
--		ret = sas_queue_work(ha, sw);
--		if (ret != 1) {
-+
-+		if (!sas_queue_work(ha, sw)) {
- 			pm_runtime_put(ha->dev);
- 			sas_free_event(to_asd_sas_event(&sw->work));
- 		}
-@@ -170,7 +166,6 @@ void sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
- {
- 	struct sas_ha_struct *ha = phy->ha;
- 	struct asd_sas_event *ev;
--	int ret;
- 
- 	BUG_ON(event >= PORT_NUM_EVENTS);
- 
-@@ -186,8 +181,7 @@ void sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
- 	if (sas_defer_event(phy, ev))
- 		return;
- 
--	ret = sas_queue_event(event, &ev->work, ha);
--	if (ret != 1) {
-+	if (!sas_queue_event(event, &ev->work, ha)) {
- 		pm_runtime_put(ha->dev);
- 		sas_free_event(ev);
- 	}
-@@ -199,7 +193,6 @@ void sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
- {
- 	struct sas_ha_struct *ha = phy->ha;
- 	struct asd_sas_event *ev;
--	int ret;
- 
- 	BUG_ON(event >= PHY_NUM_EVENTS);
- 
-@@ -215,8 +208,7 @@ void sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
- 	if (sas_defer_event(phy, ev))
- 		return;
- 
--	ret = sas_queue_event(event, &ev->work, ha);
--	if (ret != 1) {
-+	if (!sas_queue_event(event, &ev->work, ha)) {
- 		pm_runtime_put(ha->dev);
- 		sas_free_event(ev);
- 	}
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 24843db2cb65..13d0ffaada93 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -67,7 +67,7 @@ void sas_porte_broadcast_rcvd(struct work_struct *work);
- void sas_porte_link_reset_err(struct work_struct *work);
- void sas_porte_timer_event(struct work_struct *work);
- void sas_porte_hard_reset(struct work_struct *work);
--int sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw);
-+bool sas_queue_work(struct sas_ha_struct *ha, struct sas_work *sw);
- 
- int sas_notify_lldd_dev_found(struct domain_device *);
- void sas_notify_lldd_dev_gone(struct domain_device *);
--- 
-2.26.2
+Regards,
+
+James
+
 
