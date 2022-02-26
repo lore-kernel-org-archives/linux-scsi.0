@@ -2,56 +2,56 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59823C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 26 Feb 2022 23:05:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96784C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 26 Feb 2022 23:05:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229960AbiBZXFi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 26 Feb 2022 18:05:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43174 "EHLO
+        id S229964AbiBZXFj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 26 Feb 2022 18:05:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229955AbiBZXFb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Feb 2022 18:05:31 -0500
+        with ESMTP id S229958AbiBZXFc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Feb 2022 18:05:32 -0500
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2E3115C66C
-        for <linux-scsi@vger.kernel.org>; Sat, 26 Feb 2022 15:04:56 -0800 (PST)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21QI88mc008207;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2D1015DDF4
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Feb 2022 15:04:57 -0800 (PST)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21QIIqVx030109;
         Sat, 26 Feb 2022 23:04:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=w36kmbvE03CotuJo4e7VJsDHPTfoezEt666a0noBitw=;
- b=lEjyR86ou8skMLnaxcjzKrgraF8YHeF3iqTPZ2wy9eweLvbTRnmfaziwMs88y3oWuHXj
- MjBS5dCT601/O3/UEGAeQW1B9cCILMVYYPREfS6RZ6sHiFQdf98dRvwXrg01MXrjkWI9
- XOdh3+CrETKsIePM1h55V+Q8iSM08DtsFw2jN2HfOETu1ZikylqCHX6KBZi7vglzpLqG
- 0/IWfhm2mtJjKrgOrEeCvHD5p2LLX+c9e5ZEQirOVD65E8biXEp5DlWQqc4OciSqDvzX
- xcwokJErkFSvkOJU6H+efCi1gU/C5/L0qFLv9DSVV8XFr6qTnbDkvMqtB1Pv6OusTGvA /w== 
+ s=corp-2021-07-09; bh=wYq8uOP3/EwabJNpr1OmCzpMvDmk4s1gK0zncuI5ls0=;
+ b=v7EYjkGdDHrSNNawgfnPDGaiJ4kVTi3+5Aab5D8KqT0H4vmKkkciinPl+l1vTOjzqcoz
+ HyTrZgruTSFM/A3eZYVWxM3+vWEEawFcw7oNrtVs1DmNZZ9unxTNaLSiBizKz/OFNh82
+ umjRqYatc3fYfvsdS5gqacvCBF4cwvuy4HYnTjEPqjtkYJV3tppJxhfUOSFzTORxuLPn
+ GiUVyyv1qg1NC7tA4FJeAI3XVREccC+YnNBuVS1aBmchMruo+9zuMqo+FeDLGdJBcGQf
+ pJQJ/r4oA7D+Q/Je48lqBXAfCKodDgvALsl6Nin3cOcJ2JEsMw/7VZ8NRBVhPkgwg+hQ cQ== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3efb02hbcd-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3efamc9bkb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 26 Feb 2022 23:04:49 +0000
+        Sat, 26 Feb 2022 23:04:50 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21QMtm5I027402;
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21QMtm5J027402;
         Sat, 26 Feb 2022 23:04:49 GMT
 Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2109.outbound.protection.outlook.com [104.47.70.109])
-        by userp3030.oracle.com with ESMTP id 3ef9at5krx-1
+        by userp3030.oracle.com with ESMTP id 3ef9at5krx-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 26 Feb 2022 23:04:48 +0000
+        Sat, 26 Feb 2022 23:04:49 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Z0BStM58Y/QrorzE/JvegkJKDiP3QbUUS0pAoZjEvPQJiSUFHboijsQ2itZRnbNk0U2uz1uGlfSFC8ryUcDvIHIZSJnZ+avXH3e3j+afRxDpki8qlsyuvk/DaGYwhSLoThxuiE10vMbffJDDPoZQWk7P71cVsJR0Ig6ldYLlqOF1aaFBl1BMcDHTAFMSNLl9bJMrLMt9D54XWo9cW2vk9g4uLVVtTsj0lYhOXWTCZdm8AU87TGu80jruNeVK8OzF3ZaxR11FQpb3IID0ju1ti7OPGNg7eEZQGeW/uAkfUn+EVm+oqjy1/g9RF9Ri49xXI79uJD44ArWkpD9f0LFPFg==
+ b=Hcf+cW/1gTPZ1xIZlzheDexqjsRw//f72zrIg8IcS5moLxlaVGc9R9toS3e0vClE7wlbtuAQ+sUFN0FXe27M1yyjdar66NcRz6Xrh6B6FYmKiPNiUUbEq61A77z0tPiGU0C5FwLzkdZFD/ae44y2npGTVVy2kbLunA3d7PpNa+gthK1uRdqKgy3+n3FR1n8jPuwYOPMqX6endWO9jnj81Ht6VLyiUw56f1/hvEHffpTYvAvV4V1pQAsASHIPIWIMwByKb+mXUiBKBP0MY/UwWuqNY9jd0demZHncvSMRsQciSp0/M7gX/BDnpzVvdK75f27tYBIeQJr88U83OlOLAg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=w36kmbvE03CotuJo4e7VJsDHPTfoezEt666a0noBitw=;
- b=QdrdQBONXVZCH/PoZvhKbUY4BxYOGHNy/PbBkYUaUCIGY1b4meAJ1gbCa8q4jE+3l5OEG7JptNuAetjNlkEGhXs9TDvlnnihn2sJA4XM2fHamUVx9Yo+l+U+wM/qmAvg0JTrVPTF211ZZx3AsZ1bvmnNtVuUqgxL6irFdMoCx1KcB7R3xPLcSJVvU1wjZIudjFWd6gOOplfK1GyOV9GB4jmykLXmmSXNU5/SWi4+rjqsgOVdQsZ3HUqOZNL+fXPIaT9J7O7T5Q0VSmOy3scFEK7Uyee8B+Ws755bM7rRqQLQrSGa4AyZLZRYET58LMmCRMhv8sm3/yCANJEazY1cHg==
+ bh=wYq8uOP3/EwabJNpr1OmCzpMvDmk4s1gK0zncuI5ls0=;
+ b=W0cf7F+y9vAI0W+ZbCQq5ukON8kp50pE9V6nHQaWX87hsbwK7OAajJ6o2oASlIzA3Gk1VkHrk6EkkT59uaPhcTK6zxQ8/YTsbWIigYv+qdOXBsoWjOirKtpbKmd5+50QR1oy8ztPc2w/lNp1wt+qx/LhQ7A2vzhUZcHE58setPUSRcw59+6Em4tgf11CzsqQL+xdSbrdmTXD5xA9mlUjQWNJdSrdiEJGIphCGvaHLLy38CxwKcZP/ANxlPsN4cFO7phnyA3w2iJwkKKUlWhUdMoQPntSwVFj4r6kG5W4i/2/tb3BpH/yDkeFXt3jat7bLRmIVQb3W1dT8VvCQMI2uQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=w36kmbvE03CotuJo4e7VJsDHPTfoezEt666a0noBitw=;
- b=XjqmmkrTipB6Nr7OxTtuf/yshjhIBRXdMoqfzajZVyvtvcZVYT4uv95+P8SlCqLSwLoQo8XT1z5xl2544m3Po6F5Jo9N3YdJHq5lLe/KPGWe5gMaFtXRN788XoXlXcdcn+6UR2Fox0nJiTnyaDIN8vTHdGKYT13LxyIs3rQq7QU=
+ bh=wYq8uOP3/EwabJNpr1OmCzpMvDmk4s1gK0zncuI5ls0=;
+ b=RrNJz8NP5iwtbLKaLf32qE0S+sMHBknhwM3M+p3UXEIaqc+wQh4gE04EpnMi47cwNo+Kbr4O3/G0Cg9vig7pBbk65k0VfAHXCTGGnnN+r+AnbyAYFe5KzKnSoKQGKhF889dzRiU4GB53wcWK72exf+Cs+t2qgHdW41b2+AwOwj4=
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
  MW4PR10MB5750.namprd10.prod.outlook.com (2603:10b6:303:18e::19) with
  Microsoft SMTP Server (version=TLS1_2,
@@ -67,9 +67,9 @@ To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         GR-QLogic-Storage-Upstream@marvell.com, lduncan@suse.com,
         cleech@redhat.com, liuzhengyuang521@gmail.com
 Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 3/6] scsi: iscsi: Remove iscsi_scan_finished.
-Date:   Sat, 26 Feb 2022 17:04:32 -0600
-Message-Id: <20220226230435.38733-4-michael.christie@oracle.com>
+Subject: [PATCH 4/6] scsi: iscsi, ql4: Use per session workqueue for unbinding.
+Date:   Sat, 26 Feb 2022 17:04:33 -0600
+Message-Id: <20220226230435.38733-5-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220226230435.38733-1-michael.christie@oracle.com>
 References: <20220226230435.38733-1-michael.christie@oracle.com>
@@ -80,186 +80,176 @@ X-ClientProxiedBy: DM6PR08CA0048.namprd08.prod.outlook.com
  (2603:10b6:3:b::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 58517632-d96a-4cf2-f4f8-08d9f97c60f4
+X-MS-Office365-Filtering-Correlation-Id: c015a4bf-4d8c-47e6-8e39-08d9f97c614f
 X-MS-TrafficTypeDiagnostic: MW4PR10MB5750:EE_
-X-Microsoft-Antispam-PRVS: <MW4PR10MB5750AB069B1B3DA0592627E9F13F9@MW4PR10MB5750.namprd10.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <MW4PR10MB5750084555DA782E055FA321F13F9@MW4PR10MB5750.namprd10.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: zlPn/YNyNTkHMOu8+4SGCtAt/PbsZsavgS0dDKrr5gm0c09wf+lBPqEhsdS69mpSERZm63K3VkxP6IbARFQGEVgQ40lTO5E7slZZAZoMb2f+a/rIluyHnu5d8T9YwP5SnsjHra4Nbc4X40vGwHIFSpqpx87gMDvmEo1sv135gAD3iylTykiGg5O1z8ItHh7ZxpodkE8YI7MAGoAgOGGarZJ+Rm4oirf/q+wTRKxLa1E/TnW0tcm0AaxLHWg5s2QH1PR9jIcNRlGURmoSXp4tkSGjKgNMhE1rzAGEsuVFA0KzNV/gbgxhEZ+9GPr1oVDvRi/xfwzUi4cjyBP8rpFQO6U2Wg0tfmtyO76Ih9ieLzYZia1uAnaORXsPMijsmOWXahXTrk10otBbREJE8a0Imf7Zas/ubjqgg8khlOBwrdozVdKlE1ru5v9cYTIhvh7FF3vnOlAQIU6OgoEAvUKXJUFqhxFKqSlKb/woEB1RPF4LOEJ5saVtnoIs8RipMRegn8VjeqGuwUxr3Mwzte4AkdyYDxLXoB5AIN59gnSuxpYhg3ia6JTPe+gsRf9R9lC56hYPZTAA24J5M3jHq7wIKl4bxQGIwTc9pvTXAeBzJzsFMP71s2DEA6MYFdfbegHwNfRPh6/cJGRzSWpz7A87XHvPMBCY5UbchZDE4V1EfjYfCX9TwPylDIW964LN756NL+K9tsI+DjLP3hr4DaTyAQ==
+X-Microsoft-Antispam-Message-Info: PvRmWMWhj0mbhGp1JakgSJ4+T2QJoUpBgTbMFQT0oPyKx6XtKiwTT+zCQ9aj10gezNKWjqmbnGoAMs2VGHHjNMw+/ApZ3ovWgbV2brlvVYclnmbdb2z7emu/WysA/UUsILZDBqlJMg7hppwZLo/GQezGw5W2fC//VY0i9BhezM0WDIUlaxzA0BMzyxs5xf/oDMagN4DSoAjgWqZH6OgI+saS/2HXBo6qMTTLfvu/I5KHWg/B81uqrqvIw3CIAVb8oWasMYuu2o22QdpaNhDdY6N3jypmYzyMsj/VAdH0A78ay+0U+dWkKfly6zlnBkAoE3qt7FDhtWP/obVWHtREtqw7Bk8lgsAf2bh3kBnjgdBZMG7DRaJpuz9FpztXqXiWRGUGD5x0cWLHDz8nBuUZieMykG3OcD6LB1/AS/Iyz2Ivd5d2N6uL2GyPhNYY9EwWhL0t2mVpQCZnL7qMXGVnjq4g9hNMKKVsV5n+dmn3Yi4DTkKo0NynkcUYPb0J70ShmhVwZL2niDRogtcQXVdz9T7VpjRgN13mx0mu0A9zOKFWMMyfittY8nNutyhxE2Y8wKTd0xFiu0N33JyC+ErQVIfHfyeYIF3lgh0daePrmLVlaFwAy6PBm4BW8abDpD4iu15oNkcyadAWB7fQAnXgO0PUdBmdrhwbt/jDDmNx0T7eP3A2JqzF/vEOX0wAR08RGWfWNyfx5gOyZgwzeHVuVQ==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(1076003)(107886003)(2906002)(5660300002)(66946007)(4326008)(8676002)(36756003)(186003)(26005)(38350700002)(38100700002)(2616005)(66556008)(66476007)(6666004)(8936002)(6512007)(6486002)(52116002)(6506007)(83380400001)(86362001)(508600001)(316002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?fx3/pkPw4BPVfciLZLtwxwA7dCCq9OQSEDzE+GmLYxWYwvv5Iyt6uqozY7O1?=
- =?us-ascii?Q?cNsDimDbFQxzNuTLvNiYy8twxVqDaGQj64Q9r/7bb0OUcwhDECNWSKg+jkCK?=
- =?us-ascii?Q?hAOQTzEdxOvXmR7UahI0Vy55i65OGzQIW75/qRk5pgzhjcp3a6olhdHNLJWt?=
- =?us-ascii?Q?QO0DJj1JLk0xhSSXfd7DJ230bRZNq4RirQo/c3IgiHoqD4dDj6oVDrVQ/oqh?=
- =?us-ascii?Q?k77AeM/a65q9GWCtjljfJEIRGkxulSpgPrqVWr55m8S6/Mb44AfHKjm3ZAzZ?=
- =?us-ascii?Q?uhkLde1iPNIs7EQRjpjshmUJTTheibQc66pYxpv3DtnHd4TeMD+/ErAIy3JP?=
- =?us-ascii?Q?cAIV4Gqs8iFqIXG6lXDNcd9eUFtgYPSaTEXme38X9aq8fRr5vbQsy2x6c5UB?=
- =?us-ascii?Q?DFiH60a2VPk+tMtNjeIUg8IzmQnL3iicChAueep29qdut1Vs7FfVAeDA9mba?=
- =?us-ascii?Q?myW1bD4fJNLxz8/UtUii/2fmzqQxboEKZ9Rzw+BLg+ZFRR/x6xWlfpzLatdM?=
- =?us-ascii?Q?fM0n/Dinzo54wJOibV1byXIiz7vOgNeyjzejQ9F3IceBV8zeZjMvmd9n38uE?=
- =?us-ascii?Q?D0mhC19DTsdEzqpn6aM0fTr1b8eZPwnJKyTaoqNBy90TE0pN/uz75s0evTdq?=
- =?us-ascii?Q?3EDRw31c/bWUm4jgp77y9LV5KlTo1/aHWvdo/JyQEg3mwsSghw3CXVBdYmtc?=
- =?us-ascii?Q?Tf5fTajDeTn8emGzdFxwSAu+wsslcEU7AKF0owtXp8lD51t96HLifX5RUTBf?=
- =?us-ascii?Q?pCwxap56E21oYCEttzkRo5/FeT9mKurKhi9Xo7SgwIfxaEjNN4rEwE6cGc8C?=
- =?us-ascii?Q?I6YL7c6FOQlZU5huxCpClmyceu7XhbL9FNoZ33qqro+5DNeCX00IMCdWTWxD?=
- =?us-ascii?Q?+DQaqYhoyGeRk1ug6ybTOS0qiQDtjaB+yWiEv3HrWcfH9HL64YIZmtRVIcvL?=
- =?us-ascii?Q?s5Qc3g8hHbx9lanJB+msKjbQneixRmVBf7PFqJpiF8NVH91DjULWZtSYzU2L?=
- =?us-ascii?Q?0+9n28MroxkRnPWwrSSshga+HqzOC74yjg8538CqVckoBJ+BiZE4iW4elPiH?=
- =?us-ascii?Q?R+ZauPfAKMG/UUB7/V3qTEoKezZaYhHQRAT2XJ+dUseU9jy8z9fxXKbSd7wN?=
- =?us-ascii?Q?Sv2PvQu7j2BXwd/agFAaMBlRBRosxsyP3hAn5Z3TOXVlKiJy7O/8hDgd01QA?=
- =?us-ascii?Q?kcG+H5esulzceJ8RVFnvES603GdIerUd4xClvMdtzLr9H0AA3Was8VRRd8+z?=
- =?us-ascii?Q?W4XGZu/QE8ssxpvpKb2G9AEpX4x7KOYrdqBhXgXMZA7/nCNdpMXuDFW7PC3X?=
- =?us-ascii?Q?Xb08UoDl0o/7KwcHJQROmXwdngqTruD4QDGujuEPmyiZKm1JgU783Q4nf34C?=
- =?us-ascii?Q?L8PF4I464vomt6yZArzK+cKhFpS7vwU98QMGgtL2DP/ByzruEZumHGDIjE9A?=
- =?us-ascii?Q?N24PhUbxEC4tRWMKBf2NyQCfirwNrtGImhvGpsC/ZF0NgWyjAPFojQ/ITbif?=
- =?us-ascii?Q?bCN34+9Vvke7TNZhjtEmAN28jzYiyG4GpblMxELVpc0Ls9Mkr+xHw5f+bM54?=
- =?us-ascii?Q?kSc0jxKQFGgvvvcYVlW/LS4HlDoXCk1yAUSqiicfNF3adAROuOOU4vwEuowV?=
- =?us-ascii?Q?ck2V3imbtVKeV5IAYap013PHYrHX4STrm80jfFSCBd/zrbWN02FnGvgAf60p?=
- =?us-ascii?Q?7em7IA=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?99qZaRDBsWR4rJm+QPfGeJ8Ioa/lBeWBwpgiBWsMdaZ1T9qAJcEz38m/5+ug?=
+ =?us-ascii?Q?M0PiPQMOgVCaolqBdEIWe6dKDiNyMGmr9TpY+AB4bsEmOTuoG66nf9Lkpr5m?=
+ =?us-ascii?Q?kdQsGhyW7OW5UJExSfyCO+h+Z0JInOuBexcqLnEKur4NTMM4yrNoFeneYjBt?=
+ =?us-ascii?Q?BuDbIwWh53IB2eKRSpqQJQNJpE6j4h7/zq+XigJTvBVUgWnbhjrp3Tw9rzKJ?=
+ =?us-ascii?Q?FjeCvnindsiCA8B7fabXQP+TKAidfQtySDTmh1WBGaG/DWgZxlNeQaMk6h1L?=
+ =?us-ascii?Q?NAbwU6G15vq1F8ZCHW6P3gP32cwE9t//vUT1l74sZfRJnbHWQ/m9d4uPUBVL?=
+ =?us-ascii?Q?JbTyooGgByoIl0Poiq50bCoGb60FUFx/j9F2FJJUhtsxVQnZuLh1GMaGst63?=
+ =?us-ascii?Q?HAXEDKL/dz9Q6Ota1SWelyfhZPPKz1rCF6nrwQICRX9yzdm+Y2lxiTr5+02Q?=
+ =?us-ascii?Q?elyoFDXIhoX/4YtWNvMzw5A0kWt/JuwhvnQQpuQEfYpnMN+7pG+68oAIqRXm?=
+ =?us-ascii?Q?poZDRuiGo6FjEp7l2r6r0bvn9n2OvxcE7KQE+8dXgtBfgdtTnZ0LzIqgNx2J?=
+ =?us-ascii?Q?Kp2N1AgaZpVlTZ9mogqP5rFQ0jr7nQlwzVQY1rrHrNOUcnndjeSEh8bJJ1KC?=
+ =?us-ascii?Q?fLi2tc6nbL6jatKIhqIrBSZfUGxEwPMUc/DFnnlaVvPliOebq5j+ewRuvFM2?=
+ =?us-ascii?Q?c6iuUQ6gsm86EU7TDP8ZRXqMU9UWt4pNYW/LpPdfX4V5EQVZLcM/rLxKw1V4?=
+ =?us-ascii?Q?fccufSMbEVqOgmVAI7l07dsIcnEj/udbniNjddCIYKXfl9bYwrCl6ETPA/d4?=
+ =?us-ascii?Q?ORlJ+Uz0JOBXXwVaZHW9JE7M03siqRXqihEjVJMtNHS5DlF+ithMdw+HYWmL?=
+ =?us-ascii?Q?CAi0f1zzeP5yr/da0OxY7Dlgn2rsFOrhr3Yk/KOvTuJvgnSkDhRHz/D1mkPE?=
+ =?us-ascii?Q?vyJghDnezO8sS2JVilMIMfai0nAB1Z/HK07CH/DOoA7UogJFa+7DEVS3fZXW?=
+ =?us-ascii?Q?O2f/BrwLeOdA67BuMO2IfIEWI2pVTY+JS2eMCKD9Y9xgaAoQEBXAekZlPVNo?=
+ =?us-ascii?Q?1CenLUBg3VjGGPXxux/pZ2224LBoK01aPJFneUubx82TQQYdRGh5bnxYTSu3?=
+ =?us-ascii?Q?Ul/04J4wSbs0/6o954VSD+pceVSkQTfbFDGSvJGQJYM1PM2szIxA43ubkYRL?=
+ =?us-ascii?Q?Yb6nWYvy2jBx766QqSrod/eiIgyB0FOfmK66B1zfFmPYmyozPAtE8rY7hWSw?=
+ =?us-ascii?Q?QRxMR32/GfptlQ2vbT4aec9cACsFZmdsnzK+KHJbNTLaXup0qKsePbwFVlFj?=
+ =?us-ascii?Q?MLp7cFmKPmIWH+1DTm/ak7be1PNyFJQafqKVz3TS5CUsQMDOu0MdbGFuDdiy?=
+ =?us-ascii?Q?WjLjErMRDmhLUvfunrPmMOoTab+/yd2vWl5utFJzxF5ke34iUtTHZOjve5OV?=
+ =?us-ascii?Q?59mcDp9/22rReLF6QcnxibNqDrRpNNpChlzn/pLHKABmCm6wrVuCLctFC9am?=
+ =?us-ascii?Q?GB1t87LcZN1xXvTjr4n8DDAj+u53SEN0XM44fXVcwm8GuqxbzCqe4EKnB1Cb?=
+ =?us-ascii?Q?OX5hmamVadlRjEPLlJK1JDSgAKBO0ik2sbyLwA65cYZ8yULxGoCkGAPGERyh?=
+ =?us-ascii?Q?qrD6FUJ47EYSxg9GD89Lyq6qKHrftNMJdUyiLEBy/ONYIOhjVjet13Z8ehQY?=
+ =?us-ascii?Q?q6txnw=3D=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 58517632-d96a-4cf2-f4f8-08d9f97c60f4
+X-MS-Exchange-CrossTenant-Network-Message-Id: c015a4bf-4d8c-47e6-8e39-08d9f97c614f
 X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Feb 2022 23:04:44.9281
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Feb 2022 23:04:45.4750
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ifAXL9dSWLzD5ZdY2h5QAtbyFUWL5RL2gwpJO1gF171BKhjuzc/Q3vzSzLfjfUWx3UpS2QrXY0Wv5beIKPADaz4t7yJTBB6AiObTDP+UnbQ=
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2xcXMrIsZdqzvaphJ3gBSxp4ywJzg+SjuxCFLT9q5d/dmhNTKZ4DGmVDVSzsNcH+l10pl3X+EBg2Di8iCc41TSItxWAro6BVAW+Rd/DgoK8=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR10MB5750
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10270 signatures=684655
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 malwarescore=0
  mlxscore=0 phishscore=0 suspectscore=0 adultscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
  definitions=main-2202260163
-X-Proofpoint-GUID: -VpFJys-r6rs9P_mTJ7voRHpthEoD_fR
-X-Proofpoint-ORIG-GUID: -VpFJys-r6rs9P_mTJ7voRHpthEoD_fR
+X-Proofpoint-ORIG-GUID: f0QiO9GEokEzMYJLEuRNOa_NwhHCE-oz
+X-Proofpoint-GUID: f0QiO9GEokEzMYJLEuRNOa_NwhHCE-oz
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-qla4xxx does not use iscsi_scan_finished anymore so remove it.
+We currently allocate a workqueue per host and only use it for removing
+the target. For the session per host case we could be using this workqueue
+to be able to do recoveries (block, unblock, timeout handling) in
+parallel. To also allow offload drivers to do their session recoveries in
+parallel, this drops the per host workqueue and replaces it with a per
+session one.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 39 +++--------------------------
- include/scsi/scsi_transport_iscsi.h |  2 --
- 2 files changed, 4 insertions(+), 37 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c       |  2 +-
+ drivers/scsi/scsi_transport_iscsi.c | 19 ++++++++++++++-----
+ include/scsi/scsi_transport_iscsi.h |  2 ++
+ 3 files changed, 17 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 0ae936d839f1..955d8cb675f1 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -5096,7 +5096,7 @@ int qla4xxx_unblock_flash_ddb(struct iscsi_cls_session *cls_session)
+ 		ql4_printk(KERN_INFO, ha, "scsi%ld: %s: ddb[%d]"
+ 			   " start scan\n", ha->host_no, __func__,
+ 			   ddb_entry->fw_ddb_index);
+-		scsi_queue_work(ha->host, &ddb_entry->sess->scan_work);
++		queue_work(ddb_entry->sess->workq, &ddb_entry->sess->scan_work);
+ 	}
+ 	return QLA_SUCCESS;
+ }
 diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 732938f5436b..05cd4bca979e 100644
+index 05cd4bca979e..ecb592a70e03 100644
 --- a/drivers/scsi/scsi_transport_iscsi.c
 +++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1557,7 +1557,6 @@ static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
- 	struct iscsi_cls_host *ihost = shost->shost_data;
+@@ -2032,19 +2032,27 @@ EXPORT_SYMBOL_GPL(iscsi_alloc_session);
  
- 	memset(ihost, 0, sizeof(*ihost));
--	atomic_set(&ihost->nr_scans, 0);
- 	mutex_init(&ihost->mutex);
- 
- 	iscsi_bsg_host_add(shost, ihost);
-@@ -1744,25 +1743,6 @@ void iscsi_host_for_each_session(struct Scsi_Host *shost,
- }
- EXPORT_SYMBOL_GPL(iscsi_host_for_each_session);
- 
--/**
-- * iscsi_scan_finished - helper to report when running scans are done
-- * @shost: scsi host
-- * @time: scan run time
-- *
-- * This function can be used by drives like qla4xxx to report to the scsi
-- * layer when the scans it kicked off at module load time are done.
-- */
--int iscsi_scan_finished(struct Scsi_Host *shost, unsigned long time)
--{
--	struct iscsi_cls_host *ihost = shost->shost_data;
--	/*
--	 * qla4xxx will have kicked off some session unblocks before calling
--	 * scsi_scan_host, so just wait for them to complete.
--	 */
--	return !atomic_read(&ihost->nr_scans);
--}
--EXPORT_SYMBOL_GPL(iscsi_scan_finished);
--
- struct iscsi_scan_data {
- 	unsigned int channel;
- 	unsigned int id;
-@@ -1831,8 +1811,6 @@ static void iscsi_scan_session(struct work_struct *work)
+ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
  {
- 	struct iscsi_cls_session *session =
- 			container_of(work, struct iscsi_cls_session, scan_work);
--	struct Scsi_Host *shost = iscsi_session_to_shost(session);
--	struct iscsi_cls_host *ihost = shost->shost_data;
- 	struct iscsi_scan_data scan_data;
- 
- 	scan_data.channel = 0;
-@@ -1841,7 +1819,6 @@ static void iscsi_scan_session(struct work_struct *work)
- 	scan_data.rescan = SCSI_SCAN_RESCAN;
- 
- 	iscsi_user_scan_session(&session->dev, &scan_data);
--	atomic_dec(&ihost->nr_scans);
- }
- 
- /**
-@@ -1912,8 +1889,6 @@ static void __iscsi_unblock_session(struct work_struct *work)
- 	struct iscsi_cls_session *session =
- 			container_of(work, struct iscsi_cls_session,
- 				     unblock_work);
--	struct Scsi_Host *shost = iscsi_session_to_shost(session);
--	struct iscsi_cls_host *ihost = shost->shost_data;
++	struct Scsi_Host *shost = iscsi_session_to_shost(session);
  	unsigned long flags;
+ 	int id = 0;
+ 	int err;
  
- 	ISCSI_DBG_TRANS_SESSION(session, "Unblocking session\n");
-@@ -1924,15 +1899,6 @@ static void __iscsi_unblock_session(struct work_struct *work)
- 	spin_unlock_irqrestore(&session->lock, flags);
- 	/* start IO */
- 	scsi_target_unblock(&session->dev, SDEV_RUNNING);
--	/*
--	 * Only do kernel scanning if the driver is properly hooked into
--	 * the async scanning code (drivers like iscsi_tcp do login and
--	 * scanning from userspace).
--	 */
--	if (shost->hostt->scan_finished) {
--		if (scsi_queue_work(shost, &session->scan_work))
--			atomic_inc(&ihost->nr_scans);
--	}
- 	ISCSI_DBG_TRANS_SESSION(session, "Completed unblocking session\n");
+ 	session->sid = atomic_add_return(1, &iscsi_session_nr);
+ 
++	session->workq = alloc_workqueue("iscsi_ctrl_%d:%d",
++			WQ_SYSFS | WQ_MEM_RECLAIM | WQ_UNBOUND, 0,
++			shost->host_no, session->sid);
++	if (!session->workq)
++		return -ENOMEM;
++
+ 	if (target_id == ISCSI_MAX_TARGET) {
+ 		id = ida_simple_get(&iscsi_sess_ida, 0, 0, GFP_KERNEL);
+ 
+ 		if (id < 0) {
+ 			iscsi_cls_session_printk(KERN_ERR, session,
+ 					"Failure in Target ID Allocation\n");
+-			return id;
++			err = id;
++			goto destroy_wq;
+ 		}
+ 		session->target_id = (unsigned int)id;
+ 		session->ida_used = true;
+@@ -2078,7 +2086,8 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
+ release_ida:
+ 	if (session->ida_used)
+ 		ida_simple_remove(&iscsi_sess_ida, session->target_id);
+-
++destroy_wq:
++	destroy_workqueue(session->workq);
+ 	return err;
  }
+ EXPORT_SYMBOL_GPL(iscsi_add_session);
+@@ -2177,6 +2186,8 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
  
-@@ -2192,7 +2158,10 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
- 	spin_unlock_irqrestore(&session->lock, flags);
+ 	transport_unregister_device(&session->dev);
  
- 	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
--	/* flush running scans then delete devices */
-+	/*
-+	 * qla4xxx can perform it's own scans when it runs in kernel only
-+	 * mode. Make sure to flush those scans.
-+	 */
- 	flush_work(&session->scan_work);
- 	/* flush running unbind operations */
- 	flush_work(&session->unbind_work);
++	destroy_workqueue(session->workq);
++
+ 	ISCSI_DBG_TRANS_SESSION(session, "Completing session removal\n");
+ 	device_del(&session->dev);
+ }
+@@ -3833,8 +3844,7 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ 	case ISCSI_UEVENT_UNBIND_SESSION:
+ 		session = iscsi_session_lookup(ev->u.d_session.sid);
+ 		if (session)
+-			scsi_queue_work(iscsi_session_to_shost(session),
+-					&session->unbind_work);
++			queue_work(session->workq, &session->unbind_work);
+ 		else
+ 			err = -EINVAL;
+ 		break;
+@@ -4707,7 +4717,6 @@ iscsi_register_transport(struct iscsi_transport *tt)
+ 	INIT_LIST_HEAD(&priv->list);
+ 	priv->iscsi_transport = tt;
+ 	priv->t.user_scan = iscsi_user_scan;
+-	priv->t.create_work_queue = 1;
+ 
+ 	priv->dev.class = &iscsi_transport_class;
+ 	dev_set_name(&priv->dev, "%s", tt->name);
 diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index c5d7810fd792..90b55db46d7c 100644
+index 90b55db46d7c..7a0d24d3b916 100644
 --- a/include/scsi/scsi_transport_iscsi.h
 +++ b/include/scsi/scsi_transport_iscsi.h
-@@ -278,7 +278,6 @@ struct iscsi_cls_session {
- 	iscsi_dev_to_session(_stgt->dev.parent)
+@@ -251,6 +251,8 @@ struct iscsi_cls_session {
+ 	bool recovery_tmo_sysfs_override;
+ 	struct delayed_work recovery_work;
  
- struct iscsi_cls_host {
--	atomic_t nr_scans;
- 	struct mutex mutex;
- 	struct request_queue *bsg_q;
- 	uint32_t port_speed;
-@@ -448,7 +447,6 @@ extern void iscsi_get_conn(struct iscsi_cls_conn *conn);
- extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
- extern void iscsi_unblock_session(struct iscsi_cls_session *session);
- extern void iscsi_block_session(struct iscsi_cls_session *session);
--extern int iscsi_scan_finished(struct Scsi_Host *shost, unsigned long time);
- extern struct iscsi_endpoint *iscsi_create_endpoint(int dd_size);
- extern void iscsi_destroy_endpoint(struct iscsi_endpoint *ep);
- extern struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle);
++	struct workqueue_struct *workq;
++
+ 	unsigned int target_id;
+ 	bool ida_used;
+ 
 -- 
 2.25.1
 
