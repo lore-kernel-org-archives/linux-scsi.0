@@ -2,170 +2,146 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 643F6C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Feb 2022 19:49:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2A57C433F5
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Feb 2022 23:18:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231492AbiB0Tt7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Feb 2022 14:49:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50274 "EHLO
+        id S232183AbiB0XTG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Feb 2022 18:19:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230444AbiB0Tt6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Feb 2022 14:49:58 -0500
-Received: from de-smtp-delivery-102.mimecast.com (de-smtp-delivery-102.mimecast.com [194.104.109.102])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97D07220EB
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Feb 2022 11:49:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1645991358;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TKQFrIwS+aK+sRoNVYJGU2TyhKu2r0yB/Ekhkq8xVXo=;
-        b=LKlVIXB458NwkM/KAUie/ob+NHR64t0m7BuPIE06MMbDHCaH/D3jtgRLrbqpz3Td26poMa
-        FlC2RtDyGD6Ll7JGggsg8vHlKUkaPgUbgwNpD8rgofeC3jxox0/NBn9IiZRpyKi+Yi6l5P
-        U8acNayBlaE6bYZNP9njH/u/iP33Szg=
-Received: from EUR03-DB5-obe.outbound.protection.outlook.com
- (mail-db5eur03lp2053.outbound.protection.outlook.com [104.47.10.53]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- de-mta-39-UzpXY15OPcmpWnhUCsVZXA-1; Sun, 27 Feb 2022 20:49:16 +0100
-X-MC-Unique: UzpXY15OPcmpWnhUCsVZXA-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=gZduLu2Jh9g8Oz4zyHnjiRbRwq6cxujBNlTTxu5YbV/q769a1BTDhpgjRaDNmj6PXScMo22ryCapZPB3luoImdAOtrTmc8kZdWz0h3d54gWawjt2LM8pHBJYmEzjhq1abjWTxoNuB0I+iabAxiEcBqVAViUIEsoOMzuaqDV3e71QDuXGCJZL6frAMUamcwOpFOKgZJbfn1wIWbi7pKgsxoBC9SQkHGJMs4Kwl/2Y0QPo4afZY3GBwbb5D9fBKsO/Ri+ATzfXGJAWH8wSwT6GjXdBpiYeM7eM00jdTEER8wYbEE80JXrokz9T4iPdhQerRkhGkehldyKuM4ZelKz6RQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=TKQFrIwS+aK+sRoNVYJGU2TyhKu2r0yB/Ekhkq8xVXo=;
- b=CGH0b98wulAj8zrRiB+W3riGgDnW8zjeaXDN9I+dAGuQ4wPXYqm/BVp41qjC6NigZC7oZAPELTAlVGw08apI05vnUZo/1O/7WElGR86QxJB/dlaGpMe4iuDMpwxxUI9s2LsMHa5A5liVjqdAzLw/DmGlc+XKKxj0QmsHNqDPO0Hj0ineF32W0wdZ3NXvwIh9FGhDPFjIxPZquo3+Vv4+sosGwCytZMuAqv4ko6D2rsya5gKk49/IuhuvvfiOhOJPhaFjKTkp3s3PfRJbrPPiGdN0w9dq9V+b7BPDghEk6ah/QOrZluVpqyheWoyz314r+W91LW1RlMyUoUK2mkqtiw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=suse.com;
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
- by AM0PR04MB6531.eurprd04.prod.outlook.com (2603:10a6:208:178::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.25; Sun, 27 Feb
- 2022 19:49:14 +0000
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::38e8:ef44:f684:9eed]) by AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::38e8:ef44:f684:9eed%6]) with mapi id 15.20.5017.026; Sun, 27 Feb 2022
- 19:49:14 +0000
-Message-ID: <30fc2700-1c62-c82c-ba7a-da22e60d4acb@suse.com>
-Date:   Sun, 27 Feb 2022 11:49:09 -0800
+        with ESMTP id S231630AbiB0XTF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Feb 2022 18:19:05 -0500
+Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E62020F53;
+        Sun, 27 Feb 2022 15:18:27 -0800 (PST)
+Received: by mail-pg1-f174.google.com with SMTP id 139so9940690pge.1;
+        Sun, 27 Feb 2022 15:18:27 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=0Ph/ZT2aWktwffC/2ax75T6epHj/LQx3vML/3EhsTbg=;
+        b=MTVqiM5AjFCh35O+0awPqOC+tK9pxts7QxSUYC22s5Qj+jdBG5AysEsZ74E9PZ1bmU
+         3D00gyHF7aLxtC64XXYKq2f0Z2BVRD/1NYZuw6fP+eiXNsUGKjbaAM5wYNUpVI+0ImZ/
+         acpzJdHF9tIvX/8zoi+vbIzABHzOWQEKmJQ741/mN504OZLPFERupdHb/0EJSeRzAbwC
+         eIt9YERRpe7QnbB/ZMH2/CzNLlW2pueXRF1lic66jplET5O930gZ+uxrOWnp5CzJlwLb
+         jm/rToV8PSxcGRE+EFAq3FCKnbXvno8tJzfxdgDmBvhBGabeoFluYQcSoYcuZj3dPDgG
+         OjdQ==
+X-Gm-Message-State: AOAM531sVsIb5AJzuOMm9ri3j/hcmrCDVBlgUj/+CSopnKlYh870fD+J
+        qjtn2j+dCppEy3/WfXS1ubibL6seWuYnSQ==
+X-Google-Smtp-Source: ABdhPJykDXMXmg3Vn7UzfSjTt07+WmJm2wMMkwtiCmirVxZ4yYZxKCM7MKFklSGGCMn8i6Phbhpmpg==
+X-Received: by 2002:a63:9d8c:0:b0:378:4b73:5b3b with SMTP id i134-20020a639d8c000000b003784b735b3bmr9675714pgd.564.1646003906694;
+        Sun, 27 Feb 2022 15:18:26 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id 63-20020a630942000000b00372a99c1821sm8287895pgj.21.2022.02.27.15.18.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 27 Feb 2022 15:18:25 -0800 (PST)
+Message-ID: <741e087a-43f8-dc90-b679-7865cf503ac3@acm.org>
+Date:   Sun, 27 Feb 2022 15:18:24 -0800
+MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH 1/6] scsi: iscsi: Fix recovery and ublocking race.
+ Thunderbird/91.6.1
+Subject: Re: move more work to disk_release v2
 Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        mrangankar@marvell.com, njavali@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, cleech@redhat.com,
-        liuzhengyuang521@gmail.com
-References: <20220226230435.38733-1-michael.christie@oracle.com>
- <20220226230435.38733-2-michael.christie@oracle.com>
-From:   Lee Duncan <lduncan@suse.com>
-In-Reply-To: <20220226230435.38733-2-michael.christie@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20220227172144.508118-1-hch@lst.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220227172144.508118-1-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AS9PR06CA0285.eurprd06.prod.outlook.com
- (2603:10a6:20b:45a::31) To AM5PR04MB3089.eurprd04.prod.outlook.com
- (2603:10a6:206:b::28)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 54a4a37e-0830-4d4a-4db8-08d9fa2a3b37
-X-MS-TrafficTypeDiagnostic: AM0PR04MB6531:EE_
-X-Microsoft-Antispam-PRVS: <AM0PR04MB6531BA852C050423D8169842DA009@AM0PR04MB6531.eurprd04.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: iRM23yrl8SewmzNXSGtVMTgNucE9pMpwtWNVIgp/+0R3pPwOAlCeQPTbwxFtGFYa7oi21llF3lQPDEma0Ab4tcJwTYbuhp0SGGrOKUMasJ7dniHq2MdaPECB3Yiq+58k3UF6mR5Mzz/mJB8U/2Bx6FcRz0FWewFTdAMRNmMyMZIfYk8wkq1HA11q2X/HYLn5Wr599lVzfyM8+ldEUNdDaTCgp0i8d/ttu5764kFQ0q6Oiwku6+vfA3QLScWk1kA8LmHz+7jL/nbydo5kln7MbVBXHNgErS62+xfxmHUPJoXjpXhc9U+8L+0iLEMgdiVyP7/km/hJv+Tdjj6ZcetNBT7yWY6QeeWHKJvLmVbT7jB8YdkUM98KU47msnsvT20vhuqiv5ZQ9OM8Yy563/UwChDsBHfsrnL8A3M/K4KYmR+n1IAhljhUWwNKalhaDmEXo8QGbFxuJ2etCbaRS/HvKcDLgR8fKTr6uKE62bX17FP6EOczFyp7ve72FZ/b2xEyxX0Gp2l2O6X6FcXkfYyQ9pKGjLhU1cQytH3iOfwbb8Q9zQ52xGtnOxqwrCfUV2QsWEC2vxf3ZNOQVQiD/hE0vQINkyy2hnN7ImfmpKKs5TEaUoAp5+6TkgYyxJ2/rP0pcpru3meLFNbyiH6win/KAmnUrS6HGY0FQ5d3haft3TpOLoTNauPhD8vbgAqfizXEx51oZg8ICwP0d7tYPXpPoQZajXWKqnX3F9PR7yjwER4=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(31696002)(316002)(36756003)(31686004)(53546011)(508600001)(6486002)(86362001)(38100700002)(186003)(8676002)(2616005)(26005)(83380400001)(6506007)(6512007)(6666004)(8936002)(2906002)(66476007)(66556008)(66946007)(5660300002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?czVpNUJ3N05DdmtqcGZGT1BWREFRZGgzeXJlR3BXN3QwcW9tUDZrWGtaSGNh?=
- =?utf-8?B?dFF2TXIvV0FXdzZ5MEQ3ZnlyYkJ0dkYvK0VTWURnNEJiYjhxM0RYV2VkZUUw?=
- =?utf-8?B?Tlh3cFhrRWZLM201dFFrZFQvR2ltRmc5TG9FcUgzamt1TDR4MHRsWUJiSGR2?=
- =?utf-8?B?Z1Q2bldpb1J0QkhIWVdxdStVSWdCV1ljU25KTDB5MVFuc0NlSmhwSTdpWXhq?=
- =?utf-8?B?QXplYVRoZWRoZVdnekpuTEZhUGgwNlFCVG1sZEpNNzc4MkRjdlhSREFKZU5B?=
- =?utf-8?B?OHRkakZwSkJQR0Zrak96c085OTBRY3R1Vkd5bW9mOEpEYkhGa3FvQ0tMSzlr?=
- =?utf-8?B?ZHh2TnpkRlhNOEF3V2lkMnA1RmFVQ2kvMzNvYWNtR1FaT0xpWWh0NlVSb2Zx?=
- =?utf-8?B?QTQ3Slc0Q1ZtT2daNDdXNk1LcXFCV3ZFM3hUbGtlSmI0YjdzenluaXdQVXZK?=
- =?utf-8?B?YlBqYW9QUWJuT01tUy9WNW5nSVB0WklqdHM1ak9mL25wOG01ZGNPYkdUelN6?=
- =?utf-8?B?UzFndU1ZcCtpMkV0RTdyMzc4QVloeTBUK2NRWC91ZkF6Mzd1Ykt1amxQdUUx?=
- =?utf-8?B?QWNrT0ZSM1VFRzdmaE9rTGM4aVVGczVER0pLWi9KR3NVaVNFeVlzQTMwL2t0?=
- =?utf-8?B?Wnc0WDh3WDhYbnU2Rk4rRVVRZkpFbnowTkJoejV0dzVoZFJETTJCelhMbHkx?=
- =?utf-8?B?TTBXTExBM2s1eGYrbWtMYWUzS0IraXVGYVlGamh3U0VDQkZoNXdiY0doaFJX?=
- =?utf-8?B?NklHdVdUcnprRU1HaEliNWJXVEI5VlIyTnZ6c0VGZ3VoelN1cWUzY1RkK3hw?=
- =?utf-8?B?Q0VlUTBVR2dENnNaUTMwMWcxUXczU1BlZENGa1F2MEQyUVJTMFh0L3ZhWHdH?=
- =?utf-8?B?Qi9BSHlmR1k0dWRJQzNpTG4xTW05a2hSR2tmMDZ6SmUxaUVEZml1QkZJZmJ6?=
- =?utf-8?B?NjhvbnE2WWEvRHpvS25SRS9QeTdlamRwYjZ6RG9FSE9GVHVRTTZ2SnIva0Yy?=
- =?utf-8?B?cG45Y1gwRTk0V0Z4V0ZuUUE0UVlEc0laY3Fwclg3dGlCNHUwZEx6VVpEM3o2?=
- =?utf-8?B?WnRheDdObGNXUmtEZFoxTGkzMmxQeThZdWVOZ0F1bWtudzJRc0NSVXZERGRt?=
- =?utf-8?B?OUhER0VLdlViMUYrTUpRenFzWlJUV3dxYS9YMmpzZzRyMkk1OVdvaE5IdHR1?=
- =?utf-8?B?dUJqaU92cXZseW1tajB3UXEzQUk5ODVOVVNyQ3JkRXBySXVuTk1jcklldFRD?=
- =?utf-8?B?Uis2MjZyVWJwTnhRYTNIUWxmWU84THljclFJVkNSNHk2K1lESGg5ZmpvU0xW?=
- =?utf-8?B?Slo2VjB3Rnh2RzJmZ0dMa3grMWJHSzZmbEEvbHVmRXJuUGJMV0lBZEl0YmxN?=
- =?utf-8?B?VStFV1FGRWpheXZyN3l0SzBpamYxWHFsQzZNbngzV0FMQ0NkSk5HanpNa01s?=
- =?utf-8?B?T0pxeEludTlVZVB0bWtZYWx5ZGl5NzFja012NGl3elEvSGVKTVdRSWZGV0hL?=
- =?utf-8?B?MHFIeHNoRmRiWStxQStFR0tTRmE0UU5hMHpqdXNHajJRWDJvbGxSbjRzamYv?=
- =?utf-8?B?SkVSdlprMkpnRUNtR004eHR3R1c4UkQxc1Jsd0JwcG04YTJNamhKWXkzSGYx?=
- =?utf-8?B?dkR4MS9IeU41QndNRHRsRmtBQi9oWXhBVC9BVS82Vi83SWxpWWh3eHRlakpy?=
- =?utf-8?B?QWZORHI2TUJqTEQ3Q2lqQXJmWjNUeFIzSjIyL1VkUjFJMHhGb2l0UzRPaGNt?=
- =?utf-8?B?TFRkb1kyV0xTZFNDMEpsdUhGSlNaNDNBYU55ckUvTE9rUi9jaEttMUdoWTk3?=
- =?utf-8?B?RE1KMzBvYUxrT3ZWemdySThpZnNiaDdMR1NnVC8vQitSWmJCa3FzZ0kyK0xB?=
- =?utf-8?B?Z2x4R0hBa2p2aHUvSGZrMHFCZ2tZaFB1Rzl2eDQ5OWljb0VhMEg1STg0dTFz?=
- =?utf-8?B?LzVDU0tpWEJZQUE1b2tzcWxzZ3EzQkl6SmFRamwvL2NHSzZZNTJ2MER0T2Uy?=
- =?utf-8?B?eVArODlSVUo1Qkd0WDlJeTZ6YkNVNmlHTU1PVGExM0JhZzF5MEd1WkFmTU85?=
- =?utf-8?B?TzU4akNZOWpXZmpEVFhaSmNiQzZyTld3YlIxZWVXT2FSa041NGc3M0ZWNG9i?=
- =?utf-8?B?S3Z6L2pydlgzYysrSEQ4TGh5NHE2RjRtUm43SXhaTzVTd2ZESXZuWW1UMkYw?=
- =?utf-8?Q?zi+HC5egZK7xIFQUt2z6DaM=3D?=
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 54a4a37e-0830-4d4a-4db8-08d9fa2a3b37
-X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Feb 2022 19:49:14.1186
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: WuyxKK6CmmdVW2ovAci7nj4wqYLg5w9vikOvU0XxV+Qbo/H5fLeDoCbutl9A/uvUIxm16kMc0ekijULS4g8/pQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB6531
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/26/22 15:04, Mike Christie wrote:
-> If the user sets the iscsi_eh_timer_workq/iscsi_eh workqueue's max_active
-> to greater than 1, the recovery_work could be running when
-> __iscsi_unblock_session runs. The cancel_delayed_work will then not wait
-> for the running work and we can race where we end up with the wrong
-> session state and scsi_device state set.
+On 2/27/22 09:21, Christoph Hellwig wrote:
+> Hi all,
 > 
-> This replaces the cancel_delayed_work with the sync version.
+> this series resurrects and forward ports ports larger parts of the
+> "block: don't drain file system I/O on del_gendisk" series from Ming,
+> but does not remove the draining in del_gendisk, but instead the one
+> in the sd driver, which always was a bit ad-hoc.  As part of that sd
+> and sr are switched to use the new ->free_disk method to avoid having
+> to clear disk->private_data and the way to lookup the SCSI ULP is
+> cleaned up as well.
 > 
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> ---
->   drivers/scsi/scsi_transport_iscsi.c | 7 ++-----
->   1 file changed, 2 insertions(+), 5 deletions(-)
+> Git branch:
 > 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 554b6f784223..c58126e8cd88 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -1917,11 +1917,8 @@ static void __iscsi_unblock_session(struct work_struct *work)
->   	unsigned long flags;
->   
->   	ISCSI_DBG_TRANS_SESSION(session, "Unblocking session\n");
-> -	/*
-> -	 * The recovery and unblock work get run from the same workqueue,
-> -	 * so try to cancel it if it was going to run after this unblock.
-> -	 */
-> -	cancel_delayed_work(&session->recovery_work);
-> +
-> +	cancel_delayed_work_sync(&session->recovery_work);
->   	spin_lock_irqsave(&session->lock, flags);
->   	session->state = ISCSI_SESSION_LOGGED_IN;
->   	spin_unlock_irqrestore(&session->lock, flags);
+>      git://git.infradead.org/users/hch/block.git freeze-5.18
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+Hi Christoph,
 
+Thanks for the quick respin. If I run blktests as follows:
+
+$ use_siw=1 ./check -q
+
+then the first report I hit with this branch is a deadlock report in
+nvmet_rdma_free_queue(). That issue has already been reported - see also
+https://lore.kernel.org/linux-nvme/CAHj4cs93BfTRgWF6PbuZcfq6AARHgYC2g=RQ-7Jgcf1-6h+2SQ@mail.gmail.com/
+
+The second issue I run into with this branch is as follows
+(also for nvmeof-mp/002):
+
+==================================================================
+BUG: KASAN: null-ptr-deref in __blk_account_io_start+0x28/0xa0
+Read of size 8 at addr 0000000000000008 by task kworker/0:1H/159
+
+CPU: 0 PID: 159 Comm: kworker/0:1H Not tainted 5.17.0-rc2-dbg+ #9
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.15.0-0-g2dd4b9b-rebuilt.opensuse.org 04/01/2014
+Workqueue: kblockd blk_mq_requeue_work
+Call Trace:
+  <TASK>
+  show_stack+0x52/0x58
+  ? __blk_account_io_start+0x28/0xa0
+  dump_stack_lvl+0x5b/0x82
+  kasan_report.cold+0x64/0xdb
+  ? __blk_account_io_start+0x28/0xa0
+  __asan_load8+0x69/0x90
+  __blk_account_io_start+0x28/0xa0
+  blk_insert_cloned_request+0x107/0x3b0
+  map_request+0x260/0x3c0 [dm_mod]
+  ? dm_requeue_original_request+0x1a0/0x1a0 [dm_mod]
+  ? blk_add_timer+0xc3/0x110
+  dm_mq_queue_rq+0x207/0x400 [dm_mod]
+  ? kasan_set_track+0x25/0x30
+  ? kasan_set_free_info+0x24/0x40
+  ? map_request+0x3c0/0x3c0 [dm_mod]
+  ? nvmet_rdma_release_rsp+0xb3/0x3f0 [nvmet_rdma]
+  ? nvmet_rdma_send_done+0x4a/0x70 [nvmet_rdma]
+  ? __ib_process_cq+0x11b/0x3c0 [ib_core]
+  ? ib_cq_poll_work+0x37/0xb0 [ib_core]
+  ? process_one_work+0x594/0xad0
+  ? worker_thread+0x2de/0x6b0
+  ? kthread+0x15f/0x190
+  ? ret_from_fork+0x1f/0x30
+  blk_mq_dispatch_rq_list+0x344/0xc00
+  ? blk_mq_mark_tag_wait+0x470/0x470
+  ? rcu_read_lock_sched_held+0x16/0x80
+  __blk_mq_sched_dispatch_requests+0x19b/0x280
+  ? blk_mq_do_dispatch_ctx+0x3f0/0x3f0
+  ? rcu_read_lock_sched_held+0x16/0x80
+  blk_mq_sched_dispatch_requests+0x8a/0xc0
+  __blk_mq_run_hw_queue+0x99/0x220
+  __blk_mq_delay_run_hw_queue+0x372/0x3a0
+  ? blk_mq_run_hw_queue+0xd7/0x2b0
+  ? rcu_read_lock_sched_held+0x16/0x80
+  blk_mq_run_hw_queue+0x1d6/0x2b0
+  blk_mq_run_hw_queues+0xa0/0x1e0
+  blk_mq_requeue_work+0x2e4/0x330
+  ? blk_mq_try_issue_directly+0x60/0x60
+  ? lock_acquire+0x76/0x1a0
+  process_one_work+0x594/0xad0
+  ? pwq_dec_nr_in_flight+0x120/0x120
+  ? do_raw_spin_lock+0x115/0x1b0
+  ? lock_acquire+0x76/0x1a0
+  worker_thread+0x2de/0x6b0
+  ? trace_hardirqs_on+0x2b/0x120
+  ? process_one_work+0xad0/0xad0
+  kthread+0x15f/0x190
+  ? kthread_complete_and_exit+0x30/0x30
+  ret_from_fork+0x1f/0x30
+  </TASK>
+==================================================================
