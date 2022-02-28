@@ -2,187 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A253AC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 20:02:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A248EC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 20:06:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229891AbiB1UC6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Feb 2022 15:02:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47456 "EHLO
+        id S230013AbiB1UHJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Feb 2022 15:07:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229771AbiB1UCq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2022 15:02:46 -0500
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6840F1B78F
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 12:02:06 -0800 (PST)
-Received: by mail-lf1-x12d.google.com with SMTP id d23so23219836lfv.13
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 12:02:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=gT/mxIYbzDn15+z84Rt0/ZmLFqIl34ZjMPCseIzUB9o=;
-        b=Tm2RrZZp9rg85Q2lAdsba4a3IH+hQMy5xZCbUizCCXmPzyfZ+2VRqEslWXZB4tPt3B
-         Xz8lYe63CHEdQCuWSaPC9nNMhFWrnR54Ihwd0u2qPZVZ4zvhHacXKCw+SJS4BR1PfT62
-         xCFGBc0xrmrOEo0QPHvZeTHUhXNuWYmty+udI=
+        with ESMTP id S230009AbiB1UHG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2022 15:07:06 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8E00B4BBA6
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 12:06:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1646078784;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=dQMJKjvnmYnFunMilAShMLK8B75BOippUXgb1Xv5vI4=;
+        b=UoQjcvFULNVO9UOntTOjbjJNHK9Oii34iQ7Q8zQ3qNECgaIQyHRUkgyiIiSBkHX1YxQhPg
+        n5otMTRXCuvcKZJ1nTtj1aMickUw0uC6v3VwThY6azzEJdwqr4ko0Yor/TI6YESAso+VNv
+        UEdnoV6c8bD0h4FUWzOlpN0QAiSsXW8=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-38-Fe4Vl35FNwWJQUJcdoO4jw-1; Mon, 28 Feb 2022 15:06:21 -0500
+X-MC-Unique: Fe4Vl35FNwWJQUJcdoO4jw-1
+Received: by mail-qk1-f197.google.com with SMTP id u17-20020a05620a431100b004765c0dc33cso12236402qko.14
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 12:06:21 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=gT/mxIYbzDn15+z84Rt0/ZmLFqIl34ZjMPCseIzUB9o=;
-        b=jrQYIuOp+EI70qvrbRabAChtiqwCC9Mx9I9mdq4eE9YT7mY6AyV2UyTyOScNNn4Xtj
-         gr8NVAByiOAPN9HW6UbsLDkgJQIq6Wl01+cjaeIDca3Ggx1vlSybVFtKISW8DDxMFZYA
-         ag4zzaQvotO8M6vMExcXfvKaHmGpNT8NHgt4+2UVYibqR5OwRqSDLe5BOvee65ceoTnz
-         OL8uRajziItKlQVMbDXyMfrWjaoXqnM4LXEeKYdNAQF9+pUaFsIKXDYjCMNhferSgKiy
-         bB7zd6LQntmViz8xt4fLjRobWZqRTUCxZJ6AtkK72Foo6qYqJfU5o7m1mzzfS1VnNQsX
-         jU6w==
-X-Gm-Message-State: AOAM531vPJSdoYkSDQ1RwalFcuj7Yr4shGORSYycdry6RTSHnAdtAedW
-        OITz5iyLmZFfRkPi2e6OEBAj62hkiPe0JQkcBiI=
-X-Google-Smtp-Source: ABdhPJyIZd4n3i1x4gkXsR9WiwjjBp/9sARCge85f3pQdTd0zjFNAEvjPtTjqLxEm14resYHnau+Wg==
-X-Received: by 2002:ac2:44c1:0:b0:444:18fc:8389 with SMTP id d1-20020ac244c1000000b0044418fc8389mr13496648lfm.167.1646078524306;
-        Mon, 28 Feb 2022 12:02:04 -0800 (PST)
-Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com. [209.85.208.176])
-        by smtp.gmail.com with ESMTPSA id v11-20020a2e924b000000b0024649082c0dsm1497094ljg.118.2022.02.28.12.02.04
-        for <linux-scsi@vger.kernel.org>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=dQMJKjvnmYnFunMilAShMLK8B75BOippUXgb1Xv5vI4=;
+        b=dTiNGftxH5DOTIOqtz6brqlJPWbutyK2MJW/O+Gzj4EcJ/y1A/PG7igIe+DAFaHeg2
+         Uvu2r44gM69SHBZGfyA+S30WJNI9fKV8Z9ZI1lHwXJVFX8hd37MXb6uypIcI7dNkrAeH
+         OBP8P+44bJWUlKoUbRyeezI88nbjJySX4DII6I56mhb5tA0s3yDogDnaxS3EPgCtsiwg
+         hFl7SSiVmkYdGIzilI1xni9PUZ+mR+j7oW9YBfwZPMXXse4p1XKdMsEikXlPCN6BknpC
+         JMuSxsoTHLRAuyfySal558ZF3g5DZ8OZ17AvmWDN4ysQmpRcsCTs0Qghc0r8RX4QN0K0
+         +0ag==
+X-Gm-Message-State: AOAM531oRgXo9T74AncnS/5P5HbPzDS0oIgN9THjTXjPSBK5Um3tBMBu
+        eJm5PZ/uWpVZ314ad8kUbht/B9NF8ImQmh63qzPeR2HTDlk9GHrjBglT0w8XX2LWCfPkZVR3ga/
+        NWFSDXb4oULFHt3VAwyvP+w==
+X-Received: by 2002:a05:6214:a8a:b0:430:8fbc:6be2 with SMTP id ev10-20020a0562140a8a00b004308fbc6be2mr15550984qvb.7.1646078781039;
+        Mon, 28 Feb 2022 12:06:21 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJzv/l5V6+aspgKzPPYNn/6mZxZxpc5NV2ZUlWrXVmqVoITHSQKq1Z/io3a7hCxknMhOy2O0ng==
+X-Received: by 2002:a05:6214:a8a:b0:430:8fbc:6be2 with SMTP id ev10-20020a0562140a8a00b004308fbc6be2mr15550967qvb.7.1646078780836;
+        Mon, 28 Feb 2022 12:06:20 -0800 (PST)
+Received: from [192.168.0.14] (97-120-59-83.ptld.qwest.net. [97.120.59.83])
+        by smtp.gmail.com with ESMTPSA id y17-20020a376411000000b006490deb56b2sm5427984qkb.1.2022.02.28.12.06.19
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Feb 2022 12:02:04 -0800 (PST)
-Received: by mail-lj1-f176.google.com with SMTP id v28so18932910ljv.9
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 12:02:04 -0800 (PST)
-X-Received: by 2002:ac2:5313:0:b0:443:99c1:7e89 with SMTP id
- c19-20020ac25313000000b0044399c17e89mr13183568lfh.531.1646078183366; Mon, 28
- Feb 2022 11:56:23 -0800 (PST)
+        Mon, 28 Feb 2022 12:06:20 -0800 (PST)
+Message-ID: <1cc496ed-a023-9a06-72eb-fc0fb98025e5@redhat.com>
+Date:   Mon, 28 Feb 2022 12:06:18 -0800
 MIME-Version: 1.0
-References: <20220228110822.491923-1-jakobkoschel@gmail.com>
- <20220228110822.491923-3-jakobkoschel@gmail.com> <2e4e95d6-f6c9-a188-e1cd-b1eae465562a@amd.com>
-In-Reply-To: <2e4e95d6-f6c9-a188-e1cd-b1eae465562a@amd.com>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon, 28 Feb 2022 11:56:07 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wgQps58DPEOe4y5cTh5oE9EdNTWRLXzgMiETc+mFX7jzw@mail.gmail.com>
-Message-ID: <CAHk-=wgQps58DPEOe4y5cTh5oE9EdNTWRLXzgMiETc+mFX7jzw@mail.gmail.com>
-Subject: Re: [PATCH 2/6] treewide: remove using list iterator after loop body
- as a ptr
-To:     =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc:     Jakob Koschel <jakobkoschel@gmail.com>,
-        alsa-devel@alsa-project.org, linux-aspeed@lists.ozlabs.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        linux-iio@vger.kernel.org, nouveau@lists.freedesktop.org,
-        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        Cristiano Giuffrida <c.giuffrida@vu.nl>,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        samba-technical@lists.samba.org,
-        linux1394-devel@lists.sourceforge.net, drbd-dev@lists.linbit.com,
-        linux-arch <linux-arch@vger.kernel.org>,
-        CIFS <linux-cifs@vger.kernel.org>,
-        KVM list <kvm@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-staging@lists.linux.dev, "Bos, H.J." <h.j.bos@vu.nl>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        intel-wired-lan@lists.osuosl.org,
-        kgdb-bugreport@lists.sourceforge.net,
-        bcm-kernel-feedback-list@broadcom.com,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Arnd Bergman <arnd@arndb.de>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        intel-gfx <intel-gfx@lists.freedesktop.org>,
-        Brian Johannesmeyer <bjohannesmeyer@gmail.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        v9fs-developer@lists.sourceforge.net,
-        linux-tegra <linux-tegra@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-sgx@vger.kernel.org,
-        linux-block <linux-block@vger.kernel.org>,
-        Netdev <netdev@vger.kernel.org>, linux-usb@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux F2FS Dev Mailing List 
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        tipc-discussion@lists.sourceforge.net,
-        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-        dma <dmaengine@vger.kernel.org>,
-        linux-mediatek@lists.infradead.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        Mike Rapoport <rppt@kernel.org>
-Content-Type: multipart/mixed; boundary="00000000000064a3e305d91971a9"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH 1/6] scsi: iscsi: Fix recovery and ublocking race.
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        mrangankar@marvell.com, njavali@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, lduncan@suse.com,
+        liuzhengyuang521@gmail.com
+References: <20220226230435.38733-1-michael.christie@oracle.com>
+ <20220226230435.38733-2-michael.christie@oracle.com>
+From:   Chris Leech <cleech@redhat.com>
+In-Reply-To: <20220226230435.38733-2-michael.christie@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000064a3e305d91971a9
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On 2/26/22 3:04 PM, Mike Christie wrote:
+> If the user sets the iscsi_eh_timer_workq/iscsi_eh workqueue's max_active
+> to greater than 1, the recovery_work could be running when
+> __iscsi_unblock_session runs. The cancel_delayed_work will then not wait
+> for the running work and we can race where we end up with the wrong
+> session state and scsi_device state set.
+> 
+> This replaces the cancel_delayed_work with the sync version.
+> 
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> ---
+>  drivers/scsi/scsi_transport_iscsi.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+> index 554b6f784223..c58126e8cd88 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -1917,11 +1917,8 @@ static void __iscsi_unblock_session(struct work_struct *work)
+>  	unsigned long flags;
+>  
+>  	ISCSI_DBG_TRANS_SESSION(session, "Unblocking session\n");
+> -	/*
+> -	 * The recovery and unblock work get run from the same workqueue,
+> -	 * so try to cancel it if it was going to run after this unblock.
+> -	 */
+> -	cancel_delayed_work(&session->recovery_work);
+> +
+> +	cancel_delayed_work_sync(&session->recovery_work);
+>  	spin_lock_irqsave(&session->lock, flags);
+>  	session->state = ISCSI_SESSION_LOGGED_IN;
+>  	spin_unlock_irqrestore(&session->lock, flags);
 
-On Mon, Feb 28, 2022 at 4:19 AM Christian K=C3=B6nig
-<christian.koenig@amd.com> wrote:
->
-> I don't think that using the extra variable makes the code in any way
-> more reliable or easier to read.
+Looks good to me,
 
-So I think the next step is to do the attached patch (which requires
-that "-std=3Dgnu11" that was discussed in the original thread).
+Reviewed-by: Chris Leech <cleech@redhat.com>
 
-That will guarantee that the 'pos' parameter of list_for_each_entry()
-is only updated INSIDE the for_each_list_entry() loop, and can never
-point to the (wrongly typed) head entry.
-
-And I would actually hope that it should actually cause compiler
-warnings about possibly uninitialized variables if people then use the
-'pos' pointer outside the loop. Except
-
- (a) that code in sgx/encl.c currently initializes 'tmp' to NULL for
-inexplicable reasons - possibly because it already expected this
-behavior
-
- (b) when I remove that NULL initializer, I still don't get a warning,
-because we've disabled -Wno-maybe-uninitialized since it results in so
-many false positives.
-
-Oh well.
-
-Anyway, give this patch a look, and at least if it's expanded to do
-"(pos) =3D NULL" in the entry statement for the for-loop, it will avoid
-the HEAD type confusion that Jakob is working on. And I think in a
-cleaner way than the horrid games he plays.
-
-(But it won't avoid possible CPU speculation of such type confusion.
-That, in my opinion, is a completely different issue)
-
-I do wish we could actually poison the 'pos' value after the loop
-somehow - but clearly the "might be uninitialized" I was hoping for
-isn't the way to do it.
-
-Anybody have any ideas?
-
-                Linus
-
---00000000000064a3e305d91971a9
-Content-Type: application/octet-stream; name=p
-Content-Disposition: attachment; filename=p
-Content-Transfer-Encoding: base64
-Content-ID: <f_l073sb6w0>
-X-Attachment-Id: f_l073sb6w0
-
-ZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvbGlzdC5oIGIvaW5jbHVkZS9saW51eC9saXN0LmgK
-aW5kZXggZGQ2YzIwNDFkMDljLi5iYWI5OTU1OTZhYWEgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGlu
-dXgvbGlzdC5oCisrKyBiL2luY2x1ZGUvbGludXgvbGlzdC5oCkBAIC02MzQsMTAgKzYzNCwxMCBA
-QCBzdGF0aWMgaW5saW5lIHZvaWQgbGlzdF9zcGxpY2VfdGFpbF9pbml0KHN0cnVjdCBsaXN0X2hl
-YWQgKmxpc3QsCiAgKiBAaGVhZDoJdGhlIGhlYWQgZm9yIHlvdXIgbGlzdC4KICAqIEBtZW1iZXI6
-CXRoZSBuYW1lIG9mIHRoZSBsaXN0X2hlYWQgd2l0aGluIHRoZSBzdHJ1Y3QuCiAgKi8KLSNkZWZp
-bmUgbGlzdF9mb3JfZWFjaF9lbnRyeShwb3MsIGhlYWQsIG1lbWJlcikJCQkJXAotCWZvciAocG9z
-ID0gbGlzdF9maXJzdF9lbnRyeShoZWFkLCB0eXBlb2YoKnBvcyksIG1lbWJlcik7CVwKLQkgICAg
-ICFsaXN0X2VudHJ5X2lzX2hlYWQocG9zLCBoZWFkLCBtZW1iZXIpOwkJCVwKLQkgICAgIHBvcyA9
-IGxpc3RfbmV4dF9lbnRyeShwb3MsIG1lbWJlcikpCisjZGVmaW5lIGxpc3RfZm9yX2VhY2hfZW50
-cnkocG9zLCBoZWFkLCBtZW1iZXIpCQkJCQlcCisJZm9yICh0eXBlb2YocG9zKSBfX2l0ZXIgPSBs
-aXN0X2ZpcnN0X2VudHJ5KGhlYWQsIHR5cGVvZigqcG9zKSwgbWVtYmVyKTsJXAorCSAgICAgIWxp
-c3RfZW50cnlfaXNfaGVhZChfX2l0ZXIsIGhlYWQsIG1lbWJlcikgJiYgKCgocG9zKT1fX2l0ZXIp
-LDEpOwlcCisJICAgICBfX2l0ZXIgPSBsaXN0X25leHRfZW50cnkoX19pdGVyLCBtZW1iZXIpKQog
-CiAvKioKICAqIGxpc3RfZm9yX2VhY2hfZW50cnlfcmV2ZXJzZSAtIGl0ZXJhdGUgYmFja3dhcmRz
-IG92ZXIgbGlzdCBvZiBnaXZlbiB0eXBlLgo=
---00000000000064a3e305d91971a9--
