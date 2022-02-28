@@ -2,529 +2,152 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A522DC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 07:06:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62111C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 07:06:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233526AbiB1HGi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Feb 2022 02:06:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60470 "EHLO
+        id S233538AbiB1HGl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Feb 2022 02:06:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233490AbiB1HGg (ORCPT
+        with ESMTP id S233521AbiB1HGg (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2022 02:06:36 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A59C2673D5;
-        Sun, 27 Feb 2022 23:05:57 -0800 (PST)
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 854DE673D7;
+        Sun, 27 Feb 2022 23:05:58 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 32B2160FEB;
+        by ams.source.kernel.org (Postfix) with ESMTPS id 366BEB80E45;
         Mon, 28 Feb 2022 07:05:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66373C340E7;
-        Mon, 28 Feb 2022 07:05:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8451C340F1;
+        Mon, 28 Feb 2022 07:05:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646031956;
-        bh=p4LZmBEhwI9Ubw6ivvY3meI1rm5OqUixAiwCXXYTlBA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pUsOpFF0O9XuxhFfwhuvrO4TjuR86d8Ba1arBp1gRw+uhUlGOfLiQF23RX+BJcA1s
-         yEei6c2KCn2DgJGhby4rPuR43NMby4KK7+VNDKUpVd+SdyvGPoZzvjINGa2VA35yl0
-         Fvmja7ombJM0xz1qr+XKDSrOlOb48QtXDdehVXMw6TS8RQyVJ+Y/MHJBLcIn4yB3Yz
-         y19Uz9T7lDQrs5O0qPBGFMQNZh6lwqwUaYRpqD3rQM/bXhRg2JaP8gRndgqfCAdc7l
-         gnI6dWRtsDufOBeBFky3sfbciwLf8eZHBvSQ2adkB9yCCKXvayltEt3/0Penqu+nqp
-         2lvbeOntPh3zg==
+        s=k20201202; t=1646031955;
+        bh=J36PJOgeTlo/05NdauMIt29rmiW4FJKTj7+qOHuMfFc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=IumIuW+vVgoP+3OQ4WH1GFqGIjggezNH4IL7hlwsnnKf3QZVnSQX1TO7a4ProyA91
+         d5hKuLGtP7wZaeyqSp+Dxj4Z7IsOz30b/6y0kaYceIm9eZW1A4uGOHuWvErDK0Bh9+
+         Xl6wtXMqkI62g1nyjAd25aWIcoF1VogII6Qq9QGe9etGpzR1GEwGZjfaFzC4NDxGqa
+         IKMgBqoWGdAhT8gxdNtbgntTikva9p/b/9Yv5PwXipfMMExU+BXQA2g+F9Y/+rEMmk
+         T5KezDTKNRn9XOo9TzGXM1jdQoBkhSZFBVz1I3nnJsHAaZp9mKxnbPP6qllOTtJlv1
+         5NPu9TNQT4KGA==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org
 Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com,
         Gaurav Kashyap <quic_gaurkash@quicinc.com>,
         Israel Rukshin <israelr@nvidia.com>
-Subject: [PATCH v5 2/3] block: add ioctls to create and prepare hardware-wrapped keys
-Date:   Sun, 27 Feb 2022 23:05:19 -0800
-Message-Id: <20220228070520.74082-3-ebiggers@kernel.org>
+Subject: [PATCH v5 0/3] Support for hardware-wrapped inline encryption keys
+Date:   Sun, 27 Feb 2022 23:05:17 -0800
+Message-Id: <20220228070520.74082-1-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220228070520.74082-1-ebiggers@kernel.org>
-References: <20220228070520.74082-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+[This patchset is based on v5.17-rc6.  It can also be retrieved from tag
+"wrapped-keys-v5" of https://git.kernel.org/pub/scm/fs/fscrypt/fscrypt.git]
 
-Until this point, the kernel can use hardware-wrapped keys to do
-encryption if userspace provides one -- specifically a key in
-ephemerally-wrapped form.  However, no generic way has been provided for
-userspace to get such a key in the first place.
+This patchset adds block and fscrypt support for hardware-wrapped keys
+when the inline encryption hardware supports them.
 
-Getting such a key is a two-step process.  First, the key needs to be
-imported from a raw key or generated by the hardware, producing a key in
-long-term wrapped form.  This happens once in the whole lifetime of the
-key.  Second, the long-term wrapped key needs to be converted into
-ephemerally-wrapped form.  This happens each time the key is "unlocked".
+Hardware-wrapped keys are inline encryption keys that are wrapped
+(encrypted) by a key internal to the hardware.  The wrapping key is an
+ephemeral per-boot key, except at initial unlocking time.
+Hardware-wrapped keys can only be unwrapped (decrypted) by the hardware,
+e.g. when a key is programmed into a keyslot.  They are never visible to
+software in raw form, except optionally during key generation.  The
+hardware supports importing keys as well as generating keys itself.
 
-In Android, these operations are supported in a generic way through
-KeyMint, a userspace abstraction layer.  However, that method is
-Android-specific and can't be used on other Linux systems, may rely on
-proprietary libraries, and also misleads people into supporting KeyMint
-features like rollback resistance that make sense for other KeyMint keys
-but don't make sense for hardware-wrapped inline encryption keys.
+This feature protects encryption keys from read-only compromises of
+kernel memory, such as that which can occur during a cold boot attack.
+It does this without limiting the number of keys that can be used, as
+would be the case with solutions that didn't use key wrapping.
 
-Therefore, this patch provides a generic kernel interface for these
-operations by introducing new block device ioctls:
+Hardware supporting this feature is present on recent Qualcomm SoCs
+(SM8350 and later) as well as on the Google Tensor SoC.
 
-- BLKCRYPTOIMPORTKEY: convert a raw key to long-term wrapped form.
+This patchset is organized as follows:
 
-- BLKCRYPTOGENERATEKEY: have the hardware generate a new key, then
-  return it in long-term wrapped form.
+- Patch 1 adds the block support and documentation, excluding the ioctls
+  needed to get a key ready to be used in the first place.
 
-- BLKCRYPTOPREPAREKEY: convert a key from long-term wrapped form to
-  ephemerally-wrapped form.
+- Patch 2 adds new block device ioctls for importing, generating, and
+  preparing hardware-wrapped keys.
 
-These ioctls are implemented using new operations in blk_crypto_ll_ops.
+- Patch 3 adds the fscrypt support and documentation.
 
-In combination with the rest of the hardware-wrapped keys framework,
-these ioctls allow the hardware-wrapped key support of inline encryption
-hardware to be used end-to-end on any Linux system.
+For full details, see the individual patches, especially the detailed
+documentation they add to Documentation/block/inline-encryption.rst and
+Documentation/filesystems/fscrypt.rst.
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- Documentation/block/inline-encryption.rst |  34 +++--
- block/blk-crypto-internal.h               |   9 ++
- block/blk-crypto-profile.c                |  53 ++++++++
- block/blk-crypto.c                        | 145 ++++++++++++++++++++++
+This feature also requires UFS driver changes.  For Qualcomm SoCs, these
+are being worked on at
+https://lore.kernel.org/linux-scsi/20211206225725.77512-1-quic_gaurkash@quicinc.com/T/#u.
+I've verified that this feature works end-to-end on the SM8350 HDK with
+the upstream kernel with these two patchsets applied.  (One caveat is
+that a custom TrustZone image needs to be flashed to the board too; I
+understand that Qualcomm is working on addressing that.)
+
+I've also written xfstests which verify that this feature encrypts files
+correctly.  These tests can currently be found at
+https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/xfstests-dev.git/log/?h=wip-wrapped-keys.
+I'll be sending these tests in a separate patchset.
+
+Changed v4 => v5:
+    - Dropped the RFC tag, now that these patches are actually testable.
+    - Split the BLKCRYPTOCREATEKEY ioctl into BLKCRYPTOIMPORTKEY and
+      BLKCRYPTOGENERATEKEY.  (I'm thinking that these operations are
+      distinct enough that two separate ioctls would be best.)
+    - Added some warning messages in fscrypt_derive_sw_secret().
+    - Rebased onto v5.17-rc6.
+
+Changed v3 => v4:
+    - Rebased onto v5.16-rc1 and dropped a few bits that were upstreamed.
+    - Updated cover letter to link to Gaurav's UFS driver patchset.
+
+Changed v2 => v3:
+    - Dropped some fscrypt cleanups that were applied.
+    - Rebased on top of the latest linux-block and fscrypt branches.
+    - Minor cleanups.
+
+Changed v1 => v2:
+    - Added new ioctls for creating and preparing hardware-wrapped keys.
+    - Rebased onto my patchset which renames blk_keyslot_manager to
+      blk_crypto_profile.
+
+Eric Biggers (3):
+  block: add basic hardware-wrapped key support
+  block: add ioctls to create and prepare hardware-wrapped keys
+  fscrypt: add support for hardware-wrapped keys
+
+ Documentation/block/inline-encryption.rst | 241 +++++++++++++++++++++-
+ Documentation/filesystems/fscrypt.rst     | 154 ++++++++++++--
+ block/blk-crypto-fallback.c               |   5 +-
+ block/blk-crypto-internal.h               |  10 +
+ block/blk-crypto-profile.c                |  97 +++++++++
+ block/blk-crypto.c                        | 190 ++++++++++++++++-
  block/ioctl.c                             |   5 +
- include/linux/blk-crypto-profile.h        |  54 ++++++++
- include/uapi/linux/fs.h                   |  26 ++++
- 7 files changed, 319 insertions(+), 7 deletions(-)
+ drivers/md/dm-table.c                     |   1 +
+ drivers/mmc/host/cqhci-crypto.c           |   2 +
+ drivers/scsi/ufs/ufshcd-crypto.c          |   1 +
+ fs/crypto/fscrypt_private.h               |  72 ++++++-
+ fs/crypto/hkdf.c                          |   4 +-
+ fs/crypto/inline_crypt.c                  |  75 ++++++-
+ fs/crypto/keyring.c                       | 119 ++++++++---
+ fs/crypto/keysetup.c                      |  71 ++++++-
+ fs/crypto/keysetup_v1.c                   |   5 +-
+ fs/crypto/policy.c                        |  11 +-
+ include/linux/blk-crypto-profile.h        |  80 +++++++
+ include/linux/blk-crypto.h                |  70 ++++++-
+ include/uapi/linux/fs.h                   |  26 +++
+ include/uapi/linux/fscrypt.h              |   7 +-
+ 21 files changed, 1153 insertions(+), 93 deletions(-)
 
-diff --git a/Documentation/block/inline-encryption.rst b/Documentation/block/inline-encryption.rst
-index 5d43ba36634a8..871603a15f749 100644
---- a/Documentation/block/inline-encryption.rst
-+++ b/Documentation/block/inline-encryption.rst
-@@ -487,13 +487,33 @@ keys, when hardware support is available.  This works in the following way:
- blk-crypto-fallback doesn't support hardware-wrapped keys.  Therefore,
- hardware-wrapped keys can only be used with actual inline encryption hardware.
- 
--Currently, the kernel only works with hardware-wrapped keys in
--ephemerally-wrapped form.  No generic kernel interfaces are provided for
--generating or importing hardware-wrapped keys in the first place, or converting
--them to ephemerally-wrapped form.  In Android, SoC vendors are required to
--support these operations in their KeyMint implementation (a hardware abstraction
--layer in userspace); for details, see the `Android documentation
--<https://source.android.com/security/encryption/hw-wrapped-keys>`_.
-+All the above deals with hardware-wrapped keys in ephemerally-wrapped form only.
-+To get such keys in the first place, new block device ioctls have also been
-+added to provide a generic interface to creating and preparing such keys:
-+
-+- ``BLKCRYPTOIMPORTKEY`` converts a raw key to long-term wrapped form.  It takes
-+  in a pointer to a ``struct blk_crypto_import_key_arg``.  The caller must set
-+  ``raw_key_ptr`` and ``raw_key_size`` to the pointer and size (in bytes) of the
-+  raw key to import.  The ioctl will write the resulting long-term wrapped key
-+  to the buffer pointed to by ``longterm_wrapped_key_ptr``, which is of maximum
-+  size ``longterm_wrapped_key_size``.  It will also update
-+  ``longterm_wrapped_key_size`` to be the actual size of the key.  The ioctl
-+  will return 0 on success, or will return -1 and set errno on failure.
-+
-+- ``BLKCRYPTOGENERATEKEY`` is like ``BLKCRYPTOIMPORTKEY``, but it has the
-+  hardware generate the key instead of importing one.  It takes in a pointer to
-+  a ``struct blk_crypto_generate_key_arg``.
-+
-+- ``BLKCRYPTOPREPAREKEY`` converts a key from long-term wrapped form to
-+  ephemerally-wrapped form.  It takes in a pointer to a
-+  ``struct blk_crypto_prepare_key_arg``.  The caller must set
-+  ``longterm_wrapped_key_ptr`` and ``longterm_wrapped_key_size`` to the pointer
-+  and size (in bytes) of the long-term wrapped key to convert.  The ioctl will
-+  write the resulting ephemerally-wrapped key to the buffer pointed to by
-+  ``ephemerally_wrapped_key_ptr``, which is of maximum size
-+  ``ephemerally_wrapped_key_size``.  It will also update
-+  ``ephemerally_wrapped_key_size`` to be the actual size of the key.  The ioctl
-+  will return 0 on success, or will return -1 and set errno on failure.
- 
- Testability
- -----------
-diff --git a/block/blk-crypto-internal.h b/block/blk-crypto-internal.h
-index d36ae71afed3f..28993a72a2d69 100644
---- a/block/blk-crypto-internal.h
-+++ b/block/blk-crypto-internal.h
-@@ -61,6 +61,9 @@ static inline bool blk_crypto_rq_is_encrypted(struct request *rq)
- 	return rq->crypt_ctx;
- }
- 
-+int blk_crypto_ioctl(struct block_device *bdev, unsigned int cmd,
-+		     void __user *argp);
-+
- #else /* CONFIG_BLK_INLINE_ENCRYPTION */
- 
- static inline bool bio_crypt_rq_ctx_compatible(struct request *rq,
-@@ -94,6 +97,12 @@ static inline bool blk_crypto_rq_is_encrypted(struct request *rq)
- 	return false;
- }
- 
-+static inline int blk_crypto_ioctl(struct block_device *bdev, unsigned int cmd,
-+				   void __user *argp)
-+{
-+	return -ENOTTY;
-+}
-+
- #endif /* CONFIG_BLK_INLINE_ENCRYPTION */
- 
- void __bio_crypt_advance(struct bio *bio, unsigned int bytes);
-diff --git a/block/blk-crypto-profile.c b/block/blk-crypto-profile.c
-index 8699d24e6a0d3..5ea989845f055 100644
---- a/block/blk-crypto-profile.c
-+++ b/block/blk-crypto-profile.c
-@@ -501,6 +501,59 @@ int blk_crypto_derive_sw_secret(struct blk_crypto_profile *profile,
- 	return err;
- }
- 
-+int blk_crypto_import_key(struct blk_crypto_profile *profile,
-+			  const u8 *raw_key, size_t raw_key_size,
-+			  u8 longterm_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	if (profile &&
-+	    (profile->key_types_supported & BLK_CRYPTO_KEY_TYPE_HW_WRAPPED) &&
-+	    profile->ll_ops.import_key) {
-+		blk_crypto_hw_enter(profile);
-+		ret = profile->ll_ops.import_key(profile, raw_key, raw_key_size,
-+						 longterm_wrapped_key);
-+		blk_crypto_hw_exit(profile);
-+	}
-+	return ret;
-+}
-+
-+int blk_crypto_generate_key(struct blk_crypto_profile *profile,
-+			    u8 longterm_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	if (profile &&
-+	    (profile->key_types_supported & BLK_CRYPTO_KEY_TYPE_HW_WRAPPED) &&
-+	    profile->ll_ops.generate_key) {
-+		blk_crypto_hw_enter(profile);
-+		ret = profile->ll_ops.generate_key(profile,
-+						   longterm_wrapped_key);
-+		blk_crypto_hw_exit(profile);
-+	}
-+	return ret;
-+}
-+
-+int blk_crypto_prepare_key(struct blk_crypto_profile *profile,
-+			   const u8 *longterm_wrapped_key,
-+			   size_t longterm_wrapped_key_size,
-+			   u8 ephemerally_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	if (profile &&
-+	    (profile->key_types_supported & BLK_CRYPTO_KEY_TYPE_HW_WRAPPED) &&
-+	    profile->ll_ops.prepare_key) {
-+		blk_crypto_hw_enter(profile);
-+		ret = profile->ll_ops.prepare_key(profile,
-+						  longterm_wrapped_key,
-+						  longterm_wrapped_key_size,
-+						  ephemerally_wrapped_key);
-+		blk_crypto_hw_exit(profile);
-+	}
-+	return ret;
-+}
-+
- /**
-  * blk_crypto_intersect_capabilities() - restrict supported crypto capabilities
-  *					 by child device
-diff --git a/block/blk-crypto.c b/block/blk-crypto.c
-index ebd9cf12f6547..1acf103727e61 100644
---- a/block/blk-crypto.c
-+++ b/block/blk-crypto.c
-@@ -438,3 +438,148 @@ int blk_crypto_evict_key(struct request_queue *q,
- 	return blk_crypto_fallback_evict_key(key);
- }
- EXPORT_SYMBOL_GPL(blk_crypto_evict_key);
-+
-+static int blk_crypto_ioctl_import_key(struct blk_crypto_profile *profile,
-+				       void __user *argp)
-+{
-+	struct blk_crypto_import_key_arg arg;
-+	u8 raw_key[BLK_CRYPTO_MAX_STANDARD_KEY_SIZE];
-+	u8 longterm_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE];
-+	int ret;
-+
-+	if (copy_from_user(&arg, argp, sizeof(arg)))
-+		return -EFAULT;
-+
-+	if (memchr_inv(arg.reserved, 0, sizeof(arg.reserved)))
-+		return -EINVAL;
-+
-+	if (arg.raw_key_size < 16 || arg.raw_key_size > sizeof(raw_key))
-+		return -EINVAL;
-+
-+	if (copy_from_user(raw_key, u64_to_user_ptr(arg.raw_key_ptr),
-+			   arg.raw_key_size)) {
-+		ret = -EFAULT;
-+		goto out;
-+	}
-+	ret = blk_crypto_import_key(profile, raw_key, arg.raw_key_size,
-+				    longterm_wrapped_key);
-+	if (ret < 0)
-+		goto out;
-+	if (ret > arg.longterm_wrapped_key_size) {
-+		ret = -ENOBUFS;
-+		goto out;
-+	}
-+	arg.longterm_wrapped_key_size = ret;
-+	if (copy_to_user(u64_to_user_ptr(arg.longterm_wrapped_key_ptr),
-+			 longterm_wrapped_key, arg.longterm_wrapped_key_size) ||
-+	    copy_to_user(argp, &arg, sizeof(arg))) {
-+		ret = -EFAULT;
-+		goto out;
-+	}
-+	ret = 0;
-+out:
-+	memzero_explicit(raw_key, sizeof(raw_key));
-+	memzero_explicit(longterm_wrapped_key, sizeof(longterm_wrapped_key));
-+	return ret;
-+}
-+
-+static int blk_crypto_ioctl_generate_key(struct blk_crypto_profile *profile,
-+					 void __user *argp)
-+{
-+	struct blk_crypto_generate_key_arg arg;
-+	u8 longterm_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE];
-+	int ret;
-+
-+	if (copy_from_user(&arg, argp, sizeof(arg)))
-+		return -EFAULT;
-+
-+	if (memchr_inv(arg.reserved, 0, sizeof(arg.reserved)))
-+		return -EINVAL;
-+
-+	ret = blk_crypto_generate_key(profile, longterm_wrapped_key);
-+	if (ret < 0)
-+		goto out;
-+	if (ret > arg.longterm_wrapped_key_size) {
-+		ret = -ENOBUFS;
-+		goto out;
-+	}
-+	arg.longterm_wrapped_key_size = ret;
-+	if (copy_to_user(u64_to_user_ptr(arg.longterm_wrapped_key_ptr),
-+			 longterm_wrapped_key, arg.longterm_wrapped_key_size) ||
-+	    copy_to_user(argp, &arg, sizeof(arg))) {
-+		ret = -EFAULT;
-+		goto out;
-+	}
-+	ret = 0;
-+out:
-+	memzero_explicit(longterm_wrapped_key, sizeof(longterm_wrapped_key));
-+	return ret;
-+}
-+
-+static int blk_crypto_ioctl_prepare_key(struct blk_crypto_profile *profile,
-+					void __user *argp)
-+{
-+	struct blk_crypto_prepare_key_arg arg;
-+	u8 longterm_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE];
-+	u8 ephemerally_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE];
-+	int ret;
-+
-+	if (copy_from_user(&arg, argp, sizeof(arg)))
-+		return -EFAULT;
-+
-+	if (memchr_inv(arg.reserved, 0, sizeof(arg.reserved)))
-+		return -EINVAL;
-+
-+	if (arg.longterm_wrapped_key_size > sizeof(longterm_wrapped_key))
-+		return -EINVAL;
-+	if (copy_from_user(longterm_wrapped_key,
-+			   u64_to_user_ptr(arg.longterm_wrapped_key_ptr),
-+			   arg.longterm_wrapped_key_size)) {
-+		ret = -EFAULT;
-+		goto out;
-+	}
-+	ret = blk_crypto_prepare_key(profile, longterm_wrapped_key,
-+				     arg.longterm_wrapped_key_size,
-+				     ephemerally_wrapped_key);
-+	if (ret < 0)
-+		goto out;
-+	if (ret > arg.ephemerally_wrapped_key_size) {
-+		ret = -ENOBUFS;
-+		goto out;
-+	}
-+	arg.ephemerally_wrapped_key_size = ret;
-+	if (copy_to_user(u64_to_user_ptr(arg.ephemerally_wrapped_key_ptr),
-+			 ephemerally_wrapped_key,
-+			 arg.ephemerally_wrapped_key_size) ||
-+	    copy_to_user(argp, &arg, sizeof(arg))) {
-+		ret = -EFAULT;
-+		goto out;
-+	}
-+	ret = 0;
-+out:
-+	memzero_explicit(longterm_wrapped_key, sizeof(longterm_wrapped_key));
-+	memzero_explicit(ephemerally_wrapped_key,
-+			 sizeof(ephemerally_wrapped_key));
-+	return ret;
-+}
-+
-+int blk_crypto_ioctl(struct block_device *bdev, unsigned int cmd,
-+		     void __user *argp)
-+{
-+	struct blk_crypto_profile *profile =
-+		bdev_get_queue(bdev)->crypto_profile;
-+
-+	if (!profile)
-+		return -EOPNOTSUPP;
-+
-+	switch (cmd) {
-+	case BLKCRYPTOIMPORTKEY:
-+		return blk_crypto_ioctl_import_key(profile, argp);
-+	case BLKCRYPTOGENERATEKEY:
-+		return blk_crypto_ioctl_generate_key(profile, argp);
-+	case BLKCRYPTOPREPAREKEY:
-+		return blk_crypto_ioctl_prepare_key(profile, argp);
-+	default:
-+		return -ENOTTY;
-+	}
-+}
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 4a86340133e46..f934aea41647f 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -12,6 +12,7 @@
- #include <linux/pr.h>
- #include <linux/uaccess.h>
- #include "blk.h"
-+#include "blk-crypto-internal.h"
- 
- static int blkpg_do_ioctl(struct block_device *bdev,
- 			  struct blkpg_partition __user *upart, int op)
-@@ -506,6 +507,10 @@ static int blkdev_common_ioctl(struct block_device *bdev, fmode_t mode,
- 	case BLKTRACESTOP:
- 	case BLKTRACETEARDOWN:
- 		return blk_trace_ioctl(bdev, cmd, argp);
-+	case BLKCRYPTOIMPORTKEY:
-+	case BLKCRYPTOGENERATEKEY:
-+	case BLKCRYPTOPREPAREKEY:
-+		return blk_crypto_ioctl(bdev, cmd, argp);
- 	case IOC_PR_REGISTER:
- 		return blkdev_pr_register(bdev, argp);
- 	case IOC_PR_RESERVE:
-diff --git a/include/linux/blk-crypto-profile.h b/include/linux/blk-crypto-profile.h
-index 706de8c91ec9e..f55bd22185fa7 100644
---- a/include/linux/blk-crypto-profile.h
-+++ b/include/linux/blk-crypto-profile.h
-@@ -72,6 +72,48 @@ struct blk_crypto_ll_ops {
- 				const u8 *wrapped_key,
- 				unsigned int wrapped_key_size,
- 				u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE]);
-+
-+	/**
-+	 * @import_key: Create a hardware-wrapped key by importing a raw key.
-+	 *
-+	 * This only needs to be implemented if BLK_CRYPTO_KEY_TYPE_HW_WRAPPED
-+	 * is supported.
-+	 *
-+	 * Must return the size (in bytes) of the resulting wrapped key on
-+	 * success, or -errno on failure.
-+	 */
-+	int (*import_key)(struct blk_crypto_profile *profile,
-+			  const u8 *raw_key, size_t raw_key_size,
-+			  u8 longterm_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
-+
-+	/**
-+	 * @generate_key: Generate a hardware-wrapped key.
-+	 *
-+	 * This only needs to be implemented if BLK_CRYPTO_KEY_TYPE_HW_WRAPPED
-+	 * is supported.
-+	 *
-+	 * Must return the size (in bytes) of the resulting wrapped key on
-+	 * success, or -errno on failure.
-+	 */
-+	int (*generate_key)(struct blk_crypto_profile *profile,
-+			    u8 longterm_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
-+
-+	/**
-+	 * @prepare_key: Prepare a hardware-wrapped key to be used.
-+	 *
-+	 * This function prepares a hardware-wrapped to be used by converting it
-+	 * from long-term wrapped form to ephemerally-wrapped form.
-+	 *
-+	 * This only needs to be implemented if BLK_CRYPTO_KEY_TYPE_HW_WRAPPED
-+	 * is supported.
-+	 *
-+	 * Must return the size (in bytes) of the resulting wrapped key on
-+	 * success, or -errno on failure.
-+	 */
-+	int (*prepare_key)(struct blk_crypto_profile *profile,
-+			   const u8 *longterm_wrapped_key,
-+			   size_t longterm_wrapped_key_size,
-+			   u8 ephemerally_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
- };
- 
- /**
-@@ -180,6 +222,18 @@ int blk_crypto_derive_sw_secret(struct blk_crypto_profile *profile,
- 				unsigned int wrapped_key_size,
- 				u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE]);
- 
-+int blk_crypto_import_key(struct blk_crypto_profile *profile,
-+			  const u8 *raw_key, size_t raw_key_size,
-+			  u8 longterm_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
-+
-+int blk_crypto_generate_key(struct blk_crypto_profile *profile,
-+			    u8 longterm_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
-+
-+int blk_crypto_prepare_key(struct blk_crypto_profile *profile,
-+			   const u8 *longterm_wrapped_key,
-+			   size_t longterm_wrapped_key_size,
-+			   u8 ephemerally_wrapped_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
-+
- void blk_crypto_intersect_capabilities(struct blk_crypto_profile *parent,
- 				       const struct blk_crypto_profile *child);
- 
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index bdf7b404b3e72..d5021094c2fee 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -121,6 +121,28 @@ struct fsxattr {
- 	unsigned char	fsx_pad[8];
- };
- 
-+struct blk_crypto_import_key_arg {
-+	__u64 raw_key_ptr;
-+	__u64 raw_key_size;
-+	__u64 longterm_wrapped_key_ptr;
-+	__u64 longterm_wrapped_key_size;
-+	__u64 reserved[4];
-+};
-+
-+struct blk_crypto_generate_key_arg {
-+	__u64 longterm_wrapped_key_ptr;
-+	__u64 longterm_wrapped_key_size;
-+	__u64 reserved[4];
-+};
-+
-+struct blk_crypto_prepare_key_arg {
-+	__u64 longterm_wrapped_key_ptr;
-+	__u64 longterm_wrapped_key_size;
-+	__u64 ephemerally_wrapped_key_ptr;
-+	__u64 ephemerally_wrapped_key_size;
-+	__u64 reserved[4];
-+};
-+
- /*
-  * Flags for the fsx_xflags field
-  */
-@@ -185,6 +207,10 @@ struct fsxattr {
- #define BLKROTATIONAL _IO(0x12,126)
- #define BLKZEROOUT _IO(0x12,127)
- #define BLKGETDISKSEQ _IOR(0x12,128,__u64)
-+#define BLKCRYPTOIMPORTKEY _IOWR(0x12, 129, struct blk_crypto_import_key_arg)
-+#define BLKCRYPTOGENERATEKEY _IOWR(0x12, 130, struct blk_crypto_generate_key_arg)
-+#define BLKCRYPTOPREPAREKEY _IOWR(0x12, 131, struct blk_crypto_prepare_key_arg)
-+
- /*
-  * A jump here: 130-136 are reserved for zoned block devices
-  * (see uapi/linux/blkzoned.h)
+
+base-commit: 7e57714cd0ad2d5bb90e50b5096a0e671dec1ef3
 -- 
 2.35.1
 
