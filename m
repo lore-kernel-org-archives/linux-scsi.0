@@ -2,146 +2,193 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2A57C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Feb 2022 23:18:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6800C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 01:39:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232183AbiB0XTG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Feb 2022 18:19:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41572 "EHLO
+        id S232346AbiB1Bj7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Feb 2022 20:39:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231630AbiB0XTF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Feb 2022 18:19:05 -0500
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E62020F53;
-        Sun, 27 Feb 2022 15:18:27 -0800 (PST)
-Received: by mail-pg1-f174.google.com with SMTP id 139so9940690pge.1;
-        Sun, 27 Feb 2022 15:18:27 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=0Ph/ZT2aWktwffC/2ax75T6epHj/LQx3vML/3EhsTbg=;
-        b=MTVqiM5AjFCh35O+0awPqOC+tK9pxts7QxSUYC22s5Qj+jdBG5AysEsZ74E9PZ1bmU
-         3D00gyHF7aLxtC64XXYKq2f0Z2BVRD/1NYZuw6fP+eiXNsUGKjbaAM5wYNUpVI+0ImZ/
-         acpzJdHF9tIvX/8zoi+vbIzABHzOWQEKmJQ741/mN504OZLPFERupdHb/0EJSeRzAbwC
-         eIt9YERRpe7QnbB/ZMH2/CzNLlW2pueXRF1lic66jplET5O930gZ+uxrOWnp5CzJlwLb
-         jm/rToV8PSxcGRE+EFAq3FCKnbXvno8tJzfxdgDmBvhBGabeoFluYQcSoYcuZj3dPDgG
-         OjdQ==
-X-Gm-Message-State: AOAM531sVsIb5AJzuOMm9ri3j/hcmrCDVBlgUj/+CSopnKlYh870fD+J
-        qjtn2j+dCppEy3/WfXS1ubibL6seWuYnSQ==
-X-Google-Smtp-Source: ABdhPJykDXMXmg3Vn7UzfSjTt07+WmJm2wMMkwtiCmirVxZ4yYZxKCM7MKFklSGGCMn8i6Phbhpmpg==
-X-Received: by 2002:a63:9d8c:0:b0:378:4b73:5b3b with SMTP id i134-20020a639d8c000000b003784b735b3bmr9675714pgd.564.1646003906694;
-        Sun, 27 Feb 2022 15:18:26 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id 63-20020a630942000000b00372a99c1821sm8287895pgj.21.2022.02.27.15.18.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 27 Feb 2022 15:18:25 -0800 (PST)
-Message-ID: <741e087a-43f8-dc90-b679-7865cf503ac3@acm.org>
-Date:   Sun, 27 Feb 2022 15:18:24 -0800
+        with ESMTP id S232083AbiB1Bj7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Feb 2022 20:39:59 -0500
+Received: from mp-relay-01.fibernetics.ca (mp-relay-01.fibernetics.ca [208.85.217.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5907F220E8
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Feb 2022 17:39:20 -0800 (PST)
+Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mp-relay-01.fibernetics.ca (Postfix) with ESMTPS id 0CD53E0FB0;
+        Mon, 28 Feb 2022 01:39:19 +0000 (UTC)
+Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
+        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 029E0630AC;
+        Mon, 28 Feb 2022 01:39:19 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
+        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
+        with ESMTP id LNi9oZzX8ANu; Mon, 28 Feb 2022 01:39:18 +0000 (UTC)
+Received: from [192.168.48.23] (host-45-78-195-155.dyn.295.ca [45.78.195.155])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id 4AD0D60494;
+        Mon, 28 Feb 2022 01:39:18 +0000 (UTC)
+Message-ID: <86e4fafa-f834-6fb5-2337-314a6078a480@interlog.com>
+Date:   Sun, 27 Feb 2022 20:39:17 -0500
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: move more work to disk_release v2
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <20220227172144.508118-1-hch@lst.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220227172144.508118-1-hch@lst.de>
+ Thunderbird/91.5.0
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH 1/2] scsi: scsi_debug: silence sparse unexpected unlock
+ warnings
+Content-Language: en-CA
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20220225084527.523038-1-damien.lemoal@opensource.wdc.com>
+ <20220225084527.523038-2-damien.lemoal@opensource.wdc.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <20220225084527.523038-2-damien.lemoal@opensource.wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/27/22 09:21, Christoph Hellwig wrote:
-> Hi all,
+On 2022-02-25 03:45, Damien Le Moal wrote:
+> The return statement inside the sdeb_read_lock(), sdeb_read_unlock(),
+> sdeb_write_lock() and sdeb_write_unlock() confuse sparse, leading to
+> many warnings about unexpected unlocks in the resp_xxx() functions.
 > 
-> this series resurrects and forward ports ports larger parts of the
-> "block: don't drain file system I/O on del_gendisk" series from Ming,
-> but does not remove the draining in del_gendisk, but instead the one
-> in the sd driver, which always was a bit ad-hoc.  As part of that sd
-> and sr are switched to use the new ->free_disk method to avoid having
-> to clear disk->private_data and the way to lookup the SCSI ULP is
-> cleaned up as well.
+> Modify the lock/unlock functions using the __acquire() and __release()
+> inline annotations for the sdebug_no_rwlock == true case to avoid these
+> warnings.
+
+I'm confused. The idea with sdebug_no_rwlock was that the application
+may know that the protection afforded by the driver's rwlock is not
+needed because locking is performed at a higher level (e.g. in the
+user space). Hence there is no need to use a read-write lock (or a
+full lock) in this driver to protect a read (say) against a co-incident
+write to the same memory region. So this was a performance enhancement.
+
+The proposed patch seems to be replacing a read-write lock with a full
+lock. That would be going in the opposite direction to what I intended.
+
+If this is the only solution, a better idea might be to drop the
+patch (in staging I think) that introduced the sdebug_no_rwlock option.
+
+The sdebug_no_rwlock option has been pretty thoroughly tested (for over
+a year) with memory to memory transfers (together with sgl to sgl
+additions to lib/scatterlist.h). Haven't seen any unexplained crashes
+that I could trace to this lack of locking. OTOH I haven't measured
+any improvement of the copy speed either, that may be because my tests
+are approaching the copy bandwidth of the ram.
+
+
+Does sparse understand guard variables (e.g. like 'bool lock_taken')?
+ From what I've seen with sg3_utils Coverity doesn't, leading to many false
+reports.
+
+Doug Gilbert
+
+> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> ---
+>   drivers/scsi/scsi_debug.c | 68 +++++++++++++++++++++++++--------------
+>   1 file changed, 44 insertions(+), 24 deletions(-)
 > 
-> Git branch:
-> 
->      git://git.infradead.org/users/hch/block.git freeze-5.18
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 0d25b30922ef..f4e97f2224b2 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -3167,45 +3167,65 @@ static int prot_verify_read(struct scsi_cmnd *scp, sector_t start_sec,
+>   static inline void
+>   sdeb_read_lock(struct sdeb_store_info *sip)
+>   {
+> -	if (sdebug_no_rwlock)
+> -		return;
+> -	if (sip)
+> -		read_lock(&sip->macc_lck);
+> -	else
+> -		read_lock(&sdeb_fake_rw_lck);
+> +	if (sdebug_no_rwlock) {
+> +		if (sip)
+> +			__acquire(&sip->macc_lck);
+> +		else
+> +			__acquire(&sdeb_fake_rw_lck);
+> +	} else {
+> +		if (sip)
+> +			read_lock(&sip->macc_lck);
+> +		else
+> +			read_lock(&sdeb_fake_rw_lck);
+> +	}
+>   }
+>   
+>   static inline void
+>   sdeb_read_unlock(struct sdeb_store_info *sip)
+>   {
+> -	if (sdebug_no_rwlock)
+> -		return;
+> -	if (sip)
+> -		read_unlock(&sip->macc_lck);
+> -	else
+> -		read_unlock(&sdeb_fake_rw_lck);
+> +	if (sdebug_no_rwlock) {
+> +		if (sip)
+> +			__release(&sip->macc_lck);
+> +		else
+> +			__release(&sdeb_fake_rw_lck);
+> +	} else {
+> +		if (sip)
+> +			read_unlock(&sip->macc_lck);
+> +		else
+> +			read_unlock(&sdeb_fake_rw_lck);
+> +	}
+>   }
+>   
+>   static inline void
+>   sdeb_write_lock(struct sdeb_store_info *sip)
+>   {
+> -	if (sdebug_no_rwlock)
+> -		return;
+> -	if (sip)
+> -		write_lock(&sip->macc_lck);
+> -	else
+> -		write_lock(&sdeb_fake_rw_lck);
+> +	if (sdebug_no_rwlock) {
+> +		if (sip)
+> +			__acquire(&sip->macc_lck);
+> +		else
+> +			__acquire(&sdeb_fake_rw_lck);
+> +	} else {
+> +		if (sip)
+> +			write_lock(&sip->macc_lck);
+> +		else
+> +			write_lock(&sdeb_fake_rw_lck);
+> +	}
+>   }
+>   
+>   static inline void
+>   sdeb_write_unlock(struct sdeb_store_info *sip)
+>   {
+> -	if (sdebug_no_rwlock)
+> -		return;
+> -	if (sip)
+> -		write_unlock(&sip->macc_lck);
+> -	else
+> -		write_unlock(&sdeb_fake_rw_lck);
+> +	if (sdebug_no_rwlock) {
+> +		if (sip)
+> +			__release(&sip->macc_lck);
+> +		else
+> +			__release(&sdeb_fake_rw_lck);
+> +	} else {
+> +		if (sip)
+> +			write_unlock(&sip->macc_lck);
+> +		else
+> +			write_unlock(&sdeb_fake_rw_lck);
+> +	}
+>   }
+>   
+>   static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
 
-Hi Christoph,
-
-Thanks for the quick respin. If I run blktests as follows:
-
-$ use_siw=1 ./check -q
-
-then the first report I hit with this branch is a deadlock report in
-nvmet_rdma_free_queue(). That issue has already been reported - see also
-https://lore.kernel.org/linux-nvme/CAHj4cs93BfTRgWF6PbuZcfq6AARHgYC2g=RQ-7Jgcf1-6h+2SQ@mail.gmail.com/
-
-The second issue I run into with this branch is as follows
-(also for nvmeof-mp/002):
-
-==================================================================
-BUG: KASAN: null-ptr-deref in __blk_account_io_start+0x28/0xa0
-Read of size 8 at addr 0000000000000008 by task kworker/0:1H/159
-
-CPU: 0 PID: 159 Comm: kworker/0:1H Not tainted 5.17.0-rc2-dbg+ #9
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.15.0-0-g2dd4b9b-rebuilt.opensuse.org 04/01/2014
-Workqueue: kblockd blk_mq_requeue_work
-Call Trace:
-  <TASK>
-  show_stack+0x52/0x58
-  ? __blk_account_io_start+0x28/0xa0
-  dump_stack_lvl+0x5b/0x82
-  kasan_report.cold+0x64/0xdb
-  ? __blk_account_io_start+0x28/0xa0
-  __asan_load8+0x69/0x90
-  __blk_account_io_start+0x28/0xa0
-  blk_insert_cloned_request+0x107/0x3b0
-  map_request+0x260/0x3c0 [dm_mod]
-  ? dm_requeue_original_request+0x1a0/0x1a0 [dm_mod]
-  ? blk_add_timer+0xc3/0x110
-  dm_mq_queue_rq+0x207/0x400 [dm_mod]
-  ? kasan_set_track+0x25/0x30
-  ? kasan_set_free_info+0x24/0x40
-  ? map_request+0x3c0/0x3c0 [dm_mod]
-  ? nvmet_rdma_release_rsp+0xb3/0x3f0 [nvmet_rdma]
-  ? nvmet_rdma_send_done+0x4a/0x70 [nvmet_rdma]
-  ? __ib_process_cq+0x11b/0x3c0 [ib_core]
-  ? ib_cq_poll_work+0x37/0xb0 [ib_core]
-  ? process_one_work+0x594/0xad0
-  ? worker_thread+0x2de/0x6b0
-  ? kthread+0x15f/0x190
-  ? ret_from_fork+0x1f/0x30
-  blk_mq_dispatch_rq_list+0x344/0xc00
-  ? blk_mq_mark_tag_wait+0x470/0x470
-  ? rcu_read_lock_sched_held+0x16/0x80
-  __blk_mq_sched_dispatch_requests+0x19b/0x280
-  ? blk_mq_do_dispatch_ctx+0x3f0/0x3f0
-  ? rcu_read_lock_sched_held+0x16/0x80
-  blk_mq_sched_dispatch_requests+0x8a/0xc0
-  __blk_mq_run_hw_queue+0x99/0x220
-  __blk_mq_delay_run_hw_queue+0x372/0x3a0
-  ? blk_mq_run_hw_queue+0xd7/0x2b0
-  ? rcu_read_lock_sched_held+0x16/0x80
-  blk_mq_run_hw_queue+0x1d6/0x2b0
-  blk_mq_run_hw_queues+0xa0/0x1e0
-  blk_mq_requeue_work+0x2e4/0x330
-  ? blk_mq_try_issue_directly+0x60/0x60
-  ? lock_acquire+0x76/0x1a0
-  process_one_work+0x594/0xad0
-  ? pwq_dec_nr_in_flight+0x120/0x120
-  ? do_raw_spin_lock+0x115/0x1b0
-  ? lock_acquire+0x76/0x1a0
-  worker_thread+0x2de/0x6b0
-  ? trace_hardirqs_on+0x2b/0x120
-  ? process_one_work+0xad0/0xad0
-  kthread+0x15f/0x190
-  ? kthread_complete_and_exit+0x30/0x30
-  ret_from_fork+0x1f/0x30
-  </TASK>
-==================================================================
