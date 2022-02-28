@@ -2,65 +2,66 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16593C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 20:07:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71BFFC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 20:08:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230098AbiB1UI3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Feb 2022 15:08:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39618 "EHLO
+        id S230115AbiB1UIm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Feb 2022 15:08:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230113AbiB1UIU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2022 15:08:20 -0500
+        with ESMTP id S230152AbiB1UI3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2022 15:08:29 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A554641615
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 12:07:30 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 668B869CEA
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 12:07:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1646078849;
+        s=mimecast20190719; t=1646078867;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7WhVAymOW5u4geXWTL+7J2PABA83HXRAHgOjG17an2M=;
-        b=CENGGEbgeubbEG/Qba9Xz0fs6ChD8R8MaTm4neohi6bFMiLfLKY89AQUE2QIykkdElx8gl
-        X1p1tU6w05Pw8PCQY6C8KQrAdxGS5ZRqTXNO33E3Xz4WuJxpZXeli3GPV6oV7Ne9Hd/d4i
-        flQenBWhtNXgdI2a70yeGlbSQsFWfM0=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=NN46cj3RJbYFU5XqoOC/dOvDEQJ3ce6idOogTModIf4=;
+        b=JnI4+6CnPFdlzgPyKUqt0OQ4MW71ykZpPxsYxuK6mVtYMfuHJhosP+HiXPjmD/PdwlJ3jf
+        XxfLGPmmrxnMPZy/A5AJ3t/XGTfj96+fQZFsaN6iDbxXYIobSzn2n5jEurGuZnstuMR0sT
+        4wifc/3DOdHKaq4vKz28IHJHORZAFiI=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-157-RVqdSRYfMb6Pp-QevGVULA-1; Mon, 28 Feb 2022 15:07:28 -0500
-X-MC-Unique: RVqdSRYfMb6Pp-QevGVULA-1
-Received: by mail-qv1-f69.google.com with SMTP id x16-20020a0ce250000000b00432ec6eaf85so6248423qvl.15
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 12:07:28 -0800 (PST)
+ us-mta-461-pV3GfooUMcuTzmAmcGsTWw-1; Mon, 28 Feb 2022 15:07:46 -0500
+X-MC-Unique: pV3GfooUMcuTzmAmcGsTWw-1
+Received: by mail-qv1-f71.google.com with SMTP id fv11-20020a056214240b00b0043253a948f0so13306439qvb.1
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 12:07:46 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=7WhVAymOW5u4geXWTL+7J2PABA83HXRAHgOjG17an2M=;
-        b=gOLzJe5yjarTf9xQRJZLeOKhFTxwUNDGRXL9eDfhlXCZQQ7cRKvaZcCmn8kYPcfOw/
-         +R5JinjTtkGExyYqVHH6vudqCgU2y8ah+FZbFihEeWzKF/PtF+0dWDgTYaSsH/HLbCgy
-         lmUxsYugT3zhc73b0SXZd86nIcLWNTk39isjVHejXABEmK71ITBR0b6z9eyRUzGM/oat
-         OYBrfJ37joHje/O6R2uQccDoOmJFdG8B+QXIztKv57inEpWfk+Q8AAM6Q2tfNjRfGHbQ
-         U7RG7ka+e2bPNHezIkDxeqSUCLSAqJqXVerryWq3TSOg7lbxrRaTVsnGHsMXyUo/mNE7
-         811A==
-X-Gm-Message-State: AOAM531uLklBtIX/tQ0kmKJNsqyjQnNomfEPhQiy8ibF2pX8kqylvkPB
-        fJWXpdC0paUxYAKWHNhS9NPHOLaQYE1bWTXI713f2XXHLxOiJxmv8O4QBa5pg146BFcIiqawndQ
-        BRv5xamYjSpkhNismKRizcA==
-X-Received: by 2002:a05:620a:8dd:b0:663:2d2e:41ab with SMTP id z29-20020a05620a08dd00b006632d2e41abmr1498383qkz.260.1646078847611;
-        Mon, 28 Feb 2022 12:07:27 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxv1/qSd7YTqkuEaxKaY+dbsUPUNm4jVbao2rwRwDRienmiCkQG7ituf9+83a5LdQXdCmxLIw==
-X-Received: by 2002:a05:620a:8dd:b0:663:2d2e:41ab with SMTP id z29-20020a05620a08dd00b006632d2e41abmr1498365qkz.260.1646078847311;
-        Mon, 28 Feb 2022 12:07:27 -0800 (PST)
+        bh=NN46cj3RJbYFU5XqoOC/dOvDEQJ3ce6idOogTModIf4=;
+        b=j1B5tzhyJnj0Xl98hMQ4xuNGC7DWA1gIUbDP0RO1VrG876u8jrPPa+e7Lb959qrgjv
+         cUB0PpFd2IdDjcMgpzJ+8MTF/EEkXFBjVyZxfpOu1BUTSOfGJ/GX8CuyIGWg63oTsB9v
+         Lk07RHDcnrxEN2a11bvxcZG9IlfqqI9SvbGmaPSArTwIHUp7qO77/pOvvGdxnCBuKIOQ
+         xFeNj3KBJ0vUETpXJlUvXsyNmJA3F9ahYgTNN4WIRbyUR10zbp9inFDjHnqOdoqkSUi+
+         FHdLINqSvavNZc8Md1BdlNDNjlscFCcMTlCGeEzvcOZ2gM8WTunfyw6dOSjJjyJ5aZPK
+         Moaw==
+X-Gm-Message-State: AOAM5330OzjhYDNbx3m5gz73F/60YMYRiSXS2kBnDBrk/rFTWwpA0uNE
+        pQ+HrO6h1Is69fIzYckTjFGqXi4sMnPlUUjeS36Hf2fPBcc1pFMqQIfTMSjuZxPEeOmOPWY+fZR
+        3BN1sY5eRlNEsfbIyePXI9Q==
+X-Received: by 2002:ad4:5ba4:0:b0:433:48be:b063 with SMTP id 4-20020ad45ba4000000b0043348beb063mr2150240qvq.25.1646078865687;
+        Mon, 28 Feb 2022 12:07:45 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJylwQFxmD+KSwZuztDELdL1Jo7iojDsCMdmBFMguW5ro+Xa88svfwxqmWaoJnAMCh+sohzjRQ==
+X-Received: by 2002:ad4:5ba4:0:b0:433:48be:b063 with SMTP id 4-20020ad45ba4000000b0043348beb063mr2150225qvq.25.1646078865424;
+        Mon, 28 Feb 2022 12:07:45 -0800 (PST)
 Received: from [192.168.0.14] (97-120-59-83.ptld.qwest.net. [97.120.59.83])
-        by smtp.gmail.com with ESMTPSA id y16-20020a37e310000000b00648c706dda1sm5432977qki.6.2022.02.28.12.07.25
+        by smtp.gmail.com with ESMTPSA id x15-20020a05622a000f00b002de2da5e5cdsm7516332qtw.3.2022.02.28.12.07.43
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Feb 2022 12:07:26 -0800 (PST)
-Message-ID: <a34c4491-209b-dbe6-53b2-322de090efa6@redhat.com>
-Date:   Mon, 28 Feb 2022 12:07:25 -0800
+        Mon, 28 Feb 2022 12:07:44 -0800 (PST)
+Message-ID: <413020c7-626e-a1bc-1074-c3eafa494c5e@redhat.com>
+Date:   Mon, 28 Feb 2022 12:07:43 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH 3/6] scsi: iscsi: Remove iscsi_scan_finished.
+Subject: Re: [PATCH 4/6] scsi: iscsi, ql4: Use per session workqueue for
+ unbinding.
 Content-Language: en-US
 To:     Mike Christie <michael.christie@oracle.com>,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
@@ -68,9 +69,9 @@ To:     Mike Christie <michael.christie@oracle.com>,
         GR-QLogic-Storage-Upstream@marvell.com, lduncan@suse.com,
         liuzhengyuang521@gmail.com
 References: <20220226230435.38733-1-michael.christie@oracle.com>
- <20220226230435.38733-4-michael.christie@oracle.com>
+ <20220226230435.38733-5-michael.christie@oracle.com>
 From:   Chris Leech <cleech@redhat.com>
-In-Reply-To: <20220226230435.38733-4-michael.christie@oracle.com>
+In-Reply-To: <20220226230435.38733-5-michael.christie@oracle.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -78,126 +79,116 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2/26/22 3:04 PM, Mike Christie wrote:
-> qla4xxx does not use iscsi_scan_finished anymore so remove it.
+> We currently allocate a workqueue per host and only use it for removing
+> the target. For the session per host case we could be using this workqueue
+> to be able to do recoveries (block, unblock, timeout handling) in
+> parallel. To also allow offload drivers to do their session recoveries in
+> parallel, this drops the per host workqueue and replaces it with a per
+> session one.
 > 
 > Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > ---
->  drivers/scsi/scsi_transport_iscsi.c | 39 +++--------------------------
->  include/scsi/scsi_transport_iscsi.h |  2 --
->  2 files changed, 4 insertions(+), 37 deletions(-)
+>  drivers/scsi/qla4xxx/ql4_os.c       |  2 +-
+>  drivers/scsi/scsi_transport_iscsi.c | 19 ++++++++++++++-----
+>  include/scsi/scsi_transport_iscsi.h |  2 ++
+>  3 files changed, 17 insertions(+), 6 deletions(-)
 > 
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+> index 0ae936d839f1..955d8cb675f1 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -5096,7 +5096,7 @@ int qla4xxx_unblock_flash_ddb(struct iscsi_cls_session *cls_session)
+>  		ql4_printk(KERN_INFO, ha, "scsi%ld: %s: ddb[%d]"
+>  			   " start scan\n", ha->host_no, __func__,
+>  			   ddb_entry->fw_ddb_index);
+> -		scsi_queue_work(ha->host, &ddb_entry->sess->scan_work);
+> +		queue_work(ddb_entry->sess->workq, &ddb_entry->sess->scan_work);
+>  	}
+>  	return QLA_SUCCESS;
+>  }
 > diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 732938f5436b..05cd4bca979e 100644
+> index 05cd4bca979e..ecb592a70e03 100644
 > --- a/drivers/scsi/scsi_transport_iscsi.c
 > +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -1557,7 +1557,6 @@ static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
->  	struct iscsi_cls_host *ihost = shost->shost_data;
+> @@ -2032,19 +2032,27 @@ EXPORT_SYMBOL_GPL(iscsi_alloc_session);
 >  
->  	memset(ihost, 0, sizeof(*ihost));
-> -	atomic_set(&ihost->nr_scans, 0);
->  	mutex_init(&ihost->mutex);
->  
->  	iscsi_bsg_host_add(shost, ihost);
-> @@ -1744,25 +1743,6 @@ void iscsi_host_for_each_session(struct Scsi_Host *shost,
->  }
->  EXPORT_SYMBOL_GPL(iscsi_host_for_each_session);
->  
-> -/**
-> - * iscsi_scan_finished - helper to report when running scans are done
-> - * @shost: scsi host
-> - * @time: scan run time
-> - *
-> - * This function can be used by drives like qla4xxx to report to the scsi
-> - * layer when the scans it kicked off at module load time are done.
-> - */
-> -int iscsi_scan_finished(struct Scsi_Host *shost, unsigned long time)
-> -{
-> -	struct iscsi_cls_host *ihost = shost->shost_data;
-> -	/*
-> -	 * qla4xxx will have kicked off some session unblocks before calling
-> -	 * scsi_scan_host, so just wait for them to complete.
-> -	 */
-> -	return !atomic_read(&ihost->nr_scans);
-> -}
-> -EXPORT_SYMBOL_GPL(iscsi_scan_finished);
-> -
->  struct iscsi_scan_data {
->  	unsigned int channel;
->  	unsigned int id;
-> @@ -1831,8 +1811,6 @@ static void iscsi_scan_session(struct work_struct *work)
+>  int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
 >  {
->  	struct iscsi_cls_session *session =
->  			container_of(work, struct iscsi_cls_session, scan_work);
-> -	struct Scsi_Host *shost = iscsi_session_to_shost(session);
-> -	struct iscsi_cls_host *ihost = shost->shost_data;
->  	struct iscsi_scan_data scan_data;
->  
->  	scan_data.channel = 0;
-> @@ -1841,7 +1819,6 @@ static void iscsi_scan_session(struct work_struct *work)
->  	scan_data.rescan = SCSI_SCAN_RESCAN;
->  
->  	iscsi_user_scan_session(&session->dev, &scan_data);
-> -	atomic_dec(&ihost->nr_scans);
->  }
->  
->  /**
-> @@ -1912,8 +1889,6 @@ static void __iscsi_unblock_session(struct work_struct *work)
->  	struct iscsi_cls_session *session =
->  			container_of(work, struct iscsi_cls_session,
->  				     unblock_work);
-> -	struct Scsi_Host *shost = iscsi_session_to_shost(session);
-> -	struct iscsi_cls_host *ihost = shost->shost_data;
+> +	struct Scsi_Host *shost = iscsi_session_to_shost(session);
 >  	unsigned long flags;
+>  	int id = 0;
+>  	int err;
 >  
->  	ISCSI_DBG_TRANS_SESSION(session, "Unblocking session\n");
-> @@ -1924,15 +1899,6 @@ static void __iscsi_unblock_session(struct work_struct *work)
->  	spin_unlock_irqrestore(&session->lock, flags);
->  	/* start IO */
->  	scsi_target_unblock(&session->dev, SDEV_RUNNING);
-> -	/*
-> -	 * Only do kernel scanning if the driver is properly hooked into
-> -	 * the async scanning code (drivers like iscsi_tcp do login and
-> -	 * scanning from userspace).
-> -	 */
-> -	if (shost->hostt->scan_finished) {
-> -		if (scsi_queue_work(shost, &session->scan_work))
-> -			atomic_inc(&ihost->nr_scans);
-> -	}
->  	ISCSI_DBG_TRANS_SESSION(session, "Completed unblocking session\n");
+>  	session->sid = atomic_add_return(1, &iscsi_session_nr);
+>  
+> +	session->workq = alloc_workqueue("iscsi_ctrl_%d:%d",
+> +			WQ_SYSFS | WQ_MEM_RECLAIM | WQ_UNBOUND, 0,
+> +			shost->host_no, session->sid);
+> +	if (!session->workq)
+> +		return -ENOMEM;
+> +
+>  	if (target_id == ISCSI_MAX_TARGET) {
+>  		id = ida_simple_get(&iscsi_sess_ida, 0, 0, GFP_KERNEL);
+>  
+>  		if (id < 0) {
+>  			iscsi_cls_session_printk(KERN_ERR, session,
+>  					"Failure in Target ID Allocation\n");
+> -			return id;
+> +			err = id;
+> +			goto destroy_wq;
+>  		}
+>  		session->target_id = (unsigned int)id;
+>  		session->ida_used = true;
+> @@ -2078,7 +2086,8 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
+>  release_ida:
+>  	if (session->ida_used)
+>  		ida_simple_remove(&iscsi_sess_ida, session->target_id);
+> -
+> +destroy_wq:
+> +	destroy_workqueue(session->workq);
+>  	return err;
 >  }
+>  EXPORT_SYMBOL_GPL(iscsi_add_session);
+> @@ -2177,6 +2186,8 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
 >  
-> @@ -2192,7 +2158,10 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
->  	spin_unlock_irqrestore(&session->lock, flags);
+>  	transport_unregister_device(&session->dev);
 >  
->  	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
-> -	/* flush running scans then delete devices */
-> +	/*
-> +	 * qla4xxx can perform it's own scans when it runs in kernel only
-> +	 * mode. Make sure to flush those scans.
-> +	 */
->  	flush_work(&session->scan_work);
->  	/* flush running unbind operations */
->  	flush_work(&session->unbind_work);
+> +	destroy_workqueue(session->workq);
+> +
+>  	ISCSI_DBG_TRANS_SESSION(session, "Completing session removal\n");
+>  	device_del(&session->dev);
+>  }
+> @@ -3833,8 +3844,7 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+>  	case ISCSI_UEVENT_UNBIND_SESSION:
+>  		session = iscsi_session_lookup(ev->u.d_session.sid);
+>  		if (session)
+> -			scsi_queue_work(iscsi_session_to_shost(session),
+> -					&session->unbind_work);
+> +			queue_work(session->workq, &session->unbind_work);
+>  		else
+>  			err = -EINVAL;
+>  		break;
+> @@ -4707,7 +4717,6 @@ iscsi_register_transport(struct iscsi_transport *tt)
+>  	INIT_LIST_HEAD(&priv->list);
+>  	priv->iscsi_transport = tt;
+>  	priv->t.user_scan = iscsi_user_scan;
+> -	priv->t.create_work_queue = 1;
+>  
+>  	priv->dev.class = &iscsi_transport_class;
+>  	dev_set_name(&priv->dev, "%s", tt->name);
 > diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-> index c5d7810fd792..90b55db46d7c 100644
+> index 90b55db46d7c..7a0d24d3b916 100644
 > --- a/include/scsi/scsi_transport_iscsi.h
 > +++ b/include/scsi/scsi_transport_iscsi.h
-> @@ -278,7 +278,6 @@ struct iscsi_cls_session {
->  	iscsi_dev_to_session(_stgt->dev.parent)
+> @@ -251,6 +251,8 @@ struct iscsi_cls_session {
+>  	bool recovery_tmo_sysfs_override;
+>  	struct delayed_work recovery_work;
 >  
->  struct iscsi_cls_host {
-> -	atomic_t nr_scans;
->  	struct mutex mutex;
->  	struct request_queue *bsg_q;
->  	uint32_t port_speed;
-> @@ -448,7 +447,6 @@ extern void iscsi_get_conn(struct iscsi_cls_conn *conn);
->  extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
->  extern void iscsi_unblock_session(struct iscsi_cls_session *session);
->  extern void iscsi_block_session(struct iscsi_cls_session *session);
-> -extern int iscsi_scan_finished(struct Scsi_Host *shost, unsigned long time);
->  extern struct iscsi_endpoint *iscsi_create_endpoint(int dd_size);
->  extern void iscsi_destroy_endpoint(struct iscsi_endpoint *ep);
->  extern struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle);
+> +	struct workqueue_struct *workq;
+> +
+>  	unsigned int target_id;
+>  	bool ida_used;
+>  
 
 Reviewed-by: Chris Leech <cleech@redhat.com>
 
