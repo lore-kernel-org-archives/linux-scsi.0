@@ -2,82 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E8A5C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 03:43:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A440C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 03:43:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232957AbiB1DoP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S232973AbiB1DoP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sun, 27 Feb 2022 22:44:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56810 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232965AbiB1DoN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Feb 2022 22:44:13 -0500
+        with ESMTP id S232969AbiB1DoP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Feb 2022 22:44:15 -0500
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DECEE3A705
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Feb 2022 19:43:35 -0800 (PST)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21RN22iK030109;
-        Mon, 28 Feb 2022 03:43:35 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 562063982A;
+        Sun, 27 Feb 2022 19:43:37 -0800 (PST)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21RMwaGT029567;
+        Mon, 28 Feb 2022 03:43:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=azXL8wOR0/g9yJROqs2Ok2c7gbTkfFg2xCS4N0xOi04=;
- b=kMwBp596L/Mk+SFdicF7kKeCChCDMbX5rnI/gDNzMK70OvOJMgsh+48lEdzZZwFSLi7b
- STXeaTWk42/WEvLq2GwhpneW8wdmej/vjZ0ivwzbZiaDeo+/Awo0mIAGvE2ZJV6HFjRp
- 4ZHlY5af3WggUL3aaLBKCzSUcXPeUTQfbC+XKqFPxFJQSlxCf9UeV5i5xYJtNhkyqEEm
- ozNNEA3H+XkCJ/GI7LVJ400t320ox3Ij7IGDDoO8hIysKHZ9I8+bUE3AryebwOnX3IEo
- /tjjXlLH2y03SdtDx4rSEPIhVSy1uFvoMDwbGNa4yj6ghQ/xw+th80PIsK25WtK6lgg1 og== 
+ bh=WDPd4UU66TYdGYyEzivTW4h3BXzO/do4dlet7bzcTrs=;
+ b=HZTxdwhjO6Pw2Qxq8pxHVMvOukRLGlwvT7PFBgEqjESCJ8w1CoUeOcKAh9IFnJkVHnSJ
+ lqgWMV5KgLmS5Ejhhp2cyxkJHQ7w9OTKBoGqFCtq8De5iNKog9vSfYzeHW2Ofw7b3ifO
+ Oss032za4bI3puwS59qV1KgUcbyiDG7AoD2CIg6H0ax5Jg7piGKzY0WtUZEo11tTLLrc
+ z277hi2/yQk2+QUER+UjPtOFCOgfV85YYLUG0b85Y2jSBpabk8Kpzjs9361NH4qrXHIx
+ VK+2upTdNojG+XXMHUo5lmgANj1LSii37xlRFgGuQSqaRblrFrWRtxQD/OH1RJN2uZw0 Gg== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3efamcb0p9-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3efbttayev-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 28 Feb 2022 03:43:34 +0000
+        Mon, 28 Feb 2022 03:43:32 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21S3bFBg157815;
-        Mon, 28 Feb 2022 03:43:34 GMT
+        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21S3bHn3157825;
+        Mon, 28 Feb 2022 03:43:32 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3030.oracle.com with ESMTP id 3efa8bxnw9-1
+        by aserp3030.oracle.com with ESMTP id 3efa8bxnvg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 28 Feb 2022 03:43:34 +0000
+        Mon, 28 Feb 2022 03:43:32 +0000
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 21S3hPw2165853;
-        Mon, 28 Feb 2022 03:43:33 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 21S3hPvw165853;
+        Mon, 28 Feb 2022 03:43:31 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by aserp3030.oracle.com with ESMTP id 3efa8bxnt3-9;
-        Mon, 28 Feb 2022 03:43:33 +0000
+        by aserp3030.oracle.com with ESMTP id 3efa8bxnt3-7;
+        Mon, 28 Feb 2022 03:43:31 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     Guixin Liu <kanie@linux.alibaba.com>, bostroesser@gmail.com
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        mpi3mr-linuxdrv.pdl@broadcom.com
-Subject: Re: [PATCH] mpi3mr: Fix flushing !WQ_MEM_RECLAIM events warning
-Date:   Sun, 27 Feb 2022 22:43:23 -0500
-Message-Id: <164601967777.4503.10263826717475110463.b4-ty@oracle.com>
+        xlpang@linux.alibaba.com, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        xiaoguang.wang@linux.alibaba.com
+Subject: Re: [PATCH V4] scsi: target: tcmu: Make cmd_ring_size changeable via configfs
+Date:   Sun, 27 Feb 2022 22:43:21 -0500
+Message-Id: <164601967777.4503.13105145657095242015.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220218180515.27455-1-sreekanth.reddy@broadcom.com>
-References: <20220218180515.27455-1-sreekanth.reddy@broadcom.com>
+In-Reply-To: <1644978109-14885-1-git-send-email-kanie@linux.alibaba.com>
+References: <1644978109-14885-1-git-send-email-kanie@linux.alibaba.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: SaUYvLIeB8WqnFvB142XAsrVyELHF9HJ
-X-Proofpoint-GUID: SaUYvLIeB8WqnFvB142XAsrVyELHF9HJ
+X-Proofpoint-GUID: hGCbUb_VMG1B_joGWGWU4EG_X7pw8rT_
+X-Proofpoint-ORIG-GUID: hGCbUb_VMG1B_joGWGWU4EG_X7pw8rT_
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 18 Feb 2022 23:35:15 +0530, Sreekanth Reddy wrote:
+On Wed, 16 Feb 2022 10:21:49 +0800, Guixin Liu wrote:
 
-> Fix below warning by not allocating driver's event handling
-> worker queue with WQ_MEM_RECLAIM flag enabled.
+> Make cmd_ring_size changeable similar to the way it is done for
+> max_data_area_mb, the reason is that our tcmu client will create
+> thousands of tcmu instances, and this will consume lots of mem with
+> default 8Mb cmd ring size for every backstore.
 > 
-> workqueue: WQ_MEM_RECLAIM
-> mpi3mr_fwevt_worker [mpi3mr] is flushing !WQ_MEM_RECLAIM events
-> 
+> One can change the value by typing:
+>     echo "cmd_ring_size_mb=N" > control
+> The "N" is a integer between 1 to 8, if set 1, the cmd ring can hold
+> about 6k cmds(tcmu_cmd_entry about 176 byte) at least.
 > 
 > [...]
 
 Applied to 5.18/scsi-queue, thanks!
 
-[1/1] mpi3mr: Fix flushing !WQ_MEM_RECLAIM events warning
-      https://git.kernel.org/mkp/scsi/c/334ae6459aa3
+[1/1] scsi: target: tcmu: Make cmd_ring_size changeable via configfs
+      https://git.kernel.org/mkp/scsi/c/c7ede4f044b9
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
