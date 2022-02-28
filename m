@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8A4FC3527A
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 11:09:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD25BC47081
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 11:09:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235602AbiB1LJt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Feb 2022 06:09:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50830 "EHLO
+        id S234319AbiB1LJv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Feb 2022 06:09:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235427AbiB1LJj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2022 06:09:39 -0500
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 469676AA4D;
-        Mon, 28 Feb 2022 03:08:59 -0800 (PST)
-Received: by mail-ej1-x62e.google.com with SMTP id a8so23987735ejc.8;
-        Mon, 28 Feb 2022 03:08:59 -0800 (PST)
+        with ESMTP id S235467AbiB1LJl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2022 06:09:41 -0500
+Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94D306C928;
+        Mon, 28 Feb 2022 03:09:02 -0800 (PST)
+Received: by mail-ej1-x633.google.com with SMTP id lw4so23947313ejb.12;
+        Mon, 28 Feb 2022 03:09:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=HpiN/zwO1wBD5W8vJ5qwHzWs2Mz8GYwVSPoaDyTc8jQ=;
-        b=hjvTHeqAC17Nm2rqJFqOWVUlo+eMrb6KCGjEjnmUhT0UbOoSD99k2xAziOpWZa+Icu
-         SPp4Zg1lqK8FLNpUHi/iGpToynAZh7AAx7I6BqkiBOWQWPIrLjejJ7mt0E6lp79jr43P
-         Z8Tz3UxSCHK1qzDcri6ZY14M8lx9G0bi6GCGQHl0DVbHpgXti6eqzCprjBZYIcyI1uce
-         Dn/lOukn9J64/ASqyssuY+hk5ExgHfhAh8xyytTN1bW2SLq53AUCqmHXOqxQHzvGm8yg
-         Hb8Tr+NdyPNcInoLFcy82stmYANyPP1+b2zh81uncpq/hmnHTquj2t004aepXQhNWxPC
-         QShA==
+        bh=ewSqtxWpAEouzx42J3KLaoNJ3zRCYps/nc7KO/73VjI=;
+        b=NJzfXKcN7hL1Nl33p4E04eSCSKXsmXm0guAXz3+luhQpanQnRU99MCp2hnFUKYaL+B
+         1x361O+pkC4o39HmFVweecOA5EyrbgRoo6hBpKoe+ZK3uwuMgKcjXUUzcyKnqq4Ihz7Y
+         0pE7mGFU6qwm5nlEaQI6CtIcQNt/P0yiVszOfwFWGIKlTpST4oUB8Axjb2KGdfFCf6oM
+         BF7gos7RIFK+C7zFe1BBqWlnyj9ABXdIe2RTMFKfzCdWuqPXqav1BQyfcB8KfJDsFPFC
+         rwx0y6HLf2zquaEOFfVg855ZoIJbHt3hF+DdFMjnEF9CZ4aqYu3RYVbCj5tslcC60Xqy
+         JDWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=HpiN/zwO1wBD5W8vJ5qwHzWs2Mz8GYwVSPoaDyTc8jQ=;
-        b=lLl+YmY9FiSRN80GVWrymLx9swIZ3gwOyStRn6bfg3dV/Cj+9GnHjavNd9IXJXv+Xh
-         GPG9BH9/RiwW0YmuimvZ37s2kmXZZvd+p4RFBeEA6UX+2QQUVkBWwDh3Olg818ZEw+vL
-         dHIIjOdr8qcEsZNS9suMsyLOCRouXjXNLitMqC6FNwdGXjzEkHxdZfWvDQqLd1qc5OrE
-         gKZmJbAE9IOmzcGd7+k6vuHGSzbZBSfA+hCxEGr6l8+eiopqfo99O1DokRXVvjBnutsK
-         11jGbRfp37Rrrtf7038S9jrTkKss7okMbif/HUR3OS6xBC3zzM+ROm6xTD/wsiHpkOtm
-         cwPQ==
-X-Gm-Message-State: AOAM531kSYy2VbDob0O7hBr4gBcFW8RunwTwxAE+MDCY//frvFtjKqQB
-        1+pUI8CNx5vrjqxV+9+WW/I=
-X-Google-Smtp-Source: ABdhPJwIz1+OuMm91LqO5/9SwgL6U3RC8rZg6hPrO7zQUYJxh0T24GQzaSGRh+uNCyYPoPAvBQZaKw==
-X-Received: by 2002:a17:906:3803:b0:6cf:56b9:60a9 with SMTP id v3-20020a170906380300b006cf56b960a9mr14108161ejc.716.1646046537823;
-        Mon, 28 Feb 2022 03:08:57 -0800 (PST)
+        bh=ewSqtxWpAEouzx42J3KLaoNJ3zRCYps/nc7KO/73VjI=;
+        b=cpZVpveY7srDDOckQNQzga2h6shbCDDU84DQ5tMtLl3NkmLBKOeJjOf7Bl2Xyk725P
+         AJ7w+ZTGcuchMbYuX/m05L7hBaCm//45J2aehR2ZYf/eeebplRPMDEuAJb07cUP/vo5t
+         yFmWXl0yrK/vt0TexR9FQ9xi8wuTU0FNpjOnVZkcAt+GZ8xXjvUWol+a1bAnsIppT2dW
+         zV6POB4NQPFngAxpbz0k056G8L/ubO+Z7GOXkfVduRlMxOnYpGCz77/B+9Tszh21lgxg
+         pqzT84KAHS669RGmdB+CnR27go4+RreVaT2MXq3RoufefBEv069xhmUYeCG2O7lsOsP3
+         7u8A==
+X-Gm-Message-State: AOAM533KJ1dB1aDmLRJMUjImlaH/7M2wxr0J2FXoZThqg/ppuN/FzhDq
+        i3HQCCf8/FC3rDAKdPoSgFs=
+X-Google-Smtp-Source: ABdhPJzNtnbGg8Nz3uHKd7Xw6L7mCtzAWYaq4yun9pZXXpwsqc9NwfSvsBrijeUqxIoEXwfdb0F3Mg==
+X-Received: by 2002:a17:906:26da:b0:6d6:da2e:d338 with SMTP id u26-20020a17090626da00b006d6da2ed338mr451651ejc.700.1646046541112;
+        Mon, 28 Feb 2022 03:09:01 -0800 (PST)
 Received: from localhost.localdomain (dhcp-077-250-038-153.chello.nl. [77.250.38.153])
-        by smtp.googlemail.com with ESMTPSA id z22-20020a17090655d600b006d229436793sm4209049ejp.223.2022.02.28.03.08.56
+        by smtp.googlemail.com with ESMTPSA id z22-20020a17090655d600b006d229436793sm4209049ejp.223.2022.02.28.03.08.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Feb 2022 03:08:57 -0800 (PST)
+        Mon, 28 Feb 2022 03:09:00 -0800 (PST)
 From:   Jakob Koschel <jakobkoschel@gmail.com>
 To:     Linus Torvalds <torvalds@linux-foundation.org>
 Cc:     Jakob Koschel <jakobkoschel@gmail.com>,
@@ -86,9 +86,9 @@ Cc:     Jakob Koschel <jakobkoschel@gmail.com>,
         kgdb-bugreport@lists.sourceforge.net,
         v9fs-developer@lists.sourceforge.net,
         tipc-discussion@lists.sourceforge.net, alsa-devel@alsa-project.org
-Subject: [PATCH 3/6] treewide: fix incorrect use to determine if list is empty
-Date:   Mon, 28 Feb 2022 12:08:19 +0100
-Message-Id: <20220228110822.491923-4-jakobkoschel@gmail.com>
+Subject: [PATCH 5/6] treewide: remove dereference of list iterator after loop body
+Date:   Mon, 28 Feb 2022 12:08:21 +0100
+Message-Id: <20220228110822.491923-6-jakobkoschel@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220228110822.491923-1-jakobkoschel@gmail.com>
 References: <20220228110822.491923-1-jakobkoschel@gmail.com>
@@ -98,103 +98,106 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The list iterator value will *always* be set by list_for_each_entry().
-It is incorrect to assume that the iterator value will be NULL if the
-list is empty.
+The list iterator variable will be a bogus pointer if no break was hit.
+Dereferencing it could load *any* out-of-bounds/undefined value
+making it unsafe to use that in the comparision to determine if the
+specific element was found.
 
-Instead of checking the pointer it should be checked if
-the list is empty.
-In acpi_get_pmu_hw_inf() instead of setting the pointer to NULL
-on the break, it is set to the correct value and leaving it
-NULL if no element was found.
+This is fixed by using a separate list iterator variable for the loop
+and only setting the original variable if a suitable element was found.
+Then determing if the element was found is simply checking if the
+variable is set.
 
 Signed-off-by: Jakob Koschel <jakobkoschel@gmail.com>
 ---
- arch/powerpc/sysdev/fsl_gtm.c            |  4 ++--
- drivers/media/pci/saa7134/saa7134-alsa.c |  4 ++--
- drivers/perf/xgene_pmu.c                 | 13 +++++++------
- 3 files changed, 11 insertions(+), 10 deletions(-)
+ drivers/gpu/drm/nouveau/nvkm/subdev/clk/base.c | 11 +++++++----
+ drivers/scsi/wd719x.c                          | 12 ++++++++----
+ fs/f2fs/segment.c                              |  9 ++++++---
+ 3 files changed, 21 insertions(+), 11 deletions(-)
 
-diff --git a/arch/powerpc/sysdev/fsl_gtm.c b/arch/powerpc/sysdev/fsl_gtm.c
-index 8963eaffb1b7..39186ad6b3c3 100644
---- a/arch/powerpc/sysdev/fsl_gtm.c
-+++ b/arch/powerpc/sysdev/fsl_gtm.c
-@@ -86,7 +86,7 @@ static LIST_HEAD(gtms);
-  */
- struct gtm_timer *gtm_get_timer16(void)
+diff --git a/drivers/gpu/drm/nouveau/nvkm/subdev/clk/base.c b/drivers/gpu/drm/nouveau/nvkm/subdev/clk/base.c
+index 57199be082fd..c56cd9e59a66 100644
+--- a/drivers/gpu/drm/nouveau/nvkm/subdev/clk/base.c
++++ b/drivers/gpu/drm/nouveau/nvkm/subdev/clk/base.c
+@@ -471,20 +471,23 @@ nvkm_pstate_new(struct nvkm_clk *clk, int idx)
+ static int
+ nvkm_clk_ustate_update(struct nvkm_clk *clk, int req)
  {
--	struct gtm *gtm = NULL;
-+	struct gtm *gtm;
- 	int i;
+-	struct nvkm_pstate *pstate;
++	struct nvkm_pstate *pstate = NULL;
++	struct nvkm_pstate *tmp;
+ 	int i = 0;
 
- 	list_for_each_entry(gtm, &gtms, list_node) {
-@@ -103,7 +103,7 @@ struct gtm_timer *gtm_get_timer16(void)
- 		spin_unlock_irq(&gtm->lock);
- 	}
+ 	if (!clk->allow_reclock)
+ 		return -ENOSYS;
 
--	if (gtm)
-+	if (!list_empty(&gtms))
- 		return ERR_PTR(-EBUSY);
- 	return ERR_PTR(-ENODEV);
- }
-diff --git a/drivers/media/pci/saa7134/saa7134-alsa.c b/drivers/media/pci/saa7134/saa7134-alsa.c
-index fb24d2ed3621..d3cde05a6eba 100644
---- a/drivers/media/pci/saa7134/saa7134-alsa.c
-+++ b/drivers/media/pci/saa7134/saa7134-alsa.c
-@@ -1214,7 +1214,7 @@ static int alsa_device_exit(struct saa7134_dev *dev)
-
- static int saa7134_alsa_init(void)
- {
--	struct saa7134_dev *dev = NULL;
-+	struct saa7134_dev *dev;
-
- 	saa7134_dmasound_init = alsa_device_init;
- 	saa7134_dmasound_exit = alsa_device_exit;
-@@ -1229,7 +1229,7 @@ static int saa7134_alsa_init(void)
- 			alsa_device_init(dev);
- 	}
-
--	if (dev == NULL)
-+	if (list_empty(&saa7134_devlist))
- 		pr_info("saa7134 ALSA: no saa7134 cards found\n");
-
- 	return 0;
-diff --git a/drivers/perf/xgene_pmu.c b/drivers/perf/xgene_pmu.c
-index 2b6d476bd213..e255f9e665d1 100644
---- a/drivers/perf/xgene_pmu.c
-+++ b/drivers/perf/xgene_pmu.c
-@@ -1460,7 +1460,8 @@ xgene_pmu_dev_ctx *acpi_get_pmu_hw_inf(struct xgene_pmu *xgene_pmu,
- 	struct hw_pmu_info *inf;
- 	void __iomem *dev_csr;
- 	struct resource res;
--	struct resource_entry *rentry;
-+	struct resource_entry *rentry = NULL;
-+	struct resource_entry *tmp;
- 	int enable_bit;
- 	int rc;
-
-@@ -1475,16 +1476,16 @@ xgene_pmu_dev_ctx *acpi_get_pmu_hw_inf(struct xgene_pmu *xgene_pmu,
- 		return NULL;
- 	}
-
--	list_for_each_entry(rentry, &resource_list, node) {
--		if (resource_type(rentry->res) == IORESOURCE_MEM) {
--			res = *rentry->res;
--			rentry = NULL;
-+	list_for_each_entry(tmp, &resource_list, node) {
-+		if (resource_type(tmp->res) == IORESOURCE_MEM) {
-+			res = *tmp->res;
-+			rentry = tmp;
- 			break;
+ 	if (req != -1 && req != -2) {
+-		list_for_each_entry(pstate, &clk->states, head) {
+-			if (pstate->pstate == req)
++		list_for_each_entry(tmp, &clk->states, head) {
++			if (tmp->pstate == req) {
++				pstate = tmp;
+ 				break;
++			}
+ 			i++;
  		}
- 	}
- 	acpi_dev_free_resource_list(&resource_list);
 
--	if (rentry) {
-+	if (!rentry) {
- 		dev_err(dev, "PMU type %d: No memory resource found\n", type);
- 		return NULL;
+-		if (pstate->pstate != req)
++		if (!pstate)
+ 			return -EINVAL;
+ 		req = i;
  	}
+diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
+index 1a7947554581..be270ed8e00d 100644
+--- a/drivers/scsi/wd719x.c
++++ b/drivers/scsi/wd719x.c
+@@ -684,11 +684,15 @@ static irqreturn_t wd719x_interrupt(int irq, void *dev_id)
+ 	case WD719X_INT_SPIDERFAILED:
+ 		/* was the cmd completed a direct or SCB command? */
+ 		if (regs.bytes.OPC == WD719X_CMD_PROCESS_SCB) {
+-			struct wd719x_scb *scb;
+-			list_for_each_entry(scb, &wd->active_scbs, list)
+-				if (SCB_out == scb->phys)
++			struct wd719x_scb *scb = NULL;
++			struct wd719x_scb *tmp;
++
++			list_for_each_entry(tmp, &wd->active_scbs, list)
++				if (SCB_out == tmp->phys) {
++					scb = tmp;
+ 					break;
+-			if (SCB_out == scb->phys)
++				}
++			if (scb)
+ 				wd719x_interrupt_SCB(wd, regs, scb);
+ 			else
+ 				dev_err(&wd->pdev->dev, "card returned invalid SCB pointer\n");
+diff --git a/fs/f2fs/segment.c b/fs/f2fs/segment.c
+index 1dabc8244083..a3684385e04a 100644
+--- a/fs/f2fs/segment.c
++++ b/fs/f2fs/segment.c
+@@ -356,16 +356,19 @@ void f2fs_drop_inmem_page(struct inode *inode, struct page *page)
+ 	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
+ 	struct list_head *head = &fi->inmem_pages;
+ 	struct inmem_pages *cur = NULL;
++	struct inmem_pages *tmp;
+
+ 	f2fs_bug_on(sbi, !page_private_atomic(page));
+
+ 	mutex_lock(&fi->inmem_lock);
+-	list_for_each_entry(cur, head, list) {
+-		if (cur->page == page)
++	list_for_each_entry(tmp, head, list) {
++		if (tmp->page == page) {
++			cur = tmp;
+ 			break;
++		}
+ 	}
+
+-	f2fs_bug_on(sbi, list_empty(head) || cur->page != page);
++	f2fs_bug_on(sbi, !cur);
+ 	list_del(&cur->list);
+ 	mutex_unlock(&fi->inmem_lock);
+
 --
 2.25.1
 
