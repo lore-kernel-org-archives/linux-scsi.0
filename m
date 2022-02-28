@@ -2,64 +2,75 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 059C4C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 10:09:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACADAC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Feb 2022 10:47:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234737AbiB1KJk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Feb 2022 05:09:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46222 "EHLO
+        id S230199AbiB1KsA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Feb 2022 05:48:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234725AbiB1KJi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2022 05:09:38 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70F7738D9A
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 02:08:58 -0800 (PST)
-Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K6bfT6Ncsz67ykV;
-        Mon, 28 Feb 2022 18:07:45 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Mon, 28 Feb 2022 11:08:55 +0100
-Received: from [10.47.86.223] (10.47.86.223) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2308.21; Mon, 28 Feb
- 2022 10:08:55 +0000
-Message-ID: <378220ab-ffdf-460b-0c24-46722a81ea26@huawei.com>
-Date:   Mon, 28 Feb 2022 10:08:52 +0000
+        with ESMTP id S229565AbiB1Kr7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2022 05:47:59 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 109285B888;
+        Mon, 28 Feb 2022 02:47:19 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BBBA1B80FF2;
+        Mon, 28 Feb 2022 10:47:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26BB0C340E7;
+        Mon, 28 Feb 2022 10:47:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1646045236;
+        bh=wKsdoTANU5hpG2zlBt0hwyF+7+quOlTjzA0JHxNClnY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=RRObxfQNLSdZIiAH3BZhaD4LIww+/AHsaRBHjOolKzZF4/eGh5zIjLWvg0q8H6yT8
+         pA3jOoXTWA7jwLEhPde/cTtTNsVc2PnWb68hpE1E3mzdYrP6YrbRPY8k4ShYmP5/qh
+         rVKF8m5KZDO7o0iyU0r3t7CtUoDT/zPuXAfWSYRU=
+Date:   Mon, 28 Feb 2022 11:47:13 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+Cc:     Bodo Stroesser <bostroesser@gmail.com>,
+        Guixin Liu <kanie@linux.alibaba.com>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        xlpang@linux.alibaba.com
+Subject: Re: [PATCH 2/2] scsi:target:tcmu: reduce once copy by using uio ioctl
+Message-ID: <YhyoMekPbsKjO7KG@kroah.com>
+References: <1645064962-94123-1-git-send-email-kanie@linux.alibaba.com>
+ <1645064962-94123-2-git-send-email-kanie@linux.alibaba.com>
+ <eb08230b-c9a7-26ed-9431-9be3b9791385@gmail.com>
+ <4aef53b1-3e0f-92eb-4bd3-cdc4cd301866@linux.alibaba.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH v2] scsi: libsas: cleanup sas_form_port()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        "Jason Yan" <yanaijie@huawei.com>
-References: <20220228094857.557329-1-damien.lemoal@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <20220228094857.557329-1-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.86.223]
-X-ClientProxiedBy: lhreml708-chm.china.huawei.com (10.201.108.57) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4aef53b1-3e0f-92eb-4bd3-cdc4cd301866@linux.alibaba.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 28/02/2022 09:48, Damien Le Moal wrote:
-> Sparse throws a warning about context imbalance ("different lock
-> contexts for basic block") in sas_form_port() as it gets confused with
-> the fact that a port is locked within one of the 2 search loop and
-> unlocked afterward outside of the search loops once the phy is added to
-> the port. Since this code is not easy to follow, improve it by factoring
-> out the code adding the phy to the port once the port is locked into the
-> helper function sas_form_port_add_phy(). This helper can then be called
-> directly within the port search loops, avoiding confusion and clearing
-> the sparse warning.
+On Mon, Feb 28, 2022 at 04:52:52PM +0800, Xiaoguang Wang wrote:
 > 
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> hi Bodo,
+> 
+> > Liu,
+> > 
+> > generally I like ideas to speed up tcmu.
+> > 
+> > OTOH, since Andy Grover implemented tcmu based on uio device, we are
+> > restricted to what uio offers. With today's knowledge I think we would
+> > not use the uio device in tcmu again, but switching away from uio now
+> > would break existing userspace SW.
+> Yeah, it will have much work if deciding to switch away from uio.
+> I came up with a hacky or crazy idea :) what about we create a new file
+> in tcmu_open() by anon_inode_getfile_secure(), and export this fd by
+> tcmu mail box, we can do ioctl() on this new file, then uio framework
+> won't be touched...
 
-Reviewed-by: John Garry <john.garry@huawei.com>
+No new ioctls please.  That is creating a new user/kernel api that you
+must support for the next 20+ years.  Please do not do that.
+
+thanks,
+
+greg k-h
