@@ -2,101 +2,177 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1EE3C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 02:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EFB4C43217
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 02:15:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230128AbiCACEt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Feb 2022 21:04:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41758 "EHLO
+        id S232148AbiCACQG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Feb 2022 21:16:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230495AbiCACEr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2022 21:04:47 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 57993617B
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 18:04:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1646100245;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=JaCUSD2vTqwOwKJJzKBOPbfZizxvexTnRKWpUjmtfyU=;
-        b=bd1EiugVWwvyPMhQw/LiEqMUIkPomIt3Z68h2NkQywLLhuHYJ1XKksHftbFwvTLANGToHa
-        Ot5GqZG0eFGwl1BBLlZ2o9w+M3yB8xaoyTQbxFPoYw07HvOIkaoxM0jUovYPX08+0NbjhV
-        kVs/p49BSe8g8Rk6fTVEN6ViFCzbcKE=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-501-hiVHqO9zNymaKuV60HGnvg-1; Mon, 28 Feb 2022 21:04:03 -0500
-X-MC-Unique: hiVHqO9zNymaKuV60HGnvg-1
-Received: by mail-qk1-f200.google.com with SMTP id m22-20020a05620a221600b005f180383baeso12974298qkh.15
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 18:04:03 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent
-         :content-language:to:from:subject:cc:content-transfer-encoding;
-        bh=JaCUSD2vTqwOwKJJzKBOPbfZizxvexTnRKWpUjmtfyU=;
-        b=VKS5iJwNOCfIKW8UGxA/fAKdCfmzV8dGBtMw7eD2QpKbaNU/H3PF0SfzU61wKFNTZq
-         1zqXkhdbzpEND4EfZNrqVN+A6OvA3ITgnGkzu6+7el8Y+qZB3tdtimHOTxO6AT4pJcoj
-         in4DHdGVVaOcXbGaI/L1Fo4fWAT1hwZTgIyFv39zHb7hJPs8ANu0fa2a9pG3reLSiCqh
-         8UXiFaM60V+kuzhFI0ho9FoNIlLqItflT1Yl7WWRI0w1FExyQwNJpkz+tSkbX1yAyYJ8
-         ZwiI7DM8/sFivvOJZ7tYxkMqeZievJzSyfPmKGWFoRaW54eyW85EgortSEITK0TmPYq1
-         /tuw==
-X-Gm-Message-State: AOAM53234EK8r6x+JqKrRE+dLkTT871UHAzzF2M1/xTOfpfugfQuW9/J
-        W9BINHw6uLSRdfRLygRUvsjNybW1dI2MzoLfyY0amiVTHRfSWU9dPYk9lTGur4ODORngXfw1DAM
-        B5NPZfQh+GbuivtN6WeZIlA==
-X-Received: by 2002:ac8:59d6:0:b0:2dd:226:9d7d with SMTP id f22-20020ac859d6000000b002dd02269d7dmr18466317qtf.372.1646100243284;
-        Mon, 28 Feb 2022 18:04:03 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJz+IUB2hr74QXPnDooszKG62xt16/KuAcFHfGM+WDSG9L0tFQNkmqb18SPuQtwasI3eVUfGCg==
-X-Received: by 2002:ac8:59d6:0:b0:2dd:226:9d7d with SMTP id f22-20020ac859d6000000b002dd02269d7dmr18466308qtf.372.1646100243047;
-        Mon, 28 Feb 2022 18:04:03 -0800 (PST)
-Received: from [192.168.0.14] (97-120-59-83.ptld.qwest.net. [97.120.59.83])
-        by smtp.gmail.com with ESMTPSA id o24-20020a05620a15d800b00648a9cf86e7sm5779355qkm.33.2022.02.28.18.04.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Feb 2022 18:04:02 -0800 (PST)
-Message-ID: <1cc5dd40-47e5-0756-db22-42e4e86468c5@redhat.com>
-Date:   Mon, 28 Feb 2022 18:04:00 -0800
+        with ESMTP id S232119AbiCACP7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2022 21:15:59 -0500
+Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.86.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1BB195D1B0
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2022 18:15:18 -0800 (PST)
+Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ uk-mta-311-AiLIJJiTPXKF2aB_irlgEQ-1; Tue, 01 Mar 2022 02:15:11 +0000
+X-MC-Unique: AiLIJJiTPXKF2aB_irlgEQ-1
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) by
+ AcuMS.aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) with Microsoft SMTP
+ Server (TLS) id 15.0.1497.28; Tue, 1 Mar 2022 02:15:09 +0000
+Received: from AcuMS.Aculab.com ([fe80::994c:f5c2:35d6:9b65]) by
+ AcuMS.aculab.com ([fe80::994c:f5c2:35d6:9b65%12]) with mapi id
+ 15.00.1497.028; Tue, 1 Mar 2022 02:15:09 +0000
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Linus Torvalds' <torvalds@linux-foundation.org>,
+        =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        "alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>,
+        KVM list <kvm@vger.kernel.org>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        "linux-iio@vger.kernel.org" <linux-iio@vger.kernel.org>,
+        "nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>,
+        "Rasmus Villemoes" <linux@rasmusvillemoes.dk>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        Cristiano Giuffrida <c.giuffrida@vu.nl>,
+        "Bos, H.J." <h.j.bos@vu.nl>,
+        "linux1394-devel@lists.sourceforge.net" 
+        <linux1394-devel@lists.sourceforge.net>,
+        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        CIFS <linux-cifs@vger.kernel.org>,
+        "linux-aspeed@lists.ozlabs.org" <linux-aspeed@lists.ozlabs.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        "linux-staging@lists.linux.dev" <linux-staging@lists.linux.dev>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+        "kgdb-bugreport@lists.sourceforge.net" 
+        <kgdb-bugreport@lists.sourceforge.net>,
+        "bcm-kernel-feedback-list@broadcom.com" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        "Arnd Bergman" <arnd@arndb.de>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        intel-gfx <intel-gfx@lists.freedesktop.org>,
+        Brian Johannesmeyer <bjohannesmeyer@gmail.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        dma <dmaengine@vger.kernel.org>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        Jakob Koschel <jakobkoschel@gmail.com>,
+        "v9fs-developer@lists.sourceforge.net" 
+        <v9fs-developer@lists.sourceforge.net>,
+        linux-tegra <linux-tegra@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        "linux-sgx@vger.kernel.org" <linux-sgx@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        "samba-technical@lists.samba.org" <samba-technical@lists.samba.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux F2FS Dev Mailing List 
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        "tipc-discussion@lists.sourceforge.net" 
+        <tipc-discussion@lists.sourceforge.net>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        Mike Rapoport <rppt@kernel.org>
+Subject: RE: [PATCH 2/6] treewide: remove using list iterator after loop body
+ as a ptr
+Thread-Topic: [PATCH 2/6] treewide: remove using list iterator after loop body
+ as a ptr
+Thread-Index: AQHYLN1fDoOXhdJpm02jJhIGc9kG8qypx5SQ
+Date:   Tue, 1 Mar 2022 02:15:09 +0000
+Message-ID: <d245f691cfdf43d9a1e1e33acb570325@AcuMS.aculab.com>
+References: <20220228110822.491923-1-jakobkoschel@gmail.com>
+ <20220228110822.491923-3-jakobkoschel@gmail.com>
+ <2e4e95d6-f6c9-a188-e1cd-b1eae465562a@amd.com>
+ <CAHk-=wgQps58DPEOe4y5cTh5oE9EdNTWRLXzgMiETc+mFX7jzw@mail.gmail.com>
+In-Reply-To: <CAHk-=wgQps58DPEOe4y5cTh5oE9EdNTWRLXzgMiETc+mFX7jzw@mail.gmail.com>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
 Content-Language: en-US
-To:     lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org
-From:   Chris Leech <cleech@redhat.com>
-Subject: [LSF/MM/BPF TOPIC] network storage transports managed within a
- container
-Cc:     Lee Duncan <lduncan@suse.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There are various challenges when users start trying to manage SAN
-attachments from within a container, and how we deal with network
-namespaces.  I think it would be worth a discussion around what can be
-agreed on as desired behavior, and what it means to attach block
-devices from a containerized environment.
-
-iSCSI has a number of issues here with the kernel to iscsid
-interfaces, netlink and sysfs, which are largely fixable without
-needing to break anything.  But for kernel maintained network
-connections, there's an issue of interacting with namespace lifetimes
-without a process.
-
-NVMe/TCP has avoided complex user-space control planes, but when I
-checked subsystem connection occurred within the active namespace of
-nvme-cli, but afterwords all fabrics subsystems were visible,
-controllable, and disconnectable from any namespace.
-
-
-Lee Duncan had submitted a proposal to discuss this for iSCSI last
-year [1], partially based on some older work I did that never
-completed [2] (I need to update that code)
-
-[1]
-https://lore.kernel.org/linux-scsi/e9f0297a-a914-ba83-f706-5a2d508c666b@suse.com/
-
-[2] https://github.com/cleech/linux/commits/iscsi-netns-old-wip
-
-- Chris Leech
+RnJvbTogTGludXMgVG9ydmFsZHMNCj4gU2VudDogMjggRmVicnVhcnkgMjAyMiAxOTo1Ng0KPiBP
+biBNb24sIEZlYiAyOCwgMjAyMiBhdCA0OjE5IEFNIENocmlzdGlhbiBLw7ZuaWcNCj4gPGNocmlz
+dGlhbi5rb2VuaWdAYW1kLmNvbT4gd3JvdGU6DQo+ID4NCj4gPiBJIGRvbid0IHRoaW5rIHRoYXQg
+dXNpbmcgdGhlIGV4dHJhIHZhcmlhYmxlIG1ha2VzIHRoZSBjb2RlIGluIGFueSB3YXkNCj4gPiBt
+b3JlIHJlbGlhYmxlIG9yIGVhc2llciB0byByZWFkLg0KPiANCj4gU28gSSB0aGluayB0aGUgbmV4
+dCBzdGVwIGlzIHRvIGRvIHRoZSBhdHRhY2hlZCBwYXRjaCAod2hpY2ggcmVxdWlyZXMNCj4gdGhh
+dCAiLXN0ZD1nbnUxMSIgdGhhdCB3YXMgZGlzY3Vzc2VkIGluIHRoZSBvcmlnaW5hbCB0aHJlYWQp
+Lg0KPiANCj4gVGhhdCB3aWxsIGd1YXJhbnRlZSB0aGF0IHRoZSAncG9zJyBwYXJhbWV0ZXIgb2Yg
+bGlzdF9mb3JfZWFjaF9lbnRyeSgpDQo+IGlzIG9ubHkgdXBkYXRlZCBJTlNJREUgdGhlIGZvcl9l
+YWNoX2xpc3RfZW50cnkoKSBsb29wLCBhbmQgY2FuIG5ldmVyDQo+IHBvaW50IHRvIHRoZSAod3Jv
+bmdseSB0eXBlZCkgaGVhZCBlbnRyeS4NCj4gDQo+IEFuZCBJIHdvdWxkIGFjdHVhbGx5IGhvcGUg
+dGhhdCBpdCBzaG91bGQgYWN0dWFsbHkgY2F1c2UgY29tcGlsZXINCj4gd2FybmluZ3MgYWJvdXQg
+cG9zc2libHkgdW5pbml0aWFsaXplZCB2YXJpYWJsZXMgaWYgcGVvcGxlIHRoZW4gdXNlIHRoZQ0K
+PiAncG9zJyBwb2ludGVyIG91dHNpZGUgdGhlIGxvb3AuIEV4Y2VwdA0KPiANCj4gIChhKSB0aGF0
+IGNvZGUgaW4gc2d4L2VuY2wuYyBjdXJyZW50bHkgaW5pdGlhbGl6ZXMgJ3RtcCcgdG8gTlVMTCBm
+b3INCj4gaW5leHBsaWNhYmxlIHJlYXNvbnMgLSBwb3NzaWJseSBiZWNhdXNlIGl0IGFscmVhZHkg
+ZXhwZWN0ZWQgdGhpcw0KPiBiZWhhdmlvcg0KPiANCj4gIChiKSB3aGVuIEkgcmVtb3ZlIHRoYXQg
+TlVMTCBpbml0aWFsaXplciwgSSBzdGlsbCBkb24ndCBnZXQgYSB3YXJuaW5nLA0KPiBiZWNhdXNl
+IHdlJ3ZlIGRpc2FibGVkIC1Xbm8tbWF5YmUtdW5pbml0aWFsaXplZCBzaW5jZSBpdCByZXN1bHRz
+IGluIHNvDQo+IG1hbnkgZmFsc2UgcG9zaXRpdmVzLg0KPiANCj4gT2ggd2VsbC4NCj4gDQo+IEFu
+eXdheSwgZ2l2ZSB0aGlzIHBhdGNoIGEgbG9vaywgYW5kIGF0IGxlYXN0IGlmIGl0J3MgZXhwYW5k
+ZWQgdG8gZG8NCj4gIihwb3MpID0gTlVMTCIgaW4gdGhlIGVudHJ5IHN0YXRlbWVudCBmb3IgdGhl
+IGZvci1sb29wLCBpdCB3aWxsIGF2b2lkDQo+IHRoZSBIRUFEIHR5cGUgY29uZnVzaW9uIHRoYXQg
+SmFrb2IgaXMgd29ya2luZyBvbi4gQW5kIEkgdGhpbmsgaW4gYQ0KPiBjbGVhbmVyIHdheSB0aGFu
+IHRoZSBob3JyaWQgZ2FtZXMgaGUgcGxheXMuDQo+IA0KPiAoQnV0IGl0IHdvbid0IGF2b2lkIHBv
+c3NpYmxlIENQVSBzcGVjdWxhdGlvbiBvZiBzdWNoIHR5cGUgY29uZnVzaW9uLg0KPiBUaGF0LCBp
+biBteSBvcGluaW9uLCBpcyBhIGNvbXBsZXRlbHkgZGlmZmVyZW50IGlzc3VlKQ0KPiANCj4gSSBk
+byB3aXNoIHdlIGNvdWxkIGFjdHVhbGx5IHBvaXNvbiB0aGUgJ3BvcycgdmFsdWUgYWZ0ZXIgdGhl
+IGxvb3ANCj4gc29tZWhvdyAtIGJ1dCBjbGVhcmx5IHRoZSAibWlnaHQgYmUgdW5pbml0aWFsaXpl
+ZCIgSSB3YXMgaG9waW5nIGZvcg0KPiBpc24ndCB0aGUgd2F5IHRvIGRvIGl0Lg0KPiANCj4gQW55
+Ym9keSBoYXZlIGFueSBpZGVhcz8NCj4gDQo+ICAgICAgICAgICAgICAgICBMaW51cw0KZGlmZiAt
+LWdpdCBhL2luY2x1ZGUvbGludXgvbGlzdC5oIGIvaW5jbHVkZS9saW51eC9saXN0LmgNCmluZGV4
+IGRkNmMyMDQxZDA5Yy4uYmFiOTk1NTk2YWFhIDEwMDY0NA0KLS0tIGEvaW5jbHVkZS9saW51eC9s
+aXN0LmgNCisrKyBiL2luY2x1ZGUvbGludXgvbGlzdC5oDQpAQCAtNjM0LDEwICs2MzQsMTAgQEAg
+c3RhdGljIGlubGluZSB2b2lkIGxpc3Rfc3BsaWNlX3RhaWxfaW5pdChzdHJ1Y3QgbGlzdF9oZWFk
+ICpsaXN0LA0KICAqIEBoZWFkOgl0aGUgaGVhZCBmb3IgeW91ciBsaXN0Lg0KICAqIEBtZW1iZXI6
+CXRoZSBuYW1lIG9mIHRoZSBsaXN0X2hlYWQgd2l0aGluIHRoZSBzdHJ1Y3QuDQogICovDQotI2Rl
+ZmluZSBsaXN0X2Zvcl9lYWNoX2VudHJ5KHBvcywgaGVhZCwgbWVtYmVyKQkJCQlcDQotCWZvciAo
+cG9zID0gbGlzdF9maXJzdF9lbnRyeShoZWFkLCB0eXBlb2YoKnBvcyksIG1lbWJlcik7CVwNCi0J
+ICAgICAhbGlzdF9lbnRyeV9pc19oZWFkKHBvcywgaGVhZCwgbWVtYmVyKTsJCQlcDQotCSAgICAg
+cG9zID0gbGlzdF9uZXh0X2VudHJ5KHBvcywgbWVtYmVyKSkNCisjZGVmaW5lIGxpc3RfZm9yX2Vh
+Y2hfZW50cnkocG9zLCBoZWFkLCBtZW1iZXIpCQkJCQlcDQorCWZvciAodHlwZW9mKHBvcykgX19p
+dGVyID0gbGlzdF9maXJzdF9lbnRyeShoZWFkLCB0eXBlb2YoKnBvcyksIG1lbWJlcik7CVwNCisJ
+ICAgICAhbGlzdF9lbnRyeV9pc19oZWFkKF9faXRlciwgaGVhZCwgbWVtYmVyKSAmJiAoKChwb3Mp
+PV9faXRlciksMSk7CVwNCisJICAgICBfX2l0ZXIgPSBsaXN0X25leHRfZW50cnkoX19pdGVyLCBt
+ZW1iZXIpKQ0KIA0KIC8qKg0KICAqIGxpc3RfZm9yX2VhY2hfZW50cnlfcmV2ZXJzZSAtIGl0ZXJh
+dGUgYmFja3dhcmRzIG92ZXIgbGlzdCBvZiBnaXZlbiB0eXBlLg0KDQpJIHRoaW5rIHlvdSBhY3R1
+YWxseSB3YW50Og0KCSFsaXN0X2VudHJ5X2lzX2hlYWQoX19pdGVyLCBoZWFkLCBtZW1iZXIpID8g
+KCgocG9zKT1fX2l0ZXIpLDEpIDogKCgocG9zKSA9IE5VTEwpLDApOw0KDQpXaGljaCBjYW4gYmUg
+ZG9uZSBpbiB0aGUgb3JpZ2luYWwgYnk6DQoJIWxpc3RfZW50cnlfaXNfaGVhZChwb3MsIGhlYWQs
+IG1lbWJlcikgPyAxIDogKCgocG9zKSA9IE5VTEwpLCAwKTsNCg0KQWx0aG91Z2ggaXQgd291bGQg
+YmUgc2FmZXIgdG8gaGF2ZSAod2l0aG91dCBsb29raW5nIHVwIHRoZSBhY3R1YWwgbmFtZSk6DQoJ
+Zm9yIChpdGVtICpfX2l0ZW0gPSBoZWFkOyBcDQoJCV9faXRlbSA/ICgoKHBvcykgPSBsaXN0X2l0
+ZW0oX19pdGVtLCBtZW1iZXIpKSwgMSkgOiAoKChwb3MpID0gTlVMTCksIDApOw0KCQlfX2l0ZW0g
+PSAocG9zKS0+bWVtYmVyKQ0KDQpUaGUgbG9jYWwgZG9lcyBuZWVkICdmaXhpbmcnIHRvIGF2b2lk
+IHNoYWRvd2luZyBmb3IgbmVzdGVkIGxvb3BzLg0KDQoJRGF2aWQNCg0KLQ0KUmVnaXN0ZXJlZCBB
+ZGRyZXNzIExha2VzaWRlLCBCcmFtbGV5IFJvYWQsIE1vdW50IEZhcm0sIE1pbHRvbiBLZXluZXMs
+IE1LMSAxUFQsIFVLDQpSZWdpc3RyYXRpb24gTm86IDEzOTczODYgKFdhbGVzKQ0K
 
