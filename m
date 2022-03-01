@@ -2,59 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13E6EC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 17:47:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2109CC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 17:55:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236647AbiCARs0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Mar 2022 12:48:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41652 "EHLO
+        id S236706AbiCAR41 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Mar 2022 12:56:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231362AbiCARsZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 12:48:25 -0500
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F789FC3;
-        Tue,  1 Mar 2022 09:47:43 -0800 (PST)
-Received: by mail-pg1-x533.google.com with SMTP id e6so13537643pgn.2;
-        Tue, 01 Mar 2022 09:47:43 -0800 (PST)
+        with ESMTP id S235961AbiCAR41 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 12:56:27 -0500
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39B7041F8A;
+        Tue,  1 Mar 2022 09:55:46 -0800 (PST)
+Received: by mail-pj1-x1029.google.com with SMTP id 15-20020a17090a098f00b001bef0376d5cso439546pjo.5;
+        Tue, 01 Mar 2022 09:55:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=oKchhrdSs+HOTM0TpPvYJrRlEALmZ0/xkNKtFwagNaI=;
-        b=I75myOC/Y6BsAULekR+kdFzgkvZtLsTB0l3EW9hTrpJElC+Cn56pF7jeHYQSUxP8gI
-         Msx6fLeggCPUOzjqRcLJ6x8KQ9uLHRuyVbN3SDmKdzyfHpPlTnla+TMlR9ox/XVBjSz/
-         Ft3b2dN7mrgIXxvnsLuSfEJWqamY3lFYriZtgAM8tDWHGJxFCOcLcD9DdVIFrKmE4UGd
-         LHPjxqV8v6RuJ5W9kDJwbLm90ZbORiHDFpOq1mpdYbVsXZYYVvO+G26MzfXrO2+ruA5C
-         7CyTkHoxZgBi6tx46EIUmnhL4MCB29Xrr/1XCAMI9FLRUn4UxpjXPeIaaTNXAl5126vY
-         fgeQ==
+        bh=Jje77APtlL8Vy9okCJhF2WRN5jRkiUsyDRK6kheTyXw=;
+        b=iR1TguCYJpdrsUxXZ4NOMS6MYwCcNWMW76Nct8yiQBghGhpMeD8mWfUldOfr8ww6d1
+         QTN08lKL+lv2WyrxP78DWvp9SytFtnwASxpwNRyGGVHQ06Wqm5Lo13xXw68gVpdKmNXS
+         IFI1CUMW7lr636dRH/JwnIsOGEnSQwzNf1F+DbHlYdiMsOqe2eJyX/Vj513uoLa15mg7
+         c2rce/LRj/4LlYBTqpFOge3MkG3Vq5jiQgjH1WdV87oEwB0g8bEBDUikOkg1T62n3aBO
+         mQ9AzZi5eodi9yBb6+GmbGOs96JYl1y7Tw2FrNDbVXKfGaOVqjyjjjM0NEZ192b9UkWQ
+         81GA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=oKchhrdSs+HOTM0TpPvYJrRlEALmZ0/xkNKtFwagNaI=;
-        b=LxGHbCaxHH3a+5R1bDMOAfpBd0NLd6xf8LPLnvcyrf2+Ki39HGxjqBlpp8wV+sCAIG
-         19iTeso2+MpXaCY23m8QpXmychTJMpwWR5iJuSF2Bh+DNRhsWOi5lqMigRTg3Gn50hVD
-         +I8lybpFMfiEJbZl/WvhH/esWulGTZiGMEUdFx7GDWWx6D2Xi+mCiOR4VYck2D18yfuc
-         HjkAHcLRDyEC3jXb5fLxE6Pl3n+iKZOH8fYxynYBIY5DBAeJZ36IM09DVvG6zQmQKeNk
-         x7rf9wuFhExDgZXy+LDETPGx+l9wa4hXzHliGhi4DlEpUoxK9nXUtbiE7rXhiOuW4NNp
-         sBZQ==
-X-Gm-Message-State: AOAM530Dt5O4gpRtfKjIrQk6xkkoThGd2IMbUTABKnWAPKsOmPAxAvhL
-        RxlSaEE8OjhRY9rzdDkzECheRTdlVZA=
-X-Google-Smtp-Source: ABdhPJzMO54zZO188yUxs0ufr/PhATftO5opHZ3E3l+aLoj4N2iiSi/Ljny8WEER0t8uTIoql9EwmQ==
-X-Received: by 2002:a05:6a00:1d8a:b0:4e1:559d:2f62 with SMTP id z10-20020a056a001d8a00b004e1559d2f62mr28953139pfw.26.1646156862368;
-        Tue, 01 Mar 2022 09:47:42 -0800 (PST)
-Received: from mail-lvn-it-01.broadcom.com (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
-        by smtp.gmail.com with ESMTPSA id y13-20020aa79e0d000000b004f3cc59f884sm16956167pfq.132.2022.03.01.09.47.40
+        bh=Jje77APtlL8Vy9okCJhF2WRN5jRkiUsyDRK6kheTyXw=;
+        b=re+D4L9Oh5PAFT4Z4kW3WX1BFj/SvpupqYC4j7H5zyYIEEyAqlD+qiP4zehqKmxt1F
+         b16Qz2ZaYwp7w1MseJQ0iIkTD63YSRNwrPGnxsXuMZjNxq2V81x95dp6SQeuwKVg30kr
+         aOjzpdeWz7dybtjboQqsncRRggFLeIPTPhj6I+ujSPe2n8iz32R6C1mpbVo0bAuGMyUv
+         86HviF6IdPg2kZAWlI+QwQOdNucn27GCB7bKjPBzRe2ln2b01PpjslZ4BrAoVXLX96Jx
+         pBbpuxFsTU9TPuiD9QPxhWBFdfT3i//TpjqKIRBTuVTuo6xWb6Eyehh1OQ+OD97B+f8B
+         hQkw==
+X-Gm-Message-State: AOAM532XqT9mfEVKFb1hQYjI/DyLq6uLJ3p+5loJiEPq0id4cK26j0p6
+        oKgvfJmcY/gOE+XibU8gby3/TWiFC2w=
+X-Google-Smtp-Source: ABdhPJxtWW7+E0U0Pv9Cu44jPCPpdx+Qr3tLmWnQApMGDxwXudm5lH1R2Rde5XJtF2zaFCdsWXctGQ==
+X-Received: by 2002:a17:90a:fe0c:b0:1bd:5ea:d079 with SMTP id ck12-20020a17090afe0c00b001bd05ead079mr20472947pjb.150.1646157345599;
+        Tue, 01 Mar 2022 09:55:45 -0800 (PST)
+Received: from mail-ash-it-01.broadcom.com (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
+        by smtp.gmail.com with ESMTPSA id pf15-20020a17090b1d8f00b001bc9d6a0f15sm2801985pjb.36.2022.03.01.09.55.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Mar 2022 09:47:41 -0800 (PST)
+        Tue, 01 Mar 2022 09:55:45 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>, stable@vger.kernel.org,
         Shyam Sundar <ssundar@marvell.com>,
         Nilesh Javali <njavali@marvell.com>
-Subject: [PATCH] scsi_transport_fc: Fix FPIN Link Integrity statistics counters
-Date:   Tue,  1 Mar 2022 09:47:33 -0800
-Message-Id: <20220301174733.59993-1-jsmart2021@gmail.com>
+Subject: [PATCH][REPOST] scsi_transport_fc: Fix FPIN Link Integrity statistics counters
+Date:   Tue,  1 Mar 2022 09:55:36 -0800
+Message-Id: <20220301175536.60250-1-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -69,14 +69,15 @@ significantly off (too low) as it doesn't reflect anything not reported.
 Rather than attempt to count events, have the statistic count how many
 FPINS cross the threshold and were reported.
 
-This issue was originally reported in this thread, with no comments.
-https://lore.kernel.org/linux-scsi/b472606d-e67c-66f1-06d1-ecc5fbb2071a@broadcom.com/
-
 Fixes: 3dcfe0de5a97 ("scsi: fc: Parse FPIN packets and update statistics")
 Cc: <stable@vger.kernel.org> # v5.11+
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Cc: Shyam Sundar <ssundar@marvell.com>
 Cc: Nilesh Javali <njavali@marvell.com>
+
+---
+This issue was originally reported in this thread, with no comments.
+https://lore.kernel.org/linux-scsi/b472606d-e67c-66f1-06d1-ecc5fbb2071a@broadcom.com/
 ---
  drivers/scsi/scsi_transport_fc.c | 39 +++++++++++++-------------------
  1 file changed, 16 insertions(+), 23 deletions(-)
