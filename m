@@ -2,137 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60705C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 14:37:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48EF4C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 14:40:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235411AbiCAOi3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Mar 2022 09:38:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33872 "EHLO
+        id S231557AbiCAOkt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Mar 2022 09:40:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235370AbiCAOiQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 09:38:16 -0500
+        with ESMTP id S231256AbiCAOkr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 09:40:47 -0500
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B8EF270D
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2022 06:37:32 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51510630B
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2022 06:40:04 -0800 (PST)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id ED3681F448;
-        Tue,  1 Mar 2022 14:37:30 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTP id F2E0F1F8A6;
+        Tue,  1 Mar 2022 14:40:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1646145450; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1646145602; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=GgD/LhzHYNfTByZnocrYDNwh/QHCAL2Vj8E7iXvuebI=;
-        b=gvhXqR5cEbSZHrj1JvZYij5nhFtF/1/y/Xt+7rlLdDdXN4r5jci0agct3q3iIXMAti7+sP
-        arFplnXSRYuRQSHjIm6FTKCqgkApvXhJAYusarbjvbRnnqWWSMgpEZ3tzK879/kn5iYG5W
-        9VNkO9at1xwej9TyHKYGuFRBMc3ad4Q=
+        bh=jU5dO8yW/zX264uLAxDn+GCDGtKpgTwgXLS6EYa1LFs=;
+        b=CxhigvOIDxyI1zNdYw7gc+gZid2aWbzHJ3W9PKPGF3l0iLGHaQnHNI8LAglbP9ytg7HGKB
+        aC/q6Z8GZipcBJO0BtugHVcNLVgk9ro5kZpwTXqvt8lYGpaINdpNUTlFZ3DpcxIb6E1cZY
+        wSTFezMqi+TNimvZo1anCWdN+1G7HfE=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1646145450;
+        s=susede2_ed25519; t=1646145602;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=GgD/LhzHYNfTByZnocrYDNwh/QHCAL2Vj8E7iXvuebI=;
-        b=MyQuD4txauJLlbqLjnigA2tefJjzc+zYMqOCJQqqLV9cR/6wlly8jrEcCabrPLykNLim0t
-        X4TDnYfiz4UdzsDw==
+        bh=jU5dO8yW/zX264uLAxDn+GCDGtKpgTwgXLS6EYa1LFs=;
+        b=YH0mk6X/1jI5Qjt3vfOdZCiN8neD39TgCpC7/ZUJjgQVq6iabdwbosLzjzjTntk7FaRvXq
+        E1CVhmhX90sGgDDQ==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id E29EDA3B97;
-        Tue,  1 Mar 2022 14:37:30 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id EA616A3B8D;
+        Tue,  1 Mar 2022 14:40:02 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id ADC2651933D0; Tue,  1 Mar 2022 15:37:30 +0100 (CET)
+        id DBB3351933DA; Tue,  1 Mar 2022 15:40:02 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Hannes Reinecke <hare@suse.com>,
-        James Smart <jsmart2021@gmail.com>,
-        James Smart <james.smart@broadcom.com>
-Subject: [PATCH 5/5] lpfc: use rport as argument for lpfc_chk_tgt_mapped()
-Date:   Tue,  1 Mar 2022 15:37:18 +0100
-Message-Id: <20220301143718.40913-6-hare@suse.de>
+        Hannes Reinecke <hare@suse.com>
+Subject: [PATCH 4/4] aic79xx: do not reference scsi command when resetting device
+Date:   Tue,  1 Mar 2022 15:39:57 +0100
+Message-Id: <20220301143957.40998-5-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20220301143718.40913-1-hare@suse.de>
-References: <20220301143718.40913-1-hare@suse.de>
+In-Reply-To: <20220301143957.40998-1-hare@suse.de>
+References: <20220301143957.40998-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We only need the rport structure for lpfc_chk_tgt_mapped().
+When sending a device reset we should not take a reference to the
+scsi command.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: James Smart <jsmart2021@gmail.com>
-Cc: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 778e40d751ac..79453dc6593d 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -6244,7 +6244,7 @@ lpfc_send_taskmgmt(struct lpfc_vport *vport, struct fc_rport *rport,
- /**
-  * lpfc_chk_tgt_mapped -
-  * @vport: The virtual port to check on
-- * @cmnd: Pointer to scsi_cmnd data structure.
-+ * @rport: Pointer to fc_rport data structure.
-  *
-  * This routine delays until the scsi target (aka rport) for the
-  * command exists (is present and logged in) or we declare it non-existent.
-@@ -6254,19 +6254,20 @@ lpfc_send_taskmgmt(struct lpfc_vport *vport, struct fc_rport *rport,
-  *  0x2002 - Success
-  **/
- static int
--lpfc_chk_tgt_mapped(struct lpfc_vport *vport, struct scsi_cmnd *cmnd)
-+lpfc_chk_tgt_mapped(struct lpfc_vport *vport, struct fc_rport *rport)
- {
- 	struct lpfc_rport_data *rdata;
--	struct lpfc_nodelist *pnode;
-+	struct lpfc_nodelist *pnode = NULL;
- 	unsigned long later;
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index f900ed05f36a..b7b19fd8a2e3 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -536,8 +536,10 @@ ahd_linux_unmap_scb(struct ahd_softc *ahd, struct scb *scb)
+ 	struct scsi_cmnd *cmd;
  
--	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
-+	rdata = rport->dd_data;
- 	if (!rdata) {
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
- 			"0797 Tgt Map rport failure: rdata x%px\n", rdata);
- 		return FAILED;
+ 	cmd = scb->io_ctx;
+-	ahd_sync_sglist(ahd, scb, BUS_DMASYNC_POSTWRITE);
+-	scsi_dma_unmap(cmd);
++	if (cmd) {
++		ahd_sync_sglist(ahd, scb, BUS_DMASYNC_POSTWRITE);
++		scsi_dma_unmap(cmd);
++	}
+ }
+ 
+ /******************************** Macros **************************************/
+@@ -811,7 +813,7 @@ ahd_linux_dev_reset(struct scsi_cmnd *cmd)
+ 
+ 	tinfo = ahd_fetch_transinfo(ahd, 'A', ahd->our_id,
+ 				    cmd->device->id, &tstate);
+-	reset_scb->io_ctx = cmd;
++	reset_scb->io_ctx = NULL;
+ 	reset_scb->platform_data->dev = dev;
+ 	reset_scb->sg_count = 0;
+ 	ahd_set_residual(reset_scb, 0);
+@@ -1766,9 +1768,16 @@ ahd_done(struct ahd_softc *ahd, struct scb *scb)
+ 	dev = scb->platform_data->dev;
+ 	dev->active--;
+ 	dev->openings++;
+-	if ((cmd->result & (CAM_DEV_QFRZN << 16)) != 0) {
+-		cmd->result &= ~(CAM_DEV_QFRZN << 16);
+-		dev->qfrozen--;
++	if (cmd) {
++		if ((cmd->result & (CAM_DEV_QFRZN << 16)) != 0) {
++			cmd->result &= ~(CAM_DEV_QFRZN << 16);
++			dev->qfrozen--;
++		}
++	} else if (scb->flags & SCB_DEVICE_RESET) {
++		if (ahd->platform_data->eh_done)
++			complete(ahd->platform_data->eh_done);
++		ahd_free_scb(ahd, scb);
++		return;
  	}
- 	pnode = rdata->pnode;
-+
- 	/*
- 	 * If target is not in a MAPPED state, delay until
- 	 * target is rediscovered or devloss timeout expires.
-@@ -6278,7 +6279,7 @@ lpfc_chk_tgt_mapped(struct lpfc_vport *vport, struct scsi_cmnd *cmnd)
- 		if (pnode->nlp_state == NLP_STE_MAPPED_NODE)
- 			return SUCCESS;
- 		schedule_timeout_uninterruptible(msecs_to_jiffies(500));
--		rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
-+		rdata = rport->dd_data;
- 		if (!rdata)
- 			return FAILED;
- 		pnode = rdata->pnode;
-@@ -6371,7 +6372,7 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
- 	if (status != 0 && status != SUCCESS)
- 		return status;
+ 	ahd_linux_unmap_scb(ahd, scb);
  
--	status = lpfc_chk_tgt_mapped(vport, cmnd);
-+	status = lpfc_chk_tgt_mapped(vport, rport);
- 	if (status == FAILED) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
- 			"0721 Device Reset rport failure: rdata x%px\n", rdata);
-@@ -6449,7 +6450,7 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 	if (status != 0 && status != SUCCESS)
- 		return status;
- 
--	status = lpfc_chk_tgt_mapped(vport, cmnd);
-+	status = lpfc_chk_tgt_mapped(vport, rport);
- 	if (status == FAILED) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
- 			"0722 Target Reset rport failure: rdata x%px\n", rdata);
 -- 
 2.29.2
 
