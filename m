@@ -2,291 +2,153 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 176C0C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 19:26:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C97ABC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 19:42:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234949AbiCAT1Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Mar 2022 14:27:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34898 "EHLO
+        id S237236AbiCATnd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Mar 2022 14:43:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232531AbiCAT1Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 14:27:24 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 133FB140CC;
-        Tue,  1 Mar 2022 11:26:42 -0800 (PST)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 221IflnS032613;
-        Tue, 1 Mar 2022 19:26:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=8FAR0YUArHX3dRbvPP7fSb5374OvQq6XSo5NckODtIs=;
- b=V4Pl8Pszg7bIXEFtWBn/M+Div5rO/PJ9hlTuDPjNnZhtsAZLlRuyJgK0eQykqdB89KHe
- GLg7eCRIRjGMXrD+2YBzVy9ez+r6Xk1H/3e9e6cIA8ylEfW6gW763Cwj3DP/HWP3q1Qk
- RM5CXTmUIHN3hw8aqVb3qh5Y+04XynJ1qIaCft8ULRjqs2xgnQtciWQ2b5+fJD1QLT8K
- dp9Oy/3CaPi08I2qerN4wc33flNFiYbwCev6RBCyrXz2iAeG6w1h2tuj8rOV/fmuMWnM
- gy0OcNfaLQ/Mzoz9qpfwuNxAexyf+6bqzCgPnwIU6ElV7RfDvcn5+VCubwpLo6isF2fR gw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ehh2ehm2r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Mar 2022 19:26:40 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 221JLL2p080888;
-        Tue, 1 Mar 2022 19:26:39 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2106.outbound.protection.outlook.com [104.47.55.106])
-        by userp3020.oracle.com with ESMTP id 3efdnne1pt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Mar 2022 19:26:39 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hWreh+aAosYNWrlTxXRurERYQZGs3Pnj8+VNR89Rc9rE+aO7O6nDC+qm/vNpz0cEX2gKc+ZU42vvYuxvem27XZ7urCh1wVgMVoYFO1ni9kEfp+PJFzrseXD8vrV5nYL6Vz/7OXFX+dgtIcIRKb/vzPcIsZtRxJDiY2l8rmi5GQuYzpl/H3/RXVQ6cDCFhJ9SPbL695t2k1/XwWbg8BrwXe4wX5cN9j2KHalxNbGOAZj2aIjudwrQXfZXse0Alc3ekUWC0AB4M4s7KBuOko/ja4hL6CGZ0uLo8obGg8lGgSfbizPQDun14yS9yMw1FayS1U9mXvp6JKMaO5nijgtJpw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8FAR0YUArHX3dRbvPP7fSb5374OvQq6XSo5NckODtIs=;
- b=mUSqb4DPSqnbOg6n3etblxtzr1g2MHiHFr2T1UxYIM+E1TMNBjtCoa8HMnXjxuzg7f8/lye5yBG3xYQUVmrjGFB1xGNsp4jNwuv/fdHjEK+lS8k6M4oP6dEKU3u753O0demXEt9OYgZsxTUx+uk7pQLF85GRebM9XVdqYL6dCs4SIYq+rq4UO9JjY1UBP3uTAkbtC0PXW3B3oFJBHghYRN1JIf8KJnqtmtECHJ0q5Ubh9Q2BhKsWzMv+liPLQtoLRrP9ZA8wEkprhFkRmwDCNZgtOgZcegbvZEo0wpsPoa872X9mgCq1WEl99mhiWGD6NVnGxpYwVWKx60/xrl2EJA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S237220AbiCATnb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 14:43:31 -0500
+Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C880E0FC
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2022 11:42:50 -0800 (PST)
+Received: by mail-lj1-x22c.google.com with SMTP id u11so23291319lju.4
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Mar 2022 11:42:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8FAR0YUArHX3dRbvPP7fSb5374OvQq6XSo5NckODtIs=;
- b=eVHC15DTdnuG/X3TxigVAeJWdPK3mnO1ROmbrMhm19vKUndGnpE4IiVb0q4A4c/cIvesw36D/gFrXlTcqHGDImj49935jwYaAulBKk6cKhYJMqRwycwj0BZRAYjpF9ZGEguCmz49HF+9AkuwBDppsYcmvaWq0MEqnaVgmC+bzOY=
-Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by SJ0PR10MB5438.namprd10.prod.outlook.com (2603:10b6:a03:3b8::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.22; Tue, 1 Mar
- 2022 19:26:36 +0000
-Received: from SN6PR10MB2943.namprd10.prod.outlook.com
- ([fe80::98be:91a7:9773:9d39]) by SN6PR10MB2943.namprd10.prod.outlook.com
- ([fe80::98be:91a7:9773:9d39%4]) with mapi id 15.20.5017.027; Tue, 1 Mar 2022
- 19:26:35 +0000
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-To:     James Smart <jsmart2021@gmail.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        Shyam Sundar <ssundar@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>
-Subject: Re: [PATCH][REPOST] scsi_transport_fc: Fix FPIN Link Integrity
- statistics counters
-Thread-Topic: [PATCH][REPOST] scsi_transport_fc: Fix FPIN Link Integrity
- statistics counters
-Thread-Index: AQHYLZWXC8QNlmf7bUqHCBPmEkbEYqyq6VyA
-Date:   Tue, 1 Mar 2022 19:26:35 +0000
-Message-ID: <7E6F326B-1A17-4F1D-95A6-CA9440F4F910@oracle.com>
-References: <20220301175536.60250-1-jsmart2021@gmail.com>
-In-Reply-To: <20220301175536.60250-1-jsmart2021@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3693.40.0.1.81)
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: ed68f3c4-fd56-4e7e-67c6-08d9fbb96698
-x-ms-traffictypediagnostic: SJ0PR10MB5438:EE_
-x-microsoft-antispam-prvs: <SJ0PR10MB5438429707537B692F9181C4E6029@SJ0PR10MB5438.namprd10.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: +4zUSOPOP3Qn1OzvvWToXXt9FarYxxJRUULYEi3Ax4P2Q7KP9fIfiN1pJ5ZlVY5Uoebmu/s6oyH35/5monZRJoe0pDk8L/OU9FbtU4pvDRFmkZ+zQdjRSWrgb1Co3SWVOx56iwEvBjnGzHfuS6ZLXq+uiegQdnuyI0qhKZ4AXO28H/yT+AuT5MpR+XZQcP4cdzek450ZAJtHhsjtt2tGOuTJ+qtftgyC8TKKs5P1vHLalfmXFvrExABkH+Kka9nNjkkH0fzXfGWABBldlzpZyjgdvosDpY6oztPYJ5sSLbfedXL14FeVptmu/J0cqHg9twjFk6X6L3gk40dWL1DfhMtZ9xS10zMZFavCXwdL7NPITvLprQVBjW5y393WenQBEpDbyhUkfnf27VATRnXxXXvZPYHSaqnmQ+0zT7sBJmbgcNbIp2DS+s7/SitPz7+ebnqy8ftuWTMCptOL+c1WlA94fkaOWeP5wECc5cSVzPSx4e+xNiBVFPSIPBk05mQTX0ZyzDomO2zfk4eq+20R52hCSRBPQcXSVmDYqdhAbQIQLJOx0UXrAqPenuNE/0PgKbT2BBVROk/OEPcFCzpFYI+fvH23kB+WLwf49S5RAmFeZo+NjaEt/U/4ErFhSfwiHrTHumm5BGovR/w/JpN01HKmLkSBtzAkyZhmAZyIMEO+WLeYUHu7XKGJ/YJ2Ict0iqq78wlf9/xXlkuO3bh+z0PMJ647bPGi4t8Eq9rGZDkIQ2DjE/KbDtnLb7eVY9NFeVgje4XLXXTZaFmW2EeLd56sxUs00A3nhC9XEjGiOb0YTFDyPXQ2nnIbd7dcp6/FOtyIhegIDxnksCg0JR62WA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(66446008)(66946007)(66556008)(4326008)(122000001)(2906002)(64756008)(2616005)(44832011)(8936002)(5660300002)(8676002)(76116006)(66476007)(86362001)(38070700005)(33656002)(36756003)(91956017)(38100700002)(316002)(186003)(26005)(83380400001)(966005)(6486002)(508600001)(54906003)(6916009)(53546011)(6506007)(6512007)(71200400001)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?iH1YOSoeCjABj30ctRk+uMuhdjsCCThEkJIwBvWosQTO0IdtuIWz6HEPR4rk?=
- =?us-ascii?Q?TJOpT7YpEDpseaxzuQblFKN6362OkWzcrnOner2RZiMi6idXR+GTZuj4Kb0y?=
- =?us-ascii?Q?fGydB1mBIZ6a/HiMTmhtMcTU+jwuGZRGpGxxcSFXB6LTI8rufjor2N6LkqFW?=
- =?us-ascii?Q?x0PVLVV8cEBaNvxW69mYOHX/ijqgWB0WiK9XFyQP2hHx4YHeRplrSKgJOGJs?=
- =?us-ascii?Q?i219Dq7a2ZmyZjh+OJkUMtHFTnGM3WRmHr/GQer+KH91feMAy71I4X0RNNr7?=
- =?us-ascii?Q?YeNppgbssQGh3K36cGNA4Vtq72P3zQAbcLdyvs32+Vt8mTiV8W+mPWgCyTRe?=
- =?us-ascii?Q?voGEDqjyluOnLFBZVpT0lnN+g7yvVjJ/8eWrVc3cNBMdO9crL9uM7VaNKqAw?=
- =?us-ascii?Q?m162CbcanOaSRPscMHSf6QIIGRkBbhCoAAioedKAqdowxtP2/drsUTXBO/Lv?=
- =?us-ascii?Q?YHkSvrKtPbZIUNpm8tpS63KRwFO7cM+ljkGwCmBL1G1RElJ7QEIN7ipypXh4?=
- =?us-ascii?Q?3PQvdXyAcEDvZSDKSIJIpR62QZ3bxdLUyJJCoiH+QDgIB/KPyoyI2v+8025G?=
- =?us-ascii?Q?h86GTAs6kfRBNBWgvxZtTLODFsGI1/rLU18GQ5+mTUPNPQrO5SLjY98HxtaM?=
- =?us-ascii?Q?+KBgugfAqn7DnMsTn4CS/1Q6kqTUCbjeIbKOjvn322wGdQfMrglfTJ0BpU7u?=
- =?us-ascii?Q?L5GUoVTzOEGKRo5W83amdlZCWyz2KA7P9i81qu0/4stFdTOYSgCKAlM54JS1?=
- =?us-ascii?Q?z1liz4m3AHGZzrApx+Q5e4I1B1yA3te0uTpD8J+fvn7T3sqnqWr9mAAzh7Sg?=
- =?us-ascii?Q?mPGdpBIRoPs5vINXFz1e8+vweyvm0kIzpM3eNPtTm51Ex4MJH7nCcFmhyqL/?=
- =?us-ascii?Q?3+jVgknmVSAvODsshYdCtP3LZsbq4NRXGrjPqBHjs0ioHAxmQbgOMcCp8xQ4?=
- =?us-ascii?Q?ioMZ9lyYpGbQuy7wAJbljUQjN+EvoL2oPIEhytRT+ImQxLPS16PnNOvD2eoo?=
- =?us-ascii?Q?fSg5e5z08O/wSglltCBog1XYul9n646V3SFzMYi8oQkjrcivwYVkHuLdxIlj?=
- =?us-ascii?Q?cjwMLcZ0fU0J9TlcBsfiPglALEdxZEDqhqGM5uRLyS1LloZ7vm8Drs5OTojJ?=
- =?us-ascii?Q?5t3c7PoCidoqfqfNv5UWndpMbxniyFrcXhOSpxjY7F3E7xUfPXHYukDCU7bp?=
- =?us-ascii?Q?VB1GhzsWHvwglPXqm2GU0nbJFUEGbNSW8ukGtLtEidM1DR8WestHd7Oert0k?=
- =?us-ascii?Q?PshC28YLmkUBjGXNN8yO7SSs0OVMdaMIW7u7wbUUhObM4oJX2ChP1HMC5oOI?=
- =?us-ascii?Q?V89VNxgWax+0REWIlOQHiOElR7VrwF/wo6L9AV9WG392kmifnb4GyU2boaRB?=
- =?us-ascii?Q?SEsENWFAlNN7UgM0gAMrCoTluCdj9yVUtgHHZhjK0U6JzN9qIl7bvQGI2Qv+?=
- =?us-ascii?Q?bz0ppFZN8ULw2Lw0vh05xQpNt25K4M/R/6ep0kTKgG2z0oSFKmMXAFkPcGKR?=
- =?us-ascii?Q?WMz2F0n1D+clyTVjbDCkdNfBeGHXwbOgJ33YCZOfjYQGuhIESUtFxIcboX8a?=
- =?us-ascii?Q?Su9jInDcrOMDunUdqPpXR8sMZUFCgGfgtzSsaah8H3auT8qz0Fz5GnDtyJuH?=
- =?us-ascii?Q?HtKt2VY6tL8jBpc1flWznChhtHd8ehBBK/GZn+WHHKk7rec3c0jvwIWudD5k?=
- =?us-ascii?Q?0NyVJGAO50DMvzlm7vb+MLck6+I=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <5FCF9D73BE8CA8458885EA7EA38DA22E@namprd10.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=PzY8tILS7/J5BzJfiKLdBDXy8/s4RAHqODI+UdY57jc=;
+        b=MSgmT6lRet0jPev3NhT8poLSNE2IuVKHhTmnMdindDPsxNrbDdzPrkBSaT4BauMeD+
+         LWq3ALR2NImH9IAbyg/9Mpz0DLX1H3V94a1gLKACC1HvSqM9EwtH2Km4ZUYlkqLoZgsQ
+         ZV7jqWBOB7cCGsim0JopuTtvt6tgng/ReKRwg=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=PzY8tILS7/J5BzJfiKLdBDXy8/s4RAHqODI+UdY57jc=;
+        b=p6xJe5+2z4knGSNWgSFVhBgJosJHG1WnBc0EKSM9r8oMNmtBAyAyJmNDoOU2rXDLeU
+         LHjnowcwhgWUk9YL2pkW1Ea2DnDoQv1tPn1t/PZmiohSggAN2zHyi6VbUtnk5s87zg+p
+         tncQxS4Mvq7hOZLnMzuPx3mfWrRr0jWfnmi93xF6dIZ952dUEM2/SJU8lD7KJCnWpT+m
+         ZXp3Css6bJlh1wSFzvKczj4dHDN3D9pF7hCMgWyon+wDNKdbBvGsb51n3xnpF3zNs3w0
+         32dp54mPR2L7ZnZsTh8CsNTtInihZ1UGNsGaCF6h35d4UIy5TyCXPQ3klvh46MSkFdnM
+         RCCA==
+X-Gm-Message-State: AOAM532gOQQRc7S6/bkL5T4arE0y8gXega9an91P3h6cGZXRU/AGOVFV
+        YLy0k1Uc+EMZAOYGV9MqFmRHaIGNidfgBuOXfjA=
+X-Google-Smtp-Source: ABdhPJyHwYrauLeH2nwz96EJX4mtAplRagRQoBDiBW5BTM4/RtQACcpnY75aAKjZrc9p1bCGV71dkw==
+X-Received: by 2002:a05:651c:50a:b0:246:74cb:2222 with SMTP id o10-20020a05651c050a00b0024674cb2222mr14914420ljp.484.1646163767087;
+        Tue, 01 Mar 2022 11:42:47 -0800 (PST)
+Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com. [209.85.208.169])
+        by smtp.gmail.com with ESMTPSA id z25-20020a2eb539000000b00244db8751a7sm2070769ljm.67.2022.03.01.11.42.43
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Mar 2022 11:42:43 -0800 (PST)
+Received: by mail-lj1-f169.google.com with SMTP id s25so23281004lji.5
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Mar 2022 11:42:43 -0800 (PST)
+X-Received: by 2002:a2e:3013:0:b0:246:2ca9:365e with SMTP id
+ w19-20020a2e3013000000b002462ca9365emr17983151ljw.291.1646163763108; Tue, 01
+ Mar 2022 11:42:43 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ed68f3c4-fd56-4e7e-67c6-08d9fbb96698
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Mar 2022 19:26:35.7327
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: w4ak/E8t9Z9lK9+r0n5sVtapR1iOXm6wcp+e7JqhnDDomIHDC+Fy8Xv8vOvZz/ixTlpsylpZQ00tOMuD6UJf52Gfj1iTuZYRg7a2QuQR9M4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB5438
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10273 signatures=685966
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- adultscore=0 phishscore=0 spamscore=0 suspectscore=0 malwarescore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2201110000 definitions=main-2203010097
-X-Proofpoint-ORIG-GUID: Rq5BoQDzako5YbwK0LR5NGvCLKqjfVQQ
-X-Proofpoint-GUID: Rq5BoQDzako5YbwK0LR5NGvCLKqjfVQQ
+References: <20220228110822.491923-1-jakobkoschel@gmail.com>
+ <20220228110822.491923-3-jakobkoschel@gmail.com> <2e4e95d6-f6c9-a188-e1cd-b1eae465562a@amd.com>
+ <CAHk-=wgQps58DPEOe4y5cTh5oE9EdNTWRLXzgMiETc+mFX7jzw@mail.gmail.com>
+ <282f0f8d-f491-26fc-6ae0-604b367a5a1a@amd.com> <b2d20961dbb7533f380827a7fcc313ff849875c1.camel@HansenPartnership.com>
+ <7D0C2A5D-500E-4F38-AD0C-A76E132A390E@kernel.org> <73fa82a20910c06784be2352a655acc59e9942ea.camel@HansenPartnership.com>
+ <CAHk-=wiT5HX6Kp0Qv4ZYK_rkq9t5fZ5zZ7vzvi6pub9kgp=72g@mail.gmail.com>
+In-Reply-To: <CAHk-=wiT5HX6Kp0Qv4ZYK_rkq9t5fZ5zZ7vzvi6pub9kgp=72g@mail.gmail.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue, 1 Mar 2022 11:42:26 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wghQygmASNUWj=LZn5FR5wsce2osyR6EXcfEB_FaX_6Og@mail.gmail.com>
+Message-ID: <CAHk-=wghQygmASNUWj=LZn5FR5wsce2osyR6EXcfEB_FaX_6Og@mail.gmail.com>
+Subject: Re: [PATCH 2/6] treewide: remove using list iterator after loop body
+ as a ptr
+To:     James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc:     Mike Rapoport <rppt@kernel.org>,
+        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+        Jakob Koschel <jakobkoschel@gmail.com>,
+        alsa-devel@alsa-project.org, linux-aspeed@lists.ozlabs.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        linux-iio@vger.kernel.org, nouveau@lists.freedesktop.org,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        Cristiano Giuffrida <c.giuffrida@vu.nl>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        samba-technical@lists.samba.org,
+        linux1394-devel@lists.sourceforge.net, drbd-dev@lists.linbit.com,
+        linux-arch <linux-arch@vger.kernel.org>,
+        CIFS <linux-cifs@vger.kernel.org>,
+        KVM list <kvm@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-staging@lists.linux.dev, "Bos, H.J." <h.j.bos@vu.nl>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        intel-wired-lan@lists.osuosl.org,
+        kgdb-bugreport@lists.sourceforge.net,
+        bcm-kernel-feedback-list@broadcom.com,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Arnd Bergman <arnd@arndb.de>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        intel-gfx <intel-gfx@lists.freedesktop.org>,
+        Brian Johannesmeyer <bjohannesmeyer@gmail.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        v9fs-developer@lists.sourceforge.net,
+        linux-tegra <linux-tegra@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-sgx@vger.kernel.org,
+        linux-block <linux-block@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>, linux-usb@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux F2FS Dev Mailing List 
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        tipc-discussion@lists.sourceforge.net,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        dma <dmaengine@vger.kernel.org>,
+        linux-mediatek@lists.infradead.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Tue, Mar 1, 2022 at 11:06 AM Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+> So instead of that simple "if (!entry)", we'd effectively have to
+> continue to use something that still works with the old world order
+> (ie that "if (list_entry_is_head())" model).
 
+Just to prove my point about how this is painful, that doesn't work at all.
 
-> On Mar 1, 2022, at 9:55 AM, James Smart <jsmart2021@gmail.com> wrote:
->=20
-> In the original FPIN commit, stats were incremented by the event_count.
-> Event_count is the minimum # of events that must occur before an FPIN is
-> sent. Thus, its not the actual number of events, and could be
-> significantly off (too low) as it doesn't reflect anything not reported.
-> Rather than attempt to count events, have the statistic count how many
-> FPINS cross the threshold and were reported.
->=20
-> Fixes: 3dcfe0de5a97 ("scsi: fc: Parse FPIN packets and update statistics"=
-)
-> Cc: <stable@vger.kernel.org> # v5.11+
-> Signed-off-by: James Smart <jsmart2021@gmail.com>
-> Cc: Shyam Sundar <ssundar@marvell.com>
-> Cc: Nilesh Javali <njavali@marvell.com>
->=20
-> ---
-> This issue was originally reported in this thread, with no comments.
-> https://lore.kernel.org/linux-scsi/b472606d-e67c-66f1-06d1-ecc5fbb2071a@b=
-roadcom.com/
-> ---
-> drivers/scsi/scsi_transport_fc.c | 39 +++++++++++++-------------------
-> 1 file changed, 16 insertions(+), 23 deletions(-)
->=20
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transpo=
-rt_fc.c
-> index 60e406bcf42a..a2524106206d 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -34,7 +34,7 @@ static int fc_bsg_hostadd(struct Scsi_Host *, struct fc=
-_host_attrs *);
-> static int fc_bsg_rportadd(struct Scsi_Host *, struct fc_rport *);
-> static void fc_bsg_remove(struct request_queue *);
-> static void fc_bsg_goose_queue(struct fc_rport *);
-> -static void fc_li_stats_update(struct fc_fn_li_desc *li_desc,
-> +static void fc_li_stats_update(u16 event_type,
-> 			       struct fc_fpin_stats *stats);
-> static void fc_delivery_stats_update(u32 reason_code,
-> 				     struct fc_fpin_stats *stats);
-> @@ -670,42 +670,34 @@ fc_find_rport_by_wwpn(struct Scsi_Host *shost, u64 =
-wwpn)
-> EXPORT_SYMBOL(fc_find_rport_by_wwpn);
->=20
-> static void
-> -fc_li_stats_update(struct fc_fn_li_desc *li_desc,
-> +fc_li_stats_update(u16 event_type,
-> 		   struct fc_fpin_stats *stats)
-> {
-> -	stats->li +=3D be32_to_cpu(li_desc->event_count);
-> -	switch (be16_to_cpu(li_desc->event_type)) {
-> +	stats->li++;
-> +	switch (event_type) {
-> 	case FPIN_LI_UNKNOWN:
-> -		stats->li_failure_unknown +=3D
-> -		    be32_to_cpu(li_desc->event_count);
-> +		stats->li_failure_unknown++;
-> 		break;
-> 	case FPIN_LI_LINK_FAILURE:
-> -		stats->li_link_failure_count +=3D
-> -		    be32_to_cpu(li_desc->event_count);
-> +		stats->li_link_failure_count++;
-> 		break;
-> 	case FPIN_LI_LOSS_OF_SYNC:
-> -		stats->li_loss_of_sync_count +=3D
-> -		    be32_to_cpu(li_desc->event_count);
-> +		stats->li_loss_of_sync_count++;
-> 		break;
-> 	case FPIN_LI_LOSS_OF_SIG:
-> -		stats->li_loss_of_signals_count +=3D
-> -		    be32_to_cpu(li_desc->event_count);
-> +		stats->li_loss_of_signals_count++;
-> 		break;
-> 	case FPIN_LI_PRIM_SEQ_ERR:
-> -		stats->li_prim_seq_err_count +=3D
-> -		    be32_to_cpu(li_desc->event_count);
-> +		stats->li_prim_seq_err_count++;
-> 		break;
-> 	case FPIN_LI_INVALID_TX_WD:
-> -		stats->li_invalid_tx_word_count +=3D
-> -		    be32_to_cpu(li_desc->event_count);
-> +		stats->li_invalid_tx_word_count++;
-> 		break;
-> 	case FPIN_LI_INVALID_CRC:
-> -		stats->li_invalid_crc_count +=3D
-> -		    be32_to_cpu(li_desc->event_count);
-> +		stats->li_invalid_crc_count++;
-> 		break;
-> 	case FPIN_LI_DEVICE_SPEC:
-> -		stats->li_device_specific +=3D
-> -		    be32_to_cpu(li_desc->event_count);
-> +		stats->li_device_specific++;
-> 		break;
-> 	}
-> }
-> @@ -767,6 +759,7 @@ fc_fpin_li_stats_update(struct Scsi_Host *shost, stru=
-ct fc_tlv_desc *tlv)
-> 	struct fc_rport *attach_rport =3D NULL;
-> 	struct fc_host_attrs *fc_host =3D shost_to_fc_host(shost);
-> 	struct fc_fn_li_desc *li_desc =3D (struct fc_fn_li_desc *)tlv;
-> +	u16 event_type =3D be16_to_cpu(li_desc->event_type);
-> 	u64 wwpn;
->=20
-> 	rport =3D fc_find_rport_by_wwpn(shost,
-> @@ -775,7 +768,7 @@ fc_fpin_li_stats_update(struct Scsi_Host *shost, stru=
-ct fc_tlv_desc *tlv)
-> 	    (rport->roles & FC_PORT_ROLE_FCP_TARGET ||
-> 	     rport->roles & FC_PORT_ROLE_NVME_TARGET)) {
-> 		attach_rport =3D rport;
-> -		fc_li_stats_update(li_desc, &attach_rport->fpin_stats);
-> +		fc_li_stats_update(event_type, &attach_rport->fpin_stats);
-> 	}
->=20
-> 	if (be32_to_cpu(li_desc->pname_count) > 0) {
-> @@ -789,14 +782,14 @@ fc_fpin_li_stats_update(struct Scsi_Host *shost, st=
-ruct fc_tlv_desc *tlv)
-> 			    rport->roles & FC_PORT_ROLE_NVME_TARGET)) {
-> 				if (rport =3D=3D attach_rport)
-> 					continue;
-> -				fc_li_stats_update(li_desc,
-> +				fc_li_stats_update(event_type,
-> 						   &rport->fpin_stats);
-> 			}
-> 		}
-> 	}
->=20
-> 	if (fc_host->port_name =3D=3D be64_to_cpu(li_desc->attached_wwpn))
-> -		fc_li_stats_update(li_desc, &fc_host->fpin_stats);
-> +		fc_li_stats_update(event_type, &fc_host->fpin_stats);
-> }
->=20
-> /*
-> --=20
-> 2.26.2
->=20
+If the loop iterator at the end is NULL (good, in theory), we can't
+use "list_entry_is_head()" to check whether we ended. We'd have to use
+a new thing entirely, to handle the "list_for_each_entry() has the
+old/new semantics" cases.
 
-Looks Good.=20
+That's largely why I was pushing for the "let's make it impossible to
+use the loop iterator at all outside the loop". It avoids the
+confusing case, and the patches to move to that stricter semantic can
+be merged independently (and before) doing the actual semantic change.
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+I'm not saying my suggested approach is wonderful either. Honestly,
+it's painful that we have so nasty semantics for the end-of-loop case
+for list_for_each_entry().
 
---
-Himanshu Madhani	 Oracle Linux Engineering
+The minimal patch would clearly be to keep those broken semantics, and
+just force everybody to use the list_entry_is_head() case. That's the
+"we know we messed up, we are too lazy to fix it, we'll just work
+around it and people need to be careful" approach.
 
+And laziness is a virtue. But bad semantics are bad semantics. So it's
+a question of balancing those two issues.
+
+               Linus
