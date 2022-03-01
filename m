@@ -2,187 +2,198 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2109CC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 17:55:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AB3DC43217
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 17:58:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236706AbiCAR41 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Mar 2022 12:56:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33662 "EHLO
+        id S236763AbiCAR6x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Mar 2022 12:58:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235961AbiCAR41 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 12:56:27 -0500
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39B7041F8A;
-        Tue,  1 Mar 2022 09:55:46 -0800 (PST)
-Received: by mail-pj1-x1029.google.com with SMTP id 15-20020a17090a098f00b001bef0376d5cso439546pjo.5;
-        Tue, 01 Mar 2022 09:55:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Jje77APtlL8Vy9okCJhF2WRN5jRkiUsyDRK6kheTyXw=;
-        b=iR1TguCYJpdrsUxXZ4NOMS6MYwCcNWMW76Nct8yiQBghGhpMeD8mWfUldOfr8ww6d1
-         QTN08lKL+lv2WyrxP78DWvp9SytFtnwASxpwNRyGGVHQ06Wqm5Lo13xXw68gVpdKmNXS
-         IFI1CUMW7lr636dRH/JwnIsOGEnSQwzNf1F+DbHlYdiMsOqe2eJyX/Vj513uoLa15mg7
-         c2rce/LRj/4LlYBTqpFOge3MkG3Vq5jiQgjH1WdV87oEwB0g8bEBDUikOkg1T62n3aBO
-         mQ9AzZi5eodi9yBb6+GmbGOs96JYl1y7Tw2FrNDbVXKfGaOVqjyjjjM0NEZ192b9UkWQ
-         81GA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Jje77APtlL8Vy9okCJhF2WRN5jRkiUsyDRK6kheTyXw=;
-        b=re+D4L9Oh5PAFT4Z4kW3WX1BFj/SvpupqYC4j7H5zyYIEEyAqlD+qiP4zehqKmxt1F
-         b16Qz2ZaYwp7w1MseJQ0iIkTD63YSRNwrPGnxsXuMZjNxq2V81x95dp6SQeuwKVg30kr
-         aOjzpdeWz7dybtjboQqsncRRggFLeIPTPhj6I+ujSPe2n8iz32R6C1mpbVo0bAuGMyUv
-         86HviF6IdPg2kZAWlI+QwQOdNucn27GCB7bKjPBzRe2ln2b01PpjslZ4BrAoVXLX96Jx
-         pBbpuxFsTU9TPuiD9QPxhWBFdfT3i//TpjqKIRBTuVTuo6xWb6Eyehh1OQ+OD97B+f8B
-         hQkw==
-X-Gm-Message-State: AOAM532XqT9mfEVKFb1hQYjI/DyLq6uLJ3p+5loJiEPq0id4cK26j0p6
-        oKgvfJmcY/gOE+XibU8gby3/TWiFC2w=
-X-Google-Smtp-Source: ABdhPJxtWW7+E0U0Pv9Cu44jPCPpdx+Qr3tLmWnQApMGDxwXudm5lH1R2Rde5XJtF2zaFCdsWXctGQ==
-X-Received: by 2002:a17:90a:fe0c:b0:1bd:5ea:d079 with SMTP id ck12-20020a17090afe0c00b001bd05ead079mr20472947pjb.150.1646157345599;
-        Tue, 01 Mar 2022 09:55:45 -0800 (PST)
-Received: from mail-ash-it-01.broadcom.com (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
-        by smtp.gmail.com with ESMTPSA id pf15-20020a17090b1d8f00b001bc9d6a0f15sm2801985pjb.36.2022.03.01.09.55.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Mar 2022 09:55:45 -0800 (PST)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>, stable@vger.kernel.org,
-        Shyam Sundar <ssundar@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>
-Subject: [PATCH][REPOST] scsi_transport_fc: Fix FPIN Link Integrity statistics counters
-Date:   Tue,  1 Mar 2022 09:55:36 -0800
-Message-Id: <20220301175536.60250-1-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.26.2
+        with ESMTP id S231947AbiCAR6t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 12:58:49 -0500
+Received: from new3-smtp.messagingengine.com (new3-smtp.messagingengine.com [66.111.4.229])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D310F3CA7B;
+        Tue,  1 Mar 2022 09:58:06 -0800 (PST)
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailnew.nyi.internal (Postfix) with ESMTP id 1F34E5801D0;
+        Tue,  1 Mar 2022 12:58:06 -0500 (EST)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute1.internal (MEProxy); Tue, 01 Mar 2022 12:58:06 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=cc
+        :cc:content-type:date:date:from:from:in-reply-to:in-reply-to
+        :message-id:mime-version:references:reply-to:sender:subject
+        :subject:to:to; s=fm3; bh=1b8nHfrBOcjPGYcB+Q6wr00uk1GmKX3v3ZNCnj
+        2Fc4I=; b=ZBUT+xBEPIHuw8jHImLNH+x52gankwE7MJd8sDFwnEoy45z1BwbhNh
+        xKsOdQ1yD9u7q0d/6DIUtrg535wnOmT4Lvdd1apo2YuuhLLDVkYx1vSgNyoTE5fJ
+        ofsW7j8uCMJyXK6Loz8rrLOzHyzxWsYiemruNwAl4gNUMe4M/NVtyIVhNAgsOfjy
+        b/w/wzWa4VwoEUleGhkhNF3kRyKpQ3Usq/8Ca14buwUMr/k/0v+gPaqGXYzqUKuv
+        KllGIGlPN88CAydfwqCLzM8aK7V+EiOvYiI4kF7OI9OB3TO949n6Hy8EMtjF8IqZ
+        MBlpj07s0Rnbq4GNXj6M7/3IgLXdvpRA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:from:from
+        :in-reply-to:in-reply-to:message-id:mime-version:references
+        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=1b8nHfrBOcjPGYcB+
+        Q6wr00uk1GmKX3v3ZNCnj2Fc4I=; b=EY31l7G2XfgL9rSC/gwvRf8zFgwtBT7xS
+        zGIS7YVvo/KA/v9LCSJOIARDHfRqiRvn2gTz078tIpwk3oIxG21buWNUxNQmSUyy
+        MyYKa/Xe0zh4/DCiQIRNMfBLOEXackhRaibWR2bFKht/sqIYkVYfZsf6JTqkc8aS
+        N/+KxLe8dnTTbLIJQe4lQN4jxuybvA2M70S25Fv9b7VdN/aPfJftqSYQ4WVfyPqY
+        0tbQrYevVZ6RBtubRdYtr3gnZBflyWFJSH5G+LkmECZ7pFmQ2xcqosvgp1dXRrwM
+        GXM5n5s+pyNtUs5gG+ueV8296EmUoxyY6tuEcr0WZBCuK4oOvJTLg==
+X-ME-Sender: <xms:rF4eYt_khXW9JUELKd3sbskivfb6p9VNYJ9HJTNdiVa20a5SzZwcHg>
+    <xme:rF4eYhvpLP3jG67Y92AJSSlOEm5MH8cOme-q_WmBEiKHi2-d33bdpDbAgKuSlQzhv
+    bEXTTYYFzUc5A>
+X-ME-Received: <xmr:rF4eYrDa0WtfQIncLyLiGZ2_QzeJH36bSCyCi0g3L7auz9QrwNL4PuRbLUYhHGofRJvw4tCnLgWVuPYzt-8dyqU>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddruddtvddguddtgecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enucfjughrpeffhffvuffkfhggtggujgesthdtredttddtvdenucfhrhhomhepifhrvghg
+    ucfmjfcuoehgrhgvgheskhhrohgrhhdrtghomheqnecuggftrfgrthhtvghrnhepveeuhe
+    ejgfffgfeivddukedvkedtleelleeghfeljeeiueeggeevueduudekvdetnecuvehluhhs
+    thgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepghhrvghgsehkrhhorg
+    hhrdgtohhm
+X-ME-Proxy: <xmx:rF4eYhep9_FqzdGryzLUlkyDm8oB4NZlyIpp5U2aPsiBO5Uc_pu1KA>
+    <xmx:rF4eYiNt1Zd7p4zbskEHRd607PiISY-ihvHig6bYJF7awgzM4cA48A>
+    <xmx:rF4eYjmGF931qz2wbkLW14iXG2GvWL_-CIczc4jJ1wtvDsjYWSRagQ>
+    <xmx:rl4eYkl7_n3lofGsDcutmkSMBLsPYoIzfmJgc1TjOF9wAZv0ieQERQ>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 1 Mar 2022 12:58:03 -0500 (EST)
+Date:   Tue, 1 Mar 2022 18:58:02 +0100
+From:   Greg KH <greg@kroah.com>
+To:     Jakob Koschel <jakobkoschel@gmail.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        alsa-devel@alsa-project.org, linux-aspeed@lists.ozlabs.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        linux-iio@vger.kernel.org, nouveau@lists.freedesktop.org,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        Cristiano Giuffrida <c.giuffrida@vu.nl>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        samba-technical@lists.samba.org,
+        linux1394-devel@lists.sourceforge.net, drbd-dev@lists.linbit.com,
+        linux-arch <linux-arch@vger.kernel.org>,
+        CIFS <linux-cifs@vger.kernel.org>,
+        KVM list <kvm@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-staging@lists.linux.dev, "Bos, H.J." <h.j.bos@vu.nl>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        intel-wired-lan@lists.osuosl.org,
+        kgdb-bugreport@lists.sourceforge.net,
+        bcm-kernel-feedback-list@broadcom.com,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Arnd Bergman <arnd@arndb.de>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        intel-gfx <intel-gfx@lists.freedesktop.org>,
+        Brian Johannesmeyer <bjohannesmeyer@gmail.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        v9fs-developer@lists.sourceforge.net,
+        linux-tegra <linux-tegra@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-sgx@vger.kernel.org,
+        linux-block <linux-block@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>, linux-usb@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux F2FS Dev Mailing List 
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        tipc-discussion@lists.sourceforge.net,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        dma <dmaengine@vger.kernel.org>,
+        linux-mediatek@lists.infradead.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        Mike Rapoport <rppt@kernel.org>
+Subject: Re: [PATCH 2/6] treewide: remove using list iterator after loop body
+ as a ptr
+Message-ID: <Yh5eqmAv0P2nnSq0@kroah.com>
+References: <20220228110822.491923-3-jakobkoschel@gmail.com>
+ <2e4e95d6-f6c9-a188-e1cd-b1eae465562a@amd.com>
+ <CAHk-=wgQps58DPEOe4y5cTh5oE9EdNTWRLXzgMiETc+mFX7jzw@mail.gmail.com>
+ <CAHk-=wj8fkosQ7=bps5K+DDazBXk=ypfn49A0sEq+7-nZnyfXA@mail.gmail.com>
+ <CAHk-=wiTCvLQkHcJ3y0hpqH7FEk9D28LDvZZogC6OVLk7naBww@mail.gmail.com>
+ <FC710A1A-524E-481B-A668-FC258F529A2E@gmail.com>
+ <CAHk-=whLK11HyvpUtEftOjc3Gup2V77KpAQ2fycj3uai=qceHw@mail.gmail.com>
+ <CEDAD0D9-56EE-4105-9107-72C2EAD940B0@gmail.com>
+ <Yh5ZmwiH5AxtQ69K@kroah.com>
+ <4B1AFAD9-C1B3-499C-945A-C259361ABA8C@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4B1AFAD9-C1B3-499C-945A-C259361ABA8C@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the original FPIN commit, stats were incremented by the event_count.
-Event_count is the minimum # of events that must occur before an FPIN is
-sent. Thus, its not the actual number of events, and could be
-significantly off (too low) as it doesn't reflect anything not reported.
-Rather than attempt to count events, have the statistic count how many
-FPINS cross the threshold and were reported.
+On Tue, Mar 01, 2022 at 06:40:04PM +0100, Jakob Koschel wrote:
+> 
+> 
+> > On 1. Mar 2022, at 18:36, Greg KH <greg@kroah.com> wrote:
+> > 
+> > On Tue, Mar 01, 2022 at 12:28:15PM +0100, Jakob Koschel wrote:
+> >> 
+> >> 
+> >>> On 1. Mar 2022, at 01:41, Linus Torvalds <torvalds@linux-foundation.org> wrote:
+> >>> 
+> >>> On Mon, Feb 28, 2022 at 1:47 PM Jakob Koschel <jakobkoschel@gmail.com> wrote:
+> >>>> 
+> >>>> The goal of this is to get compiler warnings right? This would indeed be great.
+> >>> 
+> >>> Yes, so I don't mind having a one-time patch that has been gathered
+> >>> using some automated checker tool, but I don't think that works from a
+> >>> long-term maintenance perspective.
+> >>> 
+> >>> So if we have the basic rule being "don't use the loop iterator after
+> >>> the loop has finished, because it can cause all kinds of subtle
+> >>> issues", then in _addition_ to fixing the existing code paths that
+> >>> have this issue, I really would want to (a) get a compiler warning for
+> >>> future cases and (b) make it not actually _work_ for future cases.
+> >>> 
+> >>> Because otherwise it will just happen again.
+> >>> 
+> >>>> Changing the list_for_each_entry() macro first will break all of those cases
+> >>>> (e.g. the ones using 'list_entry_is_head()).
+> >>> 
+> >>> So I have no problems with breaking cases that we basically already
+> >>> have a patch for due to  your automated tool. There were certainly
+> >>> more than a handful, but it didn't look _too_ bad to just make the
+> >>> rule be "don't use the iterator after the loop".
+> >>> 
+> >>> Of course, that's just based on that patch of yours. Maybe there are a
+> >>> ton of other cases that your patch didn't change, because they didn't
+> >>> match your trigger case, so I may just be overly optimistic here.
+> >> 
+> >> Based on the coccinelle script there are ~480 cases that need fixing
+> >> in total. I'll now finish all of them and then split them by
+> >> submodules as Greg suggested and repost a patch set per submodule.
+> >> Sounds good?
+> > 
+> > Sounds good to me!
+> > 
+> > If you need help carving these up and maintaining them over time as
+> > different subsystem maintainers accept/ignore them, just let me know.
+> > Doing large patchsets like this can be tough without a lot of
+> > experience.
+> 
+> Very much appreciated!
+> 
+> There will probably be some cases that do not match one of the pattern
+> we already discussed and need separate attention.
+> 
+> I was planning to start with one subsystem and adjust the coming ones
+> according to the feedback gather there instead of posting all of them
+> in one go.
 
-Fixes: 3dcfe0de5a97 ("scsi: fc: Parse FPIN packets and update statistics")
-Cc: <stable@vger.kernel.org> # v5.11+
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Cc: Shyam Sundar <ssundar@marvell.com>
-Cc: Nilesh Javali <njavali@marvell.com>
+That seems wise.  Feel free to use USB as a testing ground for this if
+you want to :)
 
----
-This issue was originally reported in this thread, with no comments.
-https://lore.kernel.org/linux-scsi/b472606d-e67c-66f1-06d1-ecc5fbb2071a@broadcom.com/
----
- drivers/scsi/scsi_transport_fc.c | 39 +++++++++++++-------------------
- 1 file changed, 16 insertions(+), 23 deletions(-)
+thanks,
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 60e406bcf42a..a2524106206d 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -34,7 +34,7 @@ static int fc_bsg_hostadd(struct Scsi_Host *, struct fc_host_attrs *);
- static int fc_bsg_rportadd(struct Scsi_Host *, struct fc_rport *);
- static void fc_bsg_remove(struct request_queue *);
- static void fc_bsg_goose_queue(struct fc_rport *);
--static void fc_li_stats_update(struct fc_fn_li_desc *li_desc,
-+static void fc_li_stats_update(u16 event_type,
- 			       struct fc_fpin_stats *stats);
- static void fc_delivery_stats_update(u32 reason_code,
- 				     struct fc_fpin_stats *stats);
-@@ -670,42 +670,34 @@ fc_find_rport_by_wwpn(struct Scsi_Host *shost, u64 wwpn)
- EXPORT_SYMBOL(fc_find_rport_by_wwpn);
- 
- static void
--fc_li_stats_update(struct fc_fn_li_desc *li_desc,
-+fc_li_stats_update(u16 event_type,
- 		   struct fc_fpin_stats *stats)
- {
--	stats->li += be32_to_cpu(li_desc->event_count);
--	switch (be16_to_cpu(li_desc->event_type)) {
-+	stats->li++;
-+	switch (event_type) {
- 	case FPIN_LI_UNKNOWN:
--		stats->li_failure_unknown +=
--		    be32_to_cpu(li_desc->event_count);
-+		stats->li_failure_unknown++;
- 		break;
- 	case FPIN_LI_LINK_FAILURE:
--		stats->li_link_failure_count +=
--		    be32_to_cpu(li_desc->event_count);
-+		stats->li_link_failure_count++;
- 		break;
- 	case FPIN_LI_LOSS_OF_SYNC:
--		stats->li_loss_of_sync_count +=
--		    be32_to_cpu(li_desc->event_count);
-+		stats->li_loss_of_sync_count++;
- 		break;
- 	case FPIN_LI_LOSS_OF_SIG:
--		stats->li_loss_of_signals_count +=
--		    be32_to_cpu(li_desc->event_count);
-+		stats->li_loss_of_signals_count++;
- 		break;
- 	case FPIN_LI_PRIM_SEQ_ERR:
--		stats->li_prim_seq_err_count +=
--		    be32_to_cpu(li_desc->event_count);
-+		stats->li_prim_seq_err_count++;
- 		break;
- 	case FPIN_LI_INVALID_TX_WD:
--		stats->li_invalid_tx_word_count +=
--		    be32_to_cpu(li_desc->event_count);
-+		stats->li_invalid_tx_word_count++;
- 		break;
- 	case FPIN_LI_INVALID_CRC:
--		stats->li_invalid_crc_count +=
--		    be32_to_cpu(li_desc->event_count);
-+		stats->li_invalid_crc_count++;
- 		break;
- 	case FPIN_LI_DEVICE_SPEC:
--		stats->li_device_specific +=
--		    be32_to_cpu(li_desc->event_count);
-+		stats->li_device_specific++;
- 		break;
- 	}
- }
-@@ -767,6 +759,7 @@ fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
- 	struct fc_rport *attach_rport = NULL;
- 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
- 	struct fc_fn_li_desc *li_desc = (struct fc_fn_li_desc *)tlv;
-+	u16 event_type = be16_to_cpu(li_desc->event_type);
- 	u64 wwpn;
- 
- 	rport = fc_find_rport_by_wwpn(shost,
-@@ -775,7 +768,7 @@ fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
- 	    (rport->roles & FC_PORT_ROLE_FCP_TARGET ||
- 	     rport->roles & FC_PORT_ROLE_NVME_TARGET)) {
- 		attach_rport = rport;
--		fc_li_stats_update(li_desc, &attach_rport->fpin_stats);
-+		fc_li_stats_update(event_type, &attach_rport->fpin_stats);
- 	}
- 
- 	if (be32_to_cpu(li_desc->pname_count) > 0) {
-@@ -789,14 +782,14 @@ fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
- 			    rport->roles & FC_PORT_ROLE_NVME_TARGET)) {
- 				if (rport == attach_rport)
- 					continue;
--				fc_li_stats_update(li_desc,
-+				fc_li_stats_update(event_type,
- 						   &rport->fpin_stats);
- 			}
- 		}
- 	}
- 
- 	if (fc_host->port_name == be64_to_cpu(li_desc->attached_wwpn))
--		fc_li_stats_update(li_desc, &fc_host->fpin_stats);
-+		fc_li_stats_update(event_type, &fc_host->fpin_stats);
- }
- 
- /*
--- 
-2.26.2
-
+greg k-h
