@@ -2,174 +2,189 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FBCAC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 23:34:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17F5DC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 23:56:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238664AbiCAXfI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Mar 2022 18:35:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35268 "EHLO
+        id S235465AbiCAX4s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Mar 2022 18:56:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233036AbiCAXfH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 18:35:07 -0500
-Received: from mail-qv1-xf2e.google.com (mail-qv1-xf2e.google.com [IPv6:2607:f8b0:4864:20::f2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEDA85EDCC
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2022 15:34:25 -0800 (PST)
-Received: by mail-qv1-xf2e.google.com with SMTP id gm1so227136qvb.7
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Mar 2022 15:34:25 -0800 (PST)
+        with ESMTP id S234476AbiCAX4q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 18:56:46 -0500
+Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A1E170075
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2022 15:56:03 -0800 (PST)
+Received: by mail-lf1-x12a.google.com with SMTP id g39so29546754lfv.10
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Mar 2022 15:56:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
+        d=linux-foundation.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=n8lyo1Ou37YrvSIXmH5d4LvmDWvohcrt3ECdMXPa1SU=;
-        b=r6nu3aVbYQjTDDNBu1VH8nkarYk2eF9b2PlLA64gIwoVYoigKf4gVlt7uv8Ughj1bK
-         T/tSnAjQE4KB2F0hBM4WIBLhX1iPJPKhiu4QF7mGta6e3FSPJ470FHsMATbzJ5XzOPfJ
-         34IWM9rMNhX8+/ZepDiYus3B1eapqIososWDWJaDGWNI4aMaM07wc0qjyqczVWOHETCm
-         38rXqgYpxne2G5BVjjInoeDEmZD2AhRM6X4tObuYm8ELlCJvZfu9Txf4S8uwsTECOuV2
-         UL2hv38oYqV63r5NeZpCU2RF4q2hm7F84GTD47deCJDJxIC6NUY/agI0r4JKlWJbWS3G
-         rhiA==
+        bh=4H0hy1V+vsSL/J4iRHU98fs6Ghx9E/bawvPg5OjXQmQ=;
+        b=A1xSV6w+mnGI8KddmZFT+SVp47UhRqZlj7dZE7Ue1BgWjGw2+QCc51Zb6PIPvKiXuh
+         /TGd1P3o63R0kiFyLwVU+kzDBf6Kt9wFSZwwJYnrWAqavu9szp3nfmKm0Qe68N3l8Mdl
+         bWvesgtwBf4BWRSm4aUiCmj0pmAaHYwmzAjUs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=n8lyo1Ou37YrvSIXmH5d4LvmDWvohcrt3ECdMXPa1SU=;
-        b=NrBai7dWCSkihrwAWd3apw252ZC/CzmOD/nduLV/C2ZHb1oykvsKS3YLWrzn7ubDF6
-         vBQH4bom5OjJB739FDnQ35+Pw5Cl5Hysya72cuQGIXymNSx+Uw3AhPEkxlNgtlbMyPER
-         fvhchK/JjWNYv04l9GXcuDoN8J41p5ZncC7MwAZcvfBpSRSV//PXd9v1VcCYjN4q0PJh
-         vilIv7Cnp5OiRAcGd8rpfmjT3s21qjesJQE4Sz6P8grno42LWPqIe+KvxrUcMohWgVT0
-         8LplI10Mdv121aJJevPjhzOgeJbpacNSuHuSdCRWEEEwYVAYQ1ddDCJZAHl6eTdUhY0O
-         1vJw==
-X-Gm-Message-State: AOAM532ntbE7MBOFDTcFpo7q1WYEF1fPGLq/AlAXoqUzUx6euKBV2U+p
-        dUPir2IHZHeKSUWH2ksPsD/Z8p4umA6rgSc9WCp2UA==
-X-Google-Smtp-Source: ABdhPJxT8ixyPUum5vHjaIh/ScO8V99UZmyY3ZhyUCg28dxyS2CE9ZonLh3Wc4MIGmPcKfy+vqYnRWVNC3A/hYI+jmc=
-X-Received: by 2002:a05:6214:9c3:b0:432:c0c0:a6c3 with SMTP id
- dp3-20020a05621409c300b00432c0c0a6c3mr16032462qvb.43.1646177664600; Tue, 01
- Mar 2022 15:34:24 -0800 (PST)
+        bh=4H0hy1V+vsSL/J4iRHU98fs6Ghx9E/bawvPg5OjXQmQ=;
+        b=hDnkvsKQF4KgS7BM3IBofyFyrT2lgrQXyZy4N52PUEtS08NFxo/6fnGcJm3/eraYwm
+         RKNccwWxKGpBr67sgUatnHKWZzRtf5ZjjACKjBosTUEukbkb37ykyLCYHKY9znj9S0gv
+         Kfn7wjEtABPTGAPkb+GJ9ZPdacI+OENmLUB1sXxP9Yd5BLA2lGY3Tca+Tf54o0XzrX1W
+         aDmBes43/oHK/SJWLxkjjX8i5QjQF3Ad1dZ5BPwSm4FjYw31tvBLHv+yNYsoPy/QTRRE
+         fGFDpjqGt9zCq3asQ/uWA8x3myAtn2/215PwwMEaRhqyl1lqV+ail5F18UHKecNYMeVy
+         +nQg==
+X-Gm-Message-State: AOAM531fIXl+bJESI50hdtVQxqeW7Tsz1GRy237i/vKyiqOaZGv0Tm2x
+        CTz0tjoan43f4dJ85NWdY4jnzNcUcuT6Er8HIeA=
+X-Google-Smtp-Source: ABdhPJxflGNqT7nHVVQknzbC5tmjyvnvLfTbgnyfVwqbho2yIA96zU+NeQ0yofwK2G+OSIRmOIHAYg==
+X-Received: by 2002:a05:6512:324c:b0:443:7be8:5a4f with SMTP id c12-20020a056512324c00b004437be85a4fmr16633114lfr.631.1646178961695;
+        Tue, 01 Mar 2022 15:56:01 -0800 (PST)
+Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com. [209.85.167.50])
+        by smtp.gmail.com with ESMTPSA id o1-20020a2e7301000000b002461808ad8bsm2176611ljc.102.2022.03.01.15.55.58
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Mar 2022 15:55:59 -0800 (PST)
+Received: by mail-lf1-f50.google.com with SMTP id b11so29563689lfb.12
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Mar 2022 15:55:58 -0800 (PST)
+X-Received: by 2002:a05:6512:3042:b0:437:96f5:e68a with SMTP id
+ b2-20020a056512304200b0043796f5e68amr17643498lfb.449.1646178958685; Tue, 01
+ Mar 2022 15:55:58 -0800 (PST)
 MIME-Version: 1.0
-References: <20220217181907.A2460E9317@localhost>
-In-Reply-To: <20220217181907.A2460E9317@localhost>
-From:   Khazhy Kumykov <khazhy@google.com>
-Date:   Tue, 1 Mar 2022 15:34:13 -0800
-Message-ID: <CACGdZYL8k46jTXvuu5AXzwZwQF2yj5WEwC_PTsN+f9mD6vUVmg@mail.gmail.com>
-Subject: Re: [LSF/MM/BPF Topic][LSF/MM/BPF Attend] iscsi issue of scale with MNoT
-To:     lduncan@suse.com
-Cc:     lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000f69c9205d9309a27"
+References: <20220228110822.491923-1-jakobkoschel@gmail.com>
+ <20220228110822.491923-3-jakobkoschel@gmail.com> <2e4e95d6-f6c9-a188-e1cd-b1eae465562a@amd.com>
+ <CAHk-=wgQps58DPEOe4y5cTh5oE9EdNTWRLXzgMiETc+mFX7jzw@mail.gmail.com>
+ <282f0f8d-f491-26fc-6ae0-604b367a5a1a@amd.com> <b2d20961dbb7533f380827a7fcc313ff849875c1.camel@HansenPartnership.com>
+ <7D0C2A5D-500E-4F38-AD0C-A76E132A390E@kernel.org> <73fa82a20910c06784be2352a655acc59e9942ea.camel@HansenPartnership.com>
+ <CAHk-=wiT5HX6Kp0Qv4ZYK_rkq9t5fZ5zZ7vzvi6pub9kgp=72g@mail.gmail.com>
+ <7dc860874d434d2288f36730d8ea3312@AcuMS.aculab.com> <CAHk-=whKqg89zu4T95+ctY-hocR6kDArpo2qO14-kV40Ga7ufw@mail.gmail.com>
+ <0ced2b155b984882b39e895f0211037c@AcuMS.aculab.com>
+In-Reply-To: <0ced2b155b984882b39e895f0211037c@AcuMS.aculab.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue, 1 Mar 2022 15:55:42 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wix0HLCBs5sxAeW3uckg0YncXbTjMsE-Tv8WzmkOgLAXQ@mail.gmail.com>
+Message-ID: <CAHk-=wix0HLCBs5sxAeW3uckg0YncXbTjMsE-Tv8WzmkOgLAXQ@mail.gmail.com>
+Subject: Re: [PATCH 2/6] treewide: remove using list iterator after loop body
+ as a ptr
+To:     David Laight <David.Laight@aculab.com>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>,
+        KVM list <kvm@vger.kernel.org>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        "linux-iio@vger.kernel.org" <linux-iio@vger.kernel.org>,
+        "nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        Cristiano Giuffrida <c.giuffrida@vu.nl>,
+        "Bos, H.J." <h.j.bos@vu.nl>,
+        "linux1394-devel@lists.sourceforge.net" 
+        <linux1394-devel@lists.sourceforge.net>,
+        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        CIFS <linux-cifs@vger.kernel.org>,
+        "linux-aspeed@lists.ozlabs.org" <linux-aspeed@lists.ozlabs.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        "linux-staging@lists.linux.dev" <linux-staging@lists.linux.dev>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+        "kgdb-bugreport@lists.sourceforge.net" 
+        <kgdb-bugreport@lists.sourceforge.net>,
+        "bcm-kernel-feedback-list@broadcom.com" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Arnd Bergman <arnd@arndb.de>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        intel-gfx <intel-gfx@lists.freedesktop.org>,
+        Brian Johannesmeyer <bjohannesmeyer@gmail.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        dma <dmaengine@vger.kernel.org>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        Jakob Koschel <jakobkoschel@gmail.com>,
+        "v9fs-developer@lists.sourceforge.net" 
+        <v9fs-developer@lists.sourceforge.net>,
+        linux-tegra <linux-tegra@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        "linux-sgx@vger.kernel.org" <linux-sgx@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        "samba-technical@lists.samba.org" <samba-technical@lists.samba.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux F2FS Dev Mailing List 
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        "tipc-discussion@lists.sourceforge.net" 
+        <tipc-discussion@lists.sourceforge.net>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+        Mike Rapoport <rppt@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000f69c9205d9309a27
-Content-Type: text/plain; charset="UTF-8"
+On Tue, Mar 1, 2022 at 3:19 PM David Laight <David.Laight@aculab.com> wrote:
+>
+> Having said that there are so few users of list_entry_is_head()
+> it is reasonable to generate two new names.
 
-On Thu, Feb 17, 2022 at 10:19 AM <lduncan@suse.com> wrote:
->
-> [RESEND -- apologies if you see this more than once]
->
-> The iSCSI protocol continues to be used in Linux, but some of the
-> users push the system past its normal limits. And using multipath just
-> exacerbates that problem (usually doubling the number of sessions).
->
-> I'd like to gather some numbers for open-iscsi (the standard Linux
-> iSCSI initiator) and the kernel target code (i.e. LIO/targetcli) on
-> what happens when there are MNoT -- massive numbers of targets.
->
-> "Massive" in my case, will be relative, since I don't have access to
-> a supercomputer, but I believe it will not be too hard to start
-> pushing the system too far. For example, a recent user problem found
-> that even at 2000 sessions using multipath, the system takes about 80
-> seconds to switch paths. Each switch takes 80ms (and they are
-> currently serialized), but when you multiply that by 1000 it adds up.
->
-> For the initiator, I've long suspected some parts of the code were not
-> designed for scale, so this might give me a chance to find and
-> possibly address some of these issues.
+Well, the problem is that the users of list_entry_is_head() may be few
+- but there are a number of _other_ ways to check "was that the HEAD
+pointer", and not all of them are necessarily correct.
 
-There are some linear lookups (sess_list, conn_list) in the iSCSI
-netlink which may be low hanging fruit, and do show up in heatmaps
-when creating/destroying sessions/connections in the presence of 10k+
-sessions in a machine. (Though this doesn't manifest 80s+ stalls,
-thankfully)
->
-> --
-> Lee Duncan
+IOW, different places do different random tests for "did we walk the
+whole loop without breaking out". And many of them happen to work. In
+fact, in practice, pretty much *all* of them happen to work, and you
+have to have the right struct layout and really really bad luck to hit
+a case of "type confusion ended up causing the test to not work".
 
---000000000000f69c9205d9309a27
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+And *THAT* is the problem here. It's not the "there are 25ish places
+that current use list_entry_is_head()".
 
-MIIPmAYJKoZIhvcNAQcCoIIPiTCCD4UCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-ggzyMIIEtjCCA56gAwIBAgIQeAMYYHb81ngUVR0WyMTzqzANBgkqhkiG9w0BAQsFADBMMSAwHgYD
-VQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMzETMBEGA1UEChMKR2xvYmFsU2lnbjETMBEGA1UE
-AxMKR2xvYmFsU2lnbjAeFw0yMDA3MjgwMDAwMDBaFw0yOTAzMTgwMDAwMDBaMFQxCzAJBgNVBAYT
-AkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSowKAYDVQQDEyFHbG9iYWxTaWduIEF0bGFz
-IFIzIFNNSU1FIENBIDIwMjAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCvLe9xPU9W
-dpiHLAvX7kFnaFZPuJLey7LYaMO8P/xSngB9IN73mVc7YiLov12Fekdtn5kL8PjmDBEvTYmWsuQS
-6VBo3vdlqqXZ0M9eMkjcKqijrmDRleudEoPDzTumwQ18VB/3I+vbN039HIaRQ5x+NHGiPHVfk6Rx
-c6KAbYceyeqqfuJEcq23vhTdium/Bf5hHqYUhuJwnBQ+dAUcFndUKMJrth6lHeoifkbw2bv81zxJ
-I9cvIy516+oUekqiSFGfzAqByv41OrgLV4fLGCDH3yRh1tj7EtV3l2TngqtrDLUs5R+sWIItPa/4
-AJXB1Q3nGNl2tNjVpcSn0uJ7aFPbAgMBAAGjggGKMIIBhjAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0l
-BBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFHzM
-CmjXouseLHIb0c1dlW+N+/JjMB8GA1UdIwQYMBaAFI/wS3+oLkUkrk1Q+mOai97i3Ru8MHsGCCsG
-AQUFBwEBBG8wbTAuBggrBgEFBQcwAYYiaHR0cDovL29jc3AyLmdsb2JhbHNpZ24uY29tL3Jvb3Ry
-MzA7BggrBgEFBQcwAoYvaHR0cDovL3NlY3VyZS5nbG9iYWxzaWduLmNvbS9jYWNlcnQvcm9vdC1y
-My5jcnQwNgYDVR0fBC8wLTAroCmgJ4YlaHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9yb290LXIz
-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
-ILTGVY3VZAH79IEwTAYDVR0gBEUwQzBBBgkrBgEEAaAyASgwNDAyBggrBgEFBQcCARYmaHR0cHM6
-Ly93d3cuZ2xvYmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADCBmgYIKwYBBQUHAQEE
-gY0wgYowPgYIKwYBBQUHMAGGMmh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2NhL2dzYXRsYXNy
-M3NtaW1lY2EyMDIwMEgGCCsGAQUFBzAChjxodHRwOi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2Nh
-Y2VydC9nc2F0bGFzcjNzbWltZWNhMjAyMC5jcnQwHwYDVR0jBBgwFoAUfMwKaNei6x4schvRzV2V
-b4378mMwRgYDVR0fBD8wPTA7oDmgN4Y1aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9jYS9nc2F0
-bGFzcjNzbWltZWNhMjAyMC5jcmwwDQYJKoZIhvcNAQELBQADggEBAJ4mUVcBAENL0YI+c7NV9lED
-+LdJalqdzPSczf76Imu8iFqQLRJE2f/oXC6rRCd4Re9dQWFTJrdG7FP8DvNo5gRcOY0cSQWeyh7x
-kRxliZ1eOu4hjoH+JtrIIJBm40vHwDWc51MV1LuQJ6kA1/n5PyJsfYyPw4h5lInk3ZYVpkh6f4Oh
-a1pUuyFRuqCOJ0r2IJcYVXrreMNOZfcjKtzZ290l5UZJtlKXS0qfeVdndP8ld3kdTYr4EcWiSI5l
-qohmI3eIH5GaIMsagonJlBy+HTzwO5RW54p4DjsVMwcYB+82QFGOT2AZoIBeCYFXU2XB6t0Q8RoU
-8Jg6o35bh+CWZ2UxggJqMIICZgIBATBoMFQxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
-aWduIG52LXNhMSowKAYDVQQDEyFHbG9iYWxTaWduIEF0bGFzIFIzIFNNSU1FIENBIDIwMjACEAEO
-OfOqtlFUhIfo3Q6pjqUwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIL5r8/JN03Qf
-2AetgDe7PTZ4s7Ru98+ybg9lPYr0/SFqMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
-hvcNAQkFMQ8XDTIyMDMwMTIzMzQyNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
-YIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcN
-AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC/t4XIXC/mPAj4TcN4vI8paU8SWUQB
-XmpuKvcjMMGqyzygbH16ZqcRFixAlD6jrsr9ZLpvYVAhRNeqzF5t7itgbaRA9/qXYFzRM1bZzAYB
-v4iZbGSjXgcHZmYrC3OHhfGWVf/qWyNcUGvbO4g7cZET9oNIL0T7XP2NkNris7XraDYnevA24tuP
-lSQpCUjnJrl5m6uQnYhQbyBTrwTfDXyCsOMnmZJLJVDsWG93MwBGmrA/1pkhv1jR3G4qXDvZ9xAP
-rb8B60dnr0CyAKHjp4PNkx3BYDh72NoO8srf6szJAy73Rkq+xKJQ2QVpNyWUOeTZK7knYIYzIJjM
-77wFF+9I
---000000000000f69c9205d9309a27--
+It's the "there are ~480 places that use the type-confused HEAD entry
+that has been cast to the wrong type".
+
+And THAT is why I think we'd be better off with that bigger change
+that simply means that you can't use the iterator variable at all
+outside the loop, and try to make it something where the compiler can
+help catch mis-uses.
+
+Now, making the list_for_each_entry() thing force the iterator to NULL
+at the end of the loop does fix the problem. The issue I have with it
+is really just that you end up getting no warning at all from the
+compiler if you mix old-style and new-style semantics. Now, you *will*
+get an oops (if using a new-style iterator with an old-style check),
+but many of these things will be in odd driver code and may happen
+only for error cases.
+
+And if you use a new-style check with an old-style iterator (ie some
+backport problem), you will probably end up getting random memory
+corruption, because you'll decide "it's not a HEAD entry", and then
+you'll actually *use* the HEAD that has the wrong type cast associated
+with it.
+
+See what my worry is?
+
+With the "don't use iterator outside the loop" approach, the exact
+same code works in both the old world order and the new world order,
+and you don't have the semantic confusion. And *if* you try to use the
+iterator outside the loop, you'll _mostly_ (*) get a compiler warning
+about it not being initialized.
+
+             Linus
+
+(*) Unless somebody initializes the iterator pointer pointlessly.
+Which clearly does happen. Thus the "mostly". It's not perfect, and
+that's most definitely not nice - but it should at least hopefully
+make it that much harder to mess up.
