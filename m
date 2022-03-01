@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74BCDC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 15:54:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00427C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Mar 2022 15:54:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235702AbiCAPzV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Mar 2022 10:55:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46220 "EHLO
+        id S235865AbiCAPzj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Mar 2022 10:55:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230374AbiCAPzV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 10:55:21 -0500
+        with ESMTP id S235908AbiCAPzi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2022 10:55:38 -0500
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6614F3BBE2
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2022 07:54:40 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 433906620C
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2022 07:54:57 -0800 (PST)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id CFC9E68BEB; Tue,  1 Mar 2022 16:54:36 +0100 (CET)
-Date:   Tue, 1 Mar 2022 16:54:36 +0100
+        id 92FEE68BEB; Tue,  1 Mar 2022 16:54:54 +0100 (CET)
+Date:   Tue, 1 Mar 2022 16:54:54 +0100
 From:   Christoph Hellwig <hch@lst.de>
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 3/4] aic7xxx: do not reference scsi command when
+Subject: Re: [PATCH 4/4] aic79xx: do not reference scsi command when
  resetting device
-Message-ID: <20220301155436.GB6667@lst.de>
-References: <20220301143957.40998-1-hare@suse.de> <20220301143957.40998-4-hare@suse.de>
+Message-ID: <20220301155454.GC6667@lst.de>
+References: <20220301143957.40998-1-hare@suse.de> <20220301143957.40998-5-hare@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220301143957.40998-4-hare@suse.de>
+In-Reply-To: <20220301143957.40998-5-hare@suse.de>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
