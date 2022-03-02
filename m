@@ -2,134 +2,184 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FA8AC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Mar 2022 19:14:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98E88C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Mar 2022 20:07:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244953AbiCBTPa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Mar 2022 14:15:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37860 "EHLO
+        id S242814AbiCBUIA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Mar 2022 15:08:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234399AbiCBTP3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2022 14:15:29 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 495DC51306
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Mar 2022 11:14:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1646248484;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=YiPVDUBebs7EB1B9i8U5kkuWPnwl3uCi7XbX0p51YuI=;
-        b=PmoXzez90gjGqH5AFCOBzc0ZDO2A6nNhOybBKB1QFXTfvTYy60gx8ZEe8sPGk+FPpCm79O
-        xc1Jl4CD+CoqjrV/rMZwX/vs11yo2/UXGXX7RS0iF29g4Yu+aLvw8TzE79YY2VnBLhLkhG
-        SwsNw7fksGoQe0FJ9Rbit70bsz8P+rM=
-Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com
- [209.85.161.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-198-80OBA4csNWS6mOjdLwl7-g-1; Wed, 02 Mar 2022 14:14:43 -0500
-X-MC-Unique: 80OBA4csNWS6mOjdLwl7-g-1
-Received: by mail-oo1-f69.google.com with SMTP id j3-20020a4a92c3000000b00319481d8795so1865043ooh.9
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Mar 2022 11:14:43 -0800 (PST)
+        with ESMTP id S242667AbiCBUH4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2022 15:07:56 -0500
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 401FBCB667
+        for <linux-scsi@vger.kernel.org>; Wed,  2 Mar 2022 12:07:06 -0800 (PST)
+Received: by mail-pj1-x1033.google.com with SMTP id mg21-20020a17090b371500b001bef9e4657cso2394864pjb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Mar 2022 12:07:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=9llME+iRL2iH9L07jwvbWbmbHLr47Rbz7WJ4fOgTlZc=;
+        b=IvpJRwG7ynxkReEE85KaN5rJUYtD4xKNHA+hy6TwBmoQ8B3uYeJI+QViQcnaGiWq86
+         F88M3HTERkoil1v4VBpPtCvYuei+/tfueI2kCXzM7ddvcotxLyWZwiewhTHLUCy28lRK
+         BraqPBOXvwYRthhpbxTgJWS9pGCc3zSZJBqHk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=YiPVDUBebs7EB1B9i8U5kkuWPnwl3uCi7XbX0p51YuI=;
-        b=434Yy/RYOjO6pH3wq810yp+cRpjFp3NTQCckKRiVrWYdJo3nRJeXYTjZfA+zEj0r3M
-         2vFzIejcjNsMBzPzHJZIvrgN51sh5Pyv/ugy0KDoAJZrw2mY7wBLUeQskWOnn9JET6OQ
-         uJdIgUfpsUI+xFiSC6KZ+L39EgrHgBq5ZWDr0KCc/UiuMcFz0IHtC+VzfdiWp5AHSzg6
-         I7HTEoK7EG98Pxw8gIk3w0ikDmNgqZYRo72qXJzsBlTMzwIrzTUCzniXTOeRrX3KPR+a
-         MR7/2MeLYmAZLUdXf2dAUcRVkBq1eGtcj0ubR1q6rIH0h48dXNLWMi3BDdbLM6k1vkf1
-         2rRg==
-X-Gm-Message-State: AOAM5330pzigQemphEfa/Mj65rOV8unDeLCoOsGgnsEEdrkzy+Ch4l3N
-        Dj67RnAVZeorFyUPgOsRXw1k64iRMFmd8WVn218D90Bajt/aGxBTDodgAJwsOf3owz+5j5PLdU+
-        eD0gLcSOXFnpyoqbBtYn87Q==
-X-Received: by 2002:a9d:6f82:0:b0:5af:1555:5a9b with SMTP id h2-20020a9d6f82000000b005af15555a9bmr17592469otq.289.1646248482660;
-        Wed, 02 Mar 2022 11:14:42 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxB4KkiaJYio4742IBRrbpirlsfY7jDTJSDYE0Y2LApyDfwNM6nimi0+dhckWOYXqK7oHp9AA==
-X-Received: by 2002:a9d:6f82:0:b0:5af:1555:5a9b with SMTP id h2-20020a9d6f82000000b005af15555a9bmr17592453otq.289.1646248482460;
-        Wed, 02 Mar 2022 11:14:42 -0800 (PST)
-Received: from localhost.localdomain (024-205-208-113.res.spectrum.com. [24.205.208.113])
-        by smtp.gmail.com with ESMTPSA id q13-20020a0568080ecd00b002d44f01f1d7sm10093409oiv.40.2022.03.02.11.14.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Mar 2022 11:14:42 -0800 (PST)
-Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
-From:   Tom Rix <trix@redhat.com>
-To:     Joe Perches <joe@perches.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, nathan@kernel.org,
-        ndesaulniers@google.com, Konrad Kleine <kkleine@redhat.com>
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
-References: <20220127151945.1244439-1-trix@redhat.com>
- <d26d4bd8-b5e1-f4d5-b563-9bc4dd384ff8@acm.org>
- <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com>
- <e3ae392a16491b9ddeb1f0b2b74fdf05628b1996.camel@perches.com>
- <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com>
-Message-ID: <8dd05afd-0bb9-c91b-6393-aff69f1363e1@redhat.com>
-Date:   Wed, 2 Mar 2022 11:14:39 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=9llME+iRL2iH9L07jwvbWbmbHLr47Rbz7WJ4fOgTlZc=;
+        b=sD1KJnBdkADoWHQkPyOuEz8aCsb8+jIcYKUz+xkKKWlc3xvQanN+9ClmIMpU1OEOdy
+         pI1TdZEDIEHc/pKr/jCpRn1inuuPm8wgNCEm2igY18OfgZ+r/F6RZYPTtjVelqgiGjTd
+         e/lewbxWpyt6nnhPMY0+fiQPYnM19+4KzKsOkt/XwaRK2G0CjIa0cK0h2VrOmsOkUmQV
+         sId40ETIJGh4RKvEbm9qOA7dj1J8hYssCWMRCYLomYFJnBrJJ/qbaH82/H87N7Fg7mEP
+         HwL6wByX8arlF0cyBIKTm/Sk7LpaQmCW7zLQrFJ6FloKHT3cev3MDsz1JYjSZ3Ych5fL
+         9ifg==
+X-Gm-Message-State: AOAM531sPpRV8fkADYc/zwUtOzF6elgb+rIq5VPkxjQwCW8ZHXu5Mnqb
+        qLUa2/UoZ9bLcQFB9cXQncgjFA==
+X-Google-Smtp-Source: ABdhPJyalZw/yElDAQSdRYusWOxjkvZUrvn+e5j/jboS/+hXUtUpvVb6mMnbBbqlv1j/a0ygzQBPkQ==
+X-Received: by 2002:a17:90b:94e:b0:1bc:c99f:ede1 with SMTP id dw14-20020a17090b094e00b001bcc99fede1mr1518926pjb.49.1646251625762;
+        Wed, 02 Mar 2022 12:07:05 -0800 (PST)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id d25-20020a637359000000b0037843afb785sm6664pgn.25.2022.03.02.12.07.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Mar 2022 12:07:05 -0800 (PST)
+Date:   Wed, 2 Mar 2022 12:07:04 -0800
+From:   Kees Cook <keescook@chromium.org>
+To:     Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        David Laight <David.Laight@aculab.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>,
+        KVM list <kvm@vger.kernel.org>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        "linux-iio@vger.kernel.org" <linux-iio@vger.kernel.org>,
+        "nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        Cristiano Giuffrida <c.giuffrida@vu.nl>,
+        "Bos, H.J." <h.j.bos@vu.nl>,
+        "linux1394-devel@lists.sourceforge.net" 
+        <linux1394-devel@lists.sourceforge.net>,
+        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        CIFS <linux-cifs@vger.kernel.org>,
+        "linux-aspeed@lists.ozlabs.org" <linux-aspeed@lists.ozlabs.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        "linux-staging@lists.linux.dev" <linux-staging@lists.linux.dev>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+        "kgdb-bugreport@lists.sourceforge.net" 
+        <kgdb-bugreport@lists.sourceforge.net>,
+        "bcm-kernel-feedback-list@broadcom.com" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Arnd Bergman <arnd@arndb.de>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        intel-gfx <intel-gfx@lists.freedesktop.org>,
+        Brian Johannesmeyer <bjohannesmeyer@gmail.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        dma <dmaengine@vger.kernel.org>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        Jakob Koschel <jakobkoschel@gmail.com>,
+        "v9fs-developer@lists.sourceforge.net" 
+        <v9fs-developer@lists.sourceforge.net>,
+        linux-tegra <linux-tegra@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        "linux-sgx@vger.kernel.org" <linux-sgx@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        "samba-technical@lists.samba.org" <samba-technical@lists.samba.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux F2FS Dev Mailing List 
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        "tipc-discussion@lists.sourceforge.net" 
+        <tipc-discussion@lists.sourceforge.net>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Mike Rapoport <rppt@kernel.org>
+Subject: Re: [PATCH 2/6] treewide: remove using list iterator after loop body
+ as a ptr
+Message-ID: <202203021158.DB5204A0@keescook>
+References: <282f0f8d-f491-26fc-6ae0-604b367a5a1a@amd.com>
+ <b2d20961dbb7533f380827a7fcc313ff849875c1.camel@HansenPartnership.com>
+ <7D0C2A5D-500E-4F38-AD0C-A76E132A390E@kernel.org>
+ <73fa82a20910c06784be2352a655acc59e9942ea.camel@HansenPartnership.com>
+ <CAHk-=wiT5HX6Kp0Qv4ZYK_rkq9t5fZ5zZ7vzvi6pub9kgp=72g@mail.gmail.com>
+ <7dc860874d434d2288f36730d8ea3312@AcuMS.aculab.com>
+ <CAHk-=whKqg89zu4T95+ctY-hocR6kDArpo2qO14-kV40Ga7ufw@mail.gmail.com>
+ <0ced2b155b984882b39e895f0211037c@AcuMS.aculab.com>
+ <CAHk-=wix0HLCBs5sxAeW3uckg0YncXbTjMsE-Tv8WzmkOgLAXQ@mail.gmail.com>
+ <78ccb184-405e-da93-1e02-078f90d2b9bc@rasmusvillemoes.dk>
 MIME-Version: 1.0
-In-Reply-To: <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <78ccb184-405e-da93-1e02-078f90d2b9bc@rasmusvillemoes.dk>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Wed, Mar 02, 2022 at 10:29:31AM +0100, Rasmus Villemoes wrote:
+> This won't help the current issue (because it doesn't exist and might
+> never), but just in case some compiler people are listening, I'd like to
+> have some sort of way to tell the compiler "treat this variable as
+> uninitialized from here on". So one could do
+> 
+> #define kfree(p) do { __kfree(p); __magic_uninit(p); } while (0)
+> 
+> with __magic_uninit being a magic no-op that doesn't affect the
+> semantics of the code, but could be used by the compiler's "[is/may be]
+> used uninitialized" machinery to flag e.g. double frees on some odd
+> error path etc. It would probably only work for local automatic
+> variables, but it should be possible to just ignore the hint if p is
+> some expression like foo->bar or has side effects. If we had that, the
+> end-of-loop test could include that to "uninitialize" the iterator.
 
-On 1/28/22 11:37 AM, Tom Rix wrote:
->
-> On 1/28/22 11:11 AM, Joe Perches wrote:
->> On Fri, 2022-01-28 at 09:59 -0800, Tom Rix wrote:
->>> On 1/28/22 9:42 AM, Bart Van Assche wrote:
->>>> On 1/27/22 07:19, trix@redhat.com wrote:
->>>>> From: Tom Rix <trix@redhat.com>
->>>>>
->>>>> checkpatch reports several hundred formatting errors.
->>>>> Run these files through clang-format and knock off
->>>>> some of them.
->>>> Isn't this the kind of patches that carries more risk than value?
->> Risk for whitespace style reformatting patches is quite low.
->>
->> Nominally, clang-format changes should not produce a different
->> compiled object file unless __LINE__/__DATE__/__TIME__ style
->> changes occur.
->>
->> If it does, the clang-format tool is broken.
->>
->>>> Additionally, this patch conflicts with a patch series that I plan to
->>>> post soon.
->> []
->>> Long term, it would be good have a reliable way to automatically fix
->>> either new files or really broken old files.
->> That's really a maintainer preference no?
->>
->> Especially so for any automation.
->
-> In practice everything is up to the maintainer.
->
-> If some maintainer wants fix their formatting then clang-format should 
-> just work
->
-> It isn't likely they will have time to hand fix every file.
+I've long wanted to change kfree() to explicitly set pointers to NULL on
+free. https://github.com/KSPP/linux/issues/87
 
-A follow up issue in the clang project has been raised by Konrad, here
+The thing stopping a trivial transformation of kfree() is:
 
-https://github.com/llvm/llvm-project/issues/54137
+	kfree(get_some_pointer());
 
-Tom
+I would argue, though, that the above is poor form: the thing holding
+the pointer should be the thing freeing it, so these cases should be
+refactored and kfree() could do the NULLing by default.
+
+Quoting myself in the above issue:
 
 
->
-> Tom
->
->>
->>
+Without doing massive tree-wide changes, I think we need compiler
+support. If we had something like __builtin_is_lvalue(), we could
+distinguish function returns from lvalues. For example, right now a
+common case are things like:
 
+	kfree(get_some_ptr());
+
+But if we could at least gain coverage of the lvalue cases, and detect
+them statically at compile-time, we could do:
+
+#define __kfree_and_null(x) do { __kfree(*x); *x = NULL; } while (0)
+#define kfree(x) __builtin_choose_expr(__builtin_is_lvalue(x),
+			__kfree_and_null(&(x)), __kfree(x))
+
+Alternatively, we could do a tree-wide change of the former case (findable
+with Coccinelle) and change them into something like kfree_no_null()
+and redefine kfree() itself:
+
+#define kfree_no_null(x) do { void *__ptr = (x); __kfree(__ptr); } while (0)
+#define kfree(x) do { __kfree(x); x = NULL; } while (0)
+
+-- 
+Kees Cook
