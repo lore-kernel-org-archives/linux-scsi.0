@@ -2,191 +2,246 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C903C43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D827C43219
 	for <linux-scsi@archiver.kernel.org>; Wed,  2 Mar 2022 05:36:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239638AbiCBFhX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S239637AbiCBFhX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 2 Mar 2022 00:37:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38354 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239520AbiCBFhQ (ORCPT
+        with ESMTP id S239449AbiCBFhQ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2022 00:37:16 -0500
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F29DBB16D4
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD0A8B16D3
         for <linux-scsi@vger.kernel.org>; Tue,  1 Mar 2022 21:36:33 -0800 (PST)
 Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 2222jYNB010945;
-        Wed, 2 Mar 2022 05:36:33 GMT
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 2222eVlZ010950
+        for <linux-scsi@vger.kernel.org>; Wed, 2 Mar 2022 05:36:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2021-07-09;
- bh=GkDE/hlNw16W+LVhEbObnJBC9YC+b98WI5GqfISARrI=;
- b=AtWq515GPMNIDsjAE6fJNcPvOTLyUHN8bF8k8AcpNYyHlfdlNScPfpie4w6LxKyFk2Es
- ZExkq7jmqy7TwpMSehgpeRTmRfpeZUXLPjEH9NV/xZZEmP3OUp16Bka6VBYdoPd/GVDQ
- GUwBaSnc9czNRKj/OMH1L8QvL/Ua3BIH9sMrzW6K7XmLso0Swtcr1O/vE2u54sAlCoFM
- gXpwZp1VtOhAbNhyeArq4sPrqbOp5XGelVf6AAQK1a+wi9DDJN4u/w99E4qJ30ESP+oD
- fG0JwHym2Fvj+25gUSY2/JRXIsBEle5Ww8+CP4TBMn6/ay2Mmzzi6sD+U3OQw5NNeHdI xA== 
+ bh=IXXw93fNwl3rDuAUNJtQ4WYpdJEw+RuWHMFKcGlsqqo=;
+ b=nkbGKmXk16pdY6GybVfrLs2sAZbRW2bxmcXi/aSXywzxp8TZibomKfOi2cw6D8BeS374
+ GM4z/40ez4Qr53FHVBKtNgPMl3IwLE6P+99/JHSoJXFqyFR25Ljcye/R0TxLvuUkldNf
+ BRnDrh0/Y10aQYqCslwMY2CvJkBvzAVwdFVWFkW6MnuFWtEPtY8aZ4v1CXVhRZIDCVDt
+ Lt5jWAouUiW2QH35D7PUoVkwT0fjH64CsNnSPGz1++sZIAOLkDX6+rFsZtPdHyaU/Y/d
+ tVQlWN6gpJZFYUynjc+lkRGrMZG+2CV+6jxfvcDvulybExAj3lkojPb2pyKHPaE7QjmP Pw== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3eh14bvwck-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Mar 2022 05:36:32 +0000
+        by mx0b-00069f02.pphosted.com with ESMTP id 3eh14bvwcm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Mar 2022 05:36:33 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 2225IqLS175868;
-        Wed, 2 Mar 2022 05:36:31 GMT
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 2225IuEu175938
+        for <linux-scsi@vger.kernel.org>; Wed, 2 Mar 2022 05:36:32 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by aserp3020.oracle.com with ESMTP id 3efc15vajg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Mar 2022 05:36:31 +0000
+        by aserp3020.oracle.com with ESMTP id 3efc15vak9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Mar 2022 05:36:32 +0000
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2225aRZj014395;
-        Wed, 2 Mar 2022 05:36:31 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2225aRZn014395
+        for <linux-scsi@vger.kernel.org>; Wed, 2 Mar 2022 05:36:32 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by aserp3020.oracle.com with ESMTP id 3efc15vaeg-9;
-        Wed, 02 Mar 2022 05:36:31 +0000
+        by aserp3020.oracle.com with ESMTP id 3efc15vaeg-11;
+        Wed, 02 Mar 2022 05:36:32 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 To:     linux-scsi@vger.kernel.org
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bernhard Sulzer <micraft.b@gmail.com>
-Subject: [PATCH 08/14] scsi: sd: Optimal I/O size should be a multiple of reported granularity
-Date:   Wed,  2 Mar 2022 00:35:53 -0500
-Message-Id: <20220302053559.32147-9-martin.petersen@oracle.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 10/14] scsi: sd: Move WRITE_ZEROES configuration to a separate function
+Date:   Wed,  2 Mar 2022 00:35:55 -0500
+Message-Id: <20220302053559.32147-11-martin.petersen@oracle.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220302053559.32147-1-martin.petersen@oracle.com>
 References: <20220302053559.32147-1-martin.petersen@oracle.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: BClhjpCyshYtpq2LqtMEiaaBV-IiAjmD
-X-Proofpoint-ORIG-GUID: BClhjpCyshYtpq2LqtMEiaaBV-IiAjmD
+X-Proofpoint-GUID: Xed0Q1r28yW4QFwbs1BcedHgI8qGi1m0
+X-Proofpoint-ORIG-GUID: Xed0Q1r28yW4QFwbs1BcedHgI8qGi1m0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit a83da8a4509d ("scsi: sd: Optimal I/O size should be a multiple of
-physical block size") validated the reported optimal I/O size against the
-physical block size to overcome problems with devices reporting nonsensical
-transfer sizes.
+In preparation for adding support for the WRITE SAME(16) NDOB flag,
+move configuration of the WRITE_ZEROES operation to a separate
+function. This is done to facilitate fetching all VPD pages before
+choosing the appropriate zeroing method for a given device.
 
-However, some devices claim conformity to older SCSI versions that predate
-the physical block size being reported. Other devices do not report a
-physical block size at all. We need to be able to validate the optimal I/O
-size on those devices as well.
+The deferred configuration also allows us to mirror the discard
+behavior and permit the user to revert a device to the kernel default
+configuration by echoing "default" to the sysfs file.
 
-Many devices report an OPTIMAL TRANSFER LENGTH GRANULARITY in the same VPD
-page as the OPTIMAL TRANSFER LENGTH. Use this value to validate the optimal
-I/O size. Also check that the reported granularity is a multiple of the
-physical block size, if supported.
-
-Link: https://lore.kernel.org/r/33fb522e-4f61-1b76-914f-c9e6a3553c9b@gmail.com
-Reported-by: Bernhard Sulzer <micraft.b@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/sd.c | 45 +++++++++++++++++++++++++++++++++++++++++----
- drivers/scsi/sd.h |  1 +
- 2 files changed, 42 insertions(+), 4 deletions(-)
+ drivers/scsi/sd.c | 56 +++++++++++++++++++++++++++++++++--------------
+ drivers/scsi/sd.h |  7 ++++--
+ 2 files changed, 44 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 84c04691841f..8595c4f2e915 100644
+index eae5c81ae515..ee4f4aea5f0f 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -2871,7 +2871,6 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
-  */
- static void sd_read_block_limits(struct scsi_disk *sdkp)
- {
--	unsigned int sector_sz = sdkp->device->sector_size;
- 	struct scsi_vpd *vpd;
+@@ -101,6 +101,7 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
+ #define SD_MINORS	16
  
- 	rcu_read_lock();
-@@ -2880,9 +2879,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 	if (!vpd || vpd->len < 16)
- 		goto out;
+ static void sd_config_discard(struct scsi_disk *, enum sd_lbp_mode);
++static void sd_config_write_zeroes(struct scsi_disk *, enum sd_zeroing_mode);
+ static void sd_config_write_same(struct scsi_disk *);
+ static int  sd_revalidate_disk(struct gendisk *);
+ static void sd_unlock_native_capacity(struct gendisk *disk);
+@@ -428,10 +429,12 @@ static DEVICE_ATTR_RW(provisioning_mode);
  
--	blk_queue_io_min(sdkp->disk->queue,
--			 get_unaligned_be16(&vpd->data[6]) * sector_sz);
--
-+	sdkp->min_xfer_blocks = get_unaligned_be16(&vpd->data[6]);
- 	sdkp->max_xfer_blocks = get_unaligned_be32(&vpd->data[8]);
- 	sdkp->opt_xfer_blocks = get_unaligned_be32(&vpd->data[12]);
+ /* sysfs_match_string() requires dense arrays */
+ static const char *zeroing_mode[] = {
++	[SD_ZERO_DEFAULT]	= "default",
+ 	[SD_ZERO_WRITE]		= "write",
+ 	[SD_ZERO_WS]		= "writesame",
+ 	[SD_ZERO_WS16_UNMAP]	= "writesame_16_unmap",
+ 	[SD_ZERO_WS10_UNMAP]	= "writesame_10_unmap",
++	[SD_ZERO_DISABLE]	= "disabled",
+ };
  
-@@ -3140,6 +3137,29 @@ static void sd_read_cpr(struct scsi_disk *sdkp)
- 	kfree(buffer);
+ static ssize_t
+@@ -457,7 +460,12 @@ zeroing_mode_store(struct device *dev, struct device_attribute *attr,
+ 	if (mode < 0)
+ 		return -EINVAL;
+ 
+-	sdkp->zeroing_mode = mode;
++	if (mode == SD_ZERO_DEFAULT)
++		sdkp->zeroing_override = false;
++	else
++		sdkp->zeroing_override = true;
++
++	sd_config_write_zeroes(sdkp, mode);
+ 
+ 	return count;
+ }
+@@ -1049,6 +1057,31 @@ static blk_status_t sd_setup_write_same10_cmnd(struct scsi_cmnd *cmd,
+ 	return scsi_alloc_sgtables(cmd);
  }
  
-+static bool sd_validate_min_xfer_size(struct scsi_disk *sdkp)
++static void sd_config_write_zeroes(struct scsi_disk *sdkp,
++				   enum sd_zeroing_mode mode)
 +{
-+	struct scsi_device *sdp = sdkp->device;
-+	unsigned int min_xfer_bytes =
-+		logical_to_bytes(sdp, sdkp->min_xfer_blocks);
++	struct request_queue *q = sdkp->disk->queue;
++	unsigned int logical_block_size = sdkp->device->sector_size;
 +
-+	if (sdkp->min_xfer_blocks == 0)
-+		return false;
-+
-+	if (min_xfer_bytes & (sdkp->physical_block_size - 1)) {
-+		sd_first_printk(KERN_WARNING, sdkp,
-+				"Preferred minimum I/O size %u bytes not a " \
-+				"multiple of physical block size (%u bytes)\n",
-+				min_xfer_bytes, sdkp->physical_block_size);
-+		sdkp->min_xfer_blocks = 0;
-+		return false;
++	if (mode == SD_ZERO_DEFAULT && !sdkp->zeroing_override) {
++		if (sdkp->lbprz && sdkp->lbpws)
++			mode = SD_ZERO_WS16_UNMAP;
++		else if (sdkp->lbprz && sdkp->lbpws10)
++			mode = SD_ZERO_WS10_UNMAP;
++		else if (sdkp->max_ws_blocks)
++			mode = SD_ZERO_WS;
++		else
++			mode = SD_ZERO_WRITE;
 +	}
 +
-+	sd_first_printk(KERN_INFO, sdkp, "Preferred minimum I/O size %u bytes\n",
-+			min_xfer_bytes);
-+	return true;
++	if (mode == SD_ZERO_DISABLE)
++		sdkp->zeroing_override = true;
++
++	sdkp->zeroing_mode = mode;
++	blk_queue_max_write_zeroes_sectors(q, sdkp->max_ws_blocks *
++					   (logical_block_size >> 9));
 +}
 +
- /*
-  * Determine the device's preferred I/O size for reads and writes
-  * unless the reported value is unreasonably small, large, not a
-@@ -3151,6 +3171,8 @@ static bool sd_validate_opt_xfer_size(struct scsi_disk *sdkp,
- 	struct scsi_device *sdp = sdkp->device;
- 	unsigned int opt_xfer_bytes =
- 		logical_to_bytes(sdp, sdkp->opt_xfer_blocks);
-+	unsigned int min_xfer_bytes =
-+		logical_to_bytes(sdp, sdkp->min_xfer_blocks);
+ static blk_status_t sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
+ {
+ 	struct request *rq = scsi_cmd_to_rq(cmd);
+@@ -1079,12 +1112,11 @@ static blk_status_t sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
  
- 	if (sdkp->opt_xfer_blocks == 0)
- 		return false;
-@@ -3179,6 +3201,15 @@ static bool sd_validate_opt_xfer_size(struct scsi_disk *sdkp,
- 		return false;
+ static void sd_config_write_same(struct scsi_disk *sdkp)
+ {
+-	struct request_queue *q = sdkp->disk->queue;
+ 	unsigned int logical_block_size = sdkp->device->sector_size;
+ 
+ 	if (sdkp->device->no_write_same) {
+ 		sdkp->max_ws_blocks = 0;
+-		goto out;
++		return;
  	}
  
-+	if (min_xfer_bytes && opt_xfer_bytes & (min_xfer_bytes - 1)) {
-+		sd_first_printk(KERN_WARNING, sdkp,
-+				"Optimal transfer size %u bytes not a " \
-+				"multiple of preferred minimum block " \
-+				"size (%u bytes)\n",
-+				opt_xfer_bytes, min_xfer_bytes);
-+		return false;
-+	}
-+
- 	if (opt_xfer_bytes & (sdkp->physical_block_size - 1)) {
- 		sd_first_printk(KERN_WARNING, sdkp,
- 				"Optimal transfer size %u bytes not a " \
-@@ -3271,6 +3302,12 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	dev_max = min_not_zero(dev_max, sdkp->max_xfer_blocks);
- 	q->limits.max_dev_sectors = logical_to_sectors(sdp, dev_max);
+ 	/* Some devices can not handle block counts above 0xffff despite
+@@ -1103,15 +1135,6 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
+ 		sdkp->max_ws_blocks = 0;
+ 	}
  
-+	if (sd_validate_min_xfer_size(sdkp))
-+		blk_queue_io_min(sdkp->disk->queue,
-+				 logical_to_bytes(sdp, sdkp->min_xfer_blocks));
-+	else
-+		blk_queue_io_min(sdkp->disk->queue, 0);
-+
- 	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
- 		q->limits.io_opt = logical_to_bytes(sdp, sdkp->opt_xfer_blocks);
- 		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
+-	if (sdkp->lbprz && sdkp->lbpws)
+-		sdkp->zeroing_mode = SD_ZERO_WS16_UNMAP;
+-	else if (sdkp->lbprz && sdkp->lbpws10)
+-		sdkp->zeroing_mode = SD_ZERO_WS10_UNMAP;
+-	else if (sdkp->max_ws_blocks)
+-		sdkp->zeroing_mode = SD_ZERO_WS;
+-	else
+-		sdkp->zeroing_mode = SD_ZERO_WRITE;
+-
+ 	if (sdkp->max_ws_blocks &&
+ 	    sdkp->physical_block_size > logical_block_size) {
+ 		/*
+@@ -1131,10 +1154,6 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
+ 				   bytes_to_logical(sdkp->device,
+ 						    sdkp->physical_block_size));
+ 	}
+-
+-out:
+-	blk_queue_max_write_zeroes_sectors(q, sdkp->max_ws_blocks *
+-					 (logical_block_size >> 9));
+ }
+ 
+ static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
+@@ -2126,6 +2145,8 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 			case WRITE_SAME:
+ 				if (SCpnt->cmnd[1] & 8) { /* UNMAP */
+ 					sd_config_discard(sdkp, SD_LBP_DISABLE);
++					sd_config_write_zeroes(sdkp,
++							       SD_ZERO_DISABLE);
+ 				} else {
+ 					sdkp->device->no_write_same = 1;
+ 					sd_config_write_same(sdkp);
+@@ -3352,7 +3373,9 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 		sd_read_write_same(sdkp, buffer);
+ 		sd_read_security(sdkp, buffer);
+ 		sd_read_cpr(sdkp);
++		sd_config_write_same(sdkp);
+ 		sd_config_discard(sdkp, SD_LBP_DEFAULT);
++		sd_config_write_zeroes(sdkp, SD_ZERO_DEFAULT);
+ 	}
+ 
+ 	/*
+@@ -3398,7 +3421,6 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	sdkp->first_scan = 0;
+ 
+ 	set_capacity_and_notify(disk, logical_to_sectors(sdp, sdkp->capacity));
+-	sd_config_write_same(sdkp);
+ 	kfree(buffer);
+ 
+ 	/*
 diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 2e5932bde43d..f4fbca90e997 100644
+index 57a8241163c5..e0ee4215a3b4 100644
 --- a/drivers/scsi/sd.h
 +++ b/drivers/scsi/sd.h
-@@ -91,6 +91,7 @@ struct scsi_disk {
- 	atomic_t	openers;
- 	sector_t	capacity;	/* size in logical blocks */
- 	int		max_retries;
-+	u32		min_xfer_blocks;
- 	u32		max_xfer_blocks;
- 	u32		opt_xfer_blocks;
- 	u32		max_ws_blocks;
+@@ -61,11 +61,13 @@ enum sd_lbp_mode {
+ 	SD_LBP_DISABLE,		/* Discard disabled due to failed cmd */
+ };
+ 
+-enum {
+-	SD_ZERO_WRITE = 0,	/* Use WRITE(10/16) command */
++enum sd_zeroing_mode {
++	SD_ZERO_DEFAULT = 0,	/* Default mode based on what device reports */
++	SD_ZERO_WRITE,		/* Use WRITE(10/16) command */
+ 	SD_ZERO_WS,		/* Use WRITE SAME(10/16) command */
+ 	SD_ZERO_WS16_UNMAP,	/* Use WRITE SAME(16) with UNMAP */
+ 	SD_ZERO_WS10_UNMAP,	/* Use WRITE SAME(10) with UNMAP */
++	SD_ZERO_DISABLE,	/* Write Zeroes disabled due to failed cmd */
+ };
+ 
+ struct scsi_disk {
+@@ -111,6 +113,7 @@ struct scsi_disk {
+ 	u8		nr_actuators;		/* Number of actuators */
+ 	bool		lblvpd;
+ 	bool		provisioning_override;
++	bool		zeroing_override;
+ 	unsigned	ATO : 1;	/* state of disk ATO bit */
+ 	unsigned	cache_override : 1; /* temp override of WCE,RCD */
+ 	unsigned	WCE : 1;	/* state of disk WCE bit */
 -- 
 2.32.0
 
