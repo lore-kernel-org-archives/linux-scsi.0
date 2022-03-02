@@ -2,99 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49806C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Mar 2022 05:14:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA12C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Mar 2022 05:14:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239594AbiCBFOk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Mar 2022 00:14:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42006 "EHLO
+        id S239585AbiCBFOm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Mar 2022 00:14:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239521AbiCBFO0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2022 00:14:26 -0500
+        with ESMTP id S239567AbiCBFOf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2022 00:14:35 -0500
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57BC4A9A72;
-        Tue,  1 Mar 2022 21:13:43 -0800 (PST)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 2222cXOt016190;
-        Wed, 2 Mar 2022 05:13:40 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71928B1527;
+        Tue,  1 Mar 2022 21:13:49 -0800 (PST)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 2222ZTui016801;
+        Wed, 2 Mar 2022 05:13:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=FJ/slUmyfVzJZk6jgRLUq//9lqbCFNZrAkRugfbn7XY=;
- b=m2pHnaHw9+VLURCb6pptbRrIZd9ijwuSU9jWcdRUIHuLGQrM0qX47XMbDQOpjldIAg08
- CZH8h7bfFgYwps0/cM7gmhlATA42jVxWnpMnNPgJh1UMgyWlL9JeenwlygReIrjK4RCk
- EjxgUNo47jjv9UIw68V3r2hjaMo+Dp5TAoBuO2e1Qouu0q/O+X/C/UH1s8eBATvfdRtK
- CtPBOcLBX6BKMJCJwx7G4t4tAzqADKjEVRLnMdrxdELjzID7kD6acLj7u5mQRh+xhId7
- X2RZNTqiKOR3cQ7beS/1XUe9URLAH51K3ebia/UpHgyAdGIEJAAPRZBRi8ATE13hnPcQ eg== 
+ bh=I8Cvi+cPuQc47TPbs2QgHyjEqcva3j6D+kkqLW4QU98=;
+ b=fpZJpurTTrGzrr/KKQI5E0qc5/JMx+DYudN7bkZxdmUfyKnk/3BWw9X9cI0aNRCO9xxN
+ 2W0eYzqchwKHphG/xgDZ7KF0N5oceE7tijPlCOOcKaH2ZMhR1Yk+IvJqWZGWx2eOjEty
+ ACKN4v8dMqrcWskBpZ1nTq0m5KINb4NnDI/NNxK0QB6G2vAxRvxcDIRNrkyYtFI6zHhl
+ 2c529Ql9C0lf8bUMqJRigLDLHrFdT7BJ6RSCEr0Mx+nFv+yjjoIDINc5TiP3z4ulvmpS
+ +Yqv/DZMr+p8v5/gfg7X3ZacCM0lmdqQT8gBUnMidDvigxDum+y5cF6tQkfufdgrK336 Ig== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ehbk9b9vt-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3ehdayu3fk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 02 Mar 2022 05:13:40 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 2225C0fL175174;
+        Wed, 2 Mar 2022 05:13:39 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by userp3030.oracle.com with ESMTP id 3ef9ayxgpk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Wed, 02 Mar 2022 05:13:39 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 2225C1i8175289;
-        Wed, 2 Mar 2022 05:13:38 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3030.oracle.com with ESMTP id 3ef9ayxgnq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Mar 2022 05:13:38 +0000
 Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2225DVPS178145;
-        Wed, 2 Mar 2022 05:13:38 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2225DVPU178145;
+        Wed, 2 Mar 2022 05:13:39 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by userp3030.oracle.com with ESMTP id 3ef9ayxgcv-7;
-        Wed, 02 Mar 2022 05:13:38 +0000
+        by userp3030.oracle.com with ESMTP id 3ef9ayxgcv-8;
+        Wed, 02 Mar 2022 05:13:39 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
+To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: Re: remove struct scsi_request v2
-Date:   Wed,  2 Mar 2022 00:13:25 -0500
-Message-Id: <164619702114.16127.6666650319483152093.b4-ty@oracle.com>
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com
+Subject: Re: [PATCH 0/6] hisi_sas: Some misc updates
+Date:   Wed,  2 Mar 2022 00:13:26 -0500
+Message-Id: <164619702113.16127.16130590731146695188.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220224175552.988286-1-hch@lst.de>
-References: <20220224175552.988286-1-hch@lst.de>
+In-Reply-To: <1645703489-87194-1-git-send-email-john.garry@huawei.com>
+References: <1645703489-87194-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: IGWqcdbrgUnMcnR65o40HXNYBTSwpqrd
-X-Proofpoint-ORIG-GUID: IGWqcdbrgUnMcnR65o40HXNYBTSwpqrd
+X-Proofpoint-GUID: UQoZBqozYefv-XZJbxdL-DZAyzodcpYB
+X-Proofpoint-ORIG-GUID: UQoZBqozYefv-XZJbxdL-DZAyzodcpYB
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 24 Feb 2022 18:55:44 +0100, Christoph Hellwig wrote:
+On Thu, 24 Feb 2022 19:51:23 +0800, John Garry wrote:
 
-> with the recent removal of the REQ_OP_SCSI_{IN,OUT} based passthrough
-> from non-scsi drivers, the need for the scsi_request structure went
-> away as well.  As all submitters of SCSI passthrough requests are using
-> the SCSI midlayer now they can just fill out the scsi_cmnd directly.
-> 
-> Changes since v1:
->  - fix a few commit message typos
->  - remove an extra clearing of scmd->flags
->  - cleanup sense handling in sg_scsi_ioctl
->  - split the last patch
+> This series includes some updates as following:
+> - better management of freeing PCI vectors
+>   - hopefully the following series can make it soon so we may remove this
+>     new code:
+>     https://lore.kernel.org/linux-pci/20210607153916.1021016-1-zhengdejin5@gmail.com/T/#md27a594ac53b8e05abb2f22ec350137b9023ff18
+> - Fix prot_mask module param permissions
+> - Change phyup timeout to handle some special SATA disks
+> - modify underflow handling to quickly identify faulty disks
+> - debugfs hardening
 > 
 > [...]
 
 Applied to 5.18/scsi-queue, thanks!
 
-[1/8] target/pscsi: remove struct pscsi_plugin_task
-      https://git.kernel.org/mkp/scsi/c/c49ff72cff4c
-[2/8] scsi: don't memset the entire scsi_cmnd in scsi_init_command
-      https://git.kernel.org/mkp/scsi/c/71bada345b33
-[3/8] scsi: remove the cmd field from struct scsi_request
-      https://git.kernel.org/mkp/scsi/c/ce70fd9a551a
-[4/8] scsi: remove the sense and sense_len fields from struct scsi_request
-      https://git.kernel.org/mkp/scsi/c/5b794f98074a
-[5/8] scsi: move the resid_len field from struct scsi_request to struct scsi_cmnd
-      https://git.kernel.org/mkp/scsi/c/a9a4ea1166d6
-[6/8] scsi: move the result field from struct scsi_request to struct scsi_cmnd
-      https://git.kernel.org/mkp/scsi/c/dbb4c84d87af
-[7/8] scsi: remove struct scsi_request
-      https://git.kernel.org/mkp/scsi/c/6aded12b10e0
-[8/8] scsi: remove <scsi/scsi_request.h>
-      https://git.kernel.org/mkp/scsi/c/264403033105
+[1/6] scsi: hisi_sas: Change permission of parameter prot_mask
+      https://git.kernel.org/mkp/scsi/c/c4e070457a93
+[2/6] scsi: hisi_sas: Change hisi_sas_control_phy() phyup timeout
+      https://git.kernel.org/mkp/scsi/c/512623de5239
+[3/6] scsi: hisi_sas: Free irq vectors in order for v3 HW
+      https://git.kernel.org/mkp/scsi/c/554fb72ee34f
+[4/6] scsi: hisi_sas: Rename error labels in hisi_sas_v3_probe()
+      https://git.kernel.org/mkp/scsi/c/86287065fac2
+[5/6] scsi: hisi_sas: Limit users changing debugfs BIST count value
+      https://git.kernel.org/mkp/scsi/c/286ce4c65fbd
+[6/6] scsi: hisi_sas: Modify v3 HW SSP underflow error processing
+      https://git.kernel.org/mkp/scsi/c/62413199cd6d
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
