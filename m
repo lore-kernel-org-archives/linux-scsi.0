@@ -2,163 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F24E9C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Mar 2022 20:59:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6D66C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Mar 2022 23:45:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245008AbiCBVA1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Mar 2022 16:00:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45694 "EHLO
+        id S229533AbiCBXqH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Mar 2022 18:46:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244838AbiCBVAS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2022 16:00:18 -0500
-Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D6F4DBD2A
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Mar 2022 12:59:30 -0800 (PST)
-Received: by mail-pg1-x52b.google.com with SMTP id 132so2663675pga.5
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Mar 2022 12:59:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=R/oQqieG0aXWXHs93Td97reRxAIjZoSgBmUtDJFVhjU=;
-        b=d2ZFN7FzXJICmnX4Tyt0wAx0nHny3V7g7RBF7BzoFi4JqvMjvTlFe6r9CSmtZHYpfY
-         sI7cCbacBhQSn0c2nYjk/wWGRSWn9quhJSSynH9lMYRKPPdVW/LYlF+HQ4F3tfS4GoN+
-         rfxT6gA9HHGJJFfNnOWheyqKpysRyPxkd0f8U=
+        with ESMTP id S229507AbiCBXqF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2022 18:46:05 -0500
+Received: from mail-qv1-f49.google.com (mail-qv1-f49.google.com [209.85.219.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB2DA3FBDC;
+        Wed,  2 Mar 2022 15:43:39 -0800 (PST)
+Received: by mail-qv1-f49.google.com with SMTP id j5so2811599qvs.13;
+        Wed, 02 Mar 2022 15:43:39 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=R/oQqieG0aXWXHs93Td97reRxAIjZoSgBmUtDJFVhjU=;
-        b=zJ0TmdoTv8sO5NteKlZ/Hu1ThE5kDxgSiZL1YmKEuX2ItfiG3S7VzZwOiuc9Hapef9
-         f28cw2a6zdCNNIVs4og7Vpn+cxdka2L1PVX+EjMOVY/TqGCzIcz6SOdjkiLkBmwhEFXr
-         6iMmfA/EDuQp+8mh3dzXKQWto6skaUhxddtoIpSkSLvf0tKXrnEhiuOyjzVk5Cw8b5G/
-         wW4jLFGe1sJR/10C7o6Xlaioy9GXyZtMxHXRElWJoHwEyi8tfxTUs/acFrFVqfGxY9+y
-         zCzlbvZW2pzxkwFaaX1G/J70EDCqA0AhLyv42ckVkwp35b0Ivy4hF/X1cToNIpuJ4haV
-         kSbQ==
-X-Gm-Message-State: AOAM532JDaC/fIH/BfBi+nnGKLku6/EVz9CcfCLkPQEEkJe3+nqAtgbJ
-        gGUSd2TNEFEgG7IRrF6n0C2Kcg==
-X-Google-Smtp-Source: ABdhPJwV5Vftpu3BNFYOd1YAI3xcgBfQbmCq2DPnKYT59xnVma61vCMoUamoUdgwMbiUWTPibOctJw==
-X-Received: by 2002:a63:595e:0:b0:378:b203:a74e with SMTP id j30-20020a63595e000000b00378b203a74emr13280856pgm.328.1646254769698;
-        Wed, 02 Mar 2022 12:59:29 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id z9-20020a655a49000000b00373459df190sm58337pgs.35.2022.03.02.12.59.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Mar 2022 12:59:29 -0800 (PST)
-Date:   Wed, 2 Mar 2022 12:59:28 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        David Laight <David.Laight@aculab.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>,
-        KVM list <kvm@vger.kernel.org>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        "linux-iio@vger.kernel.org" <linux-iio@vger.kernel.org>,
-        "nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        Cristiano Giuffrida <c.giuffrida@vu.nl>,
-        "Bos, H.J." <h.j.bos@vu.nl>,
-        "linux1394-devel@lists.sourceforge.net" 
-        <linux1394-devel@lists.sourceforge.net>,
-        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        CIFS <linux-cifs@vger.kernel.org>,
-        "linux-aspeed@lists.ozlabs.org" <linux-aspeed@lists.ozlabs.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        "linux-staging@lists.linux.dev" <linux-staging@lists.linux.dev>,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-        "kgdb-bugreport@lists.sourceforge.net" 
-        <kgdb-bugreport@lists.sourceforge.net>,
-        "bcm-kernel-feedback-list@broadcom.com" 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        Arnd Bergman <arnd@arndb.de>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        intel-gfx <intel-gfx@lists.freedesktop.org>,
-        Brian Johannesmeyer <bjohannesmeyer@gmail.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        dma <dmaengine@vger.kernel.org>,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        Jakob Koschel <jakobkoschel@gmail.com>,
-        "v9fs-developer@lists.sourceforge.net" 
-        <v9fs-developer@lists.sourceforge.net>,
-        linux-tegra <linux-tegra@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        "linux-sgx@vger.kernel.org" <linux-sgx@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Netdev <netdev@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "samba-technical@lists.samba.org" <samba-technical@lists.samba.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux F2FS Dev Mailing List 
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        "tipc-discussion@lists.sourceforge.net" 
-        <tipc-discussion@lists.sourceforge.net>,
-        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Mike Rapoport <rppt@kernel.org>
-Subject: Re: [PATCH 2/6] treewide: remove using list iterator after loop body
- as a ptr
-Message-ID: <202203021256.69D7C4BCA6@keescook>
-References: <7D0C2A5D-500E-4F38-AD0C-A76E132A390E@kernel.org>
- <73fa82a20910c06784be2352a655acc59e9942ea.camel@HansenPartnership.com>
- <CAHk-=wiT5HX6Kp0Qv4ZYK_rkq9t5fZ5zZ7vzvi6pub9kgp=72g@mail.gmail.com>
- <7dc860874d434d2288f36730d8ea3312@AcuMS.aculab.com>
- <CAHk-=whKqg89zu4T95+ctY-hocR6kDArpo2qO14-kV40Ga7ufw@mail.gmail.com>
- <0ced2b155b984882b39e895f0211037c@AcuMS.aculab.com>
- <CAHk-=wix0HLCBs5sxAeW3uckg0YncXbTjMsE-Tv8WzmkOgLAXQ@mail.gmail.com>
- <78ccb184-405e-da93-1e02-078f90d2b9bc@rasmusvillemoes.dk>
- <202203021158.DB5204A0@keescook>
- <CAHk-=wikKPC0LUqZ8++EC5JOvGdBqVH9uUaTX=DvBioDoReYww@mail.gmail.com>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=YubSjBfIuHvUqf85+oZbcJlWJHy5V5+oMv2zbzjivfY=;
+        b=Z4fxse9WuKTEQIl/j+PccFudevCMik/LMzm+qtuG0JK/MKiS1Af+FFgitvg79t8Ljq
+         YepZcKc/5ZWAJdwLfbyoomIZVZHISKUbXsIFeik9lL3RbQHmgkjbqoUniENrqy+5Dj3b
+         vBaXYw4PRJRKSxI6is82klOD4/1Wh5A4vyE98a/4V8BfstON/ghf+SzmFSMUXifQ9axq
+         4fAbYmDFn3QaOJnUeN2bcEBnHyDAppe2TCxYHURJm9ZCJuyUEcc1mzSJX0SUxy3ZyT+e
+         WyJ8XChvTNn3E3+DMygnZKXPaEstaK3xMBTjgyUUF3htGPkenlCRgvTYs0Pyw50j4558
+         XQlg==
+X-Gm-Message-State: AOAM531ck4QaLm0vQBOP8VrHVCGNgQYiWKJQ9jTXVKXkVpXTT8gQsHC0
+        gtn4OLjlOhm5ZVTqAQ3hZBbnejnMVAs=
+X-Google-Smtp-Source: ABdhPJxUsTDEZUjKOL/Hkg6jc21Fhkxg+c8+3++ArYMa3Xk3Lu21qOMBed3EIK/TolFwzwRvHO+G8A==
+X-Received: by 2002:a17:902:f602:b0:14f:53a8:64f7 with SMTP id n2-20020a170902f60200b0014f53a864f7mr33024156plg.151.1646264018123;
+        Wed, 02 Mar 2022 15:33:38 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id h2-20020a056a00218200b004f66d50f054sm219507pfi.158.2022.03.02.15.33.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Mar 2022 15:33:37 -0800 (PST)
+Message-ID: <9e818df5-e8c0-b397-ae21-1a0745074094@acm.org>
+Date:   Wed, 2 Mar 2022 15:33:35 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wikKPC0LUqZ8++EC5JOvGdBqVH9uUaTX=DvBioDoReYww@mail.gmail.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: move more work to disk_release v2
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20220227172144.508118-1-hch@lst.de>
+ <741e087a-43f8-dc90-b679-7865cf503ac3@acm.org> <20220301125632.GA3911@lst.de>
+ <c61b6a0d-c3b5-30e2-14c5-efa7ea475c23@acm.org>
+ <20220302150319.GA30076@lst.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220302150319.GA30076@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 02, 2022 at 12:18:45PM -0800, Linus Torvalds wrote:
-> On Wed, Mar 2, 2022 at 12:07 PM Kees Cook <keescook@chromium.org> wrote:
-> >
-> > I've long wanted to change kfree() to explicitly set pointers to NULL on
-> > free. https://github.com/KSPP/linux/issues/87
+On 3/2/22 07:03, Christoph Hellwig wrote:
+> On Tue, Mar 01, 2022 at 09:05:24PM -0800, Bart Van Assche wrote:
+>> Hmm ... even with that patch applied, I still see the crash reported in my
+>> previous email. After I observed that crash I did a clean kernel build to
+>> make sure that the kernel binaries used in my test match the source code.
 > 
-> We've had this discussion with the gcc people in the past, and gcc
-> actually has some support for it, but it's sadly tied to the actual
-> function name (ie gcc has some special-casing for "free()")
+> I still can't reproduce it at all.  With this patchset on Jens'
+> for-5.18/block branch I do get a pre-existing crash in
+> nvmf_connect_admin_queue, and on Jens' for-next tree that has all the
+> latest fixes from Linus' tree I only see the CM lockdep warning you
+> reported.
 > 
-> See
+> FYI, this is a branch with the patches applied ontop of the for-next
+> branch:
 > 
->     https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94527
-> 
-> for some of that discussion.
-> 
-> Oh, and I see some patch actually got merged since I looked there last
-> so that you can mark "deallocator" functions, but I think it's only
-> for the context matching, not for actually killing accesses to the
-> pointer afterwards.
+> http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/freeze-for-next
 
-Ah! I missed that getting added in GCC 11. But yes, there it is:
+Hi Christoph,
 
-https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-malloc-function-attribute
+Thanks for having published a merge of block-for-next and the branch 
+with this patch series. That makes it easy for me to replicate your 
+kernel tree. I can reproduce the null-ptr-deref with the freeze-for-next 
+branch but not with Jens' block-for-next branch (commit e70f36e84f9b 
+("Merge branch 'for-5.18/block' into for-next")). This is what appears 
+in the kernel log on my test setup for the freeze-for-next branch 
+(commit acac349e5516 ("block: move rq_qos_exit() into disk_release()"):
 
-Hah, now we may need to split __malloc from __alloc_size. ;)
+BUG: KASAN: null-ptr-deref in __blk_account_io_start+0x28/0xa0
 
-I'd still like the NULL assignment behavior, though, since some things
-can easily avoid static analysis.
+Maybe we are using different kernel configurations? I'm using 
+CONFIG_NVME_MULTIPATH=n. I guess that you are using CONFIG_NVME_MULTIPATH=y?
 
--- 
-Kees Cook
+Bart.
