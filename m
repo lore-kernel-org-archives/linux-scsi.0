@@ -2,260 +2,134 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B4B0C35278
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Mar 2022 17:15:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FA8AC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Mar 2022 19:14:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243695AbiCBRPx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Mar 2022 12:15:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38762 "EHLO
+        id S244953AbiCBTPa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Mar 2022 14:15:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237817AbiCBRPu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2022 12:15:50 -0500
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A19AA58E45;
-        Wed,  2 Mar 2022 09:15:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1646241306; x=1677777306;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=quZJORXDoBJnmtXWeY1UEG0LMErZNbKWG4uR8GxuM8A=;
-  b=EgFtrQTE2RuXhvw9sRIr3IT+pA0Ncb8f9tiCc0SC60P5NxN5IIJ1lIbG
-   qRXhfI2wJDlspyrIGC0iL/9/1vb/Lqq8nOVou0CScelNSeM2zFz5ZYwQd
-   vRCxbYiuOYMHLgn2p868GOLIzIRhmd1d7Ftp+C+uIAO1rF5yphwxH1nTK
-   BZo8QGgTZGobcAwOhtAkimiecLreyGJPEymFRGwK29ytkPQQTUw1YAXwn
-   7s74MTXIjfdUqEKiu1QGwymv12Ru01fVqM/H0rIJHbiNJzFQB0n0mysA7
-   4izUGN7Nj88HSoNqykEmQlZt68TbXwAcpy2jJWkt8gcliob3VHMqMtNgg
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10274"; a="339886271"
-X-IronPort-AV: E=Sophos;i="5.90,149,1643702400"; 
-   d="scan'208";a="339886271"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 09:15:05 -0800
-X-IronPort-AV: E=Sophos;i="5.90,149,1643702400"; 
-   d="scan'208";a="551343768"
-Received: from jbuller-mobl1.ger.corp.intel.com (HELO [10.213.194.231]) ([10.213.194.231])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 09:14:53 -0800
-Message-ID: <ed52ce3c-0f4a-a1e8-4176-543657d6228d@linux.intel.com>
-Date:   Wed, 2 Mar 2022 17:14:50 +0000
+        with ESMTP id S234399AbiCBTP3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2022 14:15:29 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 495DC51306
+        for <linux-scsi@vger.kernel.org>; Wed,  2 Mar 2022 11:14:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1646248484;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=YiPVDUBebs7EB1B9i8U5kkuWPnwl3uCi7XbX0p51YuI=;
+        b=PmoXzez90gjGqH5AFCOBzc0ZDO2A6nNhOybBKB1QFXTfvTYy60gx8ZEe8sPGk+FPpCm79O
+        xc1Jl4CD+CoqjrV/rMZwX/vs11yo2/UXGXX7RS0iF29g4Yu+aLvw8TzE79YY2VnBLhLkhG
+        SwsNw7fksGoQe0FJ9Rbit70bsz8P+rM=
+Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com
+ [209.85.161.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-198-80OBA4csNWS6mOjdLwl7-g-1; Wed, 02 Mar 2022 14:14:43 -0500
+X-MC-Unique: 80OBA4csNWS6mOjdLwl7-g-1
+Received: by mail-oo1-f69.google.com with SMTP id j3-20020a4a92c3000000b00319481d8795so1865043ooh.9
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Mar 2022 11:14:43 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=YiPVDUBebs7EB1B9i8U5kkuWPnwl3uCi7XbX0p51YuI=;
+        b=434Yy/RYOjO6pH3wq810yp+cRpjFp3NTQCckKRiVrWYdJo3nRJeXYTjZfA+zEj0r3M
+         2vFzIejcjNsMBzPzHJZIvrgN51sh5Pyv/ugy0KDoAJZrw2mY7wBLUeQskWOnn9JET6OQ
+         uJdIgUfpsUI+xFiSC6KZ+L39EgrHgBq5ZWDr0KCc/UiuMcFz0IHtC+VzfdiWp5AHSzg6
+         I7HTEoK7EG98Pxw8gIk3w0ikDmNgqZYRo72qXJzsBlTMzwIrzTUCzniXTOeRrX3KPR+a
+         MR7/2MeLYmAZLUdXf2dAUcRVkBq1eGtcj0ubR1q6rIH0h48dXNLWMi3BDdbLM6k1vkf1
+         2rRg==
+X-Gm-Message-State: AOAM5330pzigQemphEfa/Mj65rOV8unDeLCoOsGgnsEEdrkzy+Ch4l3N
+        Dj67RnAVZeorFyUPgOsRXw1k64iRMFmd8WVn218D90Bajt/aGxBTDodgAJwsOf3owz+5j5PLdU+
+        eD0gLcSOXFnpyoqbBtYn87Q==
+X-Received: by 2002:a9d:6f82:0:b0:5af:1555:5a9b with SMTP id h2-20020a9d6f82000000b005af15555a9bmr17592469otq.289.1646248482660;
+        Wed, 02 Mar 2022 11:14:42 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxB4KkiaJYio4742IBRrbpirlsfY7jDTJSDYE0Y2LApyDfwNM6nimi0+dhckWOYXqK7oHp9AA==
+X-Received: by 2002:a9d:6f82:0:b0:5af:1555:5a9b with SMTP id h2-20020a9d6f82000000b005af15555a9bmr17592453otq.289.1646248482460;
+        Wed, 02 Mar 2022 11:14:42 -0800 (PST)
+Received: from localhost.localdomain (024-205-208-113.res.spectrum.com. [24.205.208.113])
+        by smtp.gmail.com with ESMTPSA id q13-20020a0568080ecd00b002d44f01f1d7sm10093409oiv.40.2022.03.02.11.14.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Mar 2022 11:14:42 -0800 (PST)
+Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
+From:   Tom Rix <trix@redhat.com>
+To:     Joe Perches <joe@perches.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, nathan@kernel.org,
+        ndesaulniers@google.com, Konrad Kleine <kkleine@redhat.com>
+Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
+References: <20220127151945.1244439-1-trix@redhat.com>
+ <d26d4bd8-b5e1-f4d5-b563-9bc4dd384ff8@acm.org>
+ <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com>
+ <e3ae392a16491b9ddeb1f0b2b74fdf05628b1996.camel@perches.com>
+ <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com>
+Message-ID: <8dd05afd-0bb9-c91b-6393-aff69f1363e1@redhat.com>
+Date:   Wed, 2 Mar 2022 11:14:39 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [Intel-gfx] [PATCH 6/6] treewide: remove check of list iterator
- against head past the loop body
-Content-Language: en-US
-To:     Jakob Koschel <jakobkoschel@gmail.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     alsa-devel@alsa-project.org, linux-aspeed@lists.ozlabs.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        linux-iio@vger.kernel.org, nouveau@lists.freedesktop.org,
-        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        dri-devel@lists.freedesktop.org,
-        Cristiano Giuffrida <c.giuffrida@vu.nl>,
-        amd-gfx@lists.freedesktop.org, samba-technical@lists.samba.org,
-        linux1394-devel@lists.sourceforge.net, drbd-dev@lists.linbit.com,
-        linux-arch <linux-arch@vger.kernel.org>,
-        linux-cifs@vger.kernel.org, kvm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-staging@lists.linux.dev, "Bos, H.J." <h.j.bos@vu.nl>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        intel-wired-lan@lists.osuosl.org,
-        kgdb-bugreport@lists.sourceforge.net,
-        bcm-kernel-feedback-list@broadcom.com,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        linux-media@vger.kernel.org, Kees Cook <keescook@chromium.org>,
-        Arnd Bergman <arnd@arndb.de>, linux-pm@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org,
-        Brian Johannesmeyer <bjohannesmeyer@gmail.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        linux-fsdevel@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        v9fs-developer@lists.sourceforge.net, linux-tegra@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-arm-kernel@lists.infradead.org, linux-sgx@vger.kernel.org,
-        linux-block@vger.kernel.org, netdev@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        tipc-discussion@lists.sourceforge.net,
-        linux-crypto@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-mediatek@lists.infradead.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linuxppc-dev@lists.ozlabs.org, Mike Rapoport <rppt@kernel.org>
-References: <20220228110822.491923-1-jakobkoschel@gmail.com>
- <20220228110822.491923-7-jakobkoschel@gmail.com>
-From:   Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Organization: Intel Corporation UK Plc
-In-Reply-To: <20220228110822.491923-7-jakobkoschel@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-On 28/02/2022 11:08, Jakob Koschel wrote:
-> When list_for_each_entry() completes the iteration over the whole list
-> without breaking the loop, the iterator value will be a bogus pointer
-> computed based on the head element.
-> 
-> While it is safe to use the pointer to determine if it was computed
-> based on the head element, either with list_entry_is_head() or
-> &pos->member == head, using the iterator variable after the loop should
-> be avoided.
-> 
-> In preparation to limiting the scope of a list iterator to the list
-> traversal loop, use a dedicated pointer to point to the found element.
-> 
-> Signed-off-by: Jakob Koschel <jakobkoschel@gmail.com>
+On 1/28/22 11:37 AM, Tom Rix wrote:
+>
+> On 1/28/22 11:11 AM, Joe Perches wrote:
+>> On Fri, 2022-01-28 at 09:59 -0800, Tom Rix wrote:
+>>> On 1/28/22 9:42 AM, Bart Van Assche wrote:
+>>>> On 1/27/22 07:19, trix@redhat.com wrote:
+>>>>> From: Tom Rix <trix@redhat.com>
+>>>>>
+>>>>> checkpatch reports several hundred formatting errors.
+>>>>> Run these files through clang-format and knock off
+>>>>> some of them.
+>>>> Isn't this the kind of patches that carries more risk than value?
+>> Risk for whitespace style reformatting patches is quite low.
+>>
+>> Nominally, clang-format changes should not produce a different
+>> compiled object file unless __LINE__/__DATE__/__TIME__ style
+>> changes occur.
+>>
+>> If it does, the clang-format tool is broken.
+>>
+>>>> Additionally, this patch conflicts with a patch series that I plan to
+>>>> post soon.
+>> []
+>>> Long term, it would be good have a reliable way to automatically fix
+>>> either new files or really broken old files.
+>> That's really a maintainer preference no?
+>>
+>> Especially so for any automation.
+>
+> In practice everything is up to the maintainer.
+>
+> If some maintainer wants fix their formatting then clang-format should 
+> just work
+>
+> It isn't likely they will have time to hand fix every file.
 
-[snip until i915 parts]
+A follow up issue in the clang project has been raised by Konrad, here
 
->   drivers/gpu/drm/i915/gem/i915_gem_context.c   | 14 +++---
->   .../gpu/drm/i915/gem/i915_gem_execbuffer.c    | 15 ++++---
->   drivers/gpu/drm/i915/gt/intel_ring.c          | 15 ++++---
+https://github.com/llvm/llvm-project/issues/54137
 
-[snip]
+Tom
 
-> diff --git a/drivers/gpu/drm/i915/gem/i915_gem_context.c b/drivers/gpu/drm/i915/gem/i915_gem_context.c
-> index 00327b750fbb..80c79028901a 100644
-> --- a/drivers/gpu/drm/i915/gem/i915_gem_context.c
-> +++ b/drivers/gpu/drm/i915/gem/i915_gem_context.c
-> @@ -107,25 +107,27 @@ static void lut_close(struct i915_gem_context *ctx)
->   	radix_tree_for_each_slot(slot, &ctx->handles_vma, &iter, 0) {
->   		struct i915_vma *vma = rcu_dereference_raw(*slot);
->   		struct drm_i915_gem_object *obj = vma->obj;
-> -		struct i915_lut_handle *lut;
-> +		struct i915_lut_handle *lut = NULL;
-> +		struct i915_lut_handle *tmp;
-> 
->   		if (!kref_get_unless_zero(&obj->base.refcount))
->   			continue;
-> 
->   		spin_lock(&obj->lut_lock);
-> -		list_for_each_entry(lut, &obj->lut_list, obj_link) {
-> -			if (lut->ctx != ctx)
-> +		list_for_each_entry(tmp, &obj->lut_list, obj_link) {
-> +			if (tmp->ctx != ctx)
->   				continue;
-> 
-> -			if (lut->handle != iter.index)
-> +			if (tmp->handle != iter.index)
->   				continue;
-> 
-> -			list_del(&lut->obj_link);
-> +			list_del(&tmp->obj_link);
-> +			lut = tmp;
->   			break;
->   		}
->   		spin_unlock(&obj->lut_lock);
-> 
-> -		if (&lut->obj_link != &obj->lut_list) {
-> +		if (lut) {
->   			i915_lut_handle_free(lut);
->   			radix_tree_iter_delete(&ctx->handles_vma, &iter, slot);
 
-Looks okay although personally I would have left lut as is for a smaller 
-diff and introduced a new local like 'found' or 'unlinked'.
+>
+> Tom
+>
+>>
+>>
 
->   			i915_vma_close(vma);
-> diff --git a/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c b/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
-> index 1736efa43339..fda9e3685ad2 100644
-> --- a/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
-> +++ b/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
-> @@ -2444,7 +2444,8 @@ static struct i915_request *eb_throttle(struct i915_execbuffer *eb, struct intel
->   {
->   	struct intel_ring *ring = ce->ring;
->   	struct intel_timeline *tl = ce->timeline;
-> -	struct i915_request *rq;
-> +	struct i915_request *rq = NULL;
-> +	struct i915_request *tmp;
-> 
->   	/*
->   	 * Completely unscientific finger-in-the-air estimates for suitable
-> @@ -2460,15 +2461,17 @@ static struct i915_request *eb_throttle(struct i915_execbuffer *eb, struct intel
->   	 * claiming our resources, but not so long that the ring completely
->   	 * drains before we can submit our next request.
->   	 */
-> -	list_for_each_entry(rq, &tl->requests, link) {
-> -		if (rq->ring != ring)
-> +	list_for_each_entry(tmp, &tl->requests, link) {
-> +		if (tmp->ring != ring)
->   			continue;
-> 
-> -		if (__intel_ring_space(rq->postfix,
-> -				       ring->emit, ring->size) > ring->size / 2)
-> +		if (__intel_ring_space(tmp->postfix,
-> +				       ring->emit, ring->size) > ring->size / 2) {
-> +			rq = tmp;
->   			break;
-> +		}
->   	}
-> -	if (&rq->link == &tl->requests)
-> +	if (!rq)
->   		return NULL; /* weird, we will check again later for real */
-
-Alternatively, instead of break could simply do "return 
-i915_request_get(rq);" and replace the end of the function after the 
-loop with "return NULL;". A bit smaller diff, or at least less "spread 
-out" over the function, so might be easier to backport stuff touching 
-this area in the future. But looks correct as is.
-
-> 
->   	return i915_request_get(rq);
-> diff --git a/drivers/gpu/drm/i915/gt/intel_ring.c b/drivers/gpu/drm/i915/gt/intel_ring.c
-> index 2fdd52b62092..4881c4e0c407 100644
-> --- a/drivers/gpu/drm/i915/gt/intel_ring.c
-> +++ b/drivers/gpu/drm/i915/gt/intel_ring.c
-> @@ -191,24 +191,27 @@ wait_for_space(struct intel_ring *ring,
->   	       struct intel_timeline *tl,
->   	       unsigned int bytes)
->   {
-> -	struct i915_request *target;
-> +	struct i915_request *target = NULL;
-> +	struct i915_request *tmp;
->   	long timeout;
-> 
->   	if (intel_ring_update_space(ring) >= bytes)
->   		return 0;
-> 
->   	GEM_BUG_ON(list_empty(&tl->requests));
-> -	list_for_each_entry(target, &tl->requests, link) {
-> -		if (target->ring != ring)
-> +	list_for_each_entry(tmp, &tl->requests, link) {
-> +		if (tmp->ring != ring)
->   			continue;
-> 
->   		/* Would completion of this request free enough space? */
-> -		if (bytes <= __intel_ring_space(target->postfix,
-> -						ring->emit, ring->size))
-> +		if (bytes <= __intel_ring_space(tmp->postfix,
-> +						ring->emit, ring->size)) {
-> +			target = tmp;
->   			break;
-> +		}
->   	}
-> 
-> -	if (GEM_WARN_ON(&target->link == &tl->requests))
-> +	if (GEM_WARN_ON(!target))
->   		return -ENOSPC;
-> 
->   	timeout = i915_request_wait(target,
-
-Looks okay as well. Less clear here if there is a clean solution to make 
-the diff smaller so no suggestions. I mean do I dare mention "goto 
-found;" from inside the loop, where the break is, instead of the 
-variable renames.. risky.. :) (And ofc "return -ENOSPC" immediately 
-after the loop.)
-
-As a summary changes looks okay, up to you if you want to try to make 
-the diffs smaller or not. It doesn't matter hugely really, all I have is 
-a vague and uncertain "maybe it makes backporting of something, someday 
-easier". So for i915 it is good either way.
-
-Reviewed-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com> # i915 bits only
-
-Regards,
-
-Tvrtko
