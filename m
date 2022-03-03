@@ -2,130 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72408C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 06:09:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C2B0C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 07:26:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229779AbiCCGKT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 01:10:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50394 "EHLO
+        id S230103AbiCCH0v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 02:26:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbiCCGKS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 01:10:18 -0500
-Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1A3F163D54
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Mar 2022 22:09:33 -0800 (PST)
-Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
+        with ESMTP id S229588AbiCCH0v (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 02:26:51 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCE2C16A58E;
+        Wed,  2 Mar 2022 23:26:05 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id D05E66156D;
-        Thu,  3 Mar 2022 06:09:31 +0000 (UTC)
-Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
-        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id C7E72630B6;
-        Thu,  3 Mar 2022 06:09:31 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
-        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
-        with ESMTP id 2j6jcRG3GoYO; Thu,  3 Mar 2022 06:09:31 +0000 (UTC)
-Received: from [192.168.48.23] (host-45-78-195-155.dyn.295.ca [45.78.195.155])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 7E16B219A5;
+        Thu,  3 Mar 2022 07:26:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1646292364; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=hAm6aBODLiWVVxzqTP/nBuW3NSWlM2Lr77y8WTZdvaU=;
+        b=DnW0ZAcybnZEocRHj1n7cOXGpRLWfnSFOpPjFwAxJ5tg0Syf8NqicRsiWkTPhHwiMDgDTD
+        8/eQmzFAxniqnt+UqV9aSokyIwbbZjrh2Bprk3JzDjzmR0ZxrMeABn1UsOPHd8i7L1Cf0t
+        +Xh6FjIT3rdw7S94zsFjBAABh6159GY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1646292364;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=hAm6aBODLiWVVxzqTP/nBuW3NSWlM2Lr77y8WTZdvaU=;
+        b=x/7Tp3GxlfXUJIeaiasdPcvYNfLn+CakiVRjmdMLDIxcPy0zkRlYZUz+CZx71Z3KzYvDvi
+        gX1rJQhpDNSUupDw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id 7A3B2630AE;
-        Thu,  3 Mar 2022 06:09:29 +0000 (UTC)
-Message-ID: <5a532d1a-d1b8-a153-4988-7ac62ae6441d@interlog.com>
-Date:   Thu, 3 Mar 2022 01:09:28 -0500
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 5C2F013AB4;
+        Thu,  3 Mar 2022 07:26:04 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id LiO/EoxtIGJWNQAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 03 Mar 2022 07:26:04 +0000
+Message-ID: <51943e86-e05c-8f3c-59de-e75af03a1efe@suse.de>
+Date:   Thu, 3 Mar 2022 08:26:03 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Reply-To: dgilbert@interlog.com
-Subject: Re: SCSI discovery update
-Content-Language: en-CA
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-References: <20220302053559.32147-1-martin.petersen@oracle.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Cc:     "Knight, Frederick" <Frederick.Knight@netapp.com>
-In-Reply-To: <20220302053559.32147-1-martin.petersen@oracle.com>
+ Thunderbird/91.4.0
+Subject: Re: [PATCH] scsi: libfc: Fix use after free in fc_exch_abts_resp()
+Content-Language: en-US
+To:     Jianglei Nie <niejianglei2021@163.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220303015115.459778-1-niejianglei2021@163.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20220303015115.459778-1-niejianglei2021@163.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022-03-02 00:35, Martin K. Petersen wrote:
-> This series addresses several issues in the SCSI device discovery
-> code:
+On 3/3/22 02:51, Jianglei Nie wrote:
+> fc_exch_release(ep) will decrease the ep's reference count. When the
+> reference count reaches zero, it is freed. But ep is still used in the
+> following code, which will lead to a use after free.
 > 
->   - Fetch the VPD header before getting the full VPD page. This removes
->     the guesswork from sizing the VPD buffer and fixes problems with
->     RAID controllers that wedge when we try to fetch the IDENTIFY
->     DEVICE information trailing the ATA Information VPD page.
+> We should return the function after the call of fc_exch_release() to
+> avoid use after free.
 > 
->   - Cache the VPD pages we need instead of fetching them every
->     revalidate iteration.
+> Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
+> ---
+>   drivers/scsi/libfc/fc_exch.c | 1 +
+>   1 file changed, 1 insertion(+)
 > 
->   - Avoid truncating the INQUIRY length for modern devices. This allows
->     us to query the version descriptors reported by most contemporary
->     drives. These version descriptors are used as an extra heuristic
->     for querying protocol features.
+> diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+> index 841000445b9a..aa223db4cf53 100644
+> --- a/drivers/scsi/libfc/fc_exch.c
+> +++ b/drivers/scsi/libfc/fc_exch.c
+> @@ -1701,6 +1701,7 @@ static void fc_exch_abts_resp(struct fc_exch *ep, struct fc_frame *fp)
+>   	if (cancel_delayed_work_sync(&ep->timeout_work)) {
+>   		FC_EXCH_DBG(ep, "Exchange timer canceled due to ABTS response\n");
+>   		fc_exch_release(ep);	/* release from pending timer hold */
+> +		return;
+>   	}
+>   
+>   	spin_lock_bh(&ep->ex_lock);
 
-Version descriptors used to be updated by Ralph Weber (WDC, T10) but
-he stopped doing that about 2 years ago. When that was pointed out
-he made a proposal to T10 [20-022r0] for dropping version descriptors
-henceforth. The proposal was voted down but no-one has stepped up at
-T10 to keep the version descriptors up to date.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Version descriptors used to have an entry on this page:
-     https://www.t10.org/lists/1spc-lst.htm
-That is no longer the case. They are still in spc6r06.pdf (latest draft)
-but haven't been updated for the same period.
+Cheers,
 
-I believe Seagate never supported version descriptors. Hitachi/WD
-used to support them. But I have a WD SAS disk manufactured last
-month and it has no version descriptors.
-
-I have no Toshiba, Samsung nor Kioxia disks. Could someone report if their
-recent SAS disks support version descriptors?
-
->   - Additional sanity checking for the reported minimum and optimal I/O
->     sizes.
-> 
->   - Fix reported discard failures by making the configuration a
->     two-stage process. Completing full VPD/RSOC discovery before we
->     configure discard prevents a small window of error where the wrong
->     command and/or wrong limit would briefly be applied.
-> 
->   - Make the zeroing configuration a two-stage process as well.
-> 
->   - Implement support for the NDOB flag for both discards and
->     zeroing. The "No Data Out Buffer" flag removes the need for a
->     zeroed payload to be included with a WRITE SAME(16) command.
-> 
->   - Remove the superfluous revalidate operation historically required
->     by the integrity profile registration. This further reduces the
->     commands we send during device discovery.
-> 
->   - Add additional heuristics for enabling discards on modern devices.
->     Specifically, if a device reports that it supports logical block
->     provisioning, attempt to query the LBP VPD page.
-> 
->   - Also query the device VPD pages if a device reports conformance to
->     a recent version of the SCSI Block Commands specification.
-
-Everything else here looks great.
-
-Ah, one thing. If you cache VPD pages (and the standard INQUIRY response),
-then if an INQUIRY DATA CHANGED Unit Attention occurs, all the cached data
-should be invalidated and the cached VPD pages re-fetched. The Last n Inquiry
-Data Changed log page [0xb,0x1] could help with that, but I haven't seen
-it implemented yet.
-
-Doug Gilbert
-
-> Thanks to several bug reporters and volunteers this series has been
-> extensively tested with a much wider variety of USB/UAS devices than I
-> have access to.
-> 
-
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
