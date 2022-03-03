@@ -2,90 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21971C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 13:54:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27BEDC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 13:57:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233295AbiCCNzT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 08:55:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42402 "EHLO
+        id S232311AbiCCN5r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 08:57:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230230AbiCCNzQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 08:55:16 -0500
-Received: from mail-ot1-x32f.google.com (mail-ot1-x32f.google.com [IPv6:2607:f8b0:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DED5918A79E
-        for <linux-scsi@vger.kernel.org>; Thu,  3 Mar 2022 05:54:30 -0800 (PST)
-Received: by mail-ot1-x32f.google.com with SMTP id k9-20020a056830242900b005ad25f8ebfdso4638957ots.7
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Mar 2022 05:54:30 -0800 (PST)
+        with ESMTP id S233112AbiCCN5q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 08:57:46 -0500
+Received: from mail-oo1-xc2d.google.com (mail-oo1-xc2d.google.com [IPv6:2607:f8b0:4864:20::c2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 898B418BA7B
+        for <linux-scsi@vger.kernel.org>; Thu,  3 Mar 2022 05:57:01 -0800 (PST)
+Received: by mail-oo1-xc2d.google.com with SMTP id w3-20020a4ac183000000b0031d806bbd7eso5806002oop.13
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Mar 2022 05:57:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=IijNdGC+6WVWwT9ghJp+UZFL1rbN52nAStXwZnt06ik=;
-        b=ILSDaPA5QQ3AaGxyswslIN2IhY1blbXCaou1G87S34976DsglBCQjqbKn4piSdS1fO
-         kGglbSChWE/tF3VexFOnD25BguXGlMjzpJSfFWwYt3jT+LJgaIKY+RPViIdIG+va8VST
-         KYQqVelUPQmL/zDKGI7Qxqt9hlsHSIB40YyKU=
+        bh=BVjgcGGkTWKO8YOUuDLAXRPVmUUyH2fnEbHGP0PNh6M=;
+        b=bCE/g9Qi41dPHRSkXbOcjRgOrgnsU6wRZoe2A6YXHz6A83sZn9EB/vkU5J9+pelAXK
+         Voq5kE74zbPBm2oWRiUNjLisrhGR69Gqtp+AwExhU4Skn42A9JL6QwOXNBuW115yjRca
+         4qTPUauJXjbwJWKVYnLLesq/J9ddD+g4vj11E=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=IijNdGC+6WVWwT9ghJp+UZFL1rbN52nAStXwZnt06ik=;
-        b=KP786+Rh+81e9veyQ7Q0U41gnpDhDEPoYdzASPeXBeeF+M4GDmIQ4gGqHKpQ07wn3q
-         /qashwcyY86rYpsA1v/VJqEkklB5tsJzpzeNgsUEKf7dyDaaUh3+dwc8jLh0RiMh8K2g
-         WpzS+O9kd98HHMr5jyl9ofUEkHMU/IrE3fsnfnWz+W3uhnmYmd5JJDofWG9jZoZKhEk7
-         7nou/HpaDkIH1XAzVhJReQoDaJWfGVyeWisxkIOAI9pTKDPcdsABXD09IXJD9Qv5lHIA
-         ooxtg1UOCtaqB0+FxHsV9JVmgPA86Z2FScFAxH3At4BjznM8BkpWSmC35FWs/peKt9g5
-         neLQ==
-X-Gm-Message-State: AOAM530R45PtPLlyvsXstKlTxD5lOUoHd19RdigURAr/q56sff6qLUBt
-        Cc15Ieod68iP1nTwC1N2LPi7q7tIHpYl+u55bjGWEZOtAvabnQ==
-X-Google-Smtp-Source: ABdhPJzZ+IRt86SAUE9RZaZAhh4bMMshWojIXvUJcZgmKMK3zXKZdhTbdtWN5+3DmNxvyGRwBROsZW3ZpQBUyfXCT24=
-X-Received: by 2002:a9d:7d14:0:b0:5ad:30ba:e8fc with SMTP id
- v20-20020a9d7d14000000b005ad30bae8fcmr18916808otn.127.1646315670175; Thu, 03
- Mar 2022 05:54:30 -0800 (PST)
+        bh=BVjgcGGkTWKO8YOUuDLAXRPVmUUyH2fnEbHGP0PNh6M=;
+        b=u1j7jhofyt0PdHZGafnB0f+qoxUjJbGURZljGcrFDgBhKGkvX88RVFr8G0Zfx55Huq
+         vtxgEukpPem/uUsGnGPm2dOxSpBEkwzXGHyfatEnWw5QpvpZTVsRig96uqHpNl+DY6pR
+         F2vzVsisgGI164/vLQaAuvJLGO82xXMj7+mesF6O6VjkmNzHtPzllp29qBLdXlc6V94O
+         sTvGh0ksDt8c2Nt96t5uHMaPNCiuhKY7wQud16J8Cc+p6FmaPRHEmnTP4IPmtpsLCyhx
+         7FsjqXI87wQBnpZhvYC+bGBQtCenWCsPJE8RG5RnkJoTfV9+j7jOfUWxaysYAAc/+HhO
+         JVLg==
+X-Gm-Message-State: AOAM531I39XhRKp43mFdu9uO352655t87bOzgxPy+jSTqSnv70jWrxKU
+        HlSOtcCqBJ4nNsloa7tojWUV1zbD6Uu361lQCkT+1Q==
+X-Google-Smtp-Source: ABdhPJyxlCBuZ7/lL4NsbrGZ7lF/Cz7N4tdKs6VJhA3fA06KVBapRPLaXki2y08g/B2KUsWygcnpQrGyaVIsi6fePa4=
+X-Received: by 2002:a05:6870:7391:b0:d9:ae66:b8df with SMTP id
+ z17-20020a056870739100b000d9ae66b8dfmr3736701oam.7.1646315820849; Thu, 03 Mar
+ 2022 05:57:00 -0800 (PST)
 MIME-Version: 1.0
-References: <20220224233056.398054-1-damien.lemoal@opensource.wdc.com> <yq1sfs1yob5.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1sfs1yob5.fsf@ca-mkp.ca.oracle.com>
+References: <20220222150319.28397-1-jpittman@redhat.com> <CAFdVvOzsSECZsjtniH5LCoBT-h01KHfGwose9awH1PN=-7yp0w@mail.gmail.com>
+ <yq1y21tyocp.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1y21tyocp.fsf@ca-mkp.ca.oracle.com>
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date:   Thu, 3 Mar 2022 19:24:18 +0530
-Message-ID: <CAK=zhgpspRmVszy+rzzF-9QEnjHC-p+aKWwE9Q37wKQ=NB22Og@mail.gmail.com>
-Subject: Re: [PATCH v2 0/5] Fix mpt3sas driver sparse warnings
+Date:   Thu, 3 Mar 2022 19:26:49 +0530
+Message-ID: <CAK=zhgoGc98eHN9aPq47tALSzMKZXTjL7CSf=sdM1wEif4epog@mail.gmail.com>
+Subject: Re: [PATCH] scsi: mpt3sas: decrease potential frequency of
+ scsi_dma_map errors
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
+Cc:     John Pittman <jpittman@redhat.com>,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>,
-        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>,
+        Laurence Oberman <loberman@redhat.com>,
+        David Jeffery <djeffery@redhat.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ba25c205d950bc3b"
+        boundary="000000000000b4c85205d950c543"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ba25c205d950bc3b
+--000000000000b4c85205d950c543
 Content-Type: text/plain; charset="UTF-8"
 
 On Wed, Mar 2, 2022 at 9:54 AM Martin K. Petersen
 <martin.petersen@oracle.com> wrote:
 >
 >
-> > This series fix (remove) all sparse warnings generated when compiling
-> > the mpt3sas driver. All warnings are related to __iomem access and
-> > endianness.
-> >
-> > The series was tested on top of Martin's 5.18/scsi-staging branch with
-> > a 9400-8i HBA with direct attached iSAS and SATA drives. The fixes
-> > need careful review by the maintainers as there is no documentation
-> > clearly explaning the proper endianness of the values touched.
+> > ACK by BRCM.
 >
-> Broadcom: Please review!
+> Please resubmit with message removed as requested by Christoph.
 
-Sure Martin. I will complete the review by the end of this week.
+Posted below patch to remove these error messages,
+mpt3sas: Remove scsi_dma_map errors messages
+https://patchwork.kernel.org/project/linux-scsi/patch/20220303140203.12642-1-sreekanth.reddy@broadcom.com/
 
 >
 > --
 > Martin K. Petersen      Oracle Linux Engineering
 
---000000000000ba25c205d950bc3b
+--000000000000b4c85205d950c543
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -156,13 +156,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMJDUpU1GM6z/3Lc7HkM
-YRho795+369Kt2bFpw+GF6GQMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDMwMzEzNTQzMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOLgSBXZFfclGKX6feTe
+X5xGqlyasbV1fF7D9b19oscOMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDMwMzEzNTcwMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCyeUKo78K3m4kExFzM2d/vdotJYeeQniKa9JQq
-yyNJeVCvOHN7U9KNHYsB8gUAUiT24R9zEO/jKFxVi6JlZU2sHR6MhfrDNUqtWi87rDinlCJH2koF
-/FFoCp1i2N+l20oJ7N2XF5dZDsuOZ7SDZ7BKui3ScRES0W5RgHwRRca2BccT+MEhaUOcXD4nV/q2
-kdrybEVKyeazAKAcAyngnVjDuslBK69SK39nXWBhC0OPM5W3jjyoXj3mWTZ3pXqAwVzn8NKfr63N
-iNnjnFFz1rldSUaAyFQSf1qRnudsiQhJxJz3Be5fiwD9Y2OITJlwBuhgKjiW+K673v1+KJMQDmGe
---000000000000ba25c205d950bc3b--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBKUDRPo/jHO091+iOQDJ5rLHGgrkWJ+T9CWXaj
+5Qfzt0oCggIVBsElTemDLfZzNp+Q+hxey9A/eJFKGgtcV1ZFCg8h9981ifOJ28+VwSRucEPtvar9
+c1UmMfKdRHUI2nFS+svxffryHS/F2yntXqRpXzavdWNyN4OA7ctLN8GVP/ivO3q+LsrxBTga4Toz
+q0yzW9Ff9BVzfHVhZU4aIC26Ze/hEHakwzaBTFoRgUQPu/fbLUw5VbwLLkuiUpRR54EwIdKJB1TM
+RDx0fnfw4ELVkfvebirh7RD8ZJ8sMsXEwix1RCS3oHXfrt+PPKbsAFIAA25O64Z8M0jRZU5oGQ85
+--000000000000b4c85205d950c543--
