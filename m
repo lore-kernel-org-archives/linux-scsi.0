@@ -2,141 +2,206 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E115C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 13:45:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED955C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 13:51:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233840AbiCCNqN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 08:46:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52832 "EHLO
+        id S233772AbiCCNwi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 08:52:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232070AbiCCNqM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 08:46:12 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8827A18A7B1;
-        Thu,  3 Mar 2022 05:45:26 -0800 (PST)
-Received: from dggpemm500021.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4K8XJk69WQzdZwK;
-        Thu,  3 Mar 2022 21:44:06 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500021.china.huawei.com (7.185.36.109) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Thu, 3 Mar 2022 21:45:24 +0800
-Received: from huawei.com (10.175.101.6) by dggpemm500017.china.huawei.com
- (7.185.36.178) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 3 Mar
- 2022 21:45:23 +0800
-From:   Wenchao Hao <haowenchao@huawei.com>
-To:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     Wu Bo <wubo40@huawei.com>, Zhiqiang Liu <liuzhiqiang26@huawei.com>,
-        <linfeilong@huawei.com>, Wenchao Hao <haowenchao@huawei.com>
-Subject: [PATCH 1/2] iscsi_tcp: Fix NULL pointer dereference in iscsi_sw_tcp_conn_get_param()
-Date:   Thu, 3 Mar 2022 21:56:07 -0500
-Message-ID: <20220304025608.1874516-1-haowenchao@huawei.com>
-X-Mailer: git-send-email 2.32.0
+        with ESMTP id S230384AbiCCNwh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 08:52:37 -0500
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C81A18A7AA
+        for <linux-scsi@vger.kernel.org>; Thu,  3 Mar 2022 05:51:51 -0800 (PST)
+Received: by mail-pl1-x629.google.com with SMTP id t19so1031376plr.5
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Mar 2022 05:51:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=MWOK+gixXJX4NeVIpPL8YjzwrYMDMq3x89FHvMWMcXc=;
+        b=DPGm+MsLMCo0jeLzAvPOR5ThESHU87Du7FSTFUinkQVp9zY8SvAbh60B7cLHv683SX
+         R0XIOnSbetk2Vq1ZlxLh5Hln6bVeX0OkuqV6t48ZLO671QFU8fjJ2RM7lSXr0GIlzFgi
+         p38S7zGk2iCR7hzuYevhFezV606p1z2sUYjDw=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=MWOK+gixXJX4NeVIpPL8YjzwrYMDMq3x89FHvMWMcXc=;
+        b=MhjoRpKifRlV3KtsW4jdpqGrYfeLeJxhZtdPAhyDQzs2sP1f213En9deJI1FwaaQqq
+         0DnzGJ7/KVnzy5ErdzDl833QY21TtVIWtcCKSfEbyq+n6VQ0kFp30ZazeplDBx0XTDIg
+         PuqfHobLRlJKBgSEeBwgtx+6gDy+7P0/Y6ksNwgHmft1d4la91uqx9aUBrLAUwmXQ9ko
+         Vobvu2OdZ2fzV0U79kyhlF4IZ9xx6xixH8DjRKeA6IUXxvZaBdDuPCtNMxUlDi8dC8gU
+         /uh/QikuDBezMmySpN9abdve7ioZs5VWIX7fKXO5Lvr9QLUo2+h1EXdrknpQABtGV/Ua
+         /Q7A==
+X-Gm-Message-State: AOAM532eAm2CBqJK66IAcE/G9dhL8Q9Y4vodTzCDyhgjiPak4WudQK7I
+        rBiXfX7Ejs6hV8e1ugy6ORRCgEkE2C3Nbb3Dvc3NS1daVkwxFxSlTN382LsZ4XqZNZeG1Y+CHc0
+        LoKErVCodZA2o9FGLDGE3k/CLkY0rzd/NOOTeDE+9HggdU3ooEFw3xQ4hAGlj2mXqURXzoAfHAG
+        NE7NlD4T2fC3M=
+X-Google-Smtp-Source: ABdhPJyKV7CMKhoemC4YoxWMXmEJvbKIlO/lGo4QUo4vULmhAZ1B1Q08ewqzQDQXqLB6aTsbPIHJpQ==
+X-Received: by 2002:a17:902:9887:b0:151:6e1c:7082 with SMTP id s7-20020a170902988700b001516e1c7082mr18707178plp.162.1646315510530;
+        Thu, 03 Mar 2022 05:51:50 -0800 (PST)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id oa2-20020a17090b1bc200b001bcff056f09sm2346740pjb.13.2022.03.03.05.51.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Mar 2022 05:51:49 -0800 (PST)
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: Remove scsi_dma_map errors messages
+Date:   Thu,  3 Mar 2022 19:32:03 +0530
+Message-Id: <20220303140203.12642-1-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="00000000000039f39605d950b36f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-kernel might crash in iscsi_sw_tcp_conn_get_param() because it dereference
-an invalid address.
+--00000000000039f39605d950b36f
+Content-Transfer-Encoding: 8bit
 
-The initialization of iscsi_conn's dd_data is after device_register() of
-struct iscsi_cls_conn, so iscsi_conn's dd_data might not initialized when
-iscsi_sw_tcp_conn_get_param() is called.
+When scsi_dma_map() fails by returning a sges_left value less than
+zero, the amount of logging can be extremely high.  In a recent
+end-user environment, 1200 messages per second were being sent to
+the log buffer.  This eventually overwhelmed the system and it
+stalled. Also these error messages are not needed and hence
+removing them.
 
-Following stack would be reported and kernel would panic.
-
-[449311.812887] Unable to handle kernel NULL pointer dereference at virtual address 0000000000000008
-[449311.812893] Mem abort info:
-[449311.812895]   ESR = 0x96000004
-[449311.812899]   Exception class = DABT (current EL), IL = 32 bits
-[449311.812901]   SET = 0, FnV = 0
-[449311.812903]   EA = 0, S1PTW = 0
-[449311.812905] Data abort info:
-[449311.812907]   ISV = 0, ISS = 0x00000004
-[449311.812909]   CM = 0, WnR = 0
-[449311.812915] user pgtable: 4k pages, 48-bit VAs, pgdp = 00000000e26e7ace
-[449311.812918] [0000000000000008] pgd=0000000000000000
-[449311.812925] Internal error: Oops: 96000004 [#1] SMP
-[449311.814974] Process iscsiadm (pid: 8286, stack limit = 0xffff800010f78000)
-[449311.815570] CPU: 0 PID: 8286 Comm: iscsiadm Kdump: loaded Tainted: G    B   W         4.19.90-vhulk2201.1.0.h1021.kasan.eulerosv2r10.aarch64 #1
-[449311.816584] sd 1:0:0:1: [sdg] Attached SCSI disk
-[449311.816695] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 02/06/2015
-[449311.817677] pstate: 40400005 (nZcv daif +PAN -UAO)
-[449311.818121] pc : iscsi_sw_tcp_conn_get_param+0xec/0x300 [iscsi_tcp]
-[449311.818688] lr : iscsi_sw_tcp_conn_get_param+0xe8/0x300 [iscsi_tcp]
-[449311.819244] sp : ffff800010f7f890
-[449311.819542] x29: ffff800010f7f890 x28: ffff8000cb1bea38
-[449311.820025] x27: ffff800010911010 x26: ffff2000028887a4
-[449311.820500] x25: ffff800009200d98 x24: ffff800010911000
-[449311.820973] x23: 0000000000000000 x22: ffff8000cb1bea28
-[449311.821458] x21: 0000000000000015 x20: ffff200081afa000
-[449311.821934] x19: 1ffff000021eff20 x18: 0000000000000000
-[449311.822414] x17: 0000000000000000 x16: ffff200080618220
-[449311.822891] x15: 0000000000000000 x14: 0000000000000000
-[449311.823413] x13: 0000000000000000 x12: 0000000000000000
-[449311.823897] x11: 1ffff0001ab4f41f x10: ffff10001ab4f41f
-[449311.824373] x9 : 0000000000000000 x8 : ffff8000d5a7a100
-[449311.824847] x7 : 0000000000000000 x6 : dfff200000000000
-[449311.825329] x5 : ffff1000021eff20 x4 : ffff8000cb1bea30
-[449311.825806] x3 : ffff200002911178 x2 : ffff2000841ff000
-[449311.826281] x1 : e0c234eab8420c00 x0 : ffff8000cb1bea38
-[449311.826756] Call trace:
-[449311.826987]  iscsi_sw_tcp_conn_get_param+0xec/0x300 [iscsi_tcp]
-[449311.827550]  show_conn_ep_param_ISCSI_PARAM_CONN_ADDRESS+0xe4/0x100 [scsi_transport_iscsi]
-[449311.828304]  dev_attr_show+0x58/0xb0
-[449311.828639]  sysfs_kf_seq_show+0x124/0x210
-[449311.829014]  kernfs_seq_show+0x8c/0xa0
-[449311.829362]  seq_read+0x188/0x8a0
-[449311.829667]  kernfs_fop_read+0x250/0x398
-[449311.830024]  __vfs_read+0xe0/0x350
-[449311.830339]  vfs_read+0xbc/0x1c0
-[449311.830635]  ksys_read+0xdc/0x1b8
-[449311.830941]  __arm64_sys_read+0x50/0x60
-[449311.831295]  el0_svc_common+0xc8/0x320
-[449311.831642]  el0_svc_handler+0xf8/0x160
-[449311.831998]  el0_svc+0x10/0x218
-[449311.832292] Code: f94006d7 910022e0 940007bb aa1c03e0 (f94006f9)
-
-Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
-Signed-off-by: Wu Bo <wubo40@huawei.com>
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/iscsi_tcp.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 18 +++---------------
+ 1 file changed, 3 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 1bc37593c88f..14db224486be 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -741,11 +741,16 @@ static int iscsi_sw_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
- {
- 	struct iscsi_conn *conn = cls_conn->dd_data;
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
--	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
-+	struct iscsi_sw_tcp_conn *tcp_sw_conn;
- 	struct sockaddr_in6 addr;
- 	struct socket *sock;
- 	int rc;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 511726f92d9a..ebb61b47dc2f 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2593,12 +2593,8 @@ _base_check_pcie_native_sgl(struct MPT3SAS_ADAPTER *ioc,
  
-+	if (!tcp_conn)
-+		return -ENOTCONN;
-+
-+	tcp_sw_conn = tcp_conn->dd_data;
-+
- 	switch(param) {
- 	case ISCSI_PARAM_CONN_PORT:
- 	case ISCSI_PARAM_CONN_ADDRESS:
+ 	/* Get the SG list pointer and info. */
+ 	sges_left = scsi_dma_map(scmd);
+-	if (sges_left < 0) {
+-		sdev_printk(KERN_ERR, scmd->device,
+-			"scsi_dma_map failed: request for %d bytes!\n",
+-			scsi_bufflen(scmd));
++	if (sges_left < 0)
+ 		return 1;
+-	}
+ 
+ 	/* Check if we need to build a native SG list. */
+ 	if (!base_is_prp_possible(ioc, pcie_device,
+@@ -2705,12 +2701,8 @@ _base_build_sg_scmd(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	sg_scmd = scsi_sglist(scmd);
+ 	sges_left = scsi_dma_map(scmd);
+-	if (sges_left < 0) {
+-		sdev_printk(KERN_ERR, scmd->device,
+-		 "scsi_dma_map failed: request for %d bytes!\n",
+-		 scsi_bufflen(scmd));
++	if (sges_left < 0)
+ 		return -ENOMEM;
+-	}
+ 
+ 	sg_local = &mpi_request->SGL;
+ 	sges_in_segment = ioc->max_sges_in_main_message;
+@@ -2853,12 +2845,8 @@ _base_build_sg_scmd_ieee(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	sg_scmd = scsi_sglist(scmd);
+ 	sges_left = scsi_dma_map(scmd);
+-	if (sges_left < 0) {
+-		sdev_printk(KERN_ERR, scmd->device,
+-			"scsi_dma_map failed: request for %d bytes!\n",
+-			scsi_bufflen(scmd));
++	if (sges_left < 0)
+ 		return -ENOMEM;
+-	}
+ 
+ 	sg_local = &mpi_request->SGL;
+ 	sges_in_segment = (ioc->request_sz -
 -- 
-2.32.0
+2.27.0
 
+
+--00000000000039f39605d950b36f
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+5AGo2E3pe+2yEgkxKvM2fnniZHUiSjbrfKk6nl9RIXPOKUP5HntZFdA5XuNYXWM+HPs3O0AJwBm/
+VCZsZtkjVjxeBmTXiXDnxytdsHdGrHGymPfjJYatDu6d1KRVDlMCAwEAAaOCAd0wggHZMA4GA1Ud
+DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
+Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
+BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
+Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
+aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
+JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
+BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUClVHbAvhzGT8
+s2/6xOf58NkGMQ8wDQYJKoZIhvcNAQELBQADggEBAENRsP1H3calKC2Sstg/8li8byKiqljCFkfi
+IhcJsjPOOR9UZnMFxAoH/s2AlM7mQDR7rZ2MxRuUnIa6Cp5W5w1lUJHktjCUHnQq5nIAZ9GH5SDY
+pgzbFsoYX8U2QCmkAC023FF++ZDJuc9aj0R/nhABxmUYErIze2jV/VO8Pj7TnCrBONZ/Qvf8G5CQ
+X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
+eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
+Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
+MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMENhTTc8tRWJmt/QswE
+WTGlc6DYfEgpp0+KbSCrNBkkMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDMwMzEzNTE1MVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBF5ZExrhuLLlW7fQzBFOKyQWIm6PcuttQWBJX9
+y0leEwIKu72/Is2DVCjwdZdg12vUljOv1XhSxCiALcjFo86g7mgKCLgcBw0o0EdkCHBCeJRUgIqb
+N+Lmw3bvu6j3bEodQU6pLNn7aD2Ca7XTZsBbdbD/nPZEKCVMb+yg6EOIw9rdonu5p2Nq17HXabcm
+oKHxn3HMmHlDxEVjWuXJrMVulxcCClsQnkb6tIMS1mSY4fhcTE0HDTdEGZB8IO+otZTtcm1+aTaA
+zUiYIAZZnBVRvdh2ud+Zfewj4aikQ/aDUjiIa3czBfo6mXlL21j+NQRRqz2e7MoxC6siLAOFFry2
+--00000000000039f39605d950b36f--
