@@ -2,168 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A05A6C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 13:52:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21971C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 13:54:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233772AbiCCNxE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 08:53:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35404 "EHLO
+        id S233295AbiCCNzT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 08:55:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230384AbiCCNxE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 08:53:04 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A19E1795DC
-        for <linux-scsi@vger.kernel.org>; Thu,  3 Mar 2022 05:52:18 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id bx5so4629872pjb.3
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Mar 2022 05:52:18 -0800 (PST)
+        with ESMTP id S230230AbiCCNzQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 08:55:16 -0500
+Received: from mail-ot1-x32f.google.com (mail-ot1-x32f.google.com [IPv6:2607:f8b0:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DED5918A79E
+        for <linux-scsi@vger.kernel.org>; Thu,  3 Mar 2022 05:54:30 -0800 (PST)
+Received: by mail-ot1-x32f.google.com with SMTP id k9-20020a056830242900b005ad25f8ebfdso4638957ots.7
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Mar 2022 05:54:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=athXeL9enq5NDZ2c8XIOUaCPv0/mTgSdb3Eh7gkk5OI=;
-        b=NhSd7RGEgJFvniyppuWF7xFSTMKP1j7HogVSLq6TYX4OXtCbkImxUrn/qwjcWv/kRn
-         v2N+R5FVws9uyR9z30qEGL3GnjRWkAsbhvQGFUyfNcRYYCIgSgRdsEOPDqFJXK1a3RGJ
-         l0ULWQHo/mYkX/s4rI32/jzh3cpXHbGqPtbMk=
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=IijNdGC+6WVWwT9ghJp+UZFL1rbN52nAStXwZnt06ik=;
+        b=ILSDaPA5QQ3AaGxyswslIN2IhY1blbXCaou1G87S34976DsglBCQjqbKn4piSdS1fO
+         kGglbSChWE/tF3VexFOnD25BguXGlMjzpJSfFWwYt3jT+LJgaIKY+RPViIdIG+va8VST
+         KYQqVelUPQmL/zDKGI7Qxqt9hlsHSIB40YyKU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=athXeL9enq5NDZ2c8XIOUaCPv0/mTgSdb3Eh7gkk5OI=;
-        b=Ty4ddtrjUaZFblC30VqL2HVZDt/xpOgTid6rDzbW2GFBpOcAxzIHGWR70Bn63vCe5c
-         egFkALZCP3KVmmhO2DGA7J8gYlrcdCuB3akF2rHij+tQphc7XkBF4oTyYSgu+7ayUIoZ
-         4SH0k4h8Si7Sv8mRWMzszARNrWxrc/9vTUOVywgwkmd9aZ1C7Lb0aCfBbXSk72tfzDnd
-         TbIWM4MXG4jpQPJEc1kmIGzhFbfVtw5bL0GBbpcxeSc3Js2HEjW3XWZL5ZJUbi5GEoAn
-         jxLKTjw35MbmzbiAbliaJbfAh7SjA7ciSooNEL+GyXdpPwXbnttif82CQ24XPd3WvXSG
-         hzSA==
-X-Gm-Message-State: AOAM533q6NyNkLb1pb+v5ioL27H3iZn+8lH4CUaxrzAFD801mrSVEYnn
-        iZs/cVQVWNjPfhOe1kxcrPjUhoiJC3cVuDL5tvN7qKxZyFCrBGpj4cIXTG/aeRfSJhOY/Y3hYFG
-        rbH5tvWRZZqMVeAVXcT55RttA/0cxoEcHUPx7F/Avk5qUPRnJ73Uxe7dcj6Un5x38zOOakhrq4y
-        eUIvr/emXgLLo=
-X-Google-Smtp-Source: ABdhPJwduJDi9rzsgU6fSSckuTpDAPjQxLuSyxq41Mm4OBnCMdfl6T2xe0AWirkqP/G5jKn0dec8ZQ==
-X-Received: by 2002:a17:90a:bf86:b0:1bd:6057:b77c with SMTP id d6-20020a17090abf8600b001bd6057b77cmr5418470pjs.72.1646315537343;
-        Thu, 03 Mar 2022 05:52:17 -0800 (PST)
-Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id i128-20020a626d86000000b004f3f2929d7asm2579757pfc.217.2022.03.03.05.52.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Mar 2022 05:52:16 -0800 (PST)
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH] mpt3sas: Fix incorrect 4gb boundary check
-Date:   Thu,  3 Mar 2022 19:32:30 +0530
-Message-Id: <20220303140230.13098-1-sreekanth.reddy@broadcom.com>
-X-Mailer: git-send-email 2.27.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=IijNdGC+6WVWwT9ghJp+UZFL1rbN52nAStXwZnt06ik=;
+        b=KP786+Rh+81e9veyQ7Q0U41gnpDhDEPoYdzASPeXBeeF+M4GDmIQ4gGqHKpQ07wn3q
+         /qashwcyY86rYpsA1v/VJqEkklB5tsJzpzeNgsUEKf7dyDaaUh3+dwc8jLh0RiMh8K2g
+         WpzS+O9kd98HHMr5jyl9ofUEkHMU/IrE3fsnfnWz+W3uhnmYmd5JJDofWG9jZoZKhEk7
+         7nou/HpaDkIH1XAzVhJReQoDaJWfGVyeWisxkIOAI9pTKDPcdsABXD09IXJD9Qv5lHIA
+         ooxtg1UOCtaqB0+FxHsV9JVmgPA86Z2FScFAxH3At4BjznM8BkpWSmC35FWs/peKt9g5
+         neLQ==
+X-Gm-Message-State: AOAM530R45PtPLlyvsXstKlTxD5lOUoHd19RdigURAr/q56sff6qLUBt
+        Cc15Ieod68iP1nTwC1N2LPi7q7tIHpYl+u55bjGWEZOtAvabnQ==
+X-Google-Smtp-Source: ABdhPJzZ+IRt86SAUE9RZaZAhh4bMMshWojIXvUJcZgmKMK3zXKZdhTbdtWN5+3DmNxvyGRwBROsZW3ZpQBUyfXCT24=
+X-Received: by 2002:a9d:7d14:0:b0:5ad:30ba:e8fc with SMTP id
+ v20-20020a9d7d14000000b005ad30bae8fcmr18916808otn.127.1646315670175; Thu, 03
+ Mar 2022 05:54:30 -0800 (PST)
 MIME-Version: 1.0
+References: <20220224233056.398054-1-damien.lemoal@opensource.wdc.com> <yq1sfs1yob5.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1sfs1yob5.fsf@ca-mkp.ca.oracle.com>
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date:   Thu, 3 Mar 2022 19:24:18 +0530
+Message-ID: <CAK=zhgpspRmVszy+rzzF-9QEnjHC-p+aKWwE9Q37wKQ=NB22Og@mail.gmail.com>
+Subject: Re: [PATCH v2 0/5] Fix mpt3sas driver sparse warnings
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000d3770905d950b49c"
+        boundary="000000000000ba25c205d950bc3b"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000d3770905d950b49c
-Content-Transfer-Encoding: 8bit
+--000000000000ba25c205d950bc3b
+Content-Type: text/plain; charset="UTF-8"
 
-Driver has to do a 4gb boundary check using the pool's
-dma address instead of using a virtual address.
+On Wed, Mar 2, 2022 at 9:54 AM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>
+> > This series fix (remove) all sparse warnings generated when compiling
+> > the mpt3sas driver. All warnings are related to __iomem access and
+> > endianness.
+> >
+> > The series was tested on top of Martin's 5.18/scsi-staging branch with
+> > a 9400-8i HBA with direct attached iSAS and SATA drives. The fixes
+> > need careful review by the maintainers as there is no documentation
+> > clearly explaning the proper endianness of the values touched.
+>
+> Broadcom: Please review!
 
-Fixes: d6adc251dd2f("mpt3sas: Force PCIe scatterlist allocations to be within same 4 GB region")
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+Sure Martin. I will complete the review by the end of this week.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index ebb61b47dc2f..a10ceaa8f881 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -5723,14 +5723,13 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
-  */
- 
- static int
--mpt3sas_check_same_4gb_region(long reply_pool_start_address, u32 pool_sz)
-+mpt3sas_check_same_4gb_region(dma_addr_t start_address, u32 pool_sz)
- {
--	long reply_pool_end_address;
-+	dma_addr_t end_address;
- 
--	reply_pool_end_address = reply_pool_start_address + pool_sz;
-+	end_address = start_address + pool_sz - 1;
- 
--	if (upper_32_bits(reply_pool_start_address) ==
--		upper_32_bits(reply_pool_end_address))
-+	if (upper_32_bits(start_address) == upper_32_bits(end_address))
- 		return 1;
- 	else
- 		return 0;
-@@ -5791,7 +5790,7 @@ _base_allocate_pcie_sgl_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
- 		}
- 
- 		if (!mpt3sas_check_same_4gb_region(
--		    (long)ioc->pcie_sg_lookup[i].pcie_sgl, sz)) {
-+		    ioc->pcie_sg_lookup[i].pcie_sgl_dma, sz)) {
- 			ioc_err(ioc, "PCIE SGLs are not in same 4G !! pcie sgl (0x%p) dma = (0x%llx)\n",
- 			    ioc->pcie_sg_lookup[i].pcie_sgl,
- 			    (unsigned long long)
-@@ -5846,8 +5845,8 @@ _base_allocate_chain_dma_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
- 			    GFP_KERNEL, &ctr->chain_buffer_dma);
- 			if (!ctr->chain_buffer)
- 				return -EAGAIN;
--			if (!mpt3sas_check_same_4gb_region((long)
--			    ctr->chain_buffer, ioc->chain_segment_sz)) {
-+			if (!mpt3sas_check_same_4gb_region(
-+			    ctr->chain_buffer_dma, ioc->chain_segment_sz)) {
- 				ioc_err(ioc,
- 				    "Chain buffers are not in same 4G !!! Chain buff (0x%p) dma = (0x%llx)\n",
- 				    ctr->chain_buffer,
-@@ -5883,7 +5882,7 @@ _base_allocate_sense_dma_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
- 	    GFP_KERNEL, &ioc->sense_dma);
- 	if (!ioc->sense)
- 		return -EAGAIN;
--	if (!mpt3sas_check_same_4gb_region((long)ioc->sense, sz)) {
-+	if (!mpt3sas_check_same_4gb_region(ioc->sense_dma, sz)) {
- 		dinitprintk(ioc, pr_err(
- 		    "Bad Sense Pool! sense (0x%p) sense_dma = (0x%llx)\n",
- 		    ioc->sense, (unsigned long long) ioc->sense_dma));
-@@ -5916,7 +5915,7 @@ _base_allocate_reply_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
- 	    &ioc->reply_dma);
- 	if (!ioc->reply)
- 		return -EAGAIN;
--	if (!mpt3sas_check_same_4gb_region((long)ioc->reply_free, sz)) {
-+	if (!mpt3sas_check_same_4gb_region(ioc->reply_dma, sz)) {
- 		dinitprintk(ioc, pr_err(
- 		    "Bad Reply Pool! Reply (0x%p) Reply dma = (0x%llx)\n",
- 		    ioc->reply, (unsigned long long) ioc->reply_dma));
-@@ -5951,7 +5950,7 @@ _base_allocate_reply_free_dma_pool(struct MPT3SAS_ADAPTER *ioc, u32 sz)
- 	    GFP_KERNEL, &ioc->reply_free_dma);
- 	if (!ioc->reply_free)
- 		return -EAGAIN;
--	if (!mpt3sas_check_same_4gb_region((long)ioc->reply_free, sz)) {
-+	if (!mpt3sas_check_same_4gb_region(ioc->reply_free_dma, sz)) {
- 		dinitprintk(ioc,
- 		    pr_err("Bad Reply Free Pool! Reply Free (0x%p) Reply Free dma = (0x%llx)\n",
- 		    ioc->reply_free, (unsigned long long) ioc->reply_free_dma));
-@@ -5990,7 +5989,7 @@ _base_allocate_reply_post_free_array(struct MPT3SAS_ADAPTER *ioc,
- 	    GFP_KERNEL, &ioc->reply_post_free_array_dma);
- 	if (!ioc->reply_post_free_array)
- 		return -EAGAIN;
--	if (!mpt3sas_check_same_4gb_region((long)ioc->reply_post_free_array,
-+	if (!mpt3sas_check_same_4gb_region(ioc->reply_post_free_array_dma,
- 	    reply_post_free_array_sz)) {
- 		dinitprintk(ioc, pr_err(
- 		    "Bad Reply Free Pool! Reply Free (0x%p) Reply Free dma = (0x%llx)\n",
-@@ -6055,7 +6054,7 @@ base_alloc_rdpq_dma_pool(struct MPT3SAS_ADAPTER *ioc, int sz)
- 			 * resources and set DMA mask to 32 and allocate.
- 			 */
- 			if (!mpt3sas_check_same_4gb_region(
--				(long)ioc->reply_post[i].reply_post_free, sz)) {
-+				ioc->reply_post[i].reply_post_free_dma, sz)) {
- 				dinitprintk(ioc,
- 				    ioc_err(ioc, "bad Replypost free pool(0x%p)"
- 				    "reply_post_free_dma = (0x%llx)\n",
--- 
-2.27.0
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
 
-
---000000000000d3770905d950b49c
+--000000000000ba25c205d950bc3b
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -234,13 +156,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMx1Xj2CO5RJEBKmk5xr
-HgwlnE4o2kWoWLgLZvFhjpuwMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDMwMzEzNTIxN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMJDUpU1GM6z/3Lc7HkM
+YRho795+369Kt2bFpw+GF6GQMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDMwMzEzNTQzMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDCvXL0iFfXxDJK816hotcXDFOnq64iyfYNk2Kd
-4DoTi5JcwAiX7wIlHFnjiD9X8M4lUodI5PHpf3ktJk4okmJtyuWw2mkvmO5ED6822dw24VJxSr3t
-nRZYc7vndi36UASziFPz2lrlaI16/o07BRUjl0zXFfVZoQFcTaP6Hwth5QwRPsiAu7asFDXASV22
-z97+Prb311Ue1UWPJ2YBb3OkZxmTR0FmcOZ7NgKVjPuxkKEcM6EvtrphqcXzUmAszbzXzsRhLKE3
-Jp8IYOm8Hidl8NcrOXKhu0VrhpTNnpUGaGAKMFT9jTX4ZUDy389qW9p/g7xsQX/dMkoo0g/+e8Vu
---000000000000d3770905d950b49c--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCyeUKo78K3m4kExFzM2d/vdotJYeeQniKa9JQq
+yyNJeVCvOHN7U9KNHYsB8gUAUiT24R9zEO/jKFxVi6JlZU2sHR6MhfrDNUqtWi87rDinlCJH2koF
+/FFoCp1i2N+l20oJ7N2XF5dZDsuOZ7SDZ7BKui3ScRES0W5RgHwRRca2BccT+MEhaUOcXD4nV/q2
+kdrybEVKyeazAKAcAyngnVjDuslBK69SK39nXWBhC0OPM5W3jjyoXj3mWTZ3pXqAwVzn8NKfr63N
+iNnjnFFz1rldSUaAyFQSf1qRnudsiQhJxJz3Be5fiwD9Y2OITJlwBuhgKjiW+K673v1+KJMQDmGe
+--000000000000ba25c205d950bc3b--
