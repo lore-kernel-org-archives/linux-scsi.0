@@ -2,244 +2,206 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04C24C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 14:01:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EC15C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 14:59:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233884AbiCCOCW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 09:02:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54724 "EHLO
+        id S234211AbiCCPAW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 10:00:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233880AbiCCOCV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 09:02:21 -0500
-Received: from mail-ot1-x332.google.com (mail-ot1-x332.google.com [IPv6:2607:f8b0:4864:20::332])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEACFCEA28
-        for <linux-scsi@vger.kernel.org>; Thu,  3 Mar 2022 06:01:31 -0800 (PST)
-Received: by mail-ot1-x332.google.com with SMTP id a7-20020a9d5c87000000b005ad1467cb59so4661279oti.5
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Mar 2022 06:01:31 -0800 (PST)
+        with ESMTP id S234205AbiCCPAU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 10:00:20 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63210DE2F8;
+        Thu,  3 Mar 2022 06:59:34 -0800 (PST)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 223C094w028870;
+        Thu, 3 Mar 2022 14:59:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=NdTOJvEPuVWz7NT6CQ3oHJj3AAdJcYuXcEu5GoiwbKU=;
+ b=k2A4DJsEBFtW3PwiWhpsJCQf6D42beL8wZxEMtc0/3R+T3MBDurjyRzxqqAsVqGV/nxk
+ E+960Zgb8YzjO+Hg8Os/Qg18yqzuV1pttYX9ejYkG+baRV7MNDsUHCbdMGNKR8zlEtXX
+ tPbSg2Iq9bSVgwx5iahnlPVSsRUFQeHwOF+Pm31J4yg5cy7010NannFIPW/9XhMnXWgw
+ lIkNGq+TRPgqazIdDPhiZyhDYWVVjzjG3l+Gz3Jot6bRFd194g7kEb2Dp6xJkX/t18iS
+ 7DD4fEKR97o0bhZ7F3oSprZFGvqJVLK+XvOVx/OKJNXWNTGEns14Hm3KZ8M9iIBo63yv mg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3eh14c1376-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 03 Mar 2022 14:59:15 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 223Eu7aO164498;
+        Thu, 3 Mar 2022 14:59:14 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2104.outbound.protection.outlook.com [104.47.58.104])
+        by userp3030.oracle.com with ESMTP id 3ef9b3k7yc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 03 Mar 2022 14:59:14 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BGDuo4xppngLzfmyrBY3RtbpHfqwbOJBLmmxNViiNiiCfr/9wDuX3cREPE1v//2V6In9CYdp9Sieq90H+s3pOOO2Kg6ObBll6hyOpeJNfB8TPc20BIEIh7F89+VcmMoqsyRRtHr4aAa/0dr535EyWh+0/9GHUvWU3d6LU1b8UiwL7alnNDvYGmy9l1gF1b8WQ9RBnJdweFeJUdwlkreM4x+MvZwKVkS4jjUmUS2BO17o6DSsjRXl3eGMnHDJPs8w9OtLe8XvsPfiaJSugf3nBxx7u2E2Hq/iHL2G0b88fS022B6p4gnPLJUdNIuwQbECEHKdJHLExLEYnF9F4pPxHQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=NdTOJvEPuVWz7NT6CQ3oHJj3AAdJcYuXcEu5GoiwbKU=;
+ b=J/s60wyLMX4vEfk0lgvpRr7QyfooYiStB4hG67Gm8Z6PATPvFEs4xGjaa9umXC4M5DdAgBA8axhN89Nq9wTenhl+NtPx4rrlq1kGS1nCxidYxmvdiSCS6euYyjX4meHqN+rJQb3C11w/cM36Yz9sw5HDSqkOy2u5/EaHZpkX56Rf2lbSPELR1xhrG0Bvv+a7F8nvl9rvgLw34QvRhUIPBcrBaoJ+cArs5KQS6YxF3cTLK2rsN3s2/FLz87cM1E/xutQshBDeJAphQ3yVOiyMTcBBd9rDYTbD935ccJToWw9kgyiet+Pv2IS+MAjU+zIUnt0VsUDqX77A2WPE/dtygQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=AY1AcaYoeSvds4f7VfcM3qp4q4MueaQTmBODFbD5Bbk=;
-        b=finAhWo7PwGKB2zmrbYKXuVh0LMcXi66y3yWyviSKQl4MFBuVP00tvPzbvITxuWQwM
-         0p5TPDaf7v6S6En4wr6nG1dlMGWzVJuwWBkizQloXtg5QYQGkGjB8Son3fbqWuhi7QKT
-         na3ArsgcUG8jr0lhikmTpm5CmdSs+AnVOjGG0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=AY1AcaYoeSvds4f7VfcM3qp4q4MueaQTmBODFbD5Bbk=;
-        b=udCBC1DB+xyRycKjVNwPMehgYKXw9U5Db9RflZrRNsSRSNTac7DKC8La2rQvyuh5Dd
-         keY3AHKEkwwItvgYOSIWBTZSBm1kY0o5gAREM45NTr+0Vzsggrlt54BnCw590znMyhp3
-         IS8CsPoUisuR/BGCrar6fKu7u2PUMnE3pttcbEdPks5dFgz9iVhnjRy/gzVb+xjEQQhB
-         xs+ja8E8wDPmpYB+w7C/E0sxQWfD/SjckHTtzyBCDp6cDrMr4nBlDOF6F7X+OCjOHR+x
-         iWxqWWkZD5t8LSYGM4dRix13ybS6+rx/I+sTUSRoT8hUKxME8xyDaGumEcbXmGypHJXd
-         5hxA==
-X-Gm-Message-State: AOAM533u7N1iwNIvDaDsDRE3LkxXbNIJDIAuDW2Ol/R47buD9zbD6R59
-        pw9oGCv6y1MHVHf/a4ztUSG7naxh2HPLZN1gJ3BRliEf/S7mbhlp
-X-Google-Smtp-Source: ABdhPJy6ktXt6Xg0XaKJVVWFESMKry/+PC9sS602Df8KIRW4F6BDs1kk2UPNtDcbLoWrpI9RZp0qu/RLjsRuRTk7z24=
-X-Received: by 2002:a05:6830:2645:b0:5b0:2317:c738 with SMTP id
- f5-20020a056830264500b005b02317c738mr10692486otu.237.1646316089641; Thu, 03
- Mar 2022 06:01:29 -0800 (PST)
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NdTOJvEPuVWz7NT6CQ3oHJj3AAdJcYuXcEu5GoiwbKU=;
+ b=WuwEY2PIgUJ3tFK0T2YZAB7uuDwU1YX+1rhyTrv6+zWVEMKXNqZWOvs/u1hpAWyYCHNXBxu0h1o1ZGgg5qaGxqnvVAzGdWoUZSpCY7ewGQKvA0dT79OaH1GtWXqrtDjXfUldQPfs7/7pHV+uvYmJc3ujpyxtbeSA5HwYD/3wUZ0=
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
+ DM6PR10MB2811.namprd10.prod.outlook.com (2603:10b6:5:61::20) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5038.14; Thu, 3 Mar 2022 14:59:08 +0000
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::3dd8:6b8:e2e6:c3a2]) by DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::3dd8:6b8:e2e6:c3a2%12]) with mapi id 15.20.5038.015; Thu, 3 Mar 2022
+ 14:59:08 +0000
+Message-ID: <85a64450-99c8-268d-1ac7-86e70cbb3562@oracle.com>
+Date:   Thu, 3 Mar 2022 08:59:06 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 2/2] iscsi_tcp: Check if tcp_conn is valid in
+Content-Language: en-US
+To:     Wenchao Hao <haowenchao@huawei.com>, Lee Duncan <lduncan@suse.com>,
+        Chris Leech <cleech@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Wu Bo <wubo40@huawei.com>, Zhiqiang Liu <liuzhiqiang26@huawei.com>,
+        linfeilong@huawei.com
+References: <20220304025608.1874516-1-haowenchao@huawei.com>
+ <20220304025608.1874516-2-haowenchao@huawei.com>
+From:   Mike Christie <michael.christie@oracle.com>
+In-Reply-To: <20220304025608.1874516-2-haowenchao@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: DM5PR07CA0083.namprd07.prod.outlook.com
+ (2603:10b6:4:ad::48) To DM5PR10MB1466.namprd10.prod.outlook.com
+ (2603:10b6:3:b::7)
 MIME-Version: 1.0
-References: <20220201223948.1455637-1-keescook@chromium.org> <164462189850.7606.6908949862618145181.b4-ty@oracle.com>
-In-Reply-To: <164462189850.7606.6908949862618145181.b4-ty@oracle.com>
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date:   Thu, 3 Mar 2022 19:31:18 +0530
-Message-ID: <CAK=zhgpQcJkRKVNFHy6mDqV9hOyzFsV_uqOWur8UsNLRZy-VdA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: mpt3sas: Convert to flexible arrays
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Kees Cook <keescook@chromium.org>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-hardening@vger.kernel.org,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000d1a51605d950d578"
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 0d8a0adc-e33c-4519-dbf6-08d9fd265e69
+X-MS-TrafficTypeDiagnostic: DM6PR10MB2811:EE_
+X-Microsoft-Antispam-PRVS: <DM6PR10MB281172971BDE0C13CC3B3F4BF1049@DM6PR10MB2811.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: I/18VjN8mSy1R5sEZzUJsGJWFzb2EGhzastWLlxL0M+XWlkT5I6MNOCLk3DYNvIj+/Zas5M/WwWuRnciwVjer4+Cf4sgy/o0xwdDTY06WneDEhQjUh7oaC+mk8ON6EVat7oZatJoTIQU6RQCTHduWUe0RmYmzW1cUrHkgjzcXNp0juMkRERZR+wMEutl1rA7OBvOGSYvGe5OBoE2n8zk3O4LxoHGAMx5y+AljzG2EJH3FvK4fPIMzxIXbfi9YdOB7GAFNgBYurWaTaJb/iCahLC5bdM93KcH4F7Je6XkAykujudTpUGns9Ly8LBttMT2EoNKPE9KXDxm2WWASFNbL5L5OHBk7T8Kd5Cq3JvOb6anW7nHguANEl7bD9EhQdJ7ROzHA4D4KE3Jl/NLytKuTgu1r9FbFgrKiK20JDp0VWWt26fZ7taBJteoQAGwnw2Hbz88JTXTteN3dgZzkWjm0CxVUU1EEH1rDbPUppayIZnl73ljq6QxN2ow4PMMLP7jpcXPWKjEacHHYVJn5IO3AXgvAegtV2XNg7mTlJjfILZC9zAcSYoGbbnbrQyCVxF1KoWZaUDxOXFg888bZdgJzuiXoA6Dim0quR9+IKqM4dnTPh4Bzc7tEbcT7jEqR9DZX5RvrYWsjKY/+81ZpCZbdYNcnvjdRU/0pBB7XMdF0vGnOGcbpoTkFJLKmEmhlyhohUzDV+8+qSEWzAj3PYBjiTkjVOJNP3qBbvCPc/chi/A=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(110136005)(31686004)(316002)(83380400001)(8936002)(86362001)(6486002)(54906003)(36756003)(31696002)(26005)(186003)(7416002)(6506007)(2616005)(5660300002)(38100700002)(66946007)(4326008)(508600001)(66476007)(66556008)(8676002)(2906002)(53546011)(6512007)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?M2V3S2l6eTJXKzZHMXBuVTdqcWw5NGVIWFBwSWhkb2ptdWwrVjdFZERrWk1I?=
+ =?utf-8?B?NE9KOGI2bDNtOFVsRzVJU3VESGRoWDhpZW9OZ093WDl1b2tRcStNVmVUTXQz?=
+ =?utf-8?B?d2FmVmVFS2cxUnhuejd2WVFBL3FjYTNEWkVyVkVkbTd3cUg3Nng0VDB6M05p?=
+ =?utf-8?B?OWV1RWpxVXRZWC9wK21JTC9vSzhlNlBUeXZOUUdsd0VVQXF4cXdDdS81L2ZM?=
+ =?utf-8?B?TGdBUXNsbmJ5M1V2RU9qb0E1OUprQnN6NUtocWlIR2xrK2NxVm9yQkd4R0cv?=
+ =?utf-8?B?eldQUS9SV2huSjBRMTZkZG1obTlGeUgwOUJqTllPOWwwcGZSeW1OMnRCb3My?=
+ =?utf-8?B?VHhTTGlwcGF6dVNzV1l6S1o0cklYKzlRaENMaU5XZFkyV1JsOFlhWDEyMUd1?=
+ =?utf-8?B?d3pXWjVLWkVOczJaNDI5dUpXL29BaEgyZGJ1RVdOZFFsQmpxbWo4T1hXb3lx?=
+ =?utf-8?B?Y3J1N1c4Ri9odkFjdy95YzlRQVhDVHFBQUVFdWN6bXpYbDU4ZE5jcEsybHBa?=
+ =?utf-8?B?clVIOWViVm1iVU9mNnRxL1o2NHdTL00vd29sNHZjSzUvSEdtT2tIbGFnTmti?=
+ =?utf-8?B?UWR6UDV0SzBCcnE4T1JYOWZHSXNYUjFaSWNLWk90Q1N5RUpCTnZnVGVEL1VI?=
+ =?utf-8?B?QmswUUJacTZRMm9YM2locStZMWsyaFVQWmtLbStyVjRIczJrV2pCdGx3cUt5?=
+ =?utf-8?B?dFk3bXVLN1RrdkFoR1IvQTZ3T2lhRk1RaUpCRmZsMTdjZ3pScldraVhreDdz?=
+ =?utf-8?B?TkVxL1pZeVJ0OHo1Wkt2RVRLbG42Q0dESTJ4V3MydU1sbzZCNTZrRUNZQlVx?=
+ =?utf-8?B?OFJQOVFjZWpRWG9MNnVTRzZ2WWhBWExwdFFaVlhvUmdsYjhEUHY4TUZ4YUVk?=
+ =?utf-8?B?bzZndVJ2M0ZPb2pZQzZRcVQrWXpNK2pzVWpJeEFXNWt4b2dpSHZidWt1M1lD?=
+ =?utf-8?B?dkQzdnVGTEhFQ0JzaWJITmlOSzk5bTRidGxXRVp1VUllOU1KbzhabUJOOGFJ?=
+ =?utf-8?B?RVV2dHpDY0FaeEVNZFVxVHMyK1lyZlp0Nm4wQnpNTHMxZjVRWnhkWTczT2kx?=
+ =?utf-8?B?SWdLbVpqcTY1bVVVRFZKbWp1YVY4a2Jpd0VmaXN4RzFqcVFGWEhGTXZ1dVNI?=
+ =?utf-8?B?eWJMZ1JaSGdmMHVvcWtXUExSYUhERHR1bm95K2FSb2d2aE4yY1hXdGd1elV2?=
+ =?utf-8?B?TUR4bnJNa1crUkZ3WTJSekFzbG5TRU1lR3ZpTy9OVklQQUozZEkveXpZUFl5?=
+ =?utf-8?B?b2QvaUhyQi9uVlkvQXU3MzZjMUdybWlwS0VCUVh4aGF3UVh5L25VTWZFY2lH?=
+ =?utf-8?B?UG5jd3JRRlJ2Z1QwZXlsUzZSQkIxOG1TMGhoMGNBOGZEUnVxOEtiMjhOYUth?=
+ =?utf-8?B?VW1kN2N5QUd2Wm55aGxCOXdTVC9qWnVZdlF4UEFNWjJROHMyYWVSNWNHcm9y?=
+ =?utf-8?B?MnJXOEhEOHNBdE5kc3RJTndHUEdtdUFCdFRvVEJ2WElzN0F3TktJY0xUY1lC?=
+ =?utf-8?B?OThXZXlVNlRTbG9rYVVMUEYxWFR6Qkcra1JZQUtVWUtBTnNoWEFzL2tBeG9U?=
+ =?utf-8?B?ekNxVWIrbXFjcGtZYkJaSy93QXNQNmhCR1Q3VzdMM3NHTnpBZFp0YkFyWSty?=
+ =?utf-8?B?OWhBOXZPRGhDN0lTdE9odG9nd1VKbENZYk13UE5KclQ4WjF2Q1FueExNTEJX?=
+ =?utf-8?B?RTB3V0QvaHFjdU1QeFo1YkxwRnlxa1VlcGQ1QVlRdVlWWUY2ZlhHL0ltaUxW?=
+ =?utf-8?B?UGhmUjh6a01FUmtUdGhBbGJ0R3Z3UGRXNW13Z0l6OG5GQzJ4RUN1TEpveDlY?=
+ =?utf-8?B?MHFFc25ZT1Z3RS9oemFGd0pUOFMxczEwUVZlQU5MZEREM2h0dEJLdDdFU1FB?=
+ =?utf-8?B?YjJ0TjBYdlZ2QTdpeFBiekJXYStkRmlxdGl2UCtlM2UrMDZqaitYbTdHamxM?=
+ =?utf-8?B?MnI0K0NIWHZ0TUw1d2ltOUpSOTlxOEdreUYxQjRaUVFnUXBBa01PajUvQjQx?=
+ =?utf-8?B?alNRRnE5dFV2aWJwV1BMQ3Z6cnZ6UkROQzBBVmdwOHowRW83LzBQb05WY0Y1?=
+ =?utf-8?B?MU0wRnhSRDJ3dmF0SDRXQ2IwdGhZWEpXbFBwcERYQnpaSm9qSHg1VjhIUEZy?=
+ =?utf-8?B?TC83L0pFY1B0YlY1MVZSU3BYdjdFYWhVL2pMcG8zMkRGK2swdklEaTlObVBJ?=
+ =?utf-8?B?Nlo5YSt5VUpnTHpOY0ZSMTd6djJNTHhQWVRDMmU4S2FNSUlaMjZPMW9IRm1z?=
+ =?utf-8?B?dUZTNUwvdTV0cXpJdk42VnlQS093PT0=?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0d8a0adc-e33c-4519-dbf6-08d9fd265e69
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Mar 2022 14:59:08.6560
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: pa8ucy6G4b2A+xAutUytPd3Beoc7AdcHmMbyeEg5NZPrY9v84EM70u+Ms1s89B17Tj/JkOZq5/sM+vIdQMa9Cj7Pdjxo1jtiOaHhBbm36L4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB2811
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10274 signatures=686787
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 malwarescore=0
+ mlxscore=0 phishscore=0 suspectscore=0 adultscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2201110000
+ definitions=main-2203030072
+X-Proofpoint-GUID: QBmCLm0Op-ixg7FgvjCo84tk_Bq9UHIf
+X-Proofpoint-ORIG-GUID: QBmCLm0Op-ixg7FgvjCo84tk_Bq9UHIf
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000d1a51605d950d578
-Content-Type: text/plain; charset="UTF-8"
+On 3/3/22 8:56 PM, Wenchao Hao wrote:
+> iscsi_create_conn() would add newly alloced iscsi_cls_conn to connlist,
+> it means when userspace sends ISCSI_UEVENT_SET_PARAM, iscsi_conn_lookup()
+> would found this iscsi_cls_conn and call the set_param callback which is
+> iscsi_sw_tcp_conn_set_param(). While the iscsi_conn's dd_data might not
+> been initialized.
+> 
+> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+> Signed-off-by: Wu Bo <wubo40@huawei.com>
+> ---
+>  drivers/scsi/iscsi_tcp.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+> index 14db224486be..a42449df6156 100644
+> --- a/drivers/scsi/iscsi_tcp.c
+> +++ b/drivers/scsi/iscsi_tcp.c
+> @@ -716,13 +716,17 @@ static int iscsi_sw_tcp_conn_set_param(struct iscsi_cls_conn *cls_conn,
+>  {
+>  	struct iscsi_conn *conn = cls_conn->dd_data;
+>  	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+> -	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
+> +	struct iscsi_sw_tcp_conn *tcp_sw_conn;
+>  
+>  	switch(param) {
+>  	case ISCSI_PARAM_HDRDGST_EN:
+>  		iscsi_set_param(cls_conn, param, buf, buflen);
+>  		break;
+>  	case ISCSI_PARAM_DATADGST_EN:
+> +		if (!tcp_conn || !tcp_conn->dd_data)
+> +			return -ENOTCONN;
+> +
+> +		tcp_sw_conn = tcp_conn->dd_data;
+>  		iscsi_set_param(cls_conn, param, buf, buflen);
+>  		tcp_sw_conn->sendpage = conn->datadgst_en ?
+>  			sock_no_sendpage : tcp_sw_conn->sock->ops->sendpage;
 
-Hi,
+Is this something you hit or from code review?
 
-I am observing below kernel panic when I load the driver with this
-patch changes. After reverting this patch changes then the driver is
-getting loaded successfully.
+We have those state checks:
 
-[  414.493579] mpt3sas_cm0: port enable: SUCCESS
-[  414.498313] BUG: unable to handle page fault for address: 00000024000000ba
-[  414.505182] #PF: supervisor read access in kernel mode
-[  414.510322] #PF: error_code(0x0000) - not-present page
-[  414.515462] PGD 0 P4D 0
-[  414.518000] Oops: 0000 [#1] PREEMPT SMP NOPTI
-[  414.522360] CPU: 31 PID: 48 Comm: kworker/u98:0 Kdump: loaded
-Tainted: G           OE     5.17.0-rc1+ #1
-[  414.531833] Hardware name: Supermicro AS -1114S-WTRT/H12SSW-NT,
-BIOS 1.1a 05/28/2020
-[  414.539564] Workqueue: events_unbound async_run_entry_fn
-[  414.544877] RIP: 0010:scsih_qcmd+0x29/0x450 [mpt3sas]
-[  414.549938] Code: 00 0f 1f 44 00 00 41 57 41 56 41 55 41 54 55 48
-89 fd 53 48 89 f3 48 83 ec 18 f6 87 91 08 00 00 40 0f 85 e3 00 05
-[  414.568684] RSP: 0018:ffffa397c67df8d0 EFLAGS: 00010246
-[  414.573912] RAX: 0000002400000012 RBX: ffff947666d84208 RCX: ffff947666d84208
-[  414.581042] RDX: ffff947603afa000 RSI: ffff947666d84208 RDI: ffff947603afa000
-[  414.588168] RBP: ffff947603afa000 R08: 0000000000000020 R09: ffff94764ad2fa30
-[  414.595301] R10: 0000000000000000 R11: 0000000000000001 R12: ffff947603afa000
-[  414.602434] R13: ffff947667d87000 R14: ffff947603afa000 R15: ffffa397c67df9d0
-[  414.609568] FS:  0000000000000000(0000) GS:ffff947d2fbc0000(0000)
-knlGS:0000000000000000
-[  414.617654] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  414.623399] CR2: 00000024000000ba CR3: 00000004c9e0a000 CR4: 0000000000350ee0
-[  414.630531] Call Trace:
-[  414.632977]  <TASK>
-[  414.635084]  scsi_queue_rq+0x36e/0xa70
-[  414.638836]  blk_mq_dispatch_rq_list+0x2f6/0x8e0
-[  414.643455]  ? get_page_from_freelist+0xb70/0xe50
-[  414.648161]  ? __sbitmap_get_word+0x37/0x80
-[  414.652347]  __blk_mq_sched_dispatch_requests+0xb2/0x140
-[  414.657661]  blk_mq_sched_dispatch_requests+0x30/0x60
-[  414.662712]  __blk_mq_run_hw_queue+0x34/0x90
-[  414.666985]  __blk_mq_delay_run_hw_queue+0x18b/0x1c0
-[  414.671949]  blk_mq_sched_insert_request+0xd3/0x140
-[  414.676830]  blk_execute_rq+0x53/0xf0
-[  414.680495]  __scsi_execute+0x101/0x260
-[  414.684337]  scsi_probe_and_add_lun+0x181/0xe10
-[  414.688869]  __scsi_scan_target+0xec/0x5a0
-[  414.692969]  ? _raw_spin_unlock_irqrestore+0x1f/0x31
-[  414.697933]  ? __pm_runtime_resume+0x54/0x70
-[  414.702208]  scsi_scan_target+0xf8/0x110
-[  414.706135]  sas_rphy_add+0x162/0x1b0 [scsi_transport_sas]
-[  414.711620]  mpt3sas_transport_port_add+0x315/0x480 [mpt3sas]
-[  414.717375]  _scsih_complete_devices_scanning+0x2f8/0x336 [mpt3sas]
-[  414.723648]  scsih_scan_finished.cold.103+0x91/0xe3 [mpt3sas]
-[  414.729393]  do_scsi_scan_host+0x6f/0x90
-[  414.733321]  do_scan_async+0x17/0x150
-[  414.736987]  async_run_entry_fn+0x30/0x130
-[  414.741085]  process_one_work+0x1c8/0x390
-[  414.745099]  worker_thread+0x30/0x350
-[  414.748764]  ? process_one_work+0x390/0x390
-[  414.752951]  kthread+0xe8/0x110
-[  414.756098]  ? kthread_complete_and_exit+0x20/0x20
-[  414.760891]  ret_from_fork+0x22/0x30
-[  414.764469]  </TASK>
-[  414.766662] Modules linked in: mpt3sas(OE) xt_CHECKSUM
-xt_MASQUERADE xt_conntrack ipt_REJECT nf_nat_tftp nft_objref
-nf_conntrack_tc
-[  414.766715]  drm_ttm_helper ttm ahci crc32c_intel libahci drm
-bnxt_en libata raid_class scsi_transport_sas pinctrl_amd dm_mirror d]
-[  414.869470] CR2: 00000024000000ba
+if ((conn->state == ISCSI_CONN_BOUND) ||
+    (conn->state == ISCSI_CONN_UP)) {
+	err = transport->set_param(conn, ev->u.set_param.param,
 
-Thanks,
-Sreekanth
+so we don't call set_param until after we have bound the
+connection which will be after ISCSI_UEVENT_CREATE_CONN has returned.
 
-On Sat, Feb 12, 2022 at 4:55 AM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
-> On Tue, 1 Feb 2022 14:39:48 -0800, Kees Cook wrote:
->
-> > This converts to a flexible array instead of the old-style 1-element
-> > arrays. The existing code already did the correct math for finding the
-> > size of the resulting flexible array structure, so there is no binary
-> > difference.
-> >
-> > The other two structures converted to use flexible arrays appear to
-> > have no users at all.
-> >
-> > [...]
->
-> Applied to 5.18/scsi-queue, thanks!
->
-> [1/1] scsi: mpt3sas: Convert to flexible arrays
->       https://git.kernel.org/mkp/scsi/c/d20b3dae630f
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
-
---000000000000d1a51605d950d578
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIIQdgYJKoZIhvcNAQcCoIIQZzCCEGMCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-gg3NMIIFDTCCA/WgAwIBAgIQeEqpED+lv77edQixNJMdADANBgkqhkiG9w0BAQsFADBMMSAwHgYD
-VQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMzETMBEGA1UEChMKR2xvYmFsU2lnbjETMBEGA1UE
-AxMKR2xvYmFsU2lnbjAeFw0yMDA5MTYwMDAwMDBaFw0yODA5MTYwMDAwMDBaMFsxCzAJBgNVBAYT
-AkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBS
-MyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
-vbCmXCcsbZ/a0fRIQMBxp4gJnnyeneFYpEtNydrZZ+GeKSMdHiDgXD1UnRSIudKo+moQ6YlCOu4t
-rVWO/EiXfYnK7zeop26ry1RpKtogB7/O115zultAz64ydQYLe+a1e/czkALg3sgTcOOcFZTXk38e
-aqsXsipoX1vsNurqPtnC27TWsA7pk4uKXscFjkeUE8JZu9BDKaswZygxBOPBQBwrA5+20Wxlk6k1
-e6EKaaNaNZUy30q3ArEf30ZDpXyfCtiXnupjSK8WU2cK4qsEtj09JS4+mhi0CTCrCnXAzum3tgcH
-cHRg0prcSzzEUDQWoFxyuqwiwhHu3sPQNmFOMwIDAQABo4IB2jCCAdYwDgYDVR0PAQH/BAQDAgGG
-MGAGA1UdJQRZMFcGCCsGAQUFBwMCBggrBgEFBQcDBAYKKwYBBAGCNxQCAgYKKwYBBAGCNwoDBAYJ
-KwYBBAGCNxUGBgorBgEEAYI3CgMMBggrBgEFBQcDBwYIKwYBBQUHAxEwEgYDVR0TAQH/BAgwBgEB
-/wIBADAdBgNVHQ4EFgQUljPR5lgXWzR1ioFWZNW+SN6hj88wHwYDVR0jBBgwFoAUj/BLf6guRSSu
-TVD6Y5qL3uLdG7wwegYIKwYBBQUHAQEEbjBsMC0GCCsGAQUFBzABhiFodHRwOi8vb2NzcC5nbG9i
-YWxzaWduLmNvbS9yb290cjMwOwYIKwYBBQUHMAKGL2h0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5j
-b20vY2FjZXJ0L3Jvb3QtcjMuY3J0MDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9jcmwuZ2xvYmFs
-c2lnbi5jb20vcm9vdC1yMy5jcmwwWgYDVR0gBFMwUTALBgkrBgEEAaAyASgwQgYKKwYBBAGgMgEo
-CjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAN
-BgkqhkiG9w0BAQsFAAOCAQEAdAXk/XCnDeAOd9nNEUvWPxblOQ/5o/q6OIeTYvoEvUUi2qHUOtbf
-jBGdTptFsXXe4RgjVF9b6DuizgYfy+cILmvi5hfk3Iq8MAZsgtW+A/otQsJvK2wRatLE61RbzkX8
-9/OXEZ1zT7t/q2RiJqzpvV8NChxIj+P7WTtepPm9AIj0Keue+gS2qvzAZAY34ZZeRHgA7g5O4TPJ
-/oTd+4rgiU++wLDlcZYd/slFkaT3xg4qWDepEMjT4T1qFOQIL+ijUArYS4owpPg9NISTKa1qqKWJ
-jFoyms0d0GwOniIIbBvhI2MJ7BSY9MYtWVT5jJO3tsVHwj4cp92CSFuGwunFMzCCA18wggJHoAMC
-AQICCwQAAAAAASFYUwiiMA0GCSqGSIb3DQEBCwUAMEwxIDAeBgNVBAsTF0dsb2JhbFNpZ24gUm9v
-dCBDQSAtIFIzMRMwEQYDVQQKEwpHbG9iYWxTaWduMRMwEQYDVQQDEwpHbG9iYWxTaWduMB4XDTA5
-MDMxODEwMDAwMFoXDTI5MDMxODEwMDAwMFowTDEgMB4GA1UECxMXR2xvYmFsU2lnbiBSb290IENB
-IC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMTCkdsb2JhbFNpZ24wggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMJXaQeQZ4Ihb1wIO2hMoonv0FdhHFrYhy/EYCQ8eyip0E
-XyTLLkvhYIJG4VKrDIFHcGzdZNHr9SyjD4I9DCuul9e2FIYQebs7E4B3jAjhSdJqYi8fXvqWaN+J
-J5U4nwbXPsnLJlkNc96wyOkmDoMVxu9bi9IEYMpJpij2aTv2y8gokeWdimFXN6x0FNx04Druci8u
-nPvQu7/1PQDhBjPogiuuU6Y6FnOM3UEOIDrAtKeh6bJPkC4yYOlXy7kEkmho5TgmYHWyn3f/kRTv
-riBJ/K1AFUjRAjFhGV64l++td7dkmnq/X8ET75ti+w1s4FRpFqkD2m7pg5NxdsZphYIXAgMBAAGj
-QjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSP8Et/qC5FJK5N
-UPpjmove4t0bvDANBgkqhkiG9w0BAQsFAAOCAQEAS0DbwFCq/sgM7/eWVEVJu5YACUGssxOGhigH
-M8pr5nS5ugAtrqQK0/Xx8Q+Kv3NnSoPHRHt44K9ubG8DKY4zOUXDjuS5V2yq/BKW7FPGLeQkbLmU
-Y/vcU2hnVj6DuM81IcPJaP7O2sJTqsyQiunwXUaMld16WCgaLx3ezQA3QY/tRG3XUyiXfvNnBB4V
-14qWtNPeTCekTBtzc3b0F5nCH3oO4y0IrQocLP88q1UOD5F+NuvDV0m+4S4tfGCLw0FREyOdzvcy
-a5QBqJnnLDMfOjsl0oZAzjsshnjJYS8Uuu7bVW/fhO4FCU29KNhyztNiUGUe65KXgzHZs7XKR1g/
-XzCCBVUwggQ9oAMCAQICDHJ6qvXSR4uS891jDjANBgkqhkiG9w0BAQsFADBbMQswCQYDVQQGEwJC
-RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMg
-UGVyc29uYWxTaWduIDIgQ0EgMjAyMDAeFw0yMTAyMjIxMzAyMTFaFw0yMjA5MTUxMTUxNTZaMIGU
-MQswCQYDVQQGEwJJTjESMBAGA1UECBMJS2FybmF0YWthMRIwEAYDVQQHEwlCYW5nYWxvcmUxFjAU
-BgNVBAoTDUJyb2FkY29tIEluYy4xGDAWBgNVBAMTD1NyZWVrYW50aCBSZWRkeTErMCkGCSqGSIb3
-DQEJARYcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEP
-ADCCAQoCggEBAM11a0WXhMRf+z55FvPxVs60RyUZmrtnJOnUab8zTrgbomymXdRB6/75SvK5zuoS
-vqbhMdvYrRV5ratysbeHnjsfDV+GJzHuvcv9KuCzInOX8G3rXAa0Ow/iodgTPuiGxulzqKO85XKn
-bwqwW9vNSVVW+q/zGg4hpJr4GCywE9qkW7qSYva67acR6vw3nrl2OZpwPjoYDRgUI8QRLxItAgyi
-5AGo2E3pe+2yEgkxKvM2fnniZHUiSjbrfKk6nl9RIXPOKUP5HntZFdA5XuNYXWM+HPs3O0AJwBm/
-VCZsZtkjVjxeBmTXiXDnxytdsHdGrHGymPfjJYatDu6d1KRVDlMCAwEAAaOCAd0wggHZMA4GA1Ud
-DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
-Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
-BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
-YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
-Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
-aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
-JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
-BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUClVHbAvhzGT8
-s2/6xOf58NkGMQ8wDQYJKoZIhvcNAQELBQADggEBAENRsP1H3calKC2Sstg/8li8byKiqljCFkfi
-IhcJsjPOOR9UZnMFxAoH/s2AlM7mQDR7rZ2MxRuUnIa6Cp5W5w1lUJHktjCUHnQq5nIAZ9GH5SDY
-pgzbFsoYX8U2QCmkAC023FF++ZDJuc9aj0R/nhABxmUYErIze2jV/VO8Pj7TnCrBONZ/Qvf8G5CQ
-X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
-eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
-Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
-MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIN06xAWm+gj0yPI0/yC
-BpkVQmMk7HHzaP4KvyXjfesTMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDMwMzE0MDEzMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
-BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCfLbrt2Awk8IISnf8A5cNysZGggdNjK5cdXtVN
-TYDoSS7MUJTVjCM7C3bRftBFF9A5oZ6qXNK6vfxO8Nfw6UjGicc72q2UI4lSYa+48tEhTNd93uSq
-GxIxgfIKh17kouHH+lHTx5OMIQRiFjMVnSyvRVV8v6jVsvf5vb0WE6XiwYumhusBjp+qelIrYp1L
-w6ObkMaxfPNIF7qGaVp4ZUb5nHtmgLVIqljPOzIbouD+YVC9R11L/NaTjjRh4uziohbwlZUt8mwV
-xNtYR1YRyu//8jek8UUA4DBjMohX6UFG36uqgJLqJ2Fwh8JFeYHBgZhnVhIKygcbQbz/lcscz552
---000000000000d1a51605d950d578--
+Also for this specific bug iscsi_if_recv_msg is called with the
+rx_queue_mutex, so set_param can only be called after the
+ISCSI_UEVENT_CREATE_CONN cmd has returned.
