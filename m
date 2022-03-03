@@ -2,117 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB521C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 07:56:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21841C41535
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 08:30:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230432AbiCCH5N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 02:57:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52004 "EHLO
+        id S231364AbiCCIbW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 03:31:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229814AbiCCH5L (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 02:57:11 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E8AD16FDDA;
-        Wed,  2 Mar 2022 23:56:26 -0800 (PST)
-X-UUID: a1b45fee22bd4677baa95a5857ed4a1e-20220303
-X-UUID: a1b45fee22bd4677baa95a5857ed4a1e-20220303
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
-        (envelope-from <alice.chao@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1216922223; Thu, 03 Mar 2022 15:56:19 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Thu, 3 Mar 2022 15:56:18 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 3 Mar 2022 15:56:18 +0800
-From:   Alice Chao <alice.chao@mediatek.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <matthias.bgg@gmail.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>
-CC:     <stanley.chu@mediatek.com>, <peter.wang@mediatek.com>,
-        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
-        <jonathan.hsu@mediatek.com>, <powen.kao@mediatek.com>,
-        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <jiajie.hao@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>, <yanxu.wei@mediatek.com>,
-        <wsd_upstream@mediatek.com>
-Subject: [PATCH 1/1] scsi: Fix racing between dev init and dev reset
-Date:   Thu, 3 Mar 2022 15:55:29 +0800
-Message-ID: <20220303075527.25258-2-alice.chao@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20220303075527.25258-1-alice.chao@mediatek.com>
-References: <20220303075527.25258-1-alice.chao@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+        with ESMTP id S230130AbiCCIbU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 03:31:20 -0500
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DA8F171850;
+        Thu,  3 Mar 2022 00:30:35 -0800 (PST)
+Received: by mail-pg1-x542.google.com with SMTP id z4so3886069pgh.12;
+        Thu, 03 Mar 2022 00:30:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=uLpTC29O7sSEzWIyhD1PQNyRAs1/upRhzEEBO0P7TrY=;
+        b=R05ZV01Yp+GvJafCjJwp2DdNQL1X7N4+v2qDpWCUjxekJqjhV8nKttt+lgDdDv8VHZ
+         pTpad4a62LLA8SjB/yHHEpNTxY0U28zfBa611uCN9ihzVETreTphlyPy+ETyTE4AgOSy
+         RSp6pqcLA1mQfW+JjTEEtr3nMT+EN3gAPPB7pPpCIhAgeloFO+Vkph8Zctn11Qajj/U0
+         QUVjSv6dTXzOO7akWefQCdrhFJznQKo01Wl+2crhxprXX9zSh/gHLWP/Xe3lMKAcW1nu
+         BI3FrzUOW0QskfQ+hVH91vnr00ExY+gCD8VtMWG6RhFXS05x/6dGZMaR1NPNguf29zlo
+         qAtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=uLpTC29O7sSEzWIyhD1PQNyRAs1/upRhzEEBO0P7TrY=;
+        b=tX4Lvnprkbl55JgpIMGPwUYB3zl4weKQtUQYSCGebicA19Oo2euseaSt/seHhHgl0U
+         WGEXF4Yq70OpGaJzdrRUdewFnJPKwyRe2hcmhELKOAaCQScpZMjVomIJ7EFgGxvhYEp3
+         9HxQe4UlZmMPk4ZhvlJqwjvYVIunkaPltt23SQUu1FRGohEGvel7sT8VStEWsaxjfs5X
+         viiLJUsV/Poav7kbPBu/1Hl2pXtDu+ktsOyqWkyiZbpO4/DOhJ/qeHIG5UgkeNYfEpB/
+         i4SSxCqaL5X+skhojHCTmrD6wVTzE//JfLQc8R7q5KqW7Pfmirm/ksaw2x6Yi8IQw3cR
+         RW+Q==
+X-Gm-Message-State: AOAM533yIcrXrWD0e+qg8tCGwICNQuG2ezuK76KXrTeyZwEDIAawJ7rL
+        tJd6y95jIfu3iOx5y5a6kN0=
+X-Google-Smtp-Source: ABdhPJxl3tqNmXwEb6Rf4RyrJiQAiYb1f64m7AmzgvvLqhkGp3dQvJbj8a24YWybBg5gGNAc3KtcpA==
+X-Received: by 2002:a63:8bca:0:b0:370:2717:3756 with SMTP id j193-20020a638bca000000b0037027173756mr29011952pge.604.1646296234811;
+        Thu, 03 Mar 2022 00:30:34 -0800 (PST)
+Received: from ubuntu.huawei.com ([119.3.119.19])
+        by smtp.googlemail.com with ESMTPSA id d5-20020a17090acd0500b001b9c05b075dsm7342532pju.44.2022.03.03.00.30.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Mar 2022 00:30:34 -0800 (PST)
+From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
+To:     jakobkoschel@gmail.com
+Cc:     David.Laight@ACULAB.COM, akpm@linux-foundation.org,
+        alsa-devel@alsa-project.org, amd-gfx@lists.freedesktop.org,
+        andriy.shevchenko@linux.intel.com, arnd@arndb.de,
+        bcm-kernel-feedback-list@broadcom.com, bjohannesmeyer@gmail.com,
+        c.giuffrida@vu.nl, christian.koenig@amd.com,
+        christophe.jaillet@wanadoo.fr, dan.carpenter@oracle.com,
+        dmaengine@vger.kernel.org, drbd-dev@lists.linbit.com,
+        dri-devel@lists.freedesktop.org, gustavo@embeddedor.com,
+        h.j.bos@vu.nl, intel-gfx@lists.freedesktop.org,
+        intel-wired-lan@lists.osuosl.org, jgg@ziepe.ca,
+        keescook@chromium.org, kgdb-bugreport@lists.sourceforge.net,
+        kvm@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-aspeed@lists.ozlabs.org, linux-block@vger.kernel.org,
+        linux-cifs@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-fsdevel@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-pm@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-sgx@vger.kernel.org, linux-staging@lists.linux.dev,
+        linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net, linux@rasmusvillemoes.dk,
+        linuxppc-dev@lists.ozlabs.org, nathan@kernel.org,
+        netdev@vger.kernel.org, nouveau@lists.freedesktop.org,
+        rppt@kernel.org, samba-technical@lists.samba.org,
+        tglx@linutronix.de, tipc-discussion@lists.sourceforge.net,
+        torvalds@linux-foundation.org,
+        v9fs-developer@lists.sourceforge.net, xiam0nd.tong@gmail.com
+Subject: Re: [PATCH 2/6] treewide: remove using list iterator after loop body as a ptr
+Date:   Thu,  3 Mar 2022 16:30:07 +0800
+Message-Id: <20220303083007.11640-1-xiam0nd.tong@gmail.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <A568BD90-FE81-4740-B1D3-C795EB636A5A@gmail.com>
+References: <A568BD90-FE81-4740-B1D3-C795EB636A5A@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Device reset thread uses kobject_uevent_env() to get kobj.parent
-after scsi_evt_emit(), and it races with device init thread which
-calls device_add() to create kobj.parent before kobject_uevent_env().
+> I think this would make sense, it would mean you only assign the containing
+> element on valid elements.
+>
+> I was thinking something along the lines of:
+>
+> #define list_for_each_entry(pos, head, member)					\
+>	for (struct list_head *list = head->next, typeof(pos) pos;	\
+>	     list == head ? 0 : (( pos = list_entry(pos, list, member), 1));	\
+>	     list = list->next)
+>
+> Although the initialization block of the for loop is not valid C, I'm
+> not sure there is any way to declare two variables of a different type
+> in the initialization part of the loop.
 
-Device reset call trace:
-fill_kobj_path
-kobject_get_path
-kobject_uevent_env
-scsi_evt_emit			<- add wait_event()
-scsi_evt_thread
+It can be done using a *nested loop*, like this:
 
-Device init call trace:
-fill_kobj_path
-kobject_get_path
-kobject_uevent_env
-device_add				<- create kobj.parent
-scsi_target_add
-scsi_sysfs_add_sdev
-scsi_add_lun
-scsi_probe_and_add_lun
+#define list_for_each_entry(pos, head, member)					\
+	for (struct list_head *list = head->next, cond = (struct list_head *)-1; cond == (struct list_head *)-1; cond = NULL) \
+	  for (typeof(pos) pos;	\
+	     list == head ? 0 : (( pos = list_entry(pos, list, member), 1));	\
+	     list = list->next)
 
-These two jobs are scheduled asynchronously, we can't guaranteed that
-kobj.parent will be created in device init thread before device reset
-thread calls kobj_get_path().
+>
+> I believe all this does is get rid of the &pos->member == (head) check
+> to terminate the list.
 
-To resolve the racing issue between device init thread and device
-reset thread, we use wait_event() in scsi_evt_emit() to wait for
-device_add() to complete the creation of kobj.parent.
+Indeed, although the original way is harmless.
 
-Signed-off-by: Alice Chao <alice.chao@mediatek.com>
-Change-Id: I2848cf054186739d3a125a0635dbed5539557e64
----
- drivers/scsi/scsi_lib.c  | 1 +
- drivers/scsi/scsi_scan.c | 1 +
- 2 files changed, 2 insertions(+)
+> It alone will not fix any of the other issues that using the iterator
+> variable after the loop currently has.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0a70aa763a96..abf9a71ed77c 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2461,6 +2461,7 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
- 		break;
- 	case SDEV_EVT_POWER_ON_RESET_OCCURRED:
- 		envp[idx++] = "SDEV_UA=POWER_ON_RESET_OCCURRED";
-+		wait_event(sdev->host->host_wait, sdev->sdev_gendev.kobj.parent != NULL);
- 		break;
- 	default:
- 		/* do nothing */
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index f4e6c68ac99e..431f229ac435 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1904,6 +1904,7 @@ static void do_scsi_scan_host(struct Scsi_Host *shost)
- 	} else {
- 		scsi_scan_host_selected(shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
- 				SCAN_WILD_CARD, 0);
-+		wake_up(&shost->host_wait);
- 	}
- }
- 
--- 
-2.18.0
+Yes, but I stick with the list_for_each_entry_inside(pos, type, head, member)
+way to make the iterator invisiable outside the loop (before and after the loop).
+It is maintainable longer-term than "type(pos) pos" one and perfect.
+see my explain:
+https://lore.kernel.org/lkml/20220302093106.8402-1-xiam0nd.tong@gmail.com/
+and list_for_each_entry_inside(pos, type, head, member) patch here:
+https://lore.kernel.org/lkml/20220301075839.4156-3-xiam0nd.tong@gmail.com/
 
+--
+Xiaomeng Tong
