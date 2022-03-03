@@ -2,79 +2,151 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49AF8C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 21:06:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BBC7C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 22:44:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234003AbiCCVHX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 16:07:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50268 "EHLO
+        id S237072AbiCCWpK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 17:45:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234395AbiCCVHW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 16:07:22 -0500
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF2ACD4CAC
-        for <linux-scsi@vger.kernel.org>; Thu,  3 Mar 2022 13:06:36 -0800 (PST)
-Received: by mail-pg1-f178.google.com with SMTP id 6so1217507pgg.0
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Mar 2022 13:06:36 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=fYK9iS3VwUHayMTX9GEVvQlQTgbQbyUzigqv/h3uHEA=;
-        b=RibNvZ8biwF/6mAeDuq+lEft16P0cH7jUi7Yq2IBu8tHMoVLi7WUVW6pM4iSyeLKzg
-         rsielDbJOSUUvfNcQE5JaUhbPyzaeKbpMzHDh38vlBHVtwvvn0GjsG+8Wx3qnx0yVugu
-         4LPg2ug3/NB2XuKcXSSVta12m7l0IcVxJwbKUCqYXGM4geK1PCW+WXZQklmqSlzPBBym
-         Gvkto7KEbXTaUiEhcLlHiufxhHA/FEkoxfy2Omgn33gwXjmnZgB0Wm44VZAs9JpwJIdN
-         2j4hyAeII5FFQSkSYQeEfICffYd/uF0Otgh89KTtKQIO7sLyOKVmJ0I3w5vckpizBOum
-         GLog==
-X-Gm-Message-State: AOAM533H2GSW9y/5JiNiIeHob6gaKXXfV0pGPbAHie5tUI4ol46R8LOT
-        WWhbmfixocUtOjEF+fgck6vnbT49DwU=
-X-Google-Smtp-Source: ABdhPJzSFzz6D2olWFeFIrnFdFYzsaHyu9OKT8FoKYXAxsyIwhOIHdknGdgxG96lEAqiw/2UEzQcfA==
-X-Received: by 2002:a63:7e43:0:b0:374:75ce:4d80 with SMTP id o3-20020a637e43000000b0037475ce4d80mr31679256pgn.589.1646341596005;
-        Thu, 03 Mar 2022 13:06:36 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id bd6-20020a056a00278600b004f68f9fbbd5sm1837593pfb.129.2022.03.03.13.06.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 03 Mar 2022 13:06:35 -0800 (PST)
-Message-ID: <c088db8c-19cf-182f-8d2f-e990b5a0c35c@acm.org>
-Date:   Thu, 3 Mar 2022 13:06:34 -0800
+        with ESMTP id S237084AbiCCWpJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 17:45:09 -0500
+Received: from new4-smtp.messagingengine.com (new4-smtp.messagingengine.com [66.111.4.230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD04F15C1A7;
+        Thu,  3 Mar 2022 14:44:21 -0800 (PST)
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
+        by mailnew.nyi.internal (Postfix) with ESMTP id 6E5225807C5;
+        Thu,  3 Mar 2022 17:44:20 -0500 (EST)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute2.internal (MEProxy); Thu, 03 Mar 2022 17:44:20 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:from:from
+        :in-reply-to:in-reply-to:message-id:mime-version:references
+        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=LJYVvuKLawnkE6Wm/
+        j6OKnAtK1dk2wwP7VL303McoIQ=; b=HHiFURfSb0KxCAm5OFX1e4gkqvdZqugiY
+        xWJkml7nJNE0fPPncMw3UCvlzaG/5rEDOleTqYWfBy4Y/Vh4BU1Hdc+iECf3Le5B
+        pTj4f0sxGYl5B1ogjKd2V054S9P+8LULe4X//FWdkEonYD4gVDVYNqCp/9BPr0Cv
+        onaCbkbLHUikPTpltEXJQFWEl9qO9USnoglYdbpJXwS4TdlmKoiT3QS+ckiWndE6
+        LADM1iWhAc/D8R/pAHDkPGUAraFcHa+0+I7zgg+z10x+BJ18suivOuZg1lquiPJJ
+        wLKArw2GFmRH5TbmQUxN/4mqQNKmserUyMyghIcCxBmK9F95cXYJA==
+X-ME-Sender: <xms:xEQhYsVxE1kne7ZxLY-qmuMx7ZcY_hccE4XVb7csyokdT9BHTccDIg>
+    <xme:xEQhYgmLEGVgxjdvitlkAn1MB7MLAk8qDVhi6a80sqwCl0qZNQgfMDTittmtLJCCH
+    GxI8pRC726c7F_NdSs>
+X-ME-Received: <xmr:xEQhYgahodaUoRYauOkc_RsnyRtXoWMwSLyVL783iN7KJBmSYrHw_BzO_9dDKU-M9K4KKhdqrQx-W4nW4Fk-XvupSFRupkJ7r6E>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddruddtjedgtdduucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvffujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhnucfv
+    hhgrihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrth
+    htvghrnhepffetffekiefhfeevfeetuedtteeugeelhedvueejhefftdejieduleetffev
+    ffeunecuffhomhgrihhnpehgihhthhhusgdrtghomhdpkhgvrhhnvghlrdhorhhgnecuve
+    hluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfhhthhgrihhn
+    sehlihhnuhigqdhmieekkhdrohhrgh
+X-ME-Proxy: <xmx:xEQhYrVf6IN6ExMECwgmw9jiG8TK8bABA4Yi-6Zttqa75jcPWjeuRw>
+    <xmx:xEQhYmkiDV0yHjuPBZiQ9CzM88bU8SYEmJynDR2180EWXP_-srbQgA>
+    <xmx:xEQhYgeZNLONre-W8j-kx_o8XyipnWAMDt0v2bPXfe-HaXiJkIlONw>
+    <xmx:xEQhYh_m2iWGgNaLOM_GrHtuLQUTNbBit7cHU5jXuHknAidBjj8zJw>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 3 Mar 2022 17:44:17 -0500 (EST)
+Date:   Fri, 4 Mar 2022 09:44:12 +1100 (AEDT)
+From:   Finn Thain <fthain@linux-m68k.org>
+To:     Konrad Wilhelm Kleine <kkleine@redhat.com>
+cc:     Tom Rix <trix@redhat.com>, Joe Perches <joe@perches.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, nathan@kernel.org,
+        ndesaulniers@google.com, megaraidlinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev
+Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
+In-Reply-To: <CABRYuGk+1AGpvfkR7=LTCm+bN4kt55fwQnQXCjidSXWxuMWsiQ@mail.gmail.com>
+Message-ID: <95f5be1d-f5f3-478-5ccb-76556a41de78@linux-m68k.org>
+References: <20220127151945.1244439-1-trix@redhat.com> <d26d4bd8-b5e1-f4d5-b563-9bc4dd384ff8@acm.org> <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com> <e3ae392a16491b9ddeb1f0b2b74fdf05628b1996.camel@perches.com> <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com>
+ <8dd05afd-0bb9-c91b-6393-aff69f1363e1@redhat.com> <233660d0-1dee-7d80-1581-2e6845bf7689@linux-m68k.org> <CABRYuGk+1AGpvfkR7=LTCm+bN4kt55fwQnQXCjidSXWxuMWsiQ@mail.gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 09/14] scsi: sd: Fix discard errors during revalidate
-Content-Language: en-US
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-References: <20220302053559.32147-1-martin.petersen@oracle.com>
- <20220302053559.32147-10-martin.petersen@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220302053559.32147-10-martin.petersen@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/1/22 21:35, Martin K. Petersen wrote:
-> +	if (mode == SD_LBP_DEFAULT)
-> +		sdkp->provisioning_override = false;
-> +	else
-> +		sdkp->provisioning_override = true;
+Hi Konrad,
 
-This can be changed into the following?
+On Thu, 3 Mar 2022, Konrad Wilhelm Kleine wrote:
 
-sdkp->provisioning_override = mode != SD_LBP_DEFAULT;
+> On Thu, 3 Mar 2022 at 09:40, Finn Thain <fthain@linux-m68k.org> wrote:
+> 
+> > On Wed, 2 Mar 2022, Tom Rix wrote:
+> >
+> > > >>> Long term, it would be good have a reliable way to automatically 
+> > > >>> fix either new files or really broken old files.
+> > > >> That's really a maintainer preference no?
+> > > >>
+> > > >> Especially so for any automation.
+> > > >
+> > > > In practice everything is up to the maintainer.
+> > > >
+> > > > If some maintainer wants fix their formatting then clang-format 
+> > > > should just work
+> > > >
+> > > > It isn't likely they will have time to hand fix every file.
+> > >
+> > > A follow up issue in the clang project has been raised by Konrad, 
+> > > here
+> > >
+> > > https://github.com/llvm/llvm-project/issues/54137
+> > >
+> >
+> > Why request a "leave" option for every style rule? Why not just a 
+> > "leave" option for the most contentious rules?
+> >
+> 
+> Getting to the point that every style option can be disabled 
+> individually is not an operation done in one go. I plan on presenting 
+> the changes required to exactly one style option and from there I'm all 
+> ears if you have style options that you consider "contentious". 
 
-> +	if (mode == SD_LBP_DEFAULT && !sdkp->provisioning_override) {
+Sure, I'll provide an example of that below in case you're interested in 
+what I happen to find contentious. But this isn't about my taste.
 
-Hmm ... is provisioning_override ever true for the SD_LBP_DEFAULT mode? If not, 
-can "&& !sdkp->provisioning_override" be left out?
+The issue is really about removing an obstacle to wider adoption of 
+clang-formt. Therefore, shouldn't you be asking, what style rules have 
+already proven to be contentious within the project?
 
-> +	bool		lblvpd;
+You can look to kernel subsystem style rules for examples of that. E.g. 
+some might argue that comments should always be left unmolested (where 
+they exist for the benefit of human readers and not tooling).
 
-Please add a comment that explains what lblvpd stands for.
+Others might argue that they should always be changed from,
 
-Thanks,
+/*
+ * this style
+ * of multiline comment
+ */
 
-Bart.
+to 
+
+/* this style
+ * of multiline comment
+ */
+
+For another example, the mailing lists recently saw another style rule 
+difference between subsystems:
+https://lore.kernel.org/all/20220301055231.GI2812@kadam/
+
+Joe said, in effect, "leave" whereas others seem to have different views.
+
+Finally, here's an example that I personally found contentious. 
+drivers/scsi/NCR5380.c line 2306:
+		dsprintk(NDEBUG_ABORT, instance,
+		         "abort: removed %p from sense queue\n", cmd);
+
+Note the spaces (for alignment) following the tabs (for scope). I mention 
+this example not because I expect the world to "wake up and smell the 
+coffee" one day and embrace spaces-after-tabs.
+
+I mention it because I expect the tabs/spaces/both issue to remain 
+contentious indefinitely (within any sufficiently large project).
+
+I can think of another good example (line wrap) but I'll stop here.
