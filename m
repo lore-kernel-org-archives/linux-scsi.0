@@ -2,95 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2DE7C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 20:51:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00C30C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 21:00:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235273AbiCCUwG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 15:52:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45202 "EHLO
+        id S235156AbiCCVBM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 16:01:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36676 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231809AbiCCUwG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 15:52:06 -0500
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87A47483BC;
-        Thu,  3 Mar 2022 12:51:20 -0800 (PST)
-Received: by mail-pj1-f51.google.com with SMTP id ge19-20020a17090b0e1300b001bcca16e2e7so8870094pjb.3;
-        Thu, 03 Mar 2022 12:51:20 -0800 (PST)
+        with ESMTP id S231439AbiCCVBM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 16:01:12 -0500
+Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CC9A1CFD1
+        for <linux-scsi@vger.kernel.org>; Thu,  3 Mar 2022 13:00:25 -0800 (PST)
+Received: by mail-wm1-x331.google.com with SMTP id p184-20020a1c29c1000000b0037f76d8b484so3964226wmp.5
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Mar 2022 13:00:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=TyE39n7MpFIkfgXARaAIpSs1PmIH4C+yx6k8CYAlWFg=;
+        b=FuLEV7CWBA2IRdM3kwluhSlKzDLNU3gW7PxAY0Ipm4ZofSEH4MsdTojgyMhM3sr2P3
+         nNRIFqWoW91Sa76ndAUsouRWzBhSYFBBD+vxAF3ybJpqJLtWcg90vaQtIlFnu4X+m60Q
+         tlpyl899XZKw24BwYbT3BPlZYUv7GdRiFk85En0Vwn5W5St/B/xP7UKb4bCl+oIUwbeC
+         KJTavbBRKAzE0aqmmH4SzrFIppUZiNgYNH9gQ7EEx+M9dLUi7K0fMncl54FjVyJfPaEK
+         7Igs0eFZPLqIBLXjAMihne+WPLA61UHWl0hNv07SFKcqIl/8aGMI/CCBF9huzG9U+Iyb
+         JDKQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=BpgkWjnWuEgp3Cu6bAQ0FzKlFx/Hz9hUby+++zqWYJ0=;
-        b=tgGa+lHE+IZN6YppmNnx8QAfM6Fj3M1yq2WOhTq/3ZligKRpoZE5dPvlqDY4dPba0X
-         bQ5Hug4K0oWELfmZg1oCSlx299DAHRpGwgjVcArX08ZaAiTpucKJLiBLhqlWtqAcsjIA
-         p60JdAWSeAkRVDaWXu5TLbRbfrjQGqs+jNI3JXwuesSI7xg4C9jMEU4eyEyPJtUVuqZo
-         26DTiStDGDscNtkKsWeMuv9llOkSkvfptuF1ygvW+zP0As/e+fArbA0HqgGdSkJG40/l
-         WhjfIGN/IfTeIz16AHU4cwt599MAVqQLTq4vzSYb8ctqasuc5HauGqUpkmoZiG2z22IL
-         ZF4A==
-X-Gm-Message-State: AOAM531STuH+e69ZBUBOGytUrL5B9r8cW0wbtUPDUnluVxhI3edKf0c4
-        98ZycpYwHCFdIPXQKCljdTk=
-X-Google-Smtp-Source: ABdhPJw6To/8cw2ZGMm8I7mQ4sIahkk1H/eRR1uUPPoUOYX8L9Cxt3rRitLy4XVFfea5Qdjf8/k/Dg==
-X-Received: by 2002:a17:902:f701:b0:14d:7cea:82af with SMTP id h1-20020a170902f70100b0014d7cea82afmr37656097plo.71.1646340679915;
-        Thu, 03 Mar 2022 12:51:19 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id y12-20020a056a00190c00b004f39e28fb87sm3507488pfi.98.2022.03.03.12.51.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 03 Mar 2022 12:51:19 -0800 (PST)
-Message-ID: <7b1daba2-3ff8-d4ee-9499-89d46d756bb9@acm.org>
-Date:   Thu, 3 Mar 2022 12:51:18 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: move more work to disk_release v2
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
+        bh=TyE39n7MpFIkfgXARaAIpSs1PmIH4C+yx6k8CYAlWFg=;
+        b=8AyJUTp1thDCPcQ80wuYJw8ffqxBO8OfTnWC5Qgcxu8uGBuaK1BcbDKyI2XGF5nAMm
+         H00/ErhteuBe1SMzjcxb+KAgwYoyMkmMXECkrFMUJu6LGML5StfqjMjia2k8flI5ULM7
+         AxUE7DkrZJF23UgAp+6RUEQ0Ju8gUBHLqj35LXYgQvgzdNqH9PfNu87ckUpUkMv1vj2r
+         6zt0syZQQYeIb9smr435cCd/qkciwhVDLJIvUdYJSYt8WhPwOLMBu64k3c9kDzWP2SLe
+         5Sn/ATTwDwQ2xTXe2RTKh8Ech01haeLwJ5xKyEyFDKLMFDJ1+yC/W2TaXcZuM1bPA6ry
+         gmNg==
+X-Gm-Message-State: AOAM533PUH273MAspVYfG3rc5w6Gsh9eNAahw7cf4Bjo0WRQiec++c3S
+        1vfh23LOAIY+OB9A+/Vhe/Ig2Pp20CiZBw==
+X-Google-Smtp-Source: ABdhPJwxSXAw+ly0rlQpXSn0/K2fXtbpHJ+Y5gAwLaApXdHU5IG28rKDtZKRdyzjZVLcOv2ALwCP8g==
+X-Received: by 2002:a1c:730e:0:b0:381:103f:d6d9 with SMTP id d14-20020a1c730e000000b00381103fd6d9mr5137199wmb.46.1646341223736;
+        Thu, 03 Mar 2022 13:00:23 -0800 (PST)
+Received: from nlaptop.localdomain (ptr-dtfv0poj8u7zblqwbt6.18120a2.ip6.access.telenet.be. [2a02:1811:cc83:eef0:f2b6:6987:9238:41ca])
+        by smtp.gmail.com with ESMTPSA id e15-20020a5d6d0f000000b001ef7dca67fasm3394209wrq.114.2022.03.03.13.00.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Mar 2022 13:00:23 -0800 (PST)
+From:   Niels Dossche <dossche.niels@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <20220227172144.508118-1-hch@lst.de>
- <741e087a-43f8-dc90-b679-7865cf503ac3@acm.org> <20220301125632.GA3911@lst.de>
- <c61b6a0d-c3b5-30e2-14c5-efa7ea475c23@acm.org>
- <20220302150319.GA30076@lst.de>
- <9e818df5-e8c0-b397-ae21-1a0745074094@acm.org>
- <20220303105455.GA14991@lst.de>
- <7b4ba630-b51c-9675-88b4-d79649756abd@acm.org>
- <20220303192338.GA23351@lst.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220303192338.GA23351@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Niels Dossche <dossche.niels@gmail.com>
+Subject: [PATCH v3] scsi: aacraid: add missing manage_lock on management_fib_count
+Date:   Thu,  3 Mar 2022 21:59:47 +0100
+Message-Id: <20220303205946.1609-1-dossche.niels@gmail.com>
+X-Mailer: git-send-email 2.35.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/3/22 11:23, Christoph Hellwig wrote:
-> Can you try this patch on top of the series?
-> 
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index 6a072543bde4d..73b8bc9d67cf6 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -883,7 +883,10 @@ static inline void blk_account_io_done(struct request *req, u64 now)
->   
->   static void __blk_account_io_start(struct request *rq)
->   {
-> -	rq->part = rq->bio->bi_bdev;
-> +	if (rq->bio)
-> +		rq->part = rq->bio->bi_bdev;
-> +	else /* should only happen for dm-mpath flush requests */
-> +		rq->part = rq->q->disk->part0;
->   
->   	part_stat_lock();
->   	update_io_ticks(rq->part, jiffies, false);
+All other places modify the management_fib_count under the manage_lock.
+Avoid a possible race condition by also applying that lock in
+aac_src_intr_message.
 
-Hi Christoph,
+Signed-off-by: Niels Dossche <dossche.niels@gmail.com>
+---
+Changes in v3:
+  - Improve commit message.
 
-This patch fixes the crash I reported. With this patch applied on top of the 
-hch-block/freeze-for-next branch blktests produces the same results on my setup 
-as for Jens' for-next branch.
+Changes in v2:
+  - Fix whitespace.
 
-Thanks!
+ drivers/scsi/aacraid/src.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Bart.
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 11ef58204e96..ca73439587ed 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -91,7 +91,9 @@ static irqreturn_t aac_src_intr_message(int irq, void *dev_id)
+ 					dev->sync_fib);
+ 			spin_lock_irqsave(&dev->sync_fib->event_lock, sflags);
+ 			if (dev->sync_fib->flags & FIB_CONTEXT_FLAG_WAIT) {
++				spin_lock(&dev->manage_lock);
+ 				dev->management_fib_count--;
++				spin_unlock(&dev->manage_lock);
+ 				complete(&dev->sync_fib->event_wait);
+ 			}
+ 			spin_unlock_irqrestore(&dev->sync_fib->event_lock,
+-- 
+2.35.1
+
