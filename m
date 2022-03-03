@@ -2,130 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21841C41535
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 08:30:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5BF7C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 08:35:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231364AbiCCIbW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 03:31:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56930 "EHLO
+        id S230199AbiCCIgd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 03:36:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230130AbiCCIbU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 03:31:20 -0500
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DA8F171850;
-        Thu,  3 Mar 2022 00:30:35 -0800 (PST)
-Received: by mail-pg1-x542.google.com with SMTP id z4so3886069pgh.12;
-        Thu, 03 Mar 2022 00:30:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=uLpTC29O7sSEzWIyhD1PQNyRAs1/upRhzEEBO0P7TrY=;
-        b=R05ZV01Yp+GvJafCjJwp2DdNQL1X7N4+v2qDpWCUjxekJqjhV8nKttt+lgDdDv8VHZ
-         pTpad4a62LLA8SjB/yHHEpNTxY0U28zfBa611uCN9ihzVETreTphlyPy+ETyTE4AgOSy
-         RSp6pqcLA1mQfW+JjTEEtr3nMT+EN3gAPPB7pPpCIhAgeloFO+Vkph8Zctn11Qajj/U0
-         QUVjSv6dTXzOO7akWefQCdrhFJznQKo01Wl+2crhxprXX9zSh/gHLWP/Xe3lMKAcW1nu
-         BI3FrzUOW0QskfQ+hVH91vnr00ExY+gCD8VtMWG6RhFXS05x/6dGZMaR1NPNguf29zlo
-         qAtA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=uLpTC29O7sSEzWIyhD1PQNyRAs1/upRhzEEBO0P7TrY=;
-        b=tX4Lvnprkbl55JgpIMGPwUYB3zl4weKQtUQYSCGebicA19Oo2euseaSt/seHhHgl0U
-         WGEXF4Yq70OpGaJzdrRUdewFnJPKwyRe2hcmhELKOAaCQScpZMjVomIJ7EFgGxvhYEp3
-         9HxQe4UlZmMPk4ZhvlJqwjvYVIunkaPltt23SQUu1FRGohEGvel7sT8VStEWsaxjfs5X
-         viiLJUsV/Poav7kbPBu/1Hl2pXtDu+ktsOyqWkyiZbpO4/DOhJ/qeHIG5UgkeNYfEpB/
-         i4SSxCqaL5X+skhojHCTmrD6wVTzE//JfLQc8R7q5KqW7Pfmirm/ksaw2x6Yi8IQw3cR
-         RW+Q==
-X-Gm-Message-State: AOAM533yIcrXrWD0e+qg8tCGwICNQuG2ezuK76KXrTeyZwEDIAawJ7rL
-        tJd6y95jIfu3iOx5y5a6kN0=
-X-Google-Smtp-Source: ABdhPJxl3tqNmXwEb6Rf4RyrJiQAiYb1f64m7AmzgvvLqhkGp3dQvJbj8a24YWybBg5gGNAc3KtcpA==
-X-Received: by 2002:a63:8bca:0:b0:370:2717:3756 with SMTP id j193-20020a638bca000000b0037027173756mr29011952pge.604.1646296234811;
-        Thu, 03 Mar 2022 00:30:34 -0800 (PST)
-Received: from ubuntu.huawei.com ([119.3.119.19])
-        by smtp.googlemail.com with ESMTPSA id d5-20020a17090acd0500b001b9c05b075dsm7342532pju.44.2022.03.03.00.30.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Mar 2022 00:30:34 -0800 (PST)
-From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
-To:     jakobkoschel@gmail.com
-Cc:     David.Laight@ACULAB.COM, akpm@linux-foundation.org,
-        alsa-devel@alsa-project.org, amd-gfx@lists.freedesktop.org,
-        andriy.shevchenko@linux.intel.com, arnd@arndb.de,
-        bcm-kernel-feedback-list@broadcom.com, bjohannesmeyer@gmail.com,
-        c.giuffrida@vu.nl, christian.koenig@amd.com,
-        christophe.jaillet@wanadoo.fr, dan.carpenter@oracle.com,
-        dmaengine@vger.kernel.org, drbd-dev@lists.linbit.com,
-        dri-devel@lists.freedesktop.org, gustavo@embeddedor.com,
-        h.j.bos@vu.nl, intel-gfx@lists.freedesktop.org,
-        intel-wired-lan@lists.osuosl.org, jgg@ziepe.ca,
-        keescook@chromium.org, kgdb-bugreport@lists.sourceforge.net,
-        kvm@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-aspeed@lists.ozlabs.org, linux-block@vger.kernel.org,
-        linux-cifs@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-fsdevel@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-pm@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-sgx@vger.kernel.org, linux-staging@lists.linux.dev,
-        linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net, linux@rasmusvillemoes.dk,
-        linuxppc-dev@lists.ozlabs.org, nathan@kernel.org,
-        netdev@vger.kernel.org, nouveau@lists.freedesktop.org,
-        rppt@kernel.org, samba-technical@lists.samba.org,
-        tglx@linutronix.de, tipc-discussion@lists.sourceforge.net,
-        torvalds@linux-foundation.org,
-        v9fs-developer@lists.sourceforge.net, xiam0nd.tong@gmail.com
-Subject: Re: [PATCH 2/6] treewide: remove using list iterator after loop body as a ptr
-Date:   Thu,  3 Mar 2022 16:30:07 +0800
-Message-Id: <20220303083007.11640-1-xiam0nd.tong@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <A568BD90-FE81-4740-B1D3-C795EB636A5A@gmail.com>
-References: <A568BD90-FE81-4740-B1D3-C795EB636A5A@gmail.com>
+        with ESMTP id S229864AbiCCIgc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 03:36:32 -0500
+Received: from wnew3-smtp.messagingengine.com (wnew3-smtp.messagingengine.com [64.147.123.17])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED9F313DE02;
+        Thu,  3 Mar 2022 00:35:47 -0800 (PST)
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+        by mailnew.west.internal (Postfix) with ESMTP id 533612B0025D;
+        Thu,  3 Mar 2022 03:35:44 -0500 (EST)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute5.internal (MEProxy); Thu, 03 Mar 2022 03:35:45 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:from:from
+        :in-reply-to:in-reply-to:message-id:mime-version:references
+        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=atfxuid6e0L2hecp7
+        attQXvPKmB6bGaKLyrJYHTr/dU=; b=DTsFBzSKEjzfDla//Pr0bprESm1H5jLIn
+        lpW76snRUIOeG5sLR+37XtEcEUgvz7aJbp+j1Sl2d+v1Im9nHGHI4H2b2CXqR5o+
+        PboPnPV2s6L4XCSfbVUEYAXREHDY7HZ2a7llI+0jlrFzulNkZX+9YgBbt1TwqHIw
+        3h1wL8GX0wTTi7z32x3fTSbA7odkE8GZFRyOUp/WogvfIA97HoDF3Xez+SVnJXzb
+        BzjdjccIn7LZn1s31iTrnpDQmZOw/Zpe/WejW+2BwBhYT6XYfHNRWmkCWpBNesAU
+        upqgMLezCtReekEhrZQBsvx/jfwCwdtDIUYRFCTpy8ALX6pl/uk2A==
+X-ME-Sender: <xms:330gYvmVuFWompH0N8GPsdbsfdyk1z6Y3VwKPmOOYB1BQQsm4XBNxg>
+    <xme:330gYi2t182I-mgvweKhIQ38DHTGLDKr8qjOEruN63rZXT3vuFbb00hFDg0BuySSd
+    ukVnORiZVibyk6oG0k>
+X-ME-Received: <xmr:330gYlqCRw1Si4zaWjbs3ArMUvgjpQry9ij5_sYPpQ-Um_iffvAS5WqaTcgRNt9mOLjesMoH28z2ve4raWuTs1v0oXBMEvwdX5I>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddruddthedguddvvdcutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enucfjughrpeffhffvufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcu
+    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
+    htthgvrhhnpefgtdegudfgheehhfeugeeffefhvefgjeevffegfeduffdugeekkeffffej
+    jeehtdenucffohhmrghinhepghhithhhuhgsrdgtohhmnecuvehluhhsthgvrhfuihiivg
+    eptdenucfrrghrrghmpehmrghilhhfrhhomhepfhhthhgrihhnsehlihhnuhigqdhmieek
+    khdrohhrgh
+X-ME-Proxy: <xmx:330gYnnIamJb1Mmv0EFPliA3N07S8ejNbeT0zaqVdpsVSuEOK0CYAw>
+    <xmx:330gYt3VY9GU1C3Hlyvs-1xN6QhLrs8pyNjbzVy--ModPBzZmpsFtQ>
+    <xmx:330gYms5SSizU6GFcJW-ttjBXL2Hw2_dXpfL9CY7i6rI9nbE2EHXfA>
+    <xmx:330gYrPVyu_93Arj84MiOEUzNIYTTbD5fy-LIwvfch9JD6CYOOd7xPY4GcQ>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 3 Mar 2022 03:35:34 -0500 (EST)
+Date:   Thu, 3 Mar 2022 19:35:25 +1100 (AEDT)
+From:   Finn Thain <fthain@linux-m68k.org>
+To:     Tom Rix <trix@redhat.com>
+cc:     Joe Perches <joe@perches.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, nathan@kernel.org,
+        ndesaulniers@google.com, Konrad Kleine <kkleine@redhat.com>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
+Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
+In-Reply-To: <8dd05afd-0bb9-c91b-6393-aff69f1363e1@redhat.com>
+Message-ID: <233660d0-1dee-7d80-1581-2e6845bf7689@linux-m68k.org>
+References: <20220127151945.1244439-1-trix@redhat.com> <d26d4bd8-b5e1-f4d5-b563-9bc4dd384ff8@acm.org> <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com> <e3ae392a16491b9ddeb1f0b2b74fdf05628b1996.camel@perches.com> <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com>
+ <8dd05afd-0bb9-c91b-6393-aff69f1363e1@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> I think this would make sense, it would mean you only assign the containing
-> element on valid elements.
->
-> I was thinking something along the lines of:
->
-> #define list_for_each_entry(pos, head, member)					\
->	for (struct list_head *list = head->next, typeof(pos) pos;	\
->	     list == head ? 0 : (( pos = list_entry(pos, list, member), 1));	\
->	     list = list->next)
->
-> Although the initialization block of the for loop is not valid C, I'm
-> not sure there is any way to declare two variables of a different type
-> in the initialization part of the loop.
 
-It can be done using a *nested loop*, like this:
+On Wed, 2 Mar 2022, Tom Rix wrote:
 
-#define list_for_each_entry(pos, head, member)					\
-	for (struct list_head *list = head->next, cond = (struct list_head *)-1; cond == (struct list_head *)-1; cond = NULL) \
-	  for (typeof(pos) pos;	\
-	     list == head ? 0 : (( pos = list_entry(pos, list, member), 1));	\
-	     list = list->next)
+> >>> Long term, it would be good have a reliable way to automatically fix 
+> >>> either new files or really broken old files.
+> >> That's really a maintainer preference no?
+> >>
+> >> Especially so for any automation.
+> >
+> > In practice everything is up to the maintainer.
+> >
+> > If some maintainer wants fix their formatting then clang-format should 
+> > just work
+> >
+> > It isn't likely they will have time to hand fix every file.
+> 
+> A follow up issue in the clang project has been raised by Konrad, here
+> 
+> https://github.com/llvm/llvm-project/issues/54137
+> 
 
->
-> I believe all this does is get rid of the &pos->member == (head) check
-> to terminate the list.
+Why request a "leave" option for every style rule? Why not just a "leave" 
+option for the most contentious rules?
 
-Indeed, although the original way is harmless.
+The response from the developers that anyone who wants to leave existing 
+code unmolested by certain rules should "wake up and smell the coffee" is 
+obnoxious, IMO.
 
-> It alone will not fix any of the other issues that using the iterator
-> variable after the loop currently has.
+Presumably clang-format must grow until it has sufficient program logic 
+and config options to cater to every exception to every rule. How long 
+will that take? Some carefully chosen "leave" options might make the 
+program much more useful in the near term.
 
-Yes, but I stick with the list_for_each_entry_inside(pos, type, head, member)
-way to make the iterator invisiable outside the loop (before and after the loop).
-It is maintainable longer-term than "type(pos) pos" one and perfect.
-see my explain:
-https://lore.kernel.org/lkml/20220302093106.8402-1-xiam0nd.tong@gmail.com/
-and list_for_each_entry_inside(pos, type, head, member) patch here:
-https://lore.kernel.org/lkml/20220301075839.4156-3-xiam0nd.tong@gmail.com/
+> Tom
+> 
+> 
+> >
+> > Tom
+> >
+> >>
+> >>
+> 
 
---
-Xiaomeng Tong
