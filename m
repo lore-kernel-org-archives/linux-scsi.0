@@ -2,90 +2,167 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27BEDC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 13:57:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04C24C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 14:01:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232311AbiCCN5r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 08:57:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44326 "EHLO
+        id S233884AbiCCOCW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 09:02:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233112AbiCCN5q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 08:57:46 -0500
-Received: from mail-oo1-xc2d.google.com (mail-oo1-xc2d.google.com [IPv6:2607:f8b0:4864:20::c2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 898B418BA7B
-        for <linux-scsi@vger.kernel.org>; Thu,  3 Mar 2022 05:57:01 -0800 (PST)
-Received: by mail-oo1-xc2d.google.com with SMTP id w3-20020a4ac183000000b0031d806bbd7eso5806002oop.13
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Mar 2022 05:57:01 -0800 (PST)
+        with ESMTP id S233880AbiCCOCV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 09:02:21 -0500
+Received: from mail-ot1-x332.google.com (mail-ot1-x332.google.com [IPv6:2607:f8b0:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEACFCEA28
+        for <linux-scsi@vger.kernel.org>; Thu,  3 Mar 2022 06:01:31 -0800 (PST)
+Received: by mail-ot1-x332.google.com with SMTP id a7-20020a9d5c87000000b005ad1467cb59so4661279oti.5
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Mar 2022 06:01:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=BVjgcGGkTWKO8YOUuDLAXRPVmUUyH2fnEbHGP0PNh6M=;
-        b=bCE/g9Qi41dPHRSkXbOcjRgOrgnsU6wRZoe2A6YXHz6A83sZn9EB/vkU5J9+pelAXK
-         Voq5kE74zbPBm2oWRiUNjLisrhGR69Gqtp+AwExhU4Skn42A9JL6QwOXNBuW115yjRca
-         4qTPUauJXjbwJWKVYnLLesq/J9ddD+g4vj11E=
+        bh=AY1AcaYoeSvds4f7VfcM3qp4q4MueaQTmBODFbD5Bbk=;
+        b=finAhWo7PwGKB2zmrbYKXuVh0LMcXi66y3yWyviSKQl4MFBuVP00tvPzbvITxuWQwM
+         0p5TPDaf7v6S6En4wr6nG1dlMGWzVJuwWBkizQloXtg5QYQGkGjB8Son3fbqWuhi7QKT
+         na3ArsgcUG8jr0lhikmTpm5CmdSs+AnVOjGG0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=BVjgcGGkTWKO8YOUuDLAXRPVmUUyH2fnEbHGP0PNh6M=;
-        b=u1j7jhofyt0PdHZGafnB0f+qoxUjJbGURZljGcrFDgBhKGkvX88RVFr8G0Zfx55Huq
-         vtxgEukpPem/uUsGnGPm2dOxSpBEkwzXGHyfatEnWw5QpvpZTVsRig96uqHpNl+DY6pR
-         F2vzVsisgGI164/vLQaAuvJLGO82xXMj7+mesF6O6VjkmNzHtPzllp29qBLdXlc6V94O
-         sTvGh0ksDt8c2Nt96t5uHMaPNCiuhKY7wQud16J8Cc+p6FmaPRHEmnTP4IPmtpsLCyhx
-         7FsjqXI87wQBnpZhvYC+bGBQtCenWCsPJE8RG5RnkJoTfV9+j7jOfUWxaysYAAc/+HhO
-         JVLg==
-X-Gm-Message-State: AOAM531I39XhRKp43mFdu9uO352655t87bOzgxPy+jSTqSnv70jWrxKU
-        HlSOtcCqBJ4nNsloa7tojWUV1zbD6Uu361lQCkT+1Q==
-X-Google-Smtp-Source: ABdhPJyxlCBuZ7/lL4NsbrGZ7lF/Cz7N4tdKs6VJhA3fA06KVBapRPLaXki2y08g/B2KUsWygcnpQrGyaVIsi6fePa4=
-X-Received: by 2002:a05:6870:7391:b0:d9:ae66:b8df with SMTP id
- z17-20020a056870739100b000d9ae66b8dfmr3736701oam.7.1646315820849; Thu, 03 Mar
- 2022 05:57:00 -0800 (PST)
+        bh=AY1AcaYoeSvds4f7VfcM3qp4q4MueaQTmBODFbD5Bbk=;
+        b=udCBC1DB+xyRycKjVNwPMehgYKXw9U5Db9RflZrRNsSRSNTac7DKC8La2rQvyuh5Dd
+         keY3AHKEkwwItvgYOSIWBTZSBm1kY0o5gAREM45NTr+0Vzsggrlt54BnCw590znMyhp3
+         IS8CsPoUisuR/BGCrar6fKu7u2PUMnE3pttcbEdPks5dFgz9iVhnjRy/gzVb+xjEQQhB
+         xs+ja8E8wDPmpYB+w7C/E0sxQWfD/SjckHTtzyBCDp6cDrMr4nBlDOF6F7X+OCjOHR+x
+         iWxqWWkZD5t8LSYGM4dRix13ybS6+rx/I+sTUSRoT8hUKxME8xyDaGumEcbXmGypHJXd
+         5hxA==
+X-Gm-Message-State: AOAM533u7N1iwNIvDaDsDRE3LkxXbNIJDIAuDW2Ol/R47buD9zbD6R59
+        pw9oGCv6y1MHVHf/a4ztUSG7naxh2HPLZN1gJ3BRliEf/S7mbhlp
+X-Google-Smtp-Source: ABdhPJy6ktXt6Xg0XaKJVVWFESMKry/+PC9sS602Df8KIRW4F6BDs1kk2UPNtDcbLoWrpI9RZp0qu/RLjsRuRTk7z24=
+X-Received: by 2002:a05:6830:2645:b0:5b0:2317:c738 with SMTP id
+ f5-20020a056830264500b005b02317c738mr10692486otu.237.1646316089641; Thu, 03
+ Mar 2022 06:01:29 -0800 (PST)
 MIME-Version: 1.0
-References: <20220222150319.28397-1-jpittman@redhat.com> <CAFdVvOzsSECZsjtniH5LCoBT-h01KHfGwose9awH1PN=-7yp0w@mail.gmail.com>
- <yq1y21tyocp.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1y21tyocp.fsf@ca-mkp.ca.oracle.com>
+References: <20220201223948.1455637-1-keescook@chromium.org> <164462189850.7606.6908949862618145181.b4-ty@oracle.com>
+In-Reply-To: <164462189850.7606.6908949862618145181.b4-ty@oracle.com>
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date:   Thu, 3 Mar 2022 19:26:49 +0530
-Message-ID: <CAK=zhgoGc98eHN9aPq47tALSzMKZXTjL7CSf=sdM1wEif4epog@mail.gmail.com>
-Subject: Re: [PATCH] scsi: mpt3sas: decrease potential frequency of
- scsi_dma_map errors
+Date:   Thu, 3 Mar 2022 19:31:18 +0530
+Message-ID: <CAK=zhgpQcJkRKVNFHy6mDqV9hOyzFsV_uqOWur8UsNLRZy-VdA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: mpt3sas: Convert to flexible arrays
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     John Pittman <jpittman@redhat.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+Cc:     Kees Cook <keescook@chromium.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
         Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-hardening@vger.kernel.org,
         linux-scsi <linux-scsi@vger.kernel.org>,
-        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>,
-        Laurence Oberman <loberman@redhat.com>,
-        David Jeffery <djeffery@redhat.com>
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000b4c85205d950c543"
+        boundary="000000000000d1a51605d950d578"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000b4c85205d950c543
+--000000000000d1a51605d950d578
 Content-Type: text/plain; charset="UTF-8"
 
-On Wed, Mar 2, 2022 at 9:54 AM Martin K. Petersen
+Hi,
+
+I am observing below kernel panic when I load the driver with this
+patch changes. After reverting this patch changes then the driver is
+getting loaded successfully.
+
+[  414.493579] mpt3sas_cm0: port enable: SUCCESS
+[  414.498313] BUG: unable to handle page fault for address: 00000024000000ba
+[  414.505182] #PF: supervisor read access in kernel mode
+[  414.510322] #PF: error_code(0x0000) - not-present page
+[  414.515462] PGD 0 P4D 0
+[  414.518000] Oops: 0000 [#1] PREEMPT SMP NOPTI
+[  414.522360] CPU: 31 PID: 48 Comm: kworker/u98:0 Kdump: loaded
+Tainted: G           OE     5.17.0-rc1+ #1
+[  414.531833] Hardware name: Supermicro AS -1114S-WTRT/H12SSW-NT,
+BIOS 1.1a 05/28/2020
+[  414.539564] Workqueue: events_unbound async_run_entry_fn
+[  414.544877] RIP: 0010:scsih_qcmd+0x29/0x450 [mpt3sas]
+[  414.549938] Code: 00 0f 1f 44 00 00 41 57 41 56 41 55 41 54 55 48
+89 fd 53 48 89 f3 48 83 ec 18 f6 87 91 08 00 00 40 0f 85 e3 00 05
+[  414.568684] RSP: 0018:ffffa397c67df8d0 EFLAGS: 00010246
+[  414.573912] RAX: 0000002400000012 RBX: ffff947666d84208 RCX: ffff947666d84208
+[  414.581042] RDX: ffff947603afa000 RSI: ffff947666d84208 RDI: ffff947603afa000
+[  414.588168] RBP: ffff947603afa000 R08: 0000000000000020 R09: ffff94764ad2fa30
+[  414.595301] R10: 0000000000000000 R11: 0000000000000001 R12: ffff947603afa000
+[  414.602434] R13: ffff947667d87000 R14: ffff947603afa000 R15: ffffa397c67df9d0
+[  414.609568] FS:  0000000000000000(0000) GS:ffff947d2fbc0000(0000)
+knlGS:0000000000000000
+[  414.617654] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  414.623399] CR2: 00000024000000ba CR3: 00000004c9e0a000 CR4: 0000000000350ee0
+[  414.630531] Call Trace:
+[  414.632977]  <TASK>
+[  414.635084]  scsi_queue_rq+0x36e/0xa70
+[  414.638836]  blk_mq_dispatch_rq_list+0x2f6/0x8e0
+[  414.643455]  ? get_page_from_freelist+0xb70/0xe50
+[  414.648161]  ? __sbitmap_get_word+0x37/0x80
+[  414.652347]  __blk_mq_sched_dispatch_requests+0xb2/0x140
+[  414.657661]  blk_mq_sched_dispatch_requests+0x30/0x60
+[  414.662712]  __blk_mq_run_hw_queue+0x34/0x90
+[  414.666985]  __blk_mq_delay_run_hw_queue+0x18b/0x1c0
+[  414.671949]  blk_mq_sched_insert_request+0xd3/0x140
+[  414.676830]  blk_execute_rq+0x53/0xf0
+[  414.680495]  __scsi_execute+0x101/0x260
+[  414.684337]  scsi_probe_and_add_lun+0x181/0xe10
+[  414.688869]  __scsi_scan_target+0xec/0x5a0
+[  414.692969]  ? _raw_spin_unlock_irqrestore+0x1f/0x31
+[  414.697933]  ? __pm_runtime_resume+0x54/0x70
+[  414.702208]  scsi_scan_target+0xf8/0x110
+[  414.706135]  sas_rphy_add+0x162/0x1b0 [scsi_transport_sas]
+[  414.711620]  mpt3sas_transport_port_add+0x315/0x480 [mpt3sas]
+[  414.717375]  _scsih_complete_devices_scanning+0x2f8/0x336 [mpt3sas]
+[  414.723648]  scsih_scan_finished.cold.103+0x91/0xe3 [mpt3sas]
+[  414.729393]  do_scsi_scan_host+0x6f/0x90
+[  414.733321]  do_scan_async+0x17/0x150
+[  414.736987]  async_run_entry_fn+0x30/0x130
+[  414.741085]  process_one_work+0x1c8/0x390
+[  414.745099]  worker_thread+0x30/0x350
+[  414.748764]  ? process_one_work+0x390/0x390
+[  414.752951]  kthread+0xe8/0x110
+[  414.756098]  ? kthread_complete_and_exit+0x20/0x20
+[  414.760891]  ret_from_fork+0x22/0x30
+[  414.764469]  </TASK>
+[  414.766662] Modules linked in: mpt3sas(OE) xt_CHECKSUM
+xt_MASQUERADE xt_conntrack ipt_REJECT nf_nat_tftp nft_objref
+nf_conntrack_tc
+[  414.766715]  drm_ttm_helper ttm ahci crc32c_intel libahci drm
+bnxt_en libata raid_class scsi_transport_sas pinctrl_amd dm_mirror d]
+[  414.869470] CR2: 00000024000000ba
+
+Thanks,
+Sreekanth
+
+On Sat, Feb 12, 2022 at 4:55 AM Martin K. Petersen
 <martin.petersen@oracle.com> wrote:
 >
+> On Tue, 1 Feb 2022 14:39:48 -0800, Kees Cook wrote:
 >
-> > ACK by BRCM.
+> > This converts to a flexible array instead of the old-style 1-element
+> > arrays. The existing code already did the correct math for finding the
+> > size of the resulting flexible array structure, so there is no binary
+> > difference.
+> >
+> > The other two structures converted to use flexible arrays appear to
+> > have no users at all.
+> >
+> > [...]
 >
-> Please resubmit with message removed as requested by Christoph.
-
-Posted below patch to remove these error messages,
-mpt3sas: Remove scsi_dma_map errors messages
-https://patchwork.kernel.org/project/linux-scsi/patch/20220303140203.12642-1-sreekanth.reddy@broadcom.com/
-
+> Applied to 5.18/scsi-queue, thanks!
+>
+> [1/1] scsi: mpt3sas: Convert to flexible arrays
+>       https://git.kernel.org/mkp/scsi/c/d20b3dae630f
 >
 > --
 > Martin K. Petersen      Oracle Linux Engineering
 
---000000000000b4c85205d950c543
+--000000000000d1a51605d950d578
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -156,13 +233,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOLgSBXZFfclGKX6feTe
-X5xGqlyasbV1fF7D9b19oscOMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDMwMzEzNTcwMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIN06xAWm+gj0yPI0/yC
+BpkVQmMk7HHzaP4KvyXjfesTMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDMwMzE0MDEzMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBKUDRPo/jHO091+iOQDJ5rLHGgrkWJ+T9CWXaj
-5Qfzt0oCggIVBsElTemDLfZzNp+Q+hxey9A/eJFKGgtcV1ZFCg8h9981ifOJ28+VwSRucEPtvar9
-c1UmMfKdRHUI2nFS+svxffryHS/F2yntXqRpXzavdWNyN4OA7ctLN8GVP/ivO3q+LsrxBTga4Toz
-q0yzW9Ff9BVzfHVhZU4aIC26Ze/hEHakwzaBTFoRgUQPu/fbLUw5VbwLLkuiUpRR54EwIdKJB1TM
-RDx0fnfw4ELVkfvebirh7RD8ZJ8sMsXEwix1RCS3oHXfrt+PPKbsAFIAA25O64Z8M0jRZU5oGQ85
---000000000000b4c85205d950c543--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCfLbrt2Awk8IISnf8A5cNysZGggdNjK5cdXtVN
+TYDoSS7MUJTVjCM7C3bRftBFF9A5oZ6qXNK6vfxO8Nfw6UjGicc72q2UI4lSYa+48tEhTNd93uSq
+GxIxgfIKh17kouHH+lHTx5OMIQRiFjMVnSyvRVV8v6jVsvf5vb0WE6XiwYumhusBjp+qelIrYp1L
+w6ObkMaxfPNIF7qGaVp4ZUb5nHtmgLVIqljPOzIbouD+YVC9R11L/NaTjjRh4uziohbwlZUt8mwV
+xNtYR1YRyu//8jek8UUA4DBjMohX6UFG36uqgJLqJ2Fwh8JFeYHBgZhnVhIKygcbQbz/lcscz552
+--000000000000d1a51605d950d578--
