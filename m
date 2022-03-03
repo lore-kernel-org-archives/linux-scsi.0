@@ -2,246 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 928F1C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 07:32:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8A9BC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 07:56:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229985AbiCCHd0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 02:33:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58372 "EHLO
+        id S230416AbiCCH4u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 02:56:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229613AbiCCHdX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 02:33:23 -0500
-Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E039A21E01;
-        Wed,  2 Mar 2022 23:32:35 -0800 (PST)
-Received: by mail-ej1-x62f.google.com with SMTP id kt27so8803750ejb.0;
-        Wed, 02 Mar 2022 23:32:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=Gor8M86/GsIuBlid/S84lkBznvRDaKBCWzgLUKh5JV4=;
-        b=k+fk9urovAn8Fq6hF831psJF6X0Hx41hiPVDAocMfW4Gi2tjP5gBRRyYi9UY1gS3y9
-         T1f7NxhpZChRCZGs3wiKfQBYFQeu68Ugjwk2rWVNy++UqI5E9Ffm7Qe5sREsy932o9zn
-         yoQiy9LiamLlfFC8y8nGBw2mIwTduboT8pHpf33UZ2RGjV2D/meZqmuHsAbl7tfxfJuC
-         e8redX9TOEvOJZ9E1AYG0yGidZEg6kfprz6yLCxUQC7gampXaGyLYaXWTA6umkTeR66S
-         hL8UX9htvKnv+kjTxwKZtpIsvgv4G4bDiBBsZxSW5S7a6ZZ6AFWNSxZHN5mDaVwEmoV0
-         Hg1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=Gor8M86/GsIuBlid/S84lkBznvRDaKBCWzgLUKh5JV4=;
-        b=id0kl/q90ncvhsMeCrR4RKoyZDDANC/HB9N31+GJ3KaCgiAjFV4cIJRbdUQB6Vfzq+
-         z6Wgpo3P9AILdpw3qiK35g30pVmVnTBacdxGNBSWHTxSKuVQObpL1BrSTICx2DyuFbSQ
-         y07UToAz/LPW32TyLjnnkTUkU+W2XFc9f4hKZsBdjU2h92YeL0jZ14GPPWCTI4QkoprA
-         dGoJoPMZtN+QYmJ2ss0VfueKrjfHYv53b28HdoXTFPWB7gp9jpULrd2BZ+pxJGeTH/2s
-         9HUU5AMdtUKRnq9mny0Q+glbNiV9UfYjWEIrOmzSmIVPfh+kMJnkeLVv8SkXeCl7gnLK
-         XQpg==
-X-Gm-Message-State: AOAM530e8Jv/uqzTzSYpQEM5Nb28hM+7fB3J76qfgQWmnwitXHBDKD71
-        J0ASu2+7nPZqagQhYrXzLBg=
-X-Google-Smtp-Source: ABdhPJzeteUoFgq8PxHWf79kt1+XNtdp+qSeHQzci99kHRtMUTD40dS4a5KNav7C0/39ueCDeIyc3w==
-X-Received: by 2002:a17:906:7c93:b0:6cd:341a:a1d5 with SMTP id w19-20020a1709067c9300b006cd341aa1d5mr25639417ejo.698.1646292754302;
-        Wed, 02 Mar 2022 23:32:34 -0800 (PST)
-Received: from smtpclient.apple ([2a02:8109:9d80:3f6c:896:faf2:6663:1f74])
-        by smtp.gmail.com with ESMTPSA id gj18-20020a170907741200b006da82539c83sm410819ejc.73.2022.03.02.23.32.32
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 02 Mar 2022 23:32:33 -0800 (PST)
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 15.0 \(3693.60.0.1.1\))
-Subject: Re: [PATCH 2/6] treewide: remove using list iterator after loop body
- as a ptr
-From:   Jakob Koschel <jakobkoschel@gmail.com>
-In-Reply-To: <39404befad5b44b385698ff65465abe5@AcuMS.aculab.com>
-Date:   Thu, 3 Mar 2022 08:32:31 +0100
-Cc:     Xiaomeng Tong <xiam0nd.tong@gmail.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>,
-        "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>,
-        "andriy.shevchenko@linux.intel.com" 
-        <andriy.shevchenko@linux.intel.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "bcm-kernel-feedback-list@broadcom.com" 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        "bjohannesmeyer@gmail.com" <bjohannesmeyer@gmail.com>,
-        "c.giuffrida@vu.nl" <c.giuffrida@vu.nl>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "christophe.jaillet@wanadoo.fr" <christophe.jaillet@wanadoo.fr>,
-        "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "gustavo@embeddedor.com" <gustavo@embeddedor.com>,
-        "h.j.bos@vu.nl" <h.j.bos@vu.nl>,
-        "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-        "jgg@ziepe.ca" <jgg@ziepe.ca>,
-        "keescook@chromium.org" <keescook@chromium.org>,
-        "kgdb-bugreport@lists.sourceforge.net" 
-        <kgdb-bugreport@lists.sourceforge.net>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
+        with ESMTP id S229814AbiCCH4t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 02:56:49 -0500
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D668716F960;
+        Wed,  2 Mar 2022 23:56:00 -0800 (PST)
+X-UUID: 4a72785ec92a48dc8d8e5438043181db-20220303
+X-UUID: 4a72785ec92a48dc8d8e5438043181db-20220303
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        (envelope-from <alice.chao@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 344685981; Thu, 03 Mar 2022 15:55:53 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
+ Thu, 3 Mar 2022 15:55:47 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 3 Mar 2022 15:55:47 +0800
+From:   Alice Chao <alice.chao@mediatek.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <matthias.bgg@gmail.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
-        "linux-aspeed@lists.ozlabs.org" <linux-aspeed@lists.ozlabs.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>,
-        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-        "linux-f2fs-devel@lists.sourceforge.net" 
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-iio@vger.kernel.org" <linux-iio@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-sgx@vger.kernel.org" <linux-sgx@vger.kernel.org>,
-        "linux-staging@lists.linux.dev" <linux-staging@lists.linux.dev>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux1394-devel@lists.sourceforge.net" 
-        <linux1394-devel@lists.sourceforge.net>,
-        "linux@rasmusvillemoes.dk" <linux@rasmusvillemoes.dk>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "nathan@kernel.org" <nathan@kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>,
-        "rppt@kernel.org" <rppt@kernel.org>,
-        "samba-technical@lists.samba.org" <samba-technical@lists.samba.org>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "tipc-discussion@lists.sourceforge.net" 
-        <tipc-discussion@lists.sourceforge.net>,
-        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-        "v9fs-developer@lists.sourceforge.net" 
-        <v9fs-developer@lists.sourceforge.net>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <A568BD90-FE81-4740-B1D3-C795EB636A5A@gmail.com>
-References: <1077f17e50d34dc2bbfdf4e52a1cb2fd@AcuMS.aculab.com>
- <20220303022729.9321-1-xiam0nd.tong@gmail.com>
- <39404befad5b44b385698ff65465abe5@AcuMS.aculab.com>
-To:     David Laight <David.Laight@ACULAB.COM>
-X-Mailer: Apple Mail (2.3693.60.0.1.1)
+        <linux-mediatek@lists.infradead.org>
+CC:     <stanley.chu@mediatek.com>, <peter.wang@mediatek.com>,
+        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
+        <jonathan.hsu@mediatek.com>, <powen.kao@mediatek.com>,
+        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <jiajie.hao@mediatek.com>, <qilin.tan@mediatek.com>,
+        <lin.gui@mediatek.com>, <yanxu.wei@mediatek.com>,
+        <wsd_upstream@mediatek.com>
+Subject: [PATCH 1/1] scsi: Fix racing between dev init and dev reset
+Date:   Thu, 3 Mar 2022 15:55:27 +0800
+Message-ID: <20220303075527.25258-1-alice.chao@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+MIME-Version: 1.0
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Device reset thread uses kobject_uevent_env() to get kobj.parent
+after scsi_evt_emit(), and it races with device init thread which
+calls device_add() to create kobj.parent before kobject_uevent_env().
 
+Device reset call trace:
+fill_kobj_path
+kobject_get_path
+kobject_uevent_env
+scsi_evt_emit			<- add wait_event()
+scsi_evt_thread
 
-> On 3. Mar 2022, at 05:58, David Laight <David.Laight@ACULAB.COM> =
-wrote:
->=20
-> From: Xiaomeng Tong
->> Sent: 03 March 2022 02:27
->>=20
->> On Wed, 2 Mar 2022 14:04:06 +0000, David Laight
->> <David.Laight@ACULAB.COM> wrote:
->>> I think that it would be better to make any alternate loop macro
->>> just set the variable to NULL on the loop exit.
->>> That is easier to code for and the compiler might be persuaded to
->>> not redo the test.
->>=20
->> No, that would lead to a NULL dereference.
->=20
-> Why, it would make it b ethe same as the 'easy to use':
-> 	for (item =3D head; item; item =3D item->next) {
-> 		...
-> 		if (...)
-> 			break;
-> 		...
-> 	}
-> 	if (!item)
-> 		return;
->=20
->> The problem is the mis-use of iterator outside the loop on exit, and
->> the iterator will be the HEAD's container_of pointer which pointers
->> to a type-confused struct. Sidenote: The *mis-use* here refers to
->> mistakely access to other members of the struct, instead of the
->> list_head member which acutally is the valid HEAD.
->=20
-> The problem is that the HEAD's container_of pointer should never
-> be calculated at all.
-> This is what is fundamentally broken about the current definition.
->=20
->> IOW, you would dereference a (NULL + offset_of_member) address here.
->=20
-> Where?
->=20
->> Please remind me if i missed something, thanks.
->>=20
->> Can you share your "alternative definitions" details? thanks!
->=20
-> The loop should probably use as extra variable that points
-> to the 'list node' in the next structure.
-> Something like:
-> 	for (xxx *iter =3D head->next;
-> 		iter =3D=3D &head ? ((item =3D NULL),0) : ((item =3D =
-list_item(iter),1));
-> 		iter =3D item->member->next) {
-> 	   ...
-> With a bit of casting you can use 'item' to hold 'iter'.
+Device init call trace:
+fill_kobj_path
+kobject_get_path
+kobject_uevent_env
+device_add				<- create kobj.parent
+scsi_target_add
+scsi_sysfs_add_sdev
+scsi_add_lun
+scsi_probe_and_add_lun
 
-I think this would make sense, it would mean you only assign the =
-containing
-element on valid elements.
+These two jobs are scheduled asynchronously, we can't guaranteed that
+kobj.parent will be created in device init thread before device reset
+thread calls kobj_get_path().
 
-I was thinking something along the lines of:
+To resolve the racing issue between device init thread and device
+reset thread, we use wait_event() in scsi_evt_emit() to wait for
+device_add() to complete the creation of kobj.parent.
 
-#define list_for_each_entry(pos, head, member)					=
-\
-	for (struct list_head *list =3D head->next, typeof(pos) pos;	=
-\
-	     list =3D=3D head ? 0 : (( pos =3D list_entry(pos, list, =
-member), 1));	\
-	     list =3D list->next)
+Signed-off-by: Alice Chao <alice.chao@mediatek.com>
+---
+ drivers/scsi/scsi_lib.c  | 1 +
+ drivers/scsi/scsi_scan.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-Although the initialization block of the for loop is not valid C, I'm
-not sure there is any way to declare two variables of a different type
-in the initialization part of the loop.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0a70aa763a96..abf9a71ed77c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2461,6 +2461,7 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+ 		break;
+ 	case SDEV_EVT_POWER_ON_RESET_OCCURRED:
+ 		envp[idx++] = "SDEV_UA=POWER_ON_RESET_OCCURRED";
++		wait_event(sdev->host->host_wait, sdev->sdev_gendev.kobj.parent != NULL);
+ 		break;
+ 	default:
+ 		/* do nothing */
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index f4e6c68ac99e..431f229ac435 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1904,6 +1904,7 @@ static void do_scsi_scan_host(struct Scsi_Host *shost)
+ 	} else {
+ 		scsi_scan_host_selected(shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
+ 				SCAN_WILD_CARD, 0);
++		wake_up(&shost->host_wait);
+ 	}
+ }
+ 
+-- 
+2.18.0
 
-I believe all this does is get rid of the &pos->member =3D=3D (head) =
-check
-to terminate the list.
-It alone will not fix any of the other issues that using the iterator
-variable after the loop currently has.
-
-
-AFAIK Adri=C3=A1n Moreno is working on doing something along those lines
-for the list iterator in openvswitch (that was similar to the kernel
-one before) [1].
-
-I *think* they don't declare 'pos' within the loop which we *do want*
-to avoid any uses of it after the loop.
-(If pos is not declared in the initialization block, shadowing the
-*outer* pos, it would just point to the last element of the list or stay
-uninitialized if the list is empty).
-
-
-[1] https://www.mail-archive.com/ovs-dev@openvswitch.org/msg63497.html
-
-
->=20
->>=20
->>> OTOH there may be alternative definitions that can be used to get
->>> the compiler (or other compiler-like tools) to detect broken code.
->>> Even if the definition can't possibly generate a working kerrnel.
->>=20
->> The "list_for_each_entry_inside(pos, type, head, member)" way makes
->> the iterator invisiable outside the loop, and would be catched by
->> compiler if use-after-loop things happened.
->=20
-> It is also a compete PITA for anything doing a search.
->=20
-> 	David
->=20
-> -
-> Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, =
-MK1 1PT, UK
-> Registration No: 1397386 (Wales)
->=20
-
-- Jakob=
