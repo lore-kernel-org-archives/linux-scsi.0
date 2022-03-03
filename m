@@ -2,73 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1525AC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 02:06:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3979C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Mar 2022 02:28:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231608AbiCCCHa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Mar 2022 21:07:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46962 "EHLO
+        id S231808AbiCCC2m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Mar 2022 21:28:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231613AbiCCCH3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2022 21:07:29 -0500
-X-Greylist: delayed 906 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 02 Mar 2022 18:06:44 PST
-Received: from mail-m972.mail.163.com (mail-m972.mail.163.com [123.126.97.2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5E479108742
-        for <linux-scsi@vger.kernel.org>; Wed,  2 Mar 2022 18:06:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=zQiqJ
-        MMK3nLRrtLWwk0/n0GVF6Y3EScFNSuSayheZUw=; b=JZ/RQWOo4LkyI9KS8H0Bz
-        yVctZZxQEKmaazdKVi9m8U2bYd8R0h5/sTpwqAVKb4+Akj8581HPCBiWx+RURmxL
-        yJtrQT8sWLN3mCxF4e+V1U10ci16fiBfimSpVZSn9R2b35TBeA3/9ci43s2GHIPN
-        /3uA0G+/ojrMLmLVOl3UVc=
-Received: from localhost.localdomain (unknown [218.106.182.227])
-        by smtp2 (Coremail) with SMTP id GtxpCgDn708VHyBiSEeUAA--.9337S4;
-        Thu, 03 Mar 2022 09:51:26 +0800 (CST)
-From:   Jianglei Nie <niejianglei2021@163.com>
-To:     hare@suse.de, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jianglei Nie <niejianglei2021@163.com>
-Subject: [PATCH] scsi: libfc: Fix use after free in fc_exch_abts_resp()
-Date:   Thu,  3 Mar 2022 09:51:15 +0800
-Message-Id: <20220303015115.459778-1-niejianglei2021@163.com>
-X-Mailer: git-send-email 2.25.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: GtxpCgDn708VHyBiSEeUAA--.9337S4
-X-Coremail-Antispam: 1Uf129KBjvdXoWrKrWkJF4DWrW5urWrZr1rtFb_yoWDJrc_ua
-        9rGr17Gr1UtrWxWw18GF4fZrWa934DXFnakrn2qF1fuay5urWkZF1UZr95ury5Ww4UKFZx
-        Gr4DWryrAF1avjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xREzuWtUUUUU==
-X-Originating-IP: [218.106.182.227]
-X-CM-SenderInfo: xqlhyxxdqjzvrlsqjii6rwjhhfrp/1tbiQx64jFc7XpxpwwAAst
+        with ESMTP id S231743AbiCCC2i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2022 21:28:38 -0500
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B340D10FC6;
+        Wed,  2 Mar 2022 18:27:53 -0800 (PST)
+Received: by mail-pj1-x102e.google.com with SMTP id p3-20020a17090a680300b001bbfb9d760eso6464723pjj.2;
+        Wed, 02 Mar 2022 18:27:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=C6016/38QKZUQAyk5HMPjenTvm42Pe8sPBzTcqL5vmY=;
+        b=qBGtve+IuFrAkJa+gsN1WQjHRs2fvQkSK1D44BenBKAqsyswWIPF49CjeAw6Lc/Xiz
+         7VY9uX10GWOeYOq3Roffx9lK59MGCnSnWmLkHD6Zz3XGADMqQbIXFAspvzlfyt7tl87F
+         C44YITS/y0gKUKqqxM42VKL4jH/Xx4KasojD++jZOWXtcwkx1m//DlSoFwhQEbp4i/NS
+         eGEaCL2abI9d2Qo/vgVE47lljuFHl9RIsYb9haWI9DYl1+oIMHXMK3O9uyeK26H4D1AX
+         Jy4saNgfSyFkb5FP8pbKE6ds3BSqIpGBCoZu+qijzq/vfSl1dGYXTnehjmH9/ySByi+z
+         BIOg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=C6016/38QKZUQAyk5HMPjenTvm42Pe8sPBzTcqL5vmY=;
+        b=CzJtZPcuhcWcftaDgdBMfTH8+c9EoS3XmQ505LWS57kdN7/Y7hxiGiFhGCtkVhWR4n
+         9QiYMg9DgjK+2U+OgCUW8Ihc/Zsz1tArsI+VPvsbHeizYXBDN8PT/Evowom4DSVx5ZKW
+         SbKPrObrC5eMgExacIP+ZPEND4qx5Us+NJQ0WRDXPRpYk5m/o2sqMuwebEko7dN7/HEk
+         eAq5ky/UWz0+SWqk5EOcM1gkci5Yts4Pn4Ct+p/tQQvAT2EONElmTfre57WvwdfOJKPi
+         0JSo3Tr1FuDqKJWi6MM1A+v0Yqa4E2WoDAES5x9cgi/rm9pPbPuEvHVBoD12sn5e/d+j
+         6agg==
+X-Gm-Message-State: AOAM531YwoKciGKl5/xB3iguH9sB6KyY7W/Y8igN4n9GDfpUTuo8ZSvU
+        LuwF03lr62QEMLGgZKYD3hLDUsWYyg5BSQ==
+X-Google-Smtp-Source: ABdhPJwdGKGtPoJbq9KB0b78P8kOQOqlHazHAUCZQHvA6TzNHcldJErwW75BUHOqmaVxrll88UvLqQ==
+X-Received: by 2002:a17:902:ec90:b0:151:a632:7ebb with SMTP id x16-20020a170902ec9000b00151a6327ebbmr1936164plg.154.1646274473191;
+        Wed, 02 Mar 2022 18:27:53 -0800 (PST)
+Received: from ubuntu.huawei.com ([119.3.119.19])
+        by smtp.googlemail.com with ESMTPSA id d15-20020a17090ab30f00b001b8e65326b3sm359822pjr.9.2022.03.02.18.27.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Mar 2022 18:27:52 -0800 (PST)
+From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
+To:     david.laight@aculab.com
+Cc:     akpm@linux-foundation.org, alsa-devel@alsa-project.org,
+        amd-gfx@lists.freedesktop.org, andriy.shevchenko@linux.intel.com,
+        arnd@arndb.de, bcm-kernel-feedback-list@broadcom.com,
+        bjohannesmeyer@gmail.com, c.giuffrida@vu.nl,
+        christian.koenig@amd.com, christophe.jaillet@wanadoo.fr,
+        dan.carpenter@oracle.com, dmaengine@vger.kernel.org,
+        drbd-dev@lists.linbit.com, dri-devel@lists.freedesktop.org,
+        gustavo@embeddedor.com, h.j.bos@vu.nl,
+        intel-gfx@lists.freedesktop.org, intel-wired-lan@lists.osuosl.org,
+        jakobkoschel@gmail.com, jgg@ziepe.ca, keescook@chromium.org,
+        kgdb-bugreport@lists.sourceforge.net, kvm@vger.kernel.org,
+        linux-arch@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-aspeed@lists.ozlabs.org, linux-block@vger.kernel.org,
+        linux-cifs@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-fsdevel@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-pm@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-sgx@vger.kernel.org, linux-staging@lists.linux.dev,
+        linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net, linux@rasmusvillemoes.dk,
+        linuxppc-dev@lists.ozlabs.org, nathan@kernel.org,
+        netdev@vger.kernel.org, nouveau@lists.freedesktop.org,
+        rppt@kernel.org, samba-technical@lists.samba.org,
+        tglx@linutronix.de, tipc-discussion@lists.sourceforge.net,
+        torvalds@linux-foundation.org,
+        v9fs-developer@lists.sourceforge.net, xiam0nd.tong@gmail.com
+Subject: RE: [PATCH 2/6] treewide: remove using list iterator after loop body as a ptr
+Date:   Thu,  3 Mar 2022 10:27:29 +0800
+Message-Id: <20220303022729.9321-1-xiam0nd.tong@gmail.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <1077f17e50d34dc2bbfdf4e52a1cb2fd@AcuMS.aculab.com>
+References: <1077f17e50d34dc2bbfdf4e52a1cb2fd@AcuMS.aculab.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-fc_exch_release(ep) will decrease the ep's reference count. When the
-reference count reaches zero, it is freed. But ep is still used in the
-following code, which will lead to a use after free.
+On Wed, 2 Mar 2022 14:04:06 +0000, David Laight
+<David.Laight@ACULAB.COM> wrote:
+> I think that it would be better to make any alternate loop macro
+> just set the variable to NULL on the loop exit.
+> That is easier to code for and the compiler might be persuaded to
+> not redo the test.
 
-We should return the function after the call of fc_exch_release() to
-avoid use after free.
+No, that would lead to a NULL dereference.
 
-Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
----
- drivers/scsi/libfc/fc_exch.c | 1 +
- 1 file changed, 1 insertion(+)
+The problem is the mis-use of iterator outside the loop on exit, and
+the iterator will be the HEAD's container_of pointer which pointers
+to a type-confused struct. Sidenote: The *mis-use* here refers to
+mistakely access to other members of the struct, instead of the
+list_head member which acutally is the valid HEAD.
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 841000445b9a..aa223db4cf53 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1701,6 +1701,7 @@ static void fc_exch_abts_resp(struct fc_exch *ep, struct fc_frame *fp)
- 	if (cancel_delayed_work_sync(&ep->timeout_work)) {
- 		FC_EXCH_DBG(ep, "Exchange timer canceled due to ABTS response\n");
- 		fc_exch_release(ep);	/* release from pending timer hold */
-+		return;
- 	}
- 
- 	spin_lock_bh(&ep->ex_lock);
--- 
-2.25.1
+IOW, you would dereference a (NULL + offset_of_member) address here.
 
+Please remind me if i missed something, thanks.
+
+> OTOH there may be alternative definitions that can be used to get
+> the compiler (or other compiler-like tools) to detect broken code.
+> Even if the definition can't possibly generate a working kerrnel.
+
+The "list_for_each_entry_inside(pos, type, head, member)" way makes
+the iterator invisiable outside the loop, and would be catched by
+compiler if use-after-loop things happened.
+
+Can you share your "alternative definitions" details? thanks!
+
+--
+Xiaomeng Tong
