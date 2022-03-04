@@ -2,101 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B81DFC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 09:48:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA44EC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 12:32:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239490AbiCDJs6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Mar 2022 04:48:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57596 "EHLO
+        id S234968AbiCDMc7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Mar 2022 07:32:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239569AbiCDJsp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2022 04:48:45 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55AB44EA3D;
-        Fri,  4 Mar 2022 01:47:56 -0800 (PST)
-Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4K930G1dtrz681Y1;
-        Fri,  4 Mar 2022 17:46:38 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.21; Fri, 4 Mar 2022 10:47:53 +0100
-Received: from [10.47.95.117] (10.47.95.117) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 4 Mar
- 2022 09:47:52 +0000
-Message-ID: <43acb2b3-8bb0-48b7-2330-3cfad8ca748c@huawei.com>
-Date:   Fri, 4 Mar 2022 09:47:57 +0000
+        with ESMTP id S238550AbiCDMcu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2022 07:32:50 -0500
+Received: from mail-io1-xd2c.google.com (mail-io1-xd2c.google.com [IPv6:2607:f8b0:4864:20::d2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E069D1B30AA;
+        Fri,  4 Mar 2022 04:31:59 -0800 (PST)
+Received: by mail-io1-xd2c.google.com with SMTP id c14so9247801ioa.12;
+        Fri, 04 Mar 2022 04:31:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=LD6gTN1e1zlXj/t0lCkcVAaZ8PXN0Am12ReQ8fAXUPs=;
+        b=e6PlMr+Ng2RXFkOsDTEEIhu/IDbXp+tbne53o6Az1rCcgVUCSmdAi5esbgyj5fhip0
+         OXaYzRHIvIYTVjmHTnfWM7nV0W8zBeFEt65eLj4HHQfbYLB6FkFGXxF1mmU/wIa9JKwx
+         vlqALBCvvLDGTcFP0GKIJWlAIqOSUUuJbCE57aiVO1cqEtXg6Lq9qXyVPpEC8yg8dDkk
+         uK7iIZckpbA/Sf0xniKEBDK3d4UVaDthvT6On4lTEV/Q+vlIGmp5kmqBYiGrB0On/mDN
+         36H+CTOHGEheF9h3F78UPrIVSks/dNl4rBMufzgNrbxLkc0zSKqLV5vif1SLMmJZIrcA
+         RhPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=LD6gTN1e1zlXj/t0lCkcVAaZ8PXN0Am12ReQ8fAXUPs=;
+        b=52ZXRr1+Ble4nCspUGsMJwiRUsu0dO6d/22hmEL6TJ6JFoeY030oFUdBDmAIqIVOOd
+         2xALi8LRxmAEnAg+JSwBSoFU7JxR4Z3g7wGX1R6NLIggcw9vgDwfaEmrte/cH7yb2iPB
+         wzwcwDfWZMNjUOvRxq9y9Iwt8r+80SoStkbyO4uTmshkKvNI9kC1j+se2Hx7wlWcISKP
+         Gd2K5QWQX0qpfg3QQXWGirC1U7uMMQZPjDxd8JF9xARLLH1agaBnRiDZc2Ty8beHj+yc
+         pWUKLVN+hcKyeREwKViG+PCOS2+jVdS+yxbeYRFHYv28IWJ8r2sPxSMkbZlQW1TCtzmS
+         ZEqQ==
+X-Gm-Message-State: AOAM530gZ1k8Z0eNttsrx9qkSFJGvONkYndbw761FMdFrCOrjfobfxa1
+        x3m6ymWqRJ5gWgoa9gTjsC5Vpo7GhnFg6GZajMY=
+X-Google-Smtp-Source: ABdhPJzgoS8M3g05AsBUieLPYXmV+8l+IaUmXwXDcgNemeZDL75Od1vp3aFBe6iRKW58gyU5bLS4LMxRJNvrbH9wl30=
+X-Received: by 2002:a05:6638:168b:b0:314:7a8d:19d4 with SMTP id
+ f11-20020a056638168b00b003147a8d19d4mr33662849jat.199.1646397119277; Fri, 04
+ Mar 2022 04:31:59 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Subject: Re: [PATCH 4/4] scsi: hisi_sas: Use libsas internal abort support
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <Ajish.Koshy@microchip.com>, <linuxarm@huawei.com>,
-        <Viswas.G@microchip.com>, <hch@lst.de>, <liuqi115@huawei.com>,
-        <chenxiang66@hisilicon.com>
-References: <1646309930-138960-1-git-send-email-john.garry@huawei.com>
- <1646309930-138960-5-git-send-email-john.garry@huawei.com>
- <fdded2c0-c382-75b1-9679-e10ba47084d7@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <fdded2c0-c382-75b1-9679-e10ba47084d7@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.95.117]
-X-ClientProxiedBy: lhreml734-chm.china.huawei.com (10.201.108.85) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+References: <20220127151945.1244439-1-trix@redhat.com> <d26d4bd8-b5e1-f4d5-b563-9bc4dd384ff8@acm.org>
+ <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com> <e3ae392a16491b9ddeb1f0b2b74fdf05628b1996.camel@perches.com>
+ <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com> <8dd05afd-0bb9-c91b-6393-aff69f1363e1@redhat.com>
+ <233660d0-1dee-7d80-1581-2e6845bf7689@linux-m68k.org> <CABRYuGk+1AGpvfkR7=LTCm+bN4kt55fwQnQXCjidSXWxuMWsiQ@mail.gmail.com>
+ <95f5be1d-f5f3-478-5ccb-76556a41de78@linux-m68k.org> <CANiq72kOJh_rGg6cT+S833HYqwHnZJzZss8v+kQDcgz_cZUfBQ@mail.gmail.com>
+ <7368bc3ea6dece01004c3e0c194abb0d26d4932b.camel@perches.com>
+In-Reply-To: <7368bc3ea6dece01004c3e0c194abb0d26d4932b.camel@perches.com>
+From:   Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Date:   Fri, 4 Mar 2022 13:31:48 +0100
+Message-ID: <CANiq72noan-b84yU370wVaRRu-GX=A5X0Ocfv4uJDk2nyeR0aw@mail.gmail.com>
+Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
+To:     Joe Perches <joe@perches.com>
+Cc:     Finn Thain <fthain@linux-m68k.org>,
+        Konrad Wilhelm Kleine <kkleine@redhat.com>,
+        Tom Rix <trix@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        megaraidlinux.pdl@broadcom.com, scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>, llvm@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 03/03/2022 16:42, Damien Le Moal wrote:
->> -	if (DEV_IS_GONE(sas_dev)) {
->> -		if (sas_dev)
->> -			dev_info(dev, "task prep: device %d not ready\n",
->> -				 sas_dev->device_id);
->> -		else
->> -			dev_info(dev, "task prep: device %016llx not ready\n",
->> -				 SAS_ADDR(device->sas_addr));
->> +		if (DEV_IS_GONE(sas_dev)) {
->> +			if (sas_dev)
->> +				dev_info(dev, "task prep: device %d not ready\n",
->> +					 sas_dev->device_id);
->> +			else
->> +				dev_info(dev, "task prep: device %016llx not ready\n",
->> +					 SAS_ADDR(device->sas_addr));
->>   
-> This blank line could be removed too, no ?
+On Fri, Mar 4, 2022 at 5:03 AM Joe Perches <joe@perches.com> wrote:
+>
+> It's up to individual maintainers to each decide on what might be
+> considered unnecessary churn for the subsystems they control.
+>
+> One argument is that churn leads to difficulty in backporting
+> fixes to older 'stable' versions.
+>
+> I think the churn argument is overstated.
 
-I think that I might change this code to just use the 2nd print always.
+I was only pointing out that, for the global `.clang-format` file, the
+style in `coding-style.rst` should be followed. Then subsystem
+maintainers may override it if really needed.
 
-> 
->> -		return -ECOMM;
->> -	}
->> +			return -ECOMM;
->> +		}
->>   
->> -	if (task->uldd_task) {
->> -		struct ata_queued_cmd *qc;
->> +		port = to_hisi_sas_port(sas_port);
->> +		if (!port->port_attached) {
->> +			dev_info(dev, "task prep: %s port%d not attach device\n",
->> +				 dev_is_sata(device) ? "SATA/STP" : "SAS",
->> +				 device->port->id);
->>   
->> -		if (dev_is_sata(device)) {
->> -			qc = task->uldd_task;
->> -			scmd = qc->scsicmd;
->> -		} else {
->> -			scmd = task->uldd_task;
->> +				return -ECOMM;
-> One tab too many for the indentation here, no ?
+I definitely agree that we should aim to have a consistent style.
+However, by allowing a few exceptions, some major subsystems may start
+using `clang-format` sooner.
 
-Right, I'll fix it.
-
-Thanks,
-John
-
+Cheers,
+Miguel
