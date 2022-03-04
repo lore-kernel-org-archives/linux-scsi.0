@@ -2,63 +2,27 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAD74C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 18:48:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEE01C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 20:16:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241827AbiCDSt1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Mar 2022 13:49:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42314 "EHLO
+        id S229739AbiCDURO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Mar 2022 15:17:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231381AbiCDSt0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2022 13:49:26 -0500
-Received: from mail-io1-xd2d.google.com (mail-io1-xd2d.google.com [IPv6:2607:f8b0:4864:20::d2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 774A91C1EF1;
-        Fri,  4 Mar 2022 10:48:37 -0800 (PST)
-Received: by mail-io1-xd2d.google.com with SMTP id u2so8512177ioc.11;
-        Fri, 04 Mar 2022 10:48:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=NZVqR2IXuPYi/CmafDbS5W6yfPjJBN8Q1wn/cKiQemY=;
-        b=fR7l0zn8xJNMq3ZimB+MotJrfmWksw5FUbuKX8xZ0KrU81Er3UcSQr8Xz4fO32Vwbg
-         Nu2Js1VOxv0PA6FZIG279vnxnytdo6BMI0fUwdBcYrZWEpTR0zhmzVWQU8rQGcquEg/Y
-         d22VOQF6SO2u2GzyC6roO8Le49UQBMgxQaxX1xT3xNKRB57pbnU2e1r2R1nik0ynqq2g
-         dJWfq0S7irxYaPdbuugyp2Q7aYuhjL4y8y7815ItnrHQiBvG1qteJNAOdfvHNdNz68r6
-         4VSxq37S4cm8QehTxMrQiWGYhtaUE0h5th6ntso3uMwaC0yK0kJJ5MsJHxb7gMZR+9b8
-         axng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=NZVqR2IXuPYi/CmafDbS5W6yfPjJBN8Q1wn/cKiQemY=;
-        b=n7ekN0xOb6gIkiV5pGXH1Awvpskq02MSRf73ntQ1z8w+CrMtqrr+W4u8Kp8kMmjYBY
-         9o44DcddssT12FfgtEN5rjREw8qUCn+2MAzd/BZL0QFgDSJgZJ8i3JvIYTjIfZykLS4w
-         hXaluo907TsCw1gk5NcnvXrkryqozeS8mS3PfLEGELp6ag+PKLNQrcphWTXnW9Vud18i
-         balgJ3Ci0amWAMkgx136od15BqT4BdyJ3WYKIBue+I+7jY4119DEeqrjmyKj59MFiVdt
-         wLLOwyzlz//CzOOQ3lm1XaSeKPAnofC4JF2BZH3cs9cZEQEhyHinZqjDHz1z26W23kqu
-         XzPg==
-X-Gm-Message-State: AOAM533QhIgRp/p7R7oNuleymN4vN7bw3FI586JhGwV8fIFocXs9H+9e
-        hxdkYtBt4rE+uiqCVg/5pHQKkTpjmnpD5ve8FpI=
-X-Google-Smtp-Source: ABdhPJy63i/BlI2iCbWovC/qOl03K/3nFIt5/6OUfXFTorzmrGEY769OhKk8AcXgjvay/k1hXPrVLapa0NAo6BScxtY=
-X-Received: by 2002:a05:6602:15c6:b0:611:591d:1d9a with SMTP id
- f6-20020a05660215c600b00611591d1d9amr31562359iow.177.1646419716803; Fri, 04
- Mar 2022 10:48:36 -0800 (PST)
-MIME-Version: 1.0
-References: <20220127151945.1244439-1-trix@redhat.com> <d26d4bd8-b5e1-f4d5-b563-9bc4dd384ff8@acm.org>
- <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com> <e3ae392a16491b9ddeb1f0b2b74fdf05628b1996.camel@perches.com>
- <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com> <8dd05afd-0bb9-c91b-6393-aff69f1363e1@redhat.com>
- <233660d0-1dee-7d80-1581-2e6845bf7689@linux-m68k.org> <CABRYuGk+1AGpvfkR7=LTCm+bN4kt55fwQnQXCjidSXWxuMWsiQ@mail.gmail.com>
- <95f5be1d-f5f3-478-5ccb-76556a41de78@linux-m68k.org> <CANiq72kOJh_rGg6cT+S833HYqwHnZJzZss8v+kQDcgz_cZUfBQ@mail.gmail.com>
- <7368bc3ea6dece01004c3e0c194abb0d26d4932b.camel@perches.com>
- <9dc86e74-7741-bb8e-bbad-ae96cebaaebc@redhat.com> <CANiq72nsKijH4zgLoEpiiq4462r1zYmaiDs13SEHDYR3aQziUw@mail.gmail.com>
- <ad3567301af7b1b24cf4ac447fec8d618231ea33.camel@perches.com>
-In-Reply-To: <ad3567301af7b1b24cf4ac447fec8d618231ea33.camel@perches.com>
-From:   Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date:   Fri, 4 Mar 2022 19:48:25 +0100
-Message-ID: <CANiq72kWJtOTmcXNO+t4NY22v6xM49Z-U2aSB4apNd96PYbD4Q@mail.gmail.com>
+        with ESMTP id S231419AbiCDUQy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2022 15:16:54 -0500
+Received: from relay3.hostedemail.com (relay3.hostedemail.com [64.99.140.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DD01239323
+        for <linux-scsi@vger.kernel.org>; Fri,  4 Mar 2022 12:13:01 -0800 (PST)
+Received: from omf17.hostedemail.com (a10.router.float.18 [10.200.18.1])
+        by unirelay11.hostedemail.com (Postfix) with ESMTP id A8F9A80EAC;
+        Fri,  4 Mar 2022 19:28:35 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf17.hostedemail.com (Postfix) with ESMTPA id D6DAF19;
+        Fri,  4 Mar 2022 19:27:34 +0000 (UTC)
+Message-ID: <451bb2c394b05928c815f1eb349a1281a687a608.camel@perches.com>
 Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
-To:     Joe Perches <joe@perches.com>
+From:   Joe Perches <joe@perches.com>
+To:     Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
 Cc:     Tom Rix <trix@redhat.com>, Finn Thain <fthain@linux-m68k.org>,
         Konrad Wilhelm Kleine <kkleine@redhat.com>,
         Bart Van Assche <bvanassche@acm.org>,
@@ -68,65 +32,125 @@ Cc:     Tom Rix <trix@redhat.com>, Finn Thain <fthain@linux-m68k.org>,
         Nick Desaulniers <ndesaulniers@google.com>,
         megaraidlinux.pdl@broadcom.com, scsi <linux-scsi@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>, llvm@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
+Date:   Fri, 04 Mar 2022 11:28:31 -0800
+In-Reply-To: <CANiq72kWJtOTmcXNO+t4NY22v6xM49Z-U2aSB4apNd96PYbD4Q@mail.gmail.com>
+References: <20220127151945.1244439-1-trix@redhat.com>
+         <d26d4bd8-b5e1-f4d5-b563-9bc4dd384ff8@acm.org>
+         <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com>
+         <e3ae392a16491b9ddeb1f0b2b74fdf05628b1996.camel@perches.com>
+         <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com>
+         <8dd05afd-0bb9-c91b-6393-aff69f1363e1@redhat.com>
+         <233660d0-1dee-7d80-1581-2e6845bf7689@linux-m68k.org>
+         <CABRYuGk+1AGpvfkR7=LTCm+bN4kt55fwQnQXCjidSXWxuMWsiQ@mail.gmail.com>
+         <95f5be1d-f5f3-478-5ccb-76556a41de78@linux-m68k.org>
+         <CANiq72kOJh_rGg6cT+S833HYqwHnZJzZss8v+kQDcgz_cZUfBQ@mail.gmail.com>
+         <7368bc3ea6dece01004c3e0c194abb0d26d4932b.camel@perches.com>
+         <9dc86e74-7741-bb8e-bbad-ae96cebaaebc@redhat.com>
+         <CANiq72nsKijH4zgLoEpiiq4462r1zYmaiDs13SEHDYR3aQziUw@mail.gmail.com>
+         <ad3567301af7b1b24cf4ac447fec8d618231ea33.camel@perches.com>
+         <CANiq72kWJtOTmcXNO+t4NY22v6xM49Z-U2aSB4apNd96PYbD4Q@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.40.4-1ubuntu2 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Stat-Signature: hyg3dz78tn3se81k3zw45k8tm7sk1h45
+X-Rspamd-Server: rspamout04
+X-Rspamd-Queue-Id: D6DAF19
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-Session-ID: U2FsdGVkX1+VgJSiCgMrlaHF7nxKS3V69xPErNMNUTw=
+X-HE-Tag: 1646422054-460497
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Mar 4, 2022 at 6:37 PM Joe Perches <joe@perches.com> wrote:
->
-> I rather doubt clang-format will ever be 'close enough'.
->
-> A human's sense of 'taste' for reading code is very different than
-> what an automated tool produces.
+On Fri, 2022-03-04 at 19:48 +0100, Miguel Ojeda wrote:
+> On Fri, Mar 4, 2022 at 6:37 PM Joe Perches <joe@perches.com> wrote:
+> > 
+> > I rather doubt clang-format will ever be 'close enough'.
+> > 
+> > A human's sense of 'taste' for reading code is very different than
+> > what an automated tool produces.
+> 
+> Maybe,
 
-Maybe, but it is a trade-off. If it is close enough, the benefits of
-automatic formatting may overcome the downsides.
+Hey again Miguel.
 
-> Also, try looking at the changes clang-format does on a file chosen
-> at random:
->
-> o columnarized definitions -> not columnarized
-> o odd line continuation placement using spaces and not tabs before \
-> o odd array definition layouts
-> o per line definitions with comments poorly laid out
-> o individual line definitions rewrapped
-> o enum definitions on multiple lines compressed to single lines
-> o u8 array definition layouts where the first element has a separate
->   meaning than the subsequent elements are compressed and made
->   difficult to understand
+Is that statement really disputable?
 
-I am not sure what you are trying to show here -- some of these are
-precisely the things that the tool could improve or have already
-improved, and we may just need to use the new option.
+> but it is a trade-off. If it is close enough, the benefits of
+> automatic formatting may overcome the downsides.
 
-For instance, for the columnarized macros case, it is possible to
-align them since clang-format 9. For array of structures, there is
-also a new alignment option since clang-format 13. Etc.
+IYO.  I think using an SCCS with better language understanding rather
+than a line oriented one could be an improvement.  Such a tool could
+allow arbitrary style reformatting at check-in/check-out.
 
-For the wrapping and related bits, now that the limit on 80 is a bit
-more fuzzy, we could perhaps tweak the penalties to improve the
-decision making.
+> > Also, try looking at the changes clang-format does on a file chosen
+> > at random:
+> > 
+> > o columnarized definitions -> not columnarized
+> > o odd line continuation placement using spaces and not tabs before \
+> > o odd array definition layouts
+> > o per line definitions with comments poorly laid out
+> > o individual line definitions rewrapped
+> > o enum definitions on multiple lines compressed to single lines
+> > o u8 array definition layouts where the first element has a separate
+> >   meaning than the subsequent elements are compressed and made
+> >   difficult to understand
+> 
+> I am not sure what you are trying to show here -- some of these are
+> precisely the things that the tool could improve or have already
+> improved, and we may just need to use the new option.
 
-In summary, what we should be trying to do is improve the tool
-configuration and tool itself to see if we can get it to be close
-enough to the kernel style to make it more widely used.
+All of these existing code are more human readable than the code
+reformatted using clang-format.
 
-> I think _some_ clang-format output is ok, but the concept of
-> enabling/disabling specific reformatting bits would be quite useful.
->
-> And sprinkling "clang-format on/off" lines in the code is not good.
+I used whatever is the latest clang-format here with today's -next.
+https://releases.llvm.org/download.html
 
-Definitely, but it is fine in some exceptional cases.
+> For instance, for the columnarized macros case, it is possible to
+> align them since clang-format 9. For array of structures, there is
+> also a new alignment option since clang-format 13. Etc.
 
-> Any control codes that determine when source code layout might be
-> immutable or allowed to be modified could be should be tool name
-> agnostic.
+Then perhaps you as the maintainer of the kernel's .clang-format file
+could update the entries for those new options.
 
-I don't see why would that be a problem, and I don't understand why we
-would use several different formatting tools (the point is to be
-consistent, after all); but sure, we could propose an alternative
-spelling.
+I believe the minimum clang version is already 11.  Maybe higher.
+I don't track clang or use it very much.  The clang version I use
+though is 13.
 
-Cheers,
-Miguel
+> For the wrapping and related bits, now that the limit on 80 is a bit
+> more fuzzy, we could perhaps tweak the penalties to improve the
+> decision making.
+
+Please have at it.
+But perhaps tweaking will just improve some cases and worsen others.
+
+> In summary, what we should be trying to do is improve the tool
+> configuration and tool itself to see if we can get it to be close
+> enough to the kernel style to make it more widely used.
+> 
+> > I think _some_ clang-format output is ok, but the concept of
+> > enabling/disabling specific reformatting bits would be quite useful.
+> > 
+> > And sprinkling "clang-format on/off" lines in the code is not good.
+> 
+> Definitely, but it is fine in some exceptional cases.
+
+I don't think so.
+
+> > Any control codes that determine when source code layout might be
+> > immutable or allowed to be modified could be should be tool name
+> > agnostic.
+> 
+> I don't see why would that be a problem, and I don't understand why we
+> would use several different formatting tools (the point is to be
+> consistent, after all); but sure, we could propose an alternative
+> spelling.
+
+Thanks.
+
+There is no "one true editor".
+There will not be "one true source code formatter" either.
+
+cheers not jeers, just keep at it.  Joe
+
