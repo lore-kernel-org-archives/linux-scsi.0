@@ -2,76 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10C0DC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 01:07:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0AAAC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 02:24:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236101AbiCDBI3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Mar 2022 20:08:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41300 "EHLO
+        id S237677AbiCDCZW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Mar 2022 21:25:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235576AbiCDBI1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 20:08:27 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6965F1EC4B;
-        Thu,  3 Mar 2022 17:07:40 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B9F0FB826D4;
-        Fri,  4 Mar 2022 01:07:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32781C004E1;
-        Fri,  4 Mar 2022 01:07:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646356057;
-        bh=3mi7VxXpLHb5nSJP4Fl9rRCoWjt0fOGvcpAtnS+zlq0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SBRmJtsLeS4H3LTufeok6l2thSvNhjLSZ9Ew1WA/am/rFGLUWlyfeJFJCfV/YSLB6
-         bQItQUclIp2+767l2tLEmfu0IfMcm2da/qOzDpKWMETA/zYD8VGenf7iyV5mXaHtSv
-         yDw6WmWl4VtDwByvDVbG9DonEdEQ/ECVuns96yiQwSR1ATgrwr4wCmGMr5NW625aBE
-         XiT9HzQ3cKE8SS+kuHhi+xRhZ85yVaPMw1oJkhOK9l+cocyyqOMm/wA9KSONmhBEee
-         XPSNveb4J1euzOTOslg/FUhbm2GUsBe0N8LdHVe/q5n53c2ciGDQf+qngwkVABSnjz
-         SPVIgosHLj//A==
-Date:   Fri, 4 Mar 2022 01:07:35 +0000
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com,
-        Gaurav Kashyap <quic_gaurkash@quicinc.com>,
-        Israel Rukshin <israelr@nvidia.com>
-Subject: Re: [PATCH v5 1/3] block: add basic hardware-wrapped key support
-Message-ID: <YiFmV+WXY+mKsM83@gmail.com>
-References: <20220228070520.74082-1-ebiggers@kernel.org>
- <20220228070520.74082-2-ebiggers@kernel.org>
- <ac499ff9-eeb4-4f25-bb59-3f37477190ed@acm.org>
+        with ESMTP id S232705AbiCDCZV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2022 21:25:21 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F477BA74C;
+        Thu,  3 Mar 2022 18:24:34 -0800 (PST)
+Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4K8s8149BczBrWT;
+        Fri,  4 Mar 2022 10:22:41 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Fri, 4 Mar 2022 10:24:32 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Fri, 4 Mar 2022 10:24:31 +0800
+Subject: Re: [PATCH 2/2] iscsi_tcp: Check if tcp_conn is valid in
+To:     Mike Christie <michael.christie@oracle.com>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     Wu Bo <wubo40@huawei.com>, Zhiqiang Liu <liuzhiqiang26@huawei.com>,
+        <linfeilong@huawei.com>
+References: <20220304025608.1874516-1-haowenchao@huawei.com>
+ <20220304025608.1874516-2-haowenchao@huawei.com>
+ <85a64450-99c8-268d-1ac7-86e70cbb3562@oracle.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+Message-ID: <f6055c4a-b32f-8025-f096-f6abda03e2d4@huawei.com>
+Date:   Fri, 4 Mar 2022 10:24:31 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ac499ff9-eeb4-4f25-bb59-3f37477190ed@acm.org>
+In-Reply-To: <85a64450-99c8-268d-1ac7-86e70cbb3562@oracle.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 03, 2022 at 04:53:56PM -0800, Bart Van Assche wrote:
-> On 2/27/22 23:05, Eric Biggers wrote:
-> > @@ -68,7 +71,10 @@ static int __init bio_crypt_ctx_init(void)
-> >   	/* Sanity check that no algorithm exceeds the defined limits. */
-> >   	for (i = 0; i < BLK_ENCRYPTION_MODE_MAX; i++) {
-> > -		BUG_ON(blk_crypto_modes[i].keysize > BLK_CRYPTO_MAX_KEY_SIZE);
-> > +		BUG_ON(blk_crypto_modes[i].keysize >
-> > +		       BLK_CRYPTO_MAX_STANDARD_KEY_SIZE);
-> > +		BUG_ON(blk_crypto_modes[i].security_strength >
-> > +		       blk_crypto_modes[i].keysize);
-> >   		BUG_ON(blk_crypto_modes[i].ivsize > BLK_CRYPTO_MAX_IV_SIZE);
-> >   	}
+On 2022/3/3 22:59, Mike Christie wrote:
+> On 3/3/22 8:56 PM, Wenchao Hao wrote:
+>> iscsi_create_conn() would add newly alloced iscsi_cls_conn to connlist,
+>> it means when userspace sends ISCSI_UEVENT_SET_PARAM, iscsi_conn_lookup()
+>> would found this iscsi_cls_conn and call the set_param callback which is
+>> iscsi_sw_tcp_conn_set_param(). While the iscsi_conn's dd_data might not
+>> been initialized.
+>>
+>> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+>> Signed-off-by: Wu Bo <wubo40@huawei.com>
+>> ---
+>>   drivers/scsi/iscsi_tcp.c | 6 +++++-
+>>   1 file changed, 5 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+>> index 14db224486be..a42449df6156 100644
+>> --- a/drivers/scsi/iscsi_tcp.c
+>> +++ b/drivers/scsi/iscsi_tcp.c
+>> @@ -716,13 +716,17 @@ static int iscsi_sw_tcp_conn_set_param(struct iscsi_cls_conn *cls_conn,
+>>   {
+>>   	struct iscsi_conn *conn = cls_conn->dd_data;
+>>   	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+>> -	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
+>> +	struct iscsi_sw_tcp_conn *tcp_sw_conn;
+>>   
+>>   	switch(param) {
+>>   	case ISCSI_PARAM_HDRDGST_EN:
+>>   		iscsi_set_param(cls_conn, param, buf, buflen);
+>>   		break;
+>>   	case ISCSI_PARAM_DATADGST_EN:
+>> +		if (!tcp_conn || !tcp_conn->dd_data)
+>> +			return -ENOTCONN;
+>> +
+>> +		tcp_sw_conn = tcp_conn->dd_data;
+>>   		iscsi_set_param(cls_conn, param, buf, buflen);
+>>   		tcp_sw_conn->sendpage = conn->datadgst_en ?
+>>   			sock_no_sendpage : tcp_sw_conn->sock->ops->sendpage;
 > 
-> Does the following advice from Linus Torvalds apply to the above code:
-> "because there is NO EXCUSE to knowingly kill the kernel"? See also
-> https://lkml.org/lkml/2016/10/4/1.
+> Is this something you hit or from code review?
+> 
 
-These are boot time checks, so the advice doesn't apply.  If the code is buggy
-here, then kernels with CONFIG_BLK_INLINE_ENCRYPTION enabled won't boot.  I
-would prefer compile-time checks, of course, but that isn't possible here.  This
-is the next best thing.
+It's from code review. I reviewed the code because the panic mentioned 
+in my first patch. The issue seems would not happen, so just ignore it.
 
-- Eric
+> We have those state checks:
+> 
+> if ((conn->state == ISCSI_CONN_BOUND) ||
+>      (conn->state == ISCSI_CONN_UP)) {
+> 	err = transport->set_param(conn, ev->u.set_param.param,
+> 
+> so we don't call set_param until after we have bound the
+> connection which will be after ISCSI_UEVENT_CREATE_CONN has returned.
+> 
+> Also for this specific bug iscsi_if_recv_msg is called with the
+> rx_queue_mutex, so set_param can only be called after the
+> ISCSI_UEVENT_CREATE_CONN cmd has returned.
+> .
+> 
+
