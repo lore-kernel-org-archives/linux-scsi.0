@@ -2,40 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2EA3C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 16:03:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B52DC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 16:03:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236443AbiCDQEg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Mar 2022 11:04:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47490 "EHLO
+        id S240560AbiCDQEk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Mar 2022 11:04:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232723AbiCDQEe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2022 11:04:34 -0500
+        with ESMTP id S236700AbiCDQEg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2022 11:04:36 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E60E213D90E;
-        Fri,  4 Mar 2022 08:03:43 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3FA01AEEF1;
+        Fri,  4 Mar 2022 08:03:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=QQVlxFrmrrWNi3IoqP7GqjAW18JlQybNg4y9LNyfDyU=; b=sFw6O/bHTUm8R2CubCC4k0yNz2
-        rGwvlRmyZN3HHJFoIC1Vg8/h8xB0E0vZ1zMf+Q/kbGmf7xZ/QAx+Ywxa8jb7zoszYnba0Ulwxq9JV
-        QGrrI4Cuzu6g2ULwZHxX6QAvWNN+0YcoUl5fYqXax1AUUyn9Dqe3RHfYaflsibdXM5ldUAP/OthP7
-        BKBr6m+Cscw7vzUJ4olljT4NkLyNIth6ZcVFp+4UCkRuAVhXVlObdZSfC+gQhkqZ1e0mk2l0QMfTg
-        KYSFXCuo/Iizh/3kEuzuhLLr8PkyaHEmf+HyHo75G91ECMxdMKm7CbgEibn7WC48lKL/gUMZmPgRI
-        j4nC7Q9Q==;
+        bh=FnZ1fpykhfq9OvBcy/Lm11zVWshjv7O0KP30y4r9KR0=; b=dLKoxtaVVTKaA1w9vFRyv7HZ1E
+        kD6ixBRyzZRhwEJ2mbKPQBuzAGzseEbJoDDV/ANELkDFn01LKRkCjjL5iWwhFlc+zhB8CpXmGqKjW
+        oQwWwAwWMPiJX+t9JdTvrBtLwqxKSoZq7Qmqhw15yWVtRPI5pGb1vrEmD7eZ9IzqOvIivQi3Z7DCa
+        7xyrlY4NMQ7xfmWLz0M0yEKW/PYz0l14vtJ58CSu8XirLSiQfm1lSyD/bE0LD5pC/DOHUeGl3fVMf
+        NhISqJ9N2T2Z2yJmB+3ftzrEzl5BUrvK6LpsA7JRcQbjML+bEscSsgoIyYJTJcheGd/i7PZOe/0f3
+        mVkfyJJw==;
 Received: from [2001:4bb8:180:5296:7360:567:acd5:aaa2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nQAP2-00Atyx-WF; Fri, 04 Mar 2022 16:03:37 +0000
+        id 1nQAP6-00Atza-5S; Fri, 04 Mar 2022 16:03:40 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Ming Lei <ming.lei@redhat.com>,
         Bart Van Assche <bvanassche@acm.org>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 01/14] blk-mq: do not include passthrough requests in I/O accounting
-Date:   Fri,  4 Mar 2022 17:03:18 +0100
-Message-Id: <20220304160331.399757-2-hch@lst.de>
+Subject: [PATCH 02/14] blk-mq: handle already freed tags gracefully in blk_mq_free_rqs
+Date:   Fri,  4 Mar 2022 17:03:19 +0100
+Message-Id: <20220304160331.399757-3-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220304160331.399757-1-hch@lst.de>
 References: <20220304160331.399757-1-hch@lst.de>
@@ -46,52 +46,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-I/O accounting buckets I/O into the read/write/discard categories into
-which passthrough I/O does not fit at all.  It also accounts to the
-block_device, which may not even exist for passthrough I/O.
+From: Ming Lei <ming.lei@redhat.com>
 
+To simplify further changes allow for double calling blk_mq_free_rqs on
+a queue.
+
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+[hch: split out from a larger patch]
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-mq.c | 11 ++++++++---
- block/blk.h    |  2 +-
- 2 files changed, 9 insertions(+), 4 deletions(-)
+ block/blk-mq.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index a05ce77250316..ab4b646551334 100644
+index ab4b646551334..6fd0b0f652514 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -883,10 +883,15 @@ static inline void blk_account_io_done(struct request *req, u64 now)
+@@ -3070,6 +3070,9 @@ void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
+ 	struct blk_mq_tags *drv_tags;
+ 	struct page *page;
  
- static void __blk_account_io_start(struct request *rq)
- {
--	/* passthrough requests can hold bios that do not have ->bi_bdev set */
--	if (rq->bio && rq->bio->bi_bdev)
-+	/*
-+	 * All non-passthrough requests are created from a bio with one
-+	 * exception: when a flush command that is part of a flush sequence
-+	 * generated by the state machine in blk-flush.c is cloned onto the
-+	 * lower device by dm-multipath we can get here without a bio.
-+	 */
-+	if (rq->bio)
- 		rq->part = rq->bio->bi_bdev;
--	else if (rq->q->disk)
-+	else
- 		rq->part = rq->q->disk->part0;
- 
- 	part_stat_lock();
-diff --git a/block/blk.h b/block/blk.h
-index ebaa59ca46ca6..6f21859c7f0ff 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -325,7 +325,7 @@ int blk_dev_init(void);
-  */
- static inline bool blk_do_io_stat(struct request *rq)
- {
--	return (rq->rq_flags & RQF_IO_STAT) && rq->q->disk;
-+	return (rq->rq_flags & RQF_IO_STAT) && !blk_rq_is_passthrough(rq);
- }
- 
- void update_io_ticks(struct block_device *part, unsigned long now, bool end);
++	if (list_empty(&tags->page_list))
++		return;
++
+ 	if (blk_mq_is_shared_tags(set->flags))
+ 		drv_tags = set->shared_tags;
+ 	else
 -- 
 2.30.2
 
