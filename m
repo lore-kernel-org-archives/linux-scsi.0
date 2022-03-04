@@ -2,92 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70D64C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 14:02:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F266AC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 16:03:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239483AbiCDOD3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Mar 2022 09:03:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38048 "EHLO
+        id S235812AbiCDQEf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Mar 2022 11:04:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239189AbiCDOD2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2022 09:03:28 -0500
-Received: from mail-il1-x12e.google.com (mail-il1-x12e.google.com [IPv6:2607:f8b0:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86A9911A0F;
-        Fri,  4 Mar 2022 06:02:38 -0800 (PST)
-Received: by mail-il1-x12e.google.com with SMTP id q4so6634144ilt.0;
-        Fri, 04 Mar 2022 06:02:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ZzBK5WA3QVrcuQnQd4ntSERHlUAQ+GXLljw8Z7OoM1w=;
-        b=gql0/NZ9ElEaLpJcoudiGif5RN5qPMlJiaKX7m517j2VwmaKvsNpJNz6gM45g/JcS9
-         rsA5xoUm06axa8boCk+7Xp850UdRUPuMKH5xG6Lkut3tfvpxqOLjyEUEhItI9Cx/ADrs
-         Wa6gHbviGEDvLPDtQ5jcEv+3U4ZB0hLc9bgvVIv6h5jbsZCec8FFoNLo5KjnbOvdvqIc
-         meJk1l1uqgbFn3BjJoiTQhsNYBAAhUH7VyPFDg1S1U7FsKsO+Di1Wgc9Ka21lL0oStys
-         Hi3CztQlo27qYQ4BSVxZhEp8tOJwTETLgG2xBJGMOnjtUmXbWCHca00E0YAZ7GnulxTp
-         aI4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ZzBK5WA3QVrcuQnQd4ntSERHlUAQ+GXLljw8Z7OoM1w=;
-        b=N2K50vgB1OAaIIsWQw2bUBOfdjwDWnn8ylvqSNwfAnwJG0OLn13nwLel54Gu0eoGw4
-         SKOeV8Gr/2AAYeBL44M2uCDg5LuRFFraun7ZzKF4UeAx59qt7D8O3nZDSNztXnRAdiH/
-         HD1XqGDrhMlLYAKgT1r0hLpwtyJR8bvsTbKm8aPsOZBfsTyOO+GhciUy83MexIsA7Vus
-         /sT/zWsW7NTYGsUSwlf99ZMimAyZatzMXaK+5F9Yctoy4mMqaNnX/B0GPOo1PhHNGKs2
-         Mi6DBqnZaPiKrcmf5FX9Kt/e4jhNwY5R9bT7bSLsU2B3rZLSF66iMDTBccGDgy0vH/xF
-         dcJw==
-X-Gm-Message-State: AOAM533jcAQ6dV2/lfgnhRk3pIntioKyAkw+vM6WhXpQNkSSaAD0KjQg
-        3S0vN7+mi6SyqHanEr3VWZbBmeEuAOo7IkEZUgw=
-X-Google-Smtp-Source: ABdhPJwN3WEErb2vH6B5dP6UVI1dEFWdcimvNqhP0CYrCi0JEKnjM0RGkRw2NrXmb/cu+Z/9c+O/3Qw3B9+ytktZl+E=
-X-Received: by 2002:a05:6e02:198b:b0:2c2:c454:ea7 with SMTP id
- g11-20020a056e02198b00b002c2c4540ea7mr27132602ilf.151.1646402557663; Fri, 04
- Mar 2022 06:02:37 -0800 (PST)
-MIME-Version: 1.0
-References: <20220127151945.1244439-1-trix@redhat.com> <d26d4bd8-b5e1-f4d5-b563-9bc4dd384ff8@acm.org>
- <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com> <e3ae392a16491b9ddeb1f0b2b74fdf05628b1996.camel@perches.com>
- <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com> <8dd05afd-0bb9-c91b-6393-aff69f1363e1@redhat.com>
- <233660d0-1dee-7d80-1581-2e6845bf7689@linux-m68k.org> <CABRYuGk+1AGpvfkR7=LTCm+bN4kt55fwQnQXCjidSXWxuMWsiQ@mail.gmail.com>
- <95f5be1d-f5f3-478-5ccb-76556a41de78@linux-m68k.org> <CANiq72kOJh_rGg6cT+S833HYqwHnZJzZss8v+kQDcgz_cZUfBQ@mail.gmail.com>
- <7368bc3ea6dece01004c3e0c194abb0d26d4932b.camel@perches.com> <9dc86e74-7741-bb8e-bbad-ae96cebaaebc@redhat.com>
-In-Reply-To: <9dc86e74-7741-bb8e-bbad-ae96cebaaebc@redhat.com>
-From:   Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date:   Fri, 4 Mar 2022 15:02:26 +0100
-Message-ID: <CANiq72nsKijH4zgLoEpiiq4462r1zYmaiDs13SEHDYR3aQziUw@mail.gmail.com>
-Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
-To:     Tom Rix <trix@redhat.com>
-Cc:     Joe Perches <joe@perches.com>, Finn Thain <fthain@linux-m68k.org>,
-        Konrad Wilhelm Kleine <kkleine@redhat.com>,
+        with ESMTP id S230108AbiCDQEe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2022 11:04:34 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E61A013D90F;
+        Fri,  4 Mar 2022 08:03:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=lA+6ePXKiQ9floEuIP5ejvrnMT+UHuJ0JLlo/pBvA4I=; b=gnnEDakvzDp7H1xOPMA/na6RFx
+        0eHNYmjS+RLvVGki0i/Mre0qAqmHkwQ+ExKEhp4+MA0pA6OOc1zrIoAAMXyOnl5nRtXVbpYKr/Oqr
+        1u/fjLmzn1fl3zf2EWIM5z1A3E30CVb/be9FMAIKEmId+8EwIkOwq8ILMYFAt9k0OSCWhjKryzF+u
+        oe2lifJBr7uOAEJ85Vq9NqNmi23Ce3cKrSlDDhEy4eyeEkaSjFQ4N3JRrBMDXARSqurVjRukdEwd/
+        GbvO/GSxYrN8xc0WhUoRn5PIJ0dJUtXIKnEoWHG347XJFHVfe/hzIQpUnFmSsmsdJvoQaxhcGMMMz
+        V9kOMZcA==;
+Received: from [2001:4bb8:180:5296:7360:567:acd5:aaa2] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nQAOz-00Atyj-QQ; Fri, 04 Mar 2022 16:03:34 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Ming Lei <ming.lei@redhat.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        megaraidlinux.pdl@broadcom.com, scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>, llvm@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: move more work to disk_release v3
+Date:   Fri,  4 Mar 2022 17:03:17 +0100
+Message-Id: <20220304160331.399757-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Mar 4, 2022 at 2:46 PM Tom Rix <trix@redhat.com> wrote:
->
-> The churn level will be very high.
+Hi all,
 
-Nobody is planning to reformat the entire kernel, at least not until
-the tool is close enough to the kernel style, which will take a while.
+this series resurrects and forward ports ports larger parts of the
+"block: don't drain file system I/O on del_gendisk" series from Ming,
+but does not remove the draining in del_gendisk, but instead the one
+in the sd driver, which always was a bit ad-hoc.  As part of that sd
+and sr are switched to use the new ->free_disk method to avoid having
+to clear disk->private_data and the way to lookup the SCSI ULP is
+cleaned up as well.
 
-> Until clang-format has an opt-in mechanism, I do not think clang-format
-> should be used.
->
-> .clang-format should be moved to staging/ to reflect its not being ready
-> status.
+Git branch:
 
-What is not ready about it?
+    git://git.infradead.org/users/hch/block.git freeze-5.18
 
-It is a fairly useful tool that some people is already using, either
-for full file formatting or for sections within their editor.
+Gitweb:
 
-Cheers,
-Miguel
+    http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/freeze-5.18
+
+Changes since v2:
+ - handle the weird dm-multipath flush sequence corner case when
+   assinging rq->part
+
+Changes since v1:
+ - fix a refcounting bug in sd
+ - rename a function
+
+Diffstat:
+ block/blk-core.c           |    7 --
+ block/blk-mq.c             |   10 +--
+ block/blk-sysfs.c          |   25 --------
+ block/blk.h                |    2 
+ block/elevator.c           |    7 +-
+ block/genhd.c              |   38 ++++++++++++-
+ drivers/scsi/sd.c          |  114 +++++++++------------------------------
+ drivers/scsi/sd.h          |   13 +++-
+ drivers/scsi/sr.c          |  129 +++++++++------------------------------------
+ drivers/scsi/sr.h          |    5 -
+ drivers/scsi/st.c          |    1 
+ drivers/scsi/st.h          |    1 
+ include/scsi/scsi_cmnd.h   |    9 ---
+ include/scsi/scsi_driver.h |    9 ++-
+ 14 files changed, 117 insertions(+), 253 deletions(-)
