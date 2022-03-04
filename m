@@ -2,92 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CBBEC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 05:07:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D17C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Mar 2022 05:22:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237978AbiCDFHu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Mar 2022 00:07:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42818 "EHLO
+        id S236824AbiCDFXm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Mar 2022 00:23:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237971AbiCDFHo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2022 00:07:44 -0500
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EA8F17E356
-        for <linux-scsi@vger.kernel.org>; Thu,  3 Mar 2022 21:06:57 -0800 (PST)
-Received: by mail-pl1-f169.google.com with SMTP id z11so6761646pla.7
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Mar 2022 21:06:57 -0800 (PST)
+        with ESMTP id S235088AbiCDFXl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2022 00:23:41 -0500
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B7BC2A277;
+        Thu,  3 Mar 2022 21:22:53 -0800 (PST)
+Received: by mail-pg1-f169.google.com with SMTP id 6so2049244pgg.0;
+        Thu, 03 Mar 2022 21:22:53 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=Iyg0lLG0agtvt+YAP/2UVsFJHIF67Oxeov3ak6OfnXs=;
-        b=fGP0ZON3lbomrHUTfEF3gQ07HH3OoIruneC8DFRu72Rl5UbPIwZatrl5qLkzx+5QVH
-         JeD0V+yML2XKihsdI9ausdKLjpdpRA/QIpswj4GW0fVyUyZA5lG6IEzpgmWVRfpZm7aE
-         mu3bNXSK4AmRBRGgF/esPZv2ZUv2E7Ar4Ggv8AAnPvRyqwwgmLqiBMpihnuAZ4hk+fDN
-         UtiJwO31uC4EVbAFa6EWelMFWiy1buk8XNshKOX3I28iBf8zjgB4YZ/p66kxd28SB4gP
-         509C4PDi+G5B6j0d9iTk8oeNl98CK3Arx5LqALdllK75JborUqZhmb1DUZkge7HWKTkd
-         VbNg==
-X-Gm-Message-State: AOAM532m+FgCJRVpyNvsPxo4eHidBC7F+cPhbPfD1cleWv15Dj1RuL0T
-        K1RI4N1t6SxxUDJwR9nYxRI=
-X-Google-Smtp-Source: ABdhPJzpUy38JpJk9sWE0Pr6t6mSCEGhwWqPXCAgtN4ks/CN8LUmZIEM+IONtIl/61TmLgKp/5I3CQ==
-X-Received: by 2002:a17:902:f684:b0:151:93ab:3483 with SMTP id l4-20020a170902f68400b0015193ab3483mr13639237plg.4.1646370416329;
-        Thu, 03 Mar 2022 21:06:56 -0800 (PST)
+        bh=OUz+YHeOX2526f3yLcPlYSdunuzlqb7mEsolHTN6QCc=;
+        b=TKGhxT1xQjOI9NiK5fFVY2Xrn5tNT2acTtC8M5brN33736eI3K9Ui3NL4wfrFmnh9e
+         mroaJSygxTK+9hUq4MgFMd6BsAn/G5MTdRp5nlXgo62iRkkYPkbA5Ys0eMi4N3S0x2SM
+         jsDUS2HfUIMiqtBh8/KZhqrUBHgHbSNhQX/s+BwxeATaRp17z9rv8Uf/lDZ757cNzdqI
+         efnx83xHMgPTq7eHkOBcRq2P09zjrCIeqka/taN5gFSdgrDFilv9fTi7IP5Q6PpUUzEW
+         jiBEnvmNlPYCgr0nTGSWswvBH/bkfhcumv9NZJHFq7E3ytvXbnEt2oErpGqZdKOIT+g5
+         dy8Q==
+X-Gm-Message-State: AOAM532larrWurJGNanoj3Fa5+5RoNPt3gieaMQgyk48CTAizDxUj42C
+        r5G1bNNtmipqtg5cD7zLT6A=
+X-Google-Smtp-Source: ABdhPJxYq0TQM9vFcm1Kh6j0fbxqoFm/wrv7nZEyjEvofCbrP3HT13X6zNV9QhK/eSCtlBdJzomxHA==
+X-Received: by 2002:a63:4c07:0:b0:374:a41b:62e1 with SMTP id z7-20020a634c07000000b00374a41b62e1mr32490448pga.541.1646371373021;
+        Thu, 03 Mar 2022 21:22:53 -0800 (PST)
 Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id k190-20020a633dc7000000b0037c921abb5bsm868117pga.23.2022.03.03.21.06.54
+        by smtp.gmail.com with ESMTPSA id s21-20020a056a00195500b004f65b15b3a0sm4274787pfk.8.2022.03.03.21.22.51
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 03 Mar 2022 21:06:55 -0800 (PST)
-Message-ID: <ad4bba42-291f-fea6-0ee7-39d0d9286b37@acm.org>
-Date:   Thu, 3 Mar 2022 21:06:53 -0800
+        Thu, 03 Mar 2022 21:22:52 -0800 (PST)
+Message-ID: <e7e99791-aade-55fd-ac75-71478699cbe0@acm.org>
+Date:   Thu, 3 Mar 2022 21:22:50 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH 08/14] scsi: sd: Optimal I/O size should be a multiple of
- reported granularity
+Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
 Content-Language: en-US
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bernhard Sulzer <micraft.b@gmail.com>
-References: <20220302053559.32147-1-martin.petersen@oracle.com>
- <20220302053559.32147-9-martin.petersen@oracle.com>
- <8459576c-3f04-14d1-24d2-0edfd814a454@acm.org>
- <yq1bkymtmbp.fsf@ca-mkp.ca.oracle.com>
+To:     Joe Perches <joe@perches.com>,
+        Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
+        Finn Thain <fthain@linux-m68k.org>
+Cc:     Konrad Wilhelm Kleine <kkleine@redhat.com>,
+        Tom Rix <trix@redhat.com>, kashyap.desai@broadcom.com,
+        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        megaraidlinux.pdl@broadcom.com, scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>, llvm@lists.linux.dev
+References: <20220127151945.1244439-1-trix@redhat.com>
+ <d26d4bd8-b5e1-f4d5-b563-9bc4dd384ff8@acm.org>
+ <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com>
+ <e3ae392a16491b9ddeb1f0b2b74fdf05628b1996.camel@perches.com>
+ <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com>
+ <8dd05afd-0bb9-c91b-6393-aff69f1363e1@redhat.com>
+ <233660d0-1dee-7d80-1581-2e6845bf7689@linux-m68k.org>
+ <CABRYuGk+1AGpvfkR7=LTCm+bN4kt55fwQnQXCjidSXWxuMWsiQ@mail.gmail.com>
+ <95f5be1d-f5f3-478-5ccb-76556a41de78@linux-m68k.org>
+ <CANiq72kOJh_rGg6cT+S833HYqwHnZJzZss8v+kQDcgz_cZUfBQ@mail.gmail.com>
+ <7368bc3ea6dece01004c3e0c194abb0d26d4932b.camel@perches.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <yq1bkymtmbp.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <7368bc3ea6dece01004c3e0c194abb0d26d4932b.camel@perches.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/3/22 19:45, Martin K. Petersen wrote:
->> On 3/1/22 21:35, Martin K. Petersen wrote:
->>> +	if (min_xfer_bytes && opt_xfer_bytes & (min_xfer_bytes - 1)) {
->>> +		sd_first_printk(KERN_WARNING, sdkp,
->>> +				"Optimal transfer size %u bytes not a " \
->>> +				"multiple of preferred minimum block " \
->>> +				"size (%u bytes)\n",
->>> +				opt_xfer_bytes, min_xfer_bytes);
->>> +		return false;
->>> +	}
->>
->> Hmm ... what guarantees that min_xfer_bytes is a power of two? Did I
->> perhaps overlook something?
+On 3/3/22 15:38, Joe Perches wrote:
+> One argument is that churn leads to difficulty in backporting
+> fixes to older 'stable' versions.
 > 
-> Nothing in the spec, obviously, but I think we'd have a lot of headaches
-> further up the stack if that wasn't the case.
-> 
-> Do you know of any devices that report something unusual here?
+> I think the churn argument is overstated.
 
-Hi Martin,
-
-I'm not aware of any devices that report an unusual OPTIMAL TRANSFER LENGTH 
-GRANULARITY value.
-
-Since this code is not in the hot path, how about using the modulo operator 
-instead of binary and?
+I'm often backporting patches to older kernels and I think the churn argument 
+has not been emphasized enough. Backporting patches is a normal aspect of a 
+product lifecycle since a kernel version is chosen when development of a 
+product starts and bugfixes are cherry-picked from upstream selectively.
 
 Thanks,
 
 Bart.
-
 
