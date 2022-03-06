@@ -2,92 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99037C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Mar 2022 03:33:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53371C433EF
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Mar 2022 00:35:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230493AbiCEDdt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Mar 2022 22:33:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51642 "EHLO
+        id S231563AbiCFAgM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 5 Mar 2022 19:36:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbiCEDdt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2022 22:33:49 -0500
-Received: from wnew1-smtp.messagingengine.com (wnew1-smtp.messagingengine.com [64.147.123.26])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58F3B1DB3C6;
-        Fri,  4 Mar 2022 19:32:59 -0800 (PST)
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
-        by mailnew.west.internal (Postfix) with ESMTP id 4EFE32B00158;
-        Fri,  4 Mar 2022 22:32:58 -0500 (EST)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute2.internal (MEProxy); Fri, 04 Mar 2022 22:32:59 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:from:from
-        :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
-        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=mJWJFr2xwIdcBLgWF
-        leFF/ItCGiD5KO4oeAEsg0YmsE=; b=D7dROpaZ9IbFQXnayqKtFMyokt2JpYSXI
-        Qx18D70ZW82wYhb+b/ovkqX1k86TG//9znkFpTfqH4waMn2MPBNhFIDYa4hQUdav
-        cZXuGuHA/HT/+t9QCCsJZjE4EyP4y2QZxpUqgly1NAfZeL/db/lpqThv3n6mBnj3
-        14haI1vN8PtMIHYtINe6C4B9sxakA5n+XtDx0kD1ETXTRfQ5b/0EQuK78ISraSHQ
-        TKGGASOEEB9Yk3OBwRpaDoDAPN1lwKx69dTTGc4ZtB9sLQP8V51PCwqY44fo4pYm
-        sfhqI7j8i/BPexSZu65cLnFe3VMZMUmkQNvn5MbbTyj16Ubv+tyEg==
-X-ME-Sender: <xms:6dkiYlTDdgPqB7hlzkzr4ezW2CLNbqMKooP1De5xeuImvLywzsO-UA>
-    <xme:6dkiYuy-dF6NVzLUNybff--ikyfYPQgYwro-JN2dAXCiiKuMT0vYMtUV6XUrCeetb
-    aTFCbtqQR47An9tjcc>
-X-ME-Received: <xmr:6dkiYq2qLbwBva--Fouzk3nRZPa3f7LisMDwRsP_Y19yPRwb853rkiqr7lt4-pk91k_uxMV1wi7Y0lzQjLNuW3lCkVm30ALNV5Y>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddruddtledgheejucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvffujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhnucfv
-    hhgrihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrth
-    htvghrnhepffduhfegfedvieetudfgleeugeehkeekfeevfffhieevteelvdfhtdevffet
-    uedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfh
-    hthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgh
-X-ME-Proxy: <xmx:6dkiYtCFKMnKgeA7O3Y7eKtXowhGRn1eAixFMO6cY-9hrrW2DJd8zw>
-    <xmx:6dkiYuidfQaazp8NBmtZbq1ShOEE0mxW7by5KEeGBdm2YfJRPymxXg>
-    <xmx:6dkiYhpIIeK0ELvKPp9ke6j_-6BK_mRLGx-0dVy9vJJg6TkYJ-JQeg>
-    <xmx:6dkiYlSmrP5_44RUGz8IgEJYVERsry9x32xffP2qDJs5wLmISLJ5pBq6B_I>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 4 Mar 2022 22:32:54 -0500 (EST)
-Date:   Sat, 5 Mar 2022 14:32:53 +1100 (AEDT)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     Joe Perches <joe@perches.com>
-cc:     Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
-        Tom Rix <trix@redhat.com>,
-        Konrad Wilhelm Kleine <kkleine@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        megaraidlinux.pdl@broadcom.com, scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>, llvm@lists.linux.dev
-Subject: Re: [PATCH] scsi: megaraid: cleanup formatting of megaraid
-In-Reply-To: <451bb2c394b05928c815f1eb349a1281a687a608.camel@perches.com>
-Message-ID: <80717e6-16ac-56b2-bf12-683d44f4743d@linux-m68k.org>
-References: <20220127151945.1244439-1-trix@redhat.com>  <d26d4bd8-b5e1-f4d5-b563-9bc4dd384ff8@acm.org>  <0adde369-3fd7-3608-594c-d199cce3c936@redhat.com>  <e3ae392a16491b9ddeb1f0b2b74fdf05628b1996.camel@perches.com>  <46441b86-1d19-5eb4-0013-db1c63a9b0a5@redhat.com>
-  <8dd05afd-0bb9-c91b-6393-aff69f1363e1@redhat.com>  <233660d0-1dee-7d80-1581-2e6845bf7689@linux-m68k.org>  <CABRYuGk+1AGpvfkR7=LTCm+bN4kt55fwQnQXCjidSXWxuMWsiQ@mail.gmail.com>  <95f5be1d-f5f3-478-5ccb-76556a41de78@linux-m68k.org> 
- <CANiq72kOJh_rGg6cT+S833HYqwHnZJzZss8v+kQDcgz_cZUfBQ@mail.gmail.com>  <7368bc3ea6dece01004c3e0c194abb0d26d4932b.camel@perches.com>  <9dc86e74-7741-bb8e-bbad-ae96cebaaebc@redhat.com>  <CANiq72nsKijH4zgLoEpiiq4462r1zYmaiDs13SEHDYR3aQziUw@mail.gmail.com> 
- <ad3567301af7b1b24cf4ac447fec8d618231ea33.camel@perches.com>  <CANiq72kWJtOTmcXNO+t4NY22v6xM49Z-U2aSB4apNd96PYbD4Q@mail.gmail.com> <451bb2c394b05928c815f1eb349a1281a687a608.camel@perches.com>
+        with ESMTP id S229752AbiCFAgM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Mar 2022 19:36:12 -0500
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DBF86C951
+        for <linux-scsi@vger.kernel.org>; Sat,  5 Mar 2022 16:35:20 -0800 (PST)
+Received: by mail-pg1-f173.google.com with SMTP id bc27so10565981pgb.4
+        for <linux-scsi@vger.kernel.org>; Sat, 05 Mar 2022 16:35:20 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=gQ8isKWAmDG6Rc7/+PaKJVXFq7oZ+uwGGcPZ67/K0FQ=;
+        b=XFPI/YFRoNVWrXXgGEoFogz2ko28NPGqakzyVXda0xt3VlzbEe66X4UGqFMQ9vfhYl
+         lgK/UFh6h5ReV9PuBezoByYdKzhOG/jj0Ua+fK65g9Rwygz8OmHwjDSdJS6f1m2JVuA2
+         j9PVZZaxSUU9LJ7vPCoSyK998xphxJn0wjh5qyxxd+rqPx2QsfnPnBiLtGffAjdICWol
+         iIko0lhK4JC8yWUIYWxLgxCoDpbEoIJ97wuHQ4dG15/f0iDaMQpVguTnRtNUgTlGvGTi
+         j68L+iaoFEWV6DJOZvlBrpv8HQKa4JpLStJIqD2LCBUd1bXbbad4mPC8zEYykt7SFbMr
+         9tQw==
+X-Gm-Message-State: AOAM531NBMWv/DPBjVlNdw5+7wnBazMP6tL6PladlYP4aYOUbaHOMW1L
+        OWPrxDmuzDLmjzwqJkIUDkTQOS7K8D8=
+X-Google-Smtp-Source: ABdhPJycxNDxnbW+gCESHL8uj8CvgCm0oigFR7GDqNhuUs1VWEXrzS4PHBoZuUXQ80HmM9aAC6/25g==
+X-Received: by 2002:a63:9d48:0:b0:378:c359:fcbf with SMTP id i69-20020a639d48000000b00378c359fcbfmr4319785pgd.371.1646526919976;
+        Sat, 05 Mar 2022 16:35:19 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id l10-20020a056a00140a00b004c55d0dcbd1sm10477281pfu.120.2022.03.05.16.35.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 05 Mar 2022 16:35:19 -0800 (PST)
+Message-ID: <0faa4852-bbd1-11b2-967c-768b7e02259b@acm.org>
+Date:   Sat, 5 Mar 2022 16:35:18 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 09/14] scsi: sd: Fix discard errors during revalidate
+Content-Language: en-US
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org
+References: <20220302053559.32147-1-martin.petersen@oracle.com>
+ <20220302053559.32147-10-martin.petersen@oracle.com>
+ <c088db8c-19cf-182f-8d2f-e990b5a0c35c@acm.org>
+ <yq15youtm4y.fsf@ca-mkp.ca.oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <yq15youtm4y.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 4 Mar 2022, Joe Perches wrote:
-
+On 3/3/22 19:55, Martin K. Petersen wrote:
 > 
-> Is that statement really disputable?
+> Bart,
 > 
-
-If there was such a thing as an indisputable statement, a set of 
-universally accepted style rules would soon follow, I suspect.
-
-...
-
+>>> +	if (mode == SD_LBP_DEFAULT && !sdkp->provisioning_override) {
+>>
+>> Hmm ... is provisioning_override ever true for the SD_LBP_DEFAULT
+>> mode? If not, can "&& !sdkp->provisioning_override" be left out?
 > 
-> There is no "one true editor".
-> There will not be "one true source code formatter" either.
+> The two *_override variables are used to prevent subsequent revalidates
+> from clobbering the mode configured by the user.
 > 
+> I experimented with various approaches for this, including having a
+> separate SD_LBP_ mode for revalidate, using first_scan, etc. In the end
+> I felt that the boolean was the best approach to capturing the fact that
+> the currently active mode was explicitly configured by the user.
+> 
+> Open to suggestions.
 
-It only has to be sufficiently good that it produces a consensus.
+Hi Martin,
+
+It took me a while before I realized that the purpose of the 
+provisioning_override variable is to make the behavior of the 
+sd_config_discard(sdkp, SD_LBP_DEFAULT) different depending on whether the 
+SD_LBP_DEFAULT comes from userspace (via sysfs) or from the sd_config_discard() 
+call in sd_revalidate_disk().
+
+How about storing the mode selected by the user inside the 
+provisioning_mode_store() function and using that variable inside 
+sd_config_discard() instead of sdkp->provisioning_override? I think that would 
+result in easier to comprehend code.
+
+Thanks,
+
+Bart.
