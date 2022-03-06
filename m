@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C38C6C433FE
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Mar 2022 11:12:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D06C433FE
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Mar 2022 11:12:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233282AbiCFLNH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Mar 2022 06:13:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49850 "EHLO
+        id S232896AbiCFLNU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Mar 2022 06:13:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233350AbiCFLMt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2022 06:12:49 -0500
-Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B138660AB3
-        for <linux-scsi@vger.kernel.org>; Sun,  6 Mar 2022 03:11:57 -0800 (PST)
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com [209.85.208.70])
+        with ESMTP id S233392AbiCFLNF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2022 06:13:05 -0500
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91CD160CF5
+        for <linux-scsi@vger.kernel.org>; Sun,  6 Mar 2022 03:12:10 -0800 (PST)
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com [209.85.218.71])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 85AA13F63A
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id EF69F3F5FC
         for <linux-scsi@vger.kernel.org>; Sun,  6 Mar 2022 11:11:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
         s=20210705; t=1646565109;
-        bh=vMFnkOH1WJAajK2DqdRDAa0cLEGNFmbkS8Gtp9GKvtI=;
-        h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
+        bh=XXqgQ+cuaWzLih+IxYNjcqnJP94TLIhig/Ow2N98IAk=;
+        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
          MIME-Version;
-        b=O7d8uV8Okv/XTDEpawGXsUnPR8krCNI95rrLTe3BVb0+arTPy1hE14MXy5kPymz7T
-         G7mKBZ1uIURbgSZTI1WF7k4LoW10chNyM8fc32dVxxg2Oq8VnbzdBZISAA2WH+4tCU
-         MoZnlrNbZ5+01swEphN9IipYOpud4r1UxuRAm+1cOnmhCquuxTxprPNQ/x6MH+sZz6
-         oHo2SJ6JuRZnEtL6OEcNMv8/EBsMfXyINSxArHyN5Lrdg+m/K66Sz1+pf16i21aPg5
-         tBMczHYqg1cTjHxa7+l6SvDKQkpBytrkoL6/URbWNz3UXLgCjELeCbvyl2JwT2i3Py
-         EvE0JmJvIik6A==
-Received: by mail-ed1-f70.google.com with SMTP id l14-20020aa7cace000000b003f7f8e1cbbdso6731816edt.20
+        b=Ksukk3Gw1sXcvvpIQF4GFGvaA9Dp6llUwkfwwXoJ64N5vCT5b4QzpsgGtMJsdkl7N
+         mHuCeq+z1gjgakSs/h14xCWPY84JY8LxNTSrvVr5m1GHJwHwbOaUVFZpiVPlhI1pyP
+         8UhkVila2yHS0itmKgyEEiHsk0cR/Ty3CBiLQFVqCjbf6WG4itV21I21vUjRRDvq9u
+         J2r+v66mpF7c3y4mJl98RNyJSmBMHEftwigUFp47NgAHzn6JFiBtjsAz6BPPw4/5Yx
+         6CkOm/si2XMZKXgofFqyAfu9ZSmrZ63P0btdh4oFSgSA6Idl8UJYBTNeaS95OC6IlD
+         FmEJQlSdZES+A==
+Received: by mail-ej1-f71.google.com with SMTP id d7-20020a1709061f4700b006bbf73a7becso6126004ejk.17
         for <linux-scsi@vger.kernel.org>; Sun, 06 Mar 2022 03:11:49 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=vMFnkOH1WJAajK2DqdRDAa0cLEGNFmbkS8Gtp9GKvtI=;
-        b=UOUURGS+6o17lddCzjZuuJ1JmOkbpxRzkHXK9GbP6pidsjys0II61HTPZAd6lv3cZt
-         f8AjlJ7fVByj4qg5I3ZnyF+Zm94mqAeQPozyFNGN942CFVIcc23gTBE4i0yc4GP+08gz
-         wR7ncMMVxnaOL8VTPmurLXnH9mTcFe249SQrp6oWJ2MVie2UeWmKvyvKf7CTHC+6Tkzc
-         ly1tMkhTNiGaf3FVWsXaUfvPcbioZU3VD317biHMKBAjymtIzVOjmYLrIvueaEqdJ4ZJ
-         SSePZs/NpLr+gyqXmqA+DF1RDvX+7GMghtnfR4Qc+/xYs41WH3uko4xJ2nllQNjcefSZ
-         hTLw==
-X-Gm-Message-State: AOAM532JQonkg/L3YCMB1eusxzGZ6+6B2fRJwY0ABEQI/q+x2ody9Ruu
-        wn+ib1kPMoNrmYHZsqjCGOeyvASgPrPjqtYQRtRWOUAB0lTdqrygbDct8rkIIirfXuqS9CLYNfl
-        bMHKXIuCeNl2zTn7zlvB23ArQVEZqJlw00irGQnA=
-X-Received: by 2002:a05:6402:2d8:b0:416:34b0:5d5c with SMTP id b24-20020a05640202d800b0041634b05d5cmr2294041edx.6.1646565107741;
-        Sun, 06 Mar 2022 03:11:47 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJwTQ1jrVfZZl3Nu0dKHXWLrV//RroIxSgPbz2wvMOZz/2cmoQu/ylE+3YUml5SvnaWO1iXePw==
-X-Received: by 2002:a05:6402:2d8:b0:416:34b0:5d5c with SMTP id b24-20020a05640202d800b0041634b05d5cmr2294031edx.6.1646565107595;
-        Sun, 06 Mar 2022 03:11:47 -0800 (PST)
+        bh=XXqgQ+cuaWzLih+IxYNjcqnJP94TLIhig/Ow2N98IAk=;
+        b=umUPqYJpT4513BX4PMuzAl4qtqHpAH3jngqh8nWgdiTKNUjGDaw8aKM75yRwuYyIuK
+         /fi71j33gmfY2qYdVMd7LGBUF8roCzkp058SgTaQ8Xj4oe2n5CTTMYGLTvHUKfKjgH5j
+         FBSRgia3guELkr9s4a77t83GdL5fC8pJ4qxeFg/5wtGPB2hIVrtIsRy4asZJIXqHRpkf
+         9XRT5RPoiSxihsSE/IeifwK6lxNtd2QZFZH6fV+QtevnUuLaOauYidtjFHrFoevFg3U8
+         8N2LgwDAdAzsJgKswmRg8fVxjX5bCKeUg0qbLc/i45l+QAHFCxs6ivT+9maPu4LqvoVp
+         YNpg==
+X-Gm-Message-State: AOAM533Odrcah4M1w+U/1+LT9Z8xmNWTkAo0lw/Mm11dC3GZ8TeHa7ux
+        PkHKNDxTpqIMUTw9Y1yIZG3NKZMcc6TqB/Az23F3OxEwOQt40mIIl7A7LTM8DoAQaLI2GE/IGK8
+        YSJggUjNEYSexVe/m+s2Sf6Kd1Eg2Ojf9GtDdX60=
+X-Received: by 2002:a05:6402:424b:b0:40f:1386:5fa6 with SMTP id g11-20020a056402424b00b0040f13865fa6mr6352595edb.268.1646565094789;
+        Sun, 06 Mar 2022 03:11:34 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJzXebW2FRHxJVYm8J3fXHmnRdTAf7ZamehBdj0d6YMfLqjOEMT1nQnh5DIuu0Stinsuh9xtgw==
+X-Received: by 2002:a05:6402:424b:b0:40f:1386:5fa6 with SMTP id g11-20020a056402424b00b0040f13865fa6mr6352563edb.268.1646565094576;
+        Sun, 06 Mar 2022 03:11:34 -0800 (PST)
 Received: from localhost.localdomain (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
-        by smtp.gmail.com with ESMTPSA id a9-20020a1709066d4900b006da888c3ef0sm3720444ejt.108.2022.03.06.03.11.46
+        by smtp.gmail.com with ESMTPSA id a9-20020a1709066d4900b006da888c3ef0sm3720444ejt.108.2022.03.06.03.11.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Mar 2022 03:11:47 -0800 (PST)
+        Sun, 06 Mar 2022 03:11:33 -0800 (PST)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 To:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
@@ -73,9 +73,10 @@ To:     Alim Akhtar <alim.akhtar@samsung.com>,
         linux-arm-kernel@lists.infradead.org,
         linux-samsung-soc@vger.kernel.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH v3 11/12] arm64: dts: qcom: msm8996: correct UFS compatible
-Date:   Sun,  6 Mar 2022 12:11:24 +0100
-Message-Id: <20220306111125.116455-12-krzysztof.kozlowski@canonical.com>
+Cc:     Rob Herring <robh@kernel.org>
+Subject: [PATCH v3 03/12] dt-bindings: ufs: cdns,ufshc: convert to dtschema
+Date:   Sun,  6 Mar 2022 12:11:16 +0100
+Message-Id: <20220306111125.116455-4-krzysztof.kozlowski@canonical.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220306111125.116455-1-krzysztof.kozlowski@canonical.com>
 References: <20220306111125.116455-1-krzysztof.kozlowski@canonical.com>
@@ -85,27 +86,149 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The Qualcomm UFS bindings require to use specific (qcom,msm8996-ufshc)
-and generic (jedec,ufs-2.0) compatibles.
+Convert the Cadence Universal Flash Storage (UFS) Controlle to DT schema
+format.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- arch/arm64/boot/dts/qcom/msm8996.dtsi | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ .../devicetree/bindings/ufs/cdns,ufshc.txt    | 32 ---------
+ .../devicetree/bindings/ufs/cdns,ufshc.yaml   | 68 +++++++++++++++++++
+ .../devicetree/bindings/ufs/ti,j721e-ufs.yaml |  7 +-
+ 3 files changed, 71 insertions(+), 36 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
+ create mode 100644 Documentation/devicetree/bindings/ufs/cdns,ufshc.yaml
 
-diff --git a/arch/arm64/boot/dts/qcom/msm8996.dtsi b/arch/arm64/boot/dts/qcom/msm8996.dtsi
-index f0f81c23c16f..fa491f2271ff 100644
---- a/arch/arm64/boot/dts/qcom/msm8996.dtsi
-+++ b/arch/arm64/boot/dts/qcom/msm8996.dtsi
-@@ -1730,7 +1730,8 @@ pcie2: pcie@610000 {
- 		};
+diff --git a/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt b/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
+deleted file mode 100644
+index 02347b017abd..000000000000
+--- a/Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
++++ /dev/null
+@@ -1,32 +0,0 @@
+-* Cadence Universal Flash Storage (UFS) Controller
+-
+-UFS nodes are defined to describe on-chip UFS host controllers.
+-Each UFS controller instance should have its own node.
+-Please see the ufshcd-pltfrm.txt for a list of all available properties.
+-
+-Required properties:
+-- compatible	: Compatible list, contains one of the following controllers:
+-			"cdns,ufshc" - Generic CDNS HCI,
+-			"cdns,ufshc-m31-16nm" - CDNS UFS HC + M31 16nm PHY
+-		  complemented with the JEDEC version:
+-			"jedec,ufs-2.0"
+-
+-- reg		: Address and length of the UFS register set.
+-- interrupts	: One interrupt mapping.
+-- freq-table-hz	: Clock frequency table.
+-		  See the ufshcd-pltfrm.txt for details.
+-- clocks	: List of phandle and clock specifier pairs.
+-- clock-names	: List of clock input name strings sorted in the same
+-		  order as the clocks property. "core_clk" is mandatory.
+-		  Depending on a type of a PHY,
+-		  the "phy_clk" clock can also be added, if needed.
+-
+-Example:
+-	ufs@fd030000 {
+-		compatible = "cdns,ufshc", "jedec,ufs-2.0";
+-		reg = <0xfd030000 0x10000>;
+-		interrupts = <0 1 IRQ_TYPE_LEVEL_HIGH>;
+-		freq-table-hz = <0 0>, <0 0>;
+-		clocks = <&ufs_core_clk>, <&ufs_phy_clk>;
+-		clock-names = "core_clk", "phy_clk";
+-	};
+diff --git a/Documentation/devicetree/bindings/ufs/cdns,ufshc.yaml b/Documentation/devicetree/bindings/ufs/cdns,ufshc.yaml
+new file mode 100644
+index 000000000000..d227dea368be
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/cdns,ufshc.yaml
+@@ -0,0 +1,68 @@
++# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ufs/cdns,ufshc.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Cadence Universal Flash Storage (UFS) Controller
++
++maintainers:
++  - Jan Kotas <jank@cadence.com>
++
++# Select only our matches, not all jedec,ufs-2.0
++select:
++  properties:
++    compatible:
++      contains:
++        enum:
++          - cdns,ufshc
++          - cdns,ufshc-m31-16nm
++  required:
++    - compatible
++
++allOf:
++  - $ref: ufs-common.yaml
++
++properties:
++  compatible:
++    items:
++      - enum:
++          - cdns,ufshc
++            # CDNS UFS HC + M31 16nm PHY
++          - cdns,ufshc-m31-16nm
++      - const: jedec,ufs-2.0
++
++  clocks:
++    minItems: 1
++    maxItems: 3
++
++  clock-names:
++    minItems: 1
++    items:
++      - const: core_clk
++      - const: phy_clk
++      - const: ref_clk
++
++  reg:
++    maxItems: 1
++
++required:
++  - compatible
++  - clocks
++  - clock-names
++  - reg
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++
++    ufs@fd030000 {
++        compatible = "cdns,ufshc", "jedec,ufs-2.0";
++        reg = <0xfd030000 0x10000>;
++        interrupts = <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>;
++        freq-table-hz = <0 0>, <0 0>;
++        clocks = <&ufs_core_clk>, <&ufs_phy_clk>;
++        clock-names = "core_clk", "phy_clk";
++    };
+diff --git a/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml b/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+index 4d13e6bc1c50..c5eca7735f76 100644
+--- a/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+@@ -47,11 +47,10 @@ required:
  
- 		ufshc: ufshc@624000 {
--			compatible = "qcom,ufshc";
-+			compatible = "qcom,msm8996-ufshc", "qcom,ufshc",
-+				     "jedec,ufs-2.0";
- 			reg = <0x00624000 0x2500>;
- 			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+ patternProperties:
+   "^ufs@[0-9a-f]+$":
+-    type: object
++    $ref: cdns,ufshc.yaml
+     description: |
+-      Cadence UFS controller node must be the child node. Refer
+-      Documentation/devicetree/bindings/ufs/cdns,ufshc.txt for binding
+-      documentation of child node
++      Cadence UFS controller node must be the child node.
++    unevaluatedProperties: false
+ 
+ additionalProperties: false
  
 -- 
 2.32.0
