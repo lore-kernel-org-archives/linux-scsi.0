@@ -2,208 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A90CBC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 09:41:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BBFAC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 11:30:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237967AbiCGJm2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Mar 2022 04:42:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56664 "EHLO
+        id S242111AbiCGLbM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Mar 2022 06:31:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238576AbiCGJif (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 04:38:35 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0F7F48301
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 01:32:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1646645576; x=1678181576;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=llHiu1JSq+kMvM9/4AxtTinDlNJLIPMTZeOhiBuyEto=;
-  b=l786gm77F2EI2eblZKtYVvi+0vcxdluRHp8PQh6PjdfK2eIP3ZhmfYto
-   RZ6CEHX0KtNMgpm2ANi733lz2bk1mn7utiTdFDI+Gt7oSsnabHJrSwpe6
-   6Gzodh/V5ZOAo4hXTE53MRn/SezlGjKsL8vLG2nhMSWT13tRzwFnZqCc3
-   nh6TiYn4awlXJG6OMAiw71+CL0exobDTrq5COipKU/qUTu+z4rRPpwyoZ
-   CeS56JyjmiIYa7sG5wxM0zhRT99KHFRlJ46JagTPA6qrXkNLYvvrocoOh
-   oYx6LpDH/cGdVKVjFYHRPhEAL3qoVxd+mf+1Sn1PesJ+QvzObR+cTZPT2
-   w==;
-X-IronPort-AV: E=Sophos;i="5.90,161,1643644800"; 
-   d="scan'208";a="298787710"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Mar 2022 17:31:42 +0800
-IronPort-SDR: kDNPdzqtIKVDmoHX8QL/3n2Vkvfamzs8oqavOuHd6j3oI84AYbq9/yIAUkCpBB3YJlcNoISLCE
- uodRO8OhrmFe+gtAcEOIDIZAxd7w6t4Y9/OTCWikPPMPRQ7yYmrujRTW1SnzFKAMNGOiOvWGsB
- MmWfC+s9wyI90enqBTWNnne59gg9EMYj6BQgGrVwavQVlgtceqSGuTCfSDwv+aToKRXXTJcNQv
- ehyKuiUyR5au2mAc+PsXvbGTtp32XL8vlEH5DYEjJtkrksdhuALpE4dx55B5yLutC6KHO3+Ix8
- k5Ly89DauYhZja4yz7uqd4ZM
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2022 01:02:59 -0800
-IronPort-SDR: odl5mv/4oF1jNboj+bcN6vRzpRz2DiBqR+NqjMjz2zpWdQMlmLp7acbkYwISlz4vwAwMi5kKSx
- UAKVsWFpUeVDIOgVPnq8yjbtwvoZpWaGUeNnPmgw+YaZ5wVsKpuQX23qWWMR3aR0BglI7PVwds
- 0dWrS0whRpikYZLcyxzqjCfb4a+aM142GDBnEJMDQ9qAOGK5sFxSplduns6n1Ijh4n9VyqiMzI
- xVRUjR+t7n8puBibJJm9T+4TqrRIgzU3tMZ0Y5DJpbZevysXZog00nD3a2VLWTs4pIBGySBY0A
- ojM=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2022 01:31:42 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KBtWd69tpz1SHwl
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 01:31:41 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1646645496; x=1649237497; bh=llHiu1JSq+kMvM9/4AxtTinDlNJLIPMTZeO
-        hiBuyEto=; b=jw3Os9oPeCyK3yc6zDwwpccNXjjni6ZWen20MWdXaxyzww3xMZ8
-        v8HMVbO9EO+OhbP2/Y1Fxmc8nCuhMaVrWnt1KQ6eL/DS96ExX+gqysh5hNWeWaJm
-        n0ba7swySKd/WaX2k7smAvStEryAkmYtpSAXjCOR3yDHA9vTGQLXu3S4uU5YQwfz
-        j9O6OtZg4LF1OrjWFRt0uIIwWHiEBLsFD+SxbflYg5fGDFLFHz+rUZltcxXrOqY/
-        2LMkJ23L4KYrzEX+OIGnMRl5p+zcBsHbUn2qCBF+uWNrHLQk+cq9C16/0WvEC9nW
-        C5YbJA6yk5WW9Rv3Oz8iHsW7ntXVKz8GrCQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id KhwyPQMAKUZH for <linux-scsi@vger.kernel.org>;
-        Mon,  7 Mar 2022 01:31:36 -0800 (PST)
-Received: from [10.225.163.91] (unknown [10.225.163.91])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KBtWW3KWkz1Rvlx;
-        Mon,  7 Mar 2022 01:31:35 -0800 (PST)
-Message-ID: <4ebb7f96-2075-ce16-5950-7dade5ca1f1a@opensource.wdc.com>
-Date:   Mon, 7 Mar 2022 18:31:33 +0900
+        with ESMTP id S242085AbiCGLbC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 06:31:02 -0500
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1241028E1C
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 03:18:44 -0800 (PST)
+X-UUID: b4b65282214a439aad2746082a62a926-20220307
+X-UUID: b4b65282214a439aad2746082a62a926-20220307
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 314915228; Mon, 07 Mar 2022 19:18:39 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
+ Mon, 7 Mar 2022 19:18:38 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 7 Mar 2022 19:18:38 +0800
+From:   <peter.wang@mediatek.com>
+To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
+        <lin.gui@mediatek.com>, <mikebi@micron.com>, <beanhuo@micron.com>
+Subject: [PATCH v1] scsi: ufs: scsi_get_lba error fix by check cmd opcode
+Date:   Mon, 7 Mar 2022 19:17:52 +0800
+Message-ID: <20220307111752.10465-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH v2 5/5] scsi: mpt3sas: fix adapter replyPostRegisterIndex
- handling
-Content-Language: en-US
-To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
-References: <20220224233056.398054-1-damien.lemoal@opensource.wdc.com>
- <20220224233056.398054-6-damien.lemoal@opensource.wdc.com>
- <CAK=zhgosk4YHiKVriYAVNL8oApnA6MsEz9jvOo3imkCUpOpTRQ@mail.gmail.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <CAK=zhgosk4YHiKVriYAVNL8oApnA6MsEz9jvOo3imkCUpOpTRQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/7/22 16:35, Sreekanth Reddy wrote:
-> On Fri, Feb 25, 2022 at 5:01 AM Damien Le Moal
-> <damien.lemoal@opensource.wdc.com> wrote:
->>
->> The replyPostRegisterIndex array of struct MPT3SAS_ADAPTER is regular
->> memory allocated from RAM, and not an IO mem resource. writel() should
->> thus not be used to assign values to the array entries. Replace the
->> writel() call modifying the array with direct assignements. This change
->> suppresses sparse warnings.
-> 
-> writel() is a must here.  replyPostRegisterIndex array is having the
-> iommu address.
-> and here the driver is writing the data to these iommu addresses retrieved from
-> replyPostRegisterIndex array.
+From: Peter Wang <peter.wang@mediatek.com>
 
-So the declaration of this array of wrong. it should be an array of
-__iomem void * entries, not an array of resource_size_t * entries (which
-by the way does not make sense to me since the use of the array is
-clearly to store an address, not a pointer to an address).
+When ufs init without scmd->device->sector_size set,
+scsi_get_lba will get a wrong shift number and ubsan error.
+shift exponent 4294967286 is too large for 64-bit type
+'sector_t' (aka 'unsigned long long')
+Call scsi_get_lba only when opcode is READ_10/WRITE_10/UNMAP.
 
-How do you prefer this fixed ? I would rather not add local casts here
-and fix the declaration of the replyPostRegisterIndex array.
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> 
-> Thanks,
-> Sreekanth
-> 
->>
->> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->> ---
->>  drivers/scsi/mpt3sas/mpt3sas_base.c | 37 ++++++++++++++++++-----------
->>  1 file changed, 23 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> index 5efe4bd186db..4caa719b4ef4 100644
->> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> @@ -1771,10 +1771,13 @@ _base_process_reply_queue(struct adapter_reply_queue *reply_q)
->>                  */
->>                 if (completed_cmds >= ioc->thresh_hold) {
->>                         if (ioc->combined_reply_queue) {
->> -                               writel(reply_q->reply_post_host_index |
->> -                                               ((msix_index  & 7) <<
->> -                                                MPI2_RPHI_MSIX_INDEX_SHIFT),
->> -                                   ioc->replyPostRegisterIndex[msix_index/8]);
->> +                               unsigned long idx =
->> +                                       reply_q->reply_post_host_index |
->> +                                       ((msix_index  & 7) <<
->> +                                        MPI2_RPHI_MSIX_INDEX_SHIFT);
->> +
->> +                               ioc->replyPostRegisterIndex[msix_index/8] =
->> +                                       (resource_size_t *) idx;
->>                         } else {
->>                                 writel(reply_q->reply_post_host_index |
->>                                                 (msix_index <<
->> @@ -1826,14 +1829,17 @@ _base_process_reply_queue(struct adapter_reply_queue *reply_q)
->>          * new reply host index value in ReplyPostIndex Field and msix_index
->>          * value in MSIxIndex field.
->>          */
->> -       if (ioc->combined_reply_queue)
->> -               writel(reply_q->reply_post_host_index | ((msix_index  & 7) <<
->> -                       MPI2_RPHI_MSIX_INDEX_SHIFT),
->> -                       ioc->replyPostRegisterIndex[msix_index/8]);
->> -       else
->> +       if (ioc->combined_reply_queue) {
->> +               unsigned long idx = reply_q->reply_post_host_index |
->> +                       ((msix_index  & 7) << MPI2_RPHI_MSIX_INDEX_SHIFT);
->> +
->> +               ioc->replyPostRegisterIndex[msix_index/8] =
->> +                       (resource_size_t *) idx;
->> +       } else {
->>                 writel(reply_q->reply_post_host_index | (msix_index <<
->>                         MPI2_RPHI_MSIX_INDEX_SHIFT),
->>                         &ioc->chip->ReplyPostHostIndex);
->> +       }
->>         atomic_dec(&reply_q->busy);
->>         return completed_cmds;
->>  }
->> @@ -8095,14 +8101,17 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc)
->>
->>         /* initialize reply post host index */
->>         list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
->> -               if (ioc->combined_reply_queue)
->> -                       writel((reply_q->msix_index & 7)<<
->> -                          MPI2_RPHI_MSIX_INDEX_SHIFT,
->> -                          ioc->replyPostRegisterIndex[reply_q->msix_index/8]);
->> -               else
->> +               if (ioc->combined_reply_queue) {
->> +                       unsigned long idx =(reply_q->msix_index & 7) <<
->> +                               MPI2_RPHI_MSIX_INDEX_SHIFT;
->> +
->> +                       ioc->replyPostRegisterIndex[reply_q->msix_index/8] =
->> +                               (resource_size_t *) idx;
->> +               } else {
->>                         writel(reply_q->msix_index <<
->>                                 MPI2_RPHI_MSIX_INDEX_SHIFT,
->>                                 &ioc->chip->ReplyPostHostIndex);
->> +               }
->>
->>                 if (!_base_is_controller_msix_enabled(ioc))
->>                         goto skip_init_reply_post_host_index;
->> --
->> 2.35.1
->>
-
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 9349557b8a01..3c4caee8fb93 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -367,7 +367,7 @@ static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
+ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+ 				     enum ufs_trace_str_t str_t)
+ {
+-	u64 lba;
++	u64 lba = 0;
+ 	u8 opcode = 0, group_id = 0;
+ 	u32 intr, doorbell;
+ 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+@@ -384,7 +384,6 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+ 		return;
+ 
+ 	opcode = cmd->cmnd[0];
+-	lba = scsi_get_lba(cmd);
+ 
+ 	if (opcode == READ_10 || opcode == WRITE_10) {
+ 		/*
+@@ -392,6 +391,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+ 		 */
+ 		transfer_len =
+ 		       be32_to_cpu(lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
++		lba = scsi_get_lba(cmd);
+ 		if (opcode == WRITE_10)
+ 			group_id = lrbp->cmd->cmnd[6];
+ 	} else if (opcode == UNMAP) {
+@@ -399,6 +399,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+ 		 * The number of Bytes to be unmapped beginning with the lba.
+ 		 */
+ 		transfer_len = blk_rq_bytes(rq);
++		lba = scsi_get_lba(cmd);
+ 	}
+ 
+ 	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
 -- 
-Damien Le Moal
-Western Digital Research
+2.18.0
+
