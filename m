@@ -2,70 +2,71 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF910C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 16:05:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2426C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 16:12:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240094AbiCGQGe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Mar 2022 11:06:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40828 "EHLO
+        id S244018AbiCGQNr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Mar 2022 11:13:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232418AbiCGQGd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 11:06:33 -0500
+        with ESMTP id S237281AbiCGQNp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 11:13:45 -0500
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F4825E17D;
-        Mon,  7 Mar 2022 08:05:36 -0800 (PST)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 227EhPrU010128;
-        Mon, 7 Mar 2022 16:05:20 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45DE9E015;
+        Mon,  7 Mar 2022 08:12:51 -0800 (PST)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 227F044R029198;
+        Mon, 7 Mar 2022 16:12:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
  subject : to : cc : references : from : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=GBrwI/hSvfPG9TxP/G7OhQjPG63OLbS3EzJRRpozggs=;
- b=HisvFF3A1YTXk11WBsmZhx8CGp4uSKBXzs7MyJcPtNBGyMB0BchVvuSscJiM01XgfV1k
- FUb1q3FdXglA8j9n2ckokme3/GShs1k2FRtVWHwItEnVydOeHt/N5jX4WZjb2r3nDgEh
- CNC6KqhdmupG7qwsn8OqqAtbaoUzLsAx410QVdZ02hEuIkiXEaAs6mCqx0SMNS+pXICj
- IM3uLSfQ3FGFUSfzT73MAWgXOxVOaqU/e4FobuC2pYTc77hRk/6aDnrYqW6uKkBTOvJS
- QxrDSKyuF4SNRVmkiwBbIkoXpKM90apT/RL3jAao5rK6D9tgGIXyA0rwKmb+CTJp6r/x VA== 
+ bh=WKx8QLaKOarsxItVfC+evWuet9zOnLhQO7ZRmT1w6CA=;
+ b=N9oZWHYhmwKMjF8clY3qM+MRJq3aqD3vW+Ud4Xbek+GvQdTKY6AukOBmr0Brxkg81jLJ
+ UCTyeEPXIrnKPZOcpmOL5AeL+7KnRqwDZccO5+5CTmp9UKdyE55RNdk3POi+rt7SzS4n
+ XO49YfC7r2pfbTTp02c/yLyoulqYXX+7JWuKm4pguxXQ5VYsL3PwX6pT69IC1KdyZzlp
+ vXSGiuqddVZsS4OLqMEIqXzRdw8m3WgrSIjMjXYXzh6Pw7w7H+tx4gXXCud9dtOaEZV9
+ PoPWXT9QmWYrEpTR/o4cyFSPozpvljKjMNH/8YJumANBFuIiJUISD80CH2zoQJ0rwNYl jQ== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ekx9cc7q8-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3ekyfsc9jt-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 07 Mar 2022 16:05:19 +0000
+        Mon, 07 Mar 2022 16:12:34 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 227G1W0U125436;
-        Mon, 7 Mar 2022 16:05:19 GMT
-Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2106.outbound.protection.outlook.com [104.47.70.106])
-        by aserp3030.oracle.com with ESMTP id 3ekwwb3uer-1
+        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 227G5XM7136959;
+        Mon, 7 Mar 2022 16:12:28 GMT
+Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam07lp2042.outbound.protection.outlook.com [104.47.56.42])
+        by aserp3030.oracle.com with ESMTP id 3ekwwb40vp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 07 Mar 2022 16:05:18 +0000
+        Mon, 07 Mar 2022 16:12:28 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=oa3TNAJXkxNRWvgg/WLP5lpOb7d4Kxf/2Og3vWuL8DznRxs0wohC/VgGb1xNZ2NLeAiTIRvxj07CWFHXlsuok6QYwzImtv/kaCrmbt74NmWBwHx3fKkbWCehFnyH4IBCjSU07xDmLIavMJfpUmPQuTeCHWolkFGNygUMkY/ewaJWAQyl7fVAD67keH/KbXtqsSb36duIEiPEvhNUdDSlKjjZbS5Z3ptRBWgczqBRsNTXTwqAMf5TEckXMxaUse1UWq4GBvTB+9otnRd99iM7a9GCQLWl9SYghM5NNFckZJ2Km2qaglHz4PfIKmfheEpsbgBOtL2MBC1Zs7+2o7VQVg==
+ b=AMq/ERvubuY1KDU4osQcNHZl92MdqElVQ0ffVTheJDGkaUnSyn/MXFrL4bQCCJ12e9fnYgNzEEiJrilqUp2tCIChsQ48rPe471AouMCgcaulki3ELP6Ot/Q6SG5S5qJpJI6ua8qNwSDngMtqhvxRbvvKde7e4Zu+lGYEUGk8NpCmZY1GXiGFsjbnXdnJkDXSgYsuiqkl2Me/PUcKGrKW1ylbC8BGek/VhGkAuzmkXkSRJrxoTrNKlxz78K3QnlmpZoXC3FPuhbr/uAUwlRzZi3gkuQ/enpXbqQEIBzziWgGgm2wzxp6gti55G+LF3ZwcNNS8DqIc1tZxuoaqIrBMIw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GBrwI/hSvfPG9TxP/G7OhQjPG63OLbS3EzJRRpozggs=;
- b=kWuMkbmIzxC+niLbKVns6pLdlUmuoop0aLclamu2o7F3LDM2CM5hbt4vg9pZE2mk1oP2UHLUCt+i2r95wYtZwu0Ra0ZMfMC0eC+8AK+2cQxrPWnAqHvlseAepUSGKUYXhKL561T1/GrxYGohF2FyY+aDWDkpRSbkqSaet4Qj5jHeT723X7zfDzUN9D3JuDHff5s23Ym4jDEO2ol65ZaT1RHK2EmkI/U98Hi+FybHY7ateNKq56QQt8AjBPAc55WSGVLoJQAsBChFSFlEfbIgPGL6m1HEqpEaoUtnVy3HRm6gsUNMUQJtl+Fy7o+gOGeZHJyhXfp/mtSH+kUhQqGQww==
+ bh=WKx8QLaKOarsxItVfC+evWuet9zOnLhQO7ZRmT1w6CA=;
+ b=C2bKGNTZ6q32lvnYGwGOoQeeakbtge+LmnbWsM++tGmVFarY4rGygAGWthVp67VM1paTM2lGJIK9TeDNzYi5gE3W6PiF+tc2GGuT8DIBV42dE3fPC0NeAoWr2qDlmXE5qAIOo/giKEKdEvmh4Pi++oUK0ma9j00QcPE69X8W2Ew260sJfoj+/tT/ixlCyQ+qdoKpE/varfv9rTo1FgrFjbim0e7BncsWf25XeThFhLNvQQZEr5rJtSI0vdPIBneCb4kegdXe8deq8oGgPFXDfz88mBbpCy9RTDzSr3WXE7T6za6U9xbgtrfXJReccQ5SqGDWQMmAmQISIcAVIqgAJw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GBrwI/hSvfPG9TxP/G7OhQjPG63OLbS3EzJRRpozggs=;
- b=l0n/Af/KFLTPrTe8BakKdPruQM+7sbqyX2pOvAUdgCK7J4OaYy9d/wZxc+rkAibeekClRBzVz8Ekkpkn86elAv0zinHYRWq9nykZZRznewFr9Bl0Umxr4VcUKCkvb15erwPP+vbc4aMJKP7ei5ORgDSQ5zyhPVQTgHzZQaIWvhs=
+ bh=WKx8QLaKOarsxItVfC+evWuet9zOnLhQO7ZRmT1w6CA=;
+ b=X3kqQkhsUr4cRMrbNR2276MGBUKoOm7GK/HQuH2NIlY3utmW+Hs3mdWHV7tX5h/itKeZBlhN2JGnSlHA98wedx55o1jrbmj4cA/Lf6AC+WKjw1TpFTWx50FJoJlLawdyP8tA7P1IflFoQm7V/0BhYljeotrBsjRiyeffFwWMrIA=
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- DS7PR10MB5261.namprd10.prod.outlook.com (2603:10b6:5:3a0::20) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5038.14; Mon, 7 Mar 2022 16:05:16 +0000
+ CY4PR10MB2024.namprd10.prod.outlook.com (2603:10b6:903:125::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5038.13; Mon, 7 Mar
+ 2022 16:12:26 +0000
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::3dd8:6b8:e2e6:c3a2]) by DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::3dd8:6b8:e2e6:c3a2%12]) with mapi id 15.20.5038.027; Mon, 7 Mar 2022
- 16:05:16 +0000
-Message-ID: <c90dbaa1-199c-5430-7d0d-c91303f96fc8@oracle.com>
-Date:   Mon, 7 Mar 2022 10:05:15 -0600
+ 16:12:26 +0000
+Message-ID: <3e714766-f2cd-3bca-3611-22a87848fec7@oracle.com>
+Date:   Mon, 7 Mar 2022 10:12:25 -0600
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH 1/2] scsi: iscsi: Add helper functions to alloc and add
- iscsi_cls_conn
+Subject: Re: [PATCH 0/2]scsi:libiscsi: Add iscsi_cls_conn device to sysfs
+ correctly
 Content-Language: en-US
 To:     Wenchao Hao <haowenchao@huawei.com>, Lee Duncan <lduncan@suse.com>,
         Chris Leech <cleech@redhat.com>,
@@ -75,270 +76,105 @@ To:     Wenchao Hao <haowenchao@huawei.com>, Lee Duncan <lduncan@suse.com>,
         linux-kernel@vger.kernel.org
 Cc:     Wu Bo <wubo40@huawei.com>, Zhiqiang Liu <liuzhiqiang26@huawei.com>
 References: <20220308005654.2281343-1-haowenchao@huawei.com>
- <20220308005654.2281343-2-haowenchao@huawei.com>
 From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <20220308005654.2281343-2-haowenchao@huawei.com>
+In-Reply-To: <20220308005654.2281343-1-haowenchao@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DS7PR05CA0063.namprd05.prod.outlook.com
- (2603:10b6:8:57::19) To DM5PR10MB1466.namprd10.prod.outlook.com
- (2603:10b6:3:b::7)
+X-ClientProxiedBy: DM5PR18CA0093.namprd18.prod.outlook.com (2603:10b6:3:3::31)
+ To DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 17f6f3bd-9a1a-4324-3bcd-08da00544527
-X-MS-TrafficTypeDiagnostic: DS7PR10MB5261:EE_
-X-Microsoft-Antispam-PRVS: <DS7PR10MB52615544B1ADA1A4C15C9C15F1089@DS7PR10MB5261.namprd10.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 18153971-f3ef-49f5-c28a-08da0055455e
+X-MS-TrafficTypeDiagnostic: CY4PR10MB2024:EE_
+X-Microsoft-Antispam-PRVS: <CY4PR10MB2024B070C968AA204DFAF021F1089@CY4PR10MB2024.namprd10.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: MX8+Th3Xxp4gYH1MdZcFdEInKecxNSLZ7gk46oGAqrs+5Wi4JowRiAC9G9q7wEBjv9tfyi1BrJFB6//e687abdLPOYd5yXB6Kns0o3k/d0NDk+ixGnch/oNpmJmHtZHbtG+hsjGKFhmbA9hXQAOr+JLati6QF3oXTKfqIJCq4z1tnaxzQUvkkbVUGURhlR4VgQeD2nRUF34eD2BT44ynmREFOwmrKzjtL5NRuu0UOHtRrScJuHqfbOqKfGftUYCzdP+NVo5+nlQ1MAPDwx0GEkzYqEblhgZ59unF+EZpyBz2Nc4AKFiPaiC7S4tZqY4tfXFysxwOH1l5i9vG488qWGOaYdSm3YOlYupBOsr9vcRJ57Ts/GrOWnCCqN6Fu2Cx2PZzwpiYNXBCefaFA1SMeeGlXlz921sZGa4Jvca5uNDlP2PMRfG7JQcJBumvQxWk8LN12Q8wcI/wNKER+lxn4PNYohQHduP8tyxx7N8gQoiZJiMRZxX9k6SuEcbKhhJxbvt3I6zn99ItrbQCnvSeorJ7g97/85JOf2rmQiwt+FvlQn1SuztUFK8i0Gfdua2bjmSICZTGSN5HsSsMEVe4W7YfngfrtjZsEGyWUIQ8lNcK3ZeAuz+to/06U6g+0efcz5ntCuBTepLkk1a4gf+o3939rRqyqU1ekdUy6f2/5WC29a6InEwNJ0zcMHQcYHL5KKUmCZaqdyX/tB8ErLvvRurye7o40CCazTdKqDAlqsDwNQf5DErlbsV+tjj31Uj1
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(54906003)(6512007)(26005)(6506007)(53546011)(186003)(316002)(110136005)(38100700002)(2906002)(36756003)(2616005)(66476007)(66556008)(8676002)(4326008)(66946007)(5660300002)(31696002)(508600001)(6486002)(8936002)(86362001)(31686004)(83380400001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: Tr3+pvLWukkmJt0F4TNXmXgTgwAEc4JeuGmoQoTBF9U5VqPtgtUvUQkzl6Kab2zy4WFHkC65IMlM/rDEkK7JA4FR7SgDZDll53iNWeG10PfR31s/dnvg5ViE/vp/AZ4PfarKxLsSqnPjgaF7Oa0RddT+qsod2tV+jLsvo+8g5/3Q9+WI1rihSrBUMJxGS/z4FRr/pttfMJPEPJ5UqUtO/wUMKjHFjj3m6QTtddX58UX+PneYcTj6DNYj4Ej6UtQ9CCQ5GQmJFB6JzuF4Hk7QJgewl7BpaNiPa2NzOVwVeIN0ViBIbooYX+KmN4DCVaRdaPATM1PG6FrcZKmIp/43nme87VKmGRfLJ0gMtuK0yuX16A0ATqNsbJqpjipdixe7B42uEWF60A7ccYPGgdRvOGlJmtxzTjR4tQ3l8nLfbh5ihqgaCX0ccDBgPGPwH27HyJYtgFRU/FtyB+Vrcv6GrFqQnN88OG9SnpmlC9o9t4l3/g3axmfD3AJ57uALX2hFfHJq3fdCsHkTQShLntPix1rT78fSm1CI1QdMQTqZraTrDfs5w+Tie4NQc+kNhMDbkd6Pm2/K866pZKJ9vrQl8ovyofguYeaZtqoTZP+ylPg9Q0x9EboJdpvaQc7VjdLHJn2bUfylW4V6naWINTve+G3usYFCW1wDRveFWVTXCwAE3SLSYBuNpha7elSOC0tGZks+I9gQPYOM/9d72RVVLPqm8Kh96b1urS3RaEDAb6g=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(6506007)(6512007)(6486002)(508600001)(53546011)(26005)(186003)(31686004)(36756003)(54906003)(66946007)(38100700002)(66476007)(4326008)(8676002)(66556008)(316002)(8936002)(2616005)(2906002)(5660300002)(31696002)(86362001)(110136005)(45980500001)(43740500002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MDV3NGZzbFRQQkU2SzF4UlRwcVV2UEJsWjBHeDh2VGd2WFVUbXd2QnFUME5K?=
- =?utf-8?B?RmM1TmN4M3pzdkxIRGVpUzhVT0d6UTVwWjk3Q01OTGlRb0NEaHRBamtHVVZl?=
- =?utf-8?B?bFU0YW1nSHBzYmpqQXE4ZVBlZ0I0cDczVkpSbFFMWXkzWENySjNpQ1d4ZEs5?=
- =?utf-8?B?OXVQZDJYS0dNdUwxN3k3RFBJNTJUcUlOVHR2eXJPK2FkaGVvelZtQVB1RVVm?=
- =?utf-8?B?dlZocloxUGVYMDNzMExPOVc5Z0NqRm5MRGtqdWlBNm5kYVhFcUJYTVo4eTR1?=
- =?utf-8?B?TnhNNk5UUTlJYmNUYkIrbktITm5XTXNsSW16SVlQWkprelRuSnZjTzBYMkdo?=
- =?utf-8?B?NnJhVno2c0VmeEVBNERxSkxaNDJFcGdaMGxEWGFDMzE3YlBKaC9zZ2I3VDAy?=
- =?utf-8?B?WTk0L1RhQUF4b0ZGZlBzNHFoUmc4cllvZmJGdE5NRWRPT1VmZ1RIVTNudXRi?=
- =?utf-8?B?ODZjWGY1RFgyWUdLWDR2dUR1NkhCMTZERkh2TDg5ajZnUk5UM2ErQldrb0dE?=
- =?utf-8?B?aXlCd3pzSGdZVGIrNU5kTHRBcDVBSW82Vm9oTHBXL21tYzBSRlFqMmY0V0c5?=
- =?utf-8?B?WERhcytxcUoyMGdROGh6VklVMUp4WW1QekVhaU5jaUIyY0pGeVVpUi9EVjE5?=
- =?utf-8?B?Z2ZhZ0VpSXVOZWhsZUtJenZPZHU5ekROa2lFdUJSSElFbVZmL2haOTV6K3VO?=
- =?utf-8?B?ckpZZ09YMnJtamx5Ui8wKytwOHQ0aXhNZTFTTlZONzY3U21IaUljYUduS1l1?=
- =?utf-8?B?aWU3d1NwWXgwRkVwbUJGQ1hEL1ZmZXFCcjY3OWhqRjRvZDB6OW8rZm1hOUpG?=
- =?utf-8?B?azVBZGluRWZQcEtVeXlFSVFLalhHMHZMdmdaT0tReFp4R3BmS3MyQVhTMVdl?=
- =?utf-8?B?VnF3dkFIWUxGZGhoOVMzQlRoTHI5WGJCN3lNbXZlTHRjaDNxc0hUSjNCQWRI?=
- =?utf-8?B?algvL0xzUWlINWV6WVFBNi9LV1R6MUJpUW9TNlhHY0RkTHQ2TE0xU2NvMWhZ?=
- =?utf-8?B?NzJNY2RNbElkOUIwQVI1cWl0b2VDTmxtV0dBSXd5RjNndVI5MjYwN2swSGlQ?=
- =?utf-8?B?Q2ZWNDNjNkdpVDBQc1RQdUV1Kzh2OU1rMlZNemVRV1o1eDBOcjV2MG1VcG5B?=
- =?utf-8?B?Um14UVJSY2xmRUpTN0pzOTc0QkJrbzNBcXF3RDdueHY3R2swdStOZWNnOFBr?=
- =?utf-8?B?Uno4OEZ3UmgxNFJCQ1VaSHVaSlpIcU9yQjZMUUVIS05nb1JsQ2dYdDViZUs1?=
- =?utf-8?B?TUhNWU5uMFFuSktoYjdwSHNDYzl0N1JzV0VFUFNaTHFLTXl6UUpJREMzakJ5?=
- =?utf-8?B?dXZMazd4MXRtYU5KVlVoMVdiZ0lWM25vZVM2a0prcGkzYVJSWTJSY1EvcytR?=
- =?utf-8?B?M0FzMW5lbmJDWEpyMUFwYkhITnllSmJRN3EwR01NTWlXWkdpREVMbjVtUHhT?=
- =?utf-8?B?SUlOUkkvNWhZRUdTV0x4NmM2TjFBVXdWOVJhUjBRcVFoU0YrRDhuQWV0RjUv?=
- =?utf-8?B?MThjUGE3TjUwNXFrT1lvT3BqR3hDTGc1TERJVnhBaTZZY2VOdnBoaUtBQkVG?=
- =?utf-8?B?TDhnVWVJcEwyWUp2RTEvYmFyc2wvdTloYXZLZk1xY0VTWFdwWDA1V1Y3WDFJ?=
- =?utf-8?B?UytFQUdaMnVnQXdEVmc2bFZVVE4rc3ZKSUtIRUg4a3Erbm5Rb09qTDhFOHBq?=
- =?utf-8?B?aXhOSTZEVHlsWWRhQVByRXIwWk1lUHlYdk1oYTFwSTYvdUNnQkN3QjhqSW9Q?=
- =?utf-8?B?VWNCb1JkK1pDcnRZZFViUFVEU3MyVGxlQURhaFUyOGNqblcxWlU3NVVWaUdr?=
- =?utf-8?B?a0cwbXBXOEhRU3R0YWRXYlpZN2xEWk5BektWL1A1VGpwSTF4M1M4MFhiZk1Y?=
- =?utf-8?B?d0w2bWxuTTVZNUpHbDJvUW4zbGxIUVFXRmYwQTJXQ0lFK3ZuYjVkUXE2RGxE?=
- =?utf-8?B?dlZTTzRJUUFaUC9pdlJlVGhQUkdlbnB3UzBHYStNOVdZMmFFNXV5WGRvano1?=
- =?utf-8?B?WVhCZEViemtjSGpPeHlBbVNvNGRrSmhOZzFtSVRhWUVDOW81UFFYQ28rTkZW?=
- =?utf-8?B?Q016aFlHV0g4R0pJR2VsQng2Qm5qSGF2U1ZCZzBLaUpNVWpUUFY5anh3S2lr?=
- =?utf-8?B?UDh2aXV3NjRsTWM5bFVQdUtBZmNEM1FnSFlqcDNWVFRFcm94WDFrTkhpeGM1?=
- =?utf-8?B?dkQzTUF3bmRGT3JhU21oREV2TTQxbVhZVkRMWStVTWFsSGdPcTRSTlUrSjYw?=
- =?utf-8?B?MGs5KytSQ1JpaVJFU3luS1JGc0JRPT0=?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UURYRFZlbkVLQ21GT2JUNDFLWEVnSGVYNVdSbTNSTzNMN2FlRTc4NUZYVHdt?=
+ =?utf-8?B?MDZVbjV1ZU5wZW92dU5VeDFKQ0QvVENXbTl1UG44YkNIWHhtL2Z0NmhkbWNQ?=
+ =?utf-8?B?OERlVXBnbTVQM1BBSzJ4UXB5N0JYZzM2K0tCNTFBbmhwZnNaN3M0ZVdHMnJE?=
+ =?utf-8?B?M2hXWG5nM0xha0pPakRSZElzaEZ0d1dxaitWVnNHWlFNUis2LzZkYWhtS2Fx?=
+ =?utf-8?B?NC9hR1M1R3dDUEFPZjJlY0FlcE5mdDRVaXJnNWZuUzlRdTFWdVlhem9xbGJK?=
+ =?utf-8?B?R0xCVTJOVWtFUUgrSjVRd2xDa1VXbi9KQ2Z0V1l0Y1BJWFdITEtTelhyeU5X?=
+ =?utf-8?B?UU44d2JDN05tU3RaUUhYRjM4UXpaYmxOTkwyRlNhZytwTG5zSUtKeTcyL1kz?=
+ =?utf-8?B?eVVCQ0doTGFnam1tVkgyN1R5OWg2bFhJQ0Fyb1U3bUxxOFRWd20zOXZFUGUw?=
+ =?utf-8?B?dWgvdlVVN3Vmbk5YbS8zY1c1dk9rNk5yRDRzdGtlR0NxUHVJNE5sV3RhZm1j?=
+ =?utf-8?B?Q1BPanVDN2MvckhsaVd5ZHo1T1ZtdlA4ZkswRmllYi8wQnJIWXF4YksvMmNM?=
+ =?utf-8?B?Qk55UDZZL2JQMlY5ZlFzRWwxek1SYmdZdC9HY3B6QThZVE1HR0QrRkljUitW?=
+ =?utf-8?B?VGg4UXRoKzl6dDNodGtDa04yMnBPT2lDcHZiVFIybWw1aFVHS2hIY3pwRkpD?=
+ =?utf-8?B?U051ZnlPVVBoK2J3SEcwa0xTdUZvbTh1dm5KTXF4UGl3UE51K1g2d01MU0I2?=
+ =?utf-8?B?aXlYWHJqdUhLYTFaYVZRV2hvTXJvcHFLbDRMa1NpQ0ViaG92MEtUTnFSaEFV?=
+ =?utf-8?B?MmJuaVk2d3hFL1NuYXlyL2ZkVE94alkrNXZKVXpybW5xT2xkWXBIWlFhZzVY?=
+ =?utf-8?B?a2dMMGJ1NVJUdXhuMGZJYjJ5SmkyOHBQc0RpU0FrdmpIZDVjYytsbVdYcWdK?=
+ =?utf-8?B?dmdaeFh0WEJJd3k5Nm45WGwrVXdLOGZvS1k1VlpmT2QvYTFXeWEvRzNxOVdr?=
+ =?utf-8?B?U01iQUNSWTRiSS9yU1pwUE5SMUQyczdpTGNCM051T2dNT0lrM25zOTB3OE9q?=
+ =?utf-8?B?R1dFZFMrMVR4N2Z0SlduOHR0ZXBjekR5NzJWZUlwb01id0tyOWgvNUxKWWNv?=
+ =?utf-8?B?Z05rUGpVNElURitiaFYyWXNYQ0VPVHJ4SStGemRsOGNPaGlaQVMzU01SSHdr?=
+ =?utf-8?B?ZlBaMW1uSGhMZDIxNlg2aGRNTlRXN2dCRzhoZUIrQ2JNZFBEVEFVNjJWczkw?=
+ =?utf-8?B?akZpYWIxN1NVWDdFVkM3SGJ4NG5CYjJSdkI5aFdsTnJCTGJveUM1a2NVWWxv?=
+ =?utf-8?B?UG5DZW1DcGREcE9ZU1E2dmI3dEhLcXliSEk3Vk1oMktMOTZPR25nd04xNVRz?=
+ =?utf-8?B?eDE1ajA5RkpqL01xUFNmbTNYYXdIemlBQ0FFd1p0c1hFUTN2ZlFybkdhOTQ5?=
+ =?utf-8?B?WlFGaUZZOVltb3l6MDk0SUozbUdnZWZPWlJOUE56cFdpR0piU0pSdnZLUXU3?=
+ =?utf-8?B?YkhDKzNwYlVvOTQ4eDdCZ0FnRGpsVXpMSCtUR1BmVk5ocEE0dlVoZUd3cFYr?=
+ =?utf-8?B?SlNUdWo5b3JsSXk1ZnUzQkVlZkRXNldUeHRHOVpKd1lqK0ZvVWtvOFRNaUpt?=
+ =?utf-8?B?djJiSFlreXdUTnJjSWxnd3BLeGZqNEg0enRpQmhuc1NwYzVEQkIwUzhvaGlV?=
+ =?utf-8?B?ZnBJaWFwWmRYNy9RUGpUUGhXbjUyeHd1QkZldU1ybk81MFk2Uk5xNktmd2h2?=
+ =?utf-8?B?RVRrQytwVzdpSlkzdk9UcW9YSWpkMzRjUGxKOVRBL1RqVCtkdFQxTXpsZTkz?=
+ =?utf-8?B?WE5BSTVYSHZiVFJOd1podytIUkF3cXRHZERueUJNcEJpT1FYdlVRdlViaUdu?=
+ =?utf-8?B?Uzg1SkZmWmhkOXFlZndUNXFYeVdjU2RuSmhMZWxRbXVIS3JuMURHdzE4b2M5?=
+ =?utf-8?B?Vzk3VlY0ZHBKV1Q0TE41VGFicisxemdhMnB2Z0dIZG9iZ0Z6M0hqUlc4MHJ2?=
+ =?utf-8?B?QWh1RjAzK3lPeWZ0MXBncVlFT3hKRW5hR1I4elFQRHJIUWFpZ1ZCZ2xLUTB6?=
+ =?utf-8?B?SVppZ3RuSEsvUkJMOXpKdXJXcGZvQ3hEdy83aVV4NDhLdmM4NU44czBLZVE2?=
+ =?utf-8?B?bUpSdFp4TU5CRlhpWUhaQWRTK2dKT01valJsVW00blhIS3FqTXFRTlNiZFM5?=
+ =?utf-8?B?OFlhbHBpbEk1Qk5PMG9LMWJTSEdzQmc4cHhiUlFMSzNPOTA2M2RtVWh0OWNR?=
+ =?utf-8?B?RlowVHhTS3ViMktrcHFIME1BVkJnPT0=?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 17f6f3bd-9a1a-4324-3bcd-08da00544527
+X-MS-Exchange-CrossTenant-Network-Message-Id: 18153971-f3ef-49f5-c28a-08da0055455e
 X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Mar 2022 16:05:16.5360
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Mar 2022 16:12:26.3811
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Fe3Jfq1r/r9CLkGzZoJ0xpG4YuRrSdDAhOW3SFuQwSJfJGWbjAIdoUhizwBdceaF1V0IvXat5o2sS9i6IgA8/xjlqwjJD09+YzGrPlN5Mvc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5261
+X-MS-Exchange-CrossTenant-UserPrincipalName: UosB/MSbsMmLZwmbtZnRnyidk0/TuN7eKrGtPv3c+OcmU75xSvaKviv79jr7i+PJfi/zIvPlg7mUYxBBT/tXlJpoPD6ZCdCjPCR10qajW1E=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR10MB2024
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10279 signatures=690470
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=800 spamscore=0
  phishscore=0 bulkscore=0 adultscore=0 malwarescore=0 suspectscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2202240000 definitions=main-2203070093
-X-Proofpoint-ORIG-GUID: W_t-3vIrb_UKX08fV40KVC9CHZW5cjfH
-X-Proofpoint-GUID: W_t-3vIrb_UKX08fV40KVC9CHZW5cjfH
+ engine=8.12.0-2202240000 definitions=main-2203070094
+X-Proofpoint-GUID: kTqFDDNYy3eXqL9O3ehEytKv0T8qj_Au
+X-Proofpoint-ORIG-GUID: kTqFDDNYy3eXqL9O3ehEytKv0T8qj_Au
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 3/7/22 6:56 PM, Wenchao Hao wrote:
-> iscsi_alloc_conn() would alloc and initialize iscsi_cls_conn but do
-> not expose it to userspace.
-> iscsi_add_conn() would expose it to userspace.
+> We found a NULL pointer dereference in iscsi_sw_tcp_conn_get_param(),
+> the root reason is we did sysfs addition wrong.
 > 
-> LLDs should split the alloc and register to 2 steps.
+> iscsi_create_conn() expose iscsi_cls_conn to sysfs while the related
+> resources are not initialized. So we should delay the calling of
+> device_add() until these resources has been initialized.
 > 
-> And simplify iscsi_create_conn() with these helper functions.
+> This patchset solve this issue by changing iscsi_conn_setup() and works 
+> well for iscsi_tcp.
 > 
-> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
-> Signed-off-by: Wu Bo <wubo40@huawei.com>
-> ---
->  drivers/scsi/scsi_transport_iscsi.c | 85 +++++++++++++++++++++++------
->  include/scsi/scsi_transport_iscsi.h |  3 +
->  2 files changed, 72 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 554b6f784223..092d4429bb1d 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -2341,7 +2341,7 @@ void iscsi_free_session(struct iscsi_cls_session *session)
->  EXPORT_SYMBOL_GPL(iscsi_free_session);
->  
->  /**
-> - * iscsi_create_conn - create iscsi class connection
-> + * iscsi_alloc_conn - alloc iscsi class connection
->   * @session: iscsi cls session
->   * @dd_size: private driver data size
->   * @cid: connection id
-> @@ -2356,12 +2356,10 @@ EXPORT_SYMBOL_GPL(iscsi_free_session);
->   * non-zero.
->   */
->  struct iscsi_cls_conn *
-> -iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
-> +iscsi_alloc_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
->  {
->  	struct iscsi_transport *transport = session->transport;
->  	struct iscsi_cls_conn *conn;
-> -	unsigned long flags;
-> -	int err;
->  
->  	conn = kzalloc(sizeof(*conn) + dd_size, GFP_KERNEL);
->  	if (!conn)
-> @@ -2383,35 +2381,90 @@ iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
->  	dev_set_name(&conn->dev, "connection%d:%u", session->sid, cid);
->  	conn->dev.parent = &session->dev;
->  	conn->dev.release = iscsi_conn_release;
-> +
-> +	return conn;
-> +
-> +free_conn:
-> +	kfree(conn);
-> +	return NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(iscsi_alloc_conn);
-> +
-> +/**
-> + * iscsi_add_conn - add iscsi class connection
-> + * @conn: iscsi cls connection
-> + *
-> + * this would expose iscsi_cls_conn to sysfs, so make sure the related
-> + * resources when access sysfs attributes are initialized before calling this.
-> + */
-> +int iscsi_add_conn(struct iscsi_cls_conn *conn)
-> +{
-> +	int err;
-> +	unsigned long flags;
-> +	struct iscsi_cls_session *session = iscsi_dev_to_session(conn->dev.parent);
-> +
->  	err = device_register(&conn->dev);
 
-You should use device_initialize in iscsi_alloc_conn. Here use device_add.
+Overall I think you need to also fix up the drivers. It just makes it a
+nicer driver API where the LLDs don't know about sysfs and doesn't have
+to worry about it.
 
-Then make a iscsi_remove_conn function which does device_del. The iscsi_free_conn
-does a device_put.
+Let's start with just this first piece where we handle sysfs in the lib
+and class like you are doing in this patchset. We can do the LLDs
+interaction with the lib in a second patchset to make this easier and fix
+the initial bug and cleanup some code.
 
-Patch2 should not be doing kfree on the cls_conn because it has no idea what
-the iscsi class needs to do to unravel things. For example, your patch leaks the
-parent on failures because it doesn't do a put on the parent/session to handle
-the get that's done in iscsi_alloc_conn.
-
-In a patch3 you can then fix up iscsi_conn_teardown to remove the tmp_* kfree
-code. So at the beginning of iscsi_conn_teardown do the iscsi_remove_conn.
-Then after we have cleaned everything up in there do the iscsi_free_conn.
-
-We then don't need the tmp_* code. We can just do:
-
-       kfree(conn->persistent_address);
-       kfree(conn->local_ipaddr);
-
-anytime after the iscsi_remove_conn call.
-
-
->  	if (err) {
->  		iscsi_cls_session_printk(KERN_ERR, session, "could not "
->  					 "register connection's dev\n");
-> -		goto release_parent_ref;
-> +		put_device(&session->dev);
-> +		return err;
->  	}
->  	err = transport_register_device(&conn->dev);
->  	if (err) {
->  		iscsi_cls_session_printk(KERN_ERR, session, "could not "
->  					 "register transport's dev\n");
-> -		goto release_conn_ref;
-> +		device_unregister(&conn->dev);
-> +		put_device(&session->dev);
-> +		return err;
->  	}
->  
->  	spin_lock_irqsave(&connlock, flags);
->  	list_add(&conn->conn_list, &connlist);
->  	spin_unlock_irqrestore(&connlock, flags);
->  
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(iscsi_add_conn);
-> +
-> +/**
-> + * iscsi_create_conn - create iscsi class connection
-> + * @session: iscsi cls session
-> + * @dd_size: private driver data size
-> + * @cid: connection id
-> + *
-> + * This can be called from a LLD or iscsi_transport. The connection
-> + * is child of the session so cid must be unique for all connections
-> + * on the session.
-> + *
-> + * Since we do not support MCS, cid will normally be zero. In some cases
-> + * for software iscsi we could be trying to preallocate a connection struct
-> + * in which case there could be two connection structs and cid would be
-> + * non-zero.
-> + *
-> + * Note: iscsi_cls_conn would be exposed to sysfs after this function, it
-> + * means attributes of iscsi_cls_conn are accessible to userspace. So the
-> + * caller must make sure everything related these sysfs attributes are
-> + * already initialized.
-> + */
-> +struct iscsi_cls_conn *
-> +iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
-
-
-You should kill this since it's not used anymore.
-
-> +{
-> +	struct iscsi_cls_conn *conn;
-> +	int err;
-> +
-> +	conn = iscsi_alloc_conn(session, dd_size, cid);
-> +	if (!conn)
-> +		return NULL;
-> +
-> +	err = iscsi_add_conn(conn);
-> +	if (err) {
-> +		kfree(conn);
-> +		return NULL;
-> +	}
-> +
->  	ISCSI_DBG_TRANS_CONN(conn, "Completed conn creation\n");
->  	return conn;
-> -
-> -release_conn_ref:
-> -	device_unregister(&conn->dev);
-> -	put_device(&session->dev);
-> -	return NULL;
-> -release_parent_ref:
-> -	put_device(&session->dev);
-> -free_conn:
-> -	kfree(conn);
-> -	return NULL;
->  }
->  
->  EXPORT_SYMBOL_GPL(iscsi_create_conn);
-> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-> index c5d7810fd792..fd9ce99c2186 100644
-> --- a/include/scsi/scsi_transport_iscsi.h
-> +++ b/include/scsi/scsi_transport_iscsi.h
-> @@ -441,6 +441,9 @@ extern struct iscsi_cls_session *iscsi_create_session(struct Scsi_Host *shost,
->  						unsigned int target_id);
->  extern void iscsi_remove_session(struct iscsi_cls_session *session);
->  extern void iscsi_free_session(struct iscsi_cls_session *session);
-> +extern int iscsi_add_conn(struct iscsi_cls_conn *conn);
-> +extern struct iscsi_cls_conn *iscsi_alloc_conn(struct iscsi_cls_session *sess,
-> +						int dd_size, uint32_t cid);
->  extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
->  						int dd_size, uint32_t cid);
->  extern void iscsi_put_conn(struct iscsi_cls_conn *conn);
-
+In a separate patchset, we can then go deeper and maybe just merge/kill some
+of the lib/class interface since every driver except qla4xxx hooks into the
+lib. So we have this distinction just for that one driver's session mode
+and that doesn't make a lot of sense.
