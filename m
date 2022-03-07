@@ -2,109 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CC5FC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 11:56:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1027CC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 13:31:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235709AbiCGL44 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Mar 2022 06:56:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39728 "EHLO
+        id S238850AbiCGNcN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Mar 2022 08:32:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40604 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233302AbiCGL4x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 06:56:53 -0500
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 235B76574;
-        Mon,  7 Mar 2022 03:55:59 -0800 (PST)
-Received: from dggpemm500021.china.huawei.com (unknown [172.30.72.57])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4KBxcb0R6jz1GBys;
-        Mon,  7 Mar 2022 19:51:11 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500021.china.huawei.com (7.185.36.109) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Mon, 7 Mar 2022 19:55:57 +0800
-Received: from [10.174.178.220] (10.174.178.220) by
- dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Mon, 7 Mar 2022 19:55:56 +0800
-Subject: Re: [PATCH 1/2] iscsi_tcp: Fix NULL pointer dereference in
- iscsi_sw_tcp_conn_get_param()
-To:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     Wu Bo <wubo40@huawei.com>, Zhiqiang Liu <liuzhiqiang26@huawei.com>,
-        <linfeilong@huawei.com>
-References: <20220304025608.1874516-1-haowenchao@huawei.com>
- <e2b37e24-44dc-a159-e45d-2c720fe7ffc1@oracle.com>
-From:   Wenchao Hao <haowenchao@huawei.com>
-Message-ID: <c2891c08-5809-1f56-8783-357e6df1bc1a@huawei.com>
-Date:   Mon, 7 Mar 2022 19:55:56 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.1
+        with ESMTP id S236126AbiCGNcM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 08:32:12 -0500
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11FA37F6E0;
+        Mon,  7 Mar 2022 05:31:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1646659878; x=1678195878;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=l9ZDDygtV9eTZlD+iB+RzUt4U861wykPbQbF0/vstGE=;
+  b=FxnyhXbAfwnWiCtlZVXWOwphDm9MtqdN71iqvvIEgRpXyAuhegBAuohF
+   S44++fj2LI99RSYsWwHdaLP+NE4EZklDbg4eGk4Sw1M00SVJdph8GLEPv
+   xIn+UzNmMHeCw83OyNIQ+sBCgqGIwIcM0GTFT7N2Tt7qNhh5/jIN8+KNd
+   AgdaF7wXNY9gf2I33f1+dVCA7vwO2yEAC3xa+BG1RtojNa21mHe2bLyga
+   1hopUzy8H5633lrSr2VbR1vu01xsmP/yW/oyZr8rONcVUdDx5AmtIt/R0
+   yKqTgbqw4V0mrwmq1ejjQUwes9ynhwIV7BW27vBR7XigVc5rKodjkcH52
+   g==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10278"; a="251962370"
+X-IronPort-AV: E=Sophos;i="5.90,162,1643702400"; 
+   d="scan'208";a="251962370"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2022 05:31:17 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,162,1643702400"; 
+   d="scan'208";a="553152904"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.92]) ([10.237.72.92])
+  by orsmga008.jf.intel.com with ESMTP; 07 Mar 2022 05:31:14 -0800
+Message-ID: <74cade30-6dde-c5f7-e009-b34423d22c12@intel.com>
+Date:   Mon, 7 Mar 2022 15:31:13 +0200
 MIME-Version: 1.0
-In-Reply-To: <e2b37e24-44dc-a159-e45d-2c720fe7ffc1@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Firefox/91.0 Thunderbird/91.5.0
+Subject: Re: [PATCH] scsi: ufs: move shutting_down back to ufshcd_shutdown
 Content-Language: en-US
+To:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>
+Cc:     stable@vger.kernel.org
+References: <20220224235629.3804227-1-jaegeuk@kernel.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <20220224235629.3804227-1-jaegeuk@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/3/3 23:03, Mike Christie wrote:
-> On 3/3/22 8:56 PM, Wenchao Hao wrote:
->> kernel might crash in iscsi_sw_tcp_conn_get_param() because it dereference
->> an invalid address.
->>
->> The initialization of iscsi_conn's dd_data is after device_register() of
->> struct iscsi_cls_conn, so iscsi_conn's dd_data might not initialized when
->> iscsi_sw_tcp_conn_get_param() is called.
->>
+On 25/02/2022 01:56, Jaegeuk Kim wrote:
+> The commit b294ff3e3449 ("scsi: ufs: core: Enable power management for wlun")
+> moved hba->shutting_down from ufshcd_shutdown to ufshcd_wl_shutdown, which
+> introduced regression as belows.
 > 
-> We are actually doing sysfs/device addition wrong.
+> ufshcd_err_handler started; HBA state eh_non_fatal; powered 1; shutting down 1; saved_err = 4; saved_uic_err = 64; force_reset = 0
+> ...
+> task:init            state:D stack:    0 pid:    1 ppid:     0 flags:0x04000008
+> Call trace:
+>  __switch_to+0x25c/0x5e0
+>  __schedule+0x68c/0xaa8
+>  schedule+0x12c/0x24c
+>  schedule_timeout+0x98/0x138
+>  wait_for_common_io+0x13c/0x30c
+>  blk_execute_rq+0xb0/0x10c
+>  __scsi_execute+0x100/0x27c
+>  ufshcd_set_dev_pwr_mode+0x1c8/0x408
+>  __ufshcd_wl_suspend+0x564/0x688
+>  ufshcd_wl_shutdown+0xa8/0xc0
+>  device_shutdown+0x234/0x578
+>  kernel_restart+0x4c/0x140
+>  __arm64_sys_reboot+0x3a0/0x414
+>  el0_svc_common+0xd0/0x1e4
+>  el0_svc+0x28/0x88
+>  el0_sync_handler+0x8c/0xf0
+>  el0_sync+0x1c0/0x200
 > 
-> We should be doing the 2 step setup where in step 1 we alloc/init.
-> When everything is allocated and initialized, then we should do
-> device_add which exposes us to sysfs. On the teardown side, we are
-> then supposed to do 2 steps where the remove function does device_del
-> which waits until sysfs accesses are completed. We can then tear
-> the structs down and free them and call device_put.
+> The init for reboot was stuck, since ufshcd_err_hanlder was skipped when
+> shutting down WLUN. This patch allows to run the error handler and let
+> disable it during final ufshcd_shutdown only.
+
+I do not understand why it is stuck?  If there was a non-fatal error, the
+request should complete anyway, or at least timeout.
+
 > 
-
-I reviewed the teardown flow of iscsi_cls_conn, it has already written 
-as what you saied.
-
-
-> The exposure to NL would be similar where it goes into the wrapper
-> around device_add. However, see my comments on the other patch where
-> I don't think we can hit the bug you mention because every nl cmd
-> that calls into the drivers is done under the rx_queue_mutex.
+> Cc: stable@vger.kernel.org
+> Fixes: b294ff3e3449 ("scsi: ufs: core: Enable power management for wlun")
+> Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> I think we should separate the iscsi_create_conn function like we
-> do for sessions. This is going to be a little more involved because
-> you need to also convert iscsi_tcp_conn_setup and the drivers since
-> we can call into the drivers for the get_conn_param callout.
-> .
-> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 460d2b440d2e..a37813b474d0 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -9178,10 +9178,6 @@ static void ufshcd_wl_shutdown(struct device *dev)
+>  
+>  	hba = shost_priv(sdev->host);
+>  
+> -	down(&hba->host_sem);
+> -	hba->shutting_down = true;
+> -	up(&hba->host_sem);
+> -
+>  	/* Turn on everything while shutting down */
+>  	ufshcd_rpm_get_sync(hba);
+>  	scsi_device_quiesce(sdev);
+> @@ -9387,6 +9383,10 @@ EXPORT_SYMBOL(ufshcd_runtime_resume);
+>   */
+>  int ufshcd_shutdown(struct ufs_hba *hba)
+>  {
+> +	down(&hba->host_sem);
+> +	hba->shutting_down = true;
+> +	up(&hba->host_sem);
 
-I hesitated about when should we call device_add(). I think there are 
-two places to call it.
+This does not seem right because the device is not accessible after
+__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM), so shutting_down needs to
+be set before.
 
-The first one is in iscsi_conn_setup(), after some initialization of 
-conn, it keeps same with previous's implement and need not to change 
-drivers' code. What's more, the change can fix iscsi_tcp's NULL pointer 
-access.  While this change can not make sure the LLDs related sources 
-are already initialized when iscsi_cls_conn is exposed to sysfs. It 
-means LLDs' callback are still responsible to check if the resources are 
-accessible.
 
-Another one is in create_conn callback for each driver's 
-iscsi_transport.  This need us to change each driver's code.
-
-I send 2 patches which make changes in iscsi_conn_setup(), it's ok with 
-iscsi_tcp, would you help to review them?
+> +
+>  	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba))
+>  		goto out;
+>  
 
