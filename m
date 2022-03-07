@@ -2,86 +2,282 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3889DC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 17:52:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40CBEC4332F
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 18:36:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236649AbiCGRxS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Mar 2022 12:53:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55498 "EHLO
+        id S243381AbiCGShg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Mar 2022 13:37:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233014AbiCGRxR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 12:53:17 -0500
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FD9C6D387
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 09:52:23 -0800 (PST)
-Received: by mail-pl1-f180.google.com with SMTP id n15so4565139plh.2
-        for <linux-scsi@vger.kernel.org>; Mon, 07 Mar 2022 09:52:23 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=DwprjYwNE5LcdqrWbAc8Ni1ALn/1vHszc3TMMAI/bKY=;
-        b=JzeA0Tc06Lvo4C1UFPRRUBLqIQKFuwR5aw/TprorUu1Hb4qAW3/Yvq7EYEOt0gKB97
-         +1+bd++N+/J6WKHBD51XCulJMGblR3NGoxYsgknGCQ7l8cvPksevQJJPyE70DgMPkQIG
-         OPgEc7WCAE0IJN0rCujrzjZzklcTTy2YDpau7gBvL/wotXH9WWb+hkqtylBTYSL+Pmnz
-         7cV5XjSa6wFtiQcFSFbJzzga2j5xA6/6Xx8DxnFGPctwx+QWC0LQDLA3i6vbHL8EzAr3
-         LIZ+nl0Yr19bQwJVYZlpX8NBGoT7gubcfiRH9bdz/SxDRtYxjpiP7Q17akDdaKYo6OFf
-         /jKQ==
-X-Gm-Message-State: AOAM53336rArD/eFDd+eRk7r0P0hOR9EWHBUTRDfYFiRMe7SBuqP8jMU
-        l9ySuTi38jSNrpFP13CH57M=
-X-Google-Smtp-Source: ABdhPJy7/vQEF/R2zXFSBVgPpq7S1lU/2A3Z2FmPOFHEXpsOmmhHUuvouFaAa0cHtZ/rNQQEq36uuQ==
-X-Received: by 2002:a17:902:b210:b0:14f:d0ff:46bb with SMTP id t16-20020a170902b21000b0014fd0ff46bbmr13174842plr.47.1646675542435;
-        Mon, 07 Mar 2022 09:52:22 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id k20-20020a056a00135400b004ecc81067b8sm17889091pfu.144.2022.03.07.09.52.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 07 Mar 2022 09:52:22 -0800 (PST)
-Message-ID: <19ad4174-0435-85b2-0762-1fae5e0b5f9e@acm.org>
-Date:   Mon, 7 Mar 2022 09:52:20 -0800
+        with ESMTP id S235084AbiCGShf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 13:37:35 -0500
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D9C9888D0
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 10:36:37 -0800 (PST)
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220307183635epoutp0137a0a1067b02a0429edb3f626bddbd18~aLRgr2kFm2101121011epoutp01f
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 18:36:35 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220307183635epoutp0137a0a1067b02a0429edb3f626bddbd18~aLRgr2kFm2101121011epoutp01f
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1646678195;
+        bh=ExIE3wrKwqaUgqLiMKVI3cp5vvGy/x6hBKXpIM49F4w=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=taJuHdKHcgKz0PL8993KfntkWOF2ghDnnzse5urDxYvG1wAe2mWDZw7p+Gm6q6wGQ
+         7NHHyHNeCX4zxyvsuE3C++bK4HIiUeSlOpF8X/0PzbmJaehxHTcuzATx0oPjfVsJWo
+         e8u2Yqw7AyqhPNS+LG7hh2RmOQ/G+y9zgK21L1jo=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20220307183634epcas5p233b80f6bea41db7d43a57139f13a32e3~aLRfzWVh_1079210792epcas5p2a;
+        Mon,  7 Mar 2022 18:36:34 +0000 (GMT)
+Received: from epsmges5p3new.samsung.com (unknown [182.195.38.175]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4KC6cF4BWXz4x9Pr; Mon,  7 Mar
+        2022 18:36:29 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        97.F0.05590.DA056226; Tue,  8 Mar 2022 03:36:29 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20220307183628epcas5p427d45efb6584bc887ff0af0b8123e56b~aLRZ75e9O1486114861epcas5p4_;
+        Mon,  7 Mar 2022 18:36:28 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220307183628epsmtrp2a5e9246039e346d85bb08b3ed6df6063~aLRZ67Lrc1234212342epsmtrp2l;
+        Mon,  7 Mar 2022 18:36:28 +0000 (GMT)
+X-AuditID: b6c32a4b-739ff700000015d6-9b-622650ada1d3
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        0A.32.29871.CA056226; Tue,  8 Mar 2022 03:36:28 +0900 (KST)
+Received: from alimakhtar03 (unknown [107.122.12.5]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220307183625epsmtip257cc95cc6f4a379d8a1668c8e8c86794~aLRXiEswm2556225562epsmtip2X;
+        Mon,  7 Mar 2022 18:36:25 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Krzysztof Kozlowski'" <krzysztof.kozlowski@canonical.com>,
+        "'Avri Altman'" <avri.altman@wdc.com>,
+        "'Rob Herring'" <robh+dt@kernel.org>,
+        "'Andy Gross'" <agross@kernel.org>,
+        "'Bjorn Andersson'" <bjorn.andersson@linaro.org>,
+        "'Wei Xu'" <xuwei5@hisilicon.com>,
+        "'Matthias Brugger'" <matthias.bgg@gmail.com>,
+        "'Jan Kotas'" <jank@cadence.com>, "'Li Wei'" <liwei213@huawei.com>,
+        "'Stanley Chu'" <stanley.chu@mediatek.com>,
+        "'Vignesh Raghavendra'" <vigneshr@ti.com>,
+        <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+In-Reply-To: <20220306111125.116455-2-krzysztof.kozlowski@canonical.com>
+Subject: RE: [PATCH v3 01/12] dt-bindings: ufs: add common platform bindings
+Date:   Tue, 8 Mar 2022 00:06:24 +0530
+Message-ID: <000401d83252$41d5fe40$c581fac0$@samsung.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v1] scsi: ufs: scsi_get_lba error fix by check cmd opcode
-Content-Language: en-US
-To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com, mikebi@micron.com,
-        beanhuo@micron.com
-References: <20220307111752.10465-1-peter.wang@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220307111752.10465-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQHMSLK+HcMgkjgstDaV74uAa2rDeQH5avYoAUFFeK2ssjx4YA==
+Content-Language: en-us
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrHJsWRmVeSWpSXmKPExsWy7bCmuu7aALUkgycPJC3OPf7NYvHy51U2
+        i9P737FYzD9yjtWi+3imxca3P5gsNj2+xmoxcf9ZdovLu+awWVxuvshoMeP8PiaL7us72Cz+
+        zjnCaNHUYmzRuvcIu8XSrTcZLf6f/cBu8eToFGYHIY81na+ZPGY19LJ57Jx1l93j8dyN7B4t
+        R96yemxa1cnmcefaHjaPzUvqPVpO7mfxOH5jO5PH501yHu0HupkCeKKybTJSE1NSixRS85Lz
+        UzLz0m2VvIPjneNNzQwMdQ0tLcyVFPISc1NtlVx8AnTdMnOAvlNSKEvMKQUKBSQWFyvp29kU
+        5ZeWpCpk5BeX2CqlFqTkFJgU6BUn5haX5qXr5aWWWBkaGBiZAhUmZGcsbNvFVPBPrWLbsQvs
+        DYw/5LsYOTgkBEwkjr5072Lk4hAS2M0oMfH/HGYI5xOjxLbdXewQzjdGid6ZS5i6GDnBOla2
+        XWKDSOxllJjwso0VwnnJKLFi4wF2kCo2AV2JHYvb2EBsEYGLrBL3TuqD2JwCHhJXF69jBdkt
+        LOAj8XtOOEiYRUBFYtv1U+wgYV4BS4mbr0JBwrwCghInZz5hAbGZBeQltr8FuQ7kBgWJn0+X
+        sUJMd5J43N7CDFEjLvHy6BGwoyUE+jklpvftZYNocJF4dWwxVLOwxKvjW9ghbCmJz+9AakBB
+        kS3Rs8sYIlwjsXTeMRYI217iwJU5LCAlzAKaEut36UOs4pPo/f2ECaKTV6KjTQiiWlWi+d1V
+        qE5piYnd3awQJR4S034EQsLpJqPEx5bJjBMYFWYheXIWkidnIXlmFsLiBYwsqxglUwuKc9NT
+        i00LjPNSy+GRnZyfu4kRnPC1vHcwPnrwQe8QIxMH4yFGCQ5mJRHe++dVkoR4UxIrq1KL8uOL
+        SnNSiw8xmgIDfiKzlGhyPjDn5JXEG5pYGpiYmZmZWBqbGSqJ855K35AoJJCeWJKanZpakFoE
+        08fEwSnVwHS5xdTOxIjBuozn+pa4nCOWjm8sX6ydIcl8g69Dn+/UtZ1KjW3qP8RWu1QvKNrd
+        LHfw7K+9kScaLVLZD5zONsl+8lJQ/UNXFuOfXNu5WxdO8MxdnB72oyR3XbWRxSE/sTX+By7f
+        9XK2dfKclGJlNIWxbuJHL5eGFSrc1pPfa0310lrX9Yk5zDCmXX7yzekqh2WqavvuJ4tYs+lN
+        tdZwT5jY8OnX4XjVDbvLF7Zvn5JwY4X8j3lsXtxePkprXOYdP/hZlOtpzTVGxYubD0713r4x
+        KWfmaW13pcffnReGLTghW+1t4jFZ/5Jmev3JTtYp85g5vqwLe+ZRu99y76aHMo8WlLkuKfd+
+        OFu55tLnZCWW4oxEQy3mouJEAIXYBmGBBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Ra0hTYRjHe8/OzjmKi+Oy9qaUtUzJ0hQ1XmGUWsIhrAy0oj7ozJNJ7sKO
+        pt1FbelEUrCyaZRp0cyirZyXLiudmZVpiZpgZWiNZZuWiA7JYq7Ib39+/wsPPBRP+Br3ptLl
+        maxKLs0QE+64sU3sG1Qf758SUj8nQG9GZnFkdfQR6JXJjqOr5jd8VNyRjvS2GQwZRvr5qMzU
+        RaLelioC9ea/Baii+wmGigeaCPSrygxQXkEYOvvYTKIbDYMA/e6aINFoezkvSsjUF41hjDa3
+        hGCatR9IZuSKnmQKzDY+Y6grIpih/kcEc7/2DFPQacKZjveNGDNpWMmce1qMxXvsd5ekshnp
+        R1nVxs3J7oer1S2Ycs4/x/i8h8wFM74a4EZBOhzq1O8IDXCnhPRDAF//rOG5DB84oC8lXXoJ
+        1M1ZSFfIAqBueBx3GgQdBJtq1PNtL/ozH+r6tLgr1Qdg7ff2+ZQbzcC+mrt8DaCoJXQcnK3a
+        68Q47QeNAy9JJxbQkXDwW6ITC2hP2Hl5FHdiHh0M1XrgxDzaFzbaqv7etgo6vtzkO7UXHQNH
+        zhXwXBkRtLabyVIg1C5Y0v5f0i5Y0i5oXAN4HVjOKjlZmowLVYbK2exgTirjsuRpwQcVMgOY
+        f3jguibQWDcR3AowCrQCSPHEXoJP3X4pQkGq9NhxVqVIUmVlsFwr8KFwsUjQo+lMEtJp0kz2
+        CMsqWdU/F6PcvHOxi79KHFNplETLmo3Lw9s++t/OFI21CaqFiy95XLdv2LMm7OG4MS4u2RKQ
+        nL/hJGcfniyy7S4feCELfLvdsOmO5FmC6f6ENVleCDzfLyt8pIgYT4h2mCqnjPbTYq8X3he3
+        pvpOf6v0qziw+k7CUK9I3I9vsUWy8T550dEnehuuZzdMqxVl+84HjRsnz9yjO6JjclpzlnbX
+        JMX/YJWJjlvSHTM/rOW71j+oyOXvOxuSbg0Zw+SN3LbjU6c8LE8VPyMrbx19uTM0ovuZ7pA9
+        EF5g9ZaoiGsaSSJnT7j5tXlo96QEb3sFYrMBvSJgS+xGiaG2ZFHPamrtjpmULlIU0izGucPS
+        0ECeipP+AZkLVZpfAwAA
+X-CMS-MailID: 20220307183628epcas5p427d45efb6584bc887ff0af0b8123e56b
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220306111138epcas5p4adf7ac809dee20082ccb754767c8f61f
+References: <20220306111125.116455-1-krzysztof.kozlowski@canonical.com>
+        <CGME20220306111138epcas5p4adf7ac809dee20082ccb754767c8f61f@epcas5p4.samsung.com>
+        <20220306111125.116455-2-krzysztof.kozlowski@canonical.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/7/22 03:17, peter.wang@mediatek.com wrote:
-> When ufs init without scmd->device->sector_size set,
-> scsi_get_lba will get a wrong shift number and ubsan error.
-> shift exponent 4294967286 is too large for 64-bit type
-> 'sector_t' (aka 'unsigned long long')
-> Call scsi_get_lba only when opcode is READ_10/WRITE_10/UNMAP.
 
-Hmm ... how can it happen that sector_size has not been set? I think 
-that can only happen for LUNs of type SCSI DISK if sd_read_capacity() 
-fails? If sd_read_capacity() fails I think the sd driver is expected to 
-set the capacity to zero?
+Hi Krzysztof
 
-rq->__sector == -1 for flush requests and the type of that member 
-(sector_t) is unsigned. I think that it is allowed for a shift left of 
-an unsigned type to overflow. From the C standard: "The result of E1 << 
-E2 is E1 left-shifted E2 bit positions; vacated bits are filled with
-zeros. If E1 has an unsigned type, the value of the result is E1 × 2E2 , 
-reduced modulo one more than the maximum value representable in the 
-result type."
+>-----Original Message-----
+>From: Krzysztof Kozlowski [mailto:krzysztof.kozlowski@canonical.com]
+>Sent: Sunday, March 6, 2022 4:41 PM
+>To: Alim Akhtar <alim.akhtar@samsung.com>; Avri Altman
+><avri.altman@wdc.com>; Rob Herring <robh+dt@kernel.org>; Krzysztof
+>Kozlowski <krzysztof.kozlowski@canonical.com>; Andy Gross
+><agross@kernel.org>; Bjorn Andersson <bjorn.andersson@linaro.org>; Wei
+>Xu <xuwei5@hisilicon.com>; Matthias Brugger <matthias.bgg@gmail.com>;
+>Jan Kotas <jank@cadence.com>; Li Wei <liwei213@huawei.com>; Stanley Chu
+><stanley.chu@mediatek.com>; Vignesh Raghavendra <vigneshr@ti.com>;
+>linux-scsi@vger.kernel.org; devicetree@vger.kernel.org; linux-
+>kernel@vger.kernel.org; linux-arm-msm@vger.kernel.org; linux-arm-
+>kernel@lists.infradead.org; linux-samsung-soc@vger.kernel.org; linux-
+>mediatek@lists.infradead.org
+>Subject: [PATCH v3 01/12] dt-bindings: ufs: add common platform bindings
+>
+>Add bindings for common parts (platform) of Universal Flash Storage
+>(UFS) Host Controllers in dtschema format.
+>
+>Include also the bindings directory in the UFS maintainers entry.
+>
+>Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+>---
 
-Thanks,
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 
-Bart.
+
+> .../devicetree/bindings/ufs/ufs-common.yaml   | 82 +++++++++++++++++++
+> MAINTAINERS                                   |  1 +
+> 2 files changed, 83 insertions(+)
+> create mode 100644 Documentation/devicetree/bindings/ufs/ufs-
+>common.yaml
+>
+>diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+>b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+>new file mode 100644
+>index 000000000000..47a4e9e1a775
+>--- /dev/null
+>+++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+>@@ -0,0 +1,82 @@
+>+# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause %YAML 1.2
+>+---
+>+$id:
+>+https://protect2.fireeye.com/v1/url?k=1c5f8d40-43c4b442-1c5e060f-0cc47a
+>+31381a-044442c4c340dc87&q=1&e=f6b89910-3420-4a58-a18d-
+>4ca02e079c2b&u=ht
+>+tp%3A%2F%2Fdevicetree.org%2Fschemas%2Fufs%2Fufs-common.yaml%23
+>+$schema:
+>+https://protect2.fireeye.com/v1/url?k=bc24c591-e3bffc93-bc254ede-0cc47a
+>+31381a-e9aaf10c3795a198&q=1&e=f6b89910-3420-4a58-a18d-
+>4ca02e079c2b&u=ht
+>+tp%3A%2F%2Fdevicetree.org%2Fmeta-schemas%2Fcore.yaml%23
+>+
+>+title: Common properties for Universal Flash Storage (UFS) Host
+>+Controllers
+>+
+>+maintainers:
+>+  - Alim Akhtar <alim.akhtar@samsung.com>
+>+  - Avri Altman <avri.altman@wdc.com>
+>+
+>+properties:
+>+  clocks: true
+>+
+>+  clock-names: true
+>+
+>+  freq-table-hz:
+>+    items:
+>+      items:
+>+        - description: Minimum frequency for given clock in Hz
+>+        - description: Maximum frequency for given clock in Hz
+>+    description: |
+>+      Array of <min max> operating frequencies in Hz stored in the same
+order
+>+      as the clocks property. If this property is not defined or a value
+in the
+>+      array is "0" then it is assumed that the frequency is set by the
+parent
+>+      clock or a fixed rate clock source.
+>+
+>+  interrupts:
+>+    maxItems: 1
+>+
+>+  lanes-per-direction:
+>+    $ref: /schemas/types.yaml#/definitions/uint32
+>+    enum: [1, 2]
+>+    default: 2
+>+    description:
+>+      Number of lanes available per direction.  Note that it is assume
+same
+>+      number of lanes is used both directions at once.
+>+
+>+  vdd-hba-supply:
+>+    description:
+>+      Phandle to UFS host controller supply regulator node.
+>+
+>+  vcc-supply:
+>+    description:
+>+      Phandle to VCC supply regulator node.
+>+
+>+  vccq-supply:
+>+    description:
+>+      Phandle to VCCQ supply regulator node.
+>+
+>+  vccq2-supply:
+>+    description:
+>+      Phandle to VCCQ2 supply regulator node.
+>+
+>+  vcc-supply-1p8:
+>+    type: boolean
+>+    description:
+>+      For embedded UFS devices, valid VCC range is 1.7-1.95V or 2.7-3.6V.
+This
+>+      boolean property when set, specifies to use low voltage range of
+>+      1.7-1.95V. Note for external UFS cards this property is invalid and
+valid
+>+      VCC range is always 2.7-3.6V.
+>+
+>+  vcc-max-microamp:
+>+    description:
+>+      Specifies max. load that can be drawn from VCC supply.
+>+
+>+  vccq-max-microamp:
+>+    description:
+>+      Specifies max. load that can be drawn from VCCQ supply.
+>+
+>+  vccq2-max-microamp:
+>+    description:
+>+      Specifies max. load that can be drawn from VCCQ2 supply.
+>+
+>+dependencies:
+>+  freq-table-hz: [ 'clocks' ]
+>+
+>+required:
+>+  - interrupts
+>+
+>+additionalProperties: true
+>diff --git a/MAINTAINERS b/MAINTAINERS
+>index d7ea92ce1b1d..ef16268b6ca6 100644
+>--- a/MAINTAINERS
+>+++ b/MAINTAINERS
+>@@ -20100,6 +20100,7 @@ R:	Alim Akhtar <alim.akhtar@samsung.com>
+> R:	Avri Altman <avri.altman@wdc.com>
+> L:	linux-scsi@vger.kernel.org
+> S:	Supported
+>+F:	Documentation/devicetree/bindings/ufs/
+> F:	Documentation/scsi/ufs.rst
+> F:	drivers/scsi/ufs/
+>
+>--
+>2.32.0
+
+
