@@ -2,240 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B2E0C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 01:32:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B4C0C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 02:44:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234604AbiCGBd2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Mar 2022 20:33:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59958 "EHLO
+        id S234847AbiCGCpg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Mar 2022 21:45:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233960AbiCGBd2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2022 20:33:28 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A2F9303;
-        Sun,  6 Mar 2022 17:32:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=8scveQ0yvF1fZzX2Ib/Z9C+ILbGxteGvid64z61YsgA=; b=xs3slkKeVjHwVDyEYr/OhF+pZx
-        LcO6coBl08W0ONkoPA9azgOOcwhoPro6AUtDfOTbo2upatBwB437wQXDBCgE+qSKFG1diPGh/Asoh
-        84MkVbXgfUHAcwxzmjmTcYYz2IELPExIRnvtivjGcSPXacauKjinOxt3opbu5WH4Bb7dKHuAbpk7E
-        WFUZsSOTT5GWjYZvLCDd2XrvyeJSeHx+Uad3bTl2bj5Uf9JVgIeQcmugRNcvEKfglNhbUdqXs3tmH
-        f9d2V4Om3HPas/YThEm8j4vEw8UuRlfxQodzzJAY5gK9nMF98wvwIbyXYfepMUFumY1pkMa4u20Af
-        jZkx7+iQ==;
-Received: from [2601:1c0:6280:3f0::aa0b] (helo=bombadil.infradead.org)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nR2Ed-00FVVj-7f; Mon, 07 Mar 2022 01:32:27 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-doc@vger.kernel.org
-Cc:     patches@lists.linux.dev, Randy Dunlap <rdunlap@infradead.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
-Subject: [PATCH] SCSI: docs: UFS documentation corrections
-Date:   Sun,  6 Mar 2022 17:32:24 -0800
-Message-Id: <20220307013224.5130-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.34.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S234840AbiCGCpf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2022 21:45:35 -0500
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ED935F6E
+        for <linux-scsi@vger.kernel.org>; Sun,  6 Mar 2022 18:44:42 -0800 (PST)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220307024440epoutp013bc29d2df05a5949b07751af19e58ba2~Z_SX94MkX1715117151epoutp01M
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 02:44:40 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220307024440epoutp013bc29d2df05a5949b07751af19e58ba2~Z_SX94MkX1715117151epoutp01M
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1646621080;
+        bh=/QqAj4sBooVJtWFQuaex7gP6M60iq909aZ1ni0qhM34=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=JiGxHoL4jXnkFfa4WSEMA9QKSRsAb9J4lvO2YdggRK2U/Y0V+1stXQXAcV3wuaXLY
+         GUG8XjGJuI9Z3C/u1M7oOhTa7PbBy0EXaOwX1+/nt9dENrPKaUEGxYGJVgnsUi8Uxo
+         oRGWeiAh1VwRqk+q+5oYuH1bkzZbLHTIeI2nrTt8=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20220307024439epcas2p1cc2a030f46258e7245e759a752e28a0e~Z_SXZEBBx3136731367epcas2p1U;
+        Mon,  7 Mar 2022 02:44:39 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.102]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4KBjTw3ZTpz4x9Pv; Mon,  7 Mar
+        2022 02:44:36 +0000 (GMT)
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        F4.92.51767.49175226; Mon,  7 Mar 2022 11:44:36 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
+        20220307024436epcas2p1cb5b07d5149b37610819fa3d70af59ea~Z_ST-baMc3137231372epcas2p1D;
+        Mon,  7 Mar 2022 02:44:36 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220307024436epsmtrp24254fc720f43e0ffb41b96df539026e2~Z_ST_jWXB0107901079epsmtrp2I;
+        Mon,  7 Mar 2022 02:44:36 +0000 (GMT)
+X-AuditID: b6c32a45-45dff7000000ca37-95-62257194e573
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        56.B7.29871.39175226; Mon,  7 Mar 2022 11:44:35 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20220307024435epsmtip1566e26c09f85b0e6ea3de1a459ab92fc~Z_STyf5c12958629586epsmtip1R;
+        Mon,  7 Mar 2022 02:44:35 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, adrian.hunter@intel.com, sc.suh@samsung.com,
+        hy50.seo@samsung.com, sh425.lee@samsung.com,
+        bhoon95.kim@samsung.com, vkumar.1997@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [RESEND PATCH v1] scsi: ufs: exclude UECxx from SFR dump list
+Date:   Mon,  7 Mar 2022 11:43:30 +0900
+Message-Id: <1646621010-118886-1-git-send-email-kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpmk+LIzCtJLcpLzFFi42LZdljTXHdKoWqSwbzv0hYnn6xhs3gwbxub
+        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i+XH/zFZ
+        dN29wWix9N9bFos79z+yOPB7XO7rZfJYvOclk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5
+        tB/oZgrgiMq2yUhNTEktUkjNS85PycxLt1XyDo53jjc1MzDUNbS0MFdSyEvMTbVVcvEJ0HXL
+        zAG6XkmhLDGnFCgUkFhcrKRvZ1OUX1qSqpCRX1xiq5RakJJTYF6gV5yYW1yal66Xl1piZWhg
+        YGQKVJiQndGz+wJbwU2uigevZzA2MB7n6GLk5JAQMJH4dWc+WxcjF4eQwA5GiRk7bzODJIQE
+        PjFKrJvtA5H4xihx4c1jRpiOf3M/MEIk9jJKPP/0khnC+cEocfLAOyaQKjYBTYmnN6eC2SIC
+        15kk5m3PALGZBdQldk04ARYXFnCTuP2nnQXEZhFQlWhf+gRoEAcHL1D8whYfiGVyEjfPdTJD
+        2K0cEnffiEDYLhKPez+yQtjCEq+Ob2GHsKUkPr/bywYyRkKgWGLTPnmQ0yQEGhgllnzazAJR
+        Yywx61k7I0gNM9CZ63fpQ5QrSxy5xQJxJJ9Ex+G/7BBhXomONiGIRmWJX5MmQ0NBUmLmzTtQ
+        Sz0kjqyczQgJtliJuQ1LmCcwys5CmL+AkXEVo1hqQXFuemqxUYEhPIaS83M3MYJTo5brDsbJ
+        bz/oHWJk4mA8xCjBwawkwnv/vEqSEG9KYmVValF+fFFpTmrxIUZTYGBNZJYSTc4HJue8knhD
+        E0sDEzMzQ3MjUwNzJXFer5QNiUIC6YklqdmpqQWpRTB9TBycUg1MC/I0z84ze/LEPW93w+a1
+        yxX4zI4cXRP616gnSPfvoo0tKewhR65qy+uoC5w9ssShP3GxwrtZWXysjbc+Kz5/rXdI7ljv
+        1sZ9L459WrG0UEcx88V3wSQW9/baS+YCLgsmtfWoOIqc1VA8uaT/64aZc3c+WhusyKLw5MNn
+        PqXiJhemHzdfX5PW1n1vvnxpoXNdQ88+ptvmT26371x++uLuWWG7Api/iEqYlM4uy+tc2XdC
+        MVm6wVN2k0pn/uR2xnnH9wXt2Hlk/q9lIcurJjjwTpfZOWn6w32Mk1+4VhzVCpZ+u3prv7d7
+        77ZYoZVGol6NkfeXmD21/5+wt3ilf+Bx1dUXdHzrGpa59sU6LFkuocRSnJFoqMVcVJwIAEac
+        Q2UWBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGLMWRmVeSWpSXmKPExsWy7bCSnO7kQtUkgzfXbCxOPlnDZvFg3jY2
+        i5c/r7JZHHzYyWLxdekzVotP65exWqxe/IDFYtGNbUwWN7ccZbG4vGsOm0X39R1sFsuP/2Oy
+        6Lp7g9Fi6b+3LBZ37n9kceD3uNzXy+SxeM9LJo8Jiw4wenxf38Hm8fHpLRaPvi2rGD0+b5Lz
+        aD/QzRTAEcVlk5Kak1mWWqRvl8CV0bP7AlvBTa6KB69nMDYwHufoYuTkkBAwkfg39wNjFyMX
+        h5DAbkaJGd+6GCESkhIndj6HsoUl7rccYYUo+sYosfHcVGaQBJuApsTTm1OZQBIiAi+ZJF7M
+        WcMGkmAWUJfYNeEEE4gtLOAmcftPOwuIzSKgKtG+9AlQMwcHL1D8whYfiAVyEjfPdTJPYORZ
+        wMiwilEytaA4Nz232LDAMC+1XK84Mbe4NC9dLzk/dxMjOGi1NHcwbl/1Qe8QIxMH4yFGCQ5m
+        JRHe++dVkoR4UxIrq1KL8uOLSnNSiw8xSnOwKInzXug6GS8kkJ5YkpqdmlqQWgSTZeLglGpg
+        qp6//ehT24NdO5p916ifPO5+Krgl/Y/L/qiAsrBzxduX392W/9J/yxfxug2Lwtf/vS4fUZld
+        s0Hx3RdxL4/3Uns91iRuepXt8ezVBA399S2h+k/nyz22aLde+JL3+6N7077+U8xY57w+0Npx
+        fsd1xfJvtlqHv741nSbx/7vEgTd/J7AGRm4pSVu88dnVrElTjuT+VQmTlTc29vu4ZMebv+nC
+        fiZTthmE/tyxvfZMEd/pO5NVFsvN3eN3+dZ9TUVnrvpLqb0HdmopL8mPm7Dt4mGBf0rXS0+Y
+        yDtv5JDplfxu0Ho1rKrx9bTtO0TtV+j/i49bbL9cYN+/hncF7LfvScRxyztvty9pD/5w8bTE
+        E2MlluKMREMt5qLiRABJ1ZDZyQIAAA==
+X-CMS-MailID: 20220307024436epcas2p1cb5b07d5149b37610819fa3d70af59ea
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220307024436epcas2p1cb5b07d5149b37610819fa3d70af59ea
+References: <CGME20220307024436epcas2p1cb5b07d5149b37610819fa3d70af59ea@epcas2p1.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Make a variety of corrections to ufs.rst:
+These are ROC type things that means their values
+are cleared when the SFRs are read.
+They are usually read in ISR when an UIC error occur.
+Thus, their values would be zero at many cases. And
+there might be a little bit risky when they are read to
+be cleared before the ISR reads them, e.g. the case that
+a command is timed-out, ufshcd_dump_regs is called in
+ufshcd_abort and an UIC error occurs at the nearly
+same time. In this case, ISR will be called but UFS error handler
+will not be scheduled.
+This patch is to make UFS driver not read those SFRs in the
+dump function, i.e. ufshcd_dump_regs.
 
-- add spaces around parenthetical phrases
-- correct singular/plural grammar and nouns
-- correct punctuation
-- add article adjectives
-- add hyphens to multi-word adjectives
-- spell Lun as LUN
-- spell upiu as UPIU (in text, not code examples)
-- don't capitalize generic "specification"
-
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>
-Cc: Avri Altman <avri.altman@wdc.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: Jonathan Corbet <corbet@lwn.net>
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 ---
- Documentation/scsi/ufs.rst |   70 +++++++++++++++++------------------
- 1 file changed, 35 insertions(+), 35 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
---- linux-next-20220304.orig/Documentation/scsi/ufs.rst
-+++ linux-next-20220304/Documentation/scsi/ufs.rst
-@@ -10,8 +10,8 @@ Universal Flash Storage
-    1. Overview
-    2. UFS Architecture Overview
-      2.1 Application Layer
--     2.2 UFS Transport Protocol(UTP) layer
--     2.3 UFS Interconnect(UIC) Layer
-+     2.2 UFS Transport Protocol (UTP) layer
-+     2.3 UFS Interconnect (UIC) Layer
-    3. UFSHCD Overview
-      3.1 UFS controller initialization
-      3.2 UTP Transfer requests
-@@ -22,15 +22,15 @@ Universal Flash Storage
- 1. Overview
- ===========
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 460d2b4..8b65c081 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -115,8 +115,12 @@ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+ 	if (!regs)
+ 		return -ENOMEM;
  
--Universal Flash Storage(UFS) is a storage specification for flash devices.
--It is aimed to provide a universal storage interface for both
--embedded and removable flash memory based storage in mobile
-+Universal Flash Storage (UFS) is a storage specification for flash devices.
-+It aims to provide a universal storage interface for both
-+embedded and removable flash memory-based storage in mobile
- devices such as smart phones and tablet computers. The specification
- is defined by JEDEC Solid State Technology Association. UFS is based
--on MIPI M-PHY physical layer standard. UFS uses MIPI M-PHY as the
-+on the MIPI M-PHY physical layer standard. UFS uses MIPI M-PHY as the
- physical layer and MIPI Unipro as the link layer.
+-	for (pos = 0; pos < len; pos += 4)
++	for (pos = 0; pos < len; pos += 4) {
++		if (pos >= REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER	&&
++		    pos <= REG_UIC_ERROR_CODE_DME)
++			continue;
+ 		regs[pos / 4] = ufshcd_readl(hba, offset + pos);
++	}
  
--The main goals of UFS is to provide:
-+The main goals of UFS are to provide:
- 
-  * Optimized performance:
- 
-@@ -53,17 +53,17 @@ The main goals of UFS is to provide:
- UFS has a layered communication architecture which is based on SCSI
- SAM-5 architectural model.
- 
--UFS communication architecture consists of following layers,
-+UFS communication architecture consists of the following layers.
- 
- 2.1 Application Layer
- ---------------------
- 
--  The Application layer is composed of UFS command set layer(UCS),
-+  The Application layer is composed of the UFS command set layer (UCS),
-   Task Manager and Device manager. The UFS interface is designed to be
-   protocol agnostic, however SCSI has been selected as a baseline
--  protocol for versions 1.0 and 1.1 of UFS protocol  layer.
-+  protocol for versions 1.0 and 1.1 of the UFS protocol layer.
- 
--  UFS supports subset of SCSI commands defined by SPC-4 and SBC-3.
-+  UFS supports a subset of SCSI commands defined by SPC-4 and SBC-3.
- 
-   * UCS:
-      It handles SCSI commands supported by UFS specification.
-@@ -78,10 +78,10 @@ UFS communication architecture consists
-      requests which are used to modify and retrieve configuration
-      information of the device.
- 
--2.2 UFS Transport Protocol(UTP) layer
---------------------------------------
-+2.2 UFS Transport Protocol (UTP) layer
-+--------------------------------------
- 
--  UTP layer provides services for
-+  The UTP layer provides services for
-   the higher layers through Service Access Points. UTP defines 3
-   service access points for higher layers.
- 
-@@ -89,19 +89,19 @@ UFS communication architecture consists
-     manager for device level operations. These device level operations
-     are done through query requests.
-   * UTP_CMD_SAP: Command service access point is exposed to UFS command
--    set layer(UCS) to transport commands.
-+    set layer (UCS) to transport commands.
-   * UTP_TM_SAP: Task management service access point is exposed to task
-     manager to transport task management functions.
- 
--  UTP transports messages through UFS protocol information unit(UPIU).
-+  UTP transports messages through UFS protocol information unit (UPIU).
- 
--2.3 UFS Interconnect(UIC) Layer
---------------------------------
-+2.3 UFS Interconnect (UIC) Layer
-+--------------------------------
- 
--  UIC is the lowest layer of UFS layered architecture. It handles
--  connection between UFS host and UFS device. UIC consists of
-+  UIC is the lowest layer of the UFS layered architecture. It handles
-+  the connection between UFS host and UFS device. UIC consists of
-   MIPI UniPro and MIPI M-PHY. UIC provides 2 service access points
--  to upper layer,
-+  to upper layer:
- 
-   * UIC_SAP: To transport UPIU between UFS host and UFS device.
-   * UIO_SAP: To issue commands to Unipro layers.
-@@ -110,25 +110,25 @@ UFS communication architecture consists
- 3. UFSHCD Overview
- ==================
- 
--The UFS host controller driver is based on Linux SCSI Framework.
--UFSHCD is a low level device driver which acts as an interface between
--SCSI Midlayer and PCIe based UFS host controllers.
-+The UFS host controller driver is based on the Linux SCSI Framework.
-+UFSHCD is a low-level device driver which acts as an interface between
-+the SCSI Midlayer and PCIe-based UFS host controllers.
- 
--The current UFSHCD implementation supports following functionality,
-+The current UFSHCD implementation supports the following functionality:
- 
- 3.1 UFS controller initialization
- ---------------------------------
- 
--  The initialization module brings UFS host controller to active state
--  and prepares the controller to transfer commands/response between
-+  The initialization module brings the UFS host controller to active state
-+  and prepares the controller to transfer commands/responses between
-   UFSHCD and UFS device.
- 
- 3.2 UTP Transfer requests
- -------------------------
- 
-   Transfer request handling module of UFSHCD receives SCSI commands
--  from SCSI Midlayer, forms UPIUs and issues the UPIUs to UFS Host
--  controller. Also, the module decodes, responses received from UFS
-+  from the SCSI Midlayer, forms UPIUs and issues the UPIUs to the UFS Host
-+  controller. Also, the module decodes responses received from the UFS
-   host controller in the form of UPIUs and intimates the SCSI Midlayer
-   of the status of the command.
- 
-@@ -136,19 +136,19 @@ The current UFSHCD implementation suppor
- ----------------------
- 
-   Error handling module handles Host controller fatal errors,
--  Device fatal errors and UIC interconnect layer related errors.
-+  Device fatal errors and UIC interconnect layer-related errors.
- 
- 3.4 SCSI Error handling
- -----------------------
- 
-   This is done through UFSHCD SCSI error handling routines registered
--  with SCSI Midlayer. Examples of some of the error handling commands
--  issues by SCSI Midlayer are Abort task, Lun reset and host reset.
-+  with the SCSI Midlayer. Examples of some of the error handling commands
-+  issues by the SCSI Midlayer are Abort task, LUN reset and host reset.
-   UFSHCD Routines to perform these tasks are registered with
-   SCSI Midlayer through .eh_abort_handler, .eh_device_reset_handler and
-   .eh_host_reset_handler.
- 
--In this version of UFSHCD Query requests and power management
-+In this version of UFSHCD, Query requests and power management
- functionality are not implemented.
- 
- 4. BSG Support
-@@ -182,14 +182,14 @@ If you wish to read or write a descripto
- sg_io_v4.
- 
- The userspace tool that interacts with the ufs-bsg endpoint and uses its
--upiu-based protocol is available at:
-+UPIU-based protocol is available at:
- 
- 	https://github.com/westerndigitalcorporation/ufs-tool
- 
- For more detailed information about the tool and its supported
- features, please see the tool's README.
- 
--UFS Specifications can be found at:
-+UFS specifications can be found at:
- 
- - UFS - http://www.jedec.org/sites/default/files/docs/JESD220.pdf
- - UFSHCI - http://www.jedec.org/sites/default/files/docs/JESD223.pdf
+ 	ufshcd_hex_dump(prefix, regs, len);
+ 	kfree(regs);
+-- 
+2.7.4
+
