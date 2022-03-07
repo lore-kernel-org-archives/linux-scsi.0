@@ -2,241 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E711C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 07:35:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F4BCC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 09:11:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235832AbiCGHgg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Mar 2022 02:36:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57158 "EHLO
+        id S236283AbiCGJME (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Mar 2022 04:12:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235792AbiCGHgg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 02:36:36 -0500
-Received: from mail-oo1-xc35.google.com (mail-oo1-xc35.google.com [IPv6:2607:f8b0:4864:20::c35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9679B5F4FE
-        for <linux-scsi@vger.kernel.org>; Sun,  6 Mar 2022 23:35:42 -0800 (PST)
-Received: by mail-oo1-xc35.google.com with SMTP id k13-20020a4a948d000000b003172f2f6bdfso16706130ooi.1
-        for <linux-scsi@vger.kernel.org>; Sun, 06 Mar 2022 23:35:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=36/Zqd3z+Se2yhH8jNVs3/MDJWsjnuLoRFR7LKykZoA=;
-        b=EZHq6jmeKTJzZ/3AJ1Qp1+5s/njimkPglDfl92NVUtkLCINZW+pQD0VezeyS4iN7aM
-         b5q4Echewcm2mjpOCEBYXFS0pZmAXmVWFbwrXT0HS2NHA3haiB0B6amzsHLg5fnHc8TA
-         A2vE5nh24Vma/ZEyMgd7QoOk5+Mpc9HshcpK0=
+        with ESMTP id S236260AbiCGJMC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 04:12:02 -0500
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67B3565161
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 01:11:01 -0800 (PST)
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com [209.85.208.70])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id F12373F618
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 09:10:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1646644257;
+        bh=5EuchempEFVBJsNObrSN9bZUlyRNhaE6rhfvz/HPvrQ=;
+        h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+         In-Reply-To:Content-Type;
+        b=FCKHsAjxIiszKg7WiuKmX0m2xEQTunLuGzFVsxSItLLOz5wcQlCAAG/gOfS/aqZjQ
+         0tQOJWsWXMGf6nVXBfi0oM3gVC/U+uQ66AhiYcEnuVXaHeTGZSd1lfLnZjzv7p5Ph3
+         X7rulIn7YJ6V0G2ysDcIo+VTEh3McnhceMxbV4HhdPHBeEqiol7QMXTfwbZY/LTmJR
+         uUy/JymvQC1ALxlEmNXtGOkqe+ba0tkPDId+Oyf7bX52k6ct+iQPOzqh62UazcP0DN
+         RaAlJcViicM1sSfTyyvL1Q4sZyUazTWcjbA9A0fs0vHeLk/fcySINRoV2kdxXTJhcg
+         nIkOaFibL2DTQ==
+Received: by mail-ed1-f70.google.com with SMTP id s7-20020a508dc7000000b0040f29ccd65aso8248350edh.1
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Mar 2022 01:10:57 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=36/Zqd3z+Se2yhH8jNVs3/MDJWsjnuLoRFR7LKykZoA=;
-        b=oYz64iNnJS8+7AJ5WXiMWfQXO3PQN8RGkCdh72jZelZHX808xyzUTeirYFQrZYfPua
-         RRb3FCyb5VRew4s8PjmQO8BMCJsoSW6WZrggQlQm4V/OFz0yLhZyuy7EyLV2Ao4z62Xt
-         9xcdMTtZiuMV0mPfnu45Vf73CywDia1jF7O5IRl0CuhDm8l6v7c8S5mgsonaugOwh0iS
-         8z19Xu6bz03e/ljelmvsEp+kFxRi1TgyVa07sExmskOd1Y8U+/yE8sNvLbmJDaB7MqyC
-         2IdRKCrU8KtuoHEMUp5BI69sf5gGMJsOGR1lEEj4B4Q+zLsnYI9nnmSFffOlvidIM+MB
-         9WLQ==
-X-Gm-Message-State: AOAM530QDM7U22CJpofthUEZK4OJtt+KTHaPq45XmWerIINdM1BSZ9qd
-        qwFfUBwrkctLKiOizo/sS7QS+NBQkh2NY43tm245HA==
-X-Google-Smtp-Source: ABdhPJyFblQWh5gDI1Jh8wN7aU4FeSmkwqaD+qh4O57ayCp1vM1wZ7FgbZLl8lxCOP9yK72U4ZmiO+nKlU2oQJNyl6o=
-X-Received: by 2002:a05:6871:b2c:b0:da:b3f:2b2d with SMTP id
- fq44-20020a0568710b2c00b000da0b3f2b2dmr5184439oab.204.1646638541600; Sun, 06
- Mar 2022 23:35:41 -0800 (PST)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=5EuchempEFVBJsNObrSN9bZUlyRNhaE6rhfvz/HPvrQ=;
+        b=kbweBHK4fvSctGZ9+dj/RyfOd7G5xBNoq/UHp2fpLOTFfEkLKUCUDaOpaCD+Q69xPS
+         VTgwP2CvZL/fHc64cV6honZ3++AU2RhTvkBEVwirYAAVTF51U/wXSv8gE+6vYIdHrFPs
+         lO6xSoKrv1/gtz5HLpu55Pz40QseZ1QLbNR9izj9g/TV6+lxW92BNm7OmEv+fN50G/+N
+         ewnHVgYGgXnXL8N0DDZCc5aScoCijQMkCxZPbIDrr7PrrW+dpALwMKVE3hNcgIkMULod
+         fblqlDE+ubX0aVTeg4rScSOEqDkwji2Vfpkn9kCWwsNW+VXAUAhvAUf/qoglHG789eVe
+         afMg==
+X-Gm-Message-State: AOAM530lnRXfIsJ9XJZJRrk12VFC/AFigXZIarY3lKPeHLCfIyHnOZr5
+        RjVC0wEOTp7Gpkoe4+vjHJA5I3eZhsixl1m6ZSVZ+nUXV0pLirviCTYRtoq6eMc/8i39pkHhJIT
+        p6TqTvwSu3zF+C/3yCZb8w5swTXtcnlcY25JLi/I=
+X-Received: by 2002:a17:906:aed4:b0:6da:aa56:c923 with SMTP id me20-20020a170906aed400b006daaa56c923mr8053740ejb.148.1646644257472;
+        Mon, 07 Mar 2022 01:10:57 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwtBtJQDeExiXsvhuBndc2H+XAln/uM67ymh7Rq5QR/XjrVGGF3p74nHBCcZCCYoYOwudMCpA==
+X-Received: by 2002:a17:906:aed4:b0:6da:aa56:c923 with SMTP id me20-20020a170906aed400b006daaa56c923mr8053730ejb.148.1646644257300;
+        Mon, 07 Mar 2022 01:10:57 -0800 (PST)
+Received: from [192.168.0.141] (xdsl-188-155-174-239.adslplus.ch. [188.155.174.239])
+        by smtp.gmail.com with ESMTPSA id kv9-20020a17090778c900b006da693d5e91sm4442728ejc.122.2022.03.07.01.10.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 07 Mar 2022 01:10:56 -0800 (PST)
+Message-ID: <02bd539c-f704-dbe5-4d58-fc62314025a7@canonical.com>
+Date:   Mon, 7 Mar 2022 10:10:55 +0100
 MIME-Version: 1.0
-References: <20220224233056.398054-1-damien.lemoal@opensource.wdc.com> <20220224233056.398054-6-damien.lemoal@opensource.wdc.com>
-In-Reply-To: <20220224233056.398054-6-damien.lemoal@opensource.wdc.com>
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date:   Mon, 7 Mar 2022 13:05:30 +0530
-Message-ID: <CAK=zhgosk4YHiKVriYAVNL8oApnA6MsEz9jvOo3imkCUpOpTRQ@mail.gmail.com>
-Subject: Re: [PATCH v2 5/5] scsi: mpt3sas: fix adapter replyPostRegisterIndex handling
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000005d44b805d99be93d"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH v3 03/12] dt-bindings: ufs: cdns,ufshc: convert to
+ dtschema
+Content-Language: en-US
+To:     Rob Herring <robh@kernel.org>
+Cc:     Matthias Brugger <matthias.bgg@gmail.com>,
+        Andy Gross <agross@kernel.org>, Jan Kotas <jank@cadence.com>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Wei Xu <xuwei5@hisilicon.com>, devicetree@vger.kernel.org,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Li Wei <liwei213@huawei.com>, linux-kernel@vger.kernel.org,
+        Stanley Chu <stanley.chu@mediatek.com>
+References: <20220306111125.116455-1-krzysztof.kozlowski@canonical.com>
+ <20220306111125.116455-4-krzysztof.kozlowski@canonical.com>
+ <1646623480.209864.1496443.nullmailer@robh.at.kernel.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+In-Reply-To: <1646623480.209864.1496443.nullmailer@robh.at.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000005d44b805d99be93d
-Content-Type: text/plain; charset="UTF-8"
+On 07/03/2022 04:24, Rob Herring wrote:
+> On Sun, 06 Mar 2022 12:11:16 +0100, Krzysztof Kozlowski wrote:
+>> Convert the Cadence Universal Flash Storage (UFS) Controlle to DT schema
+>> format.
+>>
+>> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+>> Reviewed-by: Rob Herring <robh@kernel.org>
+>> ---
+>>  .../devicetree/bindings/ufs/cdns,ufshc.txt    | 32 ---------
+>>  .../devicetree/bindings/ufs/cdns,ufshc.yaml   | 68 +++++++++++++++++++
+>>  .../devicetree/bindings/ufs/ti,j721e-ufs.yaml |  7 +-
+>>  3 files changed, 71 insertions(+), 36 deletions(-)
+>>  delete mode 100644 Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
+>>  create mode 100644 Documentation/devicetree/bindings/ufs/cdns,ufshc.yaml
+>>
+> 
+> My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
+> on your patch (DT_CHECKER_FLAGS is new in v5.13):
+> 
+> yamllint warnings/errors:
+> 
+> dtschema/dtc warnings/errors:
+> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/ufs/cdns,ufshc.example.dt.yaml: ufs@fd030000: freq-table-hz: 'anyOf' conditional failed, one must be fixed:
+> 	[[0, 0], [0, 0]] is too long
+> 	[0, 0] is too long
+> 	From schema: /usr/local/lib/python3.8/dist-packages/dtschema/schemas/property-units.yaml
+> 
 
-On Fri, Feb 25, 2022 at 5:01 AM Damien Le Moal
-<damien.lemoal@opensource.wdc.com> wrote:
->
-> The replyPostRegisterIndex array of struct MPT3SAS_ADAPTER is regular
-> memory allocated from RAM, and not an IO mem resource. writel() should
-> thus not be used to assign values to the array entries. Replace the
-> writel() call modifying the array with direct assignements. This change
-> suppresses sparse warnings.
+This will be fixed with my dtschema patch:
+https://github.com/devicetree-org/dt-schema/pull/69
 
-writel() is a must here.  replyPostRegisterIndex array is having the
-iommu address.
-and here the driver is writing the data to these iommu addresses retrieved from
-replyPostRegisterIndex array.
 
-Thanks,
-Sreekanth
-
->
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 37 ++++++++++++++++++-----------
->  1 file changed, 23 insertions(+), 14 deletions(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 5efe4bd186db..4caa719b4ef4 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -1771,10 +1771,13 @@ _base_process_reply_queue(struct adapter_reply_queue *reply_q)
->                  */
->                 if (completed_cmds >= ioc->thresh_hold) {
->                         if (ioc->combined_reply_queue) {
-> -                               writel(reply_q->reply_post_host_index |
-> -                                               ((msix_index  & 7) <<
-> -                                                MPI2_RPHI_MSIX_INDEX_SHIFT),
-> -                                   ioc->replyPostRegisterIndex[msix_index/8]);
-> +                               unsigned long idx =
-> +                                       reply_q->reply_post_host_index |
-> +                                       ((msix_index  & 7) <<
-> +                                        MPI2_RPHI_MSIX_INDEX_SHIFT);
-> +
-> +                               ioc->replyPostRegisterIndex[msix_index/8] =
-> +                                       (resource_size_t *) idx;
->                         } else {
->                                 writel(reply_q->reply_post_host_index |
->                                                 (msix_index <<
-> @@ -1826,14 +1829,17 @@ _base_process_reply_queue(struct adapter_reply_queue *reply_q)
->          * new reply host index value in ReplyPostIndex Field and msix_index
->          * value in MSIxIndex field.
->          */
-> -       if (ioc->combined_reply_queue)
-> -               writel(reply_q->reply_post_host_index | ((msix_index  & 7) <<
-> -                       MPI2_RPHI_MSIX_INDEX_SHIFT),
-> -                       ioc->replyPostRegisterIndex[msix_index/8]);
-> -       else
-> +       if (ioc->combined_reply_queue) {
-> +               unsigned long idx = reply_q->reply_post_host_index |
-> +                       ((msix_index  & 7) << MPI2_RPHI_MSIX_INDEX_SHIFT);
-> +
-> +               ioc->replyPostRegisterIndex[msix_index/8] =
-> +                       (resource_size_t *) idx;
-> +       } else {
->                 writel(reply_q->reply_post_host_index | (msix_index <<
->                         MPI2_RPHI_MSIX_INDEX_SHIFT),
->                         &ioc->chip->ReplyPostHostIndex);
-> +       }
->         atomic_dec(&reply_q->busy);
->         return completed_cmds;
->  }
-> @@ -8095,14 +8101,17 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc)
->
->         /* initialize reply post host index */
->         list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
-> -               if (ioc->combined_reply_queue)
-> -                       writel((reply_q->msix_index & 7)<<
-> -                          MPI2_RPHI_MSIX_INDEX_SHIFT,
-> -                          ioc->replyPostRegisterIndex[reply_q->msix_index/8]);
-> -               else
-> +               if (ioc->combined_reply_queue) {
-> +                       unsigned long idx =(reply_q->msix_index & 7) <<
-> +                               MPI2_RPHI_MSIX_INDEX_SHIFT;
-> +
-> +                       ioc->replyPostRegisterIndex[reply_q->msix_index/8] =
-> +                               (resource_size_t *) idx;
-> +               } else {
->                         writel(reply_q->msix_index <<
->                                 MPI2_RPHI_MSIX_INDEX_SHIFT,
->                                 &ioc->chip->ReplyPostHostIndex);
-> +               }
->
->                 if (!_base_is_controller_msix_enabled(ioc))
->                         goto skip_init_reply_post_host_index;
-> --
-> 2.35.1
->
-
---0000000000005d44b805d99be93d
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-5AGo2E3pe+2yEgkxKvM2fnniZHUiSjbrfKk6nl9RIXPOKUP5HntZFdA5XuNYXWM+HPs3O0AJwBm/
-VCZsZtkjVjxeBmTXiXDnxytdsHdGrHGymPfjJYatDu6d1KRVDlMCAwEAAaOCAd0wggHZMA4GA1Ud
-DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
-Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
-BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
-YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
-Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
-aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
-JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
-BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUClVHbAvhzGT8
-s2/6xOf58NkGMQ8wDQYJKoZIhvcNAQELBQADggEBAENRsP1H3calKC2Sstg/8li8byKiqljCFkfi
-IhcJsjPOOR9UZnMFxAoH/s2AlM7mQDR7rZ2MxRuUnIa6Cp5W5w1lUJHktjCUHnQq5nIAZ9GH5SDY
-pgzbFsoYX8U2QCmkAC023FF++ZDJuc9aj0R/nhABxmUYErIze2jV/VO8Pj7TnCrBONZ/Qvf8G5CQ
-X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
-eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
-Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
-MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPKBr2fYEZSevUMwkipQ
-seJGSiBUf8c4HHqGmUmxXHkhMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDMwNzA3MzU0MVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
-BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCZqVZ0C3D/W5wvz0uKXBbCLXJEvHBs930oJHks
-Wms6UDbMGWYnvZy0kvdkI7acwroqgfuB9Y4OiMM6GR2QDRvrW12LAc92v6FvjN1mVKFzap+aYV9b
-HTvPxLYJN3AbfhlPUBvkRbsUw20i3wrhKpn0Kykr0H7MOt2x2QU0ftOO4saR3L8klfXxYEHNMlaT
-cajUY7vaoBOF/iTh7WaYxAMOqaiqX7PXVuSIEcByKazeMbi4xdgerIGZsHWzWOEnrvPos1b3H8yU
-5fLgYRIuxMjQOForTt4R18Q4UcBM6BwR3L4HGBxL+h35nlHTwX+skXWABggAI7c9krtMiNk0E4RJ
---0000000000005d44b805d99be93d--
+Best regards,
+Krzysztof
