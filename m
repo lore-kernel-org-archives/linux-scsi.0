@@ -2,212 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90BC7C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 18:40:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CAB3C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Mar 2022 19:15:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244822AbiCGSlG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Mar 2022 13:41:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33492 "EHLO
+        id S245026AbiCGTQb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Mar 2022 14:16:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241272AbiCGSlE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 13:41:04 -0500
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 597B27486B
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 10:40:09 -0800 (PST)
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220307184007epoutp03f764bbb162bd9ae1b8baf641dae27c6e~aLUmVy7mG3101831018epoutp03c
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 18:40:07 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220307184007epoutp03f764bbb162bd9ae1b8baf641dae27c6e~aLUmVy7mG3101831018epoutp03c
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1646678407;
-        bh=eiDqlXkyLxJk7tUavFB6NBVRulB8atwBogOljjBUCeI=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=kcmFqyEZA54asLw4qnDChdVqZpyesCNpmNLlS/xHvKGPW85ozW5rcE+tfjxnb1z9A
-         prj+oYY/QFIbzW+atb1MmzTYBGJ9w1cW8MERDDQkGGcWdyyLrXQsGida08ZvbvbmYv
-         ZU3aHon++MMr94JO31p0z68ivW/T0ejf4gdsAWq0=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-        20220307184006epcas5p435cd41207507bc414337f86a13ef33ac~aLUlYqroB1486114861epcas5p4C;
-        Mon,  7 Mar 2022 18:40:06 +0000 (GMT)
-Received: from epsmges5p2new.samsung.com (unknown [182.195.38.174]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4KC6hK2Kycz4x9Pt; Mon,  7 Mar
-        2022 18:40:01 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        75.DD.46822.FCE46226; Tue,  8 Mar 2022 03:28:31 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-        20220307184000epcas5p4e57a7bc3e82124d1018167e63c3960d0~aLUfI-jfF2748727487epcas5p43;
-        Mon,  7 Mar 2022 18:40:00 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220307184000epsmtrp2f4368f8a7c713a60fdf675c9c3c5d4cc~aLUfIEoRQ1421214212epsmtrp2d;
-        Mon,  7 Mar 2022 18:40:00 +0000 (GMT)
-X-AuditID: b6c32a4a-dfbff7000000b6e6-a9-62264ecf32c0
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        96.17.03370.F7156226; Tue,  8 Mar 2022 03:39:59 +0900 (KST)
-Received: from alimakhtar03 (unknown [107.122.12.5]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20220307183957epsmtip1d83677fad9d10a49385889fb09c9081f~aLUck0svH1520315203epsmtip1U;
-        Mon,  7 Mar 2022 18:39:57 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Krzysztof Kozlowski'" <krzysztof.kozlowski@canonical.com>,
-        "'Avri Altman'" <avri.altman@wdc.com>,
-        "'Rob Herring'" <robh+dt@kernel.org>,
-        "'Andy Gross'" <agross@kernel.org>,
-        "'Bjorn Andersson'" <bjorn.andersson@linaro.org>,
-        "'Wei Xu'" <xuwei5@hisilicon.com>,
-        "'Matthias Brugger'" <matthias.bgg@gmail.com>,
-        "'Jan Kotas'" <jank@cadence.com>, "'Li Wei'" <liwei213@huawei.com>,
-        "'Stanley Chu'" <stanley.chu@mediatek.com>,
-        "'Vignesh Raghavendra'" <vigneshr@ti.com>,
-        <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Cc:     "'Rob Herring'" <robh@kernel.org>
-In-Reply-To: <20220306111125.116455-3-krzysztof.kozlowski@canonical.com>
-Subject: RE: [PATCH v3 02/12] dt-bindings: ufs: samsung,exynos-ufs: use
- common bindings
-Date:   Tue, 8 Mar 2022 00:09:56 +0530
-Message-ID: <000501d83252$c0094650$401bd2f0$@samsung.com>
+        with ESMTP id S245000AbiCGTQZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2022 14:16:25 -0500
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFC097CDD8
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 11:15:29 -0800 (PST)
+Received: by mail-lf1-x135.google.com with SMTP id h14so3030719lfk.11
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Mar 2022 11:15:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=TwTcsRMn5VZVrmgXZDV1J6sFeJgAdw8S2EoV6iZ5xnc=;
+        b=dlpUNu5q4CyzmXtBLA/gOu0GC/00SF7ttDAollAbHZtk5bw2xAtIqb7CwTopnt8lf3
+         AbfnSVPq9xulj/tw8AvoPmKfCZDzXeZNEVEEDbHlLhh/I5bp+zk8upvRu1BNSASuquhE
+         pUQrRqiHujQApoBOt9qnNksqqhPlFfAR59MXs=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=TwTcsRMn5VZVrmgXZDV1J6sFeJgAdw8S2EoV6iZ5xnc=;
+        b=tYkhpGGQCrur6NKB8vK8lvlT7qU+NZ5z+Tr6fy10bnVGcUadN4oGWGlbroWV9DGtXo
+         t4sYrJ2L3rOGeZUWyWo2yo7D13F0Ruta2yllAVULQcSp61L6x2eWVZnDZKIxsfu+A/es
+         XXJGV8QXFwpi7XeZT1YnCafmf7HzzyufCXVfn8z05GqGvpzY4u+9gQMpLoGuQxLf01oU
+         pLGyP5OMqqeYX7y+SvGDWBXh7H4w6RzNPzC7z8IXFruLKuz+j6ayD1B75HO4rHdjJbBJ
+         +38ZN/igVzPf8Iq61UdGiAXLFerpzpSf6/5IZ+CqmUz+gZgpfmOS5rmsHdapUcL6WFjT
+         84Yg==
+X-Gm-Message-State: AOAM531KsuIShXNGGYwYuuokbJV91Ue6295rQMhJgzcm0P8H3Kvmvd+v
+        iipknU+pQJH+PgD/akXLKLdJzBdDMoGXGrKYIJE=
+X-Google-Smtp-Source: ABdhPJyyYLfcuWPHDhE36lYgox84CPmCkNdCIR89/gCAJWIcTlcJO7FYp1iPYVCetiTll29/Z+xtuQ==
+X-Received: by 2002:a05:6512:2082:b0:443:4236:5f57 with SMTP id t2-20020a056512208200b0044342365f57mr8773407lfr.335.1646680526338;
+        Mon, 07 Mar 2022 11:15:26 -0800 (PST)
+Received: from mail-lj1-f179.google.com (mail-lj1-f179.google.com. [209.85.208.179])
+        by smtp.gmail.com with ESMTPSA id t6-20020a056512068600b004437f8e83edsm2998536lfe.255.2022.03.07.11.15.24
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 07 Mar 2022 11:15:25 -0800 (PST)
+Received: by mail-lj1-f179.google.com with SMTP id r20so21961429ljj.1
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Mar 2022 11:15:24 -0800 (PST)
+X-Received: by 2002:a05:651c:1213:b0:247:e2d9:cdda with SMTP id
+ i19-20020a05651c121300b00247e2d9cddamr5310350lja.443.1646680524503; Mon, 07
+ Mar 2022 11:15:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQHMSLK+HcMgkjgstDaV74uAa2rDeQFlagdDAil/trGsr5wPEA==
-Content-Language: en-us
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrCJsWRmVeSWpSXmKPExsWy7bCmuu55P7Ukg2e3uCzOPf7NYvHy51U2
-        i9P737FYzD9yjtWi+3imxca3P5gsNj2+xmoxcf9ZdovLu+awWVxuvshoMeP8PiaL7us72Cz+
-        zjnCaNHUYmzRuvcIu8X/PTvYLZZuvclo8f/sB3aLJ0enMDsIe6zpfM3kMauhl81j56y77B6P
-        525k92g58pbVY9OqTjaPO9f2sHlsXlLv0XJyP4vH8RvbmTw+b5LzaD/QzRTAE5Vtk5GamJJa
-        pJCal5yfkpmXbqvkHRzvHG9qZmCoa2hpYa6kkJeYm2qr5OIToOuWmQP0opJCWWJOKVAoILG4
-        WEnfzqYov7QkVSEjv7jEVim1ICWnwKRArzgxt7g0L10vL7XEytDAwMgUqDAhO2PRxn1sBdNE
-        Km7NZ21g7BbsYuTkkBAwkbi4rY+pi5GLQ0hgN6PEr90X2CCcT4wSSx7eZ4FwPjNKHLj0jx2m
-        ZeeOecwgtpDALkaJL5OjIIpeMko8mPGBESTBJqArsWNxGxuILSJwkVXi3kl9EJtZQFVizp9f
-        YM2cAh4Sl85+B6sXFoiUOP1pMlg9i4CKxORVs1hAbF4BS4lVm/6wQ9iCEidnPmGBmCMvsf3t
-        HGaIgxQkfj5dxgqxy0liRdMiNogacYmXR4+wgxwnITCfU2LvmqOsEA0uEpvfHWKBsIUlXh3f
-        AvWZlMTnd3uBmjmA7GyJnl3GEOEaiaXzjkGV20scuDKHBaSEWUBTYv0uqLf4JHp/P2GC6OSV
-        6GgTgqhWlWh+dxWqU1piYnc31AEeEkcnr2aewKg4C8ljs5A8NgvJA7MQli1gZFnFKJlaUJyb
-        nlpsWmCUl1oOj+3k/NxNjODkr+W1g/Hhgw96hxiZOBgPMUpwMCuJ8N4/r5IkxJuSWFmVWpQf
-        X1Sak1p8iNEUGNoTmaVEk/OB+SevJN7QxNLAxMzMzMTS2MxQSZz3dPqGRCGB9MSS1OzU1ILU
-        Ipg+Jg5OqQamHQZ/2WeUf018EBpzwFrt/ZeqJa8OHHVfbP2Ae2Fmp/C0huP1RqkMsUEzFz4/
-        vs7gnt7UZU6LH9xQPJietO/tdkfmYr6F+oFOkpf67s07L3clKOxXbZOu/MSw2THHwxMSbzMs
-        XRzAEMbg9XWeCmtDBLtqQRqLX0nI06eLy3Wvf7wi8K7O0vvnA+/WQ4++LVouw/h4g9AUY40a
-        DYePa1Qyolr8XPhXdqZM2BPPf27zijsWe77Z9V8Oa1seX6UVGVW8Yh73K1VBg8d2X4v9TkQu
-        PbV5ysvStdM2zV+fZf74fIjb9/PcaiY1/gtKTh073DyN9zirCE/TjmknJz1tr9h0P93l7MaY
-        w8kscQe2Xo3yU2Ipzkg01GIuKk4EAC0hLGCHBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrLIsWRmVeSWpSXmKPExsWy7bCSnG59oFqSwaltVhbnHv9msXj58yqb
-        xen971gs5h85x2rRfTzTYuPbH0wWmx5fY7WYuP8su8XlXXPYLC43X2S0mHF+H5NF9/UdbBZ/
-        5xxhtGhqMbZo3XuE3eL/nh3sFku33mS0+H/2A7vFk6NTmB2EPdZ0vmbymNXQy+axc9Zddo/H
-        czeye7QcecvqsWlVJ5vHnWt72Dw2L6n3aDm5n8Xj+I3tTB6fN8l5tB/oZgrgieKySUnNySxL
-        LdK3S+DKWLRxH1vBNJGKW/NZGxi7BbsYOTkkBEwkdu6Yx9zFyMUhJLCDUWL2ybWMEAlpiesb
-        J7BD2MISK/89B7OFBJ4zSpw7UwliswnoSuxY3MYG0iwi8JBVYuXVWSwgCWYBVYk5f35BTb3K
-        KPFm/0Kwbk4BD4lLZ7+DbRAWCJfY+XYNK4jNIqAiMXkVRDOvgKXEqk1/2CFsQYmTM58AxTmA
-        hupJtG1khJgvL7H97RxmiOMUJH4+XQY2RkTASWJF0yI2iBpxiZdHj7BPYBSehWTSLIRJs5BM
-        moWkYwEjyypGydSC4tz03GLDAqO81HK94sTc4tK8dL3k/NxNjOAUoKW1g3HPqg96hxiZOBgP
-        MUpwMCuJ8N4/r5IkxJuSWFmVWpQfX1Sak1p8iFGag0VJnPdC18l4IYH0xJLU7NTUgtQimCwT
-        B6dUA1PWJ5VXPpnbLvT1uzLtVz4Vdvu5jsen2xuCXQwYoiufPJhgXav59+FDrcOdL/WiZnKx
-        yWQtPSboWvvYTqnJSYNRfoIYk9BfzcfvNrQ3qlxdXzIxkpf9gMqvmpl8zGentGxgu1Ly4HBA
-        9c3ghadu9G2U+V8nxPzQSfjHlilbdzI9qHt11itm9s5zP9IENP7HGbf7nXK58CBLXkW08fzz
-        orTwibYXkt+Zb9tY8i3gTqb7eenF98MLu6vOGj7/z+X5e23SnqhzbipZR0O/tvI470//tWTV
-        w6Nljz6m8bW92ctif3zvi3Op+lsDP5s/CZv2a0dPyKqVByKCuLtZOU/HnzZksM7XqetvWHyn
-        75xPcKwSS3FGoqEWc1FxIgCA8KoHcAMAAA==
-X-CMS-MailID: 20220307184000epcas5p4e57a7bc3e82124d1018167e63c3960d0
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220306111139epcas5p17c8aa66853ef371e7486aa64ea89b484
-References: <20220306111125.116455-1-krzysztof.kozlowski@canonical.com>
-        <CGME20220306111139epcas5p17c8aa66853ef371e7486aa64ea89b484@epcas5p1.samsung.com>
-        <20220306111125.116455-3-krzysztof.kozlowski@canonical.com>
+References: <20220228110822.491923-1-jakobkoschel@gmail.com>
+ <20220307150037.GD3293@kadam> <f7ffd78aa68340e1ade6af15fa2f06d8@AcuMS.aculab.com>
+In-Reply-To: <f7ffd78aa68340e1ade6af15fa2f06d8@AcuMS.aculab.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Mon, 7 Mar 2022 11:15:07 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wjnsmmGdh-SZzaPD=e1rKhoBkQAF3JeVhGvpa=Gax--7g@mail.gmail.com>
+Message-ID: <CAHk-=wjnsmmGdh-SZzaPD=e1rKhoBkQAF3JeVhGvpa=Gax--7g@mail.gmail.com>
+Subject: Re: [PATCH 0/6] Remove usage of list iterator past the loop body
+To:     David Laight <David.Laight@aculab.com>
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Jakob Koschel <jakobkoschel@gmail.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Cristiano Giuffrida <c.giuffrida@vu.nl>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "Bos, H.J." <h.j.bos@vu.nl>, Jason Gunthorpe <jgg@ziepe.ca>,
+        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Arnd Bergman <arnd@arndb.de>,
+        Brian Johannesmeyer <bjohannesmeyer@gmail.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Mike Rapoport <rppt@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Mon, Mar 7, 2022 at 7:26 AM David Laight <David.Laight@aculab.com> wrote:
+>
+> I'd write the following new defines (but I might be using
+> the old names here):
 
+See my email at
 
->-----Original Message-----
->From: Krzysztof Kozlowski [mailto:krzysztof.kozlowski@canonical.com]
->Sent: Sunday, March 6, 2022 4:41 PM
->To: Alim Akhtar <alim.akhtar@samsung.com>; Avri Altman
-><avri.altman@wdc.com>; Rob Herring <robh+dt@kernel.org>; Krzysztof
->Kozlowski <krzysztof.kozlowski@canonical.com>; Andy Gross
-><agross@kernel.org>; Bjorn Andersson <bjorn.andersson@linaro.org>; Wei
->Xu <xuwei5@hisilicon.com>; Matthias Brugger <matthias.bgg@gmail.com>;
->Jan Kotas <jank@cadence.com>; Li Wei <liwei213@huawei.com>; Stanley Chu
-><stanley.chu@mediatek.com>; Vignesh Raghavendra <vigneshr@ti.com>;
->linux-scsi@vger.kernel.org; devicetree@vger.kernel.org; linux-
->kernel@vger.kernel.org; linux-arm-msm@vger.kernel.org; linux-arm-
->kernel@lists.infradead.org; linux-samsung-soc@vger.kernel.org; linux-
->mediatek@lists.infradead.org
->Cc: Rob Herring <robh@kernel.org>
->Subject: [PATCH v3 02/12] dt-bindings: ufs: samsung,exynos-ufs: use common
->bindings
->
->Use common UFS bindings in Samsung Exynos UFS to cover generic/common
->properties in DTS.
->
->Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
->Reviewed-by: Rob Herring <robh@kernel.org>
->---
+  https://lore.kernel.org/all/CAHk-=wiacQM76xec=Hr7cLchVZ8Mo9VDHmXRJzJ_EX4sOsApEA@mail.gmail.com/
 
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+for what I think is the way forward if we want to do new defines and
+clean up the situation.
 
-> .../devicetree/bindings/ufs/samsung,exynos-ufs.yaml | 13 ++++---------
-> 1 file changed, 4 insertions(+), 9 deletions(-)
->
->diff --git a/Documentation/devicetree/bindings/ufs/samsung,exynos-
->ufs.yaml b/Documentation/devicetree/bindings/ufs/samsung,exynos-
->ufs.yaml
->index 95ac1c18334d..c949eb617313 100644
->--- a/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
->+++ b/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
->@@ -11,12 +11,11 @@ maintainers:
->
-> description: |
->   Each Samsung UFS host controller instance should have its own node.
->-  This binding define Samsung specific binding other then what is used
->-  in the common ufshcd bindings
->-  [1] Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->
->-properties:
->+allOf:
->+  - $ref: ufs-common.yaml
->
->+properties:
->   compatible:
->     enum:
->       - samsung,exynos7-ufs
->@@ -47,9 +46,6 @@ properties:
->       - const: core_clk
->       - const: sclk_unipro_main
->
->-  interrupts:
->-    maxItems: 1
->-
->   phys:
->     maxItems: 1
->
->@@ -67,13 +63,12 @@ properties:
-> required:
->   - compatible
->   - reg
->-  - interrupts
->   - phys
->   - phy-names
->   - clocks
->   - clock-names
->
->-additionalProperties: false
->+unevaluatedProperties: false
->
-> examples:
->   - |
->--
->2.32.0
+It's really just an example (and converts two list cases and one
+single file that uses them), so it's not in any way complete.
 
+I also has that "-std=gnu11" in the patch so that you can use the
+loop-declared variables - but without the other small fixups for some
+of the things that exposed.
 
+I'll merge the proper version of the "update C standard version" from
+Arnd early in the 5.18 merge window, but for testing that one file
+example change I sent out the patch like that.
+
+          Linus
