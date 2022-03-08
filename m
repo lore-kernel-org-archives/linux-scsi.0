@@ -2,112 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E605CC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Mar 2022 08:46:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 354BDC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Mar 2022 11:25:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345090AbiCHIrg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Mar 2022 03:47:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55582 "EHLO
+        id S1346179AbiCHLZ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Mar 2022 06:25:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345086AbiCHIrf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 03:47:35 -0500
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F53C3FDB3;
-        Tue,  8 Mar 2022 00:46:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1646729199; x=1678265199;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=Wb16vbWejhLrJiinHdbgfIvF0UmIay8cdh4wYFbX2jM=;
-  b=CTr2TcMmLXv40N0AVOIdokz1Lf44VqR4IaGBQlwqKO78vAH5aC4KxOFk
-   NgEHRW+ah7OwdN7NIpMWYtn680a8YM8iGLV/BivOTTWj4rLLRsAJNzQz0
-   GVY7w52t7lNUkwwrmCdpuLcmwW+1a6tZljSw+vKVx/7htVsoGD+u9Fiug
-   /3W+0DpFOQajBSXHTQ7Tc523qH8pn98YlWwfF26rNjFZyUJyQ8Caz4PVg
-   MplDZTV6rP7BxVi6gqB0Khf/GFRTej48JiuwYp7Jf0Fi/tFUQQWgZ6LDH
-   8o3vFWVY/9PxENm20Ur79r4HgdRPxg7s/j14glsIMS03yHjLlwkVgsV3h
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10279"; a="252204021"
-X-IronPort-AV: E=Sophos;i="5.90,164,1643702400"; 
-   d="scan'208";a="252204021"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2022 00:46:39 -0800
-X-IronPort-AV: E=Sophos;i="5.90,164,1643702400"; 
-   d="scan'208";a="553536539"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.46.193])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2022 00:46:34 -0800
-Message-ID: <b2909fd3-fa5b-9471-fb9c-6f068a1ab871@intel.com>
-Date:   Tue, 8 Mar 2022 10:46:29 +0200
+        with ESMTP id S1346157AbiCHLZ4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 06:25:56 -0500
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7834D443E6
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 03:24:53 -0800 (PST)
+X-UUID: e4cfb6cc7c324b68baf03c7dd4c69d78-20220308
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:CC:To:Subject; bh=VCqyF3JTD6ZKCW7IlrDyc7gXNwJ8eZM/l7AflgbgOQU=;
+        b=d8NtzYavAeYFRL7s+4JHVq/dCYDVm1py0uk9nBca7zzLsNuU5SGDFWdgyCE+RV98TDyc7rFTzbf4UUFfTf7WoBqVsKsfziitf6M6M6SRbVJGzezKduLoMd669KF+kZEuj7YqIeNWl87o6KCjO997aOwJMXRPuT5YI+uAW/hgxrM=;
+X-UUID: e4cfb6cc7c324b68baf03c7dd4c69d78-20220308
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 593439344; Tue, 08 Mar 2022 19:24:47 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
+ Tue, 8 Mar 2022 19:24:47 +0800
+Received: from [172.21.84.99] (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 8 Mar 2022 19:24:46 +0800
+Subject: Re: [PATCH v1] scsi: ufs: scsi_get_lba error fix by check cmd opcode
+To:     Bart Van Assche <bvanassche@acm.org>, <stanley.chu@mediatek.com>,
+        <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
+        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <jiajie.hao@mediatek.com>, <powen.kao@mediatek.com>,
+        <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
+        <mikebi@micron.com>, <beanhuo@micron.com>
+References: <20220307111752.10465-1-peter.wang@mediatek.com>
+ <19ad4174-0435-85b2-0762-1fae5e0b5f9e@acm.org>
+From:   Peter Wang <peter.wang@mediatek.com>
+Message-ID: <27c3e5fa-33ca-ad03-2a2d-9e35c4644385@mediatek.com>
+Date:   Tue, 8 Mar 2022 19:24:46 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Firefox/91.0 Thunderbird/91.5.0
-Subject: Re: [PATCH v2] scsi: ufs: exclude UECxx from SFR dump list
+In-Reply-To: <19ad4174-0435-85b2-0762-1fae5e0b5f9e@acm.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        cang@codeaurora.org, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, bhoon95.kim@samsung.com,
-        vkumar.1997@samsung.com
-References: <CGME20220308081304epcas2p4e7279fb51babf93fdf0bf0a3aacf9f68@epcas2p4.samsung.com>
- <1646727118-87159-1-git-send-email-kwmad.kim@samsung.com>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <1646727118-87159-1-git-send-email-kwmad.kim@samsung.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8.3.2022 10.11, Kiwoong Kim wrote:
-> v1 -> v2: does skipping only for zero offset
-> 
-> These are ROC type things that means their values
-> are cleared when the SFRs are read.
-> They are usually read in ISR when an UIC error occur.
-> Thus, their values would be zero at many cases. And
-> there might be a little bit risky when they are read to
-> be cleared before the ISR reads them, e.g. the case that
-> a command is timed-out, ufshcd_dump_regs is called in
-> ufshcd_abort and an UIC error occurs at the nearly
-> same time. In this case, ISR will be called but UFS error handler
-> will not be scheduled.
-> This patch is to make UFS driver not read those SFRs in the
-> dump function, i.e. ufshcd_dump_regs.
-
-This is essentially a fix, so perhaps a fixes tag?
-
-Wouldn't hurt to wrap the commit description more nicely.
-
-> 
-> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 460d2b4..7f2a1ed 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -115,8 +115,13 @@ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
->  	if (!regs)
->  		return -ENOMEM;
->  
-> -	for (pos = 0; pos < len; pos += 4)
-> +	for (pos = 0; pos < len; pos += 4) {
-> +		if (offset == 0 &&
-
-So it will still read them if the offset is not zero.  That seems unexpectedly inconsistent.
-
-> +		    pos >= REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER &&
-> +		    pos <= REG_UIC_ERROR_CODE_DME)
-> +			continue;
->  		regs[pos / 4] = ufshcd_readl(hba, offset + pos);
-> +	}
->  
->  	ufshcd_hex_dump(prefix, regs, len);
->  	kfree(regs);
+SGkgQmFydCwNCg0KDQpXaGVuIHNjc2kgc2NhbiBpbiBzY3NpX3Byb2JlX2x1biBmdW5jdGlvbiwg
+dGhlcmUgaGF2ZSBtdWNoIElOUVVJUlkoMHgxMikgDQpjb21tYW5kDQp3aXRoIHNlY3Rvcl9zaXpl
+IGlzIDAuDQp1bnNpZ25lZCBpbnQgc2hpZnQgd2lsbCBnZXQgNDI5NDk2NzI4NiAoc2lnbmVkIC0x
+MCkgYW5kIGFuIHNlY3Rvcl90IHR5cGUgDQppcyA2NCBiaXQuDQpTaGlmdCA2NGJpdCByaWdodCA0
+Mjk0OTY3Mjg2IHdpbGwgaGF2ZSB1YnNhbiBlcnJvciBiZWNhdXNlIHVic2FuIHRoaW5rDQpzaGlm
+dCBudW1iZXIgc2hvdWxkIGJlIHdyb25nIGFuZCByZXR1cm4gMCBhbHdheXMuDQpCVFcsIHdlIG9u
+bHkgbmVlZCB0aGUgbGJhIGluZm9ybWF0aW9uIHdoZW4gcmVhZC93cml0ZS91bm1hcC4gT3RoZXIg
+DQpjb21tYW5kIHN1Y2gNCmFzIElOUVVJUlkgaXMgdXNlbGVzcy4NCg0Kc3RhdGljIGlubGluZSBz
+ZWN0b3JfdCBzY3NpX2dldF9sYmEoc3RydWN0IHNjc2lfY21uZCAqc2NtZCkNCnsNCiDCoMKgwqAg
+dW5zaWduZWQgaW50IHNoaWZ0ID0gaWxvZzIoc2NtZC0+ZGV2aWNlLT5zZWN0b3Jfc2l6ZSkgLSAN
+ClNFQ1RPUl9TSElGVDsgPD3CoCBzaGlmdCBpcyA0Mjk0OTY3Mjg2ICgtMS05PS0xMCkNCg0KIMKg
+wqDCoCByZXR1cm4gYmxrX3JxX3BvcyhzY3NpX2NtZF90b19ycShzY21kKSkgPj4gc2hpZnQ7wqAg
+PD0gc2VjdG9yX3QgdHlwZSANCiA+PiA0Mjk0OTY3Mjg2IHdpbGwgYWx3YXlzIGdldCAwLg0KfQ0K
+DQoNCk9uIDMvOC8yMiAxOjUyIEFNLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6DQo+DQo+IEhtbSAu
+Li4gaG93IGNhbiBpdCBoYXBwZW4gdGhhdCBzZWN0b3Jfc2l6ZSBoYXMgbm90IGJlZW4gc2V0PyBJ
+IHRoaW5rIA0KPiB0aGF0IGNhbiBvbmx5IGhhcHBlbiBmb3IgTFVOcyBvZiB0eXBlIFNDU0kgRElT
+SyBpZiBzZF9yZWFkX2NhcGFjaXR5KCkgDQo+IGZhaWxzPyBJZiBzZF9yZWFkX2NhcGFjaXR5KCkg
+ZmFpbHMgSSB0aGluayB0aGUgc2QgZHJpdmVyIGlzIGV4cGVjdGVkIA0KPiB0byBzZXQgdGhlIGNh
+cGFjaXR5IHRvIHplcm8/DQo+DQo+IHJxLT5fX3NlY3RvciA9PSAtMSBmb3IgZmx1c2ggcmVxdWVz
+dHMgYW5kIHRoZSB0eXBlIG9mIHRoYXQgbWVtYmVyIA0KPiAoc2VjdG9yX3QpIGlzIHVuc2lnbmVk
+LiBJIHRoaW5rIHRoYXQgaXQgaXMgYWxsb3dlZCBmb3IgYSBzaGlmdCBsZWZ0IG9mIA0KPiBhbiB1
+bnNpZ25lZCB0eXBlIHRvIG92ZXJmbG93LiBGcm9tIHRoZSBDIHN0YW5kYXJkOiAiVGhlIHJlc3Vs
+dCBvZiBFMSANCj4gPDwgRTIgaXMgRTEgbGVmdC1zaGlmdGVkIEUyIGJpdCBwb3NpdGlvbnM7IHZh
+Y2F0ZWQgYml0cyBhcmUgZmlsbGVkIHdpdGgNCj4gemVyb3MuIElmIEUxIGhhcyBhbiB1bnNpZ25l
+ZCB0eXBlLCB0aGUgdmFsdWUgb2YgdGhlIHJlc3VsdCBpcyBFMSDDlyAyRTIgDQo+ICwgcmVkdWNl
+ZCBtb2R1bG8gb25lIG1vcmUgdGhhbiB0aGUgbWF4aW11bSB2YWx1ZSByZXByZXNlbnRhYmxlIGlu
+IHRoZSANCj4gcmVzdWx0IHR5cGUuIg0KPg0KPiBUaGFua3MsDQo+DQo+IEJhcnQuDQoNCg0KDQo=
 
