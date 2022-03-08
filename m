@@ -2,41 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F340C4321E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A744AC43217
 	for <linux-scsi@archiver.kernel.org>; Tue,  8 Mar 2022 05:52:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237389AbiCHFxR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Mar 2022 00:53:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47320 "EHLO
+        id S244530AbiCHFxS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Mar 2022 00:53:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237449AbiCHFxL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 00:53:11 -0500
+        with ESMTP id S242260AbiCHFxP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 00:53:15 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63BF11FCC6;
-        Mon,  7 Mar 2022 21:52:15 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E3D9F68;
+        Mon,  7 Mar 2022 21:52:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=hJeqyUHmsPbFplsMKP9CPrSZ3RWVJMmkYTfvXkgnPLQ=; b=MgPJ99B2Y1kJHvenp1BerxyymB
-        3+/goUuNgPu3GYVBgM3pzHnIPpt03PmMdeH9jGkYGVhsBtTSyuG12QIN21iIEQOPggemtgnBq8f+1
-        Ir+xdXSZvewc5Bwjxf/bRy4P4RfqkvcKJLlUE3QO3tKnUzMZm8vuxPEV6lw3uSEUf0quXjoB/isDm
-        7lzg8MLVrlOV+s8AI7sqdTGrQE0tLs/i7G9FFPIWVEHM2GLaquKBjSFKj2ZjevDo2cf8fyA+3JsJP
-        dqLAWBQaBGpxAyY0aw65gy/v0NJBuyhd752HLegJf2J2ojVdKgZ7v45VT8Df3roK0c3xV/oFz/Nzc
-        NWWkZdCg==;
+        bh=Kmr8DQV2AQKxHmpsIFQdnpKEXmC5Yomzad1nAgCe54c=; b=ftZhHow4+k1jlEl9lab6mIeaan
+        xH6DlZ2uGJ2QUJRF9/0qeliz19bxg8qsK3rMJUvqaH5LoTtesatIR01hKYCNOKyDt/7oGsxnGo3Hj
+        PlWMEGlt3tvjoal2WrXj69EPOT+mOZSndj+M+GBYSVBorKiXjp1oKPxn20rj61/WghCyziLn8L9r7
+        xOUoWUWbxiW3zKitHH/lGHlYibgyB4HYXjZ/l81u2QmM2jBb+mPaaWPGLsz11h061bt4nUUaFdyjS
+        hwjbYT8/CMRCKM79ihSLgG6C+9rPRG2w+rRZmbw2PAM3eJB/ceiJxnegwiM0in0JNjCjSAATWaIwl
+        dRCwU8Kg==;
 Received: from [2001:4bb8:184:7746:6f50:7a98:3141:c37b] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nRSlY-002ilQ-ER; Tue, 08 Mar 2022 05:52:12 +0000
+        id 1nRSla-002imd-UX; Tue, 08 Mar 2022 05:52:15 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Ming Lei <ming.lei@redhat.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Chaitanya Kulkarni <kch@nvidia.com>
-Subject: [PATCH 04/14] sd: rename the scsi_disk.dev field
-Date:   Tue,  8 Mar 2022 06:51:50 +0100
-Message-Id: <20220308055200.735835-5-hch@lst.de>
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH 05/14] sd: call sd_zbc_release_disk before releasing the scsi_device reference
+Date:   Tue,  8 Mar 2022 06:51:51 +0100
+Message-Id: <20220308055200.735835-6-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220308055200.735835-1-hch@lst.de>
 References: <20220308055200.735835-1-hch@lst.de>
@@ -47,116 +46,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-dev is very hard to grep for.  Give the field a more descriptive name and
-documents its purpose.
+sd_zbc_release_disk accesses disk->device, so ensure that actually still has
+a valid reference.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
 Reviewed-by: Ming Lei <ming.lei@redhat.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/sd.c | 22 +++++++++++-----------
- drivers/scsi/sd.h |  9 +++++++--
- 2 files changed, 18 insertions(+), 13 deletions(-)
+ drivers/scsi/sd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 2a1e19e871d30..7479e7cb36b43 100644
+index 7479e7cb36b43..7bfebf5b2832d 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -672,7 +672,7 @@ static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
- 	if (disk->private_data) {
- 		sdkp = scsi_disk(disk);
- 		if (scsi_device_get(sdkp->device) == 0)
--			get_device(&sdkp->dev);
-+			get_device(&sdkp->disk_dev);
- 		else
- 			sdkp = NULL;
- 	}
-@@ -685,7 +685,7 @@ static void scsi_disk_put(struct scsi_disk *sdkp)
- 	struct scsi_device *sdev = sdkp->device;
+@@ -3672,9 +3672,9 @@ static void scsi_disk_release(struct device *dev)
  
- 	mutex_lock(&sd_ref_mutex);
--	put_device(&sdkp->dev);
-+	put_device(&sdkp->disk_dev);
- 	scsi_device_put(sdev);
- 	mutex_unlock(&sd_ref_mutex);
+ 	disk->private_data = NULL;
+ 	put_disk(disk);
+-	put_device(&sdkp->device->sdev_gendev);
+ 
+ 	sd_zbc_release_disk(sdkp);
++	put_device(&sdkp->device->sdev_gendev);
+ 
+ 	kfree(sdkp);
  }
-@@ -3529,14 +3529,14 @@ static int sd_probe(struct device *dev)
- 					     SD_MOD_TIMEOUT);
- 	}
- 
--	device_initialize(&sdkp->dev);
--	sdkp->dev.parent = get_device(dev);
--	sdkp->dev.class = &sd_disk_class;
--	dev_set_name(&sdkp->dev, "%s", dev_name(dev));
-+	device_initialize(&sdkp->disk_dev);
-+	sdkp->disk_dev.parent = get_device(dev);
-+	sdkp->disk_dev.class = &sd_disk_class;
-+	dev_set_name(&sdkp->disk_dev, "%s", dev_name(dev));
- 
--	error = device_add(&sdkp->dev);
-+	error = device_add(&sdkp->disk_dev);
- 	if (error) {
--		put_device(&sdkp->dev);
-+		put_device(&sdkp->disk_dev);
- 		goto out;
- 	}
- 
-@@ -3577,7 +3577,7 @@ static int sd_probe(struct device *dev)
- 
- 	error = device_add_disk(dev, gd, NULL);
- 	if (error) {
--		put_device(&sdkp->dev);
-+		put_device(&sdkp->disk_dev);
- 		goto out;
- 	}
- 
-@@ -3628,7 +3628,7 @@ static int sd_remove(struct device *dev)
- 	sdkp = dev_get_drvdata(dev);
- 	scsi_autopm_get_device(sdkp->device);
- 
--	device_del(&sdkp->dev);
-+	device_del(&sdkp->disk_dev);
- 	del_gendisk(sdkp->disk);
- 	sd_shutdown(dev);
- 
-@@ -3636,7 +3636,7 @@ static int sd_remove(struct device *dev)
- 
- 	mutex_lock(&sd_ref_mutex);
- 	dev_set_drvdata(dev, NULL);
--	put_device(&sdkp->dev);
-+	put_device(&sdkp->disk_dev);
- 	mutex_unlock(&sd_ref_mutex);
- 
- 	return 0;
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 303aa1c23aefb..0a33a4b68ffbc 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -69,7 +69,12 @@ enum {
- 
- struct scsi_disk {
- 	struct scsi_device *device;
--	struct device	dev;
-+
-+	/*
-+	 * disk_dev is used to show attributes in /sys/class/scsi_disk/,
-+	 * but otherwise not really needed.  Do not use for refcounting.
-+	 */
-+	struct device	disk_dev;
- 	struct gendisk	*disk;
- 	struct opal_dev *opal_dev;
- #ifdef CONFIG_BLK_DEV_ZONED
-@@ -126,7 +131,7 @@ struct scsi_disk {
- 	unsigned	security : 1;
- 	unsigned	ignore_medium_access_errors : 1;
- };
--#define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
-+#define to_scsi_disk(obj) container_of(obj, struct scsi_disk, disk_dev)
- 
- static inline struct scsi_disk *scsi_disk(struct gendisk *disk)
- {
 -- 
 2.30.2
 
