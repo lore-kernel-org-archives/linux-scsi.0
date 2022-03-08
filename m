@@ -2,141 +2,330 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 721BEC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Mar 2022 08:21:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AB56C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Mar 2022 08:34:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344984AbiCHIWZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Mar 2022 03:22:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46082 "EHLO
+        id S1344979AbiCHIfh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Mar 2022 03:35:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344963AbiCHIWI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 03:22:08 -0500
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A70093F336
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 00:21:10 -0800 (PST)
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 22881NID019263
-        for <linux-scsi@vger.kernel.org>; Tue, 8 Mar 2022 00:21:10 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=TqUDQMyqkT6jEv2rF4y5UEMCjb3/kGaUhhXCyyFspC0=;
- b=kiWwYeuuSTjYTHFXP6m97Midh5yOa2LeXAMKJ/rHvJ9ZKM7EtWXhkyUpdekMYDvrYLD+
- AJ87yC7vpWiNd5pGeg4ilkacgcVcJVwKGLcNJCExii0xRIaaM88p3KufXp4Ta0na+ojv
- Yul7iW0KUtbIm4dnO0QpGAoO0MV5lfjGe/2bu/67pl1UvwoeJSA2+GYaFkcERSMMA/KF
- 5McZ7m8AtKIRj+sQ4BUHQPiCdW+lSQ1L9TJUkZ+RwCJa9kSOOzh69Nyuxhe1I8RvBLKs
- 0XluNakJHXGnvH1H3xrtOMEckz6/ulj8JNwAZ32DRi+tuu2kgF8Wt+UuvR0A1xaaQqp1 FQ== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3ep38p838b-6
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Mar 2022 00:21:09 -0800
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 8 Mar
- 2022 00:21:06 -0800
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 8 Mar 2022 00:21:06 -0800
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 178525B692E;
-        Tue,  8 Mar 2022 00:21:06 -0800 (PST)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 2288L50m009837;
-        Tue, 8 Mar 2022 00:21:05 -0800
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 2288L5mW009836;
-        Tue, 8 Mar 2022 00:21:05 -0800
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 07/13] qla2xxx: Fix hang due to session stuck
-Date:   Tue, 8 Mar 2022 00:20:42 -0800
-Message-ID: <20220308082048.9774-8-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20220308082048.9774-1-njavali@marvell.com>
-References: <20220308082048.9774-1-njavali@marvell.com>
+        with ESMTP id S234980AbiCHIfg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 03:35:36 -0500
+Received: from mail-m2835.qiye.163.com (mail-m2835.qiye.163.com [103.74.28.35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C67123CFEA;
+        Tue,  8 Mar 2022 00:34:39 -0800 (PST)
+Received: from [192.168.0.234] (unknown [218.94.118.90])
+        by mail-m2835.qiye.163.com (Hmail) with ESMTPA id 13D0D8A0302;
+        Tue,  8 Mar 2022 16:34:37 +0800 (CST)
+Message-ID: <3952debd-cd3d-3d65-635d-985ddbb91b49@easystack.cn>
+Date:   Tue, 8 Mar 2022 16:34:36 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-GUID: yEbOd8jI35AXqzCvZzk_ifwqhLwqK7hA
-X-Proofpoint-ORIG-GUID: yEbOd8jI35AXqzCvZzk_ifwqhLwqK7hA
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.816,Hydra:6.0.425,FMLib:17.11.64.514
- definitions=2022-03-08_03,2022-03-04_01,2022-02-23_01
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH v3] target: add iscsi/cpus_allowed_list in configfs
+Content-Language: en-US
+To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc:     zoumingzhe@qq.com
+References: <20220125083821.18225-1-mingzhe.zou@easystack.cn>
+ <20220301075500.14266-1-mingzhe.zou@easystack.cn>
+From:   Zou Mingzhe <mingzhe.zou@easystack.cn>
+In-Reply-To: <20220301075500.14266-1-mingzhe.zou@easystack.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgPGg8OCBgUHx5ZQUlOS1dZCBgUCR5ZQVlLVUtZV1
+        kWDxoPAgseWUFZKDYvK1lXWShZQUlCN1dZLVlBSVdZDwkaFQgSH1lBWUMfTBhWSktCTUNCSkJKHk
+        seVRkRExYaEhckFA4PWVdZFhoPEhUdFFlBWU9LSFVKSktITk9VS1kG
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6PAw6Fhw*PjIaFDgzOjUzPjEB
+        NwoaCQ1VSlVKTU9NTElDT0xMTkpIVTMWGhIXVRYSFRwBEx5VARQOOx4aCAIIDxoYEFUYFUVZV1kS
+        C1lBWUlKQ1VCT1VKSkNVQktZV1kIAVlBSkpJQ043Bg++
+X-HM-Tid: 0a7f68aa7a28841dkuqw13d0d8a0302
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+Hi, christie
 
-User experience device lost. The log shows Get port data base
-command was queued up, failed, and requeued again. Every time
-it is requeued, it set the FCF_ASYNC_ACTIVE. This prevents any
-recovery code from occurring because driver thinks a recovery is in
-progress for this session. In essence, this session is hung.
-The reason it gets into this place is the session deletion got
-in front of this call due to link perturbation.
+Have you started reviewing this patch?
 
-Break the requeue cycle and exit.
-The session deletion code will trigger a session relogin.
+Mingzhe
 
-Cc: stable@vger.kernel.org
-Fixes: 726b85487067 ("qla2xxx: Add framework for async fabric discovery")
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_def.h  |  4 ++++
- drivers/scsi/qla2xxx/qla_init.c | 19 +++++++++++++++++--
- 2 files changed, 21 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 47d7fa1c7ae8..b0579bce5b88 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -5437,4 +5437,8 @@ struct ql_vnd_tgt_stats_resp {
- #include "qla_gbl.h"
- #include "qla_dbg.h"
- #include "qla_inline.h"
-+
-+#define SESSION_DELETE(_fcport) (_fcport->disc_state == DSC_DELETE_PEND || \
-+				 _fcport->disc_state == DSC_DELETED)
-+
- #endif
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 6ffe44b805b6..3c58a2911937 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -575,6 +575,14 @@ qla2x00_async_adisc(struct scsi_qla_host *vha, fc_port_t *fcport,
- 	struct srb_iocb *lio;
- 	int rval = QLA_FUNCTION_FAILED;
- 
-+	if (SESSION_DELETE(fcport)) {
-+		ql_log(ql_log_warn, vha, 0xffff,
-+		       "%s: %8phC is being delete - not sending command.\n",
-+		       __func__, fcport->port_name);
-+		fcport->flags &= ~FCF_ASYNC_ACTIVE;
-+		return rval;
-+	}
-+
- 	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT))
- 		return rval;
- 
-@@ -1338,8 +1346,15 @@ int qla24xx_async_gpdb(struct scsi_qla_host *vha, fc_port_t *fcport, u8 opt)
- 	struct port_database_24xx *pd;
- 	struct qla_hw_data *ha = vha->hw;
- 
--	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT) ||
--	    fcport->loop_id == FC_NO_LOOP_ID) {
-+	if (SESSION_DELETE(fcport)) {
-+		ql_log(ql_log_warn, vha, 0xffff,
-+		       "%s: %8phC is being delete - not sending command.\n",
-+		       __func__, fcport->port_name);
-+		fcport->flags &= ~FCF_ASYNC_ACTIVE;
-+		return rval;
-+	}
-+
-+	if (!vha->flags.online || fcport->flags & FCF_ASYNC_SENT) {
- 		ql_log(ql_log_warn, vha, 0xffff,
- 		    "%s: %8phC online %d flags %x - not sending command.\n",
- 		    __func__, fcport->port_name, vha->flags.online, fcport->flags);
--- 
-2.19.0.rc0
-
+在 2022/3/1 15:55, mingzhe.zou@easystack.cn 写道:
+> From: Mingzhe Zou <mingzhe.zou@easystack.cn>
+>
+> The RX/TX threads for iSCSI connection can be scheduled to
+> any online cpus, and will not be rescheduled.
+>
+> If bind other heavy load threads with iSCSI connection
+> RX/TX thread to the same cpu, the iSCSI performance will
+> be worse.
+>
+> This patch add iscsi/cpus_allowed_list in configfs. The
+> available cpus set of iSCSI connection RX/TX threads is
+> allowed_cpus & online_cpus. If it is modified, all RX/TX
+> threads will be rescheduled.
+>
+> Signed-off-by: Mingzhe Zou <mingzhe.zou@easystack.cn>
+> ---
+>   drivers/target/iscsi/iscsi_target.c          | 77 +++++++++++++++++++-
+>   drivers/target/iscsi/iscsi_target_configfs.c | 32 ++++++++
+>   drivers/target/iscsi/iscsi_target_login.c    |  8 ++
+>   include/target/iscsi/iscsi_target_core.h     | 31 ++------
+>   4 files changed, 120 insertions(+), 28 deletions(-)
+>
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> index 2c54c5d8412d..6fe6a6bab3f4 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -702,13 +702,19 @@ static int __init iscsi_target_init_module(void)
+>   	if (!iscsit_global->ts_bitmap)
+>   		goto configfs_out;
+>   
+> +	if (!zalloc_cpumask_var(&iscsit_global->allowed_cpumask, GFP_KERNEL)) {
+> +		pr_err("Unable to allocate iscsit_global->allowed_cpumask\n");
+> +		goto bitmap_out;
+> +	}
+> +	cpumask_setall(iscsit_global->allowed_cpumask);
+> +
+>   	lio_qr_cache = kmem_cache_create("lio_qr_cache",
+>   			sizeof(struct iscsi_queue_req),
+>   			__alignof__(struct iscsi_queue_req), 0, NULL);
+>   	if (!lio_qr_cache) {
+>   		pr_err("Unable to kmem_cache_create() for"
+>   				" lio_qr_cache\n");
+> -		goto bitmap_out;
+> +		goto cpumask_out;
+>   	}
+>   
+>   	lio_dr_cache = kmem_cache_create("lio_dr_cache",
+> @@ -753,6 +759,8 @@ static int __init iscsi_target_init_module(void)
+>   	kmem_cache_destroy(lio_dr_cache);
+>   qr_out:
+>   	kmem_cache_destroy(lio_qr_cache);
+> +cpumask_out:
+> +	free_cpumask_var(iscsit_global->allowed_cpumask);
+>   bitmap_out:
+>   	vfree(iscsit_global->ts_bitmap);
+>   configfs_out:
+> @@ -782,6 +790,7 @@ static void __exit iscsi_target_cleanup_module(void)
+>   
+>   	target_unregister_template(&iscsi_ops);
+>   
+> +	free_cpumask_var(iscsit_global->allowed_cpumask);
+>   	vfree(iscsit_global->ts_bitmap);
+>   	kfree(iscsit_global);
+>   }
+> @@ -3587,6 +3596,11 @@ static int iscsit_send_reject(
+>   void iscsit_thread_get_cpumask(struct iscsi_conn *conn)
+>   {
+>   	int ord, cpu;
+> +	cpumask_t conn_allowed_cpumask;
+> +
+> +	cpumask_and(&conn_allowed_cpumask, iscsit_global->allowed_cpumask,
+> +		    cpu_online_mask);
+> +
+>   	/*
+>   	 * bitmap_id is assigned from iscsit_global->ts_bitmap from
+>   	 * within iscsit_start_kthreads()
+> @@ -3595,8 +3609,9 @@ void iscsit_thread_get_cpumask(struct iscsi_conn *conn)
+>   	 * iSCSI connection's RX/TX threads will be scheduled to
+>   	 * execute upon.
+>   	 */
+> -	ord = conn->bitmap_id % cpumask_weight(cpu_online_mask);
+> -	for_each_online_cpu(cpu) {
+> +	cpumask_clear(conn->conn_cpumask);
+> +	ord = conn->bitmap_id % cpumask_weight(&conn_allowed_cpumask);
+> +	for_each_cpu(cpu, &conn_allowed_cpumask) {
+>   		if (ord-- == 0) {
+>   			cpumask_set_cpu(cpu, conn->conn_cpumask);
+>   			return;
+> @@ -3609,6 +3624,62 @@ void iscsit_thread_get_cpumask(struct iscsi_conn *conn)
+>   	cpumask_setall(conn->conn_cpumask);
+>   }
+>   
+> +static void iscsit_thread_reschedule(struct iscsi_conn *conn)
+> +{
+> +	/*
+> +	 * If iscsit_global->allowed_cpumask modified, reschedule iSCSI
+> +	 * connection's RX/TX threads update conn->allowed_cpumask.
+> +	 */
+> +	if (!cpumask_equal(iscsit_global->allowed_cpumask,
+> +			   conn->allowed_cpumask)) {
+> +		iscsit_thread_get_cpumask(conn);
+> +		conn->conn_tx_reset_cpumask = 1;
+> +		conn->conn_rx_reset_cpumask = 1;
+> +		cpumask_copy(conn->allowed_cpumask,
+> +			     iscsit_global->allowed_cpumask);
+> +	}
+> +}
+> +
+> +void iscsit_thread_check_cpumask(
+> +	struct iscsi_conn *conn,
+> +	struct task_struct *p,
+> +	int mode)
+> +{
+> +	/*
+> +	 * The TX and RX threads maybe call iscsit_thread_check_cpumask()
+> +	 * at the same time. The RX thread might be faster and return from
+> +	 * iscsit_thread_reschedule() with conn_rx_reset_cpumask set to 0.
+> +	 * Then the TX thread sets it back to 1.
+> +	 * The next time the RX thread loops, it sees conn_rx_reset_cpumask
+> +	 * set to 1 and calls set_cpus_allowed_ptr() again and set it to 0.
+> +	 */
+> +	iscsit_thread_reschedule(conn);
+> +
+> +	/*
+> +	 * mode == 1 signals iscsi_target_tx_thread() usage.
+> +	 * mode == 0 signals iscsi_target_rx_thread() usage.
+> +	 */
+> +	if (mode == 1) {
+> +		if (!conn->conn_tx_reset_cpumask)
+> +			return;
+> +	} else {
+> +		if (!conn->conn_rx_reset_cpumask)
+> +			return;
+> +	}
+> +
+> +	/*
+> +	 * Update the CPU mask for this single kthread so that
+> +	 * both TX and RX kthreads are scheduled to run on the
+> +	 * same CPU.
+> +	 */
+> +	set_cpus_allowed_ptr(p, conn->conn_cpumask);
+> +	if (mode == 1)
+> +		conn->conn_tx_reset_cpumask = 0;
+> +	else
+> +		conn->conn_rx_reset_cpumask = 0;
+> +}
+> +EXPORT_SYMBOL(iscsit_thread_check_cpumask);
+> +
+>   int
+>   iscsit_immediate_queue(struct iscsi_conn *conn, struct iscsi_cmd *cmd, int state)
+>   {
+> diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+> index 2a9de24a8bbe..0cedcfe207b5 100644
+> --- a/drivers/target/iscsi/iscsi_target_configfs.c
+> +++ b/drivers/target/iscsi/iscsi_target_configfs.c
+> @@ -1127,8 +1127,40 @@ static ssize_t lio_target_wwn_lio_version_show(struct config_item *item,
+>   
+>   CONFIGFS_ATTR_RO(lio_target_wwn_, lio_version);
+>   
+> +static ssize_t lio_target_wwn_cpus_allowed_list_show(
+> +		struct config_item *item, char *page)
+> +{
+> +	return sprintf(page, "%*pbl\n",
+> +		       cpumask_pr_args(iscsit_global->allowed_cpumask));
+> +}
+> +
+> +static ssize_t lio_target_wwn_cpus_allowed_list_store(
+> +		struct config_item *item, const char *page, size_t count)
+> +{
+> +	int ret;
+> +	char *orig;
+> +	cpumask_t new_allowed_cpumask;
+> +
+> +	orig = kstrdup(page, GFP_KERNEL);
+> +	if (!orig)
+> +		return -ENOMEM;
+> +
+> +	cpumask_clear(&new_allowed_cpumask);
+> +	ret = cpulist_parse(orig, &new_allowed_cpumask);
+> +
+> +	kfree(orig);
+> +	if (ret != 0)
+> +		return ret;
+> +
+> +	cpumask_copy(iscsit_global->allowed_cpumask, &new_allowed_cpumask);
+> +	return count;
+> +}
+> +
+> +CONFIGFS_ATTR(lio_target_wwn_, cpus_allowed_list);
+> +
+>   static struct configfs_attribute *lio_target_wwn_attrs[] = {
+>   	&lio_target_wwn_attr_lio_version,
+> +	&lio_target_wwn_attr_cpus_allowed_list,
+>   	NULL,
+>   };
+>   
+> diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+> index 1a9c50401bdb..9c01fb864585 100644
+> --- a/drivers/target/iscsi/iscsi_target_login.c
+> +++ b/drivers/target/iscsi/iscsi_target_login.c
+> @@ -1129,8 +1129,15 @@ static struct iscsi_conn *iscsit_alloc_conn(struct iscsi_np *np)
+>   		goto free_conn_ops;
+>   	}
+>   
+> +	if (!zalloc_cpumask_var(&conn->allowed_cpumask, GFP_KERNEL)) {
+> +		pr_err("Unable to allocate conn->allowed_cpumask\n");
+> +		goto free_conn_cpumask;
+> +	}
+> +
+>   	return conn;
+>   
+> +free_conn_cpumask:
+> +	free_cpumask_var(conn->conn_cpumask);
+>   free_conn_ops:
+>   	kfree(conn->conn_ops);
+>   put_transport:
+> @@ -1142,6 +1149,7 @@ static struct iscsi_conn *iscsit_alloc_conn(struct iscsi_np *np)
+>   
+>   void iscsit_free_conn(struct iscsi_conn *conn)
+>   {
+> +	free_cpumask_var(conn->allowed_cpumask);
+>   	free_cpumask_var(conn->conn_cpumask);
+>   	kfree(conn->conn_ops);
+>   	iscsit_put_transport(conn->conn_transport);
+> diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+> index 1eccb2ac7d02..adc87de0362b 100644
+> --- a/include/target/iscsi/iscsi_target_core.h
+> +++ b/include/target/iscsi/iscsi_target_core.h
+> @@ -580,6 +580,7 @@ struct iscsi_conn {
+>   	struct ahash_request	*conn_tx_hash;
+>   	/* Used for scheduling TX and RX connection kthreads */
+>   	cpumask_var_t		conn_cpumask;
+> +	cpumask_var_t		allowed_cpumask;
+>   	unsigned int		conn_rx_reset_cpumask:1;
+>   	unsigned int		conn_tx_reset_cpumask:1;
+>   	/* list_head of struct iscsi_cmd for this connection */
+> @@ -878,6 +879,7 @@ struct iscsit_global {
+>   	/* Thread Set bitmap pointer */
+>   	unsigned long		*ts_bitmap;
+>   	spinlock_t		ts_bitmap_lock;
+> +	cpumask_var_t		allowed_cpumask;
+>   	/* Used for iSCSI discovery session authentication */
+>   	struct iscsi_node_acl	discovery_acl;
+>   	struct iscsi_portal_group	*discovery_tpg;
+> @@ -898,29 +900,8 @@ static inline u32 session_get_next_ttt(struct iscsi_session *session)
+>   
+>   extern struct iscsi_cmd *iscsit_find_cmd_from_itt(struct iscsi_conn *, itt_t);
+>   
+> -static inline void iscsit_thread_check_cpumask(
+> -	struct iscsi_conn *conn,
+> -	struct task_struct *p,
+> -	int mode)
+> -{
+> -	/*
+> -	 * mode == 1 signals iscsi_target_tx_thread() usage.
+> -	 * mode == 0 signals iscsi_target_rx_thread() usage.
+> -	 */
+> -	if (mode == 1) {
+> -		if (!conn->conn_tx_reset_cpumask)
+> -			return;
+> -		conn->conn_tx_reset_cpumask = 0;
+> -	} else {
+> -		if (!conn->conn_rx_reset_cpumask)
+> -			return;
+> -		conn->conn_rx_reset_cpumask = 0;
+> -	}
+> -	/*
+> -	 * Update the CPU mask for this single kthread so that
+> -	 * both TX and RX kthreads are scheduled to run on the
+> -	 * same CPU.
+> -	 */
+> -	set_cpus_allowed_ptr(p, conn->conn_cpumask);
+> -}
+> +extern void iscsit_thread_check_cpumask(struct iscsi_conn *conn,
+> +					struct task_struct *p,
+> +					int mode);
+> +
+>   #endif /* ISCSI_TARGET_CORE_H */
