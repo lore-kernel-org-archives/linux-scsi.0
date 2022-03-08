@@ -2,115 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B182C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Mar 2022 07:01:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39876C43217
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Mar 2022 08:11:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244184AbiCHHCG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Mar 2022 02:02:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53914 "EHLO
+        id S1344885AbiCHIMF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Mar 2022 03:12:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230005AbiCHHCE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 02:02:04 -0500
+        with ESMTP id S1344842AbiCHILs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 03:11:48 -0500
 Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94A9C25C46
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Mar 2022 23:01:01 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DAE03EBA2
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 00:10:51 -0800 (PST)
 Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220308070054epoutp049c563e184bc0cd1767ff2e47dc9da4ac~aVbY1EQSF0422704227epoutp04F
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 07:00:54 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220308070054epoutp049c563e184bc0cd1767ff2e47dc9da4ac~aVbY1EQSF0422704227epoutp04F
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220308081049epoutp041b3da9c0ab8029699db79a6b97d15612~aWYbOaHxz1002010020epoutp04X
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 08:10:49 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220308081049epoutp041b3da9c0ab8029699db79a6b97d15612~aWYbOaHxz1002010020epoutp04X
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1646722854;
-        bh=xIxthiEqn9FQ9jBzamiuJhFSF1jJomIQrv/+lcC8Nu4=;
-        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
-        b=pwRAuJvESEeXMc4WxIk3dmAPFMjga6jS3x/0DgWX5hnyNLOeLLb7Ai8tGOmogN6pv
-         MDpVkWbK6sZJMSIuNNy4IHudR+5HIyISSqJKY/AC8pCfwPwLigj9y8N486LkqCliKv
-         +QEhP5/GDaFYdNtRuYZx4Hm5RIAl/KkTFnaTND6U=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20220308070054epcas2p1b1ac2b195e35ae863404fb09e2469175~aVbYPWpHe0737807378epcas2p1c;
-        Tue,  8 Mar 2022 07:00:54 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.36.91]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4KCR785167z4x9Q1; Tue,  8 Mar
-        2022 07:00:52 +0000 (GMT)
-X-AuditID: b6c32a46-da1ff70000018941-ce-6226fc5adb68
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        91.0B.35137.A5CF6226; Tue,  8 Mar 2022 15:48:58 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE: [RFC PATCH 1/4] scsi: Allow drivers to set BLK_MQ_F_BLOCKING
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "lduncan@suse.com" <lduncan@suse.com>,
-        "cleech@redhat.com" <cleech@redhat.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "james.bottomley@hansenpartnership.com" 
-        <james.bottomley@hansenpartnership.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20220308003957.123312-2-michael.christie@oracle.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20220308070049epcms2p78d9e9b9bacd3fb6b52de8eb1eaedb623@epcms2p7>
-Date:   Tue, 08 Mar 2022 16:00:49 +0900
-X-CMS-MailID: 20220308070049epcms2p78d9e9b9bacd3fb6b52de8eb1eaedb623
-Content-Transfer-Encoding: 7bit
+        s=mail20170921; t=1646727049;
+        bh=xEcSpHVDKjzosO1TE32lx3HNTcFA/JVAUI7y3N9XrlY=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=cGs1tOnWJ4I6R0xqUxyN8hbAbn42NrXOI1UR1GGt7gHMPf2c9eu2tqR4c2ZfeR6Yv
+         simTroA/GaK2E/BdZSX8zEeMki5BL3VBeEVsfTnjnS1gUdiwUCxqwnK678foMGX+wl
+         roz/CS1f3WANVkz0XRC/yF3hVPQ4sXoNHIEB0NFA=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20220308081048epcas2p3630f3a03dc05cbd339de172c2b0dd151~aWYavbbwM0585005850epcas2p3M;
+        Tue,  8 Mar 2022 08:10:48 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.101]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4KCSgk3c3Rz4x9QM; Tue,  8 Mar
+        2022 08:10:42 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        42.76.33036.1BC07226; Tue,  8 Mar 2022 16:58:41 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20220308081032epcas2p4268212cd3766c952ce91ea77d45e9fcd~aWYLq_b2X2303623036epcas2p4m;
+        Tue,  8 Mar 2022 08:10:32 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220308081032epsmtrp1ad11845e74c425925be0d6866dcf0117~aWYLpzqTi2150621506epsmtrp1F;
+        Tue,  8 Mar 2022 08:10:32 +0000 (GMT)
+X-AuditID: b6c32a48-4fbff7000000810c-56-62270cb16c1f
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        DC.C5.29871.87F07226; Tue,  8 Mar 2022 17:10:32 +0900 (KST)
+Received: from KORCO011456 (unknown [10.229.18.123]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220308081032epsmtip15ccb9e17d1e0c29d31c1f2659138c473~aWYLdD3bY2616726167epsmtip1V;
+        Tue,  8 Mar 2022 08:10:32 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Adrian Hunter'" <adrian.hunter@intel.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <beanhuo@micron.com>, <cang@codeaurora.org>, <sc.suh@samsung.com>,
+        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>,
+        <bhoon95.kim@samsung.com>, <vkumar.1997@samsung.com>
+In-Reply-To: <52bbbd92-17d4-a5ea-150e-28cf56bb0a67@intel.com>
+Subject: RE: [RESEND PATCH v1] scsi: ufs: exclude UECxx from SFR dump list
+Date:   Tue, 8 Mar 2022 17:10:32 +0900
+Message-ID: <017301d832c3$fb59d690$f20d83b0$@samsung.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Content-Language: ko
+Thread-Index: AQGliURthW9IIEPdWyhSjpWWHipcLgIFdXJ5AgAX5xis+khE8A==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBJsWRmVeSWpSXmKPExsWy7bCmqe5GHvUkg2ONmhYnn6xhs3gwbxub
+        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLy7vmsFl0X9/BZrH8+D8mi667Nxgt
+        lv57y2Jx5/5HFgc+j8t9vUwei/e8ZPKYsOgAo8f39R1sHh+f3mLx6NuyitHj8yY5j/YD3UwB
+        HFHZNhmpiSmpRQqpecn5KZl56bZK3sHxzvGmZgaGuoaWFuZKCnmJuam2Si4+AbpumTlAhysp
+        lCXmlAKFAhKLi5X07WyK8ktLUhUy8otLbJVSC1JyCswL9IoTc4tL89L18lJLrAwNDIxMgQoT
+        sjMmvPrCWvCSueLX3K+sDYyfmboYOTkkBEwk1l+4yt7FyMUhJLCDUWL65utMEM4nRol5W3sY
+        QaqEBL4xSixY7Q7TMenqOjaIor2MEuc7DzJCOC8ZJQ6cmscOUsUmoC0x7eFuVpCEiEA7s8SV
+        jWdZQRKcArYSf892g40VFvCSeLN6ITOIzSKgInF86WKwo3gFLCUWn+hihLAFJU7OfMICYjMD
+        DV228DUzxBkKEj+fLmOFiItIzO5sA4pzAC1zkujpcgfZKyFwhUOi5d4vNoh6F4lv345DPS0s
+        8er4FnYIW0riZX8bO0ivhECxxKZ98hC9DYwSSz5tZoGoMZaY9aydEaSGWUBTYv0ufYhyZYkj
+        t6Au45PoOPwXagqvREebEESjssSvSZMZIWxJiZk370At9ZA4snI24wRGxVlIfpyF5MdZSP6a
+        hbB3ASPLKkax1ILi3PTUYqMCE3hcJ+fnbmIEJ2ktjx2Ms99+0DvEyMTBeIhRgoNZSYT3/nmV
+        JCHelMTKqtSi/Pii0pzU4kOMpsBQn8gsJZqcD8wTeSXxhiaWBiZmZobmRqYG5krivF4pGxKF
+        BNITS1KzU1MLUotg+pg4OKUamFaaM6y85rK2R/xiJueUsAutnme9Dz6b/zwjzetVXMf9aYuT
+        jeIaTwv8PdVQ7XB4g4D4HfZzFYev90hYeJ+d++1Oi6+l68a1BksyDc3OW50zV1gcbzxR/uj2
+        by+kmH0/R6rdk+M4MHWTzTdjdx0rk5lSjnyLz6rEXvWZzRdUxq+0a6VJ+JLXjrnH9kuU3D+2
+        tXrz6udpUaq6a+5Nyd/Cn5G+ZJJP6Z+4byfO+JbO2e1nt7rR3S9q59Tgmue3FspGTpTSXvl1
+        hYeI2/cFu5f+fWVf9t246GHJXl8JXzvPRYuqJc44XsvbFR+Q7ynEO3XxeqM5WgFuTzSVnb6a
+        xRwwj7eeV3QvQtm4q4XNmuFTtBJLcUaioRZzUXEiAKTQK31bBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrJIsWRmVeSWpSXmKPExsWy7bCSnG4Fv3qSwc9bshYnn6xhs3gwbxub
+        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLy7vmsFl0X9/BZrH8+D8mi667Nxgt
+        lv57y2Jx5/5HFgc+j8t9vUwei/e8ZPKYsOgAo8f39R1sHh+f3mLx6NuyitHj8yY5j/YD3UwB
+        HFFcNimpOZllqUX6dglcGZM+fWIpeM5c8frHY/YGxo9MXYycHBICJhKTrq5j62Lk4hAS2M0o
+        cfJsPytEQlLixM7njBC2sMT9liNgcSGB54wS86aYgNhsAtoS0x7uZgVpFhGYziyx9+5HRohJ
+        JxkldtzuZwep4hSwlfh7thtskrCAl8Sb1QuZQWwWARWJ40sXg53BK2ApsfhEFyOELShxcuYT
+        FhCbGWhD78NWRhh72cLXzBAXKUj8fLqMFSIuIjG7sw0ozgF0hZNET5f7BEahWUgmzUIyaRaS
+        SbOQdC9gZFnFKJlaUJybnltsWGCYl1quV5yYW1yal66XnJ+7iREcm1qaOxi3r/qgd4iRiYPx
+        EKMEB7OSCO/98ypJQrwpiZVVqUX58UWlOanFhxilOViUxHkvdJ2MFxJITyxJzU5NLUgtgsky
+        cXBKNTDt+sx9IkCSJfPY4d4AA7bmKNe2KUe3BL5lXSg+0f3Yh5eptdOYGKMYKg8p79qkvqbf
+        41Pbg+s2CfUuwT+Mrt6Lq576qHqR2vne+PwfEUw2Nk9u1P6968o8d0EeU/Glhz9mlhUp5z1N
+        Tk1Xtd2dEZF5vO1z9/XJy+5dq41r8U65wVBWKX304KoXh9tvTZ6wZ2FY3S6h+ZkvlU7ofJy2
+        a4lG88zWQ7oHNV51bsidvfDIzHONP/fzTr7okfku2PJQ6P1nkf/jrrG6Vmg8ZPzBn3Z8ab7K
+        2sVP2kuueq1sz77j46z6taMh/Vy3RFCSmXcS58e3uVniH37nfgqczaCmIG3mXHfIPe9Xn9gx
+        jq7JM3yVWIozEg21mIuKEwGf7pHWPAMAAA==
+X-CMS-MailID: 20220308081032epcas2p4268212cd3766c952ce91ea77d45e9fcd
+X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
 CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprIJsWRmVeSWpSXmKPExsWy7bCmhW7UH7Ukg6dL5C2mffjJbPGsYzGz
-        xctDmhYb+zks3pw/xGTRfX0Hm8Xy4/+YLP5OusFqcWhyM5MDp8flK94e0yadYvP4+PQWi8f7
-        fVfZPPq2rGL0WL/lKovH501yAexR2TYZqYkpqUUKqXnJ+SmZeem2St7B8c7xpmYGhrqGlhbm
-        Sgp5ibmptkouPgG6bpk5QHcpKZQl5pQChQISi4uV9O1sivJLS1IVMvKLS2yVUgtScgrMC/SK
-        E3OLS/PS9fJSS6wMDQyMTIEKE7IzZrwTLfjLUrH1eV0D4zXmLkZODgkBE4kFayeD2UICOxgl
-        JjbrdjFycPAKCEr83SEMEhYW8JTouXeHDaJESWL9xVnsEHE9iVsP1zCC2GwCOhLTT9wHinNx
-        iAisYpboe/+JDWI+r8SM9qcsELa0xPblW8EaOAWcJFat28MEEdeQ+LGsF+oeUYmbq9+yw9jv
-        j81nhLBFJFrvnYWqEZR48HM3VFxS4uWbG1Bz8iX+X1kO1Vsjse3APChbX+Jax0YWiL98JfY/
-        KAQxWQRUJS618UFUuEj8Xb8ObDqzgLzE9rdzmEFKmAU0Jdbv0gcxJQSUJY7cYoH5qWHjb3Z0
-        NrMAn0TH4b9w8R3znkDdpSax7ud6JogxMhK35jFOYFSahQjlWUjWzkJYu4CReRWjWGpBcW56
-        arFRgRE8VpPzczcxgtOmltsOxilvP+gdYmTiYDzEKMHBrCTCe/+8SpIQb0piZVVqUX58UWlO
-        avEhRlOgfycyS4km5wMTd15JvKGJpYGJmZmhuZGpgbmSOK9XyoZEIYH0xJLU7NTUgtQimD4m
-        Dk6pBqYeVWfTTweu+E9naPDTWj3ty/zGHa+nZyd67mpxOGEwdc7tnG6ZNMGrUqyv9kccXNB9
-        9fa+hxN3b5wXmTxR7/KOB/faHRL8beqPJtpWHcm+1Hrn5oZwfqGLER81xCs3/1UT9ZT1ujil
-        8dJks9NHOCUm7Cndt+bgnjM/NRZJHop85XTuxtL7RuorRBZ8qHTZ8vyocJD6l8gA/u63LauE
-        dwc9iFsvGBUwybrqBv/ZdRNXuHxJWmtVpab/bLZJ/v67tsaajx74M5/4s8f0yyVRDcmNghHW
-        L3yX8QSsext3Vmf984DXTPZBgnVnmzbsuyKupLSh9vlynuSvc267rkizVm9uc5KY8Irtlsfl
-        6MZ7T9uNlFiKMxINtZiLihMBMa4/LyQEAAA=
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220308004023epcas2p12ebd497c14d32f36d0aa6682c0b9d0db
-References: <20220308003957.123312-2-michael.christie@oracle.com>
-        <20220308003957.123312-1-michael.christie@oracle.com>
-        <CGME20220308004023epcas2p12ebd497c14d32f36d0aa6682c0b9d0db@epcms2p7>
+X-CMS-RootMailID: 20220307024436epcas2p1cb5b07d5149b37610819fa3d70af59ea
+References: <CGME20220307024436epcas2p1cb5b07d5149b37610819fa3d70af59ea@epcas2p1.samsung.com>
+        <1646621010-118886-1-git-send-email-kwmad.kim@samsung.com>
+        <52bbbd92-17d4-a5ea-150e-28cf56bb0a67@intel.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Mike, 
+> > -	for (pos =3D 0; pos < len; pos +=3D 4)
+> > +	for (pos =3D 0; pos < len; pos +=3D 4) =7B
+> > +		if (pos >=3D REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER	&&
+> > +		    pos <=3D REG_UIC_ERROR_CODE_DME)
+>=20
+> Doesn't that need to be 'pos + offset' not just 'pos'
+>=20
 
->@@ -2952,8 +2954,8 @@ scsi_host_block(struct Scsi_Host *shost)
->         }
-> 
->         /*
->-         * SCSI never enables blk-mq's BLK_MQ_F_BLOCKING flag so
->-         * calling synchronize_rcu() once is enough.
->+         * Drivers that use this helper enable blk-mq's BLK_MQ_F_BLOCKING flag
->+         * so calling synchronize_rcu() once is enough.
->          */
->         WARN_ON_ONCE(shost->tag_set.flags & BLK_MQ_F_BLOCKING);
-Should we keep this line?
+For only ufshcd.c, offset is always zero, so 'offset' doesn't need to be re=
+ferred to.
+But now I think the function is currently public to external modules.
 
-And I think scsi_host_block() should call synchronize_srcu() rather than
-synchronize_rcu(), if the BLK_MQ_F_BLOCKING flag is used.
+Okay, let me modify this.
 
-Thanks,
-Daejun
+Thanks.
+Kiwoong Kim
+
