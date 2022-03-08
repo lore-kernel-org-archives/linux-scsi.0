@@ -2,105 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C45C6C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Mar 2022 05:15:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23D07C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Mar 2022 05:52:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238431AbiCHFQa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Mar 2022 00:16:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57676 "EHLO
+        id S235638AbiCHFxG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Mar 2022 00:53:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbiCHFQa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 00:16:30 -0500
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C908036B41;
-        Mon,  7 Mar 2022 21:15:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1646716534; x=1678252534;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=gG7N1W4Kxhwbbk1jZERSsHzsE69OmsTBNUffQnkDmK8=;
-  b=nLvLdwXuSa3pb74zDIuEUmUelkSu7nMD3fCqbVhdzeJsdPjUHcVc7T1T
-   fjG+kNLzb4r3V8CUdywpRmQf4jjreu8Zjt0SHPyX68DYfkuHfVuG2KGEU
-   JGOtl2eSlt7+UmmAe5CiTUASjS19LBSfVIPGEJyD4POyyC5Men5vyWwXy
-   s7VdEAHL2Dkgm5ZRHnxdM8htoz/tbjIhMRZYmdHgihK+rd5PTCAqSo40U
-   uLHUn3Owsf+Y1oeKoavYvqfpExt8mR0/uKDSzUo7m46SbqAYRztEp95UP
-   4sipcE4dTnY4ZeAQqQAU+NKIOgFps3gcPZxTuBaccSJHzQiVU2fTuynUd
-   g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10279"; a="242030981"
-X-IronPort-AV: E=Sophos;i="5.90,163,1643702400"; 
-   d="scan'208";a="242030981"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2022 21:15:33 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,163,1643702400"; 
-   d="scan'208";a="553475743"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.92]) ([10.237.72.92])
-  by orsmga008.jf.intel.com with ESMTP; 07 Mar 2022 21:15:29 -0800
-Message-ID: <52bbbd92-17d4-a5ea-150e-28cf56bb0a67@intel.com>
-Date:   Tue, 8 Mar 2022 07:15:28 +0200
+        with ESMTP id S229719AbiCHFxF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 00:53:05 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24641F68;
+        Mon,  7 Mar 2022 21:52:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=xEoFMegp285+3kushkDTVGTV0J/N3oc85CKotN1+dMM=; b=vkoij6mllVAu9+rHziXTsjXB76
+        dTNA4TgP/kD/V+XGr7XmY8VLNxPMWG+EvQhFIHYl65Qv9lmkJMvPsjisOB4BglLPIE9urY/CSk7SP
+        2DsIkd2Dre0tCT4UE+tV8DHuOOIdqhrpHGcpXUiPWxX7fpBzVfWwMXpywmDZNzo+O1LPVTrhTyrkN
+        /h0hfGf/VDFY9cmVMbRwqy8z/y7bzhNEXb7+lqeWY0cetX8G9T8DcoCrD1UrSYBQab3FMiEJN8eLO
+        5a0pTaOtv8IKq5AFmx+8vbV1wRGhEM34n5sBdO5a1FpPzZIZgA+2404gClt/LSzR+/3Nr1k4xmhnw
+        /ep4nZbg==;
+Received: from [2001:4bb8:184:7746:6f50:7a98:3141:c37b] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nRSlO-002ikW-DP; Tue, 08 Mar 2022 05:52:02 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: move more work to disk_release v4
+Date:   Tue,  8 Mar 2022 06:51:46 +0100
+Message-Id: <20220308055200.735835-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Firefox/91.0 Thunderbird/91.5.0
-Subject: Re: [RESEND PATCH v1] scsi: ufs: exclude UECxx from SFR dump list
-Content-Language: en-US
-To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        cang@codeaurora.org, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, bhoon95.kim@samsung.com,
-        vkumar.1997@samsung.com
-References: <CGME20220307024436epcas2p1cb5b07d5149b37610819fa3d70af59ea@epcas2p1.samsung.com>
- <1646621010-118886-1-git-send-email-kwmad.kim@samsung.com>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <1646621010-118886-1-git-send-email-kwmad.kim@samsung.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 07/03/2022 04:43, Kiwoong Kim wrote:
-> These are ROC type things that means their values
-> are cleared when the SFRs are read.
-> They are usually read in ISR when an UIC error occur.
-> Thus, their values would be zero at many cases. And
-> there might be a little bit risky when they are read to
-> be cleared before the ISR reads them, e.g. the case that
-> a command is timed-out, ufshcd_dump_regs is called in
-> ufshcd_abort and an UIC error occurs at the nearly
-> same time. In this case, ISR will be called but UFS error handler
-> will not be scheduled.
-> This patch is to make UFS driver not read those SFRs in the
-> dump function, i.e. ufshcd_dump_regs.
-> 
-> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 460d2b4..8b65c081 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -115,8 +115,12 @@ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
->  	if (!regs)
->  		return -ENOMEM;
->  
-> -	for (pos = 0; pos < len; pos += 4)
-> +	for (pos = 0; pos < len; pos += 4) {
-> +		if (pos >= REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER	&&
-> +		    pos <= REG_UIC_ERROR_CODE_DME)
+Hi all,
 
-Doesn't that need to be 'pos + offset' not just 'pos'
+this series resurrects and forward ports ports larger parts of the
+"block: don't drain file system I/O on del_gendisk" series from Ming,
+but does not remove the draining in del_gendisk, but instead the one
+in the sd driver, which always was a bit ad-hoc.  As part of that sd
+and sr are switched to use the new ->free_disk method to avoid having
+to clear disk->private_data and the way to lookup the SCSI ULP is
+cleaned up as well.
 
-> +			continue;
->  		regs[pos / 4] = ufshcd_readl(hba, offset + pos);
-> +	}
->  
->  	ufshcd_hex_dump(prefix, regs, len);
->  	kfree(regs);
+The latest version only has cosmetic changes and plenty of rewiews and
+should be ready to merge now.
 
+Git branch:
+
+    git://git.infradead.org/users/hch/block.git freeze-5.18
+
+Gitweb:
+
+    http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/freeze-5.18
+
+Changes since v3:
+ - make use of existing local variables and helpers
+ - update a few commit logs
+ - better document the disk_dev in the sd driver
+
+Changes since v2:
+ - handle the weird dm-multipath flush sequence corner case when
+   assinging rq->part
+
+Changes since v1:
+ - fix a refcounting bug in sd
+ - rename a function
+
+Diffstat:
+ block/blk-core.c           |    7 --
+ block/blk-mq.c             |   15 +++--
+ block/blk-sysfs.c          |   25 --------
+ block/blk.h                |    2 
+ block/elevator.c           |    6 +-
+ block/genhd.c              |   38 ++++++++++++-
+ drivers/scsi/sd.c          |  114 +++++++++------------------------------
+ drivers/scsi/sd.h          |   13 +++-
+ drivers/scsi/sr.c          |  129 +++++++++------------------------------------
+ drivers/scsi/sr.h          |    5 -
+ drivers/scsi/st.c          |    1 
+ drivers/scsi/st.h          |    1 
+ include/scsi/scsi_cmnd.h   |    9 ---
+ include/scsi/scsi_driver.h |    9 ++-
+ 14 files changed, 124 insertions(+), 250 deletions(-)
