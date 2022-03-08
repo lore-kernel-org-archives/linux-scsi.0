@@ -2,71 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 646B3C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Mar 2022 22:11:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35BD8C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 01:03:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344587AbiCHWMk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Mar 2022 17:12:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45962 "EHLO
+        id S229703AbiCIBEp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Mar 2022 20:04:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229902AbiCHWMk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 17:12:40 -0500
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FE974927F
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 14:11:43 -0800 (PST)
-Received: by mail-pl1-f174.google.com with SMTP id r12so336037pla.1
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Mar 2022 14:11:43 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=zsuN6YZ8l60CNL3ec8tnGiB7TFkpcMErgCfCkAo2B4I=;
-        b=P8rFg5YSudAH8/QklYVPFzCws0nWEWVdNuyvraoCY3nABz9ayr8BxBuUSv8JOtiQ1g
-         x3CIz0Pcbp/CD2wj7GCGc0Yx5MVjZz/kMucv6fEUo/bTLLxoAfaWuvRZiiKtrYm0JPDZ
-         JvTn1YQZNecIfv20XYVeeEuuLuLsw0BK0pUj1JK4YVKA2kOHzoFlgEEqdMVVhnRxN/BN
-         yplPpU1WjXBynGAU7EdJ4T9RNv7kg9YxIeAwfo9bhNuLzODLXFd3S6scpimmut/QCbTS
-         3KiQycCwnVGcBIsSrx9Biq57kokuy798HYSNP2NBu4cJ+9RLd/8knbUt/7WzAe3ecLPk
-         Kyfw==
-X-Gm-Message-State: AOAM532L0eyCOgKKgpcOzAcwb4X/zPrpHNajrwAIRDX0edId7U0a3H1P
-        5+qJRV+hmsl6o22FgSqvPlA=
-X-Google-Smtp-Source: ABdhPJwy/p0tWeBMYKahZbXIxu9gJnAw5AeTU3wvkcEtpbhfcyhI3vDafIBBiSgYY92GvI/w0YJzLg==
-X-Received: by 2002:a17:90a:bf91:b0:1b9:bda3:10ff with SMTP id d17-20020a17090abf9100b001b9bda310ffmr6956053pjs.38.1646777502510;
-        Tue, 08 Mar 2022 14:11:42 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:88cc:528c:d341:9395? ([2620:15c:211:201:88cc:528c:d341:9395])
-        by smtp.gmail.com with ESMTPSA id f6-20020a056a00228600b004f709f5f3c1sm60541pfe.28.2022.03.08.14.11.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Mar 2022 14:11:42 -0800 (PST)
-Message-ID: <4f464024-d114-dafb-8a0d-fa77c6fdd5d6@acm.org>
-Date:   Tue, 8 Mar 2022 14:11:39 -0800
+        with ESMTP id S229899AbiCIBEa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 20:04:30 -0500
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABA67275F6;
+        Tue,  8 Mar 2022 16:41:55 -0800 (PST)
+X-UUID: 5643b9c7fc6f4726a569dd98f1f01242-20220309
+X-UUID: 5643b9c7fc6f4726a569dd98f1f01242-20220309
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
+        (envelope-from <miles.chen@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 373336592; Wed, 09 Mar 2022 07:23:34 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.792.15; Wed, 9 Mar 2022 07:23:33 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 9 Mar 2022 07:23:33 +0800
+From:   Miles Chen <miles.chen@mediatek.com>
+To:     <alice.chao@mediatek.com>
+CC:     <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <chun-hung.wu@mediatek.com>, <jejb@linux.ibm.com>,
+        <jiajie.hao@mediatek.com>, <jonathan.hsu@mediatek.com>,
+        <lin.gui@mediatek.com>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-scsi@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <matthias.bgg@gmail.com>,
+        <peter.wang@mediatek.com>, <powen.kao@mediatek.com>,
+        <qilin.tan@mediatek.com>, <stanley.chu@mediatek.com>,
+        <wsd_upstream@mediatek.com>, <yanxu.wei@mediatek.com>
+Subject: Re: [PATCH v2 1/1] scsi: Fix racing between dev init and dev reset
+Date:   Wed, 9 Mar 2022 07:23:33 +0800
+Message-ID: <20220308232333.28978-1-miles.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20220308020725.16116-2-alice.chao@mediatek.com>
+References: <20220308020725.16116-2-alice.chao@mediatek.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCH v1] scsi: ufs: scsi_get_lba error fix by check cmd opcode
-Content-Language: en-US
-To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com, mikebi@micron.com,
-        beanhuo@micron.com
-References: <20220307111752.10465-1-peter.wang@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220307111752.10465-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/7/22 03:17, peter.wang@mediatek.com wrote:
-> When ufs init without scmd->device->sector_size set,
-> scsi_get_lba will get a wrong shift number and ubsan error.
-> shift exponent 4294967286 is too large for 64-bit type
-> 'sector_t' (aka 'unsigned long long')
-> Call scsi_get_lba only when opcode is READ_10/WRITE_10/UNMAP.
+Hi Alice,
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Thanks for your patch. I have some questions.
+
+> Device reset thread uses kobject_uevent_env() to get kobj.parent
+> after scsi_evt_emit(), and it races with device init thread which
+> calls device_add() to create kobj.parent before kobject_uevent_env().
+> 
+> Device reset call trace:
+> fill_kobj_path
+> kobject_get_path
+> kobject_uevent_env
+> scsi_evt_emit			<- add wait_event()
+> scsi_evt_thread
+> 
+> Device init call trace:
+> fill_kobj_path
+> kobject_get_path
+> kobject_uevent_env
+> device_add				<- create kobj.parent
+> scsi_target_add
+> scsi_sysfs_add_sdev
+> scsi_add_lun
+> scsi_probe_and_add_lun
+
+These are backtraces, and the things above looks like your solution, not
+the problem.
+It's better to describe the problem first and solution later:
+
+Device init call:                              Device reset call:   
+scsi_probe_and_add_lun()                       scsi_evt_thread()
+  scsi_add_lun()
+    scsi_sysfs_add_sdev()                        scsi_evt_emit()
+      scsi_target_add()                            kobject_uevent_env() 
+        device_add()                                 kobject_get_path() // something wrong?
+	                                               fill_kobj_path()
+	  get_device_parent() // I see a get, not create parent kobj, could you show me that point?
+	  kobject_uevent()
+            kobject_uevent_env()
+              kobject_get_path()
+                fill_kobj_path()
+
+> 
+> These two jobs are scheduled asynchronously, we can't guaranteed that
+> kobj.parent will be created in device init thread before device reset
+> thread calls kobj_get_path().
+
+What happens if device reset thread calls kobj_get_path() before kobj.parent's
+creation? a crash or something?
+
+> 
+> To resolve the racing issue between device init thread and device
+> reset thread, we use wait_event() in scsi_evt_emit() to wait for
+> device_add() to complete the creation of kobj.parent.
+> 
+> Signed-off-by: Alice Chao <alice.chao@mediatek.com>
+
+When we send patch N+1, we have to put the change log between patch v1 to vN
+under a "---", so others can understand the changes between patch N and N+1.
+e.g.,
+
+---
+
+Change since v1
+- remove Change-Id
+
+> ---
+>  drivers/scsi/scsi_lib.c  | 1 +
+>  drivers/scsi/scsi_scan.c | 1 +
+>  2 files changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 0a70aa763a96..abf9a71ed77c 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2461,6 +2461,7 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+>  		break;
+>  	case SDEV_EVT_POWER_ON_RESET_OCCURRED:
+>  		envp[idx++] = "SDEV_UA=POWER_ON_RESET_OCCURRED";
+> +		wait_event(sdev->host->host_wait, sdev->sdev_gendev.kobj.parent != NULL);
+>  		break;
+>  	default:
+>  		/* do nothing */
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index f4e6c68ac99e..431f229ac435 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1904,6 +1904,7 @@ static void do_scsi_scan_host(struct Scsi_Host *shost)
+>  	} else {
+>  		scsi_scan_host_selected(shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
+>  				SCAN_WILD_CARD, 0);
+> +		wake_up(&shost->host_wait);
+
+do_scsi_scan_host() is not in the call trace above, could you show the relationship
+of do_scsi_scan_host in the call flow?
+
+thanks,
+Miles
+
+>  	}
+>  }
