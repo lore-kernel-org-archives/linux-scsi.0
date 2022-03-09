@@ -2,175 +2,150 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EFDDC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 06:44:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC8EFC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 08:52:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230111AbiCIGpr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Mar 2022 01:45:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53654 "EHLO
+        id S231520AbiCIIxG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Mar 2022 03:53:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230097AbiCIGpp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2022 01:45:45 -0500
-Received: from mail-ot1-x32a.google.com (mail-ot1-x32a.google.com [IPv6:2607:f8b0:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0510B148656
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 22:44:48 -0800 (PST)
-Received: by mail-ot1-x32a.google.com with SMTP id k9-20020a056830242900b005ad25f8ebfdso1051475ots.7
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Mar 2022 22:44:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=/KXqhUhLCj37cnN8FQ3YmPZW2H5oywwXFYRuqkdkjoc=;
-        b=AafP3swPlBbKzUdvsO/kYxs4KC8aCy11Pq6j3dZaqQmQmQgAtUC3bVRjLjGph/T3k0
-         gBmAN4LzA7ax7q6fOobyouPADo9vAC7ALidoLGu2w74l9kiTSud8905055nWdU04h++T
-         U6c6tfgqOLZPLlE0xNsLwGHq/iBJH3u8R/ES4=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=/KXqhUhLCj37cnN8FQ3YmPZW2H5oywwXFYRuqkdkjoc=;
-        b=1CI0ck/ITB+7JhDUNM1k0T805ISCG6e8N0Af8+19tM0Q2RbpHKfD3d31Nj3DWOm+9s
-         dtmUiz+4ymcQ6vQ4xifE9OaIq1CUcAM1to7WFM23o+uCxbhXPsnXlcUl457XmkA99a4O
-         2YBcjrwDaXy4JMjreuVdXnyhljeeGsWSIPVdmXRJVOKX8GpStKN7LKaXi9m+dJgg5ATM
-         CpUETKB7ro/Cef6U/mnqSMCsjO8kehqFLS/ZTUA8PPJ5W6USE8FzxfQKrOywOY66rDpc
-         aui2g2fVggJE8wwAU3D4kxAE3qGNMbPiNBlE4dyQOf3IiFfMZUQeKknb7bIWO6Afsp+Y
-         YiiA==
-X-Gm-Message-State: AOAM531TJeJI4dTDtm6q09Jyia3BDv6XdVHWsXVdSIeB2+LbPseG80IG
-        Vog1ZeAEgu9elVDM5VS/m6hV4KzLc1rfD0LuM+wEiA==
-X-Google-Smtp-Source: ABdhPJwgeempI9YkdJWOmlVVxhl8MwmoBOdAA7Us6mz2Gm7XPGL0yiUsvDgdWa84lwk3GbH8bhjnKcqPUNxgTgf2thI=
-X-Received: by 2002:a05:6830:25d6:b0:5b2:5015:f015 with SMTP id
- d22-20020a05683025d600b005b25015f015mr2741840otu.127.1646808287162; Tue, 08
- Mar 2022 22:44:47 -0800 (PST)
+        with ESMTP id S231589AbiCIIww (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2022 03:52:52 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D13AE16201E
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Mar 2022 00:51:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1646815912;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=TELtE/TvhBTmc9AcQH+J/FPyzAIaQTdybvoTEfYZI7Y=;
+        b=X5hZQrWTY8LlbpAIJVUyymavCGqHEqnPBwHuxrfc+wVeh7aoJoWQF4XXO1Up+qZzpzH7RC
+        2aAU0kr1KHgqh8YVEM1KpqbnWrWNcAwObjE3qNWzzCkPMQw13YcAZM+NZ3IXd9vAL0L/9D
+        90gkZkSqwzV79n0mc5I/wN9d9H8oZko=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-483-V9um9J1zMVaV3d3evW_INQ-1; Wed, 09 Mar 2022 03:51:49 -0500
+X-MC-Unique: V9um9J1zMVaV3d3evW_INQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 432A81091DA1;
+        Wed,  9 Mar 2022 08:51:45 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D016083168;
+        Wed,  9 Mar 2022 08:51:43 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 2298pgJ3020462;
+        Wed, 9 Mar 2022 03:51:42 -0500
+Received: from localhost (mpatocka@localhost)
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 2298pfEp020453;
+        Wed, 9 Mar 2022 03:51:41 -0500
+X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
+Date:   Wed, 9 Mar 2022 03:51:41 -0500 (EST)
+From:   Mikulas Patocka <mpatocka@redhat.com>
+X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
+To:     Nikos Tsironis <ntsironis@arrikto.com>
+cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "msnitzer@redhat.com >> msnitzer@redhat.com" <msnitzer@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "martin.petersen@oracle.com >> Martin K. Petersen" 
+        <martin.petersen@oracle.com>,
+        "roland@purestorage.com" <roland@purestorage.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "kbus @imap.gmail.com>> Keith Busch" <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
+        "zach.brown@ni.com" <zach.brown@ni.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
+        "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.com" <jack@suse.com>
+Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+In-Reply-To: <23895da7-bcec-d092-373a-c3d961ab5c48@arrikto.com>
+Message-ID: <alpine.LRH.2.02.2203090347500.17712@file01.intranet.prod.int.rdu2.redhat.com>
+References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com> <012723a9-2e9c-c638-4944-fa560e1b0df0@arrikto.com> <c4124f39-1ee9-8f34-e731-42315fee15f9@nvidia.com> <23895da7-bcec-d092-373a-c3d961ab5c48@arrikto.com>
+User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
 MIME-Version: 1.0
-References: <20220201223948.1455637-1-keescook@chromium.org>
- <164462189850.7606.6908949862618145181.b4-ty@oracle.com> <CAK=zhgpQcJkRKVNFHy6mDqV9hOyzFsV_uqOWur8UsNLRZy-VdA@mail.gmail.com>
- <yq1ee3blsqp.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1ee3blsqp.fsf@ca-mkp.ca.oracle.com>
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date:   Wed, 9 Mar 2022 12:14:35 +0530
-Message-ID: <CAK=zhgoiQ_ZeSO875DmLUrE2gGDRCUcPUdY9b9Yw+oftZ0=f1Q@mail.gmail.com>
-Subject: Re: [PATCH] scsi: mpt3sas: Convert to flexible arrays
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Kees Cook <keescook@chromium.org>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-hardening@vger.kernel.org,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000fe1f7a05d9c36efc"
+Content-Type: MULTIPART/MIXED; BOUNDARY="185206533-1881345822-1646815902=:17712"
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000fe1f7a05d9c36efc
-Content-Type: text/plain; charset="UTF-8"
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-On Wed, Mar 9, 2022 at 8:50 AM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
->
-> Sreekanth,
->
-> > I am observing below kernel panic when I load the driver with this
-> > patch changes. After reverting this patch changes then the driver is
-> > getting loaded successfully.
->
-> I am puzzled. The driver loads fine for me. I have verified that the
-> generated object file is identical before and after Kees' patch.
+--185206533-1881345822-1646815902=:17712
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-Looks like we will observe this issue only if DIF Type 2 drive is
-connected to the HBA. When this panic occurred I had connected one DIF
-Type2 drive to the HBA.
 
-Thanks,
-Sreekanth
 
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+On Tue, 8 Mar 2022, Nikos Tsironis wrote:
 
---000000000000fe1f7a05d9c36efc
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+> My work focuses mainly on improving the IOPs and latency of the
+> dm-snapshot target, in order to bring the performance of short-lived
+> snapshots as close as possible to bare-metal performance.
+> 
+> My initial performance evaluation of dm-snapshot had revealed a big
+> performance drop, while the snapshot is active; a drop which is not
+> justified by COW alone.
+> 
+> Using fio with blktrace I had noticed that the per-CPU I/O distribution
+> was uneven. Although many threads were doing I/O, only a couple of the
+> CPUs ended up submitting I/O requests to the underlying device.
+> 
+> The same issue also affects dm-clone, when doing I/O with sizes smaller
+> than the target's region size, where kcopyd is used for COW.
+> 
+> The bottleneck here is kcopyd serializing all I/O. Users of kcopyd, such
+> as dm-snapshot and dm-clone, cannot take advantage of the increased I/O
+> parallelism that comes with using blk-mq in modern multi-core systems,
+> because I/Os are issued only by a single CPU at a time, the one on which
+> kcopyd’s thread happens to be running.
+> 
+> So, I experimented redesigning kcopyd to prevent I/O serialization by
+> respecting thread locality for I/Os and their completions. This made the
+> distribution of I/O processing uniform across CPUs.
+> 
+> My measurements had shown that scaling kcopyd, in combination with
+> scaling dm-snapshot itself [1] [2], can lead to an eventual performance
+> improvement of ~300% increase in sustained throughput and ~80% decrease
+> in I/O latency for transient snapshots, over the null_blk device.
+> 
+> The work for scaling dm-snapshot has been merged [1], but,
+> unfortunately, I haven't been able to send upstream my work on kcopyd
+> yet, because I have been really busy with other things the last couple
+> of years.
+> 
+> I haven't looked into the details of copy offload yet, but it would be
+> really interesting to see how it affects the performance of random and
+> sequential workloads, and to check how, and if, scaling kcopyd affects
+> the performance, in combination with copy offload.
+> 
+> Nikos
 
-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
-5AGo2E3pe+2yEgkxKvM2fnniZHUiSjbrfKk6nl9RIXPOKUP5HntZFdA5XuNYXWM+HPs3O0AJwBm/
-VCZsZtkjVjxeBmTXiXDnxytdsHdGrHGymPfjJYatDu6d1KRVDlMCAwEAAaOCAd0wggHZMA4GA1Ud
-DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
-Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
-BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
-YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
-Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
-aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
-JwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
-BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUClVHbAvhzGT8
-s2/6xOf58NkGMQ8wDQYJKoZIhvcNAQELBQADggEBAENRsP1H3calKC2Sstg/8li8byKiqljCFkfi
-IhcJsjPOOR9UZnMFxAoH/s2AlM7mQDR7rZ2MxRuUnIa6Cp5W5w1lUJHktjCUHnQq5nIAZ9GH5SDY
-pgzbFsoYX8U2QCmkAC023FF++ZDJuc9aj0R/nhABxmUYErIze2jV/VO8Pj7TnCrBONZ/Qvf8G5CQ
-X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
-eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
-Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
-MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIBKosO6V87LGSqju5myS
-eGEwTogxQm+KPIpjwgg5UDfeMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDMwOTA2NDQ0N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
-BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCkYmwsncYY/ySmptIiEiH0hrIs5l1VstZz7GfL
-KuzI6iepMDewrfnO/9lpno2gOzpUdHmSfW7IVchG81qd8JAhAExEtQ0Oa17MSp5vsTtMoaRH5aa3
-VZZrUDtLh3rbALzsWmt06DBQAdGJSys4NfYghlP4QQ1EGmb+staB7gU9SjWrPf7L+Nymb/UIfRDV
-P8B/7LkROGNLMxw8HUglPvBVjtEWshelV6e8orq909JJ7pzkGCFqme2kl1dzHhMWJPTi2MJpXTTP
-vJUbG5K+RuoRguIhmd4C3OHEPNfu5zuKyjqDpHKjZwu6NUNU7I6GwjduORiupB+rLzt9jWRTBLMb
---000000000000fe1f7a05d9c36efc--
+Hi
+
+Note that you must submit kcopyd callbacks from a single thread, otherwise 
+there's a race condition in snapshot.
+
+The snapshot code doesn't take locks in the copy_callback and it expects 
+that the callbacks are serialized.
+
+Maybe, adding the locks to copy_callback would solve it.
+
+Mikulas
+--185206533-1881345822-1646815902=:17712--
+
