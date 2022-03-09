@@ -2,166 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5E97C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 12:48:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE877C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 15:50:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232841AbiCIMtF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Mar 2022 07:49:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41872 "EHLO
+        id S234039AbiCIPu6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Mar 2022 10:50:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232818AbiCIMsp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2022 07:48:45 -0500
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8AF827B1F;
-        Wed,  9 Mar 2022 04:47:45 -0800 (PST)
-Received: from dggpemm500023.china.huawei.com (unknown [172.30.72.56])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4KDBgH5NJVz1GCK2;
-        Wed,  9 Mar 2022 20:42:51 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500023.china.huawei.com (7.185.36.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Wed, 9 Mar 2022 20:47:40 +0800
-Received: from huawei.com (10.175.101.6) by dggpemm500017.china.huawei.com
- (7.185.36.178) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Wed, 9 Mar
- 2022 20:47:40 +0800
-From:   Wenchao Hao <haowenchao@huawei.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     Wu Bo <wubo40@huawei.com>, Zhiqiang Liu <liuzhiqiang26@huawei.com>,
-        <linfeilong@huawei.com>, Wenchao Hao <haowenchao@huawei.com>
-Subject: [PATCH v3 3/3] scsi:libiscsi: teradown iscsi_cls_conn gracefully
-Date:   Wed, 9 Mar 2022 20:57:59 -0500
-Message-ID: <20220310015759.3296841-4-haowenchao@huawei.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220310015759.3296841-1-haowenchao@huawei.com>
-References: <20220310015759.3296841-1-haowenchao@huawei.com>
+        with ESMTP id S234041AbiCIPu5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2022 10:50:57 -0500
+Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3A0D1342DC
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Mar 2022 07:49:57 -0800 (PST)
+Received: by mail-ej1-x62d.google.com with SMTP id r13so6021338ejd.5
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Mar 2022 07:49:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=arrikto-com.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=xrbpP/Yfwao8lnj7LaSM/uRQpgaSVRznTS0TTH/HjZY=;
+        b=s3xFNi6w/peDGqcEmc0BfMkPZn7cwxFxTcYpMhZo8mLd849lJJCJPAfTNkd3VaRKMn
+         8D/pjSsda3jU/kUBKgqXjBLnK+pfqfXsEJb+MLwdZg9xmpkHQylcEcckW1X1Ej7wxleM
+         Ocg1MWV+93+ARFiP/QbJy1epHrG9KrAALd91YORM/vgENm4v3zou2T2CrXDJY1TL81SQ
+         LAlXStVVmvhEUfG4kfQ4LJnb3TkAtXzEhDl4vxr5+owgko1gg5gks3ZdBIr/A+yDY/gM
+         RO33ihV+A5M7uWuDaf1/mtjmApBj24Up9s8gK/ksaVxOtT85uLj8B9Ov6cycxj929zDc
+         Fr+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=xrbpP/Yfwao8lnj7LaSM/uRQpgaSVRznTS0TTH/HjZY=;
+        b=iXSA7TdxC2qyX8Mcfe8Zm6oEViiZ35DlfTlvh7RnOeoYWVDoxl74V0Rj8TphHLE4vD
+         B+gd6XDIFBZflmHy+6x7pItBKAUuXC3HDFz73kTXqkLZ7NOpTpa4BSf2mUQZdJxDVxc3
+         CnzRH4uwXKl8OvJTAPnoA22VQku03kdaBwnUmP/2L21GLUe6zmVrQCvttt0dGhVyz+Qn
+         CBWjLWDGcqGxpOHAewrwgvAYECjjmz+RsXjzHCVkbUbnSdfL8djQKWyVql8ZWJOwNXIw
+         utH0P76UlOSSYkdM919FZtnf0u3wDIkB2MhrlrkvAId2KR9FtS90xHbNLpZwWqvdkoO8
+         drYQ==
+X-Gm-Message-State: AOAM532Tefo61ZZh92HV8nN4EyprCg139UV3qDn3icTsNQnp7X4atkya
+        RseJLDWLQ/WsgMfTnUzaLXBicA==
+X-Google-Smtp-Source: ABdhPJxZ5pBljQ9c4cS3Z9+taf/t5M3OBOhL/UO8YvG/idZkX4Ez6hrxTSX+wbR+RbFNFZdxzRpO9g==
+X-Received: by 2002:a17:907:7f2a:b0:6d6:df12:7f57 with SMTP id qf42-20020a1709077f2a00b006d6df127f57mr390349ejc.122.1646840996396;
+        Wed, 09 Mar 2022 07:49:56 -0800 (PST)
+Received: from [172.16.10.50] (213.16.174.189.dsl.dyn.forthnet.gr. [213.16.174.189])
+        by smtp.gmail.com with ESMTPSA id h8-20020a50ed88000000b004160630c980sm960188edr.62.2022.03.09.07.49.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 09 Mar 2022 07:49:55 -0800 (PST)
+Message-ID: <2015a35a-915c-351f-81cf-bd7dfe4502a1@arrikto.com>
+Date:   Wed, 9 Mar 2022 17:49:52 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+Content-Language: en-US
+To:     Mikulas Patocka <mpatocka@redhat.com>
+Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "msnitzer@redhat.com >> msnitzer@redhat.com" <msnitzer@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "martin.petersen@oracle.com >> Martin K. Petersen" 
+        <martin.petersen@oracle.com>,
+        "roland@purestorage.com" <roland@purestorage.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "kbus @imap.gmail.com>> Keith Busch" <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
+        "zach.brown@ni.com" <zach.brown@ni.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
+        "tytso@mit.edu" <tytso@mit.edu>, "jack@suse.com" <jack@suse.com>
+References: <f0e19ae4-b37a-e9a3-2be7-a5afb334a5c3@nvidia.com>
+ <012723a9-2e9c-c638-4944-fa560e1b0df0@arrikto.com>
+ <c4124f39-1ee9-8f34-e731-42315fee15f9@nvidia.com>
+ <23895da7-bcec-d092-373a-c3d961ab5c48@arrikto.com>
+ <alpine.LRH.2.02.2203090347500.17712@file01.intranet.prod.int.rdu2.redhat.com>
+From:   Nikos Tsironis <ntsironis@arrikto.com>
+In-Reply-To: <alpine.LRH.2.02.2203090347500.17712@file01.intranet.prod.int.rdu2.redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-commit 1b8d0300a3e9 ("scsi: libiscsi: Fix UAF in
-iscsi_conn_get_param()/iscsi_conn_teardown()") fixed an UAF in
-iscsi_conn_get_param() and introduced 2 tmp_xxx varibles, the
-implement looks ugly.
+On 3/9/22 10:51, Mikulas Patocka wrote:
+> 
+> Hi
+> 
+> Note that you must submit kcopyd callbacks from a single thread, otherwise
+> there's a race condition in snapshot.
+> 
 
-We can fix this UAF with the help of device_del() gracefully.
-Call iscsi_remove_conn() at the beginning of iscsi_conn_teardown would
-make userspace unable to see iscsi_cls_conn any more, then we can free
-memory safely.
-And remove iscsi_destroy_conn() by hand since it is not used now.
+Hi,
 
-Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
-Signed-off-by: Wu Bo <wubo40@huawei.com>
----
- drivers/scsi/libiscsi.c             | 10 +++++-----
- drivers/scsi/scsi_transport_iscsi.c | 27 +++++----------------------
- include/scsi/scsi_transport_iscsi.h |  1 -
- 3 files changed, 10 insertions(+), 28 deletions(-)
+Thanks for the feedback. Yes, I'm aware of that.
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 38e68b449c08..da583a39b307 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -3109,8 +3109,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- {
- 	struct iscsi_conn *conn = cls_conn->dd_data;
- 	struct iscsi_session *session = conn->session;
--	char *tmp_persistent_address = conn->persistent_address;
--	char *tmp_local_ipaddr = conn->local_ipaddr;
-+
-+	iscsi_remove_conn(cls_conn);
- 
- 	del_timer_sync(&conn->transport_timer);
- 
-@@ -3132,6 +3132,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- 	spin_lock_bh(&session->frwd_lock);
- 	free_pages((unsigned long) conn->data,
- 		   get_order(ISCSI_DEF_MAX_RECV_SEG_LEN));
-+	kfree(conn->persistent_address);
-+	kfree(conn->local_ipaddr);
- 	/* regular RX path uses back_lock */
- 	spin_lock_bh(&session->back_lock);
- 	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
-@@ -3142,9 +3144,7 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- 	spin_unlock_bh(&session->frwd_lock);
- 	mutex_unlock(&session->eh_mutex);
- 
--	iscsi_destroy_conn(cls_conn);
--	kfree(tmp_persistent_address);
--	kfree(tmp_local_ipaddr);
-+	iscsi_put_conn(cls_conn);
- }
- EXPORT_SYMBOL_GPL(iscsi_conn_teardown);
- 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index fc33000a6af9..d0f996d14782 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2165,7 +2165,11 @@ static int iscsi_iter_destroy_conn_fn(struct device *dev, void *data)
- {
- 	if (!iscsi_is_conn_dev(dev))
- 		return 0;
--	return iscsi_destroy_conn(iscsi_dev_to_conn(dev));
-+
-+	iscsi_remove_conn(iscsi_dev_to_conn(dev));
-+	iscsi_put_conn(iscsi_dev_to_conn(dev));
-+
-+	return 0;
- }
- 
- void iscsi_remove_session(struct iscsi_cls_session *session)
-@@ -2437,27 +2441,6 @@ void iscsi_remove_conn(struct iscsi_cls_conn *conn)
- }
- EXPORT_SYMBOL_GPL(iscsi_remove_conn);
- 
--/**
-- * iscsi_destroy_conn - destroy iscsi class connection
-- * @conn: iscsi cls session
-- *
-- * This can be called from a LLD or iscsi_transport.
-- */
--int iscsi_destroy_conn(struct iscsi_cls_conn *conn)
--{
--	unsigned long flags;
--
--	spin_lock_irqsave(&connlock, flags);
--	list_del(&conn->conn_list);
--	spin_unlock_irqrestore(&connlock, flags);
--
--	transport_unregister_device(&conn->dev);
--	ISCSI_DBG_TRANS_CONN(conn, "Completing conn destruction\n");
--	device_unregister(&conn->dev);
--	return 0;
--}
--EXPORT_SYMBOL_GPL(iscsi_destroy_conn);
--
- void iscsi_put_conn(struct iscsi_cls_conn *conn)
- {
- 	put_device(&conn->dev);
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 4af6768e8195..aedbc4488149 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -447,7 +447,6 @@ extern int iscsi_add_conn(struct iscsi_cls_conn *conn);
- extern void iscsi_remove_conn(struct iscsi_cls_conn *conn);
- extern void iscsi_put_conn(struct iscsi_cls_conn *conn);
- extern void iscsi_get_conn(struct iscsi_cls_conn *conn);
--extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
- extern void iscsi_unblock_session(struct iscsi_cls_session *session);
- extern void iscsi_block_session(struct iscsi_cls_session *session);
- extern int iscsi_scan_finished(struct Scsi_Host *shost, unsigned long time);
--- 
-2.32.0
+> The snapshot code doesn't take locks in the copy_callback and it expects
+> that the callbacks are serialized.
+> 
+> Maybe, adding the locks to copy_callback would solve it.
+> 
 
+That's what I did. I used a lock to ensure that kcopyd callbacks are
+serialized for persistent snapshots.
+
+For transient snapshots we can lift this limitation, and complete
+pending exceptions out-of-oder and in "parallel", i.e., without
+explicitly serializing kcopyd callbacks. The locks in pending_complete()
+are enough in this case.
+
+Nikos
