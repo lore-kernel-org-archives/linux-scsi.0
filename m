@@ -2,127 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D637CC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 01:33:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7558DC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 01:43:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230296AbiCIBeb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Mar 2022 20:34:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34788 "EHLO
+        id S230401AbiCIBor (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Mar 2022 20:44:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230459AbiCIBe2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 20:34:28 -0500
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AD04B2E38
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 17:33:23 -0800 (PST)
-Received: from dggpeml500025.china.huawei.com (unknown [172.30.72.56])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4KCvjF0M33z1GC1f;
-        Wed,  9 Mar 2022 09:28:33 +0800 (CST)
-Received: from dggpeml500019.china.huawei.com (7.185.36.137) by
- dggpeml500025.china.huawei.com (7.185.36.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Wed, 9 Mar 2022 09:33:21 +0800
-Received: from [10.174.179.189] (10.174.179.189) by
- dggpeml500019.china.huawei.com (7.185.36.137) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Wed, 9 Mar 2022 09:33:20 +0800
-Subject: Re: [PATCH 08/12] scsi: iscsi: remove unneeded task state check
-To:     Mike Christie <michael.christie@oracle.com>, <lduncan@suse.com>,
-        <cleech@redhat.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <jejb@linux.ibm.com>
-References: <20220308002747.122682-1-michael.christie@oracle.com>
- <20220308002747.122682-9-michael.christie@oracle.com>
-From:   Wu Bo <wubo40@huawei.com>
-Message-ID: <69c2ba50-ddb1-4fee-bfb0-005917d2f075@huawei.com>
-Date:   Wed, 9 Mar 2022 09:33:20 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.2.2
+        with ESMTP id S230459AbiCIBoq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 20:44:46 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 309D8E7F5C
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 17:43:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1646790217;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3gBo9lqNpleo37BkiSg29OXHQwru/d5CaOaGabOnuKE=;
+        b=bcvTjPjZyMX3Y82t3qca2Jn0N5TVJDprAigGYiaEoXCnPr895uawIW6dp3em16YFPKZ0tt
+        teInP1kcocU2Ag+GWPJjc6TQk0vHyFPd+hn2g1YqPA9nc31sx/gZwGvF25V3o7Ii4x0n7A
+        IYYisYzmlSsSnYijckSETvQIgu+nr80=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-435-AjrWlyGPNEyfi6YojHIt2A-1; Tue, 08 Mar 2022 20:43:34 -0500
+X-MC-Unique: AjrWlyGPNEyfi6YojHIt2A-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DDC8D1006AA6;
+        Wed,  9 Mar 2022 01:43:32 +0000 (UTC)
+Received: from T590 (ovpn-8-34.pek2.redhat.com [10.72.8.34])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1F4D660657;
+        Wed,  9 Mar 2022 01:43:28 +0000 (UTC)
+Date:   Wed, 9 Mar 2022 09:43:24 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     bvanassche@acm.org, lduncan@suse.com, cleech@redhat.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+Subject: Re: [RFC PATCH 1/4] scsi: Allow drivers to set BLK_MQ_F_BLOCKING
+Message-ID: <YigGPK3zLAN87mSS@T590>
+References: <20220308003957.123312-1-michael.christie@oracle.com>
+ <20220308003957.123312-2-michael.christie@oracle.com>
+ <Yif6jjlpPTEYpcAT@T590>
+ <b1b7fa2c-ade3-987d-e240-fb6acb421b99@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20220308002747.122682-9-michael.christie@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.189]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpeml500019.china.huawei.com (7.185.36.137)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b1b7fa2c-ade3-987d-e240-fb6acb421b99@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/3/8 8:27, Mike Christie wrote:
-> The patch:
+On Tue, Mar 08, 2022 at 07:17:13PM -0600, Mike Christie wrote:
+> On 3/8/22 6:53 PM, Ming Lei wrote:
+> > On Mon, Mar 07, 2022 at 06:39:54PM -0600, Mike Christie wrote:
+> >> The software iscsi driver's queuecommand can block and taking the extra
+> >> hop from kblockd to its workqueue results in a performance hit. Allowing
+> >> it to set BLK_MQ_F_BLOCKING and transmit from that context directly
+> >> results in a 20-30% improvement in IOPs for workloads like:
+> >>
+> >> fio --filename=/dev/sdb --direct=1 --rw=randrw --bs=4k --ioengine=libaio
+> >> --iodepth=128  --numjobs=1
+> >>
+> >> and for all write workloads.
+> > 
+> > This single patch shouldn't make any difference for iscsi, so please
+> > make it as last one if performance improvement data is provided
+> > in commit log.
 > 
-> commit 5923d64b7ab6 ("scsi: libiscsi: Drop taskqueuelock")
+> Ok.
 > 
-> added an extra task->state because for
+> > 
+> > Also is there performance effect for other worloads? such as multiple
+> > jobs? iscsi is SQ hardware, so if driver is blocked in ->queuecommand()
+> > via BLK_MQ_F_BLOCKING, other contexts can't submit IO to scsi ML any more.
 > 
-> commit 6f8830f5bbab ("scsi: libiscsi: add lock around task lists to fix
-> list corruption regression")
+> If you mean multiple jobs running on the same connection/session then
+> they are all serialized now. A connection can only do 1 cmd at a time.
+> There's a big mutex around it in the network layer, so multiple jobs
+> just suck no matter what.
+
+I guess one block device can only bind to one isci connection, given the
+1 cmd per connection limit, so looks multiple jobs is fine.
+
 > 
-> we didn't know why we ended up with cmds on the list and thought it
-> might have been a bad target sending a response while we were still
-> sending the cmd. We were never able to get a target to send us a response
-> early, because it turns out the bug was just a race in libiscsi/
-> libiscsi_tcp where
+> If you mean multiple jobs from different connection/sessions, then the
+> iscsi code with this patchset blocks only because the network layer
+> takes a mutex for a short time. We configure it to not block for things
+> like socket space, memory allocations, we do zero copy IO normally, etc
+> so it's quick.
 > 
-> 1. iscsi_tcp_r2t_rsp queues a r2t to tcp_task->r2tqueue.
-> 2. iscsi_tcp_task_xmit runs iscsi_tcp_get_curr_r2t and sees we have a r2t.
-> It dequeues it and iscsi_tcp_task_xmit starts to process it.
-> 3. iscsi_tcp_r2t_rsp runs iscsi_requeue_task and puts the task on the
-> requeue list.
-> 4. iscsi_tcp_task_xmit sends the data for r2t. This is the final chunk of
-> data, so the cmd is done.
-> 5. target sends the response.
-> 6. On a different CPU from #3, iscsi_complete_task processes the response.
-> Since there was no common lock for the list, the lists/tasks pointers are
-> not fully in sync, so could end up with list corruption.
-> 
-> Since it was just a race on our side, this patch removes the extra check
-> and fixes up the comments.
-> 
-> Reviewed-by: Lee Duncan <lduncan@suse.com>
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> ---
->   drivers/scsi/libiscsi.c | 13 ++++++++-----
->   1 file changed, 8 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 0a0076144874..5c74ab92725f 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -567,16 +567,19 @@ static bool cleanup_queued_task(struct iscsi_task *task)
->   	struct iscsi_conn *conn = task->conn;
->   	bool early_complete = false;
->   
-> -	/* Bad target might have completed task while it was still running */
-> +	/*
-> +	 * We might have raced where we handled a R2T early and got a response
-> +	 * but have not yet taken the task off the requeue list, then a TMF or
-> +	 * recovery happened and so we can still see it here.
-> +	 */
->   	if (task->state == ISCSI_TASK_COMPLETED)
->   		early_complete = true;
->   
->   	if (!list_empty(&task->running)) {
->   		list_del_init(&task->running);
->   		/*
-> -		 * If it's on a list but still running, this could be from
-> -		 * a bad target sending a rsp early, cleanup from a TMF, or
-> -		 * session recovery.
-> +		 * If it's on a list but still running this could be cleanup
-> +		 * from a TMF or session recovery.
->   		 */
->   		if (task->state == ISCSI_TASK_RUNNING ||
->   		    task->state == ISCSI_TASK_COMPLETED)
-> @@ -1484,7 +1487,7 @@ static int iscsi_xmit_task(struct iscsi_conn *conn, struct iscsi_task *task,
->   	}
->   	/* regular RX path uses back_lock */
->   	spin_lock(&conn->session->back_lock);
-> -	if (rc && task->state == ISCSI_TASK_RUNNING) {
-> +	if (rc) {
->   		/*
->   		 * get an extra ref that is released next time we access it
->   		 * as conn->task above.
-> 
-Reviewed-by: Wu Bo <wubo40@huawei.com>
+> We also can do up to workqueues max_active limit worth of calls so
+> other things can normally send IO. We haven't found a need to increase
+> it yet.
+ 
+I meant that hctx->run_work is required for blk-mq to dispatch IO, iscsi is
+SQ HBA, so there is only single work_struct. If one context is blocked in
+->queue_rq or ->queuecommand, other contexts can't submit IO to driver any
+more.
+
+
+Thanks,
+Ming
 
