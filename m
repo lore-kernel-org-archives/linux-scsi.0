@@ -2,98 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CD95C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 06:36:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EFDDC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 06:44:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229755AbiCIGhG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Mar 2022 01:37:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58138 "EHLO
+        id S230111AbiCIGpr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Mar 2022 01:45:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbiCIGhF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2022 01:37:05 -0500
-Received: from mail-oi1-x22d.google.com (mail-oi1-x22d.google.com [IPv6:2607:f8b0:4864:20::22d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1ECF15F344
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 22:36:07 -0800 (PST)
-Received: by mail-oi1-x22d.google.com with SMTP id s207so1695697oie.11
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Mar 2022 22:36:07 -0800 (PST)
+        with ESMTP id S230097AbiCIGpp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2022 01:45:45 -0500
+Received: from mail-ot1-x32a.google.com (mail-ot1-x32a.google.com [IPv6:2607:f8b0:4864:20::32a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0510B148656
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 22:44:48 -0800 (PST)
+Received: by mail-ot1-x32a.google.com with SMTP id k9-20020a056830242900b005ad25f8ebfdso1051475ots.7
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Mar 2022 22:44:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=DoamTd+LZvxRmyKsFwpjETAhBi5xlknlmE2qD07IYWU=;
-        b=UHDAZDcbg4EtAh0ylLLGXzmpVXAqY01f25tTCcg+wfmV9Rbd+lCbOC4bgFVXJ+kwDX
-         mxE9eCRtglEKxsaznBoQMtobrALnlBOcarwhFM5/GKt7pelmVr2xiL1sxNs+q8pOEdRb
-         SwSVY0U6YROG3Ai97y6eEomYHwPEdubKgVVcQ=
+        bh=/KXqhUhLCj37cnN8FQ3YmPZW2H5oywwXFYRuqkdkjoc=;
+        b=AafP3swPlBbKzUdvsO/kYxs4KC8aCy11Pq6j3dZaqQmQmQgAtUC3bVRjLjGph/T3k0
+         gBmAN4LzA7ax7q6fOobyouPADo9vAC7ALidoLGu2w74l9kiTSud8905055nWdU04h++T
+         U6c6tfgqOLZPLlE0xNsLwGHq/iBJH3u8R/ES4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=DoamTd+LZvxRmyKsFwpjETAhBi5xlknlmE2qD07IYWU=;
-        b=qt23TmCASw/R0qKoJ7Ixlf/RgMPFkEKnPQVrmVkg8HM4RbjE8b11Ig8zeqxwbkoTos
-         XX/rSVpDKOOcAvOWXpqULVSL46amdm04kQRdDL5BTOs6ockQnjZfLDcpHELWehBnd//X
-         xcxL79JW96XLpgX7C84g1AfwNIAMiWI0cTNbhyS/YsRh32GZ2MUHoae456Ql2FJiRfeJ
-         zlkoV6SdX2GoMwYAitZuLZryDCH713veE9bBai/TM8ALW4r+FFP2ITZUPlB7qFKXwM36
-         uvCXYnvqPf8ZSOjGVjRsXnQx7XzhAVIh/27s6RxIoHe2C4woYYTrTbqDXdCNv0aE/el5
-         XdQA==
-X-Gm-Message-State: AOAM530ovauQ3bKlZ+mp1OM8Ehk+GPohaSAbx2D8MC6sttABmUNbuqsx
-        I6hgn1+JNAPJbOhq0aRgzFlHofE6pJiFjB5+van0fA==
-X-Google-Smtp-Source: ABdhPJxzFZPx6GhKG27Hd79bsK031cpOQisLZOzYoGMc9F+anBPjnL08SJvozOipGzdOhsGegeTxMFDMglKT8AGgQ44=
-X-Received: by 2002:a05:6808:1643:b0:2d9:a01a:4bc3 with SMTP id
- az3-20020a056808164300b002d9a01a4bc3mr5179326oib.234.1646807767195; Tue, 08
- Mar 2022 22:36:07 -0800 (PST)
+        bh=/KXqhUhLCj37cnN8FQ3YmPZW2H5oywwXFYRuqkdkjoc=;
+        b=1CI0ck/ITB+7JhDUNM1k0T805ISCG6e8N0Af8+19tM0Q2RbpHKfD3d31Nj3DWOm+9s
+         dtmUiz+4ymcQ6vQ4xifE9OaIq1CUcAM1to7WFM23o+uCxbhXPsnXlcUl457XmkA99a4O
+         2YBcjrwDaXy4JMjreuVdXnyhljeeGsWSIPVdmXRJVOKX8GpStKN7LKaXi9m+dJgg5ATM
+         CpUETKB7ro/Cef6U/mnqSMCsjO8kehqFLS/ZTUA8PPJ5W6USE8FzxfQKrOywOY66rDpc
+         aui2g2fVggJE8wwAU3D4kxAE3qGNMbPiNBlE4dyQOf3IiFfMZUQeKknb7bIWO6Afsp+Y
+         YiiA==
+X-Gm-Message-State: AOAM531TJeJI4dTDtm6q09Jyia3BDv6XdVHWsXVdSIeB2+LbPseG80IG
+        Vog1ZeAEgu9elVDM5VS/m6hV4KzLc1rfD0LuM+wEiA==
+X-Google-Smtp-Source: ABdhPJwgeempI9YkdJWOmlVVxhl8MwmoBOdAA7Us6mz2Gm7XPGL0yiUsvDgdWa84lwk3GbH8bhjnKcqPUNxgTgf2thI=
+X-Received: by 2002:a05:6830:25d6:b0:5b2:5015:f015 with SMTP id
+ d22-20020a05683025d600b005b25015f015mr2741840otu.127.1646808287162; Tue, 08
+ Mar 2022 22:44:47 -0800 (PST)
 MIME-Version: 1.0
-References: <20220307234854.148145-1-damien.lemoal@opensource.wdc.com> <yq1a6dzkcgb.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1a6dzkcgb.fsf@ca-mkp.ca.oracle.com>
+References: <20220201223948.1455637-1-keescook@chromium.org>
+ <164462189850.7606.6908949862618145181.b4-ty@oracle.com> <CAK=zhgpQcJkRKVNFHy6mDqV9hOyzFsV_uqOWur8UsNLRZy-VdA@mail.gmail.com>
+ <yq1ee3blsqp.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1ee3blsqp.fsf@ca-mkp.ca.oracle.com>
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date:   Wed, 9 Mar 2022 12:05:56 +0530
-Message-ID: <CAK=zhgosaNGejvNq9ANzhuHqwLSxfckfdhLAX_r2y=9DN=oAvA@mail.gmail.com>
-Subject: Re: [PATCH v3 0/5] Fix mpt3sas driver sparse warnings
+Date:   Wed, 9 Mar 2022 12:14:35 +0530
+Message-ID: <CAK=zhgoiQ_ZeSO875DmLUrE2gGDRCUcPUdY9b9Yw+oftZ0=f1Q@mail.gmail.com>
+Subject: Re: [PATCH] scsi: mpt3sas: Convert to flexible arrays
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
+Cc:     Kees Cook <keescook@chromium.org>,
         Sathya Prakash <sathya.prakash@broadcom.com>,
         Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-hardening@vger.kernel.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000fe689105d9c34ff9"
+        boundary="000000000000fe1f7a05d9c36efc"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000fe689105d9c34ff9
+--000000000000fe1f7a05d9c36efc
 Content-Type: text/plain; charset="UTF-8"
 
-On Wed, Mar 9, 2022 at 9:26 AM Martin K. Petersen
+On Wed, Mar 9, 2022 at 8:50 AM Martin K. Petersen
 <martin.petersen@oracle.com> wrote:
 >
 >
 > Sreekanth,
 >
-> > This series fix (remove) all sparse warnings generated when compiling
-> > the mpt3sas driver. All warnings are related to __iomem access and
-> > endianness.
+> > I am observing below kernel panic when I load the driver with this
+> > patch changes. After reverting this patch changes then the driver is
+> > getting loaded successfully.
 >
-> Please review this series and validate the patch 5 modification.
+> I am puzzled. The driver loads fine for me. I have verified that the
+> generated object file is identical before and after Kees' patch.
 
-Martin,
-This patch set looks good, but before acknowledging this patch set I
-just wanted to do some basic testing on a big endian machine.
-Currently I don't have a big endian machine, internally I am checking
-to get access to big endian machines. Meanwhile if anyone does a basic
-testing on any big endian machine then please let me know. I will add
-the acknowledgement signature.
+Looks like we will observe this issue only if DIF Type 2 drive is
+connected to the HBA. When this panic occurred I had connected one DIF
+Type2 drive to the HBA.
 
 Thanks,
 Sreekanth
 
 >
-> Thanks!
->
 > --
 > Martin K. Petersen      Oracle Linux Engineering
 
---000000000000fe689105d9c34ff9
+--000000000000fe1f7a05d9c36efc
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -164,13 +164,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIO9f+rg/yxaTpeo4Y7QQ
-FDSoCQ/TpgZxDvrfZR9hjBrdMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDMwOTA2MzYwN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIBKosO6V87LGSqju5myS
+eGEwTogxQm+KPIpjwgg5UDfeMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDMwOTA2NDQ0N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCmLb4FGO1PDb14Ja5EqPF2kf03mcvag/kP+0J+
-pC2ArPmiGdH27Hc+brxcbY04ZrmXiAMNPnAsqWRcG8r2CTDmZ0RJ7msQkGYimVNU/YCmwG0OBrEA
-wEPFMZaBcddcaMuWfY5UxlhqQ2JUi5uj1JEitOVnT68EmuftgtChEuV4fiEv6Dep9Rv4r/0ykmkZ
-xJvNsPOuLBG+ajZ/FV2WnUy297Dl8Qe/FGsrR1s9b9KseQd8vZYVeuh605DnQ7VOp/9Nj3yqBylZ
-Xx20RtcNX7ZZh1PJSlyCLX0GjHdbIm9kb+gk30LWOm+AL9RdKrYZlDa7WcGwx+dEctpxjlLAtqoh
---000000000000fe689105d9c34ff9--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCkYmwsncYY/ySmptIiEiH0hrIs5l1VstZz7GfL
+KuzI6iepMDewrfnO/9lpno2gOzpUdHmSfW7IVchG81qd8JAhAExEtQ0Oa17MSp5vsTtMoaRH5aa3
+VZZrUDtLh3rbALzsWmt06DBQAdGJSys4NfYghlP4QQ1EGmb+staB7gU9SjWrPf7L+Nymb/UIfRDV
+P8B/7LkROGNLMxw8HUglPvBVjtEWshelV6e8orq909JJ7pzkGCFqme2kl1dzHhMWJPTi2MJpXTTP
+vJUbG5K+RuoRguIhmd4C3OHEPNfu5zuKyjqDpHKjZwu6NUNU7I6GwjduORiupB+rLzt9jWRTBLMb
+--000000000000fe1f7a05d9c36efc--
