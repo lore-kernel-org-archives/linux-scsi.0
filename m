@@ -2,62 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FCA0C43217
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 01:08:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8AD0C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 01:10:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229823AbiCIBJw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Mar 2022 20:09:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57458 "EHLO
+        id S230070AbiCIBLv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Mar 2022 20:11:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230113AbiCIBJN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 20:09:13 -0500
-Received: from out30-43.freemail.mail.aliyun.com (out30-43.freemail.mail.aliyun.com [115.124.30.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1807DD96E;
-        Tue,  8 Mar 2022 16:50:50 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R741e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04357;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0V6gLVjG_1646787034;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0V6gLVjG_1646787034)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Wed, 09 Mar 2022 08:50:48 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     aacraid@microsemi.com
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] scsi: aacraid: Clean up some inconsistent indenting
-Date:   Wed,  9 Mar 2022 08:50:31 +0800
-Message-Id: <20220309005031.126504-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        with ESMTP id S229971AbiCIBLm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 20:11:42 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C3CD8113D97
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 16:54:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1646787242;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=LRdaBa2QKiuG4EBT2/d/M9ZBpb/k6yDqa1K8uu98Rcg=;
+        b=PDvQ4XYGdrAIm+T2majGJLA5thIPwZyDeVGZyXK8BvoPTml6n0zqIHyAZVABZ4gHMRwHds
+        7RNniUapQcC6AW8wSSvVin1f3KXaf2XlaDeEwEdO+/b4VvPem10q/A1l6ZJMDvVq2pMSns
+        NhTw3tGNk4xdIjG1ZwwTz0GBbT9yWUg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-549-ej1psXdBNDKwIqUSmkko1g-1; Tue, 08 Mar 2022 19:53:59 -0500
+X-MC-Unique: ej1psXdBNDKwIqUSmkko1g-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 928E4801DDC;
+        Wed,  9 Mar 2022 00:53:58 +0000 (UTC)
+Received: from T590 (ovpn-8-34.pek2.redhat.com [10.72.8.34])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id F0D384BC45;
+        Wed,  9 Mar 2022 00:53:38 +0000 (UTC)
+Date:   Wed, 9 Mar 2022 08:53:34 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     bvanassche@acm.org, lduncan@suse.com, cleech@redhat.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+Subject: Re: [RFC PATCH 1/4] scsi: Allow drivers to set BLK_MQ_F_BLOCKING
+Message-ID: <Yif6jjlpPTEYpcAT@T590>
+References: <20220308003957.123312-1-michael.christie@oracle.com>
+ <20220308003957.123312-2-michael.christie@oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220308003957.123312-2-michael.christie@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Eliminate the follow smatch warning:
+On Mon, Mar 07, 2022 at 06:39:54PM -0600, Mike Christie wrote:
+> The software iscsi driver's queuecommand can block and taking the extra
+> hop from kblockd to its workqueue results in a performance hit. Allowing
+> it to set BLK_MQ_F_BLOCKING and transmit from that context directly
+> results in a 20-30% improvement in IOPs for workloads like:
+> 
+> fio --filename=/dev/sdb --direct=1 --rw=randrw --bs=4k --ioengine=libaio
+> --iodepth=128  --numjobs=1
+> 
+> and for all write workloads.
 
-drivers/scsi/aacraid/linit.c:867 aac_eh_tmf_hard_reset_fib() warn:
-inconsistent indenting.
+This single patch shouldn't make any difference for iscsi, so please
+make it as last one if performance improvement data is provided
+in commit log.
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- drivers/scsi/aacraid/linit.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Also is there performance effect for other worloads? such as multiple
+jobs? iscsi is SQ hardware, so if driver is blocked in ->queuecommand()
+via BLK_MQ_F_BLOCKING, other contexts can't submit IO to scsi ML any more.
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index b91b72b923ec..9c27bc37e5de 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -864,7 +864,7 @@ static u8 aac_eh_tmf_hard_reset_fib(struct aac_hba_map_info *info,
- 	rst->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
- 	fib->hbacmd_size = sizeof(*rst);
- 
--       return HBA_IU_TYPE_SATA_REQ;
-+	return HBA_IU_TYPE_SATA_REQ;
- }
- 
- static void aac_tmf_callback(void *context, struct fib *fibptr)
--- 
-2.20.1.7.g153144c
+
+thanks,
+Ming
 
