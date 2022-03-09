@@ -2,113 +2,188 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 121BEC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 01:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70329C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 01:21:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230283AbiCIBOo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Mar 2022 20:14:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35586 "EHLO
+        id S229968AbiCIBWU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Mar 2022 20:22:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231954AbiCIBNy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 20:13:54 -0500
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7833CE448D
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 16:58:28 -0800 (PST)
-Received: by mail-pj1-x102d.google.com with SMTP id e3so755774pjm.5
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Mar 2022 16:58:28 -0800 (PST)
+        with ESMTP id S231162AbiCIBWN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 20:22:13 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22FDC23D
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 17:19:01 -0800 (PST)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 228M8uDp010008;
+        Wed, 9 Mar 2022 01:17:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=XeeXPnnOS1pShcNUOYXz3RoUI1QcV4EkrN9LaNmqLDM=;
+ b=LjfTYR5LREd9j4DJ87rZzvuCBvISgcCkLEP91OkRau/NaYtDwFuELloq1Y9xZ6YE7tHj
+ 5IFCagyScfni6kH/Wb/u7Sxgr6stGfyU+ZuuIXEzvBipCEsVW5rTGgsDWH5WdrCEsvlm
+ VZoi0veDQU1pqLLdZDWkAI3rHf4uFmCTfztQR/EGYGA5OUC9Yu8CvKUE/risBCYnTd0T
+ uHuvoyvfrWApD5dontgZEWZfoxUVOGQbKH9/722YWFWEh9AM/TY0EZXF7c6lD8sboh7o
+ L9cmddSaenxc54Wyenh/cCzoZ7v2ZYYPvd0Zb1Dj/Jzmdk8g/Y04hpNyTLgRgK8+tosI vg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3ekyrararf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 09 Mar 2022 01:17:19 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 2291FveY015800;
+        Wed, 9 Mar 2022 01:17:18 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2174.outbound.protection.outlook.com [104.47.56.174])
+        by aserp3030.oracle.com with ESMTP id 3ekwwch1gs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 09 Mar 2022 01:17:18 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=K3bSK0pzfwcFWddlInn35TwGnv7fSrlrGi7tu1xktTBntz7FRTASmTlU6OtuCzw61cwrwVs35jnwBta8cnO+uTWFqbb/uYXQgv0Vm3dcUcXSQzMPwVhyXlbK2GbRYjcA5kR7wla7spfGpqFuioCOn46xBcSH2Qmz+ckinxqDH0LFyeJYz1MG6t28tn+wocmXzTU5RCnnvMe9bNwf+QNy0+UuQofyTk2qssa4MRveW6fjcFoTs7VabMcd8uAhjiCtPPExfCntk1gGK9tHISWama65nOogVs/Gs6U1QzaG3Xc11O955AE0FrNFQwyQ8kArmVd4Kv8dVhoZEui+zFFUqQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=XeeXPnnOS1pShcNUOYXz3RoUI1QcV4EkrN9LaNmqLDM=;
+ b=MnHJj6Wzt/by5kiK7UGeketmMnQzJT5OZyXjUMTyDFMbGboPwGI0PoDn5g9HcRlIkFQ7mAty+loXtk2ISOfwrSQtI2iOKGnX+BWElfKC6SoMRdz2e8+ZB8Qh9NoRkpsjrRIkkiLvFrGnmdBZHB86V4PXUFMZIbW4yizAf2UciVaZLkfqUk82x0/px5ynCUctxk2uz/yjMCV2kl/GCt3cR/wtziELtFA7U1Ea5/yzzQkHTxNI2mlaas4PxN8LQvypYtPfdFXXUuYYn+kNrorZX3oftORyjBJGOwi7Az1MdKu5iRz3X2sTeEQyuQ7X1lH+GexEmYKD8Eht1QCYCY5xDA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:in-reply-to:references:subject:message-id:date
-         :mime-version:content-transfer-encoding;
-        bh=n3kOWYi00wB/JSBNH3Nkdw571Dwb7Z4bxoeFT/f7d74=;
-        b=qDe3CBPnszracgGZ3QHhnX2rqwCMCDyq1b/oMf/CwBtfCmovbYpnAA+VSbJJn6Xa48
-         JtAXVaWA/XjICwCBqyZLkWAgL4gh3yktjXHABN4AEkIRHgy9Cog0P4jN2vZFDx3MEgHx
-         nWDKS8ytclYRe1YHJKzjrhpXXxuI+ewUOlf/Jlbh2/zBxchqIrPm+qTJzFMIGMJitB9i
-         puba+9tOjqVVXsS6wSeZZ7lEUVsEhWIPolVuFEBHYjkXuf3VXVu7ggF0vTR3+lI80jWl
-         ECTGd9vaoR8txjEJk8EqcxqVLMahgNMBWlKkHgTwwuXvp/rlnSIwoN1V5Sg4HWvF8tCn
-         1t5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
-         :message-id:date:mime-version:content-transfer-encoding;
-        bh=n3kOWYi00wB/JSBNH3Nkdw571Dwb7Z4bxoeFT/f7d74=;
-        b=HDs5eAqZD6nyly93WXjKp46dW3GkpkcW7SjlAAXAPRS7+gfMM0ptFN0SvrllL3rPb8
-         fCrJUl3zHDHwVJ557iKvogN666N9PDOJpGEBLcOhdPpOtcdJxkmstzQ+o4voFOBn4EC0
-         3wITZ2pUBIsMmqyg7i5O0ZzqwfValfuIrZ20xKBe9emcAajLSLe9vb5QvE7xf+6Iv71u
-         MRgyLteUW0seDhQfiHVl4a/gVvBddFEY2Z+klSkPc7e0moMILmE2rBHbUjQoU7UzK8qT
-         c6YnoNb5pvptGbAsN5fwNSaYr5MfYNkJ8aDuxurfpBbN8/yWS7DhC4s0gr6WJbGuOHyS
-         6x1A==
-X-Gm-Message-State: AOAM532Li2cgEnekM8WKIvtiBc7yNf6Qs1Vt38FFOGsartLX2GP1wPJy
-        YhSZJF2Ljyt2EzHvmkQF1JxY/A==
-X-Google-Smtp-Source: ABdhPJydwoFGLZgcz4NmuS/ionLpQBPtHiioJnqmd0mjxHWgfmJTXxpQKkwIkBWtrUrCPm/y2MEKAw==
-X-Received: by 2002:a17:902:930b:b0:14d:b0c0:1f71 with SMTP id bc11-20020a170902930b00b0014db0c01f71mr20409658plb.113.1646787507899;
-        Tue, 08 Mar 2022 16:58:27 -0800 (PST)
-Received: from [127.0.1.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id e14-20020a056a001a8e00b004e136d54a15sm298627pfv.105.2022.03.08.16.58.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Mar 2022 16:58:27 -0800 (PST)
-From:   Jens Axboe <axboe@kernel.dk>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-In-Reply-To: <20220308055200.735835-1-hch@lst.de>
-References: <20220308055200.735835-1-hch@lst.de>
-Subject: Re: move more work to disk_release v4
-Message-Id: <164678750695.407482.16938028641587368987.b4-ty@kernel.dk>
-Date:   Tue, 08 Mar 2022 17:58:26 -0700
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XeeXPnnOS1pShcNUOYXz3RoUI1QcV4EkrN9LaNmqLDM=;
+ b=yvj8yp5aO1eZFrfWL2uXZMtT1vdQmI7lzKhleJvZHQdXAfdIl0PdYSbNbVmGwbw1WzjHz/8unhFl+VzruroHBuvLBXHt8FXB+YK2KTeppz0ymPiKfmb+1N76HUSMiNAn+cfIF1SNdoZHDHzDzyZmf8iiC+rTyvK/+mVD2gP5FWo=
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
+ CH2PR10MB3990.namprd10.prod.outlook.com (2603:10b6:610:11::18) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5038.15; Wed, 9 Mar 2022 01:17:16 +0000
+Received: from DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::3dd8:6b8:e2e6:c3a2]) by DM5PR10MB1466.namprd10.prod.outlook.com
+ ([fe80::3dd8:6b8:e2e6:c3a2%12]) with mapi id 15.20.5038.027; Wed, 9 Mar 2022
+ 01:17:16 +0000
+Message-ID: <b1b7fa2c-ade3-987d-e240-fb6acb421b99@oracle.com>
+Date:   Tue, 8 Mar 2022 19:17:13 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.2
+Subject: Re: [RFC PATCH 1/4] scsi: Allow drivers to set BLK_MQ_F_BLOCKING
+Content-Language: en-US
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     bvanassche@acm.org, lduncan@suse.com, cleech@redhat.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+References: <20220308003957.123312-1-michael.christie@oracle.com>
+ <20220308003957.123312-2-michael.christie@oracle.com> <Yif6jjlpPTEYpcAT@T590>
+From:   Mike Christie <michael.christie@oracle.com>
+In-Reply-To: <Yif6jjlpPTEYpcAT@T590>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: DM5PR19CA0050.namprd19.prod.outlook.com
+ (2603:10b6:3:116::12) To DM5PR10MB1466.namprd10.prod.outlook.com
+ (2603:10b6:3:b::7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: aaaadc8c-5c10-446c-7a82-08da016a8c58
+X-MS-TrafficTypeDiagnostic: CH2PR10MB3990:EE_
+X-Microsoft-Antispam-PRVS: <CH2PR10MB399033BF88B297686A3E28A6F10A9@CH2PR10MB3990.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: ChRb3YqZnrCQj6o2iZBVOLg2OBbK5+uuDfdcd7KY2JfIxx025oRnObOH8gaIQJsdiv/W/NajGsHtYesrcxrL1GgTFFR0pxyjJDRRyerAQKgpypJWiswQW50edvT/oQzH7XywzzQz6om5ytVN3HHnu7DbC2hIucQpUzVMYTEE64C2mVR5knOEfIQ2qKcOi126zNk+ac3xQDQrQDgM7eHBoeeGM2d+ltZomBT5bhv/eeCrsq+dnn7Ufiex8/TJT1IgchbrZ8mFRDedK8U6BeGCE+Jg31a8XcgxkZ3/X2egaUqiByT0QNboi1YlrQoROZiIHgk/NnzKNQb8oG7hRfC4wu+eLJ6YYHv3KaRC/mas5fO+yIlDKviFgqsI9aiwsZYqswafV202+kXhkh/qtUz7opkutbgi5QBbg5rSbOCwFlMeaysJ9krgtIDaBIAB/1tCBeFXm3wYCN3erKCR/rssh5uop5+1P+DAiOhXtTo9KoxNpWdb2qlfTFcSSvwiJNJKDqc5dA3UK8GRjhYgmXR371M2HVF9RiF4Z/G3hUuzlNNW5TZWLorDVPxiiVY3VfEmsa1J05wBzVlCot2zjpBDlav8yWAQiKldVWN2SApVeczTKqCLPHxSUEay9viHik7t77pty9uMnAot9MXpmQV3w7GZ2uGEUm0flt4SARahWQYldJH9vbtMP0y4a8Urjch07jYSZ/DLh+XRvfC2wZdTy56J0SbHd/FJNUa3SGbfqj1eyVo0La/BJpRemH3tcBGm
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(6512007)(53546011)(86362001)(508600001)(6666004)(2616005)(186003)(31696002)(26005)(6486002)(38100700002)(83380400001)(31686004)(6506007)(8936002)(5660300002)(8676002)(66556008)(66476007)(66946007)(4326008)(36756003)(2906002)(6916009)(316002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MU1uSDB5YWtpVHlZcEVYMGVxUnlYS1pUNU9GRlV6Tm0ycFhoN0ZNdjRXY1cz?=
+ =?utf-8?B?bURleTc3UHpNS25QcVVabjBibUd5ek5NcFdneWhUYUtoMVR3NmY1aHVKQnJm?=
+ =?utf-8?B?VzhUclJIWUFDODU0YWhRdDc4cmxuYTlCeWFEZHU0YjhtMzNyblpnSHlEMjZ6?=
+ =?utf-8?B?ODZzUnRLSllBN2pLMUhNVjBjY2U0bmJBVFVQTUxveGVGM1BYYVVOa3c4NEEx?=
+ =?utf-8?B?Y3p5ODVQY2twZlpRNUdhZTNodDVPODk1VTlUd1ZCMUpkdFJlMEtCdmYwTlh0?=
+ =?utf-8?B?eVd5SU9pSHRFNHR6TC92bDZWMklzSzZ2RjVHNmtrRUtsMXZBeVp6dkl2Mktk?=
+ =?utf-8?B?TUp4clZ1NmcvYXFyODJvUnAxcmUxSXp6L05HTzdBM09WbVZBdnFjK01USGo2?=
+ =?utf-8?B?SEVXN2g4Wmt6YVE5bDVSdWx4QWJDYStRc3J6VnJrdmNDVUZXc2loeXh5a240?=
+ =?utf-8?B?UWt1b0kxaWRCaUxzRmR0SEwwUFpPdUdwOURRUGg1UTJhY2oxWitlZW00VVJM?=
+ =?utf-8?B?UkpQbTIzWTVaTmpXMWV2OEthNml4VW96Tjdrcm5zZE1wTHdESnk5K3lDTU1H?=
+ =?utf-8?B?MWRzNE5uWlV0eFN5OGJhb1c3bUlSRW1kVUFUSU5yUzUwc2N3QzV0d0FrdzNl?=
+ =?utf-8?B?M3pXK3lyd2xRMVp4TVZ4am0vZFJKZ2t2TEtsQ3RqQWFXTnZhMGxUR3prYStl?=
+ =?utf-8?B?bjQvU1p3T3p3QjdwUWgwRjd0NkpVdnJRMU9ydWdmOGxIbVZyVUMvb1haSTla?=
+ =?utf-8?B?QXZta1pnK0N3bEtmTUJtYjk2dUdWYXNpTUdJeWF5TzdOWEtVNUhoOWQ2WWM4?=
+ =?utf-8?B?cjc5dWszTlc0Ymk1VXFwWGhSaHdVMUNOekpwUmdtd2tjMEZ1NGRMK24yYmox?=
+ =?utf-8?B?NHJOcnZPZXRraFR0cjlDZVpzVFZjSFcwSXNHQlNSaXUxb0o4eEVWdTZRY294?=
+ =?utf-8?B?bThORE9tSUt1b01kb3pFR25ySU9jY3E2THBRTk1LUEtUM2wweDlIalFxTTRa?=
+ =?utf-8?B?TzFRbEdSbmxSYzNKeGlUUEs3SjdWTE1yOTdBL3BBd1pkT2R5dmRpMzFSOUtT?=
+ =?utf-8?B?Wm01M3pNS3BEcXNwb3RmbVB4VzNUdllZeEhFbXJnLzdkeWtVUnNUTVRnd0xS?=
+ =?utf-8?B?dXdrbGpkOTQxOUxDditXY2FqYWxTU0VuQjN5bzVETDVadVA2aUtvRFV3dUJw?=
+ =?utf-8?B?VjdDRU5nWnk3cHJYKzczY0RHTHBDUVVmemNVM2lzNWw0Um1WL2xNSTFsdHBp?=
+ =?utf-8?B?azRvVVN5Y2wzb2ovYkVnSGRqSVdVcStiVW92cXBST0U0ejJOdU9SUGswOWFn?=
+ =?utf-8?B?a1JFNUE5K0NOUitCeDRuU0l2RWw4ZHpWd2hsdHBhZHhLVWxHTElWbExHNTFJ?=
+ =?utf-8?B?NHRqRElsZ0RXb2xJQndkbXRYSnp3RU1WejVMUFBUQ1paaVRSNGdROW92UkV1?=
+ =?utf-8?B?SHhnOTFLZEJHTTE3MlIyN084L2MzbEhQMnNVRThwYm84NjEwMGljTE5RQkUy?=
+ =?utf-8?B?RE4vbUhpWndpWlRaekIxTUpBVW93cFV6L1VRTVdBUVhBVFZCdmU1VlVQZ0hW?=
+ =?utf-8?B?TGVRMHZDeFVYS0dVU3ZDZUR0NVJRYXA4TDE4NVFiUGFlaTdJRHM2Y2JnWnlB?=
+ =?utf-8?B?Z1hBSlphVE9WeW1aM2V3K2UwZEN1SEQyRWhqSk5CeFpHOG1rblFua1hBaE14?=
+ =?utf-8?B?SnZjdzBScTFOMlBCd2E2QXdBV1pHaVJGTFFPWTZvUW9ZaC9Fb1ljSUlhRU9N?=
+ =?utf-8?B?RFczUmluc1ZUdjA4V3R4WmxXZ1VzSHgxejgzVyt5ZVc0S0NhcGZUWGRwTHM4?=
+ =?utf-8?B?eVJCbEE5cVlJZ1ZVNE1valFZNTNRSFJhNzJaSzdkcGNJckQzY3NxRUE4NUtY?=
+ =?utf-8?B?cEVKcnVRUmNaME1MZElObkdEaXUvYmRwM2Mzb1V6eHVmblo5cGlPZFFZUmgr?=
+ =?utf-8?B?WHZpekJ1cXVBSGZ0RGY3by96NWR4aXRPQ2F0UnZ5L1ZFczBiSWc2OXV4KzVC?=
+ =?utf-8?B?MFQyaVNyRmFhYjlZSllnM1lyRmZIK3Y3N0tzeWVVTXo2endSWUVTKzA4Q1pv?=
+ =?utf-8?B?d3RNeVVNczFqV1JldC9BbDJXbC8wWEh6K1VwbHN1NnhLelBnaUhqSkpCcG1N?=
+ =?utf-8?B?VnBhOUVpUzlvYXpHdmNMVGNvVmF6MDVwSnI5NzV0SHh6alhScTZLSW9JNmN6?=
+ =?utf-8?B?SEk5SEhYeW10SGhERndYUHc4ZVlYSU9zZUoyQldTTmZTV2ZqTUUwb0lYdmRB?=
+ =?utf-8?B?MW5ldi9HU2hWaFB2SFY3SVBMZUJ3PT0=?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: aaaadc8c-5c10-446c-7a82-08da016a8c58
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2022 01:17:16.0210
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 7vrq0nqTRtts08JBeHTqrd3XzC0lONFIqUEkXpvOm9ml6pbHkQGN48x86y2dbmi6NRy4pxlszph6CWtLTtkIXKIXK5pOF3UuQrN7oCwrzeA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB3990
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10280 signatures=690848
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=468 spamscore=0
+ phishscore=0 bulkscore=0 adultscore=0 malwarescore=0 suspectscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2203090004
+X-Proofpoint-GUID: 5eY9v-WEXfZfwY4E5f1xCqV8rwZbSk8f
+X-Proofpoint-ORIG-GUID: 5eY9v-WEXfZfwY4E5f1xCqV8rwZbSk8f
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 8 Mar 2022 06:51:46 +0100, Christoph Hellwig wrote:
-> this series resurrects and forward ports ports larger parts of the
-> "block: don't drain file system I/O on del_gendisk" series from Ming,
-> but does not remove the draining in del_gendisk, but instead the one
-> in the sd driver, which always was a bit ad-hoc.  As part of that sd
-> and sr are switched to use the new ->free_disk method to avoid having
-> to clear disk->private_data and the way to lookup the SCSI ULP is
-> cleaned up as well.
+On 3/8/22 6:53 PM, Ming Lei wrote:
+> On Mon, Mar 07, 2022 at 06:39:54PM -0600, Mike Christie wrote:
+>> The software iscsi driver's queuecommand can block and taking the extra
+>> hop from kblockd to its workqueue results in a performance hit. Allowing
+>> it to set BLK_MQ_F_BLOCKING and transmit from that context directly
+>> results in a 20-30% improvement in IOPs for workloads like:
+>>
+>> fio --filename=/dev/sdb --direct=1 --rw=randrw --bs=4k --ioengine=libaio
+>> --iodepth=128  --numjobs=1
+>>
+>> and for all write workloads.
 > 
-> [...]
+> This single patch shouldn't make any difference for iscsi, so please
+> make it as last one if performance improvement data is provided
+> in commit log.
 
-Applied, thanks!
+Ok.
 
-[01/14] blk-mq: do not include passthrough requests in I/O accounting
-        commit: 00baefa025651b33a67fefcf8f6bf527af7b085f
-[02/14] blk-mq: handle already freed tags gracefully in blk_mq_free_rqs
-        commit: abcc148ab9236abce466d5e5070f43d290cf72c7
-[03/14] scsi: don't use disk->private_data to find the scsi_driver
-        commit: b55ac66299345b24a81444d9222bf0362920b829
-[04/14] sd: rename the scsi_disk.dev field
-        commit: 695a5b27e06242cfc89988d342016697c5f5ab5f
-[05/14] sd: call sd_zbc_release_disk before releasing the scsi_device reference
-        commit: a22da9716c1375b8c0563b607cacdb422680233b
-[06/14] sd: delay calling free_opal_dev
-        commit: f3ca592e32b3b7a74a57b77bf24cdefff1ea53fc
-[07/14] sd: implement ->free_disk to simplify refcounting
-        commit: d31ece5f112968d7efe70fdffa4d39ed6b876f40
-[08/14] sr: implement ->free_disk to simplify refcounting
-        commit: 719468c6d02fdc1a17d7b40ec73cec155cf05945
-[09/14] block: move blkcg initialization/destroy into disk allocation/release handler
-        commit: 754ddb47bbc48c987cd3c718a1ee9f1d83c001f7
-[10/14] block: don't remove hctx debugfs dir from blk_mq_exit_queue
-        commit: f58dfe31e0cd242f1de93d1aad0fbe8af7a09dc2
-[11/14] block: move q_usage_counter release into blk_queue_release
-        commit: 5407dfa49e67160724567e565fa58086a3ec1b8c
-[12/14] block: move blk_exit_queue into disk_release
-        commit: 0f426c2c2c7ea134562e64d7b6ce0acaef67146e
-[13/14] block: do more work in elevator_exit
-        commit: 3e8f2f0ef1000649dbc7d0dd41c714617a1dbc9c
-[14/14] block: move rq_qos_exit() into disk_release()
-        commit: 641fde02765e74b8b5ae8426a02c21abf0ce3a29
+> 
+> Also is there performance effect for other worloads? such as multiple
+> jobs? iscsi is SQ hardware, so if driver is blocked in ->queuecommand()
+> via BLK_MQ_F_BLOCKING, other contexts can't submit IO to scsi ML any more.
 
-Best regards,
--- 
-Jens Axboe
+If you mean multiple jobs running on the same connection/session then
+they are all serialized now. A connection can only do 1 cmd at a time.
+There's a big mutex around it in the network layer, so multiple jobs
+just suck no matter what.
 
+If you mean multiple jobs from different connection/sessions, then the
+iscsi code with this patchset blocks only because the network layer
+takes a mutex for a short time. We configure it to not block for things
+like socket space, memory allocations, we do zero copy IO normally, etc
+so it's quick.
 
+We also can do up to workqueues max_active limit worth of calls so
+other things can normally send IO. We haven't found a need to increase
+it yet.
