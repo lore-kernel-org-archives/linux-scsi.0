@@ -2,164 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0979EC43217
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 01:13:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 121BEC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 01:13:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230295AbiCIBOM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Mar 2022 20:14:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46412 "EHLO
+        id S230283AbiCIBOo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Mar 2022 20:14:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230186AbiCIBMt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 20:12:49 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED90310D5
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 16:55:17 -0800 (PST)
-Received: from dggpeml500024.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4KCtsH2ll6zbcBg;
-        Wed,  9 Mar 2022 08:50:27 +0800 (CST)
-Received: from dggpeml500019.china.huawei.com (7.185.36.137) by
- dggpeml500024.china.huawei.com (7.185.36.10) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Wed, 9 Mar 2022 08:55:15 +0800
-Received: from [10.174.179.189] (10.174.179.189) by
- dggpeml500019.china.huawei.com (7.185.36.137) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Wed, 9 Mar 2022 08:55:15 +0800
-Subject: Re: [PATCH 02/12] scsi: iscsi: Rename iscsi_conn_queue_work
-To:     Mike Christie <michael.christie@oracle.com>, <lduncan@suse.com>,
-        <cleech@redhat.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <jejb@linux.ibm.com>
-References: <20220308002747.122682-1-michael.christie@oracle.com>
- <20220308002747.122682-3-michael.christie@oracle.com>
-From:   Wu Bo <wubo40@huawei.com>
-Message-ID: <cb9af0ab-56fd-9bfd-1251-8a55ad7487e7@huawei.com>
-Date:   Wed, 9 Mar 2022 08:55:15 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.2.2
+        with ESMTP id S231954AbiCIBNy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2022 20:13:54 -0500
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7833CE448D
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Mar 2022 16:58:28 -0800 (PST)
+Received: by mail-pj1-x102d.google.com with SMTP id e3so755774pjm.5
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Mar 2022 16:58:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:in-reply-to:references:subject:message-id:date
+         :mime-version:content-transfer-encoding;
+        bh=n3kOWYi00wB/JSBNH3Nkdw571Dwb7Z4bxoeFT/f7d74=;
+        b=qDe3CBPnszracgGZ3QHhnX2rqwCMCDyq1b/oMf/CwBtfCmovbYpnAA+VSbJJn6Xa48
+         JtAXVaWA/XjICwCBqyZLkWAgL4gh3yktjXHABN4AEkIRHgy9Cog0P4jN2vZFDx3MEgHx
+         nWDKS8ytclYRe1YHJKzjrhpXXxuI+ewUOlf/Jlbh2/zBxchqIrPm+qTJzFMIGMJitB9i
+         puba+9tOjqVVXsS6wSeZZ7lEUVsEhWIPolVuFEBHYjkXuf3VXVu7ggF0vTR3+lI80jWl
+         ECTGd9vaoR8txjEJk8EqcxqVLMahgNMBWlKkHgTwwuXvp/rlnSIwoN1V5Sg4HWvF8tCn
+         1t5Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
+         :message-id:date:mime-version:content-transfer-encoding;
+        bh=n3kOWYi00wB/JSBNH3Nkdw571Dwb7Z4bxoeFT/f7d74=;
+        b=HDs5eAqZD6nyly93WXjKp46dW3GkpkcW7SjlAAXAPRS7+gfMM0ptFN0SvrllL3rPb8
+         fCrJUl3zHDHwVJ557iKvogN666N9PDOJpGEBLcOhdPpOtcdJxkmstzQ+o4voFOBn4EC0
+         3wITZ2pUBIsMmqyg7i5O0ZzqwfValfuIrZ20xKBe9emcAajLSLe9vb5QvE7xf+6Iv71u
+         MRgyLteUW0seDhQfiHVl4a/gVvBddFEY2Z+klSkPc7e0moMILmE2rBHbUjQoU7UzK8qT
+         c6YnoNb5pvptGbAsN5fwNSaYr5MfYNkJ8aDuxurfpBbN8/yWS7DhC4s0gr6WJbGuOHyS
+         6x1A==
+X-Gm-Message-State: AOAM532Li2cgEnekM8WKIvtiBc7yNf6Qs1Vt38FFOGsartLX2GP1wPJy
+        YhSZJF2Ljyt2EzHvmkQF1JxY/A==
+X-Google-Smtp-Source: ABdhPJydwoFGLZgcz4NmuS/ionLpQBPtHiioJnqmd0mjxHWgfmJTXxpQKkwIkBWtrUrCPm/y2MEKAw==
+X-Received: by 2002:a17:902:930b:b0:14d:b0c0:1f71 with SMTP id bc11-20020a170902930b00b0014db0c01f71mr20409658plb.113.1646787507899;
+        Tue, 08 Mar 2022 16:58:27 -0800 (PST)
+Received: from [127.0.1.1] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id e14-20020a056a001a8e00b004e136d54a15sm298627pfv.105.2022.03.08.16.58.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Mar 2022 16:58:27 -0800 (PST)
+From:   Jens Axboe <axboe@kernel.dk>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+In-Reply-To: <20220308055200.735835-1-hch@lst.de>
+References: <20220308055200.735835-1-hch@lst.de>
+Subject: Re: move more work to disk_release v4
+Message-Id: <164678750695.407482.16938028641587368987.b4-ty@kernel.dk>
+Date:   Tue, 08 Mar 2022 17:58:26 -0700
 MIME-Version: 1.0
-In-Reply-To: <20220308002747.122682-3-michael.christie@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.189]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpeml500019.china.huawei.com (7.185.36.137)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/3/8 8:27, Mike Christie wrote:
-> Rename iscsi_conn_queue_work to iscsi_conn_queue_xmit to reflect it
-> handles queueing of xmits only.
+On Tue, 8 Mar 2022 06:51:46 +0100, Christoph Hellwig wrote:
+> this series resurrects and forward ports ports larger parts of the
+> "block: don't drain file system I/O on del_gendisk" series from Ming,
+> but does not remove the draining in del_gendisk, but instead the one
+> in the sd driver, which always was a bit ad-hoc.  As part of that sd
+> and sr are switched to use the new ->free_disk method to avoid having
+> to clear disk->private_data and the way to lookup the SCSI ULP is
+> cleaned up as well.
 > 
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> ---
->   drivers/scsi/cxgbi/libcxgbi.c |  2 +-
->   drivers/scsi/iscsi_tcp.c      |  2 +-
->   drivers/scsi/libiscsi.c       | 12 ++++++------
->   include/scsi/libiscsi.h       |  2 +-
->   4 files changed, 9 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-> index 4365d52c6430..411b0d386fad 100644
-> --- a/drivers/scsi/cxgbi/libcxgbi.c
-> +++ b/drivers/scsi/cxgbi/libcxgbi.c
-> @@ -1455,7 +1455,7 @@ void cxgbi_conn_tx_open(struct cxgbi_sock *csk)
->   	if (conn) {
->   		log_debug(1 << CXGBI_DBG_SOCK,
->   			"csk 0x%p, cid %d.\n", csk, conn->id);
-> -		iscsi_conn_queue_work(conn);
-> +		iscsi_conn_queue_xmit(conn);
->   	}
->   }
->   EXPORT_SYMBOL_GPL(cxgbi_conn_tx_open);
-> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-> index 1bc37593c88f..f274a86d2ec0 100644
-> --- a/drivers/scsi/iscsi_tcp.c
-> +++ b/drivers/scsi/iscsi_tcp.c
-> @@ -205,7 +205,7 @@ static void iscsi_sw_tcp_write_space(struct sock *sk)
->   	old_write_space(sk);
->   
->   	ISCSI_SW_TCP_DBG(conn, "iscsi_write_space\n");
-> -	iscsi_conn_queue_work(conn);
-> +	iscsi_conn_queue_xmit(conn);
->   }
->   
->   static void iscsi_sw_tcp_conn_set_callbacks(struct iscsi_conn *conn)
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 14f5737429cf..fa44445dc75f 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -83,7 +83,7 @@ MODULE_PARM_DESC(debug_libiscsi_eh,
->   				"%s " dbg_fmt, __func__, ##arg);	\
->   	} while (0);
->   
-> -inline void iscsi_conn_queue_work(struct iscsi_conn *conn)
-> +inline void iscsi_conn_queue_xmit(struct iscsi_conn *conn)
->   {
->   	struct Scsi_Host *shost = conn->session->host;
->   	struct iscsi_host *ihost = shost_priv(shost);
-> @@ -91,7 +91,7 @@ inline void iscsi_conn_queue_work(struct iscsi_conn *conn)
->   	if (ihost->workq)
->   		queue_work(ihost->workq, &conn->xmitwork);
->   }
-> -EXPORT_SYMBOL_GPL(iscsi_conn_queue_work);
-> +EXPORT_SYMBOL_GPL(iscsi_conn_queue_xmit);
->   
->   static void __iscsi_update_cmdsn(struct iscsi_session *session,
->   				 uint32_t exp_cmdsn, uint32_t max_cmdsn)
-> @@ -764,7 +764,7 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
->   			goto free_task;
->   	} else {
->   		list_add_tail(&task->running, &conn->mgmtqueue);
-> -		iscsi_conn_queue_work(conn);
-> +		iscsi_conn_queue_xmit(conn);
->   	}
->   
->   	return task;
-> @@ -1512,7 +1512,7 @@ void iscsi_requeue_task(struct iscsi_task *task)
->   		 */
->   		iscsi_put_task(task);
->   	}
-> -	iscsi_conn_queue_work(conn);
-> +	iscsi_conn_queue_xmit(conn);
->   	spin_unlock_bh(&conn->session->frwd_lock);
->   }
->   EXPORT_SYMBOL_GPL(iscsi_requeue_task);
-> @@ -1781,7 +1781,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
->   		}
->   	} else {
->   		list_add_tail(&task->running, &conn->cmdqueue);
-> -		iscsi_conn_queue_work(conn);
-> +		iscsi_conn_queue_xmit(conn);
->   	}
->   
->   	session->queued_cmdsn++;
-> @@ -1962,7 +1962,7 @@ EXPORT_SYMBOL_GPL(iscsi_suspend_tx);
->   static void iscsi_start_tx(struct iscsi_conn *conn)
->   {
->   	clear_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
-> -	iscsi_conn_queue_work(conn);
-> +	iscsi_conn_queue_xmit(conn);
->   }
->   
->   /*
-> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-> index 10a9b89b7448..b567ea4700e5 100644
-> --- a/include/scsi/libiscsi.h
-> +++ b/include/scsi/libiscsi.h
-> @@ -441,7 +441,7 @@ extern int iscsi_conn_get_addr_param(struct sockaddr_storage *addr,
->   				     enum iscsi_param param, char *buf);
->   extern void iscsi_suspend_tx(struct iscsi_conn *conn);
->   extern void iscsi_suspend_queue(struct iscsi_conn *conn);
-> -extern void iscsi_conn_queue_work(struct iscsi_conn *conn);
-> +extern void iscsi_conn_queue_xmit(struct iscsi_conn *conn);
->   
->   #define iscsi_conn_printk(prefix, _c, fmt, a...) \
->   	iscsi_cls_conn_printk(prefix, ((struct iscsi_conn *)_c)->cls_conn, \
-> 
+> [...]
 
-Reviewed-by: Wu Bo <wubo40@huawei.com>
+Applied, thanks!
 
-.
+[01/14] blk-mq: do not include passthrough requests in I/O accounting
+        commit: 00baefa025651b33a67fefcf8f6bf527af7b085f
+[02/14] blk-mq: handle already freed tags gracefully in blk_mq_free_rqs
+        commit: abcc148ab9236abce466d5e5070f43d290cf72c7
+[03/14] scsi: don't use disk->private_data to find the scsi_driver
+        commit: b55ac66299345b24a81444d9222bf0362920b829
+[04/14] sd: rename the scsi_disk.dev field
+        commit: 695a5b27e06242cfc89988d342016697c5f5ab5f
+[05/14] sd: call sd_zbc_release_disk before releasing the scsi_device reference
+        commit: a22da9716c1375b8c0563b607cacdb422680233b
+[06/14] sd: delay calling free_opal_dev
+        commit: f3ca592e32b3b7a74a57b77bf24cdefff1ea53fc
+[07/14] sd: implement ->free_disk to simplify refcounting
+        commit: d31ece5f112968d7efe70fdffa4d39ed6b876f40
+[08/14] sr: implement ->free_disk to simplify refcounting
+        commit: 719468c6d02fdc1a17d7b40ec73cec155cf05945
+[09/14] block: move blkcg initialization/destroy into disk allocation/release handler
+        commit: 754ddb47bbc48c987cd3c718a1ee9f1d83c001f7
+[10/14] block: don't remove hctx debugfs dir from blk_mq_exit_queue
+        commit: f58dfe31e0cd242f1de93d1aad0fbe8af7a09dc2
+[11/14] block: move q_usage_counter release into blk_queue_release
+        commit: 5407dfa49e67160724567e565fa58086a3ec1b8c
+[12/14] block: move blk_exit_queue into disk_release
+        commit: 0f426c2c2c7ea134562e64d7b6ce0acaef67146e
+[13/14] block: do more work in elevator_exit
+        commit: 3e8f2f0ef1000649dbc7d0dd41c714617a1dbc9c
+[14/14] block: move rq_qos_exit() into disk_release()
+        commit: 641fde02765e74b8b5ae8426a02c21abf0ce3a29
+
+Best regards,
+-- 
+Jens Axboe
+
+
