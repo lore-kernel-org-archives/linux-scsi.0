@@ -2,145 +2,142 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 490F0C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 19:13:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2280EC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 19:13:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237313AbiCITON (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Mar 2022 14:14:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32836 "EHLO
+        id S237326AbiCITOm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Mar 2022 14:14:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237299AbiCITOM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2022 14:14:12 -0500
+        with ESMTP id S237299AbiCITOl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2022 14:14:41 -0500
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A76E99285C
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Mar 2022 11:13:12 -0800 (PST)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 229J62i2005772;
-        Wed, 9 Mar 2022 19:13:10 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3056CF543F
+        for <linux-scsi@vger.kernel.org>; Wed,  9 Mar 2022 11:13:41 -0800 (PST)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 229J68Kd030917;
+        Wed, 9 Mar 2022 19:13:39 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
  content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=mUzUQ3NLw+jwdVztVODxK9nr8FgW1Ovk7fjL6Nv/UoM=;
- b=JhgTx+o1YihiQimMb1YgsX2Ta+o8dZway6fNgeLvOMpy4rpCUjcfrw42AZl2AFWXS22Y
- 7K7wW8KwLRbqUxjqlcCsvo5m2MK8cbKNtaj4Ob6ytvvxxE4I5Udv5LBDwycrgV3wh0dj
- 7G5lh3peF9d8sFH6j+Tifu5bazb9a6567uw/6OgKbaWTUmuJFpq2Q4Yagvtj3FhQGoJZ
- cY58oLZUM02QU4SVBjSB44YN7Hrjbayz7qAIj2/2lvA+Ff93QjAL8J/KYzqxP6KmpQAz
- BUJ1jYVrygtIs7jQy9OhPx7gSrN/tX44M93j8ECtoab0soizvfKrQa2FpXr7HkSKm17u 5g== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ekxf0u4b8-1
+ bh=/3sn7PrThUPeU3fJnNQbIefpyzXyIYcr7yIry1t41d0=;
+ b=BtdRdQNLJS6uwVMJVoTBtXYSsZh+n32wmY4yLjREl/sBWqTJ3/x7etCcCBJYa2KOg96v
+ WTbT8AS/AHP1ELrREkgzJ912jarLkVwouuyjGsTD6Y/62j8u8Vu7yJMS74R8N0785BEz
+ b1FXXQsArjqTGhYZUdCTaodJVuRCfKtatuAFUjeQC3s8BKp21YbckGQ0PZ+LL2yDF5ya
+ wg2tcrwRCLm9iejDymhy/Jo8bFcuSs6M+lGmbyPsiTnyF94vWQN6/5JVY8NkRssQBn39
+ qIjxI8tEIIy4a1vXiuiRPL4u3TGhpH+sPOozfHqxGX3BhrZBFh41NPi3gqYD1OZY27Ba Uw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3ekyratp6k-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Mar 2022 19:13:10 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 229J1Gl2147313;
-        Wed, 9 Mar 2022 19:13:09 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2109.outbound.protection.outlook.com [104.47.58.109])
-        by aserp3020.oracle.com with ESMTP id 3ekyp34adw-1
+        Wed, 09 Mar 2022 19:13:39 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 229J1guV006260;
+        Wed, 9 Mar 2022 19:13:38 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2108.outbound.protection.outlook.com [104.47.70.108])
+        by aserp3030.oracle.com with ESMTP id 3ekwwd00p2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Mar 2022 19:13:09 +0000
+        Wed, 09 Mar 2022 19:13:38 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eKuZfCSjgtUocNNAk0boaX2iU+ICD1qFRENXOmdMoMgmXOAwVqAKjgbTqjJ8qcvKRBGWZ8j1Iho4T2l7zQLRQKCt9msCFkCD0Z+nPJYxkpt/MkQrecer/EMIP3+rsEwP2YagGsU/WpNaxBzOaRisYxC1IG7Y3Eqk02juijYY8E+3+/8r9b/BdNPp3u6ws/65+ZSqE2yi0PT3S+vehAJ/zHvca4yMJ9ti7aBMINUKDLymrojaxcAdNmLq2EmNwBUVxlVzJo5v6TOg3zTi5QqNJkptpuINSSMGPioNftKHm8CoFouo1RHw3rkebNWgSZcG9YWe9Mhh7eOTVKmXQFAxsg==
+ b=VspaVSl1AqsBUPBbF7HhdBuBAqkXjeHYNK8ObBIkNvY8ImRoFuoe4oTwQrlytC16LrzqgCabcVEu3IIDhUSWzS/dj2jWJOlWIBjyGJx3mK8jTmrorkMooH9GvyprgscCAXadQiV6Ulof8lrozgfG6EXaRXWl5SdXksrw6IcFsX30FBwsLXdAN3JX1Sjhf3RlbOC1i7TpVta6n4yWbnTWpLxwc+j+4yCOpZpNPuSzJ28shd3U6bEQ1hf8OaMReBcKA0qroZpkZ/56eZvUwEvTf4WAlyAz1mUOVh9kpK5u47OFfafxbvgC4C4Us/x/dVGoT6PNlqwNE58gBfqsKF5HpQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mUzUQ3NLw+jwdVztVODxK9nr8FgW1Ovk7fjL6Nv/UoM=;
- b=aihjpNzkdUu9g6B+g/6ikY6NL5KCgVhePTsB7JAZBZCQg3AvYA9P6wz8aqI9wY3ayrqrUXlkVSeZC1H93tfk8+wcayu/HmOEnh5wDD07r1V17B3tXpPWpyFurqN2pqnyBNqfeceRPk5Umzr9uXJ16sngfuRdUhnH8ADMLCwaC3GRgS1aTT3WE6PeF0VpxR0eemBRoUWGdlvADtAraj0bspSAoL4hnjvhLiygqSONBgdA24doKJEGz73ojgAQBAAs3xbEyzWHZj7bw4zoyHZlEAOFGdXbQpPpO+J2vAYk/LMHn9pHRBpW36haZ/W8+WBB9m065ruUkH3ET5mDTUpD5g==
+ bh=/3sn7PrThUPeU3fJnNQbIefpyzXyIYcr7yIry1t41d0=;
+ b=TSOXHi8et9ME5mNck5PGCbu0mckQoZ5mN0VCQ+2lHEdfx53mQ9KDE8VV/cPc1vN/HE7yhitJ63wDjKya+LBOcmHc66E+lVZy0gxljDWuONaKNWowJv5AJFG/uoUjSUVqR+D1qUrRsdP+50w5afWLCuG+k7+Lok9U5xuhddUnsbjtBKNsfaDR9aTAdTXK0qp+YFHwfz/2EPKzlx2WeTMtrNtlsEXiYgXAL8D4HhOra5gXhPGHTOzYgugevLhIZTNVzA1yeMoz9ZHgmkXesiPW/ZRy6J7E2GXzxz/34w69jHf8hg/glEtL0g5GnKnq5uRpfWWEwXAmr4v9DF56xOQWmQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mUzUQ3NLw+jwdVztVODxK9nr8FgW1Ovk7fjL6Nv/UoM=;
- b=irod8kjBPAJZ5CFxRGgq+xG2YQOmL6uFIr+59seiNSrptmacqZha/kGau8iBXMrU5fjAdGGQF7Vmq3ESySvR8XqXs2JhktLnlOZEu/O1qHURyXhhroRnk7SKR07Nq9slSqBj22zGjue+XdzxzrITn/wSmZNx9EWUhsNrAsL+fgw=
+ bh=/3sn7PrThUPeU3fJnNQbIefpyzXyIYcr7yIry1t41d0=;
+ b=hGpH8q9MYd87U6ckX/vArscu/JOSwT9BHlb5+RY92W9UZFih1z2bWq6x95BI8GVoAmWDdfxfyKdZviDMHHD43P6ECqS4adS0AoiyxGkeBfdT92pn0TD5T0YL5MgVvOUpVwGvStRUnvesXLTp+Sh3YDO7wuGHbEX99gwCDmGlZlI=
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by PH0PR10MB4615.namprd10.prod.outlook.com (2603:10b6:510:36::24) with
+ by BYAPR10MB2581.namprd10.prod.outlook.com (2603:10b6:a02:b9::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5038.18; Wed, 9 Mar
- 2022 19:13:07 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5061.21; Wed, 9 Mar
+ 2022 19:13:36 +0000
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::69d0:6635:35d6:9be6]) by SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::69d0:6635:35d6:9be6%6]) with mapi id 15.20.5038.027; Wed, 9 Mar 2022
- 19:13:07 +0000
+ 19:13:36 +0000
 From:   Himanshu Madhani <himanshu.madhani@oracle.com>
 To:     Nilesh Javali <njavali@marvell.com>
 CC:     Martin Petersen <martin.petersen@oracle.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "GR-QLogic-Storage-Upstream@marvell.com" 
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: Re: [PATCH 12/13] qla2xxx: Increase max limit of ql2xnvme_queues
-Thread-Topic: [PATCH 12/13] qla2xxx: Increase max limit of ql2xnvme_queues
-Thread-Index: AQHYMsWH9A/9ckHRLEa3a/zxq6kJyay3bd+A
-Date:   Wed, 9 Mar 2022 19:13:07 +0000
-Message-ID: <77A0A9A6-7CF3-4297-BD79-4A0788784C47@oracle.com>
+Subject: Re: [PATCH 13/13] qla2xxx: Update version to 10.02.07.400-k
+Thread-Topic: [PATCH 13/13] qla2xxx: Update version to 10.02.07.400-k
+Thread-Index: AQHYMsWFr2vcYc1Z+02rfqmxNpeAnay3bgCA
+Date:   Wed, 9 Mar 2022 19:13:36 +0000
+Message-ID: <90DF5A41-68C3-4624-8C24-E8E95DAC526E@oracle.com>
 References: <20220308082048.9774-1-njavali@marvell.com>
- <20220308082048.9774-13-njavali@marvell.com>
-In-Reply-To: <20220308082048.9774-13-njavali@marvell.com>
+ <20220308082048.9774-14-njavali@marvell.com>
+In-Reply-To: <20220308082048.9774-14-njavali@marvell.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-mailer: Apple Mail (2.3693.60.0.1.1)
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: a1e43315-4960-424e-6891-08da0200d81e
-x-ms-traffictypediagnostic: PH0PR10MB4615:EE_
-x-microsoft-antispam-prvs: <PH0PR10MB4615B2F909CE9B845B366E42E60A9@PH0PR10MB4615.namprd10.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: 80e5624f-5344-4562-8d7d-08da0200e92b
+x-ms-traffictypediagnostic: BYAPR10MB2581:EE_
+x-microsoft-antispam-prvs: <BYAPR10MB25812D42ADEB429A3457846DE60A9@BYAPR10MB2581.namprd10.prod.outlook.com>
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: W6lf/U3n7hHkht3bkZnGG/PeKo+xpXgTy4TFCP71jhcfEMY8lofJu+OP28bm2bLAq+gMoH8W9k6fyJQeOKGXrSoMVtZhihU7dLM90xwzcwCBw5Oe5zTN/ms1AzKMNAnWx6uWbh1h/uyCz4CsXMQqE5+LzYBI/AI+/oZ0LCHrvmPRGAcRhgcFDvkgs7tZw0sgwABf88/FAkW2qKxYig+L+J9gvy/FZXYJfplk9zYP2gkPFT/B8QuXXl9A18wz2PwjPokjYPhIoeGlZ9pTCM7bzpYUeB/sPC5C19SJ9B/iNyFXxuakZ9i4CaaH5Sy6E7mjpHJS7axv/UdKx/elfXNnzHFtONyX87Z6TP2Z0UbbnMoJVSTmnBEO193hLLn4lrlLgAACYZa2usCCllBoh5q/8IrSZlfvqsSO9KTShp02yFHd/uMMs3OB3w68hkzmxoSTgBNL1JFfjdKEGK1ajQaSgHDmNlNb6MbfQ57dWjgyzKD+LrY0rg6JK2r3lbdUKLI2WFtU8n558pd0ClK9tLZOK8/Z5EEotAmLIXpPMVTx3yuI1N0hpnwuk5bWhgXrLqNyLmiU9vxCtRZbcH0O6gIDFLHhYTEkltT6/QZM3auw5Q+JfyVe8hAj/uIX5r0g6TnW6TY+EBo5IB4RSK2T/o7f1F/rQAhYCd1Nj9vEIM7V17bRNjSy1x/N+Zvn1e61VWe3nf9NPpxqyCIkNQdi7IMlKv4vbanAbvQvvBENJOEf0kVHkOgnYAPHQrb8XzWWjmf+
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(186003)(26005)(2616005)(6506007)(4326008)(44832011)(6486002)(2906002)(36756003)(83380400001)(33656002)(38100700002)(6512007)(8936002)(53546011)(54906003)(122000001)(316002)(6916009)(66946007)(64756008)(66476007)(5660300002)(66446008)(66556008)(8676002)(508600001)(76116006)(38070700005)(71200400001)(86362001)(91956017)(45980500001);DIR:OUT;SFP:1101;
+x-microsoft-antispam-message-info: 62vbYzwyNXaiGE2NRygNyXheqr5ZxY7w390Cv2uDfBGc1fLGz2J6CwO1KgJX/Ef+kkJi1XjThbZ3F+X8B4wFZVvnygfc82zsJi8c51ET0FD2BAVnKdx/dBb963WzXCoc59ESxIaZk77m2C80GlfEH/PjC3e6xTT8WhifnnJ2NO3xASo0DC6Mu+soKnuzt7JPjr+PUpbbrRYwX+gJoAWM3QGoLy7+MQdIfAJHayjhanh3vOs6jbPZt/FMYEA8kulYfecTUJjzx+A5V+UsKE6SqhtNuEIfqZnYznws8oLSuADNIkUJBntBbtuxbZB79kWxHUzzWWO9C0hWh2qGLyYwHnnuCsnxYvOvtvxM0s47DQ9fc1hyzzTEgfTozsJTV+MCeg7SE19HAlgOjChOofmws4QZ95oFrgV7shxu7WgWJBAbhgqe5jXjc21gr4wg5GTYjnATDSXNeD0ZNfTYPR5ogplqdcQzqaX8JD/YiEWYmLv5prO2fIrE3UEwYwFhK0tPyVAY+aauYydms2Dnhh+JOCmGfrV7tcjutjo2ymMsEHyfv+hgPMaYfKgXC1j9q+dE5Ne3gKAAX0dVy2/Fw41Ethi42a16oxESTw4FGrxOA/oYDtr9DMHDzg/L02OML5zcm/rxrXE6iHa+utNnFU8cSXIKNkDYq/eBkyqrMz9Yr1en4BiZAKmvaWohgks0fVP8IxyhwvpSvjDlOHRzypZxVSIO70ir7hs0tCTmiP9YUESi8X0d78/5P/cGLA+Nmtpq
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(6916009)(54906003)(86362001)(38070700005)(316002)(122000001)(91956017)(66476007)(66556008)(76116006)(66946007)(66446008)(71200400001)(6486002)(4326008)(508600001)(8676002)(36756003)(64756008)(8936002)(6512007)(2906002)(5660300002)(44832011)(4744005)(53546011)(83380400001)(38100700002)(2616005)(33656002)(6506007)(186003)(26005)(45980500001);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?OWm+OTc/K5ydpqXj/6Ra6CGEx1mej+MTCXLjKP05M3ixAtwENmgTz7oYmyka?=
- =?us-ascii?Q?KjeQ2TlMQ3RUm8MZqjQ9dlR6fk8L0RrCk9rUD99QAgZVQYOxd1gY3pnsIOCH?=
- =?us-ascii?Q?QOwnMT/f1jqQhDcaqPpixjpRXGzRnhtkYaAv/WbaT12TfXed8ZC14khY4HY7?=
- =?us-ascii?Q?dpwUVWeMESI0R7uFJrZgWF61lSMusQwTpSmdrw5wg5n8cS1fpp7ickIJtfQF?=
- =?us-ascii?Q?am8LsgM1rTi0Ez8+tdanN6zRuPQwIYjXuWj11CwlAiXYOYIBHnYpJKRj9YTG?=
- =?us-ascii?Q?aqy411UJZDFlt3itKZwJMtE1vl0tFZhebVHMlmGYITYlhi9LNKkYPNkOAdF0?=
- =?us-ascii?Q?CKzPDCvm9CjyGJ3nkwIUyx3j00l68G3bPjH9QRvfjbinpWM2ry6Aahm6HZuQ?=
- =?us-ascii?Q?4d9lf1k08i9hGGJs20voxCWNmmwEx6e3A8KjSLocGWsdGmL3IZh757zK+A6/?=
- =?us-ascii?Q?31anjUCSQyUtEoykP9iZt2srodOuDCr7VLFYQpGqi6XnrAWXG5qyR3ukCpWg?=
- =?us-ascii?Q?0sNYf8NVUYQ73pkyUZWxXCjwqnFwAvsYzo4rcYW0PSAXvaNMugtNliCemnF8?=
- =?us-ascii?Q?Pu/mVqfF1M5z04z5uttmAMn9ALYyzzzeowqS/wTTig3VjSXXtV0qbkntRn1E?=
- =?us-ascii?Q?eAGPunXVn+iWZgh+olxUhzHp+et6kOGqY7afNyA/xie4pbTeEKSUZLQj1HLw?=
- =?us-ascii?Q?1nmh/NCGg35juAW21yPypA/Clo/2M4tEUXav5X/1jQ6+ZR+XzFMr2fJ7IIBr?=
- =?us-ascii?Q?+lQ0gDMeJH4xnK68ARxZulIqJpV1A8qXVLfhZUZqnJDOXAqI55DQn3x/GqQx?=
- =?us-ascii?Q?Mr65zULiAXQkABRG1llf8lN8QTWjPdRSkDQvsSz2y5lAwjmVD6faNjdq8cyV?=
- =?us-ascii?Q?Agaomx3JaGv392+MqEVTU5xG7AHOUXKhF0bI9nXRZlD3csz1n4Q276JehmOG?=
- =?us-ascii?Q?LBYVUu5jzASFkTCUS3HbkLdWqmC/NHrRdn7iFecgSbf3cZgaCVEK3th9KnBa?=
- =?us-ascii?Q?7r1O9qTtLxTnwdiu0glXf76X7+2++4PhQdEG8StanEbw1y1LcP14sNaE06U5?=
- =?us-ascii?Q?0l7IorEbSdSRYr6b1onAzhOkXJLawJJA0gSCGxMR8JIHRC6PsHxnCm9vzaDa?=
- =?us-ascii?Q?MYF2TXy+Dcp767j+gfXd5uAZkw3F3Oy9/UFVdbhzcGcv1rGrhs5+SILqj9A8?=
- =?us-ascii?Q?olpP4z612HR6fcsf85JhEDADVGFlGZ0vtj1vD2eMKLmdSsbr0wbJ1BIl5dO5?=
- =?us-ascii?Q?lSs0rF9SONhCZ9dS3RQSznXhhwiJQiO5YDH06lObO28MjA1HXbDGsdNPGpFx?=
- =?us-ascii?Q?BzpCue94jVkeMlCK+1gJQcSIp/oHcnSuIrJ/kbZkz+XoC0fWkCY/uUs5el2y?=
- =?us-ascii?Q?vg1KaMN8SUPP5oRK5hZ+XKg2/lGyJUUP025zpidcEZtf7wwUe/SAeNdUnMHX?=
- =?us-ascii?Q?aHIaxShcWCAa12pl5by4E8SfroSks1Vci5JYz74eTpd0Wpj2BjbORhJbTxrA?=
- =?us-ascii?Q?7nZM8j4KbQ7vwLAtfX8j6vvCtrpSwH/8RQ5Zi0I+0RG1Pis7H/LMxN7L49uv?=
- =?us-ascii?Q?tiuFbfNUj9WIffJkCoJpBQa2CFS76Tz67CDcFX8SlZQWgdvciVfa0bRP9PM3?=
- =?us-ascii?Q?/teko+dpLd8bsb+cV3EjckfzCBQ++dDHcXPyknzJWE/SNvijNy5ifvtIEoU1?=
- =?us-ascii?Q?15oAKlTtTtR9iXxni8zMhTiI4fs=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?MBWtLOKIJs7qBbj61+L4rmOy49UX9TCl+V2xrgRaprIxw1kmOaFlC9Rx9OvY?=
+ =?us-ascii?Q?SiREac9EPkP5cH0kM4cuhGnSxunXo6XJZJiccMfTkPIivCYaYt8CJ4acnMP9?=
+ =?us-ascii?Q?YkrB1yeVdEOO1J+mPJMg0M3TFz1Aq7v9I+YXs8KQz4sUTPgziEdjtdyq04yA?=
+ =?us-ascii?Q?QopwqWdVb1eimgAHAkw/dBzrtGhyi+o5G9fu2hhp2jgjlrV7YT/Ilys9riNa?=
+ =?us-ascii?Q?lJCqrKhYQryi5I958EFEey8QkCCtIBC9pW5HurhFCoUNxD/s/+JeA0agJxK0?=
+ =?us-ascii?Q?6qh0BivK+G9Dgb+hXluUK6ZwWkG7r2jxMl24vbknE//10Pl9xLrQJBCZhndo?=
+ =?us-ascii?Q?YbqYhDoqtXe5G1fnPAsEUKcZRcehA9jY1D4vvt9uR3megCXB5lT5L8RAkTAt?=
+ =?us-ascii?Q?EOkErqbgdTlDRlF7WCcAhW6CUhqs3u7pYxqEBnvyYFudmXY41RYfc8QTTZRu?=
+ =?us-ascii?Q?UwmuD6UYwGhT5w+P0jR9/m0hsOJH2xbQENjBEn4xzLOTkQ9UexjLbnSJBqHZ?=
+ =?us-ascii?Q?nGId1JePny2Yyk7zpVyoGuAtb2zrXUVOS1iGk84Xzi1UBVgUIwAru8GaciSw?=
+ =?us-ascii?Q?h7EnhMQHYF5yxjFA68l+oEgnQfoxjTmj0I8oDa5LNkQTeySfYeaq4KPw4X1m?=
+ =?us-ascii?Q?jY+kPv7Kicegpm4OEd+V5cV7HjMdfl3GNobf+VT4NbCMdBk3TkX6NW4Jk505?=
+ =?us-ascii?Q?MACbRPNmQsyry58cSVLezFimkWsmDk/XMSs27EyinRoQIbb8/7htJ1uwJ5ho?=
+ =?us-ascii?Q?gl9VBlK0Q1jRicsx8E8enewADyVPSzk4PNJf4mI36xqZ6ldvdKkyqqiFAbaB?=
+ =?us-ascii?Q?XFV1BidHuTxf67jtTpIzHIJRJ0HpKK5rx6JfkCrBdSBXfZskS3DEw2VpzbdD?=
+ =?us-ascii?Q?S0gbamITfdvxKK0STIgb9lRcMbj6BV8M0cQd2VHfl/Nu8BZJ2LX2HiPhUOYA?=
+ =?us-ascii?Q?ixDF74z+qytqJpcqiWdS+Q2bZyqDGclsCKjLakNZQx72qO2OARJmQGoAq92+?=
+ =?us-ascii?Q?jLbTfBR86pYQ6XMF6pyDucTXRUuukxX4lTBfLRaO0D+7scsp86kEeU+zrON7?=
+ =?us-ascii?Q?hlsjCWlcKVgnupAJivH8WWB9WDs0LdCEpFHCI10qQvMg8RbcTHyrJ2P924cO?=
+ =?us-ascii?Q?XclRehSWtjyNmLB940E3J9az+/7m8CatNyhYz8h9VyP1QRYuLhyVaNQeBo8R?=
+ =?us-ascii?Q?vEqnr9+CxC4th2CKxV7fh2zRRvlST/Sr+IFlUHiO9FNBMKoVT8O/4Gq0zGWE?=
+ =?us-ascii?Q?3+8wjVgwv6yFWFku/0afGnizWGjxrV1aszMryfuF7/+o37XpgIk0irlgwQcp?=
+ =?us-ascii?Q?sdIyljEtSTQOpo+/i6EQ9cPgW/75GFpFFPl3I3AEHnob2lNm+feKNqNWSboV?=
+ =?us-ascii?Q?JAe1LVZHgf9uyGhjKTcaoWrEfXZC3X4U0puB72U1xdF40l56FW8+prHoBbsu?=
+ =?us-ascii?Q?oXflYnJhgXZQnuMriPNMwr5Vd6mnG9n2fiT1CoLnMfK6r+EJbqOfJA61ndpL?=
+ =?us-ascii?Q?0/b3qGYonpC6vfE=3D?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <4EAAB4D971D3774B82AF381294AA756C@namprd10.prod.outlook.com>
+Content-ID: <251755CE4F5B3C4A9F5CC97888BB1570@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a1e43315-4960-424e-6891-08da0200d81e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Mar 2022 19:13:07.4848
+X-MS-Exchange-CrossTenant-Network-Message-Id: 80e5624f-5344-4562-8d7d-08da0200e92b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Mar 2022 19:13:36.0766
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 3Xgs6rcAYw5wRUFxNqUAoBCvSzE/rc8lDapyA1EJZP4iA8F+OFddmLp1sWLn6V9d7DndudxOQnGxN6o4WLK8p2xgDB0EJY82PZ3vzrqrDkQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4615
+X-MS-Exchange-CrossTenant-userprincipalname: 2uHrariQWLCceIBfK9k74HM3zOyXzthhour4L6lRyARGPsLP3Q0/QNJFjCD8Zrg4csy3lFwcS9Llg2UO0TU/50JBTIAuoUn7eJNz+DuJUcQ=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB2581
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10281 signatures=692062
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0 mlxscore=0
- bulkscore=0 mlxlogscore=999 spamscore=0 adultscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2203090103
-X-Proofpoint-ORIG-GUID: -aRIu7Ess4y4zag4FuBIdUfpfLbnzCGH
-X-Proofpoint-GUID: -aRIu7Ess4y4zag4FuBIdUfpfLbnzCGH
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ phishscore=0 bulkscore=0 adultscore=0 malwarescore=0 suspectscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2203090103
+X-Proofpoint-GUID: 0YBI1XYvJvPj5Afg23bbuW2SKJWoiaWg
+X-Proofpoint-ORIG-GUID: 0YBI1XYvJvPj5Afg23bbuW2SKJWoiaWg
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -149,86 +146,28 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 > On Mar 8, 2022, at 12:20 AM, Nilesh Javali <njavali@marvell.com> wrote:
 >=20
-> From: Shreyas Deodhar <sdeodhar@marvell.com>
->=20
-> Increase max limit of ql2xnvme_queues to (max_qpair - 1).
->=20
-> Cc: stable@vger.kernel.org
-> Fixes: 65120de26a547 ("scsi: qla2xxx: Add ql2xnvme_queues module param to=
- configure number of NVMe queues")
-> Signed-off-by: Shreyas Deodhar <sdeodhar@marvell.com>
 > Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
-> drivers/scsi/qla2xxx/qla_nvme.c | 15 ++++++++++-----
-> drivers/scsi/qla2xxx/qla_nvme.h |  1 -
-> drivers/scsi/qla2xxx/qla_os.c   |  1 -
-> 3 files changed, 10 insertions(+), 7 deletions(-)
+> drivers/scsi/qla2xxx/qla_version.h | 4 ++--
+> 1 file changed, 2 insertions(+), 2 deletions(-)
 >=20
-> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_n=
-vme.c
-> index 794a95b2e3b4..87c9404aa401 100644
-> --- a/drivers/scsi/qla2xxx/qla_nvme.c
-> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-> @@ -799,17 +799,22 @@ int qla_nvme_register_hba(struct scsi_qla_host *vha=
-)
-> 	ha =3D vha->hw;
-> 	tmpl =3D &qla_nvme_fc_transport;
+> diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/ql=
+a_version.h
+> index 913d454f4949..b09d7d2080c0 100644
+> --- a/drivers/scsi/qla2xxx/qla_version.h
+> +++ b/drivers/scsi/qla2xxx/qla_version.h
+> @@ -6,9 +6,9 @@
+> /*
+>  * Driver version
+>  */
+> -#define QLA2XXX_VERSION      "10.02.07.300-k"
+> +#define QLA2XXX_VERSION      "10.02.07.400-k"
 >=20
-> -	if (ql2xnvme_queues < MIN_NVME_HW_QUEUES || ql2xnvme_queues > MAX_NVME_=
-HW_QUEUES) {
-> +	if (ql2xnvme_queues < MIN_NVME_HW_QUEUES) {
-> 		ql_log(ql_log_warn, vha, 0xfffd,
-> -		    "ql2xnvme_queues=3D%d is out of range(MIN:%d - MAX:%d). Resetting =
-ql2xnvme_queues to:%d\n",
-> -		    ql2xnvme_queues, MIN_NVME_HW_QUEUES, MAX_NVME_HW_QUEUES,
-> -		    DEF_NVME_HW_QUEUES);
-> +		    "ql2xnvme_queues=3D%d is lower than minimum queues: %d. Resetting =
-ql2xnvme_queues to:%d\n",
-> +		    ql2xnvme_queues, MIN_NVME_HW_QUEUES, DEF_NVME_HW_QUEUES);
-> 		ql2xnvme_queues =3D DEF_NVME_HW_QUEUES;
-> +	} else if (ql2xnvme_queues > (ha->max_qpairs - 1)) {
-> +		ql_log(ql_log_warn, vha, 0xfffd,
-> +		       "ql2xnvme_queues=3D%d is greater than available IRQs: %d. Reset=
-ting ql2xnvme_queues to: %d\n",
-> +		       ql2xnvme_queues, (ha->max_qpairs - 1),
-> +		       (ha->max_qpairs - 1));
-> +		ql2xnvme_queues =3D ((ha->max_qpairs - 1));
-> 	}
->=20
-> 	qla_nvme_fc_transport.max_hw_queues =3D
-> 	    min((uint8_t)(ql2xnvme_queues),
-> -		(uint8_t)(ha->max_qpairs ? ha->max_qpairs : 1));
-> +		(uint8_t)((ha->max_qpairs - 1) ? (ha->max_qpairs - 1) : 1));
->=20
-> 	ql_log(ql_log_info, vha, 0xfffb,
-> 	       "Number of NVME queues used for this port: %d\n",
-> diff --git a/drivers/scsi/qla2xxx/qla_nvme.h b/drivers/scsi/qla2xxx/qla_n=
-vme.h
-> index d0e3c0e07baa..d299478371b2 100644
-> --- a/drivers/scsi/qla2xxx/qla_nvme.h
-> +++ b/drivers/scsi/qla2xxx/qla_nvme.h
-> @@ -14,7 +14,6 @@
-> #include "qla_dsd.h"
->=20
-> #define MIN_NVME_HW_QUEUES 1
-> -#define MAX_NVME_HW_QUEUES 128
-> #define DEF_NVME_HW_QUEUES 8
->=20
-> #define NVME_ATIO_CMD_OFF 32
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.=
-c
-> index 89c7ac36a41a..8f47dd421e33 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -344,7 +344,6 @@ MODULE_PARM_DESC(ql2xnvme_queues,
-> 	"Number of NVMe Queues that can be configured.\n"
-> 	"Final value will be min(ql2xnvme_queues, num_cpus,num_chip_queues)\n"
-> 	"1 - Minimum number of queues supported\n"
-> -	"128 - Maximum number of queues supported\n"
-> 	"8 - Default value");
->=20
-> static struct scsi_transport_template *qla2xxx_transport_template =3D NUL=
-L;
+> #define QLA_DRIVER_MAJOR_VER	10
+> #define QLA_DRIVER_MINOR_VER	2
+> #define QLA_DRIVER_PATCH_VER	7
+> -#define QLA_DRIVER_BETA_VER	300
+> +#define QLA_DRIVER_BETA_VER	400
 > --=20
 > 2.19.0.rc0
 >=20
