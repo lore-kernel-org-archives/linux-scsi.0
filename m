@@ -2,208 +2,197 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6589CC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 19:39:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65659C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Mar 2022 19:44:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237785AbiCITkI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Mar 2022 14:40:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51594 "EHLO
+        id S237984AbiCITph (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Mar 2022 14:45:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235404AbiCITkH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2022 14:40:07 -0500
+        with ESMTP id S237987AbiCITpg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2022 14:45:36 -0500
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF6AB14012
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Mar 2022 11:39:07 -0800 (PST)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 229JObhb032285;
-        Wed, 9 Mar 2022 19:38:55 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D4ACD31FA;
+        Wed,  9 Mar 2022 11:44:36 -0800 (PST)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 229JOksk017381;
+        Wed, 9 Mar 2022 19:44:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
  subject : to : cc : references : from : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=zJVaYc/D13PhQRzIivjp2371XbMmuv5Fvf++lL3GGSM=;
- b=yWrFN8HijeXYWocK/+lva9IC6dNUalT2zblTCKdVkJlwjxHrQDlzzbp2gMl/KsrDx4V6
- y0/Vgv2lgjiHEnWSOF5f6rrhC/aKlY1E8facYadENcIfYSJ+nyFEQUG1atcLxIKinAt4
- EYt0IxxcKOuuW8d6khO2EW1zBPZR8ALtjXP4DXJ22ZQZrANcvbmXUlP+4qZJ+J3HKEWo
- 0NWQvK/L6/wxw5db3uLqH8oQkVO2JnzLMTu8JfD7i/SPseqNVmS1tsZotWbWqSRK2SX5
- 4QQRLMMlmw2LOdeiLZEPbv2ujurVhy3j0vTgNcIvSDviZj9tfcpzn89unAciNds6mJqR Tg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ekxf0u67c-1
+ bh=CHo2XS6oMCg+M6GfowRK0h0ayzk+z/m5t6cqnhIT4M0=;
+ b=YPz3Cgfro3SshC3Csq3QnrjquaCe3uvDju6mBtPfODsZC4i5vvtDkNciTvHcQ10GD6wa
+ JWRXwVgwzMQfnLMv3CBgJLZzJrlwMJ1V2deZlecMmcURr+63b2AYOStuJiMBZTHBooNR
+ sZjzKSNe6pMUyKvJYtifDoVlEe6Hz3pTeWsqno0VEA36kPlTmEI7CpksldKeFLye+hyn
+ IqlK0UcETErO6tRnRk2iR12dDzu6jUK//lAXK0YTvqDaoxreRJflCiUBdh0NiXbISdA3
+ JOktBaFK/6ZXRWJ1z+BU+Gsyg0QVjp8EddWP3UzGDDDOPQ42bnhVx379DEL4HY/IwDBi Sg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3em0du3ajf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Mar 2022 19:38:55 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 229JPev4051974;
-        Wed, 9 Mar 2022 19:38:54 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2177.outbound.protection.outlook.com [104.47.59.177])
-        by aserp3030.oracle.com with ESMTP id 3ekwwd0bhx-1
+        Wed, 09 Mar 2022 19:44:18 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 229JRMIk191511;
+        Wed, 9 Mar 2022 19:44:17 GMT
+Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam08lp2040.outbound.protection.outlook.com [104.47.74.40])
+        by aserp3020.oracle.com with ESMTP id 3ekyp34vc1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Mar 2022 19:38:54 +0000
+        Wed, 09 Mar 2022 19:44:17 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=W5qmSxiE/6RdXgRoLb5CmhME2R1oI5FSEbPkJcNVe2cGCXYJu8TEhJdKWQyULY4SKmiDihOUbVlFdfuRvR4bHnfi0NFM5PGN0tbXcmZ8v7Oaay4mRJsLFs78/lqPBSMMradvtB8gifeFkF9DZxd0m+F1/g7/jVY3q0UsOZH/Fpm/6tlgwS9o5/q2/KjXPn0bWQBjpYrzFvLM7bgnBnzN3gDPHbvj5/Ik6tXr0Kh4LBxmticlK9LF//YqYEPrVO2JxN+7EGBPsorJYUEGiHiN0XQCSWyodj6XKRQmhdjx/2WS1N4q/Gz2hWkc9KY8+u1shRH5cnDE8b2sPSIgLdm41A==
+ b=H7j7rdWG/vZCsvW9VLUOEswRgzg3uGVeI22knGlN6IATFPVePdrYWUHQRvH/oQiDcE4w+l3c2a56sulVBLFMpP2WfPaH63kk+3dkNeKi8XLUmgj5J2ZaIdifEzPgjwJaOEywg3bS8LPDSwDpSEga/OTgh4sK1hXAjSLCWopvIysLdofrZMyr+cxONh8Km94qtTbIOp6C4W2x1uPOKRwjdCUhfcmBxESRF8zX8NdZmxCMwAHryP7iVjKvpH/r3w8E4097z4KyoOl0WSXwHZSzoUABjANPGN8+pHoob/T1vA9tWjdNm5t0mRraRIW4y+rThmcLuEOg4aNnI5weA7h32g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zJVaYc/D13PhQRzIivjp2371XbMmuv5Fvf++lL3GGSM=;
- b=KDO1tRqMCBZbj1EMXeBMWYFPJbMqjz1PWgM9Nv2/GLBLgUoThVZt8KNyXu9GhUubajS1vx3pwDNGK1k7FNV1K24YrwwCX1Z43xBsGrj4toRqZ/mH+fCmaVEOa+8lC8jJIuS1VDkygNcNCSD0Iuds1UAoQFEAHmw5Ma1IlMJBbKm9kxT7jS5Ap8cxOmXuhZws/blgxziSS6L2RuAP0kPG2P161cnru0IxDdaTVLkUfpBM3mXPaCWwEhKH/kyjDOh5aSjK2yZ2ftxlb8/2dN86/A1iywGxy5jP8UuZqATeF/3piY9Z0X2TuhLRD6a+1pfYjidZYLYMwaeRB1XXynSlOw==
+ bh=CHo2XS6oMCg+M6GfowRK0h0ayzk+z/m5t6cqnhIT4M0=;
+ b=V7ApwNnk/RMWTBkTqesMciH9sQJPOfMr8CPwLAPizW6+cdTBmHVxWzhgKne8qExmpI3t6b8hft40+5fycN8vlNqD3JMOwPGY3IH2CPtp3qwevBPLySOa2Jviv91nCzoq+ueLwskkUT1TPWCLkgzsqnvnDERtjF9iOdet5jkoZcTHM4XgKsCsodmuvo7nqHUNOof1lt/28BafBC0zsQCOWV4HOhHB7BwN6IMf6R004NLc71kyHnBWNYWTw4Ju3MofAMn40lAAF7cVJQo0YYpNwBZKlq3d1Jrh6lDyLcs6dmTxrCMuIDiCL5ptio6ej9Y+csFYRgX3ULCUdmASech/aw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zJVaYc/D13PhQRzIivjp2371XbMmuv5Fvf++lL3GGSM=;
- b=zlFAfJMpunJaPqBWB5T1vt3WgPTytp71CV5SckaYWOwdLNd5OXoCzvefCP0WmiyNqk09q+t05f2JE4baWsst9owykhDTYs9IiAnTxgVjorAJEBDOaNAdfyWwMQEl9uP4AgYoAw1UrmVOyg/J7ZplvvHS0I+LP7fQqIbIpQSr1AU=
+ bh=CHo2XS6oMCg+M6GfowRK0h0ayzk+z/m5t6cqnhIT4M0=;
+ b=rnAJ0MDkiFVxpR5LSFEASXLYJ8R67hcYYvr5SWd8KXwKWqetpbgSXYxn9f/5lx/UKJtX33+I1c9borQv/c9qmqTchJu8XgM9cJfMWQ+hyIQMowwZqHZUYTxxhgot+whP51yrX9wtCYFP1gJjCknMZo5Elm2QuOeEfJhK1+wK/OE=
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- CO1PR10MB4787.namprd10.prod.outlook.com (2603:10b6:303:94::17) with Microsoft
+ CH0PR10MB4986.namprd10.prod.outlook.com (2603:10b6:610:c7::7) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5038.29; Wed, 9 Mar 2022 19:38:52 +0000
+ 15.20.5038.14; Wed, 9 Mar 2022 19:44:15 +0000
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::3dd8:6b8:e2e6:c3a2]) by DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::3dd8:6b8:e2e6:c3a2%12]) with mapi id 15.20.5038.027; Wed, 9 Mar 2022
- 19:38:52 +0000
-Message-ID: <2ffdb3b4-6c87-29f3-2638-e8ed5fef15fd@oracle.com>
-Date:   Wed, 9 Mar 2022 13:38:50 -0600
+ 19:44:15 +0000
+Message-ID: <823b30ce-c95e-4fc4-e634-f49c4433bcc9@oracle.com>
+Date:   Wed, 9 Mar 2022 13:44:13 -0600
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.2
-Subject: Re: [RFC PATCH 1/4] scsi: Allow drivers to set BLK_MQ_F_BLOCKING
+Subject: Re: [PATCH v3 0/3] scsi:iscsi: handle iscsi_cls_conn device with
+ sysfs correctly
 Content-Language: en-US
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     bvanassche@acm.org, lduncan@suse.com, cleech@redhat.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com
-References: <20220308003957.123312-1-michael.christie@oracle.com>
- <20220308003957.123312-2-michael.christie@oracle.com> <Yif6jjlpPTEYpcAT@T590>
- <b1b7fa2c-ade3-987d-e240-fb6acb421b99@oracle.com> <YigGPK3zLAN87mSS@T590>
+To:     Wenchao Hao <haowenchao@huawei.com>, Lee Duncan <lduncan@suse.com>,
+        Chris Leech <cleech@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Wu Bo <wubo40@huawei.com>, Zhiqiang Liu <liuzhiqiang26@huawei.com>,
+        linfeilong@huawei.com
+References: <20220310015759.3296841-1-haowenchao@huawei.com>
 From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <YigGPK3zLAN87mSS@T590>
+In-Reply-To: <20220310015759.3296841-1-haowenchao@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DM5PR06CA0073.namprd06.prod.outlook.com (2603:10b6:3:4::11)
- To DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7)
+X-ClientProxiedBy: DM3PR12CA0137.namprd12.prod.outlook.com
+ (2603:10b6:0:51::33) To DM5PR10MB1466.namprd10.prod.outlook.com
+ (2603:10b6:3:b::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0093e2f3-a7cb-440b-33f7-08da020470ad
-X-MS-TrafficTypeDiagnostic: CO1PR10MB4787:EE_
-X-Microsoft-Antispam-PRVS: <CO1PR10MB4787D69DA539D68D2376DDEEF10A9@CO1PR10MB4787.namprd10.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: bc6b8ba1-1fe0-4444-ab1f-08da0205314f
+X-MS-TrafficTypeDiagnostic: CH0PR10MB4986:EE_
+X-Microsoft-Antispam-PRVS: <CH0PR10MB4986295B6D63B22BE1631B88F10A9@CH0PR10MB4986.namprd10.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: n7eltIRERXLwjnUClgN7nYmu3L0KNA4D/mwRiL810evP4vO+6FRhFVvZPwXbCVwWEfjxWRmzN0+i2pcQYuNhHQgIhHtigB+NHs2/ubZgWGas0QQcnxsiBjjWA3ANlcx7CIRt7ZuxXaxMRwJAv6jB8rtAiUTI7dIRJHnJS+GKSfZLBHsSl4WfyNXKk8YmJ3Ev3Hbx5wMLQKPkrXqZtm/3aaEa2TxGXNZxdMyfMfDjGpsftO4Ty3iQ5LyP3xu6SA/omLxelcrSUqNjlftDW5VJaMoyhF/HJcmLSCDIwtp2oTkFE++3o1pRCgFyi3FFf/Eie6RruMaOGDwq6qW1Ea6ekfqoOe7bSDHRc9iOZ7p5CZwMW1IEXxHEz0u8MSmySPFiT/4ygnBK+0XQWeUAPw2aWfecmiB1erVffuaUbPgDNbJP4nkijvGgVQ+R8oq38oVy7FCgIb+EpdSbVpwHwwuUyzV6M2QAbx8kG+dR2zjdfy1aq3Y2wt/nP/v+oXphi8Dwu+2DcqpKG6WtP8SiTeRopI5jt/Ri8r/RiM3Lfl18gQr2bG7LhQXd+A1fYkxp1l8CuncF35Tsf4tAVJvnknQvxuEfTBXlZ8NVoCQX33CR2nH+tB9HfL8GHGWvApPBLoqTOPIVOoESdocOWQ+erLXW/ehSDXh7y5KKUuZPlwwHzehUy5/QPoTqtHWSKiiRy5LNZWoQWOyqsoaw+RrhB1o30XbRB2ZPBYVhJuRkjR10ZwnZX9R49biySh8+1V/q/PVO
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(4326008)(6512007)(31686004)(2906002)(31696002)(6486002)(6506007)(86362001)(53546011)(508600001)(26005)(36756003)(6916009)(186003)(316002)(8936002)(2616005)(38100700002)(5660300002)(66476007)(8676002)(66556008)(66946007)(83380400001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 68kt/fLSujDRWvY4eoLri4AhB4Yf9pknL0WBmC7ZUjgo9WZMgDBDSHh3qsgdeKUdcshdDjEDSYYelzjpRe7Icb25vgv/aFzqqWML0ejvILTmAB2yVhGmmVXaQCjN7FCQvgXodC/DW4I8W5z4t8EtlDyVz4OF2Nh2SlD/fdT0lUcYgvaNDsKYA9V9vJSqhLdU66KgzuCbJ9t4MoVzBkcYDvb/LG7Pubn6LVWyIXNLwbvJ9RI4m74xQq0uKR3RoRp1cIDEZz/go24ddkZmVHTEN3fsESuR6xxOGlhS1MZ63vlMddNgcq9E+ZACAQHGZ3GnfiNASWYKSDv+nJ2KFbNBjPd9YEruqHBHpD9QK/LKOMRZ2qZiBTunyi/G/B7sQWPT08+9TFpZ1suH2u/pc6YRo/gKD6ogoP+yn5vQgABsuKPODt81ArPH+8pffJTP+ZS4NaFAHziGBmZT0gePXT8GlhNqaA0Wwkt7Wds8xPF8UxYhDi0xPWqcoZUrmkOeHghiKntMgYVDAY3MWGGyqIkrw71xpiNL5/hPEk6Oy77QNROf2DC5yGNxlk2/AJ7OjPbRbWWuuz4et9yNF+fu+dwXEdt+X+VgLMN9N97Zj3NcpqVZVtDukkdvxaHy9tg8f8TGoqD2W0shVeVgeMq+e/36yBs5dO6JJZz8FwxeSfpo+OTD9exB9zCht4xUgU7XKUQS1The9gujIxrdmnvDR9rN9cqJYD11GVFXrPROUDis8n6NZr0G5m3tH68sWbMNqgSj
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(5660300002)(2906002)(508600001)(66476007)(6512007)(38100700002)(2616005)(7416002)(53546011)(186003)(26005)(83380400001)(6506007)(8936002)(31696002)(36756003)(316002)(54906003)(110136005)(31686004)(6486002)(4326008)(66556008)(8676002)(86362001)(66946007)(43740500002)(45980500001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?dUNPZVUydk5GZ1UzRmZkU0d3aW9MZVptdWJSeEFCeVpoeExyYXE5cy94cFZT?=
- =?utf-8?B?OEdEWlhhR0lKcVlEV3VhYTZwVExSaHp1N29QWnVMeUM1enQyT2owdmhCalNP?=
- =?utf-8?B?TWhRdU5ERWZXNTVsQ3pIcGVtcXdJaFJmNytDOS9RcVVNcGdGMzVFRjJmeDc2?=
- =?utf-8?B?NGdwaDFkNHJ2WUltUjkyTU04ZTdMZzFMdHhvUkxCR0dKNVdKYTF5SXNqVlZV?=
- =?utf-8?B?VFZubmpVelFlZncwZ1lONzJ4QWhTSTFFNThDN0h0Z1Z6NDNsOU1wWE5qNXpo?=
- =?utf-8?B?WGQrQnB3WExLbjIweE5PblpqSUo2enIrSEN2WEhKejlLOVM1NmVLV2Rhc3Q1?=
- =?utf-8?B?cHA3VklKVnUzbFRIWHlyenQ4S3piaWJpUjJxOXNOZmRQY2hWZFBZaHA3bFhs?=
- =?utf-8?B?SzVHQ05ucE1uYnZtb3c2K2pzYjEwdWZwY2lvTG1tdklTSjhUYi9WK2ljVnht?=
- =?utf-8?B?MlN1M2tMSlZuTmRNcFZmK2tIV1ZxZWczUlF5eDdKT2k3RWVydmYyUkhpMEtE?=
- =?utf-8?B?Mm1XclZ1c3V4K0tVOWY2ZXI0TWZaU29DL1JlbW5kQzlQZHBxM1BZcVBoZnFk?=
- =?utf-8?B?ZTcrdjg0WVlnZzVVMThuQkY5SWh6a3NwRFZZcWh6UmNBdDZacktrdmNRckxJ?=
- =?utf-8?B?bGQvOFkzNEJHMjUzN3ZxVElGTEEydUR4Vm11UkNKSU5WMVZlOEZGajRDSGpF?=
- =?utf-8?B?ZitvNEtKTzlnN2R6ZHpqd1JPVnZCN2RocWRXV1NCNDFjdnFwck5xcXJkakR3?=
- =?utf-8?B?MDJnVXdNVWRndENKUmk1VmhsU2RPM0RBek5CVUwzN2ZXUnZYRW5XL1h2MEVt?=
- =?utf-8?B?ODRyR1ZteUlmVVhTQnNhK2kyT3Y3ZGpxTWdqRWxkOEVLbUFDQmlyS2RrUXg5?=
- =?utf-8?B?RzhneDFZTmZXK3J0NlI2eVZ4eTlQL042NFBXbEtlSW5rOEpWSjBIdEtqWXdi?=
- =?utf-8?B?ZngrcndNWlQ1STFFZGpQeHRKU2Q3RzEzUW40bDVjWXVxbzJ6MnFvREhONHJS?=
- =?utf-8?B?OW1ZWHozSEphS2pTTnhvSjFLT0JJcFhnYWNzVi9kYUFkMmJQbzQ3Yko4NGdu?=
- =?utf-8?B?OU1kL282a1lkbm1RSmdJeTZueGFEbW1EOXJ1aStNTUVxVGthRmkxTDdiWEo3?=
- =?utf-8?B?KzhEditHKzZ0ZzFXVXJZZFJzNSsrbGZwakxSTDE2ZzB2TGh2VUsrdDRZb0JB?=
- =?utf-8?B?ZnZSTEpVUmdmOFpRSHV6aVBBbkZxcEdOMWVGU28vcTN2ajByUE9aTVFKb2h0?=
- =?utf-8?B?Rzl2MFB5Kzh3aFRDU0NZMGxMV0dTWlNKSGJyT0hsZXdsN2pVK2duYnpFdS9j?=
- =?utf-8?B?M1MxcFo4d1RxTnNPbU9nUWI0T1p3UTIybFptVWtNRU9neUVVN1VxZ2FsUWpr?=
- =?utf-8?B?S3FsSFVweGw4WC9tOC8yT2pRZ2dJenpNRlF0ekVnQkxPNjJGMllmYTdwdFRM?=
- =?utf-8?B?SmxVcjB2N0xsUzg3ZkIvMEhMVjNKdFM3WWd3YkN0NjRpRFBOMUZ4dncwcjln?=
- =?utf-8?B?aVlSRlVGVW1rSi9wWk9yS0o4b0xmRlNVZEZMSHJ1V0xsc05aMXM1aXNnRzJ5?=
- =?utf-8?B?Tlc1OHZHSjhsY0J2SFF3RlNaaGpoUTl2ODRQU0htZkdFSDFnVVR1d0h2bGUx?=
- =?utf-8?B?L3FyQXJ1bXRzcGhkeGl6RUZrZ1haRThhK2k3Yzk5TEFVVENNNXVldmd6a2ww?=
- =?utf-8?B?eWcrQUw3VFhieno3bHlSUjVjSlpJOXZrL3g1bjNncThob1AyNS9vQW9DeERj?=
- =?utf-8?B?amR0Z1JhYURRblBNS0R5RFNuejEzVkZPMmlZWkJyY216MnVUZ2o5MWFVRTVJ?=
- =?utf-8?B?am8xckJ6R0xqRXV5WTBsRFVidG1MWHhKYXlYRGpnWFloS25kQmtUWDhDdUpV?=
- =?utf-8?B?ckwveFhLN3kxT2RvN1RxN3ptZjJPNklaUm9RZllFMjIrTmJwaUlQU05Bdklu?=
- =?utf-8?B?eWo1S3M1SmhaTVZzUnpYYmp5LzlKb1JHSW40a1ZvMlhBbmFVdHBIOEhlTnVR?=
- =?utf-8?B?VEN3aFpvb2RzQTdweHB4ZFlDNGdVaGloR21YZjB4S1ZmTzhoOXJENDE4N2RW?=
- =?utf-8?B?K2ZTS1lLWGQ3dEhsTXNEMmZWV0RHUjd1TWN0RTJ2dkZMTUY3L2dZcm95V3ZQ?=
- =?utf-8?B?NHdpMTNjT3lQbW5jd3pSNG8ycTQ0dzJRZXFHYXFESVBPRUY1VFlLK2EyOGxt?=
- =?utf-8?B?VEowd2Nyd1JVVlR3dnZQOVhaNVFURlE5MlNiNmN0WVZteTRlTHRsUVNmWXhn?=
- =?utf-8?B?K0hHckcwUmg1UXk5a2tDRk1JQmVRPT0=?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Rnh1RkdUMVNOdGMwVldsOFpMNE5aVld4K09wc3NyL1lBVjlvYVZSemY2S1FS?=
+ =?utf-8?B?OUl3dTl5SHBQU3h1Um85d29qNS9mTkFpNncvYnR2cFVpY3lmZTB0RUR0Mksw?=
+ =?utf-8?B?eXNKNkdoUWxrMDBxSFB4N0xjTXRqNkFBaFZ5RFRjZTNtcVcyeVB1SVlza01C?=
+ =?utf-8?B?SFFqUVNIR1pHQkV3bWF3Um5HZ0ZlOEgyQ3J4U2lPUjVMWGIyUk5NYkhKY21J?=
+ =?utf-8?B?MzBBRlVjZFdQdWM2U083QjFaN3M2ZkNPQmVzUXArWGhwbjBITUgzL29tbFBT?=
+ =?utf-8?B?c0pkRlZYMGxPTFNCMWNjdUZyS3kxdFByYTY1UTd0U2t0S0FzQ1B2QndObTd1?=
+ =?utf-8?B?T3Y3cHZTODVRVWNzU1NTdnRqeGxpSXdCRkhIc2MwZk5lZ29CQTBJUHEzcWZY?=
+ =?utf-8?B?UktJUHZqVEgwWXV4UVhTWGNTdGg2WjJSbW5pMFRrQkFpVUZnaWwrd002Mkdn?=
+ =?utf-8?B?bW96UitjNHEvVzdoUk9Wc0pKeElGT1lpWlNzS0lyQ1hRcDJYQ2VQbE1YY2ht?=
+ =?utf-8?B?V1VCK3FWWmpMUUwzNVM2Y2hCRDVEOEUzVkRGSEovd3VhRHRYaXQwVXRkR0c3?=
+ =?utf-8?B?K3Y5K3NHVGQzWm5vZnNvZTJLNnAzYUtsUTUvV29mWWdSTGNDaFhEd0hwSGta?=
+ =?utf-8?B?alZwb1hXMHUwMW5Scyt5T2daYys1M01mZmNGT2k0SVM4SmpIaU5QRGJlL3c3?=
+ =?utf-8?B?bTdMOFhwTWtPa1paYlZJZmprdWNaTFZVbHdLWDB2QkJjZFJ1OS9UR0t0WExD?=
+ =?utf-8?B?U2pGQWlDa0ovSGcxQ1V1NU1HUE10dERROXBCSCtQUys5bENJQnlFMDdUYUEy?=
+ =?utf-8?B?VFdpTlNIV0JQa0JUcWVBaFBOeTRaeUF6Q3pORXhzZVlYUU1zWHNEQmJBU0Np?=
+ =?utf-8?B?OG5NUTJwVmt3ZE4yTDZTdHBZUWdxR1IxQjZoaEY3ZE13MXFPQ0lOcU1Wb25N?=
+ =?utf-8?B?YldqbHpXTTJ6eW5aNTVtQVRaVXgyNVRzSG0wUHVUNm42SFlHblVUcTBPeDla?=
+ =?utf-8?B?WGJQS3QvbEVHUkh0YmpUbklmakNiZFFFdWhXK0pBaW13d2MrbWF0eGd6OC9N?=
+ =?utf-8?B?ZWtvZ1c3cmxKYlpDOFdOYUNUQVFIcUp5c2tta2QwZTBkTnlldFkwQzVvbHdM?=
+ =?utf-8?B?NTNuWDFNMWd6N1J4Tk9NL2xLdGhRVjMwa3lZd3F0YjRraXFPSG9nNWNOZjlT?=
+ =?utf-8?B?enB6bWh3VXhlcFpBVllTMnNNbHBSOXRkT0RUaVk2YVNmZkpXTGJBbVQvUElC?=
+ =?utf-8?B?OG93SXcvWDhZeE1tdVFpRnZEd3F6b2VtZWl5cGNZcmUxdmtjOVJxWGd5VjdZ?=
+ =?utf-8?B?em16dXF0a01WSDR3WDBueTA4aUZZT2hIeGxaSlkyS1A3VGhvdmRVVHBDclJi?=
+ =?utf-8?B?eFprUEo5MkxkamJycVhuRUIzaTJadFlKd0tFbkxYcUovcnhvQzBYRW5KNFZt?=
+ =?utf-8?B?aXJDRzFtT2lrM2NMOXgxNld1Q2NoM2srSGNyUkM1dUxVbXVrVHY4R20wLzg5?=
+ =?utf-8?B?U0owbGYxUy9WSW1wSEFHOVVoQ3N4VXljZTl1V29ZdFF0b1Bna1BjZnBaSWN6?=
+ =?utf-8?B?ZGQ2dzZCWWQvSUp3TUJUc0FYQldNMTNDc3VLbDRkRExLeU5ocWJITTd2bXJO?=
+ =?utf-8?B?Ty9nUGVrelh1eEtxd0c4Q1RPMFJGaXdIeU9VK05FY0lWblZMSkJjc2tIWTJv?=
+ =?utf-8?B?K3B0dDdOM1VUNDRSSzR0bm5jTXNlNlBwQWd5b3FrNXozZGIrYTZpUVBsd2tp?=
+ =?utf-8?B?Y3MrcHNZN0RhV3ZaTjdUdUNYMFV3dDRic0Q0aDUyTkw0ZGtjak9QOHdrRnd2?=
+ =?utf-8?B?V2pyWEk1bm1DMEo5Sm1zODZuR056Rkpydm53RG83Vk1sazBHZW5GOHgrTVND?=
+ =?utf-8?B?d0lJSFZMZ0hJTmUxNk9iZWpRZnpjSG5VK2J0Qm9Kd0p3VWU4ZTVEL1ZDdWtN?=
+ =?utf-8?B?NnNsNGpSaC83dXVwYzVLQURLWHN5RWk0WDEzbkR2d1V4S2dYaUtMcW1saWRr?=
+ =?utf-8?B?MlBJU0U2WTVSSlczYVRGcXVnbG5hQWpoc1J5UUY0eUJnd21qKy9JZmhRSHNU?=
+ =?utf-8?B?a0ZSUmlrNEowd3F0d0tab3ZlY2FkeUVpb0FodTlPZzRQQWIvYWVSWVBTcm1I?=
+ =?utf-8?B?VC9GWVNhYUMvakV5MVdIeEpOMnprbzI5cDh2MzM3c1BlL1dXYkhrNEc3ZFZu?=
+ =?utf-8?B?c04yZFZwcXJyR2VxQ3ZkaitnYUdHVHdsSmFrc3BMNEpud0wvV0dtbFljdk43?=
+ =?utf-8?B?d3hXQ2ZpMmZ4d05nR2VSOFJzMTlnPT0=?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0093e2f3-a7cb-440b-33f7-08da020470ad
+X-MS-Exchange-CrossTenant-Network-Message-Id: bc6b8ba1-1fe0-4444-ab1f-08da0205314f
 X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2022 19:38:52.0964
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2022 19:44:15.2993
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5XJXV5mo+mbCeufDMYxsCCCZZSaKX9NsILgiIv5aE6ITXF1YCFkLqPCxUn7Wl3z57SGfHO75mCpsYG2izdJIDpd74SNMLkRHQVqLMy9T5Mg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4787
+X-MS-Exchange-CrossTenant-UserPrincipalName: ERdhnNtlz8JQV92yG6gH2H56Psnpupt3bUJfEzbP2CChROlaw/tBAXyt1S4qN+ZF3L0gDYAQNOAtZ/ugmymixEieiDQvwir2wwQBvFa2cyo=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB4986
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10281 signatures=692062
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=751 spamscore=0
- phishscore=0 bulkscore=0 adultscore=0 malwarescore=0 suspectscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2202240000 definitions=main-2203090104
-X-Proofpoint-ORIG-GUID: aohMH-qqiSpfVJC2cfn7mO6yKRFbOV-n
-X-Proofpoint-GUID: aohMH-qqiSpfVJC2cfn7mO6yKRFbOV-n
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0 mlxscore=0
+ bulkscore=0 mlxlogscore=999 spamscore=0 adultscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
+ definitions=main-2203090104
+X-Proofpoint-ORIG-GUID: T49dovCJ4EFS3ebarIk4qbYZugSHhwF-
+X-Proofpoint-GUID: T49dovCJ4EFS3ebarIk4qbYZugSHhwF-
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/8/22 7:43 PM, Ming Lei wrote:
-> On Tue, Mar 08, 2022 at 07:17:13PM -0600, Mike Christie wrote:
->> On 3/8/22 6:53 PM, Ming Lei wrote:
->>> On Mon, Mar 07, 2022 at 06:39:54PM -0600, Mike Christie wrote:
->>>> The software iscsi driver's queuecommand can block and taking the extra
->>>> hop from kblockd to its workqueue results in a performance hit. Allowing
->>>> it to set BLK_MQ_F_BLOCKING and transmit from that context directly
->>>> results in a 20-30% improvement in IOPs for workloads like:
->>>>
->>>> fio --filename=/dev/sdb --direct=1 --rw=randrw --bs=4k --ioengine=libaio
->>>> --iodepth=128  --numjobs=1
->>>>
->>>> and for all write workloads.
->>>
->>> This single patch shouldn't make any difference for iscsi, so please
->>> make it as last one if performance improvement data is provided
->>> in commit log.
->>
->> Ok.
->>
->>>
->>> Also is there performance effect for other worloads? such as multiple
->>> jobs? iscsi is SQ hardware, so if driver is blocked in ->queuecommand()
->>> via BLK_MQ_F_BLOCKING, other contexts can't submit IO to scsi ML any more.
->>
->> If you mean multiple jobs running on the same connection/session then
->> they are all serialized now. A connection can only do 1 cmd at a time.
->> There's a big mutex around it in the network layer, so multiple jobs
->> just suck no matter what.
+On 3/9/22 7:57 PM, Wenchao Hao wrote:
+> We found a NULL pointer dereference in iscsi_sw_tcp_conn_get_param(),
+> the root reason is we did sysfs addition wrong.
 > 
-> I guess one block device can only bind to one isci connection, given the
-> 1 cmd per connection limit, so looks multiple jobs is fine.
+> The origin implement do device setup in iscsi_create_conn() which
+> bind the alloc/init and add in one function; do device teardown in
+> iscsi_destroy_conn() which bind remove and free in one function.
 > 
->>
->> If you mean multiple jobs from different connection/sessions, then the
->> iscsi code with this patchset blocks only because the network layer
->> takes a mutex for a short time. We configure it to not block for things
->> like socket space, memory allocations, we do zero copy IO normally, etc
->> so it's quick.
->>
->> We also can do up to workqueues max_active limit worth of calls so
->> other things can normally send IO. We haven't found a need to increase
->> it yet.
->  
-> I meant that hctx->run_work is required for blk-mq to dispatch IO, iscsi is
-> SQ HBA, so there is only single work_struct. If one context is blocked in
-> ->queue_rq or ->queuecommand, other contexts can't submit IO to driver any
-> more.
+> This implement makes it impossible to initialize resources of device
+> before add it to sysfs during setup.
+> 
+> So this patchset splict both the setup and teradown of iscsi_cls_conn to
+> 2 steps.
+> 
+> For setup flow, we should call iscsi_alloc_conn() and initialize some
+> resources, then call iscsi_add_conn().
+> 
+> For teradown flow, we should call iscsi_remove_conn() to remove device
+> and free resources which related to iscsi_cls_conn, then call
+> iscsi_put_conn() to free iscsi_cls_conn.
+> 
+> V2 -> V3:
+>   * Fix some bugs and optimization the code implement.
+> 
+> V1 -> V2:
+>   * add two more iscsi_free_conn() and iscsi_remove_conn() than V1
+>   * change the teardown flow of iscsi_cls_conn
+> 
+> Wenchao Hao (3):
+>   scsi: iscsi: Add helper functions to manage iscsi_cls_conn
+>   scsi:libiscsi: Add iscsi_cls_conn to sysfs after been initialized
+>   scsi:libiscsi: teradown iscsi_cls_conn gracefully
+> 
+>  drivers/scsi/libiscsi.c             | 23 +++++---
+>  drivers/scsi/scsi_transport_iscsi.c | 90 +++++++++++++++--------------
+>  include/scsi/scsi_transport_iscsi.h |  5 +-
+>  3 files changed, 66 insertions(+), 52 deletions(-)
+> 
 
-I see what you mean. With the current code, we have the same issue already.
-We have 1 work_struct per connection/session and one connection/session
-per scsi_host.
+Nice. Thanks.
 
-Basically, the iscsi protocol and socket layer only allow us to send the 1
-command per connection at a time (you can't have 2 threads doing
-sendmsg/sendpage). It's why nvme/tcp is a lot better. It makes N tcp
-connections and each hwctx can use a different one.
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
