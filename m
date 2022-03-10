@@ -2,60 +2,62 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB238C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Mar 2022 09:26:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39AE3C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Mar 2022 09:26:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240806AbiCJJ12 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Mar 2022 04:27:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54852 "EHLO
+        id S240812AbiCJJ13 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Mar 2022 04:27:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240755AbiCJJ10 (ORCPT
+        with ESMTP id S240796AbiCJJ10 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2022 04:27:26 -0500
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96934139CD6
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2022 01:26:25 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48C56139CE6
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2022 01:26:26 -0800 (PST)
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 22A1dmHO025048
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2022 01:26:24 -0800
+        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 22A1dlxG024974
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2022 01:26:25 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=pfpt0220;
- bh=Ml4FSqTxg1HDs21wRELUfDOhJ5YuOjxmMtoaTLrjLJI=;
- b=DqB1Qxbn0vxvsPM0Lako4+FaDizm0nmIxf7xnKVELxOCqevEWwHgA/7Qx2aGO4nXwJ+B
- 9nAzPuE07WTHueKqsYeLjbeRyyoLdxpEPP6BZDbpxL0fM4Tbl+4ZlGsij+v9CZ4clT+F
- YQtLu41pNVo4I5zRkV+56IxkoQQSmO7m5UfJIFA/77zEvXQmr9dLp5rrGb7VLRVy0E6t
- dAXhZo3jvKBJAUwZdU82QR8DjmRxRDuVS6oWPfny2HZTYzguYlYRRT8rKlOqWvfB7vxU
- /SW5x3ICf/Rp7pVHGJWQDltensogRDq2ZWVRUwnJ33nBiL4XeovlDhgGSE//EXNOgEeX Vw== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3ep38pmd7w-1
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=pfpt0220; bh=d2dO3WFvqi5qAeDslraGmyGTq8RQN1JLa2HvwUzHmBk=;
+ b=k2dJBvaCCc9QRYfPr3UjpxX2ylrmKuS8atIfr4Sxn5Ovv1W18sISe+JN1ww6EQc5T2/X
+ ZO/A6xeQRAVGW+17+qwhhiOnQ3F/Fsdlbh03ZEUil2i+mEVZ1dk1UxSB4zxodwcY99cM
+ GG8/r5qIBd7KxTuN+UIDlu3frT1ovRBAo8JOQYtcnq218Q7sJqV4rNkrisuWQq2N6ndo
+ yr/6RleYQ6sYGv/CwpjQGs/yK2ak00J4wY2d7sTeDJFsDHnPHSxfiyRFL11SC7S+HASV
+ JXh778OMZpCa87ml2BekZZtqLN52pv2x40ZPROzH0uyk8gM0F7lU87Lv5yX5jiaWHx1P cA== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3ep38pmd7x-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2022 01:26:24 -0800
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 10 Mar
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2022 01:26:25 -0800
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 10 Mar
  2022 01:26:22 -0800
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
  Transport; Thu, 10 Mar 2022 01:26:22 -0800
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id C6A0B3F7058;
+        by maili.marvell.com (Postfix) with ESMTP id DA5133F705A;
         Thu, 10 Mar 2022 01:26:22 -0800 (PST)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 22A9QJAr022985;
-        Thu, 10 Mar 2022 01:26:19 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 22A9QMA8022993;
+        Thu, 10 Mar 2022 01:26:22 -0800
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 22A9Q4Bi022984;
-        Thu, 10 Mar 2022 01:26:04 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 22A9QM0e022992;
+        Thu, 10 Mar 2022 01:26:22 -0800
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v2 00/13] qla2xxx driver fixes
-Date:   Thu, 10 Mar 2022 01:25:51 -0800
-Message-ID: <20220310092604.22950-1-njavali@marvell.com>
+Subject: [PATCH v2 02/13] qla2xxx: Fix disk failure to rediscover
+Date:   Thu, 10 Mar 2022 01:25:53 -0800
+Message-ID: <20220310092604.22950-3-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
+In-Reply-To: <20220310092604.22950-1-njavali@marvell.com>
+References: <20220310092604.22950-1-njavali@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Proofpoint-GUID: RGvvhujCEkBORX1qIRjMPv6ILdD-An37
-X-Proofpoint-ORIG-GUID: RGvvhujCEkBORX1qIRjMPv6ILdD-An37
+X-Proofpoint-GUID: KtKnm0jGdvrvccPFuyYlisEFTomspPc6
+X-Proofpoint-ORIG-GUID: KtKnm0jGdvrvccPFuyYlisEFTomspPc6
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.816,Hydra:6.0.425,FMLib:17.11.64.514
  definitions=2022-03-10_03,2022-03-09_01,2022-02-23_01
@@ -63,55 +65,76 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Martin,
+From: Quinn Tran <qutran@marvell.com>
 
-Please apply the qla2xxx driver misc bug fixes to the scsi tree
-at your earliest convenience.
+User experience some of the LUN failed to rediscovered after
+long cable pull test. The issue is triggered by a race
+condition between driver setting session online state vs
+starting the LUN scan process at the same time. Current code
+set the online state after notifying the session is
+available. In this case, trigger to start the LUN scan process happened
+before driver could set the session in online state.
+LUN scan ends up with failure due to the session
+online check was failing.
 
-v2:
-- Incorporate all minor review comments
-- Add Fixes tag to 11/13
-- Add Reviewed-by tag
+Set the online state before reporting of the availability of the session.
 
-Thanks,
-Nilesh
+Cc: stable@vger.kernel.org
+Fixes: aecf043443d3 ("scsi: qla2xxx: Fix Remote port registration")
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+---
+ drivers/scsi/qla2xxx/qla_init.c | 5 +++--
+ drivers/scsi/qla2xxx/qla_nvme.c | 5 +++++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-Arun Easi (3):
-  qla2xxx: Fix loss of NVME namespaces after driver reload test
-  qla2xxx: Fix missed DMA unmap for NVME ls requests
-  qla2xxx: Fix crash during module load unload test
-
-Manish Rangankar (1):
-  qla2xxx: Use correct feature type field during rffid processing
-
-Nilesh Javali (1):
-  qla2xxx: Update version to 10.02.07.400-k
-
-Quinn Tran (7):
-  qla2xxx: Fix incorrect reporting of task management failure
-  qla2xxx: Fix disk failure to rediscover
-  qla2xxx: fix n2n inconsistent plogi
-  qla2xxx: Fix hang due to session stuck
-  qla2xxx: Fix laggy FC remote port session recovery
-  qla2xxx: reduce false trigger to login
-  qla2xxx: Fix stuck session of prli reject
-
-Shreyas Deodhar (1):
-  qla2xxx: Increase max limit of ql2xnvme_queues
-
- drivers/scsi/qla2xxx/qla_def.h     |  5 +++
- drivers/scsi/qla2xxx/qla_gs.c      |  5 +--
- drivers/scsi/qla2xxx/qla_init.c    | 36 ++++++++++------
- drivers/scsi/qla2xxx/qla_iocb.c    |  8 ++--
- drivers/scsi/qla2xxx/qla_isr.c     |  1 +
- drivers/scsi/qla2xxx/qla_nvme.c    | 67 +++++++++++++++++++++++-------
- drivers/scsi/qla2xxx/qla_nvme.h    |  1 -
- drivers/scsi/qla2xxx/qla_os.c      | 23 ++++++++--
- drivers/scsi/qla2xxx/qla_version.h |  4 +-
- 9 files changed, 107 insertions(+), 43 deletions(-)
-
-
-base-commit: ac2beb4e3bd75b0049068516b9d42201bda0ded3
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 835ed4179887..6ffe44b805b6 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5758,6 +5758,8 @@ qla2x00_reg_remote_port(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 	if (atomic_read(&fcport->state) == FCS_ONLINE)
+ 		return;
+ 
++	qla2x00_set_fcport_state(fcport, FCS_ONLINE);
++
+ 	rport_ids.node_name = wwn_to_u64(fcport->node_name);
+ 	rport_ids.port_name = wwn_to_u64(fcport->port_name);
+ 	rport_ids.port_id = fcport->d_id.b.domain << 16 |
+@@ -5858,6 +5860,7 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 		qla2x00_reg_remote_port(vha, fcport);
+ 		break;
+ 	case MODE_TARGET:
++		qla2x00_set_fcport_state(fcport, FCS_ONLINE);
+ 		if (!vha->vha_tgt.qla_tgt->tgt_stop &&
+ 			!vha->vha_tgt.qla_tgt->tgt_stopped)
+ 			qlt_fc_port_added(vha, fcport);
+@@ -5875,8 +5878,6 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 	if (NVME_TARGET(vha->hw, fcport))
+ 		qla_nvme_register_remote(vha, fcport);
+ 
+-	qla2x00_set_fcport_state(fcport, FCS_ONLINE);
+-
+ 	if (IS_IIDMA_CAPABLE(vha->hw) && vha->hw->flags.gpsc_supported) {
+ 		if (fcport->id_changed) {
+ 			fcport->id_changed = 0;
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 718c761ff5f8..5723082d94d6 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -37,6 +37,11 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
+ 		(fcport->nvme_flag & NVME_FLAG_REGISTERED))
+ 		return 0;
+ 
++	if (atomic_read(&fcport->state) == FCS_ONLINE)
++		return 0;
++
++	qla2x00_set_fcport_state(fcport, FCS_ONLINE);
++
+ 	fcport->nvme_flag &= ~NVME_FLAG_RESETTING;
+ 
+ 	memset(&req, 0, sizeof(struct nvme_fc_port_info));
 -- 
 2.19.0.rc0
 
