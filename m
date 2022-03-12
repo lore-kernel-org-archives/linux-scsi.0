@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73063C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Mar 2022 19:42:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40599C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Mar 2022 19:43:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232481AbiCLTnd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Mar 2022 14:43:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57006 "EHLO
+        id S232481AbiCLTo0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Mar 2022 14:44:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230463AbiCLTnb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Mar 2022 14:43:31 -0500
-Received: from de-smtp-delivery-102.mimecast.com (de-smtp-delivery-102.mimecast.com [194.104.109.102])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC3DA1E95CD
-        for <linux-scsi@vger.kernel.org>; Sat, 12 Mar 2022 11:42:23 -0800 (PST)
+        with ESMTP id S229742AbiCLToZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Mar 2022 14:44:25 -0500
+Received: from de-smtp-delivery-102.mimecast.com (de-smtp-delivery-102.mimecast.com [194.104.111.102])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3BA356C0F
+        for <linux-scsi@vger.kernel.org>; Sat, 12 Mar 2022 11:43:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1647114141;
+        t=1647114198;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Ag8JnzSFH9tYCZWBRu3V3MxQF8nNf7tw+K0ji9HRYUI=;
-        b=CO+z4L5lD9sxEKBDlxHc17Igmu3+n/F7x+lcCtVoLh0RTMNP7uPcG2vCyFJ5JHqtxYjSvL
-        GMTEYilhnUMfoyolGVRy52ps0iiTIatFogIMPPKknNCeApMlPrPn/xJ0yF/j5o3UHsqRTt
-        7mK/5Q/sBiK5nDJHgi3LnwGmfgibKEs=
+        bh=cf5lgEyGH1HPKX2dfpWrwRhE67i2rkh5iB6KGQAz/sM=;
+        b=Yrs1H2msR/uPwcTYY2DuF7sx29825dCerSwFVINuZ+aNegrrDcaDuaww/CmCusxRgEt3R5
+        G/nuf9nr3daKpgkcN2uu+iEkRKYuzK20i/Nsq/kK4ocB62I2swXUxN98/agBwWTUXHwcFs
+        8MkLbsdluqeKMAwTBx0wKXtRK397WGQ=
 Received: from EUR04-DB3-obe.outbound.protection.outlook.com
  (mail-db3eur04lp2053.outbound.protection.outlook.com [104.47.12.53]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- de-mta-41-FUya3_XgPl2oGnzlut8yAg-1; Sat, 12 Mar 2022 20:42:20 +0100
-X-MC-Unique: FUya3_XgPl2oGnzlut8yAg-1
+ de-mta-20-qYAn8CVgOMeZOPd324jonw-1; Sat, 12 Mar 2022 20:43:16 +0100
+X-MC-Unique: qYAn8CVgOMeZOPd324jonw-1
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CpMDHgqfVbWBhNOE9HuUq92/5sTyb+JqKBuQnYR38eTXteQDvK0nXbswr/z6hFxeAFR3pg9F4ayO12TbpHlXa3AmpQ9KZdokAJuLHGvSkdqOZ2bnZW1OtD5iHCxYcSxj67YGUxouLYlwqw11Qc1R1JJPmwjKBsQasUW2F3Kw22twxM6Zf6JITRnBHYEowx4+hyV5jdRj0jDcJNgVF/y3yaF0t/jWhOnGS092YV5i7EddsgpHcr1ZY/jp1h/C/++WJoC9W0YzG+K5CKX1gmJQV6bDmK1zoWCl0p/Gy84pu8Zl3PTPzCUCb0RjFXIVgjpBkyQmt5h3Pky3cbDrj27pnQ==
+ b=LrzYBBkw3uA1upE6MOvbJjuyTrERMDJmvOa6trPuX6SbOgS1kMfcqONAiavRHgFIvQ2lxiOte7ptpKgmZCUYy9SyvC9sjn7JX3omQBttclnxxMZDxdzDtdwgXzQSwHfIch/1zm7kDvh/M6vPyIsKnKOeIvyRIROtocb0x74kv+fD6HOMKuEjd3akdewGi+2NsPEU7ykfUqke5JtYjz4vUbjZtiUI7nNoXmpjInJyvEofbYbEtySDWs11CfmmWOhEQGdU1ozGz09yttRJRjoFovftRFO5CJcdTJFAnpPjuAncGx850oeDczRLvfu8qYIGDwnTO3B7HiXrggWxPwsDGw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Ag8JnzSFH9tYCZWBRu3V3MxQF8nNf7tw+K0ji9HRYUI=;
- b=H2fNrw2KEqD64DcF3mJ2s9w3s7XJWO3ezGiupfovIS1trRQ0QFyck2pmck53YuL7whykCdXN1tLSOw2PHNlLa2ojt+rY2Sj8cB/KmLV5+ehN0f1ipY1okiNEcCqOrrALJuMZqzT9Aqu8vQqd0x0QLB5JEQb8bO2ltbpWSk+IPx0htS5ktwFQs9r+YyRlDcfL4c0nYY0sIk4J7zLeATjreVEnS+aOQsOyh6dmYCIDbvHgpoBCG4Ccc/jiFRBe8A9hyzBl9nccVr6SbG+79ZmgHEfNY+ABiCnES3n11I4/PxT7QZ44VrRgzbEqbwDmOgkpYIq1uKB2jGdbw6dZqxphdQ==
+ bh=cf5lgEyGH1HPKX2dfpWrwRhE67i2rkh5iB6KGQAz/sM=;
+ b=Qzwzz+Xa2O8i67y366i9vnxA0+FAJvwxHLao77fK4HZWgrLFPude9r54uYt8o8lYM62awCdRgw5QQZT3ATy239UIHJpUxJNBG8oZjEWbfonB186Z+VV9B8aA8gL4wf6+4gG2t3i0462qK/Vs355Lo3Qhq4Z0Zz7pLjKZJr5wrajZ5pzp5xXRuHlEHYyEpcf0/S6YEGvSE5hntld5AXx/DTesk0j8eIyuTm9Q4XQHN0sEC3oMRYH5Y9vwpUeMOK9WPvLJ68J1d5d8TdBxjNDaXhz1pogBHfXkkNOrxrdUsL37CvbjmPTYkueML1GtAZjCY5MhwZwo+Q0NjEd1140lzA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
  dkim=pass header.d=suse.com; arc=none
@@ -46,144 +46,110 @@ Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
  by VE1PR04MB7215.eurprd04.prod.outlook.com (2603:10a6:800:1b1::6) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5061.25; Sat, 12 Mar
- 2022 19:42:19 +0000
+ 2022 19:43:15 +0000
 Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
  ([fe80::14d7:55aa:6af:72d7]) by AM5PR04MB3089.eurprd04.prod.outlook.com
  ([fe80::14d7:55aa:6af:72d7%6]) with mapi id 15.20.5061.025; Sat, 12 Mar 2022
- 19:42:18 +0000
-Message-ID: <49ce092f-b97c-53a6-85ff-490eeeba4f47@suse.com>
-Date:   Sat, 12 Mar 2022 11:42:14 -0800
+ 19:43:15 +0000
+Message-ID: <dae68506-82fd-541e-97d5-5e761c82ecf1@suse.com>
+Date:   Sat, 12 Mar 2022 11:43:12 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH 06/12] scsi: iscsi_tcp: Use sendpage for the PDU header
+Subject: Re: [PATCH 07/12] scsi: iscsi_tcp: Drop target_alloc use
 Content-Language: en-US
 To:     Mike Christie <michael.christie@oracle.com>, cleech@redhat.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         jejb@linux.ibm.com
 References: <20220308002747.122682-1-michael.christie@oracle.com>
- <20220308002747.122682-7-michael.christie@oracle.com>
+ <20220308002747.122682-8-michael.christie@oracle.com>
 From:   Lee Duncan <lduncan@suse.com>
-In-Reply-To: <20220308002747.122682-7-michael.christie@oracle.com>
+In-Reply-To: <20220308002747.122682-8-michael.christie@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AS8PR04CA0168.eurprd04.prod.outlook.com
- (2603:10a6:20b:331::23) To AM5PR04MB3089.eurprd04.prod.outlook.com
+X-ClientProxiedBy: AS8PR04CA0176.eurprd04.prod.outlook.com
+ (2603:10a6:20b:331::31) To AM5PR04MB3089.eurprd04.prod.outlook.com
  (2603:10a6:206:b::28)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 58ea3fda-12e2-4137-c421-08da04606b1d
+X-MS-Office365-Filtering-Correlation-Id: c4c9c8f4-fb21-43c7-7234-08da04608d03
 X-MS-TrafficTypeDiagnostic: VE1PR04MB7215:EE_
-X-Microsoft-Antispam-PRVS: <VE1PR04MB72156A972BE37A19659E8B6CDA0D9@VE1PR04MB7215.eurprd04.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <VE1PR04MB72153C79C5B7E1177CC856C2DA0D9@VE1PR04MB7215.eurprd04.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: XKeG23C1eEAsfA01iDWO93AS3ruNYbPTXqO3xxblU8xeDhm6xG4zZvd+Ep0Goh9X8B3ThEDKb5HNqbHf8Ipf/3j/rB/KOtDowTK+ksRc+nuXv7JhTODiVFCYbjAwlRDJ4TpeuE7+8ffYSlZpB4ukm9kHaXQ4HqxzZ9u9P1FnO/JwvCQA38cht5TahcpIRECeliKkhJX70rVlaswZsB6So+Wvy+7Mj9XWwMPLH4P2Kz9aZcWYJa0hnKc2yys0W7Hi86giYoJ/+azajhIeEZwZuwrCyFxVf3WLPT8d7gGo2DbCPPMri27XQ/RQK0meLvwRFaLxoucPlp3FcjeZjFH8Z22gb8nU+UsYi+AOPC7Xx1WEe3d0b5U1stQM865lFgqjTRkw4GYRgVcEh+NiY9o7uWTgFdn1nGBEMTq51NKbBjvLH0oc95ygI1zU+AOkV8DIGBFKKiBr9yjKMs1c55bflTQY82Yrsm5hXR4P9fCrY1dU1oEVRKA4UClbi/RZBwJGmj3GfhJR0Sn8968weY5S4Auu5Fhs6tyx6sorjiTilIlFBsVENrvSpvn5WdSiXb5SzYwrB3aB2S5zhlqi9BAlYoJthocvEaQAWD9e4A6raxKxxtfeDoH0NEaIydgqFUKHsknuQsl8L4cT/DHHtuJdcEdWIfCxwU18+RKKjFd2xBCTttNl+a1rsyzbTD+Gn1Gk/WpHKzp/gCbYHb5CsIsaaWTLpg6/kXb5al4aC4l9vP8=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(316002)(31696002)(86362001)(2616005)(5660300002)(31686004)(53546011)(186003)(26005)(36756003)(6506007)(8936002)(66556008)(66476007)(8676002)(508600001)(6486002)(66946007)(6666004)(83380400001)(6512007)(2906002)(38100700002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 9OK1Q2IUgo+ukhb1xyTZlB9leUgI4JkPra1pS1UXxoUdz0co+okIp7jbaiMQTJLXOI/Z6Z/NpzikStO3o4HZFo4a27dZdmkxywny5mt02jZAf4zUjJsnPHV4bcbIZ4O7cPWdQa8LFccpEA2dQACVUvzRWSD8RbZFPWhg3d9ME4ZsjAJ8WOu+SPD1U+AV7WyIn3hhJxKpNtRT79Fpo9klfTaPI53cdpNlu816VBO02Cxg5geVEoxqRNufcaonxwL6v32M0r8JY/G676W0R6ujP8VUM6w4ohMyuGxJiCz1xfl+458vyL9YxPl/5CjspJ/MMhOBH7W7+R/vep8rn3gy0Gl7PEEXgmR80cARVCXvmBjixHgTHqpniO0iAmj7b962bOxm/PKgOetcKYQSf1YlA/zaSjgaPw9cskAHJd9lq8M/WTQx+S+3ZDvan0YtLxDeDxfa1vDM+eEQOZ/6Ixfo1RYRyQFSnE27tVKzk0FzKraaqZkHvSAqdaIhjy6dhcRGgsfngmfJ+A3EEVCPjnVjbGEP8vEkTNn3HzAi4cdDdSesQ3NmBoPzxnBsok/8bkazzm42OF30ALfh2iEH5nDwCI0Ghi6dAsordxCWohhBRNuY6IVsjGFEfAxK1iAq0gQaYDhuS5XeYDahhAgkV9FromUHHdykltWaLBmU6V2/2bAN05qhR990QUHkw0qK6xMwB6nIibXbO+H3wKncdFWdFfG3cvI3h4+Szqli9wtqMzg=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(316002)(31696002)(86362001)(2616005)(5660300002)(31686004)(53546011)(186003)(26005)(36756003)(6506007)(4744005)(8936002)(66556008)(66476007)(8676002)(508600001)(6486002)(66946007)(6666004)(83380400001)(6512007)(2906002)(38100700002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Q3hURHhvUitmY04vdjZwL1ZvTGlFOFh3dkhORVZ4TURwWDB1Tm50K2s0VGQy?=
- =?utf-8?B?dHl0YmdNcHIwN1hKRlorTWhqVzh4emhRT2tLVy9sRDRGME5PWW4wa0xRMytP?=
- =?utf-8?B?dFVNNThZOEE5eEcvTUZ1bHMvNkVDdFdmeWI1SEZZR2t3ZkswUXZVUVpFdzRP?=
- =?utf-8?B?NEhmbWI3Tml6a3Z1c1NwbjJxVTJvSDhCTlRDVWp1cDgxc0dkMEhFaE9xbGFy?=
- =?utf-8?B?RWlBdnJ4SG9WM0JYcGhrcHZTUkNraFN4eUpqZTNOTlVKMkZjS3BaWkFuc3Bw?=
- =?utf-8?B?QTNYd2V2Ujd6Q2NxaW9KclREYmcwSzdUS01SVjNFVlovTitkU0hmSkRSS1V6?=
- =?utf-8?B?akJTOEFzbjNYK25NamhJSEN1WE44WEZWR2tXVm52RkdjTzUxSnJLbElpQms1?=
- =?utf-8?B?QXFGU1ViV0ZlUVlWN2JNUCs3c0Z4cm1MMFpvQWJIMFJNSVBteCtETGpabHVi?=
- =?utf-8?B?c2NiSHpoWUlOV2N1NmRKNFY5KzhiMm5YUWlXNjZjTkpvWUVXbWM5Y0tDYnRu?=
- =?utf-8?B?V29jdmtoeTFTaE94bTRRY0Vna1B6MUM5L3ZUbk9EYnFUdzkrSkJ0d0hhc2RV?=
- =?utf-8?B?blFUVmsxSGZJM3czNjV6NTJXa2I0QkN3RW5KS1pKN3ZlYnhMdHMzNytrcXU1?=
- =?utf-8?B?bUd1ZVJMRjU2NlN3eDJ5ak5RUWdGbHZVSHlscHBWWUNaZy9wcWVtL3dZaTRj?=
- =?utf-8?B?ZWt2ZkZ3TG1ZNkdhcXRIb0F1d0Z6dWNiNHVwOEJNQklka0Z1bTJmSEN1TTlt?=
- =?utf-8?B?aVZhbUZQUXhnUm1XQllPMENnNEg0UW9JVTdsZkduSTJjZWx1cE93UmpUZ3Zz?=
- =?utf-8?B?ZDhtT1BtVnBJSWZpaGVMNmc3M3NlOHBoRHdham5OZUUzQ0dyQURRKzF3QlQ1?=
- =?utf-8?B?KzBrVHAwY3JFbGVudnZZYUxHemRYMHZXYWgrMFdsbEZZSlJNOGV1T3hudENo?=
- =?utf-8?B?dFA4Z2QwNCtBTEExR3prK0E5MkpwdGNDb1k5cGdtRHZyVENqVFBZWmd3Ly9X?=
- =?utf-8?B?Y3NIK2dkcGwvNlRMOGNsNG5PamtRbGxzY0pGcVJLZDBmSjd1WHMwSS8wTk82?=
- =?utf-8?B?eFRhSlFyMkZkQzdIalROSURQSFFmbC94L1V3UDBrU1ozSk9vcmVmZldFUWQ4?=
- =?utf-8?B?bHNlcHZUWFJTRTZ2MnNuN04yZEFSeUZsS1NkRXdMQUg0MFA3a0NZY1FldGxO?=
- =?utf-8?B?TTlMd1BHUEdNZFh1NTBDQUtVUUV1eG9IeUdNc2t4dXptdFdBWVAvR2NRazYv?=
- =?utf-8?B?MHZLM3VJNmZ3bW9rSFppQk96K2NBc2ZOZE1Pa1FLanFlcUUzMzBHVzhjeTBB?=
- =?utf-8?B?Q3RMNTZkdkJ4d1g0MXkrRWZ5T3JYdXgzRndIT1J3bStEcGZKVXBHU2Jhejhr?=
- =?utf-8?B?L2ZxbHB4NkhOQm0rNGtidVZVcTFqdVl2ZHVsMENDOGVCSzl0aEJlaFR2TDVq?=
- =?utf-8?B?MXFZYm05dzJ1QlVJeitkRzBRYi9TRDZaenpNVW5ZVHkyeXRLdmt2WjBpYXhs?=
- =?utf-8?B?OHJub2dpZXFESGxNc25PWHl2SUEwVVpaOG5yV2h4VUtGRndaMHMwa1BRQzZL?=
- =?utf-8?B?Wk9aNmdxYlkxOTJBa29xeDFxT1k0bGNVeWRyU0h4R1F4RzFpUzZuMGEvOEF0?=
- =?utf-8?B?TFJ3QlZsVU9qOE4rZ3BVM1NIY3V2M1d5U3BOend1TFRiUFhpNUFMQjJVMkYy?=
- =?utf-8?B?dUlubFF5SmFBRk93bHhRVzJEWHJpYmJOK3gyakRjdG14cnR5a0JJNU14NEo0?=
- =?utf-8?B?QVlZbzRPaEVzU3lmTW15MVRacjJ4KzdPOG44UmhFSmFyQ043L3pEcW5Hc0ov?=
- =?utf-8?B?Y010bU9USVpDWUhKTDBCUEVzcExCOVhNQlVudG9CM0JxSWgxdDE0djJjTkxM?=
- =?utf-8?B?MlpPL3Z3bWpQWmhPTVhBY3NXRE5FWjVOMHh5WWU0cStNbW5yeVVBMzgyUDlF?=
- =?utf-8?Q?oMWYDvlI+cmjOSUIfT0ORjWevm76rOO7?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UDU0UkF4OFdRMVd4NWVkWENwT1I5MTNsVFI1V0tMUm9RMnhZWjN3RUlzVHNm?=
+ =?utf-8?B?UEM4MHJkMU5zaElHN3pvbHExL3JxcnlLWFlkOVJoM21RaWEySWdnbXZ2ZDJs?=
+ =?utf-8?B?QkgyTUhpdnVibDgybTF5MlM3ZXN4UjR1akZ2M1NQWGcvODJobm5zaEF2aUJx?=
+ =?utf-8?B?ZlhMakdMYm9sR2RGSnNxQkNVOU1FM2dZa2kwa0hBcjF4OCtpOTAyRUtGcUxH?=
+ =?utf-8?B?ZFliN3FiYVk4dlJEd0dvT3lEVGhsZGg3UnU1MGVveTNOdXVNMkRwb3M1MEl0?=
+ =?utf-8?B?T0h4bWlWbzBveFF3aHh4UVcyVFZFVTlwd3hVM2FocWZkaGRoZVJLOVNGVDZF?=
+ =?utf-8?B?Rkw1TjF1OUhEazNPYUh4N1pOaWNSTGlHbzNRVUZDa2FySlVxSW9EVGVSS1ZC?=
+ =?utf-8?B?eU1mK0F5LzJ2b25YSUNXZzdMN3pVNEs2OWdQNzM3dGpqR0dGRGs2V3NvZUU0?=
+ =?utf-8?B?L1hYeTU2Q2RrZFFpc0V3cWFXYXEzNFEyelMrVUg3b2IrK1NiZFlubmxIMjU0?=
+ =?utf-8?B?ckZlUkdaNElZa3MzbStqc2NhVkJHWHFnVFZDanBlQnltbHEwUXZpbFdUbVNt?=
+ =?utf-8?B?VGZFbEhrWWtnRVVvNlVzS3ZNaW9MOXo1ekdCbThSYmpxemZMSWJDU3V6UTZT?=
+ =?utf-8?B?eVRsUi85UGViK2dZc1MxWFNhbkxDS0UzWExGVWMxN044eVlmTjFxUFdRSnBW?=
+ =?utf-8?B?eld2LzluZXV4dkk1L0Rna3NHNGhSeGxmS0V2S2FIclNsN0hzeVZ6NWphbWM4?=
+ =?utf-8?B?SHVoM2Rud1FSUzFTclovYmxNNk0yRWl6ZjJRbm5oWk1SMVdNU1dzZ0lyTmJN?=
+ =?utf-8?B?dFlrQmM0OWV4M0lBSDNXdEZyUGRxYmg4VkFMM25BM3JUVDRQSFJhQllkVzRS?=
+ =?utf-8?B?RFdqUFREUlRtNGdIZnU0S1hjV1RzRXl5OFFvaVQwY1pVRUU5bGJFR1FLSC9Q?=
+ =?utf-8?B?cWRUNHRYeE5Zc1BSSHVpWjBxMVU5b2g1VllCa2k4K2cvMVpMUkJqcEwrYVlS?=
+ =?utf-8?B?YndtN2pHVE5FZnBZN1ZYOGFlZSs3S0UwcVZuSHErZmtqK0tKN0pYRkp1dDcy?=
+ =?utf-8?B?eWU5MXpnSjI0T2lsUTZyZHdFSGJ6NHE0dzFTZkFGVmFnRWt4OU9ZQjByVjM1?=
+ =?utf-8?B?WHFPNUZyMmtPeEd6YjBRMWlCMlFFZ3cvOHlVTXZnM2hLRUF4MzZENGdvOFF1?=
+ =?utf-8?B?V0EweG11MWxqQmlrK1p5NEFKTlJ2eUJ2c04vYmZTeGlJOFRIc0xGOWE3cWVG?=
+ =?utf-8?B?SGFpenhvWFJGakNDMXh1SFFpWVVPMWg4eUhYelF1ZlA0VlcxOEFlTHIwSGhO?=
+ =?utf-8?B?aVlkM1NTUks1SUR3RjY4N2ZZWXF3dk9WMGJmRzF3dHRsK0NUYUw1MW5udnpo?=
+ =?utf-8?B?WXdhQXVSYTNuK1gzbi93L0ZRdWdNV1VJUittS0RsUTRIQUxMcVZXRndGWnhF?=
+ =?utf-8?B?ZWlMU2xLRG44NWZwT25ucXlySnN0b0xpRE0yWUtCQXdTemwvcmJRTkY0UUgz?=
+ =?utf-8?B?S1NXRCtQVVJFKzRHNEEyalNsc2Jqa1VJcjZPZ3l0aVV5bkJOS0pvUzRnbE9I?=
+ =?utf-8?B?OWVXUENZMGZHSE8xYVBCaHcrVC96ZkVZTSt0ckdxcHBLNW5ObmhaZmVIQVpl?=
+ =?utf-8?B?VUsrM2xWVHI2UVdwZFJrZmdFZTNZQmpnSUg2aUlnV2kyM215MVZzQ2pxYTh3?=
+ =?utf-8?B?TUFPK3QyajNaUTVKZklDTTBjakRUMHc0RUFaR0ZMeURFUmdReGJ3U0k4VkFj?=
+ =?utf-8?B?Y2RvS09rOGg4NVRDMW95bFJMQVB6SXRsWnowemh3MFZ2bllOdkRLSlJqU2Vu?=
+ =?utf-8?B?NkpUa1VERmt6bDhJZkgrbnN1clJ4Uk1SK1UzQ2JqQnFPdTFaa25ORW0xT2lp?=
+ =?utf-8?B?cWlrd2Y3QmQwNWZxVTY3NW1MbzBENXR6WG1KbHlCM3c3eTh6U1ZGS0ZPSFBy?=
+ =?utf-8?Q?Zdh+/1X5l3JGz+miPb8kd+FBx8Mrh88W?=
 X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 58ea3fda-12e2-4137-c421-08da04606b1d
+X-MS-Exchange-CrossTenant-Network-Message-Id: c4c9c8f4-fb21-43c7-7234-08da04608d03
 X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Mar 2022 19:42:18.8393
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Mar 2022 19:43:15.6312
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: RTplVbdfBgbCNVguF3nPLgf2a7LkLSC0Ubz7pHJsPp+jzpzAR+qO71drYG942Ydp5UshoyOdShn6blntf3OmIQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: bvw51ksC9HydFpaw4k397Jm5THJWpRzgQGyKzHIRdjTYT5+vgG9Yx3JX4C+P2KBE0bFBPt9AI+XNxk7zdG8xvA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: VE1PR04MB7215
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 3/7/22 16:27, Mike Christie wrote:
-> This has us use zero copy the PDU header.
+> For software iscsi, we do a session per host so there is no need to set
+> the target's can_queue since its the same as the host one. It just results
+> in extra atomic checks in the main IO path.
 > 
 > Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > ---
->   drivers/scsi/iscsi_tcp.c | 30 ++++++++++++++++++++++--------
->   1 file changed, 22 insertions(+), 8 deletions(-)
+>   drivers/scsi/iscsi_tcp.c | 1 -
+>   1 file changed, 1 deletion(-)
 > 
 > diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-> index 261599938fc9..3bdefc4b6b17 100644
+> index 3bdefc4b6b17..974245eab605 100644
 > --- a/drivers/scsi/iscsi_tcp.c
 > +++ b/drivers/scsi/iscsi_tcp.c
-> @@ -306,7 +306,7 @@ static int iscsi_sw_tcp_xmit_segment(struct iscsi_tcp_conn *tcp_conn,
->   		copy = segment->size - offset;
->   
->   		if (segment->total_copied + segment->size < segment->total_size)
-> -			flags |= MSG_MORE;
-> +			flags |= MSG_MORE | MSG_SENDPAGE_NOTLAST;
->   
->   		/* Use sendpage if we can; else fall back to sendmsg */
->   		if (!segment->data) {
-> @@ -315,13 +315,27 @@ static int iscsi_sw_tcp_xmit_segment(struct iscsi_tcp_conn *tcp_conn,
->   			r = tcp_sw_conn->sendpage(sk, sg_page(sg), offset,
->   						  copy, flags);
->   		} else {
-> -			struct msghdr msg = { .msg_flags = flags };
-> -			struct kvec iov = {
-> -				.iov_base = segment->data + offset,
-> -				.iov_len = copy
-> -			};
-> -
-> -			r = kernel_sendmsg(sk, &msg, &iov, 1, copy);
-> +			void *data = segment->data + offset;
-> +
-> +			/*
-> +			 * Make sure it's ok to send the header using zero
-> +			 * copy. The case where the sg page can't be zero
-> +			 * copied will also go down the sendmsg path.
-> +			 */
-> +			if (sendpage_ok(data)) {
-> +				r = tcp_sw_conn->sendpage(sk,
-> +						virt_to_page(data),
-> +						offset_in_page(data), copy,
-> +						flags);
-> +			} else {
-> +				struct msghdr msg = { .msg_flags = flags };
-> +				struct kvec iov = {
-> +					.iov_base = data,
-> +					.iov_len = copy,
-> +				};
-> +
-> +				r = kernel_sendmsg(sk, &msg, &iov, 1, copy);
-> +			}
->   		}
->   
->   		if (r < 0) {
+> @@ -1053,7 +1053,6 @@ static struct scsi_host_template iscsi_sw_tcp_sht = {
+>   	.eh_target_reset_handler = iscsi_eh_recover_target,
+>   	.dma_boundary		= PAGE_SIZE - 1,
+>   	.slave_configure        = iscsi_sw_tcp_slave_configure,
+> -	.target_alloc		= iscsi_target_alloc,
+>   	.proc_name		= "iscsi_tcp",
+>   	.this_id		= -1,
+>   	.track_queue_depth	= 1,
 
 Reviewed-by: Lee Duncan <lduncan@suse.com>
 
