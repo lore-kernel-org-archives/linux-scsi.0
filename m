@@ -2,180 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96327C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Mar 2022 19:58:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BF7FC41535
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Mar 2022 20:30:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244762AbiCNT7l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Mar 2022 15:59:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52482 "EHLO
+        id S245047AbiCNUbZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Mar 2022 16:31:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245182AbiCNT7B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Mar 2022 15:59:01 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05E0B265D;
-        Mon, 14 Mar 2022 12:57:49 -0700 (PDT)
-Received: from localhost.localdomain (ip5f5ae91c.dynamic.kabel-deutschland.de [95.90.233.28])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S239124AbiCNUbX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Mar 2022 16:31:23 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8449739812;
+        Mon, 14 Mar 2022 13:30:12 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id BEB4561EA1927;
-        Mon, 14 Mar 2022 20:57:46 +0100 (CET)
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-To:     Adam Radford <aradford@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Paul Menzel <pmenzel@molgen.mpg.de>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: 3w-sas: Correct log level of several messages
-Date:   Mon, 14 Mar 2022 20:57:27 +0100
-Message-Id: <20220314195728.119160-1-pmenzel@molgen.mpg.de>
-X-Mailer: git-send-email 2.35.1
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E0BE9611E3;
+        Mon, 14 Mar 2022 20:30:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 395EAC340EE;
+        Mon, 14 Mar 2022 20:30:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647289811;
+        bh=5slkzW/wYFCAJdfNlCFTBba0nZcr16X7BRShsWGs8e4=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=leggAOjDGLqu5Y16iRzmCapGpn9MgtEwT4CrU4eyl+t2E31oSfK39qKDLg3AehmbU
+         40wH8plobcUAZegoJFqfw9/xkqsBBPmZP9vZVSFOcI/Xp23ZGUf+pgmWTjQguJdafL
+         aR+7p6LxqiE9iThzqyS8jQ9G6EB+4tZZi+yCfGQiapJJIo9jcBYm9fR9I2LX08BkN2
+         bFDWmepy5ZVI6q23q7h6GXJ7SL0Svf5wH1oJCuTgacReCjqPgety1pGCFxOBEiOwa4
+         z9SA1gQwBNf2EwKLfJ+KdExejyFckwalTlOP/U5FXz63cZ94Vo7u6CrKogKN+nyC4B
+         +CVXdED/jOy7Q==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 0DC0AE6D3DE;
+        Mon, 14 Mar 2022 20:30:11 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH 00/30] fix typos in comments
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <164728981105.21494.10764025984714254687.git-patchwork-notify@kernel.org>
+Date:   Mon, 14 Mar 2022 20:30:11 +0000
+References: <20220314115354.144023-1-Julia.Lawall@inria.fr>
+In-Reply-To: <20220314115354.144023-1-Julia.Lawall@inria.fr>
+To:     Julia Lawall <julia.lawall@inria.fr>
+Cc:     linux-can@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-sunxi@lists.linux.dev, linux-spi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-usb@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-staging@lists.linux.dev,
+        platform-driver-x86@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        amd-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Laurent.pinchart@ideasonboard.com,
+        jonas@kwiboo.se, jernej.skrabec@gmail.com,
+        linux-leds@vger.kernel.org, shayne.chen@mediatek.com,
+        sean.wang@mediatek.com, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-omap@vger.kernel.org,
+        linux-clk@vger.kernel.org, rafael@kernel.org,
+        linux-rdma@vger.kernel.org, borntraeger@linux.ibm.com,
+        svens@linux.ibm.com, linux-s390@vger.kernel.org,
+        matti.vaittinen@fi.rohmeurope.com, linux-power@fi.rohmeurope.com,
+        mark.rutland@arm.com, alexander.shishkin@linux.intel.com,
+        jolsa@kernel.org, namhyung@kernel.org,
+        linux-perf-users@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On a Dell PowerEdge T630, Linux logs some 3w-sas warnings:
+Hello:
 
-    $ dmesg | grep DMI:
-    [    0.000000] DMI: Dell Inc. PowerEdge T630/0W9WXC, BIOS 2.5.4 08/17/2017
-    $ dmesg --level=warn | grep 3w
-    [   22.449617] 3w-sas: scsi12: AEN: INFO (0x04:0x0053): Battery capacity test is overdue:.
-    [   22.680618] 3w-sas: scsi12: Found an LSI 3ware 9750-8e Controller at 0xc8040000, IRQ: 117.
-    [   23.001611] 3w-sas: scsi12: Firmware FH9X 5.12.00.016, BIOS BE9X 5.11.00.007, Phys: 8.
+This series was applied to netdev/net-next.git (master)
+by Jakub Kicinski <kuba@kernel.org>:
 
-These are obviously no warnings, and just informational messages. Look
-through the file, and adapt the log level of several messages mostly
-according to the level string in the message.
+On Mon, 14 Mar 2022 12:53:24 +0100 you wrote:
+> Various spelling mistakes in comments.
+> Detected with the help of Coccinelle.
+> 
+> ---
+> 
+>  drivers/base/devres.c                               |    4 ++--
+>  drivers/clk/qcom/gcc-sm6125.c                       |    2 +-
+>  drivers/clk/ti/clkctrl.c                            |    2 +-
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_cs.c              |    4 ++--
+>  drivers/gpu/drm/amd/display/dc/bios/command_table.c |    6 +++---
+>  drivers/gpu/drm/amd/pm/amdgpu_pm.c                  |    2 +-
+>  drivers/gpu/drm/bridge/analogix/analogix_dp_core.c  |    4 ++--
+>  drivers/gpu/drm/sti/sti_gdp.c                       |    2 +-
+>  drivers/infiniband/hw/qib/qib_iba7220.c             |    4 ++--
+>  drivers/leds/leds-pca963x.c                         |    2 +-
+>  drivers/media/i2c/ov5695.c                          |    2 +-
+>  drivers/mfd/rohm-bd9576.c                           |    2 +-
+>  drivers/mtd/ubi/block.c                             |    2 +-
+>  drivers/net/can/usb/ucan.c                          |    4 ++--
+>  drivers/net/ethernet/packetengines/yellowfin.c      |    2 +-
+>  drivers/net/wireless/ath/ath6kl/htc_mbox.c          |    2 +-
+>  drivers/net/wireless/cisco/airo.c                   |    2 +-
+>  drivers/net/wireless/mediatek/mt76/mt7915/init.c    |    2 +-
+>  drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c |    6 +++---
+>  drivers/platform/x86/uv_sysfs.c                     |    2 +-
+>  drivers/s390/crypto/pkey_api.c                      |    2 +-
+>  drivers/scsi/aic7xxx/aicasm/aicasm.c                |    2 +-
+>  drivers/scsi/elx/libefc_sli/sli4.c                  |    2 +-
+>  drivers/scsi/lpfc/lpfc_mbox.c                       |    2 +-
+>  drivers/scsi/qla2xxx/qla_gs.c                       |    2 +-
+>  drivers/spi/spi-sun4i.c                             |    2 +-
+>  drivers/staging/rtl8723bs/core/rtw_mlme.c           |    2 +-
+>  drivers/usb/gadget/udc/snps_udc_core.c              |    2 +-
+>  fs/kernfs/file.c                                    |    2 +-
+>  kernel/events/core.c                                |    2 +-
+>  30 files changed, 39 insertions(+), 39 deletions(-)
 
-The message below is the only tricky change, as the log level actually
-depends on the AEN severity determined by `twl_aen_severity_lookup()`.
+Here is the summary with links:
+  - [03/30] ath6kl: fix typos in comments
+    (no matching commit)
+  - [10/30] mt76: mt7915: fix typos in comments
+    (no matching commit)
+  - [12/30] drivers: net: packetengines: fix typos in comments
+    https://git.kernel.org/netdev/net-next/c/ebc0b8b5374e
+  - [19/30] rtlwifi: rtl8821ae: fix typos in comments
+    (no matching commit)
+  - [20/30] airo: fix typos in comments
+    (no matching commit)
+  - [27/30] can: ucan: fix typos in comments
+    (no matching commit)
 
-	printk(KERN_INFO "3w-sas:%s AEN: %s (0x%02X:0x%04X): %s:%s.\n",
-	       host,
-	       twl_aen_severity_lookup(TW_SEV_OUT(header->status_block.severity__reserved)),
-	       TW_MESSAGE_SOURCE_CONTROLLER_EVENT, aen, error_str,
-	       header->err_specific_desc);
-
-The AEN severity levels below exist.
-
-	/* AEN severity table */
-	static char *twl_aen_severity_table[] =
-	{
-		"None", "ERROR", "WARNING", "INFO", "DEBUG", NULL
-	};
-
-It’s demoted from a warning to an informational message nevertheless to
-avoid adding if-else statements.
-
-Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
----
- drivers/scsi/3w-sas.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index 3ebe66151dcb..378be2c57fc5 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -256,7 +256,7 @@ static void twl_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_H
- 	event->parameter_len = strlen(header->err_specific_desc);
- 	memcpy(event->parameter_data, header->err_specific_desc, event->parameter_len + 1 + strlen(error_str));
- 	if (event->severity != TW_AEN_SEVERITY_DEBUG)
--		printk(KERN_WARNING "3w-sas:%s AEN: %s (0x%02X:0x%04X): %s:%s.\n",
-+		printk(KERN_INFO "3w-sas:%s AEN: %s (0x%02X:0x%04X): %s:%s.\n",
- 		       host,
- 		       twl_aen_severity_lookup(TW_SEV_OUT(header->status_block.severity__reserved)),
- 		       TW_MESSAGE_SOURCE_CONTROLLER_EVENT, aen, error_str,
-@@ -873,14 +873,14 @@ static int twl_fill_sense(TW_Device_Extension *tw_dev, int i, int request_id, in
- 	error = le16_to_cpu(header->status_block.error);
- 	if ((error != TW_ERROR_LOGICAL_UNIT_NOT_SUPPORTED) && (error != TW_ERROR_UNIT_OFFLINE) && (error != TW_ERROR_INVALID_FIELD_IN_CDB)) {
- 		if (print_host)
--			printk(KERN_WARNING "3w-sas: scsi%d: ERROR: (0x%02X:0x%04X): %s:%s.\n",
-+			printk(KERN_ERROR "3w-sas: scsi%d: ERROR: (0x%02X:0x%04X): %s:%s.\n",
- 			       tw_dev->host->host_no,
- 			       TW_MESSAGE_SOURCE_CONTROLLER_ERROR,
- 			       header->status_block.error,
- 			       error_str,
- 			       header->err_specific_desc);
- 		else
--			printk(KERN_WARNING "3w-sas: ERROR: (0x%02X:0x%04X): %s:%s.\n",
-+			printk(KERN_ERROR "3w-sas: ERROR: (0x%02X:0x%04X): %s:%s.\n",
- 			       TW_MESSAGE_SOURCE_CONTROLLER_ERROR,
- 			       header->status_block.error,
- 			       error_str,
-@@ -1493,13 +1493,13 @@ static void __twl_shutdown(TW_Device_Extension *tw_dev)
- 	/* Free up the IRQ */
- 	free_irq(tw_dev->tw_pci_dev->irq, tw_dev);
- 
--	printk(KERN_WARNING "3w-sas: Shutting down host %d.\n", tw_dev->host->host_no);
-+	printk(KERN_INFO "3w-sas: Shutting down host %d.\n", tw_dev->host->host_no);
- 
- 	/* Tell the card we are shutting down */
- 	if (twl_initconnection(tw_dev, 1, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL)) {
- 		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x16, "Connection shutdown failed");
- 	} else {
--		printk(KERN_WARNING "3w-sas: Shutdown complete.\n");
-+		printk(KERN_INFO "3w-sas: Shutdown complete.\n");
- 	}
- 
- 	/* Clear doorbell interrupt just before exit */
-@@ -1631,7 +1631,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
- 
- 	pci_set_drvdata(pdev, host);
- 
--	printk(KERN_WARNING "3w-sas: scsi%d: Found an LSI 3ware %s Controller at 0x%llx, IRQ: %d.\n",
-+	printk(KERN_INFO "3w-sas: scsi%d: Found an LSI 3ware %s Controller at 0x%llx, IRQ: %d.\n",
- 	       host->host_no,
- 	       (char *)twl_get_param(tw_dev, 1, TW_VERSION_TABLE,
- 				     TW_PARAM_MODEL, TW_PARAM_MODEL_LENGTH),
-@@ -1642,7 +1642,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
- 	if (ptr_phycount)
- 		phycount = le32_to_cpu(*(int *)ptr_phycount);
- 
--	printk(KERN_WARNING "3w-sas: scsi%d: Firmware %s, BIOS %s, Phys: %d.\n",
-+	printk(KERN_INFO "3w-sas: scsi%d: Firmware %s, BIOS %s, Phys: %d.\n",
- 	       host->host_no,
- 	       (char *)twl_get_param(tw_dev, 1, TW_VERSION_TABLE,
- 				     TW_PARAM_FWVER, TW_PARAM_FWVER_LENGTH),
-@@ -1753,7 +1753,7 @@ static int __maybe_unused twl_suspend(struct device *dev)
- 	struct Scsi_Host *host = dev_get_drvdata(dev);
- 	TW_Device_Extension *tw_dev = (TW_Device_Extension *)host->hostdata;
- 
--	printk(KERN_WARNING "3w-sas: Suspending host %d.\n", tw_dev->host->host_no);
-+	printk(KERN_INFO "3w-sas: Suspending host %d.\n", tw_dev->host->host_no);
- 	/* Disable interrupts */
- 	TWL_MASK_INTERRUPTS(tw_dev);
- 
-@@ -1763,7 +1763,7 @@ static int __maybe_unused twl_suspend(struct device *dev)
- 	if (twl_initconnection(tw_dev, 1, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL)) {
- 		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x23, "Connection shutdown failed during suspend");
- 	} else {
--		printk(KERN_WARNING "3w-sas: Suspend complete.\n");
-+		printk(KERN_INFO "3w-sas: Suspend complete.\n");
- 	}
- 
- 	/* Clear doorbell interrupt */
-@@ -1780,7 +1780,7 @@ static int __maybe_unused twl_resume(struct device *dev)
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
- 	TW_Device_Extension *tw_dev = (TW_Device_Extension *)host->hostdata;
- 
--	printk(KERN_WARNING "3w-sas: Resuming host %d.\n", tw_dev->host->host_no);
-+	printk(KERN_INFO "3w-sas: Resuming host %d.\n", tw_dev->host->host_no);
- 	pci_try_set_mwi(pdev);
- 
- 	retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-@@ -1811,7 +1811,7 @@ static int __maybe_unused twl_resume(struct device *dev)
- 	/* Re-enable interrupts on the card */
- 	TWL_UNMASK_INTERRUPTS(tw_dev);
- 
--	printk(KERN_WARNING "3w-sas: Resume complete.\n");
-+	printk(KERN_INFO "3w-sas: Resume complete.\n");
- 	return 0;
- 
- out_disable_device:
+You are awesome, thank you!
 -- 
-2.35.1
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
