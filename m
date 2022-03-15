@@ -2,89 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 541F8C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Mar 2022 05:17:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C675C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Mar 2022 05:17:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235603AbiCOFTE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Mar 2022 01:19:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60074 "EHLO
+        id S236782AbiCOFTF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Mar 2022 01:19:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233599AbiCOFTE (ORCPT
+        with ESMTP id S233863AbiCOFTE (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2022 01:19:04 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35A4263E5
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Mar 2022 22:17:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8686A643B
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Mar 2022 22:17:52 -0700 (PDT)
 Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 22F3O8im008016;
-        Tue, 15 Mar 2022 05:02:43 GMT
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 22F39A6i008015;
+        Tue, 15 Mar 2022 05:02:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=F+cbAGYnny0iSeDsc7twzJUA2Syx+pyIyz+9xYL+xBE=;
- b=nLE45LPef2Fzx4rwPHxO9zpKsqEtIiWTbgmRqQ1qVHlzXCQZCeRMa1v2iwMrs8kePxKm
- gVUKGAdAHvtD1zOTRy9LY1+u2pU8VgIF4l+P0YzhfQ3uL6rG6TExROKOc81sBEhsDd2B
- VJu1GUeogkty7qGjOl/d9vIciwL2kcr0/hsDhAtv4D5XCBy+dskdbsnEC/W63oGf/CHN
- 99/QtLKCJ8vc2ShmZ+w8yH1KgM8Bx5WiYr6uNk22GOJe15nP8yE9COJqZgvSeoS+qTE5
- ZVdj04WClTGuNTQbJ/WidmWT/7WC93vboeKNQDgum6VlXcH1GEUVofmnXUd8TclPk03i bQ== 
+ bh=1RgW0cjUuB6ERpvLNdXE7h2Y29V6CuESfRF7toQfAfc=;
+ b=PVgM6ogsWFRyGUh85K5pBvjfa1MgffASrlgc2MeRuguEmhaDgIu5rSEoQz6da+C2DpIX
+ jNxPVkQExp4uGjMEyzl3MnwiNUWwwX8+UQoDB7GT3ZZASqj3/R19ec0rh9yxoHSQckQZ
+ FT1nQ1S5EZ4OXjGHd6T3jahg3DXp4tUqiueMvPWid09N/1bETHTiUa1ZoyiqO9cDN7HM
+ STchkuQtwxSg/5qyD3yFsdLLYNUyAE8Qgevq4ItoQyNiGWqQvy0LusqvrgLdULP37bAg
+ T4pBXZ/CYP+RMR7+WJmElSk70S/huwTwyUNBuj+6Fwjbac1u2imOQNTfDOZ8UHbPvhON hQ== 
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3et5s6j20g-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3et5s6j20m-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Mar 2022 05:02:43 +0000
+        Tue, 15 Mar 2022 05:02:45 +0000
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 22F51JJk004866;
-        Tue, 15 Mar 2022 05:02:42 GMT
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 22F51KHe004976;
+        Tue, 15 Mar 2022 05:02:44 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3erhy25wv9-1
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3erhy25wwc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Mar 2022 05:02:42 +0000
+        Tue, 15 Mar 2022 05:02:44 +0000
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 22F52cq7007094;
-        Tue, 15 Mar 2022 05:02:41 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 22F52cqD007094;
+        Tue, 15 Mar 2022 05:02:44 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3erhy25wts-3;
-        Tue, 15 Mar 2022 05:02:41 +0000
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3erhy25wts-6;
+        Tue, 15 Mar 2022 05:02:44 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, jejb@linux.ibm.com,
-        peter.wang@mediatek.com, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, stanley.chu@mediatek.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-mediatek@lists.infradead.org, chun-hung.wu@mediatek.com,
-        chaotian.jing@mediatek.com, beanhuo@micron.com,
-        wsd_upstream@mediatek.com, alice.chao@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        cc.chou@mediatek.com, mikebi@micron.com, qilin.tan@mediatek.com,
-        lin.gui@mediatek.com
-Subject: Re: [PATCH v1] scsi: ufs: scsi_get_lba error fix by check cmd opcode
-Date:   Tue, 15 Mar 2022 01:02:33 -0400
-Message-Id: <164732052814.23186.8418060830463850785.b4-ty@oracle.com>
+To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        linux-scsi@vger.kernel.org
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] mpt3sas: Remove scsi_dma_map errors messages
+Date:   Tue, 15 Mar 2022 01:02:36 -0400
+Message-Id: <164732052813.23186.5277228738704812053.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220307111752.10465-1-peter.wang@mediatek.com>
-References: <20220307111752.10465-1-peter.wang@mediatek.com>
+In-Reply-To: <20220303140203.12642-1-sreekanth.reddy@broadcom.com>
+References: <20220303140203.12642-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: CGHBTJI2hPrbY2UpGNc2X2W0cgtXK5GY
-X-Proofpoint-ORIG-GUID: CGHBTJI2hPrbY2UpGNc2X2W0cgtXK5GY
+X-Proofpoint-GUID: Gga0oyTIZfrAT7oSVIKmh7ImWi2y10VK
+X-Proofpoint-ORIG-GUID: Gga0oyTIZfrAT7oSVIKmh7ImWi2y10VK
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 7 Mar 2022 19:17:52 +0800, peter.wang@mediatek.com wrote:
+On Thu, 3 Mar 2022 19:32:03 +0530, Sreekanth Reddy wrote:
 
-> From: Peter Wang <peter.wang@mediatek.com>
-> 
-> When ufs init without scmd->device->sector_size set,
-> scsi_get_lba will get a wrong shift number and ubsan error.
-> shift exponent 4294967286 is too large for 64-bit type
-> 'sector_t' (aka 'unsigned long long')
-> Call scsi_get_lba only when opcode is READ_10/WRITE_10/UNMAP.
+> When scsi_dma_map() fails by returning a sges_left value less than
+> zero, the amount of logging can be extremely high.  In a recent
+> end-user environment, 1200 messages per second were being sent to
+> the log buffer.  This eventually overwhelmed the system and it
+> stalled. Also these error messages are not needed and hence
+> removing them.
 > 
 > [...]
 
 Applied to 5.18/scsi-queue, thanks!
 
-[1/1] scsi: ufs: scsi_get_lba error fix by check cmd opcode
-      https://git.kernel.org/mkp/scsi/c/2bd3b6b75946
+[1/1] mpt3sas: Remove scsi_dma_map errors messages
+      https://git.kernel.org/mkp/scsi/c/0c25422d34b4
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
