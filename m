@@ -2,80 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACB50C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Mar 2022 10:49:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F59BC4321E
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Mar 2022 13:41:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347400AbiCOKuG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Mar 2022 06:50:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33460 "EHLO
+        id S1348787AbiCONmU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Mar 2022 09:42:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347604AbiCOKsA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2022 06:48:00 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3240522D6;
-        Tue, 15 Mar 2022 03:45:02 -0700 (PDT)
-Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KHqlb4ryTz6809b;
-        Tue, 15 Mar 2022 18:44:11 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 15 Mar 2022 11:44:56 +0100
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 15 Mar 2022 10:44:53 +0000
-From:   John Garry <john.garry@huawei.com>
-To:     <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <bvanassche@acm.org>,
-        <ming.lei@redhat.com>, <hch@lst.de>, <hare@suse.de>
-CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <martin.wilck@suse.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH 0/2] scsi/libata: A potential tagging fix and improvement
-Date:   Tue, 15 Mar 2022 18:39:04 +0800
-Message-ID: <1647340746-17600-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        with ESMTP id S1348757AbiCONmS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2022 09:42:18 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45DA152E66;
+        Tue, 15 Mar 2022 06:41:05 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AD8FFB81677;
+        Tue, 15 Mar 2022 13:41:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07A13C340E8;
+        Tue, 15 Mar 2022 13:40:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647351662;
+        bh=gvl9SFrDd+2JfY4XpOU21w5Fgp3RnrxgO3xzRNMW3ig=;
+        h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+        b=FpIzPAInqwcWVe7lVXyZMo10uysAvQH5/+0FSS06nOQud/sjKtVu2eXUrgVVwDtnS
+         K9saXWWZ1hCdhU07mL3gP1lbyLMM5ncodj0hAGG1sCe8guzPWwUCxCvCMd4UnYk0ij
+         MiKnX5ElR8cklFLsknUpJxfH63KChYC/OCTeoHADKe2d7sJJxnj+KlqJSXMWCfA0RW
+         7IMl8VYJBtsy0LvBdpwYawlVvfm1y/uovTsdBOXZktA8NvrkBJg6F9XHpbVdi97yvv
+         ktn0TMEJDT+qVku5scquwwLC4arp4ujY52Gxd5XtzcUD53EHdZUC9sEswg4SOYFru/
+         p422dM8tR7ngQ==
+From:   Mark Brown <broonie@kernel.org>
+To:     Julia Lawall <Julia.Lawall@inria.fr>, linux-can@vger.kernel.org
+Cc:     netdev@vger.kernel.org, Jiri Olsa <jolsa@kernel.org>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        linux-media@vger.kernel.org,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        linux-perf-users@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sean Wang <sean.wang@mediatek.com>,
+        linux-arm-msm@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        platform-driver-x86@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        Matti Vaittinen <matti.vaittinen@fi.rohmeurope.com>,
+        Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
+        target-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-staging@lists.linux.dev, linux-s390@vger.kernel.org,
+        Jonas Karlman <jonas@kwiboo.se>, linux-sunxi@lists.linux.dev,
+        linux-kernel@vger.kernel.org, linux-power@fi.rohmeurope.com,
+        linux-omap@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-leds@vger.kernel.org, linux-spi@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, linux-clk@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Namhyung Kim <namhyung@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        linux-wireless@vger.kernel.org
+In-Reply-To: <20220314115354.144023-1-Julia.Lawall@inria.fr>
+References: <20220314115354.144023-1-Julia.Lawall@inria.fr>
+Subject: Re: (subset) [PATCH 00/30] fix typos in comments
+Message-Id: <164735165474.3687547.1964402001196947729.b4-ty@kernel.org>
+Date:   Tue, 15 Mar 2022 13:40:54 +0000
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Two loosely related patches are included:
+On Mon, 14 Mar 2022 12:53:24 +0100, Julia Lawall wrote:
+> Various spelling mistakes in comments.
+> Detected with the help of Coccinelle.
+> 
 
-- Fix for scsi_realloc_sdev_budget_map(). I noticed that the budget token
-  for scsi commands was way in excess of the device queue depth, so I
-  think we need to fix the sbitmap depth. I need to test this more.
+Applied to
 
-- libata change to use scsi command budget token for qc tag for SAS host.
-  I marked this as RFC as for SAS hosts I don't see anything which
-  guarantees that the budget size is <= 32 always.
-  For libsas hosts we resize the device depth to 32 in the slave configure
-  callback, but this seems an unreliable approach since not all hosts may
-  call this.
-  In addition, I am worried that even if we resize the device depth
-  properly in the slave config callback, we may still try to alloc qc tag
-  prior to this - in lun scan, for example.
-  So we need a way to guarantee that the device queue depth is <= 32
-  always, which I would be open to suggestions for.
+   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git for-next
 
-John Garry (2):
-  scsi: core: Fix sbitmap depth in scsi_realloc_sdev_budget_map()
-  libata: Use scsi cmnd budget token for qc tag for SAS host
+Thanks!
 
- drivers/ata/libata-core.c |  5 +++--
- drivers/ata/libata-sata.c | 21 ++++-----------------
- drivers/ata/libata-scsi.c |  2 +-
- drivers/ata/libata.h      |  4 ++--
- drivers/scsi/scsi_scan.c  |  5 +++++
- include/linux/libata.h    |  1 -
- 6 files changed, 15 insertions(+), 23 deletions(-)
+[21/30] spi: sun4i: fix typos in comments
+        commit: 2002c13243d595e211c0dad6b8e2e87f906f474b
 
--- 
-2.26.2
+All being well this means that it will be integrated into the linux-next
+tree (usually sometime in the next 24 hours) and sent to Linus during
+the next merge window (or sooner if it is a bug fix), however if
+problems are discovered then the patch may be dropped or reverted.
 
+You may get further e-mails resulting from automated or manual testing
+and review of the tree, please engage with people reporting problems and
+send followup patches addressing any issues that are reported if needed.
+
+If any updates are required or you are submitting further changes they
+should be sent as incremental updates against current git, existing
+patches will not be replaced.
+
+Please add any relevant lists and maintainers to the CCs when replying
+to this mail.
+
+Thanks,
+Mark
