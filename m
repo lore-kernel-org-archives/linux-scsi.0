@@ -2,104 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F59BC4321E
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Mar 2022 13:41:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFB38C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Mar 2022 14:33:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348787AbiCONmU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Mar 2022 09:42:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44524 "EHLO
+        id S1347367AbiCOOez (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Mar 2022 10:34:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348757AbiCONmS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2022 09:42:18 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45DA152E66;
-        Tue, 15 Mar 2022 06:41:05 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AD8FFB81677;
-        Tue, 15 Mar 2022 13:41:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07A13C340E8;
-        Tue, 15 Mar 2022 13:40:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1647351662;
-        bh=gvl9SFrDd+2JfY4XpOU21w5Fgp3RnrxgO3xzRNMW3ig=;
-        h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-        b=FpIzPAInqwcWVe7lVXyZMo10uysAvQH5/+0FSS06nOQud/sjKtVu2eXUrgVVwDtnS
-         K9saXWWZ1hCdhU07mL3gP1lbyLMM5ncodj0hAGG1sCe8guzPWwUCxCvCMd4UnYk0ij
-         MiKnX5ElR8cklFLsknUpJxfH63KChYC/OCTeoHADKe2d7sJJxnj+KlqJSXMWCfA0RW
-         7IMl8VYJBtsy0LvBdpwYawlVvfm1y/uovTsdBOXZktA8NvrkBJg6F9XHpbVdi97yvv
-         ktn0TMEJDT+qVku5scquwwLC4arp4ujY52Gxd5XtzcUD53EHdZUC9sEswg4SOYFru/
-         p422dM8tR7ngQ==
-From:   Mark Brown <broonie@kernel.org>
-To:     Julia Lawall <Julia.Lawall@inria.fr>, linux-can@vger.kernel.org
-Cc:     netdev@vger.kernel.org, Jiri Olsa <jolsa@kernel.org>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        linux-media@vger.kernel.org,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        linux-perf-users@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sean Wang <sean.wang@mediatek.com>,
-        linux-arm-msm@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        platform-driver-x86@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        Matti Vaittinen <matti.vaittinen@fi.rohmeurope.com>,
-        Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
-        target-devel@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-staging@lists.linux.dev, linux-s390@vger.kernel.org,
-        Jonas Karlman <jonas@kwiboo.se>, linux-sunxi@lists.linux.dev,
-        linux-kernel@vger.kernel.org, linux-power@fi.rohmeurope.com,
-        linux-omap@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        linux-leds@vger.kernel.org, linux-spi@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, linux-clk@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Namhyung Kim <namhyung@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        linux-wireless@vger.kernel.org
-In-Reply-To: <20220314115354.144023-1-Julia.Lawall@inria.fr>
-References: <20220314115354.144023-1-Julia.Lawall@inria.fr>
-Subject: Re: (subset) [PATCH 00/30] fix typos in comments
-Message-Id: <164735165474.3687547.1964402001196947729.b4-ty@kernel.org>
-Date:   Tue, 15 Mar 2022 13:40:54 +0000
+        with ESMTP id S1344974AbiCOOex (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2022 10:34:53 -0400
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78F5F24586;
+        Tue, 15 Mar 2022 07:33:37 -0700 (PDT)
+Received: by mail-pf1-f173.google.com with SMTP id a5so20000619pfv.2;
+        Tue, 15 Mar 2022 07:33:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=eQwF88zKGJNd0osI7kT3zN47aN665LOmHxpYhgazZW4=;
+        b=apTv752JX/yFnToVj2RHAUg7DUj31hUeftoEFDePIhasDZ0rBoHZayCEaXdvxwbYlf
+         UE/0oz++5cfLlcODibfdwVrEx0UzEcGpCAsgH7wVOOCY0vV6UxQglzPXN8IeyJP5r5qU
+         CMFZRNH2Iz5vHn09Etl2yJtg7Cxpmcbdi+F5akUS33bGQWIiuTOqlq0pvZD3bD/jZd9y
+         oTZwFTgbPZvk4xiByABn3Jnn/MFV60+HJ4tfuSfLE4rU/Nqa32jqb7whBBUQJXnvteos
+         rFbKVBi+xOeUAoizqhMp3ubeR1Ery9M+AXH8fupPIAGefoLkPWnIkDvJRbyagSO8ibpj
+         X2/w==
+X-Gm-Message-State: AOAM532ZbXr0Hm++PXN2Y1dywVJcHHILOC/9A7yn1f97nKjz1SK4lDc0
+        HRmYwAyHL0O2bOGd5yIg51o=
+X-Google-Smtp-Source: ABdhPJxhD2Szkw0kyoPatvxJusEKW89tEb3gbRdR2T+xVPD6uCDt75xsIZh8M8tlIh2Ydw40EXIBYg==
+X-Received: by 2002:aa7:859a:0:b0:4f6:aaa1:832f with SMTP id w26-20020aa7859a000000b004f6aaa1832fmr29029288pfn.9.1647354816634;
+        Tue, 15 Mar 2022 07:33:36 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id ob13-20020a17090b390d00b001becfd7c6f3sm3560418pjb.27.2022.03.15.07.33.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 15 Mar 2022 07:33:36 -0700 (PDT)
+Message-ID: <51c2d9da-a0c5-8ae5-5c22-ceb56c7f5a27@acm.org>
+Date:   Tue, 15 Mar 2022 07:33:34 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 1/2] scsi: core: Fix sbitmap depth in
+ scsi_realloc_sdev_budget_map()
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, ming.lei@redhat.com, hch@lst.de,
+        hare@suse.de
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.wilck@suse.com
+References: <1647340746-17600-1-git-send-email-john.garry@huawei.com>
+ <1647340746-17600-2-git-send-email-john.garry@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1647340746-17600-2-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 14 Mar 2022 12:53:24 +0100, Julia Lawall wrote:
-> Various spelling mistakes in comments.
-> Detected with the help of Coccinelle.
+On 3/15/22 03:39, John Garry wrote:
+> In commit edb854a3680b ("scsi: core: Reallocate device's budget map on
+> queue depth change"), the sbitmap for the device budget map may be
+> reallocated after the slave device depth is configured.
 > 
+> When the sbitmap is reallocated we use the result from
+> scsi_device_max_queue_depth() for the sbitmap size, but don't resize to
+> match the actual device queue depth.
+> 
+> Fix by resizing the sbitmap after reallocating the budget sbitmap.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>   drivers/scsi/scsi_scan.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index f4e6c68ac99e..2ef78083f1ef 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -223,6 +223,8 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
+>   	int ret;
+>   	struct sbitmap sb_backup;
+>   
+> +	depth = min_t(unsigned int, depth, scsi_device_max_queue_depth(sdev));
+> +
+>   	/*
+>   	 * realloc if new shift is calculated, which is caused by setting
+>   	 * up one new default queue depth after calling ->slave_configure
+> @@ -245,6 +247,9 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
+>   				scsi_device_max_queue_depth(sdev),
+>   				new_shift, GFP_KERNEL,
+>   				sdev->request_queue->node, false, true);
+> +	if (!ret)
+> +		sbitmap_resize(&sdev->budget_map, depth);
 
-Applied to
-
-   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git for-next
-
-Thanks!
-
-[21/30] spi: sun4i: fix typos in comments
-        commit: 2002c13243d595e211c0dad6b8e2e87f906f474b
-
-All being well this means that it will be integrated into the linux-next
-tree (usually sometime in the next 24 hours) and sent to Linus during
-the next merge window (or sooner if it is a bug fix), however if
-problems are discovered then the patch may be dropped or reverted.
-
-You may get further e-mails resulting from automated or manual testing
-and review of the tree, please engage with people reporting problems and
-send followup patches addressing any issues that are reported if needed.
-
-If any updates are required or you are submitting further changes they
-should be sent as incremental updates against current git, existing
-patches will not be replaced.
-
-Please add any relevant lists and maintainers to the CCs when replying
-to this mail.
+Hmm ... why to call both sbitmap_init_node() and sbitmap_resize() 
+instead of combining both calls into a single call with the proper depth?
 
 Thanks,
-Mark
+
+Bart.
