@@ -2,82 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A58B7C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Mar 2022 06:31:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EEDAC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Mar 2022 08:26:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345247AbiCOGdC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Mar 2022 02:33:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36888 "EHLO
+        id S1345877AbiCOI15 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Mar 2022 04:27:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345230AbiCOGcz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2022 02:32:55 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D31C14A3F6;
-        Mon, 14 Mar 2022 23:31:42 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 22F3M3Dn021977;
-        Tue, 15 Mar 2022 05:02:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=mmXx/wyVMz9ehfry6mGcafZhCzbcd2rWgC9pmyVkFkk=;
- b=0FN7NCCytyY1CJBlAnDjN3ZuSNx+yd09hFzT+lLas8MVqc3t+y5fzzPCA/Vf5R7iP4yo
- 9Y74HRrOt/u/Uhdyclt7DykeiiK+p1KHvtyvm8vPKFZFij8kZAC9DvbmGp+xziT6B8Vc
- ZUY9bVi7rDtH7qEDKsDwlCEDIhtvoJW4NF6XKA7ZmNKpvFEfk/VThb4zy9T+g/adfShE
- PzYTYIQS05ja+HYEoVYWRRa/1yPgmPdQI9Dk+9vo4ib6/T3Qr8wjwnLIaf8tzG0TMplW
- boDdjh4u2URRTn97CYYMUh9N52dUL4HsgzBluM/cjJNprrjkP9u/nUyHwxyGJp99O676 Gw== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3et60r9y1q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Mar 2022 05:02:40 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 22F51JUb004847;
-        Tue, 15 Mar 2022 05:02:39 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3erhy25wub-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Mar 2022 05:02:39 +0000
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 22F52cq5007094;
-        Tue, 15 Mar 2022 05:02:39 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3erhy25wts-2;
-        Tue, 15 Mar 2022 05:02:39 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     hare@suse.de, Jianglei Nie <niejianglei2021@163.com>,
-        jejb@linux.ibm.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: libfc: Fix use after free in fc_exch_abts_resp()
-Date:   Tue, 15 Mar 2022 01:02:32 -0400
-Message-Id: <164732052813.23186.105308943748760649.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220303015115.459778-1-niejianglei2021@163.com>
-References: <20220303015115.459778-1-niejianglei2021@163.com>
+        with ESMTP id S239420AbiCOI14 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2022 04:27:56 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA4413981F
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Mar 2022 01:26:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=r2rFRtqPE+jcua+Ud1+u4R7KJYtkOEOtSqvwewp6yy4=; b=MhMDXSxq7C1hj/Gbl29lHYgwa1
+        fcr4ivtx6Zs68mMluT1GaIpv31tAuVcIVQ9+h4WFozbRw7fBUExkFA0DisQKYTri/vnecFCWvTDbm
+        ws4UdgjD64yQ3Ic5HxJ02YDPNJ0cltg50nx31eTihBN7DmhVihRQ2toH6yv+8tIDvhWYR38i+G8aW
+        VzYRrU65Fevxklx2QCPp0qTdZ+H77PTN+4fIhyYyQqqmh2zle8A0q6bwUS3UF6aBmk0zn4HYpDtNM
+        gv39bykhojC4GZcYPJcdG1ZWAoXLdTwnK+XeVdaoAAwXy4I6KnC/+I5VF750oSJGbbk8sR+dZxazS
+        ylURxkvg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nU2Vs-008GBQ-L5; Tue, 15 Mar 2022 08:26:40 +0000
+Date:   Tue, 15 Mar 2022 01:26:40 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     bvanassche@acm.org, lduncan@suse.com, cleech@redhat.com,
+        ming.lei@redhat.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
+Subject: Re: [RFC PATCH 0/4] scsi/iscsi: Send iscsi data from kblockd
+Message-ID: <YjBNwMp3WlkjFd0g@infradead.org>
+References: <20220308003957.123312-1-michael.christie@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: lCP9KMjawGnv-9AMLq_C4YB7byUd88FD
-X-Proofpoint-ORIG-GUID: lCP9KMjawGnv-9AMLq_C4YB7byUd88FD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220308003957.123312-1-michael.christie@oracle.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 3 Mar 2022 09:51:15 +0800, Jianglei Nie wrote:
+The subject seems a bit misleading, I'd expect to see
+BLK_MQ_F_BLOCKING in the subject.
 
-> fc_exch_release(ep) will decrease the ep's reference count. When the
-> reference count reaches zero, it is freed. But ep is still used in the
-> following code, which will lead to a use after free.
-> 
-> We should return the function after the call of fc_exch_release() to
-> avoid use after free.
-> 
-> [...]
-
-Applied to 5.18/scsi-queue, thanks!
-
-[1/1] scsi: libfc: Fix use after free in fc_exch_abts_resp()
-      https://git.kernel.org/mkp/scsi/c/271add11994b
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Note that you'll also need the series from Ming to support dm-multipath
+on top devices that set BLK_MQ_F_BLOCKING.
