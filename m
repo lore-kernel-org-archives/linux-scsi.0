@@ -2,182 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36C0FC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Mar 2022 06:05:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4024CC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Mar 2022 06:15:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243546AbiCOGGu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Mar 2022 02:06:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48688 "EHLO
+        id S240909AbiCOGQs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Mar 2022 02:16:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233986AbiCOGGs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2022 02:06:48 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A8C937BCE;
-        Mon, 14 Mar 2022 23:05:36 -0700 (PDT)
-Received: from localhost.localdomain (ip5f5ae8f9.dynamic.kabel-deutschland.de [95.90.232.249])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id C634161EA1927;
-        Tue, 15 Mar 2022 07:05:32 +0100 (CET)
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-To:     Adam Radford <aradford@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Paul Menzel <pmenzel@molgen.mpg.de>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2] scsi: 3w-sas: Correct log level of several messages
-Date:   Tue, 15 Mar 2022 07:05:00 +0100
-Message-Id: <20220315060459.133090-1-pmenzel@molgen.mpg.de>
-X-Mailer: git-send-email 2.35.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S230089AbiCOGQr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2022 02:16:47 -0400
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0E113CA5D;
+        Mon, 14 Mar 2022 23:15:35 -0700 (PDT)
+Received: by mail-ed1-x535.google.com with SMTP id h13so22832232ede.5;
+        Mon, 14 Mar 2022 23:15:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=YTGTs0DjMy0hvQWXCmfeGu4I6rdTV43J4LhqCKCccmk=;
+        b=VAYwMlJhncErpZj1ddCZJhy4RuQhcodpnaD8EKiXXfSymN1jG3pIQj1MoYFjXZFkYU
+         xSADENl3rg3LEuh6I8RQ14FFqg3WygrgHXhTh4HA/wW2+TLJ/RE3Tr4wPEpiRjzh0ix3
+         LAbVGqDOIanUU90cHM5KPqapqulvvDsbOkgbwvAAzf5jfDZiWtMbg2W28Vn4/12bERR9
+         XEdbbM/e3sDbofnIgKHtUTisJennFBg8bTSieoLeL8NO6PNlH3l8U+teb2T+V1u3Wo8T
+         /B1muk0wLrzo3TEF7Hs5GA3KG4EaeR/g2Pznl0DmwMr0RWVBy4gTX6ZOA5A1ixwLRuu4
+         WsVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=YTGTs0DjMy0hvQWXCmfeGu4I6rdTV43J4LhqCKCccmk=;
+        b=fYiIO+BluopSLBhk5ZrEkP0E3GOo+X6+nwRvRwGnY4ZBUrSTliaNofff9+OLpNIPNZ
+         75q33bw/ve3zxMrXZOStOhcfxguXaYxf5mLlFlgoh2INht8nEIIjMfmgUR7ePYDwSIYV
+         zRYYPC+RsJcFqJolTwImDYH8fM0uxUvXeeNS/8Kuiwo2Rmvazw/GH2Hu7niPfJzTG8GK
+         qUF7QKdEzOwTjs+DEGlGVfKyPFc0g/R/NTSl6x1ewxDg6jfT5AG6fTkxbrgyQnnDu50W
+         E2k9zHVXJ9denBaZluf8VygDhzLUUE/QVw0q+zo/uPqN0VlHEGYMVNjxUN8tZburwkKj
+         5T8g==
+X-Gm-Message-State: AOAM533B1PYwKjujucNcp1rZCncSLXfWedvlpQRF3cVTuiTG1nAshKiB
+        qYKiF58FFleaB7RSazuWNZg=
+X-Google-Smtp-Source: ABdhPJzA1/0wj3wjvlcpvJGfz22qoMu0Mkv5zCp/bmhAQ0W/8ceffGzHJb+1ovvOOO0pRixZhX8twQ==
+X-Received: by 2002:a05:6402:5243:b0:417:3a3:c6e with SMTP id t3-20020a056402524300b0041703a30c6emr17593629edd.211.1647324934470;
+        Mon, 14 Mar 2022 23:15:34 -0700 (PDT)
+Received: from felia.fritz.box (200116b8264e9400282aff0ca67bda3e.dip.versatel-1u1.de. [2001:16b8:264e:9400:282a:ff0c:a67b:da3e])
+        by smtp.gmail.com with ESMTPSA id h26-20020aa7cdda000000b0040f75ad0e60sm7562429edw.83.2022.03.14.23.15.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Mar 2022 23:15:34 -0700 (PDT)
+From:   Lukas Bulwahn <lukas.bulwahn@gmail.com>
+To:     Christoph Hellwig <hch@lst.de>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Subject: [PATCH] scsi: scsi_ioctl:drop needless assignment in sg_io()
+Date:   Tue, 15 Mar 2022 07:15:20 +0100
+Message-Id: <20220315061520.30745-1-lukas.bulwahn@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On a Dell PowerEdge T630, Linux logs some 3w-sas warnings:
+Commit ce70fd9a551a ("scsi: core: Remove the cmd field from struct
+scsi_request") refactored sg_io(), so that it does not allocate directly
+and hence does not return -ENOMEM in its error case. That makes a
+remaining assignment of -ENOMEM to the return variable needless.
 
-    $ dmesg | grep DMI:
-    [    0.000000] DMI: Dell Inc. PowerEdge T630/0W9WXC, BIOS 2.5.4 08/17/2017
-    $ dmesg --level=warn | grep 3w
-    [   22.449617] 3w-sas: scsi12: AEN: INFO (0x04:0x0053): Battery capacity test is overdue:.
-    [   22.680618] 3w-sas: scsi12: Found an LSI 3ware 9750-8e Controller at 0xc8040000, IRQ: 117.
-    [   23.001611] 3w-sas: scsi12: Firmware FH9X 5.12.00.016, BIOS BE9X 5.11.00.007, Phys: 8.
+Drop this needless assignment in sg_io().
 
-These are obviously no warnings, and just informational messages. Look
-through the file, and adapt the log level of several messages mostly
-according to the level string in the message.
+No functional change. No change in resulting object code.
 
-The message below is the only tricky change, as the log level actually
-depends on the AEN severity determined by `twl_aen_severity_lookup()`.
-
-	printk(KERN_INFO "3w-sas:%s AEN: %s (0x%02X:0x%04X): %s:%s.\n",
-	       host,
-	       twl_aen_severity_lookup(TW_SEV_OUT(header->status_block.severity__reserved)),
-	       TW_MESSAGE_SOURCE_CONTROLLER_EVENT, aen, error_str,
-	       header->err_specific_desc);
-
-The AEN severity levels below exist.
-
-	/* AEN severity table */
-	static char *twl_aen_severity_table[] =
-	{
-		"None", "ERROR", "WARNING", "INFO", "DEBUG", NULL
-	};
-
-It’s demoted from a warning to an informational message nevertheless to
-avoid adding if-else statements.
-
-Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
+Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
 ---
-v2: Fix KERN_ERROR to KERN_ERR
+Christoph, please ack.
 
- drivers/scsi/3w-sas.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+Martin, please pick this minor clean-up on your -next tree on top of the
+commit above.
 
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index 3ebe66151dcb..cf7657939d43 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -256,7 +256,7 @@ static void twl_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_H
- 	event->parameter_len = strlen(header->err_specific_desc);
- 	memcpy(event->parameter_data, header->err_specific_desc, event->parameter_len + 1 + strlen(error_str));
- 	if (event->severity != TW_AEN_SEVERITY_DEBUG)
--		printk(KERN_WARNING "3w-sas:%s AEN: %s (0x%02X:0x%04X): %s:%s.\n",
-+		printk(KERN_INFO "3w-sas:%s AEN: %s (0x%02X:0x%04X): %s:%s.\n",
- 		       host,
- 		       twl_aen_severity_lookup(TW_SEV_OUT(header->status_block.severity__reserved)),
- 		       TW_MESSAGE_SOURCE_CONTROLLER_EVENT, aen, error_str,
-@@ -873,14 +873,14 @@ static int twl_fill_sense(TW_Device_Extension *tw_dev, int i, int request_id, in
- 	error = le16_to_cpu(header->status_block.error);
- 	if ((error != TW_ERROR_LOGICAL_UNIT_NOT_SUPPORTED) && (error != TW_ERROR_UNIT_OFFLINE) && (error != TW_ERROR_INVALID_FIELD_IN_CDB)) {
- 		if (print_host)
--			printk(KERN_WARNING "3w-sas: scsi%d: ERROR: (0x%02X:0x%04X): %s:%s.\n",
-+			printk(KERN_ERR "3w-sas: scsi%d: ERROR: (0x%02X:0x%04X): %s:%s.\n",
- 			       tw_dev->host->host_no,
- 			       TW_MESSAGE_SOURCE_CONTROLLER_ERROR,
- 			       header->status_block.error,
- 			       error_str,
- 			       header->err_specific_desc);
- 		else
--			printk(KERN_WARNING "3w-sas: ERROR: (0x%02X:0x%04X): %s:%s.\n",
-+			printk(KERN_ERR "3w-sas: ERROR: (0x%02X:0x%04X): %s:%s.\n",
- 			       TW_MESSAGE_SOURCE_CONTROLLER_ERROR,
- 			       header->status_block.error,
- 			       error_str,
-@@ -1493,13 +1493,13 @@ static void __twl_shutdown(TW_Device_Extension *tw_dev)
- 	/* Free up the IRQ */
- 	free_irq(tw_dev->tw_pci_dev->irq, tw_dev);
+ drivers/scsi/scsi_ioctl.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index 0613015cae39..a480c4d589f5 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -434,7 +434,6 @@ static int sg_io(struct scsi_device *sdev, struct sg_io_hdr *hdr, fmode_t mode)
+ 	if (hdr->flags & SG_FLAG_Q_AT_HEAD)
+ 		at_head = 1;
  
--	printk(KERN_WARNING "3w-sas: Shutting down host %d.\n", tw_dev->host->host_no);
-+	printk(KERN_INFO "3w-sas: Shutting down host %d.\n", tw_dev->host->host_no);
- 
- 	/* Tell the card we are shutting down */
- 	if (twl_initconnection(tw_dev, 1, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL)) {
- 		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x16, "Connection shutdown failed");
- 	} else {
--		printk(KERN_WARNING "3w-sas: Shutdown complete.\n");
-+		printk(KERN_INFO "3w-sas: Shutdown complete.\n");
- 	}
- 
- 	/* Clear doorbell interrupt just before exit */
-@@ -1631,7 +1631,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
- 
- 	pci_set_drvdata(pdev, host);
- 
--	printk(KERN_WARNING "3w-sas: scsi%d: Found an LSI 3ware %s Controller at 0x%llx, IRQ: %d.\n",
-+	printk(KERN_INFO "3w-sas: scsi%d: Found an LSI 3ware %s Controller at 0x%llx, IRQ: %d.\n",
- 	       host->host_no,
- 	       (char *)twl_get_param(tw_dev, 1, TW_VERSION_TABLE,
- 				     TW_PARAM_MODEL, TW_PARAM_MODEL_LENGTH),
-@@ -1642,7 +1642,7 @@ static int twl_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
- 	if (ptr_phycount)
- 		phycount = le32_to_cpu(*(int *)ptr_phycount);
- 
--	printk(KERN_WARNING "3w-sas: scsi%d: Firmware %s, BIOS %s, Phys: %d.\n",
-+	printk(KERN_INFO "3w-sas: scsi%d: Firmware %s, BIOS %s, Phys: %d.\n",
- 	       host->host_no,
- 	       (char *)twl_get_param(tw_dev, 1, TW_VERSION_TABLE,
- 				     TW_PARAM_FWVER, TW_PARAM_FWVER_LENGTH),
-@@ -1753,7 +1753,7 @@ static int __maybe_unused twl_suspend(struct device *dev)
- 	struct Scsi_Host *host = dev_get_drvdata(dev);
- 	TW_Device_Extension *tw_dev = (TW_Device_Extension *)host->hostdata;
- 
--	printk(KERN_WARNING "3w-sas: Suspending host %d.\n", tw_dev->host->host_no);
-+	printk(KERN_INFO "3w-sas: Suspending host %d.\n", tw_dev->host->host_no);
- 	/* Disable interrupts */
- 	TWL_MASK_INTERRUPTS(tw_dev);
- 
-@@ -1763,7 +1763,7 @@ static int __maybe_unused twl_suspend(struct device *dev)
- 	if (twl_initconnection(tw_dev, 1, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL)) {
- 		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x23, "Connection shutdown failed during suspend");
- 	} else {
--		printk(KERN_WARNING "3w-sas: Suspend complete.\n");
-+		printk(KERN_INFO "3w-sas: Suspend complete.\n");
- 	}
- 
- 	/* Clear doorbell interrupt */
-@@ -1780,7 +1780,7 @@ static int __maybe_unused twl_resume(struct device *dev)
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
- 	TW_Device_Extension *tw_dev = (TW_Device_Extension *)host->hostdata;
- 
--	printk(KERN_WARNING "3w-sas: Resuming host %d.\n", tw_dev->host->host_no);
-+	printk(KERN_INFO "3w-sas: Resuming host %d.\n", tw_dev->host->host_no);
- 	pci_try_set_mwi(pdev);
- 
- 	retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-@@ -1811,7 +1811,7 @@ static int __maybe_unused twl_resume(struct device *dev)
- 	/* Re-enable interrupts on the card */
- 	TWL_UNMASK_INTERRUPTS(tw_dev);
- 
--	printk(KERN_WARNING "3w-sas: Resume complete.\n");
-+	printk(KERN_INFO "3w-sas: Resume complete.\n");
- 	return 0;
- 
- out_disable_device:
+-	ret = -ENOMEM;
+ 	rq = scsi_alloc_request(sdev->request_queue, writing ?
+ 			     REQ_OP_DRV_OUT : REQ_OP_DRV_IN, 0);
+ 	if (IS_ERR(rq))
 -- 
-2.35.1
+2.17.1
 
