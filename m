@@ -2,92 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0EA3C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 09:50:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 134B9C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 10:43:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354957AbiCPJve (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Mar 2022 05:51:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57256 "EHLO
+        id S1355190AbiCPKod (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Mar 2022 06:44:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241720AbiCPJve (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 05:51:34 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE701606D5;
-        Wed, 16 Mar 2022 02:50:19 -0700 (PDT)
-Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KJQT84XtZz67MtS;
-        Wed, 16 Mar 2022 17:48:44 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.24; Wed, 16 Mar 2022 10:50:17 +0100
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Wed, 16 Mar 2022 09:50:14 +0000
-From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <damien.lemoal@opensource.wdc.com>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <bvanassche@acm.org>,
-        <martin.wilck@suse.com>, <ming.lei@redhat.com>, <hch@lst.de>,
-        <hare@suse.de>, John Garry <john.garry@huawei.com>
-Subject: [PATCH v2] scsi: core: Fix sbitmap depth in scsi_realloc_sdev_budget_map()
-Date:   Wed, 16 Mar 2022 17:44:30 +0800
-Message-ID: <1647423870-143867-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        with ESMTP id S238075AbiCPKoc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 06:44:32 -0400
+Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B43913DF9;
+        Wed, 16 Mar 2022 03:43:18 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R151e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04407;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=3;SR=0;TI=SMTPD_---0V7Mc5x4_1647427395;
+Received: from 30.225.28.170(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0V7Mc5x4_1647427395)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Wed, 16 Mar 2022 18:43:16 +0800
+Message-ID: <c6a25258-6937-6cdf-0fab-081312c4dee6@linux.alibaba.com>
+Date:   Wed, 16 Mar 2022 18:43:15 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.7.0
+Subject: Re: [PATCH 2/2] scsi: target: tcmu: Use
+ address_space->invalidate_lock
+Content-Language: en-US
+From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     bostroesser@gmail.com
+References: <20220311132206.24515-1-xiaoguang.wang@linux.alibaba.com>
+ <20220311132206.24515-2-xiaoguang.wang@linux.alibaba.com>
+In-Reply-To: <20220311132206.24515-2-xiaoguang.wang@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In commit edb854a3680b ("scsi: core: Reallocate device's budget map on
-queue depth change"), the sbitmap for the device budget map may be
-reallocated after the slave device depth is configured.
+hello,
 
-When the sbitmap is reallocated we use the result from
-scsi_device_max_queue_depth() for the sbitmap size, but don't resize to
-match the actual device queue depth.
+Gentle ping.
 
-Fix by resizing the sbitmap after reallocating the budget sbitmap. We do
-this instead of init'ing the sbitmap to the device queue depth as the user
-may want to change the queue depth later via sysfs or other.
+Regards,
+Xiaoguang Wang
 
-Fixes: edb854a3680b ("scsi: core: Reallocate device's budget map on queue depth change")
-Signed-off-by: John Garry <john.garry@huawei.com>
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
----
-Changes since v1 (apart from sending as a separate patch):
-- Add fixes and RB tag (thanks)
-- mention in commit message why we don't init sbitmap at queue depth
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index f4e6c68ac99e..2ef78083f1ef 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -223,6 +223,8 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
- 	int ret;
- 	struct sbitmap sb_backup;
- 
-+	depth = min_t(unsigned int, depth, scsi_device_max_queue_depth(sdev));
-+
- 	/*
- 	 * realloc if new shift is calculated, which is caused by setting
- 	 * up one new default queue depth after calling ->slave_configure
-@@ -245,6 +247,9 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
- 				scsi_device_max_queue_depth(sdev),
- 				new_shift, GFP_KERNEL,
- 				sdev->request_queue->node, false, true);
-+	if (!ret)
-+		sbitmap_resize(&sdev->budget_map, depth);
-+
- 	if (need_free) {
- 		if (ret)
- 			sdev->budget_map = sb_backup;
--- 
-2.26.2
+> Currently tcmu_vma_fault() uses udev->cmdr_lock to avoid concurrent
+> find_free_blocks(), which unmaps idle pages and truncates them. This
+> work is really like many filesystem's truncate operations, but they
+> use address_space->invalidate_lock to protect race.
+>
+> This patch replaces cmdr_lock with address_space->invalidate_lock in
+> tcmu fault procedure, which will also make page-fault have concurrency.
+>
+> Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+> ---
+>   drivers/target/target_core_user.c | 13 +++++++++----
+>   1 file changed, 9 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 06a5c4086551..e0a62623ccd7 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -1815,13 +1815,14 @@ static int tcmu_find_mem_index(struct vm_area_struct *vma)
+>   
+>   static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
+>   {
+> +	struct address_space *mapping = udev->inode->i_mapping;
+>   	struct page *page;
+>   
+> -	mutex_lock(&udev->cmdr_lock);
+> +	filemap_invalidate_lock_shared(mapping);
+>   	page = xa_load(&udev->data_pages, dpi);
+>   	if (likely(page)) {
+>   		get_page(page);
+> -		mutex_unlock(&udev->cmdr_lock);
+> +		filemap_invalidate_unlock_shared(mapping);
+>   		return page;
+>   	}
+>   
+> @@ -1831,7 +1832,7 @@ static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
+>   	 */
+>   	pr_err("Invalid addr to data page mapping (dpi %u) on device %s\n",
+>   	       dpi, udev->name);
+> -	mutex_unlock(&udev->cmdr_lock);
+> +	filemap_invalidate_unlock_shared(mapping);
+>   
+>   	return NULL;
+>   }
+> @@ -3111,6 +3112,7 @@ static void find_free_blocks(void)
+>   	loff_t off;
+>   	u32 pages_freed, total_pages_freed = 0;
+>   	u32 start, end, block, total_blocks_freed = 0;
+> +	struct address_space *mapping;
+>   
+>   	if (atomic_read(&global_page_count) <= tcmu_global_max_pages)
+>   		return;
+> @@ -3134,6 +3136,7 @@ static void find_free_blocks(void)
+>   			continue;
+>   		}
+>   
+> +		mapping = udev->inode->i_mapping;
+>   		end = udev->dbi_max + 1;
+>   		block = find_last_bit(udev->data_bitmap, end);
+>   		if (block == udev->dbi_max) {
+> @@ -3152,12 +3155,14 @@ static void find_free_blocks(void)
+>   			udev->dbi_max = block;
+>   		}
+>   
+> +		filemap_invalidate_lock(mapping);
+>   		/* Here will truncate the data area from off */
+>   		off = udev->data_off + (loff_t)start * udev->data_blk_size;
+> -		unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
+> +		unmap_mapping_range(mapping, off, 0, 1);
+>   
+>   		/* Release the block pages */
+>   		pages_freed = tcmu_blocks_release(udev, start, end - 1);
+> +		filemap_invalidate_unlock(mapping);
+>   		mutex_unlock(&udev->cmdr_lock);
+>   
+>   		total_pages_freed += pages_freed;
 
