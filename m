@@ -2,82 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A83C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 09:03:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0EA3C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 09:50:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239395AbiCPJES (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Mar 2022 05:04:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45496 "EHLO
+        id S1354957AbiCPJve (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Mar 2022 05:51:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354794AbiCPJEQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 05:04:16 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6E4528988;
-        Wed, 16 Mar 2022 02:03:01 -0700 (PDT)
-Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.55])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4KJPQ16XdJzCqp7;
-        Wed, 16 Mar 2022 17:00:57 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+        with ESMTP id S241720AbiCPJve (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 05:51:34 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE701606D5;
+        Wed, 16 Mar 2022 02:50:19 -0700 (PDT)
+Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KJQT84XtZz67MtS;
+        Wed, 16 Mar 2022 17:48:44 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Wed, 16 Mar 2022 10:50:17 +0100
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Wed, 16 Mar 2022 17:02:59 +0800
-Received: from [10.174.178.220] (10.174.178.220) by
- dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Wed, 16 Mar 2022 17:02:58 +0800
-Subject: Re: [PATCH] scsi:libiscsi: remove unnecessary memset in
- iscsi_conn_setup
-To:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>
-CC:     Wu Bo <wubo40@huawei.com>, <open-iscsi@googlegroups.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Zhiqiang Liu <liuzhiqiang26@huawei.com>,
-        Feilong Lin <linfeilong@huawei.com>
-References: <20220316220936.191013-1-haowenchao@huawei.com>
-From:   Wenchao Hao <haowenchao@huawei.com>
-Message-ID: <44860f67-e626-411e-5ee6-9055ea2d5723@huawei.com>
-Date:   Wed, 16 Mar 2022 17:02:58 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.1
+ 15.1.2308.21; Wed, 16 Mar 2022 09:50:14 +0000
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <damien.lemoal@opensource.wdc.com>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <bvanassche@acm.org>,
+        <martin.wilck@suse.com>, <ming.lei@redhat.com>, <hch@lst.de>,
+        <hare@suse.de>, John Garry <john.garry@huawei.com>
+Subject: [PATCH v2] scsi: core: Fix sbitmap depth in scsi_realloc_sdev_budget_map()
+Date:   Wed, 16 Mar 2022 17:44:30 +0800
+Message-ID: <1647423870-143867-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-In-Reply-To: <20220316220936.191013-1-haowenchao@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
 X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemm500017.china.huawei.com (7.185.36.178)
+ lhreml724-chm.china.huawei.com (10.201.108.75)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-cc open-iscsi@googlegroups.com linux-scsi@vger.kernel.org
+In commit edb854a3680b ("scsi: core: Reallocate device's budget map on
+queue depth change"), the sbitmap for the device budget map may be
+reallocated after the slave device depth is configured.
 
-On 2022/3/17 6:09, Wenchao Hao wrote:
-> iscsi_cls_conn is alloced by kzalloc(), the whole iscsi_cls_conn is
-> zero filled already including the dd_data. So it is unnecessary to
-> call memset again.
-> 
-> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
-> Reviewed-by: Wu Bo <wubo40@huawei.com>
-> ---
->   drivers/scsi/libiscsi.c | 1 -
->   1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index d09926e6c8a8..cf4211c6500d 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -3045,7 +3045,6 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
->   	if (!cls_conn)
->   		return NULL;
->   	conn = cls_conn->dd_data;
-> -	memset(conn, 0, sizeof(*conn) + dd_size);
->   
->   	conn->dd_data = cls_conn->dd_data + sizeof(*conn);
->   	conn->session = session;
-> 
+When the sbitmap is reallocated we use the result from
+scsi_device_max_queue_depth() for the sbitmap size, but don't resize to
+match the actual device queue depth.
+
+Fix by resizing the sbitmap after reallocating the budget sbitmap. We do
+this instead of init'ing the sbitmap to the device queue depth as the user
+may want to change the queue depth later via sysfs or other.
+
+Fixes: edb854a3680b ("scsi: core: Reallocate device's budget map on queue depth change")
+Signed-off-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+---
+Changes since v1 (apart from sending as a separate patch):
+- Add fixes and RB tag (thanks)
+- mention in commit message why we don't init sbitmap at queue depth
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index f4e6c68ac99e..2ef78083f1ef 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -223,6 +223,8 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
+ 	int ret;
+ 	struct sbitmap sb_backup;
+ 
++	depth = min_t(unsigned int, depth, scsi_device_max_queue_depth(sdev));
++
+ 	/*
+ 	 * realloc if new shift is calculated, which is caused by setting
+ 	 * up one new default queue depth after calling ->slave_configure
+@@ -245,6 +247,9 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
+ 				scsi_device_max_queue_depth(sdev),
+ 				new_shift, GFP_KERNEL,
+ 				sdev->request_queue->node, false, true);
++	if (!ret)
++		sbitmap_resize(&sdev->budget_map, depth);
++
+ 	if (need_free) {
+ 		if (ret)
+ 			sdev->budget_map = sb_backup;
+-- 
+2.26.2
 
