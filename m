@@ -2,150 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0F1AC4167D
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 19:20:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE348C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 23:04:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357995AbiCPTWD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Mar 2022 15:22:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52202 "EHLO
+        id S235194AbiCPXFO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Mar 2022 19:05:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357942AbiCPTV4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 15:21:56 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7EC26AA73;
-        Wed, 16 Mar 2022 12:20:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=vYNWn7/gWvdXVAuSqHEJdNrAy6DmSK7DzABaWvfRolU=; b=uz/gKWuyajnQkK6EymeSIkywI8
-        AKee4iVGItlSmtUcyfpMs2rpMKsnM+1/6giveeY/JiJlrqSVxOo/uKyCQMLRnf2rtJLUGAat2DheY
-        jlAWn5xBb7LboEv7888ALv/5/v+uInPkhSvt1z/XZ3RC/iEuJpn9ACgG9yZgYz+Oi6jgUxBqSCUmx
-        aCyq4+1vi7jjqsiV+NLiqIgV4WBYdtKnDD1jgX6hBWsAS/lCde6/J+6WW6RQvJO43a1TKudjCx5Lv
-        cA480jryLVqH5og5d6tTRnTuMIQ/mMRRCUvOHVwbY4zZr+mPiy5PCW5pN7fH3DP5OwZaIlFLgCqCM
-        qw9BeXNQ==;
-Received: from [2601:1c0:6280:3f0::aa0b] (helo=bombadil.infradead.org)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nUZCC-00EArp-TR; Wed, 16 Mar 2022 19:20:33 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Amit Shah <amit@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Eli Cohen <eli@mellanox.com>,
-        Saeed Mahameed <saeedm@nvidia.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Pablo Neira Ayuso <pablo@netfilter.org>,
-        Jozsef Kadlecsik <kadlec@netfilter.org>,
-        Florian Westphal <fw@strlen.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Felipe Balbi <felipe.balbi@linux.intel.com>,
-        =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Krzysztof Opasiak <k.opasiak@samsung.com>,
-        Igor Kotrasinski <i.kotrasinsk@samsung.com>,
-        Valentina Manea <valentina.manea.m@gmail.com>,
-        Shuah Khan <shuah@kernel.org>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-        Joachim Fritschi <jfritschi@freenet.de>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Karol Herbst <karolherbst@gmail.com>,
-        Pekka Paalanen <ppaalanen@gmail.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, netdev@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, nouveau@lists.freedesktop.org,
-        virtualization@lists.linux-foundation.org, x86@kernel.org
-Subject: [PATCH 9/9] testmmiotrace: eliminate anonymous module_init & module_exit
-Date:   Wed, 16 Mar 2022 12:20:10 -0700
-Message-Id: <20220316192010.19001-10-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220316192010.19001-1-rdunlap@infradead.org>
-References: <20220316192010.19001-1-rdunlap@infradead.org>
+        with ESMTP id S235255AbiCPXFM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 19:05:12 -0400
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A47312609
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2022 16:03:57 -0700 (PDT)
+Received: by mail-pf1-f179.google.com with SMTP id g19so5314005pfc.9
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2022 16:03:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=uAnf/4xt9X+JkipsAw3/hWXAHV2ZcjjFC1nt+DnpNm0=;
+        b=rEgvvjjZagrYc1s1Ji82/4NSl2Wu2eokOQv5coAWEb9SbRMPvztkFBmyvnoNh9rtAc
+         ec4/SO0xAqk8FdEKqG/tJUurlMEVqQzTDKwKlr75hrEwSLKo98zoICdT+aGXKQiKeBVu
+         VUVikaliTezcdHI2i/EB2q+WRTGymumAyVORosyXacvrK3sJErtW3fzr0YopH3tRfhcA
+         RcXF1h/GlcIhdskYtkR/PrX9G04+dHm9i/6Wu4xyOaiKRLGlv5CA2ZKKobZOMsrqQA4a
+         3tnPIWt8TnLbclhrZNNR0Je9vVpkP4QMpvRJSG+JVsO1FCDBqloEK41aLes6AqgTnEEg
+         qBdA==
+X-Gm-Message-State: AOAM530wpVOYDeiv348ZC1Q+At1LpQPjkSRbXQ8+pFkZr+oH18+KnQb0
+        Vfz/4hNY5VWtbP9QWsnjmqs=
+X-Google-Smtp-Source: ABdhPJyJ0xlEmSwdEb2tE9HrVHosi8A3RjZD19H/EAb+AhSCauBtazltHNBfMwGxso0mutIj77qJzg==
+X-Received: by 2002:a65:4605:0:b0:381:fea8:7418 with SMTP id v5-20020a654605000000b00381fea87418mr1395013pgq.454.1647471836925;
+        Wed, 16 Mar 2022 16:03:56 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:af9f:e726:32ab:1234? ([2620:15c:211:201:af9f:e726:32ab:1234])
+        by smtp.gmail.com with ESMTPSA id w23-20020a627b17000000b004f6cf170070sm4142056pfc.186.2022.03.16.16.03.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 16 Mar 2022 16:03:56 -0700 (PDT)
+Message-ID: <19494279-78f9-ca48-3c09-091df342cd63@acm.org>
+Date:   Wed, 16 Mar 2022 16:03:55 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v5] scsi:spraid: initial commit of Ramaxel spraid driver
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        Yanling Song <songyl@ramaxel.com>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org
+References: <20220314025315.96674-1-songyl@ramaxel.com>
+ <ecf79a5c-49f4-cf0e-edf4-9363c8b60bb5@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <ecf79a5c-49f4-cf0e-edf4-9363c8b60bb5@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Eliminate anonymous module_init() and module_exit(), which can lead to
-confusion or ambiguity when reading System.map, crashes/oops/bugs,
-or an initcall_debug log.
+On 3/15/22 07:43, John Garry wrote:
+> On 14/03/2022 02:53, Yanling Song wrote:
+> [ ... ]
+> why do you need a separate header file? why not put all this in the only 
+> C file?
 
-Give each of these init and exit functions unique driver-specific
-names to eliminate the anonymous names.
+The C file is already very big. I like the approach of keeping 
+declarations and structure definitions in a header file because that 
+makes the code easier to navigate.
 
-Example 1: (System.map)
- ffffffff832fc78c t init
- ffffffff832fc79e t init
- ffffffff832fc8f8 t init
+>> +struct spraid_completion {
+>> +    __le32 result;
+> 
+> I think that __le32 is used for userspace common defines, while we use 
+> le32 for internal to kernel
 
-Example 2: (initcall_debug log)
- calling  init+0x0/0x12 @ 1
- initcall init+0x0/0x12 returned 0 after 15 usecs
- calling  init+0x0/0x60 @ 1
- initcall init+0x0/0x60 returned 0 after 2 usecs
- calling  init+0x0/0x9a @ 1
- initcall init+0x0/0x9a returned 0 after 74 usecs
+Really? I'm not aware of a le32 type in the Linux kernel.
 
-Fixes: 8b7d89d02ef3 ("x86: mmiotrace - trace memory mapped IO")
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Steven Rostedt <rostedt@goodmis.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Karol Herbst <karolherbst@gmail.com>
-Cc: Pekka Paalanen <ppaalanen@gmail.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Andy Lutomirski <luto@kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: nouveau@lists.freedesktop.org
-Cc: x86@kernel.org
----
- arch/x86/mm/testmmiotrace.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+>> +#define SPRAID_DRV_VERSION    "1.0.0.0"
+> 
+> I don't see much value in driver versioning. As I see, the kernel 
+> version is the driver version.
 
---- lnx-517-rc8.orig/arch/x86/mm/testmmiotrace.c
-+++ lnx-517-rc8/arch/x86/mm/testmmiotrace.c
-@@ -113,7 +113,7 @@ static void do_test_bulk_ioremapping(voi
- 	synchronize_rcu();
- }
- 
--static int __init init(void)
-+static int __init testmmiotrace_init(void)
- {
- 	unsigned long size = (read_far) ? (8 << 20) : (16 << 10);
- 	int ret = security_locked_down(LOCKDOWN_MMIOTRACE);
-@@ -136,11 +136,11 @@ static int __init init(void)
- 	return 0;
- }
- 
--static void __exit cleanup(void)
-+static void __exit testmmiotrace_cleanup(void)
- {
- 	pr_debug("unloaded.\n");
- }
- 
--module_init(init);
--module_exit(cleanup);
-+module_init(testmmiotrace_init);
-+module_exit(testmmiotrace_cleanup);
- MODULE_LICENSE("GPL");
++1
+
+Thanks,
+
+Bart.
