@@ -2,145 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EA2BC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 11:38:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D1B0C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 12:25:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355386AbiCPLjj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Mar 2022 07:39:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59988 "EHLO
+        id S1355682AbiCPM1F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Mar 2022 08:27:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233704AbiCPLji (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 07:39:38 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52F5C37BDA
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2022 04:38:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1647430704; x=1678966704;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=CA7ohyySipfkOmxuHDSFEb5ZzJ4yO/s6nSLzC1xdF0A=;
-  b=Uhrsg2ZOyC9gHyCvQsjMT2fDn8n6GCZuHRVB/VtWiIpXmR+abA7jjGYc
-   T9oVqIOqJ0gnFqbf30RYIhA5JAiViEi2YmCAPN3bsz9FHudgXGUx1bYjP
-   G9Acd8Wb7trSjmW1ZAdLsNsbONf+TYlK0x0RQMNvwl6MK9BgZGi9ovq0p
-   H9gxAzf7b1R0pJSA38wnrh11DzrWCOERlF+LM2Trkh/aiBeuC4KpmcwQM
-   hY6j2GKyCW4KXiJoEpZWLFLFF5Oo0PolT6jh5/1IpFkMtCKXMEGpOA4Nu
-   qQEnzzLIWp1UeuzhGMdqzPIObsLXCVEsjW/TInRNrj1C7cgrQEK8r/GPj
-   A==;
-X-IronPort-AV: E=Sophos;i="5.90,186,1643644800"; 
-   d="scan'208";a="194417919"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Mar 2022 19:38:23 +0800
-IronPort-SDR: lPZ6cp6ZzGf1Tj5KvPj0UosFGhNEceukPIcjYXXl85FK4OOvU+Br+aHU2T0Qvnt0fpv+dGwZqS
- c/WXlXePb/YuVQIoSQYKd4iQpSAiZPSQblbs57HMYDBoccWnmEqFcgBBAL4Vyk5hj8R/mRldUZ
- nqkusgRjsxNcD4vDeCdgRUY+nvtbBAfNnBizVok7xJVs13tfxk58G3oYnj5l2/kyE4ZAaAc0ff
- fgk7gnhwnsmNIjSsXVx/+KSo0iW9sirLQf+CJPOiLKkrgKcFQBMgpohyIVlRzpeaQ53mAREtL1
- yAiCi37K9XGgjGMu4kzFNGY7
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2022 04:09:30 -0700
-IronPort-SDR: 1NPRj8HEHSrGiSF7s3Bjh1Q8/uVpD19UH0x2iIQvSJY4WBu4sRcVV2aL8UNXCPDw3tqcGf/Zwx
- Vj4IBUcNjtBDZPpLHmne/am0pna7GD76+vS4cWUPCziMqdxnTSYbgpKMY28iyw2dXyW7KBbKMh
- /XxqSkxzCUkC+StTjlzSKqyfNRyquZZHe7MIkWmOWu5kBLXPtCfSXb94nKj4R2fkbVrlyMZEL4
- GjF1kFFaVfPJWXrXFGFmCX2pmuFAn9A+mGN4cYKS4JaljrbTsqXIOwWGhNQhfEw07uIxBylpWa
- nzg=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2022 04:38:24 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KJSvg22Gwz1SVnx
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2022 04:38:23 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1647430702; x=1650022703; bh=CA7ohyySipfkOmxuHDSFEb5ZzJ4yO/s6nSL
-        zC1xdF0A=; b=qTUcGQpmuiedPgvfI2epiNTd4Vxd8yFRi0U/caaeTz+sc3CulvZ
-        vY7MZJIkeu4A8zd2P9eys+5PZ9B1pyoLep6CGZTEkUSwc0+voujqiFmnVN5lkmrz
-        zBk3hk/1RIJKfcpxUimlJax3vmBEiOUoqxwCxNbEgtsobBLQgp237WWutb+0lnfu
-        bR1knAHJwhEGLIYFDEW/a9XVtgdMgYYak4i/EtiWX80DWtx4K6Uc7g1XoUKxrfV+
-        vwq16noUTf1ZUuKE3lnaYhSzTIhgtB9GEHyxph9WqsU1JAAN0oSEJk7l29Kybj2E
-        8JKy8MAkhZAZ2MLKNJFsFLEaUT2Qp0X9xdg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ELhNvi6s6VF1 for <linux-scsi@vger.kernel.org>;
-        Wed, 16 Mar 2022 04:38:22 -0700 (PDT)
-Received: from [10.225.163.101] (unknown [10.225.163.101])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KJSvc3tj9z1Rvlx;
-        Wed, 16 Mar 2022 04:38:20 -0700 (PDT)
-Message-ID: <9768fa36-27ed-834f-0462-3b79fd8b3478@opensource.wdc.com>
-Date:   Wed, 16 Mar 2022 20:38:18 +0900
+        with ESMTP id S1355724AbiCPM1B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 08:27:01 -0400
+Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C6876623F;
+        Wed, 16 Mar 2022 05:25:33 -0700 (PDT)
+Received: by mail-ej1-x62d.google.com with SMTP id hw13so3751527ejc.9;
+        Wed, 16 Mar 2022 05:25:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=IL+GLk+OUHvkfZNfzFD5nXZpkwjDg38KEStHONm2HfY=;
+        b=bpfq7c2ayOhmebfs4QzVOR+k87zxLgYcOBsl03zn0j2Yu9ppFmOOR3jKSk3zaatFuM
+         ppOt1hcKVekWuvVcYKEfcxw7EcwBOKUjk95tNeajuY/8SqhVB0+liYeqyqfidpQa5YdP
+         SMuEH2alky1xJb1PRbmFzcNTTLbZWuUZTK+PlIg1pEMTTY3hMsyZllq5qPYrT9caZXdF
+         YL4d4pQ6c6Mq3/TmBxCEgCeA+WIu2kHJRFg4QyElBu5dZTbnSjWXjYWD93o2XZk+lLp+
+         jRM2uMh4CkJsvXSwB4ViOKmiDLHLSNZuNO6CEZ15iUqL8CkT3H+SrFUl6Z7dnVcOubY5
+         43DQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=IL+GLk+OUHvkfZNfzFD5nXZpkwjDg38KEStHONm2HfY=;
+        b=NiSqaLXAfxHzAC/Vtcj+/jG3/1YelQ6EYwStT7ZdtZqWyK4AeQmTcd2JQj+SpW4CZ7
+         ySVdO0KdSWEhdcJuWIwLN209fSTqPUGpGVYYRUuePampZ07JcuE9klivPV3O/CZ8AMnl
+         Hzu2u83QmjVzoqWinSzQfAbl8IWaD8uJmrAt8OCGspIqvFEnQIzwHbZowK2AWDPC2BhL
+         +GaHa6vwjj3L0HO1DNh15Cm38nutu/DNh9RYBcsHERWcQyyDYK/6jMAbUGP8gOlloYmW
+         GXD9Ld6s/Bn2MOcPYJ3rhPZA9E/AroxLOCHjS3f26jEX+TkCmkFiNrOYu5HK3Y3sYjyq
+         Zxaw==
+X-Gm-Message-State: AOAM532KvlzqgA6CfBrE8f55856OqqcIPvzhqqj2hUfHFhLIN7kLAkoB
+        yUFRbkURwJNZvbAo40RaI+aKsvfacUw=
+X-Google-Smtp-Source: ABdhPJyEoNPzFlAyrABADipYXBRvhoyYbYZ2LiVPF0/ZJuff4OAltucAaTyqW6AVdUba7ZRGi8qvyg==
+X-Received: by 2002:a17:906:2ad5:b0:6cf:9cca:d9db with SMTP id m21-20020a1709062ad500b006cf9ccad9dbmr26103912eje.252.1647433531881;
+        Wed, 16 Mar 2022 05:25:31 -0700 (PDT)
+Received: from [192.168.178.40] (ipbcc1fa42.dynamic.kabel-deutschland.de. [188.193.250.66])
+        by smtp.gmail.com with ESMTPSA id r29-20020a50c01d000000b00415fb0dc793sm905328edb.47.2022.03.16.05.25.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 16 Mar 2022 05:25:31 -0700 (PDT)
+Message-ID: <85bf5adb-631c-d98b-f2e7-d599ca065640@gmail.com>
+Date:   Wed, 16 Mar 2022 13:25:30 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.2
-Subject: Re: [PATCH v2] scsi: core: Fix sbitmap depth in
- scsi_realloc_sdev_budget_map()
+ Thunderbird/91.5.0
+Subject: Re: [PATCH] scsi:target:tcmu: make sure dev blocked before resetting
+ ring
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        bvanassche@acm.org, martin.wilck@suse.com, ming.lei@redhat.com,
-        hch@lst.de, hare@suse.de
-References: <1647423870-143867-1-git-send-email-john.garry@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <1647423870-143867-1-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8
+To:     Guixin Liu <kanie@linux.alibaba.com>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <1647417702-129883-1-git-send-email-kanie@linux.alibaba.com>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+In-Reply-To: <1647417702-129883-1-git-send-email-kanie@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/16/22 18:44, John Garry wrote:
-> In commit edb854a3680b ("scsi: core: Reallocate device's budget map on
-> queue depth change"), the sbitmap for the device budget map may be
-> reallocated after the slave device depth is configured.
+Hi,
+
+I don't think we need any fix here.
+
+1) Generally userspace can easily violate the ring protocol.
+E.g., if userspace uses a currently not existing cmd_id in a cmd
+response, it forces tcmu into RING_BROKEN state.
+Resetting the ring while processing cmds is just another way to
+probably force tcmu into RING_BROKEN.
+Why should we try to fix just this one single situation?
+If userspace resets the ring, and after that continues to write
+responses to the ring for cmds it has read before the reset, we
+probably have to fix userspace app.
+
+2) Resetting the ring without being blocked is _not_ forbidden.
+The situation you describe is more about resetting the ring while
+userspace holds the uio dev open. But even that is not useless, if
+userspace just stops to process cmds, resets the ring and then
+re-starts processing the ring, including to read the new head and
+tail pointers.
+
+Bodo
+
+
+On 16.03.22 09:01, Guixin Liu wrote:
+> If dev is not blocked when resetting ring, then there could be new
+> commands coming in after resetting ring, this will make cmd ring broken,
+> because tcmu can not find tcmu_cmd when tcmu-runner handled these
+> newcome commands.
 > 
-> When the sbitmap is reallocated we use the result from
-> scsi_device_max_queue_depth() for the sbitmap size, but don't resize to
-> match the actual device queue depth.
-> 
-> Fix by resizing the sbitmap after reallocating the budget sbitmap. We do
-> this instead of init'ing the sbitmap to the device queue depth as the user
-> may want to change the queue depth later via sysfs or other.
-> 
-> Fixes: edb854a3680b ("scsi: core: Reallocate device's budget map on queue depth change")
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> Reviewed-by: Ming Lei <ming.lei@redhat.com>
+> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
 > ---
-> Changes since v1 (apart from sending as a separate patch):
-> - Add fixes and RB tag (thanks)
-> - mention in commit message why we don't init sbitmap at queue depth
+>   drivers/target/target_core_user.c | 14 ++++++++++++--
+>   1 file changed, 12 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index f4e6c68ac99e..2ef78083f1ef 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -223,6 +223,8 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
->  	int ret;
->  	struct sbitmap sb_backup;
->  
-> +	depth = min_t(unsigned int, depth, scsi_device_max_queue_depth(sdev));
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index 7b2a89a..548ad94 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -2333,7 +2333,7 @@ static void tcmu_block_dev(struct tcmu_dev *udev)
+>   	mutex_unlock(&udev->cmdr_lock);
+>   }
+>   
+> -static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
+> +static int tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
+>   {
+>   	struct tcmu_mailbox *mb;
+>   	struct tcmu_cmd *cmd;
+> @@ -2341,6 +2341,12 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
+>   
+>   	mutex_lock(&udev->cmdr_lock);
+>   
+> +	if (!test_bit(TCMU_DEV_BIT_BLOCKED, &udev->flags)) {
+> +		pr_err("The dev should be blocked before resetting ring.\n");
+> +		mutex_unlock(&udev->cmdr_lock);
+> +		return -EINVAL;
+> +	}
 > +
->  	/*
->  	 * realloc if new shift is calculated, which is caused by setting
->  	 * up one new default queue depth after calling ->slave_configure
-> @@ -245,6 +247,9 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
->  				scsi_device_max_queue_depth(sdev),
->  				new_shift, GFP_KERNEL,
->  				sdev->request_queue->node, false, true);
-> +	if (!ret)
-> +		sbitmap_resize(&sdev->budget_map, depth);
+>   	xa_for_each(&udev->commands, i, cmd) {
+>   		pr_debug("removing cmd %u on dev %s from ring %s\n",
+>   			 cmd->cmd_id, udev->name,
+> @@ -2396,6 +2402,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
+>   	run_qfull_queue(udev, false);
+>   
+>   	mutex_unlock(&udev->cmdr_lock);
+> +	return 0;
+>   }
+>   
+>   enum {
+> @@ -2995,7 +3002,10 @@ static ssize_t tcmu_reset_ring_store(struct config_item *item, const char *page,
+>   		return -EINVAL;
+>   	}
+>   
+> -	tcmu_reset_ring(udev, val);
+> +	ret = tcmu_reset_ring(udev, val);
+> +	if (ret < 0)
+> +		return ret;
 > +
->  	if (need_free) {
->  		if (ret)
->  			sdev->budget_map = sb_backup;
-
-Tested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-
--- 
-Damien Le Moal
-Western Digital Research
+>   	return count;
+>   }
+>   CONFIGFS_ATTR_WO(tcmu_, reset_ring);
