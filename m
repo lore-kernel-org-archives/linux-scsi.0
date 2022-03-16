@@ -2,122 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 134B9C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 10:43:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12E79C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 10:47:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355190AbiCPKod (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Mar 2022 06:44:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42814 "EHLO
+        id S1355210AbiCPKsQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Mar 2022 06:48:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238075AbiCPKoc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 06:44:32 -0400
-Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B43913DF9;
-        Wed, 16 Mar 2022 03:43:18 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R151e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04407;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=3;SR=0;TI=SMTPD_---0V7Mc5x4_1647427395;
-Received: from 30.225.28.170(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0V7Mc5x4_1647427395)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Wed, 16 Mar 2022 18:43:16 +0800
-Message-ID: <c6a25258-6937-6cdf-0fab-081312c4dee6@linux.alibaba.com>
-Date:   Wed, 16 Mar 2022 18:43:15 +0800
+        with ESMTP id S1355206AbiCPKsP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 06:48:15 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D2CE6353A;
+        Wed, 16 Mar 2022 03:47:01 -0700 (PDT)
+Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KJRkZ1Wptz68649;
+        Wed, 16 Mar 2022 18:45:26 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Wed, 16 Mar 2022 11:46:58 +0100
+Received: from [10.47.84.96] (10.47.84.96) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Wed, 16 Mar
+ 2022 10:46:58 +0000
+Message-ID: <4dfcddff-7736-e01e-7fcf-804de77ac623@huawei.com>
+Date:   Wed, 16 Mar 2022 10:46:57 +0000
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Subject: Re: [PATCH 2/2] scsi: target: tcmu: Use
- address_space->invalidate_lock
-Content-Language: en-US
-From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     bostroesser@gmail.com
-References: <20220311132206.24515-1-xiaoguang.wang@linux.alibaba.com>
- <20220311132206.24515-2-xiaoguang.wang@linux.alibaba.com>
-In-Reply-To: <20220311132206.24515-2-xiaoguang.wang@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH RFC 2/2] libata: Use scsi cmnd budget token for qc tag for
+ SAS host
+To:     Christoph Hellwig <hch@lst.de>
+CC:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <bvanassche@acm.org>, <ming.lei@redhat.com>, <hare@suse.de>,
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <martin.wilck@suse.com>
+References: <1647340746-17600-1-git-send-email-john.garry@huawei.com>
+ <1647340746-17600-3-git-send-email-john.garry@huawei.com>
+ <99541f2d-2aea-6bd7-e3b6-21dbc355875d@opensource.wdc.com>
+ <650c667f-ca55-821d-4e0f-29fce69a68fc@huawei.com>
+ <20220316083439.GA6701@lst.de>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <20220316083439.GA6701@lst.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.84.96]
+X-ClientProxiedBy: lhreml735-chm.china.huawei.com (10.201.108.86) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-hello,
+On 16/03/2022 08:34, Christoph Hellwig wrote:
+> In addition to the comments from Damien:  I think we should kill
+> ata_qc_new_init as well.  It is a bit pointless and having it in
+> libata-core.c when it pokes into scsi internals also doesn't make sense.
+> 
+> So maybe something like:
 
-Gentle ping.
+Seems reasonable to me at least.
 
-Regards,
-Xiaoguang Wang
+But I'd send these as 2x separate patches.
 
-> Currently tcmu_vma_fault() uses udev->cmdr_lock to avoid concurrent
-> find_free_blocks(), which unmaps idle pages and truncates them. This
-> work is really like many filesystem's truncate operations, but they
-> use address_space->invalidate_lock to protect race.
->
-> This patch replaces cmdr_lock with address_space->invalidate_lock in
-> tcmu fault procedure, which will also make page-fault have concurrency.
->
-> Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
-> ---
->   drivers/target/target_core_user.c | 13 +++++++++----
->   1 file changed, 9 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> index 06a5c4086551..e0a62623ccd7 100644
-> --- a/drivers/target/target_core_user.c
-> +++ b/drivers/target/target_core_user.c
-> @@ -1815,13 +1815,14 @@ static int tcmu_find_mem_index(struct vm_area_struct *vma)
->   
->   static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
+>    *	sata_async_notification - SATA async notification handler
+>    *	@ap: ATA port where async notification is received
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index ed8be585a98f7c..5e0bc7b05a107e 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -638,24 +638,44 @@ EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
+>   static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+>   					      struct scsi_cmnd *cmd)
 >   {
-> +	struct address_space *mapping = udev->inode->i_mapping;
->   	struct page *page;
->   
-> -	mutex_lock(&udev->cmdr_lock);
-> +	filemap_invalidate_lock_shared(mapping);
->   	page = xa_load(&udev->data_pages, dpi);
->   	if (likely(page)) {
->   		get_page(page);
-> -		mutex_unlock(&udev->cmdr_lock);
-> +		filemap_invalidate_unlock_shared(mapping);
->   		return page;
->   	}
->   
-> @@ -1831,7 +1832,7 @@ static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
->   	 */
->   	pr_err("Invalid addr to data page mapping (dpi %u) on device %s\n",
->   	       dpi, udev->name);
-> -	mutex_unlock(&udev->cmdr_lock);
-> +	filemap_invalidate_unlock_shared(mapping);
->   
->   	return NULL;
->   }
-> @@ -3111,6 +3112,7 @@ static void find_free_blocks(void)
->   	loff_t off;
->   	u32 pages_freed, total_pages_freed = 0;
->   	u32 start, end, block, total_blocks_freed = 0;
-> +	struct address_space *mapping;
->   
->   	if (atomic_read(&global_page_count) <= tcmu_global_max_pages)
->   		return;
-> @@ -3134,6 +3136,7 @@ static void find_free_blocks(void)
->   			continue;
->   		}
->   
-> +		mapping = udev->inode->i_mapping;
->   		end = udev->dbi_max + 1;
->   		block = find_last_bit(udev->data_bitmap, end);
->   		if (block == udev->dbi_max) {
-> @@ -3152,12 +3155,14 @@ static void find_free_blocks(void)
->   			udev->dbi_max = block;
->   		}
->   
-> +		filemap_invalidate_lock(mapping);
->   		/* Here will truncate the data area from off */
->   		off = udev->data_off + (loff_t)start * udev->data_blk_size;
-> -		unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
-> +		unmap_mapping_range(mapping, off, 0, 1);
->   
->   		/* Release the block pages */
->   		pages_freed = tcmu_blocks_release(udev, start, end - 1);
-> +		filemap_invalidate_unlock(mapping);
->   		mutex_unlock(&udev->cmdr_lock);
->   
->   		total_pages_freed += pages_freed;
+...
 
+>   
+> -		if (scsi_cmd_to_rq(cmd)->rq_flags & RQF_QUIET)
+> -			qc->flags |= ATA_QCFLAG_QUIET;
+> +	if (ap->flags & ATA_FLAG_SAS_HOST) {
+> +		/* XXX: add a comment here why SAS is different */
+
+I think this is simply because SAS hosts have shost.can_queue > 32
+
+> +		if (WARN_ON_ONCE(cmd->budget_token >= ATA_MAX_QUEUE))
+> +			goto fail;
+> +		tag = cmd->budget_token;
+
+thanks,
+John
