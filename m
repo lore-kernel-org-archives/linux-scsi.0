@@ -2,31 +2,31 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F9C3C41535
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C87A8C35274
 	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 19:20:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357847AbiCPTVk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Mar 2022 15:21:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51048 "EHLO
+        id S1357864AbiCPTVm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Mar 2022 15:21:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230130AbiCPTVh (ORCPT
+        with ESMTP id S239247AbiCPTVh (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 15:21:37 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 710C65FF32;
-        Wed, 16 Mar 2022 12:20:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E23E64BC9;
+        Wed, 16 Mar 2022 12:20:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=bxcgHAl0Vjaoi9igyOuuv3t+bDn9tO/RrS7lBi/KU+M=; b=f6hRy706t/BpNpFO1C9Km2RrDC
-        QpQAZACubPMNHVjc1Qg4uTBS8JBsSkx6wWoOO6MkPJLDnRMPb4gvs6j+IxwOBV3OSeMK+SM4Bc/qr
-        cbVKkVwZ7HPLsk4PUNHYTJtLurqFWxXaUdf1VQas1wSqg474f4RVgG74C1IMA8nhCoibwkT0pOmOU
-        GBglyb2fZdt3taUHK7+NnvqDf/kegkuSfBz7kIBCvuVIgmTmTlKHaYbML2syZZpq1QELYE2/RzZoa
-        l0az3lska8YewVS5FuOdlrR7fZdGroVN4nksyhhqrm4CGqbCEJyDuxhNl+9rqNtKe/b3GXlgFM8kV
-        vY7z0i7Q==;
+        bh=kkn5nl5PyZ0q8CQgfKlyj74bCk1dDbY3QIroXRJfS3I=; b=L0Bzgh5zuGNbr91N7JyNzX75Kt
+        JhMPfxEcrzeOsN+4vC/CQeS/AfZDGU+5ouMlirI/rZlDV6medv70vXqOCpdpetjh/H7ppc9k7YjoQ
+        mWVLClmn5iciAIW8GjkzdABLcKRZNG86bC0bj6NdTgJfo5d7UAQvPrCAUQ4FQyQPcgNzA4MmEdng6
+        5M/6nJLSdV4Wjea7de1J5ZEHA4+v3/9Xn2lcAV4IQZkYqUV5mDBeYxRqeKo2F2Nxn6ij2b1jWpj/B
+        GJdT5rS8QpS8JY48lBxVds6mh4DtB5qF3Kq7M4maGkcKaJPRzyLnPEgEUUsJZEDdZVKPRbWapcHoH
+        tc+kxufg==;
 Received: from [2601:1c0:6280:3f0::aa0b] (helo=bombadil.infradead.org)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nUZBy-00EArp-Bl; Wed, 16 Mar 2022 19:20:18 +0000
+        id 1nUZC2-00EArp-0P; Wed, 16 Mar 2022 19:20:22 +0000
 From:   Randy Dunlap <rdunlap@infradead.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Randy Dunlap <rdunlap@infradead.org>,
@@ -73,9 +73,9 @@ Cc:     Randy Dunlap <rdunlap@infradead.org>,
         linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-usb@vger.kernel.org, nouveau@lists.freedesktop.org,
         virtualization@lists.linux-foundation.org, x86@kernel.org
-Subject: [PATCH 2/9] virtio_console: eliminate anonymous module_init & module_exit
-Date:   Wed, 16 Mar 2022 12:20:03 -0700
-Message-Id: <20220316192010.19001-3-rdunlap@infradead.org>
+Subject: [PATCH 4/9] netfilter: h323: eliminate anonymous module_init & module_exit
+Date:   Wed, 16 Mar 2022 12:20:05 -0700
+Message-Id: <20220316192010.19001-5-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220316192010.19001-1-rdunlap@infradead.org>
 References: <20220316192010.19001-1-rdunlap@infradead.org>
@@ -105,45 +105,48 @@ Example 2: (initcall_debug log)
  calling  init+0x0/0x9a @ 1
  initcall init+0x0/0x9a returned 0 after 74 usecs
 
-Fixes: 31610434bc35 ("Virtio console driver")
-Fixes: 7177876fea83 ("virtio: console: Add ability to remove module")
+Fixes: f587de0e2feb ("[NETFILTER]: nf_conntrack/nf_nat: add H.323 helper port")
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Amit Shah <amit@kernel.org>
-Cc: virtualization@lists.linux-foundation.org
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Pablo Neira Ayuso <pablo@netfilter.org>
+Cc: Jozsef Kadlecsik <kadlec@netfilter.org>
+Cc: Florian Westphal <fw@strlen.de>
+Cc: netfilter-devel@vger.kernel.org
+Cc: coreteam@netfilter.org
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: netdev@vger.kernel.org
 ---
- drivers/char/virtio_console.c |    8 ++++----
+ net/ipv4/netfilter/nf_nat_h323.c |    8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
---- lnx-517-rc8.orig/drivers/char/virtio_console.c
-+++ lnx-517-rc8/drivers/char/virtio_console.c
-@@ -2245,7 +2245,7 @@ static struct virtio_driver virtio_rproc
- 	.remove =	virtcons_remove,
+--- lnx-517-rc8.orig/net/ipv4/netfilter/nf_nat_h323.c
++++ lnx-517-rc8/net/ipv4/netfilter/nf_nat_h323.c
+@@ -580,7 +580,7 @@ static struct nf_ct_helper_expectfn call
  };
  
+ /****************************************************************************/
 -static int __init init(void)
-+static int __init virtio_console_init(void)
++static int __init nf_nat_h323_init(void)
  {
- 	int err;
- 
-@@ -2280,7 +2280,7 @@ free:
- 	return err;
+ 	BUG_ON(set_h245_addr_hook != NULL);
+ 	BUG_ON(set_h225_addr_hook != NULL);
+@@ -607,7 +607,7 @@ static int __init init(void)
  }
  
+ /****************************************************************************/
 -static void __exit fini(void)
-+static void __exit virtio_console_fini(void)
++static void __exit nf_nat_h323_fini(void)
  {
- 	reclaim_dma_bufs();
- 
-@@ -2290,8 +2290,8 @@ static void __exit fini(void)
- 	class_destroy(pdrvdata.class);
- 	debugfs_remove_recursive(pdrvdata.debugfs_dir);
+ 	RCU_INIT_POINTER(set_h245_addr_hook, NULL);
+ 	RCU_INIT_POINTER(set_h225_addr_hook, NULL);
+@@ -624,8 +624,8 @@ static void __exit fini(void)
  }
+ 
+ /****************************************************************************/
 -module_init(init);
 -module_exit(fini);
-+module_init(virtio_console_init);
-+module_exit(virtio_console_fini);
++module_init(nf_nat_h323_init);
++module_exit(nf_nat_h323_fini);
  
- MODULE_DESCRIPTION("Virtio console driver");
- MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Jing Min Zhao <zhaojingmin@users.sourceforge.net>");
+ MODULE_DESCRIPTION("H.323 NAT helper");
