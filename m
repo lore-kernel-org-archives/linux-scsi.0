@@ -2,107 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4162AC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Mar 2022 23:56:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8255EC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Mar 2022 01:50:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238430AbiCPX5e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Mar 2022 19:57:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53588 "EHLO
+        id S1358376AbiCQBvb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Mar 2022 21:51:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235411AbiCPX5d (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 19:57:33 -0400
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D81FCF1;
-        Wed, 16 Mar 2022 16:56:17 -0700 (PDT)
-Received: by mail-wr1-x434.google.com with SMTP id j17so5215481wrc.0;
-        Wed, 16 Mar 2022 16:56:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=f70EsVw2RgUgnRRblJ9CzsRoGjkOsNA56/XaNB7y5ZI=;
-        b=SPSy+zObDPT1uAkB/yo4FlrCngip1QPnkmDiqerLhE127K6Vs8r4iOhxSKbgCTeE56
-         MxLa9/IYOp8zYlYhBOBMjUQV9mYAJow1+PzIG751SmnAP2ZEFFPZ4+/DxyN/inCo9hTD
-         7H317FRPKjCAgejBCLYqJe6ZedXjC1LBCCaUEUAJ5sWRACdTDEvERd4EK+Wv9AX2ljMN
-         oo/ggGXmKNZtdEoVRZrxPvwP07ZYLEra4HYfcpDf34X4kgeFGNgBkZ/1SSvU2uZ6gC94
-         fq4P/Rp9UfrQ1Fm13A35eehDGUp3UhfzNPO/ku+MOFtfJ5W1J8dpe+iO6b8Oo7Er/BOO
-         aJzw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=f70EsVw2RgUgnRRblJ9CzsRoGjkOsNA56/XaNB7y5ZI=;
-        b=dwIZJGqBPHGqsrmLkQDV7Ou7SleZ3XjrzGiR0auAyaypu5KBL+f1NYiFZkxjZ8FabA
-         HUd+XLqgHEkPF2NN0f9hMh2baHkIAeMaRRToYtIYhWCgHRz/2RG2gF8ZtIohaJQxNFTI
-         5ybUrVGEovWmYHOMZIhyudLhvAwVMYVL52zbeFAAmNTXfCj+njoZMk0gfwCxF8YEATz4
-         2vZjeYTR3dGpZi3FrcYH2+FB9kMJpGkT5Kyw+LT9a7N16R4gEOg8sEdICCw0HAfSQNHB
-         2qoPzLuaxxPK14CGGVDZYptn9oiyzxKM2aXXBkxAKrh39YuYyQLb7nCrc38xMjxKFP6o
-         XqHQ==
-X-Gm-Message-State: AOAM531qPevFOP59dw9lMTFseDCegm0dzawIL7QeuCU5mQl9U3EWugo0
-        HotohJ7i/BvlPCFACA0rcCk=
-X-Google-Smtp-Source: ABdhPJxbQiznLyThV54ZddWLujUO4TKVRn1SP1Khn+RurQOBlxzHfsRGWwc8MOe4M4GCeHiSbX6Hxw==
-X-Received: by 2002:a5d:47cb:0:b0:1fa:c92a:b1c with SMTP id o11-20020a5d47cb000000b001fac92a0b1cmr1715603wrc.459.1647474976530;
-        Wed, 16 Mar 2022 16:56:16 -0700 (PDT)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id g2-20020a5d46c2000000b001f079ba0158sm2688566wrs.60.2022.03.16.16.56.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Mar 2022 16:56:16 -0700 (PDT)
-From:   Colin Ian King <colin.i.king@gmail.com>
-To:     Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+        with ESMTP id S1358365AbiCQBva (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2022 21:51:30 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C272F15A05;
+        Wed, 16 Mar 2022 18:50:15 -0700 (PDT)
+Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4KJqhq1PNtzcb6q;
+        Thu, 17 Mar 2022 09:45:15 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Thu, 17 Mar 2022 09:50:14 +0800
+Received: from huawei.com (10.175.101.6) by dggpemm500017.china.huawei.com
+ (7.185.36.178) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 17 Mar
+ 2022 09:50:13 +0800
+From:   Wenchao Hao <haowenchao@huawei.com>
+To:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: isci: host: Fix spelling mistake "doesnt" -> "doesn't"
-Date:   Wed, 16 Mar 2022 23:56:15 +0000
-Message-Id: <20220316235615.56683-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.35.1
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     Zhiqiang Liu <liuzhiqiang26@huawei.com>, Wu Bo <wubo40@huawei.com>,
+        <linfeilong@huawei.com>, Wenchao Hao <haowenchao@huawei.com>
+Subject: [PATCH] scsi:libiscsi: remove unnecessary memset in iscsi_conn_setup
+Date:   Thu, 17 Mar 2022 11:01:16 -0400
+Message-ID: <20220317150116.194140-1-haowenchao@huawei.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There are a few spelling mistakes in dev_warn and dev_err messages.
-Fix these.
+iscsi_cls_conn is alloced by kzalloc(), the whole iscsi_cls_conn is
+zero filled already including the dd_data. So it is unnecessary to
+call memset again.
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+Reviewed-by: Wu Bo <wubo40@huawei.com>
+Reviewed-by: Lee Duncan <lduncan@suse.com>
 ---
- drivers/scsi/isci/host.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/libiscsi.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index d690d9cf7eb1..35589b6af90d 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -413,7 +413,7 @@ static void sci_controller_event_completion(struct isci_host *ihost, u32 ent)
- 				dev_warn(&ihost->pdev->dev,
- 					 "%s: SCIC Controller 0x%p received "
- 					 "event 0x%x for io request object "
--					 "that doesnt exist.\n",
-+					 "that doesn't exist.\n",
- 					 __func__,
- 					 ihost,
- 					 ent);
-@@ -428,7 +428,7 @@ static void sci_controller_event_completion(struct isci_host *ihost, u32 ent)
- 				dev_warn(&ihost->pdev->dev,
- 					 "%s: SCIC Controller 0x%p received "
- 					 "event 0x%x for remote device object "
--					 "that doesnt exist.\n",
-+					 "that doesn't exist.\n",
- 					 __func__,
- 					 ihost,
- 					 ent);
-@@ -462,7 +462,7 @@ static void sci_controller_event_completion(struct isci_host *ihost, u32 ent)
- 		} else
- 			dev_err(&ihost->pdev->dev,
- 				"%s: SCIC Controller 0x%p received event 0x%x "
--				"for remote device object 0x%0x that doesnt "
-+				"for remote device object 0x%0x that doesn't "
- 				"exist.\n",
- 				__func__,
- 				ihost,
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index d09926e6c8a8..cf4211c6500d 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -3045,7 +3045,6 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
+ 	if (!cls_conn)
+ 		return NULL;
+ 	conn = cls_conn->dd_data;
+-	memset(conn, 0, sizeof(*conn) + dd_size);
+ 
+ 	conn->dd_data = cls_conn->dd_data + sizeof(*conn);
+ 	conn->session = session;
 -- 
-2.35.1
+2.32.0
 
