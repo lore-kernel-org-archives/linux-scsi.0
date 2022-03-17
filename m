@@ -2,147 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E30B9C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Mar 2022 15:50:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F226C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Mar 2022 16:11:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236224AbiCQPvV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Mar 2022 11:51:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54584 "EHLO
+        id S236376AbiCQQM6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Mar 2022 12:12:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236191AbiCQPvU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 11:51:20 -0400
-Received: from mail.netfilter.org (mail.netfilter.org [217.70.188.207])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E146F16F6C0;
-        Thu, 17 Mar 2022 08:50:01 -0700 (PDT)
-Received: from netfilter.org (unknown [78.30.32.163])
-        by mail.netfilter.org (Postfix) with ESMTPSA id 80A5B601C6;
-        Thu, 17 Mar 2022 16:47:31 +0100 (CET)
-Date:   Thu, 17 Mar 2022 16:49:55 +0100
-From:   Pablo Neira Ayuso <pablo@netfilter.org>
-To:     Randy Dunlap <rdunlap@infradead.org>
-Cc:     linux-kernel@vger.kernel.org,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Amit Shah <amit@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
+        with ESMTP id S236363AbiCQQM6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 12:12:58 -0400
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FDB4214F94
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Mar 2022 09:11:40 -0700 (PDT)
+Received: by mail-pj1-x1029.google.com with SMTP id rm8-20020a17090b3ec800b001c55791fdb1so5923073pjb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Mar 2022 09:11:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:in-reply-to:references:subject:message-id:date
+         :mime-version:content-transfer-encoding;
+        bh=wywg4x91ht1wDsZE8LDgwKs/937jDdBiI3aoJq8Icig=;
+        b=EcRFu47wdTKbqMSAq17bN6l3fW68je9I7sz6dNGS5tKD2WRbtx22XzizUZtR0qkyAQ
+         QWP1OHwCDN5A0Nw0t3Q7qmd76Q7jNga+edrTyslT2xibkPds1nD37wWbuAnO8SwFuhrO
+         gsVcYZtwJfnoFR7QpeZ53g8ha9BP7vQeAQagIeRfmuB8NZSh871Oy/O22T8GKZQsso7+
+         GAqKZ5LuYXbJaI8VOrspWlTrq9NYT2zp8TS48/UvpIibmW0S8anvsp+TLqAO1q5KW6Bh
+         lxRLQvTEz/3EMFmPsbBbDBLIo1E7GTCaZssTwBenfG227MP1XIuXr1IbCZbQ1ApUnFqh
+         aueg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
+         :message-id:date:mime-version:content-transfer-encoding;
+        bh=wywg4x91ht1wDsZE8LDgwKs/937jDdBiI3aoJq8Icig=;
+        b=Y7zoj32oMUmC1+HCnTwQ8DKjAT/8fBmD5t9MIgVNuhYadWA6HCeOM7FAq72gq5SkiZ
+         7/WNcPKiMwn/AnTlDdEISPn1lSmGHpBp0G1+B+Jf4Oyd/OaUWAFn4pvLbLtvZ0lM+Jvn
+         91E2iMUMn03zSR4D0/GB3ZOi8hJackjk+571xnLGh2wW1e1NaBV+YrNDq/OBmnHc+Nwc
+         5olHplSW01VmNZJYe3vGVfnS0iGfiTSXtjz1RK/7tcX4UwE9WopELYTO53wRJOADdxsY
+         hHu686NxI0tplnk7lZ4NEtDO3lHG45B69ly8S6nL0I9tJlZUhRVYZbm5TtjjfXuwOAcg
+         4/qQ==
+X-Gm-Message-State: AOAM5326BbTITu8dkoawrSebPgGRytOJaBl7huNacaPZgio7Npwk8Nz3
+        emnhvPWwPpZSieAKIKFQg54otQ==
+X-Google-Smtp-Source: ABdhPJzujChC6izQDJEHNAPYk2A2y6Fs/ty0Hxcz37xAtsWb7B2FaolAnh/R0gH50blU6B7YVSPE4w==
+X-Received: by 2002:a17:902:7613:b0:151:6e1c:c49c with SMTP id k19-20020a170902761300b001516e1cc49cmr5906213pll.109.1647533499805;
+        Thu, 17 Mar 2022 09:11:39 -0700 (PDT)
+Received: from [127.0.1.1] ([2620:10d:c090:400::5:d2fd])
+        by smtp.gmail.com with ESMTPSA id q10-20020a056a00088a00b004f7ceff389esm7702590pfj.152.2022.03.17.09.11.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Mar 2022 09:11:39 -0700 (PDT)
+From:   Jens Axboe <axboe@kernel.dk>
+To:     linux-kernel@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
+Cc:     Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Eli Cohen <eli@mellanox.com>,
-        Saeed Mahameed <saeedm@nvidia.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Jozsef Kadlecsik <kadlec@netfilter.org>,
-        Florian Westphal <fw@strlen.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Felipe Balbi <felipe.balbi@linux.intel.com>,
-        =?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Krzysztof Opasiak <k.opasiak@samsung.com>,
         Igor Kotrasinski <i.kotrasinsk@samsung.com>,
         Valentina Manea <valentina.manea.m@gmail.com>,
-        Shuah Khan <shuah@kernel.org>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-        Joachim Fritschi <jfritschi@freenet.de>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Karol Herbst <karolherbst@gmail.com>,
-        Pekka Paalanen <ppaalanen@gmail.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Andy Lutomirski <luto@kernel.org>,
+        Florian Westphal <fw@strlen.de>,
         Peter Zijlstra <peterz@infradead.org>,
+        Karol Herbst <karolherbst@gmail.com>,
+        Eli Cohen <eli@mellanox.com>,
+        Pekka Paalanen <ppaalanen@gmail.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>, x86@kernel.org,
+        netfilter-devel@vger.kernel.org,
+        Jozsef Kadlecsik <kadlec@netfilter.org>,
+        Shuah Khan <shuah@kernel.org>, Ingo Molnar <mingo@kernel.org>,
+        Amit Shah <amit@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andy Lutomirski <luto@kernel.org>,
+        Shuah Khan <skhan@linuxfoundation.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        linux-block@vger.kernel.org, Saeed Mahameed <saeedm@nvidia.com>,
+        linux-usb@vger.kernel.org, coreteam@netfilter.org,
+        "Michael S. Tsirkin" <mst@redhat.com>,
         Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, netdev@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, nouveau@lists.freedesktop.org,
-        virtualization@lists.linux-foundation.org, x86@kernel.org
-Subject: Re: [PATCH 4/9] netfilter: h323: eliminate anonymous module_init &
- module_exit
-Message-ID: <YjNYo2LKM3smgEJM@salvia>
+        Krzysztof Opasiak <k.opasiak@samsung.com>,
+        netdev@vger.kernel.org, linux-crypto@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        nouveau@lists.freedesktop.org, Jason Wang <jasowang@redhat.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>,
+        Felipe Balbi <felipe.balbi@linux.intel.com>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        virtualization@lists.linux-foundation.org,
+        Leon Romanovsky <leon@kernel.org>,
+        Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+        linux-rdma@vger.kernel.org,
+        Pablo Neira Ayuso <pablo@netfilter.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Joachim Fritschi <jfritschi@freenet.de>
+In-Reply-To: <20220316192010.19001-1-rdunlap@infradead.org>
 References: <20220316192010.19001-1-rdunlap@infradead.org>
- <20220316192010.19001-5-rdunlap@infradead.org>
+Subject: Re: (subset) [PATCH 0/9] treewide: eliminate anonymous module_init & module_exit
+Message-Id: <164753349550.89091.10994175450707575992.b4-ty@kernel.dk>
+Date:   Thu, 17 Mar 2022 10:11:35 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20220316192010.19001-5-rdunlap@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 16, 2022 at 12:20:05PM -0700, Randy Dunlap wrote:
-> Eliminate anonymous module_init() and module_exit(), which can lead to
+On Wed, 16 Mar 2022 12:20:01 -0700, Randy Dunlap wrote:
+> There are a number of drivers that use "module_init(init)" and
+> "module_exit(exit)", which are anonymous names and can lead to
 > confusion or ambiguity when reading System.map, crashes/oops/bugs,
 > or an initcall_debug log.
 > 
 > Give each of these init and exit functions unique driver-specific
 > names to eliminate the anonymous names.
 > 
-> Example 1: (System.map)
->  ffffffff832fc78c t init
->  ffffffff832fc79e t init
->  ffffffff832fc8f8 t init
-> 
-> Example 2: (initcall_debug log)
->  calling  init+0x0/0x12 @ 1
->  initcall init+0x0/0x12 returned 0 after 15 usecs
->  calling  init+0x0/0x60 @ 1
->  initcall init+0x0/0x60 returned 0 after 2 usecs
->  calling  init+0x0/0x9a @ 1
->  initcall init+0x0/0x9a returned 0 after 74 usecs
+> [...]
 
-LGTM.
+Applied, thanks!
 
-Should I route this through the netfilter tree?
+[1/9] virtio_blk: eliminate anonymous module_init & module_exit
+      commit: bcfe9b6cbb4438b8c1cc4bd475221652c8f9301b
 
-> Fixes: f587de0e2feb ("[NETFILTER]: nf_conntrack/nf_nat: add H.323 helper port")
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc: Pablo Neira Ayuso <pablo@netfilter.org>
-> Cc: Jozsef Kadlecsik <kadlec@netfilter.org>
-> Cc: Florian Westphal <fw@strlen.de>
-> Cc: netfilter-devel@vger.kernel.org
-> Cc: coreteam@netfilter.org
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Jakub Kicinski <kuba@kernel.org>
-> Cc: netdev@vger.kernel.org
-> ---
->  net/ipv4/netfilter/nf_nat_h323.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> --- lnx-517-rc8.orig/net/ipv4/netfilter/nf_nat_h323.c
-> +++ lnx-517-rc8/net/ipv4/netfilter/nf_nat_h323.c
-> @@ -580,7 +580,7 @@ static struct nf_ct_helper_expectfn call
->  };
->  
->  /****************************************************************************/
-> -static int __init init(void)
-> +static int __init nf_nat_h323_init(void)
->  {
->  	BUG_ON(set_h245_addr_hook != NULL);
->  	BUG_ON(set_h225_addr_hook != NULL);
-> @@ -607,7 +607,7 @@ static int __init init(void)
->  }
->  
->  /****************************************************************************/
-> -static void __exit fini(void)
-> +static void __exit nf_nat_h323_fini(void)
->  {
->  	RCU_INIT_POINTER(set_h245_addr_hook, NULL);
->  	RCU_INIT_POINTER(set_h225_addr_hook, NULL);
-> @@ -624,8 +624,8 @@ static void __exit fini(void)
->  }
->  
->  /****************************************************************************/
-> -module_init(init);
-> -module_exit(fini);
-> +module_init(nf_nat_h323_init);
-> +module_exit(nf_nat_h323_fini);
->  
->  MODULE_AUTHOR("Jing Min Zhao <zhaojingmin@users.sourceforge.net>");
->  MODULE_DESCRIPTION("H.323 NAT helper");
+Best regards,
+-- 
+Jens Axboe
+
+
