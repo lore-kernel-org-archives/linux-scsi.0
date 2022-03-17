@@ -2,227 +2,242 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 536B8C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Mar 2022 06:18:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 113E7C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Mar 2022 06:19:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229626AbiCQGT5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Mar 2022 02:19:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35826 "EHLO
+        id S229760AbiCQGUR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Mar 2022 02:20:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229630AbiCQGTu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 02:19:50 -0400
-Received: from out30-56.freemail.mail.aliyun.com (out30-56.freemail.mail.aliyun.com [115.124.30.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F21C15B3FD;
-        Wed, 16 Mar 2022 23:09:03 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R151e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04426;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=3;SR=0;TI=SMTPD_---0V7QH7hw_1647497340;
-Received: from 30.225.28.160(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0V7QH7hw_1647497340)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Thu, 17 Mar 2022 14:09:01 +0800
-Message-ID: <c3f0d8c6-f468-1685-e89e-3fb0dd079ab5@linux.alibaba.com>
-Date:   Thu, 17 Mar 2022 14:09:00 +0800
+        with ESMTP id S229600AbiCQGUH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 02:20:07 -0400
+Received: from desiato.infradead.org (desiato.infradead.org [IPv6:2001:8b0:10b:1:d65d:64ff:fe57:4e05])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F164AFA233;
+        Wed, 16 Mar 2022 23:09:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=desiato.20200630; h=Content-Transfer-Encoding:Content-Type
+        :In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=bTtyCTv8jHiRySjv+joBkY5T4kiLsInhhDpfMbwTL1s=; b=os+6uLP+YQvzPOsl13Jv5guvuH
+        c88qjXZH5IySVlxqAYUihC2hbNJHZhERaN/9M1O+TRZA8WFEmSQGTv+E/uOHf9IEu5y58HmvUView
+        tJqv1oexE/7GCbLX/RqjjjPHc0Nz4QT1PCSUsF7D8Jb/EYTGiFjELEvWYE7Gu9MYUTFHov/uRCRY7
+        /x9sJUmFziSe300ACpWlnZupzoQCtmqCqtEMV0UdvwGyry98Nfw5QdyjOvLJ0JePVDhb/0YX8qdJT
+        w7vRAVMjNtBdhuXSlAfQdRkRsVo81YE8w/5mlAJkMGGTpqeQHzUxEbTrcOVom5D0PCqAQ3d5CQPbP
+        DH34JIfA==;
+Received: from [2601:1c0:6280:3f0::aa0b]
+        by desiato.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nUiEF-001mlP-TU; Thu, 17 Mar 2022 04:59:16 +0000
+Message-ID: <5db1feea-f630-79e6-15cc-77babf58a429@infradead.org>
+Date:   Wed, 16 Mar 2022 21:59:01 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Subject: Re: [PATCH 2/2] scsi: target: tcmu: Use
- address_space->invalidate_lock
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 6/9] usb: gadget: eliminate anonymous module_init &
+ module_exit
 Content-Language: en-US
-From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
-To:     Bodo Stroesser <bostroesser@gmail.com>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-References: <20220311132206.24515-1-xiaoguang.wang@linux.alibaba.com>
- <20220311132206.24515-2-xiaoguang.wang@linux.alibaba.com>
- <c6a25258-6937-6cdf-0fab-081312c4dee6@linux.alibaba.com>
- <b04319b3-2214-8d9e-46b4-1772dd003240@gmail.com>
- <02d64544-b5fa-3f06-caab-5239ff60c0bf@linux.alibaba.com>
-In-Reply-To: <02d64544-b5fa-3f06-caab-5239ff60c0bf@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     linux-kernel@vger.kernel.org,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Amit Shah <amit@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Eli Cohen <eli@mellanox.com>,
+        Saeed Mahameed <saeedm@nvidia.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Pablo Neira Ayuso <pablo@netfilter.org>,
+        Jozsef Kadlecsik <kadlec@netfilter.org>,
+        Florian Westphal <fw@strlen.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Krzysztof Opasiak <k.opasiak@samsung.com>,
+        Igor Kotrasinski <i.kotrasinsk@samsung.com>,
+        Valentina Manea <valentina.manea.m@gmail.com>,
+        Shuah Khan <shuah@kernel.org>,
+        Shuah Khan <skhan@linuxfoundation.org>,
+        Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+        Joachim Fritschi <jfritschi@freenet.de>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@kernel.org>,
+        Karol Herbst <karolherbst@gmail.com>,
+        Pekka Paalanen <ppaalanen@gmail.com>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, netdev@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, nouveau@lists.freedesktop.org,
+        virtualization@lists.linux-foundation.org, x86@kernel.org,
+        Felipe Balbi <balbi@kernel.org>
+References: <20220316192010.19001-1-rdunlap@infradead.org>
+ <20220316192010.19001-7-rdunlap@infradead.org>
+ <YjKrMyRvHh7nzHwW@iweiny-desk3>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <YjKrMyRvHh7nzHwW@iweiny-desk3>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-hi,
 
-> hi,
->
->> Sorry for the late response. Currently I'm quite busy.
-> Really never mind :)
->
->>
->> In your earlier mail you described a possible dead lock.
->> With this patch applied, are you sure a similar deadlock cannot
->> happen?
-> AFAIK, this patch will solve the deadlock.
->
->>
->> Additionally, let's assume tcmu_vma_fault/tcmu_try_get_data_page
->> - after having found a valid page to map - is interrupted after
->> releasing the invalidate_lock. Are there any locks held to prevent
->> find_free_blocks from jumping in and possibly remove that page from 
->> xarray and try to remove it from the mmapped area?
->> If not, we might end up mapping a no longer valid page.
-> Yeah, after tcmu_try_get_data_page() returns, find_free_blocks() 
-> definitely
-> may come in and do unmap_mapping_range() and tcmu_blocks_release(),
-> but I think it won't cause problems:
-> 1) Since page fault procedure and unmap_mapping_range are designed to
-> be able to run concurrently, they sync at pte_offset_map_lock(). See
-> => do_user_addr_fault
-> ==> handle_mm_fault
-> ===> __handle_mm_fault
-> ====> do_fault
-> =====> do_shared_fault
-> =======> finish_fault
-> ========> pte_offset_map_lock
-> ========> do_set_pte
-> ========> pte_unmap_unlock
->
-> and in find_free_blocks():
-> => unmap_mapping_range
-> == > unmap_mapping_range_tree
-> ===> zap_page_range_single
-> ====> unmap_page_range
-> =====> zap_p4d_range
-> ======> zap_pud_range
-> ========> zap_pmd_range
-> ==========> zap_pte_range
-> ===========> pte_offset_map_lock
-> ===========> pte_clear_not_present_full
-> ===========> pte_unmap_unlock(start_pte, ptl);
->
-> So what I want to express is that because of the concurrency of page 
-> fault
-> procedure and unmap_mapping_range(), one will either see a valid map, or
-> not. And if not, because this page exceeds dbi_max, a later page fault 
-> will
-> happen, and will get sigbus, but it's reasonable.
->
-> As for your question, tcmu_try_get_data_page() finds a page successfully,
-> this page will get a refcount properly, if later unmap_mapping_range() 
-> and
-> tcmu_blocks_release() come in, just after tcmu_try_get_data_page() 
-> returns and
-> before tcmu_vma_fault() returns, then actually tcmu_blocks_release() 
-> won't
-> free this page because there is one refcount. So yes, we'll map a no 
-> longer
-> valid page, but this page also won't be re-used, unless the map is 
-> unmapped
-> later(process exits or killed), then put_page() will be called and 
-> page will finally
-> be given back to mm subsystem.
-After thinking more about this problem, if we now have a valid map which 
-points
-to a truncated page, and this offset of this page in data_bitmap is 
-freed. If later
-another command runs in, it reuse the previous freed slot in 
-data_bitmap. Though
-we'll allocate new page for this slot in data_area, but seems no page 
-fault will
-happen again, because we have a valid map.. so real request's data will 
-lose.
 
-As you say, indeed this would be a long standing problem, we'll need to have
-a deeper look at codes.
-
-Regards,
-Xiaoguang Wang
-
->
+On 3/16/22 20:29, Ira Weiny wrote:
+> On Wed, Mar 16, 2022 at 12:20:07PM -0700, Randy Dunlap wrote:
+>> Eliminate anonymous module_init() and module_exit(), which can lead to
+>> confusion or ambiguity when reading System.map, crashes/oops/bugs,
+>> or an initcall_debug log.
 >>
->> Of course, this would be a long standing problem not caused by your
->> change. But if there would be a problem, we should try to fix it
->> when touching this code, I think.
->> Unfortunately I didn't manage yet to check which locks are involved
->> during page fault handling and unmap_mapping_range.
-> At least for my knowledge, page fault will hold mmap_read_lock() and
-> pte lock, unmap_mapping_range() will hold mapping->i_mmap_rwsem
-> and pte lock.
->
-> Regards,
-> Xiaoguang Wang
+>> Give each of these init and exit functions unique driver-specific
+>> names to eliminate the anonymous names.
 >>
->> Bodo
+>> Example 1: (System.map)
+>>  ffffffff832fc78c t init
+>>  ffffffff832fc79e t init
+>>  ffffffff832fc8f8 t init
 >>
->> On 16.03.22 11:43, Xiaoguang Wang wrote:
->>> hello,
->>>
->>> Gentle ping.
->>>
->>> Regards,
->>> Xiaoguang Wang
->>>
->>>> Currently tcmu_vma_fault() uses udev->cmdr_lock to avoid concurrent
->>>> find_free_blocks(), which unmaps idle pages and truncates them. This
->>>> work is really like many filesystem's truncate operations, but they
->>>> use address_space->invalidate_lock to protect race.
->>>>
->>>> This patch replaces cmdr_lock with address_space->invalidate_lock in
->>>> tcmu fault procedure, which will also make page-fault have 
->>>> concurrency.
->>>>
->>>> Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
->>>> ---
->>>>   drivers/target/target_core_user.c | 13 +++++++++----
->>>>   1 file changed, 9 insertions(+), 4 deletions(-)
->>>>
->>>> diff --git a/drivers/target/target_core_user.c 
->>>> b/drivers/target/target_core_user.c
->>>> index 06a5c4086551..e0a62623ccd7 100644
->>>> --- a/drivers/target/target_core_user.c
->>>> +++ b/drivers/target/target_core_user.c
->>>> @@ -1815,13 +1815,14 @@ static int tcmu_find_mem_index(struct 
->>>> vm_area_struct *vma)
->>>>   static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, 
->>>> uint32_t dpi)
->>>>   {
->>>> +    struct address_space *mapping = udev->inode->i_mapping;
->>>>       struct page *page;
->>>> -    mutex_lock(&udev->cmdr_lock);
->>>> +    filemap_invalidate_lock_shared(mapping);
->>>>       page = xa_load(&udev->data_pages, dpi);
->>>>       if (likely(page)) {
->>>>           get_page(page);
->>>> -        mutex_unlock(&udev->cmdr_lock);
->>>> +        filemap_invalidate_unlock_shared(mapping);
->>>>           return page;
->>>>       }
->>>> @@ -1831,7 +1832,7 @@ static struct page 
->>>> *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
->>>>        */
->>>>       pr_err("Invalid addr to data page mapping (dpi %u) on device 
->>>> %s\n",
->>>>              dpi, udev->name);
->>>> -    mutex_unlock(&udev->cmdr_lock);
->>>> +    filemap_invalidate_unlock_shared(mapping);
->>>>       return NULL;
->>>>   }
->>>> @@ -3111,6 +3112,7 @@ static void find_free_blocks(void)
->>>>       loff_t off;
->>>>       u32 pages_freed, total_pages_freed = 0;
->>>>       u32 start, end, block, total_blocks_freed = 0;
->>>> +    struct address_space *mapping;
->>>>       if (atomic_read(&global_page_count) <= tcmu_global_max_pages)
->>>>           return;
->>>> @@ -3134,6 +3136,7 @@ static void find_free_blocks(void)
->>>>               continue;
->>>>           }
->>>> +        mapping = udev->inode->i_mapping;
->>>>           end = udev->dbi_max + 1;
->>>>           block = find_last_bit(udev->data_bitmap, end);
->>>>           if (block == udev->dbi_max) {
->>>> @@ -3152,12 +3155,14 @@ static void find_free_blocks(void)
->>>>               udev->dbi_max = block;
->>>>           }
->>>> +        filemap_invalidate_lock(mapping);
->>>>           /* Here will truncate the data area from off */
->>>>           off = udev->data_off + (loff_t)start * udev->data_blk_size;
->>>> -        unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
->>>> +        unmap_mapping_range(mapping, off, 0, 1);
->>>>           /* Release the block pages */
->>>>           pages_freed = tcmu_blocks_release(udev, start, end - 1);
->>>> +        filemap_invalidate_unlock(mapping);
->>>>           mutex_unlock(&udev->cmdr_lock);
->>>>           total_pages_freed += pages_freed;
->>>
+>> Example 2: (initcall_debug log)
+>>  calling  init+0x0/0x12 @ 1
+>>  initcall init+0x0/0x12 returned 0 after 15 usecs
+>>  calling  init+0x0/0x60 @ 1
+>>  initcall init+0x0/0x60 returned 0 after 2 usecs
+>>  calling  init+0x0/0x9a @ 1
+>>  initcall init+0x0/0x9a returned 0 after 74 usecs
+>>
+>> Fixes: bd25a14edb75 ("usb: gadget: legacy/serial: allow dynamic removal")
+>> Fixes: 7bb5ea54be47 ("usb gadget serial: use composite gadget framework")
+>> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> 
+> I continue to be confused about the latest rules for the Fixes tag but this one
+> in particular seems completely useless.  This is the 'beginning of time' commit
+> by Linus AFAICT.  So do any of these Fixes tags need to be in this series?
 
+I guess it mostly depends on whether they get applied to stable trees, but
+it's entirely fine with me if they don't.
+
+{I also corrected Felipe's email address here.}
+
+> Regardless:
+> 
+> Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+
+Thanks.
+
+> 
+>> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+>> Cc: Felipe Balbi <felipe.balbi@linux.intel.com>
+>> Cc: Michał Mirosław <mirq-linux@rere.qmqm.pl>
+>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+>> Cc: linux-usb@vger.kernel.org
+>> ---
+>>  drivers/usb/gadget/legacy/inode.c  |    8 ++++----
+>>  drivers/usb/gadget/legacy/serial.c |   10 +++++-----
+>>  drivers/usb/gadget/udc/dummy_hcd.c |    8 ++++----
+>>  3 files changed, 13 insertions(+), 13 deletions(-)
+>>
+>> --- lnx-517-rc8.orig/drivers/usb/gadget/legacy/serial.c
+>> +++ lnx-517-rc8/drivers/usb/gadget/legacy/serial.c
+>> @@ -273,7 +273,7 @@ static struct usb_composite_driver gseri
+>>  static int switch_gserial_enable(bool do_enable)
+>>  {
+>>  	if (!serial_config_driver.label)
+>> -		/* init() was not called, yet */
+>> +		/* gserial_init() was not called, yet */
+>>  		return 0;
+>>  
+>>  	if (do_enable)
+>> @@ -283,7 +283,7 @@ static int switch_gserial_enable(bool do
+>>  	return 0;
+>>  }
+>>  
+>> -static int __init init(void)
+>> +static int __init gserial_init(void)
+>>  {
+>>  	/* We *could* export two configs; that'd be much cleaner...
+>>  	 * but neither of these product IDs was defined that way.
+>> @@ -314,11 +314,11 @@ static int __init init(void)
+>>  
+>>  	return usb_composite_probe(&gserial_driver);
+>>  }
+>> -module_init(init);
+>> +module_init(gserial_init);
+>>  
+>> -static void __exit cleanup(void)
+>> +static void __exit gserial_cleanup(void)
+>>  {
+>>  	if (enable)
+>>  		usb_composite_unregister(&gserial_driver);
+>>  }
+>> -module_exit(cleanup);
+>> +module_exit(gserial_cleanup);
+>> --- lnx-517-rc8.orig/drivers/usb/gadget/udc/dummy_hcd.c
+>> +++ lnx-517-rc8/drivers/usb/gadget/udc/dummy_hcd.c
+>> @@ -2765,7 +2765,7 @@ static struct platform_driver dummy_hcd_
+>>  static struct platform_device *the_udc_pdev[MAX_NUM_UDC];
+>>  static struct platform_device *the_hcd_pdev[MAX_NUM_UDC];
+>>  
+>> -static int __init init(void)
+>> +static int __init dummy_hcd_init(void)
+>>  {
+>>  	int	retval = -ENOMEM;
+>>  	int	i;
+>> @@ -2887,9 +2887,9 @@ err_alloc_udc:
+>>  		platform_device_put(the_hcd_pdev[i]);
+>>  	return retval;
+>>  }
+>> -module_init(init);
+>> +module_init(dummy_hcd_init);
+>>  
+>> -static void __exit cleanup(void)
+>> +static void __exit dummy_hcd_cleanup(void)
+>>  {
+>>  	int i;
+>>  
+>> @@ -2905,4 +2905,4 @@ static void __exit cleanup(void)
+>>  	platform_driver_unregister(&dummy_udc_driver);
+>>  	platform_driver_unregister(&dummy_hcd_driver);
+>>  }
+>> -module_exit(cleanup);
+>> +module_exit(dummy_hcd_cleanup);
+>> --- lnx-517-rc8.orig/drivers/usb/gadget/legacy/inode.c
+>> +++ lnx-517-rc8/drivers/usb/gadget/legacy/inode.c
+>> @@ -2101,7 +2101,7 @@ MODULE_ALIAS_FS("gadgetfs");
+>>  
+>>  /*----------------------------------------------------------------------*/
+>>  
+>> -static int __init init (void)
+>> +static int __init gadgetfs_init (void)
+>>  {
+>>  	int status;
+>>  
+>> @@ -2111,12 +2111,12 @@ static int __init init (void)
+>>  			shortname, driver_desc);
+>>  	return status;
+>>  }
+>> -module_init (init);
+>> +module_init (gadgetfs_init);
+>>  
+>> -static void __exit cleanup (void)
+>> +static void __exit gadgetfs_cleanup (void)
+>>  {
+>>  	pr_debug ("unregister %s\n", shortname);
+>>  	unregister_filesystem (&gadgetfs_type);
+>>  }
+>> -module_exit (cleanup);
+>> +module_exit (gadgetfs_cleanup);
+>>  
+
+-- 
+~Randy
