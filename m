@@ -2,467 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 706D0C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Mar 2022 05:54:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBA59C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Mar 2022 06:05:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229533AbiCQF4H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Mar 2022 01:56:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54074 "EHLO
+        id S229690AbiCQGGg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Mar 2022 02:06:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229463AbiCQF4B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 01:56:01 -0400
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BC0A103D8C
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2022 22:29:44 -0700 (PDT)
-Received: by mail-pf1-x434.google.com with SMTP id z16so5964617pfh.3
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2022 22:29:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=thejof-com.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=gXNlTZ2qbyoRP2yLyuiIo64ohOgdsEO0ZMUlrBh5370=;
-        b=uD/isuYZWM4Cj+9kSeQemyS3zFFgB4dsYRXBHzy8o8Y+d6K3bf7XOLgITzCtpOKsPx
-         aY/85Y8/IwiKu5i0yFVQGM5bM2cEVPzTWEgaf9ucKpVeCmfrUYFdagdYQxe/i3EktRDh
-         2ngjDNtvYXplaPO0ZaZhE1dkLYZSoT3RxI8OeWxvFBo3vXisUCGZ9vcUdSXL2PFM7H1v
-         FJDgjyzKWyqVYEfzBjJ0L4pjk/WN8IzuU5XrjI85cciZrFo+vBxzEEhqM+fdhjldSetC
-         sGv+tCCvsD3sq5eQLuU8upiMbXUY3TtKZVXb1cDq3C8q1TdZHKU+awdJSTHBOpJ1wyO+
-         uGTA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=gXNlTZ2qbyoRP2yLyuiIo64ohOgdsEO0ZMUlrBh5370=;
-        b=71Iw3yjui4uO29XLpkfQr0CjCQTjOD/NdddehWoE7dNlqe/kZ0UniQOeNJOP46xtiv
-         rW59w6ly1BJiCOsSGVEpP4C68HELrtY3rt7eUVJOyf03FAmVDudQ+aXnsly1EY/ig3Cg
-         QFAx+C5/ZHfa7URpDXW58yJUNH1salc1f8iKx7AVzRCPJZh8N55mlaJTUnIVnCK4CKGe
-         G+rp+8jtLEUPeLg2tc2dmjgMcuakh39j5+1byJxXKUc1xl4pguieIa5tdlDXEU27oU7G
-         3vWpt4CUXLqRUeiu8OMS1StTZpervtgRt/bd9yFLE/s4a7dHDGdiPv2DEGGw2ou6obN/
-         uXmA==
-X-Gm-Message-State: AOAM533mA8dRyKBnRfgwAH+ijrPqhpfYwiC2/zBM14xh8J2oB5vyRVpB
-        Rd9I43EdwsxYJ0+iM2qyr8PsTzSyV4Id0jMxcjs=
-X-Google-Smtp-Source: ABdhPJxeYGLzO28NmBuaEHWiAYU4jUkltMH0zsEMQ/8Ntx0ZqGLTI30Tpg/DlzdsUvN0YG2qk7w3cw==
-X-Received: by 2002:a05:6a00:bc8:b0:4f6:ff68:50ba with SMTP id x8-20020a056a000bc800b004f6ff6850bamr3327399pfu.69.1647494983184;
-        Wed, 16 Mar 2022 22:29:43 -0700 (PDT)
-Received: from banyan.jof.github.beta.tailscale.net ([2600:1700:2f74:11f:a6ae:11ff:fe14:a442])
-        by smtp.gmail.com with ESMTPSA id b16-20020a056a00115000b004f6ff260c9esm5138311pfm.207.2022.03.16.22.29.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Mar 2022 22:29:42 -0700 (PDT)
-From:   Jonathan Lassoff <jof@thejof.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jonathan Lassoff <jof@thejof.com>
-Subject: [PATCH v0 2/2] Add printk indexing to scsi drivers.
-Date:   Wed, 16 Mar 2022 22:29:35 -0700
-Message-Id: <329ce8095578967149c19fba1e93b9271ae52e89.1647494793.git.jof@thejof.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <bb8faa82799b2ced7ed1948857f652f0330f92cf.1647494793.git.jof@thejof.com>
-References: <bb8faa82799b2ced7ed1948857f652f0330f92cf.1647494793.git.jof@thejof.com>
+        with ESMTP id S229667AbiCQGG3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 02:06:29 -0400
+X-Greylist: delayed 9326 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 16 Mar 2022 22:39:10 PDT
+Received: from tmailer.gwdg.de (tmailer.gwdg.de [134.76.10.23])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E2CD13364F
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2022 22:39:10 -0700 (PDT)
+Received: from excmbx-17.um.gwdg.de ([134.76.9.228] helo=email.gwdg.de)
+        by mailer.gwdg.de with esmtp (GWDG Mailer)
+        (envelope-from <alexander.vorwerk@stud.uni-goettingen.de>)
+        id 1nUgQO-000EEm-H3; Thu, 17 Mar 2022 04:03:40 +0100
+Received: from notebook.fritz.box (10.250.9.199) by excmbx-17.um.gwdg.de
+ (134.76.9.228) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P521) id 15.1.2375.24; Thu, 17
+ Mar 2022 04:03:40 +0100
+From:   Alexander Vorwerk <alexander.vorwerk@stud.uni-goettingen.de>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Alexander Vorwerk <alexander.vorwerk@stud.uni-goettingen.de>
+Subject: [PATCH] message: fusion: Remove unused variable retval
+Date:   Thu, 17 Mar 2022 04:03:25 +0100
+Message-ID: <20220317030325.30526-1-alexander.vorwerk@stud.uni-goettingen.de>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.250.9.199]
+X-ClientProxiedBy: excmbx-11.um.gwdg.de (134.76.9.220) To excmbx-17.um.gwdg.de
+ (134.76.9.228)
+X-Virus-Scanned: (clean) by clamav
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Don't merge this.
+The following warning showed up when compiling with W=1.
 
-This just shows the printk format strings that were added to the printk
-index after merging the macro wrappers.
+drivers/message/fusion/mptctl.c: In function ‘mptctl_hp_hostinfo’:
+drivers/message/fusion/mptctl.c:2337:8: warning: variable ‘retval’ set but not used [-Wunused-but-set-variable]
+  int   retval;
 
-Signed-off-by: Jonathan Lassoff <jof@thejof.com>
+Fixing by removing the variable.
+
+Signed-off-by: Alexander Vorwerk <alexander.vorwerk@stud.uni-goettingen.de>
 ---
- scsi_printks.txt | 382 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 382 insertions(+)
- create mode 100644 scsi_printks.txt
+ drivers/message/fusion/mptctl.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/scsi_printks.txt b/scsi_printks.txt
-new file mode 100644
-index 000000000000..87d52ff3e041
---- /dev/null
-+++ b/scsi_printks.txt
-@@ -0,0 +1,382 @@
-+"abort request tag %d\n"
-+"asked for element 0x%02x, got 0x%02x\n"
-+"Async command already active.\n"
-+"Async write error %x, return value %d.\n"
-+"Async write waits %d, finished %d.\n"
-+"atapi(%s), ncq(%s), asyn_notify(%s), smart(%s), fua(%s), sw_preserve(%s)\n"
-+"Attached Enclosure device\n"
-+"Attached scsi CD-ROM %s\n"
-+"Attached scsi changer %s\n"
-+"Attached scsi generic sg%d type %d\n"
-+"Attached scsi tape %s\n"
-+"attempting device reset! scmd(0x%p)\n"
-+"attempting target reset! scmd(0x%p) tm_dev_handle: 0x%x\n"
-+"attempting task abort!scmd(0x%p), outstanding for %u ms & timeout %u ms\n"
-+"attempting task abort! scmd(0x%p) tm_dev_handle 0x%x\n"
-+"Block limits %d - %d bytes.\n"
-+"Block size: %d, buffer size: %d (%d blocks).\n"
-+"Buffer flushed, %d EOF(s) written\n"
-+"    can bsr: %d, two FMs: %d, fast mteom: %d, auto lock: %d,\n"
-+"Can't allocate %d byte tape buffer.\n"
-+"Can't allocate one page tape buffer.\n"
-+"Can't get SCSI request.\n"
-+"Can't read block limits.\n"
-+"Can't read medium partition page.\n"
-+"Can't read partition mode page.\n"
-+" Can't read tape position.\n"
-+"Can't set default block size to %d bytes and density %x.\n"
-+"Can't set default compression.\n"
-+"Can't set default drive buffering to %d.\n"
-+"CDROM does'nt support READ CD (0xbe) command\n"
-+"CDROM not ready.  Make sure there is a disc in the drive.\n"
-+"CDROM not ready yet.\n"
-+"ch%d: device_create failed\n"
-+"CHIOEXCHANGE: invalid parameter\n"
-+"CHIOMOVE: invalid parameter\n"
-+"CHIOPOSITION: invalid parameter\n"
-+"CHIOSVOLTAG: invalid parameter\n"
-+"Cleaning request mode %d, mask %02x, value %02x\n"
-+"clearing deleted flag\n"
-+"Compression algorithm set to 0x%x.\n"
-+"Compression change failed.\n"
-+"Compression default disabled.\n"
-+"Compression default set to %x\n"
-+"Compression mode page not supported.\n"
-+"Compression not supported.\n"
-+"Compression state changed to %d.\n"
-+"Compression state is %d.\n"
-+"    debugging: %d\n"
-+"Default block size disabled.\n"
-+"Default block size set to %d bytes.\n"
-+"    defs for wr: %d, no block limits: %d, partitions: %d, s2 log: %d\n"
-+"Density default disabled.\n"
-+"Density default set to %x\n"
-+"Density %x, tape length: %x, drv buffer: %d\n"
-+"Device already in use.\n"
-+"device been deleted! scmd(0x%p)\n"
-+"device been deleted! scmd: (0x%p)\n"
-+"device been deleted! scmd(%p)\n"
-+"device_block failed with return(%d) for handle(0x%04x)\n"
-+"device_block, handle(0x%04x)\n"
-+"device has no volume tag support\n"
-+"device reset: %s scmd(0x%p)\n"
-+"device_running, handle(0x%04x)\n"
-+"device_unblock and setting to running, handle(0x%04x)\n"
-+"device_unblock failed with return(%d) for handle(0x%04x) performing a block followed by an unblock\n"
-+"disc change detected.\n"
-+"Drive buffer default disabled.\n"
-+"Drive buffer default set to %x\n"
-+"dt 0x%x: "
-+"dt 0x%x: [insmod option] "
-+"dt 0x%x: READ ELEMENT STATUS failed\n"
-+"element 0x%x: asc=0x%x, ascq=0x%x\n"
-+"Embedded Enclosure Device\n"
-+"enclosure logical id(0x%016llx), slot(%d)\n"
-+" Enhanced %sload slot %2d.\n"
-+"EOF detected (%d bytes read).\n"
-+"EOF/EOM flag up (%d). Bytes %d\n"
-+"EOF up (%d). Left %d, needed %d.\n"
-+"EOM detected (%d bytes read).\n"
-+"EOM with %d bytes unwritten.\n"
-+"EOM with lost data.\n"
-+"Erasing tape.\n"
-+"Error on flush.\n"
-+"Error on write filemark.\n"
-+"Error on write:\n"
-+"Error: %x, cmd: %x %x %x %x %x %x\n"
-+"Error %x (driver bt 0x%x, host bt 0x%x).\n"
-+"exchange: 0x%x => 0x%x => 0x%x\n"
-+"Failed to bind enclosure %d\n"
-+"Failed to get diagnostic page 0x%x\n"
-+"Failed to read %d byte block with %d byte transfer.\n"
-+"... finished\n"
-+"Firmware expose tmCapable without JBOD MAP support from %s %d\n"
-+"Flushing %d bytes.\n"
-+"Formatting tape with one partition.\n"
-+"Formatting tape with two partitions (%i = %d MB).\n"
-+"GET_EVENT and TUR disagree continuously, suppress GET_EVENT events\n"
-+"Got tape pos. blk %d part %d.\n"
-+"Hmm, seems the drive doesn't support multisession CD's\n"
-+"Huh? device not found!\n"
-+"ID %i, LUN %i, "
-+"ID/LUN unknown\n"
-+"ILI but enough data received %ld %d.\n"
-+"Illegal block size.\n"
-+"Incorrect block size.\n"
-+"Incorrect device.\n"
-+"Initialized mode %d definition from mode 0\n"
-+"INITIALIZE ELEMENT STATUS, may take some time ...\n"
-+"Loading tape.\n"
-+"Long timeout set to %d seconds.\n"
-+"Mode change from %d to %d.\n"
-+"Mode %d options: buffer writes: %d, async writes: %d, read ahead: %d\n"
-+"Mode sense. Length %d, medium %x, WBS %x, BLL %d\n"
-+"move: 0x%x => 0x%x\n"
-+"mpt3sas_scsih_issue_tm: ABORT_TASK: FAILED : scmd(%p)\n"
-+"mpt3sas_scsih_issue_tm: ABORT_TASK: RETRIES (%d): scmd(%p)\n"
-+"mpt3sas_scsih_issue_tm: FAILED when sending QUERY_TASK: scmd(%p)\n"
-+"mptspi: %s: IDP:ON\n"
-+"MTSETDRVBUFFER only allowed for root.\n"
-+"name: %8.8s %16.16s %4.4s\n"
-+"No Mode Sense.\n"
-+"non-buffered tape: disabling writing immediate filemarks\n"
-+"No op on tape.\n"
-+"No reference found at driver, assuming scmd(0x%p) might have completed\n"
-+"Normal timeout set to %d seconds.\n"
-+"not this SCSI bus\n"
-+"Number of partitions %d.\n"
-+"Number of r/w requests %d, dio used in %d, pages %d.\n"
-+"OnStream tapes are no longer supported;\n"
-+"out of memory.\n"
-+"Partitioning of tape failed.\n"
-+"Partition page length is %d bytes.\n"
-+"please mail to linux-scsi@vger.kernel.org.\n"
-+"position: 0x%x\n"
-+"psd_cnt %d, max.parts %d, nbr_parts %d\n"
-+"qdepth(%d), tagged(%d), scsi_level(%d), cmd_que(%d)\n"
-+"query task: FAILED with IOCSTATUS(0x%04x), scmd(%p)\n"
-+"Queue depth not changed yet\n"
-+"Queue depth reduced to (%d)\n"
-+"READ ELEMENT STATUS for element 0x%x failed\n"
-+"reading element address assignment page failed!\n"
-+"Recovered %s error (%d).\n"
-+"Retensioning tape.\n"
-+"retried device_block failed with return(%d) for handle(0x%04x)\n"
-+"retried device_unblock failed with return(%d) for handle(0x%04x)\n"
-+"Retry write of %d bytes at EOM.\n"
-+"Rewinding tape.\n"
-+"%s: BLKFLSBUF [0x1261]\n"
-+"%s: cdb indicated=%d, IO sent=%d bytes\n"
-+"%s: CDROM_GET_CAPABILITY [0x5331]\n"
-+"%s: cmd=0x%x\n"
-+"%s: command%s found\n"
-+"%s: compare_write: cdb indicated=%u, IO sent=%d bytes\n"
-+"scsi-1 drive"
-+"scsi3-mmc drive: %dx/%dx %s%s%s%s%s%s\n"
-+"SCSI device is removed\n"
-+"scsi_dma_map failed: request for %d bytes!\n"
-+"%s: %d device(s) found in host\n"
-+"%s: %d device(s) found in target\n"
-+"%s: %d device(s) found\n"
-+"%s: enclosure level(0x%04x),connector name( %s)\n"
-+"SEND DIAGNOSTIC result: %8x\n"
-+"Sending FORMAT MEDIUM\n"
-+"Sense: %2x %2x %2x %2x %2x %2x %2x %2x\n"
-+"set ignore_delay_remove for handle(0x%04x)\n"
-+"Set queue's max_sector to: %u\n"
-+"Setting block size to %d bytes.\n"
-+"Setting block to %d and partition to %d.\n"
-+"Setting density code to %x.\n"
-+"Setting drive buffer code to %d.\n"
-+"sg_add_sfp: bufflen=%d, k_use_sg=%d\n"
-+"sg_add_sfp: sfp=0x%p\n"
-+"sg_alloc: dev=%d \n"
-+"sg_build_indirect: buff_size=%d, blk_size=%d\n"
-+"sg_build_indirect: k=%d, num=%d, ret_sz=%d\n"
-+"sg_build_indirect: k_use_sg=%d, rem_sz=%d\n"
-+"sg_build_reserve: req_size=%d\n"
-+"sg_cmd_done: pack_id=%d, res=0x%x\n"
-+"sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n"
-+"sg_common_write: start_req err=%d\n"
-+"sg_device_destroy\n"
-+"sg_fasync: mode=%d\n"
-+"sg_finish_rem_req: res_used=%d\n"
-+"sg_ioctl: cmd=0x%x\n"
-+"sg_link_reserve: BAD size\n"
-+"sg_link_reserve: size=%d\n"
-+"sg_mmap starting, vm_start=%p, len=%d\n"
-+"sg_new_write: queue full\n"
-+"sg_open: flags=0x%x\n"
-+"sg_poll: res=0x%x\n"
-+"sg_read: count=%d\n"
-+"sg_read_oxfer: num_read_xfer=%d\n"
-+"sg_release\n"
-+"sg_remove_scat: k=%d, pg=0x%p\n"
-+"sg_remove_scat: k_use_sg=%d\n"
-+"sg_remove_sfp:    bufflen=%d, k_use_sg=%d\n"
-+"sg_remove_sfp: sfp=0x%p\n"
-+"sg_start_req: dxfer_len=%d\n"
-+"sg_unlink_reserve: req->k_use_sg=%d\n"
-+"sg_vma_fault: offset=%lu, scatg=%d\n"
-+"sg_write: count=%d\n"
-+"sg_write: queue full\n"
-+"sg_write:   scsi opcode=0x%02x, cmd_size=%d\n"
-+"%s: handle(0x%04x), sas_addr(0x%016llx), phy(%d), device_name(0x%016llx)\n"
-+"%s: handle(0x%04x), wwid(0x%016llx), pd_count(%d), type(%s)\n"
-+"%s: handle(0x%04x), wwid(0x%016llx), port(%d)\n"
-+"%s: idr allocation Sg_device failure: %d\n"
-+"%s: kmalloc Sg_device failure\n"
-+"%s: max_queue=%d exceeded, %s\n"
-+"SMID: 0x%x\n"
-+"%s: non-zero result=0x%x\n"
-+"%s: num_in_q=%d +1, %s%s\n"
-+"%socking drive door.\n"
-+"%s: Opcode 0x%x not%s\n"
-+"Spacing tape %s over %d %s.\n"
-+"Spacing to end of recorded medium.\n"
-+"%s : pcie_device->starget set to starget @ %d\n"
-+"%s: qdepth=%d, num_in_q=%d\n"
-+"%s raid component\n"
-+"%s reports: Not ready: %s\n"
-+"%s reports: Unit attention: %s\n"
-+"%s : sas_device->starget set to starget @ %d\n"
-+"%s: sense_buffer is NULL\n"
-+"%s:  [sense_key,asc,ascq]: [0x5,0x%x,0x0] %c byte=%d, bit=%d\n"
-+"%s:  [sense_key,asc,ascq]: [0x%x,0x%x,0x%x]\n"
-+"%s: %s: Fetch header+scatter_list, lbdof_blen=%u\n"
-+"%s: %s: k=%d  LBA=0x%llx num=%u  sg_off=%u\n"
-+"%s skip device_block for SES handle(0x%04x)\n"
-+"%s: %s: LBA range descriptors don't fit\n"
-+"%s: %s: LB Data Offset field bad\n"
-+"%s: %s: lb size=%u, IO sent=%d bytes\n"
-+"%s %s: [%s] Adjusting the sector count from its reported value: %llu\n"
-+"%s %s: [%s] Asking for cache data failed\n"
-+"%s %s: [%s] Assuming drive cache: write back\n"
-+"%s %s: [%s] Assuming drive cache: write through\n"
-+"%s %s: [%s] Assuming Write Enabled\n"
-+"%s %s: [%s] Asymmetric access state changed"
-+"%s %s: [%s] ATO Got wrong page\n"
-+"%s %s: [%s] Attached SCSI %sdisk\n"
-+"%s %s: [%s] Cache data unavailable\n"
-+"%s %s: [%s] Capacity data has changed"
-+"%s %s: [%s] Device offlined - not ready after error recovery\n"
-+"%s %s: [%s] device reset\n"
-+"%s %s: [%s] Disabling DIF Type %u protection\n"
-+"%s %s: [%s] Disabling FUA\n"
-+"%s %s: [%s] Enabling DIF Type %u protection\n"
-+"%s %s: [%s] event %d eaten due to OOM\n"
-+"%s %s: [%s] failed to add class device: %d\n"
-+"%s %s: [%s] failed to add device: %d\n"
-+"%s %s: [%s] failed to configure device\n"
-+"%s %s: [%s] Failed to register bsg queue, errno=%d\n"
-+"%s %s: [%s] formatted with unsupported protection type %u. Disabling disk!\n"
-+"%s %s: [%s] getting Control mode page failed, assume no ATO\n"
-+"%s %s: [%s] Host-%s zoned block device\n"
-+"%s %s: [%s] ignoring write to deprecated queue_type attribute"
-+"%s %s: [%s] Illegal state transition %s->%s"
-+"%s %s: [%s] Incomplete mode parameter data\n"
-+"%s %s: [%s] Inquiry data has changed"
-+"%s %s: [%s] in wrong state %s to complete scan\n"
-+"%s %s: [%s] ioctl_internal_command: ILLEGAL REQUEST asc=0x%x ascq=0x%x\n"
-+"%s %s: [%s] ioctl_internal_command return code = %x\n"
-+"%s %s: [%s] IOCTL Releasing command\n"
-+"%s %s: [%s] Ioctl returned  0x%x\n"
-+"%s %s: [%s] %llu %d-byte logical blocks: (%s/%s)\n"
-+"%s %s: [%s] lun%llu has a LUN larger than allowed by the host adapter\n"
-+"%s %s: [%s] Missing header in MODE_SENSE response\n"
-+"%s %s: [%s] Mode parameters changed"
-+"%s %s: [%s] Mode Sense: %4ph\n"
-+"%s %s: [%s] No Caching mode page found\n"
-+"%s %s: [%s] Notifying upper driver of completion (result %x)\n"
-+"%s %s: [%s] Optimal transfer size %u bytes\n"
-+"%s %s: [%s] Optimal transfer size %u bytes not a multiple of physical block size (%u bytes)\n"
-+"%s %s: [%s] Optimal transfer size %u bytes < PAGE_SIZE (%u bytes)\n"
-+"%s %s: [%s] Optimal transfer size %u logical blocks > dev_max (%u logical blocks)\n"
-+"%s %s: [%s] Optimal transfer size %u logical blocks > sd driver limit (%u logical blocks)\n"
-+"%s %s: [%s] Parameters changed"
-+"%s %s: [%s] physical block alignment offset: %u\n"
-+"%s %s: [%s] Power-on or device reset occurred\n"
-+"%s %s: [%s] PR command failed: %d\n"
-+"%s %s: [%s] rejecting I/O to dead device\n"
-+"%s %s: [%s] rejecting I/O to offline device\n"
-+"%s %s: [%s] reservation conflict\n"
-+"%s %s: [%s] %s %.8s %.16s %.4s PQ: %d ANSI: %d%s\n"
-+"%s %s: [%s] %s: BDR failed\n"
-+"%s %s: [%s] %s: correcting incorrect peripheral device type 0x%x for W-LUN 0x%16xhN\n"
-+"%s %s: [%s] SCSI disk (sd) name length exceeded.\n"
-+"%s %s: [%s] scsi scan: consider passing scsi_mod.dev_flags=%s:%s:0x240 or 0x1000240\n"
-+"%s %s: [%s] scsi scan: %d byte inquiry failed.  Consider BLIST_INQUIRY_36 for this device\n"
-+"%s %s: [%s] scsi scan: device exists on %s\n"
-+"%s %s: [%s] scsi scan: INQUIRY pass %d length %d\n"
-+"%s %s: [%s] scsi scan: INQUIRY %s with code 0x%x\n"
-+"%s %s: [%s] scsi scan: peripheral device type of 31, no device added\n"
-+"%s %s: [%s] scsi scan: peripheral qualifier of 3, device not added\n"
-+"%s %s: [%s] scsi scan: REPORT LUN scan\n"
-+"%s %s: [%s] scsi scan: REPORT LUNS %s (try %d) result 0x%x\n"
-+"%s %s: [%s] scsi scan: Sending REPORT LUNS to (try %d)\n"
-+"%s %s: [%s] sd_check_events\n"
-+"%s %s: [%s] sd_ioctl: disk=%s, cmd=0x%x\n"
-+"%s %s: [%s] sd_open\n"
-+"%s %s: [%s] sd_probe: memory exhausted.\n"
-+"%s %s: [%s] sd_probe\n"
-+"%s %s: [%s] sd_release\n"
-+"%s %s: [%s] sd_revalidate_disk: Memory allocation failure.\n"
-+"%s %s: [%s] sd_revalidate_disk\n"
-+"%s %s: [%s] Sector size 0 reported, assuming 512.\n"
-+"%s %s: [%s] Sense not available.\n"
-+"%s %s: [%s] Spinning up disk..."
-+"%s %s: [%s] %s: Result: hostbyte=0x%02x driverbyte=0x%02x\n"
-+"%s %s: [%s] %s: Result: hostbyte=%s driverbyte=%s\n"
-+"%s %s: [%s] %s: Sending BDR\n"
-+"%s %s: [%s] %s: Sending START_UNIT\n"
-+"%s %s: [%s] %s: skip BDR, past eh deadline\n"
-+"%s %s: [%s] %s: skip START_UNIT, past eh deadline\n"
-+"%s %s: [%s] %s: skip test device, past eh deadline"
-+"%s %s: [%s] %s: START_UNIT failed\n"
-+"%s %s: [%s] %s: state %d <> %d\n"
-+"%s %s: [%s] Starting disk\n"
-+"%s %s: [%s] Stopping disk\n"
-+"%s %s: [%s] supports TCG Opal\n"
-+"%s %s: [%s] Synchronizing SCSI cache\n"
-+"%s %s: [%s] Test WP failed, assume Write Enabled\n"
-+"%s %s: [%s] Truncating mode parameter data from %d to %d bytes\n"
-+"%s %s: [%s] Trying ioctl with scsi command %d\n"
-+"%s %s: [%s] %u-byte physical blocks\n"
-+"%s: %s: sum of blocks > data provided\n"
-+"%s %s: [%s] Unaligned partial completion (resid=%u, sector_sz=%u)\n"
-+"%s %s: [%s] unblocking device at zero depth\n"
-+"%s %s: [%s] Unexpected response from lun %llu while scanning, scan aborted\n"
-+"%s %s: [%s] Unit Not Ready\n"
-+"%s %s: [%s] unlocking floptical drive\n"
-+"%s %s: [%s] Unsupported sector size %d.\n"
-+"%s %s: [%s] Uses READ/WRITE(6), disabling FUA\n"
-+"%s %s: [%s] Using 0xffffffff as device size\n"
-+"%s %s: [%s] Very big device. Trying to use READ CAPACITY(16).\n"
-+"%s %s: [%s] Warning! Received an indication that the LUN assignments on this target have changed. The Linux SCSI layer does not automatically remap LUN assignments.\n"
-+"%s %s: [%s] Warning! Received an indication that the LUN reached a thin provisioning soft threshold.\n"
-+"%s %s: [%s] Warning! Received an indication that the operating parameters on this target have changed. The Linux SCSI layer does not automatically adjust these parameters.\n"
-+"%s %s: [%s] Write cache: %s, read cache: %s, %s\n"
-+"%s %s: [%s] Write Protect is %s\n"
-+"%s %s voltag: 0x%x => \"%s\"\n"
-+"%s: tag=%#x, cmd %s\n"
-+"st: Can't allocate device descriptor.\n"
-+"st: Can't allocate new tape buffer. Device not attached.\n"
-+"st: Can't allocate statistics.\n"
-+"Stepping over filemark %s failed.\n"
-+"Stepping over filemark %s.\n"
-+"st: out of memory. Device not attached.\n"
-+"strange observation, the queue depth is (%d) meanwhile fw queue depth (%d)\n"
-+"%s: try direct i/o: %s (alignment %d B)\n"
-+"switch_partition at close failed.\n"
-+"%s: write: cdb indicated=%u, IO sent=%d bytes\n"
-+"    sysv: %d nowait: %d sili: %d nowait_filemark: %d\n"
-+"Tagged Command Queueing is being disabled\n"
-+"Tape error while reading.\n"
-+"target reset issued for invalid devhandle\n"
-+"TARGET RESET not supported\n"
-+"task abort issued for invalid devhandle\n"
-+"TASK ABORT not supported\n"
-+"task abort: %s scmd(0x%p)\n"
-+"TLR disabled\n"
-+"TLR %s\n"
-+"Trying to change partition from %d to %d\n"
-+"type #1 (mt): 0x%x+%d [medium transport]\n"
-+"type #2 (st): 0x%x+%d [storage]\n"
-+"type #3 (ie): 0x%x+%d [import/export]\n"
-+"type #4 (dt): 0x%x+%d [data transfer]\n"
-+"type #%d (v%d): 0x%x+%d [%s, vendor specific]\n"
-+"Unable to attach sg device type=%d, minor number exceeds %d\n"
-+"unknown vendor code (%i), not initialized ?\n"
-+"Unloading tape.\n"
-+"Unprotected RD to DIF device\n"
-+"Unprotected WR to DIF device\n"
-+"unsupported sector size %d."
-+"Updating partition number in status.\n"
-+"Visited block %d for partition %d saved.\n"
-+"Write Buffer failure %x\n"
-+"Write not multiple of tape block size.\n"
-+"Write protected\n"
-+"Writing %d filemarks.\n"
-+"Writing %d setmarks.\n"
-+"Wrong diagnostic page; asked for %d got %u\n"
-+"Zero returned for first BLANK CHECK after EOF.\n"
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index 03c8fb1795c2..f9ee957072c3 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -2334,7 +2334,6 @@ mptctl_hp_hostinfo(MPT_ADAPTER *ioc, unsigned long arg, unsigned int data_size)
+ 	ToolboxIstwiReadWriteRequest_t	*IstwiRWRequest;
+ 	MPT_FRAME_HDR		*mf = NULL;
+ 	unsigned long		timeleft;
+-	int			retval;
+ 	u32			msgcontext;
+ 
+ 	/* Reset long to int. Should affect IA64 and SPARC only
+@@ -2488,7 +2487,6 @@ mptctl_hp_hostinfo(MPT_ADAPTER *ioc, unsigned long arg, unsigned int data_size)
+ 	ioc->add_sge((char *)&IstwiRWRequest->SGL,
+ 	    (MPT_SGE_FLAGS_SSIMPLE_READ|4), buf_dma);
+ 
+-	retval = 0;
+ 	SET_MGMT_MSG_CONTEXT(ioc->ioctl_cmds.msg_context,
+ 				IstwiRWRequest->MsgContext);
+ 	INITIALIZE_MGMT_STATUS(ioc->ioctl_cmds.status)
+@@ -2498,7 +2496,6 @@ mptctl_hp_hostinfo(MPT_ADAPTER *ioc, unsigned long arg, unsigned int data_size)
+ 	timeleft = wait_for_completion_timeout(&ioc->ioctl_cmds.done,
+ 			HZ*MPT_IOCTL_DEFAULT_TIMEOUT);
+ 	if (!(ioc->ioctl_cmds.status & MPT_MGMT_STATUS_COMMAND_GOOD)) {
+-		retval = -ETIME;
+ 		printk(MYIOC_s_WARN_FMT "%s: failed\n", ioc->name, __func__);
+ 		if (ioc->ioctl_cmds.status & MPT_MGMT_STATUS_DID_IOCRESET) {
+ 			mpt_free_msg_frame(ioc, mf);
 -- 
-2.35.1
+2.17.1
 
