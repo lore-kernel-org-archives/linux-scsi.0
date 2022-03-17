@@ -2,190 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E64CC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Mar 2022 08:46:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73F3BC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Mar 2022 08:46:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231467AbiCQIrj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Mar 2022 04:47:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35024 "EHLO
+        id S231478AbiCQIrq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Mar 2022 04:47:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231477AbiCQIri (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 04:47:38 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7600F1C404A
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Mar 2022 01:46:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1647506781;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=sVx9DgD8AwAJ8+xHbwqIFqUi1dP3yjGM90jTXU92h6o=;
-        b=JcOWtwWcmcamaAT0mIAc+hlrG5AvD97EDvvTyyNIsxJvjXHgzJo0A0cA8FPz15mJxa001I
-        fCgyiirt9fJjYOpAr4DXdEzmX3vv33IHpprPay36JGUGMQUNUlFcalnUVeBy4k8F1QO53D
-        39QlTl9d6dRxSqxxx/QCfUX/gJT6LWA=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-635-7I8ftN2EOIe68vrg6AndoA-1; Thu, 17 Mar 2022 04:46:20 -0400
-X-MC-Unique: 7I8ftN2EOIe68vrg6AndoA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 5987B1C03385;
-        Thu, 17 Mar 2022 08:46:18 +0000 (UTC)
-Received: from localhost (unknown [10.39.194.252])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9FB7153CF;
-        Thu, 17 Mar 2022 08:46:13 +0000 (UTC)
-Date:   Thu, 17 Mar 2022 08:46:12 +0000
-From:   Stefan Hajnoczi <stefanha@redhat.com>
-To:     Randy Dunlap <rdunlap@infradead.org>
-Cc:     linux-kernel@vger.kernel.org,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Amit Shah <amit@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Eli Cohen <eli@mellanox.com>,
-        Saeed Mahameed <saeedm@nvidia.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Pablo Neira Ayuso <pablo@netfilter.org>,
-        Jozsef Kadlecsik <kadlec@netfilter.org>,
-        Florian Westphal <fw@strlen.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Felipe Balbi <felipe.balbi@linux.intel.com>,
-        =?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Krzysztof Opasiak <k.opasiak@samsung.com>,
-        Igor Kotrasinski <i.kotrasinsk@samsung.com>,
-        Valentina Manea <valentina.manea.m@gmail.com>,
-        Shuah Khan <shuah@kernel.org>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-        Joachim Fritschi <jfritschi@freenet.de>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Karol Herbst <karolherbst@gmail.com>,
-        Pekka Paalanen <ppaalanen@gmail.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, netdev@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, nouveau@lists.freedesktop.org,
-        virtualization@lists.linux-foundation.org, x86@kernel.org
-Subject: Re: [PATCH 5/9] virtio-scsi: eliminate anonymous module_init &
- module_exit
-Message-ID: <YjL1VK4F53hKntam@stefanha-x1.localdomain>
-References: <20220316192010.19001-1-rdunlap@infradead.org>
- <20220316192010.19001-6-rdunlap@infradead.org>
+        with ESMTP id S231476AbiCQIro (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 04:47:44 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F0961CABD6
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Mar 2022 01:46:25 -0700 (PDT)
+Received: from fraeml705-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KK11m25dhz67KmH;
+        Thu, 17 Mar 2022 16:45:32 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml705-chm.china.huawei.com (10.206.15.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Thu, 17 Mar 2022 09:46:21 +0100
+Received: from [10.47.84.96] (10.47.84.96) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 17 Mar
+ 2022 08:46:21 +0000
+Message-ID: <c474939d-91b7-1c30-d74c-5f473b464260@huawei.com>
+Date:   Thu, 17 Mar 2022 08:46:20 +0000
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="3AeFxmP0HGbN94e3"
-Content-Disposition: inline
-In-Reply-To: <20220316192010.19001-6-rdunlap@infradead.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.11.54.5
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v5] scsi:spraid: initial commit of Ramaxel spraid driver
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Yanling Song <songyl@ramaxel.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>
+References: <20220314025315.96674-1-songyl@ramaxel.com>
+ <ecf79a5c-49f4-cf0e-edf4-9363c8b60bb5@huawei.com>
+ <19494279-78f9-ca48-3c09-091df342cd63@acm.org>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <19494279-78f9-ca48-3c09-091df342cd63@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.47.84.96]
+X-ClientProxiedBy: lhreml735-chm.china.huawei.com (10.201.108.86) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 16/03/2022 23:03, Bart Van Assche wrote:
+>> [ ... ]
+>> why do you need a separate header file? why not put all this in the 
+>> only C file?
+> 
+> The C file is already very big. I like the approach of keeping 
+> declarations and structure definitions in a header file because that 
+> makes the code easier to navigate.
 
---3AeFxmP0HGbN94e3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+If the file is huge and hard to navigate then I would suggest multiple C 
+files with a common header file to share defines.
 
-On Wed, Mar 16, 2022 at 12:20:06PM -0700, Randy Dunlap wrote:
-> Eliminate anonymous module_init() and module_exit(), which can lead to
-> confusion or ambiguity when reading System.map, crashes/oops/bugs,
-> or an initcall_debug log.
->=20
-> Give each of these init and exit functions unique driver-specific
-> names to eliminate the anonymous names.
->=20
-> Example 1: (System.map)
->  ffffffff832fc78c t init
->  ffffffff832fc79e t init
->  ffffffff832fc8f8 t init
->=20
-> Example 2: (initcall_debug log)
->  calling  init+0x0/0x12 @ 1
->  initcall init+0x0/0x12 returned 0 after 15 usecs
->  calling  init+0x0/0x60 @ 1
->  initcall init+0x0/0x60 returned 0 after 2 usecs
->  calling  init+0x0/0x9a @ 1
->  initcall init+0x0/0x9a returned 0 after 74 usecs
->=20
-> Fixes: 4fe74b1cb051 ("[SCSI] virtio-scsi: SCSI driver for QEMU based virt=
-ual machines")
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc: "Michael S. Tsirkin" <mst@redhat.com>
-> Cc: Jason Wang <jasowang@redhat.com>
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Cc: Stefan Hajnoczi <stefanha@redhat.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: virtualization@lists.linux-foundation.org
-> ---
->  drivers/scsi/virtio_scsi.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->=20
-> --- lnx-517-rc8.orig/drivers/scsi/virtio_scsi.c
-> +++ lnx-517-rc8/drivers/scsi/virtio_scsi.c
-> @@ -988,7 +988,7 @@ static struct virtio_driver virtio_scsi_
->  	.remove =3D virtscsi_remove,
->  };
-> =20
-> -static int __init init(void)
-> +static int __init virtio_scsi_init(void)
->  {
->  	int ret =3D -ENOMEM;
-> =20
-> @@ -1020,14 +1020,14 @@ error:
->  	return ret;
->  }
-> =20
-> -static void __exit fini(void)
-> +static void __exit virtio_scsi_fini(void)
->  {
->  	unregister_virtio_driver(&virtio_scsi_driver);
->  	mempool_destroy(virtscsi_cmd_pool);
->  	kmem_cache_destroy(virtscsi_cmd_cache);
->  }
-> -module_init(init);
-> -module_exit(fini);
-> +module_init(virtio_scsi_init);
-> +module_exit(virtio_scsi_fini);
-> =20
->  MODULE_DEVICE_TABLE(virtio, id_table);
->  MODULE_DESCRIPTION("Virtio SCSI HBA driver");
->=20
+But I don't feel too strongly about that.
 
-Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
+However, I would be keen on seeing a leaner driver.
 
---3AeFxmP0HGbN94e3
-Content-Type: application/pgp-signature; name="signature.asc"
+> 
+>>> +struct spraid_completion {
+>>> +    __le32 result;
+>>
+>> I think that __le32 is used for userspace common defines, while we use 
+>> le32 for internal to kernel
+> 
+> Really? I'm not aware of a le32 type in the Linux kernel.
 
------BEGIN PGP SIGNATURE-----
+That's my mistake - you're right. I was thinking of u32 vs __u32
 
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmIy9VQACgkQnKSrs4Gr
-c8geUQgAw2TOHcSEnWK4BJz/IELyWnu6TzVbAIIgDLtl/bUwEsgSwAljdB7zw8K/
-6MBcR6ner6oRCLk6Vx0ltNqrAeaxRZOAPqnj1uBP+FZ13in/KYZNz4XkdVZpRbDj
-Kqgko1egvrgmbZlvwbRA15UnNntchizS8VfXd45jyGUFLD/zl1JvIKGDVU31vt7i
-ZLPUWxMdPG2LwGpgBmTEQnX9LQbK0/d2+f8AEnMAzn1SmIKp8ZgCTYwQrpuD/1xU
-eqYoCjQVhNAk7kwkL3XeL/1m0d3b+UVvNRIGaEQBo2Ia8ZJcub7kua6KFb3wfYyK
-AQM+SWYvzoTl9ws3BUL4BqsEgEItBA==
-=iao2
------END PGP SIGNATURE-----
+> 
+>>> +#define SPRAID_DRV_VERSION    "1.0.0.0"
+>>
+>> I don't see much value in driver versioning. As I see, the kernel 
+>> version is the driver version.
+> 
 
---3AeFxmP0HGbN94e3--
+thanks,
+John
 
