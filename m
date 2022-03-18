@@ -2,61 +2,61 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D98AC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Mar 2022 00:58:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7913AC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Mar 2022 01:00:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230194AbiCRA7k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Mar 2022 20:59:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49810 "EHLO
+        id S231334AbiCRBBo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Mar 2022 21:01:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229599AbiCRA7k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 20:59:40 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1347D19C594;
-        Thu, 17 Mar 2022 17:58:23 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id s11so8180904pfu.13;
-        Thu, 17 Mar 2022 17:58:23 -0700 (PDT)
+        with ESMTP id S230418AbiCRBBl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 21:01:41 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9A9B2571BC;
+        Thu, 17 Mar 2022 18:00:23 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id w8so5826120pll.10;
+        Thu, 17 Mar 2022 18:00:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=OjGU9QY9zP7JqWUA2HLfdO0yP2EkBCjSzBVQExa48+M=;
-        b=mBkrn2+VFQ5GqR4/ZqQ+d4mESCBPTgl0y+1hkn8prKgW206jTpxpkPyCM6a0BTi3h+
-         aXlXOby3u47XhQHQ6dV33GzYj1cIifrBT81FiOl2s9B+8xu+q8zO2bsVrno6Q3WfER6W
-         2rob2ls8JJ+kbocrJ+bO+bXP131GyoW2th0ujjd11P4mWmuU1KjLYtIavgFHn/ZVzvQr
-         to8TPvfw4GYxlBaTPYojv8xo/TVaf846rY5QNcqt14zN9REBh8r7slN2Q0YYK5ZLqKgo
-         FDWwuuSoKcMmcEosC0JEVNKG2C/pzqaClTOfZopn3KAPEF3gBdQzNCMZXJLuMlWU+HOa
-         XiSw==
+        bh=Z/J9CokFaMWfDdDSCmsPm7z7x/bhc1KUNd91iLyx4us=;
+        b=h7nPdjpO1hEjwiQzFnGxhI/CSN/AX6VC2zBItKnJbVQIxfWIw/8xhOwz+kybAPq2M8
+         rO0ri8t+zNDHG4g5+Ek6uHlWy5JT7xdTh9fDUZrlK5Y+JYZLsdv3WevQTP7eNN3PnQKh
+         uUhyV0ON3/2DjpcCovD+ot07LfBmVsul2zqIBYBlyhAFzR98vTM8xP+nI9TPJkusbkMu
+         GHuK5FaNRxhhxrhKbva4qkDVeGs5/YDUVDx9diWCr4Z0RHXTULExEsh+CGUO3FbnWY2M
+         Ii8e5fimlLCYR4L5SuaJyniuTj1cUMZzGTfVnvq5eyVK741kZROgxkxto9CUVJ/scbUG
+         YiYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=OjGU9QY9zP7JqWUA2HLfdO0yP2EkBCjSzBVQExa48+M=;
-        b=MPbkzAriAyLUXJBcEDoo86r/7h19EkhbTI1knyuabJgTP9Da8zlywtic0Sut3O8hh6
-         f4G+zbLwQYnFsNlJPlOjSAcKfo02AWrR7v1BX3j6w5T/dfRxtpq5ejfOXlBUDjJ7HPG0
-         G7bNcGlY4Yc+vqlfMMtBD4z+nqKIMx9rNVOjx82ghA0Z27OKldecsKYmT1zKOabPX8cl
-         4eIvQlgZoO6Mc8BeNKDJnLMcsWV28m+cRgPDD81tPkvVy3b//jIkVDlwIXwQ76rkjIxT
-         Q6QCj4Od65zBi43boHhl/lm4vtekwOm+0uMIei37QkD1WRwET7LIRAIJFakGqocWke0N
-         M3RQ==
-X-Gm-Message-State: AOAM533ib4VVbKEEr5dCqoWL202v3FtiCn4n9iu2ZJjpO4SKCU4f0PPi
-        lbtMbrhJ9o4P9KvaIa1/Dgc=
-X-Google-Smtp-Source: ABdhPJxFxlJRWclENUosyKaF5XSJ9FNLT76IEUwe4TLTXMUNJChv2tL+q+e5mZojvCACwwK5zA5r9Q==
-X-Received: by 2002:a63:c156:0:b0:37c:9955:ab24 with SMTP id p22-20020a63c156000000b0037c9955ab24mr5946676pgi.90.1647565102551;
-        Thu, 17 Mar 2022 17:58:22 -0700 (PDT)
+        bh=Z/J9CokFaMWfDdDSCmsPm7z7x/bhc1KUNd91iLyx4us=;
+        b=10qhhUOXwvxl8Ft74TuYHgMvWAjeRLeOQ2hx0nCOFWEog2LrTTMFJSr2B+82QQJ+7C
+         CKD9x0akpn5KNr6BWcohw41rZ8rmqlrDkVwKg6/1IdniZgNO3YRcrEMSh4cCkKsWHa40
+         YboAPwE2G68tktZ5tfUmoJ+9iTXaQuhuTNstVozaMfXJq2q5cTADrartjyrVr91UcfWA
+         B2gCwE2NoD5EvLR8Gqt0yuqthHOFIsC0iaurcw9BYe8MDEJuz89J9NuMBBSnxXtjg0o4
+         Q3DCrllTeSgOA0swdrh+l3IdiD7bHMzMgs2xu3Qb7WpDsaz3K7sHivhWjlDZyDqX6NGo
+         1/Sg==
+X-Gm-Message-State: AOAM533Vlp5SVMXEe1UILJyzSMd5/+fpPjcubxYOItrvtPRb66uDIcYL
+        eAThYY4BiQiJY4BDbDsyBNA=
+X-Google-Smtp-Source: ABdhPJzTs2LArTNlI52yXaaAH03JCqT60+Ya2opm1KFlq9+sRudQkliigmD0YQH4yEx3U09IH8jQ0Q==
+X-Received: by 2002:a17:90b:1647:b0:1c3:b18c:793f with SMTP id il7-20020a17090b164700b001c3b18c793fmr18978533pjb.134.1647565223519;
+        Thu, 17 Mar 2022 18:00:23 -0700 (PDT)
 Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id h7-20020a056a001a4700b004f70b86fd28sm7788636pfv.134.2022.03.17.17.58.20
+        by smtp.gmail.com with ESMTPSA id y21-20020a056a00191500b004f78813b2d6sm8399768pfi.178.2022.03.17.18.00.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Mar 2022 17:58:22 -0700 (PDT)
+        Thu, 17 Mar 2022 18:00:23 -0700 (PDT)
 From:   cgel.zte@gmail.com
 X-Google-Original-From: chi.minghao@zte.com.cn
-To:     james.smart@broadcom.com
-Cc:     dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Minghao Chi <chi.minghao@zte.com.cn>,
+To:     brking@us.ibm.com
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Minghao Chi <chi.minghao@zte.com.cn>,
         Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi: lpfc: Remove useless DMA-32 fallback configuration
-Date:   Fri, 18 Mar 2022 00:58:17 +0000
-Message-Id: <20220318005817.2141903-1-chi.minghao@zte.com.cn>
+Subject: [PATCH] scsi: ipr: Remove useless DMA-32 fallback configuration
+Date:   Fri, 18 Mar 2022 01:00:18 +0000
+Message-Id: <20220318010018.2142089-1-chi.minghao@zte.com.cn>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -66,41 +66,36 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Minghao Chi <chi.minghao@zte.com.cn>
 
-As stated in [1], dma_set_mask() with a 64-bit mask will never fail if
+As stated in [1], dma_set_mask() with a 64-bit mask never fails if
 dev->dma_mask is non-NULL.
 So, if it fails, the 32 bits case will also fail for the same reason.
 
 Simplify code and remove some dead code accordingly.
 
-[1]: https://lkml.org/lkml/2021/6/7/398
+[1]: https://lore.kernel.org/linux-kernel/YL3vSPK5DXTNvgdx@infradead.org/#t
 
 Reported-by: Zeal Robot <zealci@zte.com.cn>
 Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/ipr.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index f5c363f663f6..e793c4183499 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -9187,8 +9187,6 @@ lpfc_sli_pci_mem_setup(struct lpfc_hba *phba)
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 104bee9b3a9d..dd8b32b00c9b 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -10261,11 +10261,8 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
  
- 	/* Set the device DMA mask size */
- 	error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
--	if (error)
--		error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
- 	if (error)
- 		return error;
- 	error = -ENODEV;
-@@ -11714,8 +11712,6 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
- 
- 	/* Set the device DMA mask size */
- 	error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
--	if (error)
--		error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
- 	if (error)
- 		return error;
+ 	if (ioa_cfg->sis64) {
+ 		rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+-		if (rc < 0) {
++		if (rc < 0)
+ 			dev_dbg(&pdev->dev, "Failed to set 64 bit DMA mask\n");
+-			rc = dma_set_mask_and_coherent(&pdev->dev,
+-						       DMA_BIT_MASK(32));
+-		}
+ 	} else
+ 		rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
  
 -- 
 2.25.1
