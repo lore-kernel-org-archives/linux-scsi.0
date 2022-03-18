@@ -2,131 +2,161 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E4DAC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Mar 2022 14:53:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58CC4C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Mar 2022 15:51:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237598AbiCROyt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Mar 2022 10:54:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56698 "EHLO
+        id S237444AbiCRPwS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Mar 2022 11:52:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237231AbiCROyo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2022 10:54:44 -0400
-Received: from APC01-PSA-obe.outbound.protection.outlook.com (mail-psaapc01on2118.outbound.protection.outlook.com [40.107.255.118])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 417ABF8472;
-        Fri, 18 Mar 2022 07:53:25 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PSx2cPKGL5cPwM++SHMOB+xp7f/xmEzwMQZtat9ew9xU8wVOfcdos15y8w5H9q2JmApNOLirtfck22wrrLK2Gd6PccfUzsUWJGUhgJIbSqp8nkFheAWUHz4Bb7FBvNthCh3SeAlWaNDIHA5Tp9n3sUoJu0nejpdtu5IkwDDgJMyu01t4gBJbKDMcZ3kvd33DtuGzjJbSL8DBCXme4XxPb3TgYvShIugU4BT+AktZKIgwZOW+vBTUDAr/6jmHA0det/5ww4dtdgU+poYXLTju+kXIoallp6XS81dCbMHucG4vn3jsaWW0wfAJMg/mA1KKzAJGgk+4C6aE3LZTwejZ5w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kIEyoua8qyU/lxq2P0udYtP2K8pGJqUyWzlOAmWWvkY=;
- b=JtSWIgArqp2zv9rujeiRfJYOlQ9spgj6Zbdz6E2O17cjXnqbruShmRCkb0Iyz2l0OzH36+OXagjIRCN//u5XqfFMrpZ0jcqqmfIs+V7yLdtZPLfyP2pIf63fz61gAMFa5u1OPqdlDJl57p7CUYtAYVLLNbR4yS6QrR3rQSF6SSdRzHGrHJyhSMUb2svHBt1JBfWvNS0cHY005AMgfJxRH0VwN7ixn0QuDX1mnuQ4G5Kist5UlBX5fgbFuUccLc0Mqt3EUrqN3RvWseXNoZIa8UiIF0mPRnFzOZJvFumvTKnf51sptJB4OMbQe0Nk7gOhGc+e1zLzvKjtsKzdiceNOw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo0.onmicrosoft.com;
- s=selector2-vivo0-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kIEyoua8qyU/lxq2P0udYtP2K8pGJqUyWzlOAmWWvkY=;
- b=oZthGSdSdO8edagatrH0vb4PrTgqbv4wa+XPAZ51BGxH0eAp0pftYezylvXqmShQGSx0FiTUhW/B39z54fBS82GiUB2u/gHrZehSiImGwihQI+VyJUsk4UumgNPZL1+pQSezJhJbv6qxoG6NqYNyNGufg5dtIozE7PBbOxStxaM=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from SG2PR06MB3367.apcprd06.prod.outlook.com (2603:1096:4:78::19) by
- SI2PR06MB4473.apcprd06.prod.outlook.com (2603:1096:4:156::12) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5081.15; Fri, 18 Mar 2022 14:53:20 +0000
-Received: from SG2PR06MB3367.apcprd06.prod.outlook.com
- ([fe80::9d3f:ff3b:1948:d732]) by SG2PR06MB3367.apcprd06.prod.outlook.com
- ([fe80::9d3f:ff3b:1948:d732%4]) with mapi id 15.20.5081.017; Fri, 18 Mar 2022
- 14:53:20 +0000
-From:   Wan Jiabing <wanjiabing@vivo.com>
-To:     James Smart <james.smart@broadcom.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
+        with ESMTP id S237664AbiCRPwR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Mar 2022 11:52:17 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9581E2EAF43
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Mar 2022 08:50:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1647618657;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=EA6rKw0mpZS/aykq/0IZss6wMcc+T85vi5DhFZF9ONo=;
+        b=UCmclOQUaR6DsHHXUiIMni/q3Uq/fMESrUObFI/jaeVq5G4A+jbj+iWV3SVi9cTRFYfzi0
+        Pmn1/8avB0Turokn6fUnrZ65Hf4x0QOKEBwyyDJULeMk36IUY7LhwkEkWMpdk85p/A3Lfi
+        d934dYWSubQv32c7yL/VTKnyOf4rp2w=
+Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
+ [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-574-KhqJoQwcMUedV3k770tFBw-1; Fri, 18 Mar 2022 11:50:56 -0400
+X-MC-Unique: KhqJoQwcMUedV3k770tFBw-1
+Received: by mail-qv1-f69.google.com with SMTP id z2-20020a056214060200b00440d1bc7815so6342113qvw.1
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Mar 2022 08:50:56 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=EA6rKw0mpZS/aykq/0IZss6wMcc+T85vi5DhFZF9ONo=;
+        b=gStGyGUQZckpXBQ8GjifnTpQQIR7v0y/WevqAXCP/hXBqN9KHuuEN1OYyE7mt+F1Ch
+         sDBJxj9N0FVvkTCnbbG782DLbWjBtU5GNp0iB44NwU/C6FkwqhxrFodY1m3TzPrhW7yj
+         WKaD1Zqm/qgd6VyRgFTlo/C90+JT8Xptl/YC09/749K8ZiYm+eQeNmRCzWwX5fv5zW8J
+         EUoH201mpTPM21F/xGqDUYnxnyHD2+0S5FFCvfoQT90ofzkhC7HLQabkYG+Y4hjbRuXf
+         71/YBr2matTuVlIFoRYaFrvuXKdk/4HTr7yZvKxHSoEBB4JIUqD8UzubTQms/TkysGp6
+         BGZg==
+X-Gm-Message-State: AOAM530m48IvSw1prYqxLs6+5ypcddUCuO9IKZJr5AsCGN9HqU2c+VBt
+        ci0/1279fs1XulDUvl7sMHYHn7AyaGTfOKmBLwCHR1kHRJBUtbLZFk+O6+bjftwPkQ4L6G5/9Qw
+        p1dwthffP4tuX+0+e/JwSkw==
+X-Received: by 2002:a05:6214:1742:b0:440:e595:e467 with SMTP id dc2-20020a056214174200b00440e595e467mr6421907qvb.120.1647618655909;
+        Fri, 18 Mar 2022 08:50:55 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxgIejkdzkLMwxBDMtlAiE9/alrgh/1pdd6MyvTOu+dCk94bCjIfSzYEnDl0BXAJKTnQN94zA==
+X-Received: by 2002:a05:6214:1742:b0:440:e595:e467 with SMTP id dc2-20020a056214174200b00440e595e467mr6421897qvb.120.1647618655597;
+        Fri, 18 Mar 2022 08:50:55 -0700 (PDT)
+Received: from emilne (nat-pool-bos-t.redhat.com. [66.187.233.206])
+        by smtp.gmail.com with ESMTPSA id c1-20020a05620a0ce100b0067e0cd1746fsm3816349qkj.51.2022.03.18.08.50.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 18 Mar 2022 08:50:54 -0700 (PDT)
+Message-ID: <de2f3c75e472dd2dc550731a5f23ffaa1de18a66.camel@redhat.com>
+Subject: Re: [PATCH] scsi: add __GFP_ZERO flag for blk_rq_map_kern in
+ function sg_scsi_ioctl
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     Haimin Zhang <tcs.kernel@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Wan Jiabing <wanjiabing@vivo.com>,
-        Daniel Wagner <dwagner@suse.de>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: elx: efct: remove unnecessary memset in efct_io
-Date:   Fri, 18 Mar 2022 22:52:20 +0800
-Message-Id: <20220318145230.1031-1-wanjiabing@vivo.com>
-X-Mailer: git-send-email 2.35.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: HK2PR02CA0154.apcprd02.prod.outlook.com
- (2603:1096:201:1f::14) To SG2PR06MB3367.apcprd06.prod.outlook.com
- (2603:1096:4:78::19)
+        linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Date:   Fri, 18 Mar 2022 11:50:53 -0400
+In-Reply-To: <20220216164223.55546-1-tcs.kernel@gmail.com>
+References: <20220216164223.55546-1-tcs.kernel@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 5adab59b-bb97-4a1a-5b18-08da08ef0a14
-X-MS-TrafficTypeDiagnostic: SI2PR06MB4473:EE_
-X-Microsoft-Antispam-PRVS: <SI2PR06MB447301CD3C79969F6BF9D6D7AB139@SI2PR06MB4473.apcprd06.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: LlNUv7bzlFD81ar83x8ETsqVqJXzR0qJGfjKs7cnY32E42e1pGyszaPo1EYw0GSwiWzCbZzPPzZ4JFivYQwz1xpAPTOY2y6fnWtxhKpyG60ijK4rRmGy5SClyNRBCMD+En2e47bCijYRF1+0JfhDW+NbQnTChEcJwLmohDWDaGbCLCiiASVS+YGzguhLM3IHfVcCjxvyfXvapjDteuAc0wy1olEyq+W0XElwlqFfUhokA8SY4bWvInQMXcLXQRyOhbTSPGzQPBVN2dT6vXNLCtSG6UXd/fxVz+d6IadbpafG+LKcLncrVR8x6t9R4wFI+iYQjkpoDsH+nqPmtjWfNJaWBODY1doesRQlRrMH8EN8h1kixMMiLRzBdIUoZnQe4GE/daG7qNqskjmrfOpykLzWV0bJo7yv1TZlCvPpQbIl9sXSIOnKi1OY/0gSHkVf7iP01O8TLWslLhu3wNGQ1Jszo34cnMuRguR62FV/weRmECIDzhUQ/IGEknZWLi2UienKqbGtj5Mzh6XstfSb+TZhow7VYvVrpQ1sjhCXa8oV1YuCEAJuLpW5HsIzD1W0gSEkCp5PnLyTLXPMa0ibKHBmQimMrC9ROI+2a7XrIiWDazhHK3y32mJHJ724ontN+Ovt1mM6lUCsKQsvylEXyMNfOwzOA0/udmXxCB+jui57NQns/H2+R4dbfZH6UkLDBPi3pOwZAh1eB3uT1kE/Dw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SG2PR06MB3367.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(8936002)(4744005)(38350700002)(38100700002)(2906002)(8676002)(66476007)(66946007)(66556008)(2616005)(6506007)(316002)(83380400001)(6512007)(508600001)(52116002)(86362001)(36756003)(5660300002)(1076003)(186003)(26005)(110136005)(6486002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?7H10e6MrFkWqUAi4NusPGAClIAUnXrd/TNcjgevLkqf24RzTlQKZ6De2etcy?=
- =?us-ascii?Q?p5vFFal9hRgzXct3KZRpk2jCqnDPIXi8LhPLdYwrSNrEKbLaalD2pc9vcgg5?=
- =?us-ascii?Q?zj984jHLsqG9IpftcmdnJPtSjOusQeqpb+gN9160wI1EiWTSs9RWOuJL7bhk?=
- =?us-ascii?Q?gYho0hLNNEVQAYA1elQrHA0iOmXCLGZ0gN+E85l3INM6zNAW+XXzaciX/5V4?=
- =?us-ascii?Q?EbpSAnhRLMIuPgkXmjJVTa2evphnLdmp0f7UWuItqffPpQEq7gbGH+txHoJd?=
- =?us-ascii?Q?R0cu7F9XQjeBqGT6Pc1iX6tePfZxCdupkpeOGVpBG7+1+zAX2QflErS4pBg0?=
- =?us-ascii?Q?jHd1mrvURbj5mmF826whr6vCtmQjsXu1AVmEHqLG1HLVVKfeJt3X0XaAuJ2g?=
- =?us-ascii?Q?ySNhnlRXtDIdM5PBSNcnZPYrK6WJmHTtfN5F7yMU8UecAyo+rJ+IksF3eSjX?=
- =?us-ascii?Q?ks3xUHxvD6+v/bdKwnSX6Pf0IWV6J96A8fRf9OpwWrbMq1cnPH9fvni1hyXx?=
- =?us-ascii?Q?NMwsGh/4BSC9f49QS1HTfXSui4RFKThBgcFHgEwvwWzIeq8ZM9njuFM1c7ic?=
- =?us-ascii?Q?uLKG1hE7U8Wkyx3O0XrCW1LyXZCy/VmAGecTDU+gvUd+bluw9M9gujbYJalh?=
- =?us-ascii?Q?9Vls6SqQN6yOhq7zD8o0gpD61e43SnMbiorxbi55DIumbVonH5JHNGSLg0/A?=
- =?us-ascii?Q?sM/RJ9d+UOzAO+RCq6+D0o/UChsg5btRkygB1c8RifsuL8xFxC4eYIudDqYg?=
- =?us-ascii?Q?mlrhbVIRjf4h+++Hsj83dbwWUIk6TM/Wiw3h8QXWoF6jl93oQtnlSwEKpDYs?=
- =?us-ascii?Q?eEV6S7sInXUvUdArbYHmEycHXhbzsNtHhnwCMCijipVrSUEtxrdPINww/Hxl?=
- =?us-ascii?Q?EPCyICM9VarftFNuW4J8IUWY5pwMgxEVGbcgTdAMhRGYwi8ogdpLe4745uYD?=
- =?us-ascii?Q?VEmSgorHCZpsMvOPeE1dhqkEb4HxTK03bryx2aJMdLVWBNj6b0ZqRNhg0TCE?=
- =?us-ascii?Q?vhYevHJt+tt+zas9dhVnGLZdHxMrb3WBFOwbMEZy/vf0m1y3CrNed5dHMnUt?=
- =?us-ascii?Q?H0rPpmafR7j6l6vnLoSteqVlRsJwMWeMrS6lFzRajI73OVJXZRKKZOG6UQPg?=
- =?us-ascii?Q?NeAAnAmRXqSfrwEYRQmcVbHy9FUfpA3Uj69JXq2ZU5xHlY+6PYSXXfj67S6Y?=
- =?us-ascii?Q?HyqE0VMllTxeDd4BmOs73sLFaUvKM/3WYQxdVRdemoqXLJTYDprq0hd7aahF?=
- =?us-ascii?Q?0y3V8h6QtxhXU4x63WxfHldRQ2+LTW1JylAPDgxWfRXxqkjdUFpbfU7dK/Zt?=
- =?us-ascii?Q?zU7Fy+67gNeg5ZFWVu8gRSBFGoNd21etTpaPrj9MyxV8ofxue8tNZPj61hal?=
- =?us-ascii?Q?coIGOE0j+38j9Yl2WoZQkgLjDR5u6IK9KPdtwCzj+NskVFR/i81rOLczsw47?=
- =?us-ascii?Q?WwBgRaWeeryUoP9tJ1yIRq6HAYVPK1Zq?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5adab59b-bb97-4a1a-5b18-08da08ef0a14
-X-MS-Exchange-CrossTenant-AuthSource: SG2PR06MB3367.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Mar 2022 14:53:18.9408
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0ZlqbsfBz+GhGICaRu6pvvPMLPpM2muLiY344Z1NIWQl3NqVKRhGrHsrlpedmmPDr4HlK9AC3c8SopGU4JMVLA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SI2PR06MB4473
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-io->sgl is allocated by kzalloc(). The memory is set to zero.
-It is unnecessary to call memset again.
+On Thu, 2022-02-17 at 00:42 +0800, Haimin Zhang wrote:
+> Add __GFP_ZERO flag for blk_rq_map_kern in function sg_scsi_ioctl to
+> avoid a kernel information leak issue. This issue can cause the content of
+> local variable buffer which was passed to function blk_rq_map_kern was
+> rewritten. At last, it can be leaked to the user buffer.
+> 
+> Reported-by: TCS Robot <tcs_robot@tencent.com>
+> Signed-off-by: Haimin Zhang <tcs.kernel@gmail.com>
+> ---
+> This can cause a kernel-info-leak problem.
+> 0. This problem occurred in function scsi_ioctl. If the parameter cmd is SCSI_IOCTL_SEND_COMMAND, the function scsi_ioctl will call sg_scsi_ioctl to further process.
+> 1. In function sg_scsi_ioctl, it creates a scsi request and calls blk_rq_map_kern to map kernel data to a request.
+> 3. blq_rq_map_kern calls bio_copy_kern to request a bio.
+> 4. bio_copy_kern calls alloc_page to request the buffer of a bio. In the case of reading, it wouldn't fill anything into the buffer.
+> 
+> ```
+> __alloc_pages+0xbbf/0x1090 build/../mm/page_alloc.c:5409
+> alloc_pages+0x8a5/0xb80
+> bio_copy_kern build/../block/blk-map.c:449 [inline]
+> blk_rq_map_kern+0x813/0x1400 build/../block/blk-map.c:640
+> sg_scsi_ioctl build/../drivers/scsi/scsi_ioctl.c:618 [inline]
+> scsi_ioctl+0x40c0/0x4600 build/../drivers/scsi/scsi_ioctl.c:932
+> sg_ioctl_common build/../drivers/scsi/sg.c:1112 [inline]
+> sg_ioctl+0x3351/0x4c10 build/../drivers/scsi/sg.c:1165
+> vfs_ioctl build/../fs/ioctl.c:51 [inline]
+> __do_sys_ioctl build/../fs/ioctl.c:874 [inline]
+> __se_sys_ioctl+0x2df/0x4a0 build/../fs/ioctl.c:860
+> __x64_sys_ioctl+0xd8/0x110 build/../fs/ioctl.c:860
+> do_syscall_x64 build/../arch/x86/entry/common.c:51 [inline]
+> do_syscall_64+0x54/0xd0 build/../arch/x86/entry/common.c:82
+> entry_SYSCALL_64_after_hwframe+0x44/0xae
+> ```
+> 
+> 5. Then this request will be sent to the disk driver. When bio is finished, bio_copy_kern_endio_read will copy the readed content back to parameter data from the bio.
+> But if the block driver didn't process this request, the buffer of bio is still unitialized.
+> 
+> ```
+> memcpy_from_page build/../include/linux/highmem.h:346 [inline]
+> memcpy_from_bvec build/../include/linux/bvec.h:207 [inline]
+> bio_copy_kern_endio_read+0x4a3/0x620 build/../block/blk-map.c:403
+> bio_endio+0xa7f/0xac0 build/../block/bio.c:1491
+> req_bio_endio build/../block/blk-mq.c:674 [inline]
+> blk_update_request+0x1129/0x22d0 build/../block/blk-mq.c:742
+> scsi_end_request+0x119/0xe40 build/../drivers/scsi/scsi_lib.c:543
+> scsi_io_completion+0x329/0x810 build/../drivers/scsi/scsi_lib.c:939
+> scsi_finish_command+0x6e3/0x700 build/../drivers/scsi/scsi.c:199
+> scsi_complete+0x239/0x640 build/../drivers/scsi/scsi_lib.c:1441
+> blk_complete_reqs build/../block/blk-mq.c:892 [inline]
+> blk_done_softirq+0x189/0x260 build/../block/blk-mq.c:897
+> __do_softirq+0x1ee/0x7c5 build/../kernel/softirq.c:558
+> ```
+> 
+> 6. Finally, the internal buffer's content is copied to the user buffer which is specified by the parameter sic->data of sg_scsi_ioctl.
+> _copy_to_user+0x1c9/0x270 build/../lib/usercopy.c:33
+> copy_to_user build/../include/linux/uaccess.h:209 [inline]
+> sg_scsi_ioctl build/../drivers/scsi/scsi_ioctl.c:634 [inline]
+> scsi_ioctl+0x44d9/0x4600 build/../drivers/scsi/scsi_ioctl.c:932
+> sg_ioctl_common build/../drivers/scsi/sg.c:1112 [inline]
+> sg_ioctl+0x3351/0x4c10 build/../drivers/scsi/sg.c:1165
+> vfs_ioctl build/../fs/ioctl.c:51 [inline]
+> __do_sys_ioctl build/../fs/ioctl.c:874 [inline]
+> __se_sys_ioctl+0x2df/0x4a0 build/../fs/ioctl.c:860
+> __x64_sys_ioctl+0xd8/0x110 build/../fs/ioctl.c:860
+> do_syscall_x64 build/../arch/x86/entry/common.c:51 [inline]
+> do_syscall_64+0x54/0xd0 build/../arch/x86/entry/common.c:82
+> entry_SYSCALL_64_after_hwframe+0x44/0xae
+> 
+>  drivers/scsi/scsi_ioctl.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+> index e13fd380deb6..e92836f4bbd6 100644
+> --- a/drivers/scsi/scsi_ioctl.c
+> +++ b/drivers/scsi/scsi_ioctl.c
+> @@ -607,7 +607,7 @@ static int sg_scsi_ioctl(struct request_queue *q, fmode_t mode,
+>  	}
+>  
+>  	if (bytes) {
+> -		err = blk_rq_map_kern(q, rq, buffer, bytes, GFP_NOIO);
+> +		err = blk_rq_map_kern(q, rq, buffer, bytes, GFP_NOIO | __GFP_ZERO);
+>  		if (err)
+>  			goto error;
+>  	}
 
-Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
----
- drivers/scsi/elx/efct/efct_io.c | 1 -
- 1 file changed, 1 deletion(-)
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-diff --git a/drivers/scsi/elx/efct/efct_io.c b/drivers/scsi/elx/efct/efct_io.c
-index c3247b951a76..c612f0a48839 100644
---- a/drivers/scsi/elx/efct/efct_io.c
-+++ b/drivers/scsi/elx/efct/efct_io.c
-@@ -62,7 +62,6 @@ efct_io_pool_create(struct efct *efct, u32 num_sgl)
- 			return NULL;
- 		}
- 
--		memset(io->sgl, 0, sizeof(*io->sgl) * num_sgl);
- 		io->sgl_allocated = num_sgl;
- 		io->sgl_count = 0;
- 
--- 
-2.35.1
 
