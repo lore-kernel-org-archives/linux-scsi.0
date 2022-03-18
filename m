@@ -2,103 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B25AAC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Mar 2022 00:39:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D98AC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Mar 2022 00:58:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231224AbiCRAkt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Mar 2022 20:40:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35626 "EHLO
+        id S230194AbiCRA7k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Mar 2022 20:59:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229482AbiCRAks (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 20:40:48 -0400
-Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71913E994F;
-        Thu, 17 Mar 2022 17:39:30 -0700 (PDT)
-Received: by mail-wr1-x42a.google.com with SMTP id j26so9728968wrb.1;
-        Thu, 17 Mar 2022 17:39:30 -0700 (PDT)
+        with ESMTP id S229599AbiCRA7k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2022 20:59:40 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1347D19C594;
+        Thu, 17 Mar 2022 17:58:23 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id s11so8180904pfu.13;
+        Thu, 17 Mar 2022 17:58:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=7gsTkrihCJqnEHPeTUREyY+grPIvlwOYy2RYZrHaUHI=;
-        b=FLPx3v9O3yp794Fc9m8+3Fms180PmpDjbtrLO0Xu1i8qXrAd/9enHHAeShbg4oSb7t
-         md9G09lQyD5JyMP0ZOdKfNy4zxT1/xQDszXVsxP0F/x1wl9DLVVpLchZbrsin0Bk66P1
-         6vop8DECEbBHRj1ikoWDW3T6qUgGUzdvVDfOLlDTvrq+71zXZi95SfBq+N42khglWfuX
-         awl0h72ycsBAS7Vc2MvCwZJOkRdTx/T8lBcQ45hjGnfQ3EcTD2ycbkgFp385z3MYIC6P
-         APBPni1nM3HPfu7A1b4AouHvNpwkbgHS7k3Dshz85Qn2R5p6/e7AC7alVu8nhg2wvHKX
-         yjMg==
+        bh=OjGU9QY9zP7JqWUA2HLfdO0yP2EkBCjSzBVQExa48+M=;
+        b=mBkrn2+VFQ5GqR4/ZqQ+d4mESCBPTgl0y+1hkn8prKgW206jTpxpkPyCM6a0BTi3h+
+         aXlXOby3u47XhQHQ6dV33GzYj1cIifrBT81FiOl2s9B+8xu+q8zO2bsVrno6Q3WfER6W
+         2rob2ls8JJ+kbocrJ+bO+bXP131GyoW2th0ujjd11P4mWmuU1KjLYtIavgFHn/ZVzvQr
+         to8TPvfw4GYxlBaTPYojv8xo/TVaf846rY5QNcqt14zN9REBh8r7slN2Q0YYK5ZLqKgo
+         FDWwuuSoKcMmcEosC0JEVNKG2C/pzqaClTOfZopn3KAPEF3gBdQzNCMZXJLuMlWU+HOa
+         XiSw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=7gsTkrihCJqnEHPeTUREyY+grPIvlwOYy2RYZrHaUHI=;
-        b=h9r3Z7u5YrIMSxiZdaOgTqp+vaTPBcz7edOmEw36FGZa1qStVbF8CnI80P8VDdqOyx
-         z/HGxa9oeAqmBS52HR8cd0cJvFGv9LnJAu5upXRuNfFBV4WoCGg4ze1YWlV6aup2HGCe
-         HQAdA5Ol9llMwGVYu4AjlFdcPt7bDGUZelWmeBASUI6nOc+16RnM6C1k9f14+hZ6f4YW
-         A0/T3t5BGZT5slpgXWiRwSwmRJNIi39mJey54aRwPjotYBY8TAae64rhVHqsNbqiUcmD
-         05Lc5Cz59JCMXgirCsORy9bRuynPvF9Mz4W2Zb2wLuIf0A6bi2ZxybG/D616RJvuUagv
-         NXcA==
-X-Gm-Message-State: AOAM530f17/pLSJ0gxFjPeneVQgbVqe6OslyjcYZjVFBymUzy6dDmpIp
-        62OAli+eD4YJ4XwDXQrclYw=
-X-Google-Smtp-Source: ABdhPJwoQZOjUskNt5TU0ZyJE8Ju4uZEdL59fCI7gDoWZSkg2jY3/M90ILkKoeR3EvRnfG/qXKEatQ==
-X-Received: by 2002:a05:6000:18ac:b0:203:ecad:a203 with SMTP id b12-20020a05600018ac00b00203ecada203mr4249744wri.177.1647563969021;
-        Thu, 17 Mar 2022 17:39:29 -0700 (PDT)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id 2-20020a1c1902000000b00380d3873d6asm5533293wmz.43.2022.03.17.17.39.28
+        bh=OjGU9QY9zP7JqWUA2HLfdO0yP2EkBCjSzBVQExa48+M=;
+        b=MPbkzAriAyLUXJBcEDoo86r/7h19EkhbTI1knyuabJgTP9Da8zlywtic0Sut3O8hh6
+         f4G+zbLwQYnFsNlJPlOjSAcKfo02AWrR7v1BX3j6w5T/dfRxtpq5ejfOXlBUDjJ7HPG0
+         G7bNcGlY4Yc+vqlfMMtBD4z+nqKIMx9rNVOjx82ghA0Z27OKldecsKYmT1zKOabPX8cl
+         4eIvQlgZoO6Mc8BeNKDJnLMcsWV28m+cRgPDD81tPkvVy3b//jIkVDlwIXwQ76rkjIxT
+         Q6QCj4Od65zBi43boHhl/lm4vtekwOm+0uMIei37QkD1WRwET7LIRAIJFakGqocWke0N
+         M3RQ==
+X-Gm-Message-State: AOAM533ib4VVbKEEr5dCqoWL202v3FtiCn4n9iu2ZJjpO4SKCU4f0PPi
+        lbtMbrhJ9o4P9KvaIa1/Dgc=
+X-Google-Smtp-Source: ABdhPJxFxlJRWclENUosyKaF5XSJ9FNLT76IEUwe4TLTXMUNJChv2tL+q+e5mZojvCACwwK5zA5r9Q==
+X-Received: by 2002:a63:c156:0:b0:37c:9955:ab24 with SMTP id p22-20020a63c156000000b0037c9955ab24mr5946676pgi.90.1647565102551;
+        Thu, 17 Mar 2022 17:58:22 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id h7-20020a056a001a4700b004f70b86fd28sm7788636pfv.134.2022.03.17.17.58.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Mar 2022 17:39:28 -0700 (PDT)
-From:   Colin Ian King <colin.i.king@gmail.com>
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
-        llvm@lists.linux.dev
-Subject: [PATCH] scsi: message: fusion: mptbase: remove redundant variable dmp
-Date:   Fri, 18 Mar 2022 00:39:27 +0000
-Message-Id: <20220318003927.81471-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.35.1
+        Thu, 17 Mar 2022 17:58:22 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: chi.minghao@zte.com.cn
+To:     james.smart@broadcom.com
+Cc:     dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Minghao Chi <chi.minghao@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] scsi: lpfc: Remove useless DMA-32 fallback configuration
+Date:   Fri, 18 Mar 2022 00:58:17 +0000
+Message-Id: <20220318005817.2141903-1-chi.minghao@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Variable dmp is being assigned a value that is never read, the
-variable is redundant and can be removed.
+From: Minghao Chi <chi.minghao@zte.com.cn>
 
-Cleans up clang scan build warning:
-drivers/message/fusion/mptbase.c:6667:39: warning: Although
-the value stored to 'dmp' is used in the enclosing expression,
-the value is never actually read from 'dmp' [deadcode.DeadStores]
+As stated in [1], dma_set_mask() with a 64-bit mask will never fail if
+dev->dma_mask is non-NULL.
+So, if it fails, the 32 bits case will also fail for the same reason.
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+Simplify code and remove some dead code accordingly.
+
+[1]: https://lkml.org/lkml/2021/6/7/398
+
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
 ---
- drivers/message/fusion/mptbase.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index e90adfa57950..9b3ba2df71c7 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -6658,13 +6658,13 @@ static int mpt_summary_proc_show(struct seq_file *m, void *v)
- static int mpt_version_proc_show(struct seq_file *m, void *v)
- {
- 	u8	 cb_idx;
--	int	 scsi, fc, sas, lan, ctl, targ, dmp;
-+	int	 scsi, fc, sas, lan, ctl, targ;
- 	char	*drvname;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f5c363f663f6..e793c4183499 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -9187,8 +9187,6 @@ lpfc_sli_pci_mem_setup(struct lpfc_hba *phba)
  
- 	seq_printf(m, "%s-%s\n", "mptlinux", MPT_LINUX_VERSION_COMMON);
- 	seq_printf(m, "  Fusion MPT base driver\n");
+ 	/* Set the device DMA mask size */
+ 	error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+-	if (error)
+-		error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+ 	if (error)
+ 		return error;
+ 	error = -ENODEV;
+@@ -11714,8 +11712,6 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
  
--	scsi = fc = sas = lan = ctl = targ = dmp = 0;
-+	scsi = fc = sas = lan = ctl = targ = 0;
- 	for (cb_idx = MPT_MAX_PROTOCOL_DRIVERS-1; cb_idx; cb_idx--) {
- 		drvname = NULL;
- 		if (MptCallbacks[cb_idx]) {
+ 	/* Set the device DMA mask size */
+ 	error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+-	if (error)
+-		error = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+ 	if (error)
+ 		return error;
+ 
 -- 
-2.35.1
+2.25.1
 
