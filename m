@@ -2,106 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A40C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Mar 2022 05:37:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAC65C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Mar 2022 05:39:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242194AbiCSFjL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Mar 2022 01:39:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39456 "EHLO
+        id S242214AbiCSFks (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Mar 2022 01:40:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232502AbiCSFjK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 01:39:10 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A62A2E8CCC;
-        Fri, 18 Mar 2022 22:37:50 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id kx13-20020a17090b228d00b001c6715c9847so7647074pjb.1;
-        Fri, 18 Mar 2022 22:37:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id;
-        bh=Omp7vR9UcPrhGXZZpNbngBh0wCNzl1wDtEI82prc/lc=;
-        b=bmoGxWaTYLUaMlvx9G+VUSqVIpABDwNeQ6kj69pe7fDdPWNC1730AzbZ6sdkLWxsj7
-         3h19relKK8LCaFodHpJok4FaIVBShCEi5Vb9m16cx2f1XDHy2CIH+omY0gpDv9eW8dGY
-         ifxt5y+r/s2NvLvmGm170cjMXuYgIyBUqWhCc42r8EMHKHk/hr19mSl/sm8bfsrv1PkC
-         oJNdw35AUuMTB89eiNFzhqIC99Itsorj2mL4zDSl+os7nS1LbYwEpUF9kEonMDCzcpqG
-         NqXqH4uslvUCu+uae1f4NhFRavZSbCVE2Mb9k/LeuAKMZbsQ26pBwDYnIgdAVNNPN+UE
-         +XIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=Omp7vR9UcPrhGXZZpNbngBh0wCNzl1wDtEI82prc/lc=;
-        b=d17LHz3INK7RrPHRRoRcl0OrWgj0/oFwYjou0c2FjZnvZh9tGLn30qAHq3GczD8wE/
-         Y9T3EBnilunOgCi1R/7SyOn1etiy/zFu9OQnI25NJPMVpq4Rd59XHBTzxpfV983PGiZv
-         ZmPIFKWRClZcCQ3fqrEOhLloIqJ92fTswpX2lVG56iN0Vnk0VWI0MYJb7imdLlGnLuha
-         vWCIjwfxHJc+Fb8Sjp+2t1KkpDGR/V73nL287HtW1HsUv9i5ncdvZGQxkfDalJfGMHl/
-         d9mX2q3CegNzmbnHg9fwJ+ha23pgNWG+NbdqRzRN7ABbepKo718TwSVVbXm+KN/jyvg/
-         fGsw==
-X-Gm-Message-State: AOAM532xf4NfSqY5mbucH7v6RZCwE3ilVkrZPlONVPpp2qzF8Rpquc5d
-        HqPzcRm4MrobvuvFX6EmFeAwo1rZ0W2j8g==
-X-Google-Smtp-Source: ABdhPJzWPl4fvH7MhTUKr8+OP7pIxF32LhVhaVTDL+8BTSSKSXDiGaWfO+6tvSc2yzEIgXeaOSnLtg==
-X-Received: by 2002:a17:902:c215:b0:153:8d90:a108 with SMTP id 21-20020a170902c21500b001538d90a108mr3025086pll.172.1647668269923;
-        Fri, 18 Mar 2022 22:37:49 -0700 (PDT)
-Received: from ubuntu.huawei.com ([119.3.119.18])
-        by smtp.googlemail.com with ESMTPSA id b21-20020a17090a551500b001b90ef40301sm10417101pji.22.2022.03.18.22.37.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Mar 2022 22:37:49 -0700 (PDT)
-From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     skashyap@marvell.com, jhasan@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Xiaomeng Tong <xiam0nd.tong@gmail.com>
-Subject: [PATCH] qedf: remove an unneeded NULL check on list iterator
-Date:   Sat, 19 Mar 2022 13:37:42 +0800
-Message-Id: <20220319053742.27443-1-xiam0nd.tong@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S232502AbiCSFkq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 01:40:46 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8D8972E29
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Mar 2022 22:39:25 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BFB1EB80122
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Mar 2022 05:39:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 50D34C340EC
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Mar 2022 05:39:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647668362;
+        bh=m/SOqU3ZATP8hMHQLJLfGawp+v3pGGrN27R9bOyj+ZU=;
+        h=From:To:Subject:Date:From;
+        b=Xa8zd1OJDLUSvRLK+O1fIqlpHCsQ5xHIo/lztZePx7QP4O01287FmpqKsveXTJs1k
+         +Cb7FVuXhcDRa83YjRtkXEE97RCfzfp5If3GuOxt6+Nnyfk+sbwu/cuf10y5y7060B
+         b7lTxfQovjjppSXgKbebzYoxM1jp9dOYIwNaLlrZHy5eIrbaSTgzqxSeLG17aF8XxT
+         kOLFg4Igm/HltPSvu3+ugRcweM0cVWNKfq8gfu9gkyFIgZbmqHMF4u6qDfolmUS51D
+         fqpU3PI/YqMxyZZgMIJrn9h+tuPSHpzuVIdVLUFe3hEcPrPiekLOyhwyR+lFWQ9TCB
+         MqUn37Ezeshzw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 3D306C05FD5; Sat, 19 Mar 2022 05:39:22 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 215701] New: [scsi]timing out command, waited 180s
+Date:   Sat, 19 Mar 2022 05:39:21 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: xqjcool@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression attachments.created
+Message-ID: <bug-215701-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The list iterator 'fcport' is always non-NULL so it doesn't need to be
-checked. Thus just remove the unnecessary NULL check. Also remove the
-unnecessary initializer because the list iterator is always initialized.
-And adjust the position of blank lines.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215701
 
-Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
----
- drivers/scsi/qedf/qedf_main.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+            Bug ID: 215701
+           Summary: [scsi]timing out command, waited 180s
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 3.10.0-514.26.2.el7.x86_64
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: xqjcool@gmail.com
+        Regression: No
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 6ad28bc8e948..1bfa30983b92 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -873,7 +873,7 @@ static int qedf_eh_device_reset(struct scsi_cmnd *sc_cmd)
- 
- bool qedf_wait_for_upload(struct qedf_ctx *qedf)
- {
--	struct qedf_rport *fcport = NULL;
-+	struct qedf_rport *fcport;
- 	int wait_cnt = 120;
- 
- 	while (wait_cnt--) {
-@@ -888,7 +888,7 @@ bool qedf_wait_for_upload(struct qedf_ctx *qedf)
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(fcport, &qedf->fcports, peers) {
--		if (fcport && test_bit(QEDF_RPORT_SESSION_READY,
-+		if (test_bit(QEDF_RPORT_SESSION_READY,
- 				       &fcport->flags)) {
- 			if (fcport->rdata)
- 				QEDF_ERR(&qedf->dbg_ctx,
-@@ -899,9 +899,9 @@ bool qedf_wait_for_upload(struct qedf_ctx *qedf)
- 					 "Waiting for fcport %p.\n", fcport);
- 			}
- 	}
-+
- 	rcu_read_unlock();
- 	return false;
--
- }
- 
- /* Performs soft reset of qedf_ctx by simulating a link down/up */
--- 
-2.17.1
+Created attachment 300581
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D300581&action=3Dedit
+system log about scsi issue
 
+We have encountered the following problems in the operation of our equipmen=
+t.
+
+
+
+-----------------------------
+[505412.987911] sd 2:0:0:0: timing out command, waited 180s
+[505412.987920] sd 2:0:0:0: [sda] FAILED Result: hostbyte=3DDID_OK
+driverbyte=3DDRIVER_OK
+[505412.987923] sd 2:0:0:0: [sda] CDB: Write(10) 2a 00 01 29 b4 e1 00 00 04=
+ 00
+[505412.987926] blk_update_request: I/O error, dev sda, sector 19510497
+[505412.987970] XFS (dm-0): metadata I/O error: block 0xd664e1 ("xlog_iodon=
+e")
+error 5 numblks 64
+[505412.988952] XFS (dm-0): xfs_do_force_shutdown(0x2) called from line 120=
+3 of
+file fs/xfs/xfs_log.c.  Return address =3D 0xffffffffa027a590
+[505412.988971] XFS (dm-0): Log I/O Error Detected.  Shutting down filesyst=
+em
+[505412.989365] XFS (dm-0): xfs_log_force: error -5 returned.
+[505412.989428] XFS (dm-0): Please umount the filesystem and rectify the
+problem(s)
+[505413.038058] XFS (dm-0): xfs_log_force: error -5 returned.
+--------------------------------
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
