@@ -2,89 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5385C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Mar 2022 04:27:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A40C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Mar 2022 05:37:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242095AbiCSE2b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Mar 2022 00:28:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36556 "EHLO
+        id S242194AbiCSFjL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Mar 2022 01:39:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242084AbiCSE23 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 00:28:29 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3C5D1D253D;
-        Fri, 18 Mar 2022 21:27:08 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id bc27so6407028pgb.4;
-        Fri, 18 Mar 2022 21:27:08 -0700 (PDT)
+        with ESMTP id S232502AbiCSFjK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 01:39:10 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A62A2E8CCC;
+        Fri, 18 Mar 2022 22:37:50 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id kx13-20020a17090b228d00b001c6715c9847so7647074pjb.1;
+        Fri, 18 Mar 2022 22:37:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id;
-        bh=YZMUZMRb13gxRVQlDqvdqmbrfa6neN3fcSPMrOn7PzI=;
-        b=Bew74swDcYqef96ehtkWNmKyQ5lC/TfXk7XTkZOOpfEj/GHCpfvpuCeYMedZ4DI9B9
-         045sYlK3LZMvy+5vNRi00+1KocmzQfDq33Pp2f+VEejt6HKXYeM6OzhQ97vfbP7TGLy4
-         tCmTRzqHfjl3mIehaHhNmmoKmVpn1sQudbV5j/xFY1j5/CA07PpAd/VOdcE94UgiQpSG
-         gmh/ZcYi2SL5SCMKhvosXB+/MQAaLXH3VQ7M5iY0Rqsc3fMPXZ18zmZRGlr55mvaS6OV
-         UhJiAzN7RbrDdMMm7T22o6o+LwFkYTnpJp2vVtUrVwmRO/DJ1NxFJo0zQDEC0bticwst
-         R1VQ==
+        bh=Omp7vR9UcPrhGXZZpNbngBh0wCNzl1wDtEI82prc/lc=;
+        b=bmoGxWaTYLUaMlvx9G+VUSqVIpABDwNeQ6kj69pe7fDdPWNC1730AzbZ6sdkLWxsj7
+         3h19relKK8LCaFodHpJok4FaIVBShCEi5Vb9m16cx2f1XDHy2CIH+omY0gpDv9eW8dGY
+         ifxt5y+r/s2NvLvmGm170cjMXuYgIyBUqWhCc42r8EMHKHk/hr19mSl/sm8bfsrv1PkC
+         oJNdw35AUuMTB89eiNFzhqIC99Itsorj2mL4zDSl+os7nS1LbYwEpUF9kEonMDCzcpqG
+         NqXqH4uslvUCu+uae1f4NhFRavZSbCVE2Mb9k/LeuAKMZbsQ26pBwDYnIgdAVNNPN+UE
+         +XIQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=YZMUZMRb13gxRVQlDqvdqmbrfa6neN3fcSPMrOn7PzI=;
-        b=uE5s36eX77JxXKZLseZ85CInyHx3WrQH6hrVEEqEtIL6GMZ2m5Xmgf70k6AJQOZKEC
-         MBSJRjjcIkqn280r73Qzc4c0M+bpk/XRnv0tkSvi0wh73qU4+iCu7Qw7Zxosy8lcICMI
-         38NjhI7XUwCWlS3UGj8Q3un0N2HjIcHTbis/Uyx+Arm8KN9kAjjb4xZI0emyc2cp2EW6
-         hVIhlGbkw/voqbXWR5SReCgL6kHajqDNRQYqvuKKOv2URdIIKEMpnSGX1xpbj5eXAlhi
-         cl8BB7hqQzX50XLZ3y/IJHUFqGsC2bV3kwK3D5VKzrLPl33DV70JOeticagRCrIMljhI
-         7c5w==
-X-Gm-Message-State: AOAM531nrQYnnGj13+L7JrbUoZtMa7fiyXv1ylA3gIH+ordVkHKrvyXB
-        8/EJp8UW+UXEYPKi7O4jr18=
-X-Google-Smtp-Source: ABdhPJyMJQoE3n6Xaxl4MY6y/hE9op+J2qQH/Gk9qr3ihyaEyHB1BClCeaYZcEfLxBUfDim/emz5HA==
-X-Received: by 2002:aa7:8104:0:b0:4fa:2091:d200 with SMTP id b4-20020aa78104000000b004fa2091d200mr13462127pfi.17.1647664028128;
-        Fri, 18 Mar 2022 21:27:08 -0700 (PDT)
+        bh=Omp7vR9UcPrhGXZZpNbngBh0wCNzl1wDtEI82prc/lc=;
+        b=d17LHz3INK7RrPHRRoRcl0OrWgj0/oFwYjou0c2FjZnvZh9tGLn30qAHq3GczD8wE/
+         Y9T3EBnilunOgCi1R/7SyOn1etiy/zFu9OQnI25NJPMVpq4Rd59XHBTzxpfV983PGiZv
+         ZmPIFKWRClZcCQ3fqrEOhLloIqJ92fTswpX2lVG56iN0Vnk0VWI0MYJb7imdLlGnLuha
+         vWCIjwfxHJc+Fb8Sjp+2t1KkpDGR/V73nL287HtW1HsUv9i5ncdvZGQxkfDalJfGMHl/
+         d9mX2q3CegNzmbnHg9fwJ+ha23pgNWG+NbdqRzRN7ABbepKo718TwSVVbXm+KN/jyvg/
+         fGsw==
+X-Gm-Message-State: AOAM532xf4NfSqY5mbucH7v6RZCwE3ilVkrZPlONVPpp2qzF8Rpquc5d
+        HqPzcRm4MrobvuvFX6EmFeAwo1rZ0W2j8g==
+X-Google-Smtp-Source: ABdhPJzWPl4fvH7MhTUKr8+OP7pIxF32LhVhaVTDL+8BTSSKSXDiGaWfO+6tvSc2yzEIgXeaOSnLtg==
+X-Received: by 2002:a17:902:c215:b0:153:8d90:a108 with SMTP id 21-20020a170902c21500b001538d90a108mr3025086pll.172.1647668269923;
+        Fri, 18 Mar 2022 22:37:49 -0700 (PDT)
 Received: from ubuntu.huawei.com ([119.3.119.18])
-        by smtp.googlemail.com with ESMTPSA id u37-20020a056a0009a500b004f820de3dcdsm10884887pfg.9.2022.03.18.21.27.04
+        by smtp.googlemail.com with ESMTPSA id b21-20020a17090a551500b001b90ef40301sm10417101pji.22.2022.03.18.22.37.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Mar 2022 21:27:07 -0700 (PDT)
+        Fri, 18 Mar 2022 22:37:49 -0700 (PDT)
 From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        daejun7.park@samsung.com, bvanassche@acm.org, beanhuo@micron.com,
-        keosung.park@samsung.com, linux-scsi@vger.kernel.org,
+Cc:     skashyap@marvell.com, jhasan@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Xiaomeng Tong <xiam0nd.tong@gmail.com>
-Subject: [PATCH] ufs: remove an unneed NULL check on list iterator
-Date:   Sat, 19 Mar 2022 12:26:57 +0800
-Message-Id: <20220319042657.21835-1-xiam0nd.tong@gmail.com>
+Subject: [PATCH] qedf: remove an unneeded NULL check on list iterator
+Date:   Sat, 19 Mar 2022 13:37:42 +0800
+Message-Id: <20220319053742.27443-1-xiam0nd.tong@gmail.com>
 X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The list iterator is always non-NULL so it doesn't need to be checked.
-Thus just remove the unnecessary NULL check.
+The list iterator 'fcport' is always non-NULL so it doesn't need to be
+checked. Thus just remove the unnecessary NULL check. Also remove the
+unnecessary initializer because the list iterator is always initialized.
+And adjust the position of blank lines.
 
 Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
 ---
- drivers/scsi/ufs/ufshpb.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/scsi/qedf/qedf_main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index 2d36a0715..a3db0ad60 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -869,12 +869,6 @@ static struct ufshpb_region *ufshpb_victim_lru_info(struct ufshpb_lu *hpb)
- 	struct ufshpb_region *rgn, *victim_rgn = NULL;
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 6ad28bc8e948..1bfa30983b92 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -873,7 +873,7 @@ static int qedf_eh_device_reset(struct scsi_cmnd *sc_cmd)
  
- 	list_for_each_entry(rgn, &lru_info->lh_lru_rgn, list_lru_rgn) {
--		if (!rgn) {
--			dev_err(&hpb->sdev_ufs_lu->sdev_dev,
--				"%s: no region allocated\n",
--				__func__);
--			return NULL;
--		}
- 		if (ufshpb_check_srgns_issue_state(hpb, rgn))
- 			continue;
+ bool qedf_wait_for_upload(struct qedf_ctx *qedf)
+ {
+-	struct qedf_rport *fcport = NULL;
++	struct qedf_rport *fcport;
+ 	int wait_cnt = 120;
  
+ 	while (wait_cnt--) {
+@@ -888,7 +888,7 @@ bool qedf_wait_for_upload(struct qedf_ctx *qedf)
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(fcport, &qedf->fcports, peers) {
+-		if (fcport && test_bit(QEDF_RPORT_SESSION_READY,
++		if (test_bit(QEDF_RPORT_SESSION_READY,
+ 				       &fcport->flags)) {
+ 			if (fcport->rdata)
+ 				QEDF_ERR(&qedf->dbg_ctx,
+@@ -899,9 +899,9 @@ bool qedf_wait_for_upload(struct qedf_ctx *qedf)
+ 					 "Waiting for fcport %p.\n", fcport);
+ 			}
+ 	}
++
+ 	rcu_read_unlock();
+ 	return false;
+-
+ }
+ 
+ /* Performs soft reset of qedf_ctx by simulating a link down/up */
 -- 
 2.17.1
 
