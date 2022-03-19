@@ -2,146 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F46FC433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Mar 2022 19:46:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0524DC43217
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Mar 2022 23:14:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244056AbiCSTsS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Mar 2022 15:48:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39572 "EHLO
+        id S244343AbiCSXQK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Mar 2022 19:16:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235161AbiCSTsS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 15:48:18 -0400
-Received: from bedivere.hansenpartnership.com (unknown [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 924C57A981;
-        Sat, 19 Mar 2022 12:46:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1647719149;
-        bh=NggC2udics5UD05JBQeUyOZDTgDjR09Jt7/lciYz3xY=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=XT1E0GSbI48qj55tXnuSPiciBxLtNjeIaCdUqTn+xrbYnY3ST3LOO2my4l/9yma0a
-         foqyF4iXkB2ykIt2CZzBs4+rhRVkLQmvgUy3KJcu6nLfnrn81995n4SpjHxWrLubsc
-         GC4pF1+2O0i2TfhnxgaxPBAxr44Bvy42gnmEoS/Q=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 5D6011285CBD;
-        Sat, 19 Mar 2022 15:45:49 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id zhyTaYH4fX1D; Sat, 19 Mar 2022 15:45:49 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1647719149;
-        bh=NggC2udics5UD05JBQeUyOZDTgDjR09Jt7/lciYz3xY=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=XT1E0GSbI48qj55tXnuSPiciBxLtNjeIaCdUqTn+xrbYnY3ST3LOO2my4l/9yma0a
-         foqyF4iXkB2ykIt2CZzBs4+rhRVkLQmvgUy3KJcu6nLfnrn81995n4SpjHxWrLubsc
-         GC4pF1+2O0i2TfhnxgaxPBAxr44Bvy42gnmEoS/Q=
-Received: from lingrow.int.hansenpartnership.com (c-67-166-174-65.hsd1.va.comcast.net [67.166.174.65])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id C02D71281F58;
-        Sat, 19 Mar 2022 15:45:48 -0400 (EDT)
-Message-ID: <2a71975c2888f30ddebff8aa509933bc87c1a552.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.17-rc8
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Sat, 19 Mar 2022 15:45:47 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        with ESMTP id S234512AbiCSXQJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 19:16:09 -0400
+Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92FF339B8F;
+        Sat, 19 Mar 2022 16:14:47 -0700 (PDT)
+Received: by mail-wm1-x32c.google.com with SMTP id 123-20020a1c1981000000b0038b3616a71aso6568915wmz.4;
+        Sat, 19 Mar 2022 16:14:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=nTQfK58lfNVp+J0LXWpfRWrYpUP0yrdZAkFT5Rd/9rE=;
+        b=Fpog2uLZ+xedDEcYM2+jMa9eO9VcpgfQ4T3seCP4UP7rCUsGsJU2EQkQe+ChljVG3M
+         30Lw3pdqCNfCQCuWRn4qQ+5x1qNbo1SUVB8oUmd9I1HRk7w1WHtOwSkrlBgQzCuFJVp3
+         tlFAKn/RQ2kwCGVG51UKWivM/eLDnDs3vDH7UZQayj5nbwKfW48y7Eb11M11olixrJzL
+         ObXHCuVji6eH4l+cB+rBNjWsNQ4KA+SHHJsQrLFjhdjAV1S6K63pxE63a7Sdy4rHbleO
+         jbQ41sBLzmABwhULfNGUKP40kAeO9od7wS7XZil4fq5ygvbBLv486aBjRaIwEdYejeK+
+         6Y4A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=nTQfK58lfNVp+J0LXWpfRWrYpUP0yrdZAkFT5Rd/9rE=;
+        b=hszGpVleitQNev2XLXJfVs8iW9B/032fhwlRl+anUcijK53sfb5mZDsSfplFM6EItW
+         +gZLqYeZGq5j7CLNTLROrvHYwplQG+fajyaQjDp4sCCANMNfdkwdvM4UhOshOPTOAB5S
+         jmpjuC4hMZG+mPEsEq0OxaAgM4pkYIEbl5wNl6ejdrn9DIHYMgE2yXdZI7X+K9H8u3Or
+         T02zBQShZ6FbsgSxhp5EsrBC4P0oZ25mmPRBICw6oVId6WdYy6WPgF2b9m4VAhAkEs8O
+         t8oCyWouPR1XcXK9QUq/RdHz/dMcsbNsTZULuXiwqjKlxix4WuUF4tJ5BznFoIt4qvt3
+         OKcQ==
+X-Gm-Message-State: AOAM533h0Zfe5ZDryn0Ewnzv+rH8EXztxJ1vpMejy7E2+nEL3n8hbvyq
+        UaPB0ECpBK3jUVsU6In6fdU=
+X-Google-Smtp-Source: ABdhPJxG/LUMlIE26DMoRWo47G0pHVBXXCSpct+Pg8H5rBhYwyTP1oG0aQdqwb3PMZdmXt8WsmRcRA==
+X-Received: by 2002:a7b:ca42:0:b0:38c:6d09:1362 with SMTP id m2-20020a7bca42000000b0038c6d091362mr16794697wml.103.1647731686210;
+        Sat, 19 Mar 2022 16:14:46 -0700 (PDT)
+Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
+        by smtp.gmail.com with ESMTPSA id l12-20020a05600c4f0c00b0038be825b774sm11120662wmq.45.2022.03.19.16.14.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 19 Mar 2022 16:14:45 -0700 (PDT)
+From:   Colin Ian King <colin.i.king@gmail.com>
+To:     Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: bnx2i: Fix spelling mistake "mis-match" -> "mismatch"
+Date:   Sat, 19 Mar 2022 23:14:45 +0000
+Message-Id: <20220319231445.21696-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Two small(ish) fixes, both in drivers.
+There are a few spelling mistakes in some error messages. Fix them.
 
-The patch is available here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-David Jeffery (1):
-      scsi: fnic: Finish scsi_cmnd before dropping the spinlock
-
-Matt Lupfer (1):
-      scsi: mpt3sas: Page fault in reply q processing
-
-And the diffstat
-
- drivers/scsi/fnic/fnic_scsi.c       | 13 ++++++-------
- drivers/scsi/mpt3sas/mpt3sas_base.c |  5 +++--
- 2 files changed, 9 insertions(+), 9 deletions(-)
-
-With full diff below.
-
-James
-
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
 ---
+ drivers/scsi/bnx2i/bnx2i_hwi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 88c549f257db..40a52feb315d 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -986,8 +986,6 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 	CMD_SP(sc) = NULL;
- 	CMD_FLAGS(sc) |= FNIC_IO_DONE;
- 
--	spin_unlock_irqrestore(io_lock, flags);
--
- 	if (hdr_status != FCPIO_SUCCESS) {
- 		atomic64_inc(&fnic_stats->io_stats.io_failures);
- 		shost_printk(KERN_ERR, fnic->lport->host, "hdr status = %s\n",
-@@ -996,8 +994,6 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 
- 	fnic_release_ioreq_buf(fnic, io_req, sc);
- 
--	mempool_free(io_req, fnic->io_req_pool);
--
- 	cmd_trace = ((u64)hdr_status << 56) |
- 		  (u64)icmnd_cmpl->scsi_status << 48 |
- 		  (u64)icmnd_cmpl->flags << 40 | (u64)sc->cmnd[0] << 32 |
-@@ -1021,6 +1017,12 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 	} else
- 		fnic->lport->host_stats.fcp_control_requests++;
- 
-+	/* Call SCSI completion function to complete the IO */
-+	scsi_done(sc);
-+	spin_unlock_irqrestore(io_lock, flags);
-+
-+	mempool_free(io_req, fnic->io_req_pool);
-+
- 	atomic64_dec(&fnic_stats->io_stats.active_ios);
- 	if (atomic64_read(&fnic->io_cmpl_skip))
- 		atomic64_dec(&fnic->io_cmpl_skip);
-@@ -1049,9 +1051,6 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
- 		if(io_duration_time > atomic64_read(&fnic_stats->io_stats.current_max_io_time))
- 			atomic64_set(&fnic_stats->io_stats.current_max_io_time, io_duration_time);
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 5521469ce678..7fe7f53a41c0 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -2398,7 +2398,7 @@ static void bnx2i_process_conn_destroy_cmpl(struct bnx2i_hba *hba,
  	}
--
--	/* Call SCSI completion function to complete the IO */
--	scsi_done(sc);
- }
  
- /* fnic_fcpio_itmf_cmpl_handler
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 511726f92d9a..76229b839560 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2011,9 +2011,10 @@ mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc, u8 poll)
- 				enable_irq(reply_q->os_irq);
- 			}
- 		}
-+
-+		if (poll)
-+			_base_process_reply_queue(reply_q);
+ 	if (hba != ep->hba) {
+-		printk(KERN_ALERT "conn destroy- error hba mis-match\n");
++		printk(KERN_ALERT "conn destroy- error hba mismatch\n");
+ 		return;
  	}
--	if (poll)
--		_base_process_reply_queue(reply_q);
- }
  
- /**
+@@ -2432,7 +2432,7 @@ static void bnx2i_process_ofld_cmpl(struct bnx2i_hba *hba,
+ 	}
+ 
+ 	if (hba != ep->hba) {
+-		printk(KERN_ALERT "ofld_cmpl: error hba mis-match\n");
++		printk(KERN_ALERT "ofld_cmpl: error hba mismatch\n");
+ 		return;
+ 	}
+ 
+-- 
+2.35.1
 
