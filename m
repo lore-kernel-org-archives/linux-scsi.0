@@ -2,85 +2,146 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 695A7C433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Mar 2022 14:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F46FC433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Mar 2022 19:46:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243302AbiCSOn0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Mar 2022 10:43:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50652 "EHLO
+        id S244056AbiCSTsS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Mar 2022 15:48:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243280AbiCSOnT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 10:43:19 -0400
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30AC7185463;
-        Sat, 19 Mar 2022 07:41:57 -0700 (PDT)
-Received: by mail-ej1-f52.google.com with SMTP id o10so3257843ejd.1;
-        Sat, 19 Mar 2022 07:41:57 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:from:to:cc:references:in-reply-to
-         :content-transfer-encoding;
-        bh=DyX7vCd2VCaj5+Brf9GyX0DqxHD406xqpPn1xF+9QSs=;
-        b=lGdJeow1ms0Ju3eTkwr8K4b6lixHy9bltSqlc34Csk11Fq/R7DyLqgtiW0zUKDr0Ge
-         o96uM0WYURd8l9CKbyfAqWPm5sOMBeuTUOHu2D7+W8ECSvL3wahuPSjcoT/q4KF2oR7h
-         hbGNrnk3SRDJuFvWWEGUGP6rsqS0Cbtd5m4wVHwuV/vnhgfz1Xa0i1N2Ulu8rOIjn/tj
-         VRvZY8LZD3JVg+/lLuJMO74yvcgEk7Uh1XnOkTEPDvK4k4UVdfnuwprRrkAPxeXh40Vr
-         TyHX+WtpHmeIKhkkSdyyyvtY9+m4MTk7GM34S1zQfwizvXoUB1vqECC4yhP8daCL158/
-         n9tA==
-X-Gm-Message-State: AOAM5304/TYIcDT7BkfhaO6IhwKgk8s3h/oqCghkmKyniN8LJ7HRnvQj
-        3TBfHkSv4lxbVz7AzaW3Qk4=
-X-Google-Smtp-Source: ABdhPJwKUZEZpQdfxPmGox4nRgfvtbg8LWjstfZ/LPtgOApSVkWAL9XD6XVW1MPF3m9No9uaLAJ4/Q==
-X-Received: by 2002:a17:907:2d93:b0:6db:ab5e:7e0b with SMTP id gt19-20020a1709072d9300b006dbab5e7e0bmr13331335ejc.262.1647700915680;
-        Sat, 19 Mar 2022 07:41:55 -0700 (PDT)
-Received: from [192.168.0.17] (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
-        by smtp.googlemail.com with ESMTPSA id da19-20020a056402177300b00413583e0996sm5557875edb.14.2022.03.19.07.41.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 19 Mar 2022 07:41:55 -0700 (PDT)
-Message-ID: <4f7d4387-558f-d865-8cec-6c9c999cb6f7@kernel.org>
-Date:   Sat, 19 Mar 2022 15:41:53 +0100
+        with ESMTP id S235161AbiCSTsS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 15:48:18 -0400
+Received: from bedivere.hansenpartnership.com (unknown [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 924C57A981;
+        Sat, 19 Mar 2022 12:46:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1647719149;
+        bh=NggC2udics5UD05JBQeUyOZDTgDjR09Jt7/lciYz3xY=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=XT1E0GSbI48qj55tXnuSPiciBxLtNjeIaCdUqTn+xrbYnY3ST3LOO2my4l/9yma0a
+         foqyF4iXkB2ykIt2CZzBs4+rhRVkLQmvgUy3KJcu6nLfnrn81995n4SpjHxWrLubsc
+         GC4pF1+2O0i2TfhnxgaxPBAxr44Bvy42gnmEoS/Q=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 5D6011285CBD;
+        Sat, 19 Mar 2022 15:45:49 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id zhyTaYH4fX1D; Sat, 19 Mar 2022 15:45:49 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1647719149;
+        bh=NggC2udics5UD05JBQeUyOZDTgDjR09Jt7/lciYz3xY=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=XT1E0GSbI48qj55tXnuSPiciBxLtNjeIaCdUqTn+xrbYnY3ST3LOO2my4l/9yma0a
+         foqyF4iXkB2ykIt2CZzBs4+rhRVkLQmvgUy3KJcu6nLfnrn81995n4SpjHxWrLubsc
+         GC4pF1+2O0i2TfhnxgaxPBAxr44Bvy42gnmEoS/Q=
+Received: from lingrow.int.hansenpartnership.com (c-67-166-174-65.hsd1.va.comcast.net [67.166.174.65])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id C02D71281F58;
+        Sat, 19 Mar 2022 15:45:48 -0400 (EDT)
+Message-ID: <2a71975c2888f30ddebff8aa509933bc87c1a552.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.17-rc8
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 19 Mar 2022 15:45:47 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH 1/6] scsi: ufs: dt-bindings: Add SM6350 compatible string
-Content-Language: en-US
-From:   Krzysztof Kozlowski <krzk@kernel.org>
-To:     Luca Weiss <luca.weiss@fairphone.com>,
-        linux-arm-msm@vger.kernel.org
-Cc:     ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20220318183004.858707-1-luca.weiss@fairphone.com>
- <20220318183004.858707-2-luca.weiss@fairphone.com>
- <cc6a0a89-a096-e954-b245-1857e9f94c4e@kernel.org>
-In-Reply-To: <cc6a0a89-a096-e954-b245-1857e9f94c4e@kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 19/03/2022 15:38, Krzysztof Kozlowski wrote:
-> On 18/03/2022 19:29, Luca Weiss wrote:
->> Document the compatible for the UFS found on SM6350.
->>
->> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
->> ---
->>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 1 +
->>  1 file changed, 1 insertion(+)
->>
-> 
-> 
-> Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+Two small(ish) fixes, both in drivers.
 
-No, I revoke it. You also missed the constraints in if:then.
+The patch is available here:
 
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Best regards,
-Krzysztof
+The short changelog is:
+
+David Jeffery (1):
+      scsi: fnic: Finish scsi_cmnd before dropping the spinlock
+
+Matt Lupfer (1):
+      scsi: mpt3sas: Page fault in reply q processing
+
+And the diffstat
+
+ drivers/scsi/fnic/fnic_scsi.c       | 13 ++++++-------
+ drivers/scsi/mpt3sas/mpt3sas_base.c |  5 +++--
+ 2 files changed, 9 insertions(+), 9 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 88c549f257db..40a52feb315d 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -986,8 +986,6 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
+ 	CMD_SP(sc) = NULL;
+ 	CMD_FLAGS(sc) |= FNIC_IO_DONE;
+ 
+-	spin_unlock_irqrestore(io_lock, flags);
+-
+ 	if (hdr_status != FCPIO_SUCCESS) {
+ 		atomic64_inc(&fnic_stats->io_stats.io_failures);
+ 		shost_printk(KERN_ERR, fnic->lport->host, "hdr status = %s\n",
+@@ -996,8 +994,6 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
+ 
+ 	fnic_release_ioreq_buf(fnic, io_req, sc);
+ 
+-	mempool_free(io_req, fnic->io_req_pool);
+-
+ 	cmd_trace = ((u64)hdr_status << 56) |
+ 		  (u64)icmnd_cmpl->scsi_status << 48 |
+ 		  (u64)icmnd_cmpl->flags << 40 | (u64)sc->cmnd[0] << 32 |
+@@ -1021,6 +1017,12 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
+ 	} else
+ 		fnic->lport->host_stats.fcp_control_requests++;
+ 
++	/* Call SCSI completion function to complete the IO */
++	scsi_done(sc);
++	spin_unlock_irqrestore(io_lock, flags);
++
++	mempool_free(io_req, fnic->io_req_pool);
++
+ 	atomic64_dec(&fnic_stats->io_stats.active_ios);
+ 	if (atomic64_read(&fnic->io_cmpl_skip))
+ 		atomic64_dec(&fnic->io_cmpl_skip);
+@@ -1049,9 +1051,6 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
+ 		if(io_duration_time > atomic64_read(&fnic_stats->io_stats.current_max_io_time))
+ 			atomic64_set(&fnic_stats->io_stats.current_max_io_time, io_duration_time);
+ 	}
+-
+-	/* Call SCSI completion function to complete the IO */
+-	scsi_done(sc);
+ }
+ 
+ /* fnic_fcpio_itmf_cmpl_handler
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 511726f92d9a..76229b839560 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2011,9 +2011,10 @@ mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc, u8 poll)
+ 				enable_irq(reply_q->os_irq);
+ 			}
+ 		}
++
++		if (poll)
++			_base_process_reply_queue(reply_q);
+ 	}
+-	if (poll)
+-		_base_process_reply_queue(reply_q);
+ }
+ 
+ /**
+
