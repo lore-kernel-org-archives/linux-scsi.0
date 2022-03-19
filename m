@@ -2,81 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1919DC433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Mar 2022 03:59:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5385C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Mar 2022 04:27:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232396AbiCSEBO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Mar 2022 00:01:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33594 "EHLO
+        id S242095AbiCSE2b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Mar 2022 00:28:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242059AbiCSEAv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 00:00:51 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 185726AA65
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Mar 2022 20:59:32 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 22J3BdZT000630;
-        Sat, 19 Mar 2022 03:59:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=jabwnHNVOyTWdI7HmiDhZxlWjnFjGlZB7NdF9g+J7l0=;
- b=mhXeKvrATzs4UF81RxxqCSyuPyTL+PiJqU5Sawe8YNel0vkrLOQVN4Tc/OE5i9RPSBIA
- KYa3/MMpcLMr8M2oCpp2sUQ3wzBNAVIjCnA/srrH/D5E1koGJbXXOnm76YJbtM1+kBuG
- tmaqX2evIkatsT38AcUDDQp4f+Dzbn4pthfobSUBIWyDRq7LuJySk3sYRGRgRco7Q6no
- +1dzwc4n9DxfwgvrhuRt+u1p/1mBKd3vogXi0VnJUgOTwehclaC5gfxhLJCitiMJ7Tfs
- 0xBAn5niopA3OKhZSmojqz0lZ4gsLRKL41E7UTisfoiHJQoI3sKGHMfdGyLDRTG289s3 zQ== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ew72a8168-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 19 Mar 2022 03:59:30 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 22J3ufSb006991;
-        Sat, 19 Mar 2022 03:57:10 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3ew5kyshnk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 19 Mar 2022 03:57:10 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 22J3v5Qk007126;
-        Sat, 19 Mar 2022 03:57:09 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3ew5kyshmn-5;
-        Sat, 19 Mar 2022 03:57:09 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: Re: [PATCH] lpfc: Remove failing soft_wwn support
-Date:   Fri, 18 Mar 2022 23:56:55 -0400
-Message-Id: <164766213029.31329.2257707690841174483.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220310154845.11125-1-jsmart2021@gmail.com>
-References: <20220310154845.11125-1-jsmart2021@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: HJUKagEJXdkddGbUjSxaVU9XBCNESfVb
-X-Proofpoint-ORIG-GUID: HJUKagEJXdkddGbUjSxaVU9XBCNESfVb
+        with ESMTP id S242084AbiCSE23 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 00:28:29 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3C5D1D253D;
+        Fri, 18 Mar 2022 21:27:08 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id bc27so6407028pgb.4;
+        Fri, 18 Mar 2022 21:27:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=YZMUZMRb13gxRVQlDqvdqmbrfa6neN3fcSPMrOn7PzI=;
+        b=Bew74swDcYqef96ehtkWNmKyQ5lC/TfXk7XTkZOOpfEj/GHCpfvpuCeYMedZ4DI9B9
+         045sYlK3LZMvy+5vNRi00+1KocmzQfDq33Pp2f+VEejt6HKXYeM6OzhQ97vfbP7TGLy4
+         tCmTRzqHfjl3mIehaHhNmmoKmVpn1sQudbV5j/xFY1j5/CA07PpAd/VOdcE94UgiQpSG
+         gmh/ZcYi2SL5SCMKhvosXB+/MQAaLXH3VQ7M5iY0Rqsc3fMPXZ18zmZRGlr55mvaS6OV
+         UhJiAzN7RbrDdMMm7T22o6o+LwFkYTnpJp2vVtUrVwmRO/DJ1NxFJo0zQDEC0bticwst
+         R1VQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=YZMUZMRb13gxRVQlDqvdqmbrfa6neN3fcSPMrOn7PzI=;
+        b=uE5s36eX77JxXKZLseZ85CInyHx3WrQH6hrVEEqEtIL6GMZ2m5Xmgf70k6AJQOZKEC
+         MBSJRjjcIkqn280r73Qzc4c0M+bpk/XRnv0tkSvi0wh73qU4+iCu7Qw7Zxosy8lcICMI
+         38NjhI7XUwCWlS3UGj8Q3un0N2HjIcHTbis/Uyx+Arm8KN9kAjjb4xZI0emyc2cp2EW6
+         hVIhlGbkw/voqbXWR5SReCgL6kHajqDNRQYqvuKKOv2URdIIKEMpnSGX1xpbj5eXAlhi
+         cl8BB7hqQzX50XLZ3y/IJHUFqGsC2bV3kwK3D5VKzrLPl33DV70JOeticagRCrIMljhI
+         7c5w==
+X-Gm-Message-State: AOAM531nrQYnnGj13+L7JrbUoZtMa7fiyXv1ylA3gIH+ordVkHKrvyXB
+        8/EJp8UW+UXEYPKi7O4jr18=
+X-Google-Smtp-Source: ABdhPJyMJQoE3n6Xaxl4MY6y/hE9op+J2qQH/Gk9qr3ihyaEyHB1BClCeaYZcEfLxBUfDim/emz5HA==
+X-Received: by 2002:aa7:8104:0:b0:4fa:2091:d200 with SMTP id b4-20020aa78104000000b004fa2091d200mr13462127pfi.17.1647664028128;
+        Fri, 18 Mar 2022 21:27:08 -0700 (PDT)
+Received: from ubuntu.huawei.com ([119.3.119.18])
+        by smtp.googlemail.com with ESMTPSA id u37-20020a056a0009a500b004f820de3dcdsm10884887pfg.9.2022.03.18.21.27.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 18 Mar 2022 21:27:07 -0700 (PDT)
+From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        daejun7.park@samsung.com, bvanassche@acm.org, beanhuo@micron.com,
+        keosung.park@samsung.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Xiaomeng Tong <xiam0nd.tong@gmail.com>
+Subject: [PATCH] ufs: remove an unneed NULL check on list iterator
+Date:   Sat, 19 Mar 2022 12:26:57 +0800
+Message-Id: <20220319042657.21835-1-xiam0nd.tong@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 10 Mar 2022 07:48:45 -0800, James Smart wrote:
+The list iterator is always non-NULL so it doesn't need to be checked.
+Thus just remove the unnecessary NULL check.
 
-> The soft_wwpn/soft_wwn functionality, which allows the driver to modify
-> service parameters in an attempt to override the adapter-assigned WWN,
-> was originally attempted to be removed roughly 6 yrs ago as new fabric
-> features were being introduced that clashed with the implementation.
-> In the end, the feature was left in with the user being responsible if
-> things went south.
-> 
-> [...]
+Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
+---
+ drivers/scsi/ufs/ufshpb.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-Applied to 5.18/scsi-queue, thanks!
-
-[1/1] lpfc: Remove failing soft_wwn support
-      https://git.kernel.org/mkp/scsi/c/2ea3a393bfae
-
+diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+index 2d36a0715..a3db0ad60 100644
+--- a/drivers/scsi/ufs/ufshpb.c
++++ b/drivers/scsi/ufs/ufshpb.c
+@@ -869,12 +869,6 @@ static struct ufshpb_region *ufshpb_victim_lru_info(struct ufshpb_lu *hpb)
+ 	struct ufshpb_region *rgn, *victim_rgn = NULL;
+ 
+ 	list_for_each_entry(rgn, &lru_info->lh_lru_rgn, list_lru_rgn) {
+-		if (!rgn) {
+-			dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+-				"%s: no region allocated\n",
+-				__func__);
+-			return NULL;
+-		}
+ 		if (ufshpb_check_srgns_issue_state(hpb, rgn))
+ 			continue;
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.17.1
+
