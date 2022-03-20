@@ -2,116 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CEBAC433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Mar 2022 00:57:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E852EC433F5
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Mar 2022 04:57:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244537AbiCTA7E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Mar 2022 20:59:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60480 "EHLO
+        id S240234AbiCTE7G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Mar 2022 00:59:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244533AbiCTA7D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 20:59:03 -0400
-Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E73FB39A;
-        Sat, 19 Mar 2022 17:57:41 -0700 (PDT)
-Received: by mail-ej1-x635.google.com with SMTP id p15so23618637ejc.7;
-        Sat, 19 Mar 2022 17:57:41 -0700 (PDT)
+        with ESMTP id S234851AbiCTE7G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Mar 2022 00:59:06 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA953D9E88;
+        Sat, 19 Mar 2022 21:57:43 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id mp6-20020a17090b190600b001c6841b8a52so7835249pjb.5;
+        Sat, 19 Mar 2022 21:57:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=xL/91CQtbh1UaVmRRlTOuCwEzQk4/A5pjF+O731hxm0=;
-        b=Qw+T8qYqtAMZFMtvf6EQMOYWgdpC1mkns6edWSTqkwnAmzTTqLeXxzRXflHiz9zoiD
-         i2wB4E1/NDY7Nbv4wg/6cJKZ7LsY3ez6AqOIhnPSB7Z3vI/DN6ovK8DUhAGqC/HNr39M
-         EgMKfIxB+U/vf+pfPXMTnOoXDvpivcbaqBlLJv/8PPGteDWer9bVnajvrd8C9rnHXQJt
-         Y6HLLd6hT42gy03/2kVFDF62Dst6Rn4SOpJD76ucqmhkqR3dfHCiRVWixkxu1komnAYi
-         9EtQiiHQeS/q+y9ySvmH+kcw4ESxOvYOLkgjHqnKeRTow6KNZa8HJNmeSGL9c5j7UJ2B
-         wQHA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=kNkV45zQuZkhTvGKZKcmhgk7SDSL/m3JRpXy/Hbo/hY=;
+        b=NJ6zMfW0vPou6MY/aluF2UhRydg/ynbvdZopQI6ga+8acA5o8F/S3eQHTFc64CiYz7
+         u2Ft4QwPyxyHO/jFXkxJpQEC/N43ALcVypjmE9AoV4YRdNkIAgE7P5l2FSzOw28ZcmeI
+         Zu6fv7rqVsa587bZtrgg7dntvcbcbQAt1x8mpmFiNLiHTzu9u/+vg5riaunMOd1skV67
+         E8oiD2SCW3YSMxM00V1NKFsgh7oUxQpOQmNmoSknXkEa8u+dg7xbI5e/oPR2qUfANpCm
+         RPoT8O2/X+OEn9g7HT0ib6rXE6nlXwZJYBjhzo9LnYvNnApkObtGv/tniMnc6cZvltu2
+         4xOg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=xL/91CQtbh1UaVmRRlTOuCwEzQk4/A5pjF+O731hxm0=;
-        b=KyJoePzzhOFdeiwXRvVFUBsgiianeRSDrVSb8pog7vxx01qE2vCum9gp1SAI30BYpg
-         eeoGhY88r2WNSl5vqSiAlC48u8UtkIrAbB3J0leIL0qNtbZV/Jr4Ojyi7j7T5womvTN7
-         Z0814IiiVPIt4c8GIVMx4qrIUI+wUMnDfkzlQUKfDTABAQv9bdzLX00SMoJpAyBqqeQJ
-         1G20EjQhfNLLVaBItdKv1t0yu8lxWbZfpMA9ro620X/2XEIO4xABP8IWOi+mt1yjkg3s
-         h5SRu5OZ6LW31pUkAIhv0ZmKI1Fmt35txXxo+Gom+bRRt01llaptZX9gKjS21eqbw7OU
-         j/bQ==
-X-Gm-Message-State: AOAM532KOsl6gra8Q/hnZT011WUAwfxEJ8Iz57t3OGwLpHkrMJqOkvBk
-        5x0Nq3N2s4yqneCbZED1izdQeiR537OcYg==
-X-Google-Smtp-Source: ABdhPJywklwE7dbcujRJey+W8XQRuTdyG1Cv/cP6Dk++ogP4ccJuwejJaAqdyfxRGsDFhJ2a6fkyyw==
-X-Received: by 2002:a17:906:9743:b0:6d8:632a:a42d with SMTP id o3-20020a170906974300b006d8632aa42dmr15233303ejy.157.1647737860494;
-        Sat, 19 Mar 2022 17:57:40 -0700 (PDT)
-Received: from smtpclient.apple (i130160.upc-i.chello.nl. [62.195.130.160])
-        by smtp.gmail.com with ESMTPSA id g2-20020aa7c842000000b0041314b98872sm6088997edt.22.2022.03.19.17.57.39
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 19 Mar 2022 17:57:40 -0700 (PDT)
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 15.0 \(3693.60.0.1.1\))
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=kNkV45zQuZkhTvGKZKcmhgk7SDSL/m3JRpXy/Hbo/hY=;
+        b=M2o25dFBX5txJL1VZMyRQZJ+IwVTaZlB7g1d2eYIjM7Tl2V8EnNXmk7WAHv/N9HS/A
+         rkgUEz6K3JIahGYOnPyTQ8BlkS2E0seM0PFxeeAz/MV1axGwAlxkNWl6sP76jCxg35Po
+         b4q+tz+T1J6Ok5u9nObdzuO1uq8f45n3e8bXUe3jS6r616Bsd8WDbPC+78sy2CR7j5jr
+         Yx57BGhQiYB+yaMRf9BNlI0rB2u59Ayvf0Zfa5Y7xfz48t0+HCisvR+WFCUpT7VL3wVP
+         6zZyev057kXN3Acc6crWajV/9NKLw/ARFaY3MDI+W4G0lFLLg9UAzYKsDEHmwG7sA/v0
+         0lWQ==
+X-Gm-Message-State: AOAM530qbVcuYaJzhoi+g0ASQhJwamtS6z6xPxtbKPdvHmemURD0Njpn
+        qfjeRQ3MlqN/WJHO0K9dT6E=
+X-Google-Smtp-Source: ABdhPJwvJ7MDBx0sEa1mEix0SkkTBNtIT1cCiMLYIyVYU4+sc8PRvuW2sAVMBLY1oTO58ZrBgKa30g==
+X-Received: by 2002:a17:903:32c7:b0:154:19dd:fd43 with SMTP id i7-20020a17090332c700b0015419ddfd43mr7250905plr.150.1647752263405;
+        Sat, 19 Mar 2022 21:57:43 -0700 (PDT)
+Received: from localhost.localdomain ([36.24.165.243])
+        by smtp.googlemail.com with ESMTPSA id k5-20020aa788c5000000b004f7a02d2724sm15112075pff.50.2022.03.19.21.57.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 19 Mar 2022 21:57:42 -0700 (PDT)
+From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
+To:     jakobkoschel@gmail.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, beanhuo@micron.com,
+        bvanassche@acm.org, daejun7.park@samsung.com, jejb@linux.ibm.com,
+        keosung.park@samsung.com, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        xiam0nd.tong@gmail.com
 Subject: Re: [PATCH] ufs: remove an unneed NULL check on list iterator
-From:   Jakob Koschel <jakobkoschel@gmail.com>
-In-Reply-To: <20220319042657.21835-1-xiam0nd.tong@gmail.com>
-Date:   Sun, 20 Mar 2022 01:57:39 +0100
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        Alim Akhtar <alim.akhtar@samsung.com>, avri.altman@wdc.com,
-        daejun7.park@samsung.com, bvanassche@acm.org, beanhuo@micron.com,
-        keosung.park@samsung.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <6EEE0ACC-6F7F-4D29-AA2B-751E4677B35E@gmail.com>
-References: <20220319042657.21835-1-xiam0nd.tong@gmail.com>
-To:     Xiaomeng Tong <xiam0nd.tong@gmail.com>
-X-Mailer: Apple Mail (2.3693.60.0.1.1)
+Date:   Sun, 20 Mar 2022 12:57:34 +0800
+Message-Id: <20220320045734.14087-1-xiam0nd.tong@gmail.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <6EEE0ACC-6F7F-4D29-AA2B-751E4677B35E@gmail.com>
+References: <6EEE0ACC-6F7F-4D29-AA2B-751E4677B35E@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Sun, 20 Mar 2022 01:57:39 +0100, Jakob Koschel <jakobkoschel@gmail.com> wrote:
+> Maybe it make more sense to move that check after the loop body instead
+> of removing it completely? This code obviously does nothing in it's current
+> state but it's clear what the original intention was, so restoring that would
+> perhaps be better.
+> 
+> But probably someone with more experience about this code can make the call
+> 
 
-> On 19. Mar 2022, at 05:26, Xiaomeng Tong <xiam0nd.tong@gmail.com> =
-wrote:
->=20
-> The list iterator is always non-NULL so it doesn't need to be checked.
-> Thus just remove the unnecessary NULL check.
->=20
-> Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
-> ---
-> drivers/scsi/ufs/ufshpb.c | 6 ------
-> 1 file changed, 6 deletions(-)
->=20
-> diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-> index 2d36a0715..a3db0ad60 100644
-> --- a/drivers/scsi/ufs/ufshpb.c
-> +++ b/drivers/scsi/ufs/ufshpb.c
-> @@ -869,12 +869,6 @@ static struct ufshpb_region =
-*ufshpb_victim_lru_info(struct ufshpb_lu *hpb)
-> 	struct ufshpb_region *rgn, *victim_rgn =3D NULL;
->=20
-> 	list_for_each_entry(rgn, &lru_info->lh_lru_rgn, list_lru_rgn) {
-> -		if (!rgn) {
-> -			dev_err(&hpb->sdev_ufs_lu->sdev_dev,
-> -				"%s: no region allocated\n",
-> -				__func__);
-> -			return NULL;
-> -		}
+This seems like a better choice, if it doesn't go against the author's original
+intention. I will fix it in PATCH v2, thanks.
 
-Maybe it make more sense to move that check after the loop body instead
-of removing it completely? This code obviously does nothing in it's =
-current
-state but it's clear what the original intention was, so restoring that =
-would
-perhaps be better.
-
-But probably someone with more experience about this code can make the =
-call
-
-> 		if (ufshpb_check_srgns_issue_state(hpb, rgn))
-> 			continue;
->=20
-> --=20
-> 2.17.1
->=20
-
-	Jakob
-
+--
+Xiaomeng Tong
