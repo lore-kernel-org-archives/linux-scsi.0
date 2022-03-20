@@ -2,72 +2,73 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F21C7C433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Mar 2022 00:44:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC0F3C433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Mar 2022 00:44:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244513AbiCTAqE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Mar 2022 20:46:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42616 "EHLO
+        id S244481AbiCTAqF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Mar 2022 20:46:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244491AbiCTApq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 20:45:46 -0400
+        with ESMTP id S244497AbiCTAqA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2022 20:46:00 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AB5C241A0B
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Mar 2022 17:44:24 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 22JEhZuv012459;
-        Sun, 20 Mar 2022 00:44:20 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24C73241A1A
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Mar 2022 17:44:29 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 22JDXB4l027608;
+        Sun, 20 Mar 2022 00:44:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=G/x9rCYuQmcNZaeQxXNKcCHd2LWbuTuyiAqHrcqM1yI=;
- b=kBeHw+T4BRjHlTrF1pdzP4uRDq89uveSRibddONg6VQTJ9jHk91W3GSEflqeEiHMvwLT
- KVZ2Zeuvq9Rc05/5ZB0haLSKPYoj3uAnbxDnncAleFnH+b0NIhWiJghopekBKMmewOad
- CSSK59s8Ruj0F+efZ3g22KqyOmggeE8NV8KCUC2ZAf7iFVxfzmCkO8btdst83EMgpck4
- bLOL9mDB4RsmKQGkhtVDtgfYYduzigXBkJeDYR1wzOFbpbyT5cm5TcMAqOL13anuwAKo
- LUTzWf2gZqHjvPG2Of1zHJbV2MzFp23GZmiCLDpfV/UofUlnWNY/diBe2JRKuCPByZCg zw== 
+ s=corp-2021-07-09; bh=xaNqMKHMxMEPSNPdOQmipmWUgkkqiGxiIHveNJx2zoE=;
+ b=xUq5YsuymigdX35Ed24xfz8kPKdiznsM46d5OtmiPH3LKrWNnbaOTYEoBfFYj6gO89Lv
+ AIhs85brgvBMKJNDb/VW9yoT5YEOQTdVHKv7eIf0PWDnka3qdgIUXtOtyYQ88I0yrAT9
+ E7xpL/5sscWIIXVTxp6BueQXPZh8fQp3nGdES4EUetFpxUX+FuIyMvEMqdidjAYucRMe
+ GD757+AzLn/5Jr7xfp+NND6dS+OIe0iDi5EDcYzG0t0rHVPgVvPlk3eF/vnyqH3oenQw
+ mFlJzhVAOmCJ8ZYeVDXGWHWW6lasHjqQJhXkaRGAuI9uKtJwVpW/DcBh9Yt54i/ZM6wM rA== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ew6ss0ux1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 20 Mar 2022 00:44:19 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 22K0ffap137063;
-        Sun, 20 Mar 2022 00:44:18 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2169.outbound.protection.outlook.com [104.47.55.169])
-        by userp3020.oracle.com with ESMTP id 3ew8mg6mq1-11
+        by mx0b-00069f02.pphosted.com with ESMTP id 3ew5y1rw2f-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Sun, 20 Mar 2022 00:44:18 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 22K0ffam137063;
+        Sun, 20 Mar 2022 00:44:17 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2169.outbound.protection.outlook.com [104.47.55.169])
+        by userp3020.oracle.com with ESMTP id 3ew8mg6mq1-8
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 20 Mar 2022 00:44:17 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WzPgD/hvHkS7yHOHFLC5/vDvU2j5M/VKs5UM5gWkClLCaJMXXWQTGv1q5ampDB7UuvzJ3u3qKBSX0XPc5HzHNBgHGErIMn7q18qpwmq0iTAa46IJROViW3xRw6qhaFBdH4tdfwWlgn94iK0jXELSNSv+PrctNT1RT+k3VISi38lNrnJ4AfFXB0qXjUFetlZEF31nfLvkggIQP7ESdCG19Xhxmi/1n2zkLnx4FEgHntEbZtyNFWutyM1jcV/wjSuWrmfGR3JY1mFsKxEkQOa2XPhW9wIMHiyBWaY23DGLsdOtfiqukzb2a/hCf0vAFq3JPCdpB41M5/WRL/m61TB7ig==
+ b=Dp3M0HriiuGMhSIgZJjU4RV+Ihbr0gMOISmHHXTVp9cnvMBsFpvaGpEbj3/zq1L5KH8weWgITObGbXefpGKAmPzZs5IvjeRJbntPYfHda+HcEEF7Pnsr6B2t9z6AtbPCSe0iIAnV6kC5je9xQrexs+aA5/yFtUc5Bz3h2Ry2yEPNvpsdWeM3bFc7ZYERCTBFc/o8qwak0NUpdvHhmRQ56Seo2Gw8qUnF7KejOeH8ojpcbeqzZKNMn/MQrLAxj7fGbCW9qY3NiR8jsDRL0uNvtUM2/nCO/V/nJzP/iUFFMLTHOx718Xw5uM1j4zQSgfmRf7LPWfdtkORTodR6g+hlFA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=G/x9rCYuQmcNZaeQxXNKcCHd2LWbuTuyiAqHrcqM1yI=;
- b=NJWwW2I487xVSiATuRZG2BUxjCNzk2ka0vrRkOpaSAPW/puArvNoMNK/NSl6Bn/biaTjMoXd8qDg2KkPoXxicifgsqqCdAhhFe40ly3MOgDxunUgoXNd/m1GyJiPj8ClNrni03mCuXEThkd5AVYrq6X3m+hTXDYr85M78WHZNp24rLmkOms4BCWmZztfcGId3RTd1ZzPxow93nRb5+aAV9l+8FRgYds1fk/Tz54RBZ0Ivyq/NaeNcJHnTEtmxaoaLo9YQ+IP+2hzr7axi73Jh41Huv4G+Knh0dL/ELHw9pBsLXoWKA3WvXRQoyfFLNyPqFjrahED2eKVb46UDfLEAg==
+ bh=xaNqMKHMxMEPSNPdOQmipmWUgkkqiGxiIHveNJx2zoE=;
+ b=BQNjxre7hNG9aa3/iQ8CrW+x7mxpNKg56bzXAdf44FEstRw+DzgGPtrPYnLvhX4ejICgU9uEuGfaB6WnDCqG87HnTliWqyRH2eXvLIn1VvYtS6QcpA3G1UEvuXWigZMpbSTpJ2sz4WMczSG7pURy1sNZs5clTxE72dmBvkOADlDIKhzS2kNZJIRFWHi82/h1dggwbveQZrYCW7X2R34V6vGWiNKHT8Ke0Kz0PVZGz4Tc4CsIFjesmReHhew4wl+oQ12/rXFOZIrxY0GzDXzanOV7QfaUUkuh/tJxn6fb8QObW89ePPc4t1VwFxF9pJ/Mb/ahJKM5zCP/Z3P+Q5QduQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G/x9rCYuQmcNZaeQxXNKcCHd2LWbuTuyiAqHrcqM1yI=;
- b=F5oAVBMEwm/I1ZWHmQ+lBUKjUsXr3pgQ/PUfvPDYuoALQq+aFRYQmAxVNqsY/zlfBJmiyY1DF2jweXDXm6XhZYqIepRAtII10p61Caf9rDvSOrV6S6YtWG/3vshmMmqkXvcs/zv8XX96jn13nUuJ5K7z5wbuqWvNANu0VhRRGDQ=
+ bh=xaNqMKHMxMEPSNPdOQmipmWUgkkqiGxiIHveNJx2zoE=;
+ b=MECbXDN3Cq2q4S76kaHZ6pt4QRgwoYAlRjenxvSDU7qGNbrvveuMAFjqP8RjtGKs/dQ4DqBkDT0yS5XqHdwJ/T9CCqyBSXKDdPe8sBEFuVfsfly4DVSZGRcIlthDTarCGxmE3Pb3TOWr10+ac39up71OwcCdR4FKnRlXeJdM7Lo=
 Received: from CY4PR10MB1463.namprd10.prod.outlook.com (2603:10b6:903:2b::12)
  by CH2PR10MB3992.namprd10.prod.outlook.com (2603:10b6:610:9::24) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5081.17; Sun, 20 Mar
- 2022 00:44:17 +0000
+ 2022 00:44:15 +0000
 Received: from CY4PR10MB1463.namprd10.prod.outlook.com
  ([fe80::78b1:38c1:cfb8:537f]) by CY4PR10MB1463.namprd10.prod.outlook.com
  ([fe80::78b1:38c1:cfb8:537f%11]) with mapi id 15.20.5081.022; Sun, 20 Mar
- 2022 00:44:17 +0000
+ 2022 00:44:15 +0000
 From:   Mike Christie <michael.christie@oracle.com>
 To:     lduncan@suse.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, jejb@linux.ibm.com
-Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH V2 10/12] scsi: iscsi: Try to avoid taking back_lock in xmit path
-Date:   Sat, 19 Mar 2022 19:44:00 -0500
-Message-Id: <20220320004402.6707-11-michael.christie@oracle.com>
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Wu Bo <wubo40@huawei.com>
+Subject: [PATCH V2 07/12] scsi: iscsi_tcp: Drop target_alloc use
+Date:   Sat, 19 Mar 2022 19:43:57 -0500
+Message-Id: <20220320004402.6707-8-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220320004402.6707-1-michael.christie@oracle.com>
 References: <20220320004402.6707-1-michael.christie@oracle.com>
@@ -78,170 +79,85 @@ X-ClientProxiedBy: DM5PR18CA0065.namprd18.prod.outlook.com
  (2603:10b6:903:2b::12)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0f267ef2-76e9-4146-a805-08da0a0ac388
+X-MS-Office365-Filtering-Correlation-Id: 93639b0c-9e16-4047-f66d-08da0a0ac26c
 X-MS-TrafficTypeDiagnostic: CH2PR10MB3992:EE_
-X-Microsoft-Antispam-PRVS: <CH2PR10MB3992C57650B2F540BCEFB01EF1159@CH2PR10MB3992.namprd10.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <CH2PR10MB3992610291E47C034917EFDBF1159@CH2PR10MB3992.namprd10.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: vLKnG0tbB3RJBZItNVvJnL4XXWz0p9SGH/VTpFeNhLYSyCDEGe5r7qHaMBz8ho656YWa4CE/BXW+gj6EiTyXSYBoFvBPiDeDScF7OxIpKItDRWY1BTUQ5LXxNtpjqx48DTTdXSv0IKKqWZGmLfS7tMnxt99j0lZZCKRqR25ygRyRiykiD472C2FmVB0fRqCzCOPw5L7ckcP6RrzDLJtGdNfFNTOdHPycW3KicFjY7td8tQ4Ghw2md3Gv25oVCYXHZdYEcar3c6OGpqdrypB7aCZvLocKeUzmaSDgM1zGpTEOLQPnqW8Va/oO5AEqBGC615CetS8g7BthaWfyjM8bWFnA4+wkSLsBercT+LHac97xr9V8H+aoFKu8GnWymn9Ay33O3dLnMvBdgst/tqLyLck3xc99ToDde81FZpil6oRhQzHGjSf9YWp+i0bMqjK2FJMyCgnN6EBiR7C/6LAxmIo3el3DA1IwjMDsdvmrD3iQjeVt5yzH4ajJ6EzfBWFLNPyApIYbSybQqZ7Zocg5QuAMbpWOSaKmv/rD6IWr6zjk78+lG+mwAKNogwTU9UQbvdGnSAYXXQ9+ta5jOD/UEgC9mNZNKRehKK1cAArjvvQb4Hp8ExjxPWu9v4T1HBu3boUIwwAAFcclwTv3dlBJJqoMtLJBWzSHq43p+iQrrlUARdK93qcvVjVZ9LJm7MAN6cmS7JmsFyV0dnF3G+QhLw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR10MB1463.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(508600001)(66946007)(66556008)(66476007)(4326008)(8676002)(86362001)(83380400001)(5660300002)(6486002)(6506007)(6512007)(6666004)(107886003)(36756003)(26005)(186003)(1076003)(2616005)(8936002)(316002)(2906002)(38100700002)(38350700002)(52116002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: TfHGArkylfFHvVgJVIQxkIDJfF2sssLSrXpu24Y4Ilpt9FsW25lp94vAnTIdE4RoWbD+22wjKjP26XJwX3frJvFibbbgKCr1mDNCW5miKOyqfw8bcqHw33KLdljuiRndo4lNqPNzLrcubv0IYY/usFWD6AB1QlSgokq1Tl041mXf9cnRINNrxQZosZmvNbrsrsG549ciMKx6W7sffcHlj+qELCnNYX6qH4aMBOMyRR4IMehYaQ0K0JOdr1jjmvkkwsu/aXeFRTmZk4sFDhYP6IcGtqIk/hRVbII+GYmBNKyRvXlIvrwboa2lRgheqCABalftUE5nbWchhur4E6vN+eT3KgIk4N2E5bc2MuOFKmRGgVncMEeaTn9j3GqFWpzbOmHpuGxB5D5+HYFiRU4WTwlL4ctCBhJOKhXfbWO1siaZGS5W6Z/Bggi81Gkh1/YPfsY8mT6Ey4+hqdRuVbg6hpK7MnJ7MWi/MMevogeRWdxVjjLLRKrohkOEk4WV7wIxz9rSy2hufjw/hQetJmNq+Z0RT9KO7mW9UP2YB1l/Zzrx3YqQbJx86AJJTwbt0Quv3hgK4vKAaVWA1K2dQKc2pwzI/ZXHxi1Csl47Jinmi+AQ+Yy4H5JTlSm31IpZjlXg5h6StJmU06T9sY5OZ1EjTPmJs2q5ck31I4nFK+BQQVvA6YC3pVQlaLuSPaX9yGXoEYHBYSPMRl31c7E5ZJ2shg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR10MB1463.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(508600001)(66946007)(66556008)(66476007)(4326008)(8676002)(86362001)(83380400001)(5660300002)(6486002)(6506007)(6512007)(6666004)(36756003)(4744005)(26005)(186003)(1076003)(2616005)(8936002)(54906003)(316002)(2906002)(38100700002)(38350700002)(52116002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?TSgR4IRPdUptODVMDqwzJUvjuTc54UxYYIRZbA1n9+XvP7pVirM0vv4bCPNR?=
- =?us-ascii?Q?0VXCQyLsbHxLarD7FP7tjlFO3cXf4nVsBNF9hQyjvZx5Hm6XlVQkIFvMXG9c?=
- =?us-ascii?Q?4OMDI7ffjzD8L6vyidltprsIk9+S5iC0MqO1eDGOXPtjzX0JUCOa5JYhNPKC?=
- =?us-ascii?Q?dRNxQuQ4RcANGC5QiucpPxPzTlFMTjfnnq8LrTYHzvlFvtvvLu9ktbaZyTV1?=
- =?us-ascii?Q?takqG1rIJXJCEmJ2xF0IolYtx33hWDz2pgCaCsrOOxYh2ICwTXgpTW7qm22v?=
- =?us-ascii?Q?baw+uNMS488ErfWyx6hW89t1xa+jQg7r/VPvWPXKlZExmk4ywsSKvS2bwnnd?=
- =?us-ascii?Q?pj0CXnyuU5tsU181WLEQHRq5ot9W/r6WEiY7nXq8LV4zomazkrwO279zOEdg?=
- =?us-ascii?Q?u2u46SlOzb30GK1FfRwJBsJxHpe/odsIxbM2IkCvD5Avsxh4cKeTMP9Q1KS9?=
- =?us-ascii?Q?OWkI77WsPPBzeE2KaskvI2JefAiYWbThOb9OWojFf2/mOSzKh5tmFLNnaZyk?=
- =?us-ascii?Q?hMr6NzfPyGVsrVfuOM1g4mm+bGqFh/LGMNOUZ9SoxNxnSJ8fOMrnuOxBmYRd?=
- =?us-ascii?Q?9DRHUuIoWR2JjUToLhpcy/LUtEf9UKzYgCkAEXpSBi0u5U720VcC87cCIjDE?=
- =?us-ascii?Q?FUKCyx+naM5r3o3KQLnJXteCF5DorJ24by6QHWX8Y9fbpxQ3NZb7QvosSTYQ?=
- =?us-ascii?Q?E22yjmTnm49+PcGKLXytOFcS4mRt2sE20fsY8GcCtwJYFonhaTXFc9CMP2H/?=
- =?us-ascii?Q?G2jst6S15z8Ap70cOP8bET8Hw5aZZ+VULa1n1L80gRjcEYM32ej37Yy8YE/4?=
- =?us-ascii?Q?yfanBtbyMfkppzOz+mAvmR1Emjj+rgRsg1Fenb9C12nL9qjEzd7saqZhFN25?=
- =?us-ascii?Q?+ATLM9Xi8/YPEhTxpowRiL57p9lcSlYXOp9f9mES6pLkXbu2QrYL3I+DJJ8n?=
- =?us-ascii?Q?i9msb5njRuiAELAii3aUHwxgs2jAvSFJpgq1fVZafh0r2qTNNXDTI15/TTtz?=
- =?us-ascii?Q?ssMxIpYVUJn1h9E/t1Kd1jW5rfaz/KUe9k8lnAMlZncONe9Aif3pw+ccQ9lQ?=
- =?us-ascii?Q?J3KCT6NI9c/QoYGcu7a7lwn6+q/2CeQ0S9NVNXA2g1Ig7nl20un594jRHG40?=
- =?us-ascii?Q?vtV32CzYnB4poVDJ0aRK7X9/U2O1vME9xSLQFfgyq3IJDlPdEwpdxRdWg7q4?=
- =?us-ascii?Q?vDq17MLThkDOWrm0kmNMpYruq3ayMJAGQtwZjtD0+BRcw9xxejvp1NPkDICi?=
- =?us-ascii?Q?f4PnJdyOK7++7OOe/8JKtJ+La04gTS20XVMEf+O6i7hIp0ZrNojg954pADjA?=
- =?us-ascii?Q?gdtEzVTYjAqdAWLEnZjHmE/hheROpMABvm+/3l6Nazv8U9YZaTAUYWXEGvxC?=
- =?us-ascii?Q?cTpISj4V1xTwpfxcR8zVcP7DqPB9gLm7x5xC23f3uY+Dv0M4HrVa8Y4G4eCj?=
- =?us-ascii?Q?yt3lJSZCcw+s6ZltI17t2TbsdRtL0YfOWb/q6cHA6bkxxQDPytE9sg=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?FIm28FvltXUJMeC584ANl0VcFsUzp4WhdtzRUn4QpGDeeXi7iD0VxuqqVVUw?=
+ =?us-ascii?Q?J4xLN4jIFtO8IlgQ5/OlQSfov5ZDXXxhC4m144VUh4qCQ2itQD7yHUsz2lPq?=
+ =?us-ascii?Q?0gtI2fylSLCX6OvhRoU//C9+3EP1Ay6NK12dYmR3aVhOz7e/q6L64cJOKSxo?=
+ =?us-ascii?Q?iYb9fiHREhDLacozj7K3uRRg3hg8gZYCtYvEsSA2Z1E2mt4SBCupcAxKIPZ4?=
+ =?us-ascii?Q?tMFsuWG+qlKBLSar0JKIs4hohTgdokUCtIiDrl2Y7pVFiITK05rVvZFYDaTt?=
+ =?us-ascii?Q?vPRdABOKQ9oqItiHwo8sKZ99BAzQvb53wkFawqFLBT88e/KsyxWZ9JukJ6uj?=
+ =?us-ascii?Q?x2UO3pPoxmYtHScbu5+Qa/WdHWUWhV302eXCAZ0ULjXlP/vzjzU+g3fIVgFs?=
+ =?us-ascii?Q?eCy50QK35lQkqlpaYF1L6VZqQnnDDvX7FpR697tJj+NP7mGDtn3bXrCethOa?=
+ =?us-ascii?Q?F5rNIkp1gdzxnofuzGydAgVylv0QN3knPp1+BqMTGmtNtsKyWO2AwlNcHyi6?=
+ =?us-ascii?Q?9j//aQDlxHJQSe8UMKIpoqYwKE9F0VN1e0ZX0Kn6gHTd8k5/onuy5PkYuuF4?=
+ =?us-ascii?Q?2ktWmysX0p1BgaQNuWyo0V4bWEIpUS84+gSUGsREBoYnnGHs6eD9WmJnnL71?=
+ =?us-ascii?Q?ZR7xvbkMyFNaz9a0b++UFZzZYAzKesb0ElvD/vQnoqugiMZ2HCOWoJiiLXt3?=
+ =?us-ascii?Q?Zdc2vnK9FT6bYfvfegvC//8cTyA9azUYpvzMLrc0i0ZNwh7wVDOv+vPCphOy?=
+ =?us-ascii?Q?QT8Vvzt2T8jI6L5Xkh786jieDO1FJe9adTSc0bHJhA36gWJWMtgoSqokNpVl?=
+ =?us-ascii?Q?+nKLKT+NrnSUCg/X3q+BTJ0cE6V9YzugdIrApsDCnU/BrhVHpgqk27UNJnSs?=
+ =?us-ascii?Q?JAV1oe942QSoKuTwacutvaW0uVy8x9hiDP5YgczXzdhPHjVbeBEiDVJqKK2B?=
+ =?us-ascii?Q?JigKQIaQkcGMhOzDHHKoEAh5nCpFzZ7t0VS8Ro+QQXnAqA6F9oEnFw3rBrAn?=
+ =?us-ascii?Q?AWBEQx6Qnm2bq+z8Dz8t6mHoBMls6gH6IqXwQ+r5urbfF6nubAd2MdmBb3Cb?=
+ =?us-ascii?Q?ee+rJtWziLyRE8H+O6JU7nwm1DVwzF7WoUW3wAsYOQOJOB6GPlR9XbgQuSgG?=
+ =?us-ascii?Q?/dVnqYGyPuiOE+vEOHNeaCaTpOzJxlzNzqM+0UV41HjEJQNGq6sB4xSBt8AO?=
+ =?us-ascii?Q?aCBXrtPCYw66SSRbDjsT7UvZ8gpTQgYL1nl0hDir5s9PJodZ+j80MytdLM1O?=
+ =?us-ascii?Q?Ppu7YsuK5Nbk5OL5s7LuN7XiifAzphJAZDJ7Tw9yP9Nh4Ahg2gnJOgpyc/Yj?=
+ =?us-ascii?Q?uIenWFMhN2JmABspH02sy5vA+alXl51lVyRpH+q+AuNl76CJgGDwoay/QSs3?=
+ =?us-ascii?Q?LqvneXu37zf+aLJ0t+0IO/+wooFQo8wBd9q7zKPrD3htCLNE/X+UtgGqxLw2?=
+ =?us-ascii?Q?pjXKWjEJXL/0MWWvNykfqToUImI8BPNz2WnodoHwK9gvimLB1wHH1w=3D=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0f267ef2-76e9-4146-a805-08da0a0ac388
+X-MS-Exchange-CrossTenant-Network-Message-Id: 93639b0c-9e16-4047-f66d-08da0a0ac26c
 X-MS-Exchange-CrossTenant-AuthSource: CY4PR10MB1463.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2022 00:44:17.4841
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2022 00:44:15.6405
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qTOLbCNJMlFnh9MLxZxuW00dfyy8pkWmGPllybiPfAP8v5M874gZETZpsoxWjkbfqvtd4Ts9pcz8aebkaF6BMXyg8fDX0TGBvG5t5no6XfM=
+X-MS-Exchange-CrossTenant-UserPrincipalName: LNXuPhUgeCkk7i9sVVBdGADToBZbPecO6fxKnPdud/STh+HrVrhSi0gHoHbUW9Z5SltLtJ4enU3VGgMD0AsYTN86lLnJ03kxEJ13LAF1YVY=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB3992
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10291 signatures=694221
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 bulkscore=0
  malwarescore=0 mlxlogscore=999 phishscore=0 spamscore=0 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
  definitions=main-2203200003
-X-Proofpoint-ORIG-GUID: t8PzUdjIvB2058PpfFEaEBnkxhoQOiPl
-X-Proofpoint-GUID: t8PzUdjIvB2058PpfFEaEBnkxhoQOiPl
+X-Proofpoint-GUID: ZKKz8CadRdkfHJXy2YPbnCgil0bmZW0q
+X-Proofpoint-ORIG-GUID: ZKKz8CadRdkfHJXy2YPbnCgil0bmZW0q
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We need the back lock when freeing a task, so we hold it when calling
-__iscsi_put_task from the completion path to make it easier and to avoid
-having to retake it in that path. For iscsi_put_task we just grabbed it
-while also doing the decrement on the refcount but it's only really needed
-if the refcount is zero and we free the task. This modifies iscsi_put_task
-to just take the lock when needed then has the xmit path use it. Normally
-we will then not take the back lock from the xmit path. It will only be
-rare cases where the network is so fast that we get a response right after
-we send the header/data.
+For software iscsi, we do a session per host so there is no need to set
+the target's can_queue since its the same as the host one. It just results
+in extra atomic checks in the main IO path.
 
 Reviewed-by: Lee Duncan <lduncan@suse.com>
+Reviewed-by: Wu Bo <wubo40@huawei.com>
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/scsi/libiscsi.c | 30 ++++++++++++++----------------
- 1 file changed, 14 insertions(+), 16 deletions(-)
+ drivers/scsi/iscsi_tcp.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index a2d0daf5bd60..cde389225059 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -490,6 +490,12 @@ bool iscsi_get_task(struct iscsi_task *task)
- }
- EXPORT_SYMBOL_GPL(iscsi_get_task);
- 
-+/**
-+ * __iscsi_put_task - drop the refcount on a task
-+ * @task: iscsi_task to drop the refcount on
-+ *
-+ * The back_lock must be held when calling in case it frees the task.
-+ */
- void __iscsi_put_task(struct iscsi_task *task)
- {
- 	if (refcount_dec_and_test(&task->refcount))
-@@ -501,10 +507,11 @@ void iscsi_put_task(struct iscsi_task *task)
- {
- 	struct iscsi_session *session = task->conn->session;
- 
--	/* regular RX path uses back_lock */
--	spin_lock_bh(&session->back_lock);
--	__iscsi_put_task(task);
--	spin_unlock_bh(&session->back_lock);
-+	if (refcount_dec_and_test(&task->refcount)) {
-+		spin_lock_bh(&session->back_lock);
-+		iscsi_free_task(task);
-+		spin_unlock_bh(&session->back_lock);
-+	}
- }
- EXPORT_SYMBOL_GPL(iscsi_put_task);
- 
-@@ -1453,8 +1460,6 @@ static int iscsi_xmit_task(struct iscsi_conn *conn, struct iscsi_task *task,
- {
- 	int rc;
- 
--	spin_lock_bh(&conn->session->back_lock);
--
- 	if (!conn->task) {
- 		/*
- 		 * Take a ref so we can access it after xmit_task().
-@@ -1463,7 +1468,6 @@ static int iscsi_xmit_task(struct iscsi_conn *conn, struct iscsi_task *task,
- 		 * stopped the xmit thread. WARN on move on.
- 		 */
- 		if (!iscsi_get_task(task)) {
--			spin_unlock_bh(&conn->session->back_lock);
- 			WARN_ON_ONCE(1);
- 			return 0;
- 		}
-@@ -1477,7 +1481,7 @@ static int iscsi_xmit_task(struct iscsi_conn *conn, struct iscsi_task *task,
- 	 * case a bad target sends a cmd rsp before we have handled the task.
- 	 */
- 	if (was_requeue)
--		__iscsi_put_task(task);
-+		iscsi_put_task(task);
- 
- 	/*
- 	 * Do this after dropping the extra ref because if this was a requeue
-@@ -1489,10 +1493,8 @@ static int iscsi_xmit_task(struct iscsi_conn *conn, struct iscsi_task *task,
- 		 * task and get woken up again.
- 		 */
- 		conn->task = task;
--		spin_unlock_bh(&conn->session->back_lock);
- 		return -ENODATA;
- 	}
--	spin_unlock_bh(&conn->session->back_lock);
- 
- 	spin_unlock_bh(&conn->session->frwd_lock);
- 	rc = conn->session->tt->xmit_task(task);
-@@ -1500,10 +1502,7 @@ static int iscsi_xmit_task(struct iscsi_conn *conn, struct iscsi_task *task,
- 	if (!rc) {
- 		/* done with this task */
- 		task->last_xfer = jiffies;
--	}
--	/* regular RX path uses back_lock */
--	spin_lock(&conn->session->back_lock);
--	if (rc) {
-+	} else {
- 		/*
- 		 * get an extra ref that is released next time we access it
- 		 * as conn->task above.
-@@ -1512,8 +1511,7 @@ static int iscsi_xmit_task(struct iscsi_conn *conn, struct iscsi_task *task,
- 		conn->task = task;
- 	}
- 
--	__iscsi_put_task(task);
--	spin_unlock(&conn->session->back_lock);
-+	iscsi_put_task(task);
- 	return rc;
- }
- 
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 067f71a418c3..e4d633380db0 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -1039,7 +1039,6 @@ static struct scsi_host_template iscsi_sw_tcp_sht = {
+ 	.eh_target_reset_handler = iscsi_eh_recover_target,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+ 	.slave_configure        = iscsi_sw_tcp_slave_configure,
+-	.target_alloc		= iscsi_target_alloc,
+ 	.proc_name		= "iscsi_tcp",
+ 	.this_id		= -1,
+ 	.track_queue_depth	= 1,
 -- 
 2.25.1
 
