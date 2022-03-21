@@ -2,176 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 282B5C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Mar 2022 12:14:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 268A1C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Mar 2022 12:56:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347228AbiCUMPa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Mar 2022 08:15:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54446 "EHLO
+        id S1346113AbiCUM6F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Mar 2022 08:58:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347105AbiCUMPZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2022 08:15:25 -0400
-Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 157A470930
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 05:13:59 -0700 (PDT)
-Received: by mail-ej1-x633.google.com with SMTP id pv16so29490565ejb.0
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 05:13:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair;
-        h=mime-version:content-transfer-encoding:date:message-id:cc:subject
-         :from:to:references:in-reply-to;
-        bh=GV9VS8/cK/1/iW9YwiyL0XBgA3aSl8hWOkl7GPVanBI=;
-        b=oeeLLGNl+r00f+caIK1YerzgsZi2O6Q8Uy2jH+Lwvodzm/uQ35vn5qgQMf/Cv/Y9uY
-         9WsRgsBT0RWbJQQ/RvzwPzMmmET8xQjjSO3su7t4qJYzHQt3PUIsvEqfPxEFpYEXSX2Z
-         Iu2iStywN8Kbl8QHmo7hDsFxdjGFlHSZlchAqGIafE07vsa3MiVeTSQzBjHlY4nUGcRy
-         Q5+MqIJBySRDEwgiqztxIqc7BVb61MRmlwhIAjbJgGM4mvp8sXZA2CpKvYXOhca9o52k
-         hFU+z0JA9op8VQOwt6z5ARTuRooAdTr6lvq50hK7JNUWFDAoHxKsiatP/eIkg/FKNYWt
-         IwWw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:content-transfer-encoding:date
-         :message-id:cc:subject:from:to:references:in-reply-to;
-        bh=GV9VS8/cK/1/iW9YwiyL0XBgA3aSl8hWOkl7GPVanBI=;
-        b=SjarL7FJEU1XbWY/nXE2Re7lMH+h1swvI6/CQNJKovOgMLwx0KMsTuDe9mLxRrSjEp
-         lQYyXROX3207YAIPzHDKbz0sTvV5uKtNsvnkGFM2891qUFPrxGtC8xmJfqaEFCJ0oTg7
-         eHKHIVIyv5tmem4WtMkuKYr50vXSgK83rDPaiz1Jyn1z3Vke8dD8hOurgCW+QLXdColG
-         tAbkrK5Did0t4nzjHZu/OJEsiRLuUNv8CpfWu09rbHDrcLTyjnhCX29DQ3ZMY5nmb8cN
-         MGqu4ScVXY3Yx1UFQjzNcgile/ezG2TQaRF88WoythqB+fi8EVAu/XXIKTWCFJQm7OFJ
-         VZyg==
-X-Gm-Message-State: AOAM530cMoj4fbsR3bX2lJDMs2BCUMW4TX72ywyd5jlqSah2VJp5Pakf
-        yOJS8lixsiwNX8j7yi+EXcoglg==
-X-Google-Smtp-Source: ABdhPJzk0Uo89eWPVkk1mZyIW81aW02eGMZ3uIYZYeJU3QCXjfMCisnD4hgsFfd/spI4KZhqel5v5w==
-X-Received: by 2002:a17:906:3cb1:b0:6ce:2a97:5ade with SMTP id b17-20020a1709063cb100b006ce2a975ademr20035718ejh.728.1647864837621;
-        Mon, 21 Mar 2022 05:13:57 -0700 (PDT)
-Received: from localhost (a246182.upc-a.chello.nl. [62.163.246.182])
-        by smtp.gmail.com with ESMTPSA id a4-20020a170906274400b006da9456e802sm6941623ejd.102.2022.03.21.05.13.56
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Mar 2022 05:13:57 -0700 (PDT)
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S1347662AbiCUM5u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2022 08:57:50 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D711B106638
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 05:56:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1647867384; x=1679403384;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=rK+GWJIqnJbJS1w8TqvmeBh+mp1pponUH9/IsWJGSTM=;
+  b=WWeFrFedtuhrfFPVgw8AqQlREnZbqIrCYwSf9k/gBeKf86MUT+7kgXJA
+   XBaSGROzJv0gXxWWwiXKsaKIv49duFi0NgNoZO2TbwZRi7QZHbtwzZ6hK
+   MAPuqIlb/9zkKLFkwJUWojRvyG+6a+OuCgGIdxM5krdr9xs/tAx2dGYX9
+   2GXATBkDyGfTHiHXjLKf+jclY8RZ+1b4EtNMbk9q62BS0oZSe7oknIG6F
+   DA3LYLRK1ZyGFr6W+OfuiWs9gqZ3tK5EukK2Sw//bYW5KeYZSsYyTKiFt
+   3FFtlSZkj6OEP+uFTKpE0WEUaSpOxp665xOQ82fsWnJvJudFYQ7Jpjwc2
+   A==;
+X-IronPort-AV: E=Sophos;i="5.90,198,1643644800"; 
+   d="scan'208";a="307823450"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Mar 2022 20:56:24 +0800
+IronPort-SDR: wD/OVjXW7vGEi4wOaMmsb76sKwogCminoauxaM6t9jxsbLeWgPHPxVbZM9KtMOCvrbXBDDQgDK
+ 5ZxFzdYmYpSfHnvUV2HYnjpOqJeU6UGPFeV7juVf0INcUvdsU1jA2Wfi9L3QXkxs0uf/q/2zJl
+ wQMAMEPPlwTdbcLdUTiFZo6X4m7xkqgxc9kRe7urCO0IBWQBdglRZ9hCYvHtMrzGpTH0oSFsl3
+ N+qfouDS76lsFlBBAC02dQJ1yRKazTEfiKCaDGN6u7NSSgJUkRFId3g+87oBI+W1u+sUINzDVA
+ XP0ZNRkvOXZHgDYotzvGlWAP
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2022 05:28:21 -0700
+IronPort-SDR: RmW8JSqiXiLsjqF7HHmlh3r7lGkcjepK99ief+ur/WRXlWebjRb49QH+f5XRroSgGuoAHWJv/J
+ uVhnFyK6FOdiGooJ1nni7jdKHJxqoDTU/VE303L+awECGYQI/0VUpZvp4NDoKXrbCiYsRTTePn
+ krheYycWuPbEwy2mHm3AynvwcidnseYogyVigQ/syiXXFi4iB2wMbJGu8YRkB8Xauvfa/Z44ha
+ 2CH/ju4dDxX6SqI8bR0GMtMlnS/hlQ4Vk3sdvMIl7aS7mQQn6uZaz57dxlhYb75YO+Rmb4dAGR
+ JRg=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2022 05:56:25 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KMZPN2VXYz1SVp1
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 05:56:24 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1647867383; x=1650459384; bh=rK+GWJIqnJbJS1w8TqvmeBh+mp1pponUH9/
+        IsWJGSTM=; b=QGQauSZKzkW1re87MwUl5vwsW8xp+yebBhpQKVe7LtCcQ9nyeuS
+        4MWzkvefQ5KXU4vDJmFEU1C1FV2R4Hh7+8q+oVi/Z+ibFLBJ8xCYa4UXZar8z4Sb
+        veMrkk31lo6YSihReKOZNLMQ1Xowfb+7YFzqRhxL2nFoYZfl0qIMQKjIRMFNV38W
+        9GoX5fkQzx5t2TGbkGSgoznpa1yMY+fjALCoHr5gyWpFXdKo4Mu0edeAm6g6r3V5
+        eUmHSZj2Vl0dE/jhVNyquG+ELVFDU7gwOVHr/ervjdtPuFQt0V4Q9X/UbO1C2lul
+        dEi4ZY4zh1FKX/XeVq0unOAz+t3G6xnK0Aw==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id vL1Yh7BMS1xn for <linux-scsi@vger.kernel.org>;
+        Mon, 21 Mar 2022 05:56:23 -0700 (PDT)
+Received: from [10.225.54.48] (unknown [10.225.54.48])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KMZPM0LbXz1Rvlx;
+        Mon, 21 Mar 2022 05:56:22 -0700 (PDT)
+Message-ID: <f01cb35e-41be-d502-3274-177bac71186a@opensource.wdc.com>
+Date:   Mon, 21 Mar 2022 21:56:19 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.6.2
+Subject: Re: [PATCH] scsi: mpt3sas: fix use after free in
+ _scsih_expander_node_remove()
+Content-Language: en-US
+To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
+References: <20220316031521.422488-1-damien.lemoal@opensource.wdc.com>
+ <7164859f-fbf8-8e54-3c08-a40e31d7c231@opensource.wdc.com>
+ <CAK=zhgqrxEW1chA0rzftFd2F29NmjNVQQ9EiapT8J2up0YOdkg@mail.gmail.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <CAK=zhgqrxEW1chA0rzftFd2F29NmjNVQQ9EiapT8J2up0YOdkg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Mar 2022 13:13:56 +0100
-Message-Id: <CIPJBZ36YCV6.2J3QWEURX2EEQ@otso>
-Subject: Re: [RFT] ufs: qcom: drop custom Android boot parameters
-From:   "Luca Weiss" <luca.weiss@fairphone.com>
-To:     "Luca Weiss" <luca.weiss@fairphone.com>,
-        "Krzysztof Kozlowski" <krzk@kernel.org>,
-        "Andy Gross" <agross@kernel.org>,
-        "Bjorn Andersson" <bjorn.andersson@linaro.org>,
-        "Alim Akhtar" <alim.akhtar@samsung.com>,
-        "Avri Altman" <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20220320110616.18355-1-krzk@kernel.org>
- <CIPJ0CT6EQI9.2C0T9KAHDODH2@otso>
-In-Reply-To: <CIPJ0CT6EQI9.2C0T9KAHDODH2@otso>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all again,
+On 2022/03/20 22:29, Sreekanth Reddy wrote:
+> Damien,
+> 
+> Can we save the port_id to a local variable and use it while printking
+> the "expander_remove" message? In older issue logs, in some cases we
+> have observed that device removal at SML get's stuck. So, it will be
+> easy to identify/debug whether device removal got stuck at the SML or
+> not if we have a "expander_remove" print message after calling the
+> mpt3sas_transport_port_remove() (i.e. after device is successfully
+> unregistered at the SML).
 
-On Mon Mar 21, 2022 at 12:58 PM CET, Luca Weiss wrote:
-> Hi Krzysztof,
->
-> On Sun Mar 20, 2022 at 12:06 PM CET, Krzysztof Kozlowski wrote:
-> > The QCOM UFS driver requires an androidboot.bootdevice command line
-> > argument matching the UFS device name.  If the name is different, it
-> > refuses to probe.  Thise androidboot.bootdevice is provided by
-> > stock/vendor (from an Android-based device) bootloader.
-> >
-> > This does not make sense from Linux point of view.  Driver should be
-> > able to boot regardless of bootloader.  Driver should not depend on som=
-e
-> > Android custom environment data.
-> >
-> > Cc: Luca Weiss <luca.weiss@fairphone.com>
-> > Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
->
-> As expected this makes UFS probe even if the node is named ufs@1d84000
-> on my device.
->
-> While I don't know why the code existed in the first place, it was added
-> back in 2015 with the introduction of the driver, so probably it's just
-> some remains from downstream that weren't cleaned up back then.
+OK. I will send a V2.
 
-I went digging a bit and found the original commit from downstream:
-https://source.codeaurora.org/quic/la/kernel/msm-3.18/commit/?id=3D15e2c78d=
-6a7ec73be941e058671942fd9f72b128
-
-<quote>
-Boot device can be either UFS or eMMC which means if eMMC is the boot
-device, probing UFS device is not desirable as it's not going to be
-used after probing. Kernel command line parameter "android.bootdevice"
-tells the kernel about the boot device so look at this boot device
-parameter to know whether to probe UFS device or not.
-</quote>
-
-Should be safe to remove.
-
-Regards
-Luca
-
-
->
-> With this commit also 6b9afd8f96c6 ("arm64: dts: qcom: sm8250: change
-> ufs node name to ufshc") could be reverted (but it would probably make
-> more sense to rename all ufshc@ to ufs@ in a new commit).
->
-> Tested-by: Luca Weiss <luca.weiss@fairphone.com>
->
-> Regards
-> Luca
->
-> >
-> > ---
-> >
-> > Not tested, please kindly provide tests.
-> >
-> > See also:
-> > https://lore.kernel.org/linux-devicetree/f61abc2b-3ce8-7b1f-3d28-8a4a03=
-ec58eb@kernel.org/T/#u
-> > ---
-> >  drivers/scsi/ufs/ufs-qcom.c | 15 ---------------
-> >  1 file changed, 15 deletions(-)
-> >
-> > diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> > index 0d2e950d0865..586c0e567ff9 100644
-> > --- a/drivers/scsi/ufs/ufs-qcom.c
-> > +++ b/drivers/scsi/ufs/ufs-qcom.c
-> > @@ -957,18 +957,6 @@ static const struct reset_control_ops ufs_qcom_res=
-et_ops =3D {
-> >  	.deassert =3D ufs_qcom_reset_deassert,
-> >  };
-> > =20
-> > -#define	ANDROID_BOOT_DEV_MAX	30
-> > -static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
-> > -
-> > -#ifndef MODULE
-> > -static int __init get_android_boot_dev(char *str)
-> > -{
-> > -	strlcpy(android_boot_dev, str, ANDROID_BOOT_DEV_MAX);
-> > -	return 1;
-> > -}
-> > -__setup("androidboot.bootdevice=3D", get_android_boot_dev);
-> > -#endif
-> > -
-> >  /**
-> >   * ufs_qcom_init - bind phy with controller
-> >   * @hba: host controller instance
-> > @@ -988,9 +976,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
-> >  	struct resource *res;
-> >  	struct ufs_clk_info *clki;
-> > =20
-> > -	if (strlen(android_boot_dev) && strcmp(android_boot_dev, dev_name(dev=
-)))
-> > -		return -ENODEV;
-> > -
-> >  	host =3D devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
-> >  	if (!host) {
-> >  		err =3D -ENOMEM;
-> > --=20
-> > 2.32.0
-
+-- 
+Damien Le Moal
+Western Digital Research
