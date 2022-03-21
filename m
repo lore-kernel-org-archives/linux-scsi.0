@@ -2,85 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95A34C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Mar 2022 13:41:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 199E3C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Mar 2022 13:44:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348014AbiCUNmb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Mar 2022 09:42:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53126 "EHLO
+        id S1348064AbiCUNpe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Mar 2022 09:45:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348004AbiCUNm1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2022 09:42:27 -0400
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A10A74630;
-        Mon, 21 Mar 2022 06:41:02 -0700 (PDT)
-Received: by mail-wr1-f48.google.com with SMTP id q8so9386164wrc.0;
-        Mon, 21 Mar 2022 06:41:01 -0700 (PDT)
+        with ESMTP id S1348058AbiCUNpc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2022 09:45:32 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DD1321AD86
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 06:44:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1647870247;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=pnAmXlnXLTHp0iSG/dGGWw30Ukf/zjdTAa7UkhvknLc=;
+        b=NX+j0Dvh5BKNRqXFeQrb9HU0rNb5UcAga2gOBdxYKuu2cAzvWZ1/hImUY2D4N4WDHu8IT7
+        VgznPU7YT/2XIs0GSyNM8StkpvaqqVUeXsQWlay22rQDinyPRzWjtj6sQ7J/IuHaqoEKia
+        b+i3khRY5SoSS52n/YKX3fk+IuK+2a8=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-49-BCc3l4DoMEm7Dxq_rIPacg-1; Mon, 21 Mar 2022 09:44:06 -0400
+X-MC-Unique: BCc3l4DoMEm7Dxq_rIPacg-1
+Received: by mail-qt1-f197.google.com with SMTP id x10-20020ac8700a000000b002c3ef8fc44cso9296654qtm.8
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 06:44:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=9vMt+hX5zS+6WtuXH1LjsjcqPrroHsDgeG/H9EBbOj0=;
-        b=VW/c6Hh40d3QPB+ixM5WfemxoZK7q1oyz2WLdIy/3LCR88cFmN+9WFjgtEk5OH9A6b
-         H7IQGh2LFBYdzlC0qP5MDg/0fJqEeX3RK3ap3jZB8sorcHXUeSpe0Qtp4iGgoVm+bB3Z
-         CgPzFb2vQQq4W3sZCgmddgGNgQZosVtQss2uzQCvvIpo+FOH+UcMlXDxi6a3TJQkjzob
-         EAlYsBJFzOnOsV4aBg0tUHLLRCOPa9JnBFzJIqFmCx3NDnLJP3nwRFr49GMR2MADHFfG
-         g40bs0Nfb+SugonRR3aDOi4B19wlSWKQPJt3ylHDpw+Rlmu1BVMqL/a58AtRrY3k/CYE
-         QdpA==
-X-Gm-Message-State: AOAM532w5As2mIq2fFvKMt3AcfBU48/crtnEfV1UB+dGir8WsNRmZcDy
-        kwdIkfnNAmAC45SQDy+sXlM=
-X-Google-Smtp-Source: ABdhPJxTBRXSwZa5Hgbdytx3UhsHjpCQShJv0x20dGfBhjxWjqfKvLc85bU5Nw7kbDtVsAU0SKnPPw==
-X-Received: by 2002:a5d:52ca:0:b0:203:db2f:2a47 with SMTP id r10-20020a5d52ca000000b00203db2f2a47mr18658989wrv.580.1647870060324;
-        Mon, 21 Mar 2022 06:41:00 -0700 (PDT)
-Received: from [192.168.0.17] (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
-        by smtp.googlemail.com with ESMTPSA id n23-20020a05600c3b9700b0038b7c4c0803sm17157114wms.30.2022.03.21.06.40.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Mar 2022 06:40:59 -0700 (PDT)
-Message-ID: <221c38f0-4eb2-18d4-ef18-ec35437d1163@kernel.org>
-Date:   Mon, 21 Mar 2022 14:40:58 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH v2 1/6] scsi: ufs: dt-bindings: Add SM6350 compatible
- string
-Content-Language: en-US
-To:     Luca Weiss <luca.weiss@fairphone.com>,
-        linux-arm-msm@vger.kernel.org
-Cc:     ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=pnAmXlnXLTHp0iSG/dGGWw30Ukf/zjdTAa7UkhvknLc=;
+        b=K7Kqi/uy+sp/ZeUXwnTiGJ6IfI1xH+IRYI9P5VA8m4DVpwhRgH27G+9eIXFJyiqC/y
+         4YtlCey5mhvLixq5Ixa/yHKCp8Bh8FTdvH0Z96B9NzSNuwrRWCRlaSQiH/dkMvfD7jkd
+         CwgVzobsFtKCWd5A9cy2GSVTv0ejAA7C7IfkoVo5ZQrrOjmMT0waK6bxJrSqrdyQDlRG
+         PbJa+5g5/hzmZiZkjKwK7SRvk+e8rZEJ2B+CIz7hUaX9ThjRCwftaOkpkny249/jd094
+         lr3Y0ACnehe8saPIB3YPlORHRbjIXw7nFfdpuptgrdshJR0ZU5W2BKwPcXhJ3pZ7YzHR
+         0MWw==
+X-Gm-Message-State: AOAM533hhZ5dVl/mibwDmYSowsr/O0VD9ayS6YELhsE9iRxfjzbkNXfY
+        +7BTZ4Lv2qDkibJrpiDGUsSs1y1AiKi1U6BdgSdQ7KPYv+eHm/61uVjxCPAK5FajzhKWtSMBKf0
+        G3oLMDxQTnM+rum2wFiK1xA==
+X-Received: by 2002:a05:622a:1052:b0:2e1:fe6b:377d with SMTP id f18-20020a05622a105200b002e1fe6b377dmr13196872qte.229.1647870245099;
+        Mon, 21 Mar 2022 06:44:05 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyCbc10lLPdAfISHXGX6/OQIVT02pfqbNlUvvEv/dlqMfFKGpEgfAK1zb2wblj6cYu2rsDSkg==
+X-Received: by 2002:a05:622a:1052:b0:2e1:fe6b:377d with SMTP id f18-20020a05622a105200b002e1fe6b377dmr13196847qte.229.1647870244882;
+        Mon, 21 Mar 2022 06:44:04 -0700 (PDT)
+Received: from xps13 (c-98-239-145-235.hsd1.wv.comcast.net. [98.239.145.235])
+        by smtp.gmail.com with ESMTPSA id v3-20020a05622a188300b002e1cbca8ea4sm12420986qtc.59.2022.03.21.06.44.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 21 Mar 2022 06:44:04 -0700 (PDT)
+Date:   Mon, 21 Mar 2022 09:44:03 -0400
+From:   Brian Masney <bmasney@redhat.com>
+To:     Krzysztof Kozlowski <krzk@kernel.org>
+Cc:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20220321133318.99406-1-luca.weiss@fairphone.com>
- <20220321133318.99406-2-luca.weiss@fairphone.com>
-From:   Krzysztof Kozlowski <krzk@kernel.org>
-In-Reply-To: <20220321133318.99406-2-luca.weiss@fairphone.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Luca Weiss <luca.weiss@fairphone.com>
+Subject: Re: [RFT] ufs: qcom: drop custom Android boot parameters
+Message-ID: <YjiBIx+QY2EtFBtO@xps13>
+References: <20220320110616.18355-1-krzk@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220320110616.18355-1-krzk@kernel.org>
+User-Agent: Mutt/2.0.7 (2021-05-04)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 21/03/2022 14:33, Luca Weiss wrote:
-> Document the compatible for the UFS found on SM6350.
+On Sun, Mar 20, 2022 at 12:06:16PM +0100, Krzysztof Kozlowski wrote:
+> The QCOM UFS driver requires an androidboot.bootdevice command line
+> argument matching the UFS device name.  If the name is different, it
+> refuses to probe.  Thise androidboot.bootdevice is provided by
+> stock/vendor (from an Android-based device) bootloader.
 > 
-> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
-> ---
-> Changes in v2:
-> - add second hunk for clock validation
+> This does not make sense from Linux point of view.  Driver should be
+> able to boot regardless of bootloader.  Driver should not depend on some
+> Android custom environment data.
 > 
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
->  1 file changed, 2 insertions(+)
-> 
+> Cc: Luca Weiss <luca.weiss@fairphone.com>
+> Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
 
+I encountered that same code a few months ago and thought then that
+this code doesn't belong here.
 
-Reviewed-by: Krzysztof Kozlowski <krzk@kernel.org>
+Reviewed-by: Brian Masney <bmasney@redhat.com>
 
-
-Best regards,
-Krzysztof
