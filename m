@@ -2,62 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 199E3C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Mar 2022 13:44:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6438CC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Mar 2022 14:23:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348064AbiCUNpe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Mar 2022 09:45:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34626 "EHLO
+        id S1347899AbiCUOZR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Mar 2022 10:25:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348058AbiCUNpc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2022 09:45:32 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DD1321AD86
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 06:44:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1647870247;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=pnAmXlnXLTHp0iSG/dGGWw30Ukf/zjdTAa7UkhvknLc=;
-        b=NX+j0Dvh5BKNRqXFeQrb9HU0rNb5UcAga2gOBdxYKuu2cAzvWZ1/hImUY2D4N4WDHu8IT7
-        VgznPU7YT/2XIs0GSyNM8StkpvaqqVUeXsQWlay22rQDinyPRzWjtj6sQ7J/IuHaqoEKia
-        b+i3khRY5SoSS52n/YKX3fk+IuK+2a8=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-49-BCc3l4DoMEm7Dxq_rIPacg-1; Mon, 21 Mar 2022 09:44:06 -0400
-X-MC-Unique: BCc3l4DoMEm7Dxq_rIPacg-1
-Received: by mail-qt1-f197.google.com with SMTP id x10-20020ac8700a000000b002c3ef8fc44cso9296654qtm.8
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 06:44:05 -0700 (PDT)
+        with ESMTP id S1352559AbiCUOWj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2022 10:22:39 -0400
+Received: from mail-oi1-x236.google.com (mail-oi1-x236.google.com [IPv6:2607:f8b0:4864:20::236])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5118818689A
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 07:16:35 -0700 (PDT)
+Received: by mail-oi1-x236.google.com with SMTP id k10so4797071oia.0
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 07:16:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=QH3AWcYu7AkrcxCD+1AyJsqFqXIRrhSBVQz3h8P5LfU=;
+        b=a6jbebu58k8yNzCyy4LCvlCQfQ5EzUFQADfFplTD2dfiDuiewpP7F1xnW4RRu/3Hl2
+         Neot+S3ZbVaxnTtRDhtUsIZ0HDQ7KFpEdw++9id9UisJ+P1+wlkUbdOr+Wo7Fhiz/YSx
+         Gsz5gzPENQPO4Pv5fQIjyAe3t2x/eCF0rGlxm1ER6f/99PTPtcM7xkKkMOqWw6Sjq2YI
+         J12f/TWMw9dUxicqEYP7RNMREIqVgf7ElH+0hDXNpZCnD7pmg4MjSHa3/t4cIcdQIqIm
+         ZHDJlecpJAwyR71E0IPtlqUKPzedq/5+2dX+vBxD2XI8YVqqmfu6joNwPe7YTGhvPPYN
+         2OFA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=pnAmXlnXLTHp0iSG/dGGWw30Ukf/zjdTAa7UkhvknLc=;
-        b=K7Kqi/uy+sp/ZeUXwnTiGJ6IfI1xH+IRYI9P5VA8m4DVpwhRgH27G+9eIXFJyiqC/y
-         4YtlCey5mhvLixq5Ixa/yHKCp8Bh8FTdvH0Z96B9NzSNuwrRWCRlaSQiH/dkMvfD7jkd
-         CwgVzobsFtKCWd5A9cy2GSVTv0ejAA7C7IfkoVo5ZQrrOjmMT0waK6bxJrSqrdyQDlRG
-         PbJa+5g5/hzmZiZkjKwK7SRvk+e8rZEJ2B+CIz7hUaX9ThjRCwftaOkpkny249/jd094
-         lr3Y0ACnehe8saPIB3YPlORHRbjIXw7nFfdpuptgrdshJR0ZU5W2BKwPcXhJ3pZ7YzHR
-         0MWw==
-X-Gm-Message-State: AOAM533hhZ5dVl/mibwDmYSowsr/O0VD9ayS6YELhsE9iRxfjzbkNXfY
-        +7BTZ4Lv2qDkibJrpiDGUsSs1y1AiKi1U6BdgSdQ7KPYv+eHm/61uVjxCPAK5FajzhKWtSMBKf0
-        G3oLMDxQTnM+rum2wFiK1xA==
-X-Received: by 2002:a05:622a:1052:b0:2e1:fe6b:377d with SMTP id f18-20020a05622a105200b002e1fe6b377dmr13196872qte.229.1647870245099;
-        Mon, 21 Mar 2022 06:44:05 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyCbc10lLPdAfISHXGX6/OQIVT02pfqbNlUvvEv/dlqMfFKGpEgfAK1zb2wblj6cYu2rsDSkg==
-X-Received: by 2002:a05:622a:1052:b0:2e1:fe6b:377d with SMTP id f18-20020a05622a105200b002e1fe6b377dmr13196847qte.229.1647870244882;
-        Mon, 21 Mar 2022 06:44:04 -0700 (PDT)
-Received: from xps13 (c-98-239-145-235.hsd1.wv.comcast.net. [98.239.145.235])
-        by smtp.gmail.com with ESMTPSA id v3-20020a05622a188300b002e1cbca8ea4sm12420986qtc.59.2022.03.21.06.44.03
+         :mime-version:content-disposition:in-reply-to;
+        bh=QH3AWcYu7AkrcxCD+1AyJsqFqXIRrhSBVQz3h8P5LfU=;
+        b=RGEF27KekpXWTOatZ9S5L6XI47vqwZ0C3Tvs+pYGS74WBnV/Bz/DL7HvF0d0Ye3tm4
+         4oZhoSrTaPsFRUZUaxkI/jFnlRvm2h93GaOOicQm8oW0fGeCLRDINhn2FN/BMLhomDsO
+         1+f8DGzQXB2dWsS7MUIUFcUATK+CNvgt0UHBcZcHA2mNx6OiBCpI7RffCbmh5gOq0MLP
+         7dusEhugdXNozyDGSUhPZjSNlC2qVamGMlY3St9nj3CXTqmUtMjqcIy8uZMpwKPyonQo
+         yuOUzZB/uRuPBhlClPJHNU8FGe1yf6HlNaEK7uSJXG5fB1DZLkw1fH9/bdLOYZ7anbyL
+         yC+Q==
+X-Gm-Message-State: AOAM533uBkKCn/EA/QmJkiqq72RD07o3aSOkPuEipZislmKWJ48SxM38
+        +JM7RJoTxD2j39Plcb1K4QfZaQ==
+X-Google-Smtp-Source: ABdhPJxr4m2fEljzSzrW1Im9R0W5tgP6mwWuY4H+a54HyaHHJTHSHL/qeGghCZ3NUXyPTdlVO8s+JQ==
+X-Received: by 2002:a05:6808:47:b0:2ec:bddc:c677 with SMTP id v7-20020a056808004700b002ecbddcc677mr13705279oic.250.1647872190940;
+        Mon, 21 Mar 2022 07:16:30 -0700 (PDT)
+Received: from builder.lan ([2600:1700:a0:3dc8:3697:f6ff:fe85:aac9])
+        by smtp.gmail.com with ESMTPSA id j9-20020a056830270900b005b22854f3besm7439539otu.39.2022.03.21.07.16.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Mar 2022 06:44:04 -0700 (PDT)
-Date:   Mon, 21 Mar 2022 09:44:03 -0400
-From:   Brian Masney <bmasney@redhat.com>
+        Mon, 21 Mar 2022 07:16:29 -0700 (PDT)
+Date:   Mon, 21 Mar 2022 09:16:27 -0500
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
 To:     Krzysztof Kozlowski <krzk@kernel.org>
 Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -65,18 +58,18 @@ Cc:     Andy Gross <agross@kernel.org>,
         linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, Luca Weiss <luca.weiss@fairphone.com>
 Subject: Re: [RFT] ufs: qcom: drop custom Android boot parameters
-Message-ID: <YjiBIx+QY2EtFBtO@xps13>
+Message-ID: <YjiIu7BGP4fG13ct@builder.lan>
 References: <20220320110616.18355-1-krzk@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20220320110616.18355-1-krzk@kernel.org>
-User-Agent: Mutt/2.0.7 (2021-05-04)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Mar 20, 2022 at 12:06:16PM +0100, Krzysztof Kozlowski wrote:
+On Sun 20 Mar 06:06 CDT 2022, Krzysztof Kozlowski wrote:
+
 > The QCOM UFS driver requires an androidboot.bootdevice command line
 > argument matching the UFS device name.  If the name is different, it
 > refuses to probe.  Thise androidboot.bootdevice is provided by
@@ -88,9 +81,53 @@ On Sun, Mar 20, 2022 at 12:06:16PM +0100, Krzysztof Kozlowski wrote:
 > 
 > Cc: Luca Weiss <luca.weiss@fairphone.com>
 > Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
+> 
 
-I encountered that same code a few months ago and thought then that
-this code doesn't belong here.
+Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 
-Reviewed-by: Brian Masney <bmasney@redhat.com>
-
+> ---
+> 
+> Not tested, please kindly provide tests.
+> 
+> See also:
+> https://lore.kernel.org/linux-devicetree/f61abc2b-3ce8-7b1f-3d28-8a4a03ec58eb@kernel.org/T/#u
+> ---
+>  drivers/scsi/ufs/ufs-qcom.c | 15 ---------------
+>  1 file changed, 15 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 0d2e950d0865..586c0e567ff9 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -957,18 +957,6 @@ static const struct reset_control_ops ufs_qcom_reset_ops = {
+>  	.deassert = ufs_qcom_reset_deassert,
+>  };
+>  
+> -#define	ANDROID_BOOT_DEV_MAX	30
+> -static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
+> -
+> -#ifndef MODULE
+> -static int __init get_android_boot_dev(char *str)
+> -{
+> -	strlcpy(android_boot_dev, str, ANDROID_BOOT_DEV_MAX);
+> -	return 1;
+> -}
+> -__setup("androidboot.bootdevice=", get_android_boot_dev);
+> -#endif
+> -
+>  /**
+>   * ufs_qcom_init - bind phy with controller
+>   * @hba: host controller instance
+> @@ -988,9 +976,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>  	struct resource *res;
+>  	struct ufs_clk_info *clki;
+>  
+> -	if (strlen(android_boot_dev) && strcmp(android_boot_dev, dev_name(dev)))
+> -		return -ENODEV;
+> -
+>  	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+>  	if (!host) {
+>  		err = -ENOMEM;
+> -- 
+> 2.32.0
+> 
