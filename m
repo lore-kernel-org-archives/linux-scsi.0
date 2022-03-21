@@ -2,111 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10CFEC433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Mar 2022 15:07:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E179DC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Mar 2022 09:00:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245316AbiCTPJL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 20 Mar 2022 11:09:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54618 "EHLO
+        id S1345585AbiCUJB4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Mar 2022 05:01:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245312AbiCTPJL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Mar 2022 11:09:11 -0400
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79C8D181B05;
-        Sun, 20 Mar 2022 08:07:46 -0700 (PDT)
-Received: by mail-pj1-x102b.google.com with SMTP id kx5-20020a17090b228500b001c6ed9db871so2108944pjb.1;
-        Sun, 20 Mar 2022 08:07:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id;
-        bh=+l4q4eQBGuYBAncAJ/7FNjzYbCXQcTb8z0Fti3AjfZE=;
-        b=pKRs/2JE10K4Vf6BDYt3+ZiXJI53GJEKLNRdDPyEMO+eAi3qZAiszRRYdUeCvObWnY
-         UX/fxE7cRUoPrh1EBtowQvg36anRqPbzVDrb776T7xCGWNw8Yg6sayI4ugxx3LZ7j1Vd
-         66Lzfxj3wP9tJh8isZBG7b8z/5uQIwK32EbvrcUmP90tlkIhdR0CkdZ4Q4iAMbCwBGf8
-         1XPKSY9/JEkwnH0vqs/IeJ6DHNABuTZ5j+QX9kmeKKjXfk9uQqhPJgu4D8yLc4qPvJ8R
-         ARxD4ks/TRyl11SHs0V1KPvK5FGvcaKXFhXdkE4BrnornyFJyN7tL6BoixI0sWBfIt1h
-         oy3Q==
+        with ESMTP id S1345571AbiCUJBz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2022 05:01:55 -0400
+Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B1058C7CA;
+        Mon, 21 Mar 2022 02:00:28 -0700 (PDT)
+Received: by mail-qt1-f172.google.com with SMTP id v14so11398604qta.2;
+        Mon, 21 Mar 2022 02:00:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=+l4q4eQBGuYBAncAJ/7FNjzYbCXQcTb8z0Fti3AjfZE=;
-        b=SCloi02Kr43xXFfPSODHTRJlEfWwYA7oE+5inVDL5WHlZ/Ooz3uJqCxlnf6vFv9Zbr
-         aef+bchQGEU6IhlnY7525PmyCz12YmaRIzpDYzv/0qJgFF/ibpZGpa4bqfFbICGb4Irc
-         HdtF0YPe2xGLulNSQ8vR8VS3vpd+xjwNgiSBjiynMqhQhIIwIzE9bxNbdxHZxsheKmER
-         2336LMGcRNB1Ew2UGeeW+0jsQcakLN7VRg84Wh1btdaRp82AAx4XpIXLzA1WVdGZXETj
-         0uJvZUVg4D6qrBNdtGUryJoqEOeuodK+qgrdl+Aop2wKix2uyTf36X1/lL7HctmvNmm+
-         JXqQ==
-X-Gm-Message-State: AOAM532oTVo9S8DE7WIsbfv1oVpDyZ9uz9H77BZP+7NRIp++szVwwkOu
-        Fj0Sur+Y5+CdUKwnJLPWpDs=
-X-Google-Smtp-Source: ABdhPJzjVhIHqIT+FL3/lrMPWUW4Qb9pOyn3dCQxm/yIh00qtRxd6bgB3b4r8/Es3nEwAA9vFu155w==
-X-Received: by 2002:a17:903:244c:b0:154:5ec5:c4a2 with SMTP id l12-20020a170903244c00b001545ec5c4a2mr333552pls.28.1647788865955;
-        Sun, 20 Mar 2022 08:07:45 -0700 (PDT)
-Received: from localhost.localdomain ([36.24.165.243])
-        by smtp.googlemail.com with ESMTPSA id u37-20020a056a0009a500b004f820de3dcdsm15901275pfg.9.2022.03.20.08.07.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 20 Mar 2022 08:07:45 -0700 (PDT)
-From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
-To:     alim.akhtar@samsung.com
-Cc:     avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, daejun7.park@samsung.com,
-        beanhuo@micron.com, bvanassche@acm.org, keosung.park@samsung.com,
-        gregkh@linuxfoundation.org, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        jakobkoschel@gmail.com, Xiaomeng Tong <xiam0nd.tong@gmail.com>
-Subject: [PATCH v2] ufs: fix an NULL check on list iterator
-Date:   Sun, 20 Mar 2022 23:07:33 +0800
-Message-Id: <20220320150733.21824-1-xiam0nd.tong@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=xIZ3EUUKNdtUQ47jI5vIUZBFjHsbOyEGol2LvB0SN0o=;
+        b=Qxv/MUakbXwXTRVO/SQZjifkWTraB0Rm845cccjc923wfyieY+oThu4I80gLXMhCoJ
+         Bq4xBRcm/MIr8BEzMK8MLxpJeFpBhxhTIDHIdSUauT/Slnr5rbAHrB1c7qTmEctPab8+
+         UD9RuBi9bbKeTSj0ZbYbughNdeiA5qaa6nKjpR/ieguZOWRFuVeEyalWpwWfKgslX3Zw
+         u+E5M4/4z0GhVldXkNx9brEO7tx+9dH8r9mnMs6HaKGnITpbTsC6tw4mNiW+s71a4IAQ
+         6+2gaU1JfzKutYNtT5ZUsXXDMgt1x1lqXGNhQiTpQ4W048YE/lWaX85C0WvwdA44TQ7u
+         M1FQ==
+X-Gm-Message-State: AOAM533bT6UM+3YeKf029hmGcH2kI/Ao+yMSS34YcPhWptpMxhFNXw7F
+        X5rOa8IIQcPWf83XAkTZtCGTzMW9MBWAtQ==
+X-Google-Smtp-Source: ABdhPJxbdHbBA3Bahrof3NselpCQ3MCeJHm0U7LjM7L4UufcxNIF2+MXvsTPmVtLCxiKPM3GrG3G/Q==
+X-Received: by 2002:a05:622a:1822:b0:2e1:b2d4:d877 with SMTP id t34-20020a05622a182200b002e1b2d4d877mr15423381qtc.630.1647853227458;
+        Mon, 21 Mar 2022 02:00:27 -0700 (PDT)
+Received: from mail-yb1-f171.google.com (mail-yb1-f171.google.com. [209.85.219.171])
+        by smtp.gmail.com with ESMTPSA id bm21-20020a05620a199500b0067d5e6c7bd8sm7374128qkb.56.2022.03.21.02.00.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 21 Mar 2022 02:00:27 -0700 (PDT)
+Received: by mail-yb1-f171.google.com with SMTP id h126so26834183ybc.1;
+        Mon, 21 Mar 2022 02:00:26 -0700 (PDT)
+X-Received: by 2002:a25:dc4:0:b0:629:2337:f9ea with SMTP id
+ 187-20020a250dc4000000b006292337f9eamr21473033ybn.6.1647853226676; Mon, 21
+ Mar 2022 02:00:26 -0700 (PDT)
+MIME-Version: 1.0
+References: <247066a3104d25f9a05de8b3270fc3c848763bcc.1647673264.git.christophe.jaillet@wanadoo.fr>
+In-Reply-To: <247066a3104d25f9a05de8b3270fc3c848763bcc.1647673264.git.christophe.jaillet@wanadoo.fr>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 21 Mar 2022 10:00:15 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdUgXek+BDT4vJQfFcwDgQfyDAB=wXfdC0poynzH26=okw@mail.gmail.com>
+Message-ID: <CAMuHMdUgXek+BDT4vJQfFcwDgQfyDAB=wXfdC0poynzH26=okw@mail.gmail.com>
+Subject: Re: [PATCH] zorro: Fix a resource leak in zorro7xx_remove_one()
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@steeleye.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The list iterator is always non-NULL so the check 'if (!rgn)'
-is always false and the dev_err() is never called. Move the
-check outside the loop and determine if 'victim_rgn' is NULL,
-to fix this bug.
+Hi Christophe,
 
-Fixes: 4b5f49079c52a ("scsi: ufs: ufshpb: L2P map management for HPB read")
-Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
----
-changes since v1:
- - move the check outside the loop (Jakob Koschel)
-v1: https://lore.kernel.org/all/20220319042657.21835-1-xiam0nd.tong@gmail.com/
----
- drivers/scsi/ufs/ufshpb.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+On Sat, Mar 19, 2022 at 8:01 AM Christophe JAILLET
+<christophe.jaillet@wanadoo.fr> wrote:
+> The error handling path of the probe releases a resource that is not freed
+> in the remove function.
+>
+> In some cases, a ioremap() must be undone.
+>
+> Add the missing iounmap() call in the remove function.
+>
+> Fixes: 45804fbb00ee ("[SCSI] 53c700: Amiga Zorro NCR53c710 SCSI")
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index 2d36a0715fca..b34feba1f53d 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -869,12 +869,6 @@ static struct ufshpb_region *ufshpb_victim_lru_info(struct ufshpb_lu *hpb)
- 	struct ufshpb_region *rgn, *victim_rgn = NULL;
- 
- 	list_for_each_entry(rgn, &lru_info->lh_lru_rgn, list_lru_rgn) {
--		if (!rgn) {
--			dev_err(&hpb->sdev_ufs_lu->sdev_dev,
--				"%s: no region allocated\n",
--				__func__);
--			return NULL;
--		}
- 		if (ufshpb_check_srgns_issue_state(hpb, rgn))
- 			continue;
- 
-@@ -890,6 +884,11 @@ static struct ufshpb_region *ufshpb_victim_lru_info(struct ufshpb_lu *hpb)
- 		break;
- 	}
- 
-+	if (!victim_rgn)
-+		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
-+			"%s: no region allocated\n",
-+			__func__);
-+
- 	return victim_rgn;
- }
- 
+Thanks for your patch!
 
-base-commit: 14702b3b2438e2f2d07ae93b5d695c166e5c83d1
--- 
-2.17.1
+The online-summary should be
+"scsi: zorro7xx: Fix a resource leak in zorro7xx_remove_one()".
 
+Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
