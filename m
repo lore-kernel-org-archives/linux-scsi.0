@@ -2,92 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E179DC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Mar 2022 09:00:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B5D5C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Mar 2022 11:22:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345585AbiCUJB4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Mar 2022 05:01:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33498 "EHLO
+        id S1346752AbiCULYN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Mar 2022 07:24:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345571AbiCUJBz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2022 05:01:55 -0400
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B1058C7CA;
-        Mon, 21 Mar 2022 02:00:28 -0700 (PDT)
-Received: by mail-qt1-f172.google.com with SMTP id v14so11398604qta.2;
-        Mon, 21 Mar 2022 02:00:28 -0700 (PDT)
+        with ESMTP id S243316AbiCULYM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2022 07:24:12 -0400
+Received: from mail-yb1-xb2f.google.com (mail-yb1-xb2f.google.com [IPv6:2607:f8b0:4864:20::b2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E7518BE19
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 04:22:47 -0700 (PDT)
+Received: by mail-yb1-xb2f.google.com with SMTP id j2so27502008ybu.0
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2022 04:22:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=59/+29AfugXrFjzNAA/AleHnJFc3FQCIzeHJaozhbYs=;
+        b=m8XwpHjKU/W+0aeE0aPhwzwKwy85wfRo4sPTe4jYG6ugw9k55IP7wQxyjtUlrsYH6L
+         vFwf5X7rYpPMGoZFzSGwYJXPJUhhU4vS3KxGFE7zo6tMzsRA0EDCmqOJ38RjXh4aZTQi
+         B6Cxjhpbq0VX/zpyHtpaFWgO6Sb/XqE970Af3s89fgoDUWPk9HvLdPDyKwn3SBEkMOrd
+         5A0fFiNLHfesAR1aGGivG9Z8mI5iYsgSF/z6NoXTm1gsSQ5Nszw1za0F3pfafe21R8tA
+         VUU2+JfQYqGDFCwJZe+ClHoqpUO/YzBcw3+pl0UxJO3btWaKLVma4kA4NAyWFtk/9qnM
+         DxIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=xIZ3EUUKNdtUQ47jI5vIUZBFjHsbOyEGol2LvB0SN0o=;
-        b=Qxv/MUakbXwXTRVO/SQZjifkWTraB0Rm845cccjc923wfyieY+oThu4I80gLXMhCoJ
-         Bq4xBRcm/MIr8BEzMK8MLxpJeFpBhxhTIDHIdSUauT/Slnr5rbAHrB1c7qTmEctPab8+
-         UD9RuBi9bbKeTSj0ZbYbughNdeiA5qaa6nKjpR/ieguZOWRFuVeEyalWpwWfKgslX3Zw
-         u+E5M4/4z0GhVldXkNx9brEO7tx+9dH8r9mnMs6HaKGnITpbTsC6tw4mNiW+s71a4IAQ
-         6+2gaU1JfzKutYNtT5ZUsXXDMgt1x1lqXGNhQiTpQ4W048YE/lWaX85C0WvwdA44TQ7u
-         M1FQ==
-X-Gm-Message-State: AOAM533bT6UM+3YeKf029hmGcH2kI/Ao+yMSS34YcPhWptpMxhFNXw7F
-        X5rOa8IIQcPWf83XAkTZtCGTzMW9MBWAtQ==
-X-Google-Smtp-Source: ABdhPJxbdHbBA3Bahrof3NselpCQ3MCeJHm0U7LjM7L4UufcxNIF2+MXvsTPmVtLCxiKPM3GrG3G/Q==
-X-Received: by 2002:a05:622a:1822:b0:2e1:b2d4:d877 with SMTP id t34-20020a05622a182200b002e1b2d4d877mr15423381qtc.630.1647853227458;
-        Mon, 21 Mar 2022 02:00:27 -0700 (PDT)
-Received: from mail-yb1-f171.google.com (mail-yb1-f171.google.com. [209.85.219.171])
-        by smtp.gmail.com with ESMTPSA id bm21-20020a05620a199500b0067d5e6c7bd8sm7374128qkb.56.2022.03.21.02.00.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Mar 2022 02:00:27 -0700 (PDT)
-Received: by mail-yb1-f171.google.com with SMTP id h126so26834183ybc.1;
-        Mon, 21 Mar 2022 02:00:26 -0700 (PDT)
-X-Received: by 2002:a25:dc4:0:b0:629:2337:f9ea with SMTP id
- 187-20020a250dc4000000b006292337f9eamr21473033ybn.6.1647853226676; Mon, 21
- Mar 2022 02:00:26 -0700 (PDT)
+        bh=59/+29AfugXrFjzNAA/AleHnJFc3FQCIzeHJaozhbYs=;
+        b=VT+KdS3j/4hwaxJiBHN33I3uV9lbQvvnB0bm9CZz26JYP420XzCdlj1DDK2GOzDpm6
+         al89jaEm7SQeArtPCRg75VXSOIrrxxDuoabt57FvvMfWiy+sj7GNG8HEiH/axZS9GU7a
+         l7YgCkdLPBHnC/dl6sd7LS5E5z+hPt+NVZjohUA5D3RATcBgHg5nr0yx6X4GCqm2Xq9F
+         WYYomiQGeLXr302TnSi3enAOCyFIywd3es7E8r5sSvNzYMgUfaDcPzCZEnM8mk0GeP2l
+         FImIefdw3WVH71cPWPzvZbr0ODuqPJDC/BFWBp6VPa9Upn5EegF3gtMDEAjyjV/bnjnJ
+         J/Vg==
+X-Gm-Message-State: AOAM532/48kgr8b0LfduV+CgjMvugyVeHNJYM8XCVYcc7aNRCp7PyVjv
+        njn7YtoIvJKHFkuFxiU06wcJZ5VqeMRoXNHmoh6+xw==
+X-Google-Smtp-Source: ABdhPJzWhuELzmeHPG56Ha7BZy3OBGHZOV0q502yNMMRvCHzJ3G4EqBNQBJ2L5I4VLWlR1XUtgBEqVKLi8rTJQxjiwA=
+X-Received: by 2002:a5b:848:0:b0:633:716f:1fb0 with SMTP id
+ v8-20020a5b0848000000b00633716f1fb0mr19901896ybq.522.1647861766807; Mon, 21
+ Mar 2022 04:22:46 -0700 (PDT)
 MIME-Version: 1.0
-References: <247066a3104d25f9a05de8b3270fc3c848763bcc.1647673264.git.christophe.jaillet@wanadoo.fr>
-In-Reply-To: <247066a3104d25f9a05de8b3270fc3c848763bcc.1647673264.git.christophe.jaillet@wanadoo.fr>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 21 Mar 2022 10:00:15 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdUgXek+BDT4vJQfFcwDgQfyDAB=wXfdC0poynzH26=okw@mail.gmail.com>
-Message-ID: <CAMuHMdUgXek+BDT4vJQfFcwDgQfyDAB=wXfdC0poynzH26=okw@mail.gmail.com>
-Subject: Re: [PATCH] zorro: Fix a resource leak in zorro7xx_remove_one()
-To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+References: <20220320110616.18355-1-krzk@kernel.org>
+In-Reply-To: <20220320110616.18355-1-krzk@kernel.org>
+From:   Amit Pundir <amit.pundir@linaro.org>
+Date:   Mon, 21 Mar 2022 16:52:10 +0530
+Message-ID: <CAMi1Hd0T6bBdOCe4o_-RSaHdmG3oT9KtqDpHOiQpGQxmoBVa0w@mail.gmail.com>
+Subject: Re: [RFT] ufs: qcom: drop custom Android boot parameters
+To:     Krzysztof Kozlowski <krzk@kernel.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@steeleye.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Luca Weiss <luca.weiss@fairphone.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Christophe,
-
-On Sat, Mar 19, 2022 at 8:01 AM Christophe JAILLET
-<christophe.jaillet@wanadoo.fr> wrote:
-> The error handling path of the probe releases a resource that is not freed
-> in the remove function.
+On Sun, 20 Mar 2022 at 16:36, Krzysztof Kozlowski <krzk@kernel.org> wrote:
 >
-> In some cases, a ioremap() must be undone.
+> The QCOM UFS driver requires an androidboot.bootdevice command line
+> argument matching the UFS device name.  If the name is different, it
+> refuses to probe.  Thise androidboot.bootdevice is provided by
+> stock/vendor (from an Android-based device) bootloader.
 >
-> Add the missing iounmap() call in the remove function.
+> This does not make sense from Linux point of view.  Driver should be
+> able to boot regardless of bootloader.  Driver should not depend on some
+> Android custom environment data.
 >
-> Fixes: 45804fbb00ee ("[SCSI] 53c700: Amiga Zorro NCR53c710 SCSI")
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-Thanks for your patch!
+No obvious regression on QCOM devboards DB845c (sdm845) and RB5
+(sm8250), and Xiaomi Pocophone F1 (sdm845) running AOSP.
 
-The online-summary should be
-"scsi: zorro7xx: Fix a resource leak in zorro7xx_remove_one()".
+Tested-by: Amit Pundir <amit.pundir@linaro.org>
 
-Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+> Cc: Luca Weiss <luca.weiss@fairphone.com>
+> Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
+>
+> ---
+>
+> Not tested, please kindly provide tests.
+>
+> See also:
+> https://lore.kernel.org/linux-devicetree/f61abc2b-3ce8-7b1f-3d28-8a4a03ec58eb@kernel.org/T/#u
+> ---
+>  drivers/scsi/ufs/ufs-qcom.c | 15 ---------------
+>  1 file changed, 15 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 0d2e950d0865..586c0e567ff9 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -957,18 +957,6 @@ static const struct reset_control_ops ufs_qcom_reset_ops = {
+>         .deassert = ufs_qcom_reset_deassert,
+>  };
+>
+> -#define        ANDROID_BOOT_DEV_MAX    30
+> -static char android_boot_dev[ANDROID_BOOT_DEV_MAX];
+> -
+> -#ifndef MODULE
+> -static int __init get_android_boot_dev(char *str)
+> -{
+> -       strlcpy(android_boot_dev, str, ANDROID_BOOT_DEV_MAX);
+> -       return 1;
+> -}
+> -__setup("androidboot.bootdevice=", get_android_boot_dev);
+> -#endif
+> -
+>  /**
+>   * ufs_qcom_init - bind phy with controller
+>   * @hba: host controller instance
+> @@ -988,9 +976,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>         struct resource *res;
+>         struct ufs_clk_info *clki;
+>
+> -       if (strlen(android_boot_dev) && strcmp(android_boot_dev, dev_name(dev)))
+> -               return -ENODEV;
+> -
+>         host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+>         if (!host) {
+>                 err = -ENOMEM;
+> --
+> 2.32.0
+>
