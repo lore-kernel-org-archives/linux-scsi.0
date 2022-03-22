@@ -2,154 +2,175 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66FA3C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 12:17:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C0BEC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 12:21:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234747AbiCVMSh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 08:18:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41846 "EHLO
+        id S232908AbiCVMXU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 08:23:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232670AbiCVMSg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 08:18:36 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F14B6AA7F;
-        Tue, 22 Mar 2022 05:17:08 -0700 (PDT)
-Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KN9R30Xy3z686wW;
-        Tue, 22 Mar 2022 20:14:55 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 22 Mar 2022 13:17:05 +0100
-Received: from [10.47.85.68] (10.47.85.68) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Tue, 22 Mar
- 2022 12:17:04 +0000
-Message-ID: <9ab30c12-4451-d96a-f3de-5b883a92aed5@huawei.com>
-Date:   Tue, 22 Mar 2022 12:17:03 +0000
+        with ESMTP id S231751AbiCVMXS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 08:23:18 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 622BC74DE8
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 05:21:50 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id o6-20020a17090a9f8600b001c6562049d9so1998583pjp.3
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 05:21:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=gjKSynJmkW0CtA3qkSpKpJbPKvrSKd5As0XTIh+XRuY=;
+        b=BRyZ3si1l0UXPzcdX2XIi0bx+DC2xx0RSQDHqeo2Xr6mx7LyjxvUPUYG9YkOazDVgB
+         Gudhe6wCeEL+Wbmlwuy38ZIFGR/wQPfYmQYmIrUJ/RHSAuHXvZFcfQYU9p67MSS14NWJ
+         Cwf/M1f5+wphxQM6Q15EDCILzEqvTzWK6fo7M=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=gjKSynJmkW0CtA3qkSpKpJbPKvrSKd5As0XTIh+XRuY=;
+        b=X81GHUfeI5ZvNvGsia7QFdAXnVO2EcJZ+4wRUkcxmykE71GlUwzj55LGUnDe4LxDlk
+         l94GsdHNF1bnKxLmCMHg9axHpnbBfWQb0xxlovimHRaaoGkt6dAB5s4WjWPPY5KU7QQf
+         juZR1bOztAHY9co5eEsid/Ib9bVTUozOADWDpbobWmcqRkDevOfiFT7y0wPUL5pxQaSA
+         5OW2rmB2eRwErcP74pKDO4wd/G1Zlwvy+m0Jwcn6FR/hVDE+ws5k+/eCR1waE4A9fJMz
+         UoU2yscT980Mk1+4Lk4V9sWM/JRN6nfYBFvlojerIBhm/DGbo3xHWI3lb2nTNtXeaVS4
+         Y7qg==
+X-Gm-Message-State: AOAM5311jvl5WkxTMK1219A+ywcUC/xj9xyZVnyob7QujULd5F7yR/Cx
+        EGiI2f0NdBY2dfHSEV3W1Ff1tit6o0qTVjkMF0IXnjsgIZU5sG4ut9GFkEUgaMmaOpEOkERkFoI
+        G/Zaj05oNhQWgg3BrAei8j83TTKdVExs2y7pioASP1RZIxnjKEPD9uB4QZGvrrkogrxmcryfSap
+        vZKeUQ0uZ7kg==
+X-Google-Smtp-Source: ABdhPJzvta/sPU13J7zshew0tc3nNDRYOjXZL7wZ+vcoqvd4L0fB+fo4JBroVIkXWgFbx088xMzghA==
+X-Received: by 2002:a17:902:8f94:b0:14f:d9b3:52c2 with SMTP id z20-20020a1709028f9400b0014fd9b352c2mr17709976plo.103.1647951709563;
+        Tue, 22 Mar 2022 05:21:49 -0700 (PDT)
+Received: from dhcp-10-123-20-15.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id d11-20020a056a0010cb00b004e1b76b09c0sm23225259pfu.74.2022.03.22.05.21.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Mar 2022 05:21:48 -0700 (PDT)
+From:   Sumit Saxena <sumit.saxena@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, chandrakanth.patil@broadcom.com,
+        sreekanth.reddy@broadcom.com, prayas.patel@broadcom.com,
+        Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: [PATCH 0/7] mpi3mr: add BSG interface support for controller management
+Date:   Tue, 22 Mar 2022 08:21:00 -0400
+Message-Id: <20220322122107.8482-1-sumit.saxena@broadcom.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH RFC 00/11] blk-mq/libata/scsi: SCSI driver tagging
- improvements
-To:     Hannes Reinecke <hare@suse.de>, <axboe@kernel.dk>,
-        <damien.lemoal@opensource.wdc.com>, <bvanassche@acm.org>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <hch@lst.de>,
-        <ming.lei@redhat.com>
-CC:     <chenxiang66@hisilicon.com>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <dm-devel@redhat.com>,
-        <beanhuo@micron.com>
-References: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
- <1537235d-ac22-6914-4b31-4482e9536098@suse.de>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <1537235d-ac22-6914-4b31-4482e9536098@suse.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.47.85.68]
-X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="00000000000048609805dacda88e"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 22/03/2022 11:30, Hannes Reinecke wrote:
-> On 3/22/22 11:39, John Garry wrote:
->> Currently SCSI low-level drivers are required to manage tags for commands
->> which do not come via the block layer - libata internal commands would be
->> an example of one of these.
->>
->> There was some work to provide "reserved commands" support in such series
->> as 
->> https://lore.kernel.org/linux-scsi/20211125151048.103910-1-hare@suse.de/
->>
->> This was based on allocating a request for the lifetime of the "internal"
->> command.
->>
->> This series tries to solve that problem by not just allocating the 
->> request
->> but also sending it through the block layer, that being the normal flow
->> for a request. We need to do this as we may only poll completion of
->> requests through the block layer, so would need to do this for poll queue
->> support.
->>
->> There is still scope to allocate commands just to get a tag as token as
->> that may suit some other scenarios, but it's not what we do here.
->>
->> This series extends blk-mq to support a request queue having a custom set
->> of ops. In addition SCSI core code adds support for these type of 
->> requests.
->>
->> This series does not include SCSI core handling for enabling reserved
->> tags per tagset, but that would be easy to add.
->>
->> Based on mkp-scsi 5.18/scsi-staging @ 66daf3e6b993
->>
->> Please consider as an RFC for now. I think that the libata change has the
->> largest scope for improvement...
->>
-> 
-> Grand seeing that someone is taking it up. Thanks for doing this!
-> 
-> But:
-> Allocating a queue for every request (eg in patch 3) is overkill. If we 
-> want to go that route we should be allocating the queue upfront (eg when 
-> creating the device itself), and then just referencing it.
+--00000000000048609805dacda88e
+Content-Transfer-Encoding: 8bit
 
-For patch #3 I needed to allocate a separate request queue as the scsi 
-device is not created by that stage.
+This patchset adds BSG interface support for controller
+management. BSG layer faciliates communication/data exchange 
+between application and driver/firmware over BSG device node.
 
-And then for other scenarios in which we allocate the separate request 
-queue, since the scheme here is to allocate a request queue with 
-different ops, we can't use the same scsi_device request queue.
+Sumit Saxena (7):
+  mpi3mr: add BSG device support for controller management
+  mpi3mr: add support for driver commands
+  mpi3mr: add support for MPT commands
+  mpi3mr: add support for PEL commands
+  mpi3mr: expose adapter state to sysfs
+  mpi3mr: add support for nvme pass-through
+  mpi3mr: update driver version to 8.0.0.69.0
 
-note: As for allocating request queues for the lifetime of the host, we 
-need to remember that blk-mq fairly reserves a tag budget per request 
-queue, and it would be a waste to keep a budget just for these internal 
-commands. So that is why I only keep the request queues temporarily.
+ drivers/scsi/mpi3mr/Kconfig        |    1 +
+ drivers/scsi/mpi3mr/Makefile       |    1 +
+ drivers/scsi/mpi3mr/mpi3mr.h       |   81 +-
+ drivers/scsi/mpi3mr/mpi3mr_app.c   | 1610 ++++++++++++++++++++++++++++
+ drivers/scsi/mpi3mr/mpi3mr_app.h   |  490 +++++++++
+ drivers/scsi/mpi3mr/mpi3mr_debug.h |   37 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c    |  331 +++++-
+ drivers/scsi/mpi3mr/mpi3mr_os.c    |   52 +-
+ 8 files changed, 2585 insertions(+), 18 deletions(-)
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr_app.c
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr_app.h
 
-> 
-> However, can't say I like this approach. I've been playing around with 
-> supporting internal commands, and really found two constraints really 
-> annoying:
-> 
-> - The tagset supports only _one_ set of payload via
->    blk_mq_rq_(to,from)_pdu().
-> This requires each request to be of the same type, and with that making
-> it really hard for re-purposing the request for internal usage. In the
-> end I settled by just keeping it and skipping the SCSI command field.
+-- 
+2.27.0
 
-That sounds reasonable.
 
-For this series I am just fixing up libsas, and libsas has a sas_task 
-per command already, so we can just allocate the sas_task separately and 
-use the host_scribble to point to the sas_task.
+--00000000000048609805dacda88e
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-> If we could have a distinct PDU type for internal commands I guess 
-> things would be easier.
-
-Other drivers can do something similar to above or use the scsi priv data.
-
-> 
-> - The number of reserved commands is static.
-> With that it's getting really hard using reserved commands with 
-> low-queue depth devices like ATA; we only have 31 commands to work with, 
-> and setting one or two aside for TMF is really making a difference 
-> performance wise. It would be _awesome_ if we could allocate reserved 
-> commands dynamically (ie just marking a command as 'reserved' once 
-> allocated).
-
-I see. So you want to allocate a request, mark as "internal", and then 
-we have a flag which can be used to decide which path we need to send it 
-on. eh, maybe scsi_cmnd.submitter could be used
-
-> Sure, it won't have the same guarantees as 'real' reserved commands, but 
-> in most cases we don't actually need that.
-> 
-> Maybe these are some lines we could investigate?
-> Hmm?
-> 
-
-Thanks,
-John
+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
+GmgWG68YahkDuVSTTt2beZdyMeDwq/KifJFo18EkhcL3e7rmDAh8SniUI/0o3HX6hrgdmUI1wSdz
+uIVL/m6Ok9mIl2U5kvguitOSC0bVaQPfNzlj+7PCKBECAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZc3VtaXQuc2F4ZW5hQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUNz+JSIXEXl2uQ4Utcnx7FnFi
+hhowDQYJKoZIhvcNAQELBQADggEBAL0HLbxgPSW4BFbbIMN3A/ifBg4Lzaph8ARJOnZpGQivo9jG
+kQOd95knQi9Lm95JlBAJZCqXXj7QS+dnE71tsFeHWcHNNxHrTSwn4Xi5EqaRjLC6g4IEPyZHWDrD
+zzJidgfwQvfZONkf4IXnnrIEFle+26/gPs2kOjCeLMo6XGkNC4HNla1ol1htToQaNN8974pCqwIC
+rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
+3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIGQaNlwi30ES5g++YV6o/xFr7tc9D2hn
+2cemokcoT7WuMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDMy
+MjEyMjE1MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQC9idusXDPhxBSz1re1bqTSj66WVWB5vJvMtt/YxVCSYZmY2bfN
+jqMUSQn34/zJcMrVVKOL3kOlUTuix9kRBC921i0d+pbjbKCuva9Ui+mN3To+r/+VQZsl43laycOb
+yZtuTon2OGMjRv+WKzW3KMaG5dCOOVL4eybcX+3envI9XCC818FJTzbOGwT7YyLhPO4jz7ZEpFKl
+7Y7oy1chJNeCYUfv8q4JXyXHkTnCs1EQl4SjyOY3NFc5PEgrKBapn2PUmxMwWrIVAS9l9naRyLK1
+VkuOzKaKVwiM+iGWWi7tBbFpsAHPkMRmVvpUt0vK6jvCrb9MtBrKGptUaLiFfgkS
+--00000000000048609805dacda88e--
