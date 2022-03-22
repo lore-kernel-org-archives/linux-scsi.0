@@ -2,145 +2,190 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E044C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 14:03:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E766C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 14:06:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236047AbiCVOEg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 10:04:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50144 "EHLO
+        id S234614AbiCVOIW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 10:08:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236027AbiCVOEe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 10:04:34 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE1B92181D;
-        Tue, 22 Mar 2022 07:03:06 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 123B7210E2;
-        Tue, 22 Mar 2022 14:03:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1647957785; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=hxjeJtctvItHxAuxf7YEFgNghbofAlK0X837AW6jowg=;
-        b=1HahhxYubHjyjXf3x5tSAPtNs94DufBIYB7u1A0vP4mor3219f8y8piYhga6u25WArLFnS
-        pI8luKQLIIAZLESqTiECLMRUY4662mREjQaQbZ+DXRDgXhqh9PhuolvCY5UGWoSBNymWZY
-        cUDR+Cib+KwSMmvEjIpoPJ373jjq/vI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1647957785;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=hxjeJtctvItHxAuxf7YEFgNghbofAlK0X837AW6jowg=;
-        b=+s+pJvWejwOUWanic85/07ZAh2YkVuMiJHwRm5qpSCNi/cyi9lVo7pmXn2La49cbMKqUf/
-        nn/meLPCRH0vGQBA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D1B4112FC5;
-        Tue, 22 Mar 2022 14:03:04 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id ZcjaMhjXOWI6HQAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 22 Mar 2022 14:03:04 +0000
-Message-ID: <306df4cf-0ee0-2b1e-044c-aed6c70122f9@suse.de>
-Date:   Tue, 22 Mar 2022 15:03:04 +0100
+        with ESMTP id S234885AbiCVOIU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 10:08:20 -0400
+Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 839B533E23;
+        Tue, 22 Mar 2022 07:05:42 -0700 (PDT)
+Received: by mail-ed1-x52d.google.com with SMTP id h1so21786294edj.1;
+        Tue, 22 Mar 2022 07:05:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=HMkNdXcc2Lb8L9s/UykqzV2eTirXFa1SSmENhZLljCs=;
+        b=JQq/iovDe+OwIZAr+Ds/Ee/ejbRwf3QTpE77Yh3oZlfqZ9KZUrO+Z+j00ElQP2Uqsh
+         PNH4SnV11IoAD+rNVx17TT0AO3SRsCp9MMqFeeuS/OMHHs3x7LC/5ldxbpDdOgYvq8ch
+         0FMmMwNIU0MCLqUmZvuPHznb+Dq7Z5Ks1MiTEYapbaiGyXqW/nNEJSEO1idS9rVw299u
+         HWjZY1waHbuvz6slibYyGwsLePemCz+t1HMGBWJGbloG3KV/NGoo4NQZcDB0zMb5RaTL
+         TEOzkiMIuT4QHrzEfmOk4WoPe5pM/CygF+IPE0V0OgqzKl3wVwvgwtrERF5cIDxKGAP+
+         1d1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=HMkNdXcc2Lb8L9s/UykqzV2eTirXFa1SSmENhZLljCs=;
+        b=P+EY8lt4yc1CaR86U/ixORmuwjohHGeBzFs1ujzihBfCVHTneAGCSBQLBp3KUJvRV1
+         gjbZeFUlRbtAedJCfUs+yEJQ0d93P3ZjjdlhVAPThx6yHcizk+U2hl+IyLwHcO6mkrP/
+         SWnnH5R4SLFGO2FC9xVFxU8R96DRjN3jdNErv4o7YV1Ax8/EAnhcvDkFggqakaFDOQp/
+         QkH592jfDDFM7N2tg9jAZ+Oshhah7tJHfUBeszqOgVli4WJxTlj93zga0RCoxqhb2JXr
+         1QhCxKw1C5Gq4IYfDbLAYRkLr/slgzNAIiWN4LD/Db/tWsbYclFqOF3nU1eZO2sGP09w
+         ynUA==
+X-Gm-Message-State: AOAM5307Ng16nl1LZa5II6iWtdWG5N+Ya8Saxi8DGvfDXb6iYlq8azuK
+        d7Ulkmform/mTFLwWXnecLI=
+X-Google-Smtp-Source: ABdhPJz4ZImkLvEfmzp0CwI9TtxvSqsbbfBRxp4A3H3cjClX5wDINCyjuZxD+S7aWsUFsNqxkv6qOw==
+X-Received: by 2002:aa7:cb0f:0:b0:416:201f:c64d with SMTP id s15-20020aa7cb0f000000b00416201fc64dmr28451611edt.48.1647957939430;
+        Tue, 22 Mar 2022 07:05:39 -0700 (PDT)
+Received: from [192.168.178.40] (ipbcc1cfad.dynamic.kabel-deutschland.de. [188.193.207.173])
+        by smtp.gmail.com with ESMTPSA id sa13-20020a1709076d0d00b006ce3ef8e1d4sm8124886ejc.31.2022.03.22.07.05.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 22 Mar 2022 07:05:39 -0700 (PDT)
+Message-ID: <a1255a40-b112-918b-6fd7-fffbe56994b9@gmail.com>
+Date:   Tue, 22 Mar 2022 15:05:38 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
+ Thunderbird/91.5.0
+Subject: Re: [RFC 0/3] Add zero copy feature for tcmu
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, Christoph Hellwig <hch@lst.de>
-Cc:     axboe@kernel.dk, damien.lemoal@opensource.wdc.com,
-        bvanassche@acm.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        ming.lei@redhat.com, chenxiang66@hisilicon.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        dm-devel@redhat.com, beanhuo@micron.com
-References: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
- <1647945585-197349-2-git-send-email-john.garry@huawei.com>
- <20220322111848.GA29270@lst.de>
- <cacc3f7b-c8be-0f72-1c52-562c15b468a4@huawei.com>
- <b5df2ef1-2d6d-340e-e4b4-09132dc0516b@suse.de>
- <a5e42012-c1fc-082e-e636-594abc07dd70@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 01/11] blk-mq: Add blk_mq_init_queue_ops()
-In-Reply-To: <a5e42012-c1fc-082e-e636-594abc07dd70@huawei.com>
+To:     Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>,
+        linux-mm@kvack.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     linux-block@vger.kernel.org, xuyu@linux.alibaba.com
+References: <20220318095531.15479-1-xiaoguang.wang@linux.alibaba.com>
+ <abbe51c4-873f-e96e-d421-85906689a55a@gmail.com>
+ <36b5a8e5-c8e9-6a1f-834c-6bf9bf920f4c@linux.alibaba.com>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+In-Reply-To: <36b5a8e5-c8e9-6a1f-834c-6bf9bf920f4c@linux.alibaba.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/22/22 13:30, John Garry wrote:
-> On 22/03/2022 12:16, Hannes Reinecke wrote:
->> On 3/22/22 12:33, John Garry wrote:
->>> On 22/03/2022 11:18, Christoph Hellwig wrote:
->>>> On Tue, Mar 22, 2022 at 06:39:35PM +0800, John Garry wrote:
->>>>> Add an API to allocate a request queue which accepts a custom set of
->>>>> blk_mq_ops for that request queue.
->>>>>
->>>>> The reason which we may want custom ops is for queuing requests 
->>>>> which we
->>>>> don't want to go through the normal queuing path.
->>>>
->>>> Eww.  I really do not think we should do separate ops per queue, as 
->>>> that
->>>> is going to get us into a deep mess eventually.
->>>>
->>>
->>> Yeah... so far (here) it works out quite nicely, as we don't need to 
->>> change the SCSI blk mq ops nor allocate a scsi_device - everything is 
->>> just separate.
->>>
->>> The other method mentioned previously was to add the request 
->>> "reserved" flag and add new paths in scsi_queue_rq() et al to handle 
->>> this, but that gets messy.
->>>
->>> Any other ideas ...?
+On 22.03.22 14:17, Xiaoguang Wang wrote:
+> hi,
+> 
+>> On 18.03.22 10:55, Xiaoguang Wang wrote:
+>>> The core idea to implement tcmu zero copy feature is really straight,
+>>> which just maps block device io request's sgl pages to tcmu user space
+>>> backstore, then we can avoid extra copy overhead between sgl pages and
+>>> tcmu internal data area(which really impacts io throughput), please see
+>>> https://www.spinics.net/lists/target-devel/msg21121.html for detailed
+>>> info.
 >>>
 >>
->> As outlined in the other mail, I think might be useful is to have a 
->> _third_ type of requests (in addition to the normal and the reserved 
->> ones).
->> That one would be allocated from the normal I/O pool (and hence could 
->> fail if the pool is exhausted), but would be able to carry a different 
->> payload (type) than the normal requests.
+>> Can you please tell us, how big the performance improvement is and
+>> which configuration you are using for measurenments?
+> Sorry, I should have attached test results here. Initially I tried to use
+> tcmu user:fbo backstore to evaluate performance improvements, but
+> it only shows about 10%~15% io throughput improvement. Fio config
+> is numjobs=1, iodepth=8, bs=256k, which isn't very impressive. The
+> reason is that user:fbo backstore does buffered reads, it consumes most
+> of cpu.
 > 
-> As mentioned in the cover letter response, it just seems best to keep 
-> the normal scsi_cmnd payload but have other means to add on the internal 
-> command data, like using host_scribble or scsi_cmnd priv data.
+> Then I test this zero copy feature for our real workload, whose backstore
+> is a network program visiting distributed file system and it's 
+> multi-threaded.
+> For 4 job, 8 depth, 256 kb io size, the write throughput improves from
+> 3.6GB/s to 10GB/s.
+
+Thank you for the info. Sounds promising.
+
+What fabric are you using? iSCSI?
+What HW is your target running on?
+
 > 
-Well; I found that most drivers I had been looking at the scsi command 
-payload isn't used at all; the drivers primarily cared about the 
-(driver-provided) payload, and were completely ignoring the scsi command 
-payload.
-
-Similar for ATA/libsas: you basically never issue real scsi commands, 
-but either 'raw' ATA requests or SCSI TMFs. None of which are scsi 
-commands, so providing them is a bit of a waste.
-
-(And causes irritations, too, as a scsi command requires associated 
-pointers like ->device etc to be set up. Which makes it tricky to use 
-for the initial device setup.)
-
->> And we could have a separate queue_rq for these requests, as we can 
->> differentiate them in the block layer.
+> Regards,
+> Xiaoguang Wang
 > 
-> I don't know, let me think about it. Maybe we could add an "internal" 
-> blk flag, which uses a separate "internal" queue_rq callback.
+>>
+>>> Initially I use remap_pfn_range or vm_insert_pages to map sgl pages to
+>>> user space, but both of them have limits:
+>>> 1)  Use vm_insert_pages
+>>> which is like tcp getsockopt(TCP_ZEROCOPY_RECEIVE), but there're two
+>>> restrictions:
+>>>    1. anonymous pages can not be mmaped to user spacea.
+>>>      ==> vm_insert_pages
+>>>      ====> insert_pages
+>>>      ======> insert_page_in_batch_locked
+>>>      ========> validate_page_before_insert
+>>>      In validate_page_before_insert(), it shows that anonymous page 
+>>> can not
+>>>      be mapped to use space, we know that if issuing direct io to block
+>>>      device, io request's sgl pages mostly comes from anonymous page.
+>>>          if (PageAnon(page) || PageSlab(page) || page_has_type(page))
+>>>              return -EINVAL;
+>>>      I'm not sure why there is such restriction? for safety reasons ?
+>>>
+>>>    2. warn_on triggered in __folio_mark_dirty
+>>>      When calling zap_page_range in tcmu user space backstore when io
+>>>      completes, there is a warn_on triggered in __folio_mark_dirty:
+>>>         if (folio->mapping) {   /* Race with truncate? */
+>>>             WARN_ON_ONCE(warn && !folio_test_uptodate(folio));
+>>>
+>>>      I'm not familiar with folio yet, but I think the reason is that 
+>>> when
+>>>      issuing a buffered read to tcmu block device, it's page cache 
+>>> mapped
+>>>      to user space, backstore write this page and pte will be 
+>>> dirtied. but
+>>>      initially it's newly allocated, hence page_update flag not set.
+>>>      In zap_pte_range(), there is such codes:
+>>>         if (!PageAnon(page)) {
+>>>             if (pte_dirty(ptent)) {
+>>>                 force_flush = 1;
+>>>                 set_page_dirty(page);
+>>>             }
+>>>     So this warn_on is reasonable.
+>>>     Indeed what I want is just to map io request sgl pages to tcmu user
+>>>     space backstore, then backstore can read or write data to mapped 
+>>> area,
+>>>     I don't want to care about page or its mapping status, so I 
+>>> choose to
+>>>     use remap_pfn_range.
+>>>
+>>> 2) Use remap_pfn_range()
+>>>    remap_pfn_range works well, but it has somewhat obvious overhead. 
+>>> For a
+>>>    512kb io request, it has 128 pages, and usually this 128 page's 
+>>> pfn are
+>>>    not consecutive, so in worst cases, for a 512kb io request, I'd 
+>>> need to
+>>>    issue 128 calls to remap_pfn_range, it's horrible. And in 
+>>> remap_pfn_range,
+>>>    if x86 page attribute table feature is enabled, lookup_memtype 
+>>> called by
+>>>    track_pfn_remap() also introduces obvious overhead.
+>>>
+>>> Finally in order to solve these problems, Xu Yu helps to implment a new
+>>> helper, which accepts an array of pages as parameter, anonymous pages 
+>>> can
+>>> be mapped to user space, pages would be treated as special 
+>>> pte(pte_special
+>>> returns true), so vm_normal_page returns NULL, above folio warn_on won't
+>>> trigger.
+>>>
+>>> Thanks.
+>>>
+>>> Xiaoguang Wang (2):
+>>>    mm: export zap_page_range()
+>>>    scsi: target: tcmu: Support zero copy
+>>>
+>>> Xu Yu (1):
+>>>    mm/memory.c: introduce vm_insert_page(s)_mkspecial
+>>>
+>>>   drivers/target/target_core_user.c | 257 
+>>> +++++++++++++++++++++++++++++++++-----
+>>>   include/linux/mm.h                |   2 +
+>>>   mm/memory.c                       | 183 +++++++++++++++++++++++++++
+>>>   3 files changed, 414 insertions(+), 28 deletions(-)
+>>>
 > 
-Yeah, that's what I had in mind.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
