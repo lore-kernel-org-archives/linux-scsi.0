@@ -2,1201 +2,723 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95969C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 12:22:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B92A8C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 12:22:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231751AbiCVMX3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 08:23:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33090 "EHLO
+        id S234820AbiCVMXa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 08:23:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233471AbiCVMXZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 08:23:25 -0400
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CC8684EFE
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 05:21:56 -0700 (PDT)
-Received: by mail-pl1-x643.google.com with SMTP id x2so1771437plm.7
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 05:21:56 -0700 (PDT)
+        with ESMTP id S233486AbiCVMX1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 08:23:27 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 649468567B
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 05:21:59 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id t14so12508793pgr.3
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 05:21:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=RQZF/JK5VKqyIIGZwEUJt8GSFWX9yTO1tGRlyBJKdZg=;
-        b=G3T7GyxSBruaDGx9aSupkQiN0sJ6dc/hzNfsvz2neqpCVcJBdHtNoP5Y4AsZMXJUee
-         YpZNmqi2Qqfafe6IN2TEkNq5AQYpu4SH311EKi/CCJn64WRb03oXYaRnGaVhK0ZpIHUn
-         TUU/ymY3PzMZs7yTgD2UiX8fkvrYaxfgJnzS4=
+        bh=ripBV8Qq4ILkmOBw7eHa4SCLOeeFINWh/LYBIuW/syI=;
+        b=YFf5gaF6TgEIoUtD0OtC1CucIjD4rSubcJVzx4IVLL75WOw7fviubgJ2+JfQqxXvES
+         ZD5jIwHDBu6OgKjdEIQ3fkEKvUVaaWCVT2CYd7GPJZbs3qvnRB+YdSjY/CpgUkn3M+L+
+         XZK+UcTc4x+W4SSWXfQiwW3fz6melSQ0AE+7M=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=RQZF/JK5VKqyIIGZwEUJt8GSFWX9yTO1tGRlyBJKdZg=;
-        b=CD6kP/VBCnd8Jx+4U22s6QxXokKIqwE7HRiX/STz/0HOawCkr0N3wJfnRhg3xEyC9O
-         gm41/tg5ra0RDryB4ena0zmNhBEgU7+mMmablPWX+9LUxybVWr/E71Fz3zMA4+cSW/vX
-         Vz2UrD/c3i2pjnC5kHi6xarvEj6GMlZiPQNAtSf+HOQu4KrtNlYlFp/VzhjunFdCBE7u
-         dmwDjBNGU7HEx5n77z3KMnjgtWnVr5ZsIDjEjFS76R2D7vRfLiY2wSh5j+Qn3sAdfO20
-         jUDB+G10oWJaF9fuqBVn1e83mnkkutj8aIcwWVLctJBB2RyDYShDP7hEkbRbxEwH/WYq
-         xV1w==
-X-Gm-Message-State: AOAM531kiIkibE5/k4KWz154c1+kbiBgy7ep7wEzKaGupCN07YTilwEd
-        0ELl7/cCsGdnxuUFB3NrTh+66i8KBKYJ3UNiq4KJadSsqU4EfnIkQ/2CqRojL2vgYLxKC6MtQww
-        YlI5WmBPv2B9ohBbDYUPRb/vDkN+Toca/FzQciT+d7b60VPN5IPL1hJWNXAIVGgfJc4RStTpOE6
-        fN6mueaCT2kw==
-X-Google-Smtp-Source: ABdhPJxqS7X3T15HwE1hbqycHip/hYwe52BP8mxv2kI++xwxy0twx2M7d6FbgUJ1pUtqwJhUtaOTow==
-X-Received: by 2002:a17:90b:1c8e:b0:1bf:364c:dd7a with SMTP id oo14-20020a17090b1c8e00b001bf364cdd7amr4662061pjb.103.1647951715411;
-        Tue, 22 Mar 2022 05:21:55 -0700 (PDT)
+        bh=ripBV8Qq4ILkmOBw7eHa4SCLOeeFINWh/LYBIuW/syI=;
+        b=tyRuM5i+zx6Y5moOOSfPJXpL30I1yyDkcywip+w+m0P23K12xfpqv+kFGyyOvuLgIe
+         pi+uHVIoH1KSbPjXt1xKDir822pjfRk7djIsXDQBROJhk+9l31IFGLYcBVvG+vn6tTBb
+         mPjeYD5pLIsZZQbF/LYYklYAayvL3+jjNE8I+PEbHcr7avFUkllkTJxovJlZZRAhnhqk
+         vZ1VgyA22ElpV0OQP8n4BNTGlZb/B4D5oOQzLwx05hj1SQCvB9vLDHkl+bPYrCq34OU2
+         WaCS0TZrmsZ5VeORr9AVPUmjXQ8dcMtVeBqhw5gncpAdWJkKT6+8RUkmn1gfLob8/25M
+         u5bw==
+X-Gm-Message-State: AOAM531Twt5XxmeZgJr+20STXsu/U6SEQ5aquJGMDlbriDkvrB3bjeTv
+        Av9Lehr+bFN2FPCQrF8hS8GwdjpWMQ9uo/GhePdd7xmVhBMNjFAFr0B8tdbLHUIABXyNTt3cnPw
+        ubXrNt9rDc5EtRUOZtlnZ3nvun8eQ3pwbh/RGHqKAZRaezJpfEriss+FBBlcy8/yjtfyf6tpmrK
+        tOv3wQ9GfmHA==
+X-Google-Smtp-Source: ABdhPJxGSpwq8K0aHEl7y279zDr0z09qytOgTEsObAEuFXmmvTxT9bIXdAC8QmJH7Ozq62uV4N+fgQ==
+X-Received: by 2002:a63:5907:0:b0:382:2f93:5467 with SMTP id n7-20020a635907000000b003822f935467mr15681088pgb.460.1647951718331;
+        Tue, 22 Mar 2022 05:21:58 -0700 (PDT)
 Received: from dhcp-10-123-20-15.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d11-20020a056a0010cb00b004e1b76b09c0sm23225259pfu.74.2022.03.22.05.21.52
+        by smtp.gmail.com with ESMTPSA id d11-20020a056a0010cb00b004e1b76b09c0sm23225259pfu.74.2022.03.22.05.21.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Mar 2022 05:21:54 -0700 (PDT)
+        Tue, 22 Mar 2022 05:21:57 -0700 (PDT)
 From:   Sumit Saxena <sumit.saxena@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, sathya.prakash@broadcom.com,
         kashyap.desai@broadcom.com, chandrakanth.patil@broadcom.com,
         sreekanth.reddy@broadcom.com, prayas.patel@broadcom.com,
         Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH 2/7] mpi3mr: add support for driver commands
-Date:   Tue, 22 Mar 2022 08:21:02 -0400
-Message-Id: <20220322122107.8482-3-sumit.saxena@broadcom.com>
+Subject: [PATCH 3/7] mpi3mr: add support for MPT commands
+Date:   Tue, 22 Mar 2022 08:21:03 -0400
+Message-Id: <20220322122107.8482-4-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220322122107.8482-1-sumit.saxena@broadcom.com>
 References: <20220322122107.8482-1-sumit.saxena@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000a7b84f05dacda815"
+        boundary="000000000000d1e03e05dacda879"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000a7b84f05dacda815
+--000000000000d1e03e05dacda879
 Content-Transfer-Encoding: 8bit
 
-There are certain BSG commands which is to be completed
-by driver without involving firmware. These requests are termed
-as driver commands. This patch adds support for the same.
+There are certain management commands requiring firmware intervention.
+These commands are termed as MPT commands. This patch adds support for
+the same.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h       |  16 +-
- drivers/scsi/mpi3mr/mpi3mr_app.c   | 394 ++++++++++++++++++++++++
- drivers/scsi/mpi3mr/mpi3mr_app.h   | 470 +++++++++++++++++++++++++++++
- drivers/scsi/mpi3mr/mpi3mr_debug.h |  12 +-
- drivers/scsi/mpi3mr/mpi3mr_fw.c    |  21 +-
- drivers/scsi/mpi3mr/mpi3mr_os.c    |   3 +
- 6 files changed, 904 insertions(+), 12 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h       |   8 +
+ drivers/scsi/mpi3mr/mpi3mr_app.c   | 519 ++++++++++++++++++++++++++++-
+ drivers/scsi/mpi3mr/mpi3mr_debug.h |  25 ++
+ drivers/scsi/mpi3mr/mpi3mr_os.c    |   4 +-
+ 4 files changed, 553 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index f790b84c810a..958675d917ee 100644
+index 958675d917ee..9dd87013767d 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -89,7 +89,7 @@ extern int prot_mask;
- /* Reserved Host Tag definitions */
- #define MPI3MR_HOSTTAG_INVALID		0xFFFF
- #define MPI3MR_HOSTTAG_INITCMDS		1
--#define MPI3MR_HOSTTAG_IOCTLCMDS	2
-+#define MPI3MR_HOSTTAG_BSG_CMDS		2
- #define MPI3MR_HOSTTAG_BLK_TMS		5
+@@ -544,6 +544,7 @@ struct mpi3mr_sdev_priv_data {
+  * @ioc_status: IOC status from the firmware
+  * @ioc_loginfo:IOC log info from the firmware
+  * @is_waiting: Is the command issued in block mode
++ * @is_sense: Is Sense data present
+  * @retry_count: Retry count for retriable commands
+  * @host_tag: Host tag used by the command
+  * @callback: Callback for non blocking commands
+@@ -559,6 +560,7 @@ struct mpi3mr_drv_cmd {
+ 	u16 ioc_status;
+ 	u32 ioc_loginfo;
+ 	u8 is_waiting;
++	u8 is_sense;
+ 	u8 retry_count;
+ 	u16 host_tag;
  
- #define MPI3MR_NUM_DEVRMCMD		16
-@@ -190,10 +190,10 @@ enum mpi3mr_iocstate {
- enum mpi3mr_reset_reason {
- 	MPI3MR_RESET_FROM_BRINGUP = 1,
- 	MPI3MR_RESET_FROM_FAULT_WATCH = 2,
--	MPI3MR_RESET_FROM_IOCTL = 3,
-+	MPI3MR_RESET_FROM_APP = 3,
- 	MPI3MR_RESET_FROM_EH_HOS = 4,
- 	MPI3MR_RESET_FROM_TM_TIMEOUT = 5,
--	MPI3MR_RESET_FROM_IOCTL_TIMEOUT = 6,
-+	MPI3MR_RESET_FROM_APP_TIMEOUT = 6,
- 	MPI3MR_RESET_FROM_MUR_FAILURE = 7,
- 	MPI3MR_RESET_FROM_CTLR_CLEANUP = 8,
- 	MPI3MR_RESET_FROM_CIACTIV_FAULT = 9,
-@@ -686,6 +686,7 @@ struct scmd_priv {
-  * @chain_bitmap_sz: Chain buffer allocator bitmap size
-  * @chain_bitmap: Chain buffer allocator bitmap
-  * @chain_buf_lock: Chain buffer list lock
-+ * @bsg_cmds: Command tracker for BSG command
-  * @host_tm_cmds: Command tracker for task management commands
-  * @dev_rmhs_cmds: Command tracker for device removal commands
-  * @evtack_cmds: Command tracker for event ack commands
-@@ -717,6 +718,10 @@ struct scmd_priv {
-  * @requested_poll_qcount: User requested poll queue count
-  * @bsg_dev: BSG device structure
-  * @bsg_queue: Request queue for BSG device
-+ * @stop_bsgs: Stop BSG request flag
-+ * @logdata_buf: Circular buffer to store log data entries
-+ * @logdata_buf_idx: Index of entry in buffer to store
-+ * @logdata_entry_sz: log data entry size
-  */
- struct mpi3mr_ioc {
- 	struct list_head list;
-@@ -823,6 +828,7 @@ struct mpi3mr_ioc {
- 	void *chain_bitmap;
- 	spinlock_t chain_buf_lock;
+@@ -980,5 +982,11 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+ int mpi3mr_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num);
+ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_bsg_exit(struct mpi3mr_ioc *mrioc);
++int mpi3mr_issue_tm(struct mpi3mr_ioc *mrioc, u8 tm_type,
++	u16 handle, uint lun, u16 htag, ulong timeout,
++	struct mpi3mr_drv_cmd *drv_cmd,
++	u8 *resp_code, struct scsi_cmnd *scmd);
++struct mpi3mr_tgt_dev *mpi3mr_get_tgtdev_by_handle(
++	struct mpi3mr_ioc *mrioc, u16 handle);
  
-+	struct mpi3mr_drv_cmd bsg_cmds;
- 	struct mpi3mr_drv_cmd host_tm_cmds;
- 	struct mpi3mr_drv_cmd dev_rmhs_cmds[MPI3MR_NUM_DEVRMCMD];
- 	struct mpi3mr_drv_cmd evtack_cmds[MPI3MR_NUM_EVTACKCMD];
-@@ -860,6 +866,10 @@ struct mpi3mr_ioc {
- 
- 	struct device *bsg_dev;
- 	struct request_queue *bsg_queue;
-+	u8 stop_bsgs;
-+	u8 *logdata_buf;
-+	u16 logdata_buf_idx;
-+	u16 logdata_entry_sz;
- };
- 
- /**
+ #endif /*MPI3MR_H_INCLUDED*/
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index ac420730c8c4..8efb33040626 100644
+index 8efb33040626..cd354cacf3e0 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -11,6 +11,385 @@
- #include "mpi3mr_app.h"
- #include <linux/bsg-lib.h>
+@@ -200,7 +200,6 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
+ 	kfree(alltgt_info);
+ 	return rval;
+ }
+-
+ /**
+  * mpi3mr_get_change_count - Get topology change count
+  * @mrioc: Adapter instance reference
+@@ -390,6 +389,521 @@ static long mpi3mr_bsg_process_drv_cmds(struct bsg_job *job)
+ 	return rval;
+ }
  
 +/**
-+ * mpi3mr_bsg_verify_adapter - verify adapter number is valid
-+ * @ioc_number: Adapter number
-+ * @mriocpp: Pointer to hold per adapter instance
++ * mpi3mr_bsg_build_sgl - SGL construction for MPI commands
++ * @mpi_req: MPI request
++ * @sgl_offset: offset to start sgl in the MPI request
++ * @drv_bufs: DMA address of the buffers to be placed in sgl
++ * @bufcnt: Number of DMA buffers
++ * @is_rmc: Does the buffer list has management command buffer
++ * @is_rmr: Does the buffer list has management response buffer
++ * @num_datasges: Number of data buffers in the list
 + *
-+ * This function checks whether given adapter number matches
-+ * with an adapter id in the driver's list and if so fills
-+ * pointer to the per adapter instance in mriocpp else set that
-+ * to NULL.
++ * This function places the DMA address of the given buffers in
++ * proper format as SGEs in the given MPI request.
 + *
-+ * Return: Nothing.
++ * Return: Nothing
 + */
-+static void mpi3mr_bsg_verify_adapter(int ioc_number,
-+	struct mpi3mr_ioc **mriocpp)
++static void mpi3mr_bsg_build_sgl(u8 *mpi_req, uint32_t sgl_offset,
++	struct mpi3mr_buf_map *drv_bufs, u8 bufcnt, u8 is_rmc,
++	u8 is_rmr, u8 num_datasges)
 +{
-+	struct mpi3mr_ioc *mrioc;
++	u8 *sgl = (mpi_req + sgl_offset), count = 0;
++	struct mpi3_mgmt_passthrough_request *rmgmt_req =
++	    (struct mpi3_mgmt_passthrough_request *)mpi_req;
++	struct mpi3mr_buf_map *drv_buf_iter = drv_bufs;
++	u8 sgl_flags, sgl_flags_last;
 +
-+	spin_lock(&mrioc_list_lock);
-+	list_for_each_entry(mrioc, &mrioc_list, list) {
-+		if (mrioc->id != ioc_number)
-+			continue;
-+		spin_unlock(&mrioc_list_lock);
-+		*mriocpp = mrioc;
++	sgl_flags = MPI3_SGE_FLAGS_ELEMENT_TYPE_SIMPLE |
++		MPI3_SGE_FLAGS_DLAS_SYSTEM | MPI3_SGE_FLAGS_END_OF_BUFFER;
++	sgl_flags_last = sgl_flags | MPI3_SGE_FLAGS_END_OF_LIST;
++
++	if (is_rmc) {
++		mpi3mr_add_sg_single(&rmgmt_req->command_sgl,
++		    sgl_flags_last, drv_buf_iter->kern_buf_len,
++		    drv_buf_iter->kern_buf_dma);
++		sgl = (u8 *)drv_buf_iter->kern_buf + drv_buf_iter->bsg_buf_len;
++		drv_buf_iter++;
++		count++;
++		if (is_rmr) {
++			mpi3mr_add_sg_single(&rmgmt_req->response_sgl,
++			    sgl_flags_last, drv_buf_iter->kern_buf_len,
++			    drv_buf_iter->kern_buf_dma);
++			drv_buf_iter++;
++			count++;
++		} else
++			mpi3mr_build_zero_len_sge(
++			    &rmgmt_req->response_sgl);
++	}
++	if (!num_datasges) {
++		mpi3mr_build_zero_len_sge(sgl);
 +		return;
 +	}
-+	spin_unlock(&mrioc_list_lock);
-+	*mriocpp = NULL;
++	for (; count < bufcnt; count++, drv_buf_iter++) {
++		if (drv_buf_iter->data_dir == DMA_NONE)
++			continue;
++		if (num_datasges == 1 || !is_rmc)
++			mpi3mr_add_sg_single(sgl, sgl_flags_last,
++			    drv_buf_iter->kern_buf_len, drv_buf_iter->kern_buf_dma);
++		else
++			mpi3mr_add_sg_single(sgl, sgl_flags,
++			    drv_buf_iter->kern_buf_len, drv_buf_iter->kern_buf_dma);
++		sgl += sizeof(struct mpi3_sge_common);
++		num_datasges--;
++	}
 +}
 +
 +/**
-+ * mpi3mr_enable_logdata - Handler for log data enable
-+ * @mrioc: Adapter instance reference
++ * mpi3mr_bsg_process_mpt_cmds - MPI Pass through BSG handler
 + * @job: BSG job reference
 + *
-+ * This function enables log data caching in the driver if not
-+ * already enabled and return the maximum number of log data
-+ * entries that can be cached in the driver.
++ * This function is the top level handler for MPI Pass through
++ * command, this does basic validation of the input data buffers,
++ * identifies the given buffer types and MPI command, allocates
++ * DMAable memory for user given buffers, construstcs SGL
++ * properly and passes the command to the firmware.
++ *
++ * Once the MPI command is completed the driver copies the data
++ * if any and reply, sense information to user provided buffers.
++ * If the command is timed out then issues controller reset
++ * prior to returning.
 + *
 + * Return: 0 on success and proper error codes on failure
 + */
-+static long mpi3mr_enable_logdata(struct mpi3mr_ioc *mrioc,
-+	struct bsg_job *job)
++
++static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
 +{
 +	long rval = -EINVAL;
-+	struct mpi3mr_logdata_enable logdata_enable;
 +
-+	if (mrioc->logdata_buf)
-+		goto copy_user_data;
-+
-+	mrioc->logdata_entry_sz =
-+	    (mrioc->reply_sz - (sizeof(struct mpi3_event_notification_reply) - 4))
-+	    + MPI3MR_BSG_LOGDATA_ENTRY_HEADER_SZ;
-+	mrioc->logdata_buf_idx = 0;
-+
-+	mrioc->logdata_buf = kcalloc(MPI3MR_BSG_LOGDATA_MAX_ENTRIES,
-+	    mrioc->logdata_entry_sz, GFP_KERNEL);
-+	if (!mrioc->logdata_buf)
-+		return -ENOMEM;
-+
-+copy_user_data:
-+	memset(&logdata_enable, 0, sizeof(logdata_enable));
-+	logdata_enable.max_entries =
-+	    MPI3MR_BSG_LOGDATA_MAX_ENTRIES;
-+	if (job->request_payload.payload_len >= sizeof(logdata_enable)) {
-+		sg_copy_from_buffer(job->request_payload.sg_list,
-+				    job->request_payload.sg_cnt,
-+				    &logdata_enable, sizeof(logdata_enable));
-+		rval = 0;
-+	}
-+	return rval;
-+}
-+/**
-+ * mpi3mr_get_logdata - Handler for get log data
-+ * @mrioc: Adapter instance reference
-+ * @job: BSG job pointer
-+ * This function copies the log data entries to the user buffer
-+ * when log caching is enabled in the driver.
-+ *
-+ * Return: 0 on success and proper error codes on failure
-+ */
-+static long mpi3mr_get_logdata(struct mpi3mr_ioc *mrioc,
-+	struct bsg_job *job)
-+{
-+	u16 num_entries, sz, entry_sz = mrioc->logdata_entry_sz;
-+
-+	if ((!mrioc->logdata_buf) || (job->request_payload.payload_len < entry_sz))
-+		return -EINVAL;
-+
-+	num_entries = job->request_payload.payload_len / entry_sz;
-+	if (num_entries > MPI3MR_BSG_LOGDATA_MAX_ENTRIES)
-+		num_entries = MPI3MR_BSG_LOGDATA_MAX_ENTRIES;
-+	sz = num_entries * entry_sz;
-+
-+	if (job->request_payload.payload_len >= sz) {
-+		sg_copy_from_buffer(job->request_payload.sg_list,
-+				    job->request_payload.sg_cnt,
-+				    mrioc->logdata_buf, sz);
-+		return 0;
-+	}
-+	return -EINVAL;
-+}
-+
-+/**
-+ * mpi3mr_get_all_tgt_info - Get all target information
-+ * @mrioc: Adapter instance reference
-+ * @job: BSG job reference
-+ *
-+ * This function copies the driver managed target devices device
-+ * handle, persistent ID, bus ID and taret ID to the user
-+ * provided buffer for the specific controller. This function
-+ * also provides the number of devices managed by the driver for
-+ * the specific controller.
-+ *
-+ * Return: 0 on success and proper error codes on failure
-+ */
-+static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
-+	struct bsg_job *job)
-+{
-+	long rval = -EINVAL;
-+	u16 num_devices = 0, i = 0, size;
-+	unsigned long flags;
++	struct mpi3mr_ioc *mrioc = NULL;
++	u8 *mpi_req = NULL, *sense_buff_k = NULL;
++	u8 mpi_msg_size = 0;
++	struct mpi3mr_bsg_packet *bsg_req = NULL;
++	struct mpi3mr_bsg_mptcmd *karg;
++	struct mpi3mr_buf_entry *buf_entries = NULL;
++	struct mpi3mr_buf_map *drv_bufs = NULL, *drv_buf_iter = NULL;
++	u8 count, bufcnt = 0, is_rmcb = 0, is_rmrb = 0, din_cnt = 0, dout_cnt = 0;
++	u8 invalid_be = 0, erb_offset = 0xFF, mpirep_offset = 0xFF, sg_entries = 0;
++	u8 block_io = 0, resp_code = 0;
++	struct mpi3_request_header *mpi_header = NULL;
++	struct mpi3_status_reply_descriptor *status_desc;
++	struct mpi3_scsi_task_mgmt_request *tm_req;
++	u32 erbsz = MPI3MR_SENSE_BUF_SZ, tmplen;
++	u16 dev_handle;
 +	struct mpi3mr_tgt_dev *tgtdev;
-+	struct mpi3mr_device_map_info *devmap_info = NULL;
-+	struct mpi3mr_all_tgt_info *alltgt_info = NULL;
-+	uint32_t min_entrylen = 0, kern_entrylen = 0, usr_entrylen = 0;
++	struct mpi3mr_stgt_priv_data *stgt_priv = NULL;
++	struct mpi3mr_bsg_in_reply_buf *bsg_reply_buf = NULL;
++	u32 din_size = 0, dout_size = 0;
++	u8 *din_buf = NULL, *dout_buf = NULL;
++	u8 *sgl_iter = NULL, *sgl_din_iter = NULL, *sgl_dout_iter = NULL;
 +
-+	if (job->request_payload.payload_len < sizeof(u32)) {
-+		dprint_bsg_err(mrioc, "%s: invalid size argument\n",
-+		    __func__);
-+		return rval;
-+	}
++	bsg_req = job->request;
++	karg = (struct mpi3mr_bsg_mptcmd *)&bsg_req->cmd.mptcmd;
 +
-+	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-+	list_for_each_entry(tgtdev, &mrioc->tgtdev_list, list)
-+		num_devices++;
-+	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
++	mpi3mr_bsg_verify_adapter(karg->mrioc_id, &mrioc);
++	if (!mrioc)
++		return -ENODEV;
 +
-+	if ((job->request_payload.payload_len == sizeof(u32)) ||
-+		list_empty(&mrioc->tgtdev_list)) {
-+		sg_copy_from_buffer(job->request_payload.sg_list,
-+				    job->request_payload.sg_cnt,
-+				    &num_devices, sizeof(num_devices));
-+		return 0;
-+	}
++	if (karg->timeout < MPI3MR_APP_DEFAULT_TIMEOUT)
++		karg->timeout = MPI3MR_APP_DEFAULT_TIMEOUT;
 +
-+	kern_entrylen = (num_devices - 1) * sizeof(*devmap_info);
-+	size = sizeof(*alltgt_info) + kern_entrylen;
-+	alltgt_info = kzalloc(size, GFP_KERNEL);
-+	if (!alltgt_info)
++	mpi_req = kzalloc(MPI3MR_ADMIN_REQ_FRAME_SZ, GFP_KERNEL);
++	if (!mpi_req)
 +		return -ENOMEM;
++	mpi_header = (struct mpi3_request_header *)mpi_req;
 +
-+	devmap_info = alltgt_info->dmi;
-+	memset((u8 *)devmap_info, 0xFF, (kern_entrylen + sizeof(*devmap_info)));
-+	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-+	list_for_each_entry(tgtdev, &mrioc->tgtdev_list, list) {
-+		if (i < num_devices) {
-+			devmap_info[i].handle = tgtdev->dev_handle;
-+			devmap_info[i].perst_id = tgtdev->perst_id;
-+			if (tgtdev->host_exposed && tgtdev->starget) {
-+				devmap_info[i].target_id = tgtdev->starget->id;
-+				devmap_info[i].bus_id =
-+				    tgtdev->starget->channel;
-+			}
-+			i++;
-+		}
-+	}
-+	num_devices = i;
-+	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-+
-+	memcpy(&alltgt_info->num_devices, &num_devices, sizeof(num_devices));
-+
-+	usr_entrylen = (job->request_payload.payload_len - sizeof(u32)) / sizeof(*devmap_info);
-+	usr_entrylen *= sizeof(*devmap_info);
-+	min_entrylen = min(usr_entrylen, kern_entrylen);
-+	if (min_entrylen && (!memcpy(&alltgt_info->dmi, devmap_info, min_entrylen))) {
-+		dprint_bsg_err(mrioc, "%s:%d: device map info copy failed\n",
-+		    __func__, __LINE__);
-+		rval = -EFAULT;
++	bufcnt = karg->buf_entry_list.num_of_entries;
++	drv_bufs = kzalloc((sizeof(*drv_bufs) * bufcnt), GFP_KERNEL);
++	if (!drv_bufs) {
++		rval = -ENOMEM;
 +		goto out;
 +	}
 +
-+	sg_copy_from_buffer(job->request_payload.sg_list,
-+			    job->request_payload.sg_cnt,
-+			    alltgt_info, job->request_payload.payload_len);
-+	rval = 0;
-+out:
-+	kfree(alltgt_info);
-+	return rval;
-+}
-+
-+/**
-+ * mpi3mr_get_change_count - Get topology change count
-+ * @mrioc: Adapter instance reference
-+ * @job: BSG job reference
-+ *
-+ * This function copies the toplogy change count provided by the
-+ * driver in events and cached in the driver to the user
-+ * provided buffer for the specific controller.
-+ *
-+ * Return: 0 on success and proper error codes on failure
-+ */
-+static long mpi3mr_get_change_count(struct mpi3mr_ioc *mrioc,
-+	struct bsg_job *job)
-+{
-+	long rval = -EINVAL;
-+	struct mpi3mr_change_count chgcnt;
-+
-+	memset(&chgcnt, 0, sizeof(chgcnt));
-+	chgcnt.change_count = mrioc->change_count;
-+	if (job->request_payload.payload_len >= sizeof(chgcnt)) {
-+		sg_copy_from_buffer(job->request_payload.sg_list,
-+				    job->request_payload.sg_cnt,
-+				    &chgcnt, sizeof(chgcnt));
-+		rval = 0;
++	dout_buf = kzalloc(job->request_payload.payload_len,
++				      GFP_KERNEL);
++	if (!dout_buf) {
++		rval = -ENOMEM;
++		goto out;
 +	}
-+	return rval;
-+}
 +
-+/**
-+ * mpi3mr_bsg_adp_reset - Issue controller reset
-+ * @mrioc: Adapter instance reference
-+ * @job: BSG job reference
-+ *
-+ * This function identifies the user provided reset type and
-+ * issues approporiate reset to the controller and wait for that
-+ * to complete and reinitialize the controller and then returns
-+ *
-+ * Return: 0 on success and proper error codes on failure
-+ */
-+static long mpi3mr_bsg_adp_reset(struct mpi3mr_ioc *mrioc,
-+	struct bsg_job *job)
-+{
-+	long rval = -EINVAL;
-+	u8 save_snapdump;
-+	struct mpi3mr_bsg_adp_reset adpreset;
-+
-+	if (job->request_payload.payload_len !=
-+			sizeof(adpreset)) {
-+		dprint_bsg_err(mrioc, "%s: invalid size argument\n",
-+		    __func__);
++	din_buf = kzalloc(job->reply_payload.payload_len,
++				     GFP_KERNEL);
++	if (!din_buf) {
++		rval = -ENOMEM;
 +		goto out;
 +	}
 +
 +	sg_copy_to_buffer(job->request_payload.sg_list,
 +			  job->request_payload.sg_cnt,
-+			  &adpreset, sizeof(adpreset));
++			  dout_buf, job->request_payload.payload_len);
 +
-+	switch (adpreset.reset_type) {
-+	case MPI3MR_BSG_ADPRESET_SOFT:
-+		save_snapdump = 0;
-+		break;
-+	case MPI3MR_BSG_ADPRESET_DIAG_FAULT:
-+		save_snapdump = 1;
-+		break;
-+	default:
-+		dprint_bsg_err(mrioc, "%s: unknown reset_type(%d)\n",
-+		    __func__, adpreset.reset_type);
++	buf_entries = karg->buf_entry_list.buf_entry;
++	sgl_din_iter = din_buf;
++	sgl_dout_iter = dout_buf;
++	drv_buf_iter = drv_bufs;
++
++	for (count = 0; count < bufcnt; count++, buf_entries++, drv_buf_iter++) {
++
++		if (sgl_dout_iter > (dout_buf + job->request_payload.payload_len)) {
++			dprint_bsg_err(mrioc, "%s: data_out buffer length mismatch\n",
++				__func__);
++			rval = -EINVAL;
++			goto out;
++		}
++		if (sgl_din_iter > (din_buf + job->reply_payload.payload_len)) {
++			dprint_bsg_err(mrioc, "%s: data_in buffer length mismatch\n",
++				__func__);
++			rval = -EINVAL;
++			goto out;
++		}
++
++		switch (buf_entries->buf_type) {
++		case MPI3MR_BSG_BUFTYPE_RAIDMGMT_CMD:
++			sgl_iter = sgl_dout_iter;
++			sgl_dout_iter += buf_entries->buf_len;
++			drv_buf_iter->data_dir = DMA_TO_DEVICE;
++			is_rmcb = 1;
++			if (count != 0)
++				invalid_be = 1;
++			break;
++		case MPI3MR_BSG_BUFTYPE_RAIDMGMT_RESP:
++			sgl_iter = sgl_din_iter;
++			sgl_din_iter += buf_entries->buf_len;
++			drv_buf_iter->data_dir = DMA_FROM_DEVICE;
++			is_rmrb = 1;
++			if (count != 1 || !is_rmcb)
++				invalid_be = 1;
++			break;
++		case MPI3MR_BSG_BUFTYPE_DATA_IN:
++			sgl_iter = sgl_din_iter;
++			sgl_din_iter += buf_entries->buf_len;
++			drv_buf_iter->data_dir = DMA_FROM_DEVICE;
++			din_cnt++;
++			din_size += drv_buf_iter->bsg_buf_len;
++			if ((din_cnt > 1) && !is_rmcb)
++				invalid_be = 1;
++			break;
++		case MPI3MR_BSG_BUFTYPE_DATA_OUT:
++			sgl_iter = sgl_dout_iter;
++			sgl_dout_iter += buf_entries->buf_len;
++			drv_buf_iter->data_dir = DMA_TO_DEVICE;
++			dout_cnt++;
++			dout_size += drv_buf_iter->bsg_buf_len;
++			if ((dout_cnt > 1) && !is_rmcb)
++				invalid_be = 1;
++			break;
++		case MPI3MR_BSG_BUFTYPE_MPI_REPLY:
++			sgl_iter = sgl_din_iter;
++			sgl_din_iter += buf_entries->buf_len;
++			drv_buf_iter->data_dir = DMA_NONE;
++			mpirep_offset = count;
++			break;
++		case MPI3MR_BSG_BUFTYPE_ERR_RESPONSE:
++			sgl_iter = sgl_din_iter;
++			sgl_din_iter += buf_entries->buf_len;
++			drv_buf_iter->data_dir = DMA_NONE;
++			erb_offset = count;
++			break;
++		case MPI3MR_BSG_BUFTYPE_MPI_REQUEST:
++			sgl_iter = sgl_dout_iter;
++			sgl_dout_iter += buf_entries->buf_len;
++			drv_buf_iter->data_dir = DMA_NONE;
++			mpi_msg_size = buf_entries->buf_len;
++			if ((!mpi_msg_size || (mpi_msg_size % 4)) ||
++					(mpi_msg_size > MPI3MR_ADMIN_REQ_FRAME_SZ)) {
++				dprint_bsg_err(mrioc, "%s: invalid MPI message size\n",
++					__func__);
++				rval = -EINVAL;
++				goto out;
++			}
++			memcpy(mpi_req, sgl_iter, buf_entries->buf_len);
++			break;
++		default:
++			invalid_be = 1;
++			break;
++		}
++		if (invalid_be) {
++			dprint_bsg_err(mrioc, "%s: invalid buffer entries passed\n",
++				__func__);
++			rval = -EINVAL;
++			goto out;
++		}
++
++		drv_buf_iter->bsg_buf = sgl_iter;
++		drv_buf_iter->bsg_buf_len = buf_entries->buf_len;
++
++	}
++	if (!is_rmcb && (dout_cnt || din_cnt)) {
++		sg_entries = dout_cnt + din_cnt;
++		if (((mpi_msg_size) + (sg_entries *
++		      sizeof(struct mpi3_sge_common))) > MPI3MR_ADMIN_REQ_FRAME_SZ) {
++			dprint_bsg_err(mrioc,
++			    "%s:%d: invalid message size passed\n",
++			    __func__, __LINE__);
++			rval = -EINVAL;
++			goto out;
++		}
++	}
++	if (din_size > MPI3MR_MAX_APP_XFER_SIZE) {
++		dprint_bsg_err(mrioc,
++		    "%s:%d: invalid data transfer size passed for function 0x%x din_size=%d\n",
++		    __func__, __LINE__, mpi_header->function, din_size);
++		rval = -EINVAL;
++		goto out;
++	}
++	if (dout_size > MPI3MR_MAX_APP_XFER_SIZE) {
++		dprint_bsg_err(mrioc,
++		    "%s:%d: invalid data transfer size passed for function 0x%x dout_size = %d\n",
++		    __func__, __LINE__, mpi_header->function, dout_size);
++		rval = -EINVAL;
 +		goto out;
 +	}
 +
-+	rval = mpi3mr_soft_reset_handler(mrioc, MPI3MR_RESET_FROM_APP,
-+	    save_snapdump);
++	drv_buf_iter = drv_bufs;
++	for (count = 0; count < bufcnt; count++, drv_buf_iter++) {
++		if (drv_buf_iter->data_dir == DMA_NONE)
++			continue;
 +
-+	if (rval)
++		drv_buf_iter->kern_buf_len = drv_buf_iter->bsg_buf_len;
++		if (is_rmcb && !count)
++			drv_buf_iter->kern_buf_len += ((dout_cnt + din_cnt) *
++			    sizeof(struct mpi3_sge_common));
++
++		if (!drv_buf_iter->kern_buf_len)
++			continue;
++
++		drv_buf_iter->kern_buf = dma_alloc_coherent(&mrioc->pdev->dev,
++		    drv_buf_iter->kern_buf_len, &drv_buf_iter->kern_buf_dma,
++		    GFP_KERNEL);
++		if (!drv_buf_iter->kern_buf) {
++			rval = -ENOMEM;
++			goto out;
++		}
++		if (drv_buf_iter->data_dir == DMA_TO_DEVICE) {
++			tmplen = min(drv_buf_iter->kern_buf_len,
++			    drv_buf_iter->bsg_buf_len);
++			memcpy(drv_buf_iter->kern_buf, drv_buf_iter->bsg_buf, tmplen);
++		}
++	}
++
++	if (erb_offset != 0xFF) {
++		sense_buff_k = kzalloc(erbsz, GFP_KERNEL);
++		if (!sense_buff_k) {
++			rval = -ENOMEM;
++			goto out;
++		}
++	}
++
++	if (mutex_lock_interruptible(&mrioc->bsg_cmds.mutex)) {
++		rval = -ERESTARTSYS;
++		goto out;
++	}
++	if (mrioc->bsg_cmds.state & MPI3MR_CMD_PENDING) {
++		rval = -EAGAIN;
++		dprint_bsg_err(mrioc, "%s: command is in use\n", __func__);
++		mutex_unlock(&mrioc->bsg_cmds.mutex);
++		goto out;
++	}
++	if (mrioc->unrecoverable) {
++		dprint_bsg_err(mrioc, "%s: unrecoverable controller\n",
++		    __func__);
++		rval = -EFAULT;
++		mutex_unlock(&mrioc->bsg_cmds.mutex);
++		goto out;
++	}
++	if (mrioc->reset_in_progress) {
++		dprint_bsg_err(mrioc, "%s: reset in progress\n", __func__);
++		rval = -EAGAIN;
++		mutex_unlock(&mrioc->bsg_cmds.mutex);
++		goto out;
++	}
++	if (mrioc->stop_bsgs) {
++		dprint_bsg_err(mrioc, "%s: bsgs are blocked\n", __func__);
++		rval = -EAGAIN;
++		mutex_unlock(&mrioc->bsg_cmds.mutex);
++		goto out;
++	}
++
++	if (mpi_header->function != MPI3_FUNCTION_NVME_ENCAPSULATED) {
++		mpi3mr_bsg_build_sgl(mpi_req, (mpi_msg_size),
++		    drv_bufs, bufcnt, is_rmcb, is_rmrb,
++		    (dout_cnt + din_cnt));
++	}
++
++	if (mpi_header->function == MPI3_FUNCTION_SCSI_TASK_MGMT) {
++		tm_req = (struct mpi3_scsi_task_mgmt_request *)mpi_req;
++		if (tm_req->task_type !=
++		    MPI3_SCSITASKMGMT_TASKTYPE_ABORT_TASK) {
++			dev_handle = tm_req->dev_handle;
++			block_io = 1;
++		}
++	}
++	if (block_io) {
++		tgtdev = mpi3mr_get_tgtdev_by_handle(mrioc, dev_handle);
++		if (tgtdev && tgtdev->starget && tgtdev->starget->hostdata) {
++			stgt_priv = (struct mpi3mr_stgt_priv_data *)
++			    tgtdev->starget->hostdata;
++			atomic_inc(&stgt_priv->block_io);
++			mpi3mr_tgtdev_put(tgtdev);
++		}
++	}
++
++	mrioc->bsg_cmds.state = MPI3MR_CMD_PENDING;
++	mrioc->bsg_cmds.is_waiting = 1;
++	mrioc->bsg_cmds.callback = NULL;
++	mrioc->bsg_cmds.is_sense = 0;
++	mrioc->bsg_cmds.sensebuf = sense_buff_k;
++	memset(mrioc->bsg_cmds.reply, 0, mrioc->reply_sz);
++	mpi_header->host_tag = cpu_to_le16(MPI3MR_HOSTTAG_BSG_CMDS);
++	if (mrioc->logging_level & MPI3_DEBUG_BSG_INFO) {
++		dprint_bsg_info(mrioc,
++		    "%s: posting bsg request to the controller\n", __func__);
++		dprint_dump(mpi_req, MPI3MR_ADMIN_REQ_FRAME_SZ,
++		    "bsg_mpi3_req");
++		if (mpi_header->function == MPI3_FUNCTION_MGMT_PASSTHROUGH) {
++			drv_buf_iter = &drv_bufs[0];
++			dprint_dump(drv_buf_iter->kern_buf,
++			    drv_buf_iter->kern_buf_len, "mpi3_mgmt_req");
++		}
++	}
++
++	init_completion(&mrioc->bsg_cmds.done);
++	rval = mpi3mr_admin_request_post(mrioc, mpi_req,
++	    MPI3MR_ADMIN_REQ_FRAME_SZ, 0);
++
++
++	if (rval) {
++		mrioc->bsg_cmds.is_waiting = 0;
 +		dprint_bsg_err(mrioc,
-+		    "%s: reset handler returned error(%ld) for reset type %d\n",
-+		    __func__, rval, adpreset.reset_type);
-+out:
-+	return rval;
-+}
-+
-+/**
-+ * mpi3mr_bsg_populate_adpinfo - Get adapter info command handler
-+ * @mrioc: Adapter instance reference
-+ * @job: BSG job reference
-+ *
-+ * This function provides adapter information for the given
-+ * controller
-+ *
-+ * Return: 0 on success and proper error codes on failure
-+ */
-+static long mpi3mr_bsg_populate_adpinfo(struct mpi3mr_ioc *mrioc,
-+	struct bsg_job *job)
-+{
-+	enum mpi3mr_iocstate ioc_state;
-+	struct mpi3mr_bsg_in_adpinfo adpinfo;
-+
-+	memset(&adpinfo, 0, sizeof(adpinfo));
-+	adpinfo.adp_type = MPI3MR_BSG_ADPTYPE_AVGFAMILY;
-+	adpinfo.pci_dev_id = mrioc->pdev->device;
-+	adpinfo.pci_dev_hw_rev = mrioc->pdev->revision;
-+	adpinfo.pci_subsys_dev_id = mrioc->pdev->subsystem_device;
-+	adpinfo.pci_subsys_ven_id = mrioc->pdev->subsystem_vendor;
-+	adpinfo.pci_bus = mrioc->pdev->bus->number;
-+	adpinfo.pci_dev = PCI_SLOT(mrioc->pdev->devfn);
-+	adpinfo.pci_func = PCI_FUNC(mrioc->pdev->devfn);
-+	adpinfo.pci_seg_id = pci_domain_nr(mrioc->pdev->bus);
-+	adpinfo.app_intfc_ver = MPI3MR_IOCTL_VERSION;
-+
-+	ioc_state = mpi3mr_get_iocstate(mrioc);
-+	if (ioc_state == MRIOC_STATE_UNRECOVERABLE)
-+		adpinfo.adp_state = MPI3MR_BSG_ADPSTATE_UNRECOVERABLE;
-+	else if ((mrioc->reset_in_progress) || (mrioc->stop_bsgs))
-+		adpinfo.adp_state = MPI3MR_BSG_ADPSTATE_IN_RESET;
-+	else if (ioc_state == MRIOC_STATE_FAULT)
-+		adpinfo.adp_state = MPI3MR_BSG_ADPSTATE_FAULT;
-+	else
-+		adpinfo.adp_state = MPI3MR_BSG_ADPSTATE_OPERATIONAL;
-+
-+	memcpy((u8 *)&adpinfo.driver_info, (u8 *)&mrioc->driver_info,
-+	    sizeof(adpinfo.driver_info));
-+
-+	if (job->request_payload.payload_len >= sizeof(adpinfo)) {
-+		sg_copy_from_buffer(job->request_payload.sg_list,
-+				    job->request_payload.sg_cnt,
-+				    &adpinfo, sizeof(adpinfo));
-+		return 0;
++		    "%s: posting bsg request is failed\n", __func__);
++		rval = -EAGAIN;
++		goto out_unlock;
 +	}
-+	return -EINVAL;
-+}
++	wait_for_completion_timeout(&mrioc->bsg_cmds.done,
++	    (karg->timeout * HZ));
++	if (block_io && stgt_priv)
++		atomic_dec(&stgt_priv->block_io);
++	if (!(mrioc->bsg_cmds.state & MPI3MR_CMD_COMPLETE)) {
++		mrioc->bsg_cmds.is_waiting = 0;
++		rval = -EAGAIN;
++		if (mrioc->bsg_cmds.state & MPI3MR_CMD_RESET)
++			goto out_unlock;
++		dprint_bsg_err(mrioc,
++		    "%s: bsg request timedout after %d seconds\n", __func__,
++		    karg->timeout);
++		if (mrioc->logging_level & MPI3_DEBUG_BSG_ERROR) {
++			dprint_dump(mpi_req, MPI3MR_ADMIN_REQ_FRAME_SZ,
++			    "bsg_mpi3_req");
++			if (mpi_header->function ==
++			    MPI3_FUNCTION_MGMT_PASSTHROUGH) {
++				drv_buf_iter = &drv_bufs[0];
++				dprint_dump(drv_buf_iter->kern_buf,
++				    drv_buf_iter->kern_buf_len, "mpi3_mgmt_req");
++			}
++		}
 +
-+/**
-+ * mpi3mr_bsg_process_drv_cmds - Driver Command handler
-+ * @job: BSG job reference
-+ *
-+ * This function is the top level handler for driver commands,
-+ * this does basic validation of the buffer and identifies the
-+ * opcode and switches to correct sub handler.
-+ *
-+ * Return: 0 on success and proper error codes on failure
-+ */
-+static long mpi3mr_bsg_process_drv_cmds(struct bsg_job *job)
-+{
-+	long rval = -EINVAL;
-+	struct mpi3mr_ioc *mrioc = NULL;
-+	struct mpi3mr_bsg_packet *bsg_req = NULL;
-+	struct mpi3mr_bsg_drv_cmd *drvrcmd = NULL;
++		if (mpi_header->function == MPI3_FUNCTION_SCSI_IO)
++			mpi3mr_issue_tm(mrioc,
++			    MPI3_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
++			    mpi_header->function_dependent, 0,
++			    MPI3MR_HOSTTAG_BLK_TMS, MPI3MR_RESETTM_TIMEOUT,
++			    &mrioc->host_tm_cmds, &resp_code, NULL);
++		if (!(mrioc->bsg_cmds.state & MPI3MR_CMD_COMPLETE) &&
++		    !(mrioc->bsg_cmds.state & MPI3MR_CMD_RESET))
++			mpi3mr_soft_reset_handler(mrioc,
++			    MPI3MR_RESET_FROM_APP_TIMEOUT, 1);
++		goto out_unlock;
++	}
++	dprint_bsg_info(mrioc, "%s: bsg request is completed\n", __func__);
 +
-+	bsg_req = job->request;
-+	drvrcmd = &bsg_req->cmd.drvrcmd;
-+
-+	mpi3mr_bsg_verify_adapter(drvrcmd->mrioc_id, &mrioc);
-+	if (!mrioc)
-+		return -ENODEV;
-+
-+	if (drvrcmd->opcode == MPI3MR_DRVBSG_OPCODE_ADPINFO) {
-+		rval = mpi3mr_bsg_populate_adpinfo(mrioc, job);
-+		return rval;
++	if ((mrioc->bsg_cmds.ioc_status & MPI3_IOCSTATUS_STATUS_MASK)
++	     != MPI3_IOCSTATUS_SUCCESS) {
++		dprint_bsg_info(mrioc,
++		    "%s: command failed, ioc_status(0x%04x) log_info(0x%08x)\n",
++		    __func__,
++		    (mrioc->bsg_cmds.ioc_status & MPI3_IOCSTATUS_STATUS_MASK),
++		    mrioc->bsg_cmds.ioc_loginfo);
 +	}
 +
-+	if (mutex_lock_interruptible(&mrioc->bsg_cmds.mutex))
-+		return -ERESTARTSYS;
++	if ((mpirep_offset != 0xFF) &&
++	    drv_bufs[mpirep_offset].bsg_buf_len) {
++		drv_buf_iter = &drv_bufs[mpirep_offset];
++		drv_buf_iter->kern_buf_len = (sizeof(*bsg_reply_buf) - 1 +
++					   mrioc->reply_sz);
++		bsg_reply_buf = kzalloc(drv_buf_iter->kern_buf_len, GFP_KERNEL);
 +
-+	switch (drvrcmd->opcode) {
-+	case MPI3MR_DRVBSG_OPCODE_ADPRESET:
-+		rval = mpi3mr_bsg_adp_reset(mrioc, job);
-+		break;
-+	case MPI3MR_DRVBSG_OPCODE_ALLTGTDEVINFO:
-+		rval = mpi3mr_get_all_tgt_info(mrioc, job);
-+		break;
-+	case MPI3MR_DRVBSG_OPCODE_GETCHGCNT:
-+		rval = mpi3mr_get_change_count(mrioc, job);
-+		break;
-+	case MPI3MR_DRVBSG_OPCODE_LOGDATAENABLE:
-+		rval = mpi3mr_enable_logdata(mrioc, job);
-+		break;
-+	case MPI3MR_DRVBSG_OPCODE_GETLOGDATA:
-+		rval = mpi3mr_get_logdata(mrioc, job);
-+		break;
-+	case MPI3MR_DRVBSG_OPCODE_UNKNOWN:
-+	default:
-+		pr_err("%s: unsupported driver command opcode %d\n",
-+		    MPI3MR_DRIVER_NAME, drvrcmd->opcode);
-+		break;
++		if (!bsg_reply_buf) {
++			rval = -ENOMEM;
++			goto out_unlock;
++		}
++		if (mrioc->bsg_cmds.state & MPI3MR_CMD_REPLY_VALID) {
++			bsg_reply_buf->mpi_reply_type =
++				MPI3MR_BSG_MPI_REPLY_BUFTYPE_ADDRESS;
++			memcpy(bsg_reply_buf->reply_buf,
++			    mrioc->bsg_cmds.reply, mrioc->reply_sz);
++		} else {
++			bsg_reply_buf->mpi_reply_type =
++				MPI3MR_BSG_MPI_REPLY_BUFTYPE_STATUS;
++			status_desc = (struct mpi3_status_reply_descriptor *)
++			    bsg_reply_buf->reply_buf;
++			status_desc->ioc_status = mrioc->bsg_cmds.ioc_status;
++			status_desc->ioc_log_info = mrioc->bsg_cmds.ioc_loginfo;
++		}
++		tmplen = min(drv_buf_iter->kern_buf_len,
++			drv_buf_iter->bsg_buf_len);
++		memcpy(drv_buf_iter->bsg_buf, bsg_reply_buf, tmplen);
 +	}
++
++	if (erb_offset != 0xFF && mrioc->bsg_cmds.sensebuf &&
++	    mrioc->bsg_cmds.is_sense) {
++		drv_buf_iter = &drv_bufs[erb_offset];
++		tmplen = min(erbsz, drv_buf_iter->bsg_buf_len);
++		memcpy(drv_buf_iter->bsg_buf, sense_buff_k, tmplen);
++	}
++
++	drv_buf_iter = drv_bufs;
++	for (count = 0; count < bufcnt; count++, drv_buf_iter++) {
++		if (drv_buf_iter->data_dir == DMA_NONE)
++			continue;
++		if (drv_buf_iter->data_dir == DMA_FROM_DEVICE) {
++			tmplen = min(drv_buf_iter->kern_buf_len,
++				     drv_buf_iter->bsg_buf_len);
++			memcpy(drv_buf_iter->bsg_buf,
++			       drv_buf_iter->kern_buf, tmplen);
++		}
++	}
++
++out_unlock:
++	if (din_buf) {
++		job->reply_payload_rcv_len =
++			sg_copy_from_buffer(job->reply_payload.sg_list,
++					    job->reply_payload.sg_cnt,
++					    din_buf, job->reply_payload.payload_len);
++	}
++	mrioc->bsg_cmds.is_sense = 0;
++	mrioc->bsg_cmds.sensebuf = NULL;
++	mrioc->bsg_cmds.state = MPI3MR_CMD_NOTUSED;
 +	mutex_unlock(&mrioc->bsg_cmds.mutex);
++out:
++	kfree(sense_buff_k);
++	kfree(dout_buf);
++	kfree(din_buf);
++	kfree(mpi_req);
++	if (drv_bufs) {
++		drv_buf_iter = drv_bufs;
++		for (count = 0; count < bufcnt; count++, drv_buf_iter++) {
++			if (drv_buf_iter->kern_buf && drv_buf_iter->kern_buf_dma)
++				dma_free_coherent(&mrioc->pdev->dev,
++				    drv_buf_iter->kern_buf_len,
++				    drv_buf_iter->kern_buf,
++				    drv_buf_iter->kern_buf_dma);
++		}
++		kfree(drv_bufs);
++	}
++	kfree(bsg_reply_buf);
 +	return rval;
 +}
 +
  /**
   * mpi3mr_bsg_request - bsg request entry point
   * @job: BSG job reference
-@@ -21,6 +400,21 @@
-  */
- int mpi3mr_bsg_request(struct bsg_job *job)
- {
-+	long rval = -EINVAL;
-+	struct mpi3mr_bsg_packet *bsg_req = job->request;
-+
-+	switch (bsg_req->cmd_type) {
-+	case MPI3MR_DRV_CMD:
-+		rval = mpi3mr_bsg_process_drv_cmds(job);
+@@ -407,6 +921,9 @@ int mpi3mr_bsg_request(struct bsg_job *job)
+ 	case MPI3MR_DRV_CMD:
+ 		rval = mpi3mr_bsg_process_drv_cmds(job);
+ 		break;
++	case MPI3MR_MPT_CMD:
++		rval = mpi3mr_bsg_process_mpt_cmds(job);
 +		break;
-+	default:
-+		pr_err("%s: unsupported BSG command(0x%08x)\n",
-+		    MPI3MR_DRIVER_NAME, bsg_req->cmd_type);
-+		break;
-+	}
-+
-+	bsg_job_done(job, rval, job->reply_payload_rcv_len);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.h b/drivers/scsi/mpi3mr/mpi3mr_app.h
-index 4bc31d45c610..d324a13c672c 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.h
-@@ -10,6 +10,476 @@
- #ifndef MPI3MR_APP_H_INCLUDED
- #define MPI3MR_APP_H_INCLUDED
- 
-+
-+/* Definitions for BSG commands */
-+#define MPI3MR_IOCTL_VERSION			0x06
-+
-+#define MPI3MR_APP_DEFAULT_TIMEOUT		(60) /*seconds*/
-+
-+#define MPI3MR_BSG_ADPTYPE_UNKNOWN		0
-+#define MPI3MR_BSG_ADPTYPE_AVGFAMILY		1
-+
-+#define MPI3MR_BSG_ADPSTATE_UNKNOWN		0
-+#define MPI3MR_BSG_ADPSTATE_OPERATIONAL		1
-+#define MPI3MR_BSG_ADPSTATE_FAULT		2
-+#define MPI3MR_BSG_ADPSTATE_IN_RESET		3
-+#define MPI3MR_BSG_ADPSTATE_UNRECOVERABLE	4
-+
-+#define MPI3MR_BSG_ADPRESET_UNKNOWN		0
-+#define MPI3MR_BSG_ADPRESET_SOFT		1
-+#define MPI3MR_BSG_ADPRESET_DIAG_FAULT		2
-+
-+#define MPI3MR_BSG_LOGDATA_MAX_ENTRIES		400
-+#define MPI3MR_BSG_LOGDATA_ENTRY_HEADER_SZ	4
-+
-+#define MPI3MR_DRVBSG_OPCODE_UNKNOWN		0
-+#define MPI3MR_DRVBSG_OPCODE_ADPINFO		1
-+#define MPI3MR_DRVBSG_OPCODE_ADPRESET		2
-+#define MPI3MR_DRVBSG_OPCODE_ALLTGTDEVINFO	4
-+#define MPI3MR_DRVBSG_OPCODE_GETCHGCNT		5
-+#define MPI3MR_DRVBSG_OPCODE_LOGDATAENABLE	6
-+#define MPI3MR_DRVBSG_OPCODE_PELENABLE		7
-+#define MPI3MR_DRVBSG_OPCODE_GETLOGDATA		8
-+#define MPI3MR_DRVBSG_OPCODE_QUERY_HDB		9
-+#define MPI3MR_DRVBSG_OPCODE_REPOST_HDB		10
-+#define MPI3MR_DRVBSG_OPCODE_UPLOAD_HDB		11
-+#define MPI3MR_DRVBSG_OPCODE_REFRESH_HDB_TRIGGERS	12
-+
-+
-+#define MPI3MR_BSG_BUFTYPE_UNKNOWN		0
-+#define MPI3MR_BSG_BUFTYPE_RAIDMGMT_CMD		1
-+#define MPI3MR_BSG_BUFTYPE_RAIDMGMT_RESP	2
-+#define MPI3MR_BSG_BUFTYPE_DATA_IN		3
-+#define MPI3MR_BSG_BUFTYPE_DATA_OUT		4
-+#define MPI3MR_BSG_BUFTYPE_MPI_REPLY		5
-+#define MPI3MR_BSG_BUFTYPE_ERR_RESPONSE		6
-+#define MPI3MR_BSG_BUFTYPE_MPI_REQUEST		0xFE
-+
-+#define MPI3MR_BSG_MPI_REPLY_BUFTYPE_UNKNOWN	0
-+#define MPI3MR_BSG_MPI_REPLY_BUFTYPE_STATUS	1
-+#define MPI3MR_BSG_MPI_REPLY_BUFTYPE_ADDRESS	2
-+
-+#define MPI3MR_HDB_BUFTYPE_UNKNOWN		0
-+#define MPI3MR_HDB_BUFTYPE_TRACE		1
-+#define MPI3MR_HDB_BUFTYPE_FIRMWARE		2
-+#define MPI3MR_HDB_BUFTYPE_RESERVED		3
-+
-+#define MPI3MR_HDB_BUFSTATUS_UNKNOWN		0
-+#define MPI3MR_HDB_BUFSTATUS_NOT_ALLOCATED	1
-+#define MPI3MR_HDB_BUFSTATUS_POSTED_UNPAUSED	2
-+#define MPI3MR_HDB_BUFSTATUS_POSTED_PAUSED	3
-+#define MPI3MR_HDB_BUFSTATUS_RELEASED		4
-+
-+#define MPI3MR_HDB_TRIGGER_TYPE_UNKNOWN		0
-+#define MPI3MR_HDB_TRIGGER_TYPE_DIAGFAULT	1
-+#define MPI3MR_HDB_TRIGGER_TYPE_ELEMENT		2
-+#define MPI3MR_HDB_TRIGGER_TYPE_MASTER		3
-+
-+
-+/* Supported BSG commands */
-+enum command {
-+	MPI3MR_DRV_CMD = 1,
-+	MPI3MR_MPT_CMD = 2,
-+};
-+
-+/**
-+ * struct mpi3mr_bsg_in_adpinfo - Adapter information request
-+ * data returned by the driver.
-+ *
-+ * @adp_type: Adapter type
-+ * @rsvd1: Reserved
-+ * @pci_dev_id: PCI device ID of the adapter
-+ * @pci_dev_hw_rev: PCI revision of the adapter
-+ * @pci_subsys_dev_id: PCI subsystem device ID of the adapter
-+ * @pci_subsys_ven_id: PCI subsystem vendor ID of the adapter
-+ * @pci_dev: PCI device
-+ * @pci_func: PCI function
-+ * @pci_bus: PCI bus
-+ * @rsvd2: Reserved
-+ * @pci_seg_id: PCI segment ID
-+ * @app_intfc_ver: version of the application interface definition
-+ * @rsvd3: Reserved
-+ * @rsvd4: Reserved
-+ * @rsvd5: Reserved
-+ * @driver_info: Driver Information (Version/Name)
-+ */
-+struct mpi3mr_bsg_in_adpinfo {
-+	uint32_t adp_type;
-+	uint32_t rsvd1;
-+	uint32_t pci_dev_id;
-+	uint32_t pci_dev_hw_rev;
-+	uint32_t pci_subsys_dev_id;
-+	uint32_t pci_subsys_ven_id;
-+	uint32_t pci_dev:5;
-+	uint32_t pci_func:3;
-+	uint32_t pci_bus:8;
-+	uint16_t rsvd2;
-+	uint32_t pci_seg_id;
-+	uint32_t app_intfc_ver;
-+	uint8_t adp_state;
-+	uint8_t rsvd3;
-+	uint16_t rsvd4;
-+	uint32_t rsvd5[2];
-+	struct mpi3_driver_info_layout driver_info;
-+};
-+
-+/**
-+ * struct mpi3mr_bsg_adp_reset - Adapter reset request
-+ * payload data to the driver.
-+ *
-+ * @reset_type: Reset type
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ */
-+struct mpi3mr_bsg_adp_reset {
-+	uint8_t reset_type;
-+	uint8_t rsvd1;
-+	uint16_t rsvd2;
-+};
-+
-+/**
-+ * struct mpi3mr_change_count - Topology change count
-+ * returned by the driver.
-+ *
-+ * @change_count: Topology change count
-+ * @rsvd: Reserved
-+ */
-+struct mpi3mr_change_count {
-+	uint16_t change_count;
-+	uint16_t rsvd;
-+};
-+
-+/**
-+ * struct mpi3mr_device_map_info - Target device mapping
-+ * information
-+ *
-+ * @handle: Firmware device handle
-+ * @perst_id: Persistent ID assigned by the firmware
-+ * @target_id: Target ID assigned by the driver
-+ * @bus_id: Bus ID assigned by the driver
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ */
-+struct mpi3mr_device_map_info {
-+	uint16_t handle;
-+	uint16_t perst_id;
-+	uint32_t target_id;
-+	uint8_t bus_id;
-+	uint8_t rsvd1;
-+	uint16_t rsvd2;
-+};
-+
-+/**
-+ * struct mpi3mr_all_tgt_info - Target device mapping
-+ * information returned by the driver
-+ *
-+ * @num_devices: The number of devices in driver's inventory
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ * @dmi: Variable length array of mapping information of targets
-+ */
-+struct mpi3mr_all_tgt_info {
-+	uint16_t num_devices;
-+	uint16_t rsvd1;
-+	uint32_t rsvd2;
-+	struct mpi3mr_device_map_info dmi[1];
-+};
-+
-+/**
-+ * struct mpi3mr_logdata_enable - Number of log data
-+ * entries saved by the driver returned as payload data for
-+ * enable logdata BSG request by the driver.
-+ *
-+ * @max_entries: Number of log data entries cached by the driver
-+ * @rsvd: Reserved
-+ */
-+struct mpi3mr_logdata_enable {
-+	uint16_t max_entries;
-+	uint16_t rsvd;
-+};
-+
-+/**
-+ * struct mpi3mr_bsg_out_pel_enable - PEL enable request payload
-+ * data to the driver.
-+ *
-+ * @pel_locale: PEL locale to the firmware
-+ * @pel_class: PEL class to the firmware
-+ * @rsvd: Reserved
-+ */
-+struct mpi3mr_bsg_out_pel_enable {
-+	uint16_t pel_locale;
-+	uint8_t pel_class;
-+	uint8_t rsvd;
-+};
-+
-+/**
-+ * struct mpi3mr_logdata_entry - Log data entry cached by the
-+ * driver.
-+ *
-+ * @valid_entry: Is the entry valid
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ * @data: Variable length Log entry data
-+ */
-+struct mpi3mr_logdata_entry {
-+	uint8_t valid_entry;
-+	uint8_t rsvd1;
-+	uint16_t rsvd2;
-+	uint8_t data[1]; /* Variable length Array */
-+};
-+
-+/**
-+ * struct mpi3mr_bsg_in_log_data - Log data entries saved by
-+ * the driver returned as payload data for Get logdata request
-+ * by the driver.
-+ *
-+ * @entry: Variable length Log data entry array
-+ */
-+struct mpi3mr_bsg_in_log_data {
-+	struct mpi3mr_logdata_entry entry[1];
-+};
-+
-+/**
-+ * struct mpi3mr_hdb_entry - host diag buffer entry.
-+ *
-+ * @buf_type: Buffer type
-+ * @status: Buffer status
-+ * @trigger_type: Trigger type
-+ * @rsvd1: Reserved
-+ * @size: Buffer size
-+ * @rsvd2: Reserved
-+ * @trigger_data: Trigger specific data
-+ * @rsvd3: Reserved
-+ * @rsvd4: Reserved
-+ */
-+struct mpi3mr_hdb_entry {
-+	uint8_t buf_type;
-+	uint8_t status;
-+	uint8_t trigger_type;
-+	uint8_t rsvd1;
-+	uint16_t size;
-+	uint16_t rsvd2;
-+	uint64_t trigger_data;
-+	uint32_t rsvd3;
-+	uint32_t rsvd4;
-+};
-+
-+
-+/**
-+ * struct mpi3mr_bsg_in_hdb_status - This structure contains
-+ * return data for the BSG request to retrieve the number of host
-+ * diagnostic buffers supported by the driver and their current
-+ * status and additional status specific data if any in forms of
-+ * multiple hdb entries.
-+ *
-+ * @num_hdb_types: Number of host diag buffer types supported
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ * @rsvd3: Reserved
-+ * @entry: Variable length Diag buffer status entry array
-+ */
-+struct mpi3mr_bsg_in_hdb_status {
-+	uint8_t num_hdb_types;
-+	uint8_t rsvd1;
-+	uint16_t rsvd2;
-+	uint32_t rsvd3;
-+	struct mpi3mr_hdb_entry entry[1];
-+};
-+
-+/**
-+ * struct mpi3mr_bsg_out_repost_hdb - Repost host diagnostic
-+ * buffer request payload data to the driver.
-+ *
-+ * @buf_type: Buffer type
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ */
-+struct mpi3mr_bsg_out_repost_hdb {
-+	uint8_t buf_type;
-+	uint8_t rsvd1;
-+	uint16_t rsvd2;
-+};
-+
-+/**
-+ * struct mpi3mr_bsg_out_upload_hdb - Upload host diagnostic
-+ * buffer request payload data to the driver.
-+ *
-+ * @buf_type: Buffer type
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ * @start_offset: Start offset of the buffer from where to copy
-+ * @length: Length of the buffer to copy
-+ */
-+struct mpi3mr_bsg_out_upload_hdb {
-+	uint8_t buf_type;
-+	uint8_t rsvd1;
-+	uint16_t rsvd2;
-+	uint32_t start_offset;
-+	uint32_t length;
-+};
-+
-+/**
-+ * struct mpi3mr_bsg_out_refresh_hdb_triggers - Refresh host
-+ * diagnostic buffer triggers request payload data to the driver.
-+ *
-+ * @page_type: Page type
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ */
-+struct mpi3mr_bsg_out_refresh_hdb_triggers {
-+	uint8_t page_type;
-+	uint8_t rsvd1;
-+	uint16_t rsvd2;
-+};
-+/**
-+ * struct mpi3mr_bsg_drv_cmd -  Generic bsg data
-+ * structure for all driver specific requests.
-+ *
-+ * @mrioc_id: Controller ID
-+ * @opcode: Driver specific opcode
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ */
-+struct mpi3mr_bsg_drv_cmd {
-+	uint8_t mrioc_id;
-+	uint8_t opcode;
-+	uint16_t rsvd1;
-+	uint32_t rsvd2[4];
-+};
-+/**
-+ * struct mpi3mr_bsg_in_reply_buf - MPI reply buffer returned
-+ * for MPI Passthrough request .
-+ *
-+ * @mpi_reply_type: Type of MPI reply
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ * @reply_buf: Variable Length buffer based on mpirep type
-+ */
-+struct mpi3mr_bsg_in_reply_buf {
-+	uint8_t mpi_reply_type;
-+	uint8_t rsvd1;
-+	uint16_t rsvd2;
-+	uint8_t reply_buf[1];
-+};
-+
-+/**
-+ * struct mpi3mr_buf_entry - User buffer descriptor for MPI
-+ * Passthrough requests.
-+ *
-+ * @buf_type: Buffer type
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ * @buf_len: Buffer length
-+ */
-+struct mpi3mr_buf_entry {
-+	uint8_t buf_type;
-+	uint8_t rsvd1;
-+	uint16_t rsvd2;
-+	uint32_t buf_len;
-+};
-+/**
-+ * struct mpi3mr_bsg_buf_entry_list - list of user buffer
-+ * descriptor for MPI Passthrough requests.
-+ *
-+ * @num_of_entries: Number of buffer descriptors
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ * @rsvd3: Reserved
-+ * @buf_entry: Variable length array of buffer descriptors
-+ */
-+struct mpi3mr_buf_entry_list {
-+	uint8_t num_of_entries;
-+	uint8_t rsvd1;
-+	uint16_t rsvd2;
-+	uint32_t rsvd3;
-+	struct mpi3mr_buf_entry buf_entry[1];
-+};
-+/**
-+ * struct mpi3mr_bsg_mptcmd -  Generic bsg data
-+ * structure for all MPI Passthrough requests .
-+ *
-+ * @mrioc_id: Controller ID
-+ * @rsvd1: Reserved
-+ * @timeout: MPI request timeout
-+ * @buf_entry_list: Buffer descriptor list
-+ */
-+struct mpi3mr_bsg_mptcmd {
-+	uint8_t mrioc_id;
-+	uint8_t rsvd1;
-+	uint16_t timeout;
-+	uint32_t rsvd2;
-+	struct mpi3mr_buf_entry_list buf_entry_list;
-+};
-+
-+/**
-+ * struct mpi3mr_bsg_packet -  Generic bsg data
-+ * structure for all supported requests .
-+ *
-+ * @cmd_type: represents drvrcmd or mptcmd
-+ * @rsvd1: Reserved
-+ * @rsvd2: Reserved
-+ * @drvrcmd: driver request structure
-+ * @mptcmd: mpt request structure
-+ */
-+struct mpi3mr_bsg_packet {
-+	uint8_t cmd_type;
-+	uint8_t rsvd1;
-+	uint16_t rsvd2;
-+	uint32_t rsvd3;
-+	union {
-+		struct mpi3mr_bsg_drv_cmd drvrcmd;
-+		struct mpi3mr_bsg_mptcmd mptcmd;
-+	} cmd;
-+};
-+
-+/**
-+ * struct mpi3mr_buf_map -  local structure to
-+ * track kernel and user buffers associated with an BSG
-+ * structure.
-+ *
-+ * @bsg_buf: BSG buffer virtual address
-+ * @bsg_buf_len:  BSG buffer length
-+ * @kern_buf: Kernel buffer virtual address
-+ * @kern_buf_len: Kernel buffer length
-+ * @kern_buf_dma: Kernel buffer DMA address
-+ * @data_dir: Data direction.
-+ */
-+struct mpi3mr_buf_map {
-+	void *bsg_buf;
-+	u32 bsg_buf_len;
-+	void *kern_buf;
-+	u32 kern_buf_len;
-+	dma_addr_t kern_buf_dma;
-+	u8 data_dir;
-+};
-+
-+/* Encapsulated NVMe command definitions */
-+#define	MPI3MR_NVME_PRP_SIZE		8 /* PRP size */
-+#define	MPI3MR_NVME_CMD_PRP1_OFFSET	24 /* PRP1 offset in NVMe cmd */
-+#define	MPI3MR_NVME_CMD_PRP2_OFFSET	32 /* PRP2 offset in NVMe cmd */
-+#define	MPI3MR_NVME_CMD_SGL_OFFSET	24 /* SGL offset in NVMe cmd */
-+#define MPI3MR_NVME_DATA_FORMAT_PRP	0
-+#define MPI3MR_NVME_DATA_FORMAT_SGL1	1
-+#define MPI3MR_NVME_DATA_FORMAT_SGL2	2
-+
-+/**
-+ * struct mpi3mr_nvme_pt_sge -  Structure to store SGEs for NVMe
-+ * Encapsulated commands.
-+ *
-+ * @base_addr: Physical address
-+ * @length: SGE length
-+ * @rsvd: Reserved
-+ * @rsvd1: Reserved
-+ * @sgl_type: sgl type
-+ */
-+struct mpi3mr_nvme_pt_sge {
-+	u64 base_addr;
-+	u32 length;
-+	u16 rsvd;
-+	u8 rsvd1;
-+	u8 sgl_type;
-+};
-+
- /*
-  * Maximum data transfer size definitions for management
-  * application commands
+ 	default:
+ 		pr_err("%s: unsupported BSG command(0x%08x)\n",
+ 		    MPI3MR_DRIVER_NAME, bsg_req->cmd_type);
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_debug.h b/drivers/scsi/mpi3mr/mpi3mr_debug.h
-index c7982443f45a..65bfac72948c 100644
+index 65bfac72948c..2464c400a5a4 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_debug.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr_debug.h
-@@ -23,8 +23,8 @@
- #define MPI3_DEBUG_RESET		0x00000020
- #define MPI3_DEBUG_SCSI_ERROR		0x00000040
- #define MPI3_DEBUG_REPLY		0x00000080
--#define MPI3_DEBUG_IOCTL_ERROR		0x00008000
--#define MPI3_DEBUG_IOCTL_INFO		0x00010000
-+#define MPI3_DEBUG_BSG_ERROR		0x00008000
-+#define MPI3_DEBUG_BSG_INFO		0x00010000
- #define MPI3_DEBUG_SCSI_INFO		0x00020000
- #define MPI3_DEBUG			0x01000000
- #define MPI3_DEBUG_SG			0x02000000
-@@ -110,15 +110,15 @@
- 	} while (0)
+@@ -124,6 +124,31 @@
  
+ #endif /* MPT3SAS_DEBUG_H_INCLUDED */
  
--#define dprint_ioctl_info(ioc, fmt, ...) \
-+#define dprint_bsg_info(ioc, fmt, ...) \
- 	do { \
--		if (ioc->logging_level & MPI3_DEBUG_IOCTL_INFO) \
-+		if (ioc->logging_level & MPI3_DEBUG_BSG_INFO) \
- 			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
- 	} while (0)
- 
--#define dprint_ioctl_err(ioc, fmt, ...) \
-+#define dprint_bsg_err(ioc, fmt, ...) \
- 	do { \
--		if (ioc->logging_level & MPI3_DEBUG_IOCTL_ERROR) \
-+		if (ioc->logging_level & MPI3_DEBUG_BSG_ERROR) \
- 			pr_info("%s: " fmt, (ioc)->name, ##__VA_ARGS__); \
- 	} while (0)
- 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index e25c02466043..480730721f50 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -297,6 +297,8 @@ mpi3mr_get_drv_cmd(struct mpi3mr_ioc *mrioc, u16 host_tag,
- 	switch (host_tag) {
- 	case MPI3MR_HOSTTAG_INITCMDS:
- 		return &mrioc->init_cmds;
-+	case MPI3MR_HOSTTAG_BSG_CMDS:
-+		return &mrioc->bsg_cmds;
- 	case MPI3MR_HOSTTAG_BLK_TMS:
- 		return &mrioc->host_tm_cmds;
- 	case MPI3MR_HOSTTAG_INVALID:
-@@ -865,10 +867,10 @@ static const struct {
- } mpi3mr_reset_reason_codes[] = {
- 	{ MPI3MR_RESET_FROM_BRINGUP, "timeout in bringup" },
- 	{ MPI3MR_RESET_FROM_FAULT_WATCH, "fault" },
--	{ MPI3MR_RESET_FROM_IOCTL, "application invocation" },
-+	{ MPI3MR_RESET_FROM_APP, "application invocation" },
- 	{ MPI3MR_RESET_FROM_EH_HOS, "error handling" },
- 	{ MPI3MR_RESET_FROM_TM_TIMEOUT, "TM timeout" },
--	{ MPI3MR_RESET_FROM_IOCTL_TIMEOUT, "IOCTL timeout" },
-+	{ MPI3MR_RESET_FROM_APP_TIMEOUT, "application command timeout" },
- 	{ MPI3MR_RESET_FROM_MUR_FAILURE, "MUR failure" },
- 	{ MPI3MR_RESET_FROM_CTLR_CLEANUP, "timeout in controller cleanup" },
- 	{ MPI3MR_RESET_FROM_CIACTIV_FAULT, "component image activation fault" },
-@@ -2813,6 +2815,10 @@ static int mpi3mr_alloc_reply_sense_bufs(struct mpi3mr_ioc *mrioc)
- 	if (!mrioc->init_cmds.reply)
- 		goto out_failed;
- 
-+	mrioc->bsg_cmds.reply = kzalloc(mrioc->reply_sz, GFP_KERNEL);
-+	if (!mrioc->bsg_cmds.reply)
-+		goto out_failed;
++/**
++ * dprint_dump - print contents of a memory buffer
++ * @req: Pointer to a memory buffer
++ * @sz: Memory buffer size
++ * @namestr: Name String to identify the buffer type
++ */
++static inline void
++dprint_dump(void *req, int sz, const char *name_string)
++{
++	int i;
++	__le32 *mfp = (__le32 *)req;
 +
- 	for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++) {
- 		mrioc->dev_rmhs_cmds[i].reply = kzalloc(mrioc->reply_sz,
- 		    GFP_KERNEL);
-@@ -3948,6 +3954,8 @@ void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
- 
- 	if (mrioc->init_cmds.reply) {
- 		memset(mrioc->init_cmds.reply, 0, sizeof(*mrioc->init_cmds.reply));
-+		memset(mrioc->bsg_cmds.reply, 0,
-+		    sizeof(*mrioc->bsg_cmds.reply));
- 		memset(mrioc->host_tm_cmds.reply, 0,
- 		    sizeof(*mrioc->host_tm_cmds.reply));
- 		for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++)
-@@ -4050,6 +4058,9 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
- 	kfree(mrioc->init_cmds.reply);
- 	mrioc->init_cmds.reply = NULL;
- 
-+	kfree(mrioc->bsg_cmds.reply);
-+	mrioc->bsg_cmds.reply = NULL;
++	sz = sz/4;
++	if (name_string)
++		pr_info("%s:\n\t", name_string);
++	else
++		pr_info("request:\n\t");
++	for (i = 0; i < sz; i++) {
++		if (i && ((i % 8) == 0))
++			pr_info("\n\t");
++		pr_info("%08x ", le32_to_cpu(mfp[i]));
++	}
++	pr_info("\n");
++}
 +
- 	kfree(mrioc->host_tm_cmds.reply);
- 	mrioc->host_tm_cmds.reply = NULL;
- 
-@@ -4235,6 +4246,8 @@ static void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc)
- 
- 	cmdptr = &mrioc->init_cmds;
- 	mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
-+	cmdptr = &mrioc->bsg_cmds;
-+	mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
- 	cmdptr = &mrioc->host_tm_cmds;
- 	mpi3mr_drv_cmd_comp_reset(mrioc, cmdptr);
- 
-@@ -4258,7 +4271,7 @@ static void mpi3mr_flush_drv_cmds(struct mpi3mr_ioc *mrioc)
-  * This is an handler for recovering controller by issuing soft
-  * reset are diag fault reset.  This is a blocking function and
-  * when one reset is executed if any other resets they will be
-- * blocked. All IOCTLs/IO will be blocked during the reset. If
-+ * blocked. All BSG requests will be blocked during the reset. If
-  * controller reset is successful then the controller will be
-  * reinitalized, otherwise the controller will be marked as not
-  * recoverable
-@@ -4305,6 +4318,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	    mpi3mr_reset_rc_name(reset_reason));
- 
- 	mrioc->reset_in_progress = 1;
-+	mrioc->stop_bsgs = 1;
- 	mrioc->prev_reset_result = -1;
- 
- 	if ((!snapdump) && (reset_reason != MPI3MR_RESET_FROM_FAULT_WATCH) &&
-@@ -4377,6 +4391,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 			    &mrioc->watchdog_work,
- 			    msecs_to_jiffies(MPI3MR_WATCHDOG_INTERVAL));
- 		spin_unlock_irqrestore(&mrioc->watchdog_lock, flags);
-+		mrioc->stop_bsgs = 0;
- 	} else {
- 		mpi3mr_issue_reset(mrioc,
- 		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT, reset_reason);
+ /**
+  * dprint_dump_req - print message frame contents
+  * @req: pointer to message frame
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index faf14a5f9123..a03e39083a42 100644
+index a03e39083a42..450574fc1fec 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3589,6 +3589,7 @@ static int mpi3mr_scan_finished(struct Scsi_Host *shost,
- 
- 	mpi3mr_start_watchdog(mrioc);
- 	mrioc->is_driver_loading = 0;
-+	mrioc->stop_bsgs = 0;
- 	return 1;
- }
- 
-@@ -4259,6 +4260,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	mutex_init(&mrioc->reset_mutex);
- 	mpi3mr_init_drv_cmd(&mrioc->init_cmds, MPI3MR_HOSTTAG_INITCMDS);
- 	mpi3mr_init_drv_cmd(&mrioc->host_tm_cmds, MPI3MR_HOSTTAG_BLK_TMS);
-+	mpi3mr_init_drv_cmd(&mrioc->bsg_cmds, MPI3MR_HOSTTAG_BSG_CMDS);
- 
- 	for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++)
- 		mpi3mr_init_drv_cmd(&mrioc->dev_rmhs_cmds[i],
-@@ -4271,6 +4273,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	mrioc->logging_level = logging_level;
- 	mrioc->shost = shost;
- 	mrioc->pdev = pdev;
-+	mrioc->stop_bsgs = 1;
- 
- 	/* init shost parameters */
- 	shost->max_cmd_len = MPI3MR_MAX_CDB_LENGTH;
+@@ -634,7 +634,7 @@ static struct mpi3mr_tgt_dev  *__mpi3mr_get_tgtdev_by_handle(
+  *
+  * Return: Target device reference.
+  */
+-static struct mpi3mr_tgt_dev *mpi3mr_get_tgtdev_by_handle(
++struct mpi3mr_tgt_dev *mpi3mr_get_tgtdev_by_handle(
+ 	struct mpi3mr_ioc *mrioc, u16 handle)
+ {
+ 	struct mpi3mr_tgt_dev *tgtdev;
+@@ -2996,7 +2996,7 @@ inline void mpi3mr_poll_pend_io_completions(struct mpi3mr_ioc *mrioc)
+  *
+  * Return: 0 on success, non-zero on errors
+  */
+-static int mpi3mr_issue_tm(struct mpi3mr_ioc *mrioc, u8 tm_type,
++int mpi3mr_issue_tm(struct mpi3mr_ioc *mrioc, u8 tm_type,
+ 	u16 handle, uint lun, u16 htag, ulong timeout,
+ 	struct mpi3mr_drv_cmd *drv_cmd,
+ 	u8 *resp_code, struct scsi_cmnd *scmd)
 -- 
 2.27.0
 
 
---000000000000a7b84f05dacda815
+--000000000000d1e03e05dacda879
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -1267,13 +789,13 @@ rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
 3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKRU4x/uayr3N5TTKixgrXEM56eu+6nQ
-LKU7YWXNMz2YMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDMy
-MjEyMjE1NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKtjAE8VZU5apQpDXp/UVFT3W4JiiyH7
+ytgPDSRG785tMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDMy
+MjEyMjE1OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBpMpGaNRPstMFun0v+jDSpMat0Cu+2WgVWzM9PI37edSe6yYtF
-oFaQx6qH0G7MgRotHC9b2fue1MbwMHU8bR/qUxNkUfZGaOl0wTaY0fGyoqK80V4Y4ZHxPPIrNhDy
-SZ+iLcyxmGNoUx90Q4081bbH398sHN+1Mk0/qvGmmG1EHrKe+Z+ZDFGUD4BjR1CWbHoilFahh2tR
-kq/wUadOBh+E0wyHlg/HGT0SIrPaYeMjZ6Pe9EJCgetnC7n0hM7Ttj6lUDE6Ynjs9FtuXeAKc+jl
-7xZizPH4nOGSZn49o5mfzoKDaO/GJW/labv0w7LTv1U4jF8sYcefkWtT9JVyPFX8
---000000000000a7b84f05dacda815--
+ATANBgkqhkiG9w0BAQEFAASCAQDQV7+DbmiD/ncnzmYaT94HdKQtB9zjgQENdzYiMIPWPDBm0YQa
+BUjAvlCUZKC1wZIn7w+KPzMZMSQqiA4fIw8nGdNjGpVDVMVciEy49MLIybftgveIg23+/xXwY62j
+Uy0EZYwSvW4gBQyir4HrJbVXDbM2G1VRF5uIeF+Ly3EFCIazvdy7WP3NhVuyW7gI/SBJZSdBRW9Q
+RTsRgtJV8owCKzefrzrswNvl7HT51rLjzRiZyx6rak+IawIeoP55/VhI65YuNiBK6Ry5hume9shg
+ePVBfLW8RJ8sn8/nyqM/yg5tjqHrv5sn7yZFVVhS3Itk5p2kQEQMGtvM+liZaP9G
+--000000000000d1e03e05dacda879--
