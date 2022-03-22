@@ -2,29 +2,29 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9439C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 10:45:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDF20C4321E
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 10:46:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233444AbiCVKrW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 06:47:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52862 "EHLO
+        id S233502AbiCVKro (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 06:47:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233406AbiCVKrU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 06:47:20 -0400
+        with ESMTP id S233517AbiCVKrk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 06:47:40 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94F93814AF;
-        Tue, 22 Mar 2022 03:45:53 -0700 (PDT)
-Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KN7R337J0z6800j;
-        Tue, 22 Mar 2022 18:44:47 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B31F82316;
+        Tue, 22 Mar 2022 03:46:01 -0700 (PDT)
+Received: from fraeml744-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KN7RB66vHz67L71;
+        Tue, 22 Mar 2022 18:44:54 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.24; Tue, 22 Mar 2022 11:45:51 +0100
+ fraeml744-chm.china.huawei.com (10.206.15.225) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 22 Mar 2022 11:45:59 +0100
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 22 Mar 2022 10:45:47 +0000
+ 15.1.2308.21; Tue, 22 Mar 2022 10:45:55 +0000
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
         <bvanassche@acm.org>, <jejb@linux.ibm.com>,
@@ -34,9 +34,9 @@ CC:     <chenxiang66@hisilicon.com>, <linux-block@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <dm-devel@redhat.com>,
         <beanhuo@micron.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH 03/11] libata: Send internal commands through the block layer
-Date:   Tue, 22 Mar 2022 18:39:37 +0800
-Message-ID: <1647945585-197349-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 05/11] scsi: libsas: Send TMF commands through the block layer
+Date:   Tue, 22 Mar 2022 18:39:39 +0800
+Message-ID: <1647945585-197349-6-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
 References: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
@@ -50,204 +50,92 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When SCSI HBA device drivers are required to process an ATA internal
-command they still need a tag for the IO. This often requires the driver
-to set aside a set of tags for these sorts of IOs and manage the tags
-themselves.
-
-If we associate a SCSI command (and request) with an ATA internal command
-then the tag is already provided, so introduce the change to send ATA
-internal commands through the block layer with a set of custom blk-mq ops.
-
-note: I think that the timeout handling needs to be fixed up.
+Like what we did with SMP commands, send TMF commands through the block
+layer.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/ata/libata-core.c | 121 ++++++++++++++++++++++++++++----------
- 1 file changed, 89 insertions(+), 32 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c | 44 +++++++++++++++++++++--------
+ 1 file changed, 32 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 67f88027680a..9db0428d0511 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1438,6 +1438,59 @@ static void ata_qc_complete_internal(struct ata_queued_cmd *qc)
- 	complete(waiting);
- }
- 
-+struct ata_internal_sg_data {
-+	struct completion wait;
-+
-+	unsigned int preempted_tag;
-+	u32 preempted_sactive;
-+	u64 preempted_qc_active;
-+	int preempted_nr_active_links;
-+};
-+
-+static blk_status_t ata_exec_internal_sg_queue_rq(struct blk_mq_hw_ctx *hctx,
-+		const struct blk_mq_queue_data *bd)
-+{
-+	struct request *rq = bd->rq;
-+	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
-+	struct ata_queued_cmd *qc = (struct ata_queued_cmd *)scmd->host_scribble;
-+	struct ata_internal_sg_data *data;
-+	struct ata_device *dev = qc->dev;
-+	struct ata_port *ap = qc->ap;
-+	struct ata_link *link = dev->link;
-+	unsigned long flags;
-+
-+	data = container_of(qc->private_data, struct ata_internal_sg_data, wait);
-+
-+	blk_mq_start_request(bd->rq);
-+
-+	spin_lock_irqsave(ap->lock, flags);
-+
-+	/* no internal command while frozen */
-+	if (ap->pflags & ATA_PFLAG_FROZEN) {
-+		spin_unlock_irqrestore(ap->lock, flags);
-+		return BLK_STS_TARGET;
-+	}
-+
-+	data->preempted_tag = link->active_tag;
-+	data->preempted_sactive = link->sactive;
-+	data->preempted_qc_active = ap->qc_active;
-+	data->preempted_nr_active_links = ap->nr_active_links;
-+	link->active_tag = ATA_TAG_POISON;
-+	link->sactive = 0;
-+	ap->qc_active = 0;
-+	ap->nr_active_links = 0;
-+
-+	ata_qc_issue(qc);
-+
-+	spin_unlock_irqrestore(ap->lock, flags);
-+
-+	return BLK_STS_OK;
-+}
-+
-+static const struct blk_mq_ops ata_exec_internal_sg_mq_ops = {
-+	.queue_rq	= ata_exec_internal_sg_queue_rq,
-+};
-+
- /**
-  *	ata_exec_internal_sg - execute libata internal command
-  *	@dev: Device to which the command is sent
-@@ -1467,45 +1520,46 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- {
- 	struct ata_link *link = dev->link;
- 	struct ata_port *ap = link->ap;
-+	struct Scsi_Host *scsi_host = ap->scsi_host;
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 91133ad37ae8..04c6298d1340 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -1070,15 +1070,39 @@ int sas_execute_tmf(struct domain_device *device, void *parameter,
+ 	struct sas_internal *i =
+ 		to_sas_internal(device->port->ha->core.shost->transportt);
+ 	int res, retry;
 +	struct request_queue *request_queue;
- 	u8 command = tf->command;
--	int auto_timeout = 0;
- 	struct ata_queued_cmd *qc;
--	unsigned int preempted_tag;
--	u32 preempted_sactive;
--	u64 preempted_qc_active;
--	int preempted_nr_active_links;
--	DECLARE_COMPLETION_ONSTACK(wait);
--	unsigned long flags;
-+	struct scsi_cmnd *scmd;
- 	unsigned int err_mask;
--	int rc;
-+	unsigned long flags;
 +	struct request *rq;
-+	int rc, auto_timeout = 0;
-+	struct ata_internal_sg_data data = {
-+		.wait = COMPLETION_INITIALIZER_ONSTACK(data.wait),
-+	};
-+	unsigned int op;
- 
--	spin_lock_irqsave(ap->lock, flags);
-+	op = (dma_dir == DMA_TO_DEVICE) ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN;
- 
--	/* no internal command while frozen */
--	if (ap->pflags & ATA_PFLAG_FROZEN) {
--		spin_unlock_irqrestore(ap->lock, flags);
--		return AC_ERR_SYSTEM;
-+	request_queue = blk_mq_init_queue_ops(&scsi_host->tag_set,
-+					      &ata_exec_internal_sg_mq_ops);
-+	if (!request_queue)
-+		return AC_ERR_OTHER;
++	struct sas_ha_struct *ha = device->port->ha;
++	struct Scsi_Host *shost = ha->core.shost;
 +
-+	rq = scsi_alloc_request(request_queue, op, 0);
-+	if (IS_ERR(rq)) {
-+		err_mask = AC_ERR_OTHER;
-+		goto out;
- 	}
++	request_queue = sas_alloc_request_queue(shost);
++	if (IS_ERR(request_queue))
++		return PTR_ERR(request_queue);
  
-+	scmd = blk_mq_rq_to_pdu(rq);
-+	scmd->submitter = SUBMITTED_BY_SCSI_CUSTOM_OPS;
+ 	for (retry = 0; retry < TASK_RETRY; retry++) {
++		struct scsi_cmnd *scmd;
 +
- 	/* initialize internal qc */
- 	qc = __ata_qc_from_tag(ap, ATA_TAG_INTERNAL);
+ 		task = sas_alloc_slow_task(GFP_KERNEL);
+-		if (!task)
+-			return -ENOMEM;
++		if (!task) {
++			res = -ENOMEM;
++			break;
++		}
  
- 	qc->tag = ATA_TAG_INTERNAL;
- 	qc->hw_tag = 0;
--	qc->scsicmd = NULL;
-+	qc->scsicmd = scmd;
- 	qc->ap = ap;
- 	qc->dev = dev;
- 	ata_qc_reinit(qc);
+ 		task->dev = device;
+ 		task->task_proto = device->tproto;
  
--	preempted_tag = link->active_tag;
--	preempted_sactive = link->sactive;
--	preempted_qc_active = ap->qc_active;
--	preempted_nr_active_links = ap->nr_active_links;
--	link->active_tag = ATA_TAG_POISON;
--	link->sactive = 0;
--	ap->qc_active = 0;
--	ap->nr_active_links = 0;
--
- 	/* prepare & issue qc */
- 	qc->tf = *tf;
- 	if (cdb)
-@@ -1529,12 +1583,11 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 		qc->nbytes = buflen;
- 	}
- 
--	qc->private_data = &wait;
-+	qc->private_data = &data.wait;
- 	qc->complete_fn = ata_qc_complete_internal;
- 
--	ata_qc_issue(qc);
--
--	spin_unlock_irqrestore(ap->lock, flags);
-+	scmd->host_scribble = (unsigned char *)qc;
-+	blk_execute_rq_nowait(rq, true, NULL);
- 
- 	if (!timeout) {
- 		if (ata_probe_timeout)
-@@ -1548,7 +1601,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	if (ap->ops->error_handler)
- 		ata_eh_release(ap);
- 
--	rc = wait_for_completion_timeout(&wait, msecs_to_jiffies(timeout));
-+	rc = wait_for_completion_timeout(&data.wait, msecs_to_jiffies(timeout));
- 
- 	if (ap->ops->error_handler)
- 		ata_eh_acquire(ap);
-@@ -1603,16 +1656,20 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	err_mask = qc->err_mask;
- 
- 	ata_qc_free(qc);
--	link->active_tag = preempted_tag;
--	link->sactive = preempted_sactive;
--	ap->qc_active = preempted_qc_active;
--	ap->nr_active_links = preempted_nr_active_links;
-+	link->active_tag = data.preempted_tag;
-+	link->sactive = data.preempted_sactive;
-+	ap->qc_active = data.preempted_qc_active;
-+	ap->nr_active_links = data.preempted_nr_active_links;
- 
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
- 	if ((err_mask & AC_ERR_TIMEOUT) && auto_timeout)
- 		ata_internal_cmd_timed_out(dev, command);
- 
-+	__blk_mq_end_request(rq, BLK_STS_OK);
++		rq = scsi_alloc_request(request_queue, REQ_OP_DRV_IN, 0);
++		if (IS_ERR(rq)) {
++			res = PTR_ERR(rq);
++			break;
++		}
 +
-+out:
++		scmd = blk_mq_rq_to_pdu(rq);
++		scmd->submitter = SUBMITTED_BY_SCSI_CUSTOM_OPS;
++		ASSIGN_SAS_TASK(scmd, task);
++
++		task->uldd_task = scmd;
++
+ 		if (dev_is_sata(device)) {
+ 			task->ata_task.device_control_reg_update = 1;
+ 			if (force_phy_id >= 0) {
+@@ -1093,20 +1117,14 @@ int sas_execute_tmf(struct domain_device *device, void *parameter,
+ 		task->task_done = sas_task_internal_done;
+ 		task->tmf = tmf;
+ 
+-		task->slow_task->timer.function = sas_task_internal_timedout;
+-		task->slow_task->timer.expires = jiffies + TASK_TIMEOUT;
+-		add_timer(&task->slow_task->timer);
++		rq->timeout = TASK_TIMEOUT;
+ 
+-		res = i->dft->lldd_execute_task(task, GFP_KERNEL);
+-		if (res) {
+-			del_timer_sync(&task->slow_task->timer);
+-			pr_err("executing TMF task failed %016llx (%d)\n",
+-			       SAS_ADDR(device->sas_addr), res);
+-			break;
+-		}
++		blk_execute_rq_nowait(rq, true, NULL);
+ 
+ 		wait_for_completion(&task->slow_task->completion);
+ 
++		__blk_mq_end_request(rq, BLK_STS_OK);
++
+ 		if (i->dft->lldd_tmf_exec_complete)
+ 			i->dft->lldd_tmf_exec_complete(device);
+ 
+@@ -1177,6 +1195,8 @@ int sas_execute_tmf(struct domain_device *device, void *parameter,
+ 			SAS_ADDR(device->sas_addr), TASK_RETRY);
+ 	sas_free_task(task);
+ 
 +	blk_cleanup_queue(request_queue);
- 	return err_mask;
++
+ 	return res;
  }
  
 -- 
