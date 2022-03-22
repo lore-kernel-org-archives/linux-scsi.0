@@ -2,161 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE155C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 12:22:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EE3FC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 12:22:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233485AbiCVMXo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 08:23:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33444 "EHLO
+        id S234820AbiCVMXr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 08:23:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233486AbiCVMXc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 08:23:32 -0400
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D6D78594F
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 05:22:05 -0700 (PDT)
-Received: by mail-pj1-x1031.google.com with SMTP id m11-20020a17090a7f8b00b001beef6143a8so1994751pjl.4
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 05:22:05 -0700 (PDT)
+        with ESMTP id S234832AbiCVMXk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 08:23:40 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15F2185952
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 05:22:11 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id x2so1771911plm.7
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 05:22:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=yMtSbVWU3mjUEszQbVhbuP+4Rh097vOncCiKrLGAha8=;
-        b=YIG4r2hA7jt8Arf5aQ1svR4Z26IQdvvximHcRkSkAd8Q6UBwszkZsvSeO876WoLTLJ
-         sg6ef/N+O0NkcU60CNwEfCN9ORoeeV5C9w/UxrcHV2tvlQ5XWP/MORczWzJ/u4mYk8Y3
-         1Yx66sL6atq32a5teIK2VIkPiCXTQ/kfRs4uQ=
+        bh=D5RImeLHIqIE8z+kAhAEPG2Wa79Ke4rURZopgrpZ5Lk=;
+        b=BSi3HloJ0thzK/uQWt1Ta+KfjTLbtdTiv1ldsV59m62XZA+qved4V1jqBTWIJdpZl0
+         x15vkQjIjFfCjktC8jTgPN/rEitBUle1PhULRBhQ37Per0DszhmmbumONkD8SgwGgJ4t
+         M4uh2VO4fIQwtSh/7a24lJ3D1IOpXEDQR9FNM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=yMtSbVWU3mjUEszQbVhbuP+4Rh097vOncCiKrLGAha8=;
-        b=cFDKonchYDuBN7DOsf+2F2ULAAt6wZp716cnqm+GBBvLEJKWnoebbWzMA7KPWbL5Vv
-         mja/lPnP/jPZA+Een0lwaPcDeu8qya5SipR3ofzriXaynGlYQfTwswr7jGgzYMJ7KqyV
-         Z7EIX4xPuQYi8L44XcBvhZHQbUde5Umj0BY5vL+c2UWejoZqlUlAQIKE1BMkYKK51lfJ
-         qxf96mHyel9Ny/Rzx61J/ki6O7dvrMs9qvAh790X1MbjkSiHNqTU1f6guhJdDPnioJGP
-         mbBcWfpdbuCWfHgSIfViXS12/mbuhZkJHSwcCKnJH8hvJNpz1aI4V9YbHL9nKt7OmNHU
-         rOkg==
-X-Gm-Message-State: AOAM530/nfnAcrrn5t0ZFwo7IBUnMnkMrvF3auF0M/z9bc45UIzI7RKV
-        EgcXdczBls0/cOzgwHt4OaYSASpaqCYzHQqEsQwacNt3pPXAnhe4AtSx5Zy+NPC+m5pWj97aJl4
-        vRti4VbjNrQTvCigt/3VHo22OOIx20pODTdvvkFyOyHREZM9OYawR3rnIQc8cyVL4lVRCk/6GqX
-        r4uQ6qpg49Eg==
-X-Google-Smtp-Source: ABdhPJzZzcMt2vE8UwiATN63pUwEqx1dMdhdaVHBe6UgjFDDJ0w4RTYLk0xn8nRc9pRSjOlS9kBUMA==
-X-Received: by 2002:a17:90b:38d2:b0:1c6:fa94:96bb with SMTP id nn18-20020a17090b38d200b001c6fa9496bbmr4760680pjb.206.1647951724421;
-        Tue, 22 Mar 2022 05:22:04 -0700 (PDT)
+        bh=D5RImeLHIqIE8z+kAhAEPG2Wa79Ke4rURZopgrpZ5Lk=;
+        b=vzsqW5A4kveIpSE68M2gcJr5H12HuXCKPr6xqZj1cB5a+KEDIAkG5XUd9winIn8ak/
+         ZSgHNiK+L81qfu989T5+3nyp/3sUWlR0m933fQkGE0toX3BbWgIQSi8l3524mnHsJFoz
+         t0o2YoD8/qJcKI6alupkHcBi5BzFI0NCdAajvC2uaYjxr2jt9A5a4/4OGVDOZwi5/8y6
+         6KCpRDwqvHGMcPhSLvD28XmZ2ASQVcffegLFycVfjgB1d2V+y3wWp1+F1WHz7fm1efdG
+         zAorN+IpHNdzpQQJ5Xdu+ocQb3brJPQCJ2FVN87UIQfQ04Xgsl+8KbPPSDB2HjGpzO/0
+         vODQ==
+X-Gm-Message-State: AOAM533CSFby5GNvb3JfJlf3bqu7AJrjJ66nx0TRhzNKvvIXZxE5dJgp
+        LFWJpPbVQwKsdyDt2UFqXRquTryuHrK3uZ7UxT14xXrSTqTAzJUwi4YsA1T0zLNeBYgTYjaP1T2
+        3sfDmOoevE2kd5CHF1sFigLar6/JJs3sYoEzwv91bEvv+REq9L8OMCqY8lzKgTHIUhvOTDekVCI
+        rL1T6MN+HryQ==
+X-Google-Smtp-Source: ABdhPJwe821sjrmT+RH9NGuLSWBEW6FX8eW6H1v1KqlgPIxPl0ORQYebC1CYYHLWo+B0bU7OGFy/lQ==
+X-Received: by 2002:a17:902:f701:b0:14d:7cea:82af with SMTP id h1-20020a170902f70100b0014d7cea82afmr17595792plo.71.1647951730252;
+        Tue, 22 Mar 2022 05:22:10 -0700 (PDT)
 Received: from dhcp-10-123-20-15.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d11-20020a056a0010cb00b004e1b76b09c0sm23225259pfu.74.2022.03.22.05.22.01
+        by smtp.gmail.com with ESMTPSA id d11-20020a056a0010cb00b004e1b76b09c0sm23225259pfu.74.2022.03.22.05.22.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Mar 2022 05:22:03 -0700 (PDT)
+        Tue, 22 Mar 2022 05:22:09 -0700 (PDT)
 From:   Sumit Saxena <sumit.saxena@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, sathya.prakash@broadcom.com,
         kashyap.desai@broadcom.com, chandrakanth.patil@broadcom.com,
         sreekanth.reddy@broadcom.com, prayas.patel@broadcom.com,
         Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH 5/7] mpi3mr: expose adapter state to sysfs
-Date:   Tue, 22 Mar 2022 08:21:05 -0400
-Message-Id: <20220322122107.8482-6-sumit.saxena@broadcom.com>
+Subject: [PATCH 7/7] mpi3mr: update driver version to 8.0.0.69.0
+Date:   Tue, 22 Mar 2022 08:21:07 -0400
+Message-Id: <20220322122107.8482-8-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220322122107.8482-1-sumit.saxena@broadcom.com>
 References: <20220322122107.8482-1-sumit.saxena@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000002b2b4805dacda9f9"
+        boundary="000000000000840ee905dacda92f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000002b2b4805dacda9f9
+--000000000000840ee905dacda92f
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h     |  2 +-
- drivers/scsi/mpi3mr/mpi3mr_app.c | 46 ++++++++++++++++++++++++++++++++
- drivers/scsi/mpi3mr/mpi3mr_os.c  |  1 +
- 3 files changed, 48 insertions(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 10c074c1eea6..5a1b2d9b64da 100644
+index 22426f71c720..354337ad2169 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -1022,5 +1022,5 @@ int mpi3mr_pel_get_seqnum_post(struct mpi3mr_ioc *mrioc,
- 	struct mpi3mr_drv_cmd *drv_cmd);
- void mpi3mr_app_save_logdata(struct mpi3mr_ioc *mrioc, char *event_data,
- 	u16 event_data_size);
--
-+extern const struct attribute_group *mpi3mr_host_groups[];
- #endif /*MPI3MR_H_INCLUDED*/
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index aa95bff5412a..da3c7835ada4 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -1220,3 +1220,49 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
- err_device_add:
- 	kfree(mrioc->bsg_dev);
- }
-+
-+/**
-+ * adapter_state_show - SysFS callback for adapter state show
-+ * @dev: class device
-+ * @attr: Device attributes
-+ * @buf: Buffer to copy
-+ *
-+ * Return: snprintf() return after copying adapter state
-+ */
-+static ssize_t
-+adp_state_show(struct device *dev, struct device_attribute *attr,
-+	char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct mpi3mr_ioc *mrioc = shost_priv(shost);
-+	enum mpi3mr_iocstate ioc_state;
-+	uint8_t adp_state;
-+
-+	ioc_state = mpi3mr_get_iocstate(mrioc);
-+	if (ioc_state == MRIOC_STATE_UNRECOVERABLE)
-+		adp_state = MPI3MR_BSG_ADPSTATE_UNRECOVERABLE;
-+	else if ((mrioc->reset_in_progress) || (mrioc->stop_bsgs))
-+		adp_state = MPI3MR_BSG_ADPSTATE_IN_RESET;
-+	else if (ioc_state == MRIOC_STATE_FAULT)
-+		adp_state = MPI3MR_BSG_ADPSTATE_FAULT;
-+	else
-+		adp_state = MPI3MR_BSG_ADPSTATE_OPERATIONAL;
-+
-+	return snprintf(buf, PAGE_SIZE, "%u\n", adp_state);
-+}
-+
-+static DEVICE_ATTR_RO(adp_state);
-+
-+static struct attribute *mpi3mr_host_attrs[] = {
-+	&dev_attr_adp_state.attr,
-+	NULL,
-+};
-+
-+static const struct attribute_group mpi3mr_host_attr_group = {
-+	.attrs = mpi3mr_host_attrs
-+};
-+
-+const struct attribute_group *mpi3mr_host_groups[] = {
-+	&mpi3mr_host_attr_group,
-+	NULL,
-+};
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 19298136edb6..89a4918c4a9e 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -4134,6 +4134,7 @@ static struct scsi_host_template mpi3mr_driver_template = {
- 	.max_segment_size		= 0xffffffff,
- 	.track_queue_depth		= 1,
- 	.cmd_size			= sizeof(struct scmd_priv),
-+	.shost_groups			= mpi3mr_host_groups,
- };
+@@ -54,8 +54,8 @@ extern struct list_head mrioc_list;
+ extern int prot_mask;
+ extern atomic64_t event_counter;
  
- /**
+-#define MPI3MR_DRIVER_VERSION	"8.0.0.68.0"
+-#define MPI3MR_DRIVER_RELDATE	"10-February-2022"
++#define MPI3MR_DRIVER_VERSION	"8.0.0.69.0"
++#define MPI3MR_DRIVER_RELDATE	"16-March-2022"
+ 
+ #define MPI3MR_DRIVER_NAME	"mpi3mr"
+ #define MPI3MR_DRIVER_LICENSE	"GPL"
 -- 
 2.27.0
 
 
---0000000000002b2b4805dacda9f9
+--000000000000840ee905dacda92f
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -227,13 +163,13 @@ rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
 3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFycPYD8krzRlR7/kLHGV3qPc+riWnhR
-Y4/JAOsBlg5NMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDMy
-MjEyMjIwNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEXDujYUnZeuZUfOubvhB+2VEQWwsMsq
+H+4uiGXz6KNeMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDMy
+MjEyMjIxMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBtGaaH6vmKh5jrmwKCtXrQ62v1JUNTR6OPMRJ/F77hqZCVr/7o
-Q7dhR/fW650COVQQBrO9dCXweQSaw7MKCTHxpu62PGMvD5EKvlqJ1MkWR6QycNMKLKaS8ikOOUZp
-XAigUJW8nyShOAqhUA2yxTPyX+b7dkdageHDQiWGuN4/M84YUg/uoGIx4RkNaex1eG7hAtbYXpms
-BahQN6SQ6Zz2Mzug6M9MH5httWdd6uQMVtZMmexb+tVK9hCNHNdrLu02oIwdQ8FZ5o1It06vI+qk
-Ig5IcUHI5spiZ/yHsFfry6WyRl0xXGpGlour0KRt+09MhtEDnhdUv8UqNmJBZhoI
---0000000000002b2b4805dacda9f9--
+ATANBgkqhkiG9w0BAQEFAASCAQCKSMq8Yp+KeJnfSBXwYxyw4gM8bK+U7hnmsa+GfDo6KaI0lp+f
+6Dx0haYVJN7EnuUozyfpM0h2tjJ5mlJonMW3XRX85JfSXJUQwn62YbYEjpnpYJxmxqS+09dX0TRu
+yQe0HgwTpzKJ5yo31Ehha6xPNQEYGSh8mCseRYmDg9E4YZD6JxkYK+lVCaRAe3L7g2AODdJM3+5V
+SLeQo0pF1tXmVkJIRgR7BgG3p/v0uJesbrkibQjCSCwnqA4tjk+pEYlhibTAo4vEu8YaKHIjRqAQ
+25mB/0myvGmOdaWUXPu009+gzQZAqJPbmozPsh4GeAe8uxU9KvRtgW8KCDRlVYpB
+--000000000000840ee905dacda92f--
