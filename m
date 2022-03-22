@@ -2,29 +2,29 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B7A8C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 10:47:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34F88C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 10:47:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233535AbiCVKsl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 06:48:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54550 "EHLO
+        id S233553AbiCVKsm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 06:48:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233799AbiCVKsI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 06:48:08 -0400
+        with ESMTP id S233570AbiCVKrp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 06:47:45 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F68283009;
-        Tue, 22 Mar 2022 03:46:24 -0700 (PDT)
-Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KN7QM4npFz67l7t;
-        Tue, 22 Mar 2022 18:44:11 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 844FA82D31;
+        Tue, 22 Mar 2022 03:46:12 -0700 (PDT)
+Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KN7Qj1513z67Qtq;
+        Tue, 22 Mar 2022 18:44:29 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
+ fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 22 Mar 2022 11:46:22 +0100
+ 15.1.2375.24; Tue, 22 Mar 2022 11:46:10 +0100
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 22 Mar 2022 10:46:18 +0000
+ 15.1.2308.21; Tue, 22 Mar 2022 10:46:06 +0000
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
         <bvanassche@acm.org>, <jejb@linux.ibm.com>,
@@ -34,9 +34,9 @@ CC:     <chenxiang66@hisilicon.com>, <linux-block@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <dm-devel@redhat.com>,
         <beanhuo@micron.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH 11/11] scsi: hisi_sas: Remove private tag management
-Date:   Tue, 22 Mar 2022 18:39:45 +0800
-Message-ID: <1647945585-197349-12-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 08/11] scsi: libsas: Change ATA support to deal with each qc having a SCSI command
+Date:   Tue, 22 Mar 2022 18:39:42 +0800
+Message-ID: <1647945585-197349-9-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
 References: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
@@ -50,76 +50,114 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now every sas_task which the driver sees has a SCSI command and also
-request associated, so drop the internal tag management.
+Now that each ATA qc has a SCSI command associated, change the qc <->
+scsi_cmnd <-> sas_task referencing to deal with this. Essentially
+task->uldd_task = scmd always. We need to do this for sas_execute_tmf(),
+as those ATA commands have no qc.
 
-No reserved tags have been set aside in the tagset yet, but this is simple
-to do.
-
-For v2 HW we need to continue to allocate the tag internally as the HW is
-so broken and we need to use special rules for tag allocation, see
-slot_index_alloc_quirk_v2_hw()
+TODO: rename ASSIGN_SAS_TASK and TO_SAS_TASK to be more appropriate.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 37 +--------------------------
- 1 file changed, 1 insertion(+), 36 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 11 +----------
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  3 ++-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  3 ++-
+ drivers/scsi/libsas/sas_ata.c          | 11 ++++++-----
+ 4 files changed, 11 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index b3e03c229cb5..19c9ed169c91 100644
+index 461ef8a76c4c..e438c68e249a 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -169,41 +169,6 @@ static void hisi_sas_slot_index_free(struct hisi_hba *hisi_hba, int slot_idx)
- 	}
- }
+@@ -520,16 +520,7 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
+ 				return -ECOMM;
+ 		}
  
--static void hisi_sas_slot_index_set(struct hisi_hba *hisi_hba, int slot_idx)
--{
--	void *bitmap = hisi_hba->slot_index_tags;
+-		if (task->uldd_task) {
+-			struct ata_queued_cmd *qc;
 -
--	__set_bit(slot_idx, bitmap);
--}
--
--static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
--				     struct sas_task *task)
--{
--	int index;
--	void *bitmap = hisi_hba->slot_index_tags;
--
--	if (task)
--		return sas_task_to_unique_tag(task);
--
--	spin_lock(&hisi_hba->lock);
--	index = find_next_zero_bit(bitmap, hisi_hba->slot_index_count,
--				   hisi_hba->last_slot_index + 1);
--	if (index >= hisi_hba->slot_index_count) {
--		index = find_next_zero_bit(bitmap,
--				hisi_hba->slot_index_count,
--				HISI_SAS_UNRESERVED_IPTT);
--		if (index >= hisi_hba->slot_index_count) {
--			spin_unlock(&hisi_hba->lock);
--			return -SAS_QUEUE_FULL;
+-			if (dev_is_sata(device)) {
+-				qc = task->uldd_task;
+-				scmd = qc->scsicmd;
+-			} else {
+-				scmd = task->uldd_task;
+-			}
 -		}
--	}
--	hisi_sas_slot_index_set(hisi_hba, index);
--	hisi_hba->last_slot_index = index;
--	spin_unlock(&hisi_hba->lock);
--
--	return index;
--}
--
- void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
- 			     struct hisi_sas_slot *slot)
- {
-@@ -556,7 +521,7 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
- 	if (!internal_abort && hisi_hba->hw->slot_index_alloc)
- 		rc = hisi_hba->hw->slot_index_alloc(hisi_hba, device);
- 	else
--		rc = hisi_sas_slot_index_alloc(hisi_hba, task);
-+		rc = sas_task_to_unique_tag(task);
++		scmd = task->uldd_task;
  
- 	if (rc < 0)
- 		goto err_out_dif_dma_unmap;
+ 		if (scmd) {
+ 			unsigned int dq_index;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 455d49299ddf..d1f2c8fbdc79 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -2538,7 +2538,8 @@ static void prep_ata_v2_hw(struct hisi_hba *hisi_hba,
+ 
+ 	/* dw2 */
+ 	if (task->ata_task.use_ncq) {
+-		struct ata_queued_cmd *qc = task->uldd_task;
++		struct scsi_cmnd *scmd = task->uldd_task;
++		struct ata_queued_cmd *qc = (struct ata_queued_cmd *)scmd->host_scribble;
+ 
+ 		hdr_tag = qc->tag;
+ 		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 79f87d7c3e68..e3e02a24ee76 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -1421,7 +1421,8 @@ static void prep_ata_v3_hw(struct hisi_hba *hisi_hba,
+ 
+ 	/* dw2 */
+ 	if (task->ata_task.use_ncq) {
+-		struct ata_queued_cmd *qc = task->uldd_task;
++		struct scsi_cmnd *scmd = task->uldd_task;
++		struct ata_queued_cmd *qc = (struct ata_queued_cmd *)scmd->host_scribble;
+ 
+ 		hdr_tag = qc->tag;
+ 		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index d34c82e24d9a..4d2b8fb31f30 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -72,7 +72,8 @@ static enum ata_completion_errors sas_to_ata_err(struct task_status_struct *ts)
+ 
+ static void sas_ata_task_done(struct sas_task *task)
+ {
+-	struct ata_queued_cmd *qc = task->uldd_task;
++	struct scsi_cmnd *scmd = task->uldd_task;
++	struct ata_queued_cmd *qc = TO_SAS_TASK(scmd);
+ 	struct domain_device *dev = task->dev;
+ 	struct task_status_struct *stat = &task->task_status;
+ 	struct ata_task_resp *resp = (struct ata_task_resp *)stat->buf;
+@@ -184,7 +185,7 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 		qc->tf.nsect = 0;
+ 
+ 	ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, (u8 *)&task->ata_task.fis);
+-	task->uldd_task = qc;
++	task->uldd_task = qc->scsicmd;
+ 	if (ata_is_atapi(qc->tf.protocol)) {
+ 		memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
+ 		task->total_xfer_len = qc->nbytes;
+@@ -207,8 +208,7 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 	task->ata_task.use_ncq = ata_is_ncq(qc->tf.protocol);
+ 	task->ata_task.dma_xfer = ata_is_dma(qc->tf.protocol);
+ 
+-	if (qc->scsicmd)
+-		ASSIGN_SAS_TASK(qc->scsicmd, task);
++	ASSIGN_SAS_TASK(qc->scsicmd, qc);
+ 
+ 	ret = i->dft->lldd_execute_task(task, GFP_ATOMIC);
+ 	if (ret) {
+@@ -583,7 +583,8 @@ int sas_ata_init(struct domain_device *found_dev)
+ 
+ void sas_ata_task_abort(struct sas_task *task)
+ {
+-	struct ata_queued_cmd *qc = task->uldd_task;
++	struct scsi_cmnd *scmd = task->uldd_task;
++	struct ata_queued_cmd *qc = TO_SAS_TASK(scmd);
+ 	struct completion *waiting;
+ 
+ 	/* Bounce SCSI-initiated commands to the SCSI EH */
 -- 
 2.26.2
 
