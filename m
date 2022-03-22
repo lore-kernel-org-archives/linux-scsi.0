@@ -2,151 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D4CCC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 13:17:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D0BC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 13:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235268AbiCVNSl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 09:18:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60094 "EHLO
+        id S234974AbiCVNY3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 09:24:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47808 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233647AbiCVNSl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 09:18:41 -0400
-Received: from out30-45.freemail.mail.aliyun.com (out30-45.freemail.mail.aliyun.com [115.124.30.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07CF263BF4;
-        Tue, 22 Mar 2022 06:17:12 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R921e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04407;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0V7wMyaL_1647955029;
-Received: from 30.225.28.195(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0V7wMyaL_1647955029)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Tue, 22 Mar 2022 21:17:10 +0800
-Message-ID: <36b5a8e5-c8e9-6a1f-834c-6bf9bf920f4c@linux.alibaba.com>
-Date:   Tue, 22 Mar 2022 21:17:07 +0800
+        with ESMTP id S235473AbiCVNY1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 09:24:27 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C58855AEE2
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 06:22:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1647955377;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=hrtFoYwM965JL+1NIySpFg42HnshA7NZZNhw6B5RIc0=;
+        b=eV/0LigzwwRfvY9S92xwVNJpQFiz6yqUld4rnMidGv/AWpzbG6twIQMQX+mBF9kp81RvsP
+        njiUU1SLNxSYlVhM2l+mdOgfamEe/pifPb1hen5jqGqfMDHJEUMfbKTdm2RfDNyaA66U0X
+        1ggJ5suQ5bB61f4Cp4NF03Ri3cC5Szc=
+Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
+ [209.85.167.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-134-adZO6JQLOkiyyu8qNjYfDg-1; Tue, 22 Mar 2022 09:22:56 -0400
+X-MC-Unique: adZO6JQLOkiyyu8qNjYfDg-1
+Received: by mail-lf1-f71.google.com with SMTP id z39-20020a0565120c2700b0044a219505a4so1703646lfu.11
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2022 06:22:56 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=hrtFoYwM965JL+1NIySpFg42HnshA7NZZNhw6B5RIc0=;
+        b=6WhXCdlqWXxqIx4ByX7V2a2ilEHlewZMrQVWYQjm0R0LvQ9NjH8Zd6sCkEm+DZrvgO
+         UUkZNjJGxAwiAvxQeYD4WtY3MKgIq4fHFhKl/SevszMN3BoKe06SKInBJDWMkgl5Ak87
+         YnVW8rzKHU9VqiC/GZo+TpbJCHzqsDmNPIqK5ITWenyDWZbV8cZ7kuKx9x5RElHU/frO
+         vu+0h6Xd5nfRiuqCSMgq2sUp5g5/CrqEjDUiRkh+PPloskBVNgJjwg9KGINFjsA6SNlk
+         F36QwgKamJztuqMpW/pj5iUVICtH1UZAaBtPuQYQVKl+S4kqwNq0pFNhOD73aKNjVp7R
+         wniA==
+X-Gm-Message-State: AOAM5331ieZPL3JAusSueOaSCGK7VWT/Cz/4Ns76OUKBg9KuLahk2Y9Z
+        YMNefPX3xohLfDHi1Z0iuvMldD3ZeCWJYvaIitUAFs60ErI72A7H43gKQxT4lr99HsSq5LLsinP
+        oKwDiWKT+zRN3rjJNe4ViwrwStxrnW3dsQ5Es5A==
+X-Received: by 2002:a2e:2e0e:0:b0:249:677d:8333 with SMTP id u14-20020a2e2e0e000000b00249677d8333mr16982904lju.37.1647955374658;
+        Tue, 22 Mar 2022 06:22:54 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyaGUJ3IiSfN0eea9UUBW48LiQQa+++GmvQZvFy46rAde/r4xsLy7/vug+W9vcRBpjcCgi8cgGP25Nvoq2+r60=
+X-Received: by 2002:a2e:2e0e:0:b0:249:677d:8333 with SMTP id
+ u14-20020a2e2e0e000000b00249677d8333mr16982887lju.37.1647955374412; Tue, 22
+ Mar 2022 06:22:54 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Subject: Re: [RFC 0/3] Add zero copy feature for tcmu
-Content-Language: en-US
-To:     Bodo Stroesser <bostroesser@gmail.com>, linux-mm@kvack.org,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     linux-block@vger.kernel.org, xuyu@linux.alibaba.com
-References: <20220318095531.15479-1-xiaoguang.wang@linux.alibaba.com>
- <abbe51c4-873f-e96e-d421-85906689a55a@gmail.com>
-From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
-In-Reply-To: <abbe51c4-873f-e96e-d421-85906689a55a@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From:   Bruno Goncalves <bgoncalv@redhat.com>
+Date:   Tue, 22 Mar 2022 14:22:43 +0100
+Message-ID: <CA+QYu4p=6PwferesmnEEknRjigVw-2Qo6SYHA-tx-+Fevezj4w@mail.gmail.com>
+Subject: Panic at pc : _base_readl+0x4/0x20 [mpt3sas] - kernel 5.17.0
+To:     linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc:     CKI Project <cki-project@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-hi,
+Hello,
 
-> On 18.03.22 10:55, Xiaoguang Wang wrote:
->> The core idea to implement tcmu zero copy feature is really straight,
->> which just maps block device io request's sgl pages to tcmu user space
->> backstore, then we can avoid extra copy overhead between sgl pages and
->> tcmu internal data area(which really impacts io throughput), please see
->> https://www.spinics.net/lists/target-devel/msg21121.html for detailed
->> info.
->>
->
-> Can you please tell us, how big the performance improvement is and
-> which configuration you are using for measurenments?
-Sorry, I should have attached test results here. Initially I tried to use
-tcmu user:fbo backstore to evaluate performance improvements, but
-it only shows about 10%~15% io throughput improvement. Fio config
-is numjobs=1, iodepth=8, bs=256k, which isn't very impressive. The
-reason is that user:fbo backstore does buffered reads, it consumes most
-of cpu.
+We've observed the panic below when testing a mainline kernel, it is
+not 100% reproducible in our machine though.
 
-Then I test this zero copy feature for our real workload, whose backstore
-is a network program visiting distributed file system and it's 
-multi-threaded.
-For 4 job, 8 depth, 256 kb io size, the write throughput improves from
-3.6GB/s to 10GB/s.
+[  225.507306] mpt3sas_cm0 fault info from func: mpt3sas_base_make_ioc_ready
+[  225.514159] mpt3sas_cm0: fault_state(0x5854)!
+[  225.518509] mpt3sas_cm0: sending diag reset !!
+[  225.916444] Internal error: synchronous external abort: 96000610 [#1] SMP
+[  225.923230] Modules linked in: tls rfkill sunrpc joydev i2c_smbus
+qede qed vfat fat ipmi_ssif ipmi_devintf ipmi_msghandler thunderx2_pmu
+cppc_cpufreq fuse zram xfs ast i2c_algo_bit drm_vram_helper
+drm_kms_helper crct10dif_ce ghash_ce syscopyarea sysfillrect sysimgblt
+fb_sys_fops cec drm_ttm_helper ttm mpt3sas drm raid_class
+scsi_transport_sas gpio_xlp i2c_xlp9xx
+[  225.955353] CPU: 0 PID: 7 Comm: kworker/u448:0 Not tainted 5.17.0 #1
+[  225.961699] Hardware name: Default string MT91-FS1/MT91-FS1, BIOS
+F28 12/27/2019
+[  225.969084] Workqueue: poll_mpt3sas0_statu _base_fault_reset_work [mpt3sas]
+[  225.976070] pstate: 80400009 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[  225.983025] pc : _base_readl+0x4/0x20 [mpt3sas]
+[  225.987566] lr : _base_wait_on_iocstate+0x88/0x120 [mpt3sas]
+[  225.993233] sp : ffff80000b5ebc20
+[  225.996537] x29: ffff80000b5ebc20 x28: 0000000000000000 x27: 0000000000000000
+[  226.003668] x26: ffff000814d5a830 x25: 0000000050000000 x24: 0000000040000000
+[  226.010798] x23: 0000000010000000 x22: 0000000000004e1f x21: ffff000814d5a810
+[  226.017927] x20: 0000000000000004 x19: 0000000000000000 x18: ffffffffffffffff
+[  226.025056] x17: 0000000000000000 x16: ffff00080a67bd78 x15: ffff80008b5eb9ef
+[  226.032185] x14: ffffffffffffffff x13: 0000000000000000 x12: ffff8000095df498
+[  226.039313] x11: ffff800009f8f698 x10: 0000000000001d40 x9 : ffff8000090efb98
+[  226.046442] x8 : ffff00080323bf20 x7 : ffff800b62663000 x6 : 0000000e22b02726
+[  226.053570] x5 : 00000000430f0af0 x4 : 0000000000f0000f x3 : 00000000000d42a8
+[  226.060699] x2 : ffff800001203050 x1 : 0000000000000000 x0 : ffff8000151b0000
+[  226.067828] Call trace:
+[  226.070263]  _base_readl+0x4/0x20 [mpt3sas]
+[  226.074456]  _base_diag_reset+0x2f0/0x378 [mpt3sas]
+[  226.079341]  mpt3sas_base_make_ioc_ready.part.0+0xdc/0x1b4 [mpt3sas]
+[  226.085703]  mpt3sas_base_hard_reset_handler+0x140/0x424 [mpt3sas]
+[  226.091891]  _base_fault_reset_work+0x1cc/0x4a0 [mpt3sas]
+[  226.097297]  process_one_work+0x1f0/0x480
+[  226.101303]  worker_thread+0x180/0x500
+[  226.105045]  kthread+0xd4/0xe0
+[  226.108093]  ret_from_fork+0x10/0x20
+[  226.111667] Code: d50323bf d65f03c0 d503201f d503233f (b9400000)
+[  226.117751] ---[ end trace 0000000000000000 ]---
+[  226.122359] Kernel panic - not syncing: synchronous external abort:
+Fatal exception
+[  226.130004] SMP: stopping secondary CPUs
+[  226.133972] Kernel Offset: 0x100000 from 0xffff800008000000
+[  226.139534] PHYS_OFFSET: 0x80000000
+[  226.143011] CPU features: 0x006,0000450d,19001080
+[  226.147705] Memory Limit: none
+[  226.150750] ---[ end Kernel panic - not syncing: synchronous
+external abort: Fatal exception ]---
 
-Regards,
-Xiaoguang Wang
 
->
->> Initially I use remap_pfn_range or vm_insert_pages to map sgl pages to
->> user space, but both of them have limits:
->> 1)  Use vm_insert_pages
->> which is like tcp getsockopt(TCP_ZEROCOPY_RECEIVE), but there're two
->> restrictions:
->>    1. anonymous pages can not be mmaped to user spacea.
->>      ==> vm_insert_pages
->>      ====> insert_pages
->>      ======> insert_page_in_batch_locked
->>      ========> validate_page_before_insert
->>      In validate_page_before_insert(), it shows that anonymous page 
->> can not
->>      be mapped to use space, we know that if issuing direct io to block
->>      device, io request's sgl pages mostly comes from anonymous page.
->>          if (PageAnon(page) || PageSlab(page) || page_has_type(page))
->>              return -EINVAL;
->>      I'm not sure why there is such restriction? for safety reasons ?
->>
->>    2. warn_on triggered in __folio_mark_dirty
->>      When calling zap_page_range in tcmu user space backstore when io
->>      completes, there is a warn_on triggered in __folio_mark_dirty:
->>         if (folio->mapping) {   /* Race with truncate? */
->>             WARN_ON_ONCE(warn && !folio_test_uptodate(folio));
->>
->>      I'm not familiar with folio yet, but I think the reason is that 
->> when
->>      issuing a buffered read to tcmu block device, it's page cache 
->> mapped
->>      to user space, backstore write this page and pte will be 
->> dirtied. but
->>      initially it's newly allocated, hence page_update flag not set.
->>      In zap_pte_range(), there is such codes:
->>         if (!PageAnon(page)) {
->>             if (pte_dirty(ptent)) {
->>                 force_flush = 1;
->>                 set_page_dirty(page);
->>             }
->>     So this warn_on is reasonable.
->>     Indeed what I want is just to map io request sgl pages to tcmu user
->>     space backstore, then backstore can read or write data to mapped 
->> area,
->>     I don't want to care about page or its mapping status, so I 
->> choose to
->>     use remap_pfn_range.
->>
->> 2) Use remap_pfn_range()
->>    remap_pfn_range works well, but it has somewhat obvious overhead. 
->> For a
->>    512kb io request, it has 128 pages, and usually this 128 page's 
->> pfn are
->>    not consecutive, so in worst cases, for a 512kb io request, I'd 
->> need to
->>    issue 128 calls to remap_pfn_range, it's horrible. And in 
->> remap_pfn_range,
->>    if x86 page attribute table feature is enabled, lookup_memtype 
->> called by
->>    track_pfn_remap() also introduces obvious overhead.
->>
->> Finally in order to solve these problems, Xu Yu helps to implment a new
->> helper, which accepts an array of pages as parameter, anonymous pages 
->> can
->> be mapped to user space, pages would be treated as special 
->> pte(pte_special
->> returns true), so vm_normal_page returns NULL, above folio warn_on won't
->> trigger.
->>
->> Thanks.
->>
->> Xiaoguang Wang (2):
->>    mm: export zap_page_range()
->>    scsi: target: tcmu: Support zero copy
->>
->> Xu Yu (1):
->>    mm/memory.c: introduce vm_insert_page(s)_mkspecial
->>
->>   drivers/target/target_core_user.c | 257 
->> +++++++++++++++++++++++++++++++++-----
->>   include/linux/mm.h                |   2 +
->>   mm/memory.c                       | 183 +++++++++++++++++++++++++++
->>   3 files changed, 414 insertions(+), 28 deletions(-)
->>
+Full console.log:
+https://s3.us-east-1.amazonaws.com/arr-cki-prod-datawarehouse-public/datawarehouse-public/2022/03/22/497731769/build_aarch64_redhat:2232309798/tests/11656424_aarch64_5_console.log
+
+
+Thanks,
+Bruno Goncalves
 
