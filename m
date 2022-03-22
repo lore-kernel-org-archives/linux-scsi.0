@@ -2,109 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0C08C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 18:14:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BE4AC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 19:45:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237148AbiCVSQS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 14:16:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44826 "EHLO
+        id S231939AbiCVTq0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 15:46:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231956AbiCVSQR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 14:16:17 -0400
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50759193C3;
-        Tue, 22 Mar 2022 11:14:49 -0700 (PDT)
-Received: by mail-ej1-f53.google.com with SMTP id bi12so38084857ejb.3;
-        Tue, 22 Mar 2022 11:14:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:from
-         :subject:content-language:to:cc:references:in-reply-to
-         :content-transfer-encoding;
-        bh=Vt2MdOIvO+8bb+Sz5q5lOmyC+uo7DuGX9AtMkx/1wOc=;
-        b=B6m9purulAZyK7w+/eKZT0x6/XayzUZJyxt6MaVU7xPhKl2edRp9yfOAMfCn94niP+
-         omHoiwbCWu+81YQ33Av/tDRztAZQSstwrZ54Xtz8Sx1vci/fAxY/+vcqSRPvNMjCXSx4
-         Qmrs/tmnk+NYh27nd+Ilnzfa1Km4rxtbDuwITwsBBCv9F0DL8n/jXfMIiEwGrfYRUN3J
-         +I3Enqj+1Kj6gteerqHpJcesi6LLDmpkTNz+h2fqdjiYyKWAaul0XnN5U+AChpaFa4KF
-         5Ooo+KTEtXsI0EISDaTdmBacsEhPWLKeRKDsRccRSAUdTweKhGnb55QaPtpHyS7r0QrW
-         JYVg==
-X-Gm-Message-State: AOAM530nCfsQ1dri/X8pUQmosxjNdJLvBTu++Z48CzzBnA2njhsgjlsT
-        3ahsPJxhxl3rD18JhB0iqNU=
-X-Google-Smtp-Source: ABdhPJwvfxkUsLUDEMUk3Ex27al/N+zUIRbGoflNKTlVjZQhTaUURCK/BKEDch7RqueWAUDWMXi2RQ==
-X-Received: by 2002:a17:906:d204:b0:6d6:df17:835e with SMTP id w4-20020a170906d20400b006d6df17835emr26366667ejz.20.1647972887741;
-        Tue, 22 Mar 2022 11:14:47 -0700 (PDT)
-Received: from [192.168.0.17] (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
-        by smtp.googlemail.com with ESMTPSA id j18-20020a170906535200b006e007fa9d0fsm3354554ejo.149.2022.03.22.11.14.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Mar 2022 11:14:47 -0700 (PDT)
-Message-ID: <bd07c344-87cd-b64f-8418-d2b767a424b7@kernel.org>
-Date:   Tue, 22 Mar 2022 19:14:46 +0100
+        with ESMTP id S231824AbiCVTq0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 15:46:26 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EED5612746;
+        Tue, 22 Mar 2022 12:44:57 -0700 (PDT)
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 22MIETk4020314;
+        Tue, 22 Mar 2022 19:44:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-transfer-encoding; s=pp1;
+ bh=D/llYRf7sWNuR1SFQcQBSJ9cnh5+1/bra0uVYjxdJ0U=;
+ b=gdVfwzNEplxra4aAf6ApoEpGEh35fa2KrtJxAnOFLhcDqk3bvo6c+nCK40U4q/fazqOL
+ cRyVS1FHOdh1yrgD1t+h5lcX4gFiiLVu1lSvLvD9L2c8tDDF/WvMTYcd49ocFhOFcgyb
+ +whp6AmrtRdk61rExtmevhWoRpMEpAd8/sZoFuHb5HLKHpZ+zxCv8XKIgnJoYC2fnFmO
+ gRxJxTAxngm60i5G+hQrs4OtYpJP547z7PElaORCZLnw/+HPqSOnDQYq6S2CBTh1KJ5I
+ O2EX2brFkjXkk7//z33+ze5hhFs936Qgch7Ixa50zhNewNkwGmn9BP05bShAnb7A8v9E 6g== 
+Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3eykjghv4s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 22 Mar 2022 19:44:50 +0000
+Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
+        by ppma03wdc.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 22MJhaaK004040;
+        Tue, 22 Mar 2022 19:44:49 GMT
+Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
+        by ppma03wdc.us.ibm.com with ESMTP id 3ew6t9eak7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 22 Mar 2022 19:44:49 +0000
+Received: from b03ledav003.gho.boulder.ibm.com (b03ledav003.gho.boulder.ibm.com [9.17.130.234])
+        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 22MJilgB11862288
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 22 Mar 2022 19:44:47 GMT
+Received: from b03ledav003.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C7BBB6A05D;
+        Tue, 22 Mar 2022 19:44:47 +0000 (GMT)
+Received: from b03ledav003.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C4C9D6A05A;
+        Tue, 22 Mar 2022 19:44:45 +0000 (GMT)
+Received: from li-37e927cc-2b02-11b2-a85c-931637a79255.ibm.com.com (unknown [9.160.85.177])
+        by b03ledav003.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Tue, 22 Mar 2022 19:44:45 +0000 (GMT)
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+To:     james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, brking@linux.ibm.com,
+        target-devel@vger.kernel.org, mikecyr@linux.ibm.com,
+        Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH] ibmvscsis: increase INITIAL_SRP_LIMIT to 1024
+Date:   Tue, 22 Mar 2022 12:44:43 -0700
+Message-Id: <20220322194443.678433-1-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-From:   'Krzysztof Kozlowski' <krzk@kernel.org>
-Subject: Re: [PATCH v2] ufs: qcom: drop custom Android boot parameters
-Content-Language: en-US
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        'Andy Gross' <agross@kernel.org>,
-        'Bjorn Andersson' <bjorn.andersson@linaro.org>,
-        'Avri Altman' <avri.altman@wdc.com>,
-        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     'Amit Pundir' <amit.pundir@linaro.org>,
-        'Luca Weiss' <luca.weiss@fairphone.com>,
-        'Brian Masney' <bmasney@redhat.com>
-References: <CGME20220321151913epcas5p45ad53c827e3c87633acd29443322d0b5@epcas5p4.samsung.com>
- <20220321151853.24138-1-krzk@kernel.org>
- <004d01d83d39$fe7859c0$fb690d40$@samsung.com>
-In-Reply-To: <004d01d83d39$fe7859c0$fb690d40$@samsung.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: Tt4t7U4EvHrZIUZI_42VShymKeJ0LX91
+X-Proofpoint-ORIG-GUID: Tt4t7U4EvHrZIUZI_42VShymKeJ0LX91
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.850,Hydra:6.0.425,FMLib:17.11.64.514
+ definitions=2022-03-22_07,2022-03-22_01,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
+ clxscore=1011 suspectscore=0 mlxlogscore=999 bulkscore=0
+ lowpriorityscore=0 phishscore=0 spamscore=0 mlxscore=0 priorityscore=1501
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2203220101
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 21/03/2022 16:40, Alim Akhtar wrote:
-> 
-> 
->> -----Original Message-----
->> From: Krzysztof Kozlowski [mailto:krzk@kernel.org]
->> Sent: Monday, March 21, 2022 8:49 PM
->> To: Andy Gross <agross@kernel.org>; Bjorn Andersson
->> <bjorn.andersson@linaro.org>; Alim Akhtar <alim.akhtar@samsung.com>;
->> Avri Altman <avri.altman@wdc.com>; James E.J. Bottomley
->> <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>;
->> linux-arm-msm@vger.kernel.org; linux-scsi@vger.kernel.org; linux-
->> kernel@vger.kernel.org
->> Cc: Krzysztof Kozlowski <krzk@kernel.org>; Amit Pundir
->> <amit.pundir@linaro.org>; Luca Weiss <luca.weiss@fairphone.com>; Brian
->> Masney <bmasney@redhat.com>
->> Subject: [PATCH v2] ufs: qcom: drop custom Android boot parameters
->>
->> The QCOM UFS driver requires an androidboot.bootdevice command line
->> argument matching the UFS device name.  If the name is different, it
-> refuses
->> to probe.  This androidboot.bootdevice is provided by stock/vendor (from an
->> Android-based device) bootloader.
->>
->> This does not make sense from Linux point of view.  Driver should be able
-> to
->> boot regardless of bootloader.  Driver should not depend on some Android
->> custom environment data.
->>
->> Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
->> Tested-by: Amit Pundir <amit.pundir@linaro.org>
->> Tested-by: Luca Weiss <luca.weiss@fairphone.com>
->> Reviewed-by: Brian Masney <bmasney@redhat.com>
->> Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->>
-> 
-> Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+The adapter request_limit is hardcoded to be INITIAL_SRP_LIMIT which is
+currently an arbitrary value of 800. Increase this value to 1024 which
+better matches the characteristics of the typical IBMi Initiator that
+supports 32 LUNs and a queue depth of 32.
 
-Ah, sorry, I think I missed your Rb from v1.
+This change also has the secondary benefit of being a power of two as
+required by the kfifo API. Since, Commit ab9bb6318b09 ("Partially revert
+"kfifo: fix kfifo_alloc() and kfifo_init()"") the size of IU pool for
+each target has been rounded down to 512 when attempting to kfifo_init()
+those pools with the current request_limit size of 800.
 
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Best regards,
-Krzysztof
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index 61f06f6885a5..89b9fbce7488 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -36,7 +36,7 @@
+ 
+ #define IBMVSCSIS_VERSION	"v0.2"
+ 
+-#define	INITIAL_SRP_LIMIT	800
++#define	INITIAL_SRP_LIMIT	1024
+ #define	DEFAULT_MAX_SECTORS	256
+ #define MAX_TXU			1024 * 1024
+ 
+-- 
+2.35.1
+
