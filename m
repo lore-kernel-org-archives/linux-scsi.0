@@ -2,105 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63585C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 09:04:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47E66C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 10:45:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231607AbiCVJFp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 05:05:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54486 "EHLO
+        id S233331AbiCVKrL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 06:47:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232227AbiCVJEe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 05:04:34 -0400
+        with ESMTP id S230082AbiCVKrK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 06:47:10 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC641C01;
-        Tue, 22 Mar 2022 02:03:05 -0700 (PDT)
-Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KN5786v40z6892N;
-        Tue, 22 Mar 2022 17:00:52 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97A3912752;
+        Tue, 22 Mar 2022 03:45:42 -0700 (PDT)
+Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KN7PY4fsNz67Q1X;
+        Tue, 22 Mar 2022 18:43:29 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 22 Mar 2022 10:03:03 +0100
+ fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Tue, 22 Mar 2022 11:45:39 +0100
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 22 Mar 2022 09:03:00 +0000
+ 15.1.2308.21; Tue, 22 Mar 2022 10:45:36 +0000
 From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <hch@lst.de>, <ming.lei@redhat.com>, <bvanassche@acm.org>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH] scsi: core: Refine how we set tag_set NUMA node
-Date:   Tue, 22 Mar 2022 16:57:18 +0800
-Message-ID: <1647939438-187933-1-git-send-email-john.garry@huawei.com>
+To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
+        <bvanassche@acm.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hch@lst.de>, <ming.lei@redhat.com>,
+        <hare@suse.de>
+CC:     <chenxiang66@hisilicon.com>, <linux-block@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <dm-devel@redhat.com>,
+        <beanhuo@micron.com>, John Garry <john.garry@huawei.com>
+Subject: [PATCH RFC 00/11] blk-mq/libata/scsi: SCSI driver tagging improvements
+Date:   Tue, 22 Mar 2022 18:39:34 +0800
+Message-ID: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
  lhreml724-chm.china.huawei.com (10.201.108.75)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-For SCSI hosts which enable host_tagset the NUMA node returned from
-blk_mq_hw_queue_to_node() is NUMA_NO_NODE always. Then, since in
-scsi_mq_setup_tags() the default we choose for the tag_set NUMA node is
-NUMA_NO_NODE, we always evaluate the NUMA node as NUMA_NO_NODE in
-functions like blk_mq_alloc_rq_map().
+Currently SCSI low-level drivers are required to manage tags for commands
+which do not come via the block layer - libata internal commands would be
+an example of one of these.
 
-The reason we get NUMA_NO_NODE from blk_mq_hw_queue_to_node() is that
-the hctx_idx passed is BLK_MQ_NO_HCTX_IDX - so we can't match against a
-(HW) queue mapping index.
+There was some work to provide "reserved commands" support in such series
+as https://lore.kernel.org/linux-scsi/20211125151048.103910-1-hare@suse.de/
 
-Improve this by defaulting the tag_set NUMA node to the same NUMA node
-of the SCSI host DMA dev.
+This was based on allocating a request for the lifetime of the "internal"
+command.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+This series tries to solve that problem by not just allocating the request
+but also sending it through the block layer, that being the normal flow
+for a request. We need to do this as we may only poll completion of
+requests through the block layer, so would need to do this for poll queue
+support.
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index f69b77cbf538..8352f90d997d 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -229,10 +229,6 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	if (error)
- 		goto fail;
- 
--	error = scsi_mq_setup_tags(shost);
--	if (error)
--		goto fail;
--
- 	if (!shost->shost_gendev.parent)
- 		shost->shost_gendev.parent = dev ? dev : &platform_bus;
- 	if (!dma_dev)
-@@ -240,6 +236,10 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 
- 	shost->dma_dev = dma_dev;
- 
-+	error = scsi_mq_setup_tags(shost);
-+	if (error)
-+		goto fail;
-+
- 	/*
- 	 * Increase usage count temporarily here so that calling
- 	 * scsi_autopm_put_host() will trigger runtime idle if there is
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0a70aa763a96..7faa83b89fa4 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1982,7 +1982,11 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
- 	tag_set->nr_maps = shost->nr_maps ? : 1;
- 	tag_set->queue_depth = shost->can_queue;
- 	tag_set->cmd_size = cmd_size;
-+	#ifdef CONFIG_NUMA
-+	tag_set->numa_node = shost->dma_dev->numa_node;
-+	#else
- 	tag_set->numa_node = NUMA_NO_NODE;
-+	#endif
- 	tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
- 	tag_set->flags |=
- 		BLK_ALLOC_POLICY_TO_MQ_FLAG(shost->hostt->tag_alloc_policy);
+There is still scope to allocate commands just to get a tag as token as
+that may suit some other scenarios, but it's not what we do here.
+
+This series extends blk-mq to support a request queue having a custom set
+of ops. In addition SCSI core code adds support for these type of requests.
+
+This series does not include SCSI core handling for enabling reserved
+tags per tagset, but that would be easy to add.
+
+Based on mkp-scsi 5.18/scsi-staging @ 66daf3e6b993 
+
+Please consider as an RFC for now. I think that the libata change has the
+largest scope for improvement...
+
+John Garry (11):
+  blk-mq: Add blk_mq_init_queue_ops()
+  scsi: core: Add SUBMITTED_BY_SCSI_CUSTOM_OPS
+  libata: Send internal commands through the block layer
+  scsi: libsas: Send SMP commands through the block layer
+  scsi: libsas: Send TMF commands through the block layer
+  scsi: core: Add scsi_alloc_request_hwq()
+  scsi: libsas: Send internal abort commands through the block layer
+  scsi: libsas: Change ATA support to deal with each qc having a SCSI
+    command
+  scsi: libsas: Add sas_task_to_unique_tag()
+  scsi: libsas: Add sas_task_to_hwq()
+  scsi: hisi_sas: Remove private tag management
+
+ block/blk-mq.c                         |  23 +++-
+ drivers/ata/libata-core.c              | 121 +++++++++++++------
+ drivers/md/dm-rq.c                     |   2 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  66 +----------
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   3 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |   3 +-
+ drivers/scsi/libsas/sas_ata.c          |  11 +-
+ drivers/scsi/libsas/sas_expander.c     |  38 ++++--
+ drivers/scsi/libsas/sas_internal.h     |   1 +
+ drivers/scsi/libsas/sas_scsi_host.c    | 153 ++++++++++++++++++++-----
+ drivers/scsi/scsi_lib.c                |  14 +++
+ include/linux/blk-mq.h                 |   5 +-
+ include/scsi/libsas.h                  |   4 +-
+ include/scsi/scsi_cmnd.h               |   4 +
+ 14 files changed, 298 insertions(+), 150 deletions(-)
+
 -- 
 2.26.2
 
