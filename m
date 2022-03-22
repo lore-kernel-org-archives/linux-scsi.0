@@ -2,145 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25773C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 11:30:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05899C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 11:33:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234205AbiCVLb5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 07:31:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46638 "EHLO
+        id S234226AbiCVLev (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 07:34:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234213AbiCVLbz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 07:31:55 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A2B982D3B;
-        Tue, 22 Mar 2022 04:30:25 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id E0F35210F2;
-        Tue, 22 Mar 2022 11:30:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1647948623; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5fQn/kN2kD/05uJ7tYAqw+5hume5Xh0ejNwO9M3AYNQ=;
-        b=lhMdySVNeRYjPbMaYV5J07pKoxb5EKZYT0H/ygWBZwVhf6zuXmnOaNrVtzqE2mapmGYwMJ
-        8QZ5pcuQcYPHcJMRRl+O9iQfvrLa9cdxci7ggu4gAPaI02blIp9UMyqlVaYABF7dFrnGqO
-        7H7yTH2uELrhh0ZeURa+sYDPASm+NP0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1647948623;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5fQn/kN2kD/05uJ7tYAqw+5hume5Xh0ejNwO9M3AYNQ=;
-        b=c5b51+IIHqkotckGR7BMW1D8/C6gwVIUawPDPnJBmJCbT8KTjeROgyPVmAIryyk+LKqazO
-        1NOEu8fJcsxtwtAA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id BAC4A133B6;
-        Tue, 22 Mar 2022 11:30:23 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id fv4zLU+zOWJGSQAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 22 Mar 2022 11:30:23 +0000
-Message-ID: <1537235d-ac22-6914-4b31-4482e9536098@suse.de>
-Date:   Tue, 22 Mar 2022 12:30:22 +0100
+        with ESMTP id S234228AbiCVLeu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 07:34:50 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3224165B6;
+        Tue, 22 Mar 2022 04:33:22 -0700 (PDT)
+Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KN8SY1MNkz67pCt;
+        Tue, 22 Mar 2022 19:31:09 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 22 Mar 2022 12:33:19 +0100
+Received: from [10.47.85.68] (10.47.85.68) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Tue, 22 Mar
+ 2022 11:33:18 +0000
+Message-ID: <cacc3f7b-c8be-0f72-1c52-562c15b468a4@huawei.com>
+Date:   Tue, 22 Mar 2022 11:33:17 +0000
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        damien.lemoal@opensource.wdc.com, bvanassche@acm.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, hch@lst.de,
-        ming.lei@redhat.com
-Cc:     chenxiang66@hisilicon.com, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-scsi@vger.kernel.org, dm-devel@redhat.com, beanhuo@micron.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 01/11] blk-mq: Add blk_mq_init_queue_ops()
+To:     Christoph Hellwig <hch@lst.de>
+CC:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
+        <bvanassche@acm.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <ming.lei@redhat.com>,
+        <hare@suse.de>, <chenxiang66@hisilicon.com>,
+        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <dm-devel@redhat.com>, <beanhuo@micron.com>
 References: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RFC 00/11] blk-mq/libata/scsi: SCSI driver tagging
- improvements
-In-Reply-To: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+ <1647945585-197349-2-git-send-email-john.garry@huawei.com>
+ <20220322111848.GA29270@lst.de>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <20220322111848.GA29270@lst.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.85.68]
+X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/22/22 11:39, John Garry wrote:
-> Currently SCSI low-level drivers are required to manage tags for commands
-> which do not come via the block layer - libata internal commands would be
-> an example of one of these.
+On 22/03/2022 11:18, Christoph Hellwig wrote:
+> On Tue, Mar 22, 2022 at 06:39:35PM +0800, John Garry wrote:
+>> Add an API to allocate a request queue which accepts a custom set of
+>> blk_mq_ops for that request queue.
+>>
+>> The reason which we may want custom ops is for queuing requests which we
+>> don't want to go through the normal queuing path.
 > 
-> There was some work to provide "reserved commands" support in such series
-> as https://lore.kernel.org/linux-scsi/20211125151048.103910-1-hare@suse.de/
-> 
-> This was based on allocating a request for the lifetime of the "internal"
-> command.
-> 
-> This series tries to solve that problem by not just allocating the request
-> but also sending it through the block layer, that being the normal flow
-> for a request. We need to do this as we may only poll completion of
-> requests through the block layer, so would need to do this for poll queue
-> support.
-> 
-> There is still scope to allocate commands just to get a tag as token as
-> that may suit some other scenarios, but it's not what we do here.
-> 
-> This series extends blk-mq to support a request queue having a custom set
-> of ops. In addition SCSI core code adds support for these type of requests.
-> 
-> This series does not include SCSI core handling for enabling reserved
-> tags per tagset, but that would be easy to add.
-> 
-> Based on mkp-scsi 5.18/scsi-staging @ 66daf3e6b993
-> 
-> Please consider as an RFC for now. I think that the libata change has the
-> largest scope for improvement...
+> Eww.  I really do not think we should do separate ops per queue, as that
+> is going to get us into a deep mess eventually.
 > 
 
-Grand seeing that someone is taking it up. Thanks for doing this!
+Yeah... so far (here) it works out quite nicely, as we don't need to 
+change the SCSI blk mq ops nor allocate a scsi_device - everything is 
+just separate.
 
-But:
-Allocating a queue for every request (eg in patch 3) is overkill. If we 
-want to go that route we should be allocating the queue upfront (eg when 
-creating the device itself), and then just referencing it.
+The other method mentioned previously was to add the request "reserved" 
+flag and add new paths in scsi_queue_rq() et al to handle this, but that 
+gets messy.
 
-However, can't say I like this approach. I've been playing around with 
-supporting internal commands, and really found two constraints really 
-annoying:
-
-- The tagset supports only _one_ set of payload via
-   blk_mq_rq_(to,from)_pdu().
-This requires each request to be of the same type, and with that making
-it really hard for re-purposing the request for internal usage. In the
-end I settled by just keeping it and skipping the SCSI command field.
-If we could have a distinct PDU type for internal commands I guess 
-things would be easier.
-
-- The number of reserved commands is static.
-With that it's getting really hard using reserved commands with 
-low-queue depth devices like ATA; we only have 31 commands to work with, 
-and setting one or two aside for TMF is really making a difference 
-performance wise. It would be _awesome_ if we could allocate reserved 
-commands dynamically (ie just marking a command as 'reserved' once 
-allocated).
-Sure, it won't have the same guarantees as 'real' reserved commands, but 
-in most cases we don't actually need that.
-
-Maybe these are some lines we could investigate?
-Hmm?
+Any other ideas ...?
 
 Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+John
