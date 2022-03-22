@@ -2,71 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E130C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 15:53:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0C08C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 18:14:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235956AbiCVPzW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 11:55:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54668 "EHLO
+        id S237148AbiCVSQS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 14:16:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233742AbiCVPzV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 11:55:21 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CAB02DA;
-        Tue, 22 Mar 2022 08:53:51 -0700 (PDT)
-Received: from fraeml703-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KNGF64BJTz67bJf;
-        Tue, 22 Mar 2022 23:51:38 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml703-chm.china.huawei.com (10.206.15.52) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.24; Tue, 22 Mar 2022 16:53:49 +0100
-Received: from [10.47.85.68] (10.47.85.68) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Tue, 22 Mar
- 2022 15:53:48 +0000
-Message-ID: <da17474f-205c-1b08-f12c-52cd87a8379a@huawei.com>
-Date:   Tue, 22 Mar 2022 15:53:47 +0000
+        with ESMTP id S231956AbiCVSQR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 14:16:17 -0400
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50759193C3;
+        Tue, 22 Mar 2022 11:14:49 -0700 (PDT)
+Received: by mail-ej1-f53.google.com with SMTP id bi12so38084857ejb.3;
+        Tue, 22 Mar 2022 11:14:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:from
+         :subject:content-language:to:cc:references:in-reply-to
+         :content-transfer-encoding;
+        bh=Vt2MdOIvO+8bb+Sz5q5lOmyC+uo7DuGX9AtMkx/1wOc=;
+        b=B6m9purulAZyK7w+/eKZT0x6/XayzUZJyxt6MaVU7xPhKl2edRp9yfOAMfCn94niP+
+         omHoiwbCWu+81YQ33Av/tDRztAZQSstwrZ54Xtz8Sx1vci/fAxY/+vcqSRPvNMjCXSx4
+         Qmrs/tmnk+NYh27nd+Ilnzfa1Km4rxtbDuwITwsBBCv9F0DL8n/jXfMIiEwGrfYRUN3J
+         +I3Enqj+1Kj6gteerqHpJcesi6LLDmpkTNz+h2fqdjiYyKWAaul0XnN5U+AChpaFa4KF
+         5Ooo+KTEtXsI0EISDaTdmBacsEhPWLKeRKDsRccRSAUdTweKhGnb55QaPtpHyS7r0QrW
+         JYVg==
+X-Gm-Message-State: AOAM530nCfsQ1dri/X8pUQmosxjNdJLvBTu++Z48CzzBnA2njhsgjlsT
+        3ahsPJxhxl3rD18JhB0iqNU=
+X-Google-Smtp-Source: ABdhPJwvfxkUsLUDEMUk3Ex27al/N+zUIRbGoflNKTlVjZQhTaUURCK/BKEDch7RqueWAUDWMXi2RQ==
+X-Received: by 2002:a17:906:d204:b0:6d6:df17:835e with SMTP id w4-20020a170906d20400b006d6df17835emr26366667ejz.20.1647972887741;
+        Tue, 22 Mar 2022 11:14:47 -0700 (PDT)
+Received: from [192.168.0.17] (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
+        by smtp.googlemail.com with ESMTPSA id j18-20020a170906535200b006e007fa9d0fsm3354554ejo.149.2022.03.22.11.14.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 22 Mar 2022 11:14:47 -0700 (PDT)
+Message-ID: <bd07c344-87cd-b64f-8418-d2b767a424b7@kernel.org>
+Date:   Tue, 22 Mar 2022 19:14:46 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH] scsi: core: Refine how we set tag_set NUMA node
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <hch@lst.de>, <ming.lei@redhat.com>, <bvanassche@acm.org>
-References: <1647939438-187933-1-git-send-email-john.garry@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <1647939438-187933-1-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+From:   'Krzysztof Kozlowski' <krzk@kernel.org>
+Subject: Re: [PATCH v2] ufs: qcom: drop custom Android boot parameters
+Content-Language: en-US
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        'Andy Gross' <agross@kernel.org>,
+        'Bjorn Andersson' <bjorn.andersson@linaro.org>,
+        'Avri Altman' <avri.altman@wdc.com>,
+        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
+        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     'Amit Pundir' <amit.pundir@linaro.org>,
+        'Luca Weiss' <luca.weiss@fairphone.com>,
+        'Brian Masney' <bmasney@redhat.com>
+References: <CGME20220321151913epcas5p45ad53c827e3c87633acd29443322d0b5@epcas5p4.samsung.com>
+ <20220321151853.24138-1-krzk@kernel.org>
+ <004d01d83d39$fe7859c0$fb690d40$@samsung.com>
+In-Reply-To: <004d01d83d39$fe7859c0$fb690d40$@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.85.68]
-X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 22/03/2022 08:57, John Garry wrote:
->   	/*
->   	 * Increase usage count temporarily here so that calling
->   	 * scsi_autopm_put_host() will trigger runtime idle if there is
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 0a70aa763a96..7faa83b89fa4 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1982,7 +1982,11 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
->   	tag_set->nr_maps = shost->nr_maps ? : 1;
->   	tag_set->queue_depth = shost->can_queue;
->   	tag_set->cmd_size = cmd_size;
-> +	#ifdef CONFIG_NUMA
-> +	tag_set->numa_node = shost->dma_dev->numa_node;
-> +	#else
->   	tag_set->numa_node = NUMA_NO_NODE;
-> +	#endif
+On 21/03/2022 16:40, Alim Akhtar wrote:
+> 
+> 
+>> -----Original Message-----
+>> From: Krzysztof Kozlowski [mailto:krzk@kernel.org]
+>> Sent: Monday, March 21, 2022 8:49 PM
+>> To: Andy Gross <agross@kernel.org>; Bjorn Andersson
+>> <bjorn.andersson@linaro.org>; Alim Akhtar <alim.akhtar@samsung.com>;
+>> Avri Altman <avri.altman@wdc.com>; James E.J. Bottomley
+>> <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>;
+>> linux-arm-msm@vger.kernel.org; linux-scsi@vger.kernel.org; linux-
+>> kernel@vger.kernel.org
+>> Cc: Krzysztof Kozlowski <krzk@kernel.org>; Amit Pundir
+>> <amit.pundir@linaro.org>; Luca Weiss <luca.weiss@fairphone.com>; Brian
+>> Masney <bmasney@redhat.com>
+>> Subject: [PATCH v2] ufs: qcom: drop custom Android boot parameters
+>>
+>> The QCOM UFS driver requires an androidboot.bootdevice command line
+>> argument matching the UFS device name.  If the name is different, it
+> refuses
+>> to probe.  This androidboot.bootdevice is provided by stock/vendor (from an
+>> Android-based device) bootloader.
+>>
+>> This does not make sense from Linux point of view.  Driver should be able
+> to
+>> boot regardless of bootloader.  Driver should not depend on some Android
+>> custom environment data.
+>>
+>> Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
+>> Tested-by: Amit Pundir <amit.pundir@linaro.org>
+>> Tested-by: Luca Weiss <luca.weiss@fairphone.com>
+>> Reviewed-by: Brian Masney <bmasney@redhat.com>
+>> Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>>
+> 
+> Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 
-note to self: use dev_to_node()
+Ah, sorry, I think I missed your Rb from v1.
 
->   	tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
->   	tag_set->flags |=
 
+Best regards,
+Krzysztof
