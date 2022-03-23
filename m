@@ -2,109 +2,133 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BE4AC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Mar 2022 19:45:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B669C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Mar 2022 00:23:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231939AbiCVTq0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Mar 2022 15:46:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47202 "EHLO
+        id S230471AbiCWAYh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Mar 2022 20:24:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231824AbiCVTq0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 15:46:26 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EED5612746;
-        Tue, 22 Mar 2022 12:44:57 -0700 (PDT)
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 22MIETk4020314;
-        Tue, 22 Mar 2022 19:44:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-transfer-encoding; s=pp1;
- bh=D/llYRf7sWNuR1SFQcQBSJ9cnh5+1/bra0uVYjxdJ0U=;
- b=gdVfwzNEplxra4aAf6ApoEpGEh35fa2KrtJxAnOFLhcDqk3bvo6c+nCK40U4q/fazqOL
- cRyVS1FHOdh1yrgD1t+h5lcX4gFiiLVu1lSvLvD9L2c8tDDF/WvMTYcd49ocFhOFcgyb
- +whp6AmrtRdk61rExtmevhWoRpMEpAd8/sZoFuHb5HLKHpZ+zxCv8XKIgnJoYC2fnFmO
- gRxJxTAxngm60i5G+hQrs4OtYpJP547z7PElaORCZLnw/+HPqSOnDQYq6S2CBTh1KJ5I
- O2EX2brFkjXkk7//z33+ze5hhFs936Qgch7Ixa50zhNewNkwGmn9BP05bShAnb7A8v9E 6g== 
-Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3eykjghv4s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 22 Mar 2022 19:44:50 +0000
-Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
-        by ppma03wdc.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 22MJhaaK004040;
-        Tue, 22 Mar 2022 19:44:49 GMT
-Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
-        by ppma03wdc.us.ibm.com with ESMTP id 3ew6t9eak7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 22 Mar 2022 19:44:49 +0000
-Received: from b03ledav003.gho.boulder.ibm.com (b03ledav003.gho.boulder.ibm.com [9.17.130.234])
-        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 22MJilgB11862288
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Mar 2022 19:44:47 GMT
-Received: from b03ledav003.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C7BBB6A05D;
-        Tue, 22 Mar 2022 19:44:47 +0000 (GMT)
-Received: from b03ledav003.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C4C9D6A05A;
-        Tue, 22 Mar 2022 19:44:45 +0000 (GMT)
-Received: from li-37e927cc-2b02-11b2-a85c-931637a79255.ibm.com.com (unknown [9.160.85.177])
-        by b03ledav003.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Tue, 22 Mar 2022 19:44:45 +0000 (GMT)
-From:   Tyrel Datwyler <tyreld@linux.ibm.com>
-To:     james.bottomley@hansenpartnership.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, brking@linux.ibm.com,
-        target-devel@vger.kernel.org, mikecyr@linux.ibm.com,
-        Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH] ibmvscsis: increase INITIAL_SRP_LIMIT to 1024
-Date:   Tue, 22 Mar 2022 12:44:43 -0700
-Message-Id: <20220322194443.678433-1-tyreld@linux.ibm.com>
-X-Mailer: git-send-email 2.35.1
+        with ESMTP id S230174AbiCWAYf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2022 20:24:35 -0400
+Received: from CAN01-QB1-obe.outbound.protection.outlook.com (mail-eopbgr660129.outbound.protection.outlook.com [40.107.66.129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B10AA10B8;
+        Tue, 22 Mar 2022 17:23:04 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=aL2asP59lNVpVD+lL9XX7/9JGvee2I8s5Xpe1vPOyVGvorWdaocZZ/xQqZoOleLvVVYfdwFMVBsmbFlOjiEUgftcHZViB0pJIHFQUeCIxcxkRSajWA+dsSPgUyPHNJ7uFza6giPV4eYC3DVzikozyZ0t2gKV8vN+3g484IRjJRcWDx5yIRgb+mQxaSOSWXnvCI2JgV25rfyFZOu1R78g1BTxy22fD+7CIkoYjkh8kE7ZDiddiyGgoZAUCpEHNMJqSl4kbqQVcTQq4Wm6i+qSiFKPHYsPErRA2D5lxNFdH24pifaoImO2PdDfMjAZwyVY7DGrZu4Vd4W3Ckocpm+gLQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=jcu3nv73Y9Ukzx/xKd9dM6mWdvjtUjrkoa3cE1HvneI=;
+ b=XOWfX6tp9C3Tf8L1BXnvpSv2w2F/w12XGzc4ygXGjkKyIblOuGchSp7tv7fSLaHOy38TQazOLlRet2I4knWPlAadZOyx2nzmdOgXfAzGKi9yjVI6w/V6BppnnQKE7f2MzGBBJ03CixBn/KXeMVHNoiFnQcB5KHtRw5atykdQTEf3wxmVYQzRZufmArUbF+ysdjLrD9kC/3nogFvugohMQ8zM6Z50Llv4xaq3/k+xsgB2GHJ82BcOLFwyoENeCmYa6G8AEeWO6b54ceEAZdlqyu6m7CHAQWVi3hJqLhP1tt3w/w2GVHDRs+C8+NTsCl40uXbKPxmtP1IzsfdP25/3NA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=lenbrook.com; dmarc=pass action=none header.from=lenbrook.com;
+ dkim=pass header.d=lenbrook.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lenbrook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jcu3nv73Y9Ukzx/xKd9dM6mWdvjtUjrkoa3cE1HvneI=;
+ b=aeLMJiHz1RbeLGI1YYZwv4O3L3+i8HhxRM0M4kz7C7xZpqkwi1s0WbjNZw9DrlP5zA0IGSXY+mFsRPfQQsxj5ai0p2cpwIAy8dk1JhJ3mGlQ8MKMRutYILolR53h/Y7tnj/TvOTLLri/yjpIBk2WAgL7mc8E4djLfcQ2HXhr6Hc=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=lenbrook.com;
+Received: from YT4PR01MB9670.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:e8::12)
+ by YT3PR01MB9009.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:7e::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5081.15; Wed, 23 Mar
+ 2022 00:23:02 +0000
+Received: from YT4PR01MB9670.CANPRD01.PROD.OUTLOOK.COM
+ ([fe80::291e:a689:84cc:ce0d]) by YT4PR01MB9670.CANPRD01.PROD.OUTLOOK.COM
+ ([fe80::291e:a689:84cc:ce0d%7]) with mapi id 15.20.5081.023; Wed, 23 Mar 2022
+ 00:23:02 +0000
+From:   Kevin Groeneveld <kgroeneveld@lenbrook.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Kevin Groeneveld <kgroeneveld@lenbrook.com>
+Subject: [PATCH] scsi: sr: fix typo in CDROM(CLOSETRAY|EJECT) handling
+Date:   Tue, 22 Mar 2022 20:22:42 -0400
+Message-Id: <20220323002242.21157-1-kgroeneveld@lenbrook.com>
+X-Mailer: git-send-email 2.17.1
+Content-Type: text/plain
+X-ClientProxiedBy: YT1PR01CA0135.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:2f::14) To YT4PR01MB9670.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:e8::12)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: Tt4t7U4EvHrZIUZI_42VShymKeJ0LX91
-X-Proofpoint-ORIG-GUID: Tt4t7U4EvHrZIUZI_42VShymKeJ0LX91
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.850,Hydra:6.0.425,FMLib:17.11.64.514
- definitions=2022-03-22_07,2022-03-22_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
- clxscore=1011 suspectscore=0 mlxlogscore=999 bulkscore=0
- lowpriorityscore=0 phishscore=0 spamscore=0 mlxscore=0 priorityscore=1501
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2202240000 definitions=main-2203220101
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: ab0ab5cc-7808-4f70-5ece-08da0c634aeb
+X-MS-TrafficTypeDiagnostic: YT3PR01MB9009:EE_
+X-Microsoft-Antispam-PRVS: <YT3PR01MB9009F6D460A039D886720902CD189@YT3PR01MB9009.CANPRD01.PROD.OUTLOOK.COM>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 6RbL2RJgiHgzUA18VbyP57tvf2AlwU615wK3UFhHbColidIMHXkpx0rB36Q0iRqLSAJvb51sA++HiukQoUbzwm6rTCLYsbeyHSyUu1YO9gONZ1KJUUG9uhwCRc3hBTUuDE4WSuM0NC9Lzz/SH5jPwUYeRTRZx4SJsD65ID1mcaEWsQ1fWO6ty1ht+L7d4C6d1799qfbIvDSx5/u/g1qVA/sMZbuRO07avZUfjE7PDGH760+Mlw8AMCRGrK4UhOpfnW6NlcyN3bMFb7csxM/I9uIbyJgq3X+E6zH6hjQE/7QxU9vsGhiAgaUwjxKfiRjapH6GuPnmiAt/vrK9IvLIwZCharhvIWCiRBYn8maqgrxxsstQLzSBPvMAKM/QezWb+xWXdA7dBxU4abY71+p8hyr7f3CuKFBB6IL+2xlelRaXeE/f5LU2OX2qtTPoOUmESuopfT5Mq3zjO+RAInOyFka61mUB70ajX7LtrqqKmPxIYV3GrvImlJss1ETmjnRM2//9GrwrZfUDo4aqzintsGN2VuZE8ixUdg2HuqhAbwn9qQOuHoPLSWKWzmX3ytTZFNwpnUYMNI7vUSYCzLFnlwGIawRMFDUZ08fXuKHVkPqu8B/qe+TB0OamkC0O29Kixsacfd/Hxz7nmhPbzkxkojo5fdG9nX1bJevWSbXNq0GzibOCWFlbLMlGfm/ooCqg6S7LwoOZGztwbvTLC7a4fQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YT4PR01MB9670.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(366004)(8936002)(8676002)(36756003)(6512007)(6506007)(6666004)(66556008)(66476007)(66946007)(5660300002)(4326008)(2906002)(38100700002)(110136005)(6486002)(316002)(86362001)(83380400001)(508600001)(1076003)(26005)(2616005)(186003)(107886003)(83133001);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?RKMVjtz3PlTdNfhEZkvVO4Wsa4chJhfa4x0EJyFzyQDY3KNPlNLs/4IA78LD?=
+ =?us-ascii?Q?9EbYj2TrW9EIksC3Td2yqo0HGa11QvojrwSZkCq+E1LCIr5lMFlLNgB0rFLx?=
+ =?us-ascii?Q?W3mwC2m3rE5soDR4LoXWCnK6KIawwtSY5hXErWPlOLavgIQvEJSlXSsPPFTV?=
+ =?us-ascii?Q?u6ezmYTIypLGTpqr9Xi0zhmp5wI1A3MNeUEjLn1IkuBhEiY43zXszkpa9QES?=
+ =?us-ascii?Q?LXqTa318Pocgb84jKz6TesPrkgzkuGCumEw7Ysu4SG4wvqerLn4TJEuqCXqB?=
+ =?us-ascii?Q?AfCFDtLng0ktAgz75M4FLBkRQ0e0Ra9Yl1nruVZUFXEH1O/IUw3TpoYoNyfz?=
+ =?us-ascii?Q?4t8qSafGWpCAEKwhz1YLPfJv99n5HsDM7PEsqoc5/jHUiNSX+s2t4X9+c2IG?=
+ =?us-ascii?Q?TVmt0cSliNHS4ibLAuTv0xTk1eHnMhIZVYhOpa/EtpQhdJtqd1hMhYAjBEt8?=
+ =?us-ascii?Q?dCVKdnHq9JY0TiJcOtNEbf2ssTAY15/3KwVJ8F+ug+1xHM036nAQxrXlVA3e?=
+ =?us-ascii?Q?rE43sA0ZqXAGHl9bw3xe4PvHd85AVjqXumRKJEpEx0M1CDcrBWmQJ8aN0wH4?=
+ =?us-ascii?Q?9Qc+6lYQYYwmLaDOtkW+/Y6WmvaPVwcFnTIIQ2dkQW9MdEN7vRySm4JJzox/?=
+ =?us-ascii?Q?i/nj3XtWYxw5XrsNCFDo4Dhtv9xNLxh6pDKF/OBEefndmEIomNFUj6Wn83Xz?=
+ =?us-ascii?Q?5PRIU+1tjKJ92HVkrrJqy1ndEoXwyTgVsd+yKlAdY2eMNOFfwvIB0ADQo9ff?=
+ =?us-ascii?Q?vy7pbqcltzA/Y1v9DTnP6VdUSwuiOD2yhDyFkl4uLaNRRqKhaKLM6LK3917T?=
+ =?us-ascii?Q?Objg8JXqrbUJWimMxfnQpr7CP6NsjHkBeo6Ck9CRgGKcS1arZ9kCQu15jF13?=
+ =?us-ascii?Q?jB3wpeukB1XMh0NCSzygEIBsFqJwX5zELwY4xyIZV14mNT1ehYLXjQXa6CoZ?=
+ =?us-ascii?Q?PdSoFbBY5TEpxOi4sINxRiTZ+1NTrzof8QbrEhnbhJzEKOwvqq7qO+imcH1Q?=
+ =?us-ascii?Q?SqyNr+N3c+Z7hzaqW+perxWwRBP4BYPJ6nF8qtvQRSQjLLke5fnh3xsSuxag?=
+ =?us-ascii?Q?uXiZUVT+LDREP37bJ/4jBalOpGRqiN6RZh8qZCn7IDT2BWIdtgz95lNax2FH?=
+ =?us-ascii?Q?d4luzMDL9vexTv4e/W7Q/dlaaVSHTxoE4sySibKM/JosGGPxM1VfqufmiPgE?=
+ =?us-ascii?Q?JzJtj+eMxpSZLpjUDLz1R5HnYamNYjJ0T/jF00ez877iZ7tttmd0jcBHkygf?=
+ =?us-ascii?Q?aCIEIyojzPn6etHDDEs7NIfMAbgzgV6j2EPzC+sdESot08RyDEriiEO8d1Ni?=
+ =?us-ascii?Q?lQ8WAdwoNr5nvDvMhF00p8AXFzZGcs02mEzmul3DQxUVRUHoZld3qSwx7lxT?=
+ =?us-ascii?Q?Xwl3ihB4MRZUER36/wSmqD5JzcAK/OehzAlDJc3fPc6DmRrwX9CZgbX4l68o?=
+ =?us-ascii?Q?rAcFZzdIb1+2cBNJHhqZqa2RBtpKxC8Sq+iqp8gSckBcogjAj1/z0w=3D=3D?=
+X-OriginatorOrg: lenbrook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ab0ab5cc-7808-4f70-5ece-08da0c634aeb
+X-MS-Exchange-CrossTenant-AuthSource: YT4PR01MB9670.CANPRD01.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Mar 2022 00:23:02.6612
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3089fb55-f9f3-4ac8-ba44-52ac0e467cb6
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 9GYLWNPycsFI6Gk9kiN7Z/hCdHhoVw7vYf2zPjqQzyF0dKYRAhqf9t90OqS4+x5hlxMMbEpnh+RhzeZZNFcy2z7aVVt2Obd0lx48+wXzYX4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: YT3PR01MB9009
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The adapter request_limit is hardcoded to be INITIAL_SRP_LIMIT which is
-currently an arbitrary value of 800. Increase this value to 1024 which
-better matches the characteristics of the typical IBMi Initiator that
-supports 32 LUNs and a queue depth of 32.
+Commit 2e27f576abc6 ("scsi: scsi_ioctl: Call scsi_cmd_ioctl() from
+scsi_ioctl()") seems to have a typo as it is checking ret instead of
+cmd in the if statement checking for CDROMCLOSETRAY and CDROMEJECT.
+This changes the behaviour of these ioctls as the cdrom_ioctl
+handling of these is more restrictive than the scsi_ioctl version.
 
-This change also has the secondary benefit of being a power of two as
-required by the kfifo API. Since, Commit ab9bb6318b09 ("Partially revert
-"kfifo: fix kfifo_alloc() and kfifo_init()"") the size of IU pool for
-each target has been rounded down to 512 when attempting to kfifo_init()
-those pools with the current request_limit size of 800.
-
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Fixes: 2e27f576abc6 ("scsi: scsi_ioctl: Call scsi_cmd_ioctl() from scsi_ioctl()")
+Signed-off-by: Kevin Groeneveld <kgroeneveld@lenbrook.com>
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
+ drivers/scsi/sr.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 61f06f6885a5..89b9fbce7488 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -36,7 +36,7 @@
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index f925b1f1f9ad..a0beb11abdc9 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -578,7 +578,7 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
  
- #define IBMVSCSIS_VERSION	"v0.2"
+ 	scsi_autopm_get_device(sdev);
  
--#define	INITIAL_SRP_LIMIT	800
-+#define	INITIAL_SRP_LIMIT	1024
- #define	DEFAULT_MAX_SECTORS	256
- #define MAX_TXU			1024 * 1024
- 
+-	if (ret != CDROMCLOSETRAY && ret != CDROMEJECT) {
++	if (cmd != CDROMCLOSETRAY && cmd != CDROMEJECT) {
+ 		ret = cdrom_ioctl(&cd->cdi, bdev, mode, cmd, arg);
+ 		if (ret != -ENOSYS)
+ 			goto put;
 -- 
-2.35.1
+2.17.1
 
