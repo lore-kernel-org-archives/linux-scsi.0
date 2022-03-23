@@ -2,86 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A18A5C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Mar 2022 09:01:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5462DC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Mar 2022 13:35:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243010AbiCWJDK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Mar 2022 05:03:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42188 "EHLO
+        id S244306AbiCWNgr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Mar 2022 09:36:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234009AbiCWJDK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2022 05:03:10 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 326116EB0D;
-        Wed, 23 Mar 2022 02:01:40 -0700 (PDT)
-Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KNj3b1ngBz67PtB;
-        Wed, 23 Mar 2022 16:59:55 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 23 Mar 2022 10:01:37 +0100
-Received: from [10.47.85.68] (10.47.85.68) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Wed, 23 Mar
- 2022 09:01:36 +0000
-Message-ID: <378065de-3cb8-b44f-66e9-747960bcd990@huawei.com>
-Date:   Wed, 23 Mar 2022 09:01:33 +0000
+        with ESMTP id S244298AbiCWNgq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2022 09:36:46 -0400
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 822231F616
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Mar 2022 06:35:17 -0700 (PDT)
+Received: by mail-pl1-f173.google.com with SMTP id i11so1562057plr.1
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Mar 2022 06:35:17 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=oudDCTfDcsfjOLD59OkmWUfh87BNxaBsbaxb2UNlrGk=;
+        b=QE0y7gw49uq5lAJmGL4ekPbIoIyALMmzdIFLWqTQS2ZQwsSwvUK+ytZpShKBzJozC6
+         Zg8Ld97OhM0a/esY4ih+R5m+qvNPUn3FbSnn4LJlHckBqt2R/rmFcVtoBxq5wQeFHIRd
+         72lePWVDEf22P6JjEH6hmmAAPE0K9s0063YrEqoNZZfT5os84MhkiNpF0CW6X43kqj04
+         GhM/1C+sJgiOWS4VhKuUO886G0bhQVnptJogLkysGgszXtBVl/Ev/VFKrJG+W3buuJUx
+         ZFNWIiku1P+tztifpy1ukfGkhdu/Y3mUW+9DlDtL0qV3hpF6hjzuXmbcBFzs1F+4rWdi
+         HT8g==
+X-Gm-Message-State: AOAM531BcHRxfdmA7S1dZliJTB09u+G8wzh5n/cSCb34kU18Z++SFnAr
+        M17L6MdIVSZ/2xDMUMZgFyXXMMjuHD0=
+X-Google-Smtp-Source: ABdhPJxwUMSu2eygaq2wfKIFdLzY6C6hSfLgqdL8LNu9GaJmnvqssVMcjow16aU0w0lqxQS1vHtXig==
+X-Received: by 2002:a17:90b:4f8d:b0:1c6:408b:6b0d with SMTP id qe13-20020a17090b4f8d00b001c6408b6b0dmr11636848pjb.90.1648042516765;
+        Wed, 23 Mar 2022 06:35:16 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id q15-20020a056a00150f00b004fac01c0198sm18975pfu.40.2022.03.23.06.35.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Mar 2022 06:35:16 -0700 (PDT)
+Message-ID: <982a8a95-e431-6ce7-767a-8d67c01cd6be@acm.org>
+Date:   Wed, 23 Mar 2022 06:35:14 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 01/11] blk-mq: Add blk_mq_init_queue_ops()
-To:     Bart Van Assche <bvanassche@acm.org>, <axboe@kernel.dk>,
-        <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>, <ming.lei@redhat.com>,
-        <hare@suse.de>
-CC:     <chenxiang66@hisilicon.com>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <dm-devel@redhat.com>,
-        <beanhuo@micron.com>
-References: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
- <1647945585-197349-2-git-send-email-john.garry@huawei.com>
- <e74776f0-505b-8b4f-effd-519bce9bdc79@acm.org>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <e74776f0-505b-8b4f-effd-519bce9bdc79@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 2/7] mpi3mr: add support for driver commands
+Content-Language: en-US
+To:     Sumit Saxena <sumit.saxena@broadcom.com>,
+        linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, chandrakanth.patil@broadcom.com,
+        sreekanth.reddy@broadcom.com, prayas.patel@broadcom.com
+References: <20220322122107.8482-1-sumit.saxena@broadcom.com>
+ <20220322122107.8482-3-sumit.saxena@broadcom.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220322122107.8482-3-sumit.saxena@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.85.68]
-X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23/03/2022 02:57, Bart Van Assche wrote:
-> On 3/22/22 03:39, John Garry wrote:
->> Add an API to allocate a request queue which accepts a custom set of
->> blk_mq_ops for that request queue.
->>
->> The reason which we may want custom ops is for queuing requests which we
->> don't want to go through the normal queuing path.
-> 
+On 3/22/22 05:21, Sumit Saxena wrote:
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.h b/drivers/scsi/mpi3mr/mpi3mr_app.h
+> index 4bc31d45c610..d324a13c672c 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_app.h
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_app.h
+> @@ -10,6 +10,476 @@
+>   #ifndef MPI3MR_APP_H_INCLUDED
+>   #define MPI3MR_APP_H_INCLUDED
+>   
+> +
+> +/* Definitions for BSG commands */
+> +#define MPI3MR_IOCTL_VERSION			0x06
+> +
+> +#define MPI3MR_APP_DEFAULT_TIMEOUT		(60) /*seconds*/
+> +
+> +#define MPI3MR_BSG_ADPTYPE_UNKNOWN		0
+> +#define MPI3MR_BSG_ADPTYPE_AVGFAMILY		1
+> +
+> +#define MPI3MR_BSG_ADPSTATE_UNKNOWN		0
+> +#define MPI3MR_BSG_ADPSTATE_OPERATIONAL		1
+> +#define MPI3MR_BSG_ADPSTATE_FAULT		2
+> +#define MPI3MR_BSG_ADPSTATE_IN_RESET		3
+> +#define MPI3MR_BSG_ADPSTATE_UNRECOVERABLE	4
+> +
+> +#define MPI3MR_BSG_ADPRESET_UNKNOWN		0
+> +#define MPI3MR_BSG_ADPRESET_SOFT		1
+> +#define MPI3MR_BSG_ADPRESET_DIAG_FAULT		2
+> +
+> +#define MPI3MR_BSG_LOGDATA_MAX_ENTRIES		400
+> +#define MPI3MR_BSG_LOGDATA_ENTRY_HEADER_SZ	4
+> +
+> +#define MPI3MR_DRVBSG_OPCODE_UNKNOWN		0
+> +#define MPI3MR_DRVBSG_OPCODE_ADPINFO		1
+> +#define MPI3MR_DRVBSG_OPCODE_ADPRESET		2
+> +#define MPI3MR_DRVBSG_OPCODE_ALLTGTDEVINFO	4
+> +#define MPI3MR_DRVBSG_OPCODE_GETCHGCNT		5
+> +#define MPI3MR_DRVBSG_OPCODE_LOGDATAENABLE	6
+> +#define MPI3MR_DRVBSG_OPCODE_PELENABLE		7
+> +#define MPI3MR_DRVBSG_OPCODE_GETLOGDATA		8
+> +#define MPI3MR_DRVBSG_OPCODE_QUERY_HDB		9
+> +#define MPI3MR_DRVBSG_OPCODE_REPOST_HDB		10
+> +#define MPI3MR_DRVBSG_OPCODE_UPLOAD_HDB		11
+> +#define MPI3MR_DRVBSG_OPCODE_REFRESH_HDB_TRIGGERS	12
 
-Hi Bart,
-
- > Custom ops shouldn't be required for this. See e.g. how tmf_queue
- > is used in the UFS driver for an example of a queue implementation
- > with custom operations and that does not require changes of the block
- > layer core.
-
-The UFS code uses a private tagset (in ufs_hba.tmf_tag_set) for only 
-management of TMF tags/memories. This tagset does not really have any 
-custom operations. All it has is a stub of .queue_rq CB in 
-ufshcd_queue_tmf() and that is because this CB is compulsory.
-
-As for the idea of having multiple tagsets per shost with real custom 
-operations, this idea was mentioned before, but I think managing 
-multiple tagsets could be trouble. For a start, it would mean that we 
-need a distinct allocation of reserved and regular tags, and sometimes 
-we don't want this - as Hannes mentioned earlier, many HBAs have low 
-queue depth and cannot afford to permanently carve out a bunch of 
-reserved tags.
+Most if not all definitions in this file are needed by user space 
+applications that use the new BSG interface. Please move the definitions 
+from this file that are used by user space applications into a header 
+file under include/uapi/.
 
 Thanks,
-John
+
+Bart.
