@@ -2,91 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34769C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Mar 2022 12:44:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EEFEC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Mar 2022 13:46:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350236AbiCXMq1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Mar 2022 08:46:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46790 "EHLO
+        id S1350553AbiCXNro (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Mar 2022 09:47:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350305AbiCXMqP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2022 08:46:15 -0400
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E8B93A5C1;
-        Thu, 24 Mar 2022 05:44:37 -0700 (PDT)
-Received: by mail-pj1-f53.google.com with SMTP id bx5so4617842pjb.3;
-        Thu, 24 Mar 2022 05:44:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=HZwsIhjtgSAmnia0/qaT3RxixpuiveiXDCzTc8KKHGA=;
-        b=rUjQxZuaozbndvZ/yS5THFwiW+bZ5QuG4Lqq5dvYjTeIduF31GN/HtKtoOSvObcGAo
-         dxEDvdqjRyvhT1gZZWnc79Cj9RfBY0uI6KyokvKyiG3iN0auNRSlBsU7+SKiwnoiIunr
-         6Z+Ke0kANGP9QVeoDOs4FGtloXeTEzsSPX0DiHdRUz4rs7H4HLbUwGf3Ne0H2qMCePGY
-         0TVItaZALuzobzeh+LLYhJUxofsJN9eJ//Ym9SjF1Y6lhU5+COo3KrZ7itFmZFiUCo2T
-         sDgeuRYQmEToy3hS7qa6YZPfr9JXizPhQgSyT0bYUReW80Joq7hC+zDMlrOdZ7aQyHDx
-         Q/+w==
-X-Gm-Message-State: AOAM531mhgGtLCssF6BmxMR0PqtWKk4vPE8ZqSgmOJgYPLmd2R0Kl1rR
-        TZYgyP+/AkSPNyH+cHgEmEA=
-X-Google-Smtp-Source: ABdhPJz9ePb2UO+o7Kg3QBx7giEUT6UhTsxA28zonwRRr36ruXOgSgWc/cpXYsIcs0AGEZGbkpjykQ==
-X-Received: by 2002:a17:903:3091:b0:153:9dcf:de71 with SMTP id u17-20020a170903309100b001539dcfde71mr5671611plc.7.1648125876217;
-        Thu, 24 Mar 2022 05:44:36 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id 204-20020a6302d5000000b00385f29b02b2sm2669252pgc.50.2022.03.24.05.44.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 24 Mar 2022 05:44:35 -0700 (PDT)
-Message-ID: <0034b2f8-0eba-f700-6fff-03cf5b8c8332@acm.org>
-Date:   Thu, 24 Mar 2022 05:44:33 -0700
+        with ESMTP id S1350545AbiCXNrn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2022 09:47:43 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 88CD788B27
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Mar 2022 06:46:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1648129568;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=JqOZHd3EFckCXhqkJIHF1g/3I/hDC+yFZg3NskSZhts=;
+        b=T7RubHUqkyFKyPI9PMKKNKPHPtphjNZGubl2Fo+VrFvxooeBJVza/7wglIAEQv0SBZ9+py
+        wYVDoTLDb2WlBdgLp5yMIon5BvaGR9a0gqUxXbitBLK2WFN+3f+T4c2bIjGigNrbyZObSc
+        E7ebMSMfzzj7qnFEr8qPr4bA1cxLnzs=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-10-kRqwimtUMUmW7fJ7m-cE5w-1; Thu, 24 Mar 2022 09:46:05 -0400
+X-MC-Unique: kRqwimtUMUmW7fJ7m-cE5w-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id A03C48041AE;
+        Thu, 24 Mar 2022 13:46:04 +0000 (UTC)
+Received: from localhost.localdomain.com (unknown [10.40.193.88])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1F160400F738;
+        Thu, 24 Mar 2022 13:46:03 +0000 (UTC)
+From:   Tomas Henzl <thenzl@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     hch@infradead.org
+Subject: [PATCH] scsi_logging: fix a BUG
+Date:   Thu, 24 Mar 2022 14:46:03 +0100
+Message-Id: <20220324134603.28463-1-thenzl@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH] scsi: ufs: core: Remove unused field in struct ufs_hba
-Content-Language: en-US
-To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20220324070146epcms2p577d43ce3e7cbd36aa964f3842e49b2ba@epcms2p5>
- <413601558.101648105683746.JavaMail.epsvc@epcpadp4>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <413601558.101648105683746.JavaMail.epsvc@epcpadp4>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.11.54.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/24/22 00:01, Keoseong Park wrote:
-> Remove unused field "rpm_lvl_attr" and "spm_lvl_attr" in struct ufs_hba.
-> Commit cbb6813ee771 ("scsi: ufs: sysfs: attribute group for existing
-> sysfs entries.") removed all code using that field.
-> 
-> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
-> ---
->   drivers/scsi/ufs/ufshcd.h | 2 --
->   1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 88c20f3608c2..94f545be183a 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -820,8 +820,6 @@ struct ufs_hba {
->   	enum ufs_pm_level rpm_lvl;
->   	/* Desired UFS power management level during system PM */
->   	enum ufs_pm_level spm_lvl;
-> -	struct device_attribute rpm_lvl_attr;
-> -	struct device_attribute spm_lvl_attr;
->   	int pm_op_in_progress;
->   
->   	/* Auto-Hibernate Idle Timer register value */
+The request_queue may be NULL in a request, for example when it comes
+from scsi_ioctl_reset.
+Check it before before use.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Fixes: f3fa33acca9f ("block: remove the ->rq_disk field in struct request")
+
+Reported-by: Changhui Zhong <czhong@redhat.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/scsi_logging.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+index 1f8f80b2dbfc..a9f8de5e9639 100644
+--- a/drivers/scsi/scsi_logging.c
++++ b/drivers/scsi/scsi_logging.c
+@@ -30,7 +30,7 @@ static inline const char *scmd_name(const struct scsi_cmnd *scmd)
+ {
+ 	struct request *rq = scsi_cmd_to_rq((struct scsi_cmnd *)scmd);
+ 
+-	if (!rq->q->disk)
++	if (!rq->q || !rq->q->disk)
+ 		return NULL;
+ 	return rq->q->disk->disk_name;
+ }
+-- 
+2.35.1
+
