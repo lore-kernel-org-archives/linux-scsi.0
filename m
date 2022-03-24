@@ -2,54 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09323C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Mar 2022 09:50:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34769C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Mar 2022 12:44:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349351AbiCXJw0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Mar 2022 05:52:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49104 "EHLO
+        id S1350236AbiCXMq1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Mar 2022 08:46:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239549AbiCXJw0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2022 05:52:26 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71D925549E
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Mar 2022 02:50:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=8ZzLcTWo8SmylIDKSq9r8TeT+MFH1XqzQmHdecwhJQQ=; b=3eaqM3Cj2TzufmPPxE2NvhYpJB
-        kX0V9qt2nCL9zC3KqDyNEaWcGD+srXsFys3AGVLBbgda5ANKom+d5N6bVmJSBJ35nDif8ZXCF8mRU
-        iwFNTgcisfrkIGQBc5/K9wr3uCpTHFyYMX5aTYy9bEJNrv7gahiMR/vS+tXRsLrYx/FMON+jngvc9
-        Wik55KHE11gP1h+B8ndjBilhV31Rceaw45gQxRuWLf3bwzBIIj7SwJskBYsnDcGgZnhe04Gmky4qy
-        UOByciiwdUx2t+9xLdTHUVvpm5eSVGWEtal3hB0CNU2lRKgN0ZKP3HMnBWBIVEu+Q6D364RzhVTQD
-        cp7aiJfQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nXK7I-00GAbF-Uk; Thu, 24 Mar 2022 09:50:52 +0000
-Date:   Thu, 24 Mar 2022 02:50:52 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Chandrakanth patil <chandrakanth.patil@broadcom.com>
-Cc:     linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com
-Subject: Re: [PATCH] megaraid_sas: device scan on logical target with invalid
- LUN ID deletes that target from the OS
-Message-ID: <Yjw+/LJiovLV9VhB@infradead.org>
-References: <20220324094711.48833-1-chandrakanth.patil@broadcom.com>
+        with ESMTP id S1350305AbiCXMqP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2022 08:46:15 -0400
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E8B93A5C1;
+        Thu, 24 Mar 2022 05:44:37 -0700 (PDT)
+Received: by mail-pj1-f53.google.com with SMTP id bx5so4617842pjb.3;
+        Thu, 24 Mar 2022 05:44:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=HZwsIhjtgSAmnia0/qaT3RxixpuiveiXDCzTc8KKHGA=;
+        b=rUjQxZuaozbndvZ/yS5THFwiW+bZ5QuG4Lqq5dvYjTeIduF31GN/HtKtoOSvObcGAo
+         dxEDvdqjRyvhT1gZZWnc79Cj9RfBY0uI6KyokvKyiG3iN0auNRSlBsU7+SKiwnoiIunr
+         6Z+Ke0kANGP9QVeoDOs4FGtloXeTEzsSPX0DiHdRUz4rs7H4HLbUwGf3Ne0H2qMCePGY
+         0TVItaZALuzobzeh+LLYhJUxofsJN9eJ//Ym9SjF1Y6lhU5+COo3KrZ7itFmZFiUCo2T
+         sDgeuRYQmEToy3hS7qa6YZPfr9JXizPhQgSyT0bYUReW80Joq7hC+zDMlrOdZ7aQyHDx
+         Q/+w==
+X-Gm-Message-State: AOAM531mhgGtLCssF6BmxMR0PqtWKk4vPE8ZqSgmOJgYPLmd2R0Kl1rR
+        TZYgyP+/AkSPNyH+cHgEmEA=
+X-Google-Smtp-Source: ABdhPJz9ePb2UO+o7Kg3QBx7giEUT6UhTsxA28zonwRRr36ruXOgSgWc/cpXYsIcs0AGEZGbkpjykQ==
+X-Received: by 2002:a17:903:3091:b0:153:9dcf:de71 with SMTP id u17-20020a170903309100b001539dcfde71mr5671611plc.7.1648125876217;
+        Thu, 24 Mar 2022 05:44:36 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id 204-20020a6302d5000000b00385f29b02b2sm2669252pgc.50.2022.03.24.05.44.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 24 Mar 2022 05:44:35 -0700 (PDT)
+Message-ID: <0034b2f8-0eba-f700-6fff-03cf5b8c8332@acm.org>
+Date:   Thu, 24 Mar 2022 05:44:33 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220324094711.48833-1-chandrakanth.patil@broadcom.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH] scsi: ufs: core: Remove unused field in struct ufs_hba
+Content-Language: en-US
+To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <CGME20220324070146epcms2p577d43ce3e7cbd36aa964f3842e49b2ba@epcms2p5>
+ <413601558.101648105683746.JavaMail.epsvc@epcpadp4>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <413601558.101648105683746.JavaMail.epsvc@epcpadp4>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 24, 2022 at 02:47:11AM -0700, Chandrakanth patil wrote:
-> The megaraid_sas driver supports single LUN, that is LUN 0. And all other
-> LUNs are unsupported.
-> When a device scan on logical target with invalid lun is invoked through
-> sysfs that target itself is getting removed from the OS. So added a LUN
-> ID validation in the slave destroy to avoid the target deletion.
+On 3/24/22 00:01, Keoseong Park wrote:
+> Remove unused field "rpm_lvl_attr" and "spm_lvl_attr" in struct ufs_hba.
+> Commit cbb6813ee771 ("scsi: ufs: sysfs: attribute group for existing
+> sysfs entries.") removed all code using that field.
+> 
+> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
+> ---
+>   drivers/scsi/ufs/ufshcd.h | 2 --
+>   1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 88c20f3608c2..94f545be183a 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -820,8 +820,6 @@ struct ufs_hba {
+>   	enum ufs_pm_level rpm_lvl;
+>   	/* Desired UFS power management level during system PM */
+>   	enum ufs_pm_level spm_lvl;
+> -	struct device_attribute rpm_lvl_attr;
+> -	struct device_attribute spm_lvl_attr;
+>   	int pm_op_in_progress;
+>   
+>   	/* Auto-Hibernate Idle Timer register value */
 
-Please set the max_lun member ins the host template isntead of papering
-over this in the driver.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
