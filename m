@@ -2,89 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94F41C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Mar 2022 09:07:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 960CEC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Mar 2022 15:37:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354111AbiCYJIe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Mar 2022 05:08:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40468 "EHLO
+        id S240837AbiCYPi6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Mar 2022 11:38:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229940AbiCYJId (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Mar 2022 05:08:33 -0400
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5310CD33A;
-        Fri, 25 Mar 2022 02:06:59 -0700 (PDT)
-Received: by mail-ed1-x52d.google.com with SMTP id k10so8485236edj.2;
-        Fri, 25 Mar 2022 02:06:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=VhdVUAWHXjzUGq4oP9g7su55g+qs75mizf7QQXpvJEw=;
-        b=euZVYebCE4XJ6h2KVEIZN/sxeNdWBhCLQ41F3VbBi73AFa8s6umon5UZl9YlT8u9vD
-         fp5poY35XXFvreG/fDo9a+X3woO+AKZa38cO0DSYqK+Dg+LmytrvB9q4rUXqVhP0E0qK
-         bWQTPeb835PslboqVCKK8yVwr6+RZXn+Pcj5irL12oEbLAKjT/cPXQAmCp4Uz1Wu1Kjg
-         +tffZ3ZZLqEIRodZ7+iJuewi0Age1X4soOIbsnvEAit3U5iUNsTTEoz4k4QfSfCdqEHh
-         yH+VoYrCj3wY1l5+lrFZJAzocKld8uAYeFiOVipvXPyK+TigtwMG/UQDqaT08hNZyR6C
-         HZIg==
+        with ESMTP id S1376984AbiCYPiN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Mar 2022 11:38:13 -0400
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D502642EEB;
+        Fri, 25 Mar 2022 08:34:57 -0700 (PDT)
+Received: by mail-pl1-f169.google.com with SMTP id x2so8402190plm.7;
+        Fri, 25 Mar 2022 08:34:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+         :content-language:to:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=VhdVUAWHXjzUGq4oP9g7su55g+qs75mizf7QQXpvJEw=;
-        b=es+MrmEUR4sGbkxC2OWDgyCL+qq+RKcAA4YuZVLgT4RISul2PO3ataL5PF849JifjP
-         JEeRWdlxw5mIUH1/dvURJn+eSc96T5XDY4/nEzP6w48NvB1WMBXaiqu6wRSuZ1+vqemS
-         g5sbd5QnhydkSOVIci/5sJB50sJuspeICtbmOTHEHNorNOZ7p7hlIFh+b/iUVSb95kiP
-         J9Wsu1tFAMRgHG8o1iI+pAzWwvHR0l0elY8D8F2SXxCBvRTWet+k+dzVm1WWOuQUYhQb
-         EaKTxqcqTvlPVKstERTCVs1F9tNTCUQiCiYEQOYQowwcu79rrmXxYv5ED+2uHy6ffKrW
-         sRQg==
-X-Gm-Message-State: AOAM532NasESIedtkyxqnHrWKwzRKMrEJJzVgkFGnjhufBjUGfJj6s4c
-        eT/xbNSEs3DM4hK3UEpmk98=
-X-Google-Smtp-Source: ABdhPJx01pPWcYHPsWa/D2UX3hyEAgDAM3v69gqG2zc9S5TZfdLa41DCwYMxLs2+YR31sY0zcWOsoQ==
-X-Received: by 2002:a05:6402:4315:b0:419:2e38:ab8f with SMTP id m21-20020a056402431500b004192e38ab8fmr11628871edc.250.1648199218448;
-        Fri, 25 Mar 2022 02:06:58 -0700 (PDT)
-Received: from [192.168.178.40] (ipbcc1cfad.dynamic.kabel-deutschland.de. [188.193.207.173])
-        by smtp.gmail.com with ESMTPSA id e9-20020a170906c00900b006d4a45869basm2087116ejz.199.2022.03.25.02.06.57
+        bh=bbdgCmNtwzY2RLS376ybn/+3eTx3HqJcLP+kZSbonms=;
+        b=II646205Fe+H3Uj8+9+hWRuf7OkHp8NB6cGfzmJJqCmPoVZ1dA7ashLKAn+t2uT6qi
+         AGvNAmVfA/4tLXYU2AglDOyxUgwcEFmizD12oucdJfhJdiFtKwk50qsPTHQGCQ0ZDUPj
+         Iw9LCvM+BdnHeycV7y3ZRkdkH/qBvc3fba4DKZk+scOsrr2txuSaiHOCGD4xhBMdBIYU
+         rn+6sjH7dVjFlJp32GTumNR3JWDx7sgRdmz1R5b4701nVNjfEyQYEYZwib2UC47auEWC
+         r1sWCHBgiW2eQwsI0bcAhQgCppD/5IbjIYx/tBDnSg2Oq11mkE18BtJjqAH5o0VIC225
+         0YhA==
+X-Gm-Message-State: AOAM531bCEUEh9lVsrVR8vAKYr7iKhmqtC8xhXZhGRmg24QMNNvqCqAW
+        RNtaIYGimXfallenJFqS17v0eP52pz0=
+X-Google-Smtp-Source: ABdhPJylDRG/b4rWwQqiSjQYi+msf7VHn9E4kX9F42tOQD4859a6He0M7PZWCvqJkgeYBJhkGx0RPQ==
+X-Received: by 2002:a17:902:db0f:b0:154:665e:af75 with SMTP id m15-20020a170902db0f00b00154665eaf75mr12089337plx.147.1648222497062;
+        Fri, 25 Mar 2022 08:34:57 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id k18-20020a056a00135200b004fb18fc6c78sm2880862pfu.31.2022.03.25.08.34.55
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 25 Mar 2022 02:06:58 -0700 (PDT)
-Message-ID: <d15369a8-7a98-1b1a-b950-40d78ed5e9ec@gmail.com>
-Date:   Fri, 25 Mar 2022 10:06:57 +0100
+        Fri, 25 Mar 2022 08:34:56 -0700 (PDT)
+Message-ID: <e3654323-1880-d7b9-fba6-59b387b6fa77@acm.org>
+Date:   Fri, 25 Mar 2022 08:34:54 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [RFC 3/3] scsi: target: tcmu: Support zero copy
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v2] scsi: ufs: unipro: add to define HS-Gear5 mode
 Content-Language: en-US
-To:     Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>,
-        linux-mm@kvack.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     linux-block@vger.kernel.org, xuyu@linux.alibaba.com
-References: <20220318095531.15479-1-xiaoguang.wang@linux.alibaba.com>
- <20220318095531.15479-4-xiaoguang.wang@linux.alibaba.com>
- <94b00e49-5efb-658f-3142-42e7cc551d19@gmail.com>
- <57da7e54-f582-3b10-52a9-5166adacf4e6@linux.alibaba.com>
-From:   Bodo Stroesser <bostroesser@gmail.com>
-In-Reply-To: <57da7e54-f582-3b10-52a9-5166adacf4e6@linux.alibaba.com>
+To:     SEO HOYOUNG <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org,
+        bhoon95.kim@samsung.com, kwmad.kim@samsung.com
+References: <sc.suh@samsung.com;>
+ <CGME20220325082858epcas2p41c0918b1cacce09eaa5f7ffe84d9f994@epcas2p4.samsung.com>
+ <20220324201410.59187-1-hy50.seo@samsung.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220324201410.59187-1-hy50.seo@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 3/24/22 13:14, SEO HOYOUNG wrote:
+> diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+> index 8e9e486a4f7b..0d2131e1f027 100644
+> --- a/drivers/scsi/ufs/unipro.h
+> +++ b/drivers/scsi/ufs/unipro.h
+> @@ -231,6 +231,7 @@ enum ufs_hs_gear_tag {
+>   	UFS_HS_G2,		/* HS Gear 2 */
+>   	UFS_HS_G3,		/* HS Gear 3 */
+>   	UFS_HS_G4,		/* HS Gear 4 */
+> +	UFS_HS_G5,		/* HS Gear 5 */
+>   };
 
+Where is the code that uses this new constant?
 
-On 23.03.22 15:33, Xiaoguang Wang wrote:
+Thanks,
 
-... snip ...
-
->> What happens if the tcmu device currently is not open / mapped?
-> I'm not sure how it will happen.
-> But we may check whether udev->vma has a valid value. If yes,
-> it'll enter tcmu_cmd_zerocopy_map().
-> 
-
-Yeah, but what I also wanted to suggest is, that if userspace maps
-the uio device while zero copy cmds already being in the ring,
-you have to iterate over those cmds and populate the mapping.
-
-Bodo
+Bart.
