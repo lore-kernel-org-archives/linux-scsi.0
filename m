@@ -2,65 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F1F5C433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Mar 2022 08:14:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02B8EC433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Mar 2022 09:48:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229930AbiC0IQd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Mar 2022 04:16:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55654 "EHLO
+        id S231793AbiC0JuV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Mar 2022 05:50:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229884AbiC0IQb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Mar 2022 04:16:31 -0400
-Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79862286EE
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Mar 2022 01:14:53 -0700 (PDT)
-Received: by mail-lj1-x234.google.com with SMTP id 17so15417456lji.1
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Mar 2022 01:14:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=nZ275Tm5MzLa8QyOb/BmmEnnwnBICW4Wrh2vH+M44mw=;
-        b=AdMshB3Fe/c1dqzJvH6cnnA5Iv+EDyZZejpjXel7NVdRbEjuwicQoVfl+jHr7rnHOV
-         lM822nFmGcvMTyLD/t0h0X35gR/b0SxwD9P+Cty56XrjKHYkU62IcHEY99qYD8Wssv3Y
-         TprHcQaxqGGW3m86vsAoZd+ebDKs0Vr85s5D3VOffDzk6Ii/Qa494l0mfpQcqDYB2ZmE
-         n3HF0x+0vT/pPtYjgL+9YZc+sE4O0abaeasHKlaSZzTSvBvm4/oCj8LF2yGpNDlUwNRT
-         COhMjHoOhakdTbuR94Cx+gOPEcxdIknxw/jADTehL8hSxDAZT92j9v0RH96dWbYWGN7c
-         Bw6w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=nZ275Tm5MzLa8QyOb/BmmEnnwnBICW4Wrh2vH+M44mw=;
-        b=GbDB50DEprvfyOKEG4vll7BhrpHFl0zjCKtahsquDWRhN5VMQuqaAu+P8bQaYEEukI
-         iQhjOhqwM3hfThsb3xvO2/POMsmYoBE4CRwVnov+rac58leYnd7VwKhYrHsrcjp8dkcD
-         KUrnwmQMHJuNky+ugA8lb3oKa+tSq59zDendff1gbXMoTAKELXEDMjRiQB5IHe0jk2bC
-         saHWjw/gPIeJcgb2JOg123IvKFNcos3hY1U7GaHSCqsRhaUHsJMXoBSEG8NZN9eWskW0
-         x00reRciJZFVLVDr58JDG8xwl1MBSC6vgcECgiGHO14fNbS1VHD5kuPthsrG1SrHZ1XH
-         EWJA==
-X-Gm-Message-State: AOAM533n1xTAbZlEwfHvPqNgWLUEah2/zblD7mPvlqTLdZctTQhxRL1L
-        X+dPkf+E4GFhY820n0Wnk+HA8KsQWoLLIixC7mg=
-X-Google-Smtp-Source: ABdhPJwTLm1c/g5RSvYRl9ifLC3SNKIu7dDDs6q2gHmVKQDNhUVyIo/ewTzdCRLDi/WXXc1eRnTD0yKpY2mkLlOdX6w=
-X-Received: by 2002:a05:651c:1501:b0:249:8d28:5659 with SMTP id
- e1-20020a05651c150100b002498d285659mr15520959ljf.138.1648368891612; Sun, 27
- Mar 2022 01:14:51 -0700 (PDT)
-MIME-Version: 1.0
-From:   Badalian Vyacheslav <slavon.net@gmail.com>
-Date:   Sun, 27 Mar 2022 11:14:40 +0300
-Message-ID: <CALmWCAC=tewgc-611_ZD6hAPp1Pe9wc2K0qk9Xd9jkrR8+JZ0Q@mail.gmail.com>
-Subject: [PATCH] mpt3sas: Fix system falling into readonly mode
-To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
+        with ESMTP id S230219AbiC0JuU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Mar 2022 05:50:20 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E2091FA67
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Mar 2022 02:48:40 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 8F5C4B80BEC
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Mar 2022 09:48:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2B83EC340F3
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Mar 2022 09:48:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1648374517;
+        bh=U7WGoXHC4DJV/tqJp74V126U1wDUHqbYoT/6n9CncTQ=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=AGt7pq3P8rQqwlsHURM8IJ8Pu4u/rx9hagagfp3fDVWIeWI8OHXaKpFRN7ldHABCu
+         QI8uPd8YpKr2hQLYsqirlNCwUmSvv+5GobdiFhc77TYfiY5U6IRx5GrGTknaml171p
+         dQE4pHv0mae0N4nvcD3qFp6U8+nmkDVUImaoSSesKH/a+BP8WbQ0rEP20qtiB8gxvo
+         Cq2svPZCTU3uByl5O22CBrVDGN0t5bTr3FMsm0079kanOTTicR/oVRMqeDIQk/qKQV
+         qWnV1xzjXXqLA3/gph53XnsXut90643vTwjo+WvPoYCne8RsonUsXQY+kCot4zpm1f
+         8LCPokDiza9SA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 0952BC05FD6; Sun, 27 Mar 2022 09:48:37 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 215691] mpt3sas "SMP command sent to the expander has timed
+ out" cause halt
+Date:   Sun, 27 Mar 2022 09:48:36 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: slavon.net@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-215691-11613-WqW4k3Hvj4@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215691-11613@https.bugzilla.kernel.org/>
+References: <bug-215691-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Sorry for going back to an already accepted patch. Is it really the
-maximum and not the minimum? After all, at the maximum there will
-always be 32 even if there are fewer channels?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215691
 
-max_t(u8,MPT_MAX_HBA_NUM_PHYS, num_phys);
+--- Comment #5 from Badalian Slava (slavon.net@gmail.com) ---
+https://support.oracle.com/knowledge/Sun%20Microsystems/2667269_1.html
 
-The idea, as I understand it, should be in "no more than MPT_MAX_HBA_NUM_PHYS"?
+looks like same
 
-If everything is correct, then please ignore this letter.
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are the assignee for the bug.=
