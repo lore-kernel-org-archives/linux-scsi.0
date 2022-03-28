@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64A46C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Mar 2022 09:20:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 528F1C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Mar 2022 09:23:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239736AbiC1JWG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Mar 2022 05:22:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51334 "EHLO
+        id S239758AbiC1JYv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Mar 2022 05:24:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239727AbiC1JWF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Mar 2022 05:22:05 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 137539FE9
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2022 02:20:24 -0700 (PDT)
+        with ESMTP id S239757AbiC1JYu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Mar 2022 05:24:50 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40F64B87C
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2022 02:23:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1648459223; x=1679995223;
+  t=1648459389; x=1679995389;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=LFPSLQaFilhfnDen4eZXPcOYMyeDq38BacsVPsDsYC0=;
-  b=R5TENETbQvvnktAvT9Vj1ppsZrv+6p6CNe7EYcA9oYCNZ15/mdr51g9u
-   x3KJ7tMaTs0Gp4ytxjvPfrwC0mjFj+YWvAoKcn5Xk/fVYYo62Vx+jL0e1
-   BySZ7mvXMX5hNzOc5RZTPPasvBa3xbAnyMD5XoXro2c5xA+/CkJ686JZp
-   mEsvkTMqTTyYM/WDiKsNWqWy3GoS+GIE+TZyqoMojZrD2R1xgl5kEvAAO
-   1MvK2Gi8wuxN2HUORuN7LVxj5DyXVu2EysEBO2hTeGl5rh68j0ffopXRv
-   YWxy5bSeBOFO26RQCAfvXJTiG/hXdWAoc8+jrj6w/YIkaIJaE7UyNtUDt
-   g==;
+  bh=9yYSE5Y6C08cvgvTios6SjkIYNOYx/lGroX1NA9pKUY=;
+  b=L9xA5ukl4HIqkryMG6dFo4yG7vDJHpShv7cmJzkYgMHmt+eHq9rscf+r
+   Bvs/xOAnDtxCNb+yTLeVrOJMvJT0yX+Bdz14e0RsWuduwJjWJel1hJMwN
+   yHkyOt12bcNrMgTLxQDeL2SFBr942cWjLCN9AL91+Dtv74lR0FNJfzD4F
+   tMdh2PsxKBl7+Znp8yMkjOh1W3hiIBoWp1jYlE8tqa0z9EjWwqnw/Jdhq
+   Yg87+hO50tV/k5mSQjKdsuOmw9YlaBlnHoWM3OFrN0xzXf4g1iOhjCj6F
+   BxP9zSCD/LMuDuu8dH/WB1+CBMW1YJ4/9SzZwXU10VEbG/DILw8Roi8QF
+   w==;
 X-IronPort-AV: E=Sophos;i="5.90,217,1643644800"; 
-   d="scan'208";a="201276427"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Mar 2022 17:20:23 +0800
-IronPort-SDR: YRxep+GbsbKgOTu4i8m5ivYOxdvrw3yzKRSIpOAKBgQu9Mp81bUfEd+Ja7aqL2OFvLZHuZQHSx
- 9jl8sHBwW9nK27K60b12886etB4WXvBbUP7mSAFYFNs0a2csCfG5RmJcCJ0j0ycbqFulWEuhLU
- qnjPjQczC5VorVWfnCjVpB55Fik37oOjfCQ42owaBKmY+2X/pKu62evuH2/q80PgcFAUw843oh
- 88elK1t9xXzetmo6lVlPCEARChK1tgcDbqN3m85en5M/ftWJ3iGbIlEaCovyGVCOWEg24sevcL
- lC992riFskpSoJJM3T+JpdWz
+   d="scan'208";a="308386753"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Mar 2022 17:23:08 +0800
+IronPort-SDR: tx/mcXNYPB/ybh4beLKgYIU/jSMA4CJ2yRdRlryFaC1UBPIj7INW9KJQLDA7Cdd+pVsfgCQ5ow
+ E7WqEOeG4d/uZ8YJMGJnI44zNVgS00miWLbLzMTEn7zOreFzYrbgEhv8WUdAPKtTnsWKtLU6+h
+ yyMYaSEbmDPoy4C22PuhETeiSTdZK1ET9U4yVlG9UAQpMnEV8q0GsaK8wj+aOxOUeGT67fFEJy
+ fmqsrp4KhAF7jTP4DRqJluPMEq+wrhbPceitu8qhg5TvkcV7suFdf9eeE8PlWhMrcuEpeB8va4
+ T/U1Hh3G8K+FEmHmjsdZWkzi
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Mar 2022 01:51:17 -0700
-IronPort-SDR: nL9pL7ff7xkArmpB8X5Pc5+vR2fjIo0SN0WjIcC8aA4QbawEH7gBktC7pIQwx5S1s36ofroX0a
- d1NyShbzi/PmFMKAmvEHJKThUjwtqyxkoLIDHwehRePEMwumqHxtJarrl6ACH82Mug51Z++nBZ
- 1i/SK2xyEP3ZgyFhntML4lm0dHhNM5uHKiB4PZjbSbm33ucZf6GYZ5vLF7TA54UdxsFHIC57eD
- qYyK5uwaE1InRmnQjP9vcB/p3E2sMH0IqaW9sB3CQCtTvO7FYebyFWFnWCLG8A3P0WU9PlUrKP
- zEs=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Mar 2022 01:54:54 -0700
+IronPort-SDR: 4iNYNpbasCjwpyi8vKlN24bWw3SBZg8enhRyeDAoE+1pSBeK0Ld6DJR8lzs5wefM61hxDkbBQw
+ V/bA427k3wDrYyENfTrt+WAU1mSMrOLJ77vayQtoyTt22oJTJVfEFxo7T0jDyhXDLKC+5SSRSj
+ A1ZYzcEoEcXHaXlv4/+fI36eXeC4lVXvdEjxpSPm8uT4xMhV01U0xIGGAng2m+vvdFoUGDjZUw
+ gv5q2vvLCuShI45svPTuz5T7P2m+1UemKzGFj34qd2yGvJB+JnWT3GD/APQEOfmfp3lYG1lePB
+ sgs=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Mar 2022 02:20:24 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Mar 2022 02:23:08 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KRnGv6k0Lz1Rwrw
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2022 02:20:23 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KRnL428j7z1Rwrw
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2022 02:23:08 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,37 +56,36 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1648459223; x=1651051224; bh=LFPSLQaFilhfnDen4eZXPcOYMyeDq38Bacs
-        VPsDsYC0=; b=BSvPVuQLzI5yI2XsmnjXtXZkMRtLP3JAWQlOv525r6F53Ljofd4
-        4RXq0Tfd8eWPV0p5QMbsTw89Mxx+5a4JsZ5HX6XElpritE+sNsMCf8hFjMY6h3ay
-        iQSdWhyX5Ih85yPfU8uSp7erSS7xUA2tybATvNSbuponeA+tB+XWWFZygSDgXgyg
-        LpSauUTkJpaL/r3+fMiV+wQyRd38cRIDSk8SWsuuxzm0GMs2Li/q4Y8WQv1LS8sI
-        Lo+9XX62u5NguKtlk3YoblsBem0EhwDDhNvB74SfaPqNW29SER1FHtPJegY/52lD
-        pMc4IyWkzLkAWnOcq48tFt33Z0N5FR+BVlQ==
+        1648459387; x=1651051388; bh=9yYSE5Y6C08cvgvTios6SjkIYNOYx/lGroX
+        1NA9pKUY=; b=SsHByRjGN1yqWuXc7SPMn34RwLwqM+HMh+ei5Jq7yz9BQCxhrwe
+        XRDpUn5fX8t49cCNosuWNvXm5vuffCTlR2BCePa/kA+f/NCEbSLN+TvaX4f0Cq5f
+        4EYafvpMuweWPnxG4uXD66F6rQyHPIv9ii3eP3/dVx1x+JETm67XTg0WurmTiJTD
+        OR5GVk6vah33NZsbLAEcPiA6YbmRsEWNvsdfO+Kg1a4DCwZuCDahPX2nL+qADhXt
+        qsH28yJQQS+wSLS7u+yhae/6LJaNd/iflygPtAU/YChyAb2Hs25IBPFQuBRLs5Zn
+        PUSUHsdh8F6YqKfZgFbFEQysBIIpSqkLQAA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id rGI2-7OFPtKz for <linux-scsi@vger.kernel.org>;
-        Mon, 28 Mar 2022 02:20:23 -0700 (PDT)
+        with ESMTP id sZ_l_6DsqKeA for <linux-scsi@vger.kernel.org>;
+        Mon, 28 Mar 2022 02:23:07 -0700 (PDT)
 Received: from [10.225.163.121] (unknown [10.225.163.121])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KRnGt3ysZz1Rvlx;
-        Mon, 28 Mar 2022 02:20:22 -0700 (PDT)
-Message-ID: <6f377bbf-9797-7838-e0f0-631c38f85faf@opensource.wdc.com>
-Date:   Mon, 28 Mar 2022 18:20:21 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KRnL26VsSz1Rvlx;
+        Mon, 28 Mar 2022 02:23:06 -0700 (PDT)
+Message-ID: <99820f1c-10c8-72b3-c5b8-3d7209dc3fde@opensource.wdc.com>
+Date:   Mon, 28 Mar 2022 18:23:05 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
-Subject: Re: [PATCH 1/2] scsi: pm80xx: mask and unmask upper interrupt vectors
- 32-63
+Subject: Re: [PATCH 2/2] scsi: pm80xx: enable upper inbound, outbound queues
 Content-Language: en-US
 To:     Ajish Koshy <Ajish.Koshy@microchip.com>, linux-scsi@vger.kernel.org
 Cc:     Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com,
         john.garry@huawei.com, Jinpu Wang <jinpu.wang@cloud.ionos.com>
 References: <20220328084243.301493-1-Ajish.Koshy@microchip.com>
- <20220328084243.301493-2-Ajish.Koshy@microchip.com>
+ <20220328084243.301493-3-Ajish.Koshy@microchip.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20220328084243.301493-2-Ajish.Koshy@microchip.com>
+In-Reply-To: <20220328084243.301493-3-Ajish.Koshy@microchip.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -94,88 +93,54 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 3/28/22 17:42, Ajish Koshy wrote:
-> When upper inbound and outbound queues 32-63 are enabled, we see upper
-> vectors 32-63 in interrupt service routine. We need corresponding
-> registers to handle masking and unmasking of these upper interrupts.
+> Executing driver on servers with more than 32 CPUs were faced with command
+> timeouts. This is because we were not geting completions for commands
+> submitted on IQ32 - IQ63.
 > 
-> To achieve this, we use registers MSGU_ODMR_U(0x34) to mask and
-> MSGU_ODMR_CLR_U(0x3C) to unmask the interrupts. In these registers bit
-> 0-31 represents interrupt vectors 32-63.
+> Set E64Q bit to enable upper inbound and outbound queues 32 to 63 in the
+> MPI main configuration table.
+> 
+> Added 500ms delay after successful MPI initialization as mentioned in
+> controller datasheet.
 > 
 > Signed-off-by: Ajish Koshy <Ajish.Koshy@microchip.com>
 > Signed-off-by: Viswas G <Viswas.G@microchip.com>
 > ---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 35 +++++++++++++++++++++++++++-----
->  1 file changed, 30 insertions(+), 5 deletions(-)
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
 > diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 9bb31f66db85..b92e82a576e3 100644
+> index b92e82a576e3..f04c6c589615 100644
 > --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 > +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -1728,9 +1728,20 @@ pm80xx_chip_interrupt_enable(struct pm8001_hba_info *pm8001_ha, u8 vec)
->  {
->  #ifdef PM8001_USE_MSIX
->  	u32 mask;
-> -	mask = (u32)(1 << vec);
-> +	u32 vec_u;
+> @@ -766,6 +766,10 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+>  	pm8001_ha->main_cfg_tbl.pm80xx_tbl.pcs_event_log_severity	= 0x01;
+>  	pm8001_ha->main_cfg_tbl.pm80xx_tbl.fatal_err_interrupt		= 0x01;
 >  
-> -	pm8001_cw32(pm8001_ha, 0, MSGU_ODMR_CLR, (u32)(mask & 0xFFFFFFFF));
-> +	if (vec < 32) {
-> +		mask = (u32)(1 << vec);
-> +		/*vectors 0 - 31*/
-> +		pm8001_cw32(pm8001_ha, 0, MSGU_ODMR_CLR,
-> +			    (u32)(mask & 0xFFFFFFFF));
-> +	} else {
-> +		vec_u = vec - 32;
-> +		mask = (u32)(1 << vec_u);
-> +		/*vectors 32 - 63*/
-> +		pm8001_cw32(pm8001_ha, 0, MSGU_ODMR_CLR_U,
-> +			    (u32)(mask & 0xFFFFFFFF));
-> +	}
->  	return;
->  #endif
->  	pm80xx_chip_intx_interrupt_enable(pm8001_ha);
-> @@ -1747,11 +1758,25 @@ pm80xx_chip_interrupt_disable(struct pm8001_hba_info *pm8001_ha, u8 vec)
->  {
->  #ifdef PM8001_USE_MSIX
->  	u32 mask;
-> -	if (vec == 0xFF)
-> +	u32 vec_u;
+> +	/* Enable higher IQs and OQs, 32 to 63, bit 16*/
+> +	if (pm8001_ha->max_q_num > 32)
+> +		pm8001_ha->main_cfg_tbl.pm80xx_tbl.fatal_err_interrupt |=
+> +							(1 << 16);
+
+No need for the brackets.
+
+>  	/* Disable end to end CRC checking */
+>  	pm8001_ha->main_cfg_tbl.pm80xx_tbl.crc_core_dump = (0x1 << 16);
+>  
+> @@ -1027,6 +1031,9 @@ static int mpi_init_check(struct pm8001_hba_info *pm8001_ha)
+>  	if (0x0000 != gst_len_mpistate)
+>  		return -EBUSY;
+>  
+> +	/* Wait for 500ms after successful MPI initialization*/
+
+Is this comment really necessary ? Anybody sees that this will wait. It
+may be better to explain *why* the wait is needed.
+
+> +	msleep(500);
 > +
-> +	if (vec == 0xFF) {
->  		mask = 0xFFFFFFFF;
-> -	else
-> +		/* disable all vectors 0-31, 32-63*/
-> +		pm8001_cw32(pm8001_ha, 0, MSGU_ODMR, mask);
-> +		pm8001_cw32(pm8001_ha, 0, MSGU_ODMR_U, mask);
-> +	} else if (vec < 32) {
->  		mask = (u32)(1 << vec);
-> -	pm8001_cw32(pm8001_ha, 0, MSGU_ODMR, (u32)(mask & 0xFFFFFFFF));
-> +		/*vectors 0 - 31*/
-> +		pm8001_cw32(pm8001_ha, 0, MSGU_ODMR,
-> +			    (u32)(mask & 0xFFFFFFFF));
-
-mask is a u32, so the "& 0xFFFFFFFF" seems to be completely pointless...
-And pm8001_cw32() takes a u32 value as last argument so the cast is also
-pointless.
-
-> +	} else {
-> +		vec_u = vec - 32;
-> +		mask = (u32)(1 << vec_u);
-
-Cast not needed and this should probably be "1U << vec_u".
-Also, the vec_u variable seems completely unnecessary.
-
-> +		/*vectors 32 - 63*/
-> +		pm8001_cw32(pm8001_ha, 0, MSGU_ODMR_U,
-> +			    (u32)(mask & 0xFFFFFFFF));
-
-Same here: The cast and masking are not needed.
-
-> +	}
->  	return;
->  #endif
->  	pm80xx_chip_intx_interrupt_disable(pm8001_ha);
+>  	return 0;
+>  }
+>  
 
 
 -- 
