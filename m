@@ -2,73 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87D63C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Mar 2022 02:05:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E66BC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Mar 2022 03:28:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237432AbiC1CGu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Mar 2022 22:06:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46488 "EHLO
+        id S237812AbiC1D3r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Mar 2022 23:29:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230063AbiC1CGq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Mar 2022 22:06:46 -0400
-Received: from mail.meizu.com (edge07.meizu.com [112.91.151.210])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59943B7CA;
-        Sun, 27 Mar 2022 19:05:06 -0700 (PDT)
-Received: from IT-EXMB-1-125.meizu.com (172.16.1.125) by mz-mail11.meizu.com
- (172.16.1.15) with Microsoft SMTP Server (TLS) id 14.3.487.0; Mon, 28 Mar
- 2022 10:05:05 +0800
-Received: from meizu.meizu.com (172.16.137.70) by IT-EXMB-1-125.meizu.com
- (172.16.1.125) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.14; Mon, 28 Mar
- 2022 10:05:04 +0800
-From:   Haowen Bai <baihaowen@meizu.com>
-To:     <brking@us.ibm.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Haowen Bai <baihaowen@meizu.com>
-Subject: [PATCH] scsi: ipr: Directly return instead of using local ret variable
-Date:   Mon, 28 Mar 2022 10:05:03 +0800
-Message-ID: <1648433103-24308-1-git-send-email-baihaowen@meizu.com>
-X-Mailer: git-send-email 2.7.4
+        with ESMTP id S230218AbiC1D3q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Mar 2022 23:29:46 -0400
+Received: from mail-qt1-x834.google.com (mail-qt1-x834.google.com [IPv6:2607:f8b0:4864:20::834])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DCD8321;
+        Sun, 27 Mar 2022 20:28:07 -0700 (PDT)
+Received: by mail-qt1-x834.google.com with SMTP id b18so11293459qtk.13;
+        Sun, 27 Mar 2022 20:28:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=jhfnGBc1zMeNDHlXmiDZZwnSVLaEg/Q9PFtmWw5kI1U=;
+        b=UK7jIQsi9lqpK4VRqUGZm4XwsRzwYPebczxkscgk7THS0IL1uq/Wc/xa/Bv1yPkUKI
+         a28dLon+1WGmiyYO5Q46hjMryEu/9mqyUBl8L6AZXbiz0rWryS7DmJXny0ajSq+NRJXJ
+         AQaz7xpl0pACcA0fapVn/SUpQp51jYgfpn8fWSIfShnml3LigfamSAQzv6DhA7IvP9M2
+         OpJ2ArjAqQSyQp5+o5Z8kwLOgwaj4w6t2+QUPaG9b/Ru9hHaWmCLQaNw/d/w4+RVB9/f
+         9yUWtqE/2jRINZhDP8q5Qih1GMPGiQl/0p8i/IaN844rnSJz8VwDiNy+wnEMK1NuCE2o
+         TKqQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=jhfnGBc1zMeNDHlXmiDZZwnSVLaEg/Q9PFtmWw5kI1U=;
+        b=jqfRqZ83yEU5mmF+82+Ka1chahvIE3bNh6QsfzQQ9MhazOAeOX5ix42+88Q/QXkFtj
+         lILIfUf0fqiOtZnlKB87QyQ1I+SwPHgFTNfKH0k3RTwvbrgOVHWbd9mBs00S2s4Ezr0i
+         1ddveSmeSdcqqBeaSMWAeFjsK3dp5qiaJ3tHj8oLPFcipUfGYT3+4F1M7c3+lmTQuuUt
+         NCptrkb59ObN1useaVNicUHMRYShPy6nqopVudJZLoZGkPRuF7kcMbTyU/Fsgb+Q8xYQ
+         QSFHwx5IhF2/waTxVpVakrezAgeajuQdzkYQxhleszp95d27jVpQmvUgazYnoEW6UVWK
+         CW3w==
+X-Gm-Message-State: AOAM531YRWRHJVuvrcoP7vS9L3shBhbs615E+squI48e9S1W0+m0OfB4
+        28v34yM2c/xX6gqITkqsakY=
+X-Google-Smtp-Source: ABdhPJzkxCMRpipAJw7RMOhsG1MT3j4e5x+gJF3vDZqCQzpHaq5Zq7JxE5DtZvkIU31q0N7VFBcfIQ==
+X-Received: by 2002:a05:622a:15cf:b0:2e1:e5cb:aed3 with SMTP id d15-20020a05622a15cf00b002e1e5cbaed3mr20127111qty.524.1648438086294;
+        Sun, 27 Mar 2022 20:28:06 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id o13-20020ac87c4d000000b002e1e732dea5sm11745455qtv.70.2022.03.27.20.28.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 27 Mar 2022 20:28:05 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: lv.ruyi@zte.com.cn
+To:     james.smart@broadcom.com
+Cc:     dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Lv Ruyi <lv.ruyi@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] scsi: lpfc: add NULL pointer check
+Date:   Mon, 28 Mar 2022 03:27:44 +0000
+Message-Id: <20220328032744.2371667-1-lv.ruyi@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.16.137.70]
-X-ClientProxiedBy: IT-EXMB-1-125.meizu.com (172.16.1.125) To
- IT-EXMB-1-125.meizu.com (172.16.1.125)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-fixes coccinelle warning:
-./drivers/scsi/ipr.c:10095:13-15: Unneeded variable: "rc". Return
-"IRQ_HANDLED" on line 10104
+From: Lv Ruyi <lv.ruyi@zte.com.cn>
 
-Signed-off-by: Haowen Bai <baihaowen@meizu.com>
+kzalloc() is a memory allocation function which can return NULL when some
+internal memory errors happen. It is safer to check NULL pointer.
+
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Lv Ruyi <lv.ruyi@zte.com.cn>
 ---
- drivers/scsi/ipr.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 104bee9..353cf47 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -10092,7 +10092,6 @@ static irqreturn_t ipr_test_intr(int irq, void *devp)
- {
- 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)devp;
- 	unsigned long lock_flags = 0;
--	irqreturn_t rc = IRQ_HANDLED;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index eed6464bd880..6cc8765b0a92 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -7159,6 +7159,8 @@ lpfc_sli4_cgn_params_read(struct lpfc_hba *phba)
+ 	/* Find out if the FW has a new set of congestion parameters. */
+ 	len = sizeof(struct lpfc_cgn_param);
+ 	pdata = kzalloc(len, GFP_KERNEL);
++	if (!pdata)
++		return -ENOMEM;
+ 	ret = lpfc_read_object(phba, (char *)LPFC_PORT_CFG_NAME,
+ 			       pdata, len);
  
- 	dev_info(&ioa_cfg->pdev->dev, "Received IRQ : %d\n", irq);
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-@@ -10101,7 +10100,7 @@ static irqreturn_t ipr_test_intr(int irq, void *devp)
- 	wake_up(&ioa_cfg->msi_wait_q);
- 
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
--	return rc;
-+	return IRQ_HANDLED;
- }
- 
- /**
 -- 
-2.7.4
+2.25.1
 
