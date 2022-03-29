@@ -2,169 +2,372 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 164F2C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Mar 2022 18:09:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A51BAC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Mar 2022 18:09:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240439AbiC2SKs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Mar 2022 14:10:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52372 "EHLO
+        id S240212AbiC2SK6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Mar 2022 14:10:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240427AbiC2SKk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Mar 2022 14:10:40 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDC641ADAA
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2022 11:08:56 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 22THsK5B022185;
-        Tue, 29 Mar 2022 18:03:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=kvd3bTvnQHtjazNjw39p1ZUPgxJrfugP5PHexVx/GvY=;
- b=qHssOGnNqzKOoCX6wIvA+e/v9g40Gov7k7+j4x/daHwTFDqfj8Xq9yS0BW59Gqb9g513
- 80Z04AuWT/jhNoHL7KVwK+Tbt33edpBG0mR/rGxdNglD0lBbRlIrV2LivjEBNpW2xUrX
- uz3RBEWql68WAn3d0TIthuHNi0DyH1aZb7tPvKcWdInWwgFeZ3u/k1q2lS7iM6D9ip6j
- d3a2DDEu7keDerH+rm4efsoIeZ0+hE5kLI+j5u7Cqzdz/vkLD3Z+6HxeT0wf1t2VNBuL
- 64S6mq1XAqVgefkXZEGOn0T7g9oo6BZIYzXM/85kQQ6OXMeqaKPtIqeMyySLrreVZDR0 Gw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3f1tqb78tm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 29 Mar 2022 18:03:43 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 22THvFJO048570;
-        Tue, 29 Mar 2022 18:03:42 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2171.outbound.protection.outlook.com [104.47.57.171])
-        by userp3020.oracle.com with ESMTP id 3f1v9fhge0-11
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 29 Mar 2022 18:03:42 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fky7sAl5PiTfmpW5iGBM/Qz82C2Z4XctfR33T59qu3+0mpSHp3vWPAzsYXWo1UqVCvbJ2ntD0dsT2S0DxyTw5xZHe5cDiqEzzcsry4cIuFSUXFd6I9BfXrb730BsLAsKnq4TtGWrgUJndl13i+1tROdFatcMIIqv97u60vO9kZMWjITlhLlgpldSrMJTeCLsY6UMN6R0FbY0O5L5kZCW9gRLJDudOdSqFV3qgevlm05MnFEFec2/JOdpFAyn7LV621WjGbGbJiNsZBF5FNr1Zqq83URiYsjGecBpyyTOE+5Eci5w/W4dzJjFyZGZGJlS31NwYxBIz5ChkEmrbJYAtQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kvd3bTvnQHtjazNjw39p1ZUPgxJrfugP5PHexVx/GvY=;
- b=F1IDdjd8mb12wLb2vFR6RZnb8qrEtcJSuLCKNwxn3In1a67KcZbNCUY6l0xSnoYsbvQuN0zIVu5lWK+HHsE/l6b1V6+cWzVJqvOS9qA9vNOPEK8QlK9YgNrm5NgUZfn7r863soL7jPSvsQIaEjihY/2FrEJ/zEoif4MGz+CL5PNA5ZZB+pu8A+VbGTXaW6y7xnMfpUv898f/YCDqnz2M92nlY4zPFPjLhuuosfZzVV8XuG3algNWUIT5VntPLKXURKOKqY+lUvNUhER8lPZ9+gyqbnrtjB7bllUfW5YJxr+ns7uTezcOEQZ3EeKrc9/N2RmK+1+jsJvJKYeCDMlm8w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S240452AbiC2SK5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Mar 2022 14:10:57 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D258E1ADB3
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2022 11:09:08 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id mp6-20020a17090b190600b001c6841b8a52so2506350pjb.5
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2022 11:09:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kvd3bTvnQHtjazNjw39p1ZUPgxJrfugP5PHexVx/GvY=;
- b=SKgvMGbLar2gCPTRCLp3RTFcLObw2uRZBNsmhMbd3Hq9oLSPlp0WsY1H6VQl0Y20gWhfHOd810vy33cTCqwx9v5kBx7DX01CTPD2k5+nLf7of3rlj2MHPCNc40jZprVniw72XfkWPfpmUNg83fWG4yAF69s0SJ+JUEOFv5CFCiY=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- MN2PR10MB3584.namprd10.prod.outlook.com (2603:10b6:208:11e::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5102.19; Tue, 29 Mar
- 2022 18:03:40 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::29a7:bae9:9b3c:c9f2]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::29a7:bae9:9b3c:c9f2%10]) with mapi id 15.20.5102.023; Tue, 29 Mar
- 2022 18:03:40 +0000
-From:   Mike Christie <michael.christie@oracle.com>
-To:     lduncan@suse.com, cleech@redhat.com, njavali@marvell.com,
-        mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        jejb@linux.ibm.com
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Wu Bo <wubo40@huawei.com>
-Subject: [PATCH V3 10/15] scsi: iscsi_tcp: Drop target_alloc use
-Date:   Tue, 29 Mar 2022 13:03:21 -0500
-Message-Id: <20220329180326.5586-11-michael.christie@oracle.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220329180326.5586-1-michael.christie@oracle.com>
-References: <20220329180326.5586-1-michael.christie@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: DM5PR11CA0002.namprd11.prod.outlook.com
- (2603:10b6:3:115::12) To DM5PR10MB1466.namprd10.prod.outlook.com
- (2603:10b6:3:b::7)
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version;
+        bh=En6gQY/1eDfBWtKGcfGLFrt4nU+RaeGQsiG5/rLA4PU=;
+        b=T4XvbiDwRNg9c7fgVgZJXU2t44CFRa+R1yfWg83LuSlK5tzj/4aMeGDambQpZtHQkx
+         lwzL50gY4qUrkS7Lo1LUy2sBF2cv2hfx0W19iHNrV2BLmqC1a2RdKa74IYpoE34TKqIm
+         /HJ6gXPAv1j79nLnKVdcVoz799VfB6Bw3DkdM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version;
+        bh=En6gQY/1eDfBWtKGcfGLFrt4nU+RaeGQsiG5/rLA4PU=;
+        b=CWHmyXIRU1/tBwGqk0rSdqv6bJIt4IgAN97KwSYS2ylh7UXG0fTiHkOxADdE9Tq9Ac
+         YexOXAH1NiMRGAYLYizISPFECv/R6B5rCA8lgh0mIxafD1305fEC8PsXUCCh7rTIcCMS
+         h6eQhNvtSCiyrSsWQlg1asmZMrHty5sWS0qVT2tHRa/9G+hLbiuZ+6Iq85YQY9NEJIHW
+         L4ZRXSAk99r90zbHWX3OWyPr9OuYn/9VdoiwNDacN6JpPk0xztVkikqreD3jBGe/9ca/
+         6klwR2t6e8n/IZUZY2kMvslej+3YFUMhKJeJXFEvtvw1PChCv14IwLxsFBhnUkULoJqV
+         ltIg==
+X-Gm-Message-State: AOAM531wB0CzWhp0BfgbwBBPMUo17leT+oBmM08Lvp6vhShZtRpfOsQa
+        BHcS9iGwk28TbMxw5vxq8pwIf2ACB9w7LviYMrlG3gYP/Y630urXm8krA/rZ8tGLjxKd5lJF/6A
+        6wDQyCWztfVK7h/Izq240jlHRMBP6vBMhg1A41zxcSuaGeVc78vzqmHuDYpFsoXPmcAFOg/rXmt
+        vmXv3/H8QD1g==
+X-Google-Smtp-Source: ABdhPJw+C/CU/ioJVH/NRRFxOQd/P9oRHOVbCKx7/AORgIHK6OqMqNT1E9QCiN5z8PWUNkWBeeesWg==
+X-Received: by 2002:a17:90b:33cc:b0:1c6:6012:5647 with SMTP id lk12-20020a17090b33cc00b001c660125647mr353131pjb.165.1648577347965;
+        Tue, 29 Mar 2022 11:09:07 -0700 (PDT)
+Received: from dhcp-10-123-20-15.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id b2-20020a056a000a8200b004e1414f0bb1sm21838275pfl.135.2022.03.29.11.09.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Mar 2022 11:09:07 -0700 (PDT)
+From:   Sumit Saxena <sumit.saxena@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, chandrakanth.patil@broadcom.com,
+        sreekanth.reddy@broadcom.com, prayas.patel@broadcom.com,
+        Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: [PATCH v2 1/7] mpi3mr: add BSG device support
+Date:   Tue, 29 Mar 2022 14:06:10 -0400
+Message-Id: <20220329180616.22547-2-sumit.saxena@broadcom.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20220329180616.22547-1-sumit.saxena@broadcom.com>
+References: <20220329180616.22547-1-sumit.saxena@broadcom.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d9c7617c-fcfc-43bb-f996-08da11ae7422
-X-MS-TrafficTypeDiagnostic: MN2PR10MB3584:EE_
-X-Microsoft-Antispam-PRVS: <MN2PR10MB3584A8306FAD98E5A6F63CB7F11E9@MN2PR10MB3584.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: bAhjypnIKCpsxNKVvXhUBO/bloG/Nc39T0ej0/pWnSLOiVwmDe1XQSCWrJ4SBlMnmHolaALk/AYe0JA7P6uJwtkXPvDCtMaZUEHMI94peZj2Wr2Delo7pQEfXRKB5vw4sGGhV0Kz53eX5YLbxHNMscJdCYO47XewW5w4XShFN5xzhxsPx2PLml977K289VfdjG+oUgnP+i3NLh+eFYTD3YBODHU0sfJgUHQfcjlgSo8BgNBxbf/XVXIsSIfhSL0EFctLLaAyqK5TZNAlY5MlK6CmQeyJmHJeX4GQvtEYQBNX4po022PVLUduEGdFmuwdRZuKBcbd8XyEGEwcqrcMf6iU0qZBOLWn4QMLwcReisKu1HozqTorVYesA3GFnyDofOPR3Px5tplqBVyHIjKq8uum+Q3pli5HNyeEuYPhN0mH9Z+yh/SDtvguw8NkT3x6EM3Nli+I90GNZszAsUF5XHnWr6RXz2YMZ3i4bb1Fc1oyYUj02LmNx5PChPqJkWZCsOnNMYxV9f0oezX5BDMY4TY9EjsxB3d0suEkFFL+CwCTMQtzcGouSXGGHhon7NsMOgjGHxVJiHZXGXGH+gCwKnFOscljGEPiZRp7egD5hsLsw5bYlu6C98YXsLDIYkHcczDqKRipV9wfIYfuaGOvoAgvj21EgRBjnEkMvtEU5hIBDl6cOjduWVOmECv/FUCGNqkk5/uwwx22/dCCnoihMQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(66476007)(66946007)(54906003)(316002)(8936002)(8676002)(6512007)(66556008)(4744005)(38100700002)(2616005)(36756003)(508600001)(26005)(6486002)(2906002)(5660300002)(6506007)(52116002)(6666004)(86362001)(83380400001)(4326008)(1076003)(186003)(38350700002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?CHqqsUAhrz5tb8q8+MMWO0KqE/bRpWvoaix20YxPCeL1csExzIpuPGhlXXMb?=
- =?us-ascii?Q?t0HwMZSLI/54IK+5RUB2zwzz83b84RVLUWicIKAM5QJnh/LI4QieokPaBuA7?=
- =?us-ascii?Q?mdku99iy8oCfnb2lKrQm4l4mIDhWpWW+dZ0lMR/qOiwP0Q5wPvts/cBb2mcD?=
- =?us-ascii?Q?tWV+75vigDNxVEfcr6gTUwTzPSQMg8+mJgL9UK+2brMNtWbDxkEUc+OTF5Ub?=
- =?us-ascii?Q?bIJv3ypNG9zNeVckl8BAVlXNx+RPe4tBUmX1S0Jn+YO9eMAWhNNB6Mh1F8FR?=
- =?us-ascii?Q?uid3DL3SIOhvmscmPzHbnlaOQlANBoC7bO09NuuObumZ9Itn8Yrw4pP72LJK?=
- =?us-ascii?Q?i1VES2YzgQO47jcD4rhYHViKeDu8vb75SWqDsQ/jfyI747bLE3mnNyRhIfBv?=
- =?us-ascii?Q?MC3IrBDDEVrpE0VSOCBi4TZUBz+IuDWvdGVFwah40VDArFmBdITw9JUtPyHd?=
- =?us-ascii?Q?kPr2TDxTPkNP3hh6O0uwaqDXU1Mw5Kl7ySpEENZSEv3apVKtz/+d6u1ljsPy?=
- =?us-ascii?Q?r12nEtOLQpmyftxSR5isCApvcYdPDZKagHiEscO0IrSj8/SHZlUZYfgDBBRe?=
- =?us-ascii?Q?ZyGuvQVhNO6Gn+lOqW0hq/PoNOqTfjnEl82XjpDdkqtlwygLSyS5UoArp8a5?=
- =?us-ascii?Q?XsO5ObZ4Up9qqjU8KYM6QK57EQLhAWpS3/XmpvBuYWm1+WfQ5hFLip041bG4?=
- =?us-ascii?Q?dHUQqUOxFYwHyZn44YQSBpJRTvPimPdFwgq5WGSMV+aXlx5uTAkzrBOXzfev?=
- =?us-ascii?Q?a8Vd8IcU5uC5Q+oITy1c8CGPGiaONeOpGP91XesRJvQbxkuvbWZG3bbxQ0Zk?=
- =?us-ascii?Q?eUGR8kGhW8TS9MLiFFc4f5p7Mxa8F0YhrOttVTakeyfNTPBWjBynUSetKm+/?=
- =?us-ascii?Q?juIshJe5EvHhTaThs9vXv7VZVMN9PZzeyfxhM7P40plyU94WZBpH8q2hqXSX?=
- =?us-ascii?Q?XQO16dJrJPnZRA8l0Sze97XQvi9pHqCw3DIHwTqosE4cdT057m5Jq1ZAYjog?=
- =?us-ascii?Q?zcAd2RRBqlpkk2jrVsAr9UYTBdOPIFy4CXbALpMD8ONGjFECG4Sg3YAaKEzh?=
- =?us-ascii?Q?GG8//150hI+8ZnWVyjgJXW2OQHxfB1vgKcHhCHFjVD6FTBd01HBFkKNftxEL?=
- =?us-ascii?Q?r5DX1kk1sRsi8pYpW/XEKmXGzQKOihwQmriVCMav7zDlOeQRZqix88bT60WV?=
- =?us-ascii?Q?Gyf8G2AYO9/8JmWdMz2nJ19CPT5a7poF0O4YyHwlsajeFWOgxjZRIeMwQkTp?=
- =?us-ascii?Q?zqCFCtriibph3Q8Ac1dycfVKNEa2cNYfKS5nnfmgiyleJSW6Dgz+AqvGg9Pw?=
- =?us-ascii?Q?DKP5MBtT++1XLRkkyFqfe6QyIwlLTLQE2aQ+vdql1MWzf0ocvk5cR7+m6lqN?=
- =?us-ascii?Q?jpQgqueCfiUomPBBeDbSd2Z+dlewQqn7Z2DE7lOUpomyRK1yvTuq3UArK0Mu?=
- =?us-ascii?Q?K/hujtSqSt59s0oXotrFqiBIIynOeoGKSGCYeAmoLEPeU+INVAaoYQPiEwal?=
- =?us-ascii?Q?fJMrHvN6i/M6INs3p3UCyYpq6BGePFSIhHNYM4BTXfOdEvzsrFOSycbq7SuF?=
- =?us-ascii?Q?WIdAWw53C2Ap4R7sVlnaLAQNxBuOpNcEOksvxeCPrkb71XtdsnlbjMrQQG5p?=
- =?us-ascii?Q?v34/BCZBkQn9LXxQ7QbR7+BTOR8DeG4EoXS57KbQvPSaYrGQ4M0ey+5Zpbzw?=
- =?us-ascii?Q?UsaRs7uHhch3ccP6A2HBPQo1aTQczDIIzcFRKRqq1GJXx5yx7QPFyf2f2wDQ?=
- =?us-ascii?Q?5Cfiu8vPcs5FfwZTlFDbIucQ9j9geg4=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d9c7617c-fcfc-43bb-f996-08da11ae7422
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Mar 2022 18:03:39.8183
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: da+ogg3WIw3UN94TSf+CQwxP6gOhLQLghveK5diFBPAd5YW9NzdaMjEQjMdzhVQzTgifkqcrHPoakcrNniki4/TjVyZIxjAJJFvYqyOUgdQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR10MB3584
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10301 signatures=695566
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 spamscore=0
- adultscore=0 mlxlogscore=999 phishscore=0 suspectscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2203290101
-X-Proofpoint-GUID: txviblKk8WYhN5PkjGH82XyovIQ0Zw8w
-X-Proofpoint-ORIG-GUID: txviblKk8WYhN5PkjGH82XyovIQ0Zw8w
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000003ddd3c05db5f536b"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-For software iscsi, we do a session per host so there is no need to set
-the target's can_queue since its the same as the host one. It just results
-in extra atomic checks in the main IO path.
+--0000000000003ddd3c05db5f536b
+Content-Transfer-Encoding: 8bit
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Reviewed-by: Wu Bo <wubo40@huawei.com>
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
+This patch creates BSG device per controller during load and destroys
+during unload. BSG Device  nodes will be named as /dev/bsg/mpi3mrctl0,
+/dev/bsg/mpi3mrctl1...
+
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- drivers/scsi/iscsi_tcp.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/mpi3mr/Kconfig      |   1 +
+ drivers/scsi/mpi3mr/Makefile     |   1 +
+ drivers/scsi/mpi3mr/mpi3mr.h     |  15 +++++
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 105 +++++++++++++++++++++++++++++++
+ drivers/scsi/mpi3mr/mpi3mr_os.c  |   2 +
+ 5 files changed, 124 insertions(+)
+ create mode 100644 drivers/scsi/mpi3mr/mpi3mr_app.c
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index f50c00f2ef9b..69218c8830f6 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -1039,7 +1039,6 @@ static struct scsi_host_template iscsi_sw_tcp_sht = {
- 	.eh_target_reset_handler = iscsi_eh_recover_target,
- 	.dma_boundary		= PAGE_SIZE - 1,
- 	.slave_configure        = iscsi_sw_tcp_slave_configure,
--	.target_alloc		= iscsi_target_alloc,
- 	.proc_name		= "iscsi_tcp",
- 	.this_id		= -1,
- 	.track_queue_depth	= 1,
+diff --git a/drivers/scsi/mpi3mr/Kconfig b/drivers/scsi/mpi3mr/Kconfig
+index f7882375e74f..8997531940c2 100644
+--- a/drivers/scsi/mpi3mr/Kconfig
++++ b/drivers/scsi/mpi3mr/Kconfig
+@@ -3,5 +3,6 @@
+ config SCSI_MPI3MR
+ 	tristate "Broadcom MPI3 Storage Controller Device Driver"
+ 	depends on PCI && SCSI
++	select BLK_DEV_BSGLIB
+ 	help
+ 	MPI3 based Storage & RAID Controllers Driver.
+diff --git a/drivers/scsi/mpi3mr/Makefile b/drivers/scsi/mpi3mr/Makefile
+index 7c2063e04c81..f5cdbe48c150 100644
+--- a/drivers/scsi/mpi3mr/Makefile
++++ b/drivers/scsi/mpi3mr/Makefile
+@@ -2,3 +2,4 @@
+ obj-m += mpi3mr.o
+ mpi3mr-y +=  mpi3mr_os.o     \
+ 		mpi3mr_fw.o \
++		mpi3mr_app.o \
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 6672d907d75d..7d066b0dc56b 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -148,6 +148,7 @@ extern int prot_mask;
+ 
+ #define MPI3MR_DEFAULT_MDTS	(128 * 1024)
+ #define MPI3MR_DEFAULT_PGSZEXP         (12)
++
+ /* Command retry count definitions */
+ #define MPI3MR_DEV_RMHS_RETRY_COUNT 3
+ 
+@@ -175,6 +176,13 @@ extern int prot_mask;
+ /* MSI Index from Reply Queue Index */
+ #define REPLY_QUEUE_IDX_TO_MSIX_IDX(qidx, offset)	(qidx + offset)
+ 
++/*
++ * Maximum data transfer size definitions for management
++ * application commands
++ */
++#define MPI3MR_MAX_APP_XFER_SIZE	(1 * 1024 * 1024)
++#define MPI3MR_MAX_APP_XFER_SECTORS	2048
++
+ /* IOC State definitions */
+ enum mpi3mr_iocstate {
+ 	MRIOC_STATE_READY = 1,
+@@ -714,6 +722,8 @@ struct scmd_priv {
+  * @default_qcount: Total Default queues
+  * @active_poll_qcount: Currently active poll queue count
+  * @requested_poll_qcount: User requested poll queue count
++ * @bsg_dev: BSG device structure
++ * @bsg_queue: Request queue for BSG device
+  */
+ struct mpi3mr_ioc {
+ 	struct list_head list;
+@@ -854,6 +864,9 @@ struct mpi3mr_ioc {
+ 	u16 default_qcount;
+ 	u16 active_poll_qcount;
+ 	u16 requested_poll_qcount;
++
++	struct device *bsg_dev;
++	struct request_queue *bsg_queue;
+ };
+ 
+ /**
+@@ -962,5 +975,7 @@ void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code);
+ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+ 	struct op_reply_qinfo *op_reply_q);
+ int mpi3mr_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num);
++void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc);
++void mpi3mr_bsg_exit(struct mpi3mr_ioc *mrioc);
+ 
+ #endif /*MPI3MR_H_INCLUDED*/
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+new file mode 100644
+index 000000000000..1060ddd8fbc1
+--- /dev/null
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -0,0 +1,105 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Driver for Broadcom MPI3 Storage Controllers
++ *
++ * Copyright (C) 2017-2022 Broadcom Inc.
++ *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
++ *
++ */
++
++#include "mpi3mr.h"
++#include <linux/bsg-lib.h>
++
++/**
++ * mpi3mr_bsg_request - bsg request entry point
++ * @job: BSG job reference
++ *
++ * This is driver's entry point for bsg requests
++ *
++ * Return: 0 on success and proper error codes on failure
++ */
++int mpi3mr_bsg_request(struct bsg_job *job)
++{
++	return 0;
++}
++
++/**
++ * mpi3mr_bsg_exit - de-registration from bsg layer
++ *
++ * This will be called during driver unload and all
++ * bsg resources allocated during load will be freed.
++ *
++ * Return:Nothing
++ */
++void mpi3mr_bsg_exit(struct mpi3mr_ioc *mrioc)
++{
++	if (!mrioc->bsg_queue)
++		return;
++
++	bsg_remove_queue(mrioc->bsg_queue);
++	mrioc->bsg_queue = NULL;
++
++	device_del(mrioc->bsg_dev);
++	put_device(mrioc->bsg_dev);
++	kfree(mrioc->bsg_dev);
++}
++
++/**
++ * mpi3mr_bsg_node_release -release bsg device node
++ * @dev: bsg device node
++ *
++ * decrements bsg dev reference count
++ *
++ * Return:Nothing
++ */
++void mpi3mr_bsg_node_release(struct device *dev)
++{
++	put_device(dev);
++}
++
++/**
++ * mpi3mr_bsg_init -  registration with bsg layer
++ *
++ * This will be called during driver load and it will
++ * register driver with bsg layer
++ *
++ * Return:Nothing
++ */
++void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
++{
++	mrioc->bsg_dev = kzalloc(sizeof(struct device), GFP_KERNEL);
++	if (!mrioc->bsg_dev) {
++		ioc_err(mrioc, "bsg device mem allocation failed\n");
++		return;
++	}
++
++	device_initialize(mrioc->bsg_dev);
++	dev_set_name(mrioc->bsg_dev, "mpi3mrctl%u", mrioc->id);
++
++	if (device_add(mrioc->bsg_dev)) {
++		ioc_err(mrioc, "%s: bsg device add failed\n",
++		    dev_name(mrioc->bsg_dev));
++		goto err_device_add;
++	}
++
++	mrioc->bsg_dev->release = mpi3mr_bsg_node_release;
++
++	mrioc->bsg_queue = bsg_setup_queue(mrioc->bsg_dev, dev_name(mrioc->bsg_dev),
++			mpi3mr_bsg_request, NULL, 0);
++	if (!mrioc->bsg_queue) {
++		ioc_err(mrioc, "%s: bsg registration failed\n",
++		    dev_name(mrioc->bsg_dev));
++		goto err_setup_queue;
++	}
++
++	blk_queue_max_segment_size(mrioc->bsg_queue, MPI3MR_MAX_APP_XFER_SIZE);
++	blk_queue_max_hw_sectors(mrioc->bsg_queue, MPI3MR_MAX_APP_XFER_SECTORS);
++
++	return;
++
++err_setup_queue:
++	device_del(mrioc->bsg_dev);
++	put_device(mrioc->bsg_dev);
++err_device_add:
++	kfree(mrioc->bsg_dev);
++}
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index f7cd70a15ea6..faf14a5f9123 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -4345,6 +4345,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 
+ 	scsi_scan_host(shost);
++	mpi3mr_bsg_init(mrioc);
+ 	return retval;
+ 
+ addhost_failed:
+@@ -4389,6 +4390,7 @@ static void mpi3mr_remove(struct pci_dev *pdev)
+ 	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
+ 		ssleep(1);
+ 
++	mpi3mr_bsg_exit(mrioc);
+ 	mrioc->stop_drv_processing = 1;
+ 	mpi3mr_cleanup_fwevt_list(mrioc);
+ 	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
 -- 
-2.25.1
+2.27.0
 
+
+--0000000000003ddd3c05db5f536b
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+GmgWG68YahkDuVSTTt2beZdyMeDwq/KifJFo18EkhcL3e7rmDAh8SniUI/0o3HX6hrgdmUI1wSdz
+uIVL/m6Ok9mIl2U5kvguitOSC0bVaQPfNzlj+7PCKBECAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZc3VtaXQuc2F4ZW5hQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUNz+JSIXEXl2uQ4Utcnx7FnFi
+hhowDQYJKoZIhvcNAQELBQADggEBAL0HLbxgPSW4BFbbIMN3A/ifBg4Lzaph8ARJOnZpGQivo9jG
+kQOd95knQi9Lm95JlBAJZCqXXj7QS+dnE71tsFeHWcHNNxHrTSwn4Xi5EqaRjLC6g4IEPyZHWDrD
+zzJidgfwQvfZONkf4IXnnrIEFle+26/gPs2kOjCeLMo6XGkNC4HNla1ol1htToQaNN8974pCqwIC
+rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
+3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIL3DNziz43geacYP66UQyD4dDzvBLUpg
+qjN7qshNRO8oMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDMy
+OTE4MDkwOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQCAhkGIEd9Nt+UHfNja+tEoUVv4iOplGkAEKz9jlAruprm5vTwV
+lZhOiR2Zm1y2Uf6opAct+HtjAzyESgeZrPneUcMGa8L1a+g1yhgZ/Q90mVlW8X6YX1smdYoHq4zg
+R4x9nnQNRt10Fr/3Fxe4XehR4H1qvMJlX5+npbSCN03SGcaw9krHph4BCLAd9+0wncjyn0N7EV2U
++rpJb3hbdAnkbsX+uwfnYVwiv78TBpPFCdznTjgmCfPzmOudLHhs51sTOHd9a5PfjJ1ZZp8Llp2D
+0L1XB/Ox9U01dndO2UYdY9ErVuBDST8LcKXghyAdFL82TDSnjEVneFUspCDbATzS
+--0000000000003ddd3c05db5f536b--
