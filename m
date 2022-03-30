@@ -2,125 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C85C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Mar 2022 13:41:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48EC1C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Mar 2022 13:44:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346204AbiC3NnW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Mar 2022 09:43:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53946 "EHLO
+        id S1346031AbiC3NqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Mar 2022 09:46:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346287AbiC3NnK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Mar 2022 09:43:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AAC3A2253D
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Mar 2022 06:41:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1648647683;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=0pfhQO9+ySCIUtxxomjsvRcGynOcpOy3BREwqAMYCYg=;
-        b=N1LvRLSR320awZ+eAPVhxWKuiYuvBz5hCYKNtSgEzu1yc86kVW6iMOM+NfMjI9QDxqyEf5
-        xsGHHQYg98Wo4QOdJbYy4ph8u+stQkOF8HOzMZJg2o8Q8P4kDza0MctU0ysISwwGDDfzms
-        +mXZ927Zrf/qYH7Pv3Li8KfCwlA6DyI=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-30-kNYIdQ5CPQ6sD-4FDTX4Bw-1; Wed, 30 Mar 2022 09:41:20 -0400
-X-MC-Unique: kNYIdQ5CPQ6sD-4FDTX4Bw-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S1346264AbiC3Npg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Mar 2022 09:45:36 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CB9F52B1E
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Mar 2022 06:43:51 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 0F9D6805F6B;
-        Wed, 30 Mar 2022 13:41:19 +0000 (UTC)
-Received: from T590 (ovpn-8-29.pek2.redhat.com [10.72.8.29])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 546F540CF8F8;
-        Wed, 30 Mar 2022 13:41:09 +0000 (UTC)
-Date:   Wed, 30 Mar 2022 21:41:04 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     Andrea Righi <andrea.righi@canonical.com>,
-        Martin Wilck <martin.wilck@suse.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: filesystem corruption with "scsi: core: Reallocate device's
- budget map on queue depth change"
-Message-ID: <YkRd8O+kW/MRQJbw@T590>
-References: <YkQsumJ3lgGsagd2@arighi-desktop>
- <f7bacce8-b5e5-3ef1-e116-584c01533f69@huawei.com>
- <YkQ9KoKb+VK06zXi@arighi-desktop>
- <08717833-19bb-8aaa-4f24-2989a9f56cd3@huawei.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9A921612E6
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Mar 2022 13:43:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 0154FC3410F
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Mar 2022 13:43:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1648647830;
+        bh=FU4pfazs9cQrVTgwl52SymCwjwoSUkLRGiTD0JVkUL0=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=Fh26laR2leqTqUdPGopIMNPOSXVBQpZHU/qtplZ93dL9HiwI4Y6NFIs4kYWSHRfT6
+         iivvikXM/3Ylwbw6SUb8gx2kw6lAjSHIJzNK5fDIk6lwMBjdx5fi66by9pwkE9e7Ja
+         hZK0zNdgj/8uLOHmEVaKex9UoDIfEJFhO3QlKnhHHbDF8PSn96Q/0AGJTA20l0kQKf
+         Twltt4ola8z00Ih4KlJDK073TuOKkeVNAQzKXak3qTwf9hXyYO3QIqKJxS2DtenDnp
+         g7eV16fniRrcMyLuHkXXj2ozDP89plRAxm/u73PAFF41PVXHuTy6bWstfNix4SYE8/
+         1uZAwAXhkLALA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id D3137C05FD0; Wed, 30 Mar 2022 13:43:49 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 215691] mpt3sas "SMP command sent to the expander has timed
+ out" cause halt
+Date:   Wed, 30 Mar 2022 13:43:49 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: regressions@leemhuis.info
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-215691-11613-k6yafjQFRs@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215691-11613@https.bugzilla.kernel.org/>
+References: <bug-215691-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <08717833-19bb-8aaa-4f24-2989a9f56cd3@huawei.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.11.54.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 30, 2022 at 01:59:43PM +0100, John Garry wrote:
-> On 30/03/2022 12:21, Andrea Righi wrote:
-> > On Wed, Mar 30, 2022 at 11:38:02AM +0100, John Garry wrote:
-> > > On 30/03/2022 11:11, Andrea Righi wrote:
-> > > > Hello,
-> > > > 
-> > > > after this commit I'm experiencing some filesystem corruptions at boot
-> > > > on a power9 box with an aacraid controller.
-> > > > 
-> > > > At the moment I'm running a 5.15.30 kernel; when the filesystem is
-> > > > mounted at boot I see the following errors in the console:
-> 
-> About "scsi: core: Reallocate device's budget map on queue depth change"
-> being added to a stable kernel, I am not sure if this was really a fix or
-> just a memory optimisation.
-> 
-> > > > 
-> > > > Begin: Will now check root file system ... fsck from util-linux 2.36.1
-> > > > [/usr/sbin/fsck.ext4 (1) -- /dev/sda2] fsck.ext4 -a -C0 /dev/sda2
-> > > > root: clean, 99646/122101760 files, 11187342/488376336 blocks
-> > > > done.
-> > > > [    4.636613] sd 0:2:0:0: [sda] tag#257 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
-> > > > [    4.636655] sd 0:2:0:0: [sda] tag#257 CDB: Read(10) 28 00 00 00 4c 10 00 00 08 00
-> > > > [    4.636689] blk_update_request: I/O error, dev sda, sector 19472 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > > > [    4.636734] sd 0:2:0:0: [sda] tag#258 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
-> > > > [    4.636772] sd 0:2:0:0: [sda] tag#258 CDB: Read(10) 28 00 00 00 4c 18 00 00 08 00
-> > > > [    4.636796] blk_update_request: I/O error, dev sda, sector 19480 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > > > [    4.636840] sd 0:2:0:0: [sda] tag#260 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
-> > > > [    4.636877] sd 0:2:0:0: [sda] tag#260 CDB: Read(10) 28 00 00 00 4c 28 00 00 08 00
-> > > > [    4.636901] blk_update_request: I/O error, dev sda, sector 19496 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > > > [    4.636944] sd 0:2:0:0: [sda] tag#259 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
-> > > > [    4.636971] sd 0:2:0:0: [sda] tag#259 CDB: Read(10) 28 00 00 00 4c 20 00 00 08 00
-> > > > [    4.637005] blk_update_request: I/O error, dev sda, sector 19488 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > > > [    4.637049] sd 0:2:0:0: [sda] tag#262 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
-> > > > [    4.637085] sd 0:2:0:0: [sda] tag#262 CDB: Read(10) 28 00 00 00 4c 38 00 00 08 00
-> > > > [    4.637118] blk_update_request: I/O error, dev sda, sector 19512 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > > > [    4.637161] sd 0:2:0:0: [sda] tag#264 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
-> > > > [    4.637197] sd 0:2:0:0: [sda] tag#264 CDB: Read(10) 28 00 00 00 4c 48 00 00 08 00
-> > > > [    4.637221] blk_update_request: I/O error, dev sda, sector 19528 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > > > [    4.637270] sd 0:2:0:0: [sda] tag#284 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
-> > > > [    4.637306] sd 0:2:0:0: [sda] tag#284 CDB: Read(10) 28 00 00 00 4c e8 00 00 08 00
-> > > > [    4.637332] blk_update_request: I/O error, dev sda, sector 19688 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > > > [    4.637375] sd 0:2:0:0: [sda] tag#286 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
-> > > > [    4.637411] sd 0:2:0:0: [sda] tag#286 CDB: Read(10) 28 00 00 00 4c f8 00 00 08 00
-> > > > [    4.637444] blk_update_request: I/O error, dev sda, sector 19704 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > > > [    4.637481] blk_update_request: I/O error, dev sda, sector 19664 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > > > [    4.637485] sd 0:2:0:0: [sda] tag#282 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
-> > > > [    4.637487] sd 0:2:0:0: [sda] tag#287 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
-> > > > [    4.637491] sd 0:2:0:0: [sda] tag#287 CDB: Read(10) 28 00 00 00 4d 00 00 00 08 00
-> > > > [    4.637491] sd 0:2:0:0: [sda] tag#282 CDB: Read(10) 28 00 00 00 4c d8 00 00 08 00
-> > > > [    4.637494] blk_update_request: I/O error, dev sda, sector 19672 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> > > > [    4.747771] EXT4-fs (sda2): mounted filesystem with ordered data mode. Opts: (null). Quota mode: none.
-> > > > 
-> 
-> We need to find where that memory corruption is coming from. Maybe the root
-> is that too many commands are being sent to the disk. Ming?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215691
 
-Yeah, looks aacraid limits max queue depth as 256, see aac_change_queue_depth().
+The Linux kernel's regression tracker (Thorsten Leemhuis) (regressions@leem=
+huis.info) changed:
 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |regressions@leemhuis.info
 
-Thanks, 
-Ming
+--- Comment #6 from The Linux kernel's regression tracker (Thorsten Leemhui=
+s) (regressions@leemhuis.info) ---
+(In reply to Badalian Slava from comment #4)
+> Added another crashs added. Last try on 5.16.16. Rollback to 5.15.4 - few
+> days work ok
 
+To understand this properly a quick question from a bystander: the problem =
+you
+report is new in 5.16.y and 5.15.y work fine?
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are the assignee for the bug.=
