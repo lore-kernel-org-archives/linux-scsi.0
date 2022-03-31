@@ -2,33 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A66AEC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Mar 2022 09:13:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C578C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Mar 2022 10:13:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233696AbiCaJPg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Mar 2022 05:15:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40188 "EHLO
+        id S234543AbiCaKO4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Mar 2022 06:14:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233672AbiCaJPX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2022 05:15:23 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A04FEB4A;
-        Thu, 31 Mar 2022 02:13:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=WV4zzGwlX5tfhXTvGhAbB3PhzrHBBTp7BcxlK6NdwK8=; b=P/bxrCTI4drj48NjuxThG29VxH
-        ebHq/Gm9DUghweh+goB7YczQXWSsi1Gz6QnHhDS97L5Q+7HYS0yHR4EqQ+nYgReUmcnPOowqeZQmO
-        iqM+qrBpYMI7pSXI1iGiGYJ05m5h7AlHaU9thnZ3QykVYYQrri+ON9biDdtmdsnvieN0+n3SXbauk
-        zsnNQFx7DqNw+VCwny2yYxz6IhQihDCKXvTvCg3nrJ9BjrdNf0BKkJfrZHwrsqnTjVmiVOqVkZTxh
-        0PNhWQYqVtg3UYqSjzK/Lge+PRWnq+2fj9CKvesuu28DFvt3ni3Iu9+eRGbFxmsjY9E0/EUR8+3XD
-        OU6cOWUA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nZqrv-001R3U-17; Thu, 31 Mar 2022 09:13:27 +0000
-Date:   Thu, 31 Mar 2022 02:13:27 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+        with ESMTP id S234528AbiCaKOy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2022 06:14:54 -0400
+Received: from mail-wm1-x329.google.com (mail-wm1-x329.google.com [IPv6:2a00:1450:4864:20::329])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C6E81EECC;
+        Thu, 31 Mar 2022 03:13:07 -0700 (PDT)
+Received: by mail-wm1-x329.google.com with SMTP id p12-20020a05600c430c00b0038cbdf52227so1700011wme.2;
+        Thu, 31 Mar 2022 03:13:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=dKkMeptSr36K5MwCeZt80OcWRzRb8UQj5WuimYmARbo=;
+        b=c10QXVAA0Dxut1I4GVKnE6PpwlNm0nURglIWMhhy1wcvOUIEJmH6LQPMS4+/m9NsM+
+         O+8PZ2Py09DfMoTm4qXKMZ/tjQhrkBlfiF/ErHDRMUPPnlmZ/eSzuTG1V6v8BG/VyEhd
+         z57tNNUuecaGNY88UTnbsv1gh3F/ZntaLP47gacjslesFqdl6wIwkC5usWzpYrWJAPI8
+         my1EDtJOn5iNc2D3YdzLjXzjGZxKnOCPrzRIDGC92xb/LA8g+Kuz0zIOvN588l7AlEUD
+         V99MVKVsr3zjmDomQt3p2uMAIN+pXCkggSQPjX/1JXBwj/CUVbHRB44ztrJptjto2MxY
+         HroA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=dKkMeptSr36K5MwCeZt80OcWRzRb8UQj5WuimYmARbo=;
+        b=ckX1hQeMnVfQX6qGf3AHpRyLLh+Ef3O/dP+FuclM2W1Ube60CDMJqWcqwwAQHMFIcQ
+         fBWJmyijpQdOwlEYgBaxXpJViwGd7aRoFJPiPy/Hsn8Iau+PFovgdRHXgBl/bRvwoB3E
+         SjlFfTE+B3/wRxBgyn5bL2q1bLEV4bQbpGpabnITf0f40yuRKybfJlotM/jh4j4FhWA+
+         1n9VgEIbIf2s+wNBG9oYYuekfQya8r/axS6iysvgUJUK5qcLH9vvP0kpTBV4sVr0lx3X
+         Bd5pb2F4I5Xg6xL1SzVOM+jd5mOpuMpEmRh8MVkRB++qJzog/znJaFLCiboOKI+9fig7
+         x2qA==
+X-Gm-Message-State: AOAM530KrNp0/RzIq5QQojWAgfEMHDhbhF7X47iobqs3hb6uozl8foIt
+        KHEWyILcg6ltFGmQR2EVDo7c2xbyOtE=
+X-Google-Smtp-Source: ABdhPJw65pMOd/a/TkP+RPpEPUTYbErdPZV0+1TQOfGoel/Y4yrLicjLv1Mqe6jtdNx2Z1YhYacByA==
+X-Received: by 2002:a05:600c:6001:b0:38c:6c43:4427 with SMTP id az1-20020a05600c600100b0038c6c434427mr4036846wmb.186.1648721585268;
+        Thu, 31 Mar 2022 03:13:05 -0700 (PDT)
+Received: from leap.localnet (host-95-249-145-232.retail.telecomitalia.it. [95.249.145.232])
+        by smtp.gmail.com with ESMTPSA id t9-20020a05600c198900b0038cb8b38f9fsm7163875wmq.21.2022.03.31.03.13.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 31 Mar 2022 03:13:03 -0700 (PDT)
+From:   "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+To:     Christoph Hellwig <hch@infradead.org>
 Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         Christoph Hellwig <hch@infradead.org>,
         Wenchao Hao <haowenchao@huawei.com>, axboe@kernel.dk,
@@ -38,52 +58,36 @@ Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         syzbot+f08c77040fa163a75a46@syzkaller.appspotmail.com,
         syzkaller-bugs@googlegroups.com, linfeilong@huawei.com
 Subject: Re: [PATCH] scsi: sd: call device_del() if device_add_disk() fails
-Message-ID: <YkVwt4s+K0haRpbr@infradead.org>
-References: <20220329154948.10350-1-fmdefrancesco@gmail.com>
- <20220331054156.GI3293@kadam>
- <YkU/6KB+0fPU5Hie@infradead.org>
- <10056508.nUPlyArG6x@leap>
+Date:   Thu, 31 Mar 2022 12:13:01 +0200
+Message-ID: <1722561.VLH7GnMWUR@leap>
+In-Reply-To: <YkVwt4s+K0haRpbr@infradead.org>
+References: <20220329154948.10350-1-fmdefrancesco@gmail.com> <10056508.nUPlyArG6x@leap> <YkVwt4s+K0haRpbr@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <10056508.nUPlyArG6x@leap>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 31, 2022 at 11:07:45AM +0200, Fabio M. De Francesco wrote:
-> If I don't misunderstand what you wrote, I think you mean something like
-> the following changes:
+On gioved? 31 marzo 2022 11:13:27 CEST Christoph Hellwig wrote:
 > 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index a390679cf458..7a000a9a9dbe 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3431,7 +3431,7 @@ static int sd_probe(struct device *dev)
->         sdkp->disk_dev.class = &sd_disk_class;
->         dev_set_name(&sdkp->disk_dev, "%s", dev_name(dev));
->  
-> -       error = device_add(&sdkp->disk_dev);
-> +       error = device_register(&sdkp->disk_dev);
+> .. and then the cleanup patch would need the same logic.  But thinking
+> about it I don't think we actually can do that due to the split
+> unregistration.  So I take my suggestion back.
+> 
 
-The device_initialize call about also need to go.
+If I understand correctly, after thinking about it some more, you decided 
+to withdraw your own suggestion.
 
->         if (error) {
->                 put_device(&sdkp->disk_dev);
+Dan had already approved this patch.
 
-.. and this put_device
+Therefore, I'll leave the patch as it is now and wait for someone to place
+a "Reviewed-by" tag and Maintainers to merge (if, in the meantime, nobody 
+else require further changes).
 
->                 goto out;
-> @@ -3474,7 +3474,7 @@ static int sd_probe(struct device *dev)
->  
->         error = device_add_disk(dev, gd, NULL);
->         if (error) {
-> -               put_device(&sdkp->disk_dev);
-> +               device_unregister(&sdkp->disk_dev);
->                 goto out;
->         }
+Thanks,
 
-.. and then the cleanup patch would need the same logic.  But thinking
-about it I don't think we actually can do that due to the split
-unregistration.  So I take my suggestion back.
+Fabio 
+
+
+
