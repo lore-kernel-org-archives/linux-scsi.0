@@ -2,151 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EC03C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Mar 2022 22:30:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AD56C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Mar 2022 01:25:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351646AbiC3Wc2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Mar 2022 18:32:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41244 "EHLO
+        id S1345417AbiCaB1j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Mar 2022 21:27:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245658AbiC3Wc0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Mar 2022 18:32:26 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED87E5BD33
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Mar 2022 15:30:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1648679440; x=1680215440;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=j5/+7NjVRG9pSqEJs+3YZQ+s6jwWs0SKfwoc0psMQ+M=;
-  b=O7jwTuX+G29K/0FKPf6j4yUW5hEuoYHjuNpLk6MzjUg7xGbia+XHPUsQ
-   aZlHHpbqX5IlZAShU4jFQdc6yzRqAVLrZTK8ek1ezQxncW6NXwjGVkOcD
-   X1TYpj2VkMDSHhf2wZZKlaaPlSGz+EjVCalFoywHN5RpZO9XTougDWN7z
-   6RjxcC5WzL0Mi5hpcWsQl/5VBHzHZGsRG8mOY+gPZJbBbRJjshXPX/wd0
-   xawKldrV/tJ+0os+/KO/X99QA6PB7F6C9bEPMp+eVlYOcYRVxiiJgy6R2
-   SqP1UQPzUFR4LXQLygA0nCssWW1xR6MjaPJzi9RePYT6mYTvHcIKv5NEn
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.90,223,1643644800"; 
-   d="scan'208";a="308631223"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 31 Mar 2022 06:30:39 +0800
-IronPort-SDR: 44HuNhMM+MMyP0lrDlH42bOBVM7uxRjrQH6fybaiQQCz9Xpf7N1ov7R1n6qjlqYNw4BOL/XyUW
- wMrg3fjKvpj+hfnjFS+Saxqt1YnIayky2yNFpC+S+G723cak7BgtR12oig+WplGOmNbv1g3jwI
- Dwh/4WURTQG+JaHE2fecHZCHO3ZP9uPzkHL+oNrKXcbCke9agAD0m88V1wW+bhEJ28N2uB14yX
- s86Wxm5sCCXqDFshMmL2IpamOtq9G1AAT5yC8pLuXuX2FoYam+SYEeVlHPLDq6gLZr+gzpBEE/
- h8myeCG1ARC6Clg7XHlyoopv
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Mar 2022 15:01:29 -0700
-IronPort-SDR: rD8ZU6SZfpNntnV8WGtQHtyofBpI2kWTRvFixqkaDtmz8pA6A7S/O6CHlSCQt7C8gmp2dsNpts
- 6w2TKt0xKDb30MmilzboGBV3iRlVLjdSW8laOYVWTyecK37Xia4/f2az3LMpR/IxuIG6acXOG/
- SF7unaO+xTLEaSzFs32t3284BVlWg0JRXet+lURlcjtLNn5M3ZyCWra4M4biOWnihqJITuo1iS
- uuvqrQzCxm80frpDgSWMPXLJ1go4u/LtIjyQ4UhkoA8Ezbs5yRP/ySV65qyapDKNvSq8NyNSaA
- c+Q=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Mar 2022 15:30:40 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KTLjq1Crvz1SVny
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Mar 2022 15:30:39 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1648679438; x=1651271439; bh=j5/+7NjVRG9pSqEJs+3YZQ+s6jwWs0SKfwo
-        c0psMQ+M=; b=qhNRTS8qSTMNHIgXO1kWagzYlKg+EvQ/crJuOZAc01Bth/0UZ8t
-        kvEZM1QOmWFrUMR9f7kyRvoUyLfgD1sQgcCu17/+LtceoLDZ0ngeypnahSiHT/2X
-        iJShARZdKwzs4CwqPCp47LgMNAsTzQcb9uTl4p+NNpkSOn6SJjFttd1c2dlsY4G5
-        TZxv1MiVK9nX8QIq5+ntmhYwVGtI1FhxxlSEXTrnmUlfs0JB4xWKYksYT3pvBY29
-        zyARL9dDOFnonTs9b+xdyRQekwORLdRauRD0NGIoh6XmKyCj83hj4fS15l8lzKUk
-        zGxLYcETMgswy8+cEPk30l2RTzJYtFlxAQg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id odeF3wjJORjw for <linux-scsi@vger.kernel.org>;
-        Wed, 30 Mar 2022 15:30:38 -0700 (PDT)
-Received: from [10.225.163.121] (unknown [10.225.163.121])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KTLjm5HCsz1Rvlx;
-        Wed, 30 Mar 2022 15:30:36 -0700 (PDT)
-Message-ID: <ba090f1b-a767-46a1-5728-82d9c587ef3c@opensource.wdc.com>
-Date:   Thu, 31 Mar 2022 07:30:35 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: filesystem corruption with "scsi: core: Reallocate device's
- budget map on queue depth change"
-Content-Language: en-US
-To:     Ming Lei <ming.lei@redhat.com>,
-        James Bottomley <jejb@linux.ibm.com>
-Cc:     John Garry <john.garry@huawei.com>,
-        Andrea Righi <andrea.righi@canonical.com>,
-        Martin Wilck <martin.wilck@suse.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <YkQsumJ3lgGsagd2@arighi-desktop>
- <f7bacce8-b5e5-3ef1-e116-584c01533f69@huawei.com>
- <YkQ9KoKb+VK06zXi@arighi-desktop>
- <08717833-19bb-8aaa-4f24-2989a9f56cd3@huawei.com>
- <263108383b1c01cf9237ff2fcd2e97a482eff83e.camel@linux.ibm.com>
- <YkRfrjgNpD+S2WpN@T590>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <YkRfrjgNpD+S2WpN@T590>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S230076AbiCaB1j (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Mar 2022 21:27:39 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E76143380
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Mar 2022 18:25:52 -0700 (PDT)
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220331012549epoutp03d4c2672c53c818afd172e7c4d056db60~hUsYTbJAa1735017350epoutp03X
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2022 01:25:49 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220331012549epoutp03d4c2672c53c818afd172e7c4d056db60~hUsYTbJAa1735017350epoutp03X
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1648689949;
+        bh=guf5a+UyXn8Tu3/RRFV+ifGaLBDshbdYgxhEy4V5WMs=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=O92wQugQJTzhIzLLfhgw58ER+ayDZpUwilhzZs9ChZVb7Ma7D9bUEBV1k5auIo7Gx
+         2teX5JC0jiQUjuptEZs4XdjYmxjOEq18d9BglnlBvcwOA3/uSMTd/Hz/Mrqtrvj/13
+         uBBfOgo2UXOZ/Cl6eMdYzuXExURjYR9+E4XjvpBc=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20220331012548epcas2p374a6d028528c3433ed9716d29a31e4cd~hUsXzvkyh0405704057epcas2p3F;
+        Thu, 31 Mar 2022 01:25:48 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.36.91]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4KTQbl6kMrz4x9QP; Thu, 31 Mar
+        2022 01:25:39 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        53.28.16040.31305426; Thu, 31 Mar 2022 10:25:39 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
+        20220331012539epcas2p180d804d9562b6e0fb968ffd181d64605~hUsO49YM_0964809648epcas2p1G;
+        Thu, 31 Mar 2022 01:25:39 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220331012539epsmtrp2ab4320fb0eb6d74d4d5a2ff101393734~hUsO39NMN3063230632epsmtrp2R;
+        Thu, 31 Mar 2022 01:25:39 +0000 (GMT)
+X-AuditID: b6c32a46-bffff70000023ea8-d1-62450313f134
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        38.13.24342.21305426; Thu, 31 Mar 2022 10:25:39 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20220331012538epsmtip1e344a08d3833708f9f1b61e32c5f6d7e~hUsOqhHc10410904109epsmtip1w;
+        Thu, 31 Mar 2022 01:25:38 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, adrian.hunter@intel.com, sc.suh@samsung.com,
+        hy50.seo@samsung.com, sh425.lee@samsung.com,
+        bhoon95.kim@samsung.com, vkumar.1997@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [RESEND PATCH v3] scsi: ufs: exclude UECxx from SFR dump list
+Date:   Thu, 31 Mar 2022 10:24:05 +0900
+Message-Id: <1648689845-33521-1-git-send-email-kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmphk+LIzCtJLcpLzFFi42LZdljTVFeY2TXJ4Pc2NYuTT9awWTyYt43N
+        4uXPq2wWBx92slh8XfqM1eLT+mWsFqsXP2CxWHRjG5PFzS1HWSwu75rDZtF9fQebxfLj/5gs
+        uu7eYLRY+u8ti8Wd+x9ZHPg9Lvf1Mnks3vOSyWPCogOMHt/Xd7B5fHx6i8Wjb8sqRo/Pm+Q8
+        2g90MwVwRGXbZKQmpqQWKaTmJeenZOal2yp5B8c7x5uaGRjqGlpamCsp5CXmptoqufgE6Lpl
+        5gBdr6RQlphTChQKSCwuVtK3synKLy1JVcjILy6xVUotSMkpMC/QK07MLS7NS9fLSy2xMjQw
+        MDIFKkzIzpg0eyV7QRtPxd8b89gaGM9wdjFyckgImEh8WnWcsYuRi0NIYAejxNxfq6GcT4wS
+        725cZYVwvjFKnP/QzArT8uF3GztEYi+jRNf/R1AtPxglPk68yQxSxSagKfH05lQmEFtE4DqT
+        xLztGSA2s4C6xK4JJ8DiwgJuEhvmNLOB2CwCqhItf7uBNnBw8Aq4SqxcWQCxTE7i5rlOZpD5
+        EgKdHBI9DZNZIBIuEodnP2CDsIUlXh3fwg5hS0l8freXDWSOhECxxKZ98hC9DYwSSz5thuo1
+        lpj1rJ0RpIYZ6M71u/QhypUljtxigbiST6Lj8F92iDCvREebEESjssSvSZMZIWxJiZk370At
+        9ZD4OfE02EAhgViJd3NZJjDKzkIYv4CRcRWjWGpBcW56arFRgRE8ipLzczcxgpOjltsOxilv
+        P+gdYmTiYDzEKMHBrCTC+/Ggc5IQb0piZVVqUX58UWlOavEhRlNgYE1klhJNzgem57ySeEMT
+        SwMTMzNDcyNTA3MlcV6vlA2JQgLpiSWp2ampBalFMH1MHJxSDUzOllcWrNk6ob1+zrspFwOK
+        IzIM1iacjs/3ufHxoLVZpcMq9Um1iVaXnghKz09pjDmi5jl7s7Iv68ST3e+mv9iqP33Zfh6f
+        I46a7vt2RL28NIHr99elQQyf6188DlCNfTJRN+jP0kD74I+83+6973uauDnk69f4A+m6dptv
+        n9RMOL1Wrd7uzon5frM+TN0c2va/S2vHFzfhWbFMFpFWQstO/trC2X/U8V3hWuZ71gfv+ugI
+        3Er7Jbj8cJrOBMmG3U2fZnNt2Wqw4z3Tt5Inzxmme6U/l7+m2OJ/1IPxmILUhiLL/h3R6zxc
+        I0RE9rFdnZXMxHjmx1Xh6Xs/XS3Ym+fhdqYnfxLfxINeJ9qNs3LuKLEUZyQaajEXFScCAFKH
+        zpIXBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGLMWRmVeSWpSXmKPExsWy7bCSnK4ws2uSwcU5zBYnn6xhs3gwbxub
+        xcufV9ksDj7sZLH4uvQZq8Wn9ctYLVYvfsBisejGNiaLm1uOslhc3jWHzaL7+g42i+XH/zFZ
+        dN29wWix9N9bFos79z+yOPB7XO7rZfJYvOclk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5
+        tB/oZgrgiOKySUnNySxLLdK3S+DKmDR7JXtBG0/F3xvz2BoYz3B2MXJySAiYSHz43cbexcjF
+        ISSwm1Fi8v8fzBAJSYkTO58zQtjCEvdbjrBCFH1jlPiz+iMbSIJNQFPi6c2pTCAJEYGXTBIv
+        5qwBSzALqEvsmnCCCcQWFnCT2DCnGSzOIqAq0fK3G2gSBwevgKvEypUFEAvkJG6e62SewMiz
+        gJFhFaNkakFxbnpusWGBYV5quV5xYm5xaV66XnJ+7iZGcNBqae5g3L7qg94hRiYOxkOMEhzM
+        SiK8Hw86JwnxpiRWVqUW5ccXleakFh9ilOZgURLnvdB1Ml5IID2xJDU7NbUgtQgmy8TBKdXA
+        VHP2ON/rTQKXWf9IHu9VVT7kJO0p2H9zpfMW2/0MTM1XmNZb/7nLmfyCrbK06jxv8lrNrKuX
+        Zv+f/3al5bznX3d0P3tke7bs29Rnh47d3xr7ZcXVDcom51bWCt02Y9K+0fZbZf/DguI9sVN2
+        MLd+YFt/caXFgbfHFlUIeQX5L97M/OLslIdX3x+pf7p70qytDydleZ0062PM23Tc84/FB48r
+        e69kc7c/+zhv3Yes2UInwtQOrln5ol8442P2ZCs1H8Fgu3tXt1z85XvLZ/N7seVpf/KftT37
+        qPFm5zbFOUy3kuq7r3xXYb+28eSm2dvX1D3/+O5JjeClj+8szs3s0TfkuLR7qc/ZWstHHgtL
+        BbYw7FBiKc5INNRiLipOBAD6ibSAyQIAAA==
+X-CMS-MailID: 20220331012539epcas2p180d804d9562b6e0fb968ffd181d64605
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220331012539epcas2p180d804d9562b6e0fb968ffd181d64605
+References: <CGME20220331012539epcas2p180d804d9562b6e0fb968ffd181d64605@epcas2p1.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/30/22 22:48, Ming Lei wrote:
-> On Wed, Mar 30, 2022 at 09:31:35AM -0400, James Bottomley wrote:
->> On Wed, 2022-03-30 at 13:59 +0100, John Garry wrote:
->>> On 30/03/2022 12:21, Andrea Righi wrote:
->>>> On Wed, Mar 30, 2022 at 11:38:02AM +0100, John Garry wrote:
->>>>> On 30/03/2022 11:11, Andrea Righi wrote:
->>>>>> Hello,
->>>>>>
->>>>>> after this commit I'm experiencing some filesystem corruptions
->>>>>> at boot on a power9 box with an aacraid controller.
->>>>>>
->>>>>> At the moment I'm running a 5.15.30 kernel; when the filesystem
->>>>>> is mounted at boot I see the following errors in the console:
->>>
->>> About "scsi: core: Reallocate device's budget map on queue depth
->>> change" being added to a stable kernel, I am not sure if this was
->>> really a fix  or just a memory optimisation.
->>
->> I can see how it becomes the problem: it frees and allocates a new
->> bitmap across a queue freeze, but bits in the old one might still be in
->> use.  This isn't a problem except when they return and we now possibly
->> see a tag greater than we think we can allocate coming back. 
->> Presumably we don't check this and we end up doing a write to
->> unallocated memory.
->>
->> I think if you want to reallocate on queue depth reduction, you might
->> have to drain the queue as well as freeze it.
-> 
-> After queue is frozen, there can't be any in-flight request/scsi
-> command, so the sbitmap is zeroed at that time, and safe to reallocate.
-> 
-> The problem is aacraid specific, since the driver has hard limit
-> of 256 queue depth, see aac_change_queue_depth().
+v2 -> v3: add fixes
+v1 -> v2: does skipping only for zero offset
 
-256 is the scsi hard limit per device... Any SAS drive has the same limit
-by default since there is no way to know the max queue depth of a scsi
-disk. So what is special about aacraid ?
+These are ROC type things that means their values
+are cleared when the SFRs are read.
+They are usually read in ISR when an UIC error occur.
+Thus, their values would be zero at many cases. And
+there might be a little bit risky when they are read to
+be cleared before the ISR reads them, e.g. the case that
+a command is timed-out, ufshcd_dump_regs is called in
+ufshcd_abort and an UIC error occurs at the nearly
+same time. In this case, ISR will be called but UFS error handler
+will not be scheduled.
+This patch is to make UFS driver not read those SFRs in the
+dump function, i.e. ufshcd_dump_regs.
 
-> 
-> 
-> Thanks,
-> Ming
-> 
+Fixes: d67247566450 ("scsi: ufs: Use explicit access size in ufshcd_dump_regs")
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 460d2b4..7f2a1ed 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -115,8 +115,13 @@ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+ 	if (!regs)
+ 		return -ENOMEM;
+ 
+-	for (pos = 0; pos < len; pos += 4)
++	for (pos = 0; pos < len; pos += 4) {
++		if (offset == 0 &&
++		    pos >= REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER &&
++		    pos <= REG_UIC_ERROR_CODE_DME)
++			continue;
+ 		regs[pos / 4] = ufshcd_readl(hba, offset + pos);
++	}
+ 
+ 	ufshcd_hex_dump(prefix, regs, len);
+ 	kfree(regs);
 -- 
-Damien Le Moal
-Western Digital Research
+2.7.4
+
