@@ -2,52 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB58EC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Mar 2022 22:38:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D69B4C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Mar 2022 22:38:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242614AbiCaWj6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Mar 2022 18:39:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34832 "EHLO
+        id S242626AbiCaWkA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Mar 2022 18:40:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242611AbiCaWjy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2022 18:39:54 -0400
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAE112013FE
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2022 15:38:06 -0700 (PDT)
-Received: by mail-pf1-f169.google.com with SMTP id x31so909317pfh.9
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2022 15:38:06 -0700 (PDT)
+        with ESMTP id S242600AbiCaWj4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2022 18:39:56 -0400
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0ADE72013F8
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2022 15:38:09 -0700 (PDT)
+Received: by mail-pl1-f181.google.com with SMTP id y6so899545plg.2
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2022 15:38:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=xG0p7SuhY9zlTkA4dq7XtGhKxBi5xwr7Gs908aJhbY0=;
-        b=GmTpNn7j443rWTaBrn2a+Xm8Mf57rugyql/sfQKQl41BnT++TTrkQWKpwtBkgTqIpx
-         gXC0S9lJV2Y6X2zLTQCnh/ymk8VQzQp28U3pzZN/o/kX9RTJLmtt05uLjQGP9u/Qyp72
-         jGLm02c9aDhwP9xh3QachIhVEkb9a1SD7fT4QIrQHgXoteo5Vse17VXjXpzAc8gpwJIT
-         mfnQAi1ViKm2GxmpgAojEGaa+8MUoMrjXZn3xqaRP+XG5HRvQ0FANlGRoM19Nt/IZe+E
-         cGPSeOTj4LQRiyiBxTPUS6a65DzPC5fQioTuB6hLIAjw64DH15g79YpBfsYKHRKAUuII
-         guTQ==
-X-Gm-Message-State: AOAM532tcX9NAi7etLLDCX8hwo2BTrEKoARCM+zZpOHs2Tis9j8Z1uA1
-        Vhfot9wdffQvoXN1h3nZ5ACzpvN1JEk=
-X-Google-Smtp-Source: ABdhPJxuERGHz2RKZOggLr0rAsVDqJNy1HTJhLuSsXzIKHP1+GPfm1WPNGLdbDJcLoLY1+uHFuw6fA==
-X-Received: by 2002:a63:e617:0:b0:382:9ad9:d829 with SMTP id g23-20020a63e617000000b003829ad9d829mr12471144pgh.553.1648766286166;
-        Thu, 31 Mar 2022 15:38:06 -0700 (PDT)
+        bh=5FfWqSXzRy/oQYvE7ypEao+2Y/8rPzLEyN3EEy6t1/o=;
+        b=h8BUDtW2Tn0hl7hWyVypWTTH0sY07nUhPw+4YNMUJgcLA7YHvJrFYWH+s0txovZr47
+         6OLubsHB689lIYya36Ih1BjaB3JMZLnEpMQLal6nWGiJU9Lr4zuqeca9HSWTBK1hIeLb
+         lU3FOpFK034eUZ4Q57q6vXAk8C04QMk7yLGnMD8TXg1msSn3+X5FHq5Pq5xF4BbmAbEe
+         mfk47PJMCXdRhLa7gNN5pXZiRyJYTQFcK5X4f16YpZ1wYfRXIXoS3s3RSKiz2oMIfN2j
+         GW5AkiJGtoKKdRJufz8zruiQ/AMn0EjcWYsvsV2tXuSM3ctO5p0hDn6V3XxT23j0POC7
+         KeGA==
+X-Gm-Message-State: AOAM531a+BHGZzxoGDqrkR4v9rQPbOgycBHMVQ9l4P5JLt5JHJ/hrzg8
+        Tdh/44pvlCPyp8cmcwSPhg4eY4Ks2sY=
+X-Google-Smtp-Source: ABdhPJzYrmlpn8xqbZ34aN22nC2S6EbmxWzYpyYqimF7YLDWx/iwy5NQ4lVrwgk0CrcT52VmPl5nig==
+X-Received: by 2002:a17:902:8306:b0:14f:a386:6a44 with SMTP id bd6-20020a170902830600b0014fa3866a44mr7358395plb.140.1648766288469;
+        Thu, 31 Mar 2022 15:38:08 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:6375:fa54:efe8:6c8f])
-        by smtp.gmail.com with ESMTPSA id p3-20020a056a000b4300b004faee36ea56sm483481pfo.155.2022.03.31.15.38.04
+        by smtp.gmail.com with ESMTPSA id p3-20020a056a000b4300b004faee36ea56sm483481pfo.155.2022.03.31.15.38.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 31 Mar 2022 15:38:05 -0700 (PDT)
+        Thu, 31 Mar 2022 15:38:07 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Dov Levenglick <dovl@codeaurora.org>
-Subject: [PATCH 22/29] scsi: ufs: qcom: Fix ufs_qcom_resume()
-Date:   Thu, 31 Mar 2022 15:34:17 -0700
-Message-Id: <20220331223424.1054715-23-bvanassche@acm.org>
+        Matthias Brugger <matthias.bgg@gmail.com>
+Subject: [PATCH 23/29] scsi: ufs: Remove unnecessary ufshcd-crypto.h include directives
+Date:   Thu, 31 Mar 2022 15:34:18 -0700
+Message-Id: <20220331223424.1054715-24-bvanassche@acm.org>
 X-Mailer: git-send-email 2.35.1.1094.g7c7d902a7c-goog
 In-Reply-To: <20220331223424.1054715-1-bvanassche@acm.org>
 References: <20220331223424.1054715-1-bvanassche@acm.org>
@@ -57,32 +58,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Clearing hba->is_sys_suspended if ufs_qcom_resume() succeeds is wrong. That
-variable must only be cleared if all actions involved in a resume succeed.
-Hence remove the statement that clears hba->is_sys_suspended from
-ufs_qcom_resume().
+ufshcd-crypto.h declares functions that must only be called by the UFS
+core. Hence remove the #include "ufshcd-crypto.h" directive from UFS
+drivers.
 
-Fixes: 81c0fc51b7a7 ("ufs-qcom: add support for Qualcomm Technologies Inc platforms")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/scsi/ufs/ufs-mediatek.c | 1 -
+ drivers/scsi/ufs/ufs-qcom-ice.c | 1 -
+ drivers/scsi/ufs/ufs-qcom.h     | 1 +
+ 3 files changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index f24210652fe9..808dae751527 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -640,12 +640,7 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 			return err;
- 	}
+diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+index d19b35495302..84ccb5258736 100644
+--- a/drivers/scsi/ufs/ufs-mediatek.c
++++ b/drivers/scsi/ufs/ufs-mediatek.c
+@@ -19,7 +19,6 @@
+ #include <linux/soc/mediatek/mtk_sip_svc.h>
  
--	err = ufs_qcom_ice_resume(host);
--	if (err)
--		return err;
--
--	hba->is_sys_suspended = false;
--	return 0;
-+	return ufs_qcom_ice_resume(host);
- }
+ #include "ufshcd.h"
+-#include "ufshcd-crypto.h"
+ #include "ufshcd-pltfrm.h"
+ #include "ufs_quirks.h"
+ #include "unipro.h"
+diff --git a/drivers/scsi/ufs/ufs-qcom-ice.c b/drivers/scsi/ufs/ufs-qcom-ice.c
+index bbb0ad7590ec..921d6a93b653 100644
+--- a/drivers/scsi/ufs/ufs-qcom-ice.c
++++ b/drivers/scsi/ufs/ufs-qcom-ice.c
+@@ -9,7 +9,6 @@
+ #include <linux/platform_device.h>
+ #include <linux/qcom_scm.h>
  
- static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, bool enable)
+-#include "ufshcd-crypto.h"
+ #include "ufs-qcom.h"
+ 
+ #define AES_256_XTS_KEY_SIZE			64
+diff --git a/drivers/scsi/ufs/ufs-qcom.h b/drivers/scsi/ufs/ufs-qcom.h
+index 51570224a6e2..771bc95d02c7 100644
+--- a/drivers/scsi/ufs/ufs-qcom.h
++++ b/drivers/scsi/ufs/ufs-qcom.h
+@@ -7,6 +7,7 @@
+ 
+ #include <linux/reset-controller.h>
+ #include <linux/reset.h>
++#include "ufshcd.h"
+ 
+ #define MAX_UFS_QCOM_HOSTS	1
+ #define MAX_U32                 (~(u32)0)
