@@ -2,147 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E1BBC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Mar 2022 07:09:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D28F3C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Mar 2022 09:07:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231682AbiCaHKp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Mar 2022 03:10:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34322 "EHLO
+        id S233603AbiCaJJi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Mar 2022 05:09:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230243AbiCaHKo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2022 03:10:44 -0400
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.22])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18A771B7579
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2022 00:08:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1648710526;
-        bh=zOXy4zNL1gpCy5h9zwnD7Mqc0cgScD13ev8CzvexlOA=;
-        h=X-UI-Sender-Class:Date:From:To:Subject;
-        b=eXZtAjIDYJ3rEwwLokfZr4SmXQLhmW06qH5vc00cTM0YDpmx4uLTTtuXItHCNz/vg
-         YlbGCF8Z1/OOf12HpwJP6MT2wXfj5eEpIL1mJYOZvngGxXFM2OV27G9wP+0a+cQ7IT
-         lFXdu3abMLz8S4pcufd8MApyzibsy5IxDEXMExOI=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from p100 ([92.116.186.82]) by mail.gmx.net (mrgmx104
- [212.227.17.168]) with ESMTPSA (Nemesis) id 1MiJVG-1oCzUG1xRe-00fOOv; Thu, 31
- Mar 2022 09:08:46 +0200
-Date:   Thu, 31 Mar 2022 09:08:44 +0200
-From:   Helge Deller <deller@gmx.de>
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: mpt3sas_base.c:5396:40: =?utf-8?Q?warning?=
- =?utf-8?Q?=3A_array_subscript_=E2=80=98Mpi2SasIOUnitPage1=5Ft_is_partly_o?=
- =?utf-8?Q?utside_array_bounds_of_=E2=80=98unsigned_char=5B20=5D=E2=80=99?=
-Message-ID: <YkVTfIpkQ6u1hHXU@p100>
+        with ESMTP id S233597AbiCaJJh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2022 05:09:37 -0400
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56EEB1342CE;
+        Thu, 31 Mar 2022 02:07:50 -0700 (PDT)
+Received: by mail-ej1-x632.google.com with SMTP id bi12so46780416ejb.3;
+        Thu, 31 Mar 2022 02:07:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=yleowqqhp3Wp931KZ3m/sv7GFXxGTcDyzcmGmDmbgHI=;
+        b=MJcEYra4ISYsaTLHyz/zPckZ1W+v582WNIP7BA/z+gbbFk5Vd+l3XOWFknL2FUEnU4
+         6quPQfaj6miMmi4bBFTBdLTZvVrZKEMmncK/XLththqOXXC6DwavVea4vIkz4aHTKX6Q
+         Q9/Z5de9JLHYtPFKm5SWHuHwEIAehIzKmBfYLxK3xo2OI0NzaudHe0mz/aUVtTL7xTBA
+         FXVxMNpqRPLLCB8oAMmeNnv4WwrC6OXcpxovSiXeJWLwzOdswy2nNV9z6Obxf5OZe6v1
+         y0OElE7NNd/j6JZd9/AbO7tlSFhyHlucVCVEvO56kgOa9DvoMUxOw/XwUiTyq7FicAT7
+         kOQQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=yleowqqhp3Wp931KZ3m/sv7GFXxGTcDyzcmGmDmbgHI=;
+        b=zozXaBTHrhgYS9JnqlFeZiCKjNhr5MYij4e4uOnLMush5N0q9JiE6h+1/6FcTQFvFK
+         svpPCCdA0NyaYpcmH2po1kmzObesAgazR3fpqrvyinh+BcqZ08OhP+41iNN7rWQzpMko
+         uRbuTONkx32eoONA974YaFJUUIDm4W2MU3Kjvw2yFH25t+SZfFw6xQXRgn4UHQHtNshw
+         3bSCIFPgZnRvF+0KLaiK2b7D8jhqAat7dkuRjNkc4KQH6oiow3BR7QMU/7XYzkJRiPXY
+         hur2uFKJx/iQpyFDmCXEFF51zjaewTZMr4GEbGSVojikAmr2c946QixCMpdbO6hQqZ8e
+         20FA==
+X-Gm-Message-State: AOAM530AmpZ1lUqer4XQzptlPFg8YaX/OBO0bcQPKlhGQ75H718uLati
+        ly9Ag3Mjr6NgFlHb7cAp0IQ=
+X-Google-Smtp-Source: ABdhPJzYfpoUpfLnNo0BLs69thKYJ/H88xRMD5X1RrfWy000YdIwjqGUGStyPVbbIAHQzOjB5SAADQ==
+X-Received: by 2002:a17:907:7e8c:b0:6dc:b357:2f4 with SMTP id qb12-20020a1709077e8c00b006dcb35702f4mr4048945ejc.434.1648717668745;
+        Thu, 31 Mar 2022 02:07:48 -0700 (PDT)
+Received: from leap.localnet (host-95-249-145-232.retail.telecomitalia.it. [95.249.145.232])
+        by smtp.gmail.com with ESMTPSA id jg39-20020a170907972700b006e047c810dbsm9198644ejc.56.2022.03.31.02.07.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 31 Mar 2022 02:07:47 -0700 (PDT)
+From:   "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
+To:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     Wenchao Hao <haowenchao@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com,
+        syzbot+f08c77040fa163a75a46@syzkaller.appspotmail.com,
+        syzkaller-bugs@googlegroups.com, linfeilong@huawei.com
+Subject: Re: [PATCH] scsi: sd: call device_del() if device_add_disk() fails
+Date:   Thu, 31 Mar 2022 11:07:45 +0200
+Message-ID: <10056508.nUPlyArG6x@leap>
+In-Reply-To: <YkU/6KB+0fPU5Hie@infradead.org>
+References: <20220329154948.10350-1-fmdefrancesco@gmail.com> <20220331054156.GI3293@kadam> <YkU/6KB+0fPU5Hie@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:Iu0fwYZM7mp0qZfzK+IDiA/i0L/2FbwVCKDf2FcdftnjSrycMBd
- VqMeaLjbWsy7CMLeTUUyR/+LnC7IlQoDHnWEEE8QgcSTfK3kknRnapuypZYp1z0r2vdfUOC
- q4nWaTIVm5TPr4qnTHUj7sAlUCMQcgwhXcZClNiNtG2MRhWzRDoABr27kPK420+FU8QIhKX
- C6RbRSTsXr4MI43z0mfoQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:4ZP4E+SllNQ=:MCk2cDY+A7ML+jZj/RCiai
- DQKP0a5h1XBMrCp3vZ8AwF9nubCFHIQmpoKK6fjas6Jc3MBQQzyynB8g3wYbDpirep1tX0MZ7
- puvwR34/jfCf61O8RxeiDH9GjNDQuC7DzophcyzfYktT3r/Vv9ISgat+id8vCJUONQ6/xgfRx
- F9KzsoE62L0EgOgjO0IMsh+gxepd86Jq3ppiy8LlcIriKxmrhdqWq+SutKQgynEiMyWIP6gWW
- FdwjgKyM9qwkv+gQnnvlRdiRsx3GVNps+No5sgZEnfkLe6KeI7TNJSI/NsnjZe8sCZTl7ph33
- 9Lkrx+9b5uSC3WmCJKzONeioJ7dlFRthN0VuECXB8sTnuuHErZJtvWHSHsGbEVwyD+bEs5cJN
- IVMsD5iI+nuL8WtFasreZvc5hyEbMJQ3rEiwWvUJGsCqCRqSoRT93i/XUJqLM4v1ZbDFMJwu2
- 4lJgw84exDO3JeUUjIpspWUxjtf4UxdEwfmgnA+QyNcxKUnvESyNCWeZDv1/96xZZB2lmDMjc
- ZOr8/zV9dpfQ7UsHwvcbH5A4jXK32jBRd93JrYAd3Xk01xCOP8mWow4SCXWDHA7vNSHv2XdFE
- TLxsTCaJhfAL3U1Wpos2PrlseqBFdyMg6T8bVYyv8EkdD6I5gT7jCpugvb2htuuM8EAHMZVzY
- gsde+GaxjYAwGROtXG59YwuKbo8mLYN16LIYBG+hYPPZ7ax0YcrQHirr1drOeAwB2gBHqocKf
- oyGu3tUjpKsmYL8Gn7SbQeqdZbS3sF1+R1ATTNVJAK15aFIp2DHqrfFVpIbW32yjfVI2PoPlI
- ydsy14ihlvj1wdHY/WmtR45EQNpUgwOD0zS3nAEaUujqHFqIYxyJBlO2eYRELIoRe56LAtt4r
- xnMeVZ9A4f2qxiYllf1oEwn7TER4W4sQC9d0nb5MtIn50Xh7MfR59fzxGnoi3uNIGSovfjmeZ
- yW17j0tb1Cx2mf256KB3lpbQzh0rA3Bni38is7YW+hssnjOk35uoG0wCQ8Zz1H80+NLI7rABU
- ScKuHHHxkyMX687srDBqCC03Zwq6TQqRfHu3jEoid6n08CVoEsvq9XDbtQeql3706xAJYd5xa
- ZKvFWYUiwoRztU=
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When compiling current kernel git head for the parisc platform I face comp=
-iler warnings:
+On gioved=C3=AC? 31 marzo 2022 07:45:12 CEST Christoph Hellwig wrote:
+> > The temptation was to call device_unregister() which is a combined
+> > device_del(); device_put(); but when the device_initialize() and
+> > device_add() are called separately, then I think it is more readable to
+> > call del and put separately as well.
+>=20
+> I think we should also consolidate the initialization side.  Using
+> device_register and device_unregister would have prevented this bug
+> and I should have switched to that before refactoring the code.
+>=20
+If I don't misunderstand what you wrote, I think you mean something like
+the following changes:
 
-  CC      drivers/scsi/mpt3sas/mpt3sas_base.o
-In file included from linux/include/linux/swab.h:5,
-                 from linux/include/uapi/linux/byteorder/big_endian.h:14,
-                 from linux/include/linux/byteorder/big_endian.h:5,
-                 from linux/arch/parisc/include/uapi/asm/byteorder.h:5,
-                 from linux/arch/parisc/include/asm/bitops.h:11,
-                 from linux/include/linux/bitops.h:33,
-                 from linux/include/linux/kernel.h:22,
-                 from linux/drivers/scsi/mpt3sas/mpt3sas_base.c:46:
-linux/drivers/scsi/mpt3sas/mpt3sas_base.c: In function =E2=80=98_base_make=
-_ioc_operational=E2=80=99:
-linux/drivers/scsi/mpt3sas/mpt3sas_base.c:5396:40: warning: array subscrip=
-t =E2=80=98Mpi2SasIOUnitPage1_t {aka struct _MPI2_CONFIG_PAGE_SASIOUNIT_1}=
-[0]=E2=80=99 is partly outside array bounds of =E2=80=98unsigned char[20]=
-=E2=80=99 [-Warray-bounds]
- 5396 |             (le16_to_cpu(sas_iounit_pg1->SASWideMaxQueueDepth)) ?
-linux/include/uapi/linux/swab.h:105:39: note: in definition of macro =E2=
-=80=98__swab16=E2=80=99
-  105 |         (__builtin_constant_p((__u16)(x)) ?     \
-      |                                       ^
-linux/include/linux/byteorder/generic.h:91:21: note: in expansion of macro=
- =E2=80=98__le16_to_cpu=E2=80=99
-   91 | #define le16_to_cpu __le16_to_cpu
-      |                     ^~~~~~~~~~~~~
-linux/drivers/scsi/mpt3sas/mpt3sas_base.c:5396:14: note: in expansion of m=
-acro =E2=80=98le16_to_cpu=E2=80=99
- 5396 |             (le16_to_cpu(sas_iounit_pg1->SASWideMaxQueueDepth)) ?
-      |              ^~~~~~~~~~~
-linux/drivers/scsi/mpt3sas/mpt3sas_base.c:5382:26: note: referencing an ob=
-ject of size 20 allocated by =E2=80=98kzalloc=E2=80=99
- 5382 |         sas_iounit_pg1 =3D kzalloc(sz, GFP_KERNEL);
-      |                          ^~~~~~~~~~~~~~~~~~~~~~~
-In file included from linux/include/linux/swab.h:5,
-                 from linux/include/uapi/linux/byteorder/big_endian.h:14,
-                 from linux/include/linux/byteorder/big_endian.h:5,
-                 from linux/arch/parisc/include/uapi/asm/byteorder.h:5,
-                 from linux/arch/parisc/include/asm/bitops.h:11,
-                 from linux/include/linux/bitops.h:33,
-                 from linux/include/linux/kernel.h:22,
-                 from linux/drivers/scsi/mpt3sas/mpt3sas_base.c:46:
-linux/drivers/scsi/mpt3sas/mpt3sas_base.c:5400:40: warning: array subscrip=
-t =E2=80=98Mpi2SasIOUnitPage1_t {aka struct _MPI2_CONFIG_PAGE_SASIOUNIT_1}=
-[0]=E2=80=99 is partly outside array bounds of =E2=80=98unsigned char[20]=
-=E2=80=99 [-Warray-bounds]
- 5400 |             (le16_to_cpu(sas_iounit_pg1->SASNarrowMaxQueueDepth)) =
-?
-linux/include/uapi/linux/swab.h:105:39: note: in definition of macro =E2=
-=80=98__swab16=E2=80=99
-  105 |         (__builtin_constant_p((__u16)(x)) ?     \
-      |                                       ^
-linux/include/linux/byteorder/generic.h:91:21: note: in expansion of macro=
- =E2=80=98__le16_to_cpu=E2=80=99
-   91 | #define le16_to_cpu __le16_to_cpu
-      |                     ^~~~~~~~~~~~~
-linux/drivers/scsi/mpt3sas/mpt3sas_base.c:5400:14: note: in expansion of m=
-acro =E2=80=98le16_to_cpu=E2=80=99
- 5400 |             (le16_to_cpu(sas_iounit_pg1->SASNarrowMaxQueueDepth)) =
-?
-      |              ^~~~~~~~~~~
-linux/drivers/scsi/mpt3sas/mpt3sas_base.c:5382:26: note: referencing an ob=
-ject of size 20 allocated by =E2=80=98kzalloc=E2=80=99
- 5382 |         sas_iounit_pg1 =3D kzalloc(sz, GFP_KERNEL);
-      |                          ^~~~~~~~~~~~~~~~~~~~~~~
-linux/drivers/scsi/mpt3sas/mpt3sas_base.c:5403:43: warning: array subscrip=
-t =E2=80=98Mpi2SasIOUnitPage1_t {aka struct _MPI2_CONFIG_PAGE_SASIOUNIT_1}=
-[0]=E2=80=99 is partly outside array bounds of =E2=80=98unsigned char[20]=
-=E2=80=99 [-Warray-bounds]
- 5403 |         ioc->max_sata_qd =3D (sas_iounit_pg1->SATAMaxQDepth) ?
-      |                            ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
-linux/drivers/scsi/mpt3sas/mpt3sas_base.c:5382:26: note: referencing an ob=
-ject of size 20 allocated by =E2=80=98kzalloc=E2=80=99
- 5382 |         sas_iounit_pg1 =3D kzalloc(sz, GFP_KERNEL);
-      |                          ^~~~~~~~~~~~~~~~~~~~~~~
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a390679cf458..7a000a9a9dbe 100644
+=2D-- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3431,7 +3431,7 @@ static int sd_probe(struct device *dev)
+        sdkp->disk_dev.class =3D &sd_disk_class;
+        dev_set_name(&sdkp->disk_dev, "%s", dev_name(dev));
+=20
+=2D       error =3D device_add(&sdkp->disk_dev);
++       error =3D device_register(&sdkp->disk_dev);
+        if (error) {
+                put_device(&sdkp->disk_dev);
+                goto out;
+@@ -3474,7 +3474,7 @@ static int sd_probe(struct device *dev)
+=20
+        error =3D device_add_disk(dev, gd, NULL);
+        if (error) {
+=2D               put_device(&sdkp->disk_dev);
++               device_unregister(&sdkp->disk_dev);
+                goto out;
+        }
+
+@Dan, @Christoph: what do you think of the changes that I've copy-pasted ab=
+ove?
+
+Thanks,
+
+=46abio M. De Francesco
 
 
-Helge
+
