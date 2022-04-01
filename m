@@ -2,51 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F271C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:02:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DB85C43217
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:02:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348847AbiDAPEV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 11:04:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52356 "EHLO
+        id S1343984AbiDAPEb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 11:04:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350132AbiDAO7E (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:59:04 -0400
+        with ESMTP id S1350026AbiDAO6p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:58:45 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CEED56C23;
-        Fri,  1 Apr 2022 07:46:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35A2817C438;
+        Fri,  1 Apr 2022 07:45:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AF07060A3C;
-        Fri,  1 Apr 2022 14:46:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2D35C2BBE4;
-        Fri,  1 Apr 2022 14:46:32 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C381C60AC0;
+        Fri,  1 Apr 2022 14:45:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68764C34113;
+        Fri,  1 Apr 2022 14:45:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648824394;
-        bh=tkeNPRTeNCg3I4EubeoVXkxqOabZ9vgTkmUy2NLLq98=;
+        s=k20201202; t=1648824357;
+        bh=7+fl+5KI2HLiQc9ZhTDUoUDKUEeoId2FXhuByBCZFuM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=owP7+ufvlpjnHIkEnQGvt8ChAoKRX/pFO13K26we25lpu3kPmC6BlKd2ktLo/kkEp
-         rzPvrB67/cxmOaR8NZ6N4saMRuymmTIYYkcjybvvQkslmFxhoY/X7MfSvnOJGvkFzv
-         Nfnb024rpyvWxdWPeNIACXRrgW2P0b/NPKoTo2tw2uqfvNT/6GrgXQy74eAE4vcU/C
-         cDn8pr9r9eFFEpv02jn+G9608+wjg2XSVhGVYvnmufacMQY2jkGkGv8DuYVujjKvJB
-         E1BDAr12zS5k1LXS9x8f+pAtGuEozYtFazGdfU+s1mWjVweC162Ke5lmnuaQjm5ceb
-         +WduQe7VkE/qA==
+        b=K38FbCoMy52gObO/fr4LC1qmAbTvHqbnOUIjZ3BxPIyzXUuPEDgJlpg0EjLXXQqXi
+         ZUDLr95f6WGr/OB7a/UmNklouwLOmVFVM2mV48IUcIcI2uwEpvELPxnmGIVNVkDVug
+         qtmty8bGAFivNmcMUK64MjqRQQxT9NGd62HblfI4SYs+HvfUwdCv3p8DxBJOWjiK2l
+         VuN4EoFIBUZgi+DxVcRhI2nzrwidoBEdTm410fPEnPxRxwvZC1I8OGWK19g4jc52+v
+         xADpXpzl2eibGwHnw/93pC3MijXXp0c2FTXk2+mqHIj6FlqFE5ZT8c5cu28mfK63QS
+         Izhr9ypYRjaNg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yang Guang <yang.guang5@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>,
-        David Yang <davidcomponentone@gmail.com>,
+Cc:     Jianglei Nie <niejianglei2021@163.com>,
+        Hannes Reinecke <hare@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        john.garry@huawei.com, bvanassche@acm.org,
-        thunder.leizhen@huawei.com, yuyufen@huawei.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 06/29] scsi: mvsas: Replace snprintf() with sysfs_emit()
-Date:   Fri,  1 Apr 2022 10:45:49 -0400
-Message-Id: <20220401144612.1955177-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 31/37] scsi: libfc: Fix use after free in fc_exch_abts_resp()
+Date:   Fri,  1 Apr 2022 10:44:40 -0400
+Message-Id: <20220401144446.1954694-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401144612.1955177-1-sashal@kernel.org>
-References: <20220401144612.1955177-1-sashal@kernel.org>
+In-Reply-To: <20220401144446.1954694-1-sashal@kernel.org>
+References: <20220401144446.1954694-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,50 +52,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yang Guang <yang.guang5@zte.com.cn>
+From: Jianglei Nie <niejianglei2021@163.com>
 
-[ Upstream commit 0ad3867b0f13e45cfee5a1298bfd40eef096116c ]
+[ Upstream commit 271add11994ba1a334859069367e04d2be2ebdd4 ]
 
-coccinelle report:
-./drivers/scsi/mvsas/mv_init.c:699:8-16:
-WARNING: use scnprintf or sprintf
-./drivers/scsi/mvsas/mv_init.c:747:8-16:
-WARNING: use scnprintf or sprintf
+fc_exch_release(ep) will decrease the ep's reference count. When the
+reference count reaches zero, it is freed. But ep is still used in the
+following code, which will lead to a use after free.
 
-Use sysfs_emit() instead of scnprintf() or sprintf().
+Return after the fc_exch_release() call to avoid use after free.
 
-Link: https://lore.kernel.org/r/c1711f7cf251730a8ceb5bdfc313bf85662b3395.1643182948.git.yang.guang5@zte.com.cn
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Yang Guang <yang.guang5@zte.com.cn>
-Signed-off-by: David Yang <davidcomponentone@gmail.com>
+Link: https://lore.kernel.org/r/20220303015115.459778-1-niejianglei2021@163.com
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mvsas/mv_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_exch.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 98d6608068ab..9c48394ac68a 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -729,7 +729,7 @@ static ssize_t
- mvs_show_driver_version(struct device *cdev,
- 		struct device_attribute *attr,  char *buffer)
- {
--	return snprintf(buffer, PAGE_SIZE, "%s\n", DRV_VERSION);
-+	return sysfs_emit(buffer, "%s\n", DRV_VERSION);
- }
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index e5b18e5d46da..6e2a36eeb12a 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -1697,6 +1697,7 @@ static void fc_exch_abts_resp(struct fc_exch *ep, struct fc_frame *fp)
+ 	if (cancel_delayed_work_sync(&ep->timeout_work)) {
+ 		FC_EXCH_DBG(ep, "Exchange timer canceled due to ABTS response\n");
+ 		fc_exch_release(ep);	/* release from pending timer hold */
++		return;
+ 	}
  
- static DEVICE_ATTR(driver_version,
-@@ -781,7 +781,7 @@ mvs_store_interrupt_coalescing(struct device *cdev,
- static ssize_t mvs_show_interrupt_coalescing(struct device *cdev,
- 			struct device_attribute *attr, char *buffer)
- {
--	return snprintf(buffer, PAGE_SIZE, "%d\n", interrupt_coalescing);
-+	return sysfs_emit(buffer, "%d\n", interrupt_coalescing);
- }
- 
- static DEVICE_ATTR(interrupt_coalescing,
+ 	spin_lock_bh(&ep->ex_lock);
 -- 
 2.34.1
 
