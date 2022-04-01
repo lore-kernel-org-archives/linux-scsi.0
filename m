@@ -2,49 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D09FC433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F838C433FE
 	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:55:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349516AbiDAO4u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:56:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60490 "EHLO
+        id S242816AbiDAO4s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 10:56:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351766AbiDAOtd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:49:33 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD9FF2AF26C;
-        Fri,  1 Apr 2022 07:40:21 -0700 (PDT)
+        with ESMTP id S1348391AbiDAOnO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:43:14 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8481729524D;
+        Fri,  1 Apr 2022 07:34:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id DECC6CE2585;
-        Fri,  1 Apr 2022 14:39:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46B48C340EE;
-        Fri,  1 Apr 2022 14:39:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2669E6062B;
+        Fri,  1 Apr 2022 14:34:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47EB1C36AEC;
+        Fri,  1 Apr 2022 14:34:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823978;
-        bh=JsyN6E6zbblU9xHAQ9ePJvPLAeBPAfqFQhPQB4RviUY=;
+        s=k20201202; t=1648823684;
+        bh=DnxBeLDL/TbMR8vRR9AfYgYySywbj68aFx2ZC6Q6A1Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZBKgIu7n///hhQG0qS/36NNJ1JX1tdeLohvlENMvOBPnd0s8snnZOc2MQL98OslaT
-         mF4O8UIKdOiGg9konRfWqu6yQjIkki5eNh4ImJYBB1n3uRP+LJ9Cy22AwqzeB909eE
-         Cy3OvWC3EIWMdMU/npRhPYvGKy68AGNdk0+rdBAjgSP0a64XvLsCFuzBoQV9zlzwsA
-         3LghoW1dhdaUiZIZRauN8M1OBUtN+42vuYpSmXshwGzWnCHyD3Jf+iFKYYdbM2tLRW
-         F7cv/mX6WQ86vBeRExdmbZ9pblRTzFnjY9ScK9x7ep2WxmaFC39Ju1O/pViIl0xGsJ
-         joe9XHxGyXD7w==
+        b=QIuk94stRijD4LbRkk9VLb7z8uo6mJXGteEu3bQNbFzlmKgAT9Jmy499qrW1PkOEI
+         KRVOT3fUSPVzPWNpSiDMAfzUvYP4Wm+dekberNTSC/5cwndNnpvs7ssDvRTf9Hxnq9
+         EfzsRE/3AU0CXM4iPhrPiLqJEa83g6XTHvkg//VGAAJWG+bHKWqNI32FRtPJ8GANFf
+         GBiT7ATDckjOIKNPTmvpM0dntQPHEHaHea4w4zibrTKUzzxJ9zRbHW4qzXhhykCR5y
+         8rE6U1lNTHIBtfB2Y0JIZ/swZiJ66ICnEVBPnI4Oz69Z36eDIDO0LJ/86EG7ZK19ct
+         9G3PU0MF3/4PQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+Cc:     Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>,
+        Kevin Barnett <kevin.barnett@microchip.com>,
+        Scott Benesh <scott.benesh@microchip.com>,
+        Scott Teel <scott.teel@microchip.com>,
+        Don Brace <don.brace@microchip.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        jejb@linux.ibm.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 38/98] scsi: mpi3mr: Fix reporting of actual data transfer size
-Date:   Fri,  1 Apr 2022 10:36:42 -0400
-Message-Id: <20220401143742.1952163-38-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        storagedev@microchip.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.16 038/109] scsi: smartpqi: Fix kdump issue when controller is locked up
+Date:   Fri,  1 Apr 2022 10:31:45 -0400
+Message-Id: <20220401143256.1950537-38-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401143742.1952163-1-sashal@kernel.org>
-References: <20220401143742.1952163-1-sashal@kernel.org>
+In-Reply-To: <20220401143256.1950537-1-sashal@kernel.org>
+References: <20220401143256.1950537-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,35 +55,98 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+From: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
 
-[ Upstream commit 9992246127246a27cc7184f05cce6f62ac48f84e ]
+[ Upstream commit 3ada501d602abf02353445c03bb3258146445d90 ]
 
-The driver is missing to set the residual size while completing an
-I/O. Ensure proper data transfer size is reported to the kernel on I/O
-completion based on the transfer length reported by the firmware.
+Avoid dropping into shell if the controller is in locked up state.
 
-Link: https://lore.kernel.org/r/20220210095817.22828-7-sreekanth.reddy@broadcom.com
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Driver issues SIS soft reset to bring back the controller to SIS mode while
+OS boots into kdump mode.
+
+If the controller is in lockup state, SIS soft reset does not work.
+
+Since the controller lockup code has not been cleared, driver considers the
+firmware is no longer up and running. Driver returns back an error code to
+OS and the kdump fails.
+
+Link: https://lore.kernel.org/r/164375212337.440833.11955356190354940369.stgit@brunhilda.pdev.net
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/smartpqi/smartpqi_init.c | 39 ++++++++++++++++-----------
+ 1 file changed, 23 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 3cae8803383b..b2c650542bac 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2204,6 +2204,8 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
- 		scmd->result = DID_OK << 16;
- 		goto out_success;
- 	}
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 2db9f874cc51..f3749e508673 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -7855,6 +7855,21 @@ static int pqi_force_sis_mode(struct pqi_ctrl_info *ctrl_info)
+ 	return pqi_revert_to_sis_mode(ctrl_info);
+ }
+ 
++static void pqi_perform_lockup_action(void)
++{
++	switch (pqi_lockup_action) {
++	case PANIC:
++		panic("FATAL: Smart Family Controller lockup detected");
++		break;
++	case REBOOT:
++		emergency_restart();
++		break;
++	case NONE:
++	default:
++		break;
++	}
++}
 +
-+	scsi_set_resid(scmd, scsi_bufflen(scmd) - xfer_count);
- 	if (ioc_status == MPI3_IOCSTATUS_SCSI_DATA_UNDERRUN &&
- 	    xfer_count == 0 && (scsi_status == MPI3_SCSI_STATUS_BUSY ||
- 	    scsi_status == MPI3_SCSI_STATUS_RESERVATION_CONFLICT ||
+ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	int rc;
+@@ -7879,8 +7894,15 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ 	 * commands.
+ 	 */
+ 	rc = sis_wait_for_ctrl_ready(ctrl_info);
+-	if (rc)
++	if (rc) {
++		if (reset_devices) {
++			dev_err(&ctrl_info->pci_dev->dev,
++				"kdump init failed with error %d\n", rc);
++			pqi_lockup_action = REBOOT;
++			pqi_perform_lockup_action();
++		}
+ 		return rc;
++	}
+ 
+ 	/*
+ 	 * Get the controller properties.  This allows us to determine
+@@ -8605,21 +8627,6 @@ static int pqi_ofa_ctrl_restart(struct pqi_ctrl_info *ctrl_info, unsigned int de
+ 	return pqi_ctrl_init_resume(ctrl_info);
+ }
+ 
+-static void pqi_perform_lockup_action(void)
+-{
+-	switch (pqi_lockup_action) {
+-	case PANIC:
+-		panic("FATAL: Smart Family Controller lockup detected");
+-		break;
+-	case REBOOT:
+-		emergency_restart();
+-		break;
+-	case NONE:
+-	default:
+-		break;
+-	}
+-}
+-
+ static struct pqi_raid_error_info pqi_ctrl_offline_raid_error_info = {
+ 	.data_out_result = PQI_DATA_IN_OUT_HARDWARE_ERROR,
+ 	.status = SAM_STAT_CHECK_CONDITION,
 -- 
 2.34.1
 
