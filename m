@@ -2,48 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03484C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:03:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D54FC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:03:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240849AbiDAPEr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 11:04:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55858 "EHLO
+        id S1346190AbiDAPEy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 11:04:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350505AbiDAPAG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 11:00:06 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0C6A5AECF;
-        Fri,  1 Apr 2022 07:47:17 -0700 (PDT)
+        with ESMTP id S1350544AbiDAPAI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 11:00:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9831A64BF3;
+        Fri,  1 Apr 2022 07:47:44 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6C91DB8240E;
-        Fri,  1 Apr 2022 14:47:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EF6FC340F2;
-        Fri,  1 Apr 2022 14:47:14 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2450A60AC9;
+        Fri,  1 Apr 2022 14:47:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21E2EC340EE;
+        Fri,  1 Apr 2022 14:47:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648824435;
-        bh=mI114Ao+RDfpQC5D6nzgqT0P7mQSo7soZtMayzbFJZU=;
+        s=k20201202; t=1648824463;
+        bh=J1f0lQ9piKBazL8l/JdIIROG6EMQUCVmrex/JmHS88Q=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NqvThGSDGqq1oM5fA76QMuCAQPkwqXTeOrXLqogAC2M3mwc1fpvyCLKwS9CCDuWaa
-         v+UtwrA0TST4rOV+8O6NHBHjf74Vff9nrDYASqaKkgTNeuh23X45dA49MWYB8Q4PpV
-         Jp8fnM17NCiUcEvWypG97FO4BDyziCEKaf+cHpLn70U37stmqRdBxWZ7twzfGBqa4z
-         CRqTsjR6DoUJrvX5w0XdSd7zC1mbam6BZ4zaT5TWIc+jp58YlvuVLu6FOWX2bZiRhg
-         kK+gd2VKzo8cYf0Cu3mMNs5JWBxIKay2IibOILWxuugUIp7YdyZIMAFGLAEzvoKEnP
-         LGReILrcn6csg==
+        b=gg7GJdaGJYw1+dD+MbOYw9ithpQ13PUlxc7zHfkNt2M7Z8OMQy/AtnLPsi6M4J9Hx
+         tYg/EB2iwShmW6qK9EwwgPns7hNXgua1ptZA0PvFbqNtzJuYMc1Zq7qDdU+bYO1H5d
+         AMAMwt4upgFrGQWfroING+SrUT1oBuUdLI0bZpRPajgU2kqanJIkWIDMUqX4E794+/
+         12qs63lhfGPzZBOO5Cg9LE2lWZfZdtPG/xk5wTzlZGlqc3a/xPrtxtX4u8YQ1ecW+u
+         KG1zIG0EkzY3AeKhRczKwy+bZgXNzOEbxT0RPRINRkY7hs40FPEGUPFmQO4EuBkg2w
+         /nl9Xak9jV34A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jianglei Nie <niejianglei2021@163.com>,
-        Hannes Reinecke <hare@suse.de>,
+Cc:     Yang Guang <yang.guang5@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>,
+        David Yang <davidcomponentone@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        john.garry@huawei.com, bvanassche@acm.org, yuyufen@huawei.com,
+        johannes.thumshirn@wdc.com, thunder.leizhen@huawei.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 24/29] scsi: libfc: Fix use after free in fc_exch_abts_resp()
-Date:   Fri,  1 Apr 2022 10:46:07 -0400
-Message-Id: <20220401144612.1955177-24-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 04/22] scsi: mvsas: Replace snprintf() with sysfs_emit()
+Date:   Fri,  1 Apr 2022 10:47:11 -0400
+Message-Id: <20220401144729.1955554-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401144612.1955177-1-sashal@kernel.org>
-References: <20220401144612.1955177-1-sashal@kernel.org>
+In-Reply-To: <20220401144729.1955554-1-sashal@kernel.org>
+References: <20220401144729.1955554-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,37 +55,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jianglei Nie <niejianglei2021@163.com>
+From: Yang Guang <yang.guang5@zte.com.cn>
 
-[ Upstream commit 271add11994ba1a334859069367e04d2be2ebdd4 ]
+[ Upstream commit 0ad3867b0f13e45cfee5a1298bfd40eef096116c ]
 
-fc_exch_release(ep) will decrease the ep's reference count. When the
-reference count reaches zero, it is freed. But ep is still used in the
-following code, which will lead to a use after free.
+coccinelle report:
+./drivers/scsi/mvsas/mv_init.c:699:8-16:
+WARNING: use scnprintf or sprintf
+./drivers/scsi/mvsas/mv_init.c:747:8-16:
+WARNING: use scnprintf or sprintf
 
-Return after the fc_exch_release() call to avoid use after free.
+Use sysfs_emit() instead of scnprintf() or sprintf().
 
-Link: https://lore.kernel.org/r/20220303015115.459778-1-niejianglei2021@163.com
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
+Link: https://lore.kernel.org/r/c1711f7cf251730a8ceb5bdfc313bf85662b3395.1643182948.git.yang.guang5@zte.com.cn
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Yang Guang <yang.guang5@zte.com.cn>
+Signed-off-by: David Yang <davidcomponentone@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_exch.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/mvsas/mv_init.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 384458d1f73c..9fa0aa235cb4 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1709,6 +1709,7 @@ static void fc_exch_abts_resp(struct fc_exch *ep, struct fc_frame *fp)
- 	if (cancel_delayed_work_sync(&ep->timeout_work)) {
- 		FC_EXCH_DBG(ep, "Exchange timer canceled due to ABTS response\n");
- 		fc_exch_release(ep);	/* release from pending timer hold */
-+		return;
- 	}
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 718c88de328b..f6070b1fe1d8 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -729,7 +729,7 @@ static ssize_t
+ mvs_show_driver_version(struct device *cdev,
+ 		struct device_attribute *attr,  char *buffer)
+ {
+-	return snprintf(buffer, PAGE_SIZE, "%s\n", DRV_VERSION);
++	return sysfs_emit(buffer, "%s\n", DRV_VERSION);
+ }
  
- 	spin_lock_bh(&ep->ex_lock);
+ static DEVICE_ATTR(driver_version,
+@@ -781,7 +781,7 @@ mvs_store_interrupt_coalescing(struct device *cdev,
+ static ssize_t mvs_show_interrupt_coalescing(struct device *cdev,
+ 			struct device_attribute *attr, char *buffer)
+ {
+-	return snprintf(buffer, PAGE_SIZE, "%d\n", interrupt_coalescing);
++	return sysfs_emit(buffer, "%d\n", interrupt_coalescing);
+ }
+ 
+ static DEVICE_ATTR(interrupt_coalescing,
 -- 
 2.34.1
 
