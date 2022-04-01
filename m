@@ -2,49 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D709C3527B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53A99C4707A
 	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:02:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349759AbiDAO5y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:57:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60488 "EHLO
+        id S1349773AbiDAO55 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 10:57:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348126AbiDAOus (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:50:48 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C75882B3333;
-        Fri,  1 Apr 2022 07:41:53 -0700 (PDT)
+        with ESMTP id S1349731AbiDAOqp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:46:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECCD129E4C4;
+        Fri,  1 Apr 2022 07:36:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 808EDB824D5;
-        Fri,  1 Apr 2022 14:40:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C934C34111;
-        Fri,  1 Apr 2022 14:40:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C4DB160B9A;
+        Fri,  1 Apr 2022 14:36:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 531EBC2BBE4;
+        Fri,  1 Apr 2022 14:36:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648824045;
-        bh=KlPAxKGIlO8xwx74jZXXEVv3uQ+BvJrTHrwa1gUkQmw=;
+        s=k20201202; t=1648823783;
+        bh=tsODSIxsLeSUxtlp3/TVZzEZFMypKoyJ0UBhTRNd7vg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OU4BuCtTencuoFS+EBcD+N0izvDxnBMMkRh+5sxCxThevhrnPNJEMMY5GRKA6OUs6
-         QntrAoZNowvV9pMhGPpQwPqTwzB0BN6j8zMUBGZxVQrPs3tYXQ5Vr6fJN7RfFYAdH9
-         LRr0XAXBcWNdiktmijrhGXEh4bnKSepvTDoTL8PVCn6HJipLyN4l6G2pLoXwkewmV1
-         nHPEtxLDyJwrxwFikezGkPRKrDGhrLtmyzTN+p8th5wZBzN0VjV3OVqeSmO4fPK7/E
-         cbd0IZGR9t9MIWDRIbMNRpLIUf5Ef8ML5+eeNN37fqv6yTVMkkBU/cUjb9rYhjn0Cw
-         Rs+0FMRMmToGA==
+        b=uv3NncpbueRKuf7rLbBE6pgzyhlEkwOKll8pG5tf88U+OA+e/Rq8WcFJvjJ5Gdsx2
+         dPsF+hvjh3W+S3Gy0v8TgrcojZNzJXwwx4ocn5Yxll8e1aXG8HzTBvUVjjRs2j80WL
+         vdSoNHPVBNCDlcTTrO4DazpuBltabBy53SpGpbJk2tqC2bC2809nHCxLUGz+U1BN10
+         RYjRznFLFC1g2SWuuHQSlVR35wXe0zZonjZw+x+FSK4tR1ya76YWdKT206ogHWXm0Q
+         4efamNH4CMVGzARPA5ka/h8Gm+iOLzY8TDyGkjK2TsI+871EEJHmGYCYNn1z2xVCig
+         tmAACn3b+gNlw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        "Juergen E. Fischer" <fischer@norbit.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Igor Zhbanov <i.zhbanov@omprussia.ru>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 62/98] scsi: aha152x: Fix aha152x_setup() __setup handler return value
-Date:   Fri,  1 Apr 2022 10:37:06 -0400
-Message-Id: <20220401143742.1952163-62-sashal@kernel.org>
+Cc:     Qi Liu <liuqi115@huawei.com>, John Garry <john.garry@huawei.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.16 074/109] scsi: hisi_sas: Free irq vectors in order for v3 HW
+Date:   Fri,  1 Apr 2022 10:32:21 -0400
+Message-Id: <20220401143256.1950537-74-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401143742.1952163-1-sashal@kernel.org>
-References: <20220401143742.1952163-1-sashal@kernel.org>
+In-Reply-To: <20220401143256.1950537-1-sashal@kernel.org>
+References: <20220401143256.1950537-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,50 +51,107 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@infradead.org>
+From: Qi Liu <liuqi115@huawei.com>
 
-[ Upstream commit cc8294ec4738d25e2bb2d71f7d82a9bf7f4a157b ]
+[ Upstream commit 554fb72ee34f4732c7f694f56c3c6e67790352a0 ]
 
-__setup() handlers should return 1 if the command line option is handled
-and 0 if not (or maybe never return 0; doing so just pollutes init's
-environment with strings that are not init arguments/parameters).
+If the driver probe fails to request the channel IRQ or fatal IRQ, the
+driver will free the IRQ vectors before freeing the IRQs in free_irq(),
+and this will cause a kernel BUG like this:
 
-Return 1 from aha152x_setup() to indicate that the boot option has been
-handled.
+------------[ cut here ]------------
+kernel BUG at drivers/pci/msi.c:369!
+Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+Call trace:
+   free_msi_irqs+0x118/0x13c
+   pci_disable_msi+0xfc/0x120
+   pci_free_irq_vectors+0x24/0x3c
+   hisi_sas_v3_probe+0x360/0x9d0 [hisi_sas_v3_hw]
+   local_pci_probe+0x44/0xb0
+   work_for_cpu_fn+0x20/0x34
+   process_one_work+0x1d0/0x340
+   worker_thread+0x2e0/0x460
+   kthread+0x180/0x190
+   ret_from_fork+0x10/0x20
+---[ end trace b88990335b610c11 ]---
 
-Link: lore.kernel.org/r/64644a2f-4a20-bab3-1e15-3b2cdd0defe3@omprussia.ru
-Link: https://lore.kernel.org/r/20220223000623.5920-1-rdunlap@infradead.org
-Cc: "Juergen E. Fischer" <fischer@norbit.de>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Reported-by: Igor Zhbanov <i.zhbanov@omprussia.ru>
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+So we use devm_add_action() to control the order in which we free the
+vectors.
+
+Link: https://lore.kernel.org/r/1645703489-87194-4-git-send-email-john.garry@huawei.com
+Signed-off-by: Qi Liu <liuqi115@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/aha152x.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index b13b5c85f3de..75a5a4765f42 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -3370,13 +3370,11 @@ static int __init aha152x_setup(char *str)
- 	setup[setup_count].synchronous = ints[0] >= 6 ? ints[6] : 1;
- 	setup[setup_count].delay       = ints[0] >= 7 ? ints[7] : DELAY_DEFAULT;
- 	setup[setup_count].ext_trans   = ints[0] >= 8 ? ints[8] : 0;
--	if (ints[0] > 8) {                                                /*}*/
-+	if (ints[0] > 8)
- 		printk(KERN_NOTICE "aha152x: usage: aha152x=<IOBASE>[,<IRQ>[,<SCSI ID>"
- 		       "[,<RECONNECT>[,<PARITY>[,<SYNCHRONOUS>[,<DELAY>[,<EXT_TRANS>]]]]]]]\n");
--	} else {
-+	else
- 		setup_count++;
--		return 0;
--	}
- 
- 	return 1;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 11a44d9dd9b2..b3e010483705 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2390,17 +2390,25 @@ static irqreturn_t cq_interrupt_v3_hw(int irq_no, void *p)
+ 	return IRQ_WAKE_THREAD;
  }
+ 
++static void hisi_sas_v3_free_vectors(void *data)
++{
++	struct pci_dev *pdev = data;
++
++	pci_free_irq_vectors(pdev);
++}
++
+ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	int vectors;
+ 	int max_msi = HISI_SAS_MSI_COUNT_V3_HW, min_msi;
+ 	struct Scsi_Host *shost = hisi_hba->shost;
++	struct pci_dev *pdev = hisi_hba->pci_dev;
+ 	struct irq_affinity desc = {
+ 		.pre_vectors = BASE_VECTORS_V3_HW,
+ 	};
+ 
+ 	min_msi = MIN_AFFINE_VECTORS_V3_HW;
+-	vectors = pci_alloc_irq_vectors_affinity(hisi_hba->pci_dev,
++	vectors = pci_alloc_irq_vectors_affinity(pdev,
+ 						 min_msi, max_msi,
+ 						 PCI_IRQ_MSI |
+ 						 PCI_IRQ_AFFINITY,
+@@ -2412,6 +2420,7 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
+ 	hisi_hba->cq_nvecs = vectors - BASE_VECTORS_V3_HW;
+ 	shost->nr_hw_queues = hisi_hba->cq_nvecs;
+ 
++	devm_add_action(&pdev->dev, hisi_sas_v3_free_vectors, pdev);
+ 	return 0;
+ }
+ 
+@@ -4763,7 +4772,7 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	rc = scsi_add_host(shost, dev);
+ 	if (rc)
+-		goto err_out_free_irq_vectors;
++		goto err_out_debugfs;
+ 
+ 	rc = sas_register_ha(sha);
+ 	if (rc)
+@@ -4792,8 +4801,6 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	sas_unregister_ha(sha);
+ err_out_register_ha:
+ 	scsi_remove_host(shost);
+-err_out_free_irq_vectors:
+-	pci_free_irq_vectors(pdev);
+ err_out_debugfs:
+ 	debugfs_exit_v3_hw(hisi_hba);
+ err_out_ha:
+@@ -4817,7 +4824,6 @@ hisi_sas_v3_destroy_irqs(struct pci_dev *pdev, struct hisi_hba *hisi_hba)
+ 
+ 		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, nr), cq);
+ 	}
+-	pci_free_irq_vectors(pdev);
+ }
+ 
+ static void hisi_sas_v3_remove(struct pci_dev *pdev)
 -- 
 2.34.1
 
