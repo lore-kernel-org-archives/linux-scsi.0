@@ -2,144 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52ED4C43219
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:02:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B80DEC4167E
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:02:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348802AbiDAO5p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:57:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60394 "EHLO
+        id S1349744AbiDAO5v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 10:57:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352535AbiDAOu1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:50:27 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C73472B3330;
-        Fri,  1 Apr 2022 07:41:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8BAD3611E4;
-        Fri,  1 Apr 2022 14:40:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A424C340F2;
-        Fri,  1 Apr 2022 14:40:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648824048;
-        bh=CwQowb1XNFLdS/UPwZLTXi+3ITKGQlT2Hr0iMUTfAk4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dIruksJDz5pqURNaB6YUntqfSY5dBib7htNGK1YEnch2DY1fUyfUqRBLLbOtKuQ7G
-         CsXlDYSGRS1LwmUgc8Q10inACxJsqjYNs1jaxaM5KxrSqIqkNvnh0jdvOzWnkQuLnb
-         nnazyx50PvssTTaMvn6Dj73ev83JwWbVeUp0L81nl62OvjVhIXEqkAzFMVOiLUrU7L
-         u7fjKCiOsOZcZDN0ObnjgZy/qryy9d7d4x3VCeoiaVJOVRyY4O/E25mo+DozWakGF7
-         sxQCsrNCIJF2RrTL9iRc5dLeQ3BF1130/zNTyPb0pO/lNlwnzAubEINYYChmrQLH7T
-         mvu7fWAe8ypQw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
-        Qi Liu <liuqi115@huawei.com>,
-        John Garry <john.garry@huawei.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 64/98] scsi: hisi_sas: Limit users changing debugfs BIST count value
-Date:   Fri,  1 Apr 2022 10:37:08 -0400
-Message-Id: <20220401143742.1952163-64-sashal@kernel.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401143742.1952163-1-sashal@kernel.org>
-References: <20220401143742.1952163-1-sashal@kernel.org>
+        with ESMTP id S1349319AbiDAOpq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:45:46 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2B1A29A57E
+        for <linux-scsi@vger.kernel.org>; Fri,  1 Apr 2022 07:35:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1648823746; x=1680359746;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=JinOvZgQOLDXNfhZgNFKxhl/hzFt5+bNm8bUnrw4DNE=;
+  b=W9eVZIv+SbOJCIBr2YCkmgScKYQcHx5ylb2/wSu+wGM6ZXDuEjYvJDee
+   FPxfIbvQ+MZutQxehzebnJi+NQzqDGnBLbn3ouKPYLrYspfW6hDtJ6fB8
+   wKQobIgJ9t85IYoJzu1xli2ibKqZal6252uJMxeq/YAXB9iFk1zwDyiZC
+   IZNynni9v4FCJNa8cT8Hn3TY8xTQtkfEOkSdEvwSGXXXWeQeLZwJaw6BL
+   WbOEGPQgaqDReJnBrJma5RgEu247hzv0zXQNCHnTAifYKY9YRSeB0ujhb
+   xyyM6mFfZd1Er38fdXqBS4Fk3oFsF3rqkT+zJCVvnBMygrRk/sPH/vHIl
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10304"; a="260328560"
+X-IronPort-AV: E=Sophos;i="5.90,227,1643702400"; 
+   d="scan'208";a="260328560"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2022 07:35:13 -0700
+X-IronPort-AV: E=Sophos;i="5.90,227,1643702400"; 
+   d="scan'208";a="567534847"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.63.177])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2022 07:35:10 -0700
+Message-ID: <17c360e7-ea35-de7a-6f38-f1818826312a@intel.com>
+Date:   Fri, 1 Apr 2022 17:35:05 +0300
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Firefox/91.0 Thunderbird/91.7.0
+Subject: Re: [PATCH 13/29] scsi: ufs: Remove the LUN quiescing code from
+ ufshcd_wl_shutdown()
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>
+References: <20220331223424.1054715-1-bvanassche@acm.org>
+ <20220331223424.1054715-14-bvanassche@acm.org>
+ <8e1a89f6-4195-c0a9-62f3-c1dcbbd4202f@intel.com>
+ <66458c8f-157e-f050-f520-e3ec01e75d69@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <66458c8f-157e-f050-f520-e3ec01e75d69@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+On 01/04/2022 16.52, Bart Van Assche wrote:
+> On 3/31/22 23:20, Adrian Hunter wrote:
+>> On 01/04/2022 1.34, Bart Van Assche wrote:
+>>> Quiescing LUNs falls outside the scope of a shutdown callback. The shutdown
+>>> callback is called from inside the reboot() system call and the reboot()
+>>> system call is called after user space has stopped accessing block devices.
+>>> Hence this patch that removes the quiescing calls from
+>>> ufshcd_wl_shutdown(). This patch makes shutdown faster since multiple
+>>> synchronize_rcu() calls are removed.
+>>
+>> AFAIK there is nothing stopping shutdown being called during intense UFS I/O.
+>> What happens then?
+> 
+> Hmm ... how could this happen? Am I perhaps misunderstanding something about the Linux shutdown sequence?
+> 
+> The UFS driver is the only driver I know that tries to stop I/O from inside its shutdown callback. I'm not aware of any other Linux kernel driver that tries to pause I/O from inside its shutdown callback.
 
-[ Upstream commit 286ce4c65fbdf5eb9d4d5f4e4997c4e32bf1b073 ]
-
-Add a file operation for "cnt" file under bist directory, so users can only
-read "cnt" or clear "cnt" to zero, but cannot randomly modify.
-
-Link: https://lore.kernel.org/r/1645703489-87194-6-git-send-email-john.garry@huawei.com
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: Qi Liu <liuqi115@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 52 +++++++++++++++++++++++++-
- 1 file changed, 50 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index fd14f66c71df..299a22ab5bc9 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3968,6 +3968,54 @@ static const struct file_operations debugfs_bist_phy_v3_hw_fops = {
- 	.owner = THIS_MODULE,
- };
- 
-+static ssize_t debugfs_bist_cnt_v3_hw_write(struct file *filp,
-+					const char __user *buf,
-+					size_t count, loff_t *ppos)
-+{
-+	struct seq_file *m = filp->private_data;
-+	struct hisi_hba *hisi_hba = m->private;
-+	unsigned int cnt;
-+	int val;
-+
-+	if (hisi_hba->debugfs_bist_enable)
-+		return -EPERM;
-+
-+	val = kstrtouint_from_user(buf, count, 0, &cnt);
-+	if (val)
-+		return val;
-+
-+	if (cnt)
-+		return -EINVAL;
-+
-+	hisi_hba->debugfs_bist_cnt = 0;
-+	return count;
-+}
-+
-+static int debugfs_bist_cnt_v3_hw_show(struct seq_file *s, void *p)
-+{
-+	struct hisi_hba *hisi_hba = s->private;
-+
-+	seq_printf(s, "%u\n", hisi_hba->debugfs_bist_cnt);
-+
-+	return 0;
-+}
-+
-+static int debugfs_bist_cnt_v3_hw_open(struct inode *inode,
-+					  struct file *filp)
-+{
-+	return single_open(filp, debugfs_bist_cnt_v3_hw_show,
-+			   inode->i_private);
-+}
-+
-+static const struct file_operations debugfs_bist_cnt_v3_hw_ops = {
-+	.open = debugfs_bist_cnt_v3_hw_open,
-+	.read = seq_read,
-+	.write = debugfs_bist_cnt_v3_hw_write,
-+	.llseek = seq_lseek,
-+	.release = single_release,
-+	.owner = THIS_MODULE,
-+};
-+
- static const struct {
- 	int		value;
- 	char		*name;
-@@ -4605,8 +4653,8 @@ static void debugfs_bist_init_v3_hw(struct hisi_hba *hisi_hba)
- 	debugfs_create_file("phy_id", 0600, hisi_hba->debugfs_bist_dentry,
- 			    hisi_hba, &debugfs_bist_phy_v3_hw_fops);
- 
--	debugfs_create_u32("cnt", 0600, hisi_hba->debugfs_bist_dentry,
--			   &hisi_hba->debugfs_bist_cnt);
-+	debugfs_create_file("cnt", 0600, hisi_hba->debugfs_bist_dentry,
-+			    hisi_hba, &debugfs_bist_cnt_v3_hw_ops);
- 
- 	debugfs_create_file("loopback_mode", 0600,
- 			    hisi_hba->debugfs_bist_dentry,
--- 
-2.34.1
+We are putting the UFS device into powerdown mode.  I am not sure what will happen if the device is processing requests at the same time.
 
