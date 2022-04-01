@@ -2,50 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF9F2C47080
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:02:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF94FC4707F
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:02:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349801AbiDAO6E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:58:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59912 "EHLO
+        id S1346704AbiDAPDv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 11:03:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348301AbiDAOmv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:42:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D4AA294A02;
-        Fri,  1 Apr 2022 07:34:44 -0700 (PDT)
+        with ESMTP id S1345190AbiDAOze (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:55:34 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB5553DDD2;
+        Fri,  1 Apr 2022 07:43:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5CE4A60AD8;
-        Fri,  1 Apr 2022 14:34:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8172C3410F;
-        Fri,  1 Apr 2022 14:34:41 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4DA60B82370;
+        Fri,  1 Apr 2022 14:43:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1296FC34111;
+        Fri,  1 Apr 2022 14:43:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823682;
-        bh=DrqH9cql0k3eM6eCKUpNDdtUpEA96OPz/k7Lh2O7sJ4=;
+        s=k20201202; t=1648824221;
+        bh=7M/WydYQmYrOK/bAUpmARPtxqJQjNA/qXl46kMwdp6A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZfO26ec7jn2wb61+WHj7lbjuBp5BUNuTSzIJCaXYemXh7DmJdmRaVg424jwBoSdQp
-         8bsJw6x8ANiunMr8RkZwphHpc/4BD85iM5Gy3WDSbxZsQGyKKMefOOEJ4kWrejDc5v
-         8MmilGppg3TJOe9KaEpzubT5BvDFlK/IvK9eOkb7eyQ8IbKrAWI4nUzhxEZ485Dvos
-         /Cmc1k5ZIwTlXCdPtwUDdxavMPY/2L+yrPjdKtAsrXxYJXzuxXzpqP70G0GUcNv1jW
-         6cDRTloFjptA7vXRJW3SUEniP1djRQE7Y4LgZK3LStaK2nCBvp+tDRyjgl6Wr1I2kJ
-         t+5R3plIun1ow==
+        b=Jnnh24pNZP/HXgRFsKeVvZnZFuF5Vyp/nP1F/nB1kS5ra3VddWnvvika23Tqvm54R
+         +3PK55yJs26x26oVLEdjS/iNbNHwPjbOj16pV0812qh0INIW+f6VaGestDue1nhtty
+         +i6hhGQt5BBTMKZ3a8q0egxJxKBntUKAg07eeYutMoZKp1AfEttmSxTRvLLYDPMw6F
+         PnjJZnAnKVqPKE2oHuBYKqnvverU8pDAZTqoa44uw4yu7vaoHSroM+6GcZf1/cp0Fb
+         jnkZTGBx6oXF1fvntm+5Mp45Bt0iDqLy8iqEEKrklSQijq3JHjl0iM3EXDo7sVG632
+         KgjsUdrVZuxdw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Don Brace <don.brace@microchip.com>,
-        Scott Benesh <scott.benesh@microchip.com>,
-        Scott Teel <scott.teel@microchip.com>,
-        Kevin Barnett <kevin.barnett@microchip.com>,
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        storagedev@microchip.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 037/109] scsi: smartpqi: Fix rmmod stack trace
-Date:   Fri,  1 Apr 2022 10:31:44 -0400
-Message-Id: <20220401143256.1950537-37-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 37/65] scsi: pm8001: Fix memory leak in pm8001_chip_fw_flash_update_req()
+Date:   Fri,  1 Apr 2022 10:41:38 -0400
+Message-Id: <20220401144206.1953700-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401143256.1950537-1-sashal@kernel.org>
-References: <20220401143256.1950537-1-sashal@kernel.org>
+In-Reply-To: <20220401144206.1953700-1-sashal@kernel.org>
+References: <20220401144206.1953700-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,49 +52,39 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Don Brace <don.brace@microchip.com>
+From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-[ Upstream commit c4ff687d25c05919382a759503bd3821689f4e2f ]
+[ Upstream commit f792a3629f4c4aa4c3703d66b43ce1edcc3ec09a ]
 
-Prevent "BUG: scheduling while atomic: rmmod" stack trace.
+In pm8001_chip_fw_flash_update_build(), if
+pm8001_chip_fw_flash_update_build() fails, the struct fw_control_ex
+allocated must be freed.
 
-Stop setting spin_locks before calling OS functions to remove devices.
-
-Link: https://lore.kernel.org/r/164375207296.440833.4996145011193819683.stgit@brunhilda.pdev.net
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
+Link: https://lore.kernel.org/r/20220220031810.738362-23-damien.lemoal@opensource.wdc.com
+Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index f0897d587454..2db9f874cc51 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2513,17 +2513,15 @@ static void pqi_remove_all_scsi_devices(struct pqi_ctrl_info *ctrl_info)
- 	struct pqi_scsi_dev *device;
- 	struct pqi_scsi_dev *next;
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 32081d545342..688f42c54c3d 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -4842,8 +4842,10 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info *pm8001_ha,
+ 	ccb->ccb_tag = tag;
+ 	rc = pm8001_chip_fw_flash_update_build(pm8001_ha, &flash_update_info,
+ 		tag);
+-	if (rc)
++	if (rc) {
++		kfree(fw_control_context);
+ 		pm8001_tag_free(pm8001_ha, tag);
++	}
  
--	spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
--
- 	list_for_each_entry_safe(device, next, &ctrl_info->scsi_device_list,
- 		scsi_device_list_entry) {
- 		if (pqi_is_device_added(device))
- 			pqi_remove_device(ctrl_info, device);
-+		spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
- 		list_del(&device->scsi_device_list_entry);
- 		pqi_free_device(device);
-+		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 	}
--
--	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+ 	return rc;
  }
- 
- static int pqi_scan_scsi_devices(struct pqi_ctrl_info *ctrl_info)
 -- 
 2.34.1
 
