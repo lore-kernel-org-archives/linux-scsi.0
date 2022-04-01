@@ -2,46 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64FABC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:35:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61BF2C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:35:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348076AbiDAOhY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:37:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40512 "EHLO
+        id S1348091AbiDAOh1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 10:37:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348216AbiDAOdt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:33:49 -0400
+        with ESMTP id S1347424AbiDAOcd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:32:33 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B7901EA5F2;
-        Fri,  1 Apr 2022 07:31:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 725511EE8DB;
+        Fri,  1 Apr 2022 07:29:07 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E53A261CA5;
-        Fri,  1 Apr 2022 14:31:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31CF1C36AE2;
-        Fri,  1 Apr 2022 14:31:15 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0E3C161C43;
+        Fri,  1 Apr 2022 14:29:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24CDCC340EE;
+        Fri,  1 Apr 2022 14:29:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823476;
-        bh=OENflkaK3Qs+EfOVFmDHxnNYCJErsU7L/iykIogJmXg=;
+        s=k20201202; t=1648823346;
+        bh=flcliwEEM1gupdtOg54Qny9MyhWoC+AckPu3opEd1NQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fcCN/f29jGSD/HBUqihCw35Ah5hA+4J8CuPiBY7s42wMc4Rhp8SQiqJrYW/A7dn5w
-         E8GkLUM3PdcPFbRtwjeisG4FIeajEP6wwlzdb4W0WxoU+PItkwrzWBOHinjaxwpdvH
-         SsoA5Qc/kB/vWNUshc1qrZOEEHl9mPqwb3jYTq0TODYn5ZQbwQd0xLYD3cuNFcFGr6
-         uvKwlt7YIhgES0Aso434QB/vtn3CyKD2d+LxOf5Wafk4nMbxGGB8+n24Hzx0m8VjkP
-         iRf/rcJL1S0LOVWwPdgngDL+pp+tc9ocertvsA//HMyz9tLYBA8j3Z05qjcGTd7Hg1
-         xo3gHOvEC6yMw==
+        b=h5C8z+MSbaKvLFuKvWArKWMOLZJCG4Xb8EVRxpoGlmfYnPfdpjrofbzO0BxzjAJ0h
+         aK0U78Eb6nN1YgvPsPg+R2ZZr/N+SNGUuXs/i6WSWn5CBu1w7QTY5drqe6vA5DzCOc
+         rBHVY8unvtC43bC98uXjtbtE24NoWX0bslFgXWWoOy1waq1M6lxo1pydDQ1qdZIVk0
+         JlM67ZukIJPn2jWWY3dqGZSUVM3M0u1F2r6mvpAmGXALvCO4pV6v5Ixufqw/Wg5YAz
+         gvBoSntQYX/6kn2nqnY290dVkXyfmnxJvQyZnhC3ZFXfM6CzbW9Ih4koMCKbyHcM4E
+         m8GzdiMz5W5DA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
-        Qi Liu <liuqi115@huawei.com>,
-        John Garry <john.garry@huawei.com>,
+Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        jejb@linux.ibm.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.17 108/149] scsi: hisi_sas: Limit users changing debugfs BIST count value
-Date:   Fri,  1 Apr 2022 10:24:55 -0400
-Message-Id: <20220401142536.1948161-108-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.17 066/149] scsi: mpi3mr: Fix deadlock while canceling the fw event
+Date:   Fri,  1 Apr 2022 10:24:13 -0400
+Message-Id: <20220401142536.1948161-66-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220401142536.1948161-1-sashal@kernel.org>
 References: <20220401142536.1948161-1-sashal@kernel.org>
@@ -53,93 +53,245 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-[ Upstream commit 286ce4c65fbdf5eb9d4d5f4e4997c4e32bf1b073 ]
+[ Upstream commit 580e6742205efe6b0bfa5a6a6079f509d99168e0 ]
 
-Add a file operation for "cnt" file under bist directory, so users can only
-read "cnt" or clear "cnt" to zero, but cannot randomly modify.
+During controller reset, the driver tries to flush all the pending firmware
+event works from worker queue that are queued prior to the reset. However,
+if any work is waiting for device addition/removal operation to be
+completed at the SML, then a deadlock is observed. This is due to the
+controller reset waiting for the device addition/removal to be completed
+and the device/addition removal is waiting for the controller reset to be
+completed.
 
-Link: https://lore.kernel.org/r/1645703489-87194-6-git-send-email-john.garry@huawei.com
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: Qi Liu <liuqi115@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+To limit this deadlock, continue with the controller reset handling without
+canceling the work which is waiting for device addition/removal operation
+to complete at SML.
+
+Link: https://lore.kernel.org/r/20220210095817.22828-2-sreekanth.reddy@broadcom.com
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 52 +++++++++++++++++++++++++-
- 1 file changed, 50 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    |   4 ++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |   2 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 106 ++++++++++++++++++++++++++------
+ 3 files changed, 91 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index ce0d4bfbe51e..ee7be7d51a21 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3976,6 +3976,54 @@ static const struct file_operations debugfs_bist_phy_v3_hw_fops = {
- 	.owner = THIS_MODULE,
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index fc4eaf6d1e47..d892ade421bf 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -866,6 +866,8 @@ struct mpi3mr_ioc {
+  * @send_ack: Event acknowledgment required or not
+  * @process_evt: Bottomhalf processing required or not
+  * @evt_ctx: Event context to send in Ack
++ * @pending_at_sml: waiting for device add/remove API to complete
++ * @discard: discard this event
+  * @ref_count: kref count
+  * @event_data: Actual MPI3 event data
+  */
+@@ -877,6 +879,8 @@ struct mpi3mr_fwevt {
+ 	bool send_ack;
+ 	bool process_evt;
+ 	u32 evt_ctx;
++	bool pending_at_sml;
++	bool discard;
+ 	struct kref ref_count;
+ 	char event_data[0] __aligned(4);
  };
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 15bdc21ead66..7193b983ee3b 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -4353,8 +4353,8 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 	memset(mrioc->devrem_bitmap, 0, mrioc->devrem_bitmap_sz);
+ 	memset(mrioc->removepend_bitmap, 0, mrioc->dev_handle_bitmap_sz);
+ 	memset(mrioc->evtack_cmds_bitmap, 0, mrioc->evtack_cmds_bitmap_sz);
+-	mpi3mr_cleanup_fwevt_list(mrioc);
+ 	mpi3mr_flush_host_io(mrioc);
++	mpi3mr_cleanup_fwevt_list(mrioc);
+ 	mpi3mr_invalidate_devhandles(mrioc);
+ 	if (mrioc->prepare_for_reset) {
+ 		mrioc->prepare_for_reset = 0;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 284117da9086..d205354be63a 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -285,6 +285,35 @@ static struct mpi3mr_fwevt *mpi3mr_dequeue_fwevt(
+ 	return fwevt;
+ }
  
-+static ssize_t debugfs_bist_cnt_v3_hw_write(struct file *filp,
-+					const char __user *buf,
-+					size_t count, loff_t *ppos)
++/**
++ * mpi3mr_cancel_work - cancel firmware event
++ * @fwevt: fwevt object which needs to be canceled
++ *
++ * Return: Nothing.
++ */
++static void mpi3mr_cancel_work(struct mpi3mr_fwevt *fwevt)
 +{
-+	struct seq_file *m = filp->private_data;
-+	struct hisi_hba *hisi_hba = m->private;
-+	unsigned int cnt;
-+	int val;
-+
-+	if (hisi_hba->debugfs_bist_enable)
-+		return -EPERM;
-+
-+	val = kstrtouint_from_user(buf, count, 0, &cnt);
-+	if (val)
-+		return val;
-+
-+	if (cnt)
-+		return -EINVAL;
-+
-+	hisi_hba->debugfs_bist_cnt = 0;
-+	return count;
++	/*
++	 * Wait on the fwevt to complete. If this returns 1, then
++	 * the event was never executed.
++	 *
++	 * If it did execute, we wait for it to finish, and the put will
++	 * happen from mpi3mr_process_fwevt()
++	 */
++	if (cancel_work_sync(&fwevt->work)) {
++		/*
++		 * Put fwevt reference count after
++		 * dequeuing it from worker queue
++		 */
++		mpi3mr_fwevt_put(fwevt);
++		/*
++		 * Put fwevt reference count to neutralize
++		 * kref_init increment
++		 */
++		mpi3mr_fwevt_put(fwevt);
++	}
 +}
 +
-+static int debugfs_bist_cnt_v3_hw_show(struct seq_file *s, void *p)
+ /**
+  * mpi3mr_cleanup_fwevt_list - Cleanup firmware event list
+  * @mrioc: Adapter instance reference
+@@ -302,28 +331,25 @@ void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc)
+ 	    !mrioc->fwevt_worker_thread)
+ 		return;
+ 
+-	while ((fwevt = mpi3mr_dequeue_fwevt(mrioc)) ||
+-	    (fwevt = mrioc->current_event)) {
++	while ((fwevt = mpi3mr_dequeue_fwevt(mrioc)))
++		mpi3mr_cancel_work(fwevt);
++
++	if (mrioc->current_event) {
++		fwevt = mrioc->current_event;
+ 		/*
+-		 * Wait on the fwevt to complete. If this returns 1, then
+-		 * the event was never executed, and we need a put for the
+-		 * reference the work had on the fwevt.
+-		 *
+-		 * If it did execute, we wait for it to finish, and the put will
+-		 * happen from mpi3mr_process_fwevt()
++		 * Don't call cancel_work_sync() API for the
++		 * fwevt work if the controller reset is
++		 * get called as part of processing the
++		 * same fwevt work (or) when worker thread is
++		 * waiting for device add/remove APIs to complete.
++		 * Otherwise we will see deadlock.
+ 		 */
+-		if (cancel_work_sync(&fwevt->work)) {
+-			/*
+-			 * Put fwevt reference count after
+-			 * dequeuing it from worker queue
+-			 */
+-			mpi3mr_fwevt_put(fwevt);
+-			/*
+-			 * Put fwevt reference count to neutralize
+-			 * kref_init increment
+-			 */
+-			mpi3mr_fwevt_put(fwevt);
++		if (current_work() == &fwevt->work || fwevt->pending_at_sml) {
++			fwevt->discard = 1;
++			return;
+ 		}
++
++		mpi3mr_cancel_work(fwevt);
+ 	}
+ }
+ 
+@@ -690,6 +716,24 @@ static struct mpi3mr_tgt_dev  *__mpi3mr_get_tgtdev_from_tgtpriv(
+ 	return tgtdev;
+ }
+ 
++/**
++ * mpi3mr_print_device_event_notice - print notice related to post processing of
++ *					device event after controller reset.
++ *
++ * @mrioc: Adapter instance reference
++ * @device_add: true for device add event and false for device removal event
++ *
++ * Return: None.
++ */
++static void mpi3mr_print_device_event_notice(struct mpi3mr_ioc *mrioc,
++	bool device_add)
 +{
-+	struct hisi_hba *hisi_hba = s->private;
-+
-+	seq_printf(s, "%u\n", hisi_hba->debugfs_bist_cnt);
-+
-+	return 0;
++	ioc_notice(mrioc, "Device %s was in progress before the reset and\n",
++	    (device_add ? "addition" : "removal"));
++	ioc_notice(mrioc, "completed after reset, verify whether the exposed devices\n");
++	ioc_notice(mrioc, "are matched with attached devices for correctness\n");
 +}
 +
-+static int debugfs_bist_cnt_v3_hw_open(struct inode *inode,
-+					  struct file *filp)
-+{
-+	return single_open(filp, debugfs_bist_cnt_v3_hw_show,
-+			   inode->i_private);
-+}
-+
-+static const struct file_operations debugfs_bist_cnt_v3_hw_ops = {
-+	.open = debugfs_bist_cnt_v3_hw_open,
-+	.read = seq_read,
-+	.write = debugfs_bist_cnt_v3_hw_write,
-+	.llseek = seq_lseek,
-+	.release = single_release,
-+	.owner = THIS_MODULE,
-+};
-+
- static const struct {
- 	int		value;
- 	char		*name;
-@@ -4613,8 +4661,8 @@ static void debugfs_bist_init_v3_hw(struct hisi_hba *hisi_hba)
- 	debugfs_create_file("phy_id", 0600, hisi_hba->debugfs_bist_dentry,
- 			    hisi_hba, &debugfs_bist_phy_v3_hw_fops);
+ /**
+  * mpi3mr_remove_tgtdev_from_host - Remove dev from upper layers
+  * @mrioc: Adapter instance reference
+@@ -714,8 +758,17 @@ static void mpi3mr_remove_tgtdev_from_host(struct mpi3mr_ioc *mrioc,
+ 	}
  
--	debugfs_create_u32("cnt", 0600, hisi_hba->debugfs_bist_dentry,
--			   &hisi_hba->debugfs_bist_cnt);
-+	debugfs_create_file("cnt", 0600, hisi_hba->debugfs_bist_dentry,
-+			    hisi_hba, &debugfs_bist_cnt_v3_hw_ops);
+ 	if (tgtdev->starget) {
++		if (mrioc->current_event)
++			mrioc->current_event->pending_at_sml = 1;
+ 		scsi_remove_target(&tgtdev->starget->dev);
+ 		tgtdev->host_exposed = 0;
++		if (mrioc->current_event) {
++			mrioc->current_event->pending_at_sml = 0;
++			if (mrioc->current_event->discard) {
++				mpi3mr_print_device_event_notice(mrioc, false);
++				return;
++			}
++		}
+ 	}
+ 	ioc_info(mrioc, "%s :Removed handle(0x%04x), wwid(0x%016llx)\n",
+ 	    __func__, tgtdev->dev_handle, (unsigned long long)tgtdev->wwid);
+@@ -749,11 +802,20 @@ static int mpi3mr_report_tgtdev_to_host(struct mpi3mr_ioc *mrioc,
+ 	}
+ 	if (!tgtdev->host_exposed && !mrioc->reset_in_progress) {
+ 		tgtdev->host_exposed = 1;
++		if (mrioc->current_event)
++			mrioc->current_event->pending_at_sml = 1;
+ 		scsi_scan_target(&mrioc->shost->shost_gendev, 0,
+ 		    tgtdev->perst_id,
+ 		    SCAN_WILD_CARD, SCSI_SCAN_INITIAL);
+ 		if (!tgtdev->starget)
+ 			tgtdev->host_exposed = 0;
++		if (mrioc->current_event) {
++			mrioc->current_event->pending_at_sml = 0;
++			if (mrioc->current_event->discard) {
++				mpi3mr_print_device_event_notice(mrioc, true);
++				goto out;
++			}
++		}
+ 	}
+ out:
+ 	if (tgtdev)
+@@ -1193,6 +1255,8 @@ static void mpi3mr_sastopochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_sastopochg_evt_debug(mrioc, event_data);
  
- 	debugfs_create_file("loopback_mode", 0600,
- 			    hisi_hba->debugfs_bist_dentry,
+ 	for (i = 0; i < event_data->num_entries; i++) {
++		if (fwevt->discard)
++			return;
+ 		handle = le16_to_cpu(event_data->phy_entry[i].attached_dev_handle);
+ 		if (!handle)
+ 			continue;
+@@ -1324,6 +1388,8 @@ static void mpi3mr_pcietopochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_pcietopochg_evt_debug(mrioc, event_data);
+ 
+ 	for (i = 0; i < event_data->num_entries; i++) {
++		if (fwevt->discard)
++			return;
+ 		handle =
+ 		    le16_to_cpu(event_data->port_entry[i].attached_dev_handle);
+ 		if (!handle)
+@@ -1362,8 +1428,8 @@ static void mpi3mr_pcietopochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_fwevt *fwevt)
+ {
+-	mrioc->current_event = fwevt;
+ 	mpi3mr_fwevt_del_from_list(mrioc, fwevt);
++	mrioc->current_event = fwevt;
+ 
+ 	if (mrioc->stop_drv_processing)
+ 		goto out;
 -- 
 2.34.1
 
