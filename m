@@ -2,45 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D0A5C43217
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:55:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE2E6C4167B
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:55:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349570AbiDAO5A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:57:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60524 "EHLO
+        id S1349589AbiDAO5C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 10:57:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352337AbiDAOuP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:50:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E63D929341D;
-        Fri,  1 Apr 2022 07:41:30 -0700 (PDT)
+        with ESMTP id S1351793AbiDAOte (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:49:34 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 152412AA878;
+        Fri,  1 Apr 2022 07:40:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8F30C611C6;
-        Fri,  1 Apr 2022 14:40:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EEE0C3410F;
-        Fri,  1 Apr 2022 14:40:23 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 66340CE258A;
+        Fri,  1 Apr 2022 14:39:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5DF2C340F2;
+        Fri,  1 Apr 2022 14:39:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648824024;
-        bh=vGF3y5k+Md9JoYlQ/HpFasDzK2ORKMQo7WzM+vUcTPQ=;
+        s=k20201202; t=1648823979;
+        bh=A7zIwQRI211zRaTHQsoqYRO9i3VwRJrSVQE/uFNqMXE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LB0Q5yJ/zBQobiKcMwstGy6QYFOHp4XPj/bL3a7X2iiDCyEtHK87F/2loiKxYABNp
-         hgyszgbbU+poUvhH4XCNIt5bgNCZ3GKD/kkKAgfAPr1Wf4xMD3TcPcKIoQg5hD1xe+
-         dxgwVdMKoKwcHw43VVMOETmszFu1a8XEvEomcjfwKxY2ql5GN+bPmGZQak1CRm9Ega
-         zkGezCFvQEzqHPnwDUF8v1Xyi0f/JpKNQoF1Z0zOAGwlnzAZa5QeihOqtnYn1DsQ+E
-         GUsUJGqGwTfUMj6zhcTQa/xQKOo91XxYMe6Q+kc61hjMbG2NIW3r7Fe6PmAqDLYEmJ
-         sCVmWXZbFQ9Pg==
+        b=F94/m7HHkjBFWkQ9cGk8ChYONg+8V2r+QgQiV0l0MYuzCSflAU7MNZX5F4ePsq6an
+         AaVmOklzBxPdSzbITQhqGsgEt3M2zJkUYBXk5mBKFspACs1qGGh5OIyBBHkZKzb7yl
+         zHgoAe3kP793z1c3EWMIfO1a25Y09U/iaNnzRx8j99/3xuuOvfqisR2VCmGeoO5DYL
+         caJly+wN/zjWz9PLnkuimH7XX0R35dNLAlwvxVSAX2UMg/wkOBaVjmrcf5O6vqu44C
+         8BAz8UXd5c990AAxhQPqckuFvHIDEPUXF4c36tYfPQfAWIXYbeKjAYaF+oFcNYd2/Y
+         giOkZdKLP6Y2w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Jack Wang <jinpu.wang@ionos.com>,
+Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
-        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 57/98] scsi: pm8001: Fix memory leak in pm8001_chip_fw_flash_update_req()
-Date:   Fri,  1 Apr 2022 10:37:01 -0400
-Message-Id: <20220401143742.1952163-57-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        jejb@linux.ibm.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 39/98] scsi: mpi3mr: Fix memory leaks
+Date:   Fri,  1 Apr 2022 10:36:43 -0400
+Message-Id: <20220401143742.1952163-39-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220401143742.1952163-1-sashal@kernel.org>
 References: <20220401143742.1952163-1-sashal@kernel.org>
@@ -52,39 +53,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-[ Upstream commit f792a3629f4c4aa4c3703d66b43ce1edcc3ec09a ]
+[ Upstream commit d44b5fefb22e139408ae12b864da1ecb9ad9d1d2 ]
 
-In pm8001_chip_fw_flash_update_build(), if
-pm8001_chip_fw_flash_update_build() fails, the struct fw_control_ex
-allocated must be freed.
+Fix memory leaks related to operational reply queue's memory segments which
+are not getting freed while unloading the driver.
 
-Link: https://lore.kernel.org/r/20220220031810.738362-23-damien.lemoal@opensource.wdc.com
-Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Link: https://lore.kernel.org/r/20220210095817.22828-9-sreekanth.reddy@broadcom.com
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index d0e8e6c2f87d..caf5bcb367e4 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -4900,8 +4900,10 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info *pm8001_ha,
- 	ccb->ccb_tag = tag;
- 	rc = pm8001_chip_fw_flash_update_build(pm8001_ha, &flash_update_info,
- 		tag);
--	if (rc)
-+	if (rc) {
-+		kfree(fw_control_context);
- 		pm8001_tag_free(pm8001_ha, tag);
-+	}
- 
- 	return rc;
- }
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 5af36c54cb59..3ef6b6edef46 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1275,7 +1275,7 @@ static void mpi3mr_free_op_req_q_segments(struct mpi3mr_ioc *mrioc, u16 q_idx)
+ 			    MPI3MR_MAX_SEG_LIST_SIZE,
+ 			    mrioc->req_qinfo[q_idx].q_segment_list,
+ 			    mrioc->req_qinfo[q_idx].q_segment_list_dma);
+-			mrioc->op_reply_qinfo[q_idx].q_segment_list = NULL;
++			mrioc->req_qinfo[q_idx].q_segment_list = NULL;
+ 		}
+ 	} else
+ 		size = mrioc->req_qinfo[q_idx].segment_qd *
 -- 
 2.34.1
 
