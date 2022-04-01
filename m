@@ -2,45 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 401EFC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:55:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCAA1C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:55:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348960AbiDAO5L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:57:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54914 "EHLO
+        id S239306AbiDAO5R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 10:57:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350176AbiDAOrR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:47:17 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6707D2A129A;
-        Fri,  1 Apr 2022 07:37:18 -0700 (PDT)
+        with ESMTP id S1349747AbiDAOqq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:46:46 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F10BB29E4DA;
+        Fri,  1 Apr 2022 07:36:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5F494B82519;
-        Fri,  1 Apr 2022 14:36:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 410DFC340EE;
-        Fri,  1 Apr 2022 14:36:54 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4A56760C8C;
+        Fri,  1 Apr 2022 14:36:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEC2EC3410F;
+        Fri,  1 Apr 2022 14:36:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823815;
-        bh=3zdgk+amzkz5hnhB65s9Sk8Gho2/tyIKqasTtRUMeCk=;
+        s=k20201202; t=1648823784;
+        bh=H/rdxTjPyEKYNkJU4MJ52gR05JM+vHosoNfcB3w2/eo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BctNgRVSEtxk445FEEonZjxTEkrFaTRSvsc6VmRRFUM9KAnv8RoNRyUnSfwgS7DCx
-         9y9oQ/PtuezvATvJcokVBbUkF3Q1xR8c1G9smDulNBM5QLDrYoMSXyXgZMLNrxfJDp
-         JveV+TQLD9vOI2pjf7+7He7Ua7GAvuqIxcr0LH35gjPqxDEYboXXfGQjXpY9dWER/V
-         AlrQ/5ujqGcXwFBojaiRDsj4e7h/HeavhYDJF/0AHLSnBLtYoSrckcbJ/mZYlhiflk
-         CDevnVMncdBJVCnOlUVLlMDJLTj2BJ00FTyTqHlZPyGLKsSRYpBJo3MXI5kTzovr5H
-         aH6P3VO0fEbeQ==
+        b=bUhYEWWWhBpn50u51agQZUjCDzLgNsCEr3qvlUiE6PqzzdQ3BJoDF0wTH2D0ynQ4I
+         xW/BiIXj2NGiECPX1dbK+i/X2xRyFuMibniU9AgkhKnKM2WYpWe/ffEqXym8cCBcqn
+         J6QewyteQ7bjqQtHD5zp3kG8BF7ibW5y4eE5PMFjDVaGfvckyhQ6gi9q/mR7eopRb5
+         Yz6wYFjIoARFNnR3ldlLQg5/4h0KIUtCwpxwj33+xg7sWsUuMnsThLn8czl6eEbUTN
+         LfuegiIaO3Li8rNcZcYbNcppoHSrjfy/QCslaNb1VmX3/rISucTvdX2Ts+Zguq1fNd
+         b3Mx4PwhgMOSw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jianglei Nie <niejianglei2021@163.com>,
-        Hannes Reinecke <hare@suse.de>,
+Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
+        Qi Liu <liuqi115@huawei.com>,
+        John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 088/109] scsi: libfc: Fix use after free in fc_exch_abts_resp()
-Date:   Fri,  1 Apr 2022 10:32:35 -0400
-Message-Id: <20220401143256.1950537-88-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.16 075/109] scsi: hisi_sas: Limit users changing debugfs BIST count value
+Date:   Fri,  1 Apr 2022 10:32:22 -0400
+Message-Id: <20220401143256.1950537-75-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220401143256.1950537-1-sashal@kernel.org>
 References: <20220401143256.1950537-1-sashal@kernel.org>
@@ -52,37 +53,93 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jianglei Nie <niejianglei2021@163.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-[ Upstream commit 271add11994ba1a334859069367e04d2be2ebdd4 ]
+[ Upstream commit 286ce4c65fbdf5eb9d4d5f4e4997c4e32bf1b073 ]
 
-fc_exch_release(ep) will decrease the ep's reference count. When the
-reference count reaches zero, it is freed. But ep is still used in the
-following code, which will lead to a use after free.
+Add a file operation for "cnt" file under bist directory, so users can only
+read "cnt" or clear "cnt" to zero, but cannot randomly modify.
 
-Return after the fc_exch_release() call to avoid use after free.
-
-Link: https://lore.kernel.org/r/20220303015115.459778-1-niejianglei2021@163.com
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
+Link: https://lore.kernel.org/r/1645703489-87194-6-git-send-email-john.garry@huawei.com
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Qi Liu <liuqi115@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_exch.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 52 +++++++++++++++++++++++++-
+ 1 file changed, 50 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 841000445b9a..aa223db4cf53 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1701,6 +1701,7 @@ static void fc_exch_abts_resp(struct fc_exch *ep, struct fc_frame *fp)
- 	if (cancel_delayed_work_sync(&ep->timeout_work)) {
- 		FC_EXCH_DBG(ep, "Exchange timer canceled due to ABTS response\n");
- 		fc_exch_release(ep);	/* release from pending timer hold */
-+		return;
- 	}
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index b3e010483705..bb5c771534a6 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3968,6 +3968,54 @@ static const struct file_operations debugfs_bist_phy_v3_hw_fops = {
+ 	.owner = THIS_MODULE,
+ };
  
- 	spin_lock_bh(&ep->ex_lock);
++static ssize_t debugfs_bist_cnt_v3_hw_write(struct file *filp,
++					const char __user *buf,
++					size_t count, loff_t *ppos)
++{
++	struct seq_file *m = filp->private_data;
++	struct hisi_hba *hisi_hba = m->private;
++	unsigned int cnt;
++	int val;
++
++	if (hisi_hba->debugfs_bist_enable)
++		return -EPERM;
++
++	val = kstrtouint_from_user(buf, count, 0, &cnt);
++	if (val)
++		return val;
++
++	if (cnt)
++		return -EINVAL;
++
++	hisi_hba->debugfs_bist_cnt = 0;
++	return count;
++}
++
++static int debugfs_bist_cnt_v3_hw_show(struct seq_file *s, void *p)
++{
++	struct hisi_hba *hisi_hba = s->private;
++
++	seq_printf(s, "%u\n", hisi_hba->debugfs_bist_cnt);
++
++	return 0;
++}
++
++static int debugfs_bist_cnt_v3_hw_open(struct inode *inode,
++					  struct file *filp)
++{
++	return single_open(filp, debugfs_bist_cnt_v3_hw_show,
++			   inode->i_private);
++}
++
++static const struct file_operations debugfs_bist_cnt_v3_hw_ops = {
++	.open = debugfs_bist_cnt_v3_hw_open,
++	.read = seq_read,
++	.write = debugfs_bist_cnt_v3_hw_write,
++	.llseek = seq_lseek,
++	.release = single_release,
++	.owner = THIS_MODULE,
++};
++
+ static const struct {
+ 	int		value;
+ 	char		*name;
+@@ -4605,8 +4653,8 @@ static void debugfs_bist_init_v3_hw(struct hisi_hba *hisi_hba)
+ 	debugfs_create_file("phy_id", 0600, hisi_hba->debugfs_bist_dentry,
+ 			    hisi_hba, &debugfs_bist_phy_v3_hw_fops);
+ 
+-	debugfs_create_u32("cnt", 0600, hisi_hba->debugfs_bist_dentry,
+-			   &hisi_hba->debugfs_bist_cnt);
++	debugfs_create_file("cnt", 0600, hisi_hba->debugfs_bist_dentry,
++			    hisi_hba, &debugfs_bist_cnt_v3_hw_ops);
+ 
+ 	debugfs_create_file("loopback_mode", 0600,
+ 			    hisi_hba->debugfs_bist_dentry,
 -- 
 2.34.1
 
