@@ -2,88 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B80DEC4167E
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:02:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D52DC35276
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:02:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349744AbiDAO5v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:57:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60856 "EHLO
+        id S1347569AbiDAO5o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 10:57:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349319AbiDAOpq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:45:46 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2B1A29A57E
-        for <linux-scsi@vger.kernel.org>; Fri,  1 Apr 2022 07:35:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1648823746; x=1680359746;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=JinOvZgQOLDXNfhZgNFKxhl/hzFt5+bNm8bUnrw4DNE=;
-  b=W9eVZIv+SbOJCIBr2YCkmgScKYQcHx5ylb2/wSu+wGM6ZXDuEjYvJDee
-   FPxfIbvQ+MZutQxehzebnJi+NQzqDGnBLbn3ouKPYLrYspfW6hDtJ6fB8
-   wKQobIgJ9t85IYoJzu1xli2ibKqZal6252uJMxeq/YAXB9iFk1zwDyiZC
-   IZNynni9v4FCJNa8cT8Hn3TY8xTQtkfEOkSdEvwSGXXXWeQeLZwJaw6BL
-   WbOEGPQgaqDReJnBrJma5RgEu247hzv0zXQNCHnTAifYKY9YRSeB0ujhb
-   xyyM6mFfZd1Er38fdXqBS4Fk3oFsF3rqkT+zJCVvnBMygrRk/sPH/vHIl
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10304"; a="260328560"
-X-IronPort-AV: E=Sophos;i="5.90,227,1643702400"; 
-   d="scan'208";a="260328560"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2022 07:35:13 -0700
-X-IronPort-AV: E=Sophos;i="5.90,227,1643702400"; 
-   d="scan'208";a="567534847"
-Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.252.63.177])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2022 07:35:10 -0700
-Message-ID: <17c360e7-ea35-de7a-6f38-f1818826312a@intel.com>
-Date:   Fri, 1 Apr 2022 17:35:05 +0300
+        with ESMTP id S1349408AbiDAOp4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:45:56 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76EE129B7D9;
+        Fri,  1 Apr 2022 07:35:58 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CA7FBB82515;
+        Fri,  1 Apr 2022 14:35:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B9DCC34111;
+        Fri,  1 Apr 2022 14:35:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1648823755;
+        bh=bpiLyIlHoBG2yFqAXOrEyZuuGFpJJTLY++vq3ZuNVjU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=SaCWB0wynYFErk3eQaY+hYsHSqMMDybzR6CIP5fOcjUlhFgFjEjoW6kvuYcSnBYp8
+         hw1u2v5z/wuR0pLkCd2o+0jtzonKtw4Xb2u7baDoyt5joLJ/eqGV8gUGYXVPXZYqP+
+         9PKs3X07Yr7b8fPfPLeR+FYje+PnWWpq8ruDQ6hGXFtuUpwYmhy3txhH7mfpoNamLB
+         wSHGB67lyZSYXk2iMIQvY98mL56EnkLyh0SIk1pjWjVAvNq1rggHCQOl5w4goRGacB
+         8aEw/XXI6CjmXL312ex7IW1qemqp9ncI57URY2TVOgklmcQpU6Y5LzX2Y/LIM3aIv5
+         dots3vbuMTmZQ==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.16 064/109] scsi: pm8001: Fix pm80xx_pci_mem_copy() interface
+Date:   Fri,  1 Apr 2022 10:32:11 -0400
+Message-Id: <20220401143256.1950537-64-sashal@kernel.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220401143256.1950537-1-sashal@kernel.org>
+References: <20220401143256.1950537-1-sashal@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Firefox/91.0 Thunderbird/91.7.0
-Subject: Re: [PATCH 13/29] scsi: ufs: Remove the LUN quiescing code from
- ufshcd_wl_shutdown()
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>
-References: <20220331223424.1054715-1-bvanassche@acm.org>
- <20220331223424.1054715-14-bvanassche@acm.org>
- <8e1a89f6-4195-c0a9-62f3-c1dcbbd4202f@intel.com>
- <66458c8f-157e-f050-f520-e3ec01e75d69@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-In-Reply-To: <66458c8f-157e-f050-f520-e3ec01e75d69@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 01/04/2022 16.52, Bart Van Assche wrote:
-> On 3/31/22 23:20, Adrian Hunter wrote:
->> On 01/04/2022 1.34, Bart Van Assche wrote:
->>> Quiescing LUNs falls outside the scope of a shutdown callback. The shutdown
->>> callback is called from inside the reboot() system call and the reboot()
->>> system call is called after user space has stopped accessing block devices.
->>> Hence this patch that removes the quiescing calls from
->>> ufshcd_wl_shutdown(). This patch makes shutdown faster since multiple
->>> synchronize_rcu() calls are removed.
->>
->> AFAIK there is nothing stopping shutdown being called during intense UFS I/O.
->> What happens then?
-> 
-> Hmm ... how could this happen? Am I perhaps misunderstanding something about the Linux shutdown sequence?
-> 
-> The UFS driver is the only driver I know that tries to stop I/O from inside its shutdown callback. I'm not aware of any other Linux kernel driver that tries to pause I/O from inside its shutdown callback.
+From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-We are putting the UFS device into powerdown mode.  I am not sure what will happen if the device is processing requests at the same time.
+[ Upstream commit 3762d8f6edcdb03994c919f9487fd6d336c06561 ]
+
+The declaration of the local variable destination1 in pm80xx_pci_mem_copy()
+as a pointer to a u32 results in the sparse warning:
+
+warning: incorrect type in assignment (different base types)
+    expected unsigned int [usertype]
+    got restricted __le32 [usertype]
+
+Furthermore, the destination" argument of pm80xx_pci_mem_copy() is wrongly
+declared with the const attribute.
+
+Fix both problems by changing the type of the "destination" argument to
+"__le32 *" and use this argument directly inside the pm80xx_pci_mem_copy()
+function, thus removing the need for the destination1 local variable.
+
+Link: https://lore.kernel.org/r/20220220031810.738362-6-damien.lemoal@opensource.wdc.com
+Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/pm8001/pm80xx_hwi.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index ca4820d99dc7..39f8ae733103 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -66,18 +66,16 @@ int pm80xx_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shift_value)
+ }
+ 
+ static void pm80xx_pci_mem_copy(struct pm8001_hba_info  *pm8001_ha, u32 soffset,
+-				const void *destination,
++				__le32 *destination,
+ 				u32 dw_count, u32 bus_base_number)
+ {
+ 	u32 index, value, offset;
+-	u32 *destination1;
+-	destination1 = (u32 *)destination;
+ 
+-	for (index = 0; index < dw_count; index += 4, destination1++) {
++	for (index = 0; index < dw_count; index += 4, destination++) {
+ 		offset = (soffset + index);
+ 		if (offset < (64 * 1024)) {
+ 			value = pm8001_cr32(pm8001_ha, bus_base_number, offset);
+-			*destination1 =  cpu_to_le32(value);
++			*destination = cpu_to_le32(value);
+ 		}
+ 	}
+ 	return;
+-- 
+2.34.1
 
