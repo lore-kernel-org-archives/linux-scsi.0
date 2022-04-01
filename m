@@ -2,223 +2,196 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 456AEC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 17:03:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7744C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 17:13:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349408AbiDARFp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 13:05:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59722 "EHLO
+        id S236126AbiDARPd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 13:15:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349141AbiDARFn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 13:05:43 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B92975A5BC
-        for <linux-scsi@vger.kernel.org>; Fri,  1 Apr 2022 10:03:52 -0700 (PDT)
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220401170347epoutp01cc9477c89609c4f2d158110ba111fd82~h1IoLsbhy1066010660epoutp01P
-        for <linux-scsi@vger.kernel.org>; Fri,  1 Apr 2022 17:03:47 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220401170347epoutp01cc9477c89609c4f2d158110ba111fd82~h1IoLsbhy1066010660epoutp01P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1648832628;
-        bh=+1cc/kWoFyGeFxbK+NdADtVqkbHz28MlLkQfbk/Z/xQ=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=gx1vWVkdCZ6HMqU4pBYKYAtlXozoE7QC8HvzuLZ8RhMNXc4z5sQK/ah6G3s8fWsGQ
-         pV0fF1NJz3pKwaAXa4xevRNQMxzeAv/6RRM5bPeXfjoqCBhSurZzDUcWrnkT1yIJuk
-         xxeCvCysaUxANWrjBLuDnXeLvrOrNIiHu736LItI=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-        20220401170346epcas5p2d303c20e50354f964366b57eac757fb2~h1InKRZCi0236402364epcas5p2H;
-        Fri,  1 Apr 2022 17:03:46 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.178]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4KVRMg3cwYz4x9Px; Fri,  1 Apr
-        2022 17:03:43 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        07.D4.09952.F6037426; Sat,  2 Apr 2022 02:03:43 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20220401170342epcas5p137be705b6948a3b1c6fd8d59bd32bf07~h1Ii6-rPE1220712207epcas5p1U;
-        Fri,  1 Apr 2022 17:03:42 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220401170342epsmtrp2fea3c659fde876acadf0de7e7be17d5d~h1Ii4yFcX2139321393epsmtrp2n;
-        Fri,  1 Apr 2022 17:03:42 +0000 (GMT)
-X-AuditID: b6c32a4b-4b5ff700000226e0-e0-6247306f664d
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        FE.F3.03370.E6037426; Sat,  2 Apr 2022 02:03:42 +0900 (KST)
-Received: from alimakhtar03 (unknown [107.122.12.5]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20220401170330epsmtip16c67f881c39f6f49dfa7fe4caad435ea~h1IYTy1Hz0535805358epsmtip1a;
-        Fri,  1 Apr 2022 17:03:30 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Bart Van Assche'" <bvanassche@acm.org>,
-        "'Adrian Hunter'" <adrian.hunter@intel.com>,
-        "'Martin K . Petersen'" <martin.petersen@oracle.com>
-Cc:     "'Jaegeuk Kim'" <jaegeuk@kernel.org>, <linux-scsi@vger.kernel.org>,
-        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        "'Krzysztof Kozlowski'" <krzk@kernel.org>,
-        "'Stanley Chu'" <stanley.chu@mediatek.com>,
-        "'Andy Gross'" <agross@kernel.org>,
-        "'Bjorn Andersson'" <bjorn.andersson@linaro.org>,
-        "'Matthias Brugger'" <matthias.bgg@gmail.com>,
-        "'Avri Altman'" <Avri.Altman@wdc.com>,
-        "'Can Guo'" <cang@codeaurora.org>,
-        "'Asutosh Das'" <asutoshd@codeaurora.org>,
-        "'Bean Huo'" <beanhuo@micron.com>,
-        "'Guenter Roeck'" <linux@roeck-us.net>,
-        "'Daejun Park'" <daejun7.park@samsung.com>,
-        "'Keoseong Park'" <keosung.park@samsung.com>,
-        "'Eric Biggers'" <ebiggers@google.com>,
-        "'Ulf Hansson'" <ulf.hansson@linaro.org>,
-        "'Mike Snitzer'" <snitzer@redhat.com>,
-        "'Jens Axboe'" <axboe@kernel.dk>,
-        "'Geert Uytterhoeven'" <geert@linux-m68k.org>,
-        "'Anders Roxell'" <anders.roxell@linaro.org>,
-        "'Peter Wang'" <peter.wang@mediatek.com>,
-        "'Chanho Park'" <chanho61.park@samsung.com>,
-        "'Inki Dae'" <inki.dae@samsung.com>,
-        "'Phillip Potter'" <phil@philpotter.co.uk>,
-        "'Greg Kroah-Hartman'" <gregkh@linuxfoundation.org>,
-        "'Ye Bin'" <yebin10@huawei.com>,
-        "'ChanWoo Lee'" <cw9316.lee@samsung.com>,
-        "'Sergey Shtylyov'" <s.shtylyov@omprussia.ru>,
-        "'Srinivas Kandagatla'" <srinivas.kandagatla@linaro.org>,
-        "'Xiaoke Wang'" <xkernel.wang@foxmail.com>,
-        "'Jinyoung Choi'" <j-young.choi@samsung.com>,
-        "'Gustavo A. R. Silva'" <gustavoars@kernel.org>,
-        "'Kiwoong Kim'" <kwmad.kim@samsung.com>
-In-Reply-To: <47e847a9-d4b6-6fc9-d89f-9911c6510226@acm.org>
-Subject: RE: [PATCH 29/29] scsi: ufs: Split the drivers/scsi/ufs directory
-Date:   Fri, 1 Apr 2022 22:33:29 +0530
-Message-ID: <009301d845ea$707e5160$517af420$@samsung.com>
+        with ESMTP id S241868AbiDARPb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 13:15:31 -0400
+Received: from de-smtp-delivery-102.mimecast.com (de-smtp-delivery-102.mimecast.com [194.104.109.102])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E7AE654A6
+        for <linux-scsi@vger.kernel.org>; Fri,  1 Apr 2022 10:13:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
+        t=1648833217;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=uASKUxDJGF5RLHb5nJwYVkNiOeYBBXPLKAKMztduzBM=;
+        b=SbohKucxOdMioTiGF0rk1Q8mVvzCorpPsHrB+/XtJwKkwsumLewd6IDxMQrapCtg3Bt3Xa
+        cVklS+xQVXLixMf7Ka+vTU88xvR1Ef+sR4qw2s6HBQMsRomoW4O0f5Fz7gKlAfMOqnQgeb
+        FtedoG8oBXRmBoswfctvVFY1iRp6HjE=
+Received: from EUR03-VE1-obe.outbound.protection.outlook.com
+ (mail-ve1eur03lp2051.outbound.protection.outlook.com [104.47.9.51]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ de-mta-23-W4dVsUplNAuyI707gNRogQ-1; Fri, 01 Apr 2022 19:13:36 +0200
+X-MC-Unique: W4dVsUplNAuyI707gNRogQ-1
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=CF/onz0/6rCl1j9UMDw+e+0go+OwojV3l32sSwfe7+Kv6sF/ALoT41Mp52+Q099WBlWnKBhZpCwREMqVJhG92ZD8tXIR8Z0wL03nEmSoJ5iYL8rBMH9qZVZYJhEKWr8EJZnK90pmIzGNLuGgUGgRDZh5+yUKIu7ZhjXueH8qBg5BowQ1hfHA7dcGT+eJuB0fDaOeq2h/4Go1gv+0pEmeRaj0XtWlW2T+SaZrSow2Ll03z6FD/ZXuZ1jdNc1MHlivAyQB8soZSC5AgmOjY2xuw1aJDlkji9TdkuiQsV2dgtkDDKQ/x0onJuQ1ov7fFOvGgmnxTuyLgjZVDSxBOFrGEw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=uASKUxDJGF5RLHb5nJwYVkNiOeYBBXPLKAKMztduzBM=;
+ b=SBD7Qo8UtziWNNfUS9QnMKdowXaWhRi1AVQjhZD4BZFdCko1L60KA46xzk7VeZT2/LwIpsh6kEsQqzIkI94ajWUvtalV7ojTY7gR3W1VB7RhHYDpGwas958ybjTaU9VNjN2cAFqHINRRcfVnlEq4/SDPuJvjLDMMbR6eqekPgwACO2IRX6cn6whjEvd1qHnH/S7xzZgpoSnpyGtNBTGX7k5wfEh+sGMI7nx/qpMvD37e6zb/fbRYWqfVAeeYgaQFWj6eIMqv5h8haqk5LUTyPS1BW2gvoQjGsdMyswTdF5CneFtYnD+cG7lClNZMmb/jCd4tVII2QLgbqjMSUVbGjQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=suse.com;
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
+ by DBAPR04MB7447.eurprd04.prod.outlook.com (2603:10a6:10:1b2::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5123.25; Fri, 1 Apr
+ 2022 17:13:34 +0000
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::dc9:d46b:1a6d:2d44]) by AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::dc9:d46b:1a6d:2d44%7]) with mapi id 15.20.5123.021; Fri, 1 Apr 2022
+ 17:13:34 +0000
+Message-ID: <f3578cee-83a6-fe90-4268-8ae6d564e47b@suse.com>
+Date:   Fri, 1 Apr 2022 10:13:28 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH V3 04/15] scsi: iscsi: Fix nop handling during conn
+ recovery
+Content-Language: en-US
+To:     Mike Christie <michael.christie@oracle.com>, cleech@redhat.com,
+        njavali@marvell.com, mrangankar@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, jejb@linux.ibm.com
+References: <20220329180326.5586-1-michael.christie@oracle.com>
+ <20220329180326.5586-5-michael.christie@oracle.com>
+From:   Lee Duncan <lduncan@suse.com>
+In-Reply-To: <20220329180326.5586-5-michael.christie@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: AS9PR06CA0568.eurprd06.prod.outlook.com
+ (2603:10a6:20b:485::30) To AM5PR04MB3089.eurprd04.prod.outlook.com
+ (2603:10a6:206:b::28)
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQEkvIO8WDCMeleYLL46gzQacByZhQJQD67yAlAXIwMA15aYegEl4dvirg1rusA=
-Content-Language: en-us
-X-Brightmail-Tracker: H4sIAAAAAAAAA01Te1BUZRTvu/fu3YVCrwvIB9oMbmgBgbsC60dIMGJ1FUucHow0hRe4AQG7
-        O7usRJg6QIgggRooCMlbBWx5gzxi470or1BEkgkJSDAQUcYBGqZddy3/+53v/H7nd8755vBw
-        /jjXihcqiWTlEiZcQBoTtW22dg5S4QcBwjKNGdJMlpGo789VAo3+uIqh5oRuLppZvk2i0rFU
-        Ev16/xSBbrTMEyhjYRlHi6piDhpqsUcXehI4qGTcFw2WxnPQ9GgzhuIKVCRaGczgoLN/pBEo
-        JbWGRJOqLBzlj9RiqEszD1B/fzkX3a3uIFDynXptNu8mhi53rWEoNt4J1SyuclB6sSOqeLyC
-        o4SKJYASOjs5qKjmLkBd13zRRPUAjgY6nnI8t9JDt7zpoR9SMDr3dD9OX88a49K5lUo6vn2O
-        Qxc0zWD0UK+Sriw5RdL3hptIurUtEdBp+WpAt+SUcel4TQtBP1MlkrTq6ijwsfAL2xXCMkGs
-        3JqVBEqDQiXB7gLvj/29/F3EQpGDyBXtFFhLmAjWXbBnv4/D+6Hh2mUKrI8w4Urtkw+jUAi2
-        v7tLLlVGstYhUkWku4CVBYXLnGWOCiZCoZQEO0rYyHdEQuEOFy3xcFhIz3AjIRsw/+bvhy3Y
-        CTDDTwJGPEg5w9M3G7EkYMzjU40A5qT1GYJFAGOryoA+eAJgY98d4oXk5/xCQ6IBwIXBNINk
-        Rhs8GiJ1LJJygPUFCaQuYUad08rn2oEugVO3XoWLGdt02Ihyg5qxDkyHTal98GTfxHMLgrKB
-        A9f1hUwoVzhaWYjp8QaoyZwk9HXsYXHeQ1zfkjVcnirmJAGe1uwjeO+8rZ5iAWc62rm6HiBV
-        YwxrT5YCPX8P/K1x3qA1hbNd1Vw9toJP5ptJXR1I0TD/Hyv9cwicu6wySD2g+lY2oaPglC1U
-        NWzXW62DKauTmF5pAhMTDOvdCuPmbxv2tgmeSU7m6DENLyQtYWlgS9ZLc2W9NFfWSwNk/W+W
-        C4gSYMnKFBHBrMJF5iRho/7770BpRCV4fmp23vVgYnzBsRVgPNAKIA8XmJnc/uK9AL5JEBP9
-        LSuX+suV4ayiFbhol30GtzIPlGpvVRLpL3J2FTqLxWJnVyexSGBh0hNczvCpYCaSDWNZGSt/
-        ocN4RlYnsIYD6b9njn/5/VvZ2eW/WIzkVvnWiYc37jYa/erisbYySt3v990VD7/GxDmfc0Zv
-        z63v9oruvvI49vg+/tGC1NVrh1uE05f4rmUBeW98MsLdXG+5c8Us+cGyZ32TtX2+18yRyear
-        btMVB1+Z/TDodWJq3M1bJHZI2VQ/5Z1Tt+Ov6E56nU9QjGPoxUNea1GPPI5++mypVxlWlIO6
-        Pz+42zx5rKhQfXy9OKounnQ5eek1W5uqTPVnIpGX1+nZ9GP3D/aanlfbgFSl2dOYiOEetc/e
-        Ink5U3529evN2/Y7x/QduOzZ7mvZHV0exox0d6XuxW8gs641BbYxTvWm5oGTIETWe2jDT6MC
-        QhHCiOxwuYL5FxvwzUfzBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Sf1CTdRzH+z6/9jDd3ePGta9QVDu5EhsyJO/LaZxhHU/CZYlFdZUMeQIU
-        5tpAMct2tZtAoUSptDNigHAOaLIBtx1wxJAfg+LHhhoEUsAkQjg11MYMY646/nt97v3j8/nj
-        Q+PCPjKIzlBkcyqFPFNC8YmmDkmIVBERlxIxn0cix3QthfqnvAQa/dqLoVZdDw/Nei5TqGb8
-        FIXaf8snUF/bAoHO3PTg6LapikSutk2opFdHIuOvSWioRkui66OtGPqswkShpaEzJCqeKCJQ
-        4alGCk2b9Dgq/7kJQ92OBYAGBi7y0EhDJ4E+v2pdUQ0/Yqi6exlDn2q3oMbbXhKdrgpH9beW
-        cKSrvwOQrquLROcbRwDqrktCkw2DOBrsXCR3hLKu4XjWdbIQY8u+GMBZm36cx5aZc1jtpXmS
-        rWiZxVjXTzms2ZhPsWNXWijW3pEH2KLyHwDb9m0tj9U62gj2nimPYk0XRsGr4rf521O5zIzD
-        nGpzTDI/vbTMSSi9gbkN567hGlAsLAABNGSi4PfllaAA8GkhYwVQM9nL8wvB8Gp90b8sgheW
-        Z3h+0wyAzlYD8AkUI4XWCh3lEwKZrwCstn9H+Aac+WMNHNY4SX9Ej8E/m/2RAGYbdIx3Yj4W
-        Mbvgif5JwscEswEO2lyUjwVMNBw1V2J+Xgcd30w/9ODMJugecf/PVYY53H/fk9DjrlpZRq+c
-        8QocO7vRbxHD2c5LvCIg0q9q0q9q0q9q0q+KlAHCCNZzSnVWWpZapoxUcEfC1fIsdY4iLXz/
-        oSwzePhvYWFW0GK8GW4HGA3sANK4JFBw+d2XUoSCVPnRDznVoX2qnExObQfBNCERCwYLHPuE
-        TJo8mzvIcUpO9Z+K0QFBGizjQOqe4vUdETucSSGy5MdetLsT7z+S8ubZDPUdYVRpz9ZSS6Cm
-        z9acFlJ94649dJe4sfSDyRcS4ufeV3mPXTenay2vjT1bUvL69g2y3Vckrr7Et6L+Snnvy7V3
-        9z6uswzXPH3f4qkrOfx7wnJM+0zd2uB3DLGShLjjx/u9B6Ti86dF3vRH11UufvzgnFa6MTe+
-        xzuypTlRFRsZc0tgnAo4sfcZ1TX58JptvFyzKP/vyJMLTU5Z4b2nmPFZg+XgL2zc0RufNMQ+
-        p+yfmOJZuZc/6jpmfKJiYkK+f/fOPTtDPdH8i0FD2S5b5huETbsUvTU2G0W1M27xkecf1Eq7
-        jJvnk+d6FyMlhDpdLgvDVWr5P4VrWbPeAwAA
-X-CMS-MailID: 20220401170342epcas5p137be705b6948a3b1c6fd8d59bd32bf07
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220401135856epcas5p38d9e7721c1c0981928b38edcbb2c530f
-References: <20220331223424.1054715-1-bvanassche@acm.org>
-        <20220331223424.1054715-30-bvanassche@acm.org>
-        <c4b47162-1f98-c03b-d041-dc7ac8bd9ae2@intel.com>
-        <CGME20220401135856epcas5p38d9e7721c1c0981928b38edcbb2c530f@epcas5p3.samsung.com>
-        <47e847a9-d4b6-6fc9-d89f-9911c6510226@acm.org>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: a61bf233-083a-4916-3780-08da1402f3c9
+X-MS-TrafficTypeDiagnostic: DBAPR04MB7447:EE_
+X-Microsoft-Antispam-PRVS: <DBAPR04MB7447319440BCB35AC5CCFCCEDAE09@DBAPR04MB7447.eurprd04.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: bGlFXeUGYRKi44N47YFoH2WDFpV+zZH06xweSAmB3Y1YmVFMlj56u3nA1UK43IbM5SCSLgiVBbXyjTVwviFDfOLMAFvAziQvYQOzInIrOPRceL0f+//vU0WbmvxEpxrqlKbvA8PBnj3M3Q4LqgKNkz2hgpAAZKx2DlevxqPBxUpZu3FgYyFsmxBsMnACWumY3Me5XvcnMWeLwk5ohlJxE+NT5arLCy+ujEbJ48mpnirLs1x4ccGMFuZjWmfMxeBossqa+PYUfI2lC9Da4NFAX/rqpBdLKZ3vxh2OeKEaZFUPTgl5b1K4QDZ4hweELyiYCPtlvzLAVTe4M1kvvhFYA+NDGHRmegrxnnSKNpiD563OUWoEPdex+py1oMsdtsRtTlZkGmpLg7AZ35vFJEcmrwosR3fY1hOcxRXBzxZza+gKSaP3AiIFVmssSi/pVHB0Log8ND5E3EcVwuHK4GUYv4RhMJ6IxJpqnAn9mB8/Q6Tn8TWxhhtP0w4DLVY3S0ZiyOKRbM7W9nXlNu0tiSqbfCLMgauvgnX/YKrFrtyKzrNjrKzbTrpcP0PDPrdh3I1JcRrxKPoHMLZ1OaAsmQu0s7k6EZOWDmhgQy9gjywUBINIdDFxgavkM+OsfPZDO16GJybbpEIGPUgUnWyULCiwoXyfJWlNaiXkohPuN+MQ96dPk1cxUBDKw/0f8hzbwLDPX3kJfNcBRfazMUs3E8aZrhRjLYGEvKUUjh/RCmcywgE=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(508600001)(38100700002)(6486002)(316002)(2616005)(186003)(26005)(2906002)(86362001)(66556008)(5660300002)(8676002)(83380400001)(8936002)(6506007)(53546011)(6666004)(31696002)(66946007)(36756003)(66476007)(31686004)(6512007)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?TjVoNVFIenEyKzlYaG1DL0xQNnFvaTViMS9Ic24xblZCMG1rbitSZ3ZiNGdk?=
+ =?utf-8?B?aUpKNmNrOWhIRnlQcElRVTNZOGsvT01FR2F6REo2RjVXcFpYWSs3QVkyaHc5?=
+ =?utf-8?B?ai8rOXlyVW1UVHcyeTNQZzNDWVg3ZThySEg0eTZhOWNweGtocGNjVXNBNHRv?=
+ =?utf-8?B?dDZFaVA1YWNlT2trUlRMQUxHU2ZMZHlnc0lJTW9kL0ovYUF0K0lFVWF3M3Fl?=
+ =?utf-8?B?WW1HVWdKaG8vMm9aSkNlNWI4YTdjNEV5OXVnT0pmcFRpcGw1QVhsK25IclB2?=
+ =?utf-8?B?QWZQRTVvNXZvcWwyRlVmUHFsWXlPWnBEekJaWndrcGZrTENlUVdPZXJQQUdG?=
+ =?utf-8?B?aHRPNmxwYm84RzZBRGdJaEJoV3VKQUtxU25GWEppSHZzajdVSEpETmxFNkJo?=
+ =?utf-8?B?Tnd4SFRmVFhHVHpadWY1STQxazhiMmpCd0o3b215V01ySzZGbUhSUGtINmJF?=
+ =?utf-8?B?UEkzbHFNblRPWEhSREE1YjFmMFJUUlNPYjJjYjBlQkl6c2xlS0ZUMXZWUS85?=
+ =?utf-8?B?RkhveXBMZ3p6RHVCNUo2cnFwWUx2Znd3bmZGNkJ5N3dWSzhmTTdOelpONDU5?=
+ =?utf-8?B?Z3BXSnlFUVo5bVl6RnYxMzBYTU92MFYwU0pNQlZpOFdyWWtBL3lXV1piM1l1?=
+ =?utf-8?B?V1lORlJSVlg4a3pLOUt2TjNDbitBUCsxbjhPTjdSSlBZVlBMK3Q2NnNCTkRj?=
+ =?utf-8?B?Zk0wT2s3Yjd1R2lSemVuQnlYZGtNb2V2WnNUTUd1OUZoUHdqYVZYVUNac09Y?=
+ =?utf-8?B?WHhwWFBuRUg2M1lpZ1lvTFhsN3EwWm0vYjg0U0hMU2RvWi95TDhTaGVXM0R3?=
+ =?utf-8?B?OWxoV0FmZTlrUTBpNWQ0MWpGV2tKTmcvQXk0N2RCcHV3VFczZTB6NldvWVRw?=
+ =?utf-8?B?WXpxd1lVOVJkNzE4R0c4QXg2K1NrdUlRU3hQai9CV2NpMzd2WTNtRTREZGFH?=
+ =?utf-8?B?S0pCdVkwT0ZFSEFyczhmaEpqZ3IrajRNS0UwS0NmWkVIWkpreHdBeDE4RnJs?=
+ =?utf-8?B?dWpSUk8xSEtIcnJCeTBEY0FWNUZCV3c1dUowTG9oV2hVSjZVdzU2ZXJMVTFD?=
+ =?utf-8?B?UnJTNmk4S0h0UHkxVm5UZVN0YU9RaFhZTXNuSW0yUFMvcTFHWnZvbFdLRm01?=
+ =?utf-8?B?aXNIcTR0cGJEQit3YkFDSThrR3dhN2cvaXVMUmNZUzVJL0VFSWNFcWx4OS80?=
+ =?utf-8?B?aCsrSG50U2RNSlVyMHZYSUpFclZZa0E1Nk5DQTdWa2hXUUdyMW41VnErZm1L?=
+ =?utf-8?B?NUpVTVpObUFVN0s0VDI4bzUvbG1XYWNIby8zTDc4VFAxckI0aE5CNU1UV1ZI?=
+ =?utf-8?B?ajl1TDBZbVhxM2tHTWlScVVRODJQWkJxZ01VYmNKbXRtbGtuTmRiejZ1OUQ2?=
+ =?utf-8?B?dmcvYmVEcWNKd3NEQURJVGZGOXdmQlZVdFU5OTk0d2ZXSjJOTm1ObmVCeVRx?=
+ =?utf-8?B?R1dSNzNsem1FVVhzdHA3WVFpR0F6ZEpRbE1jczBPampra0UrcFI2eFo2STBJ?=
+ =?utf-8?B?cHFxV1BpNUluOXh3UkQwVG0xNHpDL2t6Tmdsa1BqdXFPYmY3dVpwNGNMdHJE?=
+ =?utf-8?B?RE9HZS8xeVRDR1l3MjEwdE5JNjZ0Lys3eStMN3RlcityQnVYZER1eFFsMWJT?=
+ =?utf-8?B?V2c4NkpXYzNieExoNTQ1eWE2UjZ5d21VaGdQSHkzYkxiT21hZ3YrODJhd3di?=
+ =?utf-8?B?NFU1SVpkbHM3eDE3NkFMRCs3SlRuaUlDdUpHZkhNcXZDT0ViOHIxRmdtdWJk?=
+ =?utf-8?B?eFN2ME5NNTFLbFltbzdBKzZuOE5FdGVpWk9QY2lsSEpNbkE5ZGVjdC9DTW13?=
+ =?utf-8?B?dG05cHFtTW9xSVpjak9RajVZWVBRY1VSUGVNMXRHZ0tuOThhKzNyUFFoYytw?=
+ =?utf-8?B?eFZnbEttZGF2UTQzUlBoVHFQZHVrbUJNejduZ0dGWTU0a1BnN1BhMWlwLzdz?=
+ =?utf-8?B?R21YbTJKTVA5NjA1eU83VHptR2l0M1JVMDYyQllySXpDdG5tMGhDOG9KekJz?=
+ =?utf-8?B?NmVHTUE5K1Q4b1RxMWFGTzVxR2hUQzREdCtwU2JEeXY0bU80U3ByVnNLbUdO?=
+ =?utf-8?B?NjRGV1Zsdjc5RFZJdVZPMkt2aDVGRVlhdktxOHpRRXNDNEpJMThBVFlicXcr?=
+ =?utf-8?B?TnkxNTBGTkMyTCtTOGppZjNqWExtYmoxZjhDTll3WUtNMUJuVUN2Q210ZWU1?=
+ =?utf-8?B?RzY3VmgzMHptb0VWeTRZNDJiUUd0cnprRjI4USthaGI0WGJuV3hEc2tLdmx1?=
+ =?utf-8?B?U2pPdlZ6LzllTmk5Y3hFcVBDTk1BMjllWFpMUENUSTNuN3U1U0hmSUxCUXNT?=
+ =?utf-8?B?SEMyUXR4SmROOWhXY3R0ZzZ2bks2dWxpWUtMNXlJUjc3enB3SmRIQT09?=
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a61bf233-083a-4916-3780-08da1402f3c9
+X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Apr 2022 17:13:34.0449
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: HROsZwi4yPjzhJr+8HUipMaWfvhd20PDsBGolt7qVxjc7M6VgUflo7QDBtDQaiFXMO65rgzE/0b3w8OM2dUEDQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBAPR04MB7447
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 3/29/22 11:03, Mike Christie wrote:
+> If a offload driver doesn't use the xmit workqueue, then when we are
+> doing ep_disconnect libiscsi can still inject PDUs to the driver. This
+> adds a check for if the connection is bound before trying to inject PDUs.
+> 
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> ---
+>   drivers/scsi/libiscsi.c | 7 ++++++-
+>   include/scsi/libiscsi.h | 2 +-
+>   2 files changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 5e7bd5a3b430..0bf8cf8585bb 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -678,7 +678,8 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+>   	struct iscsi_task *task;
+>   	itt_t itt;
+>   
+> -	if (session->state == ISCSI_STATE_TERMINATE)
+> +	if (session->state == ISCSI_STATE_TERMINATE ||
+> +	    !test_bit(ISCSI_CONN_FLAG_BOUND, &conn->flags))
+>   		return NULL;
+>   
+>   	if (opcode == ISCSI_OP_LOGIN || opcode == ISCSI_OP_TEXT) {
+> @@ -2214,6 +2215,8 @@ void iscsi_conn_unbind(struct iscsi_cls_conn *cls_conn, bool is_active)
+>   	iscsi_suspend_tx(conn);
+>   
+>   	spin_lock_bh(&session->frwd_lock);
+> +	clear_bit(ISCSI_CONN_FLAG_BOUND, &conn->flags);
+> +
+>   	if (!is_active) {
+>   		/*
+>   		 * if logout timed out before userspace could even send a PDU
+> @@ -3318,6 +3321,8 @@ int iscsi_conn_bind(struct iscsi_cls_session *cls_session,
+>   	spin_lock_bh(&session->frwd_lock);
+>   	if (is_leading)
+>   		session->leadconn = conn;
+> +
+> +	set_bit(ISCSI_CONN_FLAG_BOUND, &conn->flags);
+>   	spin_unlock_bh(&session->frwd_lock);
+>   
+>   	/*
+> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+> index 84086c240228..d0a24779c52d 100644
+> --- a/include/scsi/libiscsi.h
+> +++ b/include/scsi/libiscsi.h
+> @@ -56,7 +56,7 @@ enum {
+>   /* Connection flags */
+>   #define ISCSI_CONN_FLAG_SUSPEND_TX	BIT(0)
+>   #define ISCSI_CONN_FLAG_SUSPEND_RX	BIT(1)
+> -
+> +#define ISCSI_CONN_FLAG_BOUND		BIT(2)
+>   
+>   #define ISCSI_ITT_MASK			0x1fff
+>   #define ISCSI_TOTAL_CMDS_MAX		4096
 
-
->-----Original Message-----
->From: Bart Van Assche =5Bmailto:bvanassche=40acm.org=5D
->Sent: Friday, April 1, 2022 7:29 PM
->To: Adrian Hunter <adrian.hunter=40intel.com>; Martin K . Petersen
-><martin.petersen=40oracle.com>
->Cc: Jaegeuk Kim <jaegeuk=40kernel.org>; linux-scsi=40vger.kernel.org; Jame=
-s
->E.J. Bottomley <jejb=40linux.ibm.com>; Krzysztof Kozlowski
-><krzk=40kernel.org>; Stanley Chu <stanley.chu=40mediatek.com>; Andy Gross
-><agross=40kernel.org>; Bjorn Andersson <bjorn.andersson=40linaro.org>;
->Matthias Brugger <matthias.bgg=40gmail.com>; Avri Altman
-><Avri.Altman=40wdc.com>; Can Guo <cang=40codeaurora.org>; Asutosh Das
-><asutoshd=40codeaurora.org>; Bean Huo <beanhuo=40micron.com>; Guenter
->Roeck <linux=40roeck-us.net>; Daejun Park <daejun7.park=40samsung.com>;
->Keoseong Park <keosung.park=40samsung.com>; Eric Biggers
-><ebiggers=40google.com>; Ulf Hansson <ulf.hansson=40linaro.org>; Mike Snit=
-zer
-><snitzer=40redhat.com>; Jens Axboe <axboe=40kernel.dk>; Geert
->Uytterhoeven <geert=40linux-m68k.org>; Anders Roxell
-><anders.roxell=40linaro.org>; Peter Wang <peter.wang=40mediatek.com>;
->Chanho Park <chanho61.park=40samsung.com>; Alim Akhtar
-><alim.akhtar=40samsung.com>; Inki Dae <inki.dae=40samsung.com>; Phillip
->Potter <phil=40philpotter.co.uk>; Greg Kroah-Hartman
-><gregkh=40linuxfoundation.org>; Ye Bin <yebin10=40huawei.com>; ChanWoo
->Lee <cw9316.lee=40samsung.com>; Sergey Shtylyov
-><s.shtylyov=40omprussia.ru>; Srinivas Kandagatla
-><srinivas.kandagatla=40linaro.org>; Xiaoke Wang
-><xkernel.wang=40foxmail.com>; Jinyoung Choi <j-young.choi=40samsung.com>;
->Gustavo A. R. Silva <gustavoars=40kernel.org>; Kiwoong Kim
-><kwmad.kim=40samsung.com>
->Subject: Re: =5BPATCH 29/29=5D scsi: ufs: Split the drivers/scsi/ufs direc=
-tory
->
->On 3/31/22 23:38, Adrian Hunter wrote:
->> In particular drivers/ufs/core and drivers/ufs/host would seem a more
->> typical arrangement.
->
->Hi Adrian,
->
->Thanks for having taken a look at this patch series. I'm open to changing =
-the
->directory names. Moving the ufs directory one level up sounds like a good
->idea to me. However, I'm not sure that drivers/ufs/host would be a better
->name than drivers/ufs/drivers since all files in drivers/ufs/core also imp=
-lement
->UFS host controller support.
->
-Hi Bart,
-
-Interesting, it is true that ufshcd.c does have implementation of UFS HCI s=
-pecification.
-And since core uses a lot of vendor specific callbacks implementation, so m=
-ay be=20
-drivers/ufs/core and=20
-drivers/ufs/hci-vendor or drivers/ufs/pltfm=7B-vendor=7D might be good logi=
-cal one.
-
-Having said that, looking at mmc sub-system directory structure, it is simp=
-ly=20
-drivers/mmc/core and drivers/mmc/host
-
-
-=20
->Thanks,
->
->Bart.
+Reviewed-by: Lee Duncan <lduncan@suse.com>
 
