@@ -2,48 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BA25C43219
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:55:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3B6CC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:55:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349682AbiDAO51 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:57:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60842 "EHLO
+        id S1348664AbiDAO53 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 10:57:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349432AbiDAOp5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:45:57 -0400
+        with ESMTP id S1351352AbiDAOss (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:48:48 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C378829B7E9;
-        Fri,  1 Apr 2022 07:36:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E73A28AC60;
+        Fri,  1 Apr 2022 07:39:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A2B5060A3D;
-        Fri,  1 Apr 2022 14:36:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 141E6C340EE;
-        Fri,  1 Apr 2022 14:35:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 13EB160B9A;
+        Fri,  1 Apr 2022 14:39:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49578C36AEA;
+        Fri,  1 Apr 2022 14:39:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823760;
-        bh=6n70/9P3Qkc1dL6XTNTYG+wCIEIMgtMfG83rJLvg8Fw=;
+        s=k20201202; t=1648823960;
+        bh=bzbMuzZ+tSaSt+LWshNcwUC09neSrYgdPcYOVo06zZk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kWH0LXK13QLWeqvRYlzgokLDi0nWBVtzk7qOGGjTVSIRq9+FvBq1O/inqlDBr299c
-         nmY5D2jRTGsmeLv1WlfFmyzgzGlagWyHlwb/ONXck5iQL+BIMY+HcDUCh0aBTue2DM
-         glMqlNFdVgc8onU4UNyVSDZoh/e9um2OGTUO1azG2bglWEFQgWi6ET8bll2gKsJjH9
-         XMbAlppyc+RP6rHfFFW6Pm7cEi6r690ZIy4iQ7DFdoOtAU+h2xk877FSCU2fMO5zuk
-         2xFj/ed64Mn82HmSwVWoHuyKiTlwIyc6QBKM0MJStzbKmijplMgAoN9or7ofi43pSJ
-         Up87CBOrZPQqg==
+        b=d1xBqUJTzeB30yX+tPeZv9fWIUNl5Dd6gQG30MvuP9h/2L4rGTgnvgOye2BYGNBw/
+         JXzT0sstTQrmQlg/qZhJoLhb9p22ZZgRCrvDQ4XpPGVW/rf7UMZ2nujLVJJQ/u3dGl
+         gJO/rJ1NfifFFa2WAIaUs8Ej6S0dInv3+y8E8qODtL2i63nsvyevs+nyp1eqtbdw2k
+         qrU+RCQUgmWlJkMIXazN+85caZuzJl1ImdCERS54VzZ6ph0IdwWJlv4qlnQeOWl6F/
+         w7cy8KkezWCzH59TOrdmappCeIMDR7w/Vuzah9VenoUBbMiIEF4Z0uAbGFjaX76XAQ
+         jRU+tI0V6obWA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        John Garry <john.garry@huawei.com>,
+Cc:     Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>,
+        Kevin Barnett <kevin.barnett@microchip.com>,
+        Scott Benesh <scott.benesh@microchip.com>,
+        Scott Teel <scott.teel@microchip.com>,
+        Don Brace <don.brace@microchip.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
-        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.16 067/109] scsi: pm8001: Fix tag leaks on error
-Date:   Fri,  1 Apr 2022 10:32:14 -0400
-Message-Id: <20220401143256.1950537-67-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        storagedev@microchip.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 31/98] scsi: smartpqi: Fix kdump issue when controller is locked up
+Date:   Fri,  1 Apr 2022 10:36:35 -0400
+Message-Id: <20220401143742.1952163-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401143256.1950537-1-sashal@kernel.org>
-References: <20220401143256.1950537-1-sashal@kernel.org>
+In-Reply-To: <20220401143742.1952163-1-sashal@kernel.org>
+References: <20220401143742.1952163-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,100 +55,98 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+From: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
 
-[ Upstream commit 4c8f04b1905cd4b776d0b720463c091545478ef7 ]
+[ Upstream commit 3ada501d602abf02353445c03bb3258146445d90 ]
 
-In pm8001_chip_set_dev_state_req(), pm8001_chip_fw_flash_update_req(),
-pm80xx_chip_phy_ctl_req() and pm8001_chip_reg_dev_req() add missing calls
-to pm8001_tag_free() to free the allocated tag when pm8001_mpi_build_cmd()
-fails.
+Avoid dropping into shell if the controller is in locked up state.
 
-Similarly, in pm8001_exec_internal_task_abort(), if the chip ->task_abort
-method fails, the tag allocated for the abort request task must be
-freed. Add the missing call to pm8001_tag_free().
+Driver issues SIS soft reset to bring back the controller to SIS mode while
+OS boots into kdump mode.
 
-Link: https://lore.kernel.org/r/20220220031810.738362-22-damien.lemoal@opensource.wdc.com
-Reviewed-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+If the controller is in lockup state, SIS soft reset does not work.
+
+Since the controller lockup code has not been cleared, driver considers the
+firmware is no longer up and running. Driver returns back an error code to
+OS and the kdump fails.
+
+Link: https://lore.kernel.org/r/164375212337.440833.11955356190354940369.stgit@brunhilda.pdev.net
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c | 9 +++++++++
- drivers/scsi/pm8001/pm8001_sas.c | 2 +-
- drivers/scsi/pm8001/pm80xx_hwi.c | 9 +++++++--
- 3 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 39 ++++++++++++++++-----------
+ 1 file changed, 23 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 7cc1aa0b1f5a..5325da0e35f7 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -4489,6 +4489,9 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 		SAS_ADDR_SIZE);
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
- 			sizeof(payload), 0);
-+	if (rc)
-+		pm8001_tag_free(pm8001_ha, tag);
-+
- 	return rc;
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index a5453f5e87c3..2e690d8a3444 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -7653,6 +7653,21 @@ static int pqi_force_sis_mode(struct pqi_ctrl_info *ctrl_info)
+ 	return pqi_revert_to_sis_mode(ctrl_info);
  }
  
-@@ -4901,6 +4904,9 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info *pm8001_ha,
- 	ccb->ccb_tag = tag;
- 	rc = pm8001_chip_fw_flash_update_build(pm8001_ha, &flash_update_info,
- 		tag);
-+	if (rc)
-+		pm8001_tag_free(pm8001_ha, tag);
++static void pqi_perform_lockup_action(void)
++{
++	switch (pqi_lockup_action) {
++	case PANIC:
++		panic("FATAL: Smart Family Controller lockup detected");
++		break;
++	case REBOOT:
++		emergency_restart();
++		break;
++	case NONE:
++	default:
++		break;
++	}
++}
 +
- 	return rc;
+ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	int rc;
+@@ -7677,8 +7692,15 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ 	 * commands.
+ 	 */
+ 	rc = sis_wait_for_ctrl_ready(ctrl_info);
+-	if (rc)
++	if (rc) {
++		if (reset_devices) {
++			dev_err(&ctrl_info->pci_dev->dev,
++				"kdump init failed with error %d\n", rc);
++			pqi_lockup_action = REBOOT;
++			pqi_perform_lockup_action();
++		}
+ 		return rc;
++	}
+ 
+ 	/*
+ 	 * Get the controller properties.  This allows us to determine
+@@ -8402,21 +8424,6 @@ static int pqi_ofa_ctrl_restart(struct pqi_ctrl_info *ctrl_info, unsigned int de
+ 	return pqi_ctrl_init_resume(ctrl_info);
  }
  
-@@ -5005,6 +5011,9 @@ pm8001_chip_set_dev_state_req(struct pm8001_hba_info *pm8001_ha,
- 	payload.nds = cpu_to_le32(state);
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
- 			sizeof(payload), 0);
-+	if (rc)
-+		pm8001_tag_free(pm8001_ha, tag);
-+
- 	return rc;
- 
- }
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index c0b45b8a513d..2a9ea08c7fe6 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -831,10 +831,10 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
- 
- 		res = PM8001_CHIP_DISP->task_abort(pm8001_ha,
- 			pm8001_dev, flag, task_tag, ccb_tag);
+-static void pqi_perform_lockup_action(void)
+-{
+-	switch (pqi_lockup_action) {
+-	case PANIC:
+-		panic("FATAL: Smart Family Controller lockup detected");
+-		break;
+-	case REBOOT:
+-		emergency_restart();
+-		break;
+-	case NONE:
+-	default:
+-		break;
+-	}
+-}
 -
- 		if (res) {
- 			del_timer(&task->slow_task->timer);
- 			pm8001_dbg(pm8001_ha, FAIL, "Executing internal task failed\n");
-+			pm8001_tag_free(pm8001_ha, ccb_tag);
- 			goto ex_err;
- 		}
- 		wait_for_completion(&task->slow_task->completion);
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 39f8ae733103..531870552636 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -4909,8 +4909,13 @@ static int pm80xx_chip_phy_ctl_req(struct pm8001_hba_info *pm8001_ha,
- 	payload.tag = cpu_to_le32(tag);
- 	payload.phyop_phyid =
- 		cpu_to_le32(((phy_op & 0xFF) << 8) | (phyId & 0xFF));
--	return pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
--			sizeof(payload), 0);
-+
-+	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
-+				  sizeof(payload), 0);
-+	if (rc)
-+		pm8001_tag_free(pm8001_ha, tag);
-+
-+	return rc;
- }
- 
- static u32 pm80xx_chip_is_our_interrupt(struct pm8001_hba_info *pm8001_ha)
+ static struct pqi_raid_error_info pqi_ctrl_offline_raid_error_info = {
+ 	.data_out_result = PQI_DATA_IN_OUT_HARDWARE_ERROR,
+ 	.status = SAM_STAT_CHECK_CONDITION,
 -- 
 2.34.1
 
