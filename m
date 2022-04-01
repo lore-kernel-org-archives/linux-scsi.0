@@ -2,46 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9B0BC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:36:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9EECC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:36:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348180AbiDAOhp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:37:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56228 "EHLO
+        id S1348204AbiDAOhs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 10:37:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348207AbiDAOdt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:33:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3247B5F8F8;
-        Fri,  1 Apr 2022 07:31:14 -0700 (PDT)
+        with ESMTP id S1347432AbiDAOcd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:32:33 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D13BD1EE8DA;
+        Fri,  1 Apr 2022 07:29:10 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C2ABE61C0C;
-        Fri,  1 Apr 2022 14:31:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C386C36AE2;
-        Fri,  1 Apr 2022 14:31:11 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6018EB824AF;
+        Fri,  1 Apr 2022 14:29:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECA8DC36AE3;
+        Fri,  1 Apr 2022 14:29:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823473;
-        bh=fMG8qmMkatb/ALXVaoU86uFYKtdvjs1G7iwQUSKByjo=;
+        s=k20201202; t=1648823348;
+        bh=+w8+UgCH8qd5pzoPVExzhGnO6RgpcA8h/HJRk5r70bg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=c4MJT80i9ES/cHNQDXRwP6MJJKW+ZyN7CQDfF6bPWeQLNbHhW2tdUMhaniFBt8DyK
-         iMKEjuOlzqMUsd1pfj3U1jUn8H6ZK0EvZ61xkp/kpfPY1dh2lDukCr4v53TKYpFWbq
-         T1u6DyMuVmTC+YrHiFb9oKd43rtm/SNgqua+cBg7VctFvOCIVILGiY6+RQUrv6ZnGM
-         Jzif9g2uwIBYnNON1dF9xiEiYUKlLp/Qts5QLuaTIhIAaRjeo4ISnoaN1J2Dhz3Tmq
-         kr0C2jbJjG7DO1s65w+IQ6gYmw6oexlJctA6VluIydk2wZB1CD32+sQwurYABQRFkH
-         g00nnyzBRCFOQ==
+        b=Ep/CeFQBkfA9aE6E6CQVMZpCVF8yUa3wfhf86ykHGqH7o+3qY9xUtEivPBGjXw84+
+         a35hoMlCBniKPJ7xGqfDOyw2CZ3MwUL9L/YEp9FHGr2vvnJtq99MhC72Yoo4e4jGnF
+         T+78wsQxpQCdqWOraDy4nCeV/6iSkX1eYrvpQ2F1LT4JrOAfyqroBN9G8tEV1IIzwn
+         nIIigbG/KTQEXa1I3Qs/e7yUFsxg9KcgtqukGUPPAPZM27yLR2rF69BkSRPyP1aGmj
+         0Pyi2XcU7e+2aSciOeuz0lUCLvWj4d8MgoVuDlZGz+KYXaCMch8gtfHM7cZv1kr2ij
+         y7EHMPmP/2Low==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        "Juergen E. Fischer" <fischer@norbit.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Igor Zhbanov <i.zhbanov@omprussia.ru>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.17 106/149] scsi: aha152x: Fix aha152x_setup() __setup handler return value
-Date:   Fri,  1 Apr 2022 10:24:53 -0400
-Message-Id: <20220401142536.1948161-106-sashal@kernel.org>
+Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        jejb@linux.ibm.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.17 067/149] scsi: mpi3mr: Fix reporting of actual data transfer size
+Date:   Fri,  1 Apr 2022 10:24:14 -0400
+Message-Id: <20220401142536.1948161-67-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220401142536.1948161-1-sashal@kernel.org>
 References: <20220401142536.1948161-1-sashal@kernel.org>
@@ -53,50 +53,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@infradead.org>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-[ Upstream commit cc8294ec4738d25e2bb2d71f7d82a9bf7f4a157b ]
+[ Upstream commit 9992246127246a27cc7184f05cce6f62ac48f84e ]
 
-__setup() handlers should return 1 if the command line option is handled
-and 0 if not (or maybe never return 0; doing so just pollutes init's
-environment with strings that are not init arguments/parameters).
+The driver is missing to set the residual size while completing an
+I/O. Ensure proper data transfer size is reported to the kernel on I/O
+completion based on the transfer length reported by the firmware.
 
-Return 1 from aha152x_setup() to indicate that the boot option has been
-handled.
-
-Link: lore.kernel.org/r/64644a2f-4a20-bab3-1e15-3b2cdd0defe3@omprussia.ru
-Link: https://lore.kernel.org/r/20220223000623.5920-1-rdunlap@infradead.org
-Cc: "Juergen E. Fischer" <fischer@norbit.de>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Reported-by: Igor Zhbanov <i.zhbanov@omprussia.ru>
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Link: https://lore.kernel.org/r/20220210095817.22828-7-sreekanth.reddy@broadcom.com
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/aha152x.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index d17880b57d17..2449b4215b32 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -3375,13 +3375,11 @@ static int __init aha152x_setup(char *str)
- 	setup[setup_count].synchronous = ints[0] >= 6 ? ints[6] : 1;
- 	setup[setup_count].delay       = ints[0] >= 7 ? ints[7] : DELAY_DEFAULT;
- 	setup[setup_count].ext_trans   = ints[0] >= 8 ? ints[8] : 0;
--	if (ints[0] > 8) {                                                /*}*/
-+	if (ints[0] > 8)
- 		printk(KERN_NOTICE "aha152x: usage: aha152x=<IOBASE>[,<IRQ>[,<SCSI ID>"
- 		       "[,<RECONNECT>[,<PARITY>[,<SYNCHRONOUS>[,<DELAY>[,<EXT_TRANS>]]]]]]]\n");
--	} else {
-+	else
- 		setup_count++;
--		return 0;
--	}
- 
- 	return 1;
- }
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index d205354be63a..f7893de35b26 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -2617,6 +2617,8 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
+ 		scmd->result = DID_OK << 16;
+ 		goto out_success;
+ 	}
++
++	scsi_set_resid(scmd, scsi_bufflen(scmd) - xfer_count);
+ 	if (ioc_status == MPI3_IOCSTATUS_SCSI_DATA_UNDERRUN &&
+ 	    xfer_count == 0 && (scsi_status == MPI3_SCSI_STATUS_BUSY ||
+ 	    scsi_status == MPI3_SCSI_STATUS_RESERVATION_CONFLICT ||
 -- 
 2.34.1
 
