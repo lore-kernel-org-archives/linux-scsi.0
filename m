@@ -2,44 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6055C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:55:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AD92C4167D
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 14:55:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346016AbiDAO5l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:57:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60298 "EHLO
+        id S1349337AbiDAO5m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 10:57:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352301AbiDAOuO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:50:14 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 123E12B207B;
-        Fri,  1 Apr 2022 07:41:25 -0700 (PDT)
+        with ESMTP id S1352143AbiDAOt6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:49:58 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E75C292DAE;
+        Fri,  1 Apr 2022 07:41:06 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E0A04B824D8;
-        Fri,  1 Apr 2022 14:40:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6B9FC340EE;
-        Fri,  1 Apr 2022 14:40:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 352ED611BC;
+        Fri,  1 Apr 2022 14:40:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC630C2BBE4;
+        Fri,  1 Apr 2022 14:40:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648824046;
-        bh=fkv3DsJP6QDnF5V9WKUbhc3cbI7Ae3zkZ3dapDGXnZE=;
+        s=k20201202; t=1648824022;
+        bh=fGD5iJdC6D5RFyUz1FPQvYZjYGUGy6/NKYeb4gNSH+U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Obn5225KK7dQ9PGlD0WzcFVKYLnilEoHvFzposh9LdBK0Pv3x7gloq18rsEjap2fS
-         nSJv8lBkVJ4PVH71kZ0Hk2lft5+sE0qroUphFIVkPyyymbOIq7XYivLfiDdJJZrpHB
-         kZV2PTOcbHH8HsfhJRaS1NC5/Zv1HrWAjf1UXoyevjBiDhzrCGKNjkD6v5N7DFwRL6
-         bGHTpV6gQ/1+MrUUxVQTJGC6JhJnpzqWvxVUDnsKniWyvXPQcY4Y/2Qu6cbFC3OMEF
-         /4n1GeNNJlORavnazVk9me+SRsq5CxIT7wtwynwbvkoztz8+8FT6ppdRTFKzaG4cyy
-         Uun1/9JH1xgWQ==
+        b=SXNC53CzuZ7T+BIvZb93hnCdgyerCx7sj6YUM7bAZsKgkuNPUEVjX4m3Jr75R3dff
+         CXC/E1A2NxoeYUxApTAkNCL992EaXyhM3h/PE9xl1hzHk/Md1D8jjlwQoGL6cii8FJ
+         4t8YkJxr8J5ho0XMgVgzDaaC4CCELjw1bomx6/YeVOWCwGuUFrH/xc40SYofO0LmkA
+         91jo0tyf9gZ6IBRTj+doC+TSJo+nAvCuEd4AtvzITNuwRxeknyA8L3Ecff1XKU2k6c
+         3BoOVPcHwEhvGLDxvCtsoEzphakdAfXdx9VH9uAdlGEybq4VhLydVUTP1tdJnNZh8B
+         GN+y3esCYgG8A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Qi Liu <liuqi115@huawei.com>, John Garry <john.garry@huawei.com>,
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 63/98] scsi: hisi_sas: Free irq vectors in order for v3 HW
-Date:   Fri,  1 Apr 2022 10:37:07 -0400
-Message-Id: <20220401143742.1952163-63-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 56/98] scsi: pm8001: Fix tag leaks on error
+Date:   Fri,  1 Apr 2022 10:37:00 -0400
+Message-Id: <20220401143742.1952163-56-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220401143742.1952163-1-sashal@kernel.org>
 References: <20220401143742.1952163-1-sashal@kernel.org>
@@ -51,107 +52,100 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Qi Liu <liuqi115@huawei.com>
+From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-[ Upstream commit 554fb72ee34f4732c7f694f56c3c6e67790352a0 ]
+[ Upstream commit 4c8f04b1905cd4b776d0b720463c091545478ef7 ]
 
-If the driver probe fails to request the channel IRQ or fatal IRQ, the
-driver will free the IRQ vectors before freeing the IRQs in free_irq(),
-and this will cause a kernel BUG like this:
+In pm8001_chip_set_dev_state_req(), pm8001_chip_fw_flash_update_req(),
+pm80xx_chip_phy_ctl_req() and pm8001_chip_reg_dev_req() add missing calls
+to pm8001_tag_free() to free the allocated tag when pm8001_mpi_build_cmd()
+fails.
 
-------------[ cut here ]------------
-kernel BUG at drivers/pci/msi.c:369!
-Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
-Call trace:
-   free_msi_irqs+0x118/0x13c
-   pci_disable_msi+0xfc/0x120
-   pci_free_irq_vectors+0x24/0x3c
-   hisi_sas_v3_probe+0x360/0x9d0 [hisi_sas_v3_hw]
-   local_pci_probe+0x44/0xb0
-   work_for_cpu_fn+0x20/0x34
-   process_one_work+0x1d0/0x340
-   worker_thread+0x2e0/0x460
-   kthread+0x180/0x190
-   ret_from_fork+0x10/0x20
----[ end trace b88990335b610c11 ]---
+Similarly, in pm8001_exec_internal_task_abort(), if the chip ->task_abort
+method fails, the tag allocated for the abort request task must be
+freed. Add the missing call to pm8001_tag_free().
 
-So we use devm_add_action() to control the order in which we free the
-vectors.
-
-Link: https://lore.kernel.org/r/1645703489-87194-4-git-send-email-john.garry@huawei.com
-Signed-off-by: Qi Liu <liuqi115@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Link: https://lore.kernel.org/r/20220220031810.738362-22-damien.lemoal@opensource.wdc.com
+Reviewed-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c | 9 +++++++++
+ drivers/scsi/pm8001/pm8001_sas.c | 2 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c | 9 +++++++--
+ 3 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 3ab669dc806f..fd14f66c71df 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2392,17 +2392,25 @@ static irqreturn_t cq_interrupt_v3_hw(int irq_no, void *p)
- 	return IRQ_WAKE_THREAD;
- }
- 
-+static void hisi_sas_v3_free_vectors(void *data)
-+{
-+	struct pci_dev *pdev = data;
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 7e8cb377cb65..d0e8e6c2f87d 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -4485,6 +4485,9 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
+ 		SAS_ADDR_SIZE);
+ 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
+ 			sizeof(payload), 0);
++	if (rc)
++		pm8001_tag_free(pm8001_ha, tag);
 +
-+	pci_free_irq_vectors(pdev);
-+}
+ 	return rc;
+ }
+ 
+@@ -4897,6 +4900,9 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info *pm8001_ha,
+ 	ccb->ccb_tag = tag;
+ 	rc = pm8001_chip_fw_flash_update_build(pm8001_ha, &flash_update_info,
+ 		tag);
++	if (rc)
++		pm8001_tag_free(pm8001_ha, tag);
 +
- static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
- {
- 	int vectors;
- 	int max_msi = HISI_SAS_MSI_COUNT_V3_HW, min_msi;
- 	struct Scsi_Host *shost = hisi_hba->shost;
-+	struct pci_dev *pdev = hisi_hba->pci_dev;
- 	struct irq_affinity desc = {
- 		.pre_vectors = BASE_VECTORS_V3_HW,
- 	};
- 
- 	min_msi = MIN_AFFINE_VECTORS_V3_HW;
--	vectors = pci_alloc_irq_vectors_affinity(hisi_hba->pci_dev,
-+	vectors = pci_alloc_irq_vectors_affinity(pdev,
- 						 min_msi, max_msi,
- 						 PCI_IRQ_MSI |
- 						 PCI_IRQ_AFFINITY,
-@@ -2414,6 +2422,7 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_hba->cq_nvecs = vectors - BASE_VECTORS_V3_HW;
- 	shost->nr_hw_queues = hisi_hba->cq_nvecs;
- 
-+	devm_add_action(&pdev->dev, hisi_sas_v3_free_vectors, pdev);
- 	return 0;
+ 	return rc;
  }
  
-@@ -4763,7 +4772,7 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	dev_err(dev, "%d hw queues\n", shost->nr_hw_queues);
- 	rc = scsi_add_host(shost, dev);
- 	if (rc)
--		goto err_out_free_irq_vectors;
-+		goto err_out_debugfs;
+@@ -5001,6 +5007,9 @@ pm8001_chip_set_dev_state_req(struct pm8001_hba_info *pm8001_ha,
+ 	payload.nds = cpu_to_le32(state);
+ 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
+ 			sizeof(payload), 0);
++	if (rc)
++		pm8001_tag_free(pm8001_ha, tag);
++
+ 	return rc;
  
- 	rc = sas_register_ha(sha);
- 	if (rc)
-@@ -4792,8 +4801,6 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sas_unregister_ha(sha);
- err_out_register_ha:
- 	scsi_remove_host(shost);
--err_out_free_irq_vectors:
--	pci_free_irq_vectors(pdev);
- err_out_debugfs:
- 	debugfs_exit_v3_hw(hisi_hba);
- err_out_ha:
-@@ -4821,7 +4828,6 @@ hisi_sas_v3_destroy_irqs(struct pci_dev *pdev, struct hisi_hba *hisi_hba)
+ }
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 491cecbbe1aa..5fb08acbc0e5 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -831,10 +831,10 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
  
- 		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, nr), cq);
- 	}
--	pci_free_irq_vectors(pdev);
+ 		res = PM8001_CHIP_DISP->task_abort(pm8001_ha,
+ 			pm8001_dev, flag, task_tag, ccb_tag);
+-
+ 		if (res) {
+ 			del_timer(&task->slow_task->timer);
+ 			pm8001_dbg(pm8001_ha, FAIL, "Executing internal task failed\n");
++			pm8001_tag_free(pm8001_ha, ccb_tag);
+ 			goto ex_err;
+ 		}
+ 		wait_for_completion(&task->slow_task->completion);
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 287887d8d729..e3d80918d21e 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -4901,8 +4901,13 @@ static int pm80xx_chip_phy_ctl_req(struct pm8001_hba_info *pm8001_ha,
+ 	payload.tag = cpu_to_le32(tag);
+ 	payload.phyop_phyid =
+ 		cpu_to_le32(((phy_op & 0xFF) << 8) | (phyId & 0xFF));
+-	return pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
+-			sizeof(payload), 0);
++
++	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
++				  sizeof(payload), 0);
++	if (rc)
++		pm8001_tag_free(pm8001_ha, tag);
++
++	return rc;
  }
  
- static void hisi_sas_v3_remove(struct pci_dev *pdev)
+ static u32 pm80xx_chip_is_our_interrupt(struct pm8001_hba_info *pm8001_ha)
 -- 
 2.34.1
 
