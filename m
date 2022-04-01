@@ -2,46 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D5EFC4167E
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:02:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66EDCC3A589
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 15:02:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348718AbiDAPEG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 11:04:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60066 "EHLO
+        id S1348318AbiDAPED (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 11:04:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349429AbiDAOzk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:55:40 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 951A265816;
-        Fri,  1 Apr 2022 07:43:50 -0700 (PDT)
+        with ESMTP id S1349400AbiDAOzc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 10:55:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F198338A2;
+        Fri,  1 Apr 2022 07:43:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3AF05B8240E;
-        Fri,  1 Apr 2022 14:43:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EB8CC34113;
-        Fri,  1 Apr 2022 14:43:46 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ADE6B60BAF;
+        Fri,  1 Apr 2022 14:43:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16E54C3410F;
+        Fri,  1 Apr 2022 14:43:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648824228;
-        bh=Qo0QuXOTAUSojoSYUM3ShTjaFRA1mLkuZiHLouEKk7g=;
+        s=k20201202; t=1648824216;
+        bh=ftMsOTiE2AFyzUoFYW7VWMz8eLEA0rrJ4eKLlNOzqLk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iaAl+HV3rEBzTcAyP6vTw5AKWE4YQeDzmEqNQIBgCJdFJyjCEZhWbAMFd6abKIiyy
-         ngN2CZ6//WgN1qHtRX62JpnxvOvjeLK8htPJcFRoXDDujTSZj96qfQ/HRXR1zEDWk+
-         kjqi5AI9WzRY3oTs++JDwGp1KX//r+fZCxv400N9+4ss+CSR0Ofo7PZ98jYsAxBMKD
-         TV8v/p7VRJWZq9Vkmd352T2yVoIR0Ms6f3LvlFWjPfzwC1i20VMACSgU521mLZwCB7
-         NGfb5gxU99JwlWT0MNfFaQIjQbZZHcYOJoMpbPLXVg8pgmHJQbmg5ZtuZzHKZbd0sV
-         c25lI3pEkvWsg==
+        b=BQrQznCOVRM6sUk6QAEgpBmTVSNe8X5QNPSOj8b/krU0teVVaxJ8ENd++uATeqp6z
+         GmSTO3BGP+9YZPKATW2NwBerf3xxZCbkY/RX7Eb2jc8lGmVlG9lczrpEmWSnMyosGk
+         71rT9n71GyCaZzKiVRE1pwKZ2N9NV6wBkFIxh+SemLKsQxrR2KdNmN0c5kdH48gV5E
+         h3cqjVjcSBbqIwOxcj+leJRcPDFuF8x/tWQwupvhIuRW5LYiyvwMd7IoYd/5L5mB+E
+         39WqddWOn35Jz0Aal651gfW5tpGXUDwCROKRm44w5nEjRUo3MiiUXBLEiLly45BCEC
+         N8heYVWRe4Fog==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        "Juergen E. Fischer" <fischer@norbit.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Igor Zhbanov <i.zhbanov@omprussia.ru>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 39/65] scsi: aha152x: Fix aha152x_setup() __setup handler return value
-Date:   Fri,  1 Apr 2022 10:41:40 -0400
-Message-Id: <20220401144206.1953700-39-sashal@kernel.org>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, jinpu.wang@cloud.ionos.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 33/65] scsi: pm8001: Fix pm80xx_pci_mem_copy() interface
+Date:   Fri,  1 Apr 2022 10:41:34 -0400
+Message-Id: <20220401144206.1953700-33-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220401144206.1953700-1-sashal@kernel.org>
 References: <20220401144206.1953700-1-sashal@kernel.org>
@@ -53,50 +52,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@infradead.org>
+From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-[ Upstream commit cc8294ec4738d25e2bb2d71f7d82a9bf7f4a157b ]
+[ Upstream commit 3762d8f6edcdb03994c919f9487fd6d336c06561 ]
 
-__setup() handlers should return 1 if the command line option is handled
-and 0 if not (or maybe never return 0; doing so just pollutes init's
-environment with strings that are not init arguments/parameters).
+The declaration of the local variable destination1 in pm80xx_pci_mem_copy()
+as a pointer to a u32 results in the sparse warning:
 
-Return 1 from aha152x_setup() to indicate that the boot option has been
-handled.
+warning: incorrect type in assignment (different base types)
+    expected unsigned int [usertype]
+    got restricted __le32 [usertype]
 
-Link: lore.kernel.org/r/64644a2f-4a20-bab3-1e15-3b2cdd0defe3@omprussia.ru
-Link: https://lore.kernel.org/r/20220223000623.5920-1-rdunlap@infradead.org
-Cc: "Juergen E. Fischer" <fischer@norbit.de>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Reported-by: Igor Zhbanov <i.zhbanov@omprussia.ru>
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Furthermore, the destination" argument of pm80xx_pci_mem_copy() is wrongly
+declared with the const attribute.
+
+Fix both problems by changing the type of the "destination" argument to
+"__le32 *" and use this argument directly inside the pm80xx_pci_mem_copy()
+function, thus removing the need for the destination1 local variable.
+
+Link: https://lore.kernel.org/r/20220220031810.738362-6-damien.lemoal@opensource.wdc.com
+Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/aha152x.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index d8e19afa7a14..c6607c4686bb 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -3367,13 +3367,11 @@ static int __init aha152x_setup(char *str)
- 	setup[setup_count].synchronous = ints[0] >= 6 ? ints[6] : 1;
- 	setup[setup_count].delay       = ints[0] >= 7 ? ints[7] : DELAY_DEFAULT;
- 	setup[setup_count].ext_trans   = ints[0] >= 8 ? ints[8] : 0;
--	if (ints[0] > 8) {                                                /*}*/
-+	if (ints[0] > 8)
- 		printk(KERN_NOTICE "aha152x: usage: aha152x=<IOBASE>[,<IRQ>[,<SCSI ID>"
- 		       "[,<RECONNECT>[,<PARITY>[,<SYNCHRONOUS>[,<DELAY>[,<EXT_TRANS>]]]]]]]\n");
--	} else {
-+	else
- 		setup_count++;
--		return 0;
--	}
- 
- 	return 1;
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 2a3ce4680734..6af1734f2264 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -66,18 +66,16 @@ int pm80xx_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shift_value)
  }
+ 
+ static void pm80xx_pci_mem_copy(struct pm8001_hba_info  *pm8001_ha, u32 soffset,
+-				const void *destination,
++				__le32 *destination,
+ 				u32 dw_count, u32 bus_base_number)
+ {
+ 	u32 index, value, offset;
+-	u32 *destination1;
+-	destination1 = (u32 *)destination;
+ 
+-	for (index = 0; index < dw_count; index += 4, destination1++) {
++	for (index = 0; index < dw_count; index += 4, destination++) {
+ 		offset = (soffset + index);
+ 		if (offset < (64 * 1024)) {
+ 			value = pm8001_cr32(pm8001_ha, bus_base_number, offset);
+-			*destination1 =  cpu_to_le32(value);
++			*destination = cpu_to_le32(value);
+ 		}
+ 	}
+ 	return;
 -- 
 2.34.1
 
