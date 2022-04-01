@@ -2,184 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF7D6C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 09:16:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3838BC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 09:17:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344432AbiDAJSS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 05:18:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58790 "EHLO
+        id S240480AbiDAJSw convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Apr 2022 05:18:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344417AbiDAJSK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 05:18:10 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 000301C9B7A
-        for <linux-scsi@vger.kernel.org>; Fri,  1 Apr 2022 02:16:20 -0700 (PDT)
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220401091618epoutp0292d2168a82a95ffadb6fe9359b0f8fed~huwczHQ3_3091830918epoutp02c
-        for <linux-scsi@vger.kernel.org>; Fri,  1 Apr 2022 09:16:18 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220401091618epoutp0292d2168a82a95ffadb6fe9359b0f8fed~huwczHQ3_3091830918epoutp02c
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1648804578;
-        bh=cGJepxz4cnstkBJIo6/P4jwwK3qA32Md6z1NYGJE1YA=;
-        h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=fJ8oHR5X6p7ctSPK6cYpdWKADZkdkCCc1yNH3tBCUxc0miPJ69aAMKGCZLV3lh4z1
-         N54mrjrlruLQWlDtdqVGbASDGPaNLKntLkjOLl0+i4Wso7BJE9xYjXzVylxgREbWDv
-         Nhzp3zGRVG+VxaY9MIB//XTKYPDkA5vZtDTVu8Gw=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20220401091617epcas2p20f5f28caf4027e56df85ca212a0e681c~huwcWwKeY0444904449epcas2p2-;
-        Fri,  1 Apr 2022 09:16:17 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.36.68]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4KVF0G6Fp0z4x9Q7; Fri,  1 Apr
-        2022 09:16:14 +0000 (GMT)
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        A7.28.33036.ED2C6426; Fri,  1 Apr 2022 18:16:14 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
-        20220401091614epcas2p16a5e0585aa821d448dd8f2609c51bffd~huwZbp9_R2667326673epcas2p1x;
-        Fri,  1 Apr 2022 09:16:14 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220401091614epsmtrp2a4d0c38cdba198365f5154ec19817213~huwZamjXn2251322513epsmtrp2a;
-        Fri,  1 Apr 2022 09:16:14 +0000 (GMT)
-X-AuditID: b6c32a48-511ff7000000810c-15-6246c2de0062
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        36.CD.03370.ED2C6426; Fri,  1 Apr 2022 18:16:14 +0900 (KST)
-Received: from KORCO082417 (unknown [10.229.8.121]) by epsmtip2.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20220401091614epsmtip21f4171f3b2d644951d46ed35cc5e2952~huwZQzi1C1759617596epsmtip2U;
-        Fri,  1 Apr 2022 09:16:14 +0000 (GMT)
-From:   "Chanho Park" <chanho61.park@samsung.com>
-To:     "'Krzysztof Kozlowski'" <krzysztof.kozlowski@linaro.org>,
-        "'Alim Akhtar'" <alim.akhtar@samsung.com>,
-        "'Avri Altman'" <avri.altman@wdc.com>,
-        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-In-Reply-To: <20220401085050.119323-1-krzysztof.kozlowski@linaro.org>
-Subject: RE: [PATCH] scsi: ufs: ufshcd-pltfrm: simplify usages of pdev->dev
-Date:   Fri, 1 Apr 2022 18:16:14 +0900
-Message-ID: <01e401d845a9$22e481e0$68ad85a0$@samsung.com>
+        with ESMTP id S235554AbiDAJSw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 05:18:52 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E52CC1DBA9D
+        for <linux-scsi@vger.kernel.org>; Fri,  1 Apr 2022 02:17:02 -0700 (PDT)
+Received: from dggpeml500026.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4KVDzD5pHxzgYDy;
+        Fri,  1 Apr 2022 17:15:20 +0800 (CST)
+Received: from dggpeml100019.china.huawei.com (7.185.36.175) by
+ dggpeml500026.china.huawei.com (7.185.36.106) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Fri, 1 Apr 2022 17:17:01 +0800
+Received: from dggpeml500019.china.huawei.com (7.185.36.137) by
+ dggpeml100019.china.huawei.com (7.185.36.175) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Fri, 1 Apr 2022 17:17:01 +0800
+Received: from dggpeml500019.china.huawei.com ([7.185.36.137]) by
+ dggpeml500019.china.huawei.com ([7.185.36.137]) with mapi id 15.01.2308.021;
+ Fri, 1 Apr 2022 17:17:01 +0800
+From:   "wubo (T)" <wubo40@huawei.com>
+To:     Mike Christie <michael.christie@oracle.com>,
+        "lduncan@suse.com" <lduncan@suse.com>,
+        "cleech@redhat.com" <cleech@redhat.com>,
+        "njavali@marvell.com" <njavali@marvell.com>,
+        "mrangankar@marvell.com" <mrangankar@marvell.com>,
+        "GR-QLogic-Storage-Upstream@marvell.com" 
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
+Subject: Re: [PATCH V3 01/15] scsi: iscsi: Move iscsi_ep_disconnect
+Thread-Topic: [PATCH V3 01/15] scsi: iscsi: Move iscsi_ep_disconnect
+Thread-Index: AQHYQ5efa/dY63sDNkaO2TD4jZ/lwqzayryQ
+Date:   Fri, 1 Apr 2022 09:17:01 +0000
+Message-ID: <ab4ab242c12a447da17f5210a8a569b8@huawei.com>
+References: <20220329180326.5586-1-michael.christie@oracle.com>
+ <20220329180326.5586-2-michael.christie@oracle.com>
+In-Reply-To: <20220329180326.5586-2-michael.christie@oracle.com>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.174.179.189]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQIQxNM3mfj57f4Z1qObDZeWls2QCQI208enrFgRaYA=
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprDJsWRmVeSWpSXmKPExsWy7bCmhe69Q25JBl8bDS0ezNvGZvHy51U2
-        i0U3tjFZ7H29ld3i8q45bBbd13ewWSw//o/Jgd3jzrU9bB4TFh1g9Pj49BaLR9+WVYwenzfJ
-        ebQf6GYKYIvKtslITUxJLVJIzUvOT8nMS7dV8g6Od443NTMw1DW0tDBXUshLzE21VXLxCdB1
-        y8wBukVJoSwxpxQoFJBYXKykb2dTlF9akqqQkV9cYquUWpCSU2BeoFecmFtcmpeul5daYmVo
-        YGBkClSYkJ0x491H1oKJghUrW5ewNTA28XUxcnJICJhIXOicytbFyMUhJLCDUWLa39msEM4n
-        RonddyZBOZ8ZJb7/XcMC0/J8zT92iMQuRomr7z4zQTgvGCU+T7nFCFLFJqAv8bJjG1i7iMAO
-        JolJ3+cAJTg4OAVcJebvdASpERbwlth8uhNsKouAisTadauYQGxeAUuJza/3skPYghInZz4B
-        q2EWkJfY/nYOM8QVChI/ny5jBbFFBKwkpry7xwpRIyIxu7ONGWSvhMBMDolT87YwgeyVEHCR
-        eDBLBKJXWOLV8S3sELaUxOd3e9kg7GKJpbM+MUH0NjBKXN72CyphLDHrWTvY/cwCmhLrd+lD
-        jFSWOHIL6jQ+iY7Df9khwrwSHW1CEI3qEge2T4eGm6xE95zPrBC2h8T3I/dYJzAqzkLy5Cwk
-        T85C8swshL0LGFlWMYqlFhTnpqcWGxWYwCM7OT93EyM4mWp57GCc/faD3iFGJg7GQ4wSHMxK
-        IrxXY12ThHhTEiurUovy44tKc1KLDzGaAoN9IrOUaHI+MJ3nlcQbmlgamJiZGZobmRqYK4nz
-        eqVsSBQSSE8sSc1OTS1ILYLpY+LglGpgqmI+YjAjqHTRww0vKoXeerr8P+p4g3GFQdWMWcIv
-        PArclykmZcXw+D9L4H3F+nihmtTRaYuzTNqj9adsdr3Ektb1YEHX63+XOvPaqqf/0JV/u23/
-        0/qcIvfObyfPT3oR/8opLs2xkScxtGDa3BbvT0w6pybphip+rtg4+3jEVOXFJ1dOOHjcWPbr
-        wjWHJVP4zZozcxjXJsXJP9CZ5mygp7Vsz/OU1t/ioeppK+u5eu+e7nrpKjojxMyo4VPmupSY
-        umkHd/Evu3vd0OLRtLU2XZ5+V/9dEmiZP+PnbIeo3VfyJ+vvMY2R+5jhL5W8oPilRNXvH9WV
-        Nb8yPaW4r/rOZP/Goaer8P72wY9KBYUHlViKMxINtZiLihMBRG3XTy8EAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrFLMWRmVeSWpSXmKPExsWy7bCSvO69Q25JBt+a5CwezNvGZvHy51U2
-        i0U3tjFZ7H29ld3i8q45bBbd13ewWSw//o/Jgd3jzrU9bB4TFh1g9Pj49BaLR9+WVYwenzfJ
-        ebQf6GYKYIvisklJzcksSy3St0vgypjx7iNrwUTBipWtS9gaGJv4uhg5OSQETCSer/nH3sXI
-        xSEksINRYsbZHlaIhKzEs3c72CFsYYn7LUfA4kICzxglZr8vA7HZBPQlXnZsYwVpFhHYwyTR
-        fOU/I8SkaYwSh37sAXI4ODgFXCXm73QEaRAW8JbYfLqTBcRmEVCRWLtuFROIzStgKbH59V52
-        CFtQ4uTMJywgrcwCehJtGxlBwswC8hLb385hhrhHQeLn02Vg94gIWElMeXePFaJGRGJ2Zxvz
-        BEahWUgmzUKYNAvJpFlIOhYwsqxilEwtKM5Nzy02LDDKSy3XK07MLS7NS9dLzs/dxAiOHi2t
-        HYx7Vn3QO8TIxMF4iFGCg1lJhPdqrGuSEG9KYmVValF+fFFpTmrxIUZpDhYlcd4LXSfjhQTS
-        E0tSs1NTC1KLYLJMHJxSDUxe2TPcJQJfchxxfMBYWqWW8mCFmGu/9elD9hJPqydrp62YzSB5
-        1mjaJP2qy4dPbH33dp9fibRyXILiIlm7+Lu//0nMiUw4kV+u32n545vXKtWp2kout3mPn3RL
-        /OtmY+x6hvtI/0uZjVYXk7gWP1iXn7tKKoL/Mt8k3bbMeYw3n5rV/zhdozyP5cXlFEuZa5oR
-        M3P+Kay2UN1wffLOBfNML1ud4IoKWXr+29yzJlGLfKZmvejsvJTWs7tDJe6cs9uqjA7rTzvv
-        rH1QUrxALNCI787c79m7Jly8WrrMoHvGvyMJdV8OdbNoVys81ZqfdW96X7CP7eXHrV+ajz7v
-        CLlYdyY+5fHGXSufT7DR489QYinOSDTUYi4qTgQAj1EPWQ0DAAA=
-X-CMS-MailID: 20220401091614epcas2p16a5e0585aa821d448dd8f2609c51bffd
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220401085104epcas2p4a13c6ec6b67da7cf7a165b92e811a545
-References: <CGME20220401085104epcas2p4a13c6ec6b67da7cf7a165b92e811a545@epcas2p4.samsung.com>
-        <20220401085050.119323-1-krzysztof.kozlowski@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> Sent: Friday, April 1, 2022 5:51 PM
-> To: Alim Akhtar <alim.akhtar@samsung.com>; Avri Altman
-> <avri.altman@wdc.com>; James E.J. Bottomley <jejb@linux.ibm.com>; Martin
-K.
-> Petersen <martin.petersen@oracle.com>; linux-scsi@vger.kernel.org; linux-
-> kernel@vger.kernel.org
-> Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> Subject: [PATCH] scsi: ufs: ufshcd-pltfrm: simplify usages of pdev->dev
+On 3/29/22 11:03, Mike Christie wrote:
 > 
-> The 'struct device' pointer is already cached as local variable in
-> ufshcd_pltfrm_init(), so use it.
-
-Reviewed-by: Chanho Park <chanho61.park@samsung.com>
-
-Best Regards,
-Chanho Park
-
+> This patch moves iscsi_ep_disconnect so it can be called earlier in the next patch.
 > 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > ---
->  drivers/scsi/ufs/ufshcd-pltfrm.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
+>  drivers/scsi/scsi_transport_iscsi.c | 38 ++++++++++++++---------------
+>  1 file changed, 19 insertions(+), 19 deletions(-)
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-
-> pltfrm.c
-> index 87975d1a21c8..cca4b2181a81 100644
-> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-> @@ -341,7 +341,7 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+> index 27951ea05dd4..4e10457e3ab9 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -2217,6 +2217,25 @@ static void iscsi_stop_conn(struct iscsi_cls_conn *conn,
+> int flag)
+>  	ISCSI_DBG_TRANS_CONN(conn, "Stopping conn done.\n");  }
 > 
->  	err = ufshcd_alloc_host(dev, &hba);
->  	if (err) {
-> -		dev_err(&pdev->dev, "Allocation failed\n");
-> +		dev_err(dev, "Allocation failed\n");
->  		goto out;
->  	}
-> 
-> @@ -349,13 +349,13 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
-> 
->  	err = ufshcd_parse_clock_info(hba);
->  	if (err) {
-> -		dev_err(&pdev->dev, "%s: clock parse failed %d\n",
-> +		dev_err(dev, "%s: clock parse failed %d\n",
->  				__func__, err);
->  		goto dealloc_host;
->  	}
->  	err = ufshcd_parse_regulator_info(hba);
->  	if (err) {
-> -		dev_err(&pdev->dev, "%s: regulator init failed %d\n",
-> +		dev_err(dev, "%s: regulator init failed %d\n",
->  				__func__, err);
->  		goto dealloc_host;
->  	}
-> @@ -368,8 +368,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
->  		goto dealloc_host;
->  	}
-> 
-> -	pm_runtime_set_active(&pdev->dev);
-> -	pm_runtime_enable(&pdev->dev);
-> +	pm_runtime_set_active(dev);
-> +	pm_runtime_enable(dev);
-> 
+> +static void iscsi_ep_disconnect(struct iscsi_cls_conn *conn, bool
+> +is_active) {
+> +	struct iscsi_cls_session *session = iscsi_conn_to_session(conn);
+> +	struct iscsi_endpoint *ep;
+> +
+> +	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep.\n");
+> +	conn->state = ISCSI_CONN_FAILED;
+> +
+> +	if (!conn->ep || !session->transport->ep_disconnect)
+> +		return;
+> +
+> +	ep = conn->ep;
+> +	conn->ep = NULL;
+> +
+> +	session->transport->unbind_conn(conn, is_active);
+> +	session->transport->ep_disconnect(ep);
+> +	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep done.\n"); }
+> +
+>  static int iscsi_if_stop_conn(struct iscsi_transport *transport,
+>  			      struct iscsi_uevent *ev)
+>  {
+> @@ -2257,25 +2276,6 @@ static int iscsi_if_stop_conn(struct iscsi_transport
+> *transport,
 >  	return 0;
+>  }
 > 
+> -static void iscsi_ep_disconnect(struct iscsi_cls_conn *conn, bool is_active) -{
+> -	struct iscsi_cls_session *session = iscsi_conn_to_session(conn);
+> -	struct iscsi_endpoint *ep;
+> -
+> -	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep.\n");
+> -	conn->state = ISCSI_CONN_FAILED;
+> -
+> -	if (!conn->ep || !session->transport->ep_disconnect)
+> -		return;
+> -
+> -	ep = conn->ep;
+> -	conn->ep = NULL;
+> -
+> -	session->transport->unbind_conn(conn, is_active);
+> -	session->transport->ep_disconnect(ep);
+> -	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep done.\n");
+> -}
+> -
+>  static void iscsi_cleanup_conn_work_fn(struct work_struct *work)  {
+>  	struct iscsi_cls_conn *conn = container_of(work, struct iscsi_cls_conn,
 > --
-> 2.32.0
+> 2.25.1
 
-
+Reviewed-by: Wu Bo <wubo40@huawei.com>
