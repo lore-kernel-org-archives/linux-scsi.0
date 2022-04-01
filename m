@@ -2,33 +2,33 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3838BC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 09:17:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F878C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Apr 2022 09:29:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240480AbiDAJSw convert rfc822-to-8bit (ORCPT
+        id S1344585AbiDAJbV convert rfc822-to-8bit (ORCPT
         <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Apr 2022 05:18:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34164 "EHLO
+        Fri, 1 Apr 2022 05:31:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235554AbiDAJSw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 05:18:52 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E52CC1DBA9D
-        for <linux-scsi@vger.kernel.org>; Fri,  1 Apr 2022 02:17:02 -0700 (PDT)
-Received: from dggpeml500026.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4KVDzD5pHxzgYDy;
-        Fri,  1 Apr 2022 17:15:20 +0800 (CST)
-Received: from dggpeml100019.china.huawei.com (7.185.36.175) by
- dggpeml500026.china.huawei.com (7.185.36.106) with Microsoft SMTP Server
+        with ESMTP id S1344586AbiDAJbS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2022 05:31:18 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12C241F9FE6
+        for <linux-scsi@vger.kernel.org>; Fri,  1 Apr 2022 02:29:28 -0700 (PDT)
+Received: from dggpeml500020.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4KVFH65pvnzdZVd;
+        Fri,  1 Apr 2022 17:29:06 +0800 (CST)
+Received: from dggpeml100017.china.huawei.com (7.185.36.161) by
+ dggpeml500020.china.huawei.com (7.185.36.88) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Fri, 1 Apr 2022 17:17:01 +0800
+ 15.1.2308.21; Fri, 1 Apr 2022 17:29:27 +0800
 Received: from dggpeml500019.china.huawei.com (7.185.36.137) by
- dggpeml100019.china.huawei.com (7.185.36.175) with Microsoft SMTP Server
+ dggpeml100017.china.huawei.com (7.185.36.161) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Fri, 1 Apr 2022 17:17:01 +0800
+ 15.1.2308.21; Fri, 1 Apr 2022 17:29:26 +0800
 Received: from dggpeml500019.china.huawei.com ([7.185.36.137]) by
  dggpeml500019.china.huawei.com ([7.185.36.137]) with mapi id 15.01.2308.021;
- Fri, 1 Apr 2022 17:17:01 +0800
+ Fri, 1 Apr 2022 17:29:26 +0800
 From:   "wubo (T)" <wubo40@huawei.com>
 To:     Mike Christie <michael.christie@oracle.com>,
         "lduncan@suse.com" <lduncan@suse.com>,
@@ -40,14 +40,14 @@ To:     Mike Christie <michael.christie@oracle.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>
-Subject: Re: [PATCH V3 01/15] scsi: iscsi: Move iscsi_ep_disconnect
-Thread-Topic: [PATCH V3 01/15] scsi: iscsi: Move iscsi_ep_disconnect
-Thread-Index: AQHYQ5efa/dY63sDNkaO2TD4jZ/lwqzayryQ
-Date:   Fri, 1 Apr 2022 09:17:01 +0000
-Message-ID: <ab4ab242c12a447da17f5210a8a569b8@huawei.com>
+Subject: Re: [PATCH V3 03/15] scsi: iscsi: Merge suspend fields
+Thread-Topic: [PATCH V3 03/15] scsi: iscsi: Merge suspend fields
+Thread-Index: AQHYQ5egJaW/2wItYEeRSlAFUmdOeqzazloQ
+Date:   Fri, 1 Apr 2022 09:29:26 +0000
+Message-ID: <cdaf89a3d2fa41ce9d362165df45f917@huawei.com>
 References: <20220329180326.5586-1-michael.christie@oracle.com>
- <20220329180326.5586-2-michael.christie@oracle.com>
-In-Reply-To: <20220329180326.5586-2-michael.christie@oracle.com>
+ <20220329180326.5586-4-michael.christie@oracle.com>
+In-Reply-To: <20220329180326.5586-4-michael.christie@oracle.com>
 Accept-Language: zh-CN, en-US
 Content-Language: zh-CN
 X-MS-Has-Attach: 
@@ -61,69 +61,192 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/29/22 11:03, Mike Christie wrote:
 > 
-> This patch moves iscsi_ep_disconnect so it can be called earlier in the next patch.
+> Move the tx and rx suspend fields into one flags field.
 > 
+> Reviewed-by: Lee Duncan <lduncan@suse.com>
 > Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > ---
->  drivers/scsi/scsi_transport_iscsi.c | 38 ++++++++++++++---------------
->  1 file changed, 19 insertions(+), 19 deletions(-)
+>  drivers/scsi/bnx2i/bnx2i_hwi.c   |  2 +-
+>  drivers/scsi/bnx2i/bnx2i_iscsi.c |  2 +-
+>  drivers/scsi/cxgbi/libcxgbi.c    |  6 +++---
+>  drivers/scsi/libiscsi.c          | 20 ++++++++++----------
+>  drivers/scsi/libiscsi_tcp.c      |  2 +-
+>  include/scsi/libiscsi.h          |  9 +++++----
+>  6 files changed, 21 insertions(+), 20 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 27951ea05dd4..4e10457e3ab9 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -2217,6 +2217,25 @@ static void iscsi_stop_conn(struct iscsi_cls_conn *conn,
-> int flag)
->  	ISCSI_DBG_TRANS_CONN(conn, "Stopping conn done.\n");  }
+> diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c index
+> 5521469ce678..e16327a4b4c9 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+> @@ -1977,7 +1977,7 @@ static int bnx2i_process_new_cqes(struct bnx2i_conn
+> *bnx2i_conn)
+>  		if (nopin->cq_req_sn != qp->cqe_exp_seq_sn)
+>  			break;
 > 
-> +static void iscsi_ep_disconnect(struct iscsi_cls_conn *conn, bool
-> +is_active) {
-> +	struct iscsi_cls_session *session = iscsi_conn_to_session(conn);
-> +	struct iscsi_endpoint *ep;
-> +
-> +	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep.\n");
-> +	conn->state = ISCSI_CONN_FAILED;
-> +
-> +	if (!conn->ep || !session->transport->ep_disconnect)
-> +		return;
-> +
-> +	ep = conn->ep;
-> +	conn->ep = NULL;
-> +
-> +	session->transport->unbind_conn(conn, is_active);
-> +	session->transport->ep_disconnect(ep);
-> +	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep done.\n"); }
-> +
->  static int iscsi_if_stop_conn(struct iscsi_transport *transport,
->  			      struct iscsi_uevent *ev)
->  {
-> @@ -2257,25 +2276,6 @@ static int iscsi_if_stop_conn(struct iscsi_transport
-> *transport,
->  	return 0;
+> -		if (unlikely(test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx))) {
+> +		if (unlikely(test_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags)))
+> {
+>  			if (nopin->op_code == ISCSI_OP_NOOP_IN &&
+>  			    nopin->itt == (u16) RESERVED_ITT) {
+>  				printk(KERN_ALERT "bnx2i: Unsolicited "
+> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> index fe86fd61a995..15fbd09baa94 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> @@ -1721,7 +1721,7 @@ static int bnx2i_tear_down_conn(struct bnx2i_hba
+> *hba,
+>  			struct iscsi_conn *conn = ep->conn->cls_conn->dd_data;
+> 
+>  			/* Must suspend all rx queue activity for this ep */
+> -			set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
+> +			set_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
+>  		}
+>  		/* CONN_DISCONNECT timeout may or may not be an issue depending
+>  		 * on what transcribed in TCP layer, different targets behave diff --git
+> a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c index
+> 8c7d4dda4cf2..4365d52c6430 100644
+> --- a/drivers/scsi/cxgbi/libcxgbi.c
+> +++ b/drivers/scsi/cxgbi/libcxgbi.c
+> @@ -1634,11 +1634,11 @@ void cxgbi_conn_pdu_ready(struct cxgbi_sock *csk)
+>  	log_debug(1 << CXGBI_DBG_PDU_RX,
+>  		"csk 0x%p, conn 0x%p.\n", csk, conn);
+> 
+> -	if (unlikely(!conn || conn->suspend_rx)) {
+> +	if (unlikely(!conn || test_bit(ISCSI_CONN_FLAG_SUSPEND_RX,
+> +&conn->flags))) {
+>  		log_debug(1 << CXGBI_DBG_PDU_RX,
+> -			"csk 0x%p, conn 0x%p, id %d, suspend_rx %lu!\n",
+> +			"csk 0x%p, conn 0x%p, id %d, conn flags 0x%lx!\n",
+>  			csk, conn, conn ? conn->id : 0xFF,
+> -			conn ? conn->suspend_rx : 0xFF);
+> +			conn ? conn->flags : 0xFF);
+>  		return;
+>  	}
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c index
+> d09926e6c8a8..5e7bd5a3b430 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -1392,8 +1392,8 @@ static bool iscsi_set_conn_failed(struct iscsi_conn
+> *conn)
+>  	if (conn->stop_stage == 0)
+>  		session->state = ISCSI_STATE_FAILED;
+> 
+> -	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
+> -	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
+> +	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
+> +	set_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
+>  	return true;
 >  }
 > 
-> -static void iscsi_ep_disconnect(struct iscsi_cls_conn *conn, bool is_active) -{
-> -	struct iscsi_cls_session *session = iscsi_conn_to_session(conn);
-> -	struct iscsi_endpoint *ep;
-> -
-> -	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep.\n");
-> -	conn->state = ISCSI_CONN_FAILED;
-> -
-> -	if (!conn->ep || !session->transport->ep_disconnect)
-> -		return;
-> -
-> -	ep = conn->ep;
-> -	conn->ep = NULL;
-> -
-> -	session->transport->unbind_conn(conn, is_active);
-> -	session->transport->ep_disconnect(ep);
-> -	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep done.\n");
-> -}
-> -
->  static void iscsi_cleanup_conn_work_fn(struct work_struct *work)  {
->  	struct iscsi_cls_conn *conn = container_of(work, struct iscsi_cls_conn,
+> @@ -1454,7 +1454,7 @@ static int iscsi_xmit_task(struct iscsi_conn *conn, struct
+> iscsi_task *task,
+>  	 * Do this after dropping the extra ref because if this was a requeue
+>  	 * it's removed from that list and cleanup_queued_task would miss it.
+>  	 */
+> -	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
+> +	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
+>  		/*
+>  		 * Save the task and ref in case we weren't cleaning up this
+>  		 * task and get woken up again.
+> @@ -1532,7 +1532,7 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+>  	int rc = 0;
+> 
+>  	spin_lock_bh(&conn->session->frwd_lock);
+> -	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
+> +	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
+>  		ISCSI_DBG_SESSION(conn->session, "Tx suspended!\n");
+>  		spin_unlock_bh(&conn->session->frwd_lock);
+>  		return -ENODATA;
+> @@ -1746,7 +1746,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct
+> scsi_cmnd *sc)
+>  		goto fault;
+>  	}
+> 
+> -	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
+> +	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
+>  		reason = FAILURE_SESSION_IN_RECOVERY;
+>  		sc->result = DID_REQUEUE << 16;
+>  		goto fault;
+> @@ -1935,7 +1935,7 @@ static void fail_scsi_tasks(struct iscsi_conn *conn, u64
+> lun, int error)  void iscsi_suspend_queue(struct iscsi_conn *conn)  {
+>  	spin_lock_bh(&conn->session->frwd_lock);
+> -	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
+> +	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
+>  	spin_unlock_bh(&conn->session->frwd_lock);
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_suspend_queue);
+> @@ -1953,7 +1953,7 @@ void iscsi_suspend_tx(struct iscsi_conn *conn)
+>  	struct Scsi_Host *shost = conn->session->host;
+>  	struct iscsi_host *ihost = shost_priv(shost);
+> 
+> -	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
+> +	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
+>  	if (ihost->workq)
+>  		flush_workqueue(ihost->workq);
+>  }
+> @@ -1961,7 +1961,7 @@ EXPORT_SYMBOL_GPL(iscsi_suspend_tx);
+> 
+>  static void iscsi_start_tx(struct iscsi_conn *conn)  {
+> -	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
+> +	clear_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
+>  	iscsi_conn_queue_work(conn);
+>  }
+> 
+> @@ -3330,8 +3330,8 @@ int iscsi_conn_bind(struct iscsi_cls_session
+> *cls_session,
+>  	/*
+>  	 * Unblock xmitworker(), Login Phase will pass through.
+>  	 */
+> -	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
+> -	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
+> +	clear_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
+> +	clear_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_conn_bind);
+> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c index
+> 2e9ffe3d1a55..883005757ddb 100644
+> --- a/drivers/scsi/libiscsi_tcp.c
+> +++ b/drivers/scsi/libiscsi_tcp.c
+> @@ -927,7 +927,7 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, struct
+> sk_buff *skb,
+>  	 */
+>  	conn->last_recv = jiffies;
+> 
+> -	if (unlikely(conn->suspend_rx)) {
+> +	if (unlikely(test_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags))) {
+>  		ISCSI_DBG_TCP(conn, "Rx suspended!\n");
+>  		*status = ISCSI_TCP_SUSPENDED;
+>  		return 0;
+> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h index
+> e76c94697c1b..84086c240228 100644
+> --- a/include/scsi/libiscsi.h
+> +++ b/include/scsi/libiscsi.h
+> @@ -53,8 +53,10 @@ enum {
+> 
+>  #define ISID_SIZE			6
+> 
+> -/* Connection suspend "bit" */
+> -#define ISCSI_SUSPEND_BIT		1
+> +/* Connection flags */
+> +#define ISCSI_CONN_FLAG_SUSPEND_TX	BIT(0)
+> +#define ISCSI_CONN_FLAG_SUSPEND_RX	BIT(1)
+> +
+> 
+>  #define ISCSI_ITT_MASK			0x1fff
+>  #define ISCSI_TOTAL_CMDS_MAX		4096
+> @@ -211,8 +213,7 @@ struct iscsi_conn {
+>  	struct list_head	cmdqueue;	/* data-path cmd queue */
+>  	struct list_head	requeue;	/* tasks needing another run */
+>  	struct work_struct	xmitwork;	/* per-conn. xmit workqueue */
+> -	unsigned long		suspend_tx;	/* suspend Tx */
+> -	unsigned long		suspend_rx;	/* suspend Rx */
+> +	unsigned long		flags;		/* ISCSI_CONN_FLAGs */
+> 
+>  	/* negotiated params */
+>  	unsigned		max_recv_dlength; /* initiator_max_recv_dsl*/
 > --
 > 2.25.1
 
