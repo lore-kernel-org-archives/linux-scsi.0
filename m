@@ -2,243 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA311C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Apr 2022 06:59:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B70AC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  2 Apr 2022 07:06:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238370AbiDBHBY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 Apr 2022 03:01:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41814 "EHLO
+        id S229714AbiDBHIl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 2 Apr 2022 03:08:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229714AbiDBHBV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Apr 2022 03:01:21 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6952264BE1
-        for <linux-scsi@vger.kernel.org>; Fri,  1 Apr 2022 23:59:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1648882770; x=1680418770;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=W/v3wIIerYNfwO5uy0CoW7FVoJG4QknWhegwZHPNKAk=;
-  b=oGB0g4bY2OUXsZ0eELCEND93HMHX7hHKDB813eVzxknP4AiT1stLLHII
-   s7EAvD6A3+jck9JvRADHSO3sE8svzLoxRToWccZVQid5rZ3lrS+/g97wM
-   NZafeFNKPowAJmkYzb/Dko3280/Cpwwe7poZPrtAIhTUCnZt8+o42dX7W
-   Ehp3z1quXt71Mc0XeiNjkNkeHkaDKJacFIO5Zd980HiCq0Hs7flhkfZHn
-   SyBcxwNE1YpDzv4jYg+BwCLjhhCCg23/Z4GMpChurUohAf9AAcCQKqCmq
-   WNX8Fbjdi7jUjMN4T9A3WNAw50GH3hneWCN1211KnfyrO40gvj6+y+iug
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.90,229,1643644800"; 
-   d="scan'208";a="301060012"
-Received: from mail-dm6nam12lp2169.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.169])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Apr 2022 14:59:27 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GXjfxYPi5GJ9QOOEJgD86XA32WQwhQD61dqOu05rIjpW/wBk4Y/TfmPN/KFuLUFr4ETtXWUklYqV4tuv0bUYQ2RVkxxKwLhnbeqyKBdCfsO2G2W+NJnAo/+OzOl1kdMXMaiB47ClYX6iTf5xk+hU/8zu5Y7W3CEW7MwtCKRom1mMFdwOx3oQcnNucaenm3v8BweZZfidWJvj56ev6bvP9UscB5KnDZzObbnetGnqxHmFKCosMA+2MeZ56RFhRPy+UlfB4vzM41lX3Z+CxizKg2GPeQjbpD/0HxtEK3w9p5xKbdQBbrl6mnOVuuVFrOgLbNVqsmqfWNmmlNitK1ftww==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mzQoBDe7ITVh3NhtVMmVvfND/ZNq3HJyUsqXe0M0rpo=;
- b=mJEQYnhhwA4wLF/fkpWjQGUE1Xcty6eVYfr7O0MxDUNjMTDDTdbTcQrg2SD4lm4juhR5k2w3yBMPfrSB19869G6GmknuS9vxeYvDpgRW8QGn90xsL/Fu8nZUlnc5ZJJQbCHZuaf30njeQVEn/hI8vu+OnPUF+HfV9ftlBXrok136v4p7Af8bYGRKRJfCbj7MbOYP9WXL3FlY0eTowvnV1e119nK2eNgzOIg84u/PFHsXx1OsXhmAsN6X+X765d8lNKkc7WNnxQi5IFPEeejelzksHzsA7Z0tqoAOXw9dam3Jm2OSxlcp2F+DXnXFvmYzfHpNsXZRxTKts/+DZgOtSQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mzQoBDe7ITVh3NhtVMmVvfND/ZNq3HJyUsqXe0M0rpo=;
- b=D66Au8jPUErtkT0Es8AcQhrKM9E18QWAmGO7BwNtruEgiAQXy6Eg/wn1LkbIihG5XddZiu2pCsyfvl5MkWHDj9mnDldf5UuP+4nOlGDfQBzqpHnLjOa8UEsa87QhEftpHEori98/MCntHUNnyvBjsHUVhN4Cnhs4BpVHecoKCzE=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- SJ0PR04MB7245.namprd04.prod.outlook.com (2603:10b6:a03:294::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5123.19; Sat, 2 Apr
- 2022 06:59:25 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::941d:9fe8:b1bd:ea4b]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::941d:9fe8:b1bd:ea4b%5]) with mapi id 15.20.5123.026; Sat, 2 Apr 2022
- 06:59:25 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jinyoung Choi <j-young.choi@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <quic_asutoshd@quicinc.com>
-Subject: RE: [PATCH 11/29] scsi: ufs: Remove unused constants and code
-Thread-Topic: [PATCH 11/29] scsi: ufs: Remove unused constants and code
-Thread-Index: AQHYRU/S9rh8DmXsr0KXnFq5JED5x6zcMxZw
-Date:   Sat, 2 Apr 2022 06:59:25 +0000
-Message-ID: <DM6PR04MB6575F371F794F5AA28FCCB33FCE39@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20220331223424.1054715-1-bvanassche@acm.org>
- <20220331223424.1054715-12-bvanassche@acm.org>
-In-Reply-To: <20220331223424.1054715-12-bvanassche@acm.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: c92175a2-877c-4a89-e00b-08da147652ee
-x-ms-traffictypediagnostic: SJ0PR04MB7245:EE_
-x-microsoft-antispam-prvs: <SJ0PR04MB72459ADCBDA757A3B4198064FCE39@SJ0PR04MB7245.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 1FmIL2Ak3qSaECeF6BBHXJBa72m/amXTibmoeub980h/MWO6+qeyQrXW736CFt059TQeHMioMZEHEylYn3hQFhLMqecvbXRFv6UxPJB5n0pow1GVhSdcZshEioGQ4Vrc2SoEt6dHx+IsyfrK5D0GEKUQX+IB34N63ChIFEauqpFqrDEvJO1NCysW7Inaz5Y1DhSQEuxMkvPNsg8xV1lBxKYrg5rrG9kUZZHxy/n7rnshmqcMkPVg4b63f0w7GNMNE1+pHhaMylbU4COydL88M4bR56ZbNqgercjH35rIY89ePWiys/QYp1gCK8SYXyhOmu2/piJDtA3we1KOCmfbtgWyaPWc8S48jDqRb0XTLJziNpCT2NElHnsd2TmUKFgVxUg0z+yZlu5UOQL8/msiVDZnImT6hX+7T6BegiS+oXpoJ0mvMmG+s5KqOxAzNijeRlWIUpUu9UzASUWs6JKrrMAHXcWQBiNEv4a+lPSIQyx4a2aZTDjlzVd/WjN4IM4N0NqIKN6LZj/EYjFo1nV5neESeh26r/lEWzVw3sRggFfVrQpwVnVrZH82j/3aZANx2DwDGiZGlO9DpI1Lsg5+36ACx1V+FNSrJoc95sUqRLQ8KMH06d9jH6//tXJ28JrLHs1QT/l6Sw2p8OAnobXn8fuFW9tCHJULyS8KkP21krLdhPU/1u7Rkuha7CBFfq7vv/QaRlX7cxh4gOjMWJCehg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(66446008)(64756008)(8676002)(66476007)(4326008)(66556008)(508600001)(7696005)(6506007)(86362001)(76116006)(71200400001)(33656002)(55016003)(83380400001)(66946007)(7416002)(316002)(82960400001)(8936002)(2906002)(5660300002)(26005)(38100700002)(52536014)(110136005)(54906003)(122000001)(186003)(38070700005)(9686003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?xb8avioy8oQpaU5QDrSToldYoBi2TRhley4KU9EI+Zf9lqYf9I0f3aP95ezO?=
- =?us-ascii?Q?N7W+4Bm1+WksBK4+Os/5IfnKQ/ROBs7loWSVHPPV300iA9Nb2ai7ef5x+keP?=
- =?us-ascii?Q?IE6t0XpPDXbQVblZsXC/rTGh52N+jGnhS2IRhKYFFSyp4jfz7kVsigCD1r1k?=
- =?us-ascii?Q?eE7SU54GIeIfb26WHstzjLQVR1H4kfqkgMDXVDs+e0WQkhf8X3XKOC/1UdJY?=
- =?us-ascii?Q?6QYiSYJzsLKi/8UETd55jf6gMmML2m+RvDaEATQv0g2JKJNu7ByoWkdvmz/k?=
- =?us-ascii?Q?7UUeoWsuzh+B09Lg3nt9FtGIzyjkOsajn/KkgQy0Jv0tccO/wZe1TJfPNzNT?=
- =?us-ascii?Q?AJwuxjOYQ5CN04egUIq+tVkmUl2G2WVmPgeKagZRmpnfVgCy0LGOKJgxq21e?=
- =?us-ascii?Q?mX8Ao+D5WrUZjbqTcxsIiqvm++hRgvCyr2D7QqlOHBbIjj/U6fIhDidt9Uez?=
- =?us-ascii?Q?DbGk/BhP+alhbkXvYRiVgTLyaV5ePMFxHsLISE9f9RDXR2ax9wzFBeO3sSrY?=
- =?us-ascii?Q?TjSthrm4SEz40cFiwLAhuKOKjGIYUARAQ9gxcW0RbdaXj80PPzY6L3TnU19Y?=
- =?us-ascii?Q?q8uXSu/dDn31s8DO0temeuxz82lqsjpR69l4DXgUUEQmEyDLt5yJD6sywOt4?=
- =?us-ascii?Q?Yl97yVNCIxDrhkJoo/NF8tPKqFAFbcp9j4DelD1HRrfOrKQd+O1+pF3rClFj?=
- =?us-ascii?Q?OiIIwe71TbomSBcccADYHZT82RBmImJSrCxVrAy9MacJi58SYR5K7/bIE/mf?=
- =?us-ascii?Q?9TmbRABh4Cj9AU1TCeIiIfFY7Xjk6QVDoriWESfGIIVmbjQaDdApW60o3xU1?=
- =?us-ascii?Q?04unArjSmNYb4tUmvF1ISCqwtX6UyYXMwoDhKQKkLegUjRegYhVQ7Nn5xrJl?=
- =?us-ascii?Q?XdVVnlWlDM19x5dv3KVacaKKeYFPPdp9Oz+vkUudNN2H0pEcJ+KwCZ6uik3w?=
- =?us-ascii?Q?SS/CDKMaX2T291CSpN90Ye3XcF1Mp8kliQ4igYTUHM3aQDohbw7SPpFvQABX?=
- =?us-ascii?Q?20LzhD14gbuM1JETHVVH9JM1u9TUVKKoxfKS18uN4j4/W2kJScwAV4zXtGLd?=
- =?us-ascii?Q?6DAxN+u5t7DEnXGnC6Dldc3VT4yS8ehIGgpzQ2cutCeSHkzONgvplw7Je2Nq?=
- =?us-ascii?Q?9PAb/2FxfJnS20BQkRV/TavzbDqbNy8jVeABR1UuxRGBQebXaFYqcwjUGfbU?=
- =?us-ascii?Q?oncqKtMOvDhqbnVKVHKSNjomUkhLmoPw1yscTYGdOQ/IecYBQO7XJQBAbEyq?=
- =?us-ascii?Q?VHV3IcHvA2awViDUQmdzwrWIAE1OwJLpcjGBpxh+7jsJ98psjdAJaS+nS2YC?=
- =?us-ascii?Q?CA7HR7r9dMPWgR2aVIcjEYDIqgT0motGVRT+PCxb064nZBi4Tslp9fHamm30?=
- =?us-ascii?Q?YMWFNxLaaRhq66uvAh2L5UNj5dk42mU4faQlpVbBxk80Or2uLqL+HBh6JRNI?=
- =?us-ascii?Q?u1A8oJ0zsP1cq997JPkXKWGO7+uxik2OxFdrP9mwC5a/K6fnHYWICZ1KsSMe?=
- =?us-ascii?Q?n6469Gh3d4h1Bk+jFAfBw6vv5OMpQXfDO9RMX9Wyun1U8m2SbbNOeRoE6riY?=
- =?us-ascii?Q?iabdsZ2765t9GBX17DxnfajHdU9lmLqmFGi0Y5WXAt1z/5JeBvb0RbuqcpUs?=
- =?us-ascii?Q?gqcJI2Jt68Hk58Wwo6EVo+tWZ+Dec+L07N9gVtklUS5gTQ/JFSUR9KXgs5kp?=
- =?us-ascii?Q?1KfndUwNgJa9pH14NJEbleCp5bXvqiupUpCR7HeaazOB62qwx4QfqA2DGDTo?=
- =?us-ascii?Q?YOe7NJYwRg=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S234596AbiDBHIk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Apr 2022 03:08:40 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BDAE2102423
+        for <linux-scsi@vger.kernel.org>; Sat,  2 Apr 2022 00:06:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1648883208;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=HyMSiJlOQvjIy8EGlx27j+iS4lIlX1GOMrjnd5IUUSk=;
+        b=IF3v1ffIKPK646r1vPGrHQ5GPej+kjFxTQI8sZKyIACpUXQuLY5PE3O9yMa0ynndxItGHr
+        robHTjM3vqfEm13vgQtzApNaNl316IEUp2C4S7M+VfN55jcn6bANEIgh/EW1PL7LJNKav2
+        bNOv1Jb3g9OY5hk/kX+goJMh8O660g4=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-222-VVcwbCxROB-HfOCDJdb2Hw-1; Sat, 02 Apr 2022 03:06:47 -0400
+X-MC-Unique: VVcwbCxROB-HfOCDJdb2Hw-1
+Received: by mail-pf1-f198.google.com with SMTP id y189-20020a6264c6000000b004faecedcb81so2797927pfb.7
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Apr 2022 00:06:47 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=HyMSiJlOQvjIy8EGlx27j+iS4lIlX1GOMrjnd5IUUSk=;
+        b=oMDhiCZclDIqCgSE6kgMdnNbETN7Y8dizDi/CHnYCKrjIY1cjVgZW29CyHP+I1+bQ8
+         OUwmWAAkj12XZET40LajvqKtufldF6sQ0ixF4emb0osT21TAFbj/NfbWVwqAGSW7BH3n
+         cPq+lWGesHsEvbHt68kwswAhAzH/RpOU5bdFCFYux01VroAKECFPexL+wpoIARzf9d+H
+         mrzPbOA9JiEYpsOo1OYJNpSaphr+5YLScZGCSjyQvgoxaL0F1v65oCUZmrrCCNJ52KY2
+         nmTj6LbGetFJRQn3kpoPQAaRN/i7ZtKU1d6pF5P28i1Aq9z1pIca7gZTUfha3ZFXF62K
+         4fhg==
+X-Gm-Message-State: AOAM53389XlOxlek0Dywoye7xKxw0jGwj0xF/NMWkgdMIQ/Bmy+PiF2X
+        gcfIq3HnDjX/iTmlk6pQgSFX6s7j2O1GwwhPNPBLIRW0LGdXmWM5ygfjHNHYFC1EvX9kPAHDIWE
+        bo4pgM2p/nMG8CJTf4OebOPk1fSOvUUk45S2YMA==
+X-Received: by 2002:a17:902:ce8f:b0:154:6031:b53e with SMTP id f15-20020a170902ce8f00b001546031b53emr13551112plg.159.1648883206215;
+        Sat, 02 Apr 2022 00:06:46 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwyZf4Lobqcgjo9zG6mfY2sEsOCsigZvVE7GNj0PFthgZr9CyVzKyvMFUQmY8B8MBMZ7a6nW2jFTGZm5x3/8C8=
+X-Received: by 2002:a17:902:ce8f:b0:154:6031:b53e with SMTP id
+ f15-20020a170902ce8f00b001546031b53emr13551096plg.159.1648883205929; Sat, 02
+ Apr 2022 00:06:45 -0700 (PDT)
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c92175a2-877c-4a89-e00b-08da147652ee
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Apr 2022 06:59:25.4867
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: LN8dNNRO3Hhw1AboEdyiyf1KW5sNYveLuLspDL8ZeK1krK4GrUE97ufLHVuLiYL3U4EDV/42vJ+xki1IzDBjMg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR04MB7245
+From:   Yi Zhang <yi.zhang@redhat.com>
+Date:   Sat, 2 Apr 2022 15:06:34 +0800
+Message-ID: <CAHj4cs8F51f_Br7kBPYN0yDo4FqFFbodHAUN6_c=Rd4Bd+Y1sw@mail.gmail.com>
+Subject: [bug report][bisected] modprob -r scsi-debug take more than 3mins
+ during blktests srp/ tests
+To:     linux-scsi <linux-scsi@vger.kernel.org>
+Cc:     dgilbert@interlog.com, Bart Van Assche <bvanassche@acm.org>,
+        linux-block <linux-block@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->=20
-> Commit 5b44a07b6bb2 ("scsi: ufs: Remove pre-defined initial voltage value=
-s
-> of device power") removed the code that uses the UFS_VREG_VCC* constants
-> and also the code that sets the min_uV and max_uV member variables. Hence
-> also remove these constants and that member variable.
->=20
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Looks fine to me, but better get an ack from Stanley,
-because he specifically wrote in his commit log:
-"...
-Note that we keep struct ufs_vreg unchanged. This allows vendors to
-    configure proper min_uV and max_uV of any regulators to make
-    regulator_set_voltage() works during regulator toggling flow in the
-    future. Without specific vendor configurations, min_uV and max_uV will =
-be
-    NULL by default and UFS core driver will enable or disable the regulato=
-r
-    only without adjusting its voltage.
-..."
+Hello
+I found the scsi-debug module removing [1] takes more than 3mins
+during blktests srp/ tests, and bisecting shows it was introduced from
+[2],
+Pls help check it, let me know if you need more info for it, thanks.
 
-Thanks,
-Avri
+[1]
+# time ./check srp/001
+srp/001 (Create and remove LUNs)                             [passed]
+    runtime    ...  3.194s
+real 3m12.119s
+user 0m0.859s
+sys 0m2.227s
 
-> ---
->  drivers/scsi/ufs/ufs.h    | 11 -----------
->  drivers/scsi/ufs/ufshcd.c | 29 +++--------------------------
->  2 files changed, 3 insertions(+), 37 deletions(-)
->=20
-> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-> index 4a00c24a3209..225b5b4a2a7e 100644
-> --- a/drivers/scsi/ufs/ufs.h
-> +++ b/drivers/scsi/ufs/ufs.h
-> @@ -562,15 +562,6 @@ struct ufs_query_res {
->         struct utp_upiu_query upiu_res;
->  };
->=20
-> -#define UFS_VREG_VCC_MIN_UV       2700000 /* uV */
-> -#define UFS_VREG_VCC_MAX_UV       3600000 /* uV */
-> -#define UFS_VREG_VCC_1P8_MIN_UV    1700000 /* uV */
-> -#define UFS_VREG_VCC_1P8_MAX_UV    1950000 /* uV */
-> -#define UFS_VREG_VCCQ_MIN_UV      1140000 /* uV */
-> -#define UFS_VREG_VCCQ_MAX_UV      1260000 /* uV */
-> -#define UFS_VREG_VCCQ2_MIN_UV     1700000 /* uV */
-> -#define UFS_VREG_VCCQ2_MAX_UV     1950000 /* uV */
-> -
->  /*
->   * VCCQ & VCCQ2 current requirement when UFS device is in sleep state
->   * and link is in Hibern8 state.
-> @@ -582,8 +573,6 @@ struct ufs_vreg {
->         const char *name;
->         bool always_on;
->         bool enabled;
-> -       int min_uV;
-> -       int max_uV;
->         int max_uA;
->  };
->=20
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 1ed54f6aef82..a48362165672 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -8309,33 +8309,10 @@ static inline int ufshcd_config_vreg_hpm(struct
-> ufs_hba *hba,
->  static int ufshcd_config_vreg(struct device *dev,
->                 struct ufs_vreg *vreg, bool on)
->  {
-> -       int ret =3D 0;
-> -       struct regulator *reg;
-> -       const char *name;
-> -       int min_uV, uA_load;
-> -
-> -       BUG_ON(!vreg);
-> -
-> -       reg =3D vreg->reg;
-> -       name =3D vreg->name;
-> -
-> -       if (regulator_count_voltages(reg) > 0) {
-> -               uA_load =3D on ? vreg->max_uA : 0;
-> -               ret =3D ufshcd_config_vreg_load(dev, vreg, uA_load);
-> -               if (ret)
-> -                       goto out;
-> +       if (regulator_count_voltages(vreg->reg) <=3D 0)
-> +               return 0;
->=20
-> -               if (vreg->min_uV && vreg->max_uV) {
-> -                       min_uV =3D on ? vreg->min_uV : 0;
-> -                       ret =3D regulator_set_voltage(reg, min_uV, vreg->=
-max_uV);
-> -                       if (ret)
-> -                               dev_err(dev,
-> -                                       "%s: %s set voltage failed, err=
-=3D%d\n",
-> -                                       __func__, name, ret);
-> -               }
-> -       }
-> -out:
-> -       return ret;
-> +       return ufshcd_config_vreg_load(dev, vreg, on ? vreg->max_uA : 0);
->  }
->=20
->  static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
+# ps aux | grep modprobe
+root      250153  0.0  0.0  10600  2264 pts/0    D+   01:34   0:00
+modprobe -r scsi_debug
+
+# cat /proc/250153/stack
+[<0>] blk_execute_rq+0x95/0xb0
+[<0>] __scsi_execute+0xe2/0x250
+[<0>] sd_sync_cache+0xac/0x190
+[<0>] sd_shutdown+0x67/0xf0
+[<0>] sd_remove+0x39/0x80
+[<0>] __device_release_driver+0x234/0x240
+[<0>] device_release_driver+0x23/0x30
+[<0>] bus_remove_device+0xd8/0x140
+[<0>] device_del+0x18b/0x3f0
+[<0>] __scsi_remove_device+0x102/0x140
+[<0>] scsi_forget_host+0x55/0x60
+[<0>] scsi_remove_host+0x72/0x110
+[<0>] sdebug_driver_remove+0x22/0xa0 [scsi_debug]
+[<0>] __device_release_driver+0x181/0x240
+[<0>] device_release_driver+0x23/0x30
+[<0>] bus_remove_device+0xd8/0x140
+[<0>] device_del+0x18b/0x3f0
+[<0>] device_unregister+0x13/0x60
+[<0>] sdebug_do_remove_host+0xd1/0xf0 [scsi_debug]
+[<0>] scsi_debug_exit+0x58/0xe1e [scsi_debug]
+[<0>] __do_sys_delete_module.constprop.0+0x170/0x260
+[<0>] do_syscall_64+0x3a/0x80
+[<0>] entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+# dmesg | tail -10
+[  345.863755] ib_srpt:srpt_release_channel_work: ib_srpt 10.16.221.74-32
+[  345.863855] ib_srpt:srpt_release_channel_work: ib_srpt 10.16.221.74-34
+[  345.863953] ib_srpt:srpt_release_channel_work: ib_srpt 10.16.221.74-36
+[  346.373371] sd 15:0:0:0: [sdb] Synchronizing SCSI cache
+[  532.864536] sd 15:0:0:0: [sdb] Synchronize Cache(10) failed:
+Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_OK
+------> seems most of the time were taken here
+[  532.929626] eno1np0 speed is unknown, defaulting to 1000
+[  532.938524] eno2np1 speed is unknown, defaulting to 1000
+[  532.943957] eno4 speed is unknown, defaulting to 1000
+[  532.998059] rdma_rxe: rxe-ah pool destroyed with unfree'd elem
+[  533.011781] rdma_rxe: unloaded
+
+[2]
+commit 2aad3cd8537033cd34f70294a23f54623ffe9c1b (refs/bisect/bad)
+Author: Douglas Gilbert <dgilbert@interlog.com>
+Date:   Sat Jan 8 20:28:45 2022 -0500
+
+    scsi: scsi_debug: Address races following module load
+
