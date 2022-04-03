@@ -2,181 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B93B4C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Apr 2022 17:17:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DA85C433F5
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Apr 2022 17:46:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359630AbiDCRTZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Apr 2022 13:19:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37278 "EHLO
+        id S1359702AbiDCRsd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Apr 2022 13:48:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243742AbiDCRTY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Apr 2022 13:19:24 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE70F393CB;
-        Sun,  3 Apr 2022 10:17:30 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 2339hvJQ016332;
-        Sun, 3 Apr 2022 17:17:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : from : to : cc : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=Avh3r1/OlKFe2fyV+aKbBCWqX71UFZmNPszztdVR+dw=;
- b=bVstqxc3PeCOR8Ce8wEixzZya+uEiKtbsDLBugaH1/Uw7G3fPk8EcovNQdjco4ufkWGL
- Q47gsrpC7tvRq9HXeI3fpnoBIB4Yzy4i2j4n81hQ+aXQlhz6QF8JXAj8ZqplZCjn0rRZ
- cWTenWWLKHUtplO8y6ekxMAunbe7Vno6F+fCeVeXF/eIgXh/765LafgzCk5t89jSw3Gb
- 4kaVfOMOAkaS4gwHtUmxnVW2b5fKiukvI6/9IE4DyHXFdE4X22ZmHLXrbo6QBiVlsOW9
- mMac+4gs1ezauNWYYyKISuJNmeL1GnmpFmDC/4ZzinIhUaJCEVqf4dnHpm0kDsG5kuJj lA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3f6cwc9ka2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 03 Apr 2022 17:17:10 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 233HFZTe001221;
-        Sun, 3 Apr 2022 17:17:09 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2174.outbound.protection.outlook.com [104.47.55.174])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3f6cx1ttdv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 03 Apr 2022 17:17:09 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VLVwUZXpsGEYtYqfYY8wgISPbGOwhu4Mtr9cq0dJ2uvl/+81BbFV7peUm5RlePmyuUpPIW4ps9llHZ8ZUzYl8Alcjd5iaQA9qdTQA6wlJollRM6UdGu/K1tD4FRj9mvQstFLBbfyvepc+i41z/GTiWbWdcT0pfCEm38dPo7munaLrfIIHgP9W0wAtBQzPBh3ri0IrbqAXKPCoPQN8Wz5OpUhA06hLLGq3vKpmB0gOQeMKGXV0MO3C8Im9pI+kN5Ga8vrqqcNNnKVALJVxM+CHHtmQ476bZQVWVPoHdPe3HxLe4n/yGgQzQKgOUpUaWCX64vBY28d+k9YL/NIPfVQDg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Avh3r1/OlKFe2fyV+aKbBCWqX71UFZmNPszztdVR+dw=;
- b=Dt9iA0TXYBjzXHkKbHWjSrjxEqJgvUsSqcDIN5MHY8m2OPyfmDBSxCKzKsyaLiEZyftDsEe8Nk4pzS4FecBGRK5Z3uRirHnlC7zceP/9QD0MqSkNAW54XvraimSj+L7DqkuJGSc5q463X5T5xIx6fk3XL5gHryxPNonUQ/2fDRekIv8ZHUMcHGajxPJNf8gNEQ4PYHFCc6AYVfEp/pQ4sIugFXcPFGUY4rpvraktQPrDVyvASkAK4tG6+rB6O8cC0s0T2wNJpduTwiQW+0yqSNXAAp6rz+jQ6yuAcKsD6jUxEGg11t6Ib2Xlj8WNY9+CSVPH5PkrDYr38wHy0Z1FQw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S240257AbiDCRsc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Apr 2022 13:48:32 -0400
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FEF6255B7
+        for <linux-scsi@vger.kernel.org>; Sun,  3 Apr 2022 10:46:37 -0700 (PDT)
+Received: by mail-wr1-x42b.google.com with SMTP id b19so11187909wrh.11
+        for <linux-scsi@vger.kernel.org>; Sun, 03 Apr 2022 10:46:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Avh3r1/OlKFe2fyV+aKbBCWqX71UFZmNPszztdVR+dw=;
- b=xfjyekLL1lbTYXlMVwZe+NfG3UJHvYJH2xwXyChtRax/7Ohxdm7OsJ0RgNVXrbCFzoxzJ0osSRTTF1dTDUzdJhijvTD27QqWI7pw6T1jWYMWjDp5xyXzyQl7usjkig2LRGe9xJlDOHTkvfHFocD3sfjx/xhidzqrpcEKQeILxqQ=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- SJ0PR10MB5439.namprd10.prod.outlook.com (2603:10b6:a03:303::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5123.31; Sun, 3 Apr
- 2022 17:17:07 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::3cb2:a04:baff:8586]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::3cb2:a04:baff:8586%2]) with mapi id 15.20.5123.031; Sun, 3 Apr 2022
- 17:17:07 +0000
-Message-ID: <84b38f16-2a32-f361-43e5-34bce1012e71@oracle.com>
-Date:   Sun, 3 Apr 2022 12:17:05 -0500
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=2g9qaHCuEJMeVa5OH4CWlrCXm2yddjigX6r4a3uF+bk=;
+        b=rcwgiQ7fmqJ88I3Jf91Mfta3uYZ8QtARp8w3WvGxtOHFN5fZNFmW70GTLdCa+yulK6
+         G1TQqMyFTSv38tQlFw7YE3v+xWA2YnoFTqymhC/NHvco4y+S2tmJLG2xyurtaC0KgXOB
+         wiMYSwPMiKS8/ujZgjjoHtisF80DdrfbCkajBtwW0UA25BRv9V1+toF9PMrVsUgNP36V
+         UQmUbDPZQbb30nyTo09vqGSLii/75jeVxcpcVgFsL94njAAGr9cIAlbGmBuo8XAXAJXh
+         293NODuR0ay1dMB/pqalvnojX4AGMf2XKfHZ646Nu1f+COAWPXVQV9TZdqV8CpEBgLC8
+         Zh7Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=2g9qaHCuEJMeVa5OH4CWlrCXm2yddjigX6r4a3uF+bk=;
+        b=ha5yMLy1+Ay74xweBB23z9Rtc1kBYRCobxoLQVXLUFmKkDiqPIs+74p3CEFqIPDGD7
+         r/oEqNAbApu0paAyhuH5ML97hn/jgqjYd2TOYJN/bGktzMT7dvVRI+KSm5oCopI7FImS
+         nUUQDCyMyTl/+W2HngLRYsTH0n8DssbE6jOF00ISe1JzdvciTvIY1vdW86qeETcEvQ5s
+         akWz5hUTGf+k9/FPQpW+hOLonkkRRcV8o8mLX9IQj75Y148HRmlAnO5VQhqK7HizmoUc
+         N1Q7geZjKs2NYnudpYMzbJ+h12pwm5f6qGXmHsCNTrexmRCRdaXEldvWF26Ryeyw/O7D
+         zGEg==
+X-Gm-Message-State: AOAM530bwY72TOypcfUkPVwYVyjJ1JPwmU6PO88Bkux2N3FoEMaao+XF
+        2OYfKLhiDehRI4OZMYHlqe6wJg==
+X-Google-Smtp-Source: ABdhPJy2DSeufMTTGlQGYb78V/qM1iOXosW2NM+9ShpV4un5yPctthuLTvns43Z+dwPourVAYXovxQ==
+X-Received: by 2002:a5d:4e8a:0:b0:206:d4f:86 with SMTP id e10-20020a5d4e8a000000b002060d4f0086mr2916038wru.301.1649007996129;
+        Sun, 03 Apr 2022 10:46:36 -0700 (PDT)
+Received: from [192.168.0.172] (xdsl-188-155-201-27.adslplus.ch. [188.155.201.27])
+        by smtp.gmail.com with ESMTPSA id p18-20020a1c5452000000b0038e70261309sm1750080wmi.1.2022.04.03.10.46.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 03 Apr 2022 10:46:35 -0700 (PDT)
+Message-ID: <30aa1bdc-8b77-1077-a0a5-258ea0d27f71@linaro.org>
+Date:   Sun, 3 Apr 2022 19:46:34 +0200
+MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
-Subject: Re: [REQUEST DISCUSS]: speed up SCSI error handle for host with
- massive devices
+Subject: Re: [RFC PATCH 4/4] ufs: set power domain performance state when
+ scaling gears
 Content-Language: en-US
-From:   Mike Christie <michael.christie@oracle.com>
-To:     Wenchao Hao <haowenchao@huawei.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Steffen Maier <maier@linux.ibm.com>,
-        linux-scsi@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Nitin Rawat <quic_nitirawa@quicinc.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>
+Cc:     Andy Gross <agross@kernel.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Lee Duncan <lduncan@suse.com>,
-        John Garry <john.garry@huawei.com>
-Cc:     Wu Bo <wubo40@huawei.com>, Feilong Lin <linfeilong@huawei.com>,
-        zhangjian013@huawei.com
-References: <71e09bb4-ff0a-23fe-38b4-fe6425670efa@huawei.com>
- <cd7bda98-2160-9271-9520-e98d1fe00ea5@linux.ibm.com>
- <331aafe1-df9b-cae4-c958-9cf1800e389a@huawei.com>
- <64d5a997-a1bf-7747-072d-711a8248874d@suse.de>
- <c4baacf1-0e86-9660-45f7-50ebc853e6af@huawei.com>
- <1dd69d03-b4f6-ab20-4923-0995b40f045d@suse.de>
- <d2f2c89f-c048-4f04-4d95-27958f0fa46a@huawei.com>
- <78d41ec1-b30c-f6d2-811c-e0e4adbc8f01@oracle.com>
-In-Reply-To: <78d41ec1-b30c-f6d2-811c-e0e4adbc8f01@oracle.com>
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Taniya Das <tdas@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20220401145820.1003826-1-krzysztof.kozlowski@linaro.org>
+ <20220401145820.1003826-5-krzysztof.kozlowski@linaro.org>
+ <YkdWvVVp4RloGjkC@ripper>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <YkdWvVVp4RloGjkC@ripper>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CH0PR03CA0110.namprd03.prod.outlook.com
- (2603:10b6:610:cd::25) To DM5PR10MB1466.namprd10.prod.outlook.com
- (2603:10b6:3:b::7)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 8ec41662-9d17-459b-7137-08da1595c7ba
-X-MS-TrafficTypeDiagnostic: SJ0PR10MB5439:EE_
-X-Microsoft-Antispam-PRVS: <SJ0PR10MB54390FCE5536901C80701935F1E29@SJ0PR10MB5439.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ElVxZ+Nj6VpPEvZDxZbSLBJbe0PyXPbVWCUjKk0T6QzGei1EfZRGMy7Axxw2/D+qcf7A91HG9qk8ogTsVWcAbCLxpJYUfmymOrja9Mx3EynSzky76BGqUQ7tsTMkeu1VeUyyYwLlKbg2IQI7kSCbHxHo5IUs4bqozgxEh5p+R1ObEfqKx50jOuc9fgOxhqn6nQgZ/pG6M538SZpf671ncYEIqmHHAYQ3cdrOZvj8xE1ioqlmMjWOqjFsww5EodQ/RSxMR59gjzY+RA18whMNzKb8fWxvyVNSUFri18KtMew0MnKboRyJE+gIFVzsuyysphFJCSXykNG0eN9gbBwEHHGVQHvlwyRk4Io78eMxweqS6fmgmw55f2gmI4xa1RlXF7Wrj6xOEB8rBHhbh8DnVY0DQA3smMPYxFlWDlBei8xLUCrnnjHIxYQfhxGShE/PGHJjSHhrX9vKdii/xZSiPPQfg2AwvIC+1Q+p+7rNWTxGLvjAKCKaJh9AIfnlsfuLu9+MXZW+V3VIdnv8qRchuFqitmPyXt69sZ7QBCrhbJtghwWVt6SuCdtOd+SHCW7Jv1lLSmKaYzKg436C26T9FNyoZ0bE5DPAkVJW5p6zq8yr2edTND9qgjdO7OHsNzYPvVANNgwf3PG0py7lQiLczX8Sr3SkyvaIRDvmpt9Wu7gnocrOjk93f2lrDxPQ6a50k7jabl3yMzcrnQM8a+yzvuqYt/EGk9KLmhyXXG/jd6QItAje6tJgQGwzm6WREThP
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(6512007)(2906002)(6506007)(53546011)(4744005)(6486002)(508600001)(8936002)(83380400001)(2616005)(86362001)(5660300002)(31696002)(38100700002)(4326008)(31686004)(110136005)(316002)(54906003)(66556008)(66476007)(7416002)(66946007)(36756003)(26005)(8676002)(186003)(14583001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?YzRPczdxTkF4T0pEM1ZEVDF3VHZxdWNseHdFeG5NelNrUkhuNkZFQkpPVEhm?=
- =?utf-8?B?VmxJVllRTWp0c2JCbDhxc3RYSEpoSlVNS2NMYjFkZlF2dWF4aThUK1Z6N1Mz?=
- =?utf-8?B?dkVLR3ZKUHA3ZzBzeko5ZkJFMi9ublN4WklFYmFUMmw3cmFJSnhxd3gvSDBF?=
- =?utf-8?B?Q3MvL1MyYndXamZNeHdzZ09JdjZjK3l1aVpnSjR2RStXTHduV1Bod09jVmE0?=
- =?utf-8?B?ZG5adjl2ckR6U0ZORnlNK29Rb1phRUNSMmkzQW94SlpNb0FDTnI0eWJDSFZx?=
- =?utf-8?B?ZitHZ3NLb29GZlZXV01wcUdGNXBRSDFhL3pnUVJjajBvWDh4UDRkRVJBbUZI?=
- =?utf-8?B?SHhHUVBOYVB3ODZ6T1Q0bFJGanFMaGE4MXluVk9PUGdhd1l3bWsrR2tjY0Zv?=
- =?utf-8?B?Z0Vza05JdEpPSnd5bW1icFhOcGhmQlhsNjhyWnFmYm1RV21SalNFeHhCdHBl?=
- =?utf-8?B?dmJaZzJ1Z0NZakFVMmxIZFExamNpRnFNQWJ6TjV1V1lrN3VVVGVQNloxcHN1?=
- =?utf-8?B?cXJNcVlVYloxYUtGanVId2JvNlA0M0ltcWxFRVVJd3BMdmY3K3BMalduZVhZ?=
- =?utf-8?B?aWJpamFndnltbXFPcXNTSjFhSzdlYXRxNVhvYzFUUFlsMFdqTUxWbmQxdDl4?=
- =?utf-8?B?M0RlR1VsT3dDZzZTSG1hZWl5TlVyOEZLUzdrQURnZ1JkcCtyNW1LUFVQZE44?=
- =?utf-8?B?dmovaFBQRzVmVnE1c2RxVnVONTBuUyswVDg3bUhwc3hpRy9Tem1HSVpwMjRs?=
- =?utf-8?B?cHAyT0g2T2ZOK2FieGJORnRXU3dERFpoenIzcEhmWmd4RVpSNHd1Rm94b2Ft?=
- =?utf-8?B?dU1sMUZ0S1J3Z05YU3cxS0YvVml0QXorWXZPZWRpa0FvUEJRTFUvZFhOL3JK?=
- =?utf-8?B?M0FCNTRKaEJKa2tzZFRhUVd2VFJnMnhRV3dWcHdWWk0weUpUd0NkRlpBRlUx?=
- =?utf-8?B?d1VraHVuSXkvc2xnVUJraUJLOVJ0Q3BGdkFTbWtGb3NBYkJXZVcxZnB4K1ND?=
- =?utf-8?B?UkV1RlFLYklRMm8zMnh2NjZxQ3B1bUpjSWZ3b09Jb01HcFI4U3daT1lISlB5?=
- =?utf-8?B?aURYdEgzaWR1dmFJN2s1NFRqeU9UTktNWjBka3Z1SyszNkdpdmVld3g2VWd4?=
- =?utf-8?B?WHQrMFZIYkVNY0s4R2JTbHNYeU9YTEZwY3l4b0prdEpnOVo3bGRwaU8xRmQw?=
- =?utf-8?B?NHZ1Ykx4eDU1NlBiYk10citMMk15K2VoNUhLRGFiOFpLLzlDQW1TY3pkYWdl?=
- =?utf-8?B?b2VEUDh2d1ZjWmR4RnhhT3hJb1dKRk1kN29TR3BNN3pNdHhpWkdlWWpGYVpX?=
- =?utf-8?B?NS94cXZ4OEk2RDVVQ29Ha21lZVJGbmVEcmtSYk9waVZpMTU4NWJmejkyekdz?=
- =?utf-8?B?dnVkdEhxb2NHcnVvc0R0dlltYmZRQkI3ZDZUNU9FK3BqcGNPaHk3Y01pVklY?=
- =?utf-8?B?SFM0d2x3enk2eFV4VkU4TWw3cmw4UU5JV3ZYSWl6eTcrRVFHY28rZlJOTlNw?=
- =?utf-8?B?U2ZRSElPTDVXelBtNVV6akhLMVF2U1E0L3NGa01HVGlET2dNVStVSXU0Y0FB?=
- =?utf-8?B?RXkxaGZMdHZQMkFxVXZpWkRUYzVYZHo5SWNQSmY5a2VFTjFWc042em1QQmZJ?=
- =?utf-8?B?cys2YXIvSjNmdmhwTkVGMGRLSG5nN05tcDVKSnZtTXZJemJsKzI1N0JRVEtT?=
- =?utf-8?B?VWFua1Eya3J1UzJRSlBGY3g4NXhnZGY5Vi9ESko2SFNndXlQVFhtbUlmbktW?=
- =?utf-8?B?STIyZnJwR2FaYVhXNkUvb1V0cHgwVE1aSml4UHYreDFZOFRCUGZ3RHRwWk83?=
- =?utf-8?B?cldQV0ZMNjZ6a2Jmb1BOSzY2d1R0aGdiUmJEVVNKekQ3OUlZVlRjdG5TM2pG?=
- =?utf-8?B?U0JsblJRamh3Q2gwcEtPVlpsTS83aHlDYVlnaHlyR25VTVpvTVlIYzVnVHNS?=
- =?utf-8?B?NU5XUjNKVFdLNk5uWnFDWElIS3daUjF6QXZ1VEdhemQ2b2NvSTl5ZEJCeFg0?=
- =?utf-8?B?OFhsWkk4N3RRZUQraXJFVDFlUkNKblhORXRsTml3YUcwSm82YXVvSnFxZGd2?=
- =?utf-8?B?clFoaTZYL1p6VWU1OXI0QUxjbnhnVWw0K2x6MDdGUDlyQjJ6VkpQRmZSR25v?=
- =?utf-8?B?Sm1tMGNjSUJDdjdTM0xDVVVRaDRmQ3JXWGUxdUVmaXc5UGhzRlFQbGFsbWFL?=
- =?utf-8?B?WFNIbEtJcXpERGJ6bDZNQjZNcHR6S3BzV3pqU0FqVXpycWxLcWsvT0Y4OXlj?=
- =?utf-8?B?ZWZwZmNRSDhVWk8yZkRtVzlpS2dsbFhvc1B4bDBDRHBmQXlFTm50OEZxR1FQ?=
- =?utf-8?B?MlZ6ZHZpVWc4bVdXK3Qvdkt1UU44NHRURmM5TXYwanFXa0NNaUpTcXkvUTI0?=
- =?utf-8?Q?aBWWa/igfIBzz/R8=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8ec41662-9d17-459b-7137-08da1595c7ba
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Apr 2022 17:17:07.2635
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 7Jj3YVI/rfAivtg0EHPNB43wBlgJ+YeoZp+cWtP8oL4XtOQ+qO0XntpGdEfYm4Ppabp+DENX9syO6Pacvz2AATm+4cFS4sVqCtMm4WXt5TU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB5439
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.425,18.0.850
- definitions=2022-04-03_04:2022-03-30,2022-04-03 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- mlxlogscore=999 phishscore=0 spamscore=0 adultscore=0 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2202240000 definitions=main-2204030115
-X-Proofpoint-ORIG-GUID: C9GxHwVmq-E92NKojfqDVjBf-_3N0bK8
-X-Proofpoint-GUID: C9GxHwVmq-E92NKojfqDVjBf-_3N0bK8
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/3/22 12:14 PM, Mike Christie wrote:
-> We could share code with scsi_ioctl_reset as well. Drivers that support
-> TMFs via that ioctl already expect queuecommand to be possibly in the
-> middle of a run and IO not yet timed out. For example, the code to
-> block a queue and reset the device could be used for the new EH and
-> SG_SCSI_RESET_DEVICE handling.
+On 01/04/2022 21:47, Bjorn Andersson wrote:
+> On Fri 01 Apr 07:58 PDT 2022, Krzysztof Kozlowski wrote:
 > 
+>> Scaling gears requires not only scaling clocks, but also voltage levels,
+>> e.g. via performance states.
+>>
+>> USe the provided OPP table, to set proper OPP frequency which through
+>> required-opps will trigger performance state change.
+>>
+> 
+> This looks quite nice! Just two questions about the path looking forward.
+> 
+> If we where to extend the opp core to allow specifying the clock rate
+> for some N first clocks (similar to how e.g. regulators are handled) it
+> seems possible to extend this to replace the freq-table property as
+> well. Would you agree?
 
-Hannes or others,
+Yes, although that might be trickier. The frequency is a key. I'll take
+a look whether it could be changed to multiple values like the voltage.
 
-How do parallel SCSI drivers support scsi_ioctl_reset? Is is not fully
-supported and more only used for controlled testing?
+> 
+> 
+> The other missing required feature (in this area) from the upstream UFS
+> driver is the ability of voting for interconnect bandwidth. Based on
+> your path it would be trivial to specify different values for the votes
+> for each speed, but looking at downstream [1] (each row represents the
+> vote for the two paths in KB/s) indicates a more complex relationship
+> between gear and voted bandwidth.
+> 
+> This was the reason I suggested that perhaps we need to key the
+> opp-table based on the gear? But I don't think there would be any issue
+> detecting this in runtime...
+> 
+> [1] https://github.com/MiCode/kernel_devicetree/blob/zeus-s-oss/qcom/waipio.dtsi#L1982
+
+It should be doable with current bindings, assuming that gear is some
+imaginary frequency. We have two interconnects for UFS (the DDR and CPU)
+and OPP bindings allow to specify opp-peak-kBps and opp-avg-kBps for all
+of interconnects. IOW, the opp-peak-kBps will have two values and
+opp-avg-kBps as well.
+
+What would be still missing is scaling clocks.
+
+interconnects = <&ddr>, <&cpu>
+interconnect-names = "ufs-ddr", "cpu-ufs";
+opp-table {
+  // gear 1 or some core clock frequency?
+  opp-1 {
+    opp-hz = /bits/ 64 <75000000>, <0>, <0>, <75000000> ....;
+    opp-avg-kBps = <922 1000>;
+    opp-peak-kBps = <0 0>;
+    required-opps = <&rpmpd_opp_low_svs>;
+  }
+}
+
+arch/arm64/boot/dts/qcom/sdm630.dtsi already uses it.
+
+I think still the problem is scaling of multiple clocks, depending on
+the gear.
+
+Best regards,
+Krzysztof
