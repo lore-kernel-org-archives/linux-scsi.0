@@ -2,200 +2,288 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99896C433EF
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Apr 2022 16:59:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E88D7C433EF
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Apr 2022 17:15:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354939AbiDCRBV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Apr 2022 13:01:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54692 "EHLO
+        id S1359630AbiDCRRY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Apr 2022 13:17:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234629AbiDCRBU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Apr 2022 13:01:20 -0400
+        with ESMTP id S1355278AbiDCRRS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Apr 2022 13:17:18 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC39132985;
-        Sun,  3 Apr 2022 09:59:25 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 2339hvIM016332;
-        Sun, 3 Apr 2022 16:59:10 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80ED313DD7;
+        Sun,  3 Apr 2022 10:15:24 -0700 (PDT)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 233A4OVP018756;
+        Sun, 3 Apr 2022 17:15:04 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
  subject : to : cc : references : from : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=ECapqoXQTj+JWJV0C+eWUc6pfbqMn1tVL8tnUxt+Zpk=;
- b=lQ/mvLHEKrcwMlkLHffJUPIzERAJIwWRnIyu27fuijiFcYSjEVO5RHgK+pvw6Osiwp0Y
- gFFrzNwhI+XaelIQ67QQx9f6UlSS/UpXFlcOserucdpXJLOmZmX/2uesXLw2G6VyM7LP
- cIinwk7Hd6MGOYrbs7M0yU1wY8i332r/xTlWrRQS+m+InwGOdHXJG88dlBhIjSHSNyyo
- KsQHXRFSx/PB/0wirnU4LYC+GRxtN1qfJeTqZww+mrcBiLeZ970pobqGazcbzXqrShW0
- ejM9+DCxLxzi5xR0CV1Fxejodynst7ctSq+eeyL23mYKnAYVVxmAmA4/LvL3wvCCx6Bk Yg== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3f6cwc9jx9-1
+ bh=1GpoZJ7pupMjq4O6pM1F6Q2CpWcOZawkigqbKqNUabo=;
+ b=KxNbf+TH+7yI29+qRmcJH9gfgxLUCsnVhzyAg5zYW5PJ2Cb1nSPnMAr9wfH7n8GEEWCh
+ RsKAXhUgFk81YL/aEFJcfM+9DxpF7CSgYjNIKTsBhlg1xk7oj45GffFoPnkWQXtxV9JZ
+ UTllsyClezOOs9YfRYa7+3xXK9DmCl63swge3B5BE7Y8AAjVcdgbyyeG+wxLf0Ky+LVS
+ P4n/KovDEggk3ve4QFQnQ7rkovs9ra91iXMKrFMyxPWdSOKbvzhjsIRbSabUFsuQYWV1
+ 6uWlCUuVEIBd0c4pB5hqblEda6nnOyhBe0s17KSZIIUmsvRzkipGqs1waBlP19n//DhE aA== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3f6e3shhkk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 03 Apr 2022 16:59:10 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 233GtTfH020749;
-        Sun, 3 Apr 2022 16:59:03 GMT
-Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1anam02lp2046.outbound.protection.outlook.com [104.47.57.46])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3f6cx1j837-1
+        Sun, 03 Apr 2022 17:15:04 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 233HBZsm034696;
+        Sun, 3 Apr 2022 17:15:03 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2172.outbound.protection.outlook.com [104.47.56.172])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3f6cx1ts1v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 03 Apr 2022 16:59:03 +0000
+        Sun, 03 Apr 2022 17:15:03 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=bCr0FXQmgcwcyoWNUIaERs77uVHfaTBZMKuANcZHGgBgvHM3xaLByYuqH4pW+uuBRFvxoGCzDqWRoesNBPHAbt6aWaq7ofQl7xoMjKkJ23rcEsI7fuD8YlAt7gVnRJr32nsVPDWwwZntYWWKP+WBeJlPJXb2vklu8o0/ia0r2qDkCrtcjJ6W4A7R9osu6RfsDzhoux+/1pg/gimnnFyTF+rMpU4wVFfEmQl7C/5Fr1gvsv2/aME48s2y8bacT/WJ79TEQ0zqcGIsyX8pRtqOPp+7J8wjnGryZlF8PNq9kAwt9nkXosUnelRKxVLJDxCzTd1XSMN1XEE9tU/040okqg==
+ b=cBkyaF6DgsMI3ISnEDzi3JXsK40LKNr48sF6piZ0lhhSw1BO3pVf3UgGp73X1TjM1uf9UvnHQbjLl5a4xnfS+LxW2IENI8vRVAxDUYL0UEJhSRGGgpfGMz23A6cmduGAfEwfGevdNGnzFSHTjjhLGTGdpBRAYyf4g7SROF8ZaeJ6IQcHofz/+owEzUIjHwsP0Atr6olU/R7QnxymAlurT4nmfRTbwF6o6Khd5KpYbxbKv9aDh64ZBBFJCSJPE6Jt0sAMw2E+DNSN72Va1TwwB5CISnhJXoT9Qzm6/YD2DDXsRqqy3dPNeT1v38o4X3//k+qSnjHinsReLj7k+lT6rA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ECapqoXQTj+JWJV0C+eWUc6pfbqMn1tVL8tnUxt+Zpk=;
- b=H5v0md0zU6O6U05bohsvDPDVXaQ7aPRsWZAZziWhyE3zAM9M2B3U1XcpyfhtykilRq7Vw5/SOGrRVkBfdcjLVAfW/4THVSYOI6dUbYaoBW50cAmhvIP6idJJzQI61FRklt7wr97Jggqw+9A7UagzIBfvFNG7TGmA64Wtec/ACbX2cH0rJMGhCeZ8HE51gg1vW6RqRo6ZawxPCDTyo2fO+jPI+LB1qhw0EgAA6DaN2Rc5KjjuARL10fRI69GPuHGs3MI/V3NmOaY/+N4R2ETYdBwcRSHJtXfXypEdMpmaWtwEw292zclN4L7Eg8s3N7ETbKK3reV1CLMSyhIkp/WpnA==
+ bh=1GpoZJ7pupMjq4O6pM1F6Q2CpWcOZawkigqbKqNUabo=;
+ b=lT/EtykX1w7fXk0mvomWJrUTt9mPu55e+X4Sadbz5HZlqolWTDTyhIslcG725gXPiZvajTjrdGXwmEfI/2gAXq4JGQrlBIlXAQSSBhPgdEue/r7xcNNIiueLNuKK/0HNSv9piGE0CF4bT2oCXcrvOHwmBM4Ms/BO5FWz5oHcssG8ImuZqkHyRxiI7ky2VzvQCRLYnGeNyv+Plrt4rkoMzPyA3RkTy2UXAFuQEnlt7InYbvoGXm6Hc36dHvnm8YKNXyHf/aNxe04cADAR4bwbEkSM5WBbksu1QZNKb+wVC6wZym0tvQTuY2iBNG17/6CKrmQxd9Ofq7MgCmHIBj/NCg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ECapqoXQTj+JWJV0C+eWUc6pfbqMn1tVL8tnUxt+Zpk=;
- b=uKqYPc559tVhwB1k/3C60SLAyFUO7MgRr99AYM4Y1DgVNsLlUpNChB4w3NNaW4lyVXxt7hWphwaVTQQ6/S4IwMK9TKxpRviDDEvNAb/honLXve/Sp3gjaOWINdUxqQQTdiLTbsCjX8SdHmI5ffzE6Fx3CLy2ueDWHwr6TT6G6do=
+ bh=1GpoZJ7pupMjq4O6pM1F6Q2CpWcOZawkigqbKqNUabo=;
+ b=nxi1uSgtNlDGX792RiwStcJD3cU4JBqLCcqWMxmnuCoq8XeBPAGjgxKSS/iakVZLkkwG6pAbniVh1/eOJuQQNR1JNZX+5ZfcRRq3uFpdQLw5788eGNHa/JMQRJDP6DLlr13iiWRcHkU0EbAF+5kkyUJrVM6PUIq23nL3bh7bweU=
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- CY4PR10MB1655.namprd10.prod.outlook.com (2603:10b6:910:7::14) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5123.31; Sun, 3 Apr 2022 16:59:02 +0000
+ SJ0PR10MB5439.namprd10.prod.outlook.com (2603:10b6:a03:303::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5123.31; Sun, 3 Apr
+ 2022 17:15:01 +0000
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::3cb2:a04:baff:8586]) by DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::3cb2:a04:baff:8586%2]) with mapi id 15.20.5123.031; Sun, 3 Apr 2022
- 16:59:01 +0000
-Message-ID: <775f75db-edb8-8f39-2592-862756811710@oracle.com>
-Date:   Sun, 3 Apr 2022 11:58:59 -0500
+ 17:15:01 +0000
+Message-ID: <78d41ec1-b30c-f6d2-811c-e0e4adbc8f01@oracle.com>
+Date:   Sun, 3 Apr 2022 12:14:59 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
-Subject: Re: [PATCH] scsi: core: always finish successfully aborted notry
- command
+Subject: Re: [REQUEST DISCUSS]: speed up SCSI error handle for host with
+ massive devices
 Content-Language: en-US
 To:     Wenchao Hao <haowenchao@huawei.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     linfeilong@huawei.com
-References: <20220401035020.1043239-1-haowenchao@huawei.com>
+        Hannes Reinecke <hare@suse.de>,
+        Steffen Maier <maier@linux.ibm.com>,
+        linux-scsi@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Lee Duncan <lduncan@suse.com>,
+        John Garry <john.garry@huawei.com>
+Cc:     Wu Bo <wubo40@huawei.com>, Feilong Lin <linfeilong@huawei.com>,
+        zhangjian013@huawei.com
+References: <71e09bb4-ff0a-23fe-38b4-fe6425670efa@huawei.com>
+ <cd7bda98-2160-9271-9520-e98d1fe00ea5@linux.ibm.com>
+ <331aafe1-df9b-cae4-c958-9cf1800e389a@huawei.com>
+ <64d5a997-a1bf-7747-072d-711a8248874d@suse.de>
+ <c4baacf1-0e86-9660-45f7-50ebc853e6af@huawei.com>
+ <1dd69d03-b4f6-ab20-4923-0995b40f045d@suse.de>
+ <d2f2c89f-c048-4f04-4d95-27958f0fa46a@huawei.com>
 From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <20220401035020.1043239-1-haowenchao@huawei.com>
+In-Reply-To: <d2f2c89f-c048-4f04-4d95-27958f0fa46a@huawei.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DS7P222CA0018.NAMP222.PROD.OUTLOOK.COM (2603:10b6:8:2e::33)
- To DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7)
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: CH2PR08CA0011.namprd08.prod.outlook.com
+ (2603:10b6:610:5a::21) To DM5PR10MB1466.namprd10.prod.outlook.com
+ (2603:10b6:3:b::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 58e1dbee-b26f-4614-2a3e-08da15934099
-X-MS-TrafficTypeDiagnostic: CY4PR10MB1655:EE_
-X-Microsoft-Antispam-PRVS: <CY4PR10MB165567C533AE4CBB5CB48C99F1E29@CY4PR10MB1655.namprd10.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 3f88a3ca-90e3-4f05-0854-08da15957c83
+X-MS-TrafficTypeDiagnostic: SJ0PR10MB5439:EE_
+X-Microsoft-Antispam-PRVS: <SJ0PR10MB5439E3E840BA933B01E49360F1E29@SJ0PR10MB5439.namprd10.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 4RWgkHHhvB5K77CTzNARZcFa1qcNHbc8rMR6wyrn5SV1/8rQ2aE4+lUpxZolBworkMF5kSU3pP95n29EfvdXD6ABlnwm0Sn7m5WcS3/y+/oq+plngjrKkrr6qtE/lTFGGGh/LBNlght1KNLgIZYUCQ5XRTNth1k+fmmDvGp0GGyze3zXhsftxF/EHpQJHuzdB4SHGCi4G5Yy1PhRqWcC3Ot/bKdqXo8fQR1PMwGGKtcJTnT1s1GqzYra/SYXC1QjSmFnR2Ltz5IS6cD2ooxkycKm9Bnb1AOg5FovLlTXznT+tg66/0155KA5iyIcf/Q/+c46pDGG1AqSsKA+UR8wHqc0uYu59MsYkEaknluQifw7O0dVpJdpqE08O4igF6zZbEC8ExPV5ln7KUyp48iPHFjHqYW0d2iZaf0ZdtlXF7AWOnMNERws4/wy2JKZjD3Ev3+6Upa3FTvDK6ObU3RaweG7K1uV0ZMTEuUD+Du+LKQt+zLQVkHYRwO2hxLtDgG0bWEIfU1rODv4k35kG76tEJqxqPXlNAmavxF0xUZXTxygdZxGaJHNBFAwDU/TBla2SP+BVNzlKGs6IcN0hJn+50gfDWYqzfu5UzVtBeNmYsagA0j6pf11/N2aGpS3JQ3+ANVebJCgt/uNmO46NtM5wXrS9L6N9oioZAH8F74T7h3hxVuWoFaUlz9h4L0WU4IQaz2n+yNYWJDV2uvcsl2bX9wQiNCJxkQU1tdO0b6CIgw=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(2906002)(6512007)(8676002)(6486002)(4326008)(31696002)(83380400001)(508600001)(66946007)(66556008)(66476007)(8936002)(26005)(6506007)(110136005)(2616005)(38100700002)(86362001)(36756003)(5660300002)(186003)(316002)(53546011)(31686004)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 59+hwP8PMkHrqC3Wn0iCqH4OUQGvTSpWFglo/b3mkEA/HvI2DaHMsqfLEZN0Brn3wbtF8kusL4EXStDbNZuhrA81GVZM7uZeqxannVFy/gZjWi5zvBhgx43r9b2SSeJI0P3Ra9fCltp5VXQ9HYrBx+6b1FgZucayJc7ZiQCgXGjfA05SW5hQ3DzCeCk5dPn+nGEBUQIN4LhI0bibBCyAuSO1GM0LMF79KTF1uWpr9UXF295xUVdWCRXVfwxcqWT3n4KsX7DJctKYLaiWkIj6y5by/X6humtKdax0nupJIEUZJKWJtX9c2LH0aO5m1ygViAV6nJSOuei5Gh4KHZhS7HJC/zQeJAWsbzBLSvNaeRI0CZG3T/l5ErsPkAF1XuRZcASCyZUaEEVpRW8YpPs4ubZ2M/LyTTRhHxFVUm0VFyz4Pj3ysPtlpqHbLTpGtsKoLwSsZhj4DoddyU+v18lEKt8JXGq2qMIOXpfpIJ3RKpMYJ2lrmIHlxWTNBZb3eLmLFuJtaaGzKgDyZRW8QIlU29EHxI6Wb3SbS00SrrIdPNdVYqwHYXpW9vm1GOcYGPV5CbiFzZ3TC8k0H2Ss7J2o9yd5dtfl/x2thms0+cS/dJqaeOfTeq86Q2v7g0m0U9WbpUFdA+G0ap7HwUwbnF2lTpaminMLiHHuIRm+t+7NIud7zck89KLkk7RD0288+OJFA9BvfXtEeU5/Keu1lB1akFRYQG8IHwNAXbQJGxTB20P+v8P0hzFrqruEpL4UD7nKB2bKWOYLYUYdsfSZdiWh9Q==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(6512007)(2906002)(6506007)(53546011)(6486002)(508600001)(8936002)(83380400001)(2616005)(86362001)(5660300002)(31696002)(38100700002)(4326008)(31686004)(110136005)(316002)(54906003)(66556008)(66476007)(7416002)(66946007)(36756003)(26005)(8676002)(186003)(14583001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?OWhHQWZ4SFNkVS9xRDJJNFMzbm8zSjRjelNBSVU4Vyt4UVZod2p5N3lKTkRx?=
- =?utf-8?B?NkU2NzUyRTZSazFFRnh3Ylo0T3VWS0tNVm1aWHYvcVNBcU94eGJuZ0szZzlK?=
- =?utf-8?B?UDJCeDQzTWovaVFzMGFlazg4RGQwdG5BSk11Z2hSOXA5WnR0Z0V1SDgva1o1?=
- =?utf-8?B?QkRnQWxnaVlrUmRxdVlIaG5sRHo4V0RDd0lWV3VlSDZkdzJKa0toajM1RWE3?=
- =?utf-8?B?eERUc0xOZDlUT2VJZnh1aXU2a25BcnhZNVZmMUNIMDNFRFpJaWpiVlhLaGFD?=
- =?utf-8?B?Vkp0TlI0NjRPUkpNMWNWUWl1WWNXNytaMzhZMk9IOE9TbThhMk1kQzZKV0RL?=
- =?utf-8?B?SkxMN0FpLzRtNVpMSGN2M0sxRFYvR2YvaWRiY0JnOG80cEdTMmNaRHJ5bGdj?=
- =?utf-8?B?QUF5bG1qbGJ4aDdqbEhWQjh6L3Bzc0hFOVFrT1pkejJPY1VxNTUrV2dNbGky?=
- =?utf-8?B?bFBabjlIc043WmZtUnNodHlVR0w4RXhxWUcyMXhLTXVGVUpHdjVJYTNJZzJZ?=
- =?utf-8?B?dU5va1RnM3dyRXhJTGowQUh5OERNRUNENVdlMVhCVEY5UzJ5WW9PWUFSbWVZ?=
- =?utf-8?B?V1R2MjNxVWhJVmdEMjI1MDdhZ3ZaNFd5M3JMK29TbDNXSzA5SHZTcThYc0t1?=
- =?utf-8?B?ZUJuRUxCT3pDMTNuVklLRENPUzUxRGxMdm1oZkUrUWswRUZhcGJnbzJzSHJq?=
- =?utf-8?B?T08rV3dtb1BBYm04MjFqQUpXY0V6a0dXR1RKWTUvY2I3L05Gd1FYU3NLcm95?=
- =?utf-8?B?RlRJY1JVcC9KQWh2bmFTWS9wTGVYYnBTSkRpSlpHNzlndVRzMTh1RUZrSDdy?=
- =?utf-8?B?bFJIZ2hzRThGdWNFMmxWd0lKYkpIa3JMcFVtaWwza3pjVkEyemtwSHZ5Q2Q4?=
- =?utf-8?B?di8wOW5KQjNpUkhsYmcybDZXUDFobkpzZmFXUFZFUjFmWFA0a0UxOUVGUUxD?=
- =?utf-8?B?MU5jd1U1QjdLbEZ2RVdsYW52MjVPc28wNE9iM2RqVmhWOWlkbkl5cE9GSlpy?=
- =?utf-8?B?TCtEVHQxSXFUZ0lYRW1nWWJVclg0QTZhTmhGTDZYTmFHTXN3WkhrYXc0RURO?=
- =?utf-8?B?bkRuMHhqbk0xclJnMUxaMTE1T2FKMkxVcFZoZzkzT2VvbFdHbVYvSnpOd2du?=
- =?utf-8?B?bkxzdjlkUnpRMkoxdnE4ME1JWGJuUEtBSUEySkc3SjNmcUU3cjl3WStXVWwz?=
- =?utf-8?B?c2dOc2Z2NVlEWEFGelNHby9nMyt0VGxRNVhmT1N1a2RpWmlxSCtTbmhHWGxW?=
- =?utf-8?B?N0lHMEdCZUxFekZNVE43blU0Nm8vUmREeVhOZFRtR2pFWlBOYmtKK3I4Q0hS?=
- =?utf-8?B?bFhXUmtiL0tIM3pnN3d2MzRwRlAxNTV0L1pvVFp5eUpWNktsWGtTdFJGbmEy?=
- =?utf-8?B?bGJNNUYzSTFMVm0vS2M0eW9qRzBpTG85ajFJYVlWWHo5bGNLRVBQdDZURm05?=
- =?utf-8?B?S2grMkk2ZnBpdXYrSUV0WUV6Q0hzQW1CUWNBbWJUODNLNmtTdFFieTJhM0FZ?=
- =?utf-8?B?bFZVdnNOSmI4VldwZUJQczBvenZRRy9iTmUrN1VSRGVkd2Jua1lhYkFwTXov?=
- =?utf-8?B?bHA1elRqTitWQWJ3Y2VXNlVUQTlkeTd5M2dPVysydFhwd0M1OG0vQTY5bzM1?=
- =?utf-8?B?ZXpjUzNVK2tCTUo5bmxvNFBzK0JRTkJwRnFUOGFFMlhmTk1YT2dyMExLRDlT?=
- =?utf-8?B?K0hUYktVMnBSbEtWckw2SWg3QVM0bnlKVWtNSkNiWWpORk1oTG5RR1R6TnNo?=
- =?utf-8?B?K0lyRGVvNkxYc0NQR1JyYUJpSkY1WWZHekJFMFhHTk1ubkozK3k0bm9IeU16?=
- =?utf-8?B?bU9xRmVSQnBGeldRTjVLTHByN255K1JvSjVEMVlaNmZ6VWlGYlJiam05T0hi?=
- =?utf-8?B?b3Vzei9sUUw2YjFGeE5TYmszN2lZUHkvQXQ4RjJWRHFyR25rRm95UjRKMHl3?=
- =?utf-8?B?Q3Y5UUhjYjJhWWluWGcvbGlpTW5BdDZXeHAyd3VyUEtqOHcrcjhMOE1FWmVG?=
- =?utf-8?B?ZDNHMlJUbWpXOEg1cGtLQXp3T3JXRXlwQzcyQ3JEYWJPK0R0aVd6ZXpleGVz?=
- =?utf-8?B?VjdwTVNDbFpHS1R3NFo0TjF0NHRGaTczeDVCdytxUy9BYjlkMy9JekpxSDJ3?=
- =?utf-8?B?YS9RdWZac1FwRUFhMXA0WGQ4YzMyOGMwRGhYNXQ2cHJwK3hJaDNiRG5SUzhB?=
- =?utf-8?B?U0Qybk9hSHBDQWZMcjVFUDdDZ0FaMkFkTXVCdlVRd3pyTGNJdWw3bTVVckwz?=
- =?utf-8?B?a0I2UlZXdXd6VVRXK09pb0JROExTZzZTQ3ZEQjFlRVJFdEFteEhyZUJUZTZ3?=
- =?utf-8?B?cFp0eTAxSSsrdDc1WkVaWDNMa2cxcEhydy9iM3FSSmk0c01LTlZkUmtBczZV?=
- =?utf-8?Q?pTBDVPrFrAJNjZ5E=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?R3RwN2dIVnZFaTY1RnFyZ1FSWCtnQW8rWnlCNjZlQzk5N0FMZDMrQ1dCWnF2?=
+ =?utf-8?B?RXEzVjZ0OWw0UHFNeHJaL1lnMFovTWtDQmdPNy9paVdGUXN0bU9TOHZFT1dm?=
+ =?utf-8?B?RVZWYXU3djBIdXhtZ0lvamZYZ2UxZnY2VGpkUk5Qb2tkWTlyYTQzek15eWNx?=
+ =?utf-8?B?REFtdDQ1NHJPYytRc2o4UFFMR1hEcnlpOFhwVGhqL0hrbE9KaDJGT3M2RG1Z?=
+ =?utf-8?B?VCtmemtUQ04yb1BnQW5lYmlXcG1OblJEZjArMlUvUmE3VVp2K0YvSnpIMHFI?=
+ =?utf-8?B?aHFIdmRTWTd0T013NTJvcER5RXk0MFNKQ0FsZk5SV2FnNjJFTmxLNU5EbWdC?=
+ =?utf-8?B?eVRZU0RtS1dIYlhqOFZSc1JsY0gyajFiV0NjUFI1NkZwRDhPaWNUZFJxVmVZ?=
+ =?utf-8?B?NXhPbUtrbmppMVRFVVJPNjF4L3prTDBLaVpkM3g5Z0gvRENsdzRUZGdrRVIz?=
+ =?utf-8?B?M0c2eVBlRHJXRmNlOElZVHYrSkFWTkJIVHFrc3hWRmUydDJ2UTE2SFFyb05o?=
+ =?utf-8?B?ZWtodUNtMU15N3JYbjlxUXFtS2ZPem0xQjNobGw0b3AxQ2twcmhSS1ZqWG4r?=
+ =?utf-8?B?MVd1VTlidk5ZWjA1VTRYRkltS3N6NzBETi9SZll3bmZKTVZIT2k0bTdmNXFQ?=
+ =?utf-8?B?b2tjM3NXMU5VSjNGcWY0b2QyN3cyaXlZZHhPa1dKdjFNUzFrSHVzVEttMUFP?=
+ =?utf-8?B?QlB5enVtQndCSll3cVljd3lETE9OakRlNkFtSjF6Q1NFZG1GYklaM1Z1N09i?=
+ =?utf-8?B?NEpNcGhrYWdjejNPeWxHalJ0ZFhwMkJ0b2U0Y3ZQSzA4VEhCTENmMk4rU0xR?=
+ =?utf-8?B?RHVyUmlKa0VQRGIwQkRYYVNMeWV1UWROZHdZODQvUDdqb0I1MUtMWmRHS3pq?=
+ =?utf-8?B?NmtuZ3VDUGhySnY0dEpBU0Z5ODZPQWV0RUJ5L3FNcC9uSFZwUDBiZHkvalVa?=
+ =?utf-8?B?VitGU2dyTndhOHdZNVFUR2p2dHR3MmlaQ2VBQXZMaXoyNnRiaFVOQk1rU0tH?=
+ =?utf-8?B?VFQrY0paY0hBN1NWVTVFR0VQeW4zU1pIZllBZE1DSnZQSkxReXpva3pRU0JL?=
+ =?utf-8?B?dWhHeDkzSmIxUjVQY0Z5RWRiUStlZmFVTHRMaDRHWFV5SVYzOTZJQU03THMy?=
+ =?utf-8?B?RS9iZDdrQSs5MjNyTlJpNXBwK08yVU1uZy9kdnlwL2xnR0oweWl0K2tNVGQ3?=
+ =?utf-8?B?MFYxQWl3WGNjaTZuQ2ZWSEZpNHZPcXpDS0xNMTFJVHU4eGJsaFNxZHZqZFJZ?=
+ =?utf-8?B?M0oyV2I2MUFuTUpTTUV6WGUxU2tuc3lrcmw1NVRhM2MwTnBkWmI3ZjVFdnU5?=
+ =?utf-8?B?SE9XNjNLakxyZi9peTNtWXpvSjVMeWdmTlRjNUw5OXMvWUJMQWtWYUVMQTlq?=
+ =?utf-8?B?SzRaNTdicU9GNE44RkM1dkFidUZ0TTVVOVhuUHdsL0oyTk9XSUpYUFZJcWl6?=
+ =?utf-8?B?aHpyeldrcTdMWGhTNWxSekZETDR6MjJqMisrcTJBOFU5cmk4WmU1WkdhVVE3?=
+ =?utf-8?B?bG44TitkTk1jWEtldG02TTdKai82KzV4cjNHUHBocmlEYWh6TEc3THdlVyt1?=
+ =?utf-8?B?eVV5bFZkNFg3dUtFeWIzSzk2NUkwRmdyVCtka0daNERwMGZiZ2g3QXhnVHRW?=
+ =?utf-8?B?emo4eFJDV2hoR2FIeWJFakh1ODhxQnN0RGp1ZlcxSEh4N2lqUEozeHM1d3pD?=
+ =?utf-8?B?T2NHMnVEbndSS0hIbTJ6c3VWSkVPR2VqOUl6VjBvd3E5RGxsZDM1YURON3BL?=
+ =?utf-8?B?RndPRnJvZDZhd2JnU05nWHB6eDd5YVJsNmFCR1Nib0syM0w4SUJuTUZSc2hB?=
+ =?utf-8?B?MndyWWhKWGR6cHZDUnozYzl4S0hZMEdwT1VLcldqSFluVmFEcGRzNGo2QVJY?=
+ =?utf-8?B?RmcxdjAxS1Jhc1ZibktyNUM5QUx0c0M5QnpUYU1mSDhXTXhPaEt6dkErZTFr?=
+ =?utf-8?B?eEYzN1VrS05jamF1M2dKOFRXdHF6c2VOQ2xtOHhRQmFyRndUN3ZnZGlhSEFH?=
+ =?utf-8?B?Mm9SajhEbDdaZjYrY3psaXRvZHk2aTVRQUtSekI2SHMrTnNOK283QTY2bk5u?=
+ =?utf-8?B?QisxZ0wvbURnQmJvclI1aXBVYVVsV1YvYjU3RzRIWXg5bFMzTUZDZitJZGZP?=
+ =?utf-8?B?VHErb1lvUnpPVElnaW12MnRUMjh6S01XU3dUTWFwWmowRmlXWHFaNzNuQnpS?=
+ =?utf-8?B?Y3ZUSlE1OWxLdVJqVGJyNHViR1E1Ym8rKzNkVHh0U3ErSVlTRmtiZmUwTlRY?=
+ =?utf-8?B?MEVyaGppdWN0OWcySmxCbndZTWdpYW1qdlFOdWF4UE1oUHp4OEtHaXQvZkd5?=
+ =?utf-8?B?M0R2RWh6ZVloMVNpeW5JZFNrRTVtdzZjMDFDODM5Y2lOS3dCbTNMUk81WW9t?=
+ =?utf-8?Q?gMWcKxLtyjg02ELQ=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 58e1dbee-b26f-4614-2a3e-08da15934099
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3f88a3ca-90e3-4f05-0854-08da15957c83
 X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Apr 2022 16:59:01.6689
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Apr 2022 17:15:01.1493
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: OtpW1OOA8C6aYTYxC+N/e0jOTw0yW/67y4PQtjiulXiMBdoccIZm+FoR7tszKsmwHXvJIvZSJaGazj0/NS4qiSjvkDWSOfgH+6L+QyITpf8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR10MB1655
+X-MS-Exchange-CrossTenant-UserPrincipalName: GMEkNkJQIpI8s7k5kcRHPTvP1x831NSVdVBtIH8FyLj/sN0okRVVN+6jFKTN6+EwsyrenUKvnmRcKI1Y0mFE4d8agvy78OCidPvh9Uk2Pq0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB5439
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.425,18.0.850
  definitions=2022-04-03_04:2022-03-30,2022-04-03 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0 mlxscore=0
- bulkscore=0 suspectscore=0 spamscore=0 mlxlogscore=999 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2204030112
-X-Proofpoint-ORIG-GUID: Vc5PvtW9S26ZWfIBU53rF5DmBx9sajOs
-X-Proofpoint-GUID: Vc5PvtW9S26ZWfIBU53rF5DmBx9sajOs
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ mlxlogscore=999 phishscore=0 spamscore=0 adultscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2204030114
+X-Proofpoint-ORIG-GUID: NF9w65DU5Gb2UO4TV9E_v4rysCgpF0yL
+X-Proofpoint-GUID: NF9w65DU5Gb2UO4TV9E_v4rysCgpF0yL
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/31/22 10:50 PM, Wenchao Hao wrote:
-> If the abort command succeed and it does not need to be retired, do not add
-> it to error handle list. 
+On 3/30/22 5:59 AM, Wenchao Hao wrote:
+> On 2022/3/30 17:32, Hannes Reinecke wrote:
+>> On 3/30/22 11:11, Wenchao Hao wrote:
+>>> On 2022/3/30 2:56, Hannes Reinecke wrote:
+>>>> On 3/29/22 14:40, Wenchao Hao wrote:
+>>>>> On 2022/3/29 18:56, Steffen Maier wrote:
+>>>>>> On 3/29/22 11:06, Wenchao Hao wrote:
+>>>>>>> SCSI timeout would call scsi_eh_scmd_add() on some conditions, host would be set
+>>>>>>> to SHOST_RECOVERY state. Once host enter SHOST_RECOVERY, IOs submitted to all
+>>>>>>> devices in this host would not succeed until the scsi_error_handler() finished.
+>>>>>>> The scsi_error_handler() might takes long time to be done, it's unbearable when
+>>>>>>> host has massive devices.
+>>>>>>>
+>>>>>>> I want to ask is anyone applying another error handler flow to address this
+>>>>>>> phenomenon?
+>>>>>>>
+>>>>>>> I think we can move some operations(like scsi get sense, scsi send startunit
+>>>>>>> and scsi device reset) out of scsi_unjam_host(), to perform these operations
+>>>>>>> without setting host to SHOST_RECOVERY? It would reduce the time of block the
+>>>>>>> whole host.
+>>>>>>>
+>>>>>>> Waiting for your discussion.
+>>>>>>
+>>>>>> We already have "async" aborts before even entering scsi_eh. So your use case seems to imply that those aborts fail and we enter scsi_eh?
+>>>>>>
+>>>>>
+>>>>> Yes, I mean when scsi_abort_command() failed and scsi_eh_scmd_add() is called.
+>>>>>
+>>>>>> There's eh_deadline for limiting the time spent in escalation of scsi_eh, and instead directly go to host reset. Would this help?
+>>>>>>
+>>>>>>
+>>>>>
+>>>>> The deadline seems not helpful. What we want to see is a single LUN's command error
+>>>>> would not stop other LUNs which share the same host. So my plan is to move reset LUN out
+>>>>> from scsi_unjam_host() which run with host set to SHOST_RECOVERY.
+>>>>
+>>>> Nope. One of the key points of scsi_unjam_host() is that is has to stop all I/O before proceeding. Without doing so basically all SCSI parallel HBAs will fail EH as they _require_ I/O to be stopped.
+>>>>
+>>>
+>>> I still can not understand why we must stop all I/O. In my comprehension, stopping all I/O
+>>> is because we might reset host during scsi_error_handler() and we must wait host's number of
+>>> failed command equal to number of busy command then we can wake up scsi_error_handler().
+>>>
+>>> If move reset LUN out of scsi_error_handler(), and perform single LUN reset, we only need
+>>> stop I/O of this single LUN, this would not affect other LUNs. If single LUN reset failed,
+>>> we can then call in the large scale error handle.
+>>>
+>> I know the EH flow.
+>>
+>> Problem here is the way parallel SCSI operates. Remember, parallel SCSI is a _bus_, and there can be only one command at a time on the bus.
+>> So if one command on the bus misfires and you have to start EH you have to stop all I/O on the bus to ensure that your EH command is the only one active on the bus.
+>>
 > 
-> Adding command to error handle list is an annoying flow which would stop I/O
-> of all LUNs which shared a same HBA.
+> Thank you for you explanation, it's clear to me now.
 > 
-> So here if we successfully abort a command, we can finish it via
-> scsi_finish_command() which would reduce time spent on scsi_error_handler()
+>> For modern HBAs we sure can device other ways and means of error recovery, but I can't really see how we would do that on legacy HBAs.
+>>
 > 
-> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
-> ---
->  drivers/scsi/scsi_error.c | 55 +++++++++++++++++++++------------------
->  1 file changed, 29 insertions(+), 26 deletions(-)
+> How about define a new return value of scsi_host_template's eh_timed_out callback which indicate this timeout
+> is totally handled by LLDs. Like following:
 > 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index cdaca13ac1f1..15299603b7ee 100644
 > --- a/drivers/scsi/scsi_error.c
 > +++ b/drivers/scsi/scsi_error.c
-> @@ -173,41 +173,44 @@ scmd_eh_abort_handler(struct work_struct *work)
->  		goto out;
->  	}
->  	set_host_byte(scmd, DID_TIME_OUT);
-> -	if (scsi_host_eh_past_deadline(shost)) {
-> -		SCSI_LOG_ERROR_RECOVERY(3,
-> -			scmd_printk(KERN_INFO, scmd,
-> -				    "eh timeout, not retrying "
-> -				    "aborted command\n"));
-> -		goto out;
-> -	}
->  
-> -	spin_lock_irqsave(shost->host_lock, flags);
-> -	list_del_init(&scmd->eh_entry);
-> +	if (scsi_noretry_cmd(scmd) ||
-> +	    !scsi_cmd_retry_allowed(scmd) &&
-> +	    !scsi_eh_should_retry_cmd(scmd)) {
+> @@ -359,6 +359,8 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
+>                         set_host_byte(scmd, DID_TIME_OUT);
+>                         scsi_eh_scmd_add(scmd);
+>                 }
+> +       } else if (rtn == EH_HANDLED_BY_DRIVERS) {
+> +               return BLK_EH_DONE;
+>         }
+> 
+> Or scsi_host_template's eh_timed_out should not do this, we can define another callback?
+> In the LLDs's timeout handler callback, apply single LUN reset first flow as previous mail metioned.
+> 
+
+You probably want to add a scsi_host_template field or new callouts
+because some drivers only preallocate enough resources for one TMF
+at a time so we have to do it on a driver by driver basis.
+
+For driver's setting/implementing it then to escalate you can do something
+like:
+
+1. Block the queue for just the LU with scsi_internal_device_block.
+2. You can then call the new callout or old one if we just added some
+new field.
+3. If device/lun reset fails, then block the target. Then you can do
+the host.
+
+We could share code with scsi_ioctl_reset as well. Drivers that support
+TMFs via that ioctl already expect queuecommand to be possibly in the
+middle of a run and IO not yet timed out. For example, the code to
+block a queue and reset the device could be used for the new EH and
+SG_SCSI_RESET_DEVICE handling.
 
 
-I don't think this test is correct. Did you want all ||s?
 
-For what the patch is trying to accomplish I'm not sure if it's
-the behavior people wanted. Do all drivers have configurable
-abort timeouts? If an abort takes N minutes to complete ok,
-and that's put us over the eh deadline maybe the user wanted
-that device to be offlined.
+> Anyway, what we need is a way to reduce the time of setting host to SHOST_RECOVERY.
+> 
+>>> Here is a brief flow:
+>>>
+>>> abort command
+>>>     ||
+>>>     || failed
+>>>     ||
+>>>     \/
+>>> stop single LUN's I/O (need to wait LUN's failed command number equal to busy command  number)
+>>>     ||
+>>>     || failed  (according to our statistic, 90% reset LUN would succeed)
+>>>     ||
+>>>     \/
+>>
+>> Interesting. This does not match up with my experience, where 99% of the errors were due to a command timeout.
+>>
+>> So which errors do you see here? What are the causes?
+> 
+> These error statistic are from our consumers' environment,they told me about 90% timeout triggered errors can be
+> handled by reset LUN.
+> 
+
+Is this with specific drivers, transport or targets?
