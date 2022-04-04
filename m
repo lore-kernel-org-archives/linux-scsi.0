@@ -2,140 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAB94C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 00:02:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A52DFC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 02:07:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376757AbiDDAET (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Apr 2022 20:04:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43182 "EHLO
+        id S1358063AbiDDCJ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Apr 2022 22:09:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376747AbiDDAES (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Apr 2022 20:04:18 -0400
-Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97C9F32EDF
-        for <linux-scsi@vger.kernel.org>; Sun,  3 Apr 2022 17:02:22 -0700 (PDT)
-Received: by mail-lj1-x232.google.com with SMTP id h11so10911328ljb.2
-        for <linux-scsi@vger.kernel.org>; Sun, 03 Apr 2022 17:02:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :references:from:in-reply-to:content-transfer-encoding;
-        bh=5bWvZkBQTfXdI0SB8SrDEX7zVm6LPWgDXAasm42CGY4=;
-        b=mN4zhps0NYYwmzS+FQLFXsSlPjyZn4j7aifukivVkBYHBHCYVat5c393ANERlwS+7A
-         +83MnCatCAO/ik4twzmymo3YzTuoGyP12vZH+3V8jxmpEsyxce4Sk0+6b7MXsxn/SWCR
-         /W9m3DFc/k/ES0I/nlcU2OKweBRHd1+w6BFYBH+88mNzTpWAo+IU+/YNwIKngyPZmlWf
-         rNs/TbIpuF68TLMsbggVlOMYb1TqG/ieQhG3u4ltAXBkgsDOVpnZfy7fkUFyaBzghike
-         q452JJwoLzWM+wa6JJh73l72T208+rFuUniEw411oxQPWZkO8ZAgbYAZMA+QXo1OCX79
-         Htnw==
+        with ESMTP id S235878AbiDDCJZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Apr 2022 22:09:25 -0400
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76B162E0AA
+        for <linux-scsi@vger.kernel.org>; Sun,  3 Apr 2022 19:07:30 -0700 (PDT)
+Received: by mail-pf1-f177.google.com with SMTP id 7so613392pfu.13
+        for <linux-scsi@vger.kernel.org>; Sun, 03 Apr 2022 19:07:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:references:from:in-reply-to
+         :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=5bWvZkBQTfXdI0SB8SrDEX7zVm6LPWgDXAasm42CGY4=;
-        b=pk8mzCQXrfA7+OTJqTRb/i3Py4MzKHHLUpoCwoAuafMP2JVNF/e6FAJX6mB3fQj/a/
-         PULzqvI580hKbmb0HwZgzqmra2XwLbeEmb4vKeFR8O9MaYkYVB1lEz1LbuHPg/KP94ym
-         T1bd6W4VvghP9cyrDEsnkrhpE+A7cn1JAoR/t5BgOdP2UCM0QJSExxgK3AN63+/yPufG
-         h+nzTrXHZc8cMZqP6I22/pIrKNQu7nmthsuotPFeubir6mdgERyZe/RwL14BEfdmFFhm
-         MDElOaYon1lr+9/6lbotBPsFBXZNni+7iZJ48FUyWOsoG8Ef1z8Kb/6fjpYPhetY9IFf
-         fYAw==
-X-Gm-Message-State: AOAM531Vq8tGnThIZ6/+r7QHcPOX4vMMsnbFWv6rTBnkux68Qgi5O21n
-        XAcGwAdYsUia1ZVHSnuFVrVbgw==
-X-Google-Smtp-Source: ABdhPJwJWW8ulMLQITy0BpOLSJpg+fSPWC4n1v41PvGfawZsK+O5iwbPlB0c7173GPk7Gu/Amuskog==
-X-Received: by 2002:a2e:546:0:b0:24a:c194:ba34 with SMTP id 67-20020a2e0546000000b0024ac194ba34mr19549918ljf.146.1649030540783;
-        Sun, 03 Apr 2022 17:02:20 -0700 (PDT)
-Received: from [192.168.1.211] ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id y12-20020a2e978c000000b0024b11369f20sm543441lji.126.2022.04.03.17.02.19
+        bh=frfg7wG3wzGB+f8K70AHhJNIrFlEXBun2rTsIvwKaJM=;
+        b=0D5ExCxJBJNLYS3Bm9AYIw3PMjaX/P0AuGO2ynGRJR6lLb9/WqNtLuiTMKZG0PfTQ2
+         dKuWooJ5F+0aQSBv6lgT2TdgqV/sggxXgOBMZhi/N9fp96gnBxzQ/9jfcPpIZPmTy9He
+         Mi90aNZ9Fi+1w19KRogxRVkXfTBokYulEWIzfWoOIS98GhiEhGANLBU7oHQZOzeSdBXC
+         Rrp/1AFGsJ0sBWLWmYAn8a6b1kOh9hFs7c9F+vyk5xM6o98O19Pq/zUTpCOcV9aen+0e
+         q0l9VV3O4tfg5Fn4nR1sP8eDfir0sFfedVTaBHQb+JlAalwpnfLCXKfi2+ObBZdxfRUx
+         bZ1A==
+X-Gm-Message-State: AOAM531d/6HI/pnCAu1dOq2AhbMwy6oRDRsmL+SP3PBlUXvHW8uk8mx1
+        Hm+wf2tuSlsQe74/S1AJaz4=
+X-Google-Smtp-Source: ABdhPJyU48/ALTj2v9SVmIIr+oQy//iXcMkXCtwR+1MldXMnPgMHXtGgRCxXM3plUkcEuoBpDRN4wg==
+X-Received: by 2002:a63:f95f:0:b0:398:cdd5:b18 with SMTP id q31-20020a63f95f000000b00398cdd50b18mr14410799pgk.562.1649038049589;
+        Sun, 03 Apr 2022 19:07:29 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id d5-20020a056a0010c500b004faee9887ccsm9861237pfu.64.2022.04.03.19.07.27
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 03 Apr 2022 17:02:20 -0700 (PDT)
-Message-ID: <0da0b229-3493-967d-c14d-60d3246b07b2@linaro.org>
-Date:   Mon, 4 Apr 2022 03:02:18 +0300
+        Sun, 03 Apr 2022 19:07:28 -0700 (PDT)
+Message-ID: <4d6c2e51-b8d7-6f2b-bcd6-a26d60a21fce@acm.org>
+Date:   Sun, 3 Apr 2022 19:07:26 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
-Subject: Re: [RFC PATCH 3/4] arm64: dts: qcom: sdm845: control RPMHPD
- performance states with UFS
-Content-Language: en-GB
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+Subject: Re: [PATCH 11/29] scsi: ufs: Remove unused constants and code
+Content-Language: en-US
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Daejun Park <daejun7.park@samsung.com>,
         Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Taniya Das <tdas@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <20220401145820.1003826-1-krzysztof.kozlowski@linaro.org>
- <20220401145820.1003826-4-krzysztof.kozlowski@linaro.org>
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-In-Reply-To: <20220401145820.1003826-4-krzysztof.kozlowski@linaro.org>
+        Jinyoung Choi <j-young.choi@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
+References: <20220331223424.1054715-1-bvanassche@acm.org>
+ <20220331223424.1054715-12-bvanassche@acm.org>
+ <DM6PR04MB6575F371F794F5AA28FCCB33FCE39@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <DM6PR04MB6575F371F794F5AA28FCCB33FCE39@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 01/04/2022 17:58, Krzysztof Kozlowski wrote:
-> UFS, when scaling gears, should choose appropriate performance state of
-> RPMHPD power domain controller.  Since UFS belongs to UFS_PHY_GDSC power
-> domain, add necessary parent power domain to GCC.
+On 4/1/22 23:59, Avri Altman wrote:
+>>
+>> Commit 5b44a07b6bb2 ("scsi: ufs: Remove pre-defined initial voltage values
+>> of device power") removed the code that uses the UFS_VREG_VCC* constants
+>> and also the code that sets the min_uV and max_uV member variables. Hence
+>> also remove these constants and that member variable.
+>>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Looks fine to me, but better get an ack from Stanley,
+> because he specifically wrote in his commit log:
+> "...
+> Note that we keep struct ufs_vreg unchanged. This allows vendors to
+>      configure proper min_uV and max_uV of any regulators to make
+>      regulator_set_voltage() works during regulator toggling flow in the
+>      future. Without specific vendor configurations, min_uV and max_uV will be
+>      NULL by default and UFS core driver will enable or disable the regulator
+>      only without adjusting its voltage.
+> ..."
 
-This will cause all gcc GDSCs to be rooted in the CX. Are we sure that 
-this is an expected (and correct) change?
+(+Stanley)
 
-> 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> ---
->   arch/arm64/boot/dts/qcom/sdm845.dtsi | 17 ++++++++++++++++-
->   1 file changed, 16 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> index b31bf62e8680..c999b41c2605 100644
-> --- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-> @@ -1078,6 +1078,7 @@ gcc: clock-controller@100000 {
->   			#clock-cells = <1>;
->   			#reset-cells = <1>;
->   			#power-domain-cells = <1>;
-> +			power-domains = <&rpmhpd SDM845_CX>;
->   		};
->   
->   		qfprom@784000 {
-> @@ -2336,8 +2337,22 @@ ufs_mem_hc: ufshc@1d84000 {
->   				<0 0>,
->   				<0 0>,
->   				<0 300000000>;
-> -
-> +			operating-points-v2 = <&ufs_opp_table>;
->   			status = "disabled";
-> +
-> +			ufs_opp_table: opp-table {
-> +				compatible = "operating-points-v2";
-> +
-> +				opp-50000000 {
-> +					opp-hz = /bits/ 64 <50000000>;
-> +					required-opps = <&rpmhpd_opp_svs>;
-> +				};
-> +
-> +				opp-200000000 {
-> +					opp-hz = /bits/ 64 <200000000>;
-> +					required-opps = <&rpmhpd_opp_nom>;
-> +				};
-> +			};
->   		};
->   
->   		ufs_mem_phy: phy@1d87000 {
+Hi Stanley,
 
+Can you take a look at this patch?
 
--- 
-With best wishes
-Dmitry
+Thanks,
+
+Bart.
+
