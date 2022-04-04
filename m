@@ -2,104 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 819D9C35274
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 09:27:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76AB7C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 14:25:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353879AbiDDJ3A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Apr 2022 05:29:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48122 "EHLO
+        id S1377120AbiDDO1l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Apr 2022 10:27:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353794AbiDDJ26 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 05:28:58 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0F8523BBCB;
-        Mon,  4 Apr 2022 02:27:02 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-43-123.pa.nsw.optusnet.com.au [49.180.43.123])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 29B8410E55FB;
-        Mon,  4 Apr 2022 19:26:57 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nbIz9-00Dc5C-Sq; Mon, 04 Apr 2022 19:26:55 +1000
-Date:   Mon, 4 Apr 2022 19:26:55 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     linux-kernel@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-parisc@vger.kernel.org, sparclinux@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-        Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
-        linux-rdma@vger.kernel.org, linux-um@lists.infradead.org,
-        linux-media@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-xfs@vger.kernel.org, alsa-devel@alsa-project.org,
-        linux-s390@vger.kernel.org
-Subject: Re: Build regressions/improvements in v5.18-rc1
-Message-ID: <20220404092655.GR1544202@dread.disaster.area>
-References: <CAHk-=wg6FWL1xjVyHx7DdjD2dHZETA5_=FqqW17Z19X-WTfWSg@mail.gmail.com>
- <20220404074734.1092959-1-geert@linux-m68k.org>
- <alpine.DEB.2.22.394.2204041006230.1941618@ramsan.of.borg>
+        with ESMTP id S1377146AbiDDO1k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 10:27:40 -0400
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D3173E5DA
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Apr 2022 07:25:45 -0700 (PDT)
+Received: by mail-pg1-f179.google.com with SMTP id q19so8472056pgm.6
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Apr 2022 07:25:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=+Wtq/Z3aPZ2OAgttgisz65dz/8jstRPltCnkdQPfUyY=;
+        b=HS4/r83VQiII4t5JiuUogB2tmQADWOhIzgMyUcccji9QU/96C8Z1yrK3LS45JarPtM
+         ouu3hP57SRhQVpAss3g9L0ZCGevMw6kiZMihL8cvEsXLABDIIN2rodJrsA6Iwyu/pskE
+         mpm54eJ6bWVNeV4+A1wbh2xULzaxjMAj0+C+tcSvOmHW7YS13pQ45vD3h2IvolpRNncr
+         bY5Bdvzcpf8e/zDvWJtRzIVVE9hFmc7unGJYSU6tQFWqdVPgPMhf/RdUBDo3zPXG8lM0
+         bcm8Me6o7TBjgAEcXJqE+xWqnIwROr8qOIzKKLFRW9y+GJXxfe4W6G0Juyk7WidLKsNF
+         UMFw==
+X-Gm-Message-State: AOAM530TLVoMGDK3qyR6Km7RRP1wVJ3cS2q8IpHW9qvPclWmfV5c/1/t
+        P4RELGBJzt34hasviK3eEA4=
+X-Google-Smtp-Source: ABdhPJym3sU/JsSsQv1CuQ4h4litOJczWLrbTZ+1Y2CS00ejOla33Lo8zeBIC4eezQzjgwmhy9n9jA==
+X-Received: by 2002:a65:4503:0:b0:382:aad5:ad7d with SMTP id n3-20020a654503000000b00382aad5ad7dmr125445pgq.488.1649082344340;
+        Mon, 04 Apr 2022 07:25:44 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id p3-20020a056a000b4300b004faee36ea56sm12731360pfo.155.2022.04.04.07.25.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 Apr 2022 07:25:43 -0700 (PDT)
+Message-ID: <8a3dfb77-9c42-871a-0d16-1ddf84516c8e@acm.org>
+Date:   Mon, 4 Apr 2022 07:25:41 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.22.394.2204041006230.1941618@ramsan.of.borg>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=624ab9e5
-        a=MV6E7+DvwtTitA3W+3A2Lw==:117 a=MV6E7+DvwtTitA3W+3A2Lw==:17
-        a=kj9zAlcOel0A:10 a=z0gMJWrwH1QA:10 a=6Fu7hv2xAAAA:8 a=7-415B0cAAAA:8
-        a=L05BbbQJD6-TbP0LrSsA:9 a=CjuIK1q_8ugA:10 a=OCr_TKDY-yBPQKLGgHr3:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v2 2/7] mpi3mr: add support for driver commands
+Content-Language: en-US
+To:     Sumit Saxena <sumit.saxena@broadcom.com>,
+        linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, chandrakanth.patil@broadcom.com,
+        sreekanth.reddy@broadcom.com, prayas.patel@broadcom.com,
+        Christoph Hellwig <hch@lst.de>
+References: <20220329180616.22547-1-sumit.saxena@broadcom.com>
+ <20220329180616.22547-3-sumit.saxena@broadcom.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220329180616.22547-3-sumit.saxena@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Apr 04, 2022 at 10:16:08AM +0200, Geert Uytterhoeven wrote:
-> On Mon, 4 Apr 2022, Geert Uytterhoeven wrote:
-> > Below is the list of build error/warning regressions/improvements in
-> > v5.18-rc1[1] compared to v5.17[2].
-> > 
-> > Summarized:
-> >  - build errors: +36/-15
-> >  - build warnings: +5/-38
-> > 
-> > Happy fixing! ;-)
+On 3/29/22 11:06, Sumit Saxena wrote:
+> +/**
+> + * struct mpi3mr_nvme_pt_sge -  Structure to store SGEs for NVMe
+> + * Encapsulated commands.
+> + *
+> + * @base_addr: Physical address
+> + * @length: SGE length
+> + * @rsvd: Reserved
+> + * @rsvd1: Reserved
+> + * @sgl_type: sgl type
+> + */
+> +struct mpi3mr_nvme_pt_sge {
+> +	u64 base_addr;
+> +	u32 length;
+> +	u16 rsvd;
+> +	u8 rsvd1;
+> +	u8 sgl_type;
+> +};
 
-Well....
+Does the above data structure force user space software to pass a 
+physical address to the kernel? A kernel driver should not do this 
+unless there is a very good reason to do so. Passing a physical address 
+from user space to the kernel requires freezing the virtual-to-physical 
+mapping. Some user space developers erroneously use mlock() for this 
+purpose. Is there any other way than the VFIO_IOMMU_MAP_DMA ioctl to 
+prevent that the kernel modifies the virtual-to-physical mapping?
 
-> >  + /kisskb/src/fs/xfs/xfs_buf.h: error: initializer element is not constant:  => 46:23
+Thanks,
 
-Looking at:
-
-http://kisskb.ellerman.id.au/kisskb/buildresult/14714961/
-
-The build error is:
-
-/kisskb/src/fs/xfs/./xfs_trace.h:432:2: note: in expansion of macro 'TP_printk'
-  TP_printk("dev %d:%d daddr 0x%llx bbcount 0x%x hold %d pincount %d "
-  ^
-/kisskb/src/fs/xfs/./xfs_trace.h:440:5: note: in expansion of macro '__print_flags'
-     __print_flags(__entry->flags, "|", XFS_BUF_FLAGS),
-     ^
-/kisskb/src/fs/xfs/xfs_buf.h:67:4: note: in expansion of macro 'XBF_UNMAPPED'
-  { XBF_UNMAPPED,  "UNMAPPED" }
-    ^
-/kisskb/src/fs/xfs/./xfs_trace.h:440:40: note: in expansion of macro 'XFS_BUF_FLAGS'
-     __print_flags(__entry->flags, "|", XFS_BUF_FLAGS),
-                                        ^
-/kisskb/src/fs/xfs/./xfs_trace.h: In function 'trace_raw_output_xfs_buf_flags_class':
-/kisskb/src/fs/xfs/xfs_buf.h:46:23: error: initializer element is not constant
- #define XBF_UNMAPPED  (1 << 31)/* do not map the buffer */
-
-This doesn't make a whole lotta sense to me. It's blown up in a
-tracepoint macro in XFS that was not changed at all in 5.18-rc1, nor
-was any of the surrounding XFS code or contexts.  Perhaps something
-outside XFS changed to cause this on these platforms?
-
-Can you bisect this, please?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Bart.
