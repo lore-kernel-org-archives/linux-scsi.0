@@ -2,85 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A79CC433EF
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Apr 2022 21:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAB94C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 00:02:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234830AbiDCV4t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Apr 2022 17:56:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37708 "EHLO
+        id S1376757AbiDDAET (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Apr 2022 20:04:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356933AbiDCV4s (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Apr 2022 17:56:48 -0400
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10F8215A3A
-        for <linux-scsi@vger.kernel.org>; Sun,  3 Apr 2022 14:54:53 -0700 (PDT)
-Received: by mail-pj1-f41.google.com with SMTP id nt14-20020a17090b248e00b001ca601046a4so3267253pjb.0
-        for <linux-scsi@vger.kernel.org>; Sun, 03 Apr 2022 14:54:53 -0700 (PDT)
+        with ESMTP id S1376747AbiDDAES (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Apr 2022 20:04:18 -0400
+Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97C9F32EDF
+        for <linux-scsi@vger.kernel.org>; Sun,  3 Apr 2022 17:02:22 -0700 (PDT)
+Received: by mail-lj1-x232.google.com with SMTP id h11so10911328ljb.2
+        for <linux-scsi@vger.kernel.org>; Sun, 03 Apr 2022 17:02:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :references:from:in-reply-to:content-transfer-encoding;
+        bh=5bWvZkBQTfXdI0SB8SrDEX7zVm6LPWgDXAasm42CGY4=;
+        b=mN4zhps0NYYwmzS+FQLFXsSlPjyZn4j7aifukivVkBYHBHCYVat5c393ANERlwS+7A
+         +83MnCatCAO/ik4twzmymo3YzTuoGyP12vZH+3V8jxmpEsyxce4Sk0+6b7MXsxn/SWCR
+         /W9m3DFc/k/ES0I/nlcU2OKweBRHd1+w6BFYBH+88mNzTpWAo+IU+/YNwIKngyPZmlWf
+         rNs/TbIpuF68TLMsbggVlOMYb1TqG/ieQhG3u4ltAXBkgsDOVpnZfy7fkUFyaBzghike
+         q452JJwoLzWM+wa6JJh73l72T208+rFuUniEw411oxQPWZkO8ZAgbYAZMA+QXo1OCX79
+         Htnw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+         :content-language:to:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=9b2kscuKXu9uc97rYzKzGQoIEOf7Gquytzmp7etlzSM=;
-        b=sLEyZ+2RtskgMlY4ERVgf2kdXsv7jj4wiSmIJJ/yodvnS3fYzq67uT5iUL2eFhFh5b
-         MayN6GQTp0rkXRsSMXkBTrR90LU5UzdNen7J7owxlbq722fB6E6Y0y0ea+6G5xKWFzvI
-         qtPte1YdHSDCau01z6XJxvl5pXT5revf9WyHTtM0B/QuTkRI7vbT3MkiRESrzR823DY3
-         Y/ss6vLMDm+PbJ6fGiMR2XzMJZOmAFRScDDN4QAeX2Uuda3+3FSFhbMFHMCHy0+QOVNn
-         jCIZ4WLBhe/lSmdC3JhZMDe5S5oidTUZMO+/94M0aKdK7AaJxcMBJhORBZD7uAmLTif7
-         bpng==
-X-Gm-Message-State: AOAM533fgSbMzm1V8RIUkZJR/JFPm6zQyG27M4LQLTmoY134YMufg3hz
-        F8OmXFpIIBZ/9Uzzso3bpkk=
-X-Google-Smtp-Source: ABdhPJzSSuaY0UFQuzcZd+mEyXQ/kF/yyp50D0z0i87GLIPAv9Fx8bPUH4KBbKcUTJracWTvGeu1XQ==
-X-Received: by 2002:a17:902:edc5:b0:156:68e4:416 with SMTP id q5-20020a170902edc500b0015668e40416mr12248471plk.87.1649022892617;
-        Sun, 03 Apr 2022 14:54:52 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id u6-20020a17090a3fc600b001ca88b0bdfesm2532538pjm.13.2022.04.03.14.54.51
+        bh=5bWvZkBQTfXdI0SB8SrDEX7zVm6LPWgDXAasm42CGY4=;
+        b=pk8mzCQXrfA7+OTJqTRb/i3Py4MzKHHLUpoCwoAuafMP2JVNF/e6FAJX6mB3fQj/a/
+         PULzqvI580hKbmb0HwZgzqmra2XwLbeEmb4vKeFR8O9MaYkYVB1lEz1LbuHPg/KP94ym
+         T1bd6W4VvghP9cyrDEsnkrhpE+A7cn1JAoR/t5BgOdP2UCM0QJSExxgK3AN63+/yPufG
+         h+nzTrXHZc8cMZqP6I22/pIrKNQu7nmthsuotPFeubir6mdgERyZe/RwL14BEfdmFFhm
+         MDElOaYon1lr+9/6lbotBPsFBXZNni+7iZJ48FUyWOsoG8Ef1z8Kb/6fjpYPhetY9IFf
+         fYAw==
+X-Gm-Message-State: AOAM531Vq8tGnThIZ6/+r7QHcPOX4vMMsnbFWv6rTBnkux68Qgi5O21n
+        XAcGwAdYsUia1ZVHSnuFVrVbgw==
+X-Google-Smtp-Source: ABdhPJwJWW8ulMLQITy0BpOLSJpg+fSPWC4n1v41PvGfawZsK+O5iwbPlB0c7173GPk7Gu/Amuskog==
+X-Received: by 2002:a2e:546:0:b0:24a:c194:ba34 with SMTP id 67-20020a2e0546000000b0024ac194ba34mr19549918ljf.146.1649030540783;
+        Sun, 03 Apr 2022 17:02:20 -0700 (PDT)
+Received: from [192.168.1.211] ([37.153.55.125])
+        by smtp.gmail.com with ESMTPSA id y12-20020a2e978c000000b0024b11369f20sm543441lji.126.2022.04.03.17.02.19
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 03 Apr 2022 14:54:51 -0700 (PDT)
-Message-ID: <ebf3cc31-9cd1-3615-b033-06bfc7d25b9a@acm.org>
-Date:   Sun, 3 Apr 2022 14:54:50 -0700
+        Sun, 03 Apr 2022 17:02:20 -0700 (PDT)
+Message-ID: <0da0b229-3493-967d-c14d-60d3246b07b2@linaro.org>
+Date:   Mon, 4 Apr 2022 03:02:18 +0300
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
-Subject: Re: [PATCH 00/29] UFS patches for kernel v5.19
-Content-Language: en-US
-To:     Bean Huo <huobean@gmail.com>, Avri Altman <Avri.Altman@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Can Guo <cang@codeaurora.org>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <20220331223424.1054715-1-bvanassche@acm.org>
- <60dc8a92c7eda8f190a8a6123bc927e8403bdbb1.camel@gmail.com>
- <eee8d304-aacd-9116-9e2d-92e2e3682b5b@acm.org>
- <DM6PR04MB6575DBC3CFAD57F5AA19DCF8FCE29@DM6PR04MB6575.namprd04.prod.outlook.com>
- <9bff98fa4a4a8a61a5c46830ef9515a7dfddcb89.camel@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <9bff98fa4a4a8a61a5c46830ef9515a7dfddcb89.camel@gmail.com>
+Subject: Re: [RFC PATCH 3/4] arm64: dts: qcom: sdm845: control RPMHPD
+ performance states with UFS
+Content-Language: en-GB
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Taniya Das <tdas@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20220401145820.1003826-1-krzysztof.kozlowski@linaro.org>
+ <20220401145820.1003826-4-krzysztof.kozlowski@linaro.org>
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+In-Reply-To: <20220401145820.1003826-4-krzysztof.kozlowski@linaro.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/3/22 14:36, Bean Huo wrote:
-> Yes, I reviewed the entire series of patches and there are no
-> significant structural changes. Still want to squeeze ufs driver under
-> driver/scsi/ufs/. No major conflict with pending submissions. Go ahead.
+On 01/04/2022 17:58, Krzysztof Kozlowski wrote:
+> UFS, when scaling gears, should choose appropriate performance state of
+> RPMHPD power domain controller.  Since UFS belongs to UFS_PHY_GDSC power
+> domain, add necessary parent power domain to GCC.
 
-Hi Bean,
+This will cause all gcc GDSCs to be rooted in the CX. Are we sure that 
+this is an expected (and correct) change?
 
-It has been suggested to move the UFS driver code into the following two 
-directories to keep paths short:
-* drivers/ufs/core
-* drivers/ufs/host
+> 
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> ---
+>   arch/arm64/boot/dts/qcom/sdm845.dtsi | 17 ++++++++++++++++-
+>   1 file changed, 16 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+> index b31bf62e8680..c999b41c2605 100644
+> --- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+> @@ -1078,6 +1078,7 @@ gcc: clock-controller@100000 {
+>   			#clock-cells = <1>;
+>   			#reset-cells = <1>;
+>   			#power-domain-cells = <1>;
+> +			power-domains = <&rpmhpd SDM845_CX>;
+>   		};
+>   
+>   		qfprom@784000 {
+> @@ -2336,8 +2337,22 @@ ufs_mem_hc: ufshc@1d84000 {
+>   				<0 0>,
+>   				<0 0>,
+>   				<0 300000000>;
+> -
+> +			operating-points-v2 = <&ufs_opp_table>;
+>   			status = "disabled";
+> +
+> +			ufs_opp_table: opp-table {
+> +				compatible = "operating-points-v2";
+> +
+> +				opp-50000000 {
+> +					opp-hz = /bits/ 64 <50000000>;
+> +					required-opps = <&rpmhpd_opp_svs>;
+> +				};
+> +
+> +				opp-200000000 {
+> +					opp-hz = /bits/ 64 <200000000>;
+> +					required-opps = <&rpmhpd_opp_nom>;
+> +				};
+> +			};
+>   		};
+>   
+>   		ufs_mem_phy: phy@1d87000 {
 
-That approach is similar to the approach followed for the MMC and NVMe 
-drivers.
 
-Additionally, some other SCSI drivers already occur outside the 
-drivers/scsi directory, e.g. the drivers/infiniband/ulp/srp/ib_srp.c driver.
-
-Thanks,
-
-Bart.
+-- 
+With best wishes
+Dmitry
