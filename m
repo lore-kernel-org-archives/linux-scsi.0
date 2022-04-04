@@ -2,187 +2,186 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7E5DC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 15:08:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DE0FC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 15:10:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378221AbiDDPKY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Apr 2022 11:10:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60136 "EHLO
+        id S1378441AbiDDPL6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Apr 2022 11:11:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357038AbiDDPKW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 11:10:22 -0400
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FA361A6
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Apr 2022 08:08:26 -0700 (PDT)
-Received: by mail-pj1-x1032.google.com with SMTP id gt4so3176266pjb.4
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Apr 2022 08:08:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=0gwspQdPDB+l/Evv+qDfnRBGPMoJjcgtCyWMziDMDbw=;
-        b=hVVppLVEIKOd82GVdqWMG3js+ldLAHtSIobmi7A4LWoaiYiKBgKy/aU64j2EDSZxl6
-         LOlXrKH6CBZ9bRii+9GlASC1fvlOJU2fxVj2K8QJxANsVTze6MpIxYYJ1jr02NxfHUMC
-         PWYF+Yd3xGlRJYVadHe7nYMhqxssWBOjZ6vnI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=0gwspQdPDB+l/Evv+qDfnRBGPMoJjcgtCyWMziDMDbw=;
-        b=eHBBYnWDOZWMxAwjKja/2jsTAMBXM5KOZuXajZyJ+2QpZt7KLI7Uotw5dLPO1iIx5O
-         /Oi5+EQiB/mqN1hcUMzBc28i4h0NnzYgb18QOTYCYegbjoeuWwKS7zh/2RgNpKjOaG8R
-         VQhtOPisVqL+UevbrEFwwgPsYVwrPqcpbarDco/BfYFS1XWlniGtlbzn3prWUOlcUJV/
-         tqlOF2MPEG0W/DSxpgb5DKVIF3zwy6RHPD5r9ToO26g5q9noGAsCrDzT5ya64HYlUnzB
-         G+UobBMgt59LOtFSTzrYeTTQIZcWd+v8CcvX88s2gGUkTADb+FvOwKGQKEMNziC4DAAX
-         IDyg==
-X-Gm-Message-State: AOAM531ozdGCxodRNika1mvp4eRzrCD6rdQpxD5HvRXzQMzKSsyj1wdy
-        rUGl28bchDL4lQokzi+HiUOq2e5SmNmD20aZq/oeiQ==
-X-Google-Smtp-Source: ABdhPJynDbSf3VDPHza7P3Xsb8p4OJ8VYsFc93Ry4MaVrsubBeezlT6LhHNhBKFAed/YdG7xRaeBbpx7asYuSFbH8O8=
-X-Received: by 2002:a17:902:868d:b0:154:4d09:5827 with SMTP id
- g13-20020a170902868d00b001544d095827mr312313plo.21.1649084905921; Mon, 04 Apr
- 2022 08:08:25 -0700 (PDT)
+        with ESMTP id S238001AbiDDPL5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 11:11:57 -0400
+Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF8AD2F3B7;
+        Mon,  4 Apr 2022 08:09:59 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R571e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04407;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0V9DFo9t_1649084996;
+Received: from 30.32.77.251(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0V9DFo9t_1649084996)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Mon, 04 Apr 2022 23:09:57 +0800
+Message-ID: <7038dcfd-4f66-2d8c-d988-132a84193b33@linux.alibaba.com>
+Date:   Mon, 4 Apr 2022 23:09:56 +0800
 MIME-Version: 1.0
-References: <20220329180616.22547-1-sumit.saxena@broadcom.com>
- <20220329180616.22547-3-sumit.saxena@broadcom.com> <8a3dfb77-9c42-871a-0d16-1ddf84516c8e@acm.org>
-In-Reply-To: <8a3dfb77-9c42-871a-0d16-1ddf84516c8e@acm.org>
-From:   Sumit Saxena <sumit.saxena@broadcom.com>
-Date:   Mon, 4 Apr 2022 20:37:59 +0530
-Message-ID: <CAL2rwxoT311ndWB-imycpC9_hkn8FExO0c0FCw6Q=wkYBnaJbg@mail.gmail.com>
-Subject: Re: [PATCH v2 2/7] mpi3mr: add support for driver commands
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Linux SCSI List <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Prayas Patel <prayas.patel@broadcom.com>,
-        Christoph Hellwig <hch@lst.de>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000000b198005dbd58043"
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.7.0
+Subject: Re: [PATCH v2 3/3] scsi: target: tcmu: Use
+ address_space->invalidate_lock
+Content-Language: en-US
+To:     Bodo Stroesser <bostroesser@gmail.com>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc:     linux-block@vger.kernel.org
+References: <20220323134940.31463-1-xiaoguang.wang@linux.alibaba.com>
+ <20220323134940.31463-4-xiaoguang.wang@linux.alibaba.com>
+ <5226b4ae-33fe-2bee-b88a-240994231d1c@gmail.com>
+From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+In-Reply-To: <5226b4ae-33fe-2bee-b88a-240994231d1c@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000000b198005dbd58043
-Content-Type: text/plain; charset="UTF-8"
+hi,
 
-On Mon, Apr 4, 2022 at 7:55 PM Bart Van Assche <bvanassche@acm.org> wrote:
+> On 23.03.22 14:49, Xiaoguang Wang wrote:
+>> Currently tcmu_vma_fault() uses udev->cmdr_lock to avoid concurrent
+>> find_free_blocks(), which unmaps idle pages and truncates them. This
+>> work is really like many filesystem's truncate operations, but they
+>> use address_space->invalidate_lock to protect race.
+>>
+>> This patch replaces cmdr_lock with address_space->invalidate_lock in
+>> tcmu fault procedure, which will also make page-fault have concurrency.
+>>
 >
-> On 3/29/22 11:06, Sumit Saxena wrote:
-> > +/**
-> > + * struct mpi3mr_nvme_pt_sge -  Structure to store SGEs for NVMe
-> > + * Encapsulated commands.
-> > + *
-> > + * @base_addr: Physical address
-> > + * @length: SGE length
-> > + * @rsvd: Reserved
-> > + * @rsvd1: Reserved
-> > + * @sgl_type: sgl type
-> > + */
-> > +struct mpi3mr_nvme_pt_sge {
-> > +     u64 base_addr;
-> > +     u32 length;
-> > +     u16 rsvd;
-> > +     u8 rsvd1;
-> > +     u8 sgl_type;
-> > +};
->
-> Does the above data structure force user space software to pass a
-> physical address to the kernel? A kernel driver should not do this
-> unless there is a very good reason to do so. Passing a physical address
-> from user space to the kernel requires freezing the virtual-to-physical
-> mapping. Some user space developers erroneously use mlock() for this
-> purpose. Is there any other way than the VFIO_IOMMU_MAP_DMA ioctl to
-> prevent that the kernel modifies the virtual-to-physical mapping?
-This structure is not for user space consumption. Mistakenly, it's moved
-to this header. Will fix it in the next revision.
+> Page fault happens only once for each allocated data page. After the
+> page fault was processed, the page is re-used for many cmds without
+> further page faults.
+Oh, right, I almost have forgotten that, thanks.
 
-Thanks,
-Sumit
 >
-> Thanks,
+> Of course, if find_free_blocks released a page and tcmu after that
+> allocates a new one, another page fault will occur. But that is a
+> very rare case.
+Yeah, now I agree it will happen rarely, but will still happen, especially
+in the early stages of page fault establishment when tcmu device is
+freshly created.
+
+And in current codes, tcmu normally reclaim free pages under such
+conditions:
+        if (atomic_read(&global_page_count) > tcmu_global_max_pages &&
+            xa_empty(&udev->commands) && list_empty(&udev->qfull_queue)) {
+                /*
+                 * Allocated blocks exceeded global block limit, currently no
+                 * more pending or waiting commands so try to reclaim blocks.
+                 */
+                schedule_delayed_work(&tcmu_unmap_work, 0);
+        }
+
+I'm not sure whether this method is good, seems other subsystems use
+mm shrinker feature to reclaim free pages when system memory is low.
+tcmu_global_max_pages is 512k, 2GB memory, that means if tcmu devices
+really have allocated 2GB memory, these memory won't be tried to be freed
+even whole system memory is very low.
+What I want to express is that though currently page fault occurs rarely,
+but if we use a better memory reclaim method later, page fault may occur
+more.
+
 >
-> Bart.
+> So, what is the advantage of concurrency here?
+cmdr_lock is a mutex, so it meas that tcmu page fault could not happen
+concurrently, and indeed mm subsystem allows page fault to run concurrently.
+If we change to use filemap_invalidate_lock_shared() in tcmu page fault,
+I think there will be two advantages:
+1) Though page fault will happen rarely in tcmu if system memory is
+enough, in the early stages of page fault establishment, say we'll
+finally make the default 1GB data area have page fault happened.
+At least in this stage, page fault will have concurrency.
+Also if page fault happens with queue_cmd_ring() at the same time,
+for big io size, queue_cmd_ring() may hold cmdr_lock for long time
+because of data area and sgl pages copy, page fault will be stalled
+for a long time, which will result in long tail latency.
 
---0000000000000b198005dbd58043
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+2) If we latter try to support zero copy successfully, we'll need to
+call zap_page_range() in tcmu_handle_completion(), which needs to
+hold mm_struct's mmap_lock, then we may have "abba" dead lock issue:
+  page fault: hold mm_struct's mmap_lock, then try to hold cmdr_lock
+  cmd completion: hold cmdr_lock, then try to hold mm_struct's mmap_lock.
 
-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
-GmgWG68YahkDuVSTTt2beZdyMeDwq/KifJFo18EkhcL3e7rmDAh8SniUI/0o3HX6hrgdmUI1wSdz
-uIVL/m6Ok9mIl2U5kvguitOSC0bVaQPfNzlj+7PCKBECAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
-AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
-c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
-AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
-TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
-bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
-L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
-BB0wG4EZc3VtaXQuc2F4ZW5hQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
-HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUNz+JSIXEXl2uQ4Utcnx7FnFi
-hhowDQYJKoZIhvcNAQELBQADggEBAL0HLbxgPSW4BFbbIMN3A/ifBg4Lzaph8ARJOnZpGQivo9jG
-kQOd95knQi9Lm95JlBAJZCqXXj7QS+dnE71tsFeHWcHNNxHrTSwn4Xi5EqaRjLC6g4IEPyZHWDrD
-zzJidgfwQvfZONkf4IXnnrIEFle+26/gPs2kOjCeLMo6XGkNC4HNla1ol1htToQaNN8974pCqwIC
-rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
-3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
-aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
-EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOfuhO5A6uPriylTSgAQoNQbeUbZmQla
-zpQ2+tjdY5WpMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDQw
-NDE1MDgyNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
-SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBSIwicCWq3fnKp69j+wBgoaJio81G1F6+zhDcW8yAMvjp5Seoq
-TtZSfyQR/qoK3bPPXhLEdV7P6NgTlcn6bIzJindzFPprJkq7Dx5yeRwv8WXgPxGraSVRHT0DvzbL
-mT8z5rsEZBStKKV9Aeu0rvXdFlApkhe4O9aChGDhFU/bqqWAccq1ko1dkybDIJjegvYPV8KOkPJu
-NqG+Pr1ftZ2DVTQGcGKcihhZUVMIxH4BES5816QrCVYA2J1AClAZGkeVPucJkzKcvyWxU31cgnz1
-AXSNhL87WPRZ3WEGLLkQ4/ujlqBWM+iRMmBsK84no3CIlXTWDgsmbfglpT9YE1eG
---0000000000000b198005dbd58043--
+Or we can define a new "struct rw_semaphore i_mmap_sem;" in
+tcmu_dev, and use it rather than filemap_invalidate_lock_shared(mapping);
+
+>
+> OTOH, I don't like the switch from tcmu's cmdr_lock to
+> filemap_invalidate_* without a real technical reason.
+Anyway, at least I don't see any obvious disadvantages
+about this patch.
+
+
+Regards,
+Xiaoguang Wang
+>
+>
+>> Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+>> ---
+>>   drivers/target/target_core_user.c | 14 ++++++++++----
+>>   1 file changed, 10 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+>> index 9196188504ec..81bfa553cc67 100644
+>> --- a/drivers/target/target_core_user.c
+>> +++ b/drivers/target/target_core_user.c
+>> @@ -1820,13 +1820,14 @@ static int tcmu_find_mem_index(struct vm_area_struct *vma)
+>>     static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
+>>   {
+>> +    struct address_space *mapping = udev->inode->i_mapping;
+>>       struct page *page;
+>>   -    mutex_lock(&udev->cmdr_lock);
+>> +    filemap_invalidate_lock_shared(mapping);
+>>       page = xa_load(&udev->data_pages, dpi);
+>>       if (likely(page)) {
+>>           get_page(page);
+>> -        mutex_unlock(&udev->cmdr_lock);
+>> +        filemap_invalidate_unlock_shared(mapping);
+>>           return page;
+>>       }
+>>   @@ -1836,7 +1837,7 @@ static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
+>>        */
+>>       pr_err("Invalid addr to data page mapping (dpi %u) on device %s\n",
+>>              dpi, udev->name);
+>> -    mutex_unlock(&udev->cmdr_lock);
+>> +    filemap_invalidate_unlock_shared(mapping);
+>>         return NULL;
+>>   }
+>> @@ -3116,6 +3117,7 @@ static void find_free_blocks(void)
+>>       loff_t off;
+>>       u32 pages_freed, total_pages_freed = 0;
+>>       u32 start, end, block, total_blocks_freed = 0;
+>> +    struct address_space *mapping;
+>>         if (atomic_read(&global_page_count) <= tcmu_global_max_pages)
+>>           return;
+>> @@ -3139,6 +3141,8 @@ static void find_free_blocks(void)
+>>               continue;
+>>           }
+>>   +        mapping = udev->inode->i_mapping;
+>> +        filemap_invalidate_lock(mapping);
+>>           end = udev->dbi_max + 1;
+>>           block = find_last_bit(udev->data_bitmap, end);
+>>           if (block == udev->dbi_max) {
+>> @@ -3146,6 +3150,7 @@ static void find_free_blocks(void)
+>>                * The last bit is dbi_max, so it is not possible
+>>                * reclaim any blocks.
+>>                */
+>> +            filemap_invalidate_unlock(mapping);
+>>               mutex_unlock(&udev->cmdr_lock);
+>>               continue;
+>>           } else if (block == end) {
+>> @@ -3159,10 +3164,11 @@ static void find_free_blocks(void)
+>>             /* Here will truncate the data area from off */
+>>           off = udev->data_off + (loff_t)start * udev->data_blk_size;
+>> -        unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
+>> +        unmap_mapping_range(mapping, off, 0, 1);
+>>             /* Release the block pages */
+>>           pages_freed = tcmu_blocks_release(udev, start, end - 1);
+>> +        filemap_invalidate_unlock(mapping);
+>>           mutex_unlock(&udev->cmdr_lock);
+>>             total_pages_freed += pages_freed;
+
