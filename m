@@ -2,117 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71812C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 21:17:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50B92C38A02
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 21:17:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379483AbiDDVTs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Apr 2022 17:19:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58154 "EHLO
+        id S1379543AbiDDVTv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Apr 2022 17:19:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378983AbiDDQPg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 12:15:36 -0400
-Received: from out30-42.freemail.mail.aliyun.com (out30-42.freemail.mail.aliyun.com [115.124.30.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93B68625C;
-        Mon,  4 Apr 2022 09:13:38 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R931e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04426;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0V9DJJPq_1649088814;
-Received: from 30.32.77.251(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0V9DJJPq_1649088814)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Tue, 05 Apr 2022 00:13:35 +0800
-Message-ID: <3ed13bac-8e8a-3204-6bf9-08d16b1876ff@linux.alibaba.com>
-Date:   Tue, 5 Apr 2022 00:13:34 +0800
+        with ESMTP id S1379086AbiDDQdo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 12:33:44 -0400
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A7F936E0C
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Apr 2022 09:31:48 -0700 (PDT)
+Received: by mail-pl1-f180.google.com with SMTP id o20so2856718pla.13
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Apr 2022 09:31:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=PfcQxKWnDwl/kUQHXfOCv8uKkTcWUMbTjibTyLbBZE4=;
+        b=flrOJr+XIsgLNtYcl6B3fdFJ4fJs0noUsbfkpRCSmEH01ryAUWfpB9UxfOeZf7V8qP
+         9h6Onj7mUcI3QxOoEy1HCKFeu7Hu6uFqyqL+j+2xB2YLhbV1qQIojCiU3t2AuEg1hsTv
+         uON9k1j4b4IaM/+p1AWtA09h2g1zToGHumHfbcpvJnmN+XOnseAIs5jJygABeHfvt2v3
+         5MBUSF2TnhzWlvhFHfxtty4saf3mV1N/ABt2StEtbJFMfUNm5OsvN3ArZJTvb4XODFsu
+         ebhSmoeadT1KJ4QgsxGPZByLxtRYvJ+neQ6yapO4qF6h/VLXzSgHhHi048fukkjUjCzJ
+         e9Eg==
+X-Gm-Message-State: AOAM531Tv6YeA92uiKV+9DVX+EnoWWtzUZKk8HaPDSs3e0582np8C5+n
+        H6c3HxMZObYAZtm4xcuBuI0=
+X-Google-Smtp-Source: ABdhPJzhRykh8H7EGXmcuD5vXuQc9M2JBUqUNDYGYcsJds8JzQrztCgjQbzjOtIKxa7iCEkgkx+70w==
+X-Received: by 2002:a17:902:e80c:b0:156:bc53:704e with SMTP id u12-20020a170902e80c00b00156bc53704emr793572plg.31.1649089907395;
+        Mon, 04 Apr 2022 09:31:47 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id 124-20020a621682000000b004f6a2e59a4dsm12381653pfw.121.2022.04.04.09.31.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 Apr 2022 09:31:46 -0700 (PDT)
+Message-ID: <a54906ac-9d1b-9c45-96d1-6b2afb8e0d97@acm.org>
+Date:   Mon, 4 Apr 2022 09:31:44 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Subject: Re: [PATCH v2 2/3] scsi: target: tcmu: Fix possible data corruption
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v2 2/7] mpi3mr: add support for driver commands
 Content-Language: en-US
-To:     Bodo Stroesser <bostroesser@gmail.com>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc:     linux-block@vger.kernel.org
-References: <20220323134940.31463-1-xiaoguang.wang@linux.alibaba.com>
- <20220323134940.31463-3-xiaoguang.wang@linux.alibaba.com>
- <b6280955-d3f5-f11b-5f62-07ab83cff4ac@gmail.com>
-From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
-In-Reply-To: <b6280955-d3f5-f11b-5f62-07ab83cff4ac@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+To:     Sumit Saxena <sumit.saxena@broadcom.com>
+Cc:     Linux SCSI List <linux-scsi@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Prayas Patel <prayas.patel@broadcom.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20220329180616.22547-1-sumit.saxena@broadcom.com>
+ <20220329180616.22547-3-sumit.saxena@broadcom.com>
+ <8a3dfb77-9c42-871a-0d16-1ddf84516c8e@acm.org>
+ <CAL2rwxoT311ndWB-imycpC9_hkn8FExO0c0FCw6Q=wkYBnaJbg@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAL2rwxoT311ndWB-imycpC9_hkn8FExO0c0FCw6Q=wkYBnaJbg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-hi,
+On 4/4/22 08:07, Sumit Saxena wrote:
+> On Mon, Apr 4, 2022 at 7:55 PM Bart Van Assche <bvanassche@acm.org> wrote:
+>>
+>> On 3/29/22 11:06, Sumit Saxena wrote:
+>>> +/**
+>>> + * struct mpi3mr_nvme_pt_sge -  Structure to store SGEs for NVMe
+>>> + * Encapsulated commands.
+>>> + *
+>>> + * @base_addr: Physical address
+>>> + * @length: SGE length
+>>> + * @rsvd: Reserved
+>>> + * @rsvd1: Reserved
+>>> + * @sgl_type: sgl type
+>>> + */
+>>> +struct mpi3mr_nvme_pt_sge {
+>>> +     u64 base_addr;
+>>> +     u32 length;
+>>> +     u16 rsvd;
+>>> +     u8 rsvd1;
+>>> +     u8 sgl_type;
+>>> +};
+>>
+>> Does the above data structure force user space software to pass a
+>> physical address to the kernel? A kernel driver should not do this
+>> unless there is a very good reason to do so. Passing a physical address
+>> from user space to the kernel requires freezing the virtual-to-physical
+>> mapping. Some user space developers erroneously use mlock() for this
+>> purpose. Is there any other way than the VFIO_IOMMU_MAP_DMA ioctl to
+>> prevent that the kernel modifies the virtual-to-physical mapping?
+ >
+> This structure is not for user space consumption. Mistakenly, it's moved
+> to this header. Will fix it in the next revision.
 
-> On 23.03.22 14:49, Xiaoguang Wang wrote:
->> When tcmu_vma_fault() gets one page successfully, before the current
->> context completes page fault procedure, find_free_blocks() may run in
->> and call unmap_mapping_range() to unmap this page. Assume when
->> find_free_blocks() completes its job firstly, previous page fault
->> procedure starts to run again and completes, then one truncated page has
->> beed mapped to use space, but note that tcmu_vma_fault() has gotten one
->> refcount for this page, so any other subsystem won't use this page,
->> unless later the use space addr is unmapped.
->>
->> If another command runs in later and needs to extends dbi_thresh, it may
->> reuse the corresponding slot to previous page in data_bitmap, then thouth
->> we'll allocate new page for this slot in data_area, but no page fault will
->> happen again, because we have a valid map, real request's data will lose.
->
-> I don't think, this is a safe fix. It is possible that not only
-> find_free_blocks runs before page fault procedure completes, but also
-> allocation for next cmd happens. In that case the new call to
-> unmap_mapping_range would also happen before page fault completes ->
-> data corruption.
-You're right, thanks for pointing this issue.
-For your below questions, I need to take some time to read and understand
-codes, I'll try to reply in tomorrow, sorry.
+I can't find any code in the kernel that stores the value 
+MPI3_FUNCTION_NVME_ENCAPSULATED. Does that mean that that value is set 
+by user space and hence that the definition of that constant should 
+occur in a uapi header? Same question for struct 
+mpi3_nvme_encapsulated_request.
 
-Regards,
-Xiaoguang Wang
->
-> AFAIK, no one ever has seen this this bug in real life, as
-> find_free_blocks only runs seldomly and userspace would have to access
-> a data page the very first time while the cmd that owned this page
-> already has been completed by userspace. Therefore I think we should
-> apply a perfect fix only.
->
-> I'm wondering whether there really is such a race. If so, couldn't the
-> same race happen in other drivers or even when truncating mapped files?
->
->
->>
->> To fix this issue, when extending dbi_thresh, we'll need to call
->> unmap_mapping_range() to unmap use space data area which may exist,
->> which I think it's a simple method.
->>
->> Filesystem implementations will also run into this issue, but they
->> ususally lock page when vm_operations_struct->fault gets one page, and
->> unlock page after finish_fault() completes. In truncate sides, they
->> lock pages in truncate_inode_pages() to protect race with page fault.
->> We can also have similar codes like filesystem to fix this issue.
->>
->> Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
->> ---
->>   drivers/target/target_core_user.c | 5 +++++
->>   1 file changed, 5 insertions(+)
->>
->> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
->> index 06a5c4086551..9196188504ec 100644
->> --- a/drivers/target/target_core_user.c
->> +++ b/drivers/target/target_core_user.c
->> @@ -862,6 +862,7 @@ static int tcmu_alloc_data_space(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
->>       if (space < cmd->dbi_cnt) {
->>           unsigned long blocks_left =
->>                   (udev->max_blocks - udev->dbi_thresh) + space;
->> +        loff_t off, len;
->>             if (blocks_left < cmd->dbi_cnt) {
->>               pr_debug("no data space: only %lu available, but ask for %u\n",
->> @@ -870,6 +871,10 @@ static int tcmu_alloc_data_space(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
->>               return -1;
->>           }
->>   +        off = udev->data_off + (loff_t)udev->dbi_thresh * udev->data_blk_size;
->> +        len = cmd->dbi_cnt * udev->data_blk_size;
->> +        unmap_mapping_range(udev->inode->i_mapping, off, len, 1);
->> +
->>           udev->dbi_thresh += cmd->dbi_cnt;
->>           if (udev->dbi_thresh > udev->max_blocks)
->>               udev->dbi_thresh = udev->max_blocks;
+Thanks,
 
+Bart.
