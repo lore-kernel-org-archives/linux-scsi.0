@@ -2,121 +2,204 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E235C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 08:12:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB747C43217
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 08:16:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377922AbiDDION (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Apr 2022 04:14:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58522 "EHLO
+        id S239441AbiDDISU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Apr 2022 04:18:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377920AbiDDIOM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 04:14:12 -0400
-Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 485422FFDC
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Apr 2022 01:12:17 -0700 (PDT)
-Received: by mail-ed1-x52a.google.com with SMTP id b15so10059242edn.4
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Apr 2022 01:12:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :content-transfer-encoding:user-agent:mime-version;
-        bh=t4pHkr3Fy3D8Gbg4I8ddBm6gN3AAVtS40j90Mskm7ls=;
-        b=FvoEyLh3lNEffdg6i292Tdvwsc9tJTcZX5yC2TD3aET52poi9cu/A2R1nNJkOtaY6M
-         y0CxEDw/LMKQwDTRGcY+nIxgP2jAbASy57LfCtjpIUJ1tiUYvpB2HXzlF4tr9rRSrwTF
-         /hvhki+9vb0cN2bmIqS/aiXbDvmCrFOhnRjOf1Q8VxNKpfUHL8AHY6mn5R/efzR2/lZ9
-         +56K3iNqClAoqoyRw3ib+8ab2NSgU/E8Oo/v/MYsbfPalt28VgLYeG47JZwWUAC4pVRJ
-         XyCUqcUrzaDVQBnESus7NWN6+NLtsFVPvrcgP9kVoLk9ghS+vcDCX4vc9QjB/fptiLyI
-         EAsQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:content-transfer-encoding:user-agent:mime-version;
-        bh=t4pHkr3Fy3D8Gbg4I8ddBm6gN3AAVtS40j90Mskm7ls=;
-        b=6PDKPL0zVKcIU3paMtcK4c9VPr6xHpQ8NXPdcoNm5SI8AVjH4Q4YNfr8krh/XXzclv
-         SEYLv9rZXbVdhrswwISseQSYI3nBN+t4ZhmzkDar/Sfth/htUB8MTyxvMWO8c0i9k0F3
-         5nDSEXvF87JKRackK3PiU4iWe5ZBuiwWlAdatC1qWgZaTUlcwzNpyQngSMbKvOqVue37
-         rMWpefDzqvPbe/ZbatZuF84STdRzrb5RT9BSKQmaTtVlEdkE0LxZZvPNDEf4YJvCsBqH
-         fJXmKywDLYPhjJQFjvtbu4NyU4YiB/0WWHmVAX3QhVbYaUnc5BHGn71G2KIxccyoAi3G
-         NW6A==
-X-Gm-Message-State: AOAM533u0QUN3/O3TNuv4T5KgXD4iH3heKOPl+Hx8NbscHkXSWDfWqDd
-        UkttZPEs1R5fStqonVaWw+U=
-X-Google-Smtp-Source: ABdhPJxPsITJCCvAQIcJw2t5n5+Q9G4ZsAqcHRCfkfr4DE00TpoSj+dfW4VeDJw5qmr8gDHWoLVcLA==
-X-Received: by 2002:a05:6402:184c:b0:41c:dad5:72a5 with SMTP id v12-20020a056402184c00b0041cdad572a5mr1041118edy.254.1649059935795;
-        Mon, 04 Apr 2022 01:12:15 -0700 (PDT)
-Received: from p200300c587018436671532b804c21788.dip0.t-ipconnect.de (p200300c587018436671532b804c21788.dip0.t-ipconnect.de. [2003:c5:8701:8436:6715:32b8:4c2:1788])
-        by smtp.googlemail.com with ESMTPSA id y8-20020a50d8c8000000b0041c80bb88c7sm4392226edj.8.2022.04.04.01.12.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Apr 2022 01:12:15 -0700 (PDT)
-Message-ID: <94902f1e26a18ff7774dc429502bef7d54f23b5d.camel@gmail.com>
-Subject: Re: [PATCH 00/29] UFS patches for kernel v5.19
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        quic_cang@quicinc.com
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Date:   Mon, 04 Apr 2022 10:12:13 +0200
-In-Reply-To: <ebf3cc31-9cd1-3615-b033-06bfc7d25b9a@acm.org>
-References: <20220331223424.1054715-1-bvanassche@acm.org>
-         <60dc8a92c7eda8f190a8a6123bc927e8403bdbb1.camel@gmail.com>
-         <eee8d304-aacd-9116-9e2d-92e2e3682b5b@acm.org>
-         <DM6PR04MB6575DBC3CFAD57F5AA19DCF8FCE29@DM6PR04MB6575.namprd04.prod.outlook.com>
-         <9bff98fa4a4a8a61a5c46830ef9515a7dfddcb89.camel@gmail.com>
-         <ebf3cc31-9cd1-3615-b033-06bfc7d25b9a@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.0-1 
+        with ESMTP id S237204AbiDDISR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 04:18:17 -0400
+Received: from baptiste.telenet-ops.be (baptiste.telenet-ops.be [IPv6:2a02:1800:120:4::f00:13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 049A23B3E9
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Apr 2022 01:16:19 -0700 (PDT)
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed40:6d4d:d9ec:3c70:7c2c])
+        by baptiste.telenet-ops.be with bizsmtp
+        id EYG82700R40M8zK01YG8cT; Mon, 04 Apr 2022 10:16:17 +0200
+Received: from geert (helo=localhost)
+        by ramsan.of.borg with local-esmtp (Exim 4.93)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1nbHse-0089Aj-Eu; Mon, 04 Apr 2022 10:16:08 +0200
+Date:   Mon, 4 Apr 2022 10:16:08 +0200 (CEST)
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+X-X-Sender: geert@ramsan.of.borg
+To:     linux-kernel@vger.kernel.org
+cc:     linux-m68k@lists.linux-m68k.org, linux-parisc@vger.kernel.org,
+        sparclinux@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        Mike Marciniszyn <mike.marciniszyn@cornelisnetworks.com>,
+        linux-rdma@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-media@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-xfs@vger.kernel.org, alsa-devel@alsa-project.org,
+        linux-s390@vger.kernel.org
+Subject: Re: Build regressions/improvements in v5.18-rc1
+In-Reply-To: <20220404074734.1092959-1-geert@linux-m68k.org>
+Message-ID: <alpine.DEB.2.22.394.2204041006230.1941618@ramsan.of.borg>
+References: <CAHk-=wg6FWL1xjVyHx7DdjD2dHZETA5_=FqqW17Z19X-WTfWSg@mail.gmail.com> <20220404074734.1092959-1-geert@linux-m68k.org>
+User-Agent: Alpine 2.22 (DEB 394 2020-01-19)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 2022-04-03 at 14:54 -0700, Bart Van Assche wrote:
-> On 4/3/22 14:36, Bean Huo wrote:
-> > Yes, I reviewed the entire series of patches and there are no
-> > significant structural changes. Still want to squeeze ufs driver
-> > under
-> > driver/scsi/ufs/. No major conflict with pending submissions. Go
-> > ahead.
->=20
-> Hi Bean,
->=20
-> It has been suggested to move the UFS driver code into the following
-> two=20
-> directories to keep paths short:
-> * drivers/ufs/core
-> * drivers/ufs/host
->=20
-Bart,
+On Mon, 4 Apr 2022, Geert Uytterhoeven wrote:
+> Below is the list of build error/warning regressions/improvements in
+> v5.18-rc1[1] compared to v5.17[2].
+>
+> Summarized:
+>  - build errors: +36/-15
+>  - build warnings: +5/-38
+>
+> Happy fixing! ;-)
+>
+> Thanks to the linux-next team for providing the build service.
+>
+> [1] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/3123109284176b1532874591f7c81f3837bbdc17/ (all 96 configs)
+> [2] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/f443e374ae131c168a065ea1748feac6b2e76613/ (all 96 configs)
+>
+>
+> *** ERRORS ***
+>
+> 36 error regressions:
+>  + /kisskb/src/arch/m68k/include/asm/bitops.h: error: array subscript 2 is above array bounds of 'long unsigned int[1]' [-Werror=array-bounds]:  => 329:20
 
-Very interested in this design. I'm assuming you're still going to
-continue parsing SCSI commands. Can we also shorten the UFS command
-path?
+m68k-gcc8/m68k-allmodconfig (assumed gcc8 bug)
 
-Meaning we convert block requests directly to UFS UPIU commands?
-instead of like the current one: block request -> CDB -> UPIU.
+>  + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: .cfi_endproc without corresponding .cfi_startproc:  => 32
+>  + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: bad or irreducible absolute expression:  => 16
+>  + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: junk at end of line, first unrecognized character is `:':  => 16
+>  + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: no such instruction: `be 0x100(%sr2,%r0)':  => 29
+>  + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: no such instruction: `ldi 0,%r20':  => 30
+>  + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: no such instruction: `ldw 0(%sp),%r31':  => 26
+>  + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: no such instruction: `ble 0x100(%sr2,%r0)':  => 51, 46
+>  + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: no such instruction: `ldi 0,%r25':  => 44
+>  + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: no such instruction: `ldi 1,%r25':  => 49
+>  + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: no such instruction: `ldi 173,%r20':  => 45, 50
+>  + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.callinfo':  => 40
+>  + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.entry':  => 41
+>  + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.exit':  => 54
+>  + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.proc':  => 39
+>  + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.procend':  => 55
+>  + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.stringz':  => 76
 
-> That approach is similar to the approach followed for the MMC and
-> NVMe=20
-> drivers.
->=20
-> Additionally, some other SCSI drivers already occur outside the=20
-> drivers/scsi directory, e.g. the drivers/infiniband/ulp/srp/ib_srp.c
-> driver.
+parisc64-gcc8/generic-64bit_defconfig
+parisc-gcc8/generic-32bit_defconfig
+parisc-gcc8/parisc-allmodconfig
+parisc-gcc8/parisc-allnoconfig
 
-I'll take a look at its design, it seems to give us hope that we can
-make the UFS stack more vertical.
+>  + /kisskb/src/arch/sparc/kernel/irq_32.c: error: array subscript [16, 79] is outside array bounds of 'struct tt_entry[1]' [-Werror=array-bounds]:  => 262:14, 261:46, 259:14, 258:14, 263:14
 
-Kind regards,
-Bean
+sparc64-gcc11/sparc-allmodconfig
+
+>  + /kisskb/src/drivers/gpu/drm/r128/r128_cce.c: error: case label does not reduce to an integer constant:  => 417:2, 418:2
+
+arm64-gcc5.4/arm64-allmodconfig
+mipsel/mips-allmodconfig
+powerpc-gcc5/powerpc-allmodconfig
+powerpc-gcc5/powerpc-allyesconfig
+powerpc-gcc5/ppc32_allmodconfig
+powerpc-gcc5/ppc64_book3e_allmodconfig
+powerpc-gcc5/ppc64le_allmodconfig
+
+>  + /kisskb/src/drivers/infiniband/hw/qib/qib_wc_x86_64.c: error: 'X86_VENDOR_AMD' undeclared (first use in this function):  => 149:37
+>  + /kisskb/src/drivers/infiniband/hw/qib/qib_wc_x86_64.c: error: 'struct cpuinfo_um' has no member named 'x86_vendor':  => 149:22
+>  + /kisskb/src/drivers/infiniband/hw/qib/qib_wc_x86_64.c: error: control reaches end of non-void function [-Werror=return-type]:  => 150:1
+>  + /kisskb/src/drivers/infiniband/sw/rdmavt/qp.c: error: 'struct cpuinfo_um' has no member named 'x86_cache_size':  => 88:22
+>  + /kisskb/src/drivers/infiniband/sw/rdmavt/qp.c: error: control reaches end of non-void function [-Werror=return-type]:  => 89:1
+>  + /kisskb/src/drivers/infiniband/sw/rdmavt/qp.c: error: implicit declaration of function '__copy_user_nocache' [-Werror=implicit-function-declaration]:  => 100:2
+
+um-x86_64/um-allmodconfig
+um-x86_64/um-allyesconfig
+
+>  + /kisskb/src/drivers/media/platform/nxp/imx-pxp.h: error: initializer element is not constant:  => 582:38
+
+arm64-gcc5.4/arm64-allmodconfig
+powerpc-gcc5/powerpc-allmodconfig
+
+>  + /kisskb/src/drivers/misc/habanalabs/common/memory.c: error: cast from pointer to integer of different size [-Werror=pointer-to-int-cast]:  => 153:49, 153:7
+
+mipsel/mips-allmodconfig
+mips-gcc8/mips-allmodconfig
+sparc64/sparc-allmodconfig
+xtensa-gcc11/xtensa-allmodconfig
+
+>  + /kisskb/src/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c: error: case label does not reduce to an integer constant:  => 4917:4
+>  + /kisskb/src/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c: error: case label does not reduce to an integer constant:  => 3798:2, 3809:2
+
+arm64-gcc5.4/arm64-allmodconfig
+powerpc-gcc5/powerpc-allmodconfig
+powerpc-gcc5/ppc64_book3e_allmodconfig
+
+>  + /kisskb/src/drivers/scsi/aacraid/commsup.c: error: case label does not reduce to an integer constant:  => 1983:2
+
+arm64-gcc5.4/arm64-allmodconfig
+powerpc-gcc5/powerpc-allmodconfig
+powerpc-gcc5/ppc64_book3e_allmodconfig
+powerpc-gcc5/ppc64le_allmodconfig
+
+>  + /kisskb/src/drivers/tty/serial/mpc52xx_uart.c: error: initialization from incompatible pointer type [-Werror=incompatible-pointer-types]:  => 1004:12, 1005:12, 1006:14, 970:12, 968:16, 971:14, 969:12, 1002:16, 1003:16, 967:16
+
+powerpc-gcc5/ppc32_allmodconfig
+
+>  + /kisskb/src/drivers/usb/typec/tcpm/tcpm.c: error: case label does not reduce to an integer constant:  => 4724:3
+
+arm64-gcc5.4/arm64-allmodconfig
+powerpc-gcc5/powerpc-allmodconfig
+powerpc-gcc5/ppc64_book3e_allmodconfig
+
+>  + /kisskb/src/fs/xfs/xfs_buf.h: error: initializer element is not constant:  => 46:23
+>  + /kisskb/src/sound/usb/midi.c: error: case label does not reduce to an integer constant:  => 1389:2
+
+arm64-gcc5.4/arm64-allmodconfig
+mipsel/mips-allmodconfig
+powerpc-gcc5/powerpc-allmodconfig
+powerpc-gcc5/powerpc-allyesconfig
+powerpc-gcc5/ppc32_allmodconfig
+powerpc-gcc5/ppc64_book3e_allmodconfig
+powerpc-gcc5/ppc64le_allmodconfig
+
+>  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_402' declared with attribute error: FIELD_PREP: mask is not constant:  => 352:38
+>  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_404' declared with attribute error: FIELD_PREP: mask is not constant:  => 352:38
+
+powerpc-gcc5/powerpc-allmodconfig
 
 
+> *** WARNINGS ***
+>
+> 5 warning regressions:
+>  + /kisskb/src/arch/m68k/include/asm/string.h: warning: '__builtin_memset' offset [0, 11] is out of the bounds [0, 0] [-Warray-bounds]:  => 68:25
 
+m68k-gcc11/sun3_defconfig
 
->=20
-> Thanks,
->=20
-> Bart.
+>  + /kisskb/src/arch/s390/kernel/machine_kexec.c: warning: 'memcpy' offset [0, 511] is out of the bounds [0, 0] [-Warray-bounds]:  => 57:9
 
+s390x-gcc11/s390-defconfig
+
+>  + /kisskb/src/drivers/net/ethernet/i825xx/sun3_82586.c: warning: array subscript 1 is above array bounds of 'volatile struct transmit_cmd_struct *[1]' [-Warray-bounds]:  => 989:108, 989:122
+
+m68k-gcc11/sun3_defconfig
+m68k-gcc8/sun3_defconfig
+
+>  + /kisskb/src/drivers/scsi/mpt3sas/mpt3sas_base.c: warning: array subscript 'Mpi2SasIOUnitPage1_t {aka struct _MPI2_CONFIG_PAGE_SASIOUNIT_1}[0]' is partly outside array bounds of 'unsigned char[20]' [-Warray-bounds]:  => 5400:40, 5403:43, 5396:40
+
+powerpc-gcc11/skiroot_defconfig
+
+>  + modpost: WARNING: modpost: EXPORT symbol "_mcount" [vmlinux] version generation failed, symbol will not be versioned.:  => N/A
+
+sparc64-gcc11/sparc64-defconfig
+sparc64/sparc64-defconfig
+
+Gr{oetje,eeting}s,
+
+ 						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+ 							    -- Linus Torvalds
