@@ -2,115 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1FE5C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 05:28:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3110AC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 05:51:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351922AbiDDF37 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Apr 2022 01:29:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53162 "EHLO
+        id S1377361AbiDDFwi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Apr 2022 01:52:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230304AbiDDF36 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 01:29:58 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B02021838;
-        Sun,  3 Apr 2022 22:28:03 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id A3D13210E0;
-        Mon,  4 Apr 2022 05:28:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1649050081; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=c3Jl3xN1+ZJDwDSqXEjt8XdEW9eHbNf/gHTrPbTlPGg=;
-        b=kxuT6iwU+kWRUJcyoskUv3rl12gvoI8ffMEuVPXzahulIXifhNchaCcX65dk2jFzy7hU5c
-        F02BfyCip+v0TPVdM2uRjkNC3gqHHCvxAnhikZJWu+G90e69AxtexFh7jqM7flzeoufnar
-        F9zA9J9OQjTydzxfF07HTStC19CJuvg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1649050081;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=c3Jl3xN1+ZJDwDSqXEjt8XdEW9eHbNf/gHTrPbTlPGg=;
-        b=+ZZyEJ/T57xeYaKDKJWa6MPOVxzG0urOZMGW6OkTuURzm7hAfNW8ety1NAvksZLvB4WGTT
-        GoVd81QGpMD+rVCw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 496C513A7C;
-        Mon,  4 Apr 2022 05:28:01 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id mwkrEOGBSmK3RAAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 04 Apr 2022 05:28:01 +0000
-Message-ID: <769bcd36-4818-8470-2daa-49ac5c05b33a@suse.de>
-Date:   Mon, 4 Apr 2022 07:28:00 +0200
+        with ESMTP id S242595AbiDDFwg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 01:52:36 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 722C3326EB
+        for <linux-scsi@vger.kernel.org>; Sun,  3 Apr 2022 22:50:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1649051441; x=1680587441;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=BYBwQffvi/+ysDS+ehbASNTaJcKw9nREUpAXUFqlVYU=;
+  b=NiTSuX2+VqY62eoOtad8ZGsB0AFCHioX9+/M09KGwM5L+NiqYlH4Dmy4
+   zUcHOQt6ZSUG0M2DUJUEzgitY5c0WZmKsDbbApSspDoPu3JOnwovXJ4Pw
+   HJGcVLI1GLhWX/FtIekMMWjthrsEnsELTZz1n/QcIaH4UH4J2GGrovyox
+   EpSR/QZY/EXOvdJN5EBNNkPt5OJR3zGupiLYA4l82W6QX79ZARsdN37Mc
+   D/5f4VWju5t3siPfA0HcLB5Pb4VdoQabdE1IkMVuIfQ+6RORBxCoDX7UB
+   jEA4oV20694Vno6gtE5nAn+L5QOm1hmlLD3vRn/JjvvLetQ2qN5QA6V/N
+   w==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10306"; a="241031017"
+X-IronPort-AV: E=Sophos;i="5.90,233,1643702400"; 
+   d="scan'208";a="241031017"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Apr 2022 22:50:41 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,233,1643702400"; 
+   d="scan'208";a="504786171"
+Received: from ahunter-desktop.fi.intel.com ([10.237.72.92])
+  by orsmga003.jf.intel.com with ESMTP; 03 Apr 2022 22:50:39 -0700
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: ufs: ufs-pci: Add support for Intel MTL
+Date:   Mon,  4 Apr 2022 08:50:38 +0300
+Message-Id: <20220404055038.2208051-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [REQUEST DISCUSS]: speed up SCSI error handle for host with
- massive devices
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        Wenchao Hao <haowenchao@huawei.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        linux-scsi@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Lee Duncan <lduncan@suse.com>,
-        John Garry <john.garry@huawei.com>
-Cc:     Wu Bo <wubo40@huawei.com>, Feilong Lin <linfeilong@huawei.com>,
-        zhangjian013@huawei.com
-References: <71e09bb4-ff0a-23fe-38b4-fe6425670efa@huawei.com>
- <cd7bda98-2160-9271-9520-e98d1fe00ea5@linux.ibm.com>
- <331aafe1-df9b-cae4-c958-9cf1800e389a@huawei.com>
- <64d5a997-a1bf-7747-072d-711a8248874d@suse.de>
- <c4baacf1-0e86-9660-45f7-50ebc853e6af@huawei.com>
- <1dd69d03-b4f6-ab20-4923-0995b40f045d@suse.de>
- <d2f2c89f-c048-4f04-4d95-27958f0fa46a@huawei.com>
- <78d41ec1-b30c-f6d2-811c-e0e4adbc8f01@oracle.com>
- <84b38f16-2a32-f361-43e5-34bce1012e71@oracle.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <84b38f16-2a32-f361-43e5-34bce1012e71@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/3/22 19:17, Mike Christie wrote:
-> On 4/3/22 12:14 PM, Mike Christie wrote:
->> We could share code with scsi_ioctl_reset as well. Drivers that support
->> TMFs via that ioctl already expect queuecommand to be possibly in the
->> middle of a run and IO not yet timed out. For example, the code to
->> block a queue and reset the device could be used for the new EH and
->> SG_SCSI_RESET_DEVICE handling.
->>
-> 
-> Hannes or others,
-> 
-> How do parallel SCSI drivers support scsi_ioctl_reset? Is is not fully
-> supported and more only used for controlled testing?
+Add PCI ID and callbacks to support Intel Meteor Lake (MTL).
 
-That's actually a problem in scsi_ioctl_reset(); it really should wait 
-for all I/O to quiesce. Currently it just sets the 'tmf' flag and calls 
-into the various reset functions.
+Cc: stable@vger.kernel.org # v5.15+
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+---
+ drivers/scsi/ufs/ufshcd-pci.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-But really, I'd rather get my EH rework in before we're start discussing 
-modifying EH behaviour.
-Let me repost it ...
-
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+index f76692053ca1..e892b9feffb1 100644
+--- a/drivers/scsi/ufs/ufshcd-pci.c
++++ b/drivers/scsi/ufs/ufshcd-pci.c
+@@ -428,6 +428,12 @@ static int ufs_intel_adl_init(struct ufs_hba *hba)
+ 	return ufs_intel_common_init(hba);
+ }
+ 
++static int ufs_intel_mtl_init(struct ufs_hba *hba)
++{
++	hba->caps |= UFSHCD_CAP_CRYPTO | UFSHCD_CAP_WB_EN;
++	return ufs_intel_common_init(hba);
++}
++
+ static struct ufs_hba_variant_ops ufs_intel_cnl_hba_vops = {
+ 	.name                   = "intel-pci",
+ 	.init			= ufs_intel_common_init,
+@@ -465,6 +471,16 @@ static struct ufs_hba_variant_ops ufs_intel_adl_hba_vops = {
+ 	.device_reset		= ufs_intel_device_reset,
+ };
+ 
++static struct ufs_hba_variant_ops ufs_intel_mtl_hba_vops = {
++	.name                   = "intel-pci",
++	.init			= ufs_intel_mtl_init,
++	.exit			= ufs_intel_common_exit,
++	.hce_enable_notify	= ufs_intel_hce_enable_notify,
++	.link_startup_notify	= ufs_intel_link_startup_notify,
++	.resume			= ufs_intel_resume,
++	.device_reset		= ufs_intel_device_reset,
++};
++
+ #ifdef CONFIG_PM_SLEEP
+ static int ufshcd_pci_restore(struct device *dev)
+ {
+@@ -579,6 +595,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x98FA), (kernel_ulong_t)&ufs_intel_lkf_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x51FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x54FF), (kernel_ulong_t)&ufs_intel_adl_hba_vops },
++	{ PCI_VDEVICE(INTEL, 0x7E47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
+ 	{ }	/* terminate list */
+ };
+ 
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.25.1
+
