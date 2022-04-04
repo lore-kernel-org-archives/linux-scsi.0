@@ -2,91 +2,207 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76AB7C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 14:25:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E381BC4332F
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 14:59:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377120AbiDDO1l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Apr 2022 10:27:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50726 "EHLO
+        id S1378302AbiDDPA5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Apr 2022 11:00:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377146AbiDDO1k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 10:27:40 -0400
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D3173E5DA
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Apr 2022 07:25:45 -0700 (PDT)
-Received: by mail-pg1-f179.google.com with SMTP id q19so8472056pgm.6
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Apr 2022 07:25:45 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=+Wtq/Z3aPZ2OAgttgisz65dz/8jstRPltCnkdQPfUyY=;
-        b=HS4/r83VQiII4t5JiuUogB2tmQADWOhIzgMyUcccji9QU/96C8Z1yrK3LS45JarPtM
-         ouu3hP57SRhQVpAss3g9L0ZCGevMw6kiZMihL8cvEsXLABDIIN2rodJrsA6Iwyu/pskE
-         mpm54eJ6bWVNeV4+A1wbh2xULzaxjMAj0+C+tcSvOmHW7YS13pQ45vD3h2IvolpRNncr
-         bY5Bdvzcpf8e/zDvWJtRzIVVE9hFmc7unGJYSU6tQFWqdVPgPMhf/RdUBDo3zPXG8lM0
-         bcm8Me6o7TBjgAEcXJqE+xWqnIwROr8qOIzKKLFRW9y+GJXxfe4W6G0Juyk7WidLKsNF
-         UMFw==
-X-Gm-Message-State: AOAM530TLVoMGDK3qyR6Km7RRP1wVJ3cS2q8IpHW9qvPclWmfV5c/1/t
-        P4RELGBJzt34hasviK3eEA4=
-X-Google-Smtp-Source: ABdhPJym3sU/JsSsQv1CuQ4h4litOJczWLrbTZ+1Y2CS00ejOla33Lo8zeBIC4eezQzjgwmhy9n9jA==
-X-Received: by 2002:a65:4503:0:b0:382:aad5:ad7d with SMTP id n3-20020a654503000000b00382aad5ad7dmr125445pgq.488.1649082344340;
-        Mon, 04 Apr 2022 07:25:44 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id p3-20020a056a000b4300b004faee36ea56sm12731360pfo.155.2022.04.04.07.25.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 04 Apr 2022 07:25:43 -0700 (PDT)
-Message-ID: <8a3dfb77-9c42-871a-0d16-1ddf84516c8e@acm.org>
-Date:   Mon, 4 Apr 2022 07:25:41 -0700
+        with ESMTP id S1378321AbiDDPAy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 11:00:54 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C40A2DEFB;
+        Mon,  4 Apr 2022 07:58:56 -0700 (PDT)
+Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KXDQK2q0hz687B7;
+        Mon,  4 Apr 2022 22:57:13 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 4 Apr 2022 16:58:54 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 4 Apr 2022 15:58:52 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <damien.lemoal@opensource.wdc.com>, <hch@lst.de>
+CC:     <linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-doc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH v2 1/2] libata: Use scsi cmnd budget token for qc tag for SAS host
+Date:   Mon, 4 Apr 2022 22:53:09 +0800
+Message-ID: <1649083990-207133-2-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1649083990-207133-1-git-send-email-john.garry@huawei.com>
+References: <1649083990-207133-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH v2 2/7] mpi3mr: add support for driver commands
-Content-Language: en-US
-To:     Sumit Saxena <sumit.saxena@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, sathya.prakash@broadcom.com,
-        kashyap.desai@broadcom.com, chandrakanth.patil@broadcom.com,
-        sreekanth.reddy@broadcom.com, prayas.patel@broadcom.com,
-        Christoph Hellwig <hch@lst.de>
-References: <20220329180616.22547-1-sumit.saxena@broadcom.com>
- <20220329180616.22547-3-sumit.saxena@broadcom.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220329180616.22547-3-sumit.saxena@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/29/22 11:06, Sumit Saxena wrote:
-> +/**
-> + * struct mpi3mr_nvme_pt_sge -  Structure to store SGEs for NVMe
-> + * Encapsulated commands.
-> + *
-> + * @base_addr: Physical address
-> + * @length: SGE length
-> + * @rsvd: Reserved
-> + * @rsvd1: Reserved
-> + * @sgl_type: sgl type
-> + */
-> +struct mpi3mr_nvme_pt_sge {
-> +	u64 base_addr;
-> +	u32 length;
-> +	u16 rsvd;
-> +	u8 rsvd1;
-> +	u8 sgl_type;
-> +};
+For attaining a qc tag for a SAS host we need to allocate a bit in
+ata_port.sas_tag_allocated bitmap.
 
-Does the above data structure force user space software to pass a 
-physical address to the kernel? A kernel driver should not do this 
-unless there is a very good reason to do so. Passing a physical address 
-from user space to the kernel requires freezing the virtual-to-physical 
-mapping. Some user space developers erroneously use mlock() for this 
-purpose. Is there any other way than the VFIO_IOMMU_MAP_DMA ioctl to 
-prevent that the kernel modifies the virtual-to-physical mapping?
+However we already have a unique tag per device in range
+[0, ATA_MAX_QUEUE) in the scsi cmnd budget token, so just use that
+instead.
 
-Thanks,
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/ata/libata-core.c | 14 +++++---------
+ drivers/ata/libata-sata.c | 25 ++++---------------------
+ drivers/ata/libata-scsi.c |  2 +-
+ drivers/ata/libata.h      |  7 +++----
+ include/linux/libata.h    |  1 -
+ 5 files changed, 13 insertions(+), 36 deletions(-)
 
-Bart.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index cceedde51126..1067b2e2be28 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4566,14 +4566,15 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
+ /**
+  *	ata_qc_new_init - Request an available ATA command, and initialize it
+  *	@dev: Device from whom we request an available command structure
+- *	@tag: tag
++ *	@scmd: scmd for which to get qc
+  *
+  *	LOCKING:
+  *	None.
+  */
+ 
+-struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
++struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, struct scsi_cmnd *scmd)
+ {
++	int tag = scsi_cmd_to_rq(scmd)->tag;
+ 	struct ata_port *ap = dev->link->ap;
+ 	struct ata_queued_cmd *qc;
+ 
+@@ -4583,7 +4584,7 @@ struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
+ 
+ 	/* libsas case */
+ 	if (ap->flags & ATA_FLAG_SAS_HOST) {
+-		tag = ata_sas_allocate_tag(ap);
++		tag = ata_sas_get_tag(scmd);
+ 		if (tag < 0)
+ 			return NULL;
+ 	}
+@@ -4611,19 +4612,14 @@ struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
+  */
+ void ata_qc_free(struct ata_queued_cmd *qc)
+ {
+-	struct ata_port *ap;
+ 	unsigned int tag;
+ 
+ 	WARN_ON_ONCE(qc == NULL); /* ata_qc_from_tag _might_ return NULL */
+-	ap = qc->ap;
+ 
+ 	qc->flags = 0;
+ 	tag = qc->tag;
+-	if (ata_tag_valid(tag)) {
++	if (ata_tag_valid(tag))
+ 		qc->tag = ATA_TAG_POISON;
+-		if (ap->flags & ATA_FLAG_SAS_HOST)
+-			ata_sas_free_tag(tag, ap);
+-	}
+ }
+ 
+ void __ata_qc_complete(struct ata_queued_cmd *qc)
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index 044a16daa2d4..c3e9fd7d920c 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -1268,29 +1268,12 @@ int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap)
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_queuecmd);
+ 
+-int ata_sas_allocate_tag(struct ata_port *ap)
++int ata_sas_get_tag(struct scsi_cmnd *scmd)
+ {
+-	unsigned int max_queue = ap->host->n_tags;
+-	unsigned int i, tag;
++	if (WARN_ON_ONCE(scmd->budget_token >= ATA_MAX_QUEUE))
++		return -1;
+ 
+-	for (i = 0, tag = ap->sas_last_tag + 1; i < max_queue; i++, tag++) {
+-		tag = tag < max_queue ? tag : 0;
+-
+-		/* the last tag is reserved for internal command. */
+-		if (ata_tag_internal(tag))
+-			continue;
+-
+-		if (!test_and_set_bit(tag, &ap->sas_tag_allocated)) {
+-			ap->sas_last_tag = tag;
+-			return tag;
+-		}
+-	}
+-	return -1;
+-}
+-
+-void ata_sas_free_tag(unsigned int tag, struct ata_port *ap)
+-{
+-	clear_bit(tag, &ap->sas_tag_allocated);
++	return scmd->budget_token;
+ }
+ 
+ /**
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 06c9d90238d9..61dd7f7c7743 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -640,7 +640,7 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+ {
+ 	struct ata_queued_cmd *qc;
+ 
+-	qc = ata_qc_new_init(dev, scsi_cmd_to_rq(cmd)->tag);
++	qc = ata_qc_new_init(dev, cmd);
+ 	if (qc) {
+ 		qc->scsicmd = cmd;
+ 		qc->scsidone = scsi_done;
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index c9c2496d91ea..92e52090165b 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -44,7 +44,7 @@ static inline void ata_force_cbl(struct ata_port *ap) { }
+ #endif
+ extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
+ extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
+-extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
++extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, struct scsi_cmnd *scmd);
+ extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 			   u64 block, u32 n_block, unsigned int tf_flags,
+ 			   unsigned int tag, int class);
+@@ -93,10 +93,9 @@ extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+ 
+ /* libata-sata.c */
+ #ifdef CONFIG_SATA_HOST
+-int ata_sas_allocate_tag(struct ata_port *ap);
+-void ata_sas_free_tag(unsigned int tag, struct ata_port *ap);
++int ata_sas_get_tag(struct scsi_cmnd *scmd);
+ #else
+-static inline int ata_sas_allocate_tag(struct ata_port *ap)
++static inline int ata_sas_get_tag(struct scsi_cmnd *scmd)
+ {
+ 	return -EOPNOTSUPP;
+ }
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 9b1d3d8b1252..16107122e587 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -820,7 +820,6 @@ struct ata_port {
+ 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
+ 
+ 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE + 1];
+-	unsigned long		sas_tag_allocated; /* for sas tag allocation only */
+ 	u64			qc_active;
+ 	int			nr_active_links; /* #links with active qcs */
+ 	unsigned int		sas_last_tag;	/* track next tag hw expects */
+-- 
+2.26.2
+
