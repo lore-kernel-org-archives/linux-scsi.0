@@ -2,76 +2,71 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95E6DC43219
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 01:10:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB9EC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 01:10:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1448629AbiDFBJA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Apr 2022 21:09:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34896 "EHLO
+        id S1449377AbiDFBJD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Apr 2022 21:09:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1573723AbiDETxh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 15:53:37 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 181F84338D
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 12:51:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S1456849AbiDEQCZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 12:02:25 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E814915D3AA;
+        Tue,  5 Apr 2022 08:25:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1649172298;
+        bh=ySu+WdbLhJy7RbHw1+FFBWYzYY6iBwBvKC8kGG4udH8=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=Qn7HJhLc1YnnJeD1uH+YD8JszCg3jcUfDll4fIeNiJETSxOeOCF7GwBes4YO9K6Ck
+         FYTGOyt8SIUswtDPGr4Jv7xDnWcVtExfP2ixKeP+CpFNeks7V33teQzcKPqkGY30rj
+         Wlasc6tpicOp/LYhi/VFAnoF35SVwEzgbIjx/CAY=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 0C7C612878FE;
+        Tue,  5 Apr 2022 11:24:58 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id GiwgNUSrnlUz; Tue,  5 Apr 2022 11:24:57 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1649172297;
+        bh=ySu+WdbLhJy7RbHw1+FFBWYzYY6iBwBvKC8kGG4udH8=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=AE5O0qlUuh4PfAJRZm3mQXR58Jv3mXkovnqsVGx8PD23lYOV7eLg1L/JOBhVddg+8
+         Yhkji33jf1xqka1UL8d+M+WeQBN2goZetlmA7wK9/u8sZFW2DgRPRp9/RXhTOYweNV
+         lAlOAFpVSaEGWclbnyGVT8I1C5DzkNd6CrG4csxQ=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::3774])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AE351B81FC4
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 19:51:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 5A10DC385A7
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 19:51:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649188296;
-        bh=QvdaGRRYq7zt37mkWiltdpQOIDKkP/kCENCFWa3eAYw=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=iY0VReJ50UlepdDhsFM4RebSPhnk0jTpIaLRyiGQUu5FfyzKtauc17oxwZgpbKP27
-         4r41Ai/zyW1ZCDOSBnk7evpU7pNHJhVBSw2vJUeeuNIRNnR3lvWlO0MpFeD0QRYVw/
-         S6O72TkxxVVS9Snkm6ogEs3fe0NjaZs0oyTLEk4rk7gmK2c7DCrry+Mf6/a0C7FyQL
-         YNnhTo6udiVNSuU0i7TEUGW/by/UVLcvKkzMuK7eJIhubo+Qt56GZAfDqbU4Ou6CaM
-         etaP4y8j0HPoruQLmMlhhiQQnDsDgrXCA519yT5APSWGK6Xv1qngji4hVGbHoHi346
-         P4xSuz2mRiNLg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 4709DC05FD2; Tue,  5 Apr 2022 19:51:36 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215788] arcmsr driver on kernel 5.16 and up fails to initialize
- ARC-1280ML RAID controller
-Date:   Tue, 05 Apr 2022 19:51:36 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bvanassche@acm.org
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215788-11613-ccDoKdPEyK@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215788-11613@https.bugzilla.kernel.org/>
-References: <bug-215788-11613@https.bugzilla.kernel.org/>
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 5B9CB12878FB;
+        Tue,  5 Apr 2022 11:24:57 -0400 (EDT)
+Message-ID: <175195a9b7840e883677c6f351ee186089ab2b6d.camel@HansenPartnership.com>
+Subject: Re: RIP: 0010:ahd_init.cold+0x96/0x98 [aic79xx] - 5.17.0
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Bruno Goncalves <bgoncalv@redhat.com>,
+        LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Cc:     CKI Project <cki-project@redhat.com>
+Date:   Tue, 05 Apr 2022 11:24:56 -0400
+In-Reply-To: <CA+QYu4qTtXgVegAd7S5bjJQye+kmtPaFau4dg3YPU2tH9faBjg@mail.gmail.com>
+References: <CA+QYu4qTtXgVegAd7S5bjJQye+kmtPaFau4dg3YPU2tH9faBjg@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215788
+On Tue, 2022-04-05 at 09:14 +0200, Bruno Goncalves wrote:
+> Hello,
+> 
+> We've been hitting the panic below when testing mainline kernel. More
+> logs can be found on [1] and CKI tracker [2].
 
---- Comment #4 from Bart Van Assche (bvanassche@acm.org) ---
-Damien, can you take a look?
+When was the last time this driver passed the test?  I'm asking because
+nothing significant has changed in this driver for a while and the
+trivial changes all seem to check out.
 
---=20
-You may reply to this email to add a comment.
+James
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+
