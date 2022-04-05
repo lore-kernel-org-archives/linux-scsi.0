@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E07BC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Apr 2022 10:53:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2619DC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Apr 2022 10:53:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240783AbiDEKzX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Apr 2022 06:55:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39808 "EHLO
+        id S241063AbiDEKzg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Apr 2022 06:55:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348954AbiDEJst (ORCPT
+        with ESMTP id S1348940AbiDEJst (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 05:48:49 -0400
-Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97E9EA5EA6
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 02:38:07 -0700 (PDT)
-Received: by mail-wr1-x42d.google.com with SMTP id m30so18431186wrb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Apr 2022 02:38:07 -0700 (PDT)
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D88A2A206B
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 02:38:04 -0700 (PDT)
+Received: by mail-wr1-x42b.google.com with SMTP id d3so7570818wrb.7
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Apr 2022 02:38:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=5XIz5OfvKltqZSeXren24cN8/vWoQ7uO5RENAi6vLig=;
-        b=UrUfEXIlvxSp8sIeO6xh/kGe1WpSq4OqI/LhLEgsXMMfzgl7OpApM9zMvJvcWAe7sp
-         C1NkO5Z54qjRtT/gZ0XEOf2fVGk0aY/gFKs0y0BkRSO9RQDYk1SoBvSR1M11Kph0SKyW
-         kwYz/F8IvDRqTIEx00WxT93T7B6U5KTDejqbmM1mwqf6upU9lzQsnXTdRNUF0jpXzL4w
-         fAMflltmSitvXC1olNJQuRNSY8rOcDxVgYPk1879U/D6meXkohynmsgz2Wifn7ALuygs
-         Y9xRoD/7cV9jGnmLZ8E/5S296sec2HmVZi7H92tJXDz8EHGl/KHP3F5RjnW/89ewCzRF
-         ihsA==
+        bh=9kxJqP7a1M2gpL6SMSPDw94NffEPUOvYaV+FubVSaZo=;
+        b=wRmNlkC5m4iGc78HN11BCavIkWRbMMK1+Bo1yXjgsRM4gS/6LOiQbvEWwODolabhrb
+         K4aC/mXYUssgxN07Op2s83ZJUItpexJBaX513jgSby+nmn990bj6rSPhbS3wahYS1Wbg
+         BuMTBifAJbROYT9PcfHYDR4dT6KzfuJkDSVIe4lugEp4iDf/f8mNUysNj5OQmKQZvnCa
+         i8cUmDjmPSa1u5KjKo0wzMZ9GOIOxocs5WLG/HH0YADIS1xs0fXHg7bTJCJGQ7tas71k
+         IbhhGMroJpZh9JjHl0hYwyI0TIDbCiLC8zUU+V35N4qBs3p5xolKL7tuG0DgJ5k9iy8A
+         Py1g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=5XIz5OfvKltqZSeXren24cN8/vWoQ7uO5RENAi6vLig=;
-        b=Z8Q211RLVILPPXKYjMVOBWUY8BPNF2J23TqbBcEI0OW7HkH3gCPn1avlta+BqkI5gV
-         TlmZsruQ3N4ravawX2LU8C/JCsdryWQMQIBvDt/bOdq6htMT2Nlp0RjnCZGbxCB2u6Oa
-         vZIm7LJTjuYgvuPRCTWzvAdBiXsUYmA/YsRt6HyKAgN1JpM2bm36Z6ENfGS7iPMMbZ7T
-         C4rmrQHW8Z1aLAbb6yw0GaVE+G2rmaiYD76CVwIs8UGWdfyrb0toF/WwaH1vCPJATM53
-         PyD+oXNBVADTYhbBWxUhgbpMWXb4enimmmnTdY/hS6IaCM7zeADKDlvnMU4Xd0Rp/i2r
-         M1fw==
-X-Gm-Message-State: AOAM533FNSRioAjwISndMfMkSFzxQbU7f10a52KUicQzwAZYzi7wxWr4
-        DGTzQ970IWqbirBUPT+m8ggm0A==
-X-Google-Smtp-Source: ABdhPJyuOUieYVJh0pNqAbyEnkD6s6YTyfa0TavUfZNB+FdJRmfUgtO0dixX7I+3Wr7D2BXaYe9gtA==
-X-Received: by 2002:a5d:6782:0:b0:203:d6af:5869 with SMTP id v2-20020a5d6782000000b00203d6af5869mr1973756wru.213.1649151485956;
-        Tue, 05 Apr 2022 02:38:05 -0700 (PDT)
+        bh=9kxJqP7a1M2gpL6SMSPDw94NffEPUOvYaV+FubVSaZo=;
+        b=kZJUDEcyHRAUDzk/aEnzEhSkyfv5OfycgnOU4eR+XQCclmwIL2sEj80NCPO2WUT42G
+         cLx/w15qp0J5+tVf3XLX9IwBy9Nim4hZdKmF0R0edqMBph+EWCBb7IJYLnsg3h9XxQvc
+         j1UwaXSqn3mlhgqPCUCHZbUF6WQpGG3istNkuF3TrBJ8D/NDdxudXskKP5DvMoS2Mk4J
+         ERDpxHKdUUfrDfsZQjJ3fZGXABnRJ2EteBUHnt+ig2giTgta87VAwuPWWTiSSrlURmcL
+         /5HopE5tG8zKjj7OzHL/pOIPsgJ+ATAV+TBY9C1sE2MBgsN3uf3ZF5sPwZm+amQlkmD4
+         lBxQ==
+X-Gm-Message-State: AOAM532mu19CgIL66XAukOWt7tXmA9QRdC6sTTHdMuNEGCndvN2u5obn
+        BwaK4mGCdd+QabfbNx1D6lMQwg==
+X-Google-Smtp-Source: ABdhPJziSgg2ISzYD+NQwV22bFIPYzBUI9GfT/TLjFTC+cQ2qIT1LU0iej+X30xqxW1XrxfY6ap9EA==
+X-Received: by 2002:a5d:4712:0:b0:206:120d:b038 with SMTP id y18-20020a5d4712000000b00206120db038mr2052231wrq.542.1649151483317;
+        Tue, 05 Apr 2022 02:38:03 -0700 (PDT)
 Received: from zen.linaroharston ([51.148.130.216])
-        by smtp.gmail.com with ESMTPSA id v15-20020a056000144f00b002057eac999fsm11955806wrx.76.2022.04.05.02.38.00
+        by smtp.gmail.com with ESMTPSA id f18-20020a5d6652000000b001e669ebd528sm11346872wrw.91.2022.04.05.02.38.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 05 Apr 2022 02:38:00 -0700 (PDT)
 Received: from zen.lan (localhost [127.0.0.1])
-        by zen.linaroharston (Postfix) with ESMTP id 238991FFBB;
+        by zen.linaroharston (Postfix) with ESMTP id 0E3441FFB8;
         Tue,  5 Apr 2022 10:38:00 +0100 (BST)
 From:   =?UTF-8?q?Alex=20Benn=C3=A9e?= <alex.bennee@linaro.org>
 To:     linux-kernel@vger.kernel.org
@@ -58,10 +58,12 @@ Cc:     maxim.uvarov@linaro.org, joakim.bech@linaro.org,
         yang.huang@intel.com, bing.zhu@intel.com,
         Matti.Moell@opensynergy.com, hmo@opensynergy.com,
         linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        =?UTF-8?q?Alex=20Benn=C3=A9e?= <alex.bennee@linaro.org>
-Subject: [PATCH  v2 3/4] rpmb: create virtio rpmb frontend driver
-Date:   Tue,  5 Apr 2022 10:37:58 +0100
-Message-Id: <20220405093759.1126835-4-alex.bennee@linaro.org>
+        =?UTF-8?q?Alex=20Benn=C3=A9e?= <alex.bennee@linaro.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Arnd Bergmann <arnd.bergmann@linaro.org>
+Subject: [PATCH  v2 1/4] rpmb: add Replay Protected Memory Block (RPMB) subsystem
+Date:   Tue,  5 Apr 2022 10:37:56 +0100
+Message-Id: <20220405093759.1126835-2-alex.bennee@linaro.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220405093759.1126835-1-alex.bennee@linaro.org>
 References: <20220405093759.1126835-1-alex.bennee@linaro.org>
@@ -72,644 +74,758 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This implements a virtio rpmb frontend driver for the RPMB subsystem.
-This driver conforms to the rpmb internal API which attempts to stay
-common for the majority of cases and only expose the low level frame
-details as required. In these cases it is up to something outside of
-the driver itself to do the appropriate MAC calculations.
+A number of storage technologies support a specialised hardware
+partition designed to be resistant to replay attacks. The underlying
+HW protocols differ but the operations are common. The RPMB partition
+cannot be accessed via standard block layer, but by a set of specific
+commands: WRITE, READ, GET_WRITE_COUNTER, and PROGRAM_KEY. Such a
+partition provides authenticated and replay protected access, hence
+suitable as a secure storage.
 
-The driver does do some basic verification of the incoming data and
-will reject frames which are the wrong size or have the wrong commands
-in them.
+The RPMB layer aims to provide in-kernel API for Trusted Execution
+Environment (TEE) devices that are capable to securely compute block
+frame signature. In case a TEE device wishes to store a replay
+protected data, requests the storage device via RPMB layer to store
+the data.
+
+A TEE device driver can claim the RPMB interface, for example, via
+class_interface_register(). The RPMB layer provides a series of
+operations for interacting with the device.
+
+  * program_key - a one time operation for setting up a new device
+  * get_capacity - introspect the device capacity
+  * get_write_count - check the write counter
+  * write_blocks - write a series of blocks to the RPMB device
+  * read_blocks - read a series of blocks from the RPMB device
+
+The detailed operation of implementing the access is left to the TEE
+device driver itself.
+
+[This is based-on Thomas Winkler's proposed API from:
+
+  https://lore.kernel.org/linux-mmc/1478548394-8184-2-git-send-email-tomas.winkler@intel.com/
+
+The principle difference is the framing details and HW specific
+bits (JDEC vs NVME frames) are left to the lower level TEE driver to
+worry about. The eventual userspace ioctl interface will aim to be
+similarly generic. This is an RFC to follow up on:
+
+  Subject: RPMB user space ABI
+  Date: Thu, 11 Feb 2021 14:07:00 +0000
+  Message-ID: <87mtwashi4.fsf@linaro.org>]
 
 Signed-off-by: Alex Bennée <alex.bennee@linaro.org>
 Cc: Tomas Winkler <tomas.winkler@intel.com>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Linus  Walleij <linus.walleij@linaro.org>
+Cc: Arnd Bergmann <arnd.bergmann@linaro.org>
+Cc: Ilias Apalodimas <ilias.apalodimas@linaro.org>
 
 ---
-ajb:
-  - rewrite for new API
+v2
+  - dropped keyid stuff
+  - moved from char to its own subdirectory driver/rpmb
+  - fixed compile errors for bisectability
 ---
- drivers/rpmb/Kconfig             |  10 +
- drivers/rpmb/Makefile            |   1 +
- drivers/rpmb/virtio_rpmb.c       | 518 +++++++++++++++++++++++++++++++
- include/uapi/linux/virtio_rpmb.h |  54 ++++
- 4 files changed, 583 insertions(+)
- create mode 100644 drivers/rpmb/virtio_rpmb.c
- create mode 100644 include/uapi/linux/virtio_rpmb.h
+ MAINTAINERS           |   7 +
+ drivers/Kconfig       |   2 +
+ drivers/Makefile      |   1 +
+ drivers/rpmb/Kconfig  |  11 ++
+ drivers/rpmb/Makefile |   7 +
+ drivers/rpmb/core.c   | 434 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/rpmb.h  | 172 +++++++++++++++++
+ 7 files changed, 634 insertions(+)
+ create mode 100644 drivers/rpmb/Kconfig
+ create mode 100644 drivers/rpmb/Makefile
+ create mode 100644 drivers/rpmb/core.c
+ create mode 100644 include/linux/rpmb.h
 
-diff --git a/drivers/rpmb/Kconfig b/drivers/rpmb/Kconfig
-index 126f336fe9ea..cd0d1bb10910 100644
---- a/drivers/rpmb/Kconfig
-+++ b/drivers/rpmb/Kconfig
-@@ -16,3 +16,13 @@ config RPMB_INTF_DEV
- 	help
- 	  Say yes here if you want to access RPMB from user space
- 	  via character device interface /dev/rpmb%d
-+
-+config VIRTIO_RPMB
-+	tristate "Virtio RPMB driver"
-+	default n
-+	depends on VIRTIO
-+	select RPMB
-+	help
-+	  Say yes here if you have a Virtio aware RPMB device or want to use
-+          RPMB from a Virtual Machine images.
-+	  This device interface is only for guest/frontend virtio driver.
-diff --git a/drivers/rpmb/Makefile b/drivers/rpmb/Makefile
-index f54b3f30514b..4b397b50a42c 100644
---- a/drivers/rpmb/Makefile
-+++ b/drivers/rpmb/Makefile
-@@ -4,5 +4,6 @@
- obj-$(CONFIG_RPMB) += rpmb.o
- rpmb-objs += core.o
- rpmb-$(CONFIG_RPMB_INTF_DEV) += cdev.o
-+obj-$(CONFIG_VIRTIO_RPMB) += virtio_rpmb.o
+diff --git a/MAINTAINERS b/MAINTAINERS
+index cd0f68d4a34a..9ab02b589005 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -16744,6 +16744,13 @@ T:	git git://linuxtv.org/media_tree.git
+ F:	Documentation/devicetree/bindings/media/allwinner,sun8i-a83t-de2-rotate.yaml
+ F:	drivers/media/platform/sunxi/sun8i-rotate/
  
- ccflags-y += -D__CHECK_ENDIAN__
-diff --git a/drivers/rpmb/virtio_rpmb.c b/drivers/rpmb/virtio_rpmb.c
++RPMB SUBSYSTEM
++M:	?
++L:	linux-kernel@vger.kernel.org
++S:	Supported
++F:	drivers/rpmb/*
++F:	include/linux/rpmb.h
++
+ RPMSG TTY DRIVER
+ M:	Arnaud Pouliquen <arnaud.pouliquen@foss.st.com>
+ L:	linux-remoteproc@vger.kernel.org
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index 0d399ddaa185..90d18a8a0e72 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -236,4 +236,6 @@ source "drivers/interconnect/Kconfig"
+ source "drivers/counter/Kconfig"
+ 
+ source "drivers/most/Kconfig"
++
++source "drivers/rpmb/Kconfig"
+ endmenu
+diff --git a/drivers/Makefile b/drivers/Makefile
+index a110338c860c..ade465c4589f 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -187,3 +187,4 @@ obj-$(CONFIG_GNSS)		+= gnss/
+ obj-$(CONFIG_INTERCONNECT)	+= interconnect/
+ obj-$(CONFIG_COUNTER)		+= counter/
+ obj-$(CONFIG_MOST)		+= most/
++obj-$(CONFIG_RPMB)		+= rpmb/
+diff --git a/drivers/rpmb/Kconfig b/drivers/rpmb/Kconfig
 new file mode 100644
-index 000000000000..db309014a157
+index 000000000000..f2a9ebdc4435
 --- /dev/null
-+++ b/drivers/rpmb/virtio_rpmb.c
-@@ -0,0 +1,518 @@
++++ b/drivers/rpmb/Kconfig
+@@ -0,0 +1,11 @@
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2015-2019, Intel Corporation.
++
++config RPMB
++	tristate "RPMB partition interface"
++	help
++	  Unified RPMB partition interface for RPMB capable devices such as
++          eMMC and UFS. Provides interface for in kernel security controllers to
++	  access RPMB partition.
++
++	  If unsure, select N.
+diff --git a/drivers/rpmb/Makefile b/drivers/rpmb/Makefile
+new file mode 100644
+index 000000000000..24d4752a9a53
+--- /dev/null
++++ b/drivers/rpmb/Makefile
+@@ -0,0 +1,7 @@
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2015-2019, Intel Corporation.
++
++obj-$(CONFIG_RPMB) += rpmb.o
++rpmb-objs += core.o
++
++ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/rpmb/core.c b/drivers/rpmb/core.c
+new file mode 100644
+index 000000000000..50b358a14db6
+--- /dev/null
++++ b/drivers/rpmb/core.c
+@@ -0,0 +1,434 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Virtio RPMB Front End Driver
-+ *
-+ * Copyright (c) 2018-2019 Intel Corporation.
-+ * Copyright (c) 2021-2022 Linaro Ltd.
++ * Copyright(c) 2015 - 2019 Intel Corporation. All rights reserved.
++ * Copyright(c) 2021 - 2022 Linaro Ltd.
 + */
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+#include <linux/err.h>
-+#include <linux/scatterlist.h>
-+#include <linux/spinlock.h>
-+#include <linux/slab.h>
-+#include <linux/virtio.h>
 +#include <linux/module.h>
-+#include <linux/virtio_ids.h>
-+#include <linux/virtio_config.h>
-+#include <linux/virtio_rpmb.h>
-+#include <linux/uaccess.h>
-+#include <linux/byteorder/generic.h>
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/mutex.h>
++#include <linux/list.h>
++#include <linux/device.h>
++#include <linux/slab.h>
++
 +#include <linux/rpmb.h>
 +
-+#define RPMB_MAC_SIZE 32
-+#define VIRTIO_RPMB_FRAME_SZ 512
++static DEFINE_IDA(rpmb_ida);
 +
-+static const char id[] = "RPMB:VIRTIO";
++/**
++ * rpmb_dev_get() - increase rpmb device ref counter
++ * @rdev: rpmb device
++ */
++struct rpmb_dev *rpmb_dev_get(struct rpmb_dev *rdev)
++{
++	return get_device(&rdev->dev) ? rdev : NULL;
++}
++EXPORT_SYMBOL_GPL(rpmb_dev_get);
 +
-+struct virtio_rpmb_info {
-+	/* The virtio device we're associated with */
-+	struct virtio_device *vdev;
++/**
++ * rpmb_dev_put() - decrease rpmb device ref counter
++ * @rdev: rpmb device
++ */
++void rpmb_dev_put(struct rpmb_dev *rdev)
++{
++	put_device(&rdev->dev);
++}
++EXPORT_SYMBOL_GPL(rpmb_dev_put);
 +
-+	/* The virtq we use */
-+	struct virtqueue *vq;
++/**
++ * rpmb_program_key() - program the RPMB access key
++ * @rdev: rpmb device
++ * @keylen: length of key data
++ * @key: key data
++ *
++ * A successful programming of the key implies it has been set by the
++ * driver and can be used.
++ *
++ * Return:
++ * *        0 on success
++ * *        -EINVAL on wrong parameters
++ * *        -EPERM key already programmed
++ * *        -EOPNOTSUPP if device doesn't support the requested operation
++ * *        < 0 if the operation fails
++ */
++int rpmb_program_key(struct rpmb_dev *rdev, int klen, u8 *key, int rlen, u8 *resp)
++{
++	int err;
 +
-+	struct mutex lock; /* info lock */
-+	wait_queue_head_t have_data;
++	if (!rdev || !key)
++		return -EINVAL;
 +
-+	/* Underlying RPMB device */
++	mutex_lock(&rdev->lock);
++	err = -EOPNOTSUPP;
++	if (rdev->ops && rdev->ops->program_key) {
++		err = rdev->ops->program_key(rdev->dev.parent, rdev->target,
++					     klen, key, rlen, resp);
++	}
++	mutex_unlock(&rdev->lock);
++
++	return err;
++}
++EXPORT_SYMBOL_GPL(rpmb_program_key);
++
++/**
++ * rpmb_get_capacity() - returns the capacity of the rpmb device
++ * @rdev: rpmb device
++ *
++ * Return:
++ * *        capacity of the device in units of 128K, on success
++ * *        -EINVAL on wrong parameters
++ * *        -EOPNOTSUPP if device doesn't support the requested operation
++ * *        < 0 if the operation fails
++ */
++int rpmb_get_capacity(struct rpmb_dev *rdev)
++{
++	int err;
++
++	if (!rdev)
++		return -EINVAL;
++
++	mutex_lock(&rdev->lock);
++	err = -EOPNOTSUPP;
++	if (rdev->ops && rdev->ops->get_capacity)
++		err = rdev->ops->get_capacity(rdev->dev.parent, rdev->target);
++	mutex_unlock(&rdev->lock);
++
++	return err;
++}
++EXPORT_SYMBOL_GPL(rpmb_get_capacity);
++
++/**
++ * rpmb_get_write_count() - returns the write counter of the rpmb device
++ * @rdev: rpmb device
++ * @len: size of request frame
++ * @request: request frame
++ * @rlen: size of response frame
++ * @resp: response frame
++ *
++ * Return:
++ * *        counter
++ * *        -EINVAL on wrong parameters
++ * *        -EOPNOTSUPP if device doesn't support the requested operation
++ * *        < 0 if the operation fails
++ */
++int rpmb_get_write_count(struct rpmb_dev *rdev, int len, u8 *request, int rlen, u8 *resp)
++{
++	int err;
++
++	if (!rdev)
++		return -EINVAL;
++
++	mutex_lock(&rdev->lock);
++	err = -EOPNOTSUPP;
++	if (rdev->ops && rdev->ops->get_write_count)
++		err = rdev->ops->get_write_count(rdev->dev.parent, rdev->target,
++						 len, request, rlen, resp);
++	mutex_unlock(&rdev->lock);
++
++	return err;
++}
++EXPORT_SYMBOL_GPL(rpmb_get_write_count);
++
++/**
++ * rpmb_write_blocks() - write data to RPMB device
++ * @rdev: rpmb device
++ * @addr: block address (index of first block - 256B blocks)
++ * @count: number of 256B blosks
++ * @data: pointer to data to program
++ *
++ * Write a series of blocks to the RPMB device.
++ *
++ * Return:
++ * *        0 on success
++ * *        -EINVAL on wrong parameters
++ * *        -EACCESS no key set
++ * *        -EOPNOTSUPP if device doesn't support the requested operation
++ * *        < 0 if the operation fails
++ */
++int rpmb_write_blocks(struct rpmb_dev *rdev, int len, u8 *request,
++		      int rlen, u8 *response)
++{
++	int err;
++
++	if (!rdev || !len || !request)
++		return -EINVAL;
++
++	mutex_lock(&rdev->lock);
++	err = -EOPNOTSUPP;
++	if (rdev->ops && rdev->ops->write_blocks) {
++		err = rdev->ops->write_blocks(rdev->dev.parent, rdev->target,
++					      len, request, rlen, response);
++	}
++	mutex_unlock(&rdev->lock);
++
++	return err;
++}
++EXPORT_SYMBOL_GPL(rpmb_write_blocks);
++
++/**
++ * rpmb_read_blocks() - read data from RPMB device
++ * @rdev: rpmb device
++ * @addr: block address (index of first block - 256B blocks)
++ * @count: number of 256B blocks
++ * @data: pointer to data to read
++ *
++ * Read a series of one or more blocks from the RPMB device.
++ *
++ * Return:
++ * *        0 on success
++ * *        -EINVAL on wrong parameters
++ * *        -EACCESS no key set
++ * *        -EOPNOTSUPP if device doesn't support the requested operation
++ * *        < 0 if the operation fails
++ */
++int rpmb_read_blocks(struct rpmb_dev *rdev, int addr, int count, int len, u8 *data)
++{
++	int err;
++
++	if (!rdev || !count || !data)
++		return -EINVAL;
++
++	mutex_lock(&rdev->lock);
++	err = -EOPNOTSUPP;
++	if (rdev->ops && rdev->ops->read_blocks) {
++		err = rdev->ops->read_blocks(rdev->dev.parent, rdev->target,
++					     addr, count, len, data);
++	}
++	mutex_unlock(&rdev->lock);
++
++	return err;
++}
++EXPORT_SYMBOL_GPL(rpmb_read_blocks);
++
++
++static void rpmb_dev_release(struct device *dev)
++{
++	struct rpmb_dev *rdev = to_rpmb_dev(dev);
++
++	ida_simple_remove(&rpmb_ida, rdev->id);
++	kfree(rdev);
++}
++
++struct class rpmb_class = {
++	.name = "rpmb",
++	.owner = THIS_MODULE,
++	.dev_release = rpmb_dev_release,
++};
++EXPORT_SYMBOL(rpmb_class);
++
++/**
++ * rpmb_dev_find_device() - return first matching rpmb device
++ * @data: data for the match function
++ * @match: the matching function
++ *
++ * Return: matching rpmb device or NULL on failure
++ */
++static
++struct rpmb_dev *rpmb_dev_find_device(const void *data,
++				      int (*match)(struct device *dev,
++						   const void *data))
++{
++	struct device *dev;
++
++	dev = class_find_device(&rpmb_class, NULL, data, match);
++
++	return dev ? to_rpmb_dev(dev) : NULL;
++}
++
++struct device_with_target {
++	const struct device *dev;
++	u8 target;
++};
++
++static int match_by_parent(struct device *dev, const void *data)
++{
++	const struct device_with_target *d = data;
++	struct rpmb_dev *rdev = to_rpmb_dev(dev);
++
++	return (d->dev && dev->parent == d->dev && rdev->target == d->target);
++}
++
++/**
++ * rpmb_dev_find_by_device() - retrieve rpmb device from the parent device
++ * @parent: parent device of the rpmb device
++ * @target: RPMB target/region within the physical device
++ *
++ * Return: NULL if there is no rpmb device associated with the parent device
++ */
++struct rpmb_dev *rpmb_dev_find_by_device(struct device *parent, u8 target)
++{
++	struct device_with_target t;
++
++	if (!parent)
++		return NULL;
++
++	t.dev = parent;
++	t.target = target;
++
++	return rpmb_dev_find_device(&t, match_by_parent);
++}
++EXPORT_SYMBOL_GPL(rpmb_dev_find_by_device);
++
++/**
++ * rpmb_dev_unregister() - unregister RPMB partition from the RPMB subsystem
++ * @rdev: the rpmb device to unregister
++ * Return:
++ * *        0 on success
++ * *        -EINVAL on wrong parameters
++ */
++int rpmb_dev_unregister(struct rpmb_dev *rdev)
++{
++	if (!rdev)
++		return -EINVAL;
++
++	mutex_lock(&rdev->lock);
++	device_del(&rdev->dev);
++	mutex_unlock(&rdev->lock);
++
++	rpmb_dev_put(rdev);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(rpmb_dev_unregister);
++
++/**
++ * rpmb_dev_unregister_by_device() - unregister RPMB partition
++ *     from the RPMB subsystem
++ * @dev: the parent device of the rpmb device
++ * @target: RPMB target/region within the physical device
++ * Return:
++ * *        0 on success
++ * *        -EINVAL on wrong parameters
++ * *        -ENODEV if a device cannot be find.
++ */
++int rpmb_dev_unregister_by_device(struct device *dev, u8 target)
++{
 +	struct rpmb_dev *rdev;
 +
-+	/* Config values */
-+	u8 max_wr, max_rd, capacity;
-+};
++	if (!dev)
++		return -EINVAL;
++
++	rdev = rpmb_dev_find_by_device(dev, target);
++	if (!rdev) {
++		dev_warn(dev, "no disk found %s\n", dev_name(dev->parent));
++		return -ENODEV;
++	}
++
++	rpmb_dev_put(rdev);
++
++	return rpmb_dev_unregister(rdev);
++}
++EXPORT_SYMBOL_GPL(rpmb_dev_unregister_by_device);
 +
 +/**
-+ * virtio_rpmb_recv_done() - vq completion callback
++ * rpmb_dev_get_drvdata() - driver data getter
++ * @rdev: rpmb device
++ *
++ * Return: driver private data
 + */
-+static void virtio_rpmb_recv_done(struct virtqueue *vq)
++void *rpmb_dev_get_drvdata(const struct rpmb_dev *rdev)
 +{
-+	struct virtio_rpmb_info *vi;
-+	struct virtio_device *vdev = vq->vdev;
-+
-+	vi = vq->vdev->priv;
-+	if (!vi) {
-+		dev_err(&vdev->dev, "Error: no found vi data.\n");
-+		return;
-+	}
-+
-+	wake_up(&vi->have_data);
++	return dev_get_drvdata(&rdev->dev);
 +}
++EXPORT_SYMBOL_GPL(rpmb_dev_get_drvdata);
 +
 +/**
-+ * do_virtio_transaction() - send sg list and wait for result
-+ * @dev: linux device structure
-+ * @vi: the device info (where the lock is)
-+ * @sgs: array of scatterlists
-+ * @out: total outgoing scatter lists
-+ * @in: total returning scatter lists
-+ *
-+ * This is just a simple helper for processing the sg list. It will
-+ * block until the response arrives. Returns number of bytes written
-+ * back or negative if it failed.
++ * rpmb_dev_set_drvdata() - driver data setter
++ * @rdev: rpmb device
++ * @data: data to store
 + */
-+static int do_virtio_transaction(struct device *dev,
-+				 struct virtio_rpmb_info *vi,
-+				 struct scatterlist *sgs[],
-+				 int out, int in)
++void rpmb_dev_set_drvdata(struct rpmb_dev *rdev, void *data)
 +{
-+	int ret, len = 0;
-+
-+	mutex_lock(&vi->lock);
-+	ret = virtqueue_add_sgs(vi->vq, sgs, out, in, vi, GFP_KERNEL);
-+	if (ret) {
-+		dev_err(dev, "failed to send %d, recv %d sgs (%d) to vq\n",
-+			out, in, ret);
-+		ret = -1;
-+	} else {
-+		virtqueue_kick(vi->vq);
-+		wait_event(vi->have_data, virtqueue_get_buf(vi->vq, &len));
-+	}
-+	mutex_unlock(&vi->lock);
-+
-+	return len;
++	dev_set_drvdata(&rdev->dev, data);
 +}
++EXPORT_SYMBOL_GPL(rpmb_dev_set_drvdata);
 +
 +/**
-+ * rpmb_virtio_program_key(): program key into virtio device
-+ * @dev: device handle
-+ * @target: target region (unused for VirtIO devices)
-+ * @klen: length of key programming request
-+ * @key_frame: key programming frames
-+ * @rlen: length of response buffer
-+ * @resp_frame: pointer to optional response frame
++ * rpmb_dev_register - register RPMB partition with the RPMB subsystem
++ * @dev: storage device of the rpmb device
++ * @target: RPMB target/region within the physical device
++ * @ops: device specific operations
 + *
-+ * Handle programming of the key (VIRTIO_RPMB_REQ_PROGRAM_KEY)
-+ *
-+ * The mandatory first frame contains the programming sequence. An
-+ * optional second frame may ask for the result of the operation
-+ * (VIRTIO_RPMB_REQ_RESULT_READ) which would trigger a response frame.
-+ *
-+ * Returns success/fail with errno and optional response frame
++ * Return: a pointer to rpmb device
 + */
-+static int rpmb_virtio_program_key(struct device *dev, u8 target,
-+				   int klen, u8 *key_frame, int rlen, u8 *resp_frame)
++struct rpmb_dev *rpmb_dev_register(struct device *dev, u8 target,
++				   const struct rpmb_ops *ops)
 +{
-+	struct virtio_rpmb_info *vi = dev_get_drvdata(dev);
-+	struct virtio_rpmb_frame *pkey = (struct virtio_rpmb_frame *) key_frame;
-+	struct virtio_rpmb_frame *resp = NULL;
-+	struct scatterlist out_frame;
-+	struct scatterlist in_frame;
-+	struct scatterlist *sgs[2] = { };
-+	int len;
-+
-+	if (!pkey)
-+		return -EINVAL;
-+
-+	if (be16_to_cpu(pkey->req_resp) != VIRTIO_RPMB_REQ_PROGRAM_KEY)
-+		return -EINVAL;
-+
-+	/* validate incoming frame */
-+	switch (klen) {
-+	case VIRTIO_RPMB_FRAME_SZ:
-+		if (rlen || resp_frame)
-+			return -EINVAL;
-+		break;
-+	case VIRTIO_RPMB_FRAME_SZ * 2:
-+		if (!rlen || !resp_frame)
-+			return -EINVAL;
-+		if (be16_to_cpu(pkey[1].req_resp) != VIRTIO_RPMB_REQ_RESULT_READ)
-+			return -EINVAL;
-+		if (rlen < VIRTIO_RPMB_FRAME_SZ)
-+			return -EINVAL;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	/* setup outgoing frame(s) */
-+	sg_init_one(&out_frame, pkey, klen);
-+	sgs[0] = &out_frame;
-+
-+	/* optional incoming frame */
-+	if (rlen && resp_frame) {
-+		resp = (struct virtio_rpmb_frame *) resp_frame;
-+		sg_init_one(&in_frame, resp, sizeof(*resp));
-+		sgs[1] = &in_frame;
-+	}
-+
-+	len = do_virtio_transaction(dev, vi, sgs, 1, resp ? 1 : 0);
-+
-+	if (len > 0 && resp) {
-+		if (be16_to_cpu(resp->req_resp) != VIRTIO_RPMB_RESP_PROGRAM_KEY) {
-+			dev_err(dev, "Bad response from device (%x/%x)",
-+				be16_to_cpu(resp->req_resp), be16_to_cpu(resp->result));
-+			return -EPROTO;
-+		} else {
-+			/* map responses to better errors? */
-+			return be16_to_cpu(resp->result) == VIRTIO_RPMB_RES_OK ? 0 : -EIO;
-+		}
-+	}
-+
-+	/* Something must have failed at this point. */
-+	return len < 0 ? -EIO : 0;
-+}
-+
-+static int rpmb_virtio_get_capacity(struct device *dev, u8 target)
-+{
-+	struct virtio_rpmb_info *vi = dev_get_drvdata(dev);
-+	struct virtio_device *vdev = vi->vdev;
-+
-+	u8 capacity;
-+
-+	virtio_cread(vdev, struct virtio_rpmb_config, capacity, &capacity);
-+
-+	if (capacity > 0x80) {
-+		dev_err(&vdev->dev, "Error: invalid capacity reported.\n");
-+		capacity = 0x80;
-+	}
-+
-+	return capacity;
-+}
-+
-+static int rpmb_virtio_get_write_count(struct device *dev, u8 target,
-+				       int len, u8 *req, int rlen, u8 *resp)
-+
-+{
-+	struct virtio_rpmb_info *vi = dev_get_drvdata(dev);
-+	struct virtio_rpmb_frame *request = (struct virtio_rpmb_frame *) req;
-+	struct virtio_rpmb_frame *response = (struct virtio_rpmb_frame *) resp;
-+	struct scatterlist out_frame;
-+	struct scatterlist in_frame;
-+	struct scatterlist *sgs[2];
-+	unsigned int received;
-+
-+	if (!len || len != VIRTIO_RPMB_FRAME_SZ || !request)
-+		return -EINVAL;
-+
-+	if (!rlen || rlen != VIRTIO_RPMB_FRAME_SZ || !resp)
-+		return -EINVAL;
-+
-+	if (be16_to_cpu(request->req_resp) != VIRTIO_RPMB_REQ_GET_WRITE_COUNTER)
-+		return -EINVAL;
-+
-+	/* Wrap into SG array */
-+	sg_init_one(&out_frame, request, VIRTIO_RPMB_FRAME_SZ);
-+	sg_init_one(&in_frame, response, VIRTIO_RPMB_FRAME_SZ);
-+	sgs[0] = &out_frame;
-+	sgs[1] = &in_frame;
-+
-+	/* Send it, blocks until response */
-+	received = do_virtio_transaction(dev, vi, sgs, 1, 1);
-+
-+	if (received != VIRTIO_RPMB_FRAME_SZ)
-+		return -EPROTO;
-+
-+	if (be16_to_cpu(response->req_resp) != VIRTIO_RPMB_RESP_GET_COUNTER) {
-+		dev_err(dev, "failed to get counter (%x/%x)",
-+			be16_to_cpu(response->req_resp), be16_to_cpu(response->result));
-+		return -EPROTO;
-+	}
-+
-+	return be16_to_cpu(response->result) == VIRTIO_RPMB_RES_OK ?
-+		be32_to_cpu(response->write_counter) : -EIO;
-+}
-+
-+static int rpmb_virtio_write_blocks(struct device *dev, u8 target,
-+				    int len, u8 *req, int rlen, u8 *resp)
-+{
-+	struct virtio_rpmb_info *vi = dev_get_drvdata(dev);
-+	struct virtio_rpmb_frame *request = (struct virtio_rpmb_frame *) req;
-+	struct virtio_rpmb_frame *response = (struct virtio_rpmb_frame *) resp;
-+	struct scatterlist out_frame;
-+	struct scatterlist in_frame;
-+	struct scatterlist *sgs[2];
-+	int blocks, data_len, received;
-+
-+	if (!len || (len % VIRTIO_RPMB_FRAME_SZ) != 0 || !request)
-+		return -EINVAL;
-+
-+	/* The first frame will contain the details of the request */
-+	if (be16_to_cpu(request->req_resp) != VIRTIO_RPMB_REQ_DATA_WRITE)
-+		return -EINVAL;
-+
-+	blocks = be16_to_cpu(request->block_count);
-+	if (blocks > vi->max_wr)
-+		return -EINVAL;
-+
-+	/*
-+	 * We either have exactly enough frames to write all the data
-+	 * or we have that plus a frame looking for a response.
-+	 */
-+	data_len = blocks * VIRTIO_RPMB_FRAME_SZ;
-+
-+	if (len == data_len + VIRTIO_RPMB_FRAME_SZ) {
-+		struct virtio_rpmb_frame *reply = &request[blocks];
-+
-+		if (be16_to_cpu(reply->req_resp) != VIRTIO_RPMB_REQ_RESULT_READ)
-+			return -EINVAL;
-+
-+		if (!rlen || rlen != VIRTIO_RPMB_FRAME_SZ || !resp)
-+			return -EINVAL;
-+	} else if (len > data_len) {
-+		return -E2BIG;
-+	} else if (len < data_len) {
-+		return -ENOSPC;
-+	} else if (rlen || resp) {
-+		return -EINVAL;
-+	}
-+
-+	/* time to do the transaction */
-+	sg_init_one(&out_frame, request, len);
-+	sgs[0] = &out_frame;
-+
-+	/* optional incoming frame */
-+	if (rlen && resp) {
-+		sg_init_one(&in_frame, resp, VIRTIO_RPMB_FRAME_SZ);
-+		sgs[1] = &in_frame;
-+	}
-+
-+	received = do_virtio_transaction(dev, vi, sgs, 1, resp ? 1 : 0);
-+
-+	if (response && received != VIRTIO_RPMB_FRAME_SZ)
-+		return -EPROTO;
-+
-+	if (response && be16_to_cpu(response->req_resp) != VIRTIO_RPMB_RESP_DATA_WRITE) {
-+		dev_err(dev, "didn't get a response result (%x/%x)",
-+			be16_to_cpu(response->req_resp), be16_to_cpu(response->result));
-+		return -EPROTO;
-+	}
-+
-+	return be16_to_cpu(response->result) == VIRTIO_RPMB_RES_OK ? 0 : -EIO;
-+}
-+
-+/**
-+ * rpmb_virtio_read_blocks(): read blocks of data
-+ * @dev: device handle
-+ * @target: target region (unused for VirtIO devices)
-+ * @addr: block address to start reading from
-+ * @count: number of blocks to read
-+ * @len: length of receiving buffer
-+ * @data: receiving buffer
-+ *
-+ * Read a number of blocks from RPMB device. As there is no
-+ * authentication required to read data we construct the outgoing
-+ * frame in this driver.
-+ *
-+ * Returns success/fail with errno and filling in the buffer pointed
-+ * to by @data.
-+ */
-+static int rpmb_virtio_read_blocks(struct device *dev, u8 target,
-+				   int addr, int count, int len, u8 *data)
-+{
-+	struct virtio_rpmb_info *vi = dev_get_drvdata(dev);
-+	struct virtio_rpmb_frame *request;
-+	struct virtio_rpmb_frame *response = (struct virtio_rpmb_frame *) data;
-+	struct scatterlist out_frame;
-+	struct scatterlist in_frame;
-+	struct scatterlist *sgs[2];
-+	int computed_len = count * VIRTIO_RPMB_FRAME_SZ;
-+	int received;
-+
-+	if (!count || !data)
-+		return -EINVAL;
-+
-+	if (addr + count > vi->capacity)
-+		return -ESPIPE;
-+
-+	if (count > vi->max_rd)
-+		return -EINVAL;
-+
-+	/* EMSGSIZE? */
-+	if (len < computed_len)
-+		return -EFBIG;
-+
-+	/*
-+	 * With the basics done we can construct our request.
-+	 */
-+	request = kmalloc(VIRTIO_RPMB_FRAME_SZ, GFP_KERNEL);
-+	if (!request)
-+		return -ENOMEM;
-+
-+	request->req_resp = cpu_to_be16(VIRTIO_RPMB_REQ_DATA_READ);
-+	request->block_count = cpu_to_be16(count);
-+	request->address = cpu_to_be16(addr);
-+
-+	/* time to do the transaction */
-+	sg_init_one(&out_frame, request, sizeof(*request));
-+	sgs[0] = &out_frame;
-+	sg_init_one(&in_frame, data, len);
-+	sgs[1] = &in_frame;
-+
-+	received = do_virtio_transaction(dev, vi, sgs, 1, 1);
-+
-+	kfree(request);
-+
-+	if (received != computed_len)
-+		return -EPROTO;
-+
-+	if (be16_to_cpu(response->req_resp) != VIRTIO_RPMB_RESP_DATA_READ) {
-+		dev_err(dev, "didn't get a response result (%x/%x)",
-+			be16_to_cpu(response->req_resp), be16_to_cpu(response->result));
-+		return -EPROTO;
-+	}
-+
-+	return be16_to_cpu(response->result) == VIRTIO_RPMB_RES_OK ? 0 : -EIO;
-+}
-+
-+static struct rpmb_ops rpmb_virtio_ops = {
-+	.program_key = rpmb_virtio_program_key,
-+	.get_capacity = rpmb_virtio_get_capacity,
-+	.get_write_count = rpmb_virtio_get_write_count,
-+	.write_blocks = rpmb_virtio_write_blocks,
-+	.read_blocks = rpmb_virtio_read_blocks,
-+};
-+
-+static int rpmb_virtio_dev_init(struct virtio_rpmb_info *vi)
-+{
-+	struct virtio_device *vdev = vi->vdev;
-+	/* XXX this seems very roundabout */
-+	struct device *dev = &vi->vq->vdev->dev;
-+	int ret = 0;
-+
-+	virtio_cread(vdev, struct virtio_rpmb_config,
-+		     max_wr_cnt, &vi->max_wr);
-+	virtio_cread(vdev, struct virtio_rpmb_config,
-+		     max_rd_cnt, &vi->max_rd);
-+	virtio_cread(vdev, struct virtio_rpmb_config,
-+		     capacity, &vi->capacity);
-+
-+	rpmb_virtio_ops.dev_id_len = strlen(id);
-+	rpmb_virtio_ops.dev_id = id;
-+	rpmb_virtio_ops.wr_cnt_max = vi->max_wr;
-+	rpmb_virtio_ops.rd_cnt_max = vi->max_rd;
-+	rpmb_virtio_ops.block_size = 1;
-+
-+	vi->rdev = rpmb_dev_register(dev, 0, &rpmb_virtio_ops);
-+	if (IS_ERR(vi->rdev)) {
-+		ret = PTR_ERR(vi->rdev);
-+		goto err;
-+	}
-+
-+	dev_set_drvdata(dev, vi);
-+err:
-+	return ret;
-+}
-+
-+static int virtio_rpmb_init(struct virtio_device *vdev)
-+{
++	struct rpmb_dev *rdev;
++	int id;
 +	int ret;
-+	struct virtio_rpmb_info *vi;
 +
-+	vi = kzalloc(sizeof(*vi), GFP_KERNEL);
-+	if (!vi)
-+		return -ENOMEM;
++	if (!dev || !ops)
++		return ERR_PTR(-EINVAL);
 +
-+	init_waitqueue_head(&vi->have_data);
-+	mutex_init(&vi->lock);
++	if (!ops->program_key)
++		return ERR_PTR(-EINVAL);
 +
-+	/* link virtio_rpmb_info to virtio_device */
-+	vdev->priv = vi;
-+	vi->vdev = vdev;
++	if (!ops->get_capacity)
++		return ERR_PTR(-EINVAL);
 +
-+	/* We expect a single virtqueue. */
-+	vi->vq = virtio_find_single_vq(vdev, virtio_rpmb_recv_done, "request");
-+	if (IS_ERR(vi->vq)) {
-+		dev_err(&vdev->dev, "get single vq failed!\n");
-+		ret = PTR_ERR(vi->vq);
-+		goto err;
++	if (!ops->get_write_count)
++		return ERR_PTR(-EINVAL);
++
++	if (!ops->write_blocks)
++		return ERR_PTR(-EINVAL);
++
++	if (!ops->read_blocks)
++		return ERR_PTR(-EINVAL);
++
++	rdev = kzalloc(sizeof(*rdev), GFP_KERNEL);
++	if (!rdev)
++		return ERR_PTR(-ENOMEM);
++
++	id = ida_simple_get(&rpmb_ida, 0, 0, GFP_KERNEL);
++	if (id < 0) {
++		ret = id;
++		goto exit;
 +	}
 +
-+	/* create vrpmb device. */
-+	ret = rpmb_virtio_dev_init(vi);
-+	if (ret) {
-+		dev_err(&vdev->dev, "create vrpmb device failed.\n");
-+		goto err;
-+	}
++	mutex_init(&rdev->lock);
++	rdev->ops = ops;
++	rdev->id = id;
++	rdev->target = target;
 +
-+	dev_info(&vdev->dev, "init done!\n");
++	dev_set_name(&rdev->dev, "rpmb%d", id);
++	rdev->dev.class = &rpmb_class;
++	rdev->dev.parent = dev;
 +
-+	return 0;
++	rpmb_cdev_prepare(rdev);
 +
-+err:
-+	kfree(vi);
-+	return ret;
++	ret = device_register(&rdev->dev);
++	if (ret)
++		goto exit;
++
++	dev_dbg(&rdev->dev, "registered device\n");
++
++	return rdev;
++
++exit:
++	if (id >= 0)
++		ida_simple_remove(&rpmb_ida, id);
++	kfree(rdev);
++	return ERR_PTR(ret);
 +}
++EXPORT_SYMBOL_GPL(rpmb_dev_register);
 +
-+static void virtio_rpmb_remove(struct virtio_device *vdev)
++static int __init rpmb_init(void)
 +{
-+	struct virtio_rpmb_info *vi;
-+
-+	vi = vdev->priv;
-+	if (!vi)
-+		return;
-+
-+	if (wq_has_sleeper(&vi->have_data))
-+		wake_up(&vi->have_data);
-+
-+	rpmb_dev_unregister(vi->rdev);
-+
-+	if (vdev->config->reset)
-+		vdev->config->reset(vdev);
-+
-+	if (vdev->config->del_vqs)
-+		vdev->config->del_vqs(vdev);
-+
-+	kfree(vi);
-+}
-+
-+static int virtio_rpmb_probe(struct virtio_device *vdev)
-+{
-+	return virtio_rpmb_init(vdev);
-+}
-+
-+#ifdef CONFIG_PM_SLEEP
-+static int virtio_rpmb_freeze(struct virtio_device *vdev)
-+{
-+	virtio_rpmb_remove(vdev);
++	ida_init(&rpmb_ida);
++	class_register(&rpmb_class);
 +	return 0;
 +}
 +
-+static int virtio_rpmb_restore(struct virtio_device *vdev)
++static void __exit rpmb_exit(void)
 +{
-+	return virtio_rpmb_init(vdev);
++	class_unregister(&rpmb_class);
++	ida_destroy(&rpmb_ida);
 +}
-+#endif
 +
-+static struct virtio_device_id id_table[] = {
-+	{ VIRTIO_ID_RPMB, VIRTIO_DEV_ANY_ID },
-+	{ 0 },
-+};
++subsys_initcall(rpmb_init);
++module_exit(rpmb_exit);
 +
-+static struct virtio_driver virtio_rpmb_driver = {
-+	.driver.name =	KBUILD_MODNAME,
-+	.driver.owner =	THIS_MODULE,
-+	.id_table =	id_table,
-+	.probe =	virtio_rpmb_probe,
-+	.remove =	virtio_rpmb_remove,
-+#ifdef CONFIG_PM_SLEEP
-+	.freeze =	virtio_rpmb_freeze,
-+	.restore =	virtio_rpmb_restore,
-+#endif
-+};
-+
-+module_virtio_driver(virtio_rpmb_driver);
-+MODULE_DEVICE_TABLE(virtio, id_table);
-+
-+MODULE_DESCRIPTION("Virtio rpmb frontend driver");
 +MODULE_AUTHOR("Intel Corporation");
-+MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/include/uapi/linux/virtio_rpmb.h b/include/uapi/linux/virtio_rpmb.h
++MODULE_DESCRIPTION("RPMB class");
++MODULE_LICENSE("GPL v2");
+diff --git a/include/linux/rpmb.h b/include/linux/rpmb.h
 new file mode 100644
-index 000000000000..f048cd968210
+index 000000000000..4ed5e299623e
 --- /dev/null
-+++ b/include/uapi/linux/virtio_rpmb.h
-@@ -0,0 +1,54 @@
-+/* SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR BSD-3-Clause) */
-+
-+#ifndef _UAPI_LINUX_VIRTIO_RPMB_H
-+#define _UAPI_LINUX_VIRTIO_RPMB_H
++++ b/include/linux/rpmb.h
+@@ -0,0 +1,172 @@
++/* SPDX-License-Identifier: BSD-3-Clause OR GPL-2.0 */
++/*
++ * Copyright (C) 2015-2019 Intel Corp. All rights reserved
++ * Copyright (C) 2021-2022 Linaro Ltd
++ */
++#ifndef __RPMB_H__
++#define __RPMB_H__
 +
 +#include <linux/types.h>
-+#include <linux/virtio_ids.h>
-+#include <linux/virtio_config.h>
-+#include <linux/virtio_types.h>
++#include <linux/device.h>
++#include <linux/kref.h>
 +
-+struct virtio_rpmb_config {
-+	__u8 capacity;
-+	__u8 max_wr_cnt;
-+	__u8 max_rd_cnt;
-+} __attribute__((packed));
++/**
++ * struct rpmb_ops - RPMB ops to be implemented by underlying block device
++ *
++ * @program_key    : program device key (once only op).
++ * @get_capacity   : rpmb size in 128K units in for region/target.
++ * @get_write_count: return the device write counter
++ * @write_blocks   : write blocks to RPMB device
++ * @read_blocks    : read blocks from RPMB device
++ * @block_size     : block size in half sectors (1 == 256B)
++ * @wr_cnt_max     : maximal number of blocks that can be
++ *                   written in one access.
++ * @rd_cnt_max     : maximal number of blocks that can be
++ *                   read in one access.
++ * @dev_id         : unique device identifier
++ * @dev_id_len     : unique device identifier length
++ */
++struct rpmb_ops {
++	int (*program_key)(struct device *dev, u8 target,
++			   int keylen, u8 *key_frame,
++			   int rlen, u8 *resp);
++	int (*get_capacity)(struct device *dev, u8 target);
++	int (*get_write_count)(struct device *dev, u8 target,
++			       int len, u8 *requests,
++			       int rlen, u8 *resp);
++	int (*write_blocks)(struct device *dev, u8 target,
++			    int len, u8 *requests,
++			    int rlen, u8 *resp);
++	int (*read_blocks)(struct device *dev, u8 target,
++			   int addr, int count,
++			   int len, u8 *data);
++	u16 block_size;
++	u16 wr_cnt_max;
++	u16 rd_cnt_max;
++	const u8 *dev_id;
++	size_t dev_id_len;
++};
 +
-+/* RPMB Request Types (in .req_resp) */
-+#define VIRTIO_RPMB_REQ_PROGRAM_KEY        0x0001
-+#define VIRTIO_RPMB_REQ_GET_WRITE_COUNTER  0x0002
-+#define VIRTIO_RPMB_REQ_DATA_WRITE         0x0003
-+#define VIRTIO_RPMB_REQ_DATA_READ          0x0004
-+#define VIRTIO_RPMB_REQ_RESULT_READ        0x0005
++/**
++ * struct rpmb_dev - device which can support RPMB partition
++ *
++ * @lock       : the device lock
++ * @dev        : device
++ * @id         : device id
++ * @target     : RPMB target/region within the physical device
++ * @ops        : operation exported by rpmb
++ */
++struct rpmb_dev {
++	struct mutex lock; /* device serialization lock */
++	struct device dev;
++	int id;
++	u8 target;
++	const struct rpmb_ops *ops;
++};
 +
-+/* RPMB Response Types (in .req_resp) */
-+#define VIRTIO_RPMB_RESP_PROGRAM_KEY       0x0100
-+#define VIRTIO_RPMB_RESP_GET_COUNTER       0x0200
-+#define VIRTIO_RPMB_RESP_DATA_WRITE        0x0300
-+#define VIRTIO_RPMB_RESP_DATA_READ         0x0400
++#define to_rpmb_dev(x) container_of((x), struct rpmb_dev, dev)
 +
-+struct virtio_rpmb_frame {
-+	__u8 stuff[196];
-+	__u8 key_mac[32];
-+	__u8 data[256];
-+	__u8 nonce[16];
-+	__be32 write_counter;
-+	__be16 address;
-+	__be16 block_count;
-+	__be16 result;
-+	__be16 req_resp;
-+} __attribute__((packed));
++#if IS_ENABLED(CONFIG_RPMB)
++struct rpmb_dev *rpmb_dev_get(struct rpmb_dev *rdev);
++void rpmb_dev_put(struct rpmb_dev *rdev);
++struct rpmb_dev *rpmb_dev_find_by_device(struct device *parent, u8 target);
++struct rpmb_dev *rpmb_dev_get_by_type(u32 type);
++struct rpmb_dev *rpmb_dev_register(struct device *dev, u8 target,
++				   const struct rpmb_ops *ops);
++void *rpmb_dev_get_drvdata(const struct rpmb_dev *rdev);
++void rpmb_dev_set_drvdata(struct rpmb_dev *rdev, void *data);
++int rpmb_dev_unregister(struct rpmb_dev *rdev);
++int rpmb_dev_unregister_by_device(struct device *dev, u8 target);
 +
-+/* RPMB Operation Results (in .result) */
-+#define VIRTIO_RPMB_RES_OK                     0x0000
-+#define VIRTIO_RPMB_RES_GENERAL_FAILURE        0x0001
-+#define VIRTIO_RPMB_RES_AUTH_FAILURE           0x0002
-+#define VIRTIO_RPMB_RES_COUNT_FAILURE          0x0003
-+#define VIRTIO_RPMB_RES_ADDR_FAILURE           0x0004
-+#define VIRTIO_RPMB_RES_WRITE_FAILURE          0x0005
-+#define VIRTIO_RPMB_RES_READ_FAILURE           0x0006
-+#define VIRTIO_RPMB_RES_NO_AUTH_KEY            0x0007
-+#define VIRTIO_RPMB_RES_WRITE_COUNTER_EXPIRED  0x0080
++int rpmb_program_key(struct rpmb_dev *rdev,
++		     int klen, u8 *key, int rlen, u8 *resp);
++int rpmb_get_capacity(struct rpmb_dev *rdev);
++int rpmb_get_write_count(struct rpmb_dev *rdev,
++			 int len, u8 *request, int rlen, u8 *resp);
++int rpmb_write_blocks(struct rpmb_dev *rdev,
++		      int len, u8 *request, int rlen, u8 *resp);
++int rpmb_read_blocks(struct rpmb_dev *rdev, int addr, int count, int len, u8 *data);
 +
++#else
++static inline struct rpmb_dev *rpmb_dev_get(struct rpmb_dev *rdev)
++{
++	return NULL;
++}
 +
-+#endif /* _UAPI_LINUX_VIRTIO_RPMB_H */
++static inline void rpmb_dev_put(struct rpmb_dev *rdev) { }
++
++static inline struct rpmb_dev *rpmb_dev_find_by_device(struct device *parent,
++						       u8 target)
++{
++	return NULL;
++}
++
++static inline
++struct rpmb_dev *rpmb_dev_get_by_type(enum rpmb_type type)
++{
++	return NULL;
++}
++
++static inline void *rpmb_dev_get_drvdata(const struct rpmb_dev *rdev)
++{
++	return NULL;
++}
++
++static inline void rpmb_dev_set_drvdata(struct rpmb_dev *rdev, void *data)
++{
++}
++
++static inline struct rpmb_dev *
++rpmb_dev_register(struct device *dev, u8 target, const struct rpmb_ops *ops)
++{
++	return NULL;
++}
++
++static inline int rpmb_dev_unregister(struct rpmb_dev *dev)
++{
++	return 0;
++}
++
++static inline int rpmb_dev_unregister_by_device(struct device *dev, u8 target)
++{
++	return 0;
++}
++
++static inline int rpmb_program_key(struct rpmb_dev *rdev,
++				   int klen, u8 *key,
++				   int rlen, u8 *resp)
++{
++	return 0;
++}
++
++static inline rpmb_set_key(struct rpmb_dev *rdev, u8 *key, int keylen);
++{
++	return 0;
++}
++
++static inline int rpmb_get_capacity(struct rpmb_dev *rdev)
++{
++	return 0;
++}
++
++static inline int rpmb_get_write_count(struct rpmb_dev *rdev,
++				       int len, u8 *request, int rlen, u8 *resp)
++{
++	return 0;
++}
++
++static inline int rpmb_write_blocks(struct rpmb_dev *rdev,
++				    int len, u8 *request, int rlen, u8 *resp);
++{
++	return 0;
++}
++
++static inline int rpmb_read_blocks(struct rpmb_dev *rdev, int addr, int count,
++				   int len, u8 *data)
++{
++	return 0;
++}
++
++#endif /* CONFIG_RPMB */
++
++#endif /* __RPMB_H__ */
 -- 
 2.30.2
 
