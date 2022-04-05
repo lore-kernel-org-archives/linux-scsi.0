@@ -2,117 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9304FC35273
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Apr 2022 14:44:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F1F1C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Apr 2022 14:44:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235946AbiDEOp7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Apr 2022 10:45:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39078 "EHLO
+        id S236425AbiDEOq2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Apr 2022 10:46:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1386697AbiDEM57 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 08:57:59 -0400
-Received: from mail-ot1-x335.google.com (mail-ot1-x335.google.com [IPv6:2607:f8b0:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37BF7E016
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 05:00:21 -0700 (PDT)
-Received: by mail-ot1-x335.google.com with SMTP id w17-20020a056830111100b005b22c584b93so9205826otq.11
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Apr 2022 05:00:21 -0700 (PDT)
+        with ESMTP id S1381371AbiDEMya (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 08:54:30 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCDE529C87
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 04:56:21 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id l4-20020a17090a49c400b001c6840df4a3so2436190pjm.0
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Apr 2022 04:56:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=GZmptuVcEl6rJbko6LslAzaCkC4tvBom6Ljg9kqmBYU=;
-        b=XitBR8NtSM0t2W4Bdo0+YDcSNZFot6b4RBSNawsz1rNf0pr3+bc9ELnt3t7Z/6J4AM
-         ui3FcPja/pgfFXGOHx1VFcjCw+FTeGWtuEQpYs+FCo5F48Z6evKzRMfHTZDk4xJTnsZK
-         NiXdtvOlzhao1NVNkjJwFEHtPOpuK/wn3szp0=
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=rB3mfWCJFTHJgC52MHcnxjqxJyvS12JNoVaMNTlk/OI=;
+        b=YloC9xnHxjrIvTeJ6Mq7BsQxSsF9oDbLlAHliuJVpzG9djwQBDb3rr4x3dLq5xOzqJ
+         bQM5/xxy3PM3vKpZSmOuEdYs9mov90WZMsItqLz2E/KMFNE1EhYu5apjheNfVFZgg8gK
+         FrBMX3L3ADlQyHHnoRsTEQbEQp0U3/Z3+1hTo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=GZmptuVcEl6rJbko6LslAzaCkC4tvBom6Ljg9kqmBYU=;
-        b=l0XEj5mrwe2Ne/Q334tngtIrO8i67mYGoR0pdetuygDtj5+OFsRg9m0AFObSapiHQJ
-         +N/AZ/lNcLd/5YdsoxEDWHFgCIPYUfq0F6CRxdrJiMHtAsEgowXyVI4pCFMVYjLPDQ7u
-         qHeX+k/sXFi8yC1PVUQf+kMlA7IFTBKF4iALiml8d0L/hXNGtxf5sdU8nC/M5+BBH2nI
-         vAnH0HyoCXBtjHWg+TEMy1pKsn9AmnE7zr0u+BySJxq3VBAK0lP6OV/NdAZfS922j75U
-         WHiq/dNcDlJskCSbXDp+lwh7NTfgRyCmEwo2wMic6Srlmrp878DG7GJ82zL04uYvGR1W
-         9c/g==
-X-Gm-Message-State: AOAM530PaFp6cvTI9yYiLreszKHqC33VHyFkvImimKwRWHOLoTjGv0bU
-        xylhltC5gZvL1ojCDwpxhQJA0eif8e+7v8cIzo4P/g==
-X-Google-Smtp-Source: ABdhPJwC71Dak07XHgh+coqILPD+OLIEO1KeU3/wIHHVpWie9sBcnr/rRHo8Y+JdjMLsSawBFETgE4I5M8mizP8Iuts=
-X-Received: by 2002:a9d:4d12:0:b0:5c9:4997:452c with SMTP id
- n18-20020a9d4d12000000b005c94997452cmr1023014otf.127.1649160020321; Tue, 05
- Apr 2022 05:00:20 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220404050041.594774-1-damien.lemoal@opensource.wdc.com>
-In-Reply-To: <20220404050041.594774-1-damien.lemoal@opensource.wdc.com>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=rB3mfWCJFTHJgC52MHcnxjqxJyvS12JNoVaMNTlk/OI=;
+        b=ptOA2zhEbK4tb9+O2E6FnfyojIL0IAhBveiGyA2haIzo9epimooYVRtRrixYVTPZ1N
+         uUe2MKFLe9YstG/4PIlX23V+9C49R3sYo7WAXBU2cb03L0gP4mDStrUGeOtaF4WNq0GZ
+         GqgAVHHUc96t94kkXfxnJVEEkAgmkKhGWTw6HKVYJuYdpt/jqlboUL2earm9Ahl48fdK
+         jNHYWY1tEo5pzY7J+x23wbvsZnxlJuquHioV3m24Udn30VALeBlRzmQLuTmsYMxtDqTJ
+         I2aRer8S4HqZDL45OyZwjzaNiTorVYxDev9q0+Lj2fHO7xOUyCz/Je68do7XmHbPW+HX
+         U/kg==
+X-Gm-Message-State: AOAM531gTLP7SmMvNecA0NvcngXmbAMlynBNFEPwr8mEKS5PqXyZuxGa
+        1h8VGf2A7UfoCp22Hpha6qOVt1kZlDK1T40bCw3+dixL/Kk5nS7mGPdkfxiKi7INSTYkuG5Fdt5
+        KPckOl0/vNMkiVthfuIrZMnPtw7m0wF5HilQrRUqRnPXPQAnpJLTOkMf9imanFcL44Y4/VG/Etx
+        sJ7rHu9BukkaU=
+X-Google-Smtp-Source: ABdhPJy16Wt0x/Fyl7WhauHFwsHGGDnjKrBLwOv3/m2NCeBWBAO5fi37isw4QiSp5QLUWGOlDv+Rpw==
+X-Received: by 2002:a17:90b:4c12:b0:1c6:f450:729d with SMTP id na18-20020a17090b4c1200b001c6f450729dmr3774546pjb.190.1649159780939;
+        Tue, 05 Apr 2022 04:56:20 -0700 (PDT)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id f19-20020a056a00229300b004fb157f136asm16143757pfe.153.2022.04.05.04.56.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Apr 2022 04:56:20 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date:   Tue, 5 Apr 2022 17:30:09 +0530
-Message-ID: <CAK=zhgoTSBkxgfFM8tObVHkc5WfhhxFFcoBpUEw_53XoadGhNQ@mail.gmail.com>
-Subject: Re: [PATCH] scsi: mpt3sas: Fix mpt3sas_check_same_4gb_region() kdoc comment
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: Fail reset operation if config request timedout
+Date:   Tue,  5 Apr 2022 17:36:37 +0530
+Message-Id: <20220405120637.20528-1-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 2.27.0
+MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000003512de05dbe6fd88"
+        boundary="000000000000f211bc05dbe6ee9a"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000003512de05dbe6fd88
-Content-Type: text/plain; charset="UTF-8"
+--000000000000f211bc05dbe6ee9a
+Content-Transfer-Encoding: 8bit
 
-On Mon, Apr 4, 2022 at 10:30 AM 'Damien Le Moal' via
-PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com> wrote:
->
-> The start_addres argument of mpt3sas_check_same_4gb_region() was
-> misnamed in the function kdoc comment, resulting in the following
-> warning when compiling with W=1.
->
-> drivers/scsi/mpt3sas/mpt3sas_base.c:5728: warning: Function parameter or
-> member 'start_address' not described in 'mpt3sas_check_same_4gb_region'
-> drivers/scsi/mpt3sas/mpt3sas_base.c:5728: warning: Excess function
-> parameter 'reply_pool_start_address' description in
-> 'mpt3sas_check_same_4gb_region'
->
-> Fix the argument name in the function kdoc comment to avoid it. While at
-> it, remove a useless blank line between the kdoc and function code.
+As part of controller reset operation, driver issues a
+config request commands. If this command gets timed out
+then fail the controller reset operation instead of
+retrying it.
 
-Thanks for the patch.
-Ack-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_config.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
->
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index b57f1803371e..538d2c0cd971 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -5716,13 +5716,12 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
->  /**
->   * mpt3sas_check_same_4gb_region - checks whether all reply queues in a set are
->   *     having same upper 32bits in their base memory address.
-> - * @reply_pool_start_address: Base address of a reply queue set
-> + * @start_address: Base address of a reply queue set
->   * @pool_sz: Size of single Reply Descriptor Post Queues pool size
->   *
->   * Return: 1 if reply queues in a set have a same upper 32bits in their base
->   * memory address, else 0.
->   */
-> -
->  static int
->  mpt3sas_check_same_4gb_region(dma_addr_t start_address, u32 pool_sz)
->  {
-> --
-> 2.35.1
->
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+index 0563078..a8dd14c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_config.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+@@ -394,10 +394,13 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+ 		retry_count++;
+ 		if (ioc->config_cmds.smid == smid)
+ 			mpt3sas_base_free_smid(ioc, smid);
+-		if ((ioc->shost_recovery) || (ioc->config_cmds.status &
+-		    MPT3_CMD_RESET) || ioc->pci_error_recovery)
++		if (ioc->config_cmds.status & MPT3_CMD_RESET)
+ 			goto retry_config;
+-		issue_host_reset = 1;
++		if (ioc->shost_recovery || ioc->pci_error_recovery) {
++			issue_host_reset = 0;
++			r = -EFAULT;
++		} else
++			issue_host_reset = 1;
+ 		goto free_mem;
+ 	}
+ 
+-- 
+2.27.0
 
---0000000000003512de05dbe6fd88
+
+--000000000000f211bc05dbe6ee9a
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -183,13 +168,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIG6Nfa+xGiXVS/iUvZzd
-yFWWC0qSJNaIO/NmVFPATVsxMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDQwNTEyMDAyMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILxBHYvV5w7F3OFinBfR
+bNKnWxQfgGffQiiE2Ha+UXHrMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDQwNTExNTYyMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDAWCbd5zRalyySAENL9Hi4ydmrjv16dRpDekcN
-/OR8DeuLUJKosnDI1VJk2klhW2fqUXemodwUxY7IKHglJ7lSU6xcFsF4hLR1928Q+8vSzeVrv84I
-K73ZcSvCiGBqnfARsavEq6086ifWLLNUseOLQBHmc+2DS4VoyAMVi2uCRHjCPRcy9EZuHP5IaJKu
-6/FR9+thAIB71d9uRRITUDXPnLxkN+Riy0fF/qxeFo445+1J+uFJKHK20IuN8LSRguLxY+wHps+A
-iG+w+53D0esEScyUWmzVDZGAZWqMdoLr1XngBpRErYR9eUL6d2QC9Pa8GR3t5cIGT/Y2q0jRKHiU
---0000000000003512de05dbe6fd88--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBnuPHaZR52DrcXtW0AC/x9h32vAmWnWwPE4QO4
+qZcUjIbFa4OUci8IfGAAc+pkJ6/ogooaFWgSTzpFBT3mmLeKdljmvKRKr+BCZeEYUYjAd+gxbWQr
++fXoWKbjJnmGTIysw+41cM71AAu2ASw0a/9rF00LiC5+3Hz3sEG5srZwk2cDvO/5Rnqp73eyNQkE
+hBbNf/d3HU18M7Sva6SENYoGzgKyA4a9it1/5XqIJ7P9OIxALjziM7ytojVvdMTmqczxmJwrdSuX
+uSHKW/usu761gEf8Ki3xFGjg0pJsLEIoYrCOAuAdJh6a/g4TCv9HXLZC7lQ97vXMPuViuYtsHlkg
+--000000000000f211bc05dbe6ee9a--
