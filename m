@@ -2,104 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A03C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 01:13:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78B19C43217
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 05:42:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354781AbiDFBIC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Apr 2022 21:08:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34334 "EHLO
+        id S241974AbiDFFna (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Apr 2022 01:43:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1458020AbiDERFV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 13:05:21 -0400
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E5099969E;
-        Tue,  5 Apr 2022 10:03:22 -0700 (PDT)
-Received: by mail-ej1-x62e.google.com with SMTP id ot30so18069581ejb.12;
-        Tue, 05 Apr 2022 10:03:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :content-transfer-encoding:user-agent:mime-version;
-        bh=FdSCliDZ7y34gZ+1XXQqplq5BHBXI8/zjaKCt3n8WuY=;
-        b=ENTS4odAznIeIHoHtSEu1ZKMCfX2DpQLnUpz2y0sl+WRpZMOLqgow6YaWv7vFm/sbL
-         5EFeM47ie6KhM41GyHOuX+697NJqRL4tBfij+Sr7UzQWX1gX+Curkmco1gop1cQwlxLd
-         OvyUg8aTb5wiLCJBBt6ouWI4DRkJ6kQ9VaVp4jL2M3TJ6EVU4sWJE2wh1CfIIkD8Rd+z
-         xNeo7kn43fkN3gGJD/Fy949N4B+ambl+CFUASPW0ekG/g+jGhuLaLOpm+98dCoVxSblN
-         ZIIyBgAwq94xgF7EKjxE2SlgOAM2ZvgB2I2AUAM5qByzxUckonQlN8N7Sp4VyNZvprQo
-         jjzw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:content-transfer-encoding:user-agent:mime-version;
-        bh=FdSCliDZ7y34gZ+1XXQqplq5BHBXI8/zjaKCt3n8WuY=;
-        b=OaH0y7NzkhNrK9iYye2dF/5J96VNUoo5NoodKXb3BavQZuaZq4zpaLvukUEwKXxsOw
-         vvRC3KEdoqqWyn70U47ArUFPD6ZFEtfp0qG7z7cb8RamWeUPyhrDWibv33fQEGpQjevn
-         UvQ7x+WSMGPS6wvkFyW1FbFC4GwEOiE4/A6wgLHgTRp4USzhMRcAuiDMdn3moEAPWspP
-         SwsXgT5Qq1qNSOXejhMFpQP1uYekb32aV6dcscN0jKAM8WFfCBvPLSFZIFuSZk3wA98D
-         rqhYGgAWKphcr1/RJWtbT9FdmMchdDykmDgjt710mQAt9OwQG1k8KngLPRXtOnRRVpny
-         0d4A==
-X-Gm-Message-State: AOAM533FcshzqzYaxaOUrO0z1i/SJo4nWypszIduFgzCIVZM5l70dXVt
-        iiDS9jGvkQiXtPa7Dmmqq9o=
-X-Google-Smtp-Source: ABdhPJyeGeuae0b4tOgaXYZ/f7Hp7bTVMfkFRf4fWcB3qvU4PwQHV0bxr3esnA33saHL5j4dayu6OA==
-X-Received: by 2002:a17:907:9805:b0:6db:4c33:7883 with SMTP id ji5-20020a170907980500b006db4c337883mr4581508ejc.555.1649178200980;
-        Tue, 05 Apr 2022 10:03:20 -0700 (PDT)
-Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
-        by smtp.googlemail.com with ESMTPSA id w9-20020a50d989000000b0041cc3b9b43asm3839271edj.30.2022.04.05.10.03.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Apr 2022 10:03:20 -0700 (PDT)
-Message-ID: <aeb64d1c4bbddfd8463c07a40ab1fc78be0d158d.camel@gmail.com>
-Subject: Re: [PATCH  v2 0/4] rpmb subsystem, uapi and virtio-rpmb driver
-From:   Bean Huo <huobean@gmail.com>
-To:     Alex =?ISO-8859-1?Q?Benn=E9e?= <alex.bennee@linaro.org>
-Cc:     linux-kernel@vger.kernel.org, maxim.uvarov@linaro.org,
-        joakim.bech@linaro.org, ulf.hansson@linaro.org,
-        ilias.apalodimas@linaro.org, arnd@linaro.org,
-        ruchika.gupta@linaro.org, tomas.winkler@intel.com,
-        yang.huang@intel.com, bing.zhu@intel.com,
-        Matti.Moell@opensynergy.com, hmo@opensynergy.com,
-        linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org
-Date:   Tue, 05 Apr 2022 19:03:18 +0200
-In-Reply-To: <87r16bk013.fsf@linaro.org>
-References: <20220405093759.1126835-1-alex.bennee@linaro.org>
-         <8b3ce88f65fd11523a4d2daab3c617f7089eb1ce.camel@gmail.com>
-         <87r16bk013.fsf@linaro.org>
+        with ESMTP id S1845834AbiDFCBW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 22:01:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCAC3258FF5
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 16:29:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2C4CD60AC0
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 23:29:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 82F91C385A0
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 23:29:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649201385;
+        bh=NEWncxU3RMWEbBPuVnOQnu4+2dh1CqVI3xodyHY6Ijk=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=R1C3fgbpM8pOt4TQRat/Emy5Z08buJMfeni9ybat8Gs5GM1n4w+5BDghA0Tn+OSrf
+         CtTLEchwZY0Niu2tSqE4EG7HYmex4axIi7Jz8jGjwiI8MRI8mxNryvuYKSZn9INSk2
+         Bb/XbWln+1xqP281rLiNRPzJVO6BD9snqZmloXqVHQPzTX7ONsswRzwmPNx0DSZJqE
+         eGbWygM+q4y8DS/gcWrTiXu2qQpjcZwdO4Q70EPrWorNXJ7K/6+/gU3btZeFX7BF0M
+         VAUVGnelv51UuAi5tIilQSqJpRggsSjSVvMS7v5wXwMb13okfBuZCBD5ZpQLaKRQD/
+         E8OKUkqJkhM5g==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 6AA4ECAC6E2; Tue,  5 Apr 2022 23:29:45 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 215788] arcmsr driver on kernel 5.16 and up fails to initialize
+ ARC-1280ML RAID controller
+Date:   Tue, 05 Apr 2022 23:29:45 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: damien.lemoal@wdc.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-215788-11613-dn8na9sStn@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215788-11613@https.bugzilla.kernel.org/>
+References: <bug-215788-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.0-1 
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2022-04-05 at 16:43 +0100, Alex Benn=C3=A9e wrote:
->=20
-> Bean Huo <huobean@gmail.com> writes:
->=20
-> > Hi Alex,
-> >=20
-> > Thanks for this unified RPMB interface, I wanted to verify this on
-> > our
-> > UFS, it seems you didn't add the UFS access interface in this
-> > version=20
-> > from your userspace tools, right?
->=20
-> No I didn't but it should be easy enough to add some function pointer
-> redirection everywhere one of the op_* functions calls a vrpmb_*
-> function. Do you already have a UFS RPMB device driver?
->=20
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215788
 
-Hi Alex,
-Thanks for your feedback.
+--- Comment #5 from Damien Le Moal (damien.lemoal@wdc.com) ---
+Can you try this patch:
 
-We now access UFS RPMB through the RPMB LUN BSG device, RPMB is a well-
-known LU and we have a userspace tool to access it.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a390679cf458..cecba3fcbc61 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3216,6 +3216,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+                        sd_read_block_limits(sdkp);
+                        sd_read_block_characteristics(sdkp);
+                        sd_zbc_read_zones(sdkp, buffer);
++                       sd_read_cpr(sdkp);
+                }
 
-I see that if we're going to use your interface, "static struct
-rpmb_ops" should be registered from a lower-level driver, for example
-in a UFS driver, yes there should be no problem with this registration,
-but I don't know with the current way Compared, what are the advantages
-to add a driver. maybe the main advantage is that we will have an
-unified user space tool for RPMB. right?
+                sd_print_capacity(sdkp, old_capacity);
+@@ -3225,7 +3226,6 @@ static int sd_revalidate_disk(struct gendisk *disk)
+                sd_read_app_tag_own(sdkp, buffer);
+                sd_read_write_same(sdkp, buffer);
+                sd_read_security(sdkp, buffer);
+-               sd_read_cpr(sdkp);
+        }
 
-Kind regards,
-Bean
+        /*
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
