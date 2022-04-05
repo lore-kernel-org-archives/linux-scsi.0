@@ -2,103 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61AB6C41535
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38CCBC4167E
 	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 01:10:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1451009AbiDFBJS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Apr 2022 21:09:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34010 "EHLO
+        id S1450335AbiDFBJK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Apr 2022 21:09:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1573507AbiDETNl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 15:13:41 -0400
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A46C6E885A
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 12:11:42 -0700 (PDT)
-Received: by mail-pg1-f176.google.com with SMTP id s72so211852pgc.5
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Apr 2022 12:11:42 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=bS2UTw6nFtOIUMJtSdFkWzBa/YtBAD6tRF6qeBhFUG4=;
-        b=SYquMb+IGplWfoVeAuprimL+17bwsiLlcx0OtYUAl17H17jBKQTwyXrU5QHq9GolSf
-         GfG3xeA/hYQDUH7irtPg5c73ZDTV81EiB33giGysByq51AmXlTxOX+9NGTV4wHNx+Hzl
-         quj8mUDAg/7pEJub5OqbPX0sozxxg65QNNkTD27tBLE33+V6mrr18qR3Vl2sHhwhdSjX
-         82/GKqvYTjs+VHpSdEKK79rkd5jPkEiD7M3z0IPACqWKSzNNMOjgza0He/zrjkiAvDaB
-         8kh6jmQzXwNJBtCZzENlCS1s9eWgcJrRYfShyn48noAPzNfLZSlMeJ1x8ZJsBqUALi02
-         6jUw==
-X-Gm-Message-State: AOAM530ILKTUVOb5y8QCYj8j0/Q++g3cZonok/lt5CPKulywl8s7PKvT
-        406hvJmb0uRohydsBKv8KJmSlQVdVjw=
-X-Google-Smtp-Source: ABdhPJy9/LEFv2qrOSt54pjKzBL6JPT0/UzHJdg3/LYiEDp7YCdE4IsBbPhwRHkf2ZCyMQKB3OLosQ==
-X-Received: by 2002:a63:2058:0:b0:399:24bb:77d3 with SMTP id r24-20020a632058000000b0039924bb77d3mr4050879pgm.412.1649185901903;
-        Tue, 05 Apr 2022 12:11:41 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id l185-20020a6388c2000000b0038614ed80c0sm14871476pgd.41.2022.04.05.12.11.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Apr 2022 12:11:41 -0700 (PDT)
-Message-ID: <7c17a0a8-4c69-258c-764c-6508032bf3ae@acm.org>
-Date:   Tue, 5 Apr 2022 12:11:39 -0700
+        with ESMTP id S1457530AbiDEQFw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 12:05:52 -0400
+Received: from out30-57.freemail.mail.aliyun.com (out30-57.freemail.mail.aliyun.com [115.124.30.57])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E06C0310;
+        Tue,  5 Apr 2022 09:03:51 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e01424;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0V9HeY9c_1649174628;
+Received: from 30.32.95.104(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0V9HeY9c_1649174628)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Wed, 06 Apr 2022 00:03:48 +0800
+Message-ID: <e5923923-375f-c696-0c87-ca5def984d84@linux.alibaba.com>
+Date:   Wed, 6 Apr 2022 00:03:47 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH 13/29] scsi: ufs: Remove the LUN quiescing code from
- ufshcd_wl_shutdown()
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.7.0
+Subject: Re: [PATCH v2 2/3] scsi: target: tcmu: Fix possible data corruption
 Content-Language: en-US
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>
-References: <20220331223424.1054715-1-bvanassche@acm.org>
- <20220331223424.1054715-14-bvanassche@acm.org>
- <8e1a89f6-4195-c0a9-62f3-c1dcbbd4202f@intel.com>
- <66458c8f-157e-f050-f520-e3ec01e75d69@acm.org>
- <17c360e7-ea35-de7a-6f38-f1818826312a@intel.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <17c360e7-ea35-de7a-6f38-f1818826312a@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     Bodo Stroesser <bostroesser@gmail.com>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc:     linux-block@vger.kernel.org
+References: <20220323134940.31463-1-xiaoguang.wang@linux.alibaba.com>
+ <20220323134940.31463-3-xiaoguang.wang@linux.alibaba.com>
+ <b6280955-d3f5-f11b-5f62-07ab83cff4ac@gmail.com>
+From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+In-Reply-To: <b6280955-d3f5-f11b-5f62-07ab83cff4ac@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/1/22 07:35, Adrian Hunter wrote:
-> On 01/04/2022 16.52, Bart Van Assche wrote:
->> On 3/31/22 23:20, Adrian Hunter wrote:
->>> On 01/04/2022 1.34, Bart Van Assche wrote:
->>>> Quiescing LUNs falls outside the scope of a shutdown callback.
->>>> The shutdown callback is called from inside the reboot() system
->>>> call and the reboot() system call is called after user space
->>>> has stopped accessing block devices. Hence this patch that
->>>> removes the quiescing calls from ufshcd_wl_shutdown(). This
->>>> patch makes shutdown faster since multiple synchronize_rcu()
->>>> calls are removed.
->>> 
->>> AFAIK there is nothing stopping shutdown being called during
->>> intense UFS I/O. What happens then?
->> 
->> Hmm ... how could this happen? Am I perhaps misunderstanding
->> something about the Linux shutdown sequence?
->> 
->> The UFS driver is the only driver I know that tries to stop I/O
->> from inside its shutdown callback. I'm not aware of any other Linux
->> kernel driver that tries to pause I/O from inside its shutdown
->> callback.
-> 
-> We are putting the UFS device into powerdown mode.  I am not sure
-> what will happen if the device is processing requests at the same
-> time.
+hi,
 
-I will remove this patch from this patch series such that it does not
-block adoption of the other patches in this patch series.
+> On 23.03.22 14:49, Xiaoguang Wang wrote:
+>> When tcmu_vma_fault() gets one page successfully, before the current
+>> context completes page fault procedure, find_free_blocks() may run in
+>> and call unmap_mapping_range() to unmap this page. Assume when
+>> find_free_blocks() completes its job firstly, previous page fault
+>> procedure starts to run again and completes, then one truncated page has
+>> beed mapped to use space, but note that tcmu_vma_fault() has gotten one
+>> refcount for this page, so any other subsystem won't use this page,
+>> unless later the use space addr is unmapped.
+>>
+>> If another command runs in later and needs to extends dbi_thresh, it may
+>> reuse the corresponding slot to previous page in data_bitmap, then thouth
+>> we'll allocate new page for this slot in data_area, but no page fault will
+>> happen again, because we have a valid map, real request's data will lose.
+>
+> I don't think, this is a safe fix. It is possible that not only
+> find_free_blocks runs before page fault procedure completes, but also
+> allocation for next cmd happens. In that case the new call to
+> unmap_mapping_range would also happen before page fault completes ->
+> data corruption.
+>
+> AFAIK, no one ever has seen this this bug in real life, as
+Yeah, I know, just find this maybe an issue by reading codes :)
 
-Thanks,
+> find_free_blocks only runs seldomly and userspace would have to access
+> a data page the very first time while the cmd that owned this page
+> already has been completed by userspace. Therefore I think we should
+> apply a perfect fix only.
+>
+> I'm wondering whether there really is such a race. If so, couldn't the
+> same race happen in other drivers or even when truncating mapped files?
+Indeed, I have described how filesystem implementations avoid this issue
+in patch's commit message:
 
-Bart.
+  Filesystem implementations will also run into this issue, but they
+  usually lock page when vm_operations_struct->fault gets one page, and
+  unlock page after finish_fault() completes. In truncate sides, they
+  lock pages in truncate_inode_pages() to protect race with page fault.
+  We can also have similar codes like filesystem to fix this issue.
 
+
+Take ext4 as example, a file in ext4 is mapped to user space, if then a truncate
+operation occurs, ext4 calls truncate_pagecache():
+void truncate_pagecache(struct inode *inode, loff_t newsize)
+{
+        struct address_space *mapping = inode->i_mapping;
+        loff_t holebegin = round_up(newsize, PAGE_SIZE);
+
+        /*
+         * unmap_mapping_range is called twice, first simply for
+         * efficiency so that truncate_inode_pages does fewer
+         * single-page unmaps.  However after this first call, and
+         * before truncate_inode_pages finishes, it is possible for
+         * private pages to be COWed, which remain after
+         * truncate_inode_pages finishes, hence the second
+         * unmap_mapping_range call must be made for correctness.
+         */
+        unmap_mapping_range(mapping, holebegin, 0, 1);
+        truncate_inode_pages(mapping, newsize);
+        unmap_mapping_range(mapping, holebegin, 0, 1);
+}
+
+In truncate_inode_pages(), it'll lock page and set page->mapping
+to be NULL, and in ext4's filemap_fault(), it'll lock page and check whether
+page->mapping has been changed, if it's true, it'll just fail the page
+fault procedure.
+
+For tcmu, though the data area's pages don't have a valid mapping,
+but we can apply similar method.
+In tcmu_vma_fault(), we lock the page and set VM_FAULT_LOCKED
+flag, in find_free_blocks(), we firstly try to lock pages which are going
+to be released, if lock_page() returns, we can ensure that there are
+not inflight running page fault procedure, and following unmap_mapping_range()
+will also ensure that all user maps will be cleared.
+Seems that it'll resolve this possible issue, please have a check, thanks.
+
+
+Regards,
+Xiaoguang Wang
+
+
+>
+>
+>>
+>> To fix this issue, when extending dbi_thresh, we'll need to call
+>> unmap_mapping_range() to unmap use space data area which may exist,
+>> which I think it's a simple method.
+>>
+>> Filesystem implementations will also run into this issue, but they
+>> ususally lock page when vm_operations_struct->fault gets one page, and
+>> unlock page after finish_fault() completes. In truncate sides, they
+>> lock pages in truncate_inode_pages() to protect race with page fault.
+>> We can also have similar codes like filesystem to fix this issue.
+>>
+>> Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+>> ---
+>>   drivers/target/target_core_user.c | 5 +++++
+>>   1 file changed, 5 insertions(+)
+>>
+>> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+>> index 06a5c4086551..9196188504ec 100644
+>> --- a/drivers/target/target_core_user.c
+>> +++ b/drivers/target/target_core_user.c
+>> @@ -862,6 +862,7 @@ static int tcmu_alloc_data_space(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+>>       if (space < cmd->dbi_cnt) {
+>>           unsigned long blocks_left =
+>>                   (udev->max_blocks - udev->dbi_thresh) + space;
+>> +        loff_t off, len;
+>>             if (blocks_left < cmd->dbi_cnt) {
+>>               pr_debug("no data space: only %lu available, but ask for %u\n",
+>> @@ -870,6 +871,10 @@ static int tcmu_alloc_data_space(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+>>               return -1;
+>>           }
+>>   +        off = udev->data_off + (loff_t)udev->dbi_thresh * udev->data_blk_size;
+>> +        len = cmd->dbi_cnt * udev->data_blk_size;
+>> +        unmap_mapping_range(udev->inode->i_mapping, off, len, 1);
+>> +
+>>           udev->dbi_thresh += cmd->dbi_cnt;
+>>           if (udev->dbi_thresh > udev->max_blocks)
+>>               udev->dbi_thresh = udev->max_blocks;
 
