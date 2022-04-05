@@ -2,168 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77F7FC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Apr 2022 10:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15CECC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Apr 2022 10:53:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240270AbiDEKzF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Apr 2022 06:55:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49232 "EHLO
+        id S235143AbiDEKzR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Apr 2022 06:55:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348944AbiDEJst (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 05:48:49 -0400
-Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C012A2058
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 02:38:03 -0700 (PDT)
-Received: by mail-wm1-x32e.google.com with SMTP id n63-20020a1c2742000000b0038d0c31db6eso1253126wmn.1
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Apr 2022 02:38:03 -0700 (PDT)
+        with ESMTP id S1348193AbiDEJrM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 05:47:12 -0400
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D108EA778
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 02:33:26 -0700 (PDT)
+Received: by mail-ej1-x632.google.com with SMTP id qh7so15405040ejb.11
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Apr 2022 02:33:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=nkD/AciaywdTGKHQbOXWmFjk83Y1bSrfB27hzYXm0xI=;
-        b=NnpxvYsBqdGhKQw10fl8I+jFW+0TSKk/XRN6GnXOlx41EpMviuxdB4rMN23OhliIgv
-         tgAMQibc8aBuT3j/O0UAAOK/DduW4rP157w43znLLHbgb/7rEl7yQP9rr/p9WTJURqTB
-         vOXiOPso0dO9K2ztcYbDXYJ0XYVq9TGRRgZcJid/H+yX3Jw8HDMBd85kWr4ltsJhxsFF
-         c8gOWy+VAdKner92D4nhHtN0QabbsS9a3d81iWVu+cLIw8GzbapDNtqJ9AYHedlHZNWh
-         wbn+GhdhhH+FLXMTwQ2xui30pywFHwACTjK2rQR1u4pW0ZfGS/cRJErFAsPY4IJb7ro4
-         7m8A==
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-transfer-encoding:user-agent:mime-version;
+        bh=3DOTWF+v7LKn4npCmHoiswZmBh92qJ6RD1XtNsMouFs=;
+        b=TwbRgC8xhEgVLicRhUYJGvH3qVh8nfglMkeLYFUlz83Irf8mLjU5vY8vhpjI8DcFwe
+         2dl8MASt+2fCbcos0VGehTdOsw7oXVdQVKz/O8UNV+qZGw5axMkkIhudGfDDGzabfnws
+         Gsf+THg++vzkdM1OanLhwm/BW4EMmbEvJQlVfVfddwfH1A9zyU+qRda3KGELOlVj+k8e
+         TYujERd7Z7p10xqZ1W7qNTPacJHEc8kF76o0ts45oUtOaTFIl9CXnyWSX1yIFR7fMwzb
+         rt3mQrDKqVxKPzs+dy9rd0lEAdLriWr2ZVQ1VLaJOz6Im1XHmBn5mtw8sMlfxqW4UcBf
+         OWrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=nkD/AciaywdTGKHQbOXWmFjk83Y1bSrfB27hzYXm0xI=;
-        b=out6qzgKqaec8eL06SM6oSIKxfM2BQkReXdmVOCc04qwlAYzxhk01TmzkU2fOEitae
-         L+MQdzpjUVZPcrIY8ITPkLe6vi6dVObiH47xwDk8T6sFff2EN0ILwvonvqKII5+NeZ5e
-         y+N2ZKIDkGKcjFm/vh0XcFCr5MvusEuvjP71GcyPMjHpXLy4LzFf4RlsQn92NMYTnttC
-         Nbusimz3d5gvML52xNx+BhgsVvd887Wez2zlDNvoKWiTw71EKlwk1808bV/b43+rK896
-         AjBIbGO22Guhc12gZh86ck2InhMEpE62i2q2gWFDjVtuGw+crMc6lauvkQmnu+woZiMS
-         oi9A==
-X-Gm-Message-State: AOAM531S8FVZn+I0taKWgs4xrVCiPBsFz+zSqEvk2BXgW4w3mEXH2TgG
-        r4DGyuRw9bB/2seEjy4+0UOmew==
-X-Google-Smtp-Source: ABdhPJwkMEdcFMRSetOSc9QI210EtaRngB0m9hh4Crs0LghOWJkF24XQaLI4LFfl/+JKVDgrHnfOVA==
-X-Received: by 2002:a05:600c:5106:b0:38e:38f8:858 with SMTP id o6-20020a05600c510600b0038e38f80858mr2185653wms.109.1649151481620;
-        Tue, 05 Apr 2022 02:38:01 -0700 (PDT)
-Received: from zen.linaroharston ([51.148.130.216])
-        by smtp.gmail.com with ESMTPSA id f9-20020a05600c4e8900b0038cc29bb0e1sm2014358wmq.4.2022.04.05.02.38.00
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:content-transfer-encoding:user-agent:mime-version;
+        bh=3DOTWF+v7LKn4npCmHoiswZmBh92qJ6RD1XtNsMouFs=;
+        b=PbdNqaJ82yyaHIrHdBBqAP6PAoIcqDW4oWvRgbPt3wPFhqn3pxEhhVShS2nqmWhquX
+         NCygU9b/7bcKw608R0AIsx7Jr+eD8ObujRiprKoR5YDjZSMbGs0TkdFDSx0fUO/udVwU
+         9CpwtiBA/2n11LOaHa2elkaQWZy04cH3k7Lg9RNtGC/RMtu0FRw11mwRZA09z+oXehTX
+         fKa4ycZbGqhBMYF8xfeVNgCFAZ23zjzfgqU7ABI5JHDbOyVYc9gQH5gSHn6jzfJLsa5m
+         sLhc6GCUSqqX7G6CFgQrHLIpogtdUP5099nFQxNpRsPYYLqcgPhSwSEOAGxUT2E0lv+D
+         w8fQ==
+X-Gm-Message-State: AOAM532mTyfQsV2csj7pmieK7vpN9IgnitMCLtPivDdHuw+Ho6RsUCjs
+        apxTl4WafCcPCv26EeyYtBQ=
+X-Google-Smtp-Source: ABdhPJzolNvDKMa49b2Tiy5fBDrtAD+7x5c8KcaxxP6HP2R3x3gu9aHG+jzwpKPHfJNhPCDRfdXC+Q==
+X-Received: by 2002:a17:906:c0d6:b0:6ca:457e:f1b7 with SMTP id bn22-20020a170906c0d600b006ca457ef1b7mr2506558ejb.399.1649151204815;
+        Tue, 05 Apr 2022 02:33:24 -0700 (PDT)
+Received: from p200300c58701849e9101f49281d8361b.dip0.t-ipconnect.de (p200300c58701849e9101f49281d8361b.dip0.t-ipconnect.de. [2003:c5:8701:849e:9101:f492:81d8:361b])
+        by smtp.googlemail.com with ESMTPSA id j26-20020a1709064b5a00b006e808a933f4sm647421ejv.123.2022.04.05.02.33.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Apr 2022 02:38:00 -0700 (PDT)
-Received: from zen.lan (localhost [127.0.0.1])
-        by zen.linaroharston (Postfix) with ESMTP id 00E8F1FFB7;
-        Tue,  5 Apr 2022 10:38:00 +0100 (BST)
-From:   =?UTF-8?q?Alex=20Benn=C3=A9e?= <alex.bennee@linaro.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     maxim.uvarov@linaro.org, joakim.bech@linaro.org,
-        ulf.hansson@linaro.org, ilias.apalodimas@linaro.org,
-        arnd@linaro.org, ruchika.gupta@linaro.org, tomas.winkler@intel.com,
-        yang.huang@intel.com, bing.zhu@intel.com,
-        Matti.Moell@opensynergy.com, hmo@opensynergy.com,
-        linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        =?UTF-8?q?Alex=20Benn=C3=A9e?= <alex.bennee@linaro.org>
-Subject: [PATCH  v2 0/4] rpmb subsystem, uapi and virtio-rpmb driver
-Date:   Tue,  5 Apr 2022 10:37:55 +0100
-Message-Id: <20220405093759.1126835-1-alex.bennee@linaro.org>
-X-Mailer: git-send-email 2.30.2
+        Tue, 05 Apr 2022 02:33:24 -0700 (PDT)
+Message-ID: <2eea6ffcd83233a93a8a7ebfc24a58516cd6e79a.camel@gmail.com>
+Subject: Re: [PATCH 00/29] UFS patches for kernel v5.19
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        quic_cang@quicinc.com
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Date:   Tue, 05 Apr 2022 11:33:23 +0200
+In-Reply-To: <5073d69e-20c4-0fce-a045-47c52e2d3424@acm.org>
+References: <20220331223424.1054715-1-bvanassche@acm.org>
+         <60dc8a92c7eda8f190a8a6123bc927e8403bdbb1.camel@gmail.com>
+         <eee8d304-aacd-9116-9e2d-92e2e3682b5b@acm.org>
+         <DM6PR04MB6575DBC3CFAD57F5AA19DCF8FCE29@DM6PR04MB6575.namprd04.prod.outlook.com>
+         <9bff98fa4a4a8a61a5c46830ef9515a7dfddcb89.camel@gmail.com>
+         <ebf3cc31-9cd1-3615-b033-06bfc7d25b9a@acm.org>
+         <94902f1e26a18ff7774dc429502bef7d54f23b5d.camel@gmail.com>
+         <5073d69e-20c4-0fce-a045-47c52e2d3424@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.0-1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Hi Bart,
 
-This is another attempt to come up with an RPMB API for the kernel.
-The last discussion of this was in the thread:
+On Mon, 2022-04-04 at 14:13 -0700, Bart Van Assche wrote:
+> On 4/4/22 01:12, Bean Huo wrote:
+> > Very interested in this design. I'm assuming you're still going to
+> > continue parsing SCSI commands. Can we also shorten the UFS command
+> > path?
+> >=20
+> > Meaning we convert block requests directly to UFS UPIU commands?
+> > instead of like the current one: block request -> CDB -> UPIU.
+>=20
+> Hi Bean,
+>=20
+> Is there any data that shows that the benefits of shortening the UFS=20
+> command path outweigh the disadvantages?=C2=A0
 
-  Subject: [RFC PATCH  0/5] RPMB internal and user-space API + WIP virtio-rpmb frontend
-  Date: Wed,  3 Mar 2021 13:54:55 +0000
-  Message-Id: <20210303135500.24673-1-alex.bennee@linaro.org>
 
-The series provides for the RPMB sub-system, a new chardev API driven
-by ioctls and a full multi-block capable virtio-rpmb driver. You can
-find a working vhost-user backend in my QEMU branch here:
+For performance improvement, according to my test, if we abandon SCSI
+command parsing, we can get 3%~5% performance improvement. Maybe this
+is little or no improvement? Yes, reliability issues outweigh this
+performance improvement. Error handling and UFS probes should also be
+rebuilt. But most importantly, it makes UFS more scalable. How do you
+think about adding an immature development driver to drever/staging
+first? name it driver/staging/lightweight-ufs?
 
-  https://github.com/stsquad/qemu/commits/virtio/vhost-user-rpmb-v2
 
-The branch is a little messy but I'll be posting a cleaned up version
-in the following weeks. The only real changes to the backend is the
-multi-block awareness and some tweaks to deal with QEMU internals
-handling VirtIO config space messages which weren't previously
-exercised. The test.sh script in tools/rpmb works through the various
-transactions but isn't comprehensive.
+> For other SCSI LLDs the cost of=20
+> atomic operations and memory barriers in the LLD outweighs the cost
+> of=20
+> the operations in the SCSI core and sd drivers. I'm not sure whether=20
+> that's also the case for the UFS driver.
+>=20
 
-Changes since the last posting:
+I didn't take this into account, maybe it's not a big deal, since the
+UFS driver might use its own lock/serialization lock.
 
-  - frame construction is mostly back in userspace
+Kind regards,
+Bean.
 
-  The previous discussion showed there wasn't any appetite for using
-  the kernels keyctl() interface so userspace yet again takes
-  responsibility for constructing most* frames. Currently these are
-  all pure virtio-rpmb frames but the code is written so we can plug
-  in additional frame types. The virtio-rpmb driver does some
-  validation and in some cases (* read-blocks) constructs the request
-  frame in the driver. It would take someone implementing a driver for
-  another RPMB device type to see if this makes sense.
-
-  - user-space interface is still split across several ioctls
-
-  Although 3 of the ioctls share the common rpmb_ioc_reqresp_cmd
-  structure it does mean things like capacity, write_count and
-  read_blocks can have their own structure associated with the
-  command.
-
-As before I shall follow up with the QEMU based vhost-user backend and
-hopefully a rust-vmm re-implementation. However I've no direct
-interest in implementing the interfaces to real hardware. I leave that
-to people who have access to such things and are willing to take up
-the maintainer burden if this is merged.
-
-Regards,
-
-Alex
-    
-
-Alex Bennée (4):
-  rpmb: add Replay Protected Memory Block (RPMB) subsystem
-  char: rpmb: provide a user space interface
-  rpmb: create virtio rpmb frontend driver
-  tools rpmb: add RPBM access tool
-
- .../userspace-api/ioctl/ioctl-number.rst      |    1 +
- MAINTAINERS                                   |    9 +
- drivers/Kconfig                               |    2 +
- drivers/Makefile                              |    1 +
- drivers/rpmb/Kconfig                          |   28 +
- drivers/rpmb/Makefile                         |    9 +
- drivers/rpmb/cdev.c                           |  309 +++++
- drivers/rpmb/core.c                           |  439 +++++++
- drivers/rpmb/rpmb-cdev.h                      |   17 +
- drivers/rpmb/virtio_rpmb.c                    |  518 ++++++++
- include/linux/rpmb.h                          |  182 +++
- include/uapi/linux/rpmb.h                     |   99 ++
- include/uapi/linux/virtio_rpmb.h              |   54 +
- tools/Makefile                                |   16 +-
- tools/rpmb/.gitignore                         |    2 +
- tools/rpmb/Makefile                           |   41 +
- tools/rpmb/key                                |    1 +
- tools/rpmb/rpmb.c                             | 1083 +++++++++++++++++
- tools/rpmb/test.sh                            |   22 +
- 19 files changed, 2828 insertions(+), 5 deletions(-)
- create mode 100644 drivers/rpmb/Kconfig
- create mode 100644 drivers/rpmb/Makefile
- create mode 100644 drivers/rpmb/cdev.c
- create mode 100644 drivers/rpmb/core.c
- create mode 100644 drivers/rpmb/rpmb-cdev.h
- create mode 100644 drivers/rpmb/virtio_rpmb.c
- create mode 100644 include/linux/rpmb.h
- create mode 100644 include/uapi/linux/rpmb.h
- create mode 100644 include/uapi/linux/virtio_rpmb.h
- create mode 100644 tools/rpmb/.gitignore
- create mode 100644 tools/rpmb/Makefile
- create mode 100644 tools/rpmb/key
- create mode 100644 tools/rpmb/rpmb.c
- create mode 100755 tools/rpmb/test.sh
-
--- 
-2.30.2
+> Thanks,
+>=20
+> Bart.
 
