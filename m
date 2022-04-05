@@ -2,82 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FEFEC4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Apr 2022 22:02:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B337EC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Apr 2022 02:20:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243687AbiDDWD7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Apr 2022 18:03:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34768 "EHLO
+        id S229696AbiDECWo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Apr 2022 22:22:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348659AbiDDV4T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 17:56:19 -0400
-Received: from mail-oi1-f175.google.com (mail-oi1-f175.google.com [209.85.167.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F4BE377C1;
-        Mon,  4 Apr 2022 14:39:45 -0700 (PDT)
-Received: by mail-oi1-f175.google.com with SMTP id q129so11463583oif.4;
-        Mon, 04 Apr 2022 14:39:45 -0700 (PDT)
+        with ESMTP id S229685AbiDECWm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2022 22:22:42 -0400
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDD5932B71A;
+        Mon,  4 Apr 2022 18:18:07 -0700 (PDT)
+Received: by mail-pg1-x52f.google.com with SMTP id c2so9729378pga.10;
+        Mon, 04 Apr 2022 18:18:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=Omp7vR9UcPrhGXZZpNbngBh0wCNzl1wDtEI82prc/lc=;
+        b=l3j45LxcbX7a8DtGlzz0bIJayPR/GJ2s6RfW8uOP/QIlJMraZy2O+Kmn5S2r8+qBpI
+         67JhUesmg5tu0iDmRWfMd26c9vaEiWG1GzVgB8D0GhezBF3OwAblyuvMgITynsUgngyq
+         QifFjDEylAmb9Sru2YJqugzY9hg2dcBWk2B4a3+1wGJaiXmRyQsE+k0tBCOh35eszHz9
+         qA6bYJdF/HSgZFPq02AyLQ0TCOfUfQdhFjYDMOeZK7P82Zl1wRRLFUzhGV9EUxBUidoa
+         6gCBpyKTjl1p2e4zn5VtjiRJfSs8FqrBhknf8TiYIrmx4GjKmhWbg5NlKCTVfF7otx0P
+         wS/A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=7tFfq7b9VmjLYZDsJ/VEXlvRsUPqYtmmK37aE7ANU+M=;
-        b=ZNvi1tVMGDV6rReUc4VOfbVNyYwnvadh06x83N6H46vkptRqW8JtjeFQZZPA2Jdugt
-         wNecGghp6O1SPrcSRhkZLN4klmjUqmdHKsQskJEePAls4Gkxa/iN+mnnJyeZB/Dw1mlv
-         9eslbOqjPc2AU8DYy3P/oIA+qeRFlxqMWEIrx+jeahG8efQhXG9xnTw6Y1jVIc7HKnN1
-         1KaIUP1CIc2o13jyK5yctw2JaFLCWyJLpyXrrnXDglHZthdFxcpAYix+wpSuoawSIRBK
-         AkfqXT561YI3U4nk0Lq9l3NaOsWj6ysVbh5sWpTTFqqgibRYZHpT5phNkrVGS2c4fKsX
-         JHLA==
-X-Gm-Message-State: AOAM530S3y6gNK69EmrMr+q1Tt/ndUqn1OukE3aiu+8xItEDTTR4sJdZ
-        SviWyCVEtkY7L0yS0GNSJw==
-X-Google-Smtp-Source: ABdhPJwkBPHU37YXSW5i6D/bqu8AoWhmIEwdQoN/DKhZoQsz4VSfS5CXi9L73ed5EDEGtbUx9amVxA==
-X-Received: by 2002:a05:6808:8c4:b0:2da:575e:3402 with SMTP id k4-20020a05680808c400b002da575e3402mr143772oij.8.1649108384382;
-        Mon, 04 Apr 2022 14:39:44 -0700 (PDT)
-Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id el17-20020a056870f69100b000de9672ac3csm4644917oab.52.2022.04.04.14.39.43
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Omp7vR9UcPrhGXZZpNbngBh0wCNzl1wDtEI82prc/lc=;
+        b=a9MIY33YCFkCwhXsbcMF0yZ9u6wI1OsgC8WIe1FN5HGufZCQxlLBxs9G/V6LYxSPDL
+         OmicO/MP3XAQVMOu/T0/sHchqohW0FSVHPFlX0QulXuSqCNKiclMTn24tRyYEE/AypG/
+         JtiJuCaIXDdwdnPPdtk+cxIh7dvNQ6J0TkXjlcTsYzi2Dxjmr2dhF2bh5CNe82tq/K12
+         Dfk7LvIofBtBDWK+v1tE2RiNejizH091/mfsYOLZaf8EXvhEHy8+OvoWRkd2u7oHAy9O
+         sOUAHQP/w954devI796PRO0C2Bj9wXI3zkKCFT3aNU+tbrTeqKmr8P6ZWCBGf9gxkxtO
+         u3Tw==
+X-Gm-Message-State: AOAM5334jFp9J8Av2gjPwKs7c4YjF/ntewZa+FOUIN8toSNoZPQ0wlG/
+        YPfuyuUsqYhDA6W2YnRE9raaEz9cDeEN7Q==
+X-Google-Smtp-Source: ABdhPJxi6rRjA8yOmB9/9d3CiWfGIN1cdOyOXy+4QUPxG4RsSOAp+6eYgL3tNrArAjdSKdutIP1ONA==
+X-Received: by 2002:a63:1d07:0:b0:398:e6d3:8e22 with SMTP id d7-20020a631d07000000b00398e6d38e22mr692165pgd.8.1649119270145;
+        Mon, 04 Apr 2022 17:41:10 -0700 (PDT)
+Received: from localhost.localdomain ([183.156.181.188])
+        by smtp.gmail.com with ESMTPSA id ay9-20020a056a00300900b004fae1346aa1sm12589179pfb.122.2022.04.04.17.41.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Apr 2022 14:39:44 -0700 (PDT)
-Received: (nullmailer pid 2033895 invoked by uid 1000);
-        Mon, 04 Apr 2022 21:39:43 -0000
-Date:   Mon, 4 Apr 2022 16:39:43 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Bean Huo <beanhuo@micron.com>, linux-kernel@vger.kernel.org,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        linux-arm-msm@vger.kernel.org,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Andy Gross <agross@kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Taniya Das <tdas@codeaurora.org>, linux-clk@vger.kernel.org,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Stephen Boyd <sboyd@kernel.org>, devicetree@vger.kernel.org,
-        Michael Turquette <mturquette@baylibre.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [RFC PATCH 2/4] dt-bindings: ufs: common: allow OPP table
-Message-ID: <Yktln5RQN34SDruG@robh.at.kernel.org>
-References: <20220401145820.1003826-1-krzysztof.kozlowski@linaro.org>
- <20220401145820.1003826-3-krzysztof.kozlowski@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220401145820.1003826-3-krzysztof.kozlowski@linaro.org>
+        Mon, 04 Apr 2022 17:41:09 -0700 (PDT)
+From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
+To:     skashyap@marvell.com, jhasan@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Xiaomeng Tong <xiam0nd.tong@gmail.com>
+Subject: [RESEND][PATCH] qedf: remove an unneeded NULL check on list iterator
+Date:   Tue,  5 Apr 2022 08:40:55 +0800
+Message-Id: <20220405004055.24312-1-xiam0nd.tong@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 01 Apr 2022 16:58:18 +0200, Krzysztof Kozlowski wrote:
-> Except scaling UFS and bus clocks, it's necessary to scale also the
-> voltages of regulators or power domain performance state levels.  Adding
-> Operating Performance Points table allows to adjust power domain
-> performance state, depending on the UFS clock speed.
-> 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> ---
->  Documentation/devicetree/bindings/ufs/ufs-common.yaml | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
+The list iterator 'fcport' is always non-NULL so it doesn't need to be
+checked. Thus just remove the unnecessary NULL check. Also remove the
+unnecessary initializer because the list iterator is always initialized.
+And adjust the position of blank lines.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
+---
+ drivers/scsi/qedf/qedf_main.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 6ad28bc8e948..1bfa30983b92 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -873,7 +873,7 @@ static int qedf_eh_device_reset(struct scsi_cmnd *sc_cmd)
+ 
+ bool qedf_wait_for_upload(struct qedf_ctx *qedf)
+ {
+-	struct qedf_rport *fcport = NULL;
++	struct qedf_rport *fcport;
+ 	int wait_cnt = 120;
+ 
+ 	while (wait_cnt--) {
+@@ -888,7 +888,7 @@ bool qedf_wait_for_upload(struct qedf_ctx *qedf)
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(fcport, &qedf->fcports, peers) {
+-		if (fcport && test_bit(QEDF_RPORT_SESSION_READY,
++		if (test_bit(QEDF_RPORT_SESSION_READY,
+ 				       &fcport->flags)) {
+ 			if (fcport->rdata)
+ 				QEDF_ERR(&qedf->dbg_ctx,
+@@ -899,9 +899,9 @@ bool qedf_wait_for_upload(struct qedf_ctx *qedf)
+ 					 "Waiting for fcport %p.\n", fcport);
+ 			}
+ 	}
++
+ 	rcu_read_unlock();
+ 	return false;
+-
+ }
+ 
+ /* Performs soft reset of qedf_ctx by simulating a link down/up */
+-- 
+2.17.1
+
