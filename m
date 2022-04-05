@@ -2,224 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E37BEC4321E
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Apr 2022 08:37:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F1B9C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Apr 2022 09:14:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236482AbiDEIiA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Apr 2022 04:38:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56226 "EHLO
+        id S1343942AbiDEJP5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Apr 2022 05:15:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238285AbiDEISr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 04:18:47 -0400
-Received: from out5-smtp.messagingengine.com (out5-smtp.messagingengine.com [66.111.4.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 210C7E6;
-        Tue,  5 Apr 2022 01:08:29 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailout.nyi.internal (Postfix) with ESMTP id 194A75C0199;
-        Tue,  5 Apr 2022 04:08:29 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute3.internal (MEProxy); Tue, 05 Apr 2022 04:08:29 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:date:date:from:from:in-reply-to
-        :message-id:reply-to:sender:subject:subject:to:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=ULP8rc
-        faCHueJJcnGSad4jhUThCttt20904WHbSKF9w=; b=LuWVE8abpnpw4YMexiymBr
-        daGPXkPYmeSvVFYEoF4SoLCAG6GDvo4nnfHh93gREsZYeWKHMzYtMYISU/0x2l2p
-        Pamif2EuIzolCGUjnFtm6aVq0Pm1FE/+HNOclGrajztaRGxYbKUZm/zZINHfLO1Q
-        bqNRg8v5BtNHnbJJ36PyNRgiKNDwoH7gIPFURIbcA0UyoFK3ecUg4EK7kJjyFQwQ
-        oo8S/iVae1zeWlVkEVVGGXeyaPvIoOYPvrBnEcqSz7lzG2zlV4c3tK394FaKHZ9Z
-        1fhkEXjaLi8yYJAlB5b9L0cKwwanSzOXYEqD7vLjEtApj2kCZuUF5w8E9onV82mw
-        ==
-X-ME-Sender: <xms:_PhLYiF4hbHPvOc62rpRIabAEl1nWd6AA5Z14OIDCHO0K7Q97RLzsg>
-    <xme:_PhLYjXoIyTH1Yi11Qhz01iW61rYBTlFuuxer5W2IUjjtDQ5xrRDSFAxIUD6Qlyk7
-    i9eevoiRrYSjpYZsoc>
-X-ME-Received: <xmr:_PhLYsLUJaRsq7wCdmI_yYYMBd8rGI3ChesC6idVGyqxsigj1X1EjT7WzLKTqd8Klmhqq6ng4iYqN5xkhLoby8Z69IdT5MJWBJw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddrudejfedguddvkecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
-    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
-    enucfjughrpefvkffhufffsedttdertddttddtnecuhfhrohhmpefhihhnnhcuvfhhrghi
-    nhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrghtthgvrh
-    hnpedtleetkeelkeekvdeujeehkefgvddtheehhfetieethfetfeeghfduheevveelleen
-    ucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehfthhhrg
-    hinheslhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:_PhLYsFO_YSMl1FVVgGXuyOz7rT_g2khe_KVwvATIdDL5JRUqil_GQ>
-    <xmx:_PhLYoWyy2jGesNZmceT15g44XX4x-dglBu7K1HqGoQLun8ZWFPz4g>
-    <xmx:_PhLYvMcoQqRPG7fgJQFRHb321h5zDHIxoEfFZ_QwRogA64I-RBy7w>
-    <xmx:_fhLYjcRzdSJJa6mEsswm3NjZpnCCZLCCI76eMCzBJETOHc93hE8lQ>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 5 Apr 2022 04:08:25 -0400 (EDT)
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <4948f86703d23e5048f4e24e649680259b2610f9.1649146056.git.fthain@linux-m68k.org>
-From:   Finn Thain <fthain@linux-m68k.org>
-Subject: [PATCH] scsi: sym53c500_cs: Stop using struct scsi_pointer
-Date:   Tue, 05 Apr 2022 18:07:36 +1000
+        with ESMTP id S244899AbiDEIwq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 04:52:46 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1710023BF3
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 01:45:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1649148328; x=1680684328;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=LOS4Xy4jS1T3+k3QP7A0p/zpFnUvHqQDJVyEmPAcMIE=;
+  b=N4h7LIyo86Dx16moJffgu3yiqDcs9baKVRYxpdCibwFxkch7YxDglWmu
+   cn9baxW8XCjvZ/3Ispm+M7/b0WtnTW428Y7KwW/BX6ljBL3VSJyxP55FL
+   l/6ayRp53JqBaLZlRwCaGO/YUWLbmfM84LF5eb2p3jJ01atsDCB4zvc5T
+   zJvv/On0XFu5642o8LOm1UZAekCq0pSzPyTthlfyQT5e3FKmT89iC3gA4
+   +xYKEyqdyVQdGRJ+ic3RxH79mzdEPgB/yZWwM9tWbsIf8y9dl5+qiTlse
+   aPb4wQDYVw5C/PAzbkrJWhRNwek891VsN0ncmu51fh74b0mAUB+fhaWTY
+   w==;
+X-IronPort-AV: E=Sophos;i="5.90,236,1643644800"; 
+   d="scan'208";a="198017724"
+Received: from mail-dm6nam12lp2177.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.177])
+  by ob1.hgst.iphmx.com with ESMTP; 05 Apr 2022 16:45:20 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ju1S+1eiU5ivWARKQtDu2emYMfaOlDntsGBY7MWkg2P0Uvg7PfMXK7ZvBxXG5FP5SPxn6FnY8XpomoAtejm1Ub0swBbeKJ57SHUAPV8WqO19m6DMG1dntUeLp5fMhaZCiATYSIb7oTphfm3FlslusHGEFTtk9yPDmntbCtWNxTzdQKc0QtRbecT+kwWZ3bQbbPuvGELxqL4wkrvWA/wPGzQlBeiCvSs6Yb5om0VkimE3viiAkDdWNtFOBfP0OKqziYwZxDON/WGIgw1rYMMnR+5uCviFaVEUjNSP0g0OWyyo3x0QRfR23QZPLZcRaNDqHDCQnTasp1YDEA7VMQjk5g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LOS4Xy4jS1T3+k3QP7A0p/zpFnUvHqQDJVyEmPAcMIE=;
+ b=EuPC0aUEhRCYB2kmD7jFjftKy7M7yxIBH8ox+/X64DYizR7Vbqe3+Eq878iINdwIHjYKa14aX6DcqhsyoEhhI7YhWCQt+aB0qo0LvYnz2G0zpDu+dEMvRgbW0hV/hXLk3RyOnU1A2UC+C8g4dOwduN2X/GPTW4nIo/bh3L7X4QAMwe+YDCspmZSMAtisYKUSxMNNLIYGBdDEH8lR2nQxtRANk16x0RZfT1rgi+rWsFF4l1ZvMvFa8iY3HD0hebs+dBb/4l0VRj57JG/PZMq61DzbttXkKLUEl1ZIAWUisSAFS6XDfnhg+00Qc42u3+n69MaezIE00edt8NHuvqRLGQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LOS4Xy4jS1T3+k3QP7A0p/zpFnUvHqQDJVyEmPAcMIE=;
+ b=uilcbmYeVXcGn2woTx2uX8hYx41zvq60EHYFfwJlAJEQ/T1SIBY2OfmRF/8KB2QvaSmjrKhIYPyqQw2bvO5bAtgJVHeN+eVZjvMlT9OLxuRsalws3oEthINm7F1bpNCidHJIayt1ypGAxuMIQI/9lXg/aGdAb9/vqn+O5E1ci/w=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ MWHPR0401MB3612.namprd04.prod.outlook.com (2603:10b6:301:77::35) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5123.31; Tue, 5 Apr
+ 2022 08:45:18 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::941d:9fe8:b1bd:ea4b]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::941d:9fe8:b1bd:ea4b%5]) with mapi id 15.20.5123.031; Tue, 5 Apr 2022
+ 08:45:18 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: RE: [PATCH] scsi: ufs: ufs-pci: Add support for Intel MTL
+Thread-Topic: [PATCH] scsi: ufs: ufs-pci: Add support for Intel MTL
+Thread-Index: AQHYR+gUd7jogGxWM0ejV8vt/YjnSqzhAD8A
+Date:   Tue, 5 Apr 2022 08:45:18 +0000
+Message-ID: <DM6PR04MB65758B548863663DBCA3B4E7FCE49@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20220404055038.2208051-1-adrian.hunter@intel.com>
+In-Reply-To: <20220404055038.2208051-1-adrian.hunter@intel.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 0526e4b6-f58f-49e1-547d-08da16e09ce1
+x-ms-traffictypediagnostic: MWHPR0401MB3612:EE_
+x-microsoft-antispam-prvs: <MWHPR0401MB361238A84170676682964BDFFCE49@MWHPR0401MB3612.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 5r79nnOalXn0ZLM+Ht9fEP30e0WRU1tVRkfzn/cl9l+NMjBcV4uwJSc6Hr6ZxjwuSX3dDfPYoj9iHCr1nsuqd2LmwhKlI44pWaGhRLkETV+3O0JRj2ughuy8S1PHJK52VDQKBVPPKlLjeru1Hbtdx6yVWtPassFF2PoluXVi39zb0g4Cp45xvG8KPM6YS9rFXjMyfKou9b6IedXjbUF1oji4L+u5iX+mrP/yaGiCZ4ZqTjK9uLGYP1kgwHcD5yzn1MMcg90kgBIMmRLilbrJ7EG9kjpK8oAQzPd3evgwhUOIUNSR9+2Kj9/1FEl1IazSSw7KWPQKRjO86j6fxfwZwTWxLxbprmX4Q/ZvsDpqWMXFnr6xj//sjP9hSrNJY/l5264yYxCh+tLW6dn2hwcUu5OpkmX2U5Qgyi/q8WJ8LRM99x90ZJ2QL+BN8fULFKoMOEU3iuMG3uyT6aZSI1xCbcyb68xyIJ7SMVDTD/pQ5tORMrmtF9ZH0U0K0LjB/Zm2p6pzcwyiD78Z9j3p5AzrmjlnCIQlT5BB5b2j4ji7x6PEe4WFMUAjn1+j3KARfnyQ83Uro4RZXKe9ABp47TZcZ8Sh8XDrz94/lG7E9Pf9r97Wl5e8hKybneIQMscaQllVkt9gNCsRzza1bywWVfJbaWtdm0ICDF3h+uj1IrHEhWb4tW9R1JfQy6Bzs5VKmASaqWmMwg8oY9cMJdGZKOrdHQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(38070700005)(33656002)(71200400001)(110136005)(2906002)(76116006)(82960400001)(64756008)(316002)(54906003)(122000001)(8676002)(4326008)(66556008)(66946007)(66476007)(66446008)(38100700002)(6506007)(86362001)(9686003)(508600001)(8936002)(55016003)(558084003)(52536014)(7696005)(26005)(186003)(5660300002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?sghRJaYBQA5kfSiLwUibeb2BkYZ+YidXwj5U6ESAPoiAXlv9t8pEtxcvKVeG?=
+ =?us-ascii?Q?8VcJpneWRpesq51uamHZZ+sOllKLMfxldb167S6t1qsv7VzcB/qxJv0uX/8l?=
+ =?us-ascii?Q?2yM36fgIcSBUl6hkMkivAYIf0e3dXj1gIVOdyUGabATIiDMWDTkF2MghY9/I?=
+ =?us-ascii?Q?SsoLGvhDHJYzlHa1LfhgssLFnnkl0nGDhaUFSFWiQD6XLL97yBJ85rfSyMWh?=
+ =?us-ascii?Q?YuId83q0C4KqZ/jC3tb1IKSqNtTjBU68xNsaq9toM/EJutf0tTkKdYzoYlwg?=
+ =?us-ascii?Q?3pZs0GcqbAvQqcRq+yMSP4lkmMsoIrNK5d7Yd5RXZiO+nAxnlraDRzlyAEQ5?=
+ =?us-ascii?Q?kY16nrXT/WL6m8mdh6kL1SuUN2BUs7kJwBzHJkClLj5K6JYvOst2YKJpxC1R?=
+ =?us-ascii?Q?J7SMgulHmmRqCW1S64Sm4aqNa92wt9f6YF4itGIvAujG+wzY4qjtOvUcqlns?=
+ =?us-ascii?Q?ugTuG3ezvK4oreRujOa0m81SvIfvqPpjeVaCHNn3qIdYVUGqp9+VL9+J2yFm?=
+ =?us-ascii?Q?K4cD4hLXpjAAEWR2f2WXr50UimXCbqruVwMrU0AeCuNdKDXDg462CsrkPcMD?=
+ =?us-ascii?Q?yhm7BDV4igBBvPi/2oWaPf/SKVqtoIViOMFcv6FciAp+fnoLFDzEdS9Px5dS?=
+ =?us-ascii?Q?s6qWnXKMTQJjGeQBHMXZ7GyaBFhjknz6kbWNUYNsxu2pfOonE0w6wbVoSiFu?=
+ =?us-ascii?Q?ruzW73eZmjAnO9B+YFfMXwyJtzJABNkQkVQRswdHg2MSNVhyNTrhU/cZ78AD?=
+ =?us-ascii?Q?krUAC4ORWwcLxAzd97Y/Pa8xiEe4QWlQNy00s0DxBnIvHXhEvfD6Bmh7L8Xh?=
+ =?us-ascii?Q?B78HsdNC0bx6hNCePdX7bO+2eoGgqwYt7pIJ2DXV0/AaTqxhsbyqpDGl8btr?=
+ =?us-ascii?Q?50qlvxSPeAmFZqmgR8PcwZSKBnQta/ZnDVcUotbJYIXaJQWvsW9fN4IxRfWF?=
+ =?us-ascii?Q?3MEYLuizJa+TIAj4FDHBMa0hOVMB2tfB41YPNpvS9nvc3aBmLKosZFeot1sE?=
+ =?us-ascii?Q?7vqXkfHhH2Fr1sitC7jkX8ZX0hl8Rh8epaY1BW3fueFRsc/U/+PLFB5cOkv9?=
+ =?us-ascii?Q?zWZcsse1Zby1wAaZjQ5f23cwT+MUuijsPjFVDueChZkj5wukgsrhZwo4jaRM?=
+ =?us-ascii?Q?GBAAognpEbCD0yO6WfYxo0BlcmbtdZwKvrrDsSXXRYcfVuOvql7Px6QyWZB1?=
+ =?us-ascii?Q?efr28uM3m+RmYN3vrvh2bHb1GmroSKnxIgC5SxyzM0qzOhJBNu8zcqMMp03k?=
+ =?us-ascii?Q?2G8RdZu6nE4Jbr7M85/pK+WUkfS1Y6ptyL1gDNfLlEz3nrY8mQBgdwu1L5W3?=
+ =?us-ascii?Q?lf8rWm8240hxVaVrdxjTF6BkF0JquHK/XJYy1vcxJoZeWf65MZftSjWc9VKe?=
+ =?us-ascii?Q?ckIjloO/6SxABpOaL1PbHd7KlW0/9LEwlZNrtF9iTBxxDjLwXoPiWLJ1wg9g?=
+ =?us-ascii?Q?Ei01QvbPleYA2ColKCDA5A4LJkEqomBSSGmOyaWMObMVAxdD8IB+vl6r8vl4?=
+ =?us-ascii?Q?bRkp9w+uEMUI3IXiS15XF4KihGgegNMpQP8oWvs0JnST8GA7Clzkk8lR3/r5?=
+ =?us-ascii?Q?KCk4ztE2hpusdD/fwyIt5Y+8DDkRWWm/gEB0ASe3owrj6GYJNZXRsB2cvcWM?=
+ =?us-ascii?Q?A+6bIZmDFOwHxSp2gnx7oLBhbTX5qrSkXoI4mCQ5VlMX0l7GNDezv9i6AzPK?=
+ =?us-ascii?Q?suYz0vLfqgJwUEL2qEmLy34Qr7yhvqd6Qe5GbN8jVDM/69kRjJXDsQG4xJ1E?=
+ =?us-ascii?Q?8O6UNOv+Ig=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0526e4b6-f58f-49e1-547d-08da16e09ce1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Apr 2022 08:45:18.5751
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Fz0BcuwY/BcZ9ZYhxCE0Eos/JRlkdLaoCYiRJaEW7iVudVn8cgxuj/tVlC+jov0+0slelUPJDunQZthlHoXxlA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0401MB3612
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This driver doesn't use SCp.ptr to save a SCSI command data pointer which
-means "scsi pointer" is a complete misnomer here. Only a few members of
-struct scsi_pointer are needed so move those to private command data.
-
-Signed-off-by: Finn Thain <fthain@linux-m68k.org>
----
-The sym53c500_cs driver somehow missed out on complete scsi_pointer
-removal in Bart's recently queued patch series, unlike nsp32 for example.
-So this patch finishes the job. Compile-tested only.
----
- drivers/scsi/pcmcia/sym53c500_cs.c | 51 ++++++++++++++++--------------
- 1 file changed, 27 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
-index c4a838635893..4980247f95bc 100644
---- a/drivers/scsi/pcmcia/sym53c500_cs.c
-+++ b/drivers/scsi/pcmcia/sym53c500_cs.c
-@@ -192,7 +192,13 @@ struct sym53c500_data {
- 	int fast_pio;
- };
- 
--static struct scsi_pointer *sym53c500_scsi_pointer(struct scsi_cmnd *cmd)
-+struct sym53c500_cmd_priv {
-+	int status;
-+	int message;
-+	int phase;
-+};
-+
-+static struct sym53c500_cmd_priv *SYM53c500_priv(struct scsi_cmnd *cmd)
- {
- 	return scsi_cmd_priv(cmd);
- }
-@@ -356,7 +362,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 	struct sym53c500_data *data =
- 	    (struct sym53c500_data *)dev->hostdata;
- 	struct scsi_cmnd *curSC = data->current_SC;
--	struct scsi_pointer *scsi_pointer = sym53c500_scsi_pointer(curSC);
-+	struct sym53c500_cmd_priv *scp = SYM53c500_priv(curSC);
- 	int fast_pio = data->fast_pio;
- 
- 	spin_lock_irqsave(dev->host_lock, flags);
-@@ -403,12 +409,11 @@ SYM53C500_intr(int irq, void *dev_id)
- 
- 	if (int_reg & 0x20) {		/* Disconnect */
- 		DEB(printk("SYM53C500: disconnect intr received\n"));
--		if (scsi_pointer->phase != message_in) {	/* Unexpected disconnect */
-+		if (scp->phase != message_in) {	/* Unexpected disconnect */
- 			curSC->result = DID_NO_CONNECT << 16;
- 		} else {	/* Command complete, return status and message */
--			curSC->result = (scsi_pointer->Status & 0xff) |
--				((scsi_pointer->Message & 0xff) << 8) |
--				(DID_OK << 16);
-+			curSC->result = (scp->status & 0xff) |
-+				((scp->message & 0xff) << 8) | (DID_OK << 16);
- 		}
- 		goto idle_out;
- 	}
-@@ -419,7 +424,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 			struct scatterlist *sg;
- 			int i;
- 
--			scsi_pointer->phase = data_out;
-+			scp->phase = data_out;
- 			VDEB(printk("SYM53C500: Data-Out phase\n"));
- 			outb(FLUSH_FIFO, port_base + CMD_REG);
- 			LOAD_DMA_COUNT(port_base, scsi_bufflen(curSC));	/* Max transfer size */
-@@ -438,7 +443,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 			struct scatterlist *sg;
- 			int i;
- 
--			scsi_pointer->phase = data_in;
-+			scp->phase = data_in;
- 			VDEB(printk("SYM53C500: Data-In phase\n"));
- 			outb(FLUSH_FIFO, port_base + CMD_REG);
- 			LOAD_DMA_COUNT(port_base, scsi_bufflen(curSC));	/* Max transfer size */
-@@ -453,12 +458,12 @@ SYM53C500_intr(int irq, void *dev_id)
- 		break;
- 
- 	case 0x02:		/* COMMAND */
--		scsi_pointer->phase = command_ph;
-+		scp->phase = command_ph;
- 		printk("SYM53C500: Warning: Unknown interrupt occurred in command phase!\n");
- 		break;
- 
- 	case 0x03:		/* STATUS */
--		scsi_pointer->phase = status_ph;
-+		scp->phase = status_ph;
- 		VDEB(printk("SYM53C500: Status phase\n"));
- 		outb(FLUSH_FIFO, port_base + CMD_REG);
- 		outb(INIT_CMD_COMPLETE, port_base + CMD_REG);
-@@ -471,24 +476,22 @@ SYM53C500_intr(int irq, void *dev_id)
- 
- 	case 0x06:		/* MESSAGE-OUT */
- 		DEB(printk("SYM53C500: Message-Out phase\n"));
--		scsi_pointer->phase = message_out;
-+		scp->phase = message_out;
- 		outb(SET_ATN, port_base + CMD_REG);	/* Reject the message */
- 		outb(MSG_ACCEPT, port_base + CMD_REG);
- 		break;
- 
- 	case 0x07:		/* MESSAGE-IN */
- 		VDEB(printk("SYM53C500: Message-In phase\n"));
--		scsi_pointer->phase = message_in;
-+		scp->phase = message_in;
- 
--		scsi_pointer->Status = inb(port_base + SCSI_FIFO);
--		scsi_pointer->Message = inb(port_base + SCSI_FIFO);
-+		scp->status = inb(port_base + SCSI_FIFO);
-+		scp->message = inb(port_base + SCSI_FIFO);
- 
- 		VDEB(printk("SCSI FIFO size=%d\n", inb(port_base + FIFO_FLAGS) & 0x1f));
--		DEB(printk("Status = %02x  Message = %02x\n",
--			   scsi_pointer->Status, scsi_pointer->Message));
-+		DEB(printk("Status = %02x  Message = %02x\n", scp->status, scp->message));
- 
--		if (scsi_pointer->Message == SAVE_POINTERS ||
--		    scsi_pointer->Message == DISCONNECT) {
-+		if (scp->message == SAVE_POINTERS || scp->message == DISCONNECT) {
- 			outb(SET_ATN, port_base + CMD_REG);	/* Reject message */
- 			DEB(printk("Discarding SAVE_POINTERS message\n"));
- 		}
-@@ -500,7 +503,7 @@ SYM53C500_intr(int irq, void *dev_id)
- 	return IRQ_HANDLED;
- 
- idle_out:
--	scsi_pointer->phase = idle;
-+	scp->phase = idle;
- 	scsi_done(curSC);
- 	goto out;
- }
-@@ -548,7 +551,7 @@ SYM53C500_info(struct Scsi_Host *SChost)
- 
- static int SYM53C500_queue_lck(struct scsi_cmnd *SCpnt)
- {
--	struct scsi_pointer *scsi_pointer = sym53c500_scsi_pointer(SCpnt);
-+	struct sym53c500_cmd_priv *scp = SYM53c500_priv(SCpnt);
- 	int i;
- 	int port_base = SCpnt->device->host->io_port;
- 	struct sym53c500_data *data =
-@@ -565,9 +568,9 @@ static int SYM53C500_queue_lck(struct scsi_cmnd *SCpnt)
- 	VDEB(printk("\n"));
- 
- 	data->current_SC = SCpnt;
--	scsi_pointer->phase = command_ph;
--	scsi_pointer->Status = 0;
--	scsi_pointer->Message = 0;
-+	scp->phase = command_ph;
-+	scp->status = 0;
-+	scp->message = 0;
- 
- 	/* We are locked here already by the mid layer */
- 	REG0(port_base);
-@@ -682,7 +685,7 @@ static struct scsi_host_template sym53c500_driver_template = {
-      .this_id			= 7,
-      .sg_tablesize		= 32,
-      .shost_groups		= SYM53C500_shost_groups,
--     .cmd_size			= sizeof(struct scsi_pointer),
-+     .cmd_size			= sizeof(struct sym53c500_cmd_priv),
- };
- 
- static int SYM53C500_config_check(struct pcmcia_device *p_dev, void *priv_data)
--- 
-2.32.0
-
+=20
+> Add PCI ID and callbacks to support Intel Meteor Lake (MTL).
+>=20
+> Cc: stable@vger.kernel.org # v5.15+
+> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
