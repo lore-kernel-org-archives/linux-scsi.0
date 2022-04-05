@@ -2,79 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D309C3527A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5512C3527E
 	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 01:10:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358173AbiDFBIG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Apr 2022 21:08:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52790 "EHLO
+        id S1392152AbiDFBIQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Apr 2022 21:08:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1452390AbiDEPyv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 11:54:51 -0400
-Received: from mail-wm1-x32b.google.com (mail-wm1-x32b.google.com [IPv6:2a00:1450:4864:20::32b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5EF150463;
-        Tue,  5 Apr 2022 07:54:34 -0700 (PDT)
-Received: by mail-wm1-x32b.google.com with SMTP id h16so8188245wmd.0;
-        Tue, 05 Apr 2022 07:54:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :content-transfer-encoding:user-agent:mime-version;
-        bh=ZgloS23OHbbWJmMWCBBuxDQhTcLsXy3usgzVwJSOKgk=;
-        b=IZ5zhCimPIiAsz0DRrHxkz6PkwkjPuFniWAHfKJziaaJrfFbpYjZuJGaMF8O541WDU
-         fa7nFrPAgZOkHDqMa5NV4j64ioctuzTP5KY4v+CVHa9ie5efzsdPBr4rWv6xDankrbod
-         mNPxtwYZpOlyz/xP0BvwAB8foKwqOEH/JvEw/XYo1Y46hh/IwSZEZxPO+gn3CEKqAmch
-         Y3txROz/BrhKCeVLZkVoGtq43FsJyivRvYQFmbFijwCqmXKBxVzn1Q2j/Ln4F9kuHVAp
-         jR0ukyxQE8zRFZwsQDtJ6m+7pxEnjySQoxVjt53r9IfHzTHd7mS+46i0C96usXJzF8aV
-         lBgA==
+        with ESMTP id S1446293AbiDEPo0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 11:44:26 -0400
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F07D838B7
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 07:13:36 -0700 (PDT)
+Received: by mail-pl1-f171.google.com with SMTP id m16so302143plx.3
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Apr 2022 07:13:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:content-transfer-encoding:user-agent:mime-version;
-        bh=ZgloS23OHbbWJmMWCBBuxDQhTcLsXy3usgzVwJSOKgk=;
-        b=mD9DXTXxunSCKZZ2wRhKgxM4yk5bnee8yjTpmJ3zJXfFEHgRGOTYB9vDzeH+nW9z5V
-         wa/OMZm5rf7xCcmx62k7il0kAq5dCA7eA5SfXiCNKF6ub8PNtl5Lz2q6CCe5Si00wajj
-         qJiY/jGFIPsplv+l/hsYnsxTsyK3v25T6bNkCeNj3uCzjpvVQVqR6pw8RSmL4A4PEuUW
-         PzVRiYICMSe85ImDLt00FUvJgu6MtX/srW+TTC4hNziqgPefpczP+4MZKwtFuKCTRhu6
-         QP6KZ+D+9e1magMrvMC6f77MvBH33GxGxyds1mAyPbxwNJie6qgMVGP3VeUQv21wE6Bd
-         lNPQ==
-X-Gm-Message-State: AOAM53176nZ0gGA3m/lwXGmITVLTcx+NMvp5+9bdaRBQkYasEMJVL7x5
-        eNBy74t7VyPBO3YN0n6FOGw=
-X-Google-Smtp-Source: ABdhPJzuEe7OsLIY9AfwcG+I3E3XAqgVLzqCt8GNajGHJBJi7D2qTPcOGnYa5vyjo04qwdEoRMmBPA==
-X-Received: by 2002:a7b:c341:0:b0:37b:c619:c9f4 with SMTP id l1-20020a7bc341000000b0037bc619c9f4mr3536266wmj.38.1649170473374;
-        Tue, 05 Apr 2022 07:54:33 -0700 (PDT)
-Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
-        by smtp.googlemail.com with ESMTPSA id i14-20020a0560001ace00b00203da1fa749sm17662993wry.72.2022.04.05.07.54.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Apr 2022 07:54:32 -0700 (PDT)
-Message-ID: <8b3ce88f65fd11523a4d2daab3c617f7089eb1ce.camel@gmail.com>
-Subject: Re: [PATCH  v2 0/4] rpmb subsystem, uapi and virtio-rpmb driver
-From:   Bean Huo <huobean@gmail.com>
-To:     Alex =?ISO-8859-1?Q?Benn=E9e?= <alex.bennee@linaro.org>,
-        linux-kernel@vger.kernel.org
-Cc:     maxim.uvarov@linaro.org, joakim.bech@linaro.org,
-        ulf.hansson@linaro.org, ilias.apalodimas@linaro.org,
-        arnd@linaro.org, ruchika.gupta@linaro.org, tomas.winkler@intel.com,
-        yang.huang@intel.com, bing.zhu@intel.com,
-        Matti.Moell@opensynergy.com, hmo@opensynergy.com,
-        linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org
-Date:   Tue, 05 Apr 2022 16:54:32 +0200
-In-Reply-To: <20220405093759.1126835-1-alex.bennee@linaro.org>
-References: <20220405093759.1126835-1-alex.bennee@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.0-1 
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=vnYtZ2qJJRtr9wsVU523WFiVK+ZO9R7edAcgrMxWxe0=;
+        b=B+MmAYCH4Bc51oq2aOrQ/6OV/tvM9dPDhrjDe6xw1aZEa8e7bvxzJJL090huJaUkHQ
+         Y/YgPQET1pgnvteEYE5QYu19MGkrHhSsxbnmghsT3clNGuoMsWidvYY9pil0kvKCJ0sQ
+         vN34jDJM4gi6LAG4tr6mlN5QBq1UttvYVveUIVOD2k6h534i9GRbmURyKW0wmKvN7tJ7
+         rh6ZWgmHouHeYDqxImijzp3xwFGdpcKHbFwxXmNp/DdKdzkNAhY1E8IqDTj5HeRTTbzP
+         VwIiJ9uOnm4G2FRxZ8evFRBVKPnxTg2QMbm7ynRtvx6yc1DeVzhYm6It2l+lud5TXXJa
+         Y2JA==
+X-Gm-Message-State: AOAM530RgcMFUlA/KQJ56iRzHEEWqlFiZtoYi+4bwKf0ssaOAmE9qk5A
+        5CY8Ss6TseEQ9fzZq9ygxPY=
+X-Google-Smtp-Source: ABdhPJzvAxpaDvwZmaE/Kt/+0C0JdsVmvx/wqO5/9A3PgEITH6d1LR6kUk0OHzhmnKny9siUwoCdow==
+X-Received: by 2002:a17:90b:3a84:b0:1c7:bc91:a870 with SMTP id om4-20020a17090b3a8400b001c7bc91a870mr4355773pjb.155.1649168016289;
+        Tue, 05 Apr 2022 07:13:36 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id i67-20020a636d46000000b00398344a27cfsm13703653pgc.8.2022.04.05.07.13.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 05 Apr 2022 07:13:35 -0700 (PDT)
+Message-ID: <e605b3dc-1421-62c9-fdf2-4476b456b539@acm.org>
+Date:   Tue, 5 Apr 2022 07:13:33 -0700
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 28/29] scsi: ufs: Move the ufs_is_valid_unit_desc_lun()
+ definition
+Content-Language: en-US
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>
+References: <20220331223424.1054715-1-bvanassche@acm.org>
+ <20220331223424.1054715-29-bvanassche@acm.org>
+ <DM6PR04MB6575F48E7D66AB4644CBD87EFCE49@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <DM6PR04MB6575F48E7D66AB4644CBD87EFCE49@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Alex,
+On 4/4/22 23:53, Avri Altman wrote:
+>>
+>> Move the definition of this function from a public into a private header file
+>> since it is only used inside the UFS core.
+>
+> Should be in patch 26/29?
 
-Thanks for this unified RPMB interface, I wanted to verify this on our
-UFS, it seems you didn't add the UFS access interface in this version=20
-from your userspace tools, right?
+Patch 26/29 splits the ufshcd.h header file. This patch moves a 
+definition from ufs.h into ufshcd-priv.h. I do not have a strong opinion 
+about whether that should happen in separate patches or in a single patch.
 
+Thanks,
 
-Kind regards,
-Bean
+Bart.
