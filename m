@@ -2,31 +2,31 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDB4AC4167B
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 09:11:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 521C9C4707A
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 09:11:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353953AbiDFJIb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Apr 2022 05:08:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53042 "EHLO
+        id S1354505AbiDFJIf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Apr 2022 05:08:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358536AbiDFJDW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 05:03:22 -0400
+        with ESMTP id S1377068AbiDFJDb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 05:03:31 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F25FD48F719;
-        Tue,  5 Apr 2022 23:06:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78B2748F731;
+        Tue,  5 Apr 2022 23:06:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=TxXl3MdplxU9MCO/Q7D4FJYRsok6DDTDVaSg962eOWw=; b=rucC9iJZF0nT1xLRSKT9tqQoP5
-        nL0SBYR/iPNSHB6wdcFxgaOg4ge9C2M4FP2p1JxUqmGG9zNBcpvn8l2ImaqSWUruwic5SBL+1Ka0A
-        N9OC/cngiat+LW2SmmgQgik6umVCvLvTWe7LVYau+JKoIVcB5LAd/jZAV15/t6fN+UTCCe2AFXibt
-        E1V1T10hMp3lTxlmDK2XsJoN/x/84A5CsbNWzJR1vr4eEH4n9FywvazpXPuwcYDJ3oSJzJmHtYcSR
-        fBAUwkO6DmJcsI89V/f7f2YpyrUwGe49T4osq7oE4lAOjncY7dpUANpsFS6qbMzskbxkKi/9ab/Dz
-        RphmF5Bw==;
+        bh=d3sJ7l3Ux9SIWrKAiUmyBkG0qOnuM50cLv7WOo5iKv8=; b=U2k/JlDotMbinK7/JDeqSo6/XP
+        Bs6ySJFC9su858GHk30OJaJoPB8rDR3fvqdgMURXO1OQquTgsv4KE+byWZoWhPXIJrPHFRYb57htY
+        5kZ+Tj1EaeX24yHzNVPsnH8vK+56pifogbah/qUjzUOJyGboKhFS3X1qob8eCfNE75hF6DRia35U9
+        qUd69uVjtYbl+AqrDw3m1Y45lEPmXYcMS6cMXqiqEpwL10Cir9JTLmDF/dQj22I6ypwBu1ciZGVg0
+        rsksxrk+RgNjFNzHV8WMNg8RMAo9CfrbuDS6Y2JIjcM3aNVVcHFf8/GoINpy91AK7PBW/D671mulY
+        8/TSMjOw==;
 Received: from 213-225-3-188.nat.highway.a1.net ([213.225.3.188] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbyo9-003vQV-AV; Wed, 06 Apr 2022 06:06:22 +0000
+        id 1nbyoK-003vcM-Lw; Wed, 06 Apr 2022 06:06:33 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -43,9 +43,9 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
         ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
-Subject: [PATCH 16/27] drbd: use bdev_alignment_offset instead of queue_alignment_offset
-Date:   Wed,  6 Apr 2022 08:05:05 +0200
-Message-Id: <20220406060516.409838-17-hch@lst.de>
+Subject: [PATCH 19/27] block: remove queue_discard_alignment
+Date:   Wed,  6 Apr 2022 08:05:08 +0200
+Message-Id: <20220406060516.409838-20-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220406060516.409838-1-hch@lst.de>
 References: <20220406060516.409838-1-hch@lst.de>
@@ -56,27 +56,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The bdev version does the right thing for partitions, so use that.
+Just use bdev_alignment_offset in disk_discard_alignment_show instead.
+That helpers is the same except for an always false branch that doesn't
+matter in this slow path.
 
-Fixes: 9104d31a759f ("drbd: introduce WRITE_SAME support")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/drbd/drbd_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/genhd.c          | 2 +-
+ include/linux/blkdev.h | 8 --------
+ 2 files changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
-index d20d84ee7a88e..9d43aadde19ad 100644
---- a/drivers/block/drbd/drbd_main.c
-+++ b/drivers/block/drbd/drbd_main.c
-@@ -939,7 +939,7 @@ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enu
- 		p->qlim->logical_block_size =
- 			cpu_to_be32(bdev_logical_block_size(bdev));
- 		p->qlim->alignment_offset =
--			cpu_to_be32(queue_alignment_offset(q));
-+			cpu_to_be32(bdev_alignment_offset(bdev));
- 		p->qlim->io_min = cpu_to_be32(bdev_io_min(bdev));
- 		p->qlim->io_opt = cpu_to_be32(bdev_io_opt(bdev));
- 		p->qlim->discard_enabled = blk_queue_discard(q);
+diff --git a/block/genhd.c b/block/genhd.c
+index 712031ce19070..36532b9318419 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1019,7 +1019,7 @@ static ssize_t disk_discard_alignment_show(struct device *dev,
+ {
+ 	struct gendisk *disk = dev_to_disk(dev);
+ 
+-	return sprintf(buf, "%d\n", queue_discard_alignment(disk->queue));
++	return sprintf(buf, "%d\n", bdev_alignment_offset(disk->part0));
+ }
+ 
+ static ssize_t diskseq_show(struct device *dev,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 0a1795ac26275..5a9b7aeda010b 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1253,14 +1253,6 @@ bdev_zone_write_granularity(struct block_device *bdev)
+ 
+ int bdev_alignment_offset(struct block_device *bdev);
+ 
+-static inline int queue_discard_alignment(const struct request_queue *q)
+-{
+-	if (q->limits.discard_misaligned)
+-		return -1;
+-
+-	return q->limits.discard_alignment;
+-}
+-
+ static inline int queue_limit_discard_alignment(struct queue_limits *lim, sector_t sector)
+ {
+ 	unsigned int alignment, granularity, offset;
 -- 
 2.30.2
 
