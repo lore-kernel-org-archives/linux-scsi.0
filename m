@@ -2,97 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78B19C43217
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 05:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88E3EC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 05:42:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241974AbiDFFna (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Apr 2022 01:43:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40866 "EHLO
+        id S242282AbiDFFnn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Apr 2022 01:43:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1845834AbiDFCBW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2022 22:01:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCAC3258FF5
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 16:29:46 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S1588082AbiDFFfn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 01:35:43 -0400
+Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85F3B35E2E8
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 18:06:17 -0700 (PDT)
+Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2C4CD60AC0
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 23:29:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 82F91C385A0
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 23:29:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649201385;
-        bh=NEWncxU3RMWEbBPuVnOQnu4+2dh1CqVI3xodyHY6Ijk=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=R1C3fgbpM8pOt4TQRat/Emy5Z08buJMfeni9ybat8Gs5GM1n4w+5BDghA0Tn+OSrf
-         CtTLEchwZY0Niu2tSqE4EG7HYmex4axIi7Jz8jGjwiI8MRI8mxNryvuYKSZn9INSk2
-         Bb/XbWln+1xqP281rLiNRPzJVO6BD9snqZmloXqVHQPzTX7ONsswRzwmPNx0DSZJqE
-         eGbWygM+q4y8DS/gcWrTiXu2qQpjcZwdO4Q70EPrWorNXJ7K/6+/gU3btZeFX7BF0M
-         VAUVGnelv51UuAi5tIilQSqJpRggsSjSVvMS7v5wXwMb13okfBuZCBD5ZpQLaKRQD/
-         E8OKUkqJkhM5g==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 6AA4ECAC6E2; Tue,  5 Apr 2022 23:29:45 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215788] arcmsr driver on kernel 5.16 and up fails to initialize
- ARC-1280ML RAID controller
-Date:   Tue, 05 Apr 2022 23:29:45 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: damien.lemoal@wdc.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215788-11613-dn8na9sStn@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215788-11613@https.bugzilla.kernel.org/>
-References: <bug-215788-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 7E4186184F
+        for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2022 01:06:16 +0000 (UTC)
+Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
+        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 7592B62D23
+        for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2022 01:06:16 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
+        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
+        with ESMTP id 6JepFK7rWgXZ for <linux-scsi@vger.kernel.org>;
+        Wed,  6 Apr 2022 01:06:16 +0000 (UTC)
+Received: from [192.168.48.23] (host-45-78-195-155.dyn.295.ca [45.78.195.155])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id 0FD3D629DB
+        for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2022 01:06:15 +0000 (UTC)
+Message-ID: <43b9f7d7-658e-7452-c180-6a63b8e04cec@interlog.com>
+Date:   Tue, 5 Apr 2022 21:06:15 -0400
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Subject: scsi_cmnd.h partially consumes scsi_request.h
+Reply-To: dgilbert@interlog.com
+To:     SCSI development list <linux-scsi@vger.kernel.org>
+Content-Language: en-CA
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215788
+Prior to lk 5.18.0-rc1 SCSI commands could be as long as the user wanted.
+Practically they could not exceed 8+255 bytes due to the single byte
+additional cdb length field in the variable length cdb format (opcode 7Fh).
 
---- Comment #5 from Damien Le Moal (damien.lemoal@wdc.com) ---
-Can you try this patch:
+Not any more. Now in include/scsi/scsi_cmnd.h we have the remnants of
+include/scsi/scsi_request.h (deceased) and this questionable code:
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a390679cf458..cecba3fcbc61 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3216,6 +3216,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
-                        sd_read_block_limits(sdkp);
-                        sd_read_block_characteristics(sdkp);
-                        sd_zbc_read_zones(sdkp, buffer);
-+                       sd_read_cpr(sdkp);
-                }
+.....
+#define MAX_COMMAND_SIZE 16
+.....
 
-                sd_print_capacity(sdkp, old_capacity);
-@@ -3225,7 +3226,6 @@ static int sd_revalidate_disk(struct gendisk *disk)
-                sd_read_app_tag_own(sdkp, buffer);
-                sd_read_write_same(sdkp, buffer);
-                sd_read_security(sdkp, buffer);
--               sd_read_cpr(sdkp);
-        }
+struct scsi_cmnd {
+     ....
+     unsigned char cmnd[32]; /* SCSI CDB <<<<<<< Ouch! */
+     ....
+};
 
-        /*
+So support for vendor specific cdb_s whose length is > 32 is gone. So is
+support for any T10 cbd_s whose length is > 32 (mainly OSD). As is support
+for XCDB_s (opcode 7Eh) which currently seems to be a placeholder for
+future work by T10 (reference: spc6r06.pdf). XCDB_s are defined in SPC-5
+(INCITS 502) which is the latest _standard_ .
 
---=20
-You may reply to this email to add a comment.
+And why the magic number "32", surely it deserves to be named?
+And why keep the misleading MAX_COMMAND_SIZE define?
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+
+A suggestion ...
+
+Change:
+     unsigned char cmnd[32]; /* SCSI CDB */
+to:
+     union {
+         u8 cmnd[MAX_COMPILE_TIME_CDB_LEN]; /* SCSI CDB */
+         struct scsi_long_cdb l_cdb;
+     };
+
+And add a new scmd->flags value, a define, and that new struct prior
+to the struct scsi_cmnd definition:
+     #define SCMD_LONG_CDB               (1 << 3)
+
+     #define MAX_COMPILE_TIME_CDB_LEN 32
+
+     struct scsi_long_cdb {
+         u64 dummy_tur;	  /* when zero yields Test Unit Ready cdb */
+         u8 *cdbp;         /* byte length in scsi_cmnd::cmd_len */
+     };
+
+
+Plus the destructor for a scsi_cmnd object could free cdbp if the SCMD_LONG_CDB
+flag is set. That will make life easier for "long_cdb" users.
+
+Accessor functions:
+
+/* Returns pointer to where cdb bytes can be written, or NULL if the allocation
+  * associated with a "long" cdb fails. Copies in 'cdb' if it is non-NULL. If
+  * cdb_len == 0 then function acts as a destructor and returns NULL. */
+     u8 * scsi_cmnd_set_cdb(struct scsi_cmnd *scmd, u8 * cdb, u16 cdb_len)
+     {
+         if (unlikely(scmd->flags & SCMD_LONG_CDB)) {
+             if (cdb_len > MAX_COMPILE_TIME_CDB_LEN &&
+                 cdb_len <= scmd->cmd_len) {
+                 if (cdb)
+                     memcpy(scmd->l_cdb.cdbp, cdb, cdb_len);
+                 scmd->cmd_len = cdb_len;
+                 return scmd->l_cdb.cdbp;
+             kfree(scmd->l_cdb.cdbp);
+             scmd->l_cdb.cdbp = NULL;
+             scmd->flags &= ~SCMD_LONG_CDB;
+         }
+         scmd->cmd_len = cdb_len;
+         if (cdb_len == 0)
+             return NULL;
+         if (likely(cdb_len <= MAX_COMPILE_TIME_CDB_LEN)) {
+             if (cdb)
+                 memcpy(scmd->cmnd, cdb, cdb_len);
+             return scmd->cmnd;
+         }
+         scmd->l_cdb.cdbp = kzalloc(cdb_len, GFP_KERNEL);
+         if (!scmd->l_cdb.cdbp) {
+             scmd->cmd_len = 0;
+             return NULL;
+         }
+         scmd->flags |= SCMD_LONG_CDB;
+         scmd->l_cdb.dummy_tur = 0;  /* defensive: cheap aid when testing */
+         if (cdb)
+             memcpy(scmd->l_cdb.cdbp, cdb, cdb_len);
+         return scmd->l_cdb.cdbp;
+     }
+
+/* Associated cdb length is in scmd->cmd_len . Should not be used for
+  * modifying a cdb (hence the const_s). */
+     const u8 * scsi_cmnd_get_cdb(const struct scsi_cmnd *scmd)
+     {
+         return (scmd->flags & SCMD_LONG_CDB) ? scmd->l_cdb.cdbp :
+                                                scmd->cmnd;
+     }
+
+The latter can be inlined.
+
+LLDs can ignore the above if they do not support > 32 bytes in their cdb_s.
+Otherwise they can call the 'get' accessor function above.
+
+Notice sizeof(struct scsi_cmnd) is not changed by this suggestion. One extra
+bit is used in scmd->flags .
+
+
+Doug Gilbert
