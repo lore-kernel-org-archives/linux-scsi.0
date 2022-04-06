@@ -2,160 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88E3EC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 05:42:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE50FC43217
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 09:03:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242282AbiDFFnn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Apr 2022 01:43:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60970 "EHLO
+        id S239974AbiDFJC1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Apr 2022 05:02:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1588082AbiDFFfn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 01:35:43 -0400
-Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85F3B35E2E8
-        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 18:06:17 -0700 (PDT)
-Received: from mailpool-fe-02.fibernetics.ca (mailpool-fe-02.fibernetics.ca [208.85.217.145])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 7E4186184F
-        for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2022 01:06:16 +0000 (UTC)
-Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
-        by mailpool-fe-02.fibernetics.ca (Postfix) with ESMTP id 7592B62D23
-        for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2022 01:06:16 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-02.fibernetics.ca ([208.85.217.145])
-        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
-        with ESMTP id 6JepFK7rWgXZ for <linux-scsi@vger.kernel.org>;
-        Wed,  6 Apr 2022 01:06:16 +0000 (UTC)
-Received: from [192.168.48.23] (host-45-78-195-155.dyn.295.ca [45.78.195.155])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id 0FD3D629DB
-        for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2022 01:06:15 +0000 (UTC)
-Message-ID: <43b9f7d7-658e-7452-c180-6a63b8e04cec@interlog.com>
-Date:   Tue, 5 Apr 2022 21:06:15 -0400
+        with ESMTP id S1446747AbiDFI4j (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 04:56:39 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 641BD41FA3B
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 18:48:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1649209691; x=1680745691;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=VuoVmwsM1kjAIgmEzd4iWUN0hXYBPqUPYmlYGxx90q0=;
+  b=kJ1NHzeHl5aQt+tO+r1y0nJkUwR+AyAMkpIc13M4tcbFKjrHIzsjSvUT
+   whZcipRu6mqZAW1I1jMyYd4gmiwzG+ui2UGrOd/FjDcRRQ6yd+2S/c01d
+   2VUYfVzrgaB/ZkXXRmRgJ85ZVf0TMCuo9PXfuEyIHgGhKja2NhKhiZzMV
+   GDpLIkTYdg0xyiBY+ilbBastNQWnyn5FiWETd+ncuRn1y55wqiNI/v2gG
+   MqHRdjbhFJTdB9fKDHfRPjXqCeeksm34Nq3gQfi1nzghnXq8W7fnZhYxo
+   /eaWXJUGLL9+C/G+4+090rqSMbMAs/pa+SaRITDlheqRYARZm7F/QUxvl
+   w==;
+X-IronPort-AV: E=Sophos;i="5.90,238,1643644800"; 
+   d="scan'208";a="202037231"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 06 Apr 2022 09:48:05 +0800
+IronPort-SDR: oWnWN2H0TFXZiHU/6cyxbdT+rDXgrNbAnMpXWdCriocc3Z1nKxUcvE1LLjIL38jDUlcwV8mgrB
+ 26APO7cFaY5+RR5980JefQD8x6/Q/cuta2hCaQX+6izkyDp55H4DR7bgpatTYln92Ji9J1PgP/
+ hchbIaZYrO+tjNtwbac1i4wxiXapwSvf50Ypk5ia/f9FNNDQVux1yE8kWm5Aj+cgJtEdD069Dc
+ KoGblObDcnSkbXjicwmwBdz/IZLIfsVkIULVTtZ5CayDXngXZ/ixIMZsHj+gEICE1xtkOWZ0df
+ 9ttLDlSvudinpg29KQs842VY
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Apr 2022 18:18:49 -0700
+IronPort-SDR: uT5iTho5sgHBNioNrfE1EsSbW7b9HXBflE+X6GfVloX3vg9Jot+W8PqC5hgKMbv55RxT54k1oY
+ 4BTA/IOrmF8B3MQh7xktthqdkserV4Ee6rTTYGJRkPHyjYZxDz17WRb9cg3UapqCkxs73GGLh3
+ p4cPsRACIf4MsA0+UVsWimS+QQx2vFv6cCiH9tVYDDDIUJvTslDXHw+8UjIUp9W8ph+gx+o7n3
+ viiYEILjMQ6ZXOqTsu3tiWtFpfEK6zuBgvADCcyDrK+8TtzmBwxqr7BdsYyNlqRxWofKQlhbIh
+ vjc=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Apr 2022 18:48:06 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KY6ps5MV0z1SVp2
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 18:48:05 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1649209685; x=1651801686; bh=VuoVmwsM1kjAIgmEzd4iWUN0hXYBPqUPYml
+        YGxx90q0=; b=E4UOnw8BjAuFsxgUNz1JVDSZoX8yQLctisFANLe1Z/7C0dFuEJk
+        LfdRZDbW8aSOdPPRAKOLeHbtE6mmG+YYKwab0H3EYIozRVzMTdKBgE2ik7HJHuwe
+        1b/tZXQrhQEBKn14uwEUh3KXtkYU3AwYxZb/cftSIWs4sLb5Ii1/2OmbJOA5JmTM
+        pMTGewU2Q4eeocqSTsJgcr3aFdUI/EEHKR3ZwRZqyhl210d7gKEwFqJzkMZnFvWx
+        sVkMFEpQFSvwkCv/cyub/aWGqmuHgeyvyl77QlJzkoPLP94S2ray/pI2ibZtgHr6
+        MBrtS9l0xhBIHxhWo4d1BYM4S1B2CX7v4tQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id qQWYyftOm52h for <linux-scsi@vger.kernel.org>;
+        Tue,  5 Apr 2022 18:48:05 -0700 (PDT)
+Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KY6pr31hmz1Rvlx;
+        Tue,  5 Apr 2022 18:48:04 -0700 (PDT)
+Message-ID: <f7bbb09f-562f-fce2-cd16-a1c67fc334b5@opensource.wdc.com>
+Date:   Wed, 6 Apr 2022 10:48:03 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Subject: scsi_cmnd.h partially consumes scsi_request.h
-Reply-To: dgilbert@interlog.com
-To:     SCSI development list <linux-scsi@vger.kernel.org>
-Content-Language: en-CA
+Subject: Re: [PATCH v2 2/2] libata: Inline ata_qc_new_init() in
+ ata_scsi_qc_new()
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>, John Garry <john.garry@huawei.com>
+Cc:     linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <1649083990-207133-1-git-send-email-john.garry@huawei.com>
+ <1649083990-207133-3-git-send-email-john.garry@huawei.com>
+ <20220405055252.GA23698@lst.de>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220405055252.GA23698@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Prior to lk 5.18.0-rc1 SCSI commands could be as long as the user wanted.
-Practically they could not exceed 8+255 bytes due to the single byte
-additional cdb length field in the variable length cdb format (opcode 7Fh).
+On 4/5/22 14:52, Christoph Hellwig wrote:
+> On Mon, Apr 04, 2022 at 10:53:10PM +0800, John Garry wrote:
+>> From: Christoph Hellwig <hch@lst.de>
+>>
+>> It is a bit pointless to have ata_qc_new_init() in libata-core.c since it
+>> pokes scsi internals, so inline it in ata_scsi_qc_new() (in libata-scsi.c).
+>>
+>> <Christoph, please provide signed-off-by>
+>> [jpg, Take Christoph's change from list and form into a patch]
+>> Signed-off-by: John Garry <john.garry@huawei.com>
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Although I still think merging the two patches into one to avoid all
+> the churn would be much better.
 
-Not any more. Now in include/scsi/scsi_cmnd.h we have the remnants of
-include/scsi/scsi_request.h (deceased) and this questionable code:
-
-.....
-#define MAX_COMMAND_SIZE 16
-.....
-
-struct scsi_cmnd {
-     ....
-     unsigned char cmnd[32]; /* SCSI CDB <<<<<<< Ouch! */
-     ....
-};
-
-So support for vendor specific cdb_s whose length is > 32 is gone. So is
-support for any T10 cbd_s whose length is > 32 (mainly OSD). As is support
-for XCDB_s (opcode 7Eh) which currently seems to be a placeholder for
-future work by T10 (reference: spc6r06.pdf). XCDB_s are defined in SPC-5
-(INCITS 502) which is the latest _standard_ .
-
-And why the magic number "32", surely it deserves to be named?
-And why keep the misleading MAX_COMMAND_SIZE define?
+I agree. Let's merge these 2 patches.
 
 
-A suggestion ...
-
-Change:
-     unsigned char cmnd[32]; /* SCSI CDB */
-to:
-     union {
-         u8 cmnd[MAX_COMPILE_TIME_CDB_LEN]; /* SCSI CDB */
-         struct scsi_long_cdb l_cdb;
-     };
-
-And add a new scmd->flags value, a define, and that new struct prior
-to the struct scsi_cmnd definition:
-     #define SCMD_LONG_CDB               (1 << 3)
-
-     #define MAX_COMPILE_TIME_CDB_LEN 32
-
-     struct scsi_long_cdb {
-         u64 dummy_tur;	  /* when zero yields Test Unit Ready cdb */
-         u8 *cdbp;         /* byte length in scsi_cmnd::cmd_len */
-     };
-
-
-Plus the destructor for a scsi_cmnd object could free cdbp if the SCMD_LONG_CDB
-flag is set. That will make life easier for "long_cdb" users.
-
-Accessor functions:
-
-/* Returns pointer to where cdb bytes can be written, or NULL if the allocation
-  * associated with a "long" cdb fails. Copies in 'cdb' if it is non-NULL. If
-  * cdb_len == 0 then function acts as a destructor and returns NULL. */
-     u8 * scsi_cmnd_set_cdb(struct scsi_cmnd *scmd, u8 * cdb, u16 cdb_len)
-     {
-         if (unlikely(scmd->flags & SCMD_LONG_CDB)) {
-             if (cdb_len > MAX_COMPILE_TIME_CDB_LEN &&
-                 cdb_len <= scmd->cmd_len) {
-                 if (cdb)
-                     memcpy(scmd->l_cdb.cdbp, cdb, cdb_len);
-                 scmd->cmd_len = cdb_len;
-                 return scmd->l_cdb.cdbp;
-             kfree(scmd->l_cdb.cdbp);
-             scmd->l_cdb.cdbp = NULL;
-             scmd->flags &= ~SCMD_LONG_CDB;
-         }
-         scmd->cmd_len = cdb_len;
-         if (cdb_len == 0)
-             return NULL;
-         if (likely(cdb_len <= MAX_COMPILE_TIME_CDB_LEN)) {
-             if (cdb)
-                 memcpy(scmd->cmnd, cdb, cdb_len);
-             return scmd->cmnd;
-         }
-         scmd->l_cdb.cdbp = kzalloc(cdb_len, GFP_KERNEL);
-         if (!scmd->l_cdb.cdbp) {
-             scmd->cmd_len = 0;
-             return NULL;
-         }
-         scmd->flags |= SCMD_LONG_CDB;
-         scmd->l_cdb.dummy_tur = 0;  /* defensive: cheap aid when testing */
-         if (cdb)
-             memcpy(scmd->l_cdb.cdbp, cdb, cdb_len);
-         return scmd->l_cdb.cdbp;
-     }
-
-/* Associated cdb length is in scmd->cmd_len . Should not be used for
-  * modifying a cdb (hence the const_s). */
-     const u8 * scsi_cmnd_get_cdb(const struct scsi_cmnd *scmd)
-     {
-         return (scmd->flags & SCMD_LONG_CDB) ? scmd->l_cdb.cdbp :
-                                                scmd->cmnd;
-     }
-
-The latter can be inlined.
-
-LLDs can ignore the above if they do not support > 32 bytes in their cdb_s.
-Otherwise they can call the 'get' accessor function above.
-
-Notice sizeof(struct scsi_cmnd) is not changed by this suggestion. One extra
-bit is used in scmd->flags .
-
-
-Doug Gilbert
+-- 
+Damien Le Moal
+Western Digital Research
