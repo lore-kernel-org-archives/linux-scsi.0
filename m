@@ -2,122 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B06A2C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 15:05:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B38D5C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 16:31:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235396AbiDFPHL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Apr 2022 11:07:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36412 "EHLO
+        id S237556AbiDFQdF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Apr 2022 12:33:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235472AbiDFPGu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 11:06:50 -0400
-Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 115B25332AB
-        for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2022 05:03:37 -0700 (PDT)
-Received: by mail-ej1-x635.google.com with SMTP id bg10so3805659ejb.4
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Apr 2022 05:03:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=references:user-agent:from:to:cc:subject:date:in-reply-to
-         :message-id:mime-version:content-transfer-encoding;
-        bh=whOdS+ZcH7sIpEntYe8CJFTcnKkZdKG28Xb/p70XMvo=;
-        b=JsHKfdW83fLPaATYi8d9V3sljgvsb0oN7RRpWT6JB80/10uDk+SQamUjz4rob4ZZS0
-         gpka4IkmpVK6jnRr8X2aNLtGHqzOjKiM0WQE3+Uy9zMVEejPzHP+aTUse0FLHKtxo317
-         Rh4ephi89YgTP7m13Ladzc1N+VqpWWIaw76MYLR5gPZqVY4jnvJ55WcIK2D4KbzCEtNU
-         +JV6+V1KVZ/izMtnIZqPqWqhJmXK7Qeo7Vc1i7RSdjLG9qqq6Uo0xHbhojxwh6mP4S2f
-         8oeJHaXtzLyGDYh4waFsXrD37rwYqLPmR5fdTDK7kVDH/zVBJxSQsRx6DatNT+8FnZsU
-         IozQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:references:user-agent:from:to:cc:subject:date
-         :in-reply-to:message-id:mime-version:content-transfer-encoding;
-        bh=whOdS+ZcH7sIpEntYe8CJFTcnKkZdKG28Xb/p70XMvo=;
-        b=wBf9GSKxGwgMXgDXsrxk5mKzS19sL0jR0SDwJJxyBm73sepJtjhFfr3bKfjEaHavLD
-         +cGuRiWK1Fc8aWag1Wtm5EnB9CSwwgOPOVvT6E1JxfxDq3H5pxQpJ+sgBjLETCqi6LP7
-         K2+ibu69FkavUZAnLEQ8J0Xid7B9oJ9LQWhD6nQmA76x4IQ4N8kEcz5wzTHo2ZWwVIIv
-         z8DUX0DqDxZkVsmNgR06My51//uI7WPTQjJmMBaYZxO/3W8P3F9uht3/XymWu/e6AdE0
-         JDee0WWjRRoGBpDrMRWFeBp+V6cCYLaOmVupr68UP/+C1v9RCC26O/I5h0mY5n0G83kU
-         k8NQ==
-X-Gm-Message-State: AOAM531NtERUJ77TcpwpZjOwvnnjEbKakPAZSV1dAk+NkrO+OrvUmGyW
-        TJlcsQTYDHQyHs7b9bk9TWv80iFGzlEN7w==
-X-Google-Smtp-Source: ABdhPJxWPoa96Rp6WyUCbZqG8Rc+VbSNKHl6bbF4sy2t/iT60ay3eCLeVu4In006GQNqNwkQToMQvA==
-X-Received: by 2002:a05:6402:51d4:b0:410:a328:3c86 with SMTP id r20-20020a05640251d400b00410a3283c86mr8318099edd.55.1649246062857;
-        Wed, 06 Apr 2022 04:54:22 -0700 (PDT)
-Received: from zen.linaroharston ([51.148.130.216])
-        by smtp.gmail.com with ESMTPSA id j8-20020aa7c0c8000000b0041934547989sm7922351edp.55.2022.04.06.04.54.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Apr 2022 04:54:21 -0700 (PDT)
-Received: from zen (localhost [127.0.0.1])
-        by zen.linaroharston (Postfix) with ESMTP id 179711FFB7;
-        Wed,  6 Apr 2022 12:54:21 +0100 (BST)
-References: <20220405093759.1126835-1-alex.bennee@linaro.org>
- <8b3ce88f65fd11523a4d2daab3c617f7089eb1ce.camel@gmail.com>
- <87r16bk013.fsf@linaro.org>
- <aeb64d1c4bbddfd8463c07a40ab1fc78be0d158d.camel@gmail.com>
-User-agent: mu4e 1.7.12; emacs 28.1.50
-From:   Alex =?utf-8?Q?Benn=C3=A9e?= <alex.bennee@linaro.org>
-To:     Bean Huo <huobean@gmail.com>
-Cc:     linux-kernel@vger.kernel.org, maxim.uvarov@linaro.org,
-        joakim.bech@linaro.org, ulf.hansson@linaro.org,
-        ilias.apalodimas@linaro.org, arnd@linaro.org,
-        ruchika.gupta@linaro.org, tomas.winkler@intel.com,
-        yang.huang@intel.com, bing.zhu@intel.com,
-        Matti.Moell@opensynergy.com, hmo@opensynergy.com,
-        linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH  v2 0/4] rpmb subsystem, uapi and virtio-rpmb driver
-Date:   Wed, 06 Apr 2022 12:22:00 +0100
-In-reply-to: <aeb64d1c4bbddfd8463c07a40ab1fc78be0d158d.camel@gmail.com>
-Message-ID: <87ee2ajuky.fsf@linaro.org>
+        with ESMTP id S238170AbiDFQct (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 12:32:49 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3927DD44
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 18:29:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1649208593; x=1680744593;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=vJXgKSZZcMrTRsd4WzB8fRzLIQjJjhTfDb97PbHj6V8=;
+  b=aE/hoECLtXoH+LKwyw3xKiVrlGDY1yJvLdX1bzGHxE05JXDBHCfHnBiS
+   DxHGMGmcr3wf883OKna1dltvrpMRfECNa2UShIV4aDN2M+j3yzQ2kxPNa
+   oebdWmOr4+uaHz0UCwwGezPwMgcoPPmDzFA0p+fQy6jdUo9YRVH/uz9E+
+   GZ0OUjTECMJmYkjiW7KY9DtAG3Lt3i+Y8+FVm450TfS+L0K8kW0JuHaPP
+   SOyFgXeIyC+Nemkhs98jmAmZW426q8bgG1xUNEwhAmRqXLKFRvPOBw0D9
+   CvCQKSHQKmcLRk2/4qGji4Fr9BX+q19e62bqEc1U5za39aTzzUgW9TsFo
+   w==;
+X-IronPort-AV: E=Sophos;i="5.90,238,1643644800"; 
+   d="scan'208";a="197192584"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 06 Apr 2022 09:29:53 +0800
+IronPort-SDR: XVTtpc1GdCqe2jOJreHSAoDGUFIKcKmSu8mJEHcK62kPmxex+uasK9MTndn4pG0Gee9iVlsXaP
+ 0bZQaaOoQXEKGB0+Ba7v3GWMchaSefHEGk1hCo5dLZXB4WvnshKAnA92ufmOvJ/mogD3BPlYp/
+ E4dp8stn2zWuo2LfTlwfG5beW+5Z5nClfAk0MzaV3OnRtQJUerRPHJThNKeTl/Hriq4jjmLsXV
+ vMnGZutHfZYN5N6oneL9HStXSRg74gVDQv/czBx6JloS7+75JSGvorUim+ebaO/BazVrjAjiej
+ 1TEFEBCHUZ04NAZ3N+8BoKbj
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Apr 2022 18:01:26 -0700
+IronPort-SDR: 6kg+LlPS/hDi7F4Ih1r7+VrCBDbihzD3aS2Wtu8Hbhuu4H5tCFQQwLn+F75Kc5JUxmDA7PBkmA
+ V/oi8nkAuNiZsFJom793QJkwtlVW9Ke55bINz/vlRekfU70tBZN/U2wQkLL8KzHfhUD0YjMKmv
+ M2Sx0xTnU9QAvZ4sR6IjoLuz/sN9/US+5glAQ9R/S6YPd8wPyp0w3ZpAgt+jwN3HPDH214nyyS
+ BDGKYDY3z5AuenJLds7kdkg64reAkFxmVTOjDGJVNoYaC88d+MABp54VtfQ9ntFLDMfXeD/w8G
+ API=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Apr 2022 18:29:54 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KY6Pt1jv7z1Rwrw
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 18:29:54 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1649208593; x=1651800594; bh=vJXgKSZZcMrTRsd4WzB8fRzLIQjJjhTfDb9
+        7PbHj6V8=; b=Bfx8nc2da03IVWazzwiFF59e5bGoAOje+yvExet7dJUWb+OdR3K
+        g4Ivu/1Sdk7c4zy4NuLKD3CMGFLgN5shmeF/Iye+KCnr+TQBCk2ZN6519TKQUXSA
+        5OzD5jW1gGeyi4MvT9Stn1HQBW/mO+Xd+vRMVzV0xRgEezQf6mzAMoMJTZBts5UY
+        MBHKuQEoZuMAGltq5GGP1QAZU+cRTLAZBKFMkx7fz1lVaC+Vv90kEHXJJhpuSdqz
+        3DX32iYg8nrocgV52LoLLFQBSIym1i+Mt+8vUhtZMOX5M+aNDpUQ/ZpfASmhiI9p
+        4lDC02acq4geY5BYLaooKJ9MyjxF9dAaeww==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id Q-YY36OQ_qDo for <linux-scsi@vger.kernel.org>;
+        Tue,  5 Apr 2022 18:29:53 -0700 (PDT)
+Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KY6Ps16PRz1Rvlx;
+        Tue,  5 Apr 2022 18:29:52 -0700 (PDT)
+Message-ID: <45050814-f512-f764-007f-5fe52e224467@opensource.wdc.com>
+Date:   Wed, 6 Apr 2022 10:29:51 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 12/14] scsi: sd: sd_read_cpr() requires VPD pages
+Content-Language: en-US
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <20220302053559.32147-1-martin.petersen@oracle.com>
+ <20220302053559.32147-13-martin.petersen@oracle.com>
+ <fa37071c-3e68-9435-5f8b-6f3920e59ae1@wdc.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <fa37071c-3e68-9435-5f8b-6f3920e59ae1@wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 3/2/22 19:45, Damien Le Moal wrote:
+> On 2022/03/02 7:35, Martin K. Petersen wrote:
+>> As such it should be called inside the scsi_device_supports_vpd()
+>> conditional.
+>>
+>> Cc: Damien Le Moal <damien.lemoal@wdc.com>
+>> Fixes: e815d36548f0 ("scsi: sd: add concurrent positioning ranges support")
+>> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+> I thought this was already queued :)
+> 
+> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Bean Huo <huobean@gmail.com> writes:
+Martin,
 
-> On Tue, 2022-04-05 at 16:43 +0100, Alex Benn=C3=A9e wrote:
->>=20
->> Bean Huo <huobean@gmail.com> writes:
->>=20
->> > Hi Alex,
->> >=20
->> > Thanks for this unified RPMB interface, I wanted to verify this on
->> > our
->> > UFS, it seems you didn't add the UFS access interface in this
->> > version=20
->> > from your userspace tools, right?
->>=20
->> No I didn't but it should be easy enough to add some function pointer
->> redirection everywhere one of the op_* functions calls a vrpmb_*
->> function. Do you already have a UFS RPMB device driver?
->>=20
->
-> Hi Alex,
-> Thanks for your feedback.
->
-> We now access UFS RPMB through the RPMB LUN BSG device, RPMB is a well-
-> known LU and we have a userspace tool to access it.
->
-> I see that if we're going to use your interface, "static struct
-> rpmb_ops" should be registered from a lower-level driver, for example
-> in a UFS driver, yes there should be no problem with this registration,
-> but I don't know with the current way Compared, what are the advantages
-> to add a driver. maybe the main advantage is that we will have an
-> unified user space tool for RPMB. right?
+I still do not see this patch in 5.18-rc1... Did it fell through the 
+cracks ? It also needs cc stable...
+See: https://bugzilla.kernel.org/show_bug.cgi?id=215788
 
-Pretty much. The main issue for virtio-rpmb is it doesn't really fit
-neatly into the block stack because all it does is the RPMB part so a
-non-block orientate API makes sense.
-
-Can you point be to where the UFS driver does it's current RPMB stuff?
-
->
-> Kind regards,
-> Bean
+> 
+>> ---
+>>   drivers/scsi/sd.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index 2c2e86738578..9d6b2205339d 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -3396,6 +3396,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>>   			sd_read_block_limits(sdkp);
+>>   			sd_read_block_characteristics(sdkp);
+>>   			sd_zbc_read_zones(sdkp, buffer);
+>> +			sd_read_cpr(sdkp);
+>>   		}
+>>   
+>>   		sd_print_capacity(sdkp, old_capacity);
+>> @@ -3405,7 +3406,6 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>>   		sd_read_app_tag_own(sdkp, buffer);
+>>   		sd_read_write_same(sdkp, buffer);
+>>   		sd_read_security(sdkp, buffer);
+>> -		sd_read_cpr(sdkp);
+>>   		sd_config_write_same(sdkp);
+>>   		sd_config_discard(sdkp, SD_LBP_DEFAULT);
+>>   		sd_config_write_zeroes(sdkp, SD_ZERO_DEFAULT);
+> 
+> 
 
 
---=20
-Alex Benn=C3=A9e
+-- 
+Damien Le Moal
+Western Digital Research
