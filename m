@@ -2,57 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AB79C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 09:37:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CAB8C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 10:34:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243333AbiDFJjJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Apr 2022 05:39:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49778 "EHLO
+        id S235710AbiDFKgR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Apr 2022 06:36:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1457676AbiDFJe4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 05:34:56 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B0B4FE437;
-        Tue,  5 Apr 2022 23:19:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Kh6DytC11gdNi8W6tlBfwxpwxAPXKhPZpYoYh3mWIWo=; b=rRSov9iUqX+soc4Uk47rVun/mb
-        1kHfGTdgUwvptEg3vKe3iXKdrPPFWvn6KeXus0ze6+vOm8kx5mnC0UZcXWWE00Hm1lMPwLUgWLeVq
-        hKB8eV0YXTs3/JpRIjS5KD33MBVJb6zndYj4uQlgdKaYNlJaRWGwXS+7uW4h4d9seTyTYeROJsTIB
-        nO56czjBojnbv2To07xtTwvAgIlEhVVjU6MzrcMbUT3w0u0Km5R4IIjMLJHRvnoUjPKPzdtuLv1Ij
-        OoXnzo4ekfrLvXUuPNHJOAeDUFvW6AO/0UpYQkBLSL2fKtqJBlyy/9qEpWMORDLL5v4PAGZ7wQ0Jk
-        eAbzc2GQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbz0V-0042HW-3T; Wed, 06 Apr 2022 06:19:07 +0000
-Date:   Tue, 5 Apr 2022 23:19:07 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Finn Thain <fthain@linux-m68k.org>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: sym53c500_cs: Stop using struct scsi_pointer
-Message-ID: <Yk0w2ywoQzEnl/SV@infradead.org>
-References: <4948f86703d23e5048f4e24e649680259b2610f9.1649146056.git.fthain@linux-m68k.org>
+        with ESMTP id S236518AbiDFKfV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 06:35:21 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC14D4B47B9;
+        Tue,  5 Apr 2022 23:56:34 -0700 (PDT)
+Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4KYFcm6f5rzgYLw;
+        Wed,  6 Apr 2022 14:54:48 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Wed, 6 Apr 2022 14:56:33 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Wed, 6 Apr 2022 14:56:32 +0800
+From:   Wenchao Hao <haowenchao@huawei.com>
+Subject: Re: [PATCH] scsi: core: always finish successfully aborted notry
+ command
+To:     Mike Christie <michael.christie@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.de>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     <linfeilong@huawei.com>
+References: <20220401035020.1043239-1-haowenchao@huawei.com>
+ <775f75db-edb8-8f39-2592-862756811710@oracle.com>
+Message-ID: <275178ca-1fe4-b00b-c1f4-c8c34e7f4686@huawei.com>
+Date:   Wed, 6 Apr 2022 14:56:32 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4948f86703d23e5048f4e24e649680259b2610f9.1649146056.git.fthain@linux-m68k.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <775f75db-edb8-8f39-2592-862756811710@oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> +
-> +static struct sym53c500_cmd_priv *SYM53c500_priv(struct scsi_cmnd *cmd)
->  {
->  	return scsi_cmd_priv(cmd);
->  }
+On 2022/4/4 0:58, Mike Christie wrote:
+> On 3/31/22 10:50 PM, Wenchao Hao wrote:
+>> If the abort command succeed and it does not need to be retired, do not add
+>> it to error handle list. 
+>>
+>> Adding command to error handle list is an annoying flow which would stop I/O
+>> of all LUNs which shared a same HBA.
+>>
+>> So here if we successfully abort a command, we can finish it via
+>> scsi_finish_command() which would reduce time spent on scsi_error_handler()
+>>
+>> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+>> ---
+>>  drivers/scsi/scsi_error.c | 55 +++++++++++++++++++++------------------
+>>  1 file changed, 29 insertions(+), 26 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+>> index cdaca13ac1f1..15299603b7ee 100644
+>> --- a/drivers/scsi/scsi_error.c
+>> +++ b/drivers/scsi/scsi_error.c
+>> @@ -173,41 +173,44 @@ scmd_eh_abort_handler(struct work_struct *work)
+>>  		goto out;
+>>  	}
+>>  	set_host_byte(scmd, DID_TIME_OUT);
+>> -	if (scsi_host_eh_past_deadline(shost)) {
+>> -		SCSI_LOG_ERROR_RECOVERY(3,
+>> -			scmd_printk(KERN_INFO, scmd,
+>> -				    "eh timeout, not retrying "
+>> -				    "aborted command\n"));
+>> -		goto out;
+>> -	}
+>>  
+>> -	spin_lock_irqsave(shost->host_lock, flags);
+>> -	list_del_init(&scmd->eh_entry);
+>> +	if (scsi_noretry_cmd(scmd) ||
+>> +	    !scsi_cmd_retry_allowed(scmd) &&
+>> +	    !scsi_eh_should_retry_cmd(scmd)) {
+> 
+> 
+> I don't think this test is correct. Did you want all ||s?
 
-I don't even think we need this helper, all callers can just use
-scsi_cmd_priv directly.
+Sorry, I made a mistake, it should be "||" here.
 
-Otherwise looks good:
+> 
+> For what the patch is trying to accomplish I'm not sure if it's
+> the behavior people wanted. Do all drivers have configurable
+> abort timeouts? If an abort takes N minutes to complete ok,
+> and that's put us over the eh deadline maybe the user wanted
+> that device to be offlined.
+> .
+> 
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I think the changes would not affect the timeouts and deadline
+because the logic changed is after command abort successfully.
+
+We check if the command need to be retired after aborting command
+successfully, if it does not need to retry, just finish it (only
+commands aborted failed should be add to error handle list).
+
+I submit this change because we want to reduce the time spent on 
+scsi_error_handler().
+
+Do you think the change is OK? Except previous wrong "&&" which should
+be "||".
+
+Thanks, looking forward to hearing from you.
