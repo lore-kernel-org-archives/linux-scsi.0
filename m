@@ -2,120 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CAB8C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 10:34:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 164F7C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 10:37:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235710AbiDFKgR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Apr 2022 06:36:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57814 "EHLO
+        id S233137AbiDFKjF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Apr 2022 06:39:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236518AbiDFKfV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 06:35:21 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC14D4B47B9;
-        Tue,  5 Apr 2022 23:56:34 -0700 (PDT)
-Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4KYFcm6f5rzgYLw;
-        Wed,  6 Apr 2022 14:54:48 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Wed, 6 Apr 2022 14:56:33 +0800
-Received: from [10.174.178.220] (10.174.178.220) by
- dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Wed, 6 Apr 2022 14:56:32 +0800
-From:   Wenchao Hao <haowenchao@huawei.com>
-Subject: Re: [PATCH] scsi: core: always finish successfully aborted notry
- command
-To:     Mike Christie <michael.christie@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     <linfeilong@huawei.com>
-References: <20220401035020.1043239-1-haowenchao@huawei.com>
- <775f75db-edb8-8f39-2592-862756811710@oracle.com>
-Message-ID: <275178ca-1fe4-b00b-c1f4-c8c34e7f4686@huawei.com>
-Date:   Wed, 6 Apr 2022 14:56:32 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.1
+        with ESMTP id S1354578AbiDFKhh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 06:37:37 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05779138592
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 23:59:43 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9151C619A9
+        for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2022 06:59:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id EC521C385A6
+        for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2022 06:59:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649228382;
+        bh=Orqy6ACBE3X5JdhoudqLKiTUJmgvK1br5cGmi1aIkks=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=gX0fnrr4ngJy1chBJdyTuu/+UDx2VNop0wphT/P1tDUt+sFuLDDqrc0S59YDcF7cq
+         qY6xLZ4RQ+MXGQTgwFgfHuXKU5oCbouV+AxvnhavuJD0KmX9lInsWQSSRSSbSM0rqt
+         OZnjAjaub4kMIukN20MZm6ulzpVEDMvzxtC9JUaN7WuBzb9KeOaNDYmkuydydohKat
+         hyYAiLCwRzG+AmcNeg9rlywnGkz+nFLAqYL0Ax/2pZSKSX3pnDyxGmzVw2EnowEXzq
+         zFZNuaGMMC3E6Coj3vLI5mWuq5P50c86A83NRoDJU9H6u6px9lJxsCtYYfclbqweAw
+         70TE3KyRY/Nzg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id BA895CAC6E2; Wed,  6 Apr 2022 06:59:41 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 215788] arcmsr driver on kernel 5.16 and up fails to initialize
+ ARC-1280ML RAID controller
+Date:   Wed, 06 Apr 2022 06:59:40 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: jernej-bugzilla.kernel@ena.si
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-215788-11613-Jgj7Msqxn7@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215788-11613@https.bugzilla.kernel.org/>
+References: <bug-215788-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-In-Reply-To: <775f75db-edb8-8f39-2592-862756811710@oracle.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/4/4 0:58, Mike Christie wrote:
-> On 3/31/22 10:50 PM, Wenchao Hao wrote:
->> If the abort command succeed and it does not need to be retired, do not add
->> it to error handle list. 
->>
->> Adding command to error handle list is an annoying flow which would stop I/O
->> of all LUNs which shared a same HBA.
->>
->> So here if we successfully abort a command, we can finish it via
->> scsi_finish_command() which would reduce time spent on scsi_error_handler()
->>
->> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
->> ---
->>  drivers/scsi/scsi_error.c | 55 +++++++++++++++++++++------------------
->>  1 file changed, 29 insertions(+), 26 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index cdaca13ac1f1..15299603b7ee 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -173,41 +173,44 @@ scmd_eh_abort_handler(struct work_struct *work)
->>  		goto out;
->>  	}
->>  	set_host_byte(scmd, DID_TIME_OUT);
->> -	if (scsi_host_eh_past_deadline(shost)) {
->> -		SCSI_LOG_ERROR_RECOVERY(3,
->> -			scmd_printk(KERN_INFO, scmd,
->> -				    "eh timeout, not retrying "
->> -				    "aborted command\n"));
->> -		goto out;
->> -	}
->>  
->> -	spin_lock_irqsave(shost->host_lock, flags);
->> -	list_del_init(&scmd->eh_entry);
->> +	if (scsi_noretry_cmd(scmd) ||
->> +	    !scsi_cmd_retry_allowed(scmd) &&
->> +	    !scsi_eh_should_retry_cmd(scmd)) {
-> 
-> 
-> I don't think this test is correct. Did you want all ||s?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215788
 
-Sorry, I made a mistake, it should be "||" here.
+--- Comment #6 from Jernej Simon=C4=8Di=C4=8D (jernej-bugzilla.kernel@ena.s=
+i) ---
+Doesn't help unfortunately.
 
-> 
-> For what the patch is trying to accomplish I'm not sure if it's
-> the behavior people wanted. Do all drivers have configurable
-> abort timeouts? If an abort takes N minutes to complete ok,
-> and that's put us over the eh deadline maybe the user wanted
-> that device to be offlined.
-> .
-> 
+--=20
+You may reply to this email to add a comment.
 
-I think the changes would not affect the timeouts and deadline
-because the logic changed is after command abort successfully.
-
-We check if the command need to be retired after aborting command
-successfully, if it does not need to retry, just finish it (only
-commands aborted failed should be add to error handle list).
-
-I submit this change because we want to reduce the time spent on 
-scsi_error_handler().
-
-Do you think the change is OK? Except previous wrong "&&" which should
-be "||".
-
-Thanks, looking forward to hearing from you.
+You are receiving this mail because:
+You are watching the assignee of the bug.=
