@@ -2,229 +2,262 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 122A8C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 12:51:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1236C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Apr 2022 13:04:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230199AbiDFMxU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Apr 2022 08:53:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44152 "EHLO
+        id S231750AbiDFNG3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Apr 2022 09:06:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232217AbiDFMwk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 08:52:40 -0400
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED7B8D4444
-        for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2022 01:54:56 -0700 (PDT)
+        with ESMTP id S232046AbiDFNFp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2022 09:05:45 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE81CFE8
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 18:39:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1649235296; x=1680771296;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=cJuuae0lSesE4iYaUoPw8KMwPByyMhoTkZxtSw9Q0ks=;
-  b=Kfoefs1tR3/6YyVGA30kxKwos2bUXjblJrfJxFp7w8XvknMec9jGosSG
-   JvCDXnp+C1pcuqVcJIEdGGEmxZGs+SQdNPgVw0ruXm4zScmHcHtrl3ndU
-   BmSY4TB/HUMzVZhFg1oE8iwYflY2tumwyt/JmjnBE8JTNckOYEeleDvYQ
-   C67+/h36a+HuPcqyKjDLjoDkFs46KAKzNgHtSyG9TjrFeEgoFEFU4UrBI
-   jnM9dEkmarQQeFvc9D/rFawI2NE6hrGQCh4KUTWkDGPPCDLvohsmDoyan
-   8R4eNSITuzbwdIUpFmvlDFUrpopY2BKD2hTKewlYCkAHXBmAYDJwaT0jw
-   w==;
-X-IronPort-AV: E=Sophos;i="5.90,239,1643698800"; 
-   d="scan'208";a="91445661"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 06 Apr 2022 01:54:55 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.17; Wed, 6 Apr 2022 01:54:55 -0700
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.17 via Frontend
- Transport; Wed, 6 Apr 2022 01:54:55 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZwtCybzKsDlHc85EbB4xEf15z1xmfNj1VbFxCiCd3umGk/KxnyV0SCGkwJjeB+yv+7L2PmILJ0Wb+odF8AHwhZjX4Rv1a7+ntkA2xbwXYM0FvVT+ZEE2AeQUARP5ULOQEwIgHXIvrU9IIVXiy77f9yffya3nhjxJd6p6D4lsibUzBXV0W/MV7XeX8xYxbQlWZjnUcMPfmygxcddatzdDjw1MQLsw2fdxFWMl+jyXDQwduAOoqLR5cD/oCLQjo5GqP01Ru/I8IaZnATSLzjlaRbRkTeaB+vfaVa173UOb9R9ia/N6+t2F67hiSrmlURPo4eWKLeN8MlzmE94oM7Gxpg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=cJuuae0lSesE4iYaUoPw8KMwPByyMhoTkZxtSw9Q0ks=;
- b=NLRXJicOLYRMG3eeSnxwNeW9pALmCu0KLCOtLs4Lv+pCR9I7bhoIiWhM+HCZmx+6EDRAOPItS0Cjs1fYUIBqEzT1gKvfM2uko9AZQmaPXZ40QWRCjQfwRlxJCvhgWsDtMDYxhGC3UR/eT/MCcy/L58ZawvpDp7PAMs/lUfqFmn8RiUhINMd5CwUnZV2XXTrqs4+F9REQ8fGBCMVmPSVRZ+ddnhrw1XREjtcaWc3g5pla98z5B2pwiK15RfPOiNncXB1hfKnUu6jhgc221Y4p0kF4ugJA08OMZl96E3xy9YWjyihTz4hjD63XgTulfSSzC0f9YKXwJv6wSaTJuaCjVw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cJuuae0lSesE4iYaUoPw8KMwPByyMhoTkZxtSw9Q0ks=;
- b=bIiDId0lYdKvmj1Uy40FYTOLYE9i3hS8NesAm/32vvBu9BVCRPxkQw6H6YkQKlsBUEZOL6lG3A+n3LZFDcoq55Vt66UafbaQyWb89ZWD1MtWj4LpwAPmmjkZRuoOBh2B4PrySz6pUh9wNT7bEEn76bW2FSw7q7C0ciyzXAx1LfI=
-Received: from PH0PR11MB5112.namprd11.prod.outlook.com (2603:10b6:510:3b::18)
- by SA0PR11MB4528.namprd11.prod.outlook.com (2603:10b6:806:99::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5144.21; Wed, 6 Apr
- 2022 08:54:52 +0000
-Received: from PH0PR11MB5112.namprd11.prod.outlook.com
- ([fe80::48b9:f92:9375:2983]) by PH0PR11MB5112.namprd11.prod.outlook.com
- ([fe80::48b9:f92:9375:2983%7]) with mapi id 15.20.5123.031; Wed, 6 Apr 2022
- 08:54:51 +0000
-From:   <Ajish.Koshy@microchip.com>
-To:     <damien.lemoal@opensource.wdc.com>, <linux-scsi@vger.kernel.org>
-CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Viswas.G@microchip.com>, <john.garry@huawei.com>,
-        <jinpu.wang@cloud.ionos.com>
-Subject: RE: [PATCH v2 1/2] scsi: pm80xx: mask and unmask upper interrupt
- vectors 32-63
-Thread-Topic: [PATCH v2 1/2] scsi: pm80xx: mask and unmask upper interrupt
- vectors 32-63
-Thread-Index: AQHYSWLN5JqtlI57eE2tI9K/DavoPqziiYBQ
-Date:   Wed, 6 Apr 2022 08:54:51 +0000
-Message-ID: <PH0PR11MB511238FFB6AFDC6E494C82D3ECE79@PH0PR11MB5112.namprd11.prod.outlook.com>
-References: <20220405092833.83335-1-Ajish.Koshy@microchip.com>
- <20220405092833.83335-2-Ajish.Koshy@microchip.com>
- <3f94f4e6-762b-d1af-7021-45e5b250ab6d@opensource.wdc.com>
-In-Reply-To: <3f94f4e6-762b-d1af-7021-45e5b250ab6d@opensource.wdc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microchip.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 2eca35f9-af91-4680-414f-08da17ab1cb4
-x-ms-traffictypediagnostic: SA0PR11MB4528:EE_
-x-microsoft-antispam-prvs: <SA0PR11MB45287541576E1C7D0FCCD68AECE79@SA0PR11MB4528.namprd11.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 9BjZ5cneBeeh3C5qUXtHs6e4xBNOdlEwO1nc10JyK/QzeqCCwxpoOAISxvUOtif6Kj0/orz3ncORKidfvXdY5Nl6mEbuYudrN4ELkVKrC400cVm1Y0tSRKT4DCsBWr5hX8YORXHay4VnlaPjvjL8Qo7vkGXalJECjc/qSNP3Rv7NDBocSsyvkpi9yffbtDqW9Owq1x7Jf4u1x/HsQ8gPB1E3HSg/Sm4hx/B3Jsmxo1iexx4OdEAB2q8FHxUM2WXC3KlVoL98T0VO3MtGYt0T2Z2pq/BlZ2j2LHQk6r8jZRr7ULihjq6lLD7s2cKa0wMi4V4n63oK/IxZxFbUMqwNCtnkZUoBvpgO8zTbd4WhZ1O0MPJFCPGmADxo8F1r31Rna9S/Yk0dejMAa8RRvaxQiin6Cs2U3P6+s2xR9KsAwKViqVeagrciQ8z/CCjjcnzBpuO9snTGmAeOMcIJAT5Q+52zxpUqBdRkUWdHbgA4Gdwl1qHLavIJnRLATMbb5gMofxXA42QNGvKzS8SSlkFdsKCo9kthbkguwzdR8dpEs/2Whhss388nSJhfy5mz5JLDUmzowS8PisYUWglkSUbj9qJYgAnlLR64RJU3KneDfwEqEi+jbiO+9G9FO+gTi6tyV7hSMuCgAUODaRCdtXpaY9gj+urCNsVStVxu1o9hwfWfRT8OafCiEEQGLul9SGpP63XoLDjBMlzO4+yzXKIhfQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR11MB5112.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(83380400001)(186003)(26005)(38070700005)(38100700002)(122000001)(5660300002)(8936002)(52536014)(4326008)(8676002)(64756008)(66556008)(66946007)(55016003)(66446008)(66476007)(2906002)(508600001)(6506007)(7696005)(53546011)(316002)(9686003)(71200400001)(54906003)(110136005)(76116006)(86362001)(33656002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?SndBU0tseGE4REl3dlJ2bUVhSG1uZXVQZUl5bVl5Z1BZdjV4ZXhKMVpqVkdW?=
- =?utf-8?B?SmxIT3YyMG9oZXhoTHBKM3RkSm1MdW1ZRnRDdUFqbDg0emJlR0REWllwU0I4?=
- =?utf-8?B?YTZpMlk5L0FrK3NSWHBmYitGNG5STlU5R0duV0lzUzgyNmlaQVJkQ2gycWZl?=
- =?utf-8?B?ZENFYndLc245MDBNTmFzODc1VDZ2S3pldEVMSlVBb2ZvYzdickQ0eDdPSzM5?=
- =?utf-8?B?bXBKSVVhM05vajFpQkxacUVQWDc4Qm5YbEZIVXFNeEpIeVpHRHNmVTZHM2Z1?=
- =?utf-8?B?TXhMOW81OEJ4Y3N4eENqQUVlTytDR1d4ZjllSDVkTDNnYkh6Z0RINEtJZzZN?=
- =?utf-8?B?WktnMEhDemlKblBaVDlGdWpXajNnMTBoMTdIQmFTSGNDak4rSzA1a1NaWkRu?=
- =?utf-8?B?Snk2MkdlQjVxL3k0OTdhL0JYVktMK1NzQStORExhd3E2UGdvQ3VKNVpYSGxB?=
- =?utf-8?B?TjI1OWlZZG5UL0tuekFSOXZVSVRtbURNWXFhNnZ2Z1g2VFJRR25jN0lveFBx?=
- =?utf-8?B?MWdQMHdDMWRWM2JoY3RXVzY1K3pzR0NTdWh3UjJ2b1RKZ0VLL1VGN2hyc0R4?=
- =?utf-8?B?TXV3VmcrcWtzWTZPSUR5REVSV1pib091TmdhRmV1RzFmRjNhLzFJREpKalBQ?=
- =?utf-8?B?bG9EUHpDZ1g3UDFPdzBvdTlWQ1ZMVlJOSlZrM2lkNGxpZ3pPVUhOWis1Z2M2?=
- =?utf-8?B?dXlNU0ZTSmdpeVRXS1RVZ1hlcFFKdjVmNnlKSjJOSnZ0MFh6UWNUa2lRWk9N?=
- =?utf-8?B?aU9BVDd1UTRBNlFTaEtwdmdCcGV6Q0xGcEM5SFZ4SnJ3YTdwaTVaaS8ySkRP?=
- =?utf-8?B?R1hickFudnFQNUQzZjVjUHZjNXpPT3pSdytRZ2czTzQxV3hSWm9Ha2o2aFBN?=
- =?utf-8?B?Y3YxbmVBcDRCOWo3M3FqemIwQms0dTZhMHI4NFRkVk9uSytTYVJVMEtlTkNo?=
- =?utf-8?B?Y1M0UzluRVVlekFzMlhIYVZvNWQybnZ1WnhCemlweDNBOUhVWDZFbmx1YUsr?=
- =?utf-8?B?WUg0RHlkMytMM0RmYVNGY1FtRm1mM3pYVDRvUDJhQ1E2RndYTWE0Zjd6VkpT?=
- =?utf-8?B?VEdlcEtqSXJnTUlXQ2VtcDcvNmdsQ0FMbmNmU0dwUDUzZ29nUStXTEszeTFW?=
- =?utf-8?B?WXVnZEM0YXJVeFpCY1BSeHVUeFJIWk4wRW55ZUJDd3BpVGU2aXpqelZCeWNM?=
- =?utf-8?B?Z2kyL2g1eWxCYVZvK2o4anNPWktwZlNXSVU5ak1ZeXRrVmR2cExrVkd5WktJ?=
- =?utf-8?B?eTJQWGQ0NFMzUEZ0Z3ZqMVFRVGV0N2ZUY1FiK2w1bkNyUHp3dTIwaFJOU0M1?=
- =?utf-8?B?bGJhVWtEWVRPbnlOVEtMNDlEUUdhNWhyNTBnUENWMm9BVXBRcnppK1dvMnhD?=
- =?utf-8?B?WFZrK09pYy93ZkkvRHY0YnEwaVJqOTRpVllSSXo5YlQzM1E2dVRMUUtXeXQ4?=
- =?utf-8?B?Z3VqNGtEUXdlaXZzbGRTNWthd0NkblRodU14c1JQTmpSMjdXRXlGOHRsM29o?=
- =?utf-8?B?b2h6VGVSWGlCMWZ3K3VsRkw3S1pyaEpvVVVJYW9CNzltYmhZSVVLUHlWdUhD?=
- =?utf-8?B?TDBnRHYyRFprdktBRCs2Y3Bxb1B6cU9KWTVZaXFjelZ0YzllaXdwaThyNWRB?=
- =?utf-8?B?cGRoM3JRZWhXLy8xa0E0MDdXV0VoeDI2SEZFUldWVk15QnJNRG5HRWxHeDNy?=
- =?utf-8?B?cFhNcWZxem0yKzJ4c0dSa0xoSTVLVC9ES0Vib05BVE5JRHcra1FoM296L0h0?=
- =?utf-8?B?NmhodXdaVnFSUzlXR2Nud2Nkb2VDalN0VFB2K0hicE5jelRqYmQzc2t1SVFo?=
- =?utf-8?B?bmJQU3N0MWJPVlllRnYxOFFoSjJkOTNzOEYxT1pHelNyM2lZUlJuTXpBM0RU?=
- =?utf-8?B?aWppeTFRbnJJYmJCNVBWTEZTb285UERkRmZyMWNqL3FsbDZyMEcvSmxpY2pD?=
- =?utf-8?B?QVg2OTBTWC9kem9NSVJpdTR0eFZmQnpZT0VML2lHQVJBa01lK2JNbC9aWGNn?=
- =?utf-8?B?aWFTbW1PSklyWlZTVDAvOG5uSG5GaFRySHJXUmdKMXVMa01nbXdZZVdNdVF1?=
- =?utf-8?B?MUsyelg1Mk1sc0FraFBMaTBZWEoydVRQVCthQ1R1Mmpib3pORXd6ckpuMFEr?=
- =?utf-8?B?T1Q2bHVocUpLdXAxNFFMamdmQ1pmQUZNaGQvQ3g0ck9xQS9OaWF6eWZtYXZZ?=
- =?utf-8?B?WkJSMnpOSVMzVVo5QWI0NmFXQ0xIbXlYN04vM2EyaVQwNldVb0MvSktSUHdy?=
- =?utf-8?B?R1FiTnBGOXhwanQ2TTQ3SFRDZnRiTTJLWlBmQ3VXWkhXNGtTaGFmOFZjQXYz?=
- =?utf-8?B?cC9YNkNhSG0rYXBkNytGQXlDSkM1K1lzRUJZQUVRZkh3NWVBeHEwakdJRC9R?=
- =?utf-8?Q?DhHI4/yFijW5M53E=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1649209152; x=1680745152;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=TT9Q4isZap5oDHSGhYBaqGSoWrgP4fin4Czsfd9WOAQ=;
+  b=py1kEZljWT6FX4K5toAHwytSn+7VfhyNavQ2psQ97k5Z9fNsEhlT8E6H
+   H7bbSLhLK/5VBZ3+26NITUFash9tb18j1uvORzNCaiiDYdHhEBMIDcr59
+   bwko0QFPPEtCqL26MzD6VVo6OGACbqjBBwbZ8fpPuP4LjTMP5ZokXBEhE
+   ScSsYV6L0A7e07LaS4Xki6wKbwksnZ9/87RlGb5XEqQok46EPacwuCgVb
+   76FJGT8Pv0QoTj7KmgjpiMeOW2+/eVngPwYDnsUgzszd707ZqfMjIDdA4
+   YG3xHtJJpfwS5tk0t3g3nTLjjjNdDK/X+JO2L2iLOba6+o84cykrSG2qT
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.90,238,1643644800"; 
+   d="scan'208";a="301359982"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 06 Apr 2022 09:39:08 +0800
+IronPort-SDR: m49l6XOofOzjMPU4OkVBSDLFTEGIvqJeUqBnFSounz3WaQrsfSwSFG/4I9G8WV4V9IXMIy4nCa
+ MkJbSvQ/atkIBAjUHCiOmqtRsVI3XQax90dC734ZnR5Fy6tn1xXEREfPb+5boRJjrlA+JG04qE
+ IixKv37PV+lj1YVt0BnxL6Uaw2kRohttCqE/aLx+4lkGa7m1swLrW19bGfNiQDk0MOw5ikkauM
+ 2QXiBcdRXfA8eg85BHQyQjqCNopHpLwxthr1GxWZU3J/JdsPKfUJVmHZtWNsNVeQJLbooGFhJX
+ nB2ujqRnlQBrrzOPwC7mlTQl
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Apr 2022 18:10:40 -0700
+IronPort-SDR: 77ZQVLW8NsRjViNiDw+ZhE+NHqIbtl1tXzaJzkjq/JJF8w3YobJxKgDkAc7PMqvUVIvbPAupW1
+ Wkod38nivy+jOw/BapmgliOFDV+ZJ6xWT9owskC0dNoDSiL+mEJPshAlDo4ekOd7Hv1bSBqVrM
+ yIoIKRcuiFRcEF4Vzqz6Vl16u95ZDs7oSFN+cKjOS7BYmSBtg5YzqEzpAd7Osck4AwGAussoi2
+ YPK17RHjwK3FaBq0DtV/YGHZz9bEwl+NxLFGAZWoWP+shafgjC0/RfBzh0oiMWbGnhdNIx3dc1
+ kKk=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Apr 2022 18:39:08 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KY6cW3dgMz1SVp2
+        for <linux-scsi@vger.kernel.org>; Tue,  5 Apr 2022 18:39:07 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1649209146; x=1651801147; bh=TT9Q4isZap5oDHSGhYBaqGSoWrgP4fin4Cz
+        sfd9WOAQ=; b=WRW4DVvNBMFGKtulHYkhDYUO8cUtSlv2Z6c4RPattYWACJpHRzh
+        U5l3AhjRTEaGABj2wJVaAdvg8oi9n9YfxwtbBTWuinQKQefbQbfE8FrPObuLyI46
+        AVjb65oOtG1lYbym+3/7mRr2evI84bo32sZienDORA5jGgOPV+92EzhJ6wB77PZK
+        ZmS3yLbQS3rj6yPyUlDjKJfOXchZRZgEsFO/D4pNFuEa2+U8eHmofHuGf84me0w/
+        XhIM8rm1LQn6N4gLJTpROC9aHrOrnL/QdgdbTHIK+lt1t77kf7XdO9NG/7talRUQ
+        /54J6vBjrTsI4m/XvfaLHiB+0kaH/YrzpQw==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id Aqj8N22OIOf6 for <linux-scsi@vger.kernel.org>;
+        Tue,  5 Apr 2022 18:39:06 -0700 (PDT)
+Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KY6cT5d2wz1Rvlx;
+        Tue,  5 Apr 2022 18:39:05 -0700 (PDT)
+Message-ID: <a3cce73f-2e91-309d-bee0-a34a30335a18@opensource.wdc.com>
+Date:   Wed, 6 Apr 2022 10:39:04 +0900
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR11MB5112.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2eca35f9-af91-4680-414f-08da17ab1cb4
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Apr 2022 08:54:51.3830
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: d64IknmnX6f3hF9wVREQl2XaU2cnXzbepmE7BsAVMqmOPm0wzZL/HBYhdL2RK230V5ic6+wBR4GOyxp0WQf0cZnthncI7wAl+mXUoUzACcw=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR11MB4528
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v2 1/2] libata: Use scsi cmnd budget token for qc tag for
+ SAS host
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, hch@lst.de
+Cc:     linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <1649083990-207133-1-git-send-email-john.garry@huawei.com>
+ <1649083990-207133-2-git-send-email-john.garry@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <1649083990-207133-2-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-VGhhbmsgeW91IERhbWllbiBmb3IgeW91ciBjb21tZW50cyBiZWxvdy4gV2lsbCBtYWtlIGNoYW5n
-ZXMgaW4gdjMuDQoNCj4gT24gNC81LzIyIDE4OjI4LCBBamlzaCBLb3NoeSB3cm90ZToNCj4gPiBX
-aGVuIHVwcGVyIGluYm91bmQgYW5kIG91dGJvdW5kIHF1ZXVlcyAzMi02MyBhcmUgZW5hYmxlZCwg
-d2Ugc2VlDQo+IHVwcGVyDQo+ID4gdmVjdG9ycyAzMi02MyBpbiBpbnRlcnJ1cHQgc2VydmljZSBy
-b3V0aW5lLiBXZSBuZWVkIGNvcnJlc3BvbmRpbmcNCj4gPiByZWdpc3RlcnMgdG8gaGFuZGxlIG1h
-c2tpbmcgYW5kIHVubWFza2luZyBvZiB0aGVzZSB1cHBlciBpbnRlcnJ1cHRzLg0KPiA+DQo+ID4g
-VG8gYWNoaWV2ZSB0aGlzLCB3ZSB1c2UgcmVnaXN0ZXJzIE1TR1VfT0RNUl9VKDB4MzQpIHRvIG1h
-c2sgYW5kDQo+ID4gTVNHVV9PRE1SX0NMUl9VKDB4M0MpIHRvIHVubWFzayB0aGUgaW50ZXJydXB0
-cy4gSW4gdGhlc2UgcmVnaXN0ZXJzIGJpdA0KPiA+IDAtMzEgcmVwcmVzZW50cyBpbnRlcnJ1cHQg
-dmVjdG9ycyAzMi02My4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEFqaXNoIEtvc2h5IDxBamlz
-aC5Lb3NoeUBtaWNyb2NoaXAuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFZpc3dhcyBHIDxWaXN3
-YXMuR0BtaWNyb2NoaXAuY29tPg0KPiA+IEZpeGVzOiAwNWM2YzAyOWE0NGQgKCJzY3NpOiBwbTgw
-eHg6IEluY3JlYXNlIG51bWJlciBvZiBzdXBwb3J0ZWQNCj4gPiBxdWV1ZXMiKQ0KPiA+IC0tLQ0K
-PiA+ICAgZHJpdmVycy9zY3NpL3BtODAwMS9wbTgweHhfaHdpLmMgfCAzMSArKysrKysrKysrKysr
-KysrKysrKysrKysrLS0tLQ0KPiAtLQ0KPiA+ICAgMSBmaWxlIGNoYW5nZWQsIDI1IGluc2VydGlv
-bnMoKyksIDYgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
-L3BtODAwMS9wbTgweHhfaHdpLmMNCj4gPiBiL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MHh4X2h3
-aS5jDQo+ID4gaW5kZXggOWJiMzFmNjZkYjg1Li4zZTY0MTNlMjFiZmUgMTAwNjQ0DQo+ID4gLS0t
-IGEvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgweHhfaHdpLmMNCj4gPiArKysgYi9kcml2ZXJzL3Nj
-c2kvcG04MDAxL3BtODB4eF9od2kuYw0KPiA+IEBAIC0xNzI4LDkgKzE3MjgsMTcgQEAgcG04MHh4
-X2NoaXBfaW50ZXJydXB0X2VuYWJsZShzdHJ1Y3QNCj4gcG04MDAxX2hiYV9pbmZvICpwbTgwMDFf
-aGEsIHU4IHZlYykNCj4gPiAgIHsNCj4gPiAgICNpZmRlZiBQTTgwMDFfVVNFX01TSVgNCj4gPiAg
-ICAgICB1MzIgbWFzazsNCj4gPiAtICAgICBtYXNrID0gKHUzMikoMSA8PCB2ZWMpOw0KPiA+DQo+
-ID4gLSAgICAgcG04MDAxX2N3MzIocG04MDAxX2hhLCAwLCBNU0dVX09ETVJfQ0xSLCAodTMyKSht
-YXNrICYNCj4gMHhGRkZGRkZGRikpOw0KPiA+ICsgICAgIGlmICh2ZWMgPCAzMikgew0KPiA+ICsg
-ICAgICAgICAgICAgbWFzayA9IDFVIDw8IHZlYzsNCj4gDQo+IE5pdDogRHJvcCB0aGlzLi4uDQo+
-IA0KPiA+ICsgICAgICAgICAgICAgLyp2ZWN0b3JzIDAgLSAzMSovDQo+ID4gKyAgICAgICAgICAg
-ICBwbTgwMDFfY3czMihwbTgwMDFfaGEsIDAsIE1TR1VfT0RNUl9DTFIsIG1hc2spOw0KPiANCj4g
-Li4uYW5kIGRvOg0KPiANCj4gICAgICAgICAgICAgICAgIHBtODAwMV9jdzMyKHBtODAwMV9oYSwg
-MCwgTVNHVV9PRE1SX0NMUiwgMVUgPDwgdmVjKTsNCg0KT0sNCg0KPiANCj4gPiArICAgICB9IGVs
-c2Ugew0KPiA+ICsgICAgICAgICAgICAgdmVjID0gdmVjIC0gMzI7DQo+ID4gKyAgICAgICAgICAg
-ICBtYXNrID0gMVUgPDwgdmVjOw0KPiA+ICsgICAgICAgICAgICAgLyp2ZWN0b3JzIDMyIC0gNjMq
-Lw0KPiA+ICsgICAgICAgICAgICAgcG04MDAxX2N3MzIocG04MDAxX2hhLCAwLCBNU0dVX09ETVJf
-Q0xSX1UsIG1hc2spOw0KPiANCj4gQW5kIGhlcmU6DQo+IA0KPiAgICAgICAgICAgICAgICAgcG04
-MDAxX2N3MzIocG04MDAxX2hhLCAwLCBNU0dVX09ETVJfQ0xSX1UsDQo+ICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAxVSA8PCAodmVjIC0gMzIpKTsNCj4gDQo+IFRoZW4geW91IGRvIG5vdCBu
-ZWVkIHRoZSBtYXNrIHZhcmlhYmxlLg0KDQpPSw0KDQo+IA0KPiA+ICsgICAgIH0NCj4gPiAgICAg
-ICByZXR1cm47DQo+ID4gICAjZW5kaWYNCj4gPiAgICAgICBwbTgweHhfY2hpcF9pbnR4X2ludGVy
-cnVwdF9lbmFibGUocG04MDAxX2hhKTsNCj4gPiBAQCAtMTc0NywxMSArMTc1NSwyMiBAQCBwbTgw
-eHhfY2hpcF9pbnRlcnJ1cHRfZGlzYWJsZShzdHJ1Y3QNCj4gcG04MDAxX2hiYV9pbmZvICpwbTgw
-MDFfaGEsIHU4IHZlYykNCj4gPiAgIHsNCj4gPiAgICNpZmRlZiBQTTgwMDFfVVNFX01TSVgNCj4g
-PiAgICAgICB1MzIgbWFzazsNCj4gPiAtICAgICBpZiAodmVjID09IDB4RkYpDQo+ID4gKw0KPiA+
-ICsgICAgIGlmICh2ZWMgPT0gMHhGRikgew0KPiANCj4gVGhpcyBpcyBub3Qgc3ltbWV0cmljIHdp
-dGggcG04MHh4X2NoaXBfaW50ZXJydXB0X2VuYWJsZSgpLiBEb2VzDQo+IHBtODB4eF9jaGlwX2lu
-dGVycnVwdF9lbmFibGUoKSBuZWVkIHRoZSBzYW1lIGNhc2UgdG9vID8NCg0KSSBiZWxpZXZlIGl0
-J3Mgbm90IG5lZWRlZCByaWdodCBub3cuIA0KDQpGb3IgaW50ZXJydXB0IGRpc2FibGUgSSBjb3Vs
-ZCB0byBzZWUgdGhlIGZvbGxvd2luZyBlbnRyeSBwb2ludA0KUE04MDAxX0NISVBfRElTUC0+aW50
-ZXJydXB0X2Rpc2FibGUocG04MDAxX2hhLCAweEZGKQ0KaXMgdXNlZCBpbiBwbTgwMDFfcGNpX3Jl
-bW92ZSwgcG04MDAxX3BjaV9zdXNwZW5kLA0KcG04MDAxX3BjaV9yZXN1bWUNCg0KQnV0IHNhbWUg
-aXMgbm90IHRoZSBjYXNlIHdpdGggaW50ZXJydXB0IGVuYWJsZSBmdW5jdGlvbi4gSSBkb24ndA0K
-c2VlIGludGVycnVwdCBlbmFibGUgYmVpbmcgY2FsbGVkIHdpdGggMHhGRi4NCg0KPiANCj4gPiAg
-ICAgICAgICAgICAgIG1hc2sgPSAweEZGRkZGRkZGOw0KPiA+IC0gICAgIGVsc2UNCj4gPiAtICAg
-ICAgICAgICAgIG1hc2sgPSAodTMyKSgxIDw8IHZlYyk7DQo+ID4gLSAgICAgcG04MDAxX2N3MzIo
-cG04MDAxX2hhLCAwLCBNU0dVX09ETVIsICh1MzIpKG1hc2sgJg0KPiAweEZGRkZGRkZGKSk7DQo+
-ID4gKyAgICAgICAgICAgICAvKiBkaXNhYmxlIGFsbCB2ZWN0b3JzIDAtMzEsIDMyLTYzKi8NCj4g
-PiArICAgICAgICAgICAgIHBtODAwMV9jdzMyKHBtODAwMV9oYSwgMCwgTVNHVV9PRE1SLCBtYXNr
-KTsNCj4gPiArICAgICAgICAgICAgIHBtODAwMV9jdzMyKHBtODAwMV9oYSwgMCwgTVNHVV9PRE1S
-X1UsIG1hc2spOw0KPiANCj4gU2ltaWxhciBoZXJlLCBubyBuZWVkIGZvciB0aGUgbWFzayB2YXJp
-YWJsZS4NCg0KT0suDQoNCj4gDQo+ICAgICAgICAgICAgICAgICBwbTgwMDFfY3czMihwbTgwMDFf
-aGEsIDAsIE1TR1VfT0RNUiwgMHhGRkZGRkZGRik7DQo+ICAgICAgICAgICAgICAgICBwbTgwMDFf
-Y3czMihwbTgwMDFfaGEsIDAsIE1TR1VfT0RNUl9VLCAweEZGRkZGRkZGKTsNCj4gDQo+ID4gKyAg
-ICAgfSBlbHNlIGlmICh2ZWMgPCAzMikgew0KPiA+ICsgICAgICAgICAgICAgbWFzayA9IDFVIDw8
-IHZlYzsNCj4gPiArICAgICAgICAgICAgIC8qdmVjdG9ycyAwIC0gMzEqLw0KPiA+ICsgICAgICAg
-ICAgICAgcG04MDAxX2N3MzIocG04MDAxX2hhLCAwLCBNU0dVX09ETVIsIG1hc2spOw0KPiANCj4g
-QW5kIGhlcmUuDQo+ICAgICAgICAgICAgICAgICBwbTgwMDFfY3czMihwbTgwMDFfaGEsIDAsIE1T
-R1VfT0RNUiwgMVUgPDwgdmVjKTsNCg0KT0sNCg0KPiANCj4gPiArICAgICB9IGVsc2Ugew0KPiA+
-ICsgICAgICAgICAgICAgdmVjID0gdmVjIC0gMzI7DQo+ID4gKyAgICAgICAgICAgICBtYXNrID0g
-MVUgPDwgdmVjOw0KPiA+ICsgICAgICAgICAgICAgLyp2ZWN0b3JzIDMyIC0gNjMqLw0KPiA+ICsg
-ICAgICAgICAgICAgcG04MDAxX2N3MzIocG04MDAxX2hhLCAwLCBNU0dVX09ETVJfVSwgbWFzayk7
-DQo+IA0KPiBBbmQgaGVyZS4NCj4gICAgICAgICAgICAgICAgIHBtODAwMV9jdzMyKHBtODAwMV9o
-YSwgMCwgTVNHVV9PRE1SX1UsDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAxVSA8PCAo
-dmVjIC0gMzIpKTsNCg0KT0sNCj4gDQo+ID4gKyAgICAgfQ0KPiA+ICAgICAgIHJldHVybjsNCj4g
-PiAgICNlbmRpZg0KPiA+ICAgICAgIHBtODB4eF9jaGlwX2ludHhfaW50ZXJydXB0X2Rpc2FibGUo
-cG04MDAxX2hhKTsNCj4gDQo+IA0KPiAtLQ0KPiBEYW1pZW4gTGUgTW9hbA0KPiBXZXN0ZXJuIERp
-Z2l0YWwgUmVzZWFyY2gNCg==
+On 4/4/22 23:53, John Garry wrote:
+> For attaining a qc tag for a SAS host we need to allocate a bit in
+> ata_port.sas_tag_allocated bitmap.
+> 
+> However we already have a unique tag per device in range
+> [0, ATA_MAX_QUEUE) in the scsi cmnd budget token, so just use that
+> instead.
+
+The valid range is [0, ATA_MAX_QUEUE - 1]. Tag ATA_MAX_QUEUE is 
+ATA_TAG_INTERNAL which is never allocated as a valid device tag but used 
+directly in ata_exec_internal().
+
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>   drivers/ata/libata-core.c | 14 +++++---------
+>   drivers/ata/libata-sata.c | 25 ++++---------------------
+>   drivers/ata/libata-scsi.c |  2 +-
+>   drivers/ata/libata.h      |  7 +++----
+>   include/linux/libata.h    |  1 -
+>   5 files changed, 13 insertions(+), 36 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index cceedde51126..1067b2e2be28 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4566,14 +4566,15 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
+>   /**
+>    *	ata_qc_new_init - Request an available ATA command, and initialize it
+>    *	@dev: Device from whom we request an available command structure
+> - *	@tag: tag
+> + *	@scmd: scmd for which to get qc
+>    *
+>    *	LOCKING:
+>    *	None.
+>    */
+>   
+> -struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
+> +struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, struct scsi_cmnd *scmd)
+>   {
+> +	int tag = scsi_cmd_to_rq(scmd)->tag;
+>   	struct ata_port *ap = dev->link->ap;
+>   	struct ata_queued_cmd *qc;
+>   
+> @@ -4583,7 +4584,7 @@ struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
+>   
+>   	/* libsas case */
+>   	if (ap->flags & ATA_FLAG_SAS_HOST) {
+> -		tag = ata_sas_allocate_tag(ap);
+> +		tag = ata_sas_get_tag(scmd);
+>   		if (tag < 0)
+>   			return NULL;
+>   	}
+> @@ -4611,19 +4612,14 @@ struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
+>    */
+>   void ata_qc_free(struct ata_queued_cmd *qc)
+>   {
+> -	struct ata_port *ap;
+>   	unsigned int tag;
+>   
+>   	WARN_ON_ONCE(qc == NULL); /* ata_qc_from_tag _might_ return NULL */
+> -	ap = qc->ap;
+>   
+>   	qc->flags = 0;
+>   	tag = qc->tag;
+> -	if (ata_tag_valid(tag)) {
+> +	if (ata_tag_valid(tag))
+>   		qc->tag = ATA_TAG_POISON;
+> -		if (ap->flags & ATA_FLAG_SAS_HOST)
+> -			ata_sas_free_tag(tag, ap);
+> -	}
+>   }
+>   
+>   void __ata_qc_complete(struct ata_queued_cmd *qc)
+> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> index 044a16daa2d4..c3e9fd7d920c 100644
+> --- a/drivers/ata/libata-sata.c
+> +++ b/drivers/ata/libata-sata.c
+> @@ -1268,29 +1268,12 @@ int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap)
+>   }
+>   EXPORT_SYMBOL_GPL(ata_sas_queuecmd);
+>   
+> -int ata_sas_allocate_tag(struct ata_port *ap)
+> +int ata_sas_get_tag(struct scsi_cmnd *scmd)
+>   {
+> -	unsigned int max_queue = ap->host->n_tags;
+> -	unsigned int i, tag;
+> +	if (WARN_ON_ONCE(scmd->budget_token >= ATA_MAX_QUEUE))
+> +		return -1;
+>   
+> -	for (i = 0, tag = ap->sas_last_tag + 1; i < max_queue; i++, tag++) {
+> -		tag = tag < max_queue ? tag : 0;
+> -
+> -		/* the last tag is reserved for internal command. */
+> -		if (ata_tag_internal(tag))
+> -			continue;
+> -
+> -		if (!test_and_set_bit(tag, &ap->sas_tag_allocated)) {
+> -			ap->sas_last_tag = tag;
+> -			return tag;
+> -		}
+> -	}
+> -	return -1;
+> -}
+> -
+> -void ata_sas_free_tag(unsigned int tag, struct ata_port *ap)
+> -{
+> -	clear_bit(tag, &ap->sas_tag_allocated);
+> +	return scmd->budget_token;
+>   }
+>   
+>   /**
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 06c9d90238d9..61dd7f7c7743 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -640,7 +640,7 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+>   {
+>   	struct ata_queued_cmd *qc;
+>   
+> -	qc = ata_qc_new_init(dev, scsi_cmd_to_rq(cmd)->tag);
+> +	qc = ata_qc_new_init(dev, cmd);
+>   	if (qc) {
+>   		qc->scsicmd = cmd;
+>   		qc->scsidone = scsi_done;
+> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> index c9c2496d91ea..92e52090165b 100644
+> --- a/drivers/ata/libata.h
+> +++ b/drivers/ata/libata.h
+> @@ -44,7 +44,7 @@ static inline void ata_force_cbl(struct ata_port *ap) { }
+>   #endif
+>   extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
+>   extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
+> -extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
+> +extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, struct scsi_cmnd *scmd);
+>   extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+>   			   u64 block, u32 n_block, unsigned int tf_flags,
+>   			   unsigned int tag, int class);
+> @@ -93,10 +93,9 @@ extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+>   
+>   /* libata-sata.c */
+>   #ifdef CONFIG_SATA_HOST
+> -int ata_sas_allocate_tag(struct ata_port *ap);
+> -void ata_sas_free_tag(unsigned int tag, struct ata_port *ap);
+> +int ata_sas_get_tag(struct scsi_cmnd *scmd);
+>   #else
+> -static inline int ata_sas_allocate_tag(struct ata_port *ap)
+> +static inline int ata_sas_get_tag(struct scsi_cmnd *scmd)
+>   {
+>   	return -EOPNOTSUPP;
+>   }
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 9b1d3d8b1252..16107122e587 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -820,7 +820,6 @@ struct ata_port {
+>   	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
+>   
+>   	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE + 1];
+> -	unsigned long		sas_tag_allocated; /* for sas tag allocation only */
+>   	u64			qc_active;
+>   	int			nr_active_links; /* #links with active qcs */
+>   	unsigned int		sas_last_tag;	/* track next tag hw expects */
+
+
+-- 
+Damien Le Moal
+Western Digital Research
