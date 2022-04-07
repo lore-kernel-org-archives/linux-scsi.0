@@ -2,117 +2,209 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BBB7C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Apr 2022 04:43:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10807C43219
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Apr 2022 05:16:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240781AbiDGEo6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Apr 2022 00:44:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53370 "EHLO
+        id S240847AbiDGFSZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Apr 2022 01:18:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240750AbiDGEox (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2022 00:44:53 -0400
-Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29DED1017F0;
-        Wed,  6 Apr 2022 21:42:51 -0700 (PDT)
-Received: by mail-ej1-x634.google.com with SMTP id dr20so8297902ejc.6;
-        Wed, 06 Apr 2022 21:42:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=n4HcXuOXAZE6zoHCC/T33DPT/bULLpPnOSYZG5xwNiM=;
-        b=OYCMJRqmnh+B04rA+lkcc6Tlxx/poyV9w7qffpk4eAaYIEU3DKUsnhDwnIxKU96asq
-         2NIgU9uLB3YkkzlgSAnq0ZPUrN/vC+Nq0K7hDQCZdFRC6e4fSdUigklwY/7f4WXMaW8x
-         YZ47E5a982hGjh6fepld1dKvkAmch7se4vGCilW+j6dsX2yQ8U1STz4WkwJf9nwtPMjC
-         Lx7TCjiJdQ74ZTwN612hxYTgsnWCrhMbTg9+zZYWeReSDkPR6NbY/20/VzaAQYY40Far
-         +2Dz3KIjT+AUYIjo17uM3qsRp61sE8+ofojcRhaI6MMEz6gpDLbaZ94ofPgdp4PHnEaU
-         e+Bw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=n4HcXuOXAZE6zoHCC/T33DPT/bULLpPnOSYZG5xwNiM=;
-        b=qKu5gWzSeRh1+pIxdqFKR4yRacWNjohu7a7yxYWW7X/KjEbBHxU6AgA0Ku7poWAZvm
-         DZ1aNRLFWGn2+yJ8MrqFE9CZV+CCCzclgO7tvbUq/72XqzvNZnMeFvW+J2xmj1apodew
-         ooYqPHsyYXBnJgyrdN/5eiHnCFF8Wr8gMePWd7VI31sajoB6FToyqsBccN+Isq5CmY1k
-         1UiqXTwg9NdzMQvQizujEV7mnhbziy0MfeGDtGmgcg2n392youXGlQB5yw39GRK5o+u1
-         CJ7PGgOtkurS+wmry/bUeBTBfwOcgZHC5brAj/ZkYQxS3Pf6ewW3SKRFqZen0LUX942F
-         kLdw==
-X-Gm-Message-State: AOAM530vNH1QmfdZ/9OhrQUhUxW8MbOfdR74QmEWZzU6GBobIRb2dlhs
-        kkyAg7chlSPYvpI16F7oBqY=
-X-Google-Smtp-Source: ABdhPJxrygnMfLK8eagvxGviFG90GKXnm04NyWO6ssvyhvKoxhRK6ZP9BtRjtVzfuNBoGZXcylcLNg==
-X-Received: by 2002:a17:907:6d96:b0:6df:f199:6a7c with SMTP id sb22-20020a1709076d9600b006dff1996a7cmr11603771ejc.137.1649306569679;
-        Wed, 06 Apr 2022 21:42:49 -0700 (PDT)
-Received: from anparri.mshome.net (host-87-11-75-174.retail.telecomitalia.it. [87.11.75.174])
-        by smtp.gmail.com with ESMTPSA id e3-20020a170906374300b006e7f060bf6asm4199455ejc.207.2022.04.06.21.42.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Apr 2022 21:42:49 -0700 (PDT)
-From:   "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
-To:     KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        James Bottomley <jejb@linux.ibm.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        David Miller <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>
-Cc:     linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
-Subject: [PATCH 2/2] hv_netvsc: Print value of invalid ID in netvsc_send_{completion,tx_complete}()
-Date:   Thu,  7 Apr 2022 06:40:34 +0200
-Message-Id: <20220407044034.379971-3-parri.andrea@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220407044034.379971-1-parri.andrea@gmail.com>
-References: <20220407044034.379971-1-parri.andrea@gmail.com>
+        with ESMTP id S233492AbiDGFSV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2022 01:18:21 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91F8111166;
+        Wed,  6 Apr 2022 22:16:22 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id B76E021122;
+        Thu,  7 Apr 2022 05:16:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1649308580; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3mSljOe/NcqR0nJ5LYJS1IexMd+XWdNrUUnY7u8p4ss=;
+        b=S8u6tT4MOmjtYxCqeb3qmZNn/bHZfqArgo8fnUTx30csmaC8EzqkNzsFCobTftsYYuUnLo
+        j2CEECTylf45En922p7zGMdDliHlOB0W/p8IrTqMAAnrwN0MZYWeSbIR9ZZAecmXn6aNZm
+        pYWtnVOXe4neFTwM3RVsKoYuaP4pLxY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1649308580;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3mSljOe/NcqR0nJ5LYJS1IexMd+XWdNrUUnY7u8p4ss=;
+        b=8wVCLmcmG2fqohkxPiOTT+zNzsZDHS4xqLNwNHKElc9o7Ynzusas5Vi1t3zyX0xdAJFT8y
+        NypPr2uWld7TnxBQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 81FE713A66;
+        Thu,  7 Apr 2022 05:16:14 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 0FojFJ5zTmLoQAAAMHmgww
+        (envelope-from <colyli@suse.de>); Thu, 07 Apr 2022 05:16:14 +0000
+Message-ID: <2aee78dd-d5b6-5444-da28-34ab2631b264@suse.de>
+Date:   Thu, 7 Apr 2022 13:16:12 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.7.0
+Subject: Re: [PATCH 23/27] block: add a bdev_max_discard_sectors helper
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        nbd@other.debian.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
+        ntfs3@lists.linux.dev, ocfs2-devel@oss.oracle.com,
+        linux-mm@kvack.org
+References: <20220406060516.409838-1-hch@lst.de>
+ <20220406060516.409838-24-hch@lst.de>
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <20220406060516.409838-24-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-That being useful for debugging purposes.
+On 4/6/22 2:05 PM, Christoph Hellwig wrote:
+> Add a helper to query the number of sectors support per each discard bio
+> based on the block device and use this helper to stop various places from
+> poking into the request_queue to see if discard is supported and if so how
+> much.  This mirrors what is done e.g. for write zeroes as well.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Notice that the packet descriptor is in "private" guest memory, so
-that Hyper-V can not tamper with it.
 
-While at it, remove two unnecessary u64-casts.
+For the bcache part,
 
-Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
----
- drivers/net/hyperv/netvsc.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Acked-by: Coly Li <colyli@suse.de>
 
-diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
-index 9442f751ad3aa..4061af5baaea3 100644
---- a/drivers/net/hyperv/netvsc.c
-+++ b/drivers/net/hyperv/netvsc.c
-@@ -792,9 +792,9 @@ static void netvsc_send_tx_complete(struct net_device *ndev,
- 	int queue_sends;
- 	u64 cmd_rqst;
- 
--	cmd_rqst = channel->request_addr_callback(channel, (u64)desc->trans_id);
-+	cmd_rqst = channel->request_addr_callback(channel, desc->trans_id);
- 	if (cmd_rqst == VMBUS_RQST_ERROR) {
--		netdev_err(ndev, "Incorrect transaction id\n");
-+		netdev_err(ndev, "Invalid transaction ID %llx\n", desc->trans_id);
- 		return;
- 	}
- 
-@@ -854,9 +854,9 @@ static void netvsc_send_completion(struct net_device *ndev,
- 	/* First check if this is a VMBUS completion without data payload */
- 	if (!msglen) {
- 		cmd_rqst = incoming_channel->request_addr_callback(incoming_channel,
--								   (u64)desc->trans_id);
-+								   desc->trans_id);
- 		if (cmd_rqst == VMBUS_RQST_ERROR) {
--			netdev_err(ndev, "Invalid transaction id\n");
-+			netdev_err(ndev, "Invalid transaction ID %llx\n", desc->trans_id);
- 			return;
- 		}
- 
--- 
-2.25.1
+
+Thanks.
+
+
+Coly Li
+
+
+
+> ---
+>   block/blk-core.c                    |  2 +-
+>   block/blk-lib.c                     |  2 +-
+>   block/ioctl.c                       |  3 +--
+>   drivers/block/drbd/drbd_main.c      |  2 +-
+>   drivers/block/drbd/drbd_nl.c        | 12 +++++++-----
+>   drivers/block/drbd/drbd_receiver.c  |  5 ++---
+>   drivers/block/loop.c                |  9 +++------
+>   drivers/block/rnbd/rnbd-srv-dev.h   |  6 +-----
+>   drivers/block/xen-blkback/xenbus.c  |  2 +-
+>   drivers/md/bcache/request.c         |  4 ++--
+>   drivers/md/bcache/super.c           |  2 +-
+>   drivers/md/bcache/sysfs.c           |  2 +-
+>   drivers/md/dm-cache-target.c        |  9 +--------
+>   drivers/md/dm-clone-target.c        |  9 +--------
+>   drivers/md/dm-io.c                  |  2 +-
+>   drivers/md/dm-log-writes.c          |  3 +--
+>   drivers/md/dm-raid.c                |  9 ++-------
+>   drivers/md/dm-table.c               |  4 +---
+>   drivers/md/dm-thin.c                |  9 +--------
+>   drivers/md/dm.c                     |  2 +-
+>   drivers/md/md-linear.c              |  4 ++--
+>   drivers/md/raid0.c                  |  2 +-
+>   drivers/md/raid1.c                  |  6 +++---
+>   drivers/md/raid10.c                 |  8 ++++----
+>   drivers/md/raid5-cache.c            |  2 +-
+>   drivers/target/target_core_device.c |  8 +++-----
+>   fs/btrfs/extent-tree.c              |  4 ++--
+>   fs/btrfs/ioctl.c                    |  2 +-
+>   fs/exfat/file.c                     |  2 +-
+>   fs/exfat/super.c                    | 10 +++-------
+>   fs/ext4/ioctl.c                     | 10 +++-------
+>   fs/ext4/super.c                     | 10 +++-------
+>   fs/f2fs/f2fs.h                      |  3 +--
+>   fs/f2fs/segment.c                   |  6 ++----
+>   fs/fat/file.c                       |  2 +-
+>   fs/fat/inode.c                      | 10 +++-------
+>   fs/gfs2/rgrp.c                      |  2 +-
+>   fs/jbd2/journal.c                   |  7 ++-----
+>   fs/jfs/ioctl.c                      |  2 +-
+>   fs/jfs/super.c                      |  8 ++------
+>   fs/nilfs2/ioctl.c                   |  2 +-
+>   fs/ntfs3/file.c                     |  2 +-
+>   fs/ntfs3/super.c                    |  2 +-
+>   fs/ocfs2/ioctl.c                    |  2 +-
+>   fs/xfs/xfs_discard.c                |  2 +-
+>   fs/xfs/xfs_super.c                  | 12 ++++--------
+>   include/linux/blkdev.h              |  5 +++++
+>   mm/swapfile.c                       | 17 ++---------------
+>   48 files changed, 87 insertions(+), 163 deletions(-)
+
+[snipped]
+
+
+> diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
+> index fdd0194f84dd0..e27f67f06a428 100644
+> --- a/drivers/md/bcache/request.c
+> +++ b/drivers/md/bcache/request.c
+> @@ -1005,7 +1005,7 @@ static void cached_dev_write(struct cached_dev *dc, struct search *s)
+>   		bio_get(s->iop.bio);
+>   
+>   		if (bio_op(bio) == REQ_OP_DISCARD &&
+> -		    !blk_queue_discard(bdev_get_queue(dc->bdev)))
+> +		    !bdev_max_discard_sectors(dc->bdev))
+>   			goto insert_data;
+>   
+>   		/* I/O request sent to backing device */
+> @@ -1115,7 +1115,7 @@ static void detached_dev_do_request(struct bcache_device *d, struct bio *bio,
+>   	bio->bi_private = ddip;
+>   
+>   	if ((bio_op(bio) == REQ_OP_DISCARD) &&
+> -	    !blk_queue_discard(bdev_get_queue(dc->bdev)))
+> +	    !bdev_max_discard_sectors(dc->bdev))
+>   		bio->bi_end_io(bio);
+>   	else
+>   		submit_bio_noacct(bio);
+> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+> index bf3de149d3c9f..296f200b2e208 100644
+> --- a/drivers/md/bcache/super.c
+> +++ b/drivers/md/bcache/super.c
+> @@ -2350,7 +2350,7 @@ static int register_cache(struct cache_sb *sb, struct cache_sb_disk *sb_disk,
+>   	ca->bdev->bd_holder = ca;
+>   	ca->sb_disk = sb_disk;
+>   
+> -	if (blk_queue_discard(bdev_get_queue(bdev)))
+> +	if (bdev_max_discard_sectors((bdev)))
+>   		ca->discard = CACHE_DISCARD(&ca->sb);
+>   
+>   	ret = cache_alloc(ca);
+> diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
+> index d1029d71ff3bc..c6f677059214d 100644
+> --- a/drivers/md/bcache/sysfs.c
+> +++ b/drivers/md/bcache/sysfs.c
+> @@ -1151,7 +1151,7 @@ STORE(__bch_cache)
+>   	if (attr == &sysfs_discard) {
+>   		bool v = strtoul_or_return(buf);
+>   
+> -		if (blk_queue_discard(bdev_get_queue(ca->bdev)))
+> +		if (bdev_max_discard_sectors(ca->bdev))
+>   			ca->discard = v;
+>   
+>   		if (v != CACHE_DISCARD(&ca->sb)) {
+
+
+[snipped]
 
