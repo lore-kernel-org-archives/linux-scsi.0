@@ -2,84 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF349C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Apr 2022 13:36:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB301C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Apr 2022 14:32:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343737AbiDGNid (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Apr 2022 09:38:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37336 "EHLO
+        id S1344019AbiDGOeY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Apr 2022 10:34:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343701AbiDGNhf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2022 09:37:35 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 694E926C9
-        for <linux-scsi@vger.kernel.org>; Thu,  7 Apr 2022 06:35:34 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 237BuqvQ000758
-        for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2022 13:35:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=U96FPGp27FOteNb4Ao5omjBG6t7duB2/peR+qAyb/iA=;
- b=Jul7KjTDM90qVQ1ir0L6urT2TahBBl8ibOXMfiYoOZ0Ta68UElW0Uq8UDBOxWXq2WsTQ
- ZVh4pKwIpTE/FBmhtmnpYn0rCFtvvKS9/m2h48pPe7h5GUNJul1sxrKpjF6AVTgWraOx
- +MnbE/RR2Ze+IoLta/fTYsICin3my/dkfrms1PriQ3+x30W4swzCliBKKKCtw8hLqmGU
- WqmcfGelvboDSzoHGZvk8hnpb5H+BsSeM7J6Gbv8hwpclmyNrLA8DpkGpe3Naql4gDgd
- aaUk1lrJxZScg5YVUZbD9iOotlihhGDwBJd4TpWYgtJHpEQtMIv+3rWbZv3YbOAlkoW/ AA== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3f6e3suw2c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Apr 2022 13:35:33 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 237DLVNa036835
-        for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2022 13:35:32 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3f97uwtvyp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Apr 2022 13:35:32 +0000
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 237DZJMG032479
-        for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2022 13:35:31 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3f97uwtvpy-18;
-        Thu, 07 Apr 2022 13:35:31 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] ibmvscsis: increase INITIAL_SRP_LIMIT to 1024
-Date:   Thu,  7 Apr 2022 09:35:17 -0400
-Message-Id: <164929678999.15424.1765961902177131391.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220322194443.678433-1-tyreld@linux.ibm.com>
-References: <20220322194443.678433-1-tyreld@linux.ibm.com>
+        with ESMTP id S1344006AbiDGOeW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2022 10:34:22 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9688D198526;
+        Thu,  7 Apr 2022 07:32:12 -0700 (PDT)
+Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KZ3gw30svz681Z4;
+        Thu,  7 Apr 2022 22:30:20 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 7 Apr 2022 16:32:10 +0200
+Received: from [10.47.80.129] (10.47.80.129) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Thu, 7 Apr
+ 2022 15:32:09 +0100
+Message-ID: <3e1914a8-5f6b-8fcf-7fb3-2d1edb9766e1@huawei.com>
+Date:   Thu, 7 Apr 2022 15:32:07 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: U5AMj0MA0kW5GA9hhf-5tXUUWRXym6ZG
-X-Proofpoint-GUID: U5AMj0MA0kW5GA9hhf-5tXUUWRXym6ZG
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 03/11] libata: Send internal commands through the block
+ layer
+To:     Christoph Hellwig <hch@lst.de>
+CC:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
+        <bvanassche@acm.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <ming.lei@redhat.com>,
+        <hare@suse.de>, <chenxiang66@hisilicon.com>,
+        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <dm-devel@redhat.com>, <beanhuo@micron.com>
+References: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
+ <1647945585-197349-4-git-send-email-john.garry@huawei.com>
+ <20220322112057.GC29270@lst.de>
+In-Reply-To: <20220322112057.GC29270@lst.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.80.129]
+X-ClientProxiedBy: lhreml728-chm.china.huawei.com (10.201.108.79) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 22 Mar 2022 12:44:43 -0700, Tyrel Datwyler wrote:
+On 22/03/2022 11:20, Christoph Hellwig wrote:
+> On Tue, Mar 22, 2022 at 06:39:37PM +0800, John Garry wrote:
+>> When SCSI HBA device drivers are required to process an ATA internal
+>> command they still need a tag for the IO. This often requires the driver
+>> to set aside a set of tags for these sorts of IOs and manage the tags
+>> themselves.
+>>
+>> If we associate a SCSI command (and request) with an ATA internal command
+>> then the tag is already provided, so introduce the change to send ATA
+>> internal commands through the block layer with a set of custom blk-mq ops.
+>>
+>> note: I think that the timeout handling needs to be fixed up.
 
-> The adapter request_limit is hardcoded to be INITIAL_SRP_LIMIT which is
-> currently an arbitrary value of 800. Increase this value to 1024 which
-> better matches the characteristics of the typical IBMi Initiator that
-> supports 32 LUNs and a queue depth of 32.
-> 
-> This change also has the secondary benefit of being a power of two as
-> required by the kfifo API. Since, Commit ab9bb6318b09 ("Partially revert
-> "kfifo: fix kfifo_alloc() and kfifo_init()"") the size of IU pool for
-> each target has been rounded down to 512 when attempting to kfifo_init()
-> those pools with the current request_limit size of 800.
-> 
-> [...]
+Hi Christoph,
 
-Applied to 5.18/scsi-fixes, thanks!
+> Any reason to not just send them through an ATA_16 passthrough CDB and
+> just use all the normal SCSI command handling?
 
-[1/1] ibmvscsis: increase INITIAL_SRP_LIMIT to 1024
-      https://git.kernel.org/mkp/scsi/c/0bade8e53279
+I had a go at implementing this but I have come up against a few issues:
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+- ATA_16 handling translates the passthrough CDB to a ATA TF. However 
+ata_exec_internal_sg() is passed a TF already. So what to do? Change the 
+callers to generate a ATA_16 CDB? I guess not. Otherwise we could put 
+the already-generated TF in the SCSI cmd CDB somehow and use directly.
+
+- We may have no SCSI device (yet) for the target when issuing an 
+internal command, but only the ATA port+dev. So need a method to pass 
+these pointers to ATA_16 handling
+
+- we would need to change ata_scsi_translate(), ata_scsi_pass_thru() and 
+other friends to deal with ATA_TAG_INTERNAL and its peculiarities - 
+today it just deals with regular qc's.
+
+It still does seem a reasonable idea to use ATA_16, but it looks like 
+significant modifications would be required....
+
+Thanks,
+John
