@@ -2,161 +2,549 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 357B6C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Apr 2022 19:34:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2C2CC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Apr 2022 19:34:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229810AbiDGTgG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Apr 2022 15:36:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35140 "EHLO
+        id S229833AbiDGTgg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Apr 2022 15:36:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbiDGTgF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2022 15:36:05 -0400
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AA432C73A7
-        for <linux-scsi@vger.kernel.org>; Thu,  7 Apr 2022 12:33:35 -0700 (PDT)
-Received: by mail-pj1-x1036.google.com with SMTP id gt4so6523959pjb.4
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Apr 2022 12:33:35 -0700 (PDT)
+        with ESMTP id S229469AbiDGTgf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2022 15:36:35 -0400
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2197A2CF1FE
+        for <linux-scsi@vger.kernel.org>; Thu,  7 Apr 2022 12:34:19 -0700 (PDT)
+Received: by mail-pg1-x52d.google.com with SMTP id r66so5835638pgr.3
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Apr 2022 12:34:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=S60XJoNKCcxcvXan3WKRA4CycrfiFjExKP9uveDLI5I=;
-        b=ErtUN5/IJEWQiBYHh+EK7gMUqdw16CToiRmSIudWEOmEldXMGKEBLuXWur/atjtNiQ
-         Gy9lSmgHI36EjYmOEuQ3yWBwSku1BK2+sM1+4O/kS8QWn6VO9i5yTLinVyyXjqNFj8bj
-         F2TySSgCkluUWXbJuRmdSYv2eBLmck/cAFeaM=
+        bh=lj2uebPYi24pzmOpywhdgXgGG5A7TEeQ5395ET8d9fM=;
+        b=W39s0wdAlR9v/3iudCfDU/FN6abLTRHywfIvhfAHEkTqP8gRUE/PdCXAtG/kk+aazN
+         BMy6DY/5+f7fiwz+9A03sTKtk41oPwbLrxxLRu/jWRR1peeMOrOk9CIwXiwi9AFA/BV7
+         tY8HrYFE203IkUfXJBwHsM2XG4YDvSu8IdByY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=S60XJoNKCcxcvXan3WKRA4CycrfiFjExKP9uveDLI5I=;
-        b=YUUTAnJmBEsqTiiOupsZ3XQhNhgOuv2bS5aMOowG8jSNBm2qQiW+p6PNFW4doZD1gn
-         kKG0wwQKiHR5tE270G60s9YGSOKHFnICc8L7aHf5rwiVNMnsHU8B+/kmmczUDtnOLbKV
-         GuRh45Y/wFKNC30tcwjqomGawyVI2GUtDmMi1Gm1aoPlM0/zNw+yCpHkodnwOYAbT7Te
-         e2ocP6o0GnO72n+Sf+B/UcpV0Fkgd9XXfUeD2TCg8zVp/TWihmplBPisCCE+MxXIAKBO
-         HyoHBq8QdVaI2jOrSTzlogx+q1YixjTgr7wVaSDk21/00qjMOCxYLy/cwebpmOPndepz
-         OooA==
-X-Gm-Message-State: AOAM531Vb4GyTIxFYN2k4Y+qy1yq/xB74O4OSITGq+/vj8gKoIrFT93e
-        Uy55XVteLy4Tbhi+JNN9nCOUvHtDJO+PQtNtVuNycc5SGLwYBNWgQMxdptiDfnASb+e4puhq0lL
-        A/VomufoUtWyO9cFCffd5Z+wgY0ll0eHrNEMtGMofVgtMzUlWGgOaEkh4gLu0+IW11wj9/OfOUS
-        CATgvAQWUuZQ==
-X-Google-Smtp-Source: ABdhPJzRdeVgi1CMbytDuZ8iZcF68VfL8e8R8mm3o6i24VLqIjo3WlM0tS6RUfZlo29QZSoY5kPd6A==
-X-Received: by 2002:a17:902:8ec4:b0:156:b8a6:f9d8 with SMTP id x4-20020a1709028ec400b00156b8a6f9d8mr15905889plo.122.1649359807978;
-        Thu, 07 Apr 2022 12:30:07 -0700 (PDT)
+        bh=lj2uebPYi24pzmOpywhdgXgGG5A7TEeQ5395ET8d9fM=;
+        b=ypwxhOUQSqX4WF6LzZKm8sr8ssLKm+lFtm243wmA2EUg3YIkAOAM7glJ/qggZxG4Lq
+         Nt1R//scNIrb2O1VUINwoFpDKe4XCfLwZaD0MY+uM83G5oiw4Pr/f+mlYsS92ABNogFP
+         +ZjNB1XNU+hP833hdBvI9b4g9V48YLXTtOlFr5RJC5T4KUSw7rInhy4T9g2xQVohzV4A
+         dz6abb1i9mqsQaiXy+bqr2UVuIZ18L0iB2y3HlHVSxtQgA0VOwGTmbzzA2xegsHA/0kh
+         izKsna7+6OF9qYQxf6zrdTvU1/B4ruKgiZ02MWgdjW6Z3QEQomPxJ20ZQwdU7kMAo911
+         u+EA==
+X-Gm-Message-State: AOAM5304NrH4qpxrP8ZeBWdjLicpunnqRGLbSW9fZM+PdYH7IyxLrtsG
+        w0WmrijIcFeP4GL4Tzr5cYbycpPJb+1h6eSg3OwUmr14Cj3xENpFU6H2W4/v7sq9hHGb+4igNFS
+        cJdz89sLOoExqf282eqVzk1zvAMR9q5Wmd8uR6qPYaWU+jwmOI+FA43kyO0xh56WtaU+0hcwnsq
+        MtzKIHpBNn/w==
+X-Google-Smtp-Source: ABdhPJxID8lMhGNrlaU+5T6z+Ie8gHeJliMr5Qy49zDBQ8kVmlYZLKPtOCUgP6OCDC1zBiCB0CJu2w==
+X-Received: by 2002:a65:460a:0:b0:399:24bb:c9ea with SMTP id v10-20020a65460a000000b0039924bbc9eamr12663591pgq.410.1649359811242;
+        Thu, 07 Apr 2022 12:30:11 -0700 (PDT)
 Received: from dhcp-10-123-20-15.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id o3-20020a056a0015c300b004fb24adc4b8sm23579275pfu.159.2022.04.07.12.30.05
+        by smtp.gmail.com with ESMTPSA id o3-20020a056a0015c300b004fb24adc4b8sm23579275pfu.159.2022.04.07.12.30.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Apr 2022 12:30:07 -0700 (PDT)
+        Thu, 07 Apr 2022 12:30:10 -0700 (PDT)
 From:   Sumit Saxena <sumit.saxena@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, bvanassche@acm.org, hch@lst.de,
         sathya.prakash@broadcom.com, kashyap.desai@broadcom.com,
         chandrakanth.patil@broadcom.com, sreekanth.reddy@broadcom.com,
         prayas.patel@broadcom.com, Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH v3 6/8] mpi3mr: expose adapter state to sysfs
-Date:   Thu,  7 Apr 2022 15:29:11 -0400
-Message-Id: <20220407192913.345411-7-sumit.saxena@broadcom.com>
+Subject: [PATCH v3 7/8] mpi3mr: add support for nvme pass-through
+Date:   Thu,  7 Apr 2022 15:29:12 -0400
+Message-Id: <20220407192913.345411-8-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220407192913.345411-1-sumit.saxena@broadcom.com>
 References: <20220407192913.345411-1-sumit.saxena@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000007cd0a905dc15816e"
+        boundary="000000000000b190b305dc1581e1"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000007cd0a905dc15816e
+--000000000000b190b305dc1581e1
 Content-Transfer-Encoding: 8bit
+
+This patch adds support for management applications to send an MPI3
+Encapsulated NVMe passthru commands to the NVMe devices attached to
+the Avenger controller. Since the NVMe drives are exposed as SCSI
+devices by the controller the standard NVMe applications cannot be
+used to interact with the drives and the command sets supported is
+also limited by the controller firmware. Special handling is required
+for MPI3 Encapsulated NVMe passthru commands for PRP/SGL setup in the
+commands hence the additional changes.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h     |  2 +-
- drivers/scsi/mpi3mr/mpi3mr_app.c | 46 ++++++++++++++++++++++++++++++++
- drivers/scsi/mpi3mr/mpi3mr_os.c  |  1 +
- 3 files changed, 48 insertions(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr.h          |  25 ++
+ drivers/scsi/mpi3mr/mpi3mr_app.c      | 348 +++++++++++++++++++++++++-
+ include/uapi/scsi/mpi3mr/mpi3mr_bsg.h |  10 +
+ 3 files changed, 380 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 2c043e6b9d6a..c4370c5b87d8 100644
+index c4370c5b87d8..edd0846929b0 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -1055,5 +1055,5 @@ int mpi3mr_pel_get_seqnum_post(struct mpi3mr_ioc *mrioc,
- 	struct mpi3mr_drv_cmd *drv_cmd);
- void mpi3mr_app_save_logdata(struct mpi3mr_ioc *mrioc, char *event_data,
- 	u16 event_data_size);
--
-+extern const struct attribute_group *mpi3mr_host_groups[];
- #endif /*MPI3MR_H_INCLUDED*/
+@@ -192,6 +192,24 @@ extern atomic64_t event_counter;
+  */
+ #define MPI3MR_MAX_APP_XFER_SECTORS	(2048 + 512)
+ 
++/**
++ * struct mpi3mr_nvme_pt_sge -  Structure to store SGEs for NVMe
++ * Encapsulated commands.
++ *
++ * @base_addr: Physical address
++ * @length: SGE length
++ * @rsvd: Reserved
++ * @rsvd1: Reserved
++ * @sgl_type: sgl type
++ */
++struct mpi3mr_nvme_pt_sge {
++	u64 base_addr;
++	u32 length;
++	u16 rsvd;
++	u8 rsvd1;
++	u8 sgl_type;
++};
++
+ /**
+  * struct mpi3mr_buf_map -  local structure to
+  * track kernel and user buffers associated with an BSG
+@@ -745,6 +763,9 @@ struct scmd_priv {
+  * @reset_waitq: Controller reset  wait queue
+  * @prepare_for_reset: Prepare for reset event received
+  * @prepare_for_reset_timeout_counter: Prepare for reset timeout
++ * @prp_list_virt: NVMe encapsulated PRP list virtual base
++ * @prp_list_dma: NVMe encapsulated PRP list DMA
++ * @prp_sz: NVME encapsulated PRP list size
+  * @diagsave_timeout: Diagnostic information save timeout
+  * @logging_level: Controller debug logging level
+  * @flush_io_count: I/O count to flush after reset
+@@ -900,6 +921,10 @@ struct mpi3mr_ioc {
+ 	u8 prepare_for_reset;
+ 	u16 prepare_for_reset_timeout_counter;
+ 
++	void *prp_list_virt;
++	dma_addr_t prp_list_dma;
++	u32 prp_sz;
++
+ 	u16 diagsave_timeout;
+ 	int logging_level;
+ 	u16 flush_io_count;
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 0b9710c83065..7037ca7f8136 100644
+index 7037ca7f8136..a80f8423c8a0 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -1222,3 +1222,49 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
- err_device_add:
- 	kfree(mrioc->bsg_dev);
+@@ -626,6 +626,314 @@ static void mpi3mr_bsg_build_sgl(u8 *mpi_req, uint32_t sgl_offset,
+ 	}
  }
-+
+ 
 +/**
-+ * adapter_state_show - SysFS callback for adapter state show
-+ * @dev: class device
-+ * @attr: Device attributes
-+ * @buf: Buffer to copy
++ * mpi3mr_get_nvme_data_fmt - returns the NVMe data format
++ * @nvme_encap_request: NVMe encapsulated MPI request
 + *
-+ * Return: snprintf() return after copying adapter state
++ * This function returns the type of the data format specified
++ * in user provided NVMe command in NVMe encapsulated request.
++ *
++ * Return: Data format of the NVMe command (PRP/SGL etc)
 + */
-+static ssize_t
-+adp_state_show(struct device *dev, struct device_attribute *attr,
-+	char *buf)
++static unsigned int mpi3mr_get_nvme_data_fmt(
++	struct mpi3_nvme_encapsulated_request *nvme_encap_request)
 +{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct mpi3mr_ioc *mrioc = shost_priv(shost);
-+	enum mpi3mr_iocstate ioc_state;
-+	uint8_t adp_state;
++	u8 format = 0;
 +
-+	ioc_state = mpi3mr_get_iocstate(mrioc);
-+	if (ioc_state == MRIOC_STATE_UNRECOVERABLE)
-+		adp_state = MPI3MR_BSG_ADPSTATE_UNRECOVERABLE;
-+	else if ((mrioc->reset_in_progress) || (mrioc->stop_bsgs))
-+		adp_state = MPI3MR_BSG_ADPSTATE_IN_RESET;
-+	else if (ioc_state == MRIOC_STATE_FAULT)
-+		adp_state = MPI3MR_BSG_ADPSTATE_FAULT;
-+	else
-+		adp_state = MPI3MR_BSG_ADPSTATE_OPERATIONAL;
++	format = ((nvme_encap_request->command[0] & 0xc000) >> 14);
++	return format;
 +
-+	return snprintf(buf, PAGE_SIZE, "%u\n", adp_state);
 +}
 +
-+static DEVICE_ATTR_RO(adp_state);
++/**
++ * mpi3mr_build_nvme_sgl - SGL constructor for NVME
++ *				   encapsulated request
++ * @mrioc: Adapter instance reference
++ * @nvme_encap_request: NVMe encapsulated MPI request
++ * @drv_bufs: DMA address of the buffers to be placed in sgl
++ * @bufcnt: Number of DMA buffers
++ *
++ * This function places the DMA address of the given buffers in
++ * proper format as SGEs in the given NVMe encapsulated request.
++ *
++ * Return: 0 on success, -1 on failure
++ */
++static int mpi3mr_build_nvme_sgl(struct mpi3mr_ioc *mrioc,
++	struct mpi3_nvme_encapsulated_request *nvme_encap_request,
++	struct mpi3mr_buf_map *drv_bufs, u8 bufcnt)
++{
++	struct mpi3mr_nvme_pt_sge *nvme_sgl;
++	u64 sgl_ptr;
++	u8 count;
++	size_t length = 0;
++	struct mpi3mr_buf_map *drv_buf_iter = drv_bufs;
++	u64 sgemod_mask = ((u64)((mrioc->facts.sge_mod_mask) <<
++			    mrioc->facts.sge_mod_shift) << 32);
++	u64 sgemod_val = ((u64)(mrioc->facts.sge_mod_value) <<
++			  mrioc->facts.sge_mod_shift) << 32;
 +
-+static struct attribute *mpi3mr_host_attrs[] = {
-+	&dev_attr_adp_state.attr,
-+	NULL,
-+};
++	/*
++	 * Not all commands require a data transfer. If no data, just return
++	 * without constructing any sgl.
++	 */
++	for (count = 0; count < bufcnt; count++, drv_buf_iter++) {
++		if (drv_buf_iter->data_dir == DMA_NONE)
++			continue;
++		sgl_ptr = (u64)drv_buf_iter->kern_buf_dma;
++		length = drv_buf_iter->kern_buf_len;
++		break;
++	}
++	if (!length)
++		return 0;
 +
-+static const struct attribute_group mpi3mr_host_attr_group = {
-+	.attrs = mpi3mr_host_attrs
-+};
++	if (sgl_ptr & sgemod_mask) {
++		dprint_bsg_err(mrioc,
++		    "%s: SGL address collides with SGE modifier\n",
++		    __func__);
++		return -1;
++	}
 +
-+const struct attribute_group *mpi3mr_host_groups[] = {
-+	&mpi3mr_host_attr_group,
-+	NULL,
-+};
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 19298136edb6..89a4918c4a9e 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -4134,6 +4134,7 @@ static struct scsi_host_template mpi3mr_driver_template = {
- 	.max_segment_size		= 0xffffffff,
- 	.track_queue_depth		= 1,
- 	.cmd_size			= sizeof(struct scmd_priv),
-+	.shost_groups			= mpi3mr_host_groups,
- };
- 
++	sgl_ptr &= ~sgemod_mask;
++	sgl_ptr |= sgemod_val;
++	nvme_sgl = (struct mpi3mr_nvme_pt_sge *)
++	    ((u8 *)(nvme_encap_request->command) + MPI3MR_NVME_CMD_SGL_OFFSET);
++	memset(nvme_sgl, 0, sizeof(struct mpi3mr_nvme_pt_sge));
++	nvme_sgl->base_addr = sgl_ptr;
++	nvme_sgl->length = length;
++	return 0;
++}
++
++/**
++ * mpi3mr_build_nvme_prp - PRP constructor for NVME
++ *			       encapsulated request
++ * @mrioc: Adapter instance reference
++ * @nvme_encap_request: NVMe encapsulated MPI request
++ * @drv_bufs: DMA address of the buffers to be placed in SGL
++ * @bufcnt: Number of DMA buffers
++ *
++ * This function places the DMA address of the given buffers in
++ * proper format as PRP entries in the given NVMe encapsulated
++ * request.
++ *
++ * Return: 0 on success, -1 on failure
++ */
++static int mpi3mr_build_nvme_prp(struct mpi3mr_ioc *mrioc,
++	struct mpi3_nvme_encapsulated_request *nvme_encap_request,
++	struct mpi3mr_buf_map *drv_bufs, u8 bufcnt)
++{
++	int prp_size = MPI3MR_NVME_PRP_SIZE;
++	__le64 *prp_entry, *prp1_entry, *prp2_entry;
++	__le64 *prp_page;
++	dma_addr_t prp_entry_dma, prp_page_dma, dma_addr;
++	u32 offset, entry_len, dev_pgsz;
++	u32 page_mask_result, page_mask;
++	size_t length = 0;
++	u8 count;
++	struct mpi3mr_buf_map *drv_buf_iter = drv_bufs;
++	u64 sgemod_mask = ((u64)((mrioc->facts.sge_mod_mask) <<
++			    mrioc->facts.sge_mod_shift) << 32);
++	u64 sgemod_val = ((u64)(mrioc->facts.sge_mod_value) <<
++			  mrioc->facts.sge_mod_shift) << 32;
++	u16 dev_handle = nvme_encap_request->dev_handle;
++	struct mpi3mr_tgt_dev *tgtdev;
++
++	tgtdev = mpi3mr_get_tgtdev_by_handle(mrioc, dev_handle);
++	if (!tgtdev) {
++		dprint_bsg_err(mrioc, "%s: invalid device handle 0x%04x\n",
++			__func__, dev_handle);
++		return -1;
++	}
++
++	if (tgtdev->dev_spec.pcie_inf.pgsz == 0) {
++		dprint_bsg_err(mrioc,
++		    "%s: NVMe device page size is zero for handle 0x%04x\n",
++		    __func__, dev_handle);
++		mpi3mr_tgtdev_put(tgtdev);
++		return -1;
++	}
++
++	dev_pgsz = 1 << (tgtdev->dev_spec.pcie_inf.pgsz);
++	mpi3mr_tgtdev_put(tgtdev);
++
++	/*
++	 * Not all commands require a data transfer. If no data, just return
++	 * without constructing any PRP.
++	 */
++	for (count = 0; count < bufcnt; count++, drv_buf_iter++) {
++		if (drv_buf_iter->data_dir == DMA_NONE)
++			continue;
++		dma_addr = drv_buf_iter->kern_buf_dma;
++		length = drv_buf_iter->kern_buf_len;
++		break;
++	}
++
++	if (!length)
++		return 0;
++
++	mrioc->prp_sz = 0;
++	mrioc->prp_list_virt = dma_alloc_coherent(&mrioc->pdev->dev,
++	    dev_pgsz, &mrioc->prp_list_dma, GFP_KERNEL);
++
++	if (!mrioc->prp_list_virt)
++		return -1;
++	mrioc->prp_sz = dev_pgsz;
++
++	/*
++	 * Set pointers to PRP1 and PRP2, which are in the NVMe command.
++	 * PRP1 is located at a 24 byte offset from the start of the NVMe
++	 * command.  Then set the current PRP entry pointer to PRP1.
++	 */
++	prp1_entry = (__le64 *)((u8 *)(nvme_encap_request->command) +
++	    MPI3MR_NVME_CMD_PRP1_OFFSET);
++	prp2_entry = (__le64 *)((u8 *)(nvme_encap_request->command) +
++	    MPI3MR_NVME_CMD_PRP2_OFFSET);
++	prp_entry = prp1_entry;
++	/*
++	 * For the PRP entries, use the specially allocated buffer of
++	 * contiguous memory.
++	 */
++	prp_page = (__le64 *)mrioc->prp_list_virt;
++	prp_page_dma = mrioc->prp_list_dma;
++
++	/*
++	 * Check if we are within 1 entry of a page boundary we don't
++	 * want our first entry to be a PRP List entry.
++	 */
++	page_mask = dev_pgsz - 1;
++	page_mask_result = (uintptr_t)((u8 *)prp_page + prp_size) & page_mask;
++	if (!page_mask_result) {
++		dprint_bsg_err(mrioc, "%s: PRP page is not page aligned\n",
++		    __func__);
++		goto err_out;
++	}
++
++	/*
++	 * Set PRP physical pointer, which initially points to the current PRP
++	 * DMA memory page.
++	 */
++	prp_entry_dma = prp_page_dma;
++
++
++	/* Loop while the length is not zero. */
++	while (length) {
++		page_mask_result = (prp_entry_dma + prp_size) & page_mask;
++		if (!page_mask_result && (length >  dev_pgsz)) {
++			dprint_bsg_err(mrioc,
++			    "%s: single PRP page is not sufficient\n",
++			    __func__);
++			goto err_out;
++		}
++
++		/* Need to handle if entry will be part of a page. */
++		offset = dma_addr & page_mask;
++		entry_len = dev_pgsz - offset;
++
++		if (prp_entry == prp1_entry) {
++			/*
++			 * Must fill in the first PRP pointer (PRP1) before
++			 * moving on.
++			 */
++			*prp1_entry = cpu_to_le64(dma_addr);
++			if (*prp1_entry & sgemod_mask) {
++				dprint_bsg_err(mrioc,
++				    "%s: PRP1 address collides with SGE modifier\n",
++				    __func__);
++				goto err_out;
++			}
++			*prp1_entry &= ~sgemod_mask;
++			*prp1_entry |= sgemod_val;
++
++			/*
++			 * Now point to the second PRP entry within the
++			 * command (PRP2).
++			 */
++			prp_entry = prp2_entry;
++		} else if (prp_entry == prp2_entry) {
++			/*
++			 * Should the PRP2 entry be a PRP List pointer or just
++			 * a regular PRP pointer?  If there is more than one
++			 * more page of data, must use a PRP List pointer.
++			 */
++			if (length > dev_pgsz) {
++				/*
++				 * PRP2 will contain a PRP List pointer because
++				 * more PRP's are needed with this command. The
++				 * list will start at the beginning of the
++				 * contiguous buffer.
++				 */
++				*prp2_entry = cpu_to_le64(prp_entry_dma);
++				if (*prp2_entry & sgemod_mask) {
++					dprint_bsg_err(mrioc,
++					    "%s: PRP list address collides with SGE modifier\n",
++					    __func__);
++					goto err_out;
++				}
++				*prp2_entry &= ~sgemod_mask;
++				*prp2_entry |= sgemod_val;
++
++				/*
++				 * The next PRP Entry will be the start of the
++				 * first PRP List.
++				 */
++				prp_entry = prp_page;
++				continue;
++			} else {
++				/*
++				 * After this, the PRP Entries are complete.
++				 * This command uses 2 PRP's and no PRP list.
++				 */
++				*prp2_entry = cpu_to_le64(dma_addr);
++				if (*prp2_entry & sgemod_mask) {
++					dprint_bsg_err(mrioc,
++					    "%s: PRP2 collides with SGE modifier\n",
++					    __func__);
++					goto err_out;
++				}
++				*prp2_entry &= ~sgemod_mask;
++				*prp2_entry |= sgemod_val;
++			}
++		} else {
++			/*
++			 * Put entry in list and bump the addresses.
++			 *
++			 * After PRP1 and PRP2 are filled in, this will fill in
++			 * all remaining PRP entries in a PRP List, one per
++			 * each time through the loop.
++			 */
++			*prp_entry = cpu_to_le64(dma_addr);
++			if (*prp1_entry & sgemod_mask) {
++				dprint_bsg_err(mrioc,
++				    "%s: PRP address collides with SGE modifier\n",
++				    __func__);
++				goto err_out;
++			}
++			*prp_entry &= ~sgemod_mask;
++			*prp_entry |= sgemod_val;
++			prp_entry++;
++			prp_entry_dma++;
++		}
++
++		/*
++		 * Bump the phys address of the command's data buffer by the
++		 * entry_len.
++		 */
++		dma_addr += entry_len;
++
++		/* decrement length accounting for last partial page. */
++		if (entry_len > length)
++			length = 0;
++		else
++			length -= entry_len;
++	}
++	return 0;
++err_out:
++	if (mrioc->prp_list_virt) {
++		dma_free_coherent(&mrioc->pdev->dev, mrioc->prp_sz,
++		    mrioc->prp_list_virt, mrioc->prp_list_dma);
++		mrioc->prp_list_virt = NULL;
++	}
++	return -1;
++}
  /**
+  * mpi3mr_bsg_process_mpt_cmds - MPI Pass through BSG handler
+  * @job: BSG job reference
+@@ -657,7 +965,7 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job, unsigned int *reply
+ 	struct mpi3mr_buf_map *drv_bufs = NULL, *drv_buf_iter = NULL;
+ 	u8 count, bufcnt = 0, is_rmcb = 0, is_rmrb = 0, din_cnt = 0, dout_cnt = 0;
+ 	u8 invalid_be = 0, erb_offset = 0xFF, mpirep_offset = 0xFF, sg_entries = 0;
+-	u8 block_io = 0, resp_code = 0;
++	u8 block_io = 0, resp_code = 0, nvme_fmt = 0;
+ 	struct mpi3_request_header *mpi_header = NULL;
+ 	struct mpi3_status_reply_descriptor *status_desc;
+ 	struct mpi3_scsi_task_mgmt_request *tm_req;
+@@ -897,7 +1205,34 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job, unsigned int *reply
+ 		goto out;
+ 	}
+ 
+-	if (mpi_header->function != MPI3_FUNCTION_NVME_ENCAPSULATED) {
++	if (mpi_header->function == MPI3_FUNCTION_NVME_ENCAPSULATED) {
++		nvme_fmt = mpi3mr_get_nvme_data_fmt(
++			(struct mpi3_nvme_encapsulated_request *)mpi_req);
++		if (nvme_fmt == MPI3MR_NVME_DATA_FORMAT_PRP) {
++			if (mpi3mr_build_nvme_prp(mrioc,
++			    (struct mpi3_nvme_encapsulated_request *)mpi_req,
++			    drv_bufs, bufcnt)) {
++				rval = -ENOMEM;
++				mutex_unlock(&mrioc->bsg_cmds.mutex);
++				goto out;
++			}
++		} else if (nvme_fmt == MPI3MR_NVME_DATA_FORMAT_SGL1 ||
++			nvme_fmt == MPI3MR_NVME_DATA_FORMAT_SGL2) {
++			if (mpi3mr_build_nvme_sgl(mrioc,
++			    (struct mpi3_nvme_encapsulated_request *)mpi_req,
++			    drv_bufs, bufcnt)) {
++				rval = -EINVAL;
++				mutex_unlock(&mrioc->bsg_cmds.mutex);
++				goto out;
++			}
++		} else {
++			dprint_bsg_err(mrioc,
++			    "%s:invalid NVMe command format\n", __func__);
++			rval = -EINVAL;
++			mutex_unlock(&mrioc->bsg_cmds.mutex);
++			goto out;
++		}
++	} else {
+ 		mpi3mr_bsg_build_sgl(mpi_req, (mpi_msg_size),
+ 		    drv_bufs, bufcnt, is_rmcb, is_rmrb,
+ 		    (dout_cnt + din_cnt));
+@@ -975,7 +1310,8 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job, unsigned int *reply
+ 			}
+ 		}
+ 
+-		if (mpi_header->function == MPI3_FUNCTION_SCSI_IO)
++		if ((mpi_header->function == MPI3_FUNCTION_NVME_ENCAPSULATED) ||
++		    (mpi_header->function == MPI3_FUNCTION_SCSI_IO))
+ 			mpi3mr_issue_tm(mrioc,
+ 			    MPI3_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
+ 			    mpi_header->function_dependent, 0,
+@@ -989,6 +1325,12 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job, unsigned int *reply
+ 	}
+ 	dprint_bsg_info(mrioc, "%s: bsg request is completed\n", __func__);
+ 
++	if (mrioc->prp_list_virt) {
++		dma_free_coherent(&mrioc->pdev->dev, mrioc->prp_sz,
++		    mrioc->prp_list_virt, mrioc->prp_list_dma);
++		mrioc->prp_list_virt = NULL;
++	}
++
+ 	if ((mrioc->bsg_cmds.ioc_status & MPI3_IOCSTATUS_STATUS_MASK)
+ 	     != MPI3_IOCSTATUS_SUCCESS) {
+ 		dprint_bsg_info(mrioc,
+diff --git a/include/uapi/scsi/mpi3mr/mpi3mr_bsg.h b/include/uapi/scsi/mpi3mr/mpi3mr_bsg.h
+index 7535a9353807..7eab2b265391 100644
+--- a/include/uapi/scsi/mpi3mr/mpi3mr_bsg.h
++++ b/include/uapi/scsi/mpi3mr/mpi3mr_bsg.h
+@@ -431,4 +431,14 @@ struct mpi3mr_bsg_packet {
+ 		struct mpi3mr_bsg_mptcmd mptcmd;
+ 	} cmd;
+ };
++
++/* Encapsulated NVMe command definitions */
++#define	MPI3MR_NVME_PRP_SIZE		8 /* PRP size */
++#define	MPI3MR_NVME_CMD_PRP1_OFFSET	24 /* PRP1 offset in NVMe cmd */
++#define	MPI3MR_NVME_CMD_PRP2_OFFSET	32 /* PRP2 offset in NVMe cmd */
++#define	MPI3MR_NVME_CMD_SGL_OFFSET	24 /* SGL offset in NVMe cmd */
++#define MPI3MR_NVME_DATA_FORMAT_PRP	0
++#define MPI3MR_NVME_DATA_FORMAT_SGL1	1
++#define MPI3MR_NVME_DATA_FORMAT_SGL2	2
++
+ #endif
 -- 
 2.27.0
 
 
---0000000000007cd0a905dc15816e
+--000000000000b190b305dc1581e1
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -227,13 +615,13 @@ rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
 3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILKmBhMukCIjhyoflEWCDt5ozpMzR+qr
-70Zkoo+OOhjEMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDQw
-NzE5MzAwOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDd6+K/NAkm3sa63Qf1cjy2kqK+D9E2v
+mdE6+EZ2dpvRMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDQw
+NzE5MzAxMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQALppuhv/0zlhlIfEMsG4OL03vmLX1OwR0x4SnLiCD1wdQRCdlr
-j36eIi7zKo2ywuCPUbxgMJwuYOTBnXJCSV6GSGzSRfTqw9ZCgUv8hnkodqkHgFvL2jc3jw5xo/kf
-9sKj1RV8S0F3FEB9Kvgzu9Kuu3Bcj8R482wz+NtcLZbAtEP/xz148365c8zPNXVB2JeFzpVgEQqI
-f+jg0oTwroBdYj8f7FK4iDCf+qMAIjw8XVGvrtFwNCwyMGS/n2pnIOCk2uoup2SiRZnyakYhgY3f
-BYfBRd10ph8RgIuMmQ9lSYW45FCW4/6djt7YNUe8KFThYeZGaFjGN2pfWPYRKh5Z
---0000000000007cd0a905dc15816e--
+ATANBgkqhkiG9w0BAQEFAASCAQCqxs1qm10yC+QlAfx5VDkhuoyOtIj8T5vgs/nZ786SzBXavBog
+aPdNcx9MiJm4n3nd3z02Y4yy/gMbAe4njIfdO7Wnv1sU+EiQh0/6xYmqBP1h3NxZOyHtTzdG/IcJ
+4LlYO/TZsudtS9axmoLMz+3eGO6RdbIZt8j2BrUTwSSLuQ9gebXII23KVpkqFScX9RAL9atx3etI
+Z4c2p32XzI141UOExSsjArhwMtSYhSluf8Ctz4p6euwJC0TzHbV7c/12LE7a6M0JLDHIYbuNJlNJ
+8Iwnlr4PaT3SrsGXioQXZjdviBrwcG45bojOwPk7o1vmY9++IVBBnNmtNlYmWN3W
+--000000000000b190b305dc1581e1--
