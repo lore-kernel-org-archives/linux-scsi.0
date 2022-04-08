@@ -2,73 +2,73 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EEC3C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 00:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C323C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 00:13:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232754AbiDHAPr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Apr 2022 20:15:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50428 "EHLO
+        id S232757AbiDHAPt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Apr 2022 20:15:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232732AbiDHAPl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2022 20:15:41 -0400
+        with ESMTP id S232724AbiDHAPk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2022 20:15:40 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43A6A12A8FC
-        for <linux-scsi@vger.kernel.org>; Thu,  7 Apr 2022 17:13:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF8FF132E8D
+        for <linux-scsi@vger.kernel.org>; Thu,  7 Apr 2022 17:13:38 -0700 (PDT)
 Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 237NAa4k014737;
-        Fri, 8 Apr 2022 00:13:30 GMT
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 237Mi1qN014716;
+        Fri, 8 Apr 2022 00:13:27 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=dSVVvnRo7jDyQF1UEfJ9nfGfuTuhMtgmUInw4qCJyjw=;
- b=JUlC2fA/joIi01Xh8DXkkYu9smicQeYBZbvkInHKP0jHChYwilrsOCO0AFfUCnsX+Zjy
- bmmqQ4hmzFXb6pFaO8Vdcky3MOzoQNYXUTapjdYRtgB2KmwDZZ86RMsCTiy4OoQDKcy1
- kIacqUrPn5B4BdhnnPHlWXv1Zlqd+8AjJ98/4IUlxJY8Xv3SG33V67nWOenu0IhuvwCJ
- wfJTLr7kNBvwvIXr8llKAdoX1qnEVVCXEM7oIsPSZNo+YPi60FOG4ty40G8Csk4gkcit
- rPVT9iKQNLPsGpWRCY8Rp35B1cfV4mRl0JaFPRwDOqTbAdh5dcedaSH9onHp7ILCFbhN CQ== 
+ s=corp-2021-07-09; bh=1M24vPleLG7MciYUETNjK2/4kmRowB1PxA1K4kdm0a4=;
+ b=wdfZYnFF+RK87ldQk3VXQ0oe4syi7dbZGf/WbocD+xPN76O5EV17tabezr/+Q9DUebsE
+ HMdJrREqa9hCrqDyY904kh+XNrfGOPseGReraEfmuscV6FP8YQNw1YBY4seCPWOV2ZJq
+ YcJx2+AkSY/tYyUFxisg4WuDxSYBJv0Eq70YDwIiW7HHib6YobX2ZkWfP5Kj1c5RWc4s
+ 0ZivY7ITQX6pKVF7AdnCaCAuEfst3Na9BOZ0nG9mdNqihXHMRXKVhaJvKzyOzYsuNMy/
+ /FvFfhiIrn1x/jku7bs48ebVrnrRyi2aT7ea8Qw6udONUvc/75Ax8gYFqtqeKNmWXAKR tA== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3f6ec9w456-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3f6ec9w454-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Apr 2022 00:13:29 +0000
+        Fri, 08 Apr 2022 00:13:27 +0000
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 237NFHE6013838;
-        Fri, 8 Apr 2022 00:13:29 GMT
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 237NFHE2013838;
+        Fri, 8 Apr 2022 00:13:26 GMT
 Received: from nam02-bn1-obe.outbound.protection.outlook.com (mail-bn1nam07lp2044.outbound.protection.outlook.com [104.47.51.44])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3f97tu11q5-8
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3f97tu11q5-4
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Apr 2022 00:13:29 +0000
+        Fri, 08 Apr 2022 00:13:26 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cHCK5Y+7WCxk33XozxTrJGik5xxSR1L1TB7xU0PpXRxlJv2nfGEEM9+uXBuxOlZMYBRuE5ss9JNtDsLs7Tl0kd5aLyIfQwRd/8mIOYHUqbZoC2gLrGlbOsoeqUtWdvk9eLnTETFMF+cFq0UsGYvQYOowB7FuVA9k5CfquJyRWktKubIf5C7EPwmf2NqvL+hPuRbBJYqg4Zun19qxjK5zHwD6qkBoK0sAFGEWGLmeDK9vza/vJ+E7bem8Nep3cmcWp9IrCYpRZoZqRESN6tVuWT0Mj9t2hgEXBWxtVoIC2x4II/w9UwkeFCXfHmoHGGdfFDFXbJA7xh7TSXkphT+7mA==
+ b=RxWG3NVTtpUYqNrCGmgB6MuAoSXNi5e7oSNYoJnke9VFYR5xQaVuvhtRsBUWJU3pbG8XcZHwHJwD3SWjHi5iVhOx+sK6veI0kPvJ84cUXn5s9CaJ4vI+4hyxh3xZbywV4Xr/7z0UGEKL27evFC39LfRRTIvk0s2y0iDXrn1Jrqx/ILfjW3/rSv9pxrbhcyboUtrSpdHIoiMZBeSAPwtrPLrAj+smJqZwsPvr4R5EEMuWu5GQtZKYlC1MnGj1C+EY3yZw8UguwfU4isHcg3+/IhBcwKkRwtdUTRo6bZ3wAEBlO49tYb6PhncvJlIlwakBEz8MU3SV3kyxfoojdwXrpA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dSVVvnRo7jDyQF1UEfJ9nfGfuTuhMtgmUInw4qCJyjw=;
- b=TdSugBkI7XbeVRLujt9OxZcfQl92hkw7CYD36m+upmLYla2HF92QbaDfcUx7uCvqxP+0s82hPaQhgZP6uLvS8fJQ0vQnLY16T1j+ywOSAEHSPBQCPqPrz/YfnDnblPenapG2AMKukl66WwPS1DGj67VDEkXCVT89f9Yzi7CdWUsH9BExndT1Kkbcm7gQepIoai03io+vLQVYqJIDTkfwc4w75TLuvBbWw5Mcz5SR9RQxXDvjkqSaYnTtpafzaP+bsX07wEBwAkIuGDPZCm/kD/YadBChmBF953CjFUHehhm+aWRyKn+UEePFh5k+7LdwHCn3e2a30YS0Jf3b6qGKDA==
+ bh=1M24vPleLG7MciYUETNjK2/4kmRowB1PxA1K4kdm0a4=;
+ b=SoPBHTaFImC8rKLyy6/Qm21DKFvPpPImLHNW5Cvt1IjuA80XhixbQPoW0edZUuopay8jGjS/fR79MPxWAOfmhyDPMjMDR51QPgiKOxOpmSurLfSyUh3nyfq1sYTSo3Vy+drhVWNhUEppLNVQYNhizMYNK7LC55bnuE8AsiZlxL+ApZk5TeSS6xdUsafCkllLXEN62/3bielDERhEkz25buotNBdIjq664Etp8U+YsbSgZhO+LYq9rtD0CnL3S9zmCcvigA3AqQPLQ3wwRNRjF69n5o8WE+70CQ/BMfbJRaA4Npq/8Fu28LsWKLE6eDoMQzfB4QK4IQWwb5LJIktgCQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dSVVvnRo7jDyQF1UEfJ9nfGfuTuhMtgmUInw4qCJyjw=;
- b=W9qSdMLiWRI4GsYt+gMP8mtByn8h+9UnBjgeQ/cOTWv3jngN4y6hLTDX5MwhBm/wVPNWi5ytyQrGgrUW9YweD32AnoPBhgw1+v8tQ6SCRKckz6ypNwHAFikNc9Hx6nNq/cJ7h5m0dlwBcnFu0oj/X5NhAEcIBy55hZYzwSx6FDw=
+ bh=1M24vPleLG7MciYUETNjK2/4kmRowB1PxA1K4kdm0a4=;
+ b=T8oPalAzQXTL4yz0wJLIovUyAZgQq+0FTPNnwtOd5zzbC2+vgo16z9VBNArm9IIhzONrcPIATV6gJ417ZCNb5gtWw+nxGmcNPk9ON5LqbeLGAI7RTu3ei0ZCBB+3zpHkmvL2YAIRDTtauZ/Y0+VZWVcF85dgWY7bDYgslMEHCnE=
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
  SJ0PR10MB5550.namprd10.prod.outlook.com (2603:10b6:a03:3d3::5) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5144.22; Fri, 8 Apr 2022 00:13:26 +0000
+ 15.20.5144.22; Fri, 8 Apr 2022 00:13:24 +0000
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::3cb2:a04:baff:8586]) by DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::3cb2:a04:baff:8586%2]) with mapi id 15.20.5144.022; Fri, 8 Apr 2022
- 00:13:26 +0000
+ 00:13:24 +0000
 From:   Mike Christie <michael.christie@oracle.com>
 To:     skashyap@marvell.com, lduncan@suse.com, cleech@redhat.com,
         njavali@marvell.com, mrangankar@marvell.com,
         GR-QLogic-Storage-Upstream@marvell.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, jejb@linux.ibm.com
 Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 07/10] scsi: iscsi: Merge suspend fields
-Date:   Thu,  7 Apr 2022 19:13:11 -0500
-Message-Id: <20220408001314.5014-8-michael.christie@oracle.com>
+Subject: [PATCH 03/10] scsi: iscsi: Release endpoint ID when its freed.
+Date:   Thu,  7 Apr 2022 19:13:07 -0500
+Message-Id: <20220408001314.5014-4-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220408001314.5014-1-michael.christie@oracle.com>
 References: <20220408001314.5014-1-michael.christie@oracle.com>
@@ -79,55 +79,55 @@ X-ClientProxiedBy: DM6PR17CA0022.namprd17.prod.outlook.com
  (2603:10b6:3:b::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: a01781e8-7e13-40e6-c4d9-08da18f499e7
+X-MS-Office365-Filtering-Correlation-Id: e819591d-8d4a-4e6c-77ae-08da18f498af
 X-MS-TrafficTypeDiagnostic: SJ0PR10MB5550:EE_
-X-Microsoft-Antispam-PRVS: <SJ0PR10MB55506F1DA1ECE604B7D68336F1E99@SJ0PR10MB5550.namprd10.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <SJ0PR10MB5550F12C8C00133E6B488CA3F1E99@SJ0PR10MB5550.namprd10.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: LrEGPKG2xVftfG9mD4RCyno8wp/e/kbl8KNyQ28bctW/JU5m+wEresCfe6tlYEV9FfWu84sYs0lxbvn9p0kStzM0StG9lGd5Z8qXUQEK1Lsh3MOSxIa7bDsn4u8NY2vro/Y4oa9O82BFqsRHm3kLhzIaIbwTeJVKdyt83cpUbwrO1yvWwi3vw5Wkt5mfkBXYXkUdVmGy2OY+YYsGiBmZMJPLTIgQXWlyEVunEeLaawfZ7JcTF4O/MkfZ8vyPNuvFO5qxXVTRhK5EjCgfZwmfs5dsXgOFMDf1LCf/KhF3X8ewDzghn23Dm4jl5ErxN4lzxFW5RrdbWVlSlw8zkUBsPY+4dX3Bpv6hrD353+Kz8Qw0ErUMKwJuTiwSm9Ir+l1ukG0falENpd/dT4g0Td7pJ2XzA37hc9GBRpoZSB5fLi/VU5vZJxK3kGoD4Nj75ttF3rMhSZA0wSpP/7pBK6cqfys/ocUu4kdYhBBUBn7wdWquYe9gRimhgPSDOJGOHqP8BT+bnP5iyb+GZaaHhx8iCjb2CkuTBAOR66zGNvLuPCHGVAJLlq28P1u3cDpIjO9/glfbhWL3ZxgYSqVLa/vRmSoWHXEXflMgAIth0mdHpDBxpTdmvLiawcnbZGyQiegsW/KHKi8rYbxsLF7OtskXsC5a1h0y+3xp7rq2w8FVXS+O1jU/brOfpI9D0Mlu4MswrqXE2xHSOX2bXRSGO/Mcrg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(8936002)(186003)(83380400001)(6486002)(86362001)(316002)(2616005)(6512007)(5660300002)(6666004)(107886003)(36756003)(38350700002)(508600001)(38100700002)(4326008)(52116002)(66556008)(2906002)(66946007)(26005)(15650500001)(66476007)(1076003)(8676002)(6506007);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 4DJvJ0R3R/9frL2HGytNdh5ovycTWELZ0+akv0VhMWibIAjNShzQSPUWKxNmfDmOO8hYFrzEIiWmcmPUuIM/5SHINoMVk9rY5Elooi0uVt9Q7tGCL08QJ+2ZXCTQsqJ50loaEIEBY7oJJKGJwGOSvtV82ykl6KHcACAbgDH6CQLrtys5U9kau9dXsxHsdR8q1h7L0H1lobGeXc8MfmtSwJxfBXRiJW7FBowQ4Bmxctc4a2P02+doXQuQBD5dAKvdWumxMrJWCN2EnxwJ87qmYadFWYrsQnFQib+uUPlNw18ZQ4hOWe5be6VkqyJgsTtYZqDkZ93q9hupr30AECUbj5EhvS0OpUcEsKo7lYxEdWwTetZfZWy6M1ot2gSTCGHEut3mKxUo4z1So7ZxrldhX6yks38U6LLfSbbAqEMWhp7DVngkUaAGLslVAaPhB/1YNLNHC7HFZxJqMxTlrPM9LyNlNCrCBVQtDYiGDRbqwuOZxt53Pi00y9ItqwIq8flu8x6TqLBKImtlSnrAE/xCTLiz5uhSRWyPsd2gfG0MRO1tmh7+FdM9aqTgnioB6XsH1nxwqRQx6y5M6wj/kuL4ahKI6xuYPxkcaOmpXPzOn0NuZlyWAsC4jQp/WJb1w+LKZJxpq1FYECJwkUuL4mjemyi4/f4mvbWiqgetsFBwSQnQvcMFeD2h8huMPvvKtoi2FIaU4sTlS3OVLYMHgaVj/A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(8936002)(186003)(83380400001)(6486002)(86362001)(316002)(2616005)(6512007)(5660300002)(6666004)(107886003)(36756003)(38350700002)(508600001)(38100700002)(4326008)(52116002)(66556008)(2906002)(66946007)(26005)(66476007)(1076003)(8676002)(6506007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?gAVDgPGDsDoNPhraBAyKnQDS9Mllkn2y/h68JUlGUbqkYFwln2k3jYPlLfdJ?=
- =?us-ascii?Q?cGmfJaXI8HSjg6laxQy6BFO7PrdkmXjtd9C0IEv9+5dVP4d5oFVY/gTtGxwz?=
- =?us-ascii?Q?2o0Fu0cWzTPKNVjvXas/xTcrQhRLV05pt4Q0vSljjyQ0xtil14gtZm24O+cT?=
- =?us-ascii?Q?isv3MP6CSWGclrqQoesxoIqc3xIRH/z1/76dTNFDG2wXZXsd019llV91OWx1?=
- =?us-ascii?Q?CImgWigQhmBa86ZTT4TVcGVgnRXi8qjlqe/Q1Kbv7pJBFlLV+mtOysSOvb2/?=
- =?us-ascii?Q?T8rQiLldUS8dflFGS/A9SkW4n3lQ6ITYiQQtgBWInA94neeXrIkOFiK5Bs4x?=
- =?us-ascii?Q?EdhOQ+R8oGuTNaP5DF9oWyO3HfngrKdBNvew5wPynehj95PkcV9uBXObSrQM?=
- =?us-ascii?Q?rsXbl6mOFUstKr8lFUhaZ2OL3r0jQprgStQLMQsY1ieQGUyKH3QKXNi2ZzgG?=
- =?us-ascii?Q?JMwxVFuMBUnHnabyUQzN07YH4owrDS4JEJOjvcy2wGi6aVsGmDboZu5diEmr?=
- =?us-ascii?Q?EYncgOMe2WvafJwmfWgDQQ4cFic8r5PAYT9q50vMPwKDeXG88WK+ccK4FVhr?=
- =?us-ascii?Q?AI8nOQePOJPjJ3uAtduwb2kS7zu8qKxvl2aMiLQF3SJfe2cctIyyMkVm0Esp?=
- =?us-ascii?Q?GyEtPEBGU2V8Ow5BGzkuQ3+E/5Fp2Yt9DLsshSTCC/obsEm4bIS1AcGhzVtq?=
- =?us-ascii?Q?3ZiJuKSFI0zjGgvw3iydQCyf18gbszfuq0X1iKpxuqj7v05wEDJaAtU7Ch1H?=
- =?us-ascii?Q?XOwpFvufqhk4iKHd0cbkhvuw/gg3AN8mhpEjlfkXqy0357sFufS0ybQqYPeD?=
- =?us-ascii?Q?Wwdr75lO/kqEJbWVAzrDysGWztCrrEI58mSprQ50L20UmkXGEZz9lUcNxt5T?=
- =?us-ascii?Q?FPNtJ1OfOmA2dkK2Mqaa4OkDvWfDswu+ixsxlZVkklFwZ6n7bt5Wchtx05tu?=
- =?us-ascii?Q?hpApofjiz7lJhWPL5pxbx4ULMqcHMQvFlpexsOSyfCSqYpOP6uSD9VW49HmA?=
- =?us-ascii?Q?1gTlIO/y4pdGmI8JxrziaSscjPYG24YNMUS25LoMOgmKEF8+6Ty/0/XW8nuH?=
- =?us-ascii?Q?YBpE2yiSqmoXwTLyBFcm47x2UUb11U+Ur5TLZs6WD/rymGghM2A1fIfYFMO2?=
- =?us-ascii?Q?RXBLpFSKCFKeJPUe1nDx5cP5B1HGCvFSEUJ1yujmHv8CUpJcM3QibWKf7Qs3?=
- =?us-ascii?Q?JwlHTOt9SejTDOFAGsnOyvA1CZXWaa4KFqsWwaSX3yPObpm8MLBhJ0tvgmKi?=
- =?us-ascii?Q?y3ClLRyO3j1Le73PYJdxWvz9gds27RvSiunqj3mvGQBJHZznFfjFs4obtERx?=
- =?us-ascii?Q?e66oDWeIKSHCOEzg2veOlUXL9KP1UWVN0YsdGaAJLeLS9iM0P4ltgnqtrmSu?=
- =?us-ascii?Q?ai19i53T05y1qGG6ZVTMV6RLy8PEB+K10D/x9VYYNYECXDujZZcAUrKIbmf3?=
- =?us-ascii?Q?2BApRXBzSLNh3ejiw1oZuL3jut/GKX+J1y1xOHkeowtcr1gRIDFIK0AuK9yN?=
- =?us-ascii?Q?YuLpBj9Or6pjENwZb4rL+etHX1Z7iYgEweTwCRlYGY426G/mwvLLKrrrNNjr?=
- =?us-ascii?Q?Oex+A4q//W604MUvcMgBvIXF91s7XEcUg5PMEdqgNJqM3i7haKrl8D8ueR+O?=
- =?us-ascii?Q?PIMKMjp1WqtTISpknB2EokTMRZTvPd1rMGYHllCr90MmRTQ/TC7Mya3L/+7n?=
- =?us-ascii?Q?ATvK+iB19sdn9RsOyKYTKvdw9SVfh/aqBNdJ08cznyxwEbNpfNAMTel19pXf?=
- =?us-ascii?Q?JoZtCb/eM0+hdsegAqx0i9W8SYNtNIk=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?acvVqANEn6yq/Usu8d4Mg2RP9YdyTE5gYCHjmeq6O65SPu8z3x/agpc7z/f5?=
+ =?us-ascii?Q?GMe38kY1wxfVbayQOEC5noiUlonehEMf5FvXkGjG/vmi5mJcwKgJeP+c3m4n?=
+ =?us-ascii?Q?b6CLR9aUKHbs+4XZZP5jFbHp/l65Pr50cV0uWLk0SgtokyDWXHwi7nghC0fk?=
+ =?us-ascii?Q?5uGH5DJizjXyj6T1MtiL0xKDSuIa5aKQuGJB3/sFdrZDci+i6V36XwTfHAxz?=
+ =?us-ascii?Q?QRzsMX9k4YtOr4Mn65o32/K9W/UncQUS8UTdL0B57T4xD85IRyrEqMzV1ABB?=
+ =?us-ascii?Q?4352MckbiirdNy++0OGBxPEaawqakUR5yU/0qfXFdxEZjV7joR2XmvoQUlrd?=
+ =?us-ascii?Q?HpYcAF8EWJMYq3hdJ5uG1bajCGp5oKH6D931PMf5bpjm3YKk7dShUmnZXNan?=
+ =?us-ascii?Q?ll3qE9CiYINAmE6FrZErQ1UNs1nCW4CudQelkH61dOah3lcGyMrq0OGig0jX?=
+ =?us-ascii?Q?JFw3747JNnjIK4MDkI8cL2QRXXvdstswU+j+tYxkwSZ436Gr5/WoWPhRuP9F?=
+ =?us-ascii?Q?SWNdUeTBKLerNTKnTI9NYas962XWEfvMj8YBhc5oCMb5Ra97Gy/US6AiW/H0?=
+ =?us-ascii?Q?Vw2WUEzi2H73zM2qye3FxO3KvOnGsBHLWjQgO+eyTnMJtUcQ0g8nf/Yka8O4?=
+ =?us-ascii?Q?CqjzDS66fW/JvJL7lNUBc56lfMnjtZ30U41KH0xQvmZpGMu62838P6zYNrpr?=
+ =?us-ascii?Q?ANxtzJsqhdyiEvowRbpiMgLa3Mhd9VYL02opqS2UaJ8djm30MdM74q6Ye1/d?=
+ =?us-ascii?Q?w5WCENAr20fBy5KNpR8ujA/sQHk+HKOj8OSngrMvWuz4KDhQqcZyls0LU9vl?=
+ =?us-ascii?Q?BUhJHUxoTP2evfUtNW+BaH9+cKxzyO1sDRIIiSD0rLH0yGqCNtgHWSEGBGQc?=
+ =?us-ascii?Q?xy3BF21J80nKUw9oKfsFnz5d1vxZp2gjSXhIlzatkhe9cTV3+BUW9iucUc1V?=
+ =?us-ascii?Q?mJkGbU8CpJulfAQdOWmouQeSAOaiMt/aCaXHeGHLlaj1PHzgPncfwq0y2JT2?=
+ =?us-ascii?Q?Il5ZC6a7LOs1EI4qB6gLGLpW8xW43uk1iow3bpgNBaxmK6tWztfi3HfvRdw5?=
+ =?us-ascii?Q?W8BwSM5tEqW3zcwD8VQ5YJTQU75UdPpfpS/nwP3UwaxKW+VOpzSudisDoP22?=
+ =?us-ascii?Q?9tIPykdFpGc63t1GO01WaS8qjyjbHrfgUc7z7EbalqquetjDCcUskd3j3neP?=
+ =?us-ascii?Q?MqILP56XOJRecU9PlbOVMwQpJGug6ftobfo73Gf8runz6vkkOSP0jZA9WMGm?=
+ =?us-ascii?Q?rnwkgPhfc9cAGqhXn1MSrgFlG+lsMtL07Nc87dYahSUGQGEo/lswQ3MVi6yp?=
+ =?us-ascii?Q?ZyLLvnbjWAu6VI/FFO8NsjHi74ES9kK7yWKb7v+VVuTcRY/JpNFS3ddqDPjS?=
+ =?us-ascii?Q?njc/ZQCKa9NlvfUwEPoaagoRFC8va4Z+abIByBSJSu3u1alNqilGrrYOIS0r?=
+ =?us-ascii?Q?GJcJ+TPhSnKu6VFliqKZwwC5eQ2DIpS96sse7Ytv8I74nda7D7K44FeTc5OB?=
+ =?us-ascii?Q?E9FYLLkk0pYnPF4T/Q/4oqVEXeoFHRoNZuiC8fHz0nLXht96QXNMzox8gjtR?=
+ =?us-ascii?Q?yCTxn4ZvXC4yT2MKX2r00o0N5z1UgWLqb/W40qH+O+ifLwXhl6iY8qIQy0Q1?=
+ =?us-ascii?Q?x44cCmMjcQMXHyU5mCr5UPIwbCurWPuyo9aQtMRm8eD8zS4LCY+M+FS8n8lB?=
+ =?us-ascii?Q?c6R+n8BWypsz7+1B04hU4LBTJQFmDwZPgjUpxDtPwSZ/gzqHrUJAwAeKLxe0?=
+ =?us-ascii?Q?cexwlhB1kjN46AWTrh8KL0rVAS077yk=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a01781e8-7e13-40e6-c4d9-08da18f499e7
+X-MS-Exchange-CrossTenant-Network-Message-Id: e819591d-8d4a-4e6c-77ae-08da18f498af
 X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2022 00:13:26.0942
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2022 00:13:24.0631
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: igcJHrK8IxlQrceYL3VBLbUegZXX8TgsxqJYDQv4bi9PUvUpZ5+wZ7BbD63KykY7582cs5peD/zlssTBYXtuIgl3TyuuTNlwHjnc3YGTJv8=
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2MxHDCtT095o9zsJxAnt57Gm9v9RasmmRKCur0rUwojEWA1DdCOa6J2I2sfeqlpeuTAEfy76Uwyc/9DYIB+rWvfZVv2qxm4UT5kpYcbw8wU=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB5550
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.425,18.0.850
  definitions=2022-04-07_01:2022-04-07,2022-04-07 signatures=0
@@ -135,190 +135,169 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 m
  mlxscore=0 suspectscore=0 bulkscore=0 adultscore=0 spamscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2202240000 definitions=main-2204070064
-X-Proofpoint-GUID: oa5RcJ9XDa0IqzAZa-wrGm-HmjghsiL5
-X-Proofpoint-ORIG-GUID: oa5RcJ9XDa0IqzAZa-wrGm-HmjghsiL5
+X-Proofpoint-GUID: iC2bSY2zOUrz1sAbZuduYmUPiZl7hHLo
+X-Proofpoint-ORIG-GUID: iC2bSY2zOUrz1sAbZuduYmUPiZl7hHLo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move the tx and rx suspend fields into one flags field.
+We can't release the endpoint ID until all references to the endpoint have
+been dropped or it could be allocated while in use. This has us use an idr
+instead of looping over all conns to find a free ID and then free the ID
+when all references have been dropped instead of when the device is only
+deleted.
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/scsi/bnx2i/bnx2i_hwi.c   |  2 +-
- drivers/scsi/bnx2i/bnx2i_iscsi.c |  2 +-
- drivers/scsi/cxgbi/libcxgbi.c    |  6 +++---
- drivers/scsi/libiscsi.c          | 20 ++++++++++----------
- drivers/scsi/libiscsi_tcp.c      |  2 +-
- include/scsi/libiscsi.h          |  9 +++++----
- 6 files changed, 21 insertions(+), 20 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c | 71 ++++++++++++++---------------
+ include/scsi/scsi_transport_iscsi.h |  2 +-
+ 2 files changed, 36 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index 5521469ce678..e16327a4b4c9 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -1977,7 +1977,7 @@ static int bnx2i_process_new_cqes(struct bnx2i_conn *bnx2i_conn)
- 		if (nopin->cq_req_sn != qp->cqe_exp_seq_sn)
- 			break;
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index bf39fb5569b6..1fc7c6bfbd67 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -86,6 +86,9 @@ struct iscsi_internal {
+ 	struct transport_container session_cont;
+ };
  
--		if (unlikely(test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx))) {
-+		if (unlikely(test_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags))) {
- 			if (nopin->op_code == ISCSI_OP_NOOP_IN &&
- 			    nopin->itt == (u16) RESERVED_ITT) {
- 				printk(KERN_ALERT "bnx2i: Unsolicited "
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index fe86fd61a995..15fbd09baa94 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1721,7 +1721,7 @@ static int bnx2i_tear_down_conn(struct bnx2i_hba *hba,
- 			struct iscsi_conn *conn = ep->conn->cls_conn->dd_data;
- 
- 			/* Must suspend all rx queue activity for this ep */
--			set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
-+			set_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
- 		}
- 		/* CONN_DISCONNECT timeout may or may not be an issue depending
- 		 * on what transcribed in TCP layer, different targets behave
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index 8c7d4dda4cf2..4365d52c6430 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -1634,11 +1634,11 @@ void cxgbi_conn_pdu_ready(struct cxgbi_sock *csk)
- 	log_debug(1 << CXGBI_DBG_PDU_RX,
- 		"csk 0x%p, conn 0x%p.\n", csk, conn);
- 
--	if (unlikely(!conn || conn->suspend_rx)) {
-+	if (unlikely(!conn || test_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags))) {
- 		log_debug(1 << CXGBI_DBG_PDU_RX,
--			"csk 0x%p, conn 0x%p, id %d, suspend_rx %lu!\n",
-+			"csk 0x%p, conn 0x%p, id %d, conn flags 0x%lx!\n",
- 			csk, conn, conn ? conn->id : 0xFF,
--			conn ? conn->suspend_rx : 0xFF);
-+			conn ? conn->flags : 0xFF);
- 		return;
- 	}
- 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index d09926e6c8a8..5e7bd5a3b430 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1392,8 +1392,8 @@ static bool iscsi_set_conn_failed(struct iscsi_conn *conn)
- 	if (conn->stop_stage == 0)
- 		session->state = ISCSI_STATE_FAILED;
- 
--	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
--	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
-+	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
-+	set_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
- 	return true;
- }
- 
-@@ -1454,7 +1454,7 @@ static int iscsi_xmit_task(struct iscsi_conn *conn, struct iscsi_task *task,
- 	 * Do this after dropping the extra ref because if this was a requeue
- 	 * it's removed from that list and cleanup_queued_task would miss it.
- 	 */
--	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
-+	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
- 		/*
- 		 * Save the task and ref in case we weren't cleaning up this
- 		 * task and get woken up again.
-@@ -1532,7 +1532,7 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
- 	int rc = 0;
- 
- 	spin_lock_bh(&conn->session->frwd_lock);
--	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
-+	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
- 		ISCSI_DBG_SESSION(conn->session, "Tx suspended!\n");
- 		spin_unlock_bh(&conn->session->frwd_lock);
- 		return -ENODATA;
-@@ -1746,7 +1746,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
- 		goto fault;
- 	}
- 
--	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
-+	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
- 		reason = FAILURE_SESSION_IN_RECOVERY;
- 		sc->result = DID_REQUEUE << 16;
- 		goto fault;
-@@ -1935,7 +1935,7 @@ static void fail_scsi_tasks(struct iscsi_conn *conn, u64 lun, int error)
- void iscsi_suspend_queue(struct iscsi_conn *conn)
- {
- 	spin_lock_bh(&conn->session->frwd_lock);
--	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
- 	spin_unlock_bh(&conn->session->frwd_lock);
- }
- EXPORT_SYMBOL_GPL(iscsi_suspend_queue);
-@@ -1953,7 +1953,7 @@ void iscsi_suspend_tx(struct iscsi_conn *conn)
- 	struct Scsi_Host *shost = conn->session->host;
- 	struct iscsi_host *ihost = shost_priv(shost);
- 
--	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
- 	if (ihost->workq)
- 		flush_workqueue(ihost->workq);
- }
-@@ -1961,7 +1961,7 @@ EXPORT_SYMBOL_GPL(iscsi_suspend_tx);
- 
- static void iscsi_start_tx(struct iscsi_conn *conn)
- {
--	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	clear_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
- 	iscsi_conn_queue_work(conn);
- }
- 
-@@ -3330,8 +3330,8 @@ int iscsi_conn_bind(struct iscsi_cls_session *cls_session,
- 	/*
- 	 * Unblock xmitworker(), Login Phase will pass through.
- 	 */
--	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
--	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	clear_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
-+	clear_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(iscsi_conn_bind);
-diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-index 2e9ffe3d1a55..883005757ddb 100644
---- a/drivers/scsi/libiscsi_tcp.c
-+++ b/drivers/scsi/libiscsi_tcp.c
-@@ -927,7 +927,7 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, struct sk_buff *skb,
- 	 */
- 	conn->last_recv = jiffies;
- 
--	if (unlikely(conn->suspend_rx)) {
-+	if (unlikely(test_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags))) {
- 		ISCSI_DBG_TCP(conn, "Rx suspended!\n");
- 		*status = ISCSI_TCP_SUSPENDED;
- 		return 0;
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index e76c94697c1b..84086c240228 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -53,8 +53,10 @@ enum {
- 
- #define ISID_SIZE			6
- 
--/* Connection suspend "bit" */
--#define ISCSI_SUSPEND_BIT		1
-+/* Connection flags */
-+#define ISCSI_CONN_FLAG_SUSPEND_TX	BIT(0)
-+#define ISCSI_CONN_FLAG_SUSPEND_RX	BIT(1)
++static DEFINE_IDR(iscsi_ep_idr);
++static DEFINE_MUTEX(iscsi_ep_idr_mutex);
 +
+ static atomic_t iscsi_session_nr; /* sysfs session id for next new session */
  
- #define ISCSI_ITT_MASK			0x1fff
- #define ISCSI_TOTAL_CMDS_MAX		4096
-@@ -211,8 +213,7 @@ struct iscsi_conn {
- 	struct list_head	cmdqueue;	/* data-path cmd queue */
- 	struct list_head	requeue;	/* tasks needing another run */
- 	struct work_struct	xmitwork;	/* per-conn. xmit workqueue */
--	unsigned long		suspend_tx;	/* suspend Tx */
--	unsigned long		suspend_rx;	/* suspend Rx */
-+	unsigned long		flags;		/* ISCSI_CONN_FLAGs */
+ static struct workqueue_struct *iscsi_conn_cleanup_workq;
+@@ -168,6 +171,11 @@ struct device_attribute dev_attr_##_prefix##_##_name =	\
+ static void iscsi_endpoint_release(struct device *dev)
+ {
+ 	struct iscsi_endpoint *ep = iscsi_dev_to_endpoint(dev);
++
++	mutex_lock(&iscsi_ep_idr_mutex);
++	idr_remove(&iscsi_ep_idr, ep->id);
++	mutex_unlock(&iscsi_ep_idr_mutex);
++
+ 	kfree(ep);
+ }
  
- 	/* negotiated params */
- 	unsigned		max_recv_dlength; /* initiator_max_recv_dsl*/
+@@ -180,7 +188,7 @@ static ssize_t
+ show_ep_handle(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+ 	struct iscsi_endpoint *ep = iscsi_dev_to_endpoint(dev);
+-	return sysfs_emit(buf, "%llu\n", (unsigned long long) ep->id);
++	return sysfs_emit(buf, "%d\n", ep->id);
+ }
+ static ISCSI_ATTR(ep, handle, S_IRUGO, show_ep_handle, NULL);
+ 
+@@ -193,48 +201,32 @@ static struct attribute_group iscsi_endpoint_group = {
+ 	.attrs = iscsi_endpoint_attrs,
+ };
+ 
+-#define ISCSI_MAX_EPID -1
+-
+-static int iscsi_match_epid(struct device *dev, const void *data)
+-{
+-	struct iscsi_endpoint *ep = iscsi_dev_to_endpoint(dev);
+-	const uint64_t *epid = data;
+-
+-	return *epid == ep->id;
+-}
+-
+ struct iscsi_endpoint *
+ iscsi_create_endpoint(int dd_size)
+ {
+-	struct device *dev;
+ 	struct iscsi_endpoint *ep;
+-	uint64_t id;
+-	int err;
+-
+-	for (id = 1; id < ISCSI_MAX_EPID; id++) {
+-		dev = class_find_device(&iscsi_endpoint_class, NULL, &id,
+-					iscsi_match_epid);
+-		if (!dev)
+-			break;
+-		else
+-			put_device(dev);
+-	}
+-	if (id == ISCSI_MAX_EPID) {
+-		printk(KERN_ERR "Too many connections. Max supported %u\n",
+-		       ISCSI_MAX_EPID - 1);
+-		return NULL;
+-	}
++	int err, id;
+ 
+ 	ep = kzalloc(sizeof(*ep) + dd_size, GFP_KERNEL);
+ 	if (!ep)
+ 		return NULL;
+ 
++	mutex_lock(&iscsi_ep_idr_mutex);
++	id = idr_alloc(&iscsi_ep_idr, ep, 0, -1, GFP_NOIO);
++	if (id < 0) {
++		mutex_unlock(&iscsi_ep_idr_mutex);
++		printk(KERN_ERR "Could not allocate endpoint ID. Error %d.\n",
++		       id);
++		goto free_ep;
++	}
++	mutex_unlock(&iscsi_ep_idr_mutex);
++
+ 	ep->id = id;
+ 	ep->dev.class = &iscsi_endpoint_class;
+-	dev_set_name(&ep->dev, "ep-%llu", (unsigned long long) id);
++	dev_set_name(&ep->dev, "ep-%d", id);
+ 	err = device_register(&ep->dev);
+         if (err)
+-                goto free_ep;
++		goto free_id;
+ 
+ 	err = sysfs_create_group(&ep->dev.kobj, &iscsi_endpoint_group);
+ 	if (err)
+@@ -248,6 +240,10 @@ iscsi_create_endpoint(int dd_size)
+ 	device_unregister(&ep->dev);
+ 	return NULL;
+ 
++free_id:
++	mutex_lock(&iscsi_ep_idr_mutex);
++	idr_remove(&iscsi_ep_idr, id);
++	mutex_unlock(&iscsi_ep_idr_mutex);
+ free_ep:
+ 	kfree(ep);
+ 	return NULL;
+@@ -275,14 +271,17 @@ EXPORT_SYMBOL_GPL(iscsi_put_endpoint);
+  */
+ struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle)
+ {
+-	struct device *dev;
++	struct iscsi_endpoint *ep;
+ 
+-	dev = class_find_device(&iscsi_endpoint_class, NULL, &handle,
+-				iscsi_match_epid);
+-	if (!dev)
+-		return NULL;
++	mutex_lock(&iscsi_ep_idr_mutex);
++	ep = idr_find(&iscsi_ep_idr, handle);
++	if (!ep)
++		goto unlock;
+ 
+-	return iscsi_dev_to_endpoint(dev);
++	get_device(&ep->dev);
++unlock:
++	mutex_unlock(&iscsi_ep_idr_mutex);
++	return ep;
+ }
+ EXPORT_SYMBOL_GPL(iscsi_lookup_endpoint);
+ 
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 38e4a67f5922..fdd486047404 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -295,7 +295,7 @@ extern void iscsi_host_for_each_session(struct Scsi_Host *shost,
+ struct iscsi_endpoint {
+ 	void *dd_data;			/* LLD private data */
+ 	struct device dev;
+-	uint64_t id;
++	int id;
+ 	struct iscsi_cls_conn *conn;
+ };
+ 
 -- 
 2.25.1
 
