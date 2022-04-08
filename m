@@ -2,58 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FE41C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 11:47:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97A4EC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 11:53:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235056AbiDHLtp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 07:49:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58978 "EHLO
+        id S233071AbiDHLza (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 07:55:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234499AbiDHLtn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 07:49:43 -0400
+        with ESMTP id S235220AbiDHLz3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 07:55:29 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD5313A9B5C
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 04:47:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10D6C3B2B7
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 04:53:23 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 1CE711F861;
-        Fri,  8 Apr 2022 11:47:37 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id C33241F85F;
+        Fri,  8 Apr 2022 11:53:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1649418457; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1649418801; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7HpLWdLIhv6gyxYCRapSoAvHbYMZxPh3ub3JqpWxG0k=;
-        b=YSXGbR2USSAwIubpxzZW2OjqpJseD2lkFAIqgvrjAgsxuut6MiSsYtQPmIyPjm83njLYFX
-        u7bnJu3Goop86d8PMj+UfJTvH+KPRYEXDUN/par2I/Wa40ZVNQ/POcYWaQW9GWHPtSJSC4
-        RifdvgzQaDMCVC/EeXjNcO0rnFZtJ2I=
+        bh=bjwaftTc+q0RzGA7ol867i8l2rbeZwDDyycdnr0e4A0=;
+        b=KVx1LYRUJ2ydGeXTHSNLZYdeY/tWe15cwFYcDeBh9XW7v+pfswciVLmH1vIUd4Kr+3eQBF
+        13AlcaK1UCnLBsrIkx2AG40IFSt21BKeQnUfLpeS1L8m/6UElh0I7aEd/ES8R1NQwolLur
+        KYvDu+tifjPSAd6noNhu/PhF11OdK2U=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1649418457;
+        s=susede2_ed25519; t=1649418801;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7HpLWdLIhv6gyxYCRapSoAvHbYMZxPh3ub3JqpWxG0k=;
-        b=1406MoRx9Y72zuqdMUWBoU39hufJs9jvQlQvQb4kCXCZ0B9hYi2uHq5Qw/1aGhrny127Uy
-        r2GamCToZTb6JaBw==
+        bh=bjwaftTc+q0RzGA7ol867i8l2rbeZwDDyycdnr0e4A0=;
+        b=BTnYRWlqrh/ZggJoNWyNLsCbszx6W6hmGAh9rCbZeEfqyWxZWO3zjrPZs5Rfxb0Q7TruIj
+        Fx+SesBMOK6ZFECw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id DBDBE13314;
-        Fri,  8 Apr 2022 11:47:36 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 837FD13314;
+        Fri,  8 Apr 2022 11:53:21 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id dy0NNdggUGLgAQAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 08 Apr 2022 11:47:36 +0000
-Message-ID: <9a74d51e-5506-e1d1-61f0-67632541a146@suse.de>
-Date:   Fri, 8 Apr 2022 13:47:36 +0200
+        id G6EvHzEiUGJDBAAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 08 Apr 2022 11:53:21 +0000
+Message-ID: <92345d5b-c089-a178-7221-ab6eb6772534@suse.de>
+Date:   Fri, 8 Apr 2022 13:53:21 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH v3 1/8] mpi3mr: add BSG device support
 Content-Language: en-US
 To:     Sumit Saxena <sumit.saxena@broadcom.com>,
         linux-scsi@vger.kernel.org
@@ -62,9 +61,10 @@ Cc:     martin.petersen@oracle.com, bvanassche@acm.org, hch@lst.de,
         chandrakanth.patil@broadcom.com, sreekanth.reddy@broadcom.com,
         prayas.patel@broadcom.com
 References: <20220407192913.345411-1-sumit.saxena@broadcom.com>
- <20220407192913.345411-2-sumit.saxena@broadcom.com>
+ <20220407192913.345411-3-sumit.saxena@broadcom.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220407192913.345411-2-sumit.saxena@broadcom.com>
+Subject: Re: [PATCH v3 2/8] mpi3mr: add support for driver commands
+In-Reply-To: <20220407192913.345411-3-sumit.saxena@broadcom.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -72,229 +72,178 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/7/22 21:29, Sumit Saxena wrote:
-> Create BSG device per controller for controller management purpose.
-> BSG Device nodes will be named as /dev/bsg/mpi3mrctl0, /dev/bsg/mpi3mrctl1...
+> There are certain BSG commands which is to be completed
+> by driver without involving firmware. These requests are termed
+> as driver commands. This patch adds support for the same.
 > 
 > Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 > ---
->   drivers/scsi/mpi3mr/Kconfig      |   1 +
->   drivers/scsi/mpi3mr/Makefile     |   1 +
->   drivers/scsi/mpi3mr/mpi3mr.h     |  20 ++++++
->   drivers/scsi/mpi3mr/mpi3mr_app.c | 105 +++++++++++++++++++++++++++++++
->   drivers/scsi/mpi3mr/mpi3mr_os.c  |   2 +
->   5 files changed, 129 insertions(+)
->   create mode 100644 drivers/scsi/mpi3mr/mpi3mr_app.c
+>   drivers/scsi/mpi3mr/mpi3mr.h          |  16 +-
+>   drivers/scsi/mpi3mr/mpi3mr_app.c      | 397 +++++++++++++++++++++++
+>   drivers/scsi/mpi3mr/mpi3mr_debug.h    |  12 +-
+>   drivers/scsi/mpi3mr/mpi3mr_fw.c       |  21 +-
+>   drivers/scsi/mpi3mr/mpi3mr_os.c       |   3 +
+>   include/uapi/scsi/mpi3mr/mpi3mr_bsg.h | 434 ++++++++++++++++++++++++++
+>   6 files changed, 871 insertions(+), 12 deletions(-)
+>   create mode 100644 include/uapi/scsi/mpi3mr/mpi3mr_bsg.h
 > 
-> diff --git a/drivers/scsi/mpi3mr/Kconfig b/drivers/scsi/mpi3mr/Kconfig
-> index f7882375e74f..8997531940c2 100644
-> --- a/drivers/scsi/mpi3mr/Kconfig
-> +++ b/drivers/scsi/mpi3mr/Kconfig
-> @@ -3,5 +3,6 @@
->   config SCSI_MPI3MR
->   	tristate "Broadcom MPI3 Storage Controller Device Driver"
->   	depends on PCI && SCSI
-> +	select BLK_DEV_BSGLIB
->   	help
->   	MPI3 based Storage & RAID Controllers Driver.
-> diff --git a/drivers/scsi/mpi3mr/Makefile b/drivers/scsi/mpi3mr/Makefile
-> index 7c2063e04c81..f5cdbe48c150 100644
-> --- a/drivers/scsi/mpi3mr/Makefile
-> +++ b/drivers/scsi/mpi3mr/Makefile
-> @@ -2,3 +2,4 @@
->   obj-m += mpi3mr.o
->   mpi3mr-y +=  mpi3mr_os.o     \
->   		mpi3mr_fw.o \
-> +		mpi3mr_app.o \
 > diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-> index 6672d907d75d..f0515f929110 100644
+> index f0515f929110..877b0925dbc5 100644
 > --- a/drivers/scsi/mpi3mr/mpi3mr.h
 > +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-> @@ -148,6 +148,7 @@ extern int prot_mask;
+> @@ -89,7 +89,7 @@ extern int prot_mask;
+>   /* Reserved Host Tag definitions */
+>   #define MPI3MR_HOSTTAG_INVALID		0xFFFF
+>   #define MPI3MR_HOSTTAG_INITCMDS		1
+> -#define MPI3MR_HOSTTAG_IOCTLCMDS	2
+> +#define MPI3MR_HOSTTAG_BSG_CMDS		2
+>   #define MPI3MR_HOSTTAG_BLK_TMS		5
 >   
->   #define MPI3MR_DEFAULT_MDTS	(128 * 1024)
->   #define MPI3MR_DEFAULT_PGSZEXP         (12)
-> +
->   /* Command retry count definitions */
->   #define MPI3MR_DEV_RMHS_RETRY_COUNT 3
->   
-> @@ -175,6 +176,18 @@ extern int prot_mask;
->   /* MSI Index from Reply Queue Index */
->   #define REPLY_QUEUE_IDX_TO_MSIX_IDX(qidx, offset)	(qidx + offset)
->   
-> +/*
-> + * Maximum data transfer size definitions for management
-> + * application commands
-> + */
-> +#define MPI3MR_MAX_APP_XFER_SIZE	(1 * 1024 * 1024)
-> +#define MPI3MR_MAX_APP_XFER_SEGMENTS	512
-> +/*
-> + * 2048 sectors are for data buffers and additional 512 sectors for
-> + * other buffers
-> + */
-> +#define MPI3MR_MAX_APP_XFER_SECTORS	(2048 + 512)
-> +
->   /* IOC State definitions */
->   enum mpi3mr_iocstate {
->   	MRIOC_STATE_READY = 1,
-> @@ -714,6 +727,8 @@ struct scmd_priv {
->    * @default_qcount: Total Default queues
->    * @active_poll_qcount: Currently active poll queue count
+>   #define MPI3MR_NUM_DEVRMCMD		16
+> @@ -202,10 +202,10 @@ enum mpi3mr_iocstate {
+>   enum mpi3mr_reset_reason {
+>   	MPI3MR_RESET_FROM_BRINGUP = 1,
+>   	MPI3MR_RESET_FROM_FAULT_WATCH = 2,
+> -	MPI3MR_RESET_FROM_IOCTL = 3,
+> +	MPI3MR_RESET_FROM_APP = 3,
+>   	MPI3MR_RESET_FROM_EH_HOS = 4,
+>   	MPI3MR_RESET_FROM_TM_TIMEOUT = 5,
+> -	MPI3MR_RESET_FROM_IOCTL_TIMEOUT = 6,
+> +	MPI3MR_RESET_FROM_APP_TIMEOUT = 6,
+>   	MPI3MR_RESET_FROM_MUR_FAILURE = 7,
+>   	MPI3MR_RESET_FROM_CTLR_CLEANUP = 8,
+>   	MPI3MR_RESET_FROM_CIACTIV_FAULT = 9,
+> @@ -698,6 +698,7 @@ struct scmd_priv {
+>    * @chain_bitmap_sz: Chain buffer allocator bitmap size
+>    * @chain_bitmap: Chain buffer allocator bitmap
+>    * @chain_buf_lock: Chain buffer list lock
+> + * @bsg_cmds: Command tracker for BSG command
+>    * @host_tm_cmds: Command tracker for task management commands
+>    * @dev_rmhs_cmds: Command tracker for device removal commands
+>    * @evtack_cmds: Command tracker for event ack commands
+> @@ -729,6 +730,10 @@ struct scmd_priv {
 >    * @requested_poll_qcount: User requested poll queue count
-> + * @bsg_dev: BSG device structure
-> + * @bsg_queue: Request queue for BSG device
+>    * @bsg_dev: BSG device structure
+>    * @bsg_queue: Request queue for BSG device
+> + * @stop_bsgs: Stop BSG request flag
+> + * @logdata_buf: Circular buffer to store log data entries
+> + * @logdata_buf_idx: Index of entry in buffer to store
+> + * @logdata_entry_sz: log data entry size
 >    */
 >   struct mpi3mr_ioc {
 >   	struct list_head list;
-> @@ -854,6 +869,9 @@ struct mpi3mr_ioc {
->   	u16 default_qcount;
->   	u16 active_poll_qcount;
->   	u16 requested_poll_qcount;
-> +
-> +	struct device *bsg_dev;
-> +	struct request_queue *bsg_queue;
+> @@ -835,6 +840,7 @@ struct mpi3mr_ioc {
+>   	void *chain_bitmap;
+>   	spinlock_t chain_buf_lock;
+>   
+> +	struct mpi3mr_drv_cmd bsg_cmds;
+>   	struct mpi3mr_drv_cmd host_tm_cmds;
+>   	struct mpi3mr_drv_cmd dev_rmhs_cmds[MPI3MR_NUM_DEVRMCMD];
+>   	struct mpi3mr_drv_cmd evtack_cmds[MPI3MR_NUM_EVTACKCMD];
+> @@ -872,6 +878,10 @@ struct mpi3mr_ioc {
+>   
+>   	struct device *bsg_dev;
+>   	struct request_queue *bsg_queue;
+> +	u8 stop_bsgs;
+> +	u8 *logdata_buf;
+> +	u16 logdata_buf_idx;
+> +	u16 logdata_entry_sz;
 >   };
 >   
 >   /**
-> @@ -962,5 +980,7 @@ void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code);
->   int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
->   	struct op_reply_qinfo *op_reply_q);
->   int mpi3mr_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num);
-> +void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc);
-> +void mpi3mr_bsg_exit(struct mpi3mr_ioc *mrioc);
->   
->   #endif /*MPI3MR_H_INCLUDED*/
 > diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> new file mode 100644
-> index 000000000000..9b6698525990
-> --- /dev/null
+> index 9b6698525990..3136f5c5d164 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
 > +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> @@ -0,0 +1,105 @@
-> +// SPDX-License-Identifier: GPL-2.0-or-later
-> +/*
-> + * Driver for Broadcom MPI3 Storage Controllers
-> + *
-> + * Copyright (C) 2017-2022 Broadcom Inc.
-> + *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
-> + *
-> + */
-> +
-> +#include "mpi3mr.h"
-> +#include <linux/bsg-lib.h>
+> @@ -9,6 +9,386 @@
+>   
+>   #include "mpi3mr.h"
+>   #include <linux/bsg-lib.h>
+> +#include <uapi/scsi/mpi3mr/mpi3mr_bsg.h>
 > +
 > +/**
-> + * mpi3mr_bsg_request - bsg request entry point
+> + * mpi3mr_bsg_verify_adapter - verify adapter number is valid
+> + * @ioc_number: Adapter number
+> + * @mriocpp: Pointer to hold per adapter instance
+> + *
+> + * This function checks whether given adapter number matches
+> + * with an adapter id in the driver's list and if so fills
+> + * pointer to the per adapter instance in mriocpp else set that
+> + * to NULL.
+> + *
+> + * Return: Nothing.
+> + */
+> +static void mpi3mr_bsg_verify_adapter(int ioc_number,
+> +	struct mpi3mr_ioc **mriocpp)
+> +{
+> +	struct mpi3mr_ioc *mrioc;
+> +
+> +	spin_lock(&mrioc_list_lock);
+> +	list_for_each_entry(mrioc, &mrioc_list, list) {
+> +		if (mrioc->id != ioc_number)
+> +			continue;
+> +		spin_unlock(&mrioc_list_lock);
+> +		*mriocpp = mrioc;
+> +		return;
+> +	}
+> +	spin_unlock(&mrioc_list_lock);
+> +	*mriocpp = NULL;
+> +}
+> +
+Please return 'struct mpi3mr_io *' here and avoid having to pass a 
+return pointer.
+
+> +/**
+> + * mpi3mr_enable_logdata - Handler for log data enable
+> + * @mrioc: Adapter instance reference
 > + * @job: BSG job reference
 > + *
-> + * This is driver's entry point for bsg requests
+> + * This function enables log data caching in the driver if not
+> + * already enabled and return the maximum number of log data
+> + * entries that can be cached in the driver.
 > + *
 > + * Return: 0 on success and proper error codes on failure
 > + */
-> +int mpi3mr_bsg_request(struct bsg_job *job)
+> +static long mpi3mr_enable_logdata(struct mpi3mr_ioc *mrioc,
+> +	struct bsg_job *job)
 > +{
-> +	return 0;
-> +}
+> +	long rval = -EINVAL;
+> +	struct mpi3mr_logdata_enable logdata_enable;
 > +
-> +/**
-> + * mpi3mr_bsg_exit - de-registration from bsg layer
-> + *
-> + * This will be called during driver unload and all
-> + * bsg resources allocated during load will be freed.
-> + *
-> + * Return:Nothing
-> + */
-> +void mpi3mr_bsg_exit(struct mpi3mr_ioc *mrioc)
-> +{
-> +	if (!mrioc->bsg_queue)
-> +		return;
+> +	if (mrioc->logdata_buf)
+> +		goto copy_user_data;
 > +
-> +	bsg_remove_queue(mrioc->bsg_queue);
-> +	mrioc->bsg_queue = NULL;
+> +	mrioc->logdata_entry_sz =
+> +	    (mrioc->reply_sz - (sizeof(struct mpi3_event_notification_reply) - 4))
+> +	    + MPI3MR_BSG_LOGDATA_ENTRY_HEADER_SZ;
+> +	mrioc->logdata_buf_idx = 0;
 > +
-> +	device_del(mrioc->bsg_dev);
-> +	put_device(mrioc->bsg_dev);
-> +	kfree(mrioc->bsg_dev);
-> +}
+> +	mrioc->logdata_buf = kcalloc(MPI3MR_BSG_LOGDATA_MAX_ENTRIES,
+> +	    mrioc->logdata_entry_sz, GFP_KERNEL);
+> +	if (!mrioc->logdata_buf)
+> +		return -ENOMEM;
 > +
-> +/**
-> + * mpi3mr_bsg_node_release -release bsg device node
-> + * @dev: bsg device node
-> + *
-> + * decrements bsg dev reference count
-> + *
-> + * Return:Nothing
-> + */
-> +void mpi3mr_bsg_node_release(struct device *dev)
-> +{
-> +	put_device(dev);
-> +}
-> +
-> +/**
-> + * mpi3mr_bsg_init -  registration with bsg layer
-> + *
-> + * This will be called during driver load and it will
-> + * register driver with bsg layer
-> + *
-> + * Return:Nothing
-> + */
-> +void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
-> +{
-> +	mrioc->bsg_dev = kzalloc(sizeof(struct device), GFP_KERNEL);
-> +	if (!mrioc->bsg_dev) {
-> +		ioc_err(mrioc, "bsg device mem allocation failed\n");
-> +		return;
+> +copy_user_data:
+> +	memset(&logdata_enable, 0, sizeof(logdata_enable));
+> +	logdata_enable.max_entries =
+> +	    MPI3MR_BSG_LOGDATA_MAX_ENTRIES;
+> +	if (job->request_payload.payload_len >= sizeof(logdata_enable)) {
+> +		sg_copy_from_buffer(job->request_payload.sg_list,
+> +				    job->request_payload.sg_cnt,
+> +				    &logdata_enable, sizeof(logdata_enable));
+> +		rval = 0;
 > +	}
-> +
-> +	device_initialize(mrioc->bsg_dev);
-> +	dev_set_name(mrioc->bsg_dev, "mpi3mrctl%u", mrioc->id);
-> +
-> +	if (device_add(mrioc->bsg_dev)) {
-> +		ioc_err(mrioc, "%s: bsg device add failed\n",
-> +		    dev_name(mrioc->bsg_dev));
-> +		goto err_device_add;
-> +	}
-> +
-> +	mrioc->bsg_dev->release = mpi3mr_bsg_node_release;
-> +
-> +	mrioc->bsg_queue = bsg_setup_queue(mrioc->bsg_dev, dev_name(mrioc->bsg_dev),
-> +			mpi3mr_bsg_request, NULL, 0);
-> +	if (!mrioc->bsg_queue) {
-> +		ioc_err(mrioc, "%s: bsg registration failed\n",
-> +		    dev_name(mrioc->bsg_dev));
-> +		goto err_setup_queue;
-> +	}
-> +
-> +	blk_queue_max_segments(mrioc->bsg_queue, MPI3MR_MAX_APP_XFER_SEGMENTS);
-> +	blk_queue_max_hw_sectors(mrioc->bsg_queue, MPI3MR_MAX_APP_XFER_SECTORS);
-> +
-> +	return;
-> +
-> +err_setup_queue:
-> +	device_del(mrioc->bsg_dev);
-> +	put_device(mrioc->bsg_dev);
-> +err_device_add:
-> +	kfree(mrioc->bsg_dev);
+> +	return rval;
 > +}
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> index f7cd70a15ea6..faf14a5f9123 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -4345,6 +4345,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->   	}
->   
->   	scsi_scan_host(shost);
-> +	mpi3mr_bsg_init(mrioc);
->   	return retval;
->   
->   addhost_failed:
-> @@ -4389,6 +4390,7 @@ static void mpi3mr_remove(struct pci_dev *pdev)
->   	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
->   		ssleep(1);
->   
-> +	mpi3mr_bsg_exit(mrioc);
->   	mrioc->stop_drv_processing = 1;
->   	mpi3mr_cleanup_fwevt_list(mrioc);
->   	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+
+This is a very unusual programming pattern.
+You allocate the buffer only _after_ the command has been submitted, 
+risking a failure in buffer allocation even though the command succeeded.
+
+Please convert this to allocate the buffer _first_, then issue the 
+command, and then evaluate the response.
+
+Same for the other bsg handler functions.
 
 Cheers,
 
