@@ -2,238 +2,299 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FAA9C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 17:21:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6649BC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 17:39:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238109AbiDHRXV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 13:23:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35292 "EHLO
+        id S238245AbiDHRlb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 13:41:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238102AbiDHRXT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 13:23:19 -0400
+        with ESMTP id S238251AbiDHRl2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 13:41:28 -0400
 Received: from de-smtp-delivery-102.mimecast.com (de-smtp-delivery-102.mimecast.com [194.104.109.102])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCC622BE6
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 10:21:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE9E178FEB
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 10:39:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1649438471;
+        t=1649439561;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=HdLJr+EQtLck2rxUqOsFpGibnDVE0UHBxk26I+M7Ybc=;
-        b=iRcb7Azio/XCWzNtaRkYK/9QFzJPkjV1eaIHJ2hU0UmghPpT6h1MlNA0iSoGGUewVGGSxL
-        E4q74x1cCHuO3q+Q+AQ5/Jr+RiKe/uUKJ9DdxUc9U5TJhK+LFWkeiMmOUPQVCnPtj4yXSN
-        CVkfX+VZMAtPVHK5AKR53wOecyqsT3M=
-Received: from EUR05-AM6-obe.outbound.protection.outlook.com
- (mail-am6eur05lp2106.outbound.protection.outlook.com [104.47.18.106]) by
+        bh=gmMWACmO/0FxrqVvMnciXLTz0r3dPHc1Q/+ccOU3m70=;
+        b=EqpGEExlg0flFgsSjSyWWl8yfk8QRAH+zJyGcadR51g1jMOZU2csZZ4YX53MwpD088pfjA
+        tgeB6LYrTqqCdz7Dh8EHlIqNA9uP6Ue1QwY7y3QXWxy0WvHT7qVMkDwMJeZbJrgEHWznr1
+        nCM73cnr0zGRoPodk8rHejf1KyQ3dCk=
+Received: from EUR03-VE1-obe.outbound.protection.outlook.com
+ (mail-ve1eur03lp2054.outbound.protection.outlook.com [104.47.9.54]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- de-mta-15-Edizv0tBMw6srRTlVIzu9g-1; Fri, 08 Apr 2022 19:21:10 +0200
-X-MC-Unique: Edizv0tBMw6srRTlVIzu9g-1
+ de-mta-29--HcRoYi2Nn2qjsGHMSzDyQ-1; Fri, 08 Apr 2022 19:39:18 +0200
+X-MC-Unique: -HcRoYi2Nn2qjsGHMSzDyQ-1
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=KdtECK2caWko2Ro6/MFHbBYluBSZ0+PLCa0V7RDVVAU5Sji3sRhUr79a57J57fH/0H4LUAxScDQ9LtoJ78zRGIRpWOIt5QqRA/k1P8sZ/hUZsbUALF57P/WeiiC0XNLJoFZ5xfLUTx212b2e0gR6kQWXObrCkv3DhaNHNX13toCb9GrQRNUC299HrTDCDOW+KD+YEQp//m+h3Q/o4CRP+SM00IY6PTAx9pPgpZMQ48PX9TR8PySkMUdZ2bliTZK5xA0TJfonsN47CZWwHvldfoRwSrYT/ATrIIwqFmFZcLg8YAhm5FIBUTakjd3z4xSXgfL+6AiutYfPE2WeWLQLeA==
+ b=jv8P8fo2zXaslvzJSMyA8xnn7j3D7rjJXvltPXW66D+YX4b1gHteVsr//t02PoOP+41tp34Q1AK63rq1zwval5JQLragU46DsvxpCwIqaM/k+yYyFEzmBc2d0yO0z5uR0o2cjJCRQXrHFN9ogB6XtS6q8XI499lbD/BDCa2xfD+fJR8iz1ooALyyI3YJT+hS44Cz0wktH2Y0ZvBlqml94oocvK6bUhi60Ulaqy9EW0OpegOyOXEpnWnPbqC5FBNize4IvESrKrlTG6tRYcKwJhokHbajfepJqsMelnYQMbhTLyG1lEnxYGn99KZaShNufCFwzvkyc3R+atuS/eF8BQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HdLJr+EQtLck2rxUqOsFpGibnDVE0UHBxk26I+M7Ybc=;
- b=lC1r3afZhHwKY9UVreCqhR16HgHabXBhgK/4bVICWjI4t0AKUpQI9SKWdU0Ts+HG9dzcTqDy4fBxnzjEuVFLde32y5z8xCe1eB7sL8+LZm0hBQ7fi1BfaqgphOtXKLOHlP4ocYWdxVKmP6lPXyj7KRwNbfuePOURVaTj3d5oX3dfb861JGT2egS7Ft+UXZEcJcGs8YDI8m4jYqvLIWarZc5nmbN905Yd2JaeB+UIjHCtLwNKxEBHNnuSrAJRreIsBykCkl1tE8F38HidfiAwYeLbrlYxetG/XGYaQqMAVQo2aKb1DLZLmWXcis8yh9KFEIbC6SaZYIXj8gqxWbfY6Q==
+ bh=gmMWACmO/0FxrqVvMnciXLTz0r3dPHc1Q/+ccOU3m70=;
+ b=NlVw8mzNEEv1CScGF0oyeiZxyA4nxbMPZevzhrha34u7RZmFEcdLNr64XrSNmW43hFzEIKpPN/B1/8CE73D0UeK05B8HbUUo20//touezYfUmHDlMMWsPWzclgtoe3/vU/X9J5rKv7HWPpDnMRXNrwtb8CW97K3aL6kfT5rmCH813nfWn/gdmEag/9OqB3ACYNHBI3QXdy52aYw9tfId/64XdUBz2bDTIidPS10TIOZF5qU8UU7LusrC4pVodey3dI19UgZ+ZalPIhOcF4/FU5CQS1Yoq9rB2a+NiE+x1vNh7ilICNi+PKttiBDURTHMQSdwiKK/M+Xp1SxrBAuoCw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
  dkim=pass header.d=suse.com; arc=none
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=suse.com;
 Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
- by AM6PR04MB5192.eurprd04.prod.outlook.com (2603:10a6:20b:e::28) with
+ by AM6PR04MB5864.eurprd04.prod.outlook.com (2603:10a6:20b:a6::21) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5144.25; Fri, 8 Apr
- 2022 17:21:08 +0000
+ 2022 17:39:17 +0000
 Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
  ([fe80::6859:e5f7:b761:2d]) by AM5PR04MB3089.eurprd04.prod.outlook.com
  ([fe80::6859:e5f7:b761:2d%6]) with mapi id 15.20.5144.025; Fri, 8 Apr 2022
- 17:21:08 +0000
-Message-ID: <abe613be-aaa2-3dd9-1573-54eb44819de0@suse.com>
-Date:   Fri, 8 Apr 2022 10:21:02 -0700
+ 17:39:16 +0000
+Message-ID: <a1c1340a-52ff-c41d-5630-44750163b993@suse.com>
+Date:   Fri, 8 Apr 2022 10:39:12 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH 02/10] scsi: iscsi: Fix offload conn cleanup when iscsid
- restarts
+Subject: Re: [PATCH 03/10] scsi: iscsi: Release endpoint ID when its freed.
 Content-Language: en-US
 To:     Mike Christie <michael.christie@oracle.com>, skashyap@marvell.com,
         cleech@redhat.com, njavali@marvell.com, mrangankar@marvell.com,
         GR-QLogic-Storage-Upstream@marvell.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, jejb@linux.ibm.com
 References: <20220408001314.5014-1-michael.christie@oracle.com>
- <20220408001314.5014-3-michael.christie@oracle.com>
+ <20220408001314.5014-4-michael.christie@oracle.com>
 From:   Lee Duncan <lduncan@suse.com>
-In-Reply-To: <20220408001314.5014-3-michael.christie@oracle.com>
+In-Reply-To: <20220408001314.5014-4-michael.christie@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AS8PR04CA0187.eurprd04.prod.outlook.com
- (2603:10a6:20b:2f3::12) To AM5PR04MB3089.eurprd04.prod.outlook.com
+X-ClientProxiedBy: FR0P281CA0053.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:48::17) To AM5PR04MB3089.eurprd04.prod.outlook.com
  (2603:10a6:206:b::28)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: bb20b6b2-68f3-4996-de15-08da19842b3a
-X-MS-TrafficTypeDiagnostic: AM6PR04MB5192:EE_
-X-Microsoft-Antispam-PRVS: <AM6PR04MB51920EE1E843799E8DCE3B33DAE99@AM6PR04MB5192.eurprd04.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 5ddcfaad-85cc-4e09-9db1-08da1986b44b
+X-MS-TrafficTypeDiagnostic: AM6PR04MB5864:EE_
+X-Microsoft-Antispam-PRVS: <AM6PR04MB58642505BD069F104534E1C3DAE99@AM6PR04MB5864.eurprd04.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 2DGpsbjeVSOMsMCTu4+XFLmkVKghrnw0aM4is5SYeTos71DU7rq82ncpwKqbaU1m/BD6J7bs8Y/s3SFHzgh8jqFwnOIZodsxF1B3cWcIMdpuPeFYtOJKyas2rc2AY/swhgzz8fOqz2Hqp0mShKqaLt6MqBfnBdpvttRNOr5fVo7pXLzlPq3glf6guF7sOQg4dGBkf6XeJue5CZUIRRslMHKKgrmZw4LD3o1rumIjk/EbEJB7YP3Syt8QgslrlgMTmdVN+ndIItnKl3/xeU99KtEbzzQKNG1/6556SdtY52W89dx3JE6zuOibxuIRiQBS+K/l8tF+5a1M95KcX7oQ96vU8E0vfWtGKzhyDsd/36m0p2VbGAIoc0Y0ndwgxwbsKkgdL/37Ld/sM7WK+bTtzc7CE9+oLSP4sejk9yfWB10fNsZlYv69ghVGhx4REYf5hXnFPWsSEIq5ip8iVLQuEmJ0fFJw9+00PG84RZJYVMUeVqi+B0Tom476kQvsFSX2JzfRl/dyDqBLf24z1Vj9PiKaV4sbpF4qOr6714PQi8Z/NjBeufqSj4hZCjvnqIr7d5gCs2t+XMR0PfJc+wn3MwrzNZIZZu8DG0Sk9xxsbgSQkCkFoZFSnjt0qYDiyxqIy8U+CcKIKhpvP7Mt7OiGgIVzra//rFxp7/QNGLuM7lFl4/Nm5+nWjp4Mt4B0/LYL64TTNuJEU2YwP55PgRxI+rkjPsd+qYYYd4C3TvPwxFA=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(53546011)(6666004)(186003)(6506007)(8936002)(5660300002)(6512007)(38100700002)(86362001)(508600001)(2906002)(31696002)(36756003)(31686004)(83380400001)(316002)(66946007)(66556008)(8676002)(2616005)(66476007)(26005)(6486002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: fwFoIsEGKj1FR1BO84qVKGMb0Ve5jlhq5JhaLmYfNkx23MXo1Njr/hRTTbfa74uv1gL8wpfMiM7hv3shM4BPq7VUEA2keUxIDBmyyf0U3PoYWqOaUYvs+Ga2HSEU6UvQke9J6/6h4rFtF+PE+mcWcdE/+q3KuavLAVs+xrFYCh32IJZPgjyTV5x6XNW28R8Pm1d8nS7TSb2eTdwXVY6oq1K2AUDe2Y3owIF6QNTmAhwrgDvVcsWBSo/OnXH7g0WTqu0oU554EzqtXbQ2gNK/YQrIhMTuHS+U83VPeJpKhI0h+zJzwx6sozX/pqxOaNJrYhj5MZDtO4fIVO187HzWW0JHFN3xdImF/QZy6rIJsmEHyufyxWUI01l8+UEKR6qtS61VaoDfIOtNM7tAn2diO+yfDX0Hw4zmSBF7KUEclZSadtlPGe20xBPZc+0funcIBZgc2EZDQvheetr17jJ78BfNVsO8XPM/ctFW3ACplUwtDLVv9gCJtyFN9XFaZVVkqMq7dBPf8MrY487sjUn9Y9SBnkeCDWfQVCbEZT3rO5S0Q9REFyev4bJP3khg0XJtHkpU5C/TvYP23PIGY9RmBPuh2V8jHw3ygXGz9NriXUd1t2YX1P6gpxc/JnJEvPr6D8UXnrtmjVYzL+dnp2K68m+Bb+pWuD8U+bcyB9VfAF41UaRkUOutPGm4o8ntc8o8ArSl4Ia6iaN/5OSSLCopQq7hwsdtsF4llli/NakfRWA=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(316002)(38100700002)(8676002)(31696002)(36756003)(31686004)(66476007)(66946007)(66556008)(53546011)(86362001)(83380400001)(6506007)(6666004)(6486002)(2906002)(5660300002)(6512007)(508600001)(2616005)(26005)(186003)(8936002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?SXNBMzBiOGwrdDR2bXhsL1BOdUptbmpBS2x2blZFOFg5V1E1ZTlWZWxFNUdm?=
- =?utf-8?B?czJjNjduMXN0M090TU0wMGlTRmZ4OTlCKzg5ZGRDK2h5dHZYUFBQN1l5THJq?=
- =?utf-8?B?S2tUTCt5d2ZjTUJXUUhVYzA5U2l4M2JTbVpBeTZSampPOW40VkVEL3hLeWUy?=
- =?utf-8?B?RHZ1NmZ3SWJ6bUxzUjJSbVRLRXNOdllPQWMxYWgvem5xSG8yd3BMVTZYV0U4?=
- =?utf-8?B?bGRIRVFFZkczV1BoVWN0WWtnSUY1Z0ZGTWQ0STRWeit4Y0hhZnRXQUhZY3FF?=
- =?utf-8?B?TkRTZkwycE5xMXBvbFZkWmZIVithK2R5Rys4NTBzUS92dlZ1cFlpTXVYb0Yx?=
- =?utf-8?B?Zi8vY0Z4dDFnUUF6bVBzWmRBNG5Rd0NIV2pBV1hOTmszd21uTDdBS29HMmgv?=
- =?utf-8?B?SEkybW40OVZrVkJtRDdFb3R2K0laUzRzMTRrR09pbkpaOXhTbklUZmwvWFZ5?=
- =?utf-8?B?MVkwVHFncU5icVloQmhDQkZTTlZpaXFBRjdQa3pYbjRaOHYwejdPSm9TNUNz?=
- =?utf-8?B?dlE0UnArTCtlNHdzUThncnZhdDhGVFNkMWRvNXR2QjZRRWFGS2NIUHVFWFBD?=
- =?utf-8?B?NDRMU1djSVNqM3QzZzcxMHhjQmxJSzFsbVpTVUN4bkE5anNmVk9UNFUyam9P?=
- =?utf-8?B?OHJmQ0FieUNGK2lZWU00RnlidXQrT3RlV01rR3hYYkRkcUxPclRqbEt2MTh6?=
- =?utf-8?B?ak1MWi96a3FCbHN4Q1h5eHM3c3ZqUDJWcEg0SDJjZ1dYcFNkdSsrbmZmY2hF?=
- =?utf-8?B?RWUxeUp6SEtkVC8vV3AxSFVCNkQvUSt0bjFGQWJTS21UZE90WFF5NER2cHlS?=
- =?utf-8?B?d0VuQy94eFR5L0pEOXdkYWhMNWpYengxN3BzUG9TbWxVcGg3K0U2clpVd0tR?=
- =?utf-8?B?RVd4bWszMzVFQ1c1Z3prMjhJWUN3RjRrblhxVXoyMmZOMGI1UXpXVXljRFdG?=
- =?utf-8?B?RCs1UEh5US9tNFFZVjh5eGdENGpiSzJpcTNUVTExc0hSdHg2M1F1Vk9IaUk1?=
- =?utf-8?B?YmxzYVdXc0JNKytCVEJjUVFtdy9QeG1MNjZ5d3NMOCtWWEtOUDNGZEVjNWpB?=
- =?utf-8?B?SUVtVnFWOXgrZnhRaEkrcFYrU3pPUkJNYnQ4NkhKN2pPemdIbjhwZVVuSkhz?=
- =?utf-8?B?UjZWd3Y5dno2OGxvampUeXNGNjNXcFM5RFE5Nk95MGJ4NkVCU2pUY2V1UEow?=
- =?utf-8?B?blI3V1NKejM5MFQzejlXSU9OOGZyY3JnYnNJYkQ2N0h1anJaMEFIRkY2azFm?=
- =?utf-8?B?NGFzTmU4T2FWdThCMnE4UXo5TU9GcUs0S3JkM1RMZjUwWmQ4cGppdFNqblhs?=
- =?utf-8?B?Mk9tMVZyaEptV1R5QjNidlNXMVNUZXdqa3lkSUZsSzVKckNoZmtqQmQvY0Ji?=
- =?utf-8?B?Mnc4S1VDWWd2RzJGOGpJV2lrNkpiK0loSEFTMTNLZXBtQmZjeWZVT2dsV3Fz?=
- =?utf-8?B?dy9xWDZqM0l0dENkaVlDM2pYcUVvdCt5RFh2NDVpbWVOM2Z0OXk2azRKSkV2?=
- =?utf-8?B?VzNRNVQxQ3RIS21aYUhBSUJXVUNUb0V0YUJMdTZ5aStUTkR5dHFMTWppS2NT?=
- =?utf-8?B?MjZ1VVFabUNUSnJscmlFbUxrUmlNa011aWlUUUVBY2NrMjltTm9wV1hLZG1n?=
- =?utf-8?B?OUFyWDAxSFZ5ejRzSks2amZ6UHNnTU5JRW0wcE9jc3Rkc1pqbUxnd01jN2Nn?=
- =?utf-8?B?Y0tpQitZcTNCVTVlVEZ6ekdaUjVuQkhMQThaWVhBSXBKVEN1bDdqTjhvV2Vx?=
- =?utf-8?B?ajlUNU5pRkhQZExiTEJiQmVKWmJwUVhkNVJTRHJUNmViRnd0bDBqakRyZGti?=
- =?utf-8?B?a2w5Z2plWVh4bGJ3cW9RZjVRdlhtSi93NkRCbjJzd2IvUUo1ZFFxT3lpYXVY?=
- =?utf-8?B?bTJuN2d4T3djdGR4RlQ0ak5MdU9hMUxqeTk2c3FOelMyUVFaRzVOUVVzNjMv?=
- =?utf-8?B?eUswbVE0TzkrakNuaXJLM0F2QldDUTY4MzJ0VFZyZmFGMHNUOEVkY3JDcCto?=
- =?utf-8?B?N3JQQTNsOWxCUzNBUGdxNmIvM241S0hRdFdId3A0TE1jN3JqYzNBSFN6cXUx?=
- =?utf-8?B?WVVyeDZUanNqcENuSUo0eEVOOGZ5WVlhNWczK0cvOXQwd2xTd0JnVlJYMHlK?=
- =?utf-8?B?U2pQK1NSUDlsWm9PNUtFdkQvYXpoS3BJQUhrVG80SU9sbTRTNFJ6Y3FwRGM2?=
- =?utf-8?B?MTVmTnRjeXgxL0JXK0xRa2lFMHUweDNRUWk1REF1dnNsM2dYVmUwQU0xUWtU?=
- =?utf-8?B?ZkppalczelVqYy9Bbjlmc2pGZFRLLzFxbklJbHZleSs4czFxVEhjU0ZyZkh2?=
- =?utf-8?B?QUNIb05TWHMydFdIYlNaaVdZYXNIU0NzMTNiVjRhSGRnaEd5Znh3Zz09?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?cTNqdVNkeU9UZDBuRUt3U1Z5Tms0bUNkNjREaDZzalVVQUpOekJtM0daL05v?=
+ =?utf-8?B?cmZjNW1FQXg0dEVOTVBPOUtJZFd2Mm1xSDJXSi9qTHlJRGN5KzM3eXdxV212?=
+ =?utf-8?B?aEVObUhneGlmV0NkcFhRSnhZeE1UOERVR0M1dUZPRmZSbEVVcnlRVHJhWG5P?=
+ =?utf-8?B?WjlZZmZLU2JRTEJRNE5yZWFUUDd0Q0w3OEdkdHo2dWxwczJ3S21oTHI0N0t5?=
+ =?utf-8?B?WUFkVnNpOFRrU095cWk3WFlWMEpLb0gxb2xBTnpVSDFkVEFZM2E2Q2N4YTdV?=
+ =?utf-8?B?TkZ1OXdYQks3Z3dBTFhYWmZ0OFhaZjFVWWFqNjRIL01yZ2h6WkttRWVyb25E?=
+ =?utf-8?B?dzhHcjllWEtuSk5SYWViajhFNTJ6UlA1UnhEckIzb25IYUEweWVUUmhIaDhH?=
+ =?utf-8?B?MzRKSkV3R28yWDlDR25CRzZhaDkvM21DRHBJU0ptTVl3TkNWYVlYdTFQanpJ?=
+ =?utf-8?B?U0VFaEh0SDU3L0JqRTNLWGdhL0NYQmFvWkVBQnArUGxYZnhxclI5WVE2cU0x?=
+ =?utf-8?B?ZWsrQVZleExjVU9XZ2YycTBuNTRuMHZxNjhKRGpoRXg2cW1vZXB0b0NRTXpo?=
+ =?utf-8?B?MXNnVWhuR3pDNFpVbXA1OFhydHFBVEwyWWw1dnlJaEtQZzE5RzF1TERPb3NS?=
+ =?utf-8?B?cnlNck8yZFU4SUhvdU8yODdDdWExQjJoYldnZFJadEJvTldJajEvQnozOCtv?=
+ =?utf-8?B?Y0ZQU1VqMkhIYmg3K211ejFVYW1TdjdXM21tUHhJdk9FZjduMkIrV2JCSHhh?=
+ =?utf-8?B?ZWNxemZGejhYOWFnNURBck9OYWZoVDJMNGw0c0JzQTJYR3NReUZLV2tsOXV4?=
+ =?utf-8?B?R0x6TG9aMm8rSEh4dE9kMjlLU0FqYTQvMHQvTmZTS0M2bU1vMTJWTHJ0SGV6?=
+ =?utf-8?B?a2lCQ2hWT1I4Rzdnb1dySzJ1cTZGTWM0UHU5eUQ0S0IyV24yYXpWWHRVRFdZ?=
+ =?utf-8?B?UVQ5ZTlJSkZ0eGNrWGZOcUdIMlIwT0pjNCtXUGt5ckp2RjF5ckk2QTYva01J?=
+ =?utf-8?B?UWZGcDFiRXMzT2l3L0VGOU5IeG5RSW5xa2xoY1FyT3BVWFFsOTcyTnJuL0I0?=
+ =?utf-8?B?R1BJdzYraHNtTk01SUhWMlVFcXBoRXE2T2dTZEJKdjg5dWZ3OVJTdGNGVFhR?=
+ =?utf-8?B?SmhzS2ZjanhLUDNYTDY3YnFySnRlSjFMaEQ2OStJUGVEQlA4L09ycHQrYStF?=
+ =?utf-8?B?clFTSUw5a0VZaXFoazB5NzF2a3ovOGxMWTg1Ry9ZMFJiN3FUMzBMbWhIS2xH?=
+ =?utf-8?B?Z3ZhejFQOUhxYm1odUtJWmlFMVI4SUZ2NDNDV0JFNnRpcXdBaTZiTlJIR0gr?=
+ =?utf-8?B?bDBWNWhFbW50ZXhpTHBoUTJsMGc4NFZtS0crTmJTNldKbkFYZE1pMVVHaHp3?=
+ =?utf-8?B?dTUxRzZpaWprdjJGOFpnUUhFN0Y0dXY4VTkwa3M5dksrTDk0RVJJenVOVTgz?=
+ =?utf-8?B?NFRvbDZ4cWpJUEU4ODlLaW1TZ2JSSVJBcC81M3FGYVVKMkxOUjBCQllVUE9v?=
+ =?utf-8?B?M0UvY2o4U3FHQzRjY2E0N0UwTTdscnhtY2NnTFA0TEZYWHRkS2Q2UkZLVkVS?=
+ =?utf-8?B?ODcvK1VNYVMyNmZRalhWNGxrQjNMbi9yOC9BVTFmOFdsMGtPaXNadGVSa1d2?=
+ =?utf-8?B?eVhsVkFheW9SaGFqM0R6Ty92SWhTSTNNUFlVUDNGUXoyV1ZkMmxaY2QvZE1S?=
+ =?utf-8?B?TEs5dFhSRHBZd3ZWcUpkVndYNWdBdmxBbDVKUlY1cGw4cy9NaHQyZ25oc1pR?=
+ =?utf-8?B?VmROaFZNczgwMDRTM0o1NVNidmpLTHFvcjYzTFI4S0k2VmpCZHV5YkZwcmk3?=
+ =?utf-8?B?dmJWWXY4bWRxUldoT1BuTDZ2eE5qTXhkdDFzNUMxUWgwV09QV3AxNW9mM0lB?=
+ =?utf-8?B?RHBGNzBib2dvV3FlN2NuSXFVbTlFbkZSZzQrNThUSEVnd2puUGQ4UjdVMzJl?=
+ =?utf-8?B?SUY3dW5RWUdZTzFDdG1qNnI0eGN6L0g1dnQwSEhsc05kV1A4RlF6eVNnRUxR?=
+ =?utf-8?B?NU51QVBqQ2h0WTJsRFBkTGhBaFpZNit0c242TkZpQnV5VGlIZU0yRG5tK2J0?=
+ =?utf-8?B?QUlUZTIwbk16QUlXZXM0ZEdSZEJ2aTR5dGl2YW9IMldTaHJzTmxwdWJXSTZ5?=
+ =?utf-8?B?SEcxRWtYMy8zRlc4YWQvZEV6TUk3aUlQQlhjeFdUQkZ0bXZBMzhLWWI0UlNK?=
+ =?utf-8?B?TzBlSmxKZUxoYndRVU5xd3grd0tHZFFFb1FnRnJZL0NJMFlzelBEc0Z5bTMy?=
+ =?utf-8?B?Z0IreFJwNjFDc3RlM0R1aTJ6VHNaUXBtV2FKeTdqVmZ6YlMxVmd1N3BxeUdp?=
+ =?utf-8?B?bm5BcnhHRlp3NjAzZ3RmcU5TQ0E5ZEdLS0U1dHZEVWNUUEYvVk50UT09?=
 X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bb20b6b2-68f3-4996-de15-08da19842b3a
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5ddcfaad-85cc-4e09-9db1-08da1986b44b
 X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2022 17:21:07.9095
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2022 17:39:16.8606
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: IF/OXoQ4Gv9ciQI0H1NcCyqOcy4a7iXPjVy9eyYQL0fsGz9z96Tu7XATaduoUnnWQglOD1HgU77O/oBrPlOUvQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB5192
+X-MS-Exchange-CrossTenant-UserPrincipalName: EmLtM7XuFN5/0iQi/NZBpNNhboiBx2/H4DKvgBl+/tbH+bBHP8v9h+9gZqGFqAC4i7XBVAWBUCGSVSzp0RCEGA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB5864
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/7/22 17:13, Mike Christie wrote:
-> When userspace restarts during boot or upgrades it won't know about the
-> offload driver's endpoint and connection mappings. iscsid will start by
-> cleaning up the old session by doing a stop_conn call. Later if we are
-> able to create a new connection, we cleanup the old endpoint during the
-> binding stage. The problem is that if we do stop_conn before doing the
-> ep_disconnect call offload drivers can still be executing IO. We then
-> might free tasks from the under the card/driver.
-> 
-> This moves the ep_disconnect call to before we do the stop_conn call for
-> this case. It will then work and look like a normal recovery/cleanup
-> procedure from the driver's point of view.
+> We can't release the endpoint ID until all references to the endpoint have
+> been dropped or it could be allocated while in use. This has us use an idr
+> instead of looping over all conns to find a free ID and then free the ID
+> when all references have been dropped instead of when the device is only
+> deleted.
 > 
 > Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > ---
->   drivers/scsi/scsi_transport_iscsi.c | 48 +++++++++++++++++------------
->   1 file changed, 28 insertions(+), 20 deletions(-)
+>   drivers/scsi/scsi_transport_iscsi.c | 71 ++++++++++++++---------------
+>   include/scsi/scsi_transport_iscsi.h |  2 +-
+>   2 files changed, 36 insertions(+), 37 deletions(-)
 > 
 > diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 4e10457e3ab9..bf39fb5569b6 100644
+> index bf39fb5569b6..1fc7c6bfbd67 100644
 > --- a/drivers/scsi/scsi_transport_iscsi.c
 > +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -2236,6 +2236,23 @@ static void iscsi_ep_disconnect(struct iscsi_cls_conn *conn, bool is_active)
->   	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep done.\n");
+> @@ -86,6 +86,9 @@ struct iscsi_internal {
+>   	struct transport_container session_cont;
+>   };
+>   
+> +static DEFINE_IDR(iscsi_ep_idr);
+> +static DEFINE_MUTEX(iscsi_ep_idr_mutex);
+> +
+>   static atomic_t iscsi_session_nr; /* sysfs session id for next new session */
+>   
+>   static struct workqueue_struct *iscsi_conn_cleanup_workq;
+> @@ -168,6 +171,11 @@ struct device_attribute dev_attr_##_prefix##_##_name =	\
+>   static void iscsi_endpoint_release(struct device *dev)
+>   {
+>   	struct iscsi_endpoint *ep = iscsi_dev_to_endpoint(dev);
+> +
+> +	mutex_lock(&iscsi_ep_idr_mutex);
+> +	idr_remove(&iscsi_ep_idr, ep->id);
+> +	mutex_unlock(&iscsi_ep_idr_mutex);
+> +
+>   	kfree(ep);
 >   }
 >   
-> +static void iscsi_if_disconnect_bound_ep(struct iscsi_cls_conn *conn,
-> +					 struct iscsi_endpoint *ep,
-> +					 bool is_active)
-> +{
-> +	/* Check if this was a conn error and the kernel took ownership */
-> +	if (!test_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags)) {
-> +		iscsi_ep_disconnect(conn, is_active);
-> +	} else {
-> +		ISCSI_DBG_TRANS_CONN(conn, "flush kernel conn cleanup.\n");
-> +		mutex_unlock(&conn->ep_mutex);
-> +
-> +		flush_work(&conn->cleanup_work);
-> +
-> +		mutex_lock(&conn->ep_mutex);
-> +	}
-> +}
-> +
->   static int iscsi_if_stop_conn(struct iscsi_transport *transport,
->   			      struct iscsi_uevent *ev)
+> @@ -180,7 +188,7 @@ static ssize_t
+>   show_ep_handle(struct device *dev, struct device_attribute *attr, char *buf)
 >   {
-> @@ -2256,6 +2273,16 @@ static int iscsi_if_stop_conn(struct iscsi_transport *transport,
->   		cancel_work_sync(&conn->cleanup_work);
->   		iscsi_stop_conn(conn, flag);
->   	} else {
-> +		/*
-> +		 * For offload, when iscsid is restarted it won't know about
-> +		 * existing endpoints so it can't do a ep_disconnect. We clean
-> +		 * it up here for userspace.
-> +		 */
-> +		mutex_lock(&conn->ep_mutex);
-> +		if (conn->ep)
-> +			iscsi_if_disconnect_bound_ep(conn, conn->ep, true);
-> +		mutex_unlock(&conn->ep_mutex);
-> +
->   		/*
->   		 * Figure out if it was the kernel or userspace initiating this.
->   		 */
-> @@ -2984,16 +3011,7 @@ static int iscsi_if_ep_disconnect(struct iscsi_transport *transport,
->   	}
+>   	struct iscsi_endpoint *ep = iscsi_dev_to_endpoint(dev);
+> -	return sysfs_emit(buf, "%llu\n", (unsigned long long) ep->id);
+> +	return sysfs_emit(buf, "%d\n", ep->id);
+>   }
+>   static ISCSI_ATTR(ep, handle, S_IRUGO, show_ep_handle, NULL);
 >   
->   	mutex_lock(&conn->ep_mutex);
-> -	/* Check if this was a conn error and the kernel took ownership */
-> -	if (test_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags)) {
-> -		ISCSI_DBG_TRANS_CONN(conn, "flush kernel conn cleanup.\n");
-> -		mutex_unlock(&conn->ep_mutex);
+> @@ -193,48 +201,32 @@ static struct attribute_group iscsi_endpoint_group = {
+>   	.attrs = iscsi_endpoint_attrs,
+>   };
+>   
+> -#define ISCSI_MAX_EPID -1
 > -
-> -		flush_work(&conn->cleanup_work);
-> -		goto put_ep;
+> -static int iscsi_match_epid(struct device *dev, const void *data)
+> -{
+> -	struct iscsi_endpoint *ep = iscsi_dev_to_endpoint(dev);
+> -	const uint64_t *epid = data;
+> -
+> -	return *epid == ep->id;
+> -}
+> -
+>   struct iscsi_endpoint *
+>   iscsi_create_endpoint(int dd_size)
+>   {
+> -	struct device *dev;
+>   	struct iscsi_endpoint *ep;
+> -	uint64_t id;
+> -	int err;
+> -
+> -	for (id = 1; id < ISCSI_MAX_EPID; id++) {
+> -		dev = class_find_device(&iscsi_endpoint_class, NULL, &id,
+> -					iscsi_match_epid);
+> -		if (!dev)
+> -			break;
+> -		else
+> -			put_device(dev);
 > -	}
-> -
-> -	iscsi_ep_disconnect(conn, false);
-> +	iscsi_if_disconnect_bound_ep(conn, ep, false);
->   	mutex_unlock(&conn->ep_mutex);
->   put_ep:
->   	iscsi_put_endpoint(ep);
-> @@ -3704,16 +3722,6 @@ static int iscsi_if_transport_conn(struct iscsi_transport *transport,
+> -	if (id == ISCSI_MAX_EPID) {
+> -		printk(KERN_ERR "Too many connections. Max supported %u\n",
+> -		       ISCSI_MAX_EPID - 1);
+> -		return NULL;
+> -	}
+> +	int err, id;
 >   
->   	switch (nlh->nlmsg_type) {
->   	case ISCSI_UEVENT_BIND_CONN:
-> -		if (conn->ep) {
-> -			/*
-> -			 * For offload boot support where iscsid is restarted
-> -			 * during the pivot root stage, the ep will be intact
-> -			 * here when the new iscsid instance starts up and
-> -			 * reconnects.
-> -			 */
-> -			iscsi_ep_disconnect(conn, true);
-> -		}
-> -
->   		session = iscsi_session_lookup(ev->u.b_conn.sid);
->   		if (!session) {
->   			err = -EINVAL;
+>   	ep = kzalloc(sizeof(*ep) + dd_size, GFP_KERNEL);
+>   	if (!ep)
+>   		return NULL;
+>   
+> +	mutex_lock(&iscsi_ep_idr_mutex);
+> +	id = idr_alloc(&iscsi_ep_idr, ep, 0, -1, GFP_NOIO);
+> +	if (id < 0) {
+> +		mutex_unlock(&iscsi_ep_idr_mutex);
+> +		printk(KERN_ERR "Could not allocate endpoint ID. Error %d.\n",
+> +		       id);
+> +		goto free_ep;
+> +	}
+> +	mutex_unlock(&iscsi_ep_idr_mutex);
+> +
+>   	ep->id = id;
+>   	ep->dev.class = &iscsi_endpoint_class;
+> -	dev_set_name(&ep->dev, "ep-%llu", (unsigned long long) id);
+> +	dev_set_name(&ep->dev, "ep-%d", id);
+>   	err = device_register(&ep->dev);
+>           if (err)
+> -                goto free_ep;
+> +		goto free_id;
+>   
+>   	err = sysfs_create_group(&ep->dev.kobj, &iscsi_endpoint_group);
+>   	if (err)
+> @@ -248,6 +240,10 @@ iscsi_create_endpoint(int dd_size)
+>   	device_unregister(&ep->dev);
+>   	return NULL;
+>   
+> +free_id:
+> +	mutex_lock(&iscsi_ep_idr_mutex);
+> +	idr_remove(&iscsi_ep_idr, id);
+> +	mutex_unlock(&iscsi_ep_idr_mutex);
+>   free_ep:
+>   	kfree(ep);
+>   	return NULL;
+> @@ -275,14 +271,17 @@ EXPORT_SYMBOL_GPL(iscsi_put_endpoint);
+>    */
+>   struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle)
+>   {
+> -	struct device *dev;
+> +	struct iscsi_endpoint *ep;
+>   
+> -	dev = class_find_device(&iscsi_endpoint_class, NULL, &handle,
+> -				iscsi_match_epid);
+> -	if (!dev)
+> -		return NULL;
+> +	mutex_lock(&iscsi_ep_idr_mutex);
+> +	ep = idr_find(&iscsi_ep_idr, handle);
+> +	if (!ep)
+> +		goto unlock;
+>   
+> -	return iscsi_dev_to_endpoint(dev);
+> +	get_device(&ep->dev);
+> +unlock:
+> +	mutex_unlock(&iscsi_ep_idr_mutex);
+> +	return ep;
+>   }
+>   EXPORT_SYMBOL_GPL(iscsi_lookup_endpoint);
+>   
+> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+> index 38e4a67f5922..fdd486047404 100644
+> --- a/include/scsi/scsi_transport_iscsi.h
+> +++ b/include/scsi/scsi_transport_iscsi.h
+> @@ -295,7 +295,7 @@ extern void iscsi_host_for_each_session(struct Scsi_Host *shost,
+>   struct iscsi_endpoint {
+>   	void *dd_data;			/* LLD private data */
+>   	struct device dev;
+> -	uint64_t id;
+> +	int id;
+>   	struct iscsi_cls_conn *conn;
+>   };
+>   
+
+Good idea. :)
 
 Reviewed-by: Lee Duncan <lduncan@suse.com>
 
