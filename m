@@ -2,102 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52FE7C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 14:55:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 516BCC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 16:47:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237210AbiDHO5q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 10:57:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58158 "EHLO
+        id S233889AbiDHQtq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 12:49:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234894AbiDHO5o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 10:57:44 -0400
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5CA6640D
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 07:55:39 -0700 (PDT)
-Received: by mail-pg1-f181.google.com with SMTP id r66so7999101pgr.3
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Apr 2022 07:55:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=NH509X6GhcPmX4Tr55p31LAnmUFJMEZCzUH+OxEQKyI=;
-        b=Yx5ra25UeuRNDKLpDZ6n39YR1+pa026bucq4MrEVy/2ndRV8PBRft8mmZUOyX4whha
-         FIGQQQykS/aXTSprs8goiNbNdrimA8SnflZ0bs2dAqk2k51wK+Z5FIUAozYHVJLI2+UF
-         WyG2TDZ+5Wshr2ienxIbyLYc2XgChuOiREuev5Hgs6apT9RhjbB3TPPzLoe9maUx6m8Q
-         X46O0DgDpCPPHWXsMFXktsY8Ae/TkoHQvaUaEpIVTaUv95kh9SQ3URw31rX6O4U4W9qd
-         vWyQC665c3iDow2tNWpMIybPHD2UtapaizamOV/JJOB4Y3UzkfkWS5RBY5/7O9bGiG2P
-         Lirw==
-X-Gm-Message-State: AOAM530PGbo/S0VAnMdGOFL8zm8kPMfd1uDpp3eLxcXwETswDxg2cS43
-        WTMbBMtUjXSqgK94GKMGk5s=
-X-Google-Smtp-Source: ABdhPJyiZD5lUofOTyY08Ez0yuXZ/Ulh7HlHYtRZQfBduyZLYNwVJnbno4qxGwGlqYOhpILQMDZbEg==
-X-Received: by 2002:a63:6c8a:0:b0:398:5208:220a with SMTP id h132-20020a636c8a000000b003985208220amr15907136pgc.176.1649429739185;
-        Fri, 08 Apr 2022 07:55:39 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id s16-20020a056a001c5000b00505688553e1sm5800482pfw.57.2022.04.08.07.55.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 08 Apr 2022 07:55:38 -0700 (PDT)
-Message-ID: <78f9dc98-cca8-6ba2-9146-082f95c8d5ab@acm.org>
-Date:   Fri, 8 Apr 2022 07:55:37 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH 1/6] scsi_cmnd: reinstate support for cmd_len > 32
+        with ESMTP id S233816AbiDHQtn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 12:49:43 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AF2E1265B9
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 09:47:39 -0700 (PDT)
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 238GiqkV024771;
+        Fri, 8 Apr 2022 09:47:32 -0700
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3f9r5whb8p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 08 Apr 2022 09:47:31 -0700
+Received: from m0045849.ppops.net (m0045849.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 238GgW31032564;
+        Fri, 8 Apr 2022 09:47:31 -0700
+Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1anam02lp2049.outbound.protection.outlook.com [104.47.57.49])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3f9r5whb8m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 08 Apr 2022 09:47:31 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=NTlcku2h73JHwIRHEySoFb7/vwLr4TUJ7/PufhgZsYCkfwLwaBajzOblyK4QqaweykEfhc4oaHrKfJKeCSwv9ONGUGtpqYEeAHTJ1kbKnWR9WfEMTtQSWSZ4F77OZXs7CPjj+mKy8QCu4Jy5KZB4u+FKmmO31HwdSfoZLaeM8P+j4y8BalFHXecJK/wXnmvTyMWbc65UWSL9KMGjslo3eBQ4IpWdGMk6rjnu+zZ/YNSQYb19KpJiAklAcDCtha2ZqoMVArbTBj2X9i53zT83Xtf7LUtTWMIKQKpgsbgVOsnfIB3ixFlYhoi8l4qleThzBAfHYtHNMHMpSl+0/Eu3JQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=HPwuReA6YtIJ+NwaUBCf7dyo0ThgBaOKyQNdG4y83Hs=;
+ b=IHwPiRBaNFM0yIS9C87LhDx4Q2fx5rFCdi2tGqH5RQFiLfaWcVrSgjg+VpDIp3lzDeO9WBf9i23oNHfy6I+AUC1qVqPpFpMUcdwVKw6x7P0rgduZvLIOx0pYuvQ1g5QuaO/+vPFk3PrMWkcfvdp2sQUXv7UBAFEjL19uGwzKYvB3tZ6sVF7wZhka2FmkjoQb8S2VfweeGYtvDBW9Quyia+6WS2qzdc2i6KNQ6xHchqKIhI54psNb3aiOVo0+RkkYo/ffheca0ren7tB6NaK2w3kVZ1yCWjqPFPGhGYB6fhc5Daf5IqiQ2E+24YgE9/u7D8MTFdmDLKHnP9dB0vGclQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HPwuReA6YtIJ+NwaUBCf7dyo0ThgBaOKyQNdG4y83Hs=;
+ b=LuZEgxbUh8m7FoIRtTXsV03UrHgDygdfD9IvXhto53ngBz4FFPMD3kGXaER9ERTXPNIMyevSCXGcuoAgDtlY/9P2cgAbt/BEcBo4rcIjXQFRoIXR9erIK5T6OaRgxkNuq32GZ1CO5zknS1TTxvghy0UGR3Js6aXdVzJNCrn1KZg=
+Received: from CO6PR18MB4419.namprd18.prod.outlook.com (2603:10b6:5:35a::11)
+ by DM5PR18MB1548.namprd18.prod.outlook.com (2603:10b6:3:14f::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5144.25; Fri, 8 Apr
+ 2022 16:47:29 +0000
+Received: from CO6PR18MB4419.namprd18.prod.outlook.com
+ ([fe80::3412:b64e:80b5:94cf]) by CO6PR18MB4419.namprd18.prod.outlook.com
+ ([fe80::3412:b64e:80b5:94cf%5]) with mapi id 15.20.5144.026; Fri, 8 Apr 2022
+ 16:47:29 +0000
+From:   Manish Rangankar <mrangankar@marvell.com>
+To:     Mike Christie <michael.christie@oracle.com>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        "lduncan@suse.com" <lduncan@suse.com>,
+        "cleech@redhat.com" <cleech@redhat.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
+Subject: RE: [EXT] [PATCH 00/10] iscsi fixes
+Thread-Topic: [EXT] [PATCH 00/10] iscsi fixes
+Thread-Index: AQHYSt16nLNMDxL98U+F5ID9Ab/6fazmOZow
+Date:   Fri, 8 Apr 2022 16:47:28 +0000
+Message-ID: <CO6PR18MB4419CFB012FD95595DA8FD3AD8E99@CO6PR18MB4419.namprd18.prod.outlook.com>
+References: <20220408001314.5014-1-michael.christie@oracle.com>
+In-Reply-To: <20220408001314.5014-1-michael.christie@oracle.com>
+Accept-Language: en-US
 Content-Language: en-US
-To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        hch@lst.de
-References: <20220408035651.6472-1-dgilbert@interlog.com>
- <20220408035651.6472-2-dgilbert@interlog.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220408035651.6472-2-dgilbert@interlog.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 1c6ee942-d1c2-4e57-ffc6-08da197f77ff
+x-ms-traffictypediagnostic: DM5PR18MB1548:EE_
+x-microsoft-antispam-prvs: <DM5PR18MB15480F0669BE0D470ED9AD7CD8E99@DM5PR18MB1548.namprd18.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: OdesOBc6qLlw0SK49ZnKfE/PqE0JiVcInfJz/EIjQrOXzVTW0MGYjb+e51K6saVdtDyUHw2KT5MetOW4DbeJW8RGdyq3JLVIPe2qB2pUo+gFqJO3HcI/3mlF899cLfWwnmQplr1JKRNSG78esPCCv0bTg/M3FqDHeJEr3WWB+2UEjCj5jiU6BT8K24oEcbnXefbaLpfNXi49Lb+eluEjk7lOB1U6atCPA+n7lRCcnDB5CA70HrzH9B/D4q+cErAbNO/Q61Dsz62aUgOKOeat/7JTBjiFk3TezFFhpr5z/KS2dRV902wr9dtlnXSY+t/fTGvpipWbdTSB6gJtjFReyZ7Ebx69sYuH38GdE0AX1G8Kbb1B2GxS/SlAWE6MesMH3WsB9gNNE4ezxT81bNSnGx1aUxz5oZV4rOpUX8jiPuuKi1JKYrd0gZO2dwmSBvIXc/mpkiI6XMWJGV3yshXdmkV9kwa4MeugYng5Z7n1My19vl1aRYnZzbQukf0aExIj2POHZb4YEw7XPhd4Gni7m76AgIJoNfDEeN2pn5WtfqNPCG3cEawUAh1bFPBGQgf0iTVe4p+X5miTrEUIxyfpIPV4rnTquiZe31eDdjI5CND31PzfSMOIpK87RhWdbPkiYP27/5nCvyjcQcOTphqJ4pakhbgk7ENShKpd6A++/6Ie5H0682QJB4iT6zlLuU+IemFjPUzmBiO7e2/mNyTb6g==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO6PR18MB4419.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(55016003)(66946007)(66446008)(76116006)(66476007)(66556008)(4744005)(64756008)(33656002)(83380400001)(8676002)(86362001)(8936002)(52536014)(122000001)(38100700002)(316002)(5660300002)(2906002)(26005)(7696005)(186003)(6506007)(508600001)(71200400001)(110136005)(38070700005)(9686003)(53546011);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?9vNg6+KrdUimBafpaQPieQvogcllUxxS1nOQCe1Hk8yKqRgum06uGad7X8+z?=
+ =?us-ascii?Q?RqGwq8QRSI9Tg5JZH+yua40M1ZURsu1bsiqALGK4iAtwaQiP2QcXj2dWgAcu?=
+ =?us-ascii?Q?vv7h4sjrql30ybgwgMMUmrNZO19UpVJwoeDymY02DL74sEFyxIXTUY4nQfCh?=
+ =?us-ascii?Q?N8W9Stz8EDrsnAIuo+G/1nQ2vSlP725w4LtQTvUHqfTH+Zi4kkNDFYKtM2+U?=
+ =?us-ascii?Q?qliQM8BszOpyBu1L6uvLW2PwTgPjfyG2lVs1TQfdbNWEMW7ElUrSOvFSZVKQ?=
+ =?us-ascii?Q?ivKLqtjVBtgjYE2H1ytgFx+026jAJ7vpRkxyW9uNxVxx2sp+eVZ+CAb4102o?=
+ =?us-ascii?Q?uU1hN4YJilaPvWCQ28sdkG//2HNhLrqEVhCvb9+t4zR4+TZRKY+vL/FqXQXI?=
+ =?us-ascii?Q?dDVUF/UJKQukrD7jwFPK4ZxTL3/YmcTkys8bl/PtdzY5vnMkC+gU0BtYv9V0?=
+ =?us-ascii?Q?D6JGMusuEotIUULG5mShhdt9gS9sQ4qGmK5NzQEJ4fyxoN0qJ8MKXWvrbYoQ?=
+ =?us-ascii?Q?MVIJL3w6y3oRdzc0TsXIkZjl8ivZ5IYk8Ofzt98bJ/q7MpMWgKzR9F5Imy50?=
+ =?us-ascii?Q?2nv1oD0zjFU0K+kFSiOmHPR5dhsUA1/v6ct5onaUYtHsxnVlVYdiuPyDDg4o?=
+ =?us-ascii?Q?TD+gPVV5TATYL9qGhtcm9o7HR0p5Ny7ESDTmg9NNRWZsrZ6hGDCewSiMogg2?=
+ =?us-ascii?Q?NMlyudCNrqKrYeYJcXr/QicgVTstdgYKoAqk1JoCRX6qU0rMQZzIvzhFJmP4?=
+ =?us-ascii?Q?jnbJxmMzN6f8CsZIQg5SYJszEqLzqhuBxr/2Pr96lw+BCzSxQ5ycmx6Pt3w4?=
+ =?us-ascii?Q?wILvWQit7LcWNxM0/zKZf7osiPBKPVT/K10W4VdQ0ELU9E9OJnwEwao++IFj?=
+ =?us-ascii?Q?9+kvd8eNR1fe34/jTq169y2CclcdbQ25qXjWTVxEjVDm40emytN+QKhR5+0D?=
+ =?us-ascii?Q?w0vGrWOdvWbzMTQ2vK/8fiuxZV86Hcx6KA0wYyUOvKm5ARJqa8xhRdQWU6iT?=
+ =?us-ascii?Q?V8tvt/5SPqyJbdyTlCsaSjVnsgK2YdRaPTyAfiWr86DNuSgiIDoz/IRjqRlc?=
+ =?us-ascii?Q?J11Ar2Mmumh8PzmPgiH4sDnasAkgO/Z9JmnQOIBXUXdAWxsXMdjSMMG4NrSU?=
+ =?us-ascii?Q?4rQflMZGkmEwcl0bkNAqV62Bstf+YpfGlOwLe0WD+ruFHcTYgxtNtDnhH/dN?=
+ =?us-ascii?Q?nNd8HKo/TR6rubsW1GCl0N7hsQDAlgRN/LGDXrY8pGzh9sUpViwtqGsqxuCW?=
+ =?us-ascii?Q?O+ID6CvnHg1dtDdGMgZl6ZHanyWdsVd0Nk4z0bjeoG4gVKb6wSK1Ja2IahOw?=
+ =?us-ascii?Q?WdNdvusFoCuIjkAKDtglbCh81aiC7eaJdXxVGZLCyEf/+AolnN2/eR9EnRYo?=
+ =?us-ascii?Q?2uFGv8xKTDR8tsLhzkmmHOafdTNxt97T7hHd4QfBYmSKiX5q6jeTw/sllk8p?=
+ =?us-ascii?Q?6RYIxJ8gTG1ySKqNaOq47kBU07hsEEP7sBMrsDWaL+nVu0Pt4SlEQtE+07cR?=
+ =?us-ascii?Q?Ovj0885j8HpQysUm5hat54ul97TIrP76NxOPf1QUshG5iXCg3wEDHwpUihUN?=
+ =?us-ascii?Q?wiWkguMFcPW6H0i386Hr0OSu27A12R/1O+jkyzCK3Ky6L9QDApQGTPYPIIh9?=
+ =?us-ascii?Q?3gyCA2dNd1JDYnaS9ZDa0CvgT31pjLZM7gISAIykdTqzZRYZq+pOCG2OKSvF?=
+ =?us-ascii?Q?iwap4zDMoAWE4UoDb1Nxg7JEFxGSAPQUd0XDFdpGx+mu5btKLEFSqq+o4Npj?=
+ =?us-ascii?Q?qBBm3Ktv/w=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: marvell.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CO6PR18MB4419.namprd18.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1c6ee942-d1c2-4e57-ffc6-08da197f77ff
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Apr 2022 16:47:28.9903
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: /GEDKYOwT41OkdJS6skO2rQ3Ej67qDrZfmy2WYEzu/qQgb4NK0VADHYculz//FBd2My8ummCes6IX9xywtSxNg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR18MB1548
+X-Proofpoint-GUID: U8w7yIt7ZVLYI62MBbc5s-lITdDUSttL
+X-Proofpoint-ORIG-GUID: jy4s8pi1xzMnmE0vO3340WClUtQTmm5Q
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.425,FMLib:17.11.64.514
+ definitions=2022-04-08_05,2022-04-08_01,2022-02-23_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/7/22 20:56, Douglas Gilbert wrote:
->   static int scsi_eh_tur(struct scsi_cmnd *scmd)
->   {
-> -	static unsigned char tur_command[6] = {TEST_UNIT_READY, 0, 0, 0, 0, 0};
-> +	static const u8 tur_command[6] = {TEST_UNIT_READY, 0, 0, 0, 0, 0};
->   	int retry_cnt = 1;
->   	enum scsi_disposition rtn;
->   
->   retry_tur:
-> -	rtn = scsi_send_eh_cmnd(scmd, tur_command, 6,
-> -				scmd->device->eh_timeout, 0);
-> +	rtn = scsi_send_eh_cmnd(scmd, (u8 *)tur_command, 6, scmd->device->eh_timeout, 0);
 
-Does the cast in the above function call cast away constness? There must 
-be a better solution than casting away constness.
-
-> -bool scsi_cmd_allowed(unsigned char *cmd, fmode_t mode)
-> +bool scsi_cmd_allowed(/* const */ unsigned char *cmd, fmode_t mode)
->   {
-
-Why has 'const' been commented out?
-
-> @@ -1460,6 +1462,7 @@ static void scsi_complete(struct request *rq)
->   static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->   {
->   	struct Scsi_Host *host = cmd->device->host;
-> +	u8 *cdb = (u8 *)scsi_cmnd_get_cdb(cmd);
->   	int rtn = 0;
-
-Casting away constness is ugly. Consider providing two versions of 
-scsi_cmnd_get_cdb(): one version that accepts a const pointer and 
-returns a const pointer and another version that accepts a non-const 
-pointer and returns a non-const pointer. Maybe _Generic() or 
-__same_type() can be used to combine both versions into a single macro?
-
-> +/* This value is used to size a C array, see below if cdb length > 32 */
-> +#define SCSI_MAX_COMPILE_TIME_CDB_LEN 32
-
-Since CDBs longer than 16 bytes are rare, how about using 16 as the 
-maximum compile-time CDB size?
+> -----Original Message-----
+> From: Mike Christie <michael.christie@oracle.com>
+> Sent: Friday, April 8, 2022 5:43 AM
+> To: Saurav Kashyap <skashyap@marvell.com>; lduncan@suse.com;
+> cleech@redhat.com; Nilesh Javali <njavali@marvell.com>; Manish Rangankar
+> <mrangankar@marvell.com>; GR-QLogic-Storage-Upstream <GR-QLogic-
+> Storage-Upstream@marvell.com>; martin.petersen@oracle.com; linux-
+> scsi@vger.kernel.org; jejb@linux.ibm.com
+> Subject: [EXT] [PATCH 00/10] iscsi fixes
+>=20
+> External Email
+>=20
+> ----------------------------------------------------------------------
+> The following patchset was made over Linus's tree and contains fixes for
+> boot/iscsid restart, more fixes for the in-kernel recovery patch, a data
+> corruption regression and fix for qedi connection error handling.
+>=20
+>=20
+Validated with SW iSCSI and offload iSCSI (bnx2i and qedi) and both the reg=
+ressions are seen fixed.
 
 Thanks,
+Tested-by: Manish Rangankar <mrangankar@marvell.com>
+Tested-by: Nilesh Javali <njavali@marvell.com>
 
-Bart.
