@@ -2,87 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E090C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 04:10:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0672C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 05:13:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231213AbiDHEMT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 00:12:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49088 "EHLO
+        id S234644AbiDHFP7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 01:15:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230075AbiDHEMP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 00:12:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 755BD1EA5EA;
-        Thu,  7 Apr 2022 21:10:13 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 072E561E2B;
-        Fri,  8 Apr 2022 04:10:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4E0B2C385A9;
-        Fri,  8 Apr 2022 04:10:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649391012;
-        bh=vRmX5iSvgC8E4LHT51fSLE+1+UM0pMS536EIpWDch8s=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=LzTr1ddgzCvs0RDqYZbtX3XDQWtdRkqPjFTen7+kuPcnfoOnFZCMjJEFkMva41kGI
-         yxYvoGr6zTFlvw2Ise3EYtMG31lZRhjY20886YksHYV+EsrmLhGiU9Wv8KUHKKUJ1a
-         TNErkqv5n7fnBU9YREWk5DmUHcI4bCFEpGpuionOIA2Y9Fq0N6grNqUBP+8TbPHYAT
-         AKyMuN563NlV73f5/NHjiQj6LlpmQ8jVZTzjv67SvMRJdIUKgxKu8cvxw+Uphd0Sgj
-         WHJQnV/yaf8jCivoVN5Ary4MOYSiyCxd8gfFOzuLVRo2yf+JD7DcqtKTPcDqfFIx5g
-         +tQNZ7WBRStBg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 2AE0DE8DD18;
-        Fri,  8 Apr 2022 04:10:12 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+        with ESMTP id S229744AbiDHFP5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 01:15:57 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8371D2EB461
+        for <linux-scsi@vger.kernel.org>; Thu,  7 Apr 2022 22:13:55 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 1458C68AFE; Fri,  8 Apr 2022 07:13:52 +0200 (CEST)
+Date:   Fri, 8 Apr 2022 07:13:51 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Sumit Saxena <sumit.saxena@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        bvanassche@acm.org, hch@lst.de, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, chandrakanth.patil@broadcom.com,
+        sreekanth.reddy@broadcom.com, prayas.patel@broadcom.com
+Subject: Re: [PATCH v3 3/8] mpi3mr: move MPI headers to uapi/scsi/mpi3mr
+Message-ID: <20220408051351.GA31826@lst.de>
+References: <20220407192913.345411-1-sumit.saxena@broadcom.com> <20220407192913.345411-4-sumit.saxena@broadcom.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH 0/2] storvsc, netvsc: Improve logging
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <164939101217.29309.15271831971294215849.git-patchwork-notify@kernel.org>
-Date:   Fri, 08 Apr 2022 04:10:12 +0000
-References: <20220407044034.379971-1-parri.andrea@gmail.com>
-In-Reply-To: <20220407044034.379971-1-parri.andrea@gmail.com>
-To:     Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, mikelley@microsoft.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
-        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220407192913.345411-4-sumit.saxena@broadcom.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello:
+On Thu, Apr 07, 2022 at 03:29:08PM -0400, Sumit Saxena wrote:
+> MPI headers are used by user space applications so
+> it makes sense to move them to uapi/scsi/mpi3mr.
 
-This series was applied to netdev/net-next.git (master)
-by Jakub Kicinski <kuba@kernel.org>:
-
-On Thu,  7 Apr 2022 06:40:32 +0200 you wrote:
-> Two small (and independent) patches to augment and "standardize" the error
-> messages.
-> 
-> Thanks,
->   Andrea
-> 
-> Andrea Parri (Microsoft) (2):
->   scsi: storvsc: Print value of invalid ID in
->     storvsc_on_channel_callback()
->   hv_netvsc: Print value of invalid ID in
->     netvsc_send_{completion,tx_complete}()
-> 
-> [...]
-
-Here is the summary with links:
-  - [1/2] scsi: storvsc: Print value of invalid ID in storvsc_on_channel_callback()
-    (no matching commit)
-  - [2/2] hv_netvsc: Print value of invalid ID in netvsc_send_{completion,tx_complete}()
-    https://git.kernel.org/netdev/net-next/c/26894cd97116
-
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+I think this is a horrible idea.  These headers are a huge and a bit of
+a mess, and no we need to provide uapi guarantees for them.
