@@ -2,212 +2,308 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A923EC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 10:17:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D5CC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 10:30:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234405AbiDHKTr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 06:19:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33882 "EHLO
+        id S231431AbiDHKct (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 06:32:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234311AbiDHKTp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 06:19:45 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBE8CC748F;
-        Fri,  8 Apr 2022 03:17:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649413058; x=1680949058;
-  h=from:to:cc:subject:in-reply-to:references:date:
-   message-id:mime-version;
-  bh=ZN2WT+aHWp12igTiJOcFcOuGrpSymXLSvwLhWlCo5CA=;
-  b=nCQW6y+0U1FyujEKxJLqRYg7Cpt10pqNOpzWDbY1SvMls0IhBHjWYLK+
-   3+UZjceY27qkk5X9wSQzC8uAbGBxLfrhWmGRZWNmPF7V5jremElRQSZYi
-   wplAnCKjer4o/6/N+FiwpdQh+5PIXtUmV+eU1XochQixbqfifhHcejU0T
-   fk4nogI/mATK0syYSP1raiIxdufxfdL3YBUnEyd7Irqn/gXUFQKxtSnLf
-   rW/CnzjBGHH4ziORtRwpxncuLqNRuC8IE6Xj6w0jj/0L3QQyiwhLS9Jrx
-   c52Mp8kN0lY4xV2VxEZTV4DiVvyIqah6qMWLCc/tAUt2XViKxt4qDx+If
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10310"; a="242155536"
-X-IronPort-AV: E=Sophos;i="5.90,244,1643702400"; 
-   d="scan'208";a="242155536"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Apr 2022 03:17:38 -0700
-X-IronPort-AV: E=Sophos;i="5.90,244,1643702400"; 
-   d="scan'208";a="571439569"
-Received: from dmunisam-mobl.ger.corp.intel.com (HELO localhost) ([10.249.141.69])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Apr 2022 03:17:31 -0700
-From:   Jani Nikula <jani.nikula@linux.intel.com>
-To:     cgel.zte@gmail.com, alexander.deucher@amd.com,
-        christian.koenig@amd.com, Xinhui.Pan@amd.com, airlied@linux.ie
-Cc:     daniel@ffwll.ch, joonas.lahtinen@linux.intel.com,
-        rodrigo.vivi@intel.com, tvrtko.ursulin@linux.intel.com,
-        lv.ruyi@zte.com.cn, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org, linux-rtc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Zeal Robot <zealci@zte.com.cn>
-Subject: Re: [PATCH] drivers: Fix spelling mistake "writting" -> "writing"
-In-Reply-To: <20220408095531.2495168-1-lv.ruyi@zte.com.cn>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-References: <20220408095531.2495168-1-lv.ruyi@zte.com.cn>
-Date:   Fri, 08 Apr 2022 13:17:27 +0300
-Message-ID: <87sfqnj2vc.fsf@intel.com>
+        with ESMTP id S234443AbiDHKcm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 06:32:42 -0400
+Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A358819A559
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 03:30:38 -0700 (PDT)
+Received: by mail-wr1-x430.google.com with SMTP id w21so12197328wra.2
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Apr 2022 03:30:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=goRlQM30zfyuhFWXpIh6wI0jTG2AzkOHo69J00w1PBM=;
+        b=bGIA7Z/TXrXO2+MKbbhDdpM9dW8n7NxGLROivgfDWpAJJzvTZwLbGH9i7z59HFzM7P
+         0YYC0Emm0EDqpA1a6bWke6GorwifBkMbJl5zaHNsdl5RdcmVs4YEFu9cf1Xhlp3mBGLj
+         dmtpBZviZwaSHXDV8E1BpaUvRIATu/9BAW+FtBt1NaZLxzudxoCmeCZXvb/nizxwdToF
+         C7/6a7tiGaXRF/wx+RVRAjRxK6gmmhVq7tv3N/ypAaCHr+kfEu4VL58RyShE8hmA7Kgo
+         wVXd9/izPfEYj2CHSqT7tdq+1OvpDsKMN3XStQUD3z+n4YTkHFQnPPSGZU7La9uFZhpG
+         E7MA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=goRlQM30zfyuhFWXpIh6wI0jTG2AzkOHo69J00w1PBM=;
+        b=qgTlEdceWoh+zBZ3CY5Tc4cc6zlIx2AIhY4RCVGqFGwBt3l5+w5ZMkoQNRrgJL3pAe
+         2M5oN3GXaeS88iqFjbhsDNvMjOzZ4SCHLWjEMcUUoN58YDF7o5tur7Kj7WxyE/8ZqtDe
+         HhBq5+kB2Wjojr3PB5EsCuBawn/G8c9epF1qomv5v26JE9sp2Ml4Ep1XYAuXisOvVwxQ
+         slXc7sjRG3pqdAbdsn5rBUPJ/Q+GQvyAD77IAHSqlPolLRm7+3SZ1OgPA+EYu2YbAvfW
+         6RK9kprJy1LqJzVkiu+YO98c4CVwytgQWO+1ApEc9lQoFhZWp+T1MpkGfrykN5laR/H7
+         vyvQ==
+X-Gm-Message-State: AOAM530viREjYaLfb5fZZwYbo8x6sc3lzcvfGFrfgGEOv5IrQhFz/T1D
+        CGXXXKoCkRGpbpB4jVMwGsDozg==
+X-Google-Smtp-Source: ABdhPJyxVzgdM9g2LQRAkic6H8k7Q4GPXCT6OByFbkbnbGzPUUgCwxy5hPEQPrwQpU1yTGnSqhNrlw==
+X-Received: by 2002:adf:e6c3:0:b0:207:972c:d69 with SMTP id y3-20020adfe6c3000000b00207972c0d69mr1788951wrm.655.1649413837223;
+        Fri, 08 Apr 2022 03:30:37 -0700 (PDT)
+Received: from localhost.localdomain (xdsl-188-155-201-27.adslplus.ch. [188.155.201.27])
+        by smtp.gmail.com with ESMTPSA id n2-20020adfb742000000b00205eda3b3c1sm20181920wre.34.2022.04.08.03.30.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 08 Apr 2022 03:30:36 -0700 (PDT)
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH 4/4] scsi: ufs: ufshcd: constify pointed data
+Date:   Fri,  8 Apr 2022 12:30:27 +0200
+Message-Id: <20220408103027.311624-4-krzysztof.kozlowski@linaro.org>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
+References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 08 Apr 2022, cgel.zte@gmail.com wrote:
-> From: Lv Ruyi <lv.ruyi@zte.com.cn>
->
-> There are some spelling mistakes in the comments. Fix it.
+Constify arrays and pointers to data which is not modified for code
+safety.
 
-Please prefer splitting by driver. This isn't even split by subsystem. I
-presume there are very few maintainers willing to pick this up as it is.
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 48 ++++++++++++++++++++-------------------
+ drivers/scsi/ufs/ufshcd.h |  9 ++++----
+ 2 files changed, 30 insertions(+), 27 deletions(-)
 
-BR,
-Jani.
-
->
-> Reported-by: Zeal Robot <zealci@zte.com.cn>
-> Signed-off-by: Lv Ruyi <lv.ruyi@zte.com.cn>
-> ---
->  drivers/gpu/drm/amd/amdgpu/gfx_v10_0.c              | 2 +-
->  drivers/gpu/drm/i915/i915_request.c                 | 2 +-
->  drivers/net/ethernet/sfc/mcdi_pcol.h                | 4 ++--
->  drivers/net/ethernet/toshiba/tc35815.c              | 2 +-
->  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 4 ++--
->  drivers/platform/x86/hp_accel.c                     | 2 +-
->  drivers/rtc/rtc-sa1100.c                            | 2 +-
->  drivers/scsi/pmcraid.c                              | 4 ++--
->  8 files changed, 11 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/gpu/drm/amd/amdgpu/gfx_v10_0.c b/drivers/gpu/drm/amd/amdgpu/gfx_v10_0.c
-> index 9426e252d8aa..ce361fce7155 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/gfx_v10_0.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/gfx_v10_0.c
-> @@ -7304,7 +7304,7 @@ static void gfx_v10_0_setup_grbm_cam_remapping(struct amdgpu_device *adev)
->  		return;
->  
->  	/* initialize cam_index to 0
-> -	 * index will auto-inc after each data writting */
-> +	 * index will auto-inc after each data writing */
->  	WREG32_SOC15(GC, 0, mmGRBM_CAM_INDEX, 0);
->  
->  	switch (adev->ip_versions[GC_HWIP][0]) {
-> diff --git a/drivers/gpu/drm/i915/i915_request.c b/drivers/gpu/drm/i915/i915_request.c
-> index 582770360ad1..cf79a25cd98a 100644
-> --- a/drivers/gpu/drm/i915/i915_request.c
-> +++ b/drivers/gpu/drm/i915/i915_request.c
-> @@ -451,7 +451,7 @@ static bool __request_in_flight(const struct i915_request *signal)
->  	 * to avoid tearing.]
->  	 *
->  	 * Note that the read of *execlists->active may race with the promotion
-> -	 * of execlists->pending[] to execlists->inflight[], overwritting
-> +	 * of execlists->pending[] to execlists->inflight[], overwriting
->  	 * the value at *execlists->active. This is fine. The promotion implies
->  	 * that we received an ACK from the HW, and so the context is not
->  	 * stuck -- if we do not see ourselves in *active, the inflight status
-> diff --git a/drivers/net/ethernet/sfc/mcdi_pcol.h b/drivers/net/ethernet/sfc/mcdi_pcol.h
-> index d3fcbf930dba..ff617b1b38d3 100644
-> --- a/drivers/net/ethernet/sfc/mcdi_pcol.h
-> +++ b/drivers/net/ethernet/sfc/mcdi_pcol.h
-> @@ -73,8 +73,8 @@
->   *               \------------------------------ Resync (always set)
->   *
->   * The client writes it's request into MC shared memory, and rings the
-> - * doorbell. Each request is completed by either by the MC writting
-> - * back into shared memory, or by writting out an event.
-> + * doorbell. Each request is completed by either by the MC writing
-> + * back into shared memory, or by writing out an event.
->   *
->   * All MCDI commands support completion by shared memory response. Each
->   * request may also contain additional data (accounted for by HEADER.LEN),
-> diff --git a/drivers/net/ethernet/toshiba/tc35815.c b/drivers/net/ethernet/toshiba/tc35815.c
-> index ce38f7515225..1b4c207afb66 100644
-> --- a/drivers/net/ethernet/toshiba/tc35815.c
-> +++ b/drivers/net/ethernet/toshiba/tc35815.c
-> @@ -157,7 +157,7 @@ struct tc35815_regs {
->  #define PROM_Read	       0x00004000 /*10:Read operation		     */
->  #define PROM_Write	       0x00002000 /*01:Write operation		     */
->  #define PROM_Erase	       0x00006000 /*11:Erase operation		     */
-> -					  /*00:Enable or Disable Writting,   */
-> +					  /*00:Enable or Disable Writing,    */
->  					  /*	  as specified in PROM_Addr. */
->  #define PROM_Addr_Ena	       0x00000030 /*11xxxx:PROM Write enable	     */
->  					  /*00xxxx:	      disable	     */
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-> index eaba66113328..fbb4941d0da8 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-> @@ -520,7 +520,7 @@ static void _rtl92cu_init_queue_reserved_page(struct ieee80211_hw *hw,
->  		 * 2 out-ep. Remainder pages have assigned to High queue */
->  		if (outepnum > 1 && txqremaininpage)
->  			numhq += txqremaininpage;
-> -		/* NOTE: This step done before writting REG_RQPN. */
-> +		/* NOTE: This step done before writing REG_RQPN. */
->  		if (ischipn) {
->  			if (queue_sel & TX_SELE_NQ)
->  				numnq = txqpageunit;
-> @@ -539,7 +539,7 @@ static void _rtl92cu_init_queue_reserved_page(struct ieee80211_hw *hw,
->  			numlq = ischipn ? WMM_CHIP_B_PAGE_NUM_LPQ :
->  				WMM_CHIP_A_PAGE_NUM_LPQ;
->  		}
-> -		/* NOTE: This step done before writting REG_RQPN. */
-> +		/* NOTE: This step done before writing REG_RQPN. */
->  		if (ischipn) {
->  			if (queue_sel & TX_SELE_NQ)
->  				numnq = WMM_CHIP_B_PAGE_NUM_NPQ;
-> diff --git a/drivers/platform/x86/hp_accel.c b/drivers/platform/x86/hp_accel.c
-> index e9f852f7c27f..b59b852a666f 100644
-> --- a/drivers/platform/x86/hp_accel.c
-> +++ b/drivers/platform/x86/hp_accel.c
-> @@ -122,7 +122,7 @@ static int lis3lv02d_acpi_read(struct lis3lv02d *lis3, int reg, u8 *ret)
->  static int lis3lv02d_acpi_write(struct lis3lv02d *lis3, int reg, u8 val)
->  {
->  	struct acpi_device *dev = lis3->bus_priv;
-> -	unsigned long long ret; /* Not used when writting */
-> +	unsigned long long ret; /* Not used when writing */
->  	union acpi_object in_obj[2];
->  	struct acpi_object_list args = { 2, in_obj };
->  
-> diff --git a/drivers/rtc/rtc-sa1100.c b/drivers/rtc/rtc-sa1100.c
-> index 1250887e4382..a52a333de8e8 100644
-> --- a/drivers/rtc/rtc-sa1100.c
-> +++ b/drivers/rtc/rtc-sa1100.c
-> @@ -231,7 +231,7 @@ int sa1100_rtc_init(struct platform_device *pdev, struct sa1100_rtc *info)
->  	 * initialization is unknown and could in principle happen during
->  	 * normal processing.
->  	 *
-> -	 * Notice that clearing bit 1 and 0 is accomplished by writting ONES to
-> +	 * Notice that clearing bit 1 and 0 is accomplished by writing ONES to
->  	 * the corresponding bits in RTSR. */
->  	writel_relaxed(RTSR_AL | RTSR_HZ, info->rtsr);
->  
-> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-> index fd674ed1febe..d7f4680f6106 100644
-> --- a/drivers/scsi/pmcraid.c
-> +++ b/drivers/scsi/pmcraid.c
-> @@ -857,7 +857,7 @@ static void _pmcraid_fire_command(struct pmcraid_cmd *cmd)
->  	unsigned long lock_flags;
->  
->  	/* Add this command block to pending cmd pool. We do this prior to
-> -	 * writting IOARCB to ioarrin because IOA might complete the command
-> +	 * writing IOARCB to ioarrin because IOA might complete the command
->  	 * by the time we are about to add it to the list. Response handler
->  	 * (isr/tasklet) looks for cmd block in the pending pending list.
->  	 */
-> @@ -2450,7 +2450,7 @@ static void pmcraid_request_sense(struct pmcraid_cmd *cmd)
->  
->  	/* request sense might be called as part of error response processing
->  	 * which runs in tasklets context. It is possible that mid-layer might
-> -	 * schedule queuecommand during this time, hence, writting to IOARRIN
-> +	 * schedule queuecommand during this time, hence, writing to IOARRIN
->  	 * must be protect by host_lock
->  	 */
->  	pmcraid_send_cmd(cmd, pmcraid_erp_done,
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 3f9caafa91bf..5bfa62fa288a 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -162,7 +162,7 @@ enum {
+ #define ufshcd_clear_eh_in_progress(h) \
+ 	((h)->eh_flags &= ~UFSHCD_EH_IN_PROGRESS)
+ 
+-struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
++const struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
+ 	[UFS_PM_LVL_0] = {UFS_ACTIVE_PWR_MODE, UIC_LINK_ACTIVE_STATE},
+ 	[UFS_PM_LVL_1] = {UFS_ACTIVE_PWR_MODE, UIC_LINK_HIBERN8_STATE},
+ 	[UFS_PM_LVL_2] = {UFS_SLEEP_PWR_MODE, UIC_LINK_ACTIVE_STATE},
+@@ -204,7 +204,7 @@ ufs_get_desired_pm_lvl_for_dev_link_state(enum ufs_dev_pwr_mode dev_state,
+ 	return UFS_PM_LVL_0;
+ }
+ 
+-static struct ufs_dev_fix ufs_fixups[] = {
++static const struct ufs_dev_fix ufs_fixups[] = {
+ 	/* UFS cards deviations table */
+ 	UFS_FIX(UFS_VENDOR_MICRON, UFS_ANY_MODEL,
+ 		UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM |
+@@ -343,7 +343,7 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+ }
+ 
+ static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
+-					 struct uic_command *ucmd,
++					 const struct uic_command *ucmd,
+ 					 enum ufs_trace_str_t str_t)
+ {
+ 	u32 cmd;
+@@ -423,11 +423,11 @@ static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
+ }
+ 
+ static void ufshcd_print_evt(struct ufs_hba *hba, u32 id,
+-			     char *err_name)
++			     const char *err_name)
+ {
+ 	int i;
+ 	bool found = false;
+-	struct ufs_event_hist *e;
++	const struct ufs_event_hist *e;
+ 
+ 	if (id >= UFS_EVT_CNT)
+ 		return;
+@@ -477,7 +477,7 @@ static void ufshcd_print_evt_hist(struct ufs_hba *hba)
+ static
+ void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
+ {
+-	struct ufshcd_lrb *lrbp;
++	const struct ufshcd_lrb *lrbp;
+ 	int prdt_length;
+ 	int tag;
+ 
+@@ -533,7 +533,7 @@ static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
+ 
+ static void ufshcd_print_host_state(struct ufs_hba *hba)
+ {
+-	struct scsi_device *sdev_ufs = hba->sdev_ufs_device;
++	const struct scsi_device *sdev_ufs = hba->sdev_ufs_device;
+ 
+ 	dev_err(hba->dev, "UFS Host state=%d\n", hba->ufshcd_state);
+ 	dev_err(hba->dev, "outstanding reqs=0x%lx tasks=0x%lx\n",
+@@ -1083,7 +1083,7 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
+  */
+ static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
+ {
+-	struct scsi_device *sdev;
++	const struct scsi_device *sdev;
+ 	u32 pending = 0;
+ 
+ 	lockdep_assert_held(hba->host->host_lock);
+@@ -2046,14 +2046,15 @@ static inline int ufshcd_monitor_opcode2dir(u8 opcode)
+ static inline bool ufshcd_should_inform_monitor(struct ufs_hba *hba,
+ 						struct ufshcd_lrb *lrbp)
+ {
+-	struct ufs_hba_monitor *m = &hba->monitor;
++	const struct ufs_hba_monitor *m = &hba->monitor;
+ 
+ 	return (m->enabled && lrbp && lrbp->cmd &&
+ 		(!m->chunk_size || m->chunk_size == lrbp->cmd->sdb.length) &&
+ 		ktime_before(hba->monitor.enabled_ts, lrbp->issue_time_stamp));
+ }
+ 
+-static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
++static void ufshcd_start_monitor(struct ufs_hba *hba,
++				 const struct ufshcd_lrb *lrbp)
+ {
+ 	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
+ 	unsigned long flags;
+@@ -2064,14 +2065,14 @@ static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ }
+ 
+-static void ufshcd_update_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
++static void ufshcd_update_monitor(struct ufs_hba *hba, const struct ufshcd_lrb *lrbp)
+ {
+ 	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	if (dir >= 0 && hba->monitor.nr_queued[dir] > 0) {
+-		struct request *req = scsi_cmd_to_rq(lrbp->cmd);
++		const struct request *req = scsi_cmd_to_rq(lrbp->cmd);
+ 		struct ufs_hba_monitor *m = &hba->monitor;
+ 		ktime_t now, inc, lat;
+ 
+@@ -4888,7 +4889,7 @@ static int ufshcd_get_lu_wp(struct ufs_hba *hba,
+  *
+  */
+ static inline void ufshcd_get_lu_power_on_wp_status(struct ufs_hba *hba,
+-						    struct scsi_device *sdev)
++						    const struct scsi_device *sdev)
+ {
+ 	if (hba->dev_info.f_power_on_wp_en &&
+ 	    !hba->dev_info.is_lu_power_on_wp) {
+@@ -5407,8 +5408,8 @@ int ufshcd_write_ee_control(struct ufs_hba *hba)
+ 	return err;
+ }
+ 
+-int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
+-			     u16 set, u16 clr)
++int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
++			     const u16 *other_mask, u16 set, u16 clr)
+ {
+ 	u16 new_mask, ee_ctrl_mask;
+ 	int err = 0;
+@@ -7343,7 +7344,8 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
+  *
+  * Returns calculated max ICC level for specific regulator
+  */
+-static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
++static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan,
++				    const char *buff)
+ {
+ 	int i;
+ 	int curr_uA;
+@@ -7390,7 +7392,7 @@ static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
+  * Returns calculated ICC level
+  */
+ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+-							u8 *desc_buf, int len)
++						const u8 *desc_buf, int len)
+ {
+ 	u32 icc_level = 0;
+ 
+@@ -7540,7 +7542,7 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
+ 	return ret;
+ }
+ 
+-static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
++static void ufshcd_wb_probe(struct ufs_hba *hba, const u8 *desc_buf)
+ {
+ 	struct ufs_dev_info *dev_info = &hba->dev_info;
+ 	u8 lun;
+@@ -7611,7 +7613,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
+ 	hba->caps &= ~UFSHCD_CAP_WB_EN;
+ }
+ 
+-static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
++static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
+ {
+ 	struct ufs_dev_info *dev_info = &hba->dev_info;
+ 	u32 ext_ufs_feature;
+@@ -7634,9 +7636,9 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
+ 	}
+ }
+ 
+-void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, struct ufs_dev_fix *fixups)
++void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, const struct ufs_dev_fix *fixups)
+ {
+-	struct ufs_dev_fix *f;
++	const struct ufs_dev_fix *f;
+ 	struct ufs_dev_info *dev_info = &hba->dev_info;
+ 
+ 	if (!fixups)
+@@ -7844,7 +7846,7 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
+ 	u32 granularity, peer_granularity;
+ 	u32 pa_tactivate, peer_pa_tactivate;
+ 	u32 pa_tactivate_us, peer_pa_tactivate_us;
+-	u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
++	const u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
+ 
+ 	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_GRANULARITY),
+ 				  &granularity);
+@@ -7956,7 +7958,7 @@ static int ufshcd_device_geo_params_init(struct ufs_hba *hba)
+ 	return err;
+ }
+ 
+-static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
++static const struct ufs_ref_clk ufs_ref_clk_freqs[] = {
+ 	{19200000, REF_CLK_FREQ_19_2_MHZ},
+ 	{26000000, REF_CLK_FREQ_26_MHZ},
+ 	{38400000, REF_CLK_FREQ_38_4_MHZ},
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 94f545be183a..1a8f7b8977e6 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -1185,7 +1185,8 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 
+ void ufshcd_auto_hibern8_enable(struct ufs_hba *hba);
+ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
+-void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, struct ufs_dev_fix *fixups);
++void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
++			     const struct ufs_dev_fix *fixups);
+ #define SD_ASCII_STD true
+ #define SD_RAW false
+ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+@@ -1371,7 +1372,7 @@ static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
+ 		hba->vops->config_scaling_param(hba, profile, data);
+ }
+ 
+-extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
++extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+ 
+ /*
+  * ufshcd_scsi_to_upiu_lun - maps scsi LUN to UPIU LUN
+@@ -1393,8 +1394,8 @@ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+ 
+ int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask);
+ int ufshcd_write_ee_control(struct ufs_hba *hba);
+-int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
+-			     u16 set, u16 clr);
++int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
++			     const u16 *other_mask, u16 set, u16 clr);
+ 
+ static inline int ufshcd_update_ee_drv_mask(struct ufs_hba *hba,
+ 					    u16 set, u16 clr)
 -- 
-Jani Nikula, Intel Open Source Graphics Center
+2.32.0
+
