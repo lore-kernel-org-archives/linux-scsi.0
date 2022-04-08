@@ -2,106 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1715C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 12:45:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 135FFC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 12:58:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235839AbiDHMrV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 08:47:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42040 "EHLO
+        id S236013AbiDHNAH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 09:00:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235824AbiDHMrU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 08:47:20 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0A433EBAE3
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 05:45:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1649421916;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=khBPZtzPFEMx9dKIM9CWO7Q/Lm+eAtWPqukaOGv/i8A=;
-        b=YLtnpIsC0V7winnbPDIk8ihc1bA6iZGyvRj9ARC3Px6IupPR31DrGO1wJvQ37eQxfkUHHW
-        pdU1brJZHsIjdqPWtFJl3TsIX8uPMC77CL1FaYl7weSAgIAJv1GKpcBy1UIe/GopodhpcN
-        r+p1QFE2oLFswtseQaHaobOI3YKJRLQ=
-Received: from mail-lj1-f199.google.com (mail-lj1-f199.google.com
- [209.85.208.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-308-460K-yiNMJqnXPmTLMm4BQ-1; Fri, 08 Apr 2022 08:45:14 -0400
-X-MC-Unique: 460K-yiNMJqnXPmTLMm4BQ-1
-Received: by mail-lj1-f199.google.com with SMTP id o17-20020a2e0c51000000b0024b484876a8so1329535ljd.21
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Apr 2022 05:45:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=khBPZtzPFEMx9dKIM9CWO7Q/Lm+eAtWPqukaOGv/i8A=;
-        b=ejSJBGIMAvHIFjht6q4NkHTjFI41wVKlCoaf2foynMiHIc4MwbkyILmEvx92xH2ghz
-         sr4Dr+o982FF4siXWHMliCm14Y6fLdKh7+to7lNf8QbUBIa08g7TIWhJtdDIvq6WYzQB
-         Yj7NIgEINiSovyeGIcazE/++19ZWQ05mKTjneVrYRMbBs6qJYrTATF8g6uNwBSKHuHre
-         WVleli2fLVwJh6ljpg0Y1FHdLIYIH9Wu4ucDYoNVv9rsTOrcUZoP7WzCY0gxYihea47u
-         oGjncegDmcKi8wV3xNMUCf9zpSlmZyYxLD4rZKsFRnmRbyM/MtaSErARYFOaE5JxBE7Z
-         wezA==
-X-Gm-Message-State: AOAM530S/4fbHv/Cu8s9j74gehrbXJHniTT3N7NeKwB2VogDRn291C5K
-        zRA8QiguG0PlYlCzMaHWBu1uZfPM9yEJPf8055spJmqfIVUbXPyuVxtcQjM6bq7QWhbVwwvi75M
-        z5XDRlIAJQNNq+OE+41jzmAZJ+z69yKDEZW8F5A==
-X-Received: by 2002:a05:6512:158d:b0:44a:6522:f98f with SMTP id bp13-20020a056512158d00b0044a6522f98fmr12476803lfb.608.1649421913226;
-        Fri, 08 Apr 2022 05:45:13 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxifoUmW3lR7s6bWQ1QaUPysHRDA51bV3Mjmn5J1/ODHj+CUYXo/iK2FzHxX3hDX/jFtBf6eHMKV1gEJAu6iCE=
-X-Received: by 2002:a05:6512:158d:b0:44a:6522:f98f with SMTP id
- bp13-20020a056512158d00b0044a6522f98fmr12476781lfb.608.1649421912940; Fri, 08
- Apr 2022 05:45:12 -0700 (PDT)
+        with ESMTP id S232841AbiDHNAE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 09:00:04 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DC6A10E8;
+        Fri,  8 Apr 2022 05:57:59 -0700 (PDT)
+Received: from fraeml710-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KZdXh08ymz67kSQ;
+        Fri,  8 Apr 2022 20:56:04 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml710-chm.china.huawei.com (10.206.15.59) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 8 Apr 2022 14:57:56 +0200
+Received: from [10.47.91.39] (10.47.91.39) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Fri, 8 Apr
+ 2022 13:57:55 +0100
+Message-ID: <7b3885e3-dbae-ff0b-21dc-c28d635d950b@huawei.com>
+Date:   Fri, 8 Apr 2022 13:57:52 +0100
 MIME-Version: 1.0
-References: <CA+QYu4qTtXgVegAd7S5bjJQye+kmtPaFau4dg3YPU2tH9faBjg@mail.gmail.com>
- <175195a9b7840e883677c6f351ee186089ab2b6d.camel@HansenPartnership.com>
-In-Reply-To: <175195a9b7840e883677c6f351ee186089ab2b6d.camel@HansenPartnership.com>
-From:   Bruno Goncalves <bgoncalv@redhat.com>
-Date:   Fri, 8 Apr 2022 14:45:01 +0200
-Message-ID: <CA+QYu4oKwOwKYJB0_SezXWaMWa9Obp2=nLd-2_bKx-jSAu1TDw@mail.gmail.com>
-Subject: Re: RIP: 0010:ahd_init.cold+0x96/0x98 [aic79xx] - 5.17.0
-To:     James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org,
-        CKI Project <cki-project@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "Avri Altman" <avri.altman@wdc.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
+ <2a88a992-641a-b3ff-fe39-7a61fff87cb6@huawei.com>
+ <4c3be5b6-50ef-9e9a-6cee-9642df943342@linaro.org>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <4c3be5b6-50ef-9e9a-6cee-9642df943342@linaro.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.91.39]
+X-ClientProxiedBy: lhreml718-chm.china.huawei.com (10.201.108.69) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Apr 5, 2022 at 5:33 PM James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> On Tue, 2022-04-05 at 09:14 +0200, Bruno Goncalves wrote:
-> > Hello,
-> >
-> > We've been hitting the panic below when testing mainline kernel. More
-> > logs can be found on [1] and CKI tracker [2].
->
-> When was the last time this driver passed the test?  I'm asking because
-> nothing significant has changed in this driver for a while and the
-> trivial changes all seem to check out.
+On 08/04/2022 13:32, Krzysztof Kozlowski wrote:
+> On 08/04/2022 14:14, John Garry wrote:
+>> On 08/04/2022 11:30, Krzysztof Kozlowski wrote:
+>>> Several pointers to 'struct scsi_host_template' do not modify it, so
+>>> made them const for safety.
+>>>
+>> Is this standard practice? What is so special here?
+> This is standard practice and there is nothing special here. Pointers to
+> const are preferred because:
+> 1. They add safety if data is actually const. This is not yet the case,
+> but scsi_host_template allocation could be made const with some effort.
 
-Hi James,
+To me this seems better, but I think that some drivers might modify 
+their scsi_host_template (so not possible)
 
-Sorry for the delay in replying to you. Do you think it could be some
-patch from d51b1b33c51d147b757f042b4d336603b699f362 or
-23d1dea55520c5cf89849279cd25de4da8392687 ?
+> 2. The more const variables, the easier function contents and its impact
+> is to understand. This is actually the biggest benefit when dealing with
+> code touching different structures.
+> 
+> In general, constifying is a common practice everywhere in the kernel.
 
-I was able to reproduce it using the CKI kernel from d51b1b33, but not
-from commit 2fce7ea0.
-
-We don't have a kernel build for 23d1dea5, but if you want I can try
-it next week.
-
-Also, it seems I can only reproduce it on kernel build that adds some
-debug flags when we build with selftests enabled.
-
-kernel build: https://s3.us-east-1.amazonaws.com/arr-cki-prod-datawarehouse-public/datawarehouse-public/2022/03/23/499569088/build_x86_64_redhat:2242251830/kernel-mainline.kernel.org-x86_64-d51b1b33c51d147b757f042b4d336603b699f362.tar.gz
-kernel config: https://s3.us-east-1.amazonaws.com/arr-cki-prod-datawarehouse-public/datawarehouse-public/2022/03/23/499569088/build_x86_64_redhat:2242251830/kernel-mainline.kernel.org-x86_64-d51b1b33c51d147b757f042b4d336603b699f362.config
-
-Bruno
-
-
->
-> James
->
->
-
+Thanks,
+John
