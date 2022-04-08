@@ -2,170 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B89CCC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 00:14:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A81B7C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 01:45:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232762AbiDHAQP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Apr 2022 20:16:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52032 "EHLO
+        id S233588AbiDHBrs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Apr 2022 21:47:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232684AbiDHAQH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2022 20:16:07 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77F7C14B84E
-        for <linux-scsi@vger.kernel.org>; Thu,  7 Apr 2022 17:14:06 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 237LOlUG024505;
-        Fri, 8 Apr 2022 00:13:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=kRmbCquSf+yQslvAzTBagyoROYOlLf8ap5p8EmNDY40=;
- b=p8VAqHmyQDofmFuV7Ix0oG26mOAXhZW4VTz4PftOWcaaN0fiXNVmhOSA0/rTSnEdz2+w
- ySrhn0Bpx9fXB1TxlbRMy8OynNPK9DyzK6jpmqCH0oZ9EbfK27Lq4Ed8yjubE74f+5/L
- xRsAdJcp4WGAwZ1lCcbbWoFnTyKaWSPf2wGPuN77K8gpNxIj9IKd1ZUxekpzBdzx11W0
- bNGQStL0qkBrs6CZDm/2IaT8Q2wz9fYSaUdpajlNzNj1MdmJOWeVrc6SMrI6GGyTzaXX
- +LKpOvln+yeZ759tjohg4OHcnYW4XaHsKzvblj/1rUoN/98q4xweEe6q+GPb+7qHN1A6 9Q== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3f6f1tdnhf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Apr 2022 00:13:32 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 237M7smk029005;
-        Fri, 8 Apr 2022 00:13:30 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2044.outbound.protection.outlook.com [104.47.66.44])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3f974erfry-3
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Apr 2022 00:13:30 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LU5n16jjz5LNkuAm7XVv+c7dsRRERci+Gox79G5TGCUhj/mWhfcw+PPyxJVxfKeJc48n5W45FnseJ04W4W5YeaYdvBo6te5vb4OAT5Hn+cszeVTQ2yOKbbyJS1SiZiZTUNblwQI1ozU9AWzk3WhkPb8Ym2RS4Y9OB/sKMqoMNzZXA6bkYNo+B7Iicpnc8myv8bb/+jBseNxdfIu11vEAXoqY/9KPJ8pDiMdKkmYU7ZzwCvfmJfy24aQOHQyA6aRUizM8iEM8LGDBTlh1eC7WDtN5c9wTBSUxDIv2F4zpic22QepVZyaJMHHpNrlflB34JqdEKVXMgOmCt+ByCJcSyQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kRmbCquSf+yQslvAzTBagyoROYOlLf8ap5p8EmNDY40=;
- b=M/Vlym9WImBT+vmjDisA8NGtOzs1vFsoOVjzxFIuCvBCrIvjUdHwjF4sgLHzH/OhmLJ/71CuxY4+M0HQWO3DBeFcRLcuUET0EB10XWLzQgwFkc/bdfP+crSmMRojx7jOR9k2OsJ4v/DX1fQRB5y1BKdfaFD0z/R7K0kOF4r72h7bHyJpiPpaaubJxO/ysotQH7WPWKKyHA/sKRFmQCAPGkP1E8q46w3rRG8Rl9uUivgfOxZ9d/WuIcBhPxbNPmQzFo+IOykkFHA8p6qUc0rOiB1zVD85oWYLXM+5q0FNGxHxmXsGQ0ahIzn6ePBzc/nmX0woZ5FstsyIbNFZsyLZ2A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kRmbCquSf+yQslvAzTBagyoROYOlLf8ap5p8EmNDY40=;
- b=gELbOApNRZL+vQa7Bgd+J5T40dFyzJd58n8mlFXkgAfXVnufyviwXWYAxXOGuiKDwGTbshMCjAoDl1kHLoVQtHRe9oujy+l+HE8QGtRBkyG4jaOV+JqeU2QuCtQQAT4gmWN66NUsSYqS+0DdeZOprile2MVLz5z6b+NrrAGGsaQ=
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- BY5PR10MB3762.namprd10.prod.outlook.com (2603:10b6:a03:1b6::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5144.22; Fri, 8 Apr
- 2022 00:13:28 +0000
-Received: from DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::3cb2:a04:baff:8586]) by DM5PR10MB1466.namprd10.prod.outlook.com
- ([fe80::3cb2:a04:baff:8586%2]) with mapi id 15.20.5144.022; Fri, 8 Apr 2022
- 00:13:28 +0000
-From:   Mike Christie <michael.christie@oracle.com>
-To:     skashyap@marvell.com, lduncan@suse.com, cleech@redhat.com,
-        njavali@marvell.com, mrangankar@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, jejb@linux.ibm.com
-Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 10/10] scsi: iscsi: Add Mike Christie as co-maintainer
-Date:   Thu,  7 Apr 2022 19:13:14 -0500
-Message-Id: <20220408001314.5014-11-michael.christie@oracle.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220408001314.5014-1-michael.christie@oracle.com>
-References: <20220408001314.5014-1-michael.christie@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: DM6PR17CA0022.namprd17.prod.outlook.com
- (2603:10b6:5:1b3::35) To DM5PR10MB1466.namprd10.prod.outlook.com
- (2603:10b6:3:b::7)
+        with ESMTP id S233559AbiDHBrh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2022 21:47:37 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 300EE6563
+        for <linux-scsi@vger.kernel.org>; Thu,  7 Apr 2022 18:45:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1649382331;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=FoDzCOy/f50izW3uGq4HanBpQorxeNmbwRnYzToRWQo=;
+        b=g3UUIF2ETwzhyG/cL59Nb/bJGDGXzp+pDPQTkdvOM4zD1BSRWkFFUzDjWZ3bWOfKyvJRto
+        ppDkk55pW2YN45VvKLt/HlRXzCjzeGI6U6niLfYT9ert7oEf6wZwOzCrzw/X0idKdY4guJ
+        Fp3FJ1lx9zT20UMdeVlV8OjUGe/iD2Q=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-203-tF20snXjPPe6M2HgdXUoXQ-1; Thu, 07 Apr 2022 21:45:30 -0400
+X-MC-Unique: tF20snXjPPe6M2HgdXUoXQ-1
+Received: by mail-pl1-f199.google.com with SMTP id i16-20020a170902c95000b001570fc36d54so1497400pla.1
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Apr 2022 18:45:30 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=FoDzCOy/f50izW3uGq4HanBpQorxeNmbwRnYzToRWQo=;
+        b=Ho25L4IrlSY5dVIWQ7nKRGz6KVDBkarpfiVd1cgfeg5k9M8lSx/W0I0zksqXgwW2hr
+         WgsE6ucDcYTPQQaFTrqZR2nlY37UP87UJyImjnkfVBGbcwvA28yTHtPwxk+0fv/BqcSV
+         G7Ua4+EbdquR9nhyqq5w0fxmE19jVGYfybXBb6gYQoo7Dcdj7P3jy+ndLg1g/49zJXf4
+         l7VVkmLvOPb4u0Hw0gvUlKABfKcKu4DTMNKEKqE1S1+9G34RfHqA2wfJKkd+XSoZqJ0T
+         K5HmFnN4i1ks765lJBQgLSZGgeTJ/zr1aAjCIlsPWASQnhhyJniQS/1wfVDeMlo3FmeN
+         k4fw==
+X-Gm-Message-State: AOAM532HMJbgJCbB/MIlNJaR3gfWXoTouZCnggneByRe4yMrWEB/Vesn
+        8mifIOf3sfn9hS6EGW1HcwDXTkhpN3p/DvQ9fuQGuBaY9bmKebSTPVJA/KzLj3Xv8Qw8cmjwH4Z
+        AAcMS7Cft9anN9FnjO+EVVt1he1exYk8PtNzWpg==
+X-Received: by 2002:a17:90a:a509:b0:1ca:c48e:a795 with SMTP id a9-20020a17090aa50900b001cac48ea795mr18929603pjq.165.1649382329362;
+        Thu, 07 Apr 2022 18:45:29 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJz5kJtjvs/EKbJNkV73/X2nWnk/S7t+gBp7Bzb5JU5aF7KK8RFxuYokRIxpHt08O5l9sBT0Xp+GcpYOQqrhJqQ=
+X-Received: by 2002:a17:90a:a509:b0:1ca:c48e:a795 with SMTP id
+ a9-20020a17090aa50900b001cac48ea795mr18929581pjq.165.1649382329031; Thu, 07
+ Apr 2022 18:45:29 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 6cdb4c81-2403-463d-b3dc-08da18f49adf
-X-MS-TrafficTypeDiagnostic: BY5PR10MB3762:EE_
-X-Microsoft-Antispam-PRVS: <BY5PR10MB37627B4C6E1186DAAFE9CAC7F1E99@BY5PR10MB3762.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: dm1XBXEh6MZsS1pTUWMKz88sZyfwXvzHH/DYTCIWhmAiGXR6EkFgyTGvzWxf0Bwf+ba2d1mWfsQS0Y5ngRrG5iLiZRgqipvYTVC5ZYZppxafnpuCg5kFuic3qEoKyZMW6aOcRgvnbNFdKjHXerIf7vq5M10aLC9WOAVcWlto3PRASs/42oHQSD+eHEyLV4lMFua+rItZBWl51puXlCyg1YpV8VC6sgGwMxJqdfcOKW5HFcufElo9WODC1t+U+Iw3Mh6yYVycmhTA0VGzw8TtPS0UYasKN1oKSfkqHKgQ09KRb7hL804HuuHSOEmJyPhS5CIGYvrqma3nssCKAi3tdzEpRFNZe8o5zchyun2bZIi3tIXjdMibPvJiAFh/7FlmQPCmY0dyuGR2AiVSsDnNhFyb/KhlW8E/gD7aJ5Lfu8x3QxD1GVr2MiXhx91DuFIlrW/4CWzc69cy4s/u3GLS6jlO2hkcbcV3mpwv+ZW91D5WnSljHVnq5P4aR7nF0K6r5xRxzQIFc0iykgAMjMlY4ibNftHUyugGZoywq09dYEdD8wLSpru1jcV10TnUp0Xua5GRsiNMRCmm+mOKiOBzawQTBLgNbWZANK1xdDnDpBmXVUDy2MjpXW6vEYzSYoG20eJXD2v+rfyPJMm35VntYFaDCd6OW2xVGiIu/YrDNWgl0lxVm3lQnS47sL9GEZvcZsbco3Vs3fQ59lgawMOnzQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(86362001)(6512007)(52116002)(5660300002)(2616005)(508600001)(6486002)(107886003)(8936002)(4744005)(6666004)(6506007)(2906002)(38100700002)(38350700002)(186003)(1076003)(26005)(66556008)(4326008)(316002)(66946007)(66476007)(8676002)(36756003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?QpyjlLi6ZbWD6/neCiATowA0RZxqvgrjGr6hCYO6vsd9v2VFYwrQ6tPYRCdJ?=
- =?us-ascii?Q?ksyUwKdaboBFLxwuiDd6uPXhnCu8/fWV9kp/Dc7OMi/mnoGwBpDEWOZNaJpB?=
- =?us-ascii?Q?OuXVNsDp3llhhoqOsIZ1InoKS+DA7wmrj79PHGvyNhaiXfBadgsGRlE25C8Q?=
- =?us-ascii?Q?mEveqq1o+bDiSP2K5Tl/AVJ1Nri65pgsyz1CrW24PuZJuG9A8sqUSp3REOcF?=
- =?us-ascii?Q?N2l4ZP0c6i3smjDHUDwOzCMVaeady2hJFM6U0sP1RRSf66/fvwnk2Bd07Ar6?=
- =?us-ascii?Q?LTvZYuNWHOCN/OzbbzLIXgbFn9Qc2a9daJuhPHRAKUb6KWoVG2kO1/X4KVgR?=
- =?us-ascii?Q?WbN5M35IbbLm0Z7hRrjnBaamEq9CDR3CVNsig8bQTJ1IjgjTODlw9iAaLGFN?=
- =?us-ascii?Q?VPxNaKZj/oK0gr0epKGVaatXl4i2VsAxm+G9C4Imx6/fa+NBK5D2m0UexP2I?=
- =?us-ascii?Q?hC6LHg4gUwJkmnbkeecszvHyeU8fhJ/8KYWCggNnmXN65hMhc1DqnaUoSbQx?=
- =?us-ascii?Q?+lmrNikUCG2cgl8iG//q0hvZtDBmDrgfKfyWiv60Q0YfjHLHO3UmBsf46z6F?=
- =?us-ascii?Q?GeWvQZGdzdobH7Qn6lEAinUENJ8Zs6Noi4jCw1LPvN0vI/lppf4Q+FpcVMGd?=
- =?us-ascii?Q?q3FdIUrJi6lQZtJwv5Ez1VaKTvgPmx3xJ81HQgMVp/NmHLYP6R4k9jVWi/He?=
- =?us-ascii?Q?8EFpbjRbNUSMxDJjs5ntxW9UjenJP00kRgGFT8cLHDBmA7+HsB+AYpXylTD3?=
- =?us-ascii?Q?L8svznemfQ6+6vZ41U1oqbMPD3tO4eRhZCLaqhlTeBtmBy0oK3cxM+99Scl+?=
- =?us-ascii?Q?kwM6cvKaLpnOHaeGmqeiaxIGv+I9uMez+mKiMM/HGDPcsh8qMpLRexoozV+9?=
- =?us-ascii?Q?5ErKu1anJ2aMx6or+CJf01jSGPAFsiKoQWYExcCRjuDcLW/B+Pe8NlQz5jJC?=
- =?us-ascii?Q?rmiIBv0RrqkRfqPr/E7iKK1y7C//Zr9HtZK1/TGv+mJUdUMGUNTb1p/kHQdI?=
- =?us-ascii?Q?awuN65cd87w6ERKMb2sLWStRPuxrxs7c17X/AMU5b9tXmG4s/EBOthZOjqcd?=
- =?us-ascii?Q?Gi4Zf7v7Nd0zweKnTL1CczGNxMJsGWiaDqSkavKxcH6qrHTG6/THO4MuM9TY?=
- =?us-ascii?Q?uN3tq18npNqg6jx/WKk64n8ETmioyOZuysxMYuXEwmsVw1N7vZ+iRTchsTmn?=
- =?us-ascii?Q?GDh5dA4pDIM+rWm8l9f3sOvV8malbFt1TYme7zfvA/r1ubpSfa7bFuFyHRBx?=
- =?us-ascii?Q?VUTD2RQ12iJN9QKb5xgafnKhYx6ln+VY4X6HQukKOcQyhmtmxzm3A4f8Xu2w?=
- =?us-ascii?Q?zqkSC4ChuhtGtiCzlBvtBuNJ8loGyJkJ8lpFB2/RPtK8AeCSeQ1p+YDhMK1C?=
- =?us-ascii?Q?CGjfadbOjVEz1BR3ex9ZIDj9f/W/7y+YWHvzKDRlQOgWvi1PxGc+LpRUFNCE?=
- =?us-ascii?Q?BM6WQvkDT88sPi7Pzz5iHr9eKNqxBspjeWb+YO4wftBH2EszE+NA43q72S1z?=
- =?us-ascii?Q?DxczoJF7kqEebhVykHSPlDOTE3bdrUWVBPPBsZkuY7OBDGYvMm21eEFcdo1Q?=
- =?us-ascii?Q?Wz+NGpl3fQ902GZgwoY60tR7TpJb+EZmeQgzuVeuR/r4eT02nfF3kM21zIja?=
- =?us-ascii?Q?w6WBwQBi8msLVhQzyEn/KVJwPQgNHAzHcoStEWj5Y/UuqiUrbWN90C2qTGMO?=
- =?us-ascii?Q?qV7dy9O8+iI630BcrUqTfo/rOo8o9BsUJoX2ORsYFeX6+XaAx8maD8MNxQlf?=
- =?us-ascii?Q?Gw6AFDuXMvc58G8IwIJWfUbbs8G+ALA=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6cdb4c81-2403-463d-b3dc-08da18f49adf
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2022 00:13:27.7035
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fmQhMK+EGvAxYC5dMtUJS7cNT1w+gie/tgld8QsMBkMHb/6ghjzqIlgnmgn+kX22X2iObSCDdU+POTQIOMYKNk8uOMQcq1posbDnHmfGh3w=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB3762
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.425,18.0.850
- definitions=2022-04-07_01:2022-04-07,2022-04-07 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 malwarescore=0
- mlxlogscore=999 suspectscore=0 adultscore=0 bulkscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2204070064
-X-Proofpoint-ORIG-GUID: byqYYCflTz8sHjuXqckRIUc6qFTGvEz_
-X-Proofpoint-GUID: byqYYCflTz8sHjuXqckRIUc6qFTGvEz_
+References: <CAHj4cs8F51f_Br7kBPYN0yDo4FqFFbodHAUN6_c=Rd4Bd+Y1sw@mail.gmail.com>
+In-Reply-To: <CAHj4cs8F51f_Br7kBPYN0yDo4FqFFbodHAUN6_c=Rd4Bd+Y1sw@mail.gmail.com>
+From:   Yi Zhang <yi.zhang@redhat.com>
+Date:   Fri, 8 Apr 2022 09:45:17 +0800
+Message-ID: <CAHj4cs9OTm9sb_5fmzgz+W9OSLeVPKix3Yri856kqQVccwd_Mw@mail.gmail.com>
+Subject: Re: [bug report][bisected] modprob -r scsi-debug take more than 3mins
+ during blktests srp/ tests
+To:     linux-scsi <linux-scsi@vger.kernel.org>
+Cc:     dgilbert@interlog.com, Bart Van Assche <bvanassche@acm.org>,
+        linux-block <linux-block@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-I've been doing a lot of iscsi patches because Oracle is paying me to work
-on iSCSI again. It was supposed to be temp assignment, but my co-worker
-that was working on iscsi moved to a new group so it looks like I'm back
-on this code again. After talking to Chris and Lee this patch adds me back
-as co-maintainer, so I can help them and people remember to cc me on
-issues.
+Ping
 
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
----
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+On Sat, Apr 2, 2022 at 3:06 PM Yi Zhang <yi.zhang@redhat.com> wrote:
+>
+> Hello
+> I found the scsi-debug module removing [1] takes more than 3mins
+> during blktests srp/ tests, and bisecting shows it was introduced from
+> [2],
+> Pls help check it, let me know if you need more info for it, thanks.
+>
+> [1]
+> # time ./check srp/001
+> srp/001 (Create and remove LUNs)                             [passed]
+>     runtime    ...  3.194s
+> real 3m12.119s
+> user 0m0.859s
+> sys 0m2.227s
+>
+> # ps aux | grep modprobe
+> root      250153  0.0  0.0  10600  2264 pts/0    D+   01:34   0:00
+> modprobe -r scsi_debug
+>
+> # cat /proc/250153/stack
+> [<0>] blk_execute_rq+0x95/0xb0
+> [<0>] __scsi_execute+0xe2/0x250
+> [<0>] sd_sync_cache+0xac/0x190
+> [<0>] sd_shutdown+0x67/0xf0
+> [<0>] sd_remove+0x39/0x80
+> [<0>] __device_release_driver+0x234/0x240
+> [<0>] device_release_driver+0x23/0x30
+> [<0>] bus_remove_device+0xd8/0x140
+> [<0>] device_del+0x18b/0x3f0
+> [<0>] __scsi_remove_device+0x102/0x140
+> [<0>] scsi_forget_host+0x55/0x60
+> [<0>] scsi_remove_host+0x72/0x110
+> [<0>] sdebug_driver_remove+0x22/0xa0 [scsi_debug]
+> [<0>] __device_release_driver+0x181/0x240
+> [<0>] device_release_driver+0x23/0x30
+> [<0>] bus_remove_device+0xd8/0x140
+> [<0>] device_del+0x18b/0x3f0
+> [<0>] device_unregister+0x13/0x60
+> [<0>] sdebug_do_remove_host+0xd1/0xf0 [scsi_debug]
+> [<0>] scsi_debug_exit+0x58/0xe1e [scsi_debug]
+> [<0>] __do_sys_delete_module.constprop.0+0x170/0x260
+> [<0>] do_syscall_64+0x3a/0x80
+> [<0>] entry_SYSCALL_64_after_hwframe+0x44/0xae
+>
+> # dmesg | tail -10
+> [  345.863755] ib_srpt:srpt_release_channel_work: ib_srpt 10.16.221.74-32
+> [  345.863855] ib_srpt:srpt_release_channel_work: ib_srpt 10.16.221.74-34
+> [  345.863953] ib_srpt:srpt_release_channel_work: ib_srpt 10.16.221.74-36
+> [  346.373371] sd 15:0:0:0: [sdb] Synchronizing SCSI cache
+> [  532.864536] sd 15:0:0:0: [sdb] Synchronize Cache(10) failed:
+> Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_OK
+> ------> seems most of the time were taken here
+> [  532.929626] eno1np0 speed is unknown, defaulting to 1000
+> [  532.938524] eno2np1 speed is unknown, defaulting to 1000
+> [  532.943957] eno4 speed is unknown, defaulting to 1000
+> [  532.998059] rdma_rxe: rxe-ah pool destroyed with unfree'd elem
+> [  533.011781] rdma_rxe: unloaded
+>
+> [2]
+> commit 2aad3cd8537033cd34f70294a23f54623ffe9c1b (refs/bisect/bad)
+> Author: Douglas Gilbert <dgilbert@interlog.com>
+> Date:   Sat Jan 8 20:28:45 2022 -0500
+>
+>     scsi: scsi_debug: Address races following module load
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index fd768d43e048..ca9d56121974 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10369,6 +10369,7 @@ F:	include/linux/isapnp.h
- ISCSI
- M:	Lee Duncan <lduncan@suse.com>
- M:	Chris Leech <cleech@redhat.com>
-+M:	Mike Christie <michael.christie@oracle.com>
- L:	open-iscsi@googlegroups.com
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
--- 
-2.25.1
+
+
+--
+Best Regards,
+  Yi Zhang
 
