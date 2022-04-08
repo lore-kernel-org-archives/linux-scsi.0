@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D5CC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 10:30:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 695F7C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 10:30:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231431AbiDHKct (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 06:32:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55122 "EHLO
+        id S231229AbiDHKcu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 06:32:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234443AbiDHKcm (ORCPT
+        with ESMTP id S234419AbiDHKcm (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 06:32:42 -0400
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A358819A559
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 03:30:38 -0700 (PDT)
-Received: by mail-wr1-x430.google.com with SMTP id w21so12197328wra.2
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Apr 2022 03:30:38 -0700 (PDT)
+Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6CC37E09A
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 03:30:36 -0700 (PDT)
+Received: by mail-wr1-x432.google.com with SMTP id m30so12210150wrb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Apr 2022 03:30:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=goRlQM30zfyuhFWXpIh6wI0jTG2AzkOHo69J00w1PBM=;
-        b=bGIA7Z/TXrXO2+MKbbhDdpM9dW8n7NxGLROivgfDWpAJJzvTZwLbGH9i7z59HFzM7P
-         0YYC0Emm0EDqpA1a6bWke6GorwifBkMbJl5zaHNsdl5RdcmVs4YEFu9cf1Xhlp3mBGLj
-         dmtpBZviZwaSHXDV8E1BpaUvRIATu/9BAW+FtBt1NaZLxzudxoCmeCZXvb/nizxwdToF
-         C7/6a7tiGaXRF/wx+RVRAjRxK6gmmhVq7tv3N/ypAaCHr+kfEu4VL58RyShE8hmA7Kgo
-         wVXd9/izPfEYj2CHSqT7tdq+1OvpDsKMN3XStQUD3z+n4YTkHFQnPPSGZU7La9uFZhpG
-         E7MA==
+        bh=6SCsXI+hzZ4M8pTIIhdBURJ1vAhjOUm0NYJOu+WF3Ho=;
+        b=lBncH8biBgxdmWqPcc7DHgEYUNyW6eCG8WXtkAhWQcl5/wS1IFdOCsNgi2DIlN76mt
+         6aH5eK7ZcIqhrXgjQxUwfnxVSLcyXu2ts5aTUVSI2EG9l6pOQGjt9XbwzeooGfgGnkUL
+         PG0ALD43x5R4kK8ppL/46Gbn6n84DaW7gJzAYO/MNs45Rpqo7a+HDukKzC0X/zWXMwbS
+         WZ3Kk1r7fU2iZzUbTR/Ucvh7OKafY8r+mnAa4hVJkPjNCEOiuFn8J2jjO4f8ta8H2dGa
+         Bdq83Szd9rtG2ESJpqEhFAp8TrAzSmuf2uQaa8RDKJ4K1xjCG1yTnSlr+CH4oGcnpike
+         xEBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=goRlQM30zfyuhFWXpIh6wI0jTG2AzkOHo69J00w1PBM=;
-        b=qgTlEdceWoh+zBZ3CY5Tc4cc6zlIx2AIhY4RCVGqFGwBt3l5+w5ZMkoQNRrgJL3pAe
-         2M5oN3GXaeS88iqFjbhsDNvMjOzZ4SCHLWjEMcUUoN58YDF7o5tur7Kj7WxyE/8ZqtDe
-         HhBq5+kB2Wjojr3PB5EsCuBawn/G8c9epF1qomv5v26JE9sp2Ml4Ep1XYAuXisOvVwxQ
-         slXc7sjRG3pqdAbdsn5rBUPJ/Q+GQvyAD77IAHSqlPolLRm7+3SZ1OgPA+EYu2YbAvfW
-         6RK9kprJy1LqJzVkiu+YO98c4CVwytgQWO+1ApEc9lQoFhZWp+T1MpkGfrykN5laR/H7
-         vyvQ==
-X-Gm-Message-State: AOAM530viREjYaLfb5fZZwYbo8x6sc3lzcvfGFrfgGEOv5IrQhFz/T1D
-        CGXXXKoCkRGpbpB4jVMwGsDozg==
-X-Google-Smtp-Source: ABdhPJyxVzgdM9g2LQRAkic6H8k7Q4GPXCT6OByFbkbnbGzPUUgCwxy5hPEQPrwQpU1yTGnSqhNrlw==
-X-Received: by 2002:adf:e6c3:0:b0:207:972c:d69 with SMTP id y3-20020adfe6c3000000b00207972c0d69mr1788951wrm.655.1649413837223;
-        Fri, 08 Apr 2022 03:30:37 -0700 (PDT)
+        bh=6SCsXI+hzZ4M8pTIIhdBURJ1vAhjOUm0NYJOu+WF3Ho=;
+        b=Sz2kvw/k4xUxZgGA6El75toaDEDlWyMzr/yUtKnSm+AOG3oIzR6xgA7yp1xjP2R+0G
+         Hq/eprnYUSggtLmohs9c6r1IA7hzjzXmgZYkBMNptohjzs6VRPlfHspR/1wDl622Gdem
+         Vek+iGKBAONO4S+3dZCjA8gr9OmwAQqao0jUgV28b6xnNzoAa9J5434gSxABuiBV26m1
+         PdIM2yPABIqpCrQsMOH4jVxJ/DeqOVIvg3tpt6hDJxfTCj+YpiRa6aP6tp/haiyj8Kwu
+         QCgNgpYuax1bRlOSGExPC2dWZSdTQzsXArIkHnBXsZUarhSXjRS0vlmr3RE32pb2bfOF
+         2PHA==
+X-Gm-Message-State: AOAM531HcdrEKlfZRKP+pArr81OKgnvUf7vOGcAOlwWG77ARwnhGpMYI
+        hC0Ym+jaI0AIkCqOTAuwrRSOyg==
+X-Google-Smtp-Source: ABdhPJysphEKfa7iwvT1xCAj6Qs8hPWMRm+D8EWo4QIZhCpoHLfEHvNaVq4xv0Ws/a5TcW8WVNpMmA==
+X-Received: by 2002:a05:6000:186c:b0:205:3479:ad85 with SMTP id d12-20020a056000186c00b002053479ad85mr14238006wri.54.1649413835229;
+        Fri, 08 Apr 2022 03:30:35 -0700 (PDT)
 Received: from localhost.localdomain (xdsl-188-155-201-27.adslplus.ch. [188.155.201.27])
-        by smtp.gmail.com with ESMTPSA id n2-20020adfb742000000b00205eda3b3c1sm20181920wre.34.2022.04.08.03.30.36
+        by smtp.gmail.com with ESMTPSA id n2-20020adfb742000000b00205eda3b3c1sm20181920wre.34.2022.04.08.03.30.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Apr 2022 03:30:36 -0700 (PDT)
+        Fri, 08 Apr 2022 03:30:34 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -55,9 +55,9 @@ To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Doug Gilbert <dgilbert@interlog.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH 4/4] scsi: ufs: ufshcd: constify pointed data
-Date:   Fri,  8 Apr 2022 12:30:27 +0200
-Message-Id: <20220408103027.311624-4-krzysztof.kozlowski@linaro.org>
+Subject: [PATCH 2/4] scsi: core: fix white-spaces
+Date:   Fri,  8 Apr 2022 12:30:25 +0200
+Message-Id: <20220408103027.311624-2-krzysztof.kozlowski@linaro.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
 References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
@@ -67,243 +67,580 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Constify arrays and pointers to data which is not modified for code
-safety.
+Remove trailing white-spaces and correct mixed-up indentation.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 48 ++++++++++++++++++++-------------------
- drivers/scsi/ufs/ufshcd.h |  9 ++++----
- 2 files changed, 30 insertions(+), 27 deletions(-)
+ drivers/scsi/scsi_debug.c         |  2 +-
+ drivers/scsi/scsi_priv.h          |  4 +--
+ drivers/scsi/scsi_proc.c          | 14 ++++-----
+ drivers/scsi/scsi_scan.c          | 10 +++----
+ drivers/scsi/scsi_sysfs.c         |  4 +--
+ drivers/scsi/scsi_transport_spi.c | 49 +++++++++++++++----------------
+ drivers/scsi/scsicam.c            |  6 ++--
+ include/scsi/scsi_cmnd.h          |  2 +-
+ include/scsi/scsi_device.h        | 10 +++----
+ include/scsi/scsi_host.h          | 13 ++++----
+ include/scsi/scsi_ioctl.h         |  2 +-
+ include/scsi/scsi_transport.h     |  2 +-
+ include/scsi/scsi_transport_spi.h |  2 +-
+ include/scsi/scsicam.h            |  2 +-
+ include/scsi/sg.h                 |  2 +-
+ 15 files changed, 61 insertions(+), 63 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3f9caafa91bf..5bfa62fa288a 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -162,7 +162,7 @@ enum {
- #define ufshcd_clear_eh_in_progress(h) \
- 	((h)->eh_flags &= ~UFSHCD_EH_IN_PROGRESS)
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index c607755cce00..e227e2fc98ba 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1602,7 +1602,7 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		u32 len;
+ 		char lu_id_str[6];
+ 		int host_no = devip->sdbg_host->shost->host_no;
+-		
++
+ 		port_group_id = (((host_no + 1) & 0x7f) << 8) +
+ 		    (devip->channel & 0x7f);
+ 		if (sdebug_vpd_use_hostno == 0)
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 5c4786310a31..8bc7353883ee 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -37,7 +37,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd);
+ void scsi_log_send(struct scsi_cmnd *cmd);
+ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
+ #else
+-static inline void scsi_log_send(struct scsi_cmnd *cmd) 
++static inline void scsi_log_send(struct scsi_cmnd *cmd)
+ 	{ };
+ static inline void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+ 	{ };
+@@ -183,7 +183,7 @@ struct bsg_device *scsi_bsg_register_queue(struct scsi_device *sdev);
  
--struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
-+const struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
- 	[UFS_PM_LVL_0] = {UFS_ACTIVE_PWR_MODE, UIC_LINK_ACTIVE_STATE},
- 	[UFS_PM_LVL_1] = {UFS_ACTIVE_PWR_MODE, UIC_LINK_HIBERN8_STATE},
- 	[UFS_PM_LVL_2] = {UFS_SLEEP_PWR_MODE, UIC_LINK_ACTIVE_STATE},
-@@ -204,7 +204,7 @@ ufs_get_desired_pm_lvl_for_dev_link_state(enum ufs_dev_pwr_mode dev_state,
- 	return UFS_PM_LVL_0;
- }
+ extern int scsi_device_max_queue_depth(struct scsi_device *sdev);
  
--static struct ufs_dev_fix ufs_fixups[] = {
-+static const struct ufs_dev_fix ufs_fixups[] = {
- 	/* UFS cards deviations table */
- 	UFS_FIX(UFS_VENDOR_MICRON, UFS_ANY_MODEL,
- 		UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM |
-@@ -343,7 +343,7 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
- }
- 
- static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
--					 struct uic_command *ucmd,
-+					 const struct uic_command *ucmd,
- 					 enum ufs_trace_str_t str_t)
- {
- 	u32 cmd;
-@@ -423,11 +423,11 @@ static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
- }
- 
- static void ufshcd_print_evt(struct ufs_hba *hba, u32 id,
--			     char *err_name)
-+			     const char *err_name)
- {
- 	int i;
- 	bool found = false;
--	struct ufs_event_hist *e;
-+	const struct ufs_event_hist *e;
- 
- 	if (id >= UFS_EVT_CNT)
- 		return;
-@@ -477,7 +477,7 @@ static void ufshcd_print_evt_hist(struct ufs_hba *hba)
- static
- void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
- {
--	struct ufshcd_lrb *lrbp;
-+	const struct ufshcd_lrb *lrbp;
- 	int prdt_length;
- 	int tag;
- 
-@@ -533,7 +533,7 @@ static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
- 
- static void ufshcd_print_host_state(struct ufs_hba *hba)
- {
--	struct scsi_device *sdev_ufs = hba->sdev_ufs_device;
-+	const struct scsi_device *sdev_ufs = hba->sdev_ufs_device;
- 
- 	dev_err(hba->dev, "UFS Host state=%d\n", hba->ufshcd_state);
- 	dev_err(hba->dev, "outstanding reqs=0x%lx tasks=0x%lx\n",
-@@ -1083,7 +1083,7 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
+-/* 
++/*
+  * internal scsi timeout functions: for use by mid-layer and transport
+  * classes.
   */
- static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
- {
--	struct scsi_device *sdev;
-+	const struct scsi_device *sdev;
- 	u32 pending = 0;
- 
- 	lockdep_assert_held(hba->host->host_lock);
-@@ -2046,14 +2046,15 @@ static inline int ufshcd_monitor_opcode2dir(u8 opcode)
- static inline bool ufshcd_should_inform_monitor(struct ufs_hba *hba,
- 						struct ufshcd_lrb *lrbp)
- {
--	struct ufs_hba_monitor *m = &hba->monitor;
-+	const struct ufs_hba_monitor *m = &hba->monitor;
- 
- 	return (m->enabled && lrbp && lrbp->cmd &&
- 		(!m->chunk_size || m->chunk_size == lrbp->cmd->sdb.length) &&
- 		ktime_before(hba->monitor.enabled_ts, lrbp->issue_time_stamp));
- }
- 
--static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+static void ufshcd_start_monitor(struct ufs_hba *hba,
-+				 const struct ufshcd_lrb *lrbp)
- {
- 	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
- 	unsigned long flags;
-@@ -2064,14 +2065,14 @@ static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- }
- 
--static void ufshcd_update_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+static void ufshcd_update_monitor(struct ufs_hba *hba, const struct ufshcd_lrb *lrbp)
- {
- 	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	if (dir >= 0 && hba->monitor.nr_queued[dir] > 0) {
--		struct request *req = scsi_cmd_to_rq(lrbp->cmd);
-+		const struct request *req = scsi_cmd_to_rq(lrbp->cmd);
- 		struct ufs_hba_monitor *m = &hba->monitor;
- 		ktime_t now, inc, lat;
- 
-@@ -4888,7 +4889,7 @@ static int ufshcd_get_lu_wp(struct ufs_hba *hba,
+diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+index 6f023a2f951b..fce8ae470be4 100644
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -4,13 +4,13 @@
   *
-  */
- static inline void ufshcd_get_lu_power_on_wp_status(struct ufs_hba *hba,
--						    struct scsi_device *sdev)
-+						    const struct scsi_device *sdev)
- {
- 	if (hba->dev_info.f_power_on_wp_en &&
- 	    !hba->dev_info.is_lu_power_on_wp) {
-@@ -5407,8 +5408,8 @@ int ufshcd_write_ee_control(struct ufs_hba *hba)
- 	return err;
- }
- 
--int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
--			     u16 set, u16 clr)
-+int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
-+			     const u16 *other_mask, u16 set, u16 clr)
- {
- 	u16 new_mask, ee_ctrl_mask;
- 	int err = 0;
-@@ -7343,7 +7344,8 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
+  * The functions in this file provide an interface between
+  * the PROC file system and the SCSI device drivers
+- * It is mainly used for debugging, statistics and to pass 
++ * It is mainly used for debugging, statistics and to pass
+  * information directly to the lowlevel driver.
   *
-  * Returns calculated max ICC level for specific regulator
-  */
--static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
-+static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan,
-+				    const char *buff)
- {
- 	int i;
- 	int curr_uA;
-@@ -7390,7 +7392,7 @@ static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
-  * Returns calculated ICC level
-  */
- static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
--							u8 *desc_buf, int len)
-+						const u8 *desc_buf, int len)
- {
- 	u32 icc_level = 0;
+- * (c) 1995 Michael Neuffer neuffer@goofy.zdv.uni-mainz.de 
++ * (c) 1995 Michael Neuffer neuffer@goofy.zdv.uni-mainz.de
+  * Version: 0.99.8   last change: 95/09/13
+- * 
+- * generic command parser provided by: 
++ *
++ * generic command parser provided by:
+  * Andreas Heilwagen <crashcar@informatik.uni-koblenz.de>
+  *
+  * generic_proc_info() support of xxxx_info() by:
+@@ -52,7 +52,7 @@ static ssize_t proc_scsi_host_write(struct file *file, const char __user *buf,
+ 	struct Scsi_Host *shost = pde_data(file_inode(file));
+ 	ssize_t ret = -ENOMEM;
+ 	char *page;
+-    
++
+ 	if (count > PROC_BLOCK_SIZE)
+ 		return -EOVERFLOW;
  
-@@ -7540,7 +7542,7 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
- 	return ret;
- }
- 
--static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
-+static void ufshcd_wb_probe(struct ufs_hba *hba, const u8 *desc_buf)
- {
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	u8 lun;
-@@ -7611,7 +7613,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
- 	hba->caps &= ~UFSHCD_CAP_WB_EN;
- }
- 
--static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
-+static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
- {
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	u32 ext_ufs_feature;
-@@ -7634,9 +7636,9 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
+@@ -106,7 +106,7 @@ void scsi_proc_hostdir_add(struct scsi_host_template *sht)
+ 	mutex_lock(&global_host_template_mutex);
+ 	if (!sht->present++) {
+ 		sht->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
+-        	if (!sht->proc_dir)
++		if (!sht->proc_dir)
+ 			printk(KERN_ERR "%s: proc_mkdir failed for %s\n",
+ 			       __func__, sht->proc_name);
  	}
+@@ -361,7 +361,7 @@ static ssize_t proc_scsi_write(struct file *file, const char __user *buf,
+ 	}
+ 
+ 	/*
+-	 * convert success returns so that we return the 
++	 * convert success returns so that we return the
+ 	 * number of bytes consumed.
+ 	 */
+ 	if (!err)
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 2ef78083f1ef..d8c272cd9544 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -108,7 +108,7 @@ MODULE_PARM_DESC(scan, "sync, async, manual, or none. "
+ static unsigned int scsi_inq_timeout = SCSI_TIMEOUT/HZ + 18;
+ 
+ module_param_named(inq_timeout, scsi_inq_timeout, uint, S_IRUGO|S_IWUSR);
+-MODULE_PARM_DESC(inq_timeout, 
++MODULE_PARM_DESC(inq_timeout,
+ 		 "Timeout (in seconds) waiting for devices to answer INQUIRY."
+ 		 " Default is 20. Some devices may need more; most need less.");
+ 
+@@ -687,7 +687,7 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 			 * not-ready to ready transition [asc/ascq=0x28/0x0]
+ 			 * or power-on, reset [asc/ascq=0x29/0x0], continue.
+ 			 * INQUIRY should not yield UNIT_ATTENTION
+-			 * but many buggy devices do so anyway. 
++			 * but many buggy devices do so anyway.
+ 			 */
+ 			if (scsi_status_is_check_condition(result) &&
+ 			    scsi_sense_valid(&sshdr)) {
+@@ -933,7 +933,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 * Don't set the device offline here; rather let the upper
+ 	 * level drivers eval the PQ to decide whether they should
+ 	 * attach. So remove ((inq_result[0] >> 5) & 7) == 1 check.
+-	 */ 
++	 */
+ 
+ 	sdev->inq_periph_qual = (inq_result[0] >> 5) & 7;
+ 	sdev->lockable = sdev->removable;
+@@ -1088,7 +1088,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
  }
  
--void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, struct ufs_dev_fix *fixups)
-+void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, const struct ufs_dev_fix *fixups)
+ #ifdef CONFIG_SCSI_LOGGING
+-/** 
++/**
+  * scsi_inq_str - print INQUIRY data from min to max index, strip trailing whitespace
+  * @buf:   Output buffer with at least end-first+1 bytes of space
+  * @inq:   Inquiry buffer (input)
+@@ -1588,7 +1588,7 @@ EXPORT_SYMBOL(__scsi_add_device);
+ int scsi_add_device(struct Scsi_Host *host, uint channel,
+ 		    uint target, u64 lun)
  {
--	struct ufs_dev_fix *f;
-+	const struct ufs_dev_fix *f;
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
+-	struct scsi_device *sdev = 
++	struct scsi_device *sdev =
+ 		__scsi_add_device(host, channel, target, lun, NULL);
+ 	if (IS_ERR(sdev))
+ 		return PTR_ERR(sdev);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index cdc6e1ab8ce7..139ec8f4a4fc 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -660,7 +660,7 @@ static int scsi_sdev_check_buf_bit(const char *buf)
+ 			return 1;
+ 		else if (buf[0] == '0')
+ 			return 0;
+-		else 
++		else
+ 			return -EINVAL;
+ 	} else
+ 		return -EINVAL;
+@@ -876,7 +876,7 @@ store_queue_type_field(struct device *dev, struct device_attribute *attr,
  
- 	if (!fixups)
-@@ -7844,7 +7846,7 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
- 	u32 granularity, peer_granularity;
- 	u32 pa_tactivate, peer_pa_tactivate;
- 	u32 pa_tactivate_us, peer_pa_tactivate_us;
--	u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
-+	const u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
+ 	if (!sdev->tagged_supported)
+ 		return -EINVAL;
+-		
++
+ 	sdev_printk(KERN_INFO, sdev,
+ 		    "ignoring write to deprecated queue_type attribute");
+ 	return count;
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index bd72c38d7bfc..51d163200f41 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -1,5 +1,5 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later
+-/* 
++/*
+  *  Parallel SCSI (SPI) transport specific attributes exported to sysfs.
+  *
+  *  Copyright (c) 2003 Silicon Graphics, Inc.  All rights reserved.
+@@ -33,7 +33,7 @@
  
- 	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_GRANULARITY),
- 				  &granularity);
-@@ -7956,7 +7958,7 @@ static int ufshcd_device_geo_params_init(struct ufs_hba *hba)
- 	return err;
+ #define DV_LOOPS	3
+ #define DV_TIMEOUT	(10*HZ)
+-#define DV_RETRIES	3	/* should only need at most 
++#define DV_RETRIES	3	/* should only need at most
+ 				 * two cc/ua clears */
+ 
+ /* Our blacklist flags */
+@@ -651,7 +651,7 @@ spi_dv_device_echo_buffer(struct scsi_device *sdev, u8 *buffer,
+ 		 * 0xffff (test b) */
+ 		for ( ; j < min(len, k + 32); j += 2) {
+ 			u16 *word = (u16 *)&buffer[j];
+-			
++
+ 			*word = (j & 0x02) ? 0x0000 : 0xffff;
+ 		}
+ 		k = j;
+@@ -667,7 +667,7 @@ spi_dv_device_echo_buffer(struct scsi_device *sdev, u8 *buffer,
+ 		for ( ; j < min(len, k + 32); j += 4) {
+ 			u32 *word = (unsigned int *)&buffer[j];
+ 			u32 roll = (pattern & 0x80000000) ? 1 : 0;
+-			
++
+ 			*word = pattern;
+ 			pattern = (pattern << 1) | roll;
+ 		}
+@@ -724,7 +724,7 @@ spi_dv_device_compare_inquiry(struct scsi_device *sdev, u8 *buffer,
+ 
+ 		result = spi_execute(sdev, spi_inquiry, DMA_FROM_DEVICE,
+ 				     ptr, len, NULL);
+-		
++
+ 		if(result || !scsi_device_online(sdev)) {
+ 			scsi_device_set_state(sdev, SDEV_QUIESCE);
+ 			return SPI_COMPARE_FAILURE;
+@@ -747,12 +747,12 @@ spi_dv_device_compare_inquiry(struct scsi_device *sdev, u8 *buffer,
+ 
+ static enum spi_compare_returns
+ spi_dv_retrain(struct scsi_device *sdev, u8 *buffer, u8 *ptr,
+-	       enum spi_compare_returns 
++	       enum spi_compare_returns
+ 	       (*compare_fn)(struct scsi_device *, u8 *, u8 *, int))
+ {
+ 	struct spi_internal *i = to_spi_internal(sdev->host->transportt);
+ 	struct scsi_target *starget = sdev->sdev_target;
+-	int period = 0, prevperiod = 0; 
++	int period = 0, prevperiod = 0;
+ 	enum spi_compare_returns retval;
+ 
+ 
+@@ -808,11 +808,11 @@ spi_dv_device_get_echo_buffer(struct scsi_device *sdev, u8 *buffer)
+ {
+ 	int l, result;
+ 
+-	/* first off do a test unit ready.  This can error out 
++	/* first off do a test unit ready.  This can error out
+ 	 * because of reservations or some other reason.  If it
+ 	 * fails, the device won't let us write to the echo buffer
+ 	 * so just return failure */
+-	
++
+ 	static const char spi_test_unit_ready[] = {
+ 		TEST_UNIT_READY, 0, 0, 0, 0, 0
+ 	};
+@@ -821,14 +821,13 @@ spi_dv_device_get_echo_buffer(struct scsi_device *sdev, u8 *buffer)
+ 		READ_BUFFER, 0x0b, 0, 0, 0, 0, 0, 0, 4, 0
+ 	};
+ 
+-	
+-	/* We send a set of three TURs to clear any outstanding 
++	/* We send a set of three TURs to clear any outstanding
+ 	 * unit attention conditions if they exist (Otherwise the
+ 	 * buffer tests won't be happy).  If the TUR still fails
+ 	 * (reservation conflict, device not ready, etc) just
+ 	 * skip the write tests */
+ 	for (l = 0; ; l++) {
+-		result = spi_execute(sdev, spi_test_unit_ready, DMA_NONE, 
++		result = spi_execute(sdev, spi_test_unit_ready, DMA_NONE,
+ 				     NULL, 0, NULL);
+ 
+ 		if(result) {
+@@ -840,7 +839,7 @@ spi_dv_device_get_echo_buffer(struct scsi_device *sdev, u8 *buffer)
+ 		}
+ 	}
+ 
+-	result = spi_execute(sdev, spi_read_buffer_descriptor, 
++	result = spi_execute(sdev, spi_read_buffer_descriptor,
+ 			     DMA_FROM_DEVICE, buffer, 4, NULL);
+ 
+ 	if (result)
+@@ -1222,7 +1221,7 @@ EXPORT_SYMBOL_GPL(spi_populate_ppr_msg);
+  * @cmd:	pointer to the scsi command for the tag
+  *
+  * Notes:
+- *	designed to create the correct type of tag message for the 
++ *	designed to create the correct type of tag message for the
+  *	particular request.  Returns the size of the tag message.
+  *	May return 0 if TCQ is disabled for this device.
+  **/
+@@ -1231,7 +1230,7 @@ int spi_populate_tag_msg(unsigned char *msg, struct scsi_cmnd *cmd)
+         if (cmd->flags & SCMD_TAGGED) {
+ 		*msg++ = SIMPLE_QUEUE_TAG;
+ 		*msg++ = scsi_cmd_to_rq(cmd)->tag;
+-        	return 2;
++		return 2;
+ 	}
+ 
+ 	return 0;
+@@ -1241,10 +1240,10 @@ EXPORT_SYMBOL_GPL(spi_populate_tag_msg);
+ #ifdef CONFIG_SCSI_CONSTANTS
+ static const char * const one_byte_msgs[] = {
+ /* 0x00 */ "Task Complete", NULL /* Extended Message */, "Save Pointers",
+-/* 0x03 */ "Restore Pointers", "Disconnect", "Initiator Error", 
++/* 0x03 */ "Restore Pointers", "Disconnect", "Initiator Error",
+ /* 0x06 */ "Abort Task Set", "Message Reject", "Nop", "Message Parity Error",
+ /* 0x0a */ "Linked Command Complete", "Linked Command Complete w/flag",
+-/* 0x0c */ "Target Reset", "Abort Task", "Clear Task Set", 
++/* 0x0c */ "Target Reset", "Abort Task", "Clear Task Set",
+ /* 0x0f */ "Initiate Recovery", "Release Recovery",
+ /* 0x11 */ "Terminate Process", "Continue Task", "Target Transfer Disable",
+ /* 0x14 */ NULL, NULL, "Clear ACA", "LUN Reset"
+@@ -1290,8 +1289,8 @@ int spi_print_msg(const unsigned char *msg)
+ 		if (len == 2)
+ 			len += 256;
+ 		if (msg[2] < ARRAY_SIZE(extended_msgs))
+-			printk ("%s ", extended_msgs[msg[2]]); 
+-		else 
++			printk ("%s ", extended_msgs[msg[2]]);
++		else
+ 			printk ("Extended Message, reserved code (0x%02x) ",
+ 				(int) msg[2]);
+ 		switch (msg[2]) {
+@@ -1312,7 +1311,7 @@ int spi_print_msg(const unsigned char *msg)
+ 			print_ptr(msg, 7, "in");
+ 			break;
+ 		default:
+-		for (i = 2; i < len; ++i) 
++		for (i = 2; i < len; ++i)
+ 			printk("%02x ", msg[i]);
+ 		}
+ 	/* Identify */
+@@ -1332,13 +1331,13 @@ int spi_print_msg(const unsigned char *msg)
+ 	/* Two byte */
+ 	} else if (msg[0] <= 0x2f) {
+ 		if ((msg[0] - 0x20) < ARRAY_SIZE(two_byte_msgs))
+-			printk("%s %02x ", two_byte_msgs[msg[0] - 0x20], 
++			printk("%s %02x ", two_byte_msgs[msg[0] - 0x20],
+ 				msg[1]);
+-		else 
+-			printk("reserved two byte (%02x %02x) ", 
++		else
++			printk("reserved two byte (%02x %02x) ",
+ 				msg[0], msg[1]);
+ 		len = 2;
+-	} else 
++	} else
+ 		printk("reserved ");
+ 	return len;
  }
- 
--static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
-+static const struct ufs_ref_clk ufs_ref_clk_freqs[] = {
- 	{19200000, REF_CLK_FREQ_19_2_MHZ},
- 	{26000000, REF_CLK_FREQ_26_MHZ},
- 	{38400000, REF_CLK_FREQ_38_4_MHZ},
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 94f545be183a..1a8f7b8977e6 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1185,7 +1185,8 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 
- void ufshcd_auto_hibern8_enable(struct ufs_hba *hba);
- void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
--void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, struct ufs_dev_fix *fixups);
-+void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
-+			     const struct ufs_dev_fix *fixups);
- #define SD_ASCII_STD true
- #define SD_RAW false
- int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
-@@ -1371,7 +1372,7 @@ static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
- 		hba->vops->config_scaling_param(hba, profile, data);
+@@ -1366,7 +1365,7 @@ int spi_print_msg(const unsigned char *msg)
+ 	} else if (msg[0] <= 0x2f) {
+ 		printk("%02x %02x", msg[0], msg[1]);
+ 		len = 2;
+-	} else 
++	} else
+ 		printk("%02x ", msg[0]);
+ 	return len;
  }
+diff --git a/drivers/scsi/scsicam.c b/drivers/scsi/scsicam.c
+index acdc0aceca5e..30385c176c68 100644
+--- a/drivers/scsi/scsicam.c
++++ b/drivers/scsi/scsicam.c
+@@ -3,7 +3,7 @@
+  * scsicam.c - SCSI CAM support functions, use for HDIO_GETGEO, etc.
+  *
+  * Copyright 1993, 1994 Drew Eckhardt
+- *      Visionary Computing 
++ *      Visionary Computing
+  *      (Unix and Linux consulting and custom programming)
+  *      drew@Colorado.EDU
+  *      +1 (303) 786-7975
+@@ -160,7 +160,7 @@ EXPORT_SYMBOL(scsi_partsize);
+  * Information technology -
+  * SCSI-2 Common access method
+  * transport and SCSI interface module
+- * 
++ *
+  * ANNEX A :
+  *
+  * setsize() converts a read capacity value to int 13h
+@@ -170,7 +170,7 @@ EXPORT_SYMBOL(scsi_partsize);
+  * will not fit in 4 bits (or 6 bits). This algorithm also
+  * minimizes the number of sectors that will be unused at the end
+  * of the disk while allowing for very large disks to be
+- * accommodated. This algorithm does not use physical geometry. 
++ * accommodated. This algorithm does not use physical geometry.
+  */
  
--extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
-+extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+ static int setsize(unsigned long capacity, unsigned int *cyls, unsigned int *hds,
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 1e80e70dfa92..410a2ceefc52 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -105,7 +105,7 @@ struct scsi_cmnd {
  
- /*
-  * ufshcd_scsi_to_upiu_lun - maps scsi LUN to UPIU LUN
-@@ -1393,8 +1394,8 @@ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+ 	unsigned transfersize;	/* How much we are guaranteed to
+ 				   transfer with each SCSI transfer
+-				   (ie, between disconnect / 
++				   (ie, between disconnect /
+ 				   reconnects.   Probably == sector
+ 				   size */
+ 	unsigned resid_len;	/* residual count */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 57e3e239a1fc..cbbd69902f61 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -42,7 +42,7 @@ enum scsi_device_state {
+ 				 * All commands allowed */
+ 	SDEV_CANCEL,		/* beginning to delete device
+ 				 * Only error handler commands allowed */
+-	SDEV_DEL,		/* device deleted 
++	SDEV_DEL,		/* device deleted
+ 				 * no commands allowed */
+ 	SDEV_QUIESCE,		/* Device quiescent.  No block commands
+ 				 * will be accepted, only specials (which
+@@ -126,14 +126,14 @@ struct scsi_device {
  
- int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask);
- int ufshcd_write_ee_control(struct ufs_hba *hba);
--int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
--			     u16 set, u16 clr);
-+int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
-+			     const u16 *other_mask, u16 set, u16 clr);
+ 	unsigned int id, channel;
+ 	u64 lun;
+-	unsigned int manufacturer;	/* Manufacturer of device, for using 
++	unsigned int manufacturer;	/* Manufacturer of device, for using
+ 					 * vendor-specific cmd's */
+ 	unsigned sector_size;	/* size in bytes */
  
- static inline int ufshcd_update_ee_drv_mask(struct ufs_hba *hba,
- 					    u16 set, u16 clr)
+ 	void *hostdata;		/* available to low-level driver */
+ 	unsigned char type;
+ 	char scsi_level;
+-	char inq_periph_qual;	/* PQ from INQUIRY data */	
++	char inq_periph_qual;	/* PQ from INQUIRY data */
+ 	struct mutex inquiry_mutex;
+ 	unsigned char inquiry_len;	/* valid bytes in 'inquiry' */
+ 	unsigned char * inquiry;	/* INQUIRY response data */
+@@ -158,7 +158,7 @@ struct scsi_device {
+ 	unsigned busy:1;	/* Used to prevent races */
+ 	unsigned lockable:1;	/* Able to prevent media removal */
+ 	unsigned locked:1;      /* Media removal disabled */
+-	unsigned borken:1;	/* Tell the Seagate driver to be 
++	unsigned borken:1;	/* Tell the Seagate driver to be
+ 				 * painfully slow on this device */
+ 	unsigned disconnect:1;	/* can disconnect */
+ 	unsigned soft_reset:1;	/* Uses soft reset option */
+@@ -167,7 +167,7 @@ struct scsi_device {
+ 	unsigned ppr:1;		/* Device supports PPR messages */
+ 	unsigned tagged_supported:1;	/* Supports SCSI-II tagged queuing */
+ 	unsigned simple_tags:1;	/* simple queue tag messages are enabled */
+-	unsigned was_reset:1;	/* There was a bus reset on the bus for 
++	unsigned was_reset:1;	/* There was a bus reset on the bus for
+ 				 * this device */
+ 	unsigned expecting_cc_ua:1; /* Expecting a CHECK_CONDITION/UNIT_ATTN
+ 				     * because we did a bus reset. */
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 667d889b92b5..44ff28d8fd0d 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -178,7 +178,7 @@ struct scsi_host_template {
+ 	 * this function, it *must* perform the task of setting the queue
+ 	 * depth on the device.  All other tasks are optional and depend
+ 	 * on what the driver supports and various implementation details.
+-	 * 
++	 *
+ 	 * Things currently recommended to be handled at this time include:
+ 	 *
+ 	 * 1.  Setting the device queue depth.  Proper setting of this is
+@@ -207,7 +207,7 @@ struct scsi_host_template {
+ 	 * has ceased the mid layer calls this point so that the low level
+ 	 * driver may completely detach itself from the scsi device and vice
+ 	 * versa.  The low level driver is responsible for freeing any memory
+-	 * it allocated in the slave_alloc or slave_configure calls. 
++	 * it allocated in the slave_alloc or slave_configure calls.
+ 	 *
+ 	 * Status: OPTIONAL
+ 	 */
+@@ -466,7 +466,7 @@ struct scsi_host_template {
+ 	/*
+ 	 * Default value for the blocking.  If the queue is empty,
+ 	 * host_blocked counts down in the request_fn until it restarts
+-	 * host operations as zero is reached.  
++	 * host operations as zero is reached.
+ 	 *
+ 	 * FIXME: This should probably be a value in the template
+ 	 */
+@@ -540,7 +540,7 @@ struct Scsi_Host {
+ 	 */
+ 	struct list_head	__devices;
+ 	struct list_head	__targets;
+-	
++
+ 	struct list_head	starved_list;
+ 
+ 	spinlock_t		default_lock;
+@@ -565,7 +565,7 @@ struct Scsi_Host {
+ 	unsigned int host_failed;	   /* commands that failed.
+ 					      protected by host_lock */
+ 	unsigned int host_eh_scheduled;    /* EH scheduled without command */
+-    
++
+ 	unsigned int host_no;  /* Used for IOCTL_GET_IDLUN, /proc/scsi et al. */
+ 
+ 	/* next two fields are used to bound the time spent in error handling */
+@@ -627,7 +627,7 @@ struct Scsi_Host {
+ 	 * time being.
+ 	 */
+ 	unsigned host_self_blocked:1;
+-    
++
+ 	/*
+ 	 * Host uses correct SCSI ordering not PC ordering. The bit is
+ 	 * set for the minority of drivers whose authors actually read
+@@ -682,7 +682,6 @@ struct Scsi_Host {
+ 	unsigned char n_io_port;
+ 	unsigned char dma_channel;
+ 	unsigned int  irq;
+-	
+ 
+ 	enum scsi_host_state shost_state;
+ 
+diff --git a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
+index beac64e38b87..c3ab331c809b 100644
+--- a/include/scsi/scsi_ioctl.h
++++ b/include/scsi/scsi_ioctl.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+ #ifndef _SCSI_IOCTL_H
+-#define _SCSI_IOCTL_H 
++#define _SCSI_IOCTL_H
+ 
+ #define SCSI_IOCTL_SEND_COMMAND 1
+ #define SCSI_IOCTL_TEST_UNIT_READY 2
+diff --git a/include/scsi/scsi_transport.h b/include/scsi/scsi_transport.h
+index a0458bda3148..1a7b92f8b423 100644
+--- a/include/scsi/scsi_transport.h
++++ b/include/scsi/scsi_transport.h
+@@ -1,5 +1,5 @@
+ /* SPDX-License-Identifier: GPL-2.0-only */
+-/* 
++/*
+  *  Transport specific attributes.
+  *
+  *  Copyright (c) 2003 Silicon Graphics, Inc.  All rights reserved.
+diff --git a/include/scsi/scsi_transport_spi.h b/include/scsi/scsi_transport_spi.h
+index 78324502b1c9..d967bc6f1836 100644
+--- a/include/scsi/scsi_transport_spi.h
++++ b/include/scsi/scsi_transport_spi.h
+@@ -1,5 +1,5 @@
+ /* SPDX-License-Identifier: GPL-2.0-or-later */
+-/* 
++/*
+  *  Parallel SCSI (SPI) transport specific attributes exported to sysfs.
+  *
+  *  Copyright (c) 2003 Silicon Graphics, Inc.  All rights reserved.
+diff --git a/include/scsi/scsicam.h b/include/scsi/scsicam.h
+index 08edd603e521..3a37512c06ec 100644
+--- a/include/scsi/scsicam.h
++++ b/include/scsi/scsicam.h
+@@ -3,7 +3,7 @@
+  * scsicam.h - SCSI CAM support functions, use for HDIO_GETGEO, etc.
+  *
+  * Copyright 1993, 1994 Drew Eckhardt
+- *      Visionary Computing 
++ *      Visionary Computing
+  *      (Unix and Linux consulting and custom programming)
+  *      drew@Colorado.EDU
+  *	+1 (303) 786-7975
+diff --git a/include/scsi/sg.h b/include/scsi/sg.h
+index 068e35d36557..e16160b5b407 100644
+--- a/include/scsi/sg.h
++++ b/include/scsi/sg.h
+@@ -244,7 +244,7 @@ typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
+ #define SG_GET_KEEP_ORPHAN 0x2288
+ 
+ /* yields scsi midlevel's access_count for this SCSI device */
+-#define SG_GET_ACCESS_COUNT 0x2289  
++#define SG_GET_ACCESS_COUNT 0x2289
+ 
+ 
+ #define SG_SCATTER_SZ (8 * 4096)
 -- 
 2.32.0
 
