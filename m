@@ -2,254 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97A4EC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 11:53:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DAF5C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 12:14:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233071AbiDHLza (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 07:55:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56568 "EHLO
+        id S234357AbiDHMQW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 08:16:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235220AbiDHLz3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 07:55:29 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10D6C3B2B7
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 04:53:23 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id C33241F85F;
-        Fri,  8 Apr 2022 11:53:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1649418801; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=bjwaftTc+q0RzGA7ol867i8l2rbeZwDDyycdnr0e4A0=;
-        b=KVx1LYRUJ2ydGeXTHSNLZYdeY/tWe15cwFYcDeBh9XW7v+pfswciVLmH1vIUd4Kr+3eQBF
-        13AlcaK1UCnLBsrIkx2AG40IFSt21BKeQnUfLpeS1L8m/6UElh0I7aEd/ES8R1NQwolLur
-        KYvDu+tifjPSAd6noNhu/PhF11OdK2U=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1649418801;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=bjwaftTc+q0RzGA7ol867i8l2rbeZwDDyycdnr0e4A0=;
-        b=BTnYRWlqrh/ZggJoNWyNLsCbszx6W6hmGAh9rCbZeEfqyWxZWO3zjrPZs5Rfxb0Q7TruIj
-        Fx+SesBMOK6ZFECw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 837FD13314;
-        Fri,  8 Apr 2022 11:53:21 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id G6EvHzEiUGJDBAAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 08 Apr 2022 11:53:21 +0000
-Message-ID: <92345d5b-c089-a178-7221-ab6eb6772534@suse.de>
-Date:   Fri, 8 Apr 2022 13:53:21 +0200
+        with ESMTP id S231381AbiDHMQV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 08:16:21 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3368914B000;
+        Fri,  8 Apr 2022 05:14:15 -0700 (PDT)
+Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KZcXs0PFVz67cQ8;
+        Fri,  8 Apr 2022 20:11:09 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 8 Apr 2022 14:14:12 +0200
+Received: from [10.47.91.39] (10.47.91.39) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Fri, 8 Apr
+ 2022 13:14:11 +0100
+Message-ID: <2a88a992-641a-b3ff-fe39-7a61fff87cb6@huawei.com>
+Date:   Fri, 8 Apr 2022 13:14:08 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Content-Language: en-US
-To:     Sumit Saxena <sumit.saxena@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, bvanassche@acm.org, hch@lst.de,
-        sathya.prakash@broadcom.com, kashyap.desai@broadcom.com,
-        chandrakanth.patil@broadcom.com, sreekanth.reddy@broadcom.com,
-        prayas.patel@broadcom.com
-References: <20220407192913.345411-1-sumit.saxena@broadcom.com>
- <20220407192913.345411-3-sumit.saxena@broadcom.com>
-From:   Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 2/8] mpi3mr: add support for driver commands
-In-Reply-To: <20220407192913.345411-3-sumit.saxena@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "Avri Altman" <avri.altman@wdc.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.91.39]
+X-ClientProxiedBy: lhreml718-chm.china.huawei.com (10.201.108.69) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/7/22 21:29, Sumit Saxena wrote:
-> There are certain BSG commands which is to be completed
-> by driver without involving firmware. These requests are termed
-> as driver commands. This patch adds support for the same.
+On 08/04/2022 11:30, Krzysztof Kozlowski wrote:
+> Several pointers to 'struct scsi_host_template' do not modify it, so
+> made them const for safety.
 > 
-> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+
+Is this standard practice? What is so special here?
+
+Thanks,
+john
+
+
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 > ---
->   drivers/scsi/mpi3mr/mpi3mr.h          |  16 +-
->   drivers/scsi/mpi3mr/mpi3mr_app.c      | 397 +++++++++++++++++++++++
->   drivers/scsi/mpi3mr/mpi3mr_debug.h    |  12 +-
->   drivers/scsi/mpi3mr/mpi3mr_fw.c       |  21 +-
->   drivers/scsi/mpi3mr/mpi3mr_os.c       |   3 +
->   include/uapi/scsi/mpi3mr/mpi3mr_bsg.h | 434 ++++++++++++++++++++++++++
->   6 files changed, 871 insertions(+), 12 deletions(-)
->   create mode 100644 include/uapi/scsi/mpi3mr/mpi3mr_bsg.h
+>   drivers/scsi/hosts.c      |  2 +-
+>   drivers/scsi/scsi_error.c | 17 +++++++++--------
+>   drivers/scsi/scsi_proc.c  |  2 +-
+>   drivers/scsi/scsi_sysfs.c |  6 +++---
+>   4 files changed, 14 insertions(+), 13 deletions(-)
 > 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-> index f0515f929110..877b0925dbc5 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr.h
-> +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-> @@ -89,7 +89,7 @@ extern int prot_mask;
->   /* Reserved Host Tag definitions */
->   #define MPI3MR_HOSTTAG_INVALID		0xFFFF
->   #define MPI3MR_HOSTTAG_INITCMDS		1
-> -#define MPI3MR_HOSTTAG_IOCTLCMDS	2
-> +#define MPI3MR_HOSTTAG_BSG_CMDS		2
->   #define MPI3MR_HOSTTAG_BLK_TMS		5
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index f69b77cbf538..65616a01761a 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -209,7 +209,7 @@ EXPORT_SYMBOL(scsi_remove_host);
+>   int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>   			   struct device *dma_dev)
+>   {
+> -	struct scsi_host_template *sht = shost->hostt;
+> +	const struct scsi_host_template *sht = shost->hostt;
+>   	int error = -EINVAL;
 >   
->   #define MPI3MR_NUM_DEVRMCMD		16
-> @@ -202,10 +202,10 @@ enum mpi3mr_iocstate {
->   enum mpi3mr_reset_reason {
->   	MPI3MR_RESET_FROM_BRINGUP = 1,
->   	MPI3MR_RESET_FROM_FAULT_WATCH = 2,
-> -	MPI3MR_RESET_FROM_IOCTL = 3,
-> +	MPI3MR_RESET_FROM_APP = 3,
->   	MPI3MR_RESET_FROM_EH_HOS = 4,
->   	MPI3MR_RESET_FROM_TM_TIMEOUT = 5,
-> -	MPI3MR_RESET_FROM_IOCTL_TIMEOUT = 6,
-> +	MPI3MR_RESET_FROM_APP_TIMEOUT = 6,
->   	MPI3MR_RESET_FROM_MUR_FAILURE = 7,
->   	MPI3MR_RESET_FROM_CTLR_CLEANUP = 8,
->   	MPI3MR_RESET_FROM_CIACTIV_FAULT = 9,
-> @@ -698,6 +698,7 @@ struct scmd_priv {
->    * @chain_bitmap_sz: Chain buffer allocator bitmap size
->    * @chain_bitmap: Chain buffer allocator bitmap
->    * @chain_buf_lock: Chain buffer list lock
-> + * @bsg_cmds: Command tracker for BSG command
->    * @host_tm_cmds: Command tracker for task management commands
->    * @dev_rmhs_cmds: Command tracker for device removal commands
->    * @evtack_cmds: Command tracker for event ack commands
-> @@ -729,6 +730,10 @@ struct scmd_priv {
->    * @requested_poll_qcount: User requested poll queue count
->    * @bsg_dev: BSG device structure
->    * @bsg_queue: Request queue for BSG device
-> + * @stop_bsgs: Stop BSG request flag
-> + * @logdata_buf: Circular buffer to store log data entries
-> + * @logdata_buf_idx: Index of entry in buffer to store
-> + * @logdata_entry_sz: log data entry size
->    */
->   struct mpi3mr_ioc {
->   	struct list_head list;
-> @@ -835,6 +840,7 @@ struct mpi3mr_ioc {
->   	void *chain_bitmap;
->   	spinlock_t chain_buf_lock;
->   
-> +	struct mpi3mr_drv_cmd bsg_cmds;
->   	struct mpi3mr_drv_cmd host_tm_cmds;
->   	struct mpi3mr_drv_cmd dev_rmhs_cmds[MPI3MR_NUM_DEVRMCMD];
->   	struct mpi3mr_drv_cmd evtack_cmds[MPI3MR_NUM_EVTACKCMD];
-> @@ -872,6 +878,10 @@ struct mpi3mr_ioc {
->   
->   	struct device *bsg_dev;
->   	struct request_queue *bsg_queue;
-> +	u8 stop_bsgs;
-> +	u8 *logdata_buf;
-> +	u16 logdata_buf_idx;
-> +	u16 logdata_entry_sz;
->   };
->   
->   /**
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> index 9b6698525990..3136f5c5d164 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> @@ -9,6 +9,386 @@
->   
->   #include "mpi3mr.h"
->   #include <linux/bsg-lib.h>
-> +#include <uapi/scsi/mpi3mr/mpi3mr_bsg.h>
-> +
-> +/**
-> + * mpi3mr_bsg_verify_adapter - verify adapter number is valid
-> + * @ioc_number: Adapter number
-> + * @mriocpp: Pointer to hold per adapter instance
-> + *
-> + * This function checks whether given adapter number matches
-> + * with an adapter id in the driver's list and if so fills
-> + * pointer to the per adapter instance in mriocpp else set that
-> + * to NULL.
-> + *
-> + * Return: Nothing.
-> + */
-> +static void mpi3mr_bsg_verify_adapter(int ioc_number,
-> +	struct mpi3mr_ioc **mriocpp)
-> +{
-> +	struct mpi3mr_ioc *mrioc;
-> +
-> +	spin_lock(&mrioc_list_lock);
-> +	list_for_each_entry(mrioc, &mrioc_list, list) {
-> +		if (mrioc->id != ioc_number)
-> +			continue;
-> +		spin_unlock(&mrioc_list_lock);
-> +		*mriocpp = mrioc;
-> +		return;
-> +	}
-> +	spin_unlock(&mrioc_list_lock);
-> +	*mriocpp = NULL;
-> +}
-> +
-Please return 'struct mpi3mr_io *' here and avoid having to pass a 
-return pointer.
-
-> +/**
-> + * mpi3mr_enable_logdata - Handler for log data enable
-> + * @mrioc: Adapter instance reference
-> + * @job: BSG job reference
-> + *
-> + * This function enables log data caching in the driver if not
-> + * already enabled and return the maximum number of log data
-> + * entries that can be cached in the driver.
-> + *
-> + * Return: 0 on success and proper error codes on failure
-> + */
-> +static long mpi3mr_enable_logdata(struct mpi3mr_ioc *mrioc,
-> +	struct bsg_job *job)
-> +{
-> +	long rval = -EINVAL;
-> +	struct mpi3mr_logdata_enable logdata_enable;
-> +
-> +	if (mrioc->logdata_buf)
-> +		goto copy_user_data;
-> +
-> +	mrioc->logdata_entry_sz =
-> +	    (mrioc->reply_sz - (sizeof(struct mpi3_event_notification_reply) - 4))
-> +	    + MPI3MR_BSG_LOGDATA_ENTRY_HEADER_SZ;
-> +	mrioc->logdata_buf_idx = 0;
-> +
-> +	mrioc->logdata_buf = kcalloc(MPI3MR_BSG_LOGDATA_MAX_ENTRIES,
-> +	    mrioc->logdata_entry_sz, GFP_KERNEL);
-> +	if (!mrioc->logdata_buf)
-> +		return -ENOMEM;
-> +
-> +copy_user_data:
-> +	memset(&logdata_enable, 0, sizeof(logdata_enable));
-> +	logdata_enable.max_entries =
-> +	    MPI3MR_BSG_LOGDATA_MAX_ENTRIES;
-> +	if (job->request_payload.payload_len >= sizeof(logdata_enable)) {
-> +		sg_copy_from_buffer(job->request_payload.sg_list,
-> +				    job->request_payload.sg_cnt,
-> +				    &logdata_enable, sizeof(logdata_enable));
-> +		rval = 0;
-> +	}
-> +	return rval;
-> +}
-
-This is a very unusual programming pattern.
-You allocate the buffer only _after_ the command has been submitted, 
-risking a failure in buffer allocation even though the command succeeded.
-
-Please convert this to allocate the buffer _first_, then issue the 
-command, and then evaluate the response.
-
-Same for the other bsg handler functions.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+>   	shost_printk(KERN_INFO, shost, "%s\n",
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
