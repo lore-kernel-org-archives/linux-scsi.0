@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2995BC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 10:30:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE432C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Apr 2022 10:30:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231933AbiDHKcy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 06:32:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55120 "EHLO
+        id S231470AbiDHKcw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 06:32:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234424AbiDHKcm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 06:32:42 -0400
-Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 859B3123BD2
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 03:30:37 -0700 (PDT)
-Received: by mail-wr1-x435.google.com with SMTP id q19so12151463wrc.6
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Apr 2022 03:30:37 -0700 (PDT)
+        with ESMTP id S234399AbiDHKck (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 06:32:40 -0400
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99D1C11164
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 03:30:35 -0700 (PDT)
+Received: by mail-wr1-x431.google.com with SMTP id w4so12109932wrg.12
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Apr 2022 03:30:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=jY9910bCEE6CaueSlgP25gbvDVfiGXDsvrMiuSTpRJs=;
-        b=jsWE9NlqdY9/SnZcpgaHV4BD6QOqlfyg2175hi7mpFvIvvGKO/5VB3y5SQYsIool48
-         q0ezcxUtdaSeifg74BPQOdqmfF+HkF409bMaQ5+yd1D3UtskedDg7YvCCd+PlbNJCGKG
-         ocDsrxehwH7jZacxraizxpeLvTzKMPk26FO0ZjmkcjFHzvMenE3D6fK4LWbnD+pnHxmd
-         wcYIlDRKu72LDJvT3/AnrBXVieAyOxRFGpeytFM6nKWYgAML1QMfIY1vqfK0C5N7ePCG
-         Zg0VzZTPvaFtcKdkoDPq6Lik9rW6R12CGHBQGPJWzMa3Uu+2GzLld5WmR+6pc2AqK1qG
-         UIaQ==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=bMG1g7rr9n+ottfcmWcC55uPNKGnZnLQG5qxdVFfJ/c=;
+        b=GuN0iCXM2lz9mjvP6iCzd1e6rt5RPWJ4nuZzuAoDx9NGZHH5tDKPTiy7cAaUL5oRNe
+         2XLkko5EpqaKsJHS92hd9/F/7EJGNUCcK/kgY41x0mhgLq1wC8Tb25SjOpJKLc17SrPs
+         sw/kQskX+44pPyNZRYH5GEPFCLQ8DUSzAxoLkRmHT3cJQBi6za7uPIfDwD1E2gk9q2Iy
+         MmiiotFxmzNl3MQYH1pdYhyYFRCpu4ANdni/IMv+Q5k1H4NplH67700EAIufIXm7Fs3H
+         WP6mmanTZx0mJ9ZhpOOH1VT3NcNuO2Ve3VvisNFx6vvaXpCvmHYjAjboqXzIdax2xvZF
+         ynWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=jY9910bCEE6CaueSlgP25gbvDVfiGXDsvrMiuSTpRJs=;
-        b=yAG7JtZnHHmUOUehxTcU32CMseiRIDU6dtOA3cRg14GNIgchSkJjXlmNGcgGTOEaA6
-         NWdQ0C/mf7O92B/VKuXGGtLucE2USklaMVtV/R9SrP9bKsEFRZ1xzBey5hfOxO9RlkJA
-         zPM/8D+MT260R9i8fT9hwVvxZh+2daMjj5ss96ciopp/LQKzYjAMZQu6UNO8w2p5jUKh
-         inX35xH5JR05adhSfk4M4bkV1YnKOdhnrMaJwRvje3m26UWMuOZQ8GrHiZdMAsCyk02q
-         34gul45OCG63fYdOcAdxcDsOt65OuC8QSCfWdWznYty5Lmly5EIntnsjS08nB+dbvzQ2
-         UHSg==
-X-Gm-Message-State: AOAM5317xlwAs/Gf8KdKGHGzyO443OAGs0sPPcSjCzEdIHS2HfPysWRB
-        iWScq1MiB6/3H4SPOwpbOK+d8g==
-X-Google-Smtp-Source: ABdhPJz7CIVJbkvmN6/MgIloAdTYV6/4QzFk6iLUr6QPGdm9PGEazwHcKu8RnxJkoswxKN2QPLl+sg==
-X-Received: by 2002:adf:90e9:0:b0:204:2ee:7d5 with SMTP id i96-20020adf90e9000000b0020402ee07d5mr13918145wri.536.1649413836155;
-        Fri, 08 Apr 2022 03:30:36 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=bMG1g7rr9n+ottfcmWcC55uPNKGnZnLQG5qxdVFfJ/c=;
+        b=iiy3ro7pgEcr6HfctKTsX/Vy88QoNX4/wKiou9Ib/3NtygH/E46dDzV11R9sWy/YAP
+         SoAWEi+OsxH+Ql3+FmlimSG6aHPQKHBtbE0HG+lbwgJveqND6jUMt2n3g4GlcXF5gcYN
+         //WrKkqnYgGiPDmbNkRY7B2A+J8KAd+1YaBEec1oMh0g0o1hhCKD2xfGrO+xdyWvuyiD
+         2XFLK+TKX0tQfKWYQji+MGFKoMH8JsjDKdSu1VQn7s7Mr6oQlSwI9Inlqaa4XqLcRTRj
+         C3fAHkEr0ypw24QsU1W83GirJig7VHE57xZuLKiYE654xJ68qQso7JOkBjoYc6D2AAkM
+         5Ghw==
+X-Gm-Message-State: AOAM532//jSLcB6ZoXMOM24+cLtlq8QUf9x/1+nra9E0qZZIMShEjIrD
+        H9ZpokAZ8NuUeG2A/OXH8piQgg==
+X-Google-Smtp-Source: ABdhPJwZ7jM3+apmEvFrdIdfPicFrGgQZzpdM5I4/wXm33byVs6x5S9P0Qn+4Q4HU8JohFPXPiB7yA==
+X-Received: by 2002:a5d:47c1:0:b0:206:1c38:ab87 with SMTP id o1-20020a5d47c1000000b002061c38ab87mr13380817wrc.620.1649413834040;
+        Fri, 08 Apr 2022 03:30:34 -0700 (PDT)
 Received: from localhost.localdomain (xdsl-188-155-201-27.adslplus.ch. [188.155.201.27])
-        by smtp.gmail.com with ESMTPSA id n2-20020adfb742000000b00205eda3b3c1sm20181920wre.34.2022.04.08.03.30.35
+        by smtp.gmail.com with ESMTPSA id n2-20020adfb742000000b00205eda3b3c1sm20181920wre.34.2022.04.08.03.30.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Apr 2022 03:30:35 -0700 (PDT)
+        Fri, 08 Apr 2022 03:30:33 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -55,76 +55,161 @@ To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Doug Gilbert <dgilbert@interlog.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH 3/4] scsi: ufs: ufshcd-pltfrm: constify pointed data
-Date:   Fri,  8 Apr 2022 12:30:26 +0200
-Message-Id: <20220408103027.311624-3-krzysztof.kozlowski@linaro.org>
+Subject: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
+Date:   Fri,  8 Apr 2022 12:30:24 +0200
+Message-Id: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
-References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Constify pointers to data which is not modified for code safety.
+Several pointers to 'struct scsi_host_template' do not modify it, so
+made them const for safety.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 ---
- drivers/scsi/ufs/ufshcd-pltfrm.c | 10 +++++-----
- drivers/scsi/ufs/ufshcd-pltfrm.h |  4 ++--
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/hosts.c      |  2 +-
+ drivers/scsi/scsi_error.c | 17 +++++++++--------
+ drivers/scsi/scsi_proc.c  |  2 +-
+ drivers/scsi/scsi_sysfs.c |  6 +++---
+ 4 files changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 87975d1a21c8..3548897c3692 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -25,7 +25,7 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	int i;
- 	struct device *dev = hba->dev;
- 	struct device_node *np = dev->of_node;
--	char *name;
-+	const char *name;
- 	u32 *clkfreq = NULL;
- 	struct ufs_clk_info *clki;
- 	int len = 0;
-@@ -78,8 +78,8 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	}
- 
- 	for (i = 0; i < sz; i += 2) {
--		ret = of_property_read_string_index(np,
--				"clock-names", i/2, (const char **)&name);
-+		ret = of_property_read_string_index(np,	"clock-names", i/2,
-+						    &name);
- 		if (ret)
- 			goto out;
- 
-@@ -207,8 +207,8 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
-  *
-  * Returns 0 on success, non-zero value on failure
-  */
--int ufshcd_get_pwr_dev_param(struct ufs_dev_params *pltfrm_param,
--			     struct ufs_pa_layer_attr *dev_max,
-+int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *pltfrm_param,
-+			     const struct ufs_pa_layer_attr *dev_max,
- 			     struct ufs_pa_layer_attr *agreed_pwr)
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index f69b77cbf538..65616a01761a 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -209,7 +209,7 @@ EXPORT_SYMBOL(scsi_remove_host);
+ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 			   struct device *dma_dev)
  {
- 	int min_pltfrm_gear;
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.h b/drivers/scsi/ufs/ufshcd-pltfrm.h
-index c33e28ac6ef6..0f0c2942a5be 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.h
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.h
-@@ -25,8 +25,8 @@ struct ufs_dev_params {
- 	u32 desired_working_mode;
- };
+-	struct scsi_host_template *sht = shost->hostt;
++	const struct scsi_host_template *sht = shost->hostt;
+ 	int error = -EINVAL;
  
--int ufshcd_get_pwr_dev_param(struct ufs_dev_params *dev_param,
--			     struct ufs_pa_layer_attr *dev_max,
-+int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *dev_param,
-+			     const struct ufs_pa_layer_attr *dev_max,
- 			     struct ufs_pa_layer_attr *agreed_pwr);
- void ufshcd_init_pwr_dev_param(struct ufs_dev_params *dev_param);
- int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	shost_printk(KERN_INFO, shost, "%s\n",
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index cdaca13ac1f1..0bca4108aae2 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -58,7 +58,7 @@
+ #define HOST_RESET_SETTLE_TIME  (10)
+ 
+ static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
+-static enum scsi_disposition scsi_try_to_abort_cmd(struct scsi_host_template *,
++static enum scsi_disposition scsi_try_to_abort_cmd(const struct scsi_host_template *,
+ 						   struct scsi_cmnd *);
+ 
+ void scsi_eh_wakeup(struct Scsi_Host *shost)
+@@ -692,7 +692,7 @@ EXPORT_SYMBOL_GPL(scsi_check_sense);
+ 
+ static void scsi_handle_queue_ramp_up(struct scsi_device *sdev)
+ {
+-	struct scsi_host_template *sht = sdev->host->hostt;
++	const struct scsi_host_template *sht = sdev->host->hostt;
+ 	struct scsi_device *tmp_sdev;
+ 
+ 	if (!sht->track_queue_depth ||
+@@ -724,7 +724,7 @@ static void scsi_handle_queue_ramp_up(struct scsi_device *sdev)
+ 
+ static void scsi_handle_queue_full(struct scsi_device *sdev)
+ {
+-	struct scsi_host_template *sht = sdev->host->hostt;
++	const struct scsi_host_template *sht = sdev->host->hostt;
+ 	struct scsi_device *tmp_sdev;
+ 
+ 	if (!sht->track_queue_depth)
+@@ -833,7 +833,7 @@ static enum scsi_disposition scsi_try_host_reset(struct scsi_cmnd *scmd)
+ 	unsigned long flags;
+ 	enum scsi_disposition rtn;
+ 	struct Scsi_Host *host = scmd->device->host;
+-	struct scsi_host_template *hostt = host->hostt;
++	const struct scsi_host_template *hostt = host->hostt;
+ 
+ 	SCSI_LOG_ERROR_RECOVERY(3,
+ 		shost_printk(KERN_INFO, host, "Snd Host RST\n"));
+@@ -863,7 +863,7 @@ static enum scsi_disposition scsi_try_bus_reset(struct scsi_cmnd *scmd)
+ 	unsigned long flags;
+ 	enum scsi_disposition rtn;
+ 	struct Scsi_Host *host = scmd->device->host;
+-	struct scsi_host_template *hostt = host->hostt;
++	const struct scsi_host_template *hostt = host->hostt;
+ 
+ 	SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
+ 		"%s: Snd Bus RST\n", __func__));
+@@ -905,7 +905,7 @@ static enum scsi_disposition scsi_try_target_reset(struct scsi_cmnd *scmd)
+ 	unsigned long flags;
+ 	enum scsi_disposition rtn;
+ 	struct Scsi_Host *host = scmd->device->host;
+-	struct scsi_host_template *hostt = host->hostt;
++	const struct scsi_host_template *hostt = host->hostt;
+ 
+ 	if (!hostt->eh_target_reset_handler)
+ 		return FAILED;
+@@ -934,7 +934,7 @@ static enum scsi_disposition scsi_try_target_reset(struct scsi_cmnd *scmd)
+ static enum scsi_disposition scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
+ {
+ 	enum scsi_disposition rtn;
+-	struct scsi_host_template *hostt = scmd->device->host->hostt;
++	const struct scsi_host_template *hostt = scmd->device->host->hostt;
+ 
+ 	if (!hostt->eh_device_reset_handler)
+ 		return FAILED;
+@@ -963,7 +963,8 @@ static enum scsi_disposition scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
+  *    link down on FibreChannel)
+  */
+ static enum scsi_disposition
+-scsi_try_to_abort_cmd(struct scsi_host_template *hostt, struct scsi_cmnd *scmd)
++scsi_try_to_abort_cmd(const struct scsi_host_template *hostt,
++		      struct scsi_cmnd *scmd)
+ {
+ 	if (!hostt->eh_abort_handler)
+ 		return FAILED;
+diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+index 95aee1ad1383..6f023a2f951b 100644
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -137,7 +137,7 @@ void scsi_proc_hostdir_rm(struct scsi_host_template *sht)
+  */
+ void scsi_proc_host_add(struct Scsi_Host *shost)
+ {
+-	struct scsi_host_template *sht = shost->hostt;
++	const struct scsi_host_template *sht = shost->hostt;
+ 	struct proc_dir_entry *p;
+ 	char name[10];
+ 
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index dc6872e352bd..cdc6e1ab8ce7 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -296,7 +296,7 @@ store_host_reset(struct device *dev, struct device_attribute *attr,
+ 		const char *buf, size_t count)
+ {
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct scsi_host_template *sht = shost->hostt;
++	const struct scsi_host_template *sht = shost->hostt;
+ 	int ret = -EINVAL;
+ 	int type;
+ 
+@@ -1017,7 +1017,7 @@ sdev_store_queue_depth(struct device *dev, struct device_attribute *attr,
+ {
+ 	int depth, retval;
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct scsi_host_template *sht = sdev->host->hostt;
++	const struct scsi_host_template *sht = sdev->host->hostt;
+ 
+ 	if (!sht->change_queue_depth)
+ 		return -EINVAL;
+@@ -1584,7 +1584,7 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
+ {
+ 	unsigned long flags;
+ 	struct Scsi_Host *shost = sdev->host;
+-	struct scsi_host_template *hostt = shost->hostt;
++	const struct scsi_host_template *hostt = shost->hostt;
+ 	struct scsi_target  *starget = sdev->sdev_target;
+ 
+ 	device_initialize(&sdev->sdev_gendev);
 -- 
 2.32.0
 
