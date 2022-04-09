@@ -2,243 +2,246 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 835A6C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 01:55:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF380C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 01:56:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240453AbiDIB5K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 21:57:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32996 "EHLO
+        id S232446AbiDIB6z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 21:58:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229490AbiDIB5I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 21:57:08 -0400
+        with ESMTP id S229490AbiDIB6z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 21:58:55 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 01689237028
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 18:55:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EF9CD15D14A
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 18:56:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1649469301;
+        s=mimecast20190719; t=1649469409;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=H1YWdn6chpzz5p7itwXKYg12/dcvQxM5ehXr8CHjn7E=;
-        b=exHwCG1ZbaA963WznvdqUEnYQfNHNKOCfYM4fuGmAdcIRC2rTbkiLE899Q/fjCy56sa6hg
-        bqbgzAE8AS5pV6yOkh6VhT7pcfZ3K323f4/tTBVLryWUcgjXKtZM+H1k39UI+hGFhWvowM
-        nUsfOgZq6zT1E7MWHCiDZDZgh+tn/pQ=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=vOuptGEydZN39ughSZCEpS1Jazf2PllONzVwyRRnEPI=;
+        b=Rll+9MgDhJ/tp3lnPpw9AjqPSZVfKKOWwB60FGX/URcBFvIVWfQr4HHpNeks3TstckHS/2
+        R4Qfe94wUaGZsl0jdEa5HRekd9wue9gTy4u0g3veh6CdWKK/YEw/Yp1puVs1PKjDT9c/X0
+        pW/yOIdtMoCttDxkM5jaWRLWj/lqt/0=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-637-3JA4w3hlMMesl5yfF67TgQ-1; Fri, 08 Apr 2022 21:54:57 -0400
-X-MC-Unique: 3JA4w3hlMMesl5yfF67TgQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+ us-mta-663-DQhlBX6CMoyefg5NOx5DsQ-1; Fri, 08 Apr 2022 21:56:44 -0400
+X-MC-Unique: DQhlBX6CMoyefg5NOx5DsQ-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 32755299E749;
-        Sat,  9 Apr 2022 01:54:57 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 67F2D101A52C;
+        Sat,  9 Apr 2022 01:56:44 +0000 (UTC)
 Received: from localhost (unknown [10.2.16.9])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2FD1BC50941;
-        Sat,  9 Apr 2022 01:54:56 +0000 (UTC)
-Date:   Fri, 8 Apr 2022 18:54:54 -0700
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 63B96141512A;
+        Sat,  9 Apr 2022 01:56:43 +0000 (UTC)
+Date:   Fri, 8 Apr 2022 18:56:41 -0700
 From:   Chris Leech <cleech@redhat.com>
 To:     Mike Christie <michael.christie@oracle.com>
 Cc:     skashyap@marvell.com, lduncan@suse.com, njavali@marvell.com,
         mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         jejb@linux.ibm.com
-Subject: Re: [PATCH 06/10] scsi: iscsi: Fix unbound endpoint error handling
-Message-ID: <YlDnbumPbfZPZ3/v@localhost>
+Subject: Re: [PATCH 07/10] scsi: iscsi: Merge suspend fields
+Message-ID: <YlDn2dGFua2/XUXl@localhost>
 Mail-Followup-To: Mike Christie <michael.christie@oracle.com>,
         skashyap@marvell.com, lduncan@suse.com, njavali@marvell.com,
         mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         jejb@linux.ibm.com
 References: <20220408001314.5014-1-michael.christie@oracle.com>
- <20220408001314.5014-7-michael.christie@oracle.com>
+ <20220408001314.5014-8-michael.christie@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220408001314.5014-7-michael.christie@oracle.com>
-X-Scanned-By: MIMEDefang 2.85 on 10.11.54.8
+In-Reply-To: <20220408001314.5014-8-michael.christie@oracle.com>
+X-Scanned-By: MIMEDefang 2.85 on 10.11.54.7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 07, 2022 at 07:13:10PM -0500, Mike Christie wrote:
-> If a driver raises a connection error before the connection is bound, we
-> can leave a cleanup_work queued that can later run and disconnect/stop a
-> connection that is logged in. The problem is that drivers can call
-> iscsi_conn_error_event for endpoints that are connected but not yet bound
-> when something like the network port they are using is brought down.
-> iscsi_cleanup_conn_work_fn will check for this and exit early, but if the
-> cleanup_work is stuck behind other works, it might not get run until after
-> userspace has done ep_disconnect. Because the endpoint is not yet bound
-> there was no way for ep_disconnect to flush the work.
+On Thu, Apr 07, 2022 at 07:13:11PM -0500, Mike Christie wrote:
+> Move the tx and rx suspend fields into one flags field.
 > 
-> The bug of leaving stop_conns queued was added in:
-> 
-> Commit 23d6fefbb3f6 ("scsi: iscsi: Fix in-kernel conn failure handling")
-> 
-> and:
-> 
-> Commit 0ab710458da1 ("scsi: iscsi: Perform connection failure entirely in
-> kernel space")
-> 
-> was supposed to fix it, but left this case.
-> 
-> This patch moves the conn state check to before we even queue the work
-> so we can avoid queueing.
-> 
-> Fixes: 0ab710458da1 ("scsi: iscsi: Perform connection failure entirely in
-> kernel space")
+> Reviewed-by: Lee Duncan <lduncan@suse.com>
 > Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > ---
->  drivers/scsi/scsi_transport_iscsi.c | 65 ++++++++++++++++-------------
->  1 file changed, 36 insertions(+), 29 deletions(-)
- 
-Reviewed-by: Chris Leech <cleech@redhat.com>
+>  drivers/scsi/bnx2i/bnx2i_hwi.c   |  2 +-
+>  drivers/scsi/bnx2i/bnx2i_iscsi.c |  2 +-
+>  drivers/scsi/cxgbi/libcxgbi.c    |  6 +++---
+>  drivers/scsi/libiscsi.c          | 20 ++++++++++----------
+>  drivers/scsi/libiscsi_tcp.c      |  2 +-
+>  include/scsi/libiscsi.h          |  9 +++++----
+>  6 files changed, 21 insertions(+), 20 deletions(-)
 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 63a4f0c022fd..2c0dd64159b0 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -2201,10 +2201,10 @@ static void iscsi_stop_conn(struct iscsi_cls_conn *conn, int flag)
->  
->  	switch (flag) {
->  	case STOP_CONN_RECOVER:
-> -		conn->state = ISCSI_CONN_FAILED;
-> +		WRITE_ONCE(conn->state, ISCSI_CONN_FAILED);
->  		break;
->  	case STOP_CONN_TERM:
-> -		conn->state = ISCSI_CONN_DOWN;
-> +		WRITE_ONCE(conn->state, ISCSI_CONN_DOWN);
->  		break;
->  	default:
->  		iscsi_cls_conn_printk(KERN_ERR, conn, "invalid stop flag %d\n",
-> @@ -2222,7 +2222,7 @@ static void iscsi_ep_disconnect(struct iscsi_cls_conn *conn, bool is_active)
->  	struct iscsi_endpoint *ep;
->  
->  	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep.\n");
-> -	conn->state = ISCSI_CONN_FAILED;
-> +	WRITE_ONCE(conn->state, ISCSI_CONN_FAILED);
->  
->  	if (!conn->ep || !session->transport->ep_disconnect)
->  		return;
-> @@ -2321,21 +2321,6 @@ static void iscsi_cleanup_conn_work_fn(struct work_struct *work)
->  	struct iscsi_cls_session *session = iscsi_conn_to_session(conn);
->  
->  	mutex_lock(&conn->ep_mutex);
-> -	/*
-> -	 * If we are not at least bound there is nothing for us to do. Userspace
-> -	 * will do a ep_disconnect call if offload is used, but will not be
-> -	 * doing a stop since there is nothing to clean up, so we have to clear
-> -	 * the cleanup bit here.
-> -	 */
-> -	if (conn->state != ISCSI_CONN_BOUND && conn->state != ISCSI_CONN_UP) {
-> -		ISCSI_DBG_TRANS_CONN(conn, "Got error while conn is already failed. Ignoring.\n");
-> -		spin_lock_irq(&conn->lock);
-> -		clear_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags);
-> -		spin_unlock_irq(&conn->lock);
-> -		mutex_unlock(&conn->ep_mutex);
-> -		return;
-> -	}
-> -
->  	/*
->  	 * Get a ref to the ep, so we don't release its ID until after
->  	 * userspace is done referencing it in iscsi_if_disconnect_bound_ep.
-> @@ -2391,7 +2376,7 @@ iscsi_alloc_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
->  	INIT_WORK(&conn->cleanup_work, iscsi_cleanup_conn_work_fn);
->  	conn->transport = transport;
->  	conn->cid = cid;
-> -	conn->state = ISCSI_CONN_DOWN;
-> +	WRITE_ONCE(conn->state, ISCSI_CONN_DOWN);
->  
->  	/* this is released in the dev's release function */
->  	if (!get_device(&session->dev))
-> @@ -2590,10 +2575,30 @@ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
->  	struct iscsi_internal *priv;
->  	int len = nlmsg_total_size(sizeof(*ev));
->  	unsigned long flags;
-> +	int state;
->  
->  	spin_lock_irqsave(&conn->lock, flags);
-> -	if (!test_and_set_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags))
-> -		queue_work(iscsi_conn_cleanup_workq, &conn->cleanup_work);
-> +	/*
-> +	 * Userspace will only do a stop call if we are at least bound. And, we
-> +	 * only need to do the in kernel cleanup if in the UP state so cmds can
-> +	 * be released to upper layers. If in other states just wait for
-> +	 * userspace to avoid races that can leave the cleanup_work queued.
-> +	 */
-> +	state = READ_ONCE(conn->state);
-> +	switch (state) {
-> +	case ISCSI_CONN_BOUND:
-> +	case ISCSI_CONN_UP:
-> +		if (!test_and_set_bit(ISCSI_CLS_CONN_BIT_CLEANUP,
-> +				      &conn->flags)) {
-> +			queue_work(iscsi_conn_cleanup_workq,
-> +				   &conn->cleanup_work);
-> +		}
-> +		break;
-> +	default:
-> +		ISCSI_DBG_TRANS_CONN(conn, "Got conn error in state %d\n",
-> +				     state);
-> +		break;
-> +	}
->  	spin_unlock_irqrestore(&conn->lock, flags);
->  
->  	priv = iscsi_if_transport_lookup(conn->transport);
-> @@ -2944,7 +2949,7 @@ iscsi_set_param(struct iscsi_transport *transport, struct iscsi_uevent *ev)
->  	char *data = (char*)ev + sizeof(*ev);
->  	struct iscsi_cls_conn *conn;
->  	struct iscsi_cls_session *session;
-> -	int err = 0, value = 0;
-> +	int err = 0, value = 0, state;
->  
->  	if (ev->u.set_param.len > PAGE_SIZE)
->  		return -EINVAL;
-> @@ -2961,8 +2966,8 @@ iscsi_set_param(struct iscsi_transport *transport, struct iscsi_uevent *ev)
->  			session->recovery_tmo = value;
->  		break;
->  	default:
-> -		if ((conn->state == ISCSI_CONN_BOUND) ||
-> -			(conn->state == ISCSI_CONN_UP)) {
-> +		state = READ_ONCE(conn->state);
-> +		if (state == ISCSI_CONN_BOUND || state == ISCSI_CONN_UP) {
->  			err = transport->set_param(conn, ev->u.set_param.param,
->  					data, ev->u.set_param.len);
->  		} else {
-> @@ -3758,7 +3763,7 @@ static int iscsi_if_transport_conn(struct iscsi_transport *transport,
->  						ev->u.b_conn.transport_eph,
->  						ev->u.b_conn.is_leading);
->  		if (!ev->r.retcode)
-> -			conn->state = ISCSI_CONN_BOUND;
-> +			WRITE_ONCE(conn->state, ISCSI_CONN_BOUND);
->  
->  		if (ev->r.retcode || !transport->ep_connect)
+Reviewed-by: Chris Leech <cleech@redhat.com>
+ 
+> diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+> index 5521469ce678..e16327a4b4c9 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+> @@ -1977,7 +1977,7 @@ static int bnx2i_process_new_cqes(struct bnx2i_conn *bnx2i_conn)
+>  		if (nopin->cq_req_sn != qp->cqe_exp_seq_sn)
 >  			break;
-> @@ -3777,7 +3782,8 @@ static int iscsi_if_transport_conn(struct iscsi_transport *transport,
->  	case ISCSI_UEVENT_START_CONN:
->  		ev->r.retcode = transport->start_conn(conn);
->  		if (!ev->r.retcode)
-> -			conn->state = ISCSI_CONN_UP;
-> +			WRITE_ONCE(conn->state, ISCSI_CONN_UP);
-> +
->  		break;
->  	case ISCSI_UEVENT_SEND_PDU:
->  		pdu_len = nlh->nlmsg_len - sizeof(*nlh) - sizeof(*ev);
-> @@ -4084,10 +4090,11 @@ static ssize_t show_conn_state(struct device *dev,
->  {
->  	struct iscsi_cls_conn *conn = iscsi_dev_to_conn(dev->parent);
->  	const char *state = "unknown";
-> +	int conn_state = READ_ONCE(conn->state);
 >  
-> -	if (conn->state >= 0 &&
-> -	    conn->state < ARRAY_SIZE(connection_state_names))
-> -		state = connection_state_names[conn->state];
-> +	if (conn_state >= 0 &&
-> +	    conn_state < ARRAY_SIZE(connection_state_names))
-> +		state = connection_state_names[conn_state];
+> -		if (unlikely(test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx))) {
+> +		if (unlikely(test_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags))) {
+>  			if (nopin->op_code == ISCSI_OP_NOOP_IN &&
+>  			    nopin->itt == (u16) RESERVED_ITT) {
+>  				printk(KERN_ALERT "bnx2i: Unsolicited "
+> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> index fe86fd61a995..15fbd09baa94 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> @@ -1721,7 +1721,7 @@ static int bnx2i_tear_down_conn(struct bnx2i_hba *hba,
+>  			struct iscsi_conn *conn = ep->conn->cls_conn->dd_data;
 >  
->  	return sysfs_emit(buf, "%s\n", state);
+>  			/* Must suspend all rx queue activity for this ep */
+> -			set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
+> +			set_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
+>  		}
+>  		/* CONN_DISCONNECT timeout may or may not be an issue depending
+>  		 * on what transcribed in TCP layer, different targets behave
+> diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+> index 8c7d4dda4cf2..4365d52c6430 100644
+> --- a/drivers/scsi/cxgbi/libcxgbi.c
+> +++ b/drivers/scsi/cxgbi/libcxgbi.c
+> @@ -1634,11 +1634,11 @@ void cxgbi_conn_pdu_ready(struct cxgbi_sock *csk)
+>  	log_debug(1 << CXGBI_DBG_PDU_RX,
+>  		"csk 0x%p, conn 0x%p.\n", csk, conn);
+>  
+> -	if (unlikely(!conn || conn->suspend_rx)) {
+> +	if (unlikely(!conn || test_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags))) {
+>  		log_debug(1 << CXGBI_DBG_PDU_RX,
+> -			"csk 0x%p, conn 0x%p, id %d, suspend_rx %lu!\n",
+> +			"csk 0x%p, conn 0x%p, id %d, conn flags 0x%lx!\n",
+>  			csk, conn, conn ? conn->id : 0xFF,
+> -			conn ? conn->suspend_rx : 0xFF);
+> +			conn ? conn->flags : 0xFF);
+>  		return;
+>  	}
+>  
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index d09926e6c8a8..5e7bd5a3b430 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -1392,8 +1392,8 @@ static bool iscsi_set_conn_failed(struct iscsi_conn *conn)
+>  	if (conn->stop_stage == 0)
+>  		session->state = ISCSI_STATE_FAILED;
+>  
+> -	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
+> -	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
+> +	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
+> +	set_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
+>  	return true;
 >  }
+>  
+> @@ -1454,7 +1454,7 @@ static int iscsi_xmit_task(struct iscsi_conn *conn, struct iscsi_task *task,
+>  	 * Do this after dropping the extra ref because if this was a requeue
+>  	 * it's removed from that list and cleanup_queued_task would miss it.
+>  	 */
+> -	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
+> +	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
+>  		/*
+>  		 * Save the task and ref in case we weren't cleaning up this
+>  		 * task and get woken up again.
+> @@ -1532,7 +1532,7 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+>  	int rc = 0;
+>  
+>  	spin_lock_bh(&conn->session->frwd_lock);
+> -	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
+> +	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
+>  		ISCSI_DBG_SESSION(conn->session, "Tx suspended!\n");
+>  		spin_unlock_bh(&conn->session->frwd_lock);
+>  		return -ENODATA;
+> @@ -1746,7 +1746,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+>  		goto fault;
+>  	}
+>  
+> -	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
+> +	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
+>  		reason = FAILURE_SESSION_IN_RECOVERY;
+>  		sc->result = DID_REQUEUE << 16;
+>  		goto fault;
+> @@ -1935,7 +1935,7 @@ static void fail_scsi_tasks(struct iscsi_conn *conn, u64 lun, int error)
+>  void iscsi_suspend_queue(struct iscsi_conn *conn)
+>  {
+>  	spin_lock_bh(&conn->session->frwd_lock);
+> -	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
+> +	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
+>  	spin_unlock_bh(&conn->session->frwd_lock);
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_suspend_queue);
+> @@ -1953,7 +1953,7 @@ void iscsi_suspend_tx(struct iscsi_conn *conn)
+>  	struct Scsi_Host *shost = conn->session->host;
+>  	struct iscsi_host *ihost = shost_priv(shost);
+>  
+> -	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
+> +	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
+>  	if (ihost->workq)
+>  		flush_workqueue(ihost->workq);
+>  }
+> @@ -1961,7 +1961,7 @@ EXPORT_SYMBOL_GPL(iscsi_suspend_tx);
+>  
+>  static void iscsi_start_tx(struct iscsi_conn *conn)
+>  {
+> -	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
+> +	clear_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
+>  	iscsi_conn_queue_work(conn);
+>  }
+>  
+> @@ -3330,8 +3330,8 @@ int iscsi_conn_bind(struct iscsi_cls_session *cls_session,
+>  	/*
+>  	 * Unblock xmitworker(), Login Phase will pass through.
+>  	 */
+> -	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
+> -	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
+> +	clear_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
+> +	clear_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_conn_bind);
+> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+> index 2e9ffe3d1a55..883005757ddb 100644
+> --- a/drivers/scsi/libiscsi_tcp.c
+> +++ b/drivers/scsi/libiscsi_tcp.c
+> @@ -927,7 +927,7 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, struct sk_buff *skb,
+>  	 */
+>  	conn->last_recv = jiffies;
+>  
+> -	if (unlikely(conn->suspend_rx)) {
+> +	if (unlikely(test_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags))) {
+>  		ISCSI_DBG_TCP(conn, "Rx suspended!\n");
+>  		*status = ISCSI_TCP_SUSPENDED;
+>  		return 0;
+> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+> index e76c94697c1b..84086c240228 100644
+> --- a/include/scsi/libiscsi.h
+> +++ b/include/scsi/libiscsi.h
+> @@ -53,8 +53,10 @@ enum {
+>  
+>  #define ISID_SIZE			6
+>  
+> -/* Connection suspend "bit" */
+> -#define ISCSI_SUSPEND_BIT		1
+> +/* Connection flags */
+> +#define ISCSI_CONN_FLAG_SUSPEND_TX	BIT(0)
+> +#define ISCSI_CONN_FLAG_SUSPEND_RX	BIT(1)
+> +
+>  
+>  #define ISCSI_ITT_MASK			0x1fff
+>  #define ISCSI_TOTAL_CMDS_MAX		4096
+> @@ -211,8 +213,7 @@ struct iscsi_conn {
+>  	struct list_head	cmdqueue;	/* data-path cmd queue */
+>  	struct list_head	requeue;	/* tasks needing another run */
+>  	struct work_struct	xmitwork;	/* per-conn. xmit workqueue */
+> -	unsigned long		suspend_tx;	/* suspend Tx */
+> -	unsigned long		suspend_rx;	/* suspend Rx */
+> +	unsigned long		flags;		/* ISCSI_CONN_FLAGs */
+>  
+>  	/* negotiated params */
+>  	unsigned		max_recv_dlength; /* initiator_max_recv_dsl*/
 > -- 
 > 2.25.1
 > 
