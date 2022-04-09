@@ -2,124 +2,195 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8250AC433F5
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 01:59:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 216C9C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 02:01:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240454AbiDICBN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 22:01:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47912 "EHLO
+        id S240493AbiDICDN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 22:03:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229991AbiDICBM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 22:01:12 -0400
+        with ESMTP id S240513AbiDICDM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 22:03:12 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8D8CE4EDC8
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 18:59:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 49C28D444B
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 19:01:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1649469546;
+        s=mimecast20190719; t=1649469664;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=q/b/yHu4mKTEESadFMz+g60Zs5SmH6WdtS6fCTd+Cq8=;
-        b=RhXtrHbc+NYgq2pTYktC5tUpDSPLOmnUv7izMwjeN3nx3j1gBRngmh8HSFep5Pd3+3AzAZ
-        swuM5OJzYGJpvFD1GIjGVjxe4SlvwIT9q/CrRKyFIy302Qf0g/remRJV58wjlBNdcO40y8
-        EYf+d1JYr30XZbeZt1fc8kuHY9u3rck=
+        bh=oNBQaqt+O3C511PT1R1jwxXBpdqvaMVtsDmFzJwNCWI=;
+        b=d9xUWGWaryXmCHqvfu81UtuqvBFxmQCrjziPEytUgyZvHaXOx3G/whg8Gg6QHMt0SqSqpY
+        ymkyjLM2hP7RZNmdOW3y/HzlRBdjaUBtrOm09yrzLtbi5GzvEFsasNpEJhbUzc4jN6TTjp
+        c/NLrCLnDCKl57C/kE6JVLhpmJSJvRo=
 Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
  [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-287-_OBYcE5hNH2xizSlfDlDSg-1; Fri, 08 Apr 2022 21:59:03 -0400
-X-MC-Unique: _OBYcE5hNH2xizSlfDlDSg-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+ us-mta-495-e893iYyZMtum97nj0JBbwg-1; Fri, 08 Apr 2022 22:01:00 -0400
+X-MC-Unique: e893iYyZMtum97nj0JBbwg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id DC518185A794;
-        Sat,  9 Apr 2022 01:59:02 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 2A39C8038E3;
+        Sat,  9 Apr 2022 02:01:00 +0000 (UTC)
 Received: from localhost (unknown [10.2.16.9])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id EFF1C815B;
-        Sat,  9 Apr 2022 01:59:01 +0000 (UTC)
-Date:   Fri, 8 Apr 2022 18:59:00 -0700
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3736F2166B1F;
+        Sat,  9 Apr 2022 02:00:59 +0000 (UTC)
+Date:   Fri, 8 Apr 2022 19:00:57 -0700
 From:   Chris Leech <cleech@redhat.com>
 To:     Mike Christie <michael.christie@oracle.com>
 Cc:     skashyap@marvell.com, lduncan@suse.com, njavali@marvell.com,
         mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         jejb@linux.ibm.com
-Subject: Re: [PATCH 08/10] scsi: iscsi: Fix nop handling during conn recovery
-Message-ID: <YlDoZMSvD5X+55Mh@localhost>
+Subject: Re: [PATCH 09/10] scsi: qedi: Fix failed disconnect handling.
+Message-ID: <YlDo2f70SeNp2Kng@localhost>
 Mail-Followup-To: Mike Christie <michael.christie@oracle.com>,
         skashyap@marvell.com, lduncan@suse.com, njavali@marvell.com,
         mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         jejb@linux.ibm.com
 References: <20220408001314.5014-1-michael.christie@oracle.com>
- <20220408001314.5014-9-michael.christie@oracle.com>
+ <20220408001314.5014-10-michael.christie@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220408001314.5014-9-michael.christie@oracle.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.11.54.5
+In-Reply-To: <20220408001314.5014-10-michael.christie@oracle.com>
+X-Scanned-By: MIMEDefang 2.78 on 10.11.54.6
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 07, 2022 at 07:13:12PM -0500, Mike Christie wrote:
-> If a offload driver doesn't use the xmit workqueue, then when we are
-> doing ep_disconnect libiscsi can still inject PDUs to the driver. This
-> adds a check for if the connection is bound before trying to inject PDUs.
+On Thu, Apr 07, 2022 at 07:13:13PM -0500, Mike Christie wrote:
+> We set the qedi_ep state to EP_STATE_OFLDCONN_START when the ep is
+> created. Then in qedi_set_path we kick off the offload work. If userspace
+> times out the connection and calls ep_disconnect, qedi will only flush the
+> offload work if the qedi_ep state has transitioned away from
+> EP_STATE_OFLDCONN_START. If we can't connect we will not have transitioned
+> state and will leave the offload work running, and we will free the
+> qedi_ep from under it.
 > 
-> Reviewed-by: Lee Duncan <lduncan@suse.com>
+> This patch just has us init the work when we create the ep, then always
+> flush it.
+> 
 > Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > ---
->  drivers/scsi/libiscsi.c | 7 ++++++-
->  include/scsi/libiscsi.h | 2 +-
->  2 files changed, 7 insertions(+), 2 deletions(-)
+>  drivers/scsi/qedi/qedi_iscsi.c | 69 +++++++++++++++++-----------------
+>  1 file changed, 34 insertions(+), 35 deletions(-)
 
 Reviewed-by: Chris Leech <cleech@redhat.com>
  
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 5e7bd5a3b430..0bf8cf8585bb 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -678,7 +678,8 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
->  	struct iscsi_task *task;
->  	itt_t itt;
+> diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+> index 8196f89f404e..31ec429104e2 100644
+> --- a/drivers/scsi/qedi/qedi_iscsi.c
+> +++ b/drivers/scsi/qedi/qedi_iscsi.c
+> @@ -860,6 +860,37 @@ static int qedi_task_xmit(struct iscsi_task *task)
+>  	return qedi_iscsi_send_ioreq(task);
+>  }
 >  
-> -	if (session->state == ISCSI_STATE_TERMINATE)
-> +	if (session->state == ISCSI_STATE_TERMINATE ||
-> +	    !test_bit(ISCSI_CONN_FLAG_BOUND, &conn->flags))
->  		return NULL;
->  
->  	if (opcode == ISCSI_OP_LOGIN || opcode == ISCSI_OP_TEXT) {
-> @@ -2214,6 +2215,8 @@ void iscsi_conn_unbind(struct iscsi_cls_conn *cls_conn, bool is_active)
->  	iscsi_suspend_tx(conn);
->  
->  	spin_lock_bh(&session->frwd_lock);
-> +	clear_bit(ISCSI_CONN_FLAG_BOUND, &conn->flags);
+> +static void qedi_offload_work(struct work_struct *work)
+> +{
+> +	struct qedi_endpoint *qedi_ep =
+> +		container_of(work, struct qedi_endpoint, offload_work);
+> +	struct qedi_ctx *qedi;
+> +	int wait_delay = 5 * HZ;
+> +	int ret;
 > +
->  	if (!is_active) {
->  		/*
->  		 * if logout timed out before userspace could even send a PDU
-> @@ -3318,6 +3321,8 @@ int iscsi_conn_bind(struct iscsi_cls_session *cls_session,
->  	spin_lock_bh(&session->frwd_lock);
->  	if (is_leading)
->  		session->leadconn = conn;
+> +	qedi = qedi_ep->qedi;
 > +
-> +	set_bit(ISCSI_CONN_FLAG_BOUND, &conn->flags);
->  	spin_unlock_bh(&session->frwd_lock);
+> +	ret = qedi_iscsi_offload_conn(qedi_ep);
+> +	if (ret) {
+> +		QEDI_ERR(&qedi->dbg_ctx,
+> +			 "offload error: iscsi_cid=%u, qedi_ep=%p, ret=%d\n",
+> +			 qedi_ep->iscsi_cid, qedi_ep, ret);
+> +		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
+> +		return;
+> +	}
+> +
+> +	ret = wait_event_interruptible_timeout(qedi_ep->tcp_ofld_wait,
+> +					       (qedi_ep->state ==
+> +					       EP_STATE_OFLDCONN_COMPL),
+> +					       wait_delay);
+> +	if (ret <= 0 || qedi_ep->state != EP_STATE_OFLDCONN_COMPL) {
+> +		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
+> +		QEDI_ERR(&qedi->dbg_ctx,
+> +			 "Offload conn TIMEOUT iscsi_cid=%u, qedi_ep=%p\n",
+> +			 qedi_ep->iscsi_cid, qedi_ep);
+> +	}
+> +}
+> +
+>  static struct iscsi_endpoint *
+>  qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+>  		int non_blocking)
+> @@ -908,6 +939,7 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+>  	}
+>  	qedi_ep = ep->dd_data;
+>  	memset(qedi_ep, 0, sizeof(struct qedi_endpoint));
+> +	INIT_WORK(&qedi_ep->offload_work, qedi_offload_work);
+>  	qedi_ep->state = EP_STATE_IDLE;
+>  	qedi_ep->iscsi_cid = (u32)-1;
+>  	qedi_ep->qedi = qedi;
+> @@ -1056,12 +1088,11 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
+>  	qedi_ep = ep->dd_data;
+>  	qedi = qedi_ep->qedi;
 >  
->  	/*
-> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-> index 84086c240228..d0a24779c52d 100644
-> --- a/include/scsi/libiscsi.h
-> +++ b/include/scsi/libiscsi.h
-> @@ -56,7 +56,7 @@ enum {
->  /* Connection flags */
->  #define ISCSI_CONN_FLAG_SUSPEND_TX	BIT(0)
->  #define ISCSI_CONN_FLAG_SUSPEND_RX	BIT(1)
+> +	flush_work(&qedi_ep->offload_work);
+> +
+>  	if (qedi_ep->state == EP_STATE_OFLDCONN_START)
+>  		goto ep_exit_recover;
+>  
+> -	if (qedi_ep->state != EP_STATE_OFLDCONN_NONE)
+> -		flush_work(&qedi_ep->offload_work);
 > -
-> +#define ISCSI_CONN_FLAG_BOUND		BIT(2)
+>  	if (qedi_ep->conn) {
+>  		qedi_conn = qedi_ep->conn;
+>  		abrt_conn = qedi_conn->abrt_conn;
+> @@ -1235,37 +1266,6 @@ static int qedi_data_avail(struct qedi_ctx *qedi, u16 vlanid)
+>  	return rc;
+>  }
 >  
->  #define ISCSI_ITT_MASK			0x1fff
->  #define ISCSI_TOTAL_CMDS_MAX		4096
+> -static void qedi_offload_work(struct work_struct *work)
+> -{
+> -	struct qedi_endpoint *qedi_ep =
+> -		container_of(work, struct qedi_endpoint, offload_work);
+> -	struct qedi_ctx *qedi;
+> -	int wait_delay = 5 * HZ;
+> -	int ret;
+> -
+> -	qedi = qedi_ep->qedi;
+> -
+> -	ret = qedi_iscsi_offload_conn(qedi_ep);
+> -	if (ret) {
+> -		QEDI_ERR(&qedi->dbg_ctx,
+> -			 "offload error: iscsi_cid=%u, qedi_ep=%p, ret=%d\n",
+> -			 qedi_ep->iscsi_cid, qedi_ep, ret);
+> -		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
+> -		return;
+> -	}
+> -
+> -	ret = wait_event_interruptible_timeout(qedi_ep->tcp_ofld_wait,
+> -					       (qedi_ep->state ==
+> -					       EP_STATE_OFLDCONN_COMPL),
+> -					       wait_delay);
+> -	if ((ret <= 0) || (qedi_ep->state != EP_STATE_OFLDCONN_COMPL)) {
+> -		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
+> -		QEDI_ERR(&qedi->dbg_ctx,
+> -			 "Offload conn TIMEOUT iscsi_cid=%u, qedi_ep=%p\n",
+> -			 qedi_ep->iscsi_cid, qedi_ep);
+> -	}
+> -}
+> -
+>  static int qedi_set_path(struct Scsi_Host *shost, struct iscsi_path *path_data)
+>  {
+>  	struct qedi_ctx *qedi;
+> @@ -1381,7 +1381,6 @@ static int qedi_set_path(struct Scsi_Host *shost, struct iscsi_path *path_data)
+>  			  qedi_ep->dst_addr, qedi_ep->dst_port);
+>  	}
+>  
+> -	INIT_WORK(&qedi_ep->offload_work, qedi_offload_work);
+>  	queue_work(qedi->offload_thread, &qedi_ep->offload_work);
+>  
+>  	ret = 0;
 > -- 
 > 2.25.1
 > 
