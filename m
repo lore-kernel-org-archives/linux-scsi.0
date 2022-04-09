@@ -2,166 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADF7AC4332F
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 08:17:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0506EC433EF
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 13:49:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240843AbiDIITT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Apr 2022 04:19:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53966 "EHLO
+        id S237578AbiDINvw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Apr 2022 09:51:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240750AbiDIITO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Apr 2022 04:19:14 -0400
-Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50AEA2545AF
-        for <linux-scsi@vger.kernel.org>; Sat,  9 Apr 2022 01:17:03 -0700 (PDT)
-Received: by mail-wr1-x436.google.com with SMTP id w21so16078222wra.2
-        for <linux-scsi@vger.kernel.org>; Sat, 09 Apr 2022 01:17:03 -0700 (PDT)
+        with ESMTP id S234964AbiDINvv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Apr 2022 09:51:51 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D32FB89;
+        Sat,  9 Apr 2022 06:49:42 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id q36-20020a17090a17a700b001cb57a8da1cso2138668pja.0;
+        Sat, 09 Apr 2022 06:49:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linbit-com.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=Ga61vN/TMGQoWv5pdVva9yHEVEk7JvDu8SvkqTkiHOU=;
-        b=16VWXfTcecI6vKD89hlxEi4M1sM+lDWraPFKcdJek4zYvKgcUI+UTTfswq4WTG3pUA
-         DwGdvejVPHmGbB6WxyxpG5RxCDgxrI8ELqeSKx9xnWZSuDqFsfTR7C0q23UBJ4NTUUke
-         9rs/lGq9PScZMcSAS9SHkk+s8lIoFrVgzxTJ9NRLUES2XsBvbZXGJskPHSy0jdzHruaB
-         iGqoe9YksSt5XleGcAhaVmv2OHki/8AO1/zdgDuyMqAmL6dyveVZDyPGB/rY+7+4UaaK
-         b7o7nIN/SrEk1fy76OtZuySau99YX+Sryl6fYO8t+jUUvribl7KiF9nqytVWelfdH+Mk
-         O4fQ==
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=eQxR8LoSXw+Q4PAtREmzhoLUOa2AwuVcoHE/IZiDWwo=;
+        b=IuMzyrwpKYrswpduJZP0e2v1e2zKNVxsEMo7zglDLrCW5PVCTv97+MFqE9iyDzECza
+         cZxFReHSImiGf8FJoF9/9BzZprLuhkd1bEA77Di3qatxal974webxUPlND+x/j0gLcGC
+         5NLAsWyODgqonR15Al3w6PBlaY73c1ISCLByRCzn9Ym7jw3C32JxYsS9N9mR7hdFVVUG
+         6/9qlMVGmjozwidXrq+wkjmxQ3zsXvKGomEG3Se1KJ9K9ef+bj0OJUPQxO1r3qJ5zQ3h
+         jK8QIpFY7H0Y7Zk0dTg/bZjCIEXjnFGRW1HQ5URr4XDPVDl2i7vXCxk6ooIgnPs7DvUG
+         6xPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=Ga61vN/TMGQoWv5pdVva9yHEVEk7JvDu8SvkqTkiHOU=;
-        b=4HEeMI9MxiiYSfi/u7UsaT7CPBGBWIqZCwh12TEhQjybU3UlqdtbIEDpl2CwMBxEN9
-         S3X684Zov8PaWNiacxSROefdxBzoxfdb5B9oXEgWmqioOgG5ixdy/6G+Kn63c1RiHmsf
-         2tKiMlNPd1bdIr4GEUdWwwfnDLivTfQqSQu7wu3RT8VcktXU+Q2VnHZg36T+ij0go0Az
-         AtbQfcNnhCOQbs/MaRlgsWbgV37wh9ZAdazDCbnTXRKy/QW29spaHwkVgU6cqu+7+Dye
-         XDgjD+cL5hnVKWaMltvBOKbQFVZn4rBiEUeu9YdgSJdhFxQGBjBoOn0AQL9ElTI9WMj/
-         SOUw==
-X-Gm-Message-State: AOAM532pYISZffoCtdjaz2RBaGN8NCQoeg/Pc/KEaMxOgTpXULEuZUxe
-        4uHyVK2Xa22vG9RF/NwEkOATTg==
-X-Google-Smtp-Source: ABdhPJyMl7hUdRWB67QUv24ZWK8mJRwBaxhnGq09ejE28bU5zjvkHivlidIC/JIf/EdWqVvIZNI6nA==
-X-Received: by 2002:adf:9581:0:b0:1ed:c341:4ed1 with SMTP id p1-20020adf9581000000b001edc3414ed1mr16998132wrp.299.1649492221449;
-        Sat, 09 Apr 2022 01:17:01 -0700 (PDT)
-Received: from [192.168.169.127] (178.115.52.210.wireless.dyn.drei.com. [178.115.52.210])
-        by smtp.gmail.com with ESMTPSA id r14-20020a05600c35ce00b0038c9f469979sm12169802wmq.40.2022.04.09.01.16.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 09 Apr 2022 01:17:01 -0700 (PDT)
-Message-ID: <5a26cdb1-b63b-8d35-640b-bc0e0f78a181@linbit.com>
-Date:   Sat, 9 Apr 2022 10:16:58 +0200
+        bh=eQxR8LoSXw+Q4PAtREmzhoLUOa2AwuVcoHE/IZiDWwo=;
+        b=tnE01Fv50uMasQWz2HhTXzOnTSGavIpUOlgSOPp1BXPCyyT00Tyz9/Vf2kZNYlXWJV
+         hqr/lCpbYz7rUVfPU1PclKaeSkIN5v7LGJbxZy2pPPBhohJl3YFb+/VNexfuH5LXnQ+B
+         XNHipTRH70mv8S6VA9cDsAqQ+RfxXmFlt8pgRCUr6l+qz+UyWMT/Eidruwyqzu02c2gq
+         re0cq/hIB3kxGCmrGaPELh4GiymUOYuiKywVl7XcxDRU5ONe+1I7op3Tilu3BadPAbsl
+         eSxo7Fdmyz55MavAF7ZK0hTQidV2WhIv/RGP5n3A3bZGuNH7ww0sjV7LQ4nd1FrsU9OX
+         vIRA==
+X-Gm-Message-State: AOAM530Gza2I6y2RxX3tYT7WZkKwjiyiU58RAwaxXd03HJZsrNQotITF
+        AW3rLk4sGfUkT/iMLGX8hw==
+X-Google-Smtp-Source: ABdhPJz3LRFoU6I5tmoscaIXDLI100a23EaVeRZc3gx7tWVOTXHiclTR+f3kdmiIopdpzaX1QQUlmQ==
+X-Received: by 2002:a17:90a:c792:b0:1ca:4d2f:3f1b with SMTP id gn18-20020a17090ac79200b001ca4d2f3f1bmr26762255pjb.86.1649512182026;
+        Sat, 09 Apr 2022 06:49:42 -0700 (PDT)
+Received: from localhost.localdomain ([144.202.91.207])
+        by smtp.gmail.com with ESMTPSA id q18-20020aa78432000000b004fb0a5aa2c7sm30964774pfn.183.2022.04.09.06.49.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 09 Apr 2022 06:49:41 -0700 (PDT)
+From:   Zheyu Ma <zheyuma97@gmail.com>
+To:     sathya.prakash@broadcom.com, kashyap.desai@broadcom.com,
+        sumit.saxena@broadcom.com, sreekanth.reddy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Zheyu Ma <zheyuma97@gmail.com>
+Subject: [PATCH] scsi: mpi3mr: Fix an error code when probing the driver
+Date:   Sat,  9 Apr 2022 21:49:26 +0800
+Message-Id: <20220409134926.331728-1-zheyuma97@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.2
-Subject: Re: [Drbd-dev] [PATCH 04/27] drbd: remove assign_p_sizes_qlim
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     jfs-discussion@lists.sourceforge.net,
-        linux-nvme@lists.infradead.org,
-        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, target-devel@vger.kernel.org,
-        linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com,
-        linux-s390@vger.kernel.org, linux-nilfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, cluster-devel@redhat.com,
-        xen-devel@lists.xenproject.org, linux-ext4@vger.kernel.org,
-        linux-um@lists.infradead.org, nbd@other.debian.org,
-        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org, ntfs3@lists.linux.dev,
-        linux-btrfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-References: <20220409045043.23593-1-hch@lst.de>
- <20220409045043.23593-5-hch@lst.de>
-From:   =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= 
-        <christoph.boehmwalder@linbit.com>
-In-Reply-To: <20220409045043.23593-5-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09.04.22 06:50, Christoph Hellwig wrote:
-> Fold each branch into its only caller.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/block/drbd/drbd_main.c | 47 +++++++++++++++-------------------
->   1 file changed, 20 insertions(+), 27 deletions(-)
-> 
-> diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
-> index 9676a1d214bc5..1262fe1c33618 100644
-> --- a/drivers/block/drbd/drbd_main.c
-> +++ b/drivers/block/drbd/drbd_main.c
-> @@ -903,31 +903,6 @@ void drbd_gen_and_send_sync_uuid(struct drbd_peer_device *peer_device)
->   	}
->   }
->   
-> -/* communicated if (agreed_features & DRBD_FF_WSAME) */
-> -static void
-> -assign_p_sizes_qlim(struct drbd_device *device, struct p_sizes *p,
-> -					struct request_queue *q)
-> -{
-> -	if (q) {
-> -		p->qlim->physical_block_size = cpu_to_be32(queue_physical_block_size(q));
-> -		p->qlim->logical_block_size = cpu_to_be32(queue_logical_block_size(q));
-> -		p->qlim->alignment_offset = cpu_to_be32(queue_alignment_offset(q));
-> -		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
-> -		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
-> -		p->qlim->discard_enabled = blk_queue_discard(q);
-> -		p->qlim->write_same_capable = 0;
-> -	} else {
-> -		q = device->rq_queue;
-> -		p->qlim->physical_block_size = cpu_to_be32(queue_physical_block_size(q));
-> -		p->qlim->logical_block_size = cpu_to_be32(queue_logical_block_size(q));
-> -		p->qlim->alignment_offset = 0;
-> -		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
-> -		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
-> -		p->qlim->discard_enabled = 0;
-> -		p->qlim->write_same_capable = 0;
-> -	}
-> -}
-> -
->   int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enum dds_flags flags)
->   {
->   	struct drbd_device *device = peer_device->device;
-> @@ -957,14 +932,32 @@ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enu
->   		q_order_type = drbd_queue_order_type(device);
->   		max_bio_size = queue_max_hw_sectors(q) << 9;
->   		max_bio_size = min(max_bio_size, DRBD_MAX_BIO_SIZE);
-> -		assign_p_sizes_qlim(device, p, q);
-> +		p->qlim->physical_block_size =
-> +			cpu_to_be32(queue_physical_block_size(q));
-> +		p->qlim->logical_block_size =
-> +			cpu_to_be32(queue_logical_block_size(q));
-> +		p->qlim->alignment_offset =
-> +			cpu_to_be32(queue_alignment_offset(q));
-> +		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
-> +		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
-> +		p->qlim->discard_enabled = blk_queue_discard(q);
->   		put_ldev(device);
->   	} else {
-> +		struct request_queue *q = device->rq_queue;
-> +
-> +		p->qlim->physical_block_size =
-> +			cpu_to_be32(queue_physical_block_size(q));
-> +		p->qlim->logical_block_size =
-> +			cpu_to_be32(queue_logical_block_size(q));
-> +		p->qlim->alignment_offset = 0;
-> +		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
-> +		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
-> +		p->qlim->discard_enabled = 0;
-> +
->   		d_size = 0;
->   		u_size = 0;
->   		q_order_type = QUEUE_ORDERED_NONE;
->   		max_bio_size = DRBD_MAX_BIO_SIZE; /* ... multiple BIOs per peer_request */
-> -		assign_p_sizes_qlim(device, p, NULL);
->   	}
->   
->   	if (peer_device->connection->agreed_pro_version <= 94)
+During the process of driver probing, probe function should return < 0
+for failure, otherwise kernel will treat value >= 0 as success.
 
-LGTM now, thanks.
+Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com>
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index f7cd70a15ea6..240bfdf9788b 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -4222,9 +4222,10 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	struct Scsi_Host *shost = NULL;
+ 	int retval = 0, i;
+ 
+-	if (osintfc_mrioc_security_status(pdev)) {
++	retval = osintfc_mrioc_security_status(pdev);
++	if (retval) {
+ 		warn_non_secure_ctlr = 1;
+-		return 1; /* For Invalid and Tampered device */
++		return retval; /* For Invalid and Tampered device */
+ 	}
+ 
+ 	shost = scsi_host_alloc(&mpi3mr_driver_template,
+-- 
+2.25.1
+
