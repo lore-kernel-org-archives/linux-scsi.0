@@ -2,124 +2,164 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12D1BC433F5
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 04:42:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FFAAC433FE
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 04:51:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233497AbiDIEo1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Apr 2022 00:44:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52910 "EHLO
+        id S239582AbiDIExD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Apr 2022 00:53:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231156AbiDIEo0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Apr 2022 00:44:26 -0400
-Received: from mp-relay-01.fibernetics.ca (mp-relay-01.fibernetics.ca [208.85.217.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2BEC1D337
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 21:42:19 -0700 (PDT)
-Received: from mailpool-fe-01.fibernetics.ca (mailpool-fe-01.fibernetics.ca [208.85.217.144])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-01.fibernetics.ca (Postfix) with ESMTPS id 1AE04E0FCA;
-        Sat,  9 Apr 2022 04:42:18 +0000 (UTC)
-Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
-        by mailpool-fe-01.fibernetics.ca (Postfix) with ESMTP id 10A5E4BDEF;
-        Sat,  9 Apr 2022 04:42:18 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-01.fibernetics.ca ([208.85.217.144])
-        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
-        with ESMTP id WXrZcF3KPm_L; Sat,  9 Apr 2022 04:42:17 +0000 (UTC)
-Received: from [192.168.48.23] (host-45-78-195-155.dyn.295.ca [45.78.195.155])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id EE33C4BDEE;
-        Sat,  9 Apr 2022 04:42:16 +0000 (UTC)
-Message-ID: <13393a17-b68d-c0b3-2baf-0b553265bc7d@interlog.com>
-Date:   Sat, 9 Apr 2022 00:42:16 -0400
+        with ESMTP id S229604AbiDIEw6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Apr 2022 00:52:58 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A77A3186F5;
+        Fri,  8 Apr 2022 21:50:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=xqCE7mrNhx9Kh54A8pTQxucRKOOrbbHmaHFew3/JwbI=; b=eautlETAmAcOF4Rx+ajcsxqxAt
+        K/gc85CxDlYY+s5RX+TP4qAcopFOJMKyRoUbJGCZqLzThYN44a81gHztvDtTQOXXVmstC/BiZza91
+        +tK8A4YQHg+wud7jKaqcpT5eZw97ewGrhmTU8yf0v/D+yZnMWYW/4nRrMz5fe0RjHIwwo6UCcWnmG
+        q/WhOest1iceY98x52QbO+Ryd19aUS/0aFt0A0VdCFkKu7+7IrcjV/rCpnun6L4B6SbhX7D4hKxqE
+        vkbaC7lWGA+28JjJD9laatsN4l8Gz9BZIOD3BKi8HF53h/Wb9nBnpD0TIdhkMhGAybm9Za6sdmIlK
+        tpLM1eWg==;
+Received: from 213-147-167-116.nat.highway.webapn.at ([213.147.167.116] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nd33f-0020RM-19; Sat, 09 Apr 2022 04:50:47 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        nbd@other.debian.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
+Subject: use block_device based APIs in block layer consumers v2
+Date:   Sat,  9 Apr 2022 06:50:16 +0200
+Message-Id: <20220409045043.23593-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH 1/6] scsi_cmnd: reinstate support for cmd_len > 32
-Content-Language: en-CA
-To:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        hch@lst.de
-References: <20220408035651.6472-1-dgilbert@interlog.com>
- <20220408035651.6472-2-dgilbert@interlog.com>
- <78f9dc98-cca8-6ba2-9146-082f95c8d5ab@acm.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <78f9dc98-cca8-6ba2-9146-082f95c8d5ab@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022-04-08 10:55, Bart Van Assche wrote:
-> On 4/7/22 20:56, Douglas Gilbert wrote:
->>   static int scsi_eh_tur(struct scsi_cmnd *scmd)
->>   {
->> -    static unsigned char tur_command[6] = {TEST_UNIT_READY, 0, 0, 0, 0, 0};
->> +    static const u8 tur_command[6] = {TEST_UNIT_READY, 0, 0, 0, 0, 0};
->>       int retry_cnt = 1;
->>       enum scsi_disposition rtn;
->>   retry_tur:
->> -    rtn = scsi_send_eh_cmnd(scmd, tur_command, 6,
->> -                scmd->device->eh_timeout, 0);
->> +    rtn = scsi_send_eh_cmnd(scmd, (u8 *)tur_command, 6, 
->> scmd->device->eh_timeout, 0);
-> 
-> Does the cast in the above function call cast away constness? There must be a 
-> better solution than casting away constness.
+Hi Jens,
 
-The definition of scsi_send_eh_cmnd() is broken, obviously it doesn't
-change the cdb of the passed argument. However I don't want to use
-the const incorrectness of the existing code to avoid const in
-the code I added. So retrofitting needs casts.
+this series cleanups up the block layer API so that APIs consumed
+by file systems are (almost) only struct block_devic based, so that
+file systems don't have to poke into block layer internals like the
+request_queue.
 
->> -bool scsi_cmd_allowed(unsigned char *cmd, fmode_t mode)
->> +bool scsi_cmd_allowed(/* const */ unsigned char *cmd, fmode_t mode)
->>   {
-> 
-> Why has 'const' been commented out?
-
-Because I don't want to change that function's interface, just point out
-how it is broken.
-
->> @@ -1460,6 +1462,7 @@ static void scsi_complete(struct request *rq)
->>   static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->>   {
->>       struct Scsi_Host *host = cmd->device->host;
->> +    u8 *cdb = (u8 *)scsi_cmnd_get_cdb(cmd);
->>       int rtn = 0;
-> 
-> Casting away constness is ugly. Consider providing two versions of 
-> scsi_cmnd_get_cdb(): one version that accepts a const pointer and returns a 
-> const pointer and another version that accepts a non-const pointer and returns a 
-> non-const pointer. Maybe _Generic() or __same_type() can be used to combine both 
-> versions into a single macro?
-
-Yes, probably a scsi_cmnd_get_changeable_cdb() function which is safe as
-long as the new cdb_len <= the existing cdb_len . I think it's the only
-occasion I did that due to the cdb[1] overwrite in the lun_in_cdb case
-(i.e. SCSI-2 SPI).
-
->> +/* This value is used to size a C array, see below if cdb length > 32 */
->> +#define SCSI_MAX_COMPILE_TIME_CDB_LEN 32
-> 
-> Since CDBs longer than 16 bytes are rare, how about using 16 as the maximum 
-> compile-time CDB size?
-
-Well that was the way it was before the surgery performed by Christoph.
-If reducing the size of the scsi_cmnd structure by another 16 bytes
-is that important, it can be easily done. My "long cdb" side of the
-union takes 16 bytes currently (12 on a 32 bit machine).
+I also found a bunch of existing bugs related to partition offsets
+and discard so these are fixed while going along.
 
 
-IMO there should be comments added to scsi_cmnd.h to stress an object
-of that type is always preceded (in memory) by a struct request object.
-They are created as a pair, and are destroyed (freed, destructed) as
-a pair.
+Changes since v1:
+ - fix a bisection hazard
+ - minor spelling fixes
+ - reorder hunks between two patches to make the changes more obvious
+ - reorder a patch to be earlier in the series to ease backporting
 
-Doug Gilbert
+
+Diffstat:
+ arch/um/drivers/ubd_kern.c           |    2 
+ block/blk-core.c                     |    4 -
+ block/blk-lib.c                      |  124 ++++++++++++++++++++---------------
+ block/blk-mq-debugfs.c               |    2 
+ block/blk-settings.c                 |   74 ++++++++++++++++++++
+ block/blk.h                          |   14 ---
+ block/fops.c                         |    2 
+ block/genhd.c                        |    4 -
+ block/ioctl.c                        |   48 ++++++++++---
+ block/partitions/core.c              |   12 ---
+ drivers/block/drbd/drbd_main.c       |   51 ++++++--------
+ drivers/block/drbd/drbd_nl.c         |   94 +++++++++++---------------
+ drivers/block/drbd/drbd_receiver.c   |   13 +--
+ drivers/block/loop.c                 |   15 +---
+ drivers/block/nbd.c                  |    5 -
+ drivers/block/null_blk/main.c        |    1 
+ drivers/block/rbd.c                  |    1 
+ drivers/block/rnbd/rnbd-clt.c        |    6 -
+ drivers/block/rnbd/rnbd-srv-dev.h    |    8 --
+ drivers/block/rnbd/rnbd-srv.c        |    5 -
+ drivers/block/virtio_blk.c           |    2 
+ drivers/block/xen-blkback/blkback.c  |   15 ++--
+ drivers/block/xen-blkback/xenbus.c   |    9 --
+ drivers/block/xen-blkfront.c         |    7 -
+ drivers/block/zram/zram_drv.c        |    1 
+ drivers/md/bcache/alloc.c            |    2 
+ drivers/md/bcache/request.c          |    4 -
+ drivers/md/bcache/super.c            |    3 
+ drivers/md/bcache/sysfs.c            |    2 
+ drivers/md/dm-cache-target.c         |    9 --
+ drivers/md/dm-clone-target.c         |    9 --
+ drivers/md/dm-io.c                   |    2 
+ drivers/md/dm-log-writes.c           |    3 
+ drivers/md/dm-raid.c                 |    9 --
+ drivers/md/dm-table.c                |   25 +------
+ drivers/md/dm-thin.c                 |   15 ----
+ drivers/md/dm.c                      |    3 
+ drivers/md/md-linear.c               |   11 ---
+ drivers/md/md.c                      |    5 -
+ drivers/md/raid0.c                   |    7 -
+ drivers/md/raid1.c                   |   18 -----
+ drivers/md/raid10.c                  |   20 -----
+ drivers/md/raid5-cache.c             |    8 +-
+ drivers/md/raid5.c                   |   14 +--
+ drivers/mmc/core/queue.c             |    3 
+ drivers/mtd/mtd_blkdevs.c            |    1 
+ drivers/nvme/host/core.c             |    6 -
+ drivers/nvme/target/io-cmd-bdev.c    |    2 
+ drivers/nvme/target/zns.c            |    3 
+ drivers/s390/block/dasd_fba.c        |    1 
+ drivers/scsi/sd.c                    |    2 
+ drivers/target/target_core_device.c  |   20 ++---
+ drivers/target/target_core_file.c    |   10 +-
+ drivers/target/target_core_iblock.c  |   17 +---
+ fs/btrfs/disk-io.c                   |    3 
+ fs/btrfs/extent-tree.c               |    8 +-
+ fs/btrfs/ioctl.c                     |   12 +--
+ fs/btrfs/volumes.c                   |    4 -
+ fs/btrfs/zoned.c                     |    3 
+ fs/direct-io.c                       |   32 +--------
+ fs/exfat/file.c                      |    5 -
+ fs/exfat/super.c                     |   10 --
+ fs/ext4/ioctl.c                      |   10 --
+ fs/ext4/mballoc.c                    |   10 +-
+ fs/ext4/super.c                      |   10 --
+ fs/f2fs/f2fs.h                       |    3 
+ fs/f2fs/file.c                       |   19 ++---
+ fs/f2fs/segment.c                    |    8 --
+ fs/fat/file.c                        |    5 -
+ fs/fat/inode.c                       |   10 --
+ fs/gfs2/rgrp.c                       |    7 -
+ fs/iomap/direct-io.c                 |    3 
+ fs/jbd2/journal.c                    |    9 --
+ fs/jfs/ioctl.c                       |    5 -
+ fs/jfs/super.c                       |    8 --
+ fs/nilfs2/ioctl.c                    |    6 -
+ fs/nilfs2/sufile.c                   |    4 -
+ fs/nilfs2/the_nilfs.c                |    4 -
+ fs/ntfs3/file.c                      |    6 -
+ fs/ntfs3/super.c                     |   10 +-
+ fs/ocfs2/ioctl.c                     |    5 -
+ fs/super.c                           |    2 
+ fs/xfs/xfs_discard.c                 |    8 +-
+ fs/xfs/xfs_log_cil.c                 |    2 
+ fs/xfs/xfs_super.c                   |   12 +--
+ fs/zonefs/super.c                    |    3 
+ include/linux/blkdev.h               |  112 +++++++++++--------------------
+ include/target/target_core_backend.h |    4 -
+ mm/swapfile.c                        |   31 ++------
+ 89 files changed, 493 insertions(+), 653 deletions(-)
