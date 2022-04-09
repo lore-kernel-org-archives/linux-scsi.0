@@ -2,166 +2,225 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD1E4C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 01:36:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EB61C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 01:40:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237897AbiDIBik (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Apr 2022 21:38:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49024 "EHLO
+        id S232954AbiDIBmq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Apr 2022 21:42:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237880AbiDIBij (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 21:38:39 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 78B19BBE2D
-        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 18:36:34 -0700 (PDT)
+        with ESMTP id S240445AbiDIBmf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2022 21:42:35 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 620CABF7A
+        for <linux-scsi@vger.kernel.org>; Fri,  8 Apr 2022 18:40:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1649468193;
+        s=mimecast20190719; t=1649468429;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=7MuI7neByZKjyQnaVVkV6WHgD3eD9gk9EHFvhSvTPXs=;
-        b=N+j4pa8EQAMeLY8lV9cpPiydJKZZnAO2uS7yVLES/t8cSwMIH17cz1Hllh42y5Uf2ga2Kp
-        g9l2G61UBB3/eco/VSO5uG8X1k9/h3Th81hi7ZHjSNQmw/NhKFvu/LFafj8zyJYGgxph4s
-        I/4tYRsBCRCnOn4xyDJ7kBaTuZ8x1ys=
+        bh=heXKNptWSHpGiFSOdFs/wZDuoub54NEee2sADwILeMc=;
+        b=Ss02LMV8cqsa7k8jbEV2rfGO0J9C1OLEAhzgepi8h6FRDIin2i//M1TOl3L0SGPCcQtRtl
+        tlcOdh4osdx9S0yHOmyOBY+v6XJ+CPA/litMDGcvNeJKi4zEbKpnPn7sTF6erauxQlVF7y
+        kIawCMluLw4cEqSE7zpc5Q5cD/JO9Dc=
 Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
  [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-262-LjYcGC7eNKWqcZHmhar4bA-1; Fri, 08 Apr 2022 21:36:27 -0400
-X-MC-Unique: LjYcGC7eNKWqcZHmhar4bA-1
+ us-mta-203-_z50LmHxMdW65OShZ8sVUA-1; Fri, 08 Apr 2022 21:40:26 -0400
+X-MC-Unique: _z50LmHxMdW65OShZ8sVUA-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C677D85A5A8;
-        Sat,  9 Apr 2022 01:36:26 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 2F94C101AA42;
+        Sat,  9 Apr 2022 01:40:26 +0000 (UTC)
 Received: from localhost (unknown [10.2.16.9])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D6A73C2812B;
-        Sat,  9 Apr 2022 01:36:25 +0000 (UTC)
-Date:   Fri, 8 Apr 2022 18:36:24 -0700
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3FFA8C44AE2;
+        Sat,  9 Apr 2022 01:40:25 +0000 (UTC)
+Date:   Fri, 8 Apr 2022 18:40:23 -0700
 From:   Chris Leech <cleech@redhat.com>
 To:     Mike Christie <michael.christie@oracle.com>
 Cc:     skashyap@marvell.com, lduncan@suse.com, njavali@marvell.com,
         mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         jejb@linux.ibm.com
-Subject: Re: [PATCH 02/10] scsi: iscsi: Fix offload conn cleanup when iscsid
- restarts
-Message-ID: <YlDjGLh2wTFCCzLb@localhost>
+Subject: Re: [PATCH 03/10] scsi: iscsi: Release endpoint ID when its freed.
+Message-ID: <YlDkB4+O77xyxUj6@localhost>
 Mail-Followup-To: Mike Christie <michael.christie@oracle.com>,
         skashyap@marvell.com, lduncan@suse.com, njavali@marvell.com,
         mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         jejb@linux.ibm.com
 References: <20220408001314.5014-1-michael.christie@oracle.com>
- <20220408001314.5014-3-michael.christie@oracle.com>
+ <20220408001314.5014-4-michael.christie@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220408001314.5014-3-michael.christie@oracle.com>
+In-Reply-To: <20220408001314.5014-4-michael.christie@oracle.com>
 X-Scanned-By: MIMEDefang 2.85 on 10.11.54.8
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 07, 2022 at 07:13:06PM -0500, Mike Christie wrote:
-> When userspace restarts during boot or upgrades it won't know about the
-> offload driver's endpoint and connection mappings. iscsid will start by
-> cleaning up the old session by doing a stop_conn call. Later if we are
-> able to create a new connection, we cleanup the old endpoint during the
-> binding stage. The problem is that if we do stop_conn before doing the
-> ep_disconnect call offload drivers can still be executing IO. We then
-> might free tasks from the under the card/driver.
-> 
-> This moves the ep_disconnect call to before we do the stop_conn call for
-> this case. It will then work and look like a normal recovery/cleanup
-> procedure from the driver's point of view.
+On Thu, Apr 07, 2022 at 07:13:07PM -0500, Mike Christie wrote:
+> We can't release the endpoint ID until all references to the endpoint have
+> been dropped or it could be allocated while in use. This has us use an idr
+> instead of looping over all conns to find a free ID and then free the ID
+> when all references have been dropped instead of when the device is only
+> deleted.
 > 
 > Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > ---
->  drivers/scsi/scsi_transport_iscsi.c | 48 +++++++++++++++++------------
->  1 file changed, 28 insertions(+), 20 deletions(-)
-
-Reviewed-by: Chris Leech <cleech@redhat.com>
+>  drivers/scsi/scsi_transport_iscsi.c | 71 ++++++++++++++---------------
+>  include/scsi/scsi_transport_iscsi.h |  2 +-
+>  2 files changed, 36 insertions(+), 37 deletions(-)
  
+Reviewed-by: Chris Leech <cleech@redhat.com>
+
 > diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 4e10457e3ab9..bf39fb5569b6 100644
+> index bf39fb5569b6..1fc7c6bfbd67 100644
 > --- a/drivers/scsi/scsi_transport_iscsi.c
 > +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -2236,6 +2236,23 @@ static void iscsi_ep_disconnect(struct iscsi_cls_conn *conn, bool is_active)
->  	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep done.\n");
+> @@ -86,6 +86,9 @@ struct iscsi_internal {
+>  	struct transport_container session_cont;
+>  };
+>  
+> +static DEFINE_IDR(iscsi_ep_idr);
+> +static DEFINE_MUTEX(iscsi_ep_idr_mutex);
+> +
+>  static atomic_t iscsi_session_nr; /* sysfs session id for next new session */
+>  
+>  static struct workqueue_struct *iscsi_conn_cleanup_workq;
+> @@ -168,6 +171,11 @@ struct device_attribute dev_attr_##_prefix##_##_name =	\
+>  static void iscsi_endpoint_release(struct device *dev)
+>  {
+>  	struct iscsi_endpoint *ep = iscsi_dev_to_endpoint(dev);
+> +
+> +	mutex_lock(&iscsi_ep_idr_mutex);
+> +	idr_remove(&iscsi_ep_idr, ep->id);
+> +	mutex_unlock(&iscsi_ep_idr_mutex);
+> +
+>  	kfree(ep);
 >  }
 >  
-> +static void iscsi_if_disconnect_bound_ep(struct iscsi_cls_conn *conn,
-> +					 struct iscsi_endpoint *ep,
-> +					 bool is_active)
-> +{
-> +	/* Check if this was a conn error and the kernel took ownership */
-> +	if (!test_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags)) {
-> +		iscsi_ep_disconnect(conn, is_active);
-> +	} else {
-> +		ISCSI_DBG_TRANS_CONN(conn, "flush kernel conn cleanup.\n");
-> +		mutex_unlock(&conn->ep_mutex);
-> +
-> +		flush_work(&conn->cleanup_work);
-> +
-> +		mutex_lock(&conn->ep_mutex);
-> +	}
-> +}
-> +
->  static int iscsi_if_stop_conn(struct iscsi_transport *transport,
->  			      struct iscsi_uevent *ev)
+> @@ -180,7 +188,7 @@ static ssize_t
+>  show_ep_handle(struct device *dev, struct device_attribute *attr, char *buf)
 >  {
-> @@ -2256,6 +2273,16 @@ static int iscsi_if_stop_conn(struct iscsi_transport *transport,
->  		cancel_work_sync(&conn->cleanup_work);
->  		iscsi_stop_conn(conn, flag);
->  	} else {
-> +		/*
-> +		 * For offload, when iscsid is restarted it won't know about
-> +		 * existing endpoints so it can't do a ep_disconnect. We clean
-> +		 * it up here for userspace.
-> +		 */
-> +		mutex_lock(&conn->ep_mutex);
-> +		if (conn->ep)
-> +			iscsi_if_disconnect_bound_ep(conn, conn->ep, true);
-> +		mutex_unlock(&conn->ep_mutex);
-> +
->  		/*
->  		 * Figure out if it was the kernel or userspace initiating this.
->  		 */
-> @@ -2984,16 +3011,7 @@ static int iscsi_if_ep_disconnect(struct iscsi_transport *transport,
->  	}
+>  	struct iscsi_endpoint *ep = iscsi_dev_to_endpoint(dev);
+> -	return sysfs_emit(buf, "%llu\n", (unsigned long long) ep->id);
+> +	return sysfs_emit(buf, "%d\n", ep->id);
+>  }
+>  static ISCSI_ATTR(ep, handle, S_IRUGO, show_ep_handle, NULL);
 >  
->  	mutex_lock(&conn->ep_mutex);
-> -	/* Check if this was a conn error and the kernel took ownership */
-> -	if (test_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags)) {
-> -		ISCSI_DBG_TRANS_CONN(conn, "flush kernel conn cleanup.\n");
-> -		mutex_unlock(&conn->ep_mutex);
+> @@ -193,48 +201,32 @@ static struct attribute_group iscsi_endpoint_group = {
+>  	.attrs = iscsi_endpoint_attrs,
+>  };
+>  
+> -#define ISCSI_MAX_EPID -1
 > -
-> -		flush_work(&conn->cleanup_work);
-> -		goto put_ep;
+> -static int iscsi_match_epid(struct device *dev, const void *data)
+> -{
+> -	struct iscsi_endpoint *ep = iscsi_dev_to_endpoint(dev);
+> -	const uint64_t *epid = data;
+> -
+> -	return *epid == ep->id;
+> -}
+> -
+>  struct iscsi_endpoint *
+>  iscsi_create_endpoint(int dd_size)
+>  {
+> -	struct device *dev;
+>  	struct iscsi_endpoint *ep;
+> -	uint64_t id;
+> -	int err;
+> -
+> -	for (id = 1; id < ISCSI_MAX_EPID; id++) {
+> -		dev = class_find_device(&iscsi_endpoint_class, NULL, &id,
+> -					iscsi_match_epid);
+> -		if (!dev)
+> -			break;
+> -		else
+> -			put_device(dev);
 > -	}
-> -
-> -	iscsi_ep_disconnect(conn, false);
-> +	iscsi_if_disconnect_bound_ep(conn, ep, false);
->  	mutex_unlock(&conn->ep_mutex);
->  put_ep:
->  	iscsi_put_endpoint(ep);
-> @@ -3704,16 +3722,6 @@ static int iscsi_if_transport_conn(struct iscsi_transport *transport,
+> -	if (id == ISCSI_MAX_EPID) {
+> -		printk(KERN_ERR "Too many connections. Max supported %u\n",
+> -		       ISCSI_MAX_EPID - 1);
+> -		return NULL;
+> -	}
+> +	int err, id;
 >  
->  	switch (nlh->nlmsg_type) {
->  	case ISCSI_UEVENT_BIND_CONN:
-> -		if (conn->ep) {
-> -			/*
-> -			 * For offload boot support where iscsid is restarted
-> -			 * during the pivot root stage, the ep will be intact
-> -			 * here when the new iscsid instance starts up and
-> -			 * reconnects.
-> -			 */
-> -			iscsi_ep_disconnect(conn, true);
-> -		}
-> -
->  		session = iscsi_session_lookup(ev->u.b_conn.sid);
->  		if (!session) {
->  			err = -EINVAL;
+>  	ep = kzalloc(sizeof(*ep) + dd_size, GFP_KERNEL);
+>  	if (!ep)
+>  		return NULL;
+>  
+> +	mutex_lock(&iscsi_ep_idr_mutex);
+> +	id = idr_alloc(&iscsi_ep_idr, ep, 0, -1, GFP_NOIO);
+> +	if (id < 0) {
+> +		mutex_unlock(&iscsi_ep_idr_mutex);
+> +		printk(KERN_ERR "Could not allocate endpoint ID. Error %d.\n",
+> +		       id);
+> +		goto free_ep;
+> +	}
+> +	mutex_unlock(&iscsi_ep_idr_mutex);
+> +
+>  	ep->id = id;
+>  	ep->dev.class = &iscsi_endpoint_class;
+> -	dev_set_name(&ep->dev, "ep-%llu", (unsigned long long) id);
+> +	dev_set_name(&ep->dev, "ep-%d", id);
+>  	err = device_register(&ep->dev);
+>          if (err)
+> -                goto free_ep;
+> +		goto free_id;
+>  
+>  	err = sysfs_create_group(&ep->dev.kobj, &iscsi_endpoint_group);
+>  	if (err)
+> @@ -248,6 +240,10 @@ iscsi_create_endpoint(int dd_size)
+>  	device_unregister(&ep->dev);
+>  	return NULL;
+>  
+> +free_id:
+> +	mutex_lock(&iscsi_ep_idr_mutex);
+> +	idr_remove(&iscsi_ep_idr, id);
+> +	mutex_unlock(&iscsi_ep_idr_mutex);
+>  free_ep:
+>  	kfree(ep);
+>  	return NULL;
+> @@ -275,14 +271,17 @@ EXPORT_SYMBOL_GPL(iscsi_put_endpoint);
+>   */
+>  struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle)
+>  {
+> -	struct device *dev;
+> +	struct iscsi_endpoint *ep;
+>  
+> -	dev = class_find_device(&iscsi_endpoint_class, NULL, &handle,
+> -				iscsi_match_epid);
+> -	if (!dev)
+> -		return NULL;
+> +	mutex_lock(&iscsi_ep_idr_mutex);
+> +	ep = idr_find(&iscsi_ep_idr, handle);
+> +	if (!ep)
+> +		goto unlock;
+>  
+> -	return iscsi_dev_to_endpoint(dev);
+> +	get_device(&ep->dev);
+> +unlock:
+> +	mutex_unlock(&iscsi_ep_idr_mutex);
+> +	return ep;
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_lookup_endpoint);
+>  
+> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+> index 38e4a67f5922..fdd486047404 100644
+> --- a/include/scsi/scsi_transport_iscsi.h
+> +++ b/include/scsi/scsi_transport_iscsi.h
+> @@ -295,7 +295,7 @@ extern void iscsi_host_for_each_session(struct Scsi_Host *shost,
+>  struct iscsi_endpoint {
+>  	void *dd_data;			/* LLD private data */
+>  	struct device dev;
+> -	uint64_t id;
+> +	int id;
+>  	struct iscsi_cls_conn *conn;
+>  };
+>  
 > -- 
 > 2.25.1
 > 
