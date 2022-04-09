@@ -2,31 +2,31 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDBC6C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 04:53:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0535DC433FE
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Apr 2022 04:53:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241162AbiDIEzL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Apr 2022 00:55:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49188 "EHLO
+        id S235250AbiDIEzp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Apr 2022 00:55:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240959AbiDIExz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Apr 2022 00:53:55 -0400
+        with ESMTP id S241123AbiDIEyi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Apr 2022 00:54:38 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87B80BCB44;
-        Fri,  8 Apr 2022 21:51:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24BAABAB84;
+        Fri,  8 Apr 2022 21:51:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=OGJvHxXgCvw9/l2/0Y6T0ivupEa5/VICLVgDi4pj6zk=; b=bvdxNtIBSK2e/CHWOJvjhJQ/pD
-        ziWAaN1+H5rv0PFjwCtxUb32HQisXqhv0CfdNRRakGSvxS2SlGM7sa31KM+kznDnIR/AZLVb6CdU4
-        vS8DuWDB+gUHx5md6g+mCQSqz3crMjKTJ6PsdykxY9osHuidQtFbDkq6qQ9nvfWGIgIk4Rkp02Mzl
-        WCYI+BDG1gl4hW/mPoncA+V1yctBgiee9+ltyBfbzQvs00T9mPYBlaJ4i/TRsB0Z4Fkgt4oIU5qzV
-        IXkEEPpdqsWu7ooiuyvMhxa14Ribw7Jyx9BT4vHhU8n59256QhhUPR6N/0aIFpZCRpJfpeccBNtOP
-        uiV7Ifjw==;
+        bh=q2ranmlO4Nl6vweHnkN5W/lhAXFqjXPKY6W4cI6bGNw=; b=ZwXWqq27tMeyVdjCd9/fIV+62b
+        YxoMIWLS5QBW9+N570g/a7MqnPHccUJQp/73S/ehTJ9VEsGu0nZXpLT2GsIb95dlGJnKSkFIT7WNJ
+        Q2sY9of4Z8TkC7fc/FklkIOgdhls0Ao3F7MloWBwUhbTcUSp/MjOHIau/ybVaMror8iobGwcOp0AA
+        +a4GNDWpu5gRhJyLqGbdZW5DNs6lIAJYj08W7f1olcpdRSmv2+7GaRf1xJ5QApQRYFU40mFosdlZy
+        0ALRAEA3rIIwBWnBlj8QEgYL1eIM3It3IcCM+Tc/eC3LmnRLah4kAgVmx2WJTHuXLjilmSIpHNWrZ
+        1FnhvyJg==;
 Received: from 213-147-167-116.nat.highway.webapn.at ([213.147.167.116] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nd34C-0020kv-0d; Sat, 09 Apr 2022 04:51:20 +0000
+        id 1nd34b-0021Bd-D3; Sat, 09 Apr 2022 04:51:45 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -42,10 +42,11 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
-Subject: [PATCH 10/27] mm: use bdev_is_zoned in claim_swapfile
-Date:   Sat,  9 Apr 2022 06:50:26 +0200
-Message-Id: <20220409045043.23593-11-hch@lst.de>
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 17/27] block: use bdev_alignment_offset in disk_alignment_offset_show
+Date:   Sat,  9 Apr 2022 06:50:33 +0200
+Message-Id: <20220409045043.23593-18-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220409045043.23593-1-hch@lst.de>
 References: <20220409045043.23593-1-hch@lst.de>
@@ -56,26 +57,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the bdev based helper instead of poking into the queue.
+This does the same as the open coded variant except for an extra branch,
+and allows to remove queue_alignment_offset entirely.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- mm/swapfile.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/genhd.c          | 2 +-
+ include/linux/blkdev.h | 8 --------
+ 2 files changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index 63c61f8b26118..4c7537162af5e 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -2761,7 +2761,7 @@ static int claim_swapfile(struct swap_info_struct *p, struct inode *inode)
- 		 * write only restriction.  Hence zoned block devices are not
- 		 * suitable for swapping.  Disallow them here.
- 		 */
--		if (blk_queue_is_zoned(p->bdev->bd_disk->queue))
-+		if (bdev_is_zoned(p->bdev))
- 			return -EINVAL;
- 		p->flags |= SWP_BLKDEV;
- 	} else if (S_ISREG(inode->i_mode)) {
+diff --git a/block/genhd.c b/block/genhd.c
+index b8b6759d670f0..712031ce19070 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1010,7 +1010,7 @@ static ssize_t disk_alignment_offset_show(struct device *dev,
+ {
+ 	struct gendisk *disk = dev_to_disk(dev);
+ 
+-	return sprintf(buf, "%d\n", queue_alignment_offset(disk->queue));
++	return sprintf(buf, "%d\n", bdev_alignment_offset(disk->part0));
+ }
+ 
+ static ssize_t disk_discard_alignment_show(struct device *dev,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index f8c50b77543eb..d5346e72e3645 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1251,14 +1251,6 @@ bdev_zone_write_granularity(struct block_device *bdev)
+ 	return queue_zone_write_granularity(bdev_get_queue(bdev));
+ }
+ 
+-static inline int queue_alignment_offset(const struct request_queue *q)
+-{
+-	if (q->limits.misaligned)
+-		return -1;
+-
+-	return q->limits.alignment_offset;
+-}
+-
+ static inline int queue_limit_alignment_offset(struct queue_limits *lim, sector_t sector)
+ {
+ 	unsigned int granularity = max(lim->physical_block_size, lim->io_min);
 -- 
 2.30.2
 
