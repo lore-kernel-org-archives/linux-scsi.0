@@ -2,61 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40A67C433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Apr 2022 01:12:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3351C3526F
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Apr 2022 06:26:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234004AbiDJBOS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Apr 2022 21:14:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54328 "EHLO
+        id S232997AbiDJG2l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Apr 2022 02:28:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233921AbiDJBOR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Apr 2022 21:14:17 -0400
-X-Greylist: delayed 638 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 09 Apr 2022 18:12:07 PDT
-Received: from guaco.floridaarsonseminar.com (guaco.floridaarsonseminar.com [85.202.169.206])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EB3DDA4
-        for <linux-scsi@vger.kernel.org>; Sat,  9 Apr 2022 18:12:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; s=dkim; d=floridaarsonseminar.com;
- h=Reply-To:From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding; i=rae.leo@floridaarsonseminar.com;
- bh=MnUf62F7Cn+TYukvIUFpyVBy5Yk=;
- b=gix5PGWKWXs2cT6Nlfw7Qhvwql0lHGDaw1u85R3JHkOoalg99S4b1qXgJ2CbDeBKVHdgsgeoHhl3
-   4WmObufaOM5Cii54gbdwg614vW+7aO5lRUhWShJzLr3z+iqTXSNr2dTFoAgzODCgBlAicKrEgKnC
-   0Fc42uLBBLjoUb6RzDQVyAR+fpVDcsMwCifP0mKylnktuAHa4lSkmo1LYQn5JUZxgjIDOneKIo72
-   rnG+qHnmJ57eKWH+yX92VZ8CPLEFNFB3XsIzTPW0Z7vxqt5RlkRIX31XP2Ia5NN5kYXEUN0ykF/s
-   NAJyzlxpUOci+QFPAfP4tr2SxnY3HSOM0wEeMA==
-DomainKey-Signature: a=rsa-sha1; c=nofws; q=dns; s=dkim; d=floridaarsonseminar.com;
- b=b6QxQxYppuhSfUS8jMbiW4ehaTXMdSbvj9UdrOLw2nP5TbIG3LF8b4JXSMRb3rAOt/q22C92TLX8
-   U47cINSYduMF0uBwlbbuMTSaHY1/w6nkglMF3FcNLYilZS0ccHFOB19Y/wM0s3L3x+y7KjU0D92B
-   O4IShvZdZJhb5nLMjkNeIjrus7Qh4936xin/cQXOdqfKchx5HDlx9SbrEU5oUK1qHAEE7giLw8va
-   NHvaR6rLC0WAmSPf7aRtQhZSJe0Z98yj+urEjYLvWUtfvj52EK25wwno+M5E2m75TXJSMwvOQFFl
-   BMo3aidOhySCRa46pw+c/i/C46kymw27gGTXIA==;
-Reply-To: ayvamustafa22@gmail.com
-From:   rae.leo@floridaarsonseminar.com
-To:     linux-scsi@vger.kernel.org
-Subject: Hello
-Date:   10 Apr 2022 02:31:24 +0200
-Message-ID: <20220410023124.81AC6B4B0C48BC81@floridaarsonseminar.com>
+        with ESMTP id S232295AbiDJG2g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Apr 2022 02:28:36 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 039BD5A08F;
+        Sat,  9 Apr 2022 23:26:25 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id E057168AFE; Sun, 10 Apr 2022 08:26:20 +0200 (CEST)
+Date:   Sun, 10 Apr 2022 08:26:20 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Christoph =?iso-8859-1?Q?B=F6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>
+Cc:     Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, Jens Axboe <axboe@kernel.dk>,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
+        ntfs3@lists.linux.dev, ocfs2-devel@oss.oracle.com,
+        linux-mm@kvack.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Coly Li <colyli@suse.de>
+Subject: Re: [PATCH 24/27] block: remove QUEUE_FLAG_DISCARD
+Message-ID: <20220410062620.GA16234@lst.de>
+References: <20220409045043.23593-1-hch@lst.de> <20220409045043.23593-25-hch@lst.de> <72e9bd34-3380-e305-65f0-a17306f5bd08@linbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <72e9bd34-3380-e305-65f0-a17306f5bd08@linbit.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-sauda=C3=A7=C3=B5es ,
+On Sat, Apr 09, 2022 at 10:15:33AM +0200, Christoph Böhmwalder wrote:
+> On 09.04.22 06:50, Christoph Hellwig wrote:
+>> Just use a non-zero max_discard_sectors as an indicator for discard
+>> support, similar to what is done for write zeroes.
+>>
+>> The only places where needs special attention is the RAID5 driver,
+>> which must clear discard support for security reasons by default,
+>> even if the default stacking rules would allow for it.
+>>
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+>> Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com> [btrfs]
+>
+> I think you may have a typo there: my ACK was for drbd, not btrfs.
 
-Estou procurando um parente do meu falecido cliente Sr. Robert,=20
-que perdeu a vida devido =C3=A0 doen=C3=A7a do Coronav=C3=ADrus, que ele=20=
-
-contraiu durante sua viagem de neg=C3=B3cios na China. Eu sou seu=20
-advogado pessoal e estou procurando seus parentes mais pr=C3=B3ximos,=20
-entrei em contato com voc=C3=AA para trabalhar comigo na garantia da=20
-transfer=C3=AAncia de um fundo fiduci=C3=A1rio, quatro milh=C3=B5es,=20
-quatrocentos e vinte mil d=C3=B3lares, legado por meu falecido=20
-cliente.
-
-Entre em contato comigo imediatamente para obter mais=20
-informa=C3=A7=C3=B5es.
-
-esperando
-Mustaf=C3=A1 Aivaz
+Indeed, sorry.
