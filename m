@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 707C2C433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Apr 2022 17:37:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8826EC433F5
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Apr 2022 17:37:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240067AbiDJRjc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 Apr 2022 13:39:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51950 "EHLO
+        id S243749AbiDJRjd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Apr 2022 13:39:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240052AbiDJRjR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Apr 2022 13:39:17 -0400
+        with ESMTP id S239919AbiDJRjU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Apr 2022 13:39:20 -0400
 Received: from smtp.infotech.no (smtp.infotech.no [82.134.31.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3E51328E21
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2022 10:37:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2203528E1E
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2022 10:37:06 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 83F422041BB;
-        Sun, 10 Apr 2022 19:37:01 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id 49C04204179;
+        Sun, 10 Apr 2022 19:37:06 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id gqWjptU-f8OI; Sun, 10 Apr 2022 19:36:57 +0200 (CEST)
+        with ESMTP id KVZ7X7W3EFOg; Sun, 10 Apr 2022 19:37:02 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-78-195-155.dyn.295.ca [45.78.195.155])
-        by smtp.infotech.no (Postfix) with ESMTPA id D9B8F2041B2;
-        Sun, 10 Apr 2022 19:36:56 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id C46392041B2;
+        Sun, 10 Apr 2022 19:37:01 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         bvanassche@acm.org, hch@lst.de
-Subject: [PATCH v2 1/6] scsi_cmnd: reinstate support for cmd_len > 32
-Date:   Sun, 10 Apr 2022 13:36:47 -0400
-Message-Id: <20220410173652.313016-2-dgilbert@interlog.com>
+Subject: [PATCH v2 5/6] scsi_debug: reinstate cmd_len > 32
+Date:   Sun, 10 Apr 2022 13:36:51 -0400
+Message-Id: <20220410173652.313016-6-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220410173652.313016-1-dgilbert@interlog.com>
 References: <20220410173652.313016-1-dgilbert@interlog.com>
@@ -40,753 +40,1067 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A patch titled "scsi: core: Remove the cmd field from struct
-scsi_request" [ce70fd9a551af] limited the size of a SCSI
-CDB (command descriptor block) to 32 bytes. While this covers
-the current requirements of the sd driver, OSD users and
-those sending long vendor specific cdb_s via the sg or bsg
-drivers will be disappointed by this regression.
+Example of converting a SCSI low level driver (LLD) to handle
+cmd_len > 32 bytes.
 
-This patch adds back that support without increasing the size
-of the newly renovated struct scsi_cmnd. Three accessor functions
-are added to encourage kernel coders not to access
-scsi_cmnd::cmnd[] directly. The fix is performed by a union with
-some defensive code (i.e. a relatively harmless Test Unit Ready
-SCSI command) if that union is incorrectly accessed.
+When (opts & 1) print out all cdb_s up to 64 bytes in length
+(was up to 32 bytes). For testing using sg_raw in user space
+via a sg device to send long cdb_s (i.e. > 32 bytes).
 
-If the SCSI_MAX_COMPILE_TIME_CDB_LEN define is set to 16 as
-proposed by one reviewer (rather than 32 in the first revision),
-then struct scsi_cmnd will 16 bytes shorter than before.
-
-The end of include/scsi/scsi_cmnd.h contains the declaration for
-the construction of a scsi_cmnd sub-object. It is a "sub-object"
-because what is actually constructed is a struct request object
-with the scsi_cmnd sub-object tacked onto the end of it. In a
-similar fashion add an inline function for the destruction of a
-scsi_cmnd sub-object (and the struct request object that
-precedes it).
-
-Various files in the scsi mid-level that used scsi_cmnd::cmnd
-directly are modified to use the new accessor functions. Also
-use scsi_free_cmnd() where appropriate.
+Use 'cdb' when referring to a SCSI CDB as 'cmd' gets confused
+with other things such as a pointer to a scsi_cmnd object.
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/scsi_debugfs.c |   3 +-
- drivers/scsi/scsi_error.c   |  76 ++++++++++++++---------
- drivers/scsi/scsi_ioctl.c   |  21 ++++---
- drivers/scsi/scsi_lib.c     |  75 +++++++++++++++++++----
- drivers/scsi/scsi_logging.c |  11 ++--
- include/scsi/scsi_cmnd.h    | 116 +++++++++++++++++++++++++++++++-----
- include/scsi/scsi_eh.h      |   6 +-
- 7 files changed, 240 insertions(+), 68 deletions(-)
+ drivers/scsi/scsi_debug.c | 410 ++++++++++++++++++++------------------
+ 1 file changed, 213 insertions(+), 197 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debugfs.c b/drivers/scsi/scsi_debugfs.c
-index 217b70c678c3..6fe9507c0ecb 100644
---- a/drivers/scsi/scsi_debugfs.c
-+++ b/drivers/scsi/scsi_debugfs.c
-@@ -10,6 +10,7 @@ static const char *const scsi_cmd_flags[] = {
- 	SCSI_CMD_FLAG_NAME(TAGGED),
- 	SCSI_CMD_FLAG_NAME(INITIALIZED),
- 	SCSI_CMD_FLAG_NAME(LAST),
-+	SCSI_CMD_FLAG_NAME(LONG_CDB),
- };
- #undef SCSI_CMD_FLAG_NAME
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index c607755cce00..d61d039836a0 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -246,7 +246,7 @@ static const char *sdebug_version_date = "20210520";
  
-@@ -38,7 +39,7 @@ void scsi_show_rq(struct seq_file *m, struct request *rq)
- 	int timeout_ms = jiffies_to_msecs(rq->timeout);
- 	char buf[80] = "(?)";
+ #define SDEBUG_MAX_PARTS 4
  
--	__scsi_format_command(buf, sizeof(buf), cmd->cmnd, cmd->cmd_len);
-+	__scsi_format_command(buf, sizeof(buf), scsi_cmnd_get_cdb(cmd), cmd->cmd_len);
- 	seq_printf(m, ", .cmd=%s, .retries=%d, .result = %#x, .flags=", buf,
- 		   cmd->retries, cmd->result);
- 	scsi_flags_show(m, cmd->flags, scsi_cmd_flags,
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index cdaca13ac1f1..6fe0aeaf8837 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -530,6 +530,7 @@ static void scsi_report_sense(struct scsi_device *sdev,
- enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
+-#define SDEBUG_MAX_CMD_LEN 32
++#define SDEBUG_MAX_CMD_LEN 64
+ 
+ #define SDEB_XA_NOT_IN_USE XA_MARK_1
+ 
+@@ -1573,12 +1573,12 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
  {
- 	struct scsi_device *sdev = scmd->device;
-+	const u8 *cdb = scsi_cmnd_get_cdb(scmd);
- 	struct scsi_sense_hdr sshdr;
+ 	unsigned char pq_pdt;
+ 	unsigned char *arr;
+-	unsigned char *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	u32 alloc_len, n;
+ 	int ret;
+ 	bool have_wlun, is_disk, is_zbc, is_disk_zbc;
  
- 	if (! scsi_command_normalize_sense(scmd, &sshdr))
-@@ -549,7 +550,7 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
- 		/* handler does not care. Drop down to default handling */
- 	}
- 
--	if (scmd->cmnd[0] == TEST_UNIT_READY &&
-+	if (cdb[0] == TEST_UNIT_READY &&
- 	    scmd->submitter != SUBMITTED_BY_SCSI_ERROR_HANDLER)
- 		/*
- 		 * nasty: for mid-layer issued TURs, we need to return the
-@@ -755,6 +756,8 @@ static void scsi_handle_queue_full(struct scsi_device *sdev)
-  */
- static enum scsi_disposition scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- {
-+	const u8 *cdb = scsi_cmnd_get_cdb(scmd);
-+
- 	/*
- 	 * first check the host byte, to see if there is anything in there
- 	 * that would indicate what we need to do.
-@@ -791,7 +794,7 @@ static enum scsi_disposition scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 		 */
- 		return SUCCESS;
- 	case SAM_STAT_RESERVATION_CONFLICT:
--		if (scmd->cmnd[0] == TEST_UNIT_READY)
-+		if (cdb[0] == TEST_UNIT_READY)
- 			/* it is a success, we probed the device and
- 			 * found it */
- 			return SUCCESS;
-@@ -985,7 +988,7 @@ static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
-  * @scmd:       SCSI command structure to hijack
-  * @ses:        structure to save restore information
-  * @cmnd:       CDB to send. Can be NULL if no new cmnd is needed
-- * @cmnd_size:  size in bytes of @cmnd (must be <= MAX_COMMAND_SIZE)
-+ * @cmnd_size:  size in bytes of @cmnd (must be <= SCSI_MAX_COMPILE_TIME_CDB_LEN)
-  * @sense_bytes: size of sense data to copy. or 0 (if != 0 @cmnd is ignored)
-  *
-  * This function is used to save a scsi command information before re-execution
-@@ -998,6 +1001,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 			unsigned char *cmnd, int cmnd_size, unsigned sense_bytes)
- {
- 	struct scsi_device *sdev = scmd->device;
-+	u8 *cdb;
- 
- 	/*
- 	 * We need saved copies of a number of fields - this is because
-@@ -1013,12 +1017,21 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 	ses->resid_len = scmd->resid_len;
- 	ses->underflow = scmd->underflow;
- 	ses->prot_op = scmd->prot_op;
-+	ses->flags = scmd->flags;
- 	ses->eh_eflags = scmd->eh_eflags;
- 
-+	if (unlikely(scmd->flags & SCMD_LONG_CDB)) {
-+		ses->l_cdb.cdbp = scmd->l_cdb.cdbp;
-+		scmd->l_cdb.cdbp = NULL;
-+		ses->l_cdb.dummy_tur = 0;
-+		scmd->flags &= ~SCMD_LONG_CDB;
-+	} else {
-+		memcpy(ses->cmnd, scmd->cmnd, scmd->cmd_len);
-+		memset(scmd->cmnd, 0, scmd->cmd_len);
-+	}
-+	cdb = scmd->cmnd;
- 	scmd->prot_op = SCSI_PROT_NORMAL;
- 	scmd->eh_eflags = 0;
--	memcpy(ses->cmnd, scmd->cmnd, sizeof(ses->cmnd));
--	memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
- 	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
- 	scmd->result = 0;
- 	scmd->resid_len = 0;
-@@ -1031,23 +1044,22 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 		scmd->sdb.table.sgl = &ses->sense_sgl;
- 		scmd->sc_data_direction = DMA_FROM_DEVICE;
- 		scmd->sdb.table.nents = scmd->sdb.table.orig_nents = 1;
--		scmd->cmnd[0] = REQUEST_SENSE;
--		scmd->cmnd[4] = scmd->sdb.length;
--		scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
-+		scmd->cmd_len = 6;	/* bytes in REQUEST SENSE command */
-+		cdb[0] = REQUEST_SENSE;
-+		cdb[4] = scmd->sdb.length;
- 	} else {
- 		scmd->sc_data_direction = DMA_NONE;
- 		if (cmnd) {
--			BUG_ON(cmnd_size > sizeof(scmd->cmnd));
--			memcpy(scmd->cmnd, cmnd, cmnd_size);
--			scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
-+			BUG_ON(cmnd_size > SCSI_MAX_RUN_TIME_CDB_LEN);
-+			scmd->cmd_len = (cmnd_size > 0) ? cmnd_size : COMMAND_SIZE(cmnd[0]);
-+			cdb = scsi_cmnd_set_cdb(scmd, cmnd, scmd->cmd_len);
- 		}
- 	}
- 
- 	scmd->underflow = 0;
- 
- 	if (sdev->scsi_level <= SCSI_2 && sdev->scsi_level != SCSI_UNKNOWN)
--		scmd->cmnd[1] = (scmd->cmnd[1] & 0x1f) |
--			(sdev->lun << 5 & 0xe0);
-+		cdb[1] = (cdb[1] & 0x1f) | (sdev->lun << 5 & 0xe0);
- 
- 	/*
- 	 * Zero the sense buffer.  The scsi spec mandates that any
-@@ -1069,8 +1081,19 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
- 	/*
- 	 * Restore original data
- 	 */
-+	if (unlikely(scmd->flags & SCMD_LONG_CDB))
-+		kfree(scmd->l_cdb.cdbp);
- 	scmd->cmd_len = ses->cmd_len;
--	memcpy(scmd->cmnd, ses->cmnd, sizeof(ses->cmnd));
-+	scmd->flags = ses->flags;
-+	if (unlikely(ses->flags & SCMD_LONG_CDB)) {
-+		scmd->l_cdb.cdbp = ses->l_cdb.cdbp;
-+		ses->l_cdb.cdbp = NULL;
-+		scmd->l_cdb.dummy_tur = 0;
-+		ses->flags &= ~SCMD_LONG_CDB;
-+	} else {
-+		memcpy(scmd->cmnd, ses->cmnd, ses->cmd_len);
-+		memset(ses->cmnd, 0, ses->cmd_len);
-+	}
- 	scmd->sc_data_direction = ses->data_direction;
- 	scmd->sdb = ses->sdb;
- 	scmd->result = ses->result;
-@@ -1340,13 +1363,12 @@ EXPORT_SYMBOL_GPL(scsi_eh_get_sense);
-  */
- static int scsi_eh_tur(struct scsi_cmnd *scmd)
- {
--	static unsigned char tur_command[6] = {TEST_UNIT_READY, 0, 0, 0, 0, 0};
-+	static const u8 tur_command[6] = {TEST_UNIT_READY, 0, 0, 0, 0, 0};
- 	int retry_cnt = 1;
- 	enum scsi_disposition rtn;
- 
- retry_tur:
--	rtn = scsi_send_eh_cmnd(scmd, tur_command, 6,
--				scmd->device->eh_timeout, 0);
-+	rtn = scsi_send_eh_cmnd(scmd, (u8 *)tur_command, 6, scmd->device->eh_timeout, 0);
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
- 		"%s return: %x\n", __func__, rtn));
-@@ -1831,6 +1853,7 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
- enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *scmd)
- {
- 	enum scsi_disposition rtn;
-+	const u8 *cdb = scsi_cmnd_get_cdb(scmd);
- 
- 	/*
- 	 * if the device is offline, then we clearly just pass the result back
-@@ -1924,8 +1947,7 @@ enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		 * these commands if there is no device available.
- 		 * other hosts report did_no_connect for the same thing.
- 		 */
--		if ((scmd->cmnd[0] == TEST_UNIT_READY ||
--		     scmd->cmnd[0] == INQUIRY)) {
-+		if (cdb[0] == TEST_UNIT_READY || cdb[0] == INQUIRY) {
- 			return SUCCESS;
- 		} else {
- 			return FAILED;
-@@ -1956,7 +1978,7 @@ enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		 */
- 		return ADD_TO_MLQUEUE;
- 	case SAM_STAT_GOOD:
--		if (scmd->cmnd[0] == REPORT_LUNS)
-+		if (cdb[0] == REPORT_LUNS)
- 			scmd->device->sdev_target->expecting_lun_change = 0;
- 		scsi_handle_queue_ramp_up(scmd->device);
- 		fallthrough;
-@@ -2008,7 +2030,7 @@ enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *scmd)
- 
- static void eh_lock_door_done(struct request *req, blk_status_t status)
- {
--	blk_mq_free_request(req);
-+	scsi_free_cmnd(blk_mq_rq_to_pdu(req));
- }
- 
- /**
-@@ -2026,19 +2048,17 @@ static void scsi_eh_lock_door(struct scsi_device *sdev)
- {
- 	struct scsi_cmnd *scmd;
- 	struct request *req;
-+	u8 *cdb;
-+	static const int amr_cdb_len = 6;
- 
- 	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN, 0);
- 	if (IS_ERR(req))
- 		return;
- 	scmd = blk_mq_rq_to_pdu(req);
- 
--	scmd->cmnd[0] = ALLOW_MEDIUM_REMOVAL;
--	scmd->cmnd[1] = 0;
--	scmd->cmnd[2] = 0;
--	scmd->cmnd[3] = 0;
--	scmd->cmnd[4] = SCSI_REMOVAL_PREVENT;
--	scmd->cmnd[5] = 0;
--	scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
-+	cdb = scsi_cmnd_set_cdb(scmd, NULL, amr_cdb_len);
-+	cdb[0] = ALLOW_MEDIUM_REMOVAL;
-+	cdb[4] = SCSI_REMOVAL_PREVENT;
- 
- 	req->rq_flags |= RQF_QUIET;
- 	req->timeout = 10 * HZ;
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index a480c4d589f5..10b6b8a89c15 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -245,7 +245,7 @@ static int scsi_send_start_stop(struct scsi_device *sdev, int data)
-  * Only a subset of commands are allowed for unprivileged users. Commands used
-  * to format the media, update the firmware, etc. are not permitted.
-  */
--bool scsi_cmd_allowed(unsigned char *cmd, fmode_t mode)
-+bool scsi_cmd_allowed(/* const */ unsigned char *cmd, fmode_t mode)
- {
- 	/* root can do any command. */
- 	if (capable(CAP_SYS_RAWIO))
-@@ -346,14 +346,15 @@ static int scsi_fill_sghdr_rq(struct scsi_device *sdev, struct request *rq,
- 		struct sg_io_hdr *hdr, fmode_t mode)
- {
- 	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
-+	u8 *cdb;
- 
- 	if (hdr->cmd_len < 6)
- 		return -EMSGSIZE;
--	if (copy_from_user(scmd->cmnd, hdr->cmdp, hdr->cmd_len))
-+	cdb = scsi_cmnd_set_cdb(scmd, NULL, hdr->cmd_len);
-+	if (copy_from_user(cdb, hdr->cmdp, hdr->cmd_len))
- 		return -EFAULT;
--	if (!scsi_cmd_allowed(scmd->cmnd, mode))
-+	if (unlikely(!scsi_cmd_allowed(cdb, mode)))
- 		return -EPERM;
--	scmd->cmd_len = hdr->cmd_len;
- 
- 	rq->timeout = msecs_to_jiffies(hdr->timeout);
- 	if (!rq->timeout)
-@@ -440,7 +441,7 @@ static int sg_io(struct scsi_device *sdev, struct sg_io_hdr *hdr, fmode_t mode)
- 		return PTR_ERR(rq);
- 	scmd = blk_mq_rq_to_pdu(rq);
- 
--	if (hdr->cmd_len > sizeof(scmd->cmnd)) {
-+	if (unlikely(hdr->cmd_len > SCSI_MAX_RUN_TIME_8BIT_CDB_LEN)) {
- 		ret = -EINVAL;
- 		goto out_put_request;
- 	}
-@@ -483,7 +484,7 @@ static int sg_io(struct scsi_device *sdev, struct sg_io_hdr *hdr, fmode_t mode)
- 	ret = scsi_complete_sghdr_rq(rq, hdr, bio);
- 
- out_put_request:
--	blk_mq_free_request(rq);
-+	scsi_free_cmnd(scmd);
- 	return ret;
- }
- 
-@@ -521,6 +522,7 @@ static int sg_scsi_ioctl(struct request_queue *q, fmode_t mode,
- 	int err;
- 	unsigned int in_len, out_len, bytes, opcode, cmdlen;
- 	struct scsi_cmnd *scmd;
-+	u8 *cdb;
- 	char *buffer = NULL;
- 
- 	if (!sic)
-@@ -560,14 +562,15 @@ static int sg_scsi_ioctl(struct request_queue *q, fmode_t mode,
- 	 */
- 	err = -EFAULT;
- 	scmd->cmd_len = cmdlen;
--	if (copy_from_user(scmd->cmnd, sic->data, cmdlen))
-+	cdb = scsi_cmnd_set_cdb(scmd, NULL, cmdlen);
-+	if (copy_from_user(cdb, sic->data, cmdlen))
- 		goto error;
- 
- 	if (in_len && copy_from_user(buffer, sic->data + cmdlen, in_len))
- 		goto error;
- 
- 	err = -EPERM;
--	if (!scsi_cmd_allowed(scmd->cmnd, mode))
-+	if (unlikely(!scsi_cmd_allowed(cdb, mode)))
- 		goto error;
- 
- 	/* default.  possible overridden later */
-@@ -619,7 +622,7 @@ static int sg_scsi_ioctl(struct request_queue *q, fmode_t mode,
- 	}
- 
- error:
--	blk_mq_free_request(rq);
-+	scsi_free_cmnd(scmd);
- 
- error_free_buffer:
- 	kfree(buffer);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 8d18cc7e510e..e06c5556fa9e 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -223,15 +223,18 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	if (IS_ERR(req))
- 		return PTR_ERR(req);
- 
-+	scmd = blk_mq_rq_to_pdu(req);
- 	if (bufflen) {
- 		ret = blk_rq_map_kern(sdev->request_queue, req,
- 				      buffer, bufflen, GFP_NOIO);
- 		if (ret)
- 			goto out;
- 	}
--	scmd = blk_mq_rq_to_pdu(req);
- 	scmd->cmd_len = COMMAND_SIZE(cmd[0]);
--	memcpy(scmd->cmnd, cmd, scmd->cmd_len);
-+	if (unlikely(!scsi_cmnd_set_cdb(scmd, cmd, scmd->cmd_len))) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
- 	scmd->allowed = retries;
- 	req->timeout = timeout;
- 	req->cmd_flags |= flags;
-@@ -260,7 +263,7 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 				     sshdr);
- 	ret = scmd->result;
-  out:
--	blk_mq_free_request(req);
-+	scsi_free_cmnd(scmd);
- 
- 	return ret;
- }
-@@ -688,6 +691,7 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- {
- 	struct request_queue *q = cmd->device->request_queue;
- 	struct request *req = scsi_cmd_to_rq(cmd);
-+	const u8 *cdb = scsi_cmnd_get_cdb(cmd);
- 	int level = 0;
- 	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
- 	      ACTION_DELAYED_RETRY} action;
-@@ -737,8 +741,7 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- 			 */
- 			if ((cmd->device->use_10_for_rw &&
- 			    sshdr.asc == 0x20 && sshdr.ascq == 0x00) &&
--			    (cmd->cmnd[0] == READ_10 ||
--			     cmd->cmnd[0] == WRITE_10)) {
-+			    (cdb[0] == READ_10 || cdb[0] == WRITE_10)) {
- 				/* This will issue a new 6-byte command. */
- 				cmd->device->use_10_for_rw = 0;
- 				action = ACTION_REPREP;
-@@ -1117,8 +1120,7 @@ static void scsi_initialize_rq(struct request *rq)
- {
- 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
- 
--	memset(cmd->cmnd, 0, sizeof(cmd->cmnd));
--	cmd->cmd_len = MAX_COMMAND_SIZE;
-+	scsi_cmnd_set_cdb(cmd, NULL, SCSI_TEST_UNIT_READY_CDB_LEN);
- 	cmd->sense_len = 0;
- 	init_rcu_head(&cmd->rcu);
- 	cmd->jiffies_at_alloc = jiffies;
-@@ -1460,6 +1462,7 @@ static void scsi_complete(struct request *rq)
- static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- {
- 	struct Scsi_Host *host = cmd->device->host;
-+	u8 *cdb = scsi_cmnd_get_changeable_cdb(cmd);
- 	int rtn = 0;
- 
- 	atomic_inc(&cmd->device->iorequest_cnt);
-@@ -1489,8 +1492,7 @@ static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 
- 	/* Store the LUN value in cmnd, if needed. */
- 	if (cmd->device->lun_in_cdb)
--		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
--			       (cmd->device->lun << 5 & 0xe0);
-+		cdb[1] = (cdb[1] & 0x1f) | (cmd->device->lun << 5 & 0xe0);
- 
- 	scsi_log_send(cmd);
- 
-@@ -1600,7 +1602,6 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
- 			return ret;
- 	}
- 
--	memset(cmd->cmnd, 0, sizeof(cmd->cmnd));
- 	return scsi_cmd_to_driver(cmd)->init_command(cmd);
- }
- 
-@@ -3314,3 +3315,57 @@ void scsi_build_sense(struct scsi_cmnd *scmd, int desc, u8 key, u8 asc, u8 ascq)
- 	scmd->result = SAM_STAT_CHECK_CONDITION;
- }
- EXPORT_SYMBOL_GPL(scsi_build_sense);
-+
-+/**
-+ * __scsi_cmnd_set_cdb - build buffer for SCSI command (cdb) in *scmd
-+ * @scmd:	pointer to scsi command for which a CDB is, or will be, set
-+ * @cdb:	if non-NULL it is a pointer to start of SCSI CDB that is
-+ *              copied into *scmd . If NULL then no copy occurs.
-+ * @cdb_len:	number of bytes in SCSI CDB to be held in *scmd
-+ *              N.B. If cdb_len==0, then if *scmd holds some heap
-+ *              due to a long CDB, then that heap is freed.
-+ *
-+ * Returns a (writable) pointer to the start of a buffer, owned by *scmd,
-+ * where 'cdb' has been written to, or if 'cdb' is NULL, where cdb_len
-+ * bytes of a SCSI CDB may be written. If 'cdb' is NULL then the returned
-+ * buffer will be zero-ed. In the rare case of a long cdb where the
-+ * kzalloc() allocating the additional buffer fails, NULL is returned.
-+ **/
-+u8 *__scsi_cmnd_set_cdb(struct scsi_cmnd *scmd, const u8 *cdb, u16 cdb_len)
-+{
-+	if (unlikely(scmd->flags & SCMD_LONG_CDB)) {
-+		if (unlikely(cdb_len > SCSI_MAX_COMPILE_TIME_CDB_LEN &&
-+			     cdb_len <= scmd->cmd_len)) {
-+			if (cdb)
-+				memcpy(scmd->l_cdb.cdbp, cdb, cdb_len);
-+			else
-+				memset(scmd->l_cdb.cdbp, 0, cdb_len);
-+			scmd->cmd_len = cdb_len;
-+			return scmd->l_cdb.cdbp;
-+		}
-+		kfree(scmd->l_cdb.cdbp);
-+		scmd->l_cdb.cdbp = NULL;
-+		scmd->flags &= ~SCMD_LONG_CDB;
-+	}
-+	scmd->cmd_len = cdb_len;
-+	if (likely(cdb_len <= SCSI_MAX_COMPILE_TIME_CDB_LEN)) {
-+		if (cdb_len > 0) {
-+			if (cdb)
-+				memcpy(scmd->cmnd, cdb, cdb_len);
-+			else
-+				memset(scmd->cmnd, 0, cdb_len);
-+		}
-+		return scmd->cmnd;
-+	}
-+	scmd->l_cdb.cdbp = kzalloc(cdb_len, GFP_KERNEL);
-+	if (unlikely(!scmd->l_cdb.cdbp)) {
-+		scmd->cmd_len = 0;
-+		return NULL;
-+	}
-+	scmd->flags |= SCMD_LONG_CDB;
-+	scmd->l_cdb.dummy_tur = 0;  /* defensive: cheap aid when testing */
-+	if (cdb)
-+		memcpy(scmd->l_cdb.cdbp, cdb, cdb_len);
-+	return scmd->l_cdb.cdbp;
-+}
-+EXPORT_SYMBOL_GPL(__scsi_cmnd_set_cdb);
-diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-index ff89de86545d..0c388e47406e 100644
---- a/drivers/scsi/scsi_logging.c
-+++ b/drivers/scsi/scsi_logging.c
-@@ -181,6 +181,7 @@ void scsi_print_command(struct scsi_cmnd *cmd)
- {
- 	int k;
- 	char *logbuf;
-+	const u8 *cdb = scsi_cmnd_get_cdb(cmd);
- 	size_t off, logbuf_len;
- 
- 	logbuf = scsi_log_reserve_buffer(&logbuf_len);
-@@ -195,8 +196,7 @@ void scsi_print_command(struct scsi_cmnd *cmd)
- 	if (WARN_ON(off >= logbuf_len))
- 		goto out_printk;
- 
--	off += scsi_format_opcode_name(logbuf + off, logbuf_len - off,
--				       cmd->cmnd);
-+	off += scsi_format_opcode_name(logbuf + off, logbuf_len - off, cdb);
- 	if (off >= logbuf_len)
- 		goto out_printk;
- 
-@@ -213,8 +213,9 @@ void scsi_print_command(struct scsi_cmnd *cmd)
- 						 scsi_cmd_to_rq(cmd)->tag);
- 			if (!WARN_ON(off > logbuf_len - 58)) {
- 				off += scnprintf(logbuf + off, logbuf_len - off,
--						 "CDB[%02x]: ", k);
--				hex_dump_to_buffer(&cmd->cmnd[k], linelen,
-+						 "CDB[%s%02x]: ",
-+						 (k > 15 ? "0x" : ""), k);
-+				hex_dump_to_buffer(&cdb[k], linelen,
- 						   16, 1, logbuf + off,
- 						   logbuf_len - off, false);
+-	alloc_len = get_unaligned_be16(cmd + 3);
++	alloc_len = get_unaligned_be16(cdb + 3);
+ 	arr = kzalloc(SDEBUG_MAX_INQ_ARR_SZ, GFP_ATOMIC);
+ 	if (! arr)
+ 		return DID_REQUEUE << 16;
+@@ -1593,11 +1593,11 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	else
+ 		pq_pdt = (sdebug_ptype & 0x1f);
+ 	arr[0] = pq_pdt;
+-	if (0x2 & cmd[1]) {  /* CMDDT bit set */
++	if (0x2 & cdb[1]) {  /* CMDDT bit set */
+ 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 1, 1);
+ 		kfree(arr);
+ 		return check_condition_result;
+-	} else if (0x1 & cmd[1]) {  /* EVPD bit set */
++	} else if (0x1 & cdb[1]) {  /* EVPD bit set */
+ 		int lu_id_num, port_group_id, target_dev_id;
+ 		u32 len;
+ 		char lu_id_str[6];
+@@ -1612,8 +1612,8 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		target_dev_id = ((host_no + 1) * 2000) +
+ 				 (devip->target * 1000) - 3;
+ 		len = scnprintf(lu_id_str, 6, "%d", lu_id_num);
+-		if (0 == cmd[2]) { /* supported vital product data pages */
+-			arr[1] = cmd[2];	/*sanity */
++		if (0 == cdb[2]) { /* supported vital product data pages */
++			arr[1] = cdb[2];	/*sanity */
+ 			n = 4;
+ 			arr[n++] = 0x0;   /* this page */
+ 			arr[n++] = 0x80;  /* unit serial number */
+@@ -1633,24 +1633,24 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 					arr[n++] = 0xb6;  /* ZB dev. char. */
  			}
-@@ -225,7 +226,7 @@ void scsi_print_command(struct scsi_cmnd *cmd)
+ 			arr[3] = n - 4;	  /* number of supported VPD pages */
+-		} else if (0x80 == cmd[2]) { /* unit serial number */
+-			arr[1] = cmd[2];	/*sanity */
++		} else if (0x80 == cdb[2]) { /* unit serial number */
++			arr[1] = cdb[2];	/*sanity */
+ 			arr[3] = len;
+ 			memcpy(&arr[4], lu_id_str, len);
+-		} else if (0x83 == cmd[2]) { /* device identification */
+-			arr[1] = cmd[2];	/*sanity */
++		} else if (0x83 == cdb[2]) { /* device identification */
++			arr[1] = cdb[2];	/*sanity */
+ 			arr[3] = inquiry_vpd_83(&arr[4], port_group_id,
+ 						target_dev_id, lu_id_num,
+ 						lu_id_str, len,
+ 						&devip->lu_name);
+-		} else if (0x84 == cmd[2]) { /* Software interface ident. */
+-			arr[1] = cmd[2];	/*sanity */
++		} else if (0x84 == cdb[2]) { /* Software interface ident. */
++			arr[1] = cdb[2];	/*sanity */
+ 			arr[3] = inquiry_vpd_84(&arr[4]);
+-		} else if (0x85 == cmd[2]) { /* Management network addresses */
+-			arr[1] = cmd[2];	/*sanity */
++		} else if (0x85 == cdb[2]) { /* Management network addresses */
++			arr[1] = cdb[2];	/*sanity */
+ 			arr[3] = inquiry_vpd_85(&arr[4]);
+-		} else if (0x86 == cmd[2]) { /* extended inquiry */
+-			arr[1] = cmd[2];	/*sanity */
++		} else if (0x86 == cdb[2]) { /* extended inquiry */
++			arr[1] = cdb[2];	/*sanity */
+ 			arr[3] = 0x3c;	/* number of following entries */
+ 			if (sdebug_dif == T10_PI_TYPE3_PROTECTION)
+ 				arr[4] = 0x4;	/* SPT: GRD_CHK:1 */
+@@ -1659,31 +1659,31 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 			else
+ 				arr[4] = 0x0;   /* no protection stuff */
+ 			arr[5] = 0x7;   /* head of q, ordered + simple q's */
+-		} else if (0x87 == cmd[2]) { /* mode page policy */
+-			arr[1] = cmd[2];	/*sanity */
++		} else if (0x87 == cdb[2]) { /* mode page policy */
++			arr[1] = cdb[2];	/*sanity */
+ 			arr[3] = 0x8;	/* number of following entries */
+ 			arr[4] = 0x2;	/* disconnect-reconnect mp */
+ 			arr[6] = 0x80;	/* mlus, shared */
+ 			arr[8] = 0x18;	 /* protocol specific lu */
+ 			arr[10] = 0x82;	 /* mlus, per initiator port */
+-		} else if (0x88 == cmd[2]) { /* SCSI Ports */
+-			arr[1] = cmd[2];	/*sanity */
++		} else if (0x88 == cdb[2]) { /* SCSI Ports */
++			arr[1] = cdb[2];	/*sanity */
+ 			arr[3] = inquiry_vpd_88(&arr[4], target_dev_id);
+-		} else if (is_disk_zbc && 0x89 == cmd[2]) { /* ATA info */
+-			arr[1] = cmd[2];        /*sanity */
++		} else if (is_disk_zbc && 0x89 == cdb[2]) { /* ATA info */
++			arr[1] = cdb[2];        /*sanity */
+ 			n = inquiry_vpd_89(&arr[4]);
+ 			put_unaligned_be16(n, arr + 2);
+-		} else if (is_disk_zbc && 0xb0 == cmd[2]) { /* Block limits */
+-			arr[1] = cmd[2];        /*sanity */
++		} else if (is_disk_zbc && 0xb0 == cdb[2]) { /* Block limits */
++			arr[1] = cdb[2];        /*sanity */
+ 			arr[3] = inquiry_vpd_b0(&arr[4]);
+-		} else if (is_disk_zbc && 0xb1 == cmd[2]) { /* Block char. */
+-			arr[1] = cmd[2];        /*sanity */
++		} else if (is_disk_zbc && 0xb1 == cdb[2]) { /* Block char. */
++			arr[1] = cdb[2];        /*sanity */
+ 			arr[3] = inquiry_vpd_b1(devip, &arr[4]);
+-		} else if (is_disk && 0xb2 == cmd[2]) { /* LB Prov. */
+-			arr[1] = cmd[2];        /*sanity */
++		} else if (is_disk && 0xb2 == cdb[2]) { /* LB Prov. */
++			arr[1] = cdb[2];        /*sanity */
+ 			arr[3] = inquiry_vpd_b2(&arr[4]);
+-		} else if (is_zbc && cmd[2] == 0xb6) { /* ZB dev. charact. */
+-			arr[1] = cmd[2];        /*sanity */
++		} else if (is_zbc && cdb[2] == 0xb6) { /* ZB dev. charact. */
++			arr[1] = cdb[2];        /*sanity */
+ 			arr[3] = inquiry_vpd_b6(devip, &arr[4]);
+ 		} else {
+ 			mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, -1);
+@@ -1740,10 +1740,10 @@ static unsigned char iec_m_pg[] = {0x1c, 0xa, 0x08, 0, 0, 0, 0, 0,
+ static int resp_requests(struct scsi_cmnd *scp,
+ 			 struct sdebug_dev_info *devip)
+ {
+-	unsigned char *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	unsigned char arr[SCSI_SENSE_BUFFERSIZE];	/* assume >= 18 bytes */
+-	bool dsense = !!(cmd[1] & 1);
+-	u32 alloc_len = cmd[4];
++	bool dsense = !!(cdb[1] & 1);
++	u32 alloc_len = cdb[4];
+ 	u32 len = 18;
+ 	int stopped_state = atomic_read(&devip->stopped);
+ 
+@@ -1793,16 +1793,16 @@ static int resp_requests(struct scsi_cmnd *scp,
+ 
+ static int resp_start_stop(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ {
+-	unsigned char *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	int power_cond, want_stop, stopped_state;
+ 	bool changing;
+ 
+-	power_cond = (cmd[4] & 0xf0) >> 4;
++	power_cond = (cdb[4] & 0xf0) >> 4;
+ 	if (power_cond) {
+ 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 4, 7);
+ 		return check_condition_result;
  	}
- 	if (!WARN_ON(off > logbuf_len - 49)) {
- 		off += scnprintf(logbuf + off, logbuf_len - off, " ");
--		hex_dump_to_buffer(cmd->cmnd, cmd->cmd_len, 16, 1,
-+		hex_dump_to_buffer(cdb, cmd->cmd_len, 16, 1,
- 				   logbuf + off, logbuf_len - off,
- 				   false);
+-	want_stop = !(cmd[4] & 1);
++	want_stop = !(cdb[4] & 1);
+ 	stopped_state = atomic_read(&devip->stopped);
+ 	if (stopped_state == 2) {
+ 		ktime_t now_ts = ktime_get_boottime();
+@@ -1828,7 +1828,7 @@ static int resp_start_stop(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	changing = (stopped_state != want_stop);
+ 	if (changing)
+ 		atomic_xchg(&devip->stopped, want_stop);
+-	if (!changing || (cmd[1] & 0x1))  /* state unchanged or IMMED bit set in cdb */
++	if (!changing || (cdb[1] & 0x1))  /* state unchanged or IMMED bit set in cdb */
+ 		return SDEG_RES_IMMED_MASK;
+ 	else
+ 		return 0;
+@@ -1868,11 +1868,11 @@ static int resp_readcap(struct scsi_cmnd *scp,
+ static int resp_readcap16(struct scsi_cmnd *scp,
+ 			  struct sdebug_dev_info *devip)
+ {
+-	unsigned char *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	unsigned char arr[SDEBUG_READCAP16_ARR_SZ];
+ 	u32 alloc_len;
+ 
+-	alloc_len = get_unaligned_be32(cmd + 10);
++	alloc_len = get_unaligned_be32(cdb + 10);
+ 	/* following just in case virtual_gb changed */
+ 	sdebug_capacity = get_sdebug_capacity();
+ 	memset(arr, 0, SDEBUG_READCAP16_ARR_SZ);
+@@ -1907,14 +1907,14 @@ static int resp_readcap16(struct scsi_cmnd *scp,
+ static int resp_report_tgtpgs(struct scsi_cmnd *scp,
+ 			      struct sdebug_dev_info *devip)
+ {
+-	unsigned char *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	unsigned char *arr;
+ 	int host_no = devip->sdbg_host->shost->host_no;
+ 	int port_group_a, port_group_b, port_a, port_b;
+ 	u32 alen, n, rlen;
+ 	int ret;
+ 
+-	alen = get_unaligned_be32(cmd + 6);
++	alen = get_unaligned_be32(cdb + 6);
+ 	arr = kzalloc(SDEBUG_MAX_TGTPGS_ARR_SZ, GFP_ATOMIC);
+ 	if (! arr)
+ 		return DID_REQUEUE << 16;
+@@ -1992,13 +1992,13 @@ static int resp_rsup_opcodes(struct scsi_cmnd *scp,
+ 	const struct opcode_info_t *oip;
+ 	const struct opcode_info_t *r_oip;
+ 	u8 *arr;
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 
+-	rctd = !!(cmd[2] & 0x80);
+-	reporting_opts = cmd[2] & 0x7;
+-	req_opcode = cmd[3];
+-	req_sa = get_unaligned_be16(cmd + 4);
+-	alloc_len = get_unaligned_be32(cmd + 6);
++	rctd = !!(cdb[2] & 0x80);
++	reporting_opts = cdb[2] & 0x7;
++	req_opcode = cdb[3];
++	req_sa = get_unaligned_be16(cdb + 4);
++	alloc_len = get_unaligned_be32(cdb + 6);
+ 	if (alloc_len < 4 || alloc_len > 0xffff) {
+ 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 6, -1);
+ 		return check_condition_result;
+@@ -2138,11 +2138,11 @@ static int resp_rsup_tmfs(struct scsi_cmnd *scp,
+ 	bool repd;
+ 	u32 alloc_len, len;
+ 	u8 arr[16];
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 
+ 	memset(arr, 0, sizeof(arr));
+-	repd = !!(cmd[2] & 0x80);
+-	alloc_len = get_unaligned_be32(cmd + 6);
++	repd = !!(cdb[2] & 0x80);
++	alloc_len = get_unaligned_be32(cdb + 6);
+ 	if (alloc_len < 4) {
+ 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 6, -1);
+ 		return check_condition_result;
+@@ -2331,22 +2331,22 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+ 	int target = scp->device->id;
+ 	unsigned char *ap;
+ 	unsigned char arr[SDEBUG_MAX_MSENSE_SZ];
+-	unsigned char *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	bool dbd, llbaa, msense_6, is_disk, is_zbc, bad_pcode;
+ 
+-	dbd = !!(cmd[1] & 0x8);		/* disable block descriptors */
+-	pcontrol = (cmd[2] & 0xc0) >> 6;
+-	pcode = cmd[2] & 0x3f;
+-	subpcode = cmd[3];
+-	msense_6 = (MODE_SENSE == cmd[0]);
+-	llbaa = msense_6 ? false : !!(cmd[1] & 0x10);
++	dbd = !!(cdb[1] & 0x8);		/* disable block descriptors */
++	pcontrol = (cdb[2] & 0xc0) >> 6;
++	pcode = cdb[2] & 0x3f;
++	subpcode = cdb[3];
++	msense_6 = (MODE_SENSE == cdb[0]);
++	llbaa = msense_6 ? false : !!(cdb[1] & 0x10);
+ 	is_disk = (sdebug_ptype == TYPE_DISK);
+ 	is_zbc = (devip->zmodel != BLK_ZONED_NONE);
+ 	if ((is_disk || is_zbc) && !dbd)
+ 		bd_len = llbaa ? 16 : 8;
+ 	else
+ 		bd_len = 0;
+-	alloc_len = msense_6 ? cmd[4] : get_unaligned_be16(cmd + 7);
++	alloc_len = msense_6 ? cdb[4] : get_unaligned_be16(cdb + 7);
+ 	memset(arr, 0, SDEBUG_MAX_MSENSE_SZ);
+ 	if (0x3 == pcontrol) {  /* Saving values not supported */
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, SAVING_PARAMS_UNSUP, 0);
+@@ -2494,13 +2494,13 @@ static int resp_mode_select(struct scsi_cmnd *scp,
+ 	int pf, sp, ps, md_len, bd_len, off, spf, pg_len;
+ 	int param_len, res, mpage;
+ 	unsigned char arr[SDEBUG_MAX_MSELECT_SZ];
+-	unsigned char *cmd = scp->cmnd;
+-	int mselect6 = (MODE_SELECT == cmd[0]);
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
++	int mselect6 = (MODE_SELECT == cdb[0]);
+ 
+ 	memset(arr, 0, sizeof(arr));
+-	pf = cmd[1] & 0x10;
+-	sp = cmd[1] & 0x1;
+-	param_len = mselect6 ? cmd[4] : get_unaligned_be16(cmd + 7);
++	pf = cdb[1] & 0x10;
++	sp = cdb[1] & 0x1;
++	param_len = mselect6 ? cdb[4] : get_unaligned_be16(cdb + 7);
+ 	if ((0 == pf) || sp || (param_len > SDEBUG_MAX_MSELECT_SZ)) {
+ 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, mselect6 ? 4 : 7, -1);
+ 		return check_condition_result;
+@@ -2613,18 +2613,18 @@ static int resp_log_sense(struct scsi_cmnd *scp,
+ 	int ppc, sp, pcode, subpcode;
+ 	u32 alloc_len, len, n;
+ 	unsigned char arr[SDEBUG_MAX_LSENSE_SZ];
+-	unsigned char *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 
+ 	memset(arr, 0, sizeof(arr));
+-	ppc = cmd[1] & 0x2;
+-	sp = cmd[1] & 0x1;
++	ppc = cdb[1] & 0x2;
++	sp = cdb[1] & 0x1;
+ 	if (ppc || sp) {
+ 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 1, ppc ? 1 : 0);
+ 		return check_condition_result;
  	}
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 1e80e70dfa92..ac04245ab8e6 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -15,23 +15,33 @@ struct Scsi_Host;
+-	pcode = cmd[2] & 0x3f;
+-	subpcode = cmd[3] & 0xff;
+-	alloc_len = get_unaligned_be16(cmd + 7);
++	pcode = cdb[2] & 0x3f;
++	subpcode = cdb[3] & 0xff;
++	alloc_len = get_unaligned_be16(cdb + 7);
+ 	arr[0] = pcode;
+ 	if (0 == subpcode) {
+ 		switch (pcode) {
+@@ -3132,6 +3132,7 @@ static int prot_verify_read(struct scsi_cmnd *scp, sector_t start_sec,
+ 	struct sdeb_store_info *sip = devip2sip((struct sdebug_dev_info *)
+ 						scp->device->hostdata, true);
+ 	struct t10_pi_tuple *sdt;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
  
- /*
-  * MAX_COMMAND_SIZE is:
-- * The longest fixed-length SCSI CDB as per the SCSI standard.
-- * fixed-length means: commands that their size can be determined
-- * by their opcode and the CDB does not carry a length specifier, (unlike
-- * the VARIABLE_LENGTH_CMD(0x7f) command). This is actually not exactly
-- * true and the SCSI standard also defines extended commands and
-- * vendor specific commands that can be bigger than 16 bytes. The kernel
-- * will support these using the same infrastructure used for VARLEN CDB's.
-- * So in effect MAX_COMMAND_SIZE means the maximum size command scsi-ml
-- * supports without specifying a cmd_len by ULD's
-+ * an old define that is deprecated. Firstly it refers to a SCSI CDB
-+ * (command descriptor block) that is no longer the maximum value. Plus
-+ * using "command" is too general when there is a precise acronym: CDB .
-+ * Please use one of the more precise defines that follow,
-  */
--#define MAX_COMMAND_SIZE 16
-+#define MAX_COMMAND_SIZE 16	/* old constant, should be removed */
-+
-+/* This value is used to size a C array sufficient to hold most cdb_s */
-+#define SCSI_MAX_COMPILE_TIME_CDB_LEN 16
-+
-+/* Relatively safe SCSI command whose CDB is 6 zero bytes */
-+#define SCSI_TEST_UNIT_READY_CDB_LEN 6
-+
-+/* Following used to guard against wild cmd_len values */
-+#define SCSI_MAX_RUN_TIME_CDB_LEN (8 + 252)
-+#define SCSI_MAX_RUN_TIME_8BIT_CDB_LEN 252
+ 	for (i = 0; i < sectors; i++, ei_lba++) {
+ 		sector = start_sec + i;
+@@ -3147,7 +3148,7 @@ static int prot_verify_read(struct scsi_cmnd *scp, sector_t start_sec,
+ 		 * which type of error to return. Otherwise we would
+ 		 * have to iterate over the PI twice.
+ 		 */
+-		if (scp->cmnd[1] >> 5) { /* RDPROTECT */
++		if (cdb[1] >> 5) { /* RDPROTECT */
+ 			ret = dif_verify(sdt, lba2fake_store(sip, sector),
+ 					 sector, ei_lba);
+ 			if (ret) {
+@@ -3235,56 +3236,56 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	int ret;
+ 	u64 lba;
+ 	struct sdeb_store_info *sip = devip2sip(devip, true);
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
  
- struct scsi_data_buffer {
- 	struct sg_table table;
- 	unsigned length;
- };
+-	switch (cmd[0]) {
++	switch (cdb[0]) {
+ 	case READ_16:
+ 		ei_lba = 0;
+-		lba = get_unaligned_be64(cmd + 2);
+-		num = get_unaligned_be32(cmd + 10);
++		lba = get_unaligned_be64(cdb + 2);
++		num = get_unaligned_be32(cdb + 10);
+ 		check_prot = true;
+ 		break;
+ 	case READ_10:
+ 		ei_lba = 0;
+-		lba = get_unaligned_be32(cmd + 2);
+-		num = get_unaligned_be16(cmd + 7);
++		lba = get_unaligned_be32(cdb + 2);
++		num = get_unaligned_be16(cdb + 7);
+ 		check_prot = true;
+ 		break;
+ 	case READ_6:
+ 		ei_lba = 0;
+-		lba = (u32)cmd[3] | (u32)cmd[2] << 8 |
+-		      (u32)(cmd[1] & 0x1f) << 16;
+-		num = (0 == cmd[4]) ? 256 : cmd[4];
++		lba = (u32)cdb[3] | (u32)cdb[2] << 8 |
++		      (u32)(cdb[1] & 0x1f) << 16;
++		num = (0 == cdb[4]) ? 256 : cdb[4];
+ 		check_prot = true;
+ 		break;
+ 	case READ_12:
+ 		ei_lba = 0;
+-		lba = get_unaligned_be32(cmd + 2);
+-		num = get_unaligned_be32(cmd + 6);
++		lba = get_unaligned_be32(cdb + 2);
++		num = get_unaligned_be32(cdb + 6);
+ 		check_prot = true;
+ 		break;
+ 	case XDWRITEREAD_10:
+ 		ei_lba = 0;
+-		lba = get_unaligned_be32(cmd + 2);
+-		num = get_unaligned_be16(cmd + 7);
++		lba = get_unaligned_be32(cdb + 2);
++		num = get_unaligned_be16(cdb + 7);
+ 		check_prot = false;
+ 		break;
+ 	default:	/* assume READ(32) */
+-		lba = get_unaligned_be64(cmd + 12);
+-		ei_lba = get_unaligned_be32(cmd + 20);
+-		num = get_unaligned_be32(cmd + 28);
++		lba = get_unaligned_be64(cdb + 12);
++		ei_lba = get_unaligned_be32(cdb + 20);
++		num = get_unaligned_be32(cdb + 28);
+ 		check_prot = false;
+ 		break;
+ 	}
+ 	if (unlikely(have_dif_prot && check_prot)) {
+ 		if (sdebug_dif == T10_PI_TYPE2_PROTECTION &&
+-		    (cmd[1] & 0xe0)) {
++		    (cdb[1] & 0xe0)) {
+ 			mk_sense_invalid_opcode(scp);
+ 			return check_condition_result;
+ 		}
+ 		if ((sdebug_dif == T10_PI_TYPE1_PROTECTION ||
+ 		     sdebug_dif == T10_PI_TYPE3_PROTECTION) &&
+-		    (cmd[1] & 0xe0) == 0)
++		    (cdb[1] & 0xe0) == 0)
+ 			sdev_printk(KERN_ERR, scp->device, "Unprotected RD "
+ 				    "to DIF device\n");
+ 	}
+@@ -3319,7 +3320,7 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	if (unlikely(sdebug_dix && scsi_prot_sg_count(scp))) {
+ 		switch (prot_verify_read(scp, lba, num, ei_lba)) {
+ 		case 1: /* Guard tag error */
+-			if (cmd[1] >> 5 != 3) { /* RDPROTECT != 3 */
++			if (cdb[1] >> 5 != 3) { /* RDPROTECT != 3 */
+ 				sdeb_read_unlock(sip);
+ 				mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, 1);
+ 				return check_condition_result;
+@@ -3330,7 +3331,7 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 			}
+ 			break;
+ 		case 3: /* Reference tag error */
+-			if (cmd[1] >> 5 != 3) { /* RDPROTECT != 3 */
++			if (cdb[1] >> 5 != 3) { /* RDPROTECT != 3 */
+ 				sdeb_read_unlock(sip);
+ 				mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, 3);
+ 				return check_condition_result;
+@@ -3376,6 +3377,7 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
+ 	int ret;
+ 	struct t10_pi_tuple *sdt;
+ 	void *daddr;
++	const u8 *cdb = scsi_cmnd_get_cdb(SCpnt);
+ 	sector_t sector = start_sec;
+ 	int ppage_offset;
+ 	int dpage_offset;
+@@ -3415,7 +3417,7 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
+ 			sdt = piter.addr + ppage_offset;
+ 			daddr = diter.addr + dpage_offset;
  
-+struct scsi_long_cdb {
-+	u64 dummy_tur;	/* when zero first 6 bytes are Test Unit Ready cdb */
-+	u8 *cdbp;	/* byte length in scsi_cmnd::cmd_len */
-+};
-+
- /* embedded in scsi_cmnd */
- struct scsi_pointer {
- 	char *ptr;		/* data pointer */
-@@ -48,12 +58,17 @@ struct scsi_pointer {
- 	volatile int phase;
- };
+-			if (SCpnt->cmnd[1] >> 5 != 3) { /* WRPROTECT */
++			if (cdb[1] >> 5 != 3) { /* WRPROTECT */
+ 				ret = dif_verify(sdt, daddr, sector, ei_lba);
+ 				if (ret)
+ 					goto out;
+@@ -3532,56 +3534,56 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	int ret;
+ 	u64 lba;
+ 	struct sdeb_store_info *sip = devip2sip(devip, true);
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
  
--/* for scmd->flags */
-+/*
-+ * For scmd->flags . To maintain flag value for lifetime of scsi_cmnd
-+ * sub-object, make sure flag is OR-ed into SCMD_PRESERVED_FLAGS .
-+ */
- #define SCMD_TAGGED		(1 << 0)
- #define SCMD_INITIALIZED	(1 << 1)
- #define SCMD_LAST		(1 << 2)
-+#define SCMD_LONG_CDB		(1 << 3)   /* indicates CDB separately on heap */
-+
- /* flags preserved across unprep / reprep */
--#define SCMD_PRESERVED_FLAGS	(SCMD_INITIALIZED)
-+#define SCMD_PRESERVED_FLAGS	(SCMD_INITIALIZED | SCMD_LONG_CDB)
+-	switch (cmd[0]) {
++	switch (cdb[0]) {
+ 	case WRITE_16:
+ 		ei_lba = 0;
+-		lba = get_unaligned_be64(cmd + 2);
+-		num = get_unaligned_be32(cmd + 10);
++		lba = get_unaligned_be64(cdb + 2);
++		num = get_unaligned_be32(cdb + 10);
+ 		check_prot = true;
+ 		break;
+ 	case WRITE_10:
+ 		ei_lba = 0;
+-		lba = get_unaligned_be32(cmd + 2);
+-		num = get_unaligned_be16(cmd + 7);
++		lba = get_unaligned_be32(cdb + 2);
++		num = get_unaligned_be16(cdb + 7);
+ 		check_prot = true;
+ 		break;
+ 	case WRITE_6:
+ 		ei_lba = 0;
+-		lba = (u32)cmd[3] | (u32)cmd[2] << 8 |
+-		      (u32)(cmd[1] & 0x1f) << 16;
+-		num = (0 == cmd[4]) ? 256 : cmd[4];
++		lba = (u32)cdb[3] | (u32)cdb[2] << 8 |
++		      (u32)(cdb[1] & 0x1f) << 16;
++		num = (0 == cdb[4]) ? 256 : cdb[4];
+ 		check_prot = true;
+ 		break;
+ 	case WRITE_12:
+ 		ei_lba = 0;
+-		lba = get_unaligned_be32(cmd + 2);
+-		num = get_unaligned_be32(cmd + 6);
++		lba = get_unaligned_be32(cdb + 2);
++		num = get_unaligned_be32(cdb + 6);
+ 		check_prot = true;
+ 		break;
+ 	case 0x53:	/* XDWRITEREAD(10) */
+ 		ei_lba = 0;
+-		lba = get_unaligned_be32(cmd + 2);
+-		num = get_unaligned_be16(cmd + 7);
++		lba = get_unaligned_be32(cdb + 2);
++		num = get_unaligned_be16(cdb + 7);
+ 		check_prot = false;
+ 		break;
+ 	default:	/* assume WRITE(32) */
+-		lba = get_unaligned_be64(cmd + 12);
+-		ei_lba = get_unaligned_be32(cmd + 20);
+-		num = get_unaligned_be32(cmd + 28);
++		lba = get_unaligned_be64(cdb + 12);
++		ei_lba = get_unaligned_be32(cdb + 20);
++		num = get_unaligned_be32(cdb + 28);
+ 		check_prot = false;
+ 		break;
+ 	}
+ 	if (unlikely(have_dif_prot && check_prot)) {
+ 		if (sdebug_dif == T10_PI_TYPE2_PROTECTION &&
+-		    (cmd[1] & 0xe0)) {
++		    (cdb[1] & 0xe0)) {
+ 			mk_sense_invalid_opcode(scp);
+ 			return check_condition_result;
+ 		}
+ 		if ((sdebug_dif == T10_PI_TYPE1_PROTECTION ||
+ 		     sdebug_dif == T10_PI_TYPE3_PROTECTION) &&
+-		    (cmd[1] & 0xe0) == 0)
++		    (cdb[1] & 0xe0) == 0)
+ 			sdev_printk(KERN_ERR, scp->device, "Unprotected WR "
+ 				    "to DIF device\n");
+ 	}
+@@ -3601,7 +3603,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 				sdeb_write_unlock(sip);
+ 				mk_sense_buffer(scp, ILLEGAL_REQUEST, 0x10, 1);
+ 				return illegal_condition_result;
+-			} else if (scp->cmnd[1] >> 5 != 3) { /* WRPROTECT != 3 */
++			} else if (cdb[1] >> 5 != 3) { /* WRPROTECT != 3 */
+ 				sdeb_write_unlock(sip);
+ 				mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, 1);
+ 				return check_condition_result;
+@@ -3612,7 +3614,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 				sdeb_write_unlock(sip);
+ 				mk_sense_buffer(scp, ILLEGAL_REQUEST, 0x10, 3);
+ 				return illegal_condition_result;
+-			} else if (scp->cmnd[1] >> 5 != 3) { /* WRPROTECT != 3 */
++			} else if (cdb[1] >> 5 != 3) { /* WRPROTECT != 3 */
+ 				sdeb_write_unlock(sip);
+ 				mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, 3);
+ 				return check_condition_result;
+@@ -3663,7 +3665,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ static int resp_write_scat(struct scsi_cmnd *scp,
+ 			   struct sdebug_dev_info *devip)
+ {
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	u8 *lrdp = NULL;
+ 	u8 *up;
+ 	struct sdeb_store_info *sip = devip2sip(devip, true);
+@@ -3677,18 +3679,18 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+ 	bool is_16;
+ 	static const u32 lrd_size = 32; /* + parameter list header size */
  
- /* for scmd->state */
- #define SCMD_STATE_COMPLETE	0
-@@ -65,6 +80,18 @@ enum scsi_cmnd_submitter {
- 	SUBMITTED_BY_SCSI_RESET_IOCTL = 2,
- } __packed;
+-	if (cmd[0] == VARIABLE_LENGTH_CMD) {
++	if (cdb[0] == VARIABLE_LENGTH_CMD) {
+ 		is_16 = false;
+-		wrprotect = (cmd[10] >> 5) & 0x7;
+-		lbdof = get_unaligned_be16(cmd + 12);
+-		num_lrd = get_unaligned_be16(cmd + 16);
+-		bt_len = get_unaligned_be32(cmd + 28);
++		wrprotect = (cdb[10] >> 5) & 0x7;
++		lbdof = get_unaligned_be16(cdb + 12);
++		num_lrd = get_unaligned_be16(cdb + 16);
++		bt_len = get_unaligned_be32(cdb + 28);
+ 	} else {        /* that leaves WRITE SCATTERED(16) */
+ 		is_16 = true;
+-		wrprotect = (cmd[2] >> 5) & 0x7;
+-		lbdof = get_unaligned_be16(cmd + 4);
+-		num_lrd = get_unaligned_be16(cmd + 8);
+-		bt_len = get_unaligned_be32(cmd + 10);
++		wrprotect = (cdb[2] >> 5) & 0x7;
++		lbdof = get_unaligned_be16(cdb + 4);
++		num_lrd = get_unaligned_be16(cdb + 8);
++		bt_len = get_unaligned_be32(cdb + 10);
+ 		if (unlikely(have_dif_prot)) {
+ 			if (sdebug_dif == T10_PI_TYPE2_PROTECTION &&
+ 			    wrprotect) {
+@@ -3887,21 +3889,21 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+ static int resp_write_same_10(struct scsi_cmnd *scp,
+ 			      struct sdebug_dev_info *devip)
+ {
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	u32 lba;
+ 	u16 num;
+ 	u32 ei_lba = 0;
+ 	bool unmap = false;
  
-+/*
-+ * The scsi_cmnd structure is fundamental to the operation of the SCSI
-+ * subsystem. An object (or sub-object) of this type is created paired with
-+ * a struct request (sub-)object (see include/linux/blk-mq.h). The struct
-+ * request sub-object always has the lower address in memory. This is why the
-+ * constructor for a scsi_cmnd object [see scsi_alloc_request() below] returns
-+ * a pointer to a struct request object. The blk_mq_rq_from_pdu() and
-+ * blk_mq_rq_to_pdu() inline functions are supplied by the block layer to move
-+ * from a pointer to one of these sub-objects to the other.
-+ * Users are encouraged to destroy this paired object with scsi_free_cmnd()
-+ * function (destructor) defined below so that other clean-up can be hooked in.
-+ */
- struct scsi_cmnd {
- 	struct scsi_device *device;
- 	struct list_head eh_entry; /* entry for the host eh_abort_list/eh_cmd_q */
-@@ -72,7 +99,7 @@ struct scsi_cmnd {
+-	if (cmd[1] & 0x8) {
++	if (cdb[1] & 0x8) {
+ 		if (sdebug_lbpws10 == 0) {
+ 			mk_sense_invalid_fld(scp, SDEB_IN_CDB, 1, 3);
+ 			return check_condition_result;
+ 		} else
+ 			unmap = true;
+ 	}
+-	lba = get_unaligned_be32(cmd + 2);
+-	num = get_unaligned_be16(cmd + 7);
++	lba = get_unaligned_be32(cdb + 2);
++	num = get_unaligned_be16(cdb + 7);
+ 	if (num > sdebug_write_same_length) {
+ 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 7, -1);
+ 		return check_condition_result;
+@@ -3912,24 +3914,24 @@ static int resp_write_same_10(struct scsi_cmnd *scp,
+ static int resp_write_same_16(struct scsi_cmnd *scp,
+ 			      struct sdebug_dev_info *devip)
+ {
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	u64 lba;
+ 	u32 num;
+ 	u32 ei_lba = 0;
+ 	bool unmap = false;
+ 	bool ndob = false;
  
- 	struct rcu_head rcu;
+-	if (cmd[1] & 0x8) {	/* UNMAP */
++	if (cdb[1] & 0x8) {	/* UNMAP */
+ 		if (sdebug_lbpws == 0) {
+ 			mk_sense_invalid_fld(scp, SDEB_IN_CDB, 1, 3);
+ 			return check_condition_result;
+ 		} else
+ 			unmap = true;
+ 	}
+-	if (cmd[1] & 0x1)  /* NDOB (no data-out buffer, assumes zeroes) */
++	if (cdb[1] & 0x1)  /* NDOB (no data-out buffer, assumes zeroes) */
+ 		ndob = true;
+-	lba = get_unaligned_be64(cmd + 2);
+-	num = get_unaligned_be32(cmd + 10);
++	lba = get_unaligned_be64(cdb + 2);
++	num = get_unaligned_be32(cdb + 10);
+ 	if (num > sdebug_write_same_length) {
+ 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 10, -1);
+ 		return check_condition_result;
+@@ -3943,12 +3945,12 @@ static int resp_write_same_16(struct scsi_cmnd *scp,
+ static int resp_write_buffer(struct scsi_cmnd *scp,
+ 			     struct sdebug_dev_info *devip)
+ {
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	struct scsi_device *sdp = scp->device;
+ 	struct sdebug_dev_info *dp;
+ 	u8 mode;
  
--	int eh_eflags;		/* Used by error handlr */
-+	int eh_eflags;		/* Used by error handler */
+-	mode = cmd[1] & 0x1f;
++	mode = cdb[1] & 0x1f;
+ 	switch (mode) {
+ 	case 0x4:	/* download microcode (MC) and activate (ACT) */
+ 		/* set UAs on this device only */
+@@ -3989,7 +3991,7 @@ static int resp_write_buffer(struct scsi_cmnd *scp,
+ static int resp_comp_write(struct scsi_cmnd *scp,
+ 			   struct sdebug_dev_info *devip)
+ {
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	u8 *arr;
+ 	struct sdeb_store_info *sip = devip2sip(devip, true);
+ 	u64 lba;
+@@ -3999,18 +4001,18 @@ static int resp_comp_write(struct scsi_cmnd *scp,
+ 	int ret;
+ 	int retval = 0;
  
- 	int budget_token;
+-	lba = get_unaligned_be64(cmd + 2);
+-	num = cmd[13];		/* 1 to a maximum of 255 logical blocks */
++	lba = get_unaligned_be64(cdb + 2);
++	num = cdb[13];		/* 1 to a maximum of 255 logical blocks */
+ 	if (0 == num)
+ 		return 0;	/* degenerate case, not an error */
+ 	if (sdebug_dif == T10_PI_TYPE2_PROTECTION &&
+-	    (cmd[1] & 0xe0)) {
++	    (cdb[1] & 0xe0)) {
+ 		mk_sense_invalid_opcode(scp);
+ 		return check_condition_result;
+ 	}
+ 	if ((sdebug_dif == T10_PI_TYPE1_PROTECTION ||
+ 	     sdebug_dif == T10_PI_TYPE3_PROTECTION) &&
+-	    (cmd[1] & 0xe0) == 0)
++	    (cdb[1] & 0xe0) == 0)
+ 		sdev_printk(KERN_ERR, scp->device, "Unprotected WR "
+ 			    "to DIF device\n");
+ 	ret = check_device_access_params(scp, lba, num, false);
+@@ -4057,13 +4059,14 @@ static int resp_unmap(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ {
+ 	unsigned char *buf;
+ 	struct unmap_block_desc *desc;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	struct sdeb_store_info *sip = devip2sip(devip, true);
+ 	unsigned int i, payload_len, descriptors;
+ 	int ret;
  
-@@ -94,7 +121,18 @@ struct scsi_cmnd {
- 	unsigned short cmd_len;
- 	enum dma_data_direction sc_data_direction;
+ 	if (!scsi_debug_lbp())
+ 		return 0;	/* fib and say its done */
+-	payload_len = get_unaligned_be16(scp->cmnd + 7);
++	payload_len = get_unaligned_be16(cdb + 7);
+ 	BUG_ON(scsi_bufflen(scp) != payload_len);
  
--	unsigned char cmnd[32]; /* SCSI CDB */
-+	/*
-+	 * Access to a SCSI command (cdb) should be via the provided functions:
-+	 *     scsi_cmnd_set_cdb(struct scsi_cmnd *scmd, const u8 * cdb, u16 cdb_len), or
-+	 *     scsi_cmnd_get_cdb(const struct scsi_cmnd *scmd), or
-+	 *     scsi_cmnd_get_changeable_cdb(struct scsi_cmnd *scmd)
-+	 * If a LLD doesn't support cdb_len > SCSI_MAX_COMPILE_TIME_CDB_LEN then
-+	 * it is safe to access cmnd[] directly.
-+	 */
-+	union {		/* selected via (scsi_cmnd::flags & SCMD_LONG_CDB) */
-+		u8 cmnd[SCSI_MAX_COMPILE_TIME_CDB_LEN]; /* CDB when selector 0 */
-+		struct scsi_long_cdb l_cdb;		/* when selector != 0 */
-+	};
+ 	descriptors = (payload_len - 8) / 16;
+@@ -4113,14 +4116,14 @@ static int resp_unmap(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ static int resp_get_lba_status(struct scsi_cmnd *scp,
+ 			       struct sdebug_dev_info *devip)
+ {
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	u64 lba;
+ 	u32 alloc_len, mapped, num;
+ 	int ret;
+ 	u8 arr[SDEBUG_GET_LBA_STATUS_LEN];
  
- 	/* These elements define the operation we ultimately want to perform */
- 	struct scsi_data_buffer sdb;
-@@ -152,6 +190,47 @@ static inline void *scsi_cmd_priv(struct scsi_cmnd *cmd)
- 	return cmd + 1;
+-	lba = get_unaligned_be64(cmd + 2);
+-	alloc_len = get_unaligned_be32(cmd + 10);
++	lba = get_unaligned_be64(cdb + 2);
++	alloc_len = get_unaligned_be32(cdb + 10);
+ 
+ 	if (alloc_len < 24)
+ 		return 0;
+@@ -4158,20 +4161,20 @@ static int resp_sync_cache(struct scsi_cmnd *scp,
+ 	int res = 0;
+ 	u64 lba;
+ 	u32 num_blocks;
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 
+-	if (cmd[0] == SYNCHRONIZE_CACHE) {	/* 10 byte cdb */
+-		lba = get_unaligned_be32(cmd + 2);
+-		num_blocks = get_unaligned_be16(cmd + 7);
++	if (cdb[0] == SYNCHRONIZE_CACHE) {	/* 10 byte cdb */
++		lba = get_unaligned_be32(cdb + 2);
++		num_blocks = get_unaligned_be16(cdb + 7);
+ 	} else {				/* SYNCHRONIZE_CACHE(16) */
+-		lba = get_unaligned_be64(cmd + 2);
+-		num_blocks = get_unaligned_be32(cmd + 10);
++		lba = get_unaligned_be64(cdb + 2);
++		num_blocks = get_unaligned_be32(cdb + 10);
+ 	}
+ 	if (lba + num_blocks > sdebug_capacity) {
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
+ 		return check_condition_result;
+ 	}
+-	if (!write_since_sync || (cmd[1] & 0x2))
++	if (!write_since_sync || (cdb[1] & 0x2))
+ 		res = SDEG_RES_IMMED_MASK;
+ 	else		/* delay if write_since_sync and IMMED clear */
+ 		write_since_sync = false;
+@@ -4192,16 +4195,16 @@ static int resp_pre_fetch(struct scsi_cmnd *scp,
+ 	u64 lba;
+ 	u64 block, rest = 0;
+ 	u32 nblks;
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	struct sdeb_store_info *sip = devip2sip(devip, true);
+ 	u8 *fsp = sip->storep;
+ 
+-	if (cmd[0] == PRE_FETCH) {	/* 10 byte cdb */
+-		lba = get_unaligned_be32(cmd + 2);
+-		nblks = get_unaligned_be16(cmd + 7);
++	if (cdb[0] == PRE_FETCH) {	/* 10 byte cdb */
++		lba = get_unaligned_be32(cdb + 2);
++		nblks = get_unaligned_be16(cdb + 7);
+ 	} else {			/* PRE-FETCH(16) */
+-		lba = get_unaligned_be64(cmd + 2);
+-		nblks = get_unaligned_be32(cmd + 10);
++		lba = get_unaligned_be64(cdb + 2);
++		nblks = get_unaligned_be32(cdb + 10);
+ 	}
+ 	if (lba + nblks > sdebug_capacity) {
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
+@@ -4222,7 +4225,7 @@ static int resp_pre_fetch(struct scsi_cmnd *scp,
+ 		prefetch_range(fsp, rest * sdebug_sector_size);
+ 	sdeb_read_unlock(sip);
+ fini:
+-	if (cmd[1] & 0x2)
++	if (cdb[1] & 0x2)
+ 		res = SDEG_RES_IMMED_MASK;
+ 	return res | condition_met_result;
  }
+@@ -4240,7 +4243,7 @@ static int resp_pre_fetch(struct scsi_cmnd *scp,
+ static int resp_report_luns(struct scsi_cmnd *scp,
+ 			    struct sdebug_dev_info *devip)
+ {
+-	unsigned char *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	unsigned int alloc_len;
+ 	unsigned char select_report;
+ 	u64 lun;
+@@ -4256,8 +4259,8 @@ static int resp_report_luns(struct scsi_cmnd *scp,
  
-+/* Read only access function for SCSI CDB held in a scsi_cmnd object */
-+static inline const u8 *scsi_cmnd_get_cdb(const struct scsi_cmnd *scmd)
-+{
-+	return (scmd->flags & SCMD_LONG_CDB) ? scmd->l_cdb.cdbp : scmd->cmnd;
-+}
-+
-+/*
-+ * Writable access function to an existing SCSI CDB held in a scsi_cmnd
-+ * object. Must not increase the size if the pre-existing CDB .
-+ */
-+static inline u8 *scsi_cmnd_get_changeable_cdb(struct scsi_cmnd *scmd)
-+{
-+	return (scmd->flags & SCMD_LONG_CDB) ? scmd->l_cdb.cdbp : scmd->cmnd;
-+}
-+
-+/* Helper function for following inline function: scsi_cmnd_set_cdb() */
-+u8 *__scsi_cmnd_set_cdb(struct scsi_cmnd *scmd, const u8 *cdb, u16 cdb_len);
-+
-+/*
-+ * If 'cdb' non-NULL then cdb_len bytes starting at cdb are copied into
-+ * *scmd . Irrespective of that, the return value points to the start
-+ * of a buffer owned by *scmd that has, or can receive, cdb_len bytes
-+ * representing a SCSI CDB. If 'cdb' is NULL then the returned buffer
-+ * is zero-ed for at least cdb_len bytes. Sets scsi_cmnd::cmd_len .
-+ */
-+static inline u8 *scsi_cmnd_set_cdb(struct scsi_cmnd *scmd, const u8 *cdb,
-+				    u16 cdb_len)
-+{
-+	if ((scmd->flags & SCMD_LONG_CDB) ||
-+	    cdb_len > SCSI_MAX_COMPILE_TIME_CDB_LEN)
-+		return __scsi_cmnd_set_cdb(scmd, cdb, cdb_len);
-+	scmd->cmd_len = cdb_len;
-+	if (cdb_len > 0) {
-+		if (cdb)
-+			memcpy(scmd->cmnd, cdb, cdb_len);
-+		else
-+			memset(scmd->cmnd, 0, cdb_len);
-+	}
-+	return scmd->cmnd;
-+}
-+
- void scsi_done(struct scsi_cmnd *cmd);
- void scsi_done_direct(struct scsi_cmnd *cmd);
+ 	clear_luns_changed_on_target(devip);
  
-@@ -386,7 +465,16 @@ static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
- extern void scsi_build_sense(struct scsi_cmnd *scmd, int desc,
- 			     u8 key, u8 asc, u8 ascq);
+-	select_report = cmd[2];
+-	alloc_len = get_unaligned_be32(cmd + 6);
++	select_report = cdb[2];
++	alloc_len = get_unaligned_be32(cdb + 6);
  
-+/* Constructor for request object containing scsi_cmnd sub-object */
- struct request *scsi_alloc_request(struct request_queue *q,
- 		unsigned int op, blk_mq_req_flags_t flags);
+ 	if (alloc_len < 4) {
+ 		pr_err("alloc len too small %d\n", alloc_len);
+@@ -4339,10 +4342,10 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	const u32 lb_size = sdebug_sector_size;
+ 	u64 lba;
+ 	u8 *arr;
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	struct sdeb_store_info *sip = devip2sip(devip, true);
  
-+/* Destructor for request object via pointer to scsi_cmnd sub-object */
-+static inline void scsi_free_cmnd(struct scsi_cmnd *scmd)
-+{
-+	if (unlikely(scmd->flags & SCMD_LONG_CDB))
-+		kfree(scmd->l_cdb.cdbp);
-+	blk_mq_free_request(blk_mq_rq_from_pdu(scmd));
-+}
-+
- #endif /* _SCSI_SCSI_CMND_H */
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 1ae08e81339f..3278d3cb5a18 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -34,11 +34,15 @@ struct scsi_eh_save {
- 	int result;
- 	unsigned int resid_len;
- 	int eh_eflags;
-+	int flags;
- 	enum dma_data_direction data_direction;
- 	unsigned underflow;
- 	unsigned char cmd_len;
- 	unsigned char prot_op;
--	unsigned char cmnd[32];
-+	union {		/* selected via (scsi_cmnd::flags & SCMD_LONG_CDB) */
-+		u8 cmnd[SCSI_MAX_COMPILE_TIME_CDB_LEN]; /* CDB when selector 0 */
-+		struct scsi_long_cdb l_cdb;             /* when selector != 0 */
-+	};
- 	struct scsi_data_buffer sdb;
- 	struct scatterlist sense_sgl;
- };
+-	bytchk = (cmd[1] >> 1) & 0x3;
++	bytchk = (cdb[1] >> 1) & 0x3;
+ 	if (bytchk == 0) {
+ 		return 0;	/* always claim internal verify okay */
+ 	} else if (bytchk == 2) {
+@@ -4351,14 +4354,14 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	} else if (bytchk == 3) {
+ 		is_bytchk3 = true;	/* 1 block sent, compared repeatedly */
+ 	}
+-	switch (cmd[0]) {
++	switch (cdb[0]) {
+ 	case VERIFY_16:
+-		lba = get_unaligned_be64(cmd + 2);
+-		vnum = get_unaligned_be32(cmd + 10);
++		lba = get_unaligned_be64(cdb + 2);
++		vnum = get_unaligned_be32(cdb + 10);
+ 		break;
+ 	case VERIFY:		/* is VERIFY(10) */
+-		lba = get_unaligned_be32(cmd + 2);
+-		vnum = get_unaligned_be16(cmd + 7);
++		lba = get_unaligned_be32(cdb + 2);
++		vnum = get_unaligned_be16(cdb + 7);
+ 		break;
+ 	default:
+ 		mk_sense_invalid_opcode(scp);
+@@ -4418,7 +4421,7 @@ static int resp_report_zones(struct scsi_cmnd *scp,
+ 	bool partial;
+ 	u64 lba, zs_lba;
+ 	u8 *arr = NULL, *desc;
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	struct sdeb_zone_state *zsp;
+ 	struct sdeb_store_info *sip = devip2sip(devip, false);
+ 
+@@ -4426,12 +4429,12 @@ static int resp_report_zones(struct scsi_cmnd *scp,
+ 		mk_sense_invalid_opcode(scp);
+ 		return check_condition_result;
+ 	}
+-	zs_lba = get_unaligned_be64(cmd + 2);
+-	alloc_len = get_unaligned_be32(cmd + 10);
++	zs_lba = get_unaligned_be64(cdb + 2);
++	alloc_len = get_unaligned_be32(cdb + 10);
+ 	if (alloc_len == 0)
+ 		return 0;	/* not an error */
+-	rep_opts = cmd[14] & 0x3f;
+-	partial = cmd[14] & 0x80;
++	rep_opts = cdb[14] & 0x3f;
++	partial = cdb[14] & 0x80;
+ 
+ 	if (zs_lba >= sdebug_capacity) {
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
+@@ -4559,9 +4562,9 @@ static int resp_open_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	int res = 0;
+ 	u64 z_id;
+ 	enum sdebug_z_cond zc;
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	struct sdeb_zone_state *zsp;
+-	bool all = cmd[14] & 0x01;
++	bool all = cdb[14] & 0x01;
+ 	struct sdeb_store_info *sip = devip2sip(devip, false);
+ 
+ 	if (!sdebug_dev_is_zoned(devip)) {
+@@ -4586,7 +4589,7 @@ static int resp_open_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	}
+ 
+ 	/* Open the specified zone */
+-	z_id = get_unaligned_be64(cmd + 2);
++	z_id = get_unaligned_be64(cdb + 2);
+ 	if (z_id >= sdebug_capacity) {
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
+ 		res = check_condition_result;
+@@ -4635,9 +4638,9 @@ static int resp_close_zone(struct scsi_cmnd *scp,
+ {
+ 	int res = 0;
+ 	u64 z_id;
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	struct sdeb_zone_state *zsp;
+-	bool all = cmd[14] & 0x01;
++	bool all = cdb[14] & 0x01;
+ 	struct sdeb_store_info *sip = devip2sip(devip, false);
+ 
+ 	if (!sdebug_dev_is_zoned(devip)) {
+@@ -4653,7 +4656,7 @@ static int resp_close_zone(struct scsi_cmnd *scp,
+ 	}
+ 
+ 	/* Close specified zone */
+-	z_id = get_unaligned_be64(cmd + 2);
++	z_id = get_unaligned_be64(cdb + 2);
+ 	if (z_id >= sdebug_capacity) {
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
+ 		res = check_condition_result;
+@@ -4708,8 +4711,8 @@ static int resp_finish_zone(struct scsi_cmnd *scp,
+ 	struct sdeb_zone_state *zsp;
+ 	int res = 0;
+ 	u64 z_id;
+-	u8 *cmd = scp->cmnd;
+-	bool all = cmd[14] & 0x01;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
++	bool all = cdb[14] & 0x01;
+ 	struct sdeb_store_info *sip = devip2sip(devip, false);
+ 
+ 	if (!sdebug_dev_is_zoned(devip)) {
+@@ -4725,7 +4728,7 @@ static int resp_finish_zone(struct scsi_cmnd *scp,
+ 	}
+ 
+ 	/* Finish the specified zone */
+-	z_id = get_unaligned_be64(cmd + 2);
++	z_id = get_unaligned_be64(cdb + 2);
+ 	if (z_id >= sdebug_capacity) {
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
+ 		res = check_condition_result;
+@@ -4788,8 +4791,8 @@ static int resp_rwp_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	struct sdeb_zone_state *zsp;
+ 	int res = 0;
+ 	u64 z_id;
+-	u8 *cmd = scp->cmnd;
+-	bool all = cmd[14] & 0x01;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
++	bool all = cdb[14] & 0x01;
+ 	struct sdeb_store_info *sip = devip2sip(devip, false);
+ 
+ 	if (!sdebug_dev_is_zoned(devip)) {
+@@ -4804,7 +4807,7 @@ static int resp_rwp_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		goto fini;
+ 	}
+ 
+-	z_id = get_unaligned_be64(cmd + 2);
++	z_id = get_unaligned_be64(cdb + 2);
+ 	if (z_id >= sdebug_capacity) {
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
+ 		res = check_condition_result;
+@@ -5528,7 +5531,7 @@ static bool inject_on_this_cmd(void)
+ 
+ static int process_deflect_incoming(struct scsi_cmnd *scp)
+ {
+-	u8 opcode = scp->cmnd[0];
++	u8 opcode = scsi_cmnd_get_cdb(scp)[0];
+ 
+ 	if (opcode == SYNCHRONIZE_CACHE || opcode == SYNCHRONIZE_CACHE_16)
+ 		return 0;
+@@ -7436,6 +7439,7 @@ static int resp_not_ready(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	u64 diff_ns = 0;
+ 	ktime_t now_ts = ktime_get_boottime();
+ 	struct scsi_device *sdp = scp->device;
++	const u8 *cmd = scsi_cmnd_get_cdb(scp);
+ 
+ 	stopped_state = atomic_read(&devip->stopped);
+ 	if (stopped_state == 2) {
+@@ -7451,7 +7455,7 @@ static int resp_not_ready(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		if (sdebug_verbose)
+ 			sdev_printk(KERN_INFO, sdp,
+ 				    "%s: Not ready: in process of becoming ready\n", my_name);
+-		if (scp->cmnd[0] == TEST_UNIT_READY) {
++		if (cmd[0] == TEST_UNIT_READY) {
+ 			u64 tur_nanosecs_to_ready = (u64)sdeb_tur_ms_to_ready * 1000000;
+ 
+ 			if (diff_ns <= tur_nanosecs_to_ready)
+@@ -7604,7 +7608,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 	const struct opcode_info_t *oip;
+ 	const struct opcode_info_t *r_oip;
+ 	struct sdebug_dev_info *devip;
+-	u8 *cmd = scp->cmnd;
++	const u8 *cdb = scsi_cmnd_get_cdb(scp);
+ 	int (*r_pfp)(struct scsi_cmnd *, struct sdebug_dev_info *);
+ 	int (*pfp)(struct scsi_cmnd *, struct sdebug_dev_info *) = NULL;
+ 	int k, na;
+@@ -7612,7 +7616,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 	u64 lun_index = sdp->lun & 0x3FFF;
+ 	u32 flags;
+ 	u16 sa;
+-	u8 opcode = cmd[0];
++	u8 opcode = cdb[0];
+ 	bool has_wlun_rl;
+ 	bool inject_now;
+ 
+@@ -7625,20 +7629,32 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 	}
+ 	if (unlikely(sdebug_verbose &&
+ 		     !(SDEBUG_OPT_NO_CDB_NOISE & sdebug_opts))) {
+-		char b[120];
++		char b[200];
+ 		int n, len, sb;
+ 
+ 		len = scp->cmd_len;
+ 		sb = (int)sizeof(b);
+-		if (len > 32)
+-			strcpy(b, "too long, over 32 bytes");
++		k = 0;
++		if (len > 64)
++			strcpy(b, "too long, over 64 bytes");
+ 		else {
+-			for (k = 0, n = 0; k < len && n < sb; ++k)
++			for (n = 0; k < len && k < 16 && n < sb; ++k)
+ 				n += scnprintf(b + n, sb - n, "%02x ",
+-					       (u32)cmd[k]);
++					       (u32)cdb[k]);
+ 		}
+-		sdev_printk(KERN_INFO, sdp, "%s: tag=%#x, cmd %s\n", my_name,
++		sdev_printk(KERN_INFO, sdp, "%s: tag=%#x, cmd: %s\n", my_name,
+ 			    blk_mq_unique_tag(scsi_cmd_to_rq(scp)), b);
++		while (k > 0 && k < len) {
++			for (n = 0; (k < len && n < sb); ++k) {
++				n += scnprintf(b + n, sb - n, "%02x ",
++					       (u32)cdb[k]);
++				if (((k + 1) % 16) == 0) {
++					++k;
++					break;
++				}
++			}
++			sdev_printk(KERN_INFO, sdp, " extra cmd: %s\n", b);
++		}
+ 	}
+ 	if (unlikely(inject_now && (sdebug_opts & SDEBUG_OPT_HOST_BUSY)))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -7663,9 +7679,9 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		r_oip = oip;
+ 		if (FF_SA & r_oip->flags) {
+ 			if (F_SA_LOW & oip->flags)
+-				sa = 0x1f & cmd[1];
++				sa = 0x1f & cdb[1];
+ 			else
+-				sa = get_unaligned_be16(cmd + 8);
++				sa = get_unaligned_be16(cdb + 8);
+ 			for (k = 0; k <= na; oip = r_oip->arrp + k++) {
+ 				if (opcode == oip->opcode && sa == oip->sa)
+ 					break;
+@@ -7703,7 +7719,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		int j;
+ 
+ 		for (k = 1; k < oip->len_mask[0] && k < 16; ++k) {
+-			rem = ~oip->len_mask[k] & cmd[k];
++			rem = ~oip->len_mask[k] & cdb[k];
+ 			if (rem) {
+ 				for (j = 7; j >= 0; --j, rem <<= 1) {
+ 					if (0x80 & rem)
+@@ -7721,7 +7737,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		if (errsts)
+ 			goto check_cond;
+ 	}
+-	if (unlikely(((F_M_ACCESS & flags) || scp->cmnd[0] == TEST_UNIT_READY) &&
++	if (unlikely(((F_M_ACCESS & flags) || cdb[0] == TEST_UNIT_READY) &&
+ 		     atomic_read(&devip->stopped))) {
+ 		errsts = resp_not_ready(scp, devip);
+ 		if (errsts)
 -- 
 2.25.1
 
