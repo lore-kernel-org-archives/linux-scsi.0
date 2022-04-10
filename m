@@ -2,106 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2072DC433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Apr 2022 17:26:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D58C433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Apr 2022 17:37:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237212AbiDJR2l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 Apr 2022 13:28:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42766 "EHLO
+        id S239997AbiDJRjQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Apr 2022 13:39:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233236AbiDJR2k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Apr 2022 13:28:40 -0400
-Received: from mail-ot1-x32a.google.com (mail-ot1-x32a.google.com [IPv6:2607:f8b0:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51B5760D8E
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2022 10:26:29 -0700 (PDT)
-Received: by mail-ot1-x32a.google.com with SMTP id c24-20020a9d6c98000000b005e6b7c0a8a8so6327341otr.2
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2022 10:26:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language
-         :from:to:cc:references:in-reply-to:content-transfer-encoding;
-        bh=b6S1Hp+iFokkZeh+FP2LaecRO9njLAVtb2MAU5iUBKA=;
-        b=hMu1vLUtIiiqimce4K5cKiifA7lXl3H4+8DG+0g9RarA4bFwtNSDHW01xUmAql/qBV
-         QxSp9Z7suRcwrVbzH6qEPO4pkMnt+gmeZy20bvQbN1W0ovpMS4a2cH/KOYBZHzzwVUDL
-         TR9mAtOYfu0eOeto82sA70eawlD/i5+Gz6z3mIQgkjS9+RyifnuOq6+8CCKj1M12AMxK
-         fTkrY+VlgZDAHpKEHGOsotsTqOqnhtwAdNTLQ/sRa/dZO3dd8tTd/zCsGYbPWbC2nuYg
-         9rlbgIV+SGH/wFpgSOc+rWnjEDnmTkpWLwbMJyrkZet8M5kMPdOWjz+Lb20PJr/qpiUt
-         gZBw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:from:to:cc:references:in-reply-to
-         :content-transfer-encoding;
-        bh=b6S1Hp+iFokkZeh+FP2LaecRO9njLAVtb2MAU5iUBKA=;
-        b=xGjVGHBTws6ptAyHbXKNmJ6kAQNFOIb21kidyXAoDyYvBJBq56/IMCheM2gEs8jN7F
-         ptfmVes7VdCdyhkllEjnqVoN/2ye2bAaKjmFiBdxc0ZPprKAgqpXkq8hE8tYUpZVn2GA
-         ibrOabrdy0a8SYjs0vpr1CA/nbkj/7IFLa22RBkQz8TKTbgw5DtMUHhOB/AkTwj4+3GB
-         lF6XU9wBZeUr9zDUhYJ/So4mGL4/vhH+Z+BXuJmm/l6o7PhHVrZJSuVO+ZMxkN886Gnv
-         vwXlBaOeD4aYH6vD3pWPA2KLWkvGa0KP+RiPC9621fVnF/CXKEVHnIcNuRnlbUFfcIoi
-         XnDA==
-X-Gm-Message-State: AOAM530u6Rojc8wupEwCCMbeMVX5LuKPGn30ebS+znm19UDnUk+UnEGa
-        VjUnyowdwyTHMNCidG9j3A4Abhd0tbc=
-X-Google-Smtp-Source: ABdhPJxcsCF09U74c2vnemsdrYwBCi+X4tg4BO8SQVh/pw73dec2GJN5VMJVbFLRJrkqlFf47jg5RA==
-X-Received: by 2002:a9d:3b2:0:b0:5b2:2abc:fe8c with SMTP id f47-20020a9d03b2000000b005b22abcfe8cmr10173155otf.309.1649611588682;
-        Sun, 10 Apr 2022 10:26:28 -0700 (PDT)
-Received: from ?IPV6:2603:8081:140c:1a00:8884:2210:b4d7:3f81? (2603-8081-140c-1a00-8884-2210-b4d7-3f81.res6.spectrum.com. [2603:8081:140c:1a00:8884:2210:b4d7:3f81])
-        by smtp.gmail.com with ESMTPSA id f8-20020a4a8908000000b0032472938f95sm9662818ooi.17.2022.04.10.10.26.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 10 Apr 2022 10:26:28 -0700 (PDT)
-Message-ID: <b726c9b6-89be-ea97-4aca-93192d939a36@gmail.com>
-Date:   Sun, 10 Apr 2022 12:26:27 -0500
+        with ESMTP id S237246AbiDJRjP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Apr 2022 13:39:15 -0400
+Received: from smtp.infotech.no (smtp.infotech.no [82.134.31.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 16EC628E13
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2022 10:37:01 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 933BC2041CB;
+        Sun, 10 Apr 2022 19:36:58 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 12FZvKJlLKcM; Sun, 10 Apr 2022 19:36:56 +0200 (CEST)
+Received: from xtwo70.bingwo.ca (host-45-78-195-155.dyn.295.ca [45.78.195.155])
+        by smtp.infotech.no (Postfix) with ESMTPA id A1081204179;
+        Sun, 10 Apr 2022 19:36:55 +0200 (CEST)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        bvanassche@acm.org, hch@lst.de
+Subject: [PATCH v2 0/6] scsi: fix scsi_cmd::cmd_len
+Date:   Sun, 10 Apr 2022 13:36:46 -0400
+Message-Id: <20220410173652.313016-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH] Revert "scsi: scsi_debug: Address races following module
- load"
-Content-Language: en-US
-From:   Bob Pearson <rpearsonhpe@gmail.com>
-To:     Yi Zhang <yi.zhang@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Zhu Yanjun <zyjzyj2000@gmail.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20220409043704.28573-1-bvanassche@acm.org>
- <CAHj4cs8CRK==3+ssCSLWrC-1-jtp+=QAoaopN97GgFs5bWcbow@mail.gmail.com>
- <aaec898e-08f1-03da-a0c0-34729df4f68b@gmail.com>
-In-Reply-To: <aaec898e-08f1-03da-a0c0-34729df4f68b@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/10/22 12:00, Bob Pearson wrote:
-> On 4/10/22 08:15, Yi Zhang wrote:
->> Confirmed the blktests srp/ issue was fixed with this revert:
->>
->> Tested-by: Yi Zhang <yi.zhang@redhat.com>
->>
->> On Sat, Apr 9, 2022 at 12:37 PM Bart Van Assche <bvanassche@acm.org> wrote:
->>>
->>> Revert the patch mentioned in the subject since it blocks I/O after
->>> module unload has started while this is a legitimate use case. For e.g.
->>> blktests test case srp/001 that patch causes a command timeout to be
->>> triggered for the following call stack:
->>>
-> 
-> I also applied Bart's patch reverting the scsi_debug change. And find
-> that now blktest/check -q srp runs successfully and the trace does not
-> show the inconsistent lock state warning. So it looks to me that there
-> is not a current need to revert the remaining _bh locks in the rxe driver
-> to _irqsave locks.
-> 
-> But, as far as I know the root cause of those warnings, when valid, are due to
-> code that calls into the verbs APIs while holding _irqsave locks. If we want to
-> make that generally possible then perhaps we should just get rid of the _bh
-> locks in favor of _irqsave locks. I have a patch that does that if you think
-> it is needed.
-> 
-> Bob
+As described in the first patch of this set, commit ce70fd9a551af
+reduced the maximum size of any SCSI commands (CDB length) to
+32 bytes. It was previously larger in struct scsi_request which
+has now (lk 5.18.0-rc1) been removed.
 
-Oops. I was ahead of for-next. Going back to origin/for-next. The warning is back.
-I'll figure out what fixed it.
+Use a slightly different scheme than before to support CDB lengths
+greater than 16 bytes. Three access function are added, one for read
+access, one for writable access that doesn't increase the cdb length,
+and the third for create/write access to the CDB held inside a
+scsi_cmnd object. This reduces the size of struct scsi_cmnd by 16
+bytes.
+
+A scsi_cmnd object is always paired with a struct request object
+that immediately precedes it. To note this pairing the new comments
+refer to a scsi_cmnd "sub-object". Prior to this patch the
+constructor/destructor naming was confusing:
+   - scsi_alloc_request() to create a pair
+   - blk_mq_free_request() to destruct a pair
+
+Add a new destructor function:
+   scsi_free_cmnd(struct scsi_cmnd *scmd)
+
+to make this a bit clearer. Also scsi_free_cmnd() will free up a
+pointer to a long cdb buffer on the heap, if one is present.
+
+These changes have been applied to SCSI mid-level and the upper
+level drivers (ULDs, e.g. sd). Only one low level driver (LLD)
+has been updated: scsi_debug. The rest of the LLDs can continue
+to use scsi_cmnd::cmnd directly _unless_ they wish to support
+CDB lengths > 16 bytes; in that case they should use
+scsi_cmnd_get_cdb().
+
+This patchset is against lk 5.18.0-rc1 and also applies cleanly
+to MKP's 5.19/scsi-queue branch.
+
+Changes since the first revision:
+  - introduce a new SCSI_MAX_RUN_TIME_8BIT_CDB_LEN define for the
+    case where hp->cmd_len is an 8 bit quantity. This addresses a
+    kernel test robot report on patch 1 sent 20220408
+  - take up Bart's suggestion to reduce
+    SCSI_MAX_COMPILE_TIME_CDB_LEN to 16, hence shaving 16 bytes
+    off the size of struct scsi_cmnd
+  - introduce scsi_cmnd_get_changeable_cdb() access function for
+    the case when the code wants to change some bytes in an
+    existing cdb but not increase its size
+  - add a broad description of how struct scsi_cmnd fits into
+    overall architecture, tweak some other comments
+  - further work on the sr and stex ULDs
+ 
+
+Douglas Gilbert (6):
+  scsi_cmnd: reinstate support for cmd_len > 32
+  sd, sd_zbc: use scsi_cmnd cdb access functions
+  sg: reinstate cmd_len > 32
+  bsg: allow cmd_len > 32
+  scsi_debug: reinstate cmd_len > 32
+  st,sr,stex: use scsi_cmnd cdb access functions
+
+ drivers/scsi/scsi_bsg.c     |  22 +-
+ drivers/scsi/scsi_debug.c   | 410 +++++++++++++++++++-----------------
+ drivers/scsi/scsi_debugfs.c |   3 +-
+ drivers/scsi/scsi_error.c   |  76 ++++---
+ drivers/scsi/scsi_ioctl.c   |  21 +-
+ drivers/scsi/scsi_lib.c     |  75 ++++++-
+ drivers/scsi/scsi_logging.c |  11 +-
+ drivers/scsi/sd.c           | 176 +++++++++-------
+ drivers/scsi/sd_zbc.c       |  12 +-
+ drivers/scsi/sg.c           |  23 +-
+ drivers/scsi/sr.c           |  40 ++--
+ drivers/scsi/st.c           |  12 +-
+ drivers/scsi/stex.c         |  22 +-
+ include/scsi/scsi_cmnd.h    | 116 ++++++++--
+ include/scsi/scsi_eh.h      |   6 +-
+ 15 files changed, 623 insertions(+), 402 deletions(-)
+
+-- 
+2.25.1
+
