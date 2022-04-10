@@ -2,64 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E035FC4332F
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Apr 2022 12:40:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96828C433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Apr 2022 12:44:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239197AbiDJMmt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 Apr 2022 08:42:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32830 "EHLO
+        id S238776AbiDJMqZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Apr 2022 08:46:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239176AbiDJMmr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Apr 2022 08:42:47 -0400
-Received: from mta-out-01.tin.it (mta-out-01.tin.it [217.169.118.4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E41B34B40C
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2022 05:40:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alice.it; s=20211207; t=1649594436; 
-        bh=aYnN2M2/J7LiDks3GtVfK/dknBgrlIPDu1xhTIZ5SQ0=;
-        h=Message-ID:Content-Type:MIME-Version:Content-Transfer-Encoding:Content-Description:Subject:To:From:Date:Reply-To;
-        b=l0nt10PktOstmty1A8rVH6W3pi7nfJVx4DlqRMYPk+64PpsiynARBQTSYGEWO2tKO+/IFgn9mYPDwTH3AemRqJlYLSA6/lVZX0qEF4lN3R0XUQZXFIsv6jQSzNoimnvPAIIvUeXhu4Q8ct8/FTHMZBr5awtOvQId7q5+cmFEeWYmwDQ/AM25cR9YS/9Ma/x2AWBwtb8a2i8qR3HJARikQ9bpU2VG+WL4atYJfIvV1WnC7RYBQky8iiiHB1AFkM72efyQQq/z3rdMSCrUy5coV2WjVt2FOt/dtv7VXPwCGY0NoKMe+eNHJaVAu5pYMuiEq9sNxrmwWOCRCmSdmYXkgQ==
-X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgedvvddrudekgedgheduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuvffgnffgvefqoffkvfetnffktedpqfgfvfenuceurghilhhouhhtmecufedtudenucenucfjughrpegtggfguffvhfffrhesthhqtddttddtudenucfhrhhomhepfdforghtthhhrghishcuofhitghhrggvlhdfoehfihhlihhpphhordeffeelkeekvddugeehudesrghlihgtvgdrihhtqeenucggtffrrghtthgvrhhnpeelieekgeevleeigffhgeefueelkedtjedtteekvefhieelieegtdejgeekhfdugeenucfkphepkeejrddutddurdelgedrfeegnecuvehluhhsthgvrhfuihiivgepheeigeenucfrrghrrghmpehhvghloheplgdutddtrdduvdejrddvheehrddvheefngdpihhnvghtpeekjedruddtuddrleegrdefgedpmhgrihhlfhhrohhmpehfihhlihhpphhordeffeelkeekvddugeehudesrghlihgtvgdrihhtpdhnsggprhgtphhtthhopedupdhrtghpthhtoheplhhinhhugidqshgtshhisehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-RazorGate-Vade-Verdict: clean 0
-X-RazorGate-Vade-Classification: clean
-Received: from [100.127.255.253] (87.101.94.34) by mta-out-01.tin.it (5.8.807.04) (authenticated as giorgioborrelli3@tin.it)
-        id 624F381A0060B3D3 for linux-scsi@vger.kernel.org; Sun, 10 Apr 2022 14:37:34 +0200
-Message-ID: <624F381A0060B3D3@mta-out-01.tin.it> (added by postmaster@tin.it)
-Content-Type: text/plain; charset="iso-8859-1"
+        with ESMTP id S232791AbiDJMqY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Apr 2022 08:46:24 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02B411A380;
+        Sun, 10 Apr 2022 05:44:07 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1649594645;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=jupJYF+Zhy8Z0j1aiZqE1QaJR/Yec+7rIcNnDHtn/hA=;
+        b=szSevsxWHh1OkYXwDgmZGH28YrhD2WGnHx+NYJvX7WEYMThcMPeDRoWRZxOs9ri2KKwu5J
+        DqmgjNrXUL5SW7gsLrrt98U+T3nFBcnW1zMldd9m8iHp0Ew7TsSmLVeVbNfkVGiqOvg7g+
+        sLteFtuGskBFV6kxrExjetAI92mHSRvQOrnf/tUDKa//g0txyTY6mZ55KGWIg0drWXn4K/
+        wykHrBnWJLj8+8d3cL8VBJbzGBv2a0NBkgz1wdvnkUmV/2mmLrZaPwA+0uM1iDneSpScqk
+        ydamC1Xv/ctZFuvGEndbn7ZLKatfVZ4XHPeVDbReRVbEUNVm79B5gUkjW1ypYg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1649594645;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=jupJYF+Zhy8Z0j1aiZqE1QaJR/Yec+7rIcNnDHtn/hA=;
+        b=5P7i7gS57kJRa2/4tl0OHX9nfYMTpBnPji1hicsoUyD64NeODIs/+5PEb/PxSfRVsyTBrv
+        /kw1bkRmPKRI21CQ==
+To:     Christoph Hellwig <hch@infradead.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Peter Zijlstra <peterz@infradead.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH REPOST] irq_poll: Add local_bh_disable() in cpu_dead
+ notifier
+In-Reply-To: <YgYDePJLsVLXKqEP@infradead.org>
+References: <YgJ/XWVxxWDVBBVA@linutronix.de>
+ <YgNzsnIE9bwQZ1Zg@infradead.org> <YgUGI9qAKUh4AOUY@linutronix.de>
+ <YgYDePJLsVLXKqEP@infradead.org>
+Date:   Sun, 10 Apr 2022 14:44:04 +0200
+Message-ID: <87o819glbf.ffs@tglx>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Description: Mail message body
-Subject: reconfirm 
-To:     linux-scsi@vger.kernel.org
-From:   "Matthais Michael" <filippo.3398821451@alice.it>
-Date:   Sun, 10 Apr 2022 13:37:00 +0100
-Reply-To: matthais.michael@cheapnet.it
-Sensitivity: Personal
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-My n a m e is Matthais Michael, the Director of Financial Security and Trus=
-t F u n d Builders, our company was contracted to release your Covid-19 Com=
-pensation p a y m e n t to you on behalf of the UNITED NATION (UN). Your pa=
-yment R e l e a s e Code is: CNG/3480/04/00. The Total amount payable to yo=
-u is US$7.5 Million.
+On Thu, Feb 10 2022 at 22:34, Christoph Hellwig wrote:
+> On Thu, Feb 10, 2022 at 01:33:39PM +0100, Sebastian Andrzej Siewior wrote:
+>> You need to handle the pending softirqs. If you don't handle them
+>> immediately or in a deterministic say (like on IRQ exit) then they will
+>> be handled at a random point.
+>
+> Yes.  Just like regular interrupts.
 
-You are to reconfirm the following information to enable us determine that =
-we are dealing with the right b e n e f i c i a r y, also the receipt of yo=
-ur information  will facilitate the processing of your payment:
+But interrupts make sure they are handled. This code does not and as
+Sebastian pointed out:
 
-1 F u l l Name:
-2 Residential address:
-3 A g e:
-4 Occupation:
-5 D i r e c t telephone n u m b e r s:
+  "If you don't handle them at all, the CPU will go idle and at least
+   the NO_HZ will complain about pending softirqs (can_stop_idle_tick())."
 
-After verification of your Information, you will be contacted with detailed=
- i n f o r m a t i o n of procedures for the immediate release of your paym=
-ent to y o u without any hitch whatsoever.
+That's clearly a bug, but this should be part of the changelog.
 
-Send the requested information so we can proceed accordingly.
+Thanks,
 
-Regards
+        tglx
 
-Mr. Matthais Michael
