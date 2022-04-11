@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13F94C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 02:30:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D225C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 02:30:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244384AbiDKCdA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 Apr 2022 22:33:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54410 "EHLO
+        id S244367AbiDKCdF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Apr 2022 22:33:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244435AbiDKCcZ (ORCPT
+        with ESMTP id S244436AbiDKCcZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Apr 2022 22:32:25 -0400
 Received: from smtp.infotech.no (smtp.infotech.no [82.134.31.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D778922D
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2022 19:29:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7E97B3B3
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2022 19:29:35 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 6819D204179;
-        Mon, 11 Apr 2022 04:29:32 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id 0BEE92041C0;
+        Mon, 11 Apr 2022 04:29:35 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id vOjP4P0gUFgL; Mon, 11 Apr 2022 04:29:29 +0200 (CEST)
+        with ESMTP id LDFtNvVA8IXV; Mon, 11 Apr 2022 04:29:32 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-78-195-155.dyn.295.ca [45.78.195.155])
-        by smtp.infotech.no (Postfix) with ESMTPA id 25DAC2041BB;
-        Mon, 11 Apr 2022 04:29:28 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 827C92041B2;
+        Mon, 11 Apr 2022 04:29:31 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         bvanassche@acm.org
-Subject: [PATCH v24 41/46] sg: track lowest inactive and await indexes
-Date:   Sun, 10 Apr 2022 22:28:31 -0400
-Message-Id: <20220411022836.11871-42-dgilbert@interlog.com>
+Subject: [PATCH v24 44/46] sg: add bio_poll support
+Date:   Sun, 10 Apr 2022 22:28:34 -0400
+Message-Id: <20220411022836.11871-45-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220411022836.11871-1-dgilbert@interlog.com>
 References: <20220411022836.11871-1-dgilbert@interlog.com>
@@ -40,792 +40,362 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use two integers in the sg_fd structure to track recent and lowest
-xarray indexes that have become inactive or await a foreground
-receive. This is used to shorten the number of xarray iterations
-required prior to a match when queue (IO) depths are large, say
-128.
+Adds the SGV4_FLAG_POLLED command flag which causes REQ_POLLED to be
+set on the request. This will attempt to do polling in the associated
+SCSI low level driver (LLD) for completion. An example of an LLD is
+the driver for a SAS HBA (host bus adapter) such as mpt3sas.
 
-Replace the req_cnt atomic in struct sg_fd with the inactives
-atomic. With large queues, cycles were wasted checking the request
-xarray for any inactives when there were none to be found.
+Before waiting on an inflight request, a check is made to see if the
+SGV4_FLAG_POLLED is set and if so, bio_poll() is called instead of
+the wait. In situations where only the file descriptor is known (e.g.
+sg_poll() and ioctl(SG_GET_NUM_WAITING)) all inflight requests
+associated with the file descriptor that have SGV4_FLAG_POLLED set,
+have bio_poll() called on them.
 
-Rename the sg_rq_state_chg_*() functions to sg_rq_chg_state_*()
-since too many things start with "sg_rq_state". Also the new
-function names emphasize the change part a little more.
+It is important to know blk_execute_rq_nowait() has finished before
+sending bio_poll() on that request. The SG_RS_INFLIGHT state is set
+just before blk_execute_rq_nowait() is called so a new bit setting
+SG_FRQ_ISSUED has been added that is set just after that calls
+returns.
 
-Rename the struct request pointer from rq to rqq and when it read
-and written to sg_request::rqq use READ_ONCE() and WRITE_ONCE()
-macros.
+bio_poll() is char device/driver unfriendly. It needs information
+such as the associated request_queue placed in a struct block_device
+object, something the a char device (e.g. a sg device) does not
+normally have. Enter the new dummy_bdev pointer placed in struct
+sg_device. It remains NULL until the first time a SGV4_FLAG_POLLED
+flag is set on a command for a given device. Only then is the
+dummy block_object created. It would be much easier if bio_poll()
+just accepted a request_queue argument.
+
+Note that the implementation of bio_poll() calls mq_poll() in the
+LLD associated with the request. Then for any request found to be
+ready, bio_poll() invokes the scsi_done() callback. When bio_poll()
+returns > 0 , sg_rq_end_io() may have been called on the given
+request. If so the given request will be in await_rcv state.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 354 +++++++++++++++++++++++++++-------------------
- 1 file changed, 206 insertions(+), 148 deletions(-)
+ drivers/scsi/sg.c      | 169 +++++++++++++++++++++++++++++++++++++++--
+ include/uapi/scsi/sg.h |   1 +
+ 2 files changed, 164 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index b9fdfcfc18ee..71d86537601d 100644
+index eaf0bb9bd004..b6fee732eb7b 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -119,6 +119,7 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
- #define SG_FRQ_DEACT_ORPHAN	6	/* not keeping orphan so de-activate */
+@@ -120,12 +120,15 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
  #define SG_FRQ_RECEIVING	7	/* guard against multiple receivers */
  #define SG_FRQ_FOR_MMAP		8	/* request needs PAGE_SIZE elements */
-+#define SG_FRQ_COUNT_ACTIVE	9	/* sfp->submitted + waiting active */
+ #define SG_FRQ_COUNT_ACTIVE	9	/* sfp->submitted + waiting active */
++#define SG_FRQ_ISSUED		10	/* blk_execute_rq_nowait() finished */
++#define SG_FRQ_POLLING		11	/* to stop co-incident bio_poll()s */
  
  /* Bit positions (flags) for sg_fd::ffd_bm bitmask follow */
  #define SG_FFD_FORCE_PACKID	0	/* receive only given pack_id/tag */
-@@ -217,7 +218,7 @@ struct sg_request {	/* active SCSI command or inactive request */
- 	unsigned long frq_bm[1];	/* see SG_FRQ_* defines above */
- 	u8 *sense_bp;		/* mempool alloc-ed sense buffer, as needed */
- 	struct sg_fd *parentfp;	/* pointer to owning fd, even when on fl */
--	struct request *rq;	/* released in sg_rq_end_io(), bio kept */
-+	struct request *rqq;	/* released in sg_rq_end_io(), bio kept */
- 	struct bio *bio;	/* kept until this req -->SG_RS_INACTIVE */
- 	struct execute_work ew_orph;	/* harvest orphan request */
+ #define SG_FFD_CMD_Q		1	/* clear: only 1 active req per fd */
+ #define SG_FFD_KEEP_ORPHAN	2	/* policy for this fd */
+-#define SG_FFD_Q_AT_TAIL	3	/* set: queue reqs at tail of blk q */
++#define SG_FFD_POLLED_SEEN	3	/* could have POLLED requests active */
++#define SG_FFD_Q_AT_TAIL	4	/* set: queue reqs at tail of blk q */
+ 
+ /* Bit positions (flags) for sg_device::fdev_bm bitmask follow */
+ #define SG_FDEV_EXCLUDE		0	/* have fd open with O_EXCL */
+@@ -259,6 +262,7 @@ struct sg_device { /* holds the state of each scsi generic device */
+ 	unsigned long fdev_bm[1];	/* see SG_FDEV_* defines above */
+ 	char name[DISK_NAME_LEN];
+ 	struct cdev *cdev;
++	struct block_device *dummy_bdev;	/* hack for REQ_POLLED */
+ 	struct xarray sfp_arr;
+ 	struct kref d_ref;
  };
-@@ -228,11 +229,12 @@ struct sg_fd {		/* holds the state of a file descriptor */
- 	struct mutex f_mutex;	/* serialize ioctls on this fd */
- 	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
- 	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
--	int prev_used_idx;	/* previous used index */
-+	int low_used_idx;	/* previous or lower used index */
-+	int low_await_idx;	/* previous or lower await index */
- 	u32 idx;		/* my index within parent's sfp_arr */
- 	atomic_t submitted;	/* number inflight or awaiting receive */
- 	atomic_t waiting;	/* number of requests awaiting receive */
--	atomic_t req_cnt;	/* number of requests */
-+	atomic_t inactives;	/* number of inactive requests */
- 	int sgat_elem_sz;	/* initialized to scatter_elem_sz */
- 	int mmap_sz;		/* byte size of previous mmap() call */
- 	unsigned long ffd_bm[1];	/* see SG_FFD_* defines above */
-@@ -889,11 +891,13 @@ sg_rq_state_fail_msg(struct sg_fd *sfp, enum sg_rq_state exp_old_st,
- }
+@@ -304,6 +308,9 @@ static struct sg_device *sg_get_dev(int min_dev);
+ static void sg_device_destroy(struct kref *kref);
+ static struct sg_request *sg_mk_srp_sgat(struct sg_fd *sfp, bool first,
+ 					 int db_len);
++static int sg_sfp_bio_poll(struct sg_fd *sfp, int loop_count);
++static int sg_srp_q_bio_poll(struct sg_request *srp, struct request_queue *q,
++			     int loop_count);
+ #if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
+ static const char *sg_rq_st_str(enum sg_rq_state rq_st, bool long_str);
  #endif
- 
-+/* Functions ending in '_ulck' assume sfp->xa_lock held by caller. */
- static void
--sg_rq_state_force(struct sg_request *srp, enum sg_rq_state new_st)
-+sg_rq_chg_state_force_ulck(struct sg_request *srp, enum sg_rq_state new_st)
+@@ -1008,6 +1015,7 @@ static void
+ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
  {
- 	bool prev, want;
--	struct xarray *xafp = &srp->parentfp->srp_arr;
-+	struct sg_fd *sfp = srp->parentfp;
-+	struct xarray *xafp = &sfp->srp_arr;
+ 	bool at_head, is_v4h, sync;
++	struct request *rqq = READ_ONCE(srp->rqq);
  
- 	atomic_set(&srp->rq_st, new_st);
- 	want = (new_st == SG_RS_AWAIT_RCV);
-@@ -907,15 +911,21 @@ sg_rq_state_force(struct sg_request *srp, enum sg_rq_state new_st)
- 	want = (new_st == SG_RS_INACTIVE);
- 	prev = xa_get_mark(xafp, srp->rq_idx, SG_XA_RQ_INACTIVE);
- 	if (prev != want) {
--		if (want)
-+		if (want) {
-+			int prev_idx = READ_ONCE(sfp->low_used_idx);
-+
-+			if (prev_idx < 0 || srp->rq_idx < prev_idx ||
-+			    !xa_get_mark(xafp, prev_idx, SG_XA_RQ_INACTIVE))
-+				WRITE_ONCE(sfp->low_used_idx, srp->rq_idx);
- 			__xa_set_mark(xafp, srp->rq_idx, SG_XA_RQ_INACTIVE);
--		else
-+		} else {
- 			__xa_clear_mark(xafp, srp->rq_idx, SG_XA_RQ_INACTIVE);
-+		}
- 	}
- }
- 
- static void
--sg_rq_state_helper(struct xarray *xafp, struct sg_request *srp, int indic)
-+sg_rq_chg_state_help(struct xarray *xafp, struct sg_request *srp, int indic)
- {
- 	if (indic & 1)		/* from inactive state */
- 		__xa_clear_mark(xafp, srp->rq_idx, SG_XA_RQ_INACTIVE);
-@@ -944,45 +954,53 @@ static const int sg_rq_state_mul2arr[] = {2, 0, 8, 0};
-  * spinlock is held.
-  */
- static int
--sg_rq_state_chg(struct sg_request *srp, enum sg_rq_state old_st,
-+sg_rq_chg_state(struct sg_request *srp, enum sg_rq_state old_st,
- 		enum sg_rq_state new_st)
- {
- 	enum sg_rq_state act_old_st;
--	int indic;
--	unsigned long iflags;
-+	int indic = sg_rq_state_arr[(int)old_st] + sg_rq_state_mul2arr[(int)new_st];
- 	struct sg_fd *sfp = srp->parentfp;
--	struct xarray *xafp = &sfp->srp_arr;
- 
--	indic = sg_rq_state_arr[(int)old_st] +
--		sg_rq_state_mul2arr[(int)new_st];
--	act_old_st = (enum sg_rq_state)atomic_cmpxchg(&srp->rq_st, old_st,
--						      new_st);
--	if (act_old_st != old_st) {
--		SG_LOG(1, sfp, "%s: unexpected old state: %s\n", __func__,
--		       sg_rq_st_str(act_old_st, false));
--		return -EPROTOTYPE;	/* only used for this error type */
--	}
- 	if (indic) {
-+		unsigned long iflags;
-+		struct xarray *xafp = &sfp->srp_arr;
-+
- 		xa_lock_irqsave(xafp, iflags);
--		if (new_st == SG_RS_INACTIVE)
--			WRITE_ONCE(sfp->prev_used_idx, srp->rq_idx);
--		sg_rq_state_helper(xafp, srp, indic);
-+		act_old_st = (enum sg_rq_state)atomic_cmpxchg_relaxed(&srp->rq_st, old_st, new_st);
-+		if (unlikely(act_old_st != old_st)) {
-+			xa_unlock_irqrestore(xafp, iflags);
-+			SG_LOG(1, sfp, "%s: unexpected old state: %s\n", __func__,
-+			       sg_rq_st_str(act_old_st, false));
-+			return -EPROTOTYPE;     /* only used for this error type */
-+		}
-+		if (new_st == SG_RS_INACTIVE) {
-+			int prev_idx = READ_ONCE(sfp->low_used_idx);
-+
-+			if (prev_idx < 0 || srp->rq_idx < prev_idx ||
-+			    !xa_get_mark(xafp, prev_idx, SG_XA_RQ_INACTIVE))
-+				WRITE_ONCE(sfp->low_used_idx, srp->rq_idx);
-+		}
-+		sg_rq_chg_state_help(xafp, srp, indic);
- 		xa_unlock_irqrestore(xafp, iflags);
-+	} else {
-+		act_old_st = (enum sg_rq_state)atomic_cmpxchg(&srp->rq_st, old_st, new_st);
-+		if (unlikely(act_old_st != old_st)) {
-+			SG_LOG(1, sfp, "%s: unexpected old state: %s\n", __func__,
-+			       sg_rq_st_str(act_old_st, false));
-+			return -EPROTOTYPE;     /* only used for this error type */
-+		}
- 	}
- 	return 0;
- }
- 
- static void
--sg_rq_state_chg_force(struct sg_request *srp, enum sg_rq_state new_st)
-+sg_rq_chg_state_force(struct sg_request *srp, enum sg_rq_state new_st)
- {
- 	unsigned long iflags;
--	struct sg_fd *sfp = srp->parentfp;
--	struct xarray *xafp = &sfp->srp_arr;
-+	struct xarray *xafp = &srp->parentfp->srp_arr;
- 
- 	xa_lock_irqsave(xafp, iflags);
--	if (new_st == SG_RS_INACTIVE)
--		WRITE_ONCE(sfp->prev_used_idx, srp->rq_idx);
--	sg_rq_state_force(srp, new_st);
-+	sg_rq_chg_state_force_ulck(srp, new_st);
- 	xa_unlock_irqrestore(xafp, iflags);
- }
- 
-@@ -1006,12 +1024,14 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
- 		at_head = !(srp->rq_flags & SG_FLAG_Q_AT_TAIL);
- 
- 	kref_get(&sfp->f_ref); /* sg_rq_end_io() does kref_put(). */
--	sg_rq_state_chg_force(srp, SG_RS_INFLIGHT);
-+	sg_rq_chg_state_force(srp, SG_RS_INFLIGHT);
- 
- 	/* >>>>>>> send cmd/req off to other levels <<<<<<<< */
--	if (!sync)
-+	if (!sync) {
+ 	is_v4h = test_bit(SG_FRQ_IS_V4I, srp->frq_bm);
+ 	sync = test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm);
+@@ -1031,7 +1039,21 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
  		atomic_inc(&sfp->submitted);
--	blk_execute_rq_nowait(srp->rq, (int)at_head, sg_rq_end_io);
-+		set_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm);
+ 		set_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm);
+ 	}
+-	blk_execute_rq_nowait(READ_ONCE(srp->rqq), (int)at_head, sg_rq_end_io);
++	if (srp->rq_flags & SGV4_FLAG_POLLED) {
++		if (test_bit(QUEUE_FLAG_POLL, &rqq->q->queue_flags)) {
++			set_bit(SG_FFD_POLLED_SEEN, sfp->ffd_bm);
++			rqq->cmd_flags |= REQ_POLLED;
++			if (srp->bio)
++				srp->bio->bi_opf |= REQ_POLLED;
++		} else {
++			if (srp->bio && (srp->bio->bi_opf & REQ_POLLED))
++				srp->bio->bi_opf &= ~REQ_POLLED;
++			clear_bit(SG_FFD_POLLED_SEEN, sfp->ffd_bm);
++			srp->rq_flags &= ~SGV4_FLAG_POLLED;
++		}
 +	}
-+	blk_execute_rq_nowait(READ_ONCE(srp->rqq), (int)at_head, sg_rq_end_io);
++	blk_execute_rq_nowait(rqq, (int)at_head, sg_rq_end_io);
++	set_bit(SG_FRQ_ISSUED, srp->frq_bm);
  }
  
  /*
-@@ -1086,7 +1106,7 @@ sg_common_write(struct sg_comm_wr_t *cwrp)
- 		res = -ENODEV;
- 		goto err_out;
- 	}
--	srp->rq->timeout = cwrp->timeout;
-+	READ_ONCE(srp->rqq)->timeout = cwrp->timeout;
- 	sg_execute_cmd(fp, srp);
- 	return srp;
- err_out:
-@@ -1655,7 +1675,7 @@ sg_fill_request_element(struct sg_fd *sfp, struct sg_request *srp,
- static inline bool
- sg_rq_landed(struct sg_device *sdp, struct sg_request *srp)
- {
--	return atomic_read(&srp->rq_st) != SG_RS_INFLIGHT ||
-+	return atomic_read_acquire(&srp->rq_st) != SG_RS_INFLIGHT ||
- 	       unlikely(SG_IS_DETACHING(sdp));
- }
+@@ -1693,6 +1715,13 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
  
-@@ -1671,6 +1691,8 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
- 	enum sg_rq_state sr_st;
- 	struct sg_device *sdp = sfp->parentdp;
- 
-+	if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
-+		goto skip_wait;		/* and skip _acquire() */
+ 	if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
+ 		goto skip_wait;		/* and skip _acquire() */
++	if (srp->rq_flags & SGV4_FLAG_POLLED) {
++		/* call bio_poll(), spinning till found */
++		res = sg_srp_q_bio_poll(srp, sdp->device->request_queue, -1);
++		if (res != -ENODATA && unlikely(res < 0))
++			return res;
++		goto skip_wait;
++	}
  	SG_LOG(3, sfp, "%s: about to wait_event...()\n", __func__);
  	/* usually will be woken up by sg_rq_end_io() callback */
  	res = wait_event_interruptible(sfp->read_wait,
-@@ -1683,14 +1705,16 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
- 		       __func__, res);
- 		return res;
- 	}
-+skip_wait:
- 	if (unlikely(SG_IS_DETACHING(sdp))) {
--		atomic_set(&srp->rq_st, SG_RS_INACTIVE);
-+		sg_rq_chg_state_force(srp, SG_RS_INACTIVE);
-+		atomic_inc(&sfp->inactives);
- 		return -ENODEV;
- 	}
- 	sr_st = atomic_read(&srp->rq_st);
- 	if (unlikely(sr_st != SG_RS_AWAIT_RCV))
- 		return -EPROTO;         /* Logic error */
--	res = sg_rq_state_chg(srp, sr_st, SG_RS_BUSY);
-+	res = sg_rq_chg_state(srp, sr_st, SG_RS_BUSY);
- 	if (unlikely(res)) {
- #if IS_ENABLED(SG_LOG_ACTIVE)
- 		sg_rq_state_fail_msg(sfp, sr_st, SG_RS_BUSY, __func__);
-@@ -1948,7 +1972,10 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+@@ -1972,6 +2001,8 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
  		SG_LOG(3, sfp, "%s:    SG_GET_PACK_ID=%d\n", __func__, val);
  		return put_user(val, ip);
  	case SG_GET_NUM_WAITING:
--		return put_user(atomic_read(&sfp->waiting), ip);
-+		val = atomic_read(&sfp->waiting);
-+		if (val)
-+			return put_user(val, ip);
-+		return put_user(atomic_read_acquire(&sfp->waiting), ip);
- 	case SG_GET_SG_TABLESIZE:
- 		SG_LOG(3, sfp, "%s:    SG_GET_SG_TABLESIZE=%d\n", __func__,
- 		       sdp->max_sgat_sz);
-@@ -2136,11 +2163,16 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- static __poll_t
- sg_poll(struct file *filp, poll_table * wait)
- {
-+	int num;
++		if (test_bit(SG_FFD_POLLED_SEEN, sfp->ffd_bm))
++			sg_sfp_bio_poll(sfp, 0);	/* LLD may have some ready */
+ 		val = atomic_read(&sfp->waiting);
+ 		if (val)
+ 			return put_user(val, ip);
+@@ -2156,6 +2187,102 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 	return scsi_ioctl(sdp->device, filp->f_mode, cmd_in, p);
+ }
+ 
++/*
++ * If the sg_request object is in SG_RS_AWAIT_RCV state, return 1. Otherwise,
++ * if it is not inflight, return -ENODATA. This function returns 1 if the
++ * given object was in inflight state and is in await_rcv state after
++ * bio_poll() returns 1 or more. If bio_poll() fails, then that (negative)
++ * value is returned. Otherwise returns 0. Note that bio_poll() may complete
++ * unrelated requests that share the same q.
++ */
++static int
++sg_srp_q_bio_poll(struct sg_request *srp, struct request_queue *q, int loop_count)
++{
++	int n = 0;
++	int k, num;
++	struct bio *biop;
++	struct sg_fd *sfp = srp->parentfp;
++	enum sg_rq_state sr_st = atomic_read(&srp->rq_st);
++
++	if (sr_st == SG_RS_AWAIT_RCV)
++		return 1;
++	else if (sr_st != SG_RS_INFLIGHT)
++		return -ENODATA;
++	if (test_and_set_bit(SG_FRQ_POLLING, srp->frq_bm))
++		return 0;	/* something else is polling this request */
++	biop = READ_ONCE(srp->bio);
++	if (!biop) {
++		clear_bit(SG_FRQ_POLLING, srp->frq_bm);
++		return 0;
++	}
++	bio_get(biop);
++	if (READ_ONCE(biop->bi_cookie) == BLK_QC_T_NONE) {
++		if (atomic_read(&srp->rq_st) == SG_RS_AWAIT_RCV)
++			n = 1;
++		else
++			SG_LOG(6, sfp, "%s: cookie==BLK_QC_T_NONE\n", __func__);
++		goto fini;
++	}
++	if (!READ_ONCE(biop->bi_bdev))
++		WRITE_ONCE(biop->bi_bdev, sfp->parentdp->dummy_bdev);
++
++	num = (loop_count < 1) ? 1 : loop_count;
++	for (n = 0, k = 0; k < num; ++k) {
++		n = bio_poll(biop, NULL, (loop_count < 0) ? BLK_POLL_NOSLEEP : 0);
++		if (n > 0) {
++			n = !!(atomic_read(&srp->rq_st) == SG_RS_AWAIT_RCV);
++			break;
++		} else if (n < 0) {
++			break;
++		}
++		if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
++			break;
++	}
++fini:
++	clear_bit(SG_FRQ_POLLING, srp->frq_bm);
++	bio_put(biop);
++	return n;
++}
++
++/*
++ * Check all requests on this sfp that are both inflight and POLLED. That check involves calling
++ * bio_poll(spin<-false) loop_count times. If loop_count is 0 then call bio_poll once.
++ * If loop_count is negative then call bio_poll(spin <- true)) once for each request.
++ * Returns number found (could be 0) or a negated errno value.
++ */
++static int
++sg_sfp_bio_poll(struct sg_fd *sfp, int loop_count)
++{
++	int res = 0;
++	int n;
++	unsigned long idx, iflags;
++	struct sg_request *srp;
++	struct scsi_device *sdev = sfp->parentdp->device;
++	struct request_queue *q = sdev ? sdev->request_queue : NULL;
++	struct xarray *xafp = &sfp->srp_arr;
++
++	if (!q)
++		return -EINVAL;
++	xa_lock_irqsave(xafp, iflags);
++	xa_for_each(xafp, idx, srp) {
++		if ((srp->rq_flags & SGV4_FLAG_POLLED) &&
++		    !test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm) &&
++		    atomic_read(&srp->rq_st) == SG_RS_INFLIGHT &&
++		    test_bit(SG_FRQ_ISSUED, srp->frq_bm)) {
++			xa_unlock_irqrestore(xafp, iflags);
++			n = sg_srp_q_bio_poll(srp, q, loop_count);
++			if (n == -ENODATA)
++				n = 0;
++			if (unlikely(n < 0))
++				return n;
++			xa_lock_irqsave(xafp, iflags);
++			res += n;
++		}
++	}
++	xa_unlock_irqrestore(xafp, iflags);
++	return res;
++}
++
+ /*
+  * Implements the poll(2) system call for this driver. Returns various EPOLL*
+  * flags OR-ed together.
+@@ -2167,6 +2294,8 @@ sg_poll(struct file *filp, poll_table * wait)
  	__poll_t p_res = 0;
  	struct sg_fd *sfp = filp->private_data;
  
--	poll_wait(filp, &sfp->read_wait, wait);
--	if (atomic_read(&sfp->waiting) > 0)
-+	num = atomic_read(&sfp->waiting);
-+	if (num < 1) {
-+		poll_wait(filp, &sfp->read_wait, wait);
-+		num = atomic_read(&sfp->waiting);
-+	}
-+	if (num > 0)
- 		p_res = EPOLLIN | EPOLLRDNORM;
- 
- 	if (unlikely(SG_IS_DETACHING(sfp->parentdp)))
-@@ -2344,7 +2376,7 @@ sg_check_sense(struct sg_device *sdp, struct sg_request *srp, int sense_len)
- {
- 	int driver_stat;
- 	u32 rq_res = srp->rq_result;
--	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(srp->rq);
-+	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(READ_ONCE(srp->rqq));
- 	u8 *sbp = scmd ? scmd->sense_buffer : NULL;
- 
- 	if (!sbp)
-@@ -2379,32 +2411,18 @@ sg_check_sense(struct sg_device *sdp, struct sg_request *srp, int sense_len)
-  * (sync) usage, sg_ctl_sg_io() waits to be woken up by this callback.
-  */
- static void
--sg_rq_end_io(struct request *rq, blk_status_t status)
-+sg_rq_end_io(struct request *rqq, blk_status_t status)
- {
- 	enum sg_rq_state rqq_state = SG_RS_AWAIT_RCV;
- 	int a_resid, slen;
--	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
--	struct sg_request *srp = rq->end_io_data;
-+	unsigned long iflags;
-+	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rqq);
-+	struct sg_request *srp = rqq->end_io_data;
- 	struct sg_device *sdp;
- 	struct sg_fd *sfp;
- 
--	if (!srp) {
--		WARN_ONCE("%s: srp unexpectedly NULL\n", __func__);
--		return;
--	}
--	if (WARN_ON(atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)) {
--		pr_warn("%s: bad rq_st=%d\n", __func__,
--			atomic_read(&srp->rq_st));
--		goto early_err;
--	}
- 	sfp = srp->parentfp;
--	if (unlikely(!sfp)) {
--		WARN_ONCE(1, "%s: sfp unexpectedly NULL", __func__);
--		goto early_err;
--	}
- 	sdp = sfp->parentdp;
--	if (unlikely(SG_IS_DETACHING(sdp)))
--		pr_info("%s: device detaching\n", __func__);
- 
- 	srp->rq_result = scmd->result;
- 	slen = min_t(int, scmd->sense_len, SCSI_SENSE_BUFFERSIZE);
-@@ -2412,7 +2430,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 
- 	if (a_resid) {
- 		if (test_bit(SG_FRQ_IS_V4I, srp->frq_bm)) {
--			if (rq_data_dir(rq) == READ)
-+			if (rq_data_dir(rqq) == READ)
- 				srp->in_resid = a_resid;
- 			else
- 				srp->s_hdr4.out_resid = a_resid;
-@@ -2456,16 +2474,29 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 			set_bit(SG_FRQ_DEACT_ORPHAN, srp->frq_bm);
++	if (test_bit(SG_FFD_POLLED_SEEN, sfp->ffd_bm))
++		sg_sfp_bio_poll(sfp, 0);	/* LLD may have some ready to push up */
+ 	num = atomic_read(&sfp->waiting);
+ 	if (num < 1) {
+ 		poll_wait(filp, &sfp->read_wait, wait);
+@@ -2450,6 +2579,7 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
  		}
  	}
--	if (!test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm))
--		atomic_inc(&sfp->waiting);
--	if (unlikely(sg_rq_state_chg(srp, SG_RS_INFLIGHT, rqq_state)))
--		pr_warn("%s: can't set rq_st\n", __func__);
-+	xa_lock_irqsave(&sfp->srp_arr, iflags);
-+	sg_rq_chg_state_force_ulck(srp, rqq_state);
-+	WRITE_ONCE(srp->rqq, NULL);
-+	if (test_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
-+		int num = atomic_inc_return(&sfp->waiting);
-+
-+		if (num < 2) {
-+			WRITE_ONCE(sfp->low_await_idx, srp->rq_idx);
-+		} else {
-+			int l_await_idx = READ_ONCE(sfp->low_await_idx);
-+
-+			if (l_await_idx < 0 || srp->rq_idx < l_await_idx ||
-+			    !xa_get_mark(&sfp->srp_arr, l_await_idx, SG_XA_RQ_AWAIT))
-+				WRITE_ONCE(sfp->low_await_idx, srp->rq_idx);
-+		}
-+	}
-+	xa_unlock_irqrestore(&sfp->srp_arr, iflags);
-+
- 	/*
- 	 * Free the mid-level resources apart from the bio (if any). The bio's
- 	 * blk_rq_unmap_user() can be called later from user context.
- 	 */
--	srp->rq = NULL;
--	blk_mq_free_request(rq);
-+	blk_mq_free_request(rqq);
+ 	xa_lock_irqsave(&sfp->srp_arr, iflags);
++	__set_bit(SG_FRQ_ISSUED, srp->frq_bm);
+ 	sg_rq_chg_state_force_ulck(srp, rqq_state);
+ 	WRITE_ONCE(srp->rqq, NULL);
+ 	if (test_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
+@@ -2475,7 +2605,8 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
  
  	if (likely(rqq_state == SG_RS_AWAIT_RCV)) {
  		/* Wake any sg_read()/ioctl(SG_IORECEIVE) awaiting this req */
-@@ -2477,10 +2508,6 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 		schedule_work(&srp->ew_orph.work);
- 	}
- 	return;
--
--early_err:
--	srp->rq = NULL;
--	blk_mq_free_request(rq);
+-		wake_up_interruptible(&sfp->read_wait);
++		if (!(srp->rq_flags & SGV4_FLAG_POLLED))
++			wake_up_interruptible(&sfp->read_wait);
+ 		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
+ 		kref_put(&sfp->f_ref, sg_remove_sfp);
+ 	} else {        /* clean up orphaned request that aren't being kept */
+@@ -2515,6 +2646,7 @@ sg_add_device_helper(struct scsi_device *scsidp)
+ 	sdp = kzalloc(sizeof(*sdp), GFP_KERNEL);
+ 	if (!sdp)
+ 		return ERR_PTR(-ENOMEM);
++	/* sdp->dummy_bdev starts as NULL until a POLLED command sent on this device */
+ 
+ 	idr_preload(GFP_KERNEL);
+ 	write_lock_irqsave(&sg_index_lock, iflags);
+@@ -2620,6 +2752,7 @@ sg_add_device(struct device *cl_dev, struct class_interface *cl_intf)
+ 	write_lock_irqsave(&sg_index_lock, iflags);
+ 	idr_remove(&sg_index_idr, sdp->index);
+ 	write_unlock_irqrestore(&sg_index_lock, iflags);
++	kfree(sdp->dummy_bdev);
+ 	kfree(sdp);
+ 
+ out:
+@@ -2648,6 +2781,7 @@ sg_device_destroy(struct kref *kref)
+ 	idr_remove(&sg_index_idr, sdp->index);
+ 	write_unlock_irqrestore(&sg_index_lock, flags);
+ 
++	kfree(sdp->dummy_bdev);
+ 	kfree(sdp);
  }
  
- static const struct file_operations sg_fops = {
-@@ -2815,7 +2842,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 	u32 rq_flags = srp->rq_flags;
- 	unsigned int iov_count = 0;
- 	void __user *up;
--	struct request *rq;
-+	struct request *rqq;
- 	struct scsi_cmnd *scmd;
- 	struct sg_fd *sfp = cwrp->sfp;
- 	struct sg_device *sdp;
-@@ -2864,12 +2891,12 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 	 * do not want to use BLK_MQ_REQ_NOWAIT here because userspace might
- 	 * not expect an EWOULDBLOCK from this condition.
- 	 */
--	rq = scsi_alloc_request(q, (r0w ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN), 0);
--	if (IS_ERR(rq))
--		return PTR_ERR(rq);
-+	rqq = scsi_alloc_request(q, (r0w ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN), 0);
-+	if (IS_ERR(rqq))
-+		return PTR_ERR(rqq);
- 	/* current sg_request protected by SG_RS_BUSY state */
--	scmd = blk_mq_rq_to_pdu(rq);
--	srp->rq = rq;
-+	scmd = blk_mq_rq_to_pdu(rqq);
-+	WRITE_ONCE(srp->rqq, rqq);
- 
- 	if (cwrp->u_cmdp)
- 		res = sg_fetch_cmnd(cwrp->filp, sfp, cwrp->u_cmdp,
-@@ -2883,7 +2910,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 	us_xfer = !(rq_flags & (SG_FLAG_NO_DXFER | SG_FLAG_MMAP_IO));
- 	assign_bit(SG_FRQ_NO_US_XFER, srp->frq_bm, !us_xfer);
- 	reserved = (sfp->rsv_srp == srp);
--	rq->end_io_data = srp;
-+	rqq->end_io_data = srp;
- 	scmd->retries = SG_DEFAULT_RETRIES;
- 	req_schp = &srp->sgat_h;
- 
-@@ -2934,24 +2961,24 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 		}
- 
- 		if (us_xfer)
--			res = blk_rq_map_user_iov(q, rq, md, &i, GFP_ATOMIC);
-+			res = blk_rq_map_user_iov(q, rqq, md, &i, GFP_ATOMIC);
- 		kfree(iov);
- 		if (IS_ENABLED(CONFIG_SCSI_PROC_FS))
- 			cp = "iov_count > 0";
- 	} else if (us_xfer) { /* setup for transfer data to/from user space */
--		res = blk_rq_map_user(q, rq, md, up, dxfer_len, GFP_ATOMIC);
-+		res = blk_rq_map_user(q, rqq, md, up, dxfer_len, GFP_ATOMIC);
- 		if (IS_ENABLED(CONFIG_SCSI_PROC_FS) && res)
- 			SG_LOG(1, sfp, "%s: blk_rq_map_user() res=%d\n",
- 			       __func__, res);
- 	}
- fini:
- 	if (unlikely(res)) {		/* failure, free up resources */
--		srp->rq = NULL;
--		if (us_xfer && rq->bio)
--			blk_rq_unmap_user(rq->bio);
--		blk_mq_free_request(rq);
-+		WRITE_ONCE(srp->rqq, NULL);
-+		if (us_xfer && rqq->bio)
-+			blk_rq_unmap_user(rqq->bio);
-+		blk_mq_free_request(rqq);
+@@ -3009,6 +3143,25 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 		blk_mq_free_request(rqq);
  	} else {
--		srp->bio = rq->bio;
-+		srp->bio = rqq->bio;
+ 		srp->bio = rqq->bio;
++		/* check if first POLLED command on this device */
++		if (unlikely((rq_flags & SGV4_FLAG_POLLED) && !READ_ONCE(sdp->dummy_bdev))) {
++			bool success = false;
++			unsigned long iflags;
++			struct xarray *xadp = &sdp->sfp_arr;
++			struct block_device *bdevp = kzalloc(sizeof(*bdevp), GFP_KERNEL);
++
++			xa_lock_irqsave(xadp, iflags);
++			if (bdevp && !sdp->dummy_bdev) {
++				bdevp->bd_queue = sdp->device->request_queue;
++				sdp->dummy_bdev = bdevp;
++				success = true;
++			}
++			xa_unlock_irqrestore(xadp, iflags);
++			if (!bdevp)
++				res = -ENOMEM;
++			if (!success)
++				kfree(bdevp);
++		}
  	}
  	SG_LOG((res ? 1 : 4), sfp, "%s: %s res=%d [0x%pK]\n", __func__, cp,
  	       res, srp);
-@@ -2970,19 +2997,19 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
- {
- 	int ret;
- 	struct sg_fd *sfp = srp->parentfp;
--	struct request *rq = srp->rq;
-+	struct request *rqq = READ_ONCE(srp->rqq);
- 
+@@ -3032,7 +3185,8 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
  	SG_LOG(4, sfp, "%s: srp=0x%pK%s\n", __func__, srp,
  	       (srp->parentfp->rsv_srp == srp) ? " rsv" : "");
--	if (!test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm)) {
-+	if (test_and_clear_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
- 		atomic_dec(&sfp->submitted);
+ 	if (test_and_clear_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
+-		atomic_dec(&sfp->submitted);
++		if (atomic_dec_and_test(&sfp->submitted))
++			clear_bit(SG_FFD_POLLED_SEEN, sfp->ffd_bm);
  		atomic_dec(&sfp->waiting);
  	}
  
--	/* Expect blk_mq_free_request(rq) already called in sg_rq_end_io() */
--	if (rq) {	/* blk_get_request() may have failed */
--		srp->rq = NULL;
--		blk_mq_free_request(rq);
-+	/* Expect blk_mq_free_request(rqq) already called in sg_rq_end_io() */
-+	if (rqq) {       /* scsi_alloc_request() may have failed */
-+		WRITE_ONCE(srp->rqq, NULL);
-+		blk_mq_free_request(rqq);
- 	}
- 	if (srp->bio) {
- 		bool us_xfer = !test_bit(SG_FRQ_NO_US_XFER, srp->frq_bm);
-@@ -3159,19 +3186,30 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
- 	bool second = false;
- 	int res;
- 	int num_waiting = atomic_read(&sfp->waiting);
--	unsigned long idx, start_idx, end_idx;
-+	int l_await_idx = READ_ONCE(sfp->low_await_idx);
-+	unsigned long idx, s_idx;
-+	unsigned long end_idx = ULONG_MAX;
+@@ -3222,6 +3376,8 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
  	struct sg_request *srp = NULL;
  	struct xarray *xafp = &sfp->srp_arr;
  
--	if (num_waiting < 1)
--		return NULL;
-+	if (num_waiting < 1) {
-+		num_waiting = atomic_read_acquire(&sfp->waiting);
-+		if (num_waiting < 1)
-+			return NULL;
-+	}
-+
-+	s_idx = (l_await_idx < 0) ? 0 : l_await_idx;
-+	idx = s_idx;
- 	if (unlikely(search_for_1)) {
--		xa_for_each_marked(xafp, idx, srp, SG_XA_RQ_AWAIT) {
-+second_time:
-+		for (srp = xa_find(xafp, &idx, end_idx, SG_XA_RQ_AWAIT);
-+		     srp;
-+		     srp = xa_find_after(xafp, &idx, end_idx, SG_XA_RQ_AWAIT)) {
- 			if (test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm))
- 				continue;
- 			if (srp->pack_id != pack_id)
- 				continue;
--			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY);
-+			res = sg_rq_chg_state(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY);
- 			if (likely(res == 0))
- 				goto good;
- 			/* else another caller got it, move on */
-@@ -3181,6 +3219,14 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
- 			}
- 			break;
- 		}
-+		/* If not found so far, need to wrap around and search [0 ... s_idx) */
-+		if (!srp && !second && s_idx > 0) {
-+			end_idx = s_idx - 1;
-+			s_idx = 0;
-+			idx = s_idx;
-+			second = true;
-+			goto second_time;
-+		}
- 	} else {
- 		/*
- 		 * Searching for _any_ request is the more likely usage. Start searching with the
-@@ -3189,29 +3235,27 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
- 		 * is ready. If there is no queuing and the "last used" has been re-used then the
- 		 * first (relative) position will be the request we want.
- 		 */
--		start_idx = READ_ONCE(sfp->prev_used_idx);
--		end_idx = ULONG_MAX;
--second_time:
--		idx = start_idx;
-+second_time2:
- 		for (srp = xa_find(xafp, &idx, end_idx, SG_XA_RQ_AWAIT);
- 		     srp;
- 		     srp = xa_find_after(xafp, &idx, end_idx, SG_XA_RQ_AWAIT)) {
- 			if (test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm))
- 				continue;
--			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY);
--			if (likely(res == 0))
-+			res = sg_rq_chg_state(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY);
-+			if (likely(res == 0)) {
-+				WRITE_ONCE(sfp->low_await_idx, idx + 1);
- 				goto good;
-+			}
- #if IS_ENABLED(SG_LOG_ACTIVE)
--			else
--				sg_rq_state_fail_msg(sfp, SG_RS_AWAIT_RCV, SG_RS_BUSY, __func__);
-+			sg_rq_state_fail_msg(sfp, SG_RS_AWAIT_RCV, SG_RS_BUSY, __func__);
- #endif
- 		}
--		/* If not found so far, need to wrap around and search [0 ... start_idx) */
--		if (!srp && !second && start_idx > 0) {
--			end_idx = start_idx - 1;
--			start_idx = 0;
-+		if (!srp && !second && s_idx > 0) {
-+			end_idx = s_idx - 1;
-+			s_idx = 0;
-+			idx = s_idx;
- 			second = true;
--			goto second_time;
-+			goto second_time2;
- 		}
- 	}
- 	/* here if one of above loops does _not_ find a match */
-@@ -3330,11 +3374,12 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
- 	bool mk_new_srp = true;
- 	bool try_harder = false;
- 	bool second = false;
--	int num_inactive = 0;
--	unsigned long idx, start_idx, end_idx, iflags;
-+	bool has_inactive = false;
-+	int l_used_idx;
-+	unsigned long idx, s_idx, end_idx, iflags;
- 	struct sg_fd *fp = cwrp->sfp;
- 	struct sg_request *r_srp = NULL;	/* request to return */
--	struct sg_request *last_srp = NULL;
-+	struct sg_request *low_srp = NULL;
- 	struct xarray *xafp = &fp->srp_arr;
- 	__maybe_unused const char *cp;
++	if (test_bit(SG_FFD_POLLED_SEEN, sfp->ffd_bm))
++		sg_sfp_bio_poll(sfp, 0);	/* LLD may have some ready to push up */
+ 	if (num_waiting < 1) {
+ 		num_waiting = atomic_read_acquire(&sfp->waiting);
+ 		if (num_waiting < 1)
+@@ -4030,8 +4186,9 @@ sg_proc_debug_sreq(struct sg_request *srp, int to, char *obp, int len)
+ 	else if (dur < U32_MAX)	/* in-flight or busy (so ongoing) */
+ 		n += scnprintf(obp + n, len - n, " t_o/elap=%us/%ums",
+ 			       to / 1000, dur);
+-	n += scnprintf(obp + n, len - n, " sgat=%d op=0x%02x\n",
+-		       srp->sgat_h.num_sgat, srp->cmd_opcode);
++	cp = (srp->rq_flags & SGV4_FLAG_POLLED) ? "polled " : "";
++	n += scnprintf(obp + n, len - n, " sgat=%d %sop=0x%02x\n",
++		       srp->sgat_h.num_sgat, cp, srp->cmd_opcode);
+ 	return n;
+ }
  
-@@ -3343,49 +3388,70 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
- 	if (xa_empty(xafp)) {
- 		act_empty = true;
- 		mk_new_srp = true;
-+	} else if (atomic_read(&fp->inactives) <= 0) {
-+		mk_new_srp = true;
- 	} else if (!try_harder && dxfr_len < SG_DEF_SECTOR_SZ) {
-+		l_used_idx = READ_ONCE(fp->low_used_idx);
-+		s_idx = (l_used_idx < 0) ? 0 : l_used_idx;
-+		if (l_used_idx >= 0 && xa_get_mark(xafp, s_idx, SG_XA_RQ_INACTIVE)) {
-+			r_srp = xa_load(xafp, s_idx);
-+			if (r_srp && r_srp->sgat_h.buflen <= SG_DEF_SECTOR_SZ) {
-+				if (sg_rq_chg_state(r_srp, SG_RS_INACTIVE, SG_RS_BUSY) == 0) {
-+					found = true;
-+					atomic_dec(&fp->inactives);
-+					goto have_existing;
-+				}
-+			}
-+		}
- 		xa_for_each_marked(xafp, idx, r_srp, SG_XA_RQ_INACTIVE) {
--			++num_inactive;
--			if (dxfr_len < SG_DEF_SECTOR_SZ)
--				last_srp = r_srp;
-+			has_inactive = true;
-+			if (!low_srp && dxfr_len < SG_DEF_SECTOR_SZ) {
-+				low_srp = r_srp;
-+				break;
-+			}
- 		}
--		/* If dxfr_len is small, use last inactive request */
--		if (last_srp) {
--			r_srp = last_srp;
--			if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY))
-+		/* If dxfr_len is small, use lowest inactive request */
-+		if (low_srp) {
-+			r_srp = low_srp;
-+			if (sg_rq_chg_state(r_srp, SG_RS_INACTIVE, SG_RS_BUSY))
- 				goto start_again; /* gone to another thread */
-+			atomic_dec(&fp->inactives);
- 			cp = "toward end of srp_arr";
- 			found = true;
- 		}
- 	} else {
--		start_idx = READ_ONCE(fp->prev_used_idx);
-+		l_used_idx = READ_ONCE(fp->low_used_idx);
-+		s_idx = (l_used_idx < 0) ? 0 : l_used_idx;
-+		idx = s_idx;
- 		end_idx = ULONG_MAX;
- second_time:
--		idx = start_idx;
- 		for (r_srp = xa_find(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE);
- 		     r_srp;
- 		     r_srp = xa_find_after(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE)) {
- 			if (r_srp->sgat_h.buflen >= dxfr_len) {
--				if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY))
-+				if (sg_rq_chg_state(r_srp, SG_RS_INACTIVE, SG_RS_BUSY))
- 					continue;
-+				atomic_dec(&fp->inactives);
-+				WRITE_ONCE(fp->low_used_idx, idx + 1);
- 				cp = "near front of srp_arr";
- 				found = true;
- 				break;
- 			}
- 		}
- 		/* If not found so far, need to wrap around and search [0 ... start_idx) */
--		if (!r_srp && !second && start_idx > 0) {
--			end_idx = start_idx - 1;
--			start_idx = 0;
-+		if (!r_srp && !second && s_idx > 0) {
-+			end_idx = s_idx - 1;
-+			s_idx = 0;
-+			idx = s_idx;
- 			second = true;
- 			goto second_time;
- 		}
- 	}
-+have_existing:
- 	if (found) {
- 		r_srp->in_resid = 0;
- 		r_srp->rq_info = 0;
- 		r_srp->sense_len = 0;
--		WRITE_ONCE(fp->prev_used_idx, r_srp->rq_idx);
- 		mk_new_srp = false;
- 	} else {
- 		mk_new_srp = true;
-@@ -3394,7 +3460,6 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
- 		bool allow_cmd_q = test_bit(SG_FFD_CMD_Q, fp->ffd_bm);
- 		int res;
- 		u32 n_idx;
--		struct xa_limit xal = { .max = 0, .min = 0 };
+diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
+index 9060c40957f9..2e1e0cf5d686 100644
+--- a/include/uapi/scsi/sg.h
++++ b/include/uapi/scsi/sg.h
+@@ -109,6 +109,7 @@ typedef struct sg_io_hdr {
+ #define SGV4_FLAG_Q_AT_TAIL SG_FLAG_Q_AT_TAIL
+ #define SGV4_FLAG_Q_AT_HEAD SG_FLAG_Q_AT_HEAD
+ #define SGV4_FLAG_IMMED 0x400 /* for polling with SG_IOR, ignored in SG_IOS */
++#define SGV4_FLAG_POLLED 0x800	/* request polls LLD for completion */
  
- 		cp = "new";
- 		if (!allow_cmd_q && atomic_read(&fp->submitted) > 0) {
-@@ -3406,16 +3471,14 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
- 		r_srp = sg_mk_srp_sgat(fp, act_empty, dxfr_len);
- 		if (IS_ERR(r_srp)) {
- 			if (!try_harder && dxfr_len < SG_DEF_SECTOR_SZ &&
--			    num_inactive > 0) {
-+			    has_inactive) {
- 				try_harder = true;
- 				goto start_again;
- 			}
- 			goto fini;
- 		}
--		atomic_set(&r_srp->rq_st, SG_RS_BUSY);
- 		xa_lock_irqsave(xafp, iflags);
--		xal.max = atomic_inc_return(&fp->req_cnt);
--		res = __xa_alloc(xafp, &n_idx, r_srp, xal, GFP_KERNEL);
-+		res = __xa_alloc(xafp, &n_idx, r_srp, xa_limit_32b, GFP_KERNEL);
- 		xa_unlock_irqrestore(xafp, iflags);
- 		if (res < 0) {
- 			SG_LOG(1, fp, "%s: xa_alloc() failed, errno=%d\n",
-@@ -3458,7 +3521,8 @@ sg_deact_request(struct sg_fd *sfp, struct sg_request *srp)
- 	sbp = srp->sense_bp;
- 	srp->sense_bp = NULL;
- 	WRITE_ONCE(srp->frq_bm[0], 0);
--	sg_rq_state_chg_force(srp, SG_RS_INACTIVE);
-+	sg_rq_chg_state_force(srp, SG_RS_INACTIVE);
-+	atomic_inc(&sfp->inactives);
- 	/* maybe orphaned req, thus never read */
- 	if (sbp)
- 		mempool_free(sbp, sg_sense_pool);
-@@ -3477,7 +3541,6 @@ sg_add_sfp(struct sg_device *sdp)
- 	struct sg_request *srp = NULL;
- 	struct xarray *xadp = &sdp->sfp_arr;
- 	struct xarray *xafp;
--	struct xa_limit xal;
- 
- 	sfp = kzalloc(sizeof(*sfp), GFP_ATOMIC | __GFP_NOWARN);
- 	if (!sfp)
-@@ -3494,8 +3557,6 @@ sg_add_sfp(struct sg_device *sdp)
- 	__assign_bit(SG_FFD_CMD_Q, sfp->ffd_bm, SG_DEF_COMMAND_Q);
- 	__assign_bit(SG_FFD_KEEP_ORPHAN, sfp->ffd_bm, SG_DEF_KEEP_ORPHAN);
- 	__assign_bit(SG_FFD_Q_AT_TAIL, sfp->ffd_bm, SG_DEFAULT_Q_AT);
--	atomic_set(&sfp->submitted, 0);
--	atomic_set(&sfp->waiting, 0);
- 	/*
- 	 * SG_SCATTER_SZ initializes scatter_elem_sz but different value may
- 	 * be given as driver/module parameter (e.g. 'scatter_elem_sz=8192').
-@@ -3507,7 +3568,7 @@ sg_add_sfp(struct sg_device *sdp)
- 	sfp->parentdp = sdp;
- 	atomic_set(&sfp->submitted, 0);
- 	atomic_set(&sfp->waiting, 0);
--	atomic_set(&sfp->req_cnt, 0);
-+	atomic_set(&sfp->inactives, 0);
- 
- 	if (unlikely(SG_IS_DETACHING(sdp))) {
- 		SG_LOG(1, sfp, "%s: detaching\n", __func__);
-@@ -3519,8 +3580,6 @@ sg_add_sfp(struct sg_device *sdp)
- 
- 	rbuf_len = min_t(int, sg_big_buff, sdp->max_sgat_sz);
- 	if (rbuf_len > 0) {
--		struct xa_limit xalrq = { .max = 0, .min = 0 };
--
- 		srp = sg_build_reserve(sfp, rbuf_len);
- 		if (IS_ERR(srp)) {
- 			err = PTR_ERR(srp);
-@@ -3536,8 +3595,7 @@ sg_add_sfp(struct sg_device *sdp)
- 			       __func__, rbuf_len, srp->sgat_h.buflen);
- 		}
- 		xa_lock_irqsave(xafp, iflags);
--		xalrq.max = atomic_inc_return(&sfp->req_cnt);
--		res = __xa_alloc(xafp, &idx, srp, xalrq, GFP_ATOMIC);
-+		res = __xa_alloc(xafp, &idx, srp, xa_limit_32b, GFP_ATOMIC);
- 		xa_unlock_irqrestore(xafp, iflags);
- 		if (res < 0) {
- 			SG_LOG(1, sfp, "%s: xa_alloc(srp) bad, errno=%d\n",
-@@ -3549,20 +3607,19 @@ sg_add_sfp(struct sg_device *sdp)
- 		}
- 		srp->rq_idx = idx;
- 		srp->parentfp = sfp;
--		sg_rq_state_chg_force(srp, SG_RS_INACTIVE);
-+		sg_rq_chg_state_force(srp, SG_RS_INACTIVE);
-+		atomic_inc(&sfp->inactives);
- 	}
- 	if (!reduced) {
- 		SG_LOG(4, sfp, "%s: built reserve buflen=%d\n", __func__,
- 		       rbuf_len);
- 	}
- 	xa_lock_irqsave(xadp, iflags);
--	xal.min = 0;
--	xal.max = atomic_read(&sdp->open_cnt);
--	res = __xa_alloc(xadp, &idx, sfp, xal, GFP_KERNEL);
-+	res = __xa_alloc(xadp, &idx, sfp, xa_limit_32b, GFP_KERNEL);
- 	xa_unlock_irqrestore(xadp, iflags);
- 	if (res < 0) {
- 		pr_warn("%s: xa_alloc(sdp) bad, o_count=%d, errno=%d\n",
--			__func__, xal.max, -res);
-+			__func__, atomic_read(&sdp->open_cnt), -res);
- 		if (srp) {
- 			sg_remove_sgat(srp);
- 			kfree(srp);
-@@ -3974,12 +4031,13 @@ sg_proc_debug_fd(struct sg_fd *fp, char *obp, int len, unsigned long idx)
- 		       (int)test_bit(SG_FFD_FORCE_PACKID, fp->ffd_bm),
- 		       (int)test_bit(SG_FFD_KEEP_ORPHAN, fp->ffd_bm),
- 		       fp->ffd_bm[0]);
--	n += scnprintf(obp + n, len - n, "   mmap_sz=%d prev_used_idx=%d\n",
--		       fp->mmap_sz, fp->prev_used_idx);
- 	n += scnprintf(obp + n, len - n,
--		       "   submitted=%d waiting=%d   open thr_id=%d\n",
-+		       "   mmap_sz=%d low_used_idx=%d low_await_idx=%d\n",
-+		       fp->mmap_sz, READ_ONCE(fp->low_used_idx), READ_ONCE(fp->low_await_idx));
-+	n += scnprintf(obp + n, len - n,
-+		       "   submitted=%d waiting=%d inactives=%d   open thr_id=%d\n",
- 		       atomic_read(&fp->submitted),
--		       atomic_read(&fp->waiting), fp->tid);
-+		       atomic_read(&fp->waiting), atomic_read(&fp->inactives), fp->tid);
- 	k = 0;
- 	xa_lock_irqsave(&fp->srp_arr, iflags);
- 	xa_for_each(&fp->srp_arr, idx, srp) {
+ /* Output (potentially OR-ed together) in v3::info or v4::info field */
+ #define SG_INFO_OK_MASK 0x1
 -- 
 2.25.1
 
