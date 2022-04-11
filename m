@@ -2,159 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC73C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 14:00:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA84DC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 14:01:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346824AbiDKOCS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Apr 2022 10:02:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34552 "EHLO
+        id S1346880AbiDKOEI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Apr 2022 10:04:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243193AbiDKOCQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 10:02:16 -0400
-Received: from out30-54.freemail.mail.aliyun.com (out30-54.freemail.mail.aliyun.com [115.124.30.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 927502FE4D;
-        Mon, 11 Apr 2022 07:00:01 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R951e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0V9qH9vn_1649685598;
-Received: from localhost(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0V9qH9vn_1649685598)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Mon, 11 Apr 2022 21:59:59 +0800
-From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     linux-block@vger.kernel.org, bostroesser@gmail.com
-Subject: [PATCH v2] scsi: target: tcmu: Fix possible data corruption
-Date:   Mon, 11 Apr 2022 21:59:58 +0800
-Message-Id: <20220411135958.21385-1-xiaoguang.wang@linux.alibaba.com>
-X-Mailer: git-send-email 2.14.4.44.g2045bb6
+        with ESMTP id S1346841AbiDKOEF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 10:04:05 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 379D731DEB;
+        Mon, 11 Apr 2022 07:01:49 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id F3CB6B8160D;
+        Mon, 11 Apr 2022 14:01:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60E77C385A4;
+        Mon, 11 Apr 2022 14:01:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649685706;
+        bh=aoF5JI4oA+WPgt/y0IgsxtsbxAXaCuGafPntNOloKP4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Z3DJooO+lpgxb0V7M65iVrqmxI0PEssCJPh+vJ1dEw1YBTDUO4k0Ftowa06gEpR83
+         S1WtT+TAlqYOA3SV5oPOUKBv5r5Czq1jXlmgnBC2vlAsKUSP12Z7m3WPk2IIXa7ddE
+         7+rat37phwTAQkXhdDcOfyIkaP50hX9uWu9MCv3Yv354dhMqhNyhEKK5VIXvkcNSo/
+         Yw75O5ZXcRgYxwAIHqrZej/c3adf+HQOwXoAdC34I68eRF5zbda1Ysdnlbmc/q5KXa
+         +yAvml8INLRMKi4FRTZn17313igwH9BKq1x7zfZpQGp7kDf9WzbZnpQOZP3oofxBEN
+         wCj97MUpv05qA==
+Date:   Mon, 11 Apr 2022 08:01:41 -0600
+From:   Keith Busch <kbusch@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph =?iso-8859-1?Q?B=F6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>, Coly Li <colyli@suse.de>
+Subject: Re: [PATCH 24/27] block: remove QUEUE_FLAG_DISCARD
+Message-ID: <YlQ0xbtIcf8gti43@kbusch-mbp.dhcp.thefacebook.com>
+References: <20220409045043.23593-1-hch@lst.de>
+ <20220409045043.23593-25-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220409045043.23593-25-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When tcmu_vma_fault() gets one page successfully, before the current
-context completes page fault procedure, find_free_blocks() may run in
-and call unmap_mapping_range() to unmap this page. Assume when
-find_free_blocks() completes its job firstly, previous page fault
-procedure starts to run again and completes, then one truncated page has
-beed mapped to use space, but note that tcmu_vma_fault() has gotten one
-refcount for this page, so any other subsystem won't use this page,
-unless later the use space addr is unmapped.
+On Sat, Apr 09, 2022 at 06:50:40AM +0200, Christoph Hellwig wrote:
+> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+> index efb85c6d8e2d5..7e07dd69262a7 100644
+> --- a/drivers/nvme/host/core.c
+> +++ b/drivers/nvme/host/core.c
+> @@ -1607,10 +1607,8 @@ static void nvme_config_discard(struct gendisk *disk, struct nvme_ns *ns)
+>  	struct request_queue *queue = disk->queue;
+>  	u32 size = queue_logical_block_size(queue);
+>  
+> -	if (ctrl->max_discard_sectors == 0) {
+> -		blk_queue_flag_clear(QUEUE_FLAG_DISCARD, queue);
+> +	if (ctrl->max_discard_sectors == 0)
+>  		return;
+> -	}
 
-If another command runs in later and needs to extends dbi_thresh, it may
-reuse the corresponding slot to previous page in data_bitmap, then though
-we'll allocate new page for this slot in data_area, but no page fault will
-happen again, because we have a valid map, real request's data will lose.
-
-Filesystem implementations will also run into this issue, but they
-usually lock page when vm_operations_struct->fault gets one page, and
-unlock page after finish_fault() completes. In truncate sides, they
-lock pages in truncate_inode_pages() to protect race with page fault.
-We can also have similar codes like filesystem to fix this issue.
-
-To fix this possible data corruption, we can apply similar method like
-filesystem. For pages that are to be freed, find_free_blocks() locks
-and unlocks these pages, and make tcmu_vma_fault() also lock found page
-under cmdr_lock. With this action, for above race, find_free_blocks()
-will wait all page faults to be completed before calling
-unmap_mapping_range(), and later if unmap_mapping_range() is called,
-it will ensure stale mappings to be removed cleanly.
-
-Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
-
----
-V2:
-  Wait all possible inflight page faults to be completed in
-find_free_blocks() to fix possible stale map.
----
- drivers/target/target_core_user.c | 39 ++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 38 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index fd7267baa707..ed026f5bdb14 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -20,6 +20,7 @@
- #include <linux/configfs.h>
- #include <linux/mutex.h>
- #include <linux/workqueue.h>
-+#include <linux/pagemap.h>
- #include <net/genetlink.h>
- #include <scsi/scsi_common.h>
- #include <scsi/scsi_proto.h>
-@@ -1657,6 +1658,20 @@ static int tcmu_check_and_free_pending_cmd(struct tcmu_cmd *cmd)
- 	return -EINVAL;
- }
- 
-+static void tcmu_wait_inflight_page_fault(struct tcmu_dev *udev,
-+			unsigned long first, unsigned long last)
-+{
-+	XA_STATE(xas, &udev->data_pages, first * udev->data_pages_per_blk);
-+	struct page *page;
-+
-+	xas_lock(&xas);
-+	xas_for_each(&xas, page, (last + 1) * udev->data_pages_per_blk - 1) {
-+		lock_page(page);
-+		unlock_page(page);
-+	}
-+	xas_unlock(&xas);
-+}
-+
- static u32 tcmu_blocks_release(struct tcmu_dev *udev, unsigned long first,
- 				unsigned long last)
- {
-@@ -1822,6 +1837,7 @@ static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
- 	page = xa_load(&udev->data_pages, dpi);
- 	if (likely(page)) {
- 		get_page(page);
-+		lock_page(page);
- 		mutex_unlock(&udev->cmdr_lock);
- 		return page;
- 	}
-@@ -1863,6 +1879,7 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
- 	struct page *page;
- 	unsigned long offset;
- 	void *addr;
-+	int ret = 0;
- 
- 	int mi = tcmu_find_mem_index(vmf->vma);
- 	if (mi < 0)
-@@ -1887,10 +1904,11 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
- 		page = tcmu_try_get_data_page(udev, dpi);
- 		if (!page)
- 			return VM_FAULT_SIGBUS;
-+		ret = VM_FAULT_LOCKED;
- 	}
- 
- 	vmf->page = page;
--	return 0;
-+	return ret;
- }
- 
- static const struct vm_operations_struct tcmu_vm_ops = {
-@@ -3205,6 +3223,25 @@ static void find_free_blocks(void)
- 			udev->dbi_max = block;
- 		}
- 
-+		/*
-+		 * While reaching here, there maybe page faults occurring on
-+		 * these to be released pages, and there maybe one race that
-+		 * unmap_mapping_range() is called before page fault on these
-+		 * pages are finished, then valid but stale map is created.
-+		 *
-+		 * If another command runs in later and needs to extends
-+		 * dbi_thresh, it may reuse the corresponding slot to previous
-+		 * page in data_bitmap, then though we'll allocate new page for
-+		 * this slot in data_area, but no page fault will happen again,
-+		 * because we have a valid map, command's data will lose.
-+		 *
-+		 * So here we lock and unlock pages that are to be released to
-+		 * ensure all page faults to be completed, then following
-+		 * unmap_mapping_range() can ensure stale maps to be removed
-+		 * cleanly.
-+		 */
-+		tcmu_wait_inflight_page_fault(udev, start, end - 1);
-+
- 		/* Here will truncate the data area from off */
- 		off = udev->data_off + (loff_t)start * udev->data_blk_size;
- 		unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
--- 
-2.14.4.44.g2045bb6
-
+I think we need to update the queue limit in this condition. While unlikley,
+the flag was cleared here in case the device changed support for discard from
+the previous reset. 
