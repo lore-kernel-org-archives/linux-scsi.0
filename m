@@ -2,154 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AA27C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 11:38:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2096C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 12:05:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243706AbiDKLky (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Apr 2022 07:40:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33990 "EHLO
+        id S1344569AbiDKMHy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Apr 2022 08:07:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232426AbiDKLkx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 07:40:53 -0400
-Received: from NAM04-MW2-obe.outbound.protection.outlook.com (mail-mw2nam08on2049.outbound.protection.outlook.com [40.107.101.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF2D3457BD;
-        Mon, 11 Apr 2022 04:38:39 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=EjeHmeaj68x402b1Nm6FxbI3En9dxftFLgmSr/mQMsmOgeQK0K4PLtwRE7PwyTAL0nQgsbdOhq+mLUnxIvgV/fNeMxgKadlh3t0h4+7J6lEBbAQV/7KVDAtc2DE7MEpbKdIaK6TiEVixh+XwG9VcnQY5jwQrFziyjwk6Gi8Y3M/+9pvBZsc0iC7NZnFKMA1yKF3GHJrSAHF/kBVuBVYmlL+o1NpwACPMSKL9NnCqrGNp9Rjs2qxSYGqhWTGXbwSk+U8hkC8tKe/0hux7aS4gunZ1ah2NivkQ7BKDhUAcv4l4r/0XgMGfJMxmNJDBGAXX9xxhwNVxNl1GP9w87KNTTA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7NI8eRsAYdvCXzbpqOIS1HUQ3eBNPwq4U6hfD1nlRPw=;
- b=TPYEQXOq6Qy9TXVlLoO56nwCP16NWJCmOZllvZ0BRjYXDhW1oEcmt/oseJTLr9SmDNeGzYOnN+qjSKE98GuKkKTQ+hC4JIPVh7S9RPKZ3EfxJNI3wftKRjGZuanJdC3R403kiPZg2+HG0b/EvSvwEXZsLGd69c7KjMO2cLxjAcWaf7B8SutDcuz3r5ygrquymWKvsjazxA+FLWlMruV7zJhdi9UX95O1x77x/xi05jEDRI2HjJFUsI2mMdlaqwrVvoeAmBBbYGwsiGbdFQo42M+IeMzlgWzWFJo9b5ymvK3VT/tvAYqA87nW/HuaEerSVBvUaFdQ2WiezHO4KfSX/A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7NI8eRsAYdvCXzbpqOIS1HUQ3eBNPwq4U6hfD1nlRPw=;
- b=MXGJlqTLwFAB/hGpI92xiO35IZVeLpaQ6WlA7Ggo3cPrygVAApDaBY61amm4HOvaFtIz7JXgGRudo/ro+KlkznHi/sqk6R6K5zkTd7kLFitf2gB0dBTwa78M0FwuJQUWrCZueiVu6TfwDp6FnVOQMg3Bhovkff5sViv88bFqdiEfCN1sraUppIwwzKZ2Q9CPylaDTjq7/sscY5D6dQujjI8jc51/TyoguoCqb05ipPAXgDk6zrSGYBPyKTTUdANbbPw/6WmuccNH3p0x3IIUYsIXziuQgjL1yzB39zx7+CCinoWRBQ258YHACHV5nzYb0MmWeMUi9r7zqvG79J8BWw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
- by BN8PR12MB2913.namprd12.prod.outlook.com (2603:10b6:408:9c::33) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5144.29; Mon, 11 Apr
- 2022 11:38:38 +0000
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::cdfb:f88e:410b:9374]) by MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::cdfb:f88e:410b:9374%6]) with mapi id 15.20.5144.029; Mon, 11 Apr 2022
- 11:38:38 +0000
-Date:   Mon, 11 Apr 2022 08:38:36 -0300
-From:   Jason Gunthorpe <jgg@nvidia.com>
-To:     Bob Pearson <rpearsonhpe@gmail.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>, zyjzyj2000@gmail.com,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        yi.zhang@redhat.com
-Subject: Re: [PATCH for-next] RDMA/rxe: Fix "Replace red-black trees by
- xarrays"
-Message-ID: <20220411113836.GD2120790@nvidia.com>
-References: <20220410223939.3769-1-rpearsonhpe@gmail.com>
- <ec1de70c-aa84-7c3a-af6c-4a04c5002d1e@acm.org>
- <6296dc52-1298-6a52-a4fb-2c6fe04ab151@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <6296dc52-1298-6a52-a4fb-2c6fe04ab151@gmail.com>
-X-ClientProxiedBy: BL1PR13CA0426.namprd13.prod.outlook.com
- (2603:10b6:208:2c3::11) To MN2PR12MB4192.namprd12.prod.outlook.com
- (2603:10b6:208:1d5::15)
+        with ESMTP id S229664AbiDKMHu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 08:07:50 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 268723A709;
+        Mon, 11 Apr 2022 05:05:35 -0700 (PDT)
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23B9NnvU025178;
+        Mon, 11 Apr 2022 12:03:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=gYNUMVwDP13qlMS4+UHaJJ3PaCFPgROQJTYtqXnOX7M=;
+ b=RDqgcHKph8Jm2BhrynHRzlAqx8nGWKQVGDEreK7n+J6njlw2fY/eROIb0LG1Go0keNpO
+ U7B7ao4FH0/uzQKEPYrHVhNG/pJ2E7Z6UBEEa2SxZlUdVDQJZ6TEFr72vPR9TSXOEBKG
+ MqlChSHpWchCsB0wZHoGw70dgQSIwe1Dr/3iyUd7QHcinyuGvNuFdGbEFCrbqw9Rsc9z
+ JkcowV5iFVIqo42z4/eOag4ZGEVEYQqZe/457g+H8egdMxH/HXBM9/jRkB0BPaAeZihE
+ GFX1OIArRJYPFHkICDQZB90KgaeOXTtU3/g2gqArNZA/NmuhAbDjv3WPLEAFQ6zGE6gp Sw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3fchnqtx4t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Apr 2022 12:03:59 +0000
+Received: from m0187473.ppops.net (m0187473.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 23BAmtcM013717;
+        Mon, 11 Apr 2022 12:03:58 GMT
+Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3fchnqtx39-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Apr 2022 12:03:58 +0000
+Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
+        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23BC3gZm003276;
+        Mon, 11 Apr 2022 12:03:54 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma04ams.nl.ibm.com with ESMTP id 3fb1s8u242-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Apr 2022 12:03:54 +0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23BC40Q146596476
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 11 Apr 2022 12:04:01 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 1327BA4065;
+        Mon, 11 Apr 2022 12:03:52 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C9DE7A404D;
+        Mon, 11 Apr 2022 12:03:50 +0000 (GMT)
+Received: from [9.145.81.78] (unknown [9.145.81.78])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Mon, 11 Apr 2022 12:03:50 +0000 (GMT)
+Message-ID: <e971095e-1015-c348-3c24-114193ee5ff0@linux.ibm.com>
+Date:   Mon, 11 Apr 2022 14:03:50 +0200
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ce0b42e8-2c95-447a-c4c1-08da1bafd1c7
-X-MS-TrafficTypeDiagnostic: BN8PR12MB2913:EE_
-X-Microsoft-Antispam-PRVS: <BN8PR12MB29136AABE1ADFBF63EAD4B3BC2EA9@BN8PR12MB2913.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: NZJDB3cW+FqGxn8YDtWCeBVS2HSd10Amm3tgTs0syd19lvyISkL5aNCy5xfr4Rw6Cs3onYJo2coLGzNuOGj34vOnH/ewlbr67/RHiG/JHJbOERnl+Xj/Acr9rHr+RJEpGSHNvwdVij0FLIt/8OqxPIQw3G8+MZzRJkpWQMLI10Nj5tjirMxRrbVvjh6jlR26fzeNoqZcBZd2/UqZ6pp1TLvwnX7RWhLd2WXRmwIHYIjvfGk8AFjPhEu4OV+kKVdhNBKE3Mak10IRnTa8Mx3PskT9j11FqfXj6aCEA+A+oVC+cJtEosWC2ndf2nLS+2m1x9Nt7liJRPjyLTM9utLDMNX6erqRB/evNGQg0Xtg/4zA4qrJw4BQQfASUm6tk+K+SI2q+KLdKsBFBzSA/AONXFEGpk2rPN1fXbOXkViztqLsCyU2+tACj2gNSRcB4GLk5tKyrRIhPXB5zupNBNW5049TvpDeZj791j/6gefnpb1iwCz8kXzwgxRW2dwNUvwd1BaivIiZWH0uPfUGSSNKFFbotG/iUmY3AncmCry59NGl3Ek1gmCufUfBkYFQVrUiLSAB+pQguZRG//e0PTsR4/CFlMNPz+6vP39uk/JYOD3tycbMbTq0Js8ID5NsXpseSNdQ41sFxCfDwzj5VYi07w==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4192.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(66946007)(8676002)(66556008)(66476007)(5660300002)(36756003)(4326008)(33656002)(316002)(2906002)(8936002)(38100700002)(6916009)(2616005)(6512007)(1076003)(6506007)(53546011)(26005)(83380400001)(86362001)(186003)(508600001)(6486002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?OCt5eWx3ZUhIYmJ1QmF3RWtxVmhSa0JFK0JEeDRacjdiUmQraEVVNmtTK3J5?=
- =?utf-8?B?NnIwVjlhUlZCVkptTnFQQjdsR1BkdlhpSTdTeE9rQW1meEFxNVhXWWpoc05P?=
- =?utf-8?B?K0lQRjNGUG1oaHlPbDk2eHVSSmlzZGN3Rm1ib0JXcW9qVUpQZmQvbFFjdEs2?=
- =?utf-8?B?NWdiTVk1T1pna2FVcm5CS2I4bmdSVXdoTFZWQXo0WmJLNW93QlBrZCtnWEJP?=
- =?utf-8?B?ZnNvUTBYMkZkeVo1eDFNTXFXYjdnRzI4WlU3WDZOdmNVSzZmYUtLRThHYXFE?=
- =?utf-8?B?WVBiMXY2QWdnRHVMRnNEN3NOdjVGMDUxaCsvdUo4Vjc3SEVXMlVQd3kyRWNV?=
- =?utf-8?B?M1VQT281VnVvbHZzTFJQL25PM1RHaSsyVFZwV1ZZZzh3TEpCMUhMY3FDekhT?=
- =?utf-8?B?cjRWMzd0NGN5VDRSZGtiSThvRitHclhsa0xRQ1FKUmswRzFUVzZTVzZtUGlQ?=
- =?utf-8?B?Q3FnSExzTCtYWFUyMzFHVDdDQUVGeU1LL3hwZU9MU09YcHBGV0taaUFTVUhE?=
- =?utf-8?B?OUNpVXdlQlZaQVVDaU4wYU5ka2Q3bXhRSnhEWFYwYjlRK2g1R1JZZGMyYjZH?=
- =?utf-8?B?TkVLTTFZKzZ1MHk1di83cHJtejNVVXhPUHR3cUlVTXJoL2JKS3Z5TmllZkVw?=
- =?utf-8?B?c2FMQmFZTExqd2I2a09wZXhNdzY1c25HdlNqaytYMS93aXpZNzhpMC9FTHFB?=
- =?utf-8?B?dDhGMTAvNWJmQmZhT3ltN2ZHcGxSTGFFbnZlc3RlQnovY3NaVWRVSTVZMmI5?=
- =?utf-8?B?a3IwMjlPMWI5WW1ZbVJtRXltV0xyc1YvZ3gyM25INDFxS2lEenpUSU1tczEy?=
- =?utf-8?B?WGJSQ3ZuS3FML3YrODhLTnJocnkvaC95QWV1aitJZXd5bHpyakorNVhGeXk1?=
- =?utf-8?B?ZFFkTUIzbSthTG85OElTQmVQRm1qRUhwbEVVbHd5eHJOYitGMER6d1JmN1Vk?=
- =?utf-8?B?anBwVmYybGlVT1R3bTVPN0VOai9IcUlmZ1lXRFEvRDk1RmU2T01SYXYyNUdx?=
- =?utf-8?B?OTY3REI5dTRqUjBpTjJRVXhKNThvMzhzSDV5eHRBallFa0ZWRzZ6bG9hbDhi?=
- =?utf-8?B?WjR1Z0liNlU5UDFrcDNubDVUTittdjJyVC9zU2RzT0ZHQ3R5WmxqRDZCZkha?=
- =?utf-8?B?M2lNNnlYUGplSGNtMnoxM1dQRlB5OVV0S2plYW5WTFpvQXhodG9PUEJqR0VY?=
- =?utf-8?B?VzBVZ2N3NWlRZVZsT0NhZnVFTzFGcEtGZHFsTWdEeG1yWmpmSHc4L0YzYUpO?=
- =?utf-8?B?QmZBeTVnVklLa1dWYmt6MjI2VjFwOXRJMDJGTWdTK1pFa1orZG05TzZqWFFE?=
- =?utf-8?B?Ukg0Y0dxb28xSVdpT08xcHdvTDhPZ3NmcDhJbTZ0am82ODRsSHB6ZjZaaWth?=
- =?utf-8?B?T0V1M3dNdFNlZmN2T3NXdjJlMDQweUdpb1hkZTF2QUc3UmNYSlZHTFl3VUFs?=
- =?utf-8?B?cGIybHR0ejdaREpHMVcxd3FzVTlpcGlQbWNJMFdTTmdhNklGbDVaTVRma1ll?=
- =?utf-8?B?Rk5HMUU5VSs4TDJ2RXdPMTV1TmlHMXFpNDlIWVVUTHc0TFBXVVI2WTIyZUlx?=
- =?utf-8?B?dDE3ZnFGNW9wb2x6NUR2a1lpUmZOOUwrSDRLaEh6QUpxeER1WFRJZkF6N1JC?=
- =?utf-8?B?ZmpnZjFyZjYrWkgrSGluZUN2ajZ4OENWMTNac3M1cEtlL2NYQTNSSGhtekp6?=
- =?utf-8?B?L25mWDVidTA2b0lUZldHZFcyZTR6Z2pJTVJUODlITEt4aGVFcTZMb3lIZnQ0?=
- =?utf-8?B?ei85cTdzYkR4TzFkL2pQbWNueDRYTTVjZm9DeXNkMDNTNStZRlY0NGFSK1l2?=
- =?utf-8?B?aUFGUE5ES2RDNU4ycDRCYnB4QklzbFErRTk2ZEIvSnFKd2pjVEpGQlE2Uk5T?=
- =?utf-8?B?TjFRUFRmQW5WN1p6QkdFSjFMWnFVa0VyTk45bTZJejNGOVltZThDbnI2TkpT?=
- =?utf-8?B?VmxGUUhYUkpGd2hLMzNiUC83SGlCTkJMLzZwRFY3M0I1QkNNcXgyZzhidDRL?=
- =?utf-8?B?UDA3aE5VZHlrQkhPWjFYRTYvQ0Z3eWoxOFNSWEJOeGVMbGVHUEJTSnd1UmhJ?=
- =?utf-8?B?OTNyMU4yRlgwVVVWSmVFck8wRHVya0ZwM3ZPY21hRTR6WXJ2dTZQUHA2L05C?=
- =?utf-8?B?MlNxY29qVW9rYmpDQW9kYldNZjFJek1ScFVDbDErOXJhYWYySk1MSnJUR0Fy?=
- =?utf-8?B?YktQbU1YeGpvRHVtYlJxTkZYOSt0OFhRZExCbGNKLzhRYTdaVy9lSVRCUEg2?=
- =?utf-8?B?d1l1KzhTN3E3ekZVVk50cWJxcDdDME96Ymk4ZVJ4ZWIxVGR6TWdFUkc0UUhs?=
- =?utf-8?B?bnYwMlRYNjJDdHlkem9IS01TNVY3aDRPVWYycFFvWE9hOUUraWtOQT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ce0b42e8-2c95-447a-c4c1-08da1bafd1c7
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB4192.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2022 11:38:38.0834
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: PTOYjPHGPP116tKfMi1wCs5ctklXopO0XBNR8k9AjXX4wU55wjNc1cVQvI+747/S
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR12MB2913
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH 24/27] block: remove QUEUE_FLAG_DISCARD
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        nbd@other.debian.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>, Coly Li <colyli@suse.de>
+References: <20220409045043.23593-1-hch@lst.de>
+ <20220409045043.23593-25-hch@lst.de>
+From:   =?UTF-8?Q?Jan_H=c3=b6ppner?= <hoeppner@linux.ibm.com>
+In-Reply-To: <20220409045043.23593-25-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: fq1U6p5RSJi3IUi0XnNkXpRDl0Ogb6A0
+X-Proofpoint-ORIG-GUID: D9QlKI8GujOSuLx30db3fYGBx6ksQFZ5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.425,FMLib:17.11.64.514
+ definitions=2022-04-11_04,2022-04-11_01,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 priorityscore=1501
+ impostorscore=0 lowpriorityscore=0 spamscore=0 bulkscore=0 phishscore=0
+ adultscore=0 clxscore=1011 mlxlogscore=999 suspectscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
+ definitions=main-2204110067
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Apr 10, 2022 at 10:13:16PM -0500, Bob Pearson wrote:
-> On 4/10/22 22:06, Bart Van Assche wrote:
-> > On 4/10/22 15:39, Bob Pearson wrote:
-> >> Fixes: 3225717f6dfa ("RDMA/rxe: Replace red-black trees by carrays")
-> >                                                              ^^^^^^^
-> >                                                              xarrays?
-> > 
-> >> @@ -138,8 +140,10 @@ void *rxe_alloc(struct rxe_pool *pool)
-> >>       elem->obj = obj;
-> >>       kref_init(&elem->ref_cnt);
-> >>   -    err = xa_alloc_cyclic(&pool->xa, &elem->index, elem, pool->limit,
-> >> +    xa_lock_irqsave(xa, flags);
-> >> +    err = __xa_alloc_cyclic(&pool->xa, &elem->index, elem, pool->limit,
-> >>                     &pool->next, GFP_KERNEL);
-> >> +    xa_unlock_irqrestore(xa, flags);
-> > 
-> > Please take a look at the xas_unlock_type() and xas_lock_type() calls in __xas_nomem(). I think that the above change will trigger a GFP_KERNEL allocation with interrupts disabled. My understanding is that GFP_KERNEL allocations may sleep and hence that the above code may cause __xas_nomem() to sleep with interrupts disabled. I don't think that is allowed.
-> > 
-> > Thanks,
-> > 
-> > Bart.
+On 09/04/2022 06:50, Christoph Hellwig wrote:
+> Just use a non-zero max_discard_sectors as an indicator for discard
+> support, similar to what is done for write zeroes.
 > 
-> You're right. I missed that. Zhu wants to write the patch so hopefully he's on top of that.
-> For now we could use GFP_ATOMIC.
+> The only places where needs special attention is the RAID5 driver,
+> which must clear discard support for security reasons by default,
+> even if the default stacking rules would allow for it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com> [btrfs]
+> Acked-by: Coly Li <colyli@suse.de> [bcache]
+> ---
 
-Yes, you cannot use irq_save varients here. You have to know your
-calling context is non-atomic already and use the irq wrapper.
+For 
 
-Jason
+>  drivers/s390/block/dasd_fba.c       |  1 -
+
+Acked-by: Jan Höppner <hoeppner@linux.ibm.com>
