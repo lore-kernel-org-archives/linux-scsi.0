@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD06FC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 02:32:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C559C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 02:32:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244358AbiDKCeg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 Apr 2022 22:34:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56508 "EHLO
+        id S238173AbiDKCel (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Apr 2022 22:34:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244395AbiDKCcZ (ORCPT
+        with ESMTP id S244431AbiDKCcZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Apr 2022 22:32:25 -0400
 Received: from smtp.infotech.no (smtp.infotech.no [82.134.31.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5F28B6444
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2022 19:29:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 324EB38BEA
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2022 19:29:30 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 5B8352041B2;
-        Mon, 11 Apr 2022 04:29:25 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id A015E2041E3;
+        Mon, 11 Apr 2022 04:29:30 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id ovt4Lzafpc-Q; Mon, 11 Apr 2022 04:29:23 +0200 (CEST)
+        with ESMTP id 2AJkkeJukcOS; Mon, 11 Apr 2022 04:29:27 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-78-195-155.dyn.295.ca [45.78.195.155])
-        by smtp.infotech.no (Postfix) with ESMTPA id 7EE51204179;
-        Mon, 11 Apr 2022 04:29:22 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 072822041CB;
+        Mon, 11 Apr 2022 04:29:26 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         bvanassche@acm.org
-Subject: [PATCH v24 36/46] sg: rework mmap support
-Date:   Sun, 10 Apr 2022 22:28:26 -0400
-Message-Id: <20220411022836.11871-37-dgilbert@interlog.com>
+Subject: [PATCH v24 40/46] sg: remove rcv_done request state
+Date:   Sun, 10 Apr 2022 22:28:30 -0400
+Message-Id: <20220411022836.11871-41-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220411022836.11871-1-dgilbert@interlog.com>
 References: <20220411022836.11871-1-dgilbert@interlog.com>
@@ -40,380 +40,405 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Linux has an issue with mmap-ed multiple pages issued by
-alloc_pages() [with order > 0]. So when mmap(2) is called if the
-reserve request's scatter gather (sgat) list is either:
-  - not big enough, or
-  - made up of elements of order > 0 (i.e. size > PAGE_SIZE)
-then throw away reserve requests sgat list and rebuild it meeting
-those requirements.
-Clean up related code and stop doing mmap+indirect_io.
-
-This new mmap implementation is marginally more flexible (but
-still compatible with) the production driver. Previously if the
-user wanted a larger mmap(2) 'length' than the reserve request's
-size, then they needed to use ioctl(SG_SET_RESERVED_SIZE) to set
-the new size first. Now mmap(2) called on a sg device node will
-adjust to the size given by 'length' [mmap's second parameter].
-
-Tweak some SG_LOG() levels to control the amount of debug
-output. Add some WRITE_ONCE() macros when bitop integers are
-being initialised.
+Remove SG_RQ_RCV_DONE request state. Also remember the position of
+the last used request array element and start subsequent searches
+for completed requests and new requests from that index.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 181 ++++++++++++++++++++++++++++------------------
- 1 file changed, 109 insertions(+), 72 deletions(-)
+ drivers/scsi/sg.c | 166 +++++++++++++++++++++++++++-------------------
+ 1 file changed, 96 insertions(+), 70 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 262f11695be5..68208a54ba4c 100644
+index e10148f2fba3..b9fdfcfc18ee 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -119,6 +119,7 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
- #define SG_FRQ_NO_US_XFER	3	/* no user space transfer of data */
- #define SG_FRQ_DEACT_ORPHAN	6	/* not keeping orphan so de-activate */
- #define SG_FRQ_RECEIVING	7	/* guard against multiple receivers */
-+#define SG_FRQ_FOR_MMAP		8	/* request needs PAGE_SIZE elements */
- 
- /* Bit positions (flags) for sg_fd::ffd_bm bitmask follow */
- #define SG_FFD_FORCE_PACKID	0	/* receive only given pack_id/tag */
-@@ -707,7 +708,7 @@ sg_write(struct file *filp, const char __user *p, size_t count, loff_t *ppos)
- 			 input_size, (unsigned int)opcode, current->comm);
- 	}
- 	cwr.h3p = h3p;
--	cwr.frq_bm[0] = 0;
-+	WRITE_ONCE(cwr.frq_bm[0], 0);
- 	cwr.timeout = sfp->timeout;
- 	cwr.cmd_len = cmd_size;
- 	cwr.filp = filp;
-@@ -769,7 +770,7 @@ sg_v3_submit(struct file *filp, struct sg_fd *sfp, struct sg_io_hdr *hp,
- 	/* when v3 seen, allow cmd_q on this fd (def: no cmd_q) */
- 	set_bit(SG_FFD_CMD_Q, sfp->ffd_bm);
- 	ul_timeout = msecs_to_jiffies(hp->timeout);
--	cwr.frq_bm[0] = 0;
-+	WRITE_ONCE(cwr.frq_bm[0], 0);
- 	__assign_bit(SG_FRQ_SYNC_INVOC, cwr.frq_bm, (int)sync);
- 	cwr.h3p = hp;
- 	cwr.timeout = min_t(unsigned long, ul_timeout, INT_MAX);
-@@ -810,7 +811,7 @@ sg_submit_v4(struct file *filp, struct sg_fd *sfp, void __user *p,
- 	ul_timeout = msecs_to_jiffies(h4p->timeout);
- 	cwr.filp = filp;
- 	cwr.sfp = sfp;
--	cwr.frq_bm[0] = 0;
-+	WRITE_ONCE(cwr.frq_bm[0], 0);
- 	__assign_bit(SG_FRQ_SYNC_INVOC, cwr.frq_bm, (int)sync);
- 	__set_bit(SG_FRQ_IS_V4I, cwr.frq_bm);
- 	cwr.h4p = h4p;
-@@ -1761,6 +1762,8 @@ sg_set_reserved_sz(struct sg_fd *sfp, int want_rsv_sz)
- 	srp = sfp->rsv_srp;
- 	if (!srp)
- 		return -EPROTO;
-+	if (test_bit(SG_FRQ_FOR_MMAP, srp->frq_bm))
-+		return -EBUSY;
- 	new_sz = min_t(int, want_rsv_sz, sfp->parentdp->max_sgat_sz);
- 	new_sz = max_t(int, new_sz, sfp->sgat_elem_sz);
- 	blen = srp->sgat_h.buflen;
-@@ -2152,13 +2155,39 @@ sg_fasync(int fd, struct file *filp, int mode)
- 	return fasync_helper(fd, filp, mode, &sfp->async_qp);
- }
- 
-+static void
-+sg_vma_open(struct vm_area_struct *vma)
-+{
-+	struct sg_fd *sfp = vma->vm_private_data;
-+
-+	if (unlikely(!sfp)) {
-+		pr_warn("%s: sfp null\n", __func__);
-+		return;
-+	}
-+	kref_get(&sfp->f_ref);
-+}
-+
-+static void
-+sg_vma_close(struct vm_area_struct *vma)
-+{
-+	struct sg_fd *sfp = vma->vm_private_data;
-+
-+	if (unlikely(!sfp)) {
-+		pr_warn("%s: sfp null\n", __func__);
-+		return;
-+	}
-+	kref_put(&sfp->f_ref, sg_remove_sfp); /* get in: sg_vma_open() */
-+}
-+
- /* Note: the error return: VM_FAULT_SIGBUS causes a "bus error" */
- static vm_fault_t
- sg_vma_fault(struct vm_fault *vmf)
- {
--	int k, length;
--	unsigned long offset, len, sa, iflags;
-+	int k, n, length;
-+	int res = VM_FAULT_SIGBUS;
-+	unsigned long offset;
- 	struct vm_area_struct *vma = vmf->vma;
-+	struct page *page;
- 	struct sg_scatter_hold *rsv_schp;
- 	struct sg_request *srp;
- 	struct sg_device *sdp;
-@@ -2184,7 +2213,7 @@ sg_vma_fault(struct vm_fault *vmf)
- 		SG_LOG(1, sfp, "%s: srp%s\n", __func__, nbp);
- 		goto out_err;
- 	}
--	xa_lock_irqsave(&sfp->srp_arr, iflags);
-+	mutex_lock(&sfp->f_mutex);
- 	rsv_schp = &srp->sgat_h;
- 	offset = vmf->pgoff << PAGE_SHIFT;
- 	if (offset >= (unsigned int)rsv_schp->buflen) {
-@@ -2192,44 +2221,37 @@ sg_vma_fault(struct vm_fault *vmf)
- 		       offset);
- 		goto out_err_unlock;
- 	}
--	sa = vma->vm_start;
--	SG_LOG(3, sfp, "%s: vm_start=0x%lx, off=%lu\n", __func__, sa, offset);
-+	SG_LOG(5, sfp, "%s: vm_start=0x%lx, off=%lu\n", __func__,
-+	       vma->vm_start, offset);
- 	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
--	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; ++k) {
--		len = vma->vm_end - sa;
--		len = min_t(int, len, (int)length);
--		if (offset < len) {
--			struct page *page;
--			struct page *pp;
--
--			pp = rsv_schp->pages[k];
--			xa_unlock_irqrestore(&sfp->srp_arr, iflags);
--			page = nth_page(pp, offset >> PAGE_SHIFT);
--			get_page(page); /* increment page count */
--			vmf->page = page;
--			return 0; /* success */
--		}
--		sa += len;
--		offset -= len;
--	}
-+	k = (int)offset / length;
-+	n = ((int)offset % length) >> PAGE_SHIFT;
-+	page = nth_page(rsv_schp->pages[k], n);
-+	get_page(page);
-+	vmf->page = page;
-+	res = 0;
- out_err_unlock:
--	xa_unlock_irqrestore(&sfp->srp_arr, iflags);
-+	mutex_unlock(&sfp->f_mutex);
- out_err:
--	return VM_FAULT_SIGBUS;
-+	return res;
- }
- 
- static const struct vm_operations_struct sg_mmap_vm_ops = {
- 	.fault = sg_vma_fault,
-+	.open = sg_vma_open,
-+	.close = sg_vma_close,
+@@ -94,7 +94,6 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
+ 	SG_RS_INACTIVE = 0,	/* request not in use (e.g. on fl) */
+ 	SG_RS_INFLIGHT,		/* active: cmd/req issued, no response yet */
+ 	SG_RS_AWAIT_RCV,	/* have response from LLD, awaiting receive */
+-	SG_RS_RCV_DONE,		/* receive is ongoing or done */
+ 	SG_RS_BUSY,		/* temporary state should rarely be seen */
  };
  
--/* Entry point for mmap(2) system call */
-+/*
-+ * Entry point for mmap(2) system call. For mmap(2) to work, request's
-+ * scatter gather list needs to be order 0 which it is unlikely to be
-+ * by default. mmap(2) cannot be called more than once per fd.
-+ */
- static int
- sg_mmap(struct file *filp, struct vm_area_struct *vma)
- {
--	int k, length;
--	int ret = 0;
--	unsigned long req_sz, len, sa, iflags;
--	struct sg_scatter_hold *rsv_schp;
-+	int res = 0;
-+	unsigned long req_sz;
- 	struct sg_fd *sfp;
- 	struct sg_request *srp;
+@@ -229,6 +228,7 @@ struct sg_fd {		/* holds the state of a file descriptor */
+ 	struct mutex f_mutex;	/* serialize ioctls on this fd */
+ 	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
+ 	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
++	int prev_used_idx;	/* previous used index */
+ 	u32 idx;		/* my index within parent's sfp_arr */
+ 	atomic_t submitted;	/* number inflight or awaiting receive */
+ 	atomic_t waiting;	/* number of requests awaiting receive */
+@@ -302,7 +302,9 @@ static struct sg_device *sg_get_dev(int min_dev);
+ static void sg_device_destroy(struct kref *kref);
+ static struct sg_request *sg_mk_srp_sgat(struct sg_fd *sfp, bool first,
+ 					 int db_len);
++#if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
+ static const char *sg_rq_st_str(enum sg_rq_state rq_st, bool long_str);
++#endif
  
-@@ -2240,40 +2262,48 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
- 		pr_warn("sg: %s: sfp is NULL\n", __func__);
- 		return -ENXIO;
+ #define SG_WRITE_COUNT_LIMIT (32 * 1024 * 1024)
+ 
+@@ -872,20 +874,18 @@ sg_ctl_iosubmit_v3(struct file *filp, struct sg_fd *sfp, void __user *p)
+ #if IS_ENABLED(SG_LOG_ACTIVE)
+ static void
+ sg_rq_state_fail_msg(struct sg_fd *sfp, enum sg_rq_state exp_old_st,
+-		     enum sg_rq_state want_st, enum sg_rq_state act_old_st,
+-		     const char *fromp)
++		     enum sg_rq_state want_st, const char *fromp)
+ {
+-	const char *eaw_rs = "expected_old,actual_old,wanted rq_st";
++	const char *eaw_rs = "expected_old,wanted rq_st";
+ 
+ 	if (IS_ENABLED(CONFIG_SCSI_PROC_FS))
+-		SG_LOG(1, sfp, "%s: %s: %s: %s,%s,%s\n",
++		SG_LOG(1, sfp, "%s: %s: %s,%s,%s\n",
+ 		       __func__, fromp, eaw_rs,
+ 		       sg_rq_st_str(exp_old_st, false),
+-		       sg_rq_st_str(act_old_st, false),
+ 		       sg_rq_st_str(want_st, false));
+ 	else
+-		pr_info("sg: %s: %s: %s: %d,%d,%d\n", __func__, fromp, eaw_rs,
+-			(int)exp_old_st, (int)act_old_st, (int)want_st);
++		pr_info("sg: %s: %s: %s: %d,%d\n", __func__, fromp, eaw_rs,
++			(int)exp_old_st, (int)want_st);
+ }
+ #endif
+ 
+@@ -929,8 +929,8 @@ sg_rq_state_helper(struct xarray *xafp, struct sg_request *srp, int indic)
+ }
+ 
+ /* Following array indexed by enum sg_rq_state, 0 means no xa mark change */
+-static const int sg_rq_state_arr[] = {1, 0, 4, 0, 0};
+-static const int sg_rq_state_mul2arr[] = {2, 0, 8, 0, 0};
++static const int sg_rq_state_arr[] = {1, 0, 4, 0};
++static const int sg_rq_state_mul2arr[] = {2, 0, 8, 0};
+ 
+ /*
+  * This function keeps the srp->rq_st state and associated marks on the
+@@ -945,39 +945,47 @@ static const int sg_rq_state_mul2arr[] = {2, 0, 8, 0, 0};
+  */
+ static int
+ sg_rq_state_chg(struct sg_request *srp, enum sg_rq_state old_st,
+-		enum sg_rq_state new_st, bool force, const char *fromp)
++		enum sg_rq_state new_st)
+ {
+ 	enum sg_rq_state act_old_st;
+ 	int indic;
+ 	unsigned long iflags;
+-	struct xarray *xafp = &srp->parentfp->srp_arr;
++	struct sg_fd *sfp = srp->parentfp;
++	struct xarray *xafp = &sfp->srp_arr;
+ 
+-	if (force) {
+-		xa_lock_irqsave(xafp, iflags);
+-		sg_rq_state_force(srp, new_st);
+-		xa_unlock_irqrestore(xafp, iflags);
+-		return 0;
+-	}
+ 	indic = sg_rq_state_arr[(int)old_st] +
+ 		sg_rq_state_mul2arr[(int)new_st];
+ 	act_old_st = (enum sg_rq_state)atomic_cmpxchg(&srp->rq_st, old_st,
+ 						      new_st);
+ 	if (act_old_st != old_st) {
+-#if IS_ENABLED(SG_LOG_ACTIVE)
+-		if (fromp)
+-			sg_rq_state_fail_msg(srp->parentfp, old_st, new_st,
+-					     act_old_st, fromp);
+-#endif
++		SG_LOG(1, sfp, "%s: unexpected old state: %s\n", __func__,
++		       sg_rq_st_str(act_old_st, false));
+ 		return -EPROTOTYPE;	/* only used for this error type */
  	}
-+	mutex_lock(&sfp->f_mutex);
- 	req_sz = vma->vm_end - vma->vm_start;
- 	SG_LOG(3, sfp, "%s: vm_start=%pK, len=%d\n", __func__,
- 	       (void *)vma->vm_start, (int)req_sz);
--	if (vma->vm_pgoff)
--		return -EINVAL; /* only an offset of 0 accepted */
-+	if (vma->vm_pgoff) {
-+		res = -EINVAL; /* only an offset of 0 accepted */
-+		goto fini;
+ 	if (indic) {
+ 		xa_lock_irqsave(xafp, iflags);
++		if (new_st == SG_RS_INACTIVE)
++			WRITE_ONCE(sfp->prev_used_idx, srp->rq_idx);
+ 		sg_rq_state_helper(xafp, srp, indic);
+ 		xa_unlock_irqrestore(xafp, iflags);
+ 	}
+ 	return 0;
+ }
+ 
++static void
++sg_rq_state_chg_force(struct sg_request *srp, enum sg_rq_state new_st)
++{
++	unsigned long iflags;
++	struct sg_fd *sfp = srp->parentfp;
++	struct xarray *xafp = &sfp->srp_arr;
++
++	xa_lock_irqsave(xafp, iflags);
++	if (new_st == SG_RS_INACTIVE)
++		WRITE_ONCE(sfp->prev_used_idx, srp->rq_idx);
++	sg_rq_state_force(srp, new_st);
++	xa_unlock_irqrestore(xafp, iflags);
++}
++
+ static void
+ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
+ {
+@@ -998,8 +1006,7 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
+ 		at_head = !(srp->rq_flags & SG_FLAG_Q_AT_TAIL);
+ 
+ 	kref_get(&sfp->f_ref); /* sg_rq_end_io() does kref_put(). */
+-	sg_rq_state_chg(srp, SG_RS_BUSY /* ignored */, SG_RS_INFLIGHT,
+-			true, __func__);
++	sg_rq_state_chg_force(srp, SG_RS_INFLIGHT);
+ 
+ 	/* >>>>>>> send cmd/req off to other levels <<<<<<<< */
+ 	if (!sync)
+@@ -1200,10 +1207,6 @@ sg_receive_v3(struct sg_fd *sfp, struct sg_request *srp, size_t count,
+ 	hp->driver_status = driver_byte(rq_result);
+ 	err2 = put_sg_io_hdr(hp, p);
+ 	err = err ? err : err2;
+-	err2 = sg_rq_state_chg(srp, atomic_read(&srp->rq_st), SG_RS_RCV_DONE,
+-			       false, __func__);
+-	if (err2)
+-		err = err ? err : err2;
+ err_out:
+ 	sg_finish_scsi_blk_rq(srp);
+ 	sg_deact_request(sfp, srp);
+@@ -1214,7 +1217,7 @@ static int
+ sg_receive_v4(struct sg_fd *sfp, struct sg_request *srp, void __user *p,
+ 	      struct sg_io_v4 *h4p)
+ {
+-	int err, err2;
++	int err;
+ 	u32 rq_result = srp->rq_result;
+ 
+ 	SG_LOG(3, sfp, "%s: p=%s, h4p=%s\n", __func__,
+@@ -1249,10 +1252,6 @@ sg_receive_v4(struct sg_fd *sfp, struct sg_request *srp, void __user *p,
+ 		if (copy_to_user(p, h4p, SZ_SG_IO_V4))
+ 			err = err ? err : -EFAULT;
+ 	}
+-	err2 = sg_rq_state_chg(srp, atomic_read(&srp->rq_st), SG_RS_RCV_DONE,
+-			       false, __func__);
+-	if (err2)
+-		err = err ? err : err2;
+ 	sg_finish_scsi_blk_rq(srp);
+ 	sg_deact_request(sfp, srp);
+ 	return err < 0 ? err : 0;
+@@ -1448,7 +1447,6 @@ sg_read_v1v2(void __user *buf, int count, struct sg_fd *sfp,
+ 		res = (h2p->result == 0) ? 0 : -EIO;
+ 	}
+ fini:
+-	atomic_set(&srp->rq_st, SG_RS_RCV_DONE);
+ 	sg_finish_scsi_blk_rq(srp);
+ 	sg_deact_request(sfp, srp);
+ 	return res;
+@@ -1622,7 +1620,6 @@ sg_get_dur(struct sg_request *srp, const enum sg_rq_state *sr_stp,
+ 		res = sg_calc_rq_dur(srp);
+ 		break;
+ 	case SG_RS_AWAIT_RCV:
+-	case SG_RS_RCV_DONE:
+ 	case SG_RS_INACTIVE:
+ 		res = srp->duration;
+ 		is_dur = true;	/* completion has occurred, timing finished */
+@@ -1693,9 +1690,13 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
+ 	sr_st = atomic_read(&srp->rq_st);
+ 	if (unlikely(sr_st != SG_RS_AWAIT_RCV))
+ 		return -EPROTO;         /* Logic error */
+-	res = sg_rq_state_chg(srp, sr_st, SG_RS_BUSY, false, __func__);
+-	if (unlikely(res))
++	res = sg_rq_state_chg(srp, sr_st, SG_RS_BUSY);
++	if (unlikely(res)) {
++#if IS_ENABLED(SG_LOG_ACTIVE)
++		sg_rq_state_fail_msg(sfp, sr_st, SG_RS_BUSY, __func__);
++#endif
+ 		return res;
 +	}
- 	/* Check reserve request is inactive and has large enough buffer */
--	mutex_lock(&sfp->f_mutex);
- 	srp = sfp->rsv_srp;
--	xa_lock_irqsave(&sfp->srp_arr, iflags);
- 	if (SG_RS_ACTIVE(srp)) {
--		ret = -EBUSY;
--		goto out;
-+		res = -EBUSY;
-+		goto fini;
+ 	if (test_bit(SG_FRQ_IS_V4I, srp->frq_bm))
+ 		res = sg_receive_v4(sfp, srp, p, h4p);
+ 	else
+@@ -2457,8 +2458,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
  	}
--	rsv_schp = &srp->sgat_h;
--	if (req_sz > (unsigned long)rsv_schp->buflen) {
--		ret = -ENOMEM;
--		goto out;
-+	if (req_sz > SG_WRITE_COUNT_LIMIT) {	/* sanity check */
-+		res = -ENOMEM;
-+		goto fini;
+ 	if (!test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm))
+ 		atomic_inc(&sfp->waiting);
+-	if (unlikely(sg_rq_state_chg(srp, SG_RS_INFLIGHT, rqq_state,
+-				     false, __func__)))
++	if (unlikely(sg_rq_state_chg(srp, SG_RS_INFLIGHT, rqq_state)))
+ 		pr_warn("%s: can't set rq_st\n", __func__);
+ 	/*
+ 	 * Free the mid-level resources apart from the bio (if any). The bio's
+@@ -3156,9 +3156,10 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
+ 	__maybe_unused bool is_bad_st = false;
+ 	__maybe_unused enum sg_rq_state bad_sr_st = SG_RS_INACTIVE;
+ 	bool search_for_1 = (pack_id != SG_PACK_ID_WILDCARD);
++	bool second = false;
+ 	int res;
+ 	int num_waiting = atomic_read(&sfp->waiting);
+-	unsigned long idx;
++	unsigned long idx, start_idx, end_idx;
+ 	struct sg_request *srp = NULL;
+ 	struct xarray *xafp = &sfp->srp_arr;
+ 
+@@ -3170,8 +3171,7 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
+ 				continue;
+ 			if (srp->pack_id != pack_id)
+ 				continue;
+-			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY,
+-					      false, __func__);
++			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY);
+ 			if (likely(res == 0))
+ 				goto good;
+ 			/* else another caller got it, move on */
+@@ -3181,14 +3181,37 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
+ 			}
+ 			break;
+ 		}
+-	} else {        /* search for any request is more likely */
+-		xa_for_each_marked(xafp, idx, srp, SG_XA_RQ_AWAIT) {
++	} else {
++		/*
++		 * Searching for _any_ request is the more likely usage. Start searching with the
++		 * last xarray index that was used. In the case of a large-ish IO depth, it is
++		 * likely that the second (relative) position will be the request we want, if it
++		 * is ready. If there is no queuing and the "last used" has been re-used then the
++		 * first (relative) position will be the request we want.
++		 */
++		start_idx = READ_ONCE(sfp->prev_used_idx);
++		end_idx = ULONG_MAX;
++second_time:
++		idx = start_idx;
++		for (srp = xa_find(xafp, &idx, end_idx, SG_XA_RQ_AWAIT);
++		     srp;
++		     srp = xa_find_after(xafp, &idx, end_idx, SG_XA_RQ_AWAIT)) {
+ 			if (test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm))
+ 				continue;
+-			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY,
+-					      false, __func__);
++			res = sg_rq_state_chg(srp, SG_RS_AWAIT_RCV, SG_RS_BUSY);
+ 			if (likely(res == 0))
+ 				goto good;
++#if IS_ENABLED(SG_LOG_ACTIVE)
++			else
++				sg_rq_state_fail_msg(sfp, SG_RS_AWAIT_RCV, SG_RS_BUSY, __func__);
++#endif
++		}
++		/* If not found so far, need to wrap around and search [0 ... start_idx) */
++		if (!srp && !second && start_idx > 0) {
++			end_idx = start_idx - 1;
++			start_idx = 0;
++			second = true;
++			goto second_time;
+ 		}
  	}
--	sa = vma->vm_start;
--	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
--	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; ++k) {
--		len = vma->vm_end - sa;
--		len = min_t(unsigned long, len, (unsigned long)length);
--		sa += len;
-+	if (test_and_set_bit(SG_FFD_MMAP_CALLED, sfp->ffd_bm)) {
-+		SG_LOG(1, sfp, "%s: multiple invocations on this fd\n",
-+		       __func__);
-+		res = -EADDRINUSE;
-+		goto fini;
-+	}
-+	if (srp->sgat_h.page_order > 0 ||
-+	    req_sz > (unsigned long)srp->sgat_h.buflen) {
-+		sg_remove_sgat(srp);
-+		set_bit(SG_FRQ_FOR_MMAP, srp->frq_bm);
-+		res = sg_mk_sgat(&srp->sgat_h, sfp, req_sz);
-+		if (res) {
-+			SG_LOG(1, sfp, "%s: sg_mk_sgat failed, wanted=%lu\n",
-+			       __func__, req_sz);
-+			goto fini;
+ 	/* here if one of above loops does _not_ find a match */
+@@ -3306,8 +3329,9 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
+ 	bool found = false;
+ 	bool mk_new_srp = true;
+ 	bool try_harder = false;
++	bool second = false;
+ 	int num_inactive = 0;
+-	unsigned long idx, last_idx, iflags;
++	unsigned long idx, start_idx, end_idx, iflags;
+ 	struct sg_fd *fp = cwrp->sfp;
+ 	struct sg_request *r_srp = NULL;	/* request to return */
+ 	struct sg_request *last_srp = NULL;
+@@ -3320,45 +3344,48 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
+ 		act_empty = true;
+ 		mk_new_srp = true;
+ 	} else if (!try_harder && dxfr_len < SG_DEF_SECTOR_SZ) {
+-		last_idx = ~0UL;
+ 		xa_for_each_marked(xafp, idx, r_srp, SG_XA_RQ_INACTIVE) {
+-			if (!r_srp)
+-				continue;
+ 			++num_inactive;
+-			if (dxfr_len < SG_DEF_SECTOR_SZ) {
+-				last_idx = idx;
++			if (dxfr_len < SG_DEF_SECTOR_SZ)
+ 				last_srp = r_srp;
+-				continue;
+-			}
+ 		}
+ 		/* If dxfr_len is small, use last inactive request */
+-		if (last_idx != ~0UL && last_srp) {
++		if (last_srp) {
+ 			r_srp = last_srp;
+-			if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY,
+-					    false, __func__))
++			if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY))
+ 				goto start_again; /* gone to another thread */
+ 			cp = "toward end of srp_arr";
+ 			found = true;
+ 		}
+ 	} else {
+-		xa_for_each_marked(xafp, idx, r_srp, SG_XA_RQ_INACTIVE) {
+-			if (!r_srp)
+-				continue;
++		start_idx = READ_ONCE(fp->prev_used_idx);
++		end_idx = ULONG_MAX;
++second_time:
++		idx = start_idx;
++		for (r_srp = xa_find(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE);
++		     r_srp;
++		     r_srp = xa_find_after(xafp, &idx, end_idx, SG_XA_RQ_INACTIVE)) {
+ 			if (r_srp->sgat_h.buflen >= dxfr_len) {
+-				if (sg_rq_state_chg
+-					(r_srp, SG_RS_INACTIVE, SG_RS_BUSY,
+-					 false, __func__))
++				if (sg_rq_state_chg(r_srp, SG_RS_INACTIVE, SG_RS_BUSY))
+ 					continue;
+-				cp = "from front of srp_arr";
++				cp = "near front of srp_arr";
+ 				found = true;
+ 				break;
+ 			}
+ 		}
++		/* If not found so far, need to wrap around and search [0 ... start_idx) */
++		if (!r_srp && !second && start_idx > 0) {
++			end_idx = start_idx - 1;
++			start_idx = 0;
++			second = true;
++			goto second_time;
 +		}
  	}
--
--	set_bit(SG_FFD_MMAP_CALLED, sfp->ffd_bm);
- 	vma->vm_flags |= VM_IO | VM_DONTEXPAND | VM_DONTDUMP;
- 	vma->vm_private_data = sfp;
- 	vma->vm_ops = &sg_mmap_vm_ops;
--out:
--	xa_unlock_irqrestore(&sfp->srp_arr, iflags);
-+	sg_vma_open(vma);
-+fini:
- 	mutex_unlock(&sfp->f_mutex);
--	return ret;
-+	return res;
- }
- 
- static void
-@@ -2852,7 +2882,7 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 		goto fini;
- 	scmd->cmd_len = cwrp->cmd_len;
- 	srp->cmd_opcode = scmd->cmnd[0];
--	us_xfer = !(srp->rq_flags & SG_FLAG_NO_DXFER);
-+	us_xfer = !(srp->rq_flags & (SG_FLAG_NO_DXFER | SG_FLAG_MMAP_IO));
- 	assign_bit(SG_FRQ_NO_US_XFER, srp->frq_bm, !us_xfer);
- 	reserved = (sfp->rsv_srp == srp);
- 	rq->end_io_data = srp;
-@@ -2978,10 +3008,11 @@ sg_mk_sgat(struct sg_scatter_hold *schp, struct sg_fd *sfp, int minlen)
- {
- 	int j, k, rem_sz, align_sz, order, o_order;
- 	int mx_sgat_elems = sfp->parentdp->max_sgat_elems;
--	unsigned int elem_sz;
-+	unsigned int elem_sz = sfp->sgat_elem_sz;
- 	const size_t ptr_sz = sizeof(struct page *);
- 	gfp_t mask_ap = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN | __GFP_ZERO;
- 	gfp_t mask_kz = GFP_ATOMIC | __GFP_NOWARN;
-+	struct page **pgp;
- 
- 	if (unlikely(minlen <= 0)) {
- 		if (minlen < 0)
-@@ -2996,30 +3027,35 @@ sg_mk_sgat(struct sg_scatter_hold *schp, struct sg_fd *sfp, int minlen)
- 	       mx_sgat_elems * ptr_sz, schp->pages);
- 	if (unlikely(!schp->pages))
- 		return -ENOMEM;
--	elem_sz = sfp->sgat_elem_sz;	/* power of 2 and >= PAGE_SIZE */
-+
-+	/* elem_sz must be power of 2 and >= PAGE_SIZE */
- 	o_order = get_order(elem_sz);
- 	order = o_order;
- 
- again:
--	for (k = 0, rem_sz = align_sz; rem_sz > 0 && k < mx_sgat_elems;
--	     ++k, rem_sz -= elem_sz) {
--		schp->pages[k] = alloc_pages(mask_ap, order);
--		if (!schp->pages[k])
-+	if (elem_sz * mx_sgat_elems < align_sz) {	/* misfit ? */
-+		SG_LOG(1, sfp, "%s: align_sz=%d too big\n", __func__,
-+		       align_sz);
-+		goto b4_alloc_pages;
-+	}
-+	rem_sz = align_sz;
-+	for (pgp = schp->pages; rem_sz > 0; ++pgp, rem_sz -= elem_sz) {
-+		*pgp = alloc_pages(mask_ap, order);
-+		if (unlikely(!*pgp))
- 			goto err_out;
--		SG_LOG(5, sfp, "%s: k=%d, order=%d [0x%pK ++]\n", __func__, k,
--		       order, schp->pages[k]);
-+		SG_LOG(6, sfp, "%s: elem_sz=%d [0x%pK ++]\n", __func__,
-+		       elem_sz, *pgp);
- 	}
-+	k = pgp - schp->pages;
-+	SG_LOG(((order != o_order || rem_sz > 0) ? 2 : 5), sfp,
-+	       "%s: num_sgat=%d, order=%d,%d  rem_sz=%d\n", __func__, k,
-+	       o_order, order, rem_sz);
- 	schp->page_order = order;
- 	schp->num_sgat = k;
--	SG_LOG(((order != o_order || rem_sz > 0) ? 2 : 5), sfp,
--	       "%s: num_sgat=%d, order=%d,%d\n", __func__, k, o_order, order);
--	if (unlikely(rem_sz > 0)) {	/* hit mx_sgat_elems */
--		order = 0;		/* force exit */
--		goto err_out;
--	}
- 	schp->buflen = align_sz;
- 	return 0;
- err_out:
-+	k = pgp - schp->pages;
- 	for (j = 0; j < k; ++j)
- 		__free_pages(schp->pages[j], order);
- 
-@@ -3027,6 +3063,7 @@ sg_mk_sgat(struct sg_scatter_hold *schp, struct sg_fd *sfp, int minlen)
- 		elem_sz >>= 1;
- 		goto again;
- 	}
-+b4_alloc_pages:
- 	kfree(schp->pages);
- 	schp->pages = NULL;
- 	return -ENOMEM;
-@@ -3042,7 +3079,7 @@ sg_remove_sgat_helper(struct sg_fd *sfp, struct sg_scatter_hold *schp)
- 		return;
- 	for (k = 0; k < schp->num_sgat; ++k) {
- 		p = schp->pages[k];
--		SG_LOG(5, sfp, "%s: pg[%d]=0x%pK --\n", __func__, k, p);
-+		SG_LOG(6, sfp, "%s: pg[%d]=0x%pK --\n", __func__, k, p);
- 		if (unlikely(!p))
- 			continue;
- 		__free_pages(p, schp->page_order);
-@@ -3172,7 +3209,7 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
- 	}
- 	return NULL;
- good:
--	SG_LOG(6, sfp, "%s: %s%d found [srp=0x%pK]\n", __func__, "pack_id=",
-+	SG_LOG(5, sfp, "%s: %s%d found [srp=0x%pK]\n", __func__, "pack_id=",
- 	       pack_id, srp);
- 	return srp;
- }
-@@ -3368,7 +3405,7 @@ sg_setup_req(struct sg_comm_wr_t *cwrp, int dxfr_len)
- 		r_srp->parentfp = fp;
- 		SG_LOG(4, fp, "%s: mk_new_srp=0x%pK ++\n", __func__, r_srp);
- 	}
--	r_srp->frq_bm[0] = cwrp->frq_bm[0];	/* assumes <= 32 req flags */
-+	WRITE_ONCE(r_srp->frq_bm[0], cwrp->frq_bm[0]);	/* assumes <= 32 req flags */
- 	r_srp->sgat_h.dlen = dxfr_len;/* must be <= r_srp->sgat_h.buflen */
- 	r_srp->cmd_opcode = 0xff;  /* set invalid opcode (VS), 0x0 is TUR */
- fini:
-@@ -3395,7 +3432,7 @@ sg_deact_request(struct sg_fd *sfp, struct sg_request *srp)
- 		return;
+ 	if (found) {
+ 		r_srp->in_resid = 0;
+ 		r_srp->rq_info = 0;
+ 		r_srp->sense_len = 0;
++		WRITE_ONCE(fp->prev_used_idx, r_srp->rq_idx);
+ 		mk_new_srp = false;
+ 	} else {
+ 		mk_new_srp = true;
+@@ -3431,7 +3458,7 @@ sg_deact_request(struct sg_fd *sfp, struct sg_request *srp)
  	sbp = srp->sense_bp;
  	srp->sense_bp = NULL;
--	srp->frq_bm[0] = 0;
-+	WRITE_ONCE(srp->frq_bm[0], 0);
- 	sg_rq_state_chg(srp, 0, SG_RS_INACTIVE, true /* force */, __func__);
+ 	WRITE_ONCE(srp->frq_bm[0], 0);
+-	sg_rq_state_chg(srp, 0, SG_RS_INACTIVE, true /* force */, __func__);
++	sg_rq_state_chg_force(srp, SG_RS_INACTIVE);
  	/* maybe orphaned req, thus never read */
  	if (sbp)
+ 		mempool_free(sbp, sg_sense_pool);
+@@ -3522,7 +3549,7 @@ sg_add_sfp(struct sg_device *sdp)
+ 		}
+ 		srp->rq_idx = idx;
+ 		srp->parentfp = sfp;
+-		sg_rq_state_chg(srp, 0, SG_RS_INACTIVE, true, __func__);
++		sg_rq_state_chg_force(srp, SG_RS_INACTIVE);
+ 	}
+ 	if (!reduced) {
+ 		SG_LOG(4, sfp, "%s: built reserve buflen=%d\n", __func__,
+@@ -3671,8 +3698,6 @@ sg_rq_st_str(enum sg_rq_state rq_st, bool long_str)
+ 		return long_str ? "inflight" : "act";
+ 	case SG_RS_AWAIT_RCV:
+ 		return long_str ? "await_receive" : "rcv";
+-	case SG_RS_RCV_DONE:
+-		return long_str ? "receive_done" : "fin";
+ 	case SG_RS_BUSY:
+ 		return long_str ? "busy" : "bsy";
+ 	default:
+@@ -3949,7 +3974,8 @@ sg_proc_debug_fd(struct sg_fd *fp, char *obp, int len, unsigned long idx)
+ 		       (int)test_bit(SG_FFD_FORCE_PACKID, fp->ffd_bm),
+ 		       (int)test_bit(SG_FFD_KEEP_ORPHAN, fp->ffd_bm),
+ 		       fp->ffd_bm[0]);
+-	n += scnprintf(obp + n, len - n, "   mmap_sz=%d\n", fp->mmap_sz);
++	n += scnprintf(obp + n, len - n, "   mmap_sz=%d prev_used_idx=%d\n",
++		       fp->mmap_sz, fp->prev_used_idx);
+ 	n += scnprintf(obp + n, len - n,
+ 		       "   submitted=%d waiting=%d   open thr_id=%d\n",
+ 		       atomic_read(&fp->submitted),
 -- 
 2.25.1
 
