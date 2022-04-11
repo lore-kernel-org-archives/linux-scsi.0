@@ -2,123 +2,159 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2096C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 12:05:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC73C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 14:00:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344569AbiDKMHy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Apr 2022 08:07:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52584 "EHLO
+        id S1346824AbiDKOCS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Apr 2022 10:02:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229664AbiDKMHu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 08:07:50 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 268723A709;
-        Mon, 11 Apr 2022 05:05:35 -0700 (PDT)
-Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23B9NnvU025178;
-        Mon, 11 Apr 2022 12:03:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=gYNUMVwDP13qlMS4+UHaJJ3PaCFPgROQJTYtqXnOX7M=;
- b=RDqgcHKph8Jm2BhrynHRzlAqx8nGWKQVGDEreK7n+J6njlw2fY/eROIb0LG1Go0keNpO
- U7B7ao4FH0/uzQKEPYrHVhNG/pJ2E7Z6UBEEa2SxZlUdVDQJZ6TEFr72vPR9TSXOEBKG
- MqlChSHpWchCsB0wZHoGw70dgQSIwe1Dr/3iyUd7QHcinyuGvNuFdGbEFCrbqw9Rsc9z
- JkcowV5iFVIqo42z4/eOag4ZGEVEYQqZe/457g+H8egdMxH/HXBM9/jRkB0BPaAeZihE
- GFX1OIArRJYPFHkICDQZB90KgaeOXTtU3/g2gqArNZA/NmuhAbDjv3WPLEAFQ6zGE6gp Sw== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3fchnqtx4t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Apr 2022 12:03:59 +0000
-Received: from m0187473.ppops.net (m0187473.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 23BAmtcM013717;
-        Mon, 11 Apr 2022 12:03:58 GMT
-Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3fchnqtx39-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Apr 2022 12:03:58 +0000
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23BC3gZm003276;
-        Mon, 11 Apr 2022 12:03:54 GMT
-Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
-        by ppma04ams.nl.ibm.com with ESMTP id 3fb1s8u242-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Apr 2022 12:03:54 +0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23BC40Q146596476
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Apr 2022 12:04:01 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1327BA4065;
-        Mon, 11 Apr 2022 12:03:52 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C9DE7A404D;
-        Mon, 11 Apr 2022 12:03:50 +0000 (GMT)
-Received: from [9.145.81.78] (unknown [9.145.81.78])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 11 Apr 2022 12:03:50 +0000 (GMT)
-Message-ID: <e971095e-1015-c348-3c24-114193ee5ff0@linux.ibm.com>
-Date:   Mon, 11 Apr 2022 14:03:50 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH 24/27] block: remove QUEUE_FLAG_DISCARD
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
-        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
-        nbd@other.debian.org, ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
-        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= 
-        <christoph.boehmwalder@linbit.com>, Coly Li <colyli@suse.de>
-References: <20220409045043.23593-1-hch@lst.de>
- <20220409045043.23593-25-hch@lst.de>
-From:   =?UTF-8?Q?Jan_H=c3=b6ppner?= <hoeppner@linux.ibm.com>
-In-Reply-To: <20220409045043.23593-25-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: fq1U6p5RSJi3IUi0XnNkXpRDl0Ogb6A0
-X-Proofpoint-ORIG-GUID: D9QlKI8GujOSuLx30db3fYGBx6ksQFZ5
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.425,FMLib:17.11.64.514
- definitions=2022-04-11_04,2022-04-11_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 priorityscore=1501
- impostorscore=0 lowpriorityscore=0 spamscore=0 bulkscore=0 phishscore=0
- adultscore=0 clxscore=1011 mlxlogscore=999 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2204110067
+        with ESMTP id S243193AbiDKOCQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 10:02:16 -0400
+Received: from out30-54.freemail.mail.aliyun.com (out30-54.freemail.mail.aliyun.com [115.124.30.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 927502FE4D;
+        Mon, 11 Apr 2022 07:00:01 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R951e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0V9qH9vn_1649685598;
+Received: from localhost(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0V9qH9vn_1649685598)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Mon, 11 Apr 2022 21:59:59 +0800
+From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     linux-block@vger.kernel.org, bostroesser@gmail.com
+Subject: [PATCH v2] scsi: target: tcmu: Fix possible data corruption
+Date:   Mon, 11 Apr 2022 21:59:58 +0800
+Message-Id: <20220411135958.21385-1-xiaoguang.wang@linux.alibaba.com>
+X-Mailer: git-send-email 2.14.4.44.g2045bb6
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/04/2022 06:50, Christoph Hellwig wrote:
-> Just use a non-zero max_discard_sectors as an indicator for discard
-> support, similar to what is done for write zeroes.
-> 
-> The only places where needs special attention is the RAID5 driver,
-> which must clear discard support for security reasons by default,
-> even if the default stacking rules would allow for it.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com> [btrfs]
-> Acked-by: Coly Li <colyli@suse.de> [bcache]
-> ---
+When tcmu_vma_fault() gets one page successfully, before the current
+context completes page fault procedure, find_free_blocks() may run in
+and call unmap_mapping_range() to unmap this page. Assume when
+find_free_blocks() completes its job firstly, previous page fault
+procedure starts to run again and completes, then one truncated page has
+beed mapped to use space, but note that tcmu_vma_fault() has gotten one
+refcount for this page, so any other subsystem won't use this page,
+unless later the use space addr is unmapped.
 
-For 
+If another command runs in later and needs to extends dbi_thresh, it may
+reuse the corresponding slot to previous page in data_bitmap, then though
+we'll allocate new page for this slot in data_area, but no page fault will
+happen again, because we have a valid map, real request's data will lose.
 
->  drivers/s390/block/dasd_fba.c       |  1 -
+Filesystem implementations will also run into this issue, but they
+usually lock page when vm_operations_struct->fault gets one page, and
+unlock page after finish_fault() completes. In truncate sides, they
+lock pages in truncate_inode_pages() to protect race with page fault.
+We can also have similar codes like filesystem to fix this issue.
 
-Acked-by: Jan Höppner <hoeppner@linux.ibm.com>
+To fix this possible data corruption, we can apply similar method like
+filesystem. For pages that are to be freed, find_free_blocks() locks
+and unlocks these pages, and make tcmu_vma_fault() also lock found page
+under cmdr_lock. With this action, for above race, find_free_blocks()
+will wait all page faults to be completed before calling
+unmap_mapping_range(), and later if unmap_mapping_range() is called,
+it will ensure stale mappings to be removed cleanly.
+
+Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+
+---
+V2:
+  Wait all possible inflight page faults to be completed in
+find_free_blocks() to fix possible stale map.
+---
+ drivers/target/target_core_user.c | 39 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index fd7267baa707..ed026f5bdb14 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -20,6 +20,7 @@
+ #include <linux/configfs.h>
+ #include <linux/mutex.h>
+ #include <linux/workqueue.h>
++#include <linux/pagemap.h>
+ #include <net/genetlink.h>
+ #include <scsi/scsi_common.h>
+ #include <scsi/scsi_proto.h>
+@@ -1657,6 +1658,20 @@ static int tcmu_check_and_free_pending_cmd(struct tcmu_cmd *cmd)
+ 	return -EINVAL;
+ }
+ 
++static void tcmu_wait_inflight_page_fault(struct tcmu_dev *udev,
++			unsigned long first, unsigned long last)
++{
++	XA_STATE(xas, &udev->data_pages, first * udev->data_pages_per_blk);
++	struct page *page;
++
++	xas_lock(&xas);
++	xas_for_each(&xas, page, (last + 1) * udev->data_pages_per_blk - 1) {
++		lock_page(page);
++		unlock_page(page);
++	}
++	xas_unlock(&xas);
++}
++
+ static u32 tcmu_blocks_release(struct tcmu_dev *udev, unsigned long first,
+ 				unsigned long last)
+ {
+@@ -1822,6 +1837,7 @@ static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
+ 	page = xa_load(&udev->data_pages, dpi);
+ 	if (likely(page)) {
+ 		get_page(page);
++		lock_page(page);
+ 		mutex_unlock(&udev->cmdr_lock);
+ 		return page;
+ 	}
+@@ -1863,6 +1879,7 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
+ 	struct page *page;
+ 	unsigned long offset;
+ 	void *addr;
++	int ret = 0;
+ 
+ 	int mi = tcmu_find_mem_index(vmf->vma);
+ 	if (mi < 0)
+@@ -1887,10 +1904,11 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
+ 		page = tcmu_try_get_data_page(udev, dpi);
+ 		if (!page)
+ 			return VM_FAULT_SIGBUS;
++		ret = VM_FAULT_LOCKED;
+ 	}
+ 
+ 	vmf->page = page;
+-	return 0;
++	return ret;
+ }
+ 
+ static const struct vm_operations_struct tcmu_vm_ops = {
+@@ -3205,6 +3223,25 @@ static void find_free_blocks(void)
+ 			udev->dbi_max = block;
+ 		}
+ 
++		/*
++		 * While reaching here, there maybe page faults occurring on
++		 * these to be released pages, and there maybe one race that
++		 * unmap_mapping_range() is called before page fault on these
++		 * pages are finished, then valid but stale map is created.
++		 *
++		 * If another command runs in later and needs to extends
++		 * dbi_thresh, it may reuse the corresponding slot to previous
++		 * page in data_bitmap, then though we'll allocate new page for
++		 * this slot in data_area, but no page fault will happen again,
++		 * because we have a valid map, command's data will lose.
++		 *
++		 * So here we lock and unlock pages that are to be released to
++		 * ensure all page faults to be completed, then following
++		 * unmap_mapping_range() can ensure stale maps to be removed
++		 * cleanly.
++		 */
++		tcmu_wait_inflight_page_fault(udev, start, end - 1);
++
+ 		/* Here will truncate the data area from off */
+ 		off = udev->data_off + (loff_t)start * udev->data_blk_size;
+ 		unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
+-- 
+2.14.4.44.g2045bb6
+
