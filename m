@@ -2,112 +2,179 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 667A1C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 17:29:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A38C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Apr 2022 17:48:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348942AbiDKRcF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Apr 2022 13:32:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46360 "EHLO
+        id S1348958AbiDKRuf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Apr 2022 13:50:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348928AbiDKRb4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 13:31:56 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28931BE3F;
-        Mon, 11 Apr 2022 10:29:42 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id CB2971F38D;
-        Mon, 11 Apr 2022 17:29:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1649698180;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=y9/RDfYGC6K6KRC0KdrprIVWfIX/zpdTiz9ROrz551U=;
-        b=I9nwx9hrwiLBwY8Cn2rQGBPnpBriJmDMs1b8oNISqOpk754k7ib2Xve0iYAZqqPcSD2SgP
-        oZEA90HfyQ7ya+rehSXEh9k5AQbwstldp6HDVnl/WGBpQS17mVXtCGXXbsCypPUDUyaMdU
-        y+Peaf55gboQyV27R4kCRTuYgY7wFX4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1649698180;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=y9/RDfYGC6K6KRC0KdrprIVWfIX/zpdTiz9ROrz551U=;
-        b=AzkdKu96rYkAsjhpJavWNTiZGL3Agdt16W1llO8/BhnjKgsTeGvgPw66Q+CklEVPEpPHBk
-        JsD+WnrQfAy3whCQ==
-Received: from ds.suse.cz (ds.suse.cz [10.100.12.205])
-        by relay2.suse.de (Postfix) with ESMTP id B0827A3B87;
-        Mon, 11 Apr 2022 17:29:40 +0000 (UTC)
-Received: by ds.suse.cz (Postfix, from userid 10065)
-        id 47973DA7F7; Mon, 11 Apr 2022 19:25:36 +0200 (CEST)
-Date:   Mon, 11 Apr 2022 19:25:36 +0200
-From:   David Sterba <dsterba@suse.cz>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
-        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph =?iso-8859-1?Q?B=F6hmwalder?= 
-        <christoph.boehmwalder@linbit.com>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        David Sterba <dsterba@suse.com>
-Subject: Re: [PATCH 25/27] block: add a bdev_discard_granularity helper
-Message-ID: <20220411172536.GV15609@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-Mail-Followup-To: dsterba@suse.cz, Christoph Hellwig <hch@lst.de>,
-        Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
-        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph =?iso-8859-1?Q?B=F6hmwalder?= <christoph.boehmwalder@linbit.com>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        David Sterba <dsterba@suse.com>
-References: <20220409045043.23593-1-hch@lst.de>
- <20220409045043.23593-26-hch@lst.de>
+        with ESMTP id S235152AbiDKRue (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 13:50:34 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 17DFE2722
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Apr 2022 10:48:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1649699293;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=UM/pY0B56ZIojYfpBYET4rQaf0XG/Qm0KUr3TRSmnlw=;
+        b=iqjhiSYHB8RsxNiJ6PRZqEBLaD10+59eLHQ7uEsZviOgcUbcE+EUHPd2o8TZRJiabpfPnG
+        AIexu1rfaN4PT9sYOuPHkrHKw3gyhKeBFenSbAwbEE71hVAgMOQzL/ilJisRddrMVGFAq2
+        5HbUjJW6COOQsv+KxIGSJcQQ6TK0x8s=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-614-JlujBegIOKC3MAc0I7WU3w-1; Mon, 11 Apr 2022 13:48:12 -0400
+X-MC-Unique: JlujBegIOKC3MAc0I7WU3w-1
+Received: by mail-qk1-f200.google.com with SMTP id i2-20020a05620a248200b0067b51fa1269so8007663qkn.19
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Apr 2022 10:48:11 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=UM/pY0B56ZIojYfpBYET4rQaf0XG/Qm0KUr3TRSmnlw=;
+        b=f4b5iyznCxNKS/FmkpxoVQq7xB2QKuBjmbJcgZ1RTEzspxYI5An9qSJmsICAEwHSZG
+         YdFKbaZnPxjYL/d4gzNWsN9kAXz6uADE2iBNQHCSSDFIV74x/DVvMLNZZGLoRUxWmfOF
+         BzOkKDJ8ujfo/KzlfgSyqRiLIYtoJWp9gNmjc5pgw3xS3Sg/FgK2KCUj5KGm5twjSAsJ
+         undOCrXR6EFgMpLq/dbMM1pD2OdtPgD6hzqEBxelZI9rugb+viQyhu1g5kEmOQz5uVqs
+         KFUBljGMHh0jUWPE6LhsO5DG6rpxiBl1RJedaNHgVW2A+tFfG3uYy/9jpx1AgnzQlG+p
+         SV6w==
+X-Gm-Message-State: AOAM5322r2UOiTSHYG9VXPeiE4sLzDTHpLWv6MO/sNPHrl+Fk8NStkw6
+        KoPb4MwGp2MpZYMMz+BDUi9iWMVFSby+0+VitsLMi0orYEmX5V+kBNSr77oU3GRZzEfZjQ6avDK
+        dO1GB2iGGn6Pkzk/2HiUYrA==
+X-Received: by 2002:a05:620a:29cb:b0:699:fee3:265a with SMTP id s11-20020a05620a29cb00b00699fee3265amr344680qkp.513.1649699291479;
+        Mon, 11 Apr 2022 10:48:11 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwQkJp+3hI9ThPxyj8PrJe1MP+oIxpg2KccPU8Yg1TBKGUS0YRlwQnXFHru9URmxPBM9smFrQ==
+X-Received: by 2002:a05:620a:29cb:b0:699:fee3:265a with SMTP id s11-20020a05620a29cb00b00699fee3265amr344671qkp.513.1649699291276;
+        Mon, 11 Apr 2022 10:48:11 -0700 (PDT)
+Received: from dell-per740-01.7a2m.lab.eng.bos.redhat.com (nat-pool-bos-t.redhat.com. [66.187.233.206])
+        by smtp.gmail.com with ESMTPSA id h27-20020ac8777b000000b002eff87a2c42sm380858qtu.4.2022.04.11.10.48.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Apr 2022 10:48:10 -0700 (PDT)
+From:   Tom Rix <trix@redhat.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Tom Rix <trix@redhat.com>
+Subject: [PATCH v2] scsi: do not leak information in ioctl
+Date:   Mon, 11 Apr 2022 13:47:56 -0400
+Message-Id: <20220411174756.2418435-1-trix@redhat.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220409045043.23593-26-hch@lst.de>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Apr 09, 2022 at 06:50:41AM +0200, Christoph Hellwig wrote:
-> Abstract away implementation details from file systems by providing a
-> block_device based helper to retrieve the discard granularity.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com> [btrfs]
+sr_ioctl.c uses this pattern
 
-This ^^^^ is for drbd
+  result = sr_do_ioctl(cd, &cgc);
+  to-user = buffer[];
+  kfree(buffer);
+  return result;
 
-> Acked-by: Ryusuke Konishi <konishi.ryusuke@gmail.com>
-> Acked-by: David Sterba <dsterba@suse.com> [btrfs]
+Use a buffer without checking leaks information.
+Check result and jump over the use of buffer
+if there is an error.
+
+  result = sr_do_ioctl(cd, &cgc);
+  if (result)
+    goto err;
+  to-user = buffer[];
+err:
+  kfree(buffer);
+  return result;
+
+Additionally initialize the buffer to zero.
+
+This problem can be seen in the 2.4.0 kernel
+However this scm only goes back as far as 2.6.12
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Tom Rix <trix@redhat.com>
+---
+v2 : split from combined pcd,scsi patch
+
+ drivers/scsi/sr_ioctl.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+index ddd00efc4882..fbdb5124d7f7 100644
+--- a/drivers/scsi/sr_ioctl.c
++++ b/drivers/scsi/sr_ioctl.c
+@@ -41,7 +41,7 @@ static int sr_read_tochdr(struct cdrom_device_info *cdi,
+ 	int result;
+ 	unsigned char *buffer;
+ 
+-	buffer = kmalloc(32, GFP_KERNEL);
++	buffer = kzalloc(32, GFP_KERNEL);
+ 	if (!buffer)
+ 		return -ENOMEM;
+ 
+@@ -55,10 +55,13 @@ static int sr_read_tochdr(struct cdrom_device_info *cdi,
+ 	cgc.data_direction = DMA_FROM_DEVICE;
+ 
+ 	result = sr_do_ioctl(cd, &cgc);
++	if (result)
++		goto err;
+ 
+ 	tochdr->cdth_trk0 = buffer[2];
+ 	tochdr->cdth_trk1 = buffer[3];
+ 
++err:
+ 	kfree(buffer);
+ 	return result;
+ }
+@@ -71,7 +74,7 @@ static int sr_read_tocentry(struct cdrom_device_info *cdi,
+ 	int result;
+ 	unsigned char *buffer;
+ 
+-	buffer = kmalloc(32, GFP_KERNEL);
++	buffer = kzalloc(32, GFP_KERNEL);
+ 	if (!buffer)
+ 		return -ENOMEM;
+ 
+@@ -86,6 +89,8 @@ static int sr_read_tocentry(struct cdrom_device_info *cdi,
+ 	cgc.data_direction = DMA_FROM_DEVICE;
+ 
+ 	result = sr_do_ioctl(cd, &cgc);
++	if (result)
++		goto err;
+ 
+ 	tocentry->cdte_ctrl = buffer[5] & 0xf;
+ 	tocentry->cdte_adr = buffer[5] >> 4;
+@@ -98,6 +103,7 @@ static int sr_read_tocentry(struct cdrom_device_info *cdi,
+ 		tocentry->cdte_addr.lba = (((((buffer[8] << 8) + buffer[9]) << 8)
+ 			+ buffer[10]) << 8) + buffer[11];
+ 
++err:
+ 	kfree(buffer);
+ 	return result;
+ }
+@@ -384,7 +390,7 @@ int sr_get_mcn(struct cdrom_device_info *cdi, struct cdrom_mcn *mcn)
+ {
+ 	Scsi_CD *cd = cdi->handle;
+ 	struct packet_command cgc;
+-	char *buffer = kmalloc(32, GFP_KERNEL);
++	char *buffer = kzalloc(32, GFP_KERNEL);
+ 	int result;
+ 
+ 	if (!buffer)
+@@ -400,10 +406,13 @@ int sr_get_mcn(struct cdrom_device_info *cdi, struct cdrom_mcn *mcn)
+ 	cgc.data_direction = DMA_FROM_DEVICE;
+ 	cgc.timeout = IOCTL_TIMEOUT;
+ 	result = sr_do_ioctl(cd, &cgc);
++	if (result)
++		goto err;
+ 
+ 	memcpy(mcn->medium_catalog_number, buffer + 9, 13);
+ 	mcn->medium_catalog_number[13] = 0;
+ 
++err:
+ 	kfree(buffer);
+ 	return result;
+ }
+-- 
+2.27.0
+
