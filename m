@@ -2,50 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DC11C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 18:31:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB5C3C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 18:32:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244045AbiDLSeA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 14:34:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47210 "EHLO
+        id S244045AbiDLSe4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 14:34:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232756AbiDLSd6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 14:33:58 -0400
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B3B94EA12
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:31:39 -0700 (PDT)
-Received: by mail-pg1-f179.google.com with SMTP id s137so15303355pgs.5
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:31:39 -0700 (PDT)
+        with ESMTP id S231543AbiDLSey (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 14:34:54 -0400
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19E7B4EDF5
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:32:35 -0700 (PDT)
+Received: by mail-pg1-f180.google.com with SMTP id q19so18011181pgm.6
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:32:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :mime-version:content-transfer-encoding;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
         bh=cP5Vg5bgJ3/TD/53bijOMzVhUUEpAaK5FlL2Lu02NaM=;
-        b=1H3pe/v/nLLCuRXbnKSFVcvsKqgSep+pkjLFS4TISYOez0WXcaUUwleSo4fkOQlYBv
-         7jEYTfY4JWHMY4hAYIZnZzAB6o82VyWIHkM6PanB+30lxr5xXtVxB6jvJfW39g0wc+fx
-         f2WL33OTThiLXuHn9tEnBJ5ZiSc/9z/EbHOPC9raCXm0FjPR6DVR0BTUS7LvMkVHwIBB
-         JKjSlEKB0W/fXc8F50DU3QeM7MHcIFPlNVvFxvcvTZfgTh7akdRETJ3U/KCXXG0zw729
-         niofcM5INciqVBKcnPHJ2G7kh7sWXx5RPfayPO85XazYOaQjx0CYZ9Pmc+2Z5VPHG41G
-         0BwA==
-X-Gm-Message-State: AOAM531gq/eCBoWY34etP6fo2FH+3El3iWd5VjuV/8igBu5ZDTovk4j1
-        z3dHRuqqWH8l7uXHRjMK5mlO/zjr0AN4uQ==
-X-Google-Smtp-Source: ABdhPJzhhuvS24mvfHf84odI31GTjuExNxXMcYmG7nZT91FDfY19FeqU8vTHGNRtiCuRKBiVrsdPHA==
-X-Received: by 2002:a05:6a00:1a49:b0:505:7ab3:e5c7 with SMTP id h9-20020a056a001a4900b005057ab3e5c7mr23676603pfv.62.1649788298237;
-        Tue, 12 Apr 2022 11:31:38 -0700 (PDT)
+        b=4GJ4356cVerD4YWGG1gDAnRcFBTWGEKq2aPl+Jil4mkS5UZtQ4l+8VYes1eBhWuQxC
+         6eESMkjuTgPyI4Fed82KsQxtdrFnp28ff5BO96nlshIVTL7Oa3IX1eGO02x1DTvvjpqK
+         lYYfVwonMhtyU38/FxB2/AKf6HK5dbQhAguMuEypFAW1tSdPqVGHLVL9EKDAJZMjCVgG
+         3XidzbGaPfVbFkn3kSo2UY9ryhaDmjMXmfj8PLIcrUE17ZjtBXwUIm32IHQSux6Sv0h0
+         AvNzV/0uFz1+ZbyAE8Vs16bbRJjHFp2/1xMs7GYOARCLQeVP4Q2QEfaqJOvBiRk0VzI8
+         ZdoQ==
+X-Gm-Message-State: AOAM532bgSRaKTVRWXKz9SdoxDPV9MfIm46gW1rqhxkqF4Tvzi+A+SHq
+        4FzuaKzlDpMFqi7d6j5DLqY=
+X-Google-Smtp-Source: ABdhPJwG9URkFnyiK7VrlYrYHWEQveiYU0qtfLDp0guvd6YoJ1F6KexByUb38Caz+VqsHHEJTy888Q==
+X-Received: by 2002:a63:5907:0:b0:382:2f93:5467 with SMTP id n7-20020a635907000000b003822f935467mr31308583pgb.460.1649788354219;
+        Tue, 12 Apr 2022 11:32:34 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:d4b2:56ee:d001:c159])
-        by smtp.gmail.com with ESMTPSA id g15-20020a056a0023cf00b004e17e11cb17sm41754540pfc.111.2022.04.12.11.31.36
+        by smtp.gmail.com with ESMTPSA id s14-20020a63dc0e000000b0039cc76bda79sm3539523pgg.40.2022.04.12.11.32.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Apr 2022 11:31:37 -0700 (PDT)
+        Tue, 12 Apr 2022 11:32:33 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
 Subject: [PATCH v2 29/29] scsi: ufs: Split the drivers/scsi/ufs directory
-Date:   Tue, 12 Apr 2022 11:31:31 -0700
-Message-Id: <20220412183131.3729476-1-bvanassche@acm.org>
+Date:   Tue, 12 Apr 2022 11:32:28 -0700
+Message-Id: <20220412183228.3729720-1-bvanassche@acm.org>
 X-Mailer: git-send-email 2.36.0.rc0.470.gd361397f0d-goog
-Reply-To: <20220412181853.3715080-1-bvanassche@acm.org>
+In-Reply-To: <20220412181853.3715080-1-bvanassche@acm.org>
+References: <20220412181853.3715080-1-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
