@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD23BC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 23:34:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25CDDC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 23:34:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231329AbiDLXgg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 19:36:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40906 "EHLO
+        id S231151AbiDLXgl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 19:36:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231308AbiDLXcr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 19:32:47 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53CB88CDB6
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:18 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id 12so248327pll.12
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:18 -0700 (PDT)
+        with ESMTP id S231351AbiDLXcx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 19:32:53 -0400
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F882C55B3
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:27 -0700 (PDT)
+Received: by mail-pj1-x1032.google.com with SMTP id o5-20020a17090ad20500b001ca8a1dc47aso4403523pju.1
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=zaMEUCC1A+uyCQTvpb71rcxXx7DO/IPcmKR6u1Qa62s=;
-        b=kxbgXRJ/2Qi5sVgf/rYjGQN8pG08UKfQDNQFH8rsw7okIJfS3ueE+XtwAt0oGztFH3
-         dVdEr+niqbO/9eFrkw43u2OmexWEhLXnFn1bNHa2EFT5P6PoGFXWAG3sE722AFQN6Fwm
-         8zchin9/1BBnd/PoXnJjVBxdKz1sXl1DpI+WIs+DYC2+titws0MWB/C8zb2OekaSsWQ5
-         Yz6fuEoAIP1dreK1MxA/3WgGDN83l6BEZtDdKGAsWUJQGfIgvPD1bfIkRwhPk6KBVfxq
-         u1jmtJA+Y8uQZKxjBN8J0G6LtRk4FuhX3ku9gYK6vX8NcuKpWGb45Y6LzmrS4jK37i3j
-         a3yg==
+        bh=A8x10dniHeRN0E/sm+bVJIFGFElYIDPha5Gn5CDecrc=;
+        b=nacmmRgwoCZwGxhmF6WF3Kq2dGLXxJ+7+9KX187XBBL7TJpQJFbviy5PCi+684YCBU
+         Zl0kzEzH6i+HVVNDqdTLvvdvwys5LaGaTJYtiA/l/I9FAHuyoWvmeR8ymQVNovS1fj8b
+         7QTjoCfAp0imPS3HVe8puP5cZArsdFr0+Na1bErA/pGf9P6tRws5OPY4Ejq9V1wfrrl9
+         P31q2VXELnJ03KuRw1JhZ6e2DLhCcxAnlEDr8CFp0oJdOKTaYf5yN+ioVcRI8uWKr5oT
+         3x4TrF7zaE2F/HI0ropp2jHzT/OHSV9mNxklZ9adZ0yEQv6OpoG16gC827S0yk/AnceH
+         IS/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=zaMEUCC1A+uyCQTvpb71rcxXx7DO/IPcmKR6u1Qa62s=;
-        b=tZv3CVGXttIEsZYeeIUjnMqSTvLhg3wWNCe2ZEtpWvrY4SWKpdK7F+5KqSZ0IDEghA
-         d7nAHxbwLAU5JvDs87IFn2U6PwXdMjbsSi/bKyIS9Z0cchfQ0gepzuE1uUAZg4oZb5w5
-         wUCXCB/0wDxXKDFmRXyIMOuRYrckPgzCtLPjOo/4Yqs8maTfWLuYvdnXjpahoIAViAPC
-         9HEYNCIGt3k1uKAHF0Wt67/Ea29J0eLv7+KKI05gQYFtMtmIcQTBTO7DOgYQJ7yKoFly
-         P6YY0Lc9Muf8Mtnf4VLiQz/1/AxOn0Vsq7xhtmNATyUwT7ey9Kjzjsx0v3ctuHMeDRbf
-         iCmQ==
-X-Gm-Message-State: AOAM533HKgGeUw8gCaMgtD+4p7BA0Se1bLaPkZbcu+49YktpHrKOvpFq
-        dtLQY2vWK/mCFfVXC0MIrrsnuchf10A=
-X-Google-Smtp-Source: ABdhPJzHjKqXridave79HvY6roG3K1lJCSkt83uehvFQMgfAzOwDXzsB+TZrjD3fbZLsQT33ufuDeg==
-X-Received: by 2002:a17:903:240f:b0:156:8e81:a0a3 with SMTP id e15-20020a170903240f00b001568e81a0a3mr38995833plo.13.1649802017763;
-        Tue, 12 Apr 2022 15:20:17 -0700 (PDT)
+        bh=A8x10dniHeRN0E/sm+bVJIFGFElYIDPha5Gn5CDecrc=;
+        b=fE/kDGJVLoBB3hZKoK4nbasD3snH7r/NFZDquqqdFWJh0cmO9glGh55uGzWhe0Z0g6
+         ZrtCLxdtEZxrX+Ly9umnlRefY0yPc1nPFJVl0obxw3Uvw13nrj87Eq1ChwzSYOeV8u8T
+         7i06q3HXgtBGlrv/YnuJBZPpIqhbct2Fg6vzmFBUaeCMYrWgZ8lkkqVNfbzXWLPMNaKt
+         zTufw14QJuM1pyE7xVUIodHxsZUc0Po4STTfiuz1MLQdQ6HB13qJYPlGkxQNuXisiwpO
+         j9xPRl6Worqq+DvfF14ki0yxLSfljKEvq+b4KPryeY9KEVpriBU0eLlbGmggt78mT24x
+         Mjkw==
+X-Gm-Message-State: AOAM532qQ/3w98/6Znwq/s98iXzNT2CaD1R2Efg6alWecKuME+IGKGIn
+        wUl4B4/tQjyn6+G0SPt8kzCHD6w+SDc=
+X-Google-Smtp-Source: ABdhPJz2RkExfQb22/xSwsiQ4VDIVpv/sfeHS/3Naiwe1e5mqhRcCVt9m9BuGZEoVzTWHagUcdh/hw==
+X-Received: by 2002:a17:90b:3144:b0:1cd:37de:3bbc with SMTP id ip4-20020a17090b314400b001cd37de3bbcmr4006958pjb.110.1649802026567;
+        Tue, 12 Apr 2022 15:20:26 -0700 (PDT)
 Received: from mail-lvn-it-01.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id g15-20020a056a000b8f00b004fa9dbf27desm40429824pfj.55.2022.04.12.15.20.17
+        by smtp.gmail.com with ESMTPSA id g15-20020a056a000b8f00b004fa9dbf27desm40429824pfj.55.2022.04.12.15.20.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Apr 2022 15:20:17 -0700 (PDT)
+        Tue, 12 Apr 2022 15:20:26 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 03/26] lpfc: Fix diagnostic fw logging after a function reset
-Date:   Tue, 12 Apr 2022 15:19:45 -0700
-Message-Id: <20220412222008.126521-4-jsmart2021@gmail.com>
+Subject: [PATCH 15/26] lpfc: Fix call trace observed during I/O with CMF enabled
+Date:   Tue, 12 Apr 2022 15:19:57 -0700
+Message-Id: <20220412222008.126521-16-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20220412222008.126521-1-jsmart2021@gmail.com>
 References: <20220412222008.126521-1-jsmart2021@gmail.com>
@@ -63,53 +63,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-lpfc_sli4_ras_setup routine is only called from lpfc_pci_probe_one_s4
-routine, which means diagnostic fw logging initialization only occurs
-during probing.
+The following was seen with CMF enabled:
 
-Thus, any path involving a reset of the HBA that restarts the
-state of the SLI port does not reinitialize diagnostic fw logging.
+BUG: using smp_processor_id() in preemptible
+code: systemd-udevd/31711
+kernel: caller is lpfc_update_cmf_cmd+0x214/0x420  [lpfc]
+kernel: CPU: 12 PID: 31711 Comm: systemd-udevd
+kernel: Call Trace:
+kernel: <TASK>
+kernel: dump_stack_lvl+0x44/0x57
+kernel: check_preemption_disabled+0xbf/0xe0
+kernel: lpfc_update_cmf_cmd+0x214/0x420 [lpfc]
+kernel: lpfc_nvme_fcp_io_submit+0x23b4/0x4df0 [lpfc]
 
-Move lpfc_sli4_ras_setup into lpfc_sli4_hba_setup so that the
-LOWLEVEL_SET_DIAG_LOG_OPTIONS mailbox command can be sent after a
-function reset.
+this_cpu_ptr() calls smp_processor_id() in a preemptible context.
+
+Fix by using per_cpu_ptr() with raw_smp_processor_id() instead.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 3 ---
- drivers/scsi/lpfc/lpfc_sli.c  | 3 +++
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index f9cd4b72d949..7dfd47dcaad9 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -14832,9 +14832,6 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	/* Check if there are static vports to be created. */
- 	lpfc_create_static_vport(phba);
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index c3daf7a3e123..a949fe53651a 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -3835,7 +3835,7 @@ lpfc_update_cmf_cmpl(struct lpfc_hba *phba,
+ 		else
+ 			time = div_u64(time + 500, 1000); /* round it */
  
--	/* Enable RAS FW log support */
--	lpfc_sli4_ras_setup(phba);
--
- 	timer_setup(&phba->cpuhp_poll_timer, lpfc_sli4_poll_hbtimer, 0);
- 	cpuhp_state_add_instance_nocalls(lpfc_cpuhp_state, &phba->cpuhp);
- 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index bda2a7ba4e77..7c86271f05fd 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -8864,6 +8864,9 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+-		cgs = this_cpu_ptr(phba->cmf_stat);
++		cgs = per_cpu_ptr(phba->cmf_stat, raw_smp_processor_id());
+ 		atomic64_add(size, &cgs->rcv_bytes);
+ 		atomic64_add(time, &cgs->rx_latency);
+ 		atomic_inc(&cgs->rx_io_cnt);
+@@ -3879,7 +3879,7 @@ lpfc_update_cmf_cmd(struct lpfc_hba *phba, uint32_t size)
+ 			atomic_set(&phba->rx_max_read_cnt, size);
  	}
- 	mempool_free(mboxq, phba->mbox_mem_pool);
  
-+	/* Enable RAS FW log support */
-+	lpfc_sli4_ras_setup(phba);
-+
- 	phba->hba_flag |= HBA_SETUP;
- 	return rc;
- 
+-	cgs = this_cpu_ptr(phba->cmf_stat);
++	cgs = per_cpu_ptr(phba->cmf_stat, raw_smp_processor_id());
+ 	atomic64_add(size, &cgs->total_bytes);
+ 	return 0;
+ }
 -- 
 2.26.2
 
