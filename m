@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6FBBC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 01:02:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 046A2C43219
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 01:02:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343705AbiDLBEf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Apr 2022 21:04:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47488 "EHLO
+        id S1344060AbiDLBEk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Apr 2022 21:04:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349288AbiDLA7h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 20:59:37 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05F8B37BD2;
-        Mon, 11 Apr 2022 17:52:55 -0700 (PDT)
+        with ESMTP id S1348293AbiDLA7R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 20:59:17 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAC5E377C3;
+        Mon, 11 Apr 2022 17:52:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 689AC60DED;
-        Tue, 12 Apr 2022 00:52:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9E8CC385AA;
-        Tue, 12 Apr 2022 00:52:53 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3B404B815C8;
+        Tue, 12 Apr 2022 00:52:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F62AC385A9;
+        Tue, 12 Apr 2022 00:52:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649724774;
-        bh=t7Ek2bfIGx3XDB9l3vX26eAquej9L1q8mFbYIgiCgz8=;
+        s=k20201202; t=1649724751;
+        bh=CE8uiITvTHHnwzEeKk6MBoEMlDrcSfssjlvn4KcXDDs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NRtjSLaWocyKriPF2VvcHypkhIhYCRJp8AX93HIWtWl0YVoz8FHX/kXH13bBXKt/+
-         MLM3wWk3mjn18nK8ieMK5QNmmgF0TigP+kkUqP6djf1TJb1W8zZrWabZ86enFpEDz8
-         iYkfOMZrvG0pEWWj+QRL4T7fOQrF8DDk7WeVmY+XuyJgzZcd/Qsj8uVENqcbJAjG5m
-         XWu2EpG50BVc1zGSAtMuW3camLYH7JJya9DO8dQy3xRUsDX7H08qMGSUb4HVb6m9EC
-         iPeYJ4B8ljTNIcRD2K6lW/lDF+vWpb+o+9XaIkmhaLBkOSPdYVXzGrX5XUTGqimW9T
-         uAnWSVIG4Dh0Q==
+        b=j1yA3anDWdBSayw4VI5BoZE6Tumuaxg/zKxMpePx44k2IoclWj4q8G9djhvQSyx8J
+         iJo+5ei2cH353NhcdSUUmX0F0KsqttAucZp9ImFQpiUvIZQa7CRV6+pyZaHP4cEXF7
+         ZxI7BIi/K+cCEhURWoFrCouRU38crX7p8ZWxVpEk3iLpxXcy4tJRNPQjBODGhyOxYA
+         6sXXiIW3OmfbG/KnUM/ly/iZKwIqkD5oZJkJutzS7qGY748OuFbqzcx1rTgxU+/WcP
+         xAFjbH0wcRskSrgvZkvUmznGNNMglPq917T6e+cAIExO4R6SBbJrfahHdyYMLNYplP
+         5LP3vozL6aWAg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
@@ -38,12 +38,12 @@ Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
         Sasha Levin <sashal@kernel.org>, mikecyr@linux.ibm.com,
         jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 3/7] scsi: ibmvscsis: Increase INITIAL_SRP_LIMIT to 1024
-Date:   Mon, 11 Apr 2022 20:52:44 -0400
-Message-Id: <20220412005248.351701-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 05/11] scsi: ibmvscsis: Increase INITIAL_SRP_LIMIT to 1024
+Date:   Mon, 11 Apr 2022 20:52:14 -0400
+Message-Id: <20220412005222.351554-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220412005248.351701-1-sashal@kernel.org>
-References: <20220412005248.351701-1-sashal@kernel.org>
+In-Reply-To: <20220412005222.351554-1-sashal@kernel.org>
+References: <20220412005222.351554-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -76,10 +76,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 5ed28111c3c3..569b662e19e7 100644
+index 25d2741cdf96..b97140661119 100644
 --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
 +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -43,7 +43,7 @@
+@@ -44,7 +44,7 @@
  
  #define IBMVSCSIS_VERSION	"v0.2"
  
