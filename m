@@ -2,49 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49043C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 590AEC4332F
 	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 01:02:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239351AbiDLBE6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Apr 2022 21:04:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58874 "EHLO
+        id S1344676AbiDLBFC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Apr 2022 21:05:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343957AbiDLA5J (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 20:57:09 -0400
+        with ESMTP id S1345200AbiDLA63 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 20:58:29 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D47642612C;
-        Mon, 11 Apr 2022 17:49:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D995A35AA3;
+        Mon, 11 Apr 2022 17:51:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 22EB161800;
-        Tue, 12 Apr 2022 00:49:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5955DC385A9;
-        Tue, 12 Apr 2022 00:49:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7684960B2F;
+        Tue, 12 Apr 2022 00:51:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 082E0C385A9;
+        Tue, 12 Apr 2022 00:51:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649724585;
-        bh=frfWCP/WFjSy1bdWI3vnHvvSGgCADe10jnfJswe0OCM=;
+        s=k20201202; t=1649724668;
+        bh=5TNfAkGdooXx4QD2kDXi4ZKavUADi/pYubz4lYm1M0k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Rbo9ABDom7YgarALGxAcKJrexk5z8rseCIreNiWhe4bNp8oLQcuQUjIe8Vygi1BHF
-         dz8IvENHMovgU2mDLCxRiVYAhuMUBgBOfA3PjGR926+dCZu7W6ExjNeFN0GfQauXI0
-         qGUfapniqly079/gtZ2rdql2YbH1WrHySuY2o5zhZvqZq1JA8FoYddYqCZf6VNhdSY
-         tUUfvkVbczTWPmTDClb2nJfbA6c1uMnwpJ8VvX7NcN/46LxKQPEzjTyjo8+kayGMy3
-         GhVLDX/Ici3x1fwdiOwcXS1wDJBuxvzEyAS8RHGkJcBo8cNV+D4vaLIDkkg2f0C0RD
-         EP5FSYrU5SKcw==
+        b=hgrJMPEu0WgQnX9tu26ONO+l9GXkUpab7w8ZZpE47dX4ww1F+HIGSJVs/Q5evRd55
+         QHANpDJam8Zmu4bwsce49sreI/PW/s66YkeZQf6j9cv2MOTxHjFWcPAfspk5yCGwAd
+         NKTKkPWKHmjlZAbEQWDMTr+nW06ejg79sMmtExtglsW7Jv/gkYsuyYhA3YWiApIUoX
+         9PyokeqUn+48i1mDpjb1ZF8JdLFa96czP30t8KccEOQonyYxJnYzro/MMdHMBMR7oQ
+         +lS+aR8PQBdiq+XwRk/ZyMu0JXtK4GpD6rqAetjl3ZK73XwA0ShBWnKUPMIujL+dNe
+         NLHWYOhFg/AFw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>,
+        Bodo Stroesser <bostroesser@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 12/30] scsi: lpfc: Fix queue failures when recovering from PCI parity error
-Date:   Mon, 11 Apr 2022 20:48:46 -0400
-Message-Id: <20220412004906.350678-12-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 07/21] scsi: target: tcmu: Fix possible page UAF
+Date:   Mon, 11 Apr 2022 20:50:26 -0400
+Message-Id: <20220412005042.351105-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220412004906.350678-1-sashal@kernel.org>
-References: <20220412004906.350678-1-sashal@kernel.org>
+In-Reply-To: <20220412005042.351105-1-sashal@kernel.org>
+References: <20220412005042.351105-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,44 +52,55 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
 
-[ Upstream commit df0101197c4d9596682901631f3ee193ed354873 ]
+[ Upstream commit a6968f7a367f128d120447360734344d5a3d5336 ]
 
-When recovering from a pci-parity error the driver is failing to re-create
-queues, causing recovery to fail. Looking deeper, it was found that the
-interrupt vector count allocated on the recovery was fewer than the vectors
-originally allocated. This disparity resulted in CPU map entries with stale
-information. When the driver tries to re-create the queues, it attempts to
-use the stale information which indicates an eq/interrupt vector that was
-no longer created.
+tcmu_try_get_data_page() looks up pages under cmdr_lock, but it does not
+take refcount properly and just returns page pointer. When
+tcmu_try_get_data_page() returns, the returned page may have been freed by
+tcmu_blocks_release().
 
-Fix by clearng the cpup map array before enabling and requesting the IRQs
-in the lpfc_sli_reset_slot_s4 routine().
+We need to get_page() under cmdr_lock to avoid concurrent
+tcmu_blocks_release().
 
-Link: https://lore.kernel.org/r/20220317032737.45308-4-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20220311132206.24515-1-xiaoguang.wang@linux.alibaba.com
+Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
+Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/target/target_core_user.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 1149bfc42fe6..134e4ee5dc48 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -13614,6 +13614,8 @@ lpfc_io_slot_reset_s4(struct pci_dev *pdev)
- 	psli->sli_flag &= ~LPFC_SLI_ACTIVE;
- 	spin_unlock_irq(&phba->hbalock);
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 71144e33272a..077c56cbed4e 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1488,6 +1488,7 @@ static struct page *tcmu_try_get_block_page(struct tcmu_dev *udev, uint32_t dbi)
+ 	mutex_lock(&udev->cmdr_lock);
+ 	page = tcmu_get_block_page(udev, dbi);
+ 	if (likely(page)) {
++		get_page(page);
+ 		mutex_unlock(&udev->cmdr_lock);
+ 		return page;
+ 	}
+@@ -1526,6 +1527,7 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
+ 		/* For the vmalloc()ed cmd area pages */
+ 		addr = (void *)(unsigned long)info->mem[mi].addr + offset;
+ 		page = vmalloc_to_page(addr);
++		get_page(page);
+ 	} else {
+ 		uint32_t dbi;
  
-+	/* Init cpu_map array */
-+	lpfc_cpu_map_array_init(phba);
- 	/* Configure and enable interrupt */
- 	intr_mode = lpfc_sli4_enable_intr(phba, phba->intr_mode);
- 	if (intr_mode == LPFC_INTR_ERROR) {
+@@ -1536,7 +1538,6 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
+ 			return VM_FAULT_SIGBUS;
+ 	}
+ 
+-	get_page(page);
+ 	vmf->page = page;
+ 	return 0;
+ }
 -- 
 2.35.1
 
