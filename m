@@ -2,90 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69EDDC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 10:02:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35A7FC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 10:02:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230422AbiDLKEX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 06:04:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55204 "EHLO
+        id S232517AbiDLKE0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 06:04:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355061AbiDLIGz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 04:06:55 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B9DB54A934;
-        Tue, 12 Apr 2022 00:37:10 -0700 (PDT)
-X-IronPort-AV: E=Sophos;i="5.90,253,1643641200"; 
-   d="scan'208";a="117519937"
-Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 12 Apr 2022 16:37:07 +0900
-Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 254A2400F4F6;
-        Tue, 12 Apr 2022 16:37:07 +0900 (JST)
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com, robh+dt@kernel.org,
-        krzk+dt@kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH 3/7] ufs: add UFSHCD_QUIRK_HIBERN_FASTAUTO
-Date:   Tue, 12 Apr 2022 16:36:43 +0900
-Message-Id: <20220412073647.3808493-4-yoshihiro.shimoda.uh@renesas.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220412073647.3808493-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20220412073647.3808493-1-yoshihiro.shimoda.uh@renesas.com>
+        with ESMTP id S1381855AbiDLIYP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 04:24:15 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D9ED56203;
+        Tue, 12 Apr 2022 00:57:50 -0700 (PDT)
+Received: from fraeml734-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KcyhJ1rfkz67xbc;
+        Tue, 12 Apr 2022 15:55:44 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml734-chm.china.huawei.com (10.206.15.215) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 12 Apr 2022 09:57:45 +0200
+Received: from [10.47.91.197] (10.47.91.197) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Tue, 12 Apr
+ 2022 08:57:44 +0100
+Message-ID: <b6af3fe8-db9a-b5dc-199f-21c05d7664a2@huawei.com>
+Date:   Tue, 12 Apr 2022 08:57:39 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
+To:     "Ewan D. Milne" <emilne@redhat.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Alim Akhtar" <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Doug Gilbert" <dgilbert@interlog.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     <james.smart@broadcom.com>
+References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
+ <2a88a992-641a-b3ff-fe39-7a61fff87cb6@huawei.com>
+ <4c3be5b6-50ef-9e9a-6cee-9642df943342@linaro.org>
+ <7b3885e3-dbae-ff0b-21dc-c28d635d950b@huawei.com>
+ <c121430b1b5c8f5816b2b42b9178d00889260c90.camel@redhat.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <c121430b1b5c8f5816b2b42b9178d00889260c90.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.91.197]
+X-ClientProxiedBy: lhreml725-chm.china.huawei.com (10.201.108.76) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add UFSHCD_QUIRK_HIBERN_FASTAUTO for a broken host controller of
-the auto-hibernate capability but it's FASTAUTO only.
+On 08/04/2022 20:31, Ewan D. Milne wrote:
+> On Fri, 2022-04-08 at 13:57 +0100, John Garry wrote:
+>> On 08/04/2022 13:32, Krzysztof Kozlowski wrote:
+>>> On 08/04/2022 14:14, John Garry wrote:
+>>>> On 08/04/2022 11:30, Krzysztof Kozlowski wrote:
+>>>>> Several pointers to 'struct scsi_host_template' do not modify it, so
+>>>>> made them const for safety.
+>>>>>
+>>>> Is this standard practice? What is so special here?
+>>> This is standard practice and there is nothing special here. Pointers to
+>>> const are preferred because:
+>>> 1. They add safety if data is actually const. This is not yet the case,
+>>> but scsi_host_template allocation could be made const with some effort.
+> 
+> This seems unlikely, because some drivers, e.g. vmw_pvscsi and scsi_debug,
+> modify the scsi_host_template based on things like module parameters.
+>
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
----
- drivers/scsi/ufs/ufshcd.c | 9 +++++++--
- drivers/scsi/ufs/ufshcd.h | 6 ++++++
- 2 files changed, 13 insertions(+), 2 deletions(-)
+The standard flow is:
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a7bb3945c7c6..adc059a86e1e 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4247,8 +4247,13 @@ static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
- 	if (hba->max_pwr_info.is_valid)
- 		return 0;
- 
--	pwr_info->pwr_tx = FAST_MODE;
--	pwr_info->pwr_rx = FAST_MODE;
-+	if (hba->quirks & UFSHCD_QUIRK_HIBERN_FASTAUTO) {
-+		pwr_info->pwr_tx = FASTAUTO_MODE;
-+		pwr_info->pwr_rx = FASTAUTO_MODE;
-+	} else {
-+		pwr_info->pwr_tx = FAST_MODE;
-+		pwr_info->pwr_rx = FAST_MODE;
-+	}
- 	pwr_info->hs_rate = PA_HS_MODE_B;
- 
- 	/* Get the connected lane count */
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 1745144eb904..d14cc48226ce 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -608,6 +608,12 @@ enum ufshcd_quirks {
- 	 * 64-bit addressing supported capability but it doesn't work.
- 	 */
- 	UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS		= 1 << 17,
-+
-+	/*
-+	 * This quirk needs to be enabled if the host controller has
-+	 * auto-hibernate capability but it's FASTAUTO only.
-+	 */
-+	UFSHCD_QUIRK_HIBERN_FASTAUTO			= 1 << 18,
- };
- 
- enum ufshcd_caps {
--- 
-2.25.1
+shost = scsi_host_alloc(sht, )
 
+// modify shost, like
+shost->cmd_per_lun = 5;
+
+scsi_add_host(shost)
+
+Is there some reason for which those two drivers can't follow that?
+
+>>
+>> To me this seems better, but I think that some drivers might modify
+>> their scsi_host_template (so not possible)
+> 
+> Several drivers modify scsi_host_template, e.g. .can_queue, .cmd_per_lun
+> 
+> There is also code in lpfc_create_port() that initializes a scsi_host_template
+> that is embedded in the lpfc_hba struct.  I don't think it gets modified after
+> scsi_add_host() but it seems like driver maintainers might expect to be able
+> to do so, in general.
+> 
+
+Even so, I don't see why other drivers cannot declare their 
+scsi_host_template as const. C would have no problem with sht not be 
+being const for this:
+
+struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, )
+
+thanks,
+John
