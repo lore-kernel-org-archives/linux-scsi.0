@@ -2,82 +2,232 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A5CDC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 15:53:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A66FC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 17:13:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348933AbiDLPzX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 11:55:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51642 "EHLO
+        id S1358008AbiDLRPk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 13:15:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235086AbiDLPzW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 11:55:22 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9022C5F8F3;
-        Tue, 12 Apr 2022 08:53:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description;
-        bh=sdMxRKC7g2xwH9SumLE9xAEvXKx1mjNHvAlvUMvX6aA=; b=DQ5qgG7+24m/Do8CVMepiBekPz
-        YAW5X8q8NsE4IecqvxyI3a7vc0ON2TTbqShrZ696uctI7I5eF5bIJKwPz+1torsxTTT4xqAdl8IKZ
-        zkS92uPtdJnO3Pi9q0Msgo/cYg7CGuNSPRpAMMF58WFoSka7fEBi6jT05TIY/trFxkZ9u2bpF1X2l
-        TwMug4wtanFBuCyi5D01c/9MwlrEGAbl+JFsK9HijivBqWZAYwgvEYqjqNOrbsGoJnk3EKn/tWtTv
-        Zwih7L5z1/mknTF9fZwlJuu2ReSxy1m5mKwL948wrzNrE2U4ewVZ1A1AfffHcV7Rf0IIK6AXd9q5W
-        U8mLVJhQ==;
-Received: from [2601:1c0:6280:3f0::aa0b]
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1neIoq-00DUD2-De; Tue, 12 Apr 2022 15:52:40 +0000
-Message-ID: <4a90c2f4-2a49-5e70-2454-aca8313ab068@infradead.org>
-Date:   Tue, 12 Apr 2022 08:52:34 -0700
+        with ESMTP id S1347799AbiDLRPk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 13:15:40 -0400
+Received: from mail-oa1-x2b.google.com (mail-oa1-x2b.google.com [IPv6:2001:4860:4864:20::2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A90A360AB7
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 10:13:20 -0700 (PDT)
+Received: by mail-oa1-x2b.google.com with SMTP id 586e51a60fabf-deb9295679so21440551fac.6
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 10:13:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=TDPbcSp/vDTixVI6qzYrMBMUYnORkP5HblVB6RjbSwM=;
+        b=r0SjzZOBYNqLp6nRCKLDf8cy3mSN1YDPUqcvXb/qYRZMDOcLrLiyzOd25flwgCl3Jz
+         w+ewN48LvT8QrAYQTcAryJzLLdsDU4VhEk0xa+xeqn4tA5olHz/Irmqw6wowx5d49PGp
+         uLytBhUEF2EyN4b364eb7jvp6zxqPxlFzEetCZC8+fwnbq3HIstDQApbRZ8rBKCOGt2D
+         AuojgPgEZFXxHxJOhm6q0Lhs+UjmEyUwtVm8ixwgB0uetUPgwpybq3i/ZOWZn76lWkfN
+         rkBwMDsEbVWE7wpGisL/Dzg3Si+usBnvAupPSrjmglLn9Uz4kkNOKLtazFTjhBQ+R07l
+         u68w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=TDPbcSp/vDTixVI6qzYrMBMUYnORkP5HblVB6RjbSwM=;
+        b=1OLDUFS9f3YaA1h0ZE6XNX3yo5/0C32MNM71i1pkvXBiWIglrOVTD26nqnEriMtq6F
+         YKg/6BzGO08fyA0UlFwDxl1EesJqL81tCU6lVG20TLNKRVxYLANwUz3/iI8YLRj2nQVY
+         ZNGjbbPtxUvb64vQLFZhh5/Kd7psRucZLFiMzB2AnjsrjUNwg8EDcKG/lDMwVAPPYWxv
+         tjU1IhMVws6DX4LJubyjvpzQQDz/aHvGyHxSXGgr++Z1LoI0VcQbOLoci5KSJFnmhKxH
+         DbDzpPE5VZA4earB1PD1uKrDpDen5/pgwvIxHriNOmbPmsZyBQdSfuiP1/wAMID27zcj
+         kM4Q==
+X-Gm-Message-State: AOAM530/YyrsUT1T+mtFBCb7g6xEtH8ISezvIYSgT0OOyOot/pouFazJ
+        kJJkvLIySN6pJYfOeUj/WnmZ9NMfCHySanKh
+X-Google-Smtp-Source: ABdhPJwpxs1FgqJej6N6Ii8DouynWEV8uS72s+flB0CU1W3DfVPueaybQVWOAV+BCWqU0iB/5DfddA==
+X-Received: by 2002:a05:6870:738a:b0:de:e1b7:2371 with SMTP id z10-20020a056870738a00b000dee1b72371mr2586315oam.176.1649783599875;
+        Tue, 12 Apr 2022 10:13:19 -0700 (PDT)
+Received: from ripper ([2600:1700:a0:3dc8:205:1bff:fec0:b9b3])
+        by smtp.gmail.com with ESMTPSA id c30-20020a056830349e00b005b272587f47sm13824595otu.38.2022.04.12.10.13.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Apr 2022 10:13:19 -0700 (PDT)
+Date:   Tue, 12 Apr 2022 10:15:33 -0700
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Taniya Das <tdas@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
+Message-ID: <YlWztZknl4OBmekp@ripper>
+References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
+ <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH 0/7] treewide: scsi: ufs: Add support for Renesas R-Car
- UFS controller
-Content-Language: en-US
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, robh+dt@kernel.org,
-        krzk+dt@kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-References: <20220412073647.3808493-1-yoshihiro.shimoda.uh@renesas.com>
- <23baab5b-722e-bdcd-be2c-62e38b2ff6a5@linaro.org>
-From:   Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <23baab5b-722e-bdcd-be2c-62e38b2ff6a5@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Mon 11 Apr 08:43 PDT 2022, Krzysztof Kozlowski wrote:
 
-
-On 4/12/22 02:19, Krzysztof Kozlowski wrote:
-> On 12/04/2022 09:36, Yoshihiro Shimoda wrote:
->> This patch series adds support Renesas R-Car S4-8 UFS controller.
->> This controller has some restrictions so adds some quirks for it.
->> Before using this driver, we have to initialize a clock generator
->> on the environment board (named "Spider") by using the commands of
->> U-Boot like below:
->>  => i2c dev 0
->>  => i2c mw 0x6c 0x26 0x05
->>  => i2c olen 0x6c 2
->>  => i2c mw 0x6c 0x26c 0x2e
->>
->> To use the UFS controller, we need the following patch too:
->> https://lore.kernel.org/all/20220411124932.3765571-1-yoshihiro.shimoda.uh@renesas.com/
->>
+> Devices might need to control several clocks when scaling the frequency
+> and voltage.  Example is the Universal Flash Storage (UFS) which scales
+> several independent clocks with change of performance levels.
 > 
-> Thanks for the patches. Somehow I did not got entire set (bindings
-> missing) and I cannot find any of them on lore.kernel.org. Did you have
-> some bounces or sending troubles?
+> Add parsing of multiple clocks and clock names and scale all of them,
+> when needed.  If only one clock is provided, the code should behave the
+> same as before.
+> 
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> ---
+>  drivers/opp/core.c     | 205 ++++++++++++++++++++++++++++++++---------
+>  drivers/opp/of.c       |  48 ++++++++++
+>  drivers/opp/opp.h      |   9 +-
+>  include/linux/pm_opp.h |  23 +++++
+>  4 files changed, 242 insertions(+), 43 deletions(-)
+> 
+> diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+[..]
+> @@ -1295,21 +1344,32 @@ static struct opp_table *_update_opp_table_clk(struct device *dev,
+>  	 * Return early if we don't need to get clk or we have already tried it
+>  	 * earlier.
+>  	 */
+> -	if (!getclk || IS_ERR(opp_table) || opp_table->clk)
+> +	if (!getclk || IS_ERR(opp_table) || opp_table->clks)
+>  		return opp_table;
+>  
+> +	opp_table->clks = kmalloc_array(1, sizeof(*opp_table->clks),
+> +					GFP_KERNEL);
 
-Hi,
+This seems to be 81 chars long, perhaps worth not line breaking?
 
-They are all here:
-  https://lore.kernel.org/linux-scsi/23baab5b-722e-bdcd-be2c-62e38b2ff6a5@linaro.org/T/#t
+> +	if (!opp_table->clks)
+> +		return ERR_PTR(-ENOMEM);
+> +
+>  	/* Find clk for the device */
+> -	opp_table->clk = clk_get(dev, NULL);
+> +	opp_table->clks[0] = clk_get(dev, NULL);
+>  
+> -	ret = PTR_ERR_OR_ZERO(opp_table->clk);
+> -	if (!ret)
+> +	ret = PTR_ERR_OR_ZERO(opp_table->clks[0]);
+> +	if (!ret) {
+> +		opp_table->clk_count = 1;
+>  		return opp_table;
+> +	}
+[..]
+> +struct opp_table *dev_pm_opp_set_clknames(struct device *dev,
+> +					  const char * const names[],
+> +					  unsigned int count)
+>  {
+>  	struct opp_table *opp_table;
+> -	int ret;
+> +	struct clk *clk;
+> +	int ret, i;
+>  
+>  	opp_table = _add_opp_table(dev, false);
+>  	if (IS_ERR(opp_table))
+> @@ -2159,70 +2259,92 @@ struct opp_table *dev_pm_opp_set_clkname(struct device *dev, const char *name)
+>  	}
+>  
+>  	/* clk shouldn't be initialized at this point */
+> -	if (WARN_ON(opp_table->clk)) {
+> +	if (WARN_ON(opp_table->clks)) {
+>  		ret = -EBUSY;
+>  		goto err;
+>  	}
+>  
+> -	/* Find clk for the device */
+> -	opp_table->clk = clk_get(dev, name);
+> -	if (IS_ERR(opp_table->clk)) {
+> -		ret = dev_err_probe(dev, PTR_ERR(opp_table->clk),
+> -				    "%s: Couldn't find clock\n", __func__);
+> +	opp_table->clks = kmalloc_array(count, sizeof(*opp_table->clks),
+> +					GFP_KERNEL);
+> +	if (!opp_table->clks) {
+> +		ret = -ENOMEM;
+>  		goto err;
+>  	}
+>  
+> +	for (i = 0; i < count; i++) {
+> +		clk = clk_get(dev, names[i]);
+> +		if (IS_ERR(clk)) {
+> +			ret =  dev_err_probe(dev, PTR_ERR(clk),
+> +					     "%s: Couldn't find clock %s\n",
+> +					     __func__, names[i]);
+> +			goto free_clks;
+> +		}
+> +
+> +		opp_table->clks[i] = clk;
+> +	}
 
--- 
-~Randy
+Wouldn't it be convenient to make clks a struct clk_bulk_data array
+and use clk_bulk_get()/clk_bulk_put() instead?
+
+> +
+> +	opp_table->clk_count = count;
+> +
+>  	return opp_table;
+>  
+> +free_clks:
+> +	while (i != 0)
+> +		clk_put(opp_table->clks[--i]);
+> +
+> +	kfree(opp_table->clks);
+> +	opp_table->clks = NULL;
+> +	opp_table->clk_count = -1;
+>  err:
+>  	dev_pm_opp_put_opp_table(opp_table);
+>  
+>  	return ERR_PTR(ret);
+>  }
+> -EXPORT_SYMBOL_GPL(dev_pm_opp_set_clkname);
+> +EXPORT_SYMBOL_GPL(dev_pm_opp_set_clknames);
+[..]
+> +static int _read_clocks(struct dev_pm_opp *opp, struct opp_table *opp_table,
+> +			struct device_node *np)
+> +{
+> +	int count, ret;
+> +	u64 *freq;
+> +
+> +	count = of_property_count_u64_elems(np, "opp-hz");
+> +	if (count < 0) {
+> +		pr_err("%s: Invalid %s property (%d)\n",
+> +			__func__, of_node_full_name(np), count);
+
+Wouldn't %pOF be convenient to use here, seems like it becomes short
+enough that you don't have to wrap this line then.
+
+> +		return count;
+> +	}
+> +
+> +	if (count != opp_table->clk_count) {
+> +		pr_err("%s: number of rates %d does not match number of clocks %d in %s\n",
+> +		       __func__, count, opp_table->clk_count,
+> +		       of_node_full_name(np));
+> +		return -EINVAL;
+> +	}
+> +
+> +	freq = kmalloc_array(count, sizeof(*freq), GFP_KERNEL);
+> +	if (!freq)
+> +		return -ENOMEM;
+> +
+> +	ret = of_property_read_u64_array(np, "opp-hz", freq, count);
+> +	if (ret) {
+> +		pr_err("%s: error parsing %s: %d\n", __func__,
+> +		       of_node_full_name(np), ret);
+> +		ret = -EINVAL;
+> +		goto free_freq;
+> +	}
+
+Regards,
+Bjorn
