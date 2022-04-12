@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CB34C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 23:34:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD23BC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 23:34:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230381AbiDLXgd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 19:36:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55444 "EHLO
+        id S231329AbiDLXgg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 19:36:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231316AbiDLXcs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 19:32:48 -0400
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02917C4E3F
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:19 -0700 (PDT)
-Received: by mail-pg1-x531.google.com with SMTP id 125so18468091pgc.11
+        with ESMTP id S231308AbiDLXcr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 19:32:47 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53CB88CDB6
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:18 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id 12so248327pll.12
         for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XYNXZiaSRih3MkZK58qB9oAvWwBnBs1tqFcjf6GOCFc=;
-        b=eWLd4mn8HV9BSNigsRI+bYBaLCuzgrN+6e6au5u/zd9PAex1E/Jj0MP1giJKAlwKr9
-         M97XgAmAGncr8jBVLhGIAH0ujAzQgVpoe9FSzEE2GvuXEMsFe8s5gxCLXpUkbg8aBS5r
-         5rZWbO059bvfHhPk5IF6RvQqWYUAATWwSXtbf9wWvkEdusR9PCkcENuLz5/G4Hi7i4jD
-         zYj91qmlc7lY/m7V45nN0Pv0Db0BmorbKxpPg2GZXogVWZENW1VrIGdyVS2iJnj5xm4H
-         yZLtHMo+zt0QIYpKwFTF2PTV+VlobsZx13ZTwNA/5N/YBRKdDEVQTF3TmxBCtA/fqvYg
-         4Zng==
+        bh=zaMEUCC1A+uyCQTvpb71rcxXx7DO/IPcmKR6u1Qa62s=;
+        b=kxbgXRJ/2Qi5sVgf/rYjGQN8pG08UKfQDNQFH8rsw7okIJfS3ueE+XtwAt0oGztFH3
+         dVdEr+niqbO/9eFrkw43u2OmexWEhLXnFn1bNHa2EFT5P6PoGFXWAG3sE722AFQN6Fwm
+         8zchin9/1BBnd/PoXnJjVBxdKz1sXl1DpI+WIs+DYC2+titws0MWB/C8zb2OekaSsWQ5
+         Yz6fuEoAIP1dreK1MxA/3WgGDN83l6BEZtDdKGAsWUJQGfIgvPD1bfIkRwhPk6KBVfxq
+         u1jmtJA+Y8uQZKxjBN8J0G6LtRk4FuhX3ku9gYK6vX8NcuKpWGb45Y6LzmrS4jK37i3j
+         a3yg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=XYNXZiaSRih3MkZK58qB9oAvWwBnBs1tqFcjf6GOCFc=;
-        b=UnjY6KCogt4uKjiSpVljsfYFfccVp5blavxL+u3gA8uOUGL5WCQZYonvgaTUQrjtxA
-         mJ51ZpeD1AJ9lFmtyTDuZJUftPvvtiqzkulh6PqJoAQzzydozZz7zGQzLSmKSV6r+/bp
-         rFX8qrQTGuMk5PXKKolBRvYXfmKowebLO8qDvHALGlOjBNsCrx9JfjIPUhC4aBHH7WCB
-         24VedrxW5J5DfRmf5lB5RKe81xTySPGiBOyZaMZNFC7vKuZihOhp2KvCCkmgA4pg4lCM
-         OcVTkwsP/vayQHkJE6t6+in4cEngsk1KQAEnA0gwLwWxfOks0nBCFZZxCbeFsQqlto82
-         9Mcw==
-X-Gm-Message-State: AOAM5333T+igdDMfyrWnXbHR8/W1Iik5FwtdUFOULk8gQ6D+/Bfih+VC
-        ININLewJMY9JUgZt9cywiinyI/+kA5Q=
-X-Google-Smtp-Source: ABdhPJwgmB+tonR3M6gTTn24ajfWZjZxLfoxmL2ezPYl1kkeWN60e1kR65mrUnvv7RoIYnkBtwAtHQ==
-X-Received: by 2002:a63:ff1c:0:b0:39c:c83a:7da with SMTP id k28-20020a63ff1c000000b0039cc83a07damr23891804pgi.479.1649802018470;
-        Tue, 12 Apr 2022 15:20:18 -0700 (PDT)
+        bh=zaMEUCC1A+uyCQTvpb71rcxXx7DO/IPcmKR6u1Qa62s=;
+        b=tZv3CVGXttIEsZYeeIUjnMqSTvLhg3wWNCe2ZEtpWvrY4SWKpdK7F+5KqSZ0IDEghA
+         d7nAHxbwLAU5JvDs87IFn2U6PwXdMjbsSi/bKyIS9Z0cchfQ0gepzuE1uUAZg4oZb5w5
+         wUCXCB/0wDxXKDFmRXyIMOuRYrckPgzCtLPjOo/4Yqs8maTfWLuYvdnXjpahoIAViAPC
+         9HEYNCIGt3k1uKAHF0Wt67/Ea29J0eLv7+KKI05gQYFtMtmIcQTBTO7DOgYQJ7yKoFly
+         P6YY0Lc9Muf8Mtnf4VLiQz/1/AxOn0Vsq7xhtmNATyUwT7ey9Kjzjsx0v3ctuHMeDRbf
+         iCmQ==
+X-Gm-Message-State: AOAM533HKgGeUw8gCaMgtD+4p7BA0Se1bLaPkZbcu+49YktpHrKOvpFq
+        dtLQY2vWK/mCFfVXC0MIrrsnuchf10A=
+X-Google-Smtp-Source: ABdhPJzHjKqXridave79HvY6roG3K1lJCSkt83uehvFQMgfAzOwDXzsB+TZrjD3fbZLsQT33ufuDeg==
+X-Received: by 2002:a17:903:240f:b0:156:8e81:a0a3 with SMTP id e15-20020a170903240f00b001568e81a0a3mr38995833plo.13.1649802017763;
+        Tue, 12 Apr 2022 15:20:17 -0700 (PDT)
 Received: from mail-lvn-it-01.broadcom.com ([192.19.223.252])
         by smtp.gmail.com with ESMTPSA id g15-20020a056a000b8f00b004fa9dbf27desm40429824pfj.55.2022.04.12.15.20.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Apr 2022 15:20:18 -0700 (PDT)
+        Tue, 12 Apr 2022 15:20:17 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 04/26] lpfc: Zero SLI4 fcp_cmnd buffer's fcpCntl0 field
-Date:   Tue, 12 Apr 2022 15:19:46 -0700
-Message-Id: <20220412222008.126521-5-jsmart2021@gmail.com>
+Subject: [PATCH 03/26] lpfc: Fix diagnostic fw logging after a function reset
+Date:   Tue, 12 Apr 2022 15:19:45 -0700
+Message-Id: <20220412222008.126521-4-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20220412222008.126521-1-jsmart2021@gmail.com>
 References: <20220412222008.126521-1-jsmart2021@gmail.com>
@@ -63,35 +63,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-It's possible that the fcpCntl0 reserved field is allocated non-zero.
+lpfc_sli4_ras_setup routine is only called from lpfc_pci_probe_one_s4
+routine, which means diagnostic fw logging initialization only occurs
+during probing.
 
-For certain target storage arrays this could cause problems expecting
-reserved fields to be all zero.
+Thus, any path involving a reset of the HBA that restarts the
+state of the SLI port does not reinitialize diagnostic fw logging.
 
-SLI3 path already allocates fcp_cmnd buffer with dma_pool_zalloc in
-lpfc_new_scsi_buf_s3.  The fcpCntl0 field itself is never proactively set
-throughout the SCSI I/O path.  Thus, we only change the SLI4 fcp_cmnd
-buffer allocation to dma_pool_zalloc.
+Move lpfc_sli4_ras_setup into lpfc_sli4_hba_setup so that the
+LOWLEVEL_SET_DIAG_LOG_OPTIONS mailbox command can be sent after a
+function reset.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_init.c | 3 ---
+ drivers/scsi/lpfc/lpfc_sli.c  | 3 +++
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f9cd4b72d949..7dfd47dcaad9 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -14832,9 +14832,6 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
+ 	/* Check if there are static vports to be created. */
+ 	lpfc_create_static_vport(phba);
+ 
+-	/* Enable RAS FW log support */
+-	lpfc_sli4_ras_setup(phba);
+-
+ 	timer_setup(&phba->cpuhp_poll_timer, lpfc_sli4_poll_hbtimer, 0);
+ 	cpuhp_state_add_instance_nocalls(lpfc_cpuhp_state, &phba->cpuhp);
+ 
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 7c86271f05fd..28d8ded9e7e1 100644
+index bda2a7ba4e77..7c86271f05fd 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -22117,7 +22117,7 @@ lpfc_get_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
- 			return NULL;
- 		}
+@@ -8864,6 +8864,9 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+ 	}
+ 	mempool_free(mboxq, phba->mbox_mem_pool);
  
--		tmp->fcp_cmnd = dma_pool_alloc(phba->lpfc_cmd_rsp_buf_pool,
-+		tmp->fcp_cmnd = dma_pool_zalloc(phba->lpfc_cmd_rsp_buf_pool,
- 						GFP_ATOMIC,
- 						&tmp->fcp_cmd_rsp_dma_handle);
++	/* Enable RAS FW log support */
++	lpfc_sli4_ras_setup(phba);
++
+ 	phba->hba_flag |= HBA_SETUP;
+ 	return rc;
  
 -- 
 2.26.2
