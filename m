@@ -2,50 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD167C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 01:02:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49043C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 01:02:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345778AbiDLBEz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Apr 2022 21:04:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47390 "EHLO
+        id S239351AbiDLBE6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Apr 2022 21:04:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349796AbiDLA7o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 20:59:44 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49181275EF;
-        Mon, 11 Apr 2022 17:53:07 -0700 (PDT)
+        with ESMTP id S1343957AbiDLA5J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 20:57:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D47642612C;
+        Mon, 11 Apr 2022 17:49:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 960B6B80E9B;
-        Tue, 12 Apr 2022 00:53:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB878C385A3;
-        Tue, 12 Apr 2022 00:53:02 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 22EB161800;
+        Tue, 12 Apr 2022 00:49:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5955DC385A9;
+        Tue, 12 Apr 2022 00:49:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649724784;
-        bh=sNno4EtBAliDgozzOpAWH0kapXXQuaF4DBpGUMYbEC0=;
+        s=k20201202; t=1649724585;
+        bh=frfWCP/WFjSy1bdWI3vnHvvSGgCADe10jnfJswe0OCM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DvpOaFoJYLZhKVlDH7PcJ44oKiCaDen6RDwejep7YMORpvIChdwZ4XXRWirkL5Io+
-         vR72KPL7td1hkA89J1eQ7Kr1CNCkzj2cjFvW0zEb0tDW/Ewo/ljMU8/cOqSOP3o0GX
-         PSwKz1pMbtd4n6ZA9n48tSwgIICuXEXqqhfPTyMGrnzwdefgKhSU4ZixOgIHX5K8W6
-         6bBaasRshGqp0YMydicltqB+QvBdbIvFSwSoIOhvMU5+uXdwzjlsHbfL7bAaMRvD28
-         nCkSq9VuZR4vzg2mQy1KmRy/jFyK5vii/083/zokT+kJKHogQei867KMZCaerymoCG
-         EoVyfmuxk6QEw==
+        b=Rbo9ABDom7YgarALGxAcKJrexk5z8rseCIreNiWhe4bNp8oLQcuQUjIe8Vygi1BHF
+         dz8IvENHMovgU2mDLCxRiVYAhuMUBgBOfA3PjGR926+dCZu7W6ExjNeFN0GfQauXI0
+         qGUfapniqly079/gtZ2rdql2YbH1WrHySuY2o5zhZvqZq1JA8FoYddYqCZf6VNhdSY
+         tUUfvkVbczTWPmTDClb2nJfbA6c1uMnwpJ8VvX7NcN/46LxKQPEzjTyjo8+kayGMy3
+         GhVLDX/Ici3x1fwdiOwcXS1wDJBuxvzEyAS8RHGkJcBo8cNV+D4vaLIDkkg2f0C0RD
+         EP5FSYrU5SKcw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Alexey Galakhov <agalakhov@gmail.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        john.garry@huawei.com, bvanassche@acm.org,
-        davidcomponentone@gmail.com, johannes.thumshirn@wdc.com,
-        yuyufen@huawei.com, thunder.leizhen@huawei.com,
-        yang.guang5@zte.com.cn, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 6/7] scsi: mvsas: Add PCI ID of RocketRaid 2640
-Date:   Mon, 11 Apr 2022 20:52:47 -0400
-Message-Id: <20220412005248.351701-6-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 12/30] scsi: lpfc: Fix queue failures when recovering from PCI parity error
+Date:   Mon, 11 Apr 2022 20:48:46 -0400
+Message-Id: <20220412004906.350678-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220412005248.351701-1-sashal@kernel.org>
-References: <20220412005248.351701-1-sashal@kernel.org>
+In-Reply-To: <20220412004906.350678-1-sashal@kernel.org>
+References: <20220412004906.350678-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,34 +53,44 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Alexey Galakhov <agalakhov@gmail.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 5f2bce1e222028dc1c15f130109a17aa654ae6e8 ]
+[ Upstream commit df0101197c4d9596682901631f3ee193ed354873 ]
 
-The HighPoint RocketRaid 2640 is a low-cost SAS controller based on Marvell
-chip. The chip in question was already supported by the kernel, just the
-PCI ID of this particular board was missing.
+When recovering from a pci-parity error the driver is failing to re-create
+queues, causing recovery to fail. Looking deeper, it was found that the
+interrupt vector count allocated on the recovery was fewer than the vectors
+originally allocated. This disparity resulted in CPU map entries with stale
+information. When the driver tries to re-create the queues, it attempts to
+use the stale information which indicates an eq/interrupt vector that was
+no longer created.
 
-Link: https://lore.kernel.org/r/20220309212535.402987-1-agalakhov@gmail.com
-Signed-off-by: Alexey Galakhov <agalakhov@gmail.com>
+Fix by clearng the cpup map array before enabling and requesting the IRQs
+in the lpfc_sli_reset_slot_s4 routine().
+
+Link: https://lore.kernel.org/r/20220317032737.45308-4-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mvsas/mv_init.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/lpfc/lpfc_init.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 8280046fd1f0..b29542b82c8a 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -679,6 +679,7 @@ static struct pci_device_id mvs_pci_table[] = {
- 	{ PCI_VDEVICE(ARECA, PCI_DEVICE_ID_ARECA_1300), chip_1300 },
- 	{ PCI_VDEVICE(ARECA, PCI_DEVICE_ID_ARECA_1320), chip_1320 },
- 	{ PCI_VDEVICE(ADAPTEC2, 0x0450), chip_6440 },
-+	{ PCI_VDEVICE(TTI, 0x2640), chip_6440 },
- 	{ PCI_VDEVICE(TTI, 0x2710), chip_9480 },
- 	{ PCI_VDEVICE(TTI, 0x2720), chip_9480 },
- 	{ PCI_VDEVICE(TTI, 0x2721), chip_9480 },
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 1149bfc42fe6..134e4ee5dc48 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -13614,6 +13614,8 @@ lpfc_io_slot_reset_s4(struct pci_dev *pdev)
+ 	psli->sli_flag &= ~LPFC_SLI_ACTIVE;
+ 	spin_unlock_irq(&phba->hbalock);
+ 
++	/* Init cpu_map array */
++	lpfc_cpu_map_array_init(phba);
+ 	/* Configure and enable interrupt */
+ 	intr_mode = lpfc_sli4_enable_intr(phba, phba->intr_mode);
+ 	if (intr_mode == LPFC_INTR_ERROR) {
 -- 
 2.35.1
 
