@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8CF3C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 23:33:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5777CC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 23:33:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231177AbiDLXfv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 19:35:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55410 "EHLO
+        id S231217AbiDLXgA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 19:36:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231352AbiDLXcx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 19:32:53 -0400
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D141C55B1
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:26 -0700 (PDT)
-Received: by mail-pf1-x42c.google.com with SMTP id cw11so304842pfb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:26 -0700 (PDT)
+        with ESMTP id S231317AbiDLXcs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 19:32:48 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A583EC5583
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:19 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id o5so109462pjr.0
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=HQ8DnYInUPmNdfocvWClka5SUfhGXiHRgCQGuq108Pw=;
-        b=YZkoWsFUOtCdB9o/X4OSP/FtMEVc+YTAxlYWnYn0JqrmCGXyjca+0OwzIB1Bf7tTmJ
-         WS5iLEE52ap1XH8e5rilVu+dEFwDTxZNF8eaORGaMfDjNahGQblBLbLSncDhOGN0z2/N
-         ryEUSaRLuG3gQu5Rg8cw+LvhbL9SZNQ3xpJcBmMeg094fIy2sp/53le5qRbKkFfeeUCc
-         lQdwxggb7dwJwlVjfcWrHstLbKF1YlCks8ziNfxILW/MsKZHUWpTjlHnb29xfQbL5uin
-         wGpW/NjAF8eHEH2G/ULd22cRQK7h5LWdOEUrbh4Kcpzbya/+bltotc8hlhSrZwWfZbn1
-         2PRA==
+        bh=p3O3Yg9ObbcLqJBxL/VTmcd4M2F94bn3TMXLTmoPRyI=;
+        b=Bek+R6+RBmjurR9Biv8yvuvuvnciJLsfp98d6RGyxNM6K4xqVvI3v+339pDKfG1hey
+         m4WbDObxY/blanRQaaAk7U0UQfmbp9ZEX6RqaADw9KdOVkOqb7Q4xoItbA1i5nwqytfM
+         jnwNiLwfrqGdr1Asx5Mya4O9Xof8MFOIiKuBe9h5wBeMuaejv9eBkMz911+tr0PuFTaP
+         EdBc1hM1+niNAIxMt4HEwPtH9UaqxPcdQCk1J3O61eypjAHbaCSzNt26/ILvQq6RqBrI
+         ffmbBkEW2IkL8yPK7wh+G2qEnUChVi1xFsf2irQx3KoWITqxbqd55JiJVw520tBext43
+         QoEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=HQ8DnYInUPmNdfocvWClka5SUfhGXiHRgCQGuq108Pw=;
-        b=MmTIp3cxThnHW9GV6oh/3J/U9iEfBDSzW6iTpf0tbSQTilK3n3RdiijCACm8Wkqike
-         Dh09/lTFrK7llUMNFx5BkLxUWC/jnpnPbicjB+OewecA//6FKX/E3zqa7DSPaaFuroED
-         IMiHHn4FyFcyV6hBMQSDf55L9LYwzNHM8aTmoU6hQxXX/MEP9SAyR883XWP7DYJoytcV
-         14JOImgaxmKmyoYgdl/mle+LwTQRi6TtGDidVHp3JvZhIyx9kFrIufLMdLLjzLv7+2rr
-         7FCVxLhdaljhMqEsfJyrC2uxgZTEjWsU0Cu6voAZx3MJoKuuniHJhLIUnMah8rbHWxSL
-         7rFg==
-X-Gm-Message-State: AOAM530s8mdIeIE1fCUSOJN1gPlfYFXN4qjFaUXXDTst/KeJlTI6heIu
-        rzLvDg1SRISFGHbRrkfG3JoHEvRzvc0=
-X-Google-Smtp-Source: ABdhPJx9qNUnm/dk8Zq2j3T0aO0ELEXJ0mqxcwAx2n3xy+tQkx5/sfTvt9fCvwrdGTIh5sNMmeL2Rg==
-X-Received: by 2002:a05:6a00:1145:b0:4f6:3ebc:a79b with SMTP id b5-20020a056a00114500b004f63ebca79bmr39776152pfm.41.1649802025851;
-        Tue, 12 Apr 2022 15:20:25 -0700 (PDT)
+        bh=p3O3Yg9ObbcLqJBxL/VTmcd4M2F94bn3TMXLTmoPRyI=;
+        b=qPAopFo8DqEshISA7VKdVI6uEoxedTGZTQq+7bqdnIysAEwD8SEGS0tyZ3+d/5oVmL
+         9W3+2A2781sa5I7TowafD8YKsefRfkNqWh4XkhTlpJQS114mlg8m53XGNryIGiAMwUM/
+         GrQeWKY05yIVO74Vth6wpC1hXv7PwHdjBHCnkpAQBldafyFJCse3xv2zoqi7lQc3khxu
+         k7DgOc5bu/7504/+QBwvETPlqAtxSkFToCIypiHuNwguoEs+a36gf0v83Jt8l6qzyApF
+         LuVTzAUnx9K6x5e3xFSBICGF5wXMPwEiUUq9P6/qPhBNc2+zjkBM5PAHzPGNL6P7asoE
+         FYOQ==
+X-Gm-Message-State: AOAM5333q/nR8ju4V7nf3S/h+6kcXhnyI5iXDFO3AYqKvH+EcKyK1lpV
+        LNNq3yhugcug37D5GmmjwKW8IWQhw+I=
+X-Google-Smtp-Source: ABdhPJwz/DDbXu1190ZpcNMrYxnZ63XGMbIE2vHJpqdbd+l7O1Ghr76lOIZVwRZaDJdHpvyhrfSQ6g==
+X-Received: by 2002:a17:902:ccc1:b0:156:6066:bd18 with SMTP id z1-20020a170902ccc100b001566066bd18mr39728230ple.28.1649802019135;
+        Tue, 12 Apr 2022 15:20:19 -0700 (PDT)
 Received: from mail-lvn-it-01.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id g15-20020a056a000b8f00b004fa9dbf27desm40429824pfj.55.2022.04.12.15.20.25
+        by smtp.gmail.com with ESMTPSA id g15-20020a056a000b8f00b004fa9dbf27desm40429824pfj.55.2022.04.12.15.20.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Apr 2022 15:20:25 -0700 (PDT)
+        Tue, 12 Apr 2022 15:20:18 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 14/26] lpfc: Correct CRC32 calculation for congestion stats
-Date:   Tue, 12 Apr 2022 15:19:56 -0700
-Message-Id: <20220412222008.126521-15-jsmart2021@gmail.com>
+Subject: [PATCH 05/26] lpfc: Requeue SCSI I/O to upper layer when fw reports link down
+Date:   Tue, 12 Apr 2022 15:19:47 -0700
+Message-Id: <20220412222008.126521-6-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20220412222008.126521-1-jsmart2021@gmail.com>
 References: <20220412222008.126521-1-jsmart2021@gmail.com>
@@ -63,30 +63,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-lpfc_cgn_calc_crc32 is returning 32 bits, and lpfc_cgn_update_stat was
-using u16 to store the crc32 value.  Correct by redeclaring the local
-variable to u32.
+During heavy I/O stress tests with 100+ vports and cable pulls, it may take
+a while before the vport logs back into the fabric to resume I/O.
+
+Currently, the driver immediately fails the I/O with DID_ERROR.
+
+Change behavior to return DID_REQUEUE, and rely on SCSI layer's max retry
+of 5 before erroring out the I/O.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index ec6da7e27e4b..578e9947125b 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -5539,7 +5539,7 @@ lpfc_cgn_update_stat(struct lpfc_hba *phba, uint32_t dtag)
- 	struct tm broken;
- 	struct timespec64 cur_time;
- 	u32 cnt;
--	u16 value;
-+	u32 value;
- 
- 	/* Make sure we have a congestion info buffer */
- 	if (!phba->cgn_i)
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index ba9dbb51b75f..ae340850d94f 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -4276,6 +4276,7 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 			break;
+ 		}
+ 		if (lpfc_cmd->result == IOERR_INVALID_RPI ||
++		    lpfc_cmd->result == IOERR_LINK_DOWN ||
+ 		    lpfc_cmd->result == IOERR_NO_RESOURCES ||
+ 		    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
+ 		    lpfc_cmd->result == IOERR_RPI_SUSPENDED ||
 -- 
 2.26.2
 
