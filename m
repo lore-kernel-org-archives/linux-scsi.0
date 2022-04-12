@@ -2,40 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 300F9C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 18:20:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3D0CC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 18:21:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358680AbiDLSXN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 14:23:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55506 "EHLO
+        id S236948AbiDLSXV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 14:23:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236948AbiDLSXM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 14:23:12 -0400
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE3F74C41B
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:20:54 -0700 (PDT)
-Received: by mail-pg1-f178.google.com with SMTP id s137so15277294pgs.5
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:20:54 -0700 (PDT)
+        with ESMTP id S1358688AbiDLSXU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 14:23:20 -0400
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACAA04DF55
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:21:00 -0700 (PDT)
+Received: by mail-pf1-f178.google.com with SMTP id z16so18227790pfh.3
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:21:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Eta5PBC5X/Kb8I7p5YmauGvSBGUtRZFfJR+9ADQd7To=;
-        b=nA8oQLeGfOKAGcMSrlJ5ZmZoYT1y+Zq5Ij4BCd9VsD9MxB1YhGMr6xQaprz7U6n3t4
-         /PyoiQjM1FmEH85SRFL8aCjnVSSGMfihJuWmwNa99Pa1wzQ9YvmZ+P5ps8zQ+fuHnBsH
-         Pv+SXi0YRYhl4mlXbVDpUd2L6qP5O9fYmk+6wTmAvdmb95bwlBLpT3GW8OoI7ov/6xjc
-         yO000URN/vYn0jhw0YRpO/YElVZVacGgvHigPLizeHyk2mRXSV0fwGV3SMj6aXXn+y9E
-         lNB+wN9fOQVFyRBj6Nf/bOWxnSRsISIgTENaaZ8lA5yDW3D97QhIx57lw9psbJRAXiae
-         CyBg==
-X-Gm-Message-State: AOAM532lB2C5AsYz5CLau/lx6ge9dE1XpnNzEaFadTH9akcj1+0Nim6C
-        sQZMlQTTKZzzkhEReOeWxdw=
-X-Google-Smtp-Source: ABdhPJw76kbDmdD3ACDizbVxG+F5GH4jIZMBdU5A1Hv2kBaaksclBIyFaLovB2v0Pi1caejy3w3Khw==
-X-Received: by 2002:a05:6a00:1a52:b0:506:110:4ac6 with SMTP id h18-20020a056a001a5200b0050601104ac6mr3490779pfv.20.1649787654216;
-        Tue, 12 Apr 2022 11:20:54 -0700 (PDT)
+        bh=msoxtyUmQMPR1br4wFMJMr/YuaIVdEfrrF3GptbzXVo=;
+        b=fLznWz9Xx2gxmiBQFyofUdxuEZJ7ypzkbAcFabRVwhssL+O4H02AAIc07jJNrW1y4L
+         N5IWgo56woRSFE4xG9aVILpuFtQdki9XQUBawjYhp78hEkjnWPxolVD9MIkOONLqkg0y
+         gy2iUXgCzMRRMOIgzxzayHnCype3YGLBHLLXcFsSAbakt3YoZN3pjvooCPgjJMuGJ+fS
+         JhO2LcWO4ntuYM/23x/OFkK/0ZQ96wLdVyeIT5VPuJWkdN0DcOkqgvXAZRr2KwtqTdpd
+         Io93OKQAkp7j7K5m4RIEzXirIP25Oxg6PpUAthmWtH/8VKYgyztTfMnnOQYN5cdOROn5
+         mwMw==
+X-Gm-Message-State: AOAM532PFrTlxTulzGoVN7BTK2FJEmDAzkSQZ/nXk1/jkHmNg1XBRrZT
+        78QgSKT97HQ96q9E0+TmjCc=
+X-Google-Smtp-Source: ABdhPJwtXpgTHAjH9u6aORQ4F3Ll/mfH0yT+DKU6v+ciHNbpTALj21oDOUQhSFEvJEP9Y5KO/6rIig==
+X-Received: by 2002:a05:6a00:218a:b0:505:aa03:ba57 with SMTP id h10-20020a056a00218a00b00505aa03ba57mr15578852pfi.84.1649787660023;
+        Tue, 12 Apr 2022 11:21:00 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:d4b2:56ee:d001:c159])
-        by smtp.gmail.com with ESMTPSA id d18-20020a056a0010d200b004fa2e13ce80sm40367037pfu.76.2022.04.12.11.20.52
+        by smtp.gmail.com with ESMTPSA id d18-20020a056a0010d200b004fa2e13ce80sm40367037pfu.76.2022.04.12.11.20.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Apr 2022 11:20:53 -0700 (PDT)
+        Tue, 12 Apr 2022 11:20:59 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
@@ -43,14 +43,11 @@ Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Peter Wang <peter.wang@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
         Daejun Park <daejun7.park@samsung.com>
-Subject: [PATCH v2 10/29] scsi: ufs: Declare the quirks array const
-Date:   Tue, 12 Apr 2022 11:18:34 -0700
-Message-Id: <20220412181853.3715080-11-bvanassche@acm.org>
+Subject: [PATCH v2 11/29] scsi: ufs: Invert the return value of ufshcd_is_hba_active()
+Date:   Tue, 12 Apr 2022 11:18:35 -0700
+Message-Id: <20220412181853.3715080-12-bvanassche@acm.org>
 X-Mailer: git-send-email 2.36.0.rc0.470.gd361397f0d-goog
 In-Reply-To: <20220412181853.3715080-1-bvanassche@acm.org>
 References: <20220412181853.3715080-1-bvanassche@acm.org>
@@ -60,81 +57,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Declare the quirks array and also its 'model' member const to make it
-explicit that these are not modified.
+It is confusing that ufshcd_is_hba_active() returns 'true' if the HBA is
+not active. Clear up this confusion by inverting the return value of
+ufshcd_is_hba_active(). This patch does not change any functionality.
 
 Reviewed-by: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufs-mediatek.c | 2 +-
- drivers/scsi/ufs/ufs_quirks.h   | 2 +-
- drivers/scsi/ufs/ufshcd.c       | 7 ++++---
- drivers/scsi/ufs/ufshcd.h       | 3 ++-
- 4 files changed, 8 insertions(+), 6 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index 217348dde6a6..9a4474210627 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -44,7 +44,7 @@
- #define ufs_mtk_device_reset_ctrl(high, res) \
- 	ufs_mtk_smc(UFS_MTK_SIP_DEVICE_RESET, high, res)
- 
--static struct ufs_dev_quirk ufs_mtk_dev_fixups[] = {
-+static const struct ufs_dev_quirk ufs_mtk_dev_fixups[] = {
- 	{ .wmanufacturerid = UFS_VENDOR_MICRON,
- 	  .model = UFS_ANY_MODEL,
- 	  .quirk = UFS_DEVICE_QUIRK_DELAY_AFTER_LPM },
-diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
-index e38dec5f0351..bcb4f004bed5 100644
---- a/drivers/scsi/ufs/ufs_quirks.h
-+++ b/drivers/scsi/ufs/ufs_quirks.h
-@@ -25,7 +25,7 @@
-  */
- struct ufs_dev_quirk {
- 	u16 wmanufacturerid;
--	u8 *model;
-+	const u8 *model;
- 	unsigned int quirk;
- };
- 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9df37c80308a..a1ebfbb6f1b9 100644
+index a1ebfbb6f1b9..eabc6b6156fd 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -204,7 +204,7 @@ ufs_get_desired_pm_lvl_for_dev_link_state(enum ufs_dev_pwr_mode dev_state,
- 	return UFS_PM_LVL_0;
- }
- 
--static struct ufs_dev_quirk ufs_fixups[] = {
-+static const struct ufs_dev_quirk ufs_fixups[] = {
- 	/* UFS cards deviations table */
- 	{ .wmanufacturerid = UFS_VENDOR_MICRON,
- 	  .model = UFS_ANY_MODEL,
-@@ -7624,9 +7624,10 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
- 	}
- }
- 
--void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, struct ufs_dev_quirk *fixups)
-+void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
-+			     const struct ufs_dev_quirk *fixups)
+@@ -917,12 +917,11 @@ static inline void ufshcd_hba_start(struct ufs_hba *hba)
+  * ufshcd_is_hba_active - Get controller state
+  * @hba: per adapter instance
+  *
+- * Returns false if controller is active, true otherwise
++ * Returns true if and only if the controller is active.
+  */
+ static inline bool ufshcd_is_hba_active(struct ufs_hba *hba)
  {
--	struct ufs_dev_quirk *f;
-+	const struct ufs_dev_quirk *f;
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
+-	return (ufshcd_readl(hba, REG_CONTROLLER_ENABLE) & CONTROLLER_ENABLE)
+-		? false : true;
++	return ufshcd_readl(hba, REG_CONTROLLER_ENABLE) & CONTROLLER_ENABLE;
+ }
  
- 	if (!fixups)
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 3d18581afc2b..107d19e98d52 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1180,7 +1180,8 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba)
+@@ -4552,7 +4551,7 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
+ 	int retry_inner;
  
- void ufshcd_auto_hibern8_enable(struct ufs_hba *hba);
- void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
--void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, struct ufs_dev_quirk *fixups);
-+void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
-+			     const struct ufs_dev_quirk *fixups);
- #define SD_ASCII_STD true
- #define SD_RAW false
- int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+ start:
+-	if (!ufshcd_is_hba_active(hba))
++	if (ufshcd_is_hba_active(hba))
+ 		/* change controller state to "reset state" */
+ 		ufshcd_hba_stop(hba);
+ 
+@@ -4578,7 +4577,7 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
+ 
+ 	/* wait for the host controller to complete initialization */
+ 	retry_inner = 50;
+-	while (ufshcd_is_hba_active(hba)) {
++	while (!ufshcd_is_hba_active(hba)) {
+ 		if (retry_inner) {
+ 			retry_inner--;
+ 		} else {
