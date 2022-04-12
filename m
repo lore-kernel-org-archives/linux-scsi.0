@@ -2,55 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B4EC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 18:23:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C75DCC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 18:23:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233150AbiDLSZS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 14:25:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58238 "EHLO
+        id S1358681AbiDLSZY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 14:25:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349095AbiDLSZM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 14:25:12 -0400
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 567D160075
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:22:54 -0700 (PDT)
-Received: by mail-pj1-f48.google.com with SMTP id z6-20020a17090a398600b001cb9fca3210so3912442pjb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:22:54 -0700 (PDT)
+        with ESMTP id S1349095AbiDLSZY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 14:25:24 -0400
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A3855D64B
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:23:06 -0700 (PDT)
+Received: by mail-pf1-f174.google.com with SMTP id a21so3291224pfv.10
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:23:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=J/MJzNqvlCtUnHD68INLBgpjwK6/TYRS8vbqLhrtU/k=;
-        b=VwZGXxJnyeSDBjmEaaDHy8W1tNIEn4zezU2EV1Oco3uBcz2CQeO7pMcNG0spx30K0f
-         Oaf08Wqq78eFaKWIi6wlZFU1OQetE3BZUtz11vp/sm7S2h++mUwsJFLqhq6B+7j8XJs+
-         2xoD4v8k+yZTtjlbehS2+sMvgPGNI8P5/K1bsYHpszclJspiPFOGH5Nwy93weXt3meom
-         HvBDMV4ejpOiwLdX/3IY4dyEfWhi7NdVCD56Gslp7fIZ73FZeoDIxzp8WSQJIsKcvT2c
-         IYDIJHU1vmS7m0nW8+AvXc3WPhQ775QddU7kttnUayQVvaMNbgrStW9s6d2hRiip+GhK
-         kSwg==
-X-Gm-Message-State: AOAM5330HN7yUOychABBAob/RF24v3kDNwuoxQg/vzpqoFe8enQtxj/X
-        A3EMlRAfywpDowaHYFcQR0Y=
-X-Google-Smtp-Source: ABdhPJxX+hV0ujRkfZ+7FmY558RtCsMEDbBBE42Y2JU63NmFpvG2Aws/SIA8wH1UEQaXGqjJgRs8Vg==
-X-Received: by 2002:a17:902:9b92:b0:158:57d8:3a20 with SMTP id y18-20020a1709029b9200b0015857d83a20mr4717901plp.34.1649787773731;
-        Tue, 12 Apr 2022 11:22:53 -0700 (PDT)
+        bh=5FfWqSXzRy/oQYvE7ypEao+2Y/8rPzLEyN3EEy6t1/o=;
+        b=Wvsq7EjtXU0NzN74zSjLNSXFlG+gyoy3UUy8TD7/BA6/r5G4vrnogZOgSPeRItJ0Zl
+         5WXaHAyhlOyAVR8GH3zCBQ5WGpqTQQ3dDIlr5ILO0dz8r+7gE7KLXyPLSXxToatNsJWC
+         72bJe2zpE5xU/5X5s4nijwmSClfUAIaPD6boianRmCU/p2s9/6B94oGnrs88kWCPT4z6
+         5hPOWa4dEyTZmVkYpgi1i4wOnckK8QAMIQLAMVlvW0qr4XNXXcZ0hsb77E1Bk/T3ct4L
+         1zEbMePM3oGBnUhfzcMAkpS5StwJDjYs710hRGrNc1w7FUCEGl/vpikKUkGVzHaeAepi
+         asUg==
+X-Gm-Message-State: AOAM531+fblESKGtrT2dplb9G0MC/0VttAGLjZaLtnk7FtAe6xJsCuPy
+        w9cipwJ2osLa8T+GohZGgAI=
+X-Google-Smtp-Source: ABdhPJxlQd5xHq1VVEKa0PMCBFRJNRqv2h348tbfVZdZWKSFtY0/h57KET9AfgeGnygEKFxnfzUiqg==
+X-Received: by 2002:a63:4761:0:b0:39c:f432:3d3d with SMTP id w33-20020a634761000000b0039cf4323d3dmr19814631pgk.544.1649787785490;
+        Tue, 12 Apr 2022 11:23:05 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:d4b2:56ee:d001:c159])
-        by smtp.gmail.com with ESMTPSA id d18-20020a056a0010d200b004fa2e13ce80sm40367037pfu.76.2022.04.12.11.22.52
+        by smtp.gmail.com with ESMTPSA id d18-20020a056a0010d200b004fa2e13ce80sm40367037pfu.76.2022.04.12.11.23.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Apr 2022 11:22:53 -0700 (PDT)
+        Tue, 12 Apr 2022 11:23:04 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         Avri Altman <avri.altman@wdc.com>,
         Peter Wang <peter.wang@mediatek.com>,
-        ChanWoo Lee <cw9316.lee@samsung.com>,
-        Ye Bin <yebin10@huawei.com>,
-        Dov Levenglick <dovl@codeaurora.org>
-Subject: [PATCH v2 22/29] scsi: ufs: qcom: Fix ufs_qcom_resume()
-Date:   Tue, 12 Apr 2022 11:18:46 -0700
-Message-Id: <20220412181853.3715080-23-bvanassche@acm.org>
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+Subject: [PATCH v2 23/29] scsi: ufs: Remove unnecessary ufshcd-crypto.h include directives
+Date:   Tue, 12 Apr 2022 11:18:47 -0700
+Message-Id: <20220412181853.3715080-24-bvanassche@acm.org>
 X-Mailer: git-send-email 2.36.0.rc0.470.gd361397f0d-goog
 In-Reply-To: <20220412181853.3715080-1-bvanassche@acm.org>
 References: <20220412181853.3715080-1-bvanassche@acm.org>
@@ -60,33 +59,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Clearing hba->is_sys_suspended if ufs_qcom_resume() succeeds is wrong. That
-variable must only be cleared if all actions involved in a resume succeed.
-Hence remove the statement that clears hba->is_sys_suspended from
-ufs_qcom_resume().
+ufshcd-crypto.h declares functions that must only be called by the UFS
+core. Hence remove the #include "ufshcd-crypto.h" directive from UFS
+drivers.
 
-Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-Fixes: 81c0fc51b7a7 ("ufs-qcom: add support for Qualcomm Technologies Inc platforms")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/scsi/ufs/ufs-mediatek.c | 1 -
+ drivers/scsi/ufs/ufs-qcom-ice.c | 1 -
+ drivers/scsi/ufs/ufs-qcom.h     | 1 +
+ 3 files changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index dded29722880..98ed9e9f7e2e 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -640,12 +640,7 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 			return err;
- 	}
+diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+index d19b35495302..84ccb5258736 100644
+--- a/drivers/scsi/ufs/ufs-mediatek.c
++++ b/drivers/scsi/ufs/ufs-mediatek.c
+@@ -19,7 +19,6 @@
+ #include <linux/soc/mediatek/mtk_sip_svc.h>
  
--	err = ufs_qcom_ice_resume(host);
--	if (err)
--		return err;
--
--	hba->is_sys_suspended = false;
--	return 0;
-+	return ufs_qcom_ice_resume(host);
- }
+ #include "ufshcd.h"
+-#include "ufshcd-crypto.h"
+ #include "ufshcd-pltfrm.h"
+ #include "ufs_quirks.h"
+ #include "unipro.h"
+diff --git a/drivers/scsi/ufs/ufs-qcom-ice.c b/drivers/scsi/ufs/ufs-qcom-ice.c
+index bbb0ad7590ec..921d6a93b653 100644
+--- a/drivers/scsi/ufs/ufs-qcom-ice.c
++++ b/drivers/scsi/ufs/ufs-qcom-ice.c
+@@ -9,7 +9,6 @@
+ #include <linux/platform_device.h>
+ #include <linux/qcom_scm.h>
  
- static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, bool enable)
+-#include "ufshcd-crypto.h"
+ #include "ufs-qcom.h"
+ 
+ #define AES_256_XTS_KEY_SIZE			64
+diff --git a/drivers/scsi/ufs/ufs-qcom.h b/drivers/scsi/ufs/ufs-qcom.h
+index 51570224a6e2..771bc95d02c7 100644
+--- a/drivers/scsi/ufs/ufs-qcom.h
++++ b/drivers/scsi/ufs/ufs-qcom.h
+@@ -7,6 +7,7 @@
+ 
+ #include <linux/reset-controller.h>
+ #include <linux/reset.h>
++#include "ufshcd.h"
+ 
+ #define MAX_UFS_QCOM_HOSTS	1
+ #define MAX_U32                 (~(u32)0)
