@@ -2,48 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 590AEC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 01:02:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46F7CC43217
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 01:03:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344676AbiDLBFC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Apr 2022 21:05:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34704 "EHLO
+        id S239586AbiDLBFJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Apr 2022 21:05:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345200AbiDLA63 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 20:58:29 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D995A35AA3;
-        Mon, 11 Apr 2022 17:51:09 -0700 (PDT)
+        with ESMTP id S1345056AbiDLA61 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 20:58:27 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAC2D2C662;
+        Mon, 11 Apr 2022 17:50:30 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7684960B2F;
-        Tue, 12 Apr 2022 00:51:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 082E0C385A9;
-        Tue, 12 Apr 2022 00:51:07 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 8B563B819B4;
+        Tue, 12 Apr 2022 00:50:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0621FC385A3;
+        Tue, 12 Apr 2022 00:50:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649724668;
-        bh=5TNfAkGdooXx4QD2kDXi4ZKavUADi/pYubz4lYm1M0k=;
+        s=k20201202; t=1649724628;
+        bh=Uu7VIrb7ME9y2Ns26nkZF0NerK26h//hTrPsKXDKuPU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hgrJMPEu0WgQnX9tu26ONO+l9GXkUpab7w8ZZpE47dX4ww1F+HIGSJVs/Q5evRd55
-         QHANpDJam8Zmu4bwsce49sreI/PW/s66YkeZQf6j9cv2MOTxHjFWcPAfspk5yCGwAd
-         NKTKkPWKHmjlZAbEQWDMTr+nW06ejg79sMmtExtglsW7Jv/gkYsuyYhA3YWiApIUoX
-         9PyokeqUn+48i1mDpjb1ZF8JdLFa96czP30t8KccEOQonyYxJnYzro/MMdHMBMR7oQ
-         +lS+aR8PQBdiq+XwRk/ZyMu0JXtK4GpD6rqAetjl3ZK73XwA0ShBWnKUPMIujL+dNe
-         NLHWYOhFg/AFw==
+        b=aBMGq/RxgDlU3XU8j7AFoCyZkQtYAXd26wHSKcJ5btJX+q/AgenCD5bgpmpfN/Sg4
+         YBzo/n1OO0btMGvk/DXkIr20+QksKKMIW5WG5ESB2by5UDLWkm9VMOV7opMi+Tz8jv
+         EPp+SgwrfWyi6AEPAvtvRN6B29zNs09mbpHBHzkXKbBWfoPIbAqqXskizqrpuIykCZ
+         udQ9RaxkGanLAQPzsjt4KOqRUZBRld+OQvS/3dxu7x3NFailwdJb3eaQP/1cGYPCyX
+         t1kGVkqejV2Rscg86roBoHCZLwy85L9fcYPP8hOa8Mt03+TrSefPaIkLjucRD4Y9K3
+         kjaK/2skAIZLg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>,
-        Bodo Stroesser <bostroesser@gmail.com>,
+Cc:     Chandrakanth patil <chandrakanth.patil@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 07/21] scsi: target: tcmu: Fix possible page UAF
-Date:   Mon, 11 Apr 2022 20:50:26 -0400
-Message-Id: <20220412005042.351105-7-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, kashyap.desai@broadcom.com,
+        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+        jejb@linux.ibm.com, megaraidlinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 27/30] scsi: megaraid_sas: Target with invalid LUN ID is deleted during scan
+Date:   Mon, 11 Apr 2022 20:49:01 -0400
+Message-Id: <20220412004906.350678-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220412005042.351105-1-sashal@kernel.org>
-References: <20220412005042.351105-1-sashal@kernel.org>
+In-Reply-To: <20220412004906.350678-1-sashal@kernel.org>
+References: <20220412004906.350678-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,55 +53,66 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+From: Chandrakanth patil <chandrakanth.patil@broadcom.com>
 
-[ Upstream commit a6968f7a367f128d120447360734344d5a3d5336 ]
+[ Upstream commit 56495f295d8e021f77d065b890fc0100e3f9f6d8 ]
 
-tcmu_try_get_data_page() looks up pages under cmdr_lock, but it does not
-take refcount properly and just returns page pointer. When
-tcmu_try_get_data_page() returns, the returned page may have been freed by
-tcmu_blocks_release().
+The megaraid_sas driver supports single LUN for RAID devices. That is LUN
+0. All other LUNs are unsupported. When a device scan on a logical target
+with invalid LUN number is invoked through sysfs, that target ends up
+getting removed.
 
-We need to get_page() under cmdr_lock to avoid concurrent
-tcmu_blocks_release().
+Add LUN ID validation in the slave destroy function to avoid the target
+deletion.
 
-Link: https://lore.kernel.org/r/20220311132206.24515-1-xiaoguang.wang@linux.alibaba.com
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
-Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+Link: https://lore.kernel.org/r/20220324094711.48833-1-chandrakanth.patil@broadcom.com
+Signed-off-by: Chandrakanth patil <chandrakanth.patil@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_user.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/megaraid/megaraid_sas.h      | 3 +++
+ drivers/scsi/megaraid/megaraid_sas_base.c | 7 +++++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 71144e33272a..077c56cbed4e 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1488,6 +1488,7 @@ static struct page *tcmu_try_get_block_page(struct tcmu_dev *udev, uint32_t dbi)
- 	mutex_lock(&udev->cmdr_lock);
- 	page = tcmu_get_block_page(udev, dbi);
- 	if (likely(page)) {
-+		get_page(page);
- 		mutex_unlock(&udev->cmdr_lock);
- 		return page;
- 	}
-@@ -1526,6 +1527,7 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
- 		/* For the vmalloc()ed cmd area pages */
- 		addr = (void *)(unsigned long)info->mem[mi].addr + offset;
- 		page = vmalloc_to_page(addr);
-+		get_page(page);
- 	} else {
- 		uint32_t dbi;
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 6b8ec57e8bdf..c088a848776e 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2554,6 +2554,9 @@ struct megasas_instance_template {
+ #define MEGASAS_IS_LOGICAL(sdev)					\
+ 	((sdev->channel < MEGASAS_MAX_PD_CHANNELS) ? 0 : 1)
  
-@@ -1536,7 +1538,6 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
- 			return VM_FAULT_SIGBUS;
++#define MEGASAS_IS_LUN_VALID(sdev)					\
++	(((sdev)->lun == 0) ? 1 : 0)
++
+ #define MEGASAS_DEV_INDEX(scp)						\
+ 	(((scp->device->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL) +	\
+ 	scp->device->id)
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 1a70cc995c28..84a2e9292fd0 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -2111,6 +2111,9 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+ 			goto scan_target;
+ 		}
+ 		return -ENXIO;
++	} else if (!MEGASAS_IS_LUN_VALID(sdev)) {
++		sdev_printk(KERN_INFO, sdev, "%s: invalid LUN\n", __func__);
++		return -ENXIO;
  	}
  
--	get_page(page);
- 	vmf->page = page;
- 	return 0;
- }
+ scan_target:
+@@ -2141,6 +2144,10 @@ static void megasas_slave_destroy(struct scsi_device *sdev)
+ 	instance = megasas_lookup_instance(sdev->host->host_no);
+ 
+ 	if (MEGASAS_IS_LOGICAL(sdev)) {
++		if (!MEGASAS_IS_LUN_VALID(sdev)) {
++			sdev_printk(KERN_INFO, sdev, "%s: invalid LUN\n", __func__);
++			return;
++		}
+ 		ld_tgt_id = MEGASAS_TARGET_ID(sdev);
+ 		instance->ld_tgtid_status[ld_tgt_id] = LD_TARGET_ID_DELETED;
+ 		if (megasas_dbg_lvl & LD_PD_DEBUG)
 -- 
 2.35.1
 
