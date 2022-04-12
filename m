@@ -2,98 +2,174 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8063C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 02:37:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8313EC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 03:05:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233901AbiDLCj1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Apr 2022 22:39:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49744 "EHLO
+        id S235685AbiDLDHz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Apr 2022 23:07:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233200AbiDLCjY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 22:39:24 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F0A419C3A
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Apr 2022 19:37:07 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23BMU6h4028126;
-        Tue, 12 Apr 2022 02:36:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=H3HuBYHLCLvGDbLg1GhxvccUoTZph4mt+afssz8+8sM=;
- b=V09+ARNrouxlcqYUGiR9nHPsWQCQyuDZjUIVwqMrj03V4gUci16bbYURnLTRRm5nKSn1
- SyB0hegW0/whX299GNEmLhfIoGStrR8Z6nCx5byW+dgzQYh+jWMf+i0hPSk6Ygswox9s
- Us6yPPMzDO/24Rx6Denrm+UyPYsfjpXx2Au47me/mFh7VjJuodIXU9e2s/smpf3/Znn4
- jKwg39S6Z3hHD/XzkfgWdnVhYu3juJttVYbBBHXjTNtaufqtj/b9Sgaag6oUAT5OOVd4
- 82M5LP3p3a/iLCXOfV5BSweZe4A07WKEyK3wjIhcw20q6gAcfY/7YmSsX0EhtvUbADEm hA== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3fb219w7vg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Apr 2022 02:36:58 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23C2VtEd032061;
-        Tue, 12 Apr 2022 02:36:58 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3fb0k2eg8d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Apr 2022 02:36:58 +0000
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 23C2ar96002744;
-        Tue, 12 Apr 2022 02:36:57 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3fb0k2efv6-3;
-        Tue, 12 Apr 2022 02:36:57 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.ibm.com, lduncan@suse.com, cleech@redhat.com,
-        Mike Christie <michael.christie@oracle.com>,
-        mrangankar@marvell.com, linux-scsi@vger.kernel.org,
-        GR-QLogic-Storage-Upstream@marvell.com, skashyap@marvell.com,
-        njavali@marvell.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/10] iscsi fixes
-Date:   Mon, 11 Apr 2022 22:36:51 -0400
-Message-Id: <164973085492.8307.10541159052908143705.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220408001314.5014-1-michael.christie@oracle.com>
-References: <20220408001314.5014-1-michael.christie@oracle.com>
+        with ESMTP id S229488AbiDLDHy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 23:07:54 -0400
+Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CCC919C27
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Apr 2022 20:05:37 -0700 (PDT)
+Received: from mailpool-fe-01.fibernetics.ca (mailpool-fe-01.fibernetics.ca [208.85.217.144])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 80FC4615F6;
+        Tue, 12 Apr 2022 03:05:36 +0000 (UTC)
+Received: from localhost (mailpool-mx-02.fibernetics.ca [208.85.217.141])
+        by mailpool-fe-01.fibernetics.ca (Postfix) with ESMTP id 786AF4CA15;
+        Tue, 12 Apr 2022 03:05:36 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at 
+Received: from mailpool-fe-01.fibernetics.ca ([208.85.217.144])
+        by localhost (mail-mx-02.fibernetics.ca [208.85.217.141]) (amavisd-new, port 10024)
+        with ESMTP id xgN7ON-nTDkD; Tue, 12 Apr 2022 03:05:36 +0000 (UTC)
+Received: from [192.168.48.23] (host-45-78-195-155.dyn.295.ca [45.78.195.155])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail.ca.inter.net (Postfix) with ESMTPSA id 6A1BD4CA14;
+        Tue, 12 Apr 2022 03:05:34 +0000 (UTC)
+Message-ID: <67af49ba-0d39-d0f6-b6fb-cd49dd32bbb3@interlog.com>
+Date:   Mon, 11 Apr 2022 23:05:34 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: DFN2ONE-A4lkRfpx5oyR2SMot0JUKHxD
-X-Proofpoint-ORIG-GUID: DFN2ONE-A4lkRfpx5oyR2SMot0JUKHxD
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v2 0/6] scsi: fix scsi_cmd::cmd_len
+Reply-To: dgilbert@interlog.com
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.vnet.ibm.com, hare@suse.de, bvanassche@acm.org
+References: <20220410173652.313016-1-dgilbert@interlog.com>
+ <20220411050325.GA13927@lst.de>
+ <aa2a08cc-ba98-b538-2448-d528e8eef917@interlog.com>
+ <20220411155258.GA25715@lst.de>
+Content-Language: en-CA
+In-Reply-To: <20220411155258.GA25715@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 7 Apr 2022 19:13:04 -0500, Mike Christie wrote:
-
-> The following patchset was made over Linus's tree and contains fixes for
-> boot/iscsid restart, more fixes for the in-kernel recovery patch, a data
-> corruption regression and fix for qedi connection error handling.
+On 2022-04-11 11:52, Christoph Hellwig wrote:
+> On Mon, Apr 11, 2022 at 11:06:17AM -0400, Douglas Gilbert wrote:
+>> On 2022-04-11 01:03, Christoph Hellwig wrote:
+>>> This still misses any good explanation of why we want all this.
+>>
+>> Advantages:
+>>     - undoes regression in ce70fd9a551af, that is:
+>>         - cdb_len > 32 no longer allowed (visible to the user space), undone
 > 
+> What exact regression causes this for real users and no just people
+> playing around with scsi_debug?
 
-Applied to 5.18/scsi-fixes, thanks!
+Sorry, you are regressing something that has been in place for over
+20 years and required by SPC (1 through 5) standards. The onus
+should not be on me to prove that regression is not safe. It should
+be the other way around (i.e. for you to prove that it is safe).
 
-[01/10] scsi: iscsi: Move iscsi_ep_disconnect
-        https://git.kernel.org/mkp/scsi/c/c34f95e98d8f
-[02/10] scsi: iscsi: Fix offload conn cleanup when iscsid restarts
-        https://git.kernel.org/mkp/scsi/c/cbd2283aaf47
-[03/10] scsi: iscsi: Release endpoint ID when its freed.
-        https://git.kernel.org/mkp/scsi/c/3c6ae371b8a1
-[04/10] scsi: iscsi: Fix endpoint reuse regression
-        https://git.kernel.org/mkp/scsi/c/0aadafb5c344
-[05/10] scsi: iscsi: Fix conn cleanup and stop race during iscsid restart
-        https://git.kernel.org/mkp/scsi/c/7c6e99c18167
-[06/10] scsi: iscsi: Fix unbound endpoint error handling
-        https://git.kernel.org/mkp/scsi/c/03690d819745
-[07/10] scsi: iscsi: Merge suspend fields
-        https://git.kernel.org/mkp/scsi/c/5bd856256f8c
-[08/10] scsi: iscsi: Fix nop handling during conn recovery
-        https://git.kernel.org/mkp/scsi/c/44ac97109e42
-[09/10] scsi: qedi: Fix failed disconnect handling.
-        https://git.kernel.org/mkp/scsi/c/857b06527f70
-[10/10] scsi: iscsi: Add Mike Christie as co-maintainer
-        https://git.kernel.org/mkp/scsi/c/70a3baeec4e8
+I admit that working with scsi_debug can be fun, but it seems to me a
+few other people have found it a useful tool. Some football advice
+might apply here: play the ball, not the man.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+>>         - but we still have this one:
+>>             - prior to lk5.18 sizeof(scsi_cmnd::cmnd) is that of a
+>>               pointer but >= lk5.18 sizeof(scsi_cmnd::cmnd) is 32 (or 16)
+> 
+> Please check the total size of struct scsi_cmnd, which is what really
+> matters.
+
+ From my laptop (64 bit) where scsi_cmnd1 is the original struct scsi_cmnd:
+     xtwo70 kernel: sizeof(struct scsi_cmnd)=376, sizeof(struct scsi_cmnd1)=392
+
+So is slightly > 4% (higher on 32 bit machines) insignificant?
+
+Since I have that measurement code in place, try a few other things ....
+Changing scsi_cmnd::flags to be a u8 and putting sense_buffer and host_scribble
+next to one another (they are pointers) gives:
+     xtwo70 kernel: sizeof(struct scsi_cmnd)=360, sizeof(struct scsi_cmnd1)=392
+
+Now we are at a 8% reduction.
+
+> 
+>>     - makes all scsi_cmnd objects 16 bytes smaller
+> 
+> Do we have data why this matters?
+
+In commit ce70fd9a551af7424a7dace2a1ba05a7de8eae27 you wrote:
+
+    "Now that each scsi_request is backed by a scsi_cmnd, there is no need to
+     indirect the CDB storage.  Change all submitters of SCSI passthrough
+     requests to store the CDB information directly in the scsi_cmnd, and while
+     doing so allocate the full 32 bytes that cover all Linux supported SCSI
+     hosts instead of requiring dynamic allocation for > 16 byte CDBs.  On
+     64-bit systems this does not change the size of the scsi_cmnd at all, while
+     on 32-bit systems it slightly increases it for now, but that increase will
+     be made up by the removal of the remaining scsi_request fields."
+
+  $ cd drivers/scsi
+  $ find . -name '*.c' -exec grep "SCSI_MAX_VARLEN_CDB_SIZE" {} \; -print
+	shost->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
+./iscsi_tcp.c
+		shost->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
+./cxgbi/libcxgbi.c
+
+include/scsi/scsi_proto.h:#define SCSI_MAX_VARLEN_CDB_SIZE 260
+
+Two examples that make your "the full 32 bytes that cover all ..." assertion
+false.
+
+Also those quoted comments seem to give weight to the argument that
+writer believes that the size of scsi_cmnd matters. If so, I agree,
+smaller is better.
+
+>>     - hides the poorly named dtor for scsi_cmnd objects (blk_mq_free_request)
+>>       within a more intuitively named inline: scsi_free_cmnd
+> 
+> I don't think this is in any way poorly named.
+
+Seriously?
+
+As well, having a scsi_cmnd destructor opens up the possibility of deferring
+kmem_cache_free(scsi_sense_cache, cmd->sense_buffer) from scsi_mq_exit_request()
+to that destructor. Then if scsi_cmnd objects are re-used,
+scsi_mq_init_request() need only get a cmd->sense_buffer if one has not yet
+been allocated. Again, I present no data, but pretty obviously a performance
+win.
+
+
+Another advantage of that patchset:
+    - in scsi_initialize_rq() the patch initializes CBD to Test Unit Ready
+      (6 zeros), previously it did a memset(scmd->cmnd, 0, 32), so that is
+      another small win.
+      That initialization could be further optimized with:
+          scmd->l_cdb.dummy_tur = 0;    /* clears first 8 zeros */
+          scmd->cmd_len = SCSI_TEST_UNIT_READY_CDB_LEN;
+      to bypass memset() completely.
+
+
+>> Disadvantages:
+>>      - burdens each access to a CDB with (scsi_cmnd::flags & SCMD_LONG_CDB)
+>>        check
+>>      - LLDs that want to fetch 32 byte CDBs (or longer) need to use the
+>>        scsi_cmnd_get_cdb() access function. For CDB lengths <= 16 bytes
+>>        they can continue to access scsi_cmnd::cmnd directly
+> 
+> It adds back the dynamic allocation for 32-byte CDBs that we got rid of.
+> It also breaks all LLDS actually using 32-byte CDBS currently as far as
+> I can tell.
+
+As Bart pointed out, the dynamic allocation for 32-byte CDBs is relatively
+rare, more than made up for by the 4% reduction in struct scsi_cmnd's size.
+
+As for the second sentence, if this patchset is accepted, I will find
+and fix those. The ones I did check limited cdb_s to 16 bytes.
+
+Doug Gilbert
+
