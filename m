@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39E5AC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 18:21:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F12D9C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 18:21:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358681AbiDLSXo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 14:23:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57274 "EHLO
+        id S233150AbiDLSYQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 14:24:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358680AbiDLSXm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 14:23:42 -0400
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B38C5D64B
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:21:24 -0700 (PDT)
-Received: by mail-pf1-f178.google.com with SMTP id w7so18178173pfu.11
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:21:24 -0700 (PDT)
+        with ESMTP id S231591AbiDLSYQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 14:24:16 -0400
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 126256006F
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:21:58 -0700 (PDT)
+Received: by mail-pj1-f54.google.com with SMTP id b2-20020a17090a010200b001cb0c78db57so3903684pjb.2
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:21:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=QD+tceN/gEAQQC3Pa7ZlKSYJgpeqDDr4LSkw0SqEVW8=;
-        b=hB9qNSxuS0Joxa2hReg8Vq0AOaDP5mI2ejX8rCCjFOgODgX/WEKpJt7GPeSnrP+S1p
-         IuvLSEOl9pWZ6+bnPZ91M+4+FKGII+HnPkucY6M0t3Cr1a79BiYbSSJmyNltGXEojEk6
-         aj8osRANaGENw5lHE2Q3fSTWS65PYH2KTE1TSUaOV2KngA8Xy7BJYR9DUZcl5SFL4Hxg
-         p/5CQYFDup+KyEJEc4HLJfhZQx7jVZUEeV4xLp8owwroNTgdBx46M5DBPj9sUx9rvxdp
-         oJf4DbAhuPb0bJt2oDaJdIP5MT3j+KaLhPLa+phT9UXUAKwI/PfN08F4yw5egPKkOXSU
-         dxXA==
-X-Gm-Message-State: AOAM533X+GUAfA4JU2jLhRj28/S96HPEeKd/7CZ5fPiR3gg1nebqDxuQ
-        7DENDiHf//c8UT2T6/hvMjw=
-X-Google-Smtp-Source: ABdhPJzVQwvjQ5odGZ5Zbi+q8jFvs80L+uFCuv3+r5FrWjf9KSu2BZs4uWuY+MyogLTQBhsVd8YEzg==
-X-Received: by 2002:a05:6a00:21c2:b0:4fe:81f:46c7 with SMTP id t2-20020a056a0021c200b004fe081f46c7mr38826748pfj.5.1649787683755;
-        Tue, 12 Apr 2022 11:21:23 -0700 (PDT)
+        bh=Aw6YY+9Ojmaf5Vn85bSv35EzCBs6xNM6n5pGVr8SH9w=;
+        b=JUhFDpnfTZB5Yj+3FY/ZT6WhqUcThdimiM5/3V8L6PbcpxZPBWOLzB8w57b8shTvxi
+         0QSxgmlLNrYo/QyUqMPluJgYqmKfmX0J16cTbJlHWPfTBkRVnzqRX00dXgOEM8Tq48VR
+         UBmd03aYJ4fbkk3mAE2tIRuoSaULObCkcLPdiv5nsVUOviJcP+aP4mNpaGqqxb7Q5X1h
+         N5G9r/SQXAEZudLEyoKtRfjw6DAtaWv1hOuBEgaJJTNd8nQwqbX/b3BQulrwvUeHtIOn
+         lrt9A1Cch5cCozhLUTqY+2XviCld51zfQ6eP83Wa/brW/DPHYmfw52BrvaEqtYB5rd26
+         yhnA==
+X-Gm-Message-State: AOAM533lfDXeThopKiZHgjNO3pRjKQgWCYMoEwAu9dlqi0uETts4MB6F
+        I6V4GsXYwdAcF0yhJL1/6MU=
+X-Google-Smtp-Source: ABdhPJwwlYlydbNFa3U5Sb5l7/45nvho3ePM+T5OLvzIWEyFTJYmT0x9GVDtTdZxbCXzzA7GhRFYgw==
+X-Received: by 2002:a17:90b:1e44:b0:1ca:9eb8:e1ec with SMTP id pi4-20020a17090b1e4400b001ca9eb8e1ecmr6536058pjb.63.1649787717448;
+        Tue, 12 Apr 2022 11:21:57 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:d4b2:56ee:d001:c159])
-        by smtp.gmail.com with ESMTPSA id d18-20020a056a0010d200b004fa2e13ce80sm40367037pfu.76.2022.04.12.11.21.22
+        by smtp.gmail.com with ESMTPSA id d18-20020a056a0010d200b004fa2e13ce80sm40367037pfu.76.2022.04.12.11.21.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Apr 2022 11:21:23 -0700 (PDT)
+        Tue, 12 Apr 2022 11:21:56 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>, Ye Bin <yebin10@huawei.com>,
-        ChanWoo Lee <cw9316.lee@samsung.com>,
-        Peter Wang <peter.wang@mediatek.com>,
         Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
         Daejun Park <daejun7.park@samsung.com>
-Subject: [PATCH v2 14/29] scsi: ufs: Make the config_scaling_param calls type safe
-Date:   Tue, 12 Apr 2022 11:18:38 -0700
-Message-Id: <20220412181853.3715080-15-bvanassche@acm.org>
+Subject: [PATCH v2 17/29] scsi: ufs: Use an SPDX license identifier in the Kconfig file
+Date:   Tue, 12 Apr 2022 11:18:41 -0700
+Message-Id: <20220412181853.3715080-18-bvanassche@acm.org>
 X-Mailer: git-send-email 2.36.0.rc0.470.gd361397f0d-goog
 In-Reply-To: <20220412181853.3715080-1-bvanassche@acm.org>
 References: <20220412181853.3715080-1-bvanassche@acm.org>
@@ -60,76 +60,51 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Pass the actual type to config_scaling_param callback as the third
-argment instead of a void pointer. Remove a superfluous NULL pointer
-check from ufs_qcom_config_scaling_param().
+As requested in Documentation/process/license-rules.rst, use an SPDX
+license identifier.
 
-Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 14 ++++----------
- drivers/scsi/ufs/ufshcd.h   | 10 +++++-----
- 2 files changed, 9 insertions(+), 15 deletions(-)
+ drivers/scsi/ufs/Kconfig | 25 +------------------------
+ 1 file changed, 1 insertion(+), 24 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 808b677f6083..dded29722880 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1463,23 +1463,17 @@ static int ufs_qcom_device_reset(struct ufs_hba *hba)
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index 9fe27b01904e..3ebcd5bbc344 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -1,3 +1,4 @@
++# SPDX-License-Identifier: GPL-2.0+
+ #
+ # Kernel configuration file for the UFS Host Controller
+ #
+@@ -7,30 +8,6 @@
+ # Authors:
+ #	Santosh Yaraganavi <santosh.sy@samsung.com>
+ #	Vinayak Holikatti <h.vinayak@samsung.com>
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License
+-# as published by the Free Software Foundation; either version 2
+-# of the License, or (at your option) any later version.
+-# See the COPYING file in the top-level directory or visit
+-# <http://www.gnu.org/licenses/gpl-2.0.html>
+-#
+-# This program is distributed in the hope that it will be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# This program is provided "AS IS" and "WITH ALL FAULTS" and
+-# without warranty of any kind. You are solely responsible for
+-# determining the appropriateness of using and distributing
+-# the program and assume all risks associated with your exercise
+-# of rights with respect to the program, including but not limited
+-# to infringement of third party rights, the risks and costs of
+-# program errors, damage to or loss of data, programs or equipment,
+-# and unavailability or interruption of operations. Under no
+-# circumstances will the contributor of this Program be liable for
+-# any damages of any kind arising from your use or distribution of
+-# this program.
  
- #if IS_ENABLED(CONFIG_DEVFREQ_GOV_SIMPLE_ONDEMAND)
- static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
--					  struct devfreq_dev_profile *p,
--					  void *data)
-+					struct devfreq_dev_profile *p,
-+					struct devfreq_simple_ondemand_data *d)
- {
--	static struct devfreq_simple_ondemand_data *d;
--
--	if (!data)
--		return;
--
--	d = (struct devfreq_simple_ondemand_data *)data;
- 	p->polling_ms = 60;
- 	d->upthreshold = 70;
- 	d->downdifferential = 5;
- }
- #else
- static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
--					  struct devfreq_dev_profile *p,
--					  void *data)
-+		struct devfreq_dev_profile *p,
-+		struct devfreq_simple_ondemand_data *data)
- {
- }
- #endif
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 107d19e98d52..bb2624aabda2 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -348,8 +348,8 @@ struct ufs_hba_variant_ops {
- 	int	(*phy_initialization)(struct ufs_hba *);
- 	int	(*device_reset)(struct ufs_hba *hba);
- 	void	(*config_scaling_param)(struct ufs_hba *hba,
--					struct devfreq_dev_profile *profile,
--					void *data);
-+				struct devfreq_dev_profile *profile,
-+				struct devfreq_simple_ondemand_data *data);
- 	int	(*program_key)(struct ufs_hba *hba,
- 			       const union ufs_crypto_cfg_entry *cfg, int slot);
- 	void	(*event_notify)(struct ufs_hba *hba,
-@@ -1360,11 +1360,11 @@ static inline int ufshcd_vops_device_reset(struct ufs_hba *hba)
- }
- 
- static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
--						    struct devfreq_dev_profile
--						    *profile, void *data)
-+		struct devfreq_dev_profile *p,
-+		struct devfreq_simple_ondemand_data *data)
- {
- 	if (hba->vops && hba->vops->config_scaling_param)
--		hba->vops->config_scaling_param(hba, profile, data);
-+		hba->vops->config_scaling_param(hba, p, data);
- }
- 
- extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+ config SCSI_UFSHCD
+ 	tristate "Universal Flash Storage Controller Driver Core"
