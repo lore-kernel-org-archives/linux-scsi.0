@@ -2,94 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90123C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5756C43219
 	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 10:03:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239433AbiDLKFE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 06:05:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54630 "EHLO
+        id S241027AbiDLKFM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 06:05:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352957AbiDLIDP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 04:03:15 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6BF4580D3;
-        Tue, 12 Apr 2022 00:35:48 -0700 (PDT)
-X-UUID: 7cba71d56fb7494cb4f3d71a18242d68-20220412
-X-UUID: 7cba71d56fb7494cb4f3d71a18242d68-20220412
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
-        (envelope-from <powen.kao@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 307447765; Tue, 12 Apr 2022 15:35:38 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Tue, 12 Apr 2022 15:35:37 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 12 Apr 2022 15:35:37 +0800
-From:   Po-Wen Kao <powen.kao@mediatek.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-CC:     <wsd_upstream@mediatek.com>, <peter.wang@mediatek.com>,
-        <stanley.chu@mediatek.com>, <powen.kao@mediatek.com>,
-        <alice.chao@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <jiajie.hao@mediatek.com>, <huobean@gmail.com>,
-        <yohan.joung@sk.com>, <jason.li@sk.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 1/1] scsi: ufs: remove redundant HPB unmap
-Date:   Tue, 12 Apr 2022 15:31:28 +0800
-Message-ID: <20220412073131.10644-1-powen.kao@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        with ESMTP id S1355072AbiDLIGz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 04:06:55 -0400
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A458251E48;
+        Tue, 12 Apr 2022 00:37:13 -0700 (PDT)
+X-IronPort-AV: E=Sophos;i="5.90,253,1643641200"; 
+   d="scan'208";a="116447082"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie5.idc.renesas.com with ESMTP; 12 Apr 2022 16:37:07 +0900
+Received: from localhost.localdomain (unknown [10.166.15.32])
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 5B8DD400F504;
+        Tue, 12 Apr 2022 16:37:07 +0900 (JST)
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com, robh+dt@kernel.org,
+        krzk+dt@kernel.org
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH 5/7] scsi: MAINTAINERS: Add maintainer for Renesas UFS driver
+Date:   Tue, 12 Apr 2022 16:36:45 +0900
+Message-Id: <20220412073647.3808493-6-yoshihiro.shimoda.uh@renesas.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220412073647.3808493-1-yoshihiro.shimoda.uh@renesas.com>
+References: <20220412073647.3808493-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since the HPB mapping is already reset in ufshpb_init by setting
-flag QUERY_FLAG_IDN_HPB_RESET, there is no need doing so again in
-ufshpb_hpb_lu_prepared.
+Add maintainer for Renesas UFS driver.
 
-This would also resolve the issue where HPB WRTIE BUFFER is issued
-before UAC being cleared.
-
-Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- drivers/scsi/ufs/ufshpb.c | 7 -------
- 1 file changed, 7 deletions(-)
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index a86d0cc50de2..5c09d44c4bd5 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -934,11 +934,6 @@ static int ufshpb_issue_umap_single_req(struct ufshpb_lu *hpb,
- 	return ufshpb_issue_umap_req(hpb, rgn, true);
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index f8db959c10a5..3a10f293ded9 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -20219,6 +20219,13 @@ L:	linux-mediatek@lists.infradead.org (moderated for non-subscribers)
+ S:	Maintained
+ F:	drivers/scsi/ufs/ufs-mediatek*
  
--static int ufshpb_issue_umap_all_req(struct ufshpb_lu *hpb)
--{
--	return ufshpb_issue_umap_req(hpb, NULL, false);
--}
--
- static void __ufshpb_evict_region(struct ufshpb_lu *hpb,
- 				 struct ufshpb_region *rgn)
- {
-@@ -2459,8 +2454,6 @@ static void ufshpb_hpb_lu_prepared(struct ufs_hba *hba)
- 			ufshpb_set_state(hpb, HPB_PRESENT);
- 			if ((hpb->lu_pinned_end - hpb->lu_pinned_start) > 0)
- 				queue_work(ufshpb_wq, &hpb->map_work);
--			if (!hpb->is_hcm)
--				ufshpb_issue_umap_all_req(hpb);
- 		} else {
- 			dev_err(hba->dev, "destroy HPB lu %d\n", hpb->lun);
- 			ufshpb_destroy_lu(hba, sdev);
++UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER RENESAS HOOKS
++M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
++L:	linux-renesas-soc@vger.kernel.org
++L:	linux-scsi@vger.kernel.org
++S:	Maintained
++F:	drivers/scsi/ufs/*renesas*
++
+ UNSORTED BLOCK IMAGES (UBI)
+ M:	Richard Weinberger <richard@nod.at>
+ L:	linux-mtd@lists.infradead.org
 -- 
-2.18.0
+2.25.1
 
