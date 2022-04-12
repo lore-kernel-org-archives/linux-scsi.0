@@ -2,127 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71080C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 18:22:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B71D7C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 18:22:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245485AbiDLSYY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 14:24:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57540 "EHLO
+        id S1350784AbiDLSYb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 14:24:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358694AbiDLSYB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 14:24:01 -0400
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DAAC5D64B
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:21:43 -0700 (PDT)
-Received: by mail-pl1-f173.google.com with SMTP id p10so653695plf.9
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:21:43 -0700 (PDT)
+        with ESMTP id S1349236AbiDLSYZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 14:24:25 -0400
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DEAD5D64B
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:22:07 -0700 (PDT)
+Received: by mail-pj1-f42.google.com with SMTP id md4so10965699pjb.4
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 11:22:07 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=u3xoahIYSO9OOaeanh6ld3z8PVf6V1CHNxpRp8Wej3s=;
-        b=y/+4SONzA0YHgaJw3x3Fc4NWVT7j2OlsgbB0W0rFDsNtyTNAlyAC+2ZYQyZAXjPFJu
-         PK0Fda6uM0QtZnMDg0CTYRJJTsC7OgLXnhJslxk7QNulL+cQgBYgEBZoFhBp5yEfn84x
-         VJtuRy0tNKgEC0SJ7GpJEkEMpne2obW1iVQTQIvrrNuFqPTRDp/lprTKm9GyMW0CxsFN
-         1v6WwvThSnMJOFKJ09Wj8+CgmxCt1OyPk1ZZbZhf8Gl5JM6sX8jzScS0T44qpPUyjxYr
-         BxURU4OdYnamuTjjRhsQcc+n99/rA9ZZCL9rWRfWk2/xkfVoSRbmcHL/GIccNQ/Qoqkh
-         1Irg==
-X-Gm-Message-State: AOAM531B4Bo/Tx4ak9Bv5iO6UD6BNUWbfTm0F93sHGM2PV4D8gsXRpoV
-        4LivLPCFFRWa6HDxhDtRdjc=
-X-Google-Smtp-Source: ABdhPJyPAU6pqdXZqCqogqQVjloNzTZs6I5NfHEbd2aCEDK+iUwDJa7yexjFBRmUHK6JuD3Z+tHdeA==
-X-Received: by 2002:a17:902:8ec8:b0:156:847b:a8f8 with SMTP id x8-20020a1709028ec800b00156847ba8f8mr39598715plo.121.1649787703052;
-        Tue, 12 Apr 2022 11:21:43 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:d4b2:56ee:d001:c159])
-        by smtp.gmail.com with ESMTPSA id d18-20020a056a0010d200b004fa2e13ce80sm40367037pfu.76.2022.04.12.11.21.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Apr 2022 11:21:42 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Sergey Shtylyov <s.shtylyov@omprussia.ru>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Xiaoke Wang <xkernel.wang@foxmail.com>,
-        Daejun Park <daejun7.park@samsung.com>
-Subject: [PATCH v2 15/29] scsi: ufs: Remove the driver version
-Date:   Tue, 12 Apr 2022 11:18:39 -0700
-Message-Id: <20220412181853.3715080-16-bvanassche@acm.org>
-X-Mailer: git-send-email 2.36.0.rc0.470.gd361397f0d-goog
-In-Reply-To: <20220412181853.3715080-1-bvanassche@acm.org>
-References: <20220412181853.3715080-1-bvanassche@acm.org>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=xjbtb04X5/DtSEYh7gcD/eedsjhU/N04s1DTBZ+XXlU=;
+        b=YbDS1GCFfVzy4024wZcERuhIleCjwJTgJOIMRpl5kXopslqErS+OdkbmJ4D7R6EJoe
+         nDLXZb3mowT8QPSoA9L5x29DzA8zZYXTXhIi5u4I3iYJzh4C7xeyDcpBsXleQHeTiqkx
+         K5snzgr+GFrtpcLbtw7qsAq+rgJNs0ACJM6KimQtFOS5XLODGGko5G6jm+M3FQJu/Drm
+         hNpnB5foePWFBjmXRV8s9ItNGfjkwLTcS0hBaaITgrhF6492gqmvGQ+fGc+ePDFH/H9/
+         IXLXDyPt8z6w/NE+tt06HNk3nfZVC8mb7505kT7Sxjbj4yRhfW0XEiAyArnSGwbQash4
+         B7ew==
+X-Gm-Message-State: AOAM531PwvovBrtFRZclq3x88kSw8aAw1wGEhWKoz3/WziSkOCERwTpj
+        C9LyOTHsyDI96xCzBRmWI4U=
+X-Google-Smtp-Source: ABdhPJx1YyR92Pc6OW1LlHVTyGqdCdNPcN/EUPkX5EipuOeR7np2WxVla9K/tAYgpWEhGCPrH+j+Rg==
+X-Received: by 2002:a17:90b:1c8b:b0:1ca:1ff6:607b with SMTP id oo11-20020a17090b1c8b00b001ca1ff6607bmr6399023pjb.244.1649787726792;
+        Tue, 12 Apr 2022 11:22:06 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:d4b2:56ee:d001:c159? ([2620:15c:211:201:d4b2:56ee:d001:c159])
+        by smtp.gmail.com with ESMTPSA id b25-20020a637159000000b00381fda49d15sm3625409pgn.39.2022.04.12.11.22.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 12 Apr 2022 11:22:06 -0700 (PDT)
+Message-ID: <16ccd860-1b07-512b-63c1-46433160b008@acm.org>
+Date:   Tue, 12 Apr 2022 11:22:04 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH] Revert "scsi: scsi_debug: Address races following module
+ load"
+Content-Language: en-US
+To:     Luis Chamberlain <mcgrof@kernel.org>,
+        Douglas Gilbert <dgilbert@interlog.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Yi Zhang <yi.zhang@redhat.com>,
+        Bob Pearson <rpearsonhpe@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20220409043704.28573-1-bvanassche@acm.org>
+ <5fb68dbd-ae0e-6230-8f9f-dd6df5593584@interlog.com>
+ <YlW8ZrL65ZKpQZ+j@bombadil.infradead.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <YlW8ZrL65ZKpQZ+j@bombadil.infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The current version number is 0.2. That driver version was assigned more
-than nine years ago. A version number that is not updated while the driver
-is updated is not useful. Hence remove the driver version number from the
-UFS driver. See also commit e0eca63e3421 ("[SCSI] ufs: Separate PCI code
-into glue driver").
+On 4/12/22 10:52, Luis Chamberlain wrote:
+> Upstream patient module removal inside kmod will help and is the right
+> thing to do all around. However modules can also strive to make the
+> removal painless too. How much work a module does to make it painless is
+> up to its authors. In lieu of kmod patient module removal, users of the
+> module should be aware of these issue though and open code it as I have
+> in fstests [0] as an example.
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/ufs/cdns-pltfrm.c   | 1 -
- drivers/scsi/ufs/ufshcd-pci.c    | 1 -
- drivers/scsi/ufs/ufshcd-pltfrm.c | 1 -
- drivers/scsi/ufs/ufshcd.c        | 1 -
- drivers/scsi/ufs/ufshcd.h        | 1 -
- 5 files changed, 5 deletions(-)
+If a new version of patch "Address races following module load" is posted I
+will help with reviewing it.
 
-diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.c
-index 7da8be2f35c4..e91cf9fd5a95 100644
---- a/drivers/scsi/ufs/cdns-pltfrm.c
-+++ b/drivers/scsi/ufs/cdns-pltfrm.c
-@@ -340,4 +340,3 @@ module_platform_driver(cdns_ufs_pltfrm_driver);
- MODULE_AUTHOR("Jan Kotas <jank@cadence.com>");
- MODULE_DESCRIPTION("Cadence UFS host controller platform driver");
- MODULE_LICENSE("GPL v2");
--MODULE_VERSION(UFSHCD_DRIVER_VERSION);
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index f76692053ca1..81aa14661072 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -601,4 +601,3 @@ MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
- MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
- MODULE_DESCRIPTION("UFS host controller PCI glue driver");
- MODULE_LICENSE("GPL");
--MODULE_VERSION(UFSHCD_DRIVER_VERSION);
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 9923cbc70653..fc5191101192 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -386,4 +386,3 @@ MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
- MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
- MODULE_DESCRIPTION("UFS host controller Platform bus based glue driver");
- MODULE_LICENSE("GPL");
--MODULE_VERSION(UFSHCD_DRIVER_VERSION);
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 69198e37c976..912c3ecb8d7a 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -9923,4 +9923,3 @@ MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
- MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
- MODULE_DESCRIPTION("Generic UFS host controller driver Core");
- MODULE_LICENSE("GPL");
--MODULE_VERSION(UFSHCD_DRIVER_VERSION);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index bb2624aabda2..49edbdb5ffd6 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -49,7 +49,6 @@
- #include "ufshci.h"
- 
- #define UFSHCD "ufshcd"
--#define UFSHCD_DRIVER_VERSION "0.2"
- 
- struct ufs_hba;
- 
+Thanks,
+
+Bart.
