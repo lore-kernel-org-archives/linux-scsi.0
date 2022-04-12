@@ -2,101 +2,56 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48C3EC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Apr 2022 09:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E720C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Apr 2022 09:42:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232509AbiDMJ3i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Apr 2022 05:29:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40286 "EHLO
+        id S234658AbiDMJoq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Apr 2022 05:44:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229927AbiDMJ3h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2022 05:29:37 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E75A853B69;
-        Wed, 13 Apr 2022 02:27:16 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id 2so1408038pjw.2;
-        Wed, 13 Apr 2022 02:27:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=aWHwuVM56mGn8hBqdvVQF2h0/hgZKGEUzuVUodXvntM=;
-        b=aB5TwnS2HFOxmF1b4l/z53MXkVL/ul/v+PNiOchygCcKgXValBvZeliRKQJV9gj+Vc
-         slXEpmzWh4+qwCgizBHHcwatvJK+yGMbDQVlcKamI7mLLHsWbqqaGCoNgwgU7NkvhjjN
-         4anPrku0hGi4Gnx1ceAqVwoBcAoPsQJ5bCKeR0q6lvogtnEtu7A0CelRpz9PRQsQvCq/
-         C4cpmbhO+PVUMP+LHcAPLZBkYd2uRpGA2RfWNySq9ltXftbkhX5Z4qfOk05h/WmjCH4T
-         R8pQWKToUbzigm26AAkQkemT3Oi6+vTYyaPdt0Q686WhH4YfAwo3EFk51RineGqM/R5e
-         xVlQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=aWHwuVM56mGn8hBqdvVQF2h0/hgZKGEUzuVUodXvntM=;
-        b=35rz8bpTb+Yr94p9BF5Qx6Bqn/OmueOiirla1K8uyBD9joZ8/T7acyMS7FhPyYZcLN
-         Q/CsyyLbChLaFbOaMzke3118DOBPQ171h+jJDEVkKbGtgpq6PAtPCHn5Gs0+X1/0l9gt
-         qITHiLKzD0eKLUQN4CA84f1YZAWrf8PHR41BuLHem9IvrO9DyNNOZVO7NepkCb10Ciym
-         JHAUsqj6M7QPDAH2IxlGeXtSNc7s32yyRlmQgKsiJWmmCbBAM5gw/s99dnZBAHZo23NM
-         qvB4s6tOVOS8lyFk5r1GAh+Kq0NuN4uqMdM6yJgEZoTXrnDjc7ndwKgx7DEog7D1XuXq
-         fMEg==
-X-Gm-Message-State: AOAM530O6iu/KxGqKwAVlA/WpBpKm9iskQcd+aXqP1UePDjjHAJtmIDn
-        Po7ycAGtP7jwcAAzqJcmZw/5Tg5QuQ/+y6q4Sw==
-X-Google-Smtp-Source: ABdhPJz9O5s6O8Bzb1wJFWqKHLGPLctQp79wNjlG9K87jHZwVNQ1wY2A1CSv2mriOcsbvGMVcNcMLrNXE9xUX/PJAU4=
-X-Received: by 2002:a17:90a:fb97:b0:1cb:adf9:88ba with SMTP id
- cp23-20020a17090afb9700b001cbadf988bamr9766014pjb.46.1649842036480; Wed, 13
- Apr 2022 02:27:16 -0700 (PDT)
+        with ESMTP id S233262AbiDMJoh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2022 05:44:37 -0400
+Received: from mail.growthmindset24.pl (mail.growthmindset24.pl [212.237.36.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC189554B7
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Apr 2022 02:42:16 -0700 (PDT)
+Received: by mail.growthmindset24.pl (Postfix, from userid 1001)
+        id 6E80C8841D; Tue, 12 Apr 2022 08:52:35 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=growthmindset24.pl;
+        s=mail; t=1649750065;
+        bh=FDuFY3XQoq0gMX1b2gxgT7Py2p4Sxl0PJZYZ4NVaPho=;
+        h=Date:From:To:Subject:From;
+        b=RnqFz/SyOoXfrDu9MI4Nxm+mkBaBnxRjQPPAdKEj+QT9KCaQAYsxhNeINThw2UozR
+         KDwSpQ9YoJpcPsw+swT6i+f6Rq9tmYEHA63eDCBPsaGU+MYhoC8PmVD/dO/YYVa7Oh
+         lSWEMv61QONn3+ZPXvfOyRJ+mPhHW99hPKixL1tvmqSIihYBxXjmdbBBiTwxkYLtby
+         DK+HiUtppOIdF5UQ9s6DvDTO2A95RSHokw3PL/Tn508w8GFIWL7s2fSIKGBBPPgbnx
+         ewB5ppcPFVRg4lzJj+bouDPgcqM0Kp2MIZboUNJs+vcI3BPqftJxoY15S7laq6SMxH
+         wvEYRY5x2WDPA==
+Received: by mail.growthmindset24.pl for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 07:50:49 GMT
+Message-ID: <20220412073001-0.1.2w.d780.0.5z5rp25b8i@growthmindset24.pl>
+Date:   Tue, 12 Apr 2022 07:50:49 GMT
+From:   =?UTF-8?Q? "Przemys=C5=82aw_Wr=C3=B3blewski" ?= 
+        <przemyslaw.wroblewski@growthmindset24.pl>
+To:     <linux-scsi@vger.kernel.org>
+Subject: Wycena paneli fotowoltaicznych
+X-Mailer: mail.growthmindset24.pl
 MIME-Version: 1.0
-References: <20220409134926.331728-1-zheyuma97@gmail.com> <CAFdVvOzx7t99Btf4Jv5+5=6es0i8AKx_1Bwj5gQd-Oqnqi+tPA@mail.gmail.com>
-In-Reply-To: <CAFdVvOzx7t99Btf4Jv5+5=6es0i8AKx_1Bwj5gQd-Oqnqi+tPA@mail.gmail.com>
-From:   Zheyu Ma <zheyuma97@gmail.com>
-Date:   Wed, 13 Apr 2022 17:27:04 +0800
-Message-ID: <CAMhUBj=EG8UrFoLp34F2aSTAoM8jY+Agg_PQypn6zjZ_dkUyoA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: mpi3mr: Fix an error code when probing the driver
-To:     Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        jejb@linux.ibm.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Apr 13, 2022 at 1:58 AM Sathya Prakash Veerichetty
-<sathya.prakash@broadcom.com> wrote:
->
-> On Sat, Apr 9, 2022 at 7:49 AM Zheyu Ma <zheyuma97@gmail.com> wrote:
-> >
-> > During the process of driver probing, probe function should return < 0
-> > for failure, otherwise kernel will treat value >= 0 as success.
-> >
-> > Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
-> > ---
-> >  drivers/scsi/mpi3mr/mpi3mr_os.c | 5 +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> > index f7cd70a15ea6..240bfdf9788b 100644
-> > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> > @@ -4222,9 +4222,10 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> >         struct Scsi_Host *shost = NULL;
-> >         int retval = 0, i;
-> >
-> > -       if (osintfc_mrioc_security_status(pdev)) {
-> > +       retval = osintfc_mrioc_security_status(pdev);
-> > +       if (retval) {
-> >                 warn_non_secure_ctlr = 1;
-> > -               return 1; /* For Invalid and Tampered device */
-> > +               return retval; /* For Invalid and Tampered device */
-> >         }
-> NAK. The driver has to return 1 when invalid/tampered controllers are
-> detected just to say the controller is held by the mpi3mr driver
-> without any actual operation.
+Dzie=C5=84 dobry,
 
-Thanks for your explanation, I will drop this patch.
+dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
+irm=C4=85.
 
-Zheyu Ma
+=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
+ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
+
+Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
+ropozycji?
+
+
+Pozdrawiam,
+Przemys=C5=82aw Wr=C3=B3blewski
