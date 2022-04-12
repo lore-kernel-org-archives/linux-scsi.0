@@ -2,49 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C525C4167B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69B44C41535
 	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 01:02:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236462AbiDLBEn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Apr 2022 21:04:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34780 "EHLO
+        id S1345377AbiDLBEr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Apr 2022 21:04:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347595AbiDLA7I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 20:59:08 -0400
+        with ESMTP id S1348862AbiDLA7b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Apr 2022 20:59:31 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8DF3369FF;
-        Mon, 11 Apr 2022 17:52:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D886B37A38;
+        Mon, 11 Apr 2022 17:52:44 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4B4AE60B2B;
-        Tue, 12 Apr 2022 00:52:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79423C385A3;
-        Tue, 12 Apr 2022 00:52:14 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 75A9360B28;
+        Tue, 12 Apr 2022 00:52:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A245BC385A3;
+        Tue, 12 Apr 2022 00:52:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649724735;
-        bh=vHthoxDeGSOWt/cojooMHxOT1glHUcbvDQetIrI+MZc=;
+        s=k20201202; t=1649724763;
+        bh=viMnBK9KBll2u0nvhYs6yjOuAvcgcGFCjRz5AQYZow0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=anB6kUnPiQuaziqVW1cWiMqhcqKNVY5J+qxcrRQNMtRNcmG+8j7xheUFDgOLKEDDl
-         OnQhDhlAebF3mBfNA1krzWF2DAgT9yV2Bmxu3sCV7et4LtSCIS5lobceFc4O3bP39H
-         96S6Ja5WJF2uefSxrKwKPxG+LFIKbasnY6hNjV0Dy6S3+mcmaksv7vJdWIhCV+98vs
-         FZvrGaTqSP2Xb3CTzE9T7r7g6kP2Ylyzj0vXEvrcqAO5XxFnfCvC25wne+efzOBVjO
-         f7jry6pp7rh6tIG+ELtm7nvggqvcFk9K3tWK9+8O7z95O9dexqX+DsTP0Q8ZKJWMA/
-         OaL/4j+atStHg==
+        b=lUxjb018NY1/CSBxZa0AWDKBBfLwtALux9GKALaN2CYDUC6Iiu35pN3GSFX9JcycQ
+         gfKzDhnJZCMLNRLJmnFF/9iIbjLXxE6AQVaOjb+sHjx8rCgTM9/5z57M+JQC6nJrXj
+         DhAORy4qxdk2mkYmL4VEs9HE0RWBg/XcF016b1oqSGNOi2ppXNpPjspeVw7Mc54/s0
+         ENgUProir+Yws3A/rTVsBuycMyz+DFDS8mpJavtptzfvMHbiTRMHIyCKM5RUM/xjAx
+         sh2WxPZaRRPvPTzGNFH0rfULONiw0HIs2LrpCDUFHnoaSeZ3xOqGvj+IMoFbeEzU2+
+         ockfWyBpO4Z7w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Alexey Galakhov <agalakhov@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        john.garry@huawei.com, bvanassche@acm.org, yuyufen@huawei.com,
-        yanaijie@huawei.com, thunder.leizhen@huawei.com,
+        john.garry@huawei.com, bvanassche@acm.org, hare@suse.de,
+        yuyufen@huawei.com, thunder.leizhen@huawei.com,
         yang.guang5@zte.com.cn, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 11/12] scsi: mvsas: Add PCI ID of RocketRaid 2640
-Date:   Mon, 11 Apr 2022 20:51:44 -0400
-Message-Id: <20220412005148.351391-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 10/11] scsi: mvsas: Add PCI ID of RocketRaid 2640
+Date:   Mon, 11 Apr 2022 20:52:19 -0400
+Message-Id: <20220412005222.351554-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220412005148.351391-1-sashal@kernel.org>
-References: <20220412005148.351391-1-sashal@kernel.org>
+In-Reply-To: <20220412005222.351554-1-sashal@kernel.org>
+References: <20220412005222.351554-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -70,7 +70,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 98d6608068ab..d47b4dcfb1e5 100644
+index 718c88de328b..eada13c775ba 100644
 --- a/drivers/scsi/mvsas/mv_init.c
 +++ b/drivers/scsi/mvsas/mv_init.c
 @@ -678,6 +678,7 @@ static struct pci_device_id mvs_pci_table[] = {
