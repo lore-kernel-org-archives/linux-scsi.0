@@ -2,38 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 163ACC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 10:03:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1807C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 10:03:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347912AbiDLKF2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 06:05:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38054 "EHLO
+        id S1345726AbiDLKFe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 06:05:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380839AbiDLIWn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 04:22:43 -0400
+        with ESMTP id S1380684AbiDLIWd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 04:22:33 -0400
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED69C4F462
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 00:51:43 -0700 (PDT)
-X-UUID: 7a848ed315a6432a9cc4ded1bb433ab4-20220412
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E97BE4BB98
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 00:50:51 -0700 (PDT)
+X-UUID: 81f431b1d502443d947cc7d2b4d6586e-20220412
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.4,REQID:1ef5052d-7089-44d8-be8d-449538440eb3,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:-20,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,AC
-        TION:release,TS:-20
-X-CID-META: VersionHash:faefae9,CLOUDID:cc01dfa8-d103-4e36-82b9-b0e86991b3df,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,File:nil,QS:0,BEC:nil
-X-UUID: 7a848ed315a6432a9cc4ded1bb433ab4-20220412
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+X-CID-O-INFO: VERSION:1.1.4,REQID:69c94af2-0db9-48b2-ae4e-0070a78a503f,OB:0,LO
+        B:0,IP:0,URL:0,TC:0,Content:-20,EDM:0,RT:0,SF:53,FILE:0,RULE:Release_Ham,A
+        CTION:release,TS:33
+X-CID-INFO: VERSION:1.1.4,REQID:69c94af2-0db9-48b2-ae4e-0070a78a503f,OB:0,LOB:
+        0,IP:0,URL:0,TC:0,Content:-20,EDM:0,RT:0,SF:53,FILE:0,RULE:Release_UHam,AC
+        TION:release,TS:33
+X-CID-META: VersionHash:faefae9,CLOUDID:3df7dea8-d103-4e36-82b9-b0e86991b3df,C
+        OID:189941404c1f,Recheck:0,SF:13|15|28|16|19|48,TC:nil,Content:0,EDM:-3,Fi
+        le:nil,QS:0,BEC:nil
+X-UUID: 81f431b1d502443d947cc7d2b4d6586e-20220412
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
         (envelope-from <powen.kao@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1523113766; Tue, 12 Apr 2022 15:51:37 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1302557935; Tue, 12 Apr 2022 15:50:46 +0800
 Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Tue, 12 Apr 2022 15:51:36 +0800
+ mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 12 Apr 2022 15:50:45 +0800
 Received: from mtksdccf07 (172.21.84.99) by mtkcas11.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 12 Apr 2022 15:51:36 +0800
-Message-ID: <4a13e84b5085c03f092a46ebac41690bd57bef3a.camel@mediatek.com>
+ Transport; Tue, 12 Apr 2022 15:50:45 +0800
+Message-ID: <4cd3d27b13367fd8213344f9da89964996e5acee.camel@mediatek.com>
 Subject: Re: Please check ufshpb init flow
 From:   Po-Wen Kao <powen.kao@mediatek.com>
 To:     "=?UTF-8?Q?=EC=A0=95=EC=9A=94=ED=95=9C=28JOUNG?= YOHAN) Mobile SE" 
@@ -50,7 +53,7 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         <jaeyoung21.choi@sk.com>,
         "=?UTF-8?Q?=EA=B3=BD=ED=83=9C=EC=88=98=28KWAK?= TAESU) Mobile SE" 
         <taesu.kwak@sk.com>
-Date:   Tue, 12 Apr 2022 15:51:36 +0800
+Date:   Tue, 12 Apr 2022 15:50:45 +0800
 In-Reply-To: <4d2331ea33a246c78fcabaf1ca4e0b10@sk.com>
 References: <e092e35414844175bf76868b820d907f@sk.com>
          <b06d9a87232a6d4e90fe635384a83c48586652e9.camel@gmail.com>
@@ -70,8 +73,8 @@ I have propose a patch to remove ufshpb_issue_umap_all_req as we also
 consider this a redundant operation.
 
 Please refer to topic "[PATCH 1/1] scsi: ufs: remove redundant HPB
-unmap". Feel free to leave comments there. 
-Thanks~
+unmap". Feel free to leave comments there. Thanks~
+
 Po-Wen
  
 On Tue, 2021-11-23 at 05:19 +0000, 정요한(JOUNG YOHAN) Mobile SE wrote:
