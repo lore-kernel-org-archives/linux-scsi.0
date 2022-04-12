@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 904E7C43219
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 23:33:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AAEEC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 23:33:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231255AbiDLXgL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 19:36:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58122 "EHLO
+        id S231297AbiDLXgM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 19:36:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231305AbiDLXcr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 19:32:47 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3C6D8CD99
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:16 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id q3so284540plg.3
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:16 -0700 (PDT)
+        with ESMTP id S231376AbiDLXcy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 19:32:54 -0400
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE79E7C16D
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:33 -0700 (PDT)
+Received: by mail-pg1-x530.google.com with SMTP id bg9so240768pgb.9
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 15:20:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=64/BCqJFZd6ks5SKwOEnA94soxcA/qZP55c28M4pGkg=;
-        b=MjdJe3uXg6W/f2xeR1DgSYikg6nccP6Dy0+37+59qUllhw+qplyZYPsJvnnBJidNSx
-         t8JJMAUonBbUbxQnIqguojdCOwl4ZPQ/KVUBCRLoJAK6Q3zXkgoU8Y24r2bkhYiP6Wni
-         sER9r7lGwhvMRwpx1+6gg8HlyUx15m+YjbcCWxekQlVrkRjFf7rg8W2cCiWkVquNhkHS
-         QnPFltW58REwKwbmaZm3z9SRfKwpoMg+C7OfNxe7kbSxTKo24jQfNEUfvOqZgkjoYDBm
-         XCKxAcDw2F7yPyw2XNY0IGGT85ESD+9AGOp21FTLdWby+FQuGgtf33z/EOGRWYGSxcsv
-         9uvw==
+        bh=Ktf2Ixfl4Rko+xBPpF90tScNTI6jjGh7xMf78/bKXXY=;
+        b=FyKvkWkQjXfnCb1qSwoW+5Qdo88tkeyQYuZo9V9s4TCqxyxpCEQSr0jV+475lRsslm
+         byd17BAkDHD17LvMvWyzzr3pBrO9LtRMd3U7pUpwBxJjvjgYKE1V0378apZjlalrUhHe
+         F6dmZU3ExkSP6aE7oZthm7QHcQNbjcZWBCvXuSpbxn9GtQpJZ4rZ7RPVdHm2bbZx29to
+         D0fAVWlMQMFSIWMbo2gaPPR3q2lFuMhxie+3m0nop/OQ6EmvI2GwTQPPYOvb2pZtcDuZ
+         FSXU2ZoSoNYiRoG31UKskxWlY7qWvtB65eei5bhFQU/ghaJjnfxO5+QaOWLiEGyNdMPN
+         UFdA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=64/BCqJFZd6ks5SKwOEnA94soxcA/qZP55c28M4pGkg=;
-        b=GXCShwM8d/xkW9RCLsw1dCeWZj5nTZTgApQ0yhR+aSf2enChoqpkE8UW3Rt0CFMVHu
-         or7u+kY7o/jRYeql7fWDWGUX4kjvLGrNQSF1BdRHSeKdGwnLeiiop41GxuPieadOBxD8
-         /+NCjzF4QfxyxgTh14iAgWHYCp3aGarKY+DYw6YrQtDNkEARpg9oW7+L49cKSH7CrzCD
-         Jy/3+D4oDJx2nBXSO6rdx2QFZ6EGJNvcXvonDhJBkv1jv1N/clQqw4Tgxb9K2l4mwPgd
-         hd62MgdPnkqz7TJZqjv3r/YYDKnMod2zYGhfTag1+Bf7IRQUV6q+Y+E/mdVSe20o+EKk
-         ECiQ==
-X-Gm-Message-State: AOAM5336Smvn6WzGS/vC5+g1GJZWt0nptjCjfsdgDxzQW0JEdxKH9aWB
-        ZgOlvVP80iDBlL3OEsM+Poq3ZoBo1QM=
-X-Google-Smtp-Source: ABdhPJylCIvEdWQHppKqArQSXNQd1vqWJpa/+x3dsXwNj5zQLoJiw66w5UQv/VxWsRPKI3AK4znf0w==
-X-Received: by 2002:a17:903:1105:b0:156:3e9d:bb7b with SMTP id n5-20020a170903110500b001563e9dbb7bmr39192352plh.136.1649802016260;
-        Tue, 12 Apr 2022 15:20:16 -0700 (PDT)
+        bh=Ktf2Ixfl4Rko+xBPpF90tScNTI6jjGh7xMf78/bKXXY=;
+        b=19NDpUKY5l47u/mwA4FoPRh3dMCjFfZm5qG/VryWDRSYkPoXGpOydVX4Zb0ND/v0JW
+         WAIsffpJYDpMMsQhYr+d+IgKUpcCMabT0G3/+sd4OhgcuiLMpigMi6al4YG3oML+PziV
+         l6b7RGM7+BuxsxjSRmjHCqgVvTqqxTuvEzP6ltVcX3w1A18VzQQ/ON6mn6Qn8kE3uZ2w
+         dViM0oQ7FLbPyfU8Un67uSjyK/7/YbiXzx3bcFHQtmmGtpB/tsg7U43LLubQjsMnc0Hz
+         k9lNc65zUUQ6DYNKEp1akffoeZRv5+eG5CPn1oochaHkzYT05X9Djytt06YLTlrbIeRf
+         BYqg==
+X-Gm-Message-State: AOAM5324/viFTosYZWei2PjtPV10Lw55AFAsqFEUAMPi5dE9ynpHfoR4
+        u/3ZcISQ6Qrdb9trc+sEleb9moM2ePI=
+X-Google-Smtp-Source: ABdhPJwXgysXsdJ9MbvFX1eMEd1QOKYha2DYv7HSEYAI4m7W0CcMvT3Bs55RcmzhA8cw/myorIzc1g==
+X-Received: by 2002:a63:cf09:0:b0:372:d564:8024 with SMTP id j9-20020a63cf09000000b00372d5648024mr32221686pgg.251.1649802033256;
+        Tue, 12 Apr 2022 15:20:33 -0700 (PDT)
 Received: from mail-lvn-it-01.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id g15-20020a056a000b8f00b004fa9dbf27desm40429824pfj.55.2022.04.12.15.20.15
+        by smtp.gmail.com with ESMTPSA id g15-20020a056a000b8f00b004fa9dbf27desm40429824pfj.55.2022.04.12.15.20.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Apr 2022 15:20:15 -0700 (PDT)
+        Tue, 12 Apr 2022 15:20:33 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 01/26] lpfc: Tweak message log categories for ELS/FDMI/NVME Rescan
-Date:   Tue, 12 Apr 2022 15:19:43 -0700
-Message-Id: <20220412222008.126521-2-jsmart2021@gmail.com>
+Subject: [PATCH 23/26] lpfc: Update stat accounting for READ_STATUS mbox command
+Date:   Tue, 12 Apr 2022 15:20:05 -0700
+Message-Id: <20220412222008.126521-24-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20220412222008.126521-1-jsmart2021@gmail.com>
 References: <20220412222008.126521-1-jsmart2021@gmail.com>
@@ -63,79 +63,123 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Several log message categories were updated:
-- Enable msg 4623 (Xmit of ECD) to display for ELS logging.
-- Change msg 0220 (FDMI cmd failed) to display for ELS logging.
-- Change msg 6460 (FDMI RPA failure) to be warning not hard error.
-- Change msg 6172 (NVME rescan of DID) to be logged under NVME
-  discovery.
+READ_STATUS tx/rx byte count fields are now expanded to 64 bit wide
+counters.  This patch updates logic for the READ_STATUS mbox command when
+displaying tx_word and rx_word statistics in sysfs.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c   | 6 +++---
- drivers/scsi/lpfc/lpfc_els.c  | 2 +-
- drivers/scsi/lpfc/lpfc_nvme.c | 4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c | 35 ++++++++++++++++++++++++---------
+ drivers/scsi/lpfc/lpfc_hw.h   | 37 ++++++++++++++++++++++++-----------
+ 2 files changed, 52 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 4b024aa03c1b..4334bd358c5a 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -2236,7 +2236,7 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	cmd =  be16_to_cpu(fdmi_cmd);
- 	if (fdmi_rsp == cpu_to_be16(SLI_CT_RESPONSE_FS_RJT)) {
- 		/* FDMI rsp failed */
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY | LOG_ELS,
- 				 "0220 FDMI cmd failed FS_RJT Data: x%x", cmd);
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 0d19e469386b..c8fa579168c6 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -6885,17 +6885,34 @@ lpfc_get_stats(struct Scsi_Host *shost)
+ 	memset(hs, 0, sizeof (struct fc_host_statistics));
  
- 		/* Should we fallback to FDMI-2 / FDMI-1 ? */
-@@ -2272,9 +2272,9 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 				phba->link_flag &= ~LS_CT_VEN_RPA;
- 				if (phba->cmf_active_mode == LPFC_CFG_OFF)
- 					return;
--				lpfc_printf_log(phba, KERN_ERR,
-+				lpfc_printf_log(phba, KERN_WARNING,
- 						LOG_DISCOVERY | LOG_ELS,
--						"6460 VEN FDMI RPA failure\n");
-+						"6460 VEN FDMI RPA RJT\n");
- 				return;
- 			}
- 			if (vport->fdmi_port_mask == LPFC_FDMI2_PORT_ATTR) {
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 3a445a0fea86..65e884a416a5 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -4257,7 +4257,7 @@ lpfc_issue_els_edc(struct lpfc_vport *vport, uint8_t retry)
+ 	hs->tx_frames = pmb->un.varRdStatus.xmitFrameCnt;
++	hs->rx_frames = pmb->un.varRdStatus.rcvFrameCnt;
++
+ 	/*
+-	 * The MBX_READ_STATUS returns tx_k_bytes which has to
+-	 * converted to words
++	 * The MBX_READ_STATUS returns tx_k_bytes which has to be
++	 * converted to words.
++	 *
++	 * Check if extended byte flag is set, to know when to collect upper
++	 * bits of 64 bit wide statistics counter.
+ 	 */
+-	hs->tx_words = (uint64_t)
+-			((uint64_t)pmb->un.varRdStatus.xmitByteCnt
+-			* (uint64_t)256);
+-	hs->rx_frames = pmb->un.varRdStatus.rcvFrameCnt;
+-	hs->rx_words = (uint64_t)
+-			((uint64_t)pmb->un.varRdStatus.rcvByteCnt
+-			 * (uint64_t)256);
++	if (pmb->un.varRdStatus.xkb & RD_ST_XKB) {
++		hs->tx_words = (u64)
++			       ((((u64)(pmb->un.varRdStatus.xmit_xkb &
++					RD_ST_XMIT_XKB_MASK) << 32) |
++				(u64)pmb->un.varRdStatus.xmitByteCnt) *
++				(u64)256);
++		hs->rx_words = (u64)
++			       ((((u64)(pmb->un.varRdStatus.rcv_xkb &
++					RD_ST_RCV_XKB_MASK) << 32) |
++				(u64)pmb->un.varRdStatus.rcvByteCnt) *
++				(u64)256);
++	} else {
++		hs->tx_words = (uint64_t)
++				((uint64_t)pmb->un.varRdStatus.xmitByteCnt
++				* (uint64_t)256);
++		hs->rx_words = (uint64_t)
++				((uint64_t)pmb->un.varRdStatus.rcvByteCnt
++				 * (uint64_t)256);
++	}
  
- 	phba->cgn_sig_freq = lpfc_fabric_cgn_frequency;
+ 	memset(pmboxq, 0, sizeof (LPFC_MBOXQ_t));
+ 	pmb->mbxCommand = MBX_READ_LNK_STAT;
+diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+index 70c3dd7b7105..748c53219986 100644
+--- a/drivers/scsi/lpfc/lpfc_hw.h
++++ b/drivers/scsi/lpfc/lpfc_hw.h
+@@ -2648,19 +2648,26 @@ typedef struct {
+ } READ_SPARM_VAR;
  
--	lpfc_printf_vlog(vport, KERN_INFO, LOG_CGN_MGMT,
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS | LOG_CGN_MGMT,
- 			 "4623 Xmit EDC to remote "
- 			 "NPORT x%x reg_sig x%x reg_fpin:x%x\n",
- 			 ndlp->nlp_DID, phba->cgn_reg_signal,
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 8d26f207ebd2..699b79d4f496 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2466,12 +2466,12 @@ lpfc_nvme_rescan_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	if (!nrport || !remoteport)
- 		goto rescan_exit;
+ /* Structure for MB Command READ_STATUS (14) */
++enum read_status_word1 {
++	RD_ST_CC	= 0x01,
++	RD_ST_XKB	= 0x80,
++};
++
++enum read_status_word17 {
++	RD_ST_XMIT_XKB_MASK = 0x3fffff,
++};
++
++enum read_status_word18 {
++	RD_ST_RCV_XKB_MASK = 0x3fffff,
++};
  
--	/* Only rescan if we are an NVME target in the MAPPED state */
-+	/* Rescan an NVME target in MAPPED state with DISCOVERY role set */
- 	if (remoteport->port_role & FC_PORT_ROLE_NVME_DISCOVERY &&
- 	    ndlp->nlp_state == NLP_STE_MAPPED_NODE) {
- 		nvme_fc_rescan_remoteport(remoteport);
+ typedef struct {
+-#ifdef __BIG_ENDIAN_BITFIELD
+-	uint32_t rsvd1:31;
+-	uint32_t clrCounters:1;
+-	uint16_t activeXriCnt;
+-	uint16_t activeRpiCnt;
+-#else	/*  __LITTLE_ENDIAN_BITFIELD */
+-	uint32_t clrCounters:1;
+-	uint32_t rsvd1:31;
+-	uint16_t activeRpiCnt;
+-	uint16_t activeXriCnt;
+-#endif
++	u8 clear_counters; /* rsvd 7:1, cc 0 */
++	u8 rsvd5;
++	u8 rsvd6;
++	u8 xkb; /* xkb 7, rsvd 6:0 */
++
++	u32 rsvd8;
  
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC,
- 				 "6172 NVME rescanned DID x%06x "
- 				 "port_state x%x\n",
- 				 ndlp->nlp_DID, remoteport->port_state);
+ 	uint32_t xmitByteCnt;
+ 	uint32_t rcvByteCnt;
+@@ -2672,6 +2679,14 @@ typedef struct {
+ 	uint32_t totalRespExchanges;
+ 	uint32_t rcvPbsyCnt;
+ 	uint32_t rcvFbsyCnt;
++
++	u32 drop_frame_no_rq;
++	u32 empty_rq;
++	u32 drop_frame_no_xri;
++	u32 empty_xri;
++
++	u32 xmit_xkb; /* rsvd 31:22, xmit_xkb 21:0 */
++	u32 rcv_xkb; /* rsvd 31:22, rcv_xkb 21:0 */
+ } READ_STATUS_VAR;
+ 
+ /* Structure for MB Command READ_RPI (15) */
 -- 
 2.26.2
 
