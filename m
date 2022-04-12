@@ -2,117 +2,197 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26F33C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 17:52:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7866C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Apr 2022 17:58:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351531AbiDLRzB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Apr 2022 13:55:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55956 "EHLO
+        id S1347679AbiDLSAv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Apr 2022 14:00:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350027AbiDLRzA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 13:55:00 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5BA457B3B
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 10:52:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=IARc/n7lNBIqKdd08vLtV2klg96ovXoWrNhSZsd3CqQ=; b=ZdcBcOGpNLrNzQrjMcKU3qmRII
-        5ESR2gp17SmDfttgvoqFzRWsUzh/3dwDqTY++lhTSxO4zr1c3nG+Uv0lFmOZXMa4H92le+libtGSn
-        0RkuQWxldkY40gLiXZ50f/kFwKZurOXGD+vQ1YXuQsA5p/P78TQKdVABfpS0/b1kOEwbW4UoRR8SY
-        Zbfi/1ruIEwczxO3WSqfdYaTdrXMKz2OvtJvZspwumuo3PXb5US3u4KZdF5ddZv4ItvRv9YgaOPxq
-        vqmJqfl+6DVeU8mgQQumecGBFfaAWSpFLf3wMIjiZz1PDSQx+wKtcc4KUot50XlnFAW1msD6uSMHF
-        tnMvTWBg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1neKgx-00FOGO-0D; Tue, 12 Apr 2022 17:52:39 +0000
-Date:   Tue, 12 Apr 2022 10:52:38 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Douglas Gilbert <dgilbert@interlog.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Yi Zhang <yi.zhang@redhat.com>,
-        Bob Pearson <rpearsonhpe@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH] Revert "scsi: scsi_debug: Address races following module
- load"
-Message-ID: <YlW8ZrL65ZKpQZ+j@bombadil.infradead.org>
-References: <20220409043704.28573-1-bvanassche@acm.org>
- <5fb68dbd-ae0e-6230-8f9f-dd6df5593584@interlog.com>
+        with ESMTP id S244075AbiDLSAu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Apr 2022 14:00:50 -0400
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9965B5A167
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 10:58:31 -0700 (PDT)
+Received: by mail-ej1-x636.google.com with SMTP id i27so38872359ejd.9
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2022 10:58:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=mmL4vs8ftWX+CyNMXa1yb01w8x8Mfk+3syxw44HPFDk=;
+        b=IAn9f/81JWmI7zAmW95gFJ7SC9HG4dQArs9KMToO3oj6e7DkPWIg/Jbek1+1unhTkq
+         Sa8bU7aiSOYZ8I1xGP11S7fZNCi0KJLFiC23OmfWNQbwurwSsltKnql5XinEVEQMXra1
+         c+dsJ6xa4PqEY+kDitFFjZ3eQtxaZLtcx4KnY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=mmL4vs8ftWX+CyNMXa1yb01w8x8Mfk+3syxw44HPFDk=;
+        b=dmHrN5tWPhTIpnktfDMOoT2Uud4B021KN2s6BksVkxcjUQLLb0xTPM72cqLmeJ3psh
+         VjsYJUxWoKDAqH8ZUWxE02n6XMYxIHYvOHH6cOGz5ng8l5EUZcnt/039C0f3sG2fWzsG
+         HjDSuhPVo4mfbzkG0GZLtkOMAFLsmjJYKqR2NXcWPMwjZfe7izneQTC2hZ25XJrC15Ur
+         qTRB1NKifTClg5y+2v3MiAMp+wbBQ3WtRJyyhYwURnBA/bnaboQO/7HyfQ+axnzn89cs
+         wZkVh0Cj7auSmubTeR3rYGHJoovMl8tcjz2XMauGFsyctddeKpDdSk64ZFfLtlfuVN1d
+         Ex2Q==
+X-Gm-Message-State: AOAM533QgvtpK4X46INDhp2c2VMy+9k9G9ni1EBr+2paNT6TgZ83ERR3
+        HEDrCmpp6FNvAWdaryZYDJgnJZ98Vd85in9CHw9LgOQqvBM3lSQscAZwT454GTR2APr5iYQXHpv
+        sL916vv/1sHnItPeMLjfi9VmRX9A=
+X-Google-Smtp-Source: ABdhPJyhNJo6CZgtb2oVqRdxL6W93DjAkmgh+YNhODAi9NSDqrqRc21OEqreBHnW4uvIfzh1y0tHiZuFB54FgmxXu8o=
+X-Received: by 2002:a17:906:eb42:b0:6e8:9197:f0e0 with SMTP id
+ mc2-20020a170906eb4200b006e89197f0e0mr10583318ejb.550.1649786310059; Tue, 12
+ Apr 2022 10:58:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5fb68dbd-ae0e-6230-8f9f-dd6df5593584@interlog.com>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+References: <20220409134926.331728-1-zheyuma97@gmail.com>
+In-Reply-To: <20220409134926.331728-1-zheyuma97@gmail.com>
+From:   Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Date:   Tue, 12 Apr 2022 11:58:12 -0600
+Message-ID: <CAFdVvOzx7t99Btf4Jv5+5=6es0i8AKx_1Bwj5gQd-Oqnqi+tPA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: mpi3mr: Fix an error code when probing the driver
+To:     Zheyu Ma <zheyuma97@gmail.com>
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        jejb@linux.ibm.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000fbc3b805dc78ce88"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Apr 09, 2022 at 03:10:14PM -0400, Douglas Gilbert wrote:
-> On 2022-04-09 00:37, Bart Van Assche wrote:
-> > Revert the patch mentioned in the subject since it blocks I/O after
-> > module unload has started while this is a legitimate use case. For e.g.
-> > blktests test case srp/001 that patch causes a command timeout to be
-> > triggered for the following call stack:
-> > 
-> > __schedule+0x4c3/0xd20
-> > schedule+0x82/0x110
-> > schedule_timeout+0x122/0x200
-> > io_schedule_timeout+0x7b/0xc0
-> > __wait_for_common+0x2bc/0x380
-> > wait_for_completion_io_timeout+0x1d/0x20
-> > blk_execute_rq+0x1db/0x200
-> > __scsi_execute+0x1fb/0x310
-> > sd_sync_cache+0x155/0x2c0 [sd_mod]
-> > sd_shutdown+0xbb/0x190 [sd_mod]
-> > sd_remove+0x5b/0x80 [sd_mod]
-> > device_remove+0x9a/0xb0
-> > device_release_driver_internal+0x2c5/0x360
-> > device_release_driver+0x12/0x20
-> > bus_remove_device+0x1aa/0x270
-> > device_del+0x2d4/0x640
-> > __scsi_remove_device+0x168/0x1a0
-> > scsi_forget_host+0xa8/0xb0
-> > scsi_remove_host+0x9b/0x150
-> > sdebug_driver_remove+0x3d/0x140 [scsi_debug]
-> > device_remove+0x6f/0xb0
-> > device_release_driver_internal+0x2c5/0x360
-> > device_release_driver+0x12/0x20
-> > bus_remove_device+0x1aa/0x270
-> > device_del+0x2d4/0x640
-> > device_unregister+0x18/0x70
-> > sdebug_do_remove_host+0x138/0x180 [scsi_debug]
-> > scsi_debug_exit+0x45/0xd5 [scsi_debug]
-> > __do_sys_delete_module.constprop.0+0x210/0x320
-> > __x64_sys_delete_module+0x1f/0x30
-> > do_syscall_64+0x35/0x80
-> > entry_SYSCALL_64_after_hwframe+0x44/0xae
-> > 
-> > Reported-by: Yi Zhang <yi.zhang@redhat.com>
-> > Cc: Douglas Gilbert <dgilbert@interlog.com>
-> > Cc: Yi Zhang <yi.zhang@redhat.com>
-> > Cc: Bob Pearson <rpearsonhpe@gmail.com>
-> > Fixes: 2aad3cd85370 ("scsi: scsi_debug: Address races following module load"; )
-> > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> 
-> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-> 
-> This was a relatively old patch developed in conjunction with Luis Chamberlain
-> <mcgrof@kernel.org>. So it may have been overtaken by other developments.
-> I forwarded the "[bug report][bisected] modprob -r scsi-debug take more than
-> 3mins during blktests srp/ tests" email to Luis but haven't heard back. So I'm
-> happy to remove it.
+--000000000000fbc3b805dc78ce88
+Content-Type: text/plain; charset="UTF-8"
 
-Upstream patient module removal inside kmod will help and is the right
-thing to do all around. However modules can also strive to make the
-removal painless too. How much work a module does to make it painless is
-up to its authors. In lieu of kmod patient module removal, users of the
-module should be aware of these issue though and open code it as I have
-in fstests [0] as an example.
+On Sat, Apr 9, 2022 at 7:49 AM Zheyu Ma <zheyuma97@gmail.com> wrote:
+>
+> During the process of driver probing, probe function should return < 0
+> for failure, otherwise kernel will treat value >= 0 as success.
+>
+> Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
+> ---
+>  drivers/scsi/mpi3mr/mpi3mr_os.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> index f7cd70a15ea6..240bfdf9788b 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> @@ -4222,9 +4222,10 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>         struct Scsi_Host *shost = NULL;
+>         int retval = 0, i;
+>
+> -       if (osintfc_mrioc_security_status(pdev)) {
+> +       retval = osintfc_mrioc_security_status(pdev);
+> +       if (retval) {
+>                 warn_non_secure_ctlr = 1;
+> -               return 1; /* For Invalid and Tampered device */
+> +               return retval; /* For Invalid and Tampered device */
+>         }
+NAK. The driver has to return 1 when invalid/tampered controllers are
+detected just to say the controller is held by the mpi3mr driver
+without any actual operation.
+>
+>         shost = scsi_host_alloc(&mpi3mr_driver_template,
+> --
+> 2.25.1
+>
 
-Note that kmod patient module removal is not yet merged but soon will
-be.
+-- 
+This electronic communication and the information and any files transmitted 
+with it, or attached to it, are confidential and are intended solely for 
+the use of the individual or entity to whom it is addressed and may contain 
+information that is confidential, legally privileged, protected by privacy 
+laws, or otherwise restricted from disclosure to anyone else. If you are 
+not the intended recipient or the person responsible for delivering the 
+e-mail to the intended recipient, you are hereby notified that any use, 
+copying, distributing, dissemination, forwarding, printing, or copying of 
+this e-mail is strictly prohibited. If you received this e-mail in error, 
+please return the e-mail to the sender, delete it from your computer, and 
+destroy any printed copy of it.
 
-[0] https://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git/commit/?id=d405c21d40aa1f0ca846dd144a1a7731e55679b2
+--000000000000fbc3b805dc78ce88
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-  Luis
+MIIQfwYJKoZIhvcNAQcCoIIQcDCCEGwCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
+gg3WMIIFDTCCA/WgAwIBAgIQeEqpED+lv77edQixNJMdADANBgkqhkiG9w0BAQsFADBMMSAwHgYD
+VQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMzETMBEGA1UEChMKR2xvYmFsU2lnbjETMBEGA1UE
+AxMKR2xvYmFsU2lnbjAeFw0yMDA5MTYwMDAwMDBaFw0yODA5MTYwMDAwMDBaMFsxCzAJBgNVBAYT
+AkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBS
+MyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
+vbCmXCcsbZ/a0fRIQMBxp4gJnnyeneFYpEtNydrZZ+GeKSMdHiDgXD1UnRSIudKo+moQ6YlCOu4t
+rVWO/EiXfYnK7zeop26ry1RpKtogB7/O115zultAz64ydQYLe+a1e/czkALg3sgTcOOcFZTXk38e
+aqsXsipoX1vsNurqPtnC27TWsA7pk4uKXscFjkeUE8JZu9BDKaswZygxBOPBQBwrA5+20Wxlk6k1
+e6EKaaNaNZUy30q3ArEf30ZDpXyfCtiXnupjSK8WU2cK4qsEtj09JS4+mhi0CTCrCnXAzum3tgcH
+cHRg0prcSzzEUDQWoFxyuqwiwhHu3sPQNmFOMwIDAQABo4IB2jCCAdYwDgYDVR0PAQH/BAQDAgGG
+MGAGA1UdJQRZMFcGCCsGAQUFBwMCBggrBgEFBQcDBAYKKwYBBAGCNxQCAgYKKwYBBAGCNwoDBAYJ
+KwYBBAGCNxUGBgorBgEEAYI3CgMMBggrBgEFBQcDBwYIKwYBBQUHAxEwEgYDVR0TAQH/BAgwBgEB
+/wIBADAdBgNVHQ4EFgQUljPR5lgXWzR1ioFWZNW+SN6hj88wHwYDVR0jBBgwFoAUj/BLf6guRSSu
+TVD6Y5qL3uLdG7wwegYIKwYBBQUHAQEEbjBsMC0GCCsGAQUFBzABhiFodHRwOi8vb2NzcC5nbG9i
+YWxzaWduLmNvbS9yb290cjMwOwYIKwYBBQUHMAKGL2h0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5j
+b20vY2FjZXJ0L3Jvb3QtcjMuY3J0MDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9jcmwuZ2xvYmFs
+c2lnbi5jb20vcm9vdC1yMy5jcmwwWgYDVR0gBFMwUTALBgkrBgEEAaAyASgwQgYKKwYBBAGgMgEo
+CjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAN
+BgkqhkiG9w0BAQsFAAOCAQEAdAXk/XCnDeAOd9nNEUvWPxblOQ/5o/q6OIeTYvoEvUUi2qHUOtbf
+jBGdTptFsXXe4RgjVF9b6DuizgYfy+cILmvi5hfk3Iq8MAZsgtW+A/otQsJvK2wRatLE61RbzkX8
+9/OXEZ1zT7t/q2RiJqzpvV8NChxIj+P7WTtepPm9AIj0Keue+gS2qvzAZAY34ZZeRHgA7g5O4TPJ
+/oTd+4rgiU++wLDlcZYd/slFkaT3xg4qWDepEMjT4T1qFOQIL+ijUArYS4owpPg9NISTKa1qqKWJ
+jFoyms0d0GwOniIIbBvhI2MJ7BSY9MYtWVT5jJO3tsVHwj4cp92CSFuGwunFMzCCA18wggJHoAMC
+AQICCwQAAAAAASFYUwiiMA0GCSqGSIb3DQEBCwUAMEwxIDAeBgNVBAsTF0dsb2JhbFNpZ24gUm9v
+dCBDQSAtIFIzMRMwEQYDVQQKEwpHbG9iYWxTaWduMRMwEQYDVQQDEwpHbG9iYWxTaWduMB4XDTA5
+MDMxODEwMDAwMFoXDTI5MDMxODEwMDAwMFowTDEgMB4GA1UECxMXR2xvYmFsU2lnbiBSb290IENB
+IC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMTCkdsb2JhbFNpZ24wggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMJXaQeQZ4Ihb1wIO2hMoonv0FdhHFrYhy/EYCQ8eyip0E
+XyTLLkvhYIJG4VKrDIFHcGzdZNHr9SyjD4I9DCuul9e2FIYQebs7E4B3jAjhSdJqYi8fXvqWaN+J
+J5U4nwbXPsnLJlkNc96wyOkmDoMVxu9bi9IEYMpJpij2aTv2y8gokeWdimFXN6x0FNx04Druci8u
+nPvQu7/1PQDhBjPogiuuU6Y6FnOM3UEOIDrAtKeh6bJPkC4yYOlXy7kEkmho5TgmYHWyn3f/kRTv
+riBJ/K1AFUjRAjFhGV64l++td7dkmnq/X8ET75ti+w1s4FRpFqkD2m7pg5NxdsZphYIXAgMBAAGj
+QjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSP8Et/qC5FJK5N
+UPpjmove4t0bvDANBgkqhkiG9w0BAQsFAAOCAQEAS0DbwFCq/sgM7/eWVEVJu5YACUGssxOGhigH
+M8pr5nS5ugAtrqQK0/Xx8Q+Kv3NnSoPHRHt44K9ubG8DKY4zOUXDjuS5V2yq/BKW7FPGLeQkbLmU
+Y/vcU2hnVj6DuM81IcPJaP7O2sJTqsyQiunwXUaMld16WCgaLx3ezQA3QY/tRG3XUyiXfvNnBB4V
+14qWtNPeTCekTBtzc3b0F5nCH3oO4y0IrQocLP88q1UOD5F+NuvDV0m+4S4tfGCLw0FREyOdzvcy
+a5QBqJnnLDMfOjsl0oZAzjsshnjJYS8Uuu7bVW/fhO4FCU29KNhyztNiUGUe65KXgzHZs7XKR1g/
+XzCCBV4wggRGoAMCAQICDHVnKJxgC8dP0DQZFDANBgkqhkiG9w0BAQsFADBbMQswCQYDVQQGEwJC
+RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMg
+UGVyc29uYWxTaWduIDIgQ0EgMjAyMDAeFw0yMTAyMjIxMjUzMzhaFw0yMjA5MTUxMTQyMjNaMIGe
+MQswCQYDVQQGEwJJTjESMBAGA1UECBMJS2FybmF0YWthMRIwEAYDVQQHEwlCYW5nYWxvcmUxFjAU
+BgNVBAoTDUJyb2FkY29tIEluYy4xIzAhBgNVBAMTGlNhdGh5YSBQcmFrYXNoIFZlZXJpY2hldHR5
+MSowKAYJKoZIhvcNAQkBFhtzYXRoeWEucHJha2FzaEBicm9hZGNvbS5jb20wggEiMA0GCSqGSIb3
+DQEBAQUAA4IBDwAwggEKAoIBAQDH0Ir+CNjzFR6jzJWLUBqHBDyLQkOjYmf5qNc8CPpJt9k6MBhM
+T3OLboCrjcrazTihTVQoWiAfG9xye2IE5TmmKCKnRyFcw3b+2AxUEK7c6PEGlMmjJdz1ihRrV6fb
+QCZod9GVs3L6CDeBilAFcMys8lnnW13rKzLaWcLNXuyCoypDWA1IP2IDw7/SUlByZJ+gvCrVSJnd
+AYPMVSim4+pTItuq9IB5a3B4lXktI8GoZ4icvNq/tDUC+UQBkiyx41thyEA3MCL+kgpIDnw1yNbe
+DuhEcmBxC3E4cziK/swLRngmgXt+5vyInAJZt7HlQxtmx5IEZ4mXQ9lv/ZbRm6xdAgMBAAGjggHc
+MIIB2DAOBgNVHQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRw
+Oi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MC5jcnQwQQYIKwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJz
+b25hbHNpZ24yY2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZo
+dHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRC
+MEAwPqA8oDqGOGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAuY3JsMCYGA1UdEQQfMB2BG3NhdGh5YS5wcmFrYXNoQGJyb2FkY29tLmNvbTATBgNVHSUE
+DDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU
+pgsVbwKDpO1jbwtH74jMrhpldKgwDQYJKoZIhvcNAQELBQADggEBAAs3g9+OH401HDPcsiK943D1
+29CLPOuPWwMLezDdRvDcSqXw/gHia/3hEqnSZiSNEHi7WJ+bhd7c/kLupVhlae5tQwGMchue4U6R
+/3Ck8BQ5wivGrL3n0hksKHrXs+pPI96sat0kZCX/OVLJ6KfZoNBnl4lgXkgjfrWs/2U+gcMU2lmw
+zhujPHSNF2UIyRNtvcw0NozAtiov/KGLHocfrD39IAsX9SpKaqH6W0lFtOeevTeAg7Y0yXo7HXKY
+t+RqMzkDTXFXS6MXhqwXQHf6laWJkR9smRePlZ7BHSurIjHbpKhVaYCd6aKI4gUlq2t/zr+ct4Ls
+WZg6a7glbWLB4YExggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
+aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
+MDIwAgx1ZyicYAvHT9A0GRQwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFAnjN8Y
+svRthHfEnLcTMjtEMxcBug6YUWsC141KwMSPMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIyMDQxMjE3NTgzMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCpJczeK0ESOHBwA/0eeBZTWZpd
+gPyaTAErpjLcmDIO8clLWQKVwz8Rk9AC3kAuj9XV5viiD+xAL2E2L654pIBZKMrMXa3TLdGWG2CQ
+Ba87SmO0nGGK6dBt6Dfg6kmlbBjf/Te1nfDm/6ECbikUvitOmeIVQejpgLPzqwadD4ZBOEoOyPbi
+LZMk3fwyczBgP8ktaXiwac89gJrMmBLVaChedY9NoUCU5b6XpjD6QmId80qSMZWr3RKr3YcCJU+Y
+iJwOEmhK0K/msUTiaoGH/jwH0pCytTZtAuYGnCcbMZGZrfY3mAro7hVFC8bpDZr2GB3ce8UeUAxI
+q8kl+LAwp/Fn
+--000000000000fbc3b805dc78ce88--
