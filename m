@@ -2,122 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5369C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Apr 2022 16:25:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44850C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Apr 2022 17:50:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236851AbiDMQ2N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Apr 2022 12:28:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51064 "EHLO
+        id S237473AbiDMRxN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Apr 2022 13:53:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236838AbiDMQ2M (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2022 12:28:12 -0400
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DB3E26547
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Apr 2022 09:25:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649867150; x=1681403150;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=Eh9weIB31ABIHjarMujiA+vm0gone30u06Pf4DMfNA4=;
-  b=MLHAhr3Pr6iohK+Hu332/GS/IQZ0FxhGo8wwq0qvqsBAYjU1iGFFwKiu
-   a4koZglbpw9EV5wWZv5xGWQ4KDDhjX9LJQGgakz7XpFl+ChXV+xkhvg0V
-   teU5UUDsAQ5q03bMTfQq04oSXQu/MmurEqCIDQD3oQ3qwdnenTGTPiNyG
-   DkDfIQiymG1oDVkphIMDQ40jS4d5NbDRDYQtBomWeLEQ8Q/VHbC3aiaS3
-   yN7/a9VlcEwgx1AfcuJzC2W72dJ8Pxo20de+7PFlC2lwmiOaYYA9q7VF/
-   7VUCwOkfJc9Vb/8/TQD9240bM/nF6uW/Xea9ESQ/5BJYFsBahhCL0tMwW
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10316"; a="349147301"
-X-IronPort-AV: E=Sophos;i="5.90,257,1643702400"; 
-   d="scan'208";a="349147301"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2022 09:25:29 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,257,1643702400"; 
-   d="scan'208";a="660992822"
-Received: from lkp-server01.sh.intel.com (HELO 3abc53900bec) ([10.239.97.150])
-  by orsmga004.jf.intel.com with ESMTP; 13 Apr 2022 09:25:27 -0700
-Received: from kbuild by 3abc53900bec with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1nefo6-0000Ri-Js;
-        Wed, 13 Apr 2022 16:25:26 +0000
-Date:   Thu, 14 Apr 2022 00:25:22 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-Cc:     kbuild-all@lists.01.org, James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>
-Subject: Re: [PATCH 20/26] lpfc: Fix field overload in lpfc_iocbq data
- structure
-Message-ID: <202204140010.nJRJE8ye-lkp@intel.com>
-References: <20220412222008.126521-21-jsmart2021@gmail.com>
+        with ESMTP id S237343AbiDMRxL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2022 13:53:11 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 128DD38BF3
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Apr 2022 10:50:48 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id bu29so4982774lfb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Apr 2022 10:50:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=r74y0EwDVmDlpC/kUkPtE7VG7DVXEKM1QwmOEqbKwS0=;
+        b=MclBlZJVnfe0f0mcJEdBX+WMA04jn7pmAvarbJ3uHULyR87IvtLf7s1sGDHo7Sfb/S
+         T8TheUiHcvkPdluJi7tbPOVTKmCnVlbrARbMXWeUjf6Lmrc5fjjASySd5a1ZAvb4qBvH
+         g+Jhpcs6WQ/vAaDxkWNH7jhlZy+h1v4KNWSkI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=r74y0EwDVmDlpC/kUkPtE7VG7DVXEKM1QwmOEqbKwS0=;
+        b=4AwEv45kH1n3gXvpRAwAIluZjhtKUxSe30mFkN2tilcqGRoadh/ErB1YqPCq+WUtbS
+         6M8rZqH38VqHTtJ5ATJhyBrKXenvE/u8v/84XUS/nPuC1R6JeA6mELDnHF63y/F1NAJ+
+         JZ+nNaV1uJIMBaEgIJYdTJAWLs1Yx5cDrP29laj5tPWhDcLVWf81k93eyEm8EEKFuayB
+         ofzf+AdgRaoUJtPqvBH+G5vfwie2dDB5X2Rr2d7k+zdbxsvijKdnUf4CMUB3uAvhyzwy
+         p8x6sNQ0K9kvU200s4jq3n2bQ/zt/pTQakfpwcsPnzh8nqIaiZbv3t3EelsAdC0SS6m4
+         Fn4A==
+X-Gm-Message-State: AOAM530gg7ChRe0uftgEgyQvn7U1ylF4NKzJCfirM7N/7XAiaxQ2t3F9
+        CS908YN+UWMv64c0PHG6i4M/IK0CdiTxSwax0m0u4ghfj+/jEIgA
+X-Google-Smtp-Source: ABdhPJw06dZBVNUIDQBWGii1MtEgofJKqcwF1+Fxho2xulrNNrU9nvVhU36k0pdsY3uyxyPyjh40brLkZfbI4HV2Bp8=
+X-Received: by 2002:a05:6512:1694:b0:448:3fd4:c7a9 with SMTP id
+ bu20-20020a056512169400b004483fd4c7a9mr30013864lfb.29.1649872245861; Wed, 13
+ Apr 2022 10:50:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220412222008.126521-21-jsmart2021@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+From:   Brian Bunker <brian@purestorage.com>
+Date:   Wed, 13 Apr 2022 10:50:32 -0700
+Message-ID: <CAHZQxyKbksT=FrLvtPFyBUzGChsTHaRZ-+R0Uc1oDcedVHLTUg@mail.gmail.com>
+Subject: [PATCH 1/1] dm-mpath: do not fail paths on ALUA state transitioning state
+To:     linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi James,
+I would like to revisit this patch since it continues to cause fallout
+for us. Our best practice has always been to use the setting
+no_path_retry of 0 in multipath-tools.This means that our customers
+who have a previously working configuration file upgrade into this
+problem.
 
-I love your patch! Perhaps something to improve:
+My understanding around why this patch was not accepted the first time
+was because some array vendors stay in the ALUA transitioning state
+for a very long time. It doesn't seem to me that not failing the paths
+leads to a problem since the path checker and priority will protect
+against continually using the transioning paths, but I am not aware of
+the array vendor that led to this patch in the first place. If this
+patch is still not acceptable, can it be made acceptable with a flag
+allowing this behavior?
 
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on mkp-scsi/for-next v5.18-rc2 next-20220413]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+Without this patch we have to reach out to all of our customers who
+are at risk and let them know that a change of no_path_retry to some
+non zero value is required before they upgrade. There is no good way
+to reach them all before this issue is hit and they take an unexpected
+outage.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/James-Smart/lpfc-Update-lpfc-to-revision-14-2-0-2/20220413-073746
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-config: mips-allmodconfig (https://download.01.org/0day-ci/archive/20220414/202204140010.nJRJE8ye-lkp@intel.com/config)
-compiler: mips-linux-gcc (GCC) 11.2.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/536304e3919a95bf3d790d78a9a79b862e4ef29c
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review James-Smart/lpfc-Update-lpfc-to-revision-14-2-0-2/20220413-073746
-        git checkout 536304e3919a95bf3d790d78a9a79b862e4ef29c
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=mips SHELL=/bin/bash drivers/scsi/
+The solution of no_path_retry is not a perfect fit for us either.
+There are situations where getting to all paths down and the error
+bubbling up as soon as possible is expected. A distinction between the
+transitioning state getting there and some other state like
+unavailable or standby is not there. The fail path logic is the same.
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+If the answer is that multipath-tools should handle this, a
+distinction in failing the path should be made to allow the
+multipath-tools to queue on transitioning but fail on other states to
+be able to retain the previous behavior without either regression
+mentioned above.
 
-All warnings (new ones prefixed by >>):
+Signed-off-by: Brian Bunker <brian@purestorage.com>
+Acked-by: Krishna Kant <krishna.kant@purestorage.com>
+Acked-by: Seamus Connor <sconnor@purestorage.com>
+--
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index bced42f082b0..28948cc481f9 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -1652,12 +1652,12 @@ static int multipath_end_io(struct dm_target
+*ti, struct request *clone,
+        if (error && blk_path_error(error)) {
+                struct multipath *m = ti->private;
 
-   In file included from include/linux/device.h:15,
-                    from include/linux/blk_types.h:11,
-                    from include/linux/blkdev.h:9,
-                    from drivers/scsi/lpfc/lpfc_init.c:24:
-   drivers/scsi/lpfc/lpfc_init.c: In function 'lpfc_new_io_buf':
->> drivers/scsi/lpfc/lpfc_logmsg.h:94:59: warning: format '%lx' expects argument of type 'long unsigned int', but argument 7 has type 'unsigned int' [-Wformat=]
-      94 |                 dev_printk(level, &((phba)->pcidev)->dev, "%d:" \
-         |                                                           ^~~~~
-   include/linux/dev_printk.h:129:41: note: in definition of macro 'dev_printk'
-     129 |                 _dev_printk(level, dev, fmt, ##__VA_ARGS__);            \
-         |                                         ^~~
-   drivers/scsi/lpfc/lpfc_init.c:4479:9: note: in expansion of macro 'lpfc_printf_log'
-    4479 |         lpfc_printf_log(phba, KERN_INFO, LOG_NVME,
-         |         ^~~~~~~~~~~~~~~
+-               if (error == BLK_STS_RESOURCE)
++               if (error == BLK_STS_RESOURCE || error == BLK_STS_AGAIN)
+                        r = DM_ENDIO_DELAY_REQUEUE;
+                else
+                        r = DM_ENDIO_REQUEUE;
 
+-               if (pgpath)
++               if (pgpath && (error != BLK_STS_AGAIN))
+                        fail_path(pgpath);
 
-vim +94 drivers/scsi/lpfc/lpfc_logmsg.h
-
-e8b62011d88d6f James Smart     2007-08-02  85  
-dea3101e0a5c89 James Bottomley 2005-04-17  86  #define lpfc_printf_log(phba, level, mask, fmt, arg...) \
-7f5f3d0d02aa2f James Smart     2008-02-08  87  do { \
-f4b4c68f74dcd5 James Smart     2009-05-22  88  	{ uint32_t log_verbose = (phba)->pport ? \
-f4b4c68f74dcd5 James Smart     2009-05-22  89  				 (phba)->pport->cfg_log_verbose : \
-f4b4c68f74dcd5 James Smart     2009-05-22  90  				 (phba)->cfg_log_verbose; \
-372c187b8a705c Dick Kennedy    2020-06-30  91  	if (((mask) & log_verbose) || (level[1] <= '3')) { \
-30d9d4d7f38739 James Smart     2022-04-12  92  		if ((mask) & LOG_TRACE_EVENT && !log_verbose) \
-372c187b8a705c Dick Kennedy    2020-06-30  93  			lpfc_dmp_dbg(phba); \
-e8b62011d88d6f James Smart     2007-08-02 @94  		dev_printk(level, &((phba)->pcidev)->dev, "%d:" \
-
+                if (!atomic_read(&m->nr_valid_paths) &&
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Brian Bunker
+PURE Storage, Inc.
+brian@purestorage.com
