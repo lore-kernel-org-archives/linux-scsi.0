@@ -2,106 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7ACCC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Apr 2022 12:39:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23730C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Apr 2022 12:43:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235568AbiDMMlV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Apr 2022 08:41:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44144 "EHLO
+        id S234240AbiDMMqF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Apr 2022 08:46:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233208AbiDMMlS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2022 08:41:18 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F11550E35;
-        Wed, 13 Apr 2022 05:38:56 -0700 (PDT)
-Received: from dggpemm500023.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Kdhqc1xJgzBsKf;
-        Wed, 13 Apr 2022 20:34:36 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500023.china.huawei.com (7.185.36.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 13 Apr 2022 20:38:54 +0800
-Received: from huawei.com (10.175.101.6) by dggpemm500017.china.huawei.com
- (7.185.36.178) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 13 Apr
- 2022 20:38:53 +0800
-From:   Wenchao Hao <haowenchao@huawei.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     <linfeilong@huawei.com>, Wenchao Hao <haowenchao@huawei.com>
-Subject: [PATCH 2/2] iscsi: set session to FREE state after unbind session in remove session
-Date:   Wed, 13 Apr 2022 21:49:47 -0400
-Message-ID: <20220414014947.4168447-3-haowenchao@huawei.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220414014947.4168447-1-haowenchao@huawei.com>
-References: <20220414014947.4168447-1-haowenchao@huawei.com>
+        with ESMTP id S229446AbiDMMqF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2022 08:46:05 -0400
+Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAE59205F8;
+        Wed, 13 Apr 2022 05:43:40 -0700 (PDT)
+Received: by mail-ej1-x62d.google.com with SMTP id g18so3650796ejc.10;
+        Wed, 13 Apr 2022 05:43:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-transfer-encoding:user-agent:mime-version;
+        bh=ftC/R4apSkNj0SBqqxvCqMvFLEojqjXxdMp+rh20DA0=;
+        b=g6n6tIhHD0mQsqnftSq0RvbOPkokjzp0OX6uB573Dl4Hg33fSlWFnA34EiK23DLgNh
+         eoIYQl8pXTIYUWza3XQk9sgkNkTOak01u7xQM9EFXMBIS52VtmXtfwCB+Yt1FuB3q6f8
+         y933dRXKqEq2ryGE6q/m3daCSQsXwBzOxC7DFBy+/2AiutsS6XB9B0L6mfwgGg6Yq204
+         2U/sKAEgZobJxZkGlKO+D7Yqr3QNICiikmNIs58QDVMHzZyq948MgiQHO+hl854Sb1Xj
+         nISEr9b+v8O049yvizRVjSfLhzmVr4GJneyqFOueBrrP+/f0xoz/E+KAcIGh6iDbfVMh
+         S7rQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:content-transfer-encoding:user-agent:mime-version;
+        bh=ftC/R4apSkNj0SBqqxvCqMvFLEojqjXxdMp+rh20DA0=;
+        b=mGbcYvSGIum+AQMAeYlB1vdqkWCxA8swbLGUcqcrG4H6nlqSJ22aAfB2iCsK3NexPe
+         MZSvLSCsOWxBkVPdCD9FIHytw0FmZvCslZH9AMnD0fCpMp9lzGWduu+sgd9mdFKJsHS6
+         kV91LM6EjkTUQugC9BuhboOgQXOE88Gu1fpxTrOMkLcVZDSEoUyZ89lEbi9C1qALPPXY
+         Tje8+i53L4Fw50bJorKGxYElE8SINB7urTYjUqGC5jfK2cdlKPJmrHj0orDqBBe8GNlb
+         7/ugQd+EFRsshCrkh0UCqtQqVwhIuBiKRTmd9zbXx5GvadvJMZMy5Z2M9veKb1gcF5CY
+         z4Eg==
+X-Gm-Message-State: AOAM5327yKRHcDARy1urjfBTxAnR2A+QtZRSpcbo6cXccGHMmLHWpimS
+        MOmthh+3mc/VK7X8Awxkz94=
+X-Google-Smtp-Source: ABdhPJxBLUBKYgS4v35da4ZjoDNoq81t0xJsPUkR7RcqehVi1bx196PUdi7GyD8EFLWwPQaAnzglvg==
+X-Received: by 2002:a17:907:3e0d:b0:6e8:cccd:de80 with SMTP id hp13-20020a1709073e0d00b006e8cccdde80mr1951964ejc.162.1649853819459;
+        Wed, 13 Apr 2022 05:43:39 -0700 (PDT)
+Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
+        by smtp.googlemail.com with ESMTPSA id z22-20020a1709063ad600b006e8867caa5dsm4098621ejd.72.2022.04.13.05.43.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 13 Apr 2022 05:43:39 -0700 (PDT)
+Message-ID: <d67b8969c8d2097377d9dbb414481f11958a9c9f.camel@gmail.com>
+Subject: Re: [PATCH 1/1] scsi: ufs: remove redundant HPB unmap
+From:   Bean Huo <huobean@gmail.com>
+To:     Peter Wang <peter.wang@mediatek.com>,
+        Po-Wen Kao <powen.kao@mediatek.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Cc:     wsd_upstream@mediatek.com, stanley.chu@mediatek.com,
+        alice.chao@mediatek.com, chun-hung.wu@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, yohan.joung@sk.com, jason.li@sk.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Date:   Wed, 13 Apr 2022 14:43:38 +0200
+In-Reply-To: <7e979863-21e5-ba63-862a-8ba6a63a8ae4@mediatek.com>
+References: <20220412073131.10644-1-powen.kao@mediatek.com>
+         <781bfe33efb1e44d22f71e6711da7d15be9d3ab4.camel@gmail.com>
+         <7550da4043ae45ffd58399f1ee696238a5689f25.camel@gmail.com>
+         <7e979863-21e5-ba63-862a-8ba6a63a8ae4@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.0-1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-__iscsi_unbind_session() set session state to ISCSI_SESSION_UNBOUND, which
-would overwrite the ISCSI_SESSION_FREE state.
+Hi Peter,
 
-Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
----
- drivers/scsi/scsi_transport_iscsi.c | 26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 97a9fee02efa..d8dd9279cea8 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2173,6 +2173,22 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
- 	if (!cancel_work_sync(&session->block_work))
- 		cancel_delayed_work_sync(&session->recovery_work);
- 	cancel_work_sync(&session->unblock_work);
-+
-+	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
-+	/*
-+	 * qla4xxx can perform it's own scans when it runs in kernel only
-+	 * mode. Make sure to flush those scans.
-+	 */
-+	flush_work(&session->scan_work);
-+
-+	/*
-+	 * flush running unbind operations
-+	 * if unbind work did not queued, call __iscsi_unbind_session
-+	 * directly to perform target remove
-+	 */
-+	if (!flush_work(&session->unbind_work))
-+		__iscsi_unbind_session(&session->unbind_work);
-+
- 	/*
- 	 * If we are blocked let commands flow again. The lld or iscsi
- 	 * layer should set up the queuecommand to fail commands.
-@@ -2183,16 +2199,6 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
- 	session->state = ISCSI_SESSION_FREE;
- 	spin_unlock_irqrestore(&session->lock, flags);
- 
--	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
--	/*
--	 * qla4xxx can perform it's own scans when it runs in kernel only
--	 * mode. Make sure to flush those scans.
--	 */
--	flush_work(&session->scan_work);
--	/* flush running unbind operations */
--	flush_work(&session->unbind_work);
--	__iscsi_unbind_session(&session->unbind_work);
--
- 	/* hw iscsi may not have removed all connections from session */
- 	err = device_for_each_child(&session->dev, NULL,
- 				    iscsi_iter_destroy_conn_fn);
--- 
-2.32.0
+On Wed, 2022-04-13 at 11:53 +0800, Peter Wang wrote:
+> Hi Bean,
+>=20
+> How about if reset flow not clear hpb mapping?
+
+UFS will go through normal read, because regions are not active in the
+device. The responses mabye different among different vendors. for
+example, UFS device will raise a response to host to update the region
+(in case of host mode) or inactivate it in case of device mode.
+
+The best way is that inactivate the active regions in the host side in
+the case the regions are not active in the device.
+
+>=20
+> After device is reset by RST_N pin, if the hpb mapping table still
+> exist?
+
+no, the regions in the device will be inactivated.
+
+>=20
+> BTW, Host seem not clear region mapping table in reset flow.
+>=20
+
+Yes, you are right. There will be a performance impact. I will look at
+it, then back to you.
+
+By the way, there is one issue in my patch, ignore that patch.
+
+
+Kind regards,
+Bean
 
