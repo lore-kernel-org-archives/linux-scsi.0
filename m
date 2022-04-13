@@ -2,237 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 336C1C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Apr 2022 09:07:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48C3EC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Apr 2022 09:27:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234237AbiDMJJo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Apr 2022 05:09:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47908 "EHLO
+        id S232509AbiDMJ3i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Apr 2022 05:29:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234091AbiDMJJl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2022 05:09:41 -0400
-Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE8DD4D9CF
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Apr 2022 02:07:19 -0700 (PDT)
-Received: by mail-ed1-x52b.google.com with SMTP id t25so1545097edt.9
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Apr 2022 02:07:19 -0700 (PDT)
+        with ESMTP id S229927AbiDMJ3h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2022 05:29:37 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E75A853B69;
+        Wed, 13 Apr 2022 02:27:16 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id 2so1408038pjw.2;
+        Wed, 13 Apr 2022 02:27:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=z84tQ9PE482BMfOh0tGEWBbuxsfWf7PM713AXwUAt8U=;
-        b=FI4d7X6SsxtqQKnRO595Rrvz+y7TCy5uSYJ1E4ffWmuz2lWCdWKO43S4bMqsVkOxGp
-         ghHiStu6lESL6/iYdJXXxzZYobNuJsIrC1KdLa8PVUStA5DZKFsPrQT8BYrXyhomp21y
-         VSsGIkMvmt3feVHT8TrQzjGBp/5d4bX/0M29dI3FiNAKQmPUT7PD41ZHwWSaslZ/AxrY
-         B0ueTpkUhXjcKuyJ7AnqLgZ0c21j82tT1uVZEeG7Djp64Jfp9EVMsq7Kryz8I4jbiSH4
-         Uo7QMxUVhOzx9CgUOY4N5Tgb0whGI5vAc03PdQWoKlsLvIFHgQgv+V6nQeauHa4eT7Nr
-         tQ1w==
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=aWHwuVM56mGn8hBqdvVQF2h0/hgZKGEUzuVUodXvntM=;
+        b=aB5TwnS2HFOxmF1b4l/z53MXkVL/ul/v+PNiOchygCcKgXValBvZeliRKQJV9gj+Vc
+         slXEpmzWh4+qwCgizBHHcwatvJK+yGMbDQVlcKamI7mLLHsWbqqaGCoNgwgU7NkvhjjN
+         4anPrku0hGi4Gnx1ceAqVwoBcAoPsQJ5bCKeR0q6lvogtnEtu7A0CelRpz9PRQsQvCq/
+         C4cpmbhO+PVUMP+LHcAPLZBkYd2uRpGA2RfWNySq9ltXftbkhX5Z4qfOk05h/WmjCH4T
+         R8pQWKToUbzigm26AAkQkemT3Oi6+vTYyaPdt0Q686WhH4YfAwo3EFk51RineGqM/R5e
+         xVlQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=z84tQ9PE482BMfOh0tGEWBbuxsfWf7PM713AXwUAt8U=;
-        b=4adv0FKptVbyIeMkVu6k2tH6zzrwXXF+QqBtReLr4azzEzcDMG2w7VqucjJxUiqtQe
-         sEBkipYfe03XjfDJDvTQbbtrf8bkqkzP45XHonoqy6mW5ETzq+6GfAHJZVfWG1LjGXML
-         +UH0a5TXgdysO3VD1k0xZzKAMnvcvDya/BqLy2AUrhII3/Qmq0tz972goEUh26S/ascw
-         3kLFcTRL5ZRGqpJIBPJ3jzf6BE6ah9NORhNkixcE9/eFB8AHi3JVfEsbQ7RkMyeD5muD
-         bDGGOkR1wsoCWtxs6T0ldhoXrzD0YLfSIbr9yUgt6mh6snxndCZNslMAZplvR8p3Hq96
-         Ix7w==
-X-Gm-Message-State: AOAM532Rd/sHTCw+Yx2dZ2gwXqxU6gls8iqHWY2BuG7lkSP7b7f//hKk
-        rrlaNR7G5rPSeN6KDZPQ7E7HCw==
-X-Google-Smtp-Source: ABdhPJybTYoB6hFzkTnGzb9M3CRBUVTSHcKTnFZfrgqbnaYoSiDSY2iH30hdSK5/Q287fVX6yfQFbQ==
-X-Received: by 2002:a50:d4d2:0:b0:410:9fa2:60d6 with SMTP id e18-20020a50d4d2000000b004109fa260d6mr43074728edj.35.1649840838413;
-        Wed, 13 Apr 2022 02:07:18 -0700 (PDT)
-Received: from [192.168.0.203] (xdsl-188-155-201-27.adslplus.ch. [188.155.201.27])
-        by smtp.gmail.com with ESMTPSA id a22-20020a50ff16000000b00410d029ea5csm908162edu.96.2022.04.13.02.07.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Apr 2022 02:07:17 -0700 (PDT)
-Message-ID: <02fc797a-190f-3558-5ee1-c9c3320f3d57@linaro.org>
-Date:   Wed, 13 Apr 2022 11:07:16 +0200
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=aWHwuVM56mGn8hBqdvVQF2h0/hgZKGEUzuVUodXvntM=;
+        b=35rz8bpTb+Yr94p9BF5Qx6Bqn/OmueOiirla1K8uyBD9joZ8/T7acyMS7FhPyYZcLN
+         Q/CsyyLbChLaFbOaMzke3118DOBPQ171h+jJDEVkKbGtgpq6PAtPCHn5Gs0+X1/0l9gt
+         qITHiLKzD0eKLUQN4CA84f1YZAWrf8PHR41BuLHem9IvrO9DyNNOZVO7NepkCb10Ciym
+         JHAUsqj6M7QPDAH2IxlGeXtSNc7s32yyRlmQgKsiJWmmCbBAM5gw/s99dnZBAHZo23NM
+         qvB4s6tOVOS8lyFk5r1GAh+Kq0NuN4uqMdM6yJgEZoTXrnDjc7ndwKgx7DEog7D1XuXq
+         fMEg==
+X-Gm-Message-State: AOAM530O6iu/KxGqKwAVlA/WpBpKm9iskQcd+aXqP1UePDjjHAJtmIDn
+        Po7ycAGtP7jwcAAzqJcmZw/5Tg5QuQ/+y6q4Sw==
+X-Google-Smtp-Source: ABdhPJz9O5s6O8Bzb1wJFWqKHLGPLctQp79wNjlG9K87jHZwVNQ1wY2A1CSv2mriOcsbvGMVcNcMLrNXE9xUX/PJAU4=
+X-Received: by 2002:a17:90a:fb97:b0:1cb:adf9:88ba with SMTP id
+ cp23-20020a17090afb9700b001cbadf988bamr9766014pjb.46.1649842036480; Wed, 13
+ Apr 2022 02:27:16 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
-Content-Language: en-US
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+References: <20220409134926.331728-1-zheyuma97@gmail.com> <CAFdVvOzx7t99Btf4Jv5+5=6es0i8AKx_1Bwj5gQd-Oqnqi+tPA@mail.gmail.com>
+In-Reply-To: <CAFdVvOzx7t99Btf4Jv5+5=6es0i8AKx_1Bwj5gQd-Oqnqi+tPA@mail.gmail.com>
+From:   Zheyu Ma <zheyuma97@gmail.com>
+Date:   Wed, 13 Apr 2022 17:27:04 +0800
+Message-ID: <CAMhUBj=EG8UrFoLp34F2aSTAoM8jY+Agg_PQypn6zjZ_dkUyoA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: mpi3mr: Fix an error code when probing the driver
+To:     Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        jejb@linux.ibm.com,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Taniya Das <tdas@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
- <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
- <YlWztZknl4OBmekp@ripper>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <YlWztZknl4OBmekp@ripper>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/04/2022 19:15, Bjorn Andersson wrote:
->>  
->> +	opp_table->clks = kmalloc_array(1, sizeof(*opp_table->clks),
->> +					GFP_KERNEL);
-> 
-> This seems to be 81 chars long, perhaps worth not line breaking?
+On Wed, Apr 13, 2022 at 1:58 AM Sathya Prakash Veerichetty
+<sathya.prakash@broadcom.com> wrote:
+>
+> On Sat, Apr 9, 2022 at 7:49 AM Zheyu Ma <zheyuma97@gmail.com> wrote:
+> >
+> > During the process of driver probing, probe function should return < 0
+> > for failure, otherwise kernel will treat value >= 0 as success.
+> >
+> > Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
+> > ---
+> >  drivers/scsi/mpi3mr/mpi3mr_os.c | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > index f7cd70a15ea6..240bfdf9788b 100644
+> > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > @@ -4222,9 +4222,10 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+> >         struct Scsi_Host *shost = NULL;
+> >         int retval = 0, i;
+> >
+> > -       if (osintfc_mrioc_security_status(pdev)) {
+> > +       retval = osintfc_mrioc_security_status(pdev);
+> > +       if (retval) {
+> >                 warn_non_secure_ctlr = 1;
+> > -               return 1; /* For Invalid and Tampered device */
+> > +               return retval; /* For Invalid and Tampered device */
+> >         }
+> NAK. The driver has to return 1 when invalid/tampered controllers are
+> detected just to say the controller is held by the mpi3mr driver
+> without any actual operation.
 
-I doubt that it will increase the readability:
+Thanks for your explanation, I will drop this patch.
 
-	opp_table->clks = kmalloc_array(1,
-					sizeof(*opp_table->clks),
-					GFP_KERNEL);
-
-80-character is not anymore that strict hard limit and in such case
-using 1-2 characters longer improves the code.
-
-> 
->> +	if (!opp_table->clks)
->> +		return ERR_PTR(-ENOMEM);
->> +
->>  	/* Find clk for the device */
->> -	opp_table->clk = clk_get(dev, NULL);
->> +	opp_table->clks[0] = clk_get(dev, NULL);
->>  
->> -	ret = PTR_ERR_OR_ZERO(opp_table->clk);
->> -	if (!ret)
->> +	ret = PTR_ERR_OR_ZERO(opp_table->clks[0]);
->> +	if (!ret) {
->> +		opp_table->clk_count = 1;
->>  		return opp_table;
->> +	}
-> [..]
->> +struct opp_table *dev_pm_opp_set_clknames(struct device *dev,
->> +					  const char * const names[],
->> +					  unsigned int count)
->>  {
->>  	struct opp_table *opp_table;
->> -	int ret;
->> +	struct clk *clk;
->> +	int ret, i;
->>  
->>  	opp_table = _add_opp_table(dev, false);
->>  	if (IS_ERR(opp_table))
->> @@ -2159,70 +2259,92 @@ struct opp_table *dev_pm_opp_set_clkname(struct device *dev, const char *name)
->>  	}
->>  
->>  	/* clk shouldn't be initialized at this point */
->> -	if (WARN_ON(opp_table->clk)) {
->> +	if (WARN_ON(opp_table->clks)) {
->>  		ret = -EBUSY;
->>  		goto err;
->>  	}
->>  
->> -	/* Find clk for the device */
->> -	opp_table->clk = clk_get(dev, name);
->> -	if (IS_ERR(opp_table->clk)) {
->> -		ret = dev_err_probe(dev, PTR_ERR(opp_table->clk),
->> -				    "%s: Couldn't find clock\n", __func__);
->> +	opp_table->clks = kmalloc_array(count, sizeof(*opp_table->clks),
->> +					GFP_KERNEL);
->> +	if (!opp_table->clks) {
->> +		ret = -ENOMEM;
->>  		goto err;
->>  	}
->>  
->> +	for (i = 0; i < count; i++) {
->> +		clk = clk_get(dev, names[i]);
->> +		if (IS_ERR(clk)) {
->> +			ret =  dev_err_probe(dev, PTR_ERR(clk),
->> +					     "%s: Couldn't find clock %s\n",
->> +					     __func__, names[i]);
->> +			goto free_clks;
->> +		}
->> +
->> +		opp_table->clks[i] = clk;
->> +	}
-> 
-> Wouldn't it be convenient to make clks a struct clk_bulk_data array
-> and use clk_bulk_get()/clk_bulk_put() instead?
-
-I was thinking about this but clk_bulk_get() requires struct
-clk_bulk_data, so the code in "get" is not actually smaller if function
-receives array of clock names.
-
-OTOH, usage of clk_bulk_get() would reduce code in: _put_clocks(). Rest
-of the code would be more-or-less the same, including all corner cases
-when clocks are missing.
-
-> 
->> +
->> +	opp_table->clk_count = count;
->> +
->>  	return opp_table;
->>  
->> +free_clks:
->> +	while (i != 0)
->> +		clk_put(opp_table->clks[--i]);
->> +
->> +	kfree(opp_table->clks);
->> +	opp_table->clks = NULL;
->> +	opp_table->clk_count = -1;
->>  err:
->>  	dev_pm_opp_put_opp_table(opp_table);
->>  
->>  	return ERR_PTR(ret);
->>  }
->> -EXPORT_SYMBOL_GPL(dev_pm_opp_set_clkname);
->> +EXPORT_SYMBOL_GPL(dev_pm_opp_set_clknames);
-> [..]
->> +static int _read_clocks(struct dev_pm_opp *opp, struct opp_table *opp_table,
->> +			struct device_node *np)
->> +{
->> +	int count, ret;
->> +	u64 *freq;
->> +
->> +	count = of_property_count_u64_elems(np, "opp-hz");
->> +	if (count < 0) {
->> +		pr_err("%s: Invalid %s property (%d)\n",
->> +			__func__, of_node_full_name(np), count);
-> 
-> Wouldn't %pOF be convenient to use here, seems like it becomes short
-> enough that you don't have to wrap this line then.
-
-Yes, I forgot about %pOF.
-
-> 
->> +		return count;
->> +	}
->> +
->> +	if (count != opp_table->clk_count) {
->> +		pr_err("%s: number of rates %d does not match number of clocks %d in %s\n",
->> +		       __func__, count, opp_table->clk_count,
->> +		       of_node_full_name(np));
->> +		return -EINVAL;
->> +	}
->> +
->> +	freq = kmalloc_array(count, sizeof(*freq), GFP_KERNEL);
->> +	if (!freq)
->> +		return -ENOMEM;
->> +
->> +	ret = of_property_read_u64_array(np, "opp-hz", freq, count);
->> +	if (ret) {
->> +		pr_err("%s: error parsing %s: %d\n", __func__,
->> +		       of_node_full_name(np), ret);
->> +		ret = -EINVAL;
->> +		goto free_freq;
->> +	}
-> 
-> Regards,
-> Bjorn
-
-
-Best regards,
-Krzysztof
+Zheyu Ma
