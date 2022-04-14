@@ -2,112 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64FCDC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Apr 2022 10:00:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F2BAC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Apr 2022 12:39:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234821AbiDMKDA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Apr 2022 06:03:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58112 "EHLO
+        id S235526AbiDMMlT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Apr 2022 08:41:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231304AbiDMKC7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2022 06:02:59 -0400
-Received: from nksmu.kylinos.cn (mailgw.kylinos.cn [123.150.8.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D6C955BEC;
-        Wed, 13 Apr 2022 03:00:38 -0700 (PDT)
-X-UUID: 7e369ba3cd4b4409b5dbbafebcf55522-20220413
-X-UUID: 7e369ba3cd4b4409b5dbbafebcf55522-20220413
-Received: from cs2c.com.cn [(172.17.111.24)] by nksmu.kylinos.cn
-        (envelope-from <lienze@kylinos.cn>)
-        (Generic MTA)
-        with ESMTP id 2093469296; Wed, 13 Apr 2022 17:59:13 +0800
-X-ns-mid: postfix-62569F37-9672088311
-Received: from localhost.localdomain (unknown [172.30.60.63])
-        by cs2c.com.cn (NSMail) with ESMTPSA id E5A9C383C64D;
-        Wed, 13 Apr 2022 10:00:23 +0000 (UTC)
-From:   Enze Li <lienze@kylinos.cn>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: sr: add handling of memory allocation failure in get_capabilities
-Date:   Wed, 13 Apr 2022 18:00:08 +0800
-Message-Id: <20220413100008.522912-1-lienze@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S230223AbiDMMlR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2022 08:41:17 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80E4949FBC;
+        Wed, 13 Apr 2022 05:38:55 -0700 (PDT)
+Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.57])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Kdhsm2FKqzFpfj;
+        Wed, 13 Apr 2022 20:36:28 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 13 Apr 2022 20:38:53 +0800
+Received: from huawei.com (10.175.101.6) by dggpemm500017.china.huawei.com
+ (7.185.36.178) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 13 Apr
+ 2022 20:38:52 +0800
+From:   Wenchao Hao <haowenchao@huawei.com>
+To:     Mike Christie <michael.christie@oracle.com>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     <linfeilong@huawei.com>, Wenchao Hao <haowenchao@huawei.com>
+Subject: [PATCH 0/2] Fix multiple iscsi session unbind event sent to userspace
+Date:   Wed, 13 Apr 2022 21:49:45 -0400
+Message-ID: <20220414014947.4168447-1-haowenchao@huawei.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function get_capabilities() has the possibility of failing to
-allocate transfer buffer, but it does not currently handle this, which
-can lead to exceptions when accessing the buffer.
+kernel would send ISCSI_KEVENT_UNBIND_SESSION twice to userspace, for
+open-iscsi, this would trigger iscsi_stop twice. We should fix this issue.
 
-This patch adds handling when memory allocation fails.
+Here introduced a new session state ISCSI_SESSION_UNBOUND to address it.
+Once session state is ISCSI_KEVENT_UNBIND_SESSION, it means
+__iscsi_unbind_session() has been called for this session and do not need
+to execute any more.
 
-Signed-off-by: Enze Li <lienze@kylinos.cn>
----
- drivers/scsi/sr.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+Reference:https://github.com/open-iscsi/open-iscsi/issues/338
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index cbd92891a762..868f88b1f4d4 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -113,7 +113,7 @@ static int sr_open(struct cdrom_device_info *, int);
- static void sr_release(struct cdrom_device_info *);
- 
- static void get_sectorsize(struct scsi_cd *);
--static void get_capabilities(struct scsi_cd *);
-+static int get_capabilities(struct scsi_cd *);
- 
- static unsigned int sr_check_events(struct cdrom_device_info *cdi,
- 				    unsigned int clearing, int slot);
-@@ -669,8 +669,9 @@ static int sr_probe(struct device *dev)
- 
- 	sdev->sector_size = 2048;	/* A guess, just in case */
- 
--	/* FIXME: need to handle a get_capabilities failure properly ?? */
--	get_capabilities(cd);
-+	error = -ENOMEM;
-+	if (get_capabilities(cd))
-+		goto fail_put;
- 	sr_vendor_init(cd);
- 
- 	set_capacity(disk, cd->capacity);
-@@ -794,7 +795,7 @@ static void get_sectorsize(struct scsi_cd *cd)
- 	return;
- }
- 
--static void get_capabilities(struct scsi_cd *cd)
-+static int get_capabilities(struct scsi_cd *cd)
- {
- 	unsigned char *buffer;
- 	struct scsi_mode_data data;
-@@ -819,7 +820,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 	buffer = kmalloc(512, GFP_KERNEL);
- 	if (!buffer) {
- 		sr_printk(KERN_ERR, cd, "out of memory.\n");
--		return;
-+		return -ENOMEM;
- 	}
- 
- 	/* eat unit attentions */
-@@ -839,7 +840,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 				 CDC_MRW | CDC_MRW_W | CDC_RAM);
- 		kfree(buffer);
- 		sr_printk(KERN_INFO, cd, "scsi-1 drive");
--		return;
-+		return 0;
- 	}
- 
- 	n = data.header_length + data.block_descriptor_length;
-@@ -898,6 +899,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 	}
- 
- 	kfree(buffer);
-+	return 0;
- }
- 
- /*
+Wenchao Hao (2):
+  scsi: iscsi: introduce session UNBOUND state to avoid multiple unbind
+    event
+  iscsi: set session to FREE state after unbind session in remove
+    session
+
+ drivers/scsi/scsi_transport_iscsi.c | 45 +++++++++++++++++++++--------
+ include/scsi/scsi_transport_iscsi.h |  1 +
+ 2 files changed, 34 insertions(+), 12 deletions(-)
+
 -- 
-2.25.1
+2.32.0
 
