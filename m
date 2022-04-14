@@ -2,147 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF52C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Apr 2022 22:01:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14997C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Apr 2022 22:08:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245708AbiDNWEU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Apr 2022 18:04:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48648 "EHLO
+        id S1343835AbiDNWK2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Apr 2022 18:10:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245017AbiDNWEH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Apr 2022 18:04:07 -0400
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE21EA5E91;
-        Thu, 14 Apr 2022 15:01:41 -0700 (PDT)
-Received: by mail-ej1-x62b.google.com with SMTP id g18so12478057ejc.10;
-        Thu, 14 Apr 2022 15:01:41 -0700 (PDT)
+        with ESMTP id S244107AbiDNWK1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Apr 2022 18:10:27 -0400
+Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63F96ADD61;
+        Thu, 14 Apr 2022 15:07:59 -0700 (PDT)
+Received: by mail-ej1-x631.google.com with SMTP id g18so12500792ejc.10;
+        Thu, 14 Apr 2022 15:07:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=looIiUbZXlEHUGlU5ZBgu9xV9eMHycErO1AbrDOXdUA=;
-        b=FyV2uV6NBhFd3wt4SJN67bzxmm3Am6xXqYpdq05DNRDI3AGnX7ZXwVtyMCg6wc3fLw
-         qdEdRUjzkKCromLtTM74dHOaZBKjTkaWATPsattxuHAgrIgrYaPwpS0DACeWcLD5EETD
-         3Z2sAW6OnK4wU/zrJg7JWpf3oDxq1ivY8DnS0v6qDEVjt11zQL6tRGtTlBhN1+fp5QyE
-         WNTWikUB2XCx7icC2O6H+JDy5WDAku1iJAkfD2SIaDTGRbqLvkWGdnOC5MPcxOR2aqKp
-         qVTFKRLfw3AmbHBnxXA6hkbjzPnPkdnDu6wMPsGevjuvmuyrGE35WvghmM2qaUxZ9vYv
-         XMBA==
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-transfer-encoding:user-agent:mime-version;
+        bh=a+eBKXg+HvEOWqCYxJUK4jczCUZDQAIkE1tarFAa5PQ=;
+        b=POyZeHcWT1no5HjX1bNC8NvYTtOBHqFwIiC+OxkhZfXmSoyfEEq+yGr0w5GRkl+4M/
+         cjAAzAbPkdKCUd78AbBDRBDKBws7momKROy6V13z74cZZ4HRfvaD9AlFYAb4NH7wb4s2
+         9c8e/PSlXRnWz4MarGy5iIwMz3v0Zn+L9ink5i61suX7E0ZKfO6W6HE0BGdJiPhPmT6r
+         EkFE89fAEraKstWMgYy+T6ExJmM6O060n37UVUIKhV2ML3EDO7peh0Ffv8lwu/+SA7xs
+         6Dzq2ZyUNb7MOEzm8AFCqNGcLaBVxPjFDblAeDmrURkxTSEXf7TfzLX5LXh3OXv3IrQG
+         uZqg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=looIiUbZXlEHUGlU5ZBgu9xV9eMHycErO1AbrDOXdUA=;
-        b=trloA9EHdcm+YPloVsjJq8dbF7hZg67RXkhXZAG+u1KinnmTcOEQAD8DngZ4JDXvd0
-         rI4JnpJXvPpZCjkO1p0fv8KLzHwDEYdH/TSjrpCgDUlvrQm6QZyDAmoJD7QjY/G22aOG
-         Kx4Cjcs/8RjjqzS71WEbhHm4oFO7jGnrlwfTh1toeCM+SG3rtEx/vcToBg4WM6BmyIQa
-         ynyQf/X9pYAwRqWolN3ttqD8YoS54F1BAm29oqLpAiekG717zZ15hSsI/+RBEVIX2BWs
-         D6dWPxaKJLiRJq8pQktiQl4bRq3cc+68nhfSkM8Icz5iQg04GkRAp1J6DnCH1vopXIf7
-         D+zg==
-X-Gm-Message-State: AOAM533VAlNv2nHX0cTa60BsNFez290Hdd7Ro06kHOYLcAqIXF1vLQYk
-        XgMy3Str0oxx1VAoTgvwX/Y=
-X-Google-Smtp-Source: ABdhPJwjM+0SouYfVuEnSBI4qzOhytGd+BsNEp+lc539PycxGXCxQj9sG42ebPORnmP4hKKJXbw0Ug==
-X-Received: by 2002:a17:906:7955:b0:6e8:a9b:8c7b with SMTP id l21-20020a170906795500b006e80a9b8c7bmr3963680ejo.691.1649973700278;
-        Thu, 14 Apr 2022 15:01:40 -0700 (PDT)
-Received: from linux.. (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
-        by smtp.gmail.com with ESMTPSA id e15-20020a170906044f00b006e897e110fcsm1060948eja.48.2022.04.14.15.01.39
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:content-transfer-encoding:user-agent:mime-version;
+        bh=a+eBKXg+HvEOWqCYxJUK4jczCUZDQAIkE1tarFAa5PQ=;
+        b=Kiam+A5lmabEQgKDtobqcz+vJiMSbZfhVL1fJLZRA6IBE4fAeKnAiIldQ+yDBoGcb5
+         NIQlFW2ByxfBFTERKG6fm88OKFsJb/QNtYx592WuOzqQhFkhAefr/9Jcf3o4snIdZgXC
+         tCjnND5XTf59jv+4viiz/PVfdB1AiluO2a54Ielh3FuJATbP7EqHMnD0qNvxXWe+/wqx
+         EEREW17MLD8cLCQFv0uRpPQifPUGplNpIxgcLcLBsPxBHxRWAKBfidnzBZgxg4veHL/r
+         G/ljB+vlxItIBpQDnKlG2t5rOAtiH17323gApxv0CZ0UHSvv7HlQP6uTwmtAd0pKcil9
+         12hQ==
+X-Gm-Message-State: AOAM530uqPUJIxvrvV3jK1fdUOg1NKBVNVFGo3DXzGhy2TD8koL2Ib5d
+        s+l1DTJjyQMziiAUy2MdQ9c=
+X-Google-Smtp-Source: ABdhPJycg5sAyJlqC0y3pBXqqj2ZKaEeWREZOLjoq30ZvH+3SM9+ZvZB3WG6oizUmc1EycU86vYKXg==
+X-Received: by 2002:a17:906:65d5:b0:6ba:3133:dfb9 with SMTP id z21-20020a17090665d500b006ba3133dfb9mr4135427ejn.56.1649974077944;
+        Thu, 14 Apr 2022 15:07:57 -0700 (PDT)
+Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
+        by smtp.googlemail.com with ESMTPSA id k15-20020a50ce4f000000b00420119333c1sm1687605edj.62.2022.04.14.15.07.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Apr 2022 15:01:39 -0700 (PDT)
+        Thu, 14 Apr 2022 15:07:57 -0700 (PDT)
+Message-ID: <44108a7ad56dd6984523af35cfa003f4ed7be41e.camel@gmail.com>
+Subject: Re: [PATCH 1/1] scsi: ufs: remove redundant HPB unmap
 From:   Bean Huo <huobean@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        daejun7.park@samsung.com, powen.kao@mediatek.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v1 3/4] scsi: ufshpb: Cleanup the handler when device reset HPB information
-Date:   Fri, 15 Apr 2022 00:01:26 +0200
-Message-Id: <20220414220127.587917-4-huobean@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220414220127.587917-1-huobean@gmail.com>
-References: <20220414220127.587917-1-huobean@gmail.com>
+To:     Po-Wen Kao <powen.kao@mediatek.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Cc:     wsd_upstream@mediatek.com, peter.wang@mediatek.com,
+        stanley.chu@mediatek.com, alice.chao@mediatek.com,
+        chun-hung.wu@mediatek.com, cc.chou@mediatek.com,
+        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
+        yohan.joung@sk.com, jason.li@sk.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Date:   Fri, 15 Apr 2022 00:07:56 +0200
+In-Reply-To: <004b55d8-fcd3-136c-526c-6ada025d6a1c@mediatek.com>
+References: <20220412073131.10644-1-powen.kao@mediatek.com>
+         <781bfe33efb1e44d22f71e6711da7d15be9d3ab4.camel@gmail.com>
+         <7550da4043ae45ffd58399f1ee696238a5689f25.camel@gmail.com>
+         <004b55d8-fcd3-136c-526c-6ada025d6a1c@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.0-1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+On Thu, 2022-04-14 at 12:49 +0800, Po-Wen Kao wrote:
+> Hi Bean,
+>=20
+> The general idea looks good.
+>=20
+> As ufshpb_issue_umap_all_req in ufshpb_state_toggle won't actually
+> runs=20
+> at cold boot probe due to the fact that sdev are not present yet,
+> this=20
+> should avoid sending HPB command before UAC being cleared while keeps
+> HPB mapping clean when rest flow occurs.
+>=20
+> Just a concern, shouldn't ufshpb_issue_umap_all_req be send for each=20
+> sdev's corresponding hpb?
+>=20
 
-"When the device is powered off by the host, the device may restore L2P map data
-upon power up or build from the host’s HPB READ command. In case device powered
-up and lost HPB information, device can signal to the host through HPB Sense data,
-by setting HPB Operation as ‘2’ which will inform the host that device reset HPB
-information."
+Hi Po Wen,
 
-This patch is to clean up the handler and make the intent of this handler more
-readable.
+I replied in another email that setting the flag resets all active
+regions in the device, which is a more efficient way, I have submitted
+a fix for HPB device mode, your review and testing are welcome.
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/scsi/ufs/ufshpb.c | 35 +++++++++++++++++++++++------------
- 1 file changed, 23 insertions(+), 12 deletions(-)
+Kind regards,
+Bean
 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index 4463a0fc619f..ac442f19d7f7 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -1231,7 +1231,10 @@ static void ufshpb_rsp_req_region_update(struct ufshpb_lu *hpb,
- 		queue_work(ufshpb_wq, &hpb->map_work);
- }
- 
--static void ufshpb_dev_reset_handler(struct ufshpb_lu *hpb)
-+/**
-+ * Set the flags of all active regions to RGN_FLAG_UPDATE, letting the host reload its L2P entries.
-+ */
-+static void ufshpb_set_region_update(struct ufshpb_lu *hpb)
- {
- 	struct victim_select_info *lru_info = &hpb->lru_info;
- 	struct ufshpb_region *rgn;
-@@ -1245,6 +1248,24 @@ static void ufshpb_dev_reset_handler(struct ufshpb_lu *hpb)
- 	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
- }
- 
-+static void ufshpb_dev_reset_handler(struct ufs_hba *hba)
-+{
-+	struct scsi_device *sdev;
-+	struct ufshpb_lu *hpb;
-+
-+	__shost_for_each_device(sdev, hba->host) {
-+		hpb = ufshpb_get_hpb_data(sdev);
-+		if (hpb && hpb->is_hcm)
-+			/*
-+			 * For the HPB host mode, in case device powered up and lost HPB
-+			 * information, we will set the region flag to be RGN_FLAG_UPDATE,
-+			 * it will let host reload its L2P entries(re-activate the region
-+			 * in the UFS device).
-+			 */
-+			ufshpb_set_region_update(hpb);
-+	}
-+}
-+
- /*
-  * This function will parse recommended active subregion information in sense
-  * data field of response UPIU with SAM_STAT_GOOD state.
-@@ -1319,17 +1340,7 @@ void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	case HPB_RSP_DEV_RESET:
- 		dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
- 			 "UFS device lost HPB information during PM.\n");
--
--		if (hpb->is_hcm) {
--			struct scsi_device *sdev;
--
--			__shost_for_each_device(sdev, hba->host) {
--				struct ufshpb_lu *h = sdev->hostdata;
--
--				if (h)
--					ufshpb_dev_reset_handler(h);
--			}
--		}
-+		ufshpb_dev_reset_handler(hba);
- 
- 		break;
- 	default:
--- 
-2.34.1
+> Looking forward to your further fixes.
+>=20
+>=20
 
