@@ -2,246 +2,185 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD2CAC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Apr 2022 08:18:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C99D8C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Apr 2022 10:37:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238301AbiDNIVU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Apr 2022 04:21:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58338 "EHLO
+        id S241914AbiDNKjh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Apr 2022 06:39:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233330AbiDNIVT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Apr 2022 04:21:19 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74BAF53E32;
-        Thu, 14 Apr 2022 01:18:54 -0700 (PDT)
-X-UUID: 459a53c71c984665960a7f6183dc996d-20220414
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.4,REQID:e81c5580-aadf-4766-a885-d550ae18b7f9,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:0,EDM:0,RT:0,SF:45,FILE:0,RULE:Release_Ham,ACT
-        ION:release,TS:45
-X-CID-INFO: VERSION:1.1.4,REQID:e81c5580-aadf-4766-a885-d550ae18b7f9,OB:0,LOB:
-        0,IP:0,URL:0,TC:0,Content:0,EDM:0,RT:0,SF:45,FILE:0,RULE:Release_Ham,ACTIO
-        N:release,TS:45
-X-CID-META: VersionHash:faefae9,CLOUDID:56345d78-0afa-4dca-bdec-ca54c998425a,C
-        OID:IGNORED,Recheck:0,SF:13|15|28|17|19|48,TC:nil,Content:0,EDM:-3,File:ni
-        l,QS:0,BEC:nil
-X-UUID: 459a53c71c984665960a7f6183dc996d-20220414
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
-        (envelope-from <miles.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 287361542; Thu, 14 Apr 2022 16:18:48 +0800
-Received: from mtkexhb01.mediatek.inc (172.21.101.102) by
- mtkmbs07n1.mediatek.inc (172.21.101.16) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 14 Apr 2022 16:18:47 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by mtkexhb01.mediatek.inc
- (172.21.101.102) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 14 Apr
- 2022 16:18:46 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 14 Apr 2022 16:18:46 +0800
-From:   Miles Chen <miles.chen@mediatek.com>
-To:     <alice.chao@mediatek.com>
-CC:     <Chaotian.Jing@mediatek.com>, <Chun-hung.Wu@mediatek.com>,
-        <Lin.Gui@mediatek.com>, <Powen.Kao@mediatek.com>,
-        <Qilin.Tan@mediatek.com>, <Yanxu.Wei@mediatek.com>,
-        <cc.chou@mediatek.com>, <jejb@linux.ibm.com>,
-        <jiajie.hao@mediatek.com>, <jonathan.hsu@mediatek.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <matthias.bgg@gmail.com>,
-        <miles.chen@mediatek.com>, <peter.wang@mediatek.com>,
-        <stanley.chu@mediatek.com>, <wsd_upstream@mediatek.com>
-Subject: Re: [PATCH v2 1/1] scsi: Fix racing between dev init and dev reset
-Date:   Thu, 14 Apr 2022 16:18:46 +0800
-Message-ID: <20220414081846.31356-1-miles.chen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <7ad2e7fc39ce0d2b145f651d530d157c67c04f29.camel@mediatek.com>
-References: <7ad2e7fc39ce0d2b145f651d530d157c67c04f29.camel@mediatek.com>
+        with ESMTP id S241898AbiDNKjg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Apr 2022 06:39:36 -0400
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B3BC7A982
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Apr 2022 03:37:12 -0700 (PDT)
+Received: by mail-pj1-x102d.google.com with SMTP id h15-20020a17090a054f00b001cb7cd2b11dso5252267pjf.5
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Apr 2022 03:37:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=jK9KwS6T+bquj5YHcg3bo29cXg8G42RJN1XYEO/oULs=;
+        b=femld6AdQLQ2ppLPAqsEcYR0m3p9ja7DeTar8H97KJUJlsWoSracwj29OeFZAhR9+o
+         ad+I4vGjKKoArulCaIV8n7Mfgu++5/8nR9PfDmOc3p92KBXBPsmGf4Wfv5XVqTlxAPzm
+         CBdDVeCURBQ/H6yx6pH1kLG+L4zDOz2SJjpmY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=jK9KwS6T+bquj5YHcg3bo29cXg8G42RJN1XYEO/oULs=;
+        b=KgyO82kilmNlBE0DUylc+DpNb9/VWcRdJBHCAUOFWd8OA5g60p3zcA56tYGFreHaoj
+         7D+A9B+Uz0w/zqSfbalSkhqdTrcr3BqLZYlHtHEJpVOjG6fDZSLseawfUKziAoRGtWF1
+         hFR5CUkG/nqVU7J+Shx8OIVCHDnDsSTi5Q//Sgj5Ixzya0EgBAMwJpFU/nc8rcYpiiS0
+         vILDWaDff/+7CgO9bPu6ECTSc34omviIqHj7lVM2KEZLs16zBqxvaCRPR8hYMyIHuHIZ
+         yOo3IxKrJDJyGf2v6gOfaUf8lqXwqHY1s/Oiaw2gCOyPgqsw+WsAAbKN2zrUPo6DjaZv
+         Q+vQ==
+X-Gm-Message-State: AOAM530kJSOTssnlBNLA9zbUlUaU6q3dRZGCj/5xnXDnR8Uj7uy4Gccr
+        C1rh2lzXXn69REYR9Mgw1GAdBWUPK508uBWZKtFo7ZYw2u6CMhgdMla9aBXcWYDKjLhXwcf88Sy
+        BdrqbSTFtdToHg7TmtWIJwQ1dDzOAJSmdZBk5JViIiPUGAujNAB/HzdZGu1YOBURZMe2rJqetNv
+        rzUoBmh6o=
+X-Google-Smtp-Source: ABdhPJzRH9qEaIIOdUKTA64HQswr01KdseU9kURpRWFXqzcfDA37Ixt0HBOh9BpMogeQvuVUv6Vjrw==
+X-Received: by 2002:a17:903:1c7:b0:158:5ada:8876 with SMTP id e7-20020a17090301c700b001585ada8876mr20656781plh.122.1649932631656;
+        Thu, 14 Apr 2022 03:37:11 -0700 (PDT)
+Received: from dhcp-10-123-20-15.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id z6-20020a056a00240600b004e17ab23340sm1820634pfh.177.2022.04.14.03.37.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Apr 2022 03:37:09 -0700 (PDT)
+From:   Sumit Saxena <sumit.saxena@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+Subject: [PATCH] scsi: increase max device queue_depth to 4096
+Date:   Thu, 14 Apr 2022 06:36:01 -0400
+Message-Id: <20220414103601.140687-1-sumit.saxena@broadcom.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-MTK:  N
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000006ff55805dc9ae01e"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Alice, 
+--0000000000006ff55805dc9ae01e
+Content-Transfer-Encoding: 8bit
 
->Hi Miles,
->
->On Wed, 2022-03-09 at 07:23 +0800, Miles Chen wrote:
->> Hi Alice,
->> 
->> Thanks for your patch. I have some questions.
->> 
->> > Device reset thread uses kobject_uevent_env() to get kobj.parent
->> > after scsi_evt_emit(), and it races with device init thread which
->> > calls device_add() to create kobj.parent before
->> > kobject_uevent_env().
->> > 
->> > Device reset call trace:
->> > fill_kobj_path
->> > kobject_get_path
->> > kobject_uevent_env
->> > scsi_evt_emit			<- add wait_event()
->> > scsi_evt_thread
->> > 
->> > Device init call trace:
->> > fill_kobj_path
->> > kobject_get_path
->> > kobject_uevent_env
->> > device_add				<- create kobj.parent
->> > scsi_target_add
->> > scsi_sysfs_add_sdev
->> > scsi_add_lun
->> > scsi_probe_and_add_lun
->> 
->> These are backtraces, and the things above looks like your solution,
->> not
->> the problem.
->> It's better to describe the problem first and solution later:
->> 
->> Device init call:                              Device reset call:   
->> scsi_probe_and_add_lun()                       scsi_evt_thread()
->>   scsi_add_lun()
->>     scsi_sysfs_add_sdev()                        scsi_evt_emit()
->>       scsi_target_add()                            kobject_uevent_env
->> () 
->>         device_add()                                 kobject_get_path
->> () // something wrong?
->> 	                                               fill_kobj_path()
->> 	  get_device_parent() // I see a get, not create parent kobj,
->> could you show me that point?
->> 	  kobject_uevent()
->>             kobject_uevent_env()
->>               kobject_get_path()
->>                 fill_kobj_path()
->> 
->
->Device init call:	   Device reset call:
->scsi_probe_and_add_lun()   scsi_evt_thread()
->  scsi_add_lun()	    scsi_evt_emit()
->   scsi_sysfs_add_sdev()     kobject_uevent_env() //get kobj.parent
->    scsi_target_add()	      kobject_get_path() //get wrong
->kobj.parent     device_add() // add kobj.parent  fill_kobj_path()
->      kobject_uevent_env()
->       kobject_get_path()
->        fill_kobj_path()
->Above backtrace describes the problem, device reset thread will get
->wrong kobj.parent when device init thread didn’t add kobj.parent yet.
+Maximum SCSI device queue depth limited to 1024 is not sufficient
+for RAID volumes configured behind Broadcom RAID controllers.
+For a 16 drives RAID volume with 1024 device QD, per drive
+64 IOs(1024/16) can be issued which is not good enough to achieve
+performance target.
 
-Thanks for sharing the error log, I think it is clearer this way:
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+---
+ drivers/scsi/scsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Device init call:	           Device reset call:
-scsi_probe_and_add_lun()              scsi_evt_thread()
-  scsi_add_lun()	                scsi_evt_emit()
-   scsi_sysfs_add_sdev()                  kobject_uevent_env() //get kobj.parent
-    scsi_target_add()	                    kobject_get_path()
-                                              len = get_kobj_path_length () // len=1 because parent is not create yet     
-    device_add() // add kobj.parent               
-      kobject_uevent_env()                 
-       kobject_get_path()                     path = kzalloc()
-        fill_kobj_path()	              fill_kobj_path() // --length; length -= cur is a negative value
-	                                        memcpy(path + length, kobject_name(parent), cur); // slab OOB!
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 211aace69c22..735b6c862b46 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -200,11 +200,11 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 
+ 
+ /*
+- * 1024 is big enough for saturating fast SCSI LUNs.
++ * 4096 is big enough for saturating fast SCSI LUNs.
+  */
+ int scsi_device_max_queue_depth(struct scsi_device *sdev)
+ {
+-	return min_t(int, sdev->host->can_queue, 1024);
++	return min_t(int, sdev->host->can_queue, 4096);
+ }
+ 
+ /**
+-- 
+2.27.0
 
-Now I understood this slab OOB issue, please add the kasan log and the
-analysis to the commit message so the maintainers can see it and help.
 
->
->> > 
->> > These two jobs are scheduled asynchronously, we can't guaranteed
->> > that
->> > kobj.parent will be created in device init thread before device
->> > reset
->> > thread calls kobj_get_path().
->> 
->> What happens if device reset thread calls kobj_get_path() before
->> kobj.parent's
->> creation? a crash or something?
->> 
->
->It will cause slab-out-of-bounds in kobject_get_path and kernel panic
->than crash.
+--0000000000006ff55805dc9ae01e
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-Okay, please add the KASAN slab-out-of-bounds error in the commit message.
-
-Thanks,
-Miles
->
->> > 
->> > To resolve the racing issue between device init thread and device
->> > reset thread, we use wait_event() in scsi_evt_emit() to wait for
->> > device_add() to complete the creation of kobj.parent.
->> > 
->> > Signed-off-by: Alice Chao <alice.chao@mediatek.com>
->> 
->> When we send patch N+1, we have to put the change log between patch
->> v1 to vN
->> under a "---", so others can understand the changes between patch N
->> and N+1.
->> e.g.,
->> 
->> ---
->> 
->> Change since v1
->> - remove Change-Id
->> 
->> > ---
->> >  drivers/scsi/scsi_lib.c  | 1 +
->> >  drivers/scsi/scsi_scan.c | 1 +
->> >  2 files changed, 2 insertions(+)
->> > 
->> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> > index 0a70aa763a96..abf9a71ed77c 100644
->> > --- a/drivers/scsi/scsi_lib.c
->> > +++ b/drivers/scsi/scsi_lib.c
->> > @@ -2461,6 +2461,7 @@ static void scsi_evt_emit(struct scsi_device
->> > *sdev, struct scsi_event *evt)
->> >  		break;
->> >  	case SDEV_EVT_POWER_ON_RESET_OCCURRED:
->> >  		envp[idx++] = "SDEV_UA=POWER_ON_RESET_OCCURRED";
->> > +		wait_event(sdev->host->host_wait, sdev-
->> > >sdev_gendev.kobj.parent != NULL);
->> >  		break;
->> >  	default:
->> >  		/* do nothing */
->> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
->> > index f4e6c68ac99e..431f229ac435 100644
->> > --- a/drivers/scsi/scsi_scan.c
->> > +++ b/drivers/scsi/scsi_scan.c
->> > @@ -1904,6 +1904,7 @@ static void do_scsi_scan_host(struct
->> > Scsi_Host *shost)
->> >  	} else {
->> >  		scsi_scan_host_selected(shost, SCAN_WILD_CARD,
->> > SCAN_WILD_CARD,
->> >  				SCAN_WILD_CARD, 0);
->> > +		wake_up(&shost->host_wait);
->> 
->> do_scsi_scan_host() is not in the call trace above, could you show
->> the relationship
->> of do_scsi_scan_host in the call flow?
->> 
->
->ufshcd_async_scan()
->scsi_scan_host()
->do_scsi_scan_host()  << here
->scsi_scan_host_selected()
-> __scsi_scan_target()
->scsi_probe_and_add_lun()
->scsi_sysfs_add_sdev()
->device_add()
->kobject_uevent_env()
->kobject_get_path()
->fill_kobj_path()
->
->After we add wake_up here, we can ensure that device reset thread will
->get kobject after device init thread finishes adding parent.
->
->> thanks,
->> Miles
->> 
->> >  	}
->> >  }
->
->
+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
+GmgWG68YahkDuVSTTt2beZdyMeDwq/KifJFo18EkhcL3e7rmDAh8SniUI/0o3HX6hrgdmUI1wSdz
+uIVL/m6Ok9mIl2U5kvguitOSC0bVaQPfNzlj+7PCKBECAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZc3VtaXQuc2F4ZW5hQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUNz+JSIXEXl2uQ4Utcnx7FnFi
+hhowDQYJKoZIhvcNAQELBQADggEBAL0HLbxgPSW4BFbbIMN3A/ifBg4Lzaph8ARJOnZpGQivo9jG
+kQOd95knQi9Lm95JlBAJZCqXXj7QS+dnE71tsFeHWcHNNxHrTSwn4Xi5EqaRjLC6g4IEPyZHWDrD
+zzJidgfwQvfZONkf4IXnnrIEFle+26/gPs2kOjCeLMo6XGkNC4HNla1ol1htToQaNN8974pCqwIC
+rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
+3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJzIbqLLchz4XRSTEPfBfVZROw29Bl1U
+XpNhTK8lkIcJMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDQx
+NDEwMzcxMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQBwwbPedhVe3w6Xii2L0L4EFDRyuaoLlT5+qhY/gzPGNi9+s9UL
+c3N3LaBhaqRCUQCXQc4GYLbosbsqPz74ySDm72KTLs4fjUIPhjpBE7xEe83pmAhLR5s1hLOCRS4c
+OWILRcOaRwcogl9Eju1H8PLU+Pv3CtAB6Pg6loJZIyWJtG8/tUgHwcUmUrvjMh42eWTdkx7XPeLL
+AUK+tAzYiv/FGY6wOxtwqR+AhjsD+Xl7XWzcNY1KMmXg4JGeanhwZ7vcqOr7GTsygaNSMLXxd/dD
+yfytLlt6Pq/KoU+JuseGwbBAjEzT4sRlD+B6sPfwvgAy540hXOPhUd443EgriqXR
+--0000000000006ff55805dc9ae01e--
