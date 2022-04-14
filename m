@@ -2,130 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3E66C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Apr 2022 03:08:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79A87C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Apr 2022 04:02:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239674AbiDNDK6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Apr 2022 23:10:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51404 "EHLO
+        id S239787AbiDNEFD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Apr 2022 00:05:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229996AbiDNDK5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Apr 2022 23:10:57 -0400
-Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1652B329A7;
-        Wed, 13 Apr 2022 20:08:32 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R151e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04395;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0VA0LT0e_1649905709;
-Received: from 30.225.28.188(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0VA0LT0e_1649905709)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Thu, 14 Apr 2022 11:08:30 +0800
-Message-ID: <54f14cda-8eed-e486-b41d-5eefc56da526@linux.alibaba.com>
-Date:   Thu, 14 Apr 2022 11:08:29 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Subject: Re: [PATCH v2] scsi: target: tcmu: Fix possible data corruption
-Content-Language: en-US
-To:     kernel test robot <lkp@intel.com>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc:     kbuild-all@lists.01.org, linux-block@vger.kernel.org,
-        bostroesser@gmail.com
-References: <20220411135958.21385-1-xiaoguang.wang@linux.alibaba.com>
- <202204121450.qYzuKGXT-lkp@intel.com>
-From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
-In-Reply-To: <202204121450.qYzuKGXT-lkp@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229485AbiDNEFC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Apr 2022 00:05:02 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B332B1F637;
+        Wed, 13 Apr 2022 21:02:38 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id i24-20020a17090adc1800b001cd5529465aso3463773pjv.0;
+        Wed, 13 Apr 2022 21:02:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=UIr5XR1mljt9mcirdtIb6/vyM/By5rKMU6biIej6ubw=;
+        b=p7RjGXSeO7yQ89IB4n7p4h4ArxKekNFRIrJIuCqyAd3Dvh3WGJujDEow5ihoDJw25q
+         xc3SBuk4qt7TpT4Sh94QcYkvd/7XO5nGmp75XT/V9qO4X6PkthK/bg1NjYv1MDVbGgnW
+         +wu9BIJQ6HAQ2a5o+f1+pctKj5lgd7g5DHowTnldNUx2h9nnNTnEzq2NBBEUaKBYBjvb
+         mjyG284p3Q0GtPC5Yw4DB9ATHqmm410+LF8P1jri4pkPlEB5VFc0rdfnjPRgAONhpoom
+         5VOcobGyKMuKHS3kibA/eHCPVRYibWwi6E54Q9piJb/NKpzKbQ2r/JcpLKiZpsPNglwr
+         hSJQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=UIr5XR1mljt9mcirdtIb6/vyM/By5rKMU6biIej6ubw=;
+        b=VWx+T9rTkE6yA2PrMj+yDEku0ppW3TarhwjqPMAMmA9Vqe6Svk124DqK6gIcKfaSvH
+         +F+Y6CU6ya0wUWFs5d3g56yCOTUIPIN2Q/P0iGyQw3hGyMg+GmFsD1EkzPAYgOQL4rT+
+         Y1fcX18ikJwGFm6uhNwf4//8pnKSSKCfHgnhOHfQHenECZYpTBwt3Tia2C5KoQ6jMPft
+         oXF3mhopN7HKckv644UxKdyveQufsQ9mYaz7sSYkfN08Z3WUxcmycCOeXZXAb74LiA8o
+         htGjH0qlWVliY0jgF2r+tSjiH6Gk43QZLuS/5zxTg4BDTWJYb0XKOYQHZZWT0JCdj/1p
+         Tg1g==
+X-Gm-Message-State: AOAM531/r+Aqfs5DIl2ybZoe4AiWFt5NuvI7KHsnARKxZXmQAyG9oqOD
+        G9VASAde2lfzKsBZFiMqX8Q=
+X-Google-Smtp-Source: ABdhPJzK1xyujJGBlF62EYNhg/jdmjSWDzdG8VirIOYSnajKDeT5ShSQNMgteFTZ4SSy2mP0vNMsiQ==
+X-Received: by 2002:a17:90a:6d96:b0:1c9:c1de:ef2f with SMTP id a22-20020a17090a6d9600b001c9c1deef2fmr2146548pjk.210.1649908958241;
+        Wed, 13 Apr 2022 21:02:38 -0700 (PDT)
+Received: from localhost.localdomain ([119.3.119.18])
+        by smtp.gmail.com with ESMTPSA id w1-20020a17090ac98100b001cd4e204664sm4036731pjt.4.2022.04.13.21.02.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 13 Apr 2022 21:02:37 -0700 (PDT)
+From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
+To:     oliver@neukum.org, aliakc@web.de, lenehan@twibble.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, dc395x@twibble.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Xiaomeng Tong <xiam0nd.tong@gmail.com>, stable@vger.kernel.org
+Subject: [RESEND][PATCH] scsi: dc395x: fix a missing check on list iterator
+Date:   Thu, 14 Apr 2022 12:02:31 +0800
+Message-Id: <20220414040231.2662-1-xiam0nd.tong@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-hi,
+The bug is here:
+	p->target_id, p->target_lun);
 
-Thanks for this report, I'll add the Reported-by in V3 patch.
-But before sending V3, I'd like to wait tcmu maintainer to have a brief review.
+The list iterator 'p' will point to a bogus position containing
+HEAD if the list is empty or no element is found. This case must
+be checked before any use of the iterator, otherwise it will
+lead to a invalid memory access.
 
-Regards,
-Xiaoguang Wang
+To fix this bug, add an check. Use a new variable 'iter' as the
+list iterator, while use the origin variable 'p' as a dedicated
+pointer to point to the found element.
 
-> Hi Xiaoguang,
->
-> Thank you for the patch! Perhaps something to improve:
->
-> [auto build test WARNING on jejb-scsi/for-next]
-> [also build test WARNING on v5.18-rc2 next-20220411]
-> [cannot apply to mkp-scsi/for-next]
-> [If your patch is applied to the wrong git tree, kindly drop us a note.
-> And when submitting patch, we suggest to use '--base' as documented in
-> https://git-scm.com/docs/git-format-patch]
->
-> url:    https://github.com/intel-lab-lkp/linux/commits/Xiaoguang-Wang/scsi-target-tcmu-Fix-possible-data-corruption/20220411-220214
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-> config: x86_64-rhel-8.3-kselftests (https://download.01.org/0day-ci/archive/20220412/202204121450.qYzuKGXT-lkp@intel.com/config)
-> compiler: gcc-11 (Debian 11.2.0-19) 11.2.0
-> reproduce:
->         # apt-get install sparse
->         # sparse version: v0.6.4-dirty
->         # https://github.com/intel-lab-lkp/linux/commit/2bceb529129db286e111bc3bae0b52b62b1fba07
->         git remote add linux-review https://github.com/intel-lab-lkp/linux
->         git fetch --no-tags linux-review Xiaoguang-Wang/scsi-target-tcmu-Fix-possible-data-corruption/20220411-220214
->         git checkout 2bceb529129db286e111bc3bae0b52b62b1fba07
->         # save the config file to linux build tree
->         mkdir build_dir
->         make W=1 C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=x86_64 SHELL=/bin/bash drivers/target/
->
-> If you fix the issue, kindly add following tag as appropriate
-> Reported-by: kernel test robot <lkp@intel.com>
->
->
-> sparse warnings: (new ones prefixed by >>)
->>> drivers/target/target_core_user.c:1907:21: sparse: sparse: incorrect type in assignment (different base types) @@     expected int ret @@     got restricted vm_fault_t @@
->    drivers/target/target_core_user.c:1907:21: sparse:     expected int ret
->    drivers/target/target_core_user.c:1907:21: sparse:     got restricted vm_fault_t
->>> drivers/target/target_core_user.c:1911:16: sparse: sparse: incorrect type in return expression (different base types) @@     expected restricted vm_fault_t @@     got int ret @@
->    drivers/target/target_core_user.c:1911:16: sparse:     expected restricted vm_fault_t
->    drivers/target/target_core_user.c:1911:16: sparse:     got int ret
->
-> vim +1907 drivers/target/target_core_user.c
->
->   1874	
->   1875	static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
->   1876	{
->   1877		struct tcmu_dev *udev = vmf->vma->vm_private_data;
->   1878		struct uio_info *info = &udev->uio_info;
->   1879		struct page *page;
->   1880		unsigned long offset;
->   1881		void *addr;
->   1882		int ret = 0;
->   1883	
->   1884		int mi = tcmu_find_mem_index(vmf->vma);
->   1885		if (mi < 0)
->   1886			return VM_FAULT_SIGBUS;
->   1887	
->   1888		/*
->   1889		 * We need to subtract mi because userspace uses offset = N*PAGE_SIZE
->   1890		 * to use mem[N].
->   1891		 */
->   1892		offset = (vmf->pgoff - mi) << PAGE_SHIFT;
->   1893	
->   1894		if (offset < udev->data_off) {
->   1895			/* For the vmalloc()ed cmd area pages */
->   1896			addr = (void *)(unsigned long)info->mem[mi].addr + offset;
->   1897			page = vmalloc_to_page(addr);
->   1898			get_page(page);
->   1899		} else {
->   1900			uint32_t dpi;
->   1901	
->   1902			/* For the dynamically growing data area pages */
->   1903			dpi = (offset - udev->data_off) / PAGE_SIZE;
->   1904			page = tcmu_try_get_data_page(udev, dpi);
->   1905			if (!page)
->   1906				return VM_FAULT_SIGBUS;
->> 1907			ret = VM_FAULT_LOCKED;
->   1908		}
->   1909	
->   1910		vmf->page = page;
->> 1911		return ret;
->   1912	}
->   1913	
->
+Cc: stable@vger.kernel.org
+Fixes: ^1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
+---
+ drivers/scsi/dc395x.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index c11916b8ae00..bbc03190a6f2 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -3588,10 +3588,19 @@ static struct DeviceCtlBlk *device_alloc(struct AdapterCtlBlk *acb,
+ #endif
+ 	if (dcb->target_lun != 0) {
+ 		/* Copy settings */
+-		struct DeviceCtlBlk *p;
+-		list_for_each_entry(p, &acb->dcb_list, list)
+-			if (p->target_id == dcb->target_id)
++		struct DeviceCtlBlk *p = NULL, *iter;
++
++		list_for_each_entry(iter, &acb->dcb_list, list)
++			if (iter->target_id == dcb->target_id) {
++				p = iter;
+ 				break;
++			}
++
++		if (!p) {
++			kfree(dcb);
++			return NULL;
++		}
++
+ 		dprintkdbg(DBG_1, 
+ 		       "device_alloc: <%02i-%i> copy from <%02i-%i>\n",
+ 		       dcb->target_id, dcb->target_lun,
+-- 
+2.17.1
 
