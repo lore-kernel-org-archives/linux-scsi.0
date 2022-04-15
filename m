@@ -2,210 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3659C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Apr 2022 11:30:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45602C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Apr 2022 12:43:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347974AbiDOLdW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Apr 2022 07:33:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55318 "EHLO
+        id S1353747AbiDOMqJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Apr 2022 08:46:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240835AbiDOLdU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2022 07:33:20 -0400
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF56813D10;
-        Fri, 15 Apr 2022 04:30:52 -0700 (PDT)
-Received: by mail-ej1-x630.google.com with SMTP id bh17so14915878ejb.8;
-        Fri, 15 Apr 2022 04:30:52 -0700 (PDT)
+        with ESMTP id S1353766AbiDOMqI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2022 08:46:08 -0400
+Received: from smtp.digdes.com (smtp.digdes.com [85.114.5.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94AC8C90C7
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Apr 2022 05:43:38 -0700 (PDT)
+Received: from DDSM-MAIL01.digdes.com (172.16.100.67) by mail.digdes.com
+ (172.16.96.60) with Microsoft SMTP Server (TLS) id 14.3.498.0; Fri, 15 Apr
+ 2022 15:42:31 +0300
+Received: from DDSM-MAIL01.digdes.com (172.16.100.67) by
+ DDSM-MAIL01.digdes.com (172.16.100.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.12; Fri, 15 Apr 2022 15:42:31 +0300
+Received: from smtp.digdes.com (172.16.96.24) by DDSM-MAIL01.digdes.com
+ (172.16.100.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2375.12 via Frontend
+ Transport; Fri, 15 Apr 2022 15:42:31 +0300
+Received: from EUR05-VI1-obe.outbound.protection.outlook.com (104.47.17.173)
+ by relay.digdes.com (172.16.96.24) with Microsoft SMTP Server (TLS) id
+ 14.3.498.0; Fri, 15 Apr 2022 15:42:31 +0300
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=UTHDSfJXEd+ZF6NrQODP61Je0dnjay2ZpwvJNkErUwMR2QUaqvYlRW7ZIVUH/1GrONhO/td7ymOpkt1MGW3tdg/WUuFfk+mJ1m94ApVmHg7FtHNpoTP1nNsnLitxL8JZ0wTUA7o5csN/DWJa+t03nvK6M0PQ0j2ylfKiFHl1q/UVfKJ14akFc/lnEjLll2IKDvAUfEwOjOY2+NtKphKlvnoe/CHtB0pFC8k3Ish5f0gNxez6rBVcXtuDXhVudewF1syD7F6/UCbG4EXyehP921oMCcl3SIOZuJ5uFUoe2A46qi9JmafzKhKQLlSGn0l8to9wLb6nmcfCJdqDDpb3BA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=jwnsXjghJMriGNJ40ms1bvXOK0icnKT0if3Ux0OEVwM=;
+ b=jTL5uEFStLeSFwjRRj0CcQytGsbyzt4kmyIQemCoiSOdgB8K6kdXxMMHwq7+cOYy9C8TgG/1lkPhgaUEecngeBCbufuC/NrjCm/0WflaxXd00bBWZ86pnPnA5JGiYbJQAu6vVHy178Ya9Wnq20I197erSYXGLZ3bB5m8nZLMGCQZw0VqJK7ng1HYmbs61FIKxzJCqXoc+q3dwR0uZU2cWiWqzLM4k+FkslbdDLdni3OZjCYMCVqLVcoXcmAwfT7DPsZ27w4t9tqzRIcaHYaZghSYk/j8ZB4027U0kYAOoGj4/xZDG7bpsCfJ1SbyGbQ8H7XVrT5e2tyKex8PYz8DEA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=raidix.com; dmarc=pass action=none header.from=raidix.com;
+ dkim=pass header.d=raidix.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=NuMDg4fRhVyWhAZksl85UPhTSm7yzkXOLLW7/T+oU88=;
-        b=MKRUp8vjgZui77tLGwshuC3NWpStzpUB4J8Y9Zsw90Hp2SvnLSIbRgobWeqLvboBAy
-         dsmY5Tg3hucjiEYnI3qoi3naAjfeqFmKWmqbYwstsUT/A4qR5gMEoJtOGFfL0UBRxFWr
-         uDjxwvN+QeWNEGDAC5umIukQtY5eYoIICdN5WgY93NNPHfwXFL/XS21ZauYOnGu6IK+i
-         qGLPDPFmMh4bueXqwL+4iHkYsVWjrcPk5XEY9fGuDcDVcrPqNEPWLtP94l94bBgTyKoz
-         B0JHOAViwZrs+vtZjdXIOLHWb6AeHeJnICaNT2+uByItUcZkaCvxvsERdRoD0gXbwVU+
-         oLWw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=NuMDg4fRhVyWhAZksl85UPhTSm7yzkXOLLW7/T+oU88=;
-        b=JvPgNoeDCg+Wts4Ac+5LB+pyvtPweo1mrcnA/lKxjsmzHYcJOS2LtcgqiJGmRz+svX
-         6hVezLibPSSF4RuU7D0TtFhkaZ3zkUVeiJkeJt24t9f3YKyIYsg5Az9j2wk1fBqYKgF7
-         R/RxPO78vDdXak2FosGD/GFWnF3uHB7mcqnyPB4JkjWxu8/ZKdH0i3sxhujgkqupdw7q
-         x6Pe8mBhtUGrgGJ1aIdF20/+36ksES04Xo01XJgZIBHRMYUrcTYOzCTYO7Q6xIYOUCO2
-         7YLcTh/QoQIeKuVinzzSIFFDMQn2CeCpaVRBkb+TkkddDYQ82/RioL/RfTIjZlCbQrmL
-         OMaw==
-X-Gm-Message-State: AOAM532DmRF9lm2R9rBJLaQ8R4JuD+xKXCD/IMqsG3Us2wV1FXWrlop5
-        66yr/UXC6gyAMLfo3o5VNqzElTrKois=
-X-Google-Smtp-Source: ABdhPJy9duN7S1DD+los3T/PtKdJsAsrebIer+Y+d1C2GhqYt2PHI2c21HL/V5FH49v1A0RuLX78Ew==
-X-Received: by 2002:a17:906:9b8f:b0:6db:ab62:4713 with SMTP id dd15-20020a1709069b8f00b006dbab624713mr6004025ejc.738.1650022251218;
-        Fri, 15 Apr 2022 04:30:51 -0700 (PDT)
-Received: from [192.168.178.40] (ipbcc1cfad.dynamic.kabel-deutschland.de. [188.193.207.173])
-        by smtp.gmail.com with ESMTPSA id z22-20020a1709063ad600b006e8867caa5dsm1593790ejd.72.2022.04.15.04.30.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 15 Apr 2022 04:30:50 -0700 (PDT)
-Message-ID: <cb3a64c6-eeee-213f-ad71-d343e9c0e13c@gmail.com>
-Date:   Fri, 15 Apr 2022 13:30:49 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH v2] scsi: target: tcmu: Fix possible data corruption
+ d=digdes.onmicrosoft.com; s=selector2-digdes-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jwnsXjghJMriGNJ40ms1bvXOK0icnKT0if3Ux0OEVwM=;
+ b=l3hzL5XbohdO3Fy8S123QQTj/1DhuvY6tDeyY0J2picNf0lBESxRWtO1CQ84xRNOZthzBrCSDBjhG4fOF10q5/KsK0qHyi76vpBiwg1fW/2dUsrvdg0JdR9GQDsVWxaGjnEaol/a185nIKDjy+df9KDlgBXi5DTLWvdG9MCES2s=
+Received: from AS8PR10MB4952.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:20b:403::6)
+ by AS8PR10MB4519.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:20b:2e2::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5144.22; Fri, 15 Apr
+ 2022 12:42:29 +0000
+Received: from AS8PR10MB4952.EURPRD10.PROD.OUTLOOK.COM
+ ([fe80::74ca:aa66:a112:d987]) by AS8PR10MB4952.EURPRD10.PROD.OUTLOOK.COM
+ ([fe80::74ca:aa66:a112:d987%3]) with mapi id 15.20.5164.020; Fri, 15 Apr 2022
+ 12:42:29 +0000
+From:   Chesnokov Gleb <Chesnokov.G@raidix.com>
+To:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: [PATCH 2/2] qla2xxx: Fix missed DMA unmap for aborted cmds
+Thread-Topic: [PATCH 2/2] qla2xxx: Fix missed DMA unmap for aborted cmds
+Thread-Index: AQHYUMYtkLBbKidY90SJACyXGZHZ2A==
+Date:   Fri, 15 Apr 2022 12:42:29 +0000
+Message-ID: <AS8PR10MB4952D545F84B6B1DFD39EC1E9DEE9@AS8PR10MB4952.EURPRD10.PROD.OUTLOOK.COM>
+Accept-Language: en-US
 Content-Language: en-US
-To:     Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     linux-block@vger.kernel.org
-References: <20220411135958.21385-1-xiaoguang.wang@linux.alibaba.com>
-From:   Bodo Stroesser <bostroesser@gmail.com>
-In-Reply-To: <20220411135958.21385-1-xiaoguang.wang@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+suggested_attachment_session_id: c0caa8e8-5278-c7bb-7451-4ffacdaec45d
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=raidix.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 449a68fe-b835-4be5-31b4-08da1edd6780
+x-ms-traffictypediagnostic: AS8PR10MB4519:EE_
+x-microsoft-antispam-prvs: <AS8PR10MB4519444E429D86332F9475049DEE9@AS8PR10MB4519.EURPRD10.PROD.OUTLOOK.COM>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: gmCIbQoGnEiQrAaNcJSdSYjDjGnHXZjbIH5KNtaLNN1On1DtIOrbtqE/ngZKdHBep/FT/bNXU+Y7qnz8fTFbJ96ITqt3TXp0UcxdkjkEyvfn0Trh62Oh373qKJi/BVBa/ZAmha5HNgjHR3ql1bdVoPEVZT3f2vP/DKJixu3ZQyto4sUMwxBNpPvdhllCBhR66ChzzMotMqGxZFTD7a4paKiZE7tqR+ouv1mfZjBa+BUxgiqbR85AnaULaDNhWKHFIDZTNLhJ5mi0sJAsOSdbF3Tpe221AcXU6kI8IbPKYX75DKFvjn0WuNSAp7V+cab8CfXkAlEcSvCQLCT0Tv1lRu0wPoAkvz9a2uRBl1yMDAWdnB6/gRoGip9E0qczsw9T/9PJ3NnIQgpInycNiIiaeXTWsf1k0qXR5bR9Lppl4kuJNFB+jSioGpTkd3dUZHU008NbGqGTMpb5SoGg2T3uqVw+Peoc5d3sARAPcC9F4k6le2rDTdE2q1RS7DmJTwS0MddwCK/9xmEBAI8KHoNVJIvQc31hAySQj4X87Kncm4oOBN48VSFBvFdYsrvLvMHFaV9KoxTsX2lLCox72m8cbHHjhlpvOJ1e8HVU7oK1HurMriSg2C4t7/m0Y3WVcF/zR/7372J12J2gkBH3vfWboQS6lRtdkR5QyDl6tPgHgCQBP/4NbADYWpfVeuFtsG1FY2My2cRKFF879+a+B/ox+w==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR10MB4952.EURPRD10.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(64756008)(66946007)(76116006)(9686003)(2906002)(38070700005)(122000001)(71200400001)(33656002)(55016003)(8936002)(316002)(186003)(5660300002)(52536014)(7696005)(66446008)(26005)(66476007)(8676002)(66556008)(83380400001)(6506007)(91956017)(6916009)(38100700002)(508600001)(86362001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?NInTtHrOM1JZIM1jce6zFcVah10jNeoYmcOyhWzXA2jQEdU8qe+FxdLmrE?=
+ =?iso-8859-1?Q?ddj+vvqTWHll6ExMaZRKX6qhWTGWpH0BTp2buHzAUMdRp8ZAnddW90O6mQ?=
+ =?iso-8859-1?Q?yoYL0GvvoGCwJVH37BD+Ti8z8X8FqLE58AwlBCx/8MMx+CahzLEJ1z/id4?=
+ =?iso-8859-1?Q?uvZrlc512QB+wFQhWqbd6Cu+OVUcAP49g7NLXFGr5t+8OBzNIAGixNOlQI?=
+ =?iso-8859-1?Q?GgfBMUccZhme5sVac4YupGIu4zlXMaFcjThR+9r+BlSYq9Dcm1ULlUOCSZ?=
+ =?iso-8859-1?Q?1Wbl57y/RHMzVGTtA/+6KROxI5kKWiNdasNBfLmAhS+Zou9uqa9zcvAcyU?=
+ =?iso-8859-1?Q?J+cRwcWER7zHNjZh/PVyRpEgkV7XWFHuLY6P3B7srjRx5IFRdjAwArulyY?=
+ =?iso-8859-1?Q?cB7IBOqj3p0Q3DcooeaNSmJeHTnhQPy3uoQhTOk/udE20GwVnDyIMtggUV?=
+ =?iso-8859-1?Q?yVOwlRhkLaicEhgS13mPavyrUbqdSF0rNFGEzJy3L2H3qIw4BqQvs4fJZw?=
+ =?iso-8859-1?Q?qEPDaEbA4GebUf7jkXEjfrZ7WoEacyAgHrEWRkC78fy42RITnrJzuiM2sH?=
+ =?iso-8859-1?Q?Z9aUet6Sy0OPzk1yvOXLihVI+QZcsbLhyf2LJokxKOK4z7ZUU90RAWDc07?=
+ =?iso-8859-1?Q?2I614iUAtbzwX/asXCKc29QnayAFKQr3X61BcfgcLClwOYtlbSEF/Ai12T?=
+ =?iso-8859-1?Q?oca3FUPm68/b8plLR3fLKQDliV+UREE2nPgzDHvA1RB6XYyNfrR/TfYwdY?=
+ =?iso-8859-1?Q?leZ0NAShFkTUQyniAQ3EuvHYmX8e7DQwXGJoTFQ1P6kNIMz6/WhM3u44cJ?=
+ =?iso-8859-1?Q?4YHwjrnklF5z9X51W9qHROZCNG92+x9KLBfApd6fgGL1t1oZxwFinqM7bZ?=
+ =?iso-8859-1?Q?gte1E1YucV7tI4z+wR/xupMVkVh8QgsJaBPL79zDl6k/fHefey15iyGlLh?=
+ =?iso-8859-1?Q?FFaKQaCUTyA0r0Gtm6hoHj6f5jSpcUc3ICrqS89QOpE++yzhsmsBRpePYh?=
+ =?iso-8859-1?Q?HpTdVkNI/S0fDqjZECtceb3Jb7kMeOKGz3swjWlbHQhedLEjTxkpnmWF00?=
+ =?iso-8859-1?Q?4Yaoz7jHXNX6q6aLegtTJQdHpoBWZneUgf+rc+ASj+sPzjoo0bu3OFjogS?=
+ =?iso-8859-1?Q?H5cdm1FPQFW6d1GFk7KKVBksPyBjnrr39RoKGkfnowz1DRdgPy6w8f0ZV+?=
+ =?iso-8859-1?Q?TAT/QJTLJEW/4h4ePzyI59+RZopzW4RY7Ygn2ojgIlmdVO6EE9CxWR85JR?=
+ =?iso-8859-1?Q?SfJC5U/Fb8wOviaIwbLZiwB0Xu56OsOsL2lUbnnXz9O6GSmz+BgNd2zbSb?=
+ =?iso-8859-1?Q?KAATb+CK1caCf/ZsIB3baq3zQIYISvSo5XYzIyL3edojAkfiebdO2fPEOT?=
+ =?iso-8859-1?Q?u7VocIIRd0sdKGIgFZaPap2qpVPb6Yi6RuTJ3B2OTzgxvBUwMKm7CuryWw?=
+ =?iso-8859-1?Q?HtlLkL1SsbOW78P+puE+K9bruQZRPHsth+YCRfEa+28dHk2w/pGcjeEJUP?=
+ =?iso-8859-1?Q?jSbk1ZKNA/MKT/nyW1djW4th0V5TsluEHIxmWiJIcknqJUsx44QRP4sW2+?=
+ =?iso-8859-1?Q?FgH1abdMN1XgyIoOdHM8wJNzQEaP7yk8id+LMhLN0J+HFw0DtyySNuVtYM?=
+ =?iso-8859-1?Q?yZFWXsGSjXRSnEDsZGt2aMWFYWl4ki6mkn9ZBla5cV7v8D2bCK/4LK897y?=
+ =?iso-8859-1?Q?+kBBwmT3wKAMgRRjBvfBG+UM6hRyE2cEw7gxAbsyScpJ/OG+P2Nqm/ggHJ?=
+ =?iso-8859-1?Q?udfkJkOvCv2AA7qqHAaBTw5W4o1pi+F+MkdTlo9AzUdCipjpDxMqZ4Dlaw?=
+ =?iso-8859-1?Q?7mSXD3S4ZQ=3D=3D?=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: AS8PR10MB4952.EURPRD10.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-Network-Message-Id: 449a68fe-b835-4be5-31b4-08da1edd6780
+X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Apr 2022 12:42:29.8781
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70c55e28-9cd7-4753-937e-c751128a9d38
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: wbCXgTD2R5nuy4TZiooK8cdskzl6ySnsPX/+nSYltSn6+6TeIMyhpvetyxMfa6XmhpBoMMdl+5ixNP/HTeZWsA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR10MB4519
+X-OriginatorOrg: raidix.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
-
-Thank you for the patch.
-
-I'm wondering whether we need the new function
-tcmu_wait_inflight_page_fault? Your previous patch just fixed
-tcmu_vma_fault and tcmu_try_get_data_page to call get_page() while
-holding cmdr_lock. So, I think we are safe to first call
-tcmu_blocks_release and then do unmap_mapping_range.
-If so, we could simply add lock_page() and unlock_page() to
-tcmu_blocks_release avoiding the need for a second walk through the
-xarray.
-
-Bodo
-
-On 11.04.22 15:59, Xiaoguang Wang wrote:
-> When tcmu_vma_fault() gets one page successfully, before the current
-> context completes page fault procedure, find_free_blocks() may run in
-> and call unmap_mapping_range() to unmap this page. Assume when
-> find_free_blocks() completes its job firstly, previous page fault
-> procedure starts to run again and completes, then one truncated page has
-> beed mapped to use space, but note that tcmu_vma_fault() has gotten one
-> refcount for this page, so any other subsystem won't use this page,
-> unless later the use space addr is unmapped.
-> 
-> If another command runs in later and needs to extends dbi_thresh, it may
-> reuse the corresponding slot to previous page in data_bitmap, then though
-> we'll allocate new page for this slot in data_area, but no page fault will
-> happen again, because we have a valid map, real request's data will lose.
-> 
-> Filesystem implementations will also run into this issue, but they
-> usually lock page when vm_operations_struct->fault gets one page, and
-> unlock page after finish_fault() completes. In truncate sides, they
-> lock pages in truncate_inode_pages() to protect race with page fault.
-> We can also have similar codes like filesystem to fix this issue.
-> 
-> To fix this possible data corruption, we can apply similar method like
-> filesystem. For pages that are to be freed, find_free_blocks() locks
-> and unlocks these pages, and make tcmu_vma_fault() also lock found page
-> under cmdr_lock. With this action, for above race, find_free_blocks()
-> will wait all page faults to be completed before calling
-> unmap_mapping_range(), and later if unmap_mapping_range() is called,
-> it will ensure stale mappings to be removed cleanly.
-> 
-> Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
-> 
-> ---
-> V2:
->    Wait all possible inflight page faults to be completed in
-> find_free_blocks() to fix possible stale map.
-> ---
->   drivers/target/target_core_user.c | 39 ++++++++++++++++++++++++++++++++++++++-
->   1 file changed, 38 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> index fd7267baa707..ed026f5bdb14 100644
-> --- a/drivers/target/target_core_user.c
-> +++ b/drivers/target/target_core_user.c
-> @@ -20,6 +20,7 @@
->   #include <linux/configfs.h>
->   #include <linux/mutex.h>
->   #include <linux/workqueue.h>
-> +#include <linux/pagemap.h>
->   #include <net/genetlink.h>
->   #include <scsi/scsi_common.h>
->   #include <scsi/scsi_proto.h>
-> @@ -1657,6 +1658,20 @@ static int tcmu_check_and_free_pending_cmd(struct tcmu_cmd *cmd)
->   	return -EINVAL;
->   }
->   
-> +static void tcmu_wait_inflight_page_fault(struct tcmu_dev *udev,
-> +			unsigned long first, unsigned long last)
-> +{
-> +	XA_STATE(xas, &udev->data_pages, first * udev->data_pages_per_blk);
-> +	struct page *page;
-> +
-> +	xas_lock(&xas);
-> +	xas_for_each(&xas, page, (last + 1) * udev->data_pages_per_blk - 1) {
-> +		lock_page(page);
-> +		unlock_page(page);
-> +	}
-> +	xas_unlock(&xas);
-> +}
-> +
->   static u32 tcmu_blocks_release(struct tcmu_dev *udev, unsigned long first,
->   				unsigned long last)
->   {
-> @@ -1822,6 +1837,7 @@ static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
->   	page = xa_load(&udev->data_pages, dpi);
->   	if (likely(page)) {
->   		get_page(page);
-> +		lock_page(page);
->   		mutex_unlock(&udev->cmdr_lock);
->   		return page;
->   	}
-> @@ -1863,6 +1879,7 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
->   	struct page *page;
->   	unsigned long offset;
->   	void *addr;
-> +	int ret = 0;
->   
->   	int mi = tcmu_find_mem_index(vmf->vma);
->   	if (mi < 0)
-> @@ -1887,10 +1904,11 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
->   		page = tcmu_try_get_data_page(udev, dpi);
->   		if (!page)
->   			return VM_FAULT_SIGBUS;
-> +		ret = VM_FAULT_LOCKED;
->   	}
->   
->   	vmf->page = page;
-> -	return 0;
-> +	return ret;
->   }
->   
->   static const struct vm_operations_struct tcmu_vm_ops = {
-> @@ -3205,6 +3223,25 @@ static void find_free_blocks(void)
->   			udev->dbi_max = block;
->   		}
->   
-> +		/*
-> +		 * While reaching here, there maybe page faults occurring on
-> +		 * these to be released pages, and there maybe one race that
-> +		 * unmap_mapping_range() is called before page fault on these
-> +		 * pages are finished, then valid but stale map is created.
-> +		 *
-> +		 * If another command runs in later and needs to extends
-> +		 * dbi_thresh, it may reuse the corresponding slot to previous
-> +		 * page in data_bitmap, then though we'll allocate new page for
-> +		 * this slot in data_area, but no page fault will happen again,
-> +		 * because we have a valid map, command's data will lose.
-> +		 *
-> +		 * So here we lock and unlock pages that are to be released to
-> +		 * ensure all page faults to be completed, then following
-> +		 * unmap_mapping_range() can ensure stale maps to be removed
-> +		 * cleanly.
-> +		 */
-> +		tcmu_wait_inflight_page_fault(udev, start, end - 1);
-> +
->   		/* Here will truncate the data area from off */
->   		off = udev->data_off + (loff_t)start * udev->data_blk_size;
->   		unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
+Aborting commands that have already been sent to the firmware can=0A=
+cause BUG in qlt_free_cmd(): BUG_ON(cmd->sg_mapped)=0A=
+=0A=
+For instance:=0A=
+- command passes rdx_to_xfer state, maps sgl, sends to the=0A=
+  fimware=0A=
+- reset occurs, qla2xxx performs ISP error recovery,=0A=
+  aborts the command=0A=
+- target stack calls qlt_abort_cmd() and then qlt_free_cmd()=0A=
+- BUG_ON(cmd->sg_mapped) in qlt_free_cmd() occurs because sgl was not=0A=
+  unmapped=0A=
+=0A=
+Thus, unmap sgl in qlt_abort_cmd() for commands with the aborted flag=0A=
+set.=0A=
+=0A=
+Signed-off-by: Gleb Chesnokov <Chesnokov.G@raidix.com>=0A=
+---=0A=
+ drivers/scsi/qla2xxx/qla_target.c | 3 +++=0A=
+ 1 file changed, 3 insertions(+)=0A=
+=0A=
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_t=
+arget.c=0A=
+index 2d30578aebcf..a02235a6a8e9 100644=0A=
+--- a/drivers/scsi/qla2xxx/qla_target.c=0A=
++++ b/drivers/scsi/qla2xxx/qla_target.c=0A=
+@@ -3826,6 +3826,9 @@ int qlt_abort_cmd(struct qla_tgt_cmd *cmd)=0A=
+ =0A=
+ 	spin_lock_irqsave(&cmd->cmd_lock, flags);=0A=
+ 	if (cmd->aborted) {=0A=
++		if (cmd->sg_mapped)=0A=
++			qlt_unmap_sg(vha, cmd);=0A=
++=0A=
+ 		spin_unlock_irqrestore(&cmd->cmd_lock, flags);=0A=
+ 		/*=0A=
+ 		 * It's normal to see 2 calls in this path:=0A=
+-- =0A=
+2.35.1=0A=
