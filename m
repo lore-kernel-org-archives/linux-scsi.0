@@ -2,133 +2,65 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7368C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Apr 2022 09:40:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70ADBC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Apr 2022 10:19:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351799AbiDOJmx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Apr 2022 05:42:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56262 "EHLO
+        id S1352202AbiDOKVt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Apr 2022 06:21:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351854AbiDOJmv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2022 05:42:51 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DF1148E64;
-        Fri, 15 Apr 2022 02:40:23 -0700 (PDT)
-Received: from dggpemm500023.china.huawei.com (unknown [172.30.72.56])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Kfrmd15sGzCr2p;
-        Fri, 15 Apr 2022 17:36:01 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500023.china.huawei.com (7.185.36.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 15 Apr 2022 17:40:21 +0800
-Received: from [10.174.178.220] (10.174.178.220) by
- dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 15 Apr 2022 17:40:20 +0800
-Message-ID: <f587206a-4479-1748-9211-086d79249b95@huawei.com>
-Date:   Fri, 15 Apr 2022 17:40:20 +0800
+        with ESMTP id S1348368AbiDOKVs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2022 06:21:48 -0400
+Received: from mail.meizu.com (edge07.meizu.com [112.91.151.210])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EEA3BB090;
+        Fri, 15 Apr 2022 03:19:17 -0700 (PDT)
+Received: from IT-EXMB-1-125.meizu.com (172.16.1.125) by mz-mail11.meizu.com
+ (172.16.1.15) with Microsoft SMTP Server (TLS) id 14.3.487.0; Fri, 15 Apr
+ 2022 18:19:16 +0800
+Received: from meizu.meizu.com (172.16.137.70) by IT-EXMB-1-125.meizu.com
+ (172.16.1.125) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.14; Fri, 15 Apr
+ 2022 18:19:15 +0800
+From:   Haowen Bai <baihaowen@meizu.com>
+To:     James Smart <james.smart@broadcom.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Haowen Bai <baihaowen@meizu.com>, <linux-scsi@vger.kernel.org>,
+        <target-devel@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH] scsi: efct: Remove unnecessary memset when using kzalloc()
+Date:   Fri, 15 Apr 2022 18:19:12 +0800
+Message-ID: <1650017953-16995-1-git-send-email-baihaowen@meizu.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH 2/2] iscsi: set session to FREE state after unbind session
- in remove session
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Wenchao Hao <haowenchao@huawei.com>
-CC:     <linfeilong@huawei.com>
-References: <20220414014947.4168447-1-haowenchao@huawei.com>
- <20220414014947.4168447-3-haowenchao@huawei.com>
- <a8087705-2cea-f01c-ce67-639e97edc30a@oracle.com>
-From:   Wenchao Hao <haowenchao@huawei.com>
-In-Reply-To: <a8087705-2cea-f01c-ce67-639e97edc30a@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Originating-IP: [172.16.137.70]
+X-ClientProxiedBy: IT-EXMB-1-126.meizu.com (172.16.1.126) To
+ IT-EXMB-1-125.meizu.com (172.16.1.125)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/4/14 23:30, Mike Christie wrote:
-> On 4/13/22 8:49 PM, Wenchao Hao wrote:
->> __iscsi_unbind_session() set session state to ISCSI_SESSION_UNBOUND, which
->> would overwrite the ISCSI_SESSION_FREE state.
->>
->> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
->> ---
->>  drivers/scsi/scsi_transport_iscsi.c | 26 ++++++++++++++++----------
->>  1 file changed, 16 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
->> index 97a9fee02efa..d8dd9279cea8 100644
->> --- a/drivers/scsi/scsi_transport_iscsi.c
->> +++ b/drivers/scsi/scsi_transport_iscsi.c
->> @@ -2173,6 +2173,22 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
->>  	if (!cancel_work_sync(&session->block_work))
->>  		cancel_delayed_work_sync(&session->recovery_work);
->>  	cancel_work_sync(&session->unblock_work);
->> +
->> +	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
->> +	/*
->> +	 * qla4xxx can perform it's own scans when it runs in kernel only
->> +	 * mode. Make sure to flush those scans.
->> +	 */
->> +	flush_work(&session->scan_work);
->> +
->> +	/*
->> +	 * flush running unbind operations
->> +	 * if unbind work did not queued, call __iscsi_unbind_session
->> +	 * directly to perform target remove
-> 
-> We probably don't need the flush_work test because we are going to
-> normally call __iscsi_unbind_session.
-> 
+io->sgl is allocated by kzalloc(). The memory is already set to
+zero. It is unnecessary to call memset again.
 
-I think we still need calling flush_work here. The introduce of flush_work
-is to make sure sysfs objects are removed in an correct order. There is a
-very low probability that __iscsi_unbind_session() triggered by queue_work()
-has not been finished, and iscsi_remove_session() is called. So we need
-flush_work() to make sure __iscsi_unbind_session() has done if it has been
-activated by queue_work().
+Signed-off-by: Haowen Bai <baihaowen@meizu.com>
+---
+ drivers/scsi/elx/efct/efct_io.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-> If the unbind work had already run, which is the normal case, then
-> flush_work returns false and we end up calling __iscsi_unbind_session
-> like before. That function then checks if the target is really unbound.
-> So the extra check doesn't normally buy us anything with your patches
-> because in patch 1 you fixed it so __iscsi_unbind_session doesn't send
-> the extra event.
-> 
-> 
->> +	 */
->> +	if (!flush_work(&session->unbind_work))
->> +		__iscsi_unbind_session(&session->unbind_work);
->> +
->>  	/*
->>  	 * If we are blocked let commands flow again. The lld or iscsi
->>  	 * layer should set up the queuecommand to fail commands.
->> @@ -2183,16 +2199,6 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
->>  	session->state = ISCSI_SESSION_FREE;
->>  	spin_unlock_irqrestore(&session->lock, flags);
->>  
->> -	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
->> -	/*
->> -	 * qla4xxx can perform it's own scans when it runs in kernel only
->> -	 * mode. Make sure to flush those scans.
->> -	 */
->> -	flush_work(&session->scan_work);
->> -	/* flush running unbind operations */
->> -	flush_work(&session->unbind_work);
->> -	__iscsi_unbind_session(&session->unbind_work);
->> -
->>  	/* hw iscsi may not have removed all connections from session */
->>  	err = device_for_each_child(&session->dev, NULL,
->>  				    iscsi_iter_destroy_conn_fn);
-> 
-> .
+diff --git a/drivers/scsi/elx/efct/efct_io.c b/drivers/scsi/elx/efct/efct_io.c
+index c3247b951a76..c612f0a48839 100644
+--- a/drivers/scsi/elx/efct/efct_io.c
++++ b/drivers/scsi/elx/efct/efct_io.c
+@@ -62,7 +62,6 @@ efct_io_pool_create(struct efct *efct, u32 num_sgl)
+ 			return NULL;
+ 		}
+ 
+-		memset(io->sgl, 0, sizeof(*io->sgl) * num_sgl);
+ 		io->sgl_allocated = num_sgl;
+ 		io->sgl_count = 0;
+ 
+-- 
+2.7.4
 
