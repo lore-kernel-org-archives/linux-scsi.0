@@ -2,36 +2,36 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4F59C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Apr 2022 09:33:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7368C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Apr 2022 09:40:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351761AbiDOJfx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Apr 2022 05:35:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41610 "EHLO
+        id S1351799AbiDOJmx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Apr 2022 05:42:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351754AbiDOJft (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2022 05:35:49 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 992A5A7752;
-        Fri, 15 Apr 2022 02:33:21 -0700 (PDT)
-Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Kfrfj0HbPzFprm;
-        Fri, 15 Apr 2022 17:30:53 +0800 (CST)
+        with ESMTP id S1351854AbiDOJmv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2022 05:42:51 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DF1148E64;
+        Fri, 15 Apr 2022 02:40:23 -0700 (PDT)
+Received: from dggpemm500023.china.huawei.com (unknown [172.30.72.56])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Kfrmd15sGzCr2p;
+        Fri, 15 Apr 2022 17:36:01 +0800 (CST)
 Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+ dggpemm500023.china.huawei.com (7.185.36.83) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 15 Apr 2022 17:33:19 +0800
+ 15.1.2375.24; Fri, 15 Apr 2022 17:40:21 +0800
 Received: from [10.174.178.220] (10.174.178.220) by
  dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 15 Apr 2022 17:33:19 +0800
-Message-ID: <1e4b47e5-2bd3-2766-7d47-d14d3a4fbd65@huawei.com>
-Date:   Fri, 15 Apr 2022 17:33:18 +0800
+ 15.1.2375.24; Fri, 15 Apr 2022 17:40:20 +0800
+Message-ID: <f587206a-4479-1748-9211-086d79249b95@huawei.com>
+Date:   Fri, 15 Apr 2022 17:40:20 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.8.0
-Subject: Re: [PATCH 1/2] scsi: iscsi: introduce session UNBOUND state to avoid
- multiple unbind event
+Subject: Re: [PATCH 2/2] iscsi: set session to FREE state after unbind session
+ in remove session
 Content-Language: en-US
 To:     Mike Christie <michael.christie@oracle.com>,
         Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
@@ -41,131 +41,94 @@ To:     Mike Christie <michael.christie@oracle.com>,
         <linux-kernel@vger.kernel.org>, Wenchao Hao <haowenchao@huawei.com>
 CC:     <linfeilong@huawei.com>
 References: <20220414014947.4168447-1-haowenchao@huawei.com>
- <20220414014947.4168447-2-haowenchao@huawei.com>
- <137ec5f5-dbdc-99f0-e9b7-deeef5001a01@oracle.com>
+ <20220414014947.4168447-3-haowenchao@huawei.com>
+ <a8087705-2cea-f01c-ce67-639e97edc30a@oracle.com>
 From:   Wenchao Hao <haowenchao@huawei.com>
-In-Reply-To: <137ec5f5-dbdc-99f0-e9b7-deeef5001a01@oracle.com>
+In-Reply-To: <a8087705-2cea-f01c-ce67-639e97edc30a@oracle.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.174.178.220]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
  dggpemm500017.china.huawei.com (7.185.36.178)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/4/14 23:22, Mike Christie wrote:
+On 2022/4/14 23:30, Mike Christie wrote:
 > On 4/13/22 8:49 PM, Wenchao Hao wrote:
->> Fix the issue of kernel send multiple ISCSI_KEVENT_UNBIND_SESSION event.
->> If session is in UNBOUND state, do not perform unbind operations anymore,
->> else unbind session and set session to UNBOUND state.
+>> __iscsi_unbind_session() set session state to ISCSI_SESSION_UNBOUND, which
+>> would overwrite the ISCSI_SESSION_FREE state.
 >>
-> 
-> I don't think we want this to be a state because you can have a session
-> with no target or it could be partially deleted and it could be in the
-> logged in or failed state. If scsi-ml is sending SYNC_CACHEs as part of
-> the target/device removal operation, and we lose the session then we could
-> go through recovery and the state will go from failed to logged in, and
-> your new unbound state will have been overwritten.
-> 
-> I think it might be better to have a new sysfs file, target_state, for
-> this where you could have values like scanning, bound, unbinding, and
-> unbound, or just a sysfs file, target_bound, that is bool.
-> 
-
-Thanks for your review, I would modify and send another patch.
-
->> Reference:https://github.com/open-iscsi/open-iscsi/issues/338
->>
-> 
-> You should add a description of the problem in the commit, because that
-> link might be gone one day.
-> 
-> 
 >> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
 >> ---
->>  drivers/scsi/scsi_transport_iscsi.c | 19 +++++++++++++++++--
->>  include/scsi/scsi_transport_iscsi.h |  1 +
->>  2 files changed, 18 insertions(+), 2 deletions(-)
+>>  drivers/scsi/scsi_transport_iscsi.c | 26 ++++++++++++++++----------
+>>  1 file changed, 16 insertions(+), 10 deletions(-)
 >>
 >> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
->> index 27951ea05dd4..97a9fee02efa 100644
+>> index 97a9fee02efa..d8dd9279cea8 100644
 >> --- a/drivers/scsi/scsi_transport_iscsi.c
 >> +++ b/drivers/scsi/scsi_transport_iscsi.c
->> @@ -1656,6 +1656,7 @@ static struct {
->>  	{ ISCSI_SESSION_LOGGED_IN,	"LOGGED_IN" },
->>  	{ ISCSI_SESSION_FAILED,		"FAILED" },
->>  	{ ISCSI_SESSION_FREE,		"FREE" },
->> +	{ ISCSI_SESSION_UNBOUND,	"UNBOUND" },
->>  };
->>  
->>  static const char *iscsi_session_state_name(int state)
->> @@ -1686,6 +1687,9 @@ int iscsi_session_chkready(struct iscsi_cls_session *session)
->>  	case ISCSI_SESSION_FREE:
->>  		err = DID_TRANSPORT_FAILFAST << 16;
->>  		break;
->> +	case ISCSI_SESSION_UNBOUND:
->> +		err = DID_NO_CONNECT << 16;
->> +		break;
->>  	default:
->>  		err = DID_NO_CONNECT << 16;
->>  		break;
->> @@ -1838,7 +1842,8 @@ int iscsi_block_scsi_eh(struct scsi_cmnd *cmd)
->>  
->>  	spin_lock_irqsave(&session->lock, flags);
->>  	while (session->state != ISCSI_SESSION_LOGGED_IN) {
->> -		if (session->state == ISCSI_SESSION_FREE) {
->> +		if ((session->state == ISCSI_SESSION_FREE) ||
->> +		    (session->state == ISCSI_SESSION_UNBOUND)) {
->>  			ret = FAST_IO_FAIL;
->>  			break;
->>  		}
->> @@ -1869,6 +1874,7 @@ static void session_recovery_timedout(struct work_struct *work)
->>  		break;
->>  	case ISCSI_SESSION_LOGGED_IN:
->>  	case ISCSI_SESSION_FREE:
->> +	case ISCSI_SESSION_UNBOUND:
->>  		/* we raced with the unblock's flush */
->>  		spin_unlock_irqrestore(&session->lock, flags);
->>  		return;
->> @@ -1957,6 +1963,14 @@ static void __iscsi_unbind_session(struct work_struct *work)
->>  	unsigned long flags;
->>  	unsigned int target_id;
->>  
->> +	spin_lock_irqsave(&session->lock, flags);
->> +	if (session->state == ISCSI_SESSION_UNBOUND) {
->> +		spin_unlock_irqrestore(&session->lock, flags);
->> +		return;
->> +	}
->> +	session->state = ISCSI_SESSION_UNBOUND;
->> +	spin_unlock_irqrestore(&session->lock, flags);
+>> @@ -2173,6 +2173,22 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
+>>  	if (!cancel_work_sync(&session->block_work))
+>>  		cancel_delayed_work_sync(&session->recovery_work);
+>>  	cancel_work_sync(&session->unblock_work);
 >> +
->>  	ISCSI_DBG_TRANS_SESSION(session, "Unbinding session\n");
+>> +	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
+>> +	/*
+>> +	 * qla4xxx can perform it's own scans when it runs in kernel only
+>> +	 * mode. Make sure to flush those scans.
+>> +	 */
+>> +	flush_work(&session->scan_work);
+>> +
+>> +	/*
+>> +	 * flush running unbind operations
+>> +	 * if unbind work did not queued, call __iscsi_unbind_session
+>> +	 * directly to perform target remove
+> 
+> We probably don't need the flush_work test because we are going to
+> normally call __iscsi_unbind_session.
+> 
+
+I think we still need calling flush_work here. The introduce of flush_work
+is to make sure sysfs objects are removed in an correct order. There is a
+very low probability that __iscsi_unbind_session() triggered by queue_work()
+has not been finished, and iscsi_remove_session() is called. So we need
+flush_work() to make sure __iscsi_unbind_session() has done if it has been
+activated by queue_work().
+
+> If the unbind work had already run, which is the normal case, then
+> flush_work returns false and we end up calling __iscsi_unbind_session
+> like before. That function then checks if the target is really unbound.
+> So the extra check doesn't normally buy us anything with your patches
+> because in patch 1 you fixed it so __iscsi_unbind_session doesn't send
+> the extra event.
+> 
+> 
+>> +	 */
+>> +	if (!flush_work(&session->unbind_work))
+>> +		__iscsi_unbind_session(&session->unbind_work);
+>> +
+>>  	/*
+>>  	 * If we are blocked let commands flow again. The lld or iscsi
+>>  	 * layer should set up the queuecommand to fail commands.
+>> @@ -2183,16 +2199,6 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
+>>  	session->state = ISCSI_SESSION_FREE;
+>>  	spin_unlock_irqrestore(&session->lock, flags);
 >>  
->>  	/* Prevent new scans and make sure scanning is not in progress */
->> @@ -4329,7 +4343,8 @@ store_priv_session_##field(struct device *dev,				\
->>  	struct iscsi_cls_session *session =				\
->>  		iscsi_dev_to_session(dev->parent);			\
->>  	if ((session->state == ISCSI_SESSION_FREE) ||			\
->> -	    (session->state == ISCSI_SESSION_FAILED))			\
->> +	    (session->state == ISCSI_SESSION_FAILED) ||			\
->> +	    (session->state == ISCSI_SESSION_UNBOUND))			\
->>  		return -EBUSY;						\
->>  	if (strncmp(buf, "off", 3) == 0) {				\
->>  		session->field = -1;					\
->> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
->> index 38e4a67f5922..80149643cbcd 100644
->> --- a/include/scsi/scsi_transport_iscsi.h
->> +++ b/include/scsi/scsi_transport_iscsi.h
->> @@ -232,6 +232,7 @@ enum {
->>  	ISCSI_SESSION_LOGGED_IN,
->>  	ISCSI_SESSION_FAILED,
->>  	ISCSI_SESSION_FREE,
->> +	ISCSI_SESSION_UNBOUND,
->>  };
->>  
->>  #define ISCSI_MAX_TARGET -1
+>> -	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
+>> -	/*
+>> -	 * qla4xxx can perform it's own scans when it runs in kernel only
+>> -	 * mode. Make sure to flush those scans.
+>> -	 */
+>> -	flush_work(&session->scan_work);
+>> -	/* flush running unbind operations */
+>> -	flush_work(&session->unbind_work);
+>> -	__iscsi_unbind_session(&session->unbind_work);
+>> -
+>>  	/* hw iscsi may not have removed all connections from session */
+>>  	err = device_for_each_child(&session->dev, NULL,
+>>  				    iscsi_iter_destroy_conn_fn);
 > 
 > .
 
