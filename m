@@ -2,91 +2,155 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9A3AC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Apr 2022 03:23:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E107EC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Apr 2022 04:06:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349063AbiDODZp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Apr 2022 23:25:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54724 "EHLO
+        id S1349340AbiDOEI3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Apr 2022 00:08:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349043AbiDODZo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Apr 2022 23:25:44 -0400
-Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B0779D4F0;
-        Thu, 14 Apr 2022 20:23:17 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R881e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04426;MF=dtcccc@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0VA5Gud0_1649992993;
-Received: from localhost.localdomain(mailfrom:dtcccc@linux.alibaba.com fp:SMTPD_---0VA5Gud0_1649992993)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Fri, 15 Apr 2022 11:23:14 +0800
-From:   Tianchen Ding <dtcccc@linux.alibaba.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [RFC PATCH] scsi: ses: Fix out-of-bound write at ses_enclosure_data_process()
-Date:   Fri, 15 Apr 2022 11:23:13 +0800
-Message-Id: <20220415032313.94991-1-dtcccc@linux.alibaba.com>
-X-Mailer: git-send-email 2.30.1 (Apple Git-130)
+        with ESMTP id S1349326AbiDOEI2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2022 00:08:28 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFF13A5EAC;
+        Thu, 14 Apr 2022 21:06:00 -0700 (PDT)
+X-UUID: 64768ea455ac450c9c4e7c61d749026c-20220415
+X-UUID: 64768ea455ac450c9c4e7c61d749026c-20220415
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
+        (envelope-from <alice.chao@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1224859808; Fri, 15 Apr 2022 12:05:55 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.792.15; Fri, 15 Apr 2022 12:05:53 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 15 Apr 2022 12:05:53 +0800
+From:   Alice Chao <alice.chao@mediatek.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <matthias.bgg@gmail.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>
+CC:     <stanley.chu@mediatek.com>, <peter.wang@mediatek.com>,
+        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
+        <powen.kao@mediatek.com>, <cc.chou@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
+        <yanxu.wei@mediatek.com>, <wsd_upstream@mediatek.com>
+Subject: [PATCH v3 1/1] scsi: Fix racing between dev init and dev reset
+Date:   Fri, 15 Apr 2022 12:04:47 +0800
+Message-ID: <20220415040446.26451-2-alice.chao@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Our modified KFENCE reported a memory corruption:
+Device reset thread uses kobject_uevent_env() to get kobj.parent, and it
+aces with device init thread which calls device_add() to add kobj.parent
+before kobject_uevent_env().
 
-[   52.584914] BUG: KFENCE: memory corruption in ses_enclosure_data_process+0x24b/0x310 [ses]
+Device init call:           Device reset call:
+ scsi_probe_and_add_lun()    scsi_evt_thread()
+  scsi_add_lun()             scsi_evt_emit()
+   scsi_sysfs_add_sdev()      kobject_uevent_env() //get kobj.parent
+    scsi_target_add()           kobject_get_path()
+                                 len = get_kobj_path_length () // len=1 because parent hasn't created yet
+    device_add() // add kobj.parent
+      kobject_uevent_env()
+       kobject_get_path()         path = kzalloc()
+        fill_kobj_path()           fill_kobj_path() // --length; length -= cur is a negative value
+                                    memcpy(path + length, kobject_name(parent), cur); // slab OOB!
 
-[   52.584917] Corrupted memory at 0xffff88982de06ff0 [ 0x00 . . . . . . . . . . . . . . . ] (in kfence-#1624698):
-[   52.607212]  ses_enclosure_data_process+0x24b/0x310 [ses]
-[   52.607215]  ses_intf_add+0x444/0x542 [ses]
-[   52.621369]  class_interface_register+0x110/0x120
-[   52.621373]  ses_init+0x13/0x1000 [ses]
-[   52.621377]  do_one_initcall+0x41/0x1c0
-[   52.621380]  do_init_module+0x5c/0x260
-[   52.621382]  __do_sys_finit_module+0xb1/0x110
-[   52.621386]  do_syscall_64+0x2d/0x40
-[   52.621388]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+Above backtrace describes the problem, device reset thread will get wrong
+kobj.parent when device init thread didn’t add kobj.parent yet. When this
+racing happened, it triggers the a KASAN dump on the final iteration:
 
-[   52.621393] kfence-#1624698 [0xffff88982de06fc0-0xffff88982de06fe0, size=33, cache=kmalloc-64] allocated by task 1033:
-[   52.670344]  ses_enclosure_data_process+0x2ae/0x310 [ses]
-[   52.670347]  ses_intf_add+0x444/0x542 [ses]
-[   52.670353]  class_interface_register+0x110/0x120
-[   52.688165]  ses_init+0x13/0x1000 [ses]
-[   52.688169]  do_one_initcall+0x41/0x1c0
-[   52.688172]  do_init_module+0x5c/0x260
-[   52.688174]  __do_sys_finit_module+0xb1/0x110
-[   52.688177]  do_syscall_64+0x2d/0x40
-[   52.688179]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+BUG: KASAN: slab-out-of-bounds in kobject_get_path+0xf8/0x1b8
+Write of size 11 at addr ffffff80d6bb94f5 by task kworker/3:1/58
+<snip>
+Call trace:
+ __kasan_report+0x124/0x1c8
+ kasan_report+0x54/0x84
+ kasan_check_range+0x200/0x208
+ memcpy+0xb8/0xf0
+ kobject_get_path+0xf8/0x1b8
+ kobject_uevent_env+0x228/0xa88
+ scsi_evt_thread+0x2d0/0x5b0
+ process_one_work+0x570/0xf94
+ worker_thread+0x7cc/0xf80
+ kthread+0x2c4/0x388
 
-This is because we check desc_ptr >= buf + page7_len first but then
-write '\0' to desc_ptr[len+4], while this address may be out of bound.
+These two jobs are scheduled asynchronously, we can't guaranteed that
+kobj.parent will be created in device init thread before device reset
+thread calls kobject_get_path().
 
-Fixes: 21fab1d0595e ("[SCSI] ses: update enclosure data on hot add")
-Signed-off-by: Tianchen Ding <dtcccc@linux.alibaba.com>
+To resolve the racing issue between device init thread and device reset
+thread, we use wait_event() in scsi_evt_emit() to wait for device_add()
+to complete the creation of kobj.parent.
+
+Device init call:                Device reset call:
+ufshcd_async_scan()              scsi_evt_thread()
+ scsi_scan_host()                 scsi_evt_emit() <- add wait_event()
+  do_scsi_scan_host() <- add wake_up()
+   scsi_scan_host_selected()
+    scsi_scan_channel()
+     scsi_probe_and_add_lun()
+      scsi_target_add()
+       device_add() // add kobj.parent
+        kobject_uevent_env()
+         kobject_get_path()
+          fill_kobj_path()
+  do_scan_async() <- wake_up()     kobject_uevent_env() // add kobj.parent
+                                    kobject_get_path() // get valid kobj.parent
+                                     fill_kobj_path()
+
+After we add wake_up at do_scsi_scan_host() in device init thread, we can
+ensure that device reset thread will get kobject after device init thread
+finishes adding parent.
+
+Signed-off-by: Alice Chao <alice.chao@mediatek.com>
+
 ---
- drivers/scsi/ses.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 0a1734f34587..06b991e27c84 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -559,11 +559,11 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
- 			struct enclosure_component *ecomp;
+Change since v2
+-Change commit: Describes the preblem first and then the solution.
+-Add commit: Add KASAN error log.
+
+---
+ drivers/scsi/scsi_lib.c  | 1 +
+ drivers/scsi/scsi_scan.c | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0a70aa763a96..abf9a71ed77c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2461,6 +2461,7 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+ 		break;
+ 	case SDEV_EVT_POWER_ON_RESET_OCCURRED:
+ 		envp[idx++] = "SDEV_UA=POWER_ON_RESET_OCCURRED";
++		wait_event(sdev->host->host_wait, sdev->sdev_gendev.kobj.parent != NULL);
+ 		break;
+ 	default:
+ 		/* do nothing */
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index f4e6c68ac99e..431f229ac435 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1904,6 +1904,7 @@ static void do_scsi_scan_host(struct Scsi_Host *shost)
+ 	} else {
+ 		scsi_scan_host_selected(shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
+ 				SCAN_WILD_CARD, 0);
++		wake_up(&shost->host_wait);
+ 	}
+ }
  
- 			if (desc_ptr) {
--				if (desc_ptr >= buf + page7_len) {
-+				len = (desc_ptr[2] << 8) + desc_ptr[3];
-+				desc_ptr += 4;
-+				if (desc_ptr + len > buf + page7_len) {
- 					desc_ptr = NULL;
- 				} else {
--					len = (desc_ptr[2] << 8) + desc_ptr[3];
--					desc_ptr += 4;
- 					/* Add trailing zero - pushes into
- 					 * reserved space */
- 					desc_ptr[len] = '\0';
 -- 
-2.33.0
+2.18.0
 
