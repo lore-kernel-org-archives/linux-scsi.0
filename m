@@ -2,154 +2,152 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C70D5C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Apr 2022 04:12:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3187AC352A8
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Apr 2022 04:53:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349358AbiDOEPN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Apr 2022 00:15:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43756 "EHLO
+        id S1349604AbiDOE4B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Apr 2022 00:56:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349350AbiDOEPM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2022 00:15:12 -0400
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 864C743386;
-        Thu, 14 Apr 2022 21:12:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1649995963; x=1681531963;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=G7atpaMoNEfq7jGY/OPvClgHqCKsSFVTgtRPK1n6ARo=;
-  b=ZPe6oSq0wDzoyyVQJnO1jNq7nF/660TzQvahNrK30V34V66Oxamuxhdn
-   vtCOGcmO6Qn7PNXqneYD2TYb/JeouXZsuX8Cau6U3cus627EYEku7UPMk
-   T+czkuTdgcBUs5KWZaSVlisUpYlDWJFr+8jJEbDgyNcmaXNPy5dxVy6ba
-   ERKHDNY317AHuREujqmGLnw2s5SNEAa5K9r+36JDWUtgdILtG3smvDKdA
-   9AMghFVIp5uVKmoTWQf26u0/bv+0JNp9fBCU+vAfDqfPOnsWCkugfTbcg
-   jRP2RKsIO6PvqRUvpwPrRs3hkSLUDYrNEx8a7WOxtlEUoGAwy9dXrrUtL
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.90,261,1643644800"; 
-   d="scan'208";a="197967484"
-Received: from mail-mw2nam12lp2048.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.48])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Apr 2022 12:12:41 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XF0Gf+Tlajt2ve2SK+6lyOinhO0QiITt2zzuYZQ7dFk2NS5tDbFAzoxQG93C1LlfpIfHceal8UdZQhK0wwIm7GNavV4inF0YvVNyyj9gS33hK2/pV5Bvn89R2G4KPmCkGUr//0IfYFVDIpgRs7EqdFVj4b6tIUIbzR2sduzpWa8Sd7RVwS/zHvFQ2oSHlIxeZIIcntlZ4MBkJnYNr9bOuD3q4KfVa8Qm6M6GQ6xtaKJXRs2as5Fel3mGELZzyPZous6rlnaWNyzms9bEJ4ZpOWcZR6+dTpdojG/MGdGfcMRvXm9NcSu0lOCxowgZalOEMg12eg85qcFWMa2DRf6wXw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=G7atpaMoNEfq7jGY/OPvClgHqCKsSFVTgtRPK1n6ARo=;
- b=H70OzFknihY7ZBjztRCruAI/hdzmChyWh97ceJNqgG+YWAt4Lov6Bln/lRsZkWLl28fo/h6HFecNKDSByld3O4QKm2ovmnDUy3mlVOjmnN6CoH65+HOD3ha1e1Lsn7kgBHsZdMoT6n3ighyH4BoF6na1ESwDzjed7FXG+ClMLxizGACeysLxppE9n4pFUQyzVCGavG3iJj04mlY/BlKzYtz34gLZO05Yu5SybPh6ia1/oVIrDB3XF/QZyZUKh4kY6iEw7cD9yX0IH7mRJg7RPHHrGIotM2OmuDSxPshVcAf1GDbqPYfWUiKh+V7cghtA+CA7SsBDBHOfc6oRGdmIrA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G7atpaMoNEfq7jGY/OPvClgHqCKsSFVTgtRPK1n6ARo=;
- b=RLAGF4Psf4NYxKJoizfOorirOBcGJdr1IvSPge3MlTR/yI1PA5IKPOlZD898LiLBb1reRJR7HckV/0qVgz+WXo/i1yYxp9Zg//gWvVkIGliWbxiGD63kqZYrtMEs/TaUAmPIDK9ikBDJ1Dpe0hUuBCfCeHPlxOrompDbvBAKWB8=
-Received: from BL0PR04MB6564.namprd04.prod.outlook.com (2603:10b6:208:17d::11)
- by BN6PR04MB1061.namprd04.prod.outlook.com (2603:10b6:405:46::36) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5164.20; Fri, 15 Apr
- 2022 04:12:40 +0000
-Received: from BL0PR04MB6564.namprd04.prod.outlook.com
- ([fe80::eda4:f764:fae0:b89e]) by BL0PR04MB6564.namprd04.prod.outlook.com
- ([fe80::eda4:f764:fae0:b89e%3]) with mapi id 15.20.5164.018; Fri, 15 Apr 2022
- 04:12:40 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Bean Huo <huobean@gmail.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        "powen.kao@mediatek.com" <powen.kao@mediatek.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v1 0/4] several UFSHPB changes
-Thread-Topic: [PATCH v1 0/4] several UFSHPB changes
-Thread-Index: AQHYUEs5uATTVlFhl0mC8MLRykr5SqzwXUcw
-Date:   Fri, 15 Apr 2022 04:12:40 +0000
-Message-ID: <BL0PR04MB6564084277248525A4FAA74BFCEE9@BL0PR04MB6564.namprd04.prod.outlook.com>
-References: <20220414220127.587917-1-huobean@gmail.com>
-In-Reply-To: <20220414220127.587917-1-huobean@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: b9fbcb22-6504-459f-f807-08da1e962ee0
-x-ms-traffictypediagnostic: BN6PR04MB1061:EE_
-x-microsoft-antispam-prvs: <BN6PR04MB1061A8631F11B3E9AAE486CCFCEE9@BN6PR04MB1061.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: dCovVGNgMVgxY3PotB/2k/rXrbXRsbsYRj50Y0uREmViBG6Bj+cbmeuWXBDr8w4Zd+gT8Ws+hBD6ElUXjjX3F0d2UfK8cbLB//KWVuIZJ3p9bjt+pWtL/D8X1JBAmr6RIJh7s3q/k2XYaZyk8SoquMaEk/c/VSMRHIV2BW2u6FyzBApJd63f8O0qLUEPT5QbxU7fWl2hgX1s9HMX/KoW6Yu6rnHbGRWlv++U/ta2fWLwwEuJW8UNV3Cwf22RIM74nQxW8mjb2CORjc7gyf/ILexfpCvkwemzm9fuqosPQZLKj3jtz5EZT07uiIbCTLV2qw6jS3p9pA60e+vzG16UDfpIhc20Y7Q3DF+cE0y1BITtxCzOPLsA6/QG8x20iglzNhIuOeTUt5v4tN1L71lOOQxmBhqjNWinVrrgscTC2BYwznmH6ruM4im45IrFLwNNnBwnW1wcs2Uja+WeSu+nvJmo0YYL/tQNx27TyjmDcP5Hs/8AMPaw/mvFyp7u+aqxEkUAI982QT85O3aBYyYN6mYNXtgW0gAqPqtrn6KizMdy3StMMbWVa2XJGPPi9GGe220GKG6nRzTVgzdnch+BMrZMHHNoVVbDFMlbxe/Y8CM7WNOIorHTQkhyAJJ9wNOqTAVR8H3EV/hWTyhbXvd87ljNlhE6eA7zpGjxk/Efi9vc/GPL28vENuPoTTmSPKsKdmZapyy0tuqwVpm1yli7HsZ25NNIPr7SYHA2VbBt9nI=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR04MB6564.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(110136005)(55016003)(921005)(71200400001)(38070700005)(54906003)(82960400001)(186003)(316002)(8936002)(26005)(558084003)(8676002)(38100700002)(9686003)(52536014)(5660300002)(508600001)(6506007)(86362001)(7696005)(33656002)(64756008)(66476007)(66446008)(66946007)(66556008)(122000001)(2906002)(4326008)(76116006)(7416002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?c0VJOGU5eEdjL2o3SGM4aCtLa2lOaXJwYVA1eU9XUHB5QkFuYjNndWYwR1c0?=
- =?utf-8?B?cXNxRlFicm1SWEIwYXhEUTI3TEQvV3EyWm13Q2Ewc3NJNjRzZnd1VUhvb01r?=
- =?utf-8?B?djdId0IxTHk1Y0RtY1diZWY1bjZBU29ZUmVHSGoxL2FvSmd3OW50dG85NlBF?=
- =?utf-8?B?THBBQy9VMm1wcjgwR2hKSC9XTFFHc000Q2hmTm5GYWdqZWlXdlNaUThSZWhl?=
- =?utf-8?B?NTVjV1dWNlB1dVQ0d1YyNExuMlV4RkNNb3ZjTEFiN05FemEycFpYNUhGeUVo?=
- =?utf-8?B?VmMyaExwWnpRTWQxU2RLQXpWNHJ5ekI2SGR6NHBWa3ZJS1VwaXd2RUMyQzF0?=
- =?utf-8?B?ZVRwUGRJUkVZd0toUW9KODdnSHlvT0tnOEtzVTNuYStwSzRvRE9FVmJQeEtN?=
- =?utf-8?B?K1ZpNGlRU20raVdJWjJqQ0NvNVc5U29nNlp3SWlZZUZzTW9rRVhoaEJhRXBN?=
- =?utf-8?B?RFJEcjBMMU5YalJ6ZklPWmdMdkRkMFhEdVZPWS82WW8vZEtNdU9mQThTemJ4?=
- =?utf-8?B?Tjl1dnBWOG5nQ3NtN3NlNzBUdXltTWhxVllVNktob3d2alFKWlhRNnZXVGpw?=
- =?utf-8?B?M05IY3VNL3R0b21la2NsaGVJcWhJaXgyakpiRTR4WWh0a3c5L2U4b2tRaGxS?=
- =?utf-8?B?eDhDUTRCT3lqUHBCQjc5LzFsZm4zdjJHRDhibHJFc2padnNDQTlua0F3UUFu?=
- =?utf-8?B?U2p6SU5DTk5PZDJmT2FVck8xZERZUERBNXU4VFl3RmI3OHYrWEZPMTJNQVhs?=
- =?utf-8?B?NGxHUWh0Q1c0bVJNTTNiSjBLeU5LeEo3M3lwak8xc1RDRXpOWktKMG5tTmRn?=
- =?utf-8?B?YTlLdjl6RnBxYTJQbVYzWE5IM2x5VllNSnRDVjk0OGRDN3h1VW5sMUtMSE0w?=
- =?utf-8?B?Q1pRV3NRYjFqcUtwQkx2d1BDNzBGNU1neVdjVnhMVTJESXNUNFJCZkRodDl5?=
- =?utf-8?B?VFNPK0F5WlRLZ2llMDJyL1dXbHBlc1laREdzMlhYNXZ0dmV4RStwRE9ET21i?=
- =?utf-8?B?UldLcE5XQlVtbXk3NXZMV0FhZkdGOElmajZKbkZibEhpMUUyTWxzSWFVMFh5?=
- =?utf-8?B?SHdWY1MvU3pCU1lvR1NpM2pFRFNrWWJIc0FHbFQxQk1GTHowQVRoQU9ZS3Zp?=
- =?utf-8?B?STdla2xkVmtwVHN2c1M1ejdHUTF0U0ZKdkphdlVXelFSOEpDaFAzL2I1d0Z5?=
- =?utf-8?B?dVIyVTNJcXUxd1dGdU9OdHFRRUZHejAwcEh4NW45c2NKdkhXZEhCSHBsMUs2?=
- =?utf-8?B?UGJ5Sll2TEFIcHpRREE3K3BLTUdXU3BzTWU2NFVESWR3Vktkd1JMZzZGdHhS?=
- =?utf-8?B?cHppdDhmajF1ekR6dHg4TkdhK3FLV3pLREczMFlvYlp2c1JOQW80bkxxKzJl?=
- =?utf-8?B?OUNwK0ZtNEhPeXVqcHhEZ1M1WGlHRHg0d0l6cUFoUkRPNVZVaTlOdjBHUnB4?=
- =?utf-8?B?YjVIZHZnZ253QU9XWE1Zd0JpYTdSSW1jN1NONkJTelh5dS8zODkyUXpPVGZV?=
- =?utf-8?B?eURPRmZqR2dBTmd5NzVld0xpUWNvWUxKOEl2WVpzSS9vamVNbllQaFZQVjRC?=
- =?utf-8?B?NVgzK2pMZ0dXaHkwR1EybTZqSlpyRGFsVCtTU0RzZHpsMUN2ZUQrdGVuYkZQ?=
- =?utf-8?B?YXlkY0h6c1B4R0xuNVV5Z3Zodm51S2VRcnphakVvemE0cDRmeXJac2MzQllQ?=
- =?utf-8?B?UVBrQUFBUHBRc0NvYkwyVWRmbEtVeE5WUjhkcFE1eCtUck5Kd1gwQklWSWdE?=
- =?utf-8?B?ODY3anh1bnNKZEJMZmg2ZmI3dTBZcGFwQkhyS2hYVnR1S2E1ZlltQkFQRWJW?=
- =?utf-8?B?T0t1cVovM2FaQ2dMZkRqZmM1RGtpcWFmQmtmc0NUUGJkTi8yTXFub2pmRUx4?=
- =?utf-8?B?cGxKS0swS0RnTmdmUG52dTFJclNhQUJTZWlTZTNlR3ZEb0czT3ZLYU83RVdk?=
- =?utf-8?B?bWpxRHByQXRQRGNuekp1MExLUXVKSnJjL2hXM2VQc2pBSzdGQ3lpVkpKQnlM?=
- =?utf-8?B?Q1lwOUUrbDJhWmxMYTJud3dkQWJ4K3RjR2JYdkM2REg2OC9CV21EOU1tMUtO?=
- =?utf-8?B?eXNIem9jd2Z5SEdrSHhDQmU5OVJzSkZHK2d2b2doY1VTVUYvMW9UeHVqbFFZ?=
- =?utf-8?B?YU5PaWgrQ2JNYmNNUXRFYzFhV0FGL3oyc0dDWlpDUFhjL2lkU0xPRzhJZTl2?=
- =?utf-8?B?cjh2bzJKVDNkd1pyZDhSV2E0eC9FcUY1cWEzZklQeGNnVTBOcFdtYUtVbUJD?=
- =?utf-8?B?V0NiWEg4ZmRXMytVNWZkMFB5VEU4Sm5rbjN0NmhKOTdqZFlHTER6VE9HTUt0?=
- =?utf-8?B?SGF2VjBteXhaaStYN2pXY2NQa0NVeCtHNlYrVWZzNWx6Vlh4N0MzUT09?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        with ESMTP id S1349467AbiDOEzs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2022 00:55:48 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6997C6A406;
+        Thu, 14 Apr 2022 21:53:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=6JVZQz23Gg3oLV4oYc05UwmOH+nGeMd1Qpin5+I9KgM=; b=p4/UQY65J530pBrFxSnyzz+s1S
+        20vQFpTrN15G6NO5F9VDuyGriDpCNyWjbyKgPkMSrLLko0Q4FtJ1eCzi+YOgwapAyJib+3l/z0nqL
+        +NYMVQXNHIEHx4U8dz9u48TnCqPcYXyNXVQmQKYJgAexB2zuX97VLPbrU2HmJIKE7g1fg+Kmpeu2X
+        7In2j9JZDuGthZuxusAdOOuAjghMTjSwC/AdUlo5SnfFd1vgrm4uEPQ78/HVr7y9+RCydI3REXKPH
+        s1r/AwsdOouUPRQPQY3Kuv+Zv/88cYk9RfHpmYADsU3re53XPeDNlC3OFKsZfaMhZuxBpfzjqoDMO
+        ifzKUlSQ==;
+Received: from [2a02:1205:504b:4280:f5dd:42a4:896c:d877] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nfDxP-008OnZ-2m; Fri, 15 Apr 2022 04:53:19 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        nbd@other.debian.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 02/27] target: pass a block_device to target_configure_unmap_from_queue
+Date:   Fri, 15 Apr 2022 06:52:33 +0200
+Message-Id: <20220415045258.199825-3-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220415045258.199825-1-hch@lst.de>
+References: <20220415045258.199825-1-hch@lst.de>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR04MB6564.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b9fbcb22-6504-459f-f807-08da1e962ee0
-X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Apr 2022 04:12:40.5363
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: HsYRcg7WZXas5tbfRYRAg+7VNJ/rL9XjnU9IGFvfrAUwziCj1hT9hrIxGLDWo+oQCPAgFgvATOunZdfk6qDzbg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR04MB1061
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiANCj4gRnJvbTogQmVhbiBIdW8gPGJlYW5odW9AbWljcm9uLmNvbT4NCj4gDQo+ICoqKiBCTFVS
-QiBIRVJFICoqKg0KRm9yZ290IHRvIHBhc3RlIHlvdXIgY292ZXIgbGV0dGVyLg0KDQpUaGFua3Ms
-DQpBdnJpDQo=
+The SCSI target drivers is a consumer of the block layer and shoul
+d generally work on struct block_device.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/target/target_core_device.c  | 5 +++--
+ drivers/target/target_core_file.c    | 7 ++++---
+ drivers/target/target_core_iblock.c  | 2 +-
+ include/target/target_core_backend.h | 4 ++--
+ 4 files changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index fa866acef5bb2..3a1ec705cd80b 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -834,9 +834,10 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
+  * in ATA and we need to set TPE=1
+  */
+ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
+-				       struct request_queue *q)
++				       struct block_device *bdev)
+ {
+-	int block_size = queue_logical_block_size(q);
++	struct request_queue *q = bdev_get_queue(bdev);
++	int block_size = bdev_logical_block_size(bdev);
+ 
+ 	if (!blk_queue_discard(q))
+ 		return false;
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 8190b840065f3..8d191fdc33217 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -134,10 +134,11 @@ static int fd_configure_device(struct se_device *dev)
+ 	 */
+ 	inode = file->f_mapping->host;
+ 	if (S_ISBLK(inode->i_mode)) {
+-		struct request_queue *q = bdev_get_queue(I_BDEV(inode));
++		struct block_device *bdev = I_BDEV(inode);
++		struct request_queue *q = bdev_get_queue(bdev);
+ 		unsigned long long dev_size;
+ 
+-		fd_dev->fd_block_size = bdev_logical_block_size(I_BDEV(inode));
++		fd_dev->fd_block_size = bdev_logical_block_size(bdev);
+ 		/*
+ 		 * Determine the number of bytes from i_size_read() minus
+ 		 * one (1) logical sector from underlying struct block_device
+@@ -150,7 +151,7 @@ static int fd_configure_device(struct se_device *dev)
+ 			dev_size, div_u64(dev_size, fd_dev->fd_block_size),
+ 			fd_dev->fd_block_size);
+ 
+-		if (target_configure_unmap_from_queue(&dev->dev_attrib, q))
++		if (target_configure_unmap_from_queue(&dev->dev_attrib, bdev))
+ 			pr_debug("IFILE: BLOCK Discard support available,"
+ 				 " disabled by default\n");
+ 		/*
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 87ede165ddba4..b886ce1770bfd 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -119,7 +119,7 @@ static int iblock_configure_device(struct se_device *dev)
+ 	dev->dev_attrib.hw_max_sectors = queue_max_hw_sectors(q);
+ 	dev->dev_attrib.hw_queue_depth = q->nr_requests;
+ 
+-	if (target_configure_unmap_from_queue(&dev->dev_attrib, q))
++	if (target_configure_unmap_from_queue(&dev->dev_attrib, bd))
+ 		pr_debug("IBLOCK: BLOCK Discard support available,"
+ 			 " disabled by default\n");
+ 
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index 675f3a1fe6139..773963a1e0b53 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -14,7 +14,7 @@
+ #define TRANSPORT_FLAG_PASSTHROUGH_ALUA		0x2
+ #define TRANSPORT_FLAG_PASSTHROUGH_PGR          0x4
+ 
+-struct request_queue;
++struct block_device;
+ struct scatterlist;
+ 
+ struct target_backend_ops {
+@@ -117,7 +117,7 @@ sense_reason_t passthrough_parse_cdb(struct se_cmd *cmd,
+ bool target_sense_desc_format(struct se_device *dev);
+ sector_t target_to_linux_sector(struct se_device *dev, sector_t lb);
+ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
+-				       struct request_queue *q);
++				       struct block_device *bdev);
+ 
+ static inline bool target_dev_configured(struct se_device *se_dev)
+ {
+-- 
+2.30.2
+
