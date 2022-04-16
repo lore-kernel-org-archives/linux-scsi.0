@@ -2,91 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F695C41535
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Apr 2022 02:29:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BDEAC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Apr 2022 04:50:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229927AbiDPCbf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Apr 2022 22:31:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59454 "EHLO
+        id S230097AbiDPEw3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Apr 2022 00:52:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229876AbiDPCbd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Apr 2022 22:31:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00FA134BB6;
-        Fri, 15 Apr 2022 19:29:02 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9062F61F03;
-        Sat, 16 Apr 2022 02:29:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49BEAC385A9;
-        Sat, 16 Apr 2022 02:28:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650076142;
-        bh=64fC476XAzTfqTSPn+hnDLb+pMKn+pGg/cu9T2ZYoeo=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=YR2swQd5bHjAFWTiUHuzi2CBAoBviVOC618ZH6KrZjKGz54+nb14CQuuZA/rg7rT4
-         HOUGUM1/um4+uLyDQbz+2PZe7eFGngBlsNfmtF55BEnpI8SeGgAW1TB9RPEF0hZ/gu
-         wadS+mRuD6cvw4fVgc6pYN09yVoj6blhm7pLMwx6SJQPqerB95uO3eDsfGVZkI1tAT
-         ypjbfbxn7+bT/FWjnusepnTR0gEoGRsC/NgAvlwAmFKhGsjLJGRbec9W3gsrNwS1xO
-         /N5W0GD6Xr6BMAFslHSxbnYfv+w/HrqJWAmw3dvOKrGV8WDuaNAVrqQjvW1ASku3np
-         CHDdJgFxl65YQ==
-Message-ID: <ffa14a07-b8f9-828e-97bc-cf7a2099bab5@kernel.org>
-Date:   Sat, 16 Apr 2022 10:28:49 +0800
+        with ESMTP id S230081AbiDPEwZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Apr 2022 00:52:25 -0400
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31F95641F;
+        Fri, 15 Apr 2022 21:49:54 -0700 (PDT)
+Received: by mail-pl1-f175.google.com with SMTP id q3so8517980plg.3;
+        Fri, 15 Apr 2022 21:49:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=n64Ceh0+mncTh8c+PN3WAxiVq0wOhX+10SaNJK7xeCg=;
+        b=Jqnmzopz5ELeysnhdiaOIaA8G07f/4jdOqvoLHb6YcDLZs4tqvKQzagzV+wK86eQAL
+         wtpzUZiHX7wnBd7mmAQ3l9jDVgBArNapaJGjtVWLCiousTou+ZM7HAX4luB1GxNDW9FI
+         WKk6lcZctQhpWjAQJoBhcddHQHunG9yAQ4IeEmRAdUf19AJVF0NUF3/YHNmNgA9vo5vo
+         xHzWWaIrJQeidPzeuSKLiggShjE5yoMh885s61e3/1ZnuHrSnxes6dE1L9RyT6CFWAfe
+         fKouCfNGBfjtVNYJdgzwY4HJVX70mzWQEi2iYjiToDJuFjYGe4sTbovEQql3/gr58CKC
+         T2PA==
+X-Gm-Message-State: AOAM531f0cmG9kg7wIGkZMEKfuxT+HlTcBT2JFcys3QIxQbFaCWvHQh2
+        KedyMGmSf07amDvT8+KztKc=
+X-Google-Smtp-Source: ABdhPJwT6to3858USQjNTK1oP4TKo79v1y7v98iKirBSDZhQhO7QnuXHQM8Wa7Lvk5eiXgmaG9AuCA==
+X-Received: by 2002:a17:90b:4c44:b0:1c7:1326:ec90 with SMTP id np4-20020a17090b4c4400b001c71326ec90mr7502827pjb.87.1650084593598;
+        Fri, 15 Apr 2022 21:49:53 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id k4-20020a17090a3e8400b001cd37f6c0b7sm6129296pjc.46.2022.04.15.21.49.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 15 Apr 2022 21:49:52 -0700 (PDT)
+Message-ID: <3164cd23-28b5-e971-c7a9-1b565b344ed5@acm.org>
+Date:   Fri, 15 Apr 2022 21:49:51 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [f2fs-dev] [PATCH 26/27] block: decouple REQ_OP_SECURE_ERASE from
- REQ_OP_DISCARD
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v4 1/1] scsi: Fix racing between dev init and dev reset
 Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     jfs-discussion@lists.sourceforge.net,
-        linux-nvme@lists.infradead.org,
-        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, target-devel@vger.kernel.org,
-        linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com,
-        linux-s390@vger.kernel.org, linux-nilfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, cluster-devel@redhat.com,
-        xen-devel@lists.xenproject.org, linux-ext4@vger.kernel.org,
-        linux-um@lists.infradead.org, nbd@other.debian.org,
-        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
-        David Sterba <dsterba@suse.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, ceph-devel@vger.kernel.org,
-        Coly Li <colyli@suse.de>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        linux-raid@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-mmc@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org,
-        =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= 
-        <christoph.boehmwalder@linbit.com>, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org, ntfs3@lists.linux.dev,
-        linux-btrfs@vger.kernel.org
-References: <20220415045258.199825-1-hch@lst.de>
- <20220415045258.199825-27-hch@lst.de>
-From:   Chao Yu <chao@kernel.org>
-In-Reply-To: <20220415045258.199825-27-hch@lst.de>
+To:     Alice Chao <alice.chao@mediatek.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, matthias.bgg@gmail.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Cc:     stanley.chu@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, powen.kao@mediatek.com,
+        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+        jiajie.hao@mediatek.com, qilin.tan@mediatek.com,
+        lin.gui@mediatek.com, yanxu.wei@mediatek.com,
+        wsd_upstream@mediatek.com
+References: <20220415061243.30229-2-alice.chao@mediatek.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220415061243.30229-2-alice.chao@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/4/15 12:52, Christoph Hellwig wrote:
-> Secure erase is a very different operation from discard in that it is
-> a data integrity operation vs hint.  Fully split the limits and helper
-> infrastructure to make the separation more clear.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com> [drbd]
-> Acked-by: Ryusuke Konishi <konishi.ryusuke@gmail.com> [nifs2]
-> Acked-by: Jaegeuk Kim <jaegeuk@kernel.org> [f2fs]
-> Acked-by: Coly Li <colyli@suse.de> [bcache]
-> Acked-by: David Sterba <dsterba@suse.com> [btrfs]
+On 4/14/22 23:12, Alice Chao wrote:
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 0a70aa763a96..abf9a71ed77c 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2461,6 +2461,7 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+>   		break;
+>   	case SDEV_EVT_POWER_ON_RESET_OCCURRED:
+>   		envp[idx++] = "SDEV_UA=POWER_ON_RESET_OCCURRED";
+> +		wait_event(sdev->host->host_wait, sdev->sdev_gendev.kobj.parent != NULL);
+>   		break;
+>   	default:
+>   		/* do nothing */
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index f4e6c68ac99e..431f229ac435 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1904,6 +1904,7 @@ static void do_scsi_scan_host(struct Scsi_Host *shost)
+>   	} else {
+>   		scsi_scan_host_selected(shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
+>   				SCAN_WILD_CARD, 0);
+> +		wake_up(&shost->host_wait);
+>   	}
+>   }
 
-For f2fs part,
-
-Acked-by: Chao Yu <chao@kernel.org>
+The above patch can only work if scanning a host is followed by a POWER 
+ON unit attention. I don't think that is guaranteed. Additionally, what 
+will happen with the wait loop if the device generates a POWER on unit 
+attention after the device has been removed from its parent? 
+kobject_del() clears the parent pointer. device_del() calls 
+kobject_del(). scsi_remove_device() calls device_del() before the 
+request queue is destroyed.
 
 Thanks,
+
+Bart.
+
+
