@@ -2,156 +2,246 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D796C433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 17 Apr 2022 11:10:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16209C433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 17 Apr 2022 23:07:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232054AbiDQK6Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 17 Apr 2022 06:58:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47708 "EHLO
+        id S232679AbiDQXJw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 17 Apr 2022 19:09:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229559AbiDQK6W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Apr 2022 06:58:22 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DA971010;
-        Sun, 17 Apr 2022 03:55:44 -0700 (PDT)
-Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Kh6Nn1xYyzFpXF;
-        Sun, 17 Apr 2022 18:53:13 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Sun, 17 Apr 2022 18:55:41 +0800
-Received: from huawei.com (10.175.101.6) by dggpemm500017.china.huawei.com
- (7.185.36.178) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Sun, 17 Apr
- 2022 18:55:40 +0800
-From:   Wenchao Hao <haowenchao@huawei.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     <linfeilong@huawei.com>, Wenchao Hao <haowenchao@huawei.com>
-Subject: [PATCH v2] scsi: iscsi: Fix multiple iscsi session unbind event sent to userspace
-Date:   Sun, 17 Apr 2022 20:06:28 -0400
-Message-ID: <20220418000627.474784-1-haowenchao@huawei.com>
-X-Mailer: git-send-email 2.32.0
+        with ESMTP id S231787AbiDQXJt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Apr 2022 19:09:49 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 268FBB7DC
+        for <linux-scsi@vger.kernel.org>; Sun, 17 Apr 2022 16:07:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1650236832; x=1681772832;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=dGIaAeBDouCnF5PzYe90ISUS8BUeisehyGJOfQOplME=;
+  b=SwPC6Vj10pwUbTfZ08FqOmCfN/5rkqCYzVZ+1BMaSr4IKy2/G+7vDa5V
+   3UoJva6kThJgmBCJfZqpoZxjzbfQOu5PbrGJNwUoGcNzbu5n2OghF55Kr
+   PFadecinw/odPbLgcH2Mf2n8RNg8Gn/SG8SY0SbQxWa66827O0z0dPItW
+   vegNLMRYeMqjdGgSvj6VOQh5PsO035ndxbcYdTS++njxMAlQKcXQwhGrK
+   lOoEdwNtbaWUkkeiCUt1aNBuP5Y+cWwVRoBPUdBvOeg/57PUzB8WvjDQM
+   XTe/qxmD58EU0vguGJsf1HzzUXUuTPpUzoLD3iFGAzo2w7X98XewSs9W+
+   g==;
+X-IronPort-AV: E=Sophos;i="5.90,267,1643644800"; 
+   d="scan'208";a="302307276"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Apr 2022 07:07:11 +0800
+IronPort-SDR: gpv1novK566C52aifAOZy9bqEdUZF9DMs4O4a5BhpHNkTvRyJU1QCVrx8NeCH6iCdY9IBEpOHN
+ NM0nnYbO+fXWB5wDlwhH0EfnK03Lx8RKEezUOnfMxBrIeHyIqbRR6IqGQ078cB53cx6014B783
+ P840+GwJxHQM1wCprUQVtoVvOkVYl4wg376wf25dNyJWfOzB/OB5KDMhdyjP/t72u6+MWncX9W
+ 2akOaR16lSmWGEs05siy5HxSFTmmodo/mbBQ6LEdJCl8chOgyMUsStuWxAUXFN/2XgRisW604H
+ UR3VhXF07NmawxGkO5/Iqpws
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Apr 2022 15:37:32 -0700
+IronPort-SDR: M4AJClzrF29FTlNgJ80sImMr55lawXV8/Ft8LKH1VzUUd1nFXCtP5KwZx1pXJ+U1ZPwJ6bfkQX
+ ihodnYGuPv4ikgHhDYZjykH2fcLx39JZ9YzZDZpYpr+iiY64BbSn+f7sKUNQvt6+3JpGrveRnf
+ MaxMLYInNZwQtCfBErSJDhElm5o+DkUCBp/nsoGbSXn6WG/olxr/BpfzqDI7uBileH/HP5vUJZ
+ BgBSCr1UowPXUDPSWNuQOJKAFw0DxCrlDfAUQwVzGrVs+cS9SCCI51GSVKwdGSewIEpjpUsK4w
+ +xk=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Apr 2022 16:07:11 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KhQgg0Q0hz1SVnx
+        for <linux-scsi@vger.kernel.org>; Sun, 17 Apr 2022 16:07:11 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1650236830; x=1652828831; bh=dGIaAeBDouCnF5PzYe90ISUS8BUeisehyGJ
+        OfQOplME=; b=mla2uOSe5xitmDyI/+InxXTGhrB6Eaev9HBvgymjkAKJTLDxL9n
+        QxAcTdz8lyzarcwf68WR5P32mxQFJXfknST181B3UOh8nj0nEGM/zYHum4N6vq6w
+        PZi48CTdBa1IIysy/FkJ4ajThSfJQ3yMARxXexQ02/qLR4VUlkHiHR3D3t7tW/i4
+        Tw+g+olBDmGFweiRut1RIA40TAfRimC9STxFGAe3k7+pZkvO14Sp+8LKLfwFNoLt
+        rR5hT7UKU1WNESKcF6+TulExjuq0QUOVdgxipKH5KE9Onj1vdzSkFqlpeZtqFhUq
+        jhSe5UYc8REKlmhjUgbHUV2DBQN9y1hKeJA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id A0IepsUxcMe1 for <linux-scsi@vger.kernel.org>;
+        Sun, 17 Apr 2022 16:07:10 -0700 (PDT)
+Received: from [10.225.163.14] (unknown [10.225.163.14])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KhQgd10ntz1Rvlx;
+        Sun, 17 Apr 2022 16:07:08 -0700 (PDT)
+Message-ID: <9f3d2ba9-06d7-8c60-a044-526be277676d@opensource.wdc.com>
+Date:   Mon, 18 Apr 2022 08:07:07 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH 1/8] scsi: sd_zbc: Improve source code documentation
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, Hannes Reinecke <hare@suse.de>,
+        Shaun Tancheff <shaun.tancheff@seagate.com>,
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20220415201752.2793700-1-bvanassche@acm.org>
+ <20220415201752.2793700-2-bvanassche@acm.org>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220415201752.2793700-2-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-I found an issue that kernel would send ISCSI_KEVENT_UNBIND_SESSION
-for multiple times which should be fixed.
+On 4/16/22 05:17, Bart Van Assche wrote:
+> Add several kernel-doc headers. Declare input arrays const. Specify the
+> array size in function declarations.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-This patch introduce target_unbound in iscsi_cls_session to make
-sure session would send only one ISCSI_KEVENT_UNBIND_SESSION.
+Looks good.
 
-But this would break issue fixed in commit 13e60d3ba287 ("scsi: iscsi:
-Report unbind session event when the target has been removed"). The issue
-is iscsid died for any reason after it send unbind session to kernel, once
-iscsid restart again, it loss kernel's ISCSI_KEVENT_UNBIND_SESSION event.
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Now kernel think iscsi_cls_session has already sent an
-ISCSI_KEVENT_UNBIND_SESSION event and would not send it any more. Which
-would cause userspace unable to logout. Actually the session is in
-invalid state(it's target_id is INVALID), iscsid should not sync this
-session in it's restart.
+> ---
+>  drivers/scsi/sd.h     |  5 ++--
+>  drivers/scsi/sd_zbc.c | 54 ++++++++++++++++++++++++++++++++++++++++---
+>  2 files changed, 53 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+> index 0a33a4b68ffb..4849cbe771a7 100644
+> --- a/drivers/scsi/sd.h
+> +++ b/drivers/scsi/sd.h
+> @@ -222,7 +222,7 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)
+>  #ifdef CONFIG_BLK_DEV_ZONED
+>  
+>  void sd_zbc_release_disk(struct scsi_disk *sdkp);
+> -int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
+> +int sd_zbc_read_zones(struct scsi_disk *sdkp, u8 buf[SD_BUF_SIZE]);
+>  int sd_zbc_revalidate_zones(struct scsi_disk *sdkp);
+>  blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
+>  					 unsigned char op, bool all);
+> @@ -238,8 +238,7 @@ blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd, sector_t *lba,
+>  
+>  static inline void sd_zbc_release_disk(struct scsi_disk *sdkp) {}
+>  
+> -static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
+> -				    unsigned char *buf)
+> +static inline int sd_zbc_read_zones(struct scsi_disk *sdkp, u8 buf[SD_BUF_SIZE])
+>  {
+>  	return 0;
+>  }
+> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+> index 7f466280993b..925976ac5113 100644
+> --- a/drivers/scsi/sd_zbc.c
+> +++ b/drivers/scsi/sd_zbc.c
+> @@ -20,6 +20,12 @@
+>  
+>  #include "sd.h"
+>  
+> +/**
+> + * sd_zbc_get_zone_wp_offset - Get zone write pointer offset.
+> + * @zone: Zone for which to return the write pointer offset.
+> + *
+> + * Return: offset of the write pointer from the start of the zone.
+> + */
+>  static unsigned int sd_zbc_get_zone_wp_offset(struct blk_zone *zone)
+>  {
+>  	if (zone->type == ZBC_ZONE_TYPE_CONV)
+> @@ -44,7 +50,20 @@ static unsigned int sd_zbc_get_zone_wp_offset(struct blk_zone *zone)
+>  	}
+>  }
+>  
+> -static int sd_zbc_parse_report(struct scsi_disk *sdkp, u8 *buf,
+> +/**
+> + * sd_zbc_parse_report - Parse a SCSI zone descriptor
+> + * @sdkp: SCSI disk pointer.
+> + * @buf: SCSI zone descriptor.
+> + * @idx: Index of the zone in the output of the REPORT ZONES command.
+> + * @cb: Callback function pointer.
+> + * @data: Second argument passed to @cb.
+> + *
+> + * Return: Value returned by @cb.
+> + *
+> + * Convert a SCSI zone descriptor into struct blk_zone format. Additionally,
+> + * call @cb(blk_zone, @data).
+> + */
+> +static int sd_zbc_parse_report(struct scsi_disk *sdkp, const u8 buf[64],
+>  			       unsigned int idx, report_zones_cb cb, void *data)
+>  {
+>  	struct scsi_device *sdp = sdkp->device;
+> @@ -189,6 +208,17 @@ static inline sector_t sd_zbc_zone_sectors(struct scsi_disk *sdkp)
+>  	return logical_to_sectors(sdkp->device, sdkp->zone_blocks);
+>  }
+>  
+> +/**
+> + * sd_zbc_report_zones - SCSI .report_zones() callback.
+> + * @disk: Disk to report zones for.
+> + * @sector: Start sector.
+> + * @nr_zones: Maximum number of zones to report.
+> + * @cb: Callback function called to report zone information.
+> + * @data: Second argument passed to @cb.
+> + *
+> + * Called by the block layer to iterate over zone information. See also the
+> + * disk->fops->report_zones() calls in block/blk-zoned.c.
+> + */
+>  int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
+>  			unsigned int nr_zones, report_zones_cb cb, void *data)
+>  {
+> @@ -276,6 +306,10 @@ static int sd_zbc_update_wp_offset_cb(struct blk_zone *zone, unsigned int idx,
+>  	return 0;
+>  }
+>  
+> +/*
+> + * An attempt to append a zone triggered an invalid write pointer error.
+> + * Reread the write pointer of the zone(s) in which the append failed.
+> + */
+>  static void sd_zbc_update_wp_offset_workfn(struct work_struct *work)
+>  {
+>  	struct scsi_disk *sdkp;
+> @@ -585,7 +619,7 @@ static int sd_zbc_check_zoned_characteristics(struct scsi_disk *sdkp,
+>   * sd_zbc_check_capacity - Check the device capacity
+>   * @sdkp: Target disk
+>   * @buf: command buffer
+> - * @zblocks: zone size in number of blocks
+> + * @zblocks: zone size in logical blocks
+>   *
+>   * Get the device zone size and check that the device capacity as reported
+>   * by READ CAPACITY matches the max_lba value (plus one) of the report zones
+> @@ -696,6 +730,11 @@ static void sd_zbc_revalidate_zones_cb(struct gendisk *disk)
+>  	swap(sdkp->zones_wp_offset, sdkp->rev_wp_offset);
+>  }
+>  
+> +/*
+> + * Call blk_revalidate_disk_zones() if any of the zoned disk properties have
+> + * changed that make it necessary to call that function. Called by
+> + * sd_revalidate_disk() after the gendisk capacity has been set.
+> + */
+>  int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+>  {
+>  	struct gendisk *disk = sdkp->disk;
+> @@ -774,7 +813,16 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+>  	return ret;
+>  }
+>  
+> -int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+> +/**
+> + * sd_zbc_read_zones - Read zone information and update the request queue
+> + * @sdkp: SCSI disk pointer.
+> + * @buf: 512 byte buffer used for storing SCSI command output.
+> + *
+> + * Read zone information and update the request queue zone characteristics and
+> + * also the zoned device information in *sdkp. Called by sd_revalidate_disk()
+> + * before the gendisk capacity has been set.
+> + */
+> +int sd_zbc_read_zones(struct scsi_disk *sdkp, u8 buf[SD_BUF_SIZE])
+>  {
+>  	struct gendisk *disk = sdkp->disk;
+>  	struct request_queue *q = disk->queue;
 
-So we need to check session's target unbound state during iscsid restart,
-if session is in unbound state, do not sync this session and perform
-session teardown. It's reasonable because once a session is unbound, we
-can not recover it any more(mainly because it's target id is INVALID)
 
-Changes from V1:
-- Using target_unbound rather than state to indicate session has been
-  unbound
-
-Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
----
- drivers/scsi/scsi_transport_iscsi.c | 21 +++++++++++++++++++++
- include/scsi/scsi_transport_iscsi.h |  1 +
- 2 files changed, 22 insertions(+)
-
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 2c0dd64159b0..43ba31e595b4 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1958,6 +1958,14 @@ static void __iscsi_unbind_session(struct work_struct *work)
- 
- 	ISCSI_DBG_TRANS_SESSION(session, "Unbinding session\n");
- 
-+	spin_lock_irqsave(&session->lock, flags);
-+	if (session->target_unbound) {
-+		spin_unlock_irqrestore(&session->lock, flags);
-+		return;
-+	}
-+	session->target_unbound = 1;
-+	spin_unlock_irqrestore(&session->lock, flags);
-+
- 	/* Prevent new scans and make sure scanning is not in progress */
- 	mutex_lock(&ihost->mutex);
- 	spin_lock_irqsave(&session->lock, flags);
-@@ -2058,6 +2066,7 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
- 		session->target_id = target_id;
- 
- 	dev_set_name(&session->dev, "session%u", session->sid);
-+	session->target_unbound = 0;
- 	err = device_add(&session->dev);
- 	if (err) {
- 		iscsi_cls_session_printk(KERN_ERR, session,
-@@ -4319,6 +4328,15 @@ iscsi_session_attr(def_taskmgmt_tmo, ISCSI_PARAM_DEF_TASKMGMT_TMO, 0);
- iscsi_session_attr(discovery_parent_idx, ISCSI_PARAM_DISCOVERY_PARENT_IDX, 0);
- iscsi_session_attr(discovery_parent_type, ISCSI_PARAM_DISCOVERY_PARENT_TYPE, 0);
- 
-+static ssize_t
-+show_priv_session_target_unbound(struct device *dev, struct device_attribute *attr,
-+			char *buf)
-+{
-+	struct iscsi_cls_session *session = iscsi_dev_to_session(dev->parent);
-+	return sysfs_emit(buf, "%d\n", session->target_unbound);
-+}
-+static ISCSI_CLASS_ATTR(priv_sess, target_unbound, S_IRUGO,
-+			show_priv_session_target_unbound, NULL);
- static ssize_t
- show_priv_session_state(struct device *dev, struct device_attribute *attr,
- 			char *buf)
-@@ -4422,6 +4440,7 @@ static struct attribute *iscsi_session_attrs[] = {
- 	&dev_attr_priv_sess_recovery_tmo.attr,
- 	&dev_attr_priv_sess_state.attr,
- 	&dev_attr_priv_sess_creator.attr,
-+	&dev_attr_priv_sess_target_unbound.attr,
- 	&dev_attr_sess_chap_out_idx.attr,
- 	&dev_attr_sess_chap_in_idx.attr,
- 	&dev_attr_priv_sess_target_id.attr,
-@@ -4534,6 +4553,8 @@ static umode_t iscsi_session_attr_is_visible(struct kobject *kobj,
- 		return S_IRUGO | S_IWUSR;
- 	else if (attr == &dev_attr_priv_sess_state.attr)
- 		return S_IRUGO;
-+	else if (attr == &dev_attr_priv_sess_target_unbound.attr)
-+		return S_IRUGO;
- 	else if (attr == &dev_attr_priv_sess_creator.attr)
- 		return S_IRUGO;
- 	else if (attr == &dev_attr_priv_sess_target_id.attr)
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 9acb8422f680..877632c25e56 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -256,6 +256,7 @@ struct iscsi_cls_session {
- 	struct workqueue_struct *workq;
- 
- 	unsigned int target_id;
-+	int target_unbound;   /* make sure unbind session only once */
- 	bool ida_used;
- 
- 	/*
 -- 
-2.32.0
-
+Damien Le Moal
+Western Digital Research
