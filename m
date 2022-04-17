@@ -2,69 +2,180 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB50AC433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Apr 2022 20:43:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 924DBC433F5
+	for <linux-scsi@archiver.kernel.org>; Sun, 17 Apr 2022 02:41:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233028AbiDPUpd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Apr 2022 16:45:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46036 "EHLO
+        id S233324AbiDQCns (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Apr 2022 22:43:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233019AbiDPUpb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Apr 2022 16:45:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5ADBBF03D;
-        Sat, 16 Apr 2022 13:42:58 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4BCEC60FED;
-        Sat, 16 Apr 2022 20:42:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id AA5F0C385A9;
-        Sat, 16 Apr 2022 20:42:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650141777;
-        bh=SGsEuW+QJiVoYo/YwITEbIz5a+BKHuij2pWyk7nT9o8=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=W+FB1ozddhv8I2dpkrQ/xMGYs9uisMtaHrVrf7owaqSDhNqG3qetyO+E0Cn8djX8c
-         +ZlMr85zaAJIk2qkIP/1q45lD/1iwSzFB7hgU7es8hw8TcoAqoFveHHjTIFuDIF4xM
-         +y7tpnAD1OSey8SaDBnjb+2jL4kWMDEbJDfpJ+0wz7xEdqsyKpfKXCYVAB3x5jKyhZ
-         OyYO6bK5J9XKuVmhbiqDxHIafCeYkDnQuNMzF8karaWq/Nlca6tRRb8IbH3HtWx2V1
-         SUAWCkcZFpfv+CnqS7VvILUzcUg53zETSL8nSw7qcQXOwxp0uUYVrvb55qxXin9jLf
-         PcHP8WD36xqew==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 92E60E8DD67;
-        Sat, 16 Apr 2022 20:42:57 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 5.18-rc2
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <de511417b27da4a438e60af851d5bf2c4210a969.camel@HansenPartnership.com>
-References: <de511417b27da4a438e60af851d5bf2c4210a969.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <de511417b27da4a438e60af851d5bf2c4210a969.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 70a3baeec4e89736be932a60d682d7ae27556f5c
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 90ea17a9e27b5778ec517efb1ce0b81d36905654
-Message-Id: <165014177759.10681.4916690426551865381.pr-tracker-bot@kernel.org>
-Date:   Sat, 16 Apr 2022 20:42:57 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S230493AbiDQCnr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Apr 2022 22:43:47 -0400
+Received: from out30-43.freemail.mail.aliyun.com (out30-43.freemail.mail.aliyun.com [115.124.30.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD479275D5;
+        Sat, 16 Apr 2022 19:41:11 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04426;MF=xiaoguang.wang@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0VADANgH_1650163268;
+Received: from 30.39.112.65(mailfrom:xiaoguang.wang@linux.alibaba.com fp:SMTPD_---0VADANgH_1650163268)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Sun, 17 Apr 2022 10:41:09 +0800
+Message-ID: <fd548b40-0125-cead-f5ef-8d85d1834f9d@linux.alibaba.com>
+Date:   Sun, 17 Apr 2022 10:41:08 +0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.8.0
+Subject: Re: [PATCH v3] scsi: target: tcmu: Fix possible data corruption
+Content-Language: en-US
+To:     Bodo Stroesser <bostroesser@gmail.com>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc:     linux-block@vger.kernel.org
+References: <20220415153450.15184-1-xiaoguang.wang@linux.alibaba.com>
+ <b3df81ad-c0a8-4758-2d24-103ed39acfeb@gmail.com>
+From:   Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+In-Reply-To: <b3df81ad-c0a8-4758-2d24-103ed39acfeb@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 16 Apr 2022 16:06:01 -0400:
+hi,
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+> Hi,
+>
+> Thank you again for the patch!
+>
+> You might call me a nitpicker, but ...
+>
+> Wouldn't it be good to add a comment in find_free_blocks explaining
+> why it is safe to first call tcmu_blocks_release and then
+> unmap_mapping_range?
+Never mind.
+I think better comments will help developers understand codes better.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/90ea17a9e27b5778ec517efb1ce0b81d36905654
+Regards,
+Xiaoguang Wang
 
-Thank you!
+>
+> Regards,
+> Bodo
+>
+> On 15.04.22 17:34, Xiaoguang Wang wrote:
+>> When tcmu_vma_fault() gets one page successfully, before the current
+>> context completes page fault procedure, find_free_blocks() may run in
+>> and call unmap_mapping_range() to unmap this page. Assume when
+>> find_free_blocks() completes its job firstly, previous page fault
+>> procedure starts to run again and completes, then one truncated page has
+>> beed mapped to use space, but note that tcmu_vma_fault() has gotten one
+>> refcount for this page, so any other subsystem won't use this page,
+>> unless later the use space addr is unmapped.
+>>
+>> If another command runs in later and needs to extends dbi_thresh, it may
+>> reuse the corresponding slot to previous page in data_bitmap, then though
+>> we'll allocate new page for this slot in data_area, but no page fault will
+>> happen again, because we have a valid map, real request's data will lose.
+>>
+>> Filesystem implementations will also run into this issue, but they
+>> usually lock page when vm_operations_struct->fault gets one page, and
+>> unlock page after finish_fault() completes. In truncate sides, they
+>> lock pages in truncate_inode_pages() to protect race with page fault.
+>> We can also have similar codes like filesystem to fix this issue.
+>>
+>> To fix this possible data corruption, we can apply similar method like
+>> filesystem. For pages that are to be freed, find_free_blocks() locks
+>> and unlocks these pages, and make tcmu_vma_fault() also lock found page
+>> under cmdr_lock. With this action, for above race, find_free_blocks()
+>> will wait all page faults to be completed before calling
+>> unmap_mapping_range(), and later if unmap_mapping_range() is called,
+>> it will ensure stale mappings to be removed cleanly.
+>>
+>> Signed-off-by: Xiaoguang Wang <xiaoguang.wang@linux.alibaba.com>
+>> ---
+>> V3:
+>>   Just lock/unlock_page in tcmu_blocks_release(), and call
+>> tcmu_blocks_release() before unmap_mapping_range().
+>>
+>> V2:
+>>    Wait all possible inflight page faults to be completed in
+>> find_free_blocks() to fix possible stale map.
+>> ---
+>>   drivers/target/target_core_user.c | 30 +++++++++++++++++++++++++++---
+>>   1 file changed, 27 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+>> index fd7267baa707..ff4a575a14d2 100644
+>> --- a/drivers/target/target_core_user.c
+>> +++ b/drivers/target/target_core_user.c
+>> @@ -20,6 +20,7 @@
+>>   #include <linux/configfs.h>
+>>   #include <linux/mutex.h>
+>>   #include <linux/workqueue.h>
+>> +#include <linux/pagemap.h>
+>>   #include <net/genetlink.h>
+>>   #include <scsi/scsi_common.h>
+>>   #include <scsi/scsi_proto.h>
+>> @@ -1667,6 +1668,25 @@ static u32 tcmu_blocks_release(struct tcmu_dev *udev, unsigned long first,
+>>       xas_lock(&xas);
+>>       xas_for_each(&xas, page, (last + 1) * udev->data_pages_per_blk - 1) {
+>>           xas_store(&xas, NULL);
+>> +        /*
+>> +         * While reaching here, there maybe page faults occurring on
+>> +         * these to be released pages, and there maybe one race that
+>> +         * unmap_mapping_range() is called before page fault on these
+>> +         * pages are finished, then valid but stale map is created.
+>> +         *
+>> +         * If another command runs in later and needs to extends
+>> +         * dbi_thresh, it may reuse the corresponding slot to previous
+>> +         * page in data_bitmap, then though we'll allocate new page for
+>> +         * this slot in data_area, but no page fault will happen again,
+>> +         * because we have a valid map, command's data will lose.
+>> +         *
+>> +         * So here we lock and unlock pages that are to be released to
+>> +         * ensure all page faults to be completed, then following
+>> +         * unmap_mapping_range() can ensure stale maps to be removed
+>> +         * cleanly.
+>> +         */
+>> +        lock_page(page);
+>> +        unlock_page(page);
+>>           __free_page(page);
+>>           pages_freed++;
+>>       }
+>> @@ -1822,6 +1842,7 @@ static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
+>>       page = xa_load(&udev->data_pages, dpi);
+>>       if (likely(page)) {
+>>           get_page(page);
+>> +        lock_page(page);
+>>           mutex_unlock(&udev->cmdr_lock);
+>>           return page;
+>>       }
+>> @@ -1863,6 +1884,7 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
+>>       struct page *page;
+>>       unsigned long offset;
+>>       void *addr;
+>> +    vm_fault_t ret = 0;
+>>         int mi = tcmu_find_mem_index(vmf->vma);
+>>       if (mi < 0)
+>> @@ -1887,10 +1909,11 @@ static vm_fault_t tcmu_vma_fault(struct vm_fault *vmf)
+>>           page = tcmu_try_get_data_page(udev, dpi);
+>>           if (!page)
+>>               return VM_FAULT_SIGBUS;
+>> +        ret = VM_FAULT_LOCKED;
+>>       }
+>>         vmf->page = page;
+>> -    return 0;
+>> +    return ret;
+>>   }
+>>     static const struct vm_operations_struct tcmu_vm_ops = {
+>> @@ -3205,12 +3228,13 @@ static void find_free_blocks(void)
+>>               udev->dbi_max = block;
+>>           }
+>>   +        /* Release the block pages */
+>> +        pages_freed = tcmu_blocks_release(udev, start, end - 1);
+>> +
+>>           /* Here will truncate the data area from off */
+>>           off = udev->data_off + (loff_t)start * udev->data_blk_size;
+>>           unmap_mapping_range(udev->inode->i_mapping, off, 0, 1);
+>>   -        /* Release the block pages */
+>> -        pages_freed = tcmu_blocks_release(udev, start, end - 1);
+>>           mutex_unlock(&udev->cmdr_lock);
+>>             total_pages_freed += pages_freed;
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
