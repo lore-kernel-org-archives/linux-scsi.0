@@ -2,135 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4872EC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Apr 2022 11:49:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AADC2C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Apr 2022 13:22:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237912AbiDRLwJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Apr 2022 07:52:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53418 "EHLO
+        id S241431AbiDRNZV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Apr 2022 09:25:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233356AbiDRLwI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Apr 2022 07:52:08 -0400
-Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C57319291
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Apr 2022 04:49:29 -0700 (PDT)
-Received: by mail-ed1-x535.google.com with SMTP id t25so17174882edt.9
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Apr 2022 04:49:28 -0700 (PDT)
+        with ESMTP id S241370AbiDRNYP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Apr 2022 09:24:15 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7D6C3DA5E
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Apr 2022 05:52:52 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id n8so12283278plh.1
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Apr 2022 05:52:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=Su46te7HNW++2zKgguxu+adMxrQIv2yQPrMKfptRGag=;
-        b=Wow3Xq7cPhtHQfiCZO1z4xGsOQSgEraNXhtcAJR+p9ahYFh+UIfpwJjb9ewnX9N810
-         rceUBq35zYdLxYRlbvVGzDAVGaBNZqCA7bMp1VlUs9QZ6WUuiqIgGTvoR8eEb5tutur7
-         vpdfCjxVi4d6+oN10r4XW/BXHm619ZVAhb2OKaqFhHpDItUc7jJ/87xRjWkMwd3JCg3K
-         +peY2iRIUzoCyGLAc4DXiMeFiV44Xqo1KgQLqu2oa60LUldbHs2aROrHQpSdhm+ChGa4
-         ags2SP48yGsoglA5lbFxWFP+fqvxKXSxTlkAeJlp0Ipoc7eL32wrkSjftiXeUXauetrB
-         NuKg==
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:in-reply-to:references:subject:message-id:date
+         :mime-version:content-transfer-encoding;
+        bh=F9FMycteyYrs8wEiBExwTDtAcc/2JBQ5GQqodkswvTM=;
+        b=zqMJx9kEO/syGgh/jfUujcMdgZO1Zk4th79yyPJcsdnvdIDI8Xk864jrHuyarDgv8c
+         gBt2ez+Ym/+EaLgC6MfWMHx5OVcgB54eOfckx7Cmdvf3bmGVDc/T0aLwM9rpN+nKDwcO
+         dWklV+ARMeZbUO1+GrFCqFc/xZjiULaGiN1ll1DVCyoNwgzG1P+0Y9ZhUcwBpI/7WQx/
+         gN/pYZdJuI935bVWCVcjkTqu2k20R+5oG6mGhil2uYi4X3QtR1zxXemtHM8NZ8XUvixz
+         3tQXFtvzqXbRCXIajCtyaq1nqo4kcpEpLyzsTyB3FvSvWQd/rTixV4XGHzsBwq9Bu/vV
+         stDA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=Su46te7HNW++2zKgguxu+adMxrQIv2yQPrMKfptRGag=;
-        b=Qu08XpasW54XPR12VyIuwEia4DTcaHLSzXVYWLJbzNHrTUaHa5I8aJwA4f7dZJvpGl
-         nzeojzn7dSsMpSm++itwzJA6cHeOLtl4NkqrbI4v9yAKR/ch7bA+NOhWPWB0as4LjgTB
-         bQIfkAsSLSS4F4r48g6miI1kcPwFDXLPcsgZndmuJ2q6U0YcmYUXhPHWWzpBQQrwygrm
-         2zWPPgoLe3LoPengtAu8vLViehzZhlNpWPgsmG1PXXbiBPuLk8x3XxAwQQLJkD83MYvt
-         1bA2vTC4wFLDUYbPZSueKvbLdgWa9CjTvQBrnRKdEiSXbAMwX6xGzp+cCNcP96pnAezB
-         5z5A==
-X-Gm-Message-State: AOAM533ZwkS8mxDIoFqe/7CDIzF+L9dYnOGYioIj2C3ykFY7mCvncck2
-        REgca8y1cnceNbJ1ZdocrmV24Q==
-X-Google-Smtp-Source: ABdhPJyjLcgXf19Bziy6YywbbTjReCFm8EmqOP+nJT4RSe4RjCjRYH99uE2rINOfOjdDhXQpbYrSpA==
-X-Received: by 2002:a05:6402:2689:b0:422:15c4:e17e with SMTP id w9-20020a056402268900b0042215c4e17emr11945878edd.33.1650282567594;
-        Mon, 18 Apr 2022 04:49:27 -0700 (PDT)
-Received: from [192.168.0.217] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
-        by smtp.gmail.com with ESMTPSA id t4-20020a1709067c0400b006ef810aab6fsm2338044ejo.213.2022.04.18.04.49.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 Apr 2022 04:49:27 -0700 (PDT)
-Message-ID: <fb275639-096e-78c2-3cbb-1bb10f4bbb08@linaro.org>
-Date:   Mon, 18 Apr 2022 13:49:25 +0200
+        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
+         :message-id:date:mime-version:content-transfer-encoding;
+        bh=F9FMycteyYrs8wEiBExwTDtAcc/2JBQ5GQqodkswvTM=;
+        b=X3t1NCZm1PwJWiLyhVj1wwjAQfyBWxJgH7Q64g10zQNQDZ0ys1exVFPNs8ABzs3dgY
+         nviqcLz8S+FQcFWwjfaxur8/1VAhidlvkAdxgJC+N5Ya913Cu9ft+YGrILcuuFgdFZ29
+         NbF3y4C5hUjGYIyH9gwijkCUnrMqx2gpwQNg2zMVItvwph4cM9lGYXz7ZWhMwq6PepGY
+         Qb3zgsjRNjlLVPRCDdAcOiRgWKq+RFQT3pzNRQ35q0mj/W3B87kxB3/n3/FcGbWyjo4I
+         efWOwZl99V7A/iVVIzJ8aHAC+Lm4oDtA3A9EX1FAtOQNylpeXc24uopjZIYfzEoJ92Rr
+         +gXA==
+X-Gm-Message-State: AOAM532qMM49KTMuH0cfi4gIKjTz02JH8blvc6RO+1Lkg6AwbpOsqica
+        s+FsTjk+NbetsqD1MsH2jO9MOg==
+X-Google-Smtp-Source: ABdhPJyPDIaLEewZhdBb/81ulQRxH4lnSCW72QYENTWzgjKzLqW/EIFRVhnHg8tc4oCKtNOZ6kDuRg==
+X-Received: by 2002:a17:902:6b44:b0:154:4bee:c434 with SMTP id g4-20020a1709026b4400b001544beec434mr10858040plt.43.1650286372060;
+        Mon, 18 Apr 2022 05:52:52 -0700 (PDT)
+Received: from [127.0.1.1] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id s24-20020a17090a441800b001ca9b5724a6sm12663301pjg.36.2022.04.18.05.52.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Apr 2022 05:52:51 -0700 (PDT)
+From:   Jens Axboe <axboe@kernel.dk>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-f2fs-devel@lists.sourceforge.net,
+        jfs-discussion@lists.sourceforge.net, linux-raid@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, drbd-dev@lists.linbit.com,
+        xen-devel@lists.xenproject.org, nbd@other.debian.org,
+        linux-nvme@lists.infradead.org, linux-mmc@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-block@vger.kernel.org,
+        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
+        linux-ext4@vger.kernel.org, dm-devel@redhat.com,
+        linux-nilfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+        cluster-devel@redhat.com, linux-mtd@lists.infradead.org,
+        linux-btrfs@vger.kernel.org, linux-bcache@vger.kernel.org,
+        ceph-devel@vger.kernel.org, ntfs3@lists.linux.dev,
+        linux-um@lists.infradead.org, target-devel@vger.kernel.org
+In-Reply-To: <20220415045258.199825-1-hch@lst.de>
+References: <20220415045258.199825-1-hch@lst.de>
+Subject: Re: use block_device based APIs in block layer consumers v3
+Message-Id: <165028636949.14872.7589996414521818725.b4-ty@kernel.dk>
+Date:   Mon, 18 Apr 2022 06:52:49 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH 1/2] dt-bindings: ufs: mediatek,ufs: add compatible for
- MT8195 SoC
-Content-Language: en-US
-To:     Fabien Parent <fparent@baylibre.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-References: <20220415165939.1861470-1-fparent@baylibre.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20220415165939.1861470-1-fparent@baylibre.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 15/04/2022 18:59, Fabien Parent wrote:
-> Add bindings for the MT8195 UFS support.
+On Fri, 15 Apr 2022 06:52:31 +0200, Christoph Hellwig wrote:
+> this series cleanups up the block layer API so that APIs consumed
+> by file systems are (almost) only struct block_devic based, so that
+> file systems don't have to poke into block layer internals like the
+> request_queue.
 > 
-> The MT8195 SoC requires more clocks to be enabled compared to MT8183 and
-> MT8192. Document the clocks required for MT8195.
+> I also found a bunch of existing bugs related to partition offsets
+> and discard so these are fixed while going along.
 > 
-> Signed-off-by: Fabien Parent <fparent@baylibre.com>
-> ---
->  .../devicetree/bindings/ufs/mediatek,ufs.yaml | 27 ++++++++++++++-----
->  1 file changed, 21 insertions(+), 6 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> index 32fd535a514a..5ed36e95e933 100644
-> --- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> @@ -14,16 +14,31 @@ allOf:
->  
->  properties:
->    compatible:
-> -    enum:
-> -      - mediatek,mt8183-ufshci
-> -      - mediatek,mt8192-ufshci
-> +    oneOf:
-> +      - enum:
-> +          - mediatek,mt8183-ufshci
-> +          - mediatek,mt8192-ufshci
-> +      - items:
-> +          - const: mediatek,mt8195-ufshci
-> +          - const: mediatek,mt8183-ufshci
+> [...]
 
-Are you sure that these devices are compatible? Amount of clock
-differences suggests that not (or original bindings were not complete).
+Applied, thanks!
 
->  
->    clocks:
-> -    maxItems: 1
-> +    minItems: 1
-> +    maxItems: 8
->  
->    clock-names:
-> -    items:
-> -      - const: ufs
-> +    oneOf:
-> +      - items:
-> +          - const: ufs
-> +      - items:
-> +          - const: ufs
-> +          - const: ufs_aes
-> +          - const: ufs_tick
-> +          - const: unipro_sysclk
-> +          - const: unipro_tick
-> +          - const: unipro_mp_bclk
-> +          - const: ufs_tx_symbol
-> +          - const: ufs_mem_sub
-
-Add allOf:if:then: which specifies these clocks per different compatible.
+[01/27] target: remove an incorrect unmap zeroes data deduction
+        commit: 179d8609d8424529e95021df939ed7b0b82b37f1
+[02/27] target: pass a block_device to target_configure_unmap_from_queue
+        commit: 817e8b51eb3d927ce6d56ecf9f48bc3c5b26168b
+[03/27] target: fix discard alignment on partitions
+        commit: 968786b9ef56e75e0109158a4936ffffea962c1e
+[04/27] drbd: remove assign_p_sizes_qlim
+        commit: 40349d0e16cedd0de561f59752c3249780fb749b
+[05/27] drbd: use bdev based limit helpers in drbd_send_sizes
+        commit: 7a38acce229685968b770d1d9e64e01396b93643
+[06/27] drbd: use bdev_alignment_offset instead of queue_alignment_offset
+        commit: c6f23b1a05441a26f765e59dd95e8ba7354f9388
+[07/27] drbd: cleanup decide_on_discard_support
+        commit: 998e9cbcd615e5e6a7baa69e673ee845f812744e
+[08/27] btrfs: use bdev_max_active_zones instead of open coding it
+        commit: c1e7b24416400ef13ff92a1c60c336c9a2834d7b
+[09/27] ntfs3: use bdev_logical_block_size instead of open coding it
+        commit: f09dac9afb8e3ce4b6485dbc091a9b9c742db023
+[10/27] mm: use bdev_is_zoned in claim_swapfile
+        commit: 9964e674559b02619fee2012a56839624143d02e
+[11/27] block: add a bdev_nonrot helper
+        commit: 10f0d2a517796b8f6dc04fb0cc3e49003ae6b0bc
+[12/27] block: add a bdev_write_cache helper
+        commit: 08e688fdb8f7e862092ae64cee20bc8b463d1046
+[13/27] block: add a bdev_fua helper
+        commit: a557e82e5a01826f902bd94fc925c03f253cb712
+[14/27] block: add a bdev_stable_writes helper
+        commit: 36d254893aa6a6e204075c3cce94bb572ac32c04
+[15/27] block: add a bdev_max_zone_append_sectors helper
+        commit: 2aba0d19f4d8c8929b4b3b94a9cfde2aa20e6ee2
+[16/27] block: use bdev_alignment_offset in part_alignment_offset_show
+        commit: 64dcc7c2717395b7c83ffb10f040d3be795d03c1
+[17/27] block: use bdev_alignment_offset in disk_alignment_offset_show
+        commit: 640f2a23911b8388989547f89d055afbb910b88e
+[18/27] block: move bdev_alignment_offset and queue_limit_alignment_offset out of line
+        commit: 89098b075cb74a80083bc4ed6b71d0ee18b6898f
+[19/27] block: remove queue_discard_alignment
+        commit: 4e1462ffe8998749884d61f91be251a7a8719677
+[20/27] block: use bdev_discard_alignment in part_discard_alignment_show
+        commit: f0f975a4dde890bfe25ce17bf07a6495453988a4
+[21/27] block: move {bdev,queue_limit}_discard_alignment out of line
+        commit: 5c4b4a5c6f11c869a57c6bd977143430bc9dc43d
+[22/27] block: refactor discard bio size limiting
+        commit: e3cc28ea28b5f8794db2aed24f8a0282ad2e85a2
+[23/27] block: add a bdev_max_discard_sectors helper
+        commit: cf0fbf894bb543f472f682c486be48298eccf199
+[24/27] block: remove QUEUE_FLAG_DISCARD
+        commit: 70200574cc229f6ba038259e8142af2aa09e6976
+[25/27] block: add a bdev_discard_granularity helper
+        commit: 7b47ef52d0a2025fd1408a8a0990933b8e1e510f
+[26/27] block: decouple REQ_OP_SECURE_ERASE from REQ_OP_DISCARD
+        commit: 44abff2c0b970ae3d310b97617525dc01f248d7c
+[27/27] direct-io: remove random prefetches
+        commit: c22198e78d523c8fa079bbb70b2523bb6aa51849
 
 Best regards,
-Krzysztof
+-- 
+Jens Axboe
+
+
