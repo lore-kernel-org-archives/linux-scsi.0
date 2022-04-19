@@ -2,73 +2,131 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7F89C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 20:28:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63089C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 21:00:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353340AbiDSUbl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Apr 2022 16:31:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51650 "EHLO
+        id S1357430AbiDSVDl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Apr 2022 17:03:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346273AbiDSUbj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 16:31:39 -0400
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11A413A5FE
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 13:28:56 -0700 (PDT)
-Received: by mail-pf1-f173.google.com with SMTP id p8so9426883pfh.8
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 13:28:56 -0700 (PDT)
+        with ESMTP id S1355145AbiDSVDk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 17:03:40 -0400
+Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11A4531510
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 14:00:57 -0700 (PDT)
+Received: by mail-ed1-x52e.google.com with SMTP id s25so22384672edi.13
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 14:00:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-transfer-encoding:user-agent:mime-version;
+        bh=M1Z3C7Mn2ih5eptkm3dAN35GXuhwncvW7HWj5pAFevk=;
+        b=TLmvnaI+O7zO0MysDM/BqwGz6MQ3eUIRRxuepbG31YApWdSE5v9+qtwan83KFH8s+A
+         5V+AxsODas8JNeVil7ifIkpJIx9U8+dlvE0h62jZ+9p7JeH35xmvjkngD0gfvOdNuyyW
+         rY+llO+gNGobxJlYWbYHgTHYhaxe/7Y4Hgtn4Nf/AbgxpN/8GxtznRJUFdoaJhLvbRui
+         2j88yMIwO/Gd88RXrl4hBeGJv/62P6+Iu9UmbDkwOu7NiqJ1l7NtXrtAjpdaFhWkOqc/
+         O2N+zkui9efIh1ka1BxeNhIQsUEWcFYh0lmY46Tyt2WFq6ghxlK3EFGIHg3o9Fc1qEhs
+         YkCQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=BGFL3x3e4ssqpOzhcDAAWRAaricLfZPYyPhyZ4LgZzo=;
-        b=a37HkN97qhFqYhVvW3MyismyMSJ95MnSfMo6gxrHnMpEha4+CleKMA3Zzsb/O8kVtm
-         +C8b69lokE6TejMcQaGGkH8Pv6OLMKxRjJ8bnhRCwgJ4GhtDRKkalebzZX76a1l4FGiR
-         hzjN1A7ZqnYBE0XfvTSI/LPnPTotL83l/hJAN35egjc86dDXqJcylR2oJVq6O9kTMnPN
-         1J0NodN86otW3xCaBdjGtk/GrjOHlqkmsfeleHjRs9gRmUttBfIbuxTsxdfDBB0AjDjL
-         ailkDiqRxLKC3iUm8TSl5YP+BJsatbHzqS6pG1YpZ0DDpdGaHkcenTAxXuiC0Kei7pMA
-         XqDA==
-X-Gm-Message-State: AOAM531GWXc+FHnR9ljQ6aYe1hJzkizSmwtU5dq7z3FOO4TDwYdSWcDz
-        8AL/QkoLIJbZLRenbSzSkfs=
-X-Google-Smtp-Source: ABdhPJzrD7wFFgO92Da3/Yv3Hue0mm4Aj16/C/bIQzTf6AHQk0Src+7KH9u6QF6xSlbCaq8c4jckNA==
-X-Received: by 2002:a63:541f:0:b0:399:3007:e7a2 with SMTP id i31-20020a63541f000000b003993007e7a2mr16235084pgb.568.1650400135440;
-        Tue, 19 Apr 2022 13:28:55 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:59ec:2e90:f751:1806? ([2620:15c:211:201:59ec:2e90:f751:1806])
-        by smtp.gmail.com with ESMTPSA id i2-20020a17090a138200b001cb6512b579sm16653700pja.44.2022.04.19.13.28.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 19 Apr 2022 13:28:54 -0700 (PDT)
-Message-ID: <0d0c979e-5e16-e35b-e185-b53ddfc68abb@acm.org>
-Date:   Tue, 19 Apr 2022 13:28:52 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH v2 29/29] scsi: ufs: Split the drivers/scsi/ufs directory
-Content-Language: en-US
-To:     Bean Huo <huobean@gmail.com>,
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:content-transfer-encoding:user-agent:mime-version;
+        bh=M1Z3C7Mn2ih5eptkm3dAN35GXuhwncvW7HWj5pAFevk=;
+        b=ayHTaqFlg7S8esKHOk5x9+eBg3oHZzvnYmxlC8S4gaqZQCPh2+/PURiNMYI5D6T+do
+         3GAESbfVL9HOEynce1GErkoSJsQBkim7ZYTLrV52N1prKOgnAAtO16VvuEM6Ptn7uQEY
+         oVUsEczel4mmEbyT9TZdVS+YExaS7fngboL0mYEXuSpeS4gIH74X6ND5hdwv15mAd/vz
+         JRWZsXxLyVSaw78THmmmLwMuXuByG+JH5ozZhQbk0Q5kZ5cBXOBIoigAygVGfnH3PUz4
+         Y7oSvCcjlqKqGNN0woFG/HTU7Y6aoh2ngkjPwCLiT+K2MY4MVyPVt0P6PDbFw6PN5xkZ
+         LvTQ==
+X-Gm-Message-State: AOAM5300TeSmwBvgKGoOlTKTh3Qqp3lffn0IXUTqqDbTdu9fmxPwZTZQ
+        OLHAOIUef8WiYkkz3qAtzhwF2TRIBoZMRw==
+X-Google-Smtp-Source: ABdhPJy43ib+UgGzYCUFp8hsgHRPNswhcU+foHDXoLiU0IXWznJiEk1IDIZF1AryV33tLbl964gNZA==
+X-Received: by 2002:a05:6402:845:b0:421:fcb5:55de with SMTP id b5-20020a056402084500b00421fcb555demr19752373edz.124.1650402055576;
+        Tue, 19 Apr 2022 14:00:55 -0700 (PDT)
+Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
+        by smtp.googlemail.com with ESMTPSA id dn7-20020a17090794c700b006e8b176143bsm5998057ejc.155.2022.04.19.14.00.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 Apr 2022 14:00:55 -0700 (PDT)
+Message-ID: <332ee72936e1353439d0daaa55a70e218da913b3.camel@gmail.com>
+Subject: Re: [PATCH v2 28/29] scsi: ufs: Move the
+ ufs_is_valid_unit_desc_lun() definition
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jinyoung Choi <j-young.choi@samsung.com>
+Date:   Tue, 19 Apr 2022 23:00:54 +0200
+In-Reply-To: <20220412181853.3715080-29-bvanassche@acm.org>
 References: <20220412181853.3715080-1-bvanassche@acm.org>
- <20220412183228.3729720-1-bvanassche@acm.org>
- <492cd10d-9964-6a5c-2896-9fc0d5397a54@acm.org>
- <e2cb03ed21a52e1bfd0d6eb197b43ebea6f9abba.camel@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <e2cb03ed21a52e1bfd0d6eb197b43ebea6f9abba.camel@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+         <20220412181853.3715080-29-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.0-1 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/19/22 01:25, Bean Huo wrote:
-> Looks good to us, but we need to verify it on the two platforms, and
-> need some time before add reviewed and tested tag.
+On Tue, 2022-04-12 at 11:18 -0700, Bart Van Assche wrote:
+> diff --git a/drivers/scsi/ufs/ufshcd-priv.h
+> b/drivers/scsi/ufs/ufshcd-priv.h
+> index 3fa8ab94e4e1..38bc77d3dbbd 100644
+> --- a/drivers/scsi/ufs/ufshcd-priv.h
+> +++ b/drivers/scsi/ufs/ufshcd-priv.h
+> @@ -276,4 +276,23 @@ static inline int ufshcd_rpm_put(struct ufs_hba
+> *hba)
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return pm_runtime_put(&hb=
+a->ufs_device_wlun->sdev_gendev);
+> =C2=A0}
+> =C2=A0
+> +/**
+> + * ufs_is_valid_unit_desc_lun - checks if the given LUN has a unit
+> descriptor
+> + * @dev_info: pointer of instance of struct ufs_dev_info
+> + * @lun: LU number to check
+> + * @return: true if the lun has a matching unit descriptor, false
+> otherwise
+> + */
+> +static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info
+> *dev_info,
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0u8 lun, u8 param_offset)
+> +{
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!dev_info || !dev_info->ma=
+x_lu_supported) {
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0pr_err("Max General LU supported by UFS isn't
+> initialized\n");
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0return false;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/* WB is available only for th=
+e logical unit from 0 to 7 */
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (param_offset =3D=3D UNIT_D=
+ESC_PARAM_WB_BUF_ALLOC_UNITS)
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0return lun < UFS_UPIU_MAX_WB_LUN_ID;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return lun =3D=3D UFS_UPIU_RPM=
+B_WLUN || (lun < dev_info-
+> >max_lu_supported);
+> +}
+> +
+> =C2=A0#endif /* _UFSHCD_PRIV_H_ */
 
-Thanks for the feedback. I will move this patch to a future patch series 
-such that it does not block merging of the previous patches in this series.
 
-Thanks,
+You didn't move this function to drivers/ufs/core/ufshcd-priv.h,
+It is used by the drivers/ufs/core/ufs-sysfs.c. Otherwise, there is no
+problem in compiling.
 
-Bart.
+
+Kind regards,
+Bean
+
+
+
