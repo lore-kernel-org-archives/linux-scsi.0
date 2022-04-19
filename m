@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 378F8C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96AFCC433FE
 	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 18:35:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357325AbiDSSie (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Apr 2022 14:38:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38942 "EHLO
+        id S1357331AbiDSSih (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Apr 2022 14:38:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357622AbiDSShv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 14:37:51 -0400
-Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A33C73FDB5;
-        Tue, 19 Apr 2022 11:30:59 -0700 (PDT)
-Received: by mail-ed1-x531.google.com with SMTP id c6so22390621edn.8;
-        Tue, 19 Apr 2022 11:30:59 -0700 (PDT)
+        with ESMTP id S1357614AbiDSShu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 14:37:50 -0400
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B176D3EF30;
+        Tue, 19 Apr 2022 11:30:55 -0700 (PDT)
+Received: by mail-ej1-x632.google.com with SMTP id g13so6952773ejb.4;
+        Tue, 19 Apr 2022 11:30:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=asQR7zN/XNqbk75IdkIIvMcykcD0n/R0IhNlXpw8b/8=;
-        b=U8PVwNJbHKakFbCBfMIZNubo80awJYXhDlBQ0Lxsr52TsItMW0m1wMDFITolgED++c
-         0MmcSveoAJ6MurJHyTJWf1XdI2qKth36l8s7fORa86DN+uu4JI2mzNAQ0kjb+n7mSrvT
-         kyWvqR0Sw7zC/JB395xwttpT/WUrp/yttQzGp5NQzoKg/jjXdlG3d+qJDBv+jdH2mXJH
-         WbZ0BNMeN4nd39DCM2c5KN7v7HTfrmSZts71k6eDBgeLMgW4QNlW5S9F5e4SilZKENo8
-         p6FYgKApejZLmFJSaD7Sl3c20n/cfvWsLjeRAwgRz5wUMhvoAcMR05WQJcY/xaoB4wcq
-         XPXg==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=srz+sEmD2ucHfb+YcY6XdjVFPqcuVkBR4P0HSOGGTk0=;
+        b=LL1PK8N4+Lxjt4RjWlJmPEPvV7sMbCQ5r/xafRZu+MxJE4OQQ6t+Bbw5atL8z8P2e5
+         CcMyhd7Sg9EKe5PsphMiFTZugHfl7IhV5uYrgiw0GBKujiuM1KmKqr5AMh01xYuN+7uZ
+         onxGFw2IsvO9SmxS28zkRaNySs9n7j0+0c3IONZOVMbUyWuewYdEZqEHVbIRKCI8IZV5
+         sEOxgZIO2QdLu/WI8SJBQg7Xv0iL/V1hV4huHb/50DDsT7Tiyr404uZjwGMCfwtz9LWW
+         nnlmrYyfjH7orK5OTUCcMF58VFFfhapPZgDPm9IotkdEu2xmM9JWEA00tkWxGe21xJ6u
+         W/cw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=asQR7zN/XNqbk75IdkIIvMcykcD0n/R0IhNlXpw8b/8=;
-        b=gZaZV3XLcZ6w1eWA/1xV4SgJkEDHhf+un4I2gt++z4aIqg5aZT/5lOrz5ybZDo5+ma
-         n83VevgXGJ7l1dOi19JFMlcRUgUpHTZq06U4zrsHJTPBKeHgbkXZL/eGEt8Ds8cTFTRH
-         ml5yJJxhEVk8U1QcEU7MMxkks3oBo/F0gPpsm0B7ShExPrVbcdXaMpPWAlZy1u9esz1Q
-         wnqs62uTGzK3KRdX429BeN0z1rYC9HkERsx4vmi6n0T8I6xGrgcNhDjTL87Wz7PIFhVZ
-         iqprAyxtdnJmyyCKw87O2AV//Qx3GLkjlWhdG7oFGY1jtsvdjckyW5DkdZAjS3HPHTme
-         xFxg==
-X-Gm-Message-State: AOAM530YtEJ3+XNTPQeeSNJJ54SLakx2olnoom0USCF6VtoyzShR/my1
-        EuXBWRl1JhH8Y9k958+WTyM=
-X-Google-Smtp-Source: ABdhPJykrYzUE5FPB44JUthiGF5Brjn/CSN4UgNGAv+EBxSn1Mae7UVPSGCEdYO2ivDR/3cpE4x0jg==
-X-Received: by 2002:a05:6402:26c9:b0:423:d545:9d49 with SMTP id x9-20020a05640226c900b00423d5459d49mr16670208edd.242.1650393058264;
-        Tue, 19 Apr 2022 11:30:58 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=srz+sEmD2ucHfb+YcY6XdjVFPqcuVkBR4P0HSOGGTk0=;
+        b=zdrJC7lBIUIOwDsNWiD5FRaempqp3qoHcLJ0qubKi3/dXyaUQgwsYY5W2Tfst/Dz77
+         hElZ2s4Wjtee0uEGDdKLr7NPb8KSzLLGCNh3vmh+9yCkYX6A812tPTHLmJitbc0SvtxI
+         RGWFpL1h/9n0u2ueK2TBmwEhPHEG22m/bvQt22XT/q0ctNczK2wTesVK53JK13sdL7ba
+         sEHZvJz6KCe0Z5LL7eXaEJKb8iW7jRaD+y5XeMMJReuGttM0huL91EkDkI2RS+NfmQPF
+         6YRV7d5BCRntvPh8jniBykrOG0Pg5k5jkKo5Ya8faPGt7Nm+MrQr6Da7a0jgCStmnr1/
+         Ckng==
+X-Gm-Message-State: AOAM533hI//Y+rOiZDaEZWt19siBxPXn2Y3LBMafhtA/KP+FxgV+yPyv
+        AFH7H4QcuKRnIhn6N4CaADM=
+X-Google-Smtp-Source: ABdhPJwDdEx22MzR+TbmibXMCUDZfFf8J7htm9zynudBpdoXlgSwnAxFL5zsupe+thKOdzEMYZTrKw==
+X-Received: by 2002:a17:906:58c7:b0:6da:955b:d300 with SMTP id e7-20020a17090658c700b006da955bd300mr14690005ejs.481.1650393054109;
+        Tue, 19 Apr 2022 11:30:54 -0700 (PDT)
 Received: from linux.. (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
-        by smtp.gmail.com with ESMTPSA id bq23-20020a056402215700b0041d8fcac53asm8799915edb.23.2022.04.19.11.30.57
+        by smtp.gmail.com with ESMTPSA id bq23-20020a056402215700b0041d8fcac53asm8799915edb.23.2022.04.19.11.30.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Apr 2022 11:30:57 -0700 (PDT)
+        Tue, 19 Apr 2022 11:30:53 -0700 (PDT)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -55,13 +55,12 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         cang@codeaurora.org, daejun7.park@samsung.com,
         powen.kao@mediatek.com, peter.wang@mediatek.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 5/5] scsi: ufshpb: Cleanup ufshpb_suspend/resume
-Date:   Tue, 19 Apr 2022 20:30:44 +0200
-Message-Id: <20220419183044.789065-6-huobean@gmail.com>
+Subject: [PATCH v2 0/5] Several changes for UFSHPB
+Date:   Tue, 19 Apr 2022 20:30:39 +0200
+Message-Id: <20220419183044.789065-1-huobean@gmail.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220419183044.789065-1-huobean@gmail.com>
-References: <20220419183044.789065-1-huobean@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -69,55 +68,31 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-ufshpb_resume() is only called when the HPB state is HPB_SUSPEND, so
-the check statement for "ufshpb_get_state(hpb) != HPB_PRESENT" is useless.
+Hi UFS driver developers/reviewers
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/scsi/ufs/ufshpb.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+Here are some changes to the UFS HPB driver. They are all based on Martin's Git repo
+5.18/scsi-staging branch. Please refer to the patch submission information for the
+specific purpose of each patch. I tested them on my own platform. Please have a review
+and any comments and suggestions are welcome.
 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index 4b15fa862beb..0e3bfd241f87 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -2354,11 +2354,9 @@ void ufshpb_suspend(struct ufs_hba *hba)
- 
- 	shost_for_each_device(sdev, hba->host) {
- 		hpb = ufshpb_get_hpb_data(sdev);
--		if (!hpb)
-+		if (!hpb || ufshpb_get_state(hpb) != HPB_PRESENT)
- 			continue;
- 
--		if (ufshpb_get_state(hpb) != HPB_PRESENT)
--			continue;
- 		ufshpb_set_state(hpb, HPB_SUSPEND);
- 		ufshpb_cancel_jobs(hpb);
- 	}
-@@ -2371,20 +2369,15 @@ void ufshpb_resume(struct ufs_hba *hba)
- 
- 	shost_for_each_device(sdev, hba->host) {
- 		hpb = ufshpb_get_hpb_data(sdev);
--		if (!hpb)
-+		if (!hpb || ufshpb_get_state(hpb) != HPB_SUSPEND)
- 			continue;
- 
--		if ((ufshpb_get_state(hpb) != HPB_PRESENT) &&
--		    (ufshpb_get_state(hpb) != HPB_SUSPEND))
--			continue;
- 		ufshpb_set_state(hpb, HPB_PRESENT);
- 		ufshpb_kick_map_work(hpb);
- 		if (hpb->is_hcm) {
--			unsigned int poll =
--				hpb->params.timeout_polling_interval_ms;
-+			unsigned int poll = hpb->params.timeout_polling_interval_ms;
- 
--			schedule_delayed_work(&hpb->ufshpb_read_to_work,
--				msecs_to_jiffies(poll));
-+			schedule_delayed_work(&hpb->ufshpb_read_to_work, msecs_to_jiffies(poll));
- 		}
- 	}
- }
+v1--v2:
+     1. Increase the submission information of the cover letter.
+     2. Fix coding style issues in patch 4/5
+     3. Add new patch 5/5.
+
+Bean Huo (5):
+  scsi: ufshpb: Merge ufshpb_reset() and ufshpb_reset_host()
+  scsi: ufshpb: Remove 0 assignment for enum value
+  scsi: ufshpb: Cleanup the handler when device reset HPB information
+  scsi: ufshpb: Add handing of device reset HPB regions Infos in HPB
+    device mode
+  scsi: ufshpb: Cleanup ufshpb_suspend/resume
+
+ drivers/scsi/ufs/ufshcd.c |   4 +-
+ drivers/scsi/ufs/ufshpb.c | 157 ++++++++++++++++++++++----------------
+ drivers/scsi/ufs/ufshpb.h |  10 +--
+ 3 files changed, 98 insertions(+), 73 deletions(-)
+
 -- 
 2.34.1
 
