@@ -2,49 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B84FDC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 22:58:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31AD2C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 22:58:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358386AbiDSXBe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Apr 2022 19:01:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52220 "EHLO
+        id S1356526AbiDSXBf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Apr 2022 19:01:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358382AbiDSXBc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 19:01:32 -0400
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1455838BDB
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 15:58:48 -0700 (PDT)
-Received: by mail-pj1-f41.google.com with SMTP id mm4-20020a17090b358400b001cb93d8b137so3284513pjb.2
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 15:58:48 -0700 (PDT)
+        with ESMTP id S1358380AbiDSXB1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 19:01:27 -0400
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A02038781
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 15:58:43 -0700 (PDT)
+Received: by mail-pj1-f43.google.com with SMTP id u5-20020a17090a6a8500b001d0b95031ebso199538pjj.3
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 15:58:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=QD+tceN/gEAQQC3Pa7ZlKSYJgpeqDDr4LSkw0SqEVW8=;
-        b=RU834wkzzIe9mtZbJrnXONst6g+0Gjh44Cp7R30jp7cDlNmy2jlhZ0V3b6DGd0Tz08
-         d4SAnXOX/YhKVALIGylLklmVWmb2LNYdLl7n/CxsoIC/iKSatP7sepsb6+zuS4eirRvV
-         CH6nCWxojbW/9Vn7yXVhyYQUvYB8napqiwWn9TP+VIeis1dIDrJel0TzcyVLldoOTWlQ
-         3kUD55t4Kc/IJ1VRMGUW/8B/uLdi6a+I/DiMUx1fIz/zW5oddYgkZL6moJ5kcXsLq9HG
-         tbN9/9DG4D9qJNJHcwmcOc3HW5XTnVD7AHoEacwepc7z0WK8NWXgOI+FVZHPu+Zej9iI
-         JD9Q==
-X-Gm-Message-State: AOAM530emeH9hMDw3vZyF7EhlaZsrYcyCJoclsZ7xLU18dHx3IoT12Pi
-        6diCVMAiETtgGE7ZRszamFo=
-X-Google-Smtp-Source: ABdhPJyANM+KiToUKNk51hDoj87wV87+NyfRuis9pv8PtwNph7Azm1//Wvo3xB/n2Pq3fr8eqJz9hQ==
-X-Received: by 2002:a17:902:b703:b0:158:2667:7447 with SMTP id d3-20020a170902b70300b0015826677447mr17850962pls.92.1650409127504;
-        Tue, 19 Apr 2022 15:58:47 -0700 (PDT)
+        bh=/6uWtAD/SeeR09KP91P5TwvCx574f8Z/VJ0xjlNkqlU=;
+        b=Cnli1oFsqfB/QbegkRYCHTsOyaFX1ariCQvuhRAVhsN+QhK0Z5hjcrCsIxE6RAUKIr
+         ZOo82ZXaO9P8vEFNdf7IqzsdhNk0LJZV7q/X25noWkcekeyfR/dz+42RgGmEclw7Dfuz
+         t0fzE+6WLNrvtMGQZ5FbVL43R7Xv2f2W7X8bSBtgRC5F8cXV3cRzaubHjQXy9Bw9lJRQ
+         L7fjt+lDeA1ixCMxFEh4gpSBJtEVdMTpmcu6SX5LOUvbAhLgSVAj6PEDIvUcDi1bxNIE
+         nUfsw2K+8dQvG8Vl/jkiel+g6hY/HqPNUfzPf0dAVsVwgeXVtsW3oNIAOZ+EGFpNVgYj
+         ERCQ==
+X-Gm-Message-State: AOAM532tuPVWHnq29gKsdvVIfWe+luOlGRX55QUxi7EuuuhM9jWIt0y+
+        L9ZXct/83LIgU8aDV/MTkas=
+X-Google-Smtp-Source: ABdhPJxn6X04Yvv/5BrBmYBsvouZIFypWHu9yuIDh7jlUawjiCP3LymZRRnu4Lz4BxikyTNpa6S1VA==
+X-Received: by 2002:a17:903:40ce:b0:158:8178:8563 with SMTP id t14-20020a17090340ce00b0015881788563mr17378078pld.167.1650409122675;
+        Tue, 19 Apr 2022 15:58:42 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:59ec:2e90:f751:1806])
-        by smtp.gmail.com with ESMTPSA id c15-20020a63350f000000b003992202f95fsm17622557pga.38.2022.04.19.15.58.44
+        by smtp.gmail.com with ESMTPSA id c15-20020a63350f000000b003992202f95fsm17622557pga.38.2022.04.19.15.58.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Apr 2022 15:58:45 -0700 (PDT)
+        Tue, 19 Apr 2022 15:58:41 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-Subject: [PATCH v3 14/28] scsi: ufs: Make the config_scaling_param calls type safe
-Date:   Tue, 19 Apr 2022 15:57:57 -0700
-Message-Id: <20220419225811.4127248-15-bvanassche@acm.org>
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v3 12/28] scsi: ufs: Remove unused constants and code
+Date:   Tue, 19 Apr 2022 15:57:55 -0700
+Message-Id: <20220419225811.4127248-13-bvanassche@acm.org>
 X-Mailer: git-send-email 2.36.0.rc0.470.gd361397f0d-goog
 In-Reply-To: <20220419225811.4127248-1-bvanassche@acm.org>
 References: <20220419225811.4127248-1-bvanassche@acm.org>
@@ -54,76 +54,85 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Pass the actual type to config_scaling_param callback as the third
-argment instead of a void pointer. Remove a superfluous NULL pointer
-check from ufs_qcom_config_scaling_param().
+Commit 5b44a07b6bb2 ("scsi: ufs: Remove pre-defined initial voltage values
+of device power") removed the code that uses the UFS_VREG_VCC* constants
+and also the code that sets the min_uV and max_uV member variables. Hence
+also remove these constants and that member variable.
 
-Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 14 ++++----------
- drivers/scsi/ufs/ufshcd.h   | 10 +++++-----
- 2 files changed, 9 insertions(+), 15 deletions(-)
+ drivers/scsi/ufs/ufs.h    | 11 -----------
+ drivers/scsi/ufs/ufshcd.c | 29 +++--------------------------
+ 2 files changed, 3 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 808b677f6083..dded29722880 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1463,23 +1463,17 @@ static int ufs_qcom_device_reset(struct ufs_hba *hba)
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 4a00c24a3209..225b5b4a2a7e 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -562,15 +562,6 @@ struct ufs_query_res {
+ 	struct utp_upiu_query upiu_res;
+ };
  
- #if IS_ENABLED(CONFIG_DEVFREQ_GOV_SIMPLE_ONDEMAND)
- static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
--					  struct devfreq_dev_profile *p,
--					  void *data)
-+					struct devfreq_dev_profile *p,
-+					struct devfreq_simple_ondemand_data *d)
- {
--	static struct devfreq_simple_ondemand_data *d;
+-#define UFS_VREG_VCC_MIN_UV	   2700000 /* uV */
+-#define UFS_VREG_VCC_MAX_UV	   3600000 /* uV */
+-#define UFS_VREG_VCC_1P8_MIN_UV    1700000 /* uV */
+-#define UFS_VREG_VCC_1P8_MAX_UV    1950000 /* uV */
+-#define UFS_VREG_VCCQ_MIN_UV	   1140000 /* uV */
+-#define UFS_VREG_VCCQ_MAX_UV	   1260000 /* uV */
+-#define UFS_VREG_VCCQ2_MIN_UV	   1700000 /* uV */
+-#define UFS_VREG_VCCQ2_MAX_UV	   1950000 /* uV */
 -
--	if (!data)
--		return;
+ /*
+  * VCCQ & VCCQ2 current requirement when UFS device is in sleep state
+  * and link is in Hibern8 state.
+@@ -582,8 +573,6 @@ struct ufs_vreg {
+ 	const char *name;
+ 	bool always_on;
+ 	bool enabled;
+-	int min_uV;
+-	int max_uV;
+ 	int max_uA;
+ };
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index eabc6b6156fd..69198e37c976 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8309,33 +8309,10 @@ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ static int ufshcd_config_vreg(struct device *dev,
+ 		struct ufs_vreg *vreg, bool on)
+ {
+-	int ret = 0;
+-	struct regulator *reg;
+-	const char *name;
+-	int min_uV, uA_load;
 -
--	d = (struct devfreq_simple_ondemand_data *)data;
- 	p->polling_ms = 60;
- 	d->upthreshold = 70;
- 	d->downdifferential = 5;
- }
- #else
- static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
--					  struct devfreq_dev_profile *p,
--					  void *data)
-+		struct devfreq_dev_profile *p,
-+		struct devfreq_simple_ondemand_data *data)
- {
- }
- #endif
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 107d19e98d52..bb2624aabda2 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -348,8 +348,8 @@ struct ufs_hba_variant_ops {
- 	int	(*phy_initialization)(struct ufs_hba *);
- 	int	(*device_reset)(struct ufs_hba *hba);
- 	void	(*config_scaling_param)(struct ufs_hba *hba,
--					struct devfreq_dev_profile *profile,
--					void *data);
-+				struct devfreq_dev_profile *profile,
-+				struct devfreq_simple_ondemand_data *data);
- 	int	(*program_key)(struct ufs_hba *hba,
- 			       const union ufs_crypto_cfg_entry *cfg, int slot);
- 	void	(*event_notify)(struct ufs_hba *hba,
-@@ -1360,11 +1360,11 @@ static inline int ufshcd_vops_device_reset(struct ufs_hba *hba)
+-	BUG_ON(!vreg);
+-
+-	reg = vreg->reg;
+-	name = vreg->name;
+-
+-	if (regulator_count_voltages(reg) > 0) {
+-		uA_load = on ? vreg->max_uA : 0;
+-		ret = ufshcd_config_vreg_load(dev, vreg, uA_load);
+-		if (ret)
+-			goto out;
++	if (regulator_count_voltages(vreg->reg) <= 0)
++		return 0;
+ 
+-		if (vreg->min_uV && vreg->max_uV) {
+-			min_uV = on ? vreg->min_uV : 0;
+-			ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
+-			if (ret)
+-				dev_err(dev,
+-					"%s: %s set voltage failed, err=%d\n",
+-					__func__, name, ret);
+-		}
+-	}
+-out:
+-	return ret;
++	return ufshcd_config_vreg_load(dev, vreg, on ? vreg->max_uA : 0);
  }
  
- static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
--						    struct devfreq_dev_profile
--						    *profile, void *data)
-+		struct devfreq_dev_profile *p,
-+		struct devfreq_simple_ondemand_data *data)
- {
- 	if (hba->vops && hba->vops->config_scaling_param)
--		hba->vops->config_scaling_param(hba, profile, data);
-+		hba->vops->config_scaling_param(hba, p, data);
- }
- 
- extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+ static int ufshcd_enable_vreg(struct device *dev, struct ufs_vreg *vreg)
