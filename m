@@ -2,24 +2,24 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88605C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 12:07:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91397C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 12:08:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352138AbiDSMKi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Apr 2022 08:10:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56394 "EHLO
+        id S1352145AbiDSMKk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Apr 2022 08:10:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351975AbiDSMIR (ORCPT
+        with ESMTP id S1350377AbiDSMIR (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 08:08:17 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7F587635E;
-        Tue, 19 Apr 2022 05:03:55 -0700 (PDT)
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 30CF56369;
+        Tue, 19 Apr 2022 05:03:57 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.90,272,1643641200"; 
-   d="scan'208";a="117332761"
+   d="scan'208";a="118449895"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 19 Apr 2022 21:03:54 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 19 Apr 2022 21:03:54 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 8AE6D427EA6F;
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 49B8F427EAC9;
         Tue, 19 Apr 2022 21:03:54 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com, robh+dt@kernel.org,
@@ -27,10 +27,11 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com, robh+dt@kernel.org,
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v3 3/7] ufs: add UFSHCD_QUIRK_HIBERN_FASTAUTO
-Date:   Tue, 19 Apr 2022 21:03:12 +0900
-Message-Id: <20220419120316.209151-4-yoshihiro.shimoda.uh@renesas.com>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v3 1/7] dt-bindings: ufs: Document Renesas R-Car UFS host controller
+Date:   Tue, 19 Apr 2022 21:03:10 +0900
+Message-Id: <20220419120316.209151-2-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220419120316.209151-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20220419120316.209151-1-yoshihiro.shimoda.uh@renesas.com>
@@ -40,52 +41,82 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add UFSHCD_QUIRK_HIBERN_FASTAUTO for a broken host controller of
-the auto-hibernate capability but it's FASTAUTO only.
+Document Renesas R-Car UFS host controller for R-Car S4-8 (r8a779f0).
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 9 +++++++--
- drivers/scsi/ufs/ufshcd.h | 6 ++++++
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ .../devicetree/bindings/ufs/renesas,ufs.yaml  | 61 +++++++++++++++++++
+ 1 file changed, 61 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/renesas,ufs.yaml
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a7bb3945c7c6..adc059a86e1e 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4247,8 +4247,13 @@ static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
- 	if (hba->max_pwr_info.is_valid)
- 		return 0;
- 
--	pwr_info->pwr_tx = FAST_MODE;
--	pwr_info->pwr_rx = FAST_MODE;
-+	if (hba->quirks & UFSHCD_QUIRK_HIBERN_FASTAUTO) {
-+		pwr_info->pwr_tx = FASTAUTO_MODE;
-+		pwr_info->pwr_rx = FASTAUTO_MODE;
-+	} else {
-+		pwr_info->pwr_tx = FAST_MODE;
-+		pwr_info->pwr_rx = FAST_MODE;
-+	}
- 	pwr_info->hs_rate = PA_HS_MODE_B;
- 
- 	/* Get the connected lane count */
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 1745144eb904..d14cc48226ce 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -608,6 +608,12 @@ enum ufshcd_quirks {
- 	 * 64-bit addressing supported capability but it doesn't work.
- 	 */
- 	UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS		= 1 << 17,
+diff --git a/Documentation/devicetree/bindings/ufs/renesas,ufs.yaml b/Documentation/devicetree/bindings/ufs/renesas,ufs.yaml
+new file mode 100644
+index 000000000000..f04f9f61fa9f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/renesas,ufs.yaml
+@@ -0,0 +1,61 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ufs/renesas,ufs.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+	/*
-+	 * This quirk needs to be enabled if the host controller has
-+	 * auto-hibernate capability but it's FASTAUTO only.
-+	 */
-+	UFSHCD_QUIRK_HIBERN_FASTAUTO			= 1 << 18,
- };
- 
- enum ufshcd_caps {
++title: Renesas R-Car UFS Host Controller
++
++maintainers:
++  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
++
++allOf:
++  - $ref: ufs-common.yaml
++
++properties:
++  compatible:
++    const: renesas,r8a779f0-ufs
++
++  reg:
++    maxItems: 1
++
++  clocks:
++    maxItems: 2
++
++  clock-names:
++    items:
++      - const: fck
++      - const: ref_clk
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 1
++
++required:
++  - compatible
++  - reg
++  - clocks
++  - clock-names
++  - power-domains
++  - resets
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/power/r8a779f0-sysc.h>
++
++    ufs: ufs@e686000 {
++            compatible = "renesas,r8a779f0-ufs";
++            reg = <0xe6860000 0x100>;
++            interrupts = <GIC_SPI 235 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 1514>, <&ufs30_clk>;
++            clock-names = "fck", "ref_clk";
++            freq-table-hz = <200000000 200000000>, <38400000 38400000>;
++            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
++            resets = <&cpg 1514>;
++    };
 -- 
 2.25.1
 
