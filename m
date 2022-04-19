@@ -2,50 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 439E8C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 18:13:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED206C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 18:17:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356391AbiDSSQb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Apr 2022 14:16:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51952 "EHLO
+        id S1356681AbiDSSTq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Apr 2022 14:19:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356389AbiDSSPu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 14:15:50 -0400
+        with ESMTP id S1356627AbiDSSTW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 14:19:22 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13E4A3DA5C;
-        Tue, 19 Apr 2022 11:12:27 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4746A3DA68;
+        Tue, 19 Apr 2022 11:13:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9ED2660C51;
-        Tue, 19 Apr 2022 18:12:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99004C385AC;
-        Tue, 19 Apr 2022 18:12:24 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D860B60C34;
+        Tue, 19 Apr 2022 18:13:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21DB7C385B4;
+        Tue, 19 Apr 2022 18:13:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650391946;
-        bh=G1DZZHPxxzY9jiiWaHLSmkavsSyRc4W3bovaeI/JEGk=;
+        s=k20201202; t=1650392011;
+        bh=M6RhXLMmz2S6qMvA0PcSqI2yybCtTdtl2N6YoFyDWec=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XvwIdRKBULWV45OajST/46uB8zhIagAUHWYRZGrro+YrZ8sh0N8cqZkIENbFw/1uu
-         4+3r6jfEDtmMldMFSmEB6FIIH3nuKfP4Nw7uGAhDLB7zXVJfXjI7P4kizxu6/I4L77
-         SQRt9LiUu7mUMmOoHb0kQ9ZPFl+QdQnAtKPkT1puEevG5gkwMbRUrZbItTgDD5+jFZ
-         D11v7aIMMLONIPiJLEJuGfy7PV26pIv0drVMBeJYYXMgcAqcwnOePQClTT8mfyDLZp
-         wZCp7l1ttCkWUpFQuT02+Bz01gr4sViT+UamPzmOfIrWMWWyEwz9q5s/4QBRed+P2L
-         zK7tQ74dkGzsA==
+        b=rpanCawZPTMdyzMahPixTeqPmaOriL/fnNWSLB3H2wONf0PE37l6U1DuoG4HKnXEe
+         AoVuZdlJctM6lf8H3qkJ9JjKu8EpSAukHhDXaCGWQ3r0V0JI8KM+b43VyRSFGwkRlF
+         tZ9OwufTGV6toSp3ORWRCtlF/2yUpL7ep1yqj2S6BzXlKGJqPuqLTNZo2MKmSNvU07
+         sANroIMVnZeRHNcAl3SejYfa/RPuCXPXZA1Nt1lUaAE4MelwQz9+WJ50pkW6Xwoyik
+         JY5DuAJA4wEBR8eDY+c3FOcrTahJRKs0g6wVYfEppksVfOqm5zbwU7J2ndm7qaTnHy
+         kxMX4+5GsQwvQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mike Christie <michael.christie@oracle.com>,
         Manish Rangankar <mrangankar@marvell.com>,
         Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, njavali@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.17 27/34] scsi: qedi: Fix failed disconnect handling
-Date:   Tue, 19 Apr 2022 14:10:54 -0400
-Message-Id: <20220419181104.484667-27-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 17/27] scsi: iscsi: Move iscsi_ep_disconnect()
+Date:   Tue, 19 Apr 2022 14:12:32 -0400
+Message-Id: <20220419181242.485308-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220419181104.484667-1-sashal@kernel.org>
-References: <20220419181104.484667-1-sashal@kernel.org>
+In-Reply-To: <20220419181242.485308-1-sashal@kernel.org>
+References: <20220419181242.485308-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,142 +55,78 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit 857b06527f707f5df634b854898a191b5c1d0272 ]
+[ Upstream commit c34f95e98d8fb750eefd4f3fe58b4f8b5e89253b ]
 
-We set the qedi_ep state to EP_STATE_OFLDCONN_START when the ep is
-created. Then in qedi_set_path we kick off the offload work. If userspace
-times out the connection and calls ep_disconnect, qedi will only flush the
-offload work if the qedi_ep state has transitioned away from
-EP_STATE_OFLDCONN_START. If we can't connect we will not have transitioned
-state and will leave the offload work running, and we will free the qedi_ep
-from under it.
+This patch moves iscsi_ep_disconnect() so it can be called earlier in the
+next patch.
 
-This patch just has us init the work when we create the ep, then always
-flush it.
-
-Link: https://lore.kernel.org/r/20220408001314.5014-10-michael.christie@oracle.com
+Link: https://lore.kernel.org/r/20220408001314.5014-2-michael.christie@oracle.com
 Tested-by: Manish Rangankar <mrangankar@marvell.com>
 Reviewed-by: Lee Duncan <lduncan@suse.com>
 Reviewed-by: Chris Leech <cleech@redhat.com>
-Acked-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_iscsi.c | 69 +++++++++++++++++-----------------
- 1 file changed, 34 insertions(+), 35 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c | 38 ++++++++++++++---------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 282ecb4e39bb..e1fe989ad7b3 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -859,6 +859,37 @@ static int qedi_task_xmit(struct iscsi_task *task)
- 	return qedi_iscsi_send_ioreq(task);
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 554b6f784223..126f6f23bffa 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -2236,6 +2236,25 @@ static void iscsi_stop_conn(struct iscsi_cls_conn *conn, int flag)
+ 	ISCSI_DBG_TRANS_CONN(conn, "Stopping conn done.\n");
  }
  
-+static void qedi_offload_work(struct work_struct *work)
++static void iscsi_ep_disconnect(struct iscsi_cls_conn *conn, bool is_active)
 +{
-+	struct qedi_endpoint *qedi_ep =
-+		container_of(work, struct qedi_endpoint, offload_work);
-+	struct qedi_ctx *qedi;
-+	int wait_delay = 5 * HZ;
-+	int ret;
++	struct iscsi_cls_session *session = iscsi_conn_to_session(conn);
++	struct iscsi_endpoint *ep;
 +
-+	qedi = qedi_ep->qedi;
++	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep.\n");
++	conn->state = ISCSI_CONN_FAILED;
 +
-+	ret = qedi_iscsi_offload_conn(qedi_ep);
-+	if (ret) {
-+		QEDI_ERR(&qedi->dbg_ctx,
-+			 "offload error: iscsi_cid=%u, qedi_ep=%p, ret=%d\n",
-+			 qedi_ep->iscsi_cid, qedi_ep, ret);
-+		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
++	if (!conn->ep || !session->transport->ep_disconnect)
 +		return;
-+	}
 +
-+	ret = wait_event_interruptible_timeout(qedi_ep->tcp_ofld_wait,
-+					       (qedi_ep->state ==
-+					       EP_STATE_OFLDCONN_COMPL),
-+					       wait_delay);
-+	if (ret <= 0 || qedi_ep->state != EP_STATE_OFLDCONN_COMPL) {
-+		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
-+		QEDI_ERR(&qedi->dbg_ctx,
-+			 "Offload conn TIMEOUT iscsi_cid=%u, qedi_ep=%p\n",
-+			 qedi_ep->iscsi_cid, qedi_ep);
-+	}
++	ep = conn->ep;
++	conn->ep = NULL;
++
++	session->transport->unbind_conn(conn, is_active);
++	session->transport->ep_disconnect(ep);
++	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep done.\n");
 +}
 +
- static struct iscsi_endpoint *
- qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
- 		int non_blocking)
-@@ -907,6 +938,7 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
- 	}
- 	qedi_ep = ep->dd_data;
- 	memset(qedi_ep, 0, sizeof(struct qedi_endpoint));
-+	INIT_WORK(&qedi_ep->offload_work, qedi_offload_work);
- 	qedi_ep->state = EP_STATE_IDLE;
- 	qedi_ep->iscsi_cid = (u32)-1;
- 	qedi_ep->qedi = qedi;
-@@ -1055,12 +1087,11 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
- 	qedi_ep = ep->dd_data;
- 	qedi = qedi_ep->qedi;
- 
-+	flush_work(&qedi_ep->offload_work);
-+
- 	if (qedi_ep->state == EP_STATE_OFLDCONN_START)
- 		goto ep_exit_recover;
- 
--	if (qedi_ep->state != EP_STATE_OFLDCONN_NONE)
--		flush_work(&qedi_ep->offload_work);
--
- 	if (qedi_ep->conn) {
- 		qedi_conn = qedi_ep->conn;
- 		abrt_conn = qedi_conn->abrt_conn;
-@@ -1234,37 +1265,6 @@ static int qedi_data_avail(struct qedi_ctx *qedi, u16 vlanid)
- 	return rc;
+ static int iscsi_if_stop_conn(struct iscsi_transport *transport,
+ 			      struct iscsi_uevent *ev)
+ {
+@@ -2276,25 +2295,6 @@ static int iscsi_if_stop_conn(struct iscsi_transport *transport,
+ 	return 0;
  }
  
--static void qedi_offload_work(struct work_struct *work)
+-static void iscsi_ep_disconnect(struct iscsi_cls_conn *conn, bool is_active)
 -{
--	struct qedi_endpoint *qedi_ep =
--		container_of(work, struct qedi_endpoint, offload_work);
--	struct qedi_ctx *qedi;
--	int wait_delay = 5 * HZ;
--	int ret;
+-	struct iscsi_cls_session *session = iscsi_conn_to_session(conn);
+-	struct iscsi_endpoint *ep;
 -
--	qedi = qedi_ep->qedi;
+-	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep.\n");
+-	conn->state = ISCSI_CONN_FAILED;
 -
--	ret = qedi_iscsi_offload_conn(qedi_ep);
--	if (ret) {
--		QEDI_ERR(&qedi->dbg_ctx,
--			 "offload error: iscsi_cid=%u, qedi_ep=%p, ret=%d\n",
--			 qedi_ep->iscsi_cid, qedi_ep, ret);
--		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
+-	if (!conn->ep || !session->transport->ep_disconnect)
 -		return;
--	}
 -
--	ret = wait_event_interruptible_timeout(qedi_ep->tcp_ofld_wait,
--					       (qedi_ep->state ==
--					       EP_STATE_OFLDCONN_COMPL),
--					       wait_delay);
--	if ((ret <= 0) || (qedi_ep->state != EP_STATE_OFLDCONN_COMPL)) {
--		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
--		QEDI_ERR(&qedi->dbg_ctx,
--			 "Offload conn TIMEOUT iscsi_cid=%u, qedi_ep=%p\n",
--			 qedi_ep->iscsi_cid, qedi_ep);
--	}
+-	ep = conn->ep;
+-	conn->ep = NULL;
+-
+-	session->transport->unbind_conn(conn, is_active);
+-	session->transport->ep_disconnect(ep);
+-	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep done.\n");
 -}
 -
- static int qedi_set_path(struct Scsi_Host *shost, struct iscsi_path *path_data)
+ static void iscsi_cleanup_conn_work_fn(struct work_struct *work)
  {
- 	struct qedi_ctx *qedi;
-@@ -1380,7 +1380,6 @@ static int qedi_set_path(struct Scsi_Host *shost, struct iscsi_path *path_data)
- 			  qedi_ep->dst_addr, qedi_ep->dst_port);
- 	}
- 
--	INIT_WORK(&qedi_ep->offload_work, qedi_offload_work);
- 	queue_work(qedi->offload_thread, &qedi_ep->offload_work);
- 
- 	ret = 0;
+ 	struct iscsi_cls_conn *conn = container_of(work, struct iscsi_cls_conn,
 -- 
 2.35.1
 
