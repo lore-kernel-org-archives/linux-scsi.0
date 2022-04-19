@@ -2,97 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C8A4C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 14:57:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C501C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 15:13:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240224AbiDSPAa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Apr 2022 11:00:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50810 "EHLO
+        id S1353710AbiDSPQM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Apr 2022 11:16:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353584AbiDSO7s (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 10:59:48 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1084C3298B;
-        Tue, 19 Apr 2022 07:56:55 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id C4809210DE;
-        Tue, 19 Apr 2022 14:56:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1650380213; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=P0bHge+GMMYbznLePUUnvwkPwSt8s9dbZBlPzkfEDUk=;
-        b=L4yhz0ozTVo9fBukVYFThXvzy5umuiahsDQqOO5KbrWfq5gsjRz0HEbii/PP1EYy0+NVHo
-        +kzZlDy7QDMnnQpVS8wsq2/i03B6XdcScoQjCYBJwd9k4/PgGcw0nAPcZ7Z/FSgGU/KoN/
-        QvctlGqEdKZ8ADjIErOfAz37jFuQOO0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1650380213;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=P0bHge+GMMYbznLePUUnvwkPwSt8s9dbZBlPzkfEDUk=;
-        b=Q6GawvPbP9nlR/fBI2mZjRUJRjMR3BYbxLuA40glIlT/hfcWPkHMNm4Qlo3E6e1+4FeL8l
-        2gv3oO9/w4AE3XDQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8E148139BE;
-        Tue, 19 Apr 2022 14:56:53 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id KRf5IbXNXmIhLQAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 19 Apr 2022 14:56:53 +0000
-Message-ID: <da087e9b-bd07-e5fd-421d-242e6adce22b@suse.de>
-Date:   Tue, 19 Apr 2022 16:56:53 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [Question] SCSI_EH: How does EH guarantee there is no UAF of
- scsi_cmnd if host reset failed
-Content-Language: en-US
-To:     Wenchao Hao <haowenchao@huawei.com>,
+        with ESMTP id S1353704AbiDSPQL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 11:16:11 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12BDD35847
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 08:13:29 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id c23so16086712plo.0
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 08:13:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=zSqKROW2j70JA8DM8gYUgW1/ARztLUcBd65hG17JcmE=;
+        b=qMnuP/7mxtfefsJv/k+IiMqzL2yLLWl0o5R385+BKCgwAxcQ5zQUtWulJ2exAk6Dok
+         kLd/2VRdMYRXddl6Ar3ExGShbBV9dCeIv5QMba+EDzTC16AT1LEm/YTU5DqIQNvVHmeN
+         +vUs5NWDijJ8YgrZCFECUZi/WMNTYjqgfAgkl0YkaUhDxR/WFxmoybm7kD7uqI+EbSzw
+         Kz5N/t600Mw2W+mlfjCMMsFXxg6NcrdAoe57mzhUVyssdyBjWBzktGRS8cX3pKyaPrZx
+         nwp6Y2b7ZvwaxLIPnR9UgJX2CXvH1xxnEBNuAeU31HPft3NpEeGNW2x0Me7sJ6UOSEg+
+         GIOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=zSqKROW2j70JA8DM8gYUgW1/ARztLUcBd65hG17JcmE=;
+        b=vZM5ZoTMVoUOcqqGoP/eUUd7v5rqoyqmIwmGBZd8Ke/ORFRvCDCoLMysB705mB8Wm8
+         iJs/NcF4HhS03rbH2zDps7EthTJhMze0VEv0Gch8tRRZCDrDwpTYIjmuv6u0nYjXc728
+         Q6FwBrMezTdX+gWuRQVCvNic6GHaoOo3l91hpv60DB4z7DE5VFsr1/AXIcAr36WCl91j
+         7cH3zLaMM6fOpsTp6WU5wbgej8A3mUYsyG/JN/JFhFAyboxxrdOh+9gvsjsr7Vyx1cYG
+         6DNlwFzT6YFdp3TrRzq0JRY5/8ETijeYbbkUhTwVXDAV+2a7H3gHjvOtWIH+A45WSk8W
+         +Bjg==
+X-Gm-Message-State: AOAM5313Yuwwj5UhB/k/xjPz/fNP5xtA/204vPRTrqDNyQRClXthI/vK
+        jvbMASzg8TW06YADJqXfDxnq
+X-Google-Smtp-Source: ABdhPJzGeAR7dhe85Bq8vjqZDwu3MBWPQQQd09aHXn3V8TzzsQ/+nSmTzQ3e7og0FAfsdSe7VswsEw==
+X-Received: by 2002:a17:902:eb46:b0:158:341d:93a3 with SMTP id i6-20020a170902eb4600b00158341d93a3mr16011554pli.1.1650381208560;
+        Tue, 19 Apr 2022 08:13:28 -0700 (PDT)
+Received: from thinkpad ([117.202.186.149])
+        by smtp.gmail.com with ESMTPSA id g15-20020a056a0023cf00b004e17e11cb17sm18046389pfc.111.2022.04.19.08.13.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 Apr 2022 08:13:28 -0700 (PDT)
+Date:   Tue, 19 Apr 2022 20:43:20 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Cc:     quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc:     Feilong Lin <linfeilong@huawei.com>
-References: <6301e87f-15f6-4c1f-41f5-d2f1aa4eedd7@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <6301e87f-15f6-4c1f-41f5-d2f1aa4eedd7@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Bart Van Assche <bvanassche@acm.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/1] scsi: ufs: Increase the UIC command timeout to 5
+ seconds
+Message-ID: <20220419151320.GA8699@thinkpad>
+References: <55bd9cf4216e80e73e63cf25c042d60e67592b44.1650331167.git.quic_nguyenb@quicinc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <55bd9cf4216e80e73e63cf25c042d60e67592b44.1650331167.git.quic_nguyenb@quicinc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/19/22 16:28, Wenchao Hao wrote:
-> Hi all, I am wondered how does SCSI EH guarantee there is no UAF of scsi_cmnd
-> if host reset failed. If host reset failed and eh_cmd_q of shost is not empty,
-> these command in eh_cmd_q would be added to done_q in scsi_eh_offline_sdevs()
-> and finished by scsi_eh_flush_done_q(). So these scsi_cmnd and it's related
-> request would be freed.
+On Mon, Apr 18, 2022 at 06:36:05PM -0700, Bao D. Nguyen wrote:
+> Increase the UIC command timeout to avoid false and unnecessary
+> UFS errors printout. There are increasing number of false UIC command
+> timeout error events where the actual cause of the issues is interrupt
+> starvation. When looking into these issues closely, it was clear that
+> the UIC command completed successfully, but the CPUs were hogged by other
+> subsystems for more than 500ms, causing a false UIC command timeout.
 > 
-Yes.
 
-> While since host reset failed, we can not guarantee the LLDDs has cleared all
-> references to these commands in eh_cmd_q. Is there any possibility that the
-> LLDDs reference to these commands? If this happened, then a using after free
-> issue would occur.
+UFS irq handler is a hardirq. Not sure how CPU starving can happen here.
+Unless all CPUs are occupied by hardirq handlers from other subsystems.
+
+Thanks,
+Mani
+
+> Increase the UIC command timeout to 5 seconds to avoid false and
+> time consuming support calls so that we can shift the focus to where
+> the real issue would be.
 > 
-If host reset has failed there are _no_ assumptions we can make about 
-commands, and not even about the PCI device itself.
-So in effect, once host_reset failed the system is hosed.
-
-We _might_ be able to resurrect the system by doing PCI EEH, but not 
-many systems nor drivers implement that.
-
-Cheers,
-
-Hannes
-
+> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 3f9caaf..806acf4 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -35,7 +35,7 @@
+>  				 UTP_TASK_REQ_COMPL |\
+>  				 UFSHCD_ERROR_MASK)
+>  /* UIC command timeout, unit: ms */
+> -#define UIC_CMD_TIMEOUT	500
+> +#define UIC_CMD_TIMEOUT	5000
+>  
+>  /* NOP OUT retries waiting for NOP IN response */
+>  #define NOP_OUT_RETRIES    10
+> -- 
+> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> a Linux Foundation Collaborative Project
+> 
