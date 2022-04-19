@@ -2,100 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86636C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 06:58:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C3F6C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 08:25:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349165AbiDSHBE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Apr 2022 03:01:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43492 "EHLO
+        id S1349971AbiDSI2U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Apr 2022 04:28:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349144AbiDSHAv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 03:00:51 -0400
-Received: from mail-qk1-x72f.google.com (mail-qk1-x72f.google.com [IPv6:2607:f8b0:4864:20::72f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24D0731DE1;
-        Mon, 18 Apr 2022 23:57:59 -0700 (PDT)
-Received: by mail-qk1-x72f.google.com with SMTP id s70so6044259qke.8;
-        Mon, 18 Apr 2022 23:57:59 -0700 (PDT)
+        with ESMTP id S244295AbiDSI2R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 04:28:17 -0400
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A76AF13D66
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 01:25:33 -0700 (PDT)
+Received: by mail-ej1-x636.google.com with SMTP id l7so31360114ejn.2
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 01:25:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=wtHprdS5qVUgI1B4WGLQZMUd5U+p5+WHqHW383Y1PAQ=;
-        b=odc9XxskL3SaX69jaYWVsff++71kMg1o56XrNlqrIlcQCxJDGxmzFFroN2+rWiDT8t
-         KsiR8/DriVug/R299reWRqOI6bY1m5amHJjYm34l3WHvFP9kvRthsMtF4BZTulC/Puaz
-         mJYgPTV8xz3cIfWyX6T5Eo8Zt+V90XZBtrS7LE4oGIBePzs0K9tfguvTj3JS9yL0pD5a
-         Pmq48weFsSJq/6KciYY+yiNvzkXf99x0sLqFhZLnmuQzBBbLKdU9XZinCEj5IzNh2NsI
-         qsCMTZpazSf6VQacyc+wBywjYBHv4vrqmEHkLUcqPJHlQexngcghyCdbR0+XTP7npbF6
-         sQgw==
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-transfer-encoding:user-agent:mime-version;
+        bh=SCcpgFyaQZUAJcvuvhPHKQcoQsiAphTEhs/1sD45xGQ=;
+        b=kbRTiTwLViZg8IqN2WupwyL/17oDj/3Ha6sqx3EQThM5vi6AQhNTdMdFtw3XG5cy7h
+         uF4adNkF6MLwN5F0M2oWr/ke8OEaSqw8F/w+ybAZU0ZOlOZQ2paetGbMlfCPYYa0JORj
+         W5B3+eOY5LSPzIiQkQNfWOoIry8CaWl1wTNnoEQI3OKlM2PErIBRo6o04waojD8zqGEK
+         dnH3WGV4cNZiKquFEcuYr3LFJPgbf0yNyvI/+CoHJ2mQJwdc2C72TiPfAUgFeSya2q4/
+         IbMOci0dh+ARfjWIK5F5hcmfy1BUSH2jDwJjGpNEQne9cq4G43GreONcfA20hMft7BTZ
+         HmWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=wtHprdS5qVUgI1B4WGLQZMUd5U+p5+WHqHW383Y1PAQ=;
-        b=xmT1mAW70DFtbSJHVL/+RjPiBKGTghQTnKQhCWndGZj0zyNDc/dByeOWuBjxoOOtRr
-         KVNR2ZNEamWidpAOtZToDXlZNcAzOWZEzVAxB5uG5QOu4+zf/aZjkSjY6CufeO14Aq6p
-         25OFbOFBdRMV6HRMHIFTEKPW7oFOJeOWW6PLoCuKSDT6rOVPW01p7AItB1fUsCIn5Gia
-         3rfd4YaNQnDt39Qy+VSMiCbl7H5P8wb9bOa4XwBJ/rNkhEF8nhwjosjVN8POACKbsrOF
-         TXiwv8yD9kNGLFobflWODlH76MeiDBa1iQFZg4pVQPT1r7kfmru3pZEK2VHgU+R6hVZj
-         +Llw==
-X-Gm-Message-State: AOAM531kto7nM1uWa8QuPxd7hHoWobIUcG5Ra/TGNmi7cRjNHeDbzm49
-        xMxcLu7dXB2OGM4+ON3Ftpc=
-X-Google-Smtp-Source: ABdhPJzyg5vxvZb7br6vAQNBuOZmYTr86vCbuBCenGPpOxzZBsdDMpG8jd9aVxAhgzDJvMC7AI1M9A==
-X-Received: by 2002:a37:a896:0:b0:69e:8b7a:3829 with SMTP id r144-20020a37a896000000b0069e8b7a3829mr5729860qke.626.1650351478269;
-        Mon, 18 Apr 2022 23:57:58 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id w17-20020a05622a135100b002ef480d2559sm9223144qtk.34.2022.04.18.23.57.55
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:content-transfer-encoding:user-agent:mime-version;
+        bh=SCcpgFyaQZUAJcvuvhPHKQcoQsiAphTEhs/1sD45xGQ=;
+        b=txixoL9Sydanyk5fhWFOcfJHC550jjzuhaVK0ayZeWb8ielNeyw9P2OfF4DQAr6FIt
+         esmWWKMwCpqiCxwTfUKUyocdrsc7CwzeGgEvabgoggJkm4npNNkW+PqC1CVWL415FDhh
+         ln7FtRqiwU2W+Xj9Cbjr4b4TWkbkfu+qsaA9lSM1w3sDrFACRYtGUrRe28dojEFEx29i
+         vJXfduJO1rWajIk3MSny81xljHX82shBa27HcGCuDi57SyltF5s8TAlzq3N6Kk6CT4w8
+         ZmB9hbqHBC0QDfNPhStjJOQrZCPqF1Ob3wDsihoMEnof+vNN12XFIU1j1UOpGaDr4YHv
+         zslw==
+X-Gm-Message-State: AOAM532iGun2QIFxfTkcOkd5OJTg4unEly/3OeyL71yZ4XenmUyRroPh
+        n7S9gYOIbqiyoXzDViBU7oR3NRVmNZ88Lw==
+X-Google-Smtp-Source: ABdhPJx9JEqzQVKogozu3EaSsMi09H4mh2dYDIJXJRoCZp9HELLSqha3IgfK7h9iEhZ01r50UTVm4w==
+X-Received: by 2002:a17:907:9687:b0:6ef:8eee:34ea with SMTP id hd7-20020a170907968700b006ef8eee34eamr10078265ejc.186.1650356732170;
+        Tue, 19 Apr 2022 01:25:32 -0700 (PDT)
+Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
+        by smtp.googlemail.com with ESMTPSA id s11-20020a170906284b00b006e108693850sm5351894ejc.28.2022.04.19.01.25.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Apr 2022 23:57:57 -0700 (PDT)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: deng.changcheng@zte.com.cn
-To:     james.smart@broadcom.com
-Cc:     dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Changcheng Deng <deng.changcheng@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi: lpfc: Remove unneeded variable
-Date:   Tue, 19 Apr 2022 06:57:50 +0000
-Message-Id: <20220419065750.2573861-1-deng.changcheng@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        Tue, 19 Apr 2022 01:25:31 -0700 (PDT)
+Message-ID: <e2cb03ed21a52e1bfd0d6eb197b43ebea6f9abba.camel@gmail.com>
+Subject: Re: [PATCH v2 29/29] scsi: ufs: Split the drivers/scsi/ufs directory
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>
+Date:   Tue, 19 Apr 2022 10:25:30 +0200
+In-Reply-To: <492cd10d-9964-6a5c-2896-9fc0d5397a54@acm.org>
+References: <20220412181853.3715080-1-bvanassche@acm.org>
+         <20220412183228.3729720-1-bvanassche@acm.org>
+         <492cd10d-9964-6a5c-2896-9fc0d5397a54@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.0-1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Changcheng Deng <deng.changcheng@zte.com.cn>
+On Mon, 2022-04-18 at 10:11 -0700, Bart Van Assche wrote:
+> Can anyone help with reviewing this patch?
+>=20
+> Thanks,
+>=20
+> Bart.
 
-Remove unneeded variable used to store return value.
+Bart,
+Looks good to us, but we need to verify it on the two platforms, and
+need some time before add reviewed and tested tag.
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Changcheng Deng <deng.changcheng@zte.com.cn>
----
- drivers/scsi/lpfc/lpfc_sli.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index bda2a7ba4e77..328b8f4440ef 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -3717,7 +3717,6 @@ lpfc_sli_process_sol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 			  struct lpfc_iocbq *saveq)
- {
- 	struct lpfc_iocbq *cmdiocbp;
--	int rc = 1;
- 	unsigned long iflag;
- 	u32 ulp_command, ulp_status, ulp_word4, ulp_context, iotag;
- 
-@@ -3857,7 +3856,7 @@ lpfc_sli_process_sol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 		}
- 	}
- 
--	return rc;
-+	return 1;
- }
- 
- /**
--- 
-2.25.1
-
+Kind regards,
+Bean=20
