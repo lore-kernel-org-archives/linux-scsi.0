@@ -2,94 +2,146 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93697C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 01:37:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F30C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 01:45:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245523AbiDSBkE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Apr 2022 21:40:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47162 "EHLO
+        id S242607AbiDSBsV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Apr 2022 21:48:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235649AbiDSBkC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Apr 2022 21:40:02 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C392201BE;
-        Mon, 18 Apr 2022 18:37:22 -0700 (PDT)
+        with ESMTP id S238998AbiDSBsU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Apr 2022 21:48:20 -0400
+Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21E9227157;
+        Mon, 18 Apr 2022 18:45:40 -0700 (PDT)
+Received: by mail-qk1-x72e.google.com with SMTP id s4so12546382qkh.0;
+        Mon, 18 Apr 2022 18:45:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1650332242; x=1681868242;
-  h=from:to:cc:subject:date:message-id:mime-version;
-  bh=tmgwZkvCV2R6IyuCglak7yhL3N9zBgqGkPbpA6ubX9c=;
-  b=JzyHl3yLWykIOmzk0BxiSjdnYx+7WcT9SiV2Kdbx6jxZw+xeOK+xqAIf
-   5kBqdoVLVqtg8BXEDaWKlLSY3XOPCsVsU2rpyQkr4NAWnasRnG0yRmoj1
-   X0q2LCUdkFymsrm5Hu3fT3RXoZ00ePQMNrL7k1cb0i4/o3pucDb3A2umO
-   A=;
-Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 18 Apr 2022 18:37:21 -0700
-X-QCInternal: smtphost
-Received: from unknown (HELO nasanex01a.na.qualcomm.com) ([10.52.223.231])
-  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2022 18:37:21 -0700
-Received: from stor-berry.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Mon, 18 Apr 2022 18:37:20 -0700
-From:   "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-To:     <quic_cang@quicinc.com>, <quic_asutoshd@quicinc.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
-CC:     "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "Avri Altman" <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Bean Huo <beanhuo@micron.com>,
-        "Daejun Park" <daejun7.park@samsung.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "Can Guo" <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v1 1/1] scsi: ufs: Increase the UIC command timeout to 5 seconds
-Date:   Mon, 18 Apr 2022 18:36:05 -0700
-Message-ID: <55bd9cf4216e80e73e63cf25c042d60e67592b44.1650331167.git.quic_nguyenb@quicinc.com>
-X-Mailer: git-send-email 2.7.4
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=GWJivJNTrI/QBY9yQIfFHcMB0AyV4j3D2XJyf0B7ai4=;
+        b=mdv1a5b5PbDlnJ2HcqHIOXJzFRMhQpMz5W+Dk498yUlyXwZ7v1tmTm1y2oWewJIw0y
+         TXkO/RPd+SQHpMGp1XkNqN68WSU0govwAIyUTWfP9pIbEDqtHnrzG6Abagpe3hJX8sWa
+         YGoiGUW5gUrqRAVa1yyuhygzzeu8LIY2ibDuZYV2/wmnrwOFFufWfefhaxbb1E/6Abt7
+         H3yzKlyeHUzVGh/j81234/NjIk5XEK6Y8a9J95Xiy83djKjdW6v9tDe16VjoDUALTfZQ
+         Xh8BCfat9JzApWXIN2L+kqW5jg6XsZ7Nz/POT1caezi4aQW8mebC2Ks1bkW434+4c6Xs
+         F8XQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=GWJivJNTrI/QBY9yQIfFHcMB0AyV4j3D2XJyf0B7ai4=;
+        b=LrX0hPxkSu5lgvyD88qtebSbRsJH8p8lFmY5LbD0vFx7ukMo07uQ1f3kdDXg20MqN5
+         0JkEvsRkKuLj/GiOGeQZsxlHyi73bmcaH8oUB+S+acBk6Od6BIezhGgMvEAlNejWXEAy
+         gofWWzrptu/JFiqGIjCPCKjMMVDnu29viW12Q1uqNM9ImnSfAILCXNPdKrZZUwUT4m5N
+         xAbnIm6Ug8dK73q0N2Yzg4Mjnw0aUosjb0XmlspjNcri0wzwZefwwqjpJCF6xKxlQKAk
+         dhTkmXIb9H7cs8vMJdygGQZbTKoCH1aMKAhXifiQhdb6+cr4L/VV615SRazdRSuUCZvo
+         MhYA==
+X-Gm-Message-State: AOAM530VzwsYEmKISICUhfR8NMHURwyHIhyfa2mMOC2EBOMJ6/KDje1q
+        XJmUruD65RD6+Y6B9BNYXXfuYH+agic=
+X-Google-Smtp-Source: ABdhPJxq3Tg8XW4ePGb4pBEvqZw3CEYQLcz1DA4JnyDIuKKCbLriJjkm2vByc4XsEzVsNdZVPcYTdQ==
+X-Received: by 2002:a05:620a:1a0c:b0:69e:c6ee:f8da with SMTP id bk12-20020a05620a1a0c00b0069ec6eef8damr209783qkb.340.1650332739331;
+        Mon, 18 Apr 2022 18:45:39 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id f11-20020a05622a1a0b00b002f1f3b66bd4sm5252453qtb.94.2022.04.18.18.45.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Apr 2022 18:45:38 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: lv.ruyi@zte.com.cn
+To:     james.smart@broadcom.com, dick.kennedy@broadcom.com
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lv Ruyi <lv.ruyi@zte.com.cn>, Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] scsi: lpfc: fix error check return value of debugfs_create_file()
+Date:   Tue, 19 Apr 2022 01:45:26 +0000
+Message-Id: <20220419014526.2561899-1-lv.ruyi@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Increase the UIC command timeout to avoid false and unnecessary
-UFS errors printout. There are increasing number of false UIC command
-timeout error events where the actual cause of the issues is interrupt
-starvation. When looking into these issues closely, it was clear that
-the UIC command completed successfully, but the CPUs were hogged by other
-subsystems for more than 500ms, causing a false UIC command timeout.
+From: Lv Ruyi <lv.ruyi@zte.com.cn>
 
-Increase the UIC command timeout to 5 seconds to avoid false and
-time consuming support calls so that we can shift the focus to where
-the real issue would be.
+If an error occurs, debugfs_create_file() will return ERR_PTR(-ERROR),
+so use IS_ERR() to check it.
 
-Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Lv Ruyi <lv.ruyi@zte.com.cn>
 ---
- drivers/scsi/ufs/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3f9caaf..806acf4 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -35,7 +35,7 @@
- 				 UTP_TASK_REQ_COMPL |\
- 				 UFSHCD_ERROR_MASK)
- /* UIC command timeout, unit: ms */
--#define UIC_CMD_TIMEOUT	500
-+#define UIC_CMD_TIMEOUT	5000
- 
- /* NOP OUT retries waiting for NOP IN response */
- #define NOP_OUT_RETRIES    10
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 7b24c932e812..c57f80191b34 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -6105,7 +6105,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 					    phba->hba_debugfs_root,
+ 					    phba,
+ 					    &lpfc_debugfs_op_multixripools);
+-		if (!phba->debug_multixri_pools) {
++		if (IS_ERR(phba->debug_multixri_pools)) {
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
+ 					 "0527 Cannot create debugfs multixripools\n");
+ 			goto debug_failed;
+@@ -6117,7 +6117,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 			debugfs_create_file(name, S_IFREG | 0644,
+ 					    phba->hba_debugfs_root,
+ 					    phba, &lpfc_cgn_buffer_op);
+-		if (!phba->debug_cgn_buffer) {
++		if (IS_ERR(phba->debug_cgn_buffer)) {
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
+ 					 "6527 Cannot create debugfs "
+ 					 "cgn_buffer\n");
+@@ -6130,7 +6130,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 			debugfs_create_file(name, S_IFREG | 0644,
+ 					    phba->hba_debugfs_root,
+ 					    phba, &lpfc_rx_monitor_op);
+-		if (!phba->debug_rx_monitor) {
++		if (IS_ERR(phba->debug_rx_monitor)) {
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
+ 					 "6528 Cannot create debugfs "
+ 					 "rx_monitor\n");
+@@ -6143,7 +6143,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 			debugfs_create_file(name, 0644,
+ 					    phba->hba_debugfs_root,
+ 					    phba, &lpfc_debugfs_ras_log);
+-		if (!phba->debug_ras_log) {
++		if (IS_ERR(phba->debug_ras_log)) {
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
+ 					 "6148 Cannot create debugfs"
+ 					 " ras_log\n");
+@@ -6164,7 +6164,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 			debugfs_create_file(name, S_IFREG | 0644,
+ 					    phba->hba_debugfs_root,
+ 					    phba, &lpfc_debugfs_op_lockstat);
+-		if (!phba->debug_lockstat) {
++		if (IS_ERR(phba->debug_lockstat)) {
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
+ 					 "4610 Can't create debugfs lockstat\n");
+ 			goto debug_failed;
+@@ -6390,7 +6390,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 		debugfs_create_file(name, 0644,
+ 				    vport->vport_debugfs_root,
+ 				    vport, &lpfc_debugfs_op_scsistat);
+-	if (!vport->debug_scsistat) {
++	if (IS_ERR(vport->debug_scsistat)) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
+ 				 "4611 Cannot create debugfs scsistat\n");
+ 		goto debug_failed;
+@@ -6401,7 +6401,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 		debugfs_create_file(name, 0644,
+ 				    vport->vport_debugfs_root,
+ 				    vport, &lpfc_debugfs_op_ioktime);
+-	if (!vport->debug_ioktime) {
++	if (IS_ERR(vport->debug_ioktime)) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
+ 				 "0815 Cannot create debugfs ioktime\n");
+ 		goto debug_failed;
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.25.1
+
 
