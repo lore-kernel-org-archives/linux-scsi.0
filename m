@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0976BC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 18:13:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 439E8C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Apr 2022 18:13:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356374AbiDSSQ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Apr 2022 14:16:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51204 "EHLO
+        id S1356391AbiDSSQb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Apr 2022 14:16:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356354AbiDSSPn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 14:15:43 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E08B73DDCE;
-        Tue, 19 Apr 2022 11:12:24 -0700 (PDT)
+        with ESMTP id S1356389AbiDSSPu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 14:15:50 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13E4A3DA5C;
+        Tue, 19 Apr 2022 11:12:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 7096FB818E0;
-        Tue, 19 Apr 2022 18:12:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 618ACC385A7;
-        Tue, 19 Apr 2022 18:12:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9ED2660C51;
+        Tue, 19 Apr 2022 18:12:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99004C385AC;
+        Tue, 19 Apr 2022 18:12:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650391942;
-        bh=I0Cv64zZFD3bZSetPVMANX+p6oWXDFDHsq6jsf5ae+w=;
+        s=k20201202; t=1650391946;
+        bh=G1DZZHPxxzY9jiiWaHLSmkavsSyRc4W3bovaeI/JEGk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=doSFGmMLd2W4obBI57085f5eAlSNpokYsh9xLdAwJN/zogIkR71s9rRPNfdKiwlPE
-         Gfpj2fjwpo8ieK6Z66qIxfcmK6Ar0Vhe1pmnAO8tDfY1uCXdInfgbWsmHwkNP5qlAK
-         PjBAHyG/5zm5mR8hWr/AQ4HAGQ82gqnUGyZm0sTBDAbhut75syBDnsxjJBiUH0mmGf
-         oxWnwcHISoKhIznhNZ4b85lrouXR5Svzrid5xQwQiTlXgxJt89nDa7zCqSGkYu7YFw
-         luGHCyF6JJ0NyJPog/ggH0mRQ/H3RKRBTUf0Zety/fl8SBVzQgftjs+n03pEnsgJdj
-         LsyJ6nOiErZ0Q==
+        b=XvwIdRKBULWV45OajST/46uB8zhIagAUHWYRZGrro+YrZ8sh0N8cqZkIENbFw/1uu
+         4+3r6jfEDtmMldMFSmEB6FIIH3nuKfP4Nw7uGAhDLB7zXVJfXjI7P4kizxu6/I4L77
+         SQRt9LiUu7mUMmOoHb0kQ9ZPFl+QdQnAtKPkT1puEevG5gkwMbRUrZbItTgDD5+jFZ
+         D11v7aIMMLONIPiJLEJuGfy7PV26pIv0drVMBeJYYXMgcAqcwnOePQClTT8mfyDLZp
+         wZCp7l1ttCkWUpFQuT02+Bz01gr4sViT+UamPzmOfIrWMWWyEwz9q5s/4QBRed+P2L
+         zK7tQ74dkGzsA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mike Christie <michael.christie@oracle.com>,
@@ -39,10 +39,10 @@ Cc:     Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, njavali@marvell.com,
         GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
-Subject: [PATCH AUTOSEL 5.17 25/34] scsi: iscsi: Merge suspend fields
-Date:   Tue, 19 Apr 2022 14:10:52 -0400
-Message-Id: <20220419181104.484667-25-sashal@kernel.org>
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.17 27/34] scsi: qedi: Fix failed disconnect handling
+Date:   Tue, 19 Apr 2022 14:10:54 -0400
+Message-Id: <20220419181104.484667-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220419181104.484667-1-sashal@kernel.org>
 References: <20220419181104.484667-1-sashal@kernel.org>
@@ -56,191 +56,142 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit 5bd856256f8c03e329f8ff36d8c8efcb111fe6df ]
+[ Upstream commit 857b06527f707f5df634b854898a191b5c1d0272 ]
 
-Move the tx and rx suspend fields into one flags field.
+We set the qedi_ep state to EP_STATE_OFLDCONN_START when the ep is
+created. Then in qedi_set_path we kick off the offload work. If userspace
+times out the connection and calls ep_disconnect, qedi will only flush the
+offload work if the qedi_ep state has transitioned away from
+EP_STATE_OFLDCONN_START. If we can't connect we will not have transitioned
+state and will leave the offload work running, and we will free the qedi_ep
+from under it.
 
-Link: https://lore.kernel.org/r/20220408001314.5014-8-michael.christie@oracle.com
+This patch just has us init the work when we create the ep, then always
+flush it.
+
+Link: https://lore.kernel.org/r/20220408001314.5014-10-michael.christie@oracle.com
 Tested-by: Manish Rangankar <mrangankar@marvell.com>
 Reviewed-by: Lee Duncan <lduncan@suse.com>
 Reviewed-by: Chris Leech <cleech@redhat.com>
+Acked-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/bnx2i/bnx2i_hwi.c   |  2 +-
- drivers/scsi/bnx2i/bnx2i_iscsi.c |  2 +-
- drivers/scsi/cxgbi/libcxgbi.c    |  6 +++---
- drivers/scsi/libiscsi.c          | 20 ++++++++++----------
- drivers/scsi/libiscsi_tcp.c      |  2 +-
- include/scsi/libiscsi.h          |  9 +++++----
- 6 files changed, 21 insertions(+), 20 deletions(-)
+ drivers/scsi/qedi/qedi_iscsi.c | 69 +++++++++++++++++-----------------
+ 1 file changed, 34 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index 5521469ce678..e16327a4b4c9 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -1977,7 +1977,7 @@ static int bnx2i_process_new_cqes(struct bnx2i_conn *bnx2i_conn)
- 		if (nopin->cq_req_sn != qp->cqe_exp_seq_sn)
- 			break;
- 
--		if (unlikely(test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx))) {
-+		if (unlikely(test_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags))) {
- 			if (nopin->op_code == ISCSI_OP_NOOP_IN &&
- 			    nopin->itt == (u16) RESERVED_ITT) {
- 				printk(KERN_ALERT "bnx2i: Unsolicited "
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index e21b053b4f3e..a592ca8602f9 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1721,7 +1721,7 @@ static int bnx2i_tear_down_conn(struct bnx2i_hba *hba,
- 			struct iscsi_conn *conn = ep->conn->cls_conn->dd_data;
- 
- 			/* Must suspend all rx queue activity for this ep */
--			set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
-+			set_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
- 		}
- 		/* CONN_DISCONNECT timeout may or may not be an issue depending
- 		 * on what transcribed in TCP layer, different targets behave
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index 8c7d4dda4cf2..4365d52c6430 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -1634,11 +1634,11 @@ void cxgbi_conn_pdu_ready(struct cxgbi_sock *csk)
- 	log_debug(1 << CXGBI_DBG_PDU_RX,
- 		"csk 0x%p, conn 0x%p.\n", csk, conn);
- 
--	if (unlikely(!conn || conn->suspend_rx)) {
-+	if (unlikely(!conn || test_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags))) {
- 		log_debug(1 << CXGBI_DBG_PDU_RX,
--			"csk 0x%p, conn 0x%p, id %d, suspend_rx %lu!\n",
-+			"csk 0x%p, conn 0x%p, id %d, conn flags 0x%lx!\n",
- 			csk, conn, conn ? conn->id : 0xFF,
--			conn ? conn->suspend_rx : 0xFF);
-+			conn ? conn->flags : 0xFF);
- 		return;
- 	}
- 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 059dae8909ee..073c4db79094 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1392,8 +1392,8 @@ static bool iscsi_set_conn_failed(struct iscsi_conn *conn)
- 	if (conn->stop_stage == 0)
- 		session->state = ISCSI_STATE_FAILED;
- 
--	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
--	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
-+	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
-+	set_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
- 	return true;
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 282ecb4e39bb..e1fe989ad7b3 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -859,6 +859,37 @@ static int qedi_task_xmit(struct iscsi_task *task)
+ 	return qedi_iscsi_send_ioreq(task);
  }
  
-@@ -1454,7 +1454,7 @@ static int iscsi_xmit_task(struct iscsi_conn *conn, struct iscsi_task *task,
- 	 * Do this after dropping the extra ref because if this was a requeue
- 	 * it's removed from that list and cleanup_queued_task would miss it.
- 	 */
--	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
-+	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
- 		/*
- 		 * Save the task and ref in case we weren't cleaning up this
- 		 * task and get woken up again.
-@@ -1532,7 +1532,7 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
- 	int rc = 0;
- 
- 	spin_lock_bh(&conn->session->frwd_lock);
--	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
-+	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
- 		ISCSI_DBG_SESSION(conn->session, "Tx suspended!\n");
- 		spin_unlock_bh(&conn->session->frwd_lock);
- 		return -ENODATA;
-@@ -1746,7 +1746,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
- 		goto fault;
- 	}
- 
--	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
-+	if (test_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags)) {
- 		reason = FAILURE_SESSION_IN_RECOVERY;
- 		sc->result = DID_REQUEUE << 16;
- 		goto fault;
-@@ -1935,7 +1935,7 @@ static void fail_scsi_tasks(struct iscsi_conn *conn, u64 lun, int error)
- void iscsi_suspend_queue(struct iscsi_conn *conn)
- {
- 	spin_lock_bh(&conn->session->frwd_lock);
--	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
- 	spin_unlock_bh(&conn->session->frwd_lock);
- }
- EXPORT_SYMBOL_GPL(iscsi_suspend_queue);
-@@ -1953,7 +1953,7 @@ void iscsi_suspend_tx(struct iscsi_conn *conn)
- 	struct Scsi_Host *shost = conn->session->host;
- 	struct iscsi_host *ihost = shost_priv(shost);
- 
--	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	set_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
- 	if (ihost->workq)
- 		flush_workqueue(ihost->workq);
- }
-@@ -1961,7 +1961,7 @@ EXPORT_SYMBOL_GPL(iscsi_suspend_tx);
- 
- static void iscsi_start_tx(struct iscsi_conn *conn)
- {
--	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	clear_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
- 	iscsi_conn_queue_work(conn);
- }
- 
-@@ -3323,8 +3323,8 @@ int iscsi_conn_bind(struct iscsi_cls_session *cls_session,
- 	/*
- 	 * Unblock xmitworker(), Login Phase will pass through.
- 	 */
--	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
--	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	clear_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags);
-+	clear_bit(ISCSI_CONN_FLAG_SUSPEND_TX, &conn->flags);
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(iscsi_conn_bind);
-diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-index 2e9ffe3d1a55..883005757ddb 100644
---- a/drivers/scsi/libiscsi_tcp.c
-+++ b/drivers/scsi/libiscsi_tcp.c
-@@ -927,7 +927,7 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, struct sk_buff *skb,
- 	 */
- 	conn->last_recv = jiffies;
- 
--	if (unlikely(conn->suspend_rx)) {
-+	if (unlikely(test_bit(ISCSI_CONN_FLAG_SUSPEND_RX, &conn->flags))) {
- 		ISCSI_DBG_TCP(conn, "Rx suspended!\n");
- 		*status = ISCSI_TCP_SUSPENDED;
- 		return 0;
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 4ee233e5a6ff..bdb0ae11682d 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -52,8 +52,10 @@ enum {
- 
- #define ISID_SIZE			6
- 
--/* Connection suspend "bit" */
--#define ISCSI_SUSPEND_BIT		1
-+/* Connection flags */
-+#define ISCSI_CONN_FLAG_SUSPEND_TX	BIT(0)
-+#define ISCSI_CONN_FLAG_SUSPEND_RX	BIT(1)
++static void qedi_offload_work(struct work_struct *work)
++{
++	struct qedi_endpoint *qedi_ep =
++		container_of(work, struct qedi_endpoint, offload_work);
++	struct qedi_ctx *qedi;
++	int wait_delay = 5 * HZ;
++	int ret;
 +
++	qedi = qedi_ep->qedi;
++
++	ret = qedi_iscsi_offload_conn(qedi_ep);
++	if (ret) {
++		QEDI_ERR(&qedi->dbg_ctx,
++			 "offload error: iscsi_cid=%u, qedi_ep=%p, ret=%d\n",
++			 qedi_ep->iscsi_cid, qedi_ep, ret);
++		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
++		return;
++	}
++
++	ret = wait_event_interruptible_timeout(qedi_ep->tcp_ofld_wait,
++					       (qedi_ep->state ==
++					       EP_STATE_OFLDCONN_COMPL),
++					       wait_delay);
++	if (ret <= 0 || qedi_ep->state != EP_STATE_OFLDCONN_COMPL) {
++		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
++		QEDI_ERR(&qedi->dbg_ctx,
++			 "Offload conn TIMEOUT iscsi_cid=%u, qedi_ep=%p\n",
++			 qedi_ep->iscsi_cid, qedi_ep);
++	}
++}
++
+ static struct iscsi_endpoint *
+ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 		int non_blocking)
+@@ -907,6 +938,7 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 	}
+ 	qedi_ep = ep->dd_data;
+ 	memset(qedi_ep, 0, sizeof(struct qedi_endpoint));
++	INIT_WORK(&qedi_ep->offload_work, qedi_offload_work);
+ 	qedi_ep->state = EP_STATE_IDLE;
+ 	qedi_ep->iscsi_cid = (u32)-1;
+ 	qedi_ep->qedi = qedi;
+@@ -1055,12 +1087,11 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
+ 	qedi_ep = ep->dd_data;
+ 	qedi = qedi_ep->qedi;
  
- #define ISCSI_ITT_MASK			0x1fff
- #define ISCSI_TOTAL_CMDS_MAX		4096
-@@ -199,8 +201,7 @@ struct iscsi_conn {
- 	struct list_head	cmdqueue;	/* data-path cmd queue */
- 	struct list_head	requeue;	/* tasks needing another run */
- 	struct work_struct	xmitwork;	/* per-conn. xmit workqueue */
--	unsigned long		suspend_tx;	/* suspend Tx */
--	unsigned long		suspend_rx;	/* suspend Rx */
-+	unsigned long		flags;		/* ISCSI_CONN_FLAGs */
++	flush_work(&qedi_ep->offload_work);
++
+ 	if (qedi_ep->state == EP_STATE_OFLDCONN_START)
+ 		goto ep_exit_recover;
  
- 	/* negotiated params */
- 	unsigned		max_recv_dlength; /* initiator_max_recv_dsl*/
+-	if (qedi_ep->state != EP_STATE_OFLDCONN_NONE)
+-		flush_work(&qedi_ep->offload_work);
+-
+ 	if (qedi_ep->conn) {
+ 		qedi_conn = qedi_ep->conn;
+ 		abrt_conn = qedi_conn->abrt_conn;
+@@ -1234,37 +1265,6 @@ static int qedi_data_avail(struct qedi_ctx *qedi, u16 vlanid)
+ 	return rc;
+ }
+ 
+-static void qedi_offload_work(struct work_struct *work)
+-{
+-	struct qedi_endpoint *qedi_ep =
+-		container_of(work, struct qedi_endpoint, offload_work);
+-	struct qedi_ctx *qedi;
+-	int wait_delay = 5 * HZ;
+-	int ret;
+-
+-	qedi = qedi_ep->qedi;
+-
+-	ret = qedi_iscsi_offload_conn(qedi_ep);
+-	if (ret) {
+-		QEDI_ERR(&qedi->dbg_ctx,
+-			 "offload error: iscsi_cid=%u, qedi_ep=%p, ret=%d\n",
+-			 qedi_ep->iscsi_cid, qedi_ep, ret);
+-		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
+-		return;
+-	}
+-
+-	ret = wait_event_interruptible_timeout(qedi_ep->tcp_ofld_wait,
+-					       (qedi_ep->state ==
+-					       EP_STATE_OFLDCONN_COMPL),
+-					       wait_delay);
+-	if ((ret <= 0) || (qedi_ep->state != EP_STATE_OFLDCONN_COMPL)) {
+-		qedi_ep->state = EP_STATE_OFLDCONN_FAILED;
+-		QEDI_ERR(&qedi->dbg_ctx,
+-			 "Offload conn TIMEOUT iscsi_cid=%u, qedi_ep=%p\n",
+-			 qedi_ep->iscsi_cid, qedi_ep);
+-	}
+-}
+-
+ static int qedi_set_path(struct Scsi_Host *shost, struct iscsi_path *path_data)
+ {
+ 	struct qedi_ctx *qedi;
+@@ -1380,7 +1380,6 @@ static int qedi_set_path(struct Scsi_Host *shost, struct iscsi_path *path_data)
+ 			  qedi_ep->dst_addr, qedi_ep->dst_port);
+ 	}
+ 
+-	INIT_WORK(&qedi_ep->offload_work, qedi_offload_work);
+ 	queue_work(qedi->offload_thread, &qedi_ep->offload_work);
+ 
+ 	ret = 0;
 -- 
 2.35.1
 
