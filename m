@@ -2,91 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF36C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 12:31:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EE14C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 12:48:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378575AbiDTMeY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Apr 2022 08:34:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44282 "EHLO
+        id S1376871AbiDTMv1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Apr 2022 08:51:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378687AbiDTMcg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 08:32:36 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93E9AE41;
-        Wed, 20 Apr 2022 05:29:49 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 529E31F385;
-        Wed, 20 Apr 2022 12:29:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1650457788; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=+EzLfToD3p9OXJhz5oFO7rfMu9PCtRyf++jLmq/TIJY=;
-        b=kgidIw2dv6D3V/YXt5wUFNyspBoJc4Dvj6XmB3McoHeYLui6/rkI3Q+9ohHhbZxOcrn+pP
-        1lWh8nIQGGxJHt7nCkQYx2fpHGlLHzTr+QhAQwdCwvvhugxqB7qLdWAa1QMkr4SOQ0COAB
-        rXvj4BSXZ+tNDqEm5uGKbG4fv2cU/bA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1650457788;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=+EzLfToD3p9OXJhz5oFO7rfMu9PCtRyf++jLmq/TIJY=;
-        b=Ziq0bJ+mJvgptb9cpImhV1EbAkRJheEAIzxIQJ/4i3ZTCuEpT8dTxOkqJcokELKGK2/MaK
-        bJAxa0SKhCx4YzCg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0757A13A30;
-        Wed, 20 Apr 2022 12:29:48 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 8nzoALz8X2K2ZAAAMHmgww
-        (envelope-from <hare@suse.de>); Wed, 20 Apr 2022 12:29:48 +0000
-Message-ID: <ce7c8535-a3dd-5549-1319-a3af1d0cee0b@suse.de>
-Date:   Wed, 20 Apr 2022 14:29:47 +0200
+        with ESMTP id S241082AbiDTMv0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 08:51:26 -0400
+Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D7EC3C73F;
+        Wed, 20 Apr 2022 05:48:38 -0700 (PDT)
+Received: by mail-ej1-x634.google.com with SMTP id g13so3343814ejb.4;
+        Wed, 20 Apr 2022 05:48:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-transfer-encoding:user-agent:mime-version;
+        bh=Yc/wWn41RLKXg/XnDWEYh5EY0Xa2lFOxeQbAbMbqZYE=;
+        b=mFollUCiD/7FPhy/UtL32X3UWDXVIzB74hr0HCmsiE+XPsdckXLcOjGto8kpiHZBGK
+         EkQHXhBsLlw6b85PDHQzvL++X3mouWrdjEp8glXt8nqZ+2uD2fK1bI8mM6+DUnnBC27q
+         QM/JuTnvFlzkgYNH0eAA6c8+SlGpgYBCzErOZ/7d8g5J7pNm9OsX+Y0LNmfPqj6qDxo6
+         312m/8FV69MXUuQNWqcT2DRaFhwEnrLk/gyV7FzLNwdn1Ds1Mm2Mp30F3FFVQIG2Wnpr
+         GybnsYDaw/16+0slcnPW6SmFNoD66eTjshcnyEd7IfutfGL/qo66T9hvA/ub8O3/qZH3
+         xNkA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:content-transfer-encoding:user-agent:mime-version;
+        bh=Yc/wWn41RLKXg/XnDWEYh5EY0Xa2lFOxeQbAbMbqZYE=;
+        b=fCk8Wz2C7eOtI40iVSrAAW9ob6MY2EChZ+i8iSicJJEYwbsP6HP95JIGBCaT1W59bU
+         yPAAHW4B3IEzIz5i5iBfG9bnb9Z9erIEHF8S5XMPNC22LIPUetnYz7djT/02+Bfpmu+T
+         6soojUoJNnRUeuNtDkPhhfplIqC0TSnYDn0lxNTOZJ6g6DkTBe2+aiSEGewg0u96ebi7
+         /n+ZttfZjJKfzyxLruyIWLQhysiMaFSCgBqD4M9fTywMOX3IbBtQztPqfLHsxhi7JSmw
+         8G55oHxbhZ+vS7dzxwwt3LqKqHS/IviSRAQVO++K7cXGa8n/a+85EeW3dB6SSRTMOeSG
+         F7BA==
+X-Gm-Message-State: AOAM530nF2qWP85E1PvgTk0fqQMvxS0CTX9nVMCdIHGyiHwoi0/kOKZJ
+        XUefE2nIcfQfyYBrtoNh4Qw=
+X-Google-Smtp-Source: ABdhPJwgZCaM62cQhYnGhI4Q6cYrvzn4LhpwjTyTaV76k6roT6RgmeQUAp8ZTiwGLC8u1ncWDCT3iw==
+X-Received: by 2002:a17:906:4fcb:b0:6e8:74db:6b04 with SMTP id i11-20020a1709064fcb00b006e874db6b04mr18370997ejw.676.1650458916931;
+        Wed, 20 Apr 2022 05:48:36 -0700 (PDT)
+Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
+        by smtp.googlemail.com with ESMTPSA id p9-20020a05640243c900b0041facb9ac9esm196948edc.1.2022.04.20.05.48.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 Apr 2022 05:48:36 -0700 (PDT)
+Message-ID: <db1551628c191c8efdc2e7bec1313c58636c995e.camel@gmail.com>
+Subject: Re: [PATCH v2 1/5] scsi: ufshpb: Merge ufshpb_reset() and
+ ufshpb_reset_host()
+From:   Bean Huo <huobean@gmail.com>
+To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        cpgsproxy3 <cpgsproxy3@samsung.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date:   Wed, 20 Apr 2022 14:48:35 +0200
+In-Reply-To: <1891546521.01650433981606.JavaMail.epsvc@epcpadp4>
+References: <20220419183044.789065-2-huobean@gmail.com>
+         <20220419183044.789065-1-huobean@gmail.com>
+         <CGME20220419183926epcas2p4f529c4cc6bed9ba4b6536f3a5977c3f2@epcms2p8>
+         <1891546521.01650433981606.JavaMail.epsvc@epcpadp4>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.0-1 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH 4/4] scsi: hisi_sas: Use libsas internal abort support
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com,
-        damien.lemoal@opensource.wdc.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Ajish.Koshy@microchip.com, linuxarm@huawei.com,
-        Viswas.G@microchip.com, hch@lst.de, liuqi115@huawei.com,
-        chenxiang66@hisilicon.com
-References: <1646309930-138960-1-git-send-email-john.garry@huawei.com>
- <1646309930-138960-5-git-send-email-john.garry@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <1646309930-138960-5-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/3/22 13:18, John Garry wrote:
-> Use the common libsas internal abort functionality.
-> 
-> In addition, this driver has special handling for internal abort timeouts -
-> specifically whether to reset the controller in that instance, so extend
-> the API for that.
-> 
-Huh? Is there a reason _not_ to reset the controller once abort times out?
-And why isn't that delegated to SCSI EH?
+On Wed, 2022-04-20 at 11:47 +0900, Keoseong Park wrote:
+> > +void ufshpb_toggle(struct ufs_hba *hba, enum UFSHPB_STATE src,
+> > enum UFSHPB_STATE dest)
+> How about changing it to something like ufshpb_state_toggle()?
+>=20
+> Best Regards,
+> Keoseong Park
 
-Cheers,
+ufshpb_state_toggle() is much better, I will change it in the next
+version. Thanks.
 
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+Kind regards,
+Bean
