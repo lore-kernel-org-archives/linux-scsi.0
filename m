@@ -2,54 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EE14C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 12:48:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A115C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 13:21:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376871AbiDTMv1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Apr 2022 08:51:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60086 "EHLO
+        id S1378932AbiDTNYc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Apr 2022 09:24:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241082AbiDTMv0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 08:51:26 -0400
-Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D7EC3C73F;
-        Wed, 20 Apr 2022 05:48:38 -0700 (PDT)
-Received: by mail-ej1-x634.google.com with SMTP id g13so3343814ejb.4;
-        Wed, 20 Apr 2022 05:48:38 -0700 (PDT)
+        with ESMTP id S233144AbiDTNYa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 09:24:30 -0400
+Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77F04427FF;
+        Wed, 20 Apr 2022 06:21:43 -0700 (PDT)
+Received: by mail-ed1-x52b.google.com with SMTP id z99so2270594ede.5;
+        Wed, 20 Apr 2022 06:21:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=message-id:subject:from:to:cc:date:in-reply-to:references
          :content-transfer-encoding:user-agent:mime-version;
-        bh=Yc/wWn41RLKXg/XnDWEYh5EY0Xa2lFOxeQbAbMbqZYE=;
-        b=mFollUCiD/7FPhy/UtL32X3UWDXVIzB74hr0HCmsiE+XPsdckXLcOjGto8kpiHZBGK
-         EkQHXhBsLlw6b85PDHQzvL++X3mouWrdjEp8glXt8nqZ+2uD2fK1bI8mM6+DUnnBC27q
-         QM/JuTnvFlzkgYNH0eAA6c8+SlGpgYBCzErOZ/7d8g5J7pNm9OsX+Y0LNmfPqj6qDxo6
-         312m/8FV69MXUuQNWqcT2DRaFhwEnrLk/gyV7FzLNwdn1Ds1Mm2Mp30F3FFVQIG2Wnpr
-         GybnsYDaw/16+0slcnPW6SmFNoD66eTjshcnyEd7IfutfGL/qo66T9hvA/ub8O3/qZH3
-         xNkA==
+        bh=yTrKoeSx5DVhv4GKSGEZu42X2Dj3HZfus9gjzjDWtLo=;
+        b=jZdbFV5860QLbLI4Aa30pkXGVvf+mub3Ozvr8NOYxoqL2q2lY6k1RukB4ekJ9Ge9vE
+         5HusUBWHxsYowhC1HNVmkARaR784eKvj8c8Px5UmFTpgoL6Fo+/iaeVOzrkqLwo9teQV
+         f23FzTjLkEgi/dZpwJZACmP4vgT46hbuJY8Qo+ZlkdLXo9tdGQEnv8ULNf2sdgELeVVO
+         6S/JPmxEcZzYdosOKNEeph3F+ozBkNtZyttgwTpbQekwTLC7Ur7whgHT2bZwEKN0yoXE
+         /z3tLz2NHCZ59F4caRfn5BT4fMk7f0vJY3IiSxMp3gs4y2oWPlwk5ng7YlDYtCaWKFUG
+         wk2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
          :references:content-transfer-encoding:user-agent:mime-version;
-        bh=Yc/wWn41RLKXg/XnDWEYh5EY0Xa2lFOxeQbAbMbqZYE=;
-        b=fCk8Wz2C7eOtI40iVSrAAW9ob6MY2EChZ+i8iSicJJEYwbsP6HP95JIGBCaT1W59bU
-         yPAAHW4B3IEzIz5i5iBfG9bnb9Z9erIEHF8S5XMPNC22LIPUetnYz7djT/02+Bfpmu+T
-         6soojUoJNnRUeuNtDkPhhfplIqC0TSnYDn0lxNTOZJ6g6DkTBe2+aiSEGewg0u96ebi7
-         /n+ZttfZjJKfzyxLruyIWLQhysiMaFSCgBqD4M9fTywMOX3IbBtQztPqfLHsxhi7JSmw
-         8G55oHxbhZ+vS7dzxwwt3LqKqHS/IviSRAQVO++K7cXGa8n/a+85EeW3dB6SSRTMOeSG
-         F7BA==
-X-Gm-Message-State: AOAM530nF2qWP85E1PvgTk0fqQMvxS0CTX9nVMCdIHGyiHwoi0/kOKZJ
-        XUefE2nIcfQfyYBrtoNh4Qw=
-X-Google-Smtp-Source: ABdhPJwgZCaM62cQhYnGhI4Q6cYrvzn4LhpwjTyTaV76k6roT6RgmeQUAp8ZTiwGLC8u1ncWDCT3iw==
-X-Received: by 2002:a17:906:4fcb:b0:6e8:74db:6b04 with SMTP id i11-20020a1709064fcb00b006e874db6b04mr18370997ejw.676.1650458916931;
-        Wed, 20 Apr 2022 05:48:36 -0700 (PDT)
+        bh=yTrKoeSx5DVhv4GKSGEZu42X2Dj3HZfus9gjzjDWtLo=;
+        b=ASAXt+JCyQLCmCl4G3UTOZGj556VPVdJS66IYLdsW7i8/unSx6DCIV6Ja53iJS1mq9
+         2hE0sKWzmRYDpccCd8IkSxYkRLFUSePKCBn7lAims+07H+zO4UJBRx/47rUOVK+h4zzh
+         XfGEBB/oBSMFJtS5L2UbUnR04px+BPpAzeptaK30puscpsRrrhbRwafY1LRzsqN3lzVO
+         qJkjDcDsGBRzrkMlLmWWQh4Vksvzu/ic36QYE5ElnqgoYDwaUzhrF6Xgc9ylttuIj78+
+         jQlIoEQToefs0Wf523byGeqvLgELpTc1FdHVemA9XsPH9e/I3aruNn/BDW4/kKAPPvPG
+         7ReA==
+X-Gm-Message-State: AOAM531CTFy9z8LCqZTBoHrUMagP6yE7+g8Ofw7GysKwjVnellIfrUau
+        gbTwp8G0M8cXwvyWQ5EelFE=
+X-Google-Smtp-Source: ABdhPJzcEcvHPxV6MF5NXWWou4veSt8SMjyDNTprQ4qC/0zHlveZsQAso1FXieKDqSDP6jt5ZtjyEg==
+X-Received: by 2002:a05:6402:3592:b0:423:d71e:41dc with SMTP id y18-20020a056402359200b00423d71e41dcmr20806464edc.402.1650460902000;
+        Wed, 20 Apr 2022 06:21:42 -0700 (PDT)
 Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
-        by smtp.googlemail.com with ESMTPSA id p9-20020a05640243c900b0041facb9ac9esm196948edc.1.2022.04.20.05.48.36
+        by smtp.googlemail.com with ESMTPSA id g24-20020a056402321800b00423e43ebb60sm4827837eda.61.2022.04.20.06.21.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Apr 2022 05:48:36 -0700 (PDT)
-Message-ID: <db1551628c191c8efdc2e7bec1313c58636c995e.camel@gmail.com>
-Subject: Re: [PATCH v2 1/5] scsi: ufshpb: Merge ufshpb_reset() and
- ufshpb_reset_host()
+        Wed, 20 Apr 2022 06:21:41 -0700 (PDT)
+Message-ID: <d26393a3323dc646df88fb09ee47d712c80eafc9.camel@gmail.com>
+Subject: Re: [PATCH v2 4/5] scsi: ufshpb: Add handing of device reset HPB
+ regions Infos in HPB device mode
 From:   Bean Huo <huobean@gmail.com>
 To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
         "avri.altman@wdc.com" <avri.altman@wdc.com>,
@@ -67,12 +67,12 @@ To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
         cpgsproxy3 <cpgsproxy3@samsung.com>
 Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Wed, 20 Apr 2022 14:48:35 +0200
-In-Reply-To: <1891546521.01650433981606.JavaMail.epsvc@epcpadp4>
-References: <20220419183044.789065-2-huobean@gmail.com>
+Date:   Wed, 20 Apr 2022 15:21:41 +0200
+In-Reply-To: <1381713434.41650433982422.JavaMail.epsvc@epcpadp4>
+References: <20220419183044.789065-5-huobean@gmail.com>
          <20220419183044.789065-1-huobean@gmail.com>
-         <CGME20220419183926epcas2p4f529c4cc6bed9ba4b6536f3a5977c3f2@epcms2p8>
-         <1891546521.01650433981606.JavaMail.epsvc@epcpadp4>
+         <CGME20220419183934epcas2p28272bfd9167253c2d9136c60f9050c5f@epcms2p7>
+         <1381713434.41650433982422.JavaMail.epsvc@epcpadp4>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.0-1 
@@ -81,16 +81,51 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2022-04-20 at 11:47 +0900, Keoseong Park wrote:
-> > +void ufshpb_toggle(struct ufs_hba *hba, enum UFSHPB_STATE src,
-> > enum UFSHPB_STATE dest)
-> How about changing it to something like ufshpb_state_toggle()?
->=20
-> Best Regards,
-> Keoseong Park
+On Wed, 2022-04-20 at 14:31 +0900, Keoseong Park wrote:
+> > +/**
+> > + *ufshpb_submit_region_inactive() - submit a region to be
+> > inactivated later
+> > + *@hpb: per-LU HPB instance
+> > + *@region_index: the index associated with the region that will be
+> > inactivated later
+> > + */
+> > +static void ufshpb_submit_region_inactive(struct ufshpb_lu *hpb,
+> > int region_index)
+> > +{
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int subregion_index;
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct ufshpb_region *rgn;
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct ufshpb_subregion *sr=
+gn;
+> > +
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * Remove this region =
+from active region list and add it
+> > to inactive list
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_lock(&hpb->rsp_list_lo=
+ck);
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshpb_update_inactive_info=
+(hpb, region_index);
+> How about separating the "hpb->stats.rb_inactive_cnt++" code from
+> ufshpb_update_inactive_info()?
+> Because I think this code should only be used in
+> ufshpb_rsp_req_region_update().
 
-ufshpb_state_toggle() is much better, I will change it in the next
-version. Thanks.
+
+based on Documentation/ABI/testing/sysfs-driver-ufs:
+
+"What:       /sys/class/scsi_device/*/device/hpb_stats/rb_inactive_cnt
+Date:       June 2021
+Contact:    Daejun Park <daejun7.park@samsung.com>
+Description:    This entry shows the number of inactive regions
+recommended by  response UPIUs."
+
+
+This parameter should be increased only when recieving inactive
+recommended.
+
+I will change it in the next version, thanks.
+
 
 Kind regards,
 Bean
