@@ -2,252 +2,206 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F921C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 03:05:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 957A3C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 05:53:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359184AbiDTDIJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Apr 2022 23:08:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37556 "EHLO
+        id S1359429AbiDTFzv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Apr 2022 01:55:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359101AbiDTDHz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 23:07:55 -0400
-Received: from mail-ot1-x329.google.com (mail-ot1-x329.google.com [IPv6:2607:f8b0:4864:20::329])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE5533CA72
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 20:04:24 -0700 (PDT)
-Received: by mail-ot1-x329.google.com with SMTP id c11-20020a9d684b000000b00603307cef05so281658oto.3
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 20:04:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=bOmRDQWsh4LJc0ss61NPg8qXWsb+khLjGhqRuXFnjwU=;
-        b=bAEDSRKGCAmjsYmi9/pGay3D0pg8XPKtai9P6r0xgeBxSvo/ORnSkYRuFaosMAmpIm
-         nX0hcjiP+JLYhFwZV9lLNoDJJLxWmpnJ1bwoIl/X+JqOwSWxtgxYbmbtrjnbhCWawuiI
-         CDW+0mkGLvbIgFonVOAi23HNXaoruJtORwESlKapCUBFiCpNMjC4melyj20KJERAOozu
-         /hfgJ+4d6KBH8nfbeUEEq0OHBbGj9MAxmzSgmCV95g7a9tRJBI72nUSCX+pvbplvu7jo
-         uNJL1NrL0/ianvgdM2Pr3oVaoWnw/ozCqhzjYGz5QT6L6WZPBtJm+N75mg0Ui4cEX9/a
-         d03w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=bOmRDQWsh4LJc0ss61NPg8qXWsb+khLjGhqRuXFnjwU=;
-        b=NroLb6DaS3MusEdAJIoLcqhEiul6+pOrLuCuZYyyTiFrX/UwBfWQrZfBHNaH+kKYYs
-         HwkUvRQeE3oYjqw1iHXYS1K29K3ako5bEi3ldAyhFvFZUac3iKCOORltG9NPEQKMBkIe
-         qejiBl41+mFGGL08du51KkSOWusAEIqBMRWLydj6UaEbBc2XJCKtjDU5K9KktKjCMTsq
-         j2KyD6IfkQrYL8o/ap+B6oAw+JWoNONoAq0Fou+NcrXoCu8T/Amva3fvIQ/mlMNmzhfY
-         XiM+SE2A8c7jPtsBE9LDV31WAzHbhx0dUSTmGvhNknfKQkdKEYuNanxMVZmxEID/uoHH
-         4NHA==
-X-Gm-Message-State: AOAM530lTn4RFdHbJhEHg8CRy1qI/Q4Fu+Fow56h4rufeqOxZvt1JcdL
-        aBbG1ISZI1YFRGlEZxX4uMMNtw==
-X-Google-Smtp-Source: ABdhPJz78HNHOCUdlI0fxzBVktGevGVhmjxibFmoHtIZNr8U2JMJL+kspGLrc1H8lG7ze5d0XHe6Gg==
-X-Received: by 2002:a9d:7685:0:b0:5e6:b452:4e9 with SMTP id j5-20020a9d7685000000b005e6b45204e9mr7073498otl.254.1650423864144;
-        Tue, 19 Apr 2022 20:04:24 -0700 (PDT)
-Received: from ripper ([2600:1700:a0:3dc8:205:1bff:fec0:b9b3])
-        by smtp.gmail.com with ESMTPSA id x24-20020a056870a79800b000e2e53716fbsm6121695oao.31.2022.04.19.20.04.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Apr 2022 20:04:23 -0700 (PDT)
-Date:   Tue, 19 Apr 2022 20:06:28 -0700
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Taniya Das <tdas@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
-Message-ID: <Yl94tB+FrZu/am0/@ripper>
-References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
- <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
- <YlWztZknl4OBmekp@ripper>
- <02fc797a-190f-3558-5ee1-c9c3320f3d57@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <02fc797a-190f-3558-5ee1-c9c3320f3d57@linaro.org>
+        with ESMTP id S1350030AbiDTFzu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 01:55:50 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89049DED2
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 22:53:04 -0700 (PDT)
+Received: from epcas3p4.samsung.com (unknown [182.195.41.22])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220420055302epoutp030c6e567abbeba21487a28a1828cdecc8~nhPZrMSEg0160501605epoutp03d
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2022 05:53:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220420055302epoutp030c6e567abbeba21487a28a1828cdecc8~nhPZrMSEg0160501605epoutp03d
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1650433982;
+        bh=lcRQV78t3Jw2wIP2pxcHG8gRk4NGI/jXuQE0HrIpy4c=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=GLA3mmE8p5xTi2QQgb7tCJsvJtAYCzIwjkgV7dKUxjyEgRAuBYY5PpSlnUvfVQv7D
+         zHH3mpWhh2+OUcEMI25gnrIYoP01sY4IYNy1GmRLb4FrpiqnJCDpyh/cVHYwQ4U6tU
+         bZEjQ+TvynLQpKIe1zsxWI7Ip87JsM1XyGAx11oQ=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas3p2.samsung.com (KnoxPortal) with ESMTP id
+        20220420055301epcas3p2d8bd2308bc8c2011be07177187d88aff~nhPZEC82m0546205462epcas3p2i;
+        Wed, 20 Apr 2022 05:53:01 +0000 (GMT)
+Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp4.localdomain
+        (Postfix) with ESMTP id 4Kjqb14TP8z4x9QJ; Wed, 20 Apr 2022 05:53:01 +0000
+        (GMT)
+Mime-Version: 1.0
+Subject: RE: [PATCH v2 1/5] scsi: ufshpb: Merge ufshpb_reset() and
+ ufshpb_reset_host()
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From:   Keoseong Park <keosung.park@samsung.com>
+To:     Bean Huo <huobean@gmail.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        cpgsproxy3 <cpgsproxy3@samsung.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <20220419183044.789065-2-huobean@gmail.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <1891546521.01650433981606.JavaMail.epsvc@epcpadp4>
+Date:   Wed, 20 Apr 2022 11:47:22 +0900
+X-CMS-MailID: 20220420024722epcms2p8f6db75c668cf6df9496ee9d309dfa73a
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20220419183926epcas2p4f529c4cc6bed9ba4b6536f3a5977c3f2
+References: <20220419183044.789065-2-huobean@gmail.com>
+        <20220419183044.789065-1-huobean@gmail.com>
+        <CGME20220419183926epcas2p4f529c4cc6bed9ba4b6536f3a5977c3f2@epcms2p8>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed 13 Apr 02:07 PDT 2022, Krzysztof Kozlowski wrote:
+Hi Bean,
 
-> On 12/04/2022 19:15, Bjorn Andersson wrote:
-> >>  
-> >> +	opp_table->clks = kmalloc_array(1, sizeof(*opp_table->clks),
-> >> +					GFP_KERNEL);
-> > 
-> > This seems to be 81 chars long, perhaps worth not line breaking?
+>From: Bean Huo <beanhuo@micron.com>
 > 
-> I doubt that it will increase the readability:
+>There is no functional change in this patch, just merge ufshpb_reset() and
+>ufshpb_reset_host() into one function ufshpb_toggle()
 > 
-> 	opp_table->clks = kmalloc_array(1,
-> 					sizeof(*opp_table->clks),
-> 					GFP_KERNEL);
+>Signed-off-by: Bean Huo <beanhuo@micron.com>
+>---
+> drivers/scsi/ufs/ufshcd.c |  4 ++--
+> drivers/scsi/ufs/ufshpb.c | 36 +++++++++++++-----------------------
+> drivers/scsi/ufs/ufshpb.h |  6 ++----
+> 3 files changed, 17 insertions(+), 29 deletions(-)
 > 
-> 80-character is not anymore that strict hard limit and in such case
-> using 1-2 characters longer improves the code.
+>diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>index 0899d5b8cdad..de0bc53e3ac6 100644
+>--- a/drivers/scsi/ufs/ufshcd.c
+>+++ b/drivers/scsi/ufs/ufshcd.c
+>@@ -7223,7 +7223,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+>          * Stop the host controller and complete the requests
+>          * cleared by h/w
+>          */
+>-        ufshpb_reset_host(hba);
+>+        ufshpb_toggle(hba, HPB_PRESENT, HPB_RESET);
+>         ufshcd_hba_stop(hba);
+>         hba->silence_err_logs = true;
+>         ufshcd_complete_requests(hba);
+>@@ -8184,7 +8184,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+>         /* Enable Auto-Hibernate if configured */
+>         ufshcd_auto_hibern8_enable(hba);
 > 
+>-        ufshpb_reset(hba);
+>+        ufshpb_toggle(hba, HPB_RESET, HPB_PRESENT);
+> out:
+>         spin_lock_irqsave(hba->host->host_lock, flags);
+>         if (ret)
+>diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+>index 3ca745ad616c..9df032e82ec3 100644
+>--- a/drivers/scsi/ufs/ufshpb.c
+>+++ b/drivers/scsi/ufs/ufshpb.c
+>@@ -2278,38 +2278,28 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
+>         return flag_res;
+> }
+> 
+>-void ufshpb_reset(struct ufs_hba *hba)
+>+/**
+>+ * ufshpb_toggle - switch HPB state of all LUs
+>+ * @hba: per-adapter instance
+>+ * @src: expected current HPB state
+>+ * @dest: target HPB state to switch to
+>+ */
+>+void ufshpb_toggle(struct ufs_hba *hba, enum UFSHPB_STATE src, enum UFSHPB_STATE dest)
+How about changing it to something like ufshpb_state_toggle()?
 
-I was suggesting that you remove the line break
+Best Regards,
+Keoseong Park
 
-	opp_table->clks = kmalloc_array(1, sizeof(*opp_table->clks), GFP_KERNEL);
-
-Seems to be 81 chars long, which is fine in my book with or without the
-80-char guideline.
-
-> > 
-> >> +	if (!opp_table->clks)
-> >> +		return ERR_PTR(-ENOMEM);
-> >> +
-> >>  	/* Find clk for the device */
-> >> -	opp_table->clk = clk_get(dev, NULL);
-> >> +	opp_table->clks[0] = clk_get(dev, NULL);
-> >>  
-> >> -	ret = PTR_ERR_OR_ZERO(opp_table->clk);
-> >> -	if (!ret)
-> >> +	ret = PTR_ERR_OR_ZERO(opp_table->clks[0]);
-> >> +	if (!ret) {
-> >> +		opp_table->clk_count = 1;
-> >>  		return opp_table;
-> >> +	}
-> > [..]
-> >> +struct opp_table *dev_pm_opp_set_clknames(struct device *dev,
-> >> +					  const char * const names[],
-> >> +					  unsigned int count)
-> >>  {
-> >>  	struct opp_table *opp_table;
-> >> -	int ret;
-> >> +	struct clk *clk;
-> >> +	int ret, i;
-> >>  
-> >>  	opp_table = _add_opp_table(dev, false);
-> >>  	if (IS_ERR(opp_table))
-> >> @@ -2159,70 +2259,92 @@ struct opp_table *dev_pm_opp_set_clkname(struct device *dev, const char *name)
-> >>  	}
-> >>  
-> >>  	/* clk shouldn't be initialized at this point */
-> >> -	if (WARN_ON(opp_table->clk)) {
-> >> +	if (WARN_ON(opp_table->clks)) {
-> >>  		ret = -EBUSY;
-> >>  		goto err;
-> >>  	}
-> >>  
-> >> -	/* Find clk for the device */
-> >> -	opp_table->clk = clk_get(dev, name);
-> >> -	if (IS_ERR(opp_table->clk)) {
-> >> -		ret = dev_err_probe(dev, PTR_ERR(opp_table->clk),
-> >> -				    "%s: Couldn't find clock\n", __func__);
-> >> +	opp_table->clks = kmalloc_array(count, sizeof(*opp_table->clks),
-> >> +					GFP_KERNEL);
-> >> +	if (!opp_table->clks) {
-> >> +		ret = -ENOMEM;
-> >>  		goto err;
-> >>  	}
-> >>  
-> >> +	for (i = 0; i < count; i++) {
-> >> +		clk = clk_get(dev, names[i]);
-> >> +		if (IS_ERR(clk)) {
-> >> +			ret =  dev_err_probe(dev, PTR_ERR(clk),
-> >> +					     "%s: Couldn't find clock %s\n",
-> >> +					     __func__, names[i]);
-> >> +			goto free_clks;
-> >> +		}
-> >> +
-> >> +		opp_table->clks[i] = clk;
-> >> +	}
-> > 
-> > Wouldn't it be convenient to make clks a struct clk_bulk_data array
-> > and use clk_bulk_get()/clk_bulk_put() instead?
+> {
+>         struct ufshpb_lu *hpb;
+>         struct scsi_device *sdev;
 > 
-> I was thinking about this but clk_bulk_get() requires struct
-> clk_bulk_data, so the code in "get" is not actually smaller if function
-> receives array of clock names.
+>         shost_for_each_device(sdev, hba->host) {
+>                 hpb = ufshpb_get_hpb_data(sdev);
+>-                if (!hpb)
+>-                        continue;
+>-
+>-                if (ufshpb_get_state(hpb) != HPB_RESET)
+>-                        continue;
+>-
+>-                ufshpb_set_state(hpb, HPB_PRESENT);
+>-        }
+>-}
+>-
+>-void ufshpb_reset_host(struct ufs_hba *hba)
+>-{
+>-        struct ufshpb_lu *hpb;
+>-        struct scsi_device *sdev;
 > 
-> OTOH, usage of clk_bulk_get() would reduce code in: _put_clocks(). Rest
-> of the code would be more-or-less the same, including all corner cases
-> when clocks are missing.
+>-        shost_for_each_device(sdev, hba->host) {
+>-                hpb = ufshpb_get_hpb_data(sdev);
+>-                if (!hpb)
+>+                if (!hpb || ufshpb_get_state(hpb) != src)
+>                         continue;
+>+                ufshpb_set_state(hpb, dest);
 > 
-
-Fair enough, I think you're right that it's not going to be much
-difference.
-
-Regards,
-Bjorn
-
-
-> > 
-> >> +
-> >> +	opp_table->clk_count = count;
-> >> +
-> >>  	return opp_table;
-> >>  
-> >> +free_clks:
-> >> +	while (i != 0)
-> >> +		clk_put(opp_table->clks[--i]);
-> >> +
-> >> +	kfree(opp_table->clks);
-> >> +	opp_table->clks = NULL;
-> >> +	opp_table->clk_count = -1;
-> >>  err:
-> >>  	dev_pm_opp_put_opp_table(opp_table);
-> >>  
-> >>  	return ERR_PTR(ret);
-> >>  }
-> >> -EXPORT_SYMBOL_GPL(dev_pm_opp_set_clkname);
-> >> +EXPORT_SYMBOL_GPL(dev_pm_opp_set_clknames);
-> > [..]
-> >> +static int _read_clocks(struct dev_pm_opp *opp, struct opp_table *opp_table,
-> >> +			struct device_node *np)
-> >> +{
-> >> +	int count, ret;
-> >> +	u64 *freq;
-> >> +
-> >> +	count = of_property_count_u64_elems(np, "opp-hz");
-> >> +	if (count < 0) {
-> >> +		pr_err("%s: Invalid %s property (%d)\n",
-> >> +			__func__, of_node_full_name(np), count);
-> > 
-> > Wouldn't %pOF be convenient to use here, seems like it becomes short
-> > enough that you don't have to wrap this line then.
+>-                if (ufshpb_get_state(hpb) != HPB_PRESENT)
+>-                        continue;
+>-                ufshpb_set_state(hpb, HPB_RESET);
+>-                ufshpb_cancel_jobs(hpb);
+>-                ufshpb_discard_rsp_lists(hpb);
+>+                if (dest == HPB_RESET) {
+>+                        ufshpb_cancel_jobs(hpb);
+>+                        ufshpb_discard_rsp_lists(hpb);
+>+                }
+>         }
+> }
 > 
-> Yes, I forgot about %pOF.
-> 
-> > 
-> >> +		return count;
-> >> +	}
-> >> +
-> >> +	if (count != opp_table->clk_count) {
-> >> +		pr_err("%s: number of rates %d does not match number of clocks %d in %s\n",
-> >> +		       __func__, count, opp_table->clk_count,
-> >> +		       of_node_full_name(np));
-> >> +		return -EINVAL;
-> >> +	}
-> >> +
-> >> +	freq = kmalloc_array(count, sizeof(*freq), GFP_KERNEL);
-> >> +	if (!freq)
-> >> +		return -ENOMEM;
-> >> +
-> >> +	ret = of_property_read_u64_array(np, "opp-hz", freq, count);
-> >> +	if (ret) {
-> >> +		pr_err("%s: error parsing %s: %d\n", __func__,
-> >> +		       of_node_full_name(np), ret);
-> >> +		ret = -EINVAL;
-> >> +		goto free_freq;
-> >> +	}
-> > 
-> > Regards,
-> > Bjorn
+>diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+>index b475dbd78988..2825ec69a6a6 100644
+>--- a/drivers/scsi/ufs/ufshpb.h
+>+++ b/drivers/scsi/ufs/ufshpb.h
+>@@ -288,8 +288,7 @@ static int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp) { return 0;
+> static void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp) {}
+> static void ufshpb_resume(struct ufs_hba *hba) {}
+> static void ufshpb_suspend(struct ufs_hba *hba) {}
+>-static void ufshpb_reset(struct ufs_hba *hba) {}
+>-static void ufshpb_reset_host(struct ufs_hba *hba) {}
+>+static void ufshpb_toggle(struct ufs_hba *hba, enum UFSHPB_STATE src, enum UFSHPB_STATE dest) {}
+> static void ufshpb_init(struct ufs_hba *hba) {}
+> static void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev) {}
+> static void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev) {}
+>@@ -303,8 +302,7 @@ int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
+> void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
+> void ufshpb_resume(struct ufs_hba *hba);
+> void ufshpb_suspend(struct ufs_hba *hba);
+>-void ufshpb_reset(struct ufs_hba *hba);
+>-void ufshpb_reset_host(struct ufs_hba *hba);
+>+void ufshpb_toggle(struct ufs_hba *hba, enum UFSHPB_STATE src, enum UFSHPB_STATE dest);
+> void ufshpb_init(struct ufs_hba *hba);
+> void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev);
+> void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev);
+>-- 
+>2.34.1
 > 
 > 
-> Best regards,
-> Krzysztof
