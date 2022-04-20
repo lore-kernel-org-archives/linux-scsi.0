@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2941C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 12:21:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2851EC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 12:22:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353046AbiDTMY3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Apr 2022 08:24:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36816 "EHLO
+        id S1357156AbiDTMZ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Apr 2022 08:25:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243205AbiDTMY2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 08:24:28 -0400
+        with ESMTP id S1357045AbiDTMZ2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 08:25:28 -0400
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF0FA31217;
-        Wed, 20 Apr 2022 05:21:41 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B895338BF0;
+        Wed, 20 Apr 2022 05:22:42 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 5EAEC21118;
-        Wed, 20 Apr 2022 12:21:40 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 6D0F621115;
+        Wed, 20 Apr 2022 12:22:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1650457300; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1650457361; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=KK1r6VYYIt7hQrJ5dgHOs6wdcfyWeyUTEorKnVY1GCc=;
-        b=tb0SXgOpxO9hJ7cHc8EZwwW2GR7DXAkFGFCMZBezwuJiz1+h4z7ew/vd7lAeOT6i/CzohK
-        oaNFI/sxI1eE2YnImaIoEwzvi4iEdnJebn1M6IC7oJFyioMxJiLxyu1KecDb2B2zeqzKaM
-        B7NTOvI5srPygt4ZKoIf62QB/9E0vNM=
+        bh=WHPjzzOO54qwc4Uzs2IsZR10ev/XyXj4PFhP8vWexWQ=;
+        b=ix3HWDGRLUOZCCZEPEmw5KeLE9w2iGFPkNfbRnlZ/ynXJd2JBk4o/Ro3aSZYBTiIWP/HMY
+        OsMRXg0TiQlwMtaBRT0+G4TQ10v4vtt5JReMNfrlX0L1i25GDCJzW7MDQnQ3MoVSA4Xqd6
+        YogH05//3Muk7cAw620RHcnEubR8Rps=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1650457300;
+        s=susede2_ed25519; t=1650457361;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=KK1r6VYYIt7hQrJ5dgHOs6wdcfyWeyUTEorKnVY1GCc=;
-        b=ba/xWdB7dUDuFdWlkX+w2EccmN4BPb5FEB0y69Fy8JwzRxyW3I3yG8Wc8Q7hwO8BEOry73
-        pQsYbzPluHOa3OAA==
+        bh=WHPjzzOO54qwc4Uzs2IsZR10ev/XyXj4PFhP8vWexWQ=;
+        b=UT9LthruI0/sp/QuHtb2Os6u3DxwOVMJS5GwR/HBUk9nV1VwATTyiN1Mdvi+0vvxBIeJDy
+        8ebYaFLXmUVLsZDg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3784613A30;
-        Wed, 20 Apr 2022 12:21:40 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3EA5D13A30;
+        Wed, 20 Apr 2022 12:22:41 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id ek+ZC9T6X2JXYQAAMHmgww
-        (envelope-from <hare@suse.de>); Wed, 20 Apr 2022 12:21:40 +0000
-Message-ID: <929aede0-9e58-9c3d-5951-6151a3281edd@suse.de>
-Date:   Wed, 20 Apr 2022 14:21:39 +0200
+        id 7eNODRH7X2LQYQAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 20 Apr 2022 12:22:41 +0000
+Message-ID: <3e9c9954-8b0d-6bf5-3321-4deeb4ca77bf@suse.de>
+Date:   Wed, 20 Apr 2022 14:22:40 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH 1/4] scsi: libsas: Add sas_execute_internal_abort_single()
+Subject: Re: [PATCH 2/4] scsi: libsas: Add sas_execute_internal_abort_dev()
 Content-Language: en-US
 To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
         martin.petersen@oracle.com, jinpu.wang@cloud.ionos.com,
@@ -63,9 +63,9 @@ Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Viswas.G@microchip.com, hch@lst.de, liuqi115@huawei.com,
         chenxiang66@hisilicon.com
 References: <1646309930-138960-1-git-send-email-john.garry@huawei.com>
- <1646309930-138960-2-git-send-email-john.garry@huawei.com>
+ <1646309930-138960-3-git-send-email-john.garry@huawei.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <1646309930-138960-2-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1646309930-138960-3-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -73,128 +73,70 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 3/3/22 13:18, John Garry wrote:
-> The internal abort feature is common to hisi_sas and pm8001 HBAs, and the
-> driver support is similar also, so add a common handler.
-> 
-> Two modes of operation will be supported:
-> - single: Abort a single tagged command
-> - device: Abort all commands associated with a specific domain device
-> 
-> A new protocol is added, SAS_PROTOCOL_INTERNAL_ABORT, so the common queue
-> command API may be re-used.
-> 
-> Only add "single" support as a first step.
+> Add support for a "device" variant of internal abort, which will abort all
+> pending IOs for a specific device.
 > 
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->   drivers/scsi/libsas/sas_scsi_host.c | 75 +++++++++++++++++++++++++++++
->   include/scsi/libsas.h               | 14 ++++++
->   include/scsi/sas.h                  |  2 +
->   3 files changed, 91 insertions(+)
+>   drivers/scsi/libsas/sas_scsi_host.c | 8 ++++++++
+>   include/scsi/libsas.h               | 8 ++++++++
+>   2 files changed, 16 insertions(+)
 > 
 > diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-> index 5b5747e33dbd..0d05826e6e8c 100644
+> index 0d05826e6e8c..8d6c83d15148 100644
 > --- a/drivers/scsi/libsas/sas_scsi_host.c
 > +++ b/drivers/scsi/libsas/sas_scsi_host.c
-> @@ -920,6 +920,81 @@ void sas_task_internal_timedout(struct timer_list *t)
->   #define TASK_TIMEOUT			(20 * HZ)
->   #define TASK_RETRY			3
+> @@ -995,6 +995,14 @@ int sas_execute_internal_abort_single(struct domain_device *device, u16 tag,
+>   }
+>   EXPORT_SYMBOL_GPL(sas_execute_internal_abort_single);
 >   
-> +static int sas_execute_internal_abort(struct domain_device *device,
-> +				      enum sas_internal_abort type, u16 tag,
-> +				      unsigned int qid, void *data)
+> +int sas_execute_internal_abort_dev(struct domain_device *device,
+> +				   unsigned int qid, void *data)
 > +{
-> +	struct sas_ha_struct *ha = device->port->ha;
-> +	struct sas_internal *i = to_sas_internal(ha->core.shost->transportt);
-> +	struct sas_task *task = NULL;
-> +	int res, retry;
-> +
-> +	for (retry = 0; retry < TASK_RETRY; retry++) {
-> +		task = sas_alloc_slow_task(GFP_KERNEL);
-> +		if (!task)
-> +			return -ENOMEM;
-> +
-> +		task->dev = device;
-> +		task->task_proto = SAS_PROTOCOL_INTERNAL_ABORT;
-> +		task->task_done = sas_task_internal_done;
-> +		task->slow_task->timer.function = sas_task_internal_timedout;
-> +		task->slow_task->timer.expires = jiffies + TASK_TIMEOUT;
-> +		add_timer(&task->slow_task->timer);
-> +
-> +		task->abort_task.tag = tag;
-> +		task->abort_task.type = type;
-> +
-> +		res = i->dft->lldd_execute_task(task, GFP_KERNEL);
-> +		if (res) {
-> +			del_timer_sync(&task->slow_task->timer);
-> +			pr_err("Executing internal abort failed %016llx (%d)\n",
-> +			       SAS_ADDR(device->sas_addr), res);
-> +			break;
-> +		}
-> +
-> +		wait_for_completion(&task->slow_task->completion);
-> +		res = TMF_RESP_FUNC_FAILED;
-> +
-> +		/* Even if the internal abort timed out, return direct. */
-> +		if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
-> +			pr_err("Internal abort: timeout %016llx\n",
-> +			       SAS_ADDR(device->sas_addr));
-> +
-> +			res = -EIO;
-> +			break;
-> +		}
-> +
-> +		if (task->task_status.resp == SAS_TASK_COMPLETE &&
-> +			task->task_status.stat == SAS_SAM_STAT_GOOD) {
-> +			res = TMF_RESP_FUNC_COMPLETE;
-> +			break;
-> +		}
-> +
-> +		if (task->task_status.resp == SAS_TASK_COMPLETE &&
-> +			task->task_status.stat == TMF_RESP_FUNC_SUCC) {
-> +			res = TMF_RESP_FUNC_SUCC;
-> +			break;
-> +		}
-> +
-> +		pr_err("Internal abort: task to dev %016llx response: 0x%x status 0x%x\n",
-> +		       SAS_ADDR(device->sas_addr), task->task_status.resp,
-> +		       task->task_status.stat);
-> +		sas_free_task(task);
-> +		task = NULL;
-> +	}
-> +	BUG_ON(retry == TASK_RETRY && task != NULL);
-> +	sas_free_task(task);
-> +	return res;
+> +	return sas_execute_internal_abort(device, SAS_INTERNAL_ABORT_DEV,
+> +					  SCSI_NO_TAG, qid, data);
 > +}
-> +
-> +int sas_execute_internal_abort_single(struct domain_device *device, u16 tag,
-> +				      unsigned int qid, void *data)
-> +{
-> +	return sas_execute_internal_abort(device, SAS_INTERNAL_ABORT_SINGLE,
-> +					  tag, qid, data);
-> +}
-> +EXPORT_SYMBOL_GPL(sas_execute_internal_abort_single);
+> +EXPORT_SYMBOL_GPL(sas_execute_internal_abort_dev);
 > +
 >   int sas_execute_tmf(struct domain_device *device, void *parameter,
 >   		    int para_len, int force_phy_id,
 >   		    struct sas_tmf_task *tmf)
 > diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index df2c8fc43429..2d30d57916e5 100644
+> index 2d30d57916e5..71f632b2d2bd 100644
 > --- a/include/scsi/libsas.h
 > +++ b/include/scsi/libsas.h
-> @@ -557,6 +557,16 @@ struct sas_ata_task {
->   	int    force_phy_id;
+> @@ -560,6 +560,7 @@ struct sas_ata_task {
+>   /* LLDDs rely on these values */
+>   enum sas_internal_abort {
+>   	SAS_INTERNAL_ABORT_SINGLE	= 0,
+> +	SAS_INTERNAL_ABORT_DEV		= 1,
 >   };
 >   
-> +/* LLDDs rely on these values */
-> +enum sas_internal_abort {
-> +	SAS_INTERNAL_ABORT_SINGLE	= 0,
-> +};
+>   struct sas_internal_abort_task {
+> @@ -641,6 +642,11 @@ extern struct sas_task *sas_alloc_task(gfp_t flags);
+>   extern struct sas_task *sas_alloc_slow_task(gfp_t flags);
+>   extern void sas_free_task(struct sas_task *task);
+>   
+> +static inline bool sas_is_internal_abort(struct sas_task *task)
+> +{
+> +	return task->task_proto == SAS_PROTOCOL_INTERNAL_ABORT;
+> +}
 > +
+>   struct sas_domain_function_template {
+>   	/* The class calls these to notify the LLDD of an event. */
+>   	void (*lldd_port_formed)(struct asd_sas_phy *);
+> @@ -697,6 +703,8 @@ extern int sas_bios_param(struct scsi_device *, struct block_device *,
+>   int sas_execute_internal_abort_single(struct domain_device *device,
+>   				      u16 tag, unsigned int qid,
+>   				      void *data);
+> +int sas_execute_internal_abort_dev(struct domain_device *device,
+> +				   unsigned int qid, void *data);
+>   extern struct scsi_transport_template *
+>   sas_domain_attach_transport(struct sas_domain_function_template *);
+>   extern struct device_attribute dev_attr_phy_event_threshold;
 
-Why don't you use the existing TMF_XXX values here?
-Your 'single' method pretty much _is_ a TMF_ABORT_TASK, and the 'device' 
-method _is_ a TMF_ABORT_TASK_SET, no?
+Same comment as in the previous patch: Please use the existing TMF_XXX 
+values.
 
 Cheers,
 
