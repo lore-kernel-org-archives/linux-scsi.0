@@ -2,25 +2,25 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5023C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 02:55:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C159C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 02:55:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359084AbiDTC5w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Apr 2022 22:57:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55004 "EHLO
+        id S1355149AbiDTC54 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Apr 2022 22:57:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359076AbiDTC5s (ORCPT
+        with ESMTP id S1359070AbiDTC5s (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Apr 2022 22:57:48 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C8C316336;
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 79BD92DC0;
         Tue, 19 Apr 2022 19:55:03 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.90,274,1643641200"; 
-   d="scan'208";a="117395951"
+   d="scan'208";a="118516277"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 20 Apr 2022 11:55:00 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 20 Apr 2022 11:54:59 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 06DB14179B8D;
-        Wed, 20 Apr 2022 11:55:00 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id C3F484179B67;
+        Wed, 20 Apr 2022 11:54:59 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com, robh+dt@kernel.org,
         krzk+dt@kernel.org
@@ -28,9 +28,9 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v4 5/7] scsi: MAINTAINERS: Add maintainer for Renesas UFS driver
-Date:   Wed, 20 Apr 2022 11:54:48 +0900
-Message-Id: <20220420025450.289578-6-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v4 3/7] ufs: add UFSHCD_QUIRK_HIBERN_FASTAUTO
+Date:   Wed, 20 Apr 2022 11:54:46 +0900
+Message-Id: <20220420025450.289578-4-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220420025450.289578-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20220420025450.289578-1-yoshihiro.shimoda.uh@renesas.com>
@@ -40,31 +40,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add maintainer for Renesas UFS driver.
+Add UFSHCD_QUIRK_HIBERN_FASTAUTO for a broken host controller of
+the auto-hibernate capability but it's FASTAUTO only.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 9 +++++++--
+ drivers/scsi/ufs/ufshcd.h | 6 ++++++
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f8db959c10a5..3a10f293ded9 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -20219,6 +20219,13 @@ L:	linux-mediatek@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- F:	drivers/scsi/ufs/ufs-mediatek*
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index a7bb3945c7c6..adc059a86e1e 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4247,8 +4247,13 @@ static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
+ 	if (hba->max_pwr_info.is_valid)
+ 		return 0;
  
-+UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER RENESAS HOOKS
-+M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-+L:	linux-renesas-soc@vger.kernel.org
-+L:	linux-scsi@vger.kernel.org
-+S:	Maintained
-+F:	drivers/scsi/ufs/*renesas*
+-	pwr_info->pwr_tx = FAST_MODE;
+-	pwr_info->pwr_rx = FAST_MODE;
++	if (hba->quirks & UFSHCD_QUIRK_HIBERN_FASTAUTO) {
++		pwr_info->pwr_tx = FASTAUTO_MODE;
++		pwr_info->pwr_rx = FASTAUTO_MODE;
++	} else {
++		pwr_info->pwr_tx = FAST_MODE;
++		pwr_info->pwr_rx = FAST_MODE;
++	}
+ 	pwr_info->hs_rate = PA_HS_MODE_B;
+ 
+ 	/* Get the connected lane count */
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 1745144eb904..d14cc48226ce 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -608,6 +608,12 @@ enum ufshcd_quirks {
+ 	 * 64-bit addressing supported capability but it doesn't work.
+ 	 */
+ 	UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS		= 1 << 17,
 +
- UNSORTED BLOCK IMAGES (UBI)
- M:	Richard Weinberger <richard@nod.at>
- L:	linux-mtd@lists.infradead.org
++	/*
++	 * This quirk needs to be enabled if the host controller has
++	 * auto-hibernate capability but it's FASTAUTO only.
++	 */
++	UFSHCD_QUIRK_HIBERN_FASTAUTO			= 1 << 18,
+ };
+ 
+ enum ufshcd_caps {
 -- 
 2.25.1
 
