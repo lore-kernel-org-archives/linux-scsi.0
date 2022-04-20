@@ -2,192 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02674C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 10:04:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3733C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 12:06:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377477AbiDTKHL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Apr 2022 06:07:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39692 "EHLO
+        id S1355379AbiDTMIz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Apr 2022 08:08:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377442AbiDTKHJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 06:07:09 -0400
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 743EB3ED26
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2022 03:04:23 -0700 (PDT)
-Received: by mail-ed1-x530.google.com with SMTP id v15so1563649edb.12
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2022 03:04:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=O/+Bq4GD0i1aeDJZB6KF270FrYsDWC9ZLK3WKl7pvtw=;
-        b=iQg0xYNVkHIZo0BFivFUh7zcofwerY9qIBuS1eg1pq1Wa+PK0moNksnXr2ibxPi8Nt
-         U4lJJn9AKf4k/TObba/Cc6oO4TsZpgIvDsGSOI4d+MrBlA6kaCK7lviv+aa2F++37KgR
-         N/r+QzoV+OnRGchrRwCncCZWkuUNshBr9/El/cp2eZVL39X0sLxwhSLBbrR2SosL706Q
-         QGwTbqgSZE0x2tcPBwFlyXbQQGpGtE5ZbEhr9iglUhXQg2XhGbPhvxh1iQ7sSxD8Ekyp
-         pSwmybpiz//I9XHylVbYKw8D03YZv3IELSfETGs8FfNIZ0DB7WpSpuQJKb7nPEVuVJ9w
-         vvUA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=O/+Bq4GD0i1aeDJZB6KF270FrYsDWC9ZLK3WKl7pvtw=;
-        b=NbxoXLvipOaPTNtuvJ1eCwu080epB3OMCN0Lvuz+kqcF+gCgyNRgalowTrMo4YQoID
-         brnWaOma9lL5JbKl2ompsdsErwXpHbAfqNjKV52VgQc6W//cjsuzgw0qAEdaAgvcnZC1
-         5WTMNZBQtKT+ih6pM79HCzqVezkKu9mHTrCKaw/SRPMOpZvc6BC1W4mVIWSCW8liNUxU
-         9MwxCwpn0kSLj5Si+N8VWiYumzR5vhhOA/y4LmLbbIzvjrTZbwAAPJsIlWC7dEOUMrFU
-         OAfhmyaJEBmoxA5jfWg340fORonlC6WQWoIDalxoXHxb/am4qARL4wM1F2tNlmak4Mb9
-         jy/A==
-X-Gm-Message-State: AOAM533qJXnFPObLvRUyJ7totmLBfoS+/MiW+YAdlO/xS4jhv6cfWJ27
-        SG0mmoCfjN6Fb9f5fJSjgHfGlg==
-X-Google-Smtp-Source: ABdhPJzL1lJX7sEUE2x5amjeU9v9hVjpMQnJ3qC7rbHT6pjZahpCdoZq2EmtCY7VhfWQbkBr/EYySQ==
-X-Received: by 2002:a05:6402:31ee:b0:41d:7038:c04a with SMTP id dy14-20020a05640231ee00b0041d7038c04amr22411161edb.142.1650449061949;
-        Wed, 20 Apr 2022 03:04:21 -0700 (PDT)
-Received: from [192.168.0.224] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
-        by smtp.gmail.com with ESMTPSA id kw5-20020a170907770500b006db075e5358sm6599740ejc.66.2022.04.20.03.04.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 Apr 2022 03:04:21 -0700 (PDT)
-Message-ID: <6dc5e28b-e84d-95c3-3967-476b2126314e@linaro.org>
-Date:   Wed, 20 Apr 2022 12:04:20 +0200
+        with ESMTP id S236824AbiDTMIy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 08:08:54 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FAC527FCE
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2022 05:06:07 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id DE9BC1F380;
+        Wed, 20 Apr 2022 12:06:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1650456365; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SgGcDzZ5r1DZKsCTlX0NN2Oguj4rGCmv6/JXepWI714=;
+        b=BTzDyk+VWqCXxZrkQ/0b1gu94pZSsCOHLPUmXYIeNh9htDQS7SU8FiLaonWp4uXKBVUVLN
+        vDyzJH+a2lmnyQzoOIZH89NSY6FOgh6TLtkfmpDxaYspYVeRwwjhMmSCEeYD9EnAkOPYeW
+        t3dBKbfKu2RN/1HV/tbf7xzR/69GDAA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1650456365;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SgGcDzZ5r1DZKsCTlX0NN2Oguj4rGCmv6/JXepWI714=;
+        b=UaQbwNQmLFH1WA5kjAIDSLNP8gdZbUMiSghHsndnstwU4Ggkvo1NUlr5SPnO55hj7V6Bq8
+        otKDBYu/Zb7w+KBA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D1D5113A30;
+        Wed, 20 Apr 2022 12:06:05 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id TwzaMi33X2LyWQAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 20 Apr 2022 12:06:05 +0000
+Message-ID: <3a51c6f8-fee7-1201-09e8-ad3d6a964f5c@suse.de>
+Date:   Wed, 20 Apr 2022 14:06:05 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [RFC PATCH v2 5/6] ufs: use PM OPP when scaling gears
+ Thunderbird/91.4.0
+Subject: Re: [PATCH 01/14] scsi: mpt3sas: Use cached ATA Information VPD page
 Content-Language: en-US
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Taniya Das <tdas@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
- <20220411154347.491396-6-krzysztof.kozlowski@linaro.org>
- <20220419170149.GB8699@thinkpad>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20220419170149.GB8699@thinkpad>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+References: <20220302053559.32147-1-martin.petersen@oracle.com>
+ <20220302053559.32147-2-martin.petersen@oracle.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20220302053559.32147-2-martin.petersen@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 19/04/2022 19:01, Manivannan Sadhasivam wrote:
-> On Mon, Apr 11, 2022 at 05:43:46PM +0200, Krzysztof Kozlowski wrote:
->> Scaling gears requires not only scaling clocks, but also voltage levels,
->> e.g. via performance states.
->>
->> Use the provided OPP table, to set proper OPP frequency which through
->> required-opps will trigger performance state change.  This deprecates
->> the old freq-table-hz Devicetree property and old clock scaling method
->> in favor of PM core code.
->>
->> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
->> ---
->>  drivers/scsi/ufs/ufshcd-pltfrm.c |  69 +++++++++++++++++++
->>  drivers/scsi/ufs/ufshcd.c        | 115 +++++++++++++++++++++++--------
->>  drivers/scsi/ufs/ufshcd.h        |   4 ++
->>  3 files changed, 158 insertions(+), 30 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
->> index c1d8b6f46868..edba585db0c1 100644
->> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
->> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
->> @@ -107,6 +107,69 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
->>  	return ret;
->>  }
->>  
->> +static int ufshcd_parse_operating_points(struct ufs_hba *hba)
->> +{
->> +	struct device *dev = hba->dev;
->> +	struct device_node *np = dev->of_node;
->> +	struct ufs_clk_info *clki;
->> +	const char *names[16];
->> +	bool clocks_done;
+On 3/2/22 06:35, Martin K. Petersen wrote:
+> We now cache VPD page 0x89 so there is no need to request it from the
+> hardware. Make mpt3sas use the cached page.
 > 
-> Maybe freq_table?
-
-ok
-
+> Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>   drivers/scsi/mpt3sas/mpt3sas_scsih.c | 18 ++++++++----------
+>   1 file changed, 8 insertions(+), 10 deletions(-)
 > 
->> +	int cnt, i, ret;
->> +
->> +	if (!of_find_property(dev->of_node, "operating-points-v2", NULL))
->> +		return 0;
->> +
->> +	cnt = of_property_count_strings(np, "clock-names");
->> +	if (cnt <= 0) {
->> +		dev_warn(dev, "%s: Missing clock-names\n",
->> +			 __func__);
->> +		return -EINVAL;
->> +	}
->> +
->> +	if (cnt > ARRAY_SIZE(names)) {
->> +		dev_info(dev, "%s: Too many clock-names\n",  __func__);
->> +		return -EINVAL;
->> +	}
-> 
-> How did you come up with 16 as the max clock count? Is this check necessary?
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-16 was an arbitrary choice, also mentioned in the bindings:
-https://lore.kernel.org/all/20220411154347.491396-3-krzysztof.kozlowski@linaro.org/
+Cheers,
 
-The check is necessary from current code point of view - array is
-locally allocated with fixed size. Since bindings do not allow more than
-16, I am not sure if there is a point to make the code flexible now...
-but if this is something you wish, I can change.
-
-> 
->> +
->> +	/* clocks parsed by ufshcd_parse_clock_info() */
->> +	clocks_done = !!of_find_property(np, "freq-table-hz", NULL);
-> 
-> freq-table-hz and opp-table are mutually exclusive, isn't it?
-
-You're right, this should be an exit.
-
-(...)
-
->>  	ufshcd_init_lanes_per_dir(hba);
->>  
->>  	err = ufshcd_init(hba, mmio_base, irq);
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 5bfa62fa288a..aec7da18a550 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -1022,6 +1022,9 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
->>  	int ret = 0;
->>  	ktime_t start = ktime_get();
->>  
->> +	if (hba->use_pm_opp)
->> +		return 0;
->> +
-> 
-> So you don't need pre and post clock changes below?
-
-That's tricky. The UFS HCD core does not need it, but of course the
-question is about the drivers actually using ufshcd_vops_clk_scale_notify().
-
-Only QCOM UFS driver implements it and actually we might need it. Qcom
-driver changes DME_VS_CORE_CLK_CTRL, so maybe this should be done here
-as well. I don't know yet how to incorporate it into PM-opp framework,
-because now changing frequencies and voltage is atomic from the UFS
-driver perspective. Before it was not - for example first clock (with
-these pre/post changes) and then voltage.
-
-I will need to solve it somehow...
-
-
-Best regards,
-Krzysztof
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
