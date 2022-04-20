@@ -2,98 +2,252 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 235BAC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 09:04:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83D04C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 09:25:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351380AbiDTJGt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Apr 2022 05:06:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36150 "EHLO
+        id S1377188AbiDTJ1y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Apr 2022 05:27:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351152AbiDTJGo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 05:06:44 -0400
-Received: from mail-qt1-x82d.google.com (mail-qt1-x82d.google.com [IPv6:2607:f8b0:4864:20::82d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AE862E9EB;
-        Wed, 20 Apr 2022 02:03:59 -0700 (PDT)
-Received: by mail-qt1-x82d.google.com with SMTP id f22so505980qtp.13;
-        Wed, 20 Apr 2022 02:03:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Y1TX3LxphyYPfykd3GExSANER38mSAXNP88zEi0V4a4=;
-        b=Dh7ya4c2ZRShPzME5GPDKQPO/sW4/HMyIBuiV4A8f1hf09QRJv4BHYInf9G5xh8ax9
-         itAo+PgEbcFvahcKYpQHAXx4TJ1G9dq7ph3Ce5Cr80/Xehyz1MLlno5hHhyXiYMcUQ95
-         fXl2F6XoVyXWZxv+SsbMnZpjF65sd1sePXQzZLJPU/8piPzXn+JjyewdxnMByo2qyY1c
-         EHRf6iDvoYX04QMGrzYF5+H9sOHSbn9sBcvxGMRVc0WZCHz5Nd8jQPBifYvLR1im+dTV
-         yon6u1fD4dHgl57p0NgHKOAIqTamOLaW2ApOwcnz0ZEbJZjUfpOUWbD0jaEATcA7YPsL
-         59aQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Y1TX3LxphyYPfykd3GExSANER38mSAXNP88zEi0V4a4=;
-        b=D9mXIxn9JTgXrjyiCDwbipGz8qJDqffbeBnW/TsJ9lnzeAfhUg//zAPQZFm3J7cuzk
-         fj4DUoRaQBsyLfTvc03sBgmXD0EtiPwUXPl9SQMQYrWwUHmoJW1Kr8vGPd+pOAAVU2z2
-         PNoB356MhKhMTmLf0QB5o1xxKCXD1Q7wv2eq2Vou4EJq3j4/t4kxD8N6/kxS1szoTG4e
-         Z9cHJQVKYcGCTvEQBvE/eJSfXKmH3EOEDknSqJJsik0soAP2/bUe86Dn0uU3nrs8pjkC
-         GTOx6eaBCqnw0yxnBI58ZLM6O/BZNGgX1XFiQAz0zhtOS2tR2SdTGgTEXGu+nCNnAjBX
-         wWwA==
-X-Gm-Message-State: AOAM531hjIBhlbLQufEkD9a0p0bwUufiRiUxO7UbRafAX+uQjGJW4RN7
-        QlzxApOv7y362c61+26otWo=
-X-Google-Smtp-Source: ABdhPJyWVBvS4DFoUzuUhmWNNT43TTb69T59j96Xkphuncrex//Ub01LqoYTFasZcaKrz4WtxRawxw==
-X-Received: by 2002:a05:622a:40d:b0:2f3:3d14:6959 with SMTP id n13-20020a05622a040d00b002f33d146959mr3321375qtx.519.1650445438695;
-        Wed, 20 Apr 2022 02:03:58 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id 187-20020a370bc4000000b0069c8f01368csm1303613qkl.92.2022.04.20.02.03.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Apr 2022 02:03:58 -0700 (PDT)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: chi.minghao@zte.com.cn
-To:     alim.akhtar@samsung.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Minghao Chi <chi.minghao@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi: ufs: using pm_runtime_resume_and_get instead of pm_runtime_get_sync
-Date:   Wed, 20 Apr 2022 09:03:52 +0000
-Message-Id: <20220420090353.2588804-1-chi.minghao@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S1345685AbiDTJ1x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 05:27:53 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8ADBE5FCE;
+        Wed, 20 Apr 2022 02:25:07 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 3E26E1F385;
+        Wed, 20 Apr 2022 09:25:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1650446706; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=FZ3HQWGQIijrKpRTy/DK1bE6hLtaRKbTQP99RtUeXZU=;
+        b=GBOI95QQupEY/yQccYl33Wtlr1a8cXyASJI7+AcIPpFSfS+Hy5T/+EXBHU6iBGyur7ZMYs
+        HFjfsesn0AfqHlcz3XvEzyDyhfstb34Ou8C5sYOK47sgScFEljVaKKFXPRdEob/ZE/EC2M
+        9SNwj7ZfHlMsuvXIUmsXkdWVJEKCbK8=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0FD7F13A30;
+        Wed, 20 Apr 2022 09:25:06 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id uIeGAnLRX2J1EAAAMHmgww
+        (envelope-from <jgross@suse.com>); Wed, 20 Apr 2022 09:25:06 +0000
+From:   Juergen Gross <jgross@suse.com>
+To:     xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Juergen Gross <jgross@suse.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>
+Subject: [PATCH 1/4] xen: update vscsiif.h
+Date:   Wed, 20 Apr 2022 11:25:00 +0200
+Message-Id: <20220420092503.11123-2-jgross@suse.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220420092503.11123-1-jgross@suse.com>
+References: <20220420092503.11123-1-jgross@suse.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Minghao Chi <chi.minghao@zte.com.cn>
+Update include/xen/interface/io/vscsiif.h to its newest version.
 
-Using pm_runtime_resume_and_get() to replace pm_runtime_get_sync and
-pm_runtime_put_noidle. This change is just to simplify the code, no
-actual functional changes.
-
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
+Signed-off-by: Juergen Gross <jgross@suse.com>
 ---
- drivers/scsi/ufs/ti-j721e-ufs.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ include/xen/interface/io/vscsiif.h | 133 ++++++++++++++++++++++++++++-
+ 1 file changed, 129 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ti-j721e-ufs.c b/drivers/scsi/ufs/ti-j721e-ufs.c
-index eafe0db98d54..122d650d0810 100644
---- a/drivers/scsi/ufs/ti-j721e-ufs.c
-+++ b/drivers/scsi/ufs/ti-j721e-ufs.c
-@@ -29,11 +29,9 @@ static int ti_j721e_ufs_probe(struct platform_device *pdev)
- 		return PTR_ERR(regbase);
+diff --git a/include/xen/interface/io/vscsiif.h b/include/xen/interface/io/vscsiif.h
+index 1f6047d3de44..7ea4dc9611c4 100644
+--- a/include/xen/interface/io/vscsiif.h
++++ b/include/xen/interface/io/vscsiif.h
+@@ -43,7 +43,7 @@
+  *
+  *      A string specifying the backend device: either a 4-tuple "h:c:t:l"
+  *      (host, controller, target, lun, all integers), or a WWN (e.g.
+- *      "naa.60014054ac780582").
++ *      "naa.60014054ac780582:0").
+  *
+  * v-dev
+  *      Values:         string
+@@ -87,6 +87,75 @@
+  *      response structures.
+  */
  
- 	pm_runtime_enable(dev);
--	ret = pm_runtime_get_sync(dev);
--	if (ret < 0) {
--		pm_runtime_put_noidle(dev);
-+	ret = pm_runtime_resume_and_get(dev);
-+	if (ret < 0)
- 		goto disable_pm;
--	}
++/*
++ * Xenstore format in practice
++ * ===========================
++ *
++ * The backend driver uses a single_host:many_devices notation to manage domU
++ * devices. Everything is stored in /local/domain/<backend_domid>/backend/vscsi/.
++ * The xenstore layout looks like this (dom0 is assumed to be the backend_domid):
++ *
++ *     <domid>/<vhost>/feature-host = "0"
++ *     <domid>/<vhost>/frontend = "/local/domain/<domid>/device/vscsi/0"
++ *     <domid>/<vhost>/frontend-id = "<domid>"
++ *     <domid>/<vhost>/online = "1"
++ *     <domid>/<vhost>/state = "4"
++ *     <domid>/<vhost>/vscsi-devs/dev-0/p-dev = "8:0:2:1" or "naa.wwn:lun"
++ *     <domid>/<vhost>/vscsi-devs/dev-0/state = "4"
++ *     <domid>/<vhost>/vscsi-devs/dev-0/v-dev = "0:0:0:0"
++ *     <domid>/<vhost>/vscsi-devs/dev-1/p-dev = "8:0:2:2"
++ *     <domid>/<vhost>/vscsi-devs/dev-1/state = "4"
++ *     <domid>/<vhost>/vscsi-devs/dev-1/v-dev = "0:0:1:0"
++ *
++ * The frontend driver maintains its state in
++ * /local/domain/<domid>/device/vscsi/.
++ *
++ *     <vhost>/backend = "/local/domain/0/backend/vscsi/<domid>/<vhost>"
++ *     <vhost>/backend-id = "0"
++ *     <vhost>/event-channel = "20"
++ *     <vhost>/ring-ref = "43"
++ *     <vhost>/state = "4"
++ *     <vhost>/vscsi-devs/dev-0/state = "4"
++ *     <vhost>/vscsi-devs/dev-1/state = "4"
++ *
++ * In addition to the entries for backend and frontend these flags are stored
++ * for the toolstack:
++ *
++ *     <domid>/<vhost>/vscsi-devs/dev-1/p-devname = "/dev/$device"
++ *     <domid>/<vhost>/libxl_ctrl_index = "0"
++ *
++ *
++ * Backend/frontend protocol
++ * =========================
++ *
++ * To create a vhost along with a device:
++ *     <domid>/<vhost>/feature-host = "0"
++ *     <domid>/<vhost>/frontend = "/local/domain/<domid>/device/vscsi/0"
++ *     <domid>/<vhost>/frontend-id = "<domid>"
++ *     <domid>/<vhost>/online = "1"
++ *     <domid>/<vhost>/state = "1"
++ *     <domid>/<vhost>/vscsi-devs/dev-0/p-dev = "8:0:2:1"
++ *     <domid>/<vhost>/vscsi-devs/dev-0/state = "1"
++ *     <domid>/<vhost>/vscsi-devs/dev-0/v-dev = "0:0:0:0"
++ * Wait for <domid>/<vhost>/state + <domid>/<vhost>/vscsi-devs/dev-0/state become 4
++ *
++ * To add another device to a vhost:
++ *     <domid>/<vhost>/state = "7"
++ *     <domid>/<vhost>/vscsi-devs/dev-1/p-dev = "8:0:2:2"
++ *     <domid>/<vhost>/vscsi-devs/dev-1/state = "1"
++ *     <domid>/<vhost>/vscsi-devs/dev-1/v-dev = "0:0:1:0"
++ * Wait for <domid>/<vhost>/state + <domid>/<vhost>/vscsi-devs/dev-1/state become 4
++ *
++ * To remove a device from a vhost:
++ *     <domid>/<vhost>/state = "7"
++ *     <domid>/<vhost>/vscsi-devs/dev-1/state = "5"
++ * Wait for <domid>/<vhost>/state to become 4
++ * Wait for <domid>/<vhost>/vscsi-devs/dev-1/state become 6
++ * Remove <domid>/<vhost>/vscsi-devs/dev-1/{state,p-dev,v-dev,p-devname}
++ * Remove <domid>/<vhost>/vscsi-devs/dev-1/
++ *
++ */
++
+ /* Requests from the frontend to the backend */
  
- 	/* Select MPHY refclk frequency */
- 	clk = devm_clk_get(dev, NULL);
+ /*
+@@ -117,7 +186,8 @@
+  * (plus the set VSCSIIF_SG_GRANT bit), the number of scsiif_request_segment
+  * elements referencing the target data buffers is calculated from the lengths
+  * of the seg[] elements (the sum of all valid seg[].length divided by the
+- * size of one scsiif_request_segment structure).
++ * size of one scsiif_request_segment structure). The frontend may use a mix of
++ * direct and indirect requests.
+  */
+ #define VSCSIIF_ACT_SCSI_CDB		1
+ 
+@@ -154,12 +224,14 @@
+ 
+ /*
+  * based on Linux kernel 2.6.18, still valid
++ *
+  * Changing these values requires support of multiple protocols via the rings
+  * as "old clients" will blindly use these values and the resulting structure
+  * sizes.
+  */
+ #define VSCSIIF_MAX_COMMAND_SIZE	16
+ #define VSCSIIF_SENSE_BUFFERSIZE	96
++#define VSCSIIF_PAGE_SIZE		4096
+ 
+ struct scsiif_request_segment {
+ 	grant_ref_t gref;
+@@ -167,7 +239,8 @@ struct scsiif_request_segment {
+ 	uint16_t length;
+ };
+ 
+-#define VSCSIIF_SG_PER_PAGE (PAGE_SIZE / sizeof(struct scsiif_request_segment))
++#define VSCSIIF_SG_PER_PAGE	(VSCSIIF_PAGE_SIZE / \
++				 sizeof(struct scsiif_request_segment))
+ 
+ /* Size of one request is 252 bytes */
+ struct vscsiif_request {
+@@ -207,6 +280,58 @@ struct vscsiif_response {
+ 	uint32_t reserved[36];
+ };
+ 
++/* SCSI I/O status from vscsiif_response->rslt */
++#define XEN_VSCSIIF_RSLT_STATUS(x)  ((x) & 0x00ff)
++
++/* Host I/O status from vscsiif_response->rslt */
++#define XEN_VSCSIIF_RSLT_HOST(x)    (((x) & 0x00ff0000) >> 16)
++#define XEN_VSCSIIF_RSLT_HOST_OK                   0
++/* Couldn't connect before timeout */
++#define XEN_VSCSIIF_RSLT_HOST_NO_CONNECT           1
++/* Bus busy through timeout */
++#define XEN_VSCSIIF_RSLT_HOST_BUS_BUSY             2
++/* Timed out for other reason */
++#define XEN_VSCSIIF_RSLT_HOST_TIME_OUT             3
++/* Bad target */
++#define XEN_VSCSIIF_RSLT_HOST_BAD_TARGET           4
++/* Abort for some other reason */
++#define XEN_VSCSIIF_RSLT_HOST_ABORT                5
++/* Parity error */
++#define XEN_VSCSIIF_RSLT_HOST_PARITY               6
++/* Internal error */
++#define XEN_VSCSIIF_RSLT_HOST_ERROR                7
++/* Reset by somebody */
++#define XEN_VSCSIIF_RSLT_HOST_RESET                8
++/* Unexpected interrupt */
++#define XEN_VSCSIIF_RSLT_HOST_BAD_INTR             9
++/* Force command past mid-layer */
++#define XEN_VSCSIIF_RSLT_HOST_PASSTHROUGH         10
++/* Retry requested */
++#define XEN_VSCSIIF_RSLT_HOST_SOFT_ERROR          11
++/* Hidden retry requested */
++#define XEN_VSCSIIF_RSLT_HOST_IMM_RETRY           12
++/* Requeue command requested */
++#define XEN_VSCSIIF_RSLT_HOST_REQUEUE             13
++/* Transport error disrupted I/O */
++#define XEN_VSCSIIF_RSLT_HOST_TRANSPORT_DISRUPTED 14
++/* Transport class fastfailed */
++#define XEN_VSCSIIF_RSLT_HOST_TRANSPORT_FAILFAST  15
++/* Permanent target failure */
++#define XEN_VSCSIIF_RSLT_HOST_TARGET_FAILURE      16
++/* Permanent nexus failure on path */
++#define XEN_VSCSIIF_RSLT_HOST_NEXUS_FAILURE       17
++/* Space allocation on device failed */
++#define XEN_VSCSIIF_RSLT_HOST_ALLOC_FAILURE       18
++/* Medium error */
++#define XEN_VSCSIIF_RSLT_HOST_MEDIUM_ERROR        19
++/* Transport marginal errors */
++#define XEN_VSCSIIF_RSLT_HOST_TRANSPORT_MARGINAL  20
++
++/* Result values of reset operations */
++#define XEN_VSCSIIF_RSLT_RESET_SUCCESS  0x2002
++#define XEN_VSCSIIF_RSLT_RESET_FAILED   0x2003
++
+ DEFINE_RING_TYPES(vscsiif, struct vscsiif_request, struct vscsiif_response);
+ 
+-#endif /*__XEN__PUBLIC_IO_SCSI_H__*/
++
++#endif  /*__XEN__PUBLIC_IO_SCSI_H__*/
 -- 
-2.25.1
-
+2.34.1
 
