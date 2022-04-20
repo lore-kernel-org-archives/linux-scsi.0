@@ -2,129 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20426C43219
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 15:10:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F450C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 15:10:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380026AbiDTPNR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Apr 2022 11:13:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43420 "EHLO
+        id S1380042AbiDTPNT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Apr 2022 11:13:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380100AbiDTPMt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 11:12:49 -0400
+        with ESMTP id S1380077AbiDTPMp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 11:12:45 -0400
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D3143E5FC;
-        Wed, 20 Apr 2022 08:10:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1E081BEB8;
+        Wed, 20 Apr 2022 08:09:59 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id EC45B2112B;
-        Wed, 20 Apr 2022 15:10:01 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 5B4A1210E4;
+        Wed, 20 Apr 2022 15:09:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1650467401; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zIVRYJfuKT5Cc8Eh8lkT4S5YymR5yO4CxthS7o0vErk=;
-        b=dqosmBbYFka6Cq4Fx3XDgQHYlD1l+kwlMIm2CKI8qmUk88Qls9O2u9OhjZfgqQVVyXEHAl
-        F5AYRXlkgASQKbFoZaaEmJYPy7bQ0yV3XDjBRjOVGpr8R+cUhgWmk84/IMZM/K9yZKlQHC
-        oSvKC/4crEhSlduV6M0b2pJQU17VPOU=
+        t=1650467398; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=E9Za1fy7SJZVuU3gsJHYcUnfUQspR3rknfU8bXQql9Y=;
+        b=s7o4aJsXllglxjEicM+le/pE5Q4+nZsQh1+qkc+l1wMXB8I5KM8EXHpK9vVJQBopp4olwE
+        /0eL2tvJFzr8/5F+QMy5ysfmCp4A5ramqeRsMJKSZCtFDWgeFHKh6l0oEFDWWCNJk0EhzP
+        yXIHNy0QuiJkmeTPgRibcNpvjDS2yuo=
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B940913AD5;
-        Wed, 20 Apr 2022 15:10:01 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 96AE513AD5;
+        Wed, 20 Apr 2022 15:09:57 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id GL8QLEkiYGJILQAAMHmgww
-        (envelope-from <jgross@suse.com>); Wed, 20 Apr 2022 15:10:01 +0000
+        id QAKAI0UiYGJILQAAMHmgww
+        (envelope-from <jgross@suse.com>); Wed, 20 Apr 2022 15:09:57 +0000
 From:   Juergen Gross <jgross@suse.com>
-To:     xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+To:     xen-devel@lists.xenproject.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-integrity@vger.kernel.org,
+        linux-pci@vger.kernel.org
 Cc:     Juergen Gross <jgross@suse.com>,
         Boris Ostrovsky <boris.ostrovsky@oracle.com>,
         Stefano Stabellini <sstabellini@kernel.org>,
+        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 15/18] xen/scsifront: use xenbus_setup_ring() and xenbus_teardown_ring()
-Date:   Wed, 20 Apr 2022 17:09:39 +0200
-Message-Id: <20220420150942.31235-16-jgross@suse.com>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Oleksandr Andrushchenko <oleksandr_andrushchenko@epam.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, alsa-devel@alsa-project.org,
+        Peter Huewe <peterhuewe@gmx.de>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 00/18] xen: simplify frontend side ring setup
+Date:   Wed, 20 Apr 2022 17:09:24 +0200
+Message-Id: <20220420150942.31235-1-jgross@suse.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220420150942.31235-1-jgross@suse.com>
-References: <20220420150942.31235-1-jgross@suse.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Simplify scsifront's ring creation and removal via xenbus_setup_ring()
-and xenbus_teardown_ring().
+Many Xen PV frontends share similar code for setting up a ring page
+(allocating and granting access for the backend) and for tearing it
+down.
 
-Signed-off-by: Juergen Gross <jgross@suse.com>
----
- drivers/scsi/xen-scsifront.c | 27 +++++++--------------------
- 1 file changed, 7 insertions(+), 20 deletions(-)
+Create new service functions doing all needed steps in one go.
 
-diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-index 9db2366fa2d4..f15a35750040 100644
---- a/drivers/scsi/xen-scsifront.c
-+++ b/drivers/scsi/xen-scsifront.c
-@@ -798,28 +798,17 @@ static int scsifront_alloc_ring(struct vscsifrnt_info *info)
- {
- 	struct xenbus_device *dev = info->dev;
- 	struct vscsiif_sring *sring;
--	grant_ref_t gref;
--	int err = -ENOMEM;
-+	int err;
- 
- 	/***** Frontend to Backend ring start *****/
--	sring = (struct vscsiif_sring *)__get_free_page(GFP_KERNEL);
--	if (!sring) {
--		xenbus_dev_fatal(dev, err,
--			"fail to allocate shared ring (Front to Back)");
-+	err = xenbus_setup_ring(dev, GFP_KERNEL, (void **)&sring, 1,
-+				&info->ring_ref);
-+	if (err)
- 		return err;
--	}
-+
- 	SHARED_RING_INIT(sring);
- 	FRONT_RING_INIT(&info->ring, sring, PAGE_SIZE);
- 
--	err = xenbus_grant_ring(dev, sring, 1, &gref);
--	if (err < 0) {
--		free_page((unsigned long)sring);
--		xenbus_dev_fatal(dev, err,
--			"fail to grant shared ring (Front to Back)");
--		return err;
--	}
--	info->ring_ref = gref;
--
- 	err = xenbus_alloc_evtchn(dev, &info->evtchn);
- 	if (err) {
- 		xenbus_dev_fatal(dev, err, "xenbus_alloc_evtchn");
-@@ -847,8 +836,7 @@ static int scsifront_alloc_ring(struct vscsifrnt_info *info)
- free_irq:
- 	unbind_from_irqhandler(info->irq, info);
- free_gnttab:
--	gnttab_end_foreign_access(info->ring_ref,
--				  (unsigned long)info->ring.sring);
-+	xenbus_teardown_ring((void **)&sring, 1, &info->ring_ref);
- 
- 	return err;
- }
-@@ -856,8 +844,7 @@ static int scsifront_alloc_ring(struct vscsifrnt_info *info)
- static void scsifront_free_ring(struct vscsifrnt_info *info)
- {
- 	unbind_from_irqhandler(info->irq, info);
--	gnttab_end_foreign_access(info->ring_ref,
--				  (unsigned long)info->ring.sring);
-+	xenbus_teardown_ring((void **)&info->ring.sring, 1, &info->ring_ref);
- }
- 
- static int scsifront_init_ring(struct vscsifrnt_info *info)
+This requires all frontends to use a common value for an invalid
+grant reference in order to make the functions idempotent.
+
+Juergen Gross (18):
+  xen/blkfront: switch blkfront to use INVALID_GRANT_REF
+  xen/netfront: switch netfront to use INVALID_GRANT_REF
+  xen/scsifront: remove unused GRANT_INVALID_REF definition
+  xen/usb: switch xen-hcd to use INVALID_GRANT_REF
+  xen/drm: switch xen_drm_front to use INVALID_GRANT_REF
+  xen/sound: switch xen_snd_front to use INVALID_GRANT_REF
+  xen/dmabuf: switch gntdev-dmabuf to use INVALID_GRANT_REF
+  xen/shbuf: switch xen-front-pgdir-shbuf to use INVALID_GRANT_REF
+  xen/xenbus: add xenbus_setup_ring() service function
+  xen/blkfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/netfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/tpmfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/drmfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/pcifront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/scsifront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/usbfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/sndfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/xenbus: eliminate xenbus_grant_ring()
+
+ drivers/block/xen-blkfront.c                | 54 ++++----------
+ drivers/char/tpm/xen-tpmfront.c             | 18 +----
+ drivers/gpu/drm/xen/xen_drm_front.h         |  9 ---
+ drivers/gpu/drm/xen/xen_drm_front_evtchnl.c | 40 +++-------
+ drivers/net/xen-netfront.c                  | 77 ++++++--------------
+ drivers/pci/xen-pcifront.c                  | 19 +----
+ drivers/scsi/xen-scsifront.c                | 30 ++------
+ drivers/usb/host/xen-hcd.c                  | 59 ++++-----------
+ drivers/xen/gntdev-dmabuf.c                 | 13 +---
+ drivers/xen/xen-front-pgdir-shbuf.c         | 17 +----
+ drivers/xen/xenbus/xenbus_client.c          | 81 ++++++++++++++++-----
+ include/xen/xenbus.h                        |  4 +-
+ sound/xen/xen_snd_front_evtchnl.c           | 41 +++--------
+ sound/xen/xen_snd_front_evtchnl.h           |  9 ---
+ 14 files changed, 156 insertions(+), 315 deletions(-)
+
 -- 
 2.34.1
 
