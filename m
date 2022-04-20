@@ -2,113 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92F19C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 05:53:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B37AC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Apr 2022 06:48:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359429AbiDTF4I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Apr 2022 01:56:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47652 "EHLO
+        id S1356888AbiDTGuy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Apr 2022 02:50:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359440AbiDTFzx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 01:55:53 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96EE7DED2
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2022 22:53:08 -0700 (PDT)
-Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220420055302epoutp01e563f9a753cfdd4bcf48aad649bcb38b~nhPZ9mdyc0873108731epoutp01c
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2022 05:53:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220420055302epoutp01e563f9a753cfdd4bcf48aad649bcb38b~nhPZ9mdyc0873108731epoutp01c
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1650433982;
-        bh=gsbIJ9MYIvel4byuN1yOMJ7JFiezGXpDZDDAumV77cw=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=rVyqw+JA/W0UOkrmiPWjxvh3+7PFUPbTs+cSBpl/XbrixsBbGEru03f+527iwyqjT
-         21BRMIfus4BJyY5Oj+BAc90McF/g+2wWcS/yK/VkU/emGWcPQYY1BFeENEcdxzwGP2
-         G0+f7bQYQgXcJx4tRAnco7f80ev2Ie2tj1pGW9U4=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas3p2.samsung.com (KnoxPortal) with ESMTP id
-        20220420055302epcas3p2613e0dc2fa7ad29ccb327f892a5c7dc4~nhPZcn3fr0321103211epcas3p2q;
-        Wed, 20 Apr 2022 05:53:02 +0000 (GMT)
-Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp1.localdomain
-        (Postfix) with ESMTP id 4Kjqb20RMLz4x9QV; Wed, 20 Apr 2022 05:53:02 +0000
-        (GMT)
-Mime-Version: 1.0
-Subject: RE: [PATCH v2 2/5] scsi: ufshpb: Remove 0 assignment for enum value
-Reply-To: keosung.park@samsung.com
-Sender: Keoseong Park <keosung.park@samsung.com>
-From:   Keoseong Park <keosung.park@samsung.com>
-To:     Bean Huo <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        cpgsproxy3 <cpgsproxy3@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20220419183044.789065-3-huobean@gmail.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1796371666.21650433982047.JavaMail.epsvc@epcpadp4>
-Date:   Wed, 20 Apr 2022 11:49:48 +0900
-X-CMS-MailID: 20220420024948epcms2p83ddfc0ced8ab1074865151baaa6ab8b3
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20220419183923epcas2p426a61f579c8a096a8dce2f452640cf47
-References: <20220419183044.789065-3-huobean@gmail.com>
-        <20220419183044.789065-1-huobean@gmail.com>
-        <CGME20220419183923epcas2p426a61f579c8a096a8dce2f452640cf47@epcms2p8>
+        with ESMTP id S1343934AbiDTGuy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2022 02:50:54 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 222016576;
+        Tue, 19 Apr 2022 23:48:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=2h0PxlUlFNU0ySs1hMG9RiSm7k2NO4Ql9lChGPha84Q=; b=jKa4Kk7mB+UcF870o53xqo9zZt
+        W5ag6W7Hp5SqKIzhuqhiEgs9JjueHT+zcF50gDw+TolpaS9D7O99QvlqkGCptNWQuDtTu6wkhGAM7
+        HUZ7TJ6SgA3L6gKg5LOqS1MOxs9333LhDgZW8OVSveENFoRSbJ3TEu1LLlkpSgh8dkx2gC6/oSB7j
+        mIaK8SJO7uComI306mLxdlFAzcx/Qh8KOnMnx1W/hAM31v83+PbgLXLeNPQAAAT86MuRzPr574gxw
+        bo1K4x9ch3sEfh8nD12rCeCbcwu/M+69M8x4ul1XIjRupf2HcIwjizJi1pxiqiKK26wP9z1GC/7Tl
+        tuCS4Nsw==;
+Received: from [2001:4bb8:191:364b:4299:55c7:4b14:f042] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nh47x-007cXh-3O; Wed, 20 Apr 2022 06:47:49 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>, Eric Biggers <ebiggers@google.com>
+Cc:     Mike Snitzer <snitzer@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Ritesh Harjani <riteshh@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: fix blk_crypto_profile liftetime
+Date:   Wed, 20 Apr 2022 08:47:43 +0200
+Message-Id: <20220420064745.1119823-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->From: Bean Huo <beanhuo@micron.com>
-> 
->If the first enumerator has no initializer, the value of the corresponding
->constant is zero.
-> 
->Signed-off-by: Bean Huo <beanhuo@micron.com>
->---
-> drivers/scsi/ufs/ufshpb.h | 4 ++--
-> 1 file changed, 2 insertions(+), 2 deletions(-)
-> 
->diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
->index 2825ec69a6a6..b7e2817d4e76 100644
->--- a/drivers/scsi/ufs/ufshpb.h
->+++ b/drivers/scsi/ufs/ufshpb.h
->@@ -59,8 +59,8 @@ enum UFSHPB_MODE {
-> };
-> 
-> enum UFSHPB_STATE {
->-        HPB_INIT = 0,
->-        HPB_PRESENT = 1,
->+        HPB_INIT,
->+        HPB_PRESENT,
->         HPB_SUSPEND,
->         HPB_FAILED,
->         HPB_RESET,
->-- 
->2.34.1
-> 
+Hi all,
 
-Reviewed-by: Keoseong Park <keosung.park@samsung.com>
+the newly added blk-crypto sysfs support does not seem to keep the
+blk_crypto_profile lifetimes aligned to what sysfs expects.
 
-Best Regards,
-Keoseong Park
+This was found by code inspection only and is completely untested.
+
+Diffstat:
+ b/Documentation/block/inline-encryption.rst |   10 -
+ b/block/Makefile                            |    3 
+ b/block/blk-crypto-fallback.c               |   20 +-
+ b/block/blk-crypto-profile.c                |  263 ++++++++++++++++++++++------
+ b/drivers/md/dm-table.c                     |   28 --
+ b/drivers/mmc/core/crypto.c                 |    4 
+ b/drivers/mmc/host/cqhci-crypto.c           |   16 -
+ b/drivers/scsi/ufs/ufshcd-crypto.c          |   31 +--
+ b/drivers/scsi/ufs/ufshcd.h                 |    2 
+ b/include/linux/blk-crypto-profile.h        |   19 +-
+ b/include/linux/blkdev.h                    |    1 
+ b/include/linux/mmc/host.h                  |    2 
+ block/blk-crypto-sysfs.c                    |  172 ------------------
+ 13 files changed, 265 insertions(+), 306 deletions(-)
