@@ -2,106 +2,131 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 460B5C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Apr 2022 06:25:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82D22C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Apr 2022 06:54:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1384877AbiDUG2H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Apr 2022 02:28:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33884 "EHLO
+        id S1385379AbiDUG5N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Apr 2022 02:57:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1383929AbiDUG2E (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 02:28:04 -0400
-Received: from out30-56.freemail.mail.aliyun.com (out30-56.freemail.mail.aliyun.com [115.124.30.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CD2813F15;
-        Wed, 20 Apr 2022 23:25:13 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R981e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04407;MF=dtcccc@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0VAdJ87v_1650522310;
-Received: from 192.168.0.205(mailfrom:dtcccc@linux.alibaba.com fp:SMTPD_---0VAdJ87v_1650522310)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Thu, 21 Apr 2022 14:25:11 +0800
-Message-ID: <944afdcf-2901-babe-de4e-638582bd8632@linux.alibaba.com>
-Date:   Thu, 21 Apr 2022 14:25:10 +0800
+        with ESMTP id S1385388AbiDUG47 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 02:56:59 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35049193C9
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2022 23:52:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E01CFB82213
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2022 06:52:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 88DAAC385A1
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2022 06:52:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1650523973;
+        bh=KTjIEqqfxBM5Zkc9oM0riJ8UvrJ7cdl0scEBLw6K0pA=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=D0rR5t/c0Yfb5iN89lmuc0rNTuNh0YPsaVK72cXCbhDTznoJL11PKGK3ERzkf7YFj
+         LrLgBdpakNXOzAJ5niKc37GSlfxvlTSr4ORibvZM5I9WZ5PWsknMYAMVyS9du8fiaT
+         oG/sYUfEXOqKdtmMaHAKyZUXrM/4au9tYRh2Ym0l1OUl5+ziODL8+NaKuir9Zfju3h
+         zIB4WyqYifSN7VlOwoQeQUjSrNwQZfdX8dzSR7WhqTwYFPczNyIzCWAKijqzwemRgI
+         KJNE9xXKeNH4D8zsmIHIdRM/P7+A8TeLPVd7V+Kq76dt2gZ+5Zx2FTBaX4tCmvhep6
+         7xkHdp+EQp1nQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 6FF49CAC6E2; Thu, 21 Apr 2022 06:52:53 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 215788] arcmsr driver on kernel 5.16 and up fails to initialize
+ ARC-1280ML RAID controller
+Date:   Thu, 21 Apr 2022 06:52:53 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: christophotron@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-215788-11613-jtdYadOH6Q@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215788-11613@https.bugzilla.kernel.org/>
+References: <bug-215788-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.8.0
-From:   Tianchen Ding <dtcccc@linux.alibaba.com>
-Subject: Re: [RFC PATCH] scsi: ses: Fix out-of-bound write at
- ses_enclosure_data_process()
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220415032313.94991-1-dtcccc@linux.alibaba.com>
-Content-Language: en-US
-In-Reply-To: <20220415032313.94991-1-dtcccc@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215788
 
-There seems to be some hardware problems with this machine, and it 
-cannot bootup stably now... :-(
+Chris Rodrigues (christophotron@gmail.com) changed:
 
-We guess the given desc_ptr[2] and [3] may be wrong on this machine, 
-causing the calculated len becoming wrong too.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |christophotron@gmail.com
 
-However, from the view of memory side, this is a potential oob write. 
-Should we fix it?
+--- Comment #15 from Chris Rodrigues (christophotron@gmail.com) ---
+I am having similar issues with my ARC-1231 card in OpenSuSE with kernel 5.=
+17.=20
+The card works fine in Windows but when I try to boot linux I get "ata8:
+softreset failed (device not ready)" along with errors from the arcmsr driv=
+er.
 
-On 2022/4/15 11:23, Tianchen Ding wrote:
-> Our modified KFENCE reported a memory corruption:
-> 
-> [   52.584914] BUG: KFENCE: memory corruption in ses_enclosure_data_process+0x24b/0x310 [ses]
-> 
-> [   52.584917] Corrupted memory at 0xffff88982de06ff0 [ 0x00 . . . . . . . . . . . . . . . ] (in kfence-#1624698):
-> [   52.607212]  ses_enclosure_data_process+0x24b/0x310 [ses]
-> [   52.607215]  ses_intf_add+0x444/0x542 [ses]
-> [   52.621369]  class_interface_register+0x110/0x120
-> [   52.621373]  ses_init+0x13/0x1000 [ses]
-> [   52.621377]  do_one_initcall+0x41/0x1c0
-> [   52.621380]  do_init_module+0x5c/0x260
-> [   52.621382]  __do_sys_finit_module+0xb1/0x110
-> [   52.621386]  do_syscall_64+0x2d/0x40
-> [   52.621388]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> 
-> [   52.621393] kfence-#1624698 [0xffff88982de06fc0-0xffff88982de06fe0, size=33, cache=kmalloc-64] allocated by task 1033:
-> [   52.670344]  ses_enclosure_data_process+0x2ae/0x310 [ses]
-> [   52.670347]  ses_intf_add+0x444/0x542 [ses]
-> [   52.670353]  class_interface_register+0x110/0x120
-> [   52.688165]  ses_init+0x13/0x1000 [ses]
-> [   52.688169]  do_one_initcall+0x41/0x1c0
-> [   52.688172]  do_init_module+0x5c/0x260
-> [   52.688174]  __do_sys_finit_module+0xb1/0x110
-> [   52.688177]  do_syscall_64+0x2d/0x40
-> [   52.688179]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> 
-> This is because we check desc_ptr >= buf + page7_len first but then
-> write '\0' to desc_ptr[len+4], while this address may be out of bound.
-> 
-> Fixes: 21fab1d0595e ("[SCSI] ses: update enclosure data on hot add")
-> Signed-off-by: Tianchen Ding <dtcccc@linux.alibaba.com>
-> ---
->   drivers/scsi/ses.c | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-> index 0a1734f34587..06b991e27c84 100644
-> --- a/drivers/scsi/ses.c
-> +++ b/drivers/scsi/ses.c
-> @@ -559,11 +559,11 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
->   			struct enclosure_component *ecomp;
->   
->   			if (desc_ptr) {
-> -				if (desc_ptr >= buf + page7_len) {
-> +				len = (desc_ptr[2] << 8) + desc_ptr[3];
-> +				desc_ptr += 4;
-> +				if (desc_ptr + len > buf + page7_len) {
->   					desc_ptr = NULL;
->   				} else {
-> -					len = (desc_ptr[2] << 8) + desc_ptr[3];
-> -					desc_ptr += 4;
->   					/* Add trailing zero - pushes into
->   					 * reserved space */
->   					desc_ptr[len] = '\0';
 
+> christophocles@localhost:~> lsb-release -a
+LSB Version:    n/a
+Distributor ID: openSUSE
+Description:    openSUSE Tumbleweed
+Release:        20220419
+Codename:       n/a
+christophocles@localhost:~> uname -r
+5.17.3-1-default
+christophocles@localhost:~> dmesg | grep ata8
+[    0.683123] ata8: SATA max UDMA/133 abar m8192@0xde400000 port 0xde400180
+irq 16
+[    6.998524] ata8: link is slow to respond, please be patient (ready=3D0)
+[   10.730379] ata8: softreset failed (device not ready)
+[   17.042164] ata8: link is slow to respond, please be patient (ready=3D0)
+[   20.770497] ata8: softreset failed (device not ready)
+[   27.081803] ata8: link is slow to respond, please be patient (ready=3D0)
+[   55.840740] ata8: softreset failed (device not ready)
+[   55.851912] ata8: limiting SATA link speed to 1.5 Gbps
+[   60.916825] ata8: softreset failed (device not ready)
+[   60.928005] ata8: reset failed, giving up
+christophocles@localhost:~> dmesg | grep arcmsr
+               arcmsr version v1.50.00.05-20210429
+[   63.719008] arcmsr 0000:02:00.0: msi enabled
+[   95.326504] arcmsr9: abort device command of scsi id =3D 6 lun =3D 7
+[   98.990514] arcmsr: executing bus reset eh.....num_resets =3D 0, num_abo=
+rts =3D
+1=20
+[  139.002496] arcmsr9: wait 'abort all outstanding command' timeout
+[  139.017296] arcmsr9: executing hw bus reset .....
+[  192.194497] arcmsr9: wait 'start adapter background=20=20=20=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20
+rebuild' timeout=20
+[  192.208071] arcmsr: scsi bus reset eh returns with success
+[  212.562498] arcmsr9: abort device command of scsi id =3D 6 lun =3D 7
+[  216.210497] arcmsr: executing bus reset eh.....num_resets =3D 1, num_abo=
+rts =3D
+2=20
+[  256.222496] arcmsr9: wait 'abort all outstanding command' timeout
+[  256.235610] arcmsr9: executing hw bus reset .....
+[  309.422496] arcmsr9: wait 'start adapter background=20=20=20=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20
+rebuild' timeout=20
+[  309.435455] arcmsr: scsi bus reset eh returns with success
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
