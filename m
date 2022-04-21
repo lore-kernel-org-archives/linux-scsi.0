@@ -2,101 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77AA7C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Apr 2022 13:02:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D8EC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Apr 2022 14:16:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229985AbiDUNFR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Apr 2022 09:05:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55962 "EHLO
+        id S1389104AbiDUOT1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Apr 2022 10:19:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229754AbiDUNFQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 09:05:16 -0400
-Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97A86338A7;
-        Thu, 21 Apr 2022 06:02:26 -0700 (PDT)
-Received: by mail-ej1-x62a.google.com with SMTP id l7so9938601ejn.2;
-        Thu, 21 Apr 2022 06:02:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :content-transfer-encoding:user-agent:mime-version;
-        bh=bZ9BRYh9Iptwg3pfiMWF/PamDeh/TgAduLIBmTdqTrM=;
-        b=D2ngQWLeBkbQlmv0D7Ql413R4QSfNGi0WSjltKyjFD5UcGR82J8zXrQAQ9RYYkmnkU
-         /pcDFRUeI3ewWM7mlIas0uD6qPZyQ2vLxd1Y1Qipi4yH4rG78nFwbDTolXkIsa8E5q3U
-         I8uxh35sS6/lBEqds85XHKpPc8+wNPn1qnAl+USZcUA/n+rhqbb6X5PAoHhDSWtzBgIv
-         PcSxCqe/M/w+dEYVRboPliSjOx9OzaLy3HbJ5+TtQJQ4cxop0sLyXX9A/n1zD2JW9S9K
-         GDfvJWKfF+5Pw3sUJLHDdvjUlj2yX3RzyxkXcu5LVaSlXh3zJSlxq6h1Rp+5rfj8zuzN
-         Y43Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:content-transfer-encoding:user-agent:mime-version;
-        bh=bZ9BRYh9Iptwg3pfiMWF/PamDeh/TgAduLIBmTdqTrM=;
-        b=G8JCMvcM76k3epVoPiogpBUOOX6HkPHIAmX+EWzdPxxRglUs8gqYSi2X018gt1YP/Y
-         b3UxDAAL34GF/woNtx07JudI1C2vTmzVf4vaURolhdxzsiyBJHxIjcf8uiIXwlM9tGaY
-         EZdRzJT42RKLHgGlJglrrq8qlqzCDbArwaljdZP2TukW1+JXECNV+vha9PUwXMxcTnp/
-         z4wJtv5z7Ii/HgjKH2/ZmJJ/TYCzNGH+GXr/bqgaDYG9c6blpIHN7Lz/3B9zjwCO/nMF
-         t7qSVzLWXey13X2AYmJSU/oXb0dRcWxiMnGTQmBQQaHcKf1jDeB8gytsfcXiM+PvZcEL
-         JpkQ==
-X-Gm-Message-State: AOAM533qAj89Tklx0+p2tPjCu8cxdkrsUGMwaz3sOshLCoHa+0JfRgox
-        o1mXjR9juHhRh1WgwrVfOx8+NhNSgiEWXQ==
-X-Google-Smtp-Source: ABdhPJxM3/fmxYqKDgtGwzuIThkGuP0R4Z1ufpvkh5Jx37bo4XkILkg0xor/oQCC98wMLWt6WcxiOw==
-X-Received: by 2002:a17:906:7fda:b0:6ef:811b:e1b3 with SMTP id r26-20020a1709067fda00b006ef811be1b3mr20214494ejs.178.1650546144847;
-        Thu, 21 Apr 2022 06:02:24 -0700 (PDT)
-Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
-        by smtp.googlemail.com with ESMTPSA id x8-20020a170906134800b006e86ff7db33sm6529105ejb.68.2022.04.21.06.02.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Apr 2022 06:02:24 -0700 (PDT)
-Message-ID: <65d157227ed8a1f78eb7e309278ce05ec53328ee.camel@gmail.com>
-Subject: Re: [PATCH v2 1/5] scsi: ufshpb: Merge ufshpb_reset() and
- ufshpb_reset_host()
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>, keosung.park@samsung.com,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        cpgsproxy3 <cpgsproxy3@samsung.com>
+        with ESMTP id S1389096AbiDUOT0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 10:19:26 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 885783B57E;
+        Thu, 21 Apr 2022 07:16:36 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 22C5060FCA;
+        Thu, 21 Apr 2022 14:16:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 022CAC385A1;
+        Thu, 21 Apr 2022 14:16:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1650550595;
+        bh=4rKt3ppzHKCFHR7w6YkhXzMRBVU2PmjeK9/thUqymA4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=b2hJ9Dr9taTb/KjpCkxdiOVxUMuKBaHaAEWZZx6d/0jOlom0o9uYTTJxCMyBMTT3u
+         2hwJbWWXkdCrOgA+xg1D1lb2iSltZKsk+ayZNt1NWUNGGcmtHRvxgWqHHjxStWD0J3
+         oHcm7m0kPxf0CcCfy97JkzuJAJoYfvPmFYiUf/iY=
+Date:   Thu, 21 Apr 2022 16:16:32 +0200
+From:   "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+To:     Peter Wang =?utf-8?B?KOeOi+S/oeWPiyk=?= <peter.wang@mediatek.com>
 Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Thu, 21 Apr 2022 15:02:23 +0200
-In-Reply-To: <f66f17bd-67a1-b888-01a6-4c1a02f1e21b@acm.org>
-References: <20220419183044.789065-2-huobean@gmail.com>
-         <20220419183044.789065-1-huobean@gmail.com>
-         <CGME20220419183926epcas2p4f529c4cc6bed9ba4b6536f3a5977c3f2@epcms2p8>
-         <1891546521.01650433981606.JavaMail.epsvc@epcpadp4>
-         <db1551628c191c8efdc2e7bec1313c58636c995e.camel@gmail.com>
-         <f66f17bd-67a1-b888-01a6-4c1a02f1e21b@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.0-1 
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Yee Lee =?utf-8?B?KOadjuW7uuiqvCk=?= <Yee.Lee@mediatek.com>,
+        Stanley Chu =?utf-8?B?KOacseWOn+mZnik=?= 
+        <stanley.chu@mediatek.com>,
+        Powen Kao =?utf-8?B?KOmrmOS8r+aWhyk=?= <Powen.Kao@mediatek.com>,
+        Alice Chao =?utf-8?B?KOi2meePruWdhyk=?= 
+        <Alice.Chao@mediatek.com>
+Subject: Re: backport commit ("2bd3b6b75946db2ace06e145d53988e10ed7e99a [v1]
+ scsi: ufs: scsi_get_lba error fix by check cmd opcode") to
+ linux-5.15/linux-5.16/linux-5.17
+Message-ID: <YmFnQNSoEjsousM0@kroah.com>
+References: <PSAPR03MB5605E998674382AE0BF53AC7ECF49@PSAPR03MB5605.apcprd03.prod.outlook.com>
+ <PSAPR03MB5605D50B15FEB10D57FBDFF3ECF49@PSAPR03MB5605.apcprd03.prod.outlook.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <PSAPR03MB5605D50B15FEB10D57FBDFF3ECF49@PSAPR03MB5605.apcprd03.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2022-04-20 at 20:48 -0700, Bart Van Assche wrote:
-> > > How about changing it to something like ufshpb_state_toggle()?
-> > >=20
-> > > Best Regards,
-> > > Keoseong Park
-> >=20
-> > ufshpb_state_toggle() is much better, I will change it in the next
-> > version. Thanks.
->=20
-> How about ufshbp_toggle_state() such that the word order is correct?
->=20
-> Thanks,
->=20
-> Bart.
-Sound good, I will change to this one. thanks.
+On Thu, Apr 21, 2022 at 01:44:33PM +0000, Peter Wang (王信友) wrote:
+> Hi reviewers,
+> 
+> 
+> 
+> I suggest to backport
+> 
+> commit "2bd3b6b75946db2ace06e145d53988e10ed7e99a [v1] scsi: ufs: scsi_get_lba error fix by check cmd opcode"
+> 
+> to linux-5.15/linux-5.16/linux-5.17 tree.
+> 
+> 
+> 
+> This patch fix scsi_get_lba issue by
+> 
+> https://github.com/torvalds/linux/commit/54815088859fa766c7879a06ee028e0cee4f589e
+> 
+> 
+> 
+> commit: 2bd3b6b75946db2ace06e145d53988e10ed7e99a
+> 
+> subject: [v1] scsi: ufs: scsi_get_lba error fix by check cmd opcode
 
-Bean
+Now queued up, thanks.
+
+greg k-h
