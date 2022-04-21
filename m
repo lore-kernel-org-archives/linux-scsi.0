@@ -2,73 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77657C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Apr 2022 10:25:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77AA7C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Apr 2022 13:02:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245088AbiDUK2q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Apr 2022 06:28:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52392 "EHLO
+        id S229985AbiDUNFR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Apr 2022 09:05:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1388531AbiDUK1s (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 06:27:48 -0400
-Received: from mail.meizu.com (edge01.meizu.com [14.29.68.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A79461116;
-        Thu, 21 Apr 2022 03:24:58 -0700 (PDT)
-Received: from IT-EXMB-1-125.meizu.com (172.16.1.125) by mz-mail04.meizu.com
- (172.16.1.16) with Microsoft SMTP Server (TLS) id 14.3.487.0; Thu, 21 Apr
- 2022 18:25:00 +0800
-Received: from meizu.meizu.com (172.16.137.70) by IT-EXMB-1-125.meizu.com
- (172.16.1.125) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.14; Thu, 21 Apr
- 2022 18:24:56 +0800
-From:   Haowen Bai <baihaowen@meizu.com>
-To:     Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Haowen Bai <baihaowen@meizu.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH] scsi: qedf: Remove useless code
-Date:   Thu, 21 Apr 2022 18:24:53 +0800
-Message-ID: <1650536693-13089-1-git-send-email-baihaowen@meizu.com>
-X-Mailer: git-send-email 2.7.4
+        with ESMTP id S229754AbiDUNFQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 09:05:16 -0400
+Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97A86338A7;
+        Thu, 21 Apr 2022 06:02:26 -0700 (PDT)
+Received: by mail-ej1-x62a.google.com with SMTP id l7so9938601ejn.2;
+        Thu, 21 Apr 2022 06:02:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-transfer-encoding:user-agent:mime-version;
+        bh=bZ9BRYh9Iptwg3pfiMWF/PamDeh/TgAduLIBmTdqTrM=;
+        b=D2ngQWLeBkbQlmv0D7Ql413R4QSfNGi0WSjltKyjFD5UcGR82J8zXrQAQ9RYYkmnkU
+         /pcDFRUeI3ewWM7mlIas0uD6qPZyQ2vLxd1Y1Qipi4yH4rG78nFwbDTolXkIsa8E5q3U
+         I8uxh35sS6/lBEqds85XHKpPc8+wNPn1qnAl+USZcUA/n+rhqbb6X5PAoHhDSWtzBgIv
+         PcSxCqe/M/w+dEYVRboPliSjOx9OzaLy3HbJ5+TtQJQ4cxop0sLyXX9A/n1zD2JW9S9K
+         GDfvJWKfF+5Pw3sUJLHDdvjUlj2yX3RzyxkXcu5LVaSlXh3zJSlxq6h1Rp+5rfj8zuzN
+         Y43Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:content-transfer-encoding:user-agent:mime-version;
+        bh=bZ9BRYh9Iptwg3pfiMWF/PamDeh/TgAduLIBmTdqTrM=;
+        b=G8JCMvcM76k3epVoPiogpBUOOX6HkPHIAmX+EWzdPxxRglUs8gqYSi2X018gt1YP/Y
+         b3UxDAAL34GF/woNtx07JudI1C2vTmzVf4vaURolhdxzsiyBJHxIjcf8uiIXwlM9tGaY
+         EZdRzJT42RKLHgGlJglrrq8qlqzCDbArwaljdZP2TukW1+JXECNV+vha9PUwXMxcTnp/
+         z4wJtv5z7Ii/HgjKH2/ZmJJ/TYCzNGH+GXr/bqgaDYG9c6blpIHN7Lz/3B9zjwCO/nMF
+         t7qSVzLWXey13X2AYmJSU/oXb0dRcWxiMnGTQmBQQaHcKf1jDeB8gytsfcXiM+PvZcEL
+         JpkQ==
+X-Gm-Message-State: AOAM533qAj89Tklx0+p2tPjCu8cxdkrsUGMwaz3sOshLCoHa+0JfRgox
+        o1mXjR9juHhRh1WgwrVfOx8+NhNSgiEWXQ==
+X-Google-Smtp-Source: ABdhPJxM3/fmxYqKDgtGwzuIThkGuP0R4Z1ufpvkh5Jx37bo4XkILkg0xor/oQCC98wMLWt6WcxiOw==
+X-Received: by 2002:a17:906:7fda:b0:6ef:811b:e1b3 with SMTP id r26-20020a1709067fda00b006ef811be1b3mr20214494ejs.178.1650546144847;
+        Thu, 21 Apr 2022 06:02:24 -0700 (PDT)
+Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
+        by smtp.googlemail.com with ESMTPSA id x8-20020a170906134800b006e86ff7db33sm6529105ejb.68.2022.04.21.06.02.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Apr 2022 06:02:24 -0700 (PDT)
+Message-ID: <65d157227ed8a1f78eb7e309278ce05ec53328ee.camel@gmail.com>
+Subject: Re: [PATCH v2 1/5] scsi: ufshpb: Merge ufshpb_reset() and
+ ufshpb_reset_host()
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>, keosung.park@samsung.com,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        cpgsproxy3 <cpgsproxy3@samsung.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date:   Thu, 21 Apr 2022 15:02:23 +0200
+In-Reply-To: <f66f17bd-67a1-b888-01a6-4c1a02f1e21b@acm.org>
+References: <20220419183044.789065-2-huobean@gmail.com>
+         <20220419183044.789065-1-huobean@gmail.com>
+         <CGME20220419183926epcas2p4f529c4cc6bed9ba4b6536f3a5977c3f2@epcms2p8>
+         <1891546521.01650433981606.JavaMail.epsvc@epcpadp4>
+         <db1551628c191c8efdc2e7bec1313c58636c995e.camel@gmail.com>
+         <f66f17bd-67a1-b888-01a6-4c1a02f1e21b@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.0-1 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.16.137.70]
-X-ClientProxiedBy: IT-EXMB-1-126.meizu.com (172.16.1.126) To
- IT-EXMB-1-125.meizu.com (172.16.1.125)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-buf msg only memset but no use at all, so we drop it.
+On Wed, 2022-04-20 at 20:48 -0700, Bart Van Assche wrote:
+> > > How about changing it to something like ufshpb_state_toggle()?
+> > >=20
+> > > Best Regards,
+> > > Keoseong Park
+> >=20
+> > ufshpb_state_toggle() is much better, I will change it in the next
+> > version. Thanks.
+>=20
+> How about ufshbp_toggle_state() such that the word order is correct?
+>=20
+> Thanks,
+>=20
+> Bart.
+Sound good, I will change to this one. thanks.
 
-Signed-off-by: Haowen Bai <baihaowen@meizu.com>
----
- drivers/scsi/qedf/qedf_attr.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/scsi/qedf/qedf_attr.c b/drivers/scsi/qedf/qedf_attr.c
-index fdc66d294813..8d8c760eee43 100644
---- a/drivers/scsi/qedf/qedf_attr.c
-+++ b/drivers/scsi/qedf/qedf_attr.c
-@@ -131,7 +131,6 @@ qedf_sysfs_write_grcdump(struct file *filep, struct kobject *kobj,
- 	struct qedf_ctx *qedf = NULL;
- 	long reading;
- 	int ret = 0;
--	char msg[40];
- 
- 	if (off != 0)
- 		return ret;
-@@ -148,7 +147,6 @@ qedf_sysfs_write_grcdump(struct file *filep, struct kobject *kobj,
- 		return ret;
- 	}
- 
--	memset(msg, 0, sizeof(msg));
- 	switch (reading) {
- 	case 0:
- 		memset(qedf->grcdump, 0, qedf->grcdump_size);
--- 
-2.7.4
-
+Bean
