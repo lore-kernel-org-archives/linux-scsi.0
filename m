@@ -2,86 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D8EC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Apr 2022 14:16:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6323C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Apr 2022 14:25:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1389104AbiDUOT1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Apr 2022 10:19:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56226 "EHLO
+        id S1389197AbiDUO2c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Apr 2022 10:28:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1389096AbiDUOT0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 10:19:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 885783B57E;
-        Thu, 21 Apr 2022 07:16:36 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 22C5060FCA;
-        Thu, 21 Apr 2022 14:16:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 022CAC385A1;
-        Thu, 21 Apr 2022 14:16:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1650550595;
-        bh=4rKt3ppzHKCFHR7w6YkhXzMRBVU2PmjeK9/thUqymA4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=b2hJ9Dr9taTb/KjpCkxdiOVxUMuKBaHaAEWZZx6d/0jOlom0o9uYTTJxCMyBMTT3u
-         2hwJbWWXkdCrOgA+xg1D1lb2iSltZKsk+ayZNt1NWUNGGcmtHRvxgWqHHjxStWD0J3
-         oHcm7m0kPxf0CcCfy97JkzuJAJoYfvPmFYiUf/iY=
-Date:   Thu, 21 Apr 2022 16:16:32 +0200
-From:   "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-To:     Peter Wang =?utf-8?B?KOeOi+S/oeWPiyk=?= <peter.wang@mediatek.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Yee Lee =?utf-8?B?KOadjuW7uuiqvCk=?= <Yee.Lee@mediatek.com>,
-        Stanley Chu =?utf-8?B?KOacseWOn+mZnik=?= 
-        <stanley.chu@mediatek.com>,
-        Powen Kao =?utf-8?B?KOmrmOS8r+aWhyk=?= <Powen.Kao@mediatek.com>,
-        Alice Chao =?utf-8?B?KOi2meePruWdhyk=?= 
-        <Alice.Chao@mediatek.com>
-Subject: Re: backport commit ("2bd3b6b75946db2ace06e145d53988e10ed7e99a [v1]
- scsi: ufs: scsi_get_lba error fix by check cmd opcode") to
- linux-5.15/linux-5.16/linux-5.17
-Message-ID: <YmFnQNSoEjsousM0@kroah.com>
-References: <PSAPR03MB5605E998674382AE0BF53AC7ECF49@PSAPR03MB5605.apcprd03.prod.outlook.com>
- <PSAPR03MB5605D50B15FEB10D57FBDFF3ECF49@PSAPR03MB5605.apcprd03.prod.outlook.com>
+        with ESMTP id S1388932AbiDUO2a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 10:28:30 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46AE911A3D;
+        Thu, 21 Apr 2022 07:25:41 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 9CB7B68B05; Thu, 21 Apr 2022 16:25:35 +0200 (CEST)
+Date:   Thu, 21 Apr 2022 16:25:35 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Ritesh Harjani <riteshh@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 2/2] blk-crypto: fix the blk_crypto_profile liftime
+Message-ID: <20220421142535.GA21025@lst.de>
+References: <20220420064745.1119823-1-hch@lst.de> <20220420064745.1119823-3-hch@lst.de> <YmBiAQ/IZbFhRc6o@sol.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <PSAPR03MB5605D50B15FEB10D57FBDFF3ECF49@PSAPR03MB5605.apcprd03.prod.outlook.com>
+In-Reply-To: <YmBiAQ/IZbFhRc6o@sol.localdomain>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 21, 2022 at 01:44:33PM +0000, Peter Wang (王信友) wrote:
-> Hi reviewers,
-> 
-> 
-> 
-> I suggest to backport
-> 
-> commit "2bd3b6b75946db2ace06e145d53988e10ed7e99a [v1] scsi: ufs: scsi_get_lba error fix by check cmd opcode"
-> 
-> to linux-5.15/linux-5.16/linux-5.17 tree.
-> 
-> 
-> 
-> This patch fix scsi_get_lba issue by
-> 
-> https://github.com/torvalds/linux/commit/54815088859fa766c7879a06ee028e0cee4f589e
-> 
-> 
-> 
-> commit: 2bd3b6b75946db2ace06e145d53988e10ed7e99a
-> 
-> subject: [v1] scsi: ufs: scsi_get_lba error fix by check cmd opcode
+On Wed, Apr 20, 2022 at 12:41:53PM -0700, Eric Biggers wrote:
+> Can you elaborate on what you think the actual problem is here?  The lifetime of
+> the blk_crypto_profile matches that of the host controller kobject, and I
+> thought that it is not destroyed until after higher-level objects such as
+> gendisks and request_queues are destroyed.
 
-Now queued up, thanks.
+I don't think all driver authors agree with that assumption (and it isn't
+documented anywhere). 
 
-greg k-h
+The most trivial case is device mapper, where the crypto profіle is freed
+before putting the gendisk reference acquired by blk_alloc_disk.  So
+anyone who opened the sysfs file at some point before the delete can
+still have it open and triviall access freed memory when then doing
+a read on it after the dm table is freed.
+
+For UFS things seem to work out ok because the ufs_hba is part of
+the Scsi_Host, which is the parent device of the gendisk.
+
+> Similar assumptions are made by the
+> queue kobject, which assumes it is safe to access the gendisk, and by the
+> independent_access_ranges kobject which assumes it is safe to access the queue.
+
+Yes, every queue/ object that references the gendisk has a problem I think.
+I've been wading through this code and trying to fix it, which made me
+notice this code.
+
+> In any case, this proposal is not correct since it is assuming that each
+> blk_crypto_profile is referenced by only one request_queue, which is not
+> necessarily the case since a host controller can have multiple disks.
+> The same kobject can't be added to multiple places in the hierarchy.
+
+Indeed.
+
+> If we did need to do something differently here, I think we'd either need to put
+> the blk_crypto_profile kobject under the host controller one and link to it from
+> the queue directories (which I mentioned in commit 20f01f163203 as an
+> alternative considered), or duplicate the crypto capabilities in each
+> request_queue and only share the actual keyslot management data structures.
+
+Do we even need the link instead of letting the user walk down the
+directory hierachy?  But yes, having the sysfs attributes on the
+actual object is a much better idea.
+
+> 
+> - Eric
+---end quoted text---
