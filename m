@@ -2,406 +2,320 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0078CC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Apr 2022 18:31:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13E92C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Apr 2022 20:04:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1391385AbiDUSdu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Apr 2022 14:33:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54090 "EHLO
+        id S1392176AbiDUUHD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Apr 2022 16:07:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1391368AbiDUSdn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 14:33:43 -0400
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91C184BB85
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2022 11:30:51 -0700 (PDT)
-Received: by mail-pg1-f177.google.com with SMTP id t4so5358648pgc.1
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2022 11:30:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=1NEVzUEH6vJmuRIkixQzXIWGPc9+5aPpkZDRTi35S/Q=;
-        b=V5PtR438wPFM8t4xkhe619Mew2CBnsIt3oEq+J0PmAZR6PbCYIs0ab/pPgTsfSZcNr
-         nZYZIEcInHrtUBdTAfOn0SpzkzMg4N4yg5ip8Yq+qEzbJp63iXtO5fI/VtkTFKMnrvac
-         2J0YwvMUviEsdHZDrRFRptrGVKyPEAxQ/fFjQPGfCaM/fp3TgPt4pGeSiedpcnSunrsE
-         GkHx/En3DEuDvvI7PcsgJ629tpJe9v3RqitUqVUEJhUvt0TlTC7TNLZ1elR+Lp9PSGyK
-         JQSwR233x7VJCV/Eg+G2i5h+rvm8tqd5h2PnSpi1xQKLfKXYjLm01XMzJq5JdbQClqfy
-         jzOQ==
-X-Gm-Message-State: AOAM531XbbhUfjsi7LuQA6s15xioit9G6q0iXwpKWzBEJWJVOEdsU9fV
-        lH4Sj+Vlcabrjvb+/4pHsJU=
-X-Google-Smtp-Source: ABdhPJxo5H1Kph/BqPvZi2EfIyhizxHc0IXhInh54X6EvgE9Ta5GRWJThmf3lRy7PHAbOk8UyeDygw==
-X-Received: by 2002:a65:410a:0:b0:399:38b9:8ba with SMTP id w10-20020a65410a000000b0039938b908bamr632128pgp.526.1650565850980;
-        Thu, 21 Apr 2022 11:30:50 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:a034:31d8:ca4e:1f35])
-        by smtp.gmail.com with ESMTPSA id a22-20020a62d416000000b0050bd98eaccbsm2181079pfh.213.2022.04.21.11.30.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Apr 2022 11:30:50 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        with ESMTP id S1386080AbiDUUG6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 16:06:58 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6A2449FB7
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2022 13:04:07 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23LIEFVt009531;
+        Thu, 21 Apr 2022 20:03:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=wo4N6dl+4t19r5Q1LbogW9cB4uQYNc7+bSkUwp7Qoi0=;
+ b=KzwxqN6NwaVwql756bkYlWK5EkFBH2VzLLYVKpswcu3zgXYYQnjNlkdP5hp+fsKBhzQk
+ k/a/nhkM03SiQiIH0JLO0x1K8e8KpIOxZGaHe3wS9p6j7BxYMsh5cFse1yfPRum/4M+v
+ t7/TMXM/3Z02wXn1zWmlTB27sLiWwR/pT7bF8Cm1G2L5oEzT7xbQyuSTtv4imM+tTM1L
+ 6nj2V7enyH2eKdpgURzV10nNFjeSzwtn0C6erws3RNu3iMOBAoVAOHvIHEgTqDj3LnJu
+ eKxgiON58va7fDvegWGG1Ahw4ktr8aT5RxWtEW4x9ophaLTwmGEL+XheFhD7YqOLrSq+ vg== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3ffmk2w28g-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Apr 2022 20:03:53 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23LK2DXq022957;
+        Thu, 21 Apr 2022 20:03:53 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3ffm8cqa3d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Apr 2022 20:03:52 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=NPlLSnH6TwEJ7S4xadiKlmGwZcxPbkSyXNfCptuiCEEK6E0RIYJu2m2xVAU2RktmeGznyl/1Y0H8wx+dPBbHAh0opXawewXdCTm7mz1JM2C8a+XGpeVGd5ffjfE49KeKGdOCCrlt+bKsoS4pPop72+I9xfHI9v2m8e4vRVzorhf90aeyYHRTxSAblTQF08tmB/f40kYKGYG+aeUBvtNtNaBdCZyMhYe+ZGuZO218Z8chydfTSlHCpGM7xo3FgtEZscPyhsDC/gDW75RReQj+kZCCII/DcRvSJOJQybmz4Uljgr6y5QF+u82zAER5GJzu9hyprJ4TNsFfIMusQdTTNQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=wo4N6dl+4t19r5Q1LbogW9cB4uQYNc7+bSkUwp7Qoi0=;
+ b=U893wo1cg2ffSuW5oN286l7vJVGkE85mqi4Ylf9ev89uAgOWZq2ry+gQFdtj22/KvwIJz86DhIga7aHM5QYp6Ku6RqEYCkz0oMVfo/oeIfBn9QHRiEJBRdYJG6CgR9lUzVVDgpgVcb8IdhoI1st15zpA9yaIPvMwmE1TfWGKzcG7G3eWZWQe3Lzsdttp1x4A6f2cRjop6v3uBL1EhoNUu2KoaiMKdY9GEL4iXQSHiCMpVp+sAbjypx71WPYYBCAHJPZfqfjZgTKFuTsrxzoHEd4ZVHrHF0CJJ1Rc2kxvDMdQDH4nXx+OofMw1HJINPn0n7bBwcnZanajIh0CsiVujw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=wo4N6dl+4t19r5Q1LbogW9cB4uQYNc7+bSkUwp7Qoi0=;
+ b=JP79bX00I9h/HZHogXOAPP2izTeuup933FPYS3IEOgd9fQj54SKKcEa+na8yGBTG9eLWR3dGW2tImeFYGoXm1YLnO9qhoXyTPV28xn6BBN5aXLcNgB388pIejKuD7sfQPcexW79WcuQibTa6HvxDf9Ct8v/iZqmJEtK9yG/uSOU=
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
+ by CY4PR10MB1720.namprd10.prod.outlook.com (2603:10b6:910:a::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5186.13; Thu, 21 Apr
+ 2022 20:03:50 +0000
+Received: from SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::a0bc:ec02:3bba:830c]) by SN6PR10MB2943.namprd10.prod.outlook.com
+ ([fe80::a0bc:ec02:3bba:830c%7]) with mapi id 15.20.5164.026; Thu, 21 Apr 2022
+ 20:03:50 +0000
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hannes Reinecke <hare@suse.de>,
         Shaun Tancheff <shaun.tancheff@seagate.com>,
         Douglas Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 9/9] scsi_debug: Add gap zone support
-Date:   Thu, 21 Apr 2022 11:30:23 -0700
-Message-Id: <20220421183023.3462291-10-bvanassche@acm.org>
-X-Mailer: git-send-email 2.36.0.rc2.479.g8af0fa9b8e-goog
-In-Reply-To: <20220421183023.3462291-1-bvanassche@acm.org>
+Subject: Re: [PATCH v2 1/9] scsi: sd_zbc: Improve source code documentation
+Thread-Topic: [PATCH v2 1/9] scsi: sd_zbc: Improve source code documentation
+Thread-Index: AQHYVa5Ag+XeLs8QJUuynys2c/rxG6z6yniA
+Date:   Thu, 21 Apr 2022 20:03:50 +0000
+Message-ID: <78344F6A-88B5-44BE-852E-637E326C3ED7@oracle.com>
 References: <20220421183023.3462291-1-bvanassche@acm.org>
+ <20220421183023.3462291-2-bvanassche@acm.org>
+In-Reply-To: <20220421183023.3462291-2-bvanassche@acm.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3696.80.82.1.1)
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 164c477a-bb79-44ff-ca42-08da23d20d98
+x-ms-traffictypediagnostic: CY4PR10MB1720:EE_
+x-microsoft-antispam-prvs: <CY4PR10MB172060FE7695CA81AEE61A3CE6F49@CY4PR10MB1720.namprd10.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: ev4b7M1osOkf/2ozBWJwX9ZL4vwPY9BUUCd4g3zikNY7jAYjpKobTnvqmw9pg6hVmIsiI33sCMv4o0Ap5x+83JzitX0shcg+uzqRiu8aXPYk6BnfFW6Z5JsivquXigAVgoa5NUviM9Ir9zY+v2bSfgXftaqcK4NcavXwXj+RP8SblMnM0r4UZUFVNuKcv4PAAMXAExUx9LF/XbiYY6TFPgILJh0X/16Fbetl/839wnO4lHW7AJismU6K4HL8t+s4rnecFmWWO3wEC+KJEit43gRMRoaTIvfdCPJKEUvvo0mfo0F4/MnN5eOGovh8+H9xOQ7e8esbo1GZ/AjfFVmFJOZO0rRGhNk/5c5UehbhpLG/QHEhSPy6qlDsr1VUNH73Q2LXTfSttpQWjuqDCZwprJS3A9iweQNvSGrkxp9PirYxy5ccV4Rd3tBesava65edxH7iAZ/2VsZsm2EcIK4AqrTms8GNRcGtJucNZ1h29n5z5Uj3EUrHVc5VbSM6/2xS9gaSip/huE5bpi4vKWoW7bY+PXKw9aYFpw/3QWKmA/JmwXFzZ+AnQEPoW/FH7mkJ73MO8+mGM1itmL5uW0C+RgvfwF6zWMboUiorThpUbyCyUanvFUnEYgZwNMOySAk8Odk5+LDX66wO8jdbcMNpDmChaDMuPnNaHHPth12H+JiU02Ua/sDGkna8k7f07nmPq2kItZ6y71CG11zmhkD34e9VfaH6z9LyJMILSoQlUKs=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(6506007)(2906002)(4326008)(83380400001)(6512007)(38070700005)(53546011)(8676002)(33656002)(316002)(8936002)(5660300002)(38100700002)(44832011)(26005)(66556008)(76116006)(64756008)(508600001)(91956017)(6916009)(122000001)(66946007)(2616005)(86362001)(6486002)(66476007)(66446008)(36756003)(54906003)(71200400001)(186003)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?CuUNqjmZLGgl88a5hj3J5MvZEh6MY0neBuf2y69GFmyngQ4iIFviA7eP0oir?=
+ =?us-ascii?Q?ZP25ZQxp5BWDB1uMcJ2fihdAHVLgSk0XUJRVH5AF/WloRUDorAbsT8js4cWP?=
+ =?us-ascii?Q?0vXNi1ar2j1q4LjaLPV0Y63Zieke0j5JqjHjtlZUGSEUPdhq8tI7UB44u6BI?=
+ =?us-ascii?Q?D3QtCEaafmFzPbkeFIYMl7L6Jpzo5c4JWbSoX+N5raq+H6+K9yVbM4aw0XqF?=
+ =?us-ascii?Q?SVBEEBZERv1mNrr4I1rDT+3us52clD4BU8lrPexCeV3QIiKQkJDV9Zi+jJd7?=
+ =?us-ascii?Q?xBWCmm9teE0//NL905jvVxGqBo/6baGiIn3vSXjLg+T/Zq7ep6eMLwUym55d?=
+ =?us-ascii?Q?F6qKrQ7egOWcNqRlqbz+saaGeYXrfVOBZLWymonbf9vtvwfD49qBRSSOTSMy?=
+ =?us-ascii?Q?OF6uW6LByN2ca9ZVrbNR/t1xAj/dpNqWcNYHiV07miCARwhrNrPfAfXbyQt7?=
+ =?us-ascii?Q?ANZ8oYkhOcOV+vo2CRYBNRWTTgSieN4Ih/LHWT25G44pCgunFEelP55RgG2Z?=
+ =?us-ascii?Q?NChnfzTFLcMXR/CKXqTVYuhvRfL3BmsKHqvWuuy5tCdsDJxbyilrM6eN8Z7v?=
+ =?us-ascii?Q?TocQrjZOFQWeBBO9VPLOd3rjGUS0Jlsw8FWLs716FfQ1QRV/s73EF8iRAM5j?=
+ =?us-ascii?Q?qDLDr0EQTpCyIfULSa8x8dGsaoYJGezQGjTDs1Tu1ueR7E3m2Jpfyz8ALt3g?=
+ =?us-ascii?Q?wkzIP7d4Swt0kGcvdMN+aIpAC7BECBy/d4oZvfDOX5V79XY7ENgHWkXWgR8W?=
+ =?us-ascii?Q?8E339TxdoZJ+i8iUlRPD0Ja6E23j8Sk/qjgloMmc4PhKbA5m8j/lMrVEsn8G?=
+ =?us-ascii?Q?QVcxVrus+XjH+CfjykR3tFWG31+l2tSNyzy1c8Mge0u9EmYy+9xHwbGumMRc?=
+ =?us-ascii?Q?iOKDjq055cf3wWX8f9Ozb1hrZBzQF6X3Xf7ctxASL2yyPrAa6cHqnOUdNmjb?=
+ =?us-ascii?Q?9o2hSdzbHAJXp3RGEZfsgbur0eCtGusa28RGPPJv3jhNyEENUnUWs2KPIAWG?=
+ =?us-ascii?Q?PFFKEfsWkzEU13aOq8s5GflwXtLZ0Wd3BUZIDh+0MtIQuKrO1B8EUuBfLptB?=
+ =?us-ascii?Q?LhW6ujMVtOIpgAsMqPi0aQOJS/FFkNUXVXSgLV4aKaOwsZiacbMLEs7SzQTx?=
+ =?us-ascii?Q?vIQ92QkXoCiZaFxOI+/3/KAzZQQ24wWpL4kDmz2pszJQhcmWZhi/wBSe0jTT?=
+ =?us-ascii?Q?DG15gWqQjR2K2cXJ/vybcYEbbj23QLbRB4t0wQgN3aFtyI1hdsmJdc7uu5+e?=
+ =?us-ascii?Q?O1lRAx1hKPvz+BOzJAINpBI+Zx/emhM0NjXMo7T4kEbLfa+SLLOCnPhrcCAV?=
+ =?us-ascii?Q?jcD4DoGSUwMgFRqGRI2QBz146wT5zTO4K97rso9Pol+ZpAp8dHDRk2nKCR84?=
+ =?us-ascii?Q?pqN+dsF5kPicjB5aLbudc+aAshNQSZqZKgCAIh3U0J4Vh8v1nPI9hEkBN6L9?=
+ =?us-ascii?Q?8qmi1zkAyY/+IH3BtJETljb1dWZbT7W3CWC/t4n50ZQzOOZ9zEcxNldKeb2S?=
+ =?us-ascii?Q?15hBYH7KvvI5yfROAixWFiNlzYxxXOFe1cTBSijnjnrVNiuLEIC7plcHq5VG?=
+ =?us-ascii?Q?nO/fyYAHth/0gaB1ynN+cvQNbRVNacY348E7OXp74l4rwGygnemtRQEdelbg?=
+ =?us-ascii?Q?jdpFrqgpYeHrjI0DrbMnXatAeUOBb4xCYVHS9jA98fVyEQJ8UepY9O7zdg8O?=
+ =?us-ascii?Q?4sROLjPDOboowQh8GBBrKz8kz8BNt357pIv6w/u551fheZXDH9ZkD3KZtSS/?=
+ =?us-ascii?Q?yo7o4gw7Jl5FoMNWvh8dljFl8vnefa9iAnHfD8btg+Ddz5wB4AIS?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <AEE05C866EE6894EBFBDBC6140993B59@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 164c477a-bb79-44ff-ca42-08da23d20d98
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Apr 2022 20:03:50.3474
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: rZpnyHnLB4ndTbbzhrAUztjiODDW6Xe+tVR2B1kb5HGLbUM6PaWXUqsmYCOwstZh7LS+9yA+LlWqv3jD2FLsMRykJ5XlmkjPw3x36aU+HA4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR10MB1720
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.858
+ definitions=2022-04-21_04:2022-04-21,2022-04-21 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0
+ malwarescore=0 mlxlogscore=999 suspectscore=0 spamscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2204210106
+X-Proofpoint-GUID: u_p-zG_L6GC6TJ2AxvvYk6p21U1VkRJa
+X-Proofpoint-ORIG-GUID: u_p-zG_L6GC6TJ2AxvvYk6p21U1VkRJa
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add the 'zone_cap_mb' kernel module parameter. This parameter defines
-the zone capacity. The zone capacity must be less than or equal to the
-zone size.
 
-Report that sequential write zones and gap zones are paired in the Zoned
-Block Device Characteristics VPD page (page B6h).
 
-This patch has been tested as follows:
+> On Apr 21, 2022, at 11:30 AM, Bart Van Assche <bvanassche@acm.org> wrote:
+>=20
+> Add several kernel-doc headers. Declare input arrays const. Specify the
+> array size in function declarations.
+>=20
+> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+> drivers/scsi/sd.h     |  5 ++--
+> drivers/scsi/sd_zbc.c | 55 ++++++++++++++++++++++++++++++++++++++++---
+> 2 files changed, 54 insertions(+), 6 deletions(-)
+>=20
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+> index 0a33a4b68ffb..4849cbe771a7 100644
+> --- a/drivers/scsi/sd.h
+> +++ b/drivers/scsi/sd.h
+> @@ -222,7 +222,7 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)
+> #ifdef CONFIG_BLK_DEV_ZONED
+>=20
+> void sd_zbc_release_disk(struct scsi_disk *sdkp);
+> -int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
+> +int sd_zbc_read_zones(struct scsi_disk *sdkp, u8 buf[SD_BUF_SIZE]);
+> int sd_zbc_revalidate_zones(struct scsi_disk *sdkp);
+> blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
+> 					 unsigned char op, bool all);
+> @@ -238,8 +238,7 @@ blk_status_t sd_zbc_prepare_zone_append(struct scsi_c=
+mnd *cmd, sector_t *lba,
+>=20
+> static inline void sd_zbc_release_disk(struct scsi_disk *sdkp) {}
+>=20
+> -static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
+> -				    unsigned char *buf)
+> +static inline int sd_zbc_read_zones(struct scsi_disk *sdkp, u8 buf[SD_BU=
+F_SIZE])
+> {
+> 	return 0;
+> }
+> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+> index 7f466280993b..2ae44bc52a5f 100644
+> --- a/drivers/scsi/sd_zbc.c
+> +++ b/drivers/scsi/sd_zbc.c
+> @@ -20,6 +20,12 @@
+>=20
+> #include "sd.h"
+>=20
+> +/**
+> + * sd_zbc_get_zone_wp_offset - Get zone write pointer offset.
+> + * @zone: Zone for which to return the write pointer offset.
+> + *
+> + * Return: offset of the write pointer from the start of the zone.
+> + */
+> static unsigned int sd_zbc_get_zone_wp_offset(struct blk_zone *zone)
+> {
+> 	if (zone->type =3D=3D ZBC_ZONE_TYPE_CONV)
+> @@ -44,7 +50,21 @@ static unsigned int sd_zbc_get_zone_wp_offset(struct b=
+lk_zone *zone)
+> 	}
+> }
+>=20
+> -static int sd_zbc_parse_report(struct scsi_disk *sdkp, u8 *buf,
+> +/**
+> + * sd_zbc_parse_report - Parse a SCSI zone descriptor
+> + * @sdkp: SCSI disk pointer.
+> + * @buf: SCSI zone descriptor.
+> + * @idx: Index of the zone relative to the first zone reported by the cu=
+rrent
+> + *	sd_zbc_report_zones() call.
+> + * @cb: Callback function pointer.
+> + * @data: Second argument passed to @cb.
+> + *
+> + * Return: Value returned by @cb.
+> + *
+> + * Convert a SCSI zone descriptor into struct blk_zone format. Additiona=
+lly,
+> + * call @cb(blk_zone, @data).
+> + */
+> +static int sd_zbc_parse_report(struct scsi_disk *sdkp, const u8 buf[64],
+> 			       unsigned int idx, report_zones_cb cb, void *data)
+> {
+> 	struct scsi_device *sdp =3D sdkp->device;
+> @@ -189,6 +209,17 @@ static inline sector_t sd_zbc_zone_sectors(struct sc=
+si_disk *sdkp)
+> 	return logical_to_sectors(sdkp->device, sdkp->zone_blocks);
+> }
+>=20
+> +/**
+> + * sd_zbc_report_zones - SCSI .report_zones() callback.
+> + * @disk: Disk to report zones for.
+> + * @sector: Start sector.
+> + * @nr_zones: Maximum number of zones to report.
+> + * @cb: Callback function called to report zone information.
+> + * @data: Second argument passed to @cb.
+> + *
+> + * Called by the block layer to iterate over zone information. See also =
+the
+> + * disk->fops->report_zones() calls in block/blk-zoned.c.
+> + */
+> int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
+> 			unsigned int nr_zones, report_zones_cb cb, void *data)
+> {
+> @@ -276,6 +307,10 @@ static int sd_zbc_update_wp_offset_cb(struct blk_zon=
+e *zone, unsigned int idx,
+> 	return 0;
+> }
+>=20
+> +/*
+> + * An attempt to append a zone triggered an invalid write pointer error.
+> + * Reread the write pointer of the zone(s) in which the append failed.
+> + */
+> static void sd_zbc_update_wp_offset_workfn(struct work_struct *work)
+> {
+> 	struct scsi_disk *sdkp;
+> @@ -585,7 +620,7 @@ static int sd_zbc_check_zoned_characteristics(struct =
+scsi_disk *sdkp,
+>  * sd_zbc_check_capacity - Check the device capacity
+>  * @sdkp: Target disk
+>  * @buf: command buffer
+> - * @zblocks: zone size in number of blocks
+> + * @zblocks: zone size in logical blocks
+>  *
+>  * Get the device zone size and check that the device capacity as reporte=
+d
+>  * by READ CAPACITY matches the max_lba value (plus one) of the report zo=
+nes
+> @@ -696,6 +731,11 @@ static void sd_zbc_revalidate_zones_cb(struct gendis=
+k *disk)
+> 	swap(sdkp->zones_wp_offset, sdkp->rev_wp_offset);
+> }
+>=20
+> +/*
+> + * Call blk_revalidate_disk_zones() if any of the zoned disk properties =
+have
+> + * changed that make it necessary to call that function. Called by
+> + * sd_revalidate_disk() after the gendisk capacity has been set.
+> + */
+> int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+> {
+> 	struct gendisk *disk =3D sdkp->disk;
+> @@ -774,7 +814,16 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+> 	return ret;
+> }
+>=20
+> -int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+> +/**
+> + * sd_zbc_read_zones - Read zone information and update the request queu=
+e
+> + * @sdkp: SCSI disk pointer.
+> + * @buf: 512 byte buffer used for storing SCSI command output.
+> + *
+> + * Read zone information and update the request queue zone characteristi=
+cs and
+> + * also the zoned device information in *sdkp. Called by sd_revalidate_d=
+isk()
+> + * before the gendisk capacity has been set.
+> + */
+> +int sd_zbc_read_zones(struct scsi_disk *sdkp, u8 buf[SD_BUF_SIZE])
+> {
+> 	struct gendisk *disk =3D sdkp->disk;
+> 	struct request_queue *q =3D disk->queue;
 
-modprobe scsi_debug delay=0 sector_size=512 dev_size_mb=128 zbc=host-managed zone_nr_conv=16 zone_size_mb=4 zone_cap_mb=3
-modprobe brd rd_nr=1 rd_size=$((1<<20))
-mkfs.f2fs -m /dev/ram0 -c /dev/${scsi_debug_dev}
-mount /dev/ram0 /mnt
- # Run a fio job that uses /mnt
 
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-[ bvanassche: Switched to reporting a constant zone starting LBA granularity ]
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_debug.c | 129 ++++++++++++++++++++++++++++++--------
- 1 file changed, 104 insertions(+), 25 deletions(-)
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 47cec83a4b7c..d4ab21c5d26a 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -16,7 +16,7 @@
- #define pr_fmt(fmt) KBUILD_MODNAME ":%s: " fmt, __func__
- 
- #include <linux/module.h>
--
-+#include <linux/align.h>
- #include <linux/kernel.h>
- #include <linux/errno.h>
- #include <linux/jiffies.h>
-@@ -99,6 +99,7 @@ static const char *sdebug_version_date = "20210520";
- #define WRITE_BOUNDARY_ASCQ 0x5
- #define READ_INVDATA_ASCQ 0x6
- #define READ_BOUNDARY_ASCQ 0x7
-+#define ATTEMPT_ACCESS_GAP 0x9
- #define INSUFF_ZONE_ASCQ 0xe
- 
- /* Additional Sense Code Qualifier (ASCQ) */
-@@ -255,6 +256,8 @@ enum sdebug_z_type {
- 	ZBC_ZTYPE_CNV	= 0x1,
- 	ZBC_ZTYPE_SWR	= 0x2,
- 	ZBC_ZTYPE_SWP	= 0x3,
-+	/* ZBC_ZTYPE_SOBR = 0x4, */
-+	ZBC_ZTYPE_GAP	= 0x5,
- };
- 
- /* enumeration names taken from table 26, zbcr05 */
-@@ -292,10 +295,12 @@ struct sdebug_dev_info {
- 
- 	/* For ZBC devices */
- 	enum blk_zoned_model zmodel;
-+	unsigned int zcap;
- 	unsigned int zsize;
- 	unsigned int zsize_shift;
- 	unsigned int nr_zones;
- 	unsigned int nr_conv_zones;
-+	unsigned int nr_seq_zones;
- 	unsigned int nr_imp_open;
- 	unsigned int nr_exp_open;
- 	unsigned int nr_closed;
-@@ -833,6 +838,7 @@ static int dif_errors;
- 
- /* ZBC global data */
- static bool sdeb_zbc_in_use;	/* true for host-aware and host-managed disks */
-+static int sdeb_zbc_zone_cap_mb;
- static int sdeb_zbc_zone_size_mb;
- static int sdeb_zbc_max_open = DEF_ZBC_MAX_OPEN_ZONES;
- static int sdeb_zbc_nr_conv = DEF_ZBC_NR_CONV_ZONES;
-@@ -1563,6 +1569,12 @@ static int inquiry_vpd_b6(struct sdebug_dev_info *devip, unsigned char *arr)
- 		put_unaligned_be32(devip->max_open, &arr[12]);
- 	else
- 		put_unaligned_be32(0xffffffff, &arr[12]);
-+	if (devip->zcap < devip->zsize) {
-+		arr[19] = ZBC_CONSTANT_ZONE_START_OFFSET;
-+		put_unaligned_be64(devip->zsize, &arr[20]);
-+	} else {
-+		arr[19] = 0;
-+	}
- 	return 0x3c;
- }
- 
-@@ -2715,7 +2727,23 @@ static inline bool sdebug_dev_is_zoned(struct sdebug_dev_info *devip)
- static struct sdeb_zone_state *zbc_zone(struct sdebug_dev_info *devip,
- 					unsigned long long lba)
- {
--	return &devip->zstate[lba >> devip->zsize_shift];
-+	u32 zno = lba >> devip->zsize_shift;
-+	struct sdeb_zone_state *zsp;
-+
-+	if (devip->zcap == devip->zsize || zno < devip->nr_conv_zones)
-+		return &devip->zstate[zno];
-+
-+	/*
-+	 * If the zone capacity is less than the zone size, adjust for gap
-+	 * zones.
-+	 */
-+	zno = 2 * zno - devip->nr_conv_zones;
-+	WARN_ONCE(zno >= devip->nr_zones, "%u > %u\n", zno, devip->nr_zones);
-+	zsp = &devip->zstate[zno];
-+	if (lba >= zsp->z_start + zsp->z_size)
-+		zsp++;
-+	WARN_ON_ONCE(lba >= zsp->z_start + zsp->z_size);
-+	return zsp;
- }
- 
- static inline bool zbc_zone_is_conv(struct sdeb_zone_state *zsp)
-@@ -2723,12 +2751,22 @@ static inline bool zbc_zone_is_conv(struct sdeb_zone_state *zsp)
- 	return zsp->z_type == ZBC_ZTYPE_CNV;
- }
- 
-+static inline bool zbc_zone_is_gap(struct sdeb_zone_state *zsp)
-+{
-+	return zsp->z_type == ZBC_ZTYPE_GAP;
-+}
-+
-+static inline bool zbc_zone_is_seq(struct sdeb_zone_state *zsp)
-+{
-+	return !zbc_zone_is_conv(zsp) && !zbc_zone_is_gap(zsp);
-+}
-+
- static void zbc_close_zone(struct sdebug_dev_info *devip,
- 			   struct sdeb_zone_state *zsp)
- {
- 	enum sdebug_z_cond zc;
- 
--	if (zbc_zone_is_conv(zsp))
-+	if (!zbc_zone_is_seq(zsp))
- 		return;
- 
- 	zc = zsp->z_cond;
-@@ -2766,7 +2804,7 @@ static void zbc_open_zone(struct sdebug_dev_info *devip,
- {
- 	enum sdebug_z_cond zc;
- 
--	if (zbc_zone_is_conv(zsp))
-+	if (!zbc_zone_is_seq(zsp))
- 		return;
- 
- 	zc = zsp->z_cond;
-@@ -2798,7 +2836,7 @@ static void zbc_inc_wp(struct sdebug_dev_info *devip,
- 	struct sdeb_zone_state *zsp = zbc_zone(devip, lba);
- 	unsigned long long n, end, zend = zsp->z_start + zsp->z_size;
- 
--	if (zbc_zone_is_conv(zsp))
-+	if (!zbc_zone_is_seq(zsp))
- 		return;
- 
- 	if (zsp->z_type == ZBC_ZTYPE_SWR) {
-@@ -2846,9 +2884,7 @@ static int check_zbc_access_params(struct scsi_cmnd *scp,
- 		if (devip->zmodel == BLK_ZONED_HA)
- 			return 0;
- 		/* For host-managed, reads cannot cross zone types boundaries */
--		if (zsp_end != zsp &&
--		    zbc_zone_is_conv(zsp) &&
--		    !zbc_zone_is_conv(zsp_end)) {
-+		if (zsp->z_type != zsp_end->z_type) {
- 			mk_sense_buffer(scp, ILLEGAL_REQUEST,
- 					LBA_OUT_OF_RANGE,
- 					READ_INVDATA_ASCQ);
-@@ -2857,6 +2893,13 @@ static int check_zbc_access_params(struct scsi_cmnd *scp,
- 		return 0;
- 	}
- 
-+	/* Writing into a gap zone is not allowed */
-+	if (zbc_zone_is_gap(zsp)) {
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE,
-+				ATTEMPT_ACCESS_GAP);
-+		return check_condition_result;
-+	}
-+
- 	/* No restrictions for writes within conventional zones */
- 	if (zbc_zone_is_conv(zsp)) {
- 		if (!zbc_zone_is_conv(zsp_end)) {
-@@ -4412,14 +4455,14 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- static int resp_report_zones(struct scsi_cmnd *scp,
- 			     struct sdebug_dev_info *devip)
- {
--	unsigned int i, max_zones, rep_max_zones, nrz = 0;
-+	unsigned int rep_max_zones, nrz = 0;
- 	int ret = 0;
- 	u32 alloc_len, rep_opts, rep_len;
- 	bool partial;
- 	u64 lba, zs_lba;
- 	u8 *arr = NULL, *desc;
- 	u8 *cmd = scp->cmnd;
--	struct sdeb_zone_state *zsp;
-+	struct sdeb_zone_state *zsp = NULL;
- 	struct sdeb_store_info *sip = devip2sip(devip, false);
- 
- 	if (!sdebug_dev_is_zoned(devip)) {
-@@ -4438,9 +4481,7 @@ static int resp_report_zones(struct scsi_cmnd *scp,
- 		return check_condition_result;
- 	}
- 
--	max_zones = devip->nr_zones - (zs_lba >> devip->zsize_shift);
--	rep_max_zones = min((alloc_len - 64) >> ilog2(RZONES_DESC_HD),
--			    max_zones);
-+	rep_max_zones = (alloc_len - 64) >> ilog2(RZONES_DESC_HD);
- 
- 	arr = kzalloc(alloc_len, GFP_ATOMIC);
- 	if (!arr) {
-@@ -4452,9 +4493,9 @@ static int resp_report_zones(struct scsi_cmnd *scp,
- 	sdeb_read_lock(sip);
- 
- 	desc = arr + 64;
--	for (i = 0; i < max_zones; i++) {
--		lba = zs_lba + devip->zsize * i;
--		if (lba > sdebug_capacity)
-+	for (lba = zs_lba; lba < sdebug_capacity;
-+	     lba = zsp->z_start + zsp->z_size) {
-+		if (WARN_ONCE(zbc_zone(devip, lba) == zsp, "lba = %llu\n", lba))
- 			break;
- 		zsp = zbc_zone(devip, lba);
- 		switch (rep_opts) {
-@@ -4499,9 +4540,14 @@ static int resp_report_zones(struct scsi_cmnd *scp,
- 			if (!zsp->z_non_seq_resource)
- 				continue;
- 			break;
-+		case 0x3e:
-+			/* All zones except gap zones. */
-+			if (zbc_zone_is_gap(zsp))
-+				continue;
-+			break;
- 		case 0x3f:
- 			/* Not write pointer (conventional) zones */
--			if (!zbc_zone_is_conv(zsp))
-+			if (zbc_zone_is_seq(zsp))
- 				continue;
- 			break;
- 		default:
-@@ -4530,8 +4576,13 @@ static int resp_report_zones(struct scsi_cmnd *scp,
- 	}
- 
- 	/* Report header */
-+	/* Zone list length. */
- 	put_unaligned_be32(nrz * RZONES_DESC_HD, arr + 0);
-+	/* Maximum LBA */
- 	put_unaligned_be64(sdebug_capacity - 1, arr + 8);
-+	/* Zone starting LBA granularity. */
-+	if (devip->zcap < devip->zsize)
-+		put_unaligned_be64(devip->zsize, arr + 16);
- 
- 	rep_len = (unsigned long)desc - (unsigned long)arr;
- 	ret = fill_from_dev_buffer(scp, arr, min_t(u32, alloc_len, rep_len));
-@@ -4756,7 +4807,7 @@ static void zbc_rwp_zone(struct sdebug_dev_info *devip,
- 	enum sdebug_z_cond zc;
- 	struct sdeb_store_info *sip = devip2sip(devip, false);
- 
--	if (zbc_zone_is_conv(zsp))
-+	if (!zbc_zone_is_seq(zsp))
- 		return;
- 
- 	zc = zsp->z_cond;
-@@ -4946,6 +4997,7 @@ static int sdebug_device_create_zones(struct sdebug_dev_info *devip)
- {
- 	struct sdeb_zone_state *zsp;
- 	sector_t capacity = get_sdebug_capacity();
-+	sector_t conv_capacity;
- 	sector_t zstart = 0;
- 	unsigned int i;
- 
-@@ -4980,11 +5032,30 @@ static int sdebug_device_create_zones(struct sdebug_dev_info *devip)
- 	devip->zsize_shift = ilog2(devip->zsize);
- 	devip->nr_zones = (capacity + devip->zsize - 1) >> devip->zsize_shift;
- 
--	if (sdeb_zbc_nr_conv >= devip->nr_zones) {
-+	if (sdeb_zbc_zone_cap_mb == 0) {
-+		devip->zcap = devip->zsize;
-+	} else {
-+		devip->zcap = (sdeb_zbc_zone_cap_mb * SZ_1M) >>
-+			      ilog2(sdebug_sector_size);
-+		if (devip->zcap > devip->zsize) {
-+			pr_err("Zone capacity too large\n");
-+			return -EINVAL;
-+		}
-+	}
-+
-+	conv_capacity = (sector_t)sdeb_zbc_nr_conv << devip->zsize_shift;
-+	if (conv_capacity >= capacity) {
- 		pr_err("Number of conventional zones too large\n");
- 		return -EINVAL;
- 	}
- 	devip->nr_conv_zones = sdeb_zbc_nr_conv;
-+	devip->nr_seq_zones = ALIGN(capacity - conv_capacity, devip->zsize) >>
-+			      devip->zsize_shift;
-+	devip->nr_zones = devip->nr_conv_zones + devip->nr_seq_zones;
-+
-+	/* Add gap zones if zone capacity is smaller than the zone size */
-+	if (devip->zcap < devip->zsize)
-+		devip->nr_zones += devip->nr_seq_zones;
- 
- 	if (devip->zmodel == BLK_ZONED_HM) {
- 		/* zbc_max_open_zones can be 0, meaning "not reported" */
-@@ -5008,20 +5079,26 @@ static int sdebug_device_create_zones(struct sdebug_dev_info *devip)
- 			zsp->z_type = ZBC_ZTYPE_CNV;
- 			zsp->z_cond = ZBC_NOT_WRITE_POINTER;
- 			zsp->z_wp = (sector_t)-1;
--		} else {
-+			zsp->z_size =
-+				min_t(u64, devip->zsize, capacity - zstart);
-+		} else if ((zstart & (devip->zsize - 1)) == 0) {
- 			if (devip->zmodel == BLK_ZONED_HM)
- 				zsp->z_type = ZBC_ZTYPE_SWR;
- 			else
- 				zsp->z_type = ZBC_ZTYPE_SWP;
- 			zsp->z_cond = ZC1_EMPTY;
- 			zsp->z_wp = zsp->z_start;
-+			zsp->z_size =
-+				min_t(u64, devip->zcap, capacity - zstart);
-+		} else {
-+			zsp->z_type = ZBC_ZTYPE_GAP;
-+			zsp->z_cond = ZBC_NOT_WRITE_POINTER;
-+			zsp->z_wp = (sector_t)-1;
-+			zsp->z_size = min_t(u64, devip->zsize - devip->zcap,
-+					    capacity - zstart);
- 		}
- 
--		if (zsp->z_start + devip->zsize < capacity)
--			zsp->z_size = devip->zsize;
--		else
--			zsp->z_size = capacity - zsp->z_start;
--
-+		WARN_ON_ONCE((int)zsp->z_size <= 0);
- 		zstart += zsp->z_size;
- 	}
- 
-@@ -5856,6 +5933,7 @@ module_param_named(wp, sdebug_wp, bool, S_IRUGO | S_IWUSR);
- module_param_named(write_same_length, sdebug_write_same_length, int,
- 		   S_IRUGO | S_IWUSR);
- module_param_named(zbc, sdeb_zbc_model_s, charp, S_IRUGO);
-+module_param_named(zone_cap_mb, sdeb_zbc_zone_cap_mb, int, S_IRUGO);
- module_param_named(zone_max_open, sdeb_zbc_max_open, int, S_IRUGO);
- module_param_named(zone_nr_conv, sdeb_zbc_nr_conv, int, S_IRUGO);
- module_param_named(zone_size_mb, sdeb_zbc_zone_size_mb, int, S_IRUGO);
-@@ -5927,6 +6005,7 @@ MODULE_PARM_DESC(vpd_use_hostno, "0 -> dev ids ignore hostno (def=1 -> unique de
- MODULE_PARM_DESC(wp, "Write Protect (def=0)");
- MODULE_PARM_DESC(write_same_length, "Maximum blocks per WRITE SAME cmd (def=0xffff)");
- MODULE_PARM_DESC(zbc, "'none' [0]; 'aware' [1]; 'managed' [2] (def=0). Can have 'host-' prefix");
-+MODULE_PARM_DESC(zone_cap_mb, "Zone capacity in MiB (def=zone size)");
- MODULE_PARM_DESC(zone_max_open, "Maximum number of open zones; [0] for no limit (def=auto)");
- MODULE_PARM_DESC(zone_nr_conv, "Number of conventional zones (def=1)");
- MODULE_PARM_DESC(zone_size_mb, "Zone size in MiB (def=auto)");
+--
+Himanshu Madhani	Oracle Linux Engineering
+
