@@ -2,91 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B111C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Apr 2022 08:20:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88E79C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Apr 2022 11:43:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1444729AbiDVIXb convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Apr 2022 04:23:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58662 "EHLO
+        id S1447119AbiDVLqI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Apr 2022 07:46:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1444756AbiDVIX1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Apr 2022 04:23:27 -0400
-Received: from mx4.uni-regensburg.de (mx4.uni-regensburg.de [IPv6:2001:638:a05:137:165:0:4:4e7a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 216AF48318
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2022 01:20:34 -0700 (PDT)
-Received: from mx4.uni-regensburg.de (localhost [127.0.0.1])
-        by localhost (Postfix) with SMTP id 4ABF3600004E;
-        Fri, 22 Apr 2022 10:20:31 +0200 (CEST)
-Received: from gwsmtp.uni-regensburg.de (gwsmtp1.uni-regensburg.de [132.199.5.51])
-        by mx4.uni-regensburg.de (Postfix) with ESMTP id 343C56000050;
-        Fri, 22 Apr 2022 10:20:31 +0200 (CEST)
-Received: from uni-regensburg-smtp1-MTA by gwsmtp.uni-regensburg.de
-        with Novell_GroupWise; Fri, 22 Apr 2022 10:20:31 +0200
-Message-Id: <6262654D020000A100049812@gwsmtp.uni-regensburg.de>
-X-Mailer: Novell GroupWise Internet Agent 18.4.0 
-Date:   Fri, 22 Apr 2022 10:20:29 +0200
-From:   "Ulrich Windl" <Ulrich.Windl@rz.uni-regensburg.de>
-To:     <michael.christie@oracle.com>, "Lee Duncan" <lduncan@suse.com>
-Cc:     "open-iscsi" <open-iscsi@googlegroups.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, "Chris Leech" <cleech@redhat.com>,
-        <kernel-janitors@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-Subject: Antw: [EXT] [PATCH] scsi: iscsi: fix harmless double shift bug
-References: <YmFyWHf8nrrx+SHa@kili>
-In-Reply-To: <YmFyWHf8nrrx+SHa@kili>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
-Content-Disposition: inline
+        with ESMTP id S1447112AbiDVLqI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Apr 2022 07:46:08 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4349A54BEB
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2022 04:43:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1650627794;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=0Ka4pkaIl0n0C8wRiVJB+Tf0N4jkuRhOTDXzmulvrko=;
+        b=N7lpY4NMtlZ9NF3FU+/vhJqEmLCiE1JW9NxLR2YrakY9j1GhBYkAOvSo2VJ9Iec2uXo/IP
+        Lt/of2Bbk9dMSmpAqySogwLaeFFNVO1wBNCXVS4x3B6rVCiYccC9zoWzDO68ck1lp/iwbo
+        fIPk6C/zOCLU+4bQ6Ds85U3RZXfrU8Q=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-43-2aQCrlSrPfuy5v4vWNiTYg-1; Fri, 22 Apr 2022 07:43:10 -0400
+X-MC-Unique: 2aQCrlSrPfuy5v4vWNiTYg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id AFC621C05AB6;
+        Fri, 22 Apr 2022 11:43:09 +0000 (UTC)
+Received: from [172.16.176.1] (ovpn-64-2.rdu2.redhat.com [10.10.64.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 567B3C33AE8;
+        Fri, 22 Apr 2022 11:43:09 +0000 (UTC)
+From:   "Benjamin Coddington" <bcodding@redhat.com>
+To:     "Matthew Wilcox" <willy@infradead.org>
+Cc:     lsf-pc@lists.linuxfoundation.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+        bpf@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: LSF/MM/BPF 2022: Running BOF
+Date:   Fri, 22 Apr 2022 07:43:08 -0400
+Message-ID: <15847F8A-5246-4634-ABBE-9C05AA3CBF34@redhat.com>
+In-Reply-To: <Yl7TUDtLcrhXcp1g@casper.infradead.org>
+References: <Yl7TUDtLcrhXcp1g@casper.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 2.85 on 10.11.54.8
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->>> Dan Carpenter <dan.carpenter@oracle.com> schrieb am 21.04.2022 um 17:03 in
-Nachricht <YmFyWHf8nrrx+SHa@kili>:
-> These flags are supposed to be bit numbers.  Right now they cause a
-> double shift bug where we use BIT(BIT(2)) instead of BIT(2).
-> Fortunately, the bit numbers are small and it's done consistently so it
-> does not cause an issue at run time.
-> 
-> Fixes: 5bd856256f8c ("scsi: iscsi: Merge suspend fields")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
->  include/scsi/libiscsi.h | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-> index d0a24779c52d..c0703cd20a99 100644
-> --- a/include/scsi/libiscsi.h
-> +++ b/include/scsi/libiscsi.h
-> @@ -54,9 +54,9 @@ enum {
->  #define ISID_SIZE			6
->  
->  /* Connection flags */
-> -#define ISCSI_CONN_FLAG_SUSPEND_TX	BIT(0)
-> -#define ISCSI_CONN_FLAG_SUSPEND_RX	BIT(1)
-> -#define ISCSI_CONN_FLAG_BOUND		BIT(2)
-> +#define ISCSI_CONN_FLAG_SUSPEND_TX	0
-> +#define ISCSI_CONN_FLAG_SUSPEND_RX	1
-> +#define ISCSI_CONN_FLAG_BOUND		2
+On 19 Apr 2022, at 11:20, Matthew Wilcox wrote:
 
-Actually it's not the "flag" then, but the "flag's bit position".
-Personally I think applying BIT() again is the bug, not the definition.
+> As in the past few years, let's hold a running BOF.
+>
+> I propose meeting in the lobby of the Margaritaville hotel at 6:15 for
+> a 6:30 departure for an hour-long run on Monday, Tuesday and Wednesday
+> mornings.  I'm assuming breakfast will be 8-9am and sessions start at 9am.
+> Pace will be determined by whoever shows up.
+>
+> We're only a mile from the North Lykken north Trailhead.
+> Other trails are a little more distant.  I've been reading
+> http://www.hiking-in-ps.com/the-north-lykken-trail/ (note this map is
+> for the south trailhead of the North Lykken trail).  I haven't been
+> to this area in 30 years and I have no idea what the trails are like,
+> so if somebody has local information, that would be great.
+>
+> I note that the room rate includes complimentary bicycle rentals.  If
+> we want to, we could cycle to various other local trails.
 
->  
->  #define ISCSI_ITT_MASK			0x1fff
->  #define ISCSI_TOTAL_CMDS_MAX		4096
-> -- 
-> 2.20.1
-> 
-> -- 
-> You received this message because you are subscribed to the Google Groups 
-> "open-iscsi" group.
-> To unsubscribe from this group and stop receiving emails from it, send an 
-> email to open-iscsi+unsubscribe@googlegroups.com.
-> To view this discussion on the web visit 
-> https://groups.google.com/d/msgid/open-iscsi/YmFyWHf8nrrx%2BSHa%40kili.
+I'm in unless I'm trying to run in the PM.  I've got a tentative run/explore
+of one of the slot canyons about an hour away if I can swing it (painted
+canyon, ladder canyon, I may have to borrow a car from someone), and would
+be nice to try to get up into Mt San Jacinto park as well.
 
+I'm interested in getting some trail and elevation, but I've not run out
+there yet and will need to scope out what's possible when I get there.
 
-
+Ben
 
