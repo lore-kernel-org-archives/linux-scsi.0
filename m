@@ -2,138 +2,172 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEF01C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Apr 2022 16:51:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D630DC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Apr 2022 17:30:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1449863AbiDVQyG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Apr 2022 12:54:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51600 "EHLO
+        id S233073AbiDVRdB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Apr 2022 13:33:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1449853AbiDVQyD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Apr 2022 12:54:03 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 72CB35F8DB
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2022 09:51:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1650646269;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=RP65Uj7WP6EZyZBfeufvI+9bp/deJnrcdnu1tws0K2A=;
-        b=eobIQEF+JItsaZSp4OIlGcxwaJNG8KfdhJNqGfcqe/OrtmrsCMIYQZUwOUjxye+U0rM6YR
-        MF+c8aZF+C6twlrdJfdzY+YvwyhSw7xzJ6oRGjbDjc7Y91MgOjRb2P618K7CJL6b9cyRNP
-        j9QvJKCvVATIvgR4M7vg7Wf4duC3y8s=
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
- [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-205-eHdD9-iRPF6dz30G4QMLFw-1; Fri, 22 Apr 2022 12:51:08 -0400
-X-MC-Unique: eHdD9-iRPF6dz30G4QMLFw-1
-Received: by mail-qt1-f199.google.com with SMTP id f22-20020ac840d6000000b002dd4d87de21so5348345qtm.23
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2022 09:51:08 -0700 (PDT)
+        with ESMTP id S233008AbiDVRc5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Apr 2022 13:32:57 -0400
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34C7789CF8;
+        Fri, 22 Apr 2022 10:30:00 -0700 (PDT)
+Received: by mail-pl1-f182.google.com with SMTP id b7so12288409plh.2;
+        Fri, 22 Apr 2022 10:29:59 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=RP65Uj7WP6EZyZBfeufvI+9bp/deJnrcdnu1tws0K2A=;
-        b=MeafwwuWqHxaB9euUDA6PvuwK/wB2jUfq5hMbq9ewojSVrDz2eI66bfMzE1qOjvQy8
-         19ycZqY0rIZ4ZQyA8GYauOiUfNOxJZp6FBffo3bi6HSH228GuFtdobIMSH7ACw2Zf2yA
-         Kx3YhtJmkKY/cpKAXS+ZUOFqlbzqY1i/h+SKRx2/JhSYm7T5vt47ueMHsvbEl3PK4dIY
-         pRRLpqUI4SQC95bpNTDwvp7acGPWwrQk35riGK3ejYH3h/bF0/7s3rsqRTnjOQE9awvS
-         ATShRsaWJeBGydpMPQqkXhTShdjL3dSj1AlNJVy2Rwi4vVJFfV/CL03mQ3LYaUDN9lZG
-         GPiQ==
-X-Gm-Message-State: AOAM530jxXGTKZ+aSYAIZgKZhKnjUPq5L+Wy8WsjfH5+zkLsgBRcvjzJ
-        bWYTcgnArJ1NOU4l8VLQ2n69vp0Dqh1Bjxwy2Iqs4lnMk9HU2GlPFnDj12JJMb8qUlXRl7BUaxW
-        ts8YrvFCnRIj6JawqRQiiHw==
-X-Received: by 2002:a37:6181:0:b0:69e:7b8a:e72c with SMTP id v123-20020a376181000000b0069e7b8ae72cmr3255241qkb.388.1650646265968;
-        Fri, 22 Apr 2022 09:51:05 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzGjpvtzYiKxHawYsICXnZfMhkhwABbqQn0p9KPy6KU0/ydqClvRwXk3Olfd1QtTvoihYpO3g==
-X-Received: by 2002:a37:6181:0:b0:69e:7b8a:e72c with SMTP id v123-20020a376181000000b0069e7b8ae72cmr3255217qkb.388.1650646265599;
-        Fri, 22 Apr 2022 09:51:05 -0700 (PDT)
-Received: from halaneylaptop (068-184-200-203.res.spectrum.com. [68.184.200.203])
-        by smtp.gmail.com with ESMTPSA id e16-20020ac85990000000b002f33eb4523asm1542421qte.18.2022.04.22.09.51.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Apr 2022 09:51:04 -0700 (PDT)
-Date:   Fri, 22 Apr 2022 11:51:01 -0500
-From:   Andrew Halaney <ahalaney@redhat.com>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com,
-        bjorn.andersson@linaro.org, linux-arm-msm@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/5] scsi: ufs: qcom: Simplify handling of devm_phy_get()
-Message-ID: <20220422165101.uy23jf3conuxr2iw@halaneylaptop>
-References: <20220422132140.313390-1-manivannan.sadhasivam@linaro.org>
- <20220422132140.313390-3-manivannan.sadhasivam@linaro.org>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=L0VZiWPUDvoGtAJV+rMrpuEj6dHv4nQx4wlGW/anjZk=;
+        b=q6rjtvC/ygrQrRn60iTrMkEa3xg0GQ5kmlNIL94JfDUibNGFoCdpEx6Qq0uWVBQUCe
+         Z5ByGSd3/1L4G2su+Vy98xXE7U4lmSwXl0KixZXXR6HRNjCE9WtuoNY/xmx1uEoaO496
+         gcSO2JkhVWs5pY78faYI42+FWrMaxoJ1v9g2m1MW9y+BYKMOt4Qsl9f3NDY4PYXlFy5N
+         cBbBfGfLcdiT/Isn1Q0Pv5NpdqNfkEMgvO/NMP8fKeIErQ0ULzoVwDRqlba0OEbqec05
+         hpTMOjpwq5ijWP4Ty7GlFgowNGpcvmTC2C2Snj/bRUncIEqBcu5nSlxHnAqSkD4+0mPw
+         SZrg==
+X-Gm-Message-State: AOAM5313qs32PvA3bul0xqcQzwS/STUJniEXoqt8VqNbOh6fzB64V8PI
+        0yCxC9z7AbDNoGxIxTi2mFQ=
+X-Google-Smtp-Source: ABdhPJxvwTkOkkyNA7wXQqprYp05cNssYZ3YEvlZbX43EXOI/ndmleuxVMLsu7YF8GHfJfNL8RA+NA==
+X-Received: by 2002:a17:90b:1a89:b0:1d2:f7ae:4928 with SMTP id ng9-20020a17090b1a8900b001d2f7ae4928mr17434702pjb.46.1650648310473;
+        Fri, 22 Apr 2022 10:25:10 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:e473:77c4:b4f8:27d3? ([2620:15c:211:201:e473:77c4:b4f8:27d3])
+        by smtp.gmail.com with ESMTPSA id h126-20020a628384000000b0050cfdceabbasm188350pfe.155.2022.04.22.10.25.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 Apr 2022 10:25:09 -0700 (PDT)
+Message-ID: <f426fa45-7d72-52ad-8557-0027bca84194@acm.org>
+Date:   Fri, 22 Apr 2022 10:25:07 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220422132140.313390-3-manivannan.sadhasivam@linaro.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH] scsi: ufs: wb: Add Manual Flush sysfs and cleanup toggle
+ functions
+Content-Language: en-US
+To:     j-young.choi@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <CGME20220422120240epcms2p24bdcb416becf76b417f7c39006aa40f2@epcms2p1>
+ <1891546521.01650629881201.JavaMail.epsvc@epcpadp4>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1891546521.01650629881201.JavaMail.epsvc@epcpadp4>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Apr 22, 2022 at 06:51:37PM +0530, Manivannan Sadhasivam wrote:
-> There is no need to call devm_phy_get() if ACPI is used, so skip it.
-> The "host->generic_phy" pointer should already be NULL due to the kzalloc,
-> so no need to set it NULL again.
+On 4/22/22 05:14, Jinyoung CHOI wrote:
+> There is the following quirk to bypass "WB Manual Flush" in Write
+> Booster.
 > 
-> Also, don't print the error message in case of -EPROBE_DEFER and return
-> the error code directly.
+>    - UFSHCD_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
 > 
-> While at it, also remove the comment that has no relationship with
-> devm_phy_get().
+> If this quirk is not set, there is no knob that can controll "WB Manual Flush".
 > 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  drivers/scsi/ufs/ufs-qcom.c | 26 +++++---------------------
->  1 file changed, 5 insertions(+), 21 deletions(-)
+> 	There are three flags that control Write Booster Feature.
+> 		1. WB ON/OFF
+> 		2. WB Hibern Flush ON/OFF
+> 		3. WB Flush ON/OFF
 > 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 5db0fd922062..5f0a8f646eb5 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -1022,28 +1022,12 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->  		err = 0;
->  	}
->  
-> -	/*
-> -	 * voting/devoting device ref_clk source is time consuming hence
-> -	 * skip devoting it during aggressive clock gating. This clock
-> -	 * will still be gated off during runtime suspend.
-> -	 */
-> -	host->generic_phy = devm_phy_get(dev, "ufsphy");
-> -
-> -	if (host->generic_phy == ERR_PTR(-EPROBE_DEFER)) {
-> -		/*
-> -		 * UFS driver might be probed before the phy driver does.
-> -		 * In that case we would like to return EPROBE_DEFER code.
-> -		 */
-> -		err = -EPROBE_DEFER;
-> -		dev_warn(dev, "%s: required phy device. hasn't probed yet. err = %d\n",
-> -			__func__, err);
-> -		goto out_variant_clear;
-> -	} else if (IS_ERR(host->generic_phy)) {
-> -		if (has_acpi_companion(dev)) {
-> -			host->generic_phy = NULL;
-> -		} else {
-> +	if (!has_acpi_companion(dev)) {
-> +		host->generic_phy = devm_phy_get(dev, "ufsphy");
-> +		if (IS_ERR(host->generic_phy)) {
->  			err = PTR_ERR(host->generic_phy);
-> -			dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
-> +			if (err != -EPROBE_DEFER)
-> +				dev_err(dev, "Failed to get PHY: %d\n", err);
+> 	The sysfs that controls the WB was implemented. (1)
+> 
+> 	In the case of "Hibern Flush", it is always good to turn on.
+> 	Control may not be required. (2)
+> 
+> 	Finally, "Manual flush" may be determined that it can affect
+> 	performance or power consumption.
+> 	So the sysfs that controls this may be necessary. (3)
+> 
+> In addition, toggle functions for controlling the above flags are cleaned.
 
-Risking sounding like a bad broken record, but I think this too could
-use dev_err_probe().
+Please make all sentences in the patch description start at the left margin.
 
-Looks good to me otherwise!
+> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+> index 5c405ff7b6ea..6bbb56152708 100644
+> --- a/drivers/scsi/ufs/ufs-sysfs.c
+> +++ b/drivers/scsi/ufs/ufs-sysfs.c
+> @@ -229,7 +229,7 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
+>   		 * If the platform supports UFSHCD_CAP_CLK_SCALING, turn WB
+>   		 * on/off will be done while clock scaling up/down.
+>   		 */
+> -		dev_warn(dev, "To control WB through wb_on is not allowed!\n");
+> +		dev_warn(dev, "To control Write Booster is not allowed!\n");
+>   		return -EOPNOTSUPP;
+>   	}
 
->  			goto out_variant_clear;
->  		}
->  	}
-> -- 
-> 2.25.1
-> 
+The new error message is grammatically incorrect. Please fix.
 
+> +	if (!ufshcd_is_wb_flush_allowed(hba)) {
+> +		dev_warn(dev, "To control WB Flush is not allowed!\n");
+
+Same issue for the above error message.
+
+> +static DEVICE_ATTR_RW(wb_flush_on);
+
+"wb_flush_enabled" is probably a better name than "wb_flush_on".
+Additionally, the "wb_flush_en" is closer to the terminology used in the
+UFS specification (fWriteBoosterBufferFlushEn).
+
+ > diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+ > index 4a00c24a3209..6c85f512f82f 100644
+ > --- a/drivers/scsi/ufs/ufs.h
+ > +++ b/drivers/scsi/ufs/ufs.h
+ > @@ -611,7 +611,7 @@ struct ufs_dev_info {
+ >
+ >   	/* UFS WB related flags */
+ >   	bool    wb_enabled;
+ > -	bool    wb_buf_flush_enabled;
+ > +	bool    wb_flush_enabled;
+ >   	u8	wb_dedicated_lu;
+ >   	u8      wb_buffer_type;
+
+Adding a variable with the name "wb_flush_enabled" next to a variable with
+the name "wb_buf_flush_enabled" is confusing. Please chose better names and
+add comments.
+
+> -static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_idn idn)
+> +static int __ufshcd_wb_toggle(struct ufs_hba *hba, const char *knob,
+> +			      bool set, enum flag_idn idn)
+>   {
+> +	int ret;
+>   	u8 index;
+>   	enum query_opcode opcode = set ? UPIU_QUERY_OPCODE_SET_FLAG :
+> -				   UPIU_QUERY_OPCODE_CLEAR_FLAG;
+> +		UPIU_QUERY_OPCODE_CLEAR_FLAG;
+> +
+> +	if (!ufshcd_is_wb_allowed(hba))
+> +		return -EPERM;
+>   
+>   	index = ufshcd_wb_get_query_index(hba);
+> -	return ufshcd_query_flag_retry(hba, opcode, idn, index, NULL);
+> +
+> +	ret = ufshcd_query_flag_retry(hba, opcode, idn, index, NULL);
+> +	if (ret) {
+> +		dev_err(hba->dev, "%s: %s %s failed %d\n",
+> +			__func__, knob, set ? "enable" : "disable", ret);
+> +		return ret;
+> +	}
+> +
+> +	dev_dbg(hba->dev, "%s: %s %s\n",
+> +		 __func__, knob, set ? "enabled" : "disabled");
+> +
+> +	return ret;
+>   }
+
+Please leave out the dev_dbg() message and move the dev_err() message to
+the callers of __ufshcd_wb_toggle() such that the 'knob' argument does not
+have to be added to __ufshcd_wb_toggle().
+
+Thanks,
+
+Bart.
