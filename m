@@ -2,172 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D630DC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Apr 2022 17:30:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59119C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Apr 2022 17:31:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233073AbiDVRdB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Apr 2022 13:33:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41382 "EHLO
+        id S232421AbiDVRdy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Apr 2022 13:33:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233008AbiDVRc5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Apr 2022 13:32:57 -0400
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34C7789CF8;
-        Fri, 22 Apr 2022 10:30:00 -0700 (PDT)
-Received: by mail-pl1-f182.google.com with SMTP id b7so12288409plh.2;
-        Fri, 22 Apr 2022 10:29:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=L0VZiWPUDvoGtAJV+rMrpuEj6dHv4nQx4wlGW/anjZk=;
-        b=q6rjtvC/ygrQrRn60iTrMkEa3xg0GQ5kmlNIL94JfDUibNGFoCdpEx6Qq0uWVBQUCe
-         Z5ByGSd3/1L4G2su+Vy98xXE7U4lmSwXl0KixZXXR6HRNjCE9WtuoNY/xmx1uEoaO496
-         gcSO2JkhVWs5pY78faYI42+FWrMaxoJ1v9g2m1MW9y+BYKMOt4Qsl9f3NDY4PYXlFy5N
-         cBbBfGfLcdiT/Isn1Q0Pv5NpdqNfkEMgvO/NMP8fKeIErQ0ULzoVwDRqlba0OEbqec05
-         hpTMOjpwq5ijWP4Ty7GlFgowNGpcvmTC2C2Snj/bRUncIEqBcu5nSlxHnAqSkD4+0mPw
-         SZrg==
-X-Gm-Message-State: AOAM5313qs32PvA3bul0xqcQzwS/STUJniEXoqt8VqNbOh6fzB64V8PI
-        0yCxC9z7AbDNoGxIxTi2mFQ=
-X-Google-Smtp-Source: ABdhPJxvwTkOkkyNA7wXQqprYp05cNssYZ3YEvlZbX43EXOI/ndmleuxVMLsu7YF8GHfJfNL8RA+NA==
-X-Received: by 2002:a17:90b:1a89:b0:1d2:f7ae:4928 with SMTP id ng9-20020a17090b1a8900b001d2f7ae4928mr17434702pjb.46.1650648310473;
-        Fri, 22 Apr 2022 10:25:10 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:e473:77c4:b4f8:27d3? ([2620:15c:211:201:e473:77c4:b4f8:27d3])
-        by smtp.gmail.com with ESMTPSA id h126-20020a628384000000b0050cfdceabbasm188350pfe.155.2022.04.22.10.25.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Apr 2022 10:25:09 -0700 (PDT)
-Message-ID: <f426fa45-7d72-52ad-8557-0027bca84194@acm.org>
-Date:   Fri, 22 Apr 2022 10:25:07 -0700
+        with ESMTP id S229753AbiDVRdv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Apr 2022 13:33:51 -0400
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76CF7E3CCC
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2022 10:30:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1650648652; x=1682184652;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=/zACiCd/ijhvxGV+sw5ABcZAZs8o9JZypW7uhcbbDsI=;
+  b=oChSRvrUV13I/5a0veHar6SAlFQpyqrF7mCY/JJx7ILNPZtdt9SbCUSq
+   nlFJXgcxdx6x/GlKhhbJLjNKqgKxOaaAZEWpL2VDB82gFay6bnoUiO++Y
+   pcc30NojbmSWoHu5bqnrsID5EQk7HNBX2RqZSswg54wQMm8r5N1QwtJb5
+   ElnqmjX43iWyHz8kXU5yzyKJwCLXWVEoI4xUOZjxKMdX4uv+jnegvW1bl
+   T6bvf/RhCvk1rMSK6wqGZBpLIEWOKaS4G/7uVpdRsisZqHgQJbW6eHfHh
+   kkh0Z0jlxcYrBjqJPdbbdXmWCjqDKzhF9VpITtEzu527GFEA2fVT7kgaB
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10324"; a="262330848"
+X-IronPort-AV: E=Sophos;i="5.90,282,1643702400"; 
+   d="scan'208";a="262330848"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2022 10:25:56 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,282,1643702400"; 
+   d="scan'208";a="594229944"
+Received: from lkp-server01.sh.intel.com (HELO 3abc53900bec) ([10.239.97.150])
+  by orsmga001.jf.intel.com with ESMTP; 22 Apr 2022 10:25:52 -0700
+Received: from kbuild by 3abc53900bec with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nhx2W-000AOb-9E;
+        Fri, 22 Apr 2022 17:25:52 +0000
+Date:   Sat, 23 Apr 2022 01:25:10 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Sumit Saxena <sumit.saxena@broadcom.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kbuild-all@lists.01.org, martin.petersen@oracle.com,
+        bvanassche@acm.org, hch@lst.de, hare@suse.de,
+        himanshu.madhani@oracle.com, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, chandrakanth.patil@broadcom.com,
+        sreekanth.reddy@broadcom.com, prayas.patel@broadcom.com,
+        Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: Re: [PATCH v5 2/8] mpi3mr: add support for driver commands
+Message-ID: <202204230148.eUwy76O1-lkp@intel.com>
+References: <20220422115423.279805-3-sumit.saxena@broadcom.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH] scsi: ufs: wb: Add Manual Flush sysfs and cleanup toggle
- functions
-Content-Language: en-US
-To:     j-young.choi@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20220422120240epcms2p24bdcb416becf76b417f7c39006aa40f2@epcms2p1>
- <1891546521.01650629881201.JavaMail.epsvc@epcpadp4>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1891546521.01650629881201.JavaMail.epsvc@epcpadp4>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220422115423.279805-3-sumit.saxena@broadcom.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/22/22 05:14, Jinyoung CHOI wrote:
-> There is the following quirk to bypass "WB Manual Flush" in Write
-> Booster.
-> 
->    - UFSHCD_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
-> 
-> If this quirk is not set, there is no knob that can controll "WB Manual Flush".
-> 
-> 	There are three flags that control Write Booster Feature.
-> 		1. WB ON/OFF
-> 		2. WB Hibern Flush ON/OFF
-> 		3. WB Flush ON/OFF
-> 
-> 	The sysfs that controls the WB was implemented. (1)
-> 
-> 	In the case of "Hibern Flush", it is always good to turn on.
-> 	Control may not be required. (2)
-> 
-> 	Finally, "Manual flush" may be determined that it can affect
-> 	performance or power consumption.
-> 	So the sysfs that controls this may be necessary. (3)
-> 
-> In addition, toggle functions for controlling the above flags are cleaned.
+Hi Sumit,
 
-Please make all sentences in the patch description start at the left margin.
+I love your patch! Yet something to improve:
 
-> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-> index 5c405ff7b6ea..6bbb56152708 100644
-> --- a/drivers/scsi/ufs/ufs-sysfs.c
-> +++ b/drivers/scsi/ufs/ufs-sysfs.c
-> @@ -229,7 +229,7 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
->   		 * If the platform supports UFSHCD_CAP_CLK_SCALING, turn WB
->   		 * on/off will be done while clock scaling up/down.
->   		 */
-> -		dev_warn(dev, "To control WB through wb_on is not allowed!\n");
-> +		dev_warn(dev, "To control Write Booster is not allowed!\n");
->   		return -EOPNOTSUPP;
->   	}
+[auto build test ERROR on mkp-scsi/for-next]
+[also build test ERROR on jejb-scsi/for-next hch-configfs/for-next linus/master v5.18-rc3 next-20220422]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-The new error message is grammatically incorrect. Please fix.
+url:    https://github.com/intel-lab-lkp/linux/commits/Sumit-Saxena/mpi3mr-add-BSG-interface-support-for-controller-management/20220422-201527
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+config: m68k-allyesconfig (https://download.01.org/0day-ci/archive/20220423/202204230148.eUwy76O1-lkp@intel.com/config)
+compiler: m68k-linux-gcc (GCC) 11.2.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/09bfe98846a8c4521955435e5cad41275f2581f2
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Sumit-Saxena/mpi3mr-add-BSG-interface-support-for-controller-management/20220422-201527
+        git checkout 09bfe98846a8c4521955435e5cad41275f2581f2
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross W=1 O=build_dir ARCH=m68k prepare
 
-> +	if (!ufshcd_is_wb_flush_allowed(hba)) {
-> +		dev_warn(dev, "To control WB Flush is not allowed!\n");
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
 
-Same issue for the above error message.
+All errors (new ones prefixed by >>):
 
-> +static DEVICE_ATTR_RW(wb_flush_on);
+   scripts/genksyms/parse.y: warning: 9 shift/reduce conflicts [-Wconflicts-sr]
+   scripts/genksyms/parse.y: warning: 5 reduce/reduce conflicts [-Wconflicts-rr]
+   scripts/genksyms/parse.y: note: rerun with option '-Wcounterexamples' to generate conflict counterexamples
+>> error: include/uapi/scsi/scsi_bsg_mpi3mr.h: missing "WITH Linux-syscall-note" for SPDX-License-Identifier
+   make[2]: *** [scripts/Makefile.headersinst:63: usr/include/scsi/scsi_bsg_mpi3mr.h] Error 1
+   make[2]: Target '__headers' not remade because of errors.
+   make[1]: *** [Makefile:1280: headers] Error 2
+   make[1]: Target 'prepare' not remade because of errors.
+   make: *** [Makefile:219: __sub-make] Error 2
+   make: Target 'prepare' not remade because of errors.
 
-"wb_flush_enabled" is probably a better name than "wb_flush_on".
-Additionally, the "wb_flush_en" is closer to the terminology used in the
-UFS specification (fWriteBoosterBufferFlushEn).
-
- > diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
- > index 4a00c24a3209..6c85f512f82f 100644
- > --- a/drivers/scsi/ufs/ufs.h
- > +++ b/drivers/scsi/ufs/ufs.h
- > @@ -611,7 +611,7 @@ struct ufs_dev_info {
- >
- >   	/* UFS WB related flags */
- >   	bool    wb_enabled;
- > -	bool    wb_buf_flush_enabled;
- > +	bool    wb_flush_enabled;
- >   	u8	wb_dedicated_lu;
- >   	u8      wb_buffer_type;
-
-Adding a variable with the name "wb_flush_enabled" next to a variable with
-the name "wb_buf_flush_enabled" is confusing. Please chose better names and
-add comments.
-
-> -static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_idn idn)
-> +static int __ufshcd_wb_toggle(struct ufs_hba *hba, const char *knob,
-> +			      bool set, enum flag_idn idn)
->   {
-> +	int ret;
->   	u8 index;
->   	enum query_opcode opcode = set ? UPIU_QUERY_OPCODE_SET_FLAG :
-> -				   UPIU_QUERY_OPCODE_CLEAR_FLAG;
-> +		UPIU_QUERY_OPCODE_CLEAR_FLAG;
-> +
-> +	if (!ufshcd_is_wb_allowed(hba))
-> +		return -EPERM;
->   
->   	index = ufshcd_wb_get_query_index(hba);
-> -	return ufshcd_query_flag_retry(hba, opcode, idn, index, NULL);
-> +
-> +	ret = ufshcd_query_flag_retry(hba, opcode, idn, index, NULL);
-> +	if (ret) {
-> +		dev_err(hba->dev, "%s: %s %s failed %d\n",
-> +			__func__, knob, set ? "enable" : "disable", ret);
-> +		return ret;
-> +	}
-> +
-> +	dev_dbg(hba->dev, "%s: %s %s\n",
-> +		 __func__, knob, set ? "enabled" : "disabled");
-> +
-> +	return ret;
->   }
-
-Please leave out the dev_dbg() message and move the dev_err() message to
-the callers of __ufshcd_wb_toggle() such that the 'knob' argument does not
-have to be added to __ufshcd_wb_toggle().
-
-Thanks,
-
-Bart.
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
