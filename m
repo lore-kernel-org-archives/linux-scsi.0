@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 087DBC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Apr 2022 01:02:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EBD6C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Apr 2022 02:57:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1442997AbiDVBFD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Apr 2022 21:05:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52778 "EHLO
+        id S1443679AbiDVDAH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Apr 2022 23:00:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239067AbiDVBFC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 21:05:02 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DE4D483B3
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2022 18:02:11 -0700 (PDT)
+        with ESMTP id S1443642AbiDVC7x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2022 22:59:53 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73E8E4DF6C
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2022 19:56:39 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id BD361B829DA
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2022 01:02:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8AB52C385A8
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2022 01:02:08 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D1C20B828CB
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2022 02:56:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 98078C385A9
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2022 02:56:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650589328;
-        bh=EtrU2kYumYXc5jL5OwUzH7vYKC1f6S12VpeUPw/FH/Q=;
-        h=From:To:Subject:Date:From;
-        b=fLEqFUB0P2SCB5Yao0s3VYJ6pPIxMHNq55TpOKn5U4kcDZQyfmFHo8I8k0yf30P5w
-         kbmVSaDPVAn1d0Fh7emPBiHTHbiTnW8u6qfVHkymiN9OUfrYgOOpWu2s0qLEt7xFVc
-         Q4df92qml+NtZwRzT0L/bw0QXVzUHWrogeL2wZCeW4i1Eo6hhiGXZc3KGx4DUlfTOv
-         7WEK6z1mJnMUitvPVpuvfX3OMQ45arwlfH2upooKgEGrFbzIszjR5dUdKK0rPU4D6d
-         F2vdjNmzrpUu26GGtgWjhq/Bk0bnaQmpNyJMkHkOK9OwW3SEVeCmGgOKTSpQssSJGb
-         zwIt0T5Wulcug==
+        s=k20201202; t=1650596183;
+        bh=jFVILiu+3qAb+R1NTFxbBnr0j3U8E2d2Zegv3SH+MMo=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=rkRJ/3rEhrSnvbrlZ3FU8mqbpIcjQJA3gVOcYPIp3Gv6jS0PaGAfHUR3PVnm3FHHf
+         ClMYZSuRrhF+AphA94oVa5wShEVT61hO8D6QPEQZB568LsREWKFgoeo64x74dXONC9
+         hQar57IQ36fjGEoL2gJIcJ5mAKNKfCoUTHuwENcgV7HM0pjB6t1q2ri4AXylFswvJ/
+         wmNFcgtoi8t355fhKUkldS+g5x/G5w3J5FXRuZzAmHxYx4UJasWB/WcNIuMvm9vayX
+         IUead0+4XRtn6nbx5AwhyAoIFGuwjAqeB4l2995JCYAcXEohoyYBVULZEvknsdd3+L
+         se4S1zCqD7C+A==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 687EAC05FD5; Fri, 22 Apr 2022 01:02:08 +0000 (UTC)
+        id 734ADCC13AD; Fri, 22 Apr 2022 02:56:23 +0000 (UTC)
 From:   bugzilla-daemon@kernel.org
 To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215874] New: The wifi driver is not there. Not even the network
+Subject: [Bug 215874] The wifi driver is not there. Not even the network
  driver.
-Date:   Fri, 22 Apr 2022 01:02:08 +0000
+Date:   Fri, 22 Apr 2022 02:56:23 +0000
 X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
+X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
 X-Bugzilla-Product: SCSI Drivers
 X-Bugzilla-Component: Other
 X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
 X-Bugzilla-Severity: normal
-X-Bugzilla-Who: priyatoshpaul@yahoo.com
+X-Bugzilla-Who: rdunlap@infradead.org
 X-Bugzilla-Status: NEW
 X-Bugzilla-Resolution: 
 X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression
-Message-ID: <bug-215874-11613@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-215874-11613-wgfmtQah6f@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215874-11613@https.bugzilla.kernel.org/>
+References: <bug-215874-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 X-Bugzilla-URL: https://bugzilla.kernel.org/
@@ -67,26 +67,26 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D215874
 
-            Bug ID: 215874
-           Summary: The wifi driver is not there. Not even the network
-                    driver.
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 5.10.112
-          Hardware: Intel
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
-          Reporter: priyatoshpaul@yahoo.com
-        Regression: No
+Randy Dunlap (rdunlap@infradead.org) changed:
 
-The wifi driver is not there. Not even the network driver.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |rdunlap@infradead.org
 
-After compiling kernel on the ubuntu 20.04 lts.
+--- Comment #1 from Randy Dunlap (rdunlap@infradead.org) ---
+Hi. Lots of info is missing here.
+And this should not be in SCSI Drivers either.
+I'm not sure if it's a wifi or netdev problem or a build/config issue.
+
+kernel version: 5.10.112 (stable)
+What kernel config file are you using? How did you generate it?
+
+What is your hardware configuration?
+What wifi driver is missing?  What network driver is missing?
+
+Have you built & installed kernels previously?
+
+thanks.
 
 --=20
 You may reply to this email to add a comment.
