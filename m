@@ -2,155 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64553C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Apr 2022 21:54:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F288C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 23 Apr 2022 05:03:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231272AbiDVV52 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Apr 2022 17:57:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59010 "EHLO
+        id S233088AbiDWFGW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 23 Apr 2022 01:06:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231171AbiDVV5C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Apr 2022 17:57:02 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4F711CCF81
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2022 13:39:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1650659990; x=1682195990;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=cRmlJBeHNAQIBt/ZfajDI8w281clVFBMSHKQ8pGbptc=;
-  b=e0IEgBNJ0SCHN0PLb2AIoo2QvplUr5lB1o66a29303mywvzcFHG8l6dt
-   SUN7Tq3nbp9ho4B7Y8f5jYBwSHihxS62+2bz8nXoifMvFQbipVbYijv8b
-   M+YtOlYGJ0urMs5N/7XoKGoZrtgmpF11ijw1sXF72nxQBaBjRjp85ngjH
-   IIqCQJJbEaYhQphwPcj5500lX4f4QuwI/ZqpzVeTPc+6Cu/tUzZedY9Gm
-   UMB65C0MjgT2omZCDTut2tFvnCR2QRhkKN9gBiQtX2eHeMd4llbsya9SN
-   y+iPGuDe0fTr41bHHh/lOO2p1z+48PUNcD8tC2O7a+xWx8ze+SSPqOWx9
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10324"; a="325188998"
-X-IronPort-AV: E=Sophos;i="5.90,282,1643702400"; 
-   d="scan'208";a="325188998"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2022 10:25:56 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,282,1643702400"; 
-   d="scan'208";a="648708789"
-Received: from lkp-server01.sh.intel.com (HELO 3abc53900bec) ([10.239.97.150])
-  by FMSMGA003.fm.intel.com with ESMTP; 22 Apr 2022 10:25:52 -0700
-Received: from kbuild by 3abc53900bec with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1nhx2W-000AOQ-6M;
-        Fri, 22 Apr 2022 17:25:52 +0000
-Date:   Sat, 23 Apr 2022 01:25:12 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Sumit Saxena <sumit.saxena@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kbuild-all@lists.01.org, martin.petersen@oracle.com,
-        bvanassche@acm.org, hch@lst.de, hare@suse.de,
-        himanshu.madhani@oracle.com, sathya.prakash@broadcom.com,
-        kashyap.desai@broadcom.com, chandrakanth.patil@broadcom.com,
-        sreekanth.reddy@broadcom.com, prayas.patel@broadcom.com,
-        Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: Re: [PATCH v5 1/8] mpi3mr: add BSG device support
-Message-ID: <202204230118.pTp3NoQc-lkp@intel.com>
-References: <20220422115423.279805-2-sumit.saxena@broadcom.com>
+        with ESMTP id S231760AbiDWFGV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Apr 2022 01:06:21 -0400
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D331F8EF4;
+        Fri, 22 Apr 2022 22:03:25 -0700 (PDT)
+Received: by mail-pf1-f178.google.com with SMTP id p8so9835237pfh.8;
+        Fri, 22 Apr 2022 22:03:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=vD0W6bI9inxY1IqwYpYGCs5VOO5jHMZ9Ui2cOWh/okI=;
+        b=RWffJnpR0EMAvWQ4n2uAQXH5VLGnAAh/w4N9lv+SQOf4g6YmvoL9PFiFykGtYKhk7x
+         grsCxY+NknzeRoR12SmHnJqHcKY4pph25sgJqAY+Lbo4ra8rU3GvcdqBL9omc9twkdIC
+         oMe4adn6AwuBdfuawmRqT2v+eUIUz2ZAE2gImJ47Ghl/aAHiZenZWWsuoj1yXb+3BCwM
+         ifpS6TbmsfKApb7HnQ1X1/8TlrJcfac5lag46NuEtw/KoyFvtSMDtGpPB69LlgNpuUqE
+         dygL8IfQTH7uYgC6SkiuixzzRQqaHsw0YbMvobXXlFxm6FSFKeE6oCBU2hVR0o10lo2c
+         WARw==
+X-Gm-Message-State: AOAM533xQsTJGJDcfOqdykMC6p5QsJzIA5Si0h39Toq3ANa13WPhDcNZ
+        Vlz2Q70kuV4X2LXvJV66t9c=
+X-Google-Smtp-Source: ABdhPJx6rWeo45nxheFodGYu+usoypVGBw0VrjbV/QATcx3S17+KMoJacGaZFY6u3PPv2KOdDQPdXw==
+X-Received: by 2002:a05:6a00:164c:b0:50a:472a:6b0a with SMTP id m12-20020a056a00164c00b0050a472a6b0amr8424873pfc.77.1650690204550;
+        Fri, 22 Apr 2022 22:03:24 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id r19-20020a17090b051300b001cd4989ff5esm7630037pjz.37.2022.04.22.22.03.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 Apr 2022 22:03:23 -0700 (PDT)
+Message-ID: <5ee685f5-152c-aca0-cc14-646cfae93000@acm.org>
+Date:   Fri, 22 Apr 2022 22:03:22 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220422115423.279805-2-sumit.saxena@broadcom.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 3/5] scsi: ufs: qcom: Add a readl() to make sure ref_clk
+ gets enabled
+Content-Language: en-US
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        martin.petersen@oracle.com, jejb@linux.ibm.com
+Cc:     avri.altman@wdc.com, alim.akhtar@samsung.com,
+        bjorn.andersson@linaro.org, linux-arm-msm@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+References: <20220422132140.313390-1-manivannan.sadhasivam@linaro.org>
+ <20220422132140.313390-4-manivannan.sadhasivam@linaro.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20220422132140.313390-4-manivannan.sadhasivam@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Sumit,
+On 4/22/22 06:21, Manivannan Sadhasivam wrote:
+> In ufs_qcom_dev_ref_clk_ctrl(), it was noted that the ref_clk needs to be
+> stable for atleast 1us. Eventhough there is wmb() to make sure the write
+                ^              ^
+Some spaces are missing.
 
-I love your patch! Perhaps something to improve:
+> gets "completed", there is no guarantee that the write actually reached
+> the UFS device. There is a good chance that the write could be stored in
+> a Write Buffer (WB). In that case, eventhough the CPU waits for 1us, the
+                                          ^
+missing space----------------------------
 
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on jejb-scsi/for-next hch-configfs/for-next linus/master v5.18-rc3 next-20220422]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+> ref_clk might not be stable for that period.
+> 
+> So lets do a readl() to make sure that the previous write has reached the
+> UFS device before udelay().
+> 
+> Cc: stable@vger.kernel.org
+> Fixes: f06fcc7155dc ("scsi: ufs-qcom: add QUniPro hardware support and power optimizations")
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>   drivers/scsi/ufs/ufs-qcom.c | 6 ++++++
+>   1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 5f0a8f646eb5..5b9986c63eed 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -690,6 +690,12 @@ static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, bool enable)
+>   		/* ensure that ref_clk is enabled/disabled before we return */
+>   		wmb();
+>   
+> +		/*
+> +		 * Make sure the write to ref_clk reaches the destination and
+> +		 * not stored in a Write Buffer (WB).
+> +		 */
+> +		readl(host->dev_ref_clk_ctrl_mmio);
+> +
+>   		/*
+>   		 * If we call hibern8 exit after this, we need to make sure that
+>   		 * device ref_clk is stable for at least 1us before the hibern8
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Sumit-Saxena/mpi3mr-add-BSG-interface-support-for-controller-management/20220422-201527
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-config: alpha-randconfig-r033-20220422 (https://download.01.org/0day-ci/archive/20220423/202204230118.pTp3NoQc-lkp@intel.com/config)
-compiler: alpha-linux-gcc (GCC) 11.2.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/a45cf34a6056cbcfd60079926a424e2ca56021aa
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Sumit-Saxena/mpi3mr-add-BSG-interface-support-for-controller-management/20220422-201527
-        git checkout a45cf34a6056cbcfd60079926a424e2ca56021aa
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross W=1 O=build_dir ARCH=alpha SHELL=/bin/bash drivers/scsi/mpi3mr/
+The comment above the wmb() call looks wrong to me. How about removing 
+that wmb() call?
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+Thanks,
 
-All warnings (new ones prefixed by >>):
-
->> drivers/scsi/mpi3mr/mpi3mr_app.c:21:5: warning: no previous prototype for 'mpi3mr_bsg_request' [-Wmissing-prototypes]
-      21 | int mpi3mr_bsg_request(struct bsg_job *job)
-         |     ^~~~~~~~~~~~~~~~~~
->> drivers/scsi/mpi3mr/mpi3mr_app.c:55:6: warning: no previous prototype for 'mpi3mr_bsg_node_release' [-Wmissing-prototypes]
-      55 | void mpi3mr_bsg_node_release(struct device *dev)
-         |      ^~~~~~~~~~~~~~~~~~~~~~~
-
-
-vim +/mpi3mr_bsg_request +21 drivers/scsi/mpi3mr/mpi3mr_app.c
-
-    12	
-    13	/**
-    14	 * mpi3mr_bsg_request - bsg request entry point
-    15	 * @job: BSG job reference
-    16	 *
-    17	 * This is driver's entry point for bsg requests
-    18	 *
-    19	 * Return: 0 on success and proper error codes on failure
-    20	 */
-  > 21	int mpi3mr_bsg_request(struct bsg_job *job)
-    22	{
-    23		return 0;
-    24	}
-    25	
-    26	/**
-    27	 * mpi3mr_bsg_exit - de-registration from bsg layer
-    28	 *
-    29	 * This will be called during driver unload and all
-    30	 * bsg resources allocated during load will be freed.
-    31	 *
-    32	 * Return:Nothing
-    33	 */
-    34	void mpi3mr_bsg_exit(struct mpi3mr_ioc *mrioc)
-    35	{
-    36		if (!mrioc->bsg_queue)
-    37			return;
-    38	
-    39		bsg_remove_queue(mrioc->bsg_queue);
-    40		mrioc->bsg_queue = NULL;
-    41	
-    42		device_del(mrioc->bsg_dev);
-    43		put_device(mrioc->bsg_dev);
-    44		kfree(mrioc->bsg_dev);
-    45	}
-    46	
-    47	/**
-    48	 * mpi3mr_bsg_node_release -release bsg device node
-    49	 * @dev: bsg device node
-    50	 *
-    51	 * decrements bsg dev reference count
-    52	 *
-    53	 * Return:Nothing
-    54	 */
-  > 55	void mpi3mr_bsg_node_release(struct device *dev)
-    56	{
-    57		put_device(dev);
-    58	}
-    59	
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Bart.
