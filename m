@@ -2,69 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 018BBC433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 23 Apr 2022 21:00:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BBA9C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 23 Apr 2022 21:38:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237062AbiDWVDj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 23 Apr 2022 17:03:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59582 "EHLO
+        id S236806AbiDWVlt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 23 Apr 2022 17:41:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237056AbiDWVDh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Apr 2022 17:03:37 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B72E11C27;
-        Sat, 23 Apr 2022 14:00:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1AA0FB80D6E;
-        Sat, 23 Apr 2022 21:00:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E09DEC385A5;
-        Sat, 23 Apr 2022 21:00:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650747634;
-        bh=lCsCxJ5tsHMMjUwdTFCcCyezQNe4SyYCuH4K9jkPh0k=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=hRJmx7DpZQeNLqaDOronaItxUiEdCC7pT+XJSm8kEeV1Nf2GtATJFF2OOv3I138bX
-         M7bEivk9CZkZ1OMbHR8eWerp+tmkQ/GQebuhaom59bshEKBmGiPaKDL8xzAgmMG9AW
-         kpL6+1sotmKaBA9xuDjTqz/DXy0npAyfkznAzSWEViZn9GTfWanG0xK1jD3rRjxExK
-         5BJN4AE4JH6b4GKIDhjAuYbcyT9SbwNkdTyJOr3lDlDpcox8GNtNxNcwxcrUzWaGW6
-         DNcRg5Cb7qY5R4yq2mcaGrJF8LjdHSiRq6wEcjoCBMI7LQETkJcy+QzLG4HqB03a1c
-         I9o+1QH/wjpUw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id CD74EE7399D;
-        Sat, 23 Apr 2022 21:00:34 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 5.18-rc3
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <a661ff2bab4959b2b9759c537e3c1e5c1b7ce3a9.camel@HansenPartnership.com>
-References: <a661ff2bab4959b2b9759c537e3c1e5c1b7ce3a9.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <a661ff2bab4959b2b9759c537e3c1e5c1b7ce3a9.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: faad6cebded8e0fd902b672f220449b93db479eb
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 6fc2586d23b574fcd3f6b14430277e91d27cf585
-Message-Id: <165074763483.21099.18260513095575237698.pr-tracker-bot@kernel.org>
-Date:   Sat, 23 Apr 2022 21:00:34 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S229742AbiDWVls (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Apr 2022 17:41:48 -0400
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90F751D5660;
+        Sat, 23 Apr 2022 14:38:49 -0700 (PDT)
+Received: by mail-pf1-f176.google.com with SMTP id i24so11287294pfa.7;
+        Sat, 23 Apr 2022 14:38:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=BzqWH2IzgALcoDHHVu1SSmrK7vebYFiu676jJ6lQ4us=;
+        b=ITRrI434LwGfXkPKj4SrA3C1JXDUVQeqGeGXN7X1mJjQm0TwxQt5G+FtrQyzssjNw3
+         4GYs3i9/z5FsnuMaEmREwBJVh17StIzib/hi9MfCHlTOdfQQJjhaJpJw4WzinjMuNFwQ
+         HNStg1ySrrL2DjHp/33yRqJnrRWaxEMjlCQYCylZjSwql1htDGodae3mFqCdu0eufz8N
+         1he9wyIQI0w5FmlOTQTQWAebq0hUQf3X+9JJMk7QcetbBzRQv7XyPVyfP35XUMfIfya8
+         9FtnYoxZ52gvm8wB0V2LUVtJ8oKS9oO6ejOm2U9qLelBCbXQCp6NbC3M8HtFq/Bpaawp
+         /zkA==
+X-Gm-Message-State: AOAM533s//zTreG5mB+XFAylPU8PXQmAFNnpBD3iBex8zAhdC3ShBaYg
+        9+jELdetdLDkZSHMtBAzatI=
+X-Google-Smtp-Source: ABdhPJx337gZtgIghf3LEwQbDgP5EWy3UJhIGYn5MfEWZP19IscHesE3rIdmF91xklhaW6eTy0IXdQ==
+X-Received: by 2002:a63:8a41:0:b0:3aa:a7c9:23b8 with SMTP id y62-20020a638a41000000b003aaa7c923b8mr9059061pgd.137.1650749928940;
+        Sat, 23 Apr 2022 14:38:48 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id 128-20020a630686000000b003ab01991fe5sm2091610pgg.77.2022.04.23.14.38.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 23 Apr 2022 14:38:48 -0700 (PDT)
+Message-ID: <0f061fc0-d7ee-aa48-278b-4ca7dc3ce53f@acm.org>
+Date:   Sat, 23 Apr 2022 14:38:46 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH] scsi: ufs: wb: Add Manual Flush sysfs and cleanup toggle
+ functions
+Content-Language: en-US
+To:     jin young choi <ychoijy@gmail.com>,
+        Avri Altman <Avri.Altman@wdc.com>
+Cc:     "j-young.choi@samsung.com" <j-young.choi@samsung.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <CGME20220422120240epcms2p24bdcb416becf76b417f7c39006aa40f2@epcms2p1>
+ <1891546521.01650629881201.JavaMail.epsvc@epcpadp4>
+ <DM6PR04MB6575EB87D425CE431CC4A8F8FCF79@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <CAM36TBtsU0k1e+8-_Ew4ve3SJ0yExUFwPAYnmQy_-AXUHGoeZw@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAM36TBtsU0k1e+8-_Ew4ve3SJ0yExUFwPAYnmQy_-AXUHGoeZw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 23 Apr 2022 15:19:19 -0400:
+On 4/23/22 07:24, jin young choi wrote:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+>>> +static DEVICE_ATTR_RW(wb_flush_on);
+>> Maybe wb_flush_enable ?
+>>
+> 'wb_on' sysfs already existed. So I named it in the same format (_on)
+> I'll change both. (_on -> _enable)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/6fc2586d23b574fcd3f6b14430277e91d27cf585
+sysfs attributes constitute an ABI. Breaking the user space ABI is not 
+allowed. Hence, renaming existing sysfs attributes is not an option.
 
-Thank you!
+Thanks,
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Bart.
