@@ -2,95 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BE89C433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 23 Apr 2022 05:19:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A0B1C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 23 Apr 2022 09:54:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233266AbiDWFWP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 23 Apr 2022 01:22:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57232 "EHLO
+        id S234691AbiDWJ53 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 23 Apr 2022 05:57:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233214AbiDWFWN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Apr 2022 01:22:13 -0400
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 766F3939A5;
-        Fri, 22 Apr 2022 22:19:17 -0700 (PDT)
-Received: by mail-pl1-f180.google.com with SMTP id h12so11540932plf.12;
-        Fri, 22 Apr 2022 22:19:17 -0700 (PDT)
+        with ESMTP id S231655AbiDWJ52 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Apr 2022 05:57:28 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7CB6139999
+        for <linux-scsi@vger.kernel.org>; Sat, 23 Apr 2022 02:54:31 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id h1so10228741pfv.12
+        for <linux-scsi@vger.kernel.org>; Sat, 23 Apr 2022 02:54:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=yUtsnYBIm01JXZecNVsIjjwJM9zeU9bP2sYqdVupyhs=;
+        b=s2hZa+V1gBmYvlkiakilXv/njbEHD3uo6Q+veU65MapnY7ergLjc0EcstslsKTuDem
+         hD2Wplm+D+hYzgFz8tTKyb8mPGn8vUiEoBTwSVEGDzjr0PyhnhO1IH/oj1P3dMPowB7e
+         gm3GW9ARiqEkLnCJKY/9cPqA8wzFbxL/6N2jkww8i6OdbOqRAYnJoEednmjHsfwH8FHV
+         Oxuun+ZFtniPOU33RGtU9DUjZAajYIbtXzLR/BM5bGjCa5645s544KVtpZC+NDqFM/ax
+         ocgK4S8RBm0qTosF5SXoAu5HWGRx0F0Myp1y6NUIb8gYu9sG35NhLTXdTisEOdY0viOW
+         GTuQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=FKNF8Dy16FqWhNugEObDWx1at4kneVLrik2sikA3QTo=;
-        b=0AI4zv224Fzn777XgT+Ap0BvPeCP/2/6oHG9p+B0NEtS9kUQdS+t5oW8LFOr87mFq6
-         6TtDh41YmorvzMxetDiO7M1FEE0VRlT7NeQ6Bc6eNfpGNciGgwlEkclZZF9djgpdaHDI
-         B1YPYKjULqAJt0CN7EfL3b1/BoLkACGgGuXqpomlTxRwcZK/ompA2Nrcu3MCPKEj06jM
-         4XVSEMsSHorfxBZzYeoGcma0b2ITeLwkY5JEHVEN2f/5P2vBX2zPMzLzUlrnK0qEVQbo
-         Kli05/WEeL6u80knuyz3tFC5sT5UivbsIUmvC75tC/rY9WSYzfuvKkEQD2gtC7QMc7xQ
-         Xv6g==
-X-Gm-Message-State: AOAM530M9MHaAAZmpSnq/Ef9HBFoA3W+PuVVJZ0iOE4P6fh2+4gLDHuK
-        HGQiLt8IRia6YVYxD+8Z9VuTtbKGLmM=
-X-Google-Smtp-Source: ABdhPJzYf2llY10iFZlcna8z+sViSmEPIUIxUMW3D6rCoY6nGo53evPLONAxpdpOnCm34QifKnxaNA==
-X-Received: by 2002:a17:90a:c70f:b0:1bf:3e2d:6cfa with SMTP id o15-20020a17090ac70f00b001bf3e2d6cfamr9277826pjt.70.1650691156888;
-        Fri, 22 Apr 2022 22:19:16 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id m13-20020a62a20d000000b004fe0ce6d7a1sm4406579pff.193.2022.04.22.22.19.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Apr 2022 22:19:16 -0700 (PDT)
-Message-ID: <10d7e4a7-4364-b579-fecf-53c953d22b7d@acm.org>
-Date:   Fri, 22 Apr 2022 22:19:14 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH 4/5] scsi: ufs: core: Remove redundant wmb() in
- ufshcd_send_command()
-Content-Language: en-US
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        martin.petersen@oracle.com, jejb@linux.ibm.com
-Cc:     avri.altman@wdc.com, alim.akhtar@samsung.com,
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=yUtsnYBIm01JXZecNVsIjjwJM9zeU9bP2sYqdVupyhs=;
+        b=M3aVdHykSN9lZaWe4+MQZ4FQEpltjEhm9CFi92HQuPTkZuMy1Nr2dt1ghrzyFNNaOP
+         B5iXKVS9mafOowxaDx5ShNMyd6D72tdgHA9qifoz7cgEo2U4ZdjqT1Brrl/Rg1OxMkIe
+         zba2YeCxEAM1zofzWcDVruiEvXKpSbOES7reVpnmhXRgLw9vSLB5ZxGB+py4hdydDAL1
+         6mimXuGlsamDdJ6uaMuPvDxHUsnfdYK56l/R/E3IFq7m6Af4QDUArGrgnVpE2GsCQ1Tn
+         H5xnw56LX+FiRrP/izJ8NUsIa1pEEKgYAJfSulG4hViblFazaHH5/msziUrzJ0OBZAL9
+         ZRBQ==
+X-Gm-Message-State: AOAM533vyWABKEnzqFdiGn6cxpTWQGIBf6wd3wahYMluPRmMs2pELSqd
+        yOLyOXwV/XzLCN1HMxDd03rj
+X-Google-Smtp-Source: ABdhPJyUD2+pddHG8R+pE+ymvssOE4dR8B16cM/ywDRUpHhIwOAvha9/v9gMtwZJBfeuBUslOAaECg==
+X-Received: by 2002:aa7:90d5:0:b0:4e1:307c:d94a with SMTP id k21-20020aa790d5000000b004e1307cd94amr9292303pfk.38.1650707671128;
+        Sat, 23 Apr 2022 02:54:31 -0700 (PDT)
+Received: from thinkpad ([117.207.28.196])
+        by smtp.gmail.com with ESMTPSA id iy2-20020a17090b16c200b001d75aabe050sm6309658pjb.34.2022.04.23.02.54.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 23 Apr 2022 02:54:30 -0700 (PDT)
+Date:   Sat, 23 Apr 2022 15:24:23 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Andrew Halaney <ahalaney@redhat.com>
+Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com,
         bjorn.andersson@linaro.org, linux-arm-msm@vger.kernel.org,
         quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/5] scsi: ufs: qcom: Fix acquiring the optional reset
+ control line
+Message-ID: <20220423095423.GA374560@thinkpad>
 References: <20220422132140.313390-1-manivannan.sadhasivam@linaro.org>
- <20220422132140.313390-5-manivannan.sadhasivam@linaro.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220422132140.313390-5-manivannan.sadhasivam@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+ <20220422132140.313390-2-manivannan.sadhasivam@linaro.org>
+ <20220422154010.2cxk4qy5eikxujb2@halaneylaptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220422154010.2cxk4qy5eikxujb2@halaneylaptop>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/22/22 06:21, Manivannan Sadhasivam wrote:
-> The wmb() inside ufshcd_send_command() is added to make sure that the
-> doorbell is committed immediately.
-
-That's not the purpose of the wmb() call so I think the comment is wrong.
-
-> This leads to couple of expectations:
+On Fri, Apr 22, 2022 at 10:40:10AM -0500, Andrew Halaney wrote:
+> On Fri, Apr 22, 2022 at 06:51:36PM +0530, Manivannan Sadhasivam wrote:
+> > On Qcom UFS platforms, the reset control line seems to be optional
+> > (for SoCs like MSM8996 and probably for others too). The current logic
+> > tries to mimic the `devm_reset_control_get_optional()` API but it also
+> > continues the probe if there is an error with the declared reset line in
+> > DT/ACPI.
+> > 
+> > In an ideal case, if the reset line is not declared in DT/ACPI, the probe
+> > should continue. But if there is problem in acquiring the declared reset
+> > line (like EPROBE_DEFER) it should fail and return the appropriate error
+> > code.
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > ---
+> >  drivers/scsi/ufs/ufs-qcom.c | 10 +++++-----
+> >  1 file changed, 5 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> > index 0d2e950d0865..5db0fd922062 100644
+> > --- a/drivers/scsi/ufs/ufs-qcom.c
+> > +++ b/drivers/scsi/ufs/ufs-qcom.c
+> > @@ -1002,13 +1002,13 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+> >  	host->hba = hba;
+> >  	ufshcd_set_variant(hba, host);
+> >  
+> > -	/* Setup the reset control of HCI */
+> > -	host->core_reset = devm_reset_control_get(hba->dev, "rst");
+> > +	/* Setup the optional reset control of HCI */
+> > +	host->core_reset = devm_reset_control_get_optional(hba->dev, "rst");
+> >  	if (IS_ERR(host->core_reset)) {
+> >  		err = PTR_ERR(host->core_reset);
+> > -		dev_warn(dev, "Failed to get reset control %d\n", err);
+> > -		host->core_reset = NULL;
+> > -		err = 0;
+> > +		if (err != -EPROBE_DEFER)
+> > +			dev_err(dev, "Failed to get reset control %d\n", err);
 > 
-> 1. The doorbell write should complete before the function return.
-> 2. The doorbell write should not cross the function boundary.
+> Could we use dev_err_probe() here?
 > 
-> 2nd expectation is fullfilled by the Linux memory model as there is a
-> guarantee that the critical section won't cross the unlock (release)
-> operation.
 
-I think you meant that the writel() won't cross the unlock operation?
+Yes. Will do the same for patch 2/5 as well.
 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 9349557b8a01..ec514a6c5393 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -2116,9 +2116,6 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
->   	__set_bit(task_tag, &hba->outstanding_reqs);
->   	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
->   	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-> -
-> -	/* Make sure that doorbell is committed immediately */
-> -	wmb();
->   }
+Thanks,
+Mani
 
-Anyway:
-
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Otherwise, looks good to me.
+> 
+> > +		goto out_variant_clear;
+> >  	}
+> >  
+> >  	/* Fire up the reset controller. Failure here is non-fatal. */
+> > -- 
+> > 2.25.1
+> > 
+> 
