@@ -2,85 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BBA9C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 23 Apr 2022 21:38:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B0CEC433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Apr 2022 06:18:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236806AbiDWVlt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 23 Apr 2022 17:41:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35028 "EHLO
+        id S238339AbiDXGV4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Apr 2022 02:21:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229742AbiDWVls (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Apr 2022 17:41:48 -0400
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90F751D5660;
-        Sat, 23 Apr 2022 14:38:49 -0700 (PDT)
-Received: by mail-pf1-f176.google.com with SMTP id i24so11287294pfa.7;
-        Sat, 23 Apr 2022 14:38:49 -0700 (PDT)
+        with ESMTP id S231567AbiDXGVy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Apr 2022 02:21:54 -0400
+Received: from mail-qt1-x829.google.com (mail-qt1-x829.google.com [IPv6:2607:f8b0:4864:20::829])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CC1715E843;
+        Sat, 23 Apr 2022 23:18:55 -0700 (PDT)
+Received: by mail-qt1-x829.google.com with SMTP id d14so8386274qtw.5;
+        Sat, 23 Apr 2022 23:18:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Yby90S4qeqTNTQCQTqXyyQ6ZkOIT/Nf47vs830JnxMk=;
+        b=VeR4tPYU8LPkCDcI5NL5K7ivslj8+hgD3D79PsoQm5Twy4E1+XDwSJgqbAjD1qCBZq
+         rVY+gvFcnLau0m9u7vzRe+adGhWmiaqhkXO1oTMzLR/5G0WPkeDjtb5GWkp28y3CIfJA
+         hITqWhh0SkpLWJutDnwrukDuq6lsTwqvuXjHrunf3tJEcv6PGtyTcGYR6BFMxHyDu95r
+         cjo3cBpxuJm2eeYNXPHMuJ0JXss+PnOnCIS7WYOMuEFdKiT/5yEYFdCneyzWcGEFcfnP
+         kagGPgd/bicpNsViC/fPKqfo1JjXWwdcY55thaR4Yae9OXCNaWeuSROnZc58aDnQZaiK
+         OugA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=BzqWH2IzgALcoDHHVu1SSmrK7vebYFiu676jJ6lQ4us=;
-        b=ITRrI434LwGfXkPKj4SrA3C1JXDUVQeqGeGXN7X1mJjQm0TwxQt5G+FtrQyzssjNw3
-         4GYs3i9/z5FsnuMaEmREwBJVh17StIzib/hi9MfCHlTOdfQQJjhaJpJw4WzinjMuNFwQ
-         HNStg1ySrrL2DjHp/33yRqJnrRWaxEMjlCQYCylZjSwql1htDGodae3mFqCdu0eufz8N
-         1he9wyIQI0w5FmlOTQTQWAebq0hUQf3X+9JJMk7QcetbBzRQv7XyPVyfP35XUMfIfya8
-         9FtnYoxZ52gvm8wB0V2LUVtJ8oKS9oO6ejOm2U9qLelBCbXQCp6NbC3M8HtFq/Bpaawp
-         /zkA==
-X-Gm-Message-State: AOAM533s//zTreG5mB+XFAylPU8PXQmAFNnpBD3iBex8zAhdC3ShBaYg
-        9+jELdetdLDkZSHMtBAzatI=
-X-Google-Smtp-Source: ABdhPJx337gZtgIghf3LEwQbDgP5EWy3UJhIGYn5MfEWZP19IscHesE3rIdmF91xklhaW6eTy0IXdQ==
-X-Received: by 2002:a63:8a41:0:b0:3aa:a7c9:23b8 with SMTP id y62-20020a638a41000000b003aaa7c923b8mr9059061pgd.137.1650749928940;
-        Sat, 23 Apr 2022 14:38:48 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id 128-20020a630686000000b003ab01991fe5sm2091610pgg.77.2022.04.23.14.38.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 23 Apr 2022 14:38:48 -0700 (PDT)
-Message-ID: <0f061fc0-d7ee-aa48-278b-4ca7dc3ce53f@acm.org>
-Date:   Sat, 23 Apr 2022 14:38:46 -0700
+        bh=Yby90S4qeqTNTQCQTqXyyQ6ZkOIT/Nf47vs830JnxMk=;
+        b=gXujtXxUdlB57JfM239qeL0zk+y++OCnccaV3uP3QdVNiqOprQrS+f7HLNQvL1ZQjb
+         qKUJPueRNwetIzdONrk+WzIUZ9kUpoUa3EI3jJG/fblDwxeH2Nb6eMwrD4p0mO9q4QB1
+         7yChFPLqafQIpT4yEHprufG8ONabPLSy/4STUug0lx0Jy6T3QMijyE59R08p+G34ZCvQ
+         rlQLQE0tYTIt8DfLozVFuYvN/8B7wdTg4wF+E4mUtDpet8pbhDdVrwpM2t+ebvTBYOjO
+         qiqYM8QcyIRwlTJdewWeptPaXLoTFCUkJRSbkJjsbtL9Vj0lPHCnZYTQKOkD9IIBs+z5
+         GBkg==
+X-Gm-Message-State: AOAM533paGnQg2Sve6z4ZFRL1Rr6ZOIS6gQ7X82XBlWk7xrg4D+rQr/+
+        +Rd2RfuKzgiVXI7Hf6plXaA=
+X-Google-Smtp-Source: ABdhPJwK1v96DPTQMFreQtZ9eS9KfM4LtTDRxtiHSTWJVAaGVYKJB316Iqr8jKQ0yfmOPElfpSFzeQ==
+X-Received: by 2002:a05:622a:58c:b0:2f1:f8cf:16bf with SMTP id c12-20020a05622a058c00b002f1f8cf16bfmr8329127qtb.71.1650781134784;
+        Sat, 23 Apr 2022 23:18:54 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id s18-20020a05622a1a9200b002f36470c4f1sm1012500qtc.56.2022.04.23.23.18.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 23 Apr 2022 23:18:54 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: ran.jianping@zte.com.cn
+To:     anil.gurumurthy@qlogic.com
+Cc:     sudarsana.kalluru@qlogic.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        ran jianping <ran.jianping@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] scsi: bfa: remove unneeded flush_workqueue
+Date:   Sun, 24 Apr 2022 06:18:45 +0000
+Message-Id: <20220424061845.3218774-1-ran.jianping@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH] scsi: ufs: wb: Add Manual Flush sysfs and cleanup toggle
- functions
-Content-Language: en-US
-To:     jin young choi <ychoijy@gmail.com>,
-        Avri Altman <Avri.Altman@wdc.com>
-Cc:     "j-young.choi@samsung.com" <j-young.choi@samsung.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20220422120240epcms2p24bdcb416becf76b417f7c39006aa40f2@epcms2p1>
- <1891546521.01650629881201.JavaMail.epsvc@epcpadp4>
- <DM6PR04MB6575EB87D425CE431CC4A8F8FCF79@DM6PR04MB6575.namprd04.prod.outlook.com>
- <CAM36TBtsU0k1e+8-_Ew4ve3SJ0yExUFwPAYnmQy_-AXUHGoeZw@mail.gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CAM36TBtsU0k1e+8-_Ew4ve3SJ0yExUFwPAYnmQy_-AXUHGoeZw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/23/22 07:24, jin young choi wrote:
+From: ran jianping <ran.jianping@zte.com.cn>
 
->>> +static DEVICE_ATTR_RW(wb_flush_on);
->> Maybe wb_flush_enable ?
->>
-> 'wb_on' sysfs already existed. So I named it in the same format (_on)
-> I'll change both. (_on -> _enable)
+All work currently pending will be done first by calling destroy_workqueue,
+so there is no need to flush it explicitly.
 
-sysfs attributes constitute an ABI. Breaking the user space ABI is not 
-allowed. Hence, renaming existing sysfs attributes is not an option.
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: ran jianping <ran.jianping@zte.com.cn>
+---
+ drivers/scsi/bfa/bfad_im.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Thanks,
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 8419a1a89485..c335f7a188d2 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -755,7 +755,6 @@ void
+ bfad_destroy_workq(struct bfad_im_s *im)
+ {
+ 	if (im && im->drv_workq) {
+-		flush_workqueue(im->drv_workq);
+ 		destroy_workqueue(im->drv_workq);
+ 		im->drv_workq = NULL;
+ 	}
+-- 
+2.25.1
 
-Bart.
