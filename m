@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C0AEC433FE
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Apr 2022 16:27:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C144C433F5
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Apr 2022 16:41:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235039AbiDXQaZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Apr 2022 12:30:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60656 "EHLO
+        id S235778AbiDXQoH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Apr 2022 12:44:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235027AbiDXQaR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Apr 2022 12:30:17 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DB5C8597F;
-        Sun, 24 Apr 2022 09:27:14 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id bg9so11438714pgb.9;
-        Sun, 24 Apr 2022 09:27:13 -0700 (PDT)
+        with ESMTP id S232795AbiDXQoG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Apr 2022 12:44:06 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C028E008;
+        Sun, 24 Apr 2022 09:41:05 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id k4so10356190plk.7;
+        Sun, 24 Apr 2022 09:41:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:from:date:message-id:subject:to;
         bh=uKZTe7yQ+O8BqMJZ1XBsdEQMbjgQxMztKFfEfSP4DbA=;
-        b=ezJI2puFVbW14r0youAGJ7L4Rbt+34wxknV7H2XhIyuChx42XaummsijV3sb2EPzw1
-         TIEqbG2HIlaQFoKWseMdxMOXbsjSuvlFu8idGeWSnpwUR93pO30zgLS4ZboyZaV8x13y
-         0eUEAJZjX0Glmkx8iPztla0wn7KwhijZFbt5SwC+sxfGrZR28vSSMyaXdndpsz6fDxd8
-         VA7ZVYTV5QsNYASFHgDeFgfRBqL215Y77b8HL8hOU4cnRDpGfobWzT8CNkWk8Z7XFZPx
-         MVaBKHFJDvoxrzxeLRkpYA6Az/3/LZlC3koUonq4OjQTlerxpJNyFabIVGozlXqSpIQp
-         dcBQ==
+        b=N2dGtr51J+6UMnRMMnlbWSD0N6sxh1/HQLagSI1XCqintMmVx6k7Viugy86ZJc4YNS
+         yc3SpafyfRpmTPnWkgq9WipOYdeVZeA3azWDyevKzYhh9YTjJU5Nug5Sa6eOBdezNOQF
+         /hW/ckKvlg3YCrWN8qitH+/lOIfxS4ZHbr5KmAlzXKYFs7a51XBHB/dyHnrnFGOkcqBV
+         f81QEsRtje6bv+15ppZUjNPHJFOHdk1mbqNFPL8riA1oDBb5xJlY1e6XpS6b3nkmC7VR
+         /mYsLGScTQB28/qvrJ2t7W1GStCwopZskUAe0gi2jl4Hb3qvLSJahYSJIsGMubo0u+jU
+         TCnA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
         bh=uKZTe7yQ+O8BqMJZ1XBsdEQMbjgQxMztKFfEfSP4DbA=;
-        b=tELkYBZxFEYc3fUy1ujzXyBCAe+5JeIxu1GJiNkh5Oy/VpIdjvXvoaBlbYelFp3EUd
-         jf4hBDVrtx+6a9FEcnLcLcW0rT7bySXZdktGUqPhVDBu1X3eSuWtiJlp+CF/6/JUurid
-         ij9J90fq9H7J6HM+t5vyBytVdaMXpFfmjaM/YQKYw9UGSf8K/m9sJifUoj1D5PRhATcJ
-         BiUJ7Fwfs4sY2sOX9o4MuAeCt3P3cHjeUELasDUr9/IWP/7HCjc1r3UQgyS/2sRTe2PP
-         SG5ynbcx79+6qUEd5d5S+dX+X/WYb42CIiyhLVD+H04ykZPxfLsvbhLr9ZxEvtb8Amzf
-         5n6g==
-X-Gm-Message-State: AOAM533cUcUUgexFGGMaH8LteEoIb2KyxkKWVoeqCF/gxs8+no2+LsrG
-        uat3QCZCOCU2wbgxCAPX8kaRRO7bFLGp3/XwpeiE5GdQTmr3Ig==
-X-Google-Smtp-Source: ABdhPJwLNsx+d0aJZw4U4/z/k9FtHQPg0byXIPMF1uN6Dht7jX5WsY40i8IlyBdo6ij6cXUmujzbZD/+vAf8LEhzeq0=
-X-Received: by 2002:a05:6a00:1814:b0:50d:3ccc:653f with SMTP id
- y20-20020a056a00181400b0050d3ccc653fmr2020994pfa.70.1650817633197; Sun, 24
- Apr 2022 09:27:13 -0700 (PDT)
+        b=Cj1Fqfkxp8aNGWWhDAPbZa++dvp2KSHJIN+xlb0w/XCMt4Rp7G4ZW7aGKtetpEdgy5
+         xY58zDSwL7QmQbr80S5tZEnC8bIrl2Jzas7zD7inBBGq6lRWBJpamr4uTa9WlAzIPvyC
+         qXQlohWbC/XWCp0tBSwoXwqHTYlv/SMHZ6LYliJ7mO343XoUX+gOAXIAN1O5GsEYMUII
+         gAAhIrgAoWbIA98ehKwLwwYV37VeNC4PNdu8tbIv2skgGETuomXeqEwD+VJDD2hYBWJ/
+         eEtCFTo/gqE+jTEQmgkDNrZd8duy2Sb8rRqAvJKc7kx/g+pITA66BPa4orOmdXyI34qL
+         fKEw==
+X-Gm-Message-State: AOAM5303lVuGOwuUJXUAVy2XoFhkhZ4TofZ7SK+Lts+LeNLgN+RMeYib
+        fgA8Z4hUE4f2TWCenTzRgEL8QfNtkppN83YjsKzq9lmm+HBKvA==
+X-Google-Smtp-Source: ABdhPJz2XXjObfRe2IyPKcnasvgqVGJcah07nXovTNlcQCLCZ+HBofbafKZQqYJ6Wj43BlAoBbK3/agq3N2McD4+zHU=
+X-Received: by 2002:a17:903:11d0:b0:156:6c35:9588 with SMTP id
+ q16-20020a17090311d000b001566c359588mr13846969plh.50.1650818464519; Sun, 24
+ Apr 2022 09:41:04 -0700 (PDT)
 MIME-Version: 1.0
 From:   jin young choi <ychoijy@gmail.com>
-Date:   Mon, 25 Apr 2022 01:27:02 +0900
-Message-ID: <CAM36TBuKy=6JRbAS352nBYsLCj=J09tWmte0yarv0A7xaOJmRw@mail.gmail.com>
-Subject: [PATCH v2] scsi: ufs: wb: Add Manual Flush sysfs and cleanup toggle functions
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+Date:   Mon, 25 Apr 2022 01:40:53 +0900
+Message-ID: <CAM36TBuzEE8Afbh4tQNcu20AwUwB916FTNoZ6oh3MnYOK-BKfg@mail.gmail.com>
+Subject: [RESEND PATCH v2] scsi: ufs: wb: Add Manual Flush sysfs and cleanup
+ toggle functions
+To:     Bart Van Assche <bvanassche@acm.org>, linux-kernel@vger.kernel.org,
         adrian.hunter@intel.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
         asutoshd@codeaurora.org, Avri Altman <Avri.Altman@wdc.com>,
-        martin.petersen@oracle.com, jejb@linux.ibm.com,
-        j-young.choi@samsung.com, beanhuo@micron.com,
-        Bart Van Assche <bvanassche@acm.org>, cang@codeaurora.org,
-        Daejun Park <daejun7.park@samsung.com>
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        jejb@linux.ibm.com, j-young.choi@samsung.com, beanhuo@micron.com,
+        cang@codeaurora.org, Daejun Park <daejun7.park@samsung.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
