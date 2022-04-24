@@ -2,58 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C144C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Apr 2022 16:41:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7236AC433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Apr 2022 17:17:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235778AbiDXQoH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Apr 2022 12:44:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56896 "EHLO
+        id S236252AbiDXRUm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Apr 2022 13:20:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232795AbiDXQoG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Apr 2022 12:44:06 -0400
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C028E008;
-        Sun, 24 Apr 2022 09:41:05 -0700 (PDT)
-Received: by mail-pl1-x62c.google.com with SMTP id k4so10356190plk.7;
-        Sun, 24 Apr 2022 09:41:05 -0700 (PDT)
+        with ESMTP id S229732AbiDXRUl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Apr 2022 13:20:41 -0400
+Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6E776E541;
+        Sun, 24 Apr 2022 10:17:40 -0700 (PDT)
+Received: by mail-pg1-x533.google.com with SMTP id h5so11509407pgc.7;
+        Sun, 24 Apr 2022 10:17:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:from:date:message-id:subject:to;
         bh=uKZTe7yQ+O8BqMJZ1XBsdEQMbjgQxMztKFfEfSP4DbA=;
-        b=N2dGtr51J+6UMnRMMnlbWSD0N6sxh1/HQLagSI1XCqintMmVx6k7Viugy86ZJc4YNS
-         yc3SpafyfRpmTPnWkgq9WipOYdeVZeA3azWDyevKzYhh9YTjJU5Nug5Sa6eOBdezNOQF
-         /hW/ckKvlg3YCrWN8qitH+/lOIfxS4ZHbr5KmAlzXKYFs7a51XBHB/dyHnrnFGOkcqBV
-         f81QEsRtje6bv+15ppZUjNPHJFOHdk1mbqNFPL8riA1oDBb5xJlY1e6XpS6b3nkmC7VR
-         /mYsLGScTQB28/qvrJ2t7W1GStCwopZskUAe0gi2jl4Hb3qvLSJahYSJIsGMubo0u+jU
-         TCnA==
+        b=NU2rYVB8rZ8L6ovcWBSfXSgFwmagxyaioWqP7wYjs+saiFkXomBBmKnPJhILhsvbd8
+         oZI9qcHmV4TMZzp0FCJacHk37wolUVZp8SNRJwrgUZAg76JJKLXlBz3sLRzaiP2Mkt/A
+         mdeiLsjoExOaeZtRK3r+sUihLqkUj8zKzFQgy3nXk7GSix4/j3/ZLkSJeHuFbzvP3JpX
+         Me3mYiIF6YBoBqTRrU98VirlBCveEvZ/RAwx+gNarGpCOZLNnUAOXHJjU3DJST66NeUH
+         QPuahTzWOEaywMrUqNt0R3LUDqlkQgjvr6V2TuZsNsPYXUsQPchXph/zZhUkGI2melrc
+         MqKw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
         bh=uKZTe7yQ+O8BqMJZ1XBsdEQMbjgQxMztKFfEfSP4DbA=;
-        b=Cj1Fqfkxp8aNGWWhDAPbZa++dvp2KSHJIN+xlb0w/XCMt4Rp7G4ZW7aGKtetpEdgy5
-         xY58zDSwL7QmQbr80S5tZEnC8bIrl2Jzas7zD7inBBGq6lRWBJpamr4uTa9WlAzIPvyC
-         qXQlohWbC/XWCp0tBSwoXwqHTYlv/SMHZ6LYliJ7mO343XoUX+gOAXIAN1O5GsEYMUII
-         gAAhIrgAoWbIA98ehKwLwwYV37VeNC4PNdu8tbIv2skgGETuomXeqEwD+VJDD2hYBWJ/
-         eEtCFTo/gqE+jTEQmgkDNrZd8duy2Sb8rRqAvJKc7kx/g+pITA66BPa4orOmdXyI34qL
-         fKEw==
-X-Gm-Message-State: AOAM5303lVuGOwuUJXUAVy2XoFhkhZ4TofZ7SK+Lts+LeNLgN+RMeYib
-        fgA8Z4hUE4f2TWCenTzRgEL8QfNtkppN83YjsKzq9lmm+HBKvA==
-X-Google-Smtp-Source: ABdhPJz2XXjObfRe2IyPKcnasvgqVGJcah07nXovTNlcQCLCZ+HBofbafKZQqYJ6Wj43BlAoBbK3/agq3N2McD4+zHU=
-X-Received: by 2002:a17:903:11d0:b0:156:6c35:9588 with SMTP id
- q16-20020a17090311d000b001566c359588mr13846969plh.50.1650818464519; Sun, 24
- Apr 2022 09:41:04 -0700 (PDT)
+        b=gqLXeHRYITlQ7/QHU5uIgQAd0c6f+7d6KoNwFBpa0FWGx6O6N/hkASfwMDpmpLp0L1
+         SoAFv4J4OfxSucls3kUpyl/+OnvRZ6r0wPT8CgXww0V+E/2bJbRjM0kmGIf3QRbncpQh
+         047cqkH0DkxzI76AOao0v39a/0HJCkaKaOt34UN0dL6wh1IiZbHx8PlR78SzTyfg1JrD
+         O21YxacXb5BpJeBUCWsnmgHIuPL88fbEiPkl9YCOvHfu2mdFpUYpCvGlNhnJ9FmpbTYv
+         rtnmUavquEsd3KNLSl9qX5b2nbS1czQfDyCZvuamMugkYDLKmn87lwUfgwx9uN8hkO1x
+         UXdQ==
+X-Gm-Message-State: AOAM531MH2Tygfg6EzJ775Yd9WSBmhUcecV5k5gbLA03TiaTnHhQ0FkO
+        pRlCFvim2vwZzgRwroZwQAXQz68ZoMh5bpEbvTZJbpRUViixBw==
+X-Google-Smtp-Source: ABdhPJxFD7EaU+eAZ/z9hlrkfBHeDqGKOSztvtOACm6g9JxWEeHUJFeF+tar14FIQ3QSi1/to+ULgBgcGe9fkRElbfA=
+X-Received: by 2002:a63:4c4b:0:b0:3aa:4af8:9ab8 with SMTP id
+ m11-20020a634c4b000000b003aa4af89ab8mr12344493pgl.430.1650820659975; Sun, 24
+ Apr 2022 10:17:39 -0700 (PDT)
 MIME-Version: 1.0
-From:   jin young choi <ychoijy@gmail.com>
-Date:   Mon, 25 Apr 2022 01:40:53 +0900
-Message-ID: <CAM36TBuzEE8Afbh4tQNcu20AwUwB916FTNoZ6oh3MnYOK-BKfg@mail.gmail.com>
+From:   Jinyoung CHOI <ychoijy@gmail.com>
+Date:   Mon, 25 Apr 2022 02:17:29 +0900
+Message-ID: <CAM36TBv-ovw+Og=dm1f42f13VJTub-jmmaApWRgedwO_ZS2TTA@mail.gmail.com>
 Subject: [RESEND PATCH v2] scsi: ufs: wb: Add Manual Flush sysfs and cleanup
  toggle functions
-To:     Bart Van Assche <bvanassche@acm.org>, linux-kernel@vger.kernel.org,
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         adrian.hunter@intel.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
         asutoshd@codeaurora.org, Avri Altman <Avri.Altman@wdc.com>,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        jejb@linux.ibm.com, j-young.choi@samsung.com, beanhuo@micron.com,
-        cang@codeaurora.org, Daejun Park <daejun7.park@samsung.com>
+        martin.petersen@oracle.com, jejb@linux.ibm.com,
+        j-young.choi@samsung.com, beanhuo@micron.com,
+        Bart Van Assche <bvanassche@acm.org>, cang@codeaurora.org,
+        Daejun Park <daejun7.park@samsung.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
