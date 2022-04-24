@@ -2,96 +2,73 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3504C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Apr 2022 06:54:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C901C433FE
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Apr 2022 11:05:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238434AbiDXG5P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Apr 2022 02:57:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47718 "EHLO
+        id S239199AbiDXLH5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Apr 2022 07:07:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238415AbiDXG5O (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Apr 2022 02:57:14 -0400
-Received: from mail-qv1-xf30.google.com (mail-qv1-xf30.google.com [IPv6:2607:f8b0:4864:20::f30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE1D11384BC;
-        Sat, 23 Apr 2022 23:54:14 -0700 (PDT)
-Received: by mail-qv1-xf30.google.com with SMTP id a5so9479356qvx.1;
-        Sat, 23 Apr 2022 23:54:14 -0700 (PDT)
+        with ESMTP id S229605AbiDXLHy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Apr 2022 07:07:54 -0400
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C81B3A738;
+        Sun, 24 Apr 2022 04:04:52 -0700 (PDT)
+Received: by mail-ed1-x532.google.com with SMTP id be20so7013603edb.12;
+        Sun, 24 Apr 2022 04:04:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=r09fsKtZLjwCj1HV5PJv3dMIB0dG9OUJQSIGrDje8nY=;
-        b=D2egTLIFLgTdK0Mc24j9SCSI6wDrCg4nGiVux16xn8hlW2sdIOjQ3pf4I+Yqn1Y5lL
-         Xhy3Ahc1eN0jkl0xr55gL7yzuKHEQzm64p7pXoFqJV6iTBmO+mzh7DymzxFR/3q9sRH0
-         LsOn5JELpc+DR4KK+ymUrZgpiNoT0sysTPjwhyO0QH29cX/F/pocNB375knJDKZ07ALv
-         Jl2s1Nin24pB06fFYExnvTdzfZm4TGYOoVNQ1dzHUF4/Doit2iIXrbYqHLtlrVnlunEx
-         V7R0nn/eaSB5OOIbB/Altmt7O+nQV2u0cm2BsVAmzDLFV75LNGF+GsGjANkCXjv0zs2T
-         P57w==
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-transfer-encoding:user-agent:mime-version;
+        bh=6LLXdUdwxKY7YdYKPcEjKt1YLzULEQ9fvuAEvpfSSVc=;
+        b=bxNilV/G0uGLePf9NmRaDFUR61yh2eOu7FZQvxpN8b3X1AM61Fk0PO2AcYlBGwJehj
+         3uCp8M9O7edZD86EuS/IWyMg+HTIoBKNxmQ9sbiuRYhjAL+8EdRSxRUjYRiljQtbu4Ao
+         HttIEC+WmpeBMA+h3c5YYqfFqdnMwd4PsMmWoApVXjAQtBMO1yORAaMWxmJMnqyHYdpV
+         DV3SiXsq2KlWb2jVKkPIkfh12sxCT+1Rw55XZueDUUIzqRVdTDzlKENVBa5B751ybPMF
+         Ad/a53WSqFv7TQgN6QAPVi/QE8T3g2kQGXCT6qz/+1sqmzc+qD+IOFarxdVsSWMF2FW1
+         d26g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=r09fsKtZLjwCj1HV5PJv3dMIB0dG9OUJQSIGrDje8nY=;
-        b=NnTW+gB6kL3Z9a+ZLIQ8d8c52mV0Owbe5syl/uvwhPDA8mlI0ZZKTlYrC7NpAem4Gb
-         +vPCe+ed57Frypp5VRVkCt3WTDnOQ3UaSt9ele6Nmtbd0JtDOTNoJccG1tRooH3iXktf
-         cjB7/JtuIXEzlmK4WU6eHp8Pgxo3z11xBXR7fRMfZQtAcFvgx+6hcelhujbLfuZ69LZX
-         tSQLh4TKdQtfCoLCH9MgzmYQ6ecjctwNHFekirCKEoTpG+PQFU/EUfP+ExkUG/UnLMpj
-         GC7qjVSpzdr0dDROZVU9/DDs/xX0arbskpRErRKDpyhd8yd+p4oTZKkX77RSE3PIof3K
-         dlXw==
-X-Gm-Message-State: AOAM531V3REWHfaLS4CwtNMgADSC17ASOYs08L27SVfxYyu7yJO8JiRD
-        BuDn2Pe/+ysSTW8K21pVQoo=
-X-Google-Smtp-Source: ABdhPJwubd07iNkk3PuN+yBlilLbTVDrO8/SMttaNHqwcN892IygE4Smfa2WL/2CChIU3CEeqvQ8Ag==
-X-Received: by 2002:a05:6214:2342:b0:42d:7c8b:9eac with SMTP id hu2-20020a056214234200b0042d7c8b9eacmr8693302qvb.5.1650783254063;
-        Sat, 23 Apr 2022 23:54:14 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id e23-20020a05620a12d700b0069ec181a0b2sm3142156qkl.69.2022.04.23.23.54.10
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:content-transfer-encoding:user-agent:mime-version;
+        bh=6LLXdUdwxKY7YdYKPcEjKt1YLzULEQ9fvuAEvpfSSVc=;
+        b=hRopNf+lHY2heABORPga+UwvPu5gtBbTQSDcpH8nKyXCz72Hft8DZQ5gYJY7GmjQ9C
+         iUo9jtN56rsZDk/jSxTm9aTBeptwAZfKqR0rVrZODPssmgovu4QESIFNuDK+apzdZ/w8
+         SAUG3z35D7rWwRbFX2qYg++sCxUO1/6cpE9B7cesmCymo+MRsZs0RSrESuUM7OEfWd1V
+         foCjzWg/UNFnWxpVVfXRrERL/3qvwOey7WupBhLLUGxVA/cVwjlXR8Nz8+qVlqK/bfgY
+         +4yv0Hj5fgSg2ekrjoA98UD24gTuF1xSxRAysr88aXxsH7geGwT1e6i5V7tBdf/CTf/3
+         45eg==
+X-Gm-Message-State: AOAM5327E+Zp42AOmmxniXvZFTwxeeXFnHkOl9gnqdqSdngE1I6gRHwY
+        dv3GV1uIWNwGGhxObrakquKwDX6OVitRiQ==
+X-Google-Smtp-Source: ABdhPJzvsh1P684P9PR9vpiWSWqxY0VwT4x9TksJZZ/owoajUzP2VckOsExGoo/ZDHniBzKR8D5zDg==
+X-Received: by 2002:aa7:c790:0:b0:41d:7e0f:f15c with SMTP id n16-20020aa7c790000000b0041d7e0ff15cmr13626785eds.129.1650798290974;
+        Sun, 24 Apr 2022 04:04:50 -0700 (PDT)
+Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
+        by smtp.googlemail.com with ESMTPSA id h8-20020a1709066d8800b006e09a49a713sm2499580ejt.159.2022.04.24.04.04.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 23 Apr 2022 23:54:13 -0700 (PDT)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: ran.jianping@zte.com.cn
-To:     satishkh@cisco.com
-Cc:     sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        ran jianping <ran.jianping@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi:fnic: remove unneeded flush_workqueue
-Date:   Sun, 24 Apr 2022 06:54:06 +0000
-Message-Id: <20220424065406.3228528-1-ran.jianping@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        Sun, 24 Apr 2022 04:04:50 -0700 (PDT)
+Message-ID: <0b8ffa449b2ff56d994978ce73e0c9df0454ae07.camel@gmail.com>
+Subject: Re: [PATCH v2 4/5] scsi: ufs: core: Remove redundant wmb() in
+ ufshcd_send_command()
+From:   Bean Huo <huobean@gmail.com>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        martin.petersen@oracle.com, jejb@linux.ibm.com
+Cc:     avri.altman@wdc.com, alim.akhtar@samsung.com,
+        bjorn.andersson@linaro.org, linux-arm-msm@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bvanassche@acm.org, ahalaney@redhat.com
+Date:   Sun, 24 Apr 2022 13:04:50 +0200
+In-Reply-To: <20220423140245.394092-5-manivannan.sadhasivam@linaro.org>
+References: <20220423140245.394092-1-manivannan.sadhasivam@linaro.org>
+         <20220423140245.394092-5-manivannan.sadhasivam@linaro.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+User-Agent: Evolution 3.44.0-1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ran jianping <ran.jianping@zte.com.cn>
 
-All work currently pending will be done first by calling destroy_workqueue,
-so there is no need to flush it explicitly.
-
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: ran jianping <ran.jianping@zte.com.cn>
----
- drivers/scsi/fnic/fnic_main.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index 9161bd2fd421..460e03a55096 100644
---- a/drivers/scsi/fnic/fnic_main.c
-+++ b/drivers/scsi/fnic/fnic_main.c
-@@ -1146,10 +1146,8 @@ static void __exit fnic_cleanup_module(void)
- {
- 	pci_unregister_driver(&fnic_driver);
- 	destroy_workqueue(fnic_event_queue);
--	if (fnic_fip_queue) {
--		flush_workqueue(fnic_fip_queue);
-+	if (fnic_fip_queue)
- 		destroy_workqueue(fnic_fip_queue);
--	}
- 	kmem_cache_destroy(fnic_sgl_cache[FNIC_SGL_CACHE_MAX]);
- 	kmem_cache_destroy(fnic_sgl_cache[FNIC_SGL_CACHE_DFLT]);
- 	kmem_cache_destroy(fnic_io_req_cache);
--- 
-2.25.1
-
+Acked-by: Bean Huo <beanhuo@micron.com>
