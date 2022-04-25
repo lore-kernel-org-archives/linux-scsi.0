@@ -2,126 +2,306 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2BC5C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 12:27:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D857EC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 12:27:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241919AbiDYMaK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Apr 2022 08:30:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33866 "EHLO
+        id S242148AbiDYMaM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Apr 2022 08:30:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241987AbiDYM34 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 08:29:56 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A564A6E4CE
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 05:24:23 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id j17so14630690pfi.9
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 05:24:23 -0700 (PDT)
+        with ESMTP id S234166AbiDYMaA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 08:30:00 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 022926E56E
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 05:24:28 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id u7so11290846plg.13
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 05:24:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=hyIHIhSqrYqHgp1w9JnIylg4skAFEnOxGevWMaBp13g=;
-        b=fIrmBZ5dLKWR64SECgm9Is2azk+vnAom0ul1Xky9hd1G7KFfEaUpOAJjU9wh/5tB4e
-         tr5SIVtXGoouKdgyihFjr3G/FT8arSua8kb0EgJgDirCBi3sWfBtvfqeewJ5QHiX306U
-         SzMBZ3G6R0rHQxg++AdZR2RK4KUTI9S5Ao5hY=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version;
+        bh=1ovvwi/2yi8Q2hh38ba6l97VW/Dx26q3YYfmw0dL2rE=;
+        b=M59V6d7gIVocY+VK8i6dsWcQchNrPNYT6iwGBkySBKTLSTCyLNkqZaadGmzo2GM/Ug
+         XZQhKMDCCi0ft9IXsnN3cwXyiEc4gHVoQ8udsCw6gwdG5eLpoqDMgAtAaNIVCOB3RywY
+         SSdGlDW6KUCMnxMMY6kUliUODLPVJyG9QCXfg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=hyIHIhSqrYqHgp1w9JnIylg4skAFEnOxGevWMaBp13g=;
-        b=KhmK7NQSLoPEUyGHwMV3mCWcdypNP9PLzmIJ2ClZYNn54Edb/RRfZtZgrdM6764JAV
-         R0WyzbLbKOmhVt1+b+Qy2Sh25drgYN7Q+ZspksN11MSPXnNkzZpmXzqYAM7H5ZvcaQ0j
-         qdA8C3IsIKGaExjoEYlRADLR58izsAIyRyhwK1bcBAzeN0EG5ICOpWC5J2Jbjch8nSHc
-         cLZ9gIwlvkIDBqH1f2mAmGWDfK7iQVjqyTaomExx/EQt7MqRZiSlMTRlX74zdTZ1aHOq
-         LLCyfMbY0D6jOtJXCsmOXsdOS4mHR6Re0IRbFkXO8KULDcKXuVmXbzD8hVXCNkZEGqTH
-         JgSw==
-X-Gm-Message-State: AOAM531vPHMq77Zxx0y7Ri1LLtoBuqqgB9GAcDLNwKKZLL9/nMgGokCA
-        d4aiVDGNkFk8EuVe2IW6A8Fpou6BKI+OBl4WU9IY+puBIw/9kYVK6LbX2AfTqfPTxXHf/z/Hyuw
-        inMmiyLnKK+u7pDJfJuSLgeP7byWjA0woxEai8KmCJy229wK7Lr3D7sQTJVGRCXv/8EBKweFbxc
-        eIPuiHwOk=
-X-Google-Smtp-Source: ABdhPJzikJz4pG3Z7UqZB3Hr94+PubwhVww4DMtYOOxjVvBbR1/OwU4xoxm0EkZeXvrrLd/srYLRtA==
-X-Received: by 2002:a05:6a00:21c7:b0:4fd:f89f:ec17 with SMTP id t7-20020a056a0021c700b004fdf89fec17mr18735970pfj.72.1650889462801;
-        Mon, 25 Apr 2022 05:24:22 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version;
+        bh=1ovvwi/2yi8Q2hh38ba6l97VW/Dx26q3YYfmw0dL2rE=;
+        b=PNnjoZJ8o1Ckl/H3b1U2Jip6n1rVrkWperO4JuUBpXw4vq+HCzKaU4/tI/TNuySHS4
+         sQD7SCezHv3qPp+EZYGVwNOnv/SubM5lNxZ4T3GYPxeXtL8xCVnqQReDHu+tkcUDFC75
+         7qrdvDiVCsa8oW3QQ5QKu1Be1WMzF2Q/u+eoAicgMI1sxc/tcauKiUhKU/jJk1MOQK2I
+         ZiplwiZg0UonaWPqgxAK4H8Qk1P2E0DjhjXHLpc+U0Yc+VLBvJ8V1Y+XvACMkONEG6h2
+         xFIf6VZxfqrG+/7sNejP5OFoDnqVpDKP0M6qpEnbKx4fEaOJsQ2yB3VQgdfpou/iVM/w
+         GUTw==
+X-Gm-Message-State: AOAM533x6Sr+hpXbuY/4xFlO6GbDejfsSCbzFRQnLbNPDxUj7RL3D731
+        RUcEJxYfXGPT2u+LJMfqhEoN/DRs2WYy9UeR9H8bHXD2sNNj5FXBw3hMH+LuShrqkn9uAX7Jcf6
+        zowk344f/BOgBvpLraJDclpkU3Dn0mrDNo1pmSjlFBitzeKjbuOFAqjT9bafV07+76f6u6WyT0k
+        RwxJTfugw=
+X-Google-Smtp-Source: ABdhPJxtA6E7aNIhJQIOlZNAXF/nFsD25aPxPH3fVAJs+ik5oFFPRSfN7YQ3SZMVJ75gWTPCYBUCIg==
+X-Received: by 2002:a17:902:7e0d:b0:158:cedb:3683 with SMTP id b13-20020a1709027e0d00b00158cedb3683mr17665710plm.108.1650889466981;
+        Mon, 25 Apr 2022 05:24:26 -0700 (PDT)
 Received: from dhcp-10-123-20-15.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id y16-20020a63b510000000b00398d8b19bbfsm9757722pge.23.2022.04.25.05.24.18
+        by smtp.gmail.com with ESMTPSA id y16-20020a63b510000000b00398d8b19bbfsm9757722pge.23.2022.04.25.05.24.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Apr 2022 05:24:21 -0700 (PDT)
+        Mon, 25 Apr 2022 05:24:26 -0700 (PDT)
 From:   Sumit Saxena <sumit.saxena@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, bvanassche@acm.org, hch@lst.de,
         hare@suse.de, himanshu.madhani@oracle.com,
         sathya.prakash@broadcom.com, kashyap.desai@broadcom.com,
         chandrakanth.patil@broadcom.com, sreekanth.reddy@broadcom.com,
-        prayas.patel@broadcom.com, Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH v6 0/8] mpi3mr: add BSG interface support for controller management
-Date:   Mon, 25 Apr 2022 08:23:26 -0400
-Message-Id: <20220425122334.368142-1-sumit.saxena@broadcom.com>
+        prayas.patel@broadcom.com,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        kernel test robot <lkp@intel.com>
+Subject: [PATCH v6 1/8] mpi3mr: add BSG device support
+Date:   Mon, 25 Apr 2022 08:23:27 -0400
+Message-Id: <20220425122334.368142-2-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20220425122334.368142-1-sumit.saxena@broadcom.com>
+References: <20220425122334.368142-1-sumit.saxena@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000004fb7f05dd79a864"
+        boundary="00000000000045d90705dd79a8d1"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000004fb7f05dd79a864
+--00000000000045d90705dd79a8d1
 Content-Transfer-Encoding: 8bit
 
-This patchset adds BSG interface support for controller
-management. BSG layer facilitates communication/data exchange 
-between application and driver/firmware through BSG device node.
+Create BSG device per controller for controller management purpose.
+BSG Device nodes will be named as /dev/bsg/mpi3mrctl0,
+/dev/bsg/mpi3mrctl1...
 
-v6:
--Fixed errors/warnings reported by kernel test robot <lkp@intel.com>.
-
-v5:
--Addressed review comments from Himanshu for patch#2 and added
- reviewed-by tags. 
-
-v4:
--Restored MPI headers to driver source directory(drivers/scsi/mpi3mr).
--Moved data structures/definitions used by user space applications
- from MPI headers to uapi header(uapi/scsi/scsi_bsg_mpi3mr.h).
--Addressed review comments from Bart Van Assche and Himanshu Madhani. 
-
-v3:
--Moved MPI headers to /include/uapi/scsi/mpi3mr
--As Bart suggested, moved struct mpi3mr_nvme_pt_sge from
- uapi header to driver header.
-
-v2:
--Moved definitions to be used by user space applications to
- header scsi_bsg_mpi3mr.h in /include/upai/scsi 
-
-Sumit Saxena (8):
-  mpi3mr: add BSG device support
-  mpi3mr: add support for driver commands
-  mpi3mr: move data structures/definitions from MPI headers to uapi
-    header
-  mpi3mr: add support for MPT commands
-  mpi3mr: add support for PEL commands
-  mpi3mr: expose adapter state to sysfs
-  mpi3mr: add support for nvme pass-through
-  mpi3mr: update driver version to 8.0.0.69.0
-
- drivers/scsi/mpi3mr/Kconfig          |    1 +
- drivers/scsi/mpi3mr/Makefile         |    1 +
- drivers/scsi/mpi3mr/mpi/mpi30_init.h |   53 -
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h  |   28 -
- drivers/scsi/mpi3mr/mpi/mpi30_pci.h  |   31 +-
- drivers/scsi/mpi3mr/mpi3mr.h         |  133 ++-
- drivers/scsi/mpi3mr/mpi3mr_app.c     | 1605 ++++++++++++++++++++++++++
- drivers/scsi/mpi3mr/mpi3mr_debug.h   |   37 +-
- drivers/scsi/mpi3mr/mpi3mr_fw.c      |  331 +++++-
- drivers/scsi/mpi3mr/mpi3mr_os.c      |   52 +-
- include/uapi/scsi/scsi_bsg_mpi3mr.h  |  580 ++++++++++
- 11 files changed, 2723 insertions(+), 129 deletions(-)
+Reported-by: kernel test robot <lkp@intel.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+---
+ drivers/scsi/mpi3mr/Kconfig      |   1 +
+ drivers/scsi/mpi3mr/Makefile     |   1 +
+ drivers/scsi/mpi3mr/mpi3mr.h     |  20 ++++++
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 105 +++++++++++++++++++++++++++++++
+ drivers/scsi/mpi3mr/mpi3mr_os.c  |   2 +
+ 5 files changed, 129 insertions(+)
  create mode 100644 drivers/scsi/mpi3mr/mpi3mr_app.c
- create mode 100644 include/uapi/scsi/scsi_bsg_mpi3mr.h
 
+diff --git a/drivers/scsi/mpi3mr/Kconfig b/drivers/scsi/mpi3mr/Kconfig
+index f7882375e74f..8997531940c2 100644
+--- a/drivers/scsi/mpi3mr/Kconfig
++++ b/drivers/scsi/mpi3mr/Kconfig
+@@ -3,5 +3,6 @@
+ config SCSI_MPI3MR
+ 	tristate "Broadcom MPI3 Storage Controller Device Driver"
+ 	depends on PCI && SCSI
++	select BLK_DEV_BSGLIB
+ 	help
+ 	MPI3 based Storage & RAID Controllers Driver.
+diff --git a/drivers/scsi/mpi3mr/Makefile b/drivers/scsi/mpi3mr/Makefile
+index 7c2063e04c81..f5cdbe48c150 100644
+--- a/drivers/scsi/mpi3mr/Makefile
++++ b/drivers/scsi/mpi3mr/Makefile
+@@ -2,3 +2,4 @@
+ obj-m += mpi3mr.o
+ mpi3mr-y +=  mpi3mr_os.o     \
+ 		mpi3mr_fw.o \
++		mpi3mr_app.o \
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 6672d907d75d..f0515f929110 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -148,6 +148,7 @@ extern int prot_mask;
+ 
+ #define MPI3MR_DEFAULT_MDTS	(128 * 1024)
+ #define MPI3MR_DEFAULT_PGSZEXP         (12)
++
+ /* Command retry count definitions */
+ #define MPI3MR_DEV_RMHS_RETRY_COUNT 3
+ 
+@@ -175,6 +176,18 @@ extern int prot_mask;
+ /* MSI Index from Reply Queue Index */
+ #define REPLY_QUEUE_IDX_TO_MSIX_IDX(qidx, offset)	(qidx + offset)
+ 
++/*
++ * Maximum data transfer size definitions for management
++ * application commands
++ */
++#define MPI3MR_MAX_APP_XFER_SIZE	(1 * 1024 * 1024)
++#define MPI3MR_MAX_APP_XFER_SEGMENTS	512
++/*
++ * 2048 sectors are for data buffers and additional 512 sectors for
++ * other buffers
++ */
++#define MPI3MR_MAX_APP_XFER_SECTORS	(2048 + 512)
++
+ /* IOC State definitions */
+ enum mpi3mr_iocstate {
+ 	MRIOC_STATE_READY = 1,
+@@ -714,6 +727,8 @@ struct scmd_priv {
+  * @default_qcount: Total Default queues
+  * @active_poll_qcount: Currently active poll queue count
+  * @requested_poll_qcount: User requested poll queue count
++ * @bsg_dev: BSG device structure
++ * @bsg_queue: Request queue for BSG device
+  */
+ struct mpi3mr_ioc {
+ 	struct list_head list;
+@@ -854,6 +869,9 @@ struct mpi3mr_ioc {
+ 	u16 default_qcount;
+ 	u16 active_poll_qcount;
+ 	u16 requested_poll_qcount;
++
++	struct device *bsg_dev;
++	struct request_queue *bsg_queue;
+ };
+ 
+ /**
+@@ -962,5 +980,7 @@ void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code);
+ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+ 	struct op_reply_qinfo *op_reply_q);
+ int mpi3mr_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num);
++void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc);
++void mpi3mr_bsg_exit(struct mpi3mr_ioc *mrioc);
+ 
+ #endif /*MPI3MR_H_INCLUDED*/
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+new file mode 100644
+index 000000000000..948d4ff2ea06
+--- /dev/null
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -0,0 +1,105 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Driver for Broadcom MPI3 Storage Controllers
++ *
++ * Copyright (C) 2017-2022 Broadcom Inc.
++ *  (mailto: mpi3mr-linuxdrv.pdl@broadcom.com)
++ *
++ */
++
++#include "mpi3mr.h"
++#include <linux/bsg-lib.h>
++
++/**
++ * mpi3mr_bsg_request - bsg request entry point
++ * @job: BSG job reference
++ *
++ * This is driver's entry point for bsg requests
++ *
++ * Return: 0 on success and proper error codes on failure
++ */
++static int mpi3mr_bsg_request(struct bsg_job *job)
++{
++	return 0;
++}
++
++/**
++ * mpi3mr_bsg_exit - de-registration from bsg layer
++ *
++ * This will be called during driver unload and all
++ * bsg resources allocated during load will be freed.
++ *
++ * Return:Nothing
++ */
++void mpi3mr_bsg_exit(struct mpi3mr_ioc *mrioc)
++{
++	if (!mrioc->bsg_queue)
++		return;
++
++	bsg_remove_queue(mrioc->bsg_queue);
++	mrioc->bsg_queue = NULL;
++
++	device_del(mrioc->bsg_dev);
++	put_device(mrioc->bsg_dev);
++	kfree(mrioc->bsg_dev);
++}
++
++/**
++ * mpi3mr_bsg_node_release -release bsg device node
++ * @dev: bsg device node
++ *
++ * decrements bsg dev reference count
++ *
++ * Return:Nothing
++ */
++static void mpi3mr_bsg_node_release(struct device *dev)
++{
++	put_device(dev);
++}
++
++/**
++ * mpi3mr_bsg_init -  registration with bsg layer
++ *
++ * This will be called during driver load and it will
++ * register driver with bsg layer
++ *
++ * Return:Nothing
++ */
++void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
++{
++	mrioc->bsg_dev = kzalloc(sizeof(struct device), GFP_KERNEL);
++	if (!mrioc->bsg_dev) {
++		ioc_err(mrioc, "bsg device mem allocation failed\n");
++		return;
++	}
++
++	device_initialize(mrioc->bsg_dev);
++	dev_set_name(mrioc->bsg_dev, "mpi3mrctl%u", mrioc->id);
++
++	if (device_add(mrioc->bsg_dev)) {
++		ioc_err(mrioc, "%s: bsg device add failed\n",
++		    dev_name(mrioc->bsg_dev));
++		goto err_device_add;
++	}
++
++	mrioc->bsg_dev->release = mpi3mr_bsg_node_release;
++
++	mrioc->bsg_queue = bsg_setup_queue(mrioc->bsg_dev, dev_name(mrioc->bsg_dev),
++			mpi3mr_bsg_request, NULL, 0);
++	if (!mrioc->bsg_queue) {
++		ioc_err(mrioc, "%s: bsg registration failed\n",
++		    dev_name(mrioc->bsg_dev));
++		goto err_setup_queue;
++	}
++
++	blk_queue_max_segments(mrioc->bsg_queue, MPI3MR_MAX_APP_XFER_SEGMENTS);
++	blk_queue_max_hw_sectors(mrioc->bsg_queue, MPI3MR_MAX_APP_XFER_SECTORS);
++
++	return;
++
++err_setup_queue:
++	device_del(mrioc->bsg_dev);
++	put_device(mrioc->bsg_dev);
++err_device_add:
++	kfree(mrioc->bsg_dev);
++}
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index f7cd70a15ea6..faf14a5f9123 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -4345,6 +4345,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 
+ 	scsi_scan_host(shost);
++	mpi3mr_bsg_init(mrioc);
+ 	return retval;
+ 
+ addhost_failed:
+@@ -4389,6 +4390,7 @@ static void mpi3mr_remove(struct pci_dev *pdev)
+ 	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
+ 		ssleep(1);
+ 
++	mpi3mr_bsg_exit(mrioc);
+ 	mrioc->stop_drv_processing = 1;
+ 	mpi3mr_cleanup_fwevt_list(mrioc);
+ 	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
 -- 
 2.27.0
 
 
---00000000000004fb7f05dd79a864
+--00000000000045d90705dd79a8d1
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -192,13 +372,13 @@ rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
 3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKDTnfo85qRgKgBbtF+EoCejkKQ8YL2E
-EcfUUE+TkKJEMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDQy
-NTEyMjQyM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIAm2s6sCtmqBIIpMgZU4GC1j/Xv1hLnu
+VPGaMQlF4rgxMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDQy
+NTEyMjQyN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBqBxHRSwu3vCUTjCW3cQ0e85RpQignfOdEpNwfoNdWYNeoTDEU
-TIuVHA2W9clbWHWILXN0OqcPwkv34XNNN7hIuCO9T8WaAOr7whl/OMaa9pZJ/DSbKCrrdBW+15Ix
-I5jPRuaq1aq1dGdGBN3kXQ5MfVbAWaH/1C2tqGlTwOZV+sBNSpMlylr5cw9Wsmmpwtok0dAezkZC
-8qKIfkDZTTxsLx+48IICQj95JuPn65a/oOGeDiS402qglcuD3AQ4mKVqo4lG2IJOqUS9IIvCXGGw
-IC3t6isIvtSFg7AUNVcaTa4X6hfxQki+tOM/Rxo6JRjEUGI5QbkkyvZXCv4bUsIq
---00000000000004fb7f05dd79a864--
+ATANBgkqhkiG9w0BAQEFAASCAQAEtqrkrHTYyoVTqj4wNI2B0++t+fIHpufPF2DQ0Z8zVcX83/GH
++pWQHZKvzowjOfBDx8v6b1vOmhhJyzLFK2eClvWg8bUyT/TRZtrmkIuwrD5XMHLED8wYsH4Xwiuy
++EHlL4HbULKs7K28LNx2JfI49EsaNZ45GjgKENW7uGvzEuTFErXQdD988W9suf8/irhKSHesgx39
+aRoa7d44lt5advmoFJUSHXsXxjGVu5reBdTFqfNAWkMOikd03uZ2WvXN4XbJ+gr7HHrmm63nKPCW
+f3Okf0PXK8D4Yqqsm3Cq1BSOJN6S4iOIAdascJH5HHlxnOVd3lE429ZSO1aoUM+5
+--00000000000045d90705dd79a8d1--
