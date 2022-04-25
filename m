@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BA7BC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 08:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7644EC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 08:51:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233534AbiDYIqS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Apr 2022 04:46:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53028 "EHLO
+        id S233912AbiDYIyf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Apr 2022 04:54:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232124AbiDYIqQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 04:46:16 -0400
+        with ESMTP id S234506AbiDYIyb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 04:54:31 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E147183022;
-        Mon, 25 Apr 2022 01:43:12 -0700 (PDT)
-Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Kmz3y2955z67yLV;
-        Mon, 25 Apr 2022 16:40:30 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 095E61835F;
+        Mon, 25 Apr 2022 01:51:28 -0700 (PDT)
+Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KmzFT6VJyz67yRq;
+        Mon, 25 Apr 2022 16:48:45 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
  fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 25 Apr 2022 10:43:10 +0200
+ 15.1.2375.24; Mon, 25 Apr 2022 10:51:26 +0200
 Received: from [10.47.92.213] (10.47.92.213) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2375.24; Mon, 25 Apr
- 2022 09:43:09 +0100
-Message-ID: <380af884-94f2-231b-040b-2d89a544b8ed@huawei.com>
-Date:   Mon, 25 Apr 2022 09:43:08 +0100
+ 2022 09:51:25 +0100
+Message-ID: <2843b52d-8848-45d9-13f2-2821d79689dd@huawei.com>
+Date:   Mon, 25 Apr 2022 09:51:26 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH 4/4] scsi: hisi_sas: Use libsas internal abort support
+Subject: Re: [PATCH 1/4] scsi: libsas: Add sas_execute_internal_abort_single()
 To:     Hannes Reinecke <hare@suse.de>, <jejb@linux.ibm.com>,
         <martin.petersen@oracle.com>, <jinpu.wang@cloud.ionos.com>,
         <damien.lemoal@opensource.wdc.com>
@@ -39,12 +39,14 @@ CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <Viswas.G@microchip.com>, <hch@lst.de>, <liuqi115@huawei.com>,
         <chenxiang66@hisilicon.com>
 References: <1646309930-138960-1-git-send-email-john.garry@huawei.com>
- <1646309930-138960-5-git-send-email-john.garry@huawei.com>
- <ce7c8535-a3dd-5549-1319-a3af1d0cee0b@suse.de>
+ <1646309930-138960-2-git-send-email-john.garry@huawei.com>
+ <929aede0-9e58-9c3d-5951-6151a3281edd@suse.de>
+ <83328d95-5d5e-f311-952c-ce627cb035ea@huawei.com>
+ <39975d62-b706-7d03-01a8-f6095c7af4ac@suse.de>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <ce7c8535-a3dd-5549-1319-a3af1d0cee0b@suse.de>
+In-Reply-To: <39975d62-b706-7d03-01a8-f6095c7af4ac@suse.de>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-Originating-IP: [10.47.92.213]
 X-ClientProxiedBy: lhreml702-chm.china.huawei.com (10.201.108.51) To
  lhreml724-chm.china.huawei.com (10.201.108.75)
@@ -53,30 +55,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 20/04/2022 13:29, Hannes Reinecke wrote:
-> On 3/3/22 13:18, John Garry wrote:
->> Use the common libsas internal abort functionality.
+On 25/04/2022 09:34, Hannes Reinecke wrote:
+>>>> +/* LLDDs rely on these values */
+>>>> +enum sas_internal_abort {
+>>>> +    SAS_INTERNAL_ABORT_SINGLE    = 0,
+>>>> +};
+>>>> +
+>>>
+>>> Why don't you use the existing TMF_XXX values here?
+>>> Your 'single' method pretty much _is_ a TMF_ABORT_TASK, and the 
+>>> 'device' method _is_ a TMF_ABORT_TASK_SET, no?
 >>
->> In addition, this driver has special handling for internal abort 
->> timeouts -
->> specifically whether to reset the controller in that instance, so extend
->> the API for that.
+>> Sure, they are doing the same as TMFs and there is equivalence in the 
+>> 'single' and 'device' methods, as you say.
 >>
-> Huh? Is there a reason _not_ to reset the controller once abort times out?
+>> However, as mentioned in the comment, the LLDDs rely on the values in 
+>> enum sas_internal_abort, which do not match the values in 
+>> TMF_ABORT{_TASK, _TASK_SET}.
+>>
+> How can they rely on a value which you just introduced?
 
-There's a bug in v2 HW where the internal abort may timeout due to HW 
-bug but it is not fatal, i.e. the HW state is not totally buggered, so 
-can continue without a reset.
+I am relying on no one changing those values in enum sas_internal_abort.
 
-> And why isn't that delegated to SCSI EH?
+Both hisi_sas and pm8001 use value of 0 for single abort and 1 for 
+device abort in their own internal abort HW frames structs.
 
-For sure, SCSI EH will reset the host if all else fails. However, it may 
-take some time to get to the point of deciding to reset - including lots 
-of timeouts. To accelerate this, we set a host flag to say that we have 
-a HW fault, and don't bother with nexus reset, LU reset, etc. once the 
-initial task abort fails due to HW fault and fail straight away. Maybe 
-the core code could do something similar but it seems messy/hard to 
-generalise.
+And if some other controller comes along which wants to support this 
+feature and the values in enum sas_internal_abort don't match then they 
+would need to do some translation.
+
+I could use TMF values and do the translation in hisi_sas and pm8001 
+drivers today, but I don't see much much gain in that.
 
 Thanks,
 John
