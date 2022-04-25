@@ -2,255 +2,371 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED3CDC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 04:08:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B7B1C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 04:38:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240951AbiDYELs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Apr 2022 00:11:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57064 "EHLO
+        id S241030AbiDYEli (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Apr 2022 00:41:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241012AbiDYELV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 00:11:21 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D095AE4D
-        for <linux-scsi@vger.kernel.org>; Sun, 24 Apr 2022 21:08:05 -0700 (PDT)
-Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220425040803epoutp01498c01918bcf18aaa362c4b889d27406~pCCKm_a-u0612506125epoutp01M
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 04:08:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220425040803epoutp01498c01918bcf18aaa362c4b889d27406~pCCKm_a-u0612506125epoutp01M
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1650859683;
-        bh=ysCeGAZbJmfIpJ2BTe1KDt+Ea1Y2UlSnlu5rWTG3AQg=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=HEVcBLts9rhAXNnfG6CBOlPFDqMIcBIcTAcSwr0KRfl2TkUe4r41AcoRVGbY5n1wx
-         d+/dZAba0EQZqUeDZvwaPHRQZsCLY5KyFhmot40kJ20Bit1WVWfzMkGPdS2Bht50mq
-         kqlJauqEnqNQRm3TYTPe8GUctTsbrmKd2Of3hB5Q=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas3p1.samsung.com (KnoxPortal) with ESMTP id
-        20220425040802epcas3p19682822a319aedd2870fa1aeffada508~pCCKJoJEb1934819348epcas3p1f;
-        Mon, 25 Apr 2022 04:08:02 +0000 (GMT)
-Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp3.localdomain
-        (Postfix) with ESMTP id 4Kms1Z5Ccbz4x9Q3; Mon, 25 Apr 2022 04:08:02 +0000
-        (GMT)
-Mime-Version: 1.0
-Subject: RE: [PATCH v3 5/6] scsi: ufshpb: Add handing of device reset HPB
- regions Infos in HPB device mode
-Reply-To: keosung.park@samsung.com
-Sender: Keoseong Park <keosung.park@samsung.com>
-From:   Keoseong Park <keosung.park@samsung.com>
-To:     Bean Huo <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
-        cpgsproxy3 <cpgsproxy3@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20220424220713.1253049-6-huobean@gmail.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1796371666.21650859682732.JavaMail.epsvc@epcpadp4>
-Date:   Mon, 25 Apr 2022 12:54:04 +0900
-X-CMS-MailID: 20220425035404epcms2p49ec6b7202d89e665a93ff92c662d0519
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20220424220755epcas2p231c49e8ae1326d63429b0fdd31600733
-References: <20220424220713.1253049-6-huobean@gmail.com>
-        <20220424220713.1253049-1-huobean@gmail.com>
-        <CGME20220424220755epcas2p231c49e8ae1326d63429b0fdd31600733@epcms2p4>
+        with ESMTP id S235076AbiDYElg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 00:41:36 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC17A1CFF5;
+        Sun, 24 Apr 2022 21:38:32 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id n8so24417715plh.1;
+        Sun, 24 Apr 2022 21:38:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=uKZTe7yQ+O8BqMJZ1XBsdEQMbjgQxMztKFfEfSP4DbA=;
+        b=I1DklqSdOPz+NPz+FpZWvqrJwaP0Wa97oNY1CKf5e44C/W6d+TiHK18cWRg2bFQnGD
+         R1++lHyDoQHUoiPpHrk7ZkSCSa9eWNTmmELpVSEdSMR7+joZMl8QAMJQPfuxfJeiMWKI
+         T558BQ3d/3rKHaU4o6Z12wiyg7XatQ+CXajrDEK266Ai38rbobDlWNRjAFAydSSKetFc
+         dC335Tkv+ZitYVY+FQadL0cJ+t8xLdK8sWj/cNXlwgIlUbGRohLF1BSAwrPlYyBITlCv
+         NppvGixbZNkDT5UGmP1azNqomGoFnfarWJw9ZaizL5ZhKagCqMtfcRUUVv82YtmYUobK
+         D6Bw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=uKZTe7yQ+O8BqMJZ1XBsdEQMbjgQxMztKFfEfSP4DbA=;
+        b=cdYa6Ea2CcHW9nTNsC3QlFSl6i5OpjtosysPO7M/yHvqbu4PD5wlKK88x0bPVNLZlS
+         8pqky0z25jL78gM6v+LRPVtmw8Ai54za9erEvFwZCWh66BQz4QCy3uiOSBZHPTchsEmH
+         mG3YLkgdhUh8MrbrKPGFhBu0mLflDwRU7fjTeke4QE8yJKksNjeB67FcpbBI6N1FzImn
+         /Sv03qVr1i8gIZqO+9go+bEuNVSk/w9Oy9eP0HdPs8p6VDou30DIL2Q5/pLCefhzLIVI
+         Ze7as+LRtriRW8kwU7iuBS7Xdj7ofDGWWk1elQ29MJr/O465kKdea0w9pa9Uji2gfdfQ
+         f//Q==
+X-Gm-Message-State: AOAM530wmSWWqO6tyVoeLKw8t0FTqAbxUHXk9IhdbV+CT5+ACEf+2RsO
+        IoC5STpy8wjsYP+K0jtzNollO0Dr5UQEECGENYI=
+X-Google-Smtp-Source: ABdhPJxHWlTLsxsS/0hJsc9KBoMnPYx6pjUevHp2jGIbu2RzrKutIANkrGtqEDG5s4XiGgIyB8PrCzjCpsavCqzrOtg=
+X-Received: by 2002:a17:903:11d0:b0:156:6c35:9588 with SMTP id
+ q16-20020a17090311d000b001566c359588mr15841728plh.50.1650861512127; Sun, 24
+ Apr 2022 21:38:32 -0700 (PDT)
+MIME-Version: 1.0
+From:   Jinyoung CHOI <ychoijy@gmail.com>
+Date:   Mon, 25 Apr 2022 13:38:21 +0900
+Message-ID: <CAM36TBu4Z=a4e=ik3jzGygvFqrg-dzkBuW5COHVedCig=hT6cQ@mail.gmail.com>
+Subject: [RESEND PATCH v2] scsi: ufs: wb: Add Manual Flush sysfs and cleanup
+ toggle functions
+To:     Avri Altman <Avri.Altman@wdc.com>, linux-kernel@vger.kernel.org,
+        adrian.hunter@intel.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        asutoshd@codeaurora.org, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, jejb@linux.ibm.com,
+        j-young.choi@samsung.com, beanhuo@micron.com,
+        Bart Van Assche <bvanassche@acm.org>, cang@codeaurora.org,
+        Daejun Park <daejun7.park@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->From: Bean Huo <beanhuo@micron.com>
->=20
->In UFS HPB Spec JESD220-3A,
->=20
->"5.8. Active and inactive information upon power cycle
->...
->When the device is powered off by the host, the device may restore L2P map=
- data
->upon power up or build from the host=E2=80=99s HPB READ command. In case d=
-evice powered
->up and lost HPB information, device can signal to the host through HPB Sen=
-se data,
->by setting HPB Operation as =E2=80=982=E2=80=99 which will inform the host=
- that device reset HPB
->information."
->=20
->Therefore, for HPB device control mode, if the UFS device is reset via the=
- RST_N
->pin, the active region information in the device will be reset. If the hos=
-t side
->receives this notification from the device side, it is recommended to inac=
-tivate
->all active regions in the host's HPB cache.
->=20
->Signed-off-by: Bean Huo <beanhuo@micron.com>
->---
-> drivers/scsi/ufs/ufshpb.c | 82 +++++++++++++++++++++++++++------------
-> 1 file changed, 58 insertions(+), 24 deletions(-)
->=20
->diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
->index e7f311bb4401..7868412054bf 100644
->--- a/drivers/scsi/ufs/ufshpb.c
->+++ b/drivers/scsi/ufs/ufshpb.c
->@@ -1137,6 +1137,39 @@ static int ufshpb_add_region(struct ufshpb_lu *hpb,=
- struct ufshpb_region *rgn)
->         spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
->         return ret;
-> }
->+/**
->+ *ufshpb_submit_region_inactive() - submit a region to be inactivated lat=
-er
->+ *@hpb: per-LU HPB instance
->+ *@region_index: the index associated with the region that will be inacti=
-vated later
->+ */
->+static void ufshpb_submit_region_inactive(struct ufshpb_lu *hpb, int regi=
-on_index)
->+{
->+        int subregion_index;
->+        struct ufshpb_region *rgn;
->+        struct ufshpb_subregion *srgn;
->+
->+        /*
->+         * Remove this region from active region list and add it to inact=
-ive list
->+         */
->+        spin_lock(&hpb->rsp_list_lock);
->+        ufshpb_update_inactive_info(hpb, region_index);
->+        spin_unlock(&hpb->rsp_list_lock);
->+
->+        rgn =3D hpb->rgn_tbl + region_index;
->+
->+        /*
->+         * Set subregion state to be HPB_SRGN_INVALID, there will no HPB =
-read on this subregion
->+         */
->+        spin_lock(&hpb->rgn_state_lock);
->+        if (rgn->rgn_state !=3D HPB_RGN_INACTIVE) {
->+                for (subregion_index =3D 0; subregion_index < rgn->srgn_c=
-nt; subregion_index++) {
->+                        srgn =3D rgn->srgn_tbl + subregion_index;
->+                        if (srgn->srgn_state =3D=3D HPB_SRGN_VALID)
->+                                srgn->srgn_state =3D HPB_SRGN_INVALID;
->+                }
->+        }
->+        spin_unlock(&hpb->rgn_state_lock);
->+}
->=20
-> static void ufshpb_rsp_req_region_update(struct ufshpb_lu *hpb,
->                                          struct utp_hpb_rsp *rsp_field)
->@@ -1196,25 +1229,8 @@ static void ufshpb_rsp_req_region_update(struct ufs=
-hpb_lu *hpb,
->=20
->         for (i =3D 0; i < rsp_field->inactive_rgn_cnt; i++) {
->                 rgn_i =3D be16_to_cpu(rsp_field->hpb_inactive_field[i]);
->-                dev_dbg(&hpb->sdev_ufs_lu->sdev_dev,
->-                        "inactivate(%d) region %d\n", i, rgn_i);
->-
->-                spin_lock(&hpb->rsp_list_lock);
->-                ufshpb_update_inactive_info(hpb, rgn_i);
->-                spin_unlock(&hpb->rsp_list_lock);
->-
->-                rgn =3D hpb->rgn_tbl + rgn_i;
->-
->-                spin_lock(&hpb->rgn_state_lock);
->-                if (rgn->rgn_state !=3D HPB_RGN_INACTIVE) {
->-                        for (srgn_i =3D 0; srgn_i < rgn->srgn_cnt; srgn_i=
-++) {
->-                                srgn =3D rgn->srgn_tbl + srgn_i;
->-                                if (srgn->srgn_state =3D=3D HPB_SRGN_VALI=
-D)
->-                                        srgn->srgn_state =3D HPB_SRGN_INV=
-ALID;
->-                        }
->-                }
->-                spin_unlock(&hpb->rgn_state_lock);
->-
->+                dev_dbg(&hpb->sdev_ufs_lu->sdev_dev, "inactivate(%d) regi=
-on %d\n", i, rgn_i);
->+                ufshpb_submit_region_inactive(hpb, rgn_i);
->         }
->=20
-> out:
->@@ -1249,14 +1265,32 @@ static void ufshpb_dev_reset_handler(struct ufs_hb=
-a *hba)
->=20
->         __shost_for_each_device(sdev, hba->host) {
->                 hpb =3D ufshpb_get_hpb_data(sdev);
->-                if (hpb && hpb->is_hcm)
->+                if (!hpb)
->+                        continue;
->+
->+                if (hpb->is_hcm) {
->                         /*
->-                         * For the HPB host mode, in case device powered =
-up and lost HPB
->-                         * information, we will set the region flag to be=
- RGN_FLAG_UPDATE,
->-                         * it will let host reload its L2P entries(re-act=
-ivate the region
->-                         * in the UFS device).
->+                         * For the HPB host control mode, in case device =
-powered up and lost HPB
->+                         * information, we will set the region flag to be=
- RGN_FLAG_UPDATE, it will
->+                         * let host reload its L2P entries(reactivate reg=
-ion in the UFS device).
->                          */
->                         ufshpb_set_regions_update(hpb);
->+                } else {
->+                        /*
->+                         * For the HPB device control mode, if host side =
-receives 02h:HPB Operation
->+                         * in UPIU response, which means device recommend=
-s the host side should
->+                         * inactivate all active regions. Here we add all=
- active regions to inactive
->+                         * list, they will be inactivated later in ufshpb=
-_map_work_handler().
->+                         */
->+                        struct victim_select_info *lru_info =3D &hpb->lru=
-_info;
->+                        struct ufshpb_region *rgn;
->+
->+                        list_for_each_entry(rgn, &lru_info->lh_lru_rgn, l=
-ist_lru_rgn)
->+                                ufshpb_submit_region_inactive(hpb, rgn->r=
-gn_idx);
->+
->+                        if (ufshpb_get_state(hpb) =3D=3D HPB_PRESENT)
->+                                queue_work(ufshpb_wq, &hpb->map_work);
->+                }
->         }
-> }
->=20
->--=20
->2.34.1
->=20
->=20
-Looks good to me.
+There is the following quirk to bypass "WB Manual Flush" in Write
+Booster.
 
-Reviewed-by: Keoseong Park <keosung.park@samsung.com>
+  - UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL
 
-Best Regards,
-Keoseong Park
+If this quirk is not set, there is no knob that can control "WB Manual Flush".
+
+There are three flags that control Write Booster Feature.
+1. WB ON/OFF
+2. WB Hibern Flush ON/OFF
+3. WB Flush ON/OFF
+
+The sysfs that controls the WB was implemented. (1)
+
+In the case of "Hibern Flush", it is always good to turn on.
+Control may not be required. (2)
+
+Finally, "Manual flush" may be determined that it can affect
+performance or power consumption.
+So the sysfs that controls this may be necessary. (3)
+
+In addition, toggle functions for controlling the above flags are cleaned.
+
+Signed-off-by: Jinyoung Choi <j-young.choi@samsung.com>
+---
+ drivers/scsi/ufs/ufs-sysfs.c | 46 +++++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd.c    | 76 ++++++++++++++++++------------------
+ drivers/scsi/ufs/ufshcd.h    |  7 ++++
+ 3 files changed, 89 insertions(+), 40 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index 5c405ff7b6ea..e0f6ba7ffefc 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -229,7 +229,7 @@ static ssize_t wb_on_store(struct device *dev,
+struct device_attribute *attr,
+  * If the platform supports UFSHCD_CAP_CLK_SCALING, turn WB
+  * on/off will be done while clock scaling up/down.
+  */
+- dev_warn(dev, "To control WB through wb_on is not allowed!\n");
++ dev_warn(dev, "It is not allowed to control WB!\n");
+  return -EOPNOTSUPP;
+  }
+
+@@ -253,6 +253,48 @@ static ssize_t wb_on_store(struct device *dev,
+struct device_attribute *attr,
+  return res < 0 ? res : count;
+ }
+
++static ssize_t wb_buf_flush_en_show(struct device *dev,
++     struct device_attribute *attr,
++     char *buf)
++{
++ struct ufs_hba *hba = dev_get_drvdata(dev);
++
++ return sysfs_emit(buf, "%d\n", hba->dev_info.wb_buf_flush_enabled);
++}
++
++static ssize_t wb_buf_flush_en_store(struct device *dev,
++      struct device_attribute *attr,
++      const char *buf, size_t count)
++{
++ struct ufs_hba *hba = dev_get_drvdata(dev);
++ unsigned int wb_buf_flush_en;
++ ssize_t res;
++
++ if (!ufshcd_is_wb_buf_flush_allowed(hba)) {
++ dev_warn(dev, "It is not allowed to control WB buf flush!\n");
++ return -EOPNOTSUPP;
++ }
++
++ if (kstrtouint(buf, 0, &wb_buf_flush_en))
++ return -EINVAL;
++
++ if (wb_buf_flush_en != 0 && wb_buf_flush_en != 1)
++ return -EINVAL;
++
++ down(&hba->host_sem);
++ if (!ufshcd_is_user_access_allowed(hba)) {
++ res = -EBUSY;
++ goto out;
++ }
++
++ ufshcd_rpm_get_sync(hba);
++ res = ufshcd_wb_toggle_buf_flush(hba, wb_buf_flush_en);
++ ufshcd_rpm_put_sync(hba);
++out:
++ up(&hba->host_sem);
++ return res < 0 ? res : count;
++}
++
+ static DEVICE_ATTR_RW(rpm_lvl);
+ static DEVICE_ATTR_RO(rpm_target_dev_state);
+ static DEVICE_ATTR_RO(rpm_target_link_state);
+@@ -261,6 +303,7 @@ static DEVICE_ATTR_RO(spm_target_dev_state);
+ static DEVICE_ATTR_RO(spm_target_link_state);
+ static DEVICE_ATTR_RW(auto_hibern8);
+ static DEVICE_ATTR_RW(wb_on);
++static DEVICE_ATTR_RW(wb_buf_flush_en);
+
+ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+  &dev_attr_rpm_lvl.attr,
+@@ -271,6 +314,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+  &dev_attr_spm_target_link_state.attr,
+  &dev_attr_auto_hibern8.attr,
+  &dev_attr_wb_on.attr,
++ &dev_attr_wb_buf_flush_en.attr,
+  NULL
+ };
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 3f9caafa91bf..153a625b3111 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -248,8 +248,7 @@ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+  struct ufs_vreg *vreg);
+ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+-static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
+-static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
++static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
+bool set);
+ static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
+ static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
+
+@@ -269,16 +268,17 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
+  }
+ }
+
+-static inline void ufshcd_wb_config(struct ufs_hba *hba)
++static void ufshcd_wb_set_default_flags(struct ufs_hba *hba)
+ {
+  if (!ufshcd_is_wb_allowed(hba))
+  return;
+
+  ufshcd_wb_toggle(hba, true);
+
+- ufshcd_wb_toggle_flush_during_h8(hba, true);
+- if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
+- ufshcd_wb_toggle_flush(hba, true);
++ ufshcd_wb_toggle_buf_flush_during_h8(hba, true);
++
++ if (ufshcd_is_wb_buf_flush_allowed(hba))
++ ufshcd_wb_toggle_buf_flush(hba, true);
+ }
+
+ static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
+@@ -1274,9 +1274,10 @@ static int ufshcd_devfreq_scale(struct ufs_hba
+*hba, bool scale_up)
+  }
+  }
+
+- /* Enable Write Booster if we have scaled up else disable it */
+  downgrade_write(&hba->clk_scaling_lock);
+  is_writelock = false;
++
++ /* Enable Write Booster if we have scaled up else disable it */
+  ufshcd_wb_toggle(hba, scale_up);
+
+ out_unprepare:
+@@ -5693,9 +5694,13 @@ static int __ufshcd_wb_toggle(struct ufs_hba
+*hba, bool set, enum flag_idn idn)
+ {
+  u8 index;
+  enum query_opcode opcode = set ? UPIU_QUERY_OPCODE_SET_FLAG :
+-    UPIU_QUERY_OPCODE_CLEAR_FLAG;
++ UPIU_QUERY_OPCODE_CLEAR_FLAG;
++
++ if (!ufshcd_is_wb_allowed(hba))
++ return -EPERM;
+
+  index = ufshcd_wb_get_query_index(hba);
++
+  return ufshcd_query_flag_retry(hba, opcode, idn, index, NULL);
+ }
+
+@@ -5703,60 +5708,51 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
+ {
+  int ret;
+
+- if (!ufshcd_is_wb_allowed(hba))
+- return 0;
+-
+- if (!(enable ^ hba->dev_info.wb_enabled))
++ if (hba->dev_info.wb_enabled == enable)
+  return 0;
+
+  ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_EN);
+  if (ret) {
+- dev_err(hba->dev, "%s Write Booster %s failed %d\n",
++ dev_err(hba->dev, "%s: failed to %s WB %d\n",
+  __func__, enable ? "enable" : "disable", ret);
+  return ret;
+  }
+
+  hba->dev_info.wb_enabled = enable;
+- dev_info(hba->dev, "%s Write Booster %s\n",
+- __func__, enable ? "enabled" : "disabled");
+
+  return ret;
+ }
+
+-static void ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
++static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
++ bool enable)
+ {
+  int ret;
+
+- ret = __ufshcd_wb_toggle(hba, set,
+- QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8);
+- if (ret) {
+- dev_err(hba->dev, "%s: WB-Buf Flush during H8 %s failed: %d\n",
+- __func__, set ? "enable" : "disable", ret);
+- return;
+- }
+- dev_dbg(hba->dev, "%s WB-Buf Flush during H8 %s\n",
+- __func__, set ? "enabled" : "disabled");
++ ret = __ufshcd_wb_toggle(hba, enable,
++ QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8);
++ if (ret)
++ dev_err(hba->dev, "%s: failed to %s WB buf flush during H8 %d\n",
++ __func__, enable ? "enable" : "disable", ret);
+ }
+
+-static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
++int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable)
+ {
+  int ret;
+
+- if (!ufshcd_is_wb_allowed(hba) ||
+-     hba->dev_info.wb_buf_flush_enabled == enable)
+- return;
++ if (hba->dev_info.wb_buf_flush_enabled == enable)
++ return 0;
+
+- ret = __ufshcd_wb_toggle(hba, enable, QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN);
++ ret = __ufshcd_wb_toggle(hba, enable,
++ QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN);
+  if (ret) {
+- dev_err(hba->dev, "%s WB-Buf Flush %s failed %d\n", __func__,
+- enable ? "enable" : "disable", ret);
+- return;
++ dev_err(hba->dev, "%s: failed to %s WB buf flush %d\n",
++ __func__, enable ? "enable" : "disable", ret);
++ return ret;
+  }
+
+  hba->dev_info.wb_buf_flush_enabled = enable;
+
+- dev_dbg(hba->dev, "%s WB-Buf Flush %s\n",
+- __func__, enable ? "enabled" : "disabled");
++ return ret;
+ }
+
+ static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
+@@ -5790,10 +5786,10 @@ static bool
+ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
+
+ static void ufshcd_wb_force_disable(struct ufs_hba *hba)
+ {
+- if (!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL))
+- ufshcd_wb_toggle_flush(hba, false);
++ if (ufshcd_is_wb_buf_flush_allowed(hba))
++ ufshcd_wb_toggle_buf_flush(hba, false);
+
+- ufshcd_wb_toggle_flush_during_h8(hba, false);
++ ufshcd_wb_toggle_buf_flush_during_h8(hba, false);
+  ufshcd_wb_toggle(hba, false);
+  hba->caps &= ~UFSHCD_CAP_WB_EN;
+
+@@ -8178,7 +8174,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba,
+bool init_dev_params)
+  */
+  ufshcd_set_active_icc_lvl(hba);
+
+- ufshcd_wb_config(hba);
++ /* Enable UFS Write Booster if supported */
++ ufshcd_wb_set_default_flags(hba);
++
+  if (hba->ee_usr_mask)
+  ufshcd_write_ee_control(hba);
+  /* Enable Auto-Hibernate if configured */
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 94f545be183a..69b5f33d5746 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -991,6 +991,12 @@ static inline bool ufshcd_is_wb_allowed(struct
+ufs_hba *hba)
+  return hba->caps & UFSHCD_CAP_WB_EN;
+ }
+
++static inline bool ufshcd_is_wb_buf_flush_allowed(struct ufs_hba *hba)
++{
++ return ufshcd_is_wb_allowed(hba) &&
++ !(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL);
++}
++
+ static inline bool ufshcd_is_user_access_allowed(struct ufs_hba *hba)
+ {
+  return !hba->shutting_down;
+@@ -1209,6 +1215,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+       enum query_opcode desc_op);
+
+ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
++int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable);
+ int ufshcd_suspend_prepare(struct device *dev);
+ int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm);
+ void ufshcd_resume_complete(struct device *dev);
+-- 
+2.25.1
