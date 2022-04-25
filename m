@@ -2,112 +2,207 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F458C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Apr 2022 22:16:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5780CC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 02:03:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238407AbiDXWTN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Apr 2022 18:19:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41940 "EHLO
+        id S240275AbiDYCGJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Apr 2022 22:06:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbiDXWTJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Apr 2022 18:19:09 -0400
-Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19ACB644F2;
-        Sun, 24 Apr 2022 15:16:08 -0700 (PDT)
-Received: by mail-ed1-x529.google.com with SMTP id d6so11335914ede.8;
-        Sun, 24 Apr 2022 15:16:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :content-transfer-encoding:user-agent:mime-version;
-        bh=ULkvU6lbJY7Ze1LSiFl/YjCHBSBAU9f03/gS7iw6lwQ=;
-        b=dsS9eJdRiPXgWB/2NTFf3hwTlRUFyiP9fNV45yTC5m9TgB9OJneWaVN54u3pXIKvnJ
-         NaWm201kEHqCoxrOiYeZvgcn54cEtPGoUPdLSnqH2bqotH/IWiI3piwHRb0zDpZkFT7T
-         8XYFDFSaRFHAgqAPtHm2F1s6L2dYEayWePRVkpJRM0YMu7aiz4smhlrzGHmusxXKZmf+
-         BUTd9qB9rMqIGAmdXK+TsbyraFokmr092K9hW7257ktcTqn9a+wi2Ap8SuiHFxp9635K
-         dehJ1aJ2KUawlmrvbtmdibiNIl6dr3UQ9QmzgBSJa6xopVJEGutPzdAmuQ0kK1gIXDlq
-         yazw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:content-transfer-encoding:user-agent:mime-version;
-        bh=ULkvU6lbJY7Ze1LSiFl/YjCHBSBAU9f03/gS7iw6lwQ=;
-        b=Fb45GPffTMfE1pRKEs1zFZ1Mf/gQeLw0o3XJXpY6rFGkCmnbIuyyAO19CE2W/OevK+
-         MbZtJIukx0gezJjk6iTyYNoQNBsPc6x7FSaxenRg7fBelAlpfMYL8OV3gwffmsFygK0w
-         3lzuQqmqIYMltDGiMbjzBX7iyNXgK5HXN7DeYTaw5ZLmLEPVH7t6aFp1lwey0X9eTM6J
-         xe/uYzMaOwv2RG9MA+eyDgXnSed/ut3mlETGiBjGQBbT+mPRciSLgdD+5mdDEjCTXy//
-         ck/LQ/GHXH/qW+3A1N/JoE2qVAvdWm/Hs+Gvb4jcyKXzB9F16+8DjHXhno03cpfAtdLk
-         hlxg==
-X-Gm-Message-State: AOAM533zcUViyBJAxG0SLV8/uZgoDIIm3ZCPnhVJQlhOgPMQW1RJWM4E
-        YqRKiNnnr00nc9FrsNLB59w=
-X-Google-Smtp-Source: ABdhPJwkWKvSq3br5cpOWavb+QAOLfxc91zdwDh5O2BPebCXIgxa5CP6h1zdoH4IKSGTa36GGAWjvw==
-X-Received: by 2002:a05:6402:1148:b0:416:a4fb:3c2e with SMTP id g8-20020a056402114800b00416a4fb3c2emr16054403edw.182.1650838566749;
-        Sun, 24 Apr 2022 15:16:06 -0700 (PDT)
-Received: from [192.168.3.2] (p5dd1ed70.dip0.t-ipconnect.de. [93.209.237.112])
-        by smtp.googlemail.com with ESMTPSA id n25-20020aa7db59000000b00415965e9727sm3748272edt.18.2022.04.24.15.16.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 24 Apr 2022 15:16:06 -0700 (PDT)
-Message-ID: <cab6041960b6a11627ae0deece24a49263d13366.camel@gmail.com>
-Subject: Re: [PATCH v2 4/5] scsi: ufshpb: Add handing of device reset HPB
- regions Infos in HPB device mode
-From:   Bean Huo <huobean@gmail.com>
-To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        with ESMTP id S238870AbiDYCGI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Apr 2022 22:06:08 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 484911CFFD
+        for <linux-scsi@vger.kernel.org>; Sun, 24 Apr 2022 19:03:05 -0700 (PDT)
+Received: from epcas3p1.samsung.com (unknown [182.195.41.19])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220425020302epoutp047820b307b4c0f971e2dac9323d1e6748~pAVAu7Su_1509315093epoutp048
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 02:03:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220425020302epoutp047820b307b4c0f971e2dac9323d1e6748~pAVAu7Su_1509315093epoutp048
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1650852182;
+        bh=5EKRymzxC5Y24lGXxfIm4R/GuoFHPSZl5W8D6LBGYmA=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=He9QXoteCUweiuvEFaM4lohaE7IFwVW31TzJu/fhn8XQqVsUpBJY8rd1o8plLPBgJ
+         niBuB74mXNvBRHX2sRau9n356g94i+rF0LWOx6VrHvakcOleZ1DCg1iDNV5ED0QBE3
+         PD67ai3K0NL3fyM2euvKbwzlpnwcN75v1NSeCZ5Q=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas3p2.samsung.com (KnoxPortal) with ESMTP id
+        20220425020301epcas3p28794e2186e7c53a1c105ce4c136461b4~pAVAImHx82393723937epcas3p2k;
+        Mon, 25 Apr 2022 02:03:01 +0000 (GMT)
+Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp4.localdomain
+        (Postfix) with ESMTP id 4KmpFK4Q9fz4x9QK; Mon, 25 Apr 2022 02:03:01 +0000
+        (GMT)
+Mime-Version: 1.0
+Subject: RE: [PATCH v3 1/6] scsi: ufshpb: Merge ufshpb_reset() and
+ ufshpb_reset_host()
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From:   Keoseong Park <keosung.park@samsung.com>
+To:     Bean Huo <huobean@gmail.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
         "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
         "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
         "beanhuo@micron.com" <beanhuo@micron.com>,
         "bvanassche@acm.org" <bvanassche@acm.org>,
         "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
         Daejun Park <daejun7.park@samsung.com>,
-        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
+        Keoseong Park <keosung.park@samsung.com>,
         "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
         cpgsproxy3 <cpgsproxy3@samsung.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Mon, 25 Apr 2022 00:16:05 +0200
-In-Reply-To: <d26393a3323dc646df88fb09ee47d712c80eafc9.camel@gmail.com>
-References: <20220419183044.789065-5-huobean@gmail.com>
-         <20220419183044.789065-1-huobean@gmail.com>
-         <CGME20220419183934epcas2p28272bfd9167253c2d9136c60f9050c5f@epcms2p7>
-         <1381713434.41650433982422.JavaMail.epsvc@epcpadp4>
-         <d26393a3323dc646df88fb09ee47d712c80eafc9.camel@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.0-1 
-MIME-Version: 1.0
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <20220424220713.1253049-2-huobean@gmail.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <1891546521.01650852181605.JavaMail.epsvc@epcpadp4>
+Date:   Mon, 25 Apr 2022 11:00:46 +0900
+X-CMS-MailID: 20220425020046epcms2p1d8b984fc67793254397c4846010e1834
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20220424220726epcas2p2a4824a1c187680fe519bfba447e23b32
+References: <20220424220713.1253049-2-huobean@gmail.com>
+        <20220424220713.1253049-1-huobean@gmail.com>
+        <CGME20220424220726epcas2p2a4824a1c187680fe519bfba447e23b32@epcms2p1>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> On Wed, 2022-04-20 at 14:31 +0900, Keoseong Park wrote:
-> > >=20
-> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*
-> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * Remove this regio=
-n from active region list and add it
-> > > to inactive list
-> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
-> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_lock(&hpb->rsp_list_=
-lock);
-> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshpb_update_inactive_in=
-fo(hpb, region_index);
-> > How about separating the "hpb->stats.rb_inactive_cnt++" code from
-> > ufshpb_update_inactive_info()?
-> > Because I think this code should only be used in
-> > ufshpb_rsp_req_region_update().
+Hi Bean,
 
-Hi Keoseong Park,
+>From: Bean Huo <beanhuo@micron.com>
+> 
+>There is no functional change in this patch, just merge ufshpb_reset()
+>and ufshpb_reset_host() into one function ufshpb_toggle_state().
+> 
+>Signed-off-by: Bean Huo <beanhuo@micron.com>
+Looks good to me.
 
-I didn't take this hpb->stats.rb_inactive_cnt++ out, since I think if
-the host receives HPB operation:02h, which means the device recommends
-the host to de-activate all active regions on the host side. we need to
-add these de-activations to this parameter because the device has
-inactivated all active regions. Otherwise, we will find an inconsistent
-inactivation and activation counter. Please have a look a review the
-v3.=20
+Reviewed-by: Keoseong Park <keosung.park@samsung.com>
 
-Kind regards,
-Bean
+Best Regards,
+Keoseong Park
 
+>---
+> drivers/scsi/ufs/ufshcd.c |  4 ++--
+> drivers/scsi/ufs/ufshpb.c | 36 +++++++++++++-----------------------
+> drivers/scsi/ufs/ufshpb.h |  6 ++----
+> 3 files changed, 17 insertions(+), 29 deletions(-)
+> 
+>diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>index 3f9caafa91bf..62c7f5404353 100644
+>--- a/drivers/scsi/ufs/ufshcd.c
+>+++ b/drivers/scsi/ufs/ufshcd.c
+>@@ -7223,7 +7223,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+>          * Stop the host controller and complete the requests
+>          * cleared by h/w
+>          */
+>-        ufshpb_reset_host(hba);
+>+        ufshpb_toggle_state(hba, HPB_PRESENT, HPB_RESET);
+>         ufshcd_hba_stop(hba);
+>         hba->silence_err_logs = true;
+>         ufshcd_complete_requests(hba);
+>@@ -8184,7 +8184,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+>         /* Enable Auto-Hibernate if configured */
+>         ufshcd_auto_hibern8_enable(hba);
+> 
+>-        ufshpb_reset(hba);
+>+        ufshpb_toggle_state(hba, HPB_RESET, HPB_PRESENT);
+> out:
+>         spin_lock_irqsave(hba->host->host_lock, flags);
+>         if (ret)
+>diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+>index fd31e516e491..167643969165 100644
+>--- a/drivers/scsi/ufs/ufshpb.c
+>+++ b/drivers/scsi/ufs/ufshpb.c
+>@@ -2272,38 +2272,28 @@ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
+>         return flag_res;
+> }
+> 
+>-void ufshpb_reset(struct ufs_hba *hba)
+>+/**
+>+ * ufshpb_toggle_state - switch HPB state of all LUs
+>+ * @hba: per-adapter instance
+>+ * @src: expected current HPB state
+>+ * @dest: target HPB state to switch to
+>+ */
+>+void ufshpb_toggle_state(struct ufs_hba *hba, enum UFSHPB_STATE src, enum UFSHPB_STATE dest)
+> {
+>         struct ufshpb_lu *hpb;
+>         struct scsi_device *sdev;
+> 
+>         shost_for_each_device(sdev, hba->host) {
+>                 hpb = ufshpb_get_hpb_data(sdev);
+>-                if (!hpb)
+>-                        continue;
+>-
+>-                if (ufshpb_get_state(hpb) != HPB_RESET)
+>-                        continue;
+>-
+>-                ufshpb_set_state(hpb, HPB_PRESENT);
+>-        }
+>-}
+>-
+>-void ufshpb_reset_host(struct ufs_hba *hba)
+>-{
+>-        struct ufshpb_lu *hpb;
+>-        struct scsi_device *sdev;
+> 
+>-        shost_for_each_device(sdev, hba->host) {
+>-                hpb = ufshpb_get_hpb_data(sdev);
+>-                if (!hpb)
+>+                if (!hpb || ufshpb_get_state(hpb) != src)
+>                         continue;
+>+                ufshpb_set_state(hpb, dest);
+> 
+>-                if (ufshpb_get_state(hpb) != HPB_PRESENT)
+>-                        continue;
+>-                ufshpb_set_state(hpb, HPB_RESET);
+>-                ufshpb_cancel_jobs(hpb);
+>-                ufshpb_discard_rsp_lists(hpb);
+>+                if (dest == HPB_RESET) {
+>+                        ufshpb_cancel_jobs(hpb);
+>+                        ufshpb_discard_rsp_lists(hpb);
+>+                }
+>         }
+> }
+> 
+>diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+>index b475dbd78988..7aa0dc58ee9f 100644
+>--- a/drivers/scsi/ufs/ufshpb.h
+>+++ b/drivers/scsi/ufs/ufshpb.h
+>@@ -288,8 +288,7 @@ static int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp) { return 0;
+> static void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp) {}
+> static void ufshpb_resume(struct ufs_hba *hba) {}
+> static void ufshpb_suspend(struct ufs_hba *hba) {}
+>-static void ufshpb_reset(struct ufs_hba *hba) {}
+>-static void ufshpb_reset_host(struct ufs_hba *hba) {}
+>+static void ufshpb_toggle_state(struct ufs_hba *hba, enum UFSHPB_STATE src, enum UFSHPB_STATE dest) {}
+> static void ufshpb_init(struct ufs_hba *hba) {}
+> static void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev) {}
+> static void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev) {}
+>@@ -303,8 +302,7 @@ int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
+> void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
+> void ufshpb_resume(struct ufs_hba *hba);
+> void ufshpb_suspend(struct ufs_hba *hba);
+>-void ufshpb_reset(struct ufs_hba *hba);
+>-void ufshpb_reset_host(struct ufs_hba *hba);
+>+void ufshpb_toggle_state(struct ufs_hba *hba, enum UFSHPB_STATE src, enum UFSHPB_STATE dest);
+> void ufshpb_init(struct ufs_hba *hba);
+> void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev);
+> void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev);
+>-- 
+>2.34.1
+> 
+> 
