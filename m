@@ -2,143 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C1A7C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 13:05:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 128F2C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 14:17:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239072AbiDYNIN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Apr 2022 09:08:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60064 "EHLO
+        id S239775AbiDYOUu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Apr 2022 10:20:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241741AbiDYNIB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 09:08:01 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E72317A8C;
-        Mon, 25 Apr 2022 06:04:56 -0700 (PDT)
-Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Kn4rT6BqDz67PFg;
-        Mon, 25 Apr 2022 21:00:57 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 25 Apr 2022 15:04:54 +0200
-Received: from [10.47.92.213] (10.47.92.213) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2375.24; Mon, 25 Apr
- 2022 14:04:53 +0100
-Message-ID: <1bb53912-c5c3-7690-e82f-cf356ca87404@huawei.com>
-Date:   Mon, 25 Apr 2022 14:04:54 +0100
+        with ESMTP id S231361AbiDYOUt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 10:20:49 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 417B31EEF4
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 07:17:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id F1306B81815
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 14:17:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id B7699C385AB
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 14:17:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1650896263;
+        bh=ROezhycw6AmsVAZye8YV/E6EIpkIyXqXQlyIMhXEpG4=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=mRALL7U/YzJkuyIAFKgxqtl16h6uW76unCgoQNfScMYALRuCsiDBhtU3XPBjsKQtI
+         m9CiZiN3p/4OBPyRilgONRqddPPe8ETGxjgdmahpbvnQFyR92+5WOXJtU5bMiGcLuX
+         UvuWyHHBdTTbShn8QJDgD1T/eOWFqVRv6Xoi4ZUq4ls5zoCVzkoQg+SvchUf4UF1E8
+         Ss5BGgZ3SIJwNHldPHoKH3ka4ine7nmnC3ImugKpenC7nIdfmqB8ViTku9CKlvECbd
+         gUNbDnM8u9oMH7gG1Yv3iOkdMCfQ8gNJpUO9+8q6Qs08KfIm4T3HoBRnnPjwBDgmw1
+         ULHGroze3pGUQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 91268CAC6E2; Mon, 25 Apr 2022 14:17:43 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 215788] arcmsr driver on kernel 5.16 and up fails to initialize
+ ARC-1280ML RAID controller
+Date:   Mon, 25 Apr 2022 14:17:43 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: christophotron@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-215788-11613-bzIzyOAfVC@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-215788-11613@https.bugzilla.kernel.org/>
+References: <bug-215788-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Christoph Hellwig <hch@infradead.org>
-CC:     "Ewan D. Milne" <emilne@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Alim Akhtar" <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "Doug Gilbert" <dgilbert@interlog.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <james.smart@broadcom.com>
-References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
- <2a88a992-641a-b3ff-fe39-7a61fff87cb6@huawei.com>
- <4c3be5b6-50ef-9e9a-6cee-9642df943342@linaro.org>
- <7b3885e3-dbae-ff0b-21dc-c28d635d950b@huawei.com>
- <c121430b1b5c8f5816b2b42b9178d00889260c90.camel@redhat.com>
- <b6af3fe8-db9a-b5dc-199f-21c05d7664a2@huawei.com>
- <Yl+wJ7xSHzWmR+bR@infradead.org>
- <d09faf74-a52e-8d93-cf26-08b43b12c564@huawei.com>
- <24bfb681-faec-3567-3089-9cd5ee182710@linaro.org>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <24bfb681-faec-3567-3089-9cd5ee182710@linaro.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.92.213]
-X-ClientProxiedBy: lhreml702-chm.china.huawei.com (10.201.108.51) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 25/04/2022 10:22, Krzysztof Kozlowski wrote:
-> On 25/04/2022 10:58, John Garry wrote:
->> On 20/04/2022 08:03, Christoph Hellwig wrote:
->>>> The standard flow is:
->>>>
->>>> shost = scsi_host_alloc(sht, )
->>>>
->>>> // modify shost, like
->>>> shost->cmd_per_lun = 5;
->>>>
->>>> scsi_add_host(shost)
->>>>
->>>> Is there some reason for which those two drivers can't follow that?
->>> I think they should.  Method tables should not be mutable data.
->>> .
->>
->> Hi Krzysztof,
->>
->> Do you have any interest in going further with your work and trying to
->> change all SCSI driver instances of scsi_host_template to be const? I am
->> not sure if it has been attempted before...
-> 
-> I can work on this, but what about the SCSI core modifying the template?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D215788
 
-I hope that this isn't a can of worms...
+--- Comment #17 from Chris Rodrigues (christophotron@gmail.com) ---
+Damien, thanks but I already decided Tumbleweed wasn't for me and I install=
+ed
+the stable version Leap 15.3 with the 5.3 kernel and all is well.  So I won=
+'t
+be able to test the 5.18 patch.
 
-> For example scsi_proc_hostdir_rm(): 'present' and 'proc_dir' members.
-> Where should they be stored? Should they be moved to the Scsi_Host?
-> 
+Also, I will mention that the "device not ready" errors were completely
+unrelated to arcmsr.  They're still happening and cause slower boot time, b=
+ut
+that's a separate issue with my system I still haven't figured out.
 
-I don't think scsi_Host is appropriate as this is per-scsi host 
-template, unless you see a way to do it that way. Alternatively we could 
-keep a separate list of registered sht, like this:
+--=20
+You may reply to this email to add a comment.
 
-struct sht_proc_dir {
-	int cnt;
-	struct list_head list;
-	struct proc_dir_entry *proc_dir;
-	struct scsi_host_template *sht;
-};
-static LIST_HEAD(sht_proc_dir_list);
-
-void scsi_proc_hostdir_add(struct scsi_host_template *sht)
-{
-	struct sht_proc_dir *dir;
-
-	if (!sht->show_info)
-		return;
-
-	mutex_lock(&global_host_template_mutex);
-	list_for_each_entry(dir, &sht_proc_dir_list, list) {
-		if (dir->sht == sht) {
-			dir->cnt++;
-			goto out;
-		}
-	}
-	dir = kzalloc(sizeof(*dir), GFP_KERNEL);
-	if (!dir)
-		goto out;
-
-	dir->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
-	if (!dir->proc_dir) {
-		printk(KERN_ERR "%s: proc_mkdir failed for %s\n",
-			       __func__, sht->proc_name);
-		kfree(dir);
-		goto out;
-	}
-
-	dir->cnt++;
-	list_add_tail(&dir->list, &sht_proc_dir_list);
-out:
-	mutex_unlock(&global_host_template_mutex);
-}
-
-and so on..
-
---->8---
-
-Thanks,
-John
+You are receiving this mail because:
+You are watching the assignee of the bug.=
