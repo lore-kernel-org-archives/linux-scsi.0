@@ -2,85 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 128F2C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 14:17:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A4BBC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 15:32:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239775AbiDYOUu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Apr 2022 10:20:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54140 "EHLO
+        id S242878AbiDYPfs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Apr 2022 11:35:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231361AbiDYOUt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 10:20:49 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 417B31EEF4
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 07:17:46 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id F1306B81815
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 14:17:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id B7699C385AB
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 14:17:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650896263;
-        bh=ROezhycw6AmsVAZye8YV/E6EIpkIyXqXQlyIMhXEpG4=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=mRALL7U/YzJkuyIAFKgxqtl16h6uW76unCgoQNfScMYALRuCsiDBhtU3XPBjsKQtI
-         m9CiZiN3p/4OBPyRilgONRqddPPe8ETGxjgdmahpbvnQFyR92+5WOXJtU5bMiGcLuX
-         UvuWyHHBdTTbShn8QJDgD1T/eOWFqVRv6Xoi4ZUq4ls5zoCVzkoQg+SvchUf4UF1E8
-         Ss5BGgZ3SIJwNHldPHoKH3ka4ine7nmnC3ImugKpenC7nIdfmqB8ViTku9CKlvECbd
-         gUNbDnM8u9oMH7gG1Yv3iOkdMCfQ8gNJpUO9+8q6Qs08KfIm4T3HoBRnnPjwBDgmw1
-         ULHGroze3pGUQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 91268CAC6E2; Mon, 25 Apr 2022 14:17:43 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 215788] arcmsr driver on kernel 5.16 and up fails to initialize
- ARC-1280ML RAID controller
-Date:   Mon, 25 Apr 2022 14:17:43 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: christophotron@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-215788-11613-bzIzyOAfVC@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-215788-11613@https.bugzilla.kernel.org/>
-References: <bug-215788-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S233191AbiDYPfq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 11:35:46 -0400
+Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A3E121E10;
+        Mon, 25 Apr 2022 08:32:41 -0700 (PDT)
+Received: by mail-qt1-f174.google.com with SMTP id v2so3867724qto.6;
+        Mon, 25 Apr 2022 08:32:41 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=g+loJLq4BQKFZyMUOov9xeSvRnoM3sJ2gpEra5Io5aY=;
+        b=gRbqWdtuuBXT/isFKeGKzqvktWk+g0W9f9W+jX068J6jbtmx66crXu5uHQ4qrnnSFd
+         1llw6W+k7X+Z/0v8oQb9fPppwoOLrWgXbX1P2T/JBL7CUY+yJNV4kKTl0/6aNOdsEKj9
+         9CVDEcJf0QO2xpgpGCYkIGQOUSGLb5GGNBmCBcE1FQDaWWR3tAbcV8211hfCWcfWpj1a
+         QKqCqT5aHqwr3rzYKFlIK87CZMYS8ewGaw9pLgned0dV2y7iRem4vRtrhqdsnWt1Ywy2
+         NJfOvFXjggK6QWCg4guDh0enCMU5q06oel8k2IBCXm/q7KsMDz70zqboyiWdKnfjZwKW
+         IB0g==
+X-Gm-Message-State: AOAM530ShjMAwo2+udc7PeiKQe0d4nSM7xqYcrCc0Cgf/rmF03BW62LM
+        sLV51mS+x2o1vC/SacahpxW0ibtCUhtsFg==
+X-Google-Smtp-Source: ABdhPJxcuHW2akzDXi+4yDYmFM6Ge1UFoZI2+3tmFlpwyAKvfrZ+RfHRnOYPgbhQ3X5iRLwp/RV3/g==
+X-Received: by 2002:ac8:5a84:0:b0:2f1:f687:df63 with SMTP id c4-20020ac85a84000000b002f1f687df63mr12080476qtc.307.1650900760371;
+        Mon, 25 Apr 2022 08:32:40 -0700 (PDT)
+Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com. [209.85.219.172])
+        by smtp.gmail.com with ESMTPSA id b126-20020a37b284000000b0069a11927e57sm5072449qkf.101.2022.04.25.08.32.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 Apr 2022 08:32:40 -0700 (PDT)
+Received: by mail-yb1-f172.google.com with SMTP id r189so27725508ybr.6;
+        Mon, 25 Apr 2022 08:32:40 -0700 (PDT)
+X-Received: by 2002:a25:9e89:0:b0:63c:ad37:a5de with SMTP id
+ p9-20020a259e89000000b0063cad37a5demr16461851ybq.342.1650900759836; Mon, 25
+ Apr 2022 08:32:39 -0700 (PDT)
 MIME-Version: 1.0
+References: <20220420025450.289578-1-yoshihiro.shimoda.uh@renesas.com>
+In-Reply-To: <20220420025450.289578-1-yoshihiro.shimoda.uh@renesas.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 25 Apr 2022 17:32:28 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdWRQYLK49pMKJ6b-SVK91brrEJvD52cyyLWTwAT0z3Cmg@mail.gmail.com>
+Message-ID: <CAMuHMdWRQYLK49pMKJ6b-SVK91brrEJvD52cyyLWTwAT0z3Cmg@mail.gmail.com>
+Subject: Re: [PATCH v4 0/7] treewide: scsi: ufs: Add support for Renesas R-Car
+ UFS controller
+To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>, avri.altman@wdc.com,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        scsi <linux-scsi@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D215788
+Hi Shimoda-san,
 
---- Comment #17 from Chris Rodrigues (christophotron@gmail.com) ---
-Damien, thanks but I already decided Tumbleweed wasn't for me and I install=
-ed
-the stable version Leap 15.3 with the 5.3 kernel and all is well.  So I won=
-'t
-be able to test the 5.18 patch.
+On Wed, Apr 20, 2022 at 8:17 AM Yoshihiro Shimoda
+<yoshihiro.shimoda.uh@renesas.com> wrote:
+> This patch series adds support Renesas R-Car S4-8 UFS controller.
 
-Also, I will mention that the "device not ready" errors were completely
-unrelated to arcmsr.  They're still happening and cause slower boot time, b=
-ut
-that's a separate issue with my system I still haven't figured out.
+Thanks for your series!
 
---=20
-You may reply to this email to add a comment.
+> This controller has some restrictions so adds some quirks for it.
+> Before using this driver, we have to initialize a clock generator
+> on the environment board (named "Spider") by using the commands of
+> U-Boot like below:
+>  => i2c dev 0
+>  => i2c mw 0x6c 0x26 0x05
+>  => i2c olen 0x6c 2
+>  => i2c mw 0x6c 0x26c 0x2e
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+You mean we need a driver for the RC21212 clock generator? ;-)
+
+Or the boot loader should program the clock generator, like is done
+on other R-Car boards for e.g. the PCIe clock (BTW, RC21212 also
+generates the PCIe clock on Spider)?
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
