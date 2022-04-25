@@ -2,158 +2,143 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8425C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 13:01:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C1A7C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 13:05:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240844AbiDYNEY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Apr 2022 09:04:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47742 "EHLO
+        id S239072AbiDYNIN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Apr 2022 09:08:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241124AbiDYNEV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 09:04:21 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0737F140B0
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 06:01:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1650891674;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Dg4uWbHMC2p+lHpBaAPXkFLszBBt4tnvhfrbLJtxikU=;
-        b=LAL4zz//70aH3rmj+pb6LhPIKPzBPPBJVuaECwxeSR4MShonIY3mRBPvA/PrWaMYbGaNJ2
-        urhh8+S54Xyu3HK7kXf/yHSXjQogM7N5njgl8SrUW9U97TziiS5bC3b5kkOaiTrS8nRWfa
-        XjjSfMWocaslxf6pvsR6oFaJWNLYIYY=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-588-yLoUudt0OOeG0jNoZWkt6w-1; Mon, 25 Apr 2022 09:01:13 -0400
-X-MC-Unique: yLoUudt0OOeG0jNoZWkt6w-1
-Received: by mail-qt1-f197.google.com with SMTP id m11-20020ac807cb000000b002f33f7f7d69so7846619qth.3
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 06:01:12 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=Dg4uWbHMC2p+lHpBaAPXkFLszBBt4tnvhfrbLJtxikU=;
-        b=1GLKbV8ekkq/WtXRyAR96Ewvxtx9D1xon3nYBqdk5cw0gviM0sBBxuyRGiGReFwK7J
-         hHaTn7SJn7QJsjL49v5bgK1bmOOoPiWgVNsUzu/xktVAQgDTLP0v0H/eTjesSnTb55VO
-         t40HAMGMsf33SDEw6DORB/SDbWcgUXHY7JSUZNn7/eb2QdSZl6CTKbmt5H/zfkx+wBBT
-         vp57IlCCpxmRnTNlq1m8QtB9nMf5ynFsgZe28p77oAcNg1Nh/4JBYnBE0xKa8MFm7jc+
-         D9/FCzf+iXtwiNim8EqiQGqK+MQ/h6TYRntVjOys4Fyoaw6I0uJZVTbPlqZD+Fek6cF3
-         154g==
-X-Gm-Message-State: AOAM533/QKFpuvsxKAwmkNC+MWWLLRSWeRTEzpxAuKcloZa0VJoDcwZU
-        QjyAURS+37godVvLYjSqY+v7mY4QrVYyFtu90BnD92WzyzMWcR1matNTR/CrONNzn5ZhLKHLiZz
-        208F1ZDfCIbZdYCrvnW7NUg==
-X-Received: by 2002:a37:5c9:0:b0:69f:7096:32df with SMTP id 192-20020a3705c9000000b0069f709632dfmr346354qkf.257.1650891672268;
-        Mon, 25 Apr 2022 06:01:12 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxhhv1dQrHygC+XLF+bCT3LS4/h1WyYfCFjZw5aPBiYsYZ4XKDz/S5yo4PgcO9Bem9oTXMezA==
-X-Received: by 2002:a37:5c9:0:b0:69f:7096:32df with SMTP id 192-20020a3705c9000000b0069f709632dfmr346287qkf.257.1650891671643;
-        Mon, 25 Apr 2022 06:01:11 -0700 (PDT)
-Received: from halaneylaptop (068-184-200-203.res.spectrum.com. [68.184.200.203])
-        by smtp.gmail.com with ESMTPSA id g4-20020ac87d04000000b002e06b4674a1sm6588357qtb.61.2022.04.25.06.01.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Apr 2022 06:01:11 -0700 (PDT)
-Date:   Mon, 25 Apr 2022 08:01:08 -0500
-From:   Andrew Halaney <ahalaney@redhat.com>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        martin.petersen@oracle.com, jejb@linux.ibm.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com,
-        linux-arm-msm@vger.kernel.org, quic_asutoshd@quicinc.com,
-        quic_cang@quicinc.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, bvanassche@acm.org
-Subject: Re: [PATCH v2 2/5] scsi: ufs: qcom: Simplify handling of
- devm_phy_get()
-Message-ID: <20220425130108.2noffk7p6lyakcec@halaneylaptop>
-References: <20220423140245.394092-1-manivannan.sadhasivam@linaro.org>
- <20220423140245.394092-3-manivannan.sadhasivam@linaro.org>
- <YmQYZ8l+QOsz11ld@ripper>
+        with ESMTP id S241741AbiDYNIB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 09:08:01 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E72317A8C;
+        Mon, 25 Apr 2022 06:04:56 -0700 (PDT)
+Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Kn4rT6BqDz67PFg;
+        Mon, 25 Apr 2022 21:00:57 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 25 Apr 2022 15:04:54 +0200
+Received: from [10.47.92.213] (10.47.92.213) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2375.24; Mon, 25 Apr
+ 2022 14:04:53 +0100
+Message-ID: <1bb53912-c5c3-7690-e82f-cf356ca87404@huawei.com>
+Date:   Mon, 25 Apr 2022 14:04:54 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YmQYZ8l+QOsz11ld@ripper>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Christoph Hellwig <hch@infradead.org>
+CC:     "Ewan D. Milne" <emilne@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Alim Akhtar" <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Doug Gilbert" <dgilbert@interlog.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <james.smart@broadcom.com>
+References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
+ <2a88a992-641a-b3ff-fe39-7a61fff87cb6@huawei.com>
+ <4c3be5b6-50ef-9e9a-6cee-9642df943342@linaro.org>
+ <7b3885e3-dbae-ff0b-21dc-c28d635d950b@huawei.com>
+ <c121430b1b5c8f5816b2b42b9178d00889260c90.camel@redhat.com>
+ <b6af3fe8-db9a-b5dc-199f-21c05d7664a2@huawei.com>
+ <Yl+wJ7xSHzWmR+bR@infradead.org>
+ <d09faf74-a52e-8d93-cf26-08b43b12c564@huawei.com>
+ <24bfb681-faec-3567-3089-9cd5ee182710@linaro.org>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <24bfb681-faec-3567-3089-9cd5ee182710@linaro.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.92.213]
+X-ClientProxiedBy: lhreml702-chm.china.huawei.com (10.201.108.51) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Apr 23, 2022 at 08:16:55AM -0700, Bjorn Andersson wrote:
-> On Sat 23 Apr 07:02 PDT 2022, Manivannan Sadhasivam wrote:
+On 25/04/2022 10:22, Krzysztof Kozlowski wrote:
+> On 25/04/2022 10:58, John Garry wrote:
+>> On 20/04/2022 08:03, Christoph Hellwig wrote:
+>>>> The standard flow is:
+>>>>
+>>>> shost = scsi_host_alloc(sht, )
+>>>>
+>>>> // modify shost, like
+>>>> shost->cmd_per_lun = 5;
+>>>>
+>>>> scsi_add_host(shost)
+>>>>
+>>>> Is there some reason for which those two drivers can't follow that?
+>>> I think they should.  Method tables should not be mutable data.
+>>> .
+>>
+>> Hi Krzysztof,
+>>
+>> Do you have any interest in going further with your work and trying to
+>> change all SCSI driver instances of scsi_host_template to be const? I am
+>> not sure if it has been attempted before...
 > 
-> > There is no need to call devm_phy_get() if ACPI is used, so skip it.
-> > The "host->generic_phy" pointer should already be NULL due to the kzalloc,
-> > so no need to set it NULL again.
-> > 
-> > Also, don't print the error message in case of -EPROBE_DEFER and return
-> > the error code directly.
-> > 
-> > While at it, also remove the comment that has no relationship with
-> > devm_phy_get().
-> > 
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > ---
-> >  drivers/scsi/ufs/ufs-qcom.c | 26 +++++---------------------
-> >  1 file changed, 5 insertions(+), 21 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> > index bee81b45299e..6ee33cc0ad09 100644
-> > --- a/drivers/scsi/ufs/ufs-qcom.c
-> > +++ b/drivers/scsi/ufs/ufs-qcom.c
-> > @@ -1022,28 +1022,12 @@ static int ufs_qcom_init(struct ufs_hba *hba)
-> >  		err = 0;
-> >  	}
-> >  
-> > -	/*
-> > -	 * voting/devoting device ref_clk source is time consuming hence
-> > -	 * skip devoting it during aggressive clock gating. This clock
-> > -	 * will still be gated off during runtime suspend.
-> > -	 */
-> > -	host->generic_phy = devm_phy_get(dev, "ufsphy");
-> > -
-> > -	if (host->generic_phy == ERR_PTR(-EPROBE_DEFER)) {
-> > -		/*
-> > -		 * UFS driver might be probed before the phy driver does.
-> > -		 * In that case we would like to return EPROBE_DEFER code.
-> > -		 */
-> > -		err = -EPROBE_DEFER;
-> > -		dev_warn(dev, "%s: required phy device. hasn't probed yet. err = %d\n",
-> > -			__func__, err);
-> > -		goto out_variant_clear;
-> > -	} else if (IS_ERR(host->generic_phy)) {
-> > -		if (has_acpi_companion(dev)) {
-> > -			host->generic_phy = NULL;
-> > -		} else {
-> > +	if (!has_acpi_companion(dev)) {
-> > +		host->generic_phy = devm_phy_get(dev, "ufsphy");
-> > +		if (IS_ERR(host->generic_phy)) {
-> >  			err = PTR_ERR(host->generic_phy);
-> > -			dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
-> > +			if (err != -EPROBE_DEFER)
-> > +				dev_err_probe(dev, err, "Failed to get PHY\n");
-> 
-> I believe the idiomatic form is:
-> 			err = dev_err_probe(dev, PTR_ERR(host->generic_phy), "Failed to get PHY\n");
-> 
-> 
-> But as with the previous patch, please remove the condition and you have
-> my:
-> 
-> Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> 
-> Regards,
-> Bjorn
+> I can work on this, but what about the SCSI core modifying the template?
 
-With the Bjorn's suggested change applied:
-Reviewed-by: Andrew Halaney <ahalaney@redhat.com>
+I hope that this isn't a can of worms...
+
+> For example scsi_proc_hostdir_rm(): 'present' and 'proc_dir' members.
+> Where should they be stored? Should they be moved to the Scsi_Host?
+> 
+
+I don't think scsi_Host is appropriate as this is per-scsi host 
+template, unless you see a way to do it that way. Alternatively we could 
+keep a separate list of registered sht, like this:
+
+struct sht_proc_dir {
+	int cnt;
+	struct list_head list;
+	struct proc_dir_entry *proc_dir;
+	struct scsi_host_template *sht;
+};
+static LIST_HEAD(sht_proc_dir_list);
+
+void scsi_proc_hostdir_add(struct scsi_host_template *sht)
+{
+	struct sht_proc_dir *dir;
+
+	if (!sht->show_info)
+		return;
+
+	mutex_lock(&global_host_template_mutex);
+	list_for_each_entry(dir, &sht_proc_dir_list, list) {
+		if (dir->sht == sht) {
+			dir->cnt++;
+			goto out;
+		}
+	}
+	dir = kzalloc(sizeof(*dir), GFP_KERNEL);
+	if (!dir)
+		goto out;
+
+	dir->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
+	if (!dir->proc_dir) {
+		printk(KERN_ERR "%s: proc_mkdir failed for %s\n",
+			       __func__, sht->proc_name);
+		kfree(dir);
+		goto out;
+	}
+
+	dir->cnt++;
+	list_add_tail(&dir->list, &sht_proc_dir_list);
+out:
+	mutex_unlock(&global_host_template_mutex);
+}
+
+and so on..
+
+--->8---
 
 Thanks,
-Andrew
-
-> 
-> >  			goto out_variant_clear;
-> >  		}
-> >  	}
-> > -- 
-> > 2.25.1
-> > 
-> 
-
+John
