@@ -2,99 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A4BBC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 15:32:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3353C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 18:48:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242878AbiDYPfs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Apr 2022 11:35:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60340 "EHLO
+        id S244644AbiDYSvI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Apr 2022 14:51:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233191AbiDYPfq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 11:35:46 -0400
-Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A3E121E10;
-        Mon, 25 Apr 2022 08:32:41 -0700 (PDT)
-Received: by mail-qt1-f174.google.com with SMTP id v2so3867724qto.6;
-        Mon, 25 Apr 2022 08:32:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=g+loJLq4BQKFZyMUOov9xeSvRnoM3sJ2gpEra5Io5aY=;
-        b=gRbqWdtuuBXT/isFKeGKzqvktWk+g0W9f9W+jX068J6jbtmx66crXu5uHQ4qrnnSFd
-         1llw6W+k7X+Z/0v8oQb9fPppwoOLrWgXbX1P2T/JBL7CUY+yJNV4kKTl0/6aNOdsEKj9
-         9CVDEcJf0QO2xpgpGCYkIGQOUSGLb5GGNBmCBcE1FQDaWWR3tAbcV8211hfCWcfWpj1a
-         QKqCqT5aHqwr3rzYKFlIK87CZMYS8ewGaw9pLgned0dV2y7iRem4vRtrhqdsnWt1Ywy2
-         NJfOvFXjggK6QWCg4guDh0enCMU5q06oel8k2IBCXm/q7KsMDz70zqboyiWdKnfjZwKW
-         IB0g==
-X-Gm-Message-State: AOAM530ShjMAwo2+udc7PeiKQe0d4nSM7xqYcrCc0Cgf/rmF03BW62LM
-        sLV51mS+x2o1vC/SacahpxW0ibtCUhtsFg==
-X-Google-Smtp-Source: ABdhPJxcuHW2akzDXi+4yDYmFM6Ge1UFoZI2+3tmFlpwyAKvfrZ+RfHRnOYPgbhQ3X5iRLwp/RV3/g==
-X-Received: by 2002:ac8:5a84:0:b0:2f1:f687:df63 with SMTP id c4-20020ac85a84000000b002f1f687df63mr12080476qtc.307.1650900760371;
-        Mon, 25 Apr 2022 08:32:40 -0700 (PDT)
-Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com. [209.85.219.172])
-        by smtp.gmail.com with ESMTPSA id b126-20020a37b284000000b0069a11927e57sm5072449qkf.101.2022.04.25.08.32.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Apr 2022 08:32:40 -0700 (PDT)
-Received: by mail-yb1-f172.google.com with SMTP id r189so27725508ybr.6;
-        Mon, 25 Apr 2022 08:32:40 -0700 (PDT)
-X-Received: by 2002:a25:9e89:0:b0:63c:ad37:a5de with SMTP id
- p9-20020a259e89000000b0063cad37a5demr16461851ybq.342.1650900759836; Mon, 25
- Apr 2022 08:32:39 -0700 (PDT)
+        with ESMTP id S244651AbiDYSuz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 14:50:55 -0400
+Received: from desiato.infradead.org (desiato.infradead.org [IPv6:2001:8b0:10b:1:d65d:64ff:fe57:4e05])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED14D7629C;
+        Mon, 25 Apr 2022 11:47:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=desiato.20200630; h=Content-Transfer-Encoding:Content-Type
+        :In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=CZXYnwzf0/zyAsq09zp3zqYMU6rsh9JejxfBdubxHoY=; b=LJyzOfULynUAOhxDw00BV3IB5H
+        fvN/dKv8dnmCxaP4b2TOXC6pDNcHvmAU1EoJVSWBSA5bU5cA91jqYjnN9iMsHhup2ybalmuci9s+C
+        fkYGjGbWynDUyGwLlbixM5wlWjRfwzO+TIVwVFw6o0M0ja688mkrvguFcc5Lp2oq4Cjy/hmJZ3ZNN
+        PXGNWSe/72vK+UZHiMt0YT+VZFjal8yVAB0iwgoGC+xtS+UOST29IUQ0eBCMKWlch3d+xCoFcv6hG
+        8ITygZn5uldBUuH7fO6vGt4vrYMM23wnZmrrx5udpOxerjpTPbvYc7UnGDuDnnAAnVDnjmh+fi+BG
+        lT3/0hhA==;
+Received: from [2601:1c0:6280:3f0::aa0b]
+        by desiato.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nj3jv-008bUI-Sk; Mon, 25 Apr 2022 18:47:16 +0000
+Message-ID: <4b16edaa-05ee-1dbd-e44b-c7e0512971bd@infradead.org>
+Date:   Mon, 25 Apr 2022 11:47:11 -0700
 MIME-Version: 1.0
-References: <20220420025450.289578-1-yoshihiro.shimoda.uh@renesas.com>
-In-Reply-To: <20220420025450.289578-1-yoshihiro.shimoda.uh@renesas.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 25 Apr 2022 17:32:28 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdWRQYLK49pMKJ6b-SVK91brrEJvD52cyyLWTwAT0z3Cmg@mail.gmail.com>
-Message-ID: <CAMuHMdWRQYLK49pMKJ6b-SVK91brrEJvD52cyyLWTwAT0z3Cmg@mail.gmail.com>
-Subject: Re: [PATCH v4 0/7] treewide: scsi: ufs: Add support for Renesas R-Car
- UFS controller
-To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>, avri.altman@wdc.com,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.1
+Subject: Re: [PATCH 01/11] scsi: aacraid: Fix undefined behavior due to shift
+ overflowing the constant
+Content-Language: en-US
+To:     Borislav Petkov <bp@alien8.de>, LKML <linux-kernel@vger.kernel.org>
+Cc:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        scsi <linux-scsi@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        linux-scsi@vger.kernel.org
+References: <20220405151517.29753-1-bp@alien8.de>
+ <20220405151517.29753-2-bp@alien8.de>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20220405151517.29753-2-bp@alien8.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Shimoda-san,
 
-On Wed, Apr 20, 2022 at 8:17 AM Yoshihiro Shimoda
-<yoshihiro.shimoda.uh@renesas.com> wrote:
-> This patch series adds support Renesas R-Car S4-8 UFS controller.
 
-Thanks for your series!
+On 4/5/22 08:15, Borislav Petkov wrote:
+> From: Borislav Petkov <bp@suse.de>
+> 
+> Fix
+> 
+>   drivers/scsi/aacraid/commsup.c: In function ‘aac_handle_sa_aif’:
+>   drivers/scsi/aacraid/commsup.c:1983:2: error: case label does not reduce to an integer constant
+>     case SA_AIF_BPCFG_CHANGE:
+>     ^~~~
+> 
+> See https://lore.kernel.org/r/YkwQ6%2BtIH8GQpuct@zn.tnic for the gory
+> details as to why it triggers with older gccs only.
+> 
+> Signed-off-by: Borislav Petkov <bp@suse.de>
+> Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
 
-> This controller has some restrictions so adds some quirks for it.
-> Before using this driver, we have to initialize a clock generator
-> on the environment board (named "Spider") by using the commands of
-> U-Boot like below:
->  => i2c dev 0
->  => i2c mw 0x6c 0x26 0x05
->  => i2c olen 0x6c 2
->  => i2c mw 0x6c 0x26c 0x2e
+Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
 
-You mean we need a driver for the RC21212 clock generator? ;-)
+Thanks.
 
-Or the boot loader should program the clock generator, like is done
-on other R-Car boards for e.g. the PCIe clock (BTW, RC21212 also
-generates the PCIe clock on Spider)?
+> ---
+>  drivers/scsi/aacraid/aacraid.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+> index f849e7c9d428..5e115e8b2ba4 100644
+> --- a/drivers/scsi/aacraid/aacraid.h
+> +++ b/drivers/scsi/aacraid/aacraid.h
+> @@ -121,7 +121,7 @@ enum {
+>  #define SA_AIF_PDEV_CHANGE		(1<<4)
+>  #define SA_AIF_LDEV_CHANGE		(1<<5)
+>  #define SA_AIF_BPSTAT_CHANGE		(1<<30)
+> -#define SA_AIF_BPCFG_CHANGE		(1<<31)
+> +#define SA_AIF_BPCFG_CHANGE		(1U<<31)
+>  
+>  #define HBA_MAX_SG_EMBEDDED		28
+>  #define HBA_MAX_SG_SEPARATE		90
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+-- 
+~Randy
