@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F285C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 03:38:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE91DC4332F
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 04:08:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240660AbiDYDlS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Apr 2022 23:41:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51742 "EHLO
+        id S240927AbiDYELk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Apr 2022 00:11:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239787AbiDYDlR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Apr 2022 23:41:17 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 234B22ED72
-        for <linux-scsi@vger.kernel.org>; Sun, 24 Apr 2022 20:38:09 -0700 (PDT)
-Received: from epcas3p4.samsung.com (unknown [182.195.41.22])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220425033802epoutp019eb05067f3a0ea585f916d5568db09c4~pBn9rr-zz1244112441epoutp01I
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 03:38:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220425033802epoutp019eb05067f3a0ea585f916d5568db09c4~pBn9rr-zz1244112441epoutp01I
+        with ESMTP id S241009AbiDYELV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 00:11:21 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2F2B18B3F
+        for <linux-scsi@vger.kernel.org>; Sun, 24 Apr 2022 21:08:04 -0700 (PDT)
+Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220425040802epoutp038c026968240c7a0227701216d88484fe~pCCKBgzqF0399303993epoutp03x
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 04:08:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220425040802epoutp038c026968240c7a0227701216d88484fe~pCCKBgzqF0399303993epoutp03x
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1650857882;
-        bh=kLLPKOJheZoOZst7vOsZrRhAcfeNzU817A4tSgnfK0o=;
+        s=mail20170921; t=1650859682;
+        bh=QRctrX1LwDMho3rISDlMf38L36bD3iV1OASpJeXgj0s=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=N8+1pfH+xTmEcOLEQ0R7cUIMBH84clMQLovgLoY6j5v65ymtD+OvaOvPk/Hxzmron
-         yXTzWlV/ePr9dYvl5eu2+4alQR1VCDbBLyTPPqXHWrHghlA/ghN39gsP0kH2fkeOwz
-         rfHeU0tCjZrdnad+Xem7QBXOQYpbQUtxXo0M1S8I=
+        b=OHgp/vD49yE4ISPCMp77gQrKAGMa9X6lCQyVI0rKCYcdcbih+O4kkACKGLRX9qXZT
+         2U2PZmrpgIeqbdUBZYGBrx00BHl7MaRfWCj+3XIK2FUohmGOEd0VT6k2+9GbPrm+ef
+         P3kpbWMxwgg2DdDqf96iW5IhpmZm8pUhEC983fDk=
 Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
         epcas3p1.samsung.com (KnoxPortal) with ESMTP id
-        20220425033802epcas3p15634c5ad5d04c529fc8c036a2dab9b25~pBn9Me9Ek1747617476epcas3p1K;
-        Mon, 25 Apr 2022 03:38:02 +0000 (GMT)
+        20220425040801epcas3p1c2fc1a3525c985394bc805f006600aae~pCCJRVYlD1934719347epcas3p1d;
+        Mon, 25 Apr 2022 04:08:01 +0000 (GMT)
 Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp2.localdomain
-        (Postfix) with ESMTP id 4KmrLy1B7wz4x9Q0; Mon, 25 Apr 2022 03:38:02 +0000
+        (Postfix) with ESMTP id 4Kms1Y6BXRz4x9QB; Mon, 25 Apr 2022 04:08:01 +0000
         (GMT)
 Mime-Version: 1.0
-Subject: RE: [PATCH v3 3/6] scsi: ufshpb: Cleanup the handler when device
- reset HPB information
+Subject: RE: [PATCH v3 4/6] scsi: ufshpb: Change sysfs node hpb_stats/rb_*
+ prefix to start with rcmd_*
 Reply-To: keosung.park@samsung.com
 Sender: Keoseong Park <keosung.park@samsung.com>
 From:   Keoseong Park <keosung.park@samsung.com>
@@ -56,124 +56,191 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <20220424220713.1253049-4-huobean@gmail.com>
+In-Reply-To: <20220424220713.1253049-5-huobean@gmail.com>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <1889248251.21650857882164.JavaMail.epsvc@epcpadp4>
-Date:   Mon, 25 Apr 2022 12:23:46 +0900
-X-CMS-MailID: 20220425032346epcms2p17f067428de98f364f97be8eb5381d9dc
-Content-Transfer-Encoding: quoted-printable
+Message-ID: <1891546521.01650859681867.JavaMail.epsvc@epcpadp4>
+Date:   Mon, 25 Apr 2022 12:43:53 +0900
+X-CMS-MailID: 20220425034353epcms2p351319a732aa3dca5c3c7b81e8d1c1749
+Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 X-Hop-Count: 3
-X-CMS-RootMailID: 20220424220758epcas2p1c518cbee68ebefaf1565909f60711561
-References: <20220424220713.1253049-4-huobean@gmail.com>
+X-CMS-RootMailID: 20220424220757epcas2p37d7fcf3c58b1c29291f6e6765e6690ed
+References: <20220424220713.1253049-5-huobean@gmail.com>
         <20220424220713.1253049-1-huobean@gmail.com>
-        <CGME20220424220758epcas2p1c518cbee68ebefaf1565909f60711561@epcms2p1>
+        <CGME20220424220757epcas2p37d7fcf3c58b1c29291f6e6765e6690ed@epcms2p3>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 >From: Bean Huo <beanhuo@micron.com>
->=20
->"When the device is powered off by the host, the device may restore L2P ma=
-p data
->upon power up or build from the host=E2=80=99s HPB READ command. In case d=
-evice powered
->up and lost HPB information, device can signal to the host through HPB Sen=
-se data,
->by setting HPB Operation as =E2=80=982=E2=80=99 which will inform the host=
- that device reset HPB
->information."
->=20
->This patch is to clean up the handler and make the intent of this handler =
-more
->readable, no functional change.
->=20
+> 
+>According to the documentation of the sysfs nodes rb_noti_cnt, rb_active_cnt
+>and rb_inactive_cnt, they are all related to HPB recommendation in UPIU response
+>packet. I don't know what 'rb' refers to, I think 'rcmd'
+>(recommendation) should be the correct abbreviation.
+> 
+>Change the sysfs documentation about these sysfs nodes to highlight what they mean
+>under different HPB control modes.
+I think it's better than what I suggested.
+
+> 
 >Signed-off-by: Bean Huo <beanhuo@micron.com>
+>---
+> Documentation/ABI/testing/sysfs-driver-ufs | 18 +++++++++-------
+> drivers/scsi/ufs/ufshpb.c                  | 24 +++++++++++-----------
+> drivers/scsi/ufs/ufshpb.h                  |  6 +++---
+> 3 files changed, 26 insertions(+), 22 deletions(-)
+> 
+>diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+>index a44ef8bfbadf..6b248abb1bd7 100644
+>--- a/Documentation/ABI/testing/sysfs-driver-ufs
+>+++ b/Documentation/ABI/testing/sysfs-driver-ufs
+>@@ -1518,7 +1518,7 @@ Description:        This entry shows the number of reads that cannot be changed to
+> 
+>                 The file is read only.
+> 
+>-What:                /sys/class/scsi_device/*/device/hpb_stats/rb_noti_cnt
+>+What:                /sys/class/scsi_device/*/device/hpb_stats/rcmd_noti_cnt
+> Date:                June 2021
+> Contact:        Daejun Park <daejun7.park@samsung.com>
+> Description:        This entry shows the number of response UPIUs that has
+>@@ -1526,19 +1526,23 @@ Description:        This entry shows the number of response UPIUs that has
+> 
+>                 The file is read only.
+> 
+>-What:                /sys/class/scsi_device/*/device/hpb_stats/rb_active_cnt
+>+What:                /sys/class/scsi_device/*/device/hpb_stats/rcmd_active_cnt
+> Date:                June 2021
+> Contact:        Daejun Park <daejun7.park@samsung.com>
+>-Description:        This entry shows the number of active sub-regions recommended by
+>-                response UPIUs.
+>+Description:        For the HPB device control mode, this entry shows the number of
+>+        active sub-regions recommended by response UPIUs. For the HPB host control
+>+        mode, this entry shows the number of active sub-regions recommended by the
+>+        HPB host control mode heuristic algorithm.
+Please check indentation.
+
+> 
+>                 The file is read only.
+> 
+>-What:                /sys/class/scsi_device/*/device/hpb_stats/rb_inactive_cnt
+>+What:                /sys/class/scsi_device/*/device/hpb_stats/rcmd_inactive_cnt
+> Date:                June 2021
+> Contact:        Daejun Park <daejun7.park@samsung.com>
+>-Description:        This entry shows the number of inactive regions recommended by
+>-                response UPIUs.
+>+Description:        For the HPB device control mode, this entry shows the number of
+>+        inactive regions recommended by response UPIUs. For the HPB host control
+>+        mode, this entry shows the number of inactive regions recommended by the
+>+        HPB host control mode heuristic algorithm.
+Please check indentation.
+
+> 
+>                 The file is read only.
+> 
+>diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+>index f1f30d4c3d65..e7f311bb4401 100644
+>--- a/drivers/scsi/ufs/ufshpb.c
+>+++ b/drivers/scsi/ufs/ufshpb.c
+>@@ -563,7 +563,7 @@ static void ufshpb_update_active_info(struct ufshpb_lu *hpb, int rgn_idx,
+>         if (list_empty(&srgn->list_act_srgn))
+>                 list_add_tail(&srgn->list_act_srgn, &hpb->lh_act_srgn);
+> 
+>-        hpb->stats.rb_active_cnt++;
+>+        hpb->stats.rcmd_active_cnt++;
+> }
+> 
+> static void ufshpb_update_inactive_info(struct ufshpb_lu *hpb, int rgn_idx)
+>@@ -580,7 +580,7 @@ static void ufshpb_update_inactive_info(struct ufshpb_lu *hpb, int rgn_idx)
+>         if (list_empty(&rgn->list_inact_rgn))
+>                 list_add_tail(&rgn->list_inact_rgn, &hpb->lh_inact_rgn);
+> 
+>-        hpb->stats.rb_inactive_cnt++;
+>+        hpb->stats.rcmd_inactive_cnt++;
+> }
+> 
+> static void ufshpb_activate_subregion(struct ufshpb_lu *hpb,
+>@@ -1321,7 +1321,7 @@ void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>         if (!ufshpb_is_hpb_rsp_valid(hba, lrbp, rsp_field))
+>                 return;
+> 
+>-        hpb->stats.rb_noti_cnt++;
+>+        hpb->stats.rcmd_noti_cnt++;
+> 
+>         switch (rsp_field->hpb_op) {
+>         case HPB_RSP_REQ_REGION_UPDATE:
+>@@ -1724,18 +1724,18 @@ static DEVICE_ATTR_RO(__name)
+> 
+> ufshpb_sysfs_attr_show_func(hit_cnt);
+> ufshpb_sysfs_attr_show_func(miss_cnt);
+>-ufshpb_sysfs_attr_show_func(rb_noti_cnt);
+>-ufshpb_sysfs_attr_show_func(rb_active_cnt);
+>-ufshpb_sysfs_attr_show_func(rb_inactive_cnt);
+>+ufshpb_sysfs_attr_show_func(rcmd_noti_cnt);
+>+ufshpb_sysfs_attr_show_func(rcmd_active_cnt);
+>+ufshpb_sysfs_attr_show_func(rcmd_inactive_cnt);
+> ufshpb_sysfs_attr_show_func(map_req_cnt);
+> ufshpb_sysfs_attr_show_func(umap_req_cnt);
+> 
+> static struct attribute *hpb_dev_stat_attrs[] = {
+>         &dev_attr_hit_cnt.attr,
+>         &dev_attr_miss_cnt.attr,
+>-        &dev_attr_rb_noti_cnt.attr,
+>-        &dev_attr_rb_active_cnt.attr,
+>-        &dev_attr_rb_inactive_cnt.attr,
+>+        &dev_attr_rcmd_noti_cnt.attr,
+>+        &dev_attr_rcmd_active_cnt.attr,
+>+        &dev_attr_rcmd_inactive_cnt.attr,
+>         &dev_attr_map_req_cnt.attr,
+>         &dev_attr_umap_req_cnt.attr,
+>         NULL,
+>@@ -2098,9 +2098,9 @@ static void ufshpb_stat_init(struct ufshpb_lu *hpb)
+> {
+>         hpb->stats.hit_cnt = 0;
+>         hpb->stats.miss_cnt = 0;
+>-        hpb->stats.rb_noti_cnt = 0;
+>-        hpb->stats.rb_active_cnt = 0;
+>-        hpb->stats.rb_inactive_cnt = 0;
+>+        hpb->stats.rcmd_noti_cnt = 0;
+>+        hpb->stats.rcmd_active_cnt = 0;
+>+        hpb->stats.rcmd_inactive_cnt = 0;
+>         hpb->https://protect2.fireeye.com/v1/url?k=9b807207-fa0b6728-9b81f948-74fe485cbfe7-c8e650b167f03dee&q=1&e=ec9d9a5f-605d-45e5-b145-e3a4c9a96f3e&u=http%3A%2F%2Fstats.map%2F_req_cnt = 0;
+It's not related to the patch, but the code seems to be wrong.
+
+>         hpb->stats.umap_req_cnt = 0;
+> }
+>diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+>index b83b9ec9044a..0d6e6004d783 100644
+>--- a/drivers/scsi/ufs/ufshpb.h
+>+++ b/drivers/scsi/ufs/ufshpb.h
+>@@ -211,9 +211,9 @@ struct ufshpb_params {
+> struct ufshpb_stats {
+>         u64 hit_cnt;
+>         u64 miss_cnt;
+>-        u64 rb_noti_cnt;
+>-        u64 rb_active_cnt;
+>-        u64 rb_inactive_cnt;
+>+        u64 rcmd_noti_cnt;
+>+        u64 rcmd_active_cnt;
+>+        u64 rcmd_inactive_cnt;
+>         u64 map_req_cnt;
+>         u64 pre_req_cnt;
+>         u64 umap_req_cnt;
+>-- 
+>2.34.1
+> 
+> 
+Apart from the indentation, the patch looks good to me, so once
+you've fixed them, feel free to add my:
+
 Reviewed-by: Keoseong Park <keosung.park@samsung.com>
 
 Best Regards,
 Keoseong Park
-
->---
-> drivers/scsi/ufs/ufshpb.c | 35 +++++++++++++++++++++++------------
-> 1 file changed, 23 insertions(+), 12 deletions(-)
->=20
->diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
->index 167643969165..f1f30d4c3d65 100644
->--- a/drivers/scsi/ufs/ufshpb.c
->+++ b/drivers/scsi/ufs/ufshpb.c
->@@ -1225,7 +1225,10 @@ static void ufshpb_rsp_req_region_update(struct ufs=
-hpb_lu *hpb,
->                 queue_work(ufshpb_wq, &hpb->map_work);
-> }
->=20
->-static void ufshpb_dev_reset_handler(struct ufshpb_lu *hpb)
->+/*
->+ * Set the flags of all active regions to RGN_FLAG_UPDATE to let host sid=
-e reload L2P entries later
->+ */
->+static void ufshpb_set_regions_update(struct ufshpb_lu *hpb)
-> {
->         struct victim_select_info *lru_info =3D &hpb->lru_info;
->         struct ufshpb_region *rgn;
->@@ -1239,6 +1242,24 @@ static void ufshpb_dev_reset_handler(struct ufshpb_=
-lu *hpb)
->         spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
-> }
->=20
->+static void ufshpb_dev_reset_handler(struct ufs_hba *hba)
->+{
->+        struct scsi_device *sdev;
->+        struct ufshpb_lu *hpb;
->+
->+        __shost_for_each_device(sdev, hba->host) {
->+                hpb =3D ufshpb_get_hpb_data(sdev);
->+                if (hpb && hpb->is_hcm)
->+                        /*
->+                         * For the HPB host mode, in case device powered =
-up and lost HPB
->+                         * information, we will set the region flag to be=
- RGN_FLAG_UPDATE,
->+                         * it will let host reload its L2P entries(re-act=
-ivate the region
->+                         * in the UFS device).
->+                         */
->+                        ufshpb_set_regions_update(hpb);
->+        }
->+}
->+
-> /*
->  * This function will parse recommended active subregion information in s=
-ense
->  * data field of response UPIU with SAM_STAT_GOOD state.
->@@ -1313,17 +1334,7 @@ void ufshpb_rsp_upiu(struct ufs_hba *hba, struct uf=
-shcd_lrb *lrbp)
->         case HPB_RSP_DEV_RESET:
->                 dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
->                          "UFS device lost HPB information during PM.\n");
->-
->-                if (hpb->is_hcm) {
->-                        struct scsi_device *sdev;
->-
->-                        __shost_for_each_device(sdev, hba->host) {
->-                                struct ufshpb_lu *h =3D sdev->hostdata;
->-
->-                                if (h)
->-                                        ufshpb_dev_reset_handler(h);
->-                        }
->-                }
->+                ufshpb_dev_reset_handler(hba);
->=20
->                 break;
->         default:
->--=20
->2.34.1
->=20
->
