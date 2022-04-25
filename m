@@ -2,175 +2,201 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5348FC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 06:44:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C45BC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Apr 2022 07:27:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232680AbiDYGrC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Apr 2022 02:47:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48414 "EHLO
+        id S237407AbiDYHaV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Apr 2022 03:30:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229568AbiDYGq5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 02:46:57 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6268833A3A;
-        Sun, 24 Apr 2022 23:43:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1650869032; x=1682405032;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=aVDP4yPJZPudTpvtUoyi7kPCz1nWMifCX7OAS2fEt8o=;
-  b=YkICP/Ld3CQ9l/QE87k+w0r/3IND1T/ouhxlIMMiWDZVD7jkgkdUk9kp
-   ZzGO6iU/YRLtNnd3Z/8XCXuyqQKTfLNV6k1Mn2lAuQlpy7gdu0I1DRw7f
-   QSURxeeLMR9rwlRP2PUk01iWfI3HC3kQOSdU02pNptalc65Zyh7ySrhqW
-   rj+0kAhUpGH7063KSfpJTQ4sBsDm9mbxHFpQeEaZMKmZScPe8yGd96zSc
-   mUck/R5/r7bIbO27P7UOod7hCJ1Fd07To4zFzAGbXZ7Qku15R8/o3sQ/j
-   ha+tbUcWzz3j4aV6MpBD7hKIvC3q9BexQRtQGePPBP0qb2BUznDbPvRsC
-   w==;
-X-IronPort-AV: E=Sophos;i="5.90,287,1643644800"; 
-   d="scan'208";a="203597503"
-Received: from mail-dm6nam10lp2101.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.101])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Apr 2022 14:43:51 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GHdQKntv4oRapa/afxOhrDKKyfN1kY4iFoYeOc5a9iYesVqNPFjoLNSIokqzE86jWfNLyw+0lUQNpCRwbJ4U2cvTiDgENHGTsohq4I3MCf/EPJ1sEER0IlvZ2MWvyZr/cC/r3apKdM4jLCN9neNTOuAdrlmOXKh90oNLUJDbR2qT0tYLdx+keNAijmEipf5Zh/bAFABrps55Xrrf/x/V0T77VUYMpdPdMgJJ1X0rBsB9MILjGUvzYNONfuj4qGlPzDfR2I2IhYUriEVfCKsxpn4tuzLuJIAQC2r1OsfRpcliBun4fllfRgziuS36zHEoLlYMVq118EyyapombuAuOA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aVDP4yPJZPudTpvtUoyi7kPCz1nWMifCX7OAS2fEt8o=;
- b=LEa2CpANiN+GoxDq1Lt8vlcJhlaLmvqrvRW8dlIC+uafO3H5nWeffICeF4Pfa/P7MPd8M9Rg/D97f/j8kkH9nwk7ycmAbMbtJq08dxlCgmN8O1eNDfU6XMHlgm6qQVXeHiV7gwya707nGx+CPnRGhGZCf5YHR3UxkJRORuzX+8TOuNKipHbUoP+8irayMlhUo/vKHl2HsWmh6jKoOkLiZ4/8psyluqJ8DtMywIojCIMRqKagJNyvasepNsIrLJeOVOayuzpDrqhlJ68vtV6mgJ9QIwM+iB+GVg3wMn1fEySgETorhQI1ENZ84YJFvoFiDwDEMZzk+hCEJiAPZsBVyg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        with ESMTP id S236638AbiDYHaS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Apr 2022 03:30:18 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D4A99FF6
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 00:27:13 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id c23so25099733plo.0
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 00:27:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aVDP4yPJZPudTpvtUoyi7kPCz1nWMifCX7OAS2fEt8o=;
- b=HuwNU3DdI6Ek3dgBPKeexBotnubUWh7CDqRIQ9u5vlZTWhgJjxCbG796Lvgdr61I1qY1tQN91UbLwbRYcdGajRIfylZkEOceXS/cBlF+tHC3qR9KNLkuDPNEI3Zfb6uRcYfKINa3IdfA3BceUwoPFkI8+Ual/qyk5FZstkHSnbs=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- MN2PR04MB6397.namprd04.prod.outlook.com (2603:10b6:208:1ab::7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5186.15; Mon, 25 Apr 2022 06:43:51 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::b049:a979:f614:a5a3]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::b049:a979:f614:a5a3%3]) with mapi id 15.20.5186.021; Mon, 25 Apr 2022
- 06:43:50 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Bean Huo <huobean@gmail.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        "keosung.park@samsung.com" <keosung.park@samsung.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "powen.kao@mediatek.com" <powen.kao@mediatek.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3 5/6] scsi: ufshpb: Add handing of device reset HPB
- regions Infos in HPB device mode
-Thread-Topic: [PATCH v3 5/6] scsi: ufshpb: Add handing of device reset HPB
- regions Infos in HPB device mode
-Thread-Index: AQHYWCeyktbVq8mOmUiqJJw3p1lrD60ALTIA
-Date:   Mon, 25 Apr 2022 06:43:50 +0000
-Message-ID: <DM6PR04MB6575DE756EE25ECA7DF17669FCF89@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20220424220713.1253049-1-huobean@gmail.com>
- <20220424220713.1253049-6-huobean@gmail.com>
-In-Reply-To: <20220424220713.1253049-6-huobean@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 006a0ad4-41dd-4464-90ba-08da2686f53e
-x-ms-traffictypediagnostic: MN2PR04MB6397:EE_
-x-microsoft-antispam-prvs: <MN2PR04MB6397559B5A70B6BB7D96251AFCF89@MN2PR04MB6397.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: aZxzg7koDAZKWATUFu/Nk7rf1Ofz6E/9sqlfcnxbYyh+Ck1qL2rxT2LlHCziIxegY3+EMzCPE1hd8gHTF5a4rr0MEIyAWWwxOeywazcxz/wyUjj30jxHKSi63jDm0M6cvWAf++vAAcbE5aZXGEuKxDtCWinJGpc164UJJDTqE0OQi1WjcKbmYjgdP4LUFWgV0LMpRMXUtJbXYthjuiKwFs8mbCUQqZm2DBiTadFq3NL6+cSS7IUckPmMCOMBZlN/uMD1DoEeZCJDQrBtkLucBNMA0NJDcng752mVqv9E6ZgleO8qgh7LOOlR3UxHCzzB1euDLTzxExSOLX8s3Qba1p6K9cx/yKFo69QOrJtyz2j+kjN1FmzoTVXuwTUzpR2KwU+wkmRrcg73DPUfnJuGnj/98Sy0nMA68J0C+4dUkxwijAtUcPYvRdVcmB4IjyXCBA+fLosmtExTCyhK1wnXvu/MKYMUOCjKk0IdrlWcSDNv+7r1PbStVN9S+mItojpkWdgG9dihZ5p+r4qNC1Wa7kYy91ED6Kv2qbBFL42vOXGl8CpZleGOu1OeWKG/Z0A0NaISDQlikSNo1VbFYLBBdYLt+RwCURiyKiBYTGcekDmVIvAti8Blz60fCKI1hQmNCXPK7XaIGtVXqnzgHC473BCSfwpOPJITuZvfZAV89OXeagjRsGxZGAIDH5NLAAmiuxPrh06U53vH5g5XBnzDzjiPHPgTHOw1JdbGkYVft6I=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(122000001)(186003)(38100700002)(38070700005)(83380400001)(921005)(508600001)(82960400001)(110136005)(86362001)(52536014)(7416002)(5660300002)(8936002)(2906002)(55016003)(33656002)(6506007)(54906003)(7696005)(26005)(66446008)(64756008)(66476007)(4326008)(8676002)(66556008)(9686003)(76116006)(66946007)(316002)(71200400001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?WUtpUkhVZEcreVNPandDS3VleE15aU5TRnBEdWIrZGJMMzlrdWh0elNRU2NU?=
- =?utf-8?B?OWUyUldSakc4WFlZM2NsS2ZuRC9pQUJoSmt3bFJNQnhBZllFN0U3NmQ5WCt2?=
- =?utf-8?B?ME1HNkFWcVRlbnZpbnczby9sOFVBOTlkM2thNXR3bGJqb0JHUXRMcTZ6Zktu?=
- =?utf-8?B?b0RDVllyS2ZLZ0JhUUxTYUxkK3JOTFRCQXZjTHlGakd6WFh1clZVclBRUEEv?=
- =?utf-8?B?NmVjSWFLQk5uVDZIK3cybVVoSXVjS015cld3c1FOaHQ3M2h0K2toQmEySTh4?=
- =?utf-8?B?b0ZzTlZubjkxSHN3b0ZxQk5RQm5WZGVoelJxT1c0cjBhUm8yNjN4TElDcG1y?=
- =?utf-8?B?V2V3enZHUGNTSUpHMkFnVUd1TVJLamkrYjNIdVNlSjEzS083MlFGRyt6bTN4?=
- =?utf-8?B?U240bS9CVTZKbEtNZy90bVJxKzZMZVd2UFh5aGdlWm0xUjhiSnp4a2k5by9i?=
- =?utf-8?B?RjMrWUdEMHByYjdhWWg2RTd5WjRQRkgzZ3oyV2dweXhVUlN1QU5Rd0IxZy9Y?=
- =?utf-8?B?MFFPTW41V1pXRXBaZ3liOXNUUklSU1RKT2VuU3Z1UTVrcnREQzZmNERQRG1z?=
- =?utf-8?B?MzhENHZ1dVk1QVRsMlhIVzFVMEJXaElGQUdUekczaVc2YWUxOS84ZEtEUjdX?=
- =?utf-8?B?WjR0N2I4R3BrUkRhQ3ZvdGg5a3BhWldOdEVyWDNXMGJ3SUV0MmEyeUkvNmF1?=
- =?utf-8?B?SktMZWJIOHdhdG1IdFlXb0F3NlNEenpwNE9VeTB2MGp4NmxhMk0raTRMUVZZ?=
- =?utf-8?B?dzd3aWdCbFR1UXEzd094N2RYUzZkQzhTY3VwRnllOXVZMUo1NE9tRmZ0S2ps?=
- =?utf-8?B?d1ljTEQzOW9hdEtOdDVwKzYxbjBvbkNiVnJIdFZiSWYvVjk1Ukp5dE9hZzlq?=
- =?utf-8?B?RXV3QVNpTHJtK3B2UDBkWThic0J0SlQzOEFZemtxdllQTjBoZmw3OGUyT1ZQ?=
- =?utf-8?B?R0NhQlNpSytvY1dxTFc0M1paaFppNzNFNFBIcXAwcXhENmRaaWdxY04zSS9P?=
- =?utf-8?B?eWRtZ09nRDZHUks2SjJ1SFVPZFRHcFE5YUR2aFVrVlBvVDZCa201dlF0S3Br?=
- =?utf-8?B?NUlZRU9ZY0lBNnVsT0M3SWIxeVdSejFiUmpGOEVhcnVkc1VDeEorTEloVWRR?=
- =?utf-8?B?ZEhHNmczUWovOXhNdGwxOUpUcjFMZXBybjFWTHl3OHN1b0pBY1I3aldtODJn?=
- =?utf-8?B?QkhpZkhNQ3FvYmphTkpEc3ZsaUVpaUV0MS8wT21xTE1IMmFYbFpzcnVJTzUy?=
- =?utf-8?B?d1FrYW1sZjBsUXByWS93ZHJaWWtwSk9FeVVWUHBTcmlWUHVtK3kzUkQ5V0Vn?=
- =?utf-8?B?VGhJMDZ3WDhGZndTU0N1TUtsSmlLMnlMYWFkejhiRE0yUi9lOTdtLzkvUER4?=
- =?utf-8?B?OVpYdzRiMmFyTlMwdUZQSm0xUXFJVVp0OXZMeU5ncVU4cGpVSlVJUC9HQk45?=
- =?utf-8?B?SWNxQ2E0STBreUlIcWlYWVdSSFp1NkR2RzFCaVJINGcyVCt2aTdSMkNiUkRN?=
- =?utf-8?B?V2ZuWVBXZXNrcXdsMVQyMkNBN3MrWHdZRjhxSnVCQ3E0YnJnNU0yeEEvVFQ3?=
- =?utf-8?B?OUFDUzZlTDRHem1pb3VZS3gzQUNsTFd2dmJTNkdEeUMyWVRKa2xhOFVzNFZi?=
- =?utf-8?B?YndwQVZ2TjFOUXNhejdmMUR2UDBGUjFQcVc2VmN3RURzSjRnM1UxRWxROVY4?=
- =?utf-8?B?L1J4bGFkdjdDZHpqMmFOdHpnQ2xBbTA0NGVnMTdiNHpDd05MYXRYMFBENWor?=
- =?utf-8?B?VG13VG9mWW1ZZlJXaVdnbFRMVGVkWmtXUW5DcEc2bk5aQU1sT0pkK08rYXA1?=
- =?utf-8?B?UEdmSzBRVmF6c3BMZVJtY01WMnBzS24wL0gvMFdLNGlLbUswR3dEd21weGE3?=
- =?utf-8?B?M3h0TENWdU9udjhmM21keTBOT0d5QU5Oa05jRnlUYkR1L2JZVmw5VkZTRlZr?=
- =?utf-8?B?UjZmZWNqZ0RBUC9pOEdJMnh6bjk2SDBreHVIcFIvMVd0TEZaOVVXazNlUUgr?=
- =?utf-8?B?M05TODBmRXN3RUQ4K0ZtZTZXSXQ5bCtuSUd0RXFycFM5cDY5aHR4dStKdXor?=
- =?utf-8?B?alVKaWZCRklxWm80MmNtQjFWZTh5dldaSlcxY2VST25tdW1QRDFzK0tUakl3?=
- =?utf-8?B?b3o4b0xpNE1TV3UrMDl4aFdkZnphQlFpUXJFZzRlaGgvVEZOMkdLNmI1V1VP?=
- =?utf-8?B?T3l0Z1NPbTlGb2JTam9tYlV1VjJka3E4TlhhNzkrZjV1aXljMGVPVyt3dHMr?=
- =?utf-8?B?K2VSVnM5S29pUm1qRkxBc1dmaUxxOTRzRWJkQ2ZDRFdEYURYY2JIWWgzUnMy?=
- =?utf-8?B?M0ZvZktMTEVPb0dsdFEyQ3dvN1pMZ2dMa1FpQVRQREN0bGJ0UG1IUT09?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=rxyP1rA1NVCKi+Fqd9RTEgWTAs6MpVuSe+By3MBiK+g=;
+        b=uhHdnNiHGlo6+p+WxcM0C9NfBcZ1yMZ4ZL8lPJjCqFO59XftyiBXmxLnJ4x/8IHesk
+         Iz/e+72c+hpYYtSkpN9st79ktLRdF9ucEIcsSZFrJz8zW/33b/zII36XFlgftlgRt/Rn
+         NcV0nn+GcFItTljdcQkhhruORyaimT8Hcjdf+33DifIdLTWHRc7f4BBjOpmEow9TxUAk
+         H3AoQBVj8pg7peGOZ40pMWJPb4v77MByQ/hq2wnaWxWmitojdTlAcivhdbQ8eALivIcc
+         CxsiobTeJA1GwrggCLqf/tliVYwpbUOcyyC+5xohbYhPGazYOIMkwv+sGtPOlvneNaO1
+         ub6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=rxyP1rA1NVCKi+Fqd9RTEgWTAs6MpVuSe+By3MBiK+g=;
+        b=Z0226MHvbHLtIEXJKD5spO8n1iCzgJnu8TLYfMjmxyClakbQ0RqkVtMqxK2u+TKmgn
+         1upB8RTx6CskYLTR/QTeJcKZfjzjbD8mTHhBk2HVjjnDgmkqhrfxN2LnAJ+lVAe1YsKZ
+         Cbm0giWI685VTAHvwmQke9v9OlqD9lgx1XkCS/j/6ryd0f3DPE06oQ0iTNKM0Ksg1/J6
+         IHqRTwubzidzvGapOQ+FuhGBrMxlBfVEvYytnlo8XrXVfM80/Ak+6wvKMjr51VSPaLtf
+         ENjNEQHLJGXp77i5ZoYntmbgbULpOf88LmJ2igzKWzgvhFcDL3f5iI05sd0FM8mPEC7g
+         Oe2w==
+X-Gm-Message-State: AOAM531aAXLk7J35LKbNrYiZZD1zKuLiiFvHpGuNwaKr2K+wWtw1zr4U
+        bD3aglTJ1ajnRvs8evtEdwbNgg==
+X-Google-Smtp-Source: ABdhPJxE5RcvTjEYwI71Iu772xtRFctxCEAFvy9tKFHoG9lHlSKr+lSmvTHqmcMFobuMjeZomF3jKA==
+X-Received: by 2002:a17:90b:3b46:b0:1c7:9ca8:a19e with SMTP id ot6-20020a17090b3b4600b001c79ca8a19emr29586651pjb.245.1650871632716;
+        Mon, 25 Apr 2022 00:27:12 -0700 (PDT)
+Received: from localhost ([122.171.250.232])
+        by smtp.gmail.com with ESMTPSA id p4-20020a637404000000b00375948e63d6sm8596664pgc.91.2022.04.25.00.27.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Apr 2022 00:27:12 -0700 (PDT)
+Date:   Mon, 25 Apr 2022 12:57:10 +0530
+From:   Viresh Kumar <viresh.kumar@linaro.org>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Taniya Das <tdas@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
+Message-ID: <20220425072710.v6gwo4gu3aouezg4@vireshk-i7>
+References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
+ <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 006a0ad4-41dd-4464-90ba-08da2686f53e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Apr 2022 06:43:50.8181
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: JbAYd43N792ygOnoip5oC8ppr8MsD6mKPwATzKKTicwMvJ9/8u69NbRbkWowILfpWZptCBggzp0uKFNk+q7/pg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6397
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
+User-Agent: NeoMutt/20180716-391-311a52
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiBGcm9tOiBCZWFuIEh1byA8YmVhbmh1b0BtaWNyb24uY29tPg0KPiANCj4gSW4gVUZTIEhQQiBT
-cGVjIEpFU0QyMjAtM0EsDQo+IA0KPiAiNS44LiBBY3RpdmUgYW5kIGluYWN0aXZlIGluZm9ybWF0
-aW9uIHVwb24gcG93ZXIgY3ljbGUNCj4gLi4uDQo+IFdoZW4gdGhlIGRldmljZSBpcyBwb3dlcmVk
-IG9mZiBieSB0aGUgaG9zdCwgdGhlIGRldmljZSBtYXkgcmVzdG9yZSBMMlAgbWFwDQo+IGRhdGEN
-Cj4gdXBvbiBwb3dlciB1cCBvciBidWlsZCBmcm9tIHRoZSBob3N04oCZcyBIUEIgUkVBRCBjb21t
-YW5kLiBJbiBjYXNlIGRldmljZQ0KPiBwb3dlcmVkDQo+IHVwIGFuZCBsb3N0IEhQQiBpbmZvcm1h
-dGlvbiwgZGV2aWNlIGNhbiBzaWduYWwgdG8gdGhlIGhvc3QgdGhyb3VnaCBIUEIgU2Vuc2UNCj4g
-ZGF0YSwNCj4gYnkgc2V0dGluZyBIUEIgT3BlcmF0aW9uIGFzIOKAmDLigJkgd2hpY2ggd2lsbCBp
-bmZvcm0gdGhlIGhvc3QgdGhhdCBkZXZpY2UgcmVzZXQNCj4gSFBCDQo+IGluZm9ybWF0aW9uLiIN
-Cj4gDQo+IFRoZXJlZm9yZSwgZm9yIEhQQiBkZXZpY2UgY29udHJvbCBtb2RlLCBpZiB0aGUgVUZT
-IGRldmljZSBpcyByZXNldCB2aWEgdGhlDQo+IFJTVF9ODQo+IHBpbiwgdGhlIGFjdGl2ZSByZWdp
-b24gaW5mb3JtYXRpb24gaW4gdGhlIGRldmljZSB3aWxsIGJlIHJlc2V0LiBJZiB0aGUgaG9zdCBz
-aWRlDQo+IHJlY2VpdmVzIHRoaXMgbm90aWZpY2F0aW9uIGZyb20gdGhlIGRldmljZSBzaWRlLCBp
-dCBpcyByZWNvbW1lbmRlZCB0byBpbmFjdGl2YXRlDQo+IGFsbCBhY3RpdmUgcmVnaW9ucyBpbiB0
-aGUgaG9zdCdzIEhQQiBjYWNoZS4NCldoaWxlIGl0IG1ha2VzIHNlbnNlIHRvIG1lLCB0aGlzIGlu
-dGVycHJldGF0aW9uIG9mIHRoZSBzcGVjIHRha2VzIGV4dHJlbWUgYWN0aW9uLA0KQ29tcGFyZWQg
-dG8gd2hhdCBpdCBpcyB0b2RheSwgYW5kIHlvdSBwcm9iYWJseSBuZWVkIHRvIGdldCBhbiBhY2sg
-ZnJvbSBEYWVqdW4uIA0KDQpJZiB3ZSBhcmUgZW50ZXJpbmcgYSB6b25lIGluIHdoaWNoIGVhY2gg
-dmVuZG9yIGlzIGFwcGx5aW5nIGEgZGlmZmVyZW50IGxvZ2ljIC0gDQpJIHRoaW5rIHlvdSBuZWVk
-IHRvIGZhY2lsaXRhdGUgdGhhdCAtIG1heWJlIGluIGEgZGlmZmVyZW50IHBhdGNoIHNldC4NCg0K
-VGhhbmtzLA0KQXZyaQ0K
+On 11-04-22, 17:43, Krzysztof Kozlowski wrote:
+> Devices might need to control several clocks when scaling the frequency
+> and voltage.  Example is the Universal Flash Storage (UFS) which scales
+> several independent clocks with change of performance levels.
+> 
+> Add parsing of multiple clocks and clock names
+
+This part is fine, the OPP core should be able to do this.
+
+> and scale all of them,
+
+This is tricky as the OPP core can't really assume the order in which the clocks
+needs to be programmed. We had the same problem with multiple regulators and the
+same is left for drivers to do via the custom-api.
+
+Either we can take the same route here, and let platforms add their own OPP
+drivers which can handle this, Or hide this all behind a basic device clock's
+driver, which you get with clk_get(dev, NULL).
+
+> diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+
+> +static int _generic_set_opp_clks_only(struct device *dev,
+> +				      struct opp_table *opp_table,
+> +				      struct dev_pm_opp *opp)
+> +{
+> +	int i, ret;
+> +
+> +	if (!opp_table->clks)
+> +		return 0;
+> +
+> +	for (i = 0; i < opp_table->clk_count; i++) {
+> +		if (opp->rates[i]) {
+
+This should mean that we can disable that clock and it isn't required.
+
+> +			ret = _generic_set_opp_clk_only(dev, opp_table->clks[i],
+> +							opp->rates[i]);
+> +			if (ret) {
+> +				dev_err(dev, "%s: failed to set clock %pC rate: %d\n",
+> +					__func__, opp_table->clks[i], ret);
+> +				return ret;
+> +			}
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+
+As said earlier, this won't work in the core.
+
+> +
+>  static int _generic_set_opp_regulator(struct opp_table *opp_table,
+>  				      struct device *dev,
+>  				      struct dev_pm_opp *opp,
+> @@ -796,7 +835,7 @@ static int _generic_set_opp_regulator(struct opp_table *opp_table,
+>  	}
+>  
+>  	/* Change frequency */
+> -	ret = _generic_set_opp_clk_only(dev, opp_table->clk, freq);
+> +	ret = _generic_set_opp_clks_only(dev, opp_table, opp);
+>  	if (ret)
+>  		goto restore_voltage;
+>  
+> @@ -820,7 +859,7 @@ static int _generic_set_opp_regulator(struct opp_table *opp_table,
+>  	return 0;
+>  
+>  restore_freq:
+> -	if (_generic_set_opp_clk_only(dev, opp_table->clk, old_opp->rate))
+> +	if (_generic_set_opp_clks_only(dev, opp_table, old_opp))
+>  		dev_err(dev, "%s: failed to restore old-freq (%lu Hz)\n",
+>  			__func__, old_opp->rate);
+>  restore_voltage:
+> @@ -880,7 +919,7 @@ static int _set_opp_custom(const struct opp_table *opp_table,
+
+This is where we can handle it in your case, if you don't want to hide it behind
+a clk driver.
+
+>  	}
+>  
+>  	data->regulators = opp_table->regulators;
+> -	data->clk = opp_table->clk;
+> +	data->clk = (opp_table->clks ? opp_table->clks[0] : NULL);
+>  	data->dev = dev;
+>  	data->old_opp.rate = old_opp->rate;
+>  	data->new_opp.rate = freq;
+> @@ -969,8 +1008,8 @@ static void _find_current_opp(struct device *dev, struct opp_table *opp_table)
+
+I think this routine breaks as soon as we add support for multiple clocks.
+clks[0]'s frequency can be same for multiple OPPs and this won't get you the
+right OPP then.
+
+>  	struct dev_pm_opp *opp = ERR_PTR(-ENODEV);
+>  	unsigned long freq;
+>  
+> -	if (!IS_ERR(opp_table->clk)) {
+> -		freq = clk_get_rate(opp_table->clk);
+> +	if (opp_table->clks && !IS_ERR(opp_table->clks[0])) {
+> +		freq = clk_get_rate(opp_table->clks[0]);
+>  		opp = _find_freq_ceil(opp_table, &freq);
+>  	}
+>  
+> @@ -1070,7 +1109,7 @@ static int _set_opp(struct device *dev, struct opp_table *opp_table,
+>  						 scaling_down);
+>  	} else {
+>  		/* Only frequency scaling */
+> -		ret = _generic_set_opp_clk_only(dev, opp_table->clk, freq);
+> +		ret = _generic_set_opp_clks_only(dev, opp_table, opp);
+>  	}
+>  
+>  	if (ret)
+> @@ -1135,11 +1174,15 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
+
+This should have a BUG or WARN _ON() now if clock count is more than one. This
+routine can't be called unless custom handler is available.
+
+I skipped rest of the code as we need to work/decide on the design first.
+
+Thanks.
+
+-- 
+viresh
