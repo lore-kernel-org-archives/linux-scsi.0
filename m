@@ -2,158 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDCCFC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 04:13:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C728CC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 04:25:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244025AbiDZEQo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Apr 2022 00:16:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47426 "EHLO
+        id S243935AbiDZE2m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Apr 2022 00:28:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231926AbiDZEQn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 00:16:43 -0400
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F10D618B28;
-        Mon, 25 Apr 2022 21:13:36 -0700 (PDT)
-Received: by mail-pg1-f180.google.com with SMTP id bg9so15056310pgb.9;
-        Mon, 25 Apr 2022 21:13:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=AY731iI+S8F0M/j7fMQ9Mkrc8kLhYo3SZm7WX0TOCyM=;
-        b=r1kjhNDgrhZ6RdMKJlqs9VqZ4WK+VgHu7EnJlaqjrPf8By7inmxIJJg7ybLdpiQ5QH
-         HomYLOJ6n0JnU6YFaykoMcEnIxgkI4McE4uY2To7eZjq7SZHAqvjGKwJDk+Y++QUeyb6
-         jQj4bOw2mXjvZ3P9QTe5fqOFeUUNd1jefUe8ptwL6hinov0aTloeO7U/tnJNcXSQi+KQ
-         ZizzJNTSkDJznvp65ScWcE0sRODisi2V6GM6Z/a10ZJlEr39v06j19qMVs1G11uQYAFs
-         wxE6vnTzbM8Wdeyldbp3QhelQr3ug6kC3L60zqZh5ab2OWEhhkRnPU8QgPz98qr01je0
-         glrw==
-X-Gm-Message-State: AOAM532xSHgALl0+tVcU+rAVbqquSjgtJqj1+udhlIptqcYGryQZHPIp
-        bqQxaqaCIErIb5RUGxIxrr9LgDsJOoo=
-X-Google-Smtp-Source: ABdhPJy8qxGj7WHaygIzMOklbVwTxVcEdN9ais+Mq8HJh9hfKdbPhuQ0u5BArzSL2cAFg1ODW9ctxg==
-X-Received: by 2002:a63:694a:0:b0:3aa:e962:db29 with SMTP id e71-20020a63694a000000b003aae962db29mr13349550pgc.421.1650946416300;
-        Mon, 25 Apr 2022 21:13:36 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id li12-20020a17090b48cc00b001d983f83959sm854930pjb.57.2022.04.25.21.13.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Apr 2022 21:13:35 -0700 (PDT)
-Message-ID: <f6516c7f-16c7-689c-b6cd-ebff95e931a4@acm.org>
-Date:   Mon, 25 Apr 2022 21:13:33 -0700
+        with ESMTP id S243916AbiDZE2l (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 00:28:41 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FBED47576
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 21:25:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1650947134; x=1682483134;
+  h=message-id:date:mime-version:subject:from:to:references:
+   in-reply-to:content-transfer-encoding;
+  bh=jZAWSem7tWU2tMWpU4Jy6443ujmS6/pmN4ww1qhZjag=;
+  b=hV7BwjS2srFlU3AEZe3IoDhOo2TAYafBGFABYgETsibIa224RZxgRPF4
+   +xzNzdu9V1onAZmgA1gWb0P213N3rZfinqb8tNjlKvWhTCUPKMUtiGexn
+   yCauIeySwFkad3jAM6Sp6vo9KDNNYtP7/M+O6MsDN5iuX8o8G7hhHKpon
+   SMuANVoN+sXuaAKx0zPAa7FHKFXSyBg54ApWuTqzY6K45Yzv+G6ZK3/kw
+   CqpVnKjojK83Ra1q1HRb4BCzfSd7SdMT/qXPc/R/5NMLl0vsU1Tq06ee0
+   40sLV8lhniaBE5gRjA1Cw1xA83S3oE9yAQZHufHGypMXH36bbhB4pFCyA
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.90,290,1643644800"; 
+   d="scan'208";a="310788485"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 26 Apr 2022 12:25:33 +0800
+IronPort-SDR: LQYJ+Mjb8upJVQPQ6t79hZ8FbuDN7BPPW5t5Ut2PbtVD5bElsR61Kq3eUMWDoFXfMpFM63nqvA
+ bloI9CJtiOkQjcJ6RcwVK4+cemAXKyr3QpaHcQ4v0dkHdzPOlD7GWIBlaaHNuhBXN9HvOMf97L
+ +BJEMrcWi3b4fqp6rTbpnpc3b1PHmd77LEVft+a+cNf6WcXnunVta9CgUeDP2D9cFNwIBk5jTt
+ 3a//t1A7xegfhqCnyLxrAttlHLZEb77VaQwbAV4uTGQwxyQpvT1TT569LZToy2fuHTWMvdRO68
+ KJCnUPO7VFAdOqP1xfDONJDv
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Apr 2022 20:56:28 -0700
+IronPort-SDR: 3OJ4e50w85/4vJYR/98ES9eU2YZFCWL/LR8VTCkF8o5TvOr5+0Vre8byZvGSuB7Qec1/Fr4YIT
+ 0CgVAMDImQyx7cyV4iTEgMlHOf0aFbbJXQdhu49hMkj4DWRiqq4EXYNiOuzq9r/KsoiOWuAIRZ
+ vXTGC1WGxem4Gk1vyKRSnXC5UKdzFP1PVBt1UOFMles+md03WaLNliTjUWbP33xKaLCvcBBmq3
+ zuaPJAlVErLKPZC1frc3k3euxC2RZpTHlfwZdc8XxuanzVNiQxzKjFIU2Az8ThC1Hnd2RJi+Tb
+ VlI=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Apr 2022 21:25:33 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KnTMK0v2wz1SVp1
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 21:25:33 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:references:to:from:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1650947132; x=1653539133; bh=jZAWSem7tWU2tMWpU4Jy6443ujmS6/pmN4w
+        w1qhZjag=; b=MdDlBNGaZ+Ya1KsJOf0QtL/JBJYZV4YZMOHwSVuq2H3SMhTU73Y
+        CyfhG/h8iqzvv0RvhYq8zC4Hgx79c+0dknp6RD2QfKcyFJJSbqwLyn7Kfcl3Tr4Y
+        TPmvskZZS/5VUMYPvX+hxh5ZXksbSr2ME4V81rnqm0CUrx3Izx0IN0j3GKxfVYnA
+        vGfQvkFIEVbWpmi3kLmhy4F8yZ4ZVRYMiZJZh/UNRAQH6H7ilLP+2+1vtvOtORpT
+        UFPe/qRgearS2uEM2kn4kUT6+U7GKt6xUVcg/Zqt1ERVpaif5AoX6JOE8AoQFWYV
+        94DpKN8L3cQz4W09jWVturW1Ch+m+Jyn47Q==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id d1-O87pZAutA for <linux-scsi@vger.kernel.org>;
+        Mon, 25 Apr 2022 21:25:32 -0700 (PDT)
+Received: from [10.225.163.24] (unknown [10.225.163.24])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KnTMH2Kc5z1Rvlx;
+        Mon, 25 Apr 2022 21:25:31 -0700 (PDT)
+Message-ID: <a1293ec4-d160-9ebb-d20c-d120b14e6da6@opensource.wdc.com>
+Date:   Tue, 26 Apr 2022 13:25:30 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v3 0/5] Fix mpt3sas driver sparse warnings
 Content-Language: en-US
-To:     dgilbert@interlog.com, John Garry <john.garry@huawei.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     "Ewan D. Milne" <emilne@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, james.smart@broadcom.com
-References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
- <2a88a992-641a-b3ff-fe39-7a61fff87cb6@huawei.com>
- <4c3be5b6-50ef-9e9a-6cee-9642df943342@linaro.org>
- <7b3885e3-dbae-ff0b-21dc-c28d635d950b@huawei.com>
- <c121430b1b5c8f5816b2b42b9178d00889260c90.camel@redhat.com>
- <b6af3fe8-db9a-b5dc-199f-21c05d7664a2@huawei.com>
- <Yl+wJ7xSHzWmR+bR@infradead.org>
- <d09faf74-a52e-8d93-cf26-08b43b12c564@huawei.com>
- <24bfb681-faec-3567-3089-9cd5ee182710@linaro.org>
- <1bb53912-c5c3-7690-e82f-cf356ca87404@huawei.com>
- <aba8999d-276d-f9e8-96b4-5d1cc4e82c53@acm.org>
- <5485f529-e99a-0bdd-07bd-b5b559da91e6@interlog.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <5485f529-e99a-0bdd-07bd-b5b559da91e6@interlog.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com
+References: <20220307234854.148145-1-damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220307234854.148145-1-damien.lemoal@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/25/22 18:54, Douglas Gilbert wrote:
-> On 2022-04-25 21:16, Bart Van Assche wrote:
->> How about removing scsi_proc_hostdir_add(), scsi_proc_hostdir_rm() and 
->> all other code that creates files or directories under /proc/scsi? 
->> There should be corresponding entries in sysfs for all /proc/scsi 
->> entries. Some tools in sg3_utils use that directory so sg3_utils will 
->> have to be updated.
+On 3/8/22 08:48, Damien Le Moal wrote:
+> This series fix (remove) all sparse warnings generated when compiling
+> the mpt3sas driver. All warnings are related to __iomem access and
+> endianness.
 > 
-> ... breaking this:
-> 
-> ~$ cat /proc/scsi/scsi
-> 
-> Attached devices:
-> 
-> Host: scsi3 Channel: 00 Id: 00 Lun: 00
-> 
->    Vendor: IBM-207x Model: HUSMM8020ASS20   Rev: J4B6
-> 
->    Type:   Direct-Access                    ANSI  SCSI revision: 06
-> 
-> Host: scsi3 Channel: 00 Id: 01 Lun: 00
-> 
->    Vendor: IBM-207x Model: HUSMM8020ASS20   Rev: J4B6
-> 
->    Type:   Direct-Access                    ANSI  SCSI revision: 06
-> 
-> Host: scsi3 Channel: 00 Id: 02 Lun: 00
-> 
->    Vendor: SEAGATE  Model: ST200FM0073      Rev: 0007
-> 
->    Type:   Direct-Access                    ANSI  SCSI revision: 06
-> ...
-> 
-> A deprecation notice would be helpful, then removal after a few kernel
-> cycles.
+> The series was tested on top of Martin's 5.18/scsi-staging branch with a
+> 9400-8i HBA with direct attached iSAS and SATA drives. The fixes need
+> careful review by the maintainers as there is no documentation clearly
+> explaning the proper endianness of the values touched.
 
-Agreed with the deprecation notice + delayed removal, but is anyone 
-using cat /proc/scsi/scsi?
+Martin,
 
-> Yes, lsscsi can give that output:
-> 
-> $ lsscsi -c
-> 
-> Attached devices:
-> 
-> Host: scsi2 Channel: 00 Target: 00 Lun: 00
-> 
->    Vendor: SEAGATE  Model: ST200FM0073      Rev: 0007
-> 
->    Type:   Direct-Access                    ANSI SCSI revision: 06
-> 
-> Host: scsi2 Channel: 00 Target: 01 Lun: 00
-> 
->    Vendor: WDC      Model: WSH722020AL5204  Rev: C421
-> 
->    Type:   Zoned Block                      ANSI SCSI revision: 07
-> 
-> Host: scsi2 Channel: 00 Target: 02 Lun: 00
-> 
->    Vendor: Areca Te Model: ARC-802801.37.69 Rev: 0137
-> 
->    Type:   Enclosure                        ANSI SCSI revision: 05
-> ...
-> 
-> [Hmmm, in a different order.]
-> 
-> However no distribution that I'm aware of includes lsscsi in its 
-> installation.
-> [Most recent example: Ubuntu 22.04]
+Can we get this one queued for 5.19 ?
 
-Hmm ... are you sure? Last time I looked into this an lsscsi package was 
-available for every distro I tried (RHEL, SLES, Debian and openSUSE). 
-See also 
-https://packages.debian.org/search?searchon=contents&keywords=lsscsi&mode=path&suite=stable&arch=any.
+> 
+> Changes from v2:
+> * Reworked patch 5 to keep writel() calls. Sparse warnings are
+>   suppressed with a declaration fix.
+> 
+> Changes from v1:
+> * Reworked patch 1 to remove the TaskMID field type change and simplify
+>   _ctl_set_task_mid() code.
+> 
+> Damien Le Moal (5):
+>   scsi: mpt3sas: fix _ctl_set_task_mid() TaskMID check
+>   scsi: mpt3sas: Fix writel() use
+>   scsi: mpt3sas: fix ioc->base_readl() use
+>   scsi: mpt3sas: fix event callback log_code value handling
+>   scsi: mpt3sas: fix adapter replyPostRegisterIndex declaration
+> 
+>  drivers/scsi/mpt3sas/mpt3sas_base.c  | 32 ++++++++++++++--------------
+>  drivers/scsi/mpt3sas/mpt3sas_base.h  |  2 +-
+>  drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 11 +++++-----
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c |  6 +++---
+>  4 files changed, 26 insertions(+), 25 deletions(-)
+> 
 
-Are there other utilities in sg3_utils that would break if the 
-/proc/scsi directory would be removed?
 
-$ cd sg3_utils && git grep /proc/scsi | wc -l
-51
-
-Thanks,
-
-Bart.
+-- 
+Damien Le Moal
+Western Digital Research
