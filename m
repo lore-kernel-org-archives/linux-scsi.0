@@ -2,149 +2,223 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E1FDC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 12:10:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77F59C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 12:14:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349789AbiDZMN4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Apr 2022 08:13:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47378 "EHLO
+        id S1349817AbiDZMRv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Apr 2022 08:17:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349813AbiDZMNk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 08:13:40 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F6AA222B3;
-        Tue, 26 Apr 2022 05:10:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1650975032; x=1682511032;
-  h=from:to:subject:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version;
-  bh=R2vrd2HzhP7pv0zRUidGEu4ZTfY2r8W1BtZmpM9QIGo=;
-  b=K90mx0yHDZ296FEa56o8hvvKW84LcPwpi3GLP3FMyZjH+3YkRA9uzvFr
-   b0SmBAy09shSG6O7Ag9dsiFIDLSbe77NiWj/6fVfdjHy251cSrCzuAfFN
-   GDGTB8LFzC+PtqJoXzhA7E1cYob7sl1MHSTmWpHF532+MofA3iRuG3pBP
-   w09e6llQqV5UZTZJEfZZ5zvTUxwOO6xPrtnIfKEurQ2aZ2lddkcxDx7DE
-   B3abx0M9FmgUPOipYR0x0b9oy745JNKQCNbrjaJOrQN72u9dPaWuu2jUr
-   Ip2NudEQONTB6UH8PaXMxlxp/yzFBOdDe8Zbo8npXb3V3IJiDRVdH8LS+
-   A==;
-X-IronPort-AV: E=Sophos;i="5.90,290,1643644800"; 
-   d="scan'208";a="203716674"
-Received: from mail-bn8nam11lp2168.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.168])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Apr 2022 20:10:29 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Qna/nHSVmR2z9bZIOyn1Vu8Zg3eaHbpOny+lpRTyIMVhByWCkkjC4L/jv555KfToUTTa1r/wgkY91AojJAi4vIIenEN1F/IBtDaanS3YOh4AbjhbdOn4GzN4djW8Az92Uz6FW5AfbqS4eLxmVuRa4LnDkzy9YujdcEz4j+PCPdyZDEAY25B4S1oRr5XcAf4dxcv3FaYUEXTf3rwSkJl0MiLecPRmiW3VakDY8Yqcb/YwF9yqKQFP/9EEJW/LzN2Wkl6hkI62UghC344t4tndcVf+kwF8I8rg5QTHR6DwcdiLqGSTWpKUoEfZMQo281ZuiSqWCHT+BegcMfssTTDndg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=R2vrd2HzhP7pv0zRUidGEu4ZTfY2r8W1BtZmpM9QIGo=;
- b=CrGLNECVldARjlkSa/ekv9MpR+82nruWNYvUMFVom3llACVQnY/yNZrXllK9DGXY1DnO2nK+W0fxnUb/CCks4QX8aisL3zhwp3wX7y6s5RipjDehlwFfSw0tX10MDzN/ShWwIPSNOZ3FGQnyV3TRfypOwIkt7pNrmEpOXOfdVznZhryeG9aZMh3YbmZ+B8qCTAvnkKV24YESUocPpne6H+YPnYEfph94+zNkT+n3llhWxK2OTtc/VuGMRQMc7L3T1UMsF9xw2t0D/t9LF9p1gXriIibVgTd27xclitZoYRKxMWAGzTxICzKanGZOtC+ZdQVIaAaq8y2ThNcqoVinGQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=R2vrd2HzhP7pv0zRUidGEu4ZTfY2r8W1BtZmpM9QIGo=;
- b=aWMIRa8InT54c71HIpEXEs0Yw+Jyu0QUbO47jVWDaIL2V85j+5GFktE1AccOC8E51NMHZWj66NOa1dVcF3yjyBjg7JtzF8dDw6Q4JQyzLBDqPNG4s9Rx82TKrOHbQGB3NUrGxBKfM/GJ35LP8fxGfuG3cN2ja65VvFHgS7HzyBs=
-Received: from BL0PR04MB6564.namprd04.prod.outlook.com (2603:10b6:208:17d::11)
- by BN3PR04MB2131.namprd04.prod.outlook.com (2a01:111:e400:7bbc::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5186.13; Tue, 26 Apr
- 2022 12:10:28 +0000
-Received: from BL0PR04MB6564.namprd04.prod.outlook.com
- ([fe80::eda4:f764:fae0:b89e]) by BL0PR04MB6564.namprd04.prod.outlook.com
- ([fe80::eda4:f764:fae0:b89e%3]) with mapi id 15.20.5186.021; Tue, 26 Apr 2022
- 12:10:28 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Wan Jiabing <wanjiabing@vivo.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Bean Huo <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] scsi: ufs: Remove duplicate include in ufshcd
-Thread-Topic: [PATCH] scsi: ufs: Remove duplicate include in ufshcd
-Thread-Index: AQHYWVrEcCA7RAkzTEWdlSpo1r9JAa0CGlhQ
-Date:   Tue, 26 Apr 2022 12:10:28 +0000
-Message-ID: <BL0PR04MB6564679F152563C20CB121B3FCFB9@BL0PR04MB6564.namprd04.prod.outlook.com>
-References: <20220426104509.621394-1-wanjiabing@vivo.com>
-In-Reply-To: <20220426104509.621394-1-wanjiabing@vivo.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 7a4ed34d-4312-44c4-54d0-08da277dc0c1
-x-ms-traffictypediagnostic: BN3PR04MB2131:EE_
-x-microsoft-antispam-prvs: <BN3PR04MB2131395704DA26C8D61EA7EFFCFB9@BN3PR04MB2131.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: My5p2K3YUs5RmFmn4EQco7+oHMxXkELjW/CpM1Afofp2W/E/hKiSeyN92XMRGcsEvuaLcRf8eI1hPnpgD7wzxecELypnZEW3M0INPTwdhk/0A1N22aaUEitZp8eHlDQpA6+68+qCd/VfPiO1+GvMjDHxV5PItnt5/dPtle5Ir/UiTRRsKn+pgRHn/1+fwoqCYv2sX3v+lG+wxDpSRuqMdKjjnYhNeu1oMVMaB4ttPuC6kyu3oUTtGU2bhiNJTUtBcdaCR+LZZbXBeNZBst8Q/zq2Zoh0k9l9QasFJDQKz2E/Sc0ljTr0rtInGmbn5ifeUa6Ih3X2Nx3iW/dUa95hjRppjIG20VflHGs4MVSYMs0dhihUDoiUq1ROJ4XKNX7UNeEH5L7Du3iW8+YxKif0r8jVrgnra7RMMbscqVNITq92uKH0N7Ozh0AhbP/gT4pqWQUIofrhPyr8eAZrjJV4isJaK+RSCzDqOw+2/we/1nLMDJOZEVCrZAAc3Y9C0Hi5dUoSEzyKAq8marf8npr3p0G7PINd504IKA6HNtQ1ZiPlgl/ad0/o083MBK99dzC7qntGNdB+euy52MutdVbPWAW0Y6RhoCEFzApZZ81T6WDKnoOkaTvbR7nAj1oPPEKF9mQPvzPonwjmwBvofURfboeWp4fBoOjONWBByWAKNhHNCyIkiUTTv7QH8H1anqy6Ds7csVjTIzgyORLra/ODR8BSOLx+sBNiem/Q5DOXreM=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR04MB6564.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(82960400001)(2906002)(55016003)(66446008)(66476007)(122000001)(8676002)(9686003)(110136005)(5660300002)(38100700002)(83380400001)(52536014)(38070700005)(86362001)(7416002)(8936002)(6506007)(508600001)(66556008)(558084003)(64756008)(66946007)(186003)(76116006)(921005)(33656002)(316002)(71200400001)(26005)(7696005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?lVXXlkb/TIYgEdh90hAMc6byp3zHCiapUPsk8v0ts/cvO8x0SDxkS9NQsKpa?=
- =?us-ascii?Q?qWz90REvuQuvUG5DeRNFNVheg1cu7lrR6TALs3C7ZEfHaAm6BwdDlLaqGGWJ?=
- =?us-ascii?Q?fuTsXukIFtujGL1HFvAZOtN4vFSbGQnCjZ4mEa6CD5YiIFrOv8kMY/pTABOO?=
- =?us-ascii?Q?KO7rb/1AlZkYFhVi+gBQHWJ2XV6STMKOlDMv7J67uLyu05c3eC22fpK6lNyz?=
- =?us-ascii?Q?n1Xz16qy2M3UJb1CITpnKjRY0U1L/yHvT6U88N45ptE7CTZVjQTcGn6FXcWo?=
- =?us-ascii?Q?9sXgtFi1EAH+aPfHXodkizTHcX45T4i84/iO/MzHGQc9xGixmUpU89NJegaa?=
- =?us-ascii?Q?aRIMiJfREN9jZcGTf5hBHjrbIoDER8oSg+LdR53RrT0vFYE1dGM/etZHpk2G?=
- =?us-ascii?Q?SiIEKtqRlRAIGRPaYkwzvZA4ohfSJ1GGFnbIol+oswHGf7JVW2alaSDoivXl?=
- =?us-ascii?Q?oy2YUVFjeXjPNaplElnsOS4LibhiKF2MgIJXlKC3ZqM9cS5S8jW81uohcTIS?=
- =?us-ascii?Q?K1C4iawp3vxWymj5YUuC3jAqzJKd3UPXY5zvPnl9smKfVYUla4lhrrxHka6v?=
- =?us-ascii?Q?mYG6ERbd71sHxuRmzhyjEMitf6sn3dtloIMKcNqK5em/4mU/vW8hpyanv6p5?=
- =?us-ascii?Q?CD7FjIW43z3ek761h9ZD32cSHBJF8GbLE/iLjMFxXB/jf6nKnGASTiBEPj4f?=
- =?us-ascii?Q?fiM6a43KoF4T56H6jAIijFUSvM1cmg0N/4n1t7XemoF4GsXLGP7ahXh5WNYh?=
- =?us-ascii?Q?Pt7YfTfN7AdOCcUnZNhMqFko0NSq+vnCMoO11Ax0vvPMi1DmVIYoLWvSLiy1?=
- =?us-ascii?Q?kOhy0hrfQXcR8mqUCI2XJkIdPxjbyuTXmBhZugI+pR0Ki2Vnh8K7UdeggYJY?=
- =?us-ascii?Q?dKojtxVNJSZLLmay9eA1I4jJ5H/LyF/GOIzwnlrG62AVha/6cKD+AuRRyoGq?=
- =?us-ascii?Q?DyXNTeBDXFVmk8z55ic9odk6z+JHjfx32e3yp/1VlHCkbwabtMkHXVjLHaev?=
- =?us-ascii?Q?q0VJt2PeV/lFRCdtWII0+eSvfMF19pifJbGxmUzSRcSLAuI9U68xWN2/ZhWa?=
- =?us-ascii?Q?jcI5TN8Tm9rewTt/MEkSWuCej58IrFoXWHtc3sQoZQtWA3wIygxzS4CaZGzJ?=
- =?us-ascii?Q?By1jjaxLQPuS1OnC/Taa0zUSjxrRmiAR1pcqycIBl3kaBtHQlFsWKJ5+xpYr?=
- =?us-ascii?Q?ZeVQxn6k49JHYa0tBFRMw1nEwpQY+AYxifK8FHDxup2M97wMY+TB12009k9r?=
- =?us-ascii?Q?FrmXjD/QSHAdHOECwGB8AsQa48/fko2DvcoivmjBaXHXrWMGdvH+0o2itcx2?=
- =?us-ascii?Q?ZC+JTnyz/NTWyxZj42tGXUqrridBaXE47OPDhKdxKM1erkFFHROcQISV23F1?=
- =?us-ascii?Q?y5N30RI8zhR3fZbrHZ0xuJA/iSUgCyHeIAEk5q45WK/mDVuptv6SkEFrULa0?=
- =?us-ascii?Q?/6NsNdyT+OXTR1ZaHACu5rsZ24q/thFavFB4NHEowYj8M3dnxOuyzsHBQUBH?=
- =?us-ascii?Q?1Oe8eYKvw84UaUF2fJ9HGI2nLsxrO0fJtCNR3qi3wUzQl7CYaCzgXBmbS0hZ?=
- =?us-ascii?Q?CqCrWYlwyp5TfiQlyctAqoDYv8iSx8uBnw55m+qXupQXDntNCuOM4SCRZE89?=
- =?us-ascii?Q?37rKAv7CMLhS8XOSF5SMJl1JTRjXTyxMwg4x9J8V5PX/nArqBIozp8wHZUxp?=
- =?us-ascii?Q?mQM9zW2VY9XgdKAZSpg0T5yOFh3kCOd2OH6vCqWQC+OaXfvEwRoDBqLXoEH2?=
- =?us-ascii?Q?B4WAFa1uOQ=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S238060AbiDZMRt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 08:17:49 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AECD3793A1;
+        Tue, 26 Apr 2022 05:14:41 -0700 (PDT)
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220426121439epoutp0401d40543c66c374dc583ec79daa1fc7c~pcUTtjBsm2403224032epoutp04h;
+        Tue, 26 Apr 2022 12:14:39 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220426121439epoutp0401d40543c66c374dc583ec79daa1fc7c~pcUTtjBsm2403224032epoutp04h
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1650975279;
+        bh=0O69LIhroj7wI37uoYLFc4k8EiKu/Hjr+CxXLXQiZDI=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=fCZIlxoC8abjvZgiOGBavTj55jQpOhHYC8gCtXq0YsPcVG55P2lXs3l45QlfIJD8F
+         EHhA3QgY0IGuc+VP+1AL5IJzRzIraI95AlEZnnsHTG+EmIlAL+MkPP/li7ggEGSfl2
+         qZW2QMYR02b8JeiNuG7LVd7939XbzvguWuzyQtBA=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+        20220426121438epcas5p10d323e4e6161275933c063e854a206a8~pcUTVHmsQ2178321783epcas5p1J;
+        Tue, 26 Apr 2022 12:14:38 +0000 (GMT)
+Received: from epsmges5p3new.samsung.com (unknown [182.195.38.179]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4KngmV03q9z4x9Q0; Tue, 26 Apr
+        2022 12:14:34 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        75.F0.09762.922E7626; Tue, 26 Apr 2022 21:14:33 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15~paug6xF5B1971219712epcas5p4f;
+        Tue, 26 Apr 2022 10:18:04 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220426101804epsmtrp279588e73b7154a836e04af3ef14dd860~paug5evnb1306613066epsmtrp2l;
+        Tue, 26 Apr 2022 10:18:04 +0000 (GMT)
+X-AuditID: b6c32a4b-213ff70000002622-67-6267e229546a
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        D0.39.08853.BD6C7626; Tue, 26 Apr 2022 19:18:03 +0900 (KST)
+Received: from test-zns.sa.corp.samsungelectronics.net (unknown
+        [107.110.206.5]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20220426101757epsmtip1dbba971682fc11ea2415d9083f2b846b~pauasWk1T0320603206epsmtip1X;
+        Tue, 26 Apr 2022 10:17:57 +0000 (GMT)
+From:   Nitesh Shetty <nj.shetty@samsung.com>
+Cc:     chaitanyak@nvidia.com, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, dm-devel@redhat.com,
+        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+        axboe@kernel.dk, msnitzer@redhat.com, bvanassche@acm.org,
+        martin.petersen@oracle.com, hare@suse.de, kbusch@kernel.org,
+        hch@lst.de, Frederick.Knight@netapp.com, osandov@fb.com,
+        lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
+        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
+        jack@suse.com, nitheshshetty@gmail.com, gost.dev@samsung.com,
+        Nitesh Shetty <nj.shetty@samsung.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        James Smart <james.smart@broadcom.com>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 00/10] Add Copy offload support
+Date:   Tue, 26 Apr 2022 15:42:28 +0530
+Message-Id: <20220426101241.30100-1-nj.shetty@samsung.com>
+X-Mailer: git-send-email 2.35.1.500.gb896f729e2
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR04MB6564.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7a4ed34d-4312-44c4-54d0-08da277dc0c1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Apr 2022 12:10:28.4481
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: C7SZHVykLBQxA8TQR1/O5OAEp67DJ8ozgfYOcvMb4MzTtI7j6Tb5KXiavmMIrSHWeoFgf42O46QdMSH5kP6mkA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN3PR04MB2131
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA01TaVBbVRT2LXkJHcFXlumFDsKE6ShUlpSlF4Rildbn4AIuM1ot8IDXgECS
+        ScCKVGURKhRKQcsSoGBhZFgkyJ6SIFCRkkJBKVDQAmVprVE2KUjDIukD7b/vfOd89zvn3Dk8
+        zPgHrgUvXBTNSEV0JJ/YgzddtX3W3nZKGOxUUOoMFZqfMFh1O5OAOQtrGJzvmObA7Mw8LtT1
+        9WNwcMYIqucKOHDgnwQUTtdtoXC0XYlC1eVsFFZUdaHwXnkpAlu/WUTh+h0BvLM8hsPszmEE
+        zg7JUageOwhV6h4cDl4pJGDxt7NceG6khYBtWjUGy7s3UXhDvk7ArO56DmyZSUBgk64Yg1fH
+        h3BYo53H4bWx/TA5fY0L+ze6OS/YUIM3fSn5RB9BZSXNcSml/DaX6h//HqcG+2KouspUgqov
+        +5z66lY5QrWOxhNUYm8XRuUtLRNURtIcQSmTJzjU4uwYTs23DRF++05EeIYxdCgjtWZEIeLQ
+        cJHQi+/7VuBLga5uTgJ7gTs8zLcW0VGMF9/nVT/74+GR2zvkW39ER8ZsU360TMZ3POIpFcdE
+        M9ZhYlm0F5+RhEZKXCQOMjpKFiMSOoiYaA+Bk9Mh1+3CoIgwuTJK8qPFx5O3zhPxyJZxGmLA
+        A6QLuDGZgKYhe3jGZCsCUn4ZIdhgCQH5RW0YG6wg4EJHKXdX0jqdhLAJNQIGBuI5bJCMgqz2
+        8W0Jj0eQB8H1LZ5eYErioGJ1FdfXYGQPFyQpH6L6hAl5CFSMKQh9PU4eAEuV1nrakPQAv69m
+        IHoakI4gc2IvS+8FPfkzuB5jpBVIaix41BwgHxoA7aVehG3OByi1nRiLTcAf3Q07TVuAv+fU
+        BItPg+aUEpQVf4GANI0GZxPe4GfVBqo3xkhboLjiyNKW4KKmBmWNjUCGbgZleUPQcmkX24Bq
+        RcnO++ZgeDVhB1NAuVjB0WNj8iRo6NBiFxAr+WPzyB+bR/6/cwmCVSLmjEQWJWRkrhJnEXP6
+        v38NEUfVIY8uyc63BZmaXHDoRFAe0okAHsY3Nbx44FSwsWEoHfsJIxUHSmMiGVkn4rq94izM
+        wixEvH2KouhAgYu7k4ubm5uLu7ObgL/PUCOspY1JIR3NRDCMhJHu6lCegUU8qvUu6lUd3nht
+        rMenFj8W8GfTZgDH6eiH4vuvf/CX0VHH+lw81zk9N09VdeqBwr8o84GlMOd4aihT44BXv7Ls
+        YXYXm3knvfjE5KdP+AesVDhYda3fv97jXzJanFa7FiAeyX66y3tVncWD880L6wEnl0v7dVUc
+        TVz+2Zw3vp4K2q9qHhbcfbIi9hk7Ok1Q9qalJmGurfB8QrBVorN5y2rx87rIeY+zeT2N724M
+        x+P+v8aZKoYilgOPlUNVtuI53Zlz1fzfaCUn8b0X45ovvyzzDto0sSm8KU7h3mt4e3DmjOOR
+        2Kek3w2UVa1Utdt467SC4c9yG/1Sbcy+bH+f3vS2S7/W50nycVkYLbDDpDL6X4jE5znSBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA03SbUxTZxQH8Dz33t5eicVL0fBY3JydbApZWZlZzvAlRjd9DMMtS5zLcEo7
+        7ypKobQwt2kirOPDKozRTaOVl1EXCKASi7ytQBQoHeNVawXqtCNAXNRRUbQStF0KWea3k///
+        l5Pz4XC0NMjIuLSMbEGfoUqXs2FMY6f85TdudmvUb568mwh1f3TTUHuriIWTD2Zp8F0ZF4G5
+        6JQY5voHaXBNhEPb1BkRDD3No2DcFqRg9HILBa1WMwXVtQ4K7lSdRWCvmKbg2ZgSxmY8DJg7
+        biCYdFsoaPPEQWtbDwOu30pYKK+cFMPx4WYW2u+10VDlDFAwYHnGQrGzXgTNE3kIGufKaei8
+        7Wbgwj0fA797oiG/YFYMg8+dos2vEtf1JGLx9rOk2DglJi2WW2IyePsiQ1z9OcRW8z1L6n89
+        Rn4aqULEPprLkm/7HDQ59XCGJYXGKZa05HtFZHrSwxBfu5v9MOrTsA37hfS0LwV9/KbUsAOW
+        Fq2uS/bVXyM/sLkoKDWhRRzm12H7uBGZUBgn5e0IewdKRAvFclz5vItemCNxdeCOeAEZKXzO
+        2siaEMexfBzuDXIhs5RncLXfz4QMzU+LcWn70/lFkXwCrvbUzXuGj8EPa14JxRI+Ef/tL0Sh
+        GPPxuMgbsRBH4J7TE0wopvnXcV3Z/Jk0vxIbG87QP6IllheU5X9leUH9gugatFzQGbQarUGp
+        U2YIhxUGldaQk6FRfJ6ptaH5H4ld24yaah4oOhDFoQ6EOVq+VHIi5gu1VLJf9fU3gj5znz4n
+        XTB0oGiOkUdJhkw9+6S8RpUtHBIEnaD/r6W4RbJcqu6fI9sv7ESyR6vFK4ZzolfJK84nLZPO
+        eI/0yZNHHXueFG4NWBFeG+uKcynbe49/Eqlbs8kvsj72SqJiGhKElJUkGPBELt71wbLws7LP
+        tP6xt3vGfEuSzaZAuQYau7fsCC8g7Ezr0cLod3aXRmUy+TslB2s3Fq1wzOpSFe9nDx9Wr5cf
+        u5l4t2T04LtbDFaV+v62uFpb6ebHI+vuBy69dXFvU/KGufwrQ3lma6+m4NCq76xJV9/b6qwY
+        yMrao2jte1QaTNuV+5o75ePMvohreSnOLO1pW+Vum/rPsm0/v1R2yZ5AmTtT6wem4n3Fs5zL
+        0d21xp/WMNRZ5V5d8tH1JpIsZwwHVMpYWm9Q/QtVFxLzkgMAAA==
+X-CMS-MailID: 20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15
+References: <CGME20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15@epcas5p4.samsung.com>
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-=20
-> Fix following checkincludes warning:
-> drivers/scsi/ufs/ufshcd.c: linux/nls.h is included more than once.
->=20
-> The include is in line 14. Remove the duplicated here.
->=20
-> Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+The patch series covers the points discussed in November 2021 virtual call
+[LSF/MM/BFP TOPIC] Storage: Copy Offload[0].
+We have covered the Initial agreed requirements in this patchset.
+Patchset borrows Mikulas's token based approach for 2 bdev
+implementation.
+
+Overall series supports –
+
+1. Driver
+- NVMe Copy command (single NS), including support in nvme-target (for
+    block and file backend)
+
+2. Block layer
+- Block-generic copy (REQ_COPY flag), with interface accommodating
+    two block-devs, and multi-source/destination interface
+- Emulation, when offload is natively absent
+- dm-linear support (for cases not requiring split)
+
+3. User-interface
+- new ioctl
+- copy_file_range for zonefs
+
+4. In-kernel user
+- dm-kcopyd
+- copy_file_range in zonefs
+
+For zonefs copy_file_range - Seems we cannot levearge fstest here. Limited
+testing is done at this point using a custom application for unit testing.
+
+Appreciate the inputs on plumbing and how to test this further?
+Perhaps some of it can be discussed during LSF/MM too.
+
+[0] https://lore.kernel.org/linux-nvme/CA+1E3rJ7BZ7LjQXXTdX+-0Edz=zT14mmPGMiVCzUgB33C60tbQ@mail.gmail.com/
+
+Changes in v4:
+- added copy_file_range support for zonefs
+- added documentaion about new sysfs entries
+- incorporated review comments on v3
+- minor fixes
+
+
+Arnav Dawn (2):
+  nvmet: add copy command support for bdev and file ns
+  fs: add support for copy file range in zonefs
+
+Nitesh Shetty (7):
+  block: Introduce queue limits for copy-offload support
+  block: Add copy offload support infrastructure
+  block: Introduce a new ioctl for copy
+  block: add emulation for copy
+  nvme: add copy offload support
+  dm: Add support for copy offload.
+  dm: Enable copy offload for dm-linear target
+
+SelvaKumar S (1):
+  dm kcopyd: use copy offload support
+
+ Documentation/ABI/stable/sysfs-block |  83 +++++++
+ block/blk-lib.c                      | 358 +++++++++++++++++++++++++++
+ block/blk-map.c                      |   2 +-
+ block/blk-settings.c                 |  59 +++++
+ block/blk-sysfs.c                    | 138 +++++++++++
+ block/blk.h                          |   2 +
+ block/ioctl.c                        |  32 +++
+ drivers/md/dm-kcopyd.c               |  55 +++-
+ drivers/md/dm-linear.c               |   1 +
+ drivers/md/dm-table.c                |  45 ++++
+ drivers/md/dm.c                      |   6 +
+ drivers/nvme/host/core.c             | 116 ++++++++-
+ drivers/nvme/host/fc.c               |   4 +
+ drivers/nvme/host/nvme.h             |   7 +
+ drivers/nvme/host/pci.c              |  25 ++
+ drivers/nvme/host/rdma.c             |   6 +
+ drivers/nvme/host/tcp.c              |  14 ++
+ drivers/nvme/host/trace.c            |  19 ++
+ drivers/nvme/target/admin-cmd.c      |   8 +-
+ drivers/nvme/target/io-cmd-bdev.c    |  65 +++++
+ drivers/nvme/target/io-cmd-file.c    |  49 ++++
+ fs/zonefs/super.c                    | 178 ++++++++++++-
+ fs/zonefs/zonefs.h                   |   1 +
+ include/linux/blk_types.h            |  21 ++
+ include/linux/blkdev.h               |  17 ++
+ include/linux/device-mapper.h        |   5 +
+ include/linux/nvme.h                 |  43 +++-
+ include/uapi/linux/fs.h              |  23 ++
+ 28 files changed, 1367 insertions(+), 15 deletions(-)
+
+
+base-commit: e7d6987e09a328d4a949701db40ef63fbb970670
+-- 
+2.35.1.500.gb896f729e2
+
