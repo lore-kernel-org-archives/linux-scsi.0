@@ -2,146 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D16CFC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 12:18:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5F88C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 12:32:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349911AbiDZMVF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Apr 2022 08:21:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44914 "EHLO
+        id S1349964AbiDZMfu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Apr 2022 08:35:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349983AbiDZMTr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 08:19:47 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0182D6384
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Apr 2022 05:16:35 -0700 (PDT)
-X-UUID: 885ca9df70dc4a738728e56d5bd78eed-20220426
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.4,REQID:0ad0a0a2-2b53-429a-bbca-e9b9630b4fa1,OB:0,LO
-        B:0,IP:0,URL:8,TC:0,Content:0,EDM:0,RT:0,SF:50,FILE:0,RULE:Release_Ham,ACT
-        ION:release,TS:58
-X-CID-INFO: VERSION:1.1.4,REQID:0ad0a0a2-2b53-429a-bbca-e9b9630b4fa1,OB:0,LOB:
-        0,IP:0,URL:8,TC:0,Content:0,EDM:0,RT:0,SF:50,FILE:0,RULE:Release_Ham,ACTIO
-        N:release,TS:58
-X-CID-META: VersionHash:faefae9,CLOUDID:4d5fc22e-6199-437e-8ab4-9920b4bc5b76,C
-        OID:10581e1f1abb,Recheck:0,SF:13|15|28|17|19|48,TC:nil,Content:0,EDM:-3,Fi
-        le:nil,QS:0,BEC:nil
-X-UUID: 885ca9df70dc4a738728e56d5bd78eed-20220426
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
-        (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 566345750; Tue, 26 Apr 2022 20:16:30 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Tue, 26 Apr 2022 20:16:29 +0800
-Received: from [172.21.84.99] (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 26 Apr 2022 20:16:29 +0800
-Subject: Re: [PATCH v1] scsi: ufs: fix rpm racing issue
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
-CC:     "wsd_upstream@mediatek.com" <wsd_upstream@mediatek.com>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
-        "alice.chao@mediatek.com" <alice.chao@mediatek.com>,
-        "cc.chou@mediatek.com" <cc.chou@mediatek.com>,
-        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
-        "jiajie.hao@mediatek.com" <jiajie.hao@mediatek.com>,
-        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
-        "qilin.tan@mediatek.com" <qilin.tan@mediatek.com>,
-        "lin.gui@mediatek.com" <lin.gui@mediatek.com>,
-        "mikebi@micron.com" <mikebi@micron.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>
-References: <20220421144152.23888-1-peter.wang@mediatek.com>
- <DM6PR04MB657564C8412643B2D2F5E40DFCF89@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   Peter Wang <peter.wang@mediatek.com>
-Message-ID: <6542cd8c-675e-c229-215d-c7c47d85a7db@mediatek.com>
-Date:   Tue, 26 Apr 2022 20:16:28 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        with ESMTP id S1349970AbiDZMft (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 08:35:49 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF827BB08D;
+        Tue, 26 Apr 2022 05:32:40 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23QB4QU3008853;
+        Tue, 26 Apr 2022 12:32:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=0Xkvw/mDq6Smm39Y1oEhR7A6juK5FbgjN961jtxDNEE=;
+ b=XipDe+jil91Bmavp7d9saWmu314iUHGr7EPie/1Pklj2QaV/MvjR4AnN5iOEgCOBCYJS
+ fhHmFJwdMeRvynM76y/RoaKFRTx4aMpvmMyFW12l+F2GRyUOi+RJtqwlQK2qzTLjFfog
+ srFfRqfUHYgUpV/WIjnQP9p+eAgK24LgsiWsw/7hdi0LQ8YOgnmflTPpdmIJtm3xA9j0
+ JGu1o3+VVvyfZfOceyOzr+6aRQUO1OK4ExwSx8mvYCKKSUh4EfH5jFAjm3vc4mlaxlJN
+ 0meuqjCWQdYx7D+h/ufVZTtJGLtj8In1iuQJWcxTf64etKS6c2llSLbG+H4obODsDbOQ tA== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fmb0ywpst-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 26 Apr 2022 12:32:02 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23QCV4hr015960;
+        Tue, 26 Apr 2022 12:32:00 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2171.outbound.protection.outlook.com [104.47.57.171])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fm7w3ax0p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 26 Apr 2022 12:32:00 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Xv3uptlgHkGFUnzmsYdjcKJndybjpQ7ULfnz1Wh4OYmdNyqyC/xFGwOzIcSJI8UFBjm8qn188tomRqhZOrei0wFx3KR7fvO/mf3RvTImV9liUPdCTjYxXuS6yRhgzTuUUGCUPf0fIDGhzETUjvnn0eWwYs6JCHcE4TYzAyTU63PzHCCLKLHN2yw6QXOH1UYRwJ3xiYmPWWhCftXOISi/QmsEDylcSoIytSYDPmYkLBVmxAqyVENCaxrtFKfbhWXoGFqig2G/KuiZ3xtChjY7oSiSVpXlj0ysh0XuZu4EdsaSZpJIUvdtTEEdfUZdXsY+IGangs9Z+u6TYqN1qZRjMw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0Xkvw/mDq6Smm39Y1oEhR7A6juK5FbgjN961jtxDNEE=;
+ b=Z0NewZWsnMgYP6xNeJsKfS6Mw93fwpVmtlP9yHOr+8lGVjmMCQC4RCl/qNYl+DrVsiNy7+ziPFMxMsV0b6y+UgHG5kxoazkpRVMG8wBAR7jZ0Dscub4edNVTkdIdYw8KDp1uBq9MheDnxyuG7JwtyY+39ygjf3d1kk+XqT0chCRXuM353pNa3v0Lv6n1G7aX2LHjA/asVDncNY5iqwKVNhtCC9Id14CqoYreFhWc7nPdNFIUpJoiPhWzMNGJa6w8LHF7CtCnAYwBmF/R/YGUc7qlO4w7OFIr7wyasn6nhay0WfiCKaQobz800Ts8okphDSl+a+2kNX+Ey3fkegdSHg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0Xkvw/mDq6Smm39Y1oEhR7A6juK5FbgjN961jtxDNEE=;
+ b=ENSvOw6zwHc9mMJZFSlPN5ig7a85O5el9qjxFlu5LKmQcEYoBcDLtAgTA1zrQ2PJqhTpzlvUs/Un0xZKgXWGuu9eHdvQ4WUmkSVoIIfKW2DNixIkEoQ92yDlyw7OvHhzSiQ3cgIZATLs2/btb4FzJgzIRgh998aqdj6Aqry0z0s=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by DS7PR10MB5263.namprd10.prod.outlook.com (2603:10b6:5:38c::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5186.13; Tue, 26 Apr
+ 2022 12:31:58 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::d1db:de4e:9b71:3192]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::d1db:de4e:9b71:3192%9]) with mapi id 15.20.5186.021; Tue, 26 Apr 2022
+ 12:31:58 +0000
+To:     Wan Jiabing <wanjiabing@vivo.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: Remove duplicate include in ufshcd
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1zgk8t497.fsf@ca-mkp.ca.oracle.com>
+References: <20220426104509.621394-1-wanjiabing@vivo.com>
+Date:   Tue, 26 Apr 2022 08:31:56 -0400
+In-Reply-To: <20220426104509.621394-1-wanjiabing@vivo.com> (Wan Jiabing's
+        message of "Tue, 26 Apr 2022 18:45:07 +0800")
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR03CA0160.namprd03.prod.outlook.com
+ (2603:10b6:a03:338::15) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-In-Reply-To: <DM6PR04MB657564C8412643B2D2F5E40DFCF89@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: d94e282a-084e-480c-c511-08da2780c1c2
+X-MS-TrafficTypeDiagnostic: DS7PR10MB5263:EE_
+X-Microsoft-Antispam-PRVS: <DS7PR10MB52630005F0466229ACA3A4C58EFB9@DS7PR10MB5263.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: rcxNlyLfq7Jsd9rjGqhVSFODLyHcFk+1qcJQ1L42SroNsVbgep9yxFOoAzAqAa9kon62L1Y5VS8zC1328nO6i3IOvJ/MF3Xae1XRiUFxBrdSR4Sow9lozjcxCPqnH61RDMneq+qJFFodTsBf6DUPYghqtkoGkx0BgRiL0m3OYtvmWUyZdcOMDoC/j5jU9Pfg2yERC2rsiFGvqeLss0mH7UIpTF0Mk0Sh8GJaDKmjekVlPxzh+2288Sw8qubO4BEa3MIgXX/BzCJCQewy8Ff7gpNUpE+urLJaC+/Skcu4D16sdJiAyxO+VS0AnotfhQ1R1VGZ2dOw8Cxr1Xi53ujEM1wqRUFVBN9WktZZqSVdS7NbgfWmNfEiILBjpIkc76YpKvYPt2cOcVjW0lMnqwrqXcT6wSvPGWAser+ZRIttL/2HS4z89wThEco6JKwOFg76siMKJX2hTIwG51Ut+k2/sG/iqSabKzhJCjErH6zmnHeYJMohUEv0M9H2NHIrsqGkbgt+PLEumxvj9Ac6clWwfLDBBH3rj1lC3V114vuaKa2dKOE44eihNO9YLhlkRi2lM21BUOefmD5/jCbCaNR9ahbd08rWD8Uf80ZCUtmxKgb2yh5Pp7AcVVHp/2EcOkcAXsG56ZwC0GP3IubkFL1+VCgM/YWMZYH4cvSSxETmL6FlZBPV8auL88mWYeWfpe0yxN5SzGpd5ElILiTlUGiTtg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(66946007)(8676002)(66556008)(86362001)(66476007)(54906003)(52116002)(5660300002)(26005)(6512007)(6506007)(186003)(36916002)(558084003)(38100700002)(316002)(6916009)(38350700002)(6486002)(2906002)(83380400001)(4326008)(7416002)(8936002)(508600001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?WRHqU19dpJmrLAkQsy05DFaaCIb7ci8TJuwyp+ocNLL3iWi3E1Tv1cmPpkAa?=
+ =?us-ascii?Q?cyAuLqi45y/X0Svsr2S14Pjeu+guQlSxk4ArVGWRBbpiH814RpZvCxQyIdOk?=
+ =?us-ascii?Q?wlLr2giZCoFu/5So/NpHX/mjr/6lW60LdhnNH4w6pBQho2G0YDmAvEfIVvqq?=
+ =?us-ascii?Q?GOfQn+fRQqN3UW57PHKPIzCJAX5FubE3giN2nCO7OYU22kJnTcRudt/mcF3H?=
+ =?us-ascii?Q?zewiBuoA3xLx7AydSgD14dDJI3IVhfQmFpt+xrcEjjtiruHED05C8/sJfxIL?=
+ =?us-ascii?Q?zS1skbdNGxgOq8f3qlSVfENAtF32UnCE2DJx5XLW7I4opiGHhynTMUapJHzl?=
+ =?us-ascii?Q?+pDAdgEJCWR3Z48DQJx6MiPPecP6jmmE77PPDdg4wqUM4clpov2n6N81DSNX?=
+ =?us-ascii?Q?8Mb01W0TTEbK//MFmEcMirOidGkj0Q/Cgl5c0j6tVyoOIIahlmkMMmxdUrH4?=
+ =?us-ascii?Q?wdskAFE6N3i8uNlXJ/sjBE/rfg6IIoLirm/h7lL3owh9m4qZYCVVB8t7XQYO?=
+ =?us-ascii?Q?7twkn4r8ptEfTIbmCvj1SyfOWsae9ln1jC7H9qo0mq/bqWLwrN//jWHeD0+i?=
+ =?us-ascii?Q?Msx31edkbSq+c94c13sH8BbIRayoE7wOSPOXmGl43/7I0UCW7z3dsmvet9Fk?=
+ =?us-ascii?Q?udNNezVnXDvcgFvle4hqVog9PChlK68r8dC8Ks+0RWD3lF6r/6OnOqaeearX?=
+ =?us-ascii?Q?heOyVrZS5Dy33RWR6Zv+H7BAhi02AWoMskxJ2UM0dIBA1CFFXj5XiqYvHTiK?=
+ =?us-ascii?Q?63jJ6YAXiRpIGbRJN7g2a859/HhQOH1wlgBh0kyaLYWqSDUBlTwo8THAH/F7?=
+ =?us-ascii?Q?TiMjRvRMgoqjE6m7Jy5/v4ubTV+mAYXelIkRlqu8gvIxk0JumBUQxc3ximUm?=
+ =?us-ascii?Q?3zsSF35byOPLymrNae/7uh1K+cOjjhNP0zSxM/r0aqvapo/+ifik6r2Ei3n+?=
+ =?us-ascii?Q?pRxHddxkbfYhdHc6zYhf8SRoIDRyd1ahpPy//40qVDqxf1HQkj/Winm3jHNf?=
+ =?us-ascii?Q?yAw6yN2T85BF82xAVyPUodO37arm6u2AxqTMzlHBJZx4A0GdE/Ou10XzGLuT?=
+ =?us-ascii?Q?LE2+pUnSsPHHS3+ZMIw2Ivb2YyJDv1TyPlKXtK8Asw+ng3sMAZfSi/AEYk+y?=
+ =?us-ascii?Q?n6IWB6itRfTDDHz1l6/hUSg5ODSEKrM69mJoWAHFa3t2srY1sAVrat5yw2mR?=
+ =?us-ascii?Q?4PIvsUyK+ltRBxDIrthcQhF00Bq/hjt/fjJRDEchYn/yoHkwU1z8MNiFP01j?=
+ =?us-ascii?Q?rogczuU4Ch9wUMiSLQH+6Gz2vjzR4ZBaqbtxFw83XqsT+uxFbj7pnJpi+Qvc?=
+ =?us-ascii?Q?WLIVDoFRnkJMgOKns2ujWItZT2ttk2mCqi7VwK4UfGmXBA4F25iiou9muhaX?=
+ =?us-ascii?Q?84JAMdB8XB4eFmOJtYbWfHmhWEjwuwTMSDCsAdvwt4AXqdRV1nsnK/MpKVGB?=
+ =?us-ascii?Q?J+zk+twNNvvMOE7UgN4GvtT2pjPESt9n2t0lpFPhIINo+IAtGjM/rwUSJmw9?=
+ =?us-ascii?Q?eljKHIWPFfzTyx0+F4rfl/D+Ro0slLo+1TAA0eLxUrfC60vdhbByg3/oxjmJ?=
+ =?us-ascii?Q?wGvqjJkV4+XSV5xTbzsLIj1LkuTqhakBq2eMlJ4CjNt7FOVE1Gmrm7td4y8z?=
+ =?us-ascii?Q?YsVwX1Wot1NFNP3urFs9yqX5HRfozpdVjbYBHWs+KGzJoolo38JMJdprhGvi?=
+ =?us-ascii?Q?eLjMdpJxbr843VUWzx4kCNf+3E/XcBxN0xxmFlgQSf5OxP3lwiqihTfk3a5J?=
+ =?us-ascii?Q?S10Haefe9qUSDvnRhWjFt09vhLX0Fe4=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d94e282a-084e-480c-c511-08da2780c1c2
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Apr 2022 12:31:58.7504
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 3quR409dCU5tmDpQ0vPgGzT7MCZnEJaZRKXGiwTHwWxap9nTGLC72JEW764EHGT4lf3eOvu3gRb9cXLS7fjwONBcWnHugWd7lUQaBzA4DC4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5263
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.858
+ definitions=2022-04-26_02:2022-04-26,2022-04-26 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
+ mlxscore=0 bulkscore=0 suspectscore=0 malwarescore=0 mlxlogscore=911
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
+ definitions=main-2204260080
+X-Proofpoint-ORIG-GUID: V5d5SMbDZmpMvuTHczcxRIRUToAnT9XU
+X-Proofpoint-GUID: V5d5SMbDZmpMvuTHczcxRIRUToAnT9XU
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-On 4/25/22 4:35 PM, Avri Altman wrote:
->   
->> From: Peter Wang <peter.wang@mediatek.com>
->>
->> Device WLun may enter RPM_SUSPENDED and the consumer is RPM_ACTIVE.
->>
->> The error state is
->> Device Wlun RPM: status:2, usage_count:0
->> Consumer: 0:0:0:49476 Link: rpm_active:1, RPM: status:2, usage_count:0
->> Consumer: 0:0:0:49456 Link: rpm_active:1, RPM: status:2, usage_count:0
->> Consumer: 0:0:0:0 Link: rpm_active:1, RPM: status:2, usage_count:0
->> Consumer: 0:0:0:1 Link: rpm_active:1, RPM: status:2, usage_count:0
->> Consumer: 0:0:0:2 Link: rpm_active:1, RPM: status:0, usage_count:0
->>
->> Because rpm enable before rpm delay set, scsi_autopm_put_device
->> invoke by scsi_sysfs_add_sdev may cause consumer enter suspend
->> immediately.
->> Thas will always set rpm_active to 1.
->> If driver_probe_device invoke pm_runtime_get_suppliers just befor
->> previous scsi_autopm_put_device, the rpm_active will change to 1
->> after pm_runtime_put_suppliers.
->> Set this delay to avoid scsi_autopm_put_device enter suspend immediately.
->>
->> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
->> ---
->>   drivers/scsi/ufs/ufshcd.c | 8 ++++++--
->>   1 file changed, 6 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 3f9caafa91bf..1250792d16be 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -5024,10 +5024,14 @@ static int ufshcd_slave_configure(struct
->> scsi_device *sdev)
->>           * Block runtime-pm until all consumers are added.
->>           * Refer ufshcd_setup_links().
->>           */
->> -       if (is_device_wlun(sdev))
->> +       if (is_device_wlun(sdev)) {
->>                  pm_runtime_get_noresume(&sdev->sdev_gendev);
->> -       else if (ufshcd_is_rpm_autosuspend_allowed(hba))
->> +       } else if (ufshcd_is_rpm_autosuspend_allowed(hba)) {
->>                  sdev->rpm_autosuspend = 1;
->> +               pm_runtime_set_autosuspend_delay(&sdev->sdev_gendev,
->> +                       RPM_AUTOSUSPEND_DELAY_MS);
->> +       }
-> Maybe remove ufshcd_blk_pm_runtime_init from ufshcd_scsi_add_wlus,
-> And call here ufshcd_blk_pm_runtime_init() ?
+Wan,
+
+> Fix following checkincludes warning:
+> drivers/scsi/ufs/ufshcd.c: linux/nls.h is included more than once.
 >
-> Thanks,
-> Avri
+> The include is in line 14. Remove the duplicated here.
 
-Hi Arvi,
+Applied to 5.19/scsi-staging, thanks!
 
-
-Thanks review, but I need discard this patch because it is not correct.
-
-Sorry for inconvenient.
-
-
-Thanks
-
-Peter
-
->
->> +
->>          /*
->>           * Do not print messages during runtime PM to avoid never-ending cycles
->>           * of messages written back to storage by user space causing runtime
->> --
->> 2.18.0
+-- 
+Martin K. Petersen	Oracle Linux Engineering
