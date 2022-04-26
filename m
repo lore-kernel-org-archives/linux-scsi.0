@@ -2,83 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C8ACC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 04:01:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75E69C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 04:01:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243741AbiDZEEF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Apr 2022 00:04:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59574 "EHLO
+        id S243824AbiDZEEQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Apr 2022 00:04:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243660AbiDZED5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 00:03:57 -0400
+        with ESMTP id S243745AbiDZEEF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 00:04:05 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D50E12633;
-        Mon, 25 Apr 2022 21:00:51 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23Q3rX19022277;
-        Tue, 26 Apr 2022 04:00:47 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52EAD1263F
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 21:00:59 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23PNTE78017491;
+        Tue, 26 Apr 2022 04:00:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=YtF2I6bZ2CqMK9GSqQlDwN70ct9X7AOPMuRUyJ5XD34=;
- b=sYbDhuD06ibuX53ceYl1TpdxTecDYDAYljQAxG0tA/9dVQsSgEyQ3w/3sLBjHGiQ1nIG
- m/Q+dwEe4+zZgeS1A8FhtsaJ1z7doEqLU0t8o26SoycRjkqhiQFRbfgcDCvsTb8YJyGH
- SK74kkz32doy/CsgfQX0qn7qJsTWHW4WnyCWn3cmpFW/OQhOhw7BXdnTk3eWq9cHfAa9
- xbrrBFni07XURnU48NQ3jfrudz9xavw0A6b67dlbjI4ie5q91Q14fG/qlmK/tcacisJn
- cSNRkzITq2AQou9N3SDDLBTAJ0q64HgAgW8NWd/CaJuOzB09pprq3BmwZSeqqUgNrQt5 tQ== 
+ bh=hN+44BCwUhCacNPQj3fs01DRNvC6Vofee0pfgkompGo=;
+ b=coZMbmo/GjCVmd69Xm16rNympRMNOeuC7mpfSyeZL2BHbNTknm7lGbbBYBbLF4LGO3wm
+ TdMTgwPA1Lkd+d7HvNKYRsmrQhoL1DzOTbYtxKqEr/MPIqm8jT/CQWyoOlq/oB+L0BdF
+ ZMtwB9LzRN4DIO0tMsTvbXOKJl/cYgdKgqyqP19oMHF/Op2p7/pyiXTIicvj7PR/PStA
+ Gw9FjyKRXj5Zf0CxaUBVQ3JdLX7znXx9IaRclBmkXnObd6yi/cfj0xS0hLGuh8XUAdE4
+ oNAF4ufhd1AZYjTgy8NQhkFatAWM0/w9VZZqatUyAlBfdpigDp4tK4p5FZua/hcyXGL2 5A== 
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fmaw4d0br-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fmbb4mt4s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 26 Apr 2022 04:00:46 +0000
+        Tue, 26 Apr 2022 04:00:49 +0000
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23Q40RBG029582;
-        Tue, 26 Apr 2022 04:00:46 GMT
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23Q40VkI029711;
+        Tue, 26 Apr 2022 04:00:48 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fp5yj3v1a-1
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fp5yj3v2w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 26 Apr 2022 04:00:46 +0000
+        Tue, 26 Apr 2022 04:00:48 +0000
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 23Q40juP030030;
-        Tue, 26 Apr 2022 04:00:45 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 23Q40juX030030;
+        Tue, 26 Apr 2022 04:00:48 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fp5yj3v10-1;
-        Tue, 26 Apr 2022 04:00:45 +0000
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fp5yj3v10-5;
+        Tue, 26 Apr 2022 04:00:48 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 To:     linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Hannes Reinecke <hare@suse.de>, Yihao Han <hanyihao@vivo.com>,
-        linux-kernel@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>, kernel@vivo.com
-Subject: Re: [PATCH] scsi: fcoe: simplify if-if to if-else
-Date:   Tue, 26 Apr 2022 00:00:40 -0400
-Message-Id: <165094528687.21993.818175220673009011.b4-ty@oracle.com>
+        Sumit Saxena <sumit.saxena@broadcom.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        kashyap.desai@broadcom.com, sathya.prakash@broadcom.com,
+        Hannes Reinecke <hare@suse.de>,
+        Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+Subject: Re: [PATCH] scsi: increase max device queue_depth to 4096
+Date:   Tue, 26 Apr 2022 00:00:44 -0400
+Message-Id: <165094528688.21993.15493001281989662965.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.35.2
-In-Reply-To: <20220408081237.14037-1-hanyihao@vivo.com>
-References: <20220408081237.14037-1-hanyihao@vivo.com>
+In-Reply-To: <20220414103601.140687-1-sumit.saxena@broadcom.com>
+References: <20220414103601.140687-1-sumit.saxena@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: 0wzTlgmboAoNDySwbRc0ekE62d_lRvHP
-X-Proofpoint-ORIG-GUID: 0wzTlgmboAoNDySwbRc0ekE62d_lRvHP
+X-Proofpoint-ORIG-GUID: 0M7wjlpZrfGAYKjhgsFAn8KHyuWgIF45
+X-Proofpoint-GUID: 0M7wjlpZrfGAYKjhgsFAn8KHyuWgIF45
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 8 Apr 2022 01:12:37 -0700, Yihao Han wrote:
+On Thu, 14 Apr 2022 06:36:01 -0400, Sumit Saxena wrote:
 
-> Replace `if (!is_zero_ether_addr(mac))` with `else` for simplification
-> and add curly brackets according to the kernel coding style:
+> Maximum SCSI device queue depth limited to 1024 is not sufficient
+> for RAID volumes configured behind Broadcom RAID controllers.
+> For a 16 drives RAID volume with 1024 device QD, per drive
+> 64 IOs(1024/16) can be issued which is not good enough to achieve
+> performance target.
 > 
-> "Do not unnecessarily use braces where a single statement will do."
-> 
-> ...
 > 
 > [...]
 
 Applied to 5.19/scsi-queue, thanks!
 
-[1/1] scsi: fcoe: simplify if-if to if-else
-      https://git.kernel.org/mkp/scsi/c/65db22e505c4
+[1/1] scsi: increase max device queue_depth to 4096
+      https://git.kernel.org/mkp/scsi/c/f9bdac31cf4b
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
