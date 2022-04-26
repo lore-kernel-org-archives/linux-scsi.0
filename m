@@ -2,147 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB2EFC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 07:44:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04763C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 10:15:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343838AbiDZHrX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Apr 2022 03:47:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57034 "EHLO
+        id S1348704AbiDZKSr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Apr 2022 06:18:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238615AbiDZHrU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 03:47:20 -0400
-Received: from APC01-SG2-obe.outbound.protection.outlook.com (mail-sgaapc01on2118.outbound.protection.outlook.com [40.107.215.118])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1587C1334EC;
-        Tue, 26 Apr 2022 00:44:12 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=DD8ohwFbEoX3tHPDohP3L4HGGep5g3mN+haowReq8Q9+4IeZ4us3WdcskhGkKvF0ZxeBFrl2yD8XbjstDfPOwlUrzMs1p9oxW2K8n55u8WNwQXgs/LJdGYorVzVDx3O5E+V+OyD+44J/xI9gTUMQDkUg1H7ICQOLNnQUzOzMBKTkOww5czyVJf92QzRedFQSQ4r8TDJ+GR4aJQptYH6auLHUi27jTY30vAtxSXrcWbKPXBZF9pUqHa+/tnI/8eI0/2bgIYWfijl5LwWafyBjzO8W5anKHE6bVXJSku6pnnlPYMb0cbn3L10oGn61jZYKrsrlngipkdb6hX+ReVOlVg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=l8GUAOCiEb7yUbznRrQMLFIj8tUn/zjgr/VRgWHTbws=;
- b=HVQPaMBMXIaxsifw0DB3UWBaoo8kL3YaLPnbHLnOuPFMLQHHrVaDHC1H4Cp8OqUCnaR54R/2+tEQe3QplHc3FWPPUHDpZ6j0Lo/onQ5bWl1w2AOZlwxloLF5kaONaH0l841ch+Ugsgxl1NJPT9JdgVMEV2f1Lfqqk/397VG8PYEYSwTrXlQQDN7uT2i8bdVDw3rL/r18Galp+bL891rgAQU2jvV9IJ3+r+PA7mLnkA9PNg5bB4Iw4dhv6P0YtFv2FNwq3WfATTOfh0KXwYVFDnBuH+FZuF13ymi0viwh9dhyNoRJExhc0L9eL4A+F6yPui1oh/yCEsRI1JzIzq+e+Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo0.onmicrosoft.com;
- s=selector2-vivo0-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=l8GUAOCiEb7yUbznRrQMLFIj8tUn/zjgr/VRgWHTbws=;
- b=e6sXMuUzFHkSf76JLtCYiV1f3wlNSIzNYJ0ErpUro9AlJBzrCr2Qo398S9b7PoKkwzTq14BDeJ10uo8ILDDpPkz/keuY2tGCiJunWU94EnyMo4b0zbmWCu1YSvEInR20xTgknPeasKhYy4e2n8Mi9DR1zxQ9RpOr2E90ctWbENc=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from HK2PR06MB3492.apcprd06.prod.outlook.com (2603:1096:202:2f::10)
- by PS2PR06MB3494.apcprd06.prod.outlook.com (2603:1096:300:6b::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5186.13; Tue, 26 Apr
- 2022 07:44:07 +0000
-Received: from HK2PR06MB3492.apcprd06.prod.outlook.com
- ([fe80::88e1:dc04:6851:ad08]) by HK2PR06MB3492.apcprd06.prod.outlook.com
- ([fe80::88e1:dc04:6851:ad08%7]) with mapi id 15.20.5186.021; Tue, 26 Apr 2022
- 07:44:07 +0000
-From:   Guo Zhengkui <guozhengkui@vivo.com>
-To:     Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com (supporter:QLOGIC QLA2XXX
-        FC-SCSI DRIVER), "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S245283AbiDZKR7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 06:17:59 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6637684EC7
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Apr 2022 02:41:20 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id p12so5765116pfn.0
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Apr 2022 02:41:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sslab.ics.keio.ac.jp; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=1jOH8rAGyNAfrVKutMKwb0QCsVCCxKT/dVNbhlwht0k=;
+        b=Ek72Yl6tIpqA1Fs2+GFRgaQs/2NH3RexVJ6XT8LGU1K9T2HgxCxgkIJd9e3OJyiDBC
+         5hBSrFUxUD51pu6oGsxjdQ8bL5mWXqgYSRhlZRuQyoEeW55IQC4g0Pqghy/uVVv3lJLJ
+         QgptL4RrcOoY73ItHLHy/1SgUYKkmszKYUCe8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=1jOH8rAGyNAfrVKutMKwb0QCsVCCxKT/dVNbhlwht0k=;
+        b=7BF/Z0+8XMtVssPuXEJLwUqv4HAHkKbpCOIAgPA2oaq1ggYIBrEM4b0VxqPosHvSgk
+         /8mmhTGo05Ks0St5cPiMvuzGD7CGIoxjVoBpKRZPosVu0hXZED2Z0WEXLcdk5Ngzdthu
+         3vyJUrJ11dBEpR11GAdr9BULV38TvwqYTgkUu6/WYfKPhldmnn7vCBiFyR4QMMtBF8iG
+         krCUYWxjsihpGdf7gzl0aSdTdMbfWBVnF5Dr2XafSNwT5Lopge5hvy8Ov3t+fxs5/K2J
+         CaEVBl/tjS+96atrk7Chb2Plgn8ONyzqSSjEFpGnfJGHVEynaU0MmRaeb2jHSKHhmXqZ
+         KfMQ==
+X-Gm-Message-State: AOAM532XkBBOFjHpNIJ+qFmWPeI2648hTsC4wiXAXI3ARIczZONXXBxh
+        YhbH8sxz+5ZPANYkk8A0PtG38w==
+X-Google-Smtp-Source: ABdhPJxOZtau5W7MdbpmUhec9B1zfXcdNRcZ0cGxGRDb7pmzc+b6ZvmOrf9+o2UFy6sF4GbX2WaaBA==
+X-Received: by 2002:a65:6751:0:b0:3aa:1a59:49f7 with SMTP id c17-20020a656751000000b003aa1a5949f7mr18988384pgu.35.1650966079847;
+        Tue, 26 Apr 2022 02:41:19 -0700 (PDT)
+Received: from saltlake.i.sslab.ics.keio.ac.jp (sslab-relay.ics.keio.ac.jp. [131.113.126.173])
+        by smtp.gmail.com with ESMTPSA id n92-20020a17090a5ae500b001d93118827asm2274502pji.57.2022.04.26.02.41.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Apr 2022 02:41:19 -0700 (PDT)
+From:   Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+Cc:     sdeodhar@marvell.com, aeasi@marvell.com,
+        Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>,
+        stable@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org (open list:QLOGIC QLA2XXX FC-SCSI DRIVER),
-        linux-kernel@vger.kernel.org (open list)
-Cc:     zhengkui_guo@outlook.com, Guo Zhengkui <guozhengkui@vivo.com>
-Subject: [PATCH] qla2xxx: edif: remove unneeded variable
-Date:   Tue, 26 Apr 2022 15:43:34 +0800
-Message-Id: <20220426074334.9281-1-guozhengkui@vivo.com>
-X-Mailer: git-send-email 2.20.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SG2PR06CA0185.apcprd06.prod.outlook.com (2603:1096:4:1::17)
- To HK2PR06MB3492.apcprd06.prod.outlook.com (2603:1096:202:2f::10)
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Quinn Tran <quinn.tran@cavium.com>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Andrew Vasquez <andrew.vasquez@qlogic.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: qla2xx: Fix double free in qla2x00_probe_one()
+Date:   Tue, 26 Apr 2022 09:40:30 +0000
+Message-Id: <20220426094031.750135-1-keitasuzuki.park@sslab.ics.keio.ac.jp>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 05bb3c0a-c65a-47e9-c770-08da27588b3d
-X-MS-TrafficTypeDiagnostic: PS2PR06MB3494:EE_
-X-Microsoft-Antispam-PRVS: <PS2PR06MB3494BE88D7C34CFE460D800FC7FB9@PS2PR06MB3494.apcprd06.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 7SlK4GnnJjFt73ShuhSia8ldKRllTdGUzlM64jtqGx9E+Mrf62mnAPzwzqZXjAintlGE7qMuLZTB2CnCtSAXxvlzwfkmg5X3P+vRDrmJfB8MnbWOL/NhXNTB0rrSubqV/njd345HpNQPa6VsuoQi8AzVuhNPumxXjY1DVIjFRvVoE+xhrkb3S8BlpQjFtmYoppfyaY0T6KeyC0QVBQ8W5VW1Z3CHDWPCFm+2d3T/Td2WKP+oPXHVmHOoormTu46gzk9Cy8g/xK5u99NIJF8hzPmLsZEA2HaASY5kdQtjDvgpLqvFFCgwkrFoT/Gc+7w37mDrvfG8ahH4gPwRxiu7sNK9DLquCrIMHKKOjGrCJiFkUQz/umx1No3Gv1olbF3lu8pyaSc27PgSEDKXEy4uzJYPiscFuFbR/U4ZhVnOFaXTsMLTA5w8Yxl5qxTtxNHTRVc7Y9Vzftkxoc48LtB/YNFtz7AwGMNUGxOA1SAPi7FzCEb4f+qKCBFzmIB2ASXuqOWdOzGFwitUYlaw+Q4vl+ZUPbD/7YEaH0w8Aqn3vmPxLNZRpVyfMk60hhD6oXaxB1Z1Wnqtn2+DAZ69qCi27n15u52gqA2NZ1PvvEchF8tTKqwSOI8JvBv9kZw1ICZXa6h7yykcIS8OrBy7e+0z1aHXkjrexGAHD1lOztfPUTwuMaWd9ipWH4kPWFAd1fKyB8ZVvKL4cbJ3+qsWhquokA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:HK2PR06MB3492.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(4744005)(66476007)(316002)(86362001)(2616005)(107886003)(5660300002)(38350700002)(38100700002)(6666004)(83380400001)(52116002)(2906002)(66556008)(6512007)(6506007)(66946007)(8936002)(4326008)(26005)(186003)(1076003)(110136005)(8676002)(6486002)(508600001)(36756003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?5osIC9YdJZxY6obUxJV3NVjUqZ6Gnqem9ZaP2XwsOmbFFxfurdiyK5bIVwXA?=
- =?us-ascii?Q?6X8O5GX8n2DU8Ly5k6V7fZnO3dtrAWMfQ38FIxHtMJf/yFJD/Y2JsvNuWsKh?=
- =?us-ascii?Q?gpRsbX0liCvlU2K56hJz0N3d9ulB7Z61RtbFcz7ZZYGc9UHO05pVd0giW571?=
- =?us-ascii?Q?aSbSXfkyTGoRLlEv18NeT0aEwEgH2O86wZIIrQuzIkoIkFIuqVpxoIRubnlj?=
- =?us-ascii?Q?Pa4+d0VM0DgfrvPsrWVvfX4wvNpXT/YsDNO22k+LDNsIDOcN6oFRQlFwnXTI?=
- =?us-ascii?Q?zrhGapzIgonU/DXmJY8GF/kqeef2ROMMt0P7HPdDpvzfvTJWpJA2xMKcK7VN?=
- =?us-ascii?Q?Cf6GwCjCafQyNrXx5AIUDa0bRcWS453ZfuII72dcWLu48aCjVQgz9dkebNSZ?=
- =?us-ascii?Q?AUt5K8STiljRdh1JaO2myqOqJWN0LdQ8w8zrzE+OAq2Y7OdHyP6HVIKdcpx9?=
- =?us-ascii?Q?s/Bjz8YGSn2UBU/hUvG4vxb9/LRk01n/cffzfdq96T7zRVO8urfLkdDlcfh3?=
- =?us-ascii?Q?VFYUdnhUAUqWSviS/FNBeMnC/KrV9rqahP8VvsVlG+jffZ/xw6blU1KW15k+?=
- =?us-ascii?Q?ibWpiLIB9D2KFd1nkO+hhj/8uyZqzXxsq2uLnq0JhD22X+YkmGG0wQ+n4Euk?=
- =?us-ascii?Q?z1OejoJDuwmJ38u56tklx1SqM9YRUKK+H157o9GpDmsICDyw8HpiXdWycYVr?=
- =?us-ascii?Q?weGEvXArVOi8H+i8wqGZPHg8SdvsJl7Ecw4M560XIgY+naJqiD1D8Jj4FkhF?=
- =?us-ascii?Q?38U5upAuS5Sfozq5TuOqXPXu0GVdG89txKHSEkOJzAA5emJwPyAjCspsac3e?=
- =?us-ascii?Q?jhe1jaYKgVeQFVeAAjZ+DYI5NFNpt3O5moqWH1LJAzB/Q+4JRy6MDyNiG3ri?=
- =?us-ascii?Q?7dnw0uejRiu6LYmhh9e+bvIK4FtNEVj7ajtQIdgkA4jOkXOsY2LdY7SUs9zJ?=
- =?us-ascii?Q?P9wgDnO/VYCV/Ho+B6Wnb5wSKkB/MrNS/VbOtiYDRCONptGY79Los2e8jafy?=
- =?us-ascii?Q?NhnKd0oPOvTMvcZXF9XGecX8OeoFIfmDxRDx1tKb4iqOgHGFThiewn4GphiR?=
- =?us-ascii?Q?+sbneazNdUbEAWbcQ6gOT7riwZQTXBlvpHxW9ywN9Eor7OANbmi88VKtss3B?=
- =?us-ascii?Q?i5cMzyutbJtxL/vhQ4YqZMUtmy3JFXE1jmcKXTeHDtJ8/6S8x+QSdTku/ayd?=
- =?us-ascii?Q?ODwePfnRaCNyEbgfUIAAkMtdNbvqtEIqKjnG40VMFV4iSgHNiD1sHney5gGL?=
- =?us-ascii?Q?gSZTIQlD4zQ7OXcrkdpy2Vhiqcw/6JPmh1hK38c5+h50TCjxfImSveGsdYtE?=
- =?us-ascii?Q?9xPVcLDhOfAPxTmotFJOmRqc/qX+WwwQ/9f0DMwHY/AwpkHZa78jOdTUEWbF?=
- =?us-ascii?Q?V7vCWyxOldkWmVZm1iWbbdwiXVjpQEK46jPwcDcN1kYRwHKyviIwrtybnDQF?=
- =?us-ascii?Q?mURatKNtkj/VDsiy/wyTHB/Z6lv1vD9HmF7gWWzUMtEBjE3kXgX7Xg2tkg/E?=
- =?us-ascii?Q?08MC/o6SmBqIlbTnDRcE4JbAMhYgOntlGSoy1yezIzgEmnvlC0puUQdMPGfS?=
- =?us-ascii?Q?wFFHS0mg30b3v+yPcZDlLs9OS7w3lXlpvkYylxdTVBMpeDcH8HtPudUBGCZG?=
- =?us-ascii?Q?9het29yWJ/m6XX/o7J0lYL8AEoRHYEbWnwLnGjm43QXdccSVqVOMR7BAqgk6?=
- =?us-ascii?Q?ZRTsntTyJABgg2KAPYB1dmi6/oM3CAPuh9cglbZPlNPLffXzPpVtSaRRweiR?=
- =?us-ascii?Q?qSDsavZ/nQ=3D=3D?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 05bb3c0a-c65a-47e9-c770-08da27588b3d
-X-MS-Exchange-CrossTenant-AuthSource: HK2PR06MB3492.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Apr 2022 07:44:07.5221
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: biGvmRnsXez+54E1JQBXENsW1FLTj6pE1WThOUaWxwm1hjgp66LQi1Io49DL2IniVPdpwTf4QaxxxGyshez35Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PS2PR06MB3494
+Content-Transfer-Encoding: 8bit
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following coccicheck warning:
+In qla2x00_probe_one() -> qla2x00_mem_alloc(), fields in variable ha
+is allocated and initialized. Fields ha->loop_id_map and ha->npiv_info
+are also allocated in this function, but are freed when the function
+encounters an error. Function qla2x00_probe_one() then calls
+qla2x00_mem_free() to handle the error, which frees the corresponding
+fields again. This results in double free of ha->loop_id_map and ha->
+npiv_info, since the fields are not NULLed after freed the first time.
 
-drivers/scsi/qla2xxx/qla_edif.c:660:11-15: Unneeded variable: "rval".
-Return "0" on line 761.
+Fix this by storing NULL to the corresponding fields inside
+qla2x00_mem_alloc() error handlers.
 
-Signed-off-by: Guo Zhengkui <guozhengkui@vivo.com>
+Fixes: e4e3a2ce9556 ("scsi: qla2xxx: Add ability to autodetect SFP type")
+Fixes: b64b0e8fd964 ("[SCSI] qla2xxx: Pass in optional extended-initialization control block.")
+Cc: stable@vger.kernel.org
+Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
 ---
- drivers/scsi/qla2xxx/qla_edif.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
-index 0628633c7c7e..cb8145a9ac09 100644
---- a/drivers/scsi/qla2xxx/qla_edif.c
-+++ b/drivers/scsi/qla2xxx/qla_edif.c
-@@ -657,7 +657,6 @@ qla_edif_app_chk_sa_update(scsi_qla_host_t *vha, fc_port_t *fcport,
- static int
- qla_edif_app_authok(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- {
--	int32_t			rval = 0;
- 	struct auth_complete_cmd appplogiok;
- 	struct app_plogi_reply	appplogireply = {0};
- 	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
-@@ -758,7 +757,7 @@ qla_edif_app_authok(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 							       &appplogireply,
- 							       sizeof(struct app_plogi_reply));
- 
--	return rval;
-+	return 0;
- }
- 
- /**
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 762229d495a8..a0b40578dbc8 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4396,6 +4396,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
+ 	    ha->sfp_data, ha->sfp_data_dma);
+ fail_sfp_data:
+ 	kfree(ha->loop_id_map);
++	ha->loop_id_map = NULL;
+ fail_loop_id_map:
+ 	dma_pool_free(ha->s_dma_pool, ha->async_pd, ha->async_pd_dma);
+ fail_async_pd:
+@@ -4404,6 +4405,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
+ 	dma_pool_free(ha->s_dma_pool, ha->ex_init_cb, ha->ex_init_cb_dma);
+ fail_ex_init_cb:
+ 	kfree(ha->npiv_info);
++	ha->npiv_info = NULL;
+ fail_npiv_info:
+ 	dma_free_coherent(&ha->pdev->dev, ((*rsp)->length + 1) *
+ 		sizeof(response_t), (*rsp)->ring, (*rsp)->dma);
 -- 
-2.20.1
+2.25.1
 
