@@ -2,91 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF98C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 04:01:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDCCFC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 04:13:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239859AbiDZEES (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Apr 2022 00:04:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60736 "EHLO
+        id S244025AbiDZEQo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Apr 2022 00:16:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243798AbiDZEEP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 00:04:15 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C5B617051;
-        Mon, 25 Apr 2022 21:01:06 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23PL8t2i022267;
-        Tue, 26 Apr 2022 04:00:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=VfaAkAPyUePRFxMzN4vqCs4A6PVXSAifuZPdHgE9/bI=;
- b=g30R3MYw16RtEFJoD/k/wG7apkc24EzrkocSqiTxKqOanPgiMm8TrNvPwmGPiSH2OPGn
- DtMVSx9bNUJNvK8eYhTyyPW2osoW4uN5Zyf6KNcL1upxZZCt0hwdTKC53CfyRpBp3wA5
- 3fDnWX+G7TXLBoJAC7QiaX8XJwt8/A6JEvwYZs6W9OC4h0xqMnTu9B4Tot5rGAqlK11f
- 4J8Yylg5ttBqSb+Ht7SwTsZds63CKPsNjZCZBCQ2ks/u67LsronCEAfYjqoeBYXjBdJO
- VNsnzqek+waFTQnrZIupbsCwpQNsJmb7Ey13B2X/9n2eGAXf1ibMM/2u1KbKdg7bRMnO PA== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fmaw4d0bt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 26 Apr 2022 04:00:49 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23Q40QVv029494;
-        Tue, 26 Apr 2022 04:00:48 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fp5yj3v2c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 26 Apr 2022 04:00:48 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 23Q40juV030030;
-        Tue, 26 Apr 2022 04:00:47 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fp5yj3v10-4;
-        Tue, 26 Apr 2022 04:00:47 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Po-Wen Kao <powen.kao@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        chun-hung.wu@mediatek.com, chaotian.jing@mediatek.com,
-        linux-scsi@vger.kernel.org, stanley.chu@mediatek.com,
-        linux-arm-kernel@lists.infradead.org, cc.chou@mediatek.com,
-        wsd_upstream@mediatek.com, peter.wang@mediatek.com,
-        alice.chao@mediatek.com, yohan.joung@sk.com,
-        jiajie.hao@mediatek.com, linux-mediatek@lists.infradead.org,
-        huobean@gmail.com, jason.li@sk.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] scsi: ufs: remove redundant HPB unmap
-Date:   Tue, 26 Apr 2022 00:00:43 -0400
-Message-Id: <165094528686.21993.15243100183282892659.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.35.2
-In-Reply-To: <20220412073131.10644-1-powen.kao@mediatek.com>
-References: <20220412073131.10644-1-powen.kao@mediatek.com>
+        with ESMTP id S231926AbiDZEQn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 00:16:43 -0400
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F10D618B28;
+        Mon, 25 Apr 2022 21:13:36 -0700 (PDT)
+Received: by mail-pg1-f180.google.com with SMTP id bg9so15056310pgb.9;
+        Mon, 25 Apr 2022 21:13:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=AY731iI+S8F0M/j7fMQ9Mkrc8kLhYo3SZm7WX0TOCyM=;
+        b=r1kjhNDgrhZ6RdMKJlqs9VqZ4WK+VgHu7EnJlaqjrPf8By7inmxIJJg7ybLdpiQ5QH
+         HomYLOJ6n0JnU6YFaykoMcEnIxgkI4McE4uY2To7eZjq7SZHAqvjGKwJDk+Y++QUeyb6
+         jQj4bOw2mXjvZ3P9QTe5fqOFeUUNd1jefUe8ptwL6hinov0aTloeO7U/tnJNcXSQi+KQ
+         ZizzJNTSkDJznvp65ScWcE0sRODisi2V6GM6Z/a10ZJlEr39v06j19qMVs1G11uQYAFs
+         wxE6vnTzbM8Wdeyldbp3QhelQr3ug6kC3L60zqZh5ab2OWEhhkRnPU8QgPz98qr01je0
+         glrw==
+X-Gm-Message-State: AOAM532xSHgALl0+tVcU+rAVbqquSjgtJqj1+udhlIptqcYGryQZHPIp
+        bqQxaqaCIErIb5RUGxIxrr9LgDsJOoo=
+X-Google-Smtp-Source: ABdhPJy8qxGj7WHaygIzMOklbVwTxVcEdN9ais+Mq8HJh9hfKdbPhuQ0u5BArzSL2cAFg1ODW9ctxg==
+X-Received: by 2002:a63:694a:0:b0:3aa:e962:db29 with SMTP id e71-20020a63694a000000b003aae962db29mr13349550pgc.421.1650946416300;
+        Mon, 25 Apr 2022 21:13:36 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id li12-20020a17090b48cc00b001d983f83959sm854930pjb.57.2022.04.25.21.13.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 Apr 2022 21:13:35 -0700 (PDT)
+Message-ID: <f6516c7f-16c7-689c-b6cd-ebff95e931a4@acm.org>
+Date:   Mon, 25 Apr 2022 21:13:33 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
+Content-Language: en-US
+To:     dgilbert@interlog.com, John Garry <john.garry@huawei.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     "Ewan D. Milne" <emilne@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, james.smart@broadcom.com
+References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
+ <2a88a992-641a-b3ff-fe39-7a61fff87cb6@huawei.com>
+ <4c3be5b6-50ef-9e9a-6cee-9642df943342@linaro.org>
+ <7b3885e3-dbae-ff0b-21dc-c28d635d950b@huawei.com>
+ <c121430b1b5c8f5816b2b42b9178d00889260c90.camel@redhat.com>
+ <b6af3fe8-db9a-b5dc-199f-21c05d7664a2@huawei.com>
+ <Yl+wJ7xSHzWmR+bR@infradead.org>
+ <d09faf74-a52e-8d93-cf26-08b43b12c564@huawei.com>
+ <24bfb681-faec-3567-3089-9cd5ee182710@linaro.org>
+ <1bb53912-c5c3-7690-e82f-cf356ca87404@huawei.com>
+ <aba8999d-276d-f9e8-96b4-5d1cc4e82c53@acm.org>
+ <5485f529-e99a-0bdd-07bd-b5b559da91e6@interlog.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <5485f529-e99a-0bdd-07bd-b5b559da91e6@interlog.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: 5ZG8fnjdj6FEVSC0UJ8zd_-U7Y1gxeCo
-X-Proofpoint-ORIG-GUID: 5ZG8fnjdj6FEVSC0UJ8zd_-U7Y1gxeCo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 12 Apr 2022 15:31:28 +0800, Po-Wen Kao wrote:
-
-> Since the HPB mapping is already reset in ufshpb_init by setting
-> flag QUERY_FLAG_IDN_HPB_RESET, there is no need doing so again in
-> ufshpb_hpb_lu_prepared.
+On 4/25/22 18:54, Douglas Gilbert wrote:
+> On 2022-04-25 21:16, Bart Van Assche wrote:
+>> How about removing scsi_proc_hostdir_add(), scsi_proc_hostdir_rm() and 
+>> all other code that creates files or directories under /proc/scsi? 
+>> There should be corresponding entries in sysfs for all /proc/scsi 
+>> entries. Some tools in sg3_utils use that directory so sg3_utils will 
+>> have to be updated.
 > 
-> This would also resolve the issue where HPB WRTIE BUFFER is issued
-> before UAC being cleared.
+> ... breaking this:
 > 
-> [...]
+> ~$ cat /proc/scsi/scsi
+> 
+> Attached devices:
+> 
+> Host: scsi3 Channel: 00 Id: 00 Lun: 00
+> 
+>    Vendor: IBM-207x Model: HUSMM8020ASS20   Rev: J4B6
+> 
+>    Type:   Direct-Access                    ANSI  SCSI revision: 06
+> 
+> Host: scsi3 Channel: 00 Id: 01 Lun: 00
+> 
+>    Vendor: IBM-207x Model: HUSMM8020ASS20   Rev: J4B6
+> 
+>    Type:   Direct-Access                    ANSI  SCSI revision: 06
+> 
+> Host: scsi3 Channel: 00 Id: 02 Lun: 00
+> 
+>    Vendor: SEAGATE  Model: ST200FM0073      Rev: 0007
+> 
+>    Type:   Direct-Access                    ANSI  SCSI revision: 06
+> ...
+> 
+> A deprecation notice would be helpful, then removal after a few kernel
+> cycles.
 
-Applied to 5.19/scsi-queue, thanks!
+Agreed with the deprecation notice + delayed removal, but is anyone 
+using cat /proc/scsi/scsi?
 
-[1/1] scsi: ufs: remove redundant HPB unmap
-      https://git.kernel.org/mkp/scsi/c/25a0bf213b8a
+> Yes, lsscsi can give that output:
+> 
+> $ lsscsi -c
+> 
+> Attached devices:
+> 
+> Host: scsi2 Channel: 00 Target: 00 Lun: 00
+> 
+>    Vendor: SEAGATE  Model: ST200FM0073      Rev: 0007
+> 
+>    Type:   Direct-Access                    ANSI SCSI revision: 06
+> 
+> Host: scsi2 Channel: 00 Target: 01 Lun: 00
+> 
+>    Vendor: WDC      Model: WSH722020AL5204  Rev: C421
+> 
+>    Type:   Zoned Block                      ANSI SCSI revision: 07
+> 
+> Host: scsi2 Channel: 00 Target: 02 Lun: 00
+> 
+>    Vendor: Areca Te Model: ARC-802801.37.69 Rev: 0137
+> 
+>    Type:   Enclosure                        ANSI SCSI revision: 05
+> ...
+> 
+> [Hmmm, in a different order.]
+> 
+> However no distribution that I'm aware of includes lsscsi in its 
+> installation.
+> [Most recent example: Ubuntu 22.04]
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Hmm ... are you sure? Last time I looked into this an lsscsi package was 
+available for every distro I tried (RHEL, SLES, Debian and openSUSE). 
+See also 
+https://packages.debian.org/search?searchon=contents&keywords=lsscsi&mode=path&suite=stable&arch=any.
+
+Are there other utilities in sg3_utils that would break if the 
+/proc/scsi directory would be removed?
+
+$ cd sg3_utils && git grep /proc/scsi | wc -l
+51
+
+Thanks,
+
+Bart.
