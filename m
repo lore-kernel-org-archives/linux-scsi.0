@@ -2,137 +2,147 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C728CC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 04:25:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB2EFC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 07:44:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243935AbiDZE2m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Apr 2022 00:28:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56536 "EHLO
+        id S1343838AbiDZHrX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Apr 2022 03:47:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243916AbiDZE2l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 00:28:41 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FBED47576
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 21:25:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1650947134; x=1682483134;
-  h=message-id:date:mime-version:subject:from:to:references:
-   in-reply-to:content-transfer-encoding;
-  bh=jZAWSem7tWU2tMWpU4Jy6443ujmS6/pmN4ww1qhZjag=;
-  b=hV7BwjS2srFlU3AEZe3IoDhOo2TAYafBGFABYgETsibIa224RZxgRPF4
-   +xzNzdu9V1onAZmgA1gWb0P213N3rZfinqb8tNjlKvWhTCUPKMUtiGexn
-   yCauIeySwFkad3jAM6Sp6vo9KDNNYtP7/M+O6MsDN5iuX8o8G7hhHKpon
-   SMuANVoN+sXuaAKx0zPAa7FHKFXSyBg54ApWuTqzY6K45Yzv+G6ZK3/kw
-   CqpVnKjojK83Ra1q1HRb4BCzfSd7SdMT/qXPc/R/5NMLl0vsU1Tq06ee0
-   40sLV8lhniaBE5gRjA1Cw1xA83S3oE9yAQZHufHGypMXH36bbhB4pFCyA
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.90,290,1643644800"; 
-   d="scan'208";a="310788485"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Apr 2022 12:25:33 +0800
-IronPort-SDR: LQYJ+Mjb8upJVQPQ6t79hZ8FbuDN7BPPW5t5Ut2PbtVD5bElsR61Kq3eUMWDoFXfMpFM63nqvA
- bloI9CJtiOkQjcJ6RcwVK4+cemAXKyr3QpaHcQ4v0dkHdzPOlD7GWIBlaaHNuhBXN9HvOMf97L
- +BJEMrcWi3b4fqp6rTbpnpc3b1PHmd77LEVft+a+cNf6WcXnunVta9CgUeDP2D9cFNwIBk5jTt
- 3a//t1A7xegfhqCnyLxrAttlHLZEb77VaQwbAV4uTGQwxyQpvT1TT569LZToy2fuHTWMvdRO68
- KJCnUPO7VFAdOqP1xfDONJDv
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Apr 2022 20:56:28 -0700
-IronPort-SDR: 3OJ4e50w85/4vJYR/98ES9eU2YZFCWL/LR8VTCkF8o5TvOr5+0Vre8byZvGSuB7Qec1/Fr4YIT
- 0CgVAMDImQyx7cyV4iTEgMlHOf0aFbbJXQdhu49hMkj4DWRiqq4EXYNiOuzq9r/KsoiOWuAIRZ
- vXTGC1WGxem4Gk1vyKRSnXC5UKdzFP1PVBt1UOFMles+md03WaLNliTjUWbP33xKaLCvcBBmq3
- zuaPJAlVErLKPZC1frc3k3euxC2RZpTHlfwZdc8XxuanzVNiQxzKjFIU2Az8ThC1Hnd2RJi+Tb
- VlI=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Apr 2022 21:25:33 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KnTMK0v2wz1SVp1
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Apr 2022 21:25:33 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:references:to:from:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1650947132; x=1653539133; bh=jZAWSem7tWU2tMWpU4Jy6443ujmS6/pmN4w
-        w1qhZjag=; b=MdDlBNGaZ+Ya1KsJOf0QtL/JBJYZV4YZMOHwSVuq2H3SMhTU73Y
-        CyfhG/h8iqzvv0RvhYq8zC4Hgx79c+0dknp6RD2QfKcyFJJSbqwLyn7Kfcl3Tr4Y
-        TPmvskZZS/5VUMYPvX+hxh5ZXksbSr2ME4V81rnqm0CUrx3Izx0IN0j3GKxfVYnA
-        vGfQvkFIEVbWpmi3kLmhy4F8yZ4ZVRYMiZJZh/UNRAQH6H7ilLP+2+1vtvOtORpT
-        UFPe/qRgearS2uEM2kn4kUT6+U7GKt6xUVcg/Zqt1ERVpaif5AoX6JOE8AoQFWYV
-        94DpKN8L3cQz4W09jWVturW1Ch+m+Jyn47Q==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id d1-O87pZAutA for <linux-scsi@vger.kernel.org>;
-        Mon, 25 Apr 2022 21:25:32 -0700 (PDT)
-Received: from [10.225.163.24] (unknown [10.225.163.24])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KnTMH2Kc5z1Rvlx;
-        Mon, 25 Apr 2022 21:25:31 -0700 (PDT)
-Message-ID: <a1293ec4-d160-9ebb-d20c-d120b14e6da6@opensource.wdc.com>
-Date:   Tue, 26 Apr 2022 13:25:30 +0900
+        with ESMTP id S238615AbiDZHrU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 03:47:20 -0400
+Received: from APC01-SG2-obe.outbound.protection.outlook.com (mail-sgaapc01on2118.outbound.protection.outlook.com [40.107.215.118])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1587C1334EC;
+        Tue, 26 Apr 2022 00:44:12 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=DD8ohwFbEoX3tHPDohP3L4HGGep5g3mN+haowReq8Q9+4IeZ4us3WdcskhGkKvF0ZxeBFrl2yD8XbjstDfPOwlUrzMs1p9oxW2K8n55u8WNwQXgs/LJdGYorVzVDx3O5E+V+OyD+44J/xI9gTUMQDkUg1H7ICQOLNnQUzOzMBKTkOww5czyVJf92QzRedFQSQ4r8TDJ+GR4aJQptYH6auLHUi27jTY30vAtxSXrcWbKPXBZF9pUqHa+/tnI/8eI0/2bgIYWfijl5LwWafyBjzO8W5anKHE6bVXJSku6pnnlPYMb0cbn3L10oGn61jZYKrsrlngipkdb6hX+ReVOlVg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=l8GUAOCiEb7yUbznRrQMLFIj8tUn/zjgr/VRgWHTbws=;
+ b=HVQPaMBMXIaxsifw0DB3UWBaoo8kL3YaLPnbHLnOuPFMLQHHrVaDHC1H4Cp8OqUCnaR54R/2+tEQe3QplHc3FWPPUHDpZ6j0Lo/onQ5bWl1w2AOZlwxloLF5kaONaH0l841ch+Ugsgxl1NJPT9JdgVMEV2f1Lfqqk/397VG8PYEYSwTrXlQQDN7uT2i8bdVDw3rL/r18Galp+bL891rgAQU2jvV9IJ3+r+PA7mLnkA9PNg5bB4Iw4dhv6P0YtFv2FNwq3WfATTOfh0KXwYVFDnBuH+FZuF13ymi0viwh9dhyNoRJExhc0L9eL4A+F6yPui1oh/yCEsRI1JzIzq+e+Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo0.onmicrosoft.com;
+ s=selector2-vivo0-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=l8GUAOCiEb7yUbznRrQMLFIj8tUn/zjgr/VRgWHTbws=;
+ b=e6sXMuUzFHkSf76JLtCYiV1f3wlNSIzNYJ0ErpUro9AlJBzrCr2Qo398S9b7PoKkwzTq14BDeJ10uo8ILDDpPkz/keuY2tGCiJunWU94EnyMo4b0zbmWCu1YSvEInR20xTgknPeasKhYy4e2n8Mi9DR1zxQ9RpOr2E90ctWbENc=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from HK2PR06MB3492.apcprd06.prod.outlook.com (2603:1096:202:2f::10)
+ by PS2PR06MB3494.apcprd06.prod.outlook.com (2603:1096:300:6b::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5186.13; Tue, 26 Apr
+ 2022 07:44:07 +0000
+Received: from HK2PR06MB3492.apcprd06.prod.outlook.com
+ ([fe80::88e1:dc04:6851:ad08]) by HK2PR06MB3492.apcprd06.prod.outlook.com
+ ([fe80::88e1:dc04:6851:ad08%7]) with mapi id 15.20.5186.021; Tue, 26 Apr 2022
+ 07:44:07 +0000
+From:   Guo Zhengkui <guozhengkui@vivo.com>
+To:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com (supporter:QLOGIC QLA2XXX
+        FC-SCSI DRIVER), "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org (open list:QLOGIC QLA2XXX FC-SCSI DRIVER),
+        linux-kernel@vger.kernel.org (open list)
+Cc:     zhengkui_guo@outlook.com, Guo Zhengkui <guozhengkui@vivo.com>
+Subject: [PATCH] qla2xxx: edif: remove unneeded variable
+Date:   Tue, 26 Apr 2022 15:43:34 +0800
+Message-Id: <20220426074334.9281-1-guozhengkui@vivo.com>
+X-Mailer: git-send-email 2.20.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SG2PR06CA0185.apcprd06.prod.outlook.com (2603:1096:4:1::17)
+ To HK2PR06MB3492.apcprd06.prod.outlook.com (2603:1096:202:2f::10)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH v3 0/5] Fix mpt3sas driver sparse warnings
-Content-Language: en-US
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com
-References: <20220307234854.148145-1-damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220307234854.148145-1-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 05bb3c0a-c65a-47e9-c770-08da27588b3d
+X-MS-TrafficTypeDiagnostic: PS2PR06MB3494:EE_
+X-Microsoft-Antispam-PRVS: <PS2PR06MB3494BE88D7C34CFE460D800FC7FB9@PS2PR06MB3494.apcprd06.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 7SlK4GnnJjFt73ShuhSia8ldKRllTdGUzlM64jtqGx9E+Mrf62mnAPzwzqZXjAintlGE7qMuLZTB2CnCtSAXxvlzwfkmg5X3P+vRDrmJfB8MnbWOL/NhXNTB0rrSubqV/njd345HpNQPa6VsuoQi8AzVuhNPumxXjY1DVIjFRvVoE+xhrkb3S8BlpQjFtmYoppfyaY0T6KeyC0QVBQ8W5VW1Z3CHDWPCFm+2d3T/Td2WKP+oPXHVmHOoormTu46gzk9Cy8g/xK5u99NIJF8hzPmLsZEA2HaASY5kdQtjDvgpLqvFFCgwkrFoT/Gc+7w37mDrvfG8ahH4gPwRxiu7sNK9DLquCrIMHKKOjGrCJiFkUQz/umx1No3Gv1olbF3lu8pyaSc27PgSEDKXEy4uzJYPiscFuFbR/U4ZhVnOFaXTsMLTA5w8Yxl5qxTtxNHTRVc7Y9Vzftkxoc48LtB/YNFtz7AwGMNUGxOA1SAPi7FzCEb4f+qKCBFzmIB2ASXuqOWdOzGFwitUYlaw+Q4vl+ZUPbD/7YEaH0w8Aqn3vmPxLNZRpVyfMk60hhD6oXaxB1Z1Wnqtn2+DAZ69qCi27n15u52gqA2NZ1PvvEchF8tTKqwSOI8JvBv9kZw1ICZXa6h7yykcIS8OrBy7e+0z1aHXkjrexGAHD1lOztfPUTwuMaWd9ipWH4kPWFAd1fKyB8ZVvKL4cbJ3+qsWhquokA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:HK2PR06MB3492.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(4744005)(66476007)(316002)(86362001)(2616005)(107886003)(5660300002)(38350700002)(38100700002)(6666004)(83380400001)(52116002)(2906002)(66556008)(6512007)(6506007)(66946007)(8936002)(4326008)(26005)(186003)(1076003)(110136005)(8676002)(6486002)(508600001)(36756003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?5osIC9YdJZxY6obUxJV3NVjUqZ6Gnqem9ZaP2XwsOmbFFxfurdiyK5bIVwXA?=
+ =?us-ascii?Q?6X8O5GX8n2DU8Ly5k6V7fZnO3dtrAWMfQ38FIxHtMJf/yFJD/Y2JsvNuWsKh?=
+ =?us-ascii?Q?gpRsbX0liCvlU2K56hJz0N3d9ulB7Z61RtbFcz7ZZYGc9UHO05pVd0giW571?=
+ =?us-ascii?Q?aSbSXfkyTGoRLlEv18NeT0aEwEgH2O86wZIIrQuzIkoIkFIuqVpxoIRubnlj?=
+ =?us-ascii?Q?Pa4+d0VM0DgfrvPsrWVvfX4wvNpXT/YsDNO22k+LDNsIDOcN6oFRQlFwnXTI?=
+ =?us-ascii?Q?zrhGapzIgonU/DXmJY8GF/kqeef2ROMMt0P7HPdDpvzfvTJWpJA2xMKcK7VN?=
+ =?us-ascii?Q?Cf6GwCjCafQyNrXx5AIUDa0bRcWS453ZfuII72dcWLu48aCjVQgz9dkebNSZ?=
+ =?us-ascii?Q?AUt5K8STiljRdh1JaO2myqOqJWN0LdQ8w8zrzE+OAq2Y7OdHyP6HVIKdcpx9?=
+ =?us-ascii?Q?s/Bjz8YGSn2UBU/hUvG4vxb9/LRk01n/cffzfdq96T7zRVO8urfLkdDlcfh3?=
+ =?us-ascii?Q?VFYUdnhUAUqWSviS/FNBeMnC/KrV9rqahP8VvsVlG+jffZ/xw6blU1KW15k+?=
+ =?us-ascii?Q?ibWpiLIB9D2KFd1nkO+hhj/8uyZqzXxsq2uLnq0JhD22X+YkmGG0wQ+n4Euk?=
+ =?us-ascii?Q?z1OejoJDuwmJ38u56tklx1SqM9YRUKK+H157o9GpDmsICDyw8HpiXdWycYVr?=
+ =?us-ascii?Q?weGEvXArVOi8H+i8wqGZPHg8SdvsJl7Ecw4M560XIgY+naJqiD1D8Jj4FkhF?=
+ =?us-ascii?Q?38U5upAuS5Sfozq5TuOqXPXu0GVdG89txKHSEkOJzAA5emJwPyAjCspsac3e?=
+ =?us-ascii?Q?jhe1jaYKgVeQFVeAAjZ+DYI5NFNpt3O5moqWH1LJAzB/Q+4JRy6MDyNiG3ri?=
+ =?us-ascii?Q?7dnw0uejRiu6LYmhh9e+bvIK4FtNEVj7ajtQIdgkA4jOkXOsY2LdY7SUs9zJ?=
+ =?us-ascii?Q?P9wgDnO/VYCV/Ho+B6Wnb5wSKkB/MrNS/VbOtiYDRCONptGY79Los2e8jafy?=
+ =?us-ascii?Q?NhnKd0oPOvTMvcZXF9XGecX8OeoFIfmDxRDx1tKb4iqOgHGFThiewn4GphiR?=
+ =?us-ascii?Q?+sbneazNdUbEAWbcQ6gOT7riwZQTXBlvpHxW9ywN9Eor7OANbmi88VKtss3B?=
+ =?us-ascii?Q?i5cMzyutbJtxL/vhQ4YqZMUtmy3JFXE1jmcKXTeHDtJ8/6S8x+QSdTku/ayd?=
+ =?us-ascii?Q?ODwePfnRaCNyEbgfUIAAkMtdNbvqtEIqKjnG40VMFV4iSgHNiD1sHney5gGL?=
+ =?us-ascii?Q?gSZTIQlD4zQ7OXcrkdpy2Vhiqcw/6JPmh1hK38c5+h50TCjxfImSveGsdYtE?=
+ =?us-ascii?Q?9xPVcLDhOfAPxTmotFJOmRqc/qX+WwwQ/9f0DMwHY/AwpkHZa78jOdTUEWbF?=
+ =?us-ascii?Q?V7vCWyxOldkWmVZm1iWbbdwiXVjpQEK46jPwcDcN1kYRwHKyviIwrtybnDQF?=
+ =?us-ascii?Q?mURatKNtkj/VDsiy/wyTHB/Z6lv1vD9HmF7gWWzUMtEBjE3kXgX7Xg2tkg/E?=
+ =?us-ascii?Q?08MC/o6SmBqIlbTnDRcE4JbAMhYgOntlGSoy1yezIzgEmnvlC0puUQdMPGfS?=
+ =?us-ascii?Q?wFFHS0mg30b3v+yPcZDlLs9OS7w3lXlpvkYylxdTVBMpeDcH8HtPudUBGCZG?=
+ =?us-ascii?Q?9het29yWJ/m6XX/o7J0lYL8AEoRHYEbWnwLnGjm43QXdccSVqVOMR7BAqgk6?=
+ =?us-ascii?Q?ZRTsntTyJABgg2KAPYB1dmi6/oM3CAPuh9cglbZPlNPLffXzPpVtSaRRweiR?=
+ =?us-ascii?Q?qSDsavZ/nQ=3D=3D?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 05bb3c0a-c65a-47e9-c770-08da27588b3d
+X-MS-Exchange-CrossTenant-AuthSource: HK2PR06MB3492.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Apr 2022 07:44:07.5221
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: biGvmRnsXez+54E1JQBXENsW1FLTj6pE1WThOUaWxwm1hjgp66LQi1Io49DL2IniVPdpwTf4QaxxxGyshez35Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PS2PR06MB3494
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/8/22 08:48, Damien Le Moal wrote:
-> This series fix (remove) all sparse warnings generated when compiling
-> the mpt3sas driver. All warnings are related to __iomem access and
-> endianness.
-> 
-> The series was tested on top of Martin's 5.18/scsi-staging branch with a
-> 9400-8i HBA with direct attached iSAS and SATA drives. The fixes need
-> careful review by the maintainers as there is no documentation clearly
-> explaning the proper endianness of the values touched.
+Fix the following coccicheck warning:
 
-Martin,
+drivers/scsi/qla2xxx/qla_edif.c:660:11-15: Unneeded variable: "rval".
+Return "0" on line 761.
 
-Can we get this one queued for 5.19 ?
+Signed-off-by: Guo Zhengkui <guozhengkui@vivo.com>
+---
+ drivers/scsi/qla2xxx/qla_edif.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-> 
-> Changes from v2:
-> * Reworked patch 5 to keep writel() calls. Sparse warnings are
->   suppressed with a declaration fix.
-> 
-> Changes from v1:
-> * Reworked patch 1 to remove the TaskMID field type change and simplify
->   _ctl_set_task_mid() code.
-> 
-> Damien Le Moal (5):
->   scsi: mpt3sas: fix _ctl_set_task_mid() TaskMID check
->   scsi: mpt3sas: Fix writel() use
->   scsi: mpt3sas: fix ioc->base_readl() use
->   scsi: mpt3sas: fix event callback log_code value handling
->   scsi: mpt3sas: fix adapter replyPostRegisterIndex declaration
-> 
->  drivers/scsi/mpt3sas/mpt3sas_base.c  | 32 ++++++++++++++--------------
->  drivers/scsi/mpt3sas/mpt3sas_base.h  |  2 +-
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 11 +++++-----
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c |  6 +++---
->  4 files changed, 26 insertions(+), 25 deletions(-)
-> 
-
-
+diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
+index 0628633c7c7e..cb8145a9ac09 100644
+--- a/drivers/scsi/qla2xxx/qla_edif.c
++++ b/drivers/scsi/qla2xxx/qla_edif.c
+@@ -657,7 +657,6 @@ qla_edif_app_chk_sa_update(scsi_qla_host_t *vha, fc_port_t *fcport,
+ static int
+ qla_edif_app_authok(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
+ {
+-	int32_t			rval = 0;
+ 	struct auth_complete_cmd appplogiok;
+ 	struct app_plogi_reply	appplogireply = {0};
+ 	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
+@@ -758,7 +757,7 @@ qla_edif_app_authok(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
+ 							       &appplogireply,
+ 							       sizeof(struct app_plogi_reply));
+ 
+-	return rval;
++	return 0;
+ }
+ 
+ /**
 -- 
-Damien Le Moal
-Western Digital Research
+2.20.1
+
