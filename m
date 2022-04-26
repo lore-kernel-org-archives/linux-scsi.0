@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29E10C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 12:16:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D766C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Apr 2022 12:16:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349943AbiDZMTd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Apr 2022 08:19:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41484 "EHLO
+        id S1349924AbiDZMTh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Apr 2022 08:19:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350058AbiDZMTN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 08:19:13 -0400
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09EEE205CC;
-        Tue, 26 Apr 2022 05:15:53 -0700 (PDT)
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220426121551epoutp04f35c1f556ef3533f1e480850be0b488a~pcVWuKQQl2393923939epoutp04t;
-        Tue, 26 Apr 2022 12:15:51 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220426121551epoutp04f35c1f556ef3533f1e480850be0b488a~pcVWuKQQl2393923939epoutp04t
+        with ESMTP id S1349882AbiDZMSv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 08:18:51 -0400
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F4B11110;
+        Tue, 26 Apr 2022 05:15:11 -0700 (PDT)
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220426121509epoutp03683a4ab48b63f19af30f75532c893003~pcUwFM7631718017180epoutp03b;
+        Tue, 26 Apr 2022 12:15:09 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220426121509epoutp03683a4ab48b63f19af30f75532c893003~pcUwFM7631718017180epoutp03b
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1650975351;
-        bh=vVNRB09IFD7VCsO478m75U1Fq+vWg8jECNR0w5IEHBc=;
+        s=mail20170921; t=1650975309;
+        bh=5UBtS0ms0IOiJds1Mb3s7CJgKX4t4CEpR6CiZcgXT4k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Zkq1UAYxnDBNQf6YgncmlqRr6wNFpF5bqEcUzvWxh3xr9FRrbWufmYx61KT2efymh
-         T1pPq40UACmSBAAxP7QZgZE++a1vXw0tECovn9QlhD/wN+/I+RnK71HAOV4p9Xa3fa
-         zWVog1tAPCIcVJGTlo3+tiKISw6VbxAAGNeMsH00=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-        20220426121550epcas5p45d4f028970d166726a1fe0bc79253a92~pcVV6ylFb0477704777epcas5p4f;
-        Tue, 26 Apr 2022 12:15:50 +0000 (GMT)
-Received: from epsmges5p1new.samsung.com (unknown [182.195.38.179]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4Kngns3Xpfz4x9Pv; Tue, 26 Apr
-        2022 12:15:45 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+        b=O7TeS6sq8Oci60wRSJ7qFAkjawn4FheY56CIaaIzBg3HtgNMFPCL9UjGSbPBhV/eE
+         SSi2HvTZOMK6g8miqJzN3/7Nc19EioG0vsXUYSP4xAgNSb8kJs3EddN6bWfkIFyH8i
+         F7eYYXD6lFEhUWOulU6S1S7vHNW+e2HOtu3eG0Eo=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+        20220426121509epcas5p10681d041cb3a2dab2d7e9fac1d620772~pcUvv6drF2178321783epcas5p1r;
+        Tue, 26 Apr 2022 12:15:09 +0000 (GMT)
+Received: from epsmges5p1new.samsung.com (unknown [182.195.38.181]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4Kngn54tQ5z4x9Ps; Tue, 26 Apr
+        2022 12:15:05 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
         epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        B8.33.10063.172E7626; Tue, 26 Apr 2022 21:15:45 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-        20220426102042epcas5p201aa0d9143d7bc650ae7858383b69288~paw0RoFuv0811508115epcas5p2r;
-        Tue, 26 Apr 2022 10:20:42 +0000 (GMT)
+        A1.23.10063.942E7626; Tue, 26 Apr 2022 21:15:05 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+        20220426101951epcas5p1f53a2120010607354dc29bf8331f6af8~pawFTa_Zl2413724137epcas5p1G;
+        Tue, 26 Apr 2022 10:19:51 +0000 (GMT)
 Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220426102042epsmtrp289cd93d9b6a7708cb4c090ec40bd3351~paw0QFI-I1443114431epsmtrp2j;
-        Tue, 26 Apr 2022 10:20:42 +0000 (GMT)
-X-AuditID: b6c32a49-4cbff7000000274f-0d-6267e271bfff
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220426101951epsmtrp176ced2e9b9a9f969fd96eb3b8dc05e12~pawFSMys82263822638epsmtrp1b;
+        Tue, 26 Apr 2022 10:19:51 +0000 (GMT)
+X-AuditID: b6c32a49-4cbff7000000274f-b7-6267e24970f3
 Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
         epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        A5.DA.08924.A77C7626; Tue, 26 Apr 2022 19:20:42 +0900 (KST)
+        5F.AA.08924.747C7626; Tue, 26 Apr 2022 19:19:51 +0900 (KST)
 Received: from test-zns.sa.corp.samsungelectronics.net (unknown
         [107.110.206.5]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20220426102036epsmtip1a53597986c8ac116a03cc60b915b16b8~pawunNcb80427604276epsmtip1D;
-        Tue, 26 Apr 2022 10:20:36 +0000 (GMT)
+        20220426101946epsmtip14d82f1c02263c9ee984eda8ecb45bbfd~pawAJsemo3271432714epsmtip1a;
+        Tue, 26 Apr 2022 10:19:46 +0000 (GMT)
 From:   Nitesh Shetty <nj.shetty@samsung.com>
 Cc:     chaitanyak@nvidia.com, linux-block@vger.kernel.org,
         linux-scsi@vger.kernel.org, dm-devel@redhat.com,
@@ -61,6 +61,8 @@ Cc:     chaitanyak@nvidia.com, linux-block@vger.kernel.org,
         lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
         josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
         jack@suse.com, nitheshshetty@gmail.com, gost.dev@samsung.com,
+        Nitesh Shetty <nj.shetty@samsung.com>,
+        Vincent Fu <vincent.fu@samsung.com>,
         Arnav Dawn <arnav.dawn@samsung.com>,
         Alasdair Kergon <agk@redhat.com>,
         Mike Snitzer <snitzer@kernel.org>,
@@ -72,348 +74,268 @@ Cc:     chaitanyak@nvidia.com, linux-block@vger.kernel.org,
         Johannes Thumshirn <jth@kernel.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v4 10/10] fs: add support for copy file range in zonefs
-Date:   Tue, 26 Apr 2022 15:42:38 +0530
-Message-Id: <20220426101241.30100-11-nj.shetty@samsung.com>
+Subject: [PATCH v4 04/10] block: add emulation for copy
+Date:   Tue, 26 Apr 2022 15:42:32 +0530
+Message-Id: <20220426101241.30100-5-nj.shetty@samsung.com>
 X-Mailer: git-send-email 2.35.1.500.gb896f729e2
 In-Reply-To: <20220426101241.30100-1-nj.shetty@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA01TaVBbZRTlLXkJzMA8UiofUKf4aMsAskQBPwqUduyU10WL2rGCtZjCIzBA
-        EhNibUcHKEUttKXQlomBaSikIq0sssmSoIIQCbJUFgFliYWq4LAUhqVsEhK0/86ce86999xv
-        Pg7GbWPbc2KECYxEyI+jCAu8usnF2f2DPwTnvIr6bWCprgWD6oE5FnwwlEHA7JllDE7/8IgF
-        szLkbLjS3onB7jErqJnKYcGupWQUPirfQOHA97UoVOdnobDoQTMK/ywsQGD93VkUrup5UD8/
-        iMOsxj4EjvcqUKgZdINqTSsOu+tyCaj8cpwN03+tIWDDpAaDhdp1FHYoVgmYqa1gwZqxZAQ2
-        DffisGRyGoc/DTrA1KvLbNi5pmUddKK7e47TipF2gs5MmWLTtYohNt05/A1Od7fL6PL7Vwi6
-        QpVI3+wvROj6gSSCvvRzM0bLn8wT9LWUKYKuTR1h0bPjgzg93dBLhNiGxQZEM/xIRuLICCNE
-        kTFCQSB1/K3wV8N9fL147jw/+ArlKOTHM4HU4RMh7kdi4jZvSDl+yI+TbVIhfKmU8jwQIBHJ
-        EhjHaJE0IZBixJFxYm+xh5QfL5UJBR5CJmE/z8vrJZ9N4fux0QtqJSbeOPaRaqiFnYQ8DUhD
-        zDmA9Abqlk48DbHgcMl6BMz3PWYbClzyCQJ0GcHGwhwC6tVyYttxJ12JGgt1CFDJk032VBTM
-        5qZjaQiHQ5BuoG2DYzDYkDgoWlzc0mCklg06hpVbmh1kMEidDjZocHIvyB+vQw3YkvQHlRO9
-        hEECSE+QMWJtoM036XvNUyaJNWj9Ygw3YIzcDVKqcjBDe0Cum4O1pUHcuOhh0Nb9C9uId4AJ
-        baUJ24O5KY0pzHnw7ad5qNF8GQFpOp3JHAQeqtdQwxIY6QJK6zyN9PPgtq4ENQ62AtdWxlAj
-        bwlq7mxjJ/B1aZ6pvx3oW0w2ZaHBzRHT3a4joEL+HesG4qh4Jo/imTyK/yfnIdh9xI4RS+MF
-        jNRHzBMy5/974whRfDmy9atcj9YgQ6MzHo0IykEaEcDBKBvL23ujznEtI/kXLjISUbhEFsdI
-        GxGfzXtnYvY7I0Sb31KYEM7z9vPy9vX19fZ72ZdH2Vq2Ccr4XFLAT2BiGUbMSLZ9KMfcPgml
-        eHYWew5q94jetKrSZ5Q9LW8o8J0PclCWY6LsfQ0nLtCpJeVBjwtcS2bD5OyPzZaeY1X/GHT6
-        4ap5oyJFll+UODlxeqi3SE6NFXOjRhc2OgYEHT1Wbv98PuNyZeeB0TrV/iidgyyt6o2z2Xoc
-        63p7punvjurQLo9Z/9XQyrjduSfffb3ZQ5d/fZnSnCJCnZNGVN32v5k5a17wqp/+69BVkDio
-        dH4vtOLwVG5smtasc7361hnl5RcXw0qie7POqvvjGX3xjVqXhnt67i5rcOmdr/wX8mcXPps4
-        Vpx31N9h7eKtldBT5MlDZZ3moT37dinsUj9xyrmb3Op/5jXbcEZj8buKReHSaD7PFZNI+f8C
-        1ZDWMN4EAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Sa0xbZRyHfc85PT2AdIcyxwsYiMUZhQAy2fJXkHgh42QkBKPZJmZCtx07
-        5Nb0FMb4MIGGGFscl0VlZQ5kjKvOUDotrGVbKTBUZKRWRxNaCRDQJe26jTE2Ltqhyb49+T3P
-        xx9DSqtEEUx+sZpXFcsLZXQg9cOwLCq+Ykxx+GXDCA3f/zRKgnn6rgh6Z+po+PL2Kgnea3Mi
-        aKxrEsOjiUkS7PMSsHiaRXDjQRUBc4ZNAqavDhBgbmskoLt3hIDFzvMILn/jI2BtNglm7zkp
-        aLT+jmDBoSfA4owDs2WcAvvgWRpaOhbEoPvDRMPQLQsJnWMbBPyqX6OhYaxfBKb5KgTDLgcF
-        F295KbjujISa2lUxTK6Pid6I4ey/ZXJ69wTNNWg8Ym5APyPmJl19FGefKOUMPZ/RXH/7J9zp
-        m52IuzxdSXPVv4yQXNOdezT3ucZDcwM1bhHnW3BSnHfIQWeH5QSmHuUL88t4VWJaXuCx++YW
-        Urm5r7x9ZlRciR6malEAg9lkfE7XQmhRICNlTQjbfNXklgjHHeu2/zgUd28sirciDYH/ql5H
-        WsQwNBuHf95k/M12lsLdKyuUvyFZrxi7Ll153ISyGbjGm+FvKHYnblsYJPwczKZg498O2p9g
-        NhHXuUP8c8C/84URD+Gfpexr+Oaj8q06BI+fmaf8TLLRWHOpmaxHrP4JpX9CtSKiB4XzSqFI
-        USQkKXcV88cTBHmRUFqsSDhSUmRAj18SG2tC5p7bCVZEMMiKMEPKtgd/sfOjw9Lgo/ITFbyq
-        JFdVWsgLVhTJULKw4Bva8Vwpq5Cr+QKeV/Kq/y3BBERUEh0fprd/nSrKyGmm1Ceidy8HWc7E
-        tkztD3sozzr9VJbv02uz2xL4/gOSV9aSrYb5ko+9cwVDatuztS/saEjLDBjYdc6z/DS5Nz27
-        QrIculRW8OaPte8Mcs/vWYnLe+a6zn5qT3T9sC4lf2rwW1eE0UVGdTXp0t96nZAoR7uC4tts
-        q/qyu+6TXZlLkRsNuYkxTUfwDqP2vcYrh1b6LsQw4VPPHdyW20hr4uD9g2siEr/oMxiTXYYo
-        88l9IYv4fN+BoJL6kAcp7t680GxBkvFqTunbG87v/nzXbsnau/t+kOmOML60aVR3XBTSyuNb
-        K/Nfsp1t/SpJUnX8g1O25UMOxf6IqzJKOCZPiiVVgvwf4mBy4ZQDAAA=
-X-CMS-MailID: 20220426102042epcas5p201aa0d9143d7bc650ae7858383b69288
+X-Brightmail-Tracker: H4sIAAAAAAAAA01Tf1RTZRg+3713dxun0RUhP/AQ8yLVQIUpG58oVEfqXJUKtXM6BzvglNuG
+        jG3thwoeE0RQEViAPycJBOgRUhIFBtuM8BCKTtMJISYoIiUUCFpEYsQYlv893/O+z/P++M7L
+        wz06uD68RJWe1apkSpp0I+ouigIXruyVbwz5+ao/qm77AUfW2084qOqukUSHHo/jaPj7BxxU
+        YDzCRc/s13Hk6HNHtqFjHPTjX+kYelAziaHbTQ0Ysn5dgKFTVS0Y+uVkGUCW0hEMTdwXo/tP
+        uwhU0NwB0MN2E4ZsXUHIartMIEdjEYmKTzzkov0/mUl0YdCGo5Ot/2DommmCRPmt5zjI3JcO
+        UN2zYhxd7G4n0JnBYQJd6pqLMnPGuejB/r0AXX/eynkngHHcWs2Yeuwkk58xxGUaTHe5zPXu
+        swTjsBuYmsp9JHOufCdT2HkSMJbbaSSz62oLzhwZfUoyuRlDJNOQ2cNhRh52EczwhXYyZk5s
+        0nIFK0tgtUJWtUmdkKiSR9Cr18WviJdIQ8QLxUtRGC1UyZLZCDoqOmbh+4nKqW3Swi0ypWGK
+        ipHpdHRw5HKt2qBnhQq1Th9Bs5oEpSZUs0gnS9YZVPJFKlYfLg4JWSyZStyQpGjKcABN2eJt
+        eeM5RBqwv5UN+DxIhcLDtyqwbODG86AsAP79Ry/X9RgFcLz90EzkCYClWVXgheT3iwdIJ/ag
+        GgGssPNdOBODZTf8swGPR1JB8Mokz0l7UgQ8NTZGOH1w6iAPHmitJ5yB2VQY/LO4aNqHoAKg
+        dVfFNBZQ4XAibwg4fSAVDI09s5w0n1oGK1qGMFfKLHj5aN+0DU75wYzaY7jTH1JZbtCWe5hw
+        9RkFe0sHSReeDQdaz3Nd2Ac+MmbN4K2wPqsEc4l3A5jd1jYjfhvesD7HnE3glAhWNwa7aF94
+        sO0M5irsDnOf9WEuXgDNx19gf/hNdclMXW/YMZY+gxlYbDVzXAvNAzC9cx/3SyA0vTSQ6aWB
+        TP+XLgF4JfBmNbpkOauTaMQqdut/n7xJnVwDpg8scKUZ3L33eFEzwHigGUAeTnsKDgZ8ttFD
+        kCBLSWW16nitQcnqmoFkauH5uI/XJvXUhar08eLQpSGhUqk0dOkSqZieI7gi/1bmQcllejaJ
+        ZTWs9oUO4/F90jCvxO/Cl0v2ONJwr09uJirv4YrNkQcqPduKrn0Vm3DeQu4oV9ypu//K7gb3
+        Eyew3RXtonePn51rqxcGfT4/c9Dead2xwxAn1G1PWUvVxjbtzJ9Xzw3QfiFfmx9m9p/P1b/X
+        4OcebRk4vmT01aTyvn7vkc30aRFpNEZExN4c8E3xHo1qWfXxmg+3+HHknoUbLYplY9Lq2l/t
+        67ah4aCkD0p6RdvfTI2eVEQXi4R8fmRgv9caep7v86iRTz1TuzPnDxf1C0ciOxLClhh69m54
+        bdVvqQuso471h/pzq1tOvx78KO5OdyHZFJfTuHXlJYmgU+ReUL/gKE+2Z5L2e2POepOkr8P8
+        EU3oFDJxIK7Vyf4Ft6O9FOkEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SfUwTdxzG/d1dr0cjy1FM+NUa7bqQzIq8ONFvQAnL/tglWxxGzSIxumPc
+        QKSlaaky4xDpWKSAUIYMCwYFhQCJZlAIL0WklSG6WpOujJdgRwCNcRaZL0io6E63xP8+eT5P
+        nr8ehpSXSNYyh3W5gkHHZ6tpGdXlUq/f/PlwRlps6dmNcPXWbyQ4xp9KoG2qnIbqJ0skzA/O
+        SKCyvEYKy24PCd7ZD6A/UCuBuy9PETDT/pqA8es9BDgaKgloaRsi4EFzI4K+iwsEBKfjYPrZ
+        BAWVzlEEcz4bAf0Tm8DRP0KBt7eOhvqmOSmU/NlNw7VH/SQ0D68QcMcWpME63CGB7tlTCLqW
+        60lw3fNRcOXRPAU3J5RQVLokhZmS0wg8r4YlyZGc948vOJvfTXNWc0DK9dimpJzn3q8U53Wb
+        uPbWYprruHSS+3msGXF94wU0V/j7EMnV/POM5srMAZrrKfJLuIW5CYqbv+ajUyJSZTvShezD
+        RwVDTNI3sszrZi/SN27JO7NUShUg98cWFMJgdit+7KqiLUjGyNluhItamsl3QoGbXt34j8Nx
+        y8oDqchy1kzgpuBWC2IYmt2Eb79mxHgNS+GWxUVK3CHZAQY7bhYToghnt+MX9XW0yBQbiR2F
+        l99yKJuAg2cCSNzBbAwu94eJcQibiC8PBQgxlv9bGVvOe9cOwyPnZimRSXYDNnfWkhWItb2n
+        bO+pC4hoRQpBb9RmaI1x+i064Vi0kdcaTbqM6G9ztO3o7V80mm7kaH0S7UQEg5wIM6R6TejZ
+        yO/S5KHp/PfHBUPOIYMpWzA6kZKh1BGhdy0jh+RsBp8rHBEEvWD43xJMyNoCAu2632vha08c
+        WK1bHiVN6/zFF/et4ruCyQ/z3UHVbD5fVT2w35ISk6ANuBaHYiPy0ajyljNs5srKCO8mWeV6
+        3x3Vvpf37ZMxCfFPVccr1A1l7ZeCxaYNdQN79qu0zMLVlR9zv6KmCzMHlSdPZ50IV7TRhR/2
+        tX1q3Ru365y9cXGbmU70dGzWa2TqnRFWpvq8IeqjRIW90fvQqvgpberA9JFO6su/f/hk3V/J
+        ma4b0Vm1is7Y3p0enPXcQ9YnaiZTD5p/2QP687vjU5VNDb4QiWEM2UuPqmR5g7ejNA3uVZMV
+        9tx4qqpm+2NrUk7O1/OfpQf9SVGr3WUpNeXpUjVlzOTjNKTByL8BBqQOep4DAAA=
+X-CMS-MailID: 20220426101951epcas5p1f53a2120010607354dc29bf8331f6af8
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: REQ_APPROVE
 CMS-TYPE: 105P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220426102042epcas5p201aa0d9143d7bc650ae7858383b69288
+X-CMS-RootMailID: 20220426101951epcas5p1f53a2120010607354dc29bf8331f6af8
 References: <20220426101241.30100-1-nj.shetty@samsung.com>
-        <CGME20220426102042epcas5p201aa0d9143d7bc650ae7858383b69288@epcas5p2.samsung.com>
+        <CGME20220426101951epcas5p1f53a2120010607354dc29bf8331f6af8@epcas5p1.samsung.com>
 To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arnav Dawn <arnav.dawn@samsung.com>
+For the devices which does not support copy, copy emulation is
+added. Copy-emulation is implemented by reading from source ranges
+into memory and writing to the corresponding destination synchronously.
 
-copy_file_range is implemented using copy offload,
-copy offloading to device is always enabled.
-To disable copy offloading mount with "no_copy_offload" mount option.
-At present copy offload is only used, if the source and destination files
-are on same block device, otherwise copy file range is completed by
-generic copy file range.
-
-copy file range implemented as following:
-	- write pending writes on the src and dest files
-	- drop page cache for dest file if its conv zone
-	- copy the range using offload
-	- update dest file info
-
-For all failure cases we fallback to generic file copy range
-At present this implementation does not support conv aggregation
-
+Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+Signed-off-by: Vincent Fu <vincent.fu@samsung.com>
 Signed-off-by: Arnav Dawn <arnav.dawn@samsung.com>
 ---
- fs/zonefs/super.c  | 178 ++++++++++++++++++++++++++++++++++++++++++++-
- fs/zonefs/zonefs.h |   1 +
- 2 files changed, 178 insertions(+), 1 deletion(-)
+ block/blk-lib.c        | 128 ++++++++++++++++++++++++++++++++++++++++-
+ block/blk-map.c        |   2 +-
+ include/linux/blkdev.h |   2 +
+ 3 files changed, 130 insertions(+), 2 deletions(-)
 
-diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
-index b3b0b71fdf6c..60563b592bf2 100644
---- a/fs/zonefs/super.c
-+++ b/fs/zonefs/super.c
-@@ -901,6 +901,7 @@ static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
- 	else
- 		ret = iomap_dio_rw(iocb, from, &zonefs_iomap_ops,
- 				   &zonefs_write_dio_ops, 0, 0);
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index ba9da2d2f429..58c30a42ea44 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -273,6 +273,65 @@ int blk_copy_offload(struct block_device *src_bdev, int nr_srcs,
+ 	return cio_await_completion(cio);
+ }
+ 
++int blk_submit_rw_buf(struct block_device *bdev, void *buf, sector_t buf_len,
++				sector_t sector, unsigned int op, gfp_t gfp_mask)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++	struct bio *bio, *parent = NULL;
++	sector_t max_hw_len = min_t(unsigned int, queue_max_hw_sectors(q),
++			queue_max_segments(q) << (PAGE_SHIFT - SECTOR_SHIFT)) << SECTOR_SHIFT;
++	sector_t len, remaining;
++	int ret;
 +
- 	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ &&
- 	    (ret > 0 || ret == -EIOCBQUEUED)) {
- 		if (ret > 0)
-@@ -1189,6 +1190,171 @@ static int zonefs_file_release(struct inode *inode, struct file *file)
++	for (remaining = buf_len; remaining > 0; remaining -= len) {
++		len = min_t(int, max_hw_len, remaining);
++retry:
++		bio = bio_map_kern(q, buf, len, gfp_mask);
++		if (IS_ERR(bio)) {
++			len >>= 1;
++			if (len)
++				goto retry;
++			return PTR_ERR(bio);
++		}
++
++		bio->bi_iter.bi_sector = sector >> SECTOR_SHIFT;
++		bio->bi_opf = op;
++		bio_set_dev(bio, bdev);
++		bio->bi_end_io = NULL;
++		bio->bi_private = NULL;
++
++		if (parent) {
++			bio_chain(parent, bio);
++			submit_bio(parent);
++		}
++		parent = bio;
++		sector += len;
++		buf = (char *) buf + len;
++	}
++	ret = submit_bio_wait(bio);
++	bio_put(bio);
++
++	return ret;
++}
++
++static void *blk_alloc_buf(sector_t req_size, sector_t *alloc_size, gfp_t gfp_mask)
++{
++	int min_size = PAGE_SIZE;
++	void *buf;
++
++	while (req_size >= min_size) {
++		buf = kvmalloc(req_size, gfp_mask);
++		if (buf) {
++			*alloc_size = req_size;
++			return buf;
++		}
++		/* retry half the requested size */
++		req_size >>= 1;
++	}
++
++	return NULL;
++}
++
+ static inline int blk_copy_sanity_check(struct block_device *src_bdev,
+ 		struct block_device *dst_bdev, struct range_entry *rlist, int nr)
+ {
+@@ -298,6 +357,68 @@ static inline int blk_copy_sanity_check(struct block_device *src_bdev,
  	return 0;
  }
  
-+static int zonefs_is_file_size_ok(struct inode *src_inode, struct inode *dst_inode,
-+			   loff_t src_off, loff_t dst_off, size_t len)
++/* returns the total copy length still need to be copied */
++static inline sector_t blk_copy_max_range(struct range_entry *rlist, int nr, sector_t *max_len)
 +{
-+	loff_t size, endoff;
++	int i;
++	sector_t len = 0;
 +
-+	size = i_size_read(src_inode);
-+	/* Don't copy beyond source file EOF. */
-+	if (src_off + len > size) {
-+		zonefs_err(src_inode->i_sb, "Copy beyond EOF (%llu + %zu > %llu)\n",
-+		     src_off, len, size);
-+		return -EOPNOTSUPP;
++	*max_len = 0;
++	for (i = 0; i < nr; i++) {
++		*max_len = max(*max_len, rlist[i].len - rlist[i].comp_len);
++		len += (rlist[i].len - rlist[i].comp_len);
 +	}
 +
-+	endoff = dst_off + len;
-+	if (inode_newsize_ok(dst_inode, endoff))
-+		return -EOPNOTSUPP;
-+
-+
-+	return 0;
-+}
-+static ssize_t __zonefs_send_copy(struct zonefs_inode_info *src_zi, loff_t src_off,
-+				struct zonefs_inode_info *dst_zi, loff_t dst_off, size_t len)
-+{
-+	struct block_device *src_bdev = src_zi->i_vnode.i_sb->s_bdev;
-+	struct block_device *dst_bdev = dst_zi->i_vnode.i_sb->s_bdev;
-+	struct range_entry *rlist;
-+	int ret = -EIO;
-+
-+	rlist = kmalloc(sizeof(*rlist), GFP_KERNEL);
-+	rlist[0].dst = (dst_zi->i_zsector << SECTOR_SHIFT) + dst_off;
-+	rlist[0].src = (src_zi->i_zsector << SECTOR_SHIFT) + src_off;
-+	rlist[0].len = len;
-+	rlist[0].comp_len = 0;
-+	ret = blkdev_issue_copy(src_bdev, 1, rlist, dst_bdev, GFP_KERNEL);
-+	if (ret) {
-+		if (rlist[0].comp_len != len) {
-+			ret = rlist[0].comp_len;
-+			kfree(rlist);
-+			return ret;
-+		}
-+	}
-+	kfree(rlist);
 +	return len;
 +}
-+static ssize_t __zonefs_copy_file_range(struct file *src_file, loff_t src_off,
-+				      struct file *dst_file, loff_t dst_off,
-+				      size_t len, unsigned int flags)
++
++/*
++ * If native copy offload feature is absent, this function tries to emulate,
++ * by copying data from source to a temporary buffer and from buffer to
++ * destination device.
++ */
++static int blk_copy_emulate(struct block_device *src_bdev, int nr,
++		struct range_entry *rlist, struct block_device *dest_bdev, gfp_t gfp_mask)
 +{
-+	struct inode *src_inode = file_inode(src_file);
-+	struct inode *dst_inode = file_inode(dst_file);
-+	struct zonefs_inode_info *src_zi = ZONEFS_I(src_inode);
-+	struct zonefs_inode_info *dst_zi = ZONEFS_I(dst_inode);
-+	struct block_device *src_bdev = src_inode->i_sb->s_bdev;
-+	struct block_device *dst_bdev = dst_inode->i_sb->s_bdev;
-+	struct super_block *src_sb = src_inode->i_sb;
-+	struct zonefs_sb_info *src_sbi = ZONEFS_SB(src_sb);
-+	struct super_block *dst_sb = dst_inode->i_sb;
-+	struct zonefs_sb_info *dst_sbi = ZONEFS_SB(dst_sb);
-+	ssize_t ret = -EIO, bytes;
++	void *buf = NULL;
++	int ret, nr_i = 0;
++	sector_t src, dst, copy_len, buf_len, read_len, copied_len,
++		 max_len = 0, remaining = 0, offset = 0;
 +
-+	if (src_bdev != dst_bdev) {
-+		zonefs_err(src_sb, "Copying files across two devices\n");
-+			return -EXDEV;
-+	}
++	copy_len = blk_copy_max_range(rlist, nr, &max_len);
++	buf = blk_alloc_buf(max_len, &buf_len, gfp_mask);
++	if (!buf)
++		return -ENOMEM;
 +
-+	/*
-+	 * Some of the checks below will return -EOPNOTSUPP,
-+	 * which will force a generic copy
-+	 */
++	for (copied_len = 0; copied_len < copy_len; copied_len += read_len) {
++		if (!remaining) {
++			offset = rlist[nr_i].comp_len;
++			src = rlist[nr_i].src + offset;
++			dst = rlist[nr_i].dst + offset;
++			remaining = rlist[nr_i++].len - offset;
++		}
 +
-+	if (!(src_sbi->s_mount_opts & ZONEFS_MNTOPT_COPY_FILE)
-+		|| !(dst_sbi->s_mount_opts & ZONEFS_MNTOPT_COPY_FILE))
-+		return -EOPNOTSUPP;
-+
-+	/* Start by sync'ing the source and destination files ifor conv zones */
-+	if (src_zi->i_ztype == ZONEFS_ZTYPE_CNV) {
-+		ret = file_write_and_wait_range(src_file, src_off, (src_off + len));
-+		if (ret < 0) {
-+			zonefs_err(src_sb, "failed to write source file (%zd)\n", ret);
++		read_len = min_t(sector_t, remaining, buf_len);
++		if (!read_len)
++			continue;
++		ret = blk_submit_rw_buf(src_bdev, buf, read_len, src, REQ_OP_READ, gfp_mask);
++		if (ret)
 +			goto out;
-+		}
-+	}
-+	if (dst_zi->i_ztype == ZONEFS_ZTYPE_CNV) {
-+		ret = file_write_and_wait_range(dst_file, dst_off, (dst_off + len));
-+		if (ret < 0) {
-+			zonefs_err(dst_sb, "failed to write destination file (%zd)\n", ret);
++		src += read_len;
++		remaining -= read_len;
++		ret = blk_submit_rw_buf(dest_bdev, buf, read_len, dst, REQ_OP_WRITE,
++				gfp_mask);
++		if (ret)
 +			goto out;
-+		}
-+	}
-+	mutex_lock(&dst_zi->i_truncate_mutex);
-+	if (len > dst_zi->i_max_size - dst_zi->i_wpoffset) {
-+		/* Adjust length */
-+		len -= dst_zi->i_max_size - dst_zi->i_wpoffset;
-+		if (len <= 0) {
-+			mutex_unlock(&dst_zi->i_truncate_mutex);
-+			return -EOPNOTSUPP;
-+		}
-+	}
-+	if (dst_off != dst_zi->i_wpoffset) {
-+		mutex_unlock(&dst_zi->i_truncate_mutex);
-+		return -EOPNOTSUPP; /* copy not at zone write ptr */
-+	}
-+	mutex_lock(&src_zi->i_truncate_mutex);
-+	ret = zonefs_is_file_size_ok(src_inode, dst_inode, src_off, dst_off, len);
-+	if (ret < 0) {
-+		mutex_unlock(&src_zi->i_truncate_mutex);
-+		mutex_unlock(&dst_zi->i_truncate_mutex);
-+		goto out;
-+	}
-+	mutex_unlock(&src_zi->i_truncate_mutex);
-+
-+	/* Drop dst file cached pages for a conv zone*/
-+	if (dst_zi->i_ztype == ZONEFS_ZTYPE_CNV) {
-+		ret = invalidate_inode_pages2_range(dst_inode->i_mapping,
-+						    dst_off >> PAGE_SHIFT,
-+						    (dst_off + len) >> PAGE_SHIFT);
-+		if (ret < 0) {
-+			zonefs_err(dst_sb, "Failed to invalidate inode pages (%zd)\n", ret);
-+			ret = 0;
-+		}
-+	}
-+	bytes = __zonefs_send_copy(src_zi, src_off, dst_zi, dst_off, len);
-+	ret += bytes;
-+
-+	file_update_time(dst_file);
-+	zonefs_update_stats(dst_inode, dst_off + bytes);
-+	zonefs_i_size_write(dst_inode, dst_off + bytes);
-+	dst_zi->i_wpoffset += bytes;
-+	mutex_unlock(&dst_zi->i_truncate_mutex);
-+
-+
-+
-+	/*
-+	 * if we still have some bytes left, do splice copy
-+	 */
-+	if (bytes && (bytes < len)) {
-+		zonefs_info(src_sb, "Final partial copy of %zu bytes\n", len);
-+		bytes = do_splice_direct(src_file, &src_off, dst_file,
-+					 &dst_off, len, flags);
-+		if (bytes > 0)
-+			ret += bytes;
 +		else
-+			zonefs_info(src_sb, "Failed partial copy (%zd)\n", bytes);
++			rlist[nr_i - 1].comp_len += read_len;
++		dst += read_len;
 +	}
-+
 +out:
-+
++	kvfree(buf);
 +	return ret;
 +}
 +
-+static ssize_t zonefs_copy_file_range(struct file *src_file, loff_t src_off,
-+				    struct file *dst_file, loff_t dst_off,
-+				    size_t len, unsigned int flags)
-+{
-+	ssize_t ret;
-+
-+	ret = __zonefs_copy_file_range(src_file, src_off, dst_file, dst_off,
-+				     len, flags);
-+
-+	if (ret == -EOPNOTSUPP || ret == -EXDEV)
-+		ret = generic_copy_file_range(src_file, src_off, dst_file,
-+					      dst_off, len, flags);
-+	return ret;
-+}
-+
- static const struct file_operations zonefs_file_operations = {
- 	.open		= zonefs_file_open,
- 	.release	= zonefs_file_release,
-@@ -1200,6 +1366,7 @@ static const struct file_operations zonefs_file_operations = {
- 	.splice_read	= generic_file_splice_read,
- 	.splice_write	= iter_file_splice_write,
- 	.iopoll		= iocb_bio_iopoll,
-+	.copy_file_range = zonefs_copy_file_range,
- };
+ static inline bool blk_check_copy_offload(struct request_queue *src_q,
+ 		struct request_queue *dest_q)
+ {
+@@ -325,6 +446,7 @@ int blkdev_issue_copy(struct block_device *src_bdev, int nr,
+ 	struct request_queue *src_q = bdev_get_queue(src_bdev);
+ 	struct request_queue *dest_q = bdev_get_queue(dest_bdev);
+ 	int ret = -EINVAL;
++	bool offload = false;
  
- static struct kmem_cache *zonefs_inode_cachep;
-@@ -1262,7 +1429,7 @@ static int zonefs_statfs(struct dentry *dentry, struct kstatfs *buf)
- 
- enum {
- 	Opt_errors_ro, Opt_errors_zro, Opt_errors_zol, Opt_errors_repair,
--	Opt_explicit_open, Opt_err,
-+	Opt_explicit_open, Opt_no_copy_offload, Opt_err,
- };
- 
- static const match_table_t tokens = {
-@@ -1271,6 +1438,7 @@ static const match_table_t tokens = {
- 	{ Opt_errors_zol,	"errors=zone-offline"},
- 	{ Opt_errors_repair,	"errors=repair"},
- 	{ Opt_explicit_open,	"explicit-open" },
-+	{ Opt_no_copy_offload,	"no_copy_offload" },
- 	{ Opt_err,		NULL}
- };
- 
-@@ -1280,6 +1448,7 @@ static int zonefs_parse_options(struct super_block *sb, char *options)
- 	substring_t args[MAX_OPT_ARGS];
- 	char *p;
- 
-+	sbi->s_mount_opts |= ZONEFS_MNTOPT_COPY_FILE;
- 	if (!options)
- 		return 0;
- 
-@@ -1310,6 +1479,9 @@ static int zonefs_parse_options(struct super_block *sb, char *options)
- 		case Opt_explicit_open:
- 			sbi->s_mount_opts |= ZONEFS_MNTOPT_EXPLICIT_OPEN;
- 			break;
-+		case Opt_no_copy_offload:
-+			sbi->s_mount_opts &= ~ZONEFS_MNTOPT_COPY_FILE;
-+			break;
- 		default:
- 			return -EINVAL;
- 		}
-@@ -1330,6 +1502,8 @@ static int zonefs_show_options(struct seq_file *seq, struct dentry *root)
- 		seq_puts(seq, ",errors=zone-offline");
- 	if (sbi->s_mount_opts & ZONEFS_MNTOPT_ERRORS_REPAIR)
- 		seq_puts(seq, ",errors=repair");
-+	if (sbi->s_mount_opts & ZONEFS_MNTOPT_COPY_FILE)
-+		seq_puts(seq, ",copy_offload");
- 
- 	return 0;
- }
-@@ -1769,6 +1943,8 @@ static int zonefs_fill_super(struct super_block *sb, void *data, int silent)
- 	atomic_set(&sbi->s_active_seq_files, 0);
- 	sbi->s_max_active_seq_files = bdev_max_active_zones(sb->s_bdev);
- 
-+	/* set copy support by default */
-+	sbi->s_mount_opts |= ZONEFS_MNTOPT_COPY_FILE;
- 	ret = zonefs_read_super(sb);
+ 	if (!src_q || !dest_q)
+ 		return -ENXIO;
+@@ -342,9 +464,13 @@ int blkdev_issue_copy(struct block_device *src_bdev, int nr,
  	if (ret)
  		return ret;
-diff --git a/fs/zonefs/zonefs.h b/fs/zonefs/zonefs.h
-index 4b3de66c3233..efa6632c4b6a 100644
---- a/fs/zonefs/zonefs.h
-+++ b/fs/zonefs/zonefs.h
-@@ -162,6 +162,7 @@ enum zonefs_features {
- 	(ZONEFS_MNTOPT_ERRORS_RO | ZONEFS_MNTOPT_ERRORS_ZRO | \
- 	 ZONEFS_MNTOPT_ERRORS_ZOL | ZONEFS_MNTOPT_ERRORS_REPAIR)
- #define ZONEFS_MNTOPT_EXPLICIT_OPEN	(1 << 4) /* Explicit open/close of zones on open/close */
-+#define ZONEFS_MNTOPT_COPY_FILE		(1 << 5) /* enable copy file range offload to kernel */
  
- /*
-  * In-memory Super block information.
+-	if (blk_check_copy_offload(src_q, dest_q))
++	offload = blk_check_copy_offload(src_q, dest_q);
++	if (offload)
+ 		ret = blk_copy_offload(src_bdev, nr, rlist, dest_bdev, gfp_mask);
+ 
++	if (ret || !offload)
++		ret = blk_copy_emulate(src_bdev, nr, rlist, dest_bdev, gfp_mask);
++
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(blkdev_issue_copy);
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 7ffde64f9019..ca2ad2c21f42 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -340,7 +340,7 @@ static void bio_map_kern_endio(struct bio *bio)
+  *	Map the kernel address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+-static struct bio *bio_map_kern(struct request_queue *q, void *data,
++struct bio *bio_map_kern(struct request_queue *q, void *data,
+ 		unsigned int len, gfp_t gfp_mask)
+ {
+ 	unsigned long kaddr = (unsigned long)data;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index c6cb3fe82ba2..ea1f3c8f8dad 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1121,6 +1121,8 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop);
+ int blkdev_issue_secure_erase(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp);
++struct bio *bio_map_kern(struct request_queue *q, void *data, unsigned int len,
++		gfp_t gfp_mask);
+ int blkdev_issue_copy(struct block_device *src_bdev, int nr_srcs,
+ 		struct range_entry *src_rlist, struct block_device *dest_bdev, gfp_t gfp_mask);
+ 
 -- 
 2.35.1.500.gb896f729e2
 
