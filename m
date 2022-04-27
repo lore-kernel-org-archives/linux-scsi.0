@@ -2,134 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11444C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 22:06:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D049C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 22:22:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230270AbiD0WJM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Apr 2022 18:09:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57016 "EHLO
+        id S232149AbiD0WZU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Apr 2022 18:25:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238086AbiD0WIt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2022 18:08:49 -0400
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BAC0237DC
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2022 15:05:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1651097135; x=1682633135;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=Ltiub3iDq6D6Wb7M/70Y0VAAaW3D7ZlOojkFrPEHoeo=;
-  b=Skr8I68pPMUR8cKi472dj8zdn4PkG/n9dfNhokP02ci3cERKVdOZioRH
-   frEioB3FZ1BoI3the+3gdpWcVY+VPyHGX4jrhWEWIqrmeEKaChnlK3Maa
-   BUH3ogPnKm9tHdOWwiumM/BVL3viCR4/HLGjQ9CoYGWG9ZTOvJb1GOFpn
-   Paqsghnds83ZLrmNfJOVTRh1m87xjATOTqtoq6eRvuaCIERqVkrDMPGJD
-   sPOIYQUfDVHPLcK9cQmYQPRLh3EdSsoVB8i+vwjx0rISr/yrCZOLvA76c
-   /tJVQsmeTNeLTNkwmuu34vWd2RPStbaRCpjQZx4m8v85R74hWSL7kcN8V
-   A==;
-X-IronPort-AV: E=Sophos;i="5.90,294,1643644800"; 
-   d="scan'208";a="198996981"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Apr 2022 06:05:34 +0800
-IronPort-SDR: k48ZhxNIAyaBViLivn1hNQaW6S7A6qWfeDmilNSp1Zw3mnqdUkJlMWm576GekN+O2ncqx/rWdh
- RfPrZKiDTid5UJlrDmQULtz7Hk4IxDjClqwe1C2MR5rkC7XU5yHK63uHyxD7cXdpu3SaQs6n2U
- z6XXk7eD2aXKkdYv5CRevAL3ElIxkUXTWtA3SofMKRJo0VG6OBGZgbjTuplOAjJT6aUlRP5tWM
- 3bDvM80zBzpsO14ogPiW6yzeyYdL0qer32LwrKaIppe6QOz92KpJa8kfm+NUDz4Vv6azHaXQDc
- CkkuQOo9r/A4ifM9I5io1iuo
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Apr 2022 14:36:27 -0700
-IronPort-SDR: 6PSA4mM5U4H65HM6VwB/DrVVWvvf5ukHZAcqt4Q67XjfkOmmQwTT8SBJPl8GGO1y6D1VQeeF0v
- KkcquHEuSasXZ10xtZWZXjIkHknufKPdvJ5S0bnIZkKwObZzsezoQJYrMK1PtHrL0IrrCcuWgP
- +W/FKW7fGWGM5uNBbnYDrTqVrhOhLrnKVHriPi7gfnHBcZQIS2GVAzVTzKA7MgmjoUpscXi29y
- NAQsK89lYEXlZ3EI6TcZk+UaeG6FXbzImLBb433HfF1RtYnXPv+/+4tsgQk3jsanArvCEW0s3i
- +Xo=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Apr 2022 15:05:35 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KpXqy6k1tz1SVp1
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2022 15:05:34 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1651097134; x=1653689135; bh=Ltiub3iDq6D6Wb7M/70Y0VAAaW3D7ZlOojk
-        FrPEHoeo=; b=tf10gyOH0lx9kTAQMvmNEOqbTNS9DLTOZB9qsNe71qSj+MlslLY
-        F2EMsRT1hYv8Uex+f8eyJX1V+hNKxnq0ZvLAwm2N9h1bKDM2qAdaXd8XFxq2OFtZ
-        V4RlBXCG//INUr7wVIQqFsb2qymtVwVHXuxY8eD6UpYIYKBOcpCxEpfLcPWyOf+Z
-        a1goiEri2UoD+WOlXIFCHSZYAnDDnYTLxwQ44EG/xQ6NBuYZ4KdX6hPN8R/IC8+K
-        mjJuGAhmLtYWSzjRHY0sOUl5Yj3top3PIke6IkXYtsIwx8o7NXzckBhJqqv2uDvr
-        xwDwWqUps86ht4CXLQyUclRDU1FKcwhVZrQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id o6PHTTDOjPkH for <linux-scsi@vger.kernel.org>;
-        Wed, 27 Apr 2022 15:05:34 -0700 (PDT)
-Received: from [10.225.163.27] (unknown [10.225.163.27])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KpXqx1gFtz1Rvlc;
-        Wed, 27 Apr 2022 15:05:33 -0700 (PDT)
-Message-ID: <c285f0da-ab1d-2b24-e5a4-21193ef93155@opensource.wdc.com>
-Date:   Thu, 28 Apr 2022 07:05:32 +0900
+        with ESMTP id S232057AbiD0WZS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2022 18:25:18 -0400
+Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F06D42B252
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2022 15:22:05 -0700 (PDT)
+Received: by mail-pg1-x52b.google.com with SMTP id 15so2485977pgf.4
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2022 15:22:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=+IO7f2SIDCDTHdxng7A/a+R1OGHvWooIrBKgOfcgO8s=;
+        b=broGhPI2E344O+P0zYLqtBtW+BwHD67/5IkCvorEDOj1kUE9BmSYsL72PMxI+Q8j9F
+         x5S3wSkt3l27dX6nC/e9GF0Z0ZyBzhmd/4ZcCL2SLkpGzkb7aPM8b+NvixNBdicH1pi4
+         mVOop/+kcL5mMDa1zTfqfxIpY1C5n9JEq/7p8Z8/OCZURgf0FacMiyKacMFn9iWd4+OU
+         EGFScUiX0iVHBxiDx8mj29fDEheEXoNIfCX6NIwlYhyGWx8GQLsP9t6X8rNLYlVDuYdk
+         rEymEB0yevdl1wlIuE1/AdhSyHsAPKs9AKAAhGz7tkElGyZ/AaN0U/aswxTm7Cp3YlLh
+         VSsQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=+IO7f2SIDCDTHdxng7A/a+R1OGHvWooIrBKgOfcgO8s=;
+        b=cQOongme1TKpX0xph4E4+AEMZSxvjHG0NjrOJFQUlyxQbW42Zzzd9j7nOoSq/NcRcM
+         rGgJO541h583g+H0pyypC+seylUyJ4pSmKm9mMimWgb19bvl9vn9uHejF5xywaE6Qi8k
+         IxmOkXG3+X4o8qmU4GVf0N9IuxnryX1b3xF/vfYqgnuyO/JuenaAJ7J4mN3n/8hdeZFe
+         xIQvdOpOcBUf0IzN3RYiEaoQUDofJDv97f+EaG7UV1Si/qrcYmucytOABhtdqyAaG4Qk
+         9G6HYja04fsxghP8eMwXNjZXQK+Zxilm6SSbRnNFpM60sV3YH40dSaxexFnTB/470Q2l
+         co+Q==
+X-Gm-Message-State: AOAM530hLaINaNWKhOh2do7dMQ+ZKmWlW898WWd8po/LFEDyapQamwWB
+        3cQDrBeSLGr6skY8GGS0Efn6G8j+HSk=
+X-Google-Smtp-Source: ABdhPJyLVJh/gdMbsXEXR6UXA0oGwZzuLQz3OXpD4AcxFT3G8dZ02DI0/DNHE1vHnT25fpFZB5OtNw==
+X-Received: by 2002:a05:6a00:8c9:b0:4fe:ecc:9bcd with SMTP id s9-20020a056a0008c900b004fe0ecc9bcdmr31853118pfu.34.1651098125249;
+        Wed, 27 Apr 2022 15:22:05 -0700 (PDT)
+Received: from mail-ash-it-01.broadcom.com ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id p27-20020a631e5b000000b003c14af50608sm319015pgm.32.2022.04.27.15.22.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Apr 2022 15:22:04 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Nigel Kirkland <nigel.kirkland@broadcom.com>
+Subject: [PATCH] lpfc: Fix additional reference counting in lpfc_bsg_rport_els()
+Date:   Wed, 27 Apr 2022 15:21:58 -0700
+Message-Id: <20220427222158.57867-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH v4 00/10] Add Copy offload support
-Content-Language: en-US
-To:     Nitesh Shetty <nj.shetty@samsung.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        dm-devel@redhat.com, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org, nitheshshetty@gmail.com,
-        linux-kernel@vger.kernel.org
-References: <CGME20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15@epcas5p4.samsung.com>
- <20220426101241.30100-1-nj.shetty@samsung.com>
- <6a85e8c8-d9d1-f192-f10d-09052703c99a@opensource.wdc.com>
- <20220427124951.GA9558@test-zns>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220427124951.GA9558@test-zns>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/27/22 21:49, Nitesh Shetty wrote:
-> O Wed, Apr 27, 2022 at 11:19:48AM +0900, Damien Le Moal wrote:
->> On 4/26/22 19:12, Nitesh Shetty wrote:
->>> The patch series covers the points discussed in November 2021 virtual=
- call
->>> [LSF/MM/BFP TOPIC] Storage: Copy Offload[0].
->>> We have covered the Initial agreed requirements in this patchset.
->>> Patchset borrows Mikulas's token based approach for 2 bdev
->>> implementation.
->>>
->>> Overall series supports =E2=80=93
->>>
->>> 1. Driver
->>> - NVMe Copy command (single NS), including support in nvme-target (fo=
-r
->>>     block and file backend)
->>
->> It would also be nice to have copy offload emulation in null_blk for t=
-esting.
->>
->=20
-> We can plan this in next phase of copy support, once this series settle=
-s down.
+Code inspection has found an additional reference is taken in
+lpfc_bsg_rport_els(). Results in the ndlp not being freed thus is
+leaked.
 
-So how can people test your series ? Not a lot of drives out there with
-copy support.
+Fix by removing the redundant refcount taken before WQE submission.
 
->=20
-> --
-> Nitesh Shetty
->=20
->=20
+Co-developed-by: Nigel Kirkland <nigel.kirkland@broadcom.com>
+Signed-off-by: Nigel Kirkland <nigel.kirkland@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_bsg.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index ae46383b13bf..676e7d54b97a 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -740,12 +740,6 @@ lpfc_bsg_rport_els(struct bsg_job *job)
+ 		readl(phba->HCregaddr); /* flush */
+ 	}
+ 
+-	cmdiocbq->ndlp = lpfc_nlp_get(ndlp);
+-	if (!cmdiocbq->ndlp) {
+-		rc = -EIO;
+-		goto linkdown_err;
+-	}
+-
+ 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, cmdiocbq, 0);
+ 	if (rc == IOCB_SUCCESS) {
+ 		spin_lock_irqsave(&phba->hbalock, flags);
+-- 
+2.26.2
 
---=20
-Damien Le Moal
-Western Digital Research
