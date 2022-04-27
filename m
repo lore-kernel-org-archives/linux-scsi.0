@@ -2,151 +2,559 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F9EAC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 01:47:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC408C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 01:59:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356945AbiD0BvE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Apr 2022 21:51:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57352 "EHLO
+        id S1356914AbiD0CCa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Apr 2022 22:02:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356939AbiD0BvB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 21:51:01 -0400
-Received: from mp-relay-02.fibernetics.ca (mp-relay-02.fibernetics.ca [208.85.217.137])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4667349F17;
-        Tue, 26 Apr 2022 18:47:52 -0700 (PDT)
-Received: from mailpool-fe-01.fibernetics.ca (mailpool-fe-01.fibernetics.ca [208.85.217.144])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mp-relay-02.fibernetics.ca (Postfix) with ESMTPS id 933C365FE2;
-        Wed, 27 Apr 2022 01:47:51 +0000 (UTC)
-Received: from localhost (mailpool-mx-01.fibernetics.ca [208.85.217.140])
-        by mailpool-fe-01.fibernetics.ca (Postfix) with ESMTP id 875124D4BA;
-        Wed, 27 Apr 2022 01:47:51 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at 
-Received: from mailpool-fe-01.fibernetics.ca ([208.85.217.144])
-        by localhost (mail-mx-01.fibernetics.ca [208.85.217.140]) (amavisd-new, port 10024)
-        with ESMTP id 1A8SeDgBqeFU; Wed, 27 Apr 2022 01:47:51 +0000 (UTC)
-Received: from [192.168.48.23] (host-45-78-195-155.dyn.295.ca [45.78.195.155])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail.ca.inter.net (Postfix) with ESMTPSA id 5A6B84BF89;
-        Wed, 27 Apr 2022 01:47:48 +0000 (UTC)
-Message-ID: <726c8764-c3fe-99d9-d2ea-6a4ab8a198d5@interlog.com>
-Date:   Tue, 26 Apr 2022 21:47:47 -0400
+        with ESMTP id S1356857AbiD0CC2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 22:02:28 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16A02175F81
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Apr 2022 18:59:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1651024758; x=1682560758;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=5s6rb7iS9ZQjJBwQh3UukXPumTzLR7t4Lra1wK50blY=;
+  b=JmQ6Bo4+qi6+9ULe9yQhHm5E3Q74ipcSDc9HBgiGIDPMipIj9T4nN69L
+   mSdVUVfeSdZtQ6fzqJe0K/ysO7HzzLh2RqSsMELr17qCPidKNJ3g0wXov
+   RXD5d8s0L9k7469MGGUbco9joP3WFUUApQUwNuaAfKxg+W8bN85GV7IT5
+   dDpv4+PjMUGzqfDdfYV4i6H+SUeOC9iiID9MqTDtAanTKwojorOnFRkdA
+   ta0j8A1A2StHZCMhZOhKzcJu1veQ0LtEIj1hPUh8CsYkqBUKCm1DHDdQA
+   I68Bx0k1BoBTDVZafT6QNlCxHl2uFUDUYKwmgeUARcM/dOfgHL1CvUzbv
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.90,292,1643644800"; 
+   d="scan'208";a="310879657"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Apr 2022 09:59:17 +0800
+IronPort-SDR: +DjYNCCjw/2Hur750gkfAXhfyvp6EmQRyJHF+aNAGialwJ/fkZ3zlwPesaaLyBw2EIEz5okuAA
+ FOMyQZwlk1Lxoe5FMaI5buHzSXtXhTsagrQ510/nxHDY431XHhZqjIH/7wOEeohdD3q1Z+MrDq
+ J/SfQ7PHL/CT4HfSOosAqJHiKurpyC4v3+Qkin9uNnqBuaJR2XCyQilSndrUwMfHwcYCyzar0u
+ FYYJQ96fOKldiD3M9kENLA3UUKSJbqbdVe4iQ8JYZgIkI79A/vYarsCkXcbxdi8ZHjsXx/Efv/
+ gBEC4YIS9WNIskUhADsqgZxo
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Apr 2022 18:29:27 -0700
+IronPort-SDR: /BR0iWT5MS5Mg32/VwJIXLFqiO9+VTfD61w90zML/nEwj4YKg51wIHUgYCvgaN56m2lbmN9cfg
+ 9aMmMw+tvS2603J1Q2iWYZD41Tup3wjDEu8PdgpObHy3bLymeIIJBYv27SyMCpRVVwEuCJXX6n
+ M/hbXiui+FtIcsTwCZ+gzB/ypvQLs8mO3W3S+I4r11Kd6exs4RX58D/JHBfyjOnYFC4w26k0Rr
+ yWR6s9nZvKC/PnsYiG01YoHsrzZAhj+EGTFJJz3H1MjooZ5wtdmFIgWuicXS7IYh1lqB1yCgHo
+ /Lw=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Apr 2022 18:59:17 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Kp2450PPYz1Rvlx
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Apr 2022 18:59:16 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1651024753; x=1653616754; bh=5s6rb7iS9ZQjJBwQh3UukXPumTzLR7t4Lra
+        1wK50blY=; b=TjMs/5YRmwklMixYXh5Dn+CGxzYruadVyapPYB2Q9Jg16QmS2YT
+        0SSRm3bdGc6LVUy2eg+kUJhKDRv3mVcQ1pngpPhYDY/PF7127soxxuAYkwvZPwx+
+        9ZyQT2rvzSz8/Z22gSGYEJhlqkuClT+nTAK9v6gxEpy4L4KvPT1kXoJjItklFIvw
+        6umDQVs5Za7ZYmX3ktKPrL5KsiOdbWUj+uCdKsN9XOXP70o/fNtbVWvrql2dtJR7
+        2MSbzPqg33irD52hJNqQeqY1qaMal2DcarJ7KqhbSeyVUTcMuaozYdBCtmopLfsJ
+        zVkD8HN3beGJQw+FOWsXbibU0wYko3J+ykQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id iCyf5mlgqIPs for <linux-scsi@vger.kernel.org>;
+        Tue, 26 Apr 2022 18:59:13 -0700 (PDT)
+Received: from [10.225.163.27] (unknown [10.225.163.27])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Kp23p3D6Gz1Rvlc;
+        Tue, 26 Apr 2022 18:59:02 -0700 (PDT)
+Message-ID: <0d52ad34-ab75-9672-321f-34053421c0c4@opensource.wdc.com>
+Date:   Wed, 27 Apr 2022 10:59:01 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.8.0
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
-Content-Language: en-CA
-To:     Bart Van Assche <bvanassche@acm.org>,
-        John Garry <john.garry@huawei.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     "Ewan D. Milne" <emilne@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, james.smart@broadcom.com
-References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
- <2a88a992-641a-b3ff-fe39-7a61fff87cb6@huawei.com>
- <4c3be5b6-50ef-9e9a-6cee-9642df943342@linaro.org>
- <7b3885e3-dbae-ff0b-21dc-c28d635d950b@huawei.com>
- <c121430b1b5c8f5816b2b42b9178d00889260c90.camel@redhat.com>
- <b6af3fe8-db9a-b5dc-199f-21c05d7664a2@huawei.com>
- <Yl+wJ7xSHzWmR+bR@infradead.org>
- <d09faf74-a52e-8d93-cf26-08b43b12c564@huawei.com>
- <24bfb681-faec-3567-3089-9cd5ee182710@linaro.org>
- <1bb53912-c5c3-7690-e82f-cf356ca87404@huawei.com>
- <aba8999d-276d-f9e8-96b4-5d1cc4e82c53@acm.org>
- <5485f529-e99a-0bdd-07bd-b5b559da91e6@interlog.com>
- <f6516c7f-16c7-689c-b6cd-ebff95e931a4@acm.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-In-Reply-To: <f6516c7f-16c7-689c-b6cd-ebff95e931a4@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v4 01/10] block: Introduce queue limits for copy-offload
+ support
+Content-Language: en-US
+To:     Nitesh Shetty <nj.shetty@samsung.com>
+Cc:     chaitanyak@nvidia.com, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, dm-devel@redhat.com,
+        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+        axboe@kernel.dk, msnitzer@redhat.com, bvanassche@acm.org,
+        martin.petersen@oracle.com, hare@suse.de, kbusch@kernel.org,
+        hch@lst.de, Frederick.Knight@netapp.com, osandov@fb.com,
+        lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
+        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
+        jack@suse.com, nitheshshetty@gmail.com, gost.dev@samsung.com,
+        Kanchan Joshi <joshi.k@samsung.com>,
+        Arnav Dawn <arnav.dawn@samsung.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        James Smart <james.smart@broadcom.com>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-kernel@vger.kernel.org
+References: <20220426101241.30100-1-nj.shetty@samsung.com>
+ <CGME20220426101910epcas5p4fd64f83c6da9bbd891107d158a2743b5@epcas5p4.samsung.com>
+ <20220426101241.30100-2-nj.shetty@samsung.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220426101241.30100-2-nj.shetty@samsung.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022-04-26 00:13, Bart Van Assche wrote:
-> On 4/25/22 18:54, Douglas Gilbert wrote:
->> On 2022-04-25 21:16, Bart Van Assche wrote:
->>> How about removing scsi_proc_hostdir_add(), scsi_proc_hostdir_rm() and all 
->>> other code that creates files or directories under /proc/scsi? There should 
->>> be corresponding entries in sysfs for all /proc/scsi entries. Some tools in 
->>> sg3_utils use that directory so sg3_utils will have to be updated.
->>
->> ... breaking this:
->>
->> ~$ cat /proc/scsi/scsi
->>
->> Attached devices:
->>
->> Host: scsi3 Channel: 00 Id: 00 Lun: 00
->>    Vendor: IBM-207x Model: HUSMM8020ASS20   Rev: J4B6
->>    Type:   Direct-Access                    ANSI  SCSI revision: 06
->> Host: scsi3 Channel: 00 Id: 01 Lun: 00
->>    Vendor: IBM-207x Model: HUSMM8020ASS20   Rev: J4B6
->>    Type:   Direct-Access                    ANSI  SCSI revision: 06
->> Host: scsi3 Channel: 00 Id: 02 Lun: 00
->>    Vendor: SEAGATE  Model: ST200FM0073      Rev: 0007
->>    Type:   Direct-Access                    ANSI  SCSI revision: 06
->> ...
->>
->> A deprecation notice would be helpful, then removal after a few kernel
->> cycles.
+On 4/26/22 19:12, Nitesh Shetty wrote:
+> Add device limits as sysfs entries,
+>         - copy_offload (RW)
+>         - copy_max_bytes (RW)
+>         - copy_max_hw_bytes (RO)
+>         - copy_max_range_bytes (RW)
+>         - copy_max_range_hw_bytes (RO)
+>         - copy_max_nr_ranges (RW)
+>         - copy_max_nr_ranges_hw (RO)
 > 
-> Agreed with the deprecation notice + delayed removal, but is anyone using cat 
-> /proc/scsi/scsi?
+> Above limits help to split the copy payload in block layer.
+> copy_offload, used for setting copy offload(1) or emulation(0).
+> copy_max_bytes: maximum total length of copy in single payload.
+> copy_max_range_bytes: maximum length in a single entry.
+> copy_max_nr_ranges: maximum number of entries in a payload.
+> copy_max_*_hw_*: Reflects the device supported maximum limits.
 > 
->> Yes, lsscsi can give that output:
->>
->> $ lsscsi -c
->> Attached devices:
->> Host: scsi2 Channel: 00 Target: 00 Lun: 00
->>    Vendor: SEAGATE  Model: ST200FM0073      Rev: 0007
->>    Type:   Direct-Access                    ANSI SCSI revision: 06
->> Host: scsi2 Channel: 00 Target: 01 Lun: 00
->>    Vendor: WDC      Model: WSH722020AL5204  Rev: C421
->>    Type:   Zoned Block                      ANSI SCSI revision: 07
->> Host: scsi2 Channel: 00 Target: 02 Lun: 00
->>    Vendor: Areca Te Model: ARC-802801.37.69 Rev: 0137
->>    Type:   Enclosure                        ANSI SCSI revision: 05
->> ...
->>
->> [Hmmm, in a different order.]
->>
->> However no distribution that I'm aware of includes lsscsi in its installation.
->> [Most recent example: Ubuntu 22.04]
+> Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+> Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
+> Signed-off-by: Arnav Dawn <arnav.dawn@samsung.com>
+> ---
+>  Documentation/ABI/stable/sysfs-block |  83 ++++++++++++++++
+>  block/blk-settings.c                 |  59 ++++++++++++
+>  block/blk-sysfs.c                    | 138 +++++++++++++++++++++++++++
+>  include/linux/blkdev.h               |  13 +++
+>  4 files changed, 293 insertions(+)
 > 
-> Hmm ... are you sure? Last time I looked into this an lsscsi package was 
-> available for every distro I tried (RHEL, SLES, Debian and openSUSE). See also 
-> https://packages.debian.org/search?searchon=contents&keywords=lsscsi&mode=path&suite=stable&arch=any.
+> diff --git a/Documentation/ABI/stable/sysfs-block b/Documentation/ABI/stable/sysfs-block
+> index e8797cd09aff..65e64b5a0105 100644
+> --- a/Documentation/ABI/stable/sysfs-block
+> +++ b/Documentation/ABI/stable/sysfs-block
+> @@ -155,6 +155,89 @@ Description:
+>  		last zone of the device which may be smaller.
+>  
+>  
+> +What:		/sys/block/<disk>/queue/copy_offload
+> +Date:		April 2022
+> +Contact:	linux-block@vger.kernel.org
+> +Description:
+> +		[RW] When read, this file shows whether offloading copy to
+> +		device is enabled (1) or disabled (0). Writing '0' to this
+> +		file will disable offloading copies for this device.
+> +		Writing any '1' value will enable this feature.
+> +
+> +
+> +What:		/sys/block/<disk>/queue/copy_max_bytes
+> +Date:		April 2022
+> +Contact:	linux-block@vger.kernel.org
+> +Description:
+> +		[RW] While 'copy_max_hw_bytes' is the hardware limit for the
+> +		device, 'copy_max_bytes' setting is the software limit.
+> +		Setting this value lower will make Linux issue smaller size
+> +		copies.
+> +
+> +
+> +What:		/sys/block/<disk>/queue/copy_max_hw_bytes
+> +Date:		April 2022
+> +Contact:	linux-block@vger.kernel.org
+> +Description:
+> +		[RO] Devices that support offloading copy functionality may have
+> +		internal limits on the number of bytes that can be offloaded
+> +		in a single operation. The `copy_max_hw_bytes`
+> +		parameter is set by the device driver to the maximum number of
+> +		bytes that can be copied in a single operation. Copy
+> +		requests issued to the device must not exceed this limit.
+> +		A value of 0 means that the device does not
+> +		support copy offload.
+> +
+> +
+> +What:		/sys/block/<disk>/queue/copy_max_nr_ranges
+> +Date:		April 2022
+> +Contact:	linux-block@vger.kernel.org
+> +Description:
+> +		[RW] While 'copy_max_nr_ranges_hw' is the hardware limit for the
+> +		device, 'copy_max_nr_ranges' setting is the software limit.
+> +
+> +
+> +What:		/sys/block/<disk>/queue/copy_max_nr_ranges_hw
+> +Date:		April 2022
+> +Contact:	linux-block@vger.kernel.org
+> +Description:
+> +		[RO] Devices that support offloading copy functionality may have
+> +		internal limits on the number of ranges in single copy operation
+> +		that can be offloaded in a single operation.
+> +		A range is tuple of source, destination and length of data
+> +		to be copied. The `copy_max_nr_ranges_hw` parameter is set by
+> +		the device driver to the maximum number of ranges that can be
+> +		copied in a single operation. Copy requests issued to the device
+> +		must not exceed this limit. A value of 0 means that the device
+> +		does not support copy offload.
+> +
+> +
+> +What:		/sys/block/<disk>/queue/copy_max_range_bytes
+> +Date:		April 2022
+> +Contact:	linux-block@vger.kernel.org
+> +Description:
+> +		[RW] While 'copy_max_range_hw_bytes' is the hardware limit for
+> +		the device, 'copy_max_range_bytes' setting is the software
+> +		limit.
+> +
+> +
+> +What:		/sys/block/<disk>/queue/copy_max_range_hw_bytes
+> +Date:		April 2022
+> +Contact:	linux-block@vger.kernel.org
+> +Description:
+> +		[RO] Devices that support offloading copy functionality may have
+> +		internal limits on the size of data, that can be copied in a
+> +		single range within a single copy operation.
+> +		A range is tuple of source, destination and length of data to be
+> +		copied. The `copy_max_range_hw_bytes` parameter is set by the
+> +		device driver to set the maximum length in bytes of a range
+> +		that can be copied in an operation.
+> +		Copy requests issued to the device must not exceed this limit.
+> +		Sum of sizes of all ranges in a single opeartion should not
+> +		exceed 'copy_max_hw_bytes'. A value of 0 means that the device
+> +		does not support copy offload.
+> +
+> +
+>  What:		/sys/block/<disk>/queue/crypto/
+>  Date:		February 2022
+>  Contact:	linux-block@vger.kernel.org
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index 6ccceb421ed2..70167aee3bf7 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -57,6 +57,12 @@ void blk_set_default_limits(struct queue_limits *lim)
+>  	lim->misaligned = 0;
+>  	lim->zoned = BLK_ZONED_NONE;
+>  	lim->zone_write_granularity = 0;
+> +	lim->max_hw_copy_sectors = 0;
 
-I was talking about the _initial_ installation. When I install new versions
-of Fedora or Ubuntu, or play with a "live" CD (usually a USB stick) one
-of the first things I do is get a terminal and then invoke 'lsscsi'.
-Invariably that second step fails. And on a "live" USB stick you can install
-lsscsi but the next time you use it, lsscsi is gone because those "live"
-USB sticks hardly ever have persistent storage set up. [Why not? ..
-typically the rest of the storage on such a USB stick is un-utilized.]
+For readability, I would keep "hw" next to sectors/nr_ranges:
 
-> Are there other utilities in sg3_utils that would break if the /proc/scsi 
-> directory would be removed?
-> 
-> $ cd sg3_utils && git grep /proc/scsi | wc -l
-> 51
+max_copy_hw_sectors
+max_copy_sectors
+max_copy_hw_nr_ranges
+max_copy_nr_ranges
+max_copy_range_hw_sectors
+max_copy_range_sectors
 
-Most of those are in the scripts/rescan-scsi-bus.sh which, judging from the
-number of patches and additions it gets, has quite a bit of use out there.
-The rest are in my dd variants that are mainly setting /proc/scsi/sg/allow_dio
-which has no effect in my sg driver rewrite.
+> +	lim->max_copy_sectors = 0;
+> +	lim->max_hw_copy_nr_ranges = 0;
+> +	lim->max_copy_nr_ranges = 0;
+> +	lim->max_hw_copy_range_sectors = 0;
+> +	lim->max_copy_range_sectors = 0;
+>  }
+>  EXPORT_SYMBOL(blk_set_default_limits);
+>  
+> @@ -81,6 +87,12 @@ void blk_set_stacking_limits(struct queue_limits *lim)
+>  	lim->max_dev_sectors = UINT_MAX;
+>  	lim->max_write_zeroes_sectors = UINT_MAX;
+>  	lim->max_zone_append_sectors = UINT_MAX;
+> +	lim->max_hw_copy_sectors = ULONG_MAX;
+> +	lim->max_copy_sectors = ULONG_MAX;
+> +	lim->max_hw_copy_range_sectors = UINT_MAX;
+> +	lim->max_copy_range_sectors = UINT_MAX;
+> +	lim->max_hw_copy_nr_ranges = USHRT_MAX;
+> +	lim->max_copy_nr_ranges = USHRT_MAX;
+>  }
+>  EXPORT_SYMBOL(blk_set_stacking_limits);
+>  
+> @@ -177,6 +189,45 @@ void blk_queue_max_discard_sectors(struct request_queue *q,
+>  }
+>  EXPORT_SYMBOL(blk_queue_max_discard_sectors);
+>  
+> +/**
+> + * blk_queue_max_copy_sectors - set max sectors for a single copy payload
+> + * @q:  the request queue for the device
+> + * @max_copy_sectors: maximum number of sectors to copy
+> + **/
+> +void blk_queue_max_copy_sectors(struct request_queue *q,
 
-Doug Gilbert
+This should be blk_queue_max_copy_hw_sectors().
+
+> +		unsigned int max_copy_sectors)
+> +{
+> +	q->limits.max_hw_copy_sectors = max_copy_sectors;
+> +	q->limits.max_copy_sectors = max_copy_sectors;
+> +}
+> +EXPORT_SYMBOL_GPL(blk_queue_max_copy_sectors);
+> +
+> +/**
+> + * blk_queue_max_copy_range_sectors - set max sectors for a single range, in a copy payload
+> + * @q:  the request queue for the device
+> + * @max_copy_range_sectors: maximum number of sectors to copy in a single range
+> + **/
+> +void blk_queue_max_copy_range_sectors(struct request_queue *q,
+
+And this should be blk_queue_max_copy_range_hw_sectors(). Etc for the
+other ones below.
+
+> +		unsigned int max_copy_range_sectors)
+> +{
+> +	q->limits.max_hw_copy_range_sectors = max_copy_range_sectors;
+> +	q->limits.max_copy_range_sectors = max_copy_range_sectors;
+> +}
+> +EXPORT_SYMBOL_GPL(blk_queue_max_copy_range_sectors);
+> +
+> +/**
+> + * blk_queue_max_copy_nr_ranges - set max number of ranges, in a copy payload
+> + * @q:  the request queue for the device
+> + * @max_copy_nr_ranges: maximum number of ranges
+> + **/
+> +void blk_queue_max_copy_nr_ranges(struct request_queue *q,
+> +		unsigned int max_copy_nr_ranges)
+> +{
+> +	q->limits.max_hw_copy_nr_ranges = max_copy_nr_ranges;
+> +	q->limits.max_copy_nr_ranges = max_copy_nr_ranges;
+> +}
+> +EXPORT_SYMBOL_GPL(blk_queue_max_copy_nr_ranges);
+> +
+>  /**
+>   * blk_queue_max_secure_erase_sectors - set max sectors for a secure erase
+>   * @q:  the request queue for the device
+> @@ -572,6 +623,14 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+>  	t->max_segment_size = min_not_zero(t->max_segment_size,
+>  					   b->max_segment_size);
+>  
+> +	t->max_copy_sectors = min(t->max_copy_sectors, b->max_copy_sectors);
+> +	t->max_hw_copy_sectors = min(t->max_hw_copy_sectors, b->max_hw_copy_sectors);
+> +	t->max_copy_range_sectors = min(t->max_copy_range_sectors, b->max_copy_range_sectors);
+> +	t->max_hw_copy_range_sectors = min(t->max_hw_copy_range_sectors,
+> +						b->max_hw_copy_range_sectors);
+> +	t->max_copy_nr_ranges = min(t->max_copy_nr_ranges, b->max_copy_nr_ranges);
+> +	t->max_hw_copy_nr_ranges = min(t->max_hw_copy_nr_ranges, b->max_hw_copy_nr_ranges);
+> +
+>  	t->misaligned |= b->misaligned;
+>  
+>  	alignment = queue_limit_alignment_offset(b, start);
+> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+> index 88bd41d4cb59..bae987c10f7f 100644
+> --- a/block/blk-sysfs.c
+> +++ b/block/blk-sysfs.c
+> @@ -212,6 +212,129 @@ static ssize_t queue_discard_zeroes_data_show(struct request_queue *q, char *pag
+>  	return queue_var_show(0, page);
+>  }
+>  
+> +static ssize_t queue_copy_offload_show(struct request_queue *q, char *page)
+> +{
+> +	return queue_var_show(blk_queue_copy(q), page);
+> +}
+> +
+> +static ssize_t queue_copy_offload_store(struct request_queue *q,
+> +				       const char *page, size_t count)
+> +{
+> +	unsigned long copy_offload;
+> +	ssize_t ret = queue_var_store(&copy_offload, page, count);
+> +
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	if (copy_offload && !q->limits.max_hw_copy_sectors)
+> +		return -EINVAL;
+> +
+> +	if (copy_offload)
+> +		blk_queue_flag_set(QUEUE_FLAG_COPY, q);
+> +	else
+> +		blk_queue_flag_clear(QUEUE_FLAG_COPY, q);
+> +
+> +	return ret;
+> +}
+> +
+> +static ssize_t queue_copy_max_hw_show(struct request_queue *q, char *page)
+> +{
+> +	return sprintf(page, "%llu\n",
+> +		(unsigned long long)q->limits.max_hw_copy_sectors << 9);
+> +}
+> +
+> +static ssize_t queue_copy_max_show(struct request_queue *q, char *page> +{
+> +	return sprintf(page, "%llu\n",
+> +		(unsigned long long)q->limits.max_copy_sectors << 9);
+> +}
+> +
+> +static ssize_t queue_copy_max_store(struct request_queue *q,
+> +				       const char *page, size_t count)
+> +{
+> +	unsigned long max_copy;
+> +	ssize_t ret = queue_var_store(&max_copy, page, count);
+> +
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	if (max_copy & (queue_logical_block_size(q) - 1))
+> +		return -EINVAL;
+> +
+> +	max_copy >>= 9;
+> +	if (max_copy > q->limits.max_hw_copy_sectors)
+> +		max_copy = q->limits.max_hw_copy_sectors;
+> +
+> +	q->limits.max_copy_sectors = max_copy;
+> +	return ret;
+> +}
+> +
+> +static ssize_t queue_copy_range_max_hw_show(struct request_queue *q, char *page)
+> +{
+> +	return sprintf(page, "%llu\n",
+> +		(unsigned long long)q->limits.max_hw_copy_range_sectors << 9);
+> +}
+> +
+> +static ssize_t queue_copy_range_max_show(struct request_queue *q,
+> +		char *page)
+> +{
+> +	return sprintf(page, "%llu\n",
+> +		(unsigned long long)q->limits.max_copy_range_sectors << 9);
+> +}
+> +
+> +static ssize_t queue_copy_range_max_store(struct request_queue *q,
+> +				       const char *page, size_t count)
+> +{
+> +	unsigned long max_copy;
+> +	ssize_t ret = queue_var_store(&max_copy, page, count);
+> +
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	if (max_copy & (queue_logical_block_size(q) - 1))
+> +		return -EINVAL;
+> +
+> +	max_copy >>= 9;
+> +	if (max_copy > UINT_MAX)
+
+On 32-bits arch, unsigned long and unsigned int are the same so this test
+is useless for these arch. Better have max_copy declared as unsigned long
+long.
+
+> +		return -EINVAL;
+> +
+> +	if (max_copy > q->limits.max_hw_copy_range_sectors)
+> +		max_copy = q->limits.max_hw_copy_range_sectors;
+> +
+> +	q->limits.max_copy_range_sectors = max_copy;
+> +	return ret;
+> +}
+> +
+> +static ssize_t queue_copy_nr_ranges_max_hw_show(struct request_queue *q, char *page)
+> +{
+> +	return queue_var_show(q->limits.max_hw_copy_nr_ranges, page);
+> +}
+> +
+> +static ssize_t queue_copy_nr_ranges_max_show(struct request_queue *q,
+> +		char *page)
+> +{
+> +	return queue_var_show(q->limits.max_copy_nr_ranges, page);
+> +}
+> +
+> +static ssize_t queue_copy_nr_ranges_max_store(struct request_queue *q,
+> +				       const char *page, size_t count)
+> +{
+> +	unsigned long max_nr;
+> +	ssize_t ret = queue_var_store(&max_nr, page, count);
+> +
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	if (max_nr > USHRT_MAX)
+> +		return -EINVAL;
+> +
+> +	if (max_nr > q->limits.max_hw_copy_nr_ranges)
+> +		max_nr = q->limits.max_hw_copy_nr_ranges;
+> +
+> +	q->limits.max_copy_nr_ranges = max_nr;
+> +	return ret;
+> +}
+> +
+>  static ssize_t queue_write_same_max_show(struct request_queue *q, char *page)
+>  {
+>  	return queue_var_show(0, page);
+> @@ -596,6 +719,14 @@ QUEUE_RO_ENTRY(queue_nr_zones, "nr_zones");
+>  QUEUE_RO_ENTRY(queue_max_open_zones, "max_open_zones");
+>  QUEUE_RO_ENTRY(queue_max_active_zones, "max_active_zones");
+>  
+> +QUEUE_RW_ENTRY(queue_copy_offload, "copy_offload");
+> +QUEUE_RO_ENTRY(queue_copy_max_hw, "copy_max_hw_bytes");
+> +QUEUE_RW_ENTRY(queue_copy_max, "copy_max_bytes");
+> +QUEUE_RO_ENTRY(queue_copy_range_max_hw, "copy_max_range_hw_bytes");
+> +QUEUE_RW_ENTRY(queue_copy_range_max, "copy_max_range_bytes");
+> +QUEUE_RO_ENTRY(queue_copy_nr_ranges_max_hw, "copy_max_nr_ranges_hw");
+> +QUEUE_RW_ENTRY(queue_copy_nr_ranges_max, "copy_max_nr_ranges");
+> +
+>  QUEUE_RW_ENTRY(queue_nomerges, "nomerges");
+>  QUEUE_RW_ENTRY(queue_rq_affinity, "rq_affinity");
+>  QUEUE_RW_ENTRY(queue_poll, "io_poll");
+> @@ -642,6 +773,13 @@ static struct attribute *queue_attrs[] = {
+>  	&queue_discard_max_entry.attr,
+>  	&queue_discard_max_hw_entry.attr,
+>  	&queue_discard_zeroes_data_entry.attr,
+> +	&queue_copy_offload_entry.attr,
+> +	&queue_copy_max_hw_entry.attr,
+> +	&queue_copy_max_entry.attr,
+> +	&queue_copy_range_max_hw_entry.attr,
+> +	&queue_copy_range_max_entry.attr,
+> +	&queue_copy_nr_ranges_max_hw_entry.attr,
+> +	&queue_copy_nr_ranges_max_entry.attr,
+>  	&queue_write_same_max_entry.attr,
+>  	&queue_write_zeroes_max_entry.attr,
+>  	&queue_zone_append_max_entry.attr,
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 1b24c1fb3bb1..3596fd37fae7 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -270,6 +270,13 @@ struct queue_limits {
+>  	unsigned int		discard_alignment;
+>  	unsigned int		zone_write_granularity;
+>  
+> +	unsigned long		max_hw_copy_sectors;
+> +	unsigned long		max_copy_sectors;
+> +	unsigned int		max_hw_copy_range_sectors;
+> +	unsigned int		max_copy_range_sectors;
+> +	unsigned short		max_hw_copy_nr_ranges;
+> +	unsigned short		max_copy_nr_ranges;
+> +
+>  	unsigned short		max_segments;
+>  	unsigned short		max_integrity_segments;
+>  	unsigned short		max_discard_segments;
+> @@ -574,6 +581,7 @@ struct request_queue {
+>  #define QUEUE_FLAG_RQ_ALLOC_TIME 27	/* record rq->alloc_time_ns */
+>  #define QUEUE_FLAG_HCTX_ACTIVE	28	/* at least one blk-mq hctx is active */
+>  #define QUEUE_FLAG_NOWAIT       29	/* device supports NOWAIT */
+> +#define QUEUE_FLAG_COPY		30	/* supports copy offload */
+>  
+>  #define QUEUE_FLAG_MQ_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
+>  				 (1 << QUEUE_FLAG_SAME_COMP) |		\
+> @@ -596,6 +604,7 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
+>  	test_bit(QUEUE_FLAG_STABLE_WRITES, &(q)->queue_flags)
+>  #define blk_queue_io_stat(q)	test_bit(QUEUE_FLAG_IO_STAT, &(q)->queue_flags)
+>  #define blk_queue_add_random(q)	test_bit(QUEUE_FLAG_ADD_RANDOM, &(q)->queue_flags)
+> +#define blk_queue_copy(q)	test_bit(QUEUE_FLAG_COPY, &(q)->queue_flags)
+>  #define blk_queue_zone_resetall(q)	\
+>  	test_bit(QUEUE_FLAG_ZONE_RESETALL, &(q)->queue_flags)
+>  #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
+> @@ -960,6 +969,10 @@ extern void blk_queue_chunk_sectors(struct request_queue *, unsigned int);
+>  extern void blk_queue_max_segments(struct request_queue *, unsigned short);
+>  extern void blk_queue_max_discard_segments(struct request_queue *,
+>  		unsigned short);
+> +extern void blk_queue_max_copy_sectors(struct request_queue *q, unsigned int max_copy_sectors);
+> +extern void blk_queue_max_copy_range_sectors(struct request_queue *q,
+> +		unsigned int max_copy_range_sectors);
+> +extern void blk_queue_max_copy_nr_ranges(struct request_queue *q, unsigned int max_copy_nr_ranges);
+>  void blk_queue_max_secure_erase_sectors(struct request_queue *q,
+>  		unsigned int max_sectors);
+>  extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
 
 
+-- 
+Damien Le Moal
+Western Digital Research
