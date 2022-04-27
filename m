@@ -2,271 +2,281 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D79FC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 08:40:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E51CCC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 10:42:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359484AbiD0InM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Apr 2022 04:43:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41140 "EHLO
+        id S229888AbiD0Kpv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Apr 2022 06:45:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359477AbiD0InL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2022 04:43:11 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB2AB6FF70
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2022 01:39:58 -0700 (PDT)
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220427083952epoutp01572388881231806dfa61ac625de8c7b7~ptCEcy6Iv2597925979epoutp01c
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2022 08:39:52 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220427083952epoutp01572388881231806dfa61ac625de8c7b7~ptCEcy6Iv2597925979epoutp01c
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1651048792;
-        bh=AjGv6MmR9jUkuR4ctZcH9tpG8oj7rC57h+mlWD6IArI=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=hUrpDa8rVoQC4CJzu0oZKMol6l0l8eudC4GW+SR2ZHVS6f1dCiu47PCU4ssYvwQ5q
-         TCn+AeiopxFvNq2q4221GumEJPZD4JXT6AWX5c3RWQhkfTlIyhrPb5SvL05OVA4rIP
-         tN2fwOCFa1UYWoKryicr0V+xiVzV+MowN9IjZkgQ=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20220427083952epcas2p4c800931ff7fe1118ea75139d7aa816ce~ptCD2f85I3225632256epcas2p4V;
-        Wed, 27 Apr 2022 08:39:52 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.70]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4KpByD1jZ5z4x9QN; Wed, 27 Apr
-        2022 08:39:48 +0000 (GMT)
-X-AuditID: b6c32a45-2a50fa8000002755-34-626901546de1
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        00.4C.10069.45109626; Wed, 27 Apr 2022 17:39:48 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE: [PATCH 1/1] scsi: ufs: add clock-scalable property for clk
- scaling
-Reply-To: j-young.choi@samsung.com
-Sender: Jinyoung CHOI <j-young.choi@samsung.com>
-From:   Jinyoung CHOI <j-young.choi@samsung.com>
-To:     Po-Wen Kao <powen.kao@mediatek.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        cpgsproxy2 <cpgsproxy2@samsung.com>,
-        cpgsproxy3 <cpgsproxy3@samsung.com>
-CC:     "wsd_upstream@mediatek.com" <wsd_upstream@mediatek.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "alice.chao@mediatek.com" <alice.chao@mediatek.com>,
-        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
-        "cc.chou@mediatek.com" <cc.chou@mediatek.com>,
-        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
-        "jiajie.hao@mediatek.com" <jiajie.hao@mediatek.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20220416085649.5660-1-powen.kao@mediatek.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20220427083947epcms2p505cc251f83ae7696b2d97993ae6aef62@epcms2p5>
-Date:   Wed, 27 Apr 2022 17:39:47 +0900
-X-CMS-MailID: 20220427083947epcms2p505cc251f83ae7696b2d97993ae6aef62
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA12Tf1DTZRzHfb7f7btBrb5sgA/Q5fxiEhZjQ348lHDeCd4EKzgtPC8ag32P
-        cYxttx8eWQmHMwm0k3NnsBDW0uZRJKJsC+5gDg+PP0rBIBzqIRPMioZQCkeONobY9d/rXvf+
-        PJ/n8/xg49xfiWh2mVJHa5RSBUWEMmz98ShhLygrFjZZWchgPM1CEy02Aj1YHCHQ8rUlFhp1
-        txKo7Q+H37ni0ZjBg6PJ8WmALGM2DI191sdEnZ5RJrrR3UygG4eHAKr/xZ+1XvVhqMawFQ07
-        zRjqmltiopnbywzUWzuBobNdNwGy+25h29eLfzDdZokNvW6W+ITFCcQXz1SJDYN9DPHDKTdD
-        7O0dIcSfX2oD4vnOl8VHnfVYXuj+8m1yWiqjNXxaWaKSlSlLM6jcPZIdkpRUoShBlI7SKL5S
-        WkFnUFm78xJ2lin8w1L8A1KF3q/ypFotlZi5TaPS62i+XKXVZVC0WqZQp6kFWmmFVq8sFShp
-        3RsioTApxR8sKpd7jvyOq41FlXPTZqIajBXWgRA2JJNhy9deRoC5pANA34isDrDZHDIMPnHw
-        AppH5kNL3yARjFDwp+9MIBDhkULoPp4W0AQpgItnGlci4eQpHDbW7qgDoWycvMOETZ/eYwRb
-        cWDj0alVjoF2axcIcAj5Jpzs8TGD/lW48M1xPMgR8Oa3M6yn7B1oBUEOh0fu/LiaCYMTiz2r
-        Pgq6XH8Tgb1BUgU7nPlB/TGcsTpXI4lwtPbCyhY45Fvw+uCVFWaQr0D7UDMRzGRBi3EeCzBO
-        boTG+ruswJI4GQ/PdycGV4+FV9xrQ1VfWGL9n3HyBVjb/2TNO1ruYcHSzdBSk3QCxJqenbLp
-        P61Mz1qZAd4GImm1tqKU1iapRWv3WqKq6AQrT35LtgOcnJkVuADGBi4A2TgVzvmrR17M5cik
-        Hx6kNSqJRq+gtS6Q4h+yAY+OKFH5/4xSJxElpwuTU1NFaUkpwjRqPSdH1iHlkqVSHV1O02pa
-        87QOY4dEV2PhIR+Z+XMDlgV56VL2XN1vIwuF53ZHVpKn4/YNCI2MY9OXTG/Pa7gb+xq+/zJ/
-        spj5s0rgi8p8nqp3tNvDUt+taLV0929/9DAjYjadfT71UAGquf9+w/6zox71vqu7ynolPT77
-        XERkz4uST8xqb0F74q4hwYGpqWH9/T0HM8OWH+fgttc3nUzOYbtzO995zpv9haLd7DSoNokL
-        jE25rx2Oi/gH2gqI92Z4tzbHFMpjOrBzJpIXt0Ey3szrHN6Q/8HC3etEVH3BwDpSttMWlfSA
-        l1XpeBR/7HHYS9xTe4su69v/vNzArxLmzXqrJreJoq+Nr/sqVmWt8ZCHMi7W2z1brRRDK5eK
-        tuAarfRfEa3vr3sEAAA=
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220416085718epcas2p4b2afa580404f6d367bf1d34b7a9dbdb2
-References: <20220416085649.5660-1-powen.kao@mediatek.com>
-        <CGME20220416085718epcas2p4b2afa580404f6d367bf1d34b7a9dbdb2@epcms2p5>
+        with ESMTP id S229805AbiD0Kpu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2022 06:45:50 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A499284D47;
+        Wed, 27 Apr 2022 03:29:18 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 63E961F388;
+        Wed, 27 Apr 2022 10:29:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1651055356; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=rJ68u8jd1pGMMpvwjEOkdhZXSNG8xLLCdO1Cn+Xq+gA=;
+        b=gDV+xrS2GbcllQPvhcHYRsIZ5JmMF2CTqkJH2hZzzFtDP0TXmtJZrpUuuojh3t96ebXcco
+        MAc0BQ67VewzXUn+zMa2QyCdDcBvaXF2/Fq9ddaIFETQCt9fte7B7E4o+krYi72nEXZLYM
+        2ZEuZ2TIjVXu6V9ocZWj7LvaM3Bftfc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1651055356;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=rJ68u8jd1pGMMpvwjEOkdhZXSNG8xLLCdO1Cn+Xq+gA=;
+        b=EkM4US2Ur6JYETOSv0kVXMTGm4wfX9NWB6vWzYaHSmzhLafSzMfv1PShz4hn4/DwHAF+XD
+        EYzGw+r4D0s0dBCQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 193711323E;
+        Wed, 27 Apr 2022 10:29:16 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 24OHBfwaaWJ/AQAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 27 Apr 2022 10:29:16 +0000
+Message-ID: <2082148f-890f-e5f4-c304-b99212aa377e@suse.de>
+Date:   Wed, 27 Apr 2022 12:29:15 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Content-Language: en-US
+To:     Nitesh Shetty <nj.shetty@samsung.com>
+Cc:     chaitanyak@nvidia.com, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, dm-devel@redhat.com,
+        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+        axboe@kernel.dk, msnitzer@redhat.com, bvanassche@acm.org,
+        martin.petersen@oracle.com, kbusch@kernel.org, hch@lst.de,
+        Frederick.Knight@netapp.com, osandov@fb.com,
+        lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
+        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
+        jack@suse.com, nitheshshetty@gmail.com, gost.dev@samsung.com,
+        Arnav Dawn <arnav.dawn@samsung.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        James Smart <james.smart@broadcom.com>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-kernel@vger.kernel.org
+References: <20220426101241.30100-1-nj.shetty@samsung.com>
+ <CGME20220426101921epcas5p341707619b5e836490284a42c92762083@epcas5p3.samsung.com>
+ <20220426101241.30100-3-nj.shetty@samsung.com>
+From:   Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v4 02/10] block: Add copy offload support infrastructure
+In-Reply-To: <20220426101241.30100-3-nj.shetty@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiArLyoqDQo+ICvCoCrCoHVmc2hjZF9nZXRfY2xrX3UzMl9hcnJhecKgLcKgUmVzb2x2ZcKgcHJv
-cGVydHnCoGluwqBkdHPCoHRvwqB1MzLCoGFycmF5wqB3aXRoDQo+ICvCoCrCoHNoYXBlwqBjaGVj
-ay4NCj4gK8KgKsKgQGhiYTrCoHBlci1hZGFwdGVywqBpbnN0YW5jZQ0KPiArwqAqwqBAcHJvcG5h
-bWU6wqBuYW1lwqBvZsKgcHJvcGVydHkNCj4gK8KgKsKgQGNvbHM6wqBjb2x1bW7CoGNvdW50DQo+
-ICvCoCrCoEByb3dzOsKgY2FsY3VsYXRlZMKgcm93wqBjb3VudMKgd2l0aMKgZ2l2ZW7CoGNvbHMN
-Cj4gK8KgKsKgQGFycmF5OsKgdTMywqBhcnJhecKgcG9pbnRlcsKgb2bCoHByb3BlcnR5wqBkYXRh
-wqB3aXRowqBwcm9wbmFtZQ0KPiArwqAqLw0KPiArc3RhdGljwqBpbnTCoHVmc2hjZF9nZXRfY2xr
-X3UzMl9hcnJheShzdHJ1Y3TCoHVmc19oYmHCoCpoYmEswqBjb25zdMKgY2hhcsKgKnByb3BuYW1l
-LA0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgc2l6ZV90wqBjb2xzLMKgc2l6ZV90wqAqcm93cyzCoHUzMsKg
-KiphcnJheSkNCj4gK3sNCj4gK8KgwqDCoMKgwqDCoMKgwqBzdHJ1Y3TCoGRldmljZcKgKmRldsKg
-PcKgaGJhLT5kZXY7DQo+ICvCoMKgwqDCoMKgwqDCoMKgc3RydWN0wqBkZXZpY2Vfbm9kZcKgKm5w
-wqA9wqBkZXYtPm9mX25vZGU7DQo+ICvCoMKgwqDCoMKgwqDCoMKgaW50wqBsZW7CoD3CoDAswqBy
-ZXTCoD3CoDA7DQo+ICvCoMKgwqDCoMKgwqDCoMKgaW50wqBfcm93c8KgPcKgMDsNCj4gKw0KPiAr
-wqDCoMKgwqDCoMKgwqDCoGlmwqAoIW9mX2dldF9wcm9wZXJ0eShucCzCoHByb3BuYW1lLMKgJmxl
-bikpwqB7DQo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHJldMKgPcKgLUVJTlZB
-TDsNCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZGV2X3dhcm4oZGV2LMKgIiVz
-wqBwcm9wZXJ0ecKgbm90wqBzcGVjaWZpZWQuXG4iLMKgcHJvcG5hbWUpOw0KPiArwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBnb3RvwqBvdXQ7DQpkZXZtX2tjYWxsb2MoKSBoYXMgbm90
-IGJlZW4gY2FsbGVkIHlldC4NClRoZXJlIGlzIG5vIHByb2JsZW0gd2l0aCBjYWxsaW5nIGRldm1f
-a2ZyZWUoKSwNCmJ1dCB3b3VsZG4ndCBpdCBiZSBuaWNlIHRvIHJldHVybiB0aGUgZXJyb3Igcmln
-aHQgYXdheT8NCg0KSXNuJ3QgaXQgIiVzOiB+fiIgPw0KDQoNCj4gK8KgwqDCoMKgwqDCoMKgwqB9
-DQo+ICsNCj4gK8KgwqDCoMKgwqDCoMKgwqBsZW7CoD3CoGxlbsKgL8Kgc2l6ZW9mKCoqYXJyYXkp
-Ow0KPiArwqDCoMKgwqDCoMKgwqDCoF9yb3dzwqA9wqBsZW7CoC/CoGNvbHM7DQo+ICvCoMKgwqDC
-oMKgwqDCoMKgaWbCoChsZW7CoCXCoGNvbHPCoCE9wqAwwqB8fMKgIWNvbHPCoHx8wqAhX3Jvd3Mp
-wqB7DQpXb3VsZG4ndCBpdCBiZSBuaWNlIHRvIGhhdmUgYSBjb25kaXRpb24gdGVzdCBmaXJzdD8N
-CklmIGNvbHMgaXMgMCwgZGl2aWRlIGl0IGJ5IDAgYW5kIGNoZWNrIHRoZSBjb25kaXRpb24uDQoN
-Cg0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBkZXZfd2FybihkZXYswqAiJXPC
-oHByb3BlcnR5wqBkZWZpbmXCoGVycm9yLlxuIizCoHByb3BuYW1lKTsNCj4gK8KgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgcmV0wqA9wqAtRUlOVkFMOw0KPiArwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqBnb3RvwqBvdXQ7DQo+ICvCoMKgwqDCoMKgwqDCoMKgfQ0KPiArDQo+
-ICvCoMKgwqDCoMKgwqDCoMKgKmFycmF5wqA9wqBkZXZtX2tjYWxsb2MoZGV2LMKgbGVuLMKgc2l6
-ZW9mKCoqYXJyYXkpLMKgR0ZQX0tFUk5FTCk7DQo+ICvCoMKgwqDCoMKgwqDCoMKgaWbCoCghKmFy
-cmF5KcKgew0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqByZXTCoD3CoC1FTk9N
-RU07DQo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGdvdG/CoG91dDsNCj4gK8Kg
-wqDCoMKgwqDCoMKgwqB9DQo+ICsNCj4gK8KgwqDCoMKgwqDCoMKgwqByZXTCoD3CoG9mX3Byb3Bl
-cnR5X3JlYWRfdTMyX2FycmF5KG5wLMKgcHJvcG5hbWUswqAqYXJyYXkswqBsZW4pOw0KPiArDQo+
-ICvCoMKgwqDCoMKgwqDCoMKgaWbCoChyZXQpwqB7DQpXb3VsZG4ndCBpdCBiZSBiZXR0ZXIgdG8g
-Y2hlY2sgdGhlIHJldHVybiB2YWx1ZSB3aXRob3V0IGEgc3BhY2U/DQoNCg0KPiBAQMKgLTk5LDEx
-wqArMTQ2LDEzwqBAQMKgc3RhdGljwqBpbnTCoHVmc2hjZF9wYXJzZV9jbG9ja19pbmZvKHN0cnVj
-dMKgdWZzX2hiYcKgKmhiYSkNCj4gwqANCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoGlmwqAoIXN0cmNtcChuYW1lLMKgInJlZl9jbGsiKSkNCj4gwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBjbGtpLT5rZWVwX2xpbmtfYWN0aXZlwqA9
-wqB0cnVlOw0KPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBkZXZfZGJnKGRldizC
-oCIlczrCoG1pbsKgJXXCoG1heMKgJXXCoG5hbWXCoCVzXG4iLMKgImZyZXEtdGFibGUtaHoiLA0K
-PiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoGNsa2ktPm1pbl9mcmVxLMKgY2xraS0+bWF4X2ZyZXEswqBjbGtpLT5uYW1lKTsN
-Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZGV2X2RiZyhkZXYswqAiY2xrwqAl
-czrCoHNjYWxhYmxlKCV1KSzCoG1pbigldSkswqBtYXgoJXUpXG4iLA0KPiArwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgY2xraS0+bmFtZSzCoGNsa2ktPnNj
-YWxhYmxlLMKgY2xraS0+bWluX2ZyZXEswqBjbGtpLT5tYXhfZnJlcSk7DQo+IMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBsaXN0X2FkZF90YWlsKCZjbGtpLT5saXN0LMKgJmhiYS0+
-Y2xrX2xpc3RfaGVhZCk7DQo+IMKgwqDCoMKgwqDCoMKgwqDCoH0NCj4gwqBvdXQ6DQo+ICvCoMKg
-wqDCoMKgwqDCoMKgZGV2bV9rZnJlZShkZXYswqBzY2FsYWJsZSk7DQo+ICvCoMKgwqDCoMKgwqDC
-oMKgZGV2bV9rZnJlZShkZXYswqBjbGtmcmVxKTsNCkkgaGF2ZSBhIHF1ZXN0aW9uLg0Kc2NhbGFi
-bGUgYW5kIGNsa2ZyZXEgYXJlIHVzZWQgb25seSBpbiB0aGlzIGZ1bmN0aW9uLiAoSSB0aGluay4u
-LiBub3QgbWFuYWdlZCByZXNvdXJjZSBidXQgdGVtcG9yYXJ5KQ0KRG8geW91IGhhdmUgdGhlIGFk
-dmFudGFnZSBvZiB1c2luZyBkZXZtX2tjYWxsb2MgaW5zdGVhZCBvZiBrY2FsbG9jPw0KDQoNCsKg
-DQo+IEBAwqAtOTU4LDQxwqArOTU5LDI3wqBAQMKgc3RhdGljwqBpbnTCoHVmc2hjZF9zZXRfY2xr
-X2ZyZXEoc3RydWN0wqB1ZnNfaGJhwqAqaGJhLMKgYm9vbMKgc2NhbGVfdXApDQo+IMKgDQo+IMKg
-wqDCoMKgwqDCoMKgwqDCoGxpc3RfZm9yX2VhY2hfZW50cnkoY2xraSzCoGhlYWQswqBsaXN0KcKg
-ew0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgaWbCoCghSVNfRVJSX09SX05V
-TEwoY2xraS0+Y2xrKSnCoHsNCj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoGlmwqAoc2NhbGVfdXDCoCYmwqBjbGtpLT5tYXhfZnJlcSnCoHsNCj4gLcKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqBpZsKgKGNsa2ktPmN1cnJfZnJlccKgPT3CoGNsa2ktPm1heF9mcmVxKQ0KPiAtwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqBjb250aW51ZTsNCj4gLQ0KPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHJldMKgPcKgY2xrX3Nl
-dF9yYXRlKGNsa2ktPmNsayzCoGNsa2ktPm1heF9mcmVxKTsNCj4gLcKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBpZsKgKHJldCnC
-oHsNCj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZGV2X2VycihoYmEtPmRldizCoCIlczrCoCVz
-wqBjbGvCoHNldMKgcmF0ZSglZEh6KcKgZmFpbGVkLMKgJWRcbiIsDQo+IC3CoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBfX2Z1bmNfXyzCoGNsa2ktPm5hbWUsDQo+IC3CoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBjbGtpLT5tYXhfZnJlcSzCoHJldCk7
-DQo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGJyZWFrOw0KPiAtwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoH0NCj4gLcKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqB0cmFjZV91ZnNoY2RfY2xrX3NjYWxpbmcoZGV2X25hbWUoaGJhLT5kZXYpLA0KPiAtwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgInNjYWxlZMKgdXAiLMKgY2xraS0+bmFt
-ZSwNCj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGNsa2ktPmN1cnJf
-ZnJlcSwNCj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGNsa2ktPm1h
-eF9mcmVxKTsNCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoHRhcmdldF9yYXRlwqA9wqBzY2FsZV91cMKgP8KgY2xraS0+bWF4X2ZyZXHCoDrCoGNsa2kt
-Pm1pbl9mcmVxOw0KPiDCoA0KPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGNsa2ktPmN1cnJfZnJlccKgPcKgY2xraS0+bWF4
-X2ZyZXE7DQo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqBpZsKgKCF0YXJnZXRfcmF0ZcKgfHzCoGNsa2ktPmN1cnJfZnJlccKgPT3CoHRhcmdldF9yYXRl
-KQ0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoGNvbnRpbnVlOw0KPiDCoA0KPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfcKgZWxzZcKgaWbCoCghc2NhbGVfdXDCoCYmwqBjbGtp
-LT5taW5fZnJlcSnCoHsNCj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBpZsKgKGNsa2ktPmN1cnJfZnJlccKgPT3CoGNsa2kt
-Pm1pbl9mcmVxKQ0KPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBjb250aW51ZTsNCj4gK8KgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGlmwqAoIWNsa2ktPnNj
-YWxhYmxlKQ0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoGdvdG/CoHNraXA7DQo+IMKgDQo+IC3CoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcmV0wqA9wqBj
-bGtfc2V0X3JhdGUoY2xraS0+Y2xrLMKgY2xraS0+bWluX2ZyZXEpOw0KPiAtwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGlmwqAo
-cmV0KcKgew0KPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBkZXZfZXJyKGhiYS0+ZGV2LMKgIiVz
-OsKgJXPCoGNsa8Kgc2V0wqByYXRlKCVkSHopwqBmYWlsZWQswqAlZFxuIiwNCj4gLcKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoF9fZnVuY19fLMKgY2xraS0+bmFtZSwNCj4g
-LcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGNsa2ktPm1pbl9mcmVxLMKg
-cmV0KTsNCj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgYnJlYWs7DQo+IC3CoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfQ0KPiAt
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoHRyYWNlX3Vmc2hjZF9jbGtfc2NhbGluZyhkZXZfbmFtZShoYmEtPmRldiksDQo+IC3C
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAic2NhbGVkwqBkb3duIizCoGNs
-a2ktPm5hbWUsDQo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBjbGtp
-LT5jdXJyX2ZyZXEsDQo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBj
-bGtpLT5taW5fZnJlcSk7DQo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgY2xraS0+Y3Vycl9mcmVxwqA9wqBjbGtpLT5taW5f
-ZnJlcTsNCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oHJldMKgPcKgY2xrX3NldF9yYXRlKGNsa2ktPmNsayzCoHRhcmdldF9yYXRlKTsNCj4gK8KgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGlmwqAocmV0KcKgew0K
-PiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoGRldl9lcnIoaGJhLT5kZXYswqAiJXM6wqAlc8KgY2xrwqBzZXTCoHJhdGUoJWRI
-einCoGZhaWxlZCzCoCVkXG4iLA0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBfX2Z1bmNfXyzC
-oGNsa2ktPm5hbWUsDQo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHRhcmdldF9yYXRlLMKgcmV0
-KTsNCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqBicmVhazsNCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqB9DQo+ICtza2lwOg0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgdHJhY2VfdWZzaGNkX2Nsa19zY2FsaW5nKGRldl9uYW1l
-KGhiYS0+ZGV2KSwNCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-Y2xraS0+bmFtZSzCoHNjYWxlX3VwLA0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqBjbGtpLT5jdXJyX2ZyZXEsDQo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoHRhcmdldF9yYXRlKTsNCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGNsa2ktPmN1cnJfZnJlccKgPcKgdGFyZ2V0X3JhdGU7
-DQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB9DQo+IMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqBkZXZfZGJnKGhiYS0+ZGV2LMKgIiVzOsKgY2xrOsKgJXMswqBy
-YXRlOsKgJWx1XG4iLMKgX19mdW5jX18sDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGNsa2ktPm5hbWUswqBjbGtfZ2V0
-X3JhdGUoY2xraS0+Y2xrKSk7DQpjbGtpLT5zY2FsYWJsZSBzaG91bGQgYWx3YXlzIGJlIGNvbmZp
-cm1lZCBiZWZvcmUgY2FsbGluZyBjbGtfc2V0X3JhdGUoKS4NCk1ha2luZyB0aGlzIGFzIGEgZnVu
-Y3Rpb24sDQpJIHRoaW5rIHlvdSBjYW4gZ2V0IHJpZCBvZiBnb3RvIHN0YXRlIA0KYW5kIHByZXZl
-bnQgdGhlIGNhc2UgdG8gYmUgY2FsbGVkIGNsa19zZXRfcmF0ZSgpIHdpdGhvdXQgY2hlY2tpbmcg
-dGhlIGNsa2ktPnNjYWxhYmxlLiA6KSANCg0KVGhhbmtzLA0KSmlueW91bmcu
+On 4/26/22 12:12, Nitesh Shetty wrote:
+> Introduce blkdev_issue_copy which supports source and destination bdevs,
+> and an array of (source, destination and copy length) tuples.
+> Introduce REQ_COPY copy offload operation flag. Create a read-write
+> bio pair with a token as payload and submitted to the device in order.
+> Read request populates token with source specific information which
+> is then passed with write request.
+> This design is courtesy Mikulas Patocka's token based copy
+> 
+> Larger copy will be divided, based on max_copy_sectors,
+> max_copy_range_sector limits.
+> 
+> Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+> Signed-off-by: Arnav Dawn <arnav.dawn@samsung.com>
+> ---
+>   block/blk-lib.c           | 232 ++++++++++++++++++++++++++++++++++++++
+>   block/blk.h               |   2 +
+>   include/linux/blk_types.h |  21 ++++
+>   include/linux/blkdev.h    |   2 +
+>   include/uapi/linux/fs.h   |  14 +++
+>   5 files changed, 271 insertions(+)
+> 
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index 09b7e1200c0f..ba9da2d2f429 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -117,6 +117,238 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+>   }
+>   EXPORT_SYMBOL(blkdev_issue_discard);
+>   
+> +/*
+> + * Wait on and process all in-flight BIOs.  This must only be called once
+> + * all bios have been issued so that the refcount can only decrease.
+> + * This just waits for all bios to make it through bio_copy_end_io. IO
+> + * errors are propagated through cio->io_error.
+> + */
+> +static int cio_await_completion(struct cio *cio)
+> +{
+> +	int ret = 0;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&cio->lock, flags);
+> +	if (cio->refcount) {
+> +		cio->waiter = current;
+> +		__set_current_state(TASK_UNINTERRUPTIBLE);
+> +		spin_unlock_irqrestore(&cio->lock, flags);
+> +		blk_io_schedule();
+> +		/* wake up sets us TASK_RUNNING */
+> +		spin_lock_irqsave(&cio->lock, flags);
+> +		cio->waiter = NULL;
+> +		ret = cio->io_err;
+> +	}
+> +	spin_unlock_irqrestore(&cio->lock, flags);
+> +	kvfree(cio);
+> +
+> +	return ret;
+> +}
+> +
+> +static void bio_copy_end_io(struct bio *bio)
+> +{
+> +	struct copy_ctx *ctx = bio->bi_private;
+> +	struct cio *cio = ctx->cio;
+> +	sector_t clen;
+> +	int ri = ctx->range_idx;
+> +	unsigned long flags;
+> +	bool wake = false;
+> +
+> +	if (bio->bi_status) {
+> +		cio->io_err = bio->bi_status;
+> +		clen = (bio->bi_iter.bi_sector << SECTOR_SHIFT) - ctx->start_sec;
+> +		cio->rlist[ri].comp_len = min_t(sector_t, clen, cio->rlist[ri].comp_len);
+> +	}
+> +	__free_page(bio->bi_io_vec[0].bv_page);
+> +	kfree(ctx);
+> +	bio_put(bio);
+> +
+> +	spin_lock_irqsave(&cio->lock, flags);
+> +	if (((--cio->refcount) <= 0) && cio->waiter)
+> +		wake = true;
+> +	spin_unlock_irqrestore(&cio->lock, flags);
+> +	if (wake)
+> +		wake_up_process(cio->waiter);
+> +}
+> +
+> +/*
+> + * blk_copy_offload	- Use device's native copy offload feature
+> + * Go through user provide payload, prepare new payload based on device's copy offload limits.
+> + */
+> +int blk_copy_offload(struct block_device *src_bdev, int nr_srcs,
+> +		struct range_entry *rlist, struct block_device *dst_bdev, gfp_t gfp_mask)
+> +{
+> +	struct request_queue *sq = bdev_get_queue(src_bdev);
+> +	struct request_queue *dq = bdev_get_queue(dst_bdev);
+> +	struct bio *read_bio, *write_bio;
+> +	struct copy_ctx *ctx;
+> +	struct cio *cio;
+> +	struct page *token;
+> +	sector_t src_blk, copy_len, dst_blk;
+> +	sector_t remaining, max_copy_len = LONG_MAX;
+> +	unsigned long flags;
+> +	int ri = 0, ret = 0;
+> +
+> +	cio = kzalloc(sizeof(struct cio), GFP_KERNEL);
+> +	if (!cio)
+> +		return -ENOMEM;
+> +	cio->rlist = rlist;
+> +	spin_lock_init(&cio->lock);
+> +
+> +	max_copy_len = min_t(sector_t, sq->limits.max_copy_sectors, dq->limits.max_copy_sectors);
+> +	max_copy_len = min3(max_copy_len, (sector_t)sq->limits.max_copy_range_sectors,
+> +			(sector_t)dq->limits.max_copy_range_sectors) << SECTOR_SHIFT;
+> +
+> +	for (ri = 0; ri < nr_srcs; ri++) {
+> +		cio->rlist[ri].comp_len = rlist[ri].len;
+> +		src_blk = rlist[ri].src;
+> +		dst_blk = rlist[ri].dst;
+> +		for (remaining = rlist[ri].len; remaining > 0; remaining -= copy_len) {
+> +			copy_len = min(remaining, max_copy_len);
+> +
+> +			token = alloc_page(gfp_mask);
+> +			if (unlikely(!token)) {
+> +				ret = -ENOMEM;
+> +				goto err_token;
+> +			}
+> +
+> +			ctx = kzalloc(sizeof(struct copy_ctx), gfp_mask);
+> +			if (!ctx) {
+> +				ret = -ENOMEM;
+> +				goto err_ctx;
+> +			}
+> +			ctx->cio = cio;
+> +			ctx->range_idx = ri;
+> +			ctx->start_sec = dst_blk;
+> +
+> +			read_bio = bio_alloc(src_bdev, 1, REQ_OP_READ | REQ_COPY | REQ_NOMERGE,
+> +					gfp_mask);
+> +			if (!read_bio) {
+> +				ret = -ENOMEM;
+> +				goto err_read_bio;
+> +			}
+> +			read_bio->bi_iter.bi_sector = src_blk >> SECTOR_SHIFT;
+> +			__bio_add_page(read_bio, token, PAGE_SIZE, 0);
+> +			/*__bio_add_page increases bi_size by len, so overwrite it with copy len*/
+> +			read_bio->bi_iter.bi_size = copy_len;
+> +			ret = submit_bio_wait(read_bio);
+> +			bio_put(read_bio);
+> +			if (ret)
+> +				goto err_read_bio;
+> +
+> +			write_bio = bio_alloc(dst_bdev, 1, REQ_OP_WRITE | REQ_COPY | REQ_NOMERGE,
+> +					gfp_mask);
+> +			if (!write_bio) {
+> +				ret = -ENOMEM;
+> +				goto err_read_bio;
+> +			}
+> +			write_bio->bi_iter.bi_sector = dst_blk >> SECTOR_SHIFT;
+> +			__bio_add_page(write_bio, token, PAGE_SIZE, 0);
+> +			/*__bio_add_page increases bi_size by len, so overwrite it with copy len*/
+> +			write_bio->bi_iter.bi_size = copy_len;
+> +			write_bio->bi_end_io = bio_copy_end_io;
+> +			write_bio->bi_private = ctx;
+> +
+> +			spin_lock_irqsave(&cio->lock, flags);
+> +			++cio->refcount;
+> +			spin_unlock_irqrestore(&cio->lock, flags);
+> +
+> +			submit_bio(write_bio);
+> +			src_blk += copy_len;
+> +			dst_blk += copy_len;
+> +		}
+> +	}
+> +
+
+Hmm. I'm not sure if I like the copy loop.
+What I definitely would do is to allocate the write bio before reading 
+data; after all, if we can't allocate the write bio reading is pretty 
+much pointless.
+
+But the real issue I have with this is that it's doing synchronous 
+reads, thereby limiting the performance.
+
+Can't you submit the write bio from the end_io function of the read bio?
+That would disentangle things, and we should be getting a better 
+performance.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
