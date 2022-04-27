@@ -2,114 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D76D8C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 02:57:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33738C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 03:03:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357313AbiD0DAd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Apr 2022 23:00:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55600 "EHLO
+        id S1357339AbiD0DG1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Apr 2022 23:06:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357298AbiD0DAa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 23:00:30 -0400
+        with ESMTP id S232067AbiD0DG0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 23:06:26 -0400
 Received: from nksmu.kylinos.cn (mailgw.kylinos.cn [123.150.8.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E810316E698;
-        Tue, 26 Apr 2022 19:57:19 -0700 (PDT)
-X-UUID: 73f1042d650548829fd8c49de4e7d434-20220427
-X-UUID: 73f1042d650548829fd8c49de4e7d434-20220427
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 025C6340C2;
+        Tue, 26 Apr 2022 20:03:16 -0700 (PDT)
+X-UUID: 2b590d7d9a4c4b11bbec5992426546b3-20220427
+X-UUID: 2b590d7d9a4c4b11bbec5992426546b3-20220427
 Received: from cs2c.com.cn [(172.17.111.24)] by nksmu.kylinos.cn
         (envelope-from <lienze@kylinos.cn>)
         (Generic MTA)
-        with ESMTP id 964372348; Wed, 27 Apr 2022 10:55:49 +0800
-X-ns-mid: postfix-6268B10D-2505752843
-Received: from localhost.localdomain (unknown [172.30.60.63])
-        by cs2c.com.cn (NSMail) with ESMTPSA id 368243848664;
-        Wed, 27 Apr 2022 02:57:17 +0000 (UTC)
+        with ESMTP id 339532612; Wed, 27 Apr 2022 11:01:43 +0800
+X-ns-mid: postfix-6268B26F-7169302919
+Received: from ubuntu (unknown [172.30.60.63])
+        by cs2c.com.cn (NSMail) with ESMTPA id A8AAA3848664;
+        Wed, 27 Apr 2022 03:03:11 +0000 (UTC)
+Date:   Wed, 27 Apr 2022 11:03:11 +0800
 From:   Enze Li <lienze@kylinos.cn>
-To:     lienze@kylinos.cn, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH v2] scsi: sr: add handling of memory allocation failures when calling get_capabilities
-Date:   Wed, 27 Apr 2022 10:56:47 +0800
-Message-Id: <20220427025647.298358-1-lienze@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220413100008.522912-1-lienze@kylinos.cn>
-References: <20220413100008.522912-1-lienze@kylinos.cn>
+To:     martin.petersen@oracle.com
+Cc:     jejb@linux.ibm.com, lienze@kylinos.cn,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: sr: add handling of memory allocation failure in
+ get_capabilities
+Message-ID: <20220427110311.301172b9@ubuntu>
+In-Reply-To: <yq1ilqwt3ml.fsf@ca-mkp.ca.oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function get_capabilities() has the possibility of failing to
-allocate transfer buffer, but it does not currently handle this, which
-may lead to exceptions when accessing the buffer.
+Hi Martin,
 
-This patch adds handling when memory allocation fails.
+Thank you for the review.  I've fixed the issue you pointed out.
+v2 of this patch is here:
+https://lore.kernel.org/all/20220427025647.298358-1-lienze@kylinos.cn/
 
-Signed-off-by: Enze Li <lienze@kylinos.cn>
----
- drivers/scsi/sr.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+Thanks,
+Enze
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index cbd92891a762..32d3b8274f14 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -113,7 +113,7 @@ static int sr_open(struct cdrom_device_info *, int);
- static void sr_release(struct cdrom_device_info *);
- 
- static void get_sectorsize(struct scsi_cd *);
--static void get_capabilities(struct scsi_cd *);
-+static int get_capabilities(struct scsi_cd *);
- 
- static unsigned int sr_check_events(struct cdrom_device_info *cdi,
- 				    unsigned int clearing, int slot);
-@@ -669,8 +669,9 @@ static int sr_probe(struct device *dev)
- 
- 	sdev->sector_size = 2048;	/* A guess, just in case */
- 
--	/* FIXME: need to handle a get_capabilities failure properly ?? */
--	get_capabilities(cd);
-+	error = -ENOMEM;
-+	if (get_capabilities(cd))
-+		goto fail_minor;
- 	sr_vendor_init(cd);
- 
- 	set_capacity(disk, cd->capacity);
-@@ -794,7 +795,7 @@ static void get_sectorsize(struct scsi_cd *cd)
- 	return;
- }
- 
--static void get_capabilities(struct scsi_cd *cd)
-+static int get_capabilities(struct scsi_cd *cd)
- {
- 	unsigned char *buffer;
- 	struct scsi_mode_data data;
-@@ -819,7 +820,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 	buffer = kmalloc(512, GFP_KERNEL);
- 	if (!buffer) {
- 		sr_printk(KERN_ERR, cd, "out of memory.\n");
--		return;
-+		return -ENOMEM;
- 	}
- 
- 	/* eat unit attentions */
-@@ -839,7 +840,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 				 CDC_MRW | CDC_MRW_W | CDC_RAM);
- 		kfree(buffer);
- 		sr_printk(KERN_INFO, cd, "scsi-1 drive");
--		return;
-+		return 0;
- 	}
- 
- 	n = data.header_length + data.block_descriptor_length;
-@@ -898,6 +899,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 	}
- 
- 	kfree(buffer);
-+	return 0;
- }
- 
- /*
--- 
-2.25.1
-
+>Enze,
+>
+>> @@ -669,8 +669,9 @@ static int sr_probe(struct device *dev)
+>>  
+>>  	sdev->sector_size = 2048;	/* A guess, just in case */
+>>  
+>> -	/* FIXME: need to handle a get_capabilities failure properly
+>> ?? */
+>> -	get_capabilities(cd);
+>> +	error = -ENOMEM;
+>> +	if (get_capabilities(cd))
+>> +		goto fail_put;
+>
+>Shouldn't this be 'goto fail_minor;'?
+>
+>-- 
+>Martin K. Petersen	Oracle Linux Engineering
