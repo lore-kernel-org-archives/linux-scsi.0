@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FEACC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 21:56:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C561FC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 21:57:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234882AbiD0V73 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Apr 2022 17:59:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52558 "EHLO
+        id S237776AbiD0WAy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Apr 2022 18:00:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237075AbiD0V71 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2022 17:59:27 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E03C116C
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2022 14:56:15 -0700 (PDT)
+        with ESMTP id S237763AbiD0WAx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2022 18:00:53 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F40A921A1
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2022 14:57:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1651096575; x=1682632575;
+  t=1651096660; x=1682632660;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=ndxlCJcsWNsxefRwlgceKJ0VvE3NnTsnasUGPtb8I/A=;
-  b=EJ4qt9cPTlU/WnZNjoOE77bzKkCZ2N2eTRFTlDn5u3XTl/Pgo+1V0nO6
-   IKebUB0DEeXobuFGaSBFL3vLRBG8IBpjGQMTNI0nC3H2L8b2VjhKvSF1i
-   vOw19UGyGdmgcmhkiDPDoB0s0dAg0ZFdiTxGYV5Kah4T4QTBjjBfJn+hv
-   5bKSIQBgZz2ThINXwwd9+kIisAET2f/sgoslL0tfjB3tEycqd0/SViEV0
-   /GY1KgUHXzH3GTiGBPzfvnHZCp9rAl/zwu7CQSkam5z4oiKz8sCuzKlLO
-   guMM6kwe2km9Z/jWzV9F8dhivhwmx5v1QIaNeHzS+Q23QYikp5gRzDtqO
-   Q==;
+  bh=AUyIcwobFfV5SoYGzqqBamGFyyqRQJh2j8T40K6gwpo=;
+  b=PVNPF51lLCaI5gKrEIaXmna3tBLBvrBJEUaNgNy1nw4ajCjnN4ABGISf
+   T/WuJXZbX0ethSR4LS8xKJ4pqgZRatb58z+PjBz0zlxXCdowbkDiQBY9k
+   A9hCE/inkOFTl0kmnI+87mB4rnqY0waVo2dVxFOD1TqxGajeEcFjEm4as
+   Pp2kl6RQevl8WQesjOIgBBgunXLSyrm3TsgmYPSgN6MM5acePUfNjNGZj
+   y5qab6AaZfBa32rk1oolXUpLTZQQHc7aSnYbyn+TjVFxmOUx6oDA6Dhn9
+   pUmyj9jFPNL0BIEcXuPMAbTSY+jbQDAxgNWMcDfR0S0s6lYo67Ul4sJzK
+   A==;
 X-IronPort-AV: E=Sophos;i="5.90,294,1643644800"; 
-   d="scan'208";a="197838686"
+   d="scan'208";a="303207117"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Apr 2022 05:56:11 +0800
-IronPort-SDR: oHfDaHUvnY7KpsLD0dwBQCAqLVYeWxRyGct4byRtP1E5B5ykYzWVEuijgcw33D/18oac3g4UY9
- 0SCtt1mF0n5Wfnphox2b7n0CQerJKN3HYWbLfnMCISdnhkG4Sdlk1zlHCkaJY4uxu8mQOmswRh
- mI+t569iQ/6Xu3MnJlJC54b3NvfnxCteoFKGArwtzbpi5Ijc2cfP9MhZwKZ/srmZsxpId6Tj90
- PbYf6VpD96oKsqaraYjpc1foIkpr91Kwj6IyiYNiYcbzL2dhcryT/fHuDqzMd4mb0hD/XVl1B5
- beCdQn9JRWScHbKBptFj1hN4
+  by ob1.hgst.iphmx.com with ESMTP; 28 Apr 2022 05:57:38 +0800
+IronPort-SDR: KhCUXb4DncMA9vQwvY01D28b+mGHoQvwLYZjYXHkqz0AFaMx1JxVUgTItG9DewcVK2C3pDppCG
+ S3ySr2Snz717x/v1WD+DH8WggxMEHi91aim/O7HFv+mu4d1uiYT8VvLF5JJTxevtIP9Pp914tM
+ vSLkNlRCd/iUuQaVcSGAj9edr4Z64Eax5N8yhfh8OX8CwXeXYdzmwDXBTTKj8CsvDvv4pHHcEt
+ jnXw0kEJvGXPWqsLt10OI7NxQqXOSeTqmd8QkAA3N4DfX6wGlXi1d4HsPaw35oWayuoxHHVyNm
+ jt4d+HKZi7DciECwbXch7lh/
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Apr 2022 14:27:04 -0700
-IronPort-SDR: O4ZfumYnFtXAlCPH4QlrYEJHavO1NajhcAebtRIV1gOO3uQDiQpUFIadU/ETVWdXS51I78D01f
- bloUodHDrAWnuyqyshhE825xRdY/yCbTWhWLe9piN7z3NTtfCA9OhdywJbIVKNJvMA+26hLaJe
- lme3tEpLL/FkgSNRqTgzXMf+XmWZNLK9hlI+GAturGPUMRy1MFhgD2Rmo3bxhlrca5ZjSPUlsi
- hkp7JrEDHnKrPi1iMc23m3GmOPohD45zP17qalGrTwt8INjpUX7mTQY2TTH6HHi1gjO3mucrrx
- djg=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Apr 2022 14:28:31 -0700
+IronPort-SDR: s6fnS/ZIv3mOs8/Nhf0IDq841HrLpCY7ar37FCfUkp47mpSWuht8AKThtEjlhKdUL7GeFrfY4N
+ de2yT2Zf9657nn/P82Jf5zGMlXNHUMy5/hYKUoFpcz7kok5Crhv99Cydsbuj1cbcrLbYAdlZ/k
+ kKtDTJi/8jX2KAxAYgsESsRkrUSgIZgNvvLvi+nSw5cdXvBoqX+zAtUwZn1vVj4k4T5WcmZmkE
+ dZ4BXkQ8h3388T0/s1lDO/XSKAZUvqWlvoGBrUvbuNMQM6s0++we2rK5E9r3WWV4Lx/Xa9dOMe
+ CVA=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Apr 2022 14:56:12 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Apr 2022 14:57:38 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KpXd66GGkz1SVp1
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2022 14:56:10 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KpXfp362mz1SVp1
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2022 14:57:38 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,113 +56,64 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1651096570; x=1653688571; bh=ndxlCJcsWNsxefRwlgceKJ0VvE3NnTsnasU
-        GPtb8I/A=; b=ggSIi2wKa7K/Yj0CenSA293BbFt3EsVO5xG9ttkgqCfc8vV/d/d
-        Z0XVADeDgci27/+2+Z8t9WQvji1Lg3kutMfer7DksmYw6OXawv3PgGI9ToBzaM49
-        tR1Y4U0G2OcEDjzXxvKhA7ZVchwGk8La0omPG+TejDWIj/w9uELco8SA3POOurcL
-        7VeKd1JwcE7f8F4gEnYPK543JmhyBYYfe10X74Br3eYk801Gbqr5yLRI1LbNp7Az
-        nOzi/IfpTJK0pnZKUMJ7z29vv4CXJna8RlRtrEwMGFFFo5fgE0u0qkdgSNQD8Lpt
-        YW261y9Jg7jwobHKsKsB77nhK8PPVM974ag==
+        1651096657; x=1653688658; bh=AUyIcwobFfV5SoYGzqqBamGFyyqRQJh2j8T
+        40K6gwpo=; b=PSstadGp5ulB2J+BWMxkaXnwwaZ8yjM0p23ACWCmqaNxmGu2kGS
+        C8l6BvptPaomaiRYSqAyEpBwVAZubeO6rdS2iadrzki/hkGC2m6LaHJas2Yo0byY
+        b9/2e33a44eeqtMNBaFgpcrEk472ygG6lllz6Td6b0v/IC3Xb6COAp8AGPgaIUvG
+        DA37YPM7cc2BTrg4NKQT0+sj6QcAEOlIpxkKWtjy6UKghsbkrYOsdezEtdxNTpY1
+        lZjeKqdK16ZbuRaO/nwXFLCpv4KwgJcUyGUvM7/EhO6RzVJtcVZ8NbXkoF2BZzMF
+        oWpLBf6y7Wn2PVIlOH20Sd65u7CYkD88S2w==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 3eod9rjk5-xd for <linux-scsi@vger.kernel.org>;
-        Wed, 27 Apr 2022 14:56:10 -0700 (PDT)
+        with ESMTP id NFlwMhvtjHq4 for <linux-scsi@vger.kernel.org>;
+        Wed, 27 Apr 2022 14:57:37 -0700 (PDT)
 Received: from [10.225.163.27] (unknown [10.225.163.27])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KpXd44RlGz1Rvlc;
-        Wed, 27 Apr 2022 14:56:08 -0700 (PDT)
-Message-ID: <3f80a126-e52a-955b-aca4-14218d26faf5@opensource.wdc.com>
-Date:   Thu, 28 Apr 2022 06:56:07 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KpXfm4bP3z1Rvlc;
+        Wed, 27 Apr 2022 14:57:36 -0700 (PDT)
+Message-ID: <ae18fae1-c914-7bea-7c7b-861962b10c2c@opensource.wdc.com>
+Date:   Thu, 28 Apr 2022 06:57:35 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.8.0
-Subject: Re: [PATCH v4 00/10] Add Copy offload support
+Subject: Re: [PATCH v4 01/10] block: Introduce queue limits for copy-offload
+ support
 Content-Language: en-US
 To:     Nitesh Shetty <nj.shetty@samsung.com>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         dm-devel@redhat.com, linux-nvme@lists.infradead.org,
         linux-fsdevel@vger.kernel.org, nitheshshetty@gmail.com,
-        linux-kernel@vger.kernel.org
-References: <CGME20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15@epcas5p4.samsung.com>
- <20220426101241.30100-1-nj.shetty@samsung.com>
- <c02f67e1-2f76-7e52-8478-78e28b96b6a1@opensource.wdc.com>
- <20220427153826.GE9558@test-zns>
+        inux-kernel@vger.kernel.org
+References: <20220426101241.30100-1-nj.shetty@samsung.com>
+ <CGME20220426101910epcas5p4fd64f83c6da9bbd891107d158a2743b5@epcas5p4.samsung.com>
+ <20220426101241.30100-2-nj.shetty@samsung.com>
+ <0d52ad34-ab75-9672-321f-34053421c0c4@opensource.wdc.com>
+ <20220427153053.GD9558@test-zns>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20220427153826.GE9558@test-zns>
+In-Reply-To: <20220427153053.GD9558@test-zns>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/28/22 00:38, Nitesh Shetty wrote:
-> On Wed, Apr 27, 2022 at 10:46:32AM +0900, Damien Le Moal wrote:
->> On 4/26/22 19:12, Nitesh Shetty wrote:
->>> The patch series covers the points discussed in November 2021 virtual=
- call
->>> [LSF/MM/BFP TOPIC] Storage: Copy Offload[0].
->>> We have covered the Initial agreed requirements in this patchset.
->>> Patchset borrows Mikulas's token based approach for 2 bdev
->>> implementation.
->>>
->>> Overall series supports =E2=80=93
->>>
->>> 1. Driver
->>> - NVMe Copy command (single NS), including support in nvme-target (fo=
-r
->>>     block and file backend)
->>>
->>> 2. Block layer
->>> - Block-generic copy (REQ_COPY flag), with interface accommodating
->>>     two block-devs, and multi-source/destination interface
->>> - Emulation, when offload is natively absent
->>> - dm-linear support (for cases not requiring split)
->>>
->>> 3. User-interface
->>> - new ioctl
->>> - copy_file_range for zonefs
->>>
->>> 4. In-kernel user
->>> - dm-kcopyd
->>> - copy_file_range in zonefs
->>>
->>> For zonefs copy_file_range - Seems we cannot levearge fstest here. Li=
-mited
->>> testing is done at this point using a custom application for unit tes=
-ting.
+On 4/28/22 00:30, Nitesh Shetty wrote:
+>>> +/**
+>>> + * blk_queue_max_copy_sectors - set max sectors for a single copy payload
+>>> + * @q:  the request queue for the device
+>>> + * @max_copy_sectors: maximum number of sectors to copy
+>>> + **/
+>>> +void blk_queue_max_copy_sectors(struct request_queue *q,
 >>
->> https://protect2.fireeye.com/v1/url?k=3Db14bf8e1-d0361099-b14a73ae-74f=
-e485fffb1-9bd9bbb269af18f9&q=3D1&e=3Db9714c29-ea22-4fa5-8a2a-eeb42ca4bdc1=
-&u=3Dhttps%3A%2F%2Fgithub.com%2Fwesterndigitalcorporation%2Fzonefs-tools
+>> This should be blk_queue_max_copy_hw_sectors().
 >>
->> ./configure --with-tests
->> make
->> sudo make install
->>
->> Then run tests/zonefs-tests.sh
->>
->> Adding test case is simple. Just add script files under tests/scripts
->>
->> I just realized that the README file of this project is not documentin=
-g
->> this. I will update it.
->>
->=20
-> Thank you. We will try to use this.
-> Any plans to integrate this testsuite with fstests(xfstest) ?
+> 
+> acked. Reasoning being, this function is used only by driver once for setting hw
+> limits ?
 
-No. It is not a good fit since zonefs cannot pass most of the generic tes=
-t
-cases.
+function name points at what limit field it sets.
 
->=20
-> --
-> Nitesh Shetty
->=20
->=20
-
-
---=20
+-- 
 Damien Le Moal
 Western Digital Research
