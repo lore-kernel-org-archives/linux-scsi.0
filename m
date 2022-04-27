@@ -2,212 +2,152 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2EE2C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 02:20:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2618FC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 02:25:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357160AbiD0CXQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Apr 2022 22:23:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35392 "EHLO
+        id S1357167AbiD0C2L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Apr 2022 22:28:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357152AbiD0CXL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 22:23:11 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05DFA2675
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Apr 2022 19:20:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1651026001; x=1682562001;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=5TeQN5lhR4Ahp6383VgZCh7eErXQ5BHljxeq6DTkar0=;
-  b=iGfL2ovJxRdTO4Wa38JfYEcX3CL6CKOKR4ZvdLjXJN4qiNxZSNDokwNO
-   KMceCQa3s6MfGClVpJGGkrr6lAzra4yg+UqzcHB8ZANKSXS+vgvyMFz86
-   zSnny8gw/TLwDJThcPXW4Mxr6/YKyBKBdw4KKabKULMs4l8rlmBZSvveV
-   QfmKTiuuCCzeLm3vZYZ5Pujw65mGFB6EtlgYs3IdSYCdXFhog9eNAxiUY
-   Og8hhl20O0XpGwFappOy4ZXObiTW043Tylu7uH85/+pt1LomXdIi/EniJ
-   weEdCtFHz5XOx1KiIVQQrPSkVTBc0aE9Wl1xoqDWBfzzBfM+tdI4cz8sU
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.90,292,1643644800"; 
-   d="scan'208";a="303120020"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Apr 2022 10:19:58 +0800
-IronPort-SDR: dR3qvnkahCmcu7xkYWoRXTMnSI03WjjYxtN0DCEegv2j2Z4tIBXyON88nu46+pifec27fSLf2j
- zXb49shCeqei+xMdnvMjx8Ydcjm4BT+Qg0JrTShtQpAJCo/bux+eAQoQOR7QoPR11RR9t7or8W
- d2tvr1EnJzWqa9jff+FQNUAV6WaEn/+jqhmiLagI+6F0OiGt3gXMsIKSPCeffSzgWnN5Qkp5V8
- abSmH/8NRqu6/RH0cvUQobsSCPxhu24FgKm8VuYFZ5eUkN8UoPqM/gVq9kQ5cWnHiF1DmBIF23
- GcZJmpLTpDx9fG4TCKJjjT3K
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Apr 2022 18:50:09 -0700
-IronPort-SDR: /64e2l98vuLw51ykOL20kEJQyYuM7VxLg0WwNOHe5sWvUjIJUNNta2s4CNCA7qylwjior9K5Nq
- 9eCTasys3EZmuJDe6/VLQCWtA0AY79JA40f4l3y7QNyO4c1LnztVJMOwA5Ph0ZDYaAW2dUop2k
- g1cFDH9/S3I3L3Puo1tg19E7ue6ubbarW1K9MonCnlec0rn12EA7yPYXAUQbP6uyXN96sD5hv1
- 3Kvx/vNauniKsL2dvX4znMfcx7OxwbBXUjq8RvXUyiAdxgwn94VXVEODoJsz8BJzZpMdX0kJ6R
- SB4=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Apr 2022 19:19:58 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Kp2Wy3JbYz1SVp1
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Apr 2022 19:19:58 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1651025996; x=1653617997; bh=5TeQN5lhR4Ahp6383VgZCh7eErXQ5BHljxe
-        q6DTkar0=; b=HLh3gOdIoLSGUUyUMi7ugQ80WGd64u85fuvUH7mJ8KLbrYvw+n4
-        ZfEA4vmz1fIqGmNkLDTQnp/EARZTn46QbXeSk9AgyEeRoc7QmzuDr9+HSFQaGPS8
-        f1KVXkLxmHZEAFQGUY6AEqMMZEzD6CBczxJOM0lOCUAGFZdIHa4uWWiTNs+eHmga
-        PvLhDA+WtojKoy1rBnwEqxVn9ie+kA361GS9CQqkEl2D2izLQHDP6fZUcMAJX4bG
-        PN52+3YAVZz25etiQ45f0l/NwYQB1q3ZmAaDgflCx0DlZ/VOoK33B2u08wb5A2no
-        P8lJfWB4SE71FKiYeaqRUK95YDBBPOWivdg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id crIwcbkS8549 for <linux-scsi@vger.kernel.org>;
-        Tue, 26 Apr 2022 19:19:56 -0700 (PDT)
-Received: from [10.225.163.27] (unknown [10.225.163.27])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Kp2Wn4QZqz1Rvlc;
-        Tue, 26 Apr 2022 19:19:49 -0700 (PDT)
-Message-ID: <6a85e8c8-d9d1-f192-f10d-09052703c99a@opensource.wdc.com>
-Date:   Wed, 27 Apr 2022 11:19:48 +0900
+        with ESMTP id S1357112AbiD0C2K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2022 22:28:10 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72F9314B671;
+        Tue, 26 Apr 2022 19:24:57 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23QNZGUP003693;
+        Wed, 27 Apr 2022 02:24:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=+V9OP+C2nbuJSV4qGdICtnLH1a9timCuEG283+MY9Ws=;
+ b=CLlduPNY9TWHGMtHhgPybqtfTpyZx0iuwxUV5nhk1smw/e43MfigJLHKLhXiX7OpSLPZ
+ iXTKoCD3lahmXLL+8KyEUvdAkIk++TrQmsOMoWL6K5iVkcG+DVN9Zj2hjY96E9rb8u26
+ aXfaE8UEBLl36glcbJGG84kCsGuKXQbVUghSIMg8Gkyx9n/ZUEr0spSC4RppWRhHWNan
+ FTWuyfmBKxe/FwccvWDkYGvXs68WO8p7+V1ZvzdXYmidVNzdaEr+mGq+VqV+kFlpcIfJ
+ x8PF7ckGWaCLW7K1O9BRX06F0UbKeMAmyaSfTaziFHE5TFd1pCUUCFkOQH0Il9FXZd4D DQ== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fmbb4qfxr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 27 Apr 2022 02:24:54 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23R2B5p5006523;
+        Wed, 27 Apr 2022 02:24:53 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2173.outbound.protection.outlook.com [104.47.57.173])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fm7w3yru5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 27 Apr 2022 02:24:53 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=dxeZaINV5fWH1HEMFPSClA4XuWMbhI4UdEmwFcW4fIKqjUhMYUsfmIpLX2s7vZu4HYY9wvotjCN+FEZ0GubVkZpJMUj8dNa4N9OQLK4iNTP4RpsMqpCfAMTA/A+Fp15wpXa1szJ6fadXkUY4J5yNiy8tRnPLQKmrsKIYZyWeGHdzk55XJSvH2qf1t3uInftowT7DxoLA1W3UrZ7lGnL1MHngSFnbEZGVPW6UCWP2wwZuIsovyPvrlfVv1Gy3M1ECAcIgniSosqunQMI8VXK9qjq7h1zcFGjvmqEmKGEPTF+DFhC0AIoAaaZTWAsaODMULIHAeb6JI4Wdn1td38fq2A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=+V9OP+C2nbuJSV4qGdICtnLH1a9timCuEG283+MY9Ws=;
+ b=AyHfj9MRXf3xOv/PwfDrlS1adOzar8VIoHqEaZyoCx/zjGeBQvqSnN0Ua8eL1TBczI3cmngrlI2K+s3HBNVwV/KmLbXGBJ57uFfOthtWUeDk7FRzMGgZiT+/WemgackXammTbBxvNpIzFYS5iShxtEUqtGlnkZWh0Wegijc33hkYtzozQzTe5SvlenB28DFBcLk0tuux+Cn8IR3B63pNHCEhAv6m+Zzl37eFLw4KolRlcqA4PSDg0d+obfl/rLJfLcedP3PaWIueZKTks7fvLG+wwQ52I0A4md7VQuigANqj2TLrf40lvl0rEmwp83OtZe6Xqu1EtruvBkj8Sk8xoQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+V9OP+C2nbuJSV4qGdICtnLH1a9timCuEG283+MY9Ws=;
+ b=NYag4Bi9/lrwjioJrPCtJwj9usrzjTrlAvX3kY83auw/hUxqm59leiz/OGUzY/7H+kx0/69ORGrlBLScLIyPeyqUjOWcYiZJYPlGO2Q3gRzVOcHyraTIoyjvSylvGKfoOFWdPTb19LgON7cFKFNOODJInpk1yYfJFFWG7rLKli8=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by CY4PR10MB1333.namprd10.prod.outlook.com (2603:10b6:903:2a::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5186.15; Wed, 27 Apr
+ 2022 02:24:52 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::d1db:de4e:9b71:3192]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::d1db:de4e:9b71:3192%9]) with mapi id 15.20.5186.021; Wed, 27 Apr 2022
+ 02:24:51 +0000
+To:     cgel.zte@gmail.com
+Cc:     martin.petersen@oracle.com, dick.kennedy@broadcom.com,
+        james.smart@broadcom.com, jejb@linux.ibm.com,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        lv.ruyi@zte.com.cn
+Subject: Re: [PATCH] scsi: lpfc: fix error check return value of
+ debugfs_create_file()
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq15ymvntzu.fsf@ca-mkp.ca.oracle.com>
+References: <yq1v8uwro3h.fsf@ca-mkp.ca.oracle.com>
+        <20220427021614.3841074-1-lv.ruyi@zte.com.cn>
+Date:   Tue, 26 Apr 2022 22:24:49 -0400
+In-Reply-To: <20220427021614.3841074-1-lv.ruyi@zte.com.cn> (cgel zte's message
+        of "Wed, 27 Apr 2022 02:16:14 +0000")
+Content-Type: text/plain
+X-ClientProxiedBy: BYAPR08CA0071.namprd08.prod.outlook.com
+ (2603:10b6:a03:117::48) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH v4 00/10] Add Copy offload support
-Content-Language: en-US
-To:     Nitesh Shetty <nj.shetty@samsung.com>
-Cc:     chaitanyak@nvidia.com, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, dm-devel@redhat.com,
-        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-        axboe@kernel.dk, msnitzer@redhat.com, bvanassche@acm.org,
-        martin.petersen@oracle.com, hare@suse.de, kbusch@kernel.org,
-        hch@lst.de, Frederick.Knight@netapp.com, osandov@fb.com,
-        lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
-        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
-        jack@suse.com, nitheshshetty@gmail.com, gost.dev@samsung.com,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        James Smart <james.smart@broadcom.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Naohiro Aota <naohiro.aota@wdc.com>,
-        Johannes Thumshirn <jth@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-kernel@vger.kernel.org
-References: <CGME20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15@epcas5p4.samsung.com>
- <20220426101241.30100-1-nj.shetty@samsung.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220426101241.30100-1-nj.shetty@samsung.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: abe889ea-20c3-4f32-3d55-08da27f51c0e
+X-MS-TrafficTypeDiagnostic: CY4PR10MB1333:EE_
+X-Microsoft-Antispam-PRVS: <CY4PR10MB1333146EC37ED4B145825FF78EFA9@CY4PR10MB1333.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: VtIrxVSq6IZPxy1ZHllokx18ycB9CycaGrpX+esUhKWPJYbgiBq4uiShDnF8z+vmumNnMCHRHw/Qhvh5ELUp+pO4rzEuq6/zdeiiDVB08xPLLTcfnK1Hnl3Buwzd7Yy+aCl0jJLM+DXL1/Vfr5i0gkJUKAwDmgFHs1jdka/WkvMmL4NOV6CqEYMUb6S/6+1BA3r1F0UedQjnTk915ObZ5Te8wYMuMsYhR0i3Ee3T23EUCMQgzWqLc4wO3gX4rb5eZqcLq5sPOJwbNE1HkcWC9vo7qF8lZ/qaiBuwjaR5m0fDlzPNaAwB3eSppFajrVVYazhTKud/BqcC6DyUEVe1umLKq3mvIMF+TXhYihl1CY36CbaM2JrmdV5M2r++4aI/Mctn6lEp4G0j0GVyl07LcFMHvDneKcXZqsrpYggWWLcwgctBdWLaLD0UrEaV15fo8q9fRVRPqCulueG6Qi904iUJ5mPOLYL3gbgP+yGkV6WZg+wXZ0j/XQbLHFYIChKP/+AV+2n9bp+eKsEJnzxJkE8D3ylGpRs9C2R7/74HFNLe3oH7QVRJ04Zq0MDyFz8CDcAljqtovHOQD0jqX6qu5NjBwUzTeImAOXzHOHDRh02HF4qJMoiafw0rzEKen7OLB9dUbn0Qv2DZILuUIxoCI6fiPScEOQEZDx9LRWyMdnhqX1Bn6xeTbeX3xV5N5roEEs8PdGYCLMQyl774CgjwFg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(2906002)(52116002)(6512007)(6506007)(186003)(36916002)(316002)(6916009)(558084003)(86362001)(508600001)(6486002)(5660300002)(38350700002)(26005)(4326008)(66556008)(8936002)(38100700002)(66946007)(66476007)(8676002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?eetYFd1RodE6Ua4te6ZkXpO8JHdLydT86vjpKtI1vFcgIdL8Fvo9aHBwCNbS?=
+ =?us-ascii?Q?VDb7NAmE1RczpH2adrXJse3cJANMLhfLOZyad0N866Kdh/M4MwxPBWs2Gyws?=
+ =?us-ascii?Q?OdOsFsA73AM3zzpjc5/l25YO800z9bGnQc60UJHBqh8IU4QqtNi+0JL3xDnZ?=
+ =?us-ascii?Q?zY31ukPqPtwx77sB3awfqvga+f3mephAuVfInb6wHzv1A8olVGadZJ6mCQil?=
+ =?us-ascii?Q?3ACg1tfooYWTbi1i1EAUY+13MWhelH6yivHZPayaSMsgR3ZTJItkpCUiK0/A?=
+ =?us-ascii?Q?FFlztrK6uQ+Wx0Y4NCoU02ST74i+SXHoilT04o+KhNQMIUrlQX6G1/ujTAHz?=
+ =?us-ascii?Q?UZQJykCCyuSvGhBqZOMT5H+J/J8lCFrJ6lLeVqNA7fhNu7/133oE2+nj4HkO?=
+ =?us-ascii?Q?Sfl+zG3mqOE42zvBiTca5Y7mWMokWimTxyRcjqj7LGjJ5fz8xWfITCNz40jF?=
+ =?us-ascii?Q?XOAMQAf/284le5oHjyx2zZR3qMIOgcn3+iUSZwY27E0xSKi61F/L8QzO+4Yr?=
+ =?us-ascii?Q?6ywypBm/i9B3GaRqUrXw8vw6/UoU0uOLYLfDbZC0XKC734KPOgb2X4oGXD4n?=
+ =?us-ascii?Q?WVVnMqtrgNyEAhnK3BQ9ofM2EBL6FrDEZX99RPMzProB6dt4NJlDPzj77JLT?=
+ =?us-ascii?Q?lqtOFWHJtC1Tc1JNPCFiWTvdEpVSzqmSZCki3LvgjsLMw0qZ9mlcBBpyHjlr?=
+ =?us-ascii?Q?sY10lGasG1XSnTULLdCw0LC6QmWuhKkL63ejiaKgxDf+R7mKmDWXbK18kFV7?=
+ =?us-ascii?Q?/ZCevV04hZ7EJNBOOuOFkX9AYrB5gLtiJdeD2H0pNLkmXGmvouk3kTGOY0vp?=
+ =?us-ascii?Q?qhgBlYqiJB8ap+hTOeDclovk/lTwoFF5lxiSmsJj9WTE5Hevg3VXhpOsJCAV?=
+ =?us-ascii?Q?CEQgwDSFHCdAKI2JAyWRt5cEUxfBALWEKw2tc7exh1bYOiSSZmeNJNYRNtbH?=
+ =?us-ascii?Q?o8gGJLaCstj3mQi5SY2kt05rOYE1iHWi2J5JDkpwCDgZTaDfZ4ay8yGnxxf7?=
+ =?us-ascii?Q?hA9hxUYXqPjPfTKGEgBSWj6+yNVussbErGc8IGgiHWyrQlcJN0qWmDxw2twL?=
+ =?us-ascii?Q?yUhLO9XsGy1SpPpiJyxYJm66ML+0TQuv7gZahAIIJ+35ewoVdN4TDShsssfr?=
+ =?us-ascii?Q?wXdrMTL8UBYMVQq+X9Zc/cx/dZy2DfTE7/tQchLzqSim87q1boI8mkusGwZv?=
+ =?us-ascii?Q?Q8sTGODFpYrYQlndf3ZD5Knz6gVANbfzRFpYwg9rUuA5ClRq6Cqfnc4TfGWD?=
+ =?us-ascii?Q?txOvWDJ0YNqmZcYL3PCPlv2qSeDnuZOfoiuhO4qyDRFbYlZq1RjQ4lxjxLb8?=
+ =?us-ascii?Q?Yg2Ad3rlzf3Y5i01szN2YEJZUzQwXctWJQdVUeDe/WMTYe7KVYqkTkKa6Nij?=
+ =?us-ascii?Q?YbwYmHYslGrUU3qqOvEbgo9CNoRxlyoHafUIEamfhiuP1trI+UvlAZ8/Pjix?=
+ =?us-ascii?Q?pth2nKbYpy/+ZOZrru0yw1kMUajj6+srjIdEI7zVfsdsGJDYcrhgNja+SXTJ?=
+ =?us-ascii?Q?6uED7vtzO+E8CMkK58Lm2hRVaIrfofCuY8Kwil3znEdZbRftwjc6R3ezZ6Eu?=
+ =?us-ascii?Q?UL21RCiepUSAwrtI2z3TZKmEcIxbYD7kpgOXdrThos6csr8T9Fnl6wKTNy5Q?=
+ =?us-ascii?Q?UcaE0c/FH2h3hrn+F0Wl7b07k2Z73Xm2zzVI5XGSHHbwiTdBUVFRgPbvELqt?=
+ =?us-ascii?Q?YOozYFpY14ERbdOnXzKAQZSUlaZ7uItX1xUIwelGDZmYrXjys2hCRN++vagW?=
+ =?us-ascii?Q?DjLb4TcN817dwL/ykg3gaMzJLz84YhI=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: abe889ea-20c3-4f32-3d55-08da27f51c0e
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Apr 2022 02:24:51.8919
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ltHM7gm1QofRF9Ol0RCULhAoCnC4jGGkkKTv9GJvzJKWvvmhguyCk2k2gJaObCFACLzGqGwMFazylXbV9XMp0bHPYJNBs6EsYjUgz2ZsZo4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR10MB1333
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.858
+ definitions=2022-04-26_06:2022-04-26,2022-04-26 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
+ mlxscore=0 bulkscore=0 suspectscore=0 malwarescore=0 mlxlogscore=623
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
+ definitions=main-2204270012
+X-Proofpoint-ORIG-GUID: rCquWSY3P24mWC3ehgZ7O0kpwWYa0gfl
+X-Proofpoint-GUID: rCquWSY3P24mWC3ehgZ7O0kpwWYa0gfl
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/26/22 19:12, Nitesh Shetty wrote:
-> The patch series covers the points discussed in November 2021 virtual c=
-all
-> [LSF/MM/BFP TOPIC] Storage: Copy Offload[0].
-> We have covered the Initial agreed requirements in this patchset.
-> Patchset borrows Mikulas's token based approach for 2 bdev
-> implementation.
->=20
-> Overall series supports =E2=80=93
->=20
-> 1. Driver
-> - NVMe Copy command (single NS), including support in nvme-target (for
->     block and file backend)
 
-It would also be nice to have copy offload emulation in null_blk for test=
-ing.
+> So sorry, please ignore this patch.
 
->=20
-> 2. Block layer
-> - Block-generic copy (REQ_COPY flag), with interface accommodating
->     two block-devs, and multi-source/destination interface
-> - Emulation, when offload is natively absent
-> - dm-linear support (for cases not requiring split)
->=20
-> 3. User-interface
-> - new ioctl
-> - copy_file_range for zonefs
->=20
-> 4. In-kernel user
-> - dm-kcopyd
-> - copy_file_range in zonefs
->=20
-> For zonefs copy_file_range - Seems we cannot levearge fstest here. Limi=
-ted
-> testing is done at this point using a custom application for unit testi=
-ng.
->=20
-> Appreciate the inputs on plumbing and how to test this further?
-> Perhaps some of it can be discussed during LSF/MM too.
->=20
-> [0] https://lore.kernel.org/linux-nvme/CA+1E3rJ7BZ7LjQXXTdX+-0Edz=3DzT1=
-4mmPGMiVCzUgB33C60tbQ@mail.gmail.com/
->=20
-> Changes in v4:
-> - added copy_file_range support for zonefs
-> - added documentaion about new sysfs entries
-> - incorporated review comments on v3
-> - minor fixes
->=20
->=20
-> Arnav Dawn (2):
->   nvmet: add copy command support for bdev and file ns
->   fs: add support for copy file range in zonefs
->=20
-> Nitesh Shetty (7):
->   block: Introduce queue limits for copy-offload support
->   block: Add copy offload support infrastructure
->   block: Introduce a new ioctl for copy
->   block: add emulation for copy
->   nvme: add copy offload support
->   dm: Add support for copy offload.
->   dm: Enable copy offload for dm-linear target
->=20
-> SelvaKumar S (1):
->   dm kcopyd: use copy offload support
->=20
->  Documentation/ABI/stable/sysfs-block |  83 +++++++
->  block/blk-lib.c                      | 358 +++++++++++++++++++++++++++
->  block/blk-map.c                      |   2 +-
->  block/blk-settings.c                 |  59 +++++
->  block/blk-sysfs.c                    | 138 +++++++++++
->  block/blk.h                          |   2 +
->  block/ioctl.c                        |  32 +++
->  drivers/md/dm-kcopyd.c               |  55 +++-
->  drivers/md/dm-linear.c               |   1 +
->  drivers/md/dm-table.c                |  45 ++++
->  drivers/md/dm.c                      |   6 +
->  drivers/nvme/host/core.c             | 116 ++++++++-
->  drivers/nvme/host/fc.c               |   4 +
->  drivers/nvme/host/nvme.h             |   7 +
->  drivers/nvme/host/pci.c              |  25 ++
->  drivers/nvme/host/rdma.c             |   6 +
->  drivers/nvme/host/tcp.c              |  14 ++
->  drivers/nvme/host/trace.c            |  19 ++
->  drivers/nvme/target/admin-cmd.c      |   8 +-
->  drivers/nvme/target/io-cmd-bdev.c    |  65 +++++
->  drivers/nvme/target/io-cmd-file.c    |  49 ++++
->  fs/zonefs/super.c                    | 178 ++++++++++++-
->  fs/zonefs/zonefs.h                   |   1 +
->  include/linux/blk_types.h            |  21 ++
->  include/linux/blkdev.h               |  17 ++
->  include/linux/device-mapper.h        |   5 +
->  include/linux/nvme.h                 |  43 +++-
->  include/uapi/linux/fs.h              |  23 ++
->  28 files changed, 1367 insertions(+), 15 deletions(-)
->=20
->=20
-> base-commit: e7d6987e09a328d4a949701db40ef63fbb970670
+OK, dropped.
 
-
---=20
-Damien Le Moal
-Western Digital Research
+-- 
+Martin K. Petersen	Oracle Linux Engineering
