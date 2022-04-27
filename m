@@ -2,59 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC64C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 10:53:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 122D8C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 10:57:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230508AbiD0K4P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Apr 2022 06:56:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53672 "EHLO
+        id S231740AbiD0LAL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Apr 2022 07:00:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230481AbiD0K4N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2022 06:56:13 -0400
+        with ESMTP id S231684AbiD0K72 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2022 06:59:28 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4690D3A03F7;
-        Wed, 27 Apr 2022 03:30:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7036D22C3C1;
+        Wed, 27 Apr 2022 03:37:09 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id EF7831F38D;
-        Wed, 27 Apr 2022 10:30:57 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id DE5591F747;
+        Wed, 27 Apr 2022 10:37:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1651055458; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1651055827; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=0SYO6S4wSS5TgNnn69ULkvPYv5FP7agaVxb8vZruMBA=;
-        b=ZtMWsp/vgSv0x+hV9X6XBgzBRpYAhz2Ni1JKSL4BLbE+tikPu/yDLv/LYgJmCiEku80xrF
-        1X5NMCVCrTj2gFM7w18PXmyMw4bPUaS1tJuAbxhTAsejm5cXz2+5gSgVWmlBgvv1zUAQUj
-        N9wH0oEGf1mWY6CurDEf3E9c9npyslo=
+        bh=EwRuU3lN9KI8hyzt5BRGcUdxQu2aFhndVDrcib1zzbI=;
+        b=feYJC2od1AKLT8mJSoDbAoyzHedIgJQwZvNS3KNVkgnc7RzT6txrdyC7qHmbKtqm0eHZ1C
+        nwtyIUFNi9tG48N+Y74qTSYSX6kwlgGkYQd3TgrHBB36BxazEEJwyWSiqJG/CA/Henk0as
+        Q442kgxgzolK1QTcIhmgJfFSnVSSaYE=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1651055458;
+        s=susede2_ed25519; t=1651055827;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=0SYO6S4wSS5TgNnn69ULkvPYv5FP7agaVxb8vZruMBA=;
-        b=6X6DqUjKXVYhZDBL9goi/XEUFK1JQuukpkPAwhQWeog8eUle97FBRv3cZZK8i/BbQk5H41
-        5dC/EF6L72Lx8jCw==
+        bh=EwRuU3lN9KI8hyzt5BRGcUdxQu2aFhndVDrcib1zzbI=;
+        b=Z5DGjHUwr8LqYy6Y4hmCD5vvVYHZlNaZpZ9cOR3X70LSGdN3HKPIIQ+uUPD5pElrFfGesW
+        b/jCF0GqeLUhBNBg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 73EA91323E;
-        Wed, 27 Apr 2022 10:30:57 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 942411323E;
+        Wed, 27 Apr 2022 10:37:07 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id wzGnGmEbaWJ0AgAAMHmgww
-        (envelope-from <hare@suse.de>); Wed, 27 Apr 2022 10:30:57 +0000
-Message-ID: <96acbc76-1de8-4be0-314c-4a6a9284c5a3@suse.de>
-Date:   Wed, 27 Apr 2022 12:30:56 +0200
+        id VQRnI9McaWJTBQAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 27 Apr 2022 10:37:07 +0000
+Message-ID: <a885def5-7373-28d9-6ed6-bc836864c67c@suse.de>
+Date:   Wed, 27 Apr 2022 12:37:07 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH v4 01/10] block: Introduce queue limits for copy-offload
- support
 Content-Language: en-US
 To:     Nitesh Shetty <nj.shetty@samsung.com>
 Cc:     chaitanyak@nvidia.com, linux-block@vger.kernel.org,
@@ -66,7 +64,7 @@ Cc:     chaitanyak@nvidia.com, linux-block@vger.kernel.org,
         lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
         josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
         jack@suse.com, nitheshshetty@gmail.com, gost.dev@samsung.com,
-        Kanchan Joshi <joshi.k@samsung.com>,
+        =?UTF-8?Q?Javier_Gonz=c3=a1lez?= <javier.gonz@samsung.com>,
         Arnav Dawn <arnav.dawn@samsung.com>,
         Alasdair Kergon <agk@redhat.com>,
         Mike Snitzer <snitzer@kernel.org>,
@@ -79,10 +77,11 @@ Cc:     chaitanyak@nvidia.com, linux-block@vger.kernel.org,
         Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-kernel@vger.kernel.org
 References: <20220426101241.30100-1-nj.shetty@samsung.com>
- <CGME20220426101910epcas5p4fd64f83c6da9bbd891107d158a2743b5@epcas5p4.samsung.com>
- <20220426101241.30100-2-nj.shetty@samsung.com>
+ <CGME20220426101938epcas5p291690dd1f0e931cd9f8139daaf3f9296@epcas5p2.samsung.com>
+ <20220426101241.30100-4-nj.shetty@samsung.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220426101241.30100-2-nj.shetty@samsung.com>
+Subject: Re: [PATCH v4 03/10] block: Introduce a new ioctl for copy
+In-Reply-To: <20220426101241.30100-4-nj.shetty@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -90,33 +89,58 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/26/22 12:12, Nitesh Shetty wrote:
-> Add device limits as sysfs entries,
->          - copy_offload (RW)
->          - copy_max_bytes (RW)
->          - copy_max_hw_bytes (RO)
->          - copy_max_range_bytes (RW)
->          - copy_max_range_hw_bytes (RO)
->          - copy_max_nr_ranges (RW)
->          - copy_max_nr_ranges_hw (RO)
+> Add new BLKCOPY ioctl that offloads copying of one or more sources ranges
+> to one or more destination in a device. COPY ioctl accepts a 'copy_range'
+> structure that contains no of range, a reserved field , followed by an
+> array of ranges. Each source range is represented by 'range_entry' that
+> contains source start offset, destination start offset and length of
+> source ranges (in bytes)
 > 
-> Above limits help to split the copy payload in block layer.
-> copy_offload, used for setting copy offload(1) or emulation(0).
-> copy_max_bytes: maximum total length of copy in single payload.
-> copy_max_range_bytes: maximum length in a single entry.
-> copy_max_nr_ranges: maximum number of entries in a payload.
-> copy_max_*_hw_*: Reflects the device supported maximum limits.
+> MAX_COPY_NR_RANGE, limits the number of entries for the IOCTL and
+> MAX_COPY_TOTAL_LENGTH limits the total copy length, IOCTL can handle.
+> 
+> Example code, to issue BLKCOPY:
+> /* Sample example to copy three entries with [dest,src,len],
+> * [32768, 0, 4096] [36864, 4096, 4096] [40960,8192,4096] on same device */
+> 
+> int main(void)
+> {
+> 	int i, ret, fd;
+> 	unsigned long src = 0, dst = 32768, len = 4096;
+> 	struct copy_range *cr;
+> 	cr = (struct copy_range *)malloc(sizeof(*cr)+
+> 					(sizeof(struct range_entry)*3));
+> 	cr->nr_range = 3;
+> 	cr->reserved = 0;
+> 	for (i = 0; i< cr->nr_range; i++, src += len, dst += len) {
+> 		cr->range_list[i].dst = dst;
+> 		cr->range_list[i].src = src;
+> 		cr->range_list[i].len = len;
+> 		cr->range_list[i].comp_len = 0;
+> 	}
+> 	fd = open("/dev/nvme0n1", O_RDWR);
+> 	if (fd < 0) return 1;
+> 	ret = ioctl(fd, BLKCOPY, cr);
+> 	if (ret != 0)
+> 	       printf("copy failed, ret= %d\n", ret);
+> 	for (i=0; i< cr->nr_range; i++)
+> 		if (cr->range_list[i].len != cr->range_list[i].comp_len)
+> 			printf("Partial copy for entry %d: requested %llu, completed %llu\n",
+> 								i, cr->range_list[i].len,
+> 								cr->range_list[i].comp_len);
+> 	close(fd);
+> 	free(cr);
+> 	return ret;
+> }
 > 
 > Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
-> Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
+> Signed-off-by: Javier González <javier.gonz@samsung.com>
 > Signed-off-by: Arnav Dawn <arnav.dawn@samsung.com>
 > ---
->   Documentation/ABI/stable/sysfs-block |  83 ++++++++++++++++
->   block/blk-settings.c                 |  59 ++++++++++++
->   block/blk-sysfs.c                    | 138 +++++++++++++++++++++++++++
->   include/linux/blkdev.h               |  13 +++
->   4 files changed, 293 insertions(+)
+>   block/ioctl.c           | 32 ++++++++++++++++++++++++++++++++
+>   include/uapi/linux/fs.h |  9 +++++++++
+>   2 files changed, 41 insertions(+)
 > 
-
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
