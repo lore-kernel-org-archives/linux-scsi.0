@@ -2,152 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 122D8C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 10:57:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A534C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Apr 2022 11:27:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231740AbiD0LAL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Apr 2022 07:00:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35170 "EHLO
+        id S232882AbiD0LaV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Apr 2022 07:30:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231684AbiD0K72 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2022 06:59:28 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7036D22C3C1;
-        Wed, 27 Apr 2022 03:37:09 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id DE5591F747;
-        Wed, 27 Apr 2022 10:37:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1651055827; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=EwRuU3lN9KI8hyzt5BRGcUdxQu2aFhndVDrcib1zzbI=;
-        b=feYJC2od1AKLT8mJSoDbAoyzHedIgJQwZvNS3KNVkgnc7RzT6txrdyC7qHmbKtqm0eHZ1C
-        nwtyIUFNi9tG48N+Y74qTSYSX6kwlgGkYQd3TgrHBB36BxazEEJwyWSiqJG/CA/Henk0as
-        Q442kgxgzolK1QTcIhmgJfFSnVSSaYE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1651055827;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=EwRuU3lN9KI8hyzt5BRGcUdxQu2aFhndVDrcib1zzbI=;
-        b=Z5DGjHUwr8LqYy6Y4hmCD5vvVYHZlNaZpZ9cOR3X70LSGdN3HKPIIQ+uUPD5pElrFfGesW
-        b/jCF0GqeLUhBNBg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 942411323E;
-        Wed, 27 Apr 2022 10:37:07 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id VQRnI9McaWJTBQAAMHmgww
-        (envelope-from <hare@suse.de>); Wed, 27 Apr 2022 10:37:07 +0000
-Message-ID: <a885def5-7373-28d9-6ed6-bc836864c67c@suse.de>
-Date:   Wed, 27 Apr 2022 12:37:07 +0200
+        with ESMTP id S232853AbiD0LaU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2022 07:30:20 -0400
+X-Greylist: delayed 3615 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 27 Apr 2022 04:27:09 PDT
+Received: from qq.com (smtpbg478.qq.com [59.36.132.92])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5A7C34BAF
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2022 04:27:09 -0700 (PDT)
+X-QQ-mid: bizesmtp64t1651050605tiahcm92
+Received: from localhost.localdomain ( [113.57.152.160])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Wed, 27 Apr 2022 17:10:04 +0800 (CST)
+X-QQ-SSF: 01400000002000B0D000000A0000000
+X-QQ-FEAT: k0yT7W7BRd2hJ3e44CTTxZClb4VhkQvqeT8/1vbIYdFEXyYRmRAwUKNJDbxwE
+        bSyNufrz103kdN+HSbexV3zJ8frcy35rH0dSEjze32oxJ67/YIg1Ui0wQp6jPjn8sdrWouw
+        6976pNoA+b9xTCtCGDlASzzAo7GYAHhfsvSoxHvnHqa+FcOK+Cho3d6AGJe0ZnzzrSHCFmm
+        xQX6+ciD4+yQzVq4GHlS39n+Cp4rnT9gUp+fINjO2aG+gzX7OSyOH7yH0DpFVoacHuI4ZLx
+        4TSq8q5Cf/PbqPJGvV1TIKb+dn/PEScJtoBQxsWLRYegEU3g+82O1ClsQ0NXVyEWh+hNc0V
+        r5UDk6YJJlj4Ih5JBAdRqHCXfY1Ag==
+X-QQ-GoodBg: 1
+From:   jinxiaobo <jinxiaobo@uniontech.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        jinxiaobo <jinxiaobo@uniontech.com>
+Subject: [PATCH] scsi: sr: Fix some cdroms automatically ejected when booting into the system
+Date:   Wed, 27 Apr 2022 17:09:06 +0800
+Message-Id: <20220427090906.2257940-1-jinxiaobo@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Content-Language: en-US
-To:     Nitesh Shetty <nj.shetty@samsung.com>
-Cc:     chaitanyak@nvidia.com, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, dm-devel@redhat.com,
-        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-        axboe@kernel.dk, msnitzer@redhat.com, bvanassche@acm.org,
-        martin.petersen@oracle.com, kbusch@kernel.org, hch@lst.de,
-        Frederick.Knight@netapp.com, osandov@fb.com,
-        lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
-        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
-        jack@suse.com, nitheshshetty@gmail.com, gost.dev@samsung.com,
-        =?UTF-8?Q?Javier_Gonz=c3=a1lez?= <javier.gonz@samsung.com>,
-        Arnav Dawn <arnav.dawn@samsung.com>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        James Smart <james.smart@broadcom.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Naohiro Aota <naohiro.aota@wdc.com>,
-        Johannes Thumshirn <jth@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-kernel@vger.kernel.org
-References: <20220426101241.30100-1-nj.shetty@samsung.com>
- <CGME20220426101938epcas5p291690dd1f0e931cd9f8139daaf3f9296@epcas5p2.samsung.com>
- <20220426101241.30100-4-nj.shetty@samsung.com>
-From:   Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 03/10] block: Introduce a new ioctl for copy
-In-Reply-To: <20220426101241.30100-4-nj.shetty@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:uniontech.com:qybgforeign:qybgforeign3
+X-QQ-Bgrelay: 1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/26/22 12:12, Nitesh Shetty wrote:
-> Add new BLKCOPY ioctl that offloads copying of one or more sources ranges
-> to one or more destination in a device. COPY ioctl accepts a 'copy_range'
-> structure that contains no of range, a reserved field , followed by an
-> array of ranges. Each source range is represented by 'range_entry' that
-> contains source start offset, destination start offset and length of
-> source ranges (in bytes)
-> 
-> MAX_COPY_NR_RANGE, limits the number of entries for the IOCTL and
-> MAX_COPY_TOTAL_LENGTH limits the total copy length, IOCTL can handle.
-> 
-> Example code, to issue BLKCOPY:
-> /* Sample example to copy three entries with [dest,src,len],
-> * [32768, 0, 4096] [36864, 4096, 4096] [40960,8192,4096] on same device */
-> 
-> int main(void)
-> {
-> 	int i, ret, fd;
-> 	unsigned long src = 0, dst = 32768, len = 4096;
-> 	struct copy_range *cr;
-> 	cr = (struct copy_range *)malloc(sizeof(*cr)+
-> 					(sizeof(struct range_entry)*3));
-> 	cr->nr_range = 3;
-> 	cr->reserved = 0;
-> 	for (i = 0; i< cr->nr_range; i++, src += len, dst += len) {
-> 		cr->range_list[i].dst = dst;
-> 		cr->range_list[i].src = src;
-> 		cr->range_list[i].len = len;
-> 		cr->range_list[i].comp_len = 0;
-> 	}
-> 	fd = open("/dev/nvme0n1", O_RDWR);
-> 	if (fd < 0) return 1;
-> 	ret = ioctl(fd, BLKCOPY, cr);
-> 	if (ret != 0)
-> 	       printf("copy failed, ret= %d\n", ret);
-> 	for (i=0; i< cr->nr_range; i++)
-> 		if (cr->range_list[i].len != cr->range_list[i].comp_len)
-> 			printf("Partial copy for entry %d: requested %llu, completed %llu\n",
-> 								i, cr->range_list[i].len,
-> 								cr->range_list[i].comp_len);
-> 	close(fd);
-> 	free(cr);
-> 	return ret;
-> }
-> 
-> Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
-> Signed-off-by: Javier González <javier.gonz@samsung.com>
-> Signed-off-by: Arnav Dawn <arnav.dawn@samsung.com>
-> ---
->   block/ioctl.c           | 32 ++++++++++++++++++++++++++++++++
->   include/uapi/linux/fs.h |  9 +++++++++
->   2 files changed, 41 insertions(+)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+sr_get_events() has been called before udev starts when SCSI CDROM is
+built-in and AHCI SATA is bulit-in,so sr events propagated to 
+user space are not handled.
+if both is loadable, udev will handle sr events, some cdroms may eject.
+We need call sr_get_events() once before device_add_disk() 
+to keep the same result, whether both are built-in or loadable.
 
-Cheers,
+Signed-off-by: jinxiaobo <jinxiaobo@uniontech.com>
+---
+ drivers/scsi/sr.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Hannes
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index cbd92891a762..043b3ab72d7a 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -676,6 +676,7 @@ static int sr_probe(struct device *dev)
+ 	set_capacity(disk, cd->capacity);
+ 	disk->private_data = cd;
+ 
++	sr_get_events(sdev);
+ 	if (register_cdrom(disk, &cd->cdi))
+ 		goto fail_minor;
+ 
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+2.20.1
+
+
+
