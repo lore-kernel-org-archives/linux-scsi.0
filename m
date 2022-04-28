@@ -2,252 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0665C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Apr 2022 08:19:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B9D3C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Apr 2022 08:27:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235360AbiD1IWt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Apr 2022 04:22:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48484 "EHLO
+        id S1344178AbiD1IbH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Apr 2022 04:31:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344049AbiD1IWV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2022 04:22:21 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48F5EA0BC7
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Apr 2022 01:19:07 -0700 (PDT)
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220428081905epoutp02c188ef2928f2f7d09d6c532fb60cff86~qAZNLknwb1341413414epoutp02E
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Apr 2022 08:19:05 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220428081905epoutp02c188ef2928f2f7d09d6c532fb60cff86~qAZNLknwb1341413414epoutp02E
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1651133945;
-        bh=1StvnzQqQbHqfst8nfP3BPvdI16uBOEa66gdPEBq/aQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=fQwUuWE3r+CjxahvGwx9NUPsUv4q5/Sf6uvN/C4utUYFw8Wk1gWXJkegiran1mUTP
-         2Ew5s3WjQXGzVPbeSvrieZLx3KgirUDhcvbPHbWf3eC67eLRV1aW60a13Zgn8p22DJ
-         kDto9CsxirR4u/eJMzFxle9ji5DberIIde/lRsog=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-        20220428081904epcas5p47c8bcd22873ce6d18400433fc71cb400~qAZMpQ-GT1073810738epcas5p4n;
-        Thu, 28 Apr 2022 08:19:04 +0000 (GMT)
-Received: from epsmges5p2new.samsung.com (unknown [182.195.38.175]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4KppRn3tN5z4x9Q7; Thu, 28 Apr
-        2022 08:19:01 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        2A.07.09827.5FD4A626; Thu, 28 Apr 2022 17:19:01 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-        20220428080614epcas5p3491f94c681f10e405f2e32469014cb42~qAN-WXfd03164331643epcas5p33;
-        Thu, 28 Apr 2022 08:06:14 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220428080614epsmtrp1646218e5d13d021f511c2694cde96f97~qAN-VdIg-2346223462epsmtrp1M;
-        Thu, 28 Apr 2022 08:06:14 +0000 (GMT)
-X-AuditID: b6c32a4a-b3bff70000002663-ef-626a4df5be25
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        83.6F.08853.6FA4A626; Thu, 28 Apr 2022 17:06:14 +0900 (KST)
-Received: from test-zns (unknown [107.110.206.5]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20220428080613epsmtip13d3d8cb3a0e30e5da0c0994a6f914284~qAN_HrEd02991929919epsmtip1i;
-        Thu, 28 Apr 2022 08:06:13 +0000 (GMT)
-Date:   Thu, 28 Apr 2022 13:31:05 +0530
-From:   Nitesh Shetty <nj.shetty@samsung.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        dm-devel@redhat.com, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org, nitheshshetty@gmail.com,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 02/10] block: Add copy offload support infrastructure
-Message-ID: <20220428080105.GH9558@test-zns>
+        with ESMTP id S1344142AbiD1IbC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2022 04:31:02 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B95EA0BD2;
+        Thu, 28 Apr 2022 01:27:49 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id CDEBA2186F;
+        Thu, 28 Apr 2022 08:27:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1651134467; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=uHWa92vFc0VKwXbjUTC1XMh188o1HlT0uQD6qb0vP48=;
+        b=ptsNFLPN4AOJ9HLpo2aUFC1C35GqsbNQmwQwd/cc0fkX9rwV4HLRJVj0WiG+95oGxsBYyw
+        5reFV928fpI3wng15ZZWSf2aMaxIkut0k3dO9MjlmOJ7aHFGqGsaFIzVlip6U6aXsYeVwo
+        KQjHMdo/P4x1VKzfCdDMkbEiS1Pfu8Q=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EF6F413491;
+        Thu, 28 Apr 2022 08:27:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id ApxEOAJQamIBLgAAMHmgww
+        (envelope-from <jgross@suse.com>); Thu, 28 Apr 2022 08:27:46 +0000
+From:   Juergen Gross <jgross@suse.com>
+To:     xen-devel@lists.xenproject.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-integrity@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Cc:     Juergen Gross <jgross@suse.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Oleksandr Andrushchenko <oleksandr_andrushchenko@epam.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, alsa-devel@alsa-project.org,
+        Peter Huewe <peterhuewe@gmx.de>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v2 00/19] xen: simplify frontend side ring setup
+Date:   Thu, 28 Apr 2022 10:27:24 +0200
+Message-Id: <20220428082743.16593-1-jgross@suse.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-In-Reply-To: <0d3b0a6b-825d-1b01-094a-911f81f5f354@opensource.wdc.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrAJsWRmVeSWpSXmKPExsWy7bCmlu5X36wkg0/PmS1+nz3PbLH33WxW
-        i723tC327D3JYnF51xw2i/nLnrJbdF/fwWax40kjowOHx85Zd9k9Ni+p99jZep/V4/2+q2we
-        nzfJBbBGZdtkpCampBYppOYl56dk5qXbKnkHxzvHm5oZGOoaWlqYKynkJeam2iq5+AToumXm
-        AF2ipFCWmFMKFApILC5W0rezKcovLUlVyMgvLrFVSi1IySkwKdArTswtLs1L18tLLbEyNDAw
-        MgUqTMjOODfnPFPBJ9WKVc1zmBsY/8l2MXJySAiYSKz81cbcxcjFISSwm1Fi1cR7TBDOJ0aJ
-        pzOusEE43xgl3l46wA7T0n1pFVTLXkaJfYuuQjnPGCX67r5nAaliEVCV6J84hbGLkYODTUBb
-        4vR/DpCwiICpxNueVhaQemaBM4wS7e93gU0VFvCRWH5iGiOIzSugIzHx8Tt2CFtQ4uTMJywg
-        czgF3CRW/dMFCYsKKEsc2HYc7FQJgVYOiTuda9kgrnOR2NHdzAJhC0u8Or4F6mopiZf9bVB2
-        ucT2tgVQzS2MEl2nTkE12Etc3POXCcRmFsiQ6J/wFapBVmLqqXVQcT6J3t9PmCDivBI75sHY
-        yhJr1i+AOkJS4tr3RijbQ2Le3icskBC6xSSxpuEx2wRG+VlInpuFZB+ErSOxYPcntllATzML
-        SEss/8cBYWpKrN+lv4CRdRWjZGpBcW56arFpgVFeajk8ypPzczcxgpOqltcOxocPPugdYmTi
-        YDzEKMHBrCTC+2V3RpIQb0piZVVqUX58UWlOavEhRlNgZE1klhJNzgem9bySeEMTSwMTMzMz
-        E0tjM0Mlcd7T6RsShQTSE0tSs1NTC1KLYPqYODilGphE3I1qJd5rMrdsDKionCfM8n+O8WT2
-        BOUf7nMKbre3TNtefC85ISLO5Kyn6BOmBFmrwL+/wzKTl0VZFeUk9csUPj12oTTIfrPa7eyT
-        vJWsV9lPXBN1yrh1iOW1So7jvtTjHnOcLp3U4p5WNiWeVzWaO0v/aoFpzMFJMtOW8y/M2hdX
-        OCfN0fn8KqZZ4s6FZ+TvXH4nEbvi16ktPvtv2x8NjbAOMFQ4rRneZWHaIeI+a7XZtCPZ/zbf
-        npe+xfldruZPnu/sNlN+rZx77dWiI4XBT3gjvD/+nRzc4f+qUeHpzdaSHWahi7xL/zrHrNiU
-        U9XuG1q+qGzSfmOmneqrD7xac+fPMUOWmbFTOq1XBimxFGckGmoxFxUnAgAMLRIEMwQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrALMWRmVeSWpSXmKPExsWy7bCSnO43r6wkg8WnNC1+nz3PbLH33WxW
-        i723tC327D3JYnF51xw2i/nLnrJbdF/fwWax40kjowOHx85Zd9k9Ni+p99jZep/V4/2+q2we
-        nzfJBbBGcdmkpOZklqUW6dslcGX07T7DWLBJueLcvhaWBsbr0l2MnBwSAiYS3ZdWMXcxcnEI
-        CexmlLi39xgLREJSYtnfI8wQtrDEyn/P2SGKnjBKLLx1DqyIRUBVon/iFMYuRg4ONgFtidP/
-        OUDCIgKmEm97WllA6pkFzjBKtL/fxQ6SEBbwkVh+YhojiM0roCMx8fE7qKG3mCQWP97EBpEQ
-        lDg58wnYAmYBLYkb/14ygSxgFpCWWP6PA8TkFHCTWPVPF6RCVEBZ4sC240wTGAVnIWmehaR5
-        FkLzAkbmVYySqQXFuem5xYYFhnmp5XrFibnFpXnpesn5uZsYwZGgpbmDcfuqD3qHGJk4GA8x
-        SnAwK4nwftmdkSTEm5JYWZValB9fVJqTWnyIUZqDRUmc90LXyXghgfTEktTs1NSC1CKYLBMH
-        p1QDU2aJhIDZ37KSa3Oud/X/VX85J/+55Neit+E/7fgzxHzWa1wwuzxDNHjHhWTXWSc/22mu
-        T94Tpv2tgO+n3LYbZ/I7GDV5/4u3/9doeR3w2khqsaE/4xX5qgZNw8eMog9DquwnTXVr8j6j
-        +y/qQH3kwyMyYisPZIjVlis/DDLO+bPTXbh2pbP1JF83Y5G3GY5OLO27z+3x2qf0g8XV/PqF
-        M82Wp7ZmOjpsEVdZOONgFvP3ZOOHP1isVdUKfv3UqNjQWzt7451tzx8tE3rTnsl0Larmkc6C
-        pCNlXd/lqhjn7fvnk5PtMLlrn0+nRM2mxpXXklMZzln5TU/+wvlvQaBWxt+QK2uerth15t0n
-        v9ZQJZbijERDLeai4kQAbdFbu/MCAAA=
-X-CMS-MailID: 20220428080614epcas5p3491f94c681f10e405f2e32469014cb42
-X-Msg-Generator: CA
-Content-Type: multipart/mixed;
-        boundary="----s9reHD3dvq.Swzu4OgS99nNlXP7CLa0djtt04wdzZepsPVyA=_1ceb3_"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220426101921epcas5p341707619b5e836490284a42c92762083
-References: <20220426101241.30100-1-nj.shetty@samsung.com>
-        <CGME20220426101921epcas5p341707619b5e836490284a42c92762083@epcas5p3.samsung.com>
-        <20220426101241.30100-3-nj.shetty@samsung.com>
-        <7d1fdd1e-c854-4744-8bec-7d222fb9be76@opensource.wdc.com>
-        <20220427151535.GC9558@test-zns>
-        <0d3b0a6b-825d-1b01-094a-911f81f5f354@opensource.wdc.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-------s9reHD3dvq.Swzu4OgS99nNlXP7CLa0djtt04wdzZepsPVyA=_1ceb3_
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
+Many Xen PV frontends share similar code for setting up a ring page
+(allocating and granting access for the backend) and for tearing it
+down.
 
-On Thu, Apr 28, 2022 at 07:04:13AM +0900, Damien Le Moal wrote:
-> On 4/28/22 00:15, Nitesh Shetty wrote:
-> > On Wed, Apr 27, 2022 at 11:45:26AM +0900, Damien Le Moal wrote:
-> >> On 4/26/22 19:12, Nitesh Shetty wrote:
-> >>> Introduce blkdev_issue_copy which supports source and destination bdevs,
-> >>> and an array of (source, destination and copy length) tuples.
-> >>> Introduce REQ_COPY copy offload operation flag. Create a read-write
-> >>> bio pair with a token as payload and submitted to the device in order.
-> >>> Read request populates token with source specific information which
-> >>> is then passed with write request.
-> >>> This design is courtesy Mikulas Patocka's token based copy
-> >>>
-> >>> Larger copy will be divided, based on max_copy_sectors,
-> >>> max_copy_range_sector limits.
-> >>>
-> >>> Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
-> >>> Signed-off-by: Arnav Dawn <arnav.dawn@samsung.com>
-> >>> ---
-> >>>  block/blk-lib.c           | 232 ++++++++++++++++++++++++++++++++++++++
-> >>>  block/blk.h               |   2 +
-> >>>  include/linux/blk_types.h |  21 ++++
-> >>>  include/linux/blkdev.h    |   2 +
-> >>>  include/uapi/linux/fs.h   |  14 +++
-> >>>  5 files changed, 271 insertions(+)
-> >>>
-> >>> diff --git a/block/blk-lib.c b/block/blk-lib.c
-> >>> index 09b7e1200c0f..ba9da2d2f429 100644
-> >>> --- a/block/blk-lib.c
-> >>> +++ b/block/blk-lib.c
-> >>> @@ -117,6 +117,238 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
-> >>>  }
-> >>>  EXPORT_SYMBOL(blkdev_issue_discard);
-> >>>  
-> >>> +/*
-> >>> + * Wait on and process all in-flight BIOs.  This must only be called once
-> >>> + * all bios have been issued so that the refcount can only decrease.
-> >>> + * This just waits for all bios to make it through bio_copy_end_io. IO
-> >>> + * errors are propagated through cio->io_error.
-> >>> + */
-> >>> +static int cio_await_completion(struct cio *cio)
-> >>> +{
-> >>> +	int ret = 0;
-> >>> +	unsigned long flags;
-> >>> +
-> >>> +	spin_lock_irqsave(&cio->lock, flags);
-> >>> +	if (cio->refcount) {
-> >>> +		cio->waiter = current;
-> >>> +		__set_current_state(TASK_UNINTERRUPTIBLE);
-> >>> +		spin_unlock_irqrestore(&cio->lock, flags);
-> >>> +		blk_io_schedule();
-> >>> +		/* wake up sets us TASK_RUNNING */
-> >>> +		spin_lock_irqsave(&cio->lock, flags);
-> >>> +		cio->waiter = NULL;
-> >>> +		ret = cio->io_err;
-> >>> +	}
-> >>> +	spin_unlock_irqrestore(&cio->lock, flags);
-> >>> +	kvfree(cio);
-> >>
-> >> cio is allocated with kzalloc() == kmalloc(). So why the kvfree() here ?
-> >>
-> > 
-> > acked.
-> > 
-> >>> +
-> >>> +	return ret;
-> >>> +}
-> >>> +
-> >>> +static void bio_copy_end_io(struct bio *bio)
-> >>> +{
-> >>> +	struct copy_ctx *ctx = bio->bi_private;
-> >>> +	struct cio *cio = ctx->cio;
-> >>> +	sector_t clen;
-> >>> +	int ri = ctx->range_idx;
-> >>> +	unsigned long flags;
-> >>> +	bool wake = false;
-> >>> +
-> >>> +	if (bio->bi_status) {
-> >>> +		cio->io_err = bio->bi_status;
-> >>> +		clen = (bio->bi_iter.bi_sector << SECTOR_SHIFT) - ctx->start_sec;
-> >>> +		cio->rlist[ri].comp_len = min_t(sector_t, clen, cio->rlist[ri].comp_len);
-> >>
-> >> long line.
-> > 
-> > Is it because line is more than 80 character, I thought limit is 100 now, so
-> > went with longer lines ?
-> 
-> When it is easy to wrap the lines without readability loss, please do to
-> keep things under 80 char per line.
-> 
->
+Create new service functions doing all needed steps in one go.
 
-acked
+This requires all frontends to use a common value for an invalid
+grant reference in order to make the functions idempotent.
 
-> >>> +{
-> >>> +	struct request_queue *src_q = bdev_get_queue(src_bdev);
-> >>> +	struct request_queue *dest_q = bdev_get_queue(dest_bdev);
-> >>> +	int ret = -EINVAL;
-> >>> +
-> >>> +	if (!src_q || !dest_q)
-> >>> +		return -ENXIO;
-> >>> +
-> >>> +	if (!nr)
-> >>> +		return -EINVAL;
-> >>> +
-> >>> +	if (nr >= MAX_COPY_NR_RANGE)
-> >>> +		return -EINVAL;
-> >>
-> >> Where do you check the number of ranges against what the device can do ?
-> >>
-> > 
-> > The present implementation submits only one range at a time. This was done to 
-> > make copy offload generic, so that other types of copy implementation such as
-> > XCOPY should be able to use same infrastructure. Downside at present being
-> > NVMe copy offload is not optimal.
-> 
-> If you issue one range at a time without checking the number of ranges,
-> what is the point of the nr ranges queue limit ? The user can submit a
-> copy ioctl request exceeding it. Please use that limit and enforce it or
-> remove it entirely.
-> 
+Changes in V2:
+- new patch 9 and related changes in patches 10-18
 
-Sure, will remove this limit in next version.
+Juergen Gross (19):
+  xen/blkfront: switch blkfront to use INVALID_GRANT_REF
+  xen/netfront: switch netfront to use INVALID_GRANT_REF
+  xen/scsifront: remove unused GRANT_INVALID_REF definition
+  xen/usb: switch xen-hcd to use INVALID_GRANT_REF
+  xen/drm: switch xen_drm_front to use INVALID_GRANT_REF
+  xen/sound: switch xen_snd_front to use INVALID_GRANT_REF
+  xen/dmabuf: switch gntdev-dmabuf to use INVALID_GRANT_REF
+  xen/shbuf: switch xen-front-pgdir-shbuf to use INVALID_GRANT_REF
+  xen: update ring.h
+  xen/xenbus: add xenbus_setup_ring() service function
+  xen/blkfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/netfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/tpmfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/drmfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/pcifront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/scsifront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/usbfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/sndfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/xenbus: eliminate xenbus_grant_ring()
 
---
-Thank you
-Nitesh Shetty
+ drivers/block/xen-blkfront.c                | 57 +++++---------
+ drivers/char/tpm/xen-tpmfront.c             | 18 +----
+ drivers/gpu/drm/xen/xen_drm_front.h         |  9 ---
+ drivers/gpu/drm/xen/xen_drm_front_evtchnl.c | 43 +++--------
+ drivers/net/xen-netfront.c                  | 85 +++++++--------------
+ drivers/pci/xen-pcifront.c                  | 19 +----
+ drivers/scsi/xen-scsifront.c                | 31 ++------
+ drivers/usb/host/xen-hcd.c                  | 65 ++++------------
+ drivers/xen/gntdev-dmabuf.c                 | 13 +---
+ drivers/xen/xen-front-pgdir-shbuf.c         | 17 +----
+ drivers/xen/xenbus/xenbus_client.c          | 82 +++++++++++++++-----
+ include/xen/interface/io/ring.h             | 19 +++--
+ include/xen/xenbus.h                        |  4 +-
+ sound/xen/xen_snd_front_evtchnl.c           | 44 +++--------
+ sound/xen/xen_snd_front_evtchnl.h           |  9 ---
+ 15 files changed, 179 insertions(+), 336 deletions(-)
 
+-- 
+2.34.1
 
-------s9reHD3dvq.Swzu4OgS99nNlXP7CLa0djtt04wdzZepsPVyA=_1ceb3_
-Content-Type: text/plain; charset="utf-8"
-
-
-------s9reHD3dvq.Swzu4OgS99nNlXP7CLa0djtt04wdzZepsPVyA=_1ceb3_--
