@@ -2,128 +2,61 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A13EC4321E
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Apr 2022 08:28:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89839C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Apr 2022 08:36:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344264AbiD1IbP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Apr 2022 04:31:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48330 "EHLO
+        id S236569AbiD1IjV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Apr 2022 04:39:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344209AbiD1IbJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2022 04:31:09 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8F9EA0BEE;
-        Thu, 28 Apr 2022 01:27:53 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 3C6951F88B;
-        Thu, 28 Apr 2022 08:27:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1651134472; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=1OIhlvhpDf96xGkhA26yZf7pns1SEZ9vLk/EobSBf7U=;
-        b=e4ZiNoI9Kk/vxF6WBGPMvTgtaqzePnrbSEgd3HhKF9fP7PEcYc6C3tzqPjkZsraNDBQpgQ
-        Xh5BmiCZb69+V49nJ6MhqGTMRLvrWvGZekAggS1g0NOR11UvMZk2/S6Lwh9yw+93369n8K
-        zuoWN8JagVvATERzOOkykaCGvpybBDs=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EEBE613491;
-        Thu, 28 Apr 2022 08:27:51 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id GGn6OAdQamIBLgAAMHmgww
-        (envelope-from <jgross@suse.com>); Thu, 28 Apr 2022 08:27:51 +0000
-From:   Juergen Gross <jgross@suse.com>
-To:     xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Juergen Gross <jgross@suse.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v2 16/19] xen/scsifront: use xenbus_setup_ring() and xenbus_teardown_ring()
-Date:   Thu, 28 Apr 2022 10:27:40 +0200
-Message-Id: <20220428082743.16593-17-jgross@suse.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220428082743.16593-1-jgross@suse.com>
-References: <20220428082743.16593-1-jgross@suse.com>
+        with ESMTP id S1344537AbiD1Iiz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2022 04:38:55 -0400
+X-Greylist: delayed 802 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 28 Apr 2022 01:31:08 PDT
+Received: from mail.profitbizdesign.com.pl (mail.profitbizdesign.com.pl [94.177.252.218])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C36AAAB5B
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Apr 2022 01:31:08 -0700 (PDT)
+Received: by mail.profitbizdesign.com.pl (Postfix, from userid 1001)
+        id 9C706A8DA2; Thu, 28 Apr 2022 09:11:30 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=profitbizdesign.com.pl; s=mail; t=1651133498;
+        bh=Rfzvu4C+yJ1wyuJ4V+t/udh6cgYEQVnY6S5ltO4wdNg=;
+        h=Date:From:To:Subject:From;
+        b=Wgr2yf39SzapzTLzWrVjTSI4cX+LvnueK2MDs2HjcnJ+PixkC0n6KtG6HKnCeJ5n5
+         /mCyLBWnN3WUDHMAu//STx2Yw7+Fu7rF4lbl4lVvVl43j+gmJWAlVcLEAEieOAtAg2
+         QVPPWAfEtlu+HgN+j+VMIqqH0dWjNbv32fIGW0x6LazMGQFTHXeNEkqV51Y2MHIgWe
+         YkFu1KcxXeflAaGFASVZXYWrRwSGJmQPdJh3SOc25Co2RPlOM9jRJ4+bYIAcdKfqHe
+         YmeJNlTkgb1uhMhgqBIDHQ9FqnOvCPTZvuHBErFVSeIPCdsblYBkxLvszSrpwhM3fv
+         QsGfyGyedGZZg==
+Received: by mail.profitbizdesign.com.pl for <linux-scsi@vger.kernel.org>; Thu, 28 Apr 2022 08:10:19 GMT
+Message-ID: <20220428074503-0.1.1z.5zbu.0.riz12oly8j@profitbizdesign.com.pl>
+Date:   Thu, 28 Apr 2022 08:10:19 GMT
+From:   =?UTF-8?Q? "Arkadiusz_Soko=C5=82owski" ?= 
+        <arkadiusz.sokolowski@profitbizdesign.com.pl>
+To:     <linux-scsi@vger.kernel.org>
+Subject: Koszty instalacji fotowoltaicznej
+X-Mailer: mail.profitbizdesign.com.pl
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Simplify scsifront's ring creation and removal via xenbus_setup_ring()
-and xenbus_teardown_ring().
+Dzie=C5=84 dobry,
 
-Signed-off-by: Juergen Gross <jgross@suse.com>
----
- drivers/scsi/xen-scsifront.c | 28 +++++++---------------------
- 1 file changed, 7 insertions(+), 21 deletions(-)
+stworzyli=C5=9Bmy specjaln=C4=85 ofert=C4=99 dla firm, na kompleksow=C4=85=
+ obs=C5=82ug=C4=99 inwestycji w fotowoltaik=C4=99. =20
 
-diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-index 4c55e479fc36..51afc66e839d 100644
---- a/drivers/scsi/xen-scsifront.c
-+++ b/drivers/scsi/xen-scsifront.c
-@@ -798,27 +798,15 @@ static int scsifront_alloc_ring(struct vscsifrnt_info *info)
- {
- 	struct xenbus_device *dev = info->dev;
- 	struct vscsiif_sring *sring;
--	grant_ref_t gref;
--	int err = -ENOMEM;
-+	int err;
- 
- 	/***** Frontend to Backend ring start *****/
--	sring = (struct vscsiif_sring *)__get_free_page(GFP_KERNEL);
--	if (!sring) {
--		xenbus_dev_fatal(dev, err,
--			"fail to allocate shared ring (Front to Back)");
-+	err = xenbus_setup_ring(dev, GFP_KERNEL, (void **)&sring, 1,
-+				&info->ring_ref);
-+	if (err)
- 		return err;
--	}
--	SHARED_RING_INIT(sring);
--	FRONT_RING_INIT(&info->ring, sring, PAGE_SIZE);
- 
--	err = xenbus_grant_ring(dev, sring, 1, &gref);
--	if (err < 0) {
--		free_page((unsigned long)sring);
--		xenbus_dev_fatal(dev, err,
--			"fail to grant shared ring (Front to Back)");
--		return err;
--	}
--	info->ring_ref = gref;
-+	XEN_FRONT_RING_INIT(&info->ring, sring, PAGE_SIZE);
- 
- 	err = xenbus_alloc_evtchn(dev, &info->evtchn);
- 	if (err) {
-@@ -847,8 +835,7 @@ static int scsifront_alloc_ring(struct vscsifrnt_info *info)
- free_irq:
- 	unbind_from_irqhandler(info->irq, info);
- free_gnttab:
--	gnttab_end_foreign_access(info->ring_ref,
--				  (unsigned long)info->ring.sring);
-+	xenbus_teardown_ring((void **)&sring, 1, &info->ring_ref);
- 
- 	return err;
- }
-@@ -856,8 +843,7 @@ static int scsifront_alloc_ring(struct vscsifrnt_info *info)
- static void scsifront_free_ring(struct vscsifrnt_info *info)
- {
- 	unbind_from_irqhandler(info->irq, info);
--	gnttab_end_foreign_access(info->ring_ref,
--				  (unsigned long)info->ring.sring);
-+	xenbus_teardown_ring((void **)&info->ring.sring, 1, &info->ring_ref);
- }
- 
- static int scsifront_init_ring(struct vscsifrnt_info *info)
--- 
-2.34.1
+Specjalizujemy si=C4=99 w zakresie doboru, monta=C5=BCu i serwisie instal=
+acji fotowoltaicznych, dysponujemy najnowocze=C5=9Bniejszymi rozwi=C4=85z=
+ania, kt=C3=B3re zapewni=C4=85 Pa=C5=84stwu oczekiwane rezultaty.
 
+Mo=C5=BCemy przygotowa=C4=87 dla Pa=C5=84stwa wst=C4=99pn=C4=85 kalkulacj=
+=C4=99 i przeanalizowa=C4=87 efekty mo=C5=BCliwe do osi=C4=85gni=C4=99cia=
+=2E
+
+Czy s=C4=85 Pa=C5=84stwo otwarci na wst=C4=99pn=C4=85 rozmow=C4=99 w tym =
+temacie?
+
+Pozdrawiam
+Arkadiusz Soko=C5=82owski
