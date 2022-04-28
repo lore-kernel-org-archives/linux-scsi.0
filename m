@@ -2,186 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD85FC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Apr 2022 14:53:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7D45C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Apr 2022 15:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230374AbiD1O5I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Apr 2022 10:57:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40920 "EHLO
+        id S1348916AbiD1P0Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Apr 2022 11:26:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230047AbiD1O5F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2022 10:57:05 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40598B1AB0;
-        Thu, 28 Apr 2022 07:53:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1651157630; x=1682693630;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=laK4u97EX9doYugJxLEEbIUOUAx/Qz9PAszFYjC5IiA=;
-  b=TuKL3jA6BdXeu16KLOsm/GUBQL5ZMqxA2INSrBS4JQyu7PHjxgyeQXKP
-   9JDmVDC1V11rKk8IQ9HUH0P1XZuqu1L/GU4TzaotiBGCNNZQk8Fdm/f0y
-   dl6GpSVUMF+qpSURpWj9qHmXVckqZz/BjeA1IDjdMnSeqhflWv6j24WpC
-   mcxYIKh+pybMCOIfGKK4qFPqvT3UjxZgTHO5qJU5h9kOQATKv6wW68gLR
-   V7yGqDh4sDe5/i8JwbbK0ITLwbew7RdAtBfBsP+W0mVkVmzZb15xHqlgN
-   TnWEViRG5IRiGlo65CBrDjQIuyOmwiIyf4Ozv8XVuEsNG+DCewJqmTPsc
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10330"; a="266127998"
-X-IronPort-AV: E=Sophos;i="5.91,295,1647327600"; 
-   d="scan'208";a="266127998"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2022 07:53:49 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,295,1647327600"; 
-   d="scan'208";a="514327844"
-Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
-  by orsmga003.jf.intel.com with ESMTP; 28 Apr 2022 07:53:43 -0700
-Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1nk5WY-0005Sd-BN;
-        Thu, 28 Apr 2022 14:53:42 +0000
-Date:   Thu, 28 Apr 2022 22:53:21 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Nitesh Shetty <nj.shetty@samsung.com>
-Cc:     kbuild-all@lists.01.org, chaitanyak@nvidia.com,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        dm-devel@redhat.com, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org, axboe@kernel.dk,
-        msnitzer@redhat.com, bvanassche@acm.org,
-        martin.petersen@oracle.com, hare@suse.de, kbusch@kernel.org,
-        hch@lst.de, Frederick.Knight@netapp.com, osandov@fb.com,
-        lsf-pc@lists.linux-foundation.org, djwong@kernel.org,
-        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, tytso@mit.edu,
-        jack@suse.com, nitheshshetty@gmail.com, gost.dev@samsung.com,
-        Arnav Dawn <arnav.dawn@samsung.com>,
-        Nitesh Shetty <nj.shetty@samsung.com>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH v4 06/10] nvmet: add copy command support for bdev and
- file ns
-Message-ID: <202204282248.B5VfX8LS-lkp@intel.com>
-References: <20220426101241.30100-7-nj.shetty@samsung.com>
+        with ESMTP id S1348902AbiD1P0P (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2022 11:26:15 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53AE1B6E5A;
+        Thu, 28 Apr 2022 08:23:00 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23SD0IdO003699;
+        Thu, 28 Apr 2022 15:22:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=YdPsw1cJCxmfS5V5GeRV15j2hSEpEK3i5187nKj959E=;
+ b=FCZ8lGOGsZlVaQazvr6xrndw1jawCQzRMFxrkgjb06gMpOOd65QeAEqhEyypKgMfvc2G
+ MOaLLM+aj/paO9ol0FTLSuZ7BMHjqp4W+eYa5FQdDFyd2nzR/2XiaMdhfMT/YEC1onF/
+ Cm2BJ5wX2GONke4cL1J/QQ/nGfAAzwtbzKZhW20WCl0uQ2eteftWLUN/aGjh6NHqM8qr
+ Xf2ovZ87j7cUnt2Itv2+FoYyBKerjxmLqmkMPDKFbDsaGtZQi2RjxUStN1KvaA+MhMfP
+ p/X0NBtsRtKGGXkTlD7IGt8pJFlWN2Kt92GsgCG4embkS3DOqJomrgKe9PjJ9CVC32YR 8A== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fmbb4uxv2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 28 Apr 2022 15:22:36 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 23SFAgoJ017052;
+        Thu, 28 Apr 2022 15:22:36 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2172.outbound.protection.outlook.com [104.47.55.172])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fp5ynyskt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 28 Apr 2022 15:22:36 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=oLcbPUdF8XOrcK6bisPFjZVxwiCe/6BfH8ZvAtlDzHwZSEuY5CLLaBdXgz5wdykJtBwmMVG2plsneQaH911F/usRBulnXsSCESPZsKnMN5zv2Qvb4aTIy149qHTCC4DYwwGgWRs1yuXow2kynLQBfmIfL6A0k7L6rmd663bhlyUeqH7wXH0ucs/bLpoO6HMX8L+VJDFdSdtTMlGhzc9Y5uNEGmAve5hxmlhFNTI2hHzrZ97H6Q8VFKjbKVignqx+42Im7oIov/KA7/feESNf5geWYRq5IadoVOqJqWgK2cotgTEtjtxIPdMRoOcyW4xp8aplIrz3uwQChzzAKnC/tw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=YdPsw1cJCxmfS5V5GeRV15j2hSEpEK3i5187nKj959E=;
+ b=X7bmmu/70X19BtUnf3GbELCLtbWUqYPQncNlQLtcPUKhTC8uIKZRu5dI6Br0uUx2MzU5sLbVIKB2nT8QiDKeONBLFcbvmSDJ0co6jQkft9PwSDDq00TaRv/vbULQe0SHC2g7luYYftXPEAMHDUwmLhgoAh1n81bPgAHTLBTOA9BwWmVaGIkRcR7bhbQf3lwGvXdGB66t+2WHLQ+RmoIyFaCXF1kaShFfr3RPLcln3WSEqP1yI3Nt9e8++wkpEwNteVBh8kCjZD6L6BzZ5QrbxV3VOdduEzHVpBKRxoz17fZ9f+45bMYt1W1ZPxyS7i/lPxDjoMA97J6mNs1veYFw9Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YdPsw1cJCxmfS5V5GeRV15j2hSEpEK3i5187nKj959E=;
+ b=GyHyML8hCrwDS1yoYHLcEindRmjGBbGpB8CLj8KPMr4crk8QUDTuO0UYFh3aIhoB1Nr6uDqZQQSSdy71Uzx1ILzogi53IQr3s1htYXYpZxaDT6Xf7l9REf5+Fb5k+D9+ZdoOG+nCRj2XU3sjugy94lWDIIKHjyj53xqnQJL/VBk=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by SN6PR10MB2477.namprd10.prod.outlook.com (2603:10b6:805:47::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5186.15; Thu, 28 Apr
+ 2022 15:22:34 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::d1db:de4e:9b71:3192]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::d1db:de4e:9b71:3192%9]) with mapi id 15.20.5186.023; Thu, 28 Apr 2022
+ 15:22:34 +0000
+To:     Xuezhi Zhang <zhangxuezhi1@coolpad.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: pmcraid: convert sysfs snprintf to sysfs_emit
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq14k2djkrt.fsf@ca-mkp.ca.oracle.com>
+References: <20220428070245.255827-1-zhangxuezhi1@coolpad.com>
+Date:   Thu, 28 Apr 2022 11:22:31 -0400
+In-Reply-To: <20220428070245.255827-1-zhangxuezhi1@coolpad.com> (Xuezhi
+        Zhang's message of "Thu, 28 Apr 2022 07:02:45 +0000")
+Content-Type: text/plain
+X-ClientProxiedBy: DM6PR01CA0002.prod.exchangelabs.com (2603:10b6:5:296::7) To
+ PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220426101241.30100-7-nj.shetty@samsung.com>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 31828ef7-fca8-49cd-a3e7-08da292aeb58
+X-MS-TrafficTypeDiagnostic: SN6PR10MB2477:EE_
+X-Microsoft-Antispam-PRVS: <SN6PR10MB2477B8FBDD63A1E7006EB58E8EFD9@SN6PR10MB2477.namprd10.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: fU3xm5pXiF8i7LqXPU8TjcBPDsCzy0J3bd+2CS6fe1svzBysPNpyU9lOFEmZYWQWFu5v+P3Z4BgSo33NXQeCSDCyJ5GC1HflhWSyvj1W3UFSVxZpomo5ENMvOQIN01gO4vqBjK1zB6XdhRK6UUZ9115ECsPkBaBGwXbVZGET6nlBV/FjYazBGElRVC/KSanupH4txlNBNoXVYGlN09NyZhI1GihQXgt5z1KV5RfU2coFZWYBY1MzmwRFG+M9+rAoK3Ms0ym22kiaMSut8D6OqIG/0SSNiWJ+0QOv8RVaMkcjRNeBQqOgLvIoHEZkvmo5oq556T+Eti/70wGm7O5lpAokJoolBNxSMSIZdAqzUmB95jX+oDYGDG7azpTrxfhrm0bDTvqX7BHpKDk3d03QakDIpBRXNJU4DgMeUrXnU9TNgCmeF+HgyJcIYMDTi5m2i8uCnyncJbFmtD6REBBMufNUJfUATHLmWZRNmDvOpbDrU7lwLf+YdejOevlzXExG3Ei9VhcFBN8aNGw8gWtZ4YpuRVFokjHG5Juv8AKI1fHzYMM1t1G/3kgBtn5S3nICN7h9/2K9+gbbNpQfiqkGPP2bGZkaq8uD6DCePlYi6lcEp22NtY0c4KckeBwNju2HKcMsP7B5jlnj7CbdHl0Vu6JctJsNdQjMsCwoY3G1/rhUYcGFKOHJdTc0yRd4jGrkh678GNa5Gbl+qpm4umSnZw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(66946007)(8676002)(8936002)(4326008)(6916009)(6486002)(86362001)(2906002)(508600001)(38100700002)(38350700002)(558084003)(316002)(5660300002)(186003)(66476007)(66556008)(26005)(52116002)(36916002)(6506007)(6512007)(6666004);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?O5NPhTtXWzESsmDm/dVzRL4pxjrr530PHEhna/SxNu4gfS69TiCeQQoR0PRc?=
+ =?us-ascii?Q?qedgC3HE5EFb5EoJmZ8SpclbvZPug9ZFZxkNwSjsIjhEC+CZKqBEDrAjXxnA?=
+ =?us-ascii?Q?vA/hNQixxtsLCuzI7B6b7UorWBWrNDpcMb+nPMlYNqE2DRHlarM3G67jIqkf?=
+ =?us-ascii?Q?WXrKJ4tqPUHopfAausmSqVNw2BnWM/g6fHgHa+rAAEC8DzV4GKbYBZSJqo90?=
+ =?us-ascii?Q?L0Icw0HIPQOexRvCwRbnWss6Nv9rVob20ZwSFUwjleW2EMqpKBR8g3JeWwNm?=
+ =?us-ascii?Q?uiY99Yu4Kgd9IkkV0S6ftp2mtrF/UejtU3ggyTj4qsbmPUNIAW2+klAD1K+h?=
+ =?us-ascii?Q?ipgcC9M/7pRkDHKhMTHH6/ImqbvavuP6X2gD0eAAGZ2r2237860hDvDTClox?=
+ =?us-ascii?Q?sL5anLfXh7Kp95OIWM3zB/Q6WsBcSadZcglC4KohHw8K4C4P/aDpE6U3eyw2?=
+ =?us-ascii?Q?ydWgNELorOtuMsLsPCZmIK0V/9Lz2fqg6m1wfLlyBc6F7cVV/a48IGem+vL3?=
+ =?us-ascii?Q?GvkcfXBcm1iKSQrt/tgS62k0V2uBy4eOqsXe+n+PkbLv7fqvWIbu5xwtQHKi?=
+ =?us-ascii?Q?xKZfDFACt15A9aZzbCESyT5knHdD6VYyO3DclAKqZy8HpJELyuX8oYc3jQ0P?=
+ =?us-ascii?Q?nFYJOAkIBx0oxdCbh7Y2cxlzT67aE6KYRJQOcab9QE6HB78IHRRDgPtrSKJ8?=
+ =?us-ascii?Q?VZMO2SmyC9vzXaIw9gLGunF7nM0qovzJ97OJEw2+Tyvnc6RZ8LtdbISFkpoD?=
+ =?us-ascii?Q?UPj5CpsZgcXp7Rhj4EazSuMlug8rvPYiwMtD17wfsl67KipIKNRBG46mOGn6?=
+ =?us-ascii?Q?wu5TeTv22yCvrYV/3llE4m3oOy/3Pgorqkrg+s5g0LnsGkgqqgGXY7TpVlx6?=
+ =?us-ascii?Q?vHL8vk8ce0JmL2SffSVTQCclR5bcC98ht0BkMWH06mqK6uVnZEDmmQiYUn47?=
+ =?us-ascii?Q?hrFd3oUTg3m2nnzVJcpYS4Hna5DrIYE+0zm/uxWdExCmARmHU0Zp/gcK1DfM?=
+ =?us-ascii?Q?8BY6dkZbIh4n8WFQEXPRUAlO1QtLcW/ynN5F07DgeTxbOwdZjDjzLd6w+qwu?=
+ =?us-ascii?Q?nbMNKpOY465o3bbjltZ4la+SLWw7FTAJgjD8tKC2p+i+vJ7P7XPkmj6jEpGi?=
+ =?us-ascii?Q?2pOIVWQrSlL+pyOE69K44FdbJ+XBfS1gdrO4jYoUMAzlasp3PwDHtsXFl9QK?=
+ =?us-ascii?Q?2jszVATI6zjtXkgtdvkKi3z7ZevMubMyeuhJ0iwF3k99DW+jMx4p2k6Db4z0?=
+ =?us-ascii?Q?hHbb3pNwM4CXAFaulnTaVwAxx914SLcKHKZl4WxA9s89l+H2H8YRu5xdvByW?=
+ =?us-ascii?Q?pZ7rUSAIf+ZbWv4qxyeRPPu84qWgddG1vUvUtojlbUrzuk0V4KYKp/bPyGRw?=
+ =?us-ascii?Q?DDggM5BDvMGEjTjY4CtNNIFVDyAWdiGzNmz4AAukKA6lMe+RszbEPL2lfmrS?=
+ =?us-ascii?Q?Wwv+MshEl0a0GZD7eYC0K3XxGYGSr37JiDYgZeDWU50d3x3LC8fhxBG2fmUJ?=
+ =?us-ascii?Q?FRcyAioDGO4z0gbY6h6EaWNS4GnLkacKcWy1F+NW5IrS6gCVUjsBI0goftYX?=
+ =?us-ascii?Q?CvbiCPDJw6AEfbFAw9QLHfHh3gig/SfpakF5PfwXQKMCWzN5eyJgqtAgcKqf?=
+ =?us-ascii?Q?Et1pI8O41B07XhZdqLGgpKYvadn92Kj9ikVQzZiSzCWqJX52bm237EO7tGJy?=
+ =?us-ascii?Q?NmpmElpVUeYlkUHLqY1lqCbNJFeORbAsYuT6zt/7T1XyNovtnsIPbhIj0RQt?=
+ =?us-ascii?Q?GTfeQ6y5OWpUMf/5DSJui2fk97nWPA4=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 31828ef7-fca8-49cd-a3e7-08da292aeb58
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Apr 2022 15:22:34.5634
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: +tnzXj/7HQ2dn5RmjUiU2OlKY4Gzqd4RUc50/B1mmTZCYbEpNqfDKtSgJwRqqY5+eJjPcodqf++S6EKEpeFKfTM6jUxa2Oa9gLNP48rDy7I=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR10MB2477
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.858
+ definitions=2022-04-28_02:2022-04-28,2022-04-28 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=851 mlxscore=0
+ suspectscore=0 malwarescore=0 spamscore=0 adultscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
+ definitions=main-2204280092
+X-Proofpoint-ORIG-GUID: hxfnDKEhrT3htF5tGhrgMZoQw6w9AfiE
+X-Proofpoint-GUID: hxfnDKEhrT3htF5tGhrgMZoQw6w9AfiE
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Nitesh,
 
-Thank you for the patch! Perhaps something to improve:
+Xuezhi,
 
-[auto build test WARNING on next-20220422]
-[cannot apply to axboe-block/for-next device-mapper-dm/for-next linus/master v5.18-rc4 v5.18-rc3 v5.18-rc2 v5.18-rc4]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Nitesh-Shetty/block-Introduce-queue-limits-for-copy-offload-support/20220426-201825
-base:    e7d6987e09a328d4a949701db40ef63fbb970670
-config: s390-randconfig-s032-20220427 (https://download.01.org/0day-ci/archive/20220428/202204282248.B5VfX8LS-lkp@intel.com/config)
-compiler: s390-linux-gcc (GCC) 11.3.0
-reproduce:
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # apt-get install sparse
-        # sparse version: v0.6.4-dirty
-        # https://github.com/intel-lab-lkp/linux/commit/6a9ea8570c34a7222786ca4d129578f48426d2f2
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Nitesh-Shetty/block-Introduce-queue-limits-for-copy-offload-support/20220426-201825
-        git checkout 6a9ea8570c34a7222786ca4d129578f48426d2f2
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=s390 SHELL=/bin/bash drivers/md/ drivers/nvme/target/
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-
-sparse warnings: (new ones prefixed by >>)
->> drivers/nvme/target/io-cmd-bdev.c:56:26: sparse: sparse: incorrect type in assignment (different base types) @@     expected unsigned char [usertype] msrc @@     got restricted __le16 @@
-   drivers/nvme/target/io-cmd-bdev.c:56:26: sparse:     expected unsigned char [usertype] msrc
-   drivers/nvme/target/io-cmd-bdev.c:56:26: sparse:     got restricted __le16
-   drivers/nvme/target/io-cmd-bdev.c:59:34: sparse: sparse: incorrect type in assignment (different base types) @@     expected unsigned char [usertype] msrc @@     got restricted __le16 @@
-   drivers/nvme/target/io-cmd-bdev.c:59:34: sparse:     expected unsigned char [usertype] msrc
-   drivers/nvme/target/io-cmd-bdev.c:59:34: sparse:     got restricted __le16
---
->> drivers/nvme/target/admin-cmd.c:537:26: sparse: sparse: incorrect type in assignment (different base types) @@     expected unsigned char [usertype] msrc @@     got restricted __le16 @@
-   drivers/nvme/target/admin-cmd.c:537:26: sparse:     expected unsigned char [usertype] msrc
-   drivers/nvme/target/admin-cmd.c:537:26: sparse:     got restricted __le16
-
-vim +56 drivers/nvme/target/io-cmd-bdev.c
-
-    12	
-    13	void nvmet_bdev_set_limits(struct block_device *bdev, struct nvme_id_ns *id)
-    14	{
-    15		const struct queue_limits *ql = &bdev_get_queue(bdev)->limits;
-    16		/* Number of logical blocks per physical block. */
-    17		const u32 lpp = ql->physical_block_size / ql->logical_block_size;
-    18		/* Logical blocks per physical block, 0's based. */
-    19		const __le16 lpp0b = to0based(lpp);
-    20	
-    21		/*
-    22		 * For NVMe 1.2 and later, bit 1 indicates that the fields NAWUN,
-    23		 * NAWUPF, and NACWU are defined for this namespace and should be
-    24		 * used by the host for this namespace instead of the AWUN, AWUPF,
-    25		 * and ACWU fields in the Identify Controller data structure. If
-    26		 * any of these fields are zero that means that the corresponding
-    27		 * field from the identify controller data structure should be used.
-    28		 */
-    29		id->nsfeat |= 1 << 1;
-    30		id->nawun = lpp0b;
-    31		id->nawupf = lpp0b;
-    32		id->nacwu = lpp0b;
-    33	
-    34		/*
-    35		 * Bit 4 indicates that the fields NPWG, NPWA, NPDG, NPDA, and
-    36		 * NOWS are defined for this namespace and should be used by
-    37		 * the host for I/O optimization.
-    38		 */
-    39		id->nsfeat |= 1 << 4;
-    40		/* NPWG = Namespace Preferred Write Granularity. 0's based */
-    41		id->npwg = lpp0b;
-    42		/* NPWA = Namespace Preferred Write Alignment. 0's based */
-    43		id->npwa = id->npwg;
-    44		/* NPDG = Namespace Preferred Deallocate Granularity. 0's based */
-    45		id->npdg = to0based(ql->discard_granularity / ql->logical_block_size);
-    46		/* NPDG = Namespace Preferred Deallocate Alignment */
-    47		id->npda = id->npdg;
-    48		/* NOWS = Namespace Optimal Write Size */
-    49		id->nows = to0based(ql->io_opt / ql->logical_block_size);
-    50	
-    51		/*Copy limits*/
-    52		if (ql->max_copy_sectors) {
-    53			id->mcl = cpu_to_le32((ql->max_copy_sectors << 9) / ql->logical_block_size);
-    54			id->mssrl = cpu_to_le16((ql->max_copy_range_sectors << 9) /
-    55					ql->logical_block_size);
-  > 56			id->msrc = to0based(ql->max_copy_nr_ranges);
-    57		} else {
-    58			if (ql->zoned == BLK_ZONED_NONE) {
-    59				id->msrc = to0based(BIO_MAX_VECS);
-    60				id->mssrl = cpu_to_le16(
-    61						(BIO_MAX_VECS << PAGE_SHIFT) / ql->logical_block_size);
-    62				id->mcl = cpu_to_le32(le16_to_cpu(id->mssrl) * BIO_MAX_VECS);
-    63	#ifdef CONFIG_BLK_DEV_ZONED
-    64			} else {
-    65				/* TODO: get right values for zoned device */
-    66				id->msrc = to0based(BIO_MAX_VECS);
-    67				id->mssrl = cpu_to_le16(min((BIO_MAX_VECS << PAGE_SHIFT),
-    68						ql->chunk_sectors) / ql->logical_block_size);
-    69				id->mcl = cpu_to_le32(min(le16_to_cpu(id->mssrl) * BIO_MAX_VECS,
-    70							ql->chunk_sectors));
-    71	#endif
-    72			}
-    73		}
-    74	}
-    75	
+> @@ -3554,8 +3554,7 @@ static ssize_t pmcraid_show_drv_version(
+>  	char *buf
+>  )
+>  {
+> -	return snprintf(buf, PAGE_SIZE, "version: %s\n",
+> -			PMCRAID_DRIVER_VERSION);
+> +	return sysfs_emt(buf, "version: %s\n", PMCRAID_DRIVER_VERSION);
+               ^^^^^^^^^
 
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Martin K. Petersen	Oracle Linux Engineering
