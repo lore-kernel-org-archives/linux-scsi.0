@@ -2,187 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75EB7C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Apr 2022 07:53:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09F8FC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Apr 2022 08:19:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343577AbiD1H4w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Apr 2022 03:56:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36372 "EHLO
+        id S1344032AbiD1IWg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Apr 2022 04:22:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343523AbiD1H4n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2022 03:56:43 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EE055F26B;
-        Thu, 28 Apr 2022 00:53:29 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id AACEE21870;
-        Thu, 28 Apr 2022 07:53:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1651132407; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=e7smBjs6Cs54j9gtj63aB2bUTDoqIo4j1UzSK6xvBWg=;
-        b=rpwyrV9E6S/d9bU0Olq3d0lZ/V4hx2lhfq8AigAGZwgiad+EOGLOiKyt3wOw0lACnEj/Gr
-        7XLQTGdTp6LuN7zjo3FEYVQEXr1TbhFcR68hqxGB320Bs6nK+htjcjCLxPBzEmSU/kYSB3
-        PFGspBJj5GfMqbXPksQC1qLa2e2SWs0=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7707F13AF8;
-        Thu, 28 Apr 2022 07:53:27 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id QDOoG/dHamIoHAAAMHmgww
-        (envelope-from <jgross@suse.com>); Thu, 28 Apr 2022 07:53:27 +0000
-From:   Juergen Gross <jgross@suse.com>
-To:     xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org,
+        with ESMTP id S1344046AbiD1IWS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Apr 2022 04:22:18 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F72D9E9EE
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Apr 2022 01:19:03 -0700 (PDT)
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220428081901epoutp0486787be1c074025574638e98756f1f2d~qAZJDPQPu2856728567epoutp04n
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Apr 2022 08:19:01 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220428081901epoutp0486787be1c074025574638e98756f1f2d~qAZJDPQPu2856728567epoutp04n
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1651133941;
+        bh=wOXierUafvtxBlcmLM8miKLDWIrpcRM3NRzL9LIllCI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=RRs2Pf/NQ1HxorjPRILWRRPuW8wd9+yspJN2nnu1mZZXHKUDrAsGgC6+MAH96KKzW
+         WRxujTUxwPrAWVlHgogHsRoPifVjfdMD6wMEgBeHZL4yhYSzUlRkXcsnLF9PuwM6//
+         Sf3X9a27uWVRH9AAyq72K3sK8C+2T32ob2v1PC20=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+        20220428081859epcas5p19880ba6dfa6389f18098ac62ca74e360~qAZIA-u-l0467704677epcas5p1x;
+        Thu, 28 Apr 2022 08:18:59 +0000 (GMT)
+Received: from epsmges5p2new.samsung.com (unknown [182.195.38.177]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4KppRg2W7Dz4x9QB; Thu, 28 Apr
+        2022 08:18:55 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E2.07.09827.EED4A626; Thu, 28 Apr 2022 17:18:54 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+        20220428075435epcas5p285a70634102f71440a283361657f4d9b~qAD0bnrr92164321643epcas5p2Q;
+        Thu, 28 Apr 2022 07:54:35 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220428075435epsmtrp1a9ee8d4d92953b0ff2d7f9b7559998a2~qAD0asRh-1575615756epsmtrp1S;
+        Thu, 28 Apr 2022 07:54:35 +0000 (GMT)
+X-AuditID: b6c32a4a-b3bff70000002663-dd-626a4deee6d4
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        A6.BF.08924.B384A626; Thu, 28 Apr 2022 16:54:35 +0900 (KST)
+Received: from test-zns (unknown [107.110.206.5]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20220428075434epsmtip13f509946fb1170bf6e1ff8e4df1f4948~qADzDll5X1873018730epsmtip1z;
+        Thu, 28 Apr 2022 07:54:34 +0000 (GMT)
+Date:   Thu, 28 Apr 2022 13:19:26 +0530
+From:   Nitesh Shetty <nj.shetty@samsung.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        dm-devel@redhat.com, linux-nvme@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org, nitheshshetty@gmail.com,
         linux-kernel@vger.kernel.org
-Cc:     Juergen Gross <jgross@suse.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>
-Subject: [PATCH v2 2/4] xen/scsiback: use new command result macros
-Date:   Thu, 28 Apr 2022 09:53:21 +0200
-Message-Id: <20220428075323.12853-3-jgross@suse.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220428075323.12853-1-jgross@suse.com>
-References: <20220428075323.12853-1-jgross@suse.com>
+Subject: Re: [PATCH v4 00/10] Add Copy offload support
+Message-ID: <20220428074926.GG9558@test-zns>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <c285f0da-ab1d-2b24-e5a4-21193ef93155@opensource.wdc.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrBJsWRmVeSWpSXmKPExsWy7bCmpu5736wkgz+5Fr/Pnme22PtuNqvF
+        3lvaFnv2nmSxuLxrDpvF/GVP2S26r+9gs9jxpJHRgcNj56y77B6bl9R77Gy9z+rxft9VNo/P
+        m+QCWKOybTJSE1NSixRS85LzUzLz0m2VvIPjneNNzQwMdQ0tLcyVFPISc1NtlVx8AnTdMnOA
+        DlFSKEvMKQUKBSQWFyvp29kU5ZeWpCpk5BeX2CqlFqTkFJgU6BUn5haX5qXr5aWWWBkaGBiZ
+        AhUmZGfcv7eFtaCfu+Lm7busDYztnF2MnBwSAiYSXe+2sYLYQgK7GSXmLI3uYuQCsj8xSsx/
+        8IIVwvnMKHF8/Uk2mI75d6ayQyR2MUqcOz0XquoZo0TT/HnsIFUsAqoSD6Z2MXYxcnCwCWhL
+        nP7PARIWETCVeNvTygJSzyxwhlGi/f0usHphATOJ1Z2tYBt4BXQkFs/fzQ5hC0qcnPmEBcTm
+        FHCTmL3xG5gtKqAscWDbcSaIiyZySMyYmwqyS0LARaL5dTREWFji1fEt7BC2lMTL/jYou1xi
+        e9sCJpAbJARaGCW6Tp1igUjYS1zc8xdsJrNAhsTsb2uhPpaVmHpqHVScT6L39xOovbwSO+bB
+        2MoSa9YvgKqXlLj2vRHK9pDY+XElNIBWMkm8PH2IfQKj/Cwkv81Csm8W0A/MApoS63fpQ4Tl
+        JZq3zmaGCEtLLP/HgaRiASPbKkbJ1ILi3PTUYtMCo7zUcnjcJ+fnbmIEJ1ktrx2MDx980DvE
+        yMTBeIhRgoNZSYT3y+6MJCHelMTKqtSi/Pii0pzU4kOMpsBom8gsJZqcD0zzeSXxhiaWBiZm
+        ZmYmlsZmhkrivKfTNyQKCaQnlqRmp6YWpBbB9DFxcEo1MHmYxBi3KS/r+5xXoHh/5e5/mpOK
+        OLaz1QUJJm5LlWV+dGCy2qfIDR1bPTv4Cv8o7cuz5K+7k+o17+LTf7WP9Hb0x/PP1u849K1e
+        9ECS25U/X77MfXHhdDCf6CKtxUE1cj17vjAr/U6ZkKPatTBKKu23yc1t05J0TR/EblD+sWFx
+        0DPf6Q7i++QYDghltRZyCmdZbpQ0mbLf//CW7BVyO3Mj78a3hghMUJNqNAp1337257kTdWFK
+        F5WF48I+LnzLVaHz1Wvq/N+HWwX5lVy6/OQDdXwTmyQOHOF9+P5ORO+1sxMfmJVUr1snvTy8
+        Kfb+1bVvxTqdU/dcnR/13vrQ+u4M04X3O3s98v0vTXLvVmIpzkg01GIuKk4EAG3bN+s7BAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrOLMWRmVeSWpSXmKPExsWy7bCSnK61R1aSQcdnPYvfZ88zW+x9N5vV
+        Yu8tbYs9e0+yWFzeNYfNYv6yp+wW3dd3sFnseNLI6MDhsXPWXXaPzUvqPXa23mf1eL/vKpvH
+        501yAaxRXDYpqTmZZalF+nYJXBkrtjkWbOSo2PbVroHxKFsXIyeHhICJxPw7U9m7GLk4hAR2
+        MEp8aTrHApGQlFj29wgzhC0ssfLfc6iiJ4wSs+6vBetmEVCVeDC1i7GLkYODTUBb4vR/DpCw
+        iICpxNueVhaQemaBM4wS7e93sYMkhAXMJFZ3toL18groSCyevxtq6Eomiff7V7JDJAQlTs58
+        AnYFs4C6xJ95l5hBFjALSEss/8cBEZaXaN46G+w4TgE3idkbv4GViwooSxzYdpxpAqPQLCST
+        ZiGZNAth0iwkkxYwsqxilEwtKM5Nzy02LDDKSy3XK07MLS7NS9dLzs/dxAiOGy2tHYx7Vn3Q
+        O8TIxMF4iFGCg1lJhPfL7owkId6UxMqq1KL8+KLSnNTiQ4zSHCxK4rwXuk7GCwmkJ5akZqem
+        FqQWwWSZODilGphmNkSeu+/Zy/AzdJGv3sPXJ3sNLl4t7nK+dN/kX+8ctbV/eb6LrRTa9s+k
+        YDWbSN7z4NI5On1n5fnNvWRuVogfPnn2Q/QKI/2ZvLOWpR5raFxyxPrm3G/zt/3jSAwIVNEV
+        vlGj9r15qkzKnZTAabfNrOunnG56dvDkm55ZLamR00U/P9HWbLHer/0vbFnmhkXlsVeflx5I
+        PvfhVElgVdO7F6tL4/72aE+82pMt+Icv6rLBBfXuw+1eMw7u+cD1b3uQ34IF52+4Sfkp/Ulg
+        1VRZN3Ghe9+N0/Z2JkkWB4s/O9acPB8mtemFG6OJ8TmFi3pr5/kn6pxVuj8j33YeF+MJ4zdn
+        HZjXyDM/fquzxWWKEktxRqKhFnNRcSIAWXgw9goDAAA=
+X-CMS-MailID: 20220428075435epcas5p285a70634102f71440a283361657f4d9b
+X-Msg-Generator: CA
+Content-Type: multipart/mixed;
+        boundary="----MMcOyA4CJjQRgHhn55zXOrpiM0Dxers-aGNKdRjWa9MqQ0PV=_1cb6b_"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15
+References: <CGME20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15@epcas5p4.samsung.com>
+        <20220426101241.30100-1-nj.shetty@samsung.com>
+        <6a85e8c8-d9d1-f192-f10d-09052703c99a@opensource.wdc.com>
+        <20220427124951.GA9558@test-zns>
+        <c285f0da-ab1d-2b24-e5a4-21193ef93155@opensource.wdc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of using the kernel's values for the result of PV scsi
-operations use the values of the interface definition.
+------MMcOyA4CJjQRgHhn55zXOrpiM0Dxers-aGNKdRjWa9MqQ0PV=_1cb6b_
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: inline
 
-Signed-off-by: Juergen Gross <jgross@suse.com>
----
-V2:
-- fix scsiback_result() to pass through lowest 16 bits of result
-- use XEN_VSCSIIF_RSLT_HOST() instead of open coding it (Boris Ostrovsky)
----
- drivers/xen/xen-scsiback.c | 82 ++++++++++++++++++++++++++++++++++++--
- 1 file changed, 79 insertions(+), 3 deletions(-)
+On Thu, Apr 28, 2022 at 07:05:32AM +0900, Damien Le Moal wrote:
+> On 4/27/22 21:49, Nitesh Shetty wrote:
+> > O Wed, Apr 27, 2022 at 11:19:48AM +0900, Damien Le Moal wrote:
+> >> On 4/26/22 19:12, Nitesh Shetty wrote:
+> >>> The patch series covers the points discussed in November 2021 virtual call
+> >>> [LSF/MM/BFP TOPIC] Storage: Copy Offload[0].
+> >>> We have covered the Initial agreed requirements in this patchset.
+> >>> Patchset borrows Mikulas's token based approach for 2 bdev
+> >>> implementation.
+> >>>
+> >>> Overall series supports –
+> >>>
+> >>> 1. Driver
+> >>> - NVMe Copy command (single NS), including support in nvme-target (for
+> >>>     block and file backend)
+> >>
+> >> It would also be nice to have copy offload emulation in null_blk for testing.
+> >>
+> > 
+> > We can plan this in next phase of copy support, once this series settles down.
+> 
+> So how can people test your series ? Not a lot of drives out there with
+> copy support.
+>
 
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index 0c5e565aa8cf..7a0c93acc2c5 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -280,6 +280,82 @@ static void scsiback_free_translation_entry(struct kref *kref)
- 	kfree(entry);
- }
- 
-+static int32_t scsiback_result(int32_t result)
-+{
-+	int32_t host_status;
-+
-+	switch (XEN_VSCSIIF_RSLT_HOST(result)) {
-+	case DID_OK:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_OK;
-+		break;
-+	case DID_NO_CONNECT:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_NO_CONNECT;
-+		break;
-+	case DID_BUS_BUSY:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_BUS_BUSY;
-+		break;
-+	case DID_TIME_OUT:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_TIME_OUT;
-+		break;
-+	case DID_BAD_TARGET:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_BAD_TARGET;
-+		break;
-+	case DID_ABORT:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_ABORT;
-+		break;
-+	case DID_PARITY:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_PARITY;
-+		break;
-+	case DID_ERROR:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_ERROR;
-+		break;
-+	case DID_RESET:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_RESET;
-+		break;
-+	case DID_BAD_INTR:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_BAD_INTR;
-+		break;
-+	case DID_PASSTHROUGH:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_PASSTHROUGH;
-+		break;
-+	case DID_SOFT_ERROR:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_SOFT_ERROR;
-+		break;
-+	case DID_IMM_RETRY:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_IMM_RETRY;
-+		break;
-+	case DID_REQUEUE:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_REQUEUE;
-+		break;
-+	case DID_TRANSPORT_DISRUPTED:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_TRANSPORT_DISRUPTED;
-+		break;
-+	case DID_TRANSPORT_FAILFAST:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_TRANSPORT_FAILFAST;
-+		break;
-+	case DID_TARGET_FAILURE:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_TARGET_FAILURE;
-+		break;
-+	case DID_NEXUS_FAILURE:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_NEXUS_FAILURE;
-+		break;
-+	case DID_ALLOC_FAILURE:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_ALLOC_FAILURE;
-+		break;
-+	case DID_MEDIUM_ERROR:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_MEDIUM_ERROR;
-+		break;
-+	case DID_TRANSPORT_MARGINAL:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_TRANSPORT_MARGINAL;
-+		break;
-+	default:
-+		host_status = XEN_VSCSIIF_RSLT_HOST_ERROR;
-+		break;
-+	}
-+
-+	return (host_status << 16) | (result & 0x00ffff);
-+}
-+
- static void scsiback_send_response(struct vscsibk_info *info,
- 			char *sense_buffer, int32_t result, uint32_t resid,
- 			uint16_t rqid)
-@@ -295,7 +371,7 @@ static void scsiback_send_response(struct vscsibk_info *info,
- 	ring_res = RING_GET_RESPONSE(&info->ring, info->ring.rsp_prod_pvt);
- 	info->ring.rsp_prod_pvt++;
- 
--	ring_res->rslt   = result;
-+	ring_res->rslt   = scsiback_result(result);
- 	ring_res->rqid   = rqid;
- 
- 	if (sense_buffer != NULL &&
-@@ -555,7 +631,7 @@ static void scsiback_device_action(struct vscsibk_pend *pending_req,
- 	struct scsiback_nexus *nexus = tpg->tpg_nexus;
- 	struct se_cmd *se_cmd = &pending_req->se_cmd;
- 	u64 unpacked_lun = pending_req->v2p->lun;
--	int rc, err = FAILED;
-+	int rc, err = XEN_VSCSIIF_RSLT_RESET_FAILED;
- 
- 	init_completion(&pending_req->tmr_done);
- 
-@@ -569,7 +645,7 @@ static void scsiback_device_action(struct vscsibk_pend *pending_req,
- 	wait_for_completion(&pending_req->tmr_done);
- 
- 	err = (se_cmd->se_tmr_req->response == TMR_FUNCTION_COMPLETE) ?
--		SUCCESS : FAILED;
-+		XEN_VSCSIIF_RSLT_RESET_SUCCESS : XEN_VSCSIIF_RSLT_RESET_FAILED;
- 
- 	scsiback_do_resp_with_sense(NULL, err, 0, pending_req);
- 	transport_generic_free_cmd(&pending_req->se_cmd, 0);
--- 
-2.34.1
+Yeah not many drives at present, Qemu can be used to test NVMe copy.
 
+--
+Nitesh Shetty
+
+------MMcOyA4CJjQRgHhn55zXOrpiM0Dxers-aGNKdRjWa9MqQ0PV=_1cb6b_
+Content-Type: text/plain; charset="utf-8"
+
+
+------MMcOyA4CJjQRgHhn55zXOrpiM0Dxers-aGNKdRjWa9MqQ0PV=_1cb6b_--
