@@ -2,151 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C111FC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Apr 2022 12:24:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18633C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Apr 2022 13:52:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345891AbiD2M1s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Apr 2022 08:27:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57424 "EHLO
+        id S1376657AbiD2Nzz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Apr 2022 09:55:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359060AbiD2M1s (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Apr 2022 08:27:48 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D473EC8BDE;
-        Fri, 29 Apr 2022 05:24:29 -0700 (PDT)
-Received: from [2a02:8108:963f:de38:6624:6d8d:f790:d5c]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1nkPff-00068a-O0; Fri, 29 Apr 2022 14:24:27 +0200
-Message-ID: <81b865bb-be46-cdf7-a49b-fd029de439fb@leemhuis.info>
-Date:   Fri, 29 Apr 2022 14:24:27 +0200
+        with ESMTP id S1376568AbiD2Nzf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Apr 2022 09:55:35 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 807076928D;
+        Fri, 29 Apr 2022 06:51:38 -0700 (PDT)
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TBlfgU027180;
+        Fri, 29 Apr 2022 13:51:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=2aHtI7SvKyCBMjA/lHwRwERwzyz62aOc9lR4L4IK5ZQ=;
+ b=SnCKLL+Xe/uelJjWwC0szw0iPXPA06EFzIksUrTQCv8PVNMdugGGGJi6jYKiFwPUh8Fo
+ PD01KKHs9GwoKZgIVGg2fTIqVzLSsnZ3SGreEvqnGWQDtaZITreR4WFRV3NiU+OuWnuL
+ oTGrzh2hN8LZuJFVzVmusT2r1gLRTQXkSEuTtUh/HLyNHtPuMtIXd22ohWNMpEzZCEIb
+ 4CgRvGCjYnoWC1mzLrYj+hQHKn97AjDOflwaUtv3hS+1Rz/P3SqPIhf54Le3d185HjrD
+ E0ZCHHoMhb9jcxv0zIrVR1/H13qRZdV8M4Q8LrvuAKAOOxCg+puvm1P7gbiVaHlpAK++ 0g== 
+Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqundujng-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 29 Apr 2022 13:51:32 +0000
+Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
+        by ppma06fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDSDKY011979;
+        Fri, 29 Apr 2022 13:51:30 GMT
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+        by ppma06fra.de.ibm.com with ESMTP id 3fm8qhqavv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 29 Apr 2022 13:51:30 +0000
+Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDpRZi53543220
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 29 Apr 2022 13:51:27 GMT
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A6B114C040;
+        Fri, 29 Apr 2022 13:51:27 +0000 (GMT)
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 459504C044;
+        Fri, 29 Apr 2022 13:51:27 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Fri, 29 Apr 2022 13:51:27 +0000 (GMT)
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com (open list:LSILOGIC MPT FUSION DRIVERS
+        (FC/SAS/SPI)),
+        linux-scsi@vger.kernel.org (open list:LSILOGIC MPT FUSION DRIVERS
+        (FC/SAS/SPI))
+Subject: [PATCH 19/37] mpt fusion: add HAS_IOPORT dependencies
+Date:   Fri, 29 Apr 2022 15:50:30 +0200
+Message-Id: <20220429135108.2781579-33-schnelle@linux.ibm.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20220429135108.2781579-1-schnelle@linux.ibm.com>
+References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
-        LKML <linux-kernel@vger.kernel.org>
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-Subject: [Regression] Resume process hangs for 5-6 seconds starting sometime
- in 5.16
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1651235069;14287da5;
-X-HE-SMSGID: 1nkPff-00068a-O0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: 6A9raIzHcgqAK_oRyL2Fvs6M7KcIDFSW
+X-Proofpoint-GUID: 6A9raIzHcgqAK_oRyL2Fvs6M7KcIDFSW
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
+ definitions=2022-04-29_06,2022-04-28_01,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 clxscore=1011
+ adultscore=0 mlxscore=0 lowpriorityscore=0 spamscore=0 malwarescore=0
+ mlxlogscore=840 impostorscore=0 phishscore=0 bulkscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2204290078
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi, this is your Linux kernel regression tracker.
+In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+not being declared. We thus need to add HAS_IOPORT as dependency for
+those drivers using them.
 
-Bart, I noticed a regression report in bugzilla.kernel.org that afaics
-nobody acted upon since it was reported about a week ago, that's why I
-decided to forward it to the lists and all people that seemed to be
-relevant here. It's caused by a commit of yours. To quote from
-https://bugzilla.kernel.org/show_bug.cgi?id=215880 :
+Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+---
+ drivers/message/fusion/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Previously reported on the Gentoo bug tracker: https://bugs.gentoo.org/837500
-> 
-> Basic issue: 
-> 
-> Starting sometime in 5.16, my GUI freezes up during resume for 5-6 seconds: the screen is frozen, and it seems key presses and mouse movements are not registered. If I suspend from a tty, the 'loginctl suspend' command takes about 5-6 seconds to finish after resuming, however here my key presses are registered. 
-> 
-> It seems like the first thing it does on resume is to suspend the device, as if the system powered off too quickly or something.
-> 
-> I used git bisect to identify the commit where the problem begins: 
-> 
-> ========
-> commit a19a93e4c6a98c9c0f2f5a6db76846f10d7d1f85
-> Author: Bart Van Assche <bvanassche@acm.org>
-> Date:   Wed Oct 6 14:54:51 2021 -0700
-> 
->     scsi: core: pm: Rely on the device driver core for async power management
->     
->     Instead of implementing asynchronous resume support in the SCSI core, rely
->     on the device driver core for resuming SCSI devices asynchronously.
->     Instead of only supporting asynchronous resumes, also support asynchronous
->     suspends.
->     
->     Link: https://lore.kernel.org/r/20211006215453.3318929-2-bvanassche@acm.org
->     Cc: Alan Stern <stern@rowland.harvard.edu>
->     Cc: Dan Williams <dan.j.williams@intel.com>
->     Cc: Hannes Reinecke <hare@suse.com>
->     Cc: Adrian Hunter <adrian.hunter@intel.com>
->     Cc: Martin Kepplinger <martin.kepplinger@puri.sm>
->     Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->     Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
->  drivers/scsi/hosts.c      |  1 +
->  drivers/scsi/scsi.c       |  8 --------
->  drivers/scsi/scsi_pm.c    | 44 ++------------------------------------------
->  drivers/scsi/scsi_priv.h  |  4 +---
->  drivers/scsi/scsi_scan.c  | 17 +++++++++++++++++
->  drivers/scsi/scsi_sysfs.c |  1 +
->  drivers/scsi/sd.c         |  1 -
->  7 files changed, 22 insertions(+), 54 deletions(-)
-> ========
-> 
-> For git bisect I followed the instructions provided on the gentoo wiki: https://wiki.gentoo.org/wiki/Kernel_git-bisect, which uses the linux-stable repository.
-> 
-> Here is a sample dmesg output when I do not experience the bug ('good') and when I do ('bad'). Nothing to me seems obviously wrong. You do see some 'extra' lines in the 'bad' case at the end, but these lines also appear in the 'good' case later on; they don't have enough time to appear in the 'good' case when the system resumes quickly as normal. There are xHCI errors related to USB buses, but they appear in both cases.
-> 
-> Good: https://dpaste.org/S90gh
-> Bad:  https://dpaste.org/9KQ6C
-> 
-> Hardware info:
-> AMD Ryzen 3600
-> AMD Radeon RX580 
-> AMD Radeon 270X (usually bound to vfio-pci, otherwise amdgpu)
-> ASUS Strix ROG B450-F (latest BIOS)
-> Seasonic Prime GX-750 (brand new)
-> I also have an M.2 NVME drive (boot), a SATA SSD, and one HDD.
-> 
-> 
-> I'm happy to try any troubleshooting steps.
-
-Could somebody take a look into this? Or was this discussed somewhere
-else already? Or even fixed?
-
-Anyway, to get this tracked:
-
-#regzbot introduced: a19a93e4c6a98c9c0f2f5a6db76846f10d7d1f
-#regzbot from: ericspero@icloud.com <ericspero@icloud.com>
-#regzbot title: scsi: pm: Resume process hangs for 5-6 seconds starting
-sometime in 5.16
-#regzbot link: https://bugzilla.kernel.org/show_bug.cgi?id=215880
-
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-
-P.S.: As the Linux kernel's regression tracker I deal with a lot of
-reports and sometimes miss something important when writing mails like
-this. If that's the case here, don't hesitate to tell me in a public
-reply, it's in everyone's interest to set the public record straight.
-
+diff --git a/drivers/message/fusion/Kconfig b/drivers/message/fusion/Kconfig
+index a3d0288fd0e2..88a6e506a942 100644
+--- a/drivers/message/fusion/Kconfig
++++ b/drivers/message/fusion/Kconfig
+@@ -2,7 +2,7 @@
+ 
+ menuconfig FUSION
+ 	bool "Fusion MPT device support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	Say Y here to get to see options for Fusion Message
+ 	Passing Technology (MPT) drivers.
 -- 
-Additional information about regzbot:
+2.32.0
 
-If you want to know more about regzbot, check out its web-interface, the
-getting start guide, and the references documentation:
-
-https://linux-regtracking.leemhuis.info/regzbot/
-https://gitlab.com/knurd42/regzbot/-/blob/main/docs/getting_started.md
-https://gitlab.com/knurd42/regzbot/-/blob/main/docs/reference.md
-
-The last two documents will explain how you can interact with regzbot
-yourself if your want to.
-
-Hint for reporters: when reporting a regression it's in your interest to
-CC the regression list and tell regzbot about the issue, as that ensures
-the regression makes it onto the radar of the Linux kernel's regression
-tracker -- that's in your interest, as it ensures your report won't fall
-through the cracks unnoticed.
-
-Hint for developers: you normally don't need to care about regzbot once
-it's involved. Fix the issue as you normally would, just remember to
-include 'Link:' tag in the patch descriptions pointing to all reports
-about the issue. This has been expected from developers even before
-regzbot showed up for reasons explained in
-'Documentation/process/submitting-patches.rst' and
-'Documentation/process/5.Posting.rst'.
