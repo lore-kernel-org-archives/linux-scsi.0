@@ -2,72 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BCFBC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Apr 2022 14:30:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 767CBC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Apr 2022 14:33:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377345AbiD2Odm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Apr 2022 10:33:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35178 "EHLO
+        id S1377412AbiD2OgS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Apr 2022 10:36:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377352AbiD2Odk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Apr 2022 10:33:40 -0400
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF7B4F7F;
-        Fri, 29 Apr 2022 07:30:20 -0700 (PDT)
-Received: by mail-pl1-f175.google.com with SMTP id s14so7292113plk.8;
-        Fri, 29 Apr 2022 07:30:20 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=iZlmV64Xc1hWa8wSScKbyiAr5Rslu8TBnEqFBv07zwg=;
-        b=rI03VEi0U7PA2S7ILMgtnmRA6bxBqshPFydGYNMQK+9T1lxa6h4TeUFo2P3k9HI6Cq
-         UzcKE94L0Suc9Gl4qI6xHUAhrlePllaa601JxRO6QA3EuhQJVvKQqPSlN30q1+s7T8Ed
-         wcwKm6+s6Qppfmk4PfcP5bty9o5ftSWOcnQtLJctS90l5lpPGqixacfxsFtLJdY8Mg93
-         D9jJXpJ24W1FrGEJd2V/5nO0yFvBkEN6psU1C6mOlpwXzo0myqTIaotJaL4I9VoAYgzU
-         k9YfqrEST1If+OFHvFav7FJc315PiGlhzHqJMmIgDUqWlYCikoSaroKPPdnxcxEeYRLX
-         +DQw==
-X-Gm-Message-State: AOAM530dRdFYuiL5uGYE8LbMowPkGCesA8sy4uHquBP42Agf8HdKIjlZ
-        uyFsMESNJDLosUmLnW83Mqw=
-X-Google-Smtp-Source: ABdhPJzTJp2fn8qvZQAtR6g5cDj2ky9bT3FB9Vi/zQEh7h/46+nv9XGS+bRccXwuIwR1ZcJBgpncRQ==
-X-Received: by 2002:a17:902:e80e:b0:15d:34d2:4e8c with SMTP id u14-20020a170902e80e00b0015d34d24e8cmr19949517plg.142.1651242620075;
-        Fri, 29 Apr 2022 07:30:20 -0700 (PDT)
-Received: from [192.168.51.14] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id d6-20020a17090ac24600b001d9738fdf2asm14302675pjx.37.2022.04.29.07.30.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 29 Apr 2022 07:30:19 -0700 (PDT)
-Message-ID: <9866c2ab-469f-bc87-8510-05dd9af07a84@acm.org>
-Date:   Fri, 29 Apr 2022 07:30:18 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [Regression] Resume process hangs for 5-6 seconds starting
- sometime in 5.16
-Content-Language: en-US
-To:     Thorsten Leemhuis <regressions@leemhuis.info>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
-        LKML <linux-kernel@vger.kernel.org>
-References: <81b865bb-be46-cdf7-a49b-fd029de439fb@leemhuis.info>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <81b865bb-be46-cdf7-a49b-fd029de439fb@leemhuis.info>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        with ESMTP id S1377385AbiD2OgN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Apr 2022 10:36:13 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52C13A6E35;
+        Fri, 29 Apr 2022 07:32:55 -0700 (PDT)
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TEJN4x005850;
+        Fri, 29 Apr 2022 14:32:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : to : cc : date : in-reply-to : references : content-type :
+ mime-version : content-transfer-encoding; s=pp1;
+ bh=+Pd3boeYYOqUdToIy6lpJJ2YBcwWkKSMUxL2UvbDusM=;
+ b=gfKVQF3cuseXqzp1L3t9GRmbpi9oCZfDu6JcK9u08UVy45iyXh5Nc5CEaYLXW6C5FGB2
+ W6JTB+R4d1QxlJT7Itj24pOYOXhJJX84WpjEKSreyRj5+clHRqwU29FiP+ZlzuXEyEOO
+ UpjZW4XK4c73j0uXhqiqZ1m30VFFNzOk7KVk7iqo0K4hkiSnjou4m+ww41YSp2DdosWv
+ N5bm1Gd3fFZj/sBpITKRcT1pvYnXYok73pQJKkjA1K+tUxvgdx9HQOn6rIfJpVYXvMRT
+ HxjAQhjyY3byIYZka3VuDs26t5zpdMU5Xgu1QKyeTRjMbseUwQViqGKLw6kc0r4/4RS6 5w== 
+Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqtvxnc6m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 29 Apr 2022 14:32:50 +0000
+Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
+        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TEJqoF028882;
+        Fri, 29 Apr 2022 14:32:48 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma03fra.de.ibm.com with ESMTP id 3fm938yc2r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 29 Apr 2022 14:32:48 +0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TEWsrc25821492
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 29 Apr 2022 14:32:54 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 52F19A4051;
+        Fri, 29 Apr 2022 14:32:46 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id ADF19A4040;
+        Fri, 29 Apr 2022 14:32:45 +0000 (GMT)
+Received: from sig-9-145-61-57.uk.ibm.com (unknown [9.145.61.57])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Fri, 29 Apr 2022 14:32:45 +0000 (GMT)
+Message-ID: <a499f46933b4f77d6ba54a12e189f7b0dfd5acc5.camel@linux.ibm.com>
+Subject: Re: [PATCH 19/37] mpt fusion: add HAS_IOPORT dependencies
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        "open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" 
+        <MPT-FusionLinux.pdl@broadcom.com>,
+        "open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" 
+        <linux-scsi@vger.kernel.org>
+Date:   Fri, 29 Apr 2022 16:32:45 +0200
+In-Reply-To: <20220429135108.2781579-33-schnelle@linux.ibm.com>
+References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
+         <20220429135108.2781579-33-schnelle@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-18.el8) 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: N-msLVIzoUgrrXICVjGytJGIM4fZaxH4
+X-Proofpoint-GUID: N-msLVIzoUgrrXICVjGytJGIM4fZaxH4
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
+ definitions=2022-04-29_07,2022-04-28_01,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ lowpriorityscore=0 priorityscore=1501 spamscore=0 suspectscore=0
+ clxscore=1015 mlxscore=0 impostorscore=0 mlxlogscore=660 adultscore=0
+ phishscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2204290080
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/29/22 05:24, Thorsten Leemhuis wrote:
-> Bart, I noticed a regression report in bugzilla.kernel.org that afaics
-> nobody acted upon since it was reported about a week ago, that's why I
-> decided to forward it to the lists and all people that seemed to be
-> relevant here. It's caused by a commit of yours. To quote from
-> https://bugzilla.kernel.org/show_bug.cgi?id=215880 [ ... ]
+On Fri, 2022-04-29 at 15:50 +0200, Niklas Schnelle wrote:
+> In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+> not being declared. We thus need to add HAS_IOPORT as dependency for
+> those drivers using them.
+> 
+> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> ---
 
-Thanks Thorsten for having informed me about this issue. I was not yet 
-aware of this issue but will take a look as soon as I can (next week is 
-LSF/MM).
+Sorry everyone. I sent this as PATCH in error while preparing to sent
+the same series as RFC. Since e-mail has no remote delete and I lack a
+time machine let's just all pretend you only got the RFC.
 
-Bart.
