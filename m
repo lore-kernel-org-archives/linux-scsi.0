@@ -2,104 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DF94C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Apr 2022 08:02:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45719C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Apr 2022 09:07:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240122AbiD3IF3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 Apr 2022 04:05:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54854 "EHLO
+        id S241105AbiD3JKX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 30 Apr 2022 05:10:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234291AbiD3IF2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Apr 2022 04:05:28 -0400
-Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FB043FDAB;
-        Sat, 30 Apr 2022 01:02:07 -0700 (PDT)
-Received: by mail-lf1-x133.google.com with SMTP id p10so17578436lfa.12;
-        Sat, 30 Apr 2022 01:02:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=sizE2uAhLOdIpK4PYIm9/SX9qwFF46VOJ/Mu1QH+sAU=;
-        b=ivqPOtuhIWK5Luzjj5fIuFopqP7WsOxEBI7gsiEuZQ02HuFwpSEOI2sxwa+vu/S4IY
-         ekd3Nd05oSFqbjFLpgPdWEBHgd077JQYfv1wcfzzHr3ElLlq1tFlr2S5jaLBfvkOaQQ0
-         R+EUDKaICfwZzH5JBW80/r95jZTrzTtvhzrdZawYdBUnRtsF8trOm6s6FatXRnu1FyYQ
-         JNIDQR5Tu/9OUlNO6dnk4H9HMc5VEBIiPT2GcA6AQcs6drF2QTQkkXLfvM8fQ9piDTBb
-         gomzblUosUUWxKciRI7WiGC2m676o5pO3Q0brvazd922eai8KIfZ1RPxKb/bvLSpjyQY
-         DHpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=sizE2uAhLOdIpK4PYIm9/SX9qwFF46VOJ/Mu1QH+sAU=;
-        b=JUf24l73lzAYEAGDDKVV093md+xlOPSI4tIVDc1xQgt85SHteuP6Pl7IXyehbKFrKF
-         HJXHHJOeczWVo5Xbe6hEjKucU/RK+MB+QKaZpidYF2/8yxFjWqb7cqEJOKbVySIPe+O2
-         SDkBukNZT73WjUfUl99W5A6+oVL9JZf0mIwVrxJjnYit5XI11bnXYNmWpQ8z+XOoQa6f
-         qojm5mwKuKf4b2+wy6OqBUsS4/boWx4pV1imJMWU92dnwyqPD065qqZFLwJC2pfsyW7A
-         74p3GvbAO8EtX8PRY+vFt2l8iNtPXuP4z5e+vFECHQSG972uTlxXwFgf9kavRy0v4yIq
-         cF/g==
-X-Gm-Message-State: AOAM531vAhxd/dErrl6Fv0M1d4kzeLLsqqHMRPEIbpAi3NKcPgcI6ITy
-        i+NFArvQG0El/IJChqdZDUFQw6TMl16zoreTuZsHQKt7
-X-Google-Smtp-Source: ABdhPJz8v4NabgEUNKzFO+vw4AKDefEwMDouG1OfJRZ7v8qVlPUJp7vJxfJA8odNiUpbyixbB2cmhiuOxzIPjDA9o3g=
-X-Received: by 2002:ac2:51a1:0:b0:472:154:4065 with SMTP id
- f1-20020ac251a1000000b0047201544065mr2251303lfk.590.1651305725701; Sat, 30
- Apr 2022 01:02:05 -0700 (PDT)
+        with ESMTP id S239130AbiD3JKW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Apr 2022 05:10:22 -0400
+Received: from smtp.smtpout.orange.fr (smtp04.smtpout.orange.fr [80.12.242.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 368BE888CA
+        for <linux-scsi@vger.kernel.org>; Sat, 30 Apr 2022 02:07:00 -0700 (PDT)
+Received: from [192.168.1.18] ([86.243.180.246])
+        by smtp.orange.fr with ESMTPA
+        id kj42nAiNWPp5ukj42nS5Lg; Sat, 30 Apr 2022 11:06:57 +0200
+X-ME-Helo: [192.168.1.18]
+X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
+X-ME-Date: Sat, 30 Apr 2022 11:06:57 +0200
+X-ME-IP: 86.243.180.246
+Message-ID: <c920e37a-b690-e614-c052-634177bbeb46@wanadoo.fr>
+Date:   Sat, 30 Apr 2022 11:06:53 +0200
 MIME-Version: 1.0
-References: <20220428154138.257250-1-zhangxuezhi1@coolpad.com>
-In-Reply-To: <20220428154138.257250-1-zhangxuezhi1@coolpad.com>
-From:   Julian Calaby <julian.calaby@gmail.com>
-Date:   Sat, 30 Apr 2022 18:01:53 +1000
-Message-ID: <CAGRGNgX=oVxEhwvubLVC7=j-Tfgg3nyMBEObD0XjGbu2WDXBaA@mail.gmail.com>
-Subject: Re: [PATCH v2] scsi: pmcraid: convert sysfs snprintf to sysfs_emit
-To:     Xuezhi Zhang <zhangxuezhi1@coolpad.com>
-Cc:     "James E. J. Bottomley" <jejb@linux.ibm.com>,
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.1
+Subject: Re: [PATCH] scsi: elx: efct: remove unnecessary memset in efct_io
+Content-Language: en-US
+To:     Finn Thain <fthain@linux-m68k.org>,
+        Wan Jiabing <wanjiabing@vivo.com>
+Cc:     James Smart <james.smart@broadcom.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Daniel Wagner <dwagner@suse.de>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        cocci@inria.fr
+References: <20220318145230.1031-1-wanjiabing@vivo.com>
+ <794191df-e745-c591-bf1d-37945f96e73a@wanadoo.fr>
+ <eab847fe-8d17-1a38-b55e-e68a2f6a1829@linux-m68k.org>
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+In-Reply-To: <eab847fe-8d17-1a38-b55e-e68a2f6a1829@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Xuezhi,
+Le 30/04/2022 à 09:48, Finn Thain a écrit :
+> On Sat, 30 Apr 2022, Christophe JAILLET wrote:
+> 
+>> Le 18/03/2022 à 15:52, Wan Jiabing a écrit :
+>>> io->sgl is allocated by kzalloc(). The memory is set to zero.
+>>> It is unnecessary to call memset again.
+>>>
+>>
+>> Hi,
+>>
+>> Nitpick: this kzalloc() should be a kcalloc() to avoid an open-coded
+>> multiplication when computing the size to allocate.
+>>
+> 
+> Seems like kcalloc() conversion could be a separate patch. Perhaps it
+> could be done everywhere using a coccinelle script.
 
-On Sat, Apr 30, 2022 at 2:18 PM Xuezhi Zhang <zhangxuezhi1@coolpad.com> wrote:
->
-> Fix the following coccicheck warnings:
-> drivers/scsi/pmcraid.c:3591:8-16:
-> WARNING: use scnprintf or sprintf
-> drivers/scsi/pmcraid.c:3557:8-16:
-> WARNING: use scnprintf or sprintf
-> drivers/scsi/pmcraid.c:3496:8-16:
-> WARNING: use scnprintf or sprintf
->
-> Signed-off-by: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
-> ---
-> v2: fix the sysfs_emt error.
-> ---
->  arch/arm64/configs/defconfig | 4 ++++
->  drivers/scsi/pmcraid.c       | 8 +++-----
->  2 files changed, 7 insertions(+), 5 deletions(-)
->
-> diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-> index 476c5a9488d0..8688ed761cfd 100644
-> --- a/arch/arm64/configs/defconfig
-> +++ b/arch/arm64/configs/defconfig
-> @@ -1295,3 +1295,7 @@ CONFIG_DEBUG_KERNEL=y
->  # CONFIG_DEBUG_PREEMPT is not set
->  # CONFIG_FTRACE is not set
->  CONFIG_MEMTEST=y
-> +CONFIG_UEVENT_HELPER=y
-> +CONFIG_UEVENT_HELPER_PATH="/sbin/mdev"
-> +CONFIG_INITRAMFS_SOURCE="_install_arm64"
-> +
+Sure it can and I guess that many coccinelle script already exist for it.
 
-Did you mean to include this change?
+I only replied here because of a comment from Joe Perches on the same 
+patch a few month ago (see [1] and [2])
 
-Thanks,
+So Wan Jiabing or anyone else, if you want to go one step further, just 
+feel free to propose it.
 
--- 
-Julian Calaby
+CJ
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+
+[1]: 
+https://lore.kernel.org/all/4208b3d08a677601c73889f78dd25e5c9f056a86.camel@perches.com/
+
+[2]: 
+https://lore.kernel.org/all/9be7d5beb437583f8d975d168ac5c3e32fb6e465.1639158677.git.christophe.jaillet@wanadoo.fr/
