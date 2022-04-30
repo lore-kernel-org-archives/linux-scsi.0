@@ -2,78 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9B37C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Apr 2022 06:30:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49555C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Apr 2022 07:48:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381407AbiD3GdY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 Apr 2022 02:33:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42480 "EHLO
+        id S1382320AbiD3Hvk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 30 Apr 2022 03:51:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350247AbiD3GdW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Apr 2022 02:33:22 -0400
-Received: from smtp.smtpout.orange.fr (smtp09.smtpout.orange.fr [80.12.242.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FC7939172
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Apr 2022 23:29:57 -0700 (PDT)
-Received: from [192.168.1.18] ([86.243.180.246])
-        by smtp.orange.fr with ESMTPA
-        id kgc0nZiwSuIQVkgc0nTrzn; Sat, 30 Apr 2022 08:29:55 +0200
-X-ME-Helo: [192.168.1.18]
-X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
-X-ME-Date: Sat, 30 Apr 2022 08:29:55 +0200
-X-ME-IP: 86.243.180.246
-Message-ID: <794191df-e745-c591-bf1d-37945f96e73a@wanadoo.fr>
-Date:   Sat, 30 Apr 2022 08:29:46 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH] scsi: elx: efct: remove unnecessary memset in efct_io
-Content-Language: en-US
-To:     Wan Jiabing <wanjiabing@vivo.com>,
+        with ESMTP id S233979AbiD3Hvj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Apr 2022 03:51:39 -0400
+Received: from out4-smtp.messagingengine.com (out4-smtp.messagingengine.com [66.111.4.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A3B0BF47;
+        Sat, 30 Apr 2022 00:48:17 -0700 (PDT)
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailout.nyi.internal (Postfix) with ESMTP id 66B8E5C0118;
+        Sat, 30 Apr 2022 03:48:14 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute1.internal (MEProxy); Sat, 30 Apr 2022 03:48:14 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:from:from
+        :in-reply-to:in-reply-to:message-id:mime-version:references
+        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1651304894; x=
+        1651391294; bh=ZFpADMpNUy2riU4+N7JTWxLSuEp4zLRopZiAue0Sesg=; b=F
+        5lrgzGcuMx9mm60H01rA02mgRiyjGEBznrdLP+7DEcGxzkKrEVmiGO6Rfkb9TbPd
+        RNkVkck9BWGiLhmhs/nysWJdbZ+phTZ+pgVKoJ8o9bz4EbKSQ4wyxi87nl5ndt8v
+        eTQLIqdUqV1YdG/esSlrFEup2B8uT678ZunOuzoOTq6SilK6IO7TegkeNTgsdYxL
+        LfW/33m2bHQS5Xvg/JHAsUQwj/xdfqSKcjTALUqiuEcJCz7mSv2VXN5GTcxnEOT6
+        cdzBpTzphV93/3VFkxvrLZYPU+GCnPAE3jkgT1IkiiOLn4XGUlhEMstusZKwXVlY
+        rR5Jyef7bofb8kS6GTmSA==
+X-ME-Sender: <xms:velsYlBw3Xt7nn5a_BDYeEKDz9DanKYo3V_BJGs3yvyd-YR9PSak-g>
+    <xme:velsYjjO5uFDCmt4bGUcgWqe4GhdgAGjCDEXZK_8UErxUR6TagYHh-fFfO72ff1lX
+    VPBgRAkSRXIDLBC1N0>
+X-ME-Received: <xmr:velsYgl2jC98YL9hNRTFGjC2RX4AwpyKvu1tLe5AmjvKBsnaX_qnimi5goHy9V69EMZUGuzhlQsYIUcDgMAO5SOVC_1lUuC1mYE>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvddtgdduvdegucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvfevufgjkfhfgggtsehmtderredttdejnecuhfhrohhmpefhihhnnhcu
+    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
+    htthgvrhhnpeelfeeklefggfetkedukeevfffgvdeuheetffekledtfeejteelieejteeh
+    geelieenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    hfthhhrghinheslhhinhhugidqmheikehkrdhorhhg
+X-ME-Proxy: <xmx:velsYvzDCVSwQqVHOs_snB2kZpuH-9-ri8QbNnzga4LwDvbVvzoJqQ>
+    <xmx:velsYqSe0P5ei0BuPcIzQZh1R7Hjor0p7SDqIbYPfONFON5SadOnvw>
+    <xmx:velsYiaAceUm1vNUAoi9uaPoaAhgloYAX2OpiAoIWGBN3rp0EGxwSA>
+    <xmx:vulsYtHyWD-AXIRk0WcCds9ejukXBUHsrL4c5ma87oi5UnsEdOrZtg>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sat,
+ 30 Apr 2022 03:48:10 -0400 (EDT)
+Date:   Sat, 30 Apr 2022 17:48:06 +1000 (AEST)
+From:   Finn Thain <fthain@linux-m68k.org>
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+cc:     Wan Jiabing <wanjiabing@vivo.com>,
         James Smart <james.smart@broadcom.com>,
         Ram Vegesna <ram.vegesna@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Daniel Wagner <dwagner@suse.de>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
-Newsgroups: gmane.linux.scsi,gmane.linux.scsi.target.devel,gmane.linux.kernel
-References: <20220318145230.1031-1-wanjiabing@vivo.com>
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-In-Reply-To: <20220318145230.1031-1-wanjiabing@vivo.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        cocci@inria.fr
+Subject: Re: [PATCH] scsi: elx: efct: remove unnecessary memset in efct_io
+In-Reply-To: <794191df-e745-c591-bf1d-37945f96e73a@wanadoo.fr>
+Message-ID: <eab847fe-8d17-1a38-b55e-e68a2f6a1829@linux-m68k.org>
+References: <20220318145230.1031-1-wanjiabing@vivo.com> <794191df-e745-c591-bf1d-37945f96e73a@wanadoo.fr>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="-1463811774-987175101-1651304886=:14454"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
-Message-ID: <20220430062946.BcgJLY22fHMuM4gMoYMVViUnS6xfeSP2xriIfX8HEg8@z>
 
-Le 18/03/2022 à 15:52, Wan Jiabing a écrit :
-> io->sgl is allocated by kzalloc(). The memory is set to zero.
-> It is unnecessary to call memset again.
-> 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Hi,
+---1463811774-987175101-1651304886=:14454
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-Nitpick: this kzalloc() should be a kcalloc() to avoid an open-coded 
-multiplication when computing the size to allocate.
+On Sat, 30 Apr 2022, Christophe JAILLET wrote:
 
-CJ
+> Le 18/03/2022 =C3=A0 15:52, Wan Jiabing a =C3=A9crit=C2=A0:
+> > io->sgl is allocated by kzalloc(). The memory is set to zero.
+> > It is unnecessary to call memset again.
+> >=20
+>=20
+> Hi,
+>=20
+> Nitpick: this kzalloc() should be a kcalloc() to avoid an open-coded
+> multiplication when computing the size to allocate.
+>=20
 
-
-> Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
-> ---
->   drivers/scsi/elx/efct/efct_io.c | 1 -
->   1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/elx/efct/efct_io.c b/drivers/scsi/elx/efct/efct_io.c
-> index c3247b951a76..c612f0a48839 100644
-> --- a/drivers/scsi/elx/efct/efct_io.c
-> +++ b/drivers/scsi/elx/efct/efct_io.c
-> @@ -62,7 +62,6 @@ efct_io_pool_create(struct efct *efct, u32 num_sgl)
->   			return NULL;
->   		}
->   
-> -		memset(io->sgl, 0, sizeof(*io->sgl) * num_sgl);
->   		io->sgl_allocated = num_sgl;
->   		io->sgl_count = 0;
->   
-
+Seems like kcalloc() conversion could be a separate patch. Perhaps it=20
+could be done everywhere using a coccinelle script.
+---1463811774-987175101-1651304886=:14454--
