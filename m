@@ -2,94 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49555C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Apr 2022 07:48:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DF94C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Apr 2022 08:02:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1382320AbiD3Hvk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 Apr 2022 03:51:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50078 "EHLO
+        id S240122AbiD3IF3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 30 Apr 2022 04:05:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233979AbiD3Hvj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Apr 2022 03:51:39 -0400
-Received: from out4-smtp.messagingengine.com (out4-smtp.messagingengine.com [66.111.4.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A3B0BF47;
-        Sat, 30 Apr 2022 00:48:17 -0700 (PDT)
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.nyi.internal (Postfix) with ESMTP id 66B8E5C0118;
-        Sat, 30 Apr 2022 03:48:14 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Sat, 30 Apr 2022 03:48:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:from:from
-        :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
-        :x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1651304894; x=
-        1651391294; bh=ZFpADMpNUy2riU4+N7JTWxLSuEp4zLRopZiAue0Sesg=; b=F
-        5lrgzGcuMx9mm60H01rA02mgRiyjGEBznrdLP+7DEcGxzkKrEVmiGO6Rfkb9TbPd
-        RNkVkck9BWGiLhmhs/nysWJdbZ+phTZ+pgVKoJ8o9bz4EbKSQ4wyxi87nl5ndt8v
-        eTQLIqdUqV1YdG/esSlrFEup2B8uT678ZunOuzoOTq6SilK6IO7TegkeNTgsdYxL
-        LfW/33m2bHQS5Xvg/JHAsUQwj/xdfqSKcjTALUqiuEcJCz7mSv2VXN5GTcxnEOT6
-        cdzBpTzphV93/3VFkxvrLZYPU+GCnPAE3jkgT1IkiiOLn4XGUlhEMstusZKwXVlY
-        rR5Jyef7bofb8kS6GTmSA==
-X-ME-Sender: <xms:velsYlBw3Xt7nn5a_BDYeEKDz9DanKYo3V_BJGs3yvyd-YR9PSak-g>
-    <xme:velsYjjO5uFDCmt4bGUcgWqe4GhdgAGjCDEXZK_8UErxUR6TagYHh-fFfO72ff1lX
-    VPBgRAkSRXIDLBC1N0>
-X-ME-Received: <xmr:velsYgl2jC98YL9hNRTFGjC2RX4AwpyKvu1tLe5AmjvKBsnaX_qnimi5goHy9V69EMZUGuzhlQsYIUcDgMAO5SOVC_1lUuC1mYE>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrvddtgdduvdegucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevufgjkfhfgggtsehmtderredttdejnecuhfhrohhmpefhihhnnhcu
-    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
-    htthgvrhhnpeelfeeklefggfetkedukeevfffgvdeuheetffekledtfeejteelieejteeh
-    geelieenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    hfthhhrghinheslhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:velsYvzDCVSwQqVHOs_snB2kZpuH-9-ri8QbNnzga4LwDvbVvzoJqQ>
-    <xmx:velsYqSe0P5ei0BuPcIzQZh1R7Hjor0p7SDqIbYPfONFON5SadOnvw>
-    <xmx:velsYiaAceUm1vNUAoi9uaPoaAhgloYAX2OpiAoIWGBN3rp0EGxwSA>
-    <xmx:vulsYtHyWD-AXIRk0WcCds9ejukXBUHsrL4c5ma87oi5UnsEdOrZtg>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sat,
- 30 Apr 2022 03:48:10 -0400 (EDT)
-Date:   Sat, 30 Apr 2022 17:48:06 +1000 (AEST)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-cc:     Wan Jiabing <wanjiabing@vivo.com>,
-        James Smart <james.smart@broadcom.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daniel Wagner <dwagner@suse.de>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        cocci@inria.fr
-Subject: Re: [PATCH] scsi: elx: efct: remove unnecessary memset in efct_io
-In-Reply-To: <794191df-e745-c591-bf1d-37945f96e73a@wanadoo.fr>
-Message-ID: <eab847fe-8d17-1a38-b55e-e68a2f6a1829@linux-m68k.org>
-References: <20220318145230.1031-1-wanjiabing@vivo.com> <794191df-e745-c591-bf1d-37945f96e73a@wanadoo.fr>
+        with ESMTP id S234291AbiD3IF2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Apr 2022 04:05:28 -0400
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FB043FDAB;
+        Sat, 30 Apr 2022 01:02:07 -0700 (PDT)
+Received: by mail-lf1-x133.google.com with SMTP id p10so17578436lfa.12;
+        Sat, 30 Apr 2022 01:02:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sizE2uAhLOdIpK4PYIm9/SX9qwFF46VOJ/Mu1QH+sAU=;
+        b=ivqPOtuhIWK5Luzjj5fIuFopqP7WsOxEBI7gsiEuZQ02HuFwpSEOI2sxwa+vu/S4IY
+         ekd3Nd05oSFqbjFLpgPdWEBHgd077JQYfv1wcfzzHr3ElLlq1tFlr2S5jaLBfvkOaQQ0
+         R+EUDKaICfwZzH5JBW80/r95jZTrzTtvhzrdZawYdBUnRtsF8trOm6s6FatXRnu1FyYQ
+         JNIDQR5Tu/9OUlNO6dnk4H9HMc5VEBIiPT2GcA6AQcs6drF2QTQkkXLfvM8fQ9piDTBb
+         gomzblUosUUWxKciRI7WiGC2m676o5pO3Q0brvazd922eai8KIfZ1RPxKb/bvLSpjyQY
+         DHpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=sizE2uAhLOdIpK4PYIm9/SX9qwFF46VOJ/Mu1QH+sAU=;
+        b=JUf24l73lzAYEAGDDKVV093md+xlOPSI4tIVDc1xQgt85SHteuP6Pl7IXyehbKFrKF
+         HJXHHJOeczWVo5Xbe6hEjKucU/RK+MB+QKaZpidYF2/8yxFjWqb7cqEJOKbVySIPe+O2
+         SDkBukNZT73WjUfUl99W5A6+oVL9JZf0mIwVrxJjnYit5XI11bnXYNmWpQ8z+XOoQa6f
+         qojm5mwKuKf4b2+wy6OqBUsS4/boWx4pV1imJMWU92dnwyqPD065qqZFLwJC2pfsyW7A
+         74p3GvbAO8EtX8PRY+vFt2l8iNtPXuP4z5e+vFECHQSG972uTlxXwFgf9kavRy0v4yIq
+         cF/g==
+X-Gm-Message-State: AOAM531vAhxd/dErrl6Fv0M1d4kzeLLsqqHMRPEIbpAi3NKcPgcI6ITy
+        i+NFArvQG0El/IJChqdZDUFQw6TMl16zoreTuZsHQKt7
+X-Google-Smtp-Source: ABdhPJz8v4NabgEUNKzFO+vw4AKDefEwMDouG1OfJRZ7v8qVlPUJp7vJxfJA8odNiUpbyixbB2cmhiuOxzIPjDA9o3g=
+X-Received: by 2002:ac2:51a1:0:b0:472:154:4065 with SMTP id
+ f1-20020ac251a1000000b0047201544065mr2251303lfk.590.1651305725701; Sat, 30
+ Apr 2022 01:02:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="-1463811774-987175101-1651304886=:14454"
+References: <20220428154138.257250-1-zhangxuezhi1@coolpad.com>
+In-Reply-To: <20220428154138.257250-1-zhangxuezhi1@coolpad.com>
+From:   Julian Calaby <julian.calaby@gmail.com>
+Date:   Sat, 30 Apr 2022 18:01:53 +1000
+Message-ID: <CAGRGNgX=oVxEhwvubLVC7=j-Tfgg3nyMBEObD0XjGbu2WDXBaA@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: pmcraid: convert sysfs snprintf to sysfs_emit
+To:     Xuezhi Zhang <zhangxuezhi1@coolpad.com>
+Cc:     "James E. J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi Xuezhi,
 
----1463811774-987175101-1651304886=:14454
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+On Sat, Apr 30, 2022 at 2:18 PM Xuezhi Zhang <zhangxuezhi1@coolpad.com> wrote:
+>
+> Fix the following coccicheck warnings:
+> drivers/scsi/pmcraid.c:3591:8-16:
+> WARNING: use scnprintf or sprintf
+> drivers/scsi/pmcraid.c:3557:8-16:
+> WARNING: use scnprintf or sprintf
+> drivers/scsi/pmcraid.c:3496:8-16:
+> WARNING: use scnprintf or sprintf
+>
+> Signed-off-by: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
+> ---
+> v2: fix the sysfs_emt error.
+> ---
+>  arch/arm64/configs/defconfig | 4 ++++
+>  drivers/scsi/pmcraid.c       | 8 +++-----
+>  2 files changed, 7 insertions(+), 5 deletions(-)
+>
+> diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+> index 476c5a9488d0..8688ed761cfd 100644
+> --- a/arch/arm64/configs/defconfig
+> +++ b/arch/arm64/configs/defconfig
+> @@ -1295,3 +1295,7 @@ CONFIG_DEBUG_KERNEL=y
+>  # CONFIG_DEBUG_PREEMPT is not set
+>  # CONFIG_FTRACE is not set
+>  CONFIG_MEMTEST=y
+> +CONFIG_UEVENT_HELPER=y
+> +CONFIG_UEVENT_HELPER_PATH="/sbin/mdev"
+> +CONFIG_INITRAMFS_SOURCE="_install_arm64"
+> +
 
-On Sat, 30 Apr 2022, Christophe JAILLET wrote:
+Did you mean to include this change?
 
-> Le 18/03/2022 =C3=A0 15:52, Wan Jiabing a =C3=A9crit=C2=A0:
-> > io->sgl is allocated by kzalloc(). The memory is set to zero.
-> > It is unnecessary to call memset again.
-> >=20
->=20
-> Hi,
->=20
-> Nitpick: this kzalloc() should be a kcalloc() to avoid an open-coded
-> multiplication when computing the size to allocate.
->=20
+Thanks,
 
-Seems like kcalloc() conversion could be a separate patch. Perhaps it=20
-could be done everywhere using a coccinelle script.
----1463811774-987175101-1651304886=:14454--
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
