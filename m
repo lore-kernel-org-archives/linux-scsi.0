@@ -2,126 +2,70 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73EA4C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Apr 2022 03:23:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81E2EC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Apr 2022 06:30:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1382123AbiD3D1D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Apr 2022 23:27:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59174 "EHLO
+        id S238155AbiD3GdV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 30 Apr 2022 02:33:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349226AbiD3D07 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Apr 2022 23:26:59 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26638C0E68
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Apr 2022 20:23:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1651289018;
-        bh=saZ1ICHbU9lFksbXg59gPJ7eQi7BrCLxeXMUCvy8Ls0=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=TRmoqBdyEIzD0PgS4pgitN9/buzLB7u2W2++KWlXr8u1+c14w1Ls9vzc1TTshrD13
-         wmzTNQFhOM8ONWki9QHj2TqFeHFm/OaD0k/YPRczt8P7ogJA3yPWZio09WWS7zE735
-         vSiZfWu5R1Of1xh/vyapgqxTM3bpFUOULAcCxyLI=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 202311289FB3;
-        Fri, 29 Apr 2022 23:23:38 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id whBwklBwMn_1; Fri, 29 Apr 2022 23:23:38 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1651289018;
-        bh=saZ1ICHbU9lFksbXg59gPJ7eQi7BrCLxeXMUCvy8Ls0=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=TRmoqBdyEIzD0PgS4pgitN9/buzLB7u2W2++KWlXr8u1+c14w1Ls9vzc1TTshrD13
-         wmzTNQFhOM8ONWki9QHj2TqFeHFm/OaD0k/YPRczt8P7ogJA3yPWZio09WWS7zE735
-         vSiZfWu5R1Of1xh/vyapgqxTM3bpFUOULAcCxyLI=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::3774])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 8C1EF1289FAF;
-        Fri, 29 Apr 2022 23:23:37 -0400 (EDT)
-Message-ID: <c0cce549e81dd3b773bc30bda30212d94ae0759e.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.18-rc4
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 29 Apr 2022 23:23:36 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S230052AbiD3GdV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Apr 2022 02:33:21 -0400
+Received: from ciao.gmane.io (ciao.gmane.io [116.202.254.214])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5B40167D3
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Apr 2022 23:29:56 -0700 (PDT)
+Received: from list by ciao.gmane.io with local (Exim 4.92)
+        (envelope-from <lnx-linux-scsi@m.gmane-mx.org>)
+        id 1nkgc6-0007HW-Hg
+        for linux-scsi@vger.kernel.org; Sat, 30 Apr 2022 08:29:54 +0200
+X-Injected-Via-Gmane: http://gmane.org/
+To:     linux-scsi@vger.kernel.org
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: Re: [PATCH] scsi: elx: efct: remove unnecessary memset in efct_io
+Date:   Sat, 30 Apr 2022 08:29:46 +0200
+Message-ID: <794191df-e745-c591-bf1d-37945f96e73a@wanadoo.fr>
+References: <20220318145230.1031-1-wanjiabing@vivo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Content-Language: en-US
+In-Reply-To: <20220318145230.1031-1-wanjiabing@vivo.com>
+Cc:     target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-One fix for an endless error loop with the target driver affecting
-tapes.
+Le 18/03/2022 à 15:52, Wan Jiabing a écrit :
+> io->sgl is allocated by kzalloc(). The memory is set to zero.
+> It is unnecessary to call memset again.
+> 
 
-The patch is available here:
+Hi,
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Nitpick: this kzalloc() should be a kcalloc() to avoid an open-coded 
+multiplication when computing the size to allocate.
 
-The short changelog is:
+CJ
 
-David Jeffery (1):
-      scsi: target: pscsi: Set SCF_TREAT_READ_AS_NORMAL flag only if there is valid data
 
-And the diffstat:
+> Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
+> ---
+>   drivers/scsi/elx/efct/efct_io.c | 1 -
+>   1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/elx/efct/efct_io.c b/drivers/scsi/elx/efct/efct_io.c
+> index c3247b951a76..c612f0a48839 100644
+> --- a/drivers/scsi/elx/efct/efct_io.c
+> +++ b/drivers/scsi/elx/efct/efct_io.c
+> @@ -62,7 +62,6 @@ efct_io_pool_create(struct efct *efct, u32 num_sgl)
+>   			return NULL;
+>   		}
+>   
+> -		memset(io->sgl, 0, sizeof(*io->sgl) * num_sgl);
+>   		io->sgl_allocated = num_sgl;
+>   		io->sgl_count = 0;
+>   
 
- drivers/target/target_core_pscsi.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index ff292b75e23f..60dafe4c581b 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -588,7 +588,7 @@ static void pscsi_destroy_device(struct se_device *dev)
- }
- 
- static void pscsi_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
--			       unsigned char *req_sense)
-+			       unsigned char *req_sense, int valid_data)
- {
- 	struct pscsi_dev_virt *pdv = PSCSI_DEV(cmd->se_dev);
- 	struct scsi_device *sd = pdv->pdv_sd;
-@@ -681,7 +681,7 @@ static void pscsi_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
- 		 * back despite framework assumption that a
- 		 * check condition means there is no data
- 		 */
--		if (sd->type == TYPE_TAPE &&
-+		if (sd->type == TYPE_TAPE && valid_data &&
- 		    cmd->data_direction == DMA_FROM_DEVICE) {
- 			/*
- 			 * is sense data valid, fixed format,
-@@ -1032,6 +1032,7 @@ static void pscsi_req_done(struct request *req, blk_status_t status)
- 	struct se_cmd *cmd = req->end_io_data;
- 	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(req);
- 	enum sam_status scsi_status = scmd->result & 0xff;
-+	int valid_data = cmd->data_length - scmd->resid_len;
- 	u8 *cdb = cmd->priv;
- 
- 	if (scsi_status != SAM_STAT_GOOD) {
-@@ -1039,12 +1040,11 @@ static void pscsi_req_done(struct request *req, blk_status_t status)
- 			" 0x%02x Result: 0x%08x\n", cmd, cdb[0], scmd->result);
- 	}
- 
--	pscsi_complete_cmd(cmd, scsi_status, scmd->sense_buffer);
-+	pscsi_complete_cmd(cmd, scsi_status, scmd->sense_buffer, valid_data);
- 
- 	switch (host_byte(scmd->result)) {
- 	case DID_OK:
--		target_complete_cmd_with_length(cmd, scsi_status,
--			cmd->data_length - scmd->resid_len);
-+		target_complete_cmd_with_length(cmd, scsi_status, valid_data);
- 		break;
- 	default:
- 		pr_debug("PSCSI Host Byte exception at cmd: %p CDB:"
 
