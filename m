@@ -2,241 +2,182 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F187C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 22:02:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39C48C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 23:23:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237468AbiEBWFm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 May 2022 18:05:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47692 "EHLO
+        id S231565AbiEBX05 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 May 2022 19:26:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1387800AbiEBWDx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 18:03:53 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EB08DEF0
-        for <linux-scsi@vger.kernel.org>; Mon,  2 May 2022 15:00:05 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id ED28E1F899;
-        Mon,  2 May 2022 22:00:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1651528800; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fU2eeqadf72NQOyzHys2QmG3XVR0slnd0zlUuAkSDiI=;
-        b=qGRVlZEU5lEYH0mRqjBOVrBAGDNHXRq703O4Kjs6NUk7R8Wg7nabaQX0HddhqXeU/aBEfS
-        VAbt0V/gxMS1tq8uc3RZwU12AaBtEoEiQPNqLQSTg2A/SjqYZAzNH20ee2jL77H+U/vYwR
-        CTDQUCLfWzBjyPbRLdDqGTMG+nxSiIM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1651528800;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fU2eeqadf72NQOyzHys2QmG3XVR0slnd0zlUuAkSDiI=;
-        b=hYpy7CDQKAxSN1jr+x8ata+OSzSgPHfdNUGY1o1neefh6QR5rgeO77UbqFzD7oH/YgQ++G
-        qI9POuHpV+MCdfBA==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id E7D8E2C165;
-        Mon,  2 May 2022 22:00:00 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id E4F0F5194164; Tue,  3 May 2022 00:00:00 +0200 (CEST)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH 11/11] csiostor: use separate TMF command
-Date:   Mon,  2 May 2022 23:59:53 +0200
-Message-Id: <20220502215953.5463-19-hare@suse.de>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20220502215953.5463-1-hare@suse.de>
-References: <20220502215953.5463-1-hare@suse.de>
+        with ESMTP id S232273AbiEBXYM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 19:24:12 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 41BEE63CB;
+        Mon,  2 May 2022 16:20:40 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 71A01534701;
+        Tue,  3 May 2022 09:20:38 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nlfLH-007IoG-TM; Tue, 03 May 2022 09:20:35 +1000
+Date:   Tue, 3 May 2022 09:20:35 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Nitesh Shetty <nj.shetty@samsung.com>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, dm-devel@redhat.com,
+        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+        nitheshshetty@gmail.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 00/10] Add Copy offload support
+Message-ID: <20220502232035.GE1360180@dread.disaster.area>
+References: <CGME20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15@epcas5p4.samsung.com>
+ <20220426101241.30100-1-nj.shetty@samsung.com>
+ <6a85e8c8-d9d1-f192-f10d-09052703c99a@opensource.wdc.com>
+ <20220427124951.GA9558@test-zns>
+ <20220502040951.GC1360180@dread.disaster.area>
+ <46e95412-9a79-51f8-3d52-caed4875d41f@opensource.wdc.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <46e95412-9a79-51f8-3d52-caed4875d41f@opensource.wdc.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62706747
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=IkcTkHD0fZMA:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
+        a=kuBEN3JhnRn9nEiEWMwA:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Set one command aside as a TMF command, and use this command to
-send the TMF. This avoids having to rely on the passed-in scsi
-command when resetting the device.
+On Mon, May 02, 2022 at 09:54:55PM +0900, Damien Le Moal wrote:
+> On 2022/05/02 13:09, Dave Chinner wrote:
+> > On Wed, Apr 27, 2022 at 06:19:51PM +0530, Nitesh Shetty wrote:
+> >> O Wed, Apr 27, 2022 at 11:19:48AM +0900, Damien Le Moal wrote:
+> >>> On 4/26/22 19:12, Nitesh Shetty wrote:
+> >>>> The patch series covers the points discussed in November 2021 virtual call
+> >>>> [LSF/MM/BFP TOPIC] Storage: Copy Offload[0].
+> >>>> We have covered the Initial agreed requirements in this patchset.
+> >>>> Patchset borrows Mikulas's token based approach for 2 bdev
+> >>>> implementation.
+> >>>>
+> >>>> Overall series supports –
+> >>>>
+> >>>> 1. Driver
+> >>>> - NVMe Copy command (single NS), including support in nvme-target (for
+> >>>>     block and file backend)
+> >>>
+> >>> It would also be nice to have copy offload emulation in null_blk for testing.
+> >>>
+> >>
+> >> We can plan this in next phase of copy support, once this series settles down.
+> > 
+> > Why not just hook the loopback driver up to copy_file_range() so
+> > that the backend filesystem can just reflink copy the ranges being
+> > passed? That would enable testing on btrfs, XFS and NFSv4.2 hosted
+> > image files without needing any special block device setup at all...
+> 
+> That is a very good idea ! But that will cover only the non-zoned case. For copy
+> offload on zoned devices, adding support in null_blk is probably the simplest
+> thing to do.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/csiostor/csio_hw.h   |  2 ++
- drivers/scsi/csiostor/csio_init.c |  2 +-
- drivers/scsi/csiostor/csio_scsi.c | 48 +++++++++++++++++++------------
- 3 files changed, 33 insertions(+), 19 deletions(-)
+Sure, but that's a zone device implementation issue, not a "how do
+applications use this offload" issue.
 
-diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
-index e351af6e7c81..8e22dccd6d88 100644
---- a/drivers/scsi/csiostor/csio_hw.h
-+++ b/drivers/scsi/csiostor/csio_hw.h
-@@ -68,6 +68,8 @@
- 
- #define CSIO_MAX_LUN		0xFFFF
- #define CSIO_MAX_QUEUE		2048
-+#define CSIO_TMF_TAG		(CSIO_MAX_QUEUE - 1)
-+
- #define CSIO_MAX_CMD_PER_LUN	32
- #define CSIO_MAX_DDP_BUF_SIZE	(1024 * 1024)
- #define CSIO_MAX_SECTOR_SIZE	128
-diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
-index ccbded3353bd..6a5529d6440f 100644
---- a/drivers/scsi/csiostor/csio_init.c
-+++ b/drivers/scsi/csiostor/csio_init.c
-@@ -621,7 +621,7 @@ csio_shost_init(struct csio_hw *hw, struct device *dev,
- 	/* Link common lnode to this lnode */
- 	ln->dev_num = (shost->host_no << 16);
- 
--	shost->can_queue = CSIO_MAX_QUEUE;
-+	shost->can_queue = CSIO_MAX_QUEUE - 1;
- 	shost->this_id = -1;
- 	shost->unique_id = shost->host_no;
- 	shost->max_cmd_len = 16; /* Max CDB length supported */
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index c1c410a1cfe0..b21aa2c43051 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -2056,17 +2056,20 @@ csio_tm_cbfn(struct csio_hw *hw, struct csio_ioreq *req)
- 
- 	/* Wake up the TM handler thread */
- 	csio_scsi_cmnd(req) = NULL;
-+	cmnd->host_scribble = NULL;
- }
- 
- static int
- csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- {
--	struct csio_lnode *ln = shost_priv(cmnd->device->host);
-+	struct scsi_device *sdev = cmnd->device;
-+	struct csio_lnode *ln = shost_priv(sdev->host);
- 	struct csio_hw *hw = csio_lnode_to_hw(ln);
- 	struct csio_scsim *scsim = csio_hw_to_scsim(hw);
--	struct csio_rnode *rn = (struct csio_rnode *)(cmnd->device->hostdata);
-+	struct csio_rnode *rn = (struct csio_rnode *)(sdev->hostdata);
- 	struct csio_ioreq *ioreq = NULL;
- 	struct csio_scsi_qset *sqset;
-+	struct scsi_cmnd *tmf_cmnd;
- 	unsigned long flags;
- 	int retval;
- 	int count, ret;
-@@ -2077,13 +2080,13 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 		goto fail;
- 
- 	csio_dbg(hw, "Request to reset LUN:%llu (ssni:0x%x tgtid:%d)\n",
--		      cmnd->device->lun, rn->flowid, rn->scsi_id);
-+		      sdev->lun, rn->flowid, rn->scsi_id);
- 
- 	if (!csio_is_lnode_ready(ln)) {
- 		csio_err(hw,
- 			 "LUN reset cannot be issued on non-ready"
- 			 " local node vnpi:0x%x (LUN:%llu)\n",
--			 ln->vnp_flowid, cmnd->device->lun);
-+			 ln->vnp_flowid, sdev->lun);
- 		goto fail;
- 	}
- 
-@@ -2103,7 +2106,15 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 		csio_err(hw,
- 			 "LUN reset cannot be issued on non-ready"
- 			 " remote node ssni:0x%x (LUN:%llu)\n",
--			 rn->flowid, cmnd->device->lun);
-+			 rn->flowid, sdev->lun);
-+		goto fail;
-+	}
-+
-+	tmf_cmnd = scsi_host_find_tag(sdev->host, CSIO_TMF_TAG);
-+	if (!tmf_cmnd || tmf_cmnd->host_scribble) {
-+		csio_err(hw,
-+			 "LUN reset TMF already busy (LUN:%llu)\n",
-+			 sdev->lun);
- 		goto fail;
- 	}
- 
-@@ -2123,11 +2134,11 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	ioreq->iq_idx		= sqset->iq_idx;
- 	ioreq->eq_idx		= sqset->eq_idx;
- 
--	csio_scsi_cmnd(ioreq)	= cmnd;
--	cmnd->host_scribble	= (unsigned char *)ioreq;
--	csio_priv(cmnd)->wr_status = 0;
-+	csio_scsi_cmnd(ioreq)	= tmf_cmnd;
-+	tmf_cmnd->host_scribble	= (unsigned char *)ioreq;
-+	csio_priv(tmf_cmnd)->wr_status = 0;
- 
--	csio_priv(cmnd)->fc_tm_flags = FCP_TMF_LUN_RESET;
-+	csio_priv(tmf_cmnd)->fc_tm_flags = FCP_TMF_LUN_RESET;
- 	ioreq->tmo		= CSIO_SCSI_LUNRST_TMO_MS / 1000;
- 
- 	/*
-@@ -2144,7 +2155,7 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	sld.level = CSIO_LEV_LUN;
- 	sld.lnode = ioreq->lnode;
- 	sld.rnode = ioreq->rnode;
--	sld.oslun = cmnd->device->lun;
-+	sld.oslun = sdev->lun;
- 
- 	spin_lock_irqsave(&hw->lock, flags);
- 	/* Kick off TM SM on the ioreq */
-@@ -2154,20 +2165,21 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	if (retval != 0) {
- 		csio_err(hw, "Failed to issue LUN reset, req:%p, status:%d\n",
- 			    ioreq, retval);
-+		tmf_cmnd->host_scribble = NULL;
- 		goto fail_ret_ioreq;
- 	}
- 
- 	csio_dbg(hw, "Waiting max %d secs for LUN reset completion\n",
- 		    count * (CSIO_SCSI_TM_POLL_MS / 1000));
- 	/* Wait for completion */
--	while ((((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == cmnd)
-+	while ((((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == tmf_cmnd)
- 								&& count--)
- 		msleep(CSIO_SCSI_TM_POLL_MS);
- 
- 	/* LUN reset timed-out */
--	if (((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == cmnd) {
-+	if (((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == tmf_cmnd) {
- 		csio_err(hw, "LUN reset (%d:%llu) timed out\n",
--			 cmnd->device->id, cmnd->device->lun);
-+			 sdev->id, sdev->lun);
- 
- 		spin_lock_irq(&hw->lock);
- 		csio_scsi_drvcleanup(ioreq);
-@@ -2178,10 +2190,10 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	}
- 
- 	/* LUN reset returned, check cached status */
--	if (csio_priv(cmnd)->wr_status != FW_SUCCESS) {
-+	if (csio_priv(tmf_cmnd)->wr_status != FW_SUCCESS) {
- 		csio_err(hw, "LUN reset failed (%d:%llu), status: %d\n",
--			 cmnd->device->id, cmnd->device->lun,
--			 csio_priv(cmnd)->wr_status);
-+			 sdev->id, sdev->lun,
-+			 csio_priv(tmf_cmnd)->wr_status);
- 		goto fail;
- 	}
- 
-@@ -2201,7 +2213,7 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	if (retval != 0) {
- 		csio_err(hw,
- 			 "Attempt to abort I/Os during LUN reset of %llu"
--			 " returned %d\n", cmnd->device->lun, retval);
-+			 " returned %d\n", sdev->lun, retval);
- 		/* Return I/Os back to active_q */
- 		spin_lock_irq(&hw->lock);
- 		list_splice_tail_init(&local_q, &scsim->active_q);
-@@ -2212,7 +2224,7 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	CSIO_INC_STATS(rn, n_lun_rst);
- 
- 	csio_info(hw, "LUN reset occurred (%d:%llu)\n",
--		  cmnd->device->id, cmnd->device->lun);
-+		  sdev->id, sdev->lun);
- 
- 	return SUCCESS;
- 
+i.e. zonefs support is not necessary to test the bio/block layer
+interfaces at all. All we need is a block device that can decode the
+bio-encoded offload packet and execute it to do full block layer
+testing. We can build dm devices on top of loop devices, etc, so we
+can test that the oflload support is plumbed, sliced, diced, and
+regurgitated correctly that way. We don't need actual low level
+device drivers to test this.
+
+And, unlike the nullblk device, using the loopback device w/
+copy_file_range() will also allow data integrity testing if a
+generic copy_file_range() offload implementation is added. That is,
+we test a non-reflink capable filesystem on the loop device with the
+image file hosted on a reflink-capable filesystem. The upper
+filesystem copy then gets offloaded to reflinks in the lower
+filesystem. We already have copy_file_range() support in fsx, so all
+the data integrity fsx tests in fstests will exercise this offload
+path and find all the data corruptions the initial block layer bugs
+expose...
+
+Further, fsstress also has copy_file_range() support, and so all the
+fstests that generate stress tests or use fstress as load for
+failure testing will also exercise it.
+
+Indeed, this then gives us fine-grained error injection capability
+within fstests via devices like dm-flakey. What happens when
+dm-flakey kills the device IO mid-offload? Does everything recover
+correctly? Do we end up with data corruption? Are partial offload
+completions when errors occur signalled correctly? Is there -any-
+test coverage (or even capability for testing) of user driven copy
+offload failure situations like this in any of the other test
+suites?
+
+I mean, once the loop device has cfr offload, we can use dm-flakey
+to kill IO in the image file or even do a force shutdown of the
+image host filesystem. Hence we can actually trash the copy offload
+operation in mid-flight, not just error it out on full completion.
+This is trivial to do with the fstests infrastructure - it just
+relies on having generic copy_file_range() block offload support and
+a loopback device offload of hardware copy bios back to
+copy_file_range()....
+
+This is what I mean about copy offload being designed the wrong way.
+We have the high level hooks needed to implement it right though the
+filesystems and block layer without any specific hardware support,
+and we can test the whole stack without needing specific hardware
+support. We already have filesystem level copy offload acceleration,
+so the last thing we want to see is a block layer offload
+implementation that is incompatible with the semantics we've already
+exposed to userspace for copy offloads.
+
+As I said:
+
+> > i.e. I think you're doing this compeltely backwards by trying to
+> > target non-existent hardware first....
+
+Rather than tie the block layer offload function/implementation to
+the specific quirks of a specific target hardware, we should be
+adding generic support in the block layer for the copy offload
+semantics we've already exposed to userspace. We already have test
+coverage and infrastructure for this interface and is already in use
+by applications.
+
+Transparent hardware acceleration of data copies when the hardware
+supports it is exactly where copy offloads are useful - implementing
+support based around hardware made of unobtainium and then adding
+high level user facing API support as an afterthought is putting the
+cart before the horse. We need to make sure the high level
+functionality is robust and handles errors correctly before we even
+worry about what quirks the hardware might bring to the table.
+
+Build a reference model first with the loop device and
+copy-file-range, test it, validate it, make sure it all works. Then
+hook up the hardware, and fix all the hardware bugs that are exposed
+before the hardware is released to the general public....
+
+Why haven't we learnt this lesson yet from all the problems we've
+had with, say, broken discard/trim, zeroing, erase, etc in hardware
+implementations, incompatible hardware protocol implementations of
+equivalent functionality, etc? i.e. We haven't defined the OS
+required behaviour that hardware must support and instead just tried
+to make whatever has come from the hardware vendor's
+"standarisation" process work ok?
+
+In this case, we already have a functioning model, syscalls and user
+applications making use of copy offloads at the OS level. Now we
+need to implement those exact semantics at the block layer to build
+a validated reference model for the block layer offload behaviour
+that hardware must comply with. Then hardware offloads in actual
+hardware can be compared and validated against the reference model
+behaviour, and any hardware that doesn't match can be
+quirked/blacklisted until the manufacturer fixes their firmware...
+
+Cheers,
+
+Dave.
 -- 
-2.29.2
-
+Dave Chinner
+david@fromorbit.com
