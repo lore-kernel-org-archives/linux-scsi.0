@@ -2,69 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67E15C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Apr 2022 17:27:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF81DC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 04:10:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1383233AbiD3RbJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 Apr 2022 13:31:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48110 "EHLO
+        id S1353405AbiEBEN3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 May 2022 00:13:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243748AbiD3RbI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Apr 2022 13:31:08 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DEB928E34;
-        Sat, 30 Apr 2022 10:27:46 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1C212B8077F;
-        Sat, 30 Apr 2022 17:27:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D711AC385AA;
-        Sat, 30 Apr 2022 17:27:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651339663;
-        bh=bGwSKDTOvceR4fmtlvcP/la8/7OZjJm+V8h3ZJYixgk=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=hKfDTIZ24FBGnVEpe5piws7si5ThflKR2Rmpd4LHUbpxWztf2eZanStBHwFkiFeR8
-         lll9LK0KQlkiTKX6wPg/vHrpifrryPoWCzytsqZNsbDInXu0gf5jcofk6Ow3Kyr9fm
-         cIoYAE0C1sZJlwXCaQImAHQq1Hp+CtIGbldBRIZL/9SsZBoqGe8YZrI3/HOXnT2dlj
-         JK06I6AZKdh5Y/yvMuGBJjCuTE71XqHw8USO3d7WtgDNhK3MAlqGVoyBIQJeJtLEC5
-         6IF7lV+AvyXy3aE6avhkIptp58UNZm+2qgbfeMq/fCOq3KR4u+uNGFKvr9iE8gILlm
-         XtlCfyQS/UKTg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id C521DE8DBDA;
-        Sat, 30 Apr 2022 17:27:43 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 5.18-rc4
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <c0cce549e81dd3b773bc30bda30212d94ae0759e.camel@HansenPartnership.com>
-References: <c0cce549e81dd3b773bc30bda30212d94ae0759e.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <c0cce549e81dd3b773bc30bda30212d94ae0759e.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 8be70a842f70c0fe8e00fd488b1966344fa10ff4
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: e9512f3668b7090be7a149fc38026729d96e944a
-Message-Id: <165133966380.20469.5776116866631255344.pr-tracker-bot@kernel.org>
-Date:   Sat, 30 Apr 2022 17:27:43 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S1349366AbiEBEN0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 00:13:26 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BFBDB3A6;
+        Sun,  1 May 2022 21:09:57 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 71FEB10E608C;
+        Mon,  2 May 2022 14:09:53 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nlNNf-006zFQ-FJ; Mon, 02 May 2022 14:09:51 +1000
+Date:   Mon, 2 May 2022 14:09:51 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Nitesh Shetty <nj.shetty@samsung.com>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        dm-devel@redhat.com, linux-nvme@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org, nitheshshetty@gmail.com,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 00/10] Add Copy offload support
+Message-ID: <20220502040951.GC1360180@dread.disaster.area>
+References: <CGME20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15@epcas5p4.samsung.com>
+ <20220426101241.30100-1-nj.shetty@samsung.com>
+ <6a85e8c8-d9d1-f192-f10d-09052703c99a@opensource.wdc.com>
+ <20220427124951.GA9558@test-zns>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220427124951.GA9558@test-zns>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=626f5993
+        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
+        a=IkcTkHD0fZMA:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
+        a=ldjz8t_eVu9c6UoTg2wA:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 29 Apr 2022 23:23:36 -0400:
+On Wed, Apr 27, 2022 at 06:19:51PM +0530, Nitesh Shetty wrote:
+> O Wed, Apr 27, 2022 at 11:19:48AM +0900, Damien Le Moal wrote:
+> > On 4/26/22 19:12, Nitesh Shetty wrote:
+> > > The patch series covers the points discussed in November 2021 virtual call
+> > > [LSF/MM/BFP TOPIC] Storage: Copy Offload[0].
+> > > We have covered the Initial agreed requirements in this patchset.
+> > > Patchset borrows Mikulas's token based approach for 2 bdev
+> > > implementation.
+> > > 
+> > > Overall series supports –
+> > > 
+> > > 1. Driver
+> > > - NVMe Copy command (single NS), including support in nvme-target (for
+> > >     block and file backend)
+> > 
+> > It would also be nice to have copy offload emulation in null_blk for testing.
+> >
+> 
+> We can plan this in next phase of copy support, once this series settles down.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Why not just hook the loopback driver up to copy_file_range() so
+that the backend filesystem can just reflink copy the ranges being
+passed? That would enable testing on btrfs, XFS and NFSv4.2 hosted
+image files without needing any special block device setup at all...
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/e9512f3668b7090be7a149fc38026729d96e944a
+i.e. I think you're doing this compeltely backwards by trying to
+target non-existent hardware first....
 
-Thank you!
+Cheers,
 
+Dave.
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Dave Chinner
+david@fromorbit.com
