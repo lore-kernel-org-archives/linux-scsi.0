@@ -2,53 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D35C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 21:39:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5AADC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 21:39:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1387777AbiEBVm6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 May 2022 17:42:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37844 "EHLO
+        id S1387778AbiEBVnB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 May 2022 17:43:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1387736AbiEBVmJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 17:42:09 -0400
+        with ESMTP id S1387743AbiEBVmU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 17:42:20 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 865CEE0D2
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 868FFE0F5
         for <linux-scsi@vger.kernel.org>; Mon,  2 May 2022 14:38:39 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 16F191F8AA;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 556811F8AF;
         Mon,  2 May 2022 21:38:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1651527513; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=3JUx7VZ79gNCy2Jllo5BQEiAAKeE+vu5N/51YYxIJMk=;
-        b=oT7ry3Wk0hdRPy1bbKyUL5z9L6fnV4GYpjHrkNezsE2Y4MyRXIQTPs3rVUF+EX6/R+HF3L
-        3nwmrF16ndKkbuewTxjN+GiqpJX0xRzlne6tV3vPegtFwZE2LCU3mP9fZePk4ZHTjrVZ79
-        fprJ2Z2szWRn6qt3KcPSu6meuRnT2WA=
+        bh=3eV+nAWpb1s6cucrrh1PALfsxGlRNCR2IXlROmBUhDI=;
+        b=MuW8Ub0Rx5sCEk/V3Pfqi7Lx4GJy94F8kFhCSO2I0PQHWxLvjBEOFNuu8VkUglLw6Wcu30
+        1oKVTDMDdMUf+H+Xk/QoIUU1O+xaGRYeJobelPrEdHZyl4v16DC9+0I4xAMvyQ/xrM+wQ2
+        KRF/yX+RjQaZD9UZrcvTyUruBKMyBQg=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1651527513;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=3JUx7VZ79gNCy2Jllo5BQEiAAKeE+vu5N/51YYxIJMk=;
-        b=I2HxL7FscB4uSBlg6u8EGgpb90IMVRNsLiLE0DIGEY0PGm2pVWY1in4mE2AXSncwY6sYp6
-        enc8Z7fCu6W0dtCQ==
+        bh=3eV+nAWpb1s6cucrrh1PALfsxGlRNCR2IXlROmBUhDI=;
+        b=dBzmrQloOHid3OvRJJELaw8vxRMUHPDqy4alS5W3ZS4GnejJimZ/oil5qy4kCB1lPgiESZ
+        rTA7dA6JbSEMQ6Cg==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 129F72C161;
+        by relay2.suse.de (Postfix) with ESMTP id 21D8D2C16B;
         Mon,  2 May 2022 21:38:33 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 0FDA75194116; Mon,  2 May 2022 23:38:33 +0200 (CEST)
+        id 1EE3F519411E; Mon,  2 May 2022 23:38:33 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH 17/24] snic: reserve tag for TMF
-Date:   Mon,  2 May 2022 23:38:13 +0200
-Message-Id: <20220502213820.3187-18-hare@suse.de>
+        Hannes Reinecke <hare@suse.com>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Subject: [PATCH 21/24] ips: Do not try to abort command from host reset
+Date:   Mon,  2 May 2022 23:38:17 +0200
+Message-Id: <20220502213820.3187-22-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20220502213820.3187-1-hare@suse.de>
 References: <20220502213820.3187-1-hare@suse.de>
@@ -58,158 +59,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Rather than re-using the failed command the snic driver should
-reserve one command for TMFs.
+The code for aborting an outstanding command is a copy of the
+functionality from command abort. As we already have called this
+function once we reach host reset there's no point in trying to
+do so again.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 ---
- drivers/scsi/snic/snic.h      |  3 ++-
- drivers/scsi/snic/snic_main.c |  3 +++
- drivers/scsi/snic/snic_scsi.c | 43 +++++++++++++++++------------------
- 3 files changed, 26 insertions(+), 23 deletions(-)
+ drivers/scsi/ips.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic.h b/drivers/scsi/snic/snic.h
-index 4ec7e30678e1..e40492d36031 100644
---- a/drivers/scsi/snic/snic.h
-+++ b/drivers/scsi/snic/snic.h
-@@ -310,6 +310,7 @@ struct snic {
- 	struct list_head spl_cmd_list;
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 16419aeec02d..d49c1d6df5d6 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -835,7 +835,6 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
+ 	int i;
+ 	ips_ha_t *ha;
+ 	ips_scb_t *scb;
+-	ips_copp_wait_item_t *item;
  
- 	unsigned int max_tag_id;
-+	unsigned int tmf_tag_id;
- 	atomic_t ios_inflight;		/* io in flight counter */
+ 	METHOD_TRACE("ips_eh_reset", 1);
  
- 	struct vnic_snic_config config;
-@@ -380,7 +381,7 @@ int snic_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
- int snic_abort_cmd(struct scsi_cmnd *);
- int snic_device_reset(struct scsi_cmnd *);
- int snic_host_reset(struct scsi_cmnd *);
--int snic_reset(struct Scsi_Host *, struct scsi_cmnd *);
-+int snic_reset(struct Scsi_Host *);
- void snic_shutdown_scsi_cleanup(struct snic *);
+@@ -860,23 +859,6 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
+ 	if (!ha->active)
+ 		return (FAILED);
  
- 
-diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
-index 29d56396058c..f344cbc27923 100644
---- a/drivers/scsi/snic/snic_main.c
-+++ b/drivers/scsi/snic/snic_main.c
-@@ -512,6 +512,9 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 					 max_t(u32, SNIC_MIN_IO_REQ, max_ios));
- 
- 	snic->max_tag_id = shost->can_queue;
-+	/* Reserve one reset command */
-+	shost->can_queue--;
-+	snic->tmf_tag_id = shost->can_queue;
- 
- 	shost->max_lun = snic->config.luns_per_tgt;
- 	shost->max_id = SNIC_MAX_TARGET;
-diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index 5f17666f3e1d..e18c8c5e4b46 100644
---- a/drivers/scsi/snic/snic_scsi.c
-+++ b/drivers/scsi/snic/snic_scsi.c
-@@ -1018,17 +1018,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 		      "reset_cmpl: type = %x, hdr_stat = %x, cmnd_id = %x, hid = %x, ctx = %lx\n",
- 		      typ, hdr_stat, cmnd_id, hid, ctx);
- 
--	/* spl case, host reset issued through ioctl */
--	if (cmnd_id == SCSI_NO_TAG) {
--		rqi = (struct snic_req_info *) ctx;
--		SNIC_HOST_INFO(snic->shost,
--			       "reset_cmpl:Tag %d ctx %lx cmpl stat %s\n",
--			       cmnd_id, ctx, snic_io_status_to_str(hdr_stat));
--		sc = rqi->sc;
+-	/* See if the command is on the copp queue */
+-	item = ha->copp_waitlist.head;
+-	while ((item) && (item->scsi_cmd != SC))
+-		item = item->next;
 -
--		goto ioctl_hba_rst;
+-	if (item) {
+-		/* Found it */
+-		ips_removeq_copp(&ha->copp_waitlist, item);
+-		return (SUCCESS);
 -	}
 -
- 	if (cmnd_id >= snic->max_tag_id) {
- 		SNIC_HOST_ERR(snic->shost,
- 			      "reset_cmpl: Tag 0x%x out of Range,HdrStat %s\n",
-@@ -1039,7 +1028,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 	}
- 
- 	sc = scsi_host_find_tag(snic->shost, cmnd_id);
--ioctl_hba_rst:
- 	if (!sc) {
- 		atomic64_inc(&snic->s_stats.io.sc_null);
- 		SNIC_HOST_ERR(snic->shost,
-@@ -1725,7 +1713,7 @@ snic_dr_clean_single_req(struct snic *snic,
- {
- 	struct snic_req_info *rqi = NULL;
- 	struct snic_tgt *tgt = NULL;
--	struct scsi_cmnd *sc = NULL;
-+	struct scsi_cmnd *sc;
- 	spinlock_t *io_lock = NULL;
- 	u32 sv_state = 0, tmf = 0;
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
-@@ -2238,13 +2226,6 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
- 		goto hba_rst_end;
- 	}
- 
--	if (snic_cmd_tag(sc) == SCSI_NO_TAG) {
--		memset(scsi_cmd_priv(sc), 0,
--			sizeof(struct snic_internal_io_state));
--		SNIC_HOST_INFO(snic->shost, "issu_hr:Host reset thru ioctl.\n");
--		rqi->sc = sc;
+-	/* See if the command is on the wait queue */
+-	if (ips_removeq_wait(&ha->scb_waitlist, SC)) {
+-		/* command not sent yet */
+-		return (SUCCESS);
 -	}
 -
- 	req = rqi_to_req(rqi);
- 
- 	io_lock = snic_io_lock_hash(snic, sc);
-@@ -2319,11 +2300,13 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
- } /* end of snic_issue_hba_reset */
- 
- int
--snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
-+snic_reset(struct Scsi_Host *shost)
- {
- 	struct snic *snic = shost_priv(shost);
-+	struct scsi_cmnd *sc = NULL;
- 	enum snic_state sv_state;
- 	unsigned long flags;
-+	u32 start_time  = jiffies;
- 	int ret = FAILED;
- 
- 	/* Set snic state as SNIC_FWRESET*/
-@@ -2348,6 +2331,18 @@ snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
- 	while (atomic_read(&snic->ios_inflight))
- 		schedule_timeout(msecs_to_jiffies(1));
- 
-+	sc = scsi_host_find_tag(shost, snic->tmf_tag_id);
-+	if (!sc) {
-+		SNIC_HOST_ERR(shost,
-+			      "reset:Host Reset Failed to allocate sc.\n");
-+		spin_lock_irqsave(&snic->snic_lock, flags);
-+		snic_set_state(snic, sv_state);
-+		spin_unlock_irqrestore(&snic->snic_lock, flags);
-+		atomic64_inc(&snic->s_stats.reset.hba_reset_fail);
-+		ret = FAILED;
-+
-+		goto reset_end;
-+	}
- 	ret = snic_issue_hba_reset(snic, sc);
- 	if (ret) {
- 		SNIC_HOST_ERR(shost,
-@@ -2365,6 +2360,10 @@ snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
- 	ret = SUCCESS;
- 
- reset_end:
-+	SNIC_TRC(shost->host_no, sc ? snic_cmd_tag(sc) : SCSI_NO_TAG,
-+		 (ulong) sc, jiffies_to_msecs(jiffies - start_time),
-+		 0, 0, 0);
-+
- 	return ret;
- } /* end of snic_reset */
- 
-@@ -2387,7 +2386,7 @@ snic_host_reset(struct scsi_cmnd *sc)
- 		      sc, sc->cmnd[0], scsi_cmd_to_rq(sc),
- 		      snic_cmd_tag(sc), CMD_FLAGS(sc));
- 
--	ret = snic_reset(shost, sc);
-+	ret = snic_reset(shost);
- 
- 	SNIC_TRC(shost->host_no, snic_cmd_tag(sc), (ulong) sc,
- 		 jiffies_to_msecs(jiffies - start_time),
+ 	/* An explanation for the casual observer:                              */
+ 	/* Part of the function of a RAID controller is automatic error         */
+ 	/* detection and recovery.  As such, the only problem that physically   */
 -- 
 2.29.2
 
