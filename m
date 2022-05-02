@@ -2,147 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 192F6C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 12:55:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECAE7C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 15:09:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1385127AbiEBM6f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 May 2022 08:58:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55502 "EHLO
+        id S1385671AbiEBPNA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 May 2022 11:13:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1385138AbiEBM6d (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 08:58:33 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7155715706
-        for <linux-scsi@vger.kernel.org>; Mon,  2 May 2022 05:55:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1651496101; x=1683032101;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=JUhkvda0JEwXdsLju2Qm64dHW4RVR82QZ/jIjIRhXSc=;
-  b=nbbBmYr5ExzSwmrKaOY66ByuZ6oP+fxie70r9d5slize8M4GIdx07MZX
-   EA6w2xBBKz2JMRi2Ci/qGngGN/noQqaHrm7KFIErSDWK0QOyhyc2pMLE9
-   PW9D+bGAf3tBOwf6TN6Pv5yuLWF8AN+KbUCCxqgJSwHJV3tvYV7IMZJx2
-   mU1dBOwoC32d4FJN+O1F23GjPdCFqpu1aArC954pbHB6KgKG3ieJnexG8
-   XoLsFBdBJaRadtpVHgCRm4Km2hBzgYKRi8kLjPNwJNPQCG1u11pi/N6cO
-   83Eg7Ol8/IfzaMaccM3W2Z2ovDgqGD9qROPHZgFRAj6QKMMN9PBpf+NLj
-   A==;
-X-IronPort-AV: E=Sophos;i="5.91,192,1647273600"; 
-   d="scan'208";a="204205554"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 02 May 2022 20:54:58 +0800
-IronPort-SDR: Bmh+E7KNacOlUvj4TXj7nkbwaJe8hLiNA/OzWr+/EwRVjppGqxqSsbQKktHSSVf8iBGdWbjGhu
- Gx9n2wgDIdDitwLzW/vkBcsJdrIrdXcbvJG4AZ8hHogXqLtm1pyQGtGVKBNQ8HT+AG25DM4giV
- SSVJeR5GpEPjZRnDW3Db1y6q+piJxPcPZxrqGGbzDF2IVTG7sZ1QV2Zdo2LUwZsKLVoNvBpCaj
- El/LrRhUujEDIs4jqK4M3K2i76qqTzT1TjK050St5o90Jj7ZdZcfYmPFdBIYe8aaco0ABhI/+K
- GcMNlpYvZNgdLeaiS9AUaITJ
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 May 2022 05:25:02 -0700
-IronPort-SDR: +bmQxnI8qe1/rnoiJBoeO01WyTJOKZQA0gMHC32sMkcRUmfaLNQtEr6PVzHr4mHQDy/Y4gbWLe
- qgFizfUy7UjcZVd/9Dp/bPpu0P1lLarEkGmY5GNNUbf6JUnPcUQa8I6ZdL65r9yYFbe4juVkCe
- z2eXUm0ZDlkWnMawBNNtKPLyQAjufVOdy0douBohp+jBayq2OgxBFmhMxFcdSxdnjdl2thunJo
- V02BTxQKSZJE21871cBAAI+4+CJx2kMtT+qoxg1HwMjb4FRo3jQOVuqKfrvZsF1GkQlN6alJL3
- b0k=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 May 2022 05:54:59 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KsNNL2Ccsz1SVp3
-        for <linux-scsi@vger.kernel.org>; Mon,  2 May 2022 05:54:58 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1651496097; x=1654088098; bh=JUhkvda0JEwXdsLju2Qm64dHW4RVR82QZ/j
-        IjIRhXSc=; b=AIzuKRzwZQVGatHl1N9EZyzvTE342Ex2Xsdk8dBzDQ7YlT68E2V
-        jV+TRKCrZd4GXYnfbCwGUwR95UrtQKr2UfhYl8T65OJz4IyX5umhChjtkVGNhb78
-        fifJnXe4HbDMbtWoKXkttpTB62VrmW8Nx3y8woeYDf4X2F5K5ujyv36d1+FWxt7o
-        sb9+KnDWiv764wZ2QpUYFR4rpzUKq6nGrx3NzsjOE6RgwxGpfrSzxy7XJaamCLU4
-        cKra1DSpG8GFVPnxcIuK8yBXF6OG4IuYh9XditWd0i9eLs+PM4Hw+wMdbnKYLvAZ
-        DOChJiv+tRmTFj4WmOuvf97nM+M1QTprY6Q==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id PdG5X1vNI5Aq for <linux-scsi@vger.kernel.org>;
-        Mon,  2 May 2022 05:54:57 -0700 (PDT)
-Received: from [10.225.81.200] (hq6rw33.ad.shared [10.225.81.200])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KsNNJ5Mpmz1Rvlc;
-        Mon,  2 May 2022 05:54:56 -0700 (PDT)
-Message-ID: <46e95412-9a79-51f8-3d52-caed4875d41f@opensource.wdc.com>
-Date:   Mon, 2 May 2022 21:54:55 +0900
+        with ESMTP id S1352318AbiEBPNA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 11:13:00 -0400
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB2B311A20
+        for <linux-scsi@vger.kernel.org>; Mon,  2 May 2022 08:09:30 -0700 (PDT)
+Received: by mail-lf1-x133.google.com with SMTP id n14so25723580lfu.13
+        for <linux-scsi@vger.kernel.org>; Mon, 02 May 2022 08:09:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=juDxd6VR+YQ02Zm0hzgGxUOZEz69Kzcnmgzu9eTf6nU=;
+        b=GySAGDK3VOU9c9wakLFOS62nTy4laYrIyyZSvF+mcWpnDmt2isoHOR2ECi1NUocfLd
+         ASW66/WLzU8JEb239iR2+S6yALZ50xA10H1xbHB8499Ip2IEhGSKw7oMZvLH21rBTGyC
+         pdZ2NtcVFG5CgFNiDp6MQUg0b8h4MPDf6POk4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=juDxd6VR+YQ02Zm0hzgGxUOZEz69Kzcnmgzu9eTf6nU=;
+        b=dtSNdnbNdg2knVFwXLkxCF0n1rAuRHvD+jSp3Tq3IJuwg/SEXTDiztogT8fgHutULB
+         0/5U5546b2Z+1v6kUyapiXObfiAo9m2SwfcvFpSqlPRp/Imdqw96Z8ARCkqmUq7kIoyu
+         TRqHT/cBZfj3bdjn8XkuzqvGj4/ryzJ+UuXZiZeEbQhVEJ8NeRmhpohCopSzPN3C8Hl6
+         PJYV+neskT4BXnWMVa3/cbzWpBurvsPOm03v2XFNaslqt8wwWHv/0DuwH5jj4PC9Qt2z
+         NQUC0JyXOQiYhlxDzgPcnxxIXOLJC4tflqdYwTCfGeXI4r9jexzY/Y3Loo5fY9ppwBh3
+         740Q==
+X-Gm-Message-State: AOAM5308SPRY2Kg5svZ6T7a/x78ciLKMzvJfR87Z+KmGn4qc4Rysri37
+        CFHe+TqrhYVJ/P73lvDsFhifB3OX8Y4m4qAbD0hmQpjLtMfBeQ==
+X-Google-Smtp-Source: ABdhPJwCTTQ9RwSqu/J9v2aOg26k1GMN/B7nftUYaWiI8hT41YTMB2jKOih2foph83RxDBvrVHPjz6ZKIZ9/dkqtVq0=
+X-Received: by 2002:ac2:4252:0:b0:472:5e3b:cc44 with SMTP id
+ m18-20020ac24252000000b004725e3bcc44mr6401044lfl.414.1651504168649; Mon, 02
+ May 2022 08:09:28 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.8.1
-Subject: Re: [PATCH v4 00/10] Add Copy offload support
-Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>,
-        Nitesh Shetty <nj.shetty@samsung.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        dm-devel@redhat.com, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org, nitheshshetty@gmail.com,
-        linux-kernel@vger.kernel.org
-References: <CGME20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15@epcas5p4.samsung.com>
- <20220426101241.30100-1-nj.shetty@samsung.com>
- <6a85e8c8-d9d1-f192-f10d-09052703c99a@opensource.wdc.com>
- <20220427124951.GA9558@test-zns>
- <20220502040951.GC1360180@dread.disaster.area>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220502040951.GC1360180@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From:   Brian Bunker <brian@purestorage.com>
+Date:   Mon, 2 May 2022 08:09:17 -0700
+Message-ID: <CAHZQxy+4sTPz9+pY3=7VJH+CLUJsDct81KtnR2be8ycN5mhqTg@mail.gmail.com>
+Subject: [PATCH 1/1] scsi_dh_alua: properly handling the ALUA transitioning state
+To:     linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2022/05/02 13:09, Dave Chinner wrote:
-> On Wed, Apr 27, 2022 at 06:19:51PM +0530, Nitesh Shetty wrote:
->> O Wed, Apr 27, 2022 at 11:19:48AM +0900, Damien Le Moal wrote:
->>> On 4/26/22 19:12, Nitesh Shetty wrote:
->>>> The patch series covers the points discussed in November 2021 virtua=
-l call
->>>> [LSF/MM/BFP TOPIC] Storage: Copy Offload[0].
->>>> We have covered the Initial agreed requirements in this patchset.
->>>> Patchset borrows Mikulas's token based approach for 2 bdev
->>>> implementation.
->>>>
->>>> Overall series supports =E2=80=93
->>>>
->>>> 1. Driver
->>>> - NVMe Copy command (single NS), including support in nvme-target (f=
-or
->>>>     block and file backend)
->>>
->>> It would also be nice to have copy offload emulation in null_blk for =
-testing.
->>>
->>
->> We can plan this in next phase of copy support, once this series settl=
-es down.
->=20
-> Why not just hook the loopback driver up to copy_file_range() so
-> that the backend filesystem can just reflink copy the ranges being
-> passed? That would enable testing on btrfs, XFS and NFSv4.2 hosted
-> image files without needing any special block device setup at all...
+The handling of the ALUA transitioning state is currently broken. When
+a target goes into this state, it is expected that the target is
+allowed to stay in this state for the implicit transition timeout
+without a path failure. The handler has this logic, but it gets
+skipped currently.
 
-That is a very good idea ! But that will cover only the non-zoned case. F=
-or copy
-offload on zoned devices, adding support in null_blk is probably the simp=
-lest
-thing to do.
+When the target transitions, there is in-flight I/O from the
+initiator. The first of these responses from the target will be a unit
+attention letting the initiator know that the ALUA state has changed.
+The remaining in-flight I/Os, before the initiator finds out that the
+portal state has changed, will return not ready, ALUA state is
+transitioning. The portal state will change to
+SCSI_ACCESS_STATE_TRANSITIONING. This will lead to all new I/O
+immediately failing the path unexpectedly. The path failure happens in
+less than a second instead of the expected successes until the
+transition timer is exceeded.
 
->=20
-> i.e. I think you're doing this compeltely backwards by trying to
-> target non-existent hardware first....
->=20
-> Cheers,
->=20
-> Dave.
+This change allows I/Os to continue while the path is in the ALUA
+transitioning state. The handler already takes care of a target that
+stays in the transitioning state for too long by changing the state to
+ALUA state standby once the transition timeout is exceeded at which
+point the path will fail.
 
-
---=20
-Damien Le Moal
-Western Digital Research
+Signed-off-by: Brian Bunker <brian@purestorage.com>
+Acked-by: Krishna Kant <krishna.kant@purestorage.com>
+Acked-by: Seamus Connor <sconnor@purestorage.com>
+___
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
+b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 37d06f993b76..1d9be771f3ee 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -1172,9 +1172,8 @@ static blk_status_t alua_prep_fn(struct
+scsi_device *sdev, struct request *req)
+        case SCSI_ACCESS_STATE_OPTIMAL:
+        case SCSI_ACCESS_STATE_ACTIVE:
+        case SCSI_ACCESS_STATE_LBA:
+-               return BLK_STS_OK;
+        case SCSI_ACCESS_STATE_TRANSITIONING:
+-               return BLK_STS_AGAIN;
++               return BLK_STS_OK;
+        default:
+                req->rq_flags |= RQF_QUIET;
+                return BLK_STS_IOERR;
+-- 
+Brian Bunker
+PURE Storage, Inc.
+brian@purestorage.com
