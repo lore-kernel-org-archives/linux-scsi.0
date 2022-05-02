@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEAC6C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 22:01:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E0F1C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 22:01:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1387808AbiEBWEo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 May 2022 18:04:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47692 "EHLO
+        id S1385896AbiEBWEq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 May 2022 18:04:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47604 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1383542AbiEBWDd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 18:03:33 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 546E460E2
+        with ESMTP id S1387706AbiEBWDe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 18:03:34 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E89262D2
         for <linux-scsi@vger.kernel.org>; Mon,  2 May 2022 15:00:02 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id A0D2D1F74B;
+        by smtp-out1.suse.de (Postfix) with ESMTP id B0BF5210EF;
         Mon,  2 May 2022 22:00:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1651528800; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=gp1sTnpdEMPcdbQQrGqi+QDdXS8aROeziBusgCgr98c=;
-        b=n6G+739ijUQiKfeHiRI4CrTCM6pNjhIeUX7pdqUzWO3yBivSD3mAJ5Liw193ue0jeGc4x1
-        K9qi86E/HYtrB3CQkjRkoH0duZcxy54/TiSVElrhn5KvYSFPmF6M6ONXn+OArKM+LaBiyp
-        ewblrIVOTmiOxktZ8+Tj/fGqd650Ifk=
+        bh=eV3bVFMcfcndAL+wJ/F3x57k0w2HiqDO+IfUA2JvRMU=;
+        b=FcYaJLLju6WMxi5oH0ETjiVdpJPcHLmBhno5X9/NaEMJOElE3PCLyeT0RkdqJeRwGsYK4k
+        7Cli+5nDbzBU1f9PiyWSdihRwmI5rDbhW3/f08iGMH9BktiPPvwVQnIYH7TSnbtf9Cqo4a
+        8ZJTMzi4IDVNJaqbATy+LPx9cmXy7Aw=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1651528800;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=gp1sTnpdEMPcdbQQrGqi+QDdXS8aROeziBusgCgr98c=;
-        b=SFqmlUi263zkr5KTQX6Yx5t9q/KKMICDvASkdH0DtYrABbzx+k/BSesAIvLohRajbgL2rz
-        fC/l0IhtnBpSjaDw==
+        bh=eV3bVFMcfcndAL+wJ/F3x57k0w2HiqDO+IfUA2JvRMU=;
+        b=qcBLq1nQoK89hutYlo86zJkNHILmL+v7vOWpXLKyUrYawuUoIdv+zzT8Cmr/nHcccWfdhn
+        61kcwC62LwdH9iBQ==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 9A7142C14B;
+        by relay2.suse.de (Postfix) with ESMTP id A817A2C14F;
         Mon,  2 May 2022 22:00:00 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 970F2519414A; Tue,  3 May 2022 00:00:00 +0200 (CEST)
+        id A4DAE519414E; Tue,  3 May 2022 00:00:00 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
         Hannes Reinecke <hare@suse.com>
-Subject: [PATCH 03/11] libiscsi: use cls_session as argument for target and session reset
-Date:   Mon,  2 May 2022 23:59:40 +0200
-Message-Id: <20220502215953.5463-6-hare@suse.de>
+Subject: [PATCH 04/11] scsi_transport_iscsi: use session as argument for iscsi_block_scsi_eh()
+Date:   Mon,  2 May 2022 23:59:42 +0200
+Message-Id: <20220502215953.5463-8-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20220502215953.5463-1-hare@suse.de>
 References: <20220502215953.5463-1-hare@suse.de>
@@ -58,132 +58,143 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-iscsi_eh_target_reset() and iscsi_eh_session_reset() only depend
-on the cls_session, so use that as an argument.
+We should be passing in the session directly instead of deriving it
+from the scsi command.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_main.c | 10 +++++++++-
- drivers/scsi/libiscsi.c         | 21 +++++++++------------
- include/scsi/libiscsi.h         |  2 +-
- 3 files changed, 19 insertions(+), 14 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c       | 34 ++++++++++++++++++-----------
+ drivers/scsi/scsi_transport_iscsi.c |  6 ++---
+ include/scsi/scsi_transport_iscsi.h |  2 +-
+ 3 files changed, 24 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 3bb0adefbe06..55addd7f5c81 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -370,6 +370,14 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
- 	return rc;
- }
- 
-+static int beiscsi_eh_session_reset(struct scsi_cmnd *sc)
-+{
-+	struct iscsi_cls_session *cls_session;
-+
-+	cls_session = starget_to_session(scsi_target(sc->device));
-+	return iscsi_eh_session_reset(cls_session);
-+}
-+
- /*------------------- PCI Driver operations and data ----------------- */
- static const struct pci_device_id beiscsi_pci_id_table[] = {
- 	{ PCI_DEVICE(BE_VENDOR_ID, BE_DEVICE_ID1) },
-@@ -393,7 +401,7 @@ static struct scsi_host_template beiscsi_sht = {
- 	.eh_timed_out = iscsi_eh_cmd_timed_out,
- 	.eh_abort_handler = beiscsi_eh_abort,
- 	.eh_device_reset_handler = beiscsi_eh_device_reset,
--	.eh_target_reset_handler = iscsi_eh_session_reset,
-+	.eh_target_reset_handler = beiscsi_eh_session_reset,
- 	.shost_groups = beiscsi_groups,
- 	.sg_tablesize = BEISCSI_SGLIST_ELEMENTS,
- 	.can_queue = BE2_IO_DEPTH,
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 797abf4f5399..30f7737928bb 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -2494,13 +2494,11 @@ EXPORT_SYMBOL_GPL(iscsi_session_recovery_timedout);
-  * This function will wait for a relogin, session termination from
-  * userspace, or a recovery/replacement timeout.
-  */
--int iscsi_eh_session_reset(struct scsi_cmnd *sc)
-+int iscsi_eh_session_reset(struct iscsi_cls_session *cls_session)
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 3f6cb2a5c2c2..f4969b99c07f 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -9262,15 +9262,18 @@ static int qla4xxx_eh_abort(struct scsi_cmnd *cmd)
+  **/
+ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
  {
--	struct iscsi_cls_session *cls_session;
- 	struct iscsi_session *session;
- 	struct iscsi_conn *conn;
+-	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
+-	struct ddb_entry *ddb_entry = cmd->device->hostdata;
++	struct scsi_device *sdev = cmd->device;
++	struct scsi_qla_host *ha = to_qla_host(sdev->host);
++	struct iscsi_cls_session *session;
++	struct ddb_entry *ddb_entry = sdev->hostdata;
+ 	int ret = FAILED, stat;
+ 	int rval;
  
--	cls_session = starget_to_session(scsi_target(sc->device));
- 	session = cls_session->dd_data;
+ 	if (!ddb_entry)
+ 		return ret;
  
- 	mutex_lock(&session->eh_mutex);
-@@ -2547,7 +2545,7 @@ int iscsi_eh_session_reset(struct scsi_cmnd *sc)
- }
- EXPORT_SYMBOL_GPL(iscsi_eh_session_reset);
- 
--static void iscsi_prep_tgt_reset_pdu(struct scsi_cmnd *sc, struct iscsi_tm *hdr)
-+static void iscsi_prep_tgt_reset_pdu(struct iscsi_tm *hdr)
+-	ret = iscsi_block_scsi_eh(cmd);
++	session = starget_to_session(scsi_target(sdev));
++	ret = iscsi_block_scsi_eh(session);
+ 	if (ret)
+ 		return ret;
+ 	ret = FAILED;
+@@ -9331,19 +9334,25 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
+  **/
+ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
  {
- 	memset(hdr, 0, sizeof(*hdr));
- 	hdr->opcode = ISCSI_OP_SCSI_TMFUNC | ISCSI_OP_IMMEDIATE;
-@@ -2562,19 +2560,16 @@ static void iscsi_prep_tgt_reset_pdu(struct scsi_cmnd *sc, struct iscsi_tm *hdr)
+-	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
+-	struct ddb_entry *ddb_entry = cmd->device->hostdata;
++	struct scsi_target *starget = scsi_target(cmd->device);
++	struct iscsi_cls_session *cls_session = starget_to_session(starget);
++	struct iscsi_session *sess;
++	struct scsi_qla_host *ha;
++	struct ddb_entry *ddb_entry;
+ 	int stat, ret;
+ 	int rval;
+ 
++	sess = cls_session->dd_data;
++	ddb_entry = sess->dd_data;
+ 	if (!ddb_entry)
+ 		return FAILED;
++	ha = ddb_entry->ha;
+ 
+-	ret = iscsi_block_scsi_eh(cmd);
++	ret = iscsi_block_scsi_eh(cls_session);
+ 	if (ret)
+ 		return ret;
+ 
+-	starget_printk(KERN_INFO, scsi_target(cmd->device),
++	starget_printk(KERN_INFO, starget,
+ 		       "WARM TARGET RESET ISSUED.\n");
+ 
+ 	DEBUG2(printk(KERN_INFO
+@@ -9360,14 +9369,13 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
+ 
+ 	stat = qla4xxx_reset_target(ha, ddb_entry);
+ 	if (stat != QLA_SUCCESS) {
+-		starget_printk(KERN_INFO, scsi_target(cmd->device),
++		starget_printk(KERN_INFO, starget,
+ 			       "WARM TARGET RESET FAILED.\n");
+ 		return FAILED;
+ 	}
+ 
+-	if (qla4xxx_eh_wait_for_commands(ha, scsi_target(cmd->device),
+-					 NULL)) {
+-		starget_printk(KERN_INFO, scsi_target(cmd->device),
++	if (qla4xxx_eh_wait_for_commands(ha, starget, NULL)) {
++		starget_printk(KERN_INFO, starget,
+ 			       "WARM TARGET DEVICE RESET FAILED - "
+ 			       "waiting for commands.\n");
+ 		return FAILED;
+@@ -9376,13 +9384,13 @@ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
+ 	/* Send marker. */
+ 	if (qla4xxx_send_marker_iocb(ha, ddb_entry, cmd->device->lun,
+ 		MM_TGT_WARM_RESET) != QLA_SUCCESS) {
+-		starget_printk(KERN_INFO, scsi_target(cmd->device),
++		starget_printk(KERN_INFO, starget,
+ 			       "WARM TARGET DEVICE RESET FAILED - "
+ 			       "marker iocb failed.\n");
+ 		return FAILED;
+ 	}
+ 
+-	starget_printk(KERN_INFO, scsi_target(cmd->device),
++	starget_printk(KERN_INFO, starget,
+ 		       "WARM TARGET RESET SUCCEEDED.\n");
+ 	return SUCCESS;
+ }
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 2c0dd64159b0..bdc9ef29fe9c 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1821,17 +1821,15 @@ static void iscsi_scan_session(struct work_struct *work)
+ 
+ /**
+  * iscsi_block_scsi_eh - block scsi eh until session state has transistioned
+- * @cmd: scsi cmd passed to scsi eh handler
++ * @session: iscsi session derived from scsi eh handler argument
   *
-  * This will attempt to send a warm target reset.
+  * If the session is down this function will wait for the recovery
+  * timer to fire or for the session to be logged back in. If the
+  * recovery timer fires then FAST_IO_FAIL is returned. The caller
+  * should pass this error value to the scsi eh.
   */
--static int iscsi_eh_target_reset(struct scsi_cmnd *sc)
-+static int iscsi_eh_target_reset(struct iscsi_cls_session *cls_session)
+-int iscsi_block_scsi_eh(struct scsi_cmnd *cmd)
++int iscsi_block_scsi_eh(struct iscsi_cls_session *session)
  {
--	struct iscsi_cls_session *cls_session;
- 	struct iscsi_session *session;
- 	struct iscsi_conn *conn;
- 	struct iscsi_tm *hdr;
- 	int rc = FAILED;
+-	struct iscsi_cls_session *session =
+-			starget_to_session(scsi_target(cmd->device));
+ 	unsigned long flags;
+ 	int ret = 0;
  
--	cls_session = starget_to_session(scsi_target(sc->device));
- 	session = cls_session->dd_data;
- 
--	ISCSI_DBG_EH(session, "tgt Reset [sc %p tgt %s]\n", sc,
--		     session->targetname);
-+	ISCSI_DBG_EH(session, "tgt Reset [tgt %s]\n", session->targetname);
- 
- 	mutex_lock(&session->eh_mutex);
- 	spin_lock_bh(&session->frwd_lock);
-@@ -2592,7 +2587,7 @@ static int iscsi_eh_target_reset(struct scsi_cmnd *sc)
- 	session->tmf_state = TMF_QUEUED;
- 
- 	hdr = &session->tmhdr;
--	iscsi_prep_tgt_reset_pdu(sc, hdr);
-+	iscsi_prep_tgt_reset_pdu(hdr);
- 
- 	if (iscsi_exec_task_mgmt_fn(conn, hdr, session->age,
- 				    session->tgt_reset_timeout)) {
-@@ -2644,11 +2639,13 @@ static int iscsi_eh_target_reset(struct scsi_cmnd *sc)
-  */
- int iscsi_eh_recover_target(struct scsi_cmnd *sc)
- {
-+	struct iscsi_cls_session *cls_session;
- 	int rc;
- 
--	rc = iscsi_eh_target_reset(sc);
-+	cls_session = starget_to_session(scsi_target(sc->device));
-+	rc = iscsi_eh_target_reset(cls_session);
- 	if (rc == FAILED)
--		rc = iscsi_eh_session_reset(sc);
-+		rc = iscsi_eh_session_reset(cls_session);
- 	return rc;
- }
- EXPORT_SYMBOL_GPL(iscsi_eh_recover_target);
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index d0a24779c52d..ce8d5b5dc0d3 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -391,7 +391,7 @@ struct iscsi_host {
-  */
- extern int iscsi_eh_abort(struct scsi_cmnd *sc);
- extern int iscsi_eh_recover_target(struct scsi_cmnd *sc);
--extern int iscsi_eh_session_reset(struct scsi_cmnd *sc);
-+extern int iscsi_eh_session_reset(struct iscsi_cls_session *cls_session);
- extern int iscsi_eh_device_reset(struct scsi_cmnd *sc);
- extern int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc);
- extern enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc);
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 9acb8422f680..5771275f8bf3 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -456,7 +456,7 @@ extern struct iscsi_endpoint *iscsi_create_endpoint(int dd_size);
+ extern void iscsi_destroy_endpoint(struct iscsi_endpoint *ep);
+ extern struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle);
+ extern void iscsi_put_endpoint(struct iscsi_endpoint *ep);
+-extern int iscsi_block_scsi_eh(struct scsi_cmnd *cmd);
++extern int iscsi_block_scsi_eh(struct iscsi_cls_session *session);
+ extern struct iscsi_iface *iscsi_create_iface(struct Scsi_Host *shost,
+ 					      struct iscsi_transport *t,
+ 					      uint32_t iface_type,
 -- 
 2.29.2
 
