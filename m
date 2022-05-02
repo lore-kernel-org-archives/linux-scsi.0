@@ -2,56 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E51C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 21:38:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A19F0C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 21:39:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1387747AbiEBVmW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 May 2022 17:42:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37772 "EHLO
+        id S1387724AbiEBVmZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 May 2022 17:42:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1387724AbiEBVmH (ORCPT
+        with ESMTP id S1387725AbiEBVmH (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 17:42:07 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1C8E64D6
-        for <linux-scsi@vger.kernel.org>; Mon,  2 May 2022 14:38:36 -0700 (PDT)
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 515A4E0A4
+        for <linux-scsi@vger.kernel.org>; Mon,  2 May 2022 14:38:37 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 3E1F121875;
-        Mon,  2 May 2022 21:38:33 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTP id F26E01F74D;
+        Mon,  2 May 2022 21:38:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1651527513; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1651527512; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Z8j9jQePML6bzAqEEctZo8GY6U9a7/mT7GbQ3gYMYhA=;
-        b=y+ygP+x8xI1NGeAqGJfUQigw7cGTO2TOJdjL32S1p1XK8UaZsAgq3vAao/aKSKIB14XwWl
-        JfP9Ktm6oKfBvDBSu2YZokr/xZ3E1Sua0VBYJ9M9NyvxrIr0ITEbqcwXQn7CG9cNWLI7aR
-        7HYHbU/X7vhkyuFB+7p4nMVburoQpPg=
+        bh=cEuTCsWgoRxM8nDi0W0Pe3ubFcm1Y8w3ShBgyeGIIJE=;
+        b=YBh5PDntS+m0dmSm412tSmxBz2HrX7p3XQ7KojCsbH3ujB3tB1aU+RWiLLyp/Qz4HyY12M
+        bdBsAtf5hFWAswQWq96SCi26d2/0k0X4alPGxGeU/e5ARlKvTB1LeVAY2/pUVqi9ZGL+Iz
+        KLNIKrfMkmPI7OBu3jvb8UA0i3rwHg4=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1651527513;
+        s=susede2_ed25519; t=1651527512;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Z8j9jQePML6bzAqEEctZo8GY6U9a7/mT7GbQ3gYMYhA=;
-        b=I4J3+Q0FYOtfKyz6kOhYRVaYQIlssThitm9x82QJeq7H4+f7EYxVlrjggufovPBTkhKAzr
-        UBz0et7qf0OV93Aw==
+        bh=cEuTCsWgoRxM8nDi0W0Pe3ubFcm1Y8w3ShBgyeGIIJE=;
+        b=NDnR70wF3/wj5C1kUOh5+2t+uVO+PUhzy0v9yLxLisF67ic8WdpCUJ6A7gVanGsq/2dX/U
+        AZGmYGlIN/qcd2Dg==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 35AA62C141;
-        Mon,  2 May 2022 21:38:33 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id EB0672C153;
+        Mon,  2 May 2022 21:38:32 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 2C3D65194124; Mon,  2 May 2022 23:38:33 +0200 (CEST)
+        id E93235194108; Mon,  2 May 2022 23:38:32 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 24/24] mpi3mr: split off bus_reset function from host_reset
-Date:   Mon,  2 May 2022 23:38:20 +0200
-Message-Id: <20220502213820.3187-25-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 10/24] ibmvfc: use fc_block_rport()
+Date:   Mon,  2 May 2022 23:38:06 +0200
+Message-Id: <20220502213820.3187-11-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20220502213820.3187-1-hare@suse.de>
 References: <20220502213820.3187-1-hare@suse.de>
@@ -61,120 +57,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SCSI EH host reset is the final callback in the escalation chain;
-once we reach this we need to reset the controller.
-As such it defeats the purpose to skip controller reset if no
-I/Os are pending and the RAID device is to be reset; especially
-after kexec there might be stale commands pending in firmware
-for which we have no reference whatsoever.
-So this patch splits off the check for pending I/O into a
-'bus_reset' function, and leaves the actual controller reset
-to the host reset.
+Use fc_block_rport() instead of fc_block_scsi_eh() as the latter
+will be deprecated.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 57 +++++++++++++++++++++------------
- 1 file changed, 37 insertions(+), 20 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index f7cd70a15ea6..31f05e9f5ee0 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3337,20 +3337,45 @@ void mpi3mr_wait_for_host_io(struct mpi3mr_ioc *mrioc, u32 timeout)
-  * mpi3mr_eh_host_reset - Host reset error handling callback
-  * @scmd: SCSI command reference
-  *
-- * Issue controller reset if the scmd is for a Physical Device,
-- * if the scmd is for RAID volume, then wait for
-- * MPI3MR_RAID_ERRREC_RESET_TIMEOUT and checke whether any
-- * pending I/Os prior to issuing reset to the controller.
-+ * Issue controller reset
-  *
-  * Return: SUCCESS of successful reset else FAILED
-  */
- static int mpi3mr_eh_host_reset(struct scsi_cmnd *scmd)
-+{
-+	struct mpi3mr_ioc *mrioc = shost_priv(scmd->device->host);
-+	int retval = FAILED, ret;
-+
-+	ret = mpi3mr_soft_reset_handler(mrioc,
-+	    MPI3MR_RESET_FROM_EH_HOS, 1);
-+	if (ret)
-+		goto out;
-+
-+	retval = SUCCESS;
-+out:
-+	sdev_printk(KERN_INFO, scmd->device,
-+	    "Host reset is %s for scmd(%p)\n",
-+	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
-+
-+	return retval;
-+}
-+
-+/**
-+ * mpi3mr_eh_bus_reset - Bus reset error handling callback
-+ * @scmd: SCSI command reference
-+ *
-+ * Checks whether pending I/Os are present for the RAID volume;
-+ * if not there's no need to reset the adapter.
-+ *
-+ * Return: SUCCESS of successful reset else FAILED
-+ */
-+static int mpi3mr_eh_bus_reset(struct scsi_cmnd *scmd)
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 721d965f4b0e..2e7128f0d905 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -2857,12 +2857,13 @@ static int ibmvfc_abort_task_set(struct scsi_device *sdev)
+ static int ibmvfc_eh_abort_handler(struct scsi_cmnd *cmd)
  {
- 	struct mpi3mr_ioc *mrioc = shost_priv(scmd->device->host);
- 	struct mpi3mr_stgt_priv_data *stgt_priv_data;
- 	struct mpi3mr_sdev_priv_data *sdev_priv_data;
- 	u8 dev_type = MPI3_DEVICE_DEVFORM_VD;
--	int retval = FAILED, ret;
-+	int retval = FAILED;
+ 	struct scsi_device *sdev = cmd->device;
++	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
+ 	struct ibmvfc_host *vhost = shost_priv(sdev->host);
+ 	int cancel_rc, block_rc;
+ 	int rc = FAILED;
  
- 	sdev_priv_data = scmd->device->hostdata;
- 	if (sdev_priv_data && sdev_priv_data->tgt_priv_data) {
-@@ -3360,25 +3385,16 @@ static int mpi3mr_eh_host_reset(struct scsi_cmnd *scmd)
+ 	ENTER;
+-	block_rc = fc_block_scsi_eh(cmd);
++	block_rc = fc_block_rport(rport);
+ 	ibmvfc_wait_while_resetting(vhost);
+ 	if (block_rc != FAST_IO_FAIL) {
+ 		cancel_rc = ibmvfc_cancel_all(sdev, IBMVFC_TMF_ABORT_TASK_SET);
+@@ -2890,12 +2891,13 @@ static int ibmvfc_eh_abort_handler(struct scsi_cmnd *cmd)
+ static int ibmvfc_eh_device_reset_handler(struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_device *sdev = cmd->device;
++	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
+ 	struct ibmvfc_host *vhost = shost_priv(sdev->host);
+ 	int cancel_rc, block_rc, reset_rc = 0;
+ 	int rc = FAILED;
  
- 	if (dev_type == MPI3_DEVICE_DEVFORM_VD) {
- 		mpi3mr_wait_for_host_io(mrioc,
--		    MPI3MR_RAID_ERRREC_RESET_TIMEOUT);
--		if (!mpi3mr_get_fw_pending_ios(mrioc)) {
-+			MPI3MR_RAID_ERRREC_RESET_TIMEOUT);
-+		if (!mpi3mr_get_fw_pending_ios(mrioc))
- 			retval = SUCCESS;
--			goto out;
--		}
- 	}
-+	if (retval == FAILED)
-+		mpi3mr_print_pending_host_io(mrioc);
- 
--	mpi3mr_print_pending_host_io(mrioc);
--	ret = mpi3mr_soft_reset_handler(mrioc,
--	    MPI3MR_RESET_FROM_EH_HOS, 1);
--	if (ret)
--		goto out;
--
--	retval = SUCCESS;
--out:
- 	sdev_printk(KERN_INFO, scmd->device,
--	    "Host reset is %s for scmd(%p)\n",
--	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
--
-+		"Bus reset is %s for scmd(%p)\n",
-+		((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
- 	return retval;
- }
- 
-@@ -4094,6 +4110,7 @@ static struct scsi_host_template mpi3mr_driver_template = {
- 	.change_queue_depth		= mpi3mr_change_queue_depth,
- 	.eh_device_reset_handler	= mpi3mr_eh_dev_reset,
- 	.eh_target_reset_handler	= mpi3mr_eh_target_reset,
-+	.eh_bus_reset_handler		= mpi3mr_eh_bus_reset,
- 	.eh_host_reset_handler		= mpi3mr_eh_host_reset,
- 	.bios_param			= mpi3mr_bios_param,
- 	.map_queues			= mpi3mr_map_queues,
+ 	ENTER;
+-	block_rc = fc_block_scsi_eh(cmd);
++	block_rc = fc_block_rport(rport);
+ 	ibmvfc_wait_while_resetting(vhost);
+ 	if (block_rc != FAST_IO_FAIL) {
+ 		cancel_rc = ibmvfc_cancel_all(sdev, IBMVFC_TMF_LUN_RESET);
 -- 
 2.29.2
 
