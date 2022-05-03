@@ -2,92 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ED6FC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 May 2022 09:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A88AC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 May 2022 09:41:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233311AbiECJP4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 May 2022 05:15:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51008 "EHLO
+        id S233679AbiECJoq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 May 2022 05:44:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233308AbiECJPt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2022 05:15:49 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E40E19C2E
-        for <linux-scsi@vger.kernel.org>; Tue,  3 May 2022 02:12:17 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 242NVcjv026132;
-        Tue, 3 May 2022 00:50:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=2mDgisxTPsttLZBcCQhpi7PsmJW7kbEioklPCkO1md8=;
- b=cnZNr1AVoBPEYSS+v07/HmtMv5bM+uSCa/sOWvSlfadf5a1jUFdIcXM8HDKDa+ql/hoZ
- 4t0mwJeyTRbYB3ugKHCGS7cPccKpLMk5XCa0lu3iT4xd/S8LPHttvB5WMyIjU/zNQMP6
- WPif2+WnFayF0IIsPHbQ6+j0LMDFiSnsnVfrbQEH5mWMnp3yL3DaOW0dWwVd8CaoDKvK
- /llO3Ch/LW3NSC0dlXjVjgsSGuu7d28WmAyMYl9VCcuk+uABtl1MvEvhPoCWsEtG6dAp
- Ct9lM40Up0gZPgxZdphOC7PpuWJS8qxEP+BJRl6rZdtY2tgRP+oAIgNpAgKn4AXk7eXb 8g== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fruhc4m3e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:50:29 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2430fH9E040389;
-        Tue, 3 May 2022 00:50:28 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3fs1a493en-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:50:28 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2430mf4t010456;
-        Tue, 3 May 2022 00:50:28 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3fs1a493ef-1;
-        Tue, 03 May 2022 00:50:28 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+        with ESMTP id S233664AbiECJoY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2022 05:44:24 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14367326F4
+        for <linux-scsi@vger.kernel.org>; Tue,  3 May 2022 02:40:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1651570837; x=1683106837;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=P+iOAd44yQAu6dFiULlp+J/3lk1X57kR5DCW90siNJg=;
+  b=gJvWDLUf3PbCWGlejBzAbc93AC948rmh4muSowqRhzpIMKRMrD60xhH2
+   RpFSxZbW0PgODYwLaEcxqbLDhZ4JrzFBKZr8NndZQ5JIcWNf1Hdl5mywh
+   8RCYTmdTsLUHh5L1Ta0dwSs5hW0RjTSAjDxr11DvlqNn9u9Wh/WCbaERJ
+   Jm/dKxjxbUKqAqJkmadnfUM9M6Q7uvsf526e6zZKgk6XaqcGPeCTvftqk
+   0siMJWs/VfIlraN/TQAXwORE3YnAEdCeFVhqE9fehlvZLcGIEDdbkXrjN
+   iYGDWMFBnVVAdvKzaEJKDI5GwNITQcU9oDfE6dhggWIEbI5zxPlTLUp9W
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10335"; a="353879349"
+X-IronPort-AV: E=Sophos;i="5.91,194,1647327600"; 
+   d="scan'208";a="353879349"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 May 2022 02:40:36 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,194,1647327600"; 
+   d="scan'208";a="631449685"
+Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
+  by fmsmga004.fm.intel.com with ESMTP; 03 May 2022 02:40:34 -0700
+Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nlp1G-000ALL-9h;
+        Tue, 03 May 2022 09:40:34 +0000
+Date:   Tue, 3 May 2022 17:39:52 +0800
+From:   kernel test robot <lkp@intel.com>
 To:     Hannes Reinecke <hare@suse.de>,
-        Brian Bunker <brian@purestorage.com>,
-        linux-scsi@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi_dh_alua: properly handling the ALUA transitioning state
-Date:   Mon,  2 May 2022 20:50:25 -0400
-Message-Id: <165153834205.24012.9775963085982195213.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.35.2
-In-Reply-To: <CAHZQxy+4sTPz9+pY3=7VJH+CLUJsDct81KtnR2be8ycN5mhqTg@mail.gmail.com>
-References: <CAHZQxy+4sTPz9+pY3=7VJH+CLUJsDct81KtnR2be8ycN5mhqTg@mail.gmail.com>
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 13/24] aic7xxx: make BUILD_SCSIID() a function
+Message-ID: <202205031715.Eiw7By3c-lkp@intel.com>
+References: <20220502213820.3187-14-hare@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: nqbwuSRf73Ah_Pem5Dk_ycsOlavX_qHV
-X-Proofpoint-ORIG-GUID: nqbwuSRf73Ah_Pem5Dk_ycsOlavX_qHV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220502213820.3187-14-hare@suse.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2 May 2022 08:09:17 -0700, Brian Bunker wrote:
+Hi Hannes,
 
-> The handling of the ALUA transitioning state is currently broken. When
-> a target goes into this state, it is expected that the target is
-> allowed to stay in this state for the implicit transition timeout
-> without a path failure. The handler has this logic, but it gets
-> skipped currently.
-> 
-> When the target transitions, there is in-flight I/O from the
-> initiator. The first of these responses from the target will be a unit
-> attention letting the initiator know that the ALUA state has changed.
-> The remaining in-flight I/Os, before the initiator finds out that the
-> portal state has changed, will return not ready, ALUA state is
-> transitioning. The portal state will change to
-> SCSI_ACCESS_STATE_TRANSITIONING. This will lead to all new I/O
-> immediately failing the path unexpectedly. The path failure happens in
-> less than a second instead of the expected successes until the
-> transition timer is exceeded.
-> 
-> [...]
+I love your patch! Perhaps something to improve:
 
-Applied to 5.18/scsi-fixes, thanks!
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on jejb-scsi/for-next powerpc/next linus/master v5.18-rc5 next-20220502]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-[1/1] scsi_dh_alua: properly handling the ALUA transitioning state
-      https://git.kernel.org/mkp/scsi/c/6056a92ceb2a
+url:    https://github.com/intel-lab-lkp/linux/commits/Hannes-Reinecke/scsi-EH-rework-prep-patches-part-1/20220503-054317
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+config: arm64-randconfig-r022-20220502 (https://download.01.org/0day-ci/archive/20220503/202205031715.Eiw7By3c-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 363b3a645a1e30011cc8da624f13dac5fd915628)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # install arm64 cross compiling tool for clang build
+        # apt-get install binutils-aarch64-linux-gnu
+        # https://github.com/intel-lab-lkp/linux/commit/5436bc0a0e277a5742af0b7b443b4591ce0e5b74
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Hannes-Reinecke/scsi-EH-rework-prep-patches-part-1/20220503-054317
+        git checkout 5436bc0a0e277a5742af0b7b443b4591ce0e5b74
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm64 SHELL=/bin/bash drivers/scsi/
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/scsi/aic7xxx/aic7xxx_osm.c:808:24: warning: operator '?:' has lower precedence than '|'; '|' will be evaluated first [-Wbitwise-conditional-parentheses]
+                   (sdev->channel == 0) ? 0 : TWIN_CHNLB;
+                   ~~~~~~~~~~~~~~~~~~~~ ^
+   drivers/scsi/aic7xxx/aic7xxx_osm.c:808:24: note: place parentheses around the '|' expression to silence this warning
+                   (sdev->channel == 0) ? 0 : TWIN_CHNLB;
+                                        ^
+                                       )
+   drivers/scsi/aic7xxx/aic7xxx_osm.c:808:24: note: place parentheses around the '?:' expression to evaluate it first
+                   (sdev->channel == 0) ? 0 : TWIN_CHNLB;
+                   ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+   1 warning generated.
+
+
+vim +808 drivers/scsi/aic7xxx/aic7xxx_osm.c
+
+   800	
+   801	
+   802	static inline unsigned int ahc_build_scsiid(struct ahc_softc *ahc,
+   803						    struct scsi_device *sdev)
+   804	{
+   805		unsigned int scsiid =
+   806			((sdev->id << TID_SHIFT) & TID) |
+   807			((sdev->channel == 0) ? ahc->our_id : ahc->our_id_b) |
+ > 808			(sdev->channel == 0) ? 0 : TWIN_CHNLB;
+   809		return scsiid;
+   810	}
+   811	
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+0-DAY CI Kernel Test Service
+https://01.org/lkp
