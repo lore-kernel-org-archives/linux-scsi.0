@@ -2,56 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5BF6C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 May 2022 20:07:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAB67C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 May 2022 20:07:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238116AbiECULW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 May 2022 16:11:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45634 "EHLO
+        id S238250AbiECULX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 May 2022 16:11:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238250AbiECUKz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2022 16:10:55 -0400
+        with ESMTP id S230466AbiECUKy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2022 16:10:54 -0400
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F368C26AEB
-        for <linux-scsi@vger.kernel.org>; Tue,  3 May 2022 13:07:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73F59403C9
+        for <linux-scsi@vger.kernel.org>; Tue,  3 May 2022 13:07:20 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 80D7421882;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 5D2E62187D;
         Tue,  3 May 2022 20:07:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1651608435; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=jUW4iJfuyEoe7uHxRk74VPFf3NmtImIJ0notDLIYzb0=;
-        b=ZbgskNfbYSdkJ3C/w5YnQ1OsqYkqL+KpfMOpAkjhL+9rA7NVFBcLa7+flfrCGztRcgKOyn
-        Tm8ixKmR9DP/LUFgjpvLThv92jxsEndgHL6zimxLOpBoCPH1e+RMOdmasH6qjyqresEmY/
-        v7QnBJ5wHiSFRQoJb/ofnd7KwNgOdEc=
+        bh=t9kqWrtR6rQYrTEOPBHuU+zmAD5YIiGUVdcENTriHBk=;
+        b=0NEsyuxxQqCKW6aeZlo6anLPahExPYBSHKIgFNnkvBB1/XqCAY+fHebgS5gNMpl2QBNAPy
+        AcCRTeEra6AOYVzvHZzNUUo9uNyv99d3bQhfVvnstvcziIu8Jq7AKtWXnCcXSO1aIc+XsS
+        xz1F7LSQaecRRnH4+1qDq4Ziro17M9k=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1651608435;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=jUW4iJfuyEoe7uHxRk74VPFf3NmtImIJ0notDLIYzb0=;
-        b=pAd9LHPUH41EfTsFDZpkVRpxx+06Z1bgQasc00LUEueOFfzigBOEWPn83lxZqK9HyrOstk
-        TuHYuzJQ1jsjpwCQ==
+        bh=t9kqWrtR6rQYrTEOPBHuU+zmAD5YIiGUVdcENTriHBk=;
+        b=i6L8SmAVPcNaHSiyzxmQaujhMz5QcDzP2aFgTQkEzhzmd1EJ4zSDm7SQ2cD8EoRJA6x8ff
+        uBh/1NkDokS1TgAA==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 658622C175;
+        by relay2.suse.de (Postfix) with ESMTP id 38BDF2C16B;
         Tue,  3 May 2022 20:07:15 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 73D5B51941F6; Tue,  3 May 2022 22:07:15 +0200 (CEST)
+        id 48CB151941E8; Tue,  3 May 2022 22:07:15 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 24/24] mpi3mr: split off bus_reset function from host_reset
-Date:   Tue,  3 May 2022 22:07:04 +0200
-Message-Id: <20220503200704.88003-25-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 17/24] snic: reserve tag for TMF
+Date:   Tue,  3 May 2022 22:06:57 +0200
+Message-Id: <20220503200704.88003-18-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20220503200704.88003-1-hare@suse.de>
 References: <20220503200704.88003-1-hare@suse.de>
@@ -61,121 +57,159 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SCSI EH host reset is the final callback in the escalation chain;
-once we reach this we need to reset the controller.
-As such it defeats the purpose to skip controller reset if no
-I/Os are pending and the RAID device is to be reset; especially
-after kexec there might be stale commands pending in firmware
-for which we have no reference whatsoever.
-So this patch splits off the check for pending I/O into a
-'bus_reset' function, and leaves the actual controller reset
-to the host reset.
+Rather than re-using the failed command the snic driver should
+reserve one command for TMFs.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 57 +++++++++++++++++++++------------
- 1 file changed, 37 insertions(+), 20 deletions(-)
+ drivers/scsi/snic/snic.h      |  3 ++-
+ drivers/scsi/snic/snic_main.c |  3 +++
+ drivers/scsi/snic/snic_scsi.c | 43 +++++++++++++++++------------------
+ 3 files changed, 26 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index f7cd70a15ea6..31f05e9f5ee0 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3337,20 +3337,45 @@ void mpi3mr_wait_for_host_io(struct mpi3mr_ioc *mrioc, u32 timeout)
-  * mpi3mr_eh_host_reset - Host reset error handling callback
-  * @scmd: SCSI command reference
-  *
-- * Issue controller reset if the scmd is for a Physical Device,
-- * if the scmd is for RAID volume, then wait for
-- * MPI3MR_RAID_ERRREC_RESET_TIMEOUT and checke whether any
-- * pending I/Os prior to issuing reset to the controller.
-+ * Issue controller reset
-  *
-  * Return: SUCCESS of successful reset else FAILED
-  */
- static int mpi3mr_eh_host_reset(struct scsi_cmnd *scmd)
-+{
-+	struct mpi3mr_ioc *mrioc = shost_priv(scmd->device->host);
-+	int retval = FAILED, ret;
-+
-+	ret = mpi3mr_soft_reset_handler(mrioc,
-+	    MPI3MR_RESET_FROM_EH_HOS, 1);
-+	if (ret)
-+		goto out;
-+
-+	retval = SUCCESS;
-+out:
-+	sdev_printk(KERN_INFO, scmd->device,
-+	    "Host reset is %s for scmd(%p)\n",
-+	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
-+
-+	return retval;
-+}
-+
-+/**
-+ * mpi3mr_eh_bus_reset - Bus reset error handling callback
-+ * @scmd: SCSI command reference
-+ *
-+ * Checks whether pending I/Os are present for the RAID volume;
-+ * if not there's no need to reset the adapter.
-+ *
-+ * Return: SUCCESS of successful reset else FAILED
-+ */
-+static int mpi3mr_eh_bus_reset(struct scsi_cmnd *scmd)
- {
- 	struct mpi3mr_ioc *mrioc = shost_priv(scmd->device->host);
- 	struct mpi3mr_stgt_priv_data *stgt_priv_data;
- 	struct mpi3mr_sdev_priv_data *sdev_priv_data;
- 	u8 dev_type = MPI3_DEVICE_DEVFORM_VD;
--	int retval = FAILED, ret;
-+	int retval = FAILED;
+diff --git a/drivers/scsi/snic/snic.h b/drivers/scsi/snic/snic.h
+index 4ec7e30678e1..e40492d36031 100644
+--- a/drivers/scsi/snic/snic.h
++++ b/drivers/scsi/snic/snic.h
+@@ -310,6 +310,7 @@ struct snic {
+ 	struct list_head spl_cmd_list;
  
- 	sdev_priv_data = scmd->device->hostdata;
- 	if (sdev_priv_data && sdev_priv_data->tgt_priv_data) {
-@@ -3360,25 +3385,16 @@ static int mpi3mr_eh_host_reset(struct scsi_cmnd *scmd)
+ 	unsigned int max_tag_id;
++	unsigned int tmf_tag_id;
+ 	atomic_t ios_inflight;		/* io in flight counter */
  
- 	if (dev_type == MPI3_DEVICE_DEVFORM_VD) {
- 		mpi3mr_wait_for_host_io(mrioc,
--		    MPI3MR_RAID_ERRREC_RESET_TIMEOUT);
--		if (!mpi3mr_get_fw_pending_ios(mrioc)) {
-+			MPI3MR_RAID_ERRREC_RESET_TIMEOUT);
-+		if (!mpi3mr_get_fw_pending_ios(mrioc))
- 			retval = SUCCESS;
--			goto out;
--		}
+ 	struct vnic_snic_config config;
+@@ -380,7 +381,7 @@ int snic_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
+ int snic_abort_cmd(struct scsi_cmnd *);
+ int snic_device_reset(struct scsi_cmnd *);
+ int snic_host_reset(struct scsi_cmnd *);
+-int snic_reset(struct Scsi_Host *, struct scsi_cmnd *);
++int snic_reset(struct Scsi_Host *);
+ void snic_shutdown_scsi_cleanup(struct snic *);
+ 
+ 
+diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
+index 29d56396058c..f344cbc27923 100644
+--- a/drivers/scsi/snic/snic_main.c
++++ b/drivers/scsi/snic/snic_main.c
+@@ -512,6 +512,9 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 					 max_t(u32, SNIC_MIN_IO_REQ, max_ios));
+ 
+ 	snic->max_tag_id = shost->can_queue;
++	/* Reserve one reset command */
++	shost->can_queue--;
++	snic->tmf_tag_id = shost->can_queue;
+ 
+ 	shost->max_lun = snic->config.luns_per_tgt;
+ 	shost->max_id = SNIC_MAX_TARGET;
+diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+index 5f17666f3e1d..e18c8c5e4b46 100644
+--- a/drivers/scsi/snic/snic_scsi.c
++++ b/drivers/scsi/snic/snic_scsi.c
+@@ -1018,17 +1018,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
+ 		      "reset_cmpl: type = %x, hdr_stat = %x, cmnd_id = %x, hid = %x, ctx = %lx\n",
+ 		      typ, hdr_stat, cmnd_id, hid, ctx);
+ 
+-	/* spl case, host reset issued through ioctl */
+-	if (cmnd_id == SCSI_NO_TAG) {
+-		rqi = (struct snic_req_info *) ctx;
+-		SNIC_HOST_INFO(snic->shost,
+-			       "reset_cmpl:Tag %d ctx %lx cmpl stat %s\n",
+-			       cmnd_id, ctx, snic_io_status_to_str(hdr_stat));
+-		sc = rqi->sc;
+-
+-		goto ioctl_hba_rst;
+-	}
+-
+ 	if (cmnd_id >= snic->max_tag_id) {
+ 		SNIC_HOST_ERR(snic->shost,
+ 			      "reset_cmpl: Tag 0x%x out of Range,HdrStat %s\n",
+@@ -1039,7 +1028,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
  	}
-+	if (retval == FAILED)
-+		mpi3mr_print_pending_host_io(mrioc);
  
--	mpi3mr_print_pending_host_io(mrioc);
--	ret = mpi3mr_soft_reset_handler(mrioc,
--	    MPI3MR_RESET_FROM_EH_HOS, 1);
--	if (ret)
--		goto out;
--
--	retval = SUCCESS;
--out:
- 	sdev_printk(KERN_INFO, scmd->device,
--	    "Host reset is %s for scmd(%p)\n",
--	    ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
--
-+		"Bus reset is %s for scmd(%p)\n",
-+		((retval == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
- 	return retval;
- }
+ 	sc = scsi_host_find_tag(snic->shost, cmnd_id);
+-ioctl_hba_rst:
+ 	if (!sc) {
+ 		atomic64_inc(&snic->s_stats.io.sc_null);
+ 		SNIC_HOST_ERR(snic->shost,
+@@ -1725,7 +1713,7 @@ snic_dr_clean_single_req(struct snic *snic,
+ {
+ 	struct snic_req_info *rqi = NULL;
+ 	struct snic_tgt *tgt = NULL;
+-	struct scsi_cmnd *sc = NULL;
++	struct scsi_cmnd *sc;
+ 	spinlock_t *io_lock = NULL;
+ 	u32 sv_state = 0, tmf = 0;
+ 	DECLARE_COMPLETION_ONSTACK(tm_done);
+@@ -2238,13 +2226,6 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
+ 		goto hba_rst_end;
+ 	}
  
-@@ -4094,6 +4110,7 @@ static struct scsi_host_template mpi3mr_driver_template = {
- 	.change_queue_depth		= mpi3mr_change_queue_depth,
- 	.eh_device_reset_handler	= mpi3mr_eh_dev_reset,
- 	.eh_target_reset_handler	= mpi3mr_eh_target_reset,
-+	.eh_bus_reset_handler		= mpi3mr_eh_bus_reset,
- 	.eh_host_reset_handler		= mpi3mr_eh_host_reset,
- 	.bios_param			= mpi3mr_bios_param,
- 	.map_queues			= mpi3mr_map_queues,
+-	if (snic_cmd_tag(sc) == SCSI_NO_TAG) {
+-		memset(scsi_cmd_priv(sc), 0,
+-			sizeof(struct snic_internal_io_state));
+-		SNIC_HOST_INFO(snic->shost, "issu_hr:Host reset thru ioctl.\n");
+-		rqi->sc = sc;
+-	}
+-
+ 	req = rqi_to_req(rqi);
+ 
+ 	io_lock = snic_io_lock_hash(snic, sc);
+@@ -2319,11 +2300,13 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
+ } /* end of snic_issue_hba_reset */
+ 
+ int
+-snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
++snic_reset(struct Scsi_Host *shost)
+ {
+ 	struct snic *snic = shost_priv(shost);
++	struct scsi_cmnd *sc = NULL;
+ 	enum snic_state sv_state;
+ 	unsigned long flags;
++	u32 start_time  = jiffies;
+ 	int ret = FAILED;
+ 
+ 	/* Set snic state as SNIC_FWRESET*/
+@@ -2348,6 +2331,18 @@ snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
+ 	while (atomic_read(&snic->ios_inflight))
+ 		schedule_timeout(msecs_to_jiffies(1));
+ 
++	sc = scsi_host_find_tag(shost, snic->tmf_tag_id);
++	if (!sc) {
++		SNIC_HOST_ERR(shost,
++			      "reset:Host Reset Failed to allocate sc.\n");
++		spin_lock_irqsave(&snic->snic_lock, flags);
++		snic_set_state(snic, sv_state);
++		spin_unlock_irqrestore(&snic->snic_lock, flags);
++		atomic64_inc(&snic->s_stats.reset.hba_reset_fail);
++		ret = FAILED;
++
++		goto reset_end;
++	}
+ 	ret = snic_issue_hba_reset(snic, sc);
+ 	if (ret) {
+ 		SNIC_HOST_ERR(shost,
+@@ -2365,6 +2360,10 @@ snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
+ 	ret = SUCCESS;
+ 
+ reset_end:
++	SNIC_TRC(shost->host_no, sc ? snic_cmd_tag(sc) : SCSI_NO_TAG,
++		 (ulong) sc, jiffies_to_msecs(jiffies - start_time),
++		 0, 0, 0);
++
+ 	return ret;
+ } /* end of snic_reset */
+ 
+@@ -2387,7 +2386,7 @@ snic_host_reset(struct scsi_cmnd *sc)
+ 		      sc, sc->cmnd[0], scsi_cmd_to_rq(sc),
+ 		      snic_cmd_tag(sc), CMD_FLAGS(sc));
+ 
+-	ret = snic_reset(shost, sc);
++	ret = snic_reset(shost);
+ 
+ 	SNIC_TRC(shost->host_no, snic_cmd_tag(sc), (ulong) sc,
+ 		 jiffies_to_msecs(jiffies - start_time),
 -- 
 2.29.2
 
