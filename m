@@ -2,58 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8C0AC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 07:55:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF4B7C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 10:03:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1389756AbiEFH7b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 May 2022 03:59:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48702 "EHLO
+        id S1389100AbiEFKH0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 May 2022 06:07:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1386640AbiEFH7a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 03:59:30 -0400
-X-Greylist: delayed 615 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 06 May 2022 00:55:49 PDT
-Received: from mail.greatagencyonline.pl (mail.greatagencyonline.pl [89.40.125.71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01AAC186FC
-        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 00:55:48 -0700 (PDT)
-Received: by mail.greatagencyonline.pl (Postfix, from userid 1001)
-        id 45B97A9933; Fri,  6 May 2022 08:41:24 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=greatagencyonline.pl;
-        s=mail; t=1651822909;
-        bh=ksvwLPFdjL017OLwir5xHXy3Vmrj/5fhZ5DwBI62qzc=;
-        h=Date:From:To:Subject:From;
-        b=G9FJIKoJURiggCQ/kooBWlYyDSKPDMSK9rLClYaU0N579apXbynUj/AYoxF/gUcly
-         u0yrlRUck72y/KlPCiNcF4VjO9pWkT72hB8cGziM5EODFiKXLIG0kAHVyohEcHHuX9
-         O/VjMky1BkW35A6Hr+lnIi9qt4GHodXhTM0CUAQjK+64guQ+wDaiIpnV3ISkJ6wtQP
-         1WiTzFq5RF/mcU6TULuKJ0e488RC7gNl7RLkdfAwYxgK9O3+R2zcRN1NNjiuDq9/WA
-         HBihJHDy/iqsCA6hZstr/A8LvAfPV2HIHQdZwR0Y7G8XMpaL6e9Vy/rxK+Vo45XwUX
-         GWv0h3n783UVA==
-Received: by mail.greatagencyonline.pl for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 07:38:48 GMT
-Message-ID: <20220506073002-0.1.3r.k0g3.0.22om89xq1o@greatagencyonline.pl>
-Date:   Fri,  6 May 2022 07:38:48 GMT
-From:   =?UTF-8?Q? "Miko=C5=82aj_Rudzik" ?= 
-        <mikolaj.rudzik@greatagencyonline.pl>
-To:     <linux-scsi@vger.kernel.org>
-Subject: =?UTF-8?Q?Nap=C5=82yw_Klient=C3=B3w_ze_strony?=
-X-Mailer: mail.greatagencyonline.pl
+        with ESMTP id S245092AbiEFKHZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 06:07:25 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C45255A2D5;
+        Fri,  6 May 2022 03:03:42 -0700 (PDT)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 242MkbAf018676;
+        Tue, 3 May 2022 00:52:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2021-07-09;
+ bh=0C11CsAnW4P/5rKgNjIeUGF+r6Ukzxc/zDr4VSM6xbw=;
+ b=Azi0nxGPJ/lhtYTgEqO0MVtrhnzBtHd57PI+x2/UIvEKjujA+yaLm9ptEARPpCRrwB2Y
+ 6YO/hwu5jcv6aRxl7qWxnlE6gdwEXjBsespamKwaVJKLQzlHd3P55I2gd8VN48KvaacF
+ xZV1K7Gv7P2ey+udSe2bF2rFJoZDMbvpvJl4K8P0Q0Hli0IMxT750Cy2Zu1wDjeFnwEC
+ EXRVkFFGHw7pkA2Z/8gvw09Fj4dWstpT3DpAIBS/qQnsf1CNQiD++A39yVLDFGfbJONA
+ CgZIs+DpWR6zdPwBJDuKeDoGqyXe+QW3y3yqTMVB3pA863odXncvE79UfYYxvFnHWdFp xA== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3frwnt4kx6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 03 May 2022 00:52:05 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2430oowt008899;
+        Tue, 3 May 2022 00:52:03 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83xb5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 03 May 2022 00:52:03 +0000
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2430pljs010389;
+        Tue, 3 May 2022 00:52:03 GMT
+Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x4g-29;
+        Tue, 03 May 2022 00:52:03 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     vkumar.1997@samsung.com, linux-kernel@vger.kernel.org,
+        jejb@linux.ibm.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        beanhuo@micron.com, cang@codeaurora.org, bhoon95.kim@samsung.com,
+        sh425.lee@samsung.com, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, adrian.hunter@intel.com,
+        Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [RESEND PATCH v3] scsi: ufs: exclude UECxx from SFR dump list
+Date:   Mon,  2 May 2022 20:51:39 -0400
+Message-Id: <165153836362.24053.16346946896226280421.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.35.2
+In-Reply-To: <1648689845-33521-1-git-send-email-kwmad.kim@samsung.com>
+References: <CGME20220331012539epcas2p180d804d9562b6e0fb968ffd181d64605@epcas2p1.samsung.com> <1648689845-33521-1-git-send-email-kwmad.kim@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: 0VwwRJBFilOQDQMt6MiZM326Cl2Y3HAk
+X-Proofpoint-GUID: 0VwwRJBFilOQDQMt6MiZM326Cl2Y3HAk
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On Thu, 31 Mar 2022 10:24:05 +0900, Kiwoong Kim wrote:
 
-chcia=C5=82bym poinformowa=C4=87 Pa=C5=84stwa o mo=C5=BCliwo=C5=9Bci pozy=
-skania nowych zlece=C5=84 ze strony www.
+> v2 -> v3: add fixes
+> v1 -> v2: does skipping only for zero offset
+> 
+> These are ROC type things that means their values
+> are cleared when the SFRs are read.
+> They are usually read in ISR when an UIC error occur.
+> Thus, their values would be zero at many cases. And
+> there might be a little bit risky when they are read to
+> be cleared before the ISR reads them, e.g. the case that
+> a command is timed-out, ufshcd_dump_regs is called in
+> ufshcd_abort and an UIC error occurs at the nearly
+> same time. In this case, ISR will be called but UFS error handler
+> will not be scheduled.
+> This patch is to make UFS driver not read those SFRs in the
+> dump function, i.e. ufshcd_dump_regs.
+> 
+> [...]
 
-Widzimy zainteresowanie potencjalnych Klient=C3=B3w Pa=C5=84stwa firm=C4=85=
-, dlatego ch=C4=99tnie pomo=C5=BCemy Pa=C5=84stwu dotrze=C4=87 z ofert=C4=
-=85 do wi=C4=99kszego grona odbiorc=C3=B3w poprzez efektywne metody pozyc=
-jonowania strony w Google.
+Applied to 5.19/scsi-queue, thanks!
 
-Czy m=C3=B3g=C5=82bym liczy=C4=87 na kontakt zwrotny?
+[1/1] scsi: ufs: exclude UECxx from SFR dump list
+      https://git.kernel.org/mkp/scsi/c/ef60031022eb
 
-
-Pozdrawiam,
-Miko=C5=82aj Rudzik
+-- 
+Martin K. Petersen	Oracle Linux Engineering
