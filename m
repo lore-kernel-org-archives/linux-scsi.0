@@ -2,227 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D2E0C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 05:04:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC84FC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 05:44:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1389052AbiEFFHw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 May 2022 01:07:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43968 "EHLO
+        id S1389263AbiEFFsW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 May 2022 01:48:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237609AbiEFFHu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 01:07:50 -0400
-Received: from m12-13.163.com (m12-13.163.com [220.181.12.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DFF7755488;
-        Thu,  5 May 2022 22:04:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=kwrkS
-        yRsaaiIFWrW7YZm2UrkeSJmomCa4/Kxdbxbyiw=; b=ONspd4qIXmW6V4d+1OMMb
-        6vS4HvdMVbYN2c8XrxUoThFprjnJYB00mmBTz7aIxkx/pDHV9FpV1Tc3i5Arra4/
-        YjOzqoo3Za+II1DevMBNWk8AWFJh3qq/Glre9ahoThdnjw03jdK7jh7hjfmoHt+3
-        x1JZkQr4IbZUWwkE0Cb148=
-Received: from localhost.localdomain (unknown [120.204.77.149])
-        by smtp9 (Coremail) with SMTP id DcCowAD31eJMq3Rijn0EBQ--.64477S4;
-        Fri, 06 May 2022 13:00:36 +0800 (CST)
-From:   lizhe <sensor1010@163.com>
-To:     lee.jones@linaro.org, fthain@linux-m68k.org,
-        akrowiak@linux.ibm.com, pasic@linux.ibm.com, jjherne@linux.ibm.com,
-        freude@linux.ibm.com, hca@linux.ibm.com, gor@linux.ibm.com,
-        agordeev@linux.ibm.com, borntraeger@linux.ibm.com,
-        svens@linux.ibm.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, zbr@ioremap.net, perex@perex.cz,
-        tiwai@suse.com, bvanassche@acm.org, dan.j.williams@intel.com,
-        srinivas.kandagatla@linaro.org, wens@csie.org,
-        colin.king@intel.com, u.kleine-koenig@pengutronix.de, hare@suse.de,
-        sensor1010@163.com
-Cc:     linux-kernel@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, alsa-devel@alsa-project.org
-Subject: [PATCH] kernel/drivers: Remove redundant driver match function
-Date:   Thu,  5 May 2022 21:59:52 -0700
-Message-Id: <20220506045952.136290-1-sensor1010@163.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S1389259AbiEFFsV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 01:48:21 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FF7E5A5AC;
+        Thu,  5 May 2022 22:44:38 -0700 (PDT)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 242MkbAg018676;
+        Tue, 3 May 2022 00:52:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2021-07-09;
+ bh=/yMc+68rWG/3heF7y7WQjy5vXUZ3ILi1SV6zf9lxjCs=;
+ b=G6ut9T7quCoMvq6y5pCHeAfonD12JyxulfH22wtz1tKaZSmEutY+SDDcv3W6w3fShihF
+ MHkaTkjhWf+MALC+MqfLZ+1rvolJgVoJzkFq6Z2OQF6P2FI9ivjbBq9Gok37WtOwuRZi
+ iJ4Xwcm0R0J7P/xl3EfjRTVlLlxpLMF2f5BrWqg+iA1ljnqYZEMm+aKXK6XQ/+OIChv+
+ VLWp7SCjZu8JZYBCrM7Xtkg5RF9DeIK0peiltn9F/pBrQdZq3H0ZSkllKCdfxOVNsHFb
+ 1RmXc2h5vrgVyfT7+X06KSolb0daBs2JlxDVput8ucqGS71bky1pGF1bwm6nrEWMRLwX Nw== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3frwnt4kxa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 03 May 2022 00:52:07 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2430oobc008887;
+        Tue, 3 May 2022 00:52:06 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83xcb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 03 May 2022 00:52:06 +0000
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2430plk4010389;
+        Tue, 3 May 2022 00:52:06 GMT
+Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x4g-34;
+        Tue, 03 May 2022 00:52:05 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     GR-QLogic-Storage-Upstream@marvell.com,
+        Xiaomeng Tong <xiam0nd.tong@gmail.com>, jejb@linux.ibm.com,
+        skashyap@marvell.com, jhasan@marvell.com
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [RESEND][PATCH] qedf: remove an unneeded NULL check on list iterator
+Date:   Mon,  2 May 2022 20:51:44 -0400
+Message-Id: <165153836362.24053.12346613816767008308.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.35.2
+In-Reply-To: <20220405004055.24312-1-xiam0nd.tong@gmail.com>
+References: <20220405004055.24312-1-xiam0nd.tong@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: DcCowAD31eJMq3Rijn0EBQ--.64477S4
-X-Coremail-Antispam: 1Uf129KBjvJXoWxKr13CF47Kr1rJF13uw13CFg_yoW7Ww4xpF
-        s5JFWakrWUtanrWws2yrWkAFyak3Z7G347Kr4xW3sY9FnrAry5Xa4rtFy8ArZ8XFW8G3ZF
-        van5try8CF4rJrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziAuc_UUUUU=
-X-Originating-IP: [120.204.77.149]
-X-CM-SenderInfo: 5vhq20jurqiii6rwjhhfrp/xtbBohT4q1aEENxxpgAAss
+X-Proofpoint-ORIG-GUID: rSAztyxMg1cpFyDVEJEZ96yiVuUg8b84
+X-Proofpoint-GUID: rSAztyxMg1cpFyDVEJEZ96yiVuUg8b84
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If there is no driver match function, the driver core assumes that each
-candidate pair (driver, device) matches, see driver_match_device().
+On Tue, 5 Apr 2022 08:40:55 +0800, Xiaomeng Tong wrote:
 
-Signed-off-by: lizhe <sensor1010@163.com>
----
- drivers/mfd/mcp-core.c             |  6 ------
- drivers/nubus/bus.c                |  6 ------
- drivers/s390/crypto/vfio_ap_drv.c  |  6 ------
- drivers/scsi/scsi_debug.c          |  7 -------
- drivers/target/loopback/tcm_loop.c |  7 -------
- drivers/w1/w1.c                    |  6 ------
- sound/ac97_bus.c                   | 11 -----------
- 7 files changed, 49 deletions(-)
+> The list iterator 'fcport' is always non-NULL so it doesn't need to be
+> checked. Thus just remove the unnecessary NULL check. Also remove the
+> unnecessary initializer because the list iterator is always initialized.
+> And adjust the position of blank lines.
+> 
+> 
 
-diff --git a/drivers/mfd/mcp-core.c b/drivers/mfd/mcp-core.c
-index 2fa592c37c6f..281a9369f2b3 100644
---- a/drivers/mfd/mcp-core.c
-+++ b/drivers/mfd/mcp-core.c
-@@ -20,11 +20,6 @@
- #define to_mcp(d)		container_of(d, struct mcp, attached_device)
- #define to_mcp_driver(d)	container_of(d, struct mcp_driver, drv)
- 
--static int mcp_bus_match(struct device *dev, struct device_driver *drv)
--{
--	return 1;
--}
--
- static int mcp_bus_probe(struct device *dev)
- {
- 	struct mcp *mcp = to_mcp(dev);
-@@ -43,7 +38,6 @@ static void mcp_bus_remove(struct device *dev)
- 
- static struct bus_type mcp_bus_type = {
- 	.name		= "mcp",
--	.match		= mcp_bus_match,
- 	.probe		= mcp_bus_probe,
- 	.remove		= mcp_bus_remove,
- };
-diff --git a/drivers/nubus/bus.c b/drivers/nubus/bus.c
-index 17fad660032c..72921e4f35f6 100644
---- a/drivers/nubus/bus.c
-+++ b/drivers/nubus/bus.c
-@@ -14,11 +14,6 @@
- #define to_nubus_board(d)       container_of(d, struct nubus_board, dev)
- #define to_nubus_driver(d)      container_of(d, struct nubus_driver, driver)
- 
--static int nubus_bus_match(struct device *dev, struct device_driver *driver)
--{
--	return 1;
--}
--
- static int nubus_device_probe(struct device *dev)
- {
- 	struct nubus_driver *ndrv = to_nubus_driver(dev->driver);
-@@ -39,7 +34,6 @@ static void nubus_device_remove(struct device *dev)
- 
- struct bus_type nubus_bus_type = {
- 	.name		= "nubus",
--	.match		= nubus_bus_match,
- 	.probe		= nubus_device_probe,
- 	.remove		= nubus_device_remove,
- };
-diff --git a/drivers/s390/crypto/vfio_ap_drv.c b/drivers/s390/crypto/vfio_ap_drv.c
-index 29ebd54f8919..0a662c451f2a 100644
---- a/drivers/s390/crypto/vfio_ap_drv.c
-+++ b/drivers/s390/crypto/vfio_ap_drv.c
-@@ -172,14 +172,8 @@ static void vfio_ap_matrix_dev_release(struct device *dev)
- 	kfree(matrix_dev);
- }
- 
--static int matrix_bus_match(struct device *dev, struct device_driver *drv)
--{
--	return 1;
--}
--
- static struct bus_type matrix_bus = {
- 	.name = "matrix",
--	.match = &matrix_bus_match,
- };
- 
- static struct device_driver matrix_driver = {
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 592a290e6cfa..8107489b36e8 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -7844,15 +7844,8 @@ static void sdebug_driver_remove(struct device *dev)
- 	scsi_host_put(sdbg_host->shost);
- }
- 
--static int pseudo_lld_bus_match(struct device *dev,
--				struct device_driver *dev_driver)
--{
--	return 1;
--}
--
- static struct bus_type pseudo_lld_bus = {
- 	.name = "pseudo",
--	.match = pseudo_lld_bus_match,
- 	.probe = sdebug_driver_probe,
- 	.remove = sdebug_driver_remove,
- 	.drv_groups = sdebug_drv_groups,
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 4407b56aa6d1..eeb63deff94f 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -83,15 +83,8 @@ static int tcm_loop_show_info(struct seq_file *m, struct Scsi_Host *host)
- static int tcm_loop_driver_probe(struct device *);
- static void tcm_loop_driver_remove(struct device *);
- 
--static int pseudo_lld_bus_match(struct device *dev,
--				struct device_driver *dev_driver)
--{
--	return 1;
--}
--
- static struct bus_type tcm_loop_lld_bus = {
- 	.name			= "tcm_loop_bus",
--	.match			= pseudo_lld_bus_match,
- 	.probe			= tcm_loop_driver_probe,
- 	.remove			= tcm_loop_driver_remove,
- };
-diff --git a/drivers/w1/w1.c b/drivers/w1/w1.c
-index f2ae2e563dc5..a6ecfa1b3417 100644
---- a/drivers/w1/w1.c
-+++ b/drivers/w1/w1.c
-@@ -58,11 +58,6 @@ MODULE_PARM_DESC(slave_ttl,
- DEFINE_MUTEX(w1_mlock);
- LIST_HEAD(w1_masters);
- 
--static int w1_master_match(struct device *dev, struct device_driver *drv)
--{
--	return 1;
--}
--
- static int w1_master_probe(struct device *dev)
- {
- 	return -ENODEV;
-@@ -174,7 +169,6 @@ static int w1_uevent(struct device *dev, struct kobj_uevent_env *env);
- 
- static struct bus_type w1_bus_type = {
- 	.name = "w1",
--	.match = w1_master_match,
- 	.uevent = w1_uevent,
- };
- 
-diff --git a/sound/ac97_bus.c b/sound/ac97_bus.c
-index b4685c53ff11..c7aee8c42c55 100644
---- a/sound/ac97_bus.c
-+++ b/sound/ac97_bus.c
-@@ -75,19 +75,8 @@ int snd_ac97_reset(struct snd_ac97 *ac97, bool try_warm, unsigned int id,
- }
- EXPORT_SYMBOL_GPL(snd_ac97_reset);
- 
--/*
-- * Let drivers decide whether they want to support given codec from their
-- * probe method. Drivers have direct access to the struct snd_ac97
-- * structure and may  decide based on the id field amongst other things.
-- */
--static int ac97_bus_match(struct device *dev, struct device_driver *drv)
--{
--	return 1;
--}
--
- struct bus_type ac97_bus_type = {
- 	.name		= "ac97",
--	.match		= ac97_bus_match,
- };
- 
- static int __init ac97_bus_init(void)
+Applied to 5.19/scsi-queue, thanks!
+
+[1/1] qedf: remove an unneeded NULL check on list iterator
+      https://git.kernel.org/mkp/scsi/c/505420bd5543
+
 -- 
-2.25.1
-
+Martin K. Petersen	Oracle Linux Engineering
