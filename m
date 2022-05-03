@@ -2,171 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C5DC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 07:11:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A66C3C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 07:22:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242210AbiEDHPb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 May 2022 03:15:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40548 "EHLO
+        id S1345335AbiEDHZf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 May 2022 03:25:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234092AbiEDHP0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 03:15:26 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3838122BEA
-        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 00:11:51 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id D7780210ED;
-        Wed,  4 May 2022 07:11:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1651648309; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=tFn9wwCC2jbZbvF2m0NYpG+KYz+1Qoet6t0hgOWJc6Y=;
-        b=qQs5BaWdkBcajRkOAEHRS6mRI+h/bTAuISJP75XGmBoaLJcqQvySBhKZxv83vRza0J5qIg
-        cMjjDnBcp0Mfx8hSeEAZaVP+X0OJcCkvuHUXJcEUeCz7PepO6nIel4kmphUhD90AVjoj0a
-        LdojoyU97Ovi274zrssUWkDExqKDav4=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9BDEC131BD;
-        Wed,  4 May 2022 07:11:49 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 4kiXJDUncmKiSwAAMHmgww
-        (envelope-from <mwilck@suse.com>); Wed, 04 May 2022 07:11:49 +0000
-Message-ID: <9d7e7a5613decc1737ef2601ebb2506890790930.camel@suse.com>
-Subject: lpfc: regression with lpfc 14.2.0.0 / Skyhawk: FLOGI failure
-From:   Martin Wilck <mwilck@suse.com>
-To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Justin Tee <justin.tee@broadcom.com>,
-        Daniel Wagner <daniel.wagner@suse.com>,
-        David Bond <dbond@suse.com>, Hannes Reinecke <hare@suse.com>
-Date:   Wed, 04 May 2022 09:11:49 +0200
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.1 
+        with ESMTP id S1345338AbiEDHZV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 03:25:21 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8896167F1;
+        Wed,  4 May 2022 00:21:46 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 242MCRCj030007;
+        Tue, 3 May 2022 00:51:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2021-07-09;
+ bh=g9paThm+Fsnp2BWLsmTw8WxlestNVGXIq3xS3NKyV2I=;
+ b=rEwDYggF5Wl2D1qSGwK6g1jUEdauuI2RYg4idRmm2NitjNsFCpUkwhbd6AVeLd25lFt4
+ 09hlxaXCPVPkDjreqs6/XFDQZd+YZlwm/Cv4O4U49c7yCgb/SRoax25PHT0kOBu4bCLQ
+ Sr2GdAT1jrA9S73RdU7pA+/nMXvD3RtJzOgkn08M5bJ9AMIh22UJHdfbTBDLA5yqfsvj
+ EbAL+n3yHWj5X+088IblmI/7fz9uVin5chS6l/6s6Hvpyk/AlQh25wsKlxdvitSwn/Lk
+ P6Zef9YOozAZpCp8wUFPvgF4vyaz9l22S6tlJFOfRaSFygT6VI3he30iOZCYlWGVCC8o ew== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fruq0cp5h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 03 May 2022 00:51:55 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2430op0L008940;
+        Tue, 3 May 2022 00:51:54 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x7p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 03 May 2022 00:51:54 +0000
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2430pljM010389;
+        Tue, 3 May 2022 00:51:54 GMT
+Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x4g-13;
+        Tue, 03 May 2022 00:51:54 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     cgel.zte@gmail.com, kashyap.desai@broadcom.com,
+        sumit.saxena@broadcom.com
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        megaraidlinux.pdl@broadcom.com, linux-kernel@vger.kernel.org,
+        jejb@linux.ibm.com, Zeal Robot <zealci@zte.com.cn>,
+        shivasharan.srikanteshwara@broadcom.com,
+        Lv Ruyi <lv.ruyi@zte.com.cn>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] megaraid: fix error check return value of register_chrdev()
+Date:   Mon,  2 May 2022 20:51:23 -0400
+Message-Id: <165153836363.24053.6805660896758836737.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.35.2
+In-Reply-To: <20220418105755.2558828-1-lv.ruyi@zte.com.cn>
+References: <20220418105755.2558828-1-lv.ruyi@zte.com.cn>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: WgBq_sepvIPlWDiVpNmgjWGvceU0XsUy
+X-Proofpoint-GUID: WgBq_sepvIPlWDiVpNmgjWGvceU0XsUy
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We have encountered a regression with linux 5.18-rc5, where Skyhawk
-controllers ("Emulex OneConnect OCe14000") fail at the FLOGI stage and
-don't detect any rports.
+On Mon, 18 Apr 2022 10:57:55 +0000, cgel.zte@gmail.com wrote:
 
-We've bisected it to 1b64aa9eae28 ("scsi: lpfc: SLI path split:
-Refactor fast and slow paths to native SLI4").
+> From: Lv Ruyi <lv.ruyi@zte.com.cn>
+> 
+> If major equal 0, register_chrdev() returns error code when it fails.
+> This function dynamically allocate a major and return its number on
+> success, so we should use "< 0" to check it instead of "!".
+> 
+> 
+> [...]
 
-As this was 5.18-rc5,the following fixups on top of 14.2.0.0 were
-already included in the tested code:
+Applied to 5.19/scsi-queue, thanks!
 
-c26bd6602e1d scsi: lpfc: Fix locking for lpfc_sli_iocbq_lookup()
-7294a9bcaa7e scsi: lpfc: Fix broken SLI4 abort path
-4f3beb36b1e4 scsi: lpfc: Update lpfc version to 14.2.0.1
-df0101197c4d scsi: lpfc: Fix queue failures when recovering from PCI parity=
- error
-a4691038b407 scsi: lpfc: Fix unload hang after back to back PCI EEH faults
-35ed9613d83f scsi: lpfc: Improve PCI EEH Error and Recovery Handling
+[1/1] megaraid: fix error check return value of register_chrdev()
+      https://git.kernel.org/mkp/scsi/c/c5acd61dbb32
 
-The relevant part of the log (AFAICT) looks like this, showing an "ELS
-CQE error at the FLOGI stage:
-
-lpfc 0000:04:00.2: 0:1303 Link Up Event x1 received Data: x1 x0 x4 x0 x0 x0=
- 0
-lpfc 0000:04:00.2: 0:2778 Start FCF table scan at linkup
-lpfc 0000:04:00.2: 0:2726 READ_FCF_RECORD Indicates empty FCF table.
-lpfc 0000:04:00.2: 0:2765 Mailbox command READ_FCF_RECORD failed to retriev=
-e a FCF record.
-lpfc 0000:04:00.2: 0:0392 Async Event: word0:x0, word1:x1, word2:x2, word3:=
-xc0010200
-lpfc 0000:04:00.2: 0:2546 New FCF event, evt_tag:x2, index:x0
-lpfc 0000:04:00.2: 0:2779 Read FCF (x0) for updating roundrobin FCF failove=
-r bmask
-lpfc 0000:04:00.2: 0:2770 Start FCF table scan per async FCF event, evt_tag=
-:x2, index:x0
-lpfc 0000:04:00.2: 0:2764 READ_FCF_RECORD:
-lpfc 0000:04:00.2: 0:3059 adding idx x0 pri x80 flg x0
-lpfc 0000:04:00.2: 0:2790 Set FCF (x0) to roundrobin FCF failover bmask
-lpfc 0000:04:00.2: 0:2764 READ_FCF_RECORD:
-lpfc 0000:04:00.2: 0:3059 adding idx x0 pri x80 flg x1
-lpfc 0000:04:00.2: 0:2790 Set FCF (x0) to roundrobin FCF failover bmask
-lpfc 0000:04:00.2: 0:2840 Update initial FCF candidate with FCF (x0)
-lpfc 0000:04:00.2: 0:(0):0247 Start Discovery Timer state x7 Data: x21 xfff=
-f9ac83c2449e8 x0 x0
-lpfc 0000:04:00.2: 0:(0):0932 FIND node did xfffffe NOT FOUND.
-lpfc 0000:04:00.2: 0:0001 Allocated rpi:x0 max:x1000 lim:x40
-lpfc 0000:04:00.2: 0:(0):0007 Init New ndlp xffff9abe3071ce00, rpi:x0 DID:f=
-ffffe flg:x0 refcnt:1
-lpfc 0000:04:00.2: 0:(0):0116 Xmit ELS command x4 to remote NPORT xfffffe I=
-/O tag: x800, port state:x7 rpi x0 fc_flag:x90014
-lpfc 0000:04:00.2: 0:(0):0247 Start Discovery Timer state x7 Data: x21 xfff=
-f9ac83c2449e8 x0 x0
-lpfc 0000:04:00.2: 0:(0):0354 Mbox cmd issue - Enqueue Data: x31 (x0/x0) x7=
- x200 x2
-lpfc 0000:04:00.2: 0:(0):0355 Mailbox cmd x31 (x0/x0) issue Data: x7 x300
-lpfc 0000:04:00.2: 0:0357 ELS CQE error: status=3Dx3: CQE: 08000300 0000000=
-0 00000002 80010000
-lpfc 0000:04:00.2: 0:0321 Rsp Ring 2 error: IOCB Data: x8000300 x0 x2 x8001=
-0000
-lpfc 0000:04:00.2: 0:2611 FLOGI failed on FCF (x0), status:x3/x2, tmo:x14, =
-perform roundrobin FCF failover
-lpfc 0000:04:00.2: 0:3060 Last IDX 0
-lpfc 0000:04:00.2: 0:3061 Last IDX 0
-lpfc 0000:04:00.2: 0:2844 No roundrobin failover FCF available
-lpfc 0000:04:00.2: 0:2865 No FCF available, stop roundrobin FCF failover an=
-d change port state:x7/x0
-
-Comparison with a "good" case with lpfc 14.0.0.4:
-
-lpfc 0000:04:00.2: 0:1303 Link Up Event x1 received Data: x1 x0 x4 x0 x0 x0=
- 0
-lpfc 0000:04:00.2: 0:2778 Start FCF table scan at linkup
-lpfc 0000:04:00.2: 0:2726 READ_FCF_RECORD Indicates empty FCF table.
-lpfc 0000:04:00.2: 0:2765 Mailbox command READ_FCF_RECORD failed to retriev=
-e a FCF record.
-lpfc 0000:04:00.2: 0:0392 Async Event: word0:x0, word1:x1, word2:x2, word3:=
-xc0010200
-lpfc 0000:04:00.2: 0:2546 New FCF event, evt_tag:x2, index:x0
-lpfc 0000:04:00.2: 0:2779 Read FCF (x0) for updating roundrobin FCF failove=
-r bmask
-lpfc 0000:04:00.2: 0:2770 Start FCF table scan per async FCF event, evt_tag=
-:x2, index:x0
-lpfc 0000:04:00.2: 0:2764 READ_FCF_RECORD:
-lpfc 0000:04:00.2: 0:3059 adding idx x0 pri x80 flg x0
-lpfc 0000:04:00.2: 0:2790 Set FCF (x0) to roundrobin FCF failover bmask
-lpfc 0000:04:00.2: 0:(0):0307 Mailbox cmd x9b (xc/x8) Cmpl lpfc_mbx_cmpl_fc=
-f_scan_read_fcf_rec [lpfc] Data: x9b00 x8 x244 x0 x0 x0 xfa8cd000 xf x244 x=
-0 x0 x0
-lpfc 0000:04:00.2: 0:2764 READ_FCF_RECORD:
-lpfc 0000:04:00.2: 0:3059 adding idx x0 pri x80 flg x1
-lpfc 0000:04:00.2: 0:2790 Set FCF (x0) to roundrobin FCF failover bmask
-lpfc 0000:04:00.2: 0:2840 Update initial FCF candidate with FCF (x0)
-lpfc 0000:04:00.2: 0:(0):0247 Start Discovery Timer state x7 Data: x21 xfff=
-f94b6fcae69e8 x0 x0
-lpfc 0000:04:00.2: 0:(0):0932 FIND node did xfffffe NOT FOUND.
-lpfc 0000:04:00.2: 0:0001 Allocated rpi:x0 max:x1000 lim:x40
-lpfc 0000:04:00.2: 0:(0):0007 Init New ndlp xffff94c6f0c99000, rpi:x0 DID:f=
-ffffe flg:x0 refcnt:1
-lpfc 0000:04:00.2: 0:(0):0116 Xmit ELS command x4 to remote NPORT xfffffe I=
-/O tag: x800, port state:x7 rpi x0 fc_flag:x90014
-lpfc 0000:04:00.2: 0:(0):0247 Start Discovery Timer state x7 Data: x21 xfff=
-f94b6fcae69e8 x0 x0
-lpfc 0000:04:00.2: 0:(0):0101 FLOGI completes successfully, I/O tag:x800, x=
-ri x0 Data: x40002 xd0070000 x10270000 x0 x7 90014 2
-lpfc 0000:04:00.2: 0:(0):1816 FLOGI NPIV supported, response data 0x1
-lpfc 0000:04:00.2: 0:(0):0904 NPort state transition xfffffe, UNUSED -> UNM=
-APPED
-lpfc 0000:04:00.2: 0:(0):3183 lpfc_register_remote_port rport xffff94b7c467=
-f800 DID xfffffe, role x0 refcnt 3
-
-Hints appreciated. Complete logs and additional debug data can be provided =
-on request.
-
-Regards
-Martin
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
