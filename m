@@ -2,124 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A88AC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 May 2022 09:41:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A84F5C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 May 2022 11:22:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233679AbiECJoq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 May 2022 05:44:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54438 "EHLO
+        id S234664AbiECLZi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 May 2022 07:25:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233664AbiECJoY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2022 05:44:24 -0400
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14367326F4
-        for <linux-scsi@vger.kernel.org>; Tue,  3 May 2022 02:40:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1651570837; x=1683106837;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=P+iOAd44yQAu6dFiULlp+J/3lk1X57kR5DCW90siNJg=;
-  b=gJvWDLUf3PbCWGlejBzAbc93AC948rmh4muSowqRhzpIMKRMrD60xhH2
-   RpFSxZbW0PgODYwLaEcxqbLDhZ4JrzFBKZr8NndZQ5JIcWNf1Hdl5mywh
-   8RCYTmdTsLUHh5L1Ta0dwSs5hW0RjTSAjDxr11DvlqNn9u9Wh/WCbaERJ
-   Jm/dKxjxbUKqAqJkmadnfUM9M6Q7uvsf526e6zZKgk6XaqcGPeCTvftqk
-   0siMJWs/VfIlraN/TQAXwORE3YnAEdCeFVhqE9fehlvZLcGIEDdbkXrjN
-   iYGDWMFBnVVAdvKzaEJKDI5GwNITQcU9oDfE6dhggWIEbI5zxPlTLUp9W
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10335"; a="353879349"
-X-IronPort-AV: E=Sophos;i="5.91,194,1647327600"; 
-   d="scan'208";a="353879349"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 May 2022 02:40:36 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,194,1647327600"; 
-   d="scan'208";a="631449685"
-Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 03 May 2022 02:40:34 -0700
-Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1nlp1G-000ALL-9h;
-        Tue, 03 May 2022 09:40:34 +0000
-Date:   Tue, 3 May 2022 17:39:52 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 13/24] aic7xxx: make BUILD_SCSIID() a function
-Message-ID: <202205031715.Eiw7By3c-lkp@intel.com>
-References: <20220502213820.3187-14-hare@suse.de>
+        with ESMTP id S233389AbiECLZh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2022 07:25:37 -0400
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5137417AA4;
+        Tue,  3 May 2022 04:22:05 -0700 (PDT)
+Received: by mail-wm1-f51.google.com with SMTP id l62-20020a1c2541000000b0038e4570af2fso1084986wml.5;
+        Tue, 03 May 2022 04:22:05 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=YiY0dGoIC8096MJoLsSBb1qNLHmagfKwvPsd98SImSg=;
+        b=a0vixKdvtLv2O3//vtKss4jlgL8e/Gv+Cnvveuw82Z2bXYk08ZfM099wL9y9cdDOM0
+         qohzpZu3t2pXzdNDrE/Sk1JXEi/vfWL7RTkGunyeM/pZubjD/8j+9REc2IeCwaZx+juU
+         tYXbu5uzWQDa3tcawBAmwO44VXB8yv7/o0CHfh36DYTwnCbZ1UF8ZGYNyf1Z+uI6OVID
+         ymqxlTw0vaVej9AqdE8j8wZqpB7MgGSPcVryknFcPV0DnM3UFefg9lO6pZMMaQePFIJf
+         IwehEKrWXlbpxtreo8yksbrzjY+Htc6/hFX6YmfsbKi20Jo1jOcCxob1FIpIc1oZlVF4
+         NBjQ==
+X-Gm-Message-State: AOAM533K9wdI6sTRcRPnfjNINXNE9RMNENXvqu3ViL2fIgpRpu36KkBv
+        L0mUck9gGVL5+M8Z3HzAhwI=
+X-Google-Smtp-Source: ABdhPJxm1zYhvfWARYcqdPYfX+WBZx31HBYYbX9BTSG4b89PfKyAhJee2ZJz/esokNnR95scu5noYQ==
+X-Received: by 2002:a05:600c:3b14:b0:394:1f06:37eb with SMTP id m20-20020a05600c3b1400b003941f0637ebmr2920891wms.193.1651576923857;
+        Tue, 03 May 2022 04:22:03 -0700 (PDT)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id bd10-20020a05600c1f0a00b003942a244ec6sm1465936wmb.11.2022.05.03.04.22.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 May 2022 04:22:03 -0700 (PDT)
+Date:   Tue, 3 May 2022 11:22:01 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     Michael Kelley <mikelley@microsoft.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, linux-kernel@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, vkuznets@redhat.com,
+        decui@microsoft.com, drawat.floss@gmail.com, airlied@linux.ie,
+        daniel@ffwll.ch, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        deller@gmx.de, dri-devel@lists.freedesktop.org,
+        linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org
+Subject: Re: [PATCH 0/4] Remove support for Hyper-V 2008 and 2008R2/Win7
+Message-ID: <20220503112201.hwzenitojimrgz3f@liuwe-devbox-debian-v2>
+References: <1651509391-2058-1-git-send-email-mikelley@microsoft.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220502213820.3187-14-hare@suse.de>
+In-Reply-To: <1651509391-2058-1-git-send-email-mikelley@microsoft.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Hannes,
+On Mon, May 02, 2022 at 09:36:27AM -0700, Michael Kelley wrote:
+> Linux code for running as a Hyper-V guest includes special cases for the
+> first released versions of Hyper-V: 2008 and 2008R2/Windows 7. These
+> versions were very thinly used for running Linux guests when first
+> released more than 12 years ago, and they are now out of support
+> (except for extended security updates). As initial versions, they
+> lack the performance features needed for effective production usage
+> of Linux guests. In total, there's no need to continue to support
+> the latest Linux kernels on these versions of Hyper-V.
+> 
+> Simplify the code for running on Hyper-V by removing the special
+> cases. This includes removing the negotiation of the VMbus protocol
+> versions for 2008 and 2008R2, and the special case code based on
+> those VMbus protocol versions. Changes are in the core VMbus code and
+> several drivers for synthetic VMbus devices.
+> 
+> Some drivers have driver-specific protocols with the Hyper-V host and
+> may have versions of those protocols that are limited to 2008 and
+> 2008R2. This patch set does the clean-up only for the top-level
+> VMbus protocol versions, and not the driver-specific protocols.
+> Cleaning up the driver-specific protocols can be done with
+> follow-on patches.
+> 
+> There's no specific urgency to removing the special case code for
+> 2008 and 2008R2, so if the broader Linux kernel community surfaces
+> a reason why this clean-up should not be done now, we can wait.
+> But I think we want to eventually stop carrying around this extra
+> baggage, and based on discussions with the Hyper-V team within
+> Microsoft, we're already past the point that it has any value.
+> 
 
-I love your patch! Perhaps something to improve:
+I will wait for a week for people to voice their opinions. If I hear no
+objection I will apply this series to hyperv-next.
 
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on jejb-scsi/for-next powerpc/next linus/master v5.18-rc5 next-20220502]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+Thanks,
+Wei.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Hannes-Reinecke/scsi-EH-rework-prep-patches-part-1/20220503-054317
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-config: arm64-randconfig-r022-20220502 (https://download.01.org/0day-ci/archive/20220503/202205031715.Eiw7By3c-lkp@intel.com/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 363b3a645a1e30011cc8da624f13dac5fd915628)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install arm64 cross compiling tool for clang build
-        # apt-get install binutils-aarch64-linux-gnu
-        # https://github.com/intel-lab-lkp/linux/commit/5436bc0a0e277a5742af0b7b443b4591ce0e5b74
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Hannes-Reinecke/scsi-EH-rework-prep-patches-part-1/20220503-054317
-        git checkout 5436bc0a0e277a5742af0b7b443b4591ce0e5b74
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm64 SHELL=/bin/bash drivers/scsi/
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-All warnings (new ones prefixed by >>):
-
->> drivers/scsi/aic7xxx/aic7xxx_osm.c:808:24: warning: operator '?:' has lower precedence than '|'; '|' will be evaluated first [-Wbitwise-conditional-parentheses]
-                   (sdev->channel == 0) ? 0 : TWIN_CHNLB;
-                   ~~~~~~~~~~~~~~~~~~~~ ^
-   drivers/scsi/aic7xxx/aic7xxx_osm.c:808:24: note: place parentheses around the '|' expression to silence this warning
-                   (sdev->channel == 0) ? 0 : TWIN_CHNLB;
-                                        ^
-                                       )
-   drivers/scsi/aic7xxx/aic7xxx_osm.c:808:24: note: place parentheses around the '?:' expression to evaluate it first
-                   (sdev->channel == 0) ? 0 : TWIN_CHNLB;
-                   ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
-   1 warning generated.
-
-
-vim +808 drivers/scsi/aic7xxx/aic7xxx_osm.c
-
-   800	
-   801	
-   802	static inline unsigned int ahc_build_scsiid(struct ahc_softc *ahc,
-   803						    struct scsi_device *sdev)
-   804	{
-   805		unsigned int scsiid =
-   806			((sdev->id << TID_SHIFT) & TID) |
-   807			((sdev->channel == 0) ? ahc->our_id : ahc->our_id_b) |
- > 808			(sdev->channel == 0) ? 0 : TWIN_CHNLB;
-   809		return scsiid;
-   810	}
-   811	
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+> Michael Kelley (4):
+>   Drivers: hv: vmbus: Remove support for Hyper-V 2008 and Hyper-V
+>     2008R2/Win7
+>   scsi: storvsc: Remove support for Hyper-V 2008 and 2008R2/Win7
+>   video: hyperv_fb: Remove support for Hyper-V 2008 and 2008R2/Win7
+>   drm/hyperv: Remove support for Hyper-V 2008 and 2008R2/Win7
+> 
+>  drivers/gpu/drm/hyperv/hyperv_drm_proto.c | 23 ++++--------
+>  drivers/hv/channel_mgmt.c                 | 29 ++++++---------
+>  drivers/hv/connection.c                   |  6 ++--
+>  drivers/hv/vmbus_drv.c                    | 60 +++++++------------------------
+>  drivers/scsi/storvsc_drv.c                | 36 +++++--------------
+>  drivers/video/fbdev/hyperv_fb.c           | 23 ++----------
+>  include/linux/hyperv.h                    | 10 ++++--
+>  7 files changed, 52 insertions(+), 135 deletions(-)
+> 
+> -- 
+> 1.8.3.1
+> 
