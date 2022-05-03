@@ -2,182 +2,177 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39C48C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 May 2022 23:23:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6EF5C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 May 2022 00:15:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231565AbiEBX05 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 May 2022 19:26:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52374 "EHLO
+        id S229755AbiECATY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 May 2022 20:19:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232273AbiEBXYM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 19:24:12 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 41BEE63CB;
-        Mon,  2 May 2022 16:20:40 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-2-147.pa.nsw.optusnet.com.au [49.181.2.147])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 71A01534701;
-        Tue,  3 May 2022 09:20:38 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nlfLH-007IoG-TM; Tue, 03 May 2022 09:20:35 +1000
-Date:   Tue, 3 May 2022 09:20:35 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Nitesh Shetty <nj.shetty@samsung.com>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, dm-devel@redhat.com,
-        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-        nitheshshetty@gmail.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 00/10] Add Copy offload support
-Message-ID: <20220502232035.GE1360180@dread.disaster.area>
-References: <CGME20220426101804epcas5p4a0a325d3ce89e868e4924bbdeeba6d15@epcas5p4.samsung.com>
- <20220426101241.30100-1-nj.shetty@samsung.com>
- <6a85e8c8-d9d1-f192-f10d-09052703c99a@opensource.wdc.com>
- <20220427124951.GA9558@test-zns>
- <20220502040951.GC1360180@dread.disaster.area>
- <46e95412-9a79-51f8-3d52-caed4875d41f@opensource.wdc.com>
+        with ESMTP id S229576AbiECATV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2022 20:19:21 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F486344F6
+        for <linux-scsi@vger.kernel.org>; Mon,  2 May 2022 17:15:50 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id a11so13531049pff.1
+        for <linux-scsi@vger.kernel.org>; Mon, 02 May 2022 17:15:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=uSPqb+z89QQ2S36jFP59MxksXJ0KM6ez8eSZnSI+ei8=;
+        b=H1GAb0tM6sUMCSiHhAYwhyJ5SqzXF7WZrlpc+UoVr9GNIGBKr+byg6jVgpCKVp+Rl+
+         9c1k7mjHiG/MUC0OVgwNxxfq+vpils7Q79r6Pb2VwF8flmhgQgzde0eprj1iKjZPaAl2
+         ck3w6vlVwrRO8kK1cxi1kCPotE+POYjdC0rNzzR3MvqdO3XVzJGas+EraS4ZYAXlG9I2
+         y5uhbY7iYPiVVMuOWN7q2FZiUg6ON4DhWtV8VS/u0DuCt9EYjpGFGSlVebP/cD0GP3wn
+         b8Z2oXt+bBI24QIK82XaUsqWOWI+CPrVWyBZNhQQoQM+ALpbUwTlPQQqLRfD5mlmOa/a
+         HQHQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=uSPqb+z89QQ2S36jFP59MxksXJ0KM6ez8eSZnSI+ei8=;
+        b=u14iVOf4TZpXKUnPqXdV9yqEhZ9K64xRwVh1b8g1enR7OKcSy/O8E1qOWUp0fCPJe1
+         zwI3uwrBKQZ3y9mOFIvF5WHuNo8mSz7ejZEmAA/qjmxMlXeQNc4ivWwE9E297Mr8yt6K
+         sqnpTaW9mxJuv878WMCsA7czUlniaxhRSB+g5YE+g1LQAJR6qRM3LnJ4m7zHJwGnwEc3
+         Xz7DwxY3/4LxQLQQKBA8eoRT7+riJwkLIRLSu+p26ZzGr51qk6YU9BxGESOHtjhWxdek
+         kdLNdH6oxAgm8SD1ALE/jRgDkJDlgtEW7/fp/UoqHNUjPkTlWc6kMIe8iTKZBRIXlU0e
+         Jh0g==
+X-Gm-Message-State: AOAM5306rOTE6In4XpBn9n3Xua4D5OKrMgv5ohQJtiEpWfLnIRY3gMS7
+        r5Uf5MX92tvXhBgCy7tO24FYoQ==
+X-Google-Smtp-Source: ABdhPJy7JNuOUsAEyFdbfrltm/33RcFMupJCS91zJEmcTCtVrbretmo2xPaN8nxWkXj2q93Mq7b4Eg==
+X-Received: by 2002:a63:6d0c:0:b0:3c1:7361:b25b with SMTP id i12-20020a636d0c000000b003c17361b25bmr11696958pgc.449.1651536949069;
+        Mon, 02 May 2022 17:15:49 -0700 (PDT)
+Received: from google.com ([2620:15c:2c5:11:bb0:cf90:6ae6:c153])
+        by smtp.gmail.com with ESMTPSA id w13-20020aa7858d000000b0050dc762814bsm5258223pfn.37.2022.05.02.17.15.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 May 2022 17:15:48 -0700 (PDT)
+Date:   Mon, 2 May 2022 17:15:43 -0700
+From:   Igor Pylypiv <ipylypiv@google.com>
+To:     John Garry <john.garry@huawei.com>, Ajish.Koshy@microchip.com
+Cc:     Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jolly Shah <jollys@google.com>,
+        Vishakha Channapattan <vishakhavc@google.com>,
+        Changyuan Lyu <changyuanl@google.com>,
+        linux-scsi@vger.kernel.org, Viswas G <Viswas.G@microchip.com>,
+        Ruksar Devadi <Ruksar.devadi@microchip.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: Re: [PATCH] scsi: pm80xx: Remove pm8001_tag_init()
+Message-ID: <YnB0L+eoMM9RKzyi@google.com>
+References: <20220428000326.3622230-1-ipylypiv@google.com>
+ <0cb8d2e1-b2b3-04ac-9151-9b211d893cfd@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <46e95412-9a79-51f8-3d52-caed4875d41f@opensource.wdc.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=62706747
-        a=ivVLWpVy4j68lT4lJFbQgw==:117 a=ivVLWpVy4j68lT4lJFbQgw==:17
-        a=IkcTkHD0fZMA:10 a=oZkIemNP1mAA:10 a=7-415B0cAAAA:8
-        a=kuBEN3JhnRn9nEiEWMwA:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <0cb8d2e1-b2b3-04ac-9151-9b211d893cfd@huawei.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 02, 2022 at 09:54:55PM +0900, Damien Le Moal wrote:
-> On 2022/05/02 13:09, Dave Chinner wrote:
-> > On Wed, Apr 27, 2022 at 06:19:51PM +0530, Nitesh Shetty wrote:
-> >> O Wed, Apr 27, 2022 at 11:19:48AM +0900, Damien Le Moal wrote:
-> >>> On 4/26/22 19:12, Nitesh Shetty wrote:
-> >>>> The patch series covers the points discussed in November 2021 virtual call
-> >>>> [LSF/MM/BFP TOPIC] Storage: Copy Offload[0].
-> >>>> We have covered the Initial agreed requirements in this patchset.
-> >>>> Patchset borrows Mikulas's token based approach for 2 bdev
-> >>>> implementation.
-> >>>>
-> >>>> Overall series supports –
-> >>>>
-> >>>> 1. Driver
-> >>>> - NVMe Copy command (single NS), including support in nvme-target (for
-> >>>>     block and file backend)
-> >>>
-> >>> It would also be nice to have copy offload emulation in null_blk for testing.
-> >>>
-> >>
-> >> We can plan this in next phase of copy support, once this series settles down.
+On Fri, Apr 29, 2022 at 10:06:06AM +0100, John Garry wrote:
+> On 28/04/2022 01:03, Igor Pylypiv wrote:
+> > In commit 5a141315ed7c ("scsi: pm80xx: Increase the number of outstanding
+> > I/O supported to 1024") the pm8001_ha->tags allocation was moved into
+> > pm8001_init_ccb_tag(). This changed the execution order of allocation.
+> > pm8001_tag_init() used to be called after the pm8001_ha->tags allocation
+> > and now it is called before the allocation.
 > > 
-> > Why not just hook the loopback driver up to copy_file_range() so
-> > that the backend filesystem can just reflink copy the ranges being
-> > passed? That would enable testing on btrfs, XFS and NFSv4.2 hosted
-> > image files without needing any special block device setup at all...
+> > Before:
+> > 
+> > pm8001_pci_probe()
+> > `--> pm8001_pci_alloc()
+> >       `--> pm8001_alloc()
+> >            `--> pm8001_ha->tags = kzalloc(...)
+> >            `--> pm8001_tag_init(pm8001_ha); // OK: tags are allocated
+> > 
+> > After:
+> > 
+> > pm8001_pci_probe()
+> > `--> pm8001_pci_alloc()
+> > |    `--> pm8001_alloc()
+> > |         `--> pm8001_tag_init(pm8001_ha); // NOK: tags are not allocated
+> > |
+> > `--> pm8001_init_ccb_tag()
+> >       `-->  pm8001_ha->tags = kzalloc(...) // today it is bitmap_zalloc()
+> > 
+> > Since pm8001_ha->tags_num is zero when pm8001_tag_init() is called it does
+> > nothing. Tags memory is allocated with bitmap_zalloc() so there is no need
+> > to manually clear each bit with pm8001_tag_free().
 > 
-> That is a very good idea ! But that will cover only the non-zoned case. For copy
-> offload on zoned devices, adding support in null_blk is probably the simplest
-> thing to do.
+> Your change looks ok. But please note the following discussed in the
+> following link, there was/is a bug in the lateness in which the tags are
+> allocated:
+> 
+> https://lore.kernel.org/linux-scsi/PH0PR11MB5112D8C17D9EA268C197893FEC579@PH0PR11MB5112.namprd11.prod.outlook.com/
 
-Sure, but that's a zone device implementation issue, not a "how do
-applications use this offload" issue.
+Thanks for pointing out the discussion, John. My patch should still
+apply because clearing bits is redundant for memory allocated with
+bitmap_zalloc().
 
-i.e. zonefs support is not necessary to test the bio/block layer
-interfaces at all. All we need is a block device that can decode the
-bio-encoded offload packet and execute it to do full block layer
-testing. We can build dm devices on top of loop devices, etc, so we
-can test that the oflload support is plumbed, sliced, diced, and
-regurgitated correctly that way. We don't need actual low level
-device drivers to test this.
+> 
+> I don't think that it has been fixed yet...
 
-And, unlike the nullblk device, using the loopback device w/
-copy_file_range() will also allow data integrity testing if a
-generic copy_file_range() offload implementation is added. That is,
-we test a non-reflink capable filesystem on the loop device with the
-image file hosted on a reflink-capable filesystem. The upper
-filesystem copy then gets offloaded to reflinks in the lower
-filesystem. We already have copy_file_range() support in fsx, so all
-the data integrity fsx tests in fstests will exercise this offload
-path and find all the data corruptions the initial block layer bugs
-expose...
+Adding Ajish to comment on the patch readiness for the tags allocation
+lateness issue.
 
-Further, fsstress also has copy_file_range() support, and so all the
-fstests that generate stress tests or use fstress as load for
-failure testing will also exercise it.
+Thanks,
+Igor
 
-Indeed, this then gives us fine-grained error injection capability
-within fstests via devices like dm-flakey. What happens when
-dm-flakey kills the device IO mid-offload? Does everything recover
-correctly? Do we end up with data corruption? Are partial offload
-completions when errors occur signalled correctly? Is there -any-
-test coverage (or even capability for testing) of user driven copy
-offload failure situations like this in any of the other test
-suites?
-
-I mean, once the loop device has cfr offload, we can use dm-flakey
-to kill IO in the image file or even do a force shutdown of the
-image host filesystem. Hence we can actually trash the copy offload
-operation in mid-flight, not just error it out on full completion.
-This is trivial to do with the fstests infrastructure - it just
-relies on having generic copy_file_range() block offload support and
-a loopback device offload of hardware copy bios back to
-copy_file_range()....
-
-This is what I mean about copy offload being designed the wrong way.
-We have the high level hooks needed to implement it right though the
-filesystems and block layer without any specific hardware support,
-and we can test the whole stack without needing specific hardware
-support. We already have filesystem level copy offload acceleration,
-so the last thing we want to see is a block layer offload
-implementation that is incompatible with the semantics we've already
-exposed to userspace for copy offloads.
-
-As I said:
-
-> > i.e. I think you're doing this compeltely backwards by trying to
-> > target non-existent hardware first....
-
-Rather than tie the block layer offload function/implementation to
-the specific quirks of a specific target hardware, we should be
-adding generic support in the block layer for the copy offload
-semantics we've already exposed to userspace. We already have test
-coverage and infrastructure for this interface and is already in use
-by applications.
-
-Transparent hardware acceleration of data copies when the hardware
-supports it is exactly where copy offloads are useful - implementing
-support based around hardware made of unobtainium and then adding
-high level user facing API support as an afterthought is putting the
-cart before the horse. We need to make sure the high level
-functionality is robust and handles errors correctly before we even
-worry about what quirks the hardware might bring to the table.
-
-Build a reference model first with the loop device and
-copy-file-range, test it, validate it, make sure it all works. Then
-hook up the hardware, and fix all the hardware bugs that are exposed
-before the hardware is released to the general public....
-
-Why haven't we learnt this lesson yet from all the problems we've
-had with, say, broken discard/trim, zeroing, erase, etc in hardware
-implementations, incompatible hardware protocol implementations of
-equivalent functionality, etc? i.e. We haven't defined the OS
-required behaviour that hardware must support and instead just tried
-to make whatever has come from the hardware vendor's
-"standarisation" process work ok?
-
-In this case, we already have a functioning model, syscalls and user
-applications making use of copy offloads at the OS level. Now we
-need to implement those exact semantics at the block layer to build
-a validated reference model for the block layer offload behaviour
-that hardware must comply with. Then hardware offloads in actual
-hardware can be compared and validated against the reference model
-behaviour, and any hardware that doesn't match can be
-quirked/blacklisted until the manufacturer fixes their firmware...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Thanks,
+> John
+> 
+> > 
+> > Fixes: 5a141315ed7c ("scsi: pm80xx: Increase the number of outstanding
+> > I/O supported to 1024")
+> > Reviewed-by: Changyuan Lyu <changyuanl@google.com>
+> > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> > ---
+> >   drivers/scsi/pm8001/pm8001_init.c | 2 --
+> >   drivers/scsi/pm8001/pm8001_sas.c  | 7 -------
+> >   drivers/scsi/pm8001/pm8001_sas.h  | 1 -
+> >   3 files changed, 10 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> > index 9b04f1a6a67d..7040cecd861b 100644
+> > --- a/drivers/scsi/pm8001/pm8001_init.c
+> > +++ b/drivers/scsi/pm8001/pm8001_init.c
+> > @@ -420,8 +420,6 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+> >   		atomic_set(&pm8001_ha->devices[i].running_req, 0);
+> >   	}
+> >   	pm8001_ha->flags = PM8001F_INIT_TIME;
+> > -	/* Initialize tags */
+> > -	pm8001_tag_init(pm8001_ha);
+> >   	return 0;
+> >   err_out_nodev:
+> > diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> > index 3a863d776724..dc689055341b 100644
+> > --- a/drivers/scsi/pm8001/pm8001_sas.c
+> > +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> > @@ -92,13 +92,6 @@ int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out)
+> >   	return 0;
+> >   }
+> > -void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha)
+> > -{
+> > -	int i;
+> > -	for (i = 0; i < pm8001_ha->tags_num; ++i)
+> > -		pm8001_tag_free(pm8001_ha, i);
+> > -}
+> > -
+> >   /**
+> >    * pm8001_mem_alloc - allocate memory for pm8001.
+> >    * @pdev: pci device.
+> > diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> > index 060ab680a7ed..ba959f986c1e 100644
+> > --- a/drivers/scsi/pm8001/pm8001_sas.h
+> > +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> > @@ -633,7 +633,6 @@ extern struct workqueue_struct *pm8001_wq;
+> >   /******************** function prototype *********************/
+> >   int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out);
+> > -void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha);
+> >   u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag);
+> >   void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
+> >   			  struct pm8001_ccb_info *ccb);
+> 
