@@ -2,152 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8212CC4167D
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 18:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7649EC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 18:33:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377072AbiEDSc6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 May 2022 14:32:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57506 "EHLO
+        id S1377008AbiEDSg4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 May 2022 14:36:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376932AbiEDScm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 14:32:42 -0400
-Received: from mail-ot1-f43.google.com (mail-ot1-f43.google.com [209.85.210.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C50E5AA43;
-        Wed,  4 May 2022 11:09:11 -0700 (PDT)
-Received: by mail-ot1-f43.google.com with SMTP id m6-20020a05683023a600b0060612720715so1395504ots.10;
-        Wed, 04 May 2022 11:09:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=D+E9lNuRbHFdd170vr+MtjOcic+cq6LuKuOZKRSFmmQ=;
-        b=hqu6R1IRae0VoX6RVScHw+Zzo1GjIz7JEVjL/qj/M5RsjpSzZPnxbWaJ2QRNj9pG/V
-         GzcagHr+46Vvmokee05IR5m2irmd6EgL7Zj5NeOxB9mO4H+0VWs7t+QY6SdSEHLAFOQX
-         7nlxFOlTSSaPyJczzOi0IByyUPBRQBxkBJureHxsnNNwZLVdOxVmsPv3XR9dms/Hhmdq
-         Dpei6T4pf7hR9BSOp3RbmeuXVXYkTBZhjTdTpNg8Sjcc5Id2RNDvW92doze4AoQiouKc
-         /p5ZsjI6uJj0BqaJNqAfTwSy3ZnrnJ6J4Wl3iDw286tyYbPdWZk0VQKlkpwQfXgmyYMV
-         dCDg==
-X-Gm-Message-State: AOAM531GBGiEJMipM7x6IPEegxYs2k8skR7Jmuzu2kokd0nLw2UfSWFh
-        7VEkFE2UyuEFyw5s9SPLig==
-X-Google-Smtp-Source: ABdhPJz7UxGCoN/1mtQLUptxPhW193aedSmrIFdTLYGH8vHQEwAOv7HLwELKhlP+txzkjgVxGZbMKA==
-X-Received: by 2002:a05:6830:116:b0:606:3fb1:e89e with SMTP id i22-20020a056830011600b006063fb1e89emr2227922otp.310.1651687750783;
-        Wed, 04 May 2022 11:09:10 -0700 (PDT)
-Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id d19-20020a4ad353000000b0035eb4e5a6bfsm6240803oos.21.2022.05.04.11.09.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 May 2022 11:09:10 -0700 (PDT)
-Received: (nullmailer pid 1975953 invoked by uid 1000);
-        Wed, 04 May 2022 18:09:09 -0000
-Date:   Wed, 4 May 2022 13:09:09 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     "Gustavo A . R . Silva" <gustavoars@kernel.org>,
-        Chris Zankel <chris@zankel.net>,
-        Max Filippov <jcmvbkbc@gmail.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        linux-xtensa@linux-xtensa.org, devicetree@vger.kernel.org,
-        kunit-dev@googlegroups.com, linux-arm-kernel@lists.infradead.org,
-        linux-bluetooth@vger.kernel.org, linux-hardening@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-integrity@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-security-module@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, llvm@lists.linux.dev,
-        netdev@vger.kernel.org, selinux@vger.kernel.org
-Subject: Re: [PATCH 29/32] xtensa: Use mem_to_flex_dup() with struct property
-Message-ID: <YnKbaXEUHyu+btOD@robh.at.kernel.org>
-References: <20220504014440.3697851-1-keescook@chromium.org>
- <20220504014440.3697851-30-keescook@chromium.org>
+        with ESMTP id S1376986AbiEDSgp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 14:36:45 -0400
+X-Greylist: delayed 601 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 04 May 2022 11:22:29 PDT
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B49965F1;
+        Wed,  4 May 2022 11:22:29 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 233F742B44;
+        Wed,  4 May 2022 18:02:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        mime-version:content-transfer-encoding:content-type:content-type
+        :content-language:accept-language:in-reply-to:references
+        :message-id:date:date:subject:subject:from:from:received
+        :received:received:received:received; s=mta-01; t=1651687350; x=
+        1653501751; bh=d1AvmeEuVZgsCOz9p7Jh6JALcdMQUebwCCJjiySqc3w=; b=Z
+        Pl5px0nVEqVgiJ2jfO7OD1RiJNO8dvbS2wXDfzEg8Gqc9ieuLc0DTCYMPc9R/QJH
+        bJwDE0x/J+/SywJAbD98WldPUm7LduUIZPhDVX2rslr0wr9aeV9lk7LXESt0IDu+
+        TNkbb1g+914eUu86EuRKWaCE9JZ5+EwWBfFOQ5hS8c=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id UoA5R8rV2ZWn; Wed,  4 May 2022 21:02:30 +0300 (MSK)
+Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 0B4ED4283A;
+        Wed,  4 May 2022 21:02:29 +0300 (MSK)
+Received: from T-EXCH-10.corp.yadro.com (172.17.11.60) by
+ T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Wed, 4 May 2022 21:02:29 +0300
+Received: from T-EXCH-09.corp.yadro.com (172.17.11.59) by
+ T-EXCH-10.corp.yadro.com (172.17.11.60) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Wed, 4 May 2022 21:02:28 +0300
+Received: from T-EXCH-09.corp.yadro.com ([fe80::d9f:e165:8a50:d450]) by
+ T-EXCH-09.corp.yadro.com ([fe80::d9f:e165:8a50:d450%4]) with mapi id
+ 15.02.0986.022; Wed, 4 May 2022 21:02:28 +0300
+From:   Dmitriy Bogdanov <d.bogdanov@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux@yadro.com" <linux@yadro.com>
+Subject: RE: [PATCH v3 0/3] target: iscsi: control authentication per ACL
+Thread-Topic: [PATCH v3 0/3] target: iscsi: control authentication per ACL
+Thread-Index: AQHXxLmS7SuA9HdbIk2r5RVxhcl+j6veWFEAgABFs0CBMY9zoA==
+Date:   Wed, 4 May 2022 18:02:28 +0000
+Message-ID: <bd9e50adcc95404c94b4408117a94b0a@yadro.com>
+References: <20211019071843.14890-1-d.bogdanov@yadro.com>
+ <ec9e01a3-73d0-a06b-8c20-ae492c0c3313@oracle.com>
+ <15af5f6f490a42c5a02c9d9bd79f1a28@yadro.com>
+In-Reply-To: <15af5f6f490a42c5a02c9d9bd79f1a28@yadro.com>
+Accept-Language: ru-RU, en-US
+Content-Language: ru-RU
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.178.114.42]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220504014440.3697851-30-keescook@chromium.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Gmail won't send this, so I've trimmed the recipients...
-
-On Tue, May 03, 2022 at 06:44:38PM -0700, Kees Cook wrote:
-> As part of the work to perform bounds checking on all memcpy() uses,
-> replace the open-coded a deserialization of bytes out of memory into a
-> trailing flexible array by using a flex_array.h helper to perform the
-> allocation, bounds checking, and copying.
-> 
-> Cc: Chris Zankel <chris@zankel.net>
-> Cc: Max Filippov <jcmvbkbc@gmail.com>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Frank Rowand <frowand.list@gmail.com>
-> Cc: Guenter Roeck <linux@roeck-us.net>
-> Cc: linux-xtensa@linux-xtensa.org
-> Cc: devicetree@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->  arch/xtensa/platforms/xtfpga/setup.c | 9 +++------
->  include/linux/of.h                   | 3 ++-
->  2 files changed, 5 insertions(+), 7 deletions(-)
-> 
-> diff --git a/arch/xtensa/platforms/xtfpga/setup.c b/arch/xtensa/platforms/xtfpga/setup.c
-> index 538e6748e85a..31c1fa4ba4ec 100644
-> --- a/arch/xtensa/platforms/xtfpga/setup.c
-> +++ b/arch/xtensa/platforms/xtfpga/setup.c
-> @@ -102,7 +102,7 @@ CLK_OF_DECLARE(xtfpga_clk, "cdns,xtfpga-clock", xtfpga_clk_setup);
->  #define MAC_LEN 6
->  static void __init update_local_mac(struct device_node *node)
->  {
-> -	struct property *newmac;
-> +	struct property *newmac = NULL;
->  	const u8* macaddr;
->  	int prop_len;
->  
-> @@ -110,19 +110,16 @@ static void __init update_local_mac(struct device_node *node)
->  	if (macaddr == NULL || prop_len != MAC_LEN)
->  		return;
->  
-> -	newmac = kzalloc(sizeof(*newmac) + MAC_LEN, GFP_KERNEL);
-> -	if (newmac == NULL)
-> +	if (mem_to_flex_dup(&newmac, macaddr, MAC_LEN, GFP_KERNEL))
->  		return;
->  
-> -	newmac->value = newmac + 1;
-> -	newmac->length = MAC_LEN;
-> +	newmac->value = newmac->contents;
->  	newmac->name = kstrdup("local-mac-address", GFP_KERNEL);
->  	if (newmac->name == NULL) {
->  		kfree(newmac);
->  		return;
->  	}
->  
-> -	memcpy(newmac->value, macaddr, MAC_LEN);
->  	((u8*)newmac->value)[5] = (*(u32*)DIP_SWITCHES_VADDR) & 0x3f;
->  	of_update_property(node, newmac);
->  }
-> diff --git a/include/linux/of.h b/include/linux/of.h
-> index 17741eee0ca4..efb0f419fd1f 100644
-> --- a/include/linux/of.h
-> +++ b/include/linux/of.h
-> @@ -30,7 +30,7 @@ typedef u32 ihandle;
->  
->  struct property {
->  	char	*name;
-> -	int	length;
-> +	DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(int, length);
->  	void	*value;
->  	struct property *next;
->  #if defined(CONFIG_OF_DYNAMIC) || defined(CONFIG_SPARC)
-> @@ -42,6 +42,7 @@ struct property {
->  #if defined(CONFIG_OF_KOBJ)
->  	struct bin_attribute attr;
->  #endif
-> +	DECLARE_FLEX_ARRAY_ELEMENTS(u8, contents);
-
-99.9% of the time, this is not where the property value is stored as it 
-points into an FDT blob. I suppose that is okay, but just want to make 
-sure.
-
-The DT API for creating new nodes and properties is horrible as it is 
-multiple allocs and strdups which makes for tricky error paths. A better 
-API to centralize it would be welcome, but if this is the only case you 
-came across it's certainly not a requirement.
-
-Rob
+SGkgTWlrZSwNCg0KSSd2ZSBqdXN0IHRyaWVkIG9uZSBtb3JlIHRpbWUgdG8gcmVwcm9kdWNlIHlv
+dXIgZXJyb3IgYW5kIEkgZmFpbGVkIGFnYWluLg0KV2l0aCB5b3VyIGNvbmZpZyBmaWxlIHRoZSBi
+ZWhhdmlvciBpcyB0aGUgYWJzb2x1dGVseSB0aGUgc2FtZSBmb3IgYm90aCBjYXNlcyB3aXRoIG15
+IHBhdGNoc2V0IGFuZCB3aXRob3V0IG15IHBhdGNoc2V0OiANCiogZm9yIGR5bmFtaWMgQUNMcyAt
+IHRhcmdldCBmYWlscyB0aGUgbG9naW4gYW5kIHNob3dzIHRoZSBiZWxsb3cgbG9ncy4NCiogZm9y
+IHRoZSByZWdpc3RlcmVkIEFDTCAtIHRhcmdldCBzdWNjZWVkcyB0aGUgbG9naW4uDQoNCkNvdWxk
+IHlvdSwgcGxlYXNlLCByZS1jaGVjayB0aGUgcGF0Y2hzZXQ/DQoNCkJSLA0KIERtaXRyeQ0KDQot
+LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogRG1pdHJpeSBCb2dkYW5vdiA8ZC5ib2dk
+YW5vdkB5YWRyby5jb20+IA0KU2VudDogRnJpZGF5LCBPY3RvYmVyIDIyLCAyMDIxIDEwOjQ4IEFN
+DQpUbzogTWlrZSBDaHJpc3RpZSA8bWljaGFlbC5jaHJpc3RpZUBvcmFjbGUuY29tPjsgTWFydGlu
+IFBldGVyc2VuIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47IHRhcmdldC1kZXZlbEB2Z2Vy
+Lmtlcm5lbC5vcmcNCkNjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgbGludXhAeWFkcm8u
+Y29tDQpTdWJqZWN0OiBSRTogW1BBVENIIHYzIDAvM10gdGFyZ2V0OiBpc2NzaTogY29udHJvbCBh
+dXRoZW50aWNhdGlvbiBwZXIgQUNMDQoNCkhpIE1pa2UsDQoNCj4gSSBjYW4ndCBzZWVtIHRvIGdl
+dCB0aGUgcGF0Y2hlcyB3b3JraW5nIHdpdGggdGhlIHRhcmdldGNsaSBjb25maWcgZmlsZSBiZWxv
+dyBJdCB3b3JrZWQgb2sgYmVmb3JlIHRoZSBwYXRjaGVzLg0KPg0KPiBJIGdldCB0aGlzIGVycm9y
+Og0KPg0KPiBPY3QgMjIgMDA6NTY6MjUgb2w0IGtlcm5lbDogQ0hBUCB1c2VyIG9yIHBhc3N3b3Jk
+IG5vdCBzZXQgZm9yIEluaXRpYXRvciBBQ0wNCj4gT2N0IDIyIDAwOjU2OjI1IG9sNCBrZXJuZWw6
+IFNlY3VyaXR5IG5lZ290aWF0aW9uIGZhaWxlZC4NCj4gT2N0IDIyIDAwOjU2OjI1IG9sNCBrZXJu
+ZWw6IGlTQ1NJIExvZ2luIG5lZ290aWF0aW9uIGZhaWxlZC4NCg0KVGhpcyBraW5kIG9mIGVycm9y
+IGlzIHJlcG9ydGVkIGZvciB0aGUgdW5rbm93biAoZHluYW1pYykgQUNMIHNpbmNlIHRoZSBjb25m
+aWcgZmlsZSBoYXZlIG5vdCBoYXZlDQp1c2VyaWQvcGFzc3dvcmQgY29uZmlndXJlZCBmb3IgVFBH
+LiBZb3VyIGNvbmZpZyBmaWxlIGxvb2tzIHN0cmFuZ2UgLSBpdCBoYXMgZ2VuZXJhdGVfZHluX2Fj
+bHM9MQ0KYnV0IGhhcyBub3QgY3JlZGVudGlhbHMgZm9yIGR5bmFtaWMgYWNscy4NCg0KTG9naW4g
+ZnJvbSB0aGUgY29uZmlndXJlZCBBQ0wgaW4gdGhpcyBjb25maWcgZmlsZSB3b3JrcyB3ZWxsIGZv
+ciBtZS4NCg0KQ291bGQgeW91LCBwbGVhc2UsIGRlc2NyaWJlIG1vcmUgZGV0YWlscyBvZiB5b3Vy
+IHVzZWNhc2U/DQoNCkJSLA0KIERtaXRyeQ0K
