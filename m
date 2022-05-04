@@ -2,87 +2,171 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B802FC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 06:25:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C5DC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 07:11:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238998AbiEDG2s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 May 2022 02:28:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51914 "EHLO
+        id S242210AbiEDHPb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 May 2022 03:15:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244700AbiEDG2q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 02:28:46 -0400
-X-Greylist: delayed 448 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 03 May 2022 23:25:07 PDT
-Received: from tk2-214-16531.vs.sakura.ne.jp (160.16.76.35.v6.sakura.ne.jp [IPv6:2001:e42:102:1514:160:16:76:35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7A8AE193DA
-        for <linux-scsi@vger.kernel.org>; Tue,  3 May 2022 23:25:06 -0700 (PDT)
-Received: from localhost.localdomain (localhost [IPv6:::1])
-        by tk2-214-16531.vs.sakura.ne.jp (Postfix) with ESMTP id 55333170713B
-        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 15:17:35 +0900 (JST)
-Date:   Wed, 04 May 2022 15:17:35 +0900
-From:   info@carchsclub.com
-To:     linux-scsi@vger.kernel.org
-Message-ID: <62721a7f546bd_42032b022c50dc8813903b9@tk2-214-16531.vs.sakura.ne.jp.mail>
-Subject: =?UTF-8?Q?=E3=80=90=E3=82=AB=E3=83=BC=E3=83=81=E3=82=B9=E5=80=B6=E6=A5=BD=E9=83=A8=E3=80=91=E3=80=8C=E3=81=8F=E3=82=8B=E3=81=BE=E5=A3=B2=E3=82=8A=E9=9A=8A=EF=BC=81=E3=80=8D=E3=81=8A=E7=94=B3=E3=81=97=E8=BE=BC=E3=81=BF=E3=81=82=E3=82=8A=E3=81=8C=E3=81=A8=E3=81=86=E3=81=94=E3=81=96=E3=81=84=E3=81=BE=E3=81=99?=
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: base64
+        with ESMTP id S234092AbiEDHP0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 03:15:26 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3838122BEA
+        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 00:11:51 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id D7780210ED;
+        Wed,  4 May 2022 07:11:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1651648309; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=tFn9wwCC2jbZbvF2m0NYpG+KYz+1Qoet6t0hgOWJc6Y=;
+        b=qQs5BaWdkBcajRkOAEHRS6mRI+h/bTAuISJP75XGmBoaLJcqQvySBhKZxv83vRza0J5qIg
+        cMjjDnBcp0Mfx8hSeEAZaVP+X0OJcCkvuHUXJcEUeCz7PepO6nIel4kmphUhD90AVjoj0a
+        LdojoyU97Ovi274zrssUWkDExqKDav4=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9BDEC131BD;
+        Wed,  4 May 2022 07:11:49 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 4kiXJDUncmKiSwAAMHmgww
+        (envelope-from <mwilck@suse.com>); Wed, 04 May 2022 07:11:49 +0000
+Message-ID: <9d7e7a5613decc1737ef2601ebb2506890790930.camel@suse.com>
+Subject: lpfc: regression with lpfc 14.2.0.0 / Skyhawk: FLOGI failure
+From:   Martin Wilck <mwilck@suse.com>
+To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Justin Tee <justin.tee@broadcom.com>,
+        Daniel Wagner <daniel.wagner@suse.com>,
+        David Bond <dbond@suse.com>, Hannes Reinecke <hare@suse.com>
+Date:   Wed, 04 May 2022 09:11:49 +0200
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.1 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd
-77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd77yd
-77yd77yd77ydCuOAgOOCq+ODvOODgeOCueWAtualvemDqOOAjOOBj+OCi+OB
-vuWjsuOCiumaiu+8geOAjeOBruWPl+S7mOOBjOWujOS6huOBl+OBvuOBl+OB
-n+OAggrvvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3v
-vJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3vvJ3v
-vJ3vvJ3vvJ3vvJ3vvJ0KCvCfkpwgRG9ubmEgaXMgaW50ZXJlc3RlZCBpbiB5
-b3VyIHByb2ZpbGUhIENsaWNrIGhlcmU6IGh0dHA6Ly9pbngubHYvR0dJMj8w
-bmcg8J+SnCDwn5KcIERvbm5hIGlzIGludGVyZXN0ZWQgaW4geW91ciBwcm9m
-aWxlISBDbGljayBoZXJlOiBodHRwOi8vaW54Lmx2L0dHSTI/MG5nIPCfkpwg
-5qeYCgrjgZPjga7luqbjga/jgqvjg7zjg4HjgrnlgLbmpb3pg6jjga7jgIzj
-gY/jgovjgb7lo7LjgorpmorvvIHjgI3jgavjgYrnlLPjgZfovrzjgb/jgYTj
-gZ/jgaDjgY3jgIHoqqDjgavjgYLjgorjgYzjgajjgYbjgZTjgZbjgYTjgb7j
-gZnjgIIK5LiL6KiY44GK55Sz44GX6L6844G/5YaF5a6544Gr44GK6ZaT6YGV
-44GE44GM44Gq44GE44GL44GU56K66KqN44GP44Gg44GV44GE44CCCgrmi4Xl
-vZPogIXjgYzlhoXlrrnjgpLnorroqo3lvozjgIHjg6Hjg7zjg6vjgb7jgZ/j
-ga/jgYrpm7voqbHjgavjgabjgZTpgKPntaHjgYTjgZ/jgZfjgb7jgZnjga7j
-gafjgIEK44KC44GG44GX44Gw44KJ44GP44GK5b6F44Gh44GP44Gg44GV44GE
-44CCCgo9PT09PT09PT09PT09PT09PT09PT08PCDln7rmnKzmg4XloLEgPj49
-PT09PT09PT09PT09PT09PT09PQrkvJrnpL7lkI3jgIDjgIDjgIDjgIDjgIA6
-8J+SnCBEb25uYSBpcyBpbnRlcmVzdGVkIGluIHlvdXIgcHJvZmlsZSEgQ2xp
-Y2sgaGVyZTogaHR0cDovL2lueC5sdi9HR0kyPzBuZyDwn5KcCuWQjeWJjeOA
-gOOAgOOAgOOAgOOAgOOAgDrwn5KcIERvbm5hIGlzIGludGVyZXN0ZWQgaW4g
-eW91ciBwcm9maWxlISBDbGljayBoZXJlOiBodHRwOi8vaW54Lmx2L0dHSTI/
-MG5nIPCfkpwK6YO15L6/55Wq5Y+344CA44CA44CA44CAOjY4NTUyNDMyOTU4
-NQrkvY/miYDjgIDjgIDjgIDjgIDjgIDjgIA68J+SnCBEb25uYSBpcyBpbnRl
-cmVzdGVkIGluIHlvdXIgcHJvZmlsZSEgQ2xpY2sgaGVyZTogaHR0cDovL2lu
-eC5sdi9HR0kyPzBuZyDwn5KcCumbu+ipseeVquWPt+OAgOOAgOOAgOOAgDo2
-ODU1MjQzMjk1ODUK44OV44Kh44OD44Kv44K544CA44CA44CAOjY4NTUyNDMy
-OTU4NQpFbWFpbOOAgOOAgOOAgOOAgOOAgDpsaW51eC1zY3NpQHZnZXIua2Vy
-bmVsLm9yZwrlgpnogIPjgIDjgIDjgIDjgIDjgIDjgIA6Cgo9PT09PT09PT09
-PT09PT09PT09PT08PCDnlLPjgZfovrzjgb/mg4XloLEgPj49PT09PT09PT09
-PT09PT09PQrjg6Hjg7zjgqvjg7zjgIDjgIDjgIDjgIA6b3RoZXJmb3JlaWdu
-Cui7iuOAgOOAgOeoruOAgOOAgOOAgOOAgDrwn5KcIERvbm5hIGlzIGludGVy
-ZXN0ZWQgaW4geW91ciBwcm9maWxlISBDbGljayBoZXJlOiBodHRwOi8vaW54
-Lmx2L0dHSTI/MG5nIPCfkpwK44Kw44Os44O844OJ44CA44CA44CA44CAOgrl
-ubTjgIDjgIDlvI/jgIDjgIDjgIDjgIA6MTk5MuW5tC/lubPmiJA05bm0Cui1
-sOihjOi3nembouOAgOOAgOOAgOOAgDo5NSwwMDF+MTAwLDAwMOOCreODrQrj
-grfjg5Xjg4jjgIDjgIDjgIDjgIDjgIA6TVQK6Imy44CA44CA44CA44CA44CA
-44CA44CAOuODr+OCpOODswrmiYvmlL7jgZfmmYLmnJ/jgIDjgIDjgIA68J+S
-nCBEb25uYSBpcyBpbnRlcmVzdGVkIGluIHlvdXIgcHJvZmlsZSEgQ2xpY2sg
-aGVyZTogaHR0cDovL2lueC5sdi9HR0kyPzBuZyDwn5KcCuiHquekvuWcqOW6
-q+OAgOOAgOOAgOOAgDrjgYTjgYTjgYgK44Ki44OU44O844Or44Od44Kk44Oz
-44OIOgo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT0KCirjgZPjga7jg6Hjg7zjg6vjgavlv4PlvZPjgorj
-gYzjgarjgYTmlrnjgIHjgb7jgZ/jga/jgZTkuI3mmI7jgarngrnjgYzjgYLj
-govmlrnjga/kuIvoqJjjgb7jgafjgYrllY/jgYTlkIjjgo/jgZvjgY/jgaDj
-gZXjgYTjgIIKCuKWoCDjgYrllY/jgYTlkIjjgo/jgZvlhYgKLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K5qCq
-5byP5Lya56S+44Kr44O844OB44K5CuadseS6rOmDveWNg+S7o+eUsOWMuue0
-gOWwvuS6leeUujTnlaox5Y+344CA5paw57SA5bC+5LqV55S644OT44OrMkYK
-VEVMOjAxMjAtNTUtMDAxMCjlubPml6U4OjAw772eMjE6MDApCk1BSUw6IGN1
-c3RvbWVyQGNhcmNocy5jb20KV0VCOiBodHRwOi8vd3d3LmNhcmNocy5jb20K
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0K
+We have encountered a regression with linux 5.18-rc5, where Skyhawk
+controllers ("Emulex OneConnect OCe14000") fail at the FLOGI stage and
+don't detect any rports.
+
+We've bisected it to 1b64aa9eae28 ("scsi: lpfc: SLI path split:
+Refactor fast and slow paths to native SLI4").
+
+As this was 5.18-rc5,the following fixups on top of 14.2.0.0 were
+already included in the tested code:
+
+c26bd6602e1d scsi: lpfc: Fix locking for lpfc_sli_iocbq_lookup()
+7294a9bcaa7e scsi: lpfc: Fix broken SLI4 abort path
+4f3beb36b1e4 scsi: lpfc: Update lpfc version to 14.2.0.1
+df0101197c4d scsi: lpfc: Fix queue failures when recovering from PCI parity=
+ error
+a4691038b407 scsi: lpfc: Fix unload hang after back to back PCI EEH faults
+35ed9613d83f scsi: lpfc: Improve PCI EEH Error and Recovery Handling
+
+The relevant part of the log (AFAICT) looks like this, showing an "ELS
+CQE error at the FLOGI stage:
+
+lpfc 0000:04:00.2: 0:1303 Link Up Event x1 received Data: x1 x0 x4 x0 x0 x0=
+ 0
+lpfc 0000:04:00.2: 0:2778 Start FCF table scan at linkup
+lpfc 0000:04:00.2: 0:2726 READ_FCF_RECORD Indicates empty FCF table.
+lpfc 0000:04:00.2: 0:2765 Mailbox command READ_FCF_RECORD failed to retriev=
+e a FCF record.
+lpfc 0000:04:00.2: 0:0392 Async Event: word0:x0, word1:x1, word2:x2, word3:=
+xc0010200
+lpfc 0000:04:00.2: 0:2546 New FCF event, evt_tag:x2, index:x0
+lpfc 0000:04:00.2: 0:2779 Read FCF (x0) for updating roundrobin FCF failove=
+r bmask
+lpfc 0000:04:00.2: 0:2770 Start FCF table scan per async FCF event, evt_tag=
+:x2, index:x0
+lpfc 0000:04:00.2: 0:2764 READ_FCF_RECORD:
+lpfc 0000:04:00.2: 0:3059 adding idx x0 pri x80 flg x0
+lpfc 0000:04:00.2: 0:2790 Set FCF (x0) to roundrobin FCF failover bmask
+lpfc 0000:04:00.2: 0:2764 READ_FCF_RECORD:
+lpfc 0000:04:00.2: 0:3059 adding idx x0 pri x80 flg x1
+lpfc 0000:04:00.2: 0:2790 Set FCF (x0) to roundrobin FCF failover bmask
+lpfc 0000:04:00.2: 0:2840 Update initial FCF candidate with FCF (x0)
+lpfc 0000:04:00.2: 0:(0):0247 Start Discovery Timer state x7 Data: x21 xfff=
+f9ac83c2449e8 x0 x0
+lpfc 0000:04:00.2: 0:(0):0932 FIND node did xfffffe NOT FOUND.
+lpfc 0000:04:00.2: 0:0001 Allocated rpi:x0 max:x1000 lim:x40
+lpfc 0000:04:00.2: 0:(0):0007 Init New ndlp xffff9abe3071ce00, rpi:x0 DID:f=
+ffffe flg:x0 refcnt:1
+lpfc 0000:04:00.2: 0:(0):0116 Xmit ELS command x4 to remote NPORT xfffffe I=
+/O tag: x800, port state:x7 rpi x0 fc_flag:x90014
+lpfc 0000:04:00.2: 0:(0):0247 Start Discovery Timer state x7 Data: x21 xfff=
+f9ac83c2449e8 x0 x0
+lpfc 0000:04:00.2: 0:(0):0354 Mbox cmd issue - Enqueue Data: x31 (x0/x0) x7=
+ x200 x2
+lpfc 0000:04:00.2: 0:(0):0355 Mailbox cmd x31 (x0/x0) issue Data: x7 x300
+lpfc 0000:04:00.2: 0:0357 ELS CQE error: status=3Dx3: CQE: 08000300 0000000=
+0 00000002 80010000
+lpfc 0000:04:00.2: 0:0321 Rsp Ring 2 error: IOCB Data: x8000300 x0 x2 x8001=
+0000
+lpfc 0000:04:00.2: 0:2611 FLOGI failed on FCF (x0), status:x3/x2, tmo:x14, =
+perform roundrobin FCF failover
+lpfc 0000:04:00.2: 0:3060 Last IDX 0
+lpfc 0000:04:00.2: 0:3061 Last IDX 0
+lpfc 0000:04:00.2: 0:2844 No roundrobin failover FCF available
+lpfc 0000:04:00.2: 0:2865 No FCF available, stop roundrobin FCF failover an=
+d change port state:x7/x0
+
+Comparison with a "good" case with lpfc 14.0.0.4:
+
+lpfc 0000:04:00.2: 0:1303 Link Up Event x1 received Data: x1 x0 x4 x0 x0 x0=
+ 0
+lpfc 0000:04:00.2: 0:2778 Start FCF table scan at linkup
+lpfc 0000:04:00.2: 0:2726 READ_FCF_RECORD Indicates empty FCF table.
+lpfc 0000:04:00.2: 0:2765 Mailbox command READ_FCF_RECORD failed to retriev=
+e a FCF record.
+lpfc 0000:04:00.2: 0:0392 Async Event: word0:x0, word1:x1, word2:x2, word3:=
+xc0010200
+lpfc 0000:04:00.2: 0:2546 New FCF event, evt_tag:x2, index:x0
+lpfc 0000:04:00.2: 0:2779 Read FCF (x0) for updating roundrobin FCF failove=
+r bmask
+lpfc 0000:04:00.2: 0:2770 Start FCF table scan per async FCF event, evt_tag=
+:x2, index:x0
+lpfc 0000:04:00.2: 0:2764 READ_FCF_RECORD:
+lpfc 0000:04:00.2: 0:3059 adding idx x0 pri x80 flg x0
+lpfc 0000:04:00.2: 0:2790 Set FCF (x0) to roundrobin FCF failover bmask
+lpfc 0000:04:00.2: 0:(0):0307 Mailbox cmd x9b (xc/x8) Cmpl lpfc_mbx_cmpl_fc=
+f_scan_read_fcf_rec [lpfc] Data: x9b00 x8 x244 x0 x0 x0 xfa8cd000 xf x244 x=
+0 x0 x0
+lpfc 0000:04:00.2: 0:2764 READ_FCF_RECORD:
+lpfc 0000:04:00.2: 0:3059 adding idx x0 pri x80 flg x1
+lpfc 0000:04:00.2: 0:2790 Set FCF (x0) to roundrobin FCF failover bmask
+lpfc 0000:04:00.2: 0:2840 Update initial FCF candidate with FCF (x0)
+lpfc 0000:04:00.2: 0:(0):0247 Start Discovery Timer state x7 Data: x21 xfff=
+f94b6fcae69e8 x0 x0
+lpfc 0000:04:00.2: 0:(0):0932 FIND node did xfffffe NOT FOUND.
+lpfc 0000:04:00.2: 0:0001 Allocated rpi:x0 max:x1000 lim:x40
+lpfc 0000:04:00.2: 0:(0):0007 Init New ndlp xffff94c6f0c99000, rpi:x0 DID:f=
+ffffe flg:x0 refcnt:1
+lpfc 0000:04:00.2: 0:(0):0116 Xmit ELS command x4 to remote NPORT xfffffe I=
+/O tag: x800, port state:x7 rpi x0 fc_flag:x90014
+lpfc 0000:04:00.2: 0:(0):0247 Start Discovery Timer state x7 Data: x21 xfff=
+f94b6fcae69e8 x0 x0
+lpfc 0000:04:00.2: 0:(0):0101 FLOGI completes successfully, I/O tag:x800, x=
+ri x0 Data: x40002 xd0070000 x10270000 x0 x7 90014 2
+lpfc 0000:04:00.2: 0:(0):1816 FLOGI NPIV supported, response data 0x1
+lpfc 0000:04:00.2: 0:(0):0904 NPort state transition xfffffe, UNUSED -> UNM=
+APPED
+lpfc 0000:04:00.2: 0:(0):3183 lpfc_register_remote_port rport xffff94b7c467=
+f800 DID xfffffe, role x0 refcnt 3
+
+Hints appreciated. Complete logs and additional debug data can be provided =
+on request.
+
+Regards
+Martin
+
