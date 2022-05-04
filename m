@@ -2,102 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFE3AC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 08:18:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE114C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 08:42:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346263AbiEDIWZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 May 2022 04:22:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49746 "EHLO
+        id S1346513AbiEDIp7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 May 2022 04:45:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346269AbiEDIWN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 04:22:13 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F233237F2
-        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 01:18:37 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2430TJqe004092;
-        Tue, 3 May 2022 00:51:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=s8lUmsZe8RextxlB8jcIFPjd3TiNngRfTYFzKzpxct8=;
- b=AU2OQFzGJGyfyZlZRaCd2U2PLt/vvjXdtPNXHzWhWa3O3lsB+TgOyNPS0L7w+U18OtNk
- +MA4bF5nlqcFzRxsjl+A/1tisfNU2zNo/dTQmp72DjlNz8DI4gP7E7DG6351b1UE8d51
- 2Y5bMSjmAUGW0Yah9lC5/z32c3Rhcux2+WjSNKyULh42IwjTrJiEdA2zXz3NK2Z2FIdW
- g7e1NCkNq1STzx+qJNVtiMsc76/ahxPe2RbOb3ErjwLc1iJFLyhG9ySLijT0iPTzEEcd
- cgCQO/OGuLKTW2oeGWGXFD0M9lV1yODrHNp/zLQqktcSicB8GhyuKXvciC4GYfq5fnh+ cg== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3frw0amhj4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:51:54 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2430opCW008935;
-        Tue, 3 May 2022 00:51:53 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x77-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:51:53 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2430pljI010389;
-        Tue, 3 May 2022 00:51:52 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x4g-11;
-        Tue, 03 May 2022 00:51:52 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Shaun Tancheff <shaun.tancheff@seagate.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2 0/9] Support zoned devices with gap zones
-Date:   Mon,  2 May 2022 20:51:21 -0400
-Message-Id: <165153836359.24053.1674323302545812899.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.35.2
-In-Reply-To: <20220421183023.3462291-1-bvanassche@acm.org>
-References: <20220421183023.3462291-1-bvanassche@acm.org>
+        with ESMTP id S1346502AbiEDIp5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 04:45:57 -0400
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F06EF2495F
+        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 01:42:21 -0700 (PDT)
+Received: by mail-pf1-x434.google.com with SMTP id j6so599439pfe.13
+        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2022 01:42:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=etgYlkH3k2xXRU0EPxeVLwk/8dv8OjRMpkT84HZHGoM=;
+        b=z1AO52bLTWmTJ8A7Q6s3QcGmTgAdj0o7TNsqfNXXAmUq8DvJHiILWvfwru19sfhbJ5
+         5cAdlKhpx7fcCGwB0UveWcFIV1wnkIm5wd1h75Lri4h6nIcwvKxR5YmE4oUuImB1M6ZV
+         uoV39+ELAre9YhW4MTrmF4DrOHcTwBC+vKeDBcJHhXexd4MbifLsrKBESSl9ebyZhmWV
+         +7b8O/Iv/k+g4Mlmkk896ZNWqK3g40oPPpy2yJ5DoRbYOC7+bpga7xskzruUIaojD/bv
+         lLWVeTTOXZIsQCGNmQQ+6OrZAH9kkYCeRUz2kAKtKGljvKRAEvC/RFNUldjTFV/dI2mr
+         lg4g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=etgYlkH3k2xXRU0EPxeVLwk/8dv8OjRMpkT84HZHGoM=;
+        b=7tr2JrHaLFt09HEIdN+UuSeRpe4DKxvCKvx0mxWJpba69SC5mNxAIKIj9kI6kK+RjN
+         ijEXlJGhRq6crg33ROJI2CqAIJiaSU65CJmucbPGwIvCaYCSWNOTSvhW4NDaCEsGwJb/
+         aLmFOdJFFt7IixVwQka1xxtlH2lKNWxxnTBu2t043QbcX76nG0Vyyr5NQx4Dk0F5HiY3
+         VEVuwHua4zd63pKZhLd32kd2q4P6hOGUTALpYDOyc4i8sD6HYwO2L77A1/HoYxmXkztS
+         LpAJFWX3vd49SrdmJCSBf8Jcrq/F8PsHpolvcxeipOBWOa9G5z8eeBGTtwwzkJ4Cowtt
+         Tq+w==
+X-Gm-Message-State: AOAM531jQw4EyapfvGdHfZ5RDiLQXPxeBXAiriCZuMHxWUXPaRl7IZWK
+        q4ngX1I+11oZrC1a3px7gP6q
+X-Google-Smtp-Source: ABdhPJx49Z+kce5s/YOsUZbN8QNh0gOcYuyEbYmWwzEjaux7d1kzE1ne3dcS8k+Pyq/HTyfRJ9WQCg==
+X-Received: by 2002:a05:6a00:298a:b0:50e:8e3:b673 with SMTP id cj10-20020a056a00298a00b0050e08e3b673mr7996582pfb.28.1651653741451;
+        Wed, 04 May 2022 01:42:21 -0700 (PDT)
+Received: from localhost.localdomain ([27.111.75.248])
+        by smtp.gmail.com with ESMTPSA id i10-20020a170902c94a00b0015e8d4eb278sm1386561pla.194.2022.05.04.01.42.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 May 2022 01:42:20 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     martin.petersen@oracle.com, jejb@linux.ibm.com
+Cc:     avri.altman@wdc.com, alim.akhtar@samsung.com,
+        bjorn.andersson@linaro.org, linux-arm-msm@vger.kernel.org,
+        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bvanassche@acm.org, ahalaney@redhat.com,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v3 0/5] Qcom UFS driver updates
+Date:   Wed,  4 May 2022 14:12:07 +0530
+Message-Id: <20220504084212.11605-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: jvHrslQWNpTGO9E8TR4BfgT1FQ-Y73-g
-X-Proofpoint-ORIG-GUID: jvHrslQWNpTGO9E8TR4BfgT1FQ-Y73-g
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 21 Apr 2022 11:30:14 -0700, Bart Van Assche wrote:
+Hi,
 
-> In ZBC-2 support has been improved for zones with a size that is not a power
-> of two by allowing host-managed devices to report gap zones. This patch adds
-> support for zoned devices for which data zones and gap zones alternate if the
-> distance between zone start LBAs is a power of two.
-> 
-> Please consider this patch series for kernel v5.19.
-> 
-> [...]
+This series has some cleanups and updates to the Qcom UFS driver. There
+is also a patch that removes the redundant wmb() from
+ufshcd_send_command() in ufshcd driver.
 
-Applied to 5.19/scsi-queue, thanks!
+All these patches are tested on Qualcomm Robotics RB3 platform.
 
-[1/9] scsi: sd_zbc: Improve source code documentation
-      https://git.kernel.org/mkp/scsi/c/aa96bfb4caff
-[2/9] scsi: sd_zbc: Verify that the zone size is a power of two
-      https://git.kernel.org/mkp/scsi/c/9a93b9c9d38a
-[3/9] scsi: sd_zbc: Use logical blocks as unit when querying zones
-      https://git.kernel.org/mkp/scsi/c/43af5da09efb
-[4/9] scsi: sd_zbc: Introduce struct zoned_disk_info
-      https://git.kernel.org/mkp/scsi/c/628617be8968
-[5/9] scsi: sd_zbc: Return early in sd_zbc_check_zoned_characteristics()
-      https://git.kernel.org/mkp/scsi/c/60caf3758103
-[6/9] scsi: sd_zbc: Hide gap zones
-      https://git.kernel.org/mkp/scsi/c/c976e588b34e
-[7/9] scsi_debug: Fix a typo
-      https://git.kernel.org/mkp/scsi/c/897284e8a048
-[8/9] scsi_debug: Rename zone type constants
-      https://git.kernel.org/mkp/scsi/c/35dbe2b9a7b0
-[9/9] scsi_debug: Add gap zone support
-      https://git.kernel.org/mkp/scsi/c/4a5fc1c6d752
+Thanks,
+Mani
+
+Changes in v3:
+
+* Removed check for EPROBE_DEFER and used the return value from dev_err_probe
+* Collected Reviewed-by and Acked-by tags
+
+Changes in v2:
+
+* Used dev_err_probe() instead of dev_err().
+* Removed the wmb() from ufs_qcom_dev_ref_clk_ctrl() as that is not required.
+* Added Reviewed-by tag from Bart for patch 4/5.
+
+Manivannan Sadhasivam (5):
+  scsi: ufs: qcom: Fix acquiring the optional reset control line
+  scsi: ufs: qcom: Simplify handling of devm_phy_get()
+  scsi: ufs: qcom: Add a readl() to make sure ref_clk gets enabled
+  scsi: ufs: core: Remove redundant wmb() in ufshcd_send_command()
+  scsi: ufs: qcom: Enable RPM_AUTOSUSPEND for runtime PM
+
+ drivers/scsi/ufs/ufs-qcom.c | 45 +++++++++++++------------------------
+ drivers/scsi/ufs/ufshcd.c   |  3 ---
+ 2 files changed, 15 insertions(+), 33 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.25.1
+
