@@ -2,53 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E7FBC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 19:44:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EE38C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 19:58:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377653AbiEDTrg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 May 2022 15:47:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49064 "EHLO
+        id S1377823AbiEDUCL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 May 2022 16:02:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238763AbiEDTrb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 15:47:31 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57D9C19C10
-        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 12:43:40 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id k14so1986646pga.0
-        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2022 12:43:39 -0700 (PDT)
+        with ESMTP id S1377819AbiEDUBz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 16:01:55 -0400
+Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 966B84EDC7
+        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 12:58:15 -0700 (PDT)
+Received: by mail-ej1-x62b.google.com with SMTP id l18so4905958ejc.7
+        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2022 12:58:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=RQ5+Z93YtWEK5xXREhrhRleXnskqFAblQsxgrgprxiY=;
-        b=PWTj7QFNwdFF2OE0C4xFUgoIvDGn2+dYizGm/ZxeTyJ+Iz/tyIN+jbKS/JUP74dMIB
-         W7u3atVP0GNPWpIF5TIzABeYYT/Et9n+I/Ppab3jaBr0jw2QDopw+U1E91lEzpAOCQFs
-         xQr1OFa2NKNeyWLt6H4cI0w0eWAyTF94chl/w=
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=y+sByE56HbVf5kRX6gGxIKl4lkDcQYxYxjANal7cqo4=;
+        b=Fisf8qNfLenDK0j792maHiYPMMvmyhGB9B3J/xS9stoAM/UZoSn3s9eWa4z58SqqtN
+         zwNzc/F7jGucn3q+uOerwwvhkYcHR8WadSDg35wFqZ6iJOtuV3DgeIHYCsICPjn3FRC5
+         ijS3ruVDVcid8vwK6Aeyu8cvVWuqX4vHHcMprgjz8mGjIqaTTVh5y7xE1A9w5vPgc3/M
+         9OL1YFUN+X3Smqy7ONv67Xs9IxNQQJThHBH0mRzDjCqw6Y6Boyru+xViNBlwab5eTP66
+         Ql7OyvNLc8tFoVxvf1pFaiO/JKRt9GNoTAQHusID9bvyAzw/qXdqG5nBEcpTVWJq8YZ4
+         Z1Jg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=RQ5+Z93YtWEK5xXREhrhRleXnskqFAblQsxgrgprxiY=;
-        b=2h8DW7XZbhYyh8+un44rNpzBYpeX6Xym1LxTcG1zt16/b89L9uo/9NLTME1GDNimMq
-         qUuCiGcPPeIFOeaXHzzSGXjSaH5XdHOcWy8GXK1eeaE/sf6+e4+tPSbLColWlBcihBVD
-         Q7XZ9KnZ7d2rt1mKY1fo24V7l0B9OKJZWzSyRt/kMCAC8xfRIuYI64McpHCWPke2xc1F
-         cYaeSRbME7V+jhHHhnw9W3U0AI646OkU1f4D/6Oi3hEW4JX1aEuOf8BYg+5mtP6nmQVc
-         YOtWDOXUoFCYXQcA6g9LhjXJbnBoy1P9Ad+1KzHcepQdWrweANSvLXWs4G7CQb9DxlU1
-         jcdQ==
-X-Gm-Message-State: AOAM530dyu2d1pncBbf5I8v/cAQAeMzMtIMI/0ByOOg8s7I+NPlCsKNm
-        3TpOKVhPtYOdg1E2E43j2TUp+g==
-X-Google-Smtp-Source: ABdhPJxMOUaGN1HZweue295reBywbQJPuhTeE52Ky8jS8qudgy4bxd3bAxIpi3n4Zjg11NpOxjxBqg==
-X-Received: by 2002:a63:91c9:0:b0:3ab:11e6:4ff9 with SMTP id l192-20020a6391c9000000b003ab11e64ff9mr17952537pge.121.1651693419276;
-        Wed, 04 May 2022 12:43:39 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id d12-20020a170902654c00b0015e8d4eb24dsm8677848pln.151.2022.05.04.12.43.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 May 2022 12:43:38 -0700 (PDT)
-Date:   Wed, 4 May 2022 12:43:37 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     David Gow <davidgow@google.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=y+sByE56HbVf5kRX6gGxIKl4lkDcQYxYxjANal7cqo4=;
+        b=r97mXtD5lqWsE5/SNsNLbrurFC/GLDaYZnCQKS5PxPAevSbxRtQoWywP3/CSfAl3NW
+         4cIRC9T0tRVtk+LEYMf2Vtx5ozOe3iSz1y7e44QrjHRBMhl2baB0E1rNhwxuthAlqjk2
+         Y7GhGYqOscrLdHKCXm0F+MDeVPF4CmqlTbleaROhIT2tr6CPFUgevip0cUUvrI4T8Vhh
+         dtt1p34H23ctZonUsLsxqcLcvSt5TfuR4yR6v6aDFu0w/zNA1CcymK4e9X5KN5jmzvvS
+         IpSlYUX/j7FH0nKpD5r1hEyy7RrZcY1PkRF7rVM9ci3TlK+Xdm6NHzl3xuY04xmLHwGA
+         cIgA==
+X-Gm-Message-State: AOAM531APREvad3FutEcjmxPxqPmG528sNpxYcuqDiZHzvYvuL/l/aRz
+        bA8/2W6ew2uv4IZDrJu0Cr5v/fKh8jBeuPuNOD1IMQ==
+X-Google-Smtp-Source: ABdhPJyNqylHJlc3dOLmSwn3LLwT4ktliGhTIZtJUbCp6p9cyFNeSQSMHaaSeuuF72ZsBGrGa7DMKOVMS/2gIc+sdec=
+X-Received: by 2002:a17:907:9726:b0:6f4:c0e:40ce with SMTP id
+ jg38-20020a170907972600b006f40c0e40cemr21300141ejc.170.1651694293700; Wed, 04
+ May 2022 12:58:13 -0700 (PDT)
+MIME-Version: 1.0
+References: <20220504014440.3697851-1-keescook@chromium.org> <20220504014440.3697851-4-keescook@chromium.org>
+In-Reply-To: <20220504014440.3697851-4-keescook@chromium.org>
+From:   Daniel Latypov <dlatypov@google.com>
+Date:   Wed, 4 May 2022 14:58:02 -0500
+Message-ID: <CAGS_qxrPauYtkrfB37ne9bOXJR2JQc4=jaJP5tGN4mnha7mANg@mail.gmail.com>
+Subject: Re: [PATCH 03/32] flex_array: Add Kunit tests
+To:     Kees Cook <keescook@chromium.org>
 Cc:     "Gustavo A . R . Silva" <gustavoars@kernel.org>,
-        KUnit Development <kunit-dev@googlegroups.com>,
+        David Gow <davidgow@google.com>, kunit-dev@googlegroups.com,
         Alexei Starovoitov <ast@kernel.org>,
         alsa-devel@alsa-project.org, Al Viro <viro@zeniv.linux.org.uk>,
         Andrew Gabbasov <andrew_gabbasov@mentor.com>,
@@ -62,7 +67,7 @@ Cc:     "Gustavo A . R . Silva" <gustavoars@kernel.org>,
         Bradley Grove <linuxdrivers@attotech.com>,
         brcm80211-dev-list.pdl@broadcom.com,
         Christian Brauner <brauner@kernel.org>,
-        Christian =?iso-8859-1?Q?G=F6ttsche?= <cgzones@googlemail.com>,
+        =?UTF-8?Q?Christian_G=C3=B6ttsche?= <cgzones@googlemail.com>,
         Christian Lamparter <chunkeey@googlemail.com>,
         Chris Zankel <chris@zankel.net>,
         Cong Wang <cong.wang@bytedance.com>,
@@ -109,28 +114,27 @@ Cc:     "Gustavo A . R . Silva" <gustavoars@kernel.org>,
         Liam Girdwood <lgirdwood@gmail.com>,
         linux1394-devel@lists.sourceforge.net,
         linux-afs@lists.infradead.org,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-arm-kernel@lists.infradead.org,
         linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
         linux-hardening@vger.kernel.org, linux-hyperv@vger.kernel.org,
         linux-integrity@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        linux-security-module <linux-security-module@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org,
         linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
         linux-xtensa@linux-xtensa.org, llvm@lists.linux.dev,
         Loic Poulain <loic.poulain@linaro.org>,
         Louis Peens <louis.peens@corigine.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
         Marcel Holtmann <marcel@holtmann.org>,
         Mark Brown <broonie@kernel.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Max Filippov <jcmvbkbc@gmail.com>,
         Mimi Zohar <zohar@linux.ibm.com>,
         Muchun Song <songmuchun@bytedance.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Networking <netdev@vger.kernel.org>,
+        Nathan Chancellor <nathan@kernel.org>, netdev@vger.kernel.org,
         Nick Desaulniers <ndesaulniers@google.com>,
-        Nuno =?iso-8859-1?Q?S=E1?= <nuno.sa@analog.com>,
+        =?UTF-8?B?TnVubyBTw6E=?= <nuno.sa@analog.com>,
         Paolo Abeni <pabeni@redhat.com>,
         Paul Moore <paul@paul-moore.com>,
         Rich Felker <dalias@aerifal.cx>,
@@ -152,182 +156,200 @@ Cc:     "Gustavo A . R . Silva" <gustavoars@kernel.org>,
         xen-devel@lists.xenproject.org,
         Xiu Jianfeng <xiujianfeng@huawei.com>,
         Yang Yingliang <yangyingliang@huawei.com>
-Subject: Re: [PATCH 03/32] flex_array: Add Kunit tests
-Message-ID: <202205041220.4BAF15F6B4@keescook>
-References: <20220504014440.3697851-1-keescook@chromium.org>
- <20220504014440.3697851-4-keescook@chromium.org>
- <CABVgOSn62JTxaX9BW8w8jRxOpf_vgxpW-s=amwo8PCotiZTjig@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CABVgOSn62JTxaX9BW8w8jRxOpf_vgxpW-s=amwo8PCotiZTjig@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, May 04, 2022 at 11:00:38AM +0800, David Gow wrote:
-> On Wed, May 4, 2022 at 9:47 AM Kees Cook <keescook@chromium.org> wrote:
-> >
-> > Add tests for the new flexible array structure helpers. These can be run
-> > with:
-> >
-> >   make ARCH=um mrproper
-> >   ./tools/testing/kunit/kunit.py config
-> 
-> Nit: it shouldn't be necessary to run kunit.py config separately:
-> kunit.py run will configure the kernel if necessary.
+On Tue, May 3, 2022 at 8:47 PM Kees Cook <keescook@chromium.org> wrote:
+> +#define COMPARE_STRUCTS(STRUCT_A, STRUCT_B)    do {                    \
+> +       STRUCT_A *ptr_A;                                                \
+> +       STRUCT_B *ptr_B;                                                \
+> +       int rc;                                                         \
+> +       size_t size_A, size_B;                                          \
+> +                                                                       \
+> +       /* matching types for flex array elements and count */          \
+> +       KUNIT_EXPECT_EQ(test, sizeof(*ptr_A), sizeof(*ptr_B));          \
+> +       KUNIT_EXPECT_TRUE(test, __same_type(*ptr_A->data,               \
+> +               *ptr_B->__flex_array_elements));                        \
 
-Ah yes, I think you mentioned this before. I'll adjust the commit log.
+Leaving some minor suggestions to go along with David's comments.
 
-> 
-> >   ./tools/testing/kunit/kunit.py run flex_array
-> >
-> > Cc: David Gow <davidgow@google.com>
-> > Cc: kunit-dev@googlegroups.com
-> > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > ---
-> 
-> This looks pretty good to me: it certainly worked on the different
-> setups I tried (um, x86_64, x86_64+KASAN).
-> 
-> A few minor nitpicks inline, mostly around minor config-y things, or
-> things which weren't totally clear on my first read-through.
-> 
-> Hopefully one day, with the various stubbing features or something
-> similar, we'll be able to check against allocation failures in
-> flex_dup(), too, but otherwise nothing seems too obviously missing.
-> 
-> Reviewed-by: David Gow <davidgow@google.com>
+Should we make these KUNIT_ASSERT_.* instead?
+I assume if we have a type-mismatch, then we should bail out instead
+of continuing to produce more error messages.
 
-Great; thanks for the review and testing!
+> +       KUNIT_EXPECT_TRUE(test, __same_type(ptr_A->datalen,             \
+> +               ptr_B->__flex_array_elements_count));                   \
+> +       KUNIT_EXPECT_EQ(test, sizeof(*ptr_A->data),                     \
+> +                             sizeof(*ptr_B->__flex_array_elements));   \
+> +       KUNIT_EXPECT_EQ(test, offsetof(typeof(*ptr_A), data),           \
+> +                             offsetof(typeof(*ptr_B),                  \
+> +                                      __flex_array_elements));         \
+> +       KUNIT_EXPECT_EQ(test, offsetof(typeof(*ptr_A), datalen),        \
+> +                             offsetof(typeof(*ptr_B),                  \
+> +                                      __flex_array_elements_count));   \
+> +                                                                       \
+> +       /* struct_size() vs __fas_bytes() */                            \
+> +       size_A = struct_size(ptr_A, data, 13);                          \
+> +       rc = __fas_bytes(ptr_B, __flex_array_elements,                  \
+> +                        __flex_array_elements_count, 13, &size_B);     \
+> +       KUNIT_EXPECT_EQ(test, rc, 0);                                   \
 
-> 
-> -- David
-> 
-> >  lib/Kconfig.debug      |  12 +-
-> >  lib/Makefile           |   1 +
-> >  lib/flex_array_kunit.c | 523 +++++++++++++++++++++++++++++++++++++++++
-> >  3 files changed, 531 insertions(+), 5 deletions(-)
-> >  create mode 100644 lib/flex_array_kunit.c
-> >
-> > diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-> > index 9077bb38bc93..8bae6b169c50 100644
-> > --- a/lib/Kconfig.debug
-> > +++ b/lib/Kconfig.debug
-> > @@ -2551,11 +2551,6 @@ config OVERFLOW_KUNIT_TEST
-> >           Builds unit tests for the check_*_overflow(), size_*(), allocation, and
-> >           related functions.
-> >
-> > -         For more information on KUnit and unit tests in general please refer
-> > -         to the KUnit documentation in Documentation/dev-tools/kunit/.
-> > -
-> > -         If unsure, say N.
-> > -
-> 
-> Nit: while I'm not against removing some of this boilerplate, is it
-> better suited for a separate commit?
+Hmm, what do you think about inlining the call/dropping rc?
 
-Make sense, yes. I'll drop this for now.
+i.e. something like
+KUNIT_EXPECT_EQ(test, 0, __fas_bytes(ptr_B, __flex_array_elements, \
+                        __flex_array_elements_count, 13, &size_B));
 
-> 
-> >  config STACKINIT_KUNIT_TEST
-> >         tristate "Test level of stack variable initialization" if !KUNIT_ALL_TESTS
-> >         depends on KUNIT
-> > @@ -2567,6 +2562,13 @@ config STACKINIT_KUNIT_TEST
-> >           CONFIG_GCC_PLUGIN_STRUCTLEAK, CONFIG_GCC_PLUGIN_STRUCTLEAK_BYREF,
-> >           or CONFIG_GCC_PLUGIN_STRUCTLEAK_BYREF_ALL.
-> >
-> > +config FLEX_ARRAY_KUNIT_TEST
-> > +       tristate "Test flex_*() family of helper functions at runtime" if !KUNIT_ALL_TESTS
-> > +       depends on KUNIT
-> > +       default KUNIT_ALL_TESTS
-> > +       help
-> > +         Builds unit tests for flexible array copy helper functions.
-> > +
-> 
-> Nit: checkpatch warns that the description here may be insufficient:
-> WARNING: please write a help paragraph that fully describes the config symbol
+That would give a slightly clearer error message on failure.
+Otherwise the user only really gets a line number to try and start to
+understand what went wrong.
 
-Yeah, I don't know anything to put here that isn't just more
-boilerplate, so I'm choosing to ignore this for now. :)
+> +
+> +#define CHECK_COPY(ptr)                do {                                            \
+> +       typeof(*(ptr)) *_cc_dst = (ptr);                                        \
+> +       KUNIT_EXPECT_EQ(test, _cc_dst->induce_padding, 0);                      \
+> +       memcpy(&padding, &_cc_dst->induce_padding + sizeof(_cc_dst->induce_padding), \
+> +              sizeof(padding));                                                \
+> +       /* Padding should be zero too. */                                       \
+> +       KUNIT_EXPECT_EQ(test, padding, 0);                                      \
+> +       KUNIT_EXPECT_EQ(test, src->count, _cc_dst->count);                      \
 
-> > [...]
-> > +struct normal {
-> > +       size_t  datalen;
-> > +       u32     data[];
-> > +};
-> > +
-> > +struct decl_normal {
-> > +       DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(size_t, datalen);
-> > +       DECLARE_FLEX_ARRAY_ELEMENTS(u32, data);
-> > +};
-> > +
-> > +struct aligned {
-> > +       unsigned short  datalen;
-> > +       char            data[] __aligned(__alignof__(u64));
-> > +};
-> > +
-> > +struct decl_aligned {
-> > +       DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(unsigned short, datalen);
-> > +       DECLARE_FLEX_ARRAY_ELEMENTS(char, data) __aligned(__alignof__(u64));
-> > +};
-> > +
-> > +static void struct_test(struct kunit *test)
-> > +{
-> > +       COMPARE_STRUCTS(struct normal, struct decl_normal);
-> > +       COMPARE_STRUCTS(struct aligned, struct decl_aligned);
-> > +}
-> 
-> If I understand it, the purpose of this is to ensure that structs both
-> with and without the flexible array declaration have the same memory
-> layout?
-> 
-> If so, any chance of a comment briefly stating that's the purpose (or
-> renaming this test struct_layout_test())?
+This also seems like a good place to use ASSERT instead of EXPECT.
 
-Yeah, good idea; I'll improve the naming.
 
-> 
-> Also, would it make sense to do the same with the struct with internal
-> padding below?
+> +       KUNIT_EXPECT_EQ(test, _cc_dst->count, TEST_TARGET);                     \
+> +       for (i = 0; i < _cc_dst->count - 1; i++) {                              \
+> +               /* 'A' is 0x41, and here repeated in a u32. */                  \
+> +               KUNIT_EXPECT_EQ(test, _cc_dst->flex[i], 0x41414141);            \
+> +       }                                                                       \
+> +       /* Last item should be different. */                                    \
+> +       KUNIT_EXPECT_EQ(test, _cc_dst->flex[_cc_dst->count - 1], 0x14141414);   \
+> +} while (0)
+> +
+> +/* Test copying from one flexible array struct into another. */
+> +static void flex_cpy_test(struct kunit *test)
+> +{
+> +#define TEST_BOUNDS    13
+> +#define TEST_TARGET    12
+> +#define TEST_SMALL     10
+> +       struct flex_cpy_obj *src, *dst;
+> +       unsigned long padding;
+> +       int i, rc;
+> +
+> +       /* Prepare open-coded source. */
+> +       src = kzalloc(struct_size(src, flex, TEST_BOUNDS), GFP_KERNEL);
 
-Heh, yes, good point! :)
+Looks like we could use kunit_kzalloc() here and avoid needing the
+manual call to kfree?
+This also holds for the other test cases where they don't have early
+calls to kfree().
 
-> [...]
-> > +#define CHECK_COPY(ptr)                do {                                            \
-> > +       typeof(*(ptr)) *_cc_dst = (ptr);                                        \
-> > +       KUNIT_EXPECT_EQ(test, _cc_dst->induce_padding, 0);                      \
-> > +       memcpy(&padding, &_cc_dst->induce_padding + sizeof(_cc_dst->induce_padding), \
-> > +              sizeof(padding));                                                \
-> > +       /* Padding should be zero too. */                                       \
-> > +       KUNIT_EXPECT_EQ(test, padding, 0);                                      \
-> > +       KUNIT_EXPECT_EQ(test, src->count, _cc_dst->count);                      \
-> > +       KUNIT_EXPECT_EQ(test, _cc_dst->count, TEST_TARGET);                     \
-> > +       for (i = 0; i < _cc_dst->count - 1; i++) {                              \
-> > +               /* 'A' is 0x41, and here repeated in a u32. */                  \
-> 
-> Would it be simpler to just note that the magic value is 0x41, rather
-> than have it be the character 'A'?
+Doing so would also let you use KUNIT_ASSERT's without fear of leaking
+these allocations.
 
-Yeah, now fixed.
+> +       src->count = TEST_BOUNDS;
+> +       memset(src->flex, 'A', flex_array_size(src, flex, TEST_BOUNDS));
+> +       src->flex[src->count - 2] = 0x14141414;
+> +       src->flex[src->count - 1] = 0x24242424;
+> +
+> +       /* Prepare open-coded destination, alloc only. */
+> +       dst = kzalloc(struct_size(src, flex, TEST_BOUNDS), GFP_KERNEL);
+> +       /* Pre-fill with 0xFE marker. */
+> +       memset(dst, 0xFE, struct_size(src, flex, TEST_BOUNDS));
+> +       /* Pretend we're 1 element smaller. */
+> +       dst->count = TEST_TARGET;
+> +
+> +       /* Pretend to match the target destination size. */
+> +       src->count = TEST_TARGET;
+> +
+> +       rc = flex_cpy(dst, src);
+> +       KUNIT_EXPECT_EQ(test, rc, 0);
+> +       CHECK_COPY(dst);
+> +       /* Item past last copied item is unchanged from initial memset. */
+> +       KUNIT_EXPECT_EQ(test, dst->flex[dst->count], 0xFEFEFEFE);
+> +
+> +       /* Now trip overflow, and verify we didn't clobber beyond end. */
+> +       src->count = TEST_BOUNDS;
+> +       rc = flex_cpy(dst, src);
+> +       KUNIT_EXPECT_EQ(test, rc, -E2BIG);
+> +       /* Item past last copied item is unchanged from initial memset. */
+> +       KUNIT_EXPECT_EQ(test, dst->flex[dst->count], 0xFEFEFEFE);
+> +
+> +       /* Reset destination contents. */
+> +       memset(dst, 0xFD, struct_size(src, flex, TEST_BOUNDS));
+> +       dst->count = TEST_TARGET;
+> +
+> +       /* Copy less than max. */
+> +       src->count = TEST_SMALL;
+> +       rc = flex_cpy(dst, src);
+> +       KUNIT_EXPECT_EQ(test, rc, 0);
+> +       /* Verify count was adjusted. */
+> +       KUNIT_EXPECT_EQ(test, dst->count, TEST_SMALL);
 
-> [...]
-> > +       CHECK_COPY(&encap->fas);
-> > +       /* Check that items external to "fas" are zero. */
-> > +       KUNIT_EXPECT_EQ(test, encap->flags, 0);
-> > +       KUNIT_EXPECT_EQ(test, encap->junk, 0);
-> > +       kfree(encap);
-> > +#undef MAGIC_WORD
-> 
-> MAGIC_WORD isn't defined (or used) for flux_dup_test? Is it worth
-> using it (or something similar) for the 'A' / 0x14141414 and the
-> CHECK_COPY() macro?
+Just an FYI, macros get evaluated before the expect macros can stringify them.
+So the error message would look something like
+  Expected dest->count == 10
+     but dest->count = 9
 
-Oops, yes. Fixed.
+Not a big concern, but just noting that "TEST_SMALL" won't be visible at all.
+Could opt for
 
-Thanks again!
+KUNIT_EXPECT_EQ_MSG(test, dst->count, TEST_SMALL, "my custom extra message");
 
--Kees
+if you think it'd be usable to make the test more grokkable.
 
--- 
-Kees Cook
+> +       /* Verify element beyond src size was wiped. */
+> +       KUNIT_EXPECT_EQ(test, dst->flex[TEST_SMALL], 0);
+> +       /* Verify element beyond original dst size was untouched. */
+> +       KUNIT_EXPECT_EQ(test, dst->flex[TEST_TARGET], 0xFDFDFDFD);
+> +
+> +       kfree(dst);
+> +       kfree(src);
+> +#undef TEST_BOUNDS
+> +#undef TEST_TARGET
+> +#undef TEST_SMALL
+> +}
+> +
+> +static void flex_dup_test(struct kunit *test)
+> +{
+> +#define TEST_TARGET    12
+> +       struct flex_cpy_obj *src, *dst = NULL, **null = NULL;
+> +       struct flex_dup_obj *encap = NULL;
+> +       unsigned long padding;
+> +       int i, rc;
+> +
+> +       /* Prepare open-coded source. */
+> +       src = kzalloc(struct_size(src, flex, TEST_TARGET), GFP_KERNEL);
+> +       src->count = TEST_TARGET;
+> +       memset(src->flex, 'A', flex_array_size(src, flex, TEST_TARGET));
+> +       src->flex[src->count - 1] = 0x14141414;
+> +
+> +       /* Reject NULL @alloc. */
+> +       rc = flex_dup(null, src, GFP_KERNEL);
+> +       KUNIT_EXPECT_EQ(test, rc, -EINVAL);
+> +
+> +       /* Check good copy. */
+> +       rc = flex_dup(&dst, src, GFP_KERNEL);
+> +       KUNIT_EXPECT_EQ(test, rc, 0);
+> +       KUNIT_ASSERT_TRUE(test, dst != NULL);
+> +       CHECK_COPY(dst);
+> +
+> +       /* Reject non-NULL *@alloc. */
+> +       rc = flex_dup(&dst, src, GFP_KERNEL);
+> +       KUNIT_EXPECT_EQ(test, rc, -EINVAL);
+> +
+> +       kfree(dst);
+> +
+> +       /* Check good encap copy. */
+> +       rc = __flex_dup(&encap, .fas, src, GFP_KERNEL);
+> +       KUNIT_EXPECT_EQ(test, rc, 0);
+> +       KUNIT_ASSERT_TRUE(test, dst != NULL);
+
+FYI, there's a new KUNIT_ASSERT_NOT_NULL() macro in the
+-kselftest/kunit branch,
+https://patchwork.kernel.org/project/linux-kselftest/patch/20220211164246.410079-1-ribalda@chromium.org/
+
+But that's not planned for inclusion into mainline until 5.19, so
+leaving this as-is is better for now.
