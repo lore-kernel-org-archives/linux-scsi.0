@@ -2,80 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52469C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 15:41:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BA11C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 15:55:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352579AbiEDPom (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 May 2022 11:44:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39966 "EHLO
+        id S1352915AbiEDP7N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 May 2022 11:59:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351200AbiEDPod (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 11:44:33 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27BAE193D7
-        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 08:40:57 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 242MuHJt018680;
-        Tue, 3 May 2022 00:52:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=KVvzl9O3Ak0DzMxonnqPihSxtRrAegmMhwQEvZDE0DI=;
- b=AOqbWkpwMH4+tJLPufddo/bSZRn06bJY3vYaGqAWOEYh8i3Y64P2uZO8fMBpN3eWWJcV
- b133ndgkJxwYUbBq9ImHCBaq+/C+m+Wqm/oLpQraUFcoxDVB4NWFgHlqxNySDcgd6mOj
- ENlYnSRwXMdQfhVCMZtOs13Ri356gf4Z8U9GbGgVuSvsUfdlwXYZPn868Nd+UOTbrTbp
- 003NquXOVM7zB5KRD5xYOzmbvrGI4uyFMqv5i5bQ1I7sE+JruJ/yZpxzuwy1hbb/ctjp
- gmOVaCwfKBa7jFOlXfSWN7i/WUyosNTBbmz0cjyeOY0VZE2Z22RQkaYqwP6nSWt/tYOT Cg== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3frwnt4kx4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:52:02 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2430op62008954;
-        Tue, 3 May 2022 00:52:01 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83xaf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:52:01 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2430pljm010389;
-        Tue, 3 May 2022 00:52:01 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x4g-26;
-        Tue, 03 May 2022 00:52:01 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] lpfc: Remove redundant lpfc_sli_prep_wqe() call
-Date:   Mon,  2 May 2022 20:51:36 -0400
-Message-Id: <165153836364.24053.4963013077474294434.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.35.2
-In-Reply-To: <20220427222223.57920-1-jsmart2021@gmail.com>
-References: <20220427222223.57920-1-jsmart2021@gmail.com>
+        with ESMTP id S1352823AbiEDP7M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 11:59:12 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA30B6426
+        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 08:55:35 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 3B31C210E0;
+        Wed,  4 May 2022 15:55:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1651679734; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=9Oa+li9Sl4zHn7Vb1UunpCoJkkO7QVyDYkICVgKNBvM=;
+        b=Z14tVWMKMlTXiw7FK6PlVGMYti6E5MISC9CG2vKL0ZCumtry4k9ZiNaxHtwLE7nzO7pBJ9
+        itzawtGLiBjkCwsMTZAMrI3fPWFrfALZTmDmmWRi+0pFVpqV/qYV2SrRT4ZhDO2jCJbYi2
+        xCCx0FVR2SyiMWFHC0BLX6U0QRk89RQ=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E2762132C4;
+        Wed,  4 May 2022 15:55:33 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id xpecNfWhcmItPAAAMHmgww
+        (envelope-from <mwilck@suse.com>); Wed, 04 May 2022 15:55:33 +0000
+Message-ID: <4a7f19b6330c3017c45074854cf86b04224e7706.camel@suse.com>
+Subject: Re: lpfc: regression with lpfc 14.2.0.0 / Skyhawk: FLOGI failure
+From:   Martin Wilck <mwilck@suse.com>
+To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Justin Tee <justin.tee@broadcom.com>,
+        Daniel Wagner <daniel.wagner@suse.com>,
+        David Bond <dbond@suse.com>, Hannes Reinecke <hare@suse.com>
+Date:   Wed, 04 May 2022 17:55:33 +0200
+In-Reply-To: <9d7e7a5613decc1737ef2601ebb2506890790930.camel@suse.com>
+References: <9d7e7a5613decc1737ef2601ebb2506890790930.camel@suse.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: Nwew4Zxgu5vLciGisllLnvYlxsvRIF6W
-X-Proofpoint-GUID: Nwew4Zxgu5vLciGisllLnvYlxsvRIF6W
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 27 Apr 2022 15:22:23 -0700, James Smart wrote:
+On Wed, 2022-05-04 at 09:11 +0200, Martin Wilck wrote:
+>=20
+> Hints appreciated. Complete logs and additional debug data can be
+> provided on request.
 
-> Prior patch added a call to lpfc_sli_prep_wqe prior to lpfc_sli_issue_iocb.
-> This call should not have been added as prep_wqe is called within
-> the issue_iocb routine. So it's called twice now.
-> 
-> Remove the redundant prep call.
-> 
-> 
-> [...]
+Further analysis by David showed that the FLOGI via FCoE was using the
+VLAN ID.
 
-Applied to 5.19/scsi-queue, thanks!
+Martin
 
-[1/1] lpfc: Remove redundant lpfc_sli_prep_wqe() call
-      https://git.kernel.org/mkp/scsi/c/c2024e3b33ee
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
