@@ -2,60 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 068F0C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 01:49:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF569C4321E
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 01:49:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343652AbiEDBw4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 May 2022 21:52:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56832 "EHLO
+        id S1343590AbiEDBxF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 May 2022 21:53:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245655AbiEDBw2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2022 21:52:28 -0400
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 662FD33A3B
-        for <linux-scsi@vger.kernel.org>; Tue,  3 May 2022 18:47:44 -0700 (PDT)
-Received: by mail-pg1-x530.google.com with SMTP id k14so43025pga.0
-        for <linux-scsi@vger.kernel.org>; Tue, 03 May 2022 18:47:44 -0700 (PDT)
+        with ESMTP id S1343593AbiEDBwg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2022 21:52:36 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8CDA44A03
+        for <linux-scsi@vger.kernel.org>; Tue,  3 May 2022 18:48:22 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id c11so140253plg.13
+        for <linux-scsi@vger.kernel.org>; Tue, 03 May 2022 18:48:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=dMAADGqtkadGyWtiMmUAPEm8bORo1cOmSuHFnzFIe9g=;
-        b=HdhwV0WkvXZw3hjS8p1tFCKs9cZKJFJ7k5obLNyUKACusCcW1RzcVwG/3AkN25wPjr
-         MN1c4fbIR9x0erwQN9MET5VRJYx8dh+R8g2fLDUMIFlB05v/yh9SmtiE3TYb5zg7tp+O
-         AetyTzERcbfGEy31+di4TAAiEqxWduNa5FUWY=
+        bh=P7uM3xoAcE7zuGNsfEYVdWWhl8RQOVkTgxnXHqQm9tk=;
+        b=Ttm1udnLhK1uzAB04KBRSr/POGM0kwPI1bs4XPEU6UEtgK8/23ubm+dxeV4+X853RT
+         0+Il5Jok8kr0+FDj5VV/8TyC5lx1HeS1NOnJkl2lVk9pme8hyn7Y1lYALOBUqbtoGYi3
+         cAWN4x8Bl4pcx02o/CTto17Eyhwd5u2uMzQSw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=dMAADGqtkadGyWtiMmUAPEm8bORo1cOmSuHFnzFIe9g=;
-        b=D2963vOSJjDlgg6aHkyrpJEao0Iu5qHz1mgru4/A5uCE4da0cI3EdErpsls4QAJsvz
-         lSA/fyUZ9TXLHmMypjQrOgmO+87hkFxKP++Zi+9jrhXEzyrlue6dgz/AWhJpbSU3ZMRp
-         INJ0PgCiGraOKsXhF0Qja++UuuZEd+Cykyr54Ob4D/nGmIWSCFZkyH9thcVpN/jCh99v
-         0GZic5GOQeJxgMEhoABqrg3f6hk9n9n8JYqZKbjzdoum/X0UeAce/9LDhhtGQ+/yNukS
-         EMSct3zY0Emtg8UkVoS/yDP7wS4AyRNOklDkOi56KPTRyTTVXOX01knxuqQ6zCKpq6zr
-         r23g==
-X-Gm-Message-State: AOAM530S67XVK8mUlCS4uHyZwE8UXhFFmedVcpO/cdGXpcOtXcK2QWj8
-        nXKlkUQiYyF74zKTUMBwC1nUtA==
-X-Google-Smtp-Source: ABdhPJzJgAADMFFc6IgYXUwxUbgxm7TVuxaF377qcwdaawZlHxybyGrud242lBwhZCdVFfq7tPWaqA==
-X-Received: by 2002:a63:86c6:0:b0:3ab:2c2c:42e9 with SMTP id x189-20020a6386c6000000b003ab2c2c42e9mr15878387pgd.230.1651628864123;
-        Tue, 03 May 2022 18:47:44 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id j10-20020a62b60a000000b0050dc762817dsm6922289pff.87.2022.05.03.18.47.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=P7uM3xoAcE7zuGNsfEYVdWWhl8RQOVkTgxnXHqQm9tk=;
+        b=v/YiiORMq6T330q6fbKJGK6+0U0jBbRIytQa0swxXorWeAxIIXWwKCNX//+Msh3Pgf
+         Uz1Ytu5rGLLgz6HlsJw9HWCLBK+nCwX74WuoO3F2GhqskDG8BhdpVmI9e5MiS6bFV3Zq
+         eX3zBtr3tqe+1TBljJrA5amKmcpW/Tdiv7AlVVrE2X0VR0GgFlIGYT8oSyd6p+XFLd3L
+         82A+W3axddQbIRTfoPVXpGDK2v12RWDUx2Hx49aUFfs3YN/4u9O9l2HPkrCU5XsIrz8N
+         6FHlMLr64I8TtYxEeWyUCAKtkG7htHf/HZLPaTSotkgwONtU46iAnTLDWyeKd/noPCwR
+         v2Ig==
+X-Gm-Message-State: AOAM530IUJLZGf2wlX7Kr34h4Cep+P2dDsoYbmqr1CquC9W/19/APrKd
+        Z/mbYdpdp+5iLPZIwxv4KN+pMg==
+X-Google-Smtp-Source: ABdhPJxlINiFv6UJHBX+/eJqyerMOceaIDiYJHkzj2pPV40RgErLtQ31Acn4ZOqZFTEIOPf1xFj0AA==
+X-Received: by 2002:a17:90b:3b42:b0:1dc:5cdf:5649 with SMTP id ot2-20020a17090b3b4200b001dc5cdf5649mr7783206pjb.239.1651628861490;
         Tue, 03 May 2022 18:47:41 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id on13-20020a17090b1d0d00b001d9acbc3b4esm2003067pjb.47.2022.05.03.18.47.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 May 2022 18:47:39 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     "Gustavo A . R . Silva" <gustavoars@kernel.org>
 Cc:     Kees Cook <keescook@chromium.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
         "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
         Paolo Abeni <pabeni@redhat.com>,
-        Kuniyuki Iwashima <kuniyu@amazon.co.jp>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Eric Dumazet <edumazet@google.com>,
         Alexei Starovoitov <ast@kernel.org>,
-        Cong Wang <cong.wang@bytedance.com>,
-        Al Viro <viro@zeniv.linux.org.uk>, netdev@vger.kernel.org,
-        alsa-devel@alsa-project.org,
+        alsa-devel@alsa-project.org, Al Viro <viro@zeniv.linux.org.uk>,
         Andrew Gabbasov <andrew_gabbasov@mentor.com>,
         Andrew Morton <akpm@linux-foundation.org>,
         Andy Gross <agross@kernel.org>,
@@ -70,6 +69,7 @@ Cc:     Kees Cook <keescook@chromium.org>,
         =?UTF-8?q?Christian=20G=C3=B6ttsche?= <cgzones@googlemail.com>,
         Christian Lamparter <chunkeey@googlemail.com>,
         Chris Zankel <chris@zankel.net>,
+        Cong Wang <cong.wang@bytedance.com>,
         Daniel Axtens <dja@axtens.net>,
         Daniel Vetter <daniel.vetter@ffwll.ch>,
         Dan Williams <dan.j.williams@intel.com>,
@@ -99,11 +99,12 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>,
         Johan Hedberg <johan.hedberg@gmail.com>,
         Johannes Berg <johannes.berg@intel.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
         John Keeping <john@metanate.com>,
         Juergen Gross <jgross@suse.com>, Kalle Valo <kvalo@kernel.org>,
         Keith Packard <keithp@keithp.com>, keyrings@vger.kernel.org,
-        kunit-dev@googlegroups.com, "K. Y. Srinivasan" <kys@microsoft.com>,
+        kunit-dev@googlegroups.com,
+        Kuniyuki Iwashima <kuniyu@amazon.co.jp>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
         Lars-Peter Clausen <lars@metafoo.de>,
         Lee Jones <lee.jones@linaro.org>,
         Leon Romanovsky <leon@kernel.org>,
@@ -115,9 +116,8 @@ Cc:     Kees Cook <keescook@chromium.org>,
         linux-hardening@vger.kernel.org, linux-hyperv@vger.kernel.org,
         linux-integrity@vger.kernel.org, linux-rdma@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-xtensa@linux-xtensa.org, llvm@lists.linux.dev,
-        Loic Poulain <loic.poulain@linaro.org>,
+        linux-usb@vger.kernel.org, linux-xtensa@linux-xtensa.org,
+        llvm@lists.linux.dev, Loic Poulain <loic.poulain@linaro.org>,
         Louis Peens <louis.peens@corigine.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
@@ -151,14 +151,14 @@ Cc:     Kees Cook <keescook@chromium.org>,
         xen-devel@lists.xenproject.org,
         Xiu Jianfeng <xiujianfeng@huawei.com>,
         Yang Yingliang <yangyingliang@huawei.com>
-Subject: [PATCH 14/32] af_unix: Use mem_to_flex_dup() with struct unix_address
-Date:   Tue,  3 May 2022 18:44:23 -0700
-Message-Id: <20220504014440.3697851-15-keescook@chromium.org>
+Subject: [PATCH 11/32] nl80211: Use mem_to_flex_dup() with struct cfg80211_cqm_config
+Date:   Tue,  3 May 2022 18:44:20 -0700
+Message-Id: <20220504014440.3697851-12-keescook@chromium.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220504014440.3697851-1-keescook@chromium.org>
 References: <20220504014440.3697851-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2272; h=from:subject; bh=8b5W7mEG2Sah1C3FkS/UxctivFJh7iOzV6P8ujUbZM8=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBicdqDcR3znMx51jViMoq05/q58V2/1rXjoJjYBmJ4 CKXc5kiJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYnHagwAKCRCJcvTf3G3AJp8ZEA CTZiOebtApgRIMQFGfvlsj7s1U7ENKry+y1qCoH7clKk+kIHUFtKQuToAucuA7HnBVAIDqbBHa+dtu b1A4bqv4cHK21pPyhZmiE0VCyP00EYC8X6VbBCMRrhOvgKIRCQKYCDRRU3x3+zdTamMi+Cw4QRLFbr KeEVo3vWRxKFNYlUY6py6WsFnpaTCP45A1Rt2Mk1ONM+4tvkRlgJQKibXiiVxMmNJiq7diRyS43UyZ xdZzOY9N/SsdVs+DBAetVCVJfwnmWSxup+qwrjzAenumL1egb53niPav19Uu0KPGAkzqPtS4NDain6 T5G8UOgj2W4S/ZIxVzp3AEI0v7Q07cg9AUILFEUOEn2Ga7m2xtn/dn5Hqt0Gq5ryDybbgCBb0FW6nE apZrvb6JoF5ZEkWIMx0CD3b/SEJCPUMr1n+n/nlozI3/5uYk+uJuq11ezAU6BWwGeaiQi5MNENuLtJ f2iVuD520n1Ne+0aDX0g+6Bxq6CjD/3mk3NtQkdQZ1W7jF6hmMJWqPx/GWYvlmDlmSQNEQ659WICV6 styiy2WjRaD2LhpwT9sZHwcdpjjTGhsJ3rXcC+FrO5v7LrNOaE49f+5vGV2+PdIn7TzyijsyYCwjfC sD4MdxKc4Kc8wvaGgok8h676GkR5iOBRUeFIUjcwGTrf9mDGBR6ew5hwb4cQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2217; h=from:subject; bh=rRfAu1/k1e5caQg21/8VBHhysNqsP1FR5GA2AHrLW6w=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBicdqDYqJpVuI+Da24TYyn7rK2cAZcih+2ZRWaGUhg VviQcPmJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYnHagwAKCRCJcvTf3G3AJjdwD/ 9GoZycFvhK6h6fbIQwuLO60vgqzr+JFBMz2boSXTBJSryctNsbZrwuvUuiBZUKC1y9sGE+SgzQm0T7 WzDZtyTlGmT1CZjKFpgdCfMbuMLVROkIwwyYoraeYFirZmIIRURYhLoAsJh4ZeL+hi8jOWnaV5ClMm GpAX4WW1YsM9YRJimQri0QE7pLQKGb80KxVsDgul4e0OUj1wYZTYbTgr98Zpysc1nSby6oGnxfPJ5B GvVh8QA/SYaCCMlYyUKr3bjTLrKOZ0NSnt6bAW38OpCXj8344D0TsfmO6tGo0jkheFbpEhSFjRi0Lj 1/+lxcBQ3jvc7zB+0Q5hpVWgX0kC+MxgbmIRdXF66gXOY9KMZzGl6dt9Fdm0xQWH6kFZlX7zpOBeHx To/pgX+EVE7aw6zudBInH3vlkkTYIklAIL/O9ajINZfL2HKHTp1XgnQdpa0KDyxqJilBhkXXekcKjn s7KJFzs28RJWqn+YgyJ+4W4uA6XLQvHdqVGZu5zS748KLU05KkgCeTW+Wm195aiMdUvqPG1QyqpCX5 1oMep8SXDkjOyDi6DnWcfFivJfrpKBqXU3oWsvXdBRhX+fVXmfr/E7qrARl1smC7xBgqWCcJf152Rh nwFocx9Hoo9dTUkHbkM4z/OFi36I6ENfaPOS+x9fFE1riA7xPsrh1gW6nwwA==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -170,68 +170,64 @@ replace the open-coded a deserialization of bytes out of memory into a
 trailing flexible array by using a flex_array.h helper to perform the
 allocation, bounds checking, and copying.
 
+Cc: Johannes Berg <johannes@sipsolutions.net>
 Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Eric Dumazet <edumazet@google.com>
 Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: Paolo Abeni <pabeni@redhat.com>
-Cc: Kuniyuki Iwashima <kuniyu@amazon.co.jp>
-Cc: Alexei Starovoitov <ast@kernel.org>
-Cc: Cong Wang <cong.wang@bytedance.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
+Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
+Cc: Eric Dumazet <edumazet@google.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- include/net/af_unix.h | 14 ++++++++++++--
- net/unix/af_unix.c    |  7 ++-----
- 2 files changed, 14 insertions(+), 7 deletions(-)
+ net/wireless/core.h    |  4 ++--
+ net/wireless/nl80211.c | 15 ++++-----------
+ 2 files changed, 6 insertions(+), 13 deletions(-)
 
-diff --git a/include/net/af_unix.h b/include/net/af_unix.h
-index a7ef624ed726..422535b71295 100644
---- a/include/net/af_unix.h
-+++ b/include/net/af_unix.h
-@@ -25,8 +25,18 @@ extern struct hlist_head unix_socket_table[2 * UNIX_HASH_SIZE];
- 
- struct unix_address {
- 	refcount_t	refcnt;
--	int		len;
--	struct sockaddr_un name[];
-+	DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(int, len);
-+	union {
-+		DECLARE_FLEX_ARRAY(struct sockaddr_un, name);
-+		/*
-+		 * While a struct is used to access the flexible
-+		 * array, it may only be partially populated, and
-+		 * "len" above is actually tracking bytes, not a
-+		 * count of struct sockaddr_un elements, so also
-+		 * include a byte-size flexible array.
-+		 */
-+		DECLARE_FLEX_ARRAY_ELEMENTS(u8, bytes);
-+	};
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 3a7dbd63d8c6..899d111993c6 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -295,8 +295,8 @@ struct cfg80211_beacon_registration {
+ struct cfg80211_cqm_config {
+ 	u32 rssi_hyst;
+ 	s32 last_rssi_event_value;
+-	int n_rssi_thresholds;
+-	s32 rssi_thresholds[];
++	DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(int, n_rssi_thresholds);
++	DECLARE_FLEX_ARRAY_ELEMENTS(s32, rssi_thresholds);
  };
  
- struct unix_skb_parms {
-diff --git a/net/unix/af_unix.c b/net/unix/af_unix.c
-index e1dd9e9c8452..8410cbc82ded 100644
---- a/net/unix/af_unix.c
-+++ b/net/unix/af_unix.c
-@@ -244,15 +244,12 @@ EXPORT_SYMBOL_GPL(unix_peer_get);
- static struct unix_address *unix_create_addr(struct sockaddr_un *sunaddr,
- 					     int addr_len)
- {
--	struct unix_address *addr;
-+	struct unix_address *addr = NULL;
+ void cfg80211_destroy_ifaces(struct cfg80211_registered_device *rdev);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 945ed87d12e0..70df7132cce8 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -12096,21 +12096,14 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
  
--	addr = kmalloc(sizeof(*addr) + addr_len, GFP_KERNEL);
--	if (!addr)
-+	if (mem_to_flex_dup(&addr, sunaddr, addr_len, GFP_KERNEL))
- 		return NULL;
+ 	wdev_lock(wdev);
+ 	if (n_thresholds) {
+-		struct cfg80211_cqm_config *cqm_config;
++		struct cfg80211_cqm_config *cqm_config = NULL;
  
- 	refcount_set(&addr->refcnt, 1);
--	addr->len = addr_len;
--	memcpy(addr->name, sunaddr, addr_len);
+-		cqm_config = kzalloc(struct_size(cqm_config, rssi_thresholds,
+-						 n_thresholds),
+-				     GFP_KERNEL);
+-		if (!cqm_config) {
+-			err = -ENOMEM;
++		err = mem_to_flex_dup(&cqm_config, thresholds, n_thresholds,
++				      GFP_KERNEL);
++		if (err)
+ 			goto unlock;
+-		}
  
- 	return addr;
- }
+ 		cqm_config->rssi_hyst = hysteresis;
+-		cqm_config->n_rssi_thresholds = n_thresholds;
+-		memcpy(cqm_config->rssi_thresholds, thresholds,
+-		       flex_array_size(cqm_config, rssi_thresholds,
+-				       n_thresholds));
+ 
+ 		wdev->cqm_config = cqm_config;
+ 	}
 -- 
 2.32.0
 
