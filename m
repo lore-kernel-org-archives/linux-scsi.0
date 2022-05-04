@@ -2,78 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BFD0C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 11:12:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D74C0C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 11:34:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348580AbiEDLQY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 May 2022 07:16:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51330 "EHLO
+        id S1348871AbiEDLhi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 May 2022 07:37:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348583AbiEDLQW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 07:16:22 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1A401570A;
-        Wed,  4 May 2022 04:12:43 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 242MQhCd013665;
-        Tue, 3 May 2022 00:51:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=sZdJgyADkeH3V7B3rM7EoeKb2SSRy28Z4nID5HsXg7Y=;
- b=AK/DVKeH3HlA7BlTqWeFFCnGrLuG3H/S6xyFVaIpqerQUDG9qsIA04ue2MwWz8igeODK
- 7CDV3b+WLhc2YItuUp/BoNDZbOmzdkNv+oY6T9kdJvmkCvc44NAmn/2CuWwGPryZ7iOT
- 86UOruexEcKulofqsymWP3YO/muuGjHZk4PLVXIZXP76bPQPkYSVfS0/9ZeX+RGrBTna
- ZOIhFRQcJZBD/qY8B+yuqqWwygffComRHkwsAJbow72qtPa2cPRFMMvEGg3pai7Q2YJI
- 438RjuA7D0HwMt+hvKP/4G4LA9mjVH8709TXa113tbfH2OJGvOkBtIL3q8WmQCWR7KYW TA== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3frvqscnke-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:51:49 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2430ow5J009155;
-        Tue, 3 May 2022 00:51:49 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x5d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:51:49 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2430plj2010389;
-        Tue, 3 May 2022 00:51:48 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x4g-3;
-        Tue, 03 May 2022 00:51:48 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     sudarsana.kalluru@qlogic.com, anil.gurumurthy@qlogic.com,
-        Haowen Bai <baihaowen@meizu.com>, jejb@linux.ibm.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: bfa: remove redundant NULL check
-Date:   Mon,  2 May 2022 20:51:13 -0400
-Message-Id: <165153836360.24053.2843259477177875270.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.35.2
-In-Reply-To: <1647309434-13936-1-git-send-email-baihaowen@meizu.com>
-References: <1647309434-13936-1-git-send-email-baihaowen@meizu.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        with ESMTP id S243688AbiEDLhh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 07:37:37 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01D791AF10
+        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 04:34:00 -0700 (PDT)
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 244BQxxl012808;
+        Wed, 4 May 2022 11:33:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=ZDGFh7svGPcP526v3YnyYIM3kRH+Se6prkAChaCCn8E=;
+ b=flUraAVts1yBhq0CrpSshoGh5x4hEU3Bja015al2iFG2bnvWVa3r428kxp5VpkQhVY+4
+ MuQZMhAT7EZOC6MMPu66aTM2NmvyCZ4aI8J/cV4NUqk/DPN8ObnKMNZkWe0VvxogTTI1
+ 8JzLsCMm+Rjilgt6dEkm9zVTTWARCb5lRauK23ghM2bYomH2/8hc+MELZsKwByPpZWPt
+ l4glzRtTkajfh2dLNRwKNany5INrDbRsB4CDH/aw0DwAqVtorPuNK1Q1XOwYG9j7F4Jp
+ SXNtU5ADN4G0LyKRWNLDA6xxfYHX3qNtcjeGbCi4Ai2DDAuAuei7elu/PhZM8oi4+qlf ZA== 
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3furmfg4gb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 04 May 2022 11:33:53 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 244BR8mX024536;
+        Wed, 4 May 2022 11:33:51 GMT
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+        by ppma03ams.nl.ibm.com with ESMTP id 3ftp7ftcvj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 04 May 2022 11:33:50 +0000
+Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 244BXmOP56295828
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 4 May 2022 11:33:48 GMT
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0746211C054;
+        Wed,  4 May 2022 11:33:48 +0000 (GMT)
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E95EA11C052;
+        Wed,  4 May 2022 11:33:47 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.145.86.219])
+        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
+        Wed,  4 May 2022 11:33:47 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.94.2)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1nmDGN-000wxC-CZ; Wed, 04 May 2022 13:33:47 +0200
+Date:   Wed, 4 May 2022 11:33:47 +0000
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.ibm.com>
+Subject: Re: [PATCH 03/24] zfcp: open-code fc_block_scsi_eh() for host reset
+Message-ID: <YnJkmzzIdW8BvT4+@t480-pf1aa2c2>
+References: <20220503200704.88003-1-hare@suse.de>
+ <20220503200704.88003-4-hare@suse.de>
+ <YnJdEio0ifb9/McS@t480-pf1aa2c2>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <YnJdEio0ifb9/McS@t480-pf1aa2c2>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: 91QRhISgrfWqtN2wI_CR2mZScw6rtei3
+X-Proofpoint-GUID: 91QRhISgrfWqtN2wI_CR2mZScw6rtei3
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: nBdh9Lcbqy45eL27iI1wMuEe7MLI9Z5d
-X-Proofpoint-ORIG-GUID: nBdh9Lcbqy45eL27iI1wMuEe7MLI9Z5d
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
+ definitions=2022-05-04_03,2022-05-04_01,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 suspectscore=0
+ spamscore=0 priorityscore=1501 lowpriorityscore=0 phishscore=0
+ impostorscore=0 mlxlogscore=999 clxscore=1015 mlxscore=0 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2205040076
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 15 Mar 2022 09:57:14 +0800, Haowen Bai wrote:
-
-> Fix below warnings reported by coccicheck:
-> drivers/scsi/bfa/bfad_debugfs.c:375:2-7: WARNING: NULL check before some freeing functions is not needed.
+On Wed, May 04, 2022 at 11:01:38AM +0000, Benjamin Block wrote:
+> On Tue, May 03, 2022 at 10:06:43PM +0200, Hannes Reinecke wrote:
+> > +	list_for_each_entry(port, &adapter->port_list, list) {
+> > +		struct fc_rport *rport = port->rport;
 > 
+> Like Steffen said in the other review, this may be NULL here, since
+> `scpnt` can be from a different context, and there is no guarantees this
+> is always assigned, if you iterate over all port of an adapter.
 > 
+> So you want:
+> 
+>     if (!rport)
+>             continue;
 
-Applied to 5.19/scsi-queue, thanks!
-
-[1/1] scsi: bfa: remove redundant NULL check
-      https://git.kernel.org/mkp/scsi/c/8e897c84661e
+That is probably wrong; see Steffen's comments w.r.t. waiting for them
+to appear, instead of skipping them.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
+IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
+Vorsitz. AufsR.: Gregor Pillen         /         Geschäftsführung: David Faller
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
