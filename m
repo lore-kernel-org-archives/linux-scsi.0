@@ -2,57 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7D23C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 01:47:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89A8FC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 01:47:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245458AbiEDBvY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 May 2022 21:51:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54900 "EHLO
+        id S245518AbiEDBva (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 May 2022 21:51:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245453AbiEDBvM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2022 21:51:12 -0400
-Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FF6832ED5
-        for <linux-scsi@vger.kernel.org>; Tue,  3 May 2022 18:47:35 -0700 (PDT)
-Received: by mail-pg1-x52b.google.com with SMTP id g3so21760pgg.3
-        for <linux-scsi@vger.kernel.org>; Tue, 03 May 2022 18:47:35 -0700 (PDT)
+        with ESMTP id S245279AbiEDBvR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2022 21:51:17 -0400
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 799B02F002
+        for <linux-scsi@vger.kernel.org>; Tue,  3 May 2022 18:47:37 -0700 (PDT)
+Received: by mail-pj1-x1031.google.com with SMTP id t11-20020a17090ad50b00b001d95bf21996so3935922pju.2
+        for <linux-scsi@vger.kernel.org>; Tue, 03 May 2022 18:47:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=+ZZ5vfFx25K1I7i1kYl8UxhLqvkhElnoRitD8+hKJmA=;
-        b=DpRwgsc8k+bO9cXVHmU7ksT2E8T7R4om62xOunRq9j6F4/Hlmd+72tPALfSIkWpTBv
-         6ZsB/FoXumwXqUlvu94h7ehF0Poi6zQZRyL/SVAXWNru3D7CYZKN+GO4S+p3OYu8TvOf
-         p5r4/HuAd0PoSIWCdxVFPC7ODUIYPeBjfKvmU=
+        bh=911JnfKaG9oxLMZbIRJVKqmgZoLrOSfR0+bBHDgrI5Q=;
+        b=XpaB8pfu8eVojSjAsTEUujhhPhU3ucUSWYxDz/8sQ6z59UWvf3i1yrd7kb6SWG2Tnt
+         HAfw08l7QKrj5Y9xBESf9NlJZEn9vrEgx5ueLfnIKaMH/WYs9aAiD55J+sDOumyzi4NC
+         ygqjXeva6u5ldSCOC93c/m2TPIGafNG0RRrsQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=+ZZ5vfFx25K1I7i1kYl8UxhLqvkhElnoRitD8+hKJmA=;
-        b=unV82qoMF2X9dy0Zbt9jzxrigvEpMFGKwpk/oBZ/13v0hQPwP9u+diYiI5Pn/OVhBL
-         MKWGZtZyIEWKcR2D66GNzL7jx/77HImJ7mpibtvAHuO6FxFVoZn2KrkXY3KjAEEaKs0T
-         y+5VSJzlIsHHSfUdgiFepl6uLdwFWyffNVTmX+SjlZOKO/s2cveKNZfFZdVCfXYqdcSX
-         +mTuISECv2a5pfInmGgEGvATnHe9moCP3CtbeCM0XIO03Q2MFTgZScQaTkaLPa9+yNNo
-         HzuziuluR3xKjwkKmTPd1ydTq9ifctCiHdYWepZO+eVMSMYABU6NTqVgXQlBYbEGY1rS
-         kqYg==
-X-Gm-Message-State: AOAM532ALWA7FiEfH7srMaZ2nwgcUDYwlS7aV6jESBFLovAEtAl6hg30
-        DQPzOY3Px29sxc2Nc5oyOOitpw==
-X-Google-Smtp-Source: ABdhPJx1pk1Kj8VquWNvjueoOJF84IDUN+sdPy6JRVklo0yvv2jKaWOAa1dEeUA85vrZ210XI6GffA==
-X-Received: by 2002:aa7:962e:0:b0:50d:5ed8:aa23 with SMTP id r14-20020aa7962e000000b0050d5ed8aa23mr18603820pfg.43.1651628853848;
-        Tue, 03 May 2022 18:47:33 -0700 (PDT)
+        bh=911JnfKaG9oxLMZbIRJVKqmgZoLrOSfR0+bBHDgrI5Q=;
+        b=VuKiZdE50GbfE/HdcwWF4DDkj1CvSvs7XO5s8wXVkRGzYh7J8EhAm3Cpll0QKgk3SS
+         YKt+z+iK7sVojDJjLVUD+DTdAilllvl/UI42JSXqBE4DJyvpiNOsJf/31G0CpsBYP1Zp
+         Fcf1zA86HCP3ePrTcLUuTK0Bac6Uhsl6ihmAyayRJkKume+2QxlxmwEgtNi2xVG1yRKs
+         EJErc1XBodBBL1eRBXR6nbJ96qyBzJ8/KbL2e1mlX9Ry/HFUDLbqskmV/XRfVNrfQodF
+         fssFzbWBF0rBCxZjh3AFksEmK0wgFuXFQPJKb7mSPBctzhLe/U7tkxT5Xq18Oy+2x7xC
+         sLPA==
+X-Gm-Message-State: AOAM533kjiL8uh/TK+QwAJruBp8uzpx7h50/2UOzMIxke0FtWjT0OZZV
+        opHgvH/kbNdhK8gaJGDekkPPqA==
+X-Google-Smtp-Source: ABdhPJxrHNegJmGAxW56M+/xNDI5Rp9q10uc3LuqY84v7Q4/SyroP5sNMa7kEu3GhSOoTkFJMy4yVA==
+X-Received: by 2002:a17:902:d4ce:b0:15e:90f8:216c with SMTP id o14-20020a170902d4ce00b0015e90f8216cmr17719945plg.65.1651628856716;
+        Tue, 03 May 2022 18:47:36 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id k8-20020a170902ce0800b0015e8d4eb283sm7000015plg.205.2022.05.03.18.47.33
+        by smtp.gmail.com with ESMTPSA id f6-20020a170902860600b0015e8d4eb2b8sm6950573plo.258.2022.05.03.18.47.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 May 2022 18:47:33 -0700 (PDT)
+        Tue, 03 May 2022 18:47:35 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     "Gustavo A . R . Silva" <gustavoars@kernel.org>
 Cc:     Kees Cook <keescook@chromium.org>,
-        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Rich Felker <dalias@aerifal.cx>,
-        Eric Dumazet <edumazet@google.com>, netdev@vger.kernel.org,
-        Alexei Starovoitov <ast@kernel.org>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>, linux-hardening@vger.kernel.org,
+        llvm@lists.linux.dev, Alexei Starovoitov <ast@kernel.org>,
         alsa-devel@alsa-project.org, Al Viro <viro@zeniv.linux.org.uk>,
         Andrew Gabbasov <andrew_gabbasov@mentor.com>,
         Andrew Morton <akpm@linux-foundation.org>,
@@ -74,10 +72,12 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Dan Williams <dan.j.williams@intel.com>,
         David Gow <davidgow@google.com>,
         David Howells <dhowells@redhat.com>,
+        "David S. Miller" <davem@davemloft.net>,
         Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
         devicetree@vger.kernel.org, Dexuan Cui <decui@microsoft.com>,
         Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
         Eli Cohen <elic@nvidia.com>,
+        Eric Dumazet <edumazet@google.com>,
         Eric Paris <eparis@parisplace.org>,
         Eugeniu Rosca <erosca@de.adit-jv.com>,
         Felipe Balbi <balbi@kernel.org>,
@@ -91,6 +91,7 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Herbert Xu <herbert@gondor.apana.org.au>,
         Hulk Robot <hulkci@huawei.com>,
+        Jakub Kicinski <kuba@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         James Morris <jmorris@namei.org>,
         Jarkko Sakkinen <jarkko@kernel.org>,
@@ -113,11 +114,10 @@ Cc:     Kees Cook <keescook@chromium.org>,
         linux-afs@lists.infradead.org,
         linux-arm-kernel@lists.infradead.org,
         linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-hardening@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-integrity@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-xtensa@linux-xtensa.org, llvm@lists.linux.dev,
+        linux-hyperv@vger.kernel.org, linux-integrity@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-security-module@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-xtensa@linux-xtensa.org,
         Loic Poulain <loic.poulain@linaro.org>,
         Louis Peens <louis.peens@corigine.com>,
         Luca Coelho <luciano.coelho@intel.com>,
@@ -128,12 +128,11 @@ Cc:     Kees Cook <keescook@chromium.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Max Filippov <jcmvbkbc@gmail.com>,
         Mimi Zohar <zohar@linux.ibm.com>,
-        Muchun Song <songmuchun@bytedance.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
+        Muchun Song <songmuchun@bytedance.com>, netdev@vger.kernel.org,
         =?UTF-8?q?Nuno=20S=C3=A1?= <nuno.sa@analog.com>,
         Paolo Abeni <pabeni@redhat.com>,
         Paul Moore <paul@paul-moore.com>,
+        Rich Felker <dalias@aerifal.cx>,
         Rob Herring <robh+dt@kernel.org>,
         Russell King <linux@armlinux.org.uk>, selinux@vger.kernel.org,
         "Serge E. Hallyn" <serge@hallyn.com>,
@@ -145,79 +144,222 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Stephen Hemminger <sthemmin@microsoft.com>,
         Stephen Smalley <stephen.smalley.work@gmail.com>,
         Tadeusz Struk <tadeusz.struk@linaro.org>,
-        Takashi Iwai <tiwai@suse.com>, Tom Rix <trix@redhat.com>,
+        Takashi Iwai <tiwai@suse.com>,
         Udipto Goswami <quic_ugoswami@quicinc.com>,
         Vincenzo Frascino <vincenzo.frascino@arm.com>,
         wcn36xx@lists.infradead.org, Wei Liu <wei.liu@kernel.org>,
         xen-devel@lists.xenproject.org,
         Xiu Jianfeng <xiujianfeng@huawei.com>,
         Yang Yingliang <yangyingliang@huawei.com>
-Subject: [PATCH 01/32] netlink: Avoid memcpy() across flexible array boundary
-Date:   Tue,  3 May 2022 18:44:10 -0700
-Message-Id: <20220504014440.3697851-2-keescook@chromium.org>
+Subject: [PATCH 04/32] fortify: Add run-time WARN for cross-field memcpy()
+Date:   Tue,  3 May 2022 18:44:13 -0700
+Message-Id: <20220504014440.3697851-5-keescook@chromium.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220504014440.3697851-1-keescook@chromium.org>
 References: <20220504014440.3697851-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2198; h=from:subject; bh=m3+rrHA3rlt0sA4WgKzRJNTXeSTN4vWW0f0prUvbWYY=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBicdqAKYSI60YG7oB43Zm2qf2XEYFq9+0dv6JxgKQA Vag6ObOJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYnHagAAKCRCJcvTf3G3AJt+PD/ 4wYVpcKl2liC+Uc4jUmmdOovQey8J6/k2HmeHGxkjjuXUGIWCxvRqFTmpp0zt8q6NeCY1dzyQE7A9N PW2CVLlv5GLZfLyBlcsOWL4hofk/Ed905HvAky/Dx8yVe0LszOaIIrWGUii70nX0RIZBcDlNYaOY4k wGJaGLJ9XI5Abp/vMi8qzgEIVt5Qty6Z+cfnpAvETE9FFC0ibHAuxSsOCPhKMgvWgkyDjMAVgJQC6t TKGjSE1Rwow+68x8cxXa3ZsNgWXO0wHDaWWB4/QUxyVrq/AqCxOvgu3SljXBgVpaeUF41w+gB7rTXz Jpn7XXtJZLIDQT9yoNDAsj8yjQSIPdaKabA732knKP+dXXvoimMLj17LWxunuIrNQJ5Awl5Dz2jNa4 96eQ4Eabc5miPNc5+9VOK1Wc20FUE/uqW/VkQkBWzcnLXslpLRuJ2jNTFzk50BKZOJ20vutotuSmWf 5gqjyHzRfK+iajoBCEV6nUiWN7ewO8XDDayLZtzu5foCWXgFFwp2ZWksNnvY6M1djooGD0fU2cMDkZ HK9WR0ZfO5zv8cE5RCjDXb25deVhtGS6HRKU3vBlDmFx3drFqOEK/4zwTej6ttVyJqAspxBqEq7xpi JDgQOkTfh60YdtsNYhykruXCL3NnFuRLtxOeMGWD4IL6YtPwYfH3V6aFCljQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7485; h=from:subject; bh=tR948KPQeb2PYDrDjEae6GxtJ84K9V5KxBtP7gPRR/0=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBicdqBJdrO+OL3bCOY6akLjwosSFqhKtDoTb/Zh8Fy uzSMohWJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYnHagQAKCRCJcvTf3G3AJu6nD/ 4nHJdgb4XE8OHMjojOaPl9nULa44o03t//4waAm5Xj50QbDOyrBIKqeaRsc5tWg7tp/Z6v0nmG1RJ6 XSHy4AfPcewPHlkIjBTKQ1jbxZcS7qaEExIyWtMJtQ7GtiOD1AWiQbAW4KJ769iV/0me51Vamo+8Ip veorWN0jTQ+xDJ7fyb9mbxXsI7lvSOQUBdZzwAzPgJazmEXjwO8ozXnn0AaGKNv31py+LgyPwV3P64 KAQ04Gxp/rMnWduFhSm2pHXhcI6M++J1CvvtB/IPwWfRbr9CNUU4Jk3s04sG/XIIP/XCeyAn9u7lla 0QyhfHAuqHdIkCdiPXrp7mi2GKNlqOsemPZjnRNTm7F8RVQ7axjkLgPu/OdKyoIjcu4+Gxe1+1ddUe aX6mQB2mGmzNYtycr4ZILXoVPXUX2aUg4K+tE9BlmcAPTi2DTbr35TkFDaDVuBx1qu3sfaOS7h4cb8 ktu5OJHSekWrtF+UVSH3EdBatG6D2HeS6wxcx6SHUNtMwugLr34tjLkliqOflvnPJpRccxYFyzl9dZ qy69k3TaXevsfsMBn7XO5PIzGI74pL+vRzFTRl1RwbUS4WyKiQh9d4h/hZVD2tYMHxvgBj3q9keCdw H22GUCBSF28gbojQv8oqLHwc2cPU6T+4DFzfvbOlpZYHDcM7+2IPrnwnqyXQ==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In preparation for run-time memcpy() bounds checking, split the nlmsg
-copying for error messages (which crosses a previous unspecified flexible
-array boundary) in half. Avoids the future run-time warning:
+Enable run-time checking of dynamic memcpy() and memmove() lengths,
+issuing a WARN when a write would exceed the size of the target struct
+member, when built with CONFIG_FORTIFY_SOURCE=y. This would have caught
+all of the memcpy()-based buffer overflows from 2018 through 2020,
+specifically covering all the cases where the destination buffer size
+is known at compile time.
 
-memcpy: detected field-spanning write (size 32) of single field "&errmsg->msg" (size 16)
+This change ONLY adds a run-time warning. As false positives are currently
+still expected, this will not block the overflow. The new warnings will
+look like this:
 
-Creates an explicit flexible array at the end of nlmsghdr for the payload,
-named "nlmsg_payload". There is no impact on UAPI; the sizeof(struct
-nlmsghdr) does not change, but now the compiler can better reason about
-where things are being copied.
+  memcpy: detected field-spanning write (size N) of single field "var->dest" (size M)
+  WARNING: CPU: n PID: pppp at source/file/path.c:nr function+0xXX/0xXX [module]
 
-Fixed-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Link: https://lore.kernel.org/lkml/d7251d92-150b-5346-6237-52afc154bb00@rasmusvillemoes.dk
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Rich Felker <dalias@aerifal.cx>
-Cc: Eric Dumazet <edumazet@google.com>
-Cc: netdev@vger.kernel.org
+The false positives are most likely where intentional field-spanning
+writes are happening. These need to be addressed similarly to how the
+compile-time cases were addressed: add a struct_group(), split the
+memcpy(), use a flex_array.h helper, or some other refactoring.
+
+In order to make identifying/investigating instances of added runtime
+checks easier, each instance includes the destination variable name as a
+WARN argument, prefixed with 'field "'. Therefore, on any given build,
+it is trivial to inspect the artifacts to find instances. For example
+on an x86_64 defconfig build, there are 78 new run-time memcpy() bounds
+checks added:
+
+  $ for i in vmlinux $(find . -name '*.ko'); do \
+      strings "$i" | grep '^field "'; done | wc -l
+  78
+
+Currently, the common case where a destination buffer is known to be a
+dynamic size (i.e. has a trailing flexible array) does not generate a
+WARN. For example:
+
+    struct normal_flex_array {
+	void *a;
+	int b;
+	size_t array_size;
+	u32 c;
+	u8 flex_array[];
+    };
+
+    struct normal_flex_array *instance;
+    ...
+    /* These cases will be ignored for run-time bounds checking. */
+    memcpy(instance, src, len);
+    memcpy(instance->flex_array, src, len);
+
+This code pattern will need to be addressed separately, likely by
+migrating to one of the flex_array.h family of helpers.
+
+Note that one of the dynamic-sized destination cases is irritatingly
+unable to be detected by the compiler: when using memcpy() to target
+a composite struct member which contains a trailing flexible array
+struct. For example:
+
+    struct wrapper {
+	int foo;
+	char bar;
+	struct normal_flex_array embedded;
+    };
+
+    struct wrapper *instance;
+    ...
+    /* This will incorrectly WARN when len > sizeof(instance->embedded) */
+    memcpy(&instance->embedded, src, len);
+
+These cases end up appearing to the compiler to be sized as if the
+flexible array had 0 elements. :( For more details see:
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101832
+https://godbolt.org/z/vW6x8vh4P
+
+Regardless, all cases of copying to/from flexible array structures
+should be migrated to using the new flex*()-family of helpers to gain
+their added safety checking, but priority will need to be given to the
+"composite flexible array structure destination" cases noted above.
+
+As mentioned, none of these bounds checks block any overflows
+currently. For users that have tested their workloads, do not encounter
+any warnings, and wish to make these checks stop any overflows, they
+can use a big hammer and set the sysctl panic_on_warn=1.
+
+Cc: Nathan Chancellor <nathan@kernel.org>
+Cc: Nick Desaulniers <ndesaulniers@google.com>
+Cc: Tom Rix <trix@redhat.com>
+Cc: linux-hardening@vger.kernel.org
+Cc: llvm@lists.linux.dev
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- include/uapi/linux/netlink.h | 1 +
- net/netlink/af_netlink.c     | 5 ++++-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ include/linux/fortify-string.h | 70 ++++++++++++++++++++++++++++++++--
+ 1 file changed, 67 insertions(+), 3 deletions(-)
 
-diff --git a/include/uapi/linux/netlink.h b/include/uapi/linux/netlink.h
-index 855dffb4c1c3..47f9342d51bc 100644
---- a/include/uapi/linux/netlink.h
-+++ b/include/uapi/linux/netlink.h
-@@ -47,6 +47,7 @@ struct nlmsghdr {
- 	__u16		nlmsg_flags;	/* Additional flags */
- 	__u32		nlmsg_seq;	/* Sequence number */
- 	__u32		nlmsg_pid;	/* Sending process port ID */
-+	__u8		nlmsg_payload[];/* Contents of message */
- };
+diff --git a/include/linux/fortify-string.h b/include/linux/fortify-string.h
+index 295637a66c46..9f65527fff40 100644
+--- a/include/linux/fortify-string.h
++++ b/include/linux/fortify-string.h
+@@ -3,6 +3,7 @@
+ #define _LINUX_FORTIFY_STRING_H_
  
- /* Flags values */
-diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-index 1b5a9c2e1c29..09346aee1022 100644
---- a/net/netlink/af_netlink.c
-+++ b/net/netlink/af_netlink.c
-@@ -2445,7 +2445,10 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err,
- 			  NLMSG_ERROR, payload, flags);
- 	errmsg = nlmsg_data(rep);
- 	errmsg->error = err;
--	memcpy(&errmsg->msg, nlh, payload > sizeof(*errmsg) ? nlh->nlmsg_len : sizeof(*nlh));
-+	errmsg->msg = *nlh;
-+	if (payload > sizeof(*errmsg))
-+		memcpy(errmsg->msg.nlmsg_payload, nlh->nlmsg_payload,
-+		       nlh->nlmsg_len - sizeof(*nlh));
+ #include <linux/const.h>
++#include <linux/bug.h>
  
- 	if (nlk_has_extack && extack) {
- 		if (extack->_msg) {
+ #define __FORTIFY_INLINE extern __always_inline __gnu_inline __overloadable
+ #define __RENAME(x) __asm__(#x)
+@@ -303,7 +304,7 @@ __FORTIFY_INLINE void fortify_memset_chk(__kernel_size_t size,
+  * V = vulnerable to run-time overflow (will need refactoring to solve)
+  *
+  */
+-__FORTIFY_INLINE void fortify_memcpy_chk(__kernel_size_t size,
++__FORTIFY_INLINE bool fortify_memcpy_chk(__kernel_size_t size,
+ 					 const size_t p_size,
+ 					 const size_t q_size,
+ 					 const size_t p_size_field,
+@@ -352,16 +353,79 @@ __FORTIFY_INLINE void fortify_memcpy_chk(__kernel_size_t size,
+ 	if ((p_size != (size_t)(-1) && p_size < size) ||
+ 	    (q_size != (size_t)(-1) && q_size < size))
+ 		fortify_panic(func);
++
++	/*
++	 * Warn when writing beyond destination field size.
++	 *
++	 * We must ignore p_size_field == 0 and -1 for existing
++	 * 0-element and flexible arrays, until they are all converted
++	 * to flexible arrays and use the flex()-family of helpers.
++	 *
++	 * The implementation of __builtin_object_size() behaves
++	 * like sizeof() when not directly referencing a flexible
++	 * array member, which means there will be many bounds checks
++	 * that will appear at run-time, without a way for them to be
++	 * detected at compile-time (as can be done when the destination
++	 * is specifically the flexible array member).
++	 * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101832
++	 */
++	if (p_size_field != 0 && p_size_field != (size_t)(-1) &&
++	    p_size != p_size_field && p_size_field < size)
++		return true;
++
++	return false;
+ }
+ 
+ #define __fortify_memcpy_chk(p, q, size, p_size, q_size,		\
+ 			     p_size_field, q_size_field, op) ({		\
+ 	size_t __fortify_size = (size_t)(size);				\
+-	fortify_memcpy_chk(__fortify_size, p_size, q_size,		\
+-			   p_size_field, q_size_field, #op);		\
++	WARN_ONCE(fortify_memcpy_chk(__fortify_size, p_size, q_size,	\
++				     p_size_field, q_size_field, #op),	\
++		  #op ": detected field-spanning write (size %zu) of single %s (size %zu)\n", \
++		  __fortify_size,					\
++		  "field \"" #p "\" at " __FILE__ ":" __stringify(__LINE__), \
++		  p_size_field);					\
+ 	__underlying_##op(p, q, __fortify_size);			\
+ })
+ 
++/*
++ * Notes about compile-time buffer size detection:
++ *
++ * With these types...
++ *
++ *	struct middle {
++ *		u16 a;
++ *		u8 middle_buf[16];
++ *		int b;
++ *	};
++ *	struct end {
++ *		u16 a;
++ *		u8 end_buf[16];
++ *	};
++ *	struct flex {
++ *		int a;
++ *		u8 flex_buf[];
++ *	};
++ *
++ *	void func(TYPE *ptr) { ... }
++ *
++ * Cases where destination size cannot be currently detected:
++ * - the size of ptr's object (seemingly by design, gcc & clang fail):
++ *	__builtin_object_size(ptr, 1) == -1
++ * - the size of flexible arrays in ptr's obj (by design, dynamic size):
++ *      __builtin_object_size(ptr->flex_buf, 1) == -1
++ * - the size of ANY array at the end of ptr's obj (gcc and clang bug):
++ *	__builtin_object_size(ptr->end_buf, 1) == -1
++ *	https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101836
++ *
++ * Cases where destination size is currently detected:
++ * - the size of non-array members within ptr's object:
++ *	__builtin_object_size(ptr->a, 1) == 2
++ * - the size of non-flexible-array in the middle of ptr's obj:
++ *	__builtin_object_size(ptr->middle_buf, 1) == 16
++ *
++ */
++
+ /*
+  * __builtin_object_size() must be captured here to avoid evaluating argument
+  * side-effects further into the macro layers.
 -- 
 2.32.0
 
