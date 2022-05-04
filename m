@@ -2,81 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C01CFC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 03:38:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EB3BC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 04:03:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236361AbiEDDl6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 May 2022 23:41:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45198 "EHLO
+        id S1344483AbiEDEGb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 May 2022 00:06:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344366AbiEDDly (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2022 23:41:54 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACE0B27FE1;
-        Tue,  3 May 2022 20:38:20 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 242MCRCl030007;
-        Tue, 3 May 2022 00:51:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=co1HKWWIuvqZK5K23IbCWayVwEyZTYw1u2eKWn80D5Y=;
- b=FwFL/J/c9I5g3ahWu7vrXF2J/PeooBeLfKe7CpwYI22QQEOd0RDNh1BiiK+Wxj0TA9kP
- JtcfAa2EmSk6Oeknbvt5bzZK5iQe1er+/u8RGI7yT0rq+PCGb9jHaeTnq1MbTd6fEvhU
- 1SNUdBqVZNlN5uRzQ5ryh3KGkA2dt05PDZCglyMz3snCRjyCW2+PVysTadMDhGsGhGLF
- QKYAjXIGSpx1fp1uEAX8gYO6ZKJ82K+Vcn7IBM/BHh4CbBuGERgVuR09syWTqs5FgQlI
- lII4nCw3ge0V6my7yXWyRtHeq8pmdnFiV8w52c9ooEo9jj6hoijolfmmpY64OGNzYdlx og== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fruq0cp5k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:51:57 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2430ooiZ008905;
-        Tue, 3 May 2022 00:51:56 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x8d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:51:56 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2430pljS010389;
-        Tue, 3 May 2022 00:51:56 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x4g-16;
-        Tue, 03 May 2022 00:51:56 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     cgel.zte@gmail.com, james.smart@broadcom.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, jejb@linux.ibm.com,
-        Zeal Robot <zealci@zte.com.cn>,
-        Changcheng Deng <deng.changcheng@zte.com.cn>,
-        linux-scsi@vger.kernel.org, dick.kennedy@broadcom.com
-Subject: Re: [PATCH] scsi: lpfc: Remove unneeded variable
-Date:   Mon,  2 May 2022 20:51:26 -0400
-Message-Id: <165153836362.24053.10060021441010287017.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.35.2
-In-Reply-To: <20220419065750.2573861-1-deng.changcheng@zte.com.cn>
-References: <20220419065750.2573861-1-deng.changcheng@zte.com.cn>
+        with ESMTP id S1344456AbiEDEGa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 00:06:30 -0400
+Received: from mail-yw1-x112a.google.com (mail-yw1-x112a.google.com [IPv6:2607:f8b0:4864:20::112a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DDEA1A393;
+        Tue,  3 May 2022 21:02:55 -0700 (PDT)
+Received: by mail-yw1-x112a.google.com with SMTP id 00721157ae682-2f7d19cac0bso2986207b3.13;
+        Tue, 03 May 2022 21:02:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=W3/oD3hhUgmP5e/isgUbw7+g1PPBvghdLqlobIHop/4=;
+        b=VLwwz523wVa5T9+YMAiWIa2hQHB+9nrcrvf6MxAWFdvLCo0x1OnGKzj1cFBLowgXMa
+         F45SzWgIU3s+cSzh6BKHqDYlqYUoOTlP/DSwTzBpXDEpugMjFGpv5L5yL1nWB2xwnQJD
+         EeuRYbdH8HBV17g62T1SShvp34T9BuYwrJThnLnDnLJhdGSa0nZK8W8UurXcxl8Ll3aI
+         CuFmoN3Ew3mEJT3PjNLT1g9uvz9IyHrcrnUAfAPHzOOpxOGBnh1C8FOhSOJQF400AJeW
+         WMnxtjNXFOq3SFw9wIAD4v+TZIaajPa6RX6TP2zKpwNrgXwk+AxEfopbLgEXRwClGZVE
+         vz0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=W3/oD3hhUgmP5e/isgUbw7+g1PPBvghdLqlobIHop/4=;
+        b=twBu9CF423epoCsB4SI7ml13eOKvfyAV70hxGZbC4D4mPNidsK/JNLUzts8Y56s1Hj
+         G4PYA0XA3PrMcpoTAzdKu2gTx/GXSkEBGNj4b2IYf7n94ZUKzOHMEsxlZRgQ4EEBjE7f
+         mgMMoGIekSFA+Q2bJI3uDkzgK9LBPnYUG2vEsCIrOEaxIvFYEtAfOsZESEZVjF39yUmu
+         djcu/bG0IQpOjhxPZFHHyDtk6sVOWmYkyidHiZ5yNxnLUyF6U90WHTwfjs4iXjIPTl47
+         jE4uZea5iAfRjsj5uzAsKcijJvmQwT0F6eV7aGaUzC8/+drhj1OXm+bKfHkHQZGYcwLx
+         K8TQ==
+X-Gm-Message-State: AOAM533ppJVRTubUJtPhG+loDC0wc3vHfvKJnXR5zHP07AeA5+X/ZZia
+        2CBcFeuvGeWmbyTtgZQgMtIsgnJ2W6RaPfJRbs0=
+X-Google-Smtp-Source: ABdhPJwwVfviWqFjK/Glcs4mY8hURf2iUgeAvKOXOZreMUDCs5xJ8WBeFHrhRnAuZFlZ+hOGuZ9iZ95Q7xe95PrG0k4=
+X-Received: by 2002:a05:690c:9e:b0:2e9:b625:1be2 with SMTP id
+ be30-20020a05690c009e00b002e9b6251be2mr18279825ywb.48.1651636974377; Tue, 03
+ May 2022 21:02:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: zLpwvjFFXZwgsdli8mx19IOIUys6xj_-
-X-Proofpoint-GUID: zLpwvjFFXZwgsdli8mx19IOIUys6xj_-
+References: <1651509391-2058-1-git-send-email-mikelley@microsoft.com> <1651509391-2058-5-git-send-email-mikelley@microsoft.com>
+In-Reply-To: <1651509391-2058-5-git-send-email-mikelley@microsoft.com>
+From:   Deepak Rawat <drawat.floss@gmail.com>
+Date:   Tue, 3 May 2022 21:02:44 -0700
+Message-ID: <CAHFnvW3TDTh_iRpF5zH4uPKnB+_AisniVgam=Fj_Gog6KOfKrQ@mail.gmail.com>
+Subject: Re: [PATCH 4/4] drm/hyperv: Remove support for Hyper-V 2008 and 2008R2/Win7
+To:     Michael Kelley <mikelley@microsoft.com>
+Cc:     K Y Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-hyperv@vger.kernel.org,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, deller@gmx.de,
+        dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org,
+        linux-fbdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 19 Apr 2022 06:57:50 +0000, cgel.zte@gmail.com wrote:
+On Mon, May 2, 2022 at 9:37 AM Michael Kelley <mikelley@microsoft.com> wrote:
+>
+> The DRM Hyper-V driver has special case code for running on the first
+> released versions of Hyper-V: 2008 and 2008 R2/Windows 7.  These versions
+> are now out of support (except for extended security updates) and lack
+> support for performance features that are needed for effective production
+> usage of Linux guests.
+>
+> The negotiation of the VMbus protocol versions required by these old
+> Hyper-V versions has been removed from the VMbus driver.  So now remove
+> the handling of these VMbus protocol versions from the DRM Hyper-V
+> driver.
+>
+> Signed-off-by: Michael Kelley <mikelley@microsoft.com>
+> ---
+>  drivers/gpu/drm/hyperv/hyperv_drm_proto.c | 23 +++++++----------------
+>  1 file changed, 7 insertions(+), 16 deletions(-)
+>
+> diff --git a/drivers/gpu/drm/hyperv/hyperv_drm_proto.c b/drivers/gpu/drm/hyperv/hyperv_drm_proto.c
+> index c0155c6..76a182a 100644
+> --- a/drivers/gpu/drm/hyperv/hyperv_drm_proto.c
+> +++ b/drivers/gpu/drm/hyperv/hyperv_drm_proto.c
+> @@ -18,16 +18,16 @@
+>  #define SYNTHVID_VERSION(major, minor) ((minor) << 16 | (major))
+>  #define SYNTHVID_VER_GET_MAJOR(ver) (ver & 0x0000ffff)
+>  #define SYNTHVID_VER_GET_MINOR(ver) ((ver & 0xffff0000) >> 16)
+> +
+> +/* Support for VERSION_WIN7 is removed. #define is retained for reference. */
+>  #define SYNTHVID_VERSION_WIN7 SYNTHVID_VERSION(3, 0)
+>  #define SYNTHVID_VERSION_WIN8 SYNTHVID_VERSION(3, 2)
+>  #define SYNTHVID_VERSION_WIN10 SYNTHVID_VERSION(3, 5)
+>
+> -#define SYNTHVID_DEPTH_WIN7 16
+>  #define SYNTHVID_DEPTH_WIN8 32
+> -#define SYNTHVID_FB_SIZE_WIN7 (4 * 1024 * 1024)
+> +#define SYNTHVID_WIDTH_WIN8 1600
+> +#define SYNTHVID_HEIGHT_WIN8 1200
+>  #define SYNTHVID_FB_SIZE_WIN8 (8 * 1024 * 1024)
+> -#define SYNTHVID_WIDTH_MAX_WIN7 1600
+> -#define SYNTHVID_HEIGHT_MAX_WIN7 1200
+>
+>  enum pipe_msg_type {
+>         PIPE_MSG_INVALID,
+> @@ -496,12 +496,6 @@ int hyperv_connect_vsp(struct hv_device *hdev)
+>         case VERSION_WIN8:
+>         case VERSION_WIN8_1:
+>                 ret = hyperv_negotiate_version(hdev, SYNTHVID_VERSION_WIN8);
+> -               if (!ret)
+> -                       break;
+> -               fallthrough;
+> -       case VERSION_WS2008:
+> -       case VERSION_WIN7:
+> -               ret = hyperv_negotiate_version(hdev, SYNTHVID_VERSION_WIN7);
+>                 break;
+>         default:
+>                 ret = hyperv_negotiate_version(hdev, SYNTHVID_VERSION_WIN10);
+> @@ -513,18 +507,15 @@ int hyperv_connect_vsp(struct hv_device *hdev)
+>                 goto error;
+>         }
+>
+> -       if (hv->synthvid_version == SYNTHVID_VERSION_WIN7)
+> -               hv->screen_depth = SYNTHVID_DEPTH_WIN7;
+> -       else
+> -               hv->screen_depth = SYNTHVID_DEPTH_WIN8;
+> +       hv->screen_depth = SYNTHVID_DEPTH_WIN8;
+>
+>         if (hyperv_version_ge(hv->synthvid_version, SYNTHVID_VERSION_WIN10)) {
+>                 ret = hyperv_get_supported_resolution(hdev);
+>                 if (ret)
+>                         drm_err(dev, "Failed to get supported resolution from host, use default\n");
+>         } else {
+> -               hv->screen_width_max = SYNTHVID_WIDTH_MAX_WIN7;
+> -               hv->screen_height_max = SYNTHVID_HEIGHT_MAX_WIN7;
+> +               hv->screen_width_max = SYNTHVID_WIDTH_WIN8;
+> +               hv->screen_height_max = SYNTHVID_HEIGHT_WIN8;
+>         }
+>
+>         hv->mmio_megabytes = hdev->channel->offermsg.offer.mmio_megabytes;
 
-> From: Changcheng Deng <deng.changcheng@zte.com.cn>
-> 
-> Remove unneeded variable used to store return value.
-> 
-> 
+Do we need a new version for Windows 11? If the synthetic device
+version is decoupled from Windows version, then I guess we can rename
+the macro to reflect that.
 
-Applied to 5.19/scsi-queue, thanks!
+Reviewed-by: Deepak Rawat <drawat.floss@gmail.com>
 
-[1/1] scsi: lpfc: Remove unneeded variable
-      https://git.kernel.org/mkp/scsi/c/a346f28ad231
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> --
+> 1.8.3.1
+>
