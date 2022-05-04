@@ -2,111 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BD8CC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 08:43:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FAADC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 08:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346633AbiEDIqm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 May 2022 04:46:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44160 "EHLO
+        id S1346495AbiEDIux (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 May 2022 04:50:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346582AbiEDIqT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 04:46:19 -0400
-Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51FAC24BFF
-        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 01:42:39 -0700 (PDT)
-Received: by mail-pg1-x52d.google.com with SMTP id t13so631485pgn.8
-        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2022 01:42:39 -0700 (PDT)
+        with ESMTP id S1346403AbiEDIuw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 04:50:52 -0400
+Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EFE324BD1
+        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 01:47:16 -0700 (PDT)
+Received: by mail-ej1-x62a.google.com with SMTP id i19so1521947eja.11
+        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2022 01:47:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Lvh8lsyZI2oOoPbP4vLClIs3xvhFZ7I9YPmzR8c3w2E=;
-        b=NYFadom5yTD0av27VsfrNnLB0FSMla8Eyol+HQOl1TO8/PsX+7YjyaZ+EQDMhp0h0t
-         ov5kKvlLuCRTu7NNbJt6iDPdHNQ8fzTa8H5tYfcnz5cxwYcgo1nFTl1qBVdesQk1kWyX
-         3rDuJzUSwUkppZqQg+EZ2fFcITZHFr9QqTn5jhppHjFOX/T0sPsQtiY6KGqAYRcEc1Hx
-         SOVkICj3hfDeU+HNiRnMQsvtLfm2/04gGqtqeN3c2/KKKqV/VhwnR2EhQ2wvF2vhSxfn
-         4//r3aqI6BRDyMXCYjSD3gqmNMZ59t9KMZxgp04PJB+g44WWVj2a3glFZBRYkGwTzutu
-         nVeQ==
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :references:from:in-reply-to:content-transfer-encoding;
+        bh=QmtWwByo/ZIKuv6qy4yEByVOiPKOIaqS2BZn64y92Q4=;
+        b=AL3CjXJc7FL0+ahMAGnCQ7qmyxM+AoFMp+n++syujpzPeLdz3G9e8SumISuj6OAEA0
+         mN+gxfyTym9cCFHXVM2ma5gj6lTOqSS9+fFFVIN9K17+VhI/O5XELTfaBERRbjmSI/Nl
+         vvObVZ+lE/oHjIPDG5c3kZEYjJQEe1NvGt+HsrQ0Q+6yNj+8se8zRPFmuQGMPF5BpxNO
+         +M/mEz0tJP9w1V148yHSRWo5dQEAebdJpQrcp3fpkdmwYxogU+MGAbkl5NmYDLl3m4oe
+         Nv5JLzbG6l6Ef2KxCmwdwW2oy1uCKa2pWneGeT1ndmrmk+5OUccDsfooF869KS0AeRi0
+         oAQg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Lvh8lsyZI2oOoPbP4vLClIs3xvhFZ7I9YPmzR8c3w2E=;
-        b=NuL+Km8QgJgdxHG16KdbW6VbWi0WxMNsLgMHDE+7b//ajcSNvGhNhzTckaQIsFf9vh
-         R0dcHkKKM6ZbEZ+rBaVMEvcold6SYWet4jYccDnpjlL8Pyq/m+8qVS479ocUIv1ftE/I
-         BayOVLmMzcPEKN24MxSgTJ2+ODw14ddiwuAk45uODWXtVCdeH3K+Sk2bS8wWw8J3XhJL
-         tux5dlkNTIW4GsyXVdltkWENWKP9ILrzbjz1iqjq+dBXh8sZ5OxlnD/U/gQnBIaSYMkm
-         o7S8aUtik7enw6dnMosU8IJlgg/2Ybe03AqvWwZne6anHZ/gaVz2+WmG+el4MzYu1F3Z
-         Cwjg==
-X-Gm-Message-State: AOAM532aZQBhNW1fQEYlKsK3mOteJ0jDgMdNR3WJXezLYi5PLpwzGoaX
-        RC7BhezStE7UjQE5HCqbvlTb
-X-Google-Smtp-Source: ABdhPJzwWYoSc49RrdrDrqn/x1A0CuBSs67vodfr9CgMS7tS+dOWsYs1nsMhdPXeqUcPHLLn77XHtA==
-X-Received: by 2002:a05:6a00:e14:b0:4fe:3cdb:23f with SMTP id bq20-20020a056a000e1400b004fe3cdb023fmr20209744pfb.86.1651653758017;
-        Wed, 04 May 2022 01:42:38 -0700 (PDT)
-Received: from localhost.localdomain ([27.111.75.248])
-        by smtp.gmail.com with ESMTPSA id i10-20020a170902c94a00b0015e8d4eb278sm1386561pla.194.2022.05.04.01.42.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 May 2022 01:42:37 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     martin.petersen@oracle.com, jejb@linux.ibm.com
-Cc:     avri.altman@wdc.com, alim.akhtar@samsung.com,
-        bjorn.andersson@linaro.org, linux-arm-msm@vger.kernel.org,
-        quic_asutoshd@quicinc.com, quic_cang@quicinc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bvanassche@acm.org, ahalaney@redhat.com,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v3 4/5] scsi: ufs: core: Remove redundant wmb() in ufshcd_send_command()
-Date:   Wed,  4 May 2022 14:12:11 +0530
-Message-Id: <20220504084212.11605-5-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220504084212.11605-1-manivannan.sadhasivam@linaro.org>
-References: <20220504084212.11605-1-manivannan.sadhasivam@linaro.org>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=QmtWwByo/ZIKuv6qy4yEByVOiPKOIaqS2BZn64y92Q4=;
+        b=0ufSDOUjlWEnH+bN0Udri8Gfd4prCNQiH5pwlY/PXiHxJ5dg6k1oftZQzWt4icbPEj
+         RnBw76RcFtv/I1Jy99+8wW6hk7ri7b70A8g82U8u9AlSWDHK4WHaPHDJEihdJQYLhkUT
+         zqgZuBd63GKTcJuFAxZD0+zFrr5De8PtMl/cnkHa43V8l0a+r0kMOwWSoq8hWAiLZlqj
+         lRG3/Gh9k8vRaB7mGLvKoqD599v9/33BdYkF/B3MJO1fpZUfwa9EzmzetZWfvYYwO5h6
+         p8uAWBB1WWNbga/3S1jc2r3tSbzaQfPfWAn7LtrTlgh5VIav+XxsAg24iqSU9+933tzz
+         H91g==
+X-Gm-Message-State: AOAM5305aECEqH66N/Bo+vJCZAWesVTN7CxORDRFIZVQJFf3+vsJwNzL
+        ly9lkvurhvOqoy6bBcbudTft/llZmkIz/Q==
+X-Google-Smtp-Source: ABdhPJxKi7C4JKAEzHKaoMX1d2sBQ/HwAm7M6aW+7svbe2ak15MPFJVqHU4FxQsE+k7anyG0Uq+cjQ==
+X-Received: by 2002:a17:906:4fc6:b0:6f4:b5c0:aa3f with SMTP id i6-20020a1709064fc600b006f4b5c0aa3fmr2810602ejw.382.1651654035170;
+        Wed, 04 May 2022 01:47:15 -0700 (PDT)
+Received: from [192.168.0.210] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
+        by smtp.gmail.com with ESMTPSA id b6-20020aa7cd06000000b0042617ba63a9sm8799226edw.51.2022.05.04.01.47.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 04 May 2022 01:47:14 -0700 (PDT)
+Message-ID: <38ddc169-7e8d-c8b5-62cb-7fd3de567e91@linaro.org>
+Date:   Wed, 4 May 2022 10:47:13 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 2/4] scsi: core: fix white-spaces
+Content-Language: en-US
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
+ <20220408103027.311624-2-krzysztof.kozlowski@linaro.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20220408103027.311624-2-krzysztof.kozlowski@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The wmb() inside ufshcd_send_command() is added to make sure that the
-doorbell is committed immediately. This leads to couple of expectations:
+On 08/04/2022 12:30, Krzysztof Kozlowski wrote:
+> Remove trailing white-spaces and correct mixed-up indentation.
+> 
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> ---
+>  drivers/scsi/scsi_debug.c         |  2 +-
+>  drivers/scsi/scsi_priv.h          |  4 +--
+>  drivers/scsi/scsi_proc.c          | 14 ++++-----
+>  drivers/scsi/scsi_scan.c          | 10 +++----
+>  drivers/scsi/scsi_sysfs.c         |  4 +--
+>  drivers/scsi/scsi_transport_spi.c | 49 +++++++++++++++----------------
+>  drivers/scsi/scsicam.c            |  6 ++--
+>  include/scsi/scsi_cmnd.h          |  2 +-
+>  include/scsi/scsi_device.h        | 10 +++----
+>  include/scsi/scsi_host.h          | 13 ++++----
+>  include/scsi/scsi_ioctl.h         |  2 +-
+>  include/scsi/scsi_transport.h     |  2 +-
+>  include/scsi/scsi_transport_spi.h |  2 +-
+>  include/scsi/scsicam.h            |  2 +-
+>  include/scsi/sg.h                 |  2 +-
+>  15 files changed, 61 insertions(+), 63 deletions(-)
 
-1. The doorbell write should complete before the function return.
-2. The doorbell write should not cross the function boundary.
+Hi folks!
 
-2nd expectation is fullfilled by the Linux memory model as there is a
-guarantee that the critical section won't cross the unlock (release)
-operation.
+I understand that patch #1 in the series is discussed/needs followup,
+but what about patches 2-4? Could you pick them up?
 
-1st expectation is not really needed here as there is no following read/
-write that depends on the doorbell to be complete implicitly. Even if the
-doorbell write is in a CPUs Write Buffer (WB), wmb() won't flush it. And
-there is no real need of a WB flush here as well.
-
-So let's get rid of the wmb() that seems redundant.
-
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-Acked-by: Bean Huo <beanhuo@micron.com>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/scsi/ufs/ufshcd.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9349557b8a01..ec514a6c5393 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2116,9 +2116,6 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
- 	__set_bit(task_tag, &hba->outstanding_reqs);
- 	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
- 	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
--
--	/* Make sure that doorbell is committed immediately */
--	wmb();
- }
- 
- /**
--- 
-2.25.1
-
+Best regards,
+Krzysztof
