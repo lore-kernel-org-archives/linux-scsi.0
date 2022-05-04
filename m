@@ -2,102 +2,332 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7649EC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 18:33:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E7FBC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 May 2022 19:44:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377008AbiEDSg4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 May 2022 14:36:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33928 "EHLO
+        id S1377653AbiEDTrg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 May 2022 15:47:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376986AbiEDSgp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 14:36:45 -0400
-X-Greylist: delayed 601 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 04 May 2022 11:22:29 PDT
-Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B49965F1;
-        Wed,  4 May 2022 11:22:29 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 233F742B44;
-        Wed,  4 May 2022 18:02:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        mime-version:content-transfer-encoding:content-type:content-type
-        :content-language:accept-language:in-reply-to:references
-        :message-id:date:date:subject:subject:from:from:received
-        :received:received:received:received; s=mta-01; t=1651687350; x=
-        1653501751; bh=d1AvmeEuVZgsCOz9p7Jh6JALcdMQUebwCCJjiySqc3w=; b=Z
-        Pl5px0nVEqVgiJ2jfO7OD1RiJNO8dvbS2wXDfzEg8Gqc9ieuLc0DTCYMPc9R/QJH
-        bJwDE0x/J+/SywJAbD98WldPUm7LduUIZPhDVX2rslr0wr9aeV9lk7LXESt0IDu+
-        TNkbb1g+914eUu86EuRKWaCE9JZ5+EwWBfFOQ5hS8c=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id UoA5R8rV2ZWn; Wed,  4 May 2022 21:02:30 +0300 (MSK)
-Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 0B4ED4283A;
-        Wed,  4 May 2022 21:02:29 +0300 (MSK)
-Received: from T-EXCH-10.corp.yadro.com (172.17.11.60) by
- T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Wed, 4 May 2022 21:02:29 +0300
-Received: from T-EXCH-09.corp.yadro.com (172.17.11.59) by
- T-EXCH-10.corp.yadro.com (172.17.11.60) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 4 May 2022 21:02:28 +0300
-Received: from T-EXCH-09.corp.yadro.com ([fe80::d9f:e165:8a50:d450]) by
- T-EXCH-09.corp.yadro.com ([fe80::d9f:e165:8a50:d450%4]) with mapi id
- 15.02.0986.022; Wed, 4 May 2022 21:02:28 +0300
-From:   Dmitriy Bogdanov <d.bogdanov@yadro.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux@yadro.com" <linux@yadro.com>
-Subject: RE: [PATCH v3 0/3] target: iscsi: control authentication per ACL
-Thread-Topic: [PATCH v3 0/3] target: iscsi: control authentication per ACL
-Thread-Index: AQHXxLmS7SuA9HdbIk2r5RVxhcl+j6veWFEAgABFs0CBMY9zoA==
-Date:   Wed, 4 May 2022 18:02:28 +0000
-Message-ID: <bd9e50adcc95404c94b4408117a94b0a@yadro.com>
-References: <20211019071843.14890-1-d.bogdanov@yadro.com>
- <ec9e01a3-73d0-a06b-8c20-ae492c0c3313@oracle.com>
- <15af5f6f490a42c5a02c9d9bd79f1a28@yadro.com>
-In-Reply-To: <15af5f6f490a42c5a02c9d9bd79f1a28@yadro.com>
-Accept-Language: ru-RU, en-US
-Content-Language: ru-RU
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.178.114.42]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        with ESMTP id S238763AbiEDTrb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 15:47:31 -0400
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57D9C19C10
+        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 12:43:40 -0700 (PDT)
+Received: by mail-pg1-x52c.google.com with SMTP id k14so1986646pga.0
+        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2022 12:43:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=RQ5+Z93YtWEK5xXREhrhRleXnskqFAblQsxgrgprxiY=;
+        b=PWTj7QFNwdFF2OE0C4xFUgoIvDGn2+dYizGm/ZxeTyJ+Iz/tyIN+jbKS/JUP74dMIB
+         W7u3atVP0GNPWpIF5TIzABeYYT/Et9n+I/Ppab3jaBr0jw2QDopw+U1E91lEzpAOCQFs
+         xQr1OFa2NKNeyWLt6H4cI0w0eWAyTF94chl/w=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=RQ5+Z93YtWEK5xXREhrhRleXnskqFAblQsxgrgprxiY=;
+        b=2h8DW7XZbhYyh8+un44rNpzBYpeX6Xym1LxTcG1zt16/b89L9uo/9NLTME1GDNimMq
+         qUuCiGcPPeIFOeaXHzzSGXjSaH5XdHOcWy8GXK1eeaE/sf6+e4+tPSbLColWlBcihBVD
+         Q7XZ9KnZ7d2rt1mKY1fo24V7l0B9OKJZWzSyRt/kMCAC8xfRIuYI64McpHCWPke2xc1F
+         cYaeSRbME7V+jhHHhnw9W3U0AI646OkU1f4D/6Oi3hEW4JX1aEuOf8BYg+5mtP6nmQVc
+         YOtWDOXUoFCYXQcA6g9LhjXJbnBoy1P9Ad+1KzHcepQdWrweANSvLXWs4G7CQb9DxlU1
+         jcdQ==
+X-Gm-Message-State: AOAM530dyu2d1pncBbf5I8v/cAQAeMzMtIMI/0ByOOg8s7I+NPlCsKNm
+        3TpOKVhPtYOdg1E2E43j2TUp+g==
+X-Google-Smtp-Source: ABdhPJxMOUaGN1HZweue295reBywbQJPuhTeE52Ky8jS8qudgy4bxd3bAxIpi3n4Zjg11NpOxjxBqg==
+X-Received: by 2002:a63:91c9:0:b0:3ab:11e6:4ff9 with SMTP id l192-20020a6391c9000000b003ab11e64ff9mr17952537pge.121.1651693419276;
+        Wed, 04 May 2022 12:43:39 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id d12-20020a170902654c00b0015e8d4eb24dsm8677848pln.151.2022.05.04.12.43.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 May 2022 12:43:38 -0700 (PDT)
+Date:   Wed, 4 May 2022 12:43:37 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     David Gow <davidgow@google.com>
+Cc:     "Gustavo A . R . Silva" <gustavoars@kernel.org>,
+        KUnit Development <kunit-dev@googlegroups.com>,
+        Alexei Starovoitov <ast@kernel.org>,
+        alsa-devel@alsa-project.org, Al Viro <viro@zeniv.linux.org.uk>,
+        Andrew Gabbasov <andrew_gabbasov@mentor.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Andy Gross <agross@kernel.org>,
+        Andy Lavr <andy.lavr@gmail.com>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Baowen Zheng <baowen.zheng@corigine.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Bradley Grove <linuxdrivers@attotech.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Christian Brauner <brauner@kernel.org>,
+        Christian =?iso-8859-1?Q?G=F6ttsche?= <cgzones@googlemail.com>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Chris Zankel <chris@zankel.net>,
+        Cong Wang <cong.wang@bytedance.com>,
+        Daniel Axtens <dja@axtens.net>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Dan Williams <dan.j.williams@intel.com>,
+        David Howells <dhowells@redhat.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        devicetree@vger.kernel.org, Dexuan Cui <decui@microsoft.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Eli Cohen <elic@nvidia.com>,
+        Eric Dumazet <edumazet@google.com>,
+        Eric Paris <eparis@parisplace.org>,
+        Eugeniu Rosca <erosca@de.adit-jv.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Francis Laniel <laniel_francis@privacyrequired.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Hulk Robot <hulkci@huawei.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        James Morris <jmorris@namei.org>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        John Keeping <john@metanate.com>,
+        Juergen Gross <jgross@suse.com>, Kalle Valo <kvalo@kernel.org>,
+        Keith Packard <keithp@keithp.com>, keyrings@vger.kernel.org,
+        Kuniyuki Iwashima <kuniyu@amazon.co.jp>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Lars-Peter Clausen <lars@metafoo.de>,
+        Lee Jones <lee.jones@linaro.org>,
+        Leon Romanovsky <leon@kernel.org>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        linux1394-devel@lists.sourceforge.net,
+        linux-afs@lists.infradead.org,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-hardening@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-integrity@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        linux-security-module <linux-security-module@vger.kernel.org>,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-xtensa@linux-xtensa.org, llvm@lists.linux.dev,
+        Loic Poulain <loic.poulain@linaro.org>,
+        Louis Peens <louis.peens@corigine.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Mark Brown <broonie@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Muchun Song <songmuchun@bytedance.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Networking <netdev@vger.kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Nuno =?iso-8859-1?Q?S=E1?= <nuno.sa@analog.com>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Paul Moore <paul@paul-moore.com>,
+        Rich Felker <dalias@aerifal.cx>,
+        Rob Herring <robh+dt@kernel.org>,
+        Russell King <linux@armlinux.org.uk>, selinux@vger.kernel.org,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        SHA-cyfmac-dev-list@infineon.com,
+        Simon Horman <simon.horman@corigine.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        Steffen Klassert <steffen.klassert@secunet.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Tadeusz Struk <tadeusz.struk@linaro.org>,
+        Takashi Iwai <tiwai@suse.com>, Tom Rix <trix@redhat.com>,
+        Udipto Goswami <quic_ugoswami@quicinc.com>,
+        Vincenzo Frascino <vincenzo.frascino@arm.com>,
+        wcn36xx@lists.infradead.org, Wei Liu <wei.liu@kernel.org>,
+        xen-devel@lists.xenproject.org,
+        Xiu Jianfeng <xiujianfeng@huawei.com>,
+        Yang Yingliang <yangyingliang@huawei.com>
+Subject: Re: [PATCH 03/32] flex_array: Add Kunit tests
+Message-ID: <202205041220.4BAF15F6B4@keescook>
+References: <20220504014440.3697851-1-keescook@chromium.org>
+ <20220504014440.3697851-4-keescook@chromium.org>
+ <CABVgOSn62JTxaX9BW8w8jRxOpf_vgxpW-s=amwo8PCotiZTjig@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CABVgOSn62JTxaX9BW8w8jRxOpf_vgxpW-s=amwo8PCotiZTjig@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgTWlrZSwNCg0KSSd2ZSBqdXN0IHRyaWVkIG9uZSBtb3JlIHRpbWUgdG8gcmVwcm9kdWNlIHlv
-dXIgZXJyb3IgYW5kIEkgZmFpbGVkIGFnYWluLg0KV2l0aCB5b3VyIGNvbmZpZyBmaWxlIHRoZSBi
-ZWhhdmlvciBpcyB0aGUgYWJzb2x1dGVseSB0aGUgc2FtZSBmb3IgYm90aCBjYXNlcyB3aXRoIG15
-IHBhdGNoc2V0IGFuZCB3aXRob3V0IG15IHBhdGNoc2V0OiANCiogZm9yIGR5bmFtaWMgQUNMcyAt
-IHRhcmdldCBmYWlscyB0aGUgbG9naW4gYW5kIHNob3dzIHRoZSBiZWxsb3cgbG9ncy4NCiogZm9y
-IHRoZSByZWdpc3RlcmVkIEFDTCAtIHRhcmdldCBzdWNjZWVkcyB0aGUgbG9naW4uDQoNCkNvdWxk
-IHlvdSwgcGxlYXNlLCByZS1jaGVjayB0aGUgcGF0Y2hzZXQ/DQoNCkJSLA0KIERtaXRyeQ0KDQot
-LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogRG1pdHJpeSBCb2dkYW5vdiA8ZC5ib2dk
-YW5vdkB5YWRyby5jb20+IA0KU2VudDogRnJpZGF5LCBPY3RvYmVyIDIyLCAyMDIxIDEwOjQ4IEFN
-DQpUbzogTWlrZSBDaHJpc3RpZSA8bWljaGFlbC5jaHJpc3RpZUBvcmFjbGUuY29tPjsgTWFydGlu
-IFBldGVyc2VuIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT47IHRhcmdldC1kZXZlbEB2Z2Vy
-Lmtlcm5lbC5vcmcNCkNjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgbGludXhAeWFkcm8u
-Y29tDQpTdWJqZWN0OiBSRTogW1BBVENIIHYzIDAvM10gdGFyZ2V0OiBpc2NzaTogY29udHJvbCBh
-dXRoZW50aWNhdGlvbiBwZXIgQUNMDQoNCkhpIE1pa2UsDQoNCj4gSSBjYW4ndCBzZWVtIHRvIGdl
-dCB0aGUgcGF0Y2hlcyB3b3JraW5nIHdpdGggdGhlIHRhcmdldGNsaSBjb25maWcgZmlsZSBiZWxv
-dyBJdCB3b3JrZWQgb2sgYmVmb3JlIHRoZSBwYXRjaGVzLg0KPg0KPiBJIGdldCB0aGlzIGVycm9y
-Og0KPg0KPiBPY3QgMjIgMDA6NTY6MjUgb2w0IGtlcm5lbDogQ0hBUCB1c2VyIG9yIHBhc3N3b3Jk
-IG5vdCBzZXQgZm9yIEluaXRpYXRvciBBQ0wNCj4gT2N0IDIyIDAwOjU2OjI1IG9sNCBrZXJuZWw6
-IFNlY3VyaXR5IG5lZ290aWF0aW9uIGZhaWxlZC4NCj4gT2N0IDIyIDAwOjU2OjI1IG9sNCBrZXJu
-ZWw6IGlTQ1NJIExvZ2luIG5lZ290aWF0aW9uIGZhaWxlZC4NCg0KVGhpcyBraW5kIG9mIGVycm9y
-IGlzIHJlcG9ydGVkIGZvciB0aGUgdW5rbm93biAoZHluYW1pYykgQUNMIHNpbmNlIHRoZSBjb25m
-aWcgZmlsZSBoYXZlIG5vdCBoYXZlDQp1c2VyaWQvcGFzc3dvcmQgY29uZmlndXJlZCBmb3IgVFBH
-LiBZb3VyIGNvbmZpZyBmaWxlIGxvb2tzIHN0cmFuZ2UgLSBpdCBoYXMgZ2VuZXJhdGVfZHluX2Fj
-bHM9MQ0KYnV0IGhhcyBub3QgY3JlZGVudGlhbHMgZm9yIGR5bmFtaWMgYWNscy4NCg0KTG9naW4g
-ZnJvbSB0aGUgY29uZmlndXJlZCBBQ0wgaW4gdGhpcyBjb25maWcgZmlsZSB3b3JrcyB3ZWxsIGZv
-ciBtZS4NCg0KQ291bGQgeW91LCBwbGVhc2UsIGRlc2NyaWJlIG1vcmUgZGV0YWlscyBvZiB5b3Vy
-IHVzZWNhc2U/DQoNCkJSLA0KIERtaXRyeQ0K
+On Wed, May 04, 2022 at 11:00:38AM +0800, David Gow wrote:
+> On Wed, May 4, 2022 at 9:47 AM Kees Cook <keescook@chromium.org> wrote:
+> >
+> > Add tests for the new flexible array structure helpers. These can be run
+> > with:
+> >
+> >   make ARCH=um mrproper
+> >   ./tools/testing/kunit/kunit.py config
+> 
+> Nit: it shouldn't be necessary to run kunit.py config separately:
+> kunit.py run will configure the kernel if necessary.
+
+Ah yes, I think you mentioned this before. I'll adjust the commit log.
+
+> 
+> >   ./tools/testing/kunit/kunit.py run flex_array
+> >
+> > Cc: David Gow <davidgow@google.com>
+> > Cc: kunit-dev@googlegroups.com
+> > Signed-off-by: Kees Cook <keescook@chromium.org>
+> > ---
+> 
+> This looks pretty good to me: it certainly worked on the different
+> setups I tried (um, x86_64, x86_64+KASAN).
+> 
+> A few minor nitpicks inline, mostly around minor config-y things, or
+> things which weren't totally clear on my first read-through.
+> 
+> Hopefully one day, with the various stubbing features or something
+> similar, we'll be able to check against allocation failures in
+> flex_dup(), too, but otherwise nothing seems too obviously missing.
+> 
+> Reviewed-by: David Gow <davidgow@google.com>
+
+Great; thanks for the review and testing!
+
+> 
+> -- David
+> 
+> >  lib/Kconfig.debug      |  12 +-
+> >  lib/Makefile           |   1 +
+> >  lib/flex_array_kunit.c | 523 +++++++++++++++++++++++++++++++++++++++++
+> >  3 files changed, 531 insertions(+), 5 deletions(-)
+> >  create mode 100644 lib/flex_array_kunit.c
+> >
+> > diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
+> > index 9077bb38bc93..8bae6b169c50 100644
+> > --- a/lib/Kconfig.debug
+> > +++ b/lib/Kconfig.debug
+> > @@ -2551,11 +2551,6 @@ config OVERFLOW_KUNIT_TEST
+> >           Builds unit tests for the check_*_overflow(), size_*(), allocation, and
+> >           related functions.
+> >
+> > -         For more information on KUnit and unit tests in general please refer
+> > -         to the KUnit documentation in Documentation/dev-tools/kunit/.
+> > -
+> > -         If unsure, say N.
+> > -
+> 
+> Nit: while I'm not against removing some of this boilerplate, is it
+> better suited for a separate commit?
+
+Make sense, yes. I'll drop this for now.
+
+> 
+> >  config STACKINIT_KUNIT_TEST
+> >         tristate "Test level of stack variable initialization" if !KUNIT_ALL_TESTS
+> >         depends on KUNIT
+> > @@ -2567,6 +2562,13 @@ config STACKINIT_KUNIT_TEST
+> >           CONFIG_GCC_PLUGIN_STRUCTLEAK, CONFIG_GCC_PLUGIN_STRUCTLEAK_BYREF,
+> >           or CONFIG_GCC_PLUGIN_STRUCTLEAK_BYREF_ALL.
+> >
+> > +config FLEX_ARRAY_KUNIT_TEST
+> > +       tristate "Test flex_*() family of helper functions at runtime" if !KUNIT_ALL_TESTS
+> > +       depends on KUNIT
+> > +       default KUNIT_ALL_TESTS
+> > +       help
+> > +         Builds unit tests for flexible array copy helper functions.
+> > +
+> 
+> Nit: checkpatch warns that the description here may be insufficient:
+> WARNING: please write a help paragraph that fully describes the config symbol
+
+Yeah, I don't know anything to put here that isn't just more
+boilerplate, so I'm choosing to ignore this for now. :)
+
+> > [...]
+> > +struct normal {
+> > +       size_t  datalen;
+> > +       u32     data[];
+> > +};
+> > +
+> > +struct decl_normal {
+> > +       DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(size_t, datalen);
+> > +       DECLARE_FLEX_ARRAY_ELEMENTS(u32, data);
+> > +};
+> > +
+> > +struct aligned {
+> > +       unsigned short  datalen;
+> > +       char            data[] __aligned(__alignof__(u64));
+> > +};
+> > +
+> > +struct decl_aligned {
+> > +       DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(unsigned short, datalen);
+> > +       DECLARE_FLEX_ARRAY_ELEMENTS(char, data) __aligned(__alignof__(u64));
+> > +};
+> > +
+> > +static void struct_test(struct kunit *test)
+> > +{
+> > +       COMPARE_STRUCTS(struct normal, struct decl_normal);
+> > +       COMPARE_STRUCTS(struct aligned, struct decl_aligned);
+> > +}
+> 
+> If I understand it, the purpose of this is to ensure that structs both
+> with and without the flexible array declaration have the same memory
+> layout?
+> 
+> If so, any chance of a comment briefly stating that's the purpose (or
+> renaming this test struct_layout_test())?
+
+Yeah, good idea; I'll improve the naming.
+
+> 
+> Also, would it make sense to do the same with the struct with internal
+> padding below?
+
+Heh, yes, good point! :)
+
+> [...]
+> > +#define CHECK_COPY(ptr)                do {                                            \
+> > +       typeof(*(ptr)) *_cc_dst = (ptr);                                        \
+> > +       KUNIT_EXPECT_EQ(test, _cc_dst->induce_padding, 0);                      \
+> > +       memcpy(&padding, &_cc_dst->induce_padding + sizeof(_cc_dst->induce_padding), \
+> > +              sizeof(padding));                                                \
+> > +       /* Padding should be zero too. */                                       \
+> > +       KUNIT_EXPECT_EQ(test, padding, 0);                                      \
+> > +       KUNIT_EXPECT_EQ(test, src->count, _cc_dst->count);                      \
+> > +       KUNIT_EXPECT_EQ(test, _cc_dst->count, TEST_TARGET);                     \
+> > +       for (i = 0; i < _cc_dst->count - 1; i++) {                              \
+> > +               /* 'A' is 0x41, and here repeated in a u32. */                  \
+> 
+> Would it be simpler to just note that the magic value is 0x41, rather
+> than have it be the character 'A'?
+
+Yeah, now fixed.
+
+> [...]
+> > +       CHECK_COPY(&encap->fas);
+> > +       /* Check that items external to "fas" are zero. */
+> > +       KUNIT_EXPECT_EQ(test, encap->flags, 0);
+> > +       KUNIT_EXPECT_EQ(test, encap->junk, 0);
+> > +       kfree(encap);
+> > +#undef MAGIC_WORD
+> 
+> MAGIC_WORD isn't defined (or used) for flux_dup_test? Is it worth
+> using it (or something similar) for the 'A' / 0x14141414 and the
+> CHECK_COPY() macro?
+
+Oops, yes. Fixed.
+
+Thanks again!
+
+-Kees
+
+-- 
+Kees Cook
