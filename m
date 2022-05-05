@@ -2,108 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F13DC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 May 2022 18:44:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FAD2C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 May 2022 18:44:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1384150AbiEESrm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 May 2022 14:47:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54774 "EHLO
+        id S1383527AbiEESro (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 May 2022 14:47:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1384257AbiEESrV (ORCPT
+        with ESMTP id S1384651AbiEESrV (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2022 14:47:21 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C06FC606C4
-        for <linux-scsi@vger.kernel.org>; Thu,  5 May 2022 11:37:49 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id c14so4322525pfn.2
-        for <linux-scsi@vger.kernel.org>; Thu, 05 May 2022 11:37:49 -0700 (PDT)
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D8ED606CD
+        for <linux-scsi@vger.kernel.org>; Thu,  5 May 2022 11:37:51 -0700 (PDT)
+Received: by mail-pj1-x102d.google.com with SMTP id o69so4956060pjo.3
+        for <linux-scsi@vger.kernel.org>; Thu, 05 May 2022 11:37:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=FSQYakCEv1rrLqYb6g7hBavsxbn3irhnv0IdpOvrpOE=;
-        b=iJkhjSzgjD0vkh1U0otTkte4Rvt6kgEbwXzOvOc5mqmRPl3xM781jWhEicneh1PRpc
-         a3UqmEOgLlsEkyAFcAJHZYZ4NjT/TqsW8MgRbSmlu6FeKUKS4aH5HAHaupLZ9YeaRUjn
-         dAkD7/v4EbVmTGU6Y2Q1dkrKlfDqZ/RpDQw4g=
+        bh=87P4GGNrbFYwrgAteETtzuNfoSgkZbvBxXYnS7QSs4I=;
+        b=F965xnfWU7KY1pQVEQTeWXctWSYz+7G0iwvTDHSRSC9j5QPyWNa+0gwInLMjCQdJfI
+         ezNsylloYmPWYZpYxhJeQO/QQ2+JxPFn2Kp8v9ISSEwvd7JnCdUIcfw2NMfP3tXTpVRr
+         J4ktFeAD8Zu/KCkijw74SjsrggS5DaErJuOnQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=FSQYakCEv1rrLqYb6g7hBavsxbn3irhnv0IdpOvrpOE=;
-        b=aAwFSOGNAIGyJ7As4lg7pmK/aLFHnyZU4h3WuMydOn/4dyr0FelSoWxYh1NX2jzvVf
-         H/Jf4B7sjHza3nTEXXpqdg6KmCESWvB/K7r1XmYdEO7LEl0Lc796HcJ4IqeH9EVHNU5S
-         c+otou1cVHce/1JDXzZ+xgUksxYMGBp0FByX9XFhpWQ0l+7Jp1e+qijldE/28srIVkM5
-         SKKKPCm8vNHU2FBQkGgHckzEDsl54eMrXyhHVYF0qc+NB49US9ASF9xvqKpPF/DKfPE2
-         A3oTnIFvClAGhBiOThQ6O/KOtGd0XHLQF5ENjkhneOBa0bH4gTsB3VBiwNA2fQly1Ows
-         dSEg==
-X-Gm-Message-State: AOAM531AvwbFvHvnDW+s6R2olgE+AzgTRv9QU2lKnpEanOsirVtkrgye
-        AfArbXdLGmj9yyk8a8a2QeW8fA2vFF0Vr9NcNshc8+ypjBhGkL+BQpXXHFnXUYhDPBj4yuTxl2f
-        naYBmx07wBnXiQFPIZVZeGsnG1Kb4d2YbBxpPjGwDkWYDCZug6LCCULQuTv7Grbm0zTVIjahBwK
-        6gRfzYmZb8TAk=
-X-Google-Smtp-Source: ABdhPJzZmSwjg6aCzCoVyAS6aGWuacVpThK0UjltJBp7x9PoMbjfF8CAj22Ih9IAQN4ImXQlZYvxnA==
-X-Received: by 2002:a05:6a00:4197:b0:510:671d:709c with SMTP id ca23-20020a056a00419700b00510671d709cmr3258810pfb.61.1651775868530;
-        Thu, 05 May 2022 11:37:48 -0700 (PDT)
+        bh=87P4GGNrbFYwrgAteETtzuNfoSgkZbvBxXYnS7QSs4I=;
+        b=f+lw4Goku7DUNI77amAHr02o14nw4tO/G7SMrTWySmpzCAniYVxAalnLShETpBH37/
+         eIs1lxag34zRmbSdnxHwl4YxqNKNtmvqPl7rNEG8fvolVRVpgUuzmt1TDRVi/kKll2m9
+         Zw/9j79Avb/VN1Z8XCqD7CGAvmOBllEVnIijmkRuI4WYGUJ6sgeYBuetgfivwiP6Xwx8
+         1kdrl48gsuoB9LXN+LOR4lq3VASWr5QedFPuMDjdIZ6Bj6tzmhgCgtJ6GAyiLvgMVYkY
+         2xyNgGs6FHOPZdTRv9//714WN5LhSPOT8NbgLS0NllIHCPq2SoBIyDwRZNq0i/8Sm3of
+         QsOQ==
+X-Gm-Message-State: AOAM531vm02vQU7g06dcQ7OUnmrvNCnwVWZQUTLy7jZmASi7HoP86sMV
+        3AiIBIr+yCrdMmE6wiAON8Xro13zmDIbm5XTlpc2fuAryBGSYrmB8pHlD+i+/pzClvEhSDeb9l6
+        blq8blyqdRPowb2YvQQguyltnmMDEfpe0Cjly9PEplEjvcD/t3mMotWdF+ZZy/M8Z/TAuawJ9sM
+        dy+gH1Ukp+u8I=
+X-Google-Smtp-Source: ABdhPJxbu9XnR9KxxgCY+8sg1nFXbUoi/H3CobM6WIWAyZC1XQ59yeqEN2vOSkF1FVxpuzV5Y3dfbw==
+X-Received: by 2002:a17:90b:245:b0:1dc:1597:20e with SMTP id fz5-20020a17090b024500b001dc1597020emr7695975pjb.151.1651775870295;
+        Thu, 05 May 2022 11:37:50 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 4-20020a170902c24400b0015edb22aba1sm1696166plg.270.2022.05.05.11.37.46
+        by smtp.gmail.com with ESMTPSA id 4-20020a170902c24400b0015edb22aba1sm1696166plg.270.2022.05.05.11.37.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 May 2022 11:37:47 -0700 (PDT)
+        Thu, 05 May 2022 11:37:49 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH] mpi3mr: Hidden drives not removed during soft reset
-Date:   Fri,  6 May 2022 00:18:07 +0530
-Message-Id: <20220505184808.24049-2-sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpi3mr: Increase IO timeout value to 60s
+Date:   Fri,  6 May 2022 00:18:08 +0530
+Message-Id: <20220505184808.24049-3-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20220505184808.24049-1-sreekanth.reddy@broadcom.com>
 References: <20220505184808.24049-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000eb97da05de48091f"
+        boundary="00000000000005fc9d05de480a16"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000eb97da05de48091f
+--00000000000005fc9d05de480a16
 Content-Transfer-Encoding: 8bit
 
-If any drive is missing during the reset, the driver
-checks whether the device is exposed to the OS and if it is,
-then only it removes the device from the OS and
-its own internal list. For hidden devices even if they are found
-as missing during reset the driver is not removing them from
-its internal list. Modified driver to remove hidden devices
-from the driver's target device list if they are missing
-during soft reset.
+Set each SCSI device's default IO timeout and
+default error handling IO timeout to 60s.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    | 3 +++
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 4 ++++
+ 2 files changed, 7 insertions(+)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 8612b66..584659e 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -124,6 +124,9 @@ extern atomic64_t event_counter;
+ 
+ #define MPI3MR_WATCHDOG_INTERVAL		1000 /* in milli seconds */
+ 
++#define MPI3MR_SCMD_TIMEOUT    (60 * HZ)
++#define MPI3MR_EH_SCMD_TIMEOUT (60 * HZ)
++
+ /* Internal admin command state definitions*/
+ #define MPI3MR_CMD_NOTUSED	0x8000
+ #define MPI3MR_CMD_COMPLETE	0x0001
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 5c57519..5ba490c 100644
+index 5ba490c..f5c345d 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -911,9 +911,11 @@ void mpi3mr_rfresh_tgtdevs(struct mpi3mr_ioc *mrioc)
+@@ -3727,6 +3727,10 @@ static int mpi3mr_slave_configure(struct scsi_device *sdev)
+ 		return -ENXIO;
  
- 	list_for_each_entry_safe(tgtdev, tgtdev_next, &mrioc->tgtdev_list,
- 	    list) {
--		if ((tgtdev->dev_handle == MPI3MR_INVALID_DEV_HANDLE) &&
--		    tgtdev->host_exposed) {
--			mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
-+		if (tgtdev->dev_handle == MPI3MR_INVALID_DEV_HANDLE) {
-+			dprint_reset(mrioc, "removing target device with perst_id(%d)\n",
-+			    tgtdev->perst_id);
-+			if (tgtdev->host_exposed)
-+				mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
- 			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
- 			mpi3mr_tgtdev_put(tgtdev);
- 		}
+ 	mpi3mr_change_queue_depth(sdev, tgt_dev->q_depth);
++
++	sdev->eh_timeout = MPI3MR_EH_SCMD_TIMEOUT;
++	blk_queue_rq_timeout(sdev->request_queue, MPI3MR_SCMD_TIMEOUT);
++
+ 	switch (tgt_dev->dev_type) {
+ 	case MPI3_DEVICE_DEVFORM_PCIE:
+ 		/*The block layer hw sector size = 512*/
 -- 
 2.27.0
 
 
---000000000000eb97da05de48091f
+--00000000000005fc9d05de480a16
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -174,13 +179,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIA4Jibk6lhEIzEzCX+XK
-PWnXVBwaWmF1UPWifsIIFzalMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDUwNTE4Mzc0OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOIPBeVPQJOopvHRqSSA
+iStcH0RQuV0ntWQAJEpccrtvMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDUwNTE4Mzc1MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAlG2u28ub0wCc/phV4Ib2FE2vivuJpKObAnNUk
-b8PlawTHW64AsatLxCjgCDcmfDgPw4mI7FSk16xDZEhFBtLbVQX0MxhQw30KfYH4ckkJJ66tKKNx
-aCZmiHrOftH2ivJwd6KdUbNUTMN1JbuVLo3dEE2lcm0xUkkVDhpMxX3fDo57BNVYF3RIp/JSiis7
-lWM4lSNN/D0fObptE9DpPBCnNFaCS3hOidjKyFhsb4LZJHlJdUiWhzRfvMlc1rrMyzfZzAyAoHpW
-dCUa2F+vUrsnSZNaaSEK+X5Qk0m/z3u27HjZLMvWr6VpJ3OJt4PLe5KUihRP77Bvxo+v3pB5RtbM
---000000000000eb97da05de48091f--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAGMZMj2QojFBIwJG4d4aUP7xUo5UB8vywmH+nZ
+AK6obTeiPEnCBEVTgkgqXYIQHCRXqH12bcU+3QZL1c2J0R9x7D94ckkyRk+qe7PEhZPGeESVLx8J
+Eg9BpApHmbZKVmqw7hCSf5q1OS9pRZCA+eNAgrDRvTqU1B67drN0nLNv+EXEuU8VLMiyf9hdyJpZ
+uHF+ROxZwJFOlIVA4oVm6wG6oe7fPSVECsYmNnB9xGNhxbHPlmhxn6WJsbLzzrBg+AMeuAdH4SEY
+aWQMpC+wKj5BVIACzsvCkMOIN/wh0M1bGxJaaYwyZx8gMF/6F/UIT2oEDzUJRZcbnnb5qr9KzsPt
+--00000000000005fc9d05de480a16--
