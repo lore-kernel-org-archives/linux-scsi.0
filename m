@@ -2,84 +2,209 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04E38C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 May 2022 03:02:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86EA9C43217
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 May 2022 03:15:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240524AbiEEDGB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 May 2022 23:06:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38678 "EHLO
+        id S240787AbiEEDSh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 May 2022 23:18:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240356AbiEEDF4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 23:05:56 -0400
-Received: from smtpbgsg1.qq.com (smtpbgsg1.qq.com [54.254.200.92])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A072D245A7
-        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 20:02:13 -0700 (PDT)
-X-QQ-mid: bizesmtp91t1651719712tr7ccd8w
-Received: from mail-qk1-f173.google.com ( [209.85.222.173])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 05 May 2022 11:01:50 +0800 (CST)
-X-QQ-SSF: 01400000008000B0D000B00A0000000
-X-QQ-FEAT: k0yT7W7BRd3U1025a3U/i5S/kct1X5tWuD1+2WyfFsa8O6Jz6fKR9nGJd0vfL
-        2M1Pp1P7FrFH+fZuAFuTXQRyIdAJIy6WoPDybw5wThQbUDSYy1z/6zCQkZ20tuVne2EfJCH
-        mGDwRD2nnUASwqmVJ2zzuUQ3r9OOrTZDywK/mC+AXbatsiECTlCOrnN1W2J5wXnId2PMzMr
-        2Y+bdbSd+HCf9l4/KJpZmCtV0SmzYlFV7VHNKUK98OCgykTQKSnamqxZvvOZLXLwFpH0MUS
-        YpWmiO2kb/sRa8IwPNI/ToDYbQNBihZwx3D4uJZYIWZ2Jowpv0fXTcQhGMAk1PVryen/H3S
-        Rwz7Fcm
-X-QQ-GoodBg: 2
-Received: by mail-qk1-f173.google.com with SMTP id z126so2358649qkb.2;
-        Wed, 04 May 2022 20:01:51 -0700 (PDT)
-X-Gm-Message-State: AOAM530HrJKaOxsfMWAzMs5eM3d8InDdZClDx+E+N2/l9PVPf0MTnW7o
-        V8pi7AB4FOFlM3PjHl/Agfidn6LapeREhVrBzlY=
-X-Google-Smtp-Source: ABdhPJwKL82ySEUa93ww3YD5MCh2DdPRGW79kYFlPEGClcOFe5n5TiO3U8tcBLrn+zgHpvGsuMsJpA1QUfuCUAOx26E=
-X-Received: by 2002:a37:54c4:0:b0:67e:9cbf:a984 with SMTP id
- i187-20020a3754c4000000b0067e9cbfa984mr19031192qkb.215.1651719708746; Wed, 04
- May 2022 20:01:48 -0700 (PDT)
+        with ESMTP id S240720AbiEEDSf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2022 23:18:35 -0400
+Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8557E50072
+        for <linux-scsi@vger.kernel.org>; Wed,  4 May 2022 20:14:55 -0700 (PDT)
+Received: by mail-wr1-x42c.google.com with SMTP id x18so4363796wrc.0
+        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2022 20:14:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=paul-moore-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=6ucVUJA/3XuUnAZZDdzrSa00V5OM/xNG80G7w+rY/AM=;
+        b=TuxTKLvOuI4WPEKhesTppN+S/ZTkV+RZI5Wf5W2p+hsrw7/gyfISF8EIiT+rnx8Zu6
+         zyyiN1wYwPcxjcCA2Sf5xnxirRkddqYIXy2R06dd7qAEUind0ZWDkOOMEqGzEQWPzWzC
+         ZTGq5qihhGmXwhHHxuYfhzg3wQjnC+ThZO+LDVhD9+QIb89VKx3wO1YbUFwWrxXrBCMa
+         SL8UA4+69pMFcpj8M2pJPoNe1J5xXeNZwxQABf1kR5+ALPhLTrYwt5fLtjpY8BeYkBF4
+         nHH6g/sC5IM5M9d/Ecm/JssJwuDneWf8+Vn5nXmTehGUz+AEuc9+Pt2ztZNda+z83bgG
+         KQkQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=6ucVUJA/3XuUnAZZDdzrSa00V5OM/xNG80G7w+rY/AM=;
+        b=xRvXjBSQ6jXldDN8/zFO4P+XcYy/46Ja9l+SF6XX2LYVBx0kKxJXlctH4O8/dow9JG
+         z43uwe4FMNd20hxDuPKbkK8vdMilTs4rwHtCRFD0HfYBYeGwk7lnVr5Sd0L4wu8v1Alu
+         S5Kz3N2Vnr9GJn2NnLUxXIJ8IHHGN2Uk2BJNHNHGr3TZNK5Ux/HGFlz9miouv6ISGkmD
+         /2Xavz+9t3GI5w49kZkiVY+GNGo9X9Yrl3EqjmgW5YQRqIRMuRSfZ2WI4xeBuEoTqkiS
+         rtVtlGkf7M40ShPN/12qopk52LYW4lL63jyR1ukruBi18MLWNGwFHxRjBrPgGA8RQOQE
+         UegA==
+X-Gm-Message-State: AOAM533qt1k3QxKBC+AXAX025SBved7ECHTmI7QUNartCCowTC91uXtx
+        Ejjd+lvGZPAnFkzJs3UaLEUH3eeVd+53rbwa/y2y
+X-Google-Smtp-Source: ABdhPJzVMX+BMHIo/6Rx3rt/EGt5DUCiA1Xs3vZE5oz5hLJkbM0bMmp2okAEnKI/au/mDAitpvRIKuXqsxBU1V8TuLw=
+X-Received: by 2002:a5d:590d:0:b0:20a:c3eb:2584 with SMTP id
+ v13-20020a5d590d000000b0020ac3eb2584mr18412244wrd.18.1651720493308; Wed, 04
+ May 2022 20:14:53 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220427090906.2257940-1-jinxiaobo@uniontech.com> <yq1sfpxkjpo.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1sfpxkjpo.fsf@ca-mkp.ca.oracle.com>
-From:   job jin <jinxiaobo@uniontech.com>
-Date:   Thu, 5 May 2022 11:01:37 +0800
-X-Gmail-Original-Message-ID: <CAEYFbwUBLJg5GEHBxd3xj77XbEwKXWOBV2wBo1AWs0THZCS-+w@mail.gmail.com>+7EADFA0502959A5A
-Message-ID: <CAEYFbwUBLJg5GEHBxd3xj77XbEwKXWOBV2wBo1AWs0THZCS-+w@mail.gmail.com>
-Subject: Re: [PATCH] scsi: sr: Fix some cdroms automatically ejected when
- booting into the system
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+References: <20220504014440.3697851-1-keescook@chromium.org>
+ <20220504014440.3697851-29-keescook@chromium.org> <CAHC9VhT5Y=ENiSyb=S-NVbGX63sLOv4nVuR_GS-yww6tiz0wYA@mail.gmail.com>
+ <20220504234324.GA12556@embeddedor>
+In-Reply-To: <20220504234324.GA12556@embeddedor>
+From:   Paul Moore <paul@paul-moore.com>
+Date:   Wed, 4 May 2022 23:14:42 -0400
+Message-ID: <CAHC9VhRJC4AxeDsGpdphfJD4WzgaeBsdONHnixBzft5u_cE-Dw@mail.gmail.com>
+Subject: Re: [PATCH 28/32] selinux: Use mem_to_flex_dup() with xfrm and sidtab
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     Kees Cook <keescook@chromium.org>,
+        Steffen Klassert <steffen.klassert@secunet.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Eric Paris <eparis@parisplace.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Xiu Jianfeng <xiujianfeng@huawei.com>,
+        =?UTF-8?Q?Christian_G=C3=B6ttsche?= <cgzones@googlemail.com>,
+        netdev@vger.kernel.org, selinux@vger.kernel.org,
+        Alexei Starovoitov <ast@kernel.org>,
+        alsa-devel@alsa-project.org, Al Viro <viro@zeniv.linux.org.uk>,
+        Andrew Gabbasov <andrew_gabbasov@mentor.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Andy Gross <agross@kernel.org>,
+        Andy Lavr <andy.lavr@gmail.com>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Baowen Zheng <baowen.zheng@corigine.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Bradley Grove <linuxdrivers@attotech.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Christian Brauner <brauner@kernel.org>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Chris Zankel <chris@zankel.net>,
+        Cong Wang <cong.wang@bytedance.com>,
+        Daniel Axtens <dja@axtens.net>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Dan Williams <dan.j.williams@intel.com>,
+        David Gow <davidgow@google.com>,
+        David Howells <dhowells@redhat.com>,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        devicetree@vger.kernel.org, Dexuan Cui <decui@microsoft.com>,
+        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
+        Eli Cohen <elic@nvidia.com>,
+        Eric Dumazet <edumazet@google.com>,
+        Eugeniu Rosca <erosca@de.adit-jv.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Francis Laniel <laniel_francis@privacyrequired.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Hulk Robot <hulkci@huawei.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        James Morris <jmorris@namei.org>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        John Keeping <john@metanate.com>,
+        Juergen Gross <jgross@suse.com>, Kalle Valo <kvalo@kernel.org>,
+        Keith Packard <keithp@keithp.com>, keyrings@vger.kernel.org,
+        kunit-dev@googlegroups.com,
+        Kuniyuki Iwashima <kuniyu@amazon.co.jp>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Lars-Peter Clausen <lars@metafoo.de>,
+        Lee Jones <lee.jones@linaro.org>,
+        Leon Romanovsky <leon@kernel.org>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        linux1394-devel@lists.sourceforge.net,
+        linux-afs@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-hardening@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-integrity@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-xtensa@linux-xtensa.org, llvm@lists.linux.dev,
+        Loic Poulain <loic.poulain@linaro.org>,
+        Louis Peens <louis.peens@corigine.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Mark Brown <broonie@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Mimi Zohar <zohar@linux.ibm.com>,
+        Muchun Song <songmuchun@bytedance.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        =?UTF-8?B?TnVubyBTw6E=?= <nuno.sa@analog.com>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Rich Felker <dalias@aerifal.cx>,
+        Rob Herring <robh+dt@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        SHA-cyfmac-dev-list@infineon.com,
+        Simon Horman <simon.horman@corigine.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Tadeusz Struk <tadeusz.struk@linaro.org>,
+        Takashi Iwai <tiwai@suse.com>, Tom Rix <trix@redhat.com>,
+        Udipto Goswami <quic_ugoswami@quicinc.com>,
+        Vincenzo Frascino <vincenzo.frascino@arm.com>,
+        wcn36xx@lists.infradead.org, Wei Liu <wei.liu@kernel.org>,
+        xen-devel@lists.xenproject.org,
+        Yang Yingliang <yangyingliang@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:uniontech.com:qybgforeign:qybgforeign4
-X-QQ-Bgrelay: 1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin K. Petersen!
-
-As things stand, we cannot guarantee that all events will be propagated
- to udev. So I think, we don't need to ensure that all events are received
- by udev, we only need to ensure that events after sr probe can be received
- by udev and actively discard events before sr probe.
-
-
-
+On Wed, May 4, 2022 at 7:34 PM Gustavo A. R. Silva
+<gustavoars@kernel.org> wrote:
 >
+> Hi Paul,
 >
-> Hi jinxiaobo!
+> On Wed, May 04, 2022 at 06:57:28PM -0400, Paul Moore wrote:
+> > On Tue, May 3, 2022 at 9:57 PM Kees Cook <keescook@chromium.org> wrote:
 >
-> > sr_get_events() has been called before udev starts when SCSI CDROM is
-> > built-in and AHCI SATA is bulit-in,so sr events propagated to user
-> > space are not handled.  if both is loadable, udev will handle sr
-> > events, some cdroms may eject.  We need call sr_get_events() once
-> > before device_add_disk() to keep the same result, whether both are
-> > built-in or loadable.
+> [..]
 >
-> I am not sure how calling sr_get_events() and throwing away the result
-> ensures that events get propagated to udev. Isn't this just changing
-> timing slightly?
+> > > +++ b/include/uapi/linux/xfrm.h
+> > > @@ -31,9 +31,9 @@ struct xfrm_id {
+> > >  struct xfrm_sec_ctx {
+> > >         __u8    ctx_doi;
+> > >         __u8    ctx_alg;
+> > > -       __u16   ctx_len;
+> > > +       __DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(__u16, ctx_len);
+> > >         __u32   ctx_sid;
+> > > -       char    ctx_str[0];
+> > > +       __DECLARE_FLEX_ARRAY_ELEMENTS(char, ctx_str);
+> > >  };
+> >
+> > While I like the idea of this in principle, I'd like to hear about the
+> > testing you've done on these patches.  A previous flex array
+> > conversion in the audit uapi headers ended up causing a problem with
 >
-> --
-> Martin K. Petersen      Oracle Linux Engineering
->
+> I'm curious about which commit caused those problems...?
 
+Commit ed98ea2128b6 ("audit: replace zero-length array with
+flexible-array member"), however, as I said earlier, the problem was
+actually with SWIG, it just happened to be triggered by the kernel
+commit.  There was a brief fedora-devel mail thread about the problem,
+see the link below:
 
+* https://www.spinics.net/lists/fedora-devel/msg297991.html
+
+To reiterate, I'm supportive of changes like this, but I would like to
+hear how it was tested to ensure there are no unexpected problems with
+userspace.  If there are userspace problems it doesn't mean we can't
+make changes like this, it just means we need to ensure that the
+userspace issues are resolved first.
+
+-- 
+paul-moore.com
