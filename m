@@ -2,113 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FAD2C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E67B5C433FE
 	for <linux-scsi@archiver.kernel.org>; Thu,  5 May 2022 18:44:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1383527AbiEESro (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 May 2022 14:47:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54594 "EHLO
+        id S1381408AbiEESrs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 May 2022 14:47:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1384651AbiEESrV (ORCPT
+        with ESMTP id S1384639AbiEESrV (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2022 14:47:21 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D8ED606CD
-        for <linux-scsi@vger.kernel.org>; Thu,  5 May 2022 11:37:51 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id o69so4956060pjo.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 May 2022 11:37:51 -0700 (PDT)
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4513606C3
+        for <linux-scsi@vger.kernel.org>; Thu,  5 May 2022 11:37:47 -0700 (PDT)
+Received: by mail-pg1-x535.google.com with SMTP id 7so4258039pga.12
+        for <linux-scsi@vger.kernel.org>; Thu, 05 May 2022 11:37:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version;
-        bh=87P4GGNrbFYwrgAteETtzuNfoSgkZbvBxXYnS7QSs4I=;
-        b=F965xnfWU7KY1pQVEQTeWXctWSYz+7G0iwvTDHSRSC9j5QPyWNa+0gwInLMjCQdJfI
-         ezNsylloYmPWYZpYxhJeQO/QQ2+JxPFn2Kp8v9ISSEwvd7JnCdUIcfw2NMfP3tXTpVRr
-         J4ktFeAD8Zu/KCkijw74SjsrggS5DaErJuOnQ=
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=blJZNsj6z5am0z6BCLTC5pxY3WeKTWtqX4pzShGIzeg=;
+        b=LCyseZPJRjBBu318seTFMKL73yZxJ48KEwIc8ZFFEOjNW4b1m5YbrUFIGS7TIAWfJ9
+         ejp/6iuc/1a+uM+tjZeNOdP2QY8DpVm7Kqq0qtHgy+bYTgQyxOKRryflIdChbXBMl/3A
+         yWL4HBWnqO6D8WSditHjzlb8B7YOpHLFloguI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version;
-        bh=87P4GGNrbFYwrgAteETtzuNfoSgkZbvBxXYnS7QSs4I=;
-        b=f+lw4Goku7DUNI77amAHr02o14nw4tO/G7SMrTWySmpzCAniYVxAalnLShETpBH37/
-         eIs1lxag34zRmbSdnxHwl4YxqNKNtmvqPl7rNEG8fvolVRVpgUuzmt1TDRVi/kKll2m9
-         Zw/9j79Avb/VN1Z8XCqD7CGAvmOBllEVnIijmkRuI4WYGUJ6sgeYBuetgfivwiP6Xwx8
-         1kdrl48gsuoB9LXN+LOR4lq3VASWr5QedFPuMDjdIZ6Bj6tzmhgCgtJ6GAyiLvgMVYkY
-         2xyNgGs6FHOPZdTRv9//714WN5LhSPOT8NbgLS0NllIHCPq2SoBIyDwRZNq0i/8Sm3of
-         QsOQ==
-X-Gm-Message-State: AOAM531vm02vQU7g06dcQ7OUnmrvNCnwVWZQUTLy7jZmASi7HoP86sMV
-        3AiIBIr+yCrdMmE6wiAON8Xro13zmDIbm5XTlpc2fuAryBGSYrmB8pHlD+i+/pzClvEhSDeb9l6
-        blq8blyqdRPowb2YvQQguyltnmMDEfpe0Cjly9PEplEjvcD/t3mMotWdF+ZZy/M8Z/TAuawJ9sM
-        dy+gH1Ukp+u8I=
-X-Google-Smtp-Source: ABdhPJxbu9XnR9KxxgCY+8sg1nFXbUoi/H3CobM6WIWAyZC1XQ59yeqEN2vOSkF1FVxpuzV5Y3dfbw==
-X-Received: by 2002:a17:90b:245:b0:1dc:1597:20e with SMTP id fz5-20020a17090b024500b001dc1597020emr7695975pjb.151.1651775870295;
-        Thu, 05 May 2022 11:37:50 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=blJZNsj6z5am0z6BCLTC5pxY3WeKTWtqX4pzShGIzeg=;
+        b=icN/BNYFhthh2E/qeMnIU2gXco12jbKVC6E3R/zyVrBqyB/KTYi/XCocOyJt8RHoEo
+         rgn+UIBq7W9h9Kjg15yDf2xnkSGLk7m4mHqD2Pipq3sh9YAfFLnGQ3JA5Fg8Mq7UEZwZ
+         7iQRYMIoYjuAQCcgn6NIWDFhQ4Oib9tdSW7AJoxZckDM9nOEEw4wpKD1mUL4l9RVw4nQ
+         Eq0HAkRNj2444crWzv6Xm/VRdfLsHrN8mSyGSZ/yAD6AtnXdmZrFyGIyyyRQtd3svIj+
+         Ek/loTIJqQe1+1v3MQY8jYmwQjkIx/X9hVqAm7r2FlYbUUsX51j9Y1K7DAs4Pc+QMfrJ
+         Q7fQ==
+X-Gm-Message-State: AOAM531AcYGjOH/XcK2DL8HUv6nrUVJQCjK+Zo0YpQdSJOd2YIUr/bkg
+        ZrA8vsUSXWTRzVCfZ9SuB2IyH75cRVo4JhcZfnz6wDWMFWIS2wU3RhGc7waQytraSB6ZLRERrJa
+        fhmkSLlPlcY/b95R18k6Jh1yLLBQXZcvSKyv5urHZROr2tDTQ/lSja07Okb5pCw5EX9F4gL8j8c
+        Jl4hk55jCfdtE=
+X-Google-Smtp-Source: ABdhPJw8ALhiABDwiChKBAwuIrCJlmYInfAa2ilAq8ZYvSZZObCGobUVj28faHegfqQQhCti3P3T7w==
+X-Received: by 2002:a05:6a00:84e:b0:510:5fbc:7738 with SMTP id q14-20020a056a00084e00b005105fbc7738mr4352920pfk.86.1651775866574;
+        Thu, 05 May 2022 11:37:46 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 4-20020a170902c24400b0015edb22aba1sm1696166plg.270.2022.05.05.11.37.48
+        by smtp.gmail.com with ESMTPSA id 4-20020a170902c24400b0015edb22aba1sm1696166plg.270.2022.05.05.11.37.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 May 2022 11:37:49 -0700 (PDT)
+        Thu, 05 May 2022 11:37:45 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH] mpi3mr: Increase IO timeout value to 60s
-Date:   Fri,  6 May 2022 00:18:08 +0530
-Message-Id: <20220505184808.24049-3-sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpi3mr: Return IOs to an unrecoverable HBA with DID_ERROR
+Date:   Fri,  6 May 2022 00:18:06 +0530
+Message-Id: <20220505184808.24049-1-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20220505184808.24049-1-sreekanth.reddy@broadcom.com>
-References: <20220505184808.24049-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000005fc9d05de480a16"
+        boundary="000000000000ceb4be05de4809b7"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000005fc9d05de480a16
+--000000000000ceb4be05de4809b7
 Content-Transfer-Encoding: 8bit
 
-Set each SCSI device's default IO timeout and
-default error handling IO timeout to 60s.
+Complete all new I/O requests issued to an unrecoverable
+controller with DID_ERROR status instead of returning the
+I/O requests with SCSI_MLQUEUE_HOST_BUSY. This will prevent
+the infinite retries of the new I/Os when a controller
+is in the unrecoverable state.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    | 3 +++
- drivers/scsi/mpi3mr/mpi3mr_os.c | 4 ++++
- 2 files changed, 7 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 8612b66..584659e 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -124,6 +124,9 @@ extern atomic64_t event_counter;
- 
- #define MPI3MR_WATCHDOG_INTERVAL		1000 /* in milli seconds */
- 
-+#define MPI3MR_SCMD_TIMEOUT    (60 * HZ)
-+#define MPI3MR_EH_SCMD_TIMEOUT (60 * HZ)
-+
- /* Internal admin command state definitions*/
- #define MPI3MR_CMD_NOTUSED	0x8000
- #define MPI3MR_CMD_COMPLETE	0x0001
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 5ba490c..f5c345d 100644
+index 89a4918..5c57519 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3727,6 +3727,10 @@ static int mpi3mr_slave_configure(struct scsi_device *sdev)
- 		return -ENXIO;
+@@ -3996,6 +3996,12 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 	int iprio_class;
+ 	u8 is_pcie_dev = 0;
  
- 	mpi3mr_change_queue_depth(sdev, tgt_dev->q_depth);
++	if (mrioc->unrecoverable) {
++		scmd->result = DID_ERROR << 16;
++		scsi_done(scmd);
++		goto out;
++	}
 +
-+	sdev->eh_timeout = MPI3MR_EH_SCMD_TIMEOUT;
-+	blk_queue_rq_timeout(sdev->request_queue, MPI3MR_SCMD_TIMEOUT);
-+
- 	switch (tgt_dev->dev_type) {
- 	case MPI3_DEVICE_DEVFORM_PCIE:
- 		/*The block layer hw sector size = 512*/
+ 	sdev_priv_data = scmd->device->hostdata;
+ 	if (!sdev_priv_data || !sdev_priv_data->tgt_priv_data) {
+ 		scmd->result = DID_NO_CONNECT << 16;
 -- 
 2.27.0
 
 
---00000000000005fc9d05de480a16
+--000000000000ceb4be05de4809b7
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -179,13 +165,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOIPBeVPQJOopvHRqSSA
-iStcH0RQuV0ntWQAJEpccrtvMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDUwNTE4Mzc1MFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOELUAMZrGfwmsg7KhY6
+3OLIZE26ttpVapwzH1drzo3NMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDUwNTE4Mzc0N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAGMZMj2QojFBIwJG4d4aUP7xUo5UB8vywmH+nZ
-AK6obTeiPEnCBEVTgkgqXYIQHCRXqH12bcU+3QZL1c2J0R9x7D94ckkyRk+qe7PEhZPGeESVLx8J
-Eg9BpApHmbZKVmqw7hCSf5q1OS9pRZCA+eNAgrDRvTqU1B67drN0nLNv+EXEuU8VLMiyf9hdyJpZ
-uHF+ROxZwJFOlIVA4oVm6wG6oe7fPSVECsYmNnB9xGNhxbHPlmhxn6WJsbLzzrBg+AMeuAdH4SEY
-aWQMpC+wKj5BVIACzsvCkMOIN/wh0M1bGxJaaYwyZx8gMF/6F/UIT2oEDzUJRZcbnnb5qr9KzsPt
---00000000000005fc9d05de480a16--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBw137ezm/YmxOaebnkqOYsqUoBuhs6dtxMj2Fe
+6Arod4dJxeOMNwLCSAqIOjrPEyqlvZst9WruhA6amOMpgtZecJLcbdYQ32WWjODmRY2sRNZqxweJ
+/EYX4OJQw7pvjGtWYmsA4o9b1Of6yi8veyCjSpjnPcGNiLq8VDZs/9jo4KDupIhvW6aMP8afpK8T
+uvxkQ3bNoP4jpaYkGgQYj7ZWb71YJTVs1VeTo5oh6P0QFYTv1oDToZH4UkScVRwDLZxg4kZ4iNOm
+D2cYsJOjGpALUFkFSqliYnveC1UBJi+YHh3lzlYzDszC7SJE2FqzspJHqntvMdPiClYrSClX9Kmo
+--000000000000ceb4be05de4809b7--
