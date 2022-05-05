@@ -2,156 +2,128 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D9B7C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 May 2022 06:18:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C387EC43219
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 May 2022 08:17:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234447AbiEEGV5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 May 2022 02:21:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38762 "EHLO
+        id S1347434AbiEEIUq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 May 2022 04:20:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231769AbiEEGVz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2022 02:21:55 -0400
-Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01on2123.outbound.protection.outlook.com [40.107.117.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E3F51EAC6;
-        Wed,  4 May 2022 23:18:09 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=QgqTI8pJARM3LYu1wuo1XjNQNcEyha3tFxMzCkHXwlE7KiV1nAYMYrnZzr/fMumcs/D/Cf5D9i3oBz5KKbze4ycxDhcCOnx8yY6xnyRY2lOH8LPbzMeREtZTPrQfM8c6Kg4NgsPIaBNhjewS4stZ73HkpQ8qrbItZfjBfPkMsthaB+o9/zzLWbli22Ypxaba3kPnAclmjB4Ux9HSAm3HQ94Pig7nmCFJETAgYnv1GBImZ5W7jlbJ76JZGJN28RJg+fKMKGcGTnTBGtdGz73Ao2ki2tluiE4NEScsZr5hqNSzwilx7DfEgxQF5XwYA3S8Pel1IFtTuoztDDjvV9A1UA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Q6BAMggDYn5wBQAshvsy1FSJG262ydS1qbKjbeI9Lg8=;
- b=GQLl3xQws9H38K4tatdgL/xR0HxJCTf7OVnGi67n+ah6kLCDSEQBQCwHtkdBzxIDt5N7Ua29A4Zh4oHzPGKnpGgopmqamd3RiZMMRbr2Encv4D214rO6eZIwZqh2A3htCVyC1yv+dxGnDupIT8WMzD/oHrCkCRlVPyhWfURr6Q2nGl1kIj9PUTPrULCs6yS488KvHQb67oCiNox13fEjnvZ/dn1JIg+pSdUi5hBEX+V2Y02JU57K0M21ziWFS1tByRRPaJmQkP+2INU2PC1ucRkzEGxvEoFRKHffaa2P93EdCUjoUeTC5LAyJ1IyP44y7Y+zE0rO4PyMl+Jg3xuPGA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo0.onmicrosoft.com;
- s=selector2-vivo0-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Q6BAMggDYn5wBQAshvsy1FSJG262ydS1qbKjbeI9Lg8=;
- b=XYd0ClnHsSpoKPHwz8vi9aUqWlTfGYAtm7FKx3jlXjcOKLK+ZgICnqddFtO7DHgUozT/wat6tTifokxmoFXw1M8M4zVKDlxmm2uiF1xvkBYvvq8ve6L5Y4SqGzgLBLyZZkwIn2ZpDAUJASCZQ7yKFCTVJ4FqCh1jNGVfkyiT1p8=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from SG2PR06MB3367.apcprd06.prod.outlook.com (2603:1096:4:78::19) by
- HK0PR06MB3826.apcprd06.prod.outlook.com (2603:1096:203:b9::19) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5206.13; Thu, 5 May 2022 06:18:02 +0000
-Received: from SG2PR06MB3367.apcprd06.prod.outlook.com
- ([fe80::4591:4f3e:f951:6c8c]) by SG2PR06MB3367.apcprd06.prod.outlook.com
- ([fe80::4591:4f3e:f951:6c8c%7]) with mapi id 15.20.5186.028; Thu, 5 May 2022
- 06:18:02 +0000
-From:   Wan Jiabing <wanjiabing@vivo.com>
-To:     Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        with ESMTP id S1347352AbiEEIU3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2022 04:20:29 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECC3F49926;
+        Thu,  5 May 2022 01:16:49 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 946131F8A3;
+        Thu,  5 May 2022 08:16:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1651738608; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0MG5If+wT1PFlFjSpPM4l/2JLJ70ISQLhBhO24AmiRY=;
+        b=jySglPOM/qmId9veILCMfWbXmbLP+gNn4u7XEfWwcN1T4/oJO4hATS7eTV+0YsaVudLyFb
+        aYaRxPRl6knBSXtSBo/g/lmKCyGWWV5cbs786fWksp1RjeOLzvSNCVsHa/oH4L1QHJObdw
+        88zVG8kaKeockHaPdWQ38AjKWsWoiqY=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 5A8A413B11;
+        Thu,  5 May 2022 08:16:48 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id IM5DFPCHc2K1BwAAMHmgww
+        (envelope-from <jgross@suse.com>); Thu, 05 May 2022 08:16:48 +0000
+From:   Juergen Gross <jgross@suse.com>
+To:     xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Cc:     Wan Jiabing <wanjiabing@vivo.com>
-Subject: [PATCH] scsi: mpi3mr: Replace snprintf with sysfs_emit in adp_state_show
-Date:   Thu,  5 May 2022 14:17:42 +0800
-Message-Id: <20220505061742.1657020-1-wanjiabing@vivo.com>
-X-Mailer: git-send-email 2.36.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: HK2PR03CA0047.apcprd03.prod.outlook.com
- (2603:1096:202:17::17) To SG2PR06MB3367.apcprd06.prod.outlook.com
- (2603:1096:4:78::19)
+Cc:     Juergen Gross <jgross@suse.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH v3 18/21] xen/scsifront: use xenbus_setup_ring() and xenbus_teardown_ring()
+Date:   Thu,  5 May 2022 10:16:37 +0200
+Message-Id: <20220505081640.17425-19-jgross@suse.com>
+X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20220505081640.17425-1-jgross@suse.com>
+References: <20220505081640.17425-1-jgross@suse.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 49d19012-650a-429d-120f-08da2e5f01de
-X-MS-TrafficTypeDiagnostic: HK0PR06MB3826:EE_
-X-Microsoft-Antispam-PRVS: <HK0PR06MB3826A0888CA5AC9B995A66FFABC29@HK0PR06MB3826.apcprd06.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: KjqvnpXIVWzI4WseNqzgJ2oMk7kv7Df+8YVtsDaB25Q1Zyn9hqeWRezOhOXh9+13rxkrMkMQVRsEhElTTEuR3SkHAw74q7Qj0Ii2PAnsSaCzUk7f3p8u9blCqlBM0J6Wxty4JO1jpk2Wx1iC5pjyqiCZYwnHn7KYiybf7IGeK8bS63Qkxed4JjyVpGBZ+mgBbBzzstkFnNIq1oaVpYY54RSZiOb4ALNo0ih0U59I4uNbCdMNsCKNVF1T7g1+EOJW5dWZlovWf7uIKvSAUtkjJFEvSGOkmDau0ebAhU+zSktWjeky79mrs7dqTQie4BMCHWspcKqjuk0nZgZCA2buDZnKCfOLZ89gI8D82A9iKiQlyiNCAV4vLMf1MnlvCeaC0b5EAThx8bSwwQ6oZhAYNj5HAmyCmITqEZfGesTktyYklTIvcgWuA3Vnw53XnZegGscx8XNZQsXBkvBfSnJjp1heYy3TNYu6UdAk8y+Cii3g3mo5XEY+qOJFpZnnDMfsarEP9caTZfJndwHS+SM8QTXftiXnohrDkJoubcxrMq73c49jNC+uFp/TUm7rAwEORm9m9pvitzPamLuCuJpHCbwLjjE5Pad+LEBqx2h8UvGaiL+z9HKM3Nj+ppo1xaZcy6VLW0dm5le60JZ1RT0KltgaiccPBL2DTRT74F3MOAxFLmZQD1UcxiwEC14K91v8ZcSn/eEhO80DaI+ynZlv0V9+ZlM5ywj2nQtrEjGsUcg=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SG2PR06MB3367.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(86362001)(6486002)(508600001)(2906002)(316002)(38350700002)(38100700002)(4326008)(66476007)(8676002)(66556008)(66946007)(8936002)(5660300002)(110136005)(186003)(52116002)(107886003)(6666004)(1076003)(36756003)(26005)(2616005)(6512007)(6506007)(83380400001)(32563001);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Grb5rvuZDRh57IfW/99iSXFLLSYpamjTN5/J+d9FhCp4nJNRh18pcQKJo8cf?=
- =?us-ascii?Q?okHzE3pOetFw2DTl5NdVJ34eE+mXX4bchpx672UioKBiwf+6QY6scuGLM0S2?=
- =?us-ascii?Q?/eY/UE73TTtidj8UxbNm5SdiHoT8TYBYmyB/9/RzObEUUXnAUrcKpcqklQKg?=
- =?us-ascii?Q?KxY+nPFxiH1BGuBJpXiV2q5O0qkXvdXdHOMqXfNe7HZI654oC6CbXz4dNXXd?=
- =?us-ascii?Q?S9CXC9WIIow8ns9IvgApbiKpkSBD3cXa4ES6G0OkDYDfX6LiRgtXileXBYBJ?=
- =?us-ascii?Q?XgPObv9Oy+l402r3VIhATjmdtMAk+vCcpehBVb3MctzKh9tY+T2gi/mQn2J0?=
- =?us-ascii?Q?ewyzbn2clYfgo+Z8kU5oT5sFmL/um/Ee3GI7RYgINz3RqiHC2pKbHItIfC+U?=
- =?us-ascii?Q?xQXT7GX+Cvx0TWQED7RMlZjrka1ZL9Ne0yLhP8lt7SmEi2oQNNzSxcbJExN3?=
- =?us-ascii?Q?4rsGRcLOkLkycxzgrvfRIghdVEuN/3DBI/55w3dP1f3k0xuLD+PXyrPnI8Sw?=
- =?us-ascii?Q?AmHzcKOQQ7Fe50mtN0fhXzAgfRDpb1Dgr7tqPonpDRBv8kLvxL/KWY4jMIqQ?=
- =?us-ascii?Q?i2q6AUNZH6VF+4+xkWmj+jF0vhGxFYGFDb0H3JsI6t/EhpeQ+DUAA6ukVnCl?=
- =?us-ascii?Q?cbWz4onQ4YFQmHSj58bNo0M0b021hccpbw1jw9WaJEs6MnHLxVKH/gQ2vAsT?=
- =?us-ascii?Q?UaTqA90cQWMHPic1INoY969/AZQjJPu65vMi/30lTgieXV6WHMXeDRFHKoPT?=
- =?us-ascii?Q?0Dg1xvw2VQaB8RIfSp8QRNU4PqCFlAnZrFVwX1YpQvsutbUKsYveSGoJ9R5r?=
- =?us-ascii?Q?Nvgvy26JWdnK83r96vkQuVGfHRVZdUBzTO6kQsDu74wQerxTtuxyA95j/tFV?=
- =?us-ascii?Q?66a+JwUeXeA2EAlAleyCXPpQOT+4AW/yO59k0ev6JOjuVnhas2NerFKY+EPw?=
- =?us-ascii?Q?SMrwetsvtKNyZk437PFaIuiJ2qEIhXSJND1kQoIaMpAi13uP5wmf/lcCUcVP?=
- =?us-ascii?Q?tAChiQq2eqHxBK9kGxoiUkyMOhH2/ZrtUSKiV+Lc5C14JOq5mxMRTn3DH6Rg?=
- =?us-ascii?Q?pmEzJd+D8Qgj+aDVf1H6pz82PsXjER4WbI1aY0LAfpbUiq3ggs6zKA2XDggD?=
- =?us-ascii?Q?lJFJPetnAW3Hx68aeMPDfRmFPdvOissenVvbeJ+HA+oCC920gMDxAEx/GlcX?=
- =?us-ascii?Q?MVD1eNcxg6dDkkKbUEr+ZYqioW3I4RrZwHrMvmB5u6i8rKesr6zkFzuQlrJh?=
- =?us-ascii?Q?b7s2EQ3w4xW0QoZK1Rdue4EwUgeZVqyq+2JQnRyofUzo5A4mlUOq8gcWTyJ4?=
- =?us-ascii?Q?mH2JlCE/9H3J8FEQ58Js8Mj4XPwGM15oW49vhTOFZW5imdsRYwylkRDFFdk7?=
- =?us-ascii?Q?srpZOEOYqb6HGBwhAwMHuEF3XnbxXL/wa3TyXNnRMT5nIZrdpS2xE1VQh9f4?=
- =?us-ascii?Q?0KToRIRnyJamG1H2oxXlWQvzwLTb8n7pCZyFIoL2dCS445VQ5tWJy/TV9r7u?=
- =?us-ascii?Q?5ntvg+nrf60WOEnVJtiXY5MPzqmw0xECa168eBIaLchLS2b15GnOKuixoC1t?=
- =?us-ascii?Q?6SpxegYZvtChv1srOVftdkxLxvlvvny+CUsxbe506uJu5H5q5M8WE22v8LIZ?=
- =?us-ascii?Q?Pt7Dr9kUBJ0keVFz4FDCM9HNS2pZAZprZILvj5CxIlIu04Z0oJeh5SXCNYXm?=
- =?us-ascii?Q?L0GiCSac99E7aUiQJeG4gUQTxLpf1B1XZRbCQvkiLp38YSSlYvC3AZIfJqUy?=
- =?us-ascii?Q?xGA0SWjHfQ=3D=3D?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 49d19012-650a-429d-120f-08da2e5f01de
-X-MS-Exchange-CrossTenant-AuthSource: SG2PR06MB3367.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2022 06:18:02.0541
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: EJgJTXlYaRQahcuF39kT8nZXUdG58OFkb0mQ1ksf7iQfbuxpWhoC+VHxlFT1lEaCuMo0Oyq+w+D5oIgLrEozJg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: HK0PR06MB3826
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix following coccicheck warning:
-./drivers/scsi/mpi3mr/mpi3mr_app.c:1588:8-16: WARNING: use scnprintf or sprintf
+Simplify scsifront's ring creation and removal via xenbus_setup_ring()
+and xenbus_teardown_ring().
 
-Use sysfs_emit instead of snprintf and fix some comments.
-
-Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
+Signed-off-by: Juergen Gross <jgross@suse.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_app.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/xen-scsifront.c | 28 +++++++---------------------
+ 1 file changed, 7 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 73bb7992d5a8..86a7206548e4 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -1559,12 +1559,12 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
+diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+index 4c55e479fc36..51afc66e839d 100644
+--- a/drivers/scsi/xen-scsifront.c
++++ b/drivers/scsi/xen-scsifront.c
+@@ -798,27 +798,15 @@ static int scsifront_alloc_ring(struct vscsifrnt_info *info)
+ {
+ 	struct xenbus_device *dev = info->dev;
+ 	struct vscsiif_sring *sring;
+-	grant_ref_t gref;
+-	int err = -ENOMEM;
++	int err;
+ 
+ 	/***** Frontend to Backend ring start *****/
+-	sring = (struct vscsiif_sring *)__get_free_page(GFP_KERNEL);
+-	if (!sring) {
+-		xenbus_dev_fatal(dev, err,
+-			"fail to allocate shared ring (Front to Back)");
++	err = xenbus_setup_ring(dev, GFP_KERNEL, (void **)&sring, 1,
++				&info->ring_ref);
++	if (err)
+ 		return err;
+-	}
+-	SHARED_RING_INIT(sring);
+-	FRONT_RING_INIT(&info->ring, sring, PAGE_SIZE);
+ 
+-	err = xenbus_grant_ring(dev, sring, 1, &gref);
+-	if (err < 0) {
+-		free_page((unsigned long)sring);
+-		xenbus_dev_fatal(dev, err,
+-			"fail to grant shared ring (Front to Back)");
+-		return err;
+-	}
+-	info->ring_ref = gref;
++	XEN_FRONT_RING_INIT(&info->ring, sring, PAGE_SIZE);
+ 
+ 	err = xenbus_alloc_evtchn(dev, &info->evtchn);
+ 	if (err) {
+@@ -847,8 +835,7 @@ static int scsifront_alloc_ring(struct vscsifrnt_info *info)
+ free_irq:
+ 	unbind_from_irqhandler(info->irq, info);
+ free_gnttab:
+-	gnttab_end_foreign_access(info->ring_ref,
+-				  (unsigned long)info->ring.sring);
++	xenbus_teardown_ring((void **)&sring, 1, &info->ring_ref);
+ 
+ 	return err;
+ }
+@@ -856,8 +843,7 @@ static int scsifront_alloc_ring(struct vscsifrnt_info *info)
+ static void scsifront_free_ring(struct vscsifrnt_info *info)
+ {
+ 	unbind_from_irqhandler(info->irq, info);
+-	gnttab_end_foreign_access(info->ring_ref,
+-				  (unsigned long)info->ring.sring);
++	xenbus_teardown_ring((void **)&info->ring.sring, 1, &info->ring_ref);
  }
  
- /**
-- * adapter_state_show - SysFS callback for adapter state show
-+ * adp_state_show - SysFS callback for adapter state show
-  * @dev: class device
-  * @attr: Device attributes
-  * @buf: Buffer to copy
-  *
-- * Return: snprintf() return after copying adapter state
-+ * Return: sysfs_emit() return after copying adapter state
-  */
- static ssize_t
- adp_state_show(struct device *dev, struct device_attribute *attr,
-@@ -1585,7 +1585,7 @@ adp_state_show(struct device *dev, struct device_attribute *attr,
- 	else
- 		adp_state = MPI3MR_BSG_ADPSTATE_OPERATIONAL;
- 
--	return snprintf(buf, PAGE_SIZE, "%u\n", adp_state);
-+	return sysfs_emit(buf, "%u\n", adp_state);
- }
- 
- static DEVICE_ATTR_RO(adp_state);
+ static int scsifront_init_ring(struct vscsifrnt_info *info)
 -- 
-2.36.0
+2.35.3
 
