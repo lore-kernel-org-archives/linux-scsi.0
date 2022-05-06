@@ -2,81 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC84FC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 05:44:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 115FFC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 07:11:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1389263AbiEFFsW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 May 2022 01:48:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49404 "EHLO
+        id S1389420AbiEFHPf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 May 2022 03:15:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1389259AbiEFFsV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 01:48:21 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FF7E5A5AC;
-        Thu,  5 May 2022 22:44:38 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 242MkbAg018676;
-        Tue, 3 May 2022 00:52:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=/yMc+68rWG/3heF7y7WQjy5vXUZ3ILi1SV6zf9lxjCs=;
- b=G6ut9T7quCoMvq6y5pCHeAfonD12JyxulfH22wtz1tKaZSmEutY+SDDcv3W6w3fShihF
- MHkaTkjhWf+MALC+MqfLZ+1rvolJgVoJzkFq6Z2OQF6P2FI9ivjbBq9Gok37WtOwuRZi
- iJ4Xwcm0R0J7P/xl3EfjRTVlLlxpLMF2f5BrWqg+iA1ljnqYZEMm+aKXK6XQ/+OIChv+
- VLWp7SCjZu8JZYBCrM7Xtkg5RF9DeIK0peiltn9F/pBrQdZq3H0ZSkllKCdfxOVNsHFb
- 1RmXc2h5vrgVyfT7+X06KSolb0daBs2JlxDVput8ucqGS71bky1pGF1bwm6nrEWMRLwX Nw== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3frwnt4kxa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:52:07 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 2430oobc008887;
-        Tue, 3 May 2022 00:52:06 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83xcb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 May 2022 00:52:06 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 2430plk4010389;
-        Tue, 3 May 2022 00:52:06 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fruj83x4g-34;
-        Tue, 03 May 2022 00:52:05 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     GR-QLogic-Storage-Upstream@marvell.com,
-        Xiaomeng Tong <xiam0nd.tong@gmail.com>, jejb@linux.ibm.com,
-        skashyap@marvell.com, jhasan@marvell.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [RESEND][PATCH] qedf: remove an unneeded NULL check on list iterator
-Date:   Mon,  2 May 2022 20:51:44 -0400
-Message-Id: <165153836362.24053.12346613816767008308.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.35.2
-In-Reply-To: <20220405004055.24312-1-xiam0nd.tong@gmail.com>
-References: <20220405004055.24312-1-xiam0nd.tong@gmail.com>
+        with ESMTP id S1389417AbiEFHPc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 03:15:32 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FEDE66CAE
+        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 00:11:50 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1nmrmX-0000sR-Qk; Fri, 06 May 2022 08:49:41 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1nmrmO-000egL-IQ; Fri, 06 May 2022 08:49:31 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1nmrmM-007tsw-Dy; Fri, 06 May 2022 08:49:30 +0200
+Date:   Fri, 6 May 2022 08:49:27 +0200
+From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To:     lizhe <sensor1010@163.com>
+Cc:     lee.jones@linaro.org, fthain@linux-m68k.org,
+        akrowiak@linux.ibm.com, pasic@linux.ibm.com, jjherne@linux.ibm.com,
+        freude@linux.ibm.com, hca@linux.ibm.com, gor@linux.ibm.com,
+        agordeev@linux.ibm.com, borntraeger@linux.ibm.com,
+        svens@linux.ibm.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, zbr@ioremap.net, perex@perex.cz,
+        tiwai@suse.com, bvanassche@acm.org, dan.j.williams@intel.com,
+        srinivas.kandagatla@linaro.org, wens@csie.org,
+        colin.king@intel.com, hare@suse.de, linux-kernel@vger.kernel.org,
+        linux-m68k@lists.linux-m68k.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        alsa-devel@alsa-project.org
+Subject: Re: [PATCH] kernel/drivers: Remove redundant driver match function
+Message-ID: <20220506064927.7y7a422jqbse22fr@pengutronix.de>
+References: <20220506045952.136290-1-sensor1010@163.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: rSAztyxMg1cpFyDVEJEZ96yiVuUg8b84
-X-Proofpoint-GUID: rSAztyxMg1cpFyDVEJEZ96yiVuUg8b84
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="o5fzikc3dnjeidfk"
+Content-Disposition: inline
+In-Reply-To: <20220506045952.136290-1-sensor1010@163.com>
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 5 Apr 2022 08:40:55 +0800, Xiaomeng Tong wrote:
 
-> The list iterator 'fcport' is always non-NULL so it doesn't need to be
-> checked. Thus just remove the unnecessary NULL check. Also remove the
-> unnecessary initializer because the list iterator is always initialized.
-> And adjust the position of blank lines.
-> 
-> 
+--o5fzikc3dnjeidfk
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Applied to 5.19/scsi-queue, thanks!
+Hello,
 
-[1/1] qedf: remove an unneeded NULL check on list iterator
-      https://git.kernel.org/mkp/scsi/c/505420bd5543
+On Thu, May 05, 2022 at 09:59:52PM -0700, lizhe wrote:
+> If there is no driver match function, the driver core assumes that each
+> candidate pair (driver, device) matches, see driver_match_device().
+>=20
+> Signed-off-by: lizhe <sensor1010@163.com>
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Reviewed-by: Uwe Kleine-K=F6nig <u.kleine-koenig.org>
+
+Side note: While looking through this patch I was surprised to see there
+are two different busses for ac97: sound/ac97/bus.c + sound/ac97_bus.c .
+It seems the duplication exists since 2017.
+
+Best regards
+Uwe
+
+--=20
+Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
+Industrial Linux Solutions                 | https://www.pengutronix.de/ |
+
+--o5fzikc3dnjeidfk
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmJ0xPQACgkQwfwUeK3K
+7Ak9lwf+LvgkLmWcst9CMzoJ2w5AdNZjtnWS36MvuyEFgHUH2e6lrfReaAAj9LGp
+1EPinO6S6UBPvzVTbTVcduAlnaWER3O6XDIiS1b0Z2NOchX6AHUfHjQzckmL7ZU6
+6W3P8jmVsNgbwmD2NXh98qjpmKMnmw56AjbBfYKSM1jWGookg2NUKkvN5175wSnQ
+FNAIVdMaTspMZKRJU8bhkXSCARu9oAYn88U3QFUsgfzRK4KZu3UfqU75+QZjAzE3
+q7A4nOBFl0GHZUE/kQMPWdYm1OgPbvxaDYz2DmWN+7Dqc+0HkUUYYeATdYs8OUO0
+SBdhfXzll9P8xFZvdeusA+8B6DgGYg==
+=nsQs
+-----END PGP SIGNATURE-----
+
+--o5fzikc3dnjeidfk--
