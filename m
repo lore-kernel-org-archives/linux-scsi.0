@@ -2,108 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7328EC43217
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 18:20:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38F7CC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 19:22:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1392566AbiEFSYC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 May 2022 14:24:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43590 "EHLO
+        id S1390153AbiEFT0S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 May 2022 15:26:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1391450AbiEFSXd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 14:23:33 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D617557B08
-        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 11:19:49 -0700 (PDT)
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 246HAKcw002046;
-        Fri, 6 May 2022 18:19:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : date : in-reply-to : references : content-type :
- mime-version : content-transfer-encoding; s=pp1;
- bh=wBNCbYgRNGwj1joaPv1Xpb86+vMG9GjcnXlHdPTfu+0=;
- b=mGUdAF1dtMh3Mzt3AaKPG62E/NMLvGrsu3Q5OTwIPJFN1VJNRyJe1+K2kVL69+ovNebF
- NRnTAL8SmLk6vvVKcnrh34jj6Zq1ZamgTd5RKVQQ0jptcIkjs3OsvAMx4Zo35w7OKpuM
- +LriXyrBAPz9i2MYQMuYH5zsWPTRfYZpxCXt+7KfBhWTYqmAMh39St0ztfH5GPUDsF8j
- pXh2OtnR8OR6L7VQvcBChpsIKufVNbA87YXsgF7ZXKEGl0iP9iz8zuX/vtbhCcr73Bt7
- O2Tp5MVNHCLxrZm3htNdPizFx5as3jIysBbNvRyUGLcv9zNzElEYtgBdzCM4xx5hs1vx Qg== 
-Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fw6rsjdy9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 06 May 2022 18:19:47 +0000
-Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
-        by ppma03wdc.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 246ICG5l029801;
-        Fri, 6 May 2022 18:19:46 GMT
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-        by ppma03wdc.us.ibm.com with ESMTP id 3frvra256u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 06 May 2022 18:19:46 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 246IJjoh19530174
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 6 May 2022 18:19:45 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9026A78066;
-        Fri,  6 May 2022 18:19:45 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id F0F697805F;
-        Fri,  6 May 2022 18:19:44 +0000 (GMT)
-Received: from lingrow.rcx-us.ibmmobiledemo.com (unknown [9.211.120.242])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Fri,  6 May 2022 18:19:44 +0000 (GMT)
-Message-ID: <ce95ca87344df10a477f16232815e8590118188e.camel@linux.ibm.com>
+        with ESMTP id S236285AbiEFT0R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 15:26:17 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 644794163C
+        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 12:22:33 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id BABD1CE3914
+        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 19:22:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AB3CC385A9;
+        Fri,  6 May 2022 19:22:29 +0000 (UTC)
+Authentication-Results: smtp.kernel.org;
+        dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="ouAwIFBj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
+        t=1651864947;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=pDmMMtFAeO6JUD9l825R0xX8ZBEHHuP5CXptsvw50Y0=;
+        b=ouAwIFBj6qLZbnmFwBkUY3KUDmnZqqKMFI0cV1+hA0UBeTxTYQcbMpm5VqHzi4zkiomHp+
+        knDjz0DQ/8VaCySffaeUQ0lVMB45jdfZ7PqDRIKAs9JujGOoXKHwOB90s34tkgMuoWAv9Y
+        I+EqNygltczLCZ0gSesFa2Z6vBzTN5I=
+Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id 409e11c6 (TLSv1.3:AEAD-AES256-GCM-SHA384:256:NO);
+        Fri, 6 May 2022 19:22:27 +0000 (UTC)
+Date:   Fri, 6 May 2022 21:22:24 +0200
+From:   "Jason A. Donenfeld" <Jason@zx2c4.com>
+To:     James Bottomley <jejb@linux.ibm.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
 Subject: Re: calling context of scsi_end_request() always hard IRQ or
  sometimes different?
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Date:   Fri, 06 May 2022 14:19:43 -0400
-In-Reply-To: <YnVTf+vkcLl2wZZE@zx2c4.com>
+Message-ID: <YnV1cK6jHVLoDBWj@zx2c4.com>
 References: <YnVTf+vkcLl2wZZE@zx2c4.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+ <ce95ca87344df10a477f16232815e8590118188e.camel@linux.ibm.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: yPaIPu8Qk7-DHSUcqrjGPZ6AtYKuwGH6
-X-Proofpoint-ORIG-GUID: yPaIPu8Qk7-DHSUcqrjGPZ6AtYKuwGH6
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
- definitions=2022-05-06_07,2022-05-06_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
- spamscore=0 bulkscore=0 mlxlogscore=784 malwarescore=0 suspectscore=0
- phishscore=0 lowpriorityscore=0 mlxscore=0 priorityscore=1501
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2202240000 definitions=main-2205060092
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <ce95ca87344df10a477f16232815e8590118188e.camel@linux.ibm.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2022-05-06 at 18:57 +0200, Jason A. Donenfeld wrote:
-> Hey James, Martin,
+Hi James,
+
+On Fri, May 06, 2022 at 02:19:43PM -0400, James Bottomley wrote:
+> On Fri, 2022-05-06 at 18:57 +0200, Jason A. Donenfeld wrote:
+> > Hey James, Martin,
+> > 
+> > I'm in the process of fixing a few issues with the RNG and one thing
+> > that surprised me is that scsi_end_request() appears to be called
+> > from hard IRQ context rather than some worker or soft IRQ as I
+> > assumed it would be. That's fine, and I can deal with it, but what I
+> > haven't yet been able to figure out is whether it's _always_ called
+> > from hard IRQ, or whether it's sometimes from hard IRQ and sometimes
+> > not, and so I should handle both cases in the thing I'm working on?
+> > 
+> > And if the answer turns out to be, "I don't know; that's really
+> > complicated and..." just say so, and I'll just try to work out the
+> > whole function graph.
 > 
-> I'm in the process of fixing a few issues with the RNG and one thing
-> that surprised me is that scsi_end_request() appears to be called
-> from hard IRQ context rather than some worker or soft IRQ as I
-> assumed it would be. That's fine, and I can deal with it, but what I
-> haven't yet been able to figure out is whether it's _always_ called
-> from hard IRQ, or whether it's sometimes from hard IRQ and sometimes
-> not, and so I should handle both cases in the thing I'm working on?
+> Are you sure you mean scsi_end_request()?  It's static to scsi_lib.c so
+> its call graph is tiny  it basically goes from the blk-mq complete
+> function (softirq) through scsi_complete->scsi_finish_command-
+> >scsi_io_completion->scsi_end_request
 > 
-> And if the answer turns out to be, "I don't know; that's really
-> complicated and..." just say so, and I'll just try to work out the
-> whole function graph.
+> However, I didn't think it was ever called from hard IRQ context,
+> that's usually scsi_done() (which can also be called from other
+> contexts).
 
-Are you sure you mean scsi_end_request()?  It's static to scsi_lib.c so
-its call graph is tiny  it basically goes from the blk-mq complete
-function (softirq) through scsi_complete->scsi_finish_command-
->scsi_io_completion->scsi_end_request
+Really what I'm interested in is add_disk_randomness(), and the only
+caller of that is scsi_end_request(), so I think my question is the
+right one.
 
-However, I didn't think it was ever called from hard IRQ context,
-that's usually scsi_done() (which can also be called from other
-contexts).
+Interestingly, I _am_ seeing it from hardirq context (if
+`in_interrupt()` is to be believed):
 
-James
+[    2.108954]  add_timer_randomness.cold+0x5/0x3a
+[    2.110514]  scsi_end_request+0x136/0x1a0
+[    2.111903]  scsi_io_completion+0x2e/0x710
+[    2.113314]  virtscsi_req_done+0x59/0xa0
+[    2.114705]  vring_interrupt+0x46/0x70
+[    2.116002]  __handle_irq_event_percpu+0x32/0xb0
+[    2.117591]  handle_irq_event+0x2f/0x70
+[    2.118929]  handle_edge_irq+0x7c/0x210
+[    2.120249]  __common_interrupt+0x33/0x90
+[    2.121641]  common_interrupt+0x7b/0xa0
+ 
+And it sounds like you're saying that this is really a softirq function.
+So is it correct for me to conclude that the right answer here is that
+it can be called from both/multiple contexts, and that's fine and
+normal?
 
-
+Jason
