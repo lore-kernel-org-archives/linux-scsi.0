@@ -2,101 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 115FFC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 07:11:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8C0AC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 07:55:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1389420AbiEFHPf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 May 2022 03:15:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35216 "EHLO
+        id S1389756AbiEFH7b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 May 2022 03:59:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1389417AbiEFHPc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 03:15:32 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FEDE66CAE
-        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 00:11:50 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1nmrmX-0000sR-Qk; Fri, 06 May 2022 08:49:41 +0200
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1nmrmO-000egL-IQ; Fri, 06 May 2022 08:49:31 +0200
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1nmrmM-007tsw-Dy; Fri, 06 May 2022 08:49:30 +0200
-Date:   Fri, 6 May 2022 08:49:27 +0200
-From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-To:     lizhe <sensor1010@163.com>
-Cc:     lee.jones@linaro.org, fthain@linux-m68k.org,
-        akrowiak@linux.ibm.com, pasic@linux.ibm.com, jjherne@linux.ibm.com,
-        freude@linux.ibm.com, hca@linux.ibm.com, gor@linux.ibm.com,
-        agordeev@linux.ibm.com, borntraeger@linux.ibm.com,
-        svens@linux.ibm.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, zbr@ioremap.net, perex@perex.cz,
-        tiwai@suse.com, bvanassche@acm.org, dan.j.williams@intel.com,
-        srinivas.kandagatla@linaro.org, wens@csie.org,
-        colin.king@intel.com, hare@suse.de, linux-kernel@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        alsa-devel@alsa-project.org
-Subject: Re: [PATCH] kernel/drivers: Remove redundant driver match function
-Message-ID: <20220506064927.7y7a422jqbse22fr@pengutronix.de>
-References: <20220506045952.136290-1-sensor1010@163.com>
+        with ESMTP id S1386640AbiEFH7a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 03:59:30 -0400
+X-Greylist: delayed 615 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 06 May 2022 00:55:49 PDT
+Received: from mail.greatagencyonline.pl (mail.greatagencyonline.pl [89.40.125.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01AAC186FC
+        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 00:55:48 -0700 (PDT)
+Received: by mail.greatagencyonline.pl (Postfix, from userid 1001)
+        id 45B97A9933; Fri,  6 May 2022 08:41:24 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=greatagencyonline.pl;
+        s=mail; t=1651822909;
+        bh=ksvwLPFdjL017OLwir5xHXy3Vmrj/5fhZ5DwBI62qzc=;
+        h=Date:From:To:Subject:From;
+        b=G9FJIKoJURiggCQ/kooBWlYyDSKPDMSK9rLClYaU0N579apXbynUj/AYoxF/gUcly
+         u0yrlRUck72y/KlPCiNcF4VjO9pWkT72hB8cGziM5EODFiKXLIG0kAHVyohEcHHuX9
+         O/VjMky1BkW35A6Hr+lnIi9qt4GHodXhTM0CUAQjK+64guQ+wDaiIpnV3ISkJ6wtQP
+         1WiTzFq5RF/mcU6TULuKJ0e488RC7gNl7RLkdfAwYxgK9O3+R2zcRN1NNjiuDq9/WA
+         HBihJHDy/iqsCA6hZstr/A8LvAfPV2HIHQdZwR0Y7G8XMpaL6e9Vy/rxK+Vo45XwUX
+         GWv0h3n783UVA==
+Received: by mail.greatagencyonline.pl for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 07:38:48 GMT
+Message-ID: <20220506073002-0.1.3r.k0g3.0.22om89xq1o@greatagencyonline.pl>
+Date:   Fri,  6 May 2022 07:38:48 GMT
+From:   =?UTF-8?Q? "Miko=C5=82aj_Rudzik" ?= 
+        <mikolaj.rudzik@greatagencyonline.pl>
+To:     <linux-scsi@vger.kernel.org>
+Subject: =?UTF-8?Q?Nap=C5=82yw_Klient=C3=B3w_ze_strony?=
+X-Mailer: mail.greatagencyonline.pl
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="o5fzikc3dnjeidfk"
-Content-Disposition: inline
-In-Reply-To: <20220506045952.136290-1-sensor1010@163.com>
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Dzie=C5=84 dobry,
 
---o5fzikc3dnjeidfk
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+chcia=C5=82bym poinformowa=C4=87 Pa=C5=84stwa o mo=C5=BCliwo=C5=9Bci pozy=
+skania nowych zlece=C5=84 ze strony www.
 
-Hello,
+Widzimy zainteresowanie potencjalnych Klient=C3=B3w Pa=C5=84stwa firm=C4=85=
+, dlatego ch=C4=99tnie pomo=C5=BCemy Pa=C5=84stwu dotrze=C4=87 z ofert=C4=
+=85 do wi=C4=99kszego grona odbiorc=C3=B3w poprzez efektywne metody pozyc=
+jonowania strony w Google.
 
-On Thu, May 05, 2022 at 09:59:52PM -0700, lizhe wrote:
-> If there is no driver match function, the driver core assumes that each
-> candidate pair (driver, device) matches, see driver_match_device().
->=20
-> Signed-off-by: lizhe <sensor1010@163.com>
+Czy m=C3=B3g=C5=82bym liczy=C4=87 na kontakt zwrotny?
 
-Reviewed-by: Uwe Kleine-K=F6nig <u.kleine-koenig.org>
 
-Side note: While looking through this patch I was surprised to see there
-are two different busses for ac97: sound/ac97/bus.c + sound/ac97_bus.c .
-It seems the duplication exists since 2017.
-
-Best regards
-Uwe
-
---=20
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
-Industrial Linux Solutions                 | https://www.pengutronix.de/ |
-
---o5fzikc3dnjeidfk
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmJ0xPQACgkQwfwUeK3K
-7Ak9lwf+LvgkLmWcst9CMzoJ2w5AdNZjtnWS36MvuyEFgHUH2e6lrfReaAAj9LGp
-1EPinO6S6UBPvzVTbTVcduAlnaWER3O6XDIiS1b0Z2NOchX6AHUfHjQzckmL7ZU6
-6W3P8jmVsNgbwmD2NXh98qjpmKMnmw56AjbBfYKSM1jWGookg2NUKkvN5175wSnQ
-FNAIVdMaTspMZKRJU8bhkXSCARu9oAYn88U3QFUsgfzRK4KZu3UfqU75+QZjAzE3
-q7A4nOBFl0GHZUE/kQMPWdYm1OgPbvxaDYz2DmWN+7Dqc+0HkUUYYeATdYs8OUO0
-SBdhfXzll9P8xFZvdeusA+8B6DgGYg==
-=nsQs
------END PGP SIGNATURE-----
-
---o5fzikc3dnjeidfk--
+Pozdrawiam,
+Miko=C5=82aj Rudzik
