@@ -2,152 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 924A8C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 20:12:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DC63C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 20:55:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1392635AbiEFUPs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 May 2022 16:15:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42798 "EHLO
+        id S1444045AbiEFU70 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 May 2022 16:59:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235013AbiEFUPq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 16:15:46 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C72105BD21
-        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 13:12:02 -0700 (PDT)
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 246K0MKO028617;
-        Fri, 6 May 2022 20:12:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=vJywnoJzGp4K4BcPpFZH1m83JIHkw23EQvEHjW7SxJk=;
- b=D7e/P/UIy9zaADBUtV3euIcSoY1lFe2DNgj4VarEribRGAe49IjvDcZswV/wzxl2Ww8k
- AfA/Pupt8HZj5e/lw01ftusorXtXRJM1ES5WaW89HmKjvcyAZfKV7iQqFxmJU+2/WN3w
- HQbVgUg9fYax5IhRvqhGIoO8VOyYlbQCICKGkFrKlrwJ7sha2lR4KvXrym5qDF07wB5o
- bvPKV1yLKnU1J3kClsfyoLozK4GS0TKrAZ2+gBOBMpKXPTB772fM+4GMIHEI0NZ7ULdI
- i616a53K2Yx0aHq1ABEGSAa6MLqyHA1wCWSCmP69zcFp1zbPdQMX8Dhjy8vwvxDjlq4w qw== 
-Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fwab50655-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 06 May 2022 20:12:00 +0000
-Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
-        by ppma02dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 246K88Ib028366;
-        Fri, 6 May 2022 20:12:00 GMT
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-        by ppma02dal.us.ibm.com with ESMTP id 3frvran88e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 06 May 2022 20:12:00 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 246KBx8C23527786
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 6 May 2022 20:11:59 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1AEBD7805E;
-        Fri,  6 May 2022 20:11:59 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 860D37805C;
-        Fri,  6 May 2022 20:11:58 +0000 (GMT)
-Received: from lingrow.rcx-us.ibmmobiledemo.com (unknown [9.211.120.242])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Fri,  6 May 2022 20:11:58 +0000 (GMT)
-Message-ID: <32e8e33e79a1e8e2658cd07ad7d457662aef997f.camel@linux.ibm.com>
-Subject: Re: calling context of scsi_end_request() always hard IRQ or
- sometimes different?
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     "Jason A. Donenfeld" <Jason@zx2c4.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Date:   Fri, 06 May 2022 16:11:57 -0400
-In-Reply-To: <YnV1cK6jHVLoDBWj@zx2c4.com>
-References: <YnVTf+vkcLl2wZZE@zx2c4.com>
-         <ce95ca87344df10a477f16232815e8590118188e.camel@linux.ibm.com>
-         <YnV1cK6jHVLoDBWj@zx2c4.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        with ESMTP id S1346231AbiEFU7W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 16:59:22 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9854B65A4
+        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 13:55:37 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id t11-20020a17090ad50b00b001d95bf21996so11839798pju.2
+        for <linux-scsi@vger.kernel.org>; Fri, 06 May 2022 13:55:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=2NFXQyyXiGUNufyA1e+SQwcuX7Pbo4KmUoL1yUvsJ4s=;
+        b=dLGzaS3FaHQG7EZ/WzLmDcFzXUtEVIVxodlswB4/GReyOY00Wep5IV/IfvhJZC5BAf
+         HPfj9stGBo5SIBqwcSzgyxXT3heSUSKh5zYi8oH/fNF73N5qobhNEBYdeOgWGToSd9LD
+         MwFQbQg7rqYeTvAhzauvJyzfTtXk13tdpQmOTC+fF9mIsqUmpwdUwNwZJPald553Oyug
+         cfVtk8G9taVHcQo9P7zkQCkm0NSKT+rWr+RHBPUIqX7OaCaqeOSSaNu04leSct9m8TD0
+         Vm5E5yMQwXmclV7ccSALNa/lYEtqt8KsboHpDuZg1ylIZz0fwccRM/7xsjoWg5si4Fm8
+         CODQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=2NFXQyyXiGUNufyA1e+SQwcuX7Pbo4KmUoL1yUvsJ4s=;
+        b=0sBv+sCv/L7QPZD6tAA+wif4Tdf8fpN0SYp18NZ1/83+AxTJyh4QCZJ+SwkzAIkToB
+         VgTn68/uOhfMQWNELePOletrMaTlmQxseaVUMGKQAQL/OaWgfANKhKu0Cwue0Vk/Zr1M
+         CIz2cXSdpsAvgI/IBO4yt0EiFc2cpb3AQd0NtrWPVUrtgOrI4nO6ZVACrYuY1eNo7LhX
+         g3roj+0tKeqLDJj1D2cM/OeGmgSNdwdkfxKDBpuNmOMk67Jfme6xXKmOeZBGVvPedrTJ
+         gk2y7+DpUCaRoB59oBJNZb7VhzF/8cfCUzuF/V3kuK2zVpdAMLtrgHuaGhhLOAwSsI2D
+         sU5g==
+X-Gm-Message-State: AOAM533/k2Xwgn4JsjL2Ruse2JrBBdDRBdRSuiSjZGMT3t2gbUIJf2RA
+        Qnxzh1dJpPAbNSKDlO1dN0QXMckuAwI=
+X-Google-Smtp-Source: ABdhPJyZbUjKHmJpbIysBSAL34aPLgKKg085S1KxlMCQEB6GPPkz7Owq5B7XMZ0bnmTsPeZz2GgjGA==
+X-Received: by 2002:a17:902:a417:b0:158:ed2c:3740 with SMTP id p23-20020a170902a41700b00158ed2c3740mr5466172plq.121.1651870536859;
+        Fri, 06 May 2022 13:55:36 -0700 (PDT)
+Received: from mail-lvn-it-01.broadcom.com ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id x15-20020a170902ec8f00b0015e8d4eb261sm2283719plg.171.2022.05.06.13.55.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 06 May 2022 13:55:36 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: [PATCH] lpfc: Fix split code for FLOGI on FCoE
+Date:   Fri,  6 May 2022 13:55:28 -0700
+Message-Id: <20220506205528.61590-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: Uq632sgQ83TIdIfys08lTgoRIXJ08AtL
-X-Proofpoint-GUID: Uq632sgQ83TIdIfys08lTgoRIXJ08AtL
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
- definitions=2022-05-06_07,2022-05-06_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- adultscore=0 malwarescore=0 spamscore=0 clxscore=1015 phishscore=0
- lowpriorityscore=0 mlxlogscore=815 impostorscore=0 mlxscore=0
- suspectscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2202240000 definitions=main-2205060102
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2022-05-06 at 21:22 +0200, Jason A. Donenfeld wrote:
-> Hi James,
-> 
-> On Fri, May 06, 2022 at 02:19:43PM -0400, James Bottomley wrote:
-> > On Fri, 2022-05-06 at 18:57 +0200, Jason A. Donenfeld wrote:
-> > > Hey James, Martin,
-> > > 
-> > > I'm in the process of fixing a few issues with the RNG and one
-> > > thing
-> > > that surprised me is that scsi_end_request() appears to be called
-> > > from hard IRQ context rather than some worker or soft IRQ as I
-> > > assumed it would be. That's fine, and I can deal with it, but
-> > > what I
-> > > haven't yet been able to figure out is whether it's _always_
-> > > called
-> > > from hard IRQ, or whether it's sometimes from hard IRQ and
-> > > sometimes
-> > > not, and so I should handle both cases in the thing I'm working
-> > > on?
-> > > 
-> > > And if the answer turns out to be, "I don't know; that's really
-> > > complicated and..." just say so, and I'll just try to work out
-> > > the
-> > > whole function graph.
-> > 
-> > Are you sure you mean scsi_end_request()?  It's static to
-> > scsi_lib.c so
-> > its call graph is tiny  it basically goes from the blk-mq complete
-> > function (softirq) through scsi_complete->scsi_finish_command-
-> > > scsi_io_completion->scsi_end_request
-> > 
-> > However, I didn't think it was ever called from hard IRQ context,
-> > that's usually scsi_done() (which can also be called from other
-> > contexts).
-> 
-> Really what I'm interested in is add_disk_randomness(), and the only
-> caller of that is scsi_end_request(), so I think my question is the
-> right one.
-> 
-> Interestingly, I _am_ seeing it from hardirq context (if
-> `in_interrupt()` is to be believed):
-> 
-> [    2.108954]  add_timer_randomness.cold+0x5/0x3a
-> [    2.110514]  scsi_end_request+0x136/0x1a0
-> [    2.111903]  scsi_io_completion+0x2e/0x710
+The refactoring code converted context information from SLI-3 to SLI-4.
+The conversion for the SLI-4 bit field tried to use the old (hacky)
+sli3 high/low bit settings.  Needless to say, it was incorrect.
 
-The call trace looks broken here.  After virtscsi_req_done it should
-invoke scsi_done and blk_mq_complete_req, which usually goes via the
-block softirq (but which may complete in the hardirq under some
-circumstances), before it gets back into scsi_io_completion.
+Explicitly set the context field to type FCFI and set it in the wqe.
+SLI-4 is now a proper bit field so no need for the shifting/anding.
 
-> [    2.113314]  virtscsi_req_done+0x59/0xa0
-> [    2.114705]  vring_interrupt+0x46/0x70
-> [    2.116002]  __handle_irq_event_percpu+0x32/0xb0
-> [    2.117591]  handle_irq_event+0x2f/0x70
-> [    2.118929]  handle_edge_irq+0x7c/0x210
-> [    2.120249]  __common_interrupt+0x33/0x90
-> [    2.121641]  common_interrupt+0x7b/0xa0
->  
-> And it sounds like you're saying that this is really a softirq
-> function. So is it correct for me to conclude that the right answer
-> here is that it can be called from both/multiple contexts, and that's
-> fine and normal?
+Fixes: 6831ce129f19 ("scsi: lpfc: SLI path split: Refactor base ELS paths and the FLOGI path")
+Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_els.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Pretty much, yes.
-
-James
-
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 51c505d15410..07f9a6e61e10 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1317,7 +1317,7 @@ lpfc_issue_els_flogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) ==
+ 		    LPFC_SLI_INTF_IF_TYPE_0) {
+ 			/* FLOGI needs to be 3 for WQE FCFI */
+-			ct = ((SLI4_CT_FCFI >> 1) & 1) | (SLI4_CT_FCFI & 1);
++			ct = SLI4_CT_FCFI;
+ 			bf_set(wqe_ct, &wqe->els_req.wqe_com, ct);
+ 
+ 			/* Set the fcfi to the fcfi we registered with */
+-- 
+2.26.2
 
