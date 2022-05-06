@@ -2,129 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A03C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 10:31:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3D86C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 10:58:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1390995AbiEFKfS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 May 2022 06:35:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42726 "EHLO
+        id S1391098AbiEFLBv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 May 2022 07:01:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1390994AbiEFKfH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 06:35:07 -0400
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3635262BFB
-        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 03:31:24 -0700 (PDT)
-Received: by mail-ej1-x629.google.com with SMTP id g6so13644001ejw.1
-        for <linux-scsi@vger.kernel.org>; Fri, 06 May 2022 03:31:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=G7AKvMZPXvXSnfImyNv30/Tu154Oa9ejf/GkvDjzFBY=;
-        b=Z8cFLDFsO5ZuGKiEQJA03dJNctu2elENQQ0uxCdgWJmVkg61HPj3j9GZ87Kz0PJTVp
-         HhFbD+MXuribyNGlSjqe4zeE0Ty9YxwOyMP2VeQuNR/TWNeVogE1eD2qK8NTkrJuSB+S
-         GQfnac9V/6qH12wFzEKptjotXX+cbzvmhc1hut6c/rihIRA0nV0yaXdj08N2fhqdkwF/
-         uCpgQkipkN6khlNu7K35YUhmeqVUH/58DsCmlGH3meVthU3rxOhbPVD7i4zaSMdLLhtB
-         a2osizx9oSJNsSftMpB6t3vLMGYmNZw/nCvC2Y0VXnf6fwToppdP9L/CrFbwJihkIi9r
-         Qcuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=G7AKvMZPXvXSnfImyNv30/Tu154Oa9ejf/GkvDjzFBY=;
-        b=wNz+KjIPQ1sy68mwy9X9lhG2GSshnb9hWSiFnsSCFds0/JxQxTdQVvlEL07yyjS2f3
-         2YZe1wCU3D4o1uzRRbSn2J9MF8FQ2I1IUQqosZNBzUorM22nC+3ytKk/cdHAfXOddn7/
-         AeYbzQP7SLGwsa5POVHHMj1l+JiE2Uw5QKitaWoRbwl8jVzKSl5ucht64tzjRpzmTTdA
-         QfkLkJUVEZ58nW9qhCudYF3+Sr3GIhACFCAeDcfCbXVKAIQJy8S0O8Tqs1PtPY1reQOO
-         K6TN9KIX1Z5Jp0eor+VKaLvDuj+/bQmtJl81A+87+6obkU+whGau+rfCEXbB5wWwLrOU
-         IYNA==
-X-Gm-Message-State: AOAM531JByXVtgbflhZF0n+QIcCUMDdOzbm5bPnfHOaOk07/54rtIz5w
-        SgNdNsL2vv67spkxYrl7mC9fww==
-X-Google-Smtp-Source: ABdhPJy+dR+cjNHSaFFy83lVt8fb779H9yBeKHxCkXUgxaa8JTcod6EQOvNGYenOtbBL5+BSuTUxbw==
-X-Received: by 2002:a17:906:9c83:b0:6df:839a:a6d0 with SMTP id fj3-20020a1709069c8300b006df839aa6d0mr2296006ejc.419.1651833082631;
-        Fri, 06 May 2022 03:31:22 -0700 (PDT)
-Received: from localhost.localdomain (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
-        by smtp.gmail.com with ESMTPSA id em10-20020a170907288a00b006f3ef214e6dsm1726957ejc.211.2022.05.06.03.31.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 May 2022 03:31:22 -0700 (PDT)
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S1344901AbiEFLBu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 07:01:50 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19B051EEFD
+        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 03:58:06 -0700 (PDT)
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1651834683;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=V4xDXi9MoTjmGgrudkcFX/5Dz6bfy78Vh4PgmcfOJ+M=;
+        b=puBveS0qTvq+K1w92x0iCYbaJx+N2T9VYEzhs0I8g8dxK4+eL+XMdxqw0AFDP10FXXkfIH
+        uARmLofK6sngNx+jEQLVn/XF3zIMMEYcffL8BpF2MluRIdf6pQNyGTjcjqCzUsWuoLhGfI
+        QKmM4tMfeawInNFwWBhrZJly/awPAEAX+xLf+JOnvTs3stbzsflrC4SNWhI4/wSBXglvKq
+        McQjTUw5D01SgPw+4REr+2A73tU1NmmYPD/Z6OpYRWO+27KFFQZlsB9+CdpiArtRbquTmI
+        fHxlW3TjNjCqNlOwZsLow7A0XMZezB6qdNiyeGRO0lhD5PuclemtJsI6F/wAcw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1651834683;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=V4xDXi9MoTjmGgrudkcFX/5Dz6bfy78Vh4PgmcfOJ+M=;
+        b=ruGP8RtHhuoXjhGfYKG08Bq6KDdAoHm8RqxLxEhHET+8b7byIkhrXDM9pKLV948DCgkld4
+        xdrZ1xnV79fuI7DA==
+To:     linux-scsi@vger.kernel.org
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH v2 2/3] scsi: ufs: ufshcd-pltfrm: constify pointed data
-Date:   Fri,  6 May 2022 12:31:14 +0200
-Message-Id: <20220506103115.307410-3-krzysztof.kozlowski@linaro.org>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220506103115.307410-1-krzysztof.kozlowski@linaro.org>
-References: <20220506103115.307410-1-krzysztof.kozlowski@linaro.org>
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Hannes Reinecke <hare@suse.de>,
+        Javed Hasan <jhasan@marvell.com>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Davidlohr Bueso <dbueso@suse.de>
+Subject: [PATCH 0/4] scsi: PREEMPT_RT related fixes.
+Date:   Fri,  6 May 2022 12:57:54 +0200
+Message-Id: <20220506105758.283887-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Constify pointers to data which is not modified for code safety.
+Hi,
 
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
----
- drivers/scsi/ufs/ufshcd-pltfrm.c | 10 +++++-----
- drivers/scsi/ufs/ufshcd-pltfrm.h |  4 ++--
- 2 files changed, 7 insertions(+), 7 deletions(-)
+this is what I have in PREEMPT_RT queue for the SCSI stack.
+Two of these patches have been posted earlier by Davidlohr in another
+series. I then added the statistics change and then I stumbled upon
+another get_cpu() usage in bnx2fc so there are four patches now.
+Due lack of hardware, the series has been compile tested only.
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index f5313f407617..3ab555f6e66e 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -26,7 +26,7 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	int i;
- 	struct device *dev = hba->dev;
- 	struct device_node *np = dev->of_node;
--	char *name;
-+	const char *name;
- 	u32 *clkfreq = NULL;
- 	struct ufs_clk_info *clki;
- 	int len = 0;
-@@ -79,8 +79,8 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	}
- 
- 	for (i = 0; i < sz; i += 2) {
--		ret = of_property_read_string_index(np,
--				"clock-names", i/2, (const char **)&name);
-+		ret = of_property_read_string_index(np,	"clock-names", i/2,
-+						    &name);
- 		if (ret)
- 			goto out;
- 
-@@ -208,8 +208,8 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
-  *
-  * Returns 0 on success, non-zero value on failure
-  */
--int ufshcd_get_pwr_dev_param(struct ufs_dev_params *pltfrm_param,
--			     struct ufs_pa_layer_attr *dev_max,
-+int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *pltfrm_param,
-+			     const struct ufs_pa_layer_attr *dev_max,
- 			     struct ufs_pa_layer_attr *agreed_pwr)
- {
- 	int min_pltfrm_gear;
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.h b/drivers/scsi/ufs/ufshcd-pltfrm.h
-index c33e28ac6ef6..0f0c2942a5be 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.h
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.h
-@@ -25,8 +25,8 @@ struct ufs_dev_params {
- 	u32 desired_working_mode;
- };
- 
--int ufshcd_get_pwr_dev_param(struct ufs_dev_params *dev_param,
--			     struct ufs_pa_layer_attr *dev_max,
-+int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *dev_param,
-+			     const struct ufs_pa_layer_attr *dev_max,
- 			     struct ufs_pa_layer_attr *agreed_pwr);
- void ufshcd_init_pwr_dev_param(struct ufs_dev_params *dev_param);
- int ufshcd_pltfrm_init(struct platform_device *pdev,
--- 
-2.32.0
+Sebastian
+
 
