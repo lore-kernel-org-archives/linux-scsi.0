@@ -2,89 +2,227 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1FC8C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 03:56:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D2E0C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 05:04:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1388852AbiEFD7l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 May 2022 23:59:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56160 "EHLO
+        id S1389052AbiEFFHw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 May 2022 01:07:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1388856AbiEFD7W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2022 23:59:22 -0400
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26A6A14099
-        for <linux-scsi@vger.kernel.org>; Thu,  5 May 2022 20:55:38 -0700 (PDT)
-Received: by mail-pj1-x1035.google.com with SMTP id qe3-20020a17090b4f8300b001dc24e4da73so6821361pjb.1
-        for <linux-scsi@vger.kernel.org>; Thu, 05 May 2022 20:55:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=RRiklrwfeFpT22jLAKe6QaKiYruMKel+3owLkp87EMk=;
-        b=TgI7qt1n13v1vBypLBYOsf4ctyZgQpad9cda9B7faIcNhYg+6tieeklM2EkF08+bNB
-         G4G/6UzGWAxMGmgjpgnqkx0nEsH6hzZZb7+bmnOvMtdY7Lq3q6A3l9BIwzMpUV0k/EEe
-         nc7GqCK4K9Re/CeWqIunTJshBul7wukwPbrHVQ2g3EqZ0cJRp2AliizPUQ2TTH9kbrRA
-         4RwIS0UfxQp0lRIz12xXrv7BgnsVOK6dh3g/h29J3mOCCM2Z0Kn+ugVY86U8XIqqzrUV
-         M2GKz/16nyatknVMoJaO3JQu4h878SfkaEaPK/7xC7jdcuIfC6KZwfYDnLawrCr+W1Dw
-         TQYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=RRiklrwfeFpT22jLAKe6QaKiYruMKel+3owLkp87EMk=;
-        b=znFeMaKTAfO2AqYEepVBWJHtxhGr1XaT00GIUY/e0zbzxcE5g8U28ZzU8PnmOVNRWR
-         JAwL90u9dpPrWWQV33E4S2Irw7zMVE/FKAo1tBwJvVo2yGx0GT+RworktSVvlN0Rx+Fw
-         9AMRatLAcxrsD5hrxhve5s48RYjDxTVHFsnKVjw0Z48gNQrgB9KpQZg0h09s41K/kbH9
-         mS2PoIrfqSQwprZmk9YbdpYe1PWuypqhi4pkrtqS3y0B98QYsyv5pOAMut/emHK3hHHc
-         cRMUXinQglGuinZXOYAshq9MdHMg8qs3yw659UUnLAslhn5OxTIQgsQIVh47Q0CTbe02
-         3KQg==
-X-Gm-Message-State: AOAM530sCQyGJHGSaU7Zt84MeTfCmdIuATl82PdA7+IzjIaHfiCcVH/m
-        Mx2+VDNOENzFp9JOw5MVbn3dk8t52aw=
-X-Google-Smtp-Source: ABdhPJzosv5+N9aOCeMcukA6e15dpuKqwQoW9CSBKfwh+0ZWTXvPEw9CMUiMtwBZx0Se8YWv69gSOQ==
-X-Received: by 2002:a17:90b:4d0c:b0:1dc:d293:148c with SMTP id mw12-20020a17090b4d0c00b001dcd293148cmr2841823pjb.75.1651809337512;
-        Thu, 05 May 2022 20:55:37 -0700 (PDT)
-Received: from mail-ash-it-01.broadcom.com (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
-        by smtp.gmail.com with ESMTPSA id ck3-20020a17090afe0300b001cd4989feebsm6065187pjb.55.2022.05.05.20.55.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 May 2022 20:55:37 -0700 (PDT)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 12/12] lpfc: Update lpfc version to 14.2.0.3
-Date:   Thu,  5 May 2022 20:55:19 -0700
-Message-Id: <20220506035519.50908-13-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20220506035519.50908-1-jsmart2021@gmail.com>
-References: <20220506035519.50908-1-jsmart2021@gmail.com>
+        with ESMTP id S237609AbiEFFHu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 01:07:50 -0400
+Received: from m12-13.163.com (m12-13.163.com [220.181.12.13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DFF7755488;
+        Thu,  5 May 2022 22:04:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=kwrkS
+        yRsaaiIFWrW7YZm2UrkeSJmomCa4/Kxdbxbyiw=; b=ONspd4qIXmW6V4d+1OMMb
+        6vS4HvdMVbYN2c8XrxUoThFprjnJYB00mmBTz7aIxkx/pDHV9FpV1Tc3i5Arra4/
+        YjOzqoo3Za+II1DevMBNWk8AWFJh3qq/Glre9ahoThdnjw03jdK7jh7hjfmoHt+3
+        x1JZkQr4IbZUWwkE0Cb148=
+Received: from localhost.localdomain (unknown [120.204.77.149])
+        by smtp9 (Coremail) with SMTP id DcCowAD31eJMq3Rijn0EBQ--.64477S4;
+        Fri, 06 May 2022 13:00:36 +0800 (CST)
+From:   lizhe <sensor1010@163.com>
+To:     lee.jones@linaro.org, fthain@linux-m68k.org,
+        akrowiak@linux.ibm.com, pasic@linux.ibm.com, jjherne@linux.ibm.com,
+        freude@linux.ibm.com, hca@linux.ibm.com, gor@linux.ibm.com,
+        agordeev@linux.ibm.com, borntraeger@linux.ibm.com,
+        svens@linux.ibm.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, zbr@ioremap.net, perex@perex.cz,
+        tiwai@suse.com, bvanassche@acm.org, dan.j.williams@intel.com,
+        srinivas.kandagatla@linaro.org, wens@csie.org,
+        colin.king@intel.com, u.kleine-koenig@pengutronix.de, hare@suse.de,
+        sensor1010@163.com
+Cc:     linux-kernel@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, alsa-devel@alsa-project.org
+Subject: [PATCH] kernel/drivers: Remove redundant driver match function
+Date:   Thu,  5 May 2022 21:59:52 -0700
+Message-Id: <20220506045952.136290-1-sensor1010@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: DcCowAD31eJMq3Rijn0EBQ--.64477S4
+X-Coremail-Antispam: 1Uf129KBjvJXoWxKr13CF47Kr1rJF13uw13CFg_yoW7Ww4xpF
+        s5JFWakrWUtanrWws2yrWkAFyak3Z7G347Kr4xW3sY9FnrAry5Xa4rtFy8ArZ8XFW8G3ZF
+        van5try8CF4rJrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziAuc_UUUUU=
+X-Originating-IP: [120.204.77.149]
+X-CM-SenderInfo: 5vhq20jurqiii6rwjhhfrp/xtbBohT4q1aEENxxpgAAss
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update lpfc version to 14.2.0.3
+If there is no driver match function, the driver core assumes that each
+candidate pair (driver, device) matches, see driver_match_device().
 
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: lizhe <sensor1010@163.com>
 ---
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/mfd/mcp-core.c             |  6 ------
+ drivers/nubus/bus.c                |  6 ------
+ drivers/s390/crypto/vfio_ap_drv.c  |  6 ------
+ drivers/scsi/scsi_debug.c          |  7 -------
+ drivers/target/loopback/tcm_loop.c |  7 -------
+ drivers/w1/w1.c                    |  6 ------
+ sound/ac97_bus.c                   | 11 -----------
+ 7 files changed, 49 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index a615011c282d..4fab79ed58ed 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+diff --git a/drivers/mfd/mcp-core.c b/drivers/mfd/mcp-core.c
+index 2fa592c37c6f..281a9369f2b3 100644
+--- a/drivers/mfd/mcp-core.c
++++ b/drivers/mfd/mcp-core.c
+@@ -20,11 +20,6 @@
+ #define to_mcp(d)		container_of(d, struct mcp, attached_device)
+ #define to_mcp_driver(d)	container_of(d, struct mcp_driver, drv)
  
--#define LPFC_DRIVER_VERSION "14.2.0.2"
-+#define LPFC_DRIVER_VERSION "14.2.0.3"
- #define LPFC_DRIVER_NAME		"lpfc"
+-static int mcp_bus_match(struct device *dev, struct device_driver *drv)
+-{
+-	return 1;
+-}
+-
+ static int mcp_bus_probe(struct device *dev)
+ {
+ 	struct mcp *mcp = to_mcp(dev);
+@@ -43,7 +38,6 @@ static void mcp_bus_remove(struct device *dev)
  
- /* Used for SLI 2/3 */
+ static struct bus_type mcp_bus_type = {
+ 	.name		= "mcp",
+-	.match		= mcp_bus_match,
+ 	.probe		= mcp_bus_probe,
+ 	.remove		= mcp_bus_remove,
+ };
+diff --git a/drivers/nubus/bus.c b/drivers/nubus/bus.c
+index 17fad660032c..72921e4f35f6 100644
+--- a/drivers/nubus/bus.c
++++ b/drivers/nubus/bus.c
+@@ -14,11 +14,6 @@
+ #define to_nubus_board(d)       container_of(d, struct nubus_board, dev)
+ #define to_nubus_driver(d)      container_of(d, struct nubus_driver, driver)
+ 
+-static int nubus_bus_match(struct device *dev, struct device_driver *driver)
+-{
+-	return 1;
+-}
+-
+ static int nubus_device_probe(struct device *dev)
+ {
+ 	struct nubus_driver *ndrv = to_nubus_driver(dev->driver);
+@@ -39,7 +34,6 @@ static void nubus_device_remove(struct device *dev)
+ 
+ struct bus_type nubus_bus_type = {
+ 	.name		= "nubus",
+-	.match		= nubus_bus_match,
+ 	.probe		= nubus_device_probe,
+ 	.remove		= nubus_device_remove,
+ };
+diff --git a/drivers/s390/crypto/vfio_ap_drv.c b/drivers/s390/crypto/vfio_ap_drv.c
+index 29ebd54f8919..0a662c451f2a 100644
+--- a/drivers/s390/crypto/vfio_ap_drv.c
++++ b/drivers/s390/crypto/vfio_ap_drv.c
+@@ -172,14 +172,8 @@ static void vfio_ap_matrix_dev_release(struct device *dev)
+ 	kfree(matrix_dev);
+ }
+ 
+-static int matrix_bus_match(struct device *dev, struct device_driver *drv)
+-{
+-	return 1;
+-}
+-
+ static struct bus_type matrix_bus = {
+ 	.name = "matrix",
+-	.match = &matrix_bus_match,
+ };
+ 
+ static struct device_driver matrix_driver = {
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 592a290e6cfa..8107489b36e8 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -7844,15 +7844,8 @@ static void sdebug_driver_remove(struct device *dev)
+ 	scsi_host_put(sdbg_host->shost);
+ }
+ 
+-static int pseudo_lld_bus_match(struct device *dev,
+-				struct device_driver *dev_driver)
+-{
+-	return 1;
+-}
+-
+ static struct bus_type pseudo_lld_bus = {
+ 	.name = "pseudo",
+-	.match = pseudo_lld_bus_match,
+ 	.probe = sdebug_driver_probe,
+ 	.remove = sdebug_driver_remove,
+ 	.drv_groups = sdebug_drv_groups,
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 4407b56aa6d1..eeb63deff94f 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -83,15 +83,8 @@ static int tcm_loop_show_info(struct seq_file *m, struct Scsi_Host *host)
+ static int tcm_loop_driver_probe(struct device *);
+ static void tcm_loop_driver_remove(struct device *);
+ 
+-static int pseudo_lld_bus_match(struct device *dev,
+-				struct device_driver *dev_driver)
+-{
+-	return 1;
+-}
+-
+ static struct bus_type tcm_loop_lld_bus = {
+ 	.name			= "tcm_loop_bus",
+-	.match			= pseudo_lld_bus_match,
+ 	.probe			= tcm_loop_driver_probe,
+ 	.remove			= tcm_loop_driver_remove,
+ };
+diff --git a/drivers/w1/w1.c b/drivers/w1/w1.c
+index f2ae2e563dc5..a6ecfa1b3417 100644
+--- a/drivers/w1/w1.c
++++ b/drivers/w1/w1.c
+@@ -58,11 +58,6 @@ MODULE_PARM_DESC(slave_ttl,
+ DEFINE_MUTEX(w1_mlock);
+ LIST_HEAD(w1_masters);
+ 
+-static int w1_master_match(struct device *dev, struct device_driver *drv)
+-{
+-	return 1;
+-}
+-
+ static int w1_master_probe(struct device *dev)
+ {
+ 	return -ENODEV;
+@@ -174,7 +169,6 @@ static int w1_uevent(struct device *dev, struct kobj_uevent_env *env);
+ 
+ static struct bus_type w1_bus_type = {
+ 	.name = "w1",
+-	.match = w1_master_match,
+ 	.uevent = w1_uevent,
+ };
+ 
+diff --git a/sound/ac97_bus.c b/sound/ac97_bus.c
+index b4685c53ff11..c7aee8c42c55 100644
+--- a/sound/ac97_bus.c
++++ b/sound/ac97_bus.c
+@@ -75,19 +75,8 @@ int snd_ac97_reset(struct snd_ac97 *ac97, bool try_warm, unsigned int id,
+ }
+ EXPORT_SYMBOL_GPL(snd_ac97_reset);
+ 
+-/*
+- * Let drivers decide whether they want to support given codec from their
+- * probe method. Drivers have direct access to the struct snd_ac97
+- * structure and may  decide based on the id field amongst other things.
+- */
+-static int ac97_bus_match(struct device *dev, struct device_driver *drv)
+-{
+-	return 1;
+-}
+-
+ struct bus_type ac97_bus_type = {
+ 	.name		= "ac97",
+-	.match		= ac97_bus_match,
+ };
+ 
+ static int __init ac97_bus_init(void)
 -- 
-2.26.2
+2.25.1
 
