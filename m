@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7058AC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 10:31:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A03C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 10:31:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1391011AbiEFKfP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 May 2022 06:35:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42732 "EHLO
+        id S1390995AbiEFKfS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 May 2022 06:35:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1390995AbiEFKfI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 06:35:08 -0400
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4399963398
-        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 03:31:25 -0700 (PDT)
-Received: by mail-ej1-x631.google.com with SMTP id j6so13582627ejc.13
-        for <linux-scsi@vger.kernel.org>; Fri, 06 May 2022 03:31:25 -0700 (PDT)
+        with ESMTP id S1390994AbiEFKfH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 06:35:07 -0400
+Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3635262BFB
+        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 03:31:24 -0700 (PDT)
+Received: by mail-ej1-x629.google.com with SMTP id g6so13644001ejw.1
+        for <linux-scsi@vger.kernel.org>; Fri, 06 May 2022 03:31:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=hX+bUnGQklZfPo10HNtNpaHXzVfVIfhC6tt2tyy3JGo=;
-        b=Hxkl01nfUbxKKI00kRBh9Gcu7zvQXvR6UAMrlyarMSOLeJ5PAkxhOLGYOe8Y70lC3W
-         UKaSAOx5/jMVJYFFs1ye3BOyjzWNvRnRiw8S6NjAuxJS2HZOhH68BVixzH0oG4BmDPiG
-         CI5o/debIKh1HNhpjKC0yPb8QDVT4AWOyJHTNH28e8/ni0FMGkOv3j/vBTH+/Bq0kXjO
-         p79FMh4iBV9JeJzJq6JMfApnXEa2GeP5cLJ3dYJQ7upgvN/UZFnqwbJpIrOyZ2QU6Wwn
-         fA1qQtMugOnYuP1MvJIeP11qKKqlL8oRwsLetTqScpbl+n3kspG28HDd3Z19Fe4j1SLp
-         YCmw==
+        bh=G7AKvMZPXvXSnfImyNv30/Tu154Oa9ejf/GkvDjzFBY=;
+        b=Z8cFLDFsO5ZuGKiEQJA03dJNctu2elENQQ0uxCdgWJmVkg61HPj3j9GZ87Kz0PJTVp
+         HhFbD+MXuribyNGlSjqe4zeE0Ty9YxwOyMP2VeQuNR/TWNeVogE1eD2qK8NTkrJuSB+S
+         GQfnac9V/6qH12wFzEKptjotXX+cbzvmhc1hut6c/rihIRA0nV0yaXdj08N2fhqdkwF/
+         uCpgQkipkN6khlNu7K35YUhmeqVUH/58DsCmlGH3meVthU3rxOhbPVD7i4zaSMdLLhtB
+         a2osizx9oSJNsSftMpB6t3vLMGYmNZw/nCvC2Y0VXnf6fwToppdP9L/CrFbwJihkIi9r
+         Qcuw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=hX+bUnGQklZfPo10HNtNpaHXzVfVIfhC6tt2tyy3JGo=;
-        b=DCPNFc9MuRrF2xUNbli/N9PzuDVRmXtFz96jrO7AotTuzc8+GeFHeFDXe+xgEbgojf
-         Au8O2DOTEFKRMYPtlWz/nI6AbQJ+pXq8/jBHJhL94NcTtWb87XVZij5Cj2aW8lhOZEMN
-         YO3adhNbjenkQw8d66m1ed0lDlD7AJOZJ+iRfzvFRvuzKJ/OsWi4M9ZQcHiiA4A52AeB
-         cizVkH1CXs19x7aHZVKWnY+de0fJgfBxrj0QJd2q7tSQW08pwlRl222jG0qvcCfZBItL
-         Rn4Yh3EmPJU6C2uX0jp4QRuDz9CaJHj3/fgd/Am9ceW0meC+h8mYz9u2PIbp3/pEeOgH
-         5Klw==
-X-Gm-Message-State: AOAM530jRmGLIzcFNxSGZvRBv31bSDujlbiUvCi/ZngeneuQuHDW+pnR
-        3L/SefBVXcA+Hoju8zkXxeqXuA==
-X-Google-Smtp-Source: ABdhPJwH+hPF5K3N9aW6eY3Qw6APVauglrw/noPEyvnOPVy+FL0vUwY5aKJvpfWcuGyA9Z3sUntOuA==
-X-Received: by 2002:a17:907:6e8b:b0:6f4:7147:a6ac with SMTP id sh11-20020a1709076e8b00b006f47147a6acmr2380194ejc.187.1651833083764;
-        Fri, 06 May 2022 03:31:23 -0700 (PDT)
+        bh=G7AKvMZPXvXSnfImyNv30/Tu154Oa9ejf/GkvDjzFBY=;
+        b=wNz+KjIPQ1sy68mwy9X9lhG2GSshnb9hWSiFnsSCFds0/JxQxTdQVvlEL07yyjS2f3
+         2YZe1wCU3D4o1uzRRbSn2J9MF8FQ2I1IUQqosZNBzUorM22nC+3ytKk/cdHAfXOddn7/
+         AeYbzQP7SLGwsa5POVHHMj1l+JiE2Uw5QKitaWoRbwl8jVzKSl5ucht64tzjRpzmTTdA
+         QfkLkJUVEZ58nW9qhCudYF3+Sr3GIhACFCAeDcfCbXVKAIQJy8S0O8Tqs1PtPY1reQOO
+         K6TN9KIX1Z5Jp0eor+VKaLvDuj+/bQmtJl81A+87+6obkU+whGau+rfCEXbB5wWwLrOU
+         IYNA==
+X-Gm-Message-State: AOAM531JByXVtgbflhZF0n+QIcCUMDdOzbm5bPnfHOaOk07/54rtIz5w
+        SgNdNsL2vv67spkxYrl7mC9fww==
+X-Google-Smtp-Source: ABdhPJy+dR+cjNHSaFFy83lVt8fb779H9yBeKHxCkXUgxaa8JTcod6EQOvNGYenOtbBL5+BSuTUxbw==
+X-Received: by 2002:a17:906:9c83:b0:6df:839a:a6d0 with SMTP id fj3-20020a1709069c8300b006df839aa6d0mr2296006ejc.419.1651833082631;
+        Fri, 06 May 2022 03:31:22 -0700 (PDT)
 Received: from localhost.localdomain (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
-        by smtp.gmail.com with ESMTPSA id em10-20020a170907288a00b006f3ef214e6dsm1726957ejc.211.2022.05.06.03.31.22
+        by smtp.gmail.com with ESMTPSA id em10-20020a170907288a00b006f3ef214e6dsm1726957ejc.211.2022.05.06.03.31.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 May 2022 03:31:23 -0700 (PDT)
+        Fri, 06 May 2022 03:31:22 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -55,9 +55,9 @@ To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Doug Gilbert <dgilbert@interlog.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH v2 3/3] scsi: ufs: ufshcd: constify pointed data
-Date:   Fri,  6 May 2022 12:31:15 +0200
-Message-Id: <20220506103115.307410-4-krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v2 2/3] scsi: ufs: ufshcd-pltfrm: constify pointed data
+Date:   Fri,  6 May 2022 12:31:14 +0200
+Message-Id: <20220506103115.307410-3-krzysztof.kozlowski@linaro.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220506103115.307410-1-krzysztof.kozlowski@linaro.org>
 References: <20220506103115.307410-1-krzysztof.kozlowski@linaro.org>
@@ -67,235 +67,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Constify arrays and pointers to data which is not modified for code
-safety.
+Constify pointers to data which is not modified for code safety.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 ---
- drivers/scsi/ufs/ufshcd-priv.h |  6 ++---
- drivers/scsi/ufs/ufshcd.c      | 42 ++++++++++++++++++----------------
- drivers/scsi/ufs/ufshcd.h      |  6 ++---
- 3 files changed, 28 insertions(+), 26 deletions(-)
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 10 +++++-----
+ drivers/scsi/ufs/ufshcd-pltfrm.h |  4 ++--
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd-priv.h b/drivers/scsi/ufs/ufshcd-priv.h
-index 38bc77d3dbbd..3fa4163516fb 100644
---- a/drivers/scsi/ufs/ufshcd-priv.h
-+++ b/drivers/scsi/ufs/ufshcd-priv.h
-@@ -215,7 +215,7 @@ static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
- 		hba->vops->config_scaling_param(hba, p, data);
- }
- 
--extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
-+extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
- 
- /**
-  * ufshcd_scsi_to_upiu_lun - maps scsi LUN to UPIU LUN
-@@ -234,8 +234,8 @@ static inline u8 ufshcd_scsi_to_upiu_lun(unsigned int scsi_lun)
- 
- int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask);
- int ufshcd_write_ee_control(struct ufs_hba *hba);
--int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
--			     u16 set, u16 clr);
-+int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
-+			     const u16 *other_mask, u16 set, u16 clr);
- 
- static inline int ufshcd_update_ee_drv_mask(struct ufs_hba *hba,
- 					    u16 set, u16 clr)
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2b4390a1106e..ea43aa2d26e1 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -175,7 +175,7 @@ enum {
- #define ufshcd_clear_eh_in_progress(h) \
- 	((h)->eh_flags &= ~UFSHCD_EH_IN_PROGRESS)
- 
--struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
-+const struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
- 	[UFS_PM_LVL_0] = {UFS_ACTIVE_PWR_MODE, UIC_LINK_ACTIVE_STATE},
- 	[UFS_PM_LVL_1] = {UFS_ACTIVE_PWR_MODE, UIC_LINK_HIBERN8_STATE},
- 	[UFS_PM_LVL_2] = {UFS_SLEEP_PWR_MODE, UIC_LINK_ACTIVE_STATE},
-@@ -363,7 +363,7 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
- }
- 
- static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
--					 struct uic_command *ucmd,
-+					 const struct uic_command *ucmd,
- 					 enum ufs_trace_str_t str_t)
- {
- 	u32 cmd;
-@@ -443,11 +443,11 @@ static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
- }
- 
- static void ufshcd_print_evt(struct ufs_hba *hba, u32 id,
--			     char *err_name)
-+			     const char *err_name)
- {
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index f5313f407617..3ab555f6e66e 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -26,7 +26,7 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
  	int i;
- 	bool found = false;
--	struct ufs_event_hist *e;
-+	const struct ufs_event_hist *e;
+ 	struct device *dev = hba->dev;
+ 	struct device_node *np = dev->of_node;
+-	char *name;
++	const char *name;
+ 	u32 *clkfreq = NULL;
+ 	struct ufs_clk_info *clki;
+ 	int len = 0;
+@@ -79,8 +79,8 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ 	}
  
- 	if (id >= UFS_EVT_CNT)
- 		return;
-@@ -497,7 +497,7 @@ static void ufshcd_print_evt_hist(struct ufs_hba *hba)
- static
- void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
- {
--	struct ufshcd_lrb *lrbp;
-+	const struct ufshcd_lrb *lrbp;
- 	int prdt_length;
- 	int tag;
+ 	for (i = 0; i < sz; i += 2) {
+-		ret = of_property_read_string_index(np,
+-				"clock-names", i/2, (const char **)&name);
++		ret = of_property_read_string_index(np,	"clock-names", i/2,
++						    &name);
+ 		if (ret)
+ 			goto out;
  
-@@ -553,7 +553,7 @@ static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
- 
- static void ufshcd_print_host_state(struct ufs_hba *hba)
- {
--	struct scsi_device *sdev_ufs = hba->ufs_device_wlun;
-+	const struct scsi_device *sdev_ufs = hba->ufs_device_wlun;
- 
- 	dev_err(hba->dev, "UFS Host state=%d\n", hba->ufshcd_state);
- 	dev_err(hba->dev, "outstanding reqs=0x%lx tasks=0x%lx\n",
-@@ -1098,7 +1098,7 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
-  */
- static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
- {
--	struct scsi_device *sdev;
-+	const struct scsi_device *sdev;
- 	u32 pending = 0;
- 
- 	lockdep_assert_held(hba->host->host_lock);
-@@ -2069,14 +2069,15 @@ static inline int ufshcd_monitor_opcode2dir(u8 opcode)
- static inline bool ufshcd_should_inform_monitor(struct ufs_hba *hba,
- 						struct ufshcd_lrb *lrbp)
- {
--	struct ufs_hba_monitor *m = &hba->monitor;
-+	const struct ufs_hba_monitor *m = &hba->monitor;
- 
- 	return (m->enabled && lrbp && lrbp->cmd &&
- 		(!m->chunk_size || m->chunk_size == lrbp->cmd->sdb.length) &&
- 		ktime_before(hba->monitor.enabled_ts, lrbp->issue_time_stamp));
- }
- 
--static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+static void ufshcd_start_monitor(struct ufs_hba *hba,
-+				 const struct ufshcd_lrb *lrbp)
- {
- 	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
- 	unsigned long flags;
-@@ -2087,14 +2088,14 @@ static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- }
- 
--static void ufshcd_update_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+static void ufshcd_update_monitor(struct ufs_hba *hba, const struct ufshcd_lrb *lrbp)
- {
- 	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	if (dir >= 0 && hba->monitor.nr_queued[dir] > 0) {
--		struct request *req = scsi_cmd_to_rq(lrbp->cmd);
-+		const struct request *req = scsi_cmd_to_rq(lrbp->cmd);
- 		struct ufs_hba_monitor *m = &hba->monitor;
- 		ktime_t now, inc, lat;
- 
-@@ -4902,7 +4903,7 @@ static int ufshcd_get_lu_wp(struct ufs_hba *hba,
+@@ -208,8 +208,8 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
   *
+  * Returns 0 on success, non-zero value on failure
   */
- static inline void ufshcd_get_lu_power_on_wp_status(struct ufs_hba *hba,
--						    struct scsi_device *sdev)
-+						    const struct scsi_device *sdev)
+-int ufshcd_get_pwr_dev_param(struct ufs_dev_params *pltfrm_param,
+-			     struct ufs_pa_layer_attr *dev_max,
++int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *pltfrm_param,
++			     const struct ufs_pa_layer_attr *dev_max,
+ 			     struct ufs_pa_layer_attr *agreed_pwr)
  {
- 	if (hba->dev_info.f_power_on_wp_en &&
- 	    !hba->dev_info.is_lu_power_on_wp) {
-@@ -5421,8 +5422,8 @@ int ufshcd_write_ee_control(struct ufs_hba *hba)
- 	return err;
- }
- 
--int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
--			     u16 set, u16 clr)
-+int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
-+			     const u16 *other_mask, u16 set, u16 clr)
- {
- 	u16 new_mask, ee_ctrl_mask;
- 	int err = 0;
-@@ -7349,7 +7350,8 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
-  *
-  * Returns calculated max ICC level for specific regulator
-  */
--static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
-+static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan,
-+				    const char *buff)
- {
- 	int i;
- 	int curr_uA;
-@@ -7396,7 +7398,7 @@ static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
-  * Returns calculated ICC level
-  */
- static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
--							u8 *desc_buf, int len)
-+						const u8 *desc_buf, int len)
- {
- 	u32 icc_level = 0;
- 
-@@ -7546,7 +7548,7 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
- 	return ret;
- }
- 
--static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
-+static void ufshcd_wb_probe(struct ufs_hba *hba, const u8 *desc_buf)
- {
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	u8 lun;
-@@ -7617,7 +7619,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
- 	hba->caps &= ~UFSHCD_CAP_WB_EN;
- }
- 
--static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
-+static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
- {
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	u32 ext_ufs_feature;
-@@ -7851,7 +7853,7 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
- 	u32 granularity, peer_granularity;
- 	u32 pa_tactivate, peer_pa_tactivate;
- 	u32 pa_tactivate_us, peer_pa_tactivate_us;
--	u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
-+	const u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
- 
- 	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_GRANULARITY),
- 				  &granularity);
-@@ -7968,7 +7970,7 @@ struct ufs_ref_clk {
- 	enum ufs_ref_clk_freq val;
+ 	int min_pltfrm_gear;
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.h b/drivers/scsi/ufs/ufshcd-pltfrm.h
+index c33e28ac6ef6..0f0c2942a5be 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.h
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.h
+@@ -25,8 +25,8 @@ struct ufs_dev_params {
+ 	u32 desired_working_mode;
  };
  
--static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
-+static const struct ufs_ref_clk ufs_ref_clk_freqs[] = {
- 	{19200000, REF_CLK_FREQ_19_2_MHZ},
- 	{26000000, REF_CLK_FREQ_26_MHZ},
- 	{38400000, REF_CLK_FREQ_38_4_MHZ},
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 2b0f3441b813..0b8d0192f069 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1217,14 +1217,14 @@ static inline int ufshcd_vops_phy_initialization(struct ufs_hba *hba)
- 	return 0;
- }
- 
--extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
-+extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
- 
- int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
- 		     const char *prefix);
- 
- int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask);
- int ufshcd_write_ee_control(struct ufs_hba *hba);
--int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
--			     u16 set, u16 clr);
-+int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
-+			     const u16 *other_mask, u16 set, u16 clr);
- 
- #endif /* End of Header */
+-int ufshcd_get_pwr_dev_param(struct ufs_dev_params *dev_param,
+-			     struct ufs_pa_layer_attr *dev_max,
++int ufshcd_get_pwr_dev_param(const struct ufs_dev_params *dev_param,
++			     const struct ufs_pa_layer_attr *dev_max,
+ 			     struct ufs_pa_layer_attr *agreed_pwr);
+ void ufshcd_init_pwr_dev_param(struct ufs_dev_params *dev_param);
+ int ufshcd_pltfrm_init(struct platform_device *pdev,
 -- 
 2.32.0
 
