@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72D6FC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 03:55:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4384DC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 03:55:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1388855AbiEFD71 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 May 2022 23:59:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56160 "EHLO
+        id S1388866AbiEFD72 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 May 2022 23:59:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1388847AbiEFD7W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2022 23:59:22 -0400
-Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92AD8E086
-        for <linux-scsi@vger.kernel.org>; Thu,  5 May 2022 20:55:36 -0700 (PDT)
-Received: by mail-pg1-x52b.google.com with SMTP id 15so5152056pgf.4
-        for <linux-scsi@vger.kernel.org>; Thu, 05 May 2022 20:55:36 -0700 (PDT)
+        with ESMTP id S1388837AbiEFD7O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2022 23:59:14 -0400
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 963A57662
+        for <linux-scsi@vger.kernel.org>; Thu,  5 May 2022 20:55:31 -0700 (PDT)
+Received: by mail-pg1-x52f.google.com with SMTP id r192so971387pgr.6
+        for <linux-scsi@vger.kernel.org>; Thu, 05 May 2022 20:55:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=SlJIELBy4z+xeHf/ycXLYr/gClJrx5Yhe/cSztGWovI=;
-        b=U2gG1hzjnXr1tcj4X6q3kwzjQy/ENn7nZevEZ+9R7ajSNWZaacgJzyChhtzOFvWAv+
-         NZSyC/bogPPt21DyKlf3UFcywlxAmDI64r21nDZxTCXj8caUqM2KqeIYrSSJ2YISsjGc
-         cTbj1l2QDK/67SOXqUrf+eig9Cjb57YViACqIkVakzGr0bmHkTfqXxk1XfZ7Ek1zDSHu
-         S+w3FQ4cUBocVl3Zxh99MIre3wRrTFktM4d4d+EEDK6my7be8rEJ4qs3FRmIMS6VYfPo
-         MSwgWYCxP5CZFdT2FAQ7IiHQ/WseT876xqpepbYrrsZj1e5N/c97+tw92l29Sf6gnm7P
-         SJ1w==
+        bh=SLwWUvlai3KzAUVZn6rYkydiknSt0y7PlHGQ2nlMZV4=;
+        b=JKqioQyFdo5S2TlsQuyGXK+kMWELnCXzc3H6SeKtMQJsV1zxNGyI+gky05KdTqjjKb
+         fk1O96hvUrxPSgcue1U67IjLueO5lXdrAL3qQG2AFKJoy2raKeQ23DIq7RiMs+trZqZE
+         XlqtDp3qniuE2hzlGvgPsOM5BeXbkxFQkz12pZyChhrBNkTmC04cAgimycpoo4TJLEzR
+         KdAfl8Tc2vcK8hdFHezrXGhj3/MrXqD0pUs/OjHrS645aal+saH2epHZK5DPVYsZ2jfC
+         mulDybohr2qXotsu6qyod0AH2UavvQs4WZXjhjwtBZZz3S6K8O6HDLQj3Q+uc2AaqFRC
+         Xu+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=SlJIELBy4z+xeHf/ycXLYr/gClJrx5Yhe/cSztGWovI=;
-        b=U2TbKczlUJy2VAlLjAWnCXYx+njpAmbosFtAMTQML2TBCON5OFrI7vbz/DzmvIEwxK
-         ATmqduMEvGRrlYcxrTkdu6FY7q3gLdTLseLgbm9lZP9AyL4BlFNR8eG2jtEqcw6EZcqC
-         N9kbGNQ+EoX4deV/0fudx3qkJqxq9WY+w5qq8fXgthrOmfVFwIcq6kwsHs0LZ+ETifxX
-         3IH0G39Jxq4NV09AHEghIFJpUWC/mlnv+C/ErNJ/wgC0M0WNde0LCiNocyUcNBeT+kP8
-         Ju4RNJw9L1LrkwHORWSqp9AwOjEjB2hemy4yL3hTm8rqdY+JKAanGbDRKblkYUy/+Biy
-         p2BQ==
-X-Gm-Message-State: AOAM531FSR8U0Yjn8Om3TKpmhtan983o+cIyPlSOMWvZ/k3eRHetr1Oi
-        NQ3uH3sweUGPyzY3VVqnqubdV8U3MBE=
-X-Google-Smtp-Source: ABdhPJzmnhVyp3egkTrU8QkVk0tLf+c2QZIjNLK2OPF2DX235miV9ebaE0wp0RVW27A+e4aj90EiUA==
-X-Received: by 2002:a63:680a:0:b0:3c2:7c45:c0ab with SMTP id d10-20020a63680a000000b003c27c45c0abmr1190955pgc.63.1651809335894;
-        Thu, 05 May 2022 20:55:35 -0700 (PDT)
+        bh=SLwWUvlai3KzAUVZn6rYkydiknSt0y7PlHGQ2nlMZV4=;
+        b=4W2LOh6gW8jIPriiSzbn8egZNurzJ2gvtGwuFdm+NYGW5LBm1bKO3nzLbU5E4h9DZR
+         IniW53uLGILicr9eVVdtFfabtUGipb17nqrYeBChfqMlEu9GhIbifi7pCfJGNQyWYDXN
+         fMeu++PFbZxDtbj4S6DqkO8EZRyt9s9QvO/hPxPdKzjWp+sRSZHKAEUG9j9H75CT4ffz
+         9eHy51uaLjm8O/QaR98g4jlGgwceeccZC2ViLy6sjtg+n0DzfuDKNUgQQku6odLMe68d
+         Wpd3mOw16mY/DyqLMTmx9cDipNRIyktowPyQXSXD0GFZZmTAWaTUl/h1EhGmz6/6VvtH
+         cm5g==
+X-Gm-Message-State: AOAM533csddpcffVXvBA9d0qHlkrM18ushKghs1Eadzjsr6+7wZ74Sh2
+        rub2YK9UyW7VsbKJ2ZsczAEQu4q6Cwo=
+X-Google-Smtp-Source: ABdhPJwnQGkVjOagTbmZKA8sKGeZLWEsYIRtb2Ee+PYeHXcXTCWh8oQd8/ZPyAUo2a/5wi9nZskSxA==
+X-Received: by 2002:a05:6a00:140f:b0:4e0:6995:9c48 with SMTP id l15-20020a056a00140f00b004e069959c48mr1690459pfu.59.1651809330862;
+        Thu, 05 May 2022 20:55:30 -0700 (PDT)
 Received: from mail-ash-it-01.broadcom.com (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
-        by smtp.gmail.com with ESMTPSA id ck3-20020a17090afe0300b001cd4989feebsm6065187pjb.55.2022.05.05.20.55.35
+        by smtp.gmail.com with ESMTPSA id ck3-20020a17090afe0300b001cd4989feebsm6065187pjb.55.2022.05.05.20.55.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 May 2022 20:55:35 -0700 (PDT)
+        Thu, 05 May 2022 20:55:30 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 10/12] lpfc: Alter FPIN stat accounting logic
-Date:   Thu,  5 May 2022 20:55:17 -0700
-Message-Id: <20220506035519.50908-11-jsmart2021@gmail.com>
+Subject: [PATCH 04/12] lpfc: Inhibit aborts if external loopback plug is inserted
+Date:   Thu,  5 May 2022 20:55:11 -0700
+Message-Id: <20220506035519.50908-5-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20220506035519.50908-1-jsmart2021@gmail.com>
 References: <20220506035519.50908-1-jsmart2021@gmail.com>
@@ -63,165 +63,131 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When configuring CMF management based on signals instead of FPINs, FPIN
-alarm and warning statistics are not tracked.
+After running a short external loopback test, when the external loopback
+is removed and a normal cable inserted that is directly connected to a
+target device, the system oops in the llpfc_set_rrq_active routine.
 
-Change the behavior so that FPIN alarms and warnings are always tracked
-regardless of the configured mode.
+When the loopback was inserted an FLOGI was transmit. As we're looped
+back, we receive the FLOGI request. The FLOGI is ABTS'd as we recognize
+the same wppn thus understand it's a loopback. However, as the ABTS sends
+address information the port is not set to (fffffe), the ABTS is dropped
+on the wire. A short 1 frame loopback test is run and completes before
+the ABTS times out. The looback is unplugged and the new cable plugged
+in, and the an FLOGI to the new device occurs and completes. Due to a
+mixup in ref counting the completion of the new FLOGI releases the
+fabric ndlp. Then the original ABTS completes and references the
+released ndlp generating the oops.
 
-Similar changes are made in the CMF signal stat accounting logic.  Upon
-receipt of a signal, only track signaled alarms and warnings. FPIN
-stats should not be incremented upon receipt of a signal.
+Correct by no-op'ing the ABTS when in loopback mode (it will be dropped
+anyway). Added a flag to track the mode to recognize when it should be
+no-op'd.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c  | 49 +++++++++++------------------------
- drivers/scsi/lpfc/lpfc_init.c | 22 ++--------------
- 2 files changed, 17 insertions(+), 54 deletions(-)
+ drivers/scsi/lpfc/lpfc.h         |  1 +
+ drivers/scsi/lpfc/lpfc_els.c     | 12 ++++++++++++
+ drivers/scsi/lpfc/lpfc_hbadisc.c |  3 +++
+ drivers/scsi/lpfc/lpfc_sli.c     |  8 +++++---
+ 4 files changed, 21 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 346661dc5bf2..405c8a8dd795 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -1025,6 +1025,7 @@ struct lpfc_hba {
+ #define LS_MDS_LINK_DOWN      0x8	/* MDS Diagnostics Link Down */
+ #define LS_MDS_LOOPBACK       0x10	/* MDS Diagnostics Link Up (Loopback) */
+ #define LS_CT_VEN_RPA         0x20	/* Vendor RPA sent to switch */
++#define LS_EXTERNAL_LOOPBACK  0x40	/* External loopback plug inserted */
+ 
+ 	uint32_t hba_flag;	/* hba generic flags */
+ #define HBA_ERATT_HANDLED	0x1 /* This flag is set when eratt handled */
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 33fac4401e8f..51c505d15410 100644
+index ace812ce857d..583a287b2d0c 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -3854,9 +3854,6 @@ lpfc_least_capable_settings(struct lpfc_hba *phba,
- {
- 	u32 rsp_sig_cap = 0, drv_sig_cap = 0;
- 	u32 rsp_sig_freq_cyc = 0, rsp_sig_freq_scale = 0;
--	struct lpfc_cgn_info *cp;
--	u32 crc;
--	u16 sig_freq;
+@@ -1373,6 +1373,9 @@ lpfc_issue_els_flogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
  
- 	/* Get rsp signal and frequency capabilities.  */
- 	rsp_sig_cap = be32_to_cpu(pcgd->xmt_signal_capability);
-@@ -3912,25 +3909,7 @@ lpfc_least_capable_settings(struct lpfc_hba *phba,
+ 	phba->hba_flag |= (HBA_FLOGI_ISSUED | HBA_FLOGI_OUTSTANDING);
+ 
++	/* Clear external loopback plug detected flag */
++	phba->link_flag &= ~LS_EXTERNAL_LOOPBACK;
++
+ 	/* Check for a deferred FLOGI ACC condition */
+ 	if (phba->defer_flogi_acc_flag) {
+ 		/* lookup ndlp for received FLOGI */
+@@ -8128,6 +8131,9 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+ 	uint32_t fc_flag = 0;
+ 	uint32_t port_state = 0;
+ 
++	/* Clear external loopback plug detected flag */
++	phba->link_flag &= ~LS_EXTERNAL_LOOPBACK;
++
+ 	cmd = *lp++;
+ 	sp = (struct serv_parm *) lp;
+ 
+@@ -8179,6 +8185,12 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+ 			return 1;
  		}
- 	}
  
--	if (!phba->cgn_i)
--		return;
--
--	/* Update signal frequency in congestion info buffer */
--	cp = (struct lpfc_cgn_info *)phba->cgn_i->virt;
--
--	/* Frequency (in ms) Signal Warning/Signal Congestion Notifications
--	 * are received by the HBA
--	 */
--	sig_freq = phba->cgn_sig_freq;
--
--	if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ONLY)
--		cp->cgn_warn_freq = cpu_to_le16(sig_freq);
--	if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM) {
--		cp->cgn_alarm_freq = cpu_to_le16(sig_freq);
--		cp->cgn_warn_freq = cpu_to_le16(sig_freq);
--	}
--	crc = lpfc_cgn_calc_crc32(cp, LPFC_CGN_INFO_SZ, LPFC_CGN_CRC32_SEED);
--	cp->cgn_info_crc = cpu_to_le32(crc);
-+	/* We are NOT recording signal frequency in congestion info buffer */
- 	return;
++		/* External loopback plug insertion detected */
++		phba->link_flag |= LS_EXTERNAL_LOOPBACK;
++
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS | LOG_LIBDFC,
++				 "1119 External Loopback plug detected\n");
++
+ 		/* abort the flogi coming back to ourselves
+ 		 * due to external loopback on the port.
+ 		 */
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index e4805101cd5c..a833a493a3ee 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -1229,6 +1229,9 @@ lpfc_linkdown(struct lpfc_hba *phba)
  
- out_no_support:
-@@ -9919,11 +9898,14 @@ lpfc_els_rcv_fpin_cgn(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
- 			/* Take action here for an Alarm event */
- 			if (phba->cmf_active_mode != LPFC_CFG_OFF) {
- 				if (phba->cgn_reg_fpin & LPFC_CGN_FPIN_ALARM) {
--					/* Track of alarm cnt for cgn_info */
--					atomic_inc(&phba->cgn_fabric_alarm_cnt);
- 					/* Track of alarm cnt for SYNC_WQE */
- 					atomic_inc(&phba->cgn_sync_alarm_cnt);
- 				}
-+				/* Track alarm cnt for cgn_info regardless
-+				 * of whether CMF is configured for Signals
-+				 * or FPINs.
-+				 */
-+				atomic_inc(&phba->cgn_fabric_alarm_cnt);
- 				goto cleanup;
- 			}
- 			break;
-@@ -9931,11 +9913,14 @@ lpfc_els_rcv_fpin_cgn(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
- 			/* Take action here for a Warning event */
- 			if (phba->cmf_active_mode != LPFC_CFG_OFF) {
- 				if (phba->cgn_reg_fpin & LPFC_CGN_FPIN_WARN) {
--					/* Track of warning cnt for cgn_info */
--					atomic_inc(&phba->cgn_fabric_warn_cnt);
- 					/* Track of warning cnt for SYNC_WQE */
- 					atomic_inc(&phba->cgn_sync_warn_cnt);
- 				}
-+				/* Track warning cnt and freq for cgn_info
-+				 * regardless of whether CMF is configured for
-+				 * Signals or FPINs.
-+				 */
-+				atomic_inc(&phba->cgn_fabric_warn_cnt);
- cleanup:
- 				/* Save frequency in ms */
- 				phba->cgn_fpin_frequency =
-@@ -9944,14 +9929,10 @@ lpfc_els_rcv_fpin_cgn(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
- 				if (phba->cgn_i) {
- 					cp = (struct lpfc_cgn_info *)
- 						phba->cgn_i->virt;
--					if (phba->cgn_reg_fpin &
--						LPFC_CGN_FPIN_ALARM)
--						cp->cgn_alarm_freq =
--							cpu_to_le16(value);
--					if (phba->cgn_reg_fpin &
--						LPFC_CGN_FPIN_WARN)
--						cp->cgn_warn_freq =
--							cpu_to_le16(value);
-+					cp->cgn_alarm_freq =
-+						cpu_to_le16(value);
-+					cp->cgn_warn_freq =
-+						cpu_to_le16(value);
- 					crc = lpfc_cgn_calc_crc32
- 						(cp,
- 						LPFC_CGN_INFO_SZ,
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 0dedb7cf621b..2bffaa681fcc 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -5864,21 +5864,8 @@ lpfc_cgn_save_evt_cnt(struct lpfc_hba *phba)
+ 	phba->defer_flogi_acc_flag = false;
  
- 	/* Use the frequency found in the last rcv'ed FPIN */
- 	value = phba->cgn_fpin_frequency;
--	if (phba->cgn_reg_fpin & LPFC_CGN_FPIN_WARN)
--		cp->cgn_warn_freq = cpu_to_le16(value);
--	if (phba->cgn_reg_fpin & LPFC_CGN_FPIN_ALARM)
--		cp->cgn_alarm_freq = cpu_to_le16(value);
--
--	/* Frequency (in ms) Signal Warning/Signal Congestion Notifications
--	 * are received by the HBA
--	 */
--	value = phba->cgn_sig_freq;
--
--	if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ONLY ||
--	    phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM)
--		cp->cgn_warn_freq = cpu_to_le16(value);
--	if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM)
--		cp->cgn_alarm_freq = cpu_to_le16(value);
-+	cp->cgn_warn_freq = cpu_to_le16(value);
-+	cp->cgn_alarm_freq = cpu_to_le16(value);
++	/* Clear external loopback plug detected flag */
++	phba->link_flag &= ~LS_EXTERNAL_LOOPBACK;
++
+ 	spin_lock_irq(&phba->hbalock);
+ 	phba->fcf.fcf_flag &= ~(FCF_AVAILABLE | FCF_SCAN_DONE);
+ 	spin_unlock_irq(&phba->hbalock);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index fe4eb36426df..b509b3147759 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -12201,7 +12201,8 @@ lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
  
- 	lvalue = lpfc_cgn_calc_crc32(cp, LPFC_CGN_INFO_SZ,
- 				     LPFC_CGN_CRC32_SEED);
-@@ -6585,9 +6572,6 @@ lpfc_sli4_async_sli_evt(struct lpfc_hba *phba, struct lpfc_acqe_sli *acqe_sli)
- 		/* Alarm overrides warning, so check that first */
- 		if (cgn_signal->alarm_cnt) {
- 			if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM) {
--				/* Keep track of alarm cnt for cgn_info */
--				atomic_add(cgn_signal->alarm_cnt,
--					   &phba->cgn_fabric_alarm_cnt);
- 				/* Keep track of alarm cnt for CMF_SYNC_WQE */
- 				atomic_add(cgn_signal->alarm_cnt,
- 					   &phba->cgn_sync_alarm_cnt);
-@@ -6596,8 +6580,6 @@ lpfc_sli4_async_sli_evt(struct lpfc_hba *phba, struct lpfc_acqe_sli *acqe_sli)
- 			/* signal action needs to be taken */
- 			if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ONLY ||
- 			    phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM) {
--				/* Keep track of warning cnt for cgn_info */
--				atomic_add(cnt, &phba->cgn_fabric_warn_cnt);
- 				/* Keep track of warning cnt for CMF_SYNC_WQE */
- 				atomic_add(cnt, &phba->cgn_sync_warn_cnt);
- 			}
+ 	if (phba->link_state < LPFC_LINK_UP ||
+ 	    (phba->sli_rev == LPFC_SLI_REV4 &&
+-	     phba->sli4_hba.link_state.status == LPFC_FC_LA_TYPE_LINK_DOWN))
++	     phba->sli4_hba.link_state.status == LPFC_FC_LA_TYPE_LINK_DOWN) ||
++	    (phba->link_flag & LS_EXTERNAL_LOOPBACK))
+ 		ia = true;
+ 	else
+ 		ia = false;
+@@ -12660,7 +12661,8 @@ lpfc_sli_abort_taskmgmt(struct lpfc_vport *vport, struct lpfc_sli_ring *pring,
+ 		ndlp = lpfc_cmd->rdata->pnode;
+ 
+ 		if (lpfc_is_link_up(phba) &&
+-		    (ndlp && ndlp->nlp_state == NLP_STE_MAPPED_NODE))
++		    (ndlp && ndlp->nlp_state == NLP_STE_MAPPED_NODE) &&
++		    !(phba->link_flag & LS_EXTERNAL_LOOPBACK))
+ 			ia = false;
+ 		else
+ 			ia = true;
+@@ -21112,7 +21114,7 @@ lpfc_sli4_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	abtswqe = &abtsiocb->wqe;
+ 	memset(abtswqe, 0, sizeof(*abtswqe));
+ 
+-	if (!lpfc_is_link_up(phba))
++	if (!lpfc_is_link_up(phba) || (phba->link_flag & LS_EXTERNAL_LOOPBACK))
+ 		bf_set(abort_cmd_ia, &abtswqe->abort_cmd, 1);
+ 	bf_set(abort_cmd_criteria, &abtswqe->abort_cmd, T_XRI_TAG);
+ 	abtswqe->abort_cmd.rsrvd5 = 0;
 -- 
 2.26.2
 
