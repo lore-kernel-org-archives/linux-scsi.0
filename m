@@ -2,252 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8539AC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 May 2022 22:45:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0895EC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 May 2022 04:58:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1444390AbiEFWtm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 May 2022 18:49:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55998 "EHLO
+        id S1445508AbiEGFCk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 7 May 2022 01:02:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1444535AbiEFWtj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2022 18:49:39 -0400
-X-Greylist: delayed 609 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 06 May 2022 15:45:54 PDT
-Received: from wnew3-smtp.messagingengine.com (wnew3-smtp.messagingengine.com [64.147.123.17])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC4F5289AB;
-        Fri,  6 May 2022 15:45:54 -0700 (PDT)
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailnew.west.internal (Postfix) with ESMTP id 2BEDB2B01226;
-        Fri,  6 May 2022 18:35:40 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute4.internal (MEProxy); Fri, 06 May 2022 18:35:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:from:from
-        :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
-        :x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1651876539; x=
-        1651883739; bh=2PEZYJ6H5NjwlOLCSF/znMhdRyqXIjEm8KXJigOw1Vg=; b=R
-        hSA51niVEy5JxE00UFlfNdR1m/Gsve1HXbIJ8aDQJGiiDIk1ooDHCLTCwwpYrvlQ
-        YR1enxc9lWl3vJfhQqA1K4Q69QNVad/yA9aERbbeMMv3zopodqrUwIGQ4MVLvTPP
-        S3DQ/Xspu7Gd5d76rMpzSMJlZZRVG9srnSziZ6HQfkiVCo9cgHbhK6UDCVf1YQHk
-        NjGvL/5k8tq22gbV9F9JZPOsfXQsPTClBCp3lb8H2nm7WOcpbBnjT9SO+hQibBoW
-        5rj5nh7Hhh+8opf2Xw7dGZ54ujIRFcf9yGhLGAqlqWBuJqwmuWNNCDE8Xsd7SUIU
-        +I3tHsGhsfTPCSbp9zezg==
-X-ME-Sender: <xms:uaJ1Yos7Sa-TdFVIL7sWpOzedzlxyq2DMlWgYStdttrEfWJ3KBkw2g>
-    <xme:uaJ1YldYxyOSV54bosQ1N7kY8T6WyeiFEwEWKCF4kl6GNo0mkckoMVtTeYZVKy2jR
-    i-Ik7VsQzHrRoP6TQg>
-X-ME-Received: <xmr:uaJ1Yjwf0y7CxAbgwS6EjNm7kxQQ7k6dJXwmGC25H9vJCI22UA2ENQMtoqlN8B5G3zXMjLnD6SAVkOZs6SO88vQ8YvGcQKN-8LU>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrfeeggddtlecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecunecujfgurhepfffhvfevufgjkfhfgggtsehttdertd
-    dttddvnecuhfhrohhmpefhihhnnhcuvfhhrghinhcuoehfthhhrghinheslhhinhhugidq
-    mheikehkrdhorhhgqeenucggtffrrghtthgvrhhnpeelueehleehkefgueevtdevteejke
-    fhffekfeffffdtgfejveekgeefvdeuheeuleenucevlhhushhtvghrufhiiigvpedtnecu
-    rfgrrhgrmhepmhgrihhlfhhrohhmpehfthhhrghinheslhhinhhugidqmheikehkrdhorh
-    hg
-X-ME-Proxy: <xmx:uqJ1YrOgJ7Ze4Tm5sUhhN1T4TBROjdwpfjC0NrBBv86stC8ojlcEOg>
-    <xmx:uqJ1Yo8CiMR8elzazfYvgRY28ArT41bU7Z1aLYW88WZhNYRb4XETHA>
-    <xmx:uqJ1YjUt8L4tCAlZl4mc0t_BcLXtfQ_9QlDXab0dP4mdmLz3tBn5MA>
-    <xmx:u6J1YsTZjm5Ryket5HJxDr66Tv0cB-EH5IyGfEPbAY-9E02TbqMI2DWsmrw>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 6 May 2022 18:35:36 -0400 (EDT)
-Date:   Sat, 7 May 2022 08:35:43 +1000 (AEST)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     lizhe <sensor1010@163.com>
-cc:     lee.jones@linaro.org, akrowiak@linux.ibm.com, pasic@linux.ibm.com,
-        jjherne@linux.ibm.com, freude@linux.ibm.com, hca@linux.ibm.com,
-        gor@linux.ibm.com, agordeev@linux.ibm.com,
-        borntraeger@linux.ibm.com, svens@linux.ibm.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, zbr@ioremap.net, perex@perex.cz,
-        tiwai@suse.com, bvanassche@acm.org, dan.j.williams@intel.com,
-        srinivas.kandagatla@linaro.org, wens@csie.org,
-        colin.king@intel.com, u.kleine-koenig@pengutronix.de, hare@suse.de,
-        linux-kernel@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, alsa-devel@alsa-project.org
-Subject: Re: [PATCH] kernel/drivers: Remove redundant driver match function
-In-Reply-To: <20220506045952.136290-1-sensor1010@163.com>
-Message-ID: <fe632997-be40-55f2-96c0-e79a7aece197@linux-m68k.org>
-References: <20220506045952.136290-1-sensor1010@163.com>
+        with ESMTP id S239457AbiEGFCi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 May 2022 01:02:38 -0400
+Received: from beige.elm.relay.mailchannels.net (beige.elm.relay.mailchannels.net [23.83.212.16])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8146138BE8
+        for <linux-scsi@vger.kernel.org>; Fri,  6 May 2022 21:58:52 -0700 (PDT)
+X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
+Received: from relay.mailchannels.net (localhost [127.0.0.1])
+        by relay.mailchannels.net (Postfix) with ESMTP id 541778208CB;
+        Sat,  7 May 2022 04:58:51 +0000 (UTC)
+Received: from pdx1-sub0-mail-a291.dreamhost.com (unknown [127.0.0.6])
+        (Authenticated sender: dreamhost)
+        by relay.mailchannels.net (Postfix) with ESMTPA id 9D077821221;
+        Sat,  7 May 2022 04:58:50 +0000 (UTC)
+ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1651899530; a=rsa-sha256;
+        cv=none;
+        b=nn12QXUtKpRLdXxVhaCuQhbab2LkKAXm/TQbGuqjSQQo9p3QjamgIlXSiquToMFEUXzyU5
+        tstrrxnLhvT5NGL/ax3OyyNHPiIfkhlVSUJ7gbZUtqaFHz33Cb74MfOyDzM1N99NKZuFyv
+        +/NUaVgldDeoAXQQIoCP2OrtBfPgIb+r6gt0q+TSnCllNaWgaytPfpgxE8cwoyeReSlBpG
+        N4QPVYgAn/Gwmr99NgC26vOUiTyhigA5T1fZcDREhniQq/2Rtn8HiYorm6O1RijzRaseN7
+        tROwqPOFgazXqUjCDjk2oYHcHzqH2MomvAUI2IvCmy0T6ggtXervDGfyMP/KkQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mailchannels.net;
+        s=arc-2022; t=1651899530;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references:dkim-signature;
+        bh=iGQ0Wms1Ay5vKxGN666qhSAEcBfPIVf0MTu/0xBik88=;
+        b=FPb9UT1WWAg1JLaVloYrPto7QolP+lcojOVqepC96BH9PIFTb2BTg603m02KOefCR80+Ch
+        0Bf53Z7qrBLdsfp2Ol6L7OPaQKpqNqJPhqzrO3tWitV57kL4Hu3FcoZQxbJlmgeHVbtV48
+        yIrhE0jO3lk3ru43CIMEfsw1hPPkLMdcBjgjxY65sfhJWoWUwbIjukkqbq8PGkIfjVzozn
+        /KTvBG25G6jznf9iP5KZryDiyXhD7cGinkvMdoTc5FbBTx8oLUYxPvb8efmxr61V9d+x1l
+        6X4CGxAkdr15/PBq/y75zDg0lmn+KJ8sjUlu6RsknPiiaGIlklP7wVC2QtP0aw==
+ARC-Authentication-Results: i=1;
+        rspamd-c4dc5ff8f-p427r;
+        auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
+X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
+X-MC-Relay: Neutral
+X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
+X-MailChannels-Auth-Id: dreamhost
+X-Daffy-Hook: 275769ce35e00836_1651899531121_3867965153
+X-MC-Loop-Signature: 1651899531121:3074769767
+X-MC-Ingress-Time: 1651899531121
+Received: from pdx1-sub0-mail-a291.dreamhost.com (pop.dreamhost.com
+ [64.90.62.162])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
+        by 100.106.158.137 (trex/6.7.1);
+        Sat, 07 May 2022 04:58:51 +0000
+Received: from offworld (unknown [104.36.31.105])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dave@stgolabs.net)
+        by pdx1-sub0-mail-a291.dreamhost.com (Postfix) with ESMTPSA id 4KwFZd4l3nz3m;
+        Fri,  6 May 2022 21:58:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
+        s=dreamhost; t=1651899530;
+        bh=iGQ0Wms1Ay5vKxGN666qhSAEcBfPIVf0MTu/0xBik88=;
+        h=Date:From:To:Cc:Subject:Content-Type;
+        b=Vn/44srBjH81c0wcJ669eX0jPxJBc8SRChBr8/+WnPJYvpw6HcKMVKywyeoxdfjKr
+         XvOeyB85TM85cLXz1bKQ0nEd6FY3SlGhAbSgUhU9BlOQ1fFTuyuCroXOBf0+ma6+qz
+         XUuCk8pl/7FvO0vvUNHY62IhUmYU2ChiYyn8OGjFvRvcZW6oTf9SUuPNJ1SZYseLX7
+         ObBy1VjkNCKoeWMy4tnBlx0ReIvOu8LjwtqTr79ylw/UaKECHW1On7qZAbypdenTXK
+         bYQ/YbqFvfesn2xKR4aTUV5b0xcixAjG191t27U6QN5CxEMR43ftzCrR6TG92aeuAI
+         Kj++IP+6nimtA==
+Date:   Fri, 6 May 2022 21:46:50 -0700
+From:   Davidlohr Bueso <dave@stgolabs.net>
+To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc:     linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Hannes Reinecke <hare@suse.de>,
+        Javed Hasan <jhasan@marvell.com>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Davidlohr Bueso <dbueso@suse.de>
+Subject: Re: [PATCH 4/4] scsi: bnx2fc: Avoid using get_cpu() in
+ bnx2fc_cmd_alloc().
+Message-ID: <20220507044650.q3rcdi3mzlfvp37i@offworld>
+References: <20220506105758.283887-1-bigeasy@linutronix.de>
+ <20220506105758.283887-5-bigeasy@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20220506105758.283887-5-bigeasy@linutronix.de>
+User-Agent: NeoMutt/20220408
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Fri, 06 May 2022, Sebastian Andrzej Siewior wrote:
 
-On Thu, 5 May 2022, lizhe wrote:
+>Using get_cpu() leads to disabling preemption and in this context it is
+>not possible to acquire the following spinlock_t on PREEMPT_RT because
+>it becomes a sleeping lock.
+>
+>Commit
+>   0ea5c27583e1c ("[SCSI] bnx2fc: common free list for cleanup commands")
+>
+>says that it is using get_cpu() as a fix in case the CPU is preempted.
+>While this might be true, the important part is that it is now using the
+>same CPU for locking and unlocking while previously it always relied on
+>smp_processor_id().
+>The date structure itself is protected with a lock so it does not rely
+>on CPU-local access.
+>
+>Replace get_cpu() with raw_smp_processor_id() to obtain the current CPU
+>number which is used as an index for the per-CPU resource.
+>
+>Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-> If there is no driver match function, the driver core assumes that each
-> candidate pair (driver, device) matches, see driver_match_device().
-> 
-> Signed-off-by: lizhe <sensor1010@163.com>
-
-Acked-by: Finn Thain <fthain@linux-m68k.org>
-for the nubus changes.
-
-> ---
->  drivers/mfd/mcp-core.c             |  6 ------
->  drivers/nubus/bus.c                |  6 ------
->  drivers/s390/crypto/vfio_ap_drv.c  |  6 ------
->  drivers/scsi/scsi_debug.c          |  7 -------
->  drivers/target/loopback/tcm_loop.c |  7 -------
->  drivers/w1/w1.c                    |  6 ------
->  sound/ac97_bus.c                   | 11 -----------
->  7 files changed, 49 deletions(-)
-> 
-> diff --git a/drivers/mfd/mcp-core.c b/drivers/mfd/mcp-core.c
-> index 2fa592c37c6f..281a9369f2b3 100644
-> --- a/drivers/mfd/mcp-core.c
-> +++ b/drivers/mfd/mcp-core.c
-> @@ -20,11 +20,6 @@
->  #define to_mcp(d)		container_of(d, struct mcp, attached_device)
->  #define to_mcp_driver(d)	container_of(d, struct mcp_driver, drv)
->  
-> -static int mcp_bus_match(struct device *dev, struct device_driver *drv)
-> -{
-> -	return 1;
-> -}
-> -
->  static int mcp_bus_probe(struct device *dev)
->  {
->  	struct mcp *mcp = to_mcp(dev);
-> @@ -43,7 +38,6 @@ static void mcp_bus_remove(struct device *dev)
->  
->  static struct bus_type mcp_bus_type = {
->  	.name		= "mcp",
-> -	.match		= mcp_bus_match,
->  	.probe		= mcp_bus_probe,
->  	.remove		= mcp_bus_remove,
->  };
-> diff --git a/drivers/nubus/bus.c b/drivers/nubus/bus.c
-> index 17fad660032c..72921e4f35f6 100644
-> --- a/drivers/nubus/bus.c
-> +++ b/drivers/nubus/bus.c
-> @@ -14,11 +14,6 @@
->  #define to_nubus_board(d)       container_of(d, struct nubus_board, dev)
->  #define to_nubus_driver(d)      container_of(d, struct nubus_driver, driver)
->  
-> -static int nubus_bus_match(struct device *dev, struct device_driver *driver)
-> -{
-> -	return 1;
-> -}
-> -
->  static int nubus_device_probe(struct device *dev)
->  {
->  	struct nubus_driver *ndrv = to_nubus_driver(dev->driver);
-> @@ -39,7 +34,6 @@ static void nubus_device_remove(struct device *dev)
->  
->  struct bus_type nubus_bus_type = {
->  	.name		= "nubus",
-> -	.match		= nubus_bus_match,
->  	.probe		= nubus_device_probe,
->  	.remove		= nubus_device_remove,
->  };
-> diff --git a/drivers/s390/crypto/vfio_ap_drv.c b/drivers/s390/crypto/vfio_ap_drv.c
-> index 29ebd54f8919..0a662c451f2a 100644
-> --- a/drivers/s390/crypto/vfio_ap_drv.c
-> +++ b/drivers/s390/crypto/vfio_ap_drv.c
-> @@ -172,14 +172,8 @@ static void vfio_ap_matrix_dev_release(struct device *dev)
->  	kfree(matrix_dev);
->  }
->  
-> -static int matrix_bus_match(struct device *dev, struct device_driver *drv)
-> -{
-> -	return 1;
-> -}
-> -
->  static struct bus_type matrix_bus = {
->  	.name = "matrix",
-> -	.match = &matrix_bus_match,
->  };
->  
->  static struct device_driver matrix_driver = {
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 592a290e6cfa..8107489b36e8 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -7844,15 +7844,8 @@ static void sdebug_driver_remove(struct device *dev)
->  	scsi_host_put(sdbg_host->shost);
->  }
->  
-> -static int pseudo_lld_bus_match(struct device *dev,
-> -				struct device_driver *dev_driver)
-> -{
-> -	return 1;
-> -}
-> -
->  static struct bus_type pseudo_lld_bus = {
->  	.name = "pseudo",
-> -	.match = pseudo_lld_bus_match,
->  	.probe = sdebug_driver_probe,
->  	.remove = sdebug_driver_remove,
->  	.drv_groups = sdebug_drv_groups,
-> diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-> index 4407b56aa6d1..eeb63deff94f 100644
-> --- a/drivers/target/loopback/tcm_loop.c
-> +++ b/drivers/target/loopback/tcm_loop.c
-> @@ -83,15 +83,8 @@ static int tcm_loop_show_info(struct seq_file *m, struct Scsi_Host *host)
->  static int tcm_loop_driver_probe(struct device *);
->  static void tcm_loop_driver_remove(struct device *);
->  
-> -static int pseudo_lld_bus_match(struct device *dev,
-> -				struct device_driver *dev_driver)
-> -{
-> -	return 1;
-> -}
-> -
->  static struct bus_type tcm_loop_lld_bus = {
->  	.name			= "tcm_loop_bus",
-> -	.match			= pseudo_lld_bus_match,
->  	.probe			= tcm_loop_driver_probe,
->  	.remove			= tcm_loop_driver_remove,
->  };
-> diff --git a/drivers/w1/w1.c b/drivers/w1/w1.c
-> index f2ae2e563dc5..a6ecfa1b3417 100644
-> --- a/drivers/w1/w1.c
-> +++ b/drivers/w1/w1.c
-> @@ -58,11 +58,6 @@ MODULE_PARM_DESC(slave_ttl,
->  DEFINE_MUTEX(w1_mlock);
->  LIST_HEAD(w1_masters);
->  
-> -static int w1_master_match(struct device *dev, struct device_driver *drv)
-> -{
-> -	return 1;
-> -}
-> -
->  static int w1_master_probe(struct device *dev)
->  {
->  	return -ENODEV;
-> @@ -174,7 +169,6 @@ static int w1_uevent(struct device *dev, struct kobj_uevent_env *env);
->  
->  static struct bus_type w1_bus_type = {
->  	.name = "w1",
-> -	.match = w1_master_match,
->  	.uevent = w1_uevent,
->  };
->  
-> diff --git a/sound/ac97_bus.c b/sound/ac97_bus.c
-> index b4685c53ff11..c7aee8c42c55 100644
-> --- a/sound/ac97_bus.c
-> +++ b/sound/ac97_bus.c
-> @@ -75,19 +75,8 @@ int snd_ac97_reset(struct snd_ac97 *ac97, bool try_warm, unsigned int id,
->  }
->  EXPORT_SYMBOL_GPL(snd_ac97_reset);
->  
-> -/*
-> - * Let drivers decide whether they want to support given codec from their
-> - * probe method. Drivers have direct access to the struct snd_ac97
-> - * structure and may  decide based on the id field amongst other things.
-> - */
-> -static int ac97_bus_match(struct device *dev, struct device_driver *drv)
-> -{
-> -	return 1;
-> -}
-> -
->  struct bus_type ac97_bus_type = {
->  	.name		= "ac97",
-> -	.match		= ac97_bus_match,
->  };
->  
->  static int __init ac97_bus_init(void)
-> 
+Reviewed-by: Davidlohr Bueso <dave@stgolabs.net>
