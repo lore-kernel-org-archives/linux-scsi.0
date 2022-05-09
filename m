@@ -2,244 +2,178 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEDF9C43217
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 May 2022 10:43:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F14D5C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 May 2022 10:47:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230488AbiEIKrr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 May 2022 06:47:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53048 "EHLO
+        id S230311AbiEIKu5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 May 2022 06:50:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230448AbiEIKrp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2022 06:47:45 -0400
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0499E2D2E24
-        for <linux-scsi@vger.kernel.org>; Mon,  9 May 2022 03:42:09 -0700 (PDT)
-Received: by mail-ej1-x62b.google.com with SMTP id g6so25954546ejw.1
-        for <linux-scsi@vger.kernel.org>; Mon, 09 May 2022 03:42:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=JivA9lag35NY9StRFNW9wke9LTJ6pmcL9zBt3wJOnU0=;
-        b=ebaX/LiG6h3ghMGqzXvvTtDfpdIdzRUdMsxKFM94Yy8+E12Sr3DvvX192yCt7N9eaf
-         Wo9pgDs/hq2TtDMw+I3gIbpC/iPByRUlD0nnpcj4K1aFZluap+o4rT1jKW+lRxQsY/lB
-         YImjtFV5Y2N37SSLo40zlepq4inIK4viPucbc0ucPvd7yuhvC8VBxM/aIiJCdan0EQpi
-         6z1b1qtItWLP5Qj6D5HtJCSXIcPHecK/zY6vkBDdaHTstIFF7DwctSp6Chp8sucFqYXG
-         VMDK/pAURSFkWRz0RMVESZltCFl2iav0O54VA6a9Shnscry122w8SMGNoJAYQvVobcnx
-         qpBw==
+        with ESMTP id S230443AbiEIKuR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2022 06:50:17 -0400
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 770DC2181E4;
+        Mon,  9 May 2022 03:44:49 -0700 (PDT)
+Received: by mail-wr1-f41.google.com with SMTP id b19so18818194wrh.11;
+        Mon, 09 May 2022 03:44:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=JivA9lag35NY9StRFNW9wke9LTJ6pmcL9zBt3wJOnU0=;
-        b=6kx+8yWLp7z3U6208lYahys9Ad4seSclneX+nEnnEfF3DWZ08CCTr9qJkzz3VgS4IO
-         phPV9kpSW612guMQ/M3CNHeHniwd53TyLPRJC9afHV1Gx+7USBiaqlWUKatmpiF/ugtB
-         obm1WFT+BAi7dRRBTrfryfUuXp9PF8x9WtMrU2Az9Wwx5hfKW27FfORuqjkBtqqe1PaW
-         goVa6liWg0cb19c7SGRE5muwhC22pIs8WvIiCWlHI5WFIbMav1adiq4pLJOZ3Lvq0G2P
-         PHrfTBFXZa7OaQVeiEWGB1xt2Q25q10V+qwUlCV5rzlWTXvruae+OeCeJz08G5R4eZL1
-         g1yQ==
-X-Gm-Message-State: AOAM5334J+2gUNZRniGRJzQujJIbtU1MQ/fZwO7bYUmz7AOAtux3jCBN
-        W+MNEsmLDx2vjei8+BJW0WO8WQ==
-X-Google-Smtp-Source: ABdhPJyydy8/hiqqh2G8YhKauvC+LWx8dzSKJTUfCcLfOe3cv7c+z2fSoNuVxciYHs95+Iin63Zlig==
-X-Received: by 2002:a17:906:559:b0:6f3:8ba6:39c8 with SMTP id k25-20020a170906055900b006f38ba639c8mr14043662eja.486.1652092684369;
-        Mon, 09 May 2022 03:38:04 -0700 (PDT)
-Received: from [192.168.0.243] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
-        by smtp.gmail.com with ESMTPSA id z12-20020a170906714c00b006f3ef214dfdsm4907874ejj.99.2022.05.09.03.38.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 May 2022 03:38:03 -0700 (PDT)
-Message-ID: <dea39b1f-0091-2690-7f07-108d07ef9f3c@linaro.org>
-Date:   Mon, 9 May 2022 12:38:02 +0200
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=oLgVaTlTDXgUX6d5oxdF7XG7KD8YlqPFqEct4VY7hn0=;
+        b=7bN7J8VsOe6NdV+3pMrVlJpTsLIJPGvez/qwbnnCKrKLHXhCyr3hkrjij4hEHh5uTt
+         AOtljiaW2m3GmOY5aR+mgeY9RtmFhA09rJPGys1QaK+mDcCBV2PQ+K9lkeDR7/s70jk9
+         e8tg+bXHEyEWLOWRjUZBhtYdDJ3V+MiK19pbuqqv5ZARmGsSjjTWrEjjkw0mJduTEoca
+         Nx52yAjCTAbPhptJh53bAiKTbLqAZBLJ6pv+V890J0k6N77qsdPwqSSoec+0BGxksIyF
+         7xta393YI+MekATkEpnF7T3quUcEQL4+sqxowd28ShUyYB3nQTtT2jXAaGSvcnbqASht
+         05eQ==
+X-Gm-Message-State: AOAM531pGfMX1OZidal7u+pddrjV4UPtMOAvLWe6ylB1RCmGrR4/8F2x
+        18UQKUPJJkuLOTeU9RuJ7Vs=
+X-Google-Smtp-Source: ABdhPJwDKaChWloXe++r5p1goEJJuS40KKco4mLZWce3U6q798YBSkWjgoJuS1gFOHxVdXkf6GhOpA==
+X-Received: by 2002:a5d:590d:0:b0:20a:c3eb:2584 with SMTP id v13-20020a5d590d000000b0020ac3eb2584mr13000908wrd.18.1652093087866;
+        Mon, 09 May 2022 03:44:47 -0700 (PDT)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id q1-20020adf9dc1000000b0020c5253d8b8sm11582748wre.4.2022.05.09.03.44.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 May 2022 03:44:47 -0700 (PDT)
+Date:   Mon, 9 May 2022 10:44:45 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>
+Cc:     Pavel Machek <pavel@ucw.cz>, KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        vkuznets <vkuznets@redhat.com>, Dexuan Cui <decui@microsoft.com>,
+        "drawat.floss@gmail.com" <drawat.floss@gmail.com>,
+        "airlied@linux.ie" <airlied@linux.ie>,
+        "daniel@ffwll.ch" <daniel@ffwll.ch>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "deller@gmx.de" <deller@gmx.de>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>
+Subject: Re: [PATCH 0/4] Remove support for Hyper-V 2008 and 2008R2/Win7
+Message-ID: <20220509104445.umicxfdpy65nm4us@liuwe-devbox-debian-v2>
+References: <1651509391-2058-1-git-send-email-mikelley@microsoft.com>
+ <20220504172307.GB1623@bug>
+ <PH0PR21MB302590D20E95D9076FDA9C99D7C79@PH0PR21MB3025.namprd21.prod.outlook.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.1
-Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
-Content-Language: en-US
-To:     Viresh Kumar <viresh.kumar@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Taniya Das <tdas@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
- <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
- <20220425072710.v6gwo4gu3aouezg4@vireshk-i7>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20220425072710.v6gwo4gu3aouezg4@vireshk-i7>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <PH0PR21MB302590D20E95D9076FDA9C99D7C79@PH0PR21MB3025.namprd21.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 25/04/2022 09:27, Viresh Kumar wrote:
-> On 11-04-22, 17:43, Krzysztof Kozlowski wrote:
->> Devices might need to control several clocks when scaling the frequency
->> and voltage.  Example is the Universal Flash Storage (UFS) which scales
->> several independent clocks with change of performance levels.
->>
->> Add parsing of multiple clocks and clock names
+On Sun, May 08, 2022 at 03:43:26PM +0000, Michael Kelley (LINUX) wrote:
+> From: Pavel Machek <pavel@ucw.cz> Sent: Wednesday, May 4, 2022 10:23 AM
+> > 
+> > Hi!
+> > 
+> > > Linux code for running as a Hyper-V guest includes special cases for the
+> > > first released versions of Hyper-V: 2008 and 2008R2/Windows 7. These
+> > > versions were very thinly used for running Linux guests when first
+> > > released more than 12 years ago, and they are now out of support
+> > > (except for extended security updates). As initial versions, they
+> > > lack the performance features needed for effective production usage
+> > > of Linux guests. In total, there's no need to continue to support
+> > > the latest Linux kernels on these versions of Hyper-V.
+> > >
+> > > Simplify the code for running on Hyper-V by removing the special
+> > > cases. This includes removing the negotiation of the VMbus protocol
+> > > versions for 2008 and 2008R2, and the special case code based on
+> > > those VMbus protocol versions. Changes are in the core VMbus code and
+> > > several drivers for synthetic VMbus devices.
+> > 
+> > > 2008 and 2008R2, so if the broader Linux kernel community surfaces
+> > > a reason why this clean-up should not be done now, we can wait.
+> > > But I think we want to eventually stop carrying around this extra
+> > > baggage, and based on discussions with the Hyper-V team within
+> > > Microsoft, we're already past the point that it has any value.
+> > 
+> > Normal way to do such deprecations is to put printks in first, then hide it
+> > under config option noone sets, and wait for year or so if anyone complains.
+> > 
 > 
-> This part is fine, the OPP core should be able to do this.
-
-Sorry for late reply, I think I my filters archived it or I missed it.
-
+> Are there any examples of doing these deprecation steps that you can
+> point me to?  I did not see anything in the Documentation directory
+> covering the deprecation process you describe.
 > 
->> and scale all of them,
+> I'd also make the case that we are already well down the deprecation
+> path.  For at least the last 5 years, the public Microsoft documentation
+> for Linux guests has listed Hyper-V 2012 R2 as the earliest supported
+> Hyper-V version.  Other current and new Microsoft products aren't
+> supported on Hyper-V 2008/Win7 either -- the usual Word/Excel/
+> PowerPoint, etc. fall into this category as well as Windows 10 and Windows
+> 11 as guests.  So for a rare user who might still be using Hyper-V
+> 2008/Win7, there's no reasonable expectation of being able to run
+> the latest upstream Linux kernel on Hyper-V 2008/Win7.  Other
+> current software doesn't.
 > 
-> This is tricky as the OPP core can't really assume the order in which the clocks
-> needs to be programmed. We had the same problem with multiple regulators and the
-> same is left for drivers to do via the custom-api.
+> Given that running Linux guests on Hyper-V sort of implicitly
+> combines Microsoft commercial thinking and Linux open source
+> thinking about version support, I could see putting the old Hyper-V
+> version support under a config option that defaults to "no", with a 
+> deprecation comment, and seeing if that garners any complaints.
+> But given the broader situation with Hyper-V 2008/Win7, in my
+> judgment even that is more cautious than we need to be.
 > 
-> Either we can take the same route here, and let platforms add their own OPP
-> drivers which can handle this, Or hide this all behind a basic device clock's
-> driver, which you get with clk_get(dev, NULL).
 
-For my use case, the order of scaling will be the same as in previous
-implementation, because UFS drivers just got bunch of clocks with
-freq-table-hz property and were scaling in DT order.
+In general we should trust the judgement from the main developers.
 
-If drivers need something better, they can always provide custom-opp
-thus replacing my method. My implementation here does not restrict them.
+There have been recent examples that things are dropped without any
+deprecation warnings. See below.
 
-For the drivers where the order does not matter, why forcing each driver
-to provide its own implementation of clock scaling? Isn't shared generic
-PM OPP code a way to remove code duplication?
+By and large the usefulness of the code in kernel relies on a lot of
+factors. In this particular case, I don't think adding a KCONFIG makes
+sense. Printing a warning in _guest_ won't help. Whoever still runs
+these ancient versions has had ample warnings.
 
-> 
->> diff --git a/drivers/opp/core.c b/drivers/opp/core.c
-> 
->> +static int _generic_set_opp_clks_only(struct device *dev,
->> +				      struct opp_table *opp_table,
->> +				      struct dev_pm_opp *opp)
->> +{
->> +	int i, ret;
->> +
->> +	if (!opp_table->clks)
->> +		return 0;
->> +
->> +	for (i = 0; i < opp_table->clk_count; i++) {
->> +		if (opp->rates[i]) {
-> 
-> This should mean that we can disable that clock and it isn't required.
+Thanks,
+Wei.
 
-No, it does not mean that. The DT might provide several clocks which
-only some are important for frequency scaling. All others just need to
-be enabled.
+commit c645a883df34ee10b884ec921e850def54b7f461
+Author:     NeilBrown <neilb@suse.de>
+AuthorDate: Thu Sep 2 11:15:29 2021 +1000
+Commit:     J. Bruce Fields <bfields@redhat.com>
+CommitDate: Sat Oct 2 15:51:10 2021 -0400
 
-Maybe you prefer to skip getting such clocks in PM OPP?
+    NFSD: drop support for ancient filehandles
 
-> 
->> +			ret = _generic_set_opp_clk_only(dev, opp_table->clks[i],
->> +							opp->rates[i]);
->> +			if (ret) {
->> +				dev_err(dev, "%s: failed to set clock %pC rate: %d\n",
->> +					__func__, opp_table->clks[i], ret);
->> +				return ret;
->> +			}
->> +		}
->> +	}
->> +
->> +	return 0;
->> +}
-> 
-> As said earlier, this won't work in the core.
-> 
->> +
->>  static int _generic_set_opp_regulator(struct opp_table *opp_table,
->>  				      struct device *dev,
->>  				      struct dev_pm_opp *opp,
->> @@ -796,7 +835,7 @@ static int _generic_set_opp_regulator(struct opp_table *opp_table,
->>  	}
->>  
->>  	/* Change frequency */
->> -	ret = _generic_set_opp_clk_only(dev, opp_table->clk, freq);
->> +	ret = _generic_set_opp_clks_only(dev, opp_table, opp);
->>  	if (ret)
->>  		goto restore_voltage;
->>  
->> @@ -820,7 +859,7 @@ static int _generic_set_opp_regulator(struct opp_table *opp_table,
->>  	return 0;
->>  
->>  restore_freq:
->> -	if (_generic_set_opp_clk_only(dev, opp_table->clk, old_opp->rate))
->> +	if (_generic_set_opp_clks_only(dev, opp_table, old_opp))
->>  		dev_err(dev, "%s: failed to restore old-freq (%lu Hz)\n",
->>  			__func__, old_opp->rate);
->>  restore_voltage:
->> @@ -880,7 +919,7 @@ static int _set_opp_custom(const struct opp_table *opp_table,
-> 
-> This is where we can handle it in your case, if you don't want to hide it behind
-> a clk driver.
-> 
->>  	}
->>  
->>  	data->regulators = opp_table->regulators;
->> -	data->clk = opp_table->clk;
->> +	data->clk = (opp_table->clks ? opp_table->clks[0] : NULL);
->>  	data->dev = dev;
->>  	data->old_opp.rate = old_opp->rate;
->>  	data->new_opp.rate = freq;
->> @@ -969,8 +1008,8 @@ static void _find_current_opp(struct device *dev, struct opp_table *opp_table)
-> 
-> I think this routine breaks as soon as we add support for multiple clocks.
-> clks[0]'s frequency can be same for multiple OPPs and this won't get you the
-> right OPP then.
+    Filehandles not in the "new" or "version 1" format have not been handed
+    out for new mounts since Linux 2.4 which was released 20 years ago.
+    I think it is safe to say that no such file handles are still in use,
+    and that we can drop support for them.
 
-I don't think so and this was raised also by Stephen - only the first
-clock is considered the one used for all PM OPP frequency operations,
-like get ceil/floor.
+    Signed-off-by: NeilBrown <neilb@suse.de>
+    Signed-off-by: J. Bruce Fields <bfields@redhat.com>
 
-The assumption (which might need better documentation) is that first
-clock frequency is the main one:
-1. It is still in opp->rate field, so it is used everywhere when OPPs
-are compared/checked for rates.
-1. Usually is used also in opp-table nodes names.
+commit 9b472e85d098a40b84dd8b33fbf8a15ab1452025
+Author:     Nick Desaulniers <ndesaulniers@google.com>
+AuthorDate: Thu May 6 18:04:54 2021 -0700
+Commit:     Linus Torvalds <torvalds@linux-foundation.org>
+CommitDate: Fri May 7 00:26:32 2021 -0700
 
-The logical explanation is that devices has some main operating
-frequency, e.g. the core clock, and this determines the performance. In
-the same time such device might not be able to scale this one core clock
-independently from others, therefore this set of patches.
+    gcov: clang: drop support for clang-10 and older
 
-> 
->>  	struct dev_pm_opp *opp = ERR_PTR(-ENODEV);
->>  	unsigned long freq;
->>  
->> -	if (!IS_ERR(opp_table->clk)) {
->> -		freq = clk_get_rate(opp_table->clk);
->> +	if (opp_table->clks && !IS_ERR(opp_table->clks[0])) {
->> +		freq = clk_get_rate(opp_table->clks[0]);
->>  		opp = _find_freq_ceil(opp_table, &freq);
->>  	}
->>  
->> @@ -1070,7 +1109,7 @@ static int _set_opp(struct device *dev, struct opp_table *opp_table,
->>  						 scaling_down);
->>  	} else {
->>  		/* Only frequency scaling */
->> -		ret = _generic_set_opp_clk_only(dev, opp_table->clk, freq);
->> +		ret = _generic_set_opp_clks_only(dev, opp_table, opp);
->>  	}
->>  
->>  	if (ret)
->> @@ -1135,11 +1174,15 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
-> 
-> This should have a BUG or WARN _ON() now if clock count is more than one. This
-> routine can't be called unless custom handler is available.
-> 
-> I skipped rest of the code as we need to work/decide on the design first.
+    LLVM changed the expected function signatures for llvm_gcda_start_file()
+    and llvm_gcda_emit_function() in the clang-11 release.  Drop the older
+    implementations and require folks to upgrade their compiler if they're
+    interested in GCOV support.
 
-
-
-Best regards,
-Krzysztof
+    Link: https://reviews.llvm.org/rGcdd683b516d147925212724b09ec6fb792a40041
+    Link: https://reviews.llvm.org/rG13a633b438b6500ecad9e4f936ebadf3411d0f44
+    Link: https://lkml.kernel.org/r/20210312224132.3413602-3-ndesaulniers@google.com
+    Link: https://lkml.kernel.org/r/20210413183113.2977432-1-ndesaulniers@google.com
+    Signed-off-by: Nick Desaulniers <ndesaulniers@google.com>
+    Suggested-by: Nathan Chancellor <nathan@kernel.org>
+    Acked-by: Peter Oberparleiter <oberpar@linux.ibm.com>
+    Reviewed-by: Nathan Chancellor <nathan@kernel.org>
+    Reviewed-by: Fangrui Song <maskray@google.com>
+    Cc: Prasad Sodagudi <psodagud@quicinc.com>
+    Cc: Johannes Berg <johannes.berg@intel.com>
+    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
