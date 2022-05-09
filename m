@@ -2,178 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F14D5C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 May 2022 10:47:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEF2AC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 May 2022 11:27:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230311AbiEIKu5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 May 2022 06:50:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59744 "EHLO
+        id S232971AbiEILbm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 May 2022 07:31:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230443AbiEIKuR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2022 06:50:17 -0400
-Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 770DC2181E4;
-        Mon,  9 May 2022 03:44:49 -0700 (PDT)
-Received: by mail-wr1-f41.google.com with SMTP id b19so18818194wrh.11;
-        Mon, 09 May 2022 03:44:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=oLgVaTlTDXgUX6d5oxdF7XG7KD8YlqPFqEct4VY7hn0=;
-        b=7bN7J8VsOe6NdV+3pMrVlJpTsLIJPGvez/qwbnnCKrKLHXhCyr3hkrjij4hEHh5uTt
-         AOtljiaW2m3GmOY5aR+mgeY9RtmFhA09rJPGys1QaK+mDcCBV2PQ+K9lkeDR7/s70jk9
-         e8tg+bXHEyEWLOWRjUZBhtYdDJ3V+MiK19pbuqqv5ZARmGsSjjTWrEjjkw0mJduTEoca
-         Nx52yAjCTAbPhptJh53bAiKTbLqAZBLJ6pv+V890J0k6N77qsdPwqSSoec+0BGxksIyF
-         7xta393YI+MekATkEpnF7T3quUcEQL4+sqxowd28ShUyYB3nQTtT2jXAaGSvcnbqASht
-         05eQ==
-X-Gm-Message-State: AOAM531pGfMX1OZidal7u+pddrjV4UPtMOAvLWe6ylB1RCmGrR4/8F2x
-        18UQKUPJJkuLOTeU9RuJ7Vs=
-X-Google-Smtp-Source: ABdhPJwDKaChWloXe++r5p1goEJJuS40KKco4mLZWce3U6q798YBSkWjgoJuS1gFOHxVdXkf6GhOpA==
-X-Received: by 2002:a5d:590d:0:b0:20a:c3eb:2584 with SMTP id v13-20020a5d590d000000b0020ac3eb2584mr13000908wrd.18.1652093087866;
-        Mon, 09 May 2022 03:44:47 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id q1-20020adf9dc1000000b0020c5253d8b8sm11582748wre.4.2022.05.09.03.44.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 May 2022 03:44:47 -0700 (PDT)
-Date:   Mon, 9 May 2022 10:44:45 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>
-Cc:     Pavel Machek <pavel@ucw.cz>, KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>, Dexuan Cui <decui@microsoft.com>,
-        "drawat.floss@gmail.com" <drawat.floss@gmail.com>,
-        "airlied@linux.ie" <airlied@linux.ie>,
-        "daniel@ffwll.ch" <daniel@ffwll.ch>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "deller@gmx.de" <deller@gmx.de>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>
-Subject: Re: [PATCH 0/4] Remove support for Hyper-V 2008 and 2008R2/Win7
-Message-ID: <20220509104445.umicxfdpy65nm4us@liuwe-devbox-debian-v2>
-References: <1651509391-2058-1-git-send-email-mikelley@microsoft.com>
- <20220504172307.GB1623@bug>
- <PH0PR21MB302590D20E95D9076FDA9C99D7C79@PH0PR21MB3025.namprd21.prod.outlook.com>
+        with ESMTP id S232900AbiEILbl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2022 07:31:41 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF81C1B12C6;
+        Mon,  9 May 2022 04:27:46 -0700 (PDT)
+Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Kxf2c0qHQz67KPR;
+        Mon,  9 May 2022 19:24:24 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 9 May 2022 13:27:44 +0200
+Received: from [10.47.80.57] (10.47.80.57) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 9 May
+ 2022 12:27:43 +0100
+Message-ID: <4510c5dc-3d7d-fc5f-cb80-34da7dbaaa8e@huawei.com>
+Date:   Mon, 9 May 2022 12:28:57 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <PH0PR21MB302590D20E95D9076FDA9C99D7C79@PH0PR21MB3025.namprd21.prod.outlook.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Christoph Hellwig <hch@infradead.org>
+CC:     "Ewan D. Milne" <emilne@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Alim Akhtar" <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Doug Gilbert" <dgilbert@interlog.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <james.smart@broadcom.com>
+References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
+ <2a88a992-641a-b3ff-fe39-7a61fff87cb6@huawei.com>
+ <4c3be5b6-50ef-9e9a-6cee-9642df943342@linaro.org>
+ <7b3885e3-dbae-ff0b-21dc-c28d635d950b@huawei.com>
+ <c121430b1b5c8f5816b2b42b9178d00889260c90.camel@redhat.com>
+ <b6af3fe8-db9a-b5dc-199f-21c05d7664a2@huawei.com>
+ <Yl+wJ7xSHzWmR+bR@infradead.org>
+ <d09faf74-a52e-8d93-cf26-08b43b12c564@huawei.com>
+ <24bfb681-faec-3567-3089-9cd5ee182710@linaro.org>
+ <1bb53912-c5c3-7690-e82f-cf356ca87404@huawei.com>
+ <6f28acde-2177-0bc7-b06d-c704153489c0@linaro.org>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <6f28acde-2177-0bc7-b06d-c704153489c0@linaro.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.80.57]
+X-ClientProxiedBy: lhreml739-chm.china.huawei.com (10.201.108.189) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, May 08, 2022 at 03:43:26PM +0000, Michael Kelley (LINUX) wrote:
-> From: Pavel Machek <pavel@ucw.cz> Sent: Wednesday, May 4, 2022 10:23 AM
-> > 
-> > Hi!
-> > 
-> > > Linux code for running as a Hyper-V guest includes special cases for the
-> > > first released versions of Hyper-V: 2008 and 2008R2/Windows 7. These
-> > > versions were very thinly used for running Linux guests when first
-> > > released more than 12 years ago, and they are now out of support
-> > > (except for extended security updates). As initial versions, they
-> > > lack the performance features needed for effective production usage
-> > > of Linux guests. In total, there's no need to continue to support
-> > > the latest Linux kernels on these versions of Hyper-V.
-> > >
-> > > Simplify the code for running on Hyper-V by removing the special
-> > > cases. This includes removing the negotiation of the VMbus protocol
-> > > versions for 2008 and 2008R2, and the special case code based on
-> > > those VMbus protocol versions. Changes are in the core VMbus code and
-> > > several drivers for synthetic VMbus devices.
-> > 
-> > > 2008 and 2008R2, so if the broader Linux kernel community surfaces
-> > > a reason why this clean-up should not be done now, we can wait.
-> > > But I think we want to eventually stop carrying around this extra
-> > > baggage, and based on discussions with the Hyper-V team within
-> > > Microsoft, we're already past the point that it has any value.
-> > 
-> > Normal way to do such deprecations is to put printks in first, then hide it
-> > under config option noone sets, and wait for year or so if anyone complains.
-> > 
-> 
-> Are there any examples of doing these deprecation steps that you can
-> point me to?  I did not see anything in the Documentation directory
-> covering the deprecation process you describe.
-> 
-> I'd also make the case that we are already well down the deprecation
-> path.  For at least the last 5 years, the public Microsoft documentation
-> for Linux guests has listed Hyper-V 2012 R2 as the earliest supported
-> Hyper-V version.  Other current and new Microsoft products aren't
-> supported on Hyper-V 2008/Win7 either -- the usual Word/Excel/
-> PowerPoint, etc. fall into this category as well as Windows 10 and Windows
-> 11 as guests.  So for a rare user who might still be using Hyper-V
-> 2008/Win7, there's no reasonable expectation of being able to run
-> the latest upstream Linux kernel on Hyper-V 2008/Win7.  Other
-> current software doesn't.
-> 
-> Given that running Linux guests on Hyper-V sort of implicitly
-> combines Microsoft commercial thinking and Linux open source
-> thinking about version support, I could see putting the old Hyper-V
-> version support under a config option that defaults to "no", with a 
-> deprecation comment, and seeing if that garners any complaints.
-> But given the broader situation with Hyper-V 2008/Win7, in my
-> judgment even that is more cautious than we need to be.
+On 06/05/2022 17:42, Krzysztof Kozlowski wrote:
+>> I don't think scsi_Host is appropriate as this is per-scsi host
+>> template, unless you see a way to do it that way. Alternatively we could
+>> keep a separate list of registered sht, like this:
+>>
+>> struct sht_proc_dir {
+>> 	int cnt;
+>> 	struct list_head list;
+>> 	struct proc_dir_entry *proc_dir;
+>> 	struct scsi_host_template *sht;
+>> };
+>> static LIST_HEAD(sht_proc_dir_list);
+> Hi everyone,
 > 
 
-In general we should trust the judgement from the main developers.
+Hi Krzysztof,
 
-There have been recent examples that things are dropped without any
-deprecation warnings. See below.
+> It took me some time to get back to this topic. I moved the proc_dir out
+> of SHT, how John proposed. Patches do not look that bad:
+> The commit:
+> https://github.com/krzk/linux/commit/157eb2ee8867afbae9dac3836e4c0bedb542e5c1
+> 
 
-By and large the usefulness of the code in kernel relies on a lot of
-factors. In this particular case, I don't think adding a KCONFIG makes
-sense. Printing a warning in _guest_ won't help. Whoever still runs
-these ancient versions has had ample warnings.
+For some reason I cannot fetch your git due to "error: RPC failed ..." 
+which I think is a timeout. I seem to have this problem recently 
+whenever a linux.git clone has branches based on linux-next.git . Maybe 
+a git config issue for me...
+
+> Branch:
+> https://github.com/krzk/linux/commits/n/qcom-ufs-opp-cleanups-v2
+> 
+> However this does not solve the problem. The SHT has "module" which gets
+> incremented/decremented. Exactly like in case of other drivers
+> (driver->owner).
+
+Ah, I missed that this could be a problem. So we have this member to 
+stop the SCSI host driver being removed when we have disks mounted, etc.
+
+But isn't scsi_host_template.module just a pointer to the local driver 
+module data (and that data gets incremented/decremented)? I am looking 
+at the THIS_MODULE definition in export.h:
+
+extern stuct module __this_module;
+#define THIS_MODULE(&__this_module)
+
+However I do see scsi_device_dev_release(), which does:
+
+sdp->host->hostt->module = NULL
+
+I am not sure how necessary that really is. I would need to check further.
+
+Did you see if there other places which set hostt->module dynamically?
+
+> 
+> I started moving the SHT->module to a new field scsi_host->owner and
+> trying to use the parent's driver (so PCI, USB) owner.
+> I am not sure if it is correct approach, so before implementing such big
+> change affecting multiple subsystems (USB, ATA, SCSI) - can you share
+> ideas/opinion?
+> 
+> The Work-in-Progress looks like this (last commit):
+> https://github.com/krzk/linux/commit/17609caecd53df20f631703ea084a70e7735b5d7
 
 Thanks,
-Wei.
-
-commit c645a883df34ee10b884ec921e850def54b7f461
-Author:     NeilBrown <neilb@suse.de>
-AuthorDate: Thu Sep 2 11:15:29 2021 +1000
-Commit:     J. Bruce Fields <bfields@redhat.com>
-CommitDate: Sat Oct 2 15:51:10 2021 -0400
-
-    NFSD: drop support for ancient filehandles
-
-    Filehandles not in the "new" or "version 1" format have not been handed
-    out for new mounts since Linux 2.4 which was released 20 years ago.
-    I think it is safe to say that no such file handles are still in use,
-    and that we can drop support for them.
-
-    Signed-off-by: NeilBrown <neilb@suse.de>
-    Signed-off-by: J. Bruce Fields <bfields@redhat.com>
-
-commit 9b472e85d098a40b84dd8b33fbf8a15ab1452025
-Author:     Nick Desaulniers <ndesaulniers@google.com>
-AuthorDate: Thu May 6 18:04:54 2021 -0700
-Commit:     Linus Torvalds <torvalds@linux-foundation.org>
-CommitDate: Fri May 7 00:26:32 2021 -0700
-
-    gcov: clang: drop support for clang-10 and older
-
-    LLVM changed the expected function signatures for llvm_gcda_start_file()
-    and llvm_gcda_emit_function() in the clang-11 release.  Drop the older
-    implementations and require folks to upgrade their compiler if they're
-    interested in GCOV support.
-
-    Link: https://reviews.llvm.org/rGcdd683b516d147925212724b09ec6fb792a40041
-    Link: https://reviews.llvm.org/rG13a633b438b6500ecad9e4f936ebadf3411d0f44
-    Link: https://lkml.kernel.org/r/20210312224132.3413602-3-ndesaulniers@google.com
-    Link: https://lkml.kernel.org/r/20210413183113.2977432-1-ndesaulniers@google.com
-    Signed-off-by: Nick Desaulniers <ndesaulniers@google.com>
-    Suggested-by: Nathan Chancellor <nathan@kernel.org>
-    Acked-by: Peter Oberparleiter <oberpar@linux.ibm.com>
-    Reviewed-by: Nathan Chancellor <nathan@kernel.org>
-    Reviewed-by: Fangrui Song <maskray@google.com>
-    Cc: Prasad Sodagudi <psodagud@quicinc.com>
-    Cc: Johannes Berg <johannes.berg@intel.com>
-    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+John
