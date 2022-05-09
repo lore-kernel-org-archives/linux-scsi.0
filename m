@@ -2,192 +2,431 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4AB3C433FE
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 May 2022 15:43:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61AFDC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 May 2022 03:04:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235043AbiEHPrZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 May 2022 11:47:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54024 "EHLO
+        id S231179AbiEIDIM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 8 May 2022 23:08:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234977AbiEHPrW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 May 2022 11:47:22 -0400
-Received: from na01-obe.outbound.protection.outlook.com (unknown [52.101.56.27])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EEFD2AF4;
-        Sun,  8 May 2022 08:43:30 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=nJPkIOktC0vKkD51dyC9cg/ETtislFkNWOTFbGhg7l3WbS4pnLqUFI0425yjVhmku/POOSJg9QSb88wR3lDIL8xeE/sVYFj6z+0/BDAEJrh/8LYcoEEti8TX3w1mt6n7Kbk89e/UjnS7t3vr6BaibWYJT91KP6kc8s8tKTPslu/zQU6BAIOREH5PBvubewj8xUZAse7T1/vLkXJVQsGzMwblnLTNPpk/TFI9qWOB84NlTFr0ZqKfpJWA3yU/LmHLAAzsTFtUGh9U2SMgUBODZ2CKQYWw7qA8ZUsm6hE+sXRIac5Z6TW16ynwxi/TfYVfoNBuYg5VEbjt8xH8yvA5TA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Io4v1qZ4VuuDx4ZlU6GWfhMS1DUFo/uWtelqd63x/FA=;
- b=IPrp/zbx+orGY4WuHqZ6vYqlK7VAJz0L5jEN1fpRKiCvW3iC/URujx1pUSjT15G6+r4oxzC7LIcIfAt50kiwFJpbOdNFClb4MFh20HfqfYJk8haotpu1/25qrkYTeZaCHNeqNolZ6+hI7/4Equ7zc0xtOoKAUSwC7mvXklpGsNxYGiAV8kbnMuskNS+VX9Id7NfIgc42TpFxMqs/0QlpD5nWPiSniXTEKhnl+EQ2cbWNRBVJD50+GJbPiu4iR1W8PhBdiqUx7WbmViZy1txjp9TpJcdiKt3PvewgjpV4QzjFm80U6s7gn9zseBRe8NTX1vYHRCigm96FTg8k8lWo9Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Io4v1qZ4VuuDx4ZlU6GWfhMS1DUFo/uWtelqd63x/FA=;
- b=HuMOotT66vEJ8HZSu6dXTw2HZTCyh7em6EhJZp1pxczNTYe1phiis+dBSSYD68KQi6R5OgQKoRc/nnZxL5/TQYbVmDmCnhyRPkVVYd5NRc7mfK+YZRC5KjYsgl2gWioiWSHUxSj6xo95yCo8YZ+SsxxmEtAGlWvnku5RbDUJVek=
-Received: from PH0PR21MB3025.namprd21.prod.outlook.com (2603:10b6:510:d2::21)
- by PH7PR21MB3239.namprd21.prod.outlook.com (2603:10b6:510:1db::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.4; Sun, 8 May
- 2022 15:43:27 +0000
-Received: from PH0PR21MB3025.namprd21.prod.outlook.com
- ([fe80::dd77:2d4d:329e:87df]) by PH0PR21MB3025.namprd21.prod.outlook.com
- ([fe80::dd77:2d4d:329e:87df%7]) with mapi id 15.20.5273.004; Sun, 8 May 2022
- 15:43:26 +0000
-From:   "Michael Kelley (LINUX)" <mikelley@microsoft.com>
-To:     Pavel Machek <pavel@ucw.cz>
-CC:     KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>, Dexuan Cui <decui@microsoft.com>,
-        "drawat.floss@gmail.com" <drawat.floss@gmail.com>,
-        "airlied@linux.ie" <airlied@linux.ie>,
-        "daniel@ffwll.ch" <daniel@ffwll.ch>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "deller@gmx.de" <deller@gmx.de>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>
-Subject: RE: [PATCH 0/4] Remove support for Hyper-V 2008 and 2008R2/Win7
-Thread-Topic: [PATCH 0/4] Remove support for Hyper-V 2008 and 2008R2/Win7
-Thread-Index: AQHYXkLb/0Gxv7HlzkaWTmgmFwYc5a0O+reAgAYm6dA=
-Date:   Sun, 8 May 2022 15:43:26 +0000
-Message-ID: <PH0PR21MB302590D20E95D9076FDA9C99D7C79@PH0PR21MB3025.namprd21.prod.outlook.com>
-References: <1651509391-2058-1-git-send-email-mikelley@microsoft.com>
- <20220504172307.GB1623@bug>
-In-Reply-To: <20220504172307.GB1623@bug>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=8b1d71e0-6984-4f3d-8c15-012dd89651d7;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2022-05-08T15:19:56Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: f4c30418-69ff-4c7c-2632-08da31097e0c
-x-ms-traffictypediagnostic: PH7PR21MB3239:EE_
-x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
-x-microsoft-antispam-prvs: <PH7PR21MB3239CB83092CA8E1A2459B38D7C79@PH7PR21MB3239.namprd21.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 0luIiSe8Gt3sGlai75oT3tOiz+OBwbIR7T22Ob5SOi07oTGE9EQXsdrZku4hR8YCv0IWWNEpNHf0fn6kohThwtyCXlGDXYgB7YAkSJ8IPpvrLpWzKTq0cc6pA62NFCpg0Qn1s8KbNW3C3siIGeZuLPHtrAazQNFdHFNwkwSaaBQW8dJBp/hSJoZEdJ3CoXBluPaPispKSaW456xAX/Mu46HWkiuoXgsau4DoKfQ+g0Wxb5wufkqsPCwcRQxhAt8mtnOQ4qJbnIQkJNnae0+clNRNqH/5vKIF1vK+t0MnqqPXjDRRzmLwvgwLTss8P3eZh7Co07EDaWpBNl0lsHPtyTMhD4hzwQobQLaUylQ3NCyfr1hGTmKgiV0PaOSoVk4HyNSkEf/vmCsGum5mN4VEZd0hchG8blmB8a+NWJBcYEL6aQHEMiAmeX+cTCmp10pWFI74FKMPX5Ky89lwknXIuwrs+VVCY1qg6S/ZeuS7wNW3KI8cLo4tRYj1haqm5MfA/0HlAqy43ebrIX/WVB7X8JFiLX7xDfZNbGQiisNLNlpLY/fgYLatBKfiWsGnjjL0/jBC4ujfHANKzbw5f7IeFmkWdUeKuxt8zlrWv8CR2Y7BVPxzzJgd2XyaT3tJVx97iWRs0pO3QwTI0sMQn+5+SzN4cRVmlXlY4Paa7uHJ3qITGjnzQYapqLfNbFbXkMO8KhN5wzOULWXX0ruH2l4a6+tnZ2sDjb41ycCyM/lbC38v4XRz4mYcfC/j+Yy4CmKl
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR21MB3025.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(451199009)(508600001)(71200400001)(6506007)(86362001)(186003)(26005)(7696005)(9686003)(2906002)(7416002)(5660300002)(83380400001)(8990500004)(55016003)(82960400001)(82950400001)(122000001)(66946007)(76116006)(66556008)(10290500003)(54906003)(316002)(6916009)(38100700002)(38070700005)(66476007)(33656002)(8936002)(52536014)(4326008)(8676002)(64756008)(66446008);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Tapt2rRKKa54NJyQaERGxzr9DrQliRPnnuz0Z7EsGPFsQyaZjlgYUijrJibi?=
- =?us-ascii?Q?OKX8kEJBF5BRpj9UNZthvu94wz8xnJrsdBAbuEXzzhypjshDS2ZqZDkg2bOM?=
- =?us-ascii?Q?nVtx+f/5TQZlH6GH48hPML0WLT5f5ttLGG7V1AXDfMJg+xR+fHKkSdwx/vSz?=
- =?us-ascii?Q?894uAmNylQjK0wBJ5nPxGHJnpW9k9h+AbC3RpVIF6cIlKdYOp/LjaSHl5aeL?=
- =?us-ascii?Q?RLBpug4yW9GULSVJpxfeya6fEZkhSdoDEZkLou/vStm+5TDV8oJNRJDjGaRS?=
- =?us-ascii?Q?MXqb7kHemNYEnGpXmBk4YWGaZTlX460wxMMxvUkdhkK3JAc3v1Yep5j66x1d?=
- =?us-ascii?Q?XtDdoVC5mVzf+y+Dblob2mplxwkaESVYYmhMpF62R34ISwOLfhQROjNickKd?=
- =?us-ascii?Q?vnSq/GBgEQ4W/ASE72AqPrzpuxqnkRyFXfJL+Czp7/4wnlSU14c6HDqfnWI1?=
- =?us-ascii?Q?4x9iAuOtO9FuSZnkr2ImxxpcniqLEMiv2MZOuUQ7Xd2pzdo3iYuL7ulWHWxv?=
- =?us-ascii?Q?US2N8LkMFfK2v2SYwWe8VxH0BBjm3YkZVd1C6Sc0tuyapTPDwVNNcZwhV41c?=
- =?us-ascii?Q?wrHxDXyJDhg/4aq3tlqnRE3S9c08surcMxZ4Hp6ZZ8DbgTltAdsnRIXQfg3G?=
- =?us-ascii?Q?AXssk5Lbuwra05YBzk3MVukUDA5cVUOQ1JS3jWLm7hdfaB1qINWy5/GM2pkS?=
- =?us-ascii?Q?yvNV19wY5SgvaQwA68ibn27plK2r0/xVb7xZskLVeP7/4Gx5tZfogreQCUpp?=
- =?us-ascii?Q?3M4IDnB0THcnJYatgz2yOI0W77671aYx/Noa5QP0CGaK9BHwv6IqYcOxLNYK?=
- =?us-ascii?Q?27ikyB7cphzE8bh+g/Uwxoq36CRzMiHjXw28fA8lv3Av3ZmqERr5YHizocIi?=
- =?us-ascii?Q?eT2DP+OzaoBMogjFc3L9NiOo927W7gdMcAwu2pxa8Z7WMldfeKdzs4sB3Qn9?=
- =?us-ascii?Q?aRFy3xNHnyFoLd3ZIXgy93uIUVLuw3ogi4DnpNh//iu3Vum+UCP69b6u8Mtu?=
- =?us-ascii?Q?8hae4R9rva5a5/ilAtn/WPopAuYIU2iKartku82KsWGRaj7yTR3QWxjgVatK?=
- =?us-ascii?Q?6+CDQOTV+73mLPIPNU16QKgAlsa/6bKVhJYCMCj4zsTvglwVenG3ScvRR891?=
- =?us-ascii?Q?ij8HnzwQ05cVX++0eVFEi+oGpBU46aDe6ObiYWK8Tk71OmnkGLzgVwVetmzd?=
- =?us-ascii?Q?9ki6EacHiMhQqz0JCfs3Tq21jMt+ptVbwqzWWli0ADR+FyWVWLPGkFZut9ja?=
- =?us-ascii?Q?qMACnqf+txRTI7lXfLUbD4rJ/3LMK5TFxyEHmdLwRpL6MXVV818PU5proT3A?=
- =?us-ascii?Q?OTSYNwm6rjuslxQpspSmC7m0grERlD7Q3ddjR+bHZVcHerO7KjKF7A4bO17c?=
- =?us-ascii?Q?beI9e8n2KAs8wzNV4F9oU49ODRjeJjJLHYI1yiEF/Kemy1U8N4NV08iHDc5o?=
- =?us-ascii?Q?XWUnVCMlK7VQn2TxARV3stwml+enV4BAOi8OMJge+mX/T6LdsfcIlSDvKOuU?=
- =?us-ascii?Q?/+p2K9mOy6ANA53EOwX1olgqZ8fDjucv5zJbuPeEIA0VaOetZHOnmHr1Q2NX?=
- =?us-ascii?Q?2hQhLrFgBQ0xhtXL9xpRkBHeT0W4BLLQKpW6XlgUlzxjRzrSy5Pd2l7t1G+i?=
- =?us-ascii?Q?PvEVIEEHz0ThgZp1cmw3K+VBPtVa9lMtNiYHJoNch3nMmybbK1LnUHA7k0YX?=
- =?us-ascii?Q?mHA2vNM0RAwJM4QgfvePZfhWsgK1keKo+8uyF65UsDPjCtnM0aM1zwLxzAln?=
- =?us-ascii?Q?BUs5ZVeDoWeyezUA+hYWqm6rk/ww/wg=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S232795AbiEIDBe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 May 2022 23:01:34 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF7BD84A1F;
+        Sun,  8 May 2022 19:57:37 -0700 (PDT)
+X-UUID: 3a3c2e1e4be54fe3a694e0afff2d6725-20220509
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.4,REQID:20ec6cda-f7a8-4273-a94c-e4858e2dea78,OB:0,LO
+        B:0,IP:0,URL:0,TC:0,Content:-20,EDM:0,RT:0,SF:51,FILE:0,RULE:Release_Ham,A
+        CTION:release,TS:31
+X-CID-INFO: VERSION:1.1.4,REQID:20ec6cda-f7a8-4273-a94c-e4858e2dea78,OB:0,LOB:
+        0,IP:0,URL:0,TC:0,Content:-20,EDM:0,RT:0,SF:51,FILE:0,RULE:Release_Ham,ACT
+        ION:release,TS:31
+X-CID-META: VersionHash:faefae9,CLOUDID:1dd50bb3-56b5-4c9e-8d83-0070b288eb6a,C
+        OID:5f03f18dcb27,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,File:nil
+        ,QS:0,BEC:nil
+X-UUID: 3a3c2e1e4be54fe3a694e0afff2d6725-20220509
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
+        (envelope-from <powen.kao@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 836006255; Mon, 09 May 2022 10:57:08 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
+ Mon, 9 May 2022 10:57:07 +0800
+Received: from [172.21.84.99] (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 9 May 2022 10:57:06 +0800
+Subject: Re: [PATCH v2] scsi: ufs: add clock-scalable property for clk scaling
+To:     <j-young.choi@samsung.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+        "Avri Altman" <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+CC:     <wsd_upstream@mediatek.com>, <peter.wang@mediatek.com>,
+        <stanley.chu@mediatek.com>, <alice.chao@mediatek.com>,
+        <chun-hung.wu@mediatek.com>, <cc.chou@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>
+References: <20220507045223.14775-1-powen.kao@mediatek.com>
+ <20220507045731.19495-1-powen.kao@mediatek.com>
+From:   Po-Wen Kao <powen.kao@mediatek.com>
+Message-ID: <5039606d-1dad-2a76-78fc-af416abe4d1e@mediatek.com>
+Date:   Mon, 9 May 2022 10:57:06 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR21MB3025.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f4c30418-69ff-4c7c-2632-08da31097e0c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 May 2022 15:43:26.5088
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: TO0BucS/nes4teMlv23YTecINYjeUBXD7KDETcJyW70fU5CV+LNoBImXzOJ1uwAcm6KT4NMu0oZRZ7JqI7OW+3EIu8XeHjChDcxQ50UFq2c=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR21MB3239
+In-Reply-To: <20220507045731.19495-1-powen.kao@mediatek.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Pavel Machek <pavel@ucw.cz> Sent: Wednesday, May 4, 2022 10:23 AM
->=20
-> Hi!
->=20
-> > Linux code for running as a Hyper-V guest includes special cases for th=
-e
-> > first released versions of Hyper-V: 2008 and 2008R2/Windows 7. These
-> > versions were very thinly used for running Linux guests when first
-> > released more than 12 years ago, and they are now out of support
-> > (except for extended security updates). As initial versions, they
-> > lack the performance features needed for effective production usage
-> > of Linux guests. In total, there's no need to continue to support
-> > the latest Linux kernels on these versions of Hyper-V.
-> >
-> > Simplify the code for running on Hyper-V by removing the special
-> > cases. This includes removing the negotiation of the VMbus protocol
-> > versions for 2008 and 2008R2, and the special case code based on
-> > those VMbus protocol versions. Changes are in the core VMbus code and
-> > several drivers for synthetic VMbus devices.
->=20
-> > 2008 and 2008R2, so if the broader Linux kernel community surfaces
-> > a reason why this clean-up should not be done now, we can wait.
-> > But I think we want to eventually stop carrying around this extra
-> > baggage, and based on discussions with the Hyper-V team within
-> > Microsoft, we're already past the point that it has any value.
->=20
-> Normal way to do such deprecations is to put printks in first, then hide =
-it
-> under config option noone sets, and wait for year or so if anyone complai=
-ns.
->=20
+Update missing cover letter
 
-Are there any examples of doing these deprecation steps that you can
-point me to?  I did not see anything in the Documentation directory
-covering the deprecation process you describe.
+V2 changes
+- Cleaner code path as suggested. e.g. return directly
+- Wrap clk_set_rate() with ufshcd_clk_set_rate() to check on "scalable".
 
-I'd also make the case that we are already well down the deprecation
-path.  For at least the last 5 years, the public Microsoft documentation
-for Linux guests has listed Hyper-V 2012 R2 as the earliest supported
-Hyper-V version.  Other current and new Microsoft products aren't
-supported on Hyper-V 2008/Win7 either -- the usual Word/Excel/
-PowerPoint, etc. fall into this category as well as Windows 10 and Windows
-11 as guests.  So for a rare user who might still be using Hyper-V
-2008/Win7, there's no reasonable expectation of being able to run
-the latest upstream Linux kernel on Hyper-V 2008/Win7.  Other
-current software doesn't.
-
-Given that running Linux guests on Hyper-V sort of implicitly
-combines Microsoft commercial thinking and Linux open source
-thinking about version support, I could see putting the old Hyper-V
-version support under a config option that defaults to "no", with a=20
-deprecation comment, and seeing if that garners any complaints.
-But given the broader situation with Hyper-V 2008/Win7, in my
-judgment even that is more cautious than we need to be.
-
-Michael
-
-> We can't really remove code that is in use.
->=20
-> Best regards,
-> 									Pavel
+On 5/7/22 12:57 PM, Po-Wen Kao wrote:
+> In clk scaling, clk_set_rate is invoked to set dedicated PLL clk rate
+> on scale up and down. On some MTK platform, scaling is only possible
+> by switching parent of a mux, therefore we introduce a new
+> "clock-scalable" property to gain fine control over which clock rate can
+> be scaled by calling clk_set_rate. If a clock is defined as non-scalable,
+> clk_set_rate won't be invoked while clki->current_rate is still updated
+> if min/max freq is defined. Customized clk operation may be embedded in
+> pre/post change of hba->vops->clk_scale_notify.
+>
+> All clocks in dts without "clock-scalable" property defined are assumed
+> scalable and works as usual. There is no neeed to make change on existing
+> dts.
+>
+> To specify scalable property, one may define dts as follow
+>
+> &ufshci {
+>      clocks =
+>          <clk1>,
+>          <clk2>,
+>          ...
+>          <clkn>;
+>
+>      clock-names =
+>          "clk1",
+>          "clk2",
+>          ...
+>          "clkn";
+>
+>      freq-table-hz =
+>          <1000 2000>,
+>          <0 0>,
+>          ...
+>          <0 0>;
+>
+>      clock-scalable =
+>          <0
+>           0
+>           ...
+>           0
+>          >;
+> };
+>
+> Signed-off-by: Po-Wen Kao <powen.kao@mediatek.com>
+> ---
+>   drivers/scsi/ufs/ufshcd-pltfrm.c | 96 +++++++++++++++++++++++---------
+>   drivers/scsi/ufs/ufshcd.c        | 54 +++++++-----------
+>   drivers/scsi/ufs/ufshcd.h        |  2 +
+>   include/trace/events/ufs.h       | 16 +++---
+>   4 files changed, 102 insertions(+), 66 deletions(-)
+>
+> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> index 87975d1a21c8..5f95bb519485 100644
+> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+> @@ -18,6 +18,56 @@
+>   
+>   #define UFSHCD_DEFAULT_LANES_PER_DIRECTION		2
+>   
+> +/**
+> + * ufshcd_get_clk_u32_array - Resolve property in dts to u32 array with
+> + * shape check.
+> + * @hba: per-adapter instance
+> + * @propname: name of property
+> + * @cols: column count
+> + * @rows: calculated row count with given cols
+> + * @array: u32 array pointer of property data with propname
+> + */
+> +static int ufshcd_get_clk_u32_array(struct ufs_hba *hba, const char *propname,
+> +				    size_t cols, size_t *rows, u32 **array)
+> +{
+> +	struct device *dev = hba->dev;
+> +	struct device_node *np = dev->of_node;
+> +	int len = 0, ret = 0;
+> +	int _rows = 0;
+> +
+> +	if (!of_get_property(np, propname, &len)) {
+> +		dev_warn(dev, "%s property not specified.\n", propname);
+> +		return -EINVAL;
+> +	}
+> +
+> +	len = len / sizeof(**array);
+> +	if (!cols || !len || len % cols != 0) {
+> +		dev_warn(dev, "%s property define error.\n", propname);
+> +		return -EINVAL;
+> +	}
+> +	_rows = len / cols;
+> +
+> +	*array = devm_kcalloc(dev, len, sizeof(**array), GFP_KERNEL);
+> +	if (!*array) {
+> +		ret = -ENOMEM;
+> +		goto out;
+> +	}
+> +
+> +	ret = of_property_read_u32_array(np, propname, *array, len);
+> +	if (ret) {
+> +		dev_err(dev, "%s: error reading array %d\n",
+> +			propname, ret);
+> +		goto out;
+> +	}
+> +
+> +	*rows = _rows;
+> +
+> +	return 0;
+> +out:
+> +	devm_kfree(dev, *array);
+> +	return ret;
+> +}
+> +
+>   static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+>   {
+>   	int ret = 0;
+> @@ -27,13 +77,14 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+>   	struct device_node *np = dev->of_node;
+>   	char *name;
+>   	u32 *clkfreq = NULL;
+> +	u32 *scalable = NULL;
+>   	struct ufs_clk_info *clki;
+> -	int len = 0;
+>   	size_t sz = 0;
+>   
+>   	if (!np)
+>   		goto out;
+>   
+> +	/* clock-names */
+>   	cnt = of_property_count_strings(np, "clock-names");
+>   	if (!cnt || (cnt == -EINVAL)) {
+>   		dev_info(dev, "%s: Unable to find clocks, assuming enabled\n",
+> @@ -47,37 +98,29 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+>   	if (cnt <= 0)
+>   		goto out;
+>   
+> -	if (!of_get_property(np, "freq-table-hz", &len)) {
+> -		dev_info(dev, "freq-table-hz property not specified\n");
+> +	/* clock-scalable (optional) */
+> +	ret = ufshcd_get_clk_u32_array(hba, "clock-scalable", 1, &sz, &scalable);
+> +	if (ret) {
+> +		dev_warn(dev, "Optional property %s load failed. Assume all clocks scalable.\n",
+> +			 "clock-scalable");
+> +	} else if (sz != cnt) {
+> +		dev_err(dev, "%s len mismatch\n", "clock-scalable");
+> +		ret = -EINVAL;
+>   		goto out;
+>   	}
+>   
+> -	if (len <= 0)
+> +	/* freq-table-hz */
+> +	ret = ufshcd_get_clk_u32_array(hba, "freq-table-hz", 2, &sz, &clkfreq);
+> +	if (ret) {
+> +		dev_err(dev, "Property %s load failed.", "freq-table-hz");
+>   		goto out;
+> -
+> -	sz = len / sizeof(*clkfreq);
+> -	if (sz != 2 * cnt) {
+> +	} else if (sz != cnt) {
+>   		dev_err(dev, "%s len mismatch\n", "freq-table-hz");
+>   		ret = -EINVAL;
+>   		goto out;
+>   	}
+>   
+> -	clkfreq = devm_kcalloc(dev, sz, sizeof(*clkfreq),
+> -			       GFP_KERNEL);
+> -	if (!clkfreq) {
+> -		ret = -ENOMEM;
+> -		goto out;
+> -	}
+> -
+> -	ret = of_property_read_u32_array(np, "freq-table-hz",
+> -			clkfreq, sz);
+> -	if (ret && (ret != -EINVAL)) {
+> -		dev_err(dev, "%s: error reading array %d\n",
+> -				"freq-table-hz", ret);
+> -		return ret;
+> -	}
+> -
+> -	for (i = 0; i < sz; i += 2) {
+> +	for (i = 0; i < cnt * 2; i += 2) {
+>   		ret = of_property_read_string_index(np,
+>   				"clock-names", i/2, (const char **)&name);
+>   		if (ret)
+> @@ -92,6 +135,7 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+>   		clki->min_freq = clkfreq[i];
+>   		clki->max_freq = clkfreq[i+1];
+>   		clki->name = devm_kstrdup(dev, name, GFP_KERNEL);
+> +		clki->scalable = scalable ? !!scalable[i / 2] : true;
+>   		if (!clki->name) {
+>   			ret = -ENOMEM;
+>   			goto out;
+> @@ -99,11 +143,13 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+>   
+>   		if (!strcmp(name, "ref_clk"))
+>   			clki->keep_link_active = true;
+> -		dev_dbg(dev, "%s: min %u max %u name %s\n", "freq-table-hz",
+> -				clki->min_freq, clki->max_freq, clki->name);
+> +		dev_dbg(dev, "clk %s: scalable(%u), min(%u), max(%u)\n",
+> +			clki->name, clki->scalable, clki->min_freq, clki->max_freq);
+>   		list_add_tail(&clki->list, &hba->clk_list_head);
+>   	}
+>   out:
+> +	devm_kfree(dev, scalable);
+> +	devm_kfree(dev, clkfreq);
+>   	return ret;
+>   }
+>   
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index eea5af5fa166..8dbae2f73329 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -939,6 +939,11 @@ static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
+>   		return false;
+>   }
+>   
+> +static inline int ufshcd_clk_set_rate(struct ufs_clk_info *clki, unsigned long rate)
+> +{
+> +	return clki->scalable ? clk_set_rate(clki->clk, rate) : 0;
+> +}
+> +
+>   /**
+>    * ufshcd_set_clk_freq - set UFS controller clock frequencies
+>    * @hba: per adapter instance
+> @@ -950,6 +955,7 @@ static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
+>   static int ufshcd_set_clk_freq(struct ufs_hba *hba, bool scale_up)
+>   {
+>   	int ret = 0;
+> +	u32 target_rate = 0;
+>   	struct ufs_clk_info *clki;
+>   	struct list_head *head = &hba->clk_list_head;
+>   
+> @@ -958,41 +964,23 @@ static int ufshcd_set_clk_freq(struct ufs_hba *hba, bool scale_up)
+>   
+>   	list_for_each_entry(clki, head, list) {
+>   		if (!IS_ERR_OR_NULL(clki->clk)) {
+> -			if (scale_up && clki->max_freq) {
+> -				if (clki->curr_freq == clki->max_freq)
+> -					continue;
+> -
+> -				ret = clk_set_rate(clki->clk, clki->max_freq);
+> -				if (ret) {
+> -					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
+> -						__func__, clki->name,
+> -						clki->max_freq, ret);
+> -					break;
+> -				}
+> -				trace_ufshcd_clk_scaling(dev_name(hba->dev),
+> -						"scaled up", clki->name,
+> -						clki->curr_freq,
+> -						clki->max_freq);
+> -
+> -				clki->curr_freq = clki->max_freq;
+> +			target_rate = scale_up ? clki->max_freq : clki->min_freq;
+>   
+> -			} else if (!scale_up && clki->min_freq) {
+> -				if (clki->curr_freq == clki->min_freq)
+> -					continue;
+> +			if (!target_rate || clki->curr_freq == target_rate)
+> +				continue;
+>   
+> -				ret = clk_set_rate(clki->clk, clki->min_freq);
+> -				if (ret) {
+> -					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
+> -						__func__, clki->name,
+> -						clki->min_freq, ret);
+> -					break;
+> -				}
+> -				trace_ufshcd_clk_scaling(dev_name(hba->dev),
+> -						"scaled down", clki->name,
+> -						clki->curr_freq,
+> -						clki->min_freq);
+> -				clki->curr_freq = clki->min_freq;
+> +			ret = ufshcd_clk_set_rate(clki, target_rate);
+> +			if (ret) {
+> +				dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
+> +					__func__, clki->name,
+> +					target_rate, ret);
+> +				break;
+>   			}
+> +			trace_ufshcd_clk_scaling(dev_name(hba->dev),
+> +						 clki->name, scale_up,
+> +						 clki->curr_freq,
+> +						 target_rate);
+> +			clki->curr_freq = target_rate;
+>   		}
+>   		dev_dbg(hba->dev, "%s: clk: %s, rate: %lu\n", __func__,
+>   				clki->name, clk_get_rate(clki->clk));
+> @@ -8364,7 +8352,7 @@ static int ufshcd_init_clocks(struct ufs_hba *hba)
+>   			ufshcd_parse_dev_ref_clk_freq(hba, clki->clk);
+>   
+>   		if (clki->max_freq) {
+> -			ret = clk_set_rate(clki->clk, clki->max_freq);
+> +			ret = ufshcd_clk_set_rate(clki, clki->max_freq);
+>   			if (ret) {
+>   				dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
+>   					__func__, clki->name,
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 1637f5cc1420..eaa3d6c5b9ab 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -260,6 +260,7 @@ struct ufs_dev_cmd {
+>    * @keep_link_active: indicates that the clk should not be disabled if
+>   		      link is active
+>    * @enabled: variable to check against multiple enable/disable
+> + * @scalable: indicates if clk is scalable in clk scaling
+>    */
+>   struct ufs_clk_info {
+>   	struct list_head list;
+> @@ -270,6 +271,7 @@ struct ufs_clk_info {
+>   	u32 curr_freq;
+>   	bool keep_link_active;
+>   	bool enabled;
+> +	bool scalable;
+>   };
+>   
+>   enum ufs_notify_change_status {
+> diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
+> index 599739ee7b20..780c964e52c2 100644
+> --- a/include/trace/events/ufs.h
+> +++ b/include/trace/events/ufs.h
+> @@ -103,30 +103,30 @@ TRACE_EVENT(ufshcd_clk_gating,
+>   
+>   TRACE_EVENT(ufshcd_clk_scaling,
+>   
+> -	TP_PROTO(const char *dev_name, const char *state, const char *clk,
+> -		u32 prev_state, u32 curr_state),
+> +	TP_PROTO(const char *dev_name, const char *clk,
+> +		 bool up, u32 prev_state, u32 curr_state),
+>   
+> -	TP_ARGS(dev_name, state, clk, prev_state, curr_state),
+> +	TP_ARGS(dev_name, clk, up, prev_state, curr_state),
+>   
+>   	TP_STRUCT__entry(
+>   		__string(dev_name, dev_name)
+> -		__string(state, state)
+>   		__string(clk, clk)
+> +		__field(bool, up)
+>   		__field(u32, prev_state)
+>   		__field(u32, curr_state)
+>   	),
+>   
+>   	TP_fast_assign(
+>   		__assign_str(dev_name, dev_name);
+> -		__assign_str(state, state);
+>   		__assign_str(clk, clk);
+> +		__entry->up = up;
+>   		__entry->prev_state = prev_state;
+>   		__entry->curr_state = curr_state;
+>   	),
+>   
+> -	TP_printk("%s: %s %s from %u to %u Hz",
+> -		__get_str(dev_name), __get_str(state), __get_str(clk),
+> -		__entry->prev_state, __entry->curr_state)
+> +	TP_printk("%s: scaled %s %s from %u to %u Hz",
+> +		  __get_str(dev_name), __entry->up ? "up" : "down", __get_str(clk),
+> +		  __entry->prev_state, __entry->curr_state)
+>   );
+>   
+>   TRACE_EVENT(ufshcd_auto_bkops_state,
