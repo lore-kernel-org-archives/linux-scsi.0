@@ -2,179 +2,133 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57C92C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 May 2022 13:24:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 522BFC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 May 2022 14:49:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235983AbiEIN1u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 May 2022 09:27:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41282 "EHLO
+        id S237499AbiEIOxY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 May 2022 10:53:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235895AbiEIN1l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2022 09:27:41 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 384E31E251A;
-        Mon,  9 May 2022 06:23:28 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id bu29so23828707lfb.0;
-        Mon, 09 May 2022 06:23:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=1K2obVx3YG8QEPrenU4QI5guJQ8Phbo/6yP70JTaawU=;
-        b=ctuOdHCyg4DfJDMuVyrfXjafqsIBGrPq9u27BiBAquJftMSjYFJ55Dztcsr8bNMn0w
-         oeM//L+QbMc5cqR/YL4ZYXu9SspJYNvQLipuO/dxUV/COK7qJD4YPieEuwN+Da6gnICg
-         tiL5ifQOF61sLM7j5k+TfKf3keD2QE9+mfbjkcLau1uokLQ0TJXXWGRj10hWZc6mNTCY
-         ZiPlrCXkxh/d8AP+hVzj144bdbLZ6gunWEeo3XTOHdZMf+1T4Dk4fDvhUDM82hKq6q3x
-         a24gfPwl0eQuynyAnF+v9tUB7WbmPEsnBDi3opOHoOjQkJbqyH8fYmRySBDQ1lHi3t+I
-         lY6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=1K2obVx3YG8QEPrenU4QI5guJQ8Phbo/6yP70JTaawU=;
-        b=mIkc0TZp+d1LwPecfcRJtDyH8BAqmNXPw1gYvuKs2yAX+y/qu14tJVn5mKfiCdAUiD
-         J1PqhiIjZpmt4I41YmLtpvg+xbziJgzNGHXGMiOFa6DvXp7/eZptbtwLH2IAhvwlPCxS
-         NabvguI5sndh9CnuM7+Nbt5RqzIBU1d3G0QPTQgzq002Of+D7T6HGgaawOrPEptXXb3P
-         eUYjlsTq3r2LFbCvBBF+mq0oXHqqNcckY+cE/SOi0e0PXu5RldMDfIevfXgKBHyWePHP
-         0sgqvfjsdEogwf9f3gIvaQlDCS3kpPAdvafbIWiQQWGKMr+zn7KSbobrxskZHZW/vLap
-         5kFg==
-X-Gm-Message-State: AOAM530ONvoAN48p67Wf1oX/vzg/HnhHcWEtfhjcp+b/GIzlzZTrFcLh
-        BlXgCeuNzxRrgAUVOGngXGI=
-X-Google-Smtp-Source: ABdhPJy54uNV0a0Y5a5xZUhU6QHCMVecZmAJ2frVW6KAYppShjM44jXuH8rdrMemcTVYgMIiSG1E7g==
-X-Received: by 2002:ac2:4c49:0:b0:473:ca4f:9345 with SMTP id o9-20020ac24c49000000b00473ca4f9345mr12622420lfk.203.1652102606387;
-        Mon, 09 May 2022 06:23:26 -0700 (PDT)
-Received: from [192.168.1.7] ([212.22.223.21])
-        by smtp.gmail.com with ESMTPSA id h5-20020a056512338500b0047255d2111csm1941442lfg.75.2022.05.09.06.23.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 May 2022 06:23:25 -0700 (PDT)
-Subject: Re: [PATCH v3 00/21] xen: simplify frontend side ring setup
-To:     Juergen Gross <jgross@suse.com>, xen-devel@lists.xenproject.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-integrity@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
+        with ESMTP id S237061AbiEIOxU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2022 10:53:20 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDEEE24D630;
+        Mon,  9 May 2022 07:49:24 -0700 (PDT)
+Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KxkTk0NJ3z67Yv4;
+        Mon,  9 May 2022 22:44:42 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 9 May 2022 16:49:22 +0200
+Received: from [10.47.80.57] (10.47.80.57) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 9 May
+ 2022 15:49:21 +0100
+Message-ID: <fd2cdc06-5d88-306a-3ee1-7aef3e3b8921@huawei.com>
+Date:   Mon, 9 May 2022 15:50:33 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Christoph Hellwig <hch@infradead.org>
+CC:     "Ewan D. Milne" <emilne@redhat.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Oleksandr Andrushchenko <oleksandr_andrushchenko@epam.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>, alsa-devel@alsa-project.org,
-        Peter Huewe <peterhuewe@gmx.de>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <20220505081640.17425-1-jgross@suse.com>
-From:   Oleksandr <olekstysh@gmail.com>
-Message-ID: <409fb110-646a-2973-aff3-c97fdfb9bfbc@gmail.com>
-Date:   Mon, 9 May 2022 16:23:24 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <20220505081640.17425-1-jgross@suse.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        "Alim Akhtar" <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Doug Gilbert" <dgilbert@interlog.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <james.smart@broadcom.com>
+References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
+ <2a88a992-641a-b3ff-fe39-7a61fff87cb6@huawei.com>
+ <4c3be5b6-50ef-9e9a-6cee-9642df943342@linaro.org>
+ <7b3885e3-dbae-ff0b-21dc-c28d635d950b@huawei.com>
+ <c121430b1b5c8f5816b2b42b9178d00889260c90.camel@redhat.com>
+ <b6af3fe8-db9a-b5dc-199f-21c05d7664a2@huawei.com>
+ <Yl+wJ7xSHzWmR+bR@infradead.org>
+ <d09faf74-a52e-8d93-cf26-08b43b12c564@huawei.com>
+ <24bfb681-faec-3567-3089-9cd5ee182710@linaro.org>
+ <1bb53912-c5c3-7690-e82f-cf356ca87404@huawei.com>
+ <6f28acde-2177-0bc7-b06d-c704153489c0@linaro.org>
+ <4510c5dc-3d7d-fc5f-cb80-34da7dbaaa8e@huawei.com>
+ <d01c29c1-bb5a-281d-ef71-9c7b39e28d23@linaro.org>
+In-Reply-To: <d01c29c1-bb5a-281d-ef71-9c7b39e28d23@linaro.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+X-Originating-IP: [10.47.80.57]
+X-ClientProxiedBy: lhreml739-chm.china.huawei.com (10.201.108.189) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 09/05/2022 14:20, Krzysztof Kozlowski wrote:
+> On 09/05/2022 13:28, John Garry wrote:
+>>
+>> For some reason I cannot fetch your git due to "error: RPC failed ..."
+>> which I think is a timeout. I seem to have this problem recently
+>> whenever a linux.git clone has branches based on linux-next.git . Maybe
+>> a git config issue for me...
+> 
+> Just to be sure - the link was not a git remote, but direct link for a
+> web browser. The repo is:
+> https://github.com/krzk/linux.git
+> branch: n/qcom-ufs-opp-cleanups-v2
+> 
 
-On 05.05.22 11:16, Juergen Gross wrote:
+OK, I'll double check. Regardless I'll sort my own IT issues :)
 
-Hello Juergen.
+>>> However this does not solve the problem. The SHT has "module" which gets
+>>> incremented/decremented. Exactly like in case of other drivers
+>>> (driver->owner).
+>>
+>> Ah, I missed that this could be a problem. So we have this member to
+>> stop the SCSI host driver being removed when we have disks mounted, etc.
+>>
+>> But isn't scsi_host_template.module just a pointer to the local driver
+>> module data (and that data gets incremented/decremented)? I am looking
+>> at the THIS_MODULE definition in export.h:
+> 
+> Yes, it is just a pointer, just like 'struct device_driver.owner' is.
+> 
+>>
+>> extern stuct module __this_module;
+>> #define THIS_MODULE(&__this_module)
+>>
+>> However I do see scsi_device_dev_release(), which does:
+>>
+>> sdp->host->hostt->module = NULL
+>>
+>> I am not sure how necessary that really is. I would need to check further.
+> 
+>>
+>> Did you see if there other places which set hostt->module dynamically?
+> 
+> I think all SHT set it statically. 
 
+Incidentally I did notice that the ata ahci driver does not set sht->module.
 
+> Then it is being dynamically
+> incremented when needed and in scsi_device_dev_release() is being
+> nullified (as you mentioned above).
+> 
+> I guess this SHT->module is actually duplicating what most of drivers
+> (e.g. PCI, platform, USB) are doing. If I understand correctly, the
+> Scsi_Host is instantiated by the probe of a driver (pci_driver,
+> virtio_driver etc), therefore the SHT->module could be simply stored in
+> Scsi_Host.
 
-> Many Xen PV frontends share similar code for setting up a ring page
-> (allocating and granting access for the backend) and for tearing it
-> down.
->
-> Create new service functions doing all needed steps in one go.
->
-> This requires all frontends to use a common value for an invalid
-> grant reference in order to make the functions idempotent.
->
-> Changes in V3:
-> - new patches 1 and 2, comments addressed
->
-> Changes in V2:
-> - new patch 9 and related changes in patches 10-18
->
-> Juergen Gross (21):
->    xen: update grant_table.h
->    xen/grant-table: never put a reserved grant on the free list
->    xen/blkfront: switch blkfront to use INVALID_GRANT_REF
->    xen/netfront: switch netfront to use INVALID_GRANT_REF
->    xen/scsifront: remove unused GRANT_INVALID_REF definition
->    xen/usb: switch xen-hcd to use INVALID_GRANT_REF
->    xen/drm: switch xen_drm_front to use INVALID_GRANT_REF
->    xen/sound: switch xen_snd_front to use INVALID_GRANT_REF
->    xen/dmabuf: switch gntdev-dmabuf to use INVALID_GRANT_REF
->    xen/shbuf: switch xen-front-pgdir-shbuf to use INVALID_GRANT_REF
->    xen: update ring.h
->    xen/xenbus: add xenbus_setup_ring() service function
->    xen/blkfront: use xenbus_setup_ring() and xenbus_teardown_ring()
->    xen/netfront: use xenbus_setup_ring() and xenbus_teardown_ring()
->    xen/tpmfront: use xenbus_setup_ring() and xenbus_teardown_ring()
->    xen/drmfront: use xenbus_setup_ring() and xenbus_teardown_ring()
->    xen/pcifront: use xenbus_setup_ring() and xenbus_teardown_ring()
->    xen/scsifront: use xenbus_setup_ring() and xenbus_teardown_ring()
->    xen/usbfront: use xenbus_setup_ring() and xenbus_teardown_ring()
->    xen/sndfront: use xenbus_setup_ring() and xenbus_teardown_ring()
->    xen/xenbus: eliminate xenbus_grant_ring()
+If you check scsi_device_dev_release(), we try to do a 'get' - if it 
+fails, then we nullify hostt->module. I think that is important as then 
+we call execute_in_process_context(), whose worker does the 'put'. 
+However, the 'put' will get upset if the refcnt was 0, which it would be 
+if the earlier 'get' fails - hence the nullify is to avoid that 
+possibility. So whatever you do needs to handle that. Details are in 
+f2b85040
 
-
-For the patches that touch PV display (#07, #16), PV sound (#08, #20) 
-and shared buffer framework used by both frontends (#10):
-
-Reviewed-by: Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>
-
-
-Also I didn't see any issues with these frontends while testing on Arm64 
-based board.
-So, you can also add:
-
-[Arm64 only]
-Tested-by: Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>
-
-
-Thanks!
-
-
->
->   drivers/block/xen-blkfront.c                |  57 +++----
->   drivers/char/tpm/xen-tpmfront.c             |  18 +--
->   drivers/gpu/drm/xen/xen_drm_front.h         |   9 --
->   drivers/gpu/drm/xen/xen_drm_front_evtchnl.c |  43 ++----
->   drivers/net/xen-netfront.c                  |  85 ++++-------
->   drivers/pci/xen-pcifront.c                  |  19 +--
->   drivers/scsi/xen-scsifront.c                |  31 +---
->   drivers/usb/host/xen-hcd.c                  |  65 ++------
->   drivers/xen/gntdev-dmabuf.c                 |  13 +-
->   drivers/xen/grant-table.c                   |  12 +-
->   drivers/xen/xen-front-pgdir-shbuf.c         |  18 +--
->   drivers/xen/xenbus/xenbus_client.c          |  82 +++++++---
->   include/xen/grant_table.h                   |   2 -
->   include/xen/interface/grant_table.h         | 161 ++++++++++++--------
->   include/xen/interface/io/ring.h             |  19 ++-
->   include/xen/xenbus.h                        |   4 +-
->   sound/xen/xen_snd_front_evtchnl.c           |  44 ++----
->   sound/xen/xen_snd_front_evtchnl.h           |   9 --
->   18 files changed, 287 insertions(+), 404 deletions(-)
->
--- 
-Regards,
-
-Oleksandr Tyshchenko
-
+Thanks,
+john
