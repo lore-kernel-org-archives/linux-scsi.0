@@ -2,94 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F30C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 May 2022 14:06:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27223C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 May 2022 14:56:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245226AbiEJOJr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 May 2022 10:09:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33838 "EHLO
+        id S1345352AbiEJPAE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 May 2022 11:00:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245481AbiEJOJ1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 May 2022 10:09:27 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C76D326EC;
-        Tue, 10 May 2022 06:44:39 -0700 (PDT)
-Received: from fraeml713-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KyK2d3mmXz67xBy;
-        Tue, 10 May 2022 21:41:45 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml713-chm.china.huawei.com (10.206.15.32) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 10 May 2022 15:44:36 +0200
-Received: from [10.47.91.186] (10.47.91.186) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2375.24; Tue, 10 May
- 2022 14:44:36 +0100
-Message-ID: <9ede7211-ae58-5cd4-4cf6-74c1f508f1a6@huawei.com>
-Date:   Tue, 10 May 2022 14:44:50 +0100
+        with ESMTP id S1345257AbiEJO7y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 May 2022 10:59:54 -0400
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72121496BE;
+        Tue, 10 May 2022 07:21:17 -0700 (PDT)
+Received: by mail-pg1-x52f.google.com with SMTP id r192so10588463pgr.6;
+        Tue, 10 May 2022 07:21:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=C/+VFEBe/LSPrTXVeYivM+3OUMTgtuIGywMyZxhof3k=;
+        b=O6L52kFHagR46TJPmGCxbhTD7MAV7fRTV88+fu1qZh1PExXXRlTvUD8pwrqgsK1CoA
+         6pQrsxXG/Ex/lsGUHN7nwxR1VOR5hGDzwetXGkCxfKRcJ+DgqVj1KspjlaUIBg7bB8oU
+         tHB4VF8+qxlxUsBuPiYrg8ijAOb31n+sx64wgYOpqZEImZl2QiXSbMeqP9wyRe1jTKmi
+         jsv7v1eED4sOxITiEBM8h8d7xZkNV2jNcnGFeFBwN1QJdS/7yhUfYf3ZmEVvM+UmfMps
+         QBcfB7v6uPUEldWhB0LYC/mu6FWEIC2mA3hgWxuXXeF0c9jwq475Wsqqrv+oAnvkzf8H
+         cEKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=C/+VFEBe/LSPrTXVeYivM+3OUMTgtuIGywMyZxhof3k=;
+        b=NfpKqL8H6F4iV5AX+/AJ+bjMyRXcalGu/biMl81nPLmvxofNgChXW+UAnsh323iiie
+         20ZrZ+A+sBQkVxHWIfe/SBHSoWUu3/cuIRUObX+NBOZvaJuOUrNrrVM/sek7XpFWuCJb
+         n1S9J4GgDlXMmfYhZu531VMrSOwW45Cuix4rUYih5NaNWC6FPyBhojFKyq9XXJ8msfhc
+         YF+lG2xptaPAcHmZoPBblqdxTVgBzHW2aHQGJvpn09Xe9DUmjXV9anPCbkuw1esQSUjc
+         cWmGnnIdicVBm+g+L7s3PobLWPU+MLDKlyrAYZS7y25E01bkMgcH3aOb++l3OMM3IPF8
+         jcxA==
+X-Gm-Message-State: AOAM533/ZcRjYZbt24rGqXmt5Qiguwe9150rHTnwhzTU154F4vHyygkx
+        DDcP94WHyCAHwdUGIw5q52U=
+X-Google-Smtp-Source: ABdhPJy97bolhJvIHOqV7+NcNzzrZ2GCZ5C6CuQaXVigvumxvAKUDd/RIyzO41HHMysQeVCx64xC2Q==
+X-Received: by 2002:a05:6a00:1acf:b0:50e:1872:c6b1 with SMTP id f15-20020a056a001acf00b0050e1872c6b1mr20763004pfv.76.1652192476948;
+        Tue, 10 May 2022 07:21:16 -0700 (PDT)
+Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:0:6c3c:3386:3925:381a])
+        by smtp.gmail.com with ESMTPSA id s16-20020a62e710000000b0050dc76281d8sm11031647pfh.178.2022.05.10.07.21.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 May 2022 07:21:16 -0700 (PDT)
+From:   Tianyu Lan <ltykernel@gmail.com>
+To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hch@infradead.org,
+        m.szyprowski@samsung.com, robin.murphy@arm.com,
+        michael.h.kelley@microsoft.com
+Cc:     Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        iommu@lists.linux-foundation.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        vkuznets@redhat.com, konrad.wilk@oracle.com, hch@lst.de,
+        parri.andrea@gmail.com, thomas.lendacky@amd.com
+Subject: [PATCH] swiotlb: Max mapping size takes min align mask into account
+Date:   Tue, 10 May 2022 10:21:09 -0400
+Message-Id: <20220510142109.777738-1-ltykernel@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [RFC PATCH 0/2] sbitmap: NUMA node spreading
-To:     Jens Axboe <axboe@kernel.dk>, <linux-block@vger.kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-References: <1652181274-136198-1-git-send-email-john.garry@huawei.com>
- <1afd2c01-69b3-ab8f-6bfe-118e3e56001c@kernel.dk>
-In-Reply-To: <1afd2c01-69b3-ab8f-6bfe-118e3e56001c@kernel.dk>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.91.186]
-X-ClientProxiedBy: lhreml705-chm.china.huawei.com (10.201.108.54) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/05/2022 13:50, Jens Axboe wrote:
->> fio config:
->> bs=4096, iodepth=128, numjobs=10, cpus_allowed_policy=split, rw=read,
->> ioscheduler=none
->>
->> Before:
->> 7130K
->>
->> After:
->> 7630K
->>
->> So a +7% IOPS gain.
+From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-Thanks for having a look.
+swiotlb_find_slots() skips slots according to io tlb aligned mask
+calculated from min aligned mask and original physical address
+offset. This affects max mapping size. The mapping size can't
+achieve the IO_TLB_SEGSIZE * IO_TLB_SIZE when original offset is
+non-zero. This will cause system boot up failure in Hyper-V
+Isolation VM where swiotlb force is enabled. Scsi layer use return
+value of dma_max_mapping_size() to set max segment size and it
+finally calls swiotlb_max_mapping_size(). Hyper-V storage driver
+sets min align mask to 4k - 1. Scsi layer may pass 256k length of
+request buffer with 0~4k offset and Hyper-V storage driver can't
+get swiotlb bounce buffer via DMA API. Swiotlb_find_slots() can't
+find 256k length bounce buffer with offset. Make swiotlb_max_mapping
+_size() take min align mask into account.
 
-> What does the comparison run on a non-NUMA non-shared queue look like?
-> Because I bet it'd be slower.
+Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
+---
+ kernel/dma/swiotlb.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-I could test more to get a solid result for that.
+diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
+index 73a41cec9e38..0d6684ca7eab 100644
+--- a/kernel/dma/swiotlb.c
++++ b/kernel/dma/swiotlb.c
+@@ -743,7 +743,18 @@ dma_addr_t swiotlb_map(struct device *dev, phys_addr_t paddr, size_t size,
+ 
+ size_t swiotlb_max_mapping_size(struct device *dev)
+ {
+-	return ((size_t)IO_TLB_SIZE) * IO_TLB_SEGSIZE;
++	int min_align_mask = dma_get_min_align_mask(dev);
++	int min_align = 0;
++
++	/*
++	 * swiotlb_find_slots() skips slots according to
++	 * min align mask. This affects max mapping size.
++	 * Take it into acount here.
++	 */
++	if (min_align_mask)
++		min_align = roundup(min_align_mask, IO_TLB_SIZE);
++
++	return ((size_t)IO_TLB_SIZE) * IO_TLB_SEGSIZE - min_align;
+ }
+ 
+ bool is_swiotlb_active(struct device *dev)
+-- 
+2.25.1
 
-> 
-> To be honest, I don't like this approach at all. It makes the normal
-> case quite a bit slower by having an extra layer of indirection for the
-> word, that's quite a bit of extra cost.
-
-Yes, there is the extra load. I would hope that there would be a low 
-cost, but I agree that we still want to avoid it. So prob no point in 
-testing this more.
-
-> It doesn't seem like a good
-> approach for the issue, as it pessimizes the normal fast case.
-> 
-> Spreading the memory out does probably make sense, but we need to retain
-> the fast normal case. Making sbitmap support both, selected at init
-> time, would be far more likely to be acceptable imho.
-
-I wanted to keep the code changes minimal for an initial RFC to test the 
-water.
-
-My original approach did not introduce the extra load for normal path 
-and had some init time selection for a normal word map vs numa word map, 
-but the code grew and became somewhat unmanageable. I'll revisit it to 
-see how to improve that.
-
-Cheers,
-john
