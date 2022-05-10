@@ -2,119 +2,175 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEA78C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 May 2022 01:58:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63800C43219
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 May 2022 04:41:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234446AbiEJCCK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 May 2022 22:02:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45430 "EHLO
+        id S236466AbiEJEo5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 May 2022 00:44:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234432AbiEJCCK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2022 22:02:10 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE82721330F
-        for <linux-scsi@vger.kernel.org>; Mon,  9 May 2022 18:58:09 -0700 (PDT)
-Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220510015803epoutp0295ed36b362e80a8f31172394cba3a234~tm788dLZj3273632736epoutp02R
-        for <linux-scsi@vger.kernel.org>; Tue, 10 May 2022 01:58:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220510015803epoutp0295ed36b362e80a8f31172394cba3a234~tm788dLZj3273632736epoutp02R
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1652147884;
-        bh=BLA8xn4IElcO3LAMo06B8+heYNNfifdUw16XRT/rcmc=;
-        h=Subject:Reply-To:From:To:CC:Date:References:From;
-        b=UpSfHuf5ZNEO03uoeaRtz3N8ygdqu7/uzq+GsaYCdPrVGPsIS5BQCeZ0cFXrO8ltX
-         EqxrX+8VRse/lAP+G3+bKD8nYIoKsTfsbjYVqgyhUUZHHNq0ON4IrcqWJpSRSx1PPW
-         3Z6wUNKPso18Ue5LVFp5NWL/jTIW9YTE+pRJs0Ro=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas3p1.samsung.com (KnoxPortal) with ESMTP id
-        20220510015803epcas3p1237a4112ed387a6af4ac0dffe51b9028~tm78XAo8U1834718347epcas3p1p;
-        Tue, 10 May 2022 01:58:03 +0000 (GMT)
-Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp3.localdomain
-        (Postfix) with ESMTP id 4Ky1Qg29SRz4x9Q2; Tue, 10 May 2022 01:58:03 +0000
-        (GMT)
-Mime-Version: 1.0
-Subject: RE: [PATCH v4 5/6] scsi: ufshpb: Add handing of device reset HPB
- regions Infos in HPB device mode
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Bean Huo <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "powen.kao@mediatek.com" <powen.kao@mediatek.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        cpgsproxy3 <cpgsproxy3@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1889248251.21652147883293.JavaMail.epsvc@epcpadp4>
-Date:   Tue, 10 May 2022 10:02:55 +0900
-X-CMS-MailID: 20220510010255epcms2p3f347f4b1a597c27248bacfa9dddf3139
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20220505134735epcas2p457a16df1b023585b188cc6fc15f37932
-References: <CGME20220505134735epcas2p457a16df1b023585b188cc6fc15f37932@epcms2p3>
+        with ESMTP id S236419AbiEJEoz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 May 2022 00:44:55 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A12DD1BEA8
+        for <linux-scsi@vger.kernel.org>; Mon,  9 May 2022 21:40:56 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id v11so13962475pff.6
+        for <linux-scsi@vger.kernel.org>; Mon, 09 May 2022 21:40:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=lbY1apz0pshrpCAaJ1RrYyZnbJ+UjeS0fVoXXo8j4x4=;
+        b=g1O4yIW8IBZL4UjQArViSLk8BGWFwVVdDj4k3lboHQlTkJQ+rm3mIbeCIIKgBldnDL
+         vemV1tqpX0uc13aujVWctoK7Xgz/Zw9Wdv34dhYv0rS2b96Ryzawc8Q7WTi9VBXsyM8/
+         I5Pi+SicIj63pu9fYM3QYaBG5+AIDSGzQCMOf3QCc6fdmLUVblR7n6tedFbDYuwdUZhu
+         zIuKHv2b8wLek6nQwSIbFcYwuO2pnT7dYWxxulUgiS5fNtP+EASQcqA5eMTg8QKMPEiX
+         u1yAPilOKbWZR5pPKRYIkh4RjlpecE57z8J7ag6lrDvUnChqYht9pXoHxKkm7w1GC0Ey
+         LmBg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=lbY1apz0pshrpCAaJ1RrYyZnbJ+UjeS0fVoXXo8j4x4=;
+        b=eZdEbGFkT7LTNzeYltJRoawh/wWt+gfwv3dR8BCh6rmeNCy3sGFebvJoDIKiiROGcG
+         ZRzXmINl5ld9w7CPDK3dUNxuwBExCl7jk1E/DrAreqQsu+y7GqG9/jUYnShkpw/GdBVj
+         rorWqdO7BOcFN6iLNVLMcFzhuPzi/GOLqmu6rXdnnpKqw6PySQ2cl0wiEQq8NO7du8+w
+         B9mbWvz4AyYFlLkiC1OTVEVxfe4BBcSPdYj2z4GevA2fSIKM2TdPRldgUJlowgQ77alW
+         Q4z1Zueo0s0y+Tbt5WTMqfdliMa+1/fNbtU/iRQEMer4+dQs+FecnHnoDir18ttWK6Iv
+         2K1A==
+X-Gm-Message-State: AOAM532uhUWZj+H6Ikd/8ktCyabd7RxngOQH4KfkbRtn/cj2fXYvPcIf
+        2PIaObxqwJa/jBJJz1JKz4WU6Q==
+X-Google-Smtp-Source: ABdhPJymevaw8JA+ZHsBCjPJ4j0suFS7f77voPGuje3SGgohExKLxChq+oCh5WRtZK41XqI6SBv0+w==
+X-Received: by 2002:aa7:9110:0:b0:4fa:e388:af57 with SMTP id 16-20020aa79110000000b004fae388af57mr18793150pfh.1.1652157656115;
+        Mon, 09 May 2022 21:40:56 -0700 (PDT)
+Received: from localhost ([122.162.234.2])
+        by smtp.gmail.com with ESMTPSA id a2-20020a170902900200b0015e8d4eb289sm780370plp.211.2022.05.09.21.40.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 May 2022 21:40:55 -0700 (PDT)
+Date:   Tue, 10 May 2022 10:10:53 +0530
+From:   Viresh Kumar <viresh.kumar@linaro.org>
+To:     Stephen Boyd <sboyd@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Taniya Das <tdas@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
+Message-ID: <20220510044053.ykn6ygnbeokhzrsa@vireshk-i7>
+References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
+ <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
+ <20220425072710.v6gwo4gu3aouezg4@vireshk-i7>
+ <dea39b1f-0091-2690-7f07-108d07ef9f3c@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dea39b1f-0091-2690-7f07-108d07ef9f3c@linaro.org>
+User-Agent: NeoMutt/20180716-391-311a52
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi=C2=A0Bean=C2=A0Huo,
-=C2=A0
->In=C2=A0UFS=C2=A0HPB=C2=A0Spec=C2=A0JESD220-3A,
->=C2=A0
->"5.8.=C2=A0Active=C2=A0and=C2=A0inactive=C2=A0information=C2=A0upon=C2=A0p=
-ower=C2=A0cycle
->...
->When=C2=A0the=C2=A0device=C2=A0is=C2=A0powered=C2=A0off=C2=A0by=C2=A0the=
-=C2=A0host,=C2=A0the=C2=A0device=C2=A0may=C2=A0restore=C2=A0L2P=C2=A0map=C2=
-=A0data
->upon=C2=A0power=C2=A0up=C2=A0or=C2=A0build=C2=A0from=C2=A0the=C2=A0host=E2=
-=80=99s=C2=A0HPB=C2=A0READ=C2=A0command.=C2=A0In=C2=A0case=C2=A0device=C2=
-=A0powered
->up=C2=A0and=C2=A0lost=C2=A0HPB=C2=A0information,=C2=A0device=C2=A0can=C2=
-=A0signal=C2=A0to=C2=A0the=C2=A0host=C2=A0through=C2=A0HPB=C2=A0Sense=C2=A0=
-data,
->by=C2=A0setting=C2=A0HPB=C2=A0Operation=C2=A0as=C2=A0=E2=80=982=E2=80=99=
-=C2=A0which=C2=A0will=C2=A0inform=C2=A0the=C2=A0host=C2=A0that=C2=A0device=
-=C2=A0reset=C2=A0HPB
->information."
->=C2=A0
->Therefore,=C2=A0for=C2=A0HPB=C2=A0device=C2=A0control=C2=A0mode,=C2=A0if=
-=C2=A0the=C2=A0UFS=C2=A0device=C2=A0is=C2=A0reset=C2=A0via=C2=A0the=C2=A0RS=
-T_N
->pin,=C2=A0the=C2=A0active=C2=A0region=C2=A0information=C2=A0in=C2=A0the=C2=
-=A0device=C2=A0will=C2=A0be=C2=A0reset.=C2=A0If=C2=A0the=C2=A0host=C2=A0sid=
-e
->receives=C2=A0this=C2=A0notification=C2=A0from=C2=A0the=C2=A0device=C2=A0s=
-ide,=C2=A0it=C2=A0is=C2=A0recommended=C2=A0to=C2=A0inactivate
->all=C2=A0active=C2=A0regions=C2=A0in=C2=A0the=C2=A0host's=C2=A0HPB=C2=A0ca=
-che.
->=C2=A0
->Signed-off-by:=C2=A0Bean=C2=A0Huo=C2=A0<beanhuo@micron.com>
->Reviewed-by:=C2=A0Keoseong=C2=A0Park=C2=A0<keosung.park@samsung.com>
-=C2=A0
-Here=C2=A0is=C2=A0my=C2=A0reviewed-by=C2=A0tag.
-Reviewed-by:=C2=A0Daejun=C2=A0Park=C2=A0<daejun7.park@samsung.com>
-=C2=A0
-Thanks,
-Daejun
-=C2=A0
+On 09-05-22, 12:38, Krzysztof Kozlowski wrote:
+> On 25/04/2022 09:27, Viresh Kumar wrote:
+> > This is tricky as the OPP core can't really assume the order in which the clocks
+> > needs to be programmed. We had the same problem with multiple regulators and the
+> > same is left for drivers to do via the custom-api.
+> > 
+> > Either we can take the same route here, and let platforms add their own OPP
+> > drivers which can handle this, Or hide this all behind a basic device clock's
+> > driver, which you get with clk_get(dev, NULL).
+> 
+> For my use case, the order of scaling will be the same as in previous
+> implementation, because UFS drivers just got bunch of clocks with
+> freq-table-hz property and were scaling in DT order.
+> 
+> If drivers need something better, they can always provide custom-opp
+> thus replacing my method. My implementation here does not restrict them.
+> 
+> For the drivers where the order does not matter, why forcing each driver
+> to provide its own implementation of clock scaling? Isn't shared generic
+> PM OPP code a way to remove code duplication?
+
+Code duplication is a good argument and I am in favor of avoiding it,
+but nevertheless this shouldn't be something which platforms can pick
+by mistake, just because they didn't go through core code. In other
+words, this shouldn't be the default behavior of the core.
+
+If we want, core can provide a helper to get rid of the duplication
+though, but the user explicitly needs to use it.
+
+> >> diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+> > 
+> >> +static int _generic_set_opp_clks_only(struct device *dev,
+> >> +				      struct opp_table *opp_table,
+> >> +				      struct dev_pm_opp *opp)
+> >> +{
+> >> +	int i, ret;
+> >> +
+> >> +	if (!opp_table->clks)
+> >> +		return 0;
+> >> +
+> >> +	for (i = 0; i < opp_table->clk_count; i++) {
+> >> +		if (opp->rates[i]) {
+> > 
+> > This should mean that we can disable that clock and it isn't required.
+> 
+> No, it does not mean that. The DT might provide several clocks which
+> only some are important for frequency scaling. All others just need to
+> be enabled.
+> 
+> Maybe you prefer to skip getting such clocks in PM OPP?
+
+They shouldn't reach the OPP core then. What will the OPP core do if a
+clock has a value for one OPP and not the other ?
+
+> >> @@ -969,8 +1008,8 @@ static void _find_current_opp(struct device *dev, struct opp_table *opp_table)
+> > 
+> > I think this routine breaks as soon as we add support for multiple clocks.
+> > clks[0]'s frequency can be same for multiple OPPs and this won't get you the
+> > right OPP then.
+> 
+> I don't think so and this was raised also by Stephen - only the first
+> clock is considered the one used for all PM OPP frequency operations,
+> like get ceil/floor.
+
+IMHO, this is broken by design. I can easily see that someone wants to
+have few variants of all other frequencies for the same frequency of
+the so called "main" clock, i.e. multiple OPPs with same "main" freq
+value.  I don't think we can mark the clocks "main" or otherwise as
+easily for every platform.
+
+Stephen, any inputs on this ?
+
+> The assumption (which might need better documentation) is that first
+> clock frequency is the main one:
+> 1. It is still in opp->rate field, so it is used everywhere when OPPs
+> are compared/checked for rates.
+> 1. Usually is used also in opp-table nodes names.
+> 
+> The logical explanation is that devices has some main operating
+> frequency, e.g. the core clock, and this determines the performance. In
+> the same time such device might not be able to scale this one core clock
+> independently from others, therefore this set of patches.
+
+I understand what you are saying, but I can feel that it will break or
+will force bad bug-fixes into the core at a later point of time.
+
+I think it would be better to take it slowly and see how it goes. Lets
+first add support for the OPP core to parse and store this data and
+then we can add support to use it, or at least do all this in separate
+patches so they are easier to review/apply.
+
+-- 
+viresh
