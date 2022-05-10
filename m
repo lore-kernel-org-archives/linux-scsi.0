@@ -2,114 +2,215 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B06CBC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 May 2022 12:51:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 344C7C43217
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 May 2022 13:09:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242079AbiEJMzg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 May 2022 08:55:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39714 "EHLO
+        id S242242AbiEJNN2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 May 2022 09:13:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242061AbiEJMzL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 May 2022 08:55:11 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DBE81D8B6A
-        for <linux-scsi@vger.kernel.org>; Tue, 10 May 2022 05:50:38 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id e24so15793637pjt.2
-        for <linux-scsi@vger.kernel.org>; Tue, 10 May 2022 05:50:37 -0700 (PDT)
+        with ESMTP id S242247AbiEJNN0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 May 2022 09:13:26 -0400
+Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D36DB55223
+        for <linux-scsi@vger.kernel.org>; Tue, 10 May 2022 06:09:26 -0700 (PDT)
+Received: by mail-ej1-x62a.google.com with SMTP id gh6so32911245ejb.0
+        for <linux-scsi@vger.kernel.org>; Tue, 10 May 2022 06:09:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        d=linaro.org; s=google;
         h=message-id:date:mime-version:user-agent:subject:content-language:to
          :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=fzxrrRn7cvywNO0Eg0g8MebJNrUAMkIxCPWEMLe1ccY=;
-        b=Knxf+25kcpEt1lD1GjOJabs6ZQCKEJQ1n2FOsMOb8tgxCcfH/p+ESdNWzCoSL1+JZf
-         GJeXvj2N86c0tABjp6OcRXyDPuRRZH4Yl4mxe8CZCRmHyA7Ih6t82i+FRuPur6OIsTKs
-         N+Dv4oCnBx00eIAA2ZFDmqu2KaLd8ravhRD89bEV8ZA/N73jpbgm1KkcJqJ8hwIMU52U
-         KNFtaLh4+J6omGoToE9+9ufHGmSdB9xDT/7pp8dUUM2EWRnB/+j/68PY42brWlMwKkQF
-         xvzRor0v+R8WiTFLbSeykXRu6H3uQo+Q5NcjcJfGoIJOYL28BR6tHhL4YMI1qSed5GRa
-         8Pug==
+        bh=GY+8CojCMdOqBSOFBIYghZE3p4uLJiwb7g8ImRgX/dU=;
+        b=qLsqWbFt7LCQx0MaLfgYA2s8hsAyOOpVW5rh9DzwWbCQLNbIGdXf+F5JAY+grnNJgF
+         sBb+zqwdE6bmq3okeUZuIzZcXNrdkJXOXN+krDKNhSROug7uv2bkRgdVwR8cANiD9kk9
+         BLfNHSChZRjoUi6DlTO96a5lvuqCRTd36KWMWg3SESso0kbRMIFxUgPqiB3VTABTkQwW
+         137KeyzjeGxXgJh1BBCMMJxYMNpzVQT5QI8bPIWcGLxEv6TjCxvjpmjZcxB6sZU+2Rsu
+         HVwaN8RSnozbhzp3UBfq4nG6jZLC8bbH4yImCfFr6ChuFmcx5MUDpvqyVKF1VYgZGdLl
+         7uvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=fzxrrRn7cvywNO0Eg0g8MebJNrUAMkIxCPWEMLe1ccY=;
-        b=vhypShzzBOHeJ4K82OMJyrcCbfB/+RCx/OfVJ4MPJEvyjdUJnyWQA4AWKvexNXrJ5e
-         Yt0aNjBHIQkNDKGaNCsKnxdyzvOBg3gzNX95tAIAY38YXrkPpDF119z2dvt0W0+VD7eM
-         bzPQ9KVMLIt3wfD+ZLX0cZc2zNottzn9tVc6MgXI+YwAfwoKHdRFdZa52mVCGtuzuoCp
-         8Gb6dNKjGen9qZOdbCqHzON7yJbq0OhTXnLgmmdXxBoXvuXhlPa3aW7Z7vjkVXJeqJVx
-         Sl6M9IYZfymenpdl/rchKLyU3TVAzg1p1U0CORS2cHcUkxniGXjkQzcOBfbr9Dug90+z
-         5ZXA==
-X-Gm-Message-State: AOAM530f+vlfF76JbzxFS9ldikuf+gdqTzNziwbhpd8CSQhDM5I69fL7
-        QftBr5a9kullmYzmfXMi0a9G1w==
-X-Google-Smtp-Source: ABdhPJz9xpmarjEYY69KKbBo6OrTUj6+f98YhVpTCwrY6O0JPMtCCCwu9m5ErVPx4i80Fdv6IHt7dg==
-X-Received: by 2002:a17:902:9887:b0:151:6e1c:7082 with SMTP id s7-20020a170902988700b001516e1c7082mr20228734plp.162.1652187037457;
-        Tue, 10 May 2022 05:50:37 -0700 (PDT)
-Received: from [192.168.1.100] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id ot17-20020a17090b3b5100b001dc4d22c0a7sm1719430pjb.10.2022.05.10.05.50.36
+        bh=GY+8CojCMdOqBSOFBIYghZE3p4uLJiwb7g8ImRgX/dU=;
+        b=cxedB285nWbSkFU28KMZ80KlZ4Rc+NyKUIYTNhK6a2WGHYdWXnTnMHsY/ZUcyGWzf4
+         8Xscz3lKnZyNOrbJf7m4Z1YdbBBIyxpQnR6rRxqmKrvHVQ9ovQMMMxUi8KYCnOKIW42k
+         gcRAJ/ErrUcvmmxbV3LJHOMRvTNERkDbbbtC36iUoYlQiy+xAKHIkyreDNTOIMoF53D9
+         KLdmxGHZ7KsJ586uG//Xc4OcIIvxinPFUs46i8bdtG/YKUzKyCisr6J49sQGzTqnywPW
+         +IUazLore06flmagoa9QU0V2q2K3gKHP9nkRa4c+OxjLLo78vBnAJc7PUXDlz8jNVSio
+         VPEg==
+X-Gm-Message-State: AOAM531m7mtT4fwUZnbss7Z+Zwn6XnMsGBa3guE4PPufK+rR4HZpJPLT
+        8MCAPzHX0RjgHCTwcijcc+Y/1Q==
+X-Google-Smtp-Source: ABdhPJyeV9V1iJhHLhwfC6K1BZ5EadKgzzBkTD1pVb1eEmEusgki6rRs5oqhoRfmG7wEJ9obJwywHg==
+X-Received: by 2002:a17:907:7d92:b0:6fd:bd33:f00f with SMTP id oz18-20020a1709077d9200b006fdbd33f00fmr1956321ejc.467.1652188165022;
+        Tue, 10 May 2022 06:09:25 -0700 (PDT)
+Received: from [192.168.0.252] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
+        by smtp.gmail.com with ESMTPSA id jy15-20020a170907762f00b006f3ef214e54sm6055980ejc.186.2022.05.10.06.09.22
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 May 2022 05:50:37 -0700 (PDT)
-Message-ID: <1afd2c01-69b3-ab8f-6bfe-118e3e56001c@kernel.dk>
-Date:   Tue, 10 May 2022 06:50:35 -0600
+        Tue, 10 May 2022 06:09:23 -0700 (PDT)
+Message-ID: <1e533194-7047-8342-b426-f607fddbfaa3@linaro.org>
+Date:   Tue, 10 May 2022 15:09:20 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.8.1
-Subject: Re: [RFC PATCH 0/2] sbitmap: NUMA node spreading
+Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, linux-block@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <1652181274-136198-1-git-send-email-john.garry@huawei.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <1652181274-136198-1-git-send-email-john.garry@huawei.com>
+To:     Viresh Kumar <viresh.kumar@linaro.org>,
+        Stephen Boyd <sboyd@kernel.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Taniya Das <tdas@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
+ <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
+ <20220425072710.v6gwo4gu3aouezg4@vireshk-i7>
+ <dea39b1f-0091-2690-7f07-108d07ef9f3c@linaro.org>
+ <20220510044053.ykn6ygnbeokhzrsa@vireshk-i7>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20220510044053.ykn6ygnbeokhzrsa@vireshk-i7>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/10/22 5:14 AM, John Garry wrote:
-> Hi Jens, guys,
+On 10/05/2022 06:40, Viresh Kumar wrote:
+> On 09-05-22, 12:38, Krzysztof Kozlowski wrote:
+>> On 25/04/2022 09:27, Viresh Kumar wrote:
+>>> This is tricky as the OPP core can't really assume the order in which the clocks
+>>> needs to be programmed. We had the same problem with multiple regulators and the
+>>> same is left for drivers to do via the custom-api.
+>>>
+>>> Either we can take the same route here, and let platforms add their own OPP
+>>> drivers which can handle this, Or hide this all behind a basic device clock's
+>>> driver, which you get with clk_get(dev, NULL).
+>>
+>> For my use case, the order of scaling will be the same as in previous
+>> implementation, because UFS drivers just got bunch of clocks with
+>> freq-table-hz property and were scaling in DT order.
+>>
+>> If drivers need something better, they can always provide custom-opp
+>> thus replacing my method. My implementation here does not restrict them.
+>>
+>> For the drivers where the order does not matter, why forcing each driver
+>> to provide its own implementation of clock scaling? Isn't shared generic
+>> PM OPP code a way to remove code duplication?
 > 
-> I am sending this as an RFC to see if there is any future in it or ideas
-> on how to make better. I also need to improve some items (as mentioned in
-> 2/2 commit message) and test a lot more.
+> Code duplication is a good argument and I am in favor of avoiding it,
+> but nevertheless this shouldn't be something which platforms can pick
+> by mistake, just because they didn't go through core code. In other
+> words, this shouldn't be the default behavior of the core.
 > 
-> The general idea is that we change from allocating a single array of
-> sbitmap words to allocating an sub-array per NUMA node. And then each CPU
-> in that node is hinted to use that sub-array
-> 
-> Initial performance looks decent.
-> 
-> Some figures:
-> System: 4-nodes (with memory on all nodes), 128 CPUs
-> 
-> null blk config block:
-> 20 devs, submit_queues=NR_CPUS, shared_tags, shared_tag_bitmap,
-> hw_queue_depth=256
-> 
-> fio config:
-> bs=4096, iodepth=128, numjobs=10, cpus_allowed_policy=split, rw=read,
-> ioscheduler=none
-> 
-> Before:
-> 7130K
-> 
-> After:
-> 7630K
-> 
-> So a +7% IOPS gain.
+> If we want, core can provide a helper to get rid of the duplication
+> though, but the user explicitly needs to use it.
 
-What does the comparison run on a non-NUMA non-shared queue look like?
-Because I bet it'd be slower.
+OK, that sounds like a solution.
 
-To be honest, I don't like this approach at all. It makes the normal
-case quite a bit slower by having an extra layer of indirection for the
-word, that's quite a bit of extra cost. It doesn't seem like a good
-approach for the issue, as it pessimizes the normal fast case.
+> 
+>>>> diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+>>>
+>>>> +static int _generic_set_opp_clks_only(struct device *dev,
+>>>> +				      struct opp_table *opp_table,
+>>>> +				      struct dev_pm_opp *opp)
+>>>> +{
+>>>> +	int i, ret;
+>>>> +
+>>>> +	if (!opp_table->clks)
+>>>> +		return 0;
+>>>> +
+>>>> +	for (i = 0; i < opp_table->clk_count; i++) {
+>>>> +		if (opp->rates[i]) {
+>>>
+>>> This should mean that we can disable that clock and it isn't required.
+>>
+>> No, it does not mean that. The DT might provide several clocks which
+>> only some are important for frequency scaling. All others just need to
+>> be enabled.
+>>
+>> Maybe you prefer to skip getting such clocks in PM OPP?
+> 
+> They shouldn't reach the OPP core then. What will the OPP core do if a
+> clock has a value for one OPP and not the other ?
 
-Spreading the memory out does probably make sense, but we need to retain
-the fast normal case. Making sbitmap support both, selected at init
-time, would be far more likely to be acceptable imho.
+That would be the same mistake as providing one voltage as 0 or with
+something outside of a spec (but still within regulators min/max).
+Mistakes in DTS create undesirable behavior and this part is no different.
 
--- 
-Jens Axboe
+However I understand your point - since the driver provides the list of
+clocks to OPP, it should not provide ones which are irrelevant.
 
+> 
+>>>> @@ -969,8 +1008,8 @@ static void _find_current_opp(struct device *dev, struct opp_table *opp_table)
+>>>
+>>> I think this routine breaks as soon as we add support for multiple clocks.
+>>> clks[0]'s frequency can be same for multiple OPPs and this won't get you the
+>>> right OPP then.
+>>
+>> I don't think so and this was raised also by Stephen - only the first
+>> clock is considered the one used for all PM OPP frequency operations,
+>> like get ceil/floor.
+> 
+> IMHO, this is broken by design. I can easily see that someone wants to
+> have few variants of all other frequencies for the same frequency of
+> the so called "main" clock, i.e. multiple OPPs with same "main" freq
+> value.  I don't think we can mark the clocks "main" or otherwise as
+> easily for every platform.
+> 
+> Stephen, any inputs on this ?
+
+In such case, matching opps by frequency would be a quite different API.
+The drivers can use now:
+https://github.com/krzk/linux/commit/ebc31798494fcc66389ae409dce6d9489c16156a#diff-b6370444c32afa2e55d9b6150f355ba6f4d20c5ed5da5399ea8295d323de8267R1200
+
+If you assume that this frequency can be used for multiple OPPs, then
+the API should be different. Something like:
+int dev_pm_opp_set_rate(struct device *dev, unsigned long *target_freqs,
+                        size_t num_freqs);
+
+Finding right opp for given frequencies would be also quite much more
+complicated task. Not a simple ceil/floor search by one frequency.
+
+I don't need that use-case and my implementation does not prevent anyone
+from implementing it in the future. IOW, why developing now complex
+solution which no one currently needs? If anyone needs such scaling by
+multiple-frequencies, the PM OPP can be reworked/extended/improved again.
+
+Additionally let me point also that my implementation targets not a
+specific one driver, but actually entire subsystem of drivers - all UFS
+drivers.
+
+> 
+>> The assumption (which might need better documentation) is that first
+>> clock frequency is the main one:
+>> 1. It is still in opp->rate field, so it is used everywhere when OPPs
+>> are compared/checked for rates.
+>> 1. Usually is used also in opp-table nodes names.
+>>
+>> The logical explanation is that devices has some main operating
+>> frequency, e.g. the core clock, and this determines the performance. In
+>> the same time such device might not be able to scale this one core clock
+>> independently from others, therefore this set of patches.
+> 
+> I understand what you are saying, but I can feel that it will break or
+> will force bad bug-fixes into the core at a later point of time.
+> 
+> I think it would be better to take it slowly and see how it goes. Lets
+> first add support for the OPP core to parse and store this data and
+> then we can add support to use it, or at least do all this in separate
+> patches so they are easier to review/apply.
+
+Sure, I'll split the patch to smaller chunks.
+
+Best regards,
+Krzysztof
