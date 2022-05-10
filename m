@@ -2,133 +2,125 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 522BFC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 May 2022 14:49:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03127C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 May 2022 01:09:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237499AbiEIOxY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 May 2022 10:53:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60450 "EHLO
+        id S233954AbiEJBNs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 May 2022 21:13:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237061AbiEIOxU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2022 10:53:20 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDEEE24D630;
-        Mon,  9 May 2022 07:49:24 -0700 (PDT)
-Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KxkTk0NJ3z67Yv4;
-        Mon,  9 May 2022 22:44:42 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 9 May 2022 16:49:22 +0200
-Received: from [10.47.80.57] (10.47.80.57) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 9 May
- 2022 15:49:21 +0100
-Message-ID: <fd2cdc06-5d88-306a-3ee1-7aef3e3b8921@huawei.com>
-Date:   Mon, 9 May 2022 15:50:33 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 1/4] scsi: core: constify pointer to scsi_host_template
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Christoph Hellwig <hch@infradead.org>
-CC:     "Ewan D. Milne" <emilne@redhat.com>,
+        with ESMTP id S233325AbiEJBNr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2022 21:13:47 -0400
+Received: from crane.ash.relay.mailchannels.net (crane.ash.relay.mailchannels.net [23.83.222.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 855812BA9B5
+        for <linux-scsi@vger.kernel.org>; Mon,  9 May 2022 18:09:49 -0700 (PDT)
+X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
+Received: from relay.mailchannels.net (localhost [127.0.0.1])
+        by relay.mailchannels.net (Postfix) with ESMTP id 19AE75A0D78;
+        Tue, 10 May 2022 01:00:11 +0000 (UTC)
+Received: from pdx1-sub0-mail-a278.dreamhost.com (unknown [127.0.0.6])
+        (Authenticated sender: dreamhost)
+        by relay.mailchannels.net (Postfix) with ESMTPA id 45DDE5A1224;
+        Tue, 10 May 2022 01:00:10 +0000 (UTC)
+ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1652144410; a=rsa-sha256;
+        cv=none;
+        b=3PZgdd3jIeBrdDX0sv6aA9d1CAWzOHbZRO8XQ3m9r72RVjTZXnOnlE4gWVKA60/0i6bcJU
+        CW+2bH+zwSdsCpBYQIsgjIbC4gyxwlBppl9lLLVO1yJeQFEJqQx4YV0YrhNRlNltbjPsKO
+        EZ16GhatMOu4Zudpt5wpRZVP1s6VrKUqMzZK1aDA3iJiPycIa/LCMQtt4LK2UD57mFWkYg
+        +dXGICsO0fROZji9PcFuYub/6TzJtlcVzxxSZYhtrf0w89qB58/cR1Arcx13m2zoRavL2P
+        RG8/zNdDYG8s/HGeZsF75Y4/Yexs3z2UjaLszsELqEzb/HVlD5ZLc+v/GcPjkg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mailchannels.net;
+        s=arc-2022; t=1652144410;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references:dkim-signature;
+        bh=OkYsVEQbc5DO/sqSoctBIA2Dppvklnw/UbE5LoqMvBo=;
+        b=9dUyqZ1rNUS3LIMbZvJNJk6T3I7k2k5tQKYgxgkz9eDj+wmrPCiXoVmrXYn1l0uzm5LlIE
+        WrH0UUrCz/c+BlvwMy0mGheifmmi+Vds8nAkT68610MOaPObFmGBdIAxAvJBu1xcz0mj+Y
+        muu9hAejL4R/EFgG18SeRNbvc4boTUOJqZNjKmTbI47EDq0d0hVcsm3otglJtofQj5MiQv
+        1KRXgWvrUoihfNQFopEJGeB7cnJuhItqrAFDeSBjreONGOP2grkoiU+m8Xfv5t45ul4HCf
+        +bFQ8lBzsK2aqRory8PWQ2JcXmOy78bdQLjrkqqSspXGCKJ5wMCmYtl48cj7RQ==
+ARC-Authentication-Results: i=1;
+        rspamd-554c8f6c56-2pv82;
+        auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
+X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
+X-MC-Relay: Neutral
+X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
+X-MailChannels-Auth-Id: dreamhost
+X-Desert-Wide-Eyed: 4a875f752ba7591c_1652144410667_419043207
+X-MC-Loop-Signature: 1652144410667:2618495434
+X-MC-Ingress-Time: 1652144410666
+Received: from pdx1-sub0-mail-a278.dreamhost.com (pop.dreamhost.com
+ [64.90.62.162])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
+        by 100.127.95.68 (trex/6.7.1);
+        Tue, 10 May 2022 01:00:10 +0000
+Received: from offworld (unknown [104.36.31.105])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dave@stgolabs.net)
+        by pdx1-sub0-mail-a278.dreamhost.com (Postfix) with ESMTPSA id 4Ky07s2MGPz1Ny;
+        Mon,  9 May 2022 18:00:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
+        s=dreamhost; t=1652144410;
+        bh=OkYsVEQbc5DO/sqSoctBIA2Dppvklnw/UbE5LoqMvBo=;
+        h=Date:From:To:Cc:Subject:Content-Type;
+        b=Kx/NtImp0B3LJ1QXpTJdrnlMpE9crtk1c84TIb3NeVjxKTb6VHqG6tWi9Q8nxnOZA
+         KsP+xwhijgFhEtL/ZE7VSkPEfecwkFqEfBSglNxsz9suQKUyoRiWZfOM0FlRtC+rXC
+         X5gWjMzqKMixY6dnRGscixUFRJue0xYQxmu/FSkIgRvEqQbiI+k9aBVazRfbgeAmiO
+         QsOJkI2Jysu/PuL2yVuLbwC24l6Hrwg8bXujuo75CoWCTzcxl+q/pPkaJKkiFnsWM6
+         DoEPcIOwq52Ipc5sW0HKm8NRnIG+OL8sEGUbzfLXU4J0yEXyXp6GyfzbZ7bTyto7ZW
+         tEHeFvJV1cWEQ==
+Date:   Mon, 9 May 2022 17:48:01 -0700
+From:   Davidlohr Bueso <dave@stgolabs.net>
+To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc:     linux-scsi@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Alim Akhtar" <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "Doug Gilbert" <dgilbert@interlog.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <james.smart@broadcom.com>
-References: <20220408103027.311624-1-krzysztof.kozlowski@linaro.org>
- <2a88a992-641a-b3ff-fe39-7a61fff87cb6@huawei.com>
- <4c3be5b6-50ef-9e9a-6cee-9642df943342@linaro.org>
- <7b3885e3-dbae-ff0b-21dc-c28d635d950b@huawei.com>
- <c121430b1b5c8f5816b2b42b9178d00889260c90.camel@redhat.com>
- <b6af3fe8-db9a-b5dc-199f-21c05d7664a2@huawei.com>
- <Yl+wJ7xSHzWmR+bR@infradead.org>
- <d09faf74-a52e-8d93-cf26-08b43b12c564@huawei.com>
- <24bfb681-faec-3567-3089-9cd5ee182710@linaro.org>
- <1bb53912-c5c3-7690-e82f-cf356ca87404@huawei.com>
- <6f28acde-2177-0bc7-b06d-c704153489c0@linaro.org>
- <4510c5dc-3d7d-fc5f-cb80-34da7dbaaa8e@huawei.com>
- <d01c29c1-bb5a-281d-ef71-9c7b39e28d23@linaro.org>
-In-Reply-To: <d01c29c1-bb5a-281d-ef71-9c7b39e28d23@linaro.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.80.57]
-X-ClientProxiedBy: lhreml739-chm.china.huawei.com (10.201.108.189) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Hannes Reinecke <hare@suse.de>,
+        Javed Hasan <jhasan@marvell.com>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Davidlohr Bueso <dbueso@suse.de>
+Subject: Re: [PATCH 2/4] scsi: fcoe: Use per-CPU API to update per-CPU
+ statistics.
+Message-ID: <20220510004801.w6hiyka7gi2vnto5@offworld>
+References: <20220506105758.283887-1-bigeasy@linutronix.de>
+ <20220506105758.283887-3-bigeasy@linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20220506105758.283887-3-bigeasy@linutronix.de>
+User-Agent: NeoMutt/20220408
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/05/2022 14:20, Krzysztof Kozlowski wrote:
-> On 09/05/2022 13:28, John Garry wrote:
->>
->> For some reason I cannot fetch your git due to "error: RPC failed ..."
->> which I think is a timeout. I seem to have this problem recently
->> whenever a linux.git clone has branches based on linux-next.git . Maybe
->> a git config issue for me...
-> 
-> Just to be sure - the link was not a git remote, but direct link for a
-> web browser. The repo is:
-> https://github.com/krzk/linux.git
-> branch: n/qcom-ufs-opp-cleanups-v2
-> 
+On Fri, 06 May 2022, Sebastian Andrzej Siewior wrote:
 
-OK, I'll double check. Regardless I'll sort my own IT issues :)
+>The per-CPU statistics (struct fc_stats) is updated by getting a stable
+>per-CPU pointer via get_cpu() + per_cpu_ptr() and then performing the
+>increment. This can be optimized by using this_cpu_*() which will do
+>whatever is needed on the architecture to perform the update safe and
+>efficient.
+>The read out of the individual value (fc_get_host_stats()) should be
+>done by using READ_ONCE() instead of a plain-C access. The difference is
+>that READ_ONCE() will always perform a single access while the plain-C
+>access can be splitt by the compiler into two loads if it appears
+>beneficial.
+>The usage of u64 has the side-effect that it is also 64bit wide on 32bit
+>architectures and the read is always split into two loads. The can lead
+>to strange values if the read happens during an update which alters both
+>32bit parts of the 64bit value. This can be circumvanted by either using
+>a 32bit variables on 32bit architecures or extending the statistics with
+>a sequence counter.
+>
+>Use this_cpu_*() API to update the statistics and READ_ONCE() to read
+>it.
 
->>> However this does not solve the problem. The SHT has "module" which gets
->>> incremented/decremented. Exactly like in case of other drivers
->>> (driver->owner).
->>
->> Ah, I missed that this could be a problem. So we have this member to
->> stop the SCSI host driver being removed when we have disks mounted, etc.
->>
->> But isn't scsi_host_template.module just a pointer to the local driver
->> module data (and that data gets incremented/decremented)? I am looking
->> at the THIS_MODULE definition in export.h:
-> 
-> Yes, it is just a pointer, just like 'struct device_driver.owner' is.
-> 
->>
->> extern stuct module __this_module;
->> #define THIS_MODULE(&__this_module)
->>
->> However I do see scsi_device_dev_release(), which does:
->>
->> sdp->host->hostt->module = NULL
->>
->> I am not sure how necessary that really is. I would need to check further.
-> 
->>
->> Did you see if there other places which set hostt->module dynamically?
-> 
-> I think all SHT set it statically. 
+LGTM, feel free to add my:
 
-Incidentally I did notice that the ata ahci driver does not set sht->module.
-
-> Then it is being dynamically
-> incremented when needed and in scsi_device_dev_release() is being
-> nullified (as you mentioned above).
-> 
-> I guess this SHT->module is actually duplicating what most of drivers
-> (e.g. PCI, platform, USB) are doing. If I understand correctly, the
-> Scsi_Host is instantiated by the probe of a driver (pci_driver,
-> virtio_driver etc), therefore the SHT->module could be simply stored in
-> Scsi_Host.
-
-If you check scsi_device_dev_release(), we try to do a 'get' - if it 
-fails, then we nullify hostt->module. I think that is important as then 
-we call execute_in_process_context(), whose worker does the 'put'. 
-However, the 'put' will get upset if the refcnt was 0, which it would be 
-if the earlier 'get' fails - hence the nullify is to avoid that 
-possibility. So whatever you do needs to handle that. Details are in 
-f2b85040
-
-Thanks,
-john
+Reviewed-by: Davidlohr Bueso <dave@stgolabs.net>
