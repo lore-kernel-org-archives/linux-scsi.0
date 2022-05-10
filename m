@@ -2,175 +2,273 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63800C43219
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 May 2022 04:41:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A44B4C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 May 2022 06:51:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236466AbiEJEo5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 May 2022 00:44:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45350 "EHLO
+        id S237364AbiEJGzm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 May 2022 02:55:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236419AbiEJEoz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 May 2022 00:44:55 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A12DD1BEA8
-        for <linux-scsi@vger.kernel.org>; Mon,  9 May 2022 21:40:56 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id v11so13962475pff.6
-        for <linux-scsi@vger.kernel.org>; Mon, 09 May 2022 21:40:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=lbY1apz0pshrpCAaJ1RrYyZnbJ+UjeS0fVoXXo8j4x4=;
-        b=g1O4yIW8IBZL4UjQArViSLk8BGWFwVVdDj4k3lboHQlTkJQ+rm3mIbeCIIKgBldnDL
-         vemV1tqpX0uc13aujVWctoK7Xgz/Zw9Wdv34dhYv0rS2b96Ryzawc8Q7WTi9VBXsyM8/
-         I5Pi+SicIj63pu9fYM3QYaBG5+AIDSGzQCMOf3QCc6fdmLUVblR7n6tedFbDYuwdUZhu
-         zIuKHv2b8wLek6nQwSIbFcYwuO2pnT7dYWxxulUgiS5fNtP+EASQcqA5eMTg8QKMPEiX
-         u1yAPilOKbWZR5pPKRYIkh4RjlpecE57z8J7ag6lrDvUnChqYht9pXoHxKkm7w1GC0Ey
-         LmBg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=lbY1apz0pshrpCAaJ1RrYyZnbJ+UjeS0fVoXXo8j4x4=;
-        b=eZdEbGFkT7LTNzeYltJRoawh/wWt+gfwv3dR8BCh6rmeNCy3sGFebvJoDIKiiROGcG
-         ZRzXmINl5ld9w7CPDK3dUNxuwBExCl7jk1E/DrAreqQsu+y7GqG9/jUYnShkpw/GdBVj
-         rorWqdO7BOcFN6iLNVLMcFzhuPzi/GOLqmu6rXdnnpKqw6PySQ2cl0wiEQq8NO7du8+w
-         B9mbWvz4AyYFlLkiC1OTVEVxfe4BBcSPdYj2z4GevA2fSIKM2TdPRldgUJlowgQ77alW
-         Q4z1Zueo0s0y+Tbt5WTMqfdliMa+1/fNbtU/iRQEMer4+dQs+FecnHnoDir18ttWK6Iv
-         2K1A==
-X-Gm-Message-State: AOAM532uhUWZj+H6Ikd/8ktCyabd7RxngOQH4KfkbRtn/cj2fXYvPcIf
-        2PIaObxqwJa/jBJJz1JKz4WU6Q==
-X-Google-Smtp-Source: ABdhPJymevaw8JA+ZHsBCjPJ4j0suFS7f77voPGuje3SGgohExKLxChq+oCh5WRtZK41XqI6SBv0+w==
-X-Received: by 2002:aa7:9110:0:b0:4fa:e388:af57 with SMTP id 16-20020aa79110000000b004fae388af57mr18793150pfh.1.1652157656115;
-        Mon, 09 May 2022 21:40:56 -0700 (PDT)
-Received: from localhost ([122.162.234.2])
-        by smtp.gmail.com with ESMTPSA id a2-20020a170902900200b0015e8d4eb289sm780370plp.211.2022.05.09.21.40.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 May 2022 21:40:55 -0700 (PDT)
-Date:   Tue, 10 May 2022 10:10:53 +0530
-From:   Viresh Kumar <viresh.kumar@linaro.org>
-To:     Stephen Boyd <sboyd@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Taniya Das <tdas@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
-Message-ID: <20220510044053.ykn6ygnbeokhzrsa@vireshk-i7>
-References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
- <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
- <20220425072710.v6gwo4gu3aouezg4@vireshk-i7>
- <dea39b1f-0091-2690-7f07-108d07ef9f3c@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <dea39b1f-0091-2690-7f07-108d07ef9f3c@linaro.org>
-User-Agent: NeoMutt/20180716-391-311a52
+        with ESMTP id S236920AbiEJGze (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 May 2022 02:55:34 -0400
+Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C66225E9A;
+        Mon,  9 May 2022 23:51:36 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R441e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e01424;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0VCpZSOO_1652165414;
+Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0VCpZSOO_1652165414)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Tue, 10 May 2022 14:51:34 +0800
+From:   Guixin Liu <kanie@linux.alibaba.com>
+To:     bostroesser@gmail.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: [PATCH] scsi:tcmu: switch tcmu completion path to work queue context
+Date:   Tue, 10 May 2022 14:50:14 +0800
+Message-Id: <1652165414-15933-1-git-send-email-kanie@linux.alibaba.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09-05-22, 12:38, Krzysztof Kozlowski wrote:
-> On 25/04/2022 09:27, Viresh Kumar wrote:
-> > This is tricky as the OPP core can't really assume the order in which the clocks
-> > needs to be programmed. We had the same problem with multiple regulators and the
-> > same is left for drivers to do via the custom-api.
-> > 
-> > Either we can take the same route here, and let platforms add their own OPP
-> > drivers which can handle this, Or hide this all behind a basic device clock's
-> > driver, which you get with clk_get(dev, NULL).
-> 
-> For my use case, the order of scaling will be the same as in previous
-> implementation, because UFS drivers just got bunch of clocks with
-> freq-table-hz property and were scaling in DT order.
-> 
-> If drivers need something better, they can always provide custom-opp
-> thus replacing my method. My implementation here does not restrict them.
-> 
-> For the drivers where the order does not matter, why forcing each driver
-> to provide its own implementation of clock scaling? Isn't shared generic
-> PM OPP code a way to remove code duplication?
+Currently, tcmu do completion in uio_write context, the userspace
+will wait until tcmu`s done synchronously, switch completion path to
+work queue context for better performance.
 
-Code duplication is a good argument and I am in favor of avoiding it,
-but nevertheless this shouldn't be something which platforms can pick
-by mistake, just because they didn't go through core code. In other
-words, this shouldn't be the default behavior of the core.
+Use tcmu + file to evaluate performance,
+fio job: fio -filename=/dev/sdb  -direct=1 -size=2G -name=1 -thread
+-runtime=60 -time_based  -rw=randwrite -numjobs=16 -iodepth=16 -bs=128k
 
-If we want, core can provide a helper to get rid of the duplication
-though, but the user explicitly needs to use it.
+Without this patch:
+	READ: bw=2775MiB/s (2910MB/s), 173MiB/s-174MiB/s
+(181MB/s-183MB/s), io=163GiB (175GB), run=60001-60001msec
 
-> >> diff --git a/drivers/opp/core.c b/drivers/opp/core.c
-> > 
-> >> +static int _generic_set_opp_clks_only(struct device *dev,
-> >> +				      struct opp_table *opp_table,
-> >> +				      struct dev_pm_opp *opp)
-> >> +{
-> >> +	int i, ret;
-> >> +
-> >> +	if (!opp_table->clks)
-> >> +		return 0;
-> >> +
-> >> +	for (i = 0; i < opp_table->clk_count; i++) {
-> >> +		if (opp->rates[i]) {
-> > 
-> > This should mean that we can disable that clock and it isn't required.
-> 
-> No, it does not mean that. The DT might provide several clocks which
-> only some are important for frequency scaling. All others just need to
-> be enabled.
-> 
-> Maybe you prefer to skip getting such clocks in PM OPP?
+With this patch:
+	READ: bw=3333MiB/s (3495MB/s), 208MiB/s-209MiB/s
+(218MB/s-219MB/s), io=195GiB (210GB), run=60001-60001msec
 
-They shouldn't reach the OPP core then. What will the OPP core do if a
-clock has a value for one OPP and not the other ?
+Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+---
+ drivers/target/target_core_user.c | 151 +++++++++++++++++++++-----------------
+ 1 file changed, 84 insertions(+), 67 deletions(-)
 
-> >> @@ -969,8 +1008,8 @@ static void _find_current_opp(struct device *dev, struct opp_table *opp_table)
-> > 
-> > I think this routine breaks as soon as we add support for multiple clocks.
-> > clks[0]'s frequency can be same for multiple OPPs and this won't get you the
-> > right OPP then.
-> 
-> I don't think so and this was raised also by Stephen - only the first
-> clock is considered the one used for all PM OPP frequency operations,
-> like get ceil/floor.
-
-IMHO, this is broken by design. I can easily see that someone wants to
-have few variants of all other frequencies for the same frequency of
-the so called "main" clock, i.e. multiple OPPs with same "main" freq
-value.  I don't think we can mark the clocks "main" or otherwise as
-easily for every platform.
-
-Stephen, any inputs on this ?
-
-> The assumption (which might need better documentation) is that first
-> clock frequency is the main one:
-> 1. It is still in opp->rate field, so it is used everywhere when OPPs
-> are compared/checked for rates.
-> 1. Usually is used also in opp-table nodes names.
-> 
-> The logical explanation is that devices has some main operating
-> frequency, e.g. the core clock, and this determines the performance. In
-> the same time such device might not be able to scale this one core clock
-> independently from others, therefore this set of patches.
-
-I understand what you are saying, but I can feel that it will break or
-will force bad bug-fixes into the core at a later point of time.
-
-I think it would be better to take it slowly and see how it goes. Lets
-first add support for the OPP core to parse and store this data and
-then we can add support to use it, or at least do all this in separate
-patches so they are easier to review/apply.
-
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index fd7267b..0eb3396 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -168,6 +168,8 @@ struct tcmu_dev {
+ 	char dev_config[TCMU_CONFIG_LEN];
+ 
+ 	int nl_reply_supported;
++
++	struct work_struct complete_work;
+ };
+ 
+ #define TCMU_DEV(_se_dev) container_of(_se_dev, struct tcmu_dev, se_dev)
+@@ -223,6 +225,7 @@ struct tcmu_tmr {
+ 
+ static atomic_t global_page_count = ATOMIC_INIT(0);
+ static struct delayed_work tcmu_unmap_work;
++struct workqueue_struct *tcmu_comp_wq;
+ static int tcmu_global_max_pages = TCMU_GLOBAL_MAX_PAGES_DEF;
+ 
+ static int tcmu_set_global_max_data_area(const char *str,
+@@ -1596,6 +1599,76 @@ static void tcmu_detach_hba(struct se_hba *hba)
+ 	hba->hba_ptr = NULL;
+ }
+ 
++static void run_qfull_queue(struct tcmu_dev *udev, bool fail)
++{
++	struct tcmu_cmd *tcmu_cmd, *tmp_cmd;
++	LIST_HEAD(cmds);
++	sense_reason_t scsi_ret;
++	int ret;
++
++	if (list_empty(&udev->qfull_queue))
++		return;
++
++	pr_debug("running %s's cmdr queue forcefail %d\n", udev->name, fail);
++
++	list_splice_init(&udev->qfull_queue, &cmds);
++
++	list_for_each_entry_safe(tcmu_cmd, tmp_cmd, &cmds, queue_entry) {
++		list_del_init(&tcmu_cmd->queue_entry);
++
++		pr_debug("removing cmd %p on dev %s from queue\n",
++			 tcmu_cmd, udev->name);
++
++		if (fail) {
++			/*
++			 * We were not able to even start the command, so
++			 * fail with busy to allow a retry in case runner
++			 * was only temporarily down. If the device is being
++			 * removed then LIO core will do the right thing and
++			 * fail the retry.
++			 */
++			tcmu_cmd->se_cmd->priv = NULL;
++			target_complete_cmd(tcmu_cmd->se_cmd, SAM_STAT_BUSY);
++			tcmu_free_cmd(tcmu_cmd);
++			continue;
++		}
++
++		ret = queue_cmd_ring(tcmu_cmd, &scsi_ret);
++		if (ret < 0) {
++			pr_debug("cmd %p on dev %s failed with %u\n",
++				 tcmu_cmd, udev->name, scsi_ret);
++			/*
++			 * Ignore scsi_ret for now. target_complete_cmd
++			 * drops it.
++			 */
++			tcmu_cmd->se_cmd->priv = NULL;
++			target_complete_cmd(tcmu_cmd->se_cmd,
++					    SAM_STAT_CHECK_CONDITION);
++			tcmu_free_cmd(tcmu_cmd);
++		} else if (ret > 0) {
++			pr_debug("ran out of space during cmdr queue run\n");
++			/*
++			 * cmd was requeued, so just put all cmds back in
++			 * the queue
++			 */
++			list_splice_tail(&cmds, &udev->qfull_queue);
++			break;
++		}
++	}
++
++	tcmu_set_next_deadline(&udev->qfull_queue, &udev->qfull_timer);
++}
++
++static void tcmu_complete_work(struct work_struct *work)
++{
++	struct tcmu_dev *udev = container_of(work, struct tcmu_dev, complete_work);
++
++	mutex_lock(&udev->cmdr_lock);
++	if (tcmu_handle_completions(udev))
++		run_qfull_queue(udev, false);
++	mutex_unlock(&udev->cmdr_lock);
++}
++
+ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
+ {
+ 	struct tcmu_dev *udev;
+@@ -1634,6 +1707,7 @@ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
+ 
+ 	xa_init(&udev->data_pages);
+ 
++	INIT_WORK(&udev->complete_work, tcmu_complete_work);
+ 	return &udev->se_dev;
+ }
+ 
+@@ -1725,75 +1799,10 @@ static void tcmu_dev_kref_release(struct kref *kref)
+ 	call_rcu(&dev->rcu_head, tcmu_dev_call_rcu);
+ }
+ 
+-static void run_qfull_queue(struct tcmu_dev *udev, bool fail)
+-{
+-	struct tcmu_cmd *tcmu_cmd, *tmp_cmd;
+-	LIST_HEAD(cmds);
+-	sense_reason_t scsi_ret;
+-	int ret;
+-
+-	if (list_empty(&udev->qfull_queue))
+-		return;
+-
+-	pr_debug("running %s's cmdr queue forcefail %d\n", udev->name, fail);
+-
+-	list_splice_init(&udev->qfull_queue, &cmds);
+-
+-	list_for_each_entry_safe(tcmu_cmd, tmp_cmd, &cmds, queue_entry) {
+-		list_del_init(&tcmu_cmd->queue_entry);
+-
+-		pr_debug("removing cmd %p on dev %s from queue\n",
+-			 tcmu_cmd, udev->name);
+-
+-		if (fail) {
+-			/*
+-			 * We were not able to even start the command, so
+-			 * fail with busy to allow a retry in case runner
+-			 * was only temporarily down. If the device is being
+-			 * removed then LIO core will do the right thing and
+-			 * fail the retry.
+-			 */
+-			tcmu_cmd->se_cmd->priv = NULL;
+-			target_complete_cmd(tcmu_cmd->se_cmd, SAM_STAT_BUSY);
+-			tcmu_free_cmd(tcmu_cmd);
+-			continue;
+-		}
+-
+-		ret = queue_cmd_ring(tcmu_cmd, &scsi_ret);
+-		if (ret < 0) {
+-			pr_debug("cmd %p on dev %s failed with %u\n",
+-				 tcmu_cmd, udev->name, scsi_ret);
+-			/*
+-			 * Ignore scsi_ret for now. target_complete_cmd
+-			 * drops it.
+-			 */
+-			tcmu_cmd->se_cmd->priv = NULL;
+-			target_complete_cmd(tcmu_cmd->se_cmd,
+-					    SAM_STAT_CHECK_CONDITION);
+-			tcmu_free_cmd(tcmu_cmd);
+-		} else if (ret > 0) {
+-			pr_debug("ran out of space during cmdr queue run\n");
+-			/*
+-			 * cmd was requeued, so just put all cmds back in
+-			 * the queue
+-			 */
+-			list_splice_tail(&cmds, &udev->qfull_queue);
+-			break;
+-		}
+-	}
+-
+-	tcmu_set_next_deadline(&udev->qfull_queue, &udev->qfull_timer);
+-}
+-
+ static int tcmu_irqcontrol(struct uio_info *info, s32 irq_on)
+ {
+ 	struct tcmu_dev *udev = container_of(info, struct tcmu_dev, uio_info);
+-
+-	mutex_lock(&udev->cmdr_lock);
+-	if (tcmu_handle_completions(udev))
+-		run_qfull_queue(udev, false);
+-	mutex_unlock(&udev->cmdr_lock);
+-
++	queue_work(tcmu_comp_wq, &udev->complete_work);
+ 	return 0;
+ }
+ 
+@@ -3281,12 +3290,17 @@ static int __init tcmu_module_init(void)
+ 
+ 	INIT_DELAYED_WORK(&tcmu_unmap_work, tcmu_unmap_work_fn);
+ 
++	tcmu_comp_wq = alloc_workqueue("tcmu-comp-wq",
++			WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_SYSFS, 0);
++	if (!tcmu_comp_wq)
++		return -ENOMEM;
++
+ 	tcmu_cmd_cache = kmem_cache_create("tcmu_cmd_cache",
+ 				sizeof(struct tcmu_cmd),
+ 				__alignof__(struct tcmu_cmd),
+ 				0, NULL);
+ 	if (!tcmu_cmd_cache)
+-		return -ENOMEM;
++		goto out_free_comp_wq;
+ 
+ 	tcmu_root_device = root_device_register("tcm_user");
+ 	if (IS_ERR(tcmu_root_device)) {
+@@ -3335,6 +3349,8 @@ static int __init tcmu_module_init(void)
+ 	root_device_unregister(tcmu_root_device);
+ out_free_cache:
+ 	kmem_cache_destroy(tcmu_cmd_cache);
++out_free_comp_wq:
++	destroy_workqueue(tcmu_comp_wq);
+ 
+ 	return ret;
+ }
+@@ -3347,6 +3363,7 @@ static void __exit tcmu_module_exit(void)
+ 	genl_unregister_family(&tcmu_genl_family);
+ 	root_device_unregister(tcmu_root_device);
+ 	kmem_cache_destroy(tcmu_cmd_cache);
++	destroy_workqueue(tcmu_comp_wq);
+ }
+ 
+ MODULE_DESCRIPTION("TCM USER subsystem plugin");
 -- 
-viresh
+1.8.3.1
+
