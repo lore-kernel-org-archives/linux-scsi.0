@@ -2,61 +2,61 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C25C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 May 2022 10:53:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DD26C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 May 2022 10:53:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238060AbiEJK5A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 May 2022 06:57:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38262 "EHLO
+        id S240481AbiEJK5d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 May 2022 06:57:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240392AbiEJKzC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 May 2022 06:55:02 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D12A42B24C2;
-        Tue, 10 May 2022 03:50:10 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id t13so14318679pgn.8;
-        Tue, 10 May 2022 03:50:10 -0700 (PDT)
+        with ESMTP id S240918AbiEJK4o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 May 2022 06:56:44 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2409B49CB6;
+        Tue, 10 May 2022 03:51:18 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id j6so14603756pfe.13;
+        Tue, 10 May 2022 03:51:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=sclbHhVCpytXbP5B6C6SSIufZdheKQomWRC+pnC/oHY=;
-        b=J83OMZaGsO5W6zKvuiaTqIx0nBsfHdG04fjk39gFIltlniK/KSRu1IMnkW3MaA1fnM
-         lxQm00q9pF2NFBTvX9nslTJqF5qeojReu//XMLTgkJhEFSCXG1Q/TlVTbGZ5Pb1Qxxti
-         NVsQfQ97X1VQTy1MJkTahp4HYv4XESVLxq135JTE+pKkc9HU0QxtPlHudp7kCm9W8yL0
-         C2Bhvn9+mpZUGIOv62qCR6oH4DZWJOwgYxITmo0mBD1bHcqLqLzl6rbr5NGG4YjqWSzT
-         aD+JlD/YafSn7b/hxhd4OhTrQw7L4nr7NGMEzdnidDeBIIlu7OOvcGl4M9Y+koIAnM4V
-         K5Ow==
+        bh=hAHq/Z/cN7zV+XdkiKU02nzI59eCs7rRP6xEiwk+ttM=;
+        b=omAx8HgDVZ/N16gcZs7NwcDCejSq3mv/wK0bmHiwGOCdpzpFBaEL9oJp59J3TefASW
+         VWqJ5eXPMLZnfGvy0rwgMy4XQE9RfeaNHByd00RzEW2DkNQpAaR3GjcNk0tGp1a3/Ouk
+         1X/mczkeIzuYf6tOdlntClgX3cBujoyE7N7zUJ51QQ19aneUoH/m5gkR3Na4QHyhaJud
+         1olm5tqo7xBbVvuFZtgJGn7jjstObBrJ+7bWaPFYOXiFj7DSs8fMCTHu6peNEuGhx7z9
+         22a+0pheq7GEFUAgaXhizFz6bMHBHIuwhCHgrhINnuCMAGLn1UHz6vJ33DIUopRD/5g8
+         gCmQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=sclbHhVCpytXbP5B6C6SSIufZdheKQomWRC+pnC/oHY=;
-        b=fgiBOicBJFxbxCTL9+2T2cyCI1TzmE46dq+0Fx63PLZO6bAH3aRbICQwFk8C0iFLfk
-         uQvbu9mU/qlOJxxO2mICimuR1htDh/ZU/X+IQcLILlk3xBTw5YWbSndGW5Xoc4AxZUfO
-         wbK1o7WRJyPFDyiLbg0qi9UcjuuLQu8Z9f6oahVFTymXfHmm8hB45SVxfwK4hMhTqXc1
-         qEsRdNDBNpiL7uAXB/PmSX22oo6UMjrWDQA/pfvybp/n14w6E2Ra8arYEgsnYC0naP3A
-         jBsvULZ4rv/nUnrK3mrb47KtPppzlRFcX/XvLgkpbKOpiMvYKVu0RlnzPRToDkHPNu7Y
-         CAhg==
-X-Gm-Message-State: AOAM532J79h6a61ktzQKWh1Sc+tvsqrhgMN2P71zzCikQfa8ph+xo6Iu
-        MlVa6Y4LjGbcGF26dFM/lzQ=
-X-Google-Smtp-Source: ABdhPJwCTtqekQA/FsLVdM36s38qq5EgyEfuY54L17XXT0Rd/L7KC9PL819Tdhgw9IMBR9aTRjoQLA==
-X-Received: by 2002:a63:2114:0:b0:3c4:995c:344a with SMTP id h20-20020a632114000000b003c4995c344amr16459225pgh.125.1652179810344;
-        Tue, 10 May 2022 03:50:10 -0700 (PDT)
+        bh=hAHq/Z/cN7zV+XdkiKU02nzI59eCs7rRP6xEiwk+ttM=;
+        b=uqDOQ1D+20DLacIvGOOyQwgcrRFfTdsP8vItO8XfUbxNBY0BB+e8Xr3nbJt92Wr1q6
+         ejrpJ2C90i2QJOb3YhPjcLo0Nii1vJeBRdWBfJpPiVqq69B+uvVvvVRaLtSBUXU7QPqT
+         JkKsQohNXfAr3iHNwM/0qeYRhKmvokiS5oK0d+N9kQgQ9QeVrOtwCm/F8dk2bthXnkJ5
+         kcik1miDrj+GNsMHOpk8rpaUx7PtyxVT+GTbdoZb0KSlguULBtz3M+56at7LyVyQkvZY
+         N96qmXkDPF6cRVt4kZZKfnDdEsWLTNJlgy5EW7uhDDF1jqJdlzVQlQgWLZIoMXKemTwQ
+         s4Zw==
+X-Gm-Message-State: AOAM530mPWb+w4bf4T8ugpSW8jhXB8FbTJCf7BNDzT4dnlnHbGXDRv/W
+        Hvh6veAk/0FyTOVNzNulUDE=
+X-Google-Smtp-Source: ABdhPJy+fryPMGgXljHO9c+vcQpQNMh6ymww+rTFw9yfICLO78dc6yMkKnygW8lA+g2+4HS1DnAojw==
+X-Received: by 2002:a62:4e90:0:b0:505:fa47:b611 with SMTP id c138-20020a624e90000000b00505fa47b611mr19933137pfb.65.1652179877328;
+        Tue, 10 May 2022 03:51:17 -0700 (PDT)
 Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id hv8-20020a17090ae40800b001d9927ef1desm1499917pjb.34.2022.05.10.03.50.08
+        by smtp.gmail.com with ESMTPSA id cq21-20020a056a00331500b0050dc76281e0sm10249669pfb.186.2022.05.10.03.51.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 May 2022 03:50:09 -0700 (PDT)
+        Tue, 10 May 2022 03:51:17 -0700 (PDT)
 From:   cgel.zte@gmail.com
 X-Google-Original-From: chi.minghao@zte.com.cn
-To:     aradford@gmail.com
+To:     brking@us.ibm.com
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Minghao Chi <chi.minghao@zte.com.cn>,
         Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] [SCSI] 3w-sas: use kobj_to_dev()
-Date:   Tue, 10 May 2022 10:50:05 +0000
-Message-Id: <20220510105005.1351587-1-chi.minghao@zte.com.cn>
+Subject: [PATCH] [SCSI] ipr: use kobj_to_dev()
+Date:   Tue, 10 May 2022 10:51:13 +0000
+Message-Id: <20220510105113.1351891-1-chi.minghao@zte.com.cn>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -71,31 +71,58 @@ Use kobj_to_dev() instead of open-coding it.
 Reported-by: Zeal Robot <zealci@zte.com.cn>
 Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
 ---
- drivers/scsi/3w-sas.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ipr.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-index 3ebe66151dcb..8d63e642715d 100644
---- a/drivers/scsi/3w-sas.c
-+++ b/drivers/scsi/3w-sas.c
-@@ -99,7 +99,7 @@ static ssize_t twl_sysfs_aen_read(struct file *filp, struct kobject *kobj,
- 				  struct bin_attribute *bin_attr,
- 				  char *outbuf, loff_t offset, size_t count)
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 353cf47db79c..256ec6d08c16 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -3456,7 +3456,7 @@ static ssize_t ipr_read_trace(struct file *filp, struct kobject *kobj,
+ 			      struct bin_attribute *bin_attr,
+ 			      char *buf, loff_t off, size_t count)
  {
 -	struct device *dev = container_of(kobj, struct device, kobj);
 +	struct device *dev = kobj_to_dev(kobj);
  	struct Scsi_Host *shost = class_to_shost(dev);
- 	TW_Device_Extension *tw_dev = (TW_Device_Extension *)shost->hostdata;
- 	unsigned long flags = 0;
-@@ -130,7 +130,7 @@ static ssize_t twl_sysfs_compat_info(struct file *filp, struct kobject *kobj,
- 				     struct bin_attribute *bin_attr,
- 				     char *outbuf, loff_t offset, size_t count)
+ 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
+ 	unsigned long lock_flags = 0;
+@@ -4182,7 +4182,7 @@ static ssize_t ipr_read_async_err_log(struct file *filep, struct kobject *kobj,
+ 				struct bin_attribute *bin_attr, char *buf,
+ 				loff_t off, size_t count)
  {
--	struct device *dev = container_of(kobj, struct device, kobj);
-+	struct device *dev = kobj_to_dev(kobj);
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	TW_Device_Extension *tw_dev = (TW_Device_Extension *)shost->hostdata;
- 	unsigned long flags = 0;
+-	struct device *cdev = container_of(kobj, struct device, kobj);
++	struct device *cdev = kobj_to_dev(kobj);
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
+ 	struct ipr_hostrcb *hostrcb;
+@@ -4206,7 +4206,7 @@ static ssize_t ipr_next_async_err_log(struct file *filep, struct kobject *kobj,
+ 				struct bin_attribute *bin_attr, char *buf,
+ 				loff_t off, size_t count)
+ {
+-	struct device *cdev = container_of(kobj, struct device, kobj);
++	struct device *cdev = kobj_to_dev(kobj);
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
+ 	struct ipr_hostrcb *hostrcb;
+@@ -4267,7 +4267,7 @@ static ssize_t ipr_read_dump(struct file *filp, struct kobject *kobj,
+ 			     struct bin_attribute *bin_attr,
+ 			     char *buf, loff_t off, size_t count)
+ {
+-	struct device *cdev = container_of(kobj, struct device, kobj);
++	struct device *cdev = kobj_to_dev(kobj);
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
+ 	struct ipr_dump *dump;
+@@ -4456,7 +4456,7 @@ static ssize_t ipr_write_dump(struct file *filp, struct kobject *kobj,
+ 			      struct bin_attribute *bin_attr,
+ 			      char *buf, loff_t off, size_t count)
+ {
+-	struct device *cdev = container_of(kobj, struct device, kobj);
++	struct device *cdev = kobj_to_dev(kobj);
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
+ 	int rc;
 -- 
 2.25.1
 
