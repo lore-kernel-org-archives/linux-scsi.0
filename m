@@ -2,81 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00296C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 May 2022 02:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33F13C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 May 2022 05:06:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236368AbiEKCrT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 May 2022 22:47:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55582 "EHLO
+        id S236149AbiEKFGy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 May 2022 01:06:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242807AbiEKCiN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 May 2022 22:38:13 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 760241BB117
-        for <linux-scsi@vger.kernel.org>; Tue, 10 May 2022 19:38:12 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24AKsKqv017478;
-        Wed, 11 May 2022 02:38:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=GPOURhMLbEDSAxCOlpgs26zTXUfURoOrBtQsbDbnAC0=;
- b=pLDRS9DnX7yjAAImFzGg8IQJVJQ8KNUfhnSSobRoJ1Qi8al5tCIpPL1Hdo61F273Ntlb
- B2q++wh2o0WDqi8r3hm1AyozMWbDzXF3HtOa+T7O1TMPDOnZc8wePJMkG8kj/ey0oihe
- J8wkpj/lTGjY7nM67EuDW9NQYBqkSeqQ7+m5z6ODKTtocWZge7SmiUbMT+2jX+MDCblY
- UzHfMo3pl4ccYv5VNEBernFpJsfCVvV2Ec0lwz4Fs5vSrAKxsZC7NNlF9sma2Zdq4Scd
- Lh1SoziqwzTXuBBgdbhTgxxDaE51ZKsYJ2v8Y1cfUU3YAjuPsXTidEpk567ieTX/poef IA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fwgn9r3e5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 May 2022 02:38:10 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24B2LeHV015415;
-        Wed, 11 May 2022 02:38:09 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3fwf73scta-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 May 2022 02:38:09 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 24B2c95X027764;
-        Wed, 11 May 2022 02:38:09 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3fwf73scsr-1;
-        Wed, 11 May 2022 02:38:08 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Justin Tee <justin.tee@broadcom.com>
-Subject: Re: [PATCH] lpfc: Correct BDE DMA address assignment for GEN_REQ_WQE
-Date:   Tue, 10 May 2022 22:38:06 -0400
-Message-Id: <165223667362.31045.3159914778746373173.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.35.2
-In-Reply-To: <20220506205548.61644-1-jsmart2021@gmail.com>
-References: <20220506205548.61644-1-jsmart2021@gmail.com>
+        with ESMTP id S236935AbiEKFGv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2022 01:06:51 -0400
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F0D34EDFD
+        for <linux-scsi@vger.kernel.org>; Tue, 10 May 2022 22:06:46 -0700 (PDT)
+Received: by mail-pg1-x52f.google.com with SMTP id v10so789450pgl.11
+        for <linux-scsi@vger.kernel.org>; Tue, 10 May 2022 22:06:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=AUEIkeNWULTqIuIT1TZeXx+IdneqcLu7BzWDktuhfnk=;
+        b=F8jn7i4bbQ95N7G7p4DIUqUUwb8R45Ly5JB7TyyhJiHYhrGNc7SkaFJWOMLSwQiz6B
+         mLVffC7ztUhB4aMrEx9YveKtguy8R5xI87IrhfPmry6wYuvrkwwXZhpMXR2S/FF3paXF
+         4vR4IChTGPB+fepRra4S8AToZBNXV2Un6pyThhngFfNZ12B4XRupcgr9ykO+zGnLooZe
+         WEypzao1fonjiP3LL3Df9bvaMieh8T3HC9Lp2fDodmttzz5+CZTXnRYZn2ANc1NCvkus
+         AfLV9HnZVpARsF8gv35ufAIkT1BXKQoDK835N2MrukdhICpE6kgp8lRM8SUu7m7KiNPy
+         GOaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=AUEIkeNWULTqIuIT1TZeXx+IdneqcLu7BzWDktuhfnk=;
+        b=uN6au6B2G40qIjci9L1HBp4FTYLaFJWe41+NOlpEXIPRV9hFOGtNQjjarDWijpLeXK
+         GZ+aYpj8z+j3Ko00mb3WOCJPMEfqSBdtgdrwjZ+/WM0U/jVp6YXaorAHDSAFWxyiYeWg
+         q75aaQlxwLfGZVnkVIT+Qk1BcS9QxSqfB4enHGDPS8G2+3PcbrGCWMOyOFrTfxF2L35U
+         UQW3rOoocwfLubLKMCf4gzVNJ6QZK2JsxtuOpSGLPE4LVqF1gdJ1gVN5VrEyt+sNPTdR
+         Yyc5XvGRE7z3gmDJVLYP/AIrMmdlNZrlvfjEe3vVCZlD7VNVDzVBbot8sB4Uv8z9P5Wz
+         SUqg==
+X-Gm-Message-State: AOAM532mwuKbiHVatlCSiYZPsfpjI2Xh36kbZIz2xAmJHz+yWvTmETcf
+        2VUAiwNaBEXoss3amp9CS6cuAQ==
+X-Google-Smtp-Source: ABdhPJw19bwjjubf5ZE0oIAmRAefBe7FNecIitByBceQ0V+zCTh9c6/8TSu7+c0yFISh4fD8ZvKs3w==
+X-Received: by 2002:a05:6a00:18a9:b0:50d:d41b:7240 with SMTP id x41-20020a056a0018a900b0050dd41b7240mr23119315pfh.66.1652245606028;
+        Tue, 10 May 2022 22:06:46 -0700 (PDT)
+Received: from localhost ([122.162.234.2])
+        by smtp.gmail.com with ESMTPSA id 13-20020a62190d000000b0050dc7628161sm496573pfz.59.2022.05.10.22.06.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 May 2022 22:06:45 -0700 (PDT)
+Date:   Wed, 11 May 2022 10:36:43 +0530
+From:   Viresh Kumar <viresh.kumar@linaro.org>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc:     Stephen Boyd <sboyd@kernel.org>, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Taniya Das <tdas@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
+Message-ID: <20220511050643.hd5tcrojb3wkbg7t@vireshk-i7>
+References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
+ <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
+ <20220425072710.v6gwo4gu3aouezg4@vireshk-i7>
+ <dea39b1f-0091-2690-7f07-108d07ef9f3c@linaro.org>
+ <20220510044053.ykn6ygnbeokhzrsa@vireshk-i7>
+ <1e533194-7047-8342-b426-f607fddbfaa3@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: e8FAV_mcIBURc16431Mo-7e9NOUEdiIy
-X-Proofpoint-ORIG-GUID: e8FAV_mcIBURc16431Mo-7e9NOUEdiIy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1e533194-7047-8342-b426-f607fddbfaa3@linaro.org>
+User-Agent: NeoMutt/20180716-391-311a52
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 6 May 2022 13:55:48 -0700, James Smart wrote:
-
-> Garbage FCoE CT frames are transmitted on the wire because of bad DMA ptr
-> addresses filled in the GEN_REQ_WQE.
+On 10-05-22, 15:09, Krzysztof Kozlowski wrote:
+> On 10/05/2022 06:40, Viresh Kumar wrote:
+> > They shouldn't reach the OPP core then. What will the OPP core do if a
+> > clock has a value for one OPP and not the other ?
 > 
-> The __lpfc_sli_prep_gen_req_s4() routine is using the wrong buffer for
-> the payload address. Change the dma buffer assignment from the bmp buffer
-> to the bpl buffer.
+> That would be the same mistake as providing one voltage as 0 or with
+> something outside of a spec (but still within regulators min/max).
+> Mistakes in DTS create undesirable behavior and this part is no different.
+
+Right, I agree and so it shouldn't be allowed in principle.
+
+> However I understand your point - since the driver provides the list of
+> clocks to OPP, it should not provide ones which are irrelevant.
+
+Right.
+
+> > IMHO, this is broken by design. I can easily see that someone wants to
+> > have few variants of all other frequencies for the same frequency of
+> > the so called "main" clock, i.e. multiple OPPs with same "main" freq
+> > value.  I don't think we can mark the clocks "main" or otherwise as
+> > easily for every platform.
+> > 
+> > Stephen, any inputs on this ?
 > 
-> [...]
+> In such case, matching opps by frequency would be a quite different API.
+> The drivers can use now:
+> https://github.com/krzk/linux/commit/ebc31798494fcc66389ae409dce6d9489c16156a#diff-b6370444c32afa2e55d9b6150f355ba6f4d20c5ed5da5399ea8295d323de8267R1200
+> 
+> If you assume that this frequency can be used for multiple OPPs, then
+> the API should be different. Something like:
+> int dev_pm_opp_set_rate(struct device *dev, unsigned long *target_freqs,
+>                         size_t num_freqs);
 
-Applied to 5.18/scsi-fixes, thanks!
+At this point I am not looking for a new API, but just continuing the discussion
+to understand what different hardwares want or look like.
 
-[1/1] lpfc: Correct BDE DMA address assignment for GEN_REQ_WQE
-      https://git.kernel.org/mkp/scsi/c/775266207105
+> Finding right opp for given frequencies would be also quite much more
+> complicated task. Not a simple ceil/floor search by one frequency.
+
+Right.
+
+> I don't need that use-case and my implementation does not prevent anyone
+> from implementing it in the future. IOW, why developing now complex
+> solution which no one currently needs? If anyone needs such scaling by
+> multiple-frequencies, the PM OPP can be reworked/extended/improved again.
+
+It isn't about being complex or simple for me, but the design needs to be
+robust. Either we can have a guaranteed "main" frequency or not and that would
+decide how we need to proceed here.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+viresh
