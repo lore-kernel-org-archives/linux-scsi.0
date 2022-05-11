@@ -2,93 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF32C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 May 2022 07:16:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6177CC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 May 2022 07:16:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241144AbiEKHQG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 May 2022 03:16:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43734 "EHLO
+        id S242724AbiEKHQH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 May 2022 03:16:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242772AbiEKHQB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2022 03:16:01 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B1D627FCA
-        for <linux-scsi@vger.kernel.org>; Wed, 11 May 2022 00:16:00 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id q4so1017224plr.11
-        for <linux-scsi@vger.kernel.org>; Wed, 11 May 2022 00:16:00 -0700 (PDT)
+        with ESMTP id S242794AbiEKHQD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2022 03:16:03 -0400
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A378C2A731
+        for <linux-scsi@vger.kernel.org>; Wed, 11 May 2022 00:16:02 -0700 (PDT)
+Received: by mail-pj1-x102e.google.com with SMTP id cu23-20020a17090afa9700b001d98d8e53b7so3458886pjb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 11 May 2022 00:16:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=zxkHyeD5cX6Is8wQKGtDrQyW1I6vsy8eIPj5EcMUUfw=;
-        b=dIXzbeA7PBa7qa4Xvpdas7nAhE7HLoH8k10DMEnJ+BGMMMxAKdcB/BTF/FSfcEB6KZ
-         mXsJ+7L9u05jKT6m8KaDlDIhuGb4WKBRrtkfNNlomCoScvGkeWGX8O+UZsEvAqcrYTAA
-         HHHtP9lOlMexh/a9YpPuYh4fHGOUdT3rysVfQ=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version;
+        bh=Lo9ONXqmvnaTFXfd+3bJBz/3PVgULdsYKmoUfL3Oh8c=;
+        b=dPHE3tVK/qT6XE/iq3R9HvFa0eySFT6qxfVF7/bk15wQQTITsW8a/x/qtHeGEcSoNm
+         9CE4St95m3xzKErc7yrQ4oF/T+QJJIuELue1LITcy+1ZuYEOQ/4DYeRNZk4TaYRdIZf7
+         3USgxjZWvl9ZytcQONVdTXi1wfYs8VJVzvB+Y=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=zxkHyeD5cX6Is8wQKGtDrQyW1I6vsy8eIPj5EcMUUfw=;
-        b=VID8+1wJyMvuu13oN+XLMK6orCJsaAbTJHepuAiqH+acT+W6XssgX+U4npgZuCra/b
-         z0jaCHH09BLGqdrPP06+Es9p1GKhrbu4k7ZPIpKVA9Sd8J22RAXy9jjoWb/txyAz/euE
-         o9N3YJdxK3CwR6G6Dxebj4D0kHFq2nGZp412wYvhMGcSCJkwvb60+IxSj4mZqWwAggZv
-         /ldc2LXVC4Tz1olez64abYLmuCK6SdMPxXpFa8qe/QaHLYUVye7C/9z9hqJAFkBN2RPn
-         vA97fe2P4H8X5yAgKcPQd6d3dPqwTgC5W5gMPnacvWsbXENRYhlyST7FV3hfmkvcVyvy
-         yctg==
-X-Gm-Message-State: AOAM5312Gn52McIVb0QiG0QDyec4wMTlO7Wkz2Ia1ofkJ1qh5EDzApTj
-        oqXcjMCLJycvaJ7CflRgQ7e0W05sQZvK/O87IaoSCX0ckP1MMNMivIYxECnJGagM5rocdZHOnrV
-        Whw3XH+i2Xdov6p0g+RodOumPjxD021kEbFv8yaEcaw1BKf5Jxh3vaRBw3Ir5XDna77woL7IlJL
-        Ypqoq7bJi4Rgc=
-X-Google-Smtp-Source: ABdhPJyvzGcB+oi29/pvnmoH5Urf6hrlijxMIXgxH4zcPg7SkLYgtoku4ebxEJL2vx6XFi0YTWt3UQ==
-X-Received: by 2002:a17:903:22ca:b0:15e:cf4e:79d6 with SMTP id y10-20020a17090322ca00b0015ecf4e79d6mr24724683plg.59.1652253359547;
-        Wed, 11 May 2022 00:15:59 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version;
+        bh=Lo9ONXqmvnaTFXfd+3bJBz/3PVgULdsYKmoUfL3Oh8c=;
+        b=pWcBTHPS+x25eabCPd9pKPib0Ce/9ugTvHMpnw+ZUfDIXfLIMswTF+ILP1DdmOXY13
+         T/dnmhcxHT9ft92gS8R0Jq95hI1IhgfA3Mi1QMCeeChyn7iw36MCFyPwzMaUZO0tVfNH
+         m21RkjPzV08Fgm2skvcQOxzJADyM7XM5L6+22OTRnen/FTnDgDJkTLDkLpzPNhzq5SBR
+         4ApH3uTwbIZLO5W/X/dgGW+KEsl8pZEoCgVkqFEP3rVhW115SeSxTc3eIMr8BK0LN6Ay
+         Wfd990XnL27i3nGWcEJNOXqemnW5itsk39xustciUyM7aZeYN/Bga/GshFB1Tj1bS9QT
+         SUhw==
+X-Gm-Message-State: AOAM531bUlYlq1mCQoFSUhkxo28EstGQVJPAFrU1NeggNrbPDv1lyoNJ
+        WSEnfvt2bS1g9uCCl/pf8q9N90ESYd1tttKFvWO18guae+mZUX6rMkNt4D4kaxgJVlVaUA5+uS9
+        Dn+scEurNjZi1v0JDaindQTS1Y2aN4k6DVwjpPZ2gZjRyFvNTO5trrO2xVWxJXmEPXKYeY8w3YR
+        xEC/f6N61y7zM=
+X-Google-Smtp-Source: ABdhPJyJKKxz4A+Lbz0q3FxEww2p1QIzKm2MNA0/OEuYzj4xkQmIf4uUWD3puto57ZTwclWKD53Wgw==
+X-Received: by 2002:a17:90b:1a88:b0:1dc:e4a1:a81e with SMTP id ng8-20020a17090b1a8800b001dce4a1a81emr3957348pjb.96.1652253361624;
+        Wed, 11 May 2022 00:16:01 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id a8-20020aa78e88000000b0050dc76281bfsm801596pfr.153.2022.05.11.00.15.57
+        by smtp.gmail.com with ESMTPSA id a8-20020aa78e88000000b0050dc76281bfsm801596pfr.153.2022.05.11.00.15.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 May 2022 00:15:58 -0700 (PDT)
+        Wed, 11 May 2022 00:16:00 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH] mpt3sas: Fix junk chars displayed while printing ChipName
-Date:   Wed, 11 May 2022 12:56:20 +0530
-Message-Id: <20220511072621.30657-1-sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: update driver version to 42.100.00.00
+Date:   Wed, 11 May 2022 12:56:21 +0530
+Message-Id: <20220511072621.30657-2-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20220511072621.30657-1-sreekanth.reddy@broadcom.com>
+References: <20220511072621.30657-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000099fccb05deb736ed"
+        boundary="000000000000ba959905deb73629"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000099fccb05deb736ed
+--000000000000ba959905deb73629
 Content-Transfer-Encoding: 8bit
 
-Make sure to append '/0' character after copying 16 bytes
-ChipName data from Manufacturing Page0. So that %s won't
-prints any junk characters.
+update driver version to 42.100.00.00
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 4961be5..37d46ae 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -4753,7 +4753,7 @@ static void
- _base_display_ioc_capabilities(struct MPT3SAS_ADAPTER *ioc)
- {
- 	int i = 0;
--	char desc[16];
-+	char desc[17] = {0};
- 	u32 iounit_pg1_flags;
- 	u32 bios_version;
- 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 209f868..76bfe1d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -77,8 +77,8 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"40.100.00.00"
+-#define MPT3SAS_MAJOR_VERSION		40
++#define MPT3SAS_DRIVER_VERSION		"42.100.00.00"
++#define MPT3SAS_MAJOR_VERSION		42
+ #define MPT3SAS_MINOR_VERSION		100
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
 -- 
 2.27.0
 
 
---00000000000099fccb05deb736ed
+--000000000000ba959905deb73629
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -159,13 +163,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILRdcv3CGivu9zyfoddY
-W/tKiiP7qY8P6i+7bp7mAFH6MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIyMDUxMTA3MTU1OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIRg4nzxh3+ankzjY2ev
+DB5AmkDnGa5TlBEkYP9Nq/Z0MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIyMDUxMTA3MTYwMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBjcmOIda8qaY3EOpcEMdfu9TfWe26bbKul4v1T
-H84hBRnsuFDjG2DpPL57K3c6J2atAg/ckjV0T4AhOcLyjET4IwXApFeJV4lVSkTROnunuR0R2jMV
-y7/StcYeXuDBvvC8GaqvzxA5KAG6bZCXgvxT+MpygT742ByIcjExZ/tpZYwLClHZcekG6yD5hCci
-ckADo4Vkf9C75IOX+5+3XC1eKz5byDMEMGvB+qD+fPb+GQERJ0PVVeWLa/JiIGhVmLw9xfeiLC+5
-8eBsJJHk7al4ZkE3tRE0gJTooCYLXtugY2i8SWs43gDW8oXsnL3xEGf5dseH83Z0lwiwyprBg2G/
---00000000000099fccb05deb736ed--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAIqeAJ64+z7llIddmyCc2ff/EZefw21a6J7znR
+9nI8aA9drySGoYavivVkty/OKtdzXkKGxX9ZjmkehqMqIaAQmxthT0MBlaII993cAQAEA4Nio0vw
+baYmev6qsqlU0QbdfJHMXTsitaJLdWOQPFuO/rFuduasPngMql0b1Zp49pvJiRYs/2lg/e1EyChR
+iohMHvV0Y09dDuEuchCh2pcJQde8EQyWqDokumZuVThdpv39YDjzkCRiHy5dFchARVzzuDVOkEWn
+K8FVMtcUbYE/BH7NA5xNTZSy8sCd7n4o0ChC9179H47ZyMbSVl7eDIHMVQK2EhelMRclgilWmkxb
+--000000000000ba959905deb73629--
