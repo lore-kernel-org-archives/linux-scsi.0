@@ -2,81 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14A7EC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 May 2022 09:57:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDD9DC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 May 2022 14:42:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238407AbiEKJ5j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 May 2022 05:57:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37832 "EHLO
+        id S244899AbiEKOmL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 May 2022 10:42:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231682AbiEKJ5g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2022 05:57:36 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D58BB55206;
-        Wed, 11 May 2022 02:57:34 -0700 (PDT)
-Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Kyqvy2VTTz67bNK;
-        Wed, 11 May 2022 17:52:46 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.24; Wed, 11 May 2022 11:57:32 +0200
-Received: from [10.47.91.186] (10.47.91.186) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2375.24; Wed, 11 May
- 2022 10:57:31 +0100
-Message-ID: <40fd1cc9-15b9-719c-8b8d-118cb156729f@huawei.com>
-Date:   Wed, 11 May 2022 10:57:45 +0100
+        with ESMTP id S240307AbiEKOmJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2022 10:42:09 -0400
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0010633B0;
+        Wed, 11 May 2022 07:42:07 -0700 (PDT)
+Received: by mail-wr1-f49.google.com with SMTP id q23so3334513wra.1;
+        Wed, 11 May 2022 07:42:07 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=wWjzqUVJD0Jte80wOSD+g8/wcFURTJpU9/E2wgFugws=;
+        b=N7uepyHGbC+tksq7Mkcncvgk9IXVyL9Mj9qx/CKFMx55E2qQSjqCu2EijqYVfcdm0/
+         cG5kkhJt2WGK3Q63Fw9WeQRlJdl+mw8QNsNpUJDd9xB1SccnqYwda9ibjqaFoZ2318+A
+         7VCINuDluVU4FGca679u3sSEmkEKf/DsU663CvIUBRl/pnZ/gBX78Ko9gcfi6ZFx8bNB
+         jxTRPrfKjH0bxloQm7cCMhypKJIXsxVEIy9zDHFe+UuSG6xgQxqw9VXaN9akEtjXdI0n
+         GE4hBnfWloOXkVua9B9HjI3aTQ8XIdP+FC84A4AetfoL6kUK2m2pQMXgwd6+2V1k+6xX
+         5Feg==
+X-Gm-Message-State: AOAM532f/3spfknKrGEO0fLYDXsiKl62oDYkLjz8zXUve7J5Ka6gBiXI
+        6cIYKnVP/KCEgi0l3iMLr38=
+X-Google-Smtp-Source: ABdhPJyJHl0yysMgUBB0X0fbIv9vHIIwvc08c3iHw4pfVSZWejdHpsGKKrKasDCwPGrEq2VYeEJO7A==
+X-Received: by 2002:a05:6000:1c02:b0:20c:7d20:cad6 with SMTP id ba2-20020a0560001c0200b0020c7d20cad6mr23036511wrb.373.1652280126132;
+        Wed, 11 May 2022 07:42:06 -0700 (PDT)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id s10-20020a7bc0ca000000b003942a244f34sm23407wmh.13.2022.05.11.07.42.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 May 2022 07:42:05 -0700 (PDT)
+Date:   Wed, 11 May 2022 14:42:04 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     Michael Kelley <mikelley@microsoft.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, linux-kernel@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, vkuznets@redhat.com,
+        decui@microsoft.com, drawat.floss@gmail.com, airlied@linux.ie,
+        daniel@ffwll.ch, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        deller@gmx.de, dri-devel@lists.freedesktop.org,
+        linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org
+Subject: Re: [PATCH 0/4] Remove support for Hyper-V 2008 and 2008R2/Win7
+Message-ID: <20220511144204.ilpsk2oiyknh7cys@liuwe-devbox-debian-v2>
+References: <1651509391-2058-1-git-send-email-mikelley@microsoft.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [RFC PATCH 0/2] sbitmap: NUMA node spreading
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     Jens Axboe <axboe@kernel.dk>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-References: <1652181274-136198-1-git-send-email-john.garry@huawei.com>
- <1afd2c01-69b3-ab8f-6bfe-118e3e56001c@kernel.dk>
- <9ede7211-ae58-5cd4-4cf6-74c1f508f1a6@huawei.com> <YnsaRXzKR5FKjC66@T590>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <YnsaRXzKR5FKjC66@T590>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.91.186]
-X-ClientProxiedBy: lhreml705-chm.china.huawei.com (10.201.108.54) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1651509391-2058-1-git-send-email-mikelley@microsoft.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/05/2022 03:07, Ming Lei wrote:
-
-Hi Ming,
-
->>> Spreading the memory out does probably make sense, but we need to retain
->>> the fast normal case. Making sbitmap support both, selected at init
->>> time, would be far more likely to be acceptable imho.
->> I wanted to keep the code changes minimal for an initial RFC to test the
->> water.
->>
->> My original approach did not introduce the extra load for normal path and
->> had some init time selection for a normal word map vs numa word map, but the
->> code grew and became somewhat unmanageable. I'll revisit it to see how to
->> improve that.
-> I understand this approach just splits shared sbitmap into per-numa-node
-> part, but what if all IOs are just from CPUs in one same numa node? Doesn't
-> this way cause tag starvation and waste?
+On Mon, May 02, 2022 at 09:36:27AM -0700, Michael Kelley wrote:
+> Linux code for running as a Hyper-V guest includes special cases for the
+> first released versions of Hyper-V: 2008 and 2008R2/Windows 7. These
+> versions were very thinly used for running Linux guests when first
+> released more than 12 years ago, and they are now out of support
+> (except for extended security updates). As initial versions, they
+> lack the performance features needed for effective production usage
+> of Linux guests. In total, there's no need to continue to support
+> the latest Linux kernels on these versions of Hyper-V.
 > 
+> Simplify the code for running on Hyper-V by removing the special
+> cases. This includes removing the negotiation of the VMbus protocol
+> versions for 2008 and 2008R2, and the special case code based on
+> those VMbus protocol versions. Changes are in the core VMbus code and
+> several drivers for synthetic VMbus devices.
+> 
+> Some drivers have driver-specific protocols with the Hyper-V host and
+> may have versions of those protocols that are limited to 2008 and
+> 2008R2. This patch set does the clean-up only for the top-level
+> VMbus protocol versions, and not the driver-specific protocols.
+> Cleaning up the driver-specific protocols can be done with
+> follow-on patches.
+> 
+> There's no specific urgency to removing the special case code for
+> 2008 and 2008R2, so if the broader Linux kernel community surfaces
+> a reason why this clean-up should not be done now, we can wait.
+> But I think we want to eventually stop carrying around this extra
+> baggage, and based on discussions with the Hyper-V team within
+> Microsoft, we're already past the point that it has any value.
+> 
+> Michael Kelley (4):
+>   Drivers: hv: vmbus: Remove support for Hyper-V 2008 and Hyper-V
+>     2008R2/Win7
+>   scsi: storvsc: Remove support for Hyper-V 2008 and 2008R2/Win7
+>   video: hyperv_fb: Remove support for Hyper-V 2008 and 2008R2/Win7
+>   drm/hyperv: Remove support for Hyper-V 2008 and 2008R2/Win7
 
-We would not do this. If we can't find a free bit in one node then we 
-need to check the others before giving up. This is some of the added 
-complexity which I hinted at. And things like batch get or RR support 
-become more complex.
-
-Alternatively we could have the double pointer for numa spreading only, 
-which would make things simpler. I need to check which is overall 
-better. Adding the complexity for dealing with numa node sub-arrays may 
-affect performance also.
-
-Thanks,
-John
+Applied to hyperv-next.
