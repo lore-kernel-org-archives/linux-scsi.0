@@ -2,96 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDD9DC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 May 2022 14:42:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34A9EC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 May 2022 20:54:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244899AbiEKOmL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 May 2022 10:42:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57248 "EHLO
+        id S1347907AbiEKUyw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 May 2022 16:54:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240307AbiEKOmJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2022 10:42:09 -0400
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0010633B0;
-        Wed, 11 May 2022 07:42:07 -0700 (PDT)
-Received: by mail-wr1-f49.google.com with SMTP id q23so3334513wra.1;
-        Wed, 11 May 2022 07:42:07 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=wWjzqUVJD0Jte80wOSD+g8/wcFURTJpU9/E2wgFugws=;
-        b=N7uepyHGbC+tksq7Mkcncvgk9IXVyL9Mj9qx/CKFMx55E2qQSjqCu2EijqYVfcdm0/
-         cG5kkhJt2WGK3Q63Fw9WeQRlJdl+mw8QNsNpUJDd9xB1SccnqYwda9ibjqaFoZ2318+A
-         7VCINuDluVU4FGca679u3sSEmkEKf/DsU663CvIUBRl/pnZ/gBX78Ko9gcfi6ZFx8bNB
-         jxTRPrfKjH0bxloQm7cCMhypKJIXsxVEIy9zDHFe+UuSG6xgQxqw9VXaN9akEtjXdI0n
-         GE4hBnfWloOXkVua9B9HjI3aTQ8XIdP+FC84A4AetfoL6kUK2m2pQMXgwd6+2V1k+6xX
-         5Feg==
-X-Gm-Message-State: AOAM532f/3spfknKrGEO0fLYDXsiKl62oDYkLjz8zXUve7J5Ka6gBiXI
-        6cIYKnVP/KCEgi0l3iMLr38=
-X-Google-Smtp-Source: ABdhPJyJHl0yysMgUBB0X0fbIv9vHIIwvc08c3iHw4pfVSZWejdHpsGKKrKasDCwPGrEq2VYeEJO7A==
-X-Received: by 2002:a05:6000:1c02:b0:20c:7d20:cad6 with SMTP id ba2-20020a0560001c0200b0020c7d20cad6mr23036511wrb.373.1652280126132;
-        Wed, 11 May 2022 07:42:06 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id s10-20020a7bc0ca000000b003942a244f34sm23407wmh.13.2022.05.11.07.42.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 May 2022 07:42:05 -0700 (PDT)
-Date:   Wed, 11 May 2022 14:42:04 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Michael Kelley <mikelley@microsoft.com>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, linux-kernel@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, vkuznets@redhat.com,
-        decui@microsoft.com, drawat.floss@gmail.com, airlied@linux.ie,
-        daniel@ffwll.ch, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        deller@gmx.de, dri-devel@lists.freedesktop.org,
-        linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org
-Subject: Re: [PATCH 0/4] Remove support for Hyper-V 2008 and 2008R2/Win7
-Message-ID: <20220511144204.ilpsk2oiyknh7cys@liuwe-devbox-debian-v2>
-References: <1651509391-2058-1-git-send-email-mikelley@microsoft.com>
+        with ESMTP id S244917AbiEKUyu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2022 16:54:50 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E8111C764D;
+        Wed, 11 May 2022 13:54:49 -0700 (PDT)
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24BKcm8j026710;
+        Wed, 11 May 2022 20:54:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=VztjO16qZnGK5+cxwnwPgYqTN0IWp3jCg4Y8qfUzGNs=;
+ b=omaLG+dYpCPN31VvlQKGlVmYTi0oI0Gine8ZI21wvUtMqkPvLVecRElPxpX8CX2YEXQi
+ nyGVDBu0dJcAGSpun7VStvsbLXkYbkM9woG+ivAl3jmQ8vQpWGAuJj7w0+7qWKCayer+
+ F9SaQo/Mmwv444J3iWMCawnj9wc286jUynyPZP/QFxMwcvOmf/xZVEFXvQrESQoJ7QnF
+ NDSAWrxRatPgvUsPG9NLiC9OKPPf7UIRvzLbDad1nSV/gMvcmz37aG2hgr81nXrC/ZE/
+ c/S5nPO3EWgrKsacwdbnDH5pxXW/UNZ3Edb6gToo5FeQP43jOd0iVPoQJxpD/LmR4BBE rQ== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3g0j7vttfd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 11 May 2022 20:54:47 +0000
+Received: from m0098417.ppops.net (m0098417.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 24BKemI9002203;
+        Wed, 11 May 2022 20:54:46 GMT
+Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3g0j7vttf6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 11 May 2022 20:54:46 +0000
+Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
+        by ppma02dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 24BKqOW5020227;
+        Wed, 11 May 2022 20:54:46 GMT
+Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
+        by ppma02dal.us.ibm.com with ESMTP id 3fwgdapd3w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 11 May 2022 20:54:46 +0000
+Received: from b01ledav004.gho.pok.ibm.com (b01ledav004.gho.pok.ibm.com [9.57.199.109])
+        by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 24BKsjQE26280396
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 11 May 2022 20:54:45 GMT
+Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 58E6511206E;
+        Wed, 11 May 2022 20:54:45 +0000 (GMT)
+Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id F39AA112069;
+        Wed, 11 May 2022 20:54:44 +0000 (GMT)
+Received: from [9.10.86.99] (unknown [9.10.86.99])
+        by b01ledav004.gho.pok.ibm.com (Postfix) with ESMTP;
+        Wed, 11 May 2022 20:54:44 +0000 (GMT)
+Message-ID: <4c777970-4bc3-0438-c9bc-653674c80ca3@linux.vnet.ibm.com>
+Date:   Wed, 11 May 2022 15:54:44 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1651509391-2058-1-git-send-email-mikelley@microsoft.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH] [SCSI] ipr: use kobj_to_dev()
+Content-Language: en-US
+To:     cgel.zte@gmail.com, brking@us.ibm.com
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Minghao Chi <chi.minghao@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+References: <20220510105113.1351891-1-chi.minghao@zte.com.cn>
+From:   Brian King <brking@linux.vnet.ibm.com>
+In-Reply-To: <20220510105113.1351891-1-chi.minghao@zte.com.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: kxWdFV6wsmK7a3esmhBfIq0n35ACj19z
+X-Proofpoint-GUID: 4C6NVSfCmzgdPvpqib59cqS1-Zbx8ebe
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
+ definitions=2022-05-11_07,2022-05-11_01,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=673
+ lowpriorityscore=0 priorityscore=1501 mlxscore=0 phishscore=0 adultscore=0
+ spamscore=0 bulkscore=0 suspectscore=0 impostorscore=0 clxscore=1011
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2205110088
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 02, 2022 at 09:36:27AM -0700, Michael Kelley wrote:
-> Linux code for running as a Hyper-V guest includes special cases for the
-> first released versions of Hyper-V: 2008 and 2008R2/Windows 7. These
-> versions were very thinly used for running Linux guests when first
-> released more than 12 years ago, and they are now out of support
-> (except for extended security updates). As initial versions, they
-> lack the performance features needed for effective production usage
-> of Linux guests. In total, there's no need to continue to support
-> the latest Linux kernels on these versions of Hyper-V.
-> 
-> Simplify the code for running on Hyper-V by removing the special
-> cases. This includes removing the negotiation of the VMbus protocol
-> versions for 2008 and 2008R2, and the special case code based on
-> those VMbus protocol versions. Changes are in the core VMbus code and
-> several drivers for synthetic VMbus devices.
-> 
-> Some drivers have driver-specific protocols with the Hyper-V host and
-> may have versions of those protocols that are limited to 2008 and
-> 2008R2. This patch set does the clean-up only for the top-level
-> VMbus protocol versions, and not the driver-specific protocols.
-> Cleaning up the driver-specific protocols can be done with
-> follow-on patches.
-> 
-> There's no specific urgency to removing the special case code for
-> 2008 and 2008R2, so if the broader Linux kernel community surfaces
-> a reason why this clean-up should not be done now, we can wait.
-> But I think we want to eventually stop carrying around this extra
-> baggage, and based on discussions with the Hyper-V team within
-> Microsoft, we're already past the point that it has any value.
-> 
-> Michael Kelley (4):
->   Drivers: hv: vmbus: Remove support for Hyper-V 2008 and Hyper-V
->     2008R2/Win7
->   scsi: storvsc: Remove support for Hyper-V 2008 and 2008R2/Win7
->   video: hyperv_fb: Remove support for Hyper-V 2008 and 2008R2/Win7
->   drm/hyperv: Remove support for Hyper-V 2008 and 2008R2/Win7
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
-Applied to hyperv-next.
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
