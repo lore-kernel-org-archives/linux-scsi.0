@@ -2,135 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33F13C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 May 2022 05:06:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 815F8C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 May 2022 06:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236149AbiEKFGy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 May 2022 01:06:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44182 "EHLO
+        id S239003AbiEKGCe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 May 2022 02:02:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236935AbiEKFGv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2022 01:06:51 -0400
-Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F0D34EDFD
-        for <linux-scsi@vger.kernel.org>; Tue, 10 May 2022 22:06:46 -0700 (PDT)
-Received: by mail-pg1-x52f.google.com with SMTP id v10so789450pgl.11
-        for <linux-scsi@vger.kernel.org>; Tue, 10 May 2022 22:06:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=AUEIkeNWULTqIuIT1TZeXx+IdneqcLu7BzWDktuhfnk=;
-        b=F8jn7i4bbQ95N7G7p4DIUqUUwb8R45Ly5JB7TyyhJiHYhrGNc7SkaFJWOMLSwQiz6B
-         mLVffC7ztUhB4aMrEx9YveKtguy8R5xI87IrhfPmry6wYuvrkwwXZhpMXR2S/FF3paXF
-         4vR4IChTGPB+fepRra4S8AToZBNXV2Un6pyThhngFfNZ12B4XRupcgr9ykO+zGnLooZe
-         WEypzao1fonjiP3LL3Df9bvaMieh8T3HC9Lp2fDodmttzz5+CZTXnRYZn2ANc1NCvkus
-         AfLV9HnZVpARsF8gv35ufAIkT1BXKQoDK835N2MrukdhICpE6kgp8lRM8SUu7m7KiNPy
-         GOaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=AUEIkeNWULTqIuIT1TZeXx+IdneqcLu7BzWDktuhfnk=;
-        b=uN6au6B2G40qIjci9L1HBp4FTYLaFJWe41+NOlpEXIPRV9hFOGtNQjjarDWijpLeXK
-         GZ+aYpj8z+j3Ko00mb3WOCJPMEfqSBdtgdrwjZ+/WM0U/jVp6YXaorAHDSAFWxyiYeWg
-         q75aaQlxwLfGZVnkVIT+Qk1BcS9QxSqfB4enHGDPS8G2+3PcbrGCWMOyOFrTfxF2L35U
-         UQW3rOoocwfLubLKMCf4gzVNJ6QZK2JsxtuOpSGLPE4LVqF1gdJ1gVN5VrEyt+sNPTdR
-         Yyc5XvGRE7z3gmDJVLYP/AIrMmdlNZrlvfjEe3vVCZlD7VNVDzVBbot8sB4Uv8z9P5Wz
-         SUqg==
-X-Gm-Message-State: AOAM532mwuKbiHVatlCSiYZPsfpjI2Xh36kbZIz2xAmJHz+yWvTmETcf
-        2VUAiwNaBEXoss3amp9CS6cuAQ==
-X-Google-Smtp-Source: ABdhPJw19bwjjubf5ZE0oIAmRAefBe7FNecIitByBceQ0V+zCTh9c6/8TSu7+c0yFISh4fD8ZvKs3w==
-X-Received: by 2002:a05:6a00:18a9:b0:50d:d41b:7240 with SMTP id x41-20020a056a0018a900b0050dd41b7240mr23119315pfh.66.1652245606028;
-        Tue, 10 May 2022 22:06:46 -0700 (PDT)
-Received: from localhost ([122.162.234.2])
-        by smtp.gmail.com with ESMTPSA id 13-20020a62190d000000b0050dc7628161sm496573pfz.59.2022.05.10.22.06.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 May 2022 22:06:45 -0700 (PDT)
-Date:   Wed, 11 May 2022 10:36:43 +0530
-From:   Viresh Kumar <viresh.kumar@linaro.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Stephen Boyd <sboyd@kernel.org>, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Taniya Das <tdas@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
-Message-ID: <20220511050643.hd5tcrojb3wkbg7t@vireshk-i7>
-References: <20220411154347.491396-1-krzysztof.kozlowski@linaro.org>
- <20220411154347.491396-5-krzysztof.kozlowski@linaro.org>
- <20220425072710.v6gwo4gu3aouezg4@vireshk-i7>
- <dea39b1f-0091-2690-7f07-108d07ef9f3c@linaro.org>
- <20220510044053.ykn6ygnbeokhzrsa@vireshk-i7>
- <1e533194-7047-8342-b426-f607fddbfaa3@linaro.org>
+        with ESMTP id S239066AbiEKGCZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2022 02:02:25 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9A6F35DE0;
+        Tue, 10 May 2022 23:02:22 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 08AF268BFE; Wed, 11 May 2022 08:02:14 +0200 (CEST)
+Date:   Wed, 11 May 2022 08:02:12 +0200
+From:   "hch@lst.de" <hch@lst.de>
+To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>
+Cc:     Robin Murphy <robin.murphy@arm.com>,
+        Tianyu Lan <ltykernel@gmail.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        vkuznets <vkuznets@redhat.com>,
+        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
+        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>
+Subject: Re: [PATCH] swiotlb: Max mapping size takes min align mask into
+ account
+Message-ID: <20220511060212.GA32192@lst.de>
+References: <20220510142109.777738-1-ltykernel@gmail.com> <cd64adcd-26fc-0452-754d-7ab0f5536142@arm.com> <PH0PR21MB302530B081D6CE6470D5F9A4D7C99@PH0PR21MB3025.namprd21.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1e533194-7047-8342-b426-f607fddbfaa3@linaro.org>
-User-Agent: NeoMutt/20180716-391-311a52
+In-Reply-To: <PH0PR21MB302530B081D6CE6470D5F9A4D7C99@PH0PR21MB3025.namprd21.prod.outlook.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10-05-22, 15:09, Krzysztof Kozlowski wrote:
-> On 10/05/2022 06:40, Viresh Kumar wrote:
-> > They shouldn't reach the OPP core then. What will the OPP core do if a
-> > clock has a value for one OPP and not the other ?
+On Tue, May 10, 2022 at 06:26:55PM +0000, Michael Kelley (LINUX) wrote:
+> > Hmm, this seems a bit pessimistic - the offset can vary per mapping, so
+> > it feels to me like it should really be the caller's responsibility to
+> > account for it if they're already involved enough to care about both
+> > constraints. But I'm not sure how practical that would be.
 > 
-> That would be the same mistake as providing one voltage as 0 or with
-> something outside of a spec (but still within regulators min/max).
-> Mistakes in DTS create undesirable behavior and this part is no different.
+> Tianyu and I discussed this prior to his submitting the patch.
+> Presumably dma_max_mapping_size() exists so that the higher
+> level blk-mq code can limit the size of I/O requests to something
+> that will "fit" in the swiotlb when bounce buffering is enabled.
 
-Right, I agree and so it shouldn't be allowed in principle.
+Yes, the idea that upper level code doesn't need to care was very
+much the idea behind dma_max_mapping_size().
 
-> However I understand your point - since the driver provides the list of
-> clocks to OPP, it should not provide ones which are irrelevant.
+> As you mentioned, how else would a caller handle this situation?
 
-Right.
+Well, we could look at dma_get_min_align_mask in the caller and do
+the calculation there, but I really don't think that is a good idea.
 
-> > IMHO, this is broken by design. I can easily see that someone wants to
-> > have few variants of all other frequencies for the same frequency of
-> > the so called "main" clock, i.e. multiple OPPs with same "main" freq
-> > value.  I don't think we can mark the clocks "main" or otherwise as
-> > easily for every platform.
-> > 
-> > Stephen, any inputs on this ?
-> 
-> In such case, matching opps by frequency would be a quite different API.
-> The drivers can use now:
-> https://github.com/krzk/linux/commit/ebc31798494fcc66389ae409dce6d9489c16156a#diff-b6370444c32afa2e55d9b6150f355ba6f4d20c5ed5da5399ea8295d323de8267R1200
-> 
-> If you assume that this frequency can be used for multiple OPPs, then
-> the API should be different. Something like:
-> int dev_pm_opp_set_rate(struct device *dev, unsigned long *target_freqs,
->                         size_t num_freqs);
-
-At this point I am not looking for a new API, but just continuing the discussion
-to understand what different hardwares want or look like.
-
-> Finding right opp for given frequencies would be also quite much more
-> complicated task. Not a simple ceil/floor search by one frequency.
-
-Right.
-
-> I don't need that use-case and my implementation does not prevent anyone
-> from implementing it in the future. IOW, why developing now complex
-> solution which no one currently needs? If anyone needs such scaling by
-> multiple-frequencies, the PM OPP can be reworked/extended/improved again.
-
-It isn't about being complex or simple for me, but the design needs to be
-robust. Either we can have a guaranteed "main" frequency or not and that would
-decide how we need to proceed here.
-
--- 
-viresh
+So this patch looks sensible to me.
