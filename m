@@ -2,246 +2,260 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B839AC4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 13:57:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 480D4C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 16:41:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354775AbiELN5I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 May 2022 09:57:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53086 "EHLO
+        id S1356115AbiELQle (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 May 2022 12:41:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354779AbiELN5D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2022 09:57:03 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 304271C345C
-        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 06:57:01 -0700 (PDT)
-X-UUID: 162a9dc646ba46e285457a6e4d43ea3e-20220512
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.4,REQID:ea0fc23a-65f7-4ab5-ae9a-3f6de342ee11,OB:0,LO
-        B:0,IP:0,URL:5,TC:0,Content:-20,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,AC
-        TION:release,TS:-15
-X-CID-META: VersionHash:faefae9,CLOUDID:959c13a7-eab7-4b74-a74d-5359964535a9,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,File:nil,QS:0,BEC:nil
-X-UUID: 162a9dc646ba46e285457a6e4d43ea3e-20220512
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
-        (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1861353464; Thu, 12 May 2022 21:56:58 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Thu, 12 May 2022 21:56:57 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 12 May 2022 21:56:57 +0800
-From:   <peter.wang@mediatek.com>
-To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
-        <lin.gui@mediatek.com>, <eddie.huang@mediatek.com>,
-        <tun-yu.yu@mediatek.com>
-Subject: [PATCH v1] scsi: ufs-mediatek: introduce new UFS4.0 HS-G5 mode
-Date:   Thu, 12 May 2022 21:56:54 +0800
-Message-ID: <20220512135654.3656-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        with ESMTP id S1356685AbiELQlY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2022 12:41:24 -0400
+Received: from mail-qt1-x82a.google.com (mail-qt1-x82a.google.com [IPv6:2607:f8b0:4864:20::82a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4264A3AA4F
+        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 09:41:23 -0700 (PDT)
+Received: by mail-qt1-x82a.google.com with SMTP id x22so4895641qto.2
+        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 09:41:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=kb1mLsnEPg9LHB/dpaTnZQ5qNTHichW7Na/vRvpx7U0=;
+        b=aUi2sq3YHzq+s+N1ugHMNzcB8S+klH+HeJtSHRhYQrEbFgoiOz+So8xzYFEYyUWD5k
+         /uf2HvBYsfd1B8YzWtWSglqDloUfZaGQrrG7zrK1x917jIinm4oNEx5QDV5ik0EGcuJW
+         Lp0UJzjdmVaCR82gIPf3PPZqzK6XKt+GXpr/572KBlD3uIQkF2DcckVMoqbDlKm/uJ5q
+         /pArUGWAE5QtQ4ORb1J/kgQWIARlfNat0FVp42lcbMr1qgM8bwt26UUv3go7q/ANqwf8
+         X/ZuqbcIp+moZNeAG2dr/74mhHZP9sQptNX1ftBJXwPYM75f5ARD0eiG1UOsgdAS7ZkH
+         1Xog==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=kb1mLsnEPg9LHB/dpaTnZQ5qNTHichW7Na/vRvpx7U0=;
+        b=RKvbD7b/2fcuagDkUelDgMlKX/H5+HZ/BVWS1J4g27Phi/TtGx7CZlAL9swMVxwP62
+         HBJyiNG/OhUaGJtX+vTzHqPyEFFScSsU0ora0MUoBGTw3N+XrAr9FNyCydSwD2Oz00os
+         SE841c8+QWd38ItTvU0Vs7nZGVJFDgZlphCJ4w2Q1MUuhk4fDs0m/zO7g8ysblKtp7xJ
+         VpAFKNVcdJTZUDj2pGiTauCcfHcizGBSB5vIUNotSXow4HaFmeK2ZkMgesgJVk2GqyhP
+         l8NAw3CuqcDEUDapl7JC4waJ9PzWu2ZQWob7+C6KiQqG7zZ6SMrzTMh0+iCflGXhMIWS
+         vRgg==
+X-Gm-Message-State: AOAM532i9zc7Kn3Z7FkfQTSOVFmsWklrDJedjYDhg9WstaSCn1RLYaVE
+        Sz6wUp8n93TLQq0aI+IvY3oiW9tzduwNpw==
+X-Google-Smtp-Source: ABdhPJyqXeWloROcf8QAZcmJRZ5zXnkrOg5q4x1XQ/WlOOu6B/ya3qpAnJxEAWHaGgdt514XReTwWQ==
+X-Received: by 2002:ac8:7fd1:0:b0:2f3:dddb:4206 with SMTP id b17-20020ac87fd1000000b002f3dddb4206mr628862qtk.11.1652373681716;
+        Thu, 12 May 2022 09:41:21 -0700 (PDT)
+Received: from centos7-test-jenkins.localdomain (sw.attotech.com. [208.69.85.34])
+        by smtp.googlemail.com with ESMTPSA id d12-20020ac847cc000000b002f39b99f66dsm31522qtr.7.2022.05.12.09.41.20
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 12 May 2022 09:41:20 -0700 (PDT)
+From:   Bradley Grove <bradley.grove@gmail.com>
+X-Google-Original-From: Bradley Grove <bgrove@attotech.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        Bradley Grove <bgrove@attotech.com>,
+        Jason Seba <jseba@attotech.com>
+Subject: [PATCH] scsi: lpfc: Add support for ATTO Fibre Channel devices
+Date:   Thu, 12 May 2022 12:40:32 -0400
+Message-Id: <20220512164032.47943-1-bgrove@attotech.com>
+X-Mailer: git-send-email 2.36.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peter Wang <peter.wang@mediatek.com>
+Update pci_device_id table and generate reporting strings for ATTO
+Celerity and ThunderLink Fibre Channel devices.
 
-Per UFS4.0 spec, HS-G5 is a new speed mode.
-This patch introduce HS-G5 speed mode to mediatek.
-Also add a host cap for power mode change via fastauto.
-
-Co-Developed-by: CC Chou <cc.chou@mediatek.com>
-Signed-off-by: CC Chou <cc.chou@mediatek.com>
-Co-Developed-by: Eddie Huang <eddie.huang@mediatek.com>
-Signed-off-by: Eddie Huang <eddie.huang@mediatek.com>
-Co-Developed-by: Dennis Yu <tun-yu.yu@mediatek.com>
-Signed-off-by: Dennis Yu <tun-yu.yu@mediatek.com>
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Co-developed-by: Jason Seba <jseba@attotech.com>
+Signed-off-by: Jason Seba <jseba@attotech.com>
+Signed-off-by: Bradley Grove <bgrove@attotech.com>
 ---
- drivers/scsi/ufs/ufs-mediatek.c | 60 +++++++++++++++++++++++++++++++--
- drivers/scsi/ufs/ufs-mediatek.h |  1 +
- drivers/scsi/ufs/ufshcd.c       |  3 +-
- drivers/scsi/ufs/ufshcd.h       |  1 +
- drivers/scsi/ufs/unipro.h       |  4 ++-
- 5 files changed, 65 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_hw.h   | 22 +++++++++
+ drivers/scsi/lpfc/lpfc_ids.h  | 30 ++++++++++++
+ drivers/scsi/lpfc/lpfc_init.c | 89 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 141 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index 86a938075f30..8f2a3b03d244 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -78,6 +78,13 @@ static bool ufs_mtk_is_broken_vcc(struct ufs_hba *hba)
- 	return !!(host->caps & UFS_MTK_CAP_BROKEN_VCC);
+diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+index d6050f3c9efe..74a02586fe55 100644
+--- a/drivers/scsi/lpfc/lpfc_hw.h
++++ b/drivers/scsi/lpfc/lpfc_hw.h
+@@ -1738,6 +1738,28 @@ struct lpfc_fdmi_reg_portattr {
+ #define PCI_DEVICE_ID_TOMCAT        0x0714
+ #define PCI_DEVICE_ID_SKYHAWK       0x0724
+ #define PCI_DEVICE_ID_SKYHAWK_VF    0x072c
++#define PCI_VENDOR_ID_ATTO          0x117c
++#define PCI_DEVICE_ID_CLRY_16XE     0x0064
++#define PCI_DEVICE_ID_CLRY_161E     0x0063
++#define PCI_DEVICE_ID_CLRY_162E     0x0064
++#define PCI_DEVICE_ID_CLRY_164E     0x0065
++#define PCI_DEVICE_ID_CLRY_16XP     0x0094
++#define PCI_DEVICE_ID_CLRY_161P     0x00a0
++#define PCI_DEVICE_ID_CLRY_162P     0x0094
++#define PCI_DEVICE_ID_CLRY_164P     0x00a1
++#define PCI_DEVICE_ID_CLRY_32XE     0x0094
++#define PCI_DEVICE_ID_CLRY_321E     0x00a2
++#define PCI_DEVICE_ID_CLRY_322E     0x00a3
++#define PCI_DEVICE_ID_CLRY_324E     0x00ac
++#define PCI_DEVICE_ID_CLRY_32XP     0x00bb
++#define PCI_DEVICE_ID_CLRY_321P     0x00bc
++#define PCI_DEVICE_ID_CLRY_322P     0x00bd
++#define PCI_DEVICE_ID_CLRY_324P     0x00be
++#define PCI_DEVICE_ID_TLFC_2        0x0064
++#define PCI_DEVICE_ID_TLFC_2XX2     0x4064
++#define PCI_DEVICE_ID_TLFC_3        0x0094
++#define PCI_DEVICE_ID_TLFC_3162     0x40a6
++#define PCI_DEVICE_ID_TLFC_3322     0x40a7
+ 
+ #define JEDEC_ID_ADDRESS            0x0080001c
+ #define FIREFLY_JEDEC_ID            0x1ACC
+diff --git a/drivers/scsi/lpfc/lpfc_ids.h b/drivers/scsi/lpfc/lpfc_ids.h
+index 6a90e6e53d09..a1b9be245560 100644
+--- a/drivers/scsi/lpfc/lpfc_ids.h
++++ b/drivers/scsi/lpfc/lpfc_ids.h
+@@ -124,5 +124,35 @@ const struct pci_device_id lpfc_id_table[] = {
+ 		PCI_ANY_ID, PCI_ANY_ID, },
+ 	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_SKYHAWK_VF,
+ 		PCI_ANY_ID, PCI_ANY_ID, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XE,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_161E, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XE,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_162E, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XE,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_164E, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XP,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_161P, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XP,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_162P, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XP,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_164P, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XE,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_321E, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XE,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_322E, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XE,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_324E, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XP,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_321P, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XP,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_322P, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XP,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_324P, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_2,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_2XX2, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_3,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_3162, },
++	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_3,
++		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_3322, },
+ 	{ 0 }
+ };
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 461d333b1b3a..45a71ab55be8 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -2408,6 +2408,90 @@ lpfc_parse_vpd(struct lpfc_hba *phba, uint8_t *vpd, int len)
+ 	return(1);
  }
  
-+static bool ufs_mtk_is_pmc_via_fastauto(struct ufs_hba *hba)
++/**
++ * lpfc_get_atto_model_desc - Retrieve ATTO HBA device model name and description
++ * @phba: pointer to lpfc hba data structure.
++ * @mdp: pointer to the data structure to hold the derived model name.
++ * @descp: pointer to the data structure to hold the derived description.
++ *
++ * This routine retrieves HBA's description based on its registered PCI device
++ * ID. The @descp passed into this function points to an array of 256 chars. It
++ * shall be returned with the model name, maximum speed, and the host bus type.
++ * The @mdp passed into this function points to an array of 80 chars. When the
++ * function returns, the @mdp will be filled with the model name.
++ **/
++static void
++lpfc_get_atto_model_desc(struct lpfc_hba *phba, uint8_t *mdp, uint8_t *descp)
 +{
-+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
++	uint16_t sub_dev_id = phba->pcidev->subsystem_device;
++	char *model = "<Unknown>";
++	int tbolt = 0;
 +
-+	return !!(host->caps & UFS_MTK_CAP_PMC_VIA_FASTAUTO);
-+}
-+
- static void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
- {
- 	u32 tmp;
-@@ -580,6 +587,9 @@ static void ufs_mtk_init_host_caps(struct ufs_hba *hba)
- 	if (of_property_read_bool(np, "mediatek,ufs-broken-vcc"))
- 		host->caps |= UFS_MTK_CAP_BROKEN_VCC;
- 
-+	if (of_property_read_bool(np, "mediatek,ufs-pmc-via-fastauto"))
-+		host->caps |= UFS_MTK_CAP_PMC_VIA_FASTAUTO;
-+
- 	dev_info(hba->dev, "caps: 0x%x", host->caps);
- }
- 
-@@ -755,6 +765,26 @@ static int ufs_mtk_init(struct ufs_hba *hba)
- 	return err;
- }
- 
-+static bool ufs_mtk_pmc_via_fastauto(struct ufs_hba *hba,
-+	struct ufs_pa_layer_attr *dev_req_params)
-+{
-+	if (!ufs_mtk_is_pmc_via_fastauto(hba))
-+		return false;
-+
-+	if (dev_req_params->hs_rate == hba->pwr_info.hs_rate)
-+		return false;
-+
-+	if ((dev_req_params->pwr_tx != FAST_MODE) &&
-+		(dev_req_params->gear_tx < UFS_HS_G4))
-+		return false;
-+
-+	if ((dev_req_params->pwr_rx != FAST_MODE) &&
-+		(dev_req_params->gear_rx < UFS_HS_G4))
-+		return false;
-+
-+	return true;
-+}
-+
- static int ufs_mtk_pre_pwr_change(struct ufs_hba *hba,
- 				  struct ufs_pa_layer_attr *dev_max_params,
- 				  struct ufs_pa_layer_attr *dev_req_params)
-@@ -764,8 +794,8 @@ static int ufs_mtk_pre_pwr_change(struct ufs_hba *hba,
- 	int ret;
- 
- 	ufshcd_init_pwr_dev_param(&host_cap);
--	host_cap.hs_rx_gear = UFS_HS_G4;
--	host_cap.hs_tx_gear = UFS_HS_G4;
-+	host_cap.hs_rx_gear = UFS_HS_G5;
-+	host_cap.hs_tx_gear = UFS_HS_G5;
- 
- 	ret = ufshcd_get_pwr_dev_param(&host_cap,
- 				       dev_max_params,
-@@ -775,6 +805,32 @@ static int ufs_mtk_pre_pwr_change(struct ufs_hba *hba,
- 			__func__);
- 	}
- 
-+	if (ufs_mtk_pmc_via_fastauto(hba, dev_req_params)) {
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), TRUE);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), UFS_HS_G1);
-+
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), TRUE);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), UFS_HS_G1);
-+
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES),
-+						dev_req_params->lane_tx);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES),
-+						dev_req_params->lane_rx);
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES),
-+						dev_req_params->hs_rate);
-+
-+		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXHSADAPTTYPE),
-+		     PA_NO_ADAPT);
-+
-+		ret = ufshcd_uic_change_pwr_mode(hba,
-+			FASTAUTO_MODE << 4 | FASTAUTO_MODE);
-+
-+		if (ret) {
-+			dev_err(hba->dev, "%s: HSG1B FASTAUTO failed ret=%d\n",
-+				__func__, ret);
-+		}
++	switch (sub_dev_id) {
++	case PCI_DEVICE_ID_CLRY_161E:
++		model = "161E";
++		break;
++	case PCI_DEVICE_ID_CLRY_162E:
++		model = "162E";
++		break;
++	case PCI_DEVICE_ID_CLRY_164E:
++		model = "164E";
++		break;
++	case PCI_DEVICE_ID_CLRY_161P:
++		model = "161P";
++		break;
++	case PCI_DEVICE_ID_CLRY_162P:
++		model = "162P";
++		break;
++	case PCI_DEVICE_ID_CLRY_164P:
++		model = "164P";
++		break;
++	case PCI_DEVICE_ID_CLRY_321E:
++		model = "321E";
++		break;
++	case PCI_DEVICE_ID_CLRY_322E:
++		model = "322E";
++		break;
++	case PCI_DEVICE_ID_CLRY_324E:
++		model = "324E";
++		break;
++	case PCI_DEVICE_ID_CLRY_321P:
++		model = "321P";
++		break;
++	case PCI_DEVICE_ID_CLRY_322P:
++		model = "322P";
++		break;
++	case PCI_DEVICE_ID_CLRY_324P:
++		model = "324P";
++		break;
++	case PCI_DEVICE_ID_TLFC_2XX2:
++		model = "2XX2";
++		tbolt = 1;
++		break;
++	case PCI_DEVICE_ID_TLFC_3162:
++		model = "3162";
++		tbolt = 1;
++		break;
++	case PCI_DEVICE_ID_TLFC_3322:
++		model = "3322";
++		tbolt = 1;
++		break;
++	default:
++		model = "Unknown";
++		break;
 +	}
 +
- 	if (host->hw_ver.major >= 3) {
- 		ret = ufshcd_dme_configure_adapt(hba,
- 					   dev_req_params->gear_tx,
-diff --git a/drivers/scsi/ufs/ufs-mediatek.h b/drivers/scsi/ufs/ufs-mediatek.h
-index 414dca86c09f..3a31f03f3cb1 100644
---- a/drivers/scsi/ufs/ufs-mediatek.h
-+++ b/drivers/scsi/ufs/ufs-mediatek.h
-@@ -108,6 +108,7 @@ enum ufs_mtk_host_caps {
- 	UFS_MTK_CAP_VA09_PWR_CTRL              = 1 << 1,
- 	UFS_MTK_CAP_DISABLE_AH8                = 1 << 2,
- 	UFS_MTK_CAP_BROKEN_VCC                 = 1 << 3,
-+	UFS_MTK_CAP_PMC_VIA_FASTAUTO           = 1 << 4,
- };
++	if (mdp && mdp[0] == '\0')
++		snprintf(mdp, 79, "%s", model);
++
++	if (descp && descp[0] == '\0')
++		snprintf(descp, 255,
++			 "ATTO %s%s, Fibre Channel Adapter Initiator, Port %s",
++			 (tbolt) ? "ThunderLink FC " : "Celerity FC-",
++			 model,
++			 phba->Port);
++}
++
+ /**
+  * lpfc_get_hba_model_desc - Retrieve HBA device model name and description
+  * @phba: pointer to lpfc hba data structure.
+@@ -2438,6 +2522,11 @@ lpfc_get_hba_model_desc(struct lpfc_hba *phba, uint8_t *mdp, uint8_t *descp)
+ 		&& descp && descp[0] != '\0')
+ 		return;
  
- struct ufs_mtk_crypt_cfg {
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3f9caafa91bf..e750011d0de7 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4076,7 +4076,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
-  *
-  * Returns 0 on success, non-zero value on failure
-  */
--static int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
-+int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
- {
- 	struct uic_command uic_cmd = {0};
- 	int ret;
-@@ -4101,6 +4101,7 @@ static int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
- out:
- 	return ret;
- }
-+EXPORT_SYMBOL(ufshcd_uic_change_pwr_mode);
- 
- int ufshcd_link_recovery(struct ufs_hba *hba)
- {
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 94f545be183a..1cda0f211d72 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1101,6 +1101,7 @@ extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 			       u8 attr_set, u32 mib_val, u8 peer);
- extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 			       u32 *mib_val, u8 peer);
-+extern int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode);
- extern int ufshcd_config_pwr_mode(struct ufs_hba *hba,
- 			struct ufs_pa_layer_attr *desired_pwr_mode);
- 
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 8e9e486a4f7b..94d97f123e3a 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -231,6 +231,7 @@ enum ufs_hs_gear_tag {
- 	UFS_HS_G2,		/* HS Gear 2 */
- 	UFS_HS_G3,		/* HS Gear 3 */
- 	UFS_HS_G4,		/* HS Gear 4 */
-+	UFS_HS_G5,		/* HS Gear 5 */
- };
- 
- enum ufs_unipro_ver {
-@@ -240,7 +241,8 @@ enum ufs_unipro_ver {
- 	UFS_UNIPRO_VER_1_6  = 3, /* UniPro version 1.6 */
- 	UFS_UNIPRO_VER_1_61 = 4, /* UniPro version 1.61 */
- 	UFS_UNIPRO_VER_1_8  = 5, /* UniPro version 1.8 */
--	UFS_UNIPRO_VER_MAX  = 6, /* UniPro unsupported version */
-+	UFS_UNIPRO_VER_2_0  = 6, /* UniPro version 2.0 */
-+	UFS_UNIPRO_VER_MAX  = 7, /* UniPro unsupported version */
- 	/* UniPro version field mask in PA_LOCALVERINFO */
- 	UFS_UNIPRO_VER_MASK = 0xF,
- };
++	if (phba->pcidev->vendor == PCI_VENDOR_ID_ATTO) {
++		lpfc_get_atto_model_desc(phba, mdp, descp);
++		return;
++	}
++
+ 	if (phba->lmt & LMT_64Gb)
+ 		max_speed = 64;
+ 	else if (phba->lmt & LMT_32Gb)
 -- 
-2.18.0
+2.36.0
 
