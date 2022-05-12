@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26B20C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 11:13:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8176C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 11:13:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353088AbiELLN3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 May 2022 07:13:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47092 "EHLO
+        id S1353104AbiELLNe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 May 2022 07:13:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353042AbiELLM6 (ORCPT
+        with ESMTP id S1353047AbiELLM6 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2022 07:12:58 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2C606351A
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A316563535
         for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 04:12:53 -0700 (PDT)
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 611CC1F934;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 6B9A21F93B;
         Thu, 12 May 2022 11:12:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1652353966; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=5S+SrtIIkv0nm8tr+L8EKd32QFZE908V2ogDLE6INao=;
-        b=MrLAEkTRviF6jvfy1CwjmK91UdVIiem/ZTOjW5cduVnPp9ERXEIK3LvkVWddTVMwqzCFg9
-        MyDchuWFZMsu6cw9anRLuMkWQI8dyQqFEDEB0x4AvAaHzV5bUD/lGFzyXaC5HCQORXjSNs
-        WZXNT0U6KvAshe2Jh9v+Qr+NMXtv0Pg=
+        bh=QWw4Gp1CMU8aS7D9dKfmYUjCPKvECWPnlkX95celaK8=;
+        b=cRVFtGzc+N6cWkP/dlW5bSDwj08b8G9WVOVde1Ngu4Cicc8/weoIiPHN2vEoP59w3WUQ0f
+        EYvNISCY7AvvJkI76z6lybhA2lqeO2dmo6Ti4UZ2FNrQks/l+JWIhXjQ8e7mt7qIATDcot
+        UlNaVLVfm/S4p0CyoK6KyZoBR2TtQGo=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1652353966;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=5S+SrtIIkv0nm8tr+L8EKd32QFZE908V2ogDLE6INao=;
-        b=mo78WP3vhba8Vs1FiZVnsN9HYZ2nfJxYVF2i48eQhdimyoLXpbkeTkkUZdgQimjBqJnk/W
-        i1xO1y5hvmP1WQDw==
+        bh=QWw4Gp1CMU8aS7D9dKfmYUjCPKvECWPnlkX95celaK8=;
+        b=KGzMUfIgA9PPe/cLb9I37JoinFD3/AoDfiG1Yx/cHve/M+LrBR45Pf5TBroKBnNV0TFP1X
+        0GGkHDEkpJJe9cBA==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 598A02C165;
+        by relay2.suse.de (Postfix) with ESMTP id 632AD2C16B;
         Thu, 12 May 2022 11:12:46 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 2805A51943F4; Thu, 12 May 2022 13:12:46 +0200 (CEST)
+        id 36DAA51943FC; Thu, 12 May 2022 13:12:46 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 14/20] aic7xxx: do not reference scsi command when resetting device
-Date:   Thu, 12 May 2022 13:12:30 +0200
-Message-Id: <20220512111236.109851-15-hare@suse.de>
+Subject: [PATCH 18/20] snic: Use scsi_host_busy_iter() to traverse commands
+Date:   Thu, 12 May 2022 13:12:34 +0200
+Message-Id: <20220512111236.109851-19-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20220512111236.109851-1-hare@suse.de>
 References: <20220512111236.109851-1-hare@suse.de>
@@ -58,266 +58,279 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When sending a device reset we should not take a reference to the
-scsi command.
+Use scsi_host_busy_iter() to traverse commands instead of hand-crafted
+routines walking the command list.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/scsi/aic7xxx/aic7xxx_osm.c | 108 +++++++++++++++--------------
- 1 file changed, 57 insertions(+), 51 deletions(-)
+ drivers/scsi/snic/snic_scsi.c | 177 ++++++++++++++++------------------
+ 1 file changed, 84 insertions(+), 93 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index 15e53b33b955..4ae0a1c4d374 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -366,7 +366,8 @@ static void ahc_linux_queue_cmd_complete(struct ahc_softc *ahc,
- 					 struct scsi_cmnd *cmd);
- static void ahc_linux_freeze_simq(struct ahc_softc *ahc);
- static void ahc_linux_release_simq(struct ahc_softc *ahc);
--static int  ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag);
-+static int  ahc_linux_queue_recovery_cmd(struct scsi_device *sdev,
-+					 struct scsi_cmnd *cmd);
- static void ahc_linux_initialize_scsi_bus(struct ahc_softc *ahc);
- static u_int ahc_linux_user_tagdepth(struct ahc_softc *ahc,
- 				     struct ahc_devinfo *devinfo);
-@@ -728,7 +729,7 @@ ahc_linux_abort(struct scsi_cmnd *cmd)
- {
- 	int error;
+diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+index 6570d5bc203f..50175b8f97bd 100644
+--- a/drivers/scsi/snic/snic_scsi.c
++++ b/drivers/scsi/snic/snic_scsi.c
+@@ -77,7 +77,7 @@ static const char * const snic_io_status_str[] = {
+ 	[SNIC_STAT_FATAL_ERROR]	= "SNIC_STAT_FATAL_ERROR",
+ };
  
--	error = ahc_linux_queue_recovery_cmd(cmd, SCB_ABORT);
-+	error = ahc_linux_queue_recovery_cmd(cmd->device, cmd);
- 	if (error != SUCCESS)
- 		printk("aic7xxx_abort returns 0x%x\n", error);
- 	return (error);
-@@ -742,7 +743,7 @@ ahc_linux_dev_reset(struct scsi_cmnd *cmd)
- {
- 	int error;
+-static void snic_scsi_cleanup(struct snic *, int);
++static void snic_scsi_cleanup(struct snic *);
  
--	error = ahc_linux_queue_recovery_cmd(cmd, SCB_DEVICE_RESET);
-+	error = ahc_linux_queue_recovery_cmd(cmd->device, NULL);
- 	if (error != SUCCESS)
- 		printk("aic7xxx_dev_reset returns 0x%x\n", error);
- 	return (error);
-@@ -2036,11 +2037,12 @@ ahc_linux_release_simq(struct ahc_softc *ahc)
+ const char *
+ snic_state_to_str(unsigned int state)
+@@ -977,7 +977,7 @@ snic_hba_reset_scsi_cleanup(struct snic *snic, struct scsi_cmnd *sc)
+ 	long act_ios = 0, act_fwreqs = 0;
+ 
+ 	SNIC_SCSI_DBG(snic->shost, "HBA Reset scsi cleanup.\n");
+-	snic_scsi_cleanup(snic, snic_cmd_tag(sc));
++	snic_scsi_cleanup(snic);
+ 
+ 	/* Update stats on pending IOs */
+ 	act_ios = atomic64_read(&st->io.active);
+@@ -2421,53 +2421,36 @@ snic_cmpl_pending_tmreq(struct snic *snic, struct scsi_cmnd *sc)
+ 		complete(rqi->abts_done);
  }
  
- static int
--ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
-+ahc_linux_queue_recovery_cmd(struct scsi_device *sdev,
-+			     struct scsi_cmnd *cmd)
+-/*
+- * snic_scsi_cleanup: Walks through tag map and releases the reqs
+- */
+-static void
+-snic_scsi_cleanup(struct snic *snic, int ex_tag)
++static bool
++snic_scsi_cleanup_iter(struct scsi_cmnd *sc, void *data, bool reserved)
  {
- 	struct ahc_softc *ahc;
- 	struct ahc_linux_device *dev;
--	struct scb *pending_scb;
-+	struct scb *pending_scb = NULL, *scb;
- 	u_int  saved_scbptr;
- 	u_int  active_scb_index;
- 	u_int  last_phase;
-@@ -2053,18 +2055,19 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 	int    disconnected;
++	struct snic *snic = data;
+ 	struct snic_req_info *rqi = NULL;
+-	struct scsi_cmnd *sc = NULL;
+ 	spinlock_t *io_lock = NULL;
  	unsigned long flags;
+-	int tag;
++	int tag = scsi_cmd_to_rq(sc)->tag;
+ 	u64 st_time = 0;
  
--	pending_scb = NULL;
- 	paused = FALSE;
- 	wait = FALSE;
--	ahc = *(struct ahc_softc **)cmd->device->host->hostdata;
-+	ahc = *(struct ahc_softc **)sdev->host->hostdata;
+ 	SNIC_SCSI_DBG(snic->shost, "sc_clean: scsi cleanup.\n");
  
--	scmd_printk(KERN_INFO, cmd, "Attempting to queue a%s message\n",
--	       flag == SCB_ABORT ? "n ABORT" : " TARGET RESET");
-+	sdev_printk(KERN_INFO, sdev, "Attempting to queue a%s message\n",
-+	       cmd ? "n ABORT" : " TARGET RESET");
+-	for (tag = 0; tag < snic->max_tag_id; tag++) {
+-		/* Skip ex_tag */
+-		if (tag == ex_tag)
+-			continue;
+-
+-		io_lock = snic_io_lock_tag(snic, tag);
+-		spin_lock_irqsave(io_lock, flags);
+-		sc = scsi_host_find_tag(snic->shost, tag);
+-		if (!sc) {
+-			spin_unlock_irqrestore(io_lock, flags);
+-
+-			continue;
+-		}
+-
+-		if (unlikely(snic_tmreq_pending(sc))) {
+-			/*
+-			 * When FW Completes reset w/o sending completions
+-			 * for outstanding ios.
+-			 */
+-			snic_cmpl_pending_tmreq(snic, sc);
+-			spin_unlock_irqrestore(io_lock, flags);
+-
+-			continue;
+-		}
++	io_lock = snic_io_lock_tag(snic, tag);
++	spin_lock_irqsave(io_lock, flags);
  
--	printk("CDB:");
--	for (cdb_byte = 0; cdb_byte < cmd->cmd_len; cdb_byte++)
--		printk(" 0x%x", cmd->cmnd[cdb_byte]);
--	printk("\n");
-+	if (cmd) {
-+		printk("CDB:");
-+		for (cdb_byte = 0; cdb_byte < cmd->cmd_len; cdb_byte++)
-+			printk(" 0x%x", cmd->cmnd[cdb_byte]);
-+		printk("\n");
+-		rqi = (struct snic_req_info *) CMD_SP(sc);
+-		if (!rqi) {
+-			spin_unlock_irqrestore(io_lock, flags);
++	if (unlikely(snic_tmreq_pending(sc))) {
++		/*
++		 * When FW Completes reset w/o sending completions
++		 * for outstanding ios.
++		 */
++		snic_cmpl_pending_tmreq(snic, sc);
++		spin_unlock_irqrestore(io_lock, flags);
+ 
+-			goto cleanup;
+-		}
++		return true;
 +	}
  
- 	ahc_lock(ahc, &flags);
++	rqi = (struct snic_req_info *) CMD_SP(sc);
++	if (!rqi)
++		spin_unlock_irqrestore(io_lock, flags);
++	else {
+ 		SNIC_SCSI_DBG(snic->shost,
+ 			      "sc_clean: sc %p, rqi %p, tag %d flags 0x%llx\n",
+ 			      sc, rqi, tag, CMD_FLAGS(sc));
+@@ -2482,24 +2465,34 @@ snic_scsi_cleanup(struct snic *snic, int ex_tag)
+ 			       rqi, CMD_FLAGS(sc));
  
-@@ -2075,7 +2078,7 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 	 * at all, and the system wanted us to just abort the
- 	 * command, return success.
- 	 */
--	dev = scsi_transport_device_data(cmd->device);
-+	dev = scsi_transport_device_data(sdev);
+ 		snic_release_req_buf(snic, rqi, sc);
++	}
++	sc->result = DID_TRANSPORT_DISRUPTED << 16;
++	SNIC_HOST_INFO(snic->shost,
++		       "sc_clean: DID_TRANSPORT_DISRUPTED for sc %p, Tag %d flags 0x%llx rqi %p duration %u msecs\n",
++		       sc, tag, CMD_FLAGS(sc), rqi,
++		       jiffies_to_msecs(jiffies - st_time));
  
- 	if (dev == NULL) {
- 		/*
-@@ -2083,13 +2086,12 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		 * so we must not still own the command.
- 		 */
- 		printk("%s:%d:%d:%d: Is not an active device\n",
--		       ahc_name(ahc), cmd->device->channel, cmd->device->id,
--		       (u8)cmd->device->lun);
-+		       ahc_name(ahc), sdev->channel, sdev->id, (u8)sdev->lun);
- 		retval = SUCCESS;
- 		goto no_cmd;
- 	}
+-cleanup:
+-		sc->result = DID_TRANSPORT_DISRUPTED << 16;
+-		SNIC_HOST_INFO(snic->shost,
+-			       "sc_clean: DID_TRANSPORT_DISRUPTED for sc %p, Tag %d flags 0x%llx rqi %p duration %u msecs\n",
+-			       sc, scsi_cmd_to_rq(sc)->tag, CMD_FLAGS(sc), rqi,
+-			       jiffies_to_msecs(jiffies - st_time));
++	/* Update IO stats */
++	snic_stats_update_io_cmpl(&snic->s_stats);
  
--	if ((dev->flags & (AHC_DEV_Q_BASIC|AHC_DEV_Q_TAGGED)) == 0
-+	if (cmd && (dev->flags & (AHC_DEV_Q_BASIC|AHC_DEV_Q_TAGGED)) == 0
- 	 && ahc_search_untagged_queues(ahc, cmd, cmd->device->id,
- 				       cmd->device->channel + 'A',
- 				       (u8)cmd->device->lun,
-@@ -2104,25 +2106,28 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 	/*
- 	 * See if we can find a matching cmd in the pending list.
- 	 */
--	LIST_FOREACH(pending_scb, &ahc->pending_scbs, pending_links) {
--		if (pending_scb->io_ctx == cmd)
--			break;
+-		/* Update IO stats */
+-		snic_stats_update_io_cmpl(&snic->s_stats);
++	SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
++		 jiffies_to_msecs(jiffies - st_time), 0,
++		 SNIC_TRC_CMD(sc),
++		 SNIC_TRC_CMD_STATE_FLAGS(sc));
+ 
+-		SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
+-			 jiffies_to_msecs(jiffies - st_time), 0,
+-			 SNIC_TRC_CMD(sc),
+-			 SNIC_TRC_CMD_STATE_FLAGS(sc));
++	scsi_done(sc);
++	return true;
++}
+ 
+-		scsi_done(sc);
 -	}
++/*
++ * snic_scsi_cleanup: Walks through tag map and releases the reqs
++ */
++static void
++snic_scsi_cleanup(struct snic *snic)
++{
++	SNIC_SCSI_DBG(snic->shost, "sc_clean: scsi cleanup\n");
++
++	scsi_host_busy_iter(snic->shost, snic_scsi_cleanup_iter, snic);
+ } /* end of snic_scsi_cleanup */
+ 
+ void
+@@ -2507,7 +2500,7 @@ snic_shutdown_scsi_cleanup(struct snic *snic)
+ {
+ 	SNIC_HOST_INFO(snic->shost, "Shutdown time SCSI Cleanup.\n");
+ 
+-	snic_scsi_cleanup(snic, SCSI_NO_TAG);
++	snic_scsi_cleanup(snic);
+ } /* end of snic_shutdown_scsi_cleanup */
+ 
+ /*
+@@ -2521,7 +2514,7 @@ snic_internal_abort_io(struct snic *snic, struct scsi_cmnd *sc, int tmf)
+ 	spinlock_t *io_lock = NULL;
+ 	unsigned long flags;
+ 	u32 sv_state = 0;
+-	int ret = 0;
++	int ret = FAILED;
+ 
+ 	io_lock = snic_io_lock_hash(snic, sc);
+ 	spin_lock_irqsave(io_lock, flags);
+@@ -2596,6 +2589,35 @@ snic_internal_abort_io(struct snic *snic, struct scsi_cmnd *sc, int tmf)
+ 	return ret;
+ } /* end of snic_internal_abort_io */
+ 
++struct snic_tgt_scsi_abort_io_data {
++	struct snic *snic;
++	struct snic_tgt *tgt;
++	int tmf;
++	int abt_cnt;
++};
++
++static bool snic_tgt_scsi_abort_io_iter(struct scsi_cmnd *sc, void *data,
++					bool reserved)
++{
++	struct snic_tgt_scsi_abort_io_data *iter_data = data;
++	struct snic *snic = iter_data->snic;
++	struct snic_tgt *sc_tgt;
++	int ret;
++
++	sc_tgt = starget_to_tgt(scsi_target(sc->device));
++	if (sc_tgt != iter_data->tgt)
++		return true;
++
++	ret = snic_internal_abort_io(snic, sc, iter_data->tmf);
++	if (ret == SUCCESS)
++		iter_data->abt_cnt++;
++	else
++		SNIC_HOST_ERR(snic->shost,
++			      "tgt_abt_io: Tag %x, Failed w err = %d\n",
++			      scsi_cmd_to_rq(sc)->tag, ret);
++	return true;
++}
++
+ /*
+  * snic_tgt_scsi_abort_io : called by snic_tgt_del
+  */
+@@ -2603,11 +2625,9 @@ int
+ snic_tgt_scsi_abort_io(struct snic_tgt *tgt)
+ {
+ 	struct snic *snic = NULL;
+-	struct scsi_cmnd *sc = NULL;
+-	struct snic_tgt *sc_tgt = NULL;
+-	spinlock_t *io_lock = NULL;
+-	unsigned long flags;
+-	int ret = 0, tag, abt_cnt = 0, tmf = 0;
++	struct snic_tgt_scsi_abort_io_data data = {
++		.abt_cnt = 0,
++	};
+ 
+ 	if (!tgt)
+ 		return -1;
+@@ -2615,44 +2635,15 @@ snic_tgt_scsi_abort_io(struct snic_tgt *tgt)
+ 	snic = shost_priv(snic_tgt_to_shost(tgt));
+ 	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: Cleaning Pending IOs.\n");
+ 
++	data.snic = snic;
+ 	if (tgt->tdata.typ == SNIC_TGT_DAS)
+-		tmf = SNIC_ITMF_ABTS_TASK;
++		data.tmf = SNIC_ITMF_ABTS_TASK;
+ 	else
+-		tmf = SNIC_ITMF_ABTS_TASK_TERM;
 -
--	if (pending_scb == NULL && flag == SCB_DEVICE_RESET) {
+-	for (tag = 0; tag < snic->max_tag_id; tag++) {
+-		io_lock = snic_io_lock_tag(snic, tag);
 -
-+	if (cmd) {
-+		LIST_FOREACH(scb, &ahc->pending_scbs, pending_links) {
-+			if (scb->io_ctx == cmd) {
-+				pending_scb = scb;
-+				break;
-+			}
-+		}
-+	} else {
- 		/* Any SCB for this device will do for a target reset */
--		LIST_FOREACH(pending_scb, &ahc->pending_scbs, pending_links) {
--			if (ahc_match_scb(ahc, pending_scb, scmd_id(cmd),
--					  scmd_channel(cmd) + 'A',
-+		LIST_FOREACH(scb, &ahc->pending_scbs, pending_links) {
-+			if (ahc_match_scb(ahc, scb, sdev->id,
-+					  sdev->channel + 'A',
- 					  CAM_LUN_WILDCARD,
--					  SCB_LIST_NULL, ROLE_INITIATOR))
-+					  SCB_LIST_NULL, ROLE_INITIATOR)) {
-+				pending_scb = scb;
- 				break;
-+			}
- 		}
- 	}
+-		spin_lock_irqsave(io_lock, flags);
+-		sc = scsi_host_find_tag(snic->shost, tag);
+-		if (!sc) {
+-			spin_unlock_irqrestore(io_lock, flags);
+-
+-			continue;
+-		}
++		data.tmf = SNIC_ITMF_ABTS_TASK_TERM;
  
- 	if (pending_scb == NULL) {
--		scmd_printk(KERN_INFO, cmd, "Command not found\n");
-+		sdev_printk(KERN_INFO, sdev, "Command not found\n");
- 		goto no_cmd;
- 	}
+-		sc_tgt = starget_to_tgt(scsi_target(sc->device));
+-		if (sc_tgt != tgt) {
+-			spin_unlock_irqrestore(io_lock, flags);
+-
+-			continue;
+-		}
+-		spin_unlock_irqrestore(io_lock, flags);
+-
+-		ret = snic_internal_abort_io(snic, sc, tmf);
+-		if (ret < 0) {
+-			SNIC_HOST_ERR(snic->shost,
+-				      "tgt_abt_io: Tag %x, Failed w err = %d\n",
+-				      tag, ret);
+-
+-			continue;
+-		}
+-
+-		if (ret == SUCCESS)
+-			abt_cnt++;
+-	}
++	scsi_host_busy_iter(snic->shost, snic_tgt_scsi_abort_io_iter, &data);
  
-@@ -2153,22 +2158,22 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 	ahc_dump_card_state(ahc);
+-	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: abt_cnt = %d\n", abt_cnt);
++	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: abt_cnt = %d\n", data.abt_cnt);
  
- 	disconnected = TRUE;
--	if (flag == SCB_ABORT) {
--		if (ahc_search_qinfifo(ahc, cmd->device->id,
--				       cmd->device->channel + 'A',
--				       cmd->device->lun,
-+	if (cmd) {
-+		if (ahc_search_qinfifo(ahc, sdev->id,
-+				       sdev->channel + 'A',
-+				       sdev->lun,
- 				       pending_scb->hscb->tag,
- 				       ROLE_INITIATOR, CAM_REQ_ABORTED,
- 				       SEARCH_COMPLETE) > 0) {
- 			printk("%s:%d:%d:%d: Cmd aborted from QINFIFO\n",
--			       ahc_name(ahc), cmd->device->channel,
--			       cmd->device->id, (u8)cmd->device->lun);
-+			       ahc_name(ahc), sdev->channel,
-+			       sdev->id, (u8)sdev->lun);
- 			retval = SUCCESS;
- 			goto done;
- 		}
--	} else if (ahc_search_qinfifo(ahc, cmd->device->id,
--				      cmd->device->channel + 'A',
--				      cmd->device->lun,
-+	} else if (ahc_search_qinfifo(ahc, sdev->id,
-+				      sdev->channel + 'A',
-+				      sdev->lun,
- 				      pending_scb->hscb->tag,
- 				      ROLE_INITIATOR, /*status*/0,
- 				      SEARCH_COUNT) > 0) {
-@@ -2181,7 +2186,7 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		bus_scb = ahc_lookup_scb(ahc, ahc_inb(ahc, SCB_TAG));
- 		if (bus_scb == pending_scb)
- 			disconnected = FALSE;
--		else if (flag != SCB_ABORT
-+		else if (!cmd
- 		      && ahc_inb(ahc, SAVED_SCSIID) == pending_scb->hscb->scsiid
- 		      && ahc_inb(ahc, SAVED_LUN) == SCB_GET_LUN(pending_scb))
- 			disconnected = FALSE;
-@@ -2201,18 +2206,18 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 	saved_scsiid = ahc_inb(ahc, SAVED_SCSIID);
- 	if (last_phase != P_BUSFREE
- 	 && (pending_scb->hscb->tag == active_scb_index
--	  || (flag == SCB_DEVICE_RESET
--	   && SCSIID_TARGET(ahc, saved_scsiid) == scmd_id(cmd)))) {
-+	  || (!cmd && SCSIID_TARGET(ahc, saved_scsiid) == sdev->id))) {
- 
- 		/*
- 		 * We're active on the bus, so assert ATN
- 		 * and hope that the target responds.
- 		 */
- 		pending_scb = ahc_lookup_scb(ahc, active_scb_index);
--		pending_scb->flags |= SCB_RECOVERY_SCB|flag;
-+		pending_scb->flags |= SCB_RECOVERY_SCB;
-+		pending_scb->flags |= cmd ? SCB_ABORT : SCB_DEVICE_RESET;
- 		ahc_outb(ahc, MSG_OUT, HOST_MSG);
- 		ahc_outb(ahc, SCSISIGO, last_phase|ATNO);
--		scmd_printk(KERN_INFO, cmd, "Device is active, asserting ATN\n");
-+		sdev_printk(KERN_INFO, sdev, "Device is active, asserting ATN\n");
- 		wait = TRUE;
- 	} else if (disconnected) {
- 
-@@ -2233,7 +2238,8 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		 * an unsolicited reselection occurred.
- 		 */
- 		pending_scb->hscb->control |= MK_MESSAGE|DISCONNECTED;
--		pending_scb->flags |= SCB_RECOVERY_SCB|flag;
-+		pending_scb->flags |= SCB_RECOVERY_SCB;
-+		pending_scb->flags |= cmd ? SCB_ABORT : SCB_DEVICE_RESET;
- 
- 		/*
- 		 * Remove any cached copy of this SCB in the
-@@ -2242,9 +2248,9 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		 * same element in the SCB, SCB_NEXT, for
- 		 * both the qinfifo and the disconnected list.
- 		 */
--		ahc_search_disc_list(ahc, cmd->device->id,
--				     cmd->device->channel + 'A',
--				     cmd->device->lun, pending_scb->hscb->tag,
-+		ahc_search_disc_list(ahc, sdev->id,
-+				     sdev->channel + 'A',
-+				     sdev->lun, pending_scb->hscb->tag,
- 				     /*stop_on_first*/TRUE,
- 				     /*remove*/TRUE,
- 				     /*save_state*/FALSE);
-@@ -2267,9 +2273,9 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		 * so we are the next SCB for this target
- 		 * to run.
- 		 */
--		ahc_search_qinfifo(ahc, cmd->device->id,
--				   cmd->device->channel + 'A',
--				   cmd->device->lun, SCB_LIST_NULL,
-+		ahc_search_qinfifo(ahc, sdev->id,
-+				   sdev->channel + 'A',
-+				   (u8)sdev->lun, SCB_LIST_NULL,
- 				   ROLE_INITIATOR, CAM_REQUEUE_REQ,
- 				   SEARCH_COMPLETE);
- 		ahc_qinfifo_requeue_tail(ahc, pending_scb);
-@@ -2278,7 +2284,7 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
- 		printk("Device is disconnected, re-queuing SCB\n");
- 		wait = TRUE;
- 	} else {
--		scmd_printk(KERN_INFO, cmd, "Unable to deliver message\n");
-+		sdev_printk(KERN_INFO, sdev, "Unable to deliver message\n");
- 		retval = FAILED;
- 		goto done;
- 	}
+ 	return 0;
+ } /* end of snic_tgt_scsi_abort_io */
 -- 
 2.29.2
 
