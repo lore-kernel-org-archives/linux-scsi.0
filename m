@@ -2,214 +2,175 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FD03C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 11:13:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B5DCC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 11:21:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353096AbiELLNn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 May 2022 07:13:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47090 "EHLO
+        id S1353204AbiELLVu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 May 2022 07:21:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353041AbiELLM6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2022 07:12:58 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A33E565D0D
-        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 04:12:53 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 634E71F935;
-        Thu, 12 May 2022 11:12:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1652353966; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=afNDgdCMsbxlbqYImqGCF65kYSrnWmCqxVEFBqiN78g=;
-        b=jPj8759LniirFdHje4MFsojOlwW7NHFhm4E0L/Nbzi5qdtQ7AN5UJVZwQWpLwzcTC2SDA1
-        862V4yMoUW4bvwNrfJncBFuv0+7h74sKZcBxOOAaDr94pgG7MKSnQdKUGf0DwjJQ3Esd7U
-        BB9vY1PU6up6s7YyJbH4RGaUr9vD7xA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1652353966;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=afNDgdCMsbxlbqYImqGCF65kYSrnWmCqxVEFBqiN78g=;
-        b=80HJoqQ4aTt5OmzADuedmo9qDt1P2s7TGiNCDQ0PUnIqzkCM6D/1Vh0u038RkALiQYz8qd
-        izQ2lHtawqgF+5BQ==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 545972C15F;
-        Thu, 12 May 2022 11:12:46 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 2F91F51943F8; Thu, 12 May 2022 13:12:46 +0200 (CEST)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 16/20] snic: reserve tag for TMF
-Date:   Thu, 12 May 2022 13:12:32 +0200
-Message-Id: <20220512111236.109851-17-hare@suse.de>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20220512111236.109851-1-hare@suse.de>
-References: <20220512111236.109851-1-hare@suse.de>
+        with ESMTP id S1353188AbiELLVc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2022 07:21:32 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D3F42983F;
+        Thu, 12 May 2022 04:21:30 -0700 (PDT)
+Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KzTmW1tSHz687hF;
+        Thu, 12 May 2022 19:18:35 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Thu, 12 May 2022 13:21:28 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 12 May 2022 12:21:26 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, John Garry <john.garry@huawei.com>
+Subject: [PATCH 3/3] scsi: hisi_sas: Fix rescan after deleting a disk
+Date:   Thu, 12 May 2022 19:15:34 +0800
+Message-ID: <1652354134-171343-4-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1652354134-171343-1-git-send-email-john.garry@huawei.com>
+References: <1652354134-171343-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Rather than re-using the failed command the snic driver should
-reserve one command for TMFs.
+Removing an ATA device via sysfs means that the device may not be found
+through re-scanning:
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+root@ubuntu:/home/john# lsscsi
+[0:0:0:0] disk SanDisk LT0200MO P404 /dev/sda
+[0:0:1:0] disk ATA HGST HUS724040AL A8B0 /dev/sdb
+[0:0:8:0] enclosu 12G SAS Expander RevB -
+root@ubuntu:/home/john# echo 1 > /sys/block/sdb/device/delete
+root@ubuntu:/home/john# echo "- - -" > /sys/class/scsi_host/host0/scan
+root@ubuntu:/home/john# lsscsi
+[0:0:0:0] disk SanDisk LT0200MO P404 /dev/sda
+[0:0:8:0] enclosu 12G SAS Expander RevB -
+root@ubuntu:/home/john#
+
+The problem is that the rescan of the device may conflict with the device
+in being re-initialized, as follows:
+
+- In the rescan we call hisi_sas_slave_alloc() in store_scan() ->
+  sas_user_scan() -> [__]scsi_scan_target() -> scsi_probe_and_add_lunc() ->
+  scsi_alloc_sdev() -> hisi_sas_slave_alloc() -> hisi_sas_init_device()
+  In hisi_sas_init_device() we issue an IT nexus reset for ATA devices
+
+- That IT nexus causes the remote PHY to go down and this triggers a bcast
+  event
+
+- In parallel libsas processes the bcast event, finds that the phy is down
+  and marks the device as gone
+
+The hard reset issued in hisi_sas_init_device() is unncessary - as
+described in the code comment - so remove it. Also set dev status as
+HISI_SAS_DEV_NORMAL as the hisi_sas_init_device() call.
+
+Fixes: 36c6b7613ef1 ("scsi: hisi_sas: Initialise devices in .slave_alloc callback")
+Signed-off-by: John Garry <john.garry@huawei.com>
+Tested-by: Yihang Li <liyihang6@hisilicon.com>
+Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/snic/snic.h      |  2 +-
- drivers/scsi/snic/snic_main.c |  8 +++++++
- drivers/scsi/snic/snic_scsi.c | 44 +++++++++++++++++------------------
- 3 files changed, 31 insertions(+), 23 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 47 ++++++++++-----------------
+ 1 file changed, 18 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic.h b/drivers/scsi/snic/snic.h
-index 4ec7e30678e1..28059b66f191 100644
---- a/drivers/scsi/snic/snic.h
-+++ b/drivers/scsi/snic/snic.h
-@@ -380,7 +380,7 @@ int snic_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
- int snic_abort_cmd(struct scsi_cmnd *);
- int snic_device_reset(struct scsi_cmnd *);
- int snic_host_reset(struct scsi_cmnd *);
--int snic_reset(struct Scsi_Host *, struct scsi_cmnd *);
-+int snic_reset(struct Scsi_Host *);
- void snic_shutdown_scsi_cleanup(struct snic *);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 997f27e2f1e5..6803751dc4b1 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -709,8 +709,6 @@ static int hisi_sas_init_device(struct domain_device *device)
+ 	struct scsi_lun lun;
+ 	int retry = HISI_SAS_DISK_RECOVER_CNT;
+ 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+-	struct device *dev = hisi_hba->dev;
+-	struct sas_phy *local_phy;
  
- 
-diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
-index 29d56396058c..3375153dd636 100644
---- a/drivers/scsi/snic/snic_main.c
-+++ b/drivers/scsi/snic/snic_main.c
-@@ -663,6 +663,14 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto err_get_conf;
- 	}
- 
-+	/*
-+	 * Hack alert: reduce can_queue by one after scsi_add_host()
-+	 * had been called.
-+	 * This essentially reserves the topmost request for TMF.
-+	 * Should be replaced by reserved command
-+	 * once support is being added.
-+	 */
-+	shost->can_queue--;
- 	snic_set_state(snic, SNIC_ONLINE);
- 
- 	ret = snic_disc_start(snic);
-diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index 5f17666f3e1d..e69bed855a39 100644
---- a/drivers/scsi/snic/snic_scsi.c
-+++ b/drivers/scsi/snic/snic_scsi.c
-@@ -1018,17 +1018,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 		      "reset_cmpl: type = %x, hdr_stat = %x, cmnd_id = %x, hid = %x, ctx = %lx\n",
- 		      typ, hdr_stat, cmnd_id, hid, ctx);
- 
--	/* spl case, host reset issued through ioctl */
--	if (cmnd_id == SCSI_NO_TAG) {
--		rqi = (struct snic_req_info *) ctx;
--		SNIC_HOST_INFO(snic->shost,
--			       "reset_cmpl:Tag %d ctx %lx cmpl stat %s\n",
--			       cmnd_id, ctx, snic_io_status_to_str(hdr_stat));
--		sc = rqi->sc;
+ 	switch (device->dev_type) {
+ 	case SAS_END_DEVICE:
+@@ -729,30 +727,18 @@ static int hisi_sas_init_device(struct domain_device *device)
+ 	case SAS_SATA_PM_PORT:
+ 	case SAS_SATA_PENDING:
+ 		/*
+-		 * send HARD RESET to clear previous affiliation of
+-		 * STP target port
++		 * If an expander is swapped when a SATA disk is attached then
++		 * we should issue a hard reset to clear previous affiliation
++		 * of STP target port, see SPL (chapter 6.19.4).
++		 *
++		 * However we don't need to issue a hard reset here for these
++		 * reasons:
++		 * a. When probing the device, libsas/libata already issues a
++		 * hard reset in sas_probe_sata() -> ata_sas_async_probe().
++		 * Note that in hisi_sas_debug_I_T_nexus_reset() we take care
++		 * to issue a hard reset by checking the dev status (== INIT).
++		 * b. When resetting the controller, this is simply unnecessary.
+ 		 */
+-		local_phy = sas_get_local_phy(device);
+-		if (!scsi_is_sas_phy_local(local_phy) &&
+-		    !test_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags)) {
+-			unsigned long deadline = ata_deadline(jiffies, 20000);
+-			struct sata_device *sata_dev = &device->sata_dev;
+-			struct ata_host *ata_host = sata_dev->ata_host;
+-			struct ata_port_operations *ops = ata_host->ops;
+-			struct ata_port *ap = sata_dev->ap;
+-			struct ata_link *link;
+-			unsigned int classes;
 -
--		goto ioctl_hba_rst;
--	}
+-			ata_for_each_link(link, ap, EDGE)
+-				rc = ops->hardreset(link, &classes,
+-						    deadline);
+-		}
+-		sas_put_local_phy(local_phy);
+-		if (rc) {
+-			dev_warn(dev, "SATA disk hardreset fail: %d\n", rc);
+-			return rc;
+-		}
 -
- 	if (cmnd_id >= snic->max_tag_id) {
- 		SNIC_HOST_ERR(snic->shost,
- 			      "reset_cmpl: Tag 0x%x out of Range,HdrStat %s\n",
-@@ -1039,7 +1028,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 	}
+ 		while (retry-- > 0) {
+ 			rc = hisi_sas_softreset_ata_disk(device);
+ 			if (!rc)
+@@ -768,15 +754,19 @@ static int hisi_sas_init_device(struct domain_device *device)
  
- 	sc = scsi_host_find_tag(snic->shost, cmnd_id);
--ioctl_hba_rst:
- 	if (!sc) {
- 		atomic64_inc(&snic->s_stats.io.sc_null);
- 		SNIC_HOST_ERR(snic->shost,
-@@ -1725,7 +1713,7 @@ snic_dr_clean_single_req(struct snic *snic,
+ int hisi_sas_slave_alloc(struct scsi_device *sdev)
  {
- 	struct snic_req_info *rqi = NULL;
- 	struct snic_tgt *tgt = NULL;
--	struct scsi_cmnd *sc = NULL;
-+	struct scsi_cmnd *sc;
- 	spinlock_t *io_lock = NULL;
- 	u32 sv_state = 0, tmf = 0;
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
-@@ -2238,13 +2226,6 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
- 		goto hba_rst_end;
- 	}
+-	struct domain_device *ddev;
++	struct domain_device *ddev = sdev_to_domain_dev(sdev);
++	struct hisi_sas_device *sas_dev = ddev->lldd_dev;
+ 	int rc;
  
--	if (snic_cmd_tag(sc) == SCSI_NO_TAG) {
--		memset(scsi_cmd_priv(sc), 0,
--			sizeof(struct snic_internal_io_state));
--		SNIC_HOST_INFO(snic->shost, "issu_hr:Host reset thru ioctl.\n");
--		rqi->sc = sc;
--	}
--
- 	req = rqi_to_req(rqi);
+ 	rc = sas_slave_alloc(sdev);
+ 	if (rc)
+ 		return rc;
+-	ddev = sdev_to_domain_dev(sdev);
  
- 	io_lock = snic_io_lock_hash(snic, sc);
-@@ -2319,11 +2300,13 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
- } /* end of snic_issue_hba_reset */
+-	return hisi_sas_init_device(ddev);
++	rc = hisi_sas_init_device(ddev);
++	if (rc)
++		return rc;
++	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_slave_alloc);
  
- int
--snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
-+snic_reset(struct Scsi_Host *shost)
- {
- 	struct snic *snic = shost_priv(shost);
-+	struct scsi_cmnd *sc = NULL;
- 	enum snic_state sv_state;
- 	unsigned long flags;
-+	u32 start_time  = jiffies;
- 	int ret = FAILED;
+@@ -826,7 +816,6 @@ static int hisi_sas_dev_found(struct domain_device *device)
+ 	dev_info(dev, "dev[%d:%x] found\n",
+ 		sas_dev->device_id, sas_dev->dev_type);
  
- 	/* Set snic state as SNIC_FWRESET*/
-@@ -2348,6 +2331,19 @@ snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
- 	while (atomic_read(&snic->ios_inflight))
- 		schedule_timeout(msecs_to_jiffies(1));
+-	sas_dev->dev_status = HISI_SAS_DEV_NORMAL;
+ 	return 0;
  
-+	/* The topmost command is reserved for TMF */
-+	sc = scsi_host_find_tag(shost, snic->max_tag_id - 1);
-+	if (!sc) {
-+		SNIC_HOST_ERR(shost,
-+			      "reset:Host Reset Failed to allocate sc.\n");
-+		spin_lock_irqsave(&snic->snic_lock, flags);
-+		snic_set_state(snic, sv_state);
-+		spin_unlock_irqrestore(&snic->snic_lock, flags);
-+		atomic64_inc(&snic->s_stats.reset.hba_reset_fail);
-+		ret = FAILED;
-+
-+		goto reset_end;
-+	}
- 	ret = snic_issue_hba_reset(snic, sc);
- 	if (ret) {
- 		SNIC_HOST_ERR(shost,
-@@ -2365,6 +2361,10 @@ snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
- 	ret = SUCCESS;
- 
- reset_end:
-+	SNIC_TRC(shost->host_no, sc ? snic_cmd_tag(sc) : SCSI_NO_TAG,
-+		 (ulong) sc, jiffies_to_msecs(jiffies - start_time),
-+		 0, 0, 0);
-+
- 	return ret;
- } /* end of snic_reset */
- 
-@@ -2387,7 +2387,7 @@ snic_host_reset(struct scsi_cmnd *sc)
- 		      sc, sc->cmnd[0], scsi_cmd_to_rq(sc),
- 		      snic_cmd_tag(sc), CMD_FLAGS(sc));
- 
--	ret = snic_reset(shost, sc);
-+	ret = snic_reset(shost);
- 
- 	SNIC_TRC(shost->host_no, snic_cmd_tag(sc), (ulong) sc,
- 		 jiffies_to_msecs(jiffies - start_time),
+ err_out:
 -- 
-2.29.2
+2.26.2
 
