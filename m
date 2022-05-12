@@ -2,75 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C467C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 17:18:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0E3BC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 18:42:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356760AbiELRS1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 May 2022 13:18:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57968 "EHLO
+        id S1357776AbiELSmW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 May 2022 14:42:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346013AbiELRS0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2022 13:18:26 -0400
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68A9D269EF6
-        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 10:18:24 -0700 (PDT)
-Received: by mail-pg1-f179.google.com with SMTP id h186so2544517pgc.3
-        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 10:18:24 -0700 (PDT)
+        with ESMTP id S1357775AbiELSmU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2022 14:42:20 -0400
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B427D16D5E1;
+        Thu, 12 May 2022 11:42:17 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id t5so7258737edw.11;
+        Thu, 12 May 2022 11:42:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to:cc
+         :content-transfer-encoding;
+        bh=DQEjc9LLkazMYK7135d/LkRmF8/MHLi1SQKyaSXA8xw=;
+        b=jZZfOXalAzJbrSRhMn5DOxj+wmcmW9KHSrya9O+vcqx6LjKVmxrNPmQ8uvT4U4qKfH
+         JXpeYgoJRSHhJShmsrXh4wb5T/Ybz6n7+DkqSoToP3lVHJ64Thn+r3Cau/VLlMW636fm
+         aMlsyVlViVmzRIT5iU0NxzKOvb0WY3GRr7fnXaafsvkespQVAE6j/YLNCaS1bybuMl3o
+         hPH9hwAr3dC0j69dUd9UTFH5oE/1UAuZtWIGlsRgZuJeVRFnE5SrnvLVwDkD1ZBLHXxA
+         R0JkGUfRBIKzOO/EbIhVi9jOULidARk0FUbiN13rVgeeKE3Fkvh3h1t6qQIsj/fKsU/w
+         VMHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:from
-         :subject:to:references:content-language:in-reply-to
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc
          :content-transfer-encoding;
-        bh=ZiCZca+nUKcYiBD4TTZLtTYTiykRydRfKBl7Jk8F1gs=;
-        b=vBsHLcFvmn88Uos05nfQkXcRtOzGo4YHbFk4o+V+OqNwuEhxFF+Tui1lw/NufPkAen
-         y3Y1bzqvaZlqpA8bRiHc6L6WSqy+O+5ZD+xXMS3fv5x/SA7C70Au9Pm8J+p187Td9arE
-         R6TM9VQ1aTa6OZU4HhlNmMXRxrBcj0nGza9LNDufLEwoLbyDWP9/7DaHePLqonFfal+Z
-         7xZQl9T98sUkm+EdyOiJ6V0RA+pyGuHCJsev5DiyArZazdcGo+yXZd8Qr6bxmkLfiKCd
-         1NdwRxtBKN5Z6ddq4OVtJpZH7AJKqt17FtLxqb2a3gUXPrDSUl7k0/+RJNuWa2zxMacK
-         Nebw==
-X-Gm-Message-State: AOAM533WMCUAoyUCxFozWjEszhV9jpnRJlxSg8iUgwP/MOCsTtyDMVL/
-        vlvuC7YfLNylqtcNM3xXvG2JmH9NFAI=
-X-Google-Smtp-Source: ABdhPJxovUfYbpzl/iA9ASg8gh9Kn6CNmSPacpkPFb1FUMEXSq4WDlr6Bh7WBwz5WDpcyifN5RFjsw==
-X-Received: by 2002:a65:48c5:0:b0:3c5:fe30:75dd with SMTP id o5-20020a6548c5000000b003c5fe3075ddmr515356pgs.269.1652375903002;
-        Thu, 12 May 2022 10:18:23 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:78c5:5d65:4254:a5e? ([2620:15c:211:201:78c5:5d65:4254:a5e])
-        by smtp.gmail.com with ESMTPSA id e3-20020a170902784300b0015edc07dcf3sm194309pln.21.2022.05.12.10.18.21
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 May 2022 10:18:22 -0700 (PDT)
-Message-ID: <47618ef6-ef71-b6a2-eb1c-072b7d59748d@acm.org>
-Date:   Thu, 12 May 2022 10:18:20 -0700
+        bh=DQEjc9LLkazMYK7135d/LkRmF8/MHLi1SQKyaSXA8xw=;
+        b=EdneSaAeXHCp7nYmFq5yqVz4oRTzMOSXzPe9KA7Eh2ivhKYDruH6s6zsKzfyXOrswM
+         G3wO/Ga1HGl6HrtCuHHRk+H1HM0PImRy4DHrOxvnJbm+i5M7KoNccRkKN+YSps1y8uIf
+         jd1Dp79YTKEd1paULwSBGRG8dRFKy6RZi8FUN0ZeKWPUrbEDPvWiVNSMr0OtGYfL+US+
+         5g0sznZC9QwNcq3DCdIyQSEvLpFR87MdDCABIDchgz7IcVemS6/h7wTB884HJAO4CfFO
+         BiSdWpQE8seAJLdFFnmzfWL2PJqKtvIM6dwojBeI/1vuUP20+hCv63Fe/fbBwiGg29p7
+         OGqg==
+X-Gm-Message-State: AOAM5319hwada/kVQ2X1C6MN5+ESxR0TFf1ZsjaSeNlyrMO4QetzxVCq
+        b8LyUpIQMjKSg3JeZMxMXFEAw09cbmTTaLgZtRodtMhDIlo=
+X-Google-Smtp-Source: ABdhPJyzzLMwvQTmiiVhe12k+xkHAfUJ87/jKzAZePGBkf2qmXfuAUfq4uQICrd6JfXAgtvLTKpdakL3RWNZgqSt7Mc=
+X-Received: by 2002:a05:6402:1770:b0:425:b2b5:6248 with SMTP id
+ da16-20020a056402177000b00425b2b56248mr36119207edb.281.1652380935977; Thu, 12
+ May 2022 11:42:15 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-From:   Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi: ufs: Split the drivers/scsi/ufs directory
-To:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <20220511212552.655341-1-bvanassche@acm.org>
- <202205122323.RcDb4pBm-lkp@intel.com>
-Content-Language: en-US
-In-Reply-To: <202205122323.RcDb4pBm-lkp@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From:   Test Bot <zgrieee@gmail.com>
+Date:   Thu, 12 May 2022 22:42:05 +0400
+Message-ID: <CAOFRbGmGr2Z_sbYmE0SZT48CFkNAWVABnC_4V6x9PzZw-LJO4w@mail.gmail.com>
+Subject: ERROR: drivers: iscsi: iscsi_target.c
+To:     linux-kernel@vger.kernel.org
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, torvalds@linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/12/22 08:59, kernel test robot wrote:
-> All warnings (new ones prefixed by >>):
-> 
->>> drivers/ufs/host/tc-dwc-g210-pltfrm.c:36:34: warning: unused variable 'tc_dwc_g210_pltfm_match' [-Wunused-const-variable]
->     static const struct of_device_id tc_dwc_g210_pltfm_match[] = {
->                                      ^
->     1 warning generated.
+Hi,
 
-Regarding the three warnings reported for this patch: I consider the 
-issues from these reports as out of scope for this patch since this 
-patch only moves code around and the reported issues have been 
-introduced a long time ago.
+I automatically test (RC) kernel and caught ERROR word.
+Please ignore, if its unimportant.
 
-Thanks,
+Kernel: 5.18-rc6
+Arch: x86_64 (SMP)
+Compiler: 7.5.0 (gcc)
 
-Bart.
+Codebase Block:
 
+void iscsit_thread_get_cpumask(struct iscsi_conn *conn)
+{
+        int ord, cpu;
+        cpumask_t conn_allowed_cpumask;
 
+        cpumask_and(&conn_allowed_cpumask, iscsit_global->allowed_cpumask,
+                    cpu_online_mask);
+
+       cpumask_clear(conn->conn_cpumask);
+        ord =3D conn->bitmap_id % cpumask_weight(&conn_allowed_cpumask);
+        for_each_cpu(cpu, &conn_allowed_cpumask) {
+                if (ord-- =3D=3D 0) {
+                        cpumask_set_cpu(cpu, conn->conn_cpumask);
+                        return;
+                }
+        }
+        dump_stack();
+        cpumask_setall(conn->conn_cpumask);
+}
+
+Compiler  Log:
+
+drivers/target/iscsi/iscsi_target_configfs.c: In function
+=E2=80=98lio_target_wwn_cpus_allowed_list_store=E2=80=99:
+drivers/target/iscsi/iscsi_target_configfs.c:1157:1: warning: the
+frame size of 1032 bytes is larger than 1024 bytes
+[-Wframe-larger-than=3D]
+
+drivers/target/iscsi/iscsi_target.c: In function =E2=80=98iscsit_thread_get=
+_cpumask=E2=80=99:
+drivers/target/iscsi/iscsi_target.c:3625:1: warning: the frame size of
+1032 bytes is larger than 1024 bytes [-Wframe-larger-than=3D]
