@@ -2,326 +2,235 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01E4BC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 23:36:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78177C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 23:39:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359571AbiELXgp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 May 2022 19:36:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50412 "EHLO
+        id S1359532AbiELXjG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 May 2022 19:39:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359530AbiELXgn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2022 19:36:43 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D136765D22
-        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 16:36:41 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24CJK4C7011683;
-        Thu, 12 May 2022 23:36:40 GMT
+        with ESMTP id S1347853AbiELXjE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2022 19:39:04 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6677C286FE7
+        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 16:39:03 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24CKrc8S024475;
+        Thu, 12 May 2022 23:38:49 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
  content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=X7JLT7bw1ZmwVaFNiGltVS16QCFCucEHeQ6GOrWM8D8=;
- b=vR+BOyOBHdFMTe93dr178iinL87hWroaJs8uEozl5thQCWnz0S9szujLiYg7n6z6em3p
- uxeTCD/0rHoZmezjXjN1iUQNjV5WbOvCtmkKSBJ9eI0Msl1XBHjAP1YFQDA5JcDQmjn1
- mhaJsNsYOx4PgbieBQ3/cYP7vr5xY0JXFO7EFqDtESvxror+gN3st/wWWgbOAXM193hi
- RlIZX76kXkM7dlobAKVUYNKdjitiOw34pMCSucWtKrX16msUCo0Vkp/GmLz6YVh29c7i
- LbJAGbGBDr9Z+Z9c8DfinCoZvc00IisXbKLWljQPN0jcKPU0I2OSIDGH0JxXOP/mf0G0 HQ== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fwgcsx8vy-1
+ bh=bMvqbIEUuTQESeLuPZ/DWd+qwihKTrI4inWHE/+/KUg=;
+ b=ZCw6ARWxocKCq+GWrdqT/Z1v0UlyzuXz59ZM+6Flbibg99aAefxkqA8/Vw1cHKtv/NU1
+ Pf9JTXc67zOHwzoR0fwExfpxydUdABpwsoj1hjjFqVkKvWH7PkMqFX9AJGLFXQWQtEyy
+ 6NASpY5vBXWqZpOqlX/feL/HsyrUHMuY3rJtcbVj1G8NClWn/9f8jyexR+oF0uxqriRK
+ Zm2UVCR2A4sd/w+fRj5Kg5025f+1GMPB0q0BbF59UZQGTsQnV0YLwfxpJyUVLiei3ktB
+ HK0Y7BSDjgvXhKbjF+EqhMPqh1frLW5dtgHlGJzGeWvE7mCfWpHAi+YP6XdXHJhh8yqh RA== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3fwfc0x4wd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 May 2022 23:36:40 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24CNaaTk032958;
-        Thu, 12 May 2022 23:36:39 GMT
-Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam08lp2168.outbound.protection.outlook.com [104.47.73.168])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fwf75t6q7-2
+        Thu, 12 May 2022 23:38:48 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24CNZp3g019458;
+        Thu, 12 May 2022 23:38:47 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2177.outbound.protection.outlook.com [104.47.57.177])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3fwf7cbxg7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 May 2022 23:36:39 +0000
+        Thu, 12 May 2022 23:38:47 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iKjEf6v9EB/Kd0SskN/Wt/iqCTX36Nb0O6Sj0vEy/QpOhN5troY3YB3bpgLbcWs0B6BjxBhzOA/K1tFSNqvSRASUEIB17slwvpVXbYHuwS501xBaO0L+Hp7IZB9g7Cr4okv7btQPtferIQMCh5sEpmY0ISK2a2Moj8IlxOrBrHL0LPZxqMAlBHITnIbF426Iw7ZsdCTNZpwIy4xt89bGE2rA6BcYJNu0KziAWRRihNIdcoWVAkQZSe6VVo2fWSVwtlaPIVKwp2fjkMqEjhdEQC7i1GIYt2TXCVQS+TFHFOzmWcqcHYb25UGZficFJT/Y4YJy2I+3YiR5ys+ZxPsEvw==
+ b=hTKLUoWjOZL3EqrgEvhfIUf+NNMdjsV4MBxUoeAqWKteuR8WdV8ZPe1hCOKaFq8sk4dicYykx2cZdoJhH8kdUTQlwiydhp62yfZgeEmDGDj3/nNKoGZ2Ouyda/+cmxJ+yUvi4r0pi5ARv/cOz7DkBvWUb87jqXrM9cCxHDMYfbODyvK+T6UqGqVDePCqWibJETHHLNhLWS1dgWXzFulzTf5Z2XdjplT7c+Ruu7nZB+sxO7L72vL+Hp4GXqUxrekyU2VQBpDltOtY5f0QME17yE8lNWMzuU4nc4mFuiOyu9DCsdNnvGiLC7UCwQ+DSEo94EKy8ELXiFWsePSpFYUlwg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=X7JLT7bw1ZmwVaFNiGltVS16QCFCucEHeQ6GOrWM8D8=;
- b=g8T2ZOQgSaF4O4FTln/pPCqmyFzjrw5tZ4kKyia3DXHWz5QrwYBWrcb4IvnILMlECWEc2QA/mvr0Aq4br+tt299IAL4Aw53hqlXmVNdOMxA6xTb4RGR5ciH4ujHfeyj/wMBO5rqBP9iFw6izj4dYiJmK+KSJtIO/lOPBjqE7vvcG2uvQMVN3qSKZ4HktV6uhZCz0BaiD+yayTPNoVnEF/JCfPEyN2mNyT3Nv2ONeOjtK6k2rbC4+6W20uoqlGCp1+oLYF+CROAvlnQCaPxGghGobqU/1IjHxKmdoxGiTAOyPvgAsmeR4mccE8Fy7QNN0c27cbd76dB48d3vJpy6nUw==
+ bh=bMvqbIEUuTQESeLuPZ/DWd+qwihKTrI4inWHE/+/KUg=;
+ b=ajmQ/mYQqSS0YBx+AnTSrweoujryI7m2uoA4aFaCQxrZZBT3aOG8uGH0vB0AvrnM7EhX26XgVG8HGWEclbxdrYTrPgdea5M0Mi2RknKrfnBB+j6P8vRv9G4g9HwLhC71gZxRv2BwZm08q2tbJlTiMjy4sFO/nv6Jd/NkUbIF4THAIRmx61zf9M23Vw3LwOjWyiXrsK+yrEu7y6vXk4Q3vARFX2B8PhkQjXqpUx9M3tFT2zvuwiDqknjkmfHYcE2I4BBbbrarA0HviVdbo0PrQivEOkhL0NCS0WijKNwI05RCo1AaXsBNnA9VMIgsA2Kih5bqIx44d+/rO9QX6ann7g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=X7JLT7bw1ZmwVaFNiGltVS16QCFCucEHeQ6GOrWM8D8=;
- b=eV1oQ2wuAFLqiIg0daUgYk7teYa7aoe7FuAnBxhBGo2c9Tro3UzOW3c6k2vp30VocJA79PjpqzYXkURVlKLGqHOya9jRvTez7VVYLklyjO7LN+vbHju6rzkC0gTi06BGSJ5UMbCoH4FdiYnJc67NFzh/hui1945Htw0/vY8YWoQ=
+ bh=bMvqbIEUuTQESeLuPZ/DWd+qwihKTrI4inWHE/+/KUg=;
+ b=I8IUyfz4dRu/MT6NSWEuIWvbLO5MUA5BkHnw0OLvv430xxzQGcQjRvb0Gv5NVT+Vczzuj7pSas3mNOYe0tlq5XDt+eOb+wOJhGQaQFrlJWN/0u6ZV3knRFeRbLqkGiUeFUdzdAAKC4shyaWZ/Sd8fbmOvziEAi3km+bA0j5p9Po=
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com (2603:10b6:805:d4::19)
- by PH0PR10MB5516.namprd10.prod.outlook.com (2603:10b6:510:10c::12) with
+ by MWHPR10MB1760.namprd10.prod.outlook.com (2603:10b6:301:a::10) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.13; Thu, 12 May
- 2022 23:36:38 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.14; Thu, 12 May
+ 2022 23:38:45 +0000
 Received: from SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::ccc1:c080:5df4:f478]) by SN6PR10MB2943.namprd10.prod.outlook.com
  ([fe80::ccc1:c080:5df4:f478%3]) with mapi id 15.20.5250.014; Thu, 12 May 2022
- 23:36:38 +0000
+ 23:38:45 +0000
 From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-CC:     linux-scsi <linux-scsi@vger.kernel.org>,
-        Martin Petersen <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] mpi3mr: Add shost related sysfs attributes
-Thread-Topic: [PATCH 1/2] mpi3mr: Add shost related sysfs attributes
-Thread-Index: AQHYZgdGdvtTQ2/LtUCAVhiJlUTWsa0b5jEA
-Date:   Thu, 12 May 2022 23:36:38 +0000
-Message-ID: <4348727B-BE3E-430B-B444-C845E2298C89@oracle.com>
-References: <20220512140046.19046-1-sreekanth.reddy@broadcom.com>
- <20220512140046.19046-2-sreekanth.reddy@broadcom.com>
-In-Reply-To: <20220512140046.19046-2-sreekanth.reddy@broadcom.com>
+To:     James Smart <jsmart2021@gmail.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        Muneendra <muneendra.kumar@broadcom.com>
+Subject: Re: [PATCH 1/4] nvme-fc: Add new routine nvme_fc_io_getuuid
+Thread-Topic: [PATCH 1/4] nvme-fc: Add new routine nvme_fc_io_getuuid
+Thread-Index: AQHYZKiskN+RsJqYk0aaPF5PRfNnkq0b6YQA
+Date:   Thu, 12 May 2022 23:38:45 +0000
+Message-ID: <F25608AE-7306-4751-BC5A-12984988341B@oracle.com>
+References: <20220510200028.37399-1-jsmart2021@gmail.com>
+ <20220510200028.37399-2-jsmart2021@gmail.com>
+In-Reply-To: <20220510200028.37399-2-jsmart2021@gmail.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-mailer: Apple Mail (2.3696.80.82.1.1)
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 9fbbc096-ea84-41ff-e9e5-08da347042b0
-x-ms-traffictypediagnostic: PH0PR10MB5516:EE_
-x-microsoft-antispam-prvs: <PH0PR10MB551669BD54D567A354A51884E6CB9@PH0PR10MB5516.namprd10.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: 4bd868ac-a485-4bc0-426e-08da34708e43
+x-ms-traffictypediagnostic: MWHPR10MB1760:EE_
+x-microsoft-antispam-prvs: <MWHPR10MB176033C6B5EDA0BA98DFFBCBE6CB9@MWHPR10MB1760.namprd10.prod.outlook.com>
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: KwmrGPe1XMs1gTrLIAlRGW1GWquk9laRWfs1viy9UhA1XWaf2lJM4IBjw3WSn3WrYSlqJBqvcYmFpY1M+jJ17ITNMsoKZR49L05dL0fRWJcwn506p05lPa2G4nFMrCQp29g64braPPoUfp+slKt5Db2JNWAbMYS0U7/z+IXaQkFSwWamu4LIlDrj9hYhwZ15cVxf8D8KBYR9e8D6ScaLoaBuoY02gZqaOhtdrVD4pinCiYj3bvSf6VqRb0BtUVlngy9ava7v3LmEo77k/PCTAZkalawdt2xpxmlgCl+tGJkSfipW6LsvmTjkZnQeT4CfgOJdEygBEM+dmcSRedfGnYcQ7WB94MiyFLlyX92dNOVdxQlR8Lpjp4K741wo0cgu3nNIeimALXgfwMDzuUlH4OW2+V5OOcs+Jq5Jk7huhgzdHqb3ItdHWCBmdZBq9Oc+RBqr08YQLBBoGU2AMaW34O9bcFWE4xfBrtuh7ubL0SBLSnraDDrb1qR9hL/VZsVjYN5Jy/QkJcmZYK3NCahnjoDDIMu9T4U6SM44mIl8A2ugJgHi5FwQeBAo106HXMzk5IQQkapZE2WprFhK5134uhDPPWLcOpvTszcP50Mk9qPqNY46tfFDMDKZLUl+n7ahMYQsXQxD+81Oafbqo+38cSasTkm+ItBJW9Qdr/j6jp00dfeBlCmM+/kL5WBJFj6/2aPCx4SI95744ppIwKjbtSue810abI56+O0wCVl9hrcxpWebo7Ophljs8d/DMfkksWUr7uZlVRDXjW3o4TFitA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(83380400001)(6506007)(53546011)(44832011)(38070700005)(186003)(38100700002)(8936002)(71200400001)(6486002)(2616005)(33656002)(107886003)(86362001)(5660300002)(122000001)(508600001)(36756003)(316002)(91956017)(26005)(66446008)(64756008)(8676002)(66476007)(66556008)(76116006)(4326008)(66946007)(54906003)(6916009)(6512007)(2906002)(32563001)(45980500001);DIR:OUT;SFP:1101;
+x-microsoft-antispam-message-info: ml3O2h+jkrGW0CWXm6NUIh0Xh2xmsK5FVv8eXvjLqPvSMq1dY+IpStvGodr5XwnIwNCzWHOYlBFt84nyisgl20P8+c3+zdMYxKpXKk8c+k+vGHNbnX+b9Hi/JyjJ8WQsdqZae7s2HD0xFy2Eocn78+IejifNEWI8QSDlnwKVtPNCzPgh6t7yw+9EoNcc1LAMJ8jPLKQItjJsLv2SVihb2cIgZ0qt1tN/pesPsdwcXwWdq3V6cZYOo0beCYsCu4W7RDpbauAHAIkDW0Kw2FZryVJJm8A3GnEU9nsXp2wf4V6oi/wkKn6xf9QnOny8eweCVRGtUty9TzNv0eIXM8lfeR0ZG/tsBZozRykFt2mwtl4CS+xj2fuefa3WoOgd0bBHy5JnQ3DJfNE+2HCmJNs5myGBjsjr1dZqIzrxMfL3m0ssgG50Lv1RkU7Lc3dzRnqqnIIINr4SuPJteoI6cy/0RYqD3xDWX1RxAzgt7KjUA8Yjdf6msEny1qO9OaJ/SwjLkCMf2DYK3DfxWpiTxwkq8nfg8YaiiAi2qvBNlWBOT4lPUdoPDKM9HUBXNlgZ+1WSbOG8hR+MiONIApH2SmXNhp83wVHgfxbNIZAL0dQy0I3A1pbf79YsUazn3NaSxQnbG3kB0k4FdK5Z1CAgX01y5mhmWGtursTt4CgI68xMQy468nudEMF02xfn6sPtmY2z5vj6WAFOylVHhWVWH/Yt9P4ZNVGcraKA33mr8Y4WH9NL0X3C3umbM4kRnLSC3ORE
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2943.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(122000001)(316002)(508600001)(44832011)(8936002)(83380400001)(6486002)(26005)(33656002)(6512007)(2616005)(5660300002)(53546011)(38070700005)(38100700002)(86362001)(54906003)(66946007)(4326008)(6916009)(91956017)(71200400001)(64756008)(8676002)(66476007)(66446008)(36756003)(186003)(2906002)(66556008)(6506007)(76116006)(45980500001);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?r+uqog+28WArXtKC/hGrJ4w8pd0p1UhMoCeGxC/GZSrCQbXciqAz+9RdzW/F?=
- =?us-ascii?Q?VJkCgc9fptWrMxMTlRWYCudhtgLwSYgUaFMa4OQc19w9Ag8v44gvpflTjrAE?=
- =?us-ascii?Q?YeOIBU6g4Ckn4A/W2PzNtS5CM0w2QzI1K9VKuuqQ7UEUHVGAO+27Yi9Fn561?=
- =?us-ascii?Q?z586IKrEJi0r/YNjAx47JXArYUKGn7HDlZ1rY0pQxr+/kNVofW+pCjzR/gSc?=
- =?us-ascii?Q?otUB9X3ABpDGzENy2CJjEqUKTDfO/+dL459Cg8qa/NzuuKbU27HuGdJoMALq?=
- =?us-ascii?Q?5ZwG5AMAj4lJzHzngDf/lEb8djOf9ADiQWMJ5gqvRTVmTKk4AbmhqVpAfuwB?=
- =?us-ascii?Q?HEN0wviE1noAktspGBL8XSrNMeUhAamNEGKu9wfehXw+TPboeJoN3qDHcbXy?=
- =?us-ascii?Q?opfOXLIe2ldC/7kRx0Zd9YQFq/kNlYzSFym+oLGCWaXqgXh0wu6YjPyOY1Gz?=
- =?us-ascii?Q?ZaZKW4ypEVToCjXRGk2vNOtO8cKJ11ZcF6ljwH2+LsbV2RXal7Eih3GU71HK?=
- =?us-ascii?Q?HJCV/PP+zGuAysFf2AXMSU96vurP0o9czmrUEx31sCZ3Svk7tO7JGB1ZuuTS?=
- =?us-ascii?Q?bKbPJppfsvEr6Da1KrnmWK6jxNrUX7kbz/GfF23AfoA06Nzv5x804aY4XXjj?=
- =?us-ascii?Q?kuFCmxG2lgrc+m+/9NDCTB1rgKyjeGdx9+e0B6D1que1YbF+O0/kkm/Ts100?=
- =?us-ascii?Q?AATD3SuDMWvRfWx2VdOdw8vO7MYPBwsHECR4PgQ6qFADwzxYGG1NgCP24SM2?=
- =?us-ascii?Q?ZW6fmQ+/21xVrcOfHj3axKK+UFthNH+bTbQ02y3lvjUcmI4PFppJr4+Ox+BE?=
- =?us-ascii?Q?JZ/BPUBe35JyEB/9rxwz2emqOqat4PsrjhD1xlKWuBW4Vbj4NTlu/ZVzUJnF?=
- =?us-ascii?Q?wZ0bzUoqRGDtrj6u04n09fvyjzscKN3PBBJ/xjm3m78qO2FgM/qQC9jKM0LP?=
- =?us-ascii?Q?RdY6++/u4wSzsyO5Q9QS7RzrPrbYi+bmMuDiDiTEB22tCbxRADO2L09gj+T1?=
- =?us-ascii?Q?HjblJZSmhBcJg6e/NbQWVVFgbPvQJ88F0TPz+FCxTI+Y4DLCiobDG3jlwP09?=
- =?us-ascii?Q?Ft/9er+O2pr6HhfsjHVMwbum/ycL7kaWNBgWqzP0XeEAhHDeWF1Ojohrb2tL?=
- =?us-ascii?Q?1CBnM55kXPNgLcAziY/VTgpYWLUflTfiNqYrLqU/TfEOqULGsHU52uAF+u9o?=
- =?us-ascii?Q?quRkZoKJoo8xo+DfPn3XWV+3l29VpqfR4I/QqlnR4TK8NqSuvU1ZYEBFw+xr?=
- =?us-ascii?Q?/0M4C5t3JrrBMYWpCj/Hd/Ws0vibGhiR4NgMMouCJZhIn4HOC4yvfhYzPYSP?=
- =?us-ascii?Q?PagelOwJEd0fuMvIYn4A/1c73Rfws/0SCAH2li5c4GomdlCidI5veLTSYAO/?=
- =?us-ascii?Q?py5hcCV8KUUWMyROic175FtXKLjAFzLKzG3DcJybrmih14Fe5jmvQiwN9EO3?=
- =?us-ascii?Q?yOVEEi+kTlDdHSGnLeSILp6xFmT2n5sMV3RzucZvP2ZRV2xAPNy8JOnpM1PU?=
- =?us-ascii?Q?gmudgGRWECy5UHXub1AitHXtgn7sJ8G0NB706hTvq+6O2AMYvUZN1wTNmfKF?=
- =?us-ascii?Q?rv9ncWpkhdaE4VY6ItZLaOHhwxHS1D7fcAevi1jOMlxUjKYXhh7AK3ZXwpuF?=
- =?us-ascii?Q?ZslismVYkT597I3kIKH/tBSVcfRUooPe8tgaKXJKVeBH3LI0zR8dg8GfKub2?=
- =?us-ascii?Q?qqAZJBD/pJL2zehr/PM6JDv2gyhJ5W6/g5V09bl9erWb+Ap6TrtZ9OCWjSjN?=
- =?us-ascii?Q?jW1WX2vXyLvmJDnWjqBrBuAHL8bKZiAlC8JZTZRkJOjrh7Qdlfbb?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?/mpMIcq3OFH2Q94AAlYC6ZqXeRgFPZUzd5bfa1gVtBqDXFvnoMwX9JXFPv90?=
+ =?us-ascii?Q?NNCcxkmZ92bolWt76tqFzrTu7KYbatv+3IdB5TVYav598RiUb64mwVQ0dOyI?=
+ =?us-ascii?Q?jOcfcEFjV2Y09IEjzb+9APK2SS2AXV2otF7n+uyCBIDyCTu5OqM48q/qo/Mu?=
+ =?us-ascii?Q?KvBycSE+5vafDXRI8zqBGn0azxc1sGeKrWO9ZDJVJrr5H5dxTXFx61Ys0tuB?=
+ =?us-ascii?Q?IN0WHPNtdhBqNuZBUeOfJJ+kdaCFk4Vrwq33ZhV96zDhOOhf0Qilw3G7KDRe?=
+ =?us-ascii?Q?z5i82dOmTLLt5rarGyJ5EPs0i1Mn1kJ4bRFwGjSwN1zn0aE7gE5Sg1oVyZvM?=
+ =?us-ascii?Q?FM2xN/F2zPVm9IY5Je1Tktm1o/v4BsdX7VVzbL0unE5BC6sjI2odZnpPJAPe?=
+ =?us-ascii?Q?5Ra7khkW2ZoW6ZIK5QHdwq08VtZko4LVRtRB3SKxnYURXiX2lqB7jOhsKFqn?=
+ =?us-ascii?Q?wj+II2lgKVMvoVEjGsfDayefBuipS3IXHQRl5lNLfXhC+C3BV8aKNgdkVEoU?=
+ =?us-ascii?Q?9ncw/5PP5TKfyptoL41PkcmxkJBLlH0C4iXEGYXSNxOO7oHb+qbsZGIRYVFy?=
+ =?us-ascii?Q?ndOEblbGXcNfToS9kkdkYxA9q47nGwGKkhhaHsSzay1cTR67yh6e/VGjqwfi?=
+ =?us-ascii?Q?hNYtQyAPP7lhqTlLhQLKWs+hkXVIXg9w0Ao24XyEPVeykXEiKCLVpaAH2Q2j?=
+ =?us-ascii?Q?nwl5COyFgdfNcfbIcoUFYGd8jG/xIvg1ucF/ul7iAR8/iXadA8IuP/Bw3c8o?=
+ =?us-ascii?Q?D9CoelvcZQWiFwnxSpGso9UJEACffazsPmSOHspi+RqkC4+5GAKGtdF1y2br?=
+ =?us-ascii?Q?V0+EKvnoVfVjoROx9n9ReH27JGaVNmCYL1+ijrv1UOOBQzbFJ3Z4NgCq9mRw?=
+ =?us-ascii?Q?kx36zw19o8XCJo7YNwckBVUlLhlJfw+ef3I7C6JOVcJsRk66VoK1CmJSkVAG?=
+ =?us-ascii?Q?ReKLVLJ3ABFaND9LrzTPaN1sYN1Q4KYjd3TMhKhlU4nwpuyN98J0bs602Eh0?=
+ =?us-ascii?Q?mMSReJ27vTfZ5GjRxE7SYF9qZe//TQ7lwijM0NcDUGP67JIYuUHlxI0NBj95?=
+ =?us-ascii?Q?7e8E0MxVnAfIEApM1kpZnAQAI7hJJTX1NK2D6BxS0BRgD04vqjAG0v9wKAOz?=
+ =?us-ascii?Q?aaNEzOcHAnp1kxmgE95Lo61RRsiCLtc5shIBnXFzO+Qy7p9TOUalDBX4EeKl?=
+ =?us-ascii?Q?6QouAb37jWZmZL5uC7noN+dZKFVeeypFfGeK9HDoApUSPK5MWsw9H8X6mBDa?=
+ =?us-ascii?Q?b3CfMJKfk4rxe2PPGehGv6VAyDb9F8aLGV7Pjp8OWUsfbqR63udhu7RfgiBS?=
+ =?us-ascii?Q?htdHUeJjxnfnFSxhDm/J+6n5Qm+tVOu5KJOy5sdhg3voaJGTszvW/Btz2MLz?=
+ =?us-ascii?Q?ZabYPTD3WzmCWTx2kCG9XAmSp8Msm4ZGG+42KlrXb1Y0L0uvIca5uwb7vUub?=
+ =?us-ascii?Q?LlFQ2lBn1yTwUgaghuYfHavV1FMTcR2RbgjBhw0wKsUFwZER3QRWOXSo/poV?=
+ =?us-ascii?Q?jrEUBxynMNN0IArs2XHQNpQC/hPzwGrQJNy6VMpXVkI1pwpwJiH4Bb/vRQvD?=
+ =?us-ascii?Q?konQGrg0ybRCeGT9n/PhcKQxga4E3yO1CKuJPDhIzMKB5QHdspRjCkSR3zQG?=
+ =?us-ascii?Q?xQZBmHj60OAedRPERRIBeGS3X5t+HXRBaGKJT+WRCRDXOopvD+LSKg0fd+lk?=
+ =?us-ascii?Q?DW6fh2GnEm9MGzSRH8RLmyWywxkZ7tqRTgz8g/9mKM2qxWMCAsLIo6nNCSRL?=
+ =?us-ascii?Q?lxsVIKD0Q2JFhzAWypcWpuAyqAl3+S71EnejlHc2GKqyamsPZBit?=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <2FD99F7FD9DC4F49A1E94E8544E8920F@namprd10.prod.outlook.com>
+Content-ID: <A6BCD15F277B6445ABF228A4B88ACC02@namprd10.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2943.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9fbbc096-ea84-41ff-e9e5-08da347042b0
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 May 2022 23:36:38.5749
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4bd868ac-a485-4bc0-426e-08da34708e43
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 May 2022 23:38:45.3631
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: dyqYhrnriFpDESp/8oTa1GCwreADE8TgFtMvFlSEC1Poda91zddoJea8oL9RZxtqDCfwRdyyDxEuX5A+AKUN0+2JybeHG2OyOwgdc6Ndb5A=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5516
+X-MS-Exchange-CrossTenant-userprincipalname: nvHd9Bva4fzFZijITD0mu/c5X4iEJWNJMiCz1LSOir6eAXzO+AuW/5I5w82ACCKK+1KHwTLNZDNU/n/B34GZRo/qDMrMLgP0jecbwr34a40=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR10MB1760
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.486,18.0.858
  definitions=2022-05-12_15:2022-05-12,2022-05-12 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- spamscore=0 phishscore=0 suspectscore=0 mlxscore=0 bulkscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ spamscore=0 bulkscore=0 adultscore=0 suspectscore=0 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2202240000 definitions=main-2205120101
-X-Proofpoint-GUID: qqAsM1dEM_kF3ln64CAABFc-9QK9eCgf
-X-Proofpoint-ORIG-GUID: qqAsM1dEM_kF3ln64CAABFc-9QK9eCgf
+X-Proofpoint-ORIG-GUID: iJYaDnwfugU5eNa_gE8sTvLuKU3zzxgw
+X-Proofpoint-GUID: iJYaDnwfugU5eNa_gE8sTvLuKU3zzxgw
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 
-> On May 12, 2022, at 7:00 AM, Sreekanth Reddy <sreekanth.reddy@broadcom.co=
-m> wrote:
+> On May 10, 2022, at 1:00 PM, James Smart <jsmart2021@gmail.com> wrote:
 >=20
-> Added shost related sysfs attributes to get the controller's
-> firmware version, controlller's queue depth,
-> number of request & reply queues.
-> Also added an attribute to set & get the logging_level.
+> From: Muneendra <muneendra.kumar@broadcom.com>
 >=20
-> Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+> Add nvme_fc_io_getuuid() to the nvme-fc transport.
+> The routine is invoked by the fc LLDD on a per-io request basis.
+> The routine translates from the fc-specific request structure to
+> the bio and the cgroup structure in order to obtain the fc appid
+> stored in the cgroup structure. If a value is not set or a bio
+> is not found, a NULL appid (aka uuid) will be returned to the LLDD.
+>=20
+> Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
 > ---
-> drivers/scsi/mpi3mr/mpi3mr_app.c | 139 +++++++++++++++++++++++++++++++
-> 1 file changed, 139 insertions(+)
+> drivers/nvme/host/fc.c         | 16 ++++++++++++++++
+> include/linux/nvme-fc-driver.h | 14 ++++++++++++++
+> 2 files changed, 30 insertions(+)
 >=20
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3m=
-r_app.c
-> index 73bb799..c9b153c 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> @@ -1558,6 +1558,140 @@ err_device_add:
-> 	kfree(mrioc->bsg_dev);
+> diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+> index 080f85f4105f..a484fe228cd5 100644
+> --- a/drivers/nvme/host/fc.c
+> +++ b/drivers/nvme/host/fc.c
+> @@ -1899,6 +1899,22 @@ nvme_fc_ctrl_ioerr_work(struct work_struct *work)
+> 	nvme_fc_error_recovery(ctrl, "transport detected io error");
 > }
 >=20
-> +/**
-> + * version_fw_show - SysFS callback for firmware version read
-> + * @dev: class device
-> + * @attr: Device attributes
-> + * @buf: Buffer to copy
-> + *
-> + * Return: snprintf() return after copying firmware version
+> +/*
+> + * nvme_fc_io_getuuid - Routine called to get the appid field
+> + * associated with request by the lldd
+> + * @req:IO request from nvme fc to driver
+> + * Returns: UUID if there is an appid associated with VM or
+> + * NULL if the user/libvirt has not set the appid to VM
 > + */
-> +static ssize_t
-> +version_fw_show(struct device *dev, struct device_attribute *attr,
-> +	char *buf)
+> +char *nvme_fc_io_getuuid(struct nvmefc_fcp_req *req)
 > +{
-> +	struct Scsi_Host *shost =3D class_to_shost(dev);
-> +	struct mpi3mr_ioc *mrioc =3D shost_priv(shost);
-> +	struct mpi3mr_compimg_ver *fwver =3D &mrioc->facts.fw_ver;
+> +	struct nvme_fc_fcp_op *op =3D fcp_req_to_fcp_op(req);
+> +	struct request *rq =3D op->rq;
 > +
-> +	return snprintf(buf, PAGE_SIZE, "%d.%d.%d.%d.%05d-%05d\n",
-> +	    fwver->gen_major, fwver->gen_minor, fwver->ph_major,
-> +	    fwver->ph_minor, fwver->cust_id, fwver->build_num);
+> +	return rq->bio ? blkcg_get_fc_appid(rq->bio) : NULL;
 > +}
-> +static DEVICE_ATTR_RO(version_fw);
+> +EXPORT_SYMBOL_GPL(nvme_fc_io_getuuid);
 > +
-> +/**
-> + * fw_queue_depth_show - SysFS callback for firmware max cmds
-> + * @dev: class device
-> + * @attr: Device attributes
-> + * @buf: Buffer to copy
-> + *
-> + * Return: snprintf() return after copying firmware max commands
-> + */
-> +static ssize_t
-> +fw_queue_depth_show(struct device *dev, struct device_attribute *attr,
-> +			char *buf)
-> +{
-> +	struct Scsi_Host *shost =3D class_to_shost(dev);
-> +	struct mpi3mr_ioc *mrioc =3D shost_priv(shost);
-> +
-> +	return snprintf(buf, PAGE_SIZE, "%d\n", mrioc->facts.max_reqs);
-> +}
-> +static DEVICE_ATTR_RO(fw_queue_depth);
-> +
-> +/**
-> + * op_req_q_count_show - SysFS callback for request queue count
-> + * @dev: class device
-> + * @attr: Device attributes
-> + * @buf: Buffer to copy
-> + *
-> + * Return: snprintf() return after copying request queue count
-> + */
-> +static ssize_t
-> +op_req_q_count_show(struct device *dev, struct device_attribute *attr,
-> +			char *buf)
-> +{
-> +	struct Scsi_Host *shost =3D class_to_shost(dev);
-> +	struct mpi3mr_ioc *mrioc =3D shost_priv(shost);
-> +
-> +	return snprintf(buf, PAGE_SIZE, "%d\n", mrioc->num_op_req_q);
-> +}
-> +static DEVICE_ATTR_RO(op_req_q_count);
-> +
-> +/**
-> + * reply_queue_count_show - SysFS callback for reply queue count
-> + * @dev: class device
-> + * @attr: Device attributes
-> + * @buf: Buffer to copy
-> + *
-> + * Return: snprintf() return after copying reply queue count
-> + */
-> +static ssize_t
-> +reply_queue_count_show(struct device *dev, struct device_attribute *attr=
-,
-> +			char *buf)
-> +{
-> +	struct Scsi_Host *shost =3D class_to_shost(dev);
-> +	struct mpi3mr_ioc *mrioc =3D shost_priv(shost);
-> +
-> +	return snprintf(buf, PAGE_SIZE, "%d\n", mrioc->num_op_reply_q);
-> +}
-> +
-> +static DEVICE_ATTR_RO(reply_queue_count);
-> +
-> +/**
-> + * logging_level_show - Show controller debug level
-> + * @dev: class device
-> + * @attr: Device attributes
-> + * @buf: Buffer to copy
-> + *
-> + * A sysfs 'read/write' shost attribute, to show the current
-> + * debug log level used by the driver for the specific
-> + * controller.
-> + *
-> + * Return: snprintf() return
-> + */
-> +static ssize_t
-> +logging_level_show(struct device *dev,
-> +	struct device_attribute *attr, char *buf)
-> +
-> +{
-> +	struct Scsi_Host *shost =3D class_to_shost(dev);
-> +	struct mpi3mr_ioc *mrioc =3D shost_priv(shost);
-> +
-> +	return snprintf(buf, PAGE_SIZE, "%08xh\n", mrioc->logging_level);
-> +}
-> +
-> +/**
-> + * logging_level_store- Change controller debug level
-> + * @dev: class device
-> + * @attr: Device attributes
-> + * @buf: Buffer to copy
-> + * @count: size of the buffer
-> + *
-> + * A sysfs 'read/write' shost attribute, to change the current
-> + * debug log level used by the driver for the specific
-> + * controller.
-> + *
-> + * Return: strlen() return
-> + */
-> +static ssize_t
-> +logging_level_store(struct device *dev,
-> +	struct device_attribute *attr,
-> +	const char *buf, size_t count)
-> +{
-> +	struct Scsi_Host *shost =3D class_to_shost(dev);
-> +	struct mpi3mr_ioc *mrioc =3D shost_priv(shost);
-> +	int val =3D 0;
-> +
-> +	if (kstrtoint(buf, 0, &val) !=3D 0)
-> +		return -EINVAL;
-> +
-> +	mrioc->logging_level =3D val;
-> +	ioc_info(mrioc, "logging_level=3D%08xh\n", mrioc->logging_level);
-> +	return strlen(buf);
-> +}
-> +static DEVICE_ATTR_RW(logging_level);
-> +
-> /**
->  * adapter_state_show - SysFS callback for adapter state show
->  * @dev: class device
-> @@ -1591,6 +1725,11 @@ adp_state_show(struct device *dev, struct device_a=
-ttribute *attr,
-> static DEVICE_ATTR_RO(adp_state);
+> static void
+> nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
+> {
+> diff --git a/include/linux/nvme-fc-driver.h b/include/linux/nvme-fc-drive=
+r.h
+> index 5358a5facdee..fa092b9be2fd 100644
+> --- a/include/linux/nvme-fc-driver.h
+> +++ b/include/linux/nvme-fc-driver.h
+> @@ -564,6 +564,15 @@ int nvme_fc_rcv_ls_req(struct nvme_fc_remote_port *r=
+emoteport,
+> 			void *lsreqbuf, u32 lsreqbuf_len);
 >=20
-> static struct attribute *mpi3mr_host_attrs[] =3D {
-> +	&dev_attr_version_fw.attr,
-> +	&dev_attr_fw_queue_depth.attr,
-> +	&dev_attr_op_req_q_count.attr,
-> +	&dev_attr_reply_queue_count.attr,
-> +	&dev_attr_logging_level.attr,
-> 	&dev_attr_adp_state.attr,
-> 	NULL,
-> };
+>=20
+> +/*
+> + * Routine called to get the appid field associated with request by the =
+lldd
+> + *
+> + * If the return value is NULL : the user/libvirt has not set the appid =
+to VM
+> + * If the return value is non-zero: Returns the appid associated with VM
+> + *
+> + * @req: IO request from nvme fc to driver
+> + */
+> +char *nvme_fc_io_getuuid(struct nvmefc_fcp_req *req);
+>=20
+> /*
+>  * ***************  LLDD FC-NVME Target/Subsystem API ***************
+> @@ -1048,5 +1057,10 @@ int nvmet_fc_rcv_fcp_req(struct nvmet_fc_target_po=
+rt *tgtport,
+>=20
+> void nvmet_fc_rcv_fcp_abort(struct nvmet_fc_target_port *tgtport,
+> 			struct nvmefc_tgt_fcp_req *fcpreq);
+> +/*
+> + * add a define, visible to the compiler, that indicates support
+> + * for feature. Allows for conditional compilation in LLDDs.
+> + */
+> +#define NVME_FC_FEAT_UUID	0x0001
+>=20
+> #endif /* _NVME_FC_DRIVER_H */
 > --=20
-> 2.27.0
+> 2.26.2
 >=20
 
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
