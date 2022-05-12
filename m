@@ -2,182 +2,268 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB5E5C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 21:48:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BE4AC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 23:13:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358931AbiELVsJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 May 2022 17:48:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53890 "EHLO
+        id S1359399AbiELXNQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 May 2022 19:13:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358908AbiELVr7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2022 17:47:59 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A04C649C89
-        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 14:47:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1652392070;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=YWzVrdFw3n8EH2Ce8k4daz33bBf83epcMdzHAJNT8tE=;
-        b=gVuxC4ZW9yIvGTjeB3OLU0RYFZGl+3JyaPzOZoeGcWazdKSwc8Ef9VHjpOOcs+CiEEiJD6
-        0R+dDgBQCPA3pSV3mRTd9mJDJUvE+jnnxCugCPNFLgief/eTZyaYYXSJOl2LMPOQCnmqIw
-        bBAiWyf3GxXB3U2wkXDWdcsApPQTfoY=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-617-E2haYQIaNmW7kVC3uepXEg-1; Thu, 12 May 2022 17:47:46 -0400
-X-MC-Unique: E2haYQIaNmW7kVC3uepXEg-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id DD7EB383328C;
-        Thu, 12 May 2022 21:47:45 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.33.37.67])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A13B84010E23;
-        Thu, 12 May 2022 21:47:31 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-        Kingdom.
-        Registered in England and Wales under Company Registration No. 3798903
-From:   David Howells <dhowells@redhat.com>
-In-Reply-To: <20220504014440.3697851-1-keescook@chromium.org>
-References: <20220504014440.3697851-1-keescook@chromium.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Alexei Starovoitov <ast@kernel.org>, alsa-devel@alsa-project.org,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Andrew Gabbasov <andrew_gabbasov@mentor.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Andy Gross <agross@kernel.org>,
-        Andy Lavr <andy.lavr@gmail.com>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Baowen Zheng <baowen.zheng@corigine.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Bradley Grove <linuxdrivers@attotech.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Christian Brauner <brauner@kernel.org>,
-        Christian =?utf-8?Q?G=C3=B6ttsche?= <cgzones@googlemail.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        Chris Zankel <chris@zankel.net>,
-        Cong Wang <cong.wang@bytedance.com>,
-        Daniel Axtens <dja@axtens.net>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Dan Williams <dan.j.williams@intel.com>,
-        David Gow <davidgow@google.com>,
-        David Howells <dhowells@redhat.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-        devicetree@vger.kernel.org, Dexuan Cui <decui@microsoft.com>,
-        Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
-        Eli Cohen <elic@nvidia.com>,
-        Eric Dumazet <edumazet@google.com>,
-        Eric Paris <eparis@parisplace.org>,
-        Eugeniu Rosca <erosca@de.adit-jv.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Francis Laniel <laniel_francis@privacyrequired.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Hulk Robot <hulkci@huawei.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        James Morris <jmorris@namei.org>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        John Keeping <john@metanate.com>,
-        Juergen Gross <jgross@suse.com>, Kalle Valo <kvalo@kernel.org>,
-        Keith Packard <keithp@keithp.com>, keyrings@vger.kernel.org,
-        kunit-dev@googlegroups.com,
-        Kuniyuki Iwashima <kuniyu@amazon.co.jp>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Lars-Peter Clausen <lars@metafoo.de>,
-        Lee Jones <lee.jones@linaro.org>,
-        Leon Romanovsky <leon@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        linux1394-devel@lists.sourceforge.net,
-        linux-afs@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-hardening@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-integrity@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-xtensa@linux-xtensa.org, llvm@lists.linux.dev,
-        Loic Poulain <loic.poulain@linaro.org>,
-        Louis Peens <louis.peens@corigine.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Mark Brown <broonie@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Max Filippov <jcmvbkbc@gmail.com>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Muchun Song <songmuchun@bytedance.com>,
-        Nathan Chancellor <nathan@kernel.org>, netdev@vger.kernel.org,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Nuno =?utf-8?Q?S=C3=A1?= <nuno.sa@analog.com>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Paul Moore <paul@paul-moore.com>,
-        Rich Felker <dalias@aerifal.cx>,
-        Rob Herring <robh+dt@kernel.org>,
-        Russell King <linux@armlinux.org.uk>, selinux@vger.kernel.org,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        SHA-cyfmac-dev-list@infineon.com,
-        Simon Horman <simon.horman@corigine.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Steffen Klassert <steffen.klassert@secunet.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Tadeusz Struk <tadeusz.struk@linaro.org>,
-        Takashi Iwai <tiwai@suse.com>, Tom Rix <trix@redhat.com>,
-        Udipto Goswami <quic_ugoswami@quicinc.com>,
-        Vincenzo Frascino <vincenzo.frascino@arm.com>,
-        wcn36xx@lists.infradead.org, Wei Liu <wei.liu@kernel.org>,
-        xen-devel@lists.xenproject.org,
-        Xiu Jianfeng <xiujianfeng@huawei.com>,
-        Yang Yingliang <yangyingliang@huawei.com>
-Subject: Re: [PATCH 00/32] Introduce flexible array struct memcpy() helpers
+        with ESMTP id S1359384AbiELXNO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 May 2022 19:13:14 -0400
+Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25C9022EA4C
+        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 16:13:12 -0700 (PDT)
+Received: by mail-qk1-x72c.google.com with SMTP id z126so5945050qkb.2
+        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 16:13:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=OvDFCBR6ozIUK82Bb27c6nxi3B6XJLKPaTvHWVZd6VA=;
+        b=Cy5E05VYkbdTjoO8mtBO5/abUoUZ8JPbxgpLNoAecBk+B3Nfx5P6AZ3UzBYdGFsxr3
+         TqwORbgMIbvLgtkD8jzQxBQ7qseD8EpPrKCUtUWw9ZhjMOqwo8FzNhsOMydI3Zoay/c1
+         1vnc79sMrOGT/NKU6LhcPF8eKu3lezzdYjqoSe/ZfWse3MSD5CKt/YvAa0sAlYD2Su/k
+         92QfU4lfdjxaO/bcZClIy3hUIzwZWciGEyWv8B0Y/hMS7mF1K13fLG2wkQ8+5TjiQT4s
+         w+G33LIFscTRcNUlif3nENd2cfiN1XOXkKywl4+IqhkgR7i+8HCbgFSlKT5MT75LXJ5O
+         GyPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=OvDFCBR6ozIUK82Bb27c6nxi3B6XJLKPaTvHWVZd6VA=;
+        b=SSJQIjInRZdQ0OXZMmTRY2pE+OvC4LImxrrXlzTxlM8OKxeK3RMEIBwv3jxNVgt2JY
+         o5bSvNOa4H+oBWYN0pkexDQjF2njHeW107avgeOtpSN3PL9sIbkYQOd58Py3HO6Skzks
+         se28FEWoU+Nz0/z4r2mdDSVkXBn0gM5L+PxbYdwxfeg+BAysbS/DffIzyzepH9j1iG0Z
+         b/OBI95T7qylt/X8Gb6slwHOMlWw4MwKv6PiyOIlVdoFzkR+fit6bPAK79Ko9cPoiw9R
+         stn1n+tMuLv9YfZyT9WitNUDtaM4urG2L0zGXI6ZhEr2gc41En+0Q0pqTFxsnIwxXk5g
+         usZw==
+X-Gm-Message-State: AOAM533c8Njy/45l/a1peTb33FQbBQVbdenckpusgGNh+vsWsceLMYto
+        Pp7J7cE7VAb6Kp0Snd62fwVaM1/U/U6UaA==
+X-Google-Smtp-Source: ABdhPJwlYfcKdgN0hcLBmdwa2Vxf1EHY0CNQVX39rTfgmHVvxsCU0phlL0RLu34BxOTmm4yVnHOWsA==
+X-Received: by 2002:a05:620a:1a01:b0:69c:fda:7404 with SMTP id bk1-20020a05620a1a0100b0069c0fda7404mr1837829qkb.522.1652397191601;
+        Thu, 12 May 2022 16:13:11 -0700 (PDT)
+Received: from [10.30.1.34] (sw.attotech.com. [208.69.85.34])
+        by smtp.gmail.com with ESMTPSA id h65-20020a376c44000000b0069fc13ce226sm456841qkc.87.2022.05.12.16.13.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 12 May 2022 16:13:11 -0700 (PDT)
+Message-ID: <e0b7f888-89fc-6117-fe27-114bcbb3d4cc@gmail.com>
+Date:   Thu, 12 May 2022 19:13:09 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
-Date:   Thu, 12 May 2022 22:47:31 +0100
-Message-ID: <899235.1652392051@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 2.84 on 10.11.54.2
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+Subject: Re: [PATCH] scsi: lpfc: Add support for ATTO Fibre Channel devices
+Content-Language: en-US
+To:     linux-scsi@vger.kernel.org
+Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        Jason Seba <jseba@attotech.com>, bradley.grove@gmail.com
+References: <20220512164032.47943-1-bgrove@attotech.com>
+From:   "Grove, Bradley" <bradley.grove@gmail.com>
+In-Reply-To: <20220512164032.47943-1-bgrove@attotech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Kees Cook <keescook@chromium.org> wrote:
+We'd like to withdraw this patch request while we work out an issue on 
+our end.
 
-> I'm happy to also point out that the conversions (patches 5+) are actually
-> a net reduction in lines of code:
->  49 files changed, 154 insertions(+), 244 deletions(-)
+Bradley Grove
 
-That doesn't mean that it's actually code that's clearer to read.  I would say
-that it's actually less clear.  In a bunch of places, you've done something
-like:
-
--	e = kmalloc(...);
--	if (!e)
-+	if (__mem_to_flex_dup(&e, ...))
-
-The problem is that, to me at least, it looks like:
-
--	e = kmalloc(...);
--	if (kmalloc failed)
-+	if (__mem_to_flex_dup(&e, ...) succeeded)
-
-David
-
+On 5/12/2022 12:40 PM, Bradley Grove wrote:
+> Update pci_device_id table and generate reporting strings for ATTO
+> Celerity and ThunderLink Fibre Channel devices.
+> 
+> Co-developed-by: Jason Seba <jseba@attotech.com>
+> Signed-off-by: Jason Seba <jseba@attotech.com>
+> Signed-off-by: Bradley Grove <bgrove@attotech.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_hw.h   | 22 +++++++++
+>   drivers/scsi/lpfc/lpfc_ids.h  | 30 ++++++++++++
+>   drivers/scsi/lpfc/lpfc_init.c | 89 +++++++++++++++++++++++++++++++++++
+>   3 files changed, 141 insertions(+)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+> index d6050f3c9efe..74a02586fe55 100644
+> --- a/drivers/scsi/lpfc/lpfc_hw.h
+> +++ b/drivers/scsi/lpfc/lpfc_hw.h
+> @@ -1738,6 +1738,28 @@ struct lpfc_fdmi_reg_portattr {
+>   #define PCI_DEVICE_ID_TOMCAT        0x0714
+>   #define PCI_DEVICE_ID_SKYHAWK       0x0724
+>   #define PCI_DEVICE_ID_SKYHAWK_VF    0x072c
+> +#define PCI_VENDOR_ID_ATTO          0x117c
+> +#define PCI_DEVICE_ID_CLRY_16XE     0x0064
+> +#define PCI_DEVICE_ID_CLRY_161E     0x0063
+> +#define PCI_DEVICE_ID_CLRY_162E     0x0064
+> +#define PCI_DEVICE_ID_CLRY_164E     0x0065
+> +#define PCI_DEVICE_ID_CLRY_16XP     0x0094
+> +#define PCI_DEVICE_ID_CLRY_161P     0x00a0
+> +#define PCI_DEVICE_ID_CLRY_162P     0x0094
+> +#define PCI_DEVICE_ID_CLRY_164P     0x00a1
+> +#define PCI_DEVICE_ID_CLRY_32XE     0x0094
+> +#define PCI_DEVICE_ID_CLRY_321E     0x00a2
+> +#define PCI_DEVICE_ID_CLRY_322E     0x00a3
+> +#define PCI_DEVICE_ID_CLRY_324E     0x00ac
+> +#define PCI_DEVICE_ID_CLRY_32XP     0x00bb
+> +#define PCI_DEVICE_ID_CLRY_321P     0x00bc
+> +#define PCI_DEVICE_ID_CLRY_322P     0x00bd
+> +#define PCI_DEVICE_ID_CLRY_324P     0x00be
+> +#define PCI_DEVICE_ID_TLFC_2        0x0064
+> +#define PCI_DEVICE_ID_TLFC_2XX2     0x4064
+> +#define PCI_DEVICE_ID_TLFC_3        0x0094
+> +#define PCI_DEVICE_ID_TLFC_3162     0x40a6
+> +#define PCI_DEVICE_ID_TLFC_3322     0x40a7
+>   
+>   #define JEDEC_ID_ADDRESS            0x0080001c
+>   #define FIREFLY_JEDEC_ID            0x1ACC
+> diff --git a/drivers/scsi/lpfc/lpfc_ids.h b/drivers/scsi/lpfc/lpfc_ids.h
+> index 6a90e6e53d09..a1b9be245560 100644
+> --- a/drivers/scsi/lpfc/lpfc_ids.h
+> +++ b/drivers/scsi/lpfc/lpfc_ids.h
+> @@ -124,5 +124,35 @@ const struct pci_device_id lpfc_id_table[] = {
+>   		PCI_ANY_ID, PCI_ANY_ID, },
+>   	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_SKYHAWK_VF,
+>   		PCI_ANY_ID, PCI_ANY_ID, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XE,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_161E, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XE,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_162E, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XE,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_164E, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XP,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_161P, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XP,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_162P, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_16XP,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_164P, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XE,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_321E, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XE,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_322E, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XE,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_324E, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XP,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_321P, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XP,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_322P, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_32XP,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_CLRY_324P, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_2,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_2XX2, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_3,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_3162, },
+> +	{PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_3,
+> +		PCI_VENDOR_ID_ATTO, PCI_DEVICE_ID_TLFC_3322, },
+>   	{ 0 }
+>   };
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 461d333b1b3a..45a71ab55be8 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -2408,6 +2408,90 @@ lpfc_parse_vpd(struct lpfc_hba *phba, uint8_t *vpd, int len)
+>   	return(1);
+>   }
+>   
+> +/**
+> + * lpfc_get_atto_model_desc - Retrieve ATTO HBA device model name and description
+> + * @phba: pointer to lpfc hba data structure.
+> + * @mdp: pointer to the data structure to hold the derived model name.
+> + * @descp: pointer to the data structure to hold the derived description.
+> + *
+> + * This routine retrieves HBA's description based on its registered PCI device
+> + * ID. The @descp passed into this function points to an array of 256 chars. It
+> + * shall be returned with the model name, maximum speed, and the host bus type.
+> + * The @mdp passed into this function points to an array of 80 chars. When the
+> + * function returns, the @mdp will be filled with the model name.
+> + **/
+> +static void
+> +lpfc_get_atto_model_desc(struct lpfc_hba *phba, uint8_t *mdp, uint8_t *descp)
+> +{
+> +	uint16_t sub_dev_id = phba->pcidev->subsystem_device;
+> +	char *model = "<Unknown>";
+> +	int tbolt = 0;
+> +
+> +	switch (sub_dev_id) {
+> +	case PCI_DEVICE_ID_CLRY_161E:
+> +		model = "161E";
+> +		break;
+> +	case PCI_DEVICE_ID_CLRY_162E:
+> +		model = "162E";
+> +		break;
+> +	case PCI_DEVICE_ID_CLRY_164E:
+> +		model = "164E";
+> +		break;
+> +	case PCI_DEVICE_ID_CLRY_161P:
+> +		model = "161P";
+> +		break;
+> +	case PCI_DEVICE_ID_CLRY_162P:
+> +		model = "162P";
+> +		break;
+> +	case PCI_DEVICE_ID_CLRY_164P:
+> +		model = "164P";
+> +		break;
+> +	case PCI_DEVICE_ID_CLRY_321E:
+> +		model = "321E";
+> +		break;
+> +	case PCI_DEVICE_ID_CLRY_322E:
+> +		model = "322E";
+> +		break;
+> +	case PCI_DEVICE_ID_CLRY_324E:
+> +		model = "324E";
+> +		break;
+> +	case PCI_DEVICE_ID_CLRY_321P:
+> +		model = "321P";
+> +		break;
+> +	case PCI_DEVICE_ID_CLRY_322P:
+> +		model = "322P";
+> +		break;
+> +	case PCI_DEVICE_ID_CLRY_324P:
+> +		model = "324P";
+> +		break;
+> +	case PCI_DEVICE_ID_TLFC_2XX2:
+> +		model = "2XX2";
+> +		tbolt = 1;
+> +		break;
+> +	case PCI_DEVICE_ID_TLFC_3162:
+> +		model = "3162";
+> +		tbolt = 1;
+> +		break;
+> +	case PCI_DEVICE_ID_TLFC_3322:
+> +		model = "3322";
+> +		tbolt = 1;
+> +		break;
+> +	default:
+> +		model = "Unknown";
+> +		break;
+> +	}
+> +
+> +	if (mdp && mdp[0] == '\0')
+> +		snprintf(mdp, 79, "%s", model);
+> +
+> +	if (descp && descp[0] == '\0')
+> +		snprintf(descp, 255,
+> +			 "ATTO %s%s, Fibre Channel Adapter Initiator, Port %s",
+> +			 (tbolt) ? "ThunderLink FC " : "Celerity FC-",
+> +			 model,
+> +			 phba->Port);
+> +}
+> +
+>   /**
+>    * lpfc_get_hba_model_desc - Retrieve HBA device model name and description
+>    * @phba: pointer to lpfc hba data structure.
+> @@ -2438,6 +2522,11 @@ lpfc_get_hba_model_desc(struct lpfc_hba *phba, uint8_t *mdp, uint8_t *descp)
+>   		&& descp && descp[0] != '\0')
+>   		return;
+>   
+> +	if (phba->pcidev->vendor == PCI_VENDOR_ID_ATTO) {
+> +		lpfc_get_atto_model_desc(phba, mdp, descp);
+> +		return;
+> +	}
+> +
+>   	if (phba->lmt & LMT_64Gb)
+>   		max_speed = 64;
+>   	else if (phba->lmt & LMT_32Gb)
