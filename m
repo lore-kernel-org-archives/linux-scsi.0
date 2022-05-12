@@ -2,60 +2,60 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABE6AC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 01:18:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06EB4C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 May 2022 01:19:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348697AbiELBS3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 May 2022 21:18:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59224 "EHLO
+        id S1349869AbiELBS7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 May 2022 21:18:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230481AbiELBSX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2022 21:18:23 -0400
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A148169B79;
-        Wed, 11 May 2022 18:18:22 -0700 (PDT)
-Received: by mail-pg1-x52e.google.com with SMTP id h186so599975pgc.3;
-        Wed, 11 May 2022 18:18:22 -0700 (PDT)
+        with ESMTP id S1349857AbiELBS6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2022 21:18:58 -0400
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2CE07DA8D;
+        Wed, 11 May 2022 18:18:57 -0700 (PDT)
+Received: by mail-pj1-x1031.google.com with SMTP id n10so3758615pjh.5;
+        Wed, 11 May 2022 18:18:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=YQvlML9m3qbfCKIWRjMQfFCHa0mKwk3XGcYuMzqP4uc=;
-        b=oNgFP4NY23DSU2i9MxLGgPmgoeg/KibO3pQvnXqYNJTrNVUlcvzz8pTprPJQS2k+Ga
-         a9XGoUgYIADflfEFDnynKT1fyspt2C2Bo6MHm/MFPRdI4g0Y7zsV57RYUZC+9OUs4SKd
-         X/4FUD47sqYs7fuQ9rz4xlp5+KpbqIRQ8FcB5LY81/3yBC3gCah3QxtBBFUl1hU1gm5Z
-         YguXB8U/qIKX8f9W/1JNJXQ6Xqp634PS3qcrlcswMrAsNr8MBmsrLtTtvyR0t93GzIag
-         HeL5y+aqiBy6tVuR01hPKAGwR9BTsGwVoKXqma1UCHztCaMd/7iqHjdIwMJTKgUFiHw1
-         CEkg==
+        bh=AnVgcIyIBqniHu4rYLTlqz37Qz+0nzpmLAnn5WFxfPs=;
+        b=Q9U8UNeaLvA04a+8y+a2xJd59Cn9LqfLtp9pFxCYaGjjroX8aohicGf25t1hkXfTxe
+         KkfsAuFAV5nZ1VD4xgHw3W6y2zoFHZCLvHNrt5+c/1QTXx1sPWbawP5BgsSs0yfgVLZm
+         RKpaQtf6npbYQdZMq4bV+jSngyQ4NBfY2olNrFZ1ETKBH8qk2ykIcdGdPIWktQOVFcKd
+         lyNto3FIRmE08eIuSHtNqAGaDNQd67EXEIFIDLBYXZ6PfHTDVfZapnlbluGBDuf+STDG
+         jVAuw0hSD7L63QBFSW03EwhSr+r5qCZFcMe6Uw9VQScuU6515YWsvKAoc+PVKVPjiRvP
+         FTfw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=YQvlML9m3qbfCKIWRjMQfFCHa0mKwk3XGcYuMzqP4uc=;
-        b=2cEGdJsnDMcrHkee86Bv1IwL6uvpScqfTnfpYS7IcyhGRV2crlFz4ItXrDEb38fHtV
-         jadvBjmnLkwnG/vAzNufzkUv4EslMsvX56VuST74zD1YNoBYQvHsipaTzizmhNASCdA8
-         HK7ra0a2t5izh5UIWQBIAc3RxQzASWXvKB34TAjuNcr+alG2KTkKfPA8H4n7+58TrbG6
-         ybqCvU/d+2ZElA5OUG4tK0HgAaAxz90LweXbcsH0ewR1ihrhQZU1lEis3KFYPZRRtFrg
-         TSukS/rA7PrRQeRye6gxpw4KqStuVuFFUNSXbDJIPi/8aTHFEfaQhzVGQYHoh9zTvyFI
-         tnWQ==
-X-Gm-Message-State: AOAM531MRyHZcwMNHyonNdnqy2jrWSh/G4+MN4Aw4+vGYA2buVmQO9FL
-        Nx2Ve4TeTzaoOqZDcPEgVgM=
-X-Google-Smtp-Source: ABdhPJyRhU45OFtrhCPgIZpoTW6lkIFVgv0CJwHrhFrRbGPJjDqHu7JH/7MZg+gwU8D4cu7UVtqiag==
-X-Received: by 2002:a05:6a00:16c7:b0:4f7:e497:69b8 with SMTP id l7-20020a056a0016c700b004f7e49769b8mr27486411pfc.6.1652318302226;
-        Wed, 11 May 2022 18:18:22 -0700 (PDT)
+        bh=AnVgcIyIBqniHu4rYLTlqz37Qz+0nzpmLAnn5WFxfPs=;
+        b=Wihowfk4D0MW+7+g1MvUg8G9MCsblpdDE9BleNEgYjNrCDg2dkq/NENJ+g0h6wd/4f
+         c+XMv9PTYwLP4oiVYQEL7qPXQY4yHD5kEFmQbckQOaeMJymZS2EvcFyNrmqTepNEwqvv
+         TZo2StXG0KCeXo7gzyCeTp3+XpN33LnD9gY3E500/Oc4i3yleJASV6IFc7uWJ430T5MM
+         KcgV+oaj8TB4iSN3ye3MgSiezTbSGzlf60WD91orpUVm3LcmhM9CITZoT17J03CMA4Rw
+         S/e7YqQVQmfm/0nIbBfqTnDkKXWNTFkE9vi8alXyIJKZMkZgQ3qDl/krEG8ACSSiK5Ew
+         RsZw==
+X-Gm-Message-State: AOAM532wETQIHZqV6o+EOE7SbWquK6RCWuFkaStcL9FtJo81lyj1goio
+        4sx4gC9qmElpGJzQ39IIgCQ=
+X-Google-Smtp-Source: ABdhPJz/rmyQf3Qoamjem3D5LRE9zsf7vddS53Lp1Scd8NQQ8dwNOtOJXSlw1nFabBJOjpJcXTWJCw==
+X-Received: by 2002:a17:902:7891:b0:15e:cae9:7620 with SMTP id q17-20020a170902789100b0015ecae97620mr28091638pll.136.1652318337357;
+        Wed, 11 May 2022 18:18:57 -0700 (PDT)
 Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id s20-20020a170902989400b0015e8d4eb206sm2501908plp.80.2022.05.11.18.18.20
+        by smtp.gmail.com with ESMTPSA id 18-20020a621712000000b0050dc762817asm2398325pfx.84.2022.05.11.18.18.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 May 2022 18:18:21 -0700 (PDT)
+        Wed, 11 May 2022 18:18:57 -0700 (PDT)
 From:   cgel.zte@gmail.com
 X-Google-Original-From: chi.minghao@zte.com.cn
 To:     jejb@linux.ibm.com
 Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, Minghao Chi <chi.minghao@zte.com.cn>,
         Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] [SCSI] scsi_transport_spi: Use kobj_to_dev()
-Date:   Thu, 12 May 2022 01:18:18 +0000
-Message-Id: <20220512011818.1621754-1-chi.minghao@zte.com.cn>
+Subject: [PATCH] [SCSI] arcmsr: Use kobj_to_dev()
+Date:   Thu, 12 May 2022 01:18:53 +0000
+Message-Id: <20220512011853.1621819-1-chi.minghao@zte.com.cn>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -70,22 +70,40 @@ Use kobj_to_dev() instead of open-coding it.
 Reported-by: Zeal Robot <zealci@zte.com.cn>
 Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
 ---
- drivers/scsi/scsi_transport_spi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/arcmsr/arcmsr_attr.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index bd72c38d7bfc..29a4e6cddda6 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -1468,7 +1468,7 @@ static int spi_host_configure(struct transport_container *tc,
- static umode_t target_attribute_is_visible(struct kobject *kobj,
- 					  struct attribute *attr, int i)
+diff --git a/drivers/scsi/arcmsr/arcmsr_attr.c b/drivers/scsi/arcmsr/arcmsr_attr.c
+index baeb5e795690..041e15929cd3 100644
+--- a/drivers/scsi/arcmsr/arcmsr_attr.c
++++ b/drivers/scsi/arcmsr/arcmsr_attr.c
+@@ -64,7 +64,7 @@ static ssize_t arcmsr_sysfs_iop_message_read(struct file *filp,
+ 					     char *buf, loff_t off,
+ 					     size_t count)
  {
--	struct device *cdev = container_of(kobj, struct device, kobj);
-+	struct device *cdev = kobj_to_dev(kobj);
- 	struct scsi_target *starget = transport_class_to_starget(cdev);
- 	struct Scsi_Host *shost = transport_class_to_shost(cdev);
- 	struct spi_internal *si = to_spi_internal(shost->transportt);
+-	struct device *dev = container_of(kobj,struct device,kobj);
++	struct device *dev = kobj_to_dev(kobj);
+ 	struct Scsi_Host *host = class_to_shost(dev);
+ 	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
+ 	uint8_t *ptmpQbuffer;
+@@ -111,7 +111,7 @@ static ssize_t arcmsr_sysfs_iop_message_write(struct file *filp,
+ 					      char *buf, loff_t off,
+ 					      size_t count)
+ {
+-	struct device *dev = container_of(kobj,struct device,kobj);
++	struct device *dev = kobj_to_dev(kobj);
+ 	struct Scsi_Host *host = class_to_shost(dev);
+ 	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
+ 	int32_t user_len, cnt2end;
+@@ -159,7 +159,7 @@ static ssize_t arcmsr_sysfs_iop_message_clear(struct file *filp,
+ 					      char *buf, loff_t off,
+ 					      size_t count)
+ {
+-	struct device *dev = container_of(kobj,struct device,kobj);
++	struct device *dev = kobj_to_dev(kobj);
+ 	struct Scsi_Host *host = class_to_shost(dev);
+ 	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
+ 	uint8_t *pQbuffer;
 --
 2.25.1
 
