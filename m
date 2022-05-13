@@ -2,51 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8BDBC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 May 2022 06:14:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D64C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 May 2022 06:14:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377256AbiEMGOa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 May 2022 02:14:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48372 "EHLO
+        id S1377261AbiEMGOf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 May 2022 02:14:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377231AbiEMGOZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2022 02:14:25 -0400
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC8D626FA15
-        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 23:14:18 -0700 (PDT)
-Received: by mail-wr1-x433.google.com with SMTP id t6so10019546wra.4
-        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 23:14:18 -0700 (PDT)
+        with ESMTP id S1377217AbiEMGOS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2022 02:14:18 -0400
+Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E64E926FA20
+        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 23:14:16 -0700 (PDT)
+Received: by mail-wr1-x434.google.com with SMTP id j25so8987552wrc.9
+        for <linux-scsi@vger.kernel.org>; Thu, 12 May 2022 23:14:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=nZOjg8XaBh6CCn6Js3G6uXfs3Op7yvcsYaras8GIlj8=;
-        b=mQSh+ms5+NL9ibLzhzevs3/7uTZWbcZSWelheKfn5E66Rm84nIBINpLsidC1xbazL4
-         ZkVzZ2AWThUzGbRkvSYVkwTwjyFhVD25zTEPUcJg9L7OaoqmvwO/cWckLFXYs0kALyjl
-         r5Ib42OtKSswbevBRFxUqk3laoOMdp/9qfUsFoENplsmwjTMmAFxeZpgccTfJUoUO9vU
-         bkP0/73/2NNzkbDIM4jFAqa9GBMMqTfCuPqm7jkKvEmSuN88QRb0ienHxf2eUmm+18cP
-         3Y9zb4NXVi3M4yr5E6YNPPWsZfxPLnF0xVYdjoZnYVESZuWg7yuAw9fYg4v/r2tS7YBA
-         SqSQ==
+        bh=5QCjzQNVfIHTI2M93e76yaRYudMGDMABQBv/3THcrs0=;
+        b=vYS6qMmJEZVFNULnMGiG3qsBGiCBybGyHh3F32mu4gPpUhpEKTMXB3gNlbkeTpK+Jj
+         Pb1PByrmtrKmUCYDJxjKWvOADoYhS+ecZHjhbJgxims2cBAc3m3IPvin4c2Rr5JX9jbG
+         fnHmkLvQwm9NOzay2YWyWOTZ4WCQa5mfTtqIvWC2GNXG2vmtqr91ds6Cb8b9noveYIIo
+         CLQnKsoGKvHQa+kSFLgb00XcdQ6qxXUeuTHHoKG6RjorWj/swLRWQKFBOpUWOOv++3f+
+         fpvUEQna6eVt8v33qsJKuh8VFQsKHQnnJUWwtjlC9fZh1h741IBejnMZgXz/SMusYNw5
+         B9gQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=nZOjg8XaBh6CCn6Js3G6uXfs3Op7yvcsYaras8GIlj8=;
-        b=j8hCeUtoKfjFi2BpeUHwpFRRqc15uw2IXjVxR5ruw+7kdibyz08PPUztNYHSyylv5j
-         RnOHTMZXFUx8dQsKVW62GiA4n1wP6D8dNApMNk9aWsgHNTRihfZWU5ImL3rev3mGQ1ho
-         RAIKgJ+93HVFs7qEJhhJRbiPD2UWCnSWcQqSUtkmH1+L9ioUNgfwydnEJc75azw62zE6
-         7/NYFnCGzZ65S/6OVdHKXLHsreJQIR8OzSz6yt2Cfb26mDfLcZ93522hLRQqRi3KH5Yf
-         D1a5+R/bdguYlkB1AezfSk+KOba5EWWD4qLiUXgKzIFmuQV4uSHlqrlkgA37owTA+95g
-         mGSA==
-X-Gm-Message-State: AOAM530VUBLIB7jh7N8vh5lEnu/Jdjf+83CavHQg2TvAG/nLz5fH3WK6
-        w3TMKCqVnd3gZhFgN7au9v7kFg==
-X-Google-Smtp-Source: ABdhPJx2CIvfrYk5wtBGS086/J/W4yDfOHmMCCEUwK9Xdb+yFj+w25mFVpRT7qXoE/PEk1kDR64olw==
-X-Received: by 2002:a5d:6d0b:0:b0:20c:4ec7:8e84 with SMTP id e11-20020a5d6d0b000000b0020c4ec78e84mr2413197wrq.281.1652422457425;
-        Thu, 12 May 2022 23:14:17 -0700 (PDT)
+        bh=5QCjzQNVfIHTI2M93e76yaRYudMGDMABQBv/3THcrs0=;
+        b=UneIn7uRYyINiT4fqxypYp7yS4ez0sDngi2PZ+u46HLVXqC0z5qSGyGBH2x1GppscB
+         6k408r1ZMVDMwGt4cuTc32NkSyZIrMsXbziWAkrmjiC5ff+H9hu0TWCDXnwLuBv8dEZY
+         YlZdV4PAYylU2npaRGXG9bD4dXGfdMSK4AcA2+JGDX5hyv5lPzAnFjbgWi32cpQgT0E2
+         nBlgzR7+2VmG2tzJ6W871bcK1xKOngnYMXEymodydfJKaxesa38oAaM/LtHebOJ/MRBZ
+         MJj8jOsXu6xZEfQI0OT/A7Ti8szMmZ9BTboSfBDmSBs5f21oAA5EszM7Jc/XH1z5Hoes
+         KIUQ==
+X-Gm-Message-State: AOAM531sC8UTUVynAkzroXGPKkj1JJcAJU+7VFCsrkvUCAnnEf/EwPaf
+        nROSYTpvzOM+HTxSrdtgUbwHpw==
+X-Google-Smtp-Source: ABdhPJyyIATyKjiRUxeid5jOjreYwVZ6wwH6YSUPZtqc4E+NEAssOgxzP1UL9k5cqWgrg0H/MOTBlg==
+X-Received: by 2002:a5d:630d:0:b0:20a:e1a3:8018 with SMTP id i13-20020a5d630d000000b0020ae1a38018mr2429406wru.489.1652422455421;
+        Thu, 12 May 2022 23:14:15 -0700 (PDT)
 Received: from localhost.localdomain (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
-        by smtp.gmail.com with ESMTPSA id g4-20020adfbc84000000b0020c5253d8f3sm1477760wrh.63.2022.05.12.23.14.15
+        by smtp.gmail.com with ESMTPSA id g4-20020adfbc84000000b0020c5253d8f3sm1477760wrh.63.2022.05.12.23.14.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 May 2022 23:14:16 -0700 (PDT)
+        Thu, 12 May 2022 23:14:14 -0700 (PDT)
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -65,10 +65,11 @@ To:     Andy Gross <agross@kernel.org>,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Rob Herring <robh@kernel.org>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v3 4/7] arm64: dts: qcom: sdm845: control RPMHPD performance states with UFS
-Date:   Fri, 13 May 2022 08:13:44 +0200
-Message-Id: <20220513061347.46480-5-krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v3 3/7] dt-bindings: ufs: common: add OPP table
+Date:   Fri, 13 May 2022 08:13:43 +0200
+Message-Id: <20220513061347.46480-4-krzysztof.kozlowski@linaro.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220513061347.46480-1-krzysztof.kozlowski@linaro.org>
 References: <20220513061347.46480-1-krzysztof.kozlowski@linaro.org>
@@ -78,82 +79,80 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UFS, when scaling gears, should choose appropriate performance state of
-RPMHPD power domain controller.  Since UFS belongs to UFS_PHY_GDSC power
-domain, add necessary parent power domain to GCC.
+Except scaling UFS and bus clocks, it's necessary to scale also the
+voltages of regulators or power domain performance state levels.  Adding
+Operating Performance Points table allows to adjust power domain
+performance state, depending on the UFS clock speed.
+
+OPPv2 deprecates previous property limited to clock scaling:
+freq-table-hz.
 
 Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Rob Herring <robh@kernel.org>
 
 ---
 
 Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- arch/arm64/boot/dts/qcom/sdm845.dtsi | 43 +++++++++++++++++++++-------
- 1 file changed, 33 insertions(+), 10 deletions(-)
+ .../devicetree/bindings/ufs/ufs-common.yaml   | 34 +++++++++++++++++--
+ 1 file changed, 31 insertions(+), 3 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-index 692cf4be4eef..befcdd04d832 100644
---- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-@@ -1078,6 +1078,7 @@ gcc: clock-controller@100000 {
- 			#clock-cells = <1>;
- 			#reset-cells = <1>;
- 			#power-domain-cells = <1>;
-+			power-domains = <&rpmhpd SDM845_CX>;
- 		};
- 
- 		qfprom@784000 {
-@@ -2326,18 +2327,40 @@ ufs_mem_hc: ufshc@1d84000 {
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
- 				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
- 				<&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
--			freq-table-hz =
--				<50000000 200000000>,
--				<0 0>,
--				<0 0>,
--				<37500000 150000000>,
--				<0 0>,
--				<0 0>,
--				<0 0>,
--				<0 0>,
--				<0 300000000>;
- 
-+			operating-points-v2 = <&ufs_opp_table>;
- 			status = "disabled";
+diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+index 47a4e9e1a775..d7d2c8a136bb 100644
+--- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
++++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+@@ -20,11 +20,24 @@ properties:
+       items:
+         - description: Minimum frequency for given clock in Hz
+         - description: Maximum frequency for given clock in Hz
++    deprecated: true
+     description: |
++      Preferred is operating-points-v2.
 +
-+			ufs_opp_table: opp-table {
-+				compatible = "operating-points-v2";
+       Array of <min max> operating frequencies in Hz stored in the same order
+-      as the clocks property. If this property is not defined or a value in the
+-      array is "0" then it is assumed that the frequency is set by the parent
+-      clock or a fixed rate clock source.
++      as the clocks property. If either this property or operating-points-v2 is
++      not defined or a value in the array is "0" then it is assumed that the
++      frequency is set by the parent clock or a fixed rate clock source.
 +
-+				opp-50000000 {
-+					opp-hz = /bits/ 64 <50000000
-+						 0
-+						 0
-+						 37500000
-+						 0
-+						 0
-+						 0
-+						 0
-+						 // FIXME: value 0 copied from freq-table-hz
-+						 0>;
-+					required-opps = <&rpmhpd_opp_svs>;
-+				};
++  operating-points-v2:
++    description:
++      Preferred over freq-table-hz.
++      If present, each OPP must contain array of frequencies stored in the same
++      order for each clock.  If clock frequency in the array is "0" then it is
++      assumed that the frequency is set by the parent clock or a fixed rate
++      clock source.
 +
-+				opp-200000000 {
-+					opp-hz = /bits/ 64 <200000000
-+						 0
-+						 0
-+						 150000000
-+						 0
-+						 0
-+						 0
-+						 0
-+						 300000000>;
-+					required-opps = <&rpmhpd_opp_nom>;
-+				};
-+			};
- 		};
++  opp-table: true
  
- 		ufs_mem_phy: phy@1d87000 {
+   interrupts:
+     maxItems: 1
+@@ -75,8 +88,23 @@ properties:
+ 
+ dependencies:
+   freq-table-hz: [ 'clocks' ]
++  operating-points-v2: [ 'clocks', 'clock-names' ]
+ 
+ required:
+   - interrupts
+ 
++allOf:
++  - if:
++      required:
++        - freq-table-hz
++    then:
++      properties:
++        operating-points-v2: false
++  - if:
++      required:
++        - operating-points-v2
++    then:
++      properties:
++        freq-table-hz: false
++
+ additionalProperties: true
 -- 
 2.32.0
 
