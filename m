@@ -2,69 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACE8DC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 May 2022 20:27:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E60EDC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 May 2022 20:56:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1382354AbiEMU16 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 May 2022 16:27:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56700 "EHLO
+        id S1378993AbiEMU41 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 May 2022 16:56:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1384179AbiEMU14 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2022 16:27:56 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0A101116A;
-        Fri, 13 May 2022 13:27:54 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 567A7B831C3;
-        Fri, 13 May 2022 20:27:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 1C84FC34100;
-        Fri, 13 May 2022 20:27:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652473672;
-        bh=B7YkBURDF1+FnxVQEIccEngvzMw5jb+93dTOUbcW/zE=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=AdcAtW2Fcnr9I82BB3eSckwgiHUNb7nOjXzeVxvPYtmq4ag3K5hgaFLwztuDLuJ5J
-         j82HevKqAztt4aqcRmU0CDFGWt8cB1P6j1vAiwchb8QX24R/XkAm5AUbYq+r18BhEj
-         BuNQVKW2bmtMOBhN/yh/NzQQiOIWs595cz/MZ30CiZh9jIjsi2f8UjMWxZyG5mf4ZH
-         QY1sUJuPEHm10lDAfjGUvJKjn3fHx550OsPzQnoXAx/uAUqaQPbCTmYhFXAtm3RmSK
-         12H8bIv9wEIkVTyzik7+54SDdiPYpJNUySPECkaprw6ijYp7jZFxyqHhJlSxIIZckq
-         C6LMkOy1WJrZw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 08CF8F0389D;
-        Fri, 13 May 2022 20:27:52 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 5.18-rc6
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <892647cabbe1e3b2134f4667c3edadd853d51602.camel@HansenPartnership.com>
-References: <892647cabbe1e3b2134f4667c3edadd853d51602.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <892647cabbe1e3b2134f4667c3edadd853d51602.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 7752662071053adcdb6b6e7853834205dd60e1c0
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: f2dd007445b1d4c0581d0292f85fdd5b47387776
-Message-Id: <165247367202.7375.5766271969428521513.pr-tracker-bot@kernel.org>
-Date:   Fri, 13 May 2022 20:27:52 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S232786AbiEMU40 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2022 16:56:26 -0400
+Received: from rcdn-iport-5.cisco.com (rcdn-iport-5.cisco.com [173.37.86.76])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E314E004;
+        Fri, 13 May 2022 13:56:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=cisco.com; i=@cisco.com; l=1898; q=dns/txt; s=iport;
+  t=1652475384; x=1653684984;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=M7eUi4rugKzQW5rQyZA2HgaMKOcAHQUfdaskZoW+NRI=;
+  b=N3fAtB1PCcYV/ou31YoQsAMp7BpCT7QbtkyeaDTm/2+C/Ig4tM9nnD3M
+   IV3WjCZNuRI1+WJcwwd8HSgRbbtNPjmn0OPlR6HWKetsYP7IRfRQ1JHP0
+   2Y2onSo/VK5QGZBuAovdSGNlNH5gMELpspCboSnptudc7KIopcUv8QahA
+   Y=;
+X-IronPort-AV: E=Sophos;i="5.91,223,1647302400"; 
+   d="scan'208";a="759696194"
+Received: from rcdn-core-6.cisco.com ([173.37.93.157])
+  by rcdn-iport-5.cisco.com with ESMTP/TLS/DHE-RSA-SEED-SHA; 13 May 2022 20:56:23 +0000
+Received: from localhost.cisco.com ([10.193.101.253])
+        (authenticated bits=0)
+        by rcdn-core-6.cisco.com (8.15.2/8.15.2) with ESMTPSA id 24DKu8Pc010787
+        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Fri, 13 May 2022 20:56:20 GMT
+From:   Karan Tilak Kumar <kartilak@cisco.com>
+To:     sebaddel@cisco.com
+Cc:     arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
+        satishkh@cisco.com, gvaradar@cisco.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Karan Tilak Kumar <kartilak@cisco.com>
+Subject: [PATCH] scsi: fnic: Replace DMA mask of 64 bits with 47 bits
+Date:   Fri, 13 May 2022 13:56:05 -0700
+Message-Id: <20220513205605.81788-1-kartilak@cisco.com>
+X-Mailer: git-send-email 2.31.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Authenticated-User: kartilak@cisco.com
+X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
+X-Outbound-Node: rcdn-core-6.cisco.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 13 May 2022 14:58:20 -0400:
+Cisco VIC supports only 47 bits.
+If the host sends DMA addresses that are greater than 47
+bits, it causes work queue (WQ) errors in the VIC.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Co-developed-by: Dhanraj Jhawar <djhawar@cisco.com>
+Signed-off-by: Dhanraj Jhawar <djhawar@cisco.com>
+Co-developed-by: Sesidhar Baddela <sebaddel@cisco.com>
+Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
+Signed-off-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
+Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
+Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
+---
+ drivers/scsi/fnic/fnic.h      | 2 +-
+ drivers/scsi/fnic/fnic_main.c | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/f2dd007445b1d4c0581d0292f85fdd5b47387776
-
-Thank you!
-
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index aa07189fb5fb..85ec6163ddab 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -39,7 +39,7 @@
+ 
+ #define DRV_NAME		"fnic"
+ #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+-#define DRV_VERSION		"1.6.0.53"
++#define DRV_VERSION		"1.6.0.54"
+ #define PFX			DRV_NAME ": "
+ #define DFX                     DRV_NAME "%d: "
+ 
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 460e03a55096..51e7c344ddc3 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -612,10 +612,10 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	pci_set_master(pdev);
+ 
+ 	/* Query PCI controller on system for DMA addressing
+-	 * limitation for the device.  Try 64-bit first, and
+-	 * fail to 32-bit.
++	 * limitation for the device.  Try 47-bit first, and
++	 * fail to 32-bit. Cisco VIC supports 47 bits only.
+ 	 */
+-	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
++	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(47));
+ 	if (err) {
+ 		err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+ 		if (err) {
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.28.0
+
