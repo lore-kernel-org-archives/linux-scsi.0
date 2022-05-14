@@ -2,94 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86191C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 14 May 2022 02:57:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E409C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 May 2022 09:49:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230215AbiENC5V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 May 2022 22:57:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60116 "EHLO
+        id S231587AbiENJtq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 14 May 2022 05:49:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230319AbiENCzg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2022 22:55:36 -0400
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A3DF3427AA;
-        Fri, 13 May 2022 19:41:38 -0700 (PDT)
-Received: by mail-pj1-f47.google.com with SMTP id j10-20020a17090a94ca00b001dd2131159aso12424808pjw.0;
-        Fri, 13 May 2022 19:41:38 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=ruNVL6DayK6ln7TndvoBaHbZun5aJyL13XuWbDCegG0=;
-        b=y06J1wAy8jNk0IoC+Se/QSI2nZbpb5LVap+m2F5xuPMCj0k4G5P4011SHfvN4zysWg
-         azug38qlND8sdDK97F0TZdvWAPXVsx24sukfNaIkBtUYtTEvl5JOHW48tomDhDdrruAn
-         Yi+XMvGalMAeKOEwh18SOi81d9L3wXXCIqZgKWwPw1vbStcCLQbwbJzMS+222+fF8W1A
-         ofWHUxXCMm8xop7w5pSAQF/p7IDa0522IWkye9GTVaSRoowbpxlk/b2GNFIHJaTxrvX4
-         2ZpXHdl1DXYgrtlpfDKPtC4nv/UoqK0nvN71ktXnH75rkxVVRJ1kSWVaI8wRcYraGfoD
-         mJTw==
-X-Gm-Message-State: AOAM533c3KKnR9zMPBvjzKXUNPnTTdD5+M5hUyx9gvVSUvrNBDHrNLiy
-        ataJTA8O/veL1b7zdjjXiJA=
-X-Google-Smtp-Source: ABdhPJyILAujfkR+f4aG7ZVSsJIkaeu+GmGudqvdunSorB2oGvvzIVNHRhdSPE1nLC9p3a+9IC14Iw==
-X-Received: by 2002:a17:90b:2311:b0:1d9:2e43:c7ae with SMTP id mt17-20020a17090b231100b001d92e43c7aemr18944133pjb.47.1652496098092;
-        Fri, 13 May 2022 19:41:38 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id c14-20020a170902848e00b0015e8da1f9e8sm2537827plo.77.2022.05.13.19.41.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 13 May 2022 19:41:37 -0700 (PDT)
-Message-ID: <7e12e950-fece-845f-6784-d3e59480f810@acm.org>
-Date:   Fri, 13 May 2022 19:41:35 -0700
+        with ESMTP id S231552AbiENJtp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 14 May 2022 05:49:45 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98D074F441;
+        Sat, 14 May 2022 02:49:23 -0700 (PDT)
+Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4L0gZx14z1z67Xmk;
+        Sat, 14 May 2022 17:44:25 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Sat, 14 May 2022 11:49:20 +0200
+Received: from [10.47.26.143] (10.47.26.143) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2375.24; Sat, 14 May
+ 2022 10:49:19 +0100
+Message-ID: <0f274df2-e7e2-bfca-14b5-631fe78fc6da@huawei.com>
+Date:   Sat, 14 May 2022 10:49:18 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.1
-Subject: Re: [PATCH linux-next] scsi: target: cxgbit: replace ternary operator
- with min()
-Content-Language: en-US
-To:     Guo Zhengkui <guozhengkui@vivo.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Max Gurtovoy <mgurtovoy@nvidia.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Varun Prakash <varun@chelsio.com>,
-        "open list:SCSI TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        "open list:SCSI TARGET SUBSYSTEM" <target-devel@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Cc:     zhengkui_guo@outlook.com
-References: <20220512133754.40849-1-guozhengkui@vivo.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220512133754.40849-1-guozhengkui@vivo.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [bug report] IOMMU reports data translation fault for fio testing
+To:     Bart Van Assche <bvanassche@acm.org>,
+        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+CC:     "chenxiang66@hisilicon.com >> Xiang Chen" <chenxiang66@hisilicon.com>,
+        "liyihang (E)" <liyihang6@hisilicon.com>
+References: <2b7d091b-4caf-948f-b41a-29a7fcb9fc2a@huawei.com>
+ <f5739f11-f07c-3bfe-451a-6d7a24550e61@acm.org>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <f5739f11-f07c-3bfe-451a-6d7a24550e61@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.26.143]
+X-ClientProxiedBy: lhreml704-chm.china.huawei.com (10.201.108.53) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/12/22 06:37, Guo Zhengkui wrote:
-> diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-> index 3336d2b78bf7..6d9a13da6cb7 100644
-> --- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-> +++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-> @@ -1008,7 +1008,7 @@ int cxgbit_ofld_send(struct cxgbit_device *cdev, struct sk_buff *skb)
->   	ret = cxgb4_ofld_send(cdev->lldi.ports[0], skb);
->   	if (ret < 0)
->   		kfree_skb(skb);
-> -	return ret < 0 ? ret : 0;
-> +	return min(ret, 0);
->   }
->   
->   static void cxgbit_release_tid(struct cxgbit_device *cdev, u32 tid)
-> @@ -1039,7 +1039,7 @@ cxgbit_l2t_send(struct cxgbit_device *cdev, struct sk_buff *skb,
->   	ret = cxgb4_l2t_send(cdev->lldi.ports[0], skb, l2e);
->   	if (ret < 0)
->   		kfree_skb(skb);
-> -	return ret < 0 ? ret : 0;
-> +	return min(ret, 0);
->   }
->   
->   static void cxgbit_send_rx_credits(struct cxgbit_sock *csk, struct sk_buff *skb)
+On 14/05/2022 03:28, Bart Van Assche wrote:
+> On 5/13/22 05:01, John Garry wrote:
+>> It could be an issue with the SCSI hba driver.
+> 
+> That seems likely to me.
 
-I prefer to keep the existing code since "return min(ret, 0)" is not how 
-humans write kernel code.
+Sure, that would be common wisdom. However the commit before anything 
+related to driver was added for 5.18 is also bad. It could be 
+pre-existing, but that starts to seem unlikely. Or it could still be an 
+IOMMU issue - we already have a performance issue there.
+
+This issue can take more than 15 minutes to occur, so is pretty painful 
+to bisect...
 
 Thanks,
+John
 
-Bart.
+
