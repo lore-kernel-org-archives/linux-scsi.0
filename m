@@ -2,233 +2,159 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 373A5C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 May 2022 06:10:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3898C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 May 2022 08:48:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240243AbiEPGKg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 May 2022 02:10:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57684 "EHLO
+        id S241923AbiEPIsO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 May 2022 04:48:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240212AbiEPGKe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 May 2022 02:10:34 -0400
-Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 000B120F79
-        for <linux-scsi@vger.kernel.org>; Sun, 15 May 2022 23:10:30 -0700 (PDT)
-Received: by mail-lj1-x234.google.com with SMTP id g16so16859641lja.3
-        for <linux-scsi@vger.kernel.org>; Sun, 15 May 2022 23:10:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=zib3uaRuFHQp5m+3/8oVVWs2fT/RhjrDBvhpgKAcf3A=;
-        b=T8a68Wcn4gY9NFXddamoH+rRrUy8g81C6ugx+hQrWs90thVEoFpfoW5rfePda8J8Ti
-         KhYLE5GeSNkseGhg6lt7Uw3CFsrabahfUTN6w49xWFaBgVGI0x9XP77w7igMPyaJ68Cq
-         qg8vUoA0kBuM1wr5DCpHhE3FpkgNX+KKJZK6qCoalPD/rQiLoRs9/bYs/l0ErwlkoH0P
-         1viy/5jm8JiHRHEICvrFZ3mP4KXxz85YQeOIAL0QqJ1J/jLc0LdzwVX5OH8SXaqpQEH3
-         cNP78pu268Ud97vfkkEiS4RW+MJ/RzJICDEG0kc8MdHqBzJU5DPGyHb+S8K2sDRzFhMV
-         K1KA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=zib3uaRuFHQp5m+3/8oVVWs2fT/RhjrDBvhpgKAcf3A=;
-        b=IPaVBA0/ONPxAjnolR+PYhIMEwKjnbI6CjbxtE2WLKwGnCZf/zDejoEzuVk0BVBMRq
-         ddySaBe8BtLKjCYTriLnxUtPwn1+S+H3aqQwb2fDNiu5hsCIWy8w5Jh7EIvJ6P+7kZnF
-         VP2K3BE18GWz5L2tGel/aWWkigUSsZzxvSKf4eEefpo/lwoASbfRdpK5A/Qb1oOoNm7D
-         ON+BwsuYj9md47cQdEbSjAXnzDZsE2C1awFyMO7sP8J9l8JAIzFng1p+rwFp1dqHuWRV
-         QpeVX72kTy7uegXar5jzxfTWdPZi8ZlGBhq48Y0oYcE1ocQnm8XmJf0cZq/IxXD8ja1B
-         vjQg==
-X-Gm-Message-State: AOAM530y0FcjFpvxVEu1bD3lPU8HzSQaix9aahPXyIFF7U147h2o18pn
-        t7NJ9Su98TjebO0JnkCUi1y10Q==
-X-Google-Smtp-Source: ABdhPJyrZUQf7WD5zZ0nqfhRfXzM6EGNE+a7PhnPAP8HR3cuJ7y91FoKEpx/vEUszqhSySkNWYqKKw==
-X-Received: by 2002:a05:651c:399:b0:24f:18d:5bbd with SMTP id e25-20020a05651c039900b0024f018d5bbdmr10166934ljp.481.1652681429224;
-        Sun, 15 May 2022 23:10:29 -0700 (PDT)
-Received: from [192.168.0.17] (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
-        by smtp.gmail.com with ESMTPSA id j9-20020a19f509000000b0047255d210f2sm1208147lfb.33.2022.05.15.23.10.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 15 May 2022 23:10:28 -0700 (PDT)
-Message-ID: <eecf3117-772a-f50a-5d09-4d729dea7561@linaro.org>
-Date:   Mon, 16 May 2022 08:10:27 +0200
-MIME-Version: 1.0
+        with ESMTP id S241940AbiEPIsI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 May 2022 04:48:08 -0400
+Received: from EUR04-VI1-obe.outbound.protection.outlook.com (mail-eopbgr80095.outbound.protection.outlook.com [40.107.8.95])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 643D126D6;
+        Mon, 16 May 2022 01:47:59 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=CFxKRr55pgocAXgjMQzAWcN4979kjCierMXuiOdjrOqWWGcoY1rAPsUd2azxF65VQ6HFvCXOpE6IQ+/eQ7oBnv0igD1Yr8lmR0gPG+gcHFOXmCSPoCSP1GrIkjog/QKLwTIqmIpdp3WiaJyHREASFEsWsuOcUkotzegTq1DoBKa4hbZvwuoo6C8eTU7An/X/W6Rc3Xbwi5cOOOqFaIqIYdmjEwGZ9T8lPEtuVx4jslqBBc2Ynpzjplw9qZfvJGj9k8DNxxvLmRvYBmMWvHB/rQN2eRkklaz+qQf2Jz4J0PuKdQcxaT9+ufTbkWWc7U7W0BrN/0KDOpNMb/svq7g22A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=GDvNFQ1mQkdXPJ+TOlPV819zmFUh4T83CRxTObhiXYk=;
+ b=KiVXO95mtDaKgrZhm12S7L0XQhIGR0RNiLb6D5yY32+9e53e65IyB670dr9NaC/GMuJfhas1oZkC/cmBChM17g0LFmqU+6tuJuOHg8dRobWV0Up8EcFZ8ICgR5o6iJm+1ONpTEo/A8BkxeslTO2LW3WJU+oe9qLpaw7z6MDsRs+6nwxhIGTLqLdaBgAiDKVBIscuiWkdivCx6Wma2ZwG6XtkzzJiHPnxRKqAKqbzEpVnUnMDp71xm2atz0ofuyH4b/pP7XnSCRaeuacgC/6sgLlAFuXydpL9afwe019IniCkEjGrUI/eGuCG83ZvS9tSrjs2UpwiKKL6L2APyqu6fA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=prevas.dk; dmarc=pass action=none header.from=prevas.dk;
+ dkim=pass header.d=prevas.dk; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=prevas.dk;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=GDvNFQ1mQkdXPJ+TOlPV819zmFUh4T83CRxTObhiXYk=;
+ b=cRlFIV/oifqb2eD4SK5KPIcgFiEPdafnhMlHZZXXDXMubMVOJSxIs2yJxRxF9ftYrdk1d31SY8o0Ajo9RrAh7+B552yCOyw5R2rVHW5G84/mEw2YUZqVpccRgofIdDitUF6FdBTe+KOdiavAeliHvLXvGM7ED8kPzQ7NIQJe3+g=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=prevas.dk;
+Received: from DU0PR10MB5266.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:10:34a::22)
+ by AM0PR10MB2034.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:208:42::29) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.13; Mon, 16 May
+ 2022 08:47:56 +0000
+Received: from DU0PR10MB5266.EURPRD10.PROD.OUTLOOK.COM
+ ([fe80::7d61:b91a:e773:4e]) by DU0PR10MB5266.EURPRD10.PROD.OUTLOOK.COM
+ ([fe80::7d61:b91a:e773:4e%4]) with mapi id 15.20.5250.017; Mon, 16 May 2022
+ 08:47:56 +0000
+Message-ID: <0db186ce-f789-f306-46ed-74ba75dec028@prevas.dk>
+Date:   Mon, 16 May 2022 10:47:53 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.1
-Subject: Re: [PATCH v3 7/7] ufs: use PM OPP when scaling gears
+ Thunderbird/91.7.0
+Subject: Re: ERROR: drivers: iscsi: iscsi_target.c
 Content-Language: en-US
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Taniya Das <tdas@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20220513061347.46480-1-krzysztof.kozlowski@linaro.org>
- <20220513061347.46480-8-krzysztof.kozlowski@linaro.org>
- <20220513182546.GD1922@thinkpad>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20220513182546.GD1922@thinkpad>
+To:     Test Bot <zgrieee@gmail.com>, linux-kernel@vger.kernel.org
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, torvalds@linux-foundation.org
+References: <CAOFRbGmGr2Z_sbYmE0SZT48CFkNAWVABnC_4V6x9PzZw-LJO4w@mail.gmail.com>
+From:   Rasmus Villemoes <rasmus.villemoes@prevas.dk>
+In-Reply-To: <CAOFRbGmGr2Z_sbYmE0SZT48CFkNAWVABnC_4V6x9PzZw-LJO4w@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: GV3P280CA0103.SWEP280.PROD.OUTLOOK.COM (2603:10a6:150:8::8)
+ To DU0PR10MB5266.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:10:34a::22)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 66c9e187-eb3d-4adc-43f7-08da3718c5ce
+X-MS-TrafficTypeDiagnostic: AM0PR10MB2034:EE_
+X-Microsoft-Antispam-PRVS: <AM0PR10MB20347A2FCEC1786703A03B5193CF9@AM0PR10MB2034.EURPRD10.PROD.OUTLOOK.COM>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: PjirmxJwk5tP23SoKF7Ohcfb5iyLAsqKIEwdBKiyPzvfQ4Aisr1Azjj8UegJAGllYbOi8MI02OGf7k2UYlHhF1wULejUyR5UWPIEpSyMRqIzXIqSAakWUEABZbZV/Lv4Y5aLRZYOYzOB9N+6KBSujP7rJLNK8z7+wfwqq4Noz1/I8rGaokbQxOJVvQfWsaotm9maXXk8HYio2QBy/5h4GSi8Th6HlaWSqNf+MqkBU3txr074Y26Zl1XZPyl7xT/G/4+Gewq5PcgVX5XoKX994m79cMtaayBnqnKnEWPeqieZ1kShASkD9jLhDJWZ1dmkiiX8Sa39qqMqDp0uKelUTu1SsPI44qunPD9gmPQxqWdt53J3Wa2YvMH8CigBUwKfNPeL02gG0+7+4sj1zwWtWTuTJRL3PJm60HHbPkTxxApeNIZqURHpkc1SvJ+Rk1eJRHud7vVu/HQYokw1eYjUbbev7OhFY3PQooYeXuhx8LvSfyoUU97h/qh07qD+sn6wyJoJE6QXIa8IlQlTEvg+ZHut8LXrAlaYP6oCNHYRoYQn1fiFMIPxVZf/SO5/frCP3Jx/IYQ2kbtrUKVYbHuw/kcz/y/q6RxNv9wHxpwZdayf0VZFnlWjcFbTZOW9QM3Oot71mAziZLG0BLfz9n5Q9Z+GsfuLmAnpuodBFKioIA948N0HudFr5eTI58+zQzGlil77j6S1ANazTZerphb0Hbf3xNYZvrcJy/tlIiwCEZZM9gcelNS8g3dNcS9bhKzJR6vaiYGz5ZMT0A+FBYWTyg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU0PR10MB5266.EURPRD10.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(366004)(86362001)(8676002)(66556008)(66476007)(66946007)(31696002)(4326008)(26005)(52116002)(186003)(8936002)(508600001)(8976002)(44832011)(38350700002)(5660300002)(4744005)(38100700002)(6486002)(2906002)(36756003)(2616005)(6666004)(316002)(6512007)(31686004)(83380400001)(6506007)(45980500001)(43740500002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?bHN0S3hQc01xLzE1Mm8yS21ONklwa1hscDZFZExPb1NMdGp4UG9YQVhvRzZq?=
+ =?utf-8?B?bkxOckh2Y3VORTNxTXFJRmIreDJMWnp5MG1pRUNEQzJrS3ZyYjRaTnF3eXpP?=
+ =?utf-8?B?QXh1QVBaVWVzY1Y5S3RsbkZxWTF5RWFCYnJ4UitwU25UNm1ERitZajYydEls?=
+ =?utf-8?B?Q1l4dGZGNWRycnR0OCswVFZWUTM3Q1RFS0lVcHpKQjhLTlN3WGsvbm5HdkFU?=
+ =?utf-8?B?OG9scVMxVHpuZ2wraHYvdTdKSmpCY29MWUtMMUd4QXM3Qmg4YTBHVzNXbXNU?=
+ =?utf-8?B?czlmVG5Vd2xiUk84M0ZzSnhBSStTS0U3UXlDWDJIL1gwSVAxOTJmYm9kRFdR?=
+ =?utf-8?B?dkpHWW80a3lNSDFjb0xEOCtYbUdYOTZVOU1ocXRIMFg3c1pZZXA2b2JjOTZJ?=
+ =?utf-8?B?cmZQcXdjd3FXU0RTV2ZvSDg3bzNUaSt2M1JScmxrWlVjYUx4MWRFOHRpalgz?=
+ =?utf-8?B?cDg3SFVSSWY2NWtYL1V5NG1tQUJFdDBja2Q2VGU1aWg4eVo0MmQ3S04rbHdu?=
+ =?utf-8?B?VmlaVy9kWEZyamw3RzJHU1VRUlRQeW5CeVJsaVJxalpGbSt4YlJqMkJyS2VN?=
+ =?utf-8?B?YkFuam14OUkzSEFBdm1vUGRGK2c0TGVveldiNkhzQmhzcldMQVF6SmJHaUpx?=
+ =?utf-8?B?Ymc2QkJtK1M4anE1TXBoMUJXSENaWitpa3RvMWVwei9HYTJUSHNGM1drb2Jh?=
+ =?utf-8?B?NjlyZ051bTNiQ1Q1cjlPdGZUNWoxeTVFNnJkZVpLQkFMOHRscVhwWDJNd0g2?=
+ =?utf-8?B?RWk3VUtobUJWQ081SEtMdlNiaHJqR0s2T0FEU1ppVFduTTN1SGU3Kzk0alEr?=
+ =?utf-8?B?OXROZTZDR1JqY2R6T3hGT3VRSzFWUW1zdVNUbE9Zb1RXSU1pak92Z1I2ZnNC?=
+ =?utf-8?B?UlplVW10d05DbUhSeWQySUxEV1hlQXVuWDRJc1Z0OEJ2S2R0KzlPQkxQMjdv?=
+ =?utf-8?B?RFlJMm9QNVBWL2Y3UWtpUjdaaHBzVDZTcVQwMlYzUTVhZ2RXLzNhRERXK2FC?=
+ =?utf-8?B?UnFSKyt1Uy9EajM5UVB4VzBPNHdvNmhKWEx3SktEV2xkMGt4WU5MOS9FeklB?=
+ =?utf-8?B?Nll5V1kydW01Wk12eWtrdW53eXBYN0Exc1Vhc2xra1ZCM3kxeGM5T2JabjBX?=
+ =?utf-8?B?eUg1dVFXWU9yM2Q5Nm1VT0ZOMHgzNzdXMUYxdVJvZytSeTBzUVVUSXZVQWoy?=
+ =?utf-8?B?SDk1bE5BYzBvVzdZcGlycU10dG1UVXBFbVlnQ3orN2NrYktHSHRwaDNvNlF3?=
+ =?utf-8?B?MmFkSDZuK1NPODljT0c1UW9PUm94K0xBS1VxejBrY2RsM1I1b1h4SnNRMmgx?=
+ =?utf-8?B?WDV0NUdNY2xDQVUxSFBaNUhnL0JlWk1EVmpmUndMSFJqZGUvVnI5cnBOQkFy?=
+ =?utf-8?B?NmRBbDFOUzhKaXk2aXV1bWptSnJmWm5sOHhRbFlyS3FaK3FFNXFiMTZTWmJh?=
+ =?utf-8?B?SFBQcDVDTWQ5TWZnRWdCWDdUK3YrVVlobFNmOCtVbjlTWjlrcStjMjNNb0lY?=
+ =?utf-8?B?MEl6S3BiRUlWNjd2ckVId3hnQzdOYk9MbXpla1QxbCtNRDJhc0MvOXA1UHRF?=
+ =?utf-8?B?MkRPOTVPYmVkdnZTdDlncEdCSHlQeFdwejZJY1dQNkFzMUpQbEU4SkxyQ0ho?=
+ =?utf-8?B?MnQ5aTVhcGFFd3Q2T3VqQU5xWG11eHpJMWNDa2VsRGtVdzBlbmFUSXJ0dWRM?=
+ =?utf-8?B?Zld3VFFxYm9GWXk1SSs3bUlsZkNBV0t2QStkVTBId1psQzJWVllSMEhrUVBR?=
+ =?utf-8?B?UTZycFhoUzFaM29abTQxdjAyUUtkOXZaN2U3Y2dobU9uMllDakQveVdFNjlF?=
+ =?utf-8?B?KzRlRGUxQS8wQjZOVGJGQzNFSVg4cEFsZzdxN21xVWpEelBoQ0VuN3JCQmdo?=
+ =?utf-8?B?SnlaOTJEc3FyU2dGTU9WanRCWmtxSWxjWEFPeEdwbEhSWE1RcWI0bzJoWjhV?=
+ =?utf-8?B?bEJUZFF3MDJYci9NaS9hS2lvdU93ZXpXdFY1NUdhUkJXU0hsSGhDcWdSS3hB?=
+ =?utf-8?B?L2JDUDVUbGdaYyt0ZHlpL1BCWVR2ZmhIbUdyMlVKNzNJanNDdmVSUUg1ZUhZ?=
+ =?utf-8?B?eUNSdlQ0blhBcnlIOE9EOTBiRUJBR05yU3UvV1FTMVVuRE96TlBjQlVxbStJ?=
+ =?utf-8?B?bVJTV1BmNzdDdTdKMTQzTDZFYkJUL3pZeWFQZE9iMm95RGx1a1lFVFI4N254?=
+ =?utf-8?B?UWZPeml2eFdrVy9KUkpTTzM5STBTK1dyci92LzFVZnJ3RVlxKzBlUDlWYWlG?=
+ =?utf-8?B?SE85NTRUNDJDQVBYMjZjblN4Mi9vb21VbkJWOWpxSTFWdjJ6ZXVRdWU2RUcz?=
+ =?utf-8?B?eDlLaFhiSU5xT1VMZElHVStLQTFlUDQwRm5KRkxsNTBpaVM0TDIzUGNUaHJr?=
+ =?utf-8?Q?7na8HFxTPBOXSTcs=3D?=
+X-OriginatorOrg: prevas.dk
+X-MS-Exchange-CrossTenant-Network-Message-Id: 66c9e187-eb3d-4adc-43f7-08da3718c5ce
+X-MS-Exchange-CrossTenant-AuthSource: DU0PR10MB5266.EURPRD10.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 May 2022 08:47:56.5749
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: d350cf71-778d-4780-88f5-071a4cb1ed61
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: bl3FEYzRdwNz0mzYSQOwUw4VCcCZJrSzKt/XBfAax+fvvIdweLKudIx4X1uXIMtzXa1siUw8fP920kIoCw/JWgp1z8cHDUWvEF+alwU25yo=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR10MB2034
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13/05/2022 20:25, Manivannan Sadhasivam wrote:
-> On Fri, May 13, 2022 at 08:13:47AM +0200, Krzysztof Kozlowski wrote:
->> Scaling gears requires not only scaling clocks, but also voltage levels,
->> e.g. via performance states.
->>
->> Use the provided OPP table, to set proper OPP frequency which through
->> required-opps will trigger performance state change.  This deprecates
->> the old freq-table-hz Devicetree property and old clock scaling method
->> in favor of PM core code.
->>
+On 12/05/2022 20.42, Test Bot wrote:
+> Hi,
 > 
-> To be clear, you are not changing the voltages (UFS supplies) through OPP. But
-> rather handle only clks and leave the power domain handling to parent OPP
-> device.
+> I automatically test (RC) kernel and caught ERROR word.
+> Please ignore, if its unimportant.
+> 
+> Kernel: 5.18-rc6
+> Arch: x86_64 (SMP)
+> Compiler: 7.5.0 (gcc)
+> 
+> Codebase Block:
+> 
+> void iscsit_thread_get_cpumask(struct iscsi_conn *conn)
+> {
+>         int ord, cpu;
+>         cpumask_t conn_allowed_cpumask;
+> 
+>         cpumask_and(&conn_allowed_cpumask, iscsit_global->allowed_cpumask,
+>                     cpu_online_mask);
+> 
+>        cpumask_clear(conn->conn_cpumask);
+>         ord = conn->bitmap_id % cpumask_weight(&conn_allowed_cpumask);
+>         for_each_cpu(cpu, &conn_allowed_cpumask) {
+>                 if (ord-- == 0) {
+>                         cpumask_set_cpu(cpu, conn->conn_cpumask);
+>                         return;
+>                 }
+>         }
+>         dump_stack();
+>         cpumask_setall(conn->conn_cpumask);
+> }
 
-Correct, the patchset itself does not introduce itself regulator
-control. For Qualcomm (and maybe others) these will be scaled via OPP
-performance states.
+Hm, looks like cpumask.h should also expose a wrapper for
+bitmap_ord_to_pos ...
 
-> 
->> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
->> Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->>
->> ---
->>
->> Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
->> ---
->>  drivers/scsi/ufs/ufshcd-pltfrm.c |  73 +++++++++++++++
->>  drivers/scsi/ufs/ufshcd.c        | 150 ++++++++++++++++++++++++-------
->>  drivers/scsi/ufs/ufshcd.h        |   6 ++
->>  3 files changed, 195 insertions(+), 34 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
->> index 3ab555f6e66e..a603ca8e383b 100644
->> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
->> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
->> @@ -10,6 +10,7 @@
->>  
->>  #include <linux/module.h>
->>  #include <linux/platform_device.h>
->> +#include <linux/pm_opp.h>
->>  #include <linux/pm_runtime.h>
->>  #include <linux/of.h>
->>  
->> @@ -108,6 +109,72 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
->>  	return ret;
->>  }
->>  
->> +static int ufshcd_parse_operating_points(struct ufs_hba *hba)
->> +{
->> +	struct device *dev = hba->dev;
->> +	struct device_node *np = dev->of_node;
->> +	struct ufs_clk_info *clki;
->> +	const char *names[16];
->> +	int cnt, i, ret;
->> +
->> +	if (!of_find_property(dev->of_node, "operating-points-v2", NULL))
->> +		return 0;
->> +
->> +	cnt = of_property_count_strings(np, "clock-names");
->> +	if (cnt <= 0) {
->> +		dev_warn(dev, "%s: Missing clock-names\n",
->> +			 __func__);
-> 
-> This is a hard error, right? So why not dev_err()?
-
-Good point, but actually this (and following cases) should be return 0,
-because clocks/freq-table/opp-points are not required properties. The
-original code (parsing it for freq-table-hz) also does not treat it as
-error.
-
-> 
->> +		return -EINVAL;
->> +	}
->> +
->> +	if (cnt > ARRAY_SIZE(names)) {
->> +		dev_info(dev, "%s: Too many clock-names\n",  __func__);
-> 
-> dev_err()?
-> 
->> +		return -EINVAL;
->> +	}
->> +
->> +	if (of_find_property(np, "freq-table-hz", NULL)) {
->> +		dev_info(dev, "%s: operating-points and freq-table-hz are incompatible\n",
->> +			 __func__);
-> 
-> dev_err()?
-> 
->> +		return -EINVAL;
->> +	}
->> +
->> +	for (i = 0; i < cnt; i++) {
->> +		ret = of_property_read_string_index(np, "clock-names", i,
->> +						    &names[i]);
->> +		if (ret)
->> +			return ret;
->> +
->> +		clki = devm_kzalloc(dev, sizeof(*clki), GFP_KERNEL);
->> +		if (!clki)
->> +			return -ENOMEM;
->> +
->> +		clki->name = devm_kstrdup(dev, names[i], GFP_KERNEL);
->> +		if (!clki->name)
->> +			return -ENOMEM;
->> +
->> +		if (!strcmp(names[i], "ref_clk"))
->> +			clki->keep_link_active = true;
->> +
->> +		list_add_tail(&clki->list, &hba->clk_list_head);
->> +	}
->> +
->> +	ret = devm_pm_opp_set_clknames(dev, names, i);
->> +	if (ret)
->> +		return ret;
->> +
->> +	ret = devm_pm_opp_register_set_opp_helper(dev, ufshcd_set_opp);
->> +	if (ret)
->> +		return ret;
->> +
->> +	ret = devm_pm_opp_of_add_table(dev);
->> +	if (ret)
->> +		return ret;
->> +
->> +	hba->use_pm_opp = true;
->> +
-> 
-> Since you are only handling the clks in UFS driver's OPP implementation, it
-> warrants atleast a comment. Otherwise, someone will add voltage to the OPP
-> table and complain that it is not getting changed. Eventhough the UFS driver
-> won't allow doing it, it is safer to mention it explicitly.
-
-Sure.
-
-> 
-> Also I'm worried about the implementation specific to Qcom platforms. Like we
-> rely on RPMHPD to handle the power domains, but that may not be true for other
-> platforms. I know that we cannot support all possible implementations but
-> atleast we should document this limitation.
-> 
-> Rest looks fine to me. I'll take one more look after testing this series on
-> SM8450.
-
-Using OPPs is quite generic, so other platform could implement also
-regulator scaling. The changes are indeed targetting Qcom platforms, but
-they are not restricting any other usage.
-
-Best regards,
-Krzysztof
+Rasmus
