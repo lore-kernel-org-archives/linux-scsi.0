@@ -2,77 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 858BBC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 May 2022 08:10:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9527CC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 May 2022 08:18:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242420AbiEQIKm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 May 2022 04:10:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33646 "EHLO
+        id S243384AbiEQISh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 May 2022 04:18:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239899AbiEQIKi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 May 2022 04:10:38 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D24643C73E;
-        Tue, 17 May 2022 01:10:37 -0700 (PDT)
-Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4L2THp2D8xz6H8FG;
-        Tue, 17 May 2022 16:07:34 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 17 May 2022 10:10:35 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 17 May 2022 09:10:27 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH] scsi: hisi_sas: Fix memory ordering in hisi_sas_task_deliver()
-Date:   Tue, 17 May 2022 16:04:21 +0800
-Message-ID: <1652774661-12935-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        with ESMTP id S242847AbiEQISA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 May 2022 04:18:00 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8277448E59
+        for <linux-scsi@vger.kernel.org>; Tue, 17 May 2022 01:17:15 -0700 (PDT)
+X-UUID: 4552c4d236fd46168dcbcce31135d90d-20220517
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.5,REQID:09ebaeb8-63fa-4125-bcf7-d6e690f245f3,OB:0,LO
+        B:0,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:54,FILE:0,RULE:Release_Ham,AC
+        TION:release,TS:49
+X-CID-INFO: VERSION:1.1.5,REQID:09ebaeb8-63fa-4125-bcf7-d6e690f245f3,OB:0,LOB:
+        0,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:54,FILE:0,RULE:Release_HamU,ACT
+        ION:release,TS:49
+X-CID-META: VersionHash:2a19b09,CLOUDID:8aae77e2-edbf-4bd4-8a34-dfc5f7bb086d,C
+        OID:7b9bcad43e31,Recheck:0,SF:28|16|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,QS:0,BEC:nil
+X-UUID: 4552c4d236fd46168dcbcce31135d90d-20220517
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 349737655; Tue, 17 May 2022 16:17:11 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
+ Tue, 17 May 2022 16:17:10 +0800
+Received: from [172.21.84.99] (172.21.84.99) by mtkmbs11n1.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.792.3 via Frontend
+ Transport; Tue, 17 May 2022 16:17:10 +0800
+Subject: Re: [PATCH v1] scsi: ufs-mediatek: introduce new UFS4.0 HS-G5 mode
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>, <wsd_upstream@mediatek.com>,
+        <linux-mediatek@lists.infradead.org>, <chun-hung.wu@mediatek.com>,
+        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <powen.kao@mediatek.com>, <qilin.tan@mediatek.com>,
+        <lin.gui@mediatek.com>, <eddie.huang@mediatek.com>,
+        <tun-yu.yu@mediatek.com>
+References: <20220512135654.3656-1-peter.wang@mediatek.com>
+ <yq1ee0srkc0.fsf@ca-mkp.ca.oracle.com>
+From:   Peter Wang <peter.wang@mediatek.com>
+Message-ID: <eb3b9979-2a45-8ebd-bd65-e463f8be4e81@mediatek.com>
+Date:   Tue, 17 May 2022 16:17:10 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+In-Reply-To: <yq1ee0srkc0.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The memories for the slot should be observed to be written prior to
-observing the slot as ready.
+Hi Martin,
 
-Prior to commit 26fc0ea74fcb ("scsi: libsas: Drop SAS_TASK_AT_INITIATOR"),
-we had a spin_lock() + spin_unlock() immediately before marking the slot
-as ready. The spin_unlock() - with release semantics - caused the slot
-memory to be observed to be written.
+OK. Will change next version.
 
-Now that the spin_lock() + spin_unlock() is gone, use a smp_wmb().
+Thanks for review.
 
-Fixes: 26fc0ea74fcb ("scsi: libsas: Drop SAS_TASK_AT_INITIATOR")
-Reported-by: Yihang Li <liyihang6@hisilicon.com>
-Tested-by: Yihang Li <liyihang6@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
-Hi Martin, Please consider for v5.18, thanks!
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 4bda2f6cb352..f56dd01230ce 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -446,6 +446,8 @@ void hisi_sas_task_deliver(struct hisi_hba *hisi_hba,
- 		return;
- 	}
- 
-+	/* Make slot memories observable before marking as ready */
-+	smp_wmb();
- 	WRITE_ONCE(slot->ready, 1);
- 
- 	spin_lock(&dq->lock);
--- 
-2.26.2
-
+On 5/17/22 10:00 AM, Martin K. Petersen wrote:
+> Peter,
+>
+>> @@ -4101,6 +4101,7 @@ static int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
+>>   out:
+>>   	return ret;
+>>   }
+>> +EXPORT_SYMBOL(ufshcd_uic_change_pwr_mode);
+>>   
+>>   int ufshcd_link_recovery(struct ufs_hba *hba)
+>>   {
+> EXPORT_SYMBOL_GPL()?
+>
