@@ -2,67 +2,66 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A3EEC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 May 2022 22:39:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1EA0C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 May 2022 22:41:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230084AbiERWjN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 May 2022 18:39:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41922 "EHLO
+        id S230021AbiERWlL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 May 2022 18:41:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229873AbiERWjL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 May 2022 18:39:11 -0400
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B38F917D3A3
-        for <linux-scsi@vger.kernel.org>; Wed, 18 May 2022 15:39:10 -0700 (PDT)
-Received: by mail-pf1-x429.google.com with SMTP id p8so3435000pfh.8
-        for <linux-scsi@vger.kernel.org>; Wed, 18 May 2022 15:39:10 -0700 (PDT)
+        with ESMTP id S230147AbiERWk6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 May 2022 18:40:58 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FBCC13F6F
+        for <linux-scsi@vger.kernel.org>; Wed, 18 May 2022 15:40:57 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id q4so3118154plr.11
+        for <linux-scsi@vger.kernel.org>; Wed, 18 May 2022 15:40:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20210112.gappssmtp.com; s=20210112;
         h=message-id:date:mime-version:user-agent:subject:content-language:to
          :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=TwGOpsZXmKjMebcqrmfjeutofyqjwqigUU8vU4Hxsjg=;
-        b=ltO2bQWW4c9ju/2uK55hWAnRfjLi5f6mWGgzjz+VPPbGZ9A+Y4IqXH3hn1+sOU0dgX
-         3kzudr1+8/ovu8n19SlVF4F8g6lWWCnvNZPtj3FENTwMhz8oV2+JX2J/wfE0MHsroYv1
-         65ezdDzYMJ03lYT5W919MXR/+aWgKuaOxk7wQjYfWH1DNzxQMqo5WPFH5lF4J0Q1VkAB
-         LWjqwoh+x5b10U22YJQQAzXg0sMYMTmi8g3MWKaaOa3ejSvZfPrziZmGewd6tMdd4XXG
-         YTJRg1XzLyscAApvAZ5nzeisLEfndH+iMkGbPUIDOV+dJq8SJKLwZRllbeuf/Y5cS3vN
-         ZYUQ==
+        bh=6CjLHJv2KA3UYpol8fjDDq5hkiBotVVzrhywge1qyNU=;
+        b=wrJMFTIQ7Yp9Uql3VLw0P3eZsDs+b1JV9KcU/0cWmfEKtzb2nHz9qQOWcknqiv3wB6
+         Qe/tgV7Wd1ZHgM0PLCX4x70ixWK4nzzI8BoHFoJI7M5IVH+dxrvEfNoN7lwgKCD2f3s1
+         SssvyCbsFzUf3QgcSJFKnLglCQxAspEBBcIEcsJDQCshhG6gmosFUSSFrwSOE+2aeTrU
+         2lNPrBXDbYcs5PXq5jKYOuXIF1vCRi6YBouhmgTOE0bqz//uobUJex8BrlGWvPJWaR5i
+         sNQ5I6zJ8fIjyybnFPYO1nhn+R5wcXeiyVTVwrufjzrTk7Hnrt7K/zVniZVpM1tdT3X9
+         TXQA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=TwGOpsZXmKjMebcqrmfjeutofyqjwqigUU8vU4Hxsjg=;
-        b=mfVzoylgNN6FmnPzN2sWP16UJia8Im2/pfmqinZLq5jb3UT6YI8T7euYaIhYZgJJAa
-         HDCbG45TVxF2XApMEMpg7ntEALJW3zfuNxxY+W68LIWQGj+Xi0FDYyt9YxA3QVJTHJHk
-         poCovxZ9xlQ4bbbEk8B+1XN0c/rWPgDZxsRfTlwh0KszETDSfyuF70cJjOjpPDzhEbga
-         jqcv6iEVkYD9XU/AhTmqbIl5nk1wYqdeF44xsaVmI0S569pYHr+oQkBd98xp0KaARnEH
-         yfputaZ2jf6fTSYR+3iP0KaUD109+jpDN5fzxpEK88MI9OPNw7PlJnR0ZMCCUSq7X0dd
-         soUA==
-X-Gm-Message-State: AOAM532guOb0DFXdDXznfD9ctp0K1qV/gEpPs4+b7fM/bbI4MeDStCcQ
-        ZNNSF4cxLCiUahzlKDqbtw2seg==
-X-Google-Smtp-Source: ABdhPJy7E1edQgt3ih3y4+NE5mAm66sIVfltCyXZCC1mkjHKtj6Ok+XbL/9nyPA5caK7Eaik3CwV4g==
-X-Received: by 2002:a05:6a02:208:b0:3c6:9898:e656 with SMTP id bh8-20020a056a02020800b003c69898e656mr1406244pgb.560.1652913550177;
-        Wed, 18 May 2022 15:39:10 -0700 (PDT)
+        bh=6CjLHJv2KA3UYpol8fjDDq5hkiBotVVzrhywge1qyNU=;
+        b=BZIP1CAHqBVWRijt4PnWUQho+km6cvyUdwoZrmIliJs5E+3bYOC4PIbQmk2+6M36eu
+         ZZWb4mjJFhsSJptuQdNMB7RI591H+wdy2JkZ9w+hgeXFxw8iFDzxTQtMB/PEXuDSNPTv
+         Po99z6yHxlmRk+usEgNcFE8cEeVHQyTKsvBZJg0Yimi0BwLCPC0wadfs4D9r/WuFdemJ
+         SnQYLmW4tclIpubwnQ+ZvvUt00t0WSUvVkc+/E4vxOnQvNXmTs3JLpabtPBeYRkyCvZg
+         ec1Oqh3077RFvcqJbnNiDjllHWLf+zGguzz9pWcpgvCmF3SOaD2vbupC/DLXZFk2YOh/
+         7SPg==
+X-Gm-Message-State: AOAM533cw0IbgGnAeaaLSroiF3y1OkTRQ1AfqZeiYk4mmt+G0LlttJaa
+        0TnSwHCsCh6KRedpww0wFKb0VQ==
+X-Google-Smtp-Source: ABdhPJzs5D3xiswFdU/ktExKQiuNvoDQe4ombx0sc+ixFqOYLAZByoojFMvCFdJR/wrJj7TUPZJQmg==
+X-Received: by 2002:a17:90a:940d:b0:1df:359b:2f9e with SMTP id r13-20020a17090a940d00b001df359b2f9emr2261914pjo.235.1652913656802;
+        Wed, 18 May 2022 15:40:56 -0700 (PDT)
 Received: from [192.168.1.100] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id u1-20020a170903108100b0015f2b3bc97asm2147095pld.13.2022.05.18.15.39.08
+        by smtp.gmail.com with ESMTPSA id a1-20020a1709027e4100b0015e8d4eb277sm2151000pln.193.2022.05.18.15.40.56
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 May 2022 15:39:09 -0700 (PDT)
-Message-ID: <c412b561-defe-dd86-1d4a-14dc10fc20fb@kernel.dk>
-Date:   Wed, 18 May 2022 16:39:08 -0600
+        Wed, 18 May 2022 15:40:56 -0700 (PDT)
+Message-ID: <28682d9a-ac58-ea19-6d51-73fbd87bfb5e@kernel.dk>
+Date:   Wed, 18 May 2022 16:40:55 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
  Thunderbird/91.8.1
-Subject: Re: [PATCH 1/3] blk-mq: remove __blk_execute_rq_nowait
+Subject: Re: cleanup blk_execute_rq*
 Content-Language: en-US
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
 References: <20220517064901.3059255-1-hch@lst.de>
- <20220517064901.3059255-2-hch@lst.de>
 From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20220517064901.3059255-2-hch@lst.de>
+In-Reply-To: <20220517064901.3059255-1-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -70,15 +69,15 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 5/17/22 12:48 AM, Christoph Hellwig wrote:
-> +	} else {
-> +		/*
-> +		 * Prevent hang_check timer from firing at us during very long
-> +		 * I/O
-> +		 */
-> +		unsigned long hang_check = 
-> +			sysctl_hung_task_timeout_secs;
+> Hi Jens,
+> 
+> this series cleans up the blk_execute_rq* helpers.  It simplifies the
+> plugging mess a bit, fixes the sparse __bitwise warnings and simplifies
+> the blk_execute_rq_nowait API a bit.
 
-Trailing whitespace and odd formatting here, I fixed it up.
+Looks good to me, but let's do this series post flushing out the
+initial bits. It ends up depending on the passthrough changes,
+yet also conflicts with the nvme changes on the driver side.
 
 -- 
 Jens Axboe
