@@ -2,102 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84DD2C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 May 2022 10:21:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C2CC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 May 2022 12:26:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235110AbiERKVL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 May 2022 06:21:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35500 "EHLO
+        id S236394AbiERM0s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 May 2022 08:26:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235044AbiERKVJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 May 2022 06:21:09 -0400
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F7F7245AF;
-        Wed, 18 May 2022 03:21:07 -0700 (PDT)
-Received: by mail-wm1-x331.google.com with SMTP id p189so855335wmp.3;
-        Wed, 18 May 2022 03:21:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=eUUlK8gFbeLL/gYwSjFGB469B2p9AZAbiDBrzDvrtBo=;
-        b=fsf86z7GL8uF7oZ5/oy9mXJ6AULhTE6lCbK45kPP/MAeFwfZ93zHQhHHqEo/CFsHsf
-         VwnnkepekExon2JWjTKDoW77pOOFU/NTFA7VcM9vSy1ZhcOddPr/ZcUfD6qV7xZzxcYI
-         iSTe4Dp9qLyqM2t5VrPqBbdkptiRvF5YZZHKduRHT3B4LlHjCAkFrl2H6yyK/9ZOfhk6
-         /7Qt7rhvuloB47St1MzDb0d3NnR/2JOBJlGVUKIH8NHzAn7kQlJUBdeAfEQqYIW0jl6m
-         QDZqYuGnkLOPCFkJ4P+aHqRO6ZtrbCu/mIMd2VI3kUxhlMS57qHtl8csewvsxZ3cL5t/
-         QvfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=eUUlK8gFbeLL/gYwSjFGB469B2p9AZAbiDBrzDvrtBo=;
-        b=XB/iMeivhP5YEpQsOKMjsnNyVWGwEUwg/8uwEHwsWN/Ta7ahcTt4MNYNDZF6LCjCHX
-         ZaqnS0fn4nCU3r3EA8ZQnPbEnruVIqEnufV6Z9ICDHtz8vC6j2Ef+f1/LLMqeXH2UDTS
-         5AAiKX9ZKQdK8GXXOX7CksWsQvwr7+WckN8/9FFaDkygE09kJq1OYsoNEEDAILUAGAU/
-         YH4BlPejmuDhhvnS2R6kmz0MCRXNC8H8tQZRoZKcwWNK2hwqgTZoBjLdXEUwS1Iy8JPs
-         cwkj2Ck/krjHMaXYi/TgiIIiiWFDNb1tXmGmUfFKB/WCTYHkEmF1GA5fv58twWbiiqMf
-         YsdQ==
-X-Gm-Message-State: AOAM531bRhB+yh2b10qy6bApX6ENopujVdTYgi7gvYk1xGbHEu3rThWr
-        OI43c0N3qChHktbJCPQEaOUvhoCjGqM8cGiy
-X-Google-Smtp-Source: ABdhPJw0Vi8wDw1/SK4QCP1kbEUaMv4b2Gmx0J3BodCQOZvKsbN5fZv2CUpVSJGGsMFA+UDfXbzX8g==
-X-Received: by 2002:a05:600c:3490:b0:394:5616:ac78 with SMTP id a16-20020a05600c349000b003945616ac78mr25610460wmq.80.1652869265875;
-        Wed, 18 May 2022 03:21:05 -0700 (PDT)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id v9-20020a056000144900b0020c5253d8d8sm2039780wrx.36.2022.05.18.03.21.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 May 2022 03:21:04 -0700 (PDT)
-From:   Colin Ian King <colin.i.king@gmail.com>
-To:     Michael Reed <mdr@sgi.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        with ESMTP id S236379AbiERM0q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 May 2022 08:26:46 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1E7F69B5B;
+        Wed, 18 May 2022 05:26:45 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 51F3B61627;
+        Wed, 18 May 2022 12:26:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EB36C34100;
+        Wed, 18 May 2022 12:26:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1652876804;
+        bh=Q6WGn+T2IYOJX+pYvJtK4Xq4x5ALfQD1/9ZqxdvFrkU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=OMhCNOuFtmdf295e2cSWuHc1odNkmt9gZejZIdAi+F1LOeQMvNVgd0QcDC4ES6KMy
+         YlEhxamD3b2ruDxZFx5cpv6wjlZ/JSV2QwLhQ8s7p2kDZQO8phxj3D93rI6+Bw6FcB
+         NnFiwQjcu7GYtbqJq4lYuNSuDxP4sOOkL3edBn7AnvBUuB5/d/vano7FsIeyYGg9Wv
+         KskFvIIKiIinf9j3oj3JJHL4F7LbJw8tfzc+PXQ6Lj2UYjXOCvWevfHCvIHIBpd8Jf
+         1IbG21fa1o9iBp+DA2XgAmI8HveFaVybsz2QJ8fVEPUQK2AepGCal8Hat5kTozB17H
+         4EfbLZBl+7F1w==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Brian Bunker <brian@purestorage.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Krishna Kant <krishna.kant@purestorage.com>,
+        Seamus Connor <sconnor@purestorage.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        mwilck@suse.com, dan.carpenter@oracle.com,
         linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: qla1280: remove redundant variable toke
-Date:   Wed, 18 May 2022 11:21:03 +0100
-Message-Id: <20220518102103.514701-1-colin.i.king@gmail.com>
+Subject: [PATCH AUTOSEL 5.17 01/23] scsi: scsi_dh_alua: Properly handle the ALUA transitioning state
+Date:   Wed, 18 May 2022 08:26:14 -0400
+Message-Id: <20220518122641.342120-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Variable toke is being assigned a value that is never read. The variable
-is redundant, remove it.
+From: Brian Bunker <brian@purestorage.com>
 
-Cleans up clang scan build warning:
-warning: Although the value stored to 'toke' is used in the enclosing
-expression, the value is never actually read from 'toke'
-[deadcode.DeadStores]
+[ Upstream commit 6056a92ceb2a7705d61df7ec5370548e96aee258 ]
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+The handling of the ALUA transitioning state is currently broken. When a
+target goes into this state, it is expected that the target is allowed to
+stay in this state for the implicit transition timeout without a path
+failure. The handler has this logic, but it gets skipped currently.
+
+When the target transitions, there is in-flight I/O from the initiator. The
+first of these responses from the target will be a unit attention letting
+the initiator know that the ALUA state has changed.  The remaining
+in-flight I/Os, before the initiator finds out that the portal state has
+changed, will return not ready, ALUA state is transitioning. The portal
+state will change to SCSI_ACCESS_STATE_TRANSITIONING. This will lead to all
+new I/O immediately failing the path unexpectedly. The path failure happens
+in less than a second instead of the expected successes until the
+transition timer is exceeded.
+
+Allow I/Os to continue while the path is in the ALUA transitioning
+state. The handler already takes care of a target that stays in the
+transitioning state for too long by changing the state to ALUA state
+standby once the transition timeout is exceeded at which point the path
+will fail.
+
+Link: https://lore.kernel.org/r/CAHZQxy+4sTPz9+pY3=7VJH+CLUJsDct81KtnR2be8ycN5mhqTg@mail.gmail.com
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Krishna Kant <krishna.kant@purestorage.com>
+Acked-by: Seamus Connor <sconnor@purestorage.com>
+Signed-off-by: Brian Bunker <brian@purestorage.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla1280.c | 3 +--
+ drivers/scsi/device_handler/scsi_dh_alua.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 0ab595c0870a..1e7f4d138e06 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -4037,7 +4037,6 @@ qla1280_setup(char *s)
- {
- 	char *cp, *ptr;
- 	unsigned long val;
--	int toke;
- 
- 	cp = s;
- 
-@@ -4052,7 +4051,7 @@ qla1280_setup(char *s)
- 		} else
- 			val = simple_strtoul(ptr, &ptr, 0);
- 
--		switch ((toke = qla1280_get_token(cp))) {
-+		switch (qla1280_get_token(cp)) {
- 		case TOKEN_NVRAM:
- 			if (!val)
- 				driver_setup.no_nvram = 1;
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 37d06f993b76..1d9be771f3ee 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -1172,9 +1172,8 @@ static blk_status_t alua_prep_fn(struct scsi_device *sdev, struct request *req)
+ 	case SCSI_ACCESS_STATE_OPTIMAL:
+ 	case SCSI_ACCESS_STATE_ACTIVE:
+ 	case SCSI_ACCESS_STATE_LBA:
+-		return BLK_STS_OK;
+ 	case SCSI_ACCESS_STATE_TRANSITIONING:
+-		return BLK_STS_AGAIN;
++		return BLK_STS_OK;
+ 	default:
+ 		req->rq_flags |= RQF_QUIET;
+ 		return BLK_STS_IOERR;
 -- 
 2.35.1
 
