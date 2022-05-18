@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A53BFC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 May 2022 12:34:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46E55C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 May 2022 12:35:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237024AbiERMeh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 May 2022 08:34:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54654 "EHLO
+        id S237197AbiERMfK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 May 2022 08:35:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237018AbiERMdo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 May 2022 08:33:44 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0146C1737C2;
-        Wed, 18 May 2022 05:29:51 -0700 (PDT)
+        with ESMTP id S237201AbiERMee (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 May 2022 08:34:34 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 918D419CB43;
+        Wed, 18 May 2022 05:30:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0F3DDB81FB9;
-        Wed, 18 May 2022 12:29:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B56DFC385A5;
-        Wed, 18 May 2022 12:29:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4E7FF615FE;
+        Wed, 18 May 2022 12:30:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84C26C34115;
+        Wed, 18 May 2022 12:30:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1652876988;
-        bh=AEH/dvMVbcFeYDvFezpfR84pX6HTZhUBNCCoNrj0aKI=;
+        s=k20201202; t=1652877003;
+        bh=1W2LW1qZ7oq6x4+GTpFCSF5m4dT2h7TD7pOzJu6tlbQ=;
         h=From:To:Cc:Subject:Date:From;
-        b=BIRmo9hTbP8frive6zI5edydk1EUOuDv5qAOheL/7kwkdFSBMdBiCS+DZDCT+b9EV
-         WorYbpOeq3EykQ+ijhBuzd5RHO9u8UTFonWi5U06n85OG/0roHn0d+9l1p/uB9K/iy
-         yf+9+tqOgsXCi6KwJX1IqipSBU7IeXYaPqEplmn+/HOfPo31G+RqvAcIXHwW3MULIP
-         vOtN9QFr31OqaNop03KzrQuB/AocfML9RQPJSIjQbvNxbwklU1/v3njNqBXK6xfpoC
-         UG7RwZXngeHSA+WDLekI6R0cnviwlQ6dAJnwLidfpRGAWhMQNp6jsZsFizOv+RSPKb
-         ulMEO7pHlDRVg==
+        b=tvvUc004o1M0N15KzfsDYmjrS8rcIPOksrQMDp9pY4jfm5kvAhKceamFI8xHhV1ij
+         JuGCG1Bk5et0IJEQg8ZNtqUpyHjrXc42UEx/se47t932gRHzIdPesJGzrK3PqaGMwL
+         /OLLwtqRuF90paIS0+HG7Zlw9Gt7SINKPWueSM7prhCln5zDEpHScEH1o5H9dD2WbY
+         dr9wBF/SERuvVdHgoVD0Tnix8gUrUdQFSipoGB20N9nDPN0n5Q2MKz1iosPc3beH1j
+         toKbOORR5Tt78MuDY3wdALKrzHo3y/39RhoJAc6XAieMPfeIiL9OnNUpcIzliGmL+y
+         BnqX4GH6KthQw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Gleb Chesnokov <Chesnokov.G@raidix.com>,
@@ -39,9 +39,9 @@ Cc:     Gleb Chesnokov <Chesnokov.G@raidix.com>,
         Sasha Levin <sashal@kernel.org>, njavali@marvell.com,
         GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 1/5] scsi: qla2xxx: Fix missed DMA unmap for aborted commands
-Date:   Wed, 18 May 2022 08:29:41 -0400
-Message-Id: <20220518122946.343712-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 1/5] scsi: qla2xxx: Fix missed DMA unmap for aborted commands
+Date:   Wed, 18 May 2022 08:29:56 -0400
+Message-Id: <20220518123000.343787-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
 X-stable: review
@@ -81,10 +81,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 09c52ef66887..27d3293eadf5 100644
+index 97a0c2384aee..4b431ca55c96 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3753,6 +3753,9 @@ int qlt_abort_cmd(struct qla_tgt_cmd *cmd)
+@@ -3639,6 +3639,9 @@ int qlt_abort_cmd(struct qla_tgt_cmd *cmd)
  
  	spin_lock_irqsave(&cmd->cmd_lock, flags);
  	if (cmd->aborted) {
