@@ -2,91 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6937BC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 May 2022 09:07:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDA1FC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 May 2022 09:10:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232460AbiESJHT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 May 2022 05:07:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60246 "EHLO
+        id S235828AbiESJKZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 May 2022 05:10:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231249AbiESJHS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2022 05:07:18 -0400
-Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF61B2E9E0
-        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 02:07:16 -0700 (PDT)
-Received: by mail-ed1-x531.google.com with SMTP id p26so6198620eds.5
-        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 02:07:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :content-transfer-encoding:user-agent:mime-version;
-        bh=0AyRPpX8qhEKceAHkqVsDwKW4YWSZBazXFK5XCvmQYo=;
-        b=pYMNx6Uovo9HffLcfN80ef2bDI/tkpk2EocYGVVrJbo+wdJTo3+ljZVRB3bYobWf9A
-         BUyYQyTDGTZhflCrsSEeQ8qpBdi0Nof9GLYLVZbxcdFIBQ3CyD1r3AlLj/MjNYefPXR3
-         ANZC0Y4rzBdqYm/yUKgTgbqS2KXDlyAAUo/ruTgo9u+ICrEgHvNOT0wESOy2/B2OwB3T
-         B4KOW68/eXr+JI6IX1/BYFWBGNY81qtapDEKYlP6U7GtWJbiaDP8bhpIIqnTh3rJEjkr
-         I96aJWCc4jWvtLkOz1dNfzowReo0pe7v6kqSKVccmo+t0sP/6YBGGkwff3Mm61W5JOme
-         0NnQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:content-transfer-encoding:user-agent:mime-version;
-        bh=0AyRPpX8qhEKceAHkqVsDwKW4YWSZBazXFK5XCvmQYo=;
-        b=45nU8MWYGpLQDEn2L1SiWtBDNxUksqUJ2rnI9jvWyVn9wuqeO7aq9F2LJ8thFTbw+J
-         aU94dYuPpOCWiW+hCMhqmbcgcFwS3Hd0SmaPoDCErHbyXi3XUoj8vfhpB4Sa4ghbOgi2
-         dEztfRqzv8hdKl6957YELJsg0+Zhi8uvhXXRe7f1qFp/JU1W50Os7iZL0I7YAdpQ2fFK
-         Kr1xFLutZ4Qp/nSkyraMYB+FQz+6CplYsnkDr9Hi1vw0/2+ROJD99ImjDpKy6vnPSNys
-         9zFfaBQOaoYNoh8Tp2V9YtQR1YEED6cq330w53+x+SRip7ya9/9vH8fpWcxwV368yFiJ
-         FwIA==
-X-Gm-Message-State: AOAM531GHnXFHoie9fHzQ5jPwwCYDHN4IZiWhoMw7j4033pPiUWHATRn
-        89FujpcKyDQwTskcklYFqB4=
-X-Google-Smtp-Source: ABdhPJwiPUhhnOawScO15UEncRro1JnneqgT2eqzoAQrTKUbHqdZTPirlEiqAS7jumsYsF2NB+7qmQ==
-X-Received: by 2002:a05:6402:90d:b0:428:c1ad:1e74 with SMTP id g13-20020a056402090d00b00428c1ad1e74mr4151137edz.345.1652951235467;
-        Thu, 19 May 2022 02:07:15 -0700 (PDT)
-Received: from [10.176.234.249] ([137.201.254.41])
-        by smtp.googlemail.com with ESMTPSA id d16-20020aa7d690000000b0042617ba63c0sm2593201edr.74.2022.05.19.02.07.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 May 2022 02:07:15 -0700 (PDT)
-Message-ID: <0a6abfbcdadccf6a47fbdd8393d769429fa54d7a.camel@gmail.com>
-Subject: Re: [PATCH] scsi: ufs: Split the drivers/scsi/ufs directory
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Keoseong Park <keosung.park@samsung.com>
-Date:   Thu, 19 May 2022 11:07:13 +0200
-In-Reply-To: <20220511212552.655341-1-bvanassche@acm.org>
-References: <20220511212552.655341-1-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.0-1 
+        with ESMTP id S235819AbiESJKX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2022 05:10:23 -0400
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D95BC4D614
+        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 02:10:20 -0700 (PDT)
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220519091014epoutp0440c58e6c1e25c0463d9d7ccc54c29abd~wdo3dCTxc1398413984epoutp04E
+        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 09:10:14 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220519091014epoutp0440c58e6c1e25c0463d9d7ccc54c29abd~wdo3dCTxc1398413984epoutp04E
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1652951414;
+        bh=yubcOGk4qBi6F7AK2qNHCDaOxiRtu1ZlVFm1AAMU0xg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=qxB0F0cknfBC3vPdDVAC8PpU76OHGL/xotEs6j9xPSMBQmGxV1FavIcD4Rp1mnKjK
+         90nQynLPpn+ffyTMqE5bkWLtkqXwbtxw2KC6Tp0/btBfGpWGsJOSkiOWb6QLfz9UI1
+         uuVpQGkue87n9n7xXrVUik7c0CfajlXZ7YlPV9wE=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20220519091013epcas2p416d53e04b30074a096e59ca0f212ea54~wdo2kAvC31891518915epcas2p4d;
+        Thu, 19 May 2022 09:10:13 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.100]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4L3kb56xP8z4x9Px; Thu, 19 May
+        2022 09:10:09 +0000 (GMT)
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        D9.2F.10028.07906826; Thu, 19 May 2022 18:10:08 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+        20220519091007epcas2p2ba7cd404e9948ec4160f48cd83a995fa~wdowydnrZ3174631746epcas2p2Z;
+        Thu, 19 May 2022 09:10:07 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220519091007epsmtrp10cf908a2262ecf4b60e494f6890ad86d~wdowxmNml1347613476epsmtrp1H;
+        Thu, 19 May 2022 09:10:07 +0000 (GMT)
+X-AuditID: b6c32a47-589ff7000000272c-0f-62860970cb17
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        9D.5F.11276.F6906826; Thu, 19 May 2022 18:10:07 +0900 (KST)
+Received: from rack03.dsn.sec.samsung.com (unknown [10.229.95.126]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20220519091007epsmtip27852461bb84b16036f626c1d4545a560~wdowmbKLy2681426814epsmtip2d;
+        Thu, 19 May 2022 09:10:07 +0000 (GMT)
+From:   SEO HOYOUNG <hy50.seo@samsung.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
+        bhoon95.kim@samsung.com, kwmad.kim@samsung.com
+Cc:     SEO HOYOUNG <hy50.seo@samsung.com>
+Subject: [PATCH v1] scsi: ufs: Change the shutting_down flag setting
+ position
+Date:   Thu, 19 May 2022 05:52:01 +0900
+Message-Id: <20220518205201.58264-1-hy50.seo@samsung.com>
+X-Mailer: git-send-email 2.26.0
+In-Reply-To: <sc.suh@samsung.com;>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrCJsWRmVeSWpSXmKPExsWy7bCmuW4BZ1uSwcYb/BYP5m1js9jbdoLd
+        4uXPq2wWBx92slh8XfqM1WLah5/MFp/WL2O1WL34AYvFohvbmCxubjnKYnF51xw2i+7rO9gs
+        lh//x+TA63H5irfH5b5eJo8Jiw4wenxf38Hm8fHpLRaPvi2rGD0+b5LzaD/QzRTAEZVtk5Ga
+        mJJapJCal5yfkpmXbqvkHRzvHG9qZmCoa2hpYa6kkJeYm2qr5OIToOuWmQN0spJCWWJOKVAo
+        ILG4WEnfzqYov7QkVSEjv7jEVim1ICWnwLxArzgxt7g0L10vL7XEytDAwMgUqDAhO+Nft3JB
+        F3fFy00HWRoYF3F2MXJySAiYSNzo7GbrYuTiEBLYwSixsW0DK4TziVFi/dalUM43RokVPyey
+        wLRM/7cdzBYS2MsocaRJFaLoB6PElPmvmUESbAIaEmuOHWICSYgIrGCS6Nn0iQkkwSygJvH5
+        7jKwbmEBf4ltr/YDxTk4WARUJU6fFAUJ8wpYSpzeP5EdYpm8xKKG32CtnAJKEu9PvWWGqBGU
+        ODnzCQvESHmJ5q2zmUF2SQis5JA4d/oIG0Szi8S7b1NZIWxhiVfHt0ANlZJ42d8GZRdL/Hiz
+        mgmiuYFRYmn7MWaIhLHErGftjCDHMQtoSqzfpQ9iSggoSxy5BbWXT6Lj8F92iDCvREebEESj
+        ksSZubehwhISB2fnQJgeEg/XMEFCrVTixYU/jBMYFWYh+WUWkl9mIWxdwMi8ilEstaA4Nz21
+        2KjAGB67yfm5mxjByVfLfQfjjLcf9A4xMnEwHmKU4GBWEuFlzG1JEuJNSaysSi3Kjy8qzUkt
+        PsRoCgzoicxSosn5wPSfVxJvaGJpYGJmZmhuZGpgriTO65WyIVFIID2xJDU7NbUgtQimj4mD
+        U6qBKSMuZ/Er4wXTMi0laq22bHx8ev6Nk9tOsLmzbdwlMHlj0+enbN84v5m+rrYS2PW+LunU
+        kye/+RnDr/IcED/z6MthR5c23cCI8v9N/CIH1h92tblRlnbwZoZ71711yrrWTj3z+bydMw4I
+        v5lf+D3u43bj2tT+kjkZ/WlTn0sJvCt4Pu3eyeRkQd2yvT5SIoYzvT9JT5LumF1fuGSXwXrD
+        B20L5978UJV8NEVH4LTNrhzlcxa2QlM37dnt1fn4anSKiRp/x3PZT7qKy64Uxx8Wk3im8dQw
+        WSLTq43HVcJQaOPPucw9bFUzj/92OFnckM0Z/jzk2Sw/2ZpLPb2tsbI2FjtP5nUwz7c5fKrx
+        4zwuJZbijERDLeai4kQAuYR3akcEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrELMWRmVeSWpSXmKPExsWy7bCSvG4+Z1uSwc0DmhYP5m1js9jbdoLd
+        4uXPq2wWBx92slh8XfqM1WLah5/MFp/WL2O1WL34AYvFohvbmCxubjnKYnF51xw2i+7rO9gs
+        lh//x+TA63H5irfH5b5eJo8Jiw4wenxf38Hm8fHpLRaPvi2rGD0+b5LzaD/QzRTAEcVlk5Ka
+        k1mWWqRvl8CV8a9buaCLu+LlpoMsDYyLOLsYOTkkBEwkpv/bztLFyMUhJLCbUWLu5ptMEAkJ
+        if+Lm6BsYYn7LUdYIYq+MUqcXPmNFSTBJqAhsebYISaQhIjANiaJux9OsoEkmAXUJD7fXcYC
+        YgsL+Eoc+fwIKM7BwSKgKnH6pChImFfAUuL0/onsEAvkJRY1/AZbximgJPH+1FtmEFtIQFHi
+        29p1TBD1ghInZz5hgRgvL9G8dTbzBEaBWUhSs5CkFjAyrWKUTC0ozk3PLTYsMMxLLdcrTswt
+        Ls1L10vOz93ECI4WLc0djNtXfdA7xMjEwXiIUYKDWUmElzG3JUmINyWxsiq1KD++qDQntfgQ
+        ozQHi5I474Wuk/FCAumJJanZqakFqUUwWSYOTqkGJsGFu9hTVyuEm9osk9nA3l14MztlJnNm
+        fumsdR/WFu5o5dSMsep29Di9wt/1hO15tv3r/vQ2XJ/UeFDkHt8Kzok/5Xvz11crTN2WdKYo
+        Z89LzSmL488I7W884lliujEnOFLmuPfh6k7hdcJLS77O0fAw/d658Prk+AlsCyL7fp0TbK+z
+        Uf+a6zt3jfj1hQqby1mn7tZL7WS5vD90aZ3fh/fyL+3MI093FmUc3dewVp75yPJpT86dyX8R
+        ezzNcn+jXvfbuDs7P63yfsaaPv8x0+5lnyy2xokKdqqe1GjWn9CREv+3oVdR4bLCRZmJios3
+        MzkmZcaqCE+IUuPZs/215Pk89TXth9Vf+Xaxz332SomlOCPRUIu5qDgRAJ9CpnMFAwAA
+X-CMS-MailID: 20220519091007epcas2p2ba7cd404e9948ec4160f48cd83a995fa
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220519091007epcas2p2ba7cd404e9948ec4160f48cd83a995fa
+References: <sc.suh@samsung.com;>
+        <CGME20220519091007epcas2p2ba7cd404e9948ec4160f48cd83a995fa@epcas2p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2022-05-11 at 14:25 -0700, Bart Van Assche wrote:
-> Split the drivers/scsi/ufs directory into 'core' and 'host'
-> directories
-> under the drivers/ufs/ directory. Move shared header files into the
-> include/ufs/ directory. This separation makes it clear which header
-> files UFS drivers are allowed to include (include/ufs/*.h) and which
-> header files UFS drivers are not allowed to include
-> (drivers/ufs/core/*.h).
->=20
-> Update the MAINTAINERS file. Add myself as a UFS reviewer.
->=20
-> Cc: Adrian Hunter <adrian.hunter@intel.com>
-> Cc: Avri Altman <avri.altman@wdc.com>
-> Cc: Bean Huo <beanhuo@micron.com>
-> Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
-> Cc: Keoseong Park <keosung.park@samsung.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+When System shutdown, will called ufshcd_wl_shutdown().
+Then the shutting_down falg set to 1 at ufshcd_wl_shutdown().
+And send to SSU cmd at ufshcd_wl_shutdown()->__ufshcd_wl_suspend()->
+ufshcd_set_dev_pwr_mode() function.
 
-Tested-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+If occurred fail during send SSU cmd,
+then will called ufshcd_err_handler for recovery.
+But already set shutting_down to 1, so ufs driver could not recovery.
+Then System wait for SSU cmd to be completed and
+eventaully it will take Hang.
+So changed the position where shutting_down is set.
+
+Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 1fb3a8b9b03e..65d47cd5afbe 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -9235,10 +9235,6 @@ static void ufshcd_wl_shutdown(struct device *dev)
+ 
+ 	hba = shost_priv(sdev->host);
+ 
+-	down(&hba->host_sem);
+-	hba->shutting_down = true;
+-	up(&hba->host_sem);
+-
+ 	/* Turn on everything while shutting down */
+ 	ufshcd_rpm_get_sync(hba);
+ 	scsi_device_quiesce(sdev);
+@@ -9248,6 +9244,10 @@ static void ufshcd_wl_shutdown(struct device *dev)
+ 		scsi_device_quiesce(sdev);
+ 	}
+ 	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
++
++	down(&hba->host_sem);
++	hba->shutting_down = true;
++	up(&hba->host_sem);
+ }
+ 
+ /**
+-- 
+2.26.0
 
