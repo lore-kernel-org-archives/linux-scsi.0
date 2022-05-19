@@ -2,128 +2,193 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60F31C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 May 2022 17:06:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBEBFC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 May 2022 17:29:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234030AbiESRGF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 May 2022 13:06:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47154 "EHLO
+        id S241532AbiESR3f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 May 2022 13:29:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242350AbiESRF5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2022 13:05:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EDBD6245BB
-        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 10:05:55 -0700 (PDT)
+        with ESMTP id S242965AbiESR30 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2022 13:29:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A66693E0C9
+        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 10:27:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1652979955;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+        s=mimecast20190719; t=1652981270;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=VejTqPbbw2sBzaVF5LFnYav5QK+tQClpv6Uf7G8FlBI=;
-        b=UQeCC0q9M+ydhxuAi9UQvmjH58eXkYc6ka/1oErllo5RCXYKDTx57Hvqq5LpJw8NzL0GBN
-        e/chTqgwAQ8on9JCQT17KLa5BOh8+HTdAzUL/EhMpihUgNzE6C4phvIwX3qVZhg0ZuOXYG
-        qNMTegKpKtIZ3WlXO5spQ37baUdokVo=
+        bh=R/Lkot5/4sKgRcDNp5q/Y5i98b+jBfFEKA3DLT++vAA=;
+        b=e1MDxxUr/ELBixHoj5UICZ8VvU53MI/59YbwngMxwXuk4vzMPayjHxlKbiu3IaW2kzrB0g
+        jSkp/AUVVa6aXwOW5ZNFjzAKiuq3xbSBblryYAAsb8wrkNKCLyzVkQ6bhxuJuOkWr4HpaN
+        SjDAvNSrnZcp/pOk9xcZIIvFB+xlcjQ=
 Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
  [209.85.208.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-398-HFcDIjjTO7ahTwN_LACWHQ-1; Thu, 19 May 2022 13:05:53 -0400
-X-MC-Unique: HFcDIjjTO7ahTwN_LACWHQ-1
-Received: by mail-lj1-f197.google.com with SMTP id f10-20020a2e9e8a000000b00250925fec6aso1287069ljk.20
-        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 10:05:53 -0700 (PDT)
+ us-mta-649-DC8ZiRdLObWtN1k65kbloA-1; Thu, 19 May 2022 13:27:49 -0400
+X-MC-Unique: DC8ZiRdLObWtN1k65kbloA-1
+Received: by mail-lj1-f197.google.com with SMTP id x16-20020a2e9c90000000b002509c7b56ebso1310635lji.14
+        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 10:27:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=VejTqPbbw2sBzaVF5LFnYav5QK+tQClpv6Uf7G8FlBI=;
-        b=e/km/yyCtoCfHiC9CdXlrBGXhDWukIbFi36IW5pjkEzarU2nc5RXbJueI1StV06oT8
-         PlBUZbqlLelY30wejXqVBRgOuSQWyHlz+jPr1vdBoBl8Dcjiw1/F+zCyAoGEDMqEq/Gf
-         n8vogH4iw41oxjC4ShUAdeZaguBJF4GqyC/0UFXpl+0Ym+PfelGmZy6W+go5em4ur5K4
-         j5cwiczphFNhn1cpUHEL5omN4IOkbscuL+garh6i9pOOUsH83az9rXA+lFUH+Hp7d+nY
-         4krQxiH9Yz7EnTaqKOb9PWbShw3BLZkWC3xd97NQLwILIYVKOd0KVhZWv4WQ5tVhAigZ
-         WjYA==
-X-Gm-Message-State: AOAM532OywaRmWWysvtwAigZnUpcPgBTQBx72EdUBg+Y+k1YnXDoPTPH
-        EYoPWTyY25kz0HzdFT7LFzr6S6wQ8dNM76v9chjqH5wjdMsMabHWoGnhgmKwbe1HsVV6tonpSX2
-        r/psRQcSwN/5QZimD6FbEng6eRL3muQWCsf7l2g==
-X-Received: by 2002:a05:6512:ba6:b0:477:cc66:229a with SMTP id b38-20020a0565120ba600b00477cc66229amr1412035lfv.455.1652979952189;
-        Thu, 19 May 2022 10:05:52 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwPeGiNy/MoFNUhrwdJkLH1f0iICtk5Wghk79Yh6KvvHfssiNHgRS2UPS8wCthGCxMyYULeOcjqrpMPNvsB8YY=
-X-Received: by 2002:a05:6512:ba6:b0:477:cc66:229a with SMTP id
- b38-20020a0565120ba600b00477cc66229amr1412024lfv.455.1652979952000; Thu, 19
- May 2022 10:05:52 -0700 (PDT)
+         :message-id:subject:cc;
+        bh=R/Lkot5/4sKgRcDNp5q/Y5i98b+jBfFEKA3DLT++vAA=;
+        b=fRTuLS8fJ69ZA3lw9x1baloPs2cLQW8sU2Ek9wLlSiJyWemoU4967XLHvxO6pmPmCn
+         53iuhK6xom0A+1chrv+OXfP8J3nmwuTcAZlIL7TVMQpL3G1pJ02A+L0Vr6yS6fTLbIFp
+         41XPcOYmlBNWbKWI37aMqh8qG58pQXqDRPFqid8+kLJy/QRegK0dfQ9dJVh4XFasmiWG
+         GEiQcpPnQFL4dk7x4Ya0SOJFl7i/i8Dueit5OgdBJOX5OQSnmW8QS2zVc6CTrYDjAvLO
+         9jJ7y7nbUo7xXkvo3AaOU1wTtTm9nB0GLX3+ajwpUiXaYvh1iyvR2Hyg1LhOS8FjKZw8
+         A96w==
+X-Gm-Message-State: AOAM530UzIhFJWZN7oNnWej8FaAEBFfRhGlc2MrfhUL0y2YbuUsOmebB
+        w3GCFSyZ59s7g322AT/KpsrHDiY23B06pG1nAk4EWOyNurqvtsPM3mCOPFcdMKwsl6FW1pWWJFE
+        ZBivr7iUCjcLGvVg0vN7fMR4nD8wrMge+00WkAQ==
+X-Google-Smtp-Source: ABdhPJwyOWRu0DHFXx8YNA4U8uYYQdg1vhWpzdRjN/stUE+77XY/Nog9VNB050CdnWX7ESEPVl0jEZPChBRGt42N5/g=
+X-Received: by 2002:a05:6512:23a6:b0:477:943a:818d with SMTP id c38-20020a05651223a600b00477943a818dmr4000037lfv.644.1652981267759;
+        Thu, 19 May 2022 10:27:47 -0700 (PDT)
+X-Received: by 2002:a05:6512:23a6:b0:477:943a:818d with SMTP id
+ c38-20020a05651223a600b00477943a818dmt1555170lfv.644.1652981267554; Thu, 19
+ May 2022 10:27:47 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220512111236.109851-1-hare@suse.de> <20220512111236.109851-6-hare@suse.de>
-In-Reply-To: <20220512111236.109851-6-hare@suse.de>
+References: <20220512111236.109851-1-hare@suse.de> <20220512111236.109851-5-hare@suse.de>
+In-Reply-To: <20220512111236.109851-5-hare@suse.de>
 From:   Ewan Milne <emilne@redhat.com>
-Date:   Thu, 19 May 2022 13:05:40 -0400
-Message-ID: <CAGtn9rkeUY0RwHSjEX3wuXvos-FUveqN9M1FeX-_1tRzLmS0Vw@mail.gmail.com>
-Subject: Re: [PATCH 05/20] mptfc: open-code mptfc_block_error_handler() for
- bus reset
-To:     Hannes Reinecke <hare@suse.de>
+Date:   Thu, 19 May 2022 13:27:36 -0400
+Message-ID: <CAGtn9rnkZ1Y6-H7N_VkgmsDfWURiRBm1-kjnhLYxSk7un08CyQ@mail.gmail.com>
+Subject: Re: [PATCH 04/20] mptfusion: correct definitions for mptscsih_dev_reset()
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
+        linux-scsi@vger.kernel.org,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Content-Type: text/plain; charset="UTF-8"
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This change removes the debug log messages that mptfc_block_error_handler()
-would have generated, and also doesn't do the same thing, at all, for each rport
-due to the differences in the logic between fc_block_rport() and
-fc_remote_port_chkready()
-and waiting for ioc->active == 0.
+This patch appears to change the EH activity from issuing a target
+reset to a LUN reset only
+(since it does not add an entry in the host templates for
+.eh_target_reset_handler to invoke
+the new mptscsih_target_reset() function, nor does any other patch in
+the series).
 
-Perhaps this is desirable and intentional, if so, could you explain
-this in the commit message?
+Is this going to work properly, and without escalating to a host reset
+which might not have happened before?
 
 -Ewan
 
 On Thu, May 12, 2022 at 7:13 AM Hannes Reinecke <hare@suse.de> wrote:
 >
-> When calling bus_reset we have potentially several ports to be
-> reset, so this patch open-codes the existing mptfc_block_error_handler()
-> to wait for all ports attached to this bus.
+> From: Hannes Reinecke <hare@suse.com>
+>
+> mptscsih_dev_reset() is _not_ a device reset, but rather a
+> target reset. Nevertheless it's being used for either purpose.
+> This patch adds a correct implementation for mptscsih_dev_reset(),
+> and renames the original function to mptscsih_target_reset().
 >
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > ---
->  drivers/message/fusion/mptfc.c | 17 ++++++++++++++---
->  1 file changed, 14 insertions(+), 3 deletions(-)
+>  drivers/message/fusion/mptscsih.c | 55 ++++++++++++++++++++++++++++++-
+>  drivers/message/fusion/mptscsih.h |  1 +
+>  2 files changed, 55 insertions(+), 1 deletion(-)
 >
-> diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
-> index ea8fc32dacfa..4a621380a4eb 100644
-> --- a/drivers/message/fusion/mptfc.c
-> +++ b/drivers/message/fusion/mptfc.c
-> @@ -262,12 +262,23 @@ static int
->  mptfc_bus_reset(struct scsi_cmnd *SCpnt)
->  {
->         struct Scsi_Host *shost = SCpnt->device->host;
-> -       struct fc_rport *rport = starget_to_rport(scsi_target(SCpnt->device));
->         MPT_SCSI_HOST __maybe_unused *hd = shost_priv(shost);
-> +       int channel = SCpnt->device->channel;
-> +       struct mptfc_rport_info *ri;
->         int rtn;
+> diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+> index 276084ed04a6..ed21cc4d2c77 100644
+> --- a/drivers/message/fusion/mptscsih.c
+> +++ b/drivers/message/fusion/mptscsih.c
+> @@ -1794,7 +1794,7 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
 >
-> -       rtn = mptfc_block_error_handler(rport);
-> -       if (rtn == SUCCESS) {
-> +       list_for_each_entry(ri, &hd->ioc->fc_rports, list) {
-> +               if (ri->flags & MPT_RPORT_INFO_FLAGS_REGISTERED) {
-> +                       VirtTarget *vtarget = ri->starget->hostdata;
-> +
-> +                       if (!vtarget || vtarget->channel != channel)
-> +                               continue;
-> +                       rtn = fc_block_rport(ri->rport);
-> +                       if (rtn != 0)
-> +                               break;
-> +               }
+>  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+>  /**
+> - *     mptscsih_dev_reset - Perform a SCSI TARGET_RESET!  new_eh variant
+> + *     mptscsih_dev_reset - Perform a SCSI LOGICAL_UNIT_RESET!
+>   *     @SCpnt: Pointer to scsi_cmnd structure, IO which reset is due to
+>   *
+>   *     (linux scsi_host_template.eh_dev_reset_handler routine)
+> @@ -1809,6 +1809,58 @@ mptscsih_dev_reset(struct scsi_cmnd * SCpnt)
+>         VirtDevice       *vdevice;
+>         MPT_ADAPTER     *ioc;
+>
+> +       /* If we can't locate our host adapter structure, return FAILED status.
+> +        */
+> +       if ((hd = shost_priv(SCpnt->device->host)) == NULL){
+> +               printk(KERN_ERR MYNAM ": lun reset: "
+> +                  "Can't locate host! (sc=%p)\n", SCpnt);
+> +               return FAILED;
 > +       }
-> +       if (rtn == 0) {
->                 dfcprintk (hd->ioc, printk(MYIOC_s_DEBUG_FMT
->                         "%s.%d: %d:%llu, executing recovery.\n", __func__,
->                         hd->ioc->name, shost->host_no,
+> +
+> +       ioc = hd->ioc;
+> +       printk(MYIOC_s_INFO_FMT "attempting lun reset! (sc=%p)\n",
+> +              ioc->name, SCpnt);
+> +       scsi_print_command(SCpnt);
+> +
+> +       vdevice = SCpnt->device->hostdata;
+> +       if (!vdevice || !vdevice->vtarget) {
+> +               retval = 0;
+> +               goto out;
+> +       }
+> +
+> +       retval = mptscsih_IssueTaskMgmt(hd,
+> +                               MPI_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET,
+> +                               vdevice->vtarget->channel,
+> +                               vdevice->vtarget->id, vdevice->lun, 0,
+> +                               mptscsih_get_tm_timeout(ioc));
+> +
+> + out:
+> +       printk (MYIOC_s_INFO_FMT "lun reset: %s (sc=%p)\n",
+> +           ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ), SCpnt);
+> +
+> +       if (retval == 0)
+> +               return SUCCESS;
+> +       else
+> +               return FAILED;
+> +}
+> +
+> +/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+> +/**
+> + *     mptscsih_target_reset - Perform a SCSI TARGET_RESET!
+> + *     @SCpnt: Pointer to scsi_cmnd structure, IO which reset is due to
+> + *
+> + *     (linux scsi_host_template.eh_target_reset_handler routine)
+> + *
+> + *     Returns SUCCESS or FAILED.
+> + **/
+> +int
+> +mptscsih_target_reset(struct scsi_cmnd * SCpnt)
+> +{
+> +       MPT_SCSI_HOST   *hd;
+> +       int              retval;
+> +       VirtDevice       *vdevice;
+> +       MPT_ADAPTER     *ioc;
+> +
+>         /* If we can't locate our host adapter structure, return FAILED status.
+>          */
+>         if ((hd = shost_priv(SCpnt->device->host)) == NULL){
+> @@ -3257,6 +3309,7 @@ EXPORT_SYMBOL(mptscsih_slave_destroy);
+>  EXPORT_SYMBOL(mptscsih_slave_configure);
+>  EXPORT_SYMBOL(mptscsih_abort);
+>  EXPORT_SYMBOL(mptscsih_dev_reset);
+> +EXPORT_SYMBOL(mptscsih_target_reset);
+>  EXPORT_SYMBOL(mptscsih_bus_reset);
+>  EXPORT_SYMBOL(mptscsih_host_reset);
+>  EXPORT_SYMBOL(mptscsih_bios_param);
+> diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/mptscsih.h
+> index a22c5eaf703c..e3d92c392673 100644
+> --- a/drivers/message/fusion/mptscsih.h
+> +++ b/drivers/message/fusion/mptscsih.h
+> @@ -120,6 +120,7 @@ extern void mptscsih_slave_destroy(struct scsi_device *device);
+>  extern int mptscsih_slave_configure(struct scsi_device *device);
+>  extern int mptscsih_abort(struct scsi_cmnd * SCpnt);
+>  extern int mptscsih_dev_reset(struct scsi_cmnd * SCpnt);
+> +extern int mptscsih_target_reset(struct scsi_cmnd * SCpnt);
+>  extern int mptscsih_bus_reset(struct scsi_cmnd * SCpnt);
+>  extern int mptscsih_host_reset(struct scsi_cmnd *SCpnt);
+>  extern int mptscsih_bios_param(struct scsi_device * sdev, struct block_device *bdev, sector_t capacity, int geom[]);
 > --
 > 2.29.2
 >
