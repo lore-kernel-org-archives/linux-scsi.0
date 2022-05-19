@@ -2,84 +2,154 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E730C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 May 2022 12:28:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 189B8C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 May 2022 12:31:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237935AbiESM2H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 May 2022 08:28:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43148 "EHLO
+        id S237870AbiESMbX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 May 2022 08:31:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230522AbiESM2C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2022 08:28:02 -0400
-Received: from jabberwock.ucw.cz (jabberwock.ucw.cz [46.255.230.98])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EE52BA57A;
-        Thu, 19 May 2022 05:28:01 -0700 (PDT)
-Received: by jabberwock.ucw.cz (Postfix, from userid 1017)
-        id 20D5C1C0B92; Thu, 19 May 2022 14:27:58 +0200 (CEST)
-Date:   Thu, 19 May 2022 14:27:46 +0200
-From:   Pavel Machek <pavel@ucw.cz>
-To:     Arseny Maslennikov <ar@cs.msu.ru>
-Cc:     Walt Drummond <walt@drummond.us>, Theodore Ts'o <tytso@mit.edu>,
-        "Eric W. Biederman" <ebiederm@xmission.com>, aacraid@microsemi.com,
-        viro@zeniv.linux.org.uk, anna.schumaker@netapp.com, arnd@arndb.de,
-        bsegall@google.com, bp@alien8.de, chuck.lever@oracle.com,
-        bristot@redhat.com, dave.hansen@linux.intel.com,
-        dwmw2@infradead.org, dietmar.eggemann@arm.com, dinguyen@kernel.org,
-        geert@linux-m68k.org, gregkh@linuxfoundation.org, hpa@zytor.com,
-        idryomov@gmail.com, mingo@redhat.com, yzaikin@google.com,
-        ink@jurassic.park.msu.ru, jejb@linux.ibm.com, jmorris@namei.org,
-        bfields@fieldses.org, jlayton@kernel.org, jirislaby@kernel.org,
-        john.johansen@canonical.com, juri.lelli@redhat.com,
-        keescook@chromium.org, mcgrof@kernel.org,
-        martin.petersen@oracle.com, mattst88@gmail.com, mgorman@suse.de,
-        oleg@redhat.com, pbonzini@redhat.com, peterz@infradead.org,
-        rth@twiddle.net, richard@nod.at, serge@hallyn.com,
-        rostedt@goodmis.org, tglx@linutronix.de,
-        trond.myklebust@hammerspace.com, vincent.guittot@linaro.org,
-        x86@kernel.org, linux-kernel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, kvm@vger.kernel.org,
-        linux-alpha@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-m68k@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org
-Subject: Re: [RFC PATCH 0/8] signals: Support more than 64 signals
-Message-ID: <20220519122746.GA3904@localhost>
-References: <20220103181956.983342-1-walt@drummond.us>
- <87iluzidod.fsf@email.froward.int.ebiederm.org>
- <YdSzjPbVDVGKT4km@mit.edu>
- <87pmp79mxl.fsf@email.froward.int.ebiederm.org>
- <YdTI16ZxFFNco7rH@mit.edu>
- <CADCN6nzT-Dw-AabtwWrfVRDd5HzMS3EOy8WkeomicJF07nQyoA@mail.gmail.com>
- <YdiUiHAhLyfgpvVY@cello>
+        with ESMTP id S233642AbiESMbT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2022 08:31:19 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D27D817E14
+        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 05:31:18 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id l7-20020a17090aaa8700b001dd1a5b9965so5114280pjq.2
+        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 05:31:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=pJh8WirqYdswsr6jJeoDn4B+Kd+ShXKahHaQuAvRypI=;
+        b=I48Er1b4DLjS6Z232dl0eH/pWRliW1u0llXQoKt2YKIrR2mPL1G07U+1yyGULYL03X
+         gaQmbu56LElJsBA5SFIWLExbj2pw2U90+ZgSExDcJvYuS1mQ+J9HrOk5Y0kjlCEkCX1b
+         NFswGoOd7ZT77M6QjJzHqX3m9Zuy4DjHyvqP0j7mQg2e2uDVBp2RdBa7utolRrPSIadO
+         5FB946KjB2MwkazDUfXyqjq7I5mCNxahEeuk5Fs2WqbXnb0wKNOQMDxZb5TS9Qt8cVIX
+         s/HzONrlQfOHt1+5HpoN9OWdzHtXAB45n9Fu/GnAh8kaxOWkOfNQnQaxJaxaIrMDrNdS
+         4vng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=pJh8WirqYdswsr6jJeoDn4B+Kd+ShXKahHaQuAvRypI=;
+        b=6BHec57pcfBJqWBDr1prYJ9u4WcVxstSfOiWwI6Wci8Vg5E/60MqAOLcox+6QjYJV6
+         97rc69VWfEXMCVGkLuSa0khBBSSOegbhzmcJE+jg6ACvFsyAhar8pmZpJBMccQmoDC1F
+         Ene4EX8kNg99kvQ6MEDdxmH9OF2R1LDIv55rdYtNZOuYRoD8DWYPpw2MVNK5NG1ogMRp
+         yUY7ba+Ln8zxDFokXezq6yjNjMY50ovSfEcK7Sax2AA2kQbJwD1OfLvVotK4pDNsjXPO
+         dlMCO9IXaqpcpVl9dIUa9PDvq+B8HKoAIfS14TjgeqMuMbu8+h6Yt0uwk5/C7RgGLqpF
+         wV9A==
+X-Gm-Message-State: AOAM532B73dp05lLFLq4NlT9QNBcGIwdWau0X9jtWatPYQOcNaMqh/Gi
+        pM6Qo6eaFSJkQOf7kssftRMygBE8Ki8=
+X-Google-Smtp-Source: ABdhPJxNi7FvNHdc4YZSS4PGsSI1lYhbd+Y1WfueXs4BVYi6nQbBbUfCs/La6G4+Oa6xF89XzGxuRA==
+X-Received: by 2002:a17:903:210:b0:15e:f139:f901 with SMTP id r16-20020a170903021000b0015ef139f901mr4758992plh.66.1652963478179;
+        Thu, 19 May 2022 05:31:18 -0700 (PDT)
+Received: from mail-lvn-it-01.broadcom.com (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
+        by smtp.gmail.com with ESMTPSA id z26-20020aa79e5a000000b005180f4733a8sm3581797pfq.106.2022.05.19.05.31.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 May 2022 05:31:17 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     Muneendra <muneendra.kumar@broadcom.com>,
+        James Smart <jsmart2021@gmail.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v2 1/4] nvme-fc: Add new routine nvme_fc_io_getuuid
+Date:   Thu, 19 May 2022 05:31:07 -0700
+Message-Id: <20220519123110.17361-2-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20220519123110.17361-1-jsmart2021@gmail.com>
+References: <20220519123110.17361-1-jsmart2021@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YdiUiHAhLyfgpvVY@cello>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi!
+From: Muneendra <muneendra.kumar@broadcom.com>
 
-> > The only standard tools that support SIGINFO are sleep, dd and ping,
-> > (and kill, for obvious reasons) so it's not like there's a vast hole
-> > in the tooling or something, nor is there a large legacy software base
-> > just waiting for SIGINFO to appear.   So while I very much enjoyed
-> > figuring out how to make SIGINFO work ...
-> 
-> As far as I recall, GNU make on *BSD does support SIGINFO (Not a
-> standard tool, but obviously an established one).
-> 
-> The developers of strace have expressed interest in SIGINFO support
-> to print tracer status messages (unfortunately, not on a public list).
-> Computational software can use this instead of stderr progress spam, if
-> run in an interactive fashion on a terminal, as it frequently is. There
-> is a user base, it's just not very vocal on kernel lists. :)
+Add nvme_fc_io_getuuid() to the nvme-fc transport.
+The routine is invoked by the fc LLDD on a per-io request basis.
+The routine translates from the fc-specific request structure to
+the bio and the cgroup structure in order to obtain the fc appid
+stored in the cgroup structure. If a value is not set or a bio
+is not found, a NULL appid (aka uuid) will be returned to the LLDD.
 
-And often it would be useful if cp supported this. Yes, this
-is feature I'd like to see.
+Signed-off-by: Muneendra Kumar <muneendra.kumar@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Acked-by: Christoph Hellwig <hch@lst.de>
 
-BR,							Pavel
+---
+v2: modify to sync with Christoph's patch:
+ blk-cgroup: move blkcg_{get,set}_fc_appid out of line
+ commit db05628435aa
+---
+ drivers/nvme/host/fc.c         | 18 ++++++++++++++++++
+ include/linux/nvme-fc-driver.h | 14 ++++++++++++++
+ 2 files changed, 32 insertions(+)
 
+diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+index 080f85f4105f..05f9da251758 100644
+--- a/drivers/nvme/host/fc.c
++++ b/drivers/nvme/host/fc.c
+@@ -1899,6 +1899,24 @@ nvme_fc_ctrl_ioerr_work(struct work_struct *work)
+ 	nvme_fc_error_recovery(ctrl, "transport detected io error");
+ }
+ 
++/*
++ * nvme_fc_io_getuuid - Routine called to get the appid field
++ * associated with request by the lldd
++ * @req:IO request from nvme fc to driver
++ * Returns: UUID if there is an appid associated with VM or
++ * NULL if the user/libvirt has not set the appid to VM
++ */
++char *nvme_fc_io_getuuid(struct nvmefc_fcp_req *req)
++{
++	struct nvme_fc_fcp_op *op = fcp_req_to_fcp_op(req);
++	struct request *rq = op->rq;
++
++	if (!IS_ENABLED(CONFIG_BLK_CGROUP_FC_APPID) || !rq->bio)
++		return NULL;
++	return blkcg_get_fc_appid(rq->bio);
++}
++EXPORT_SYMBOL_GPL(nvme_fc_io_getuuid);
++
+ static void
+ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
+ {
+diff --git a/include/linux/nvme-fc-driver.h b/include/linux/nvme-fc-driver.h
+index 5358a5facdee..fa092b9be2fd 100644
+--- a/include/linux/nvme-fc-driver.h
++++ b/include/linux/nvme-fc-driver.h
+@@ -564,6 +564,15 @@ int nvme_fc_rcv_ls_req(struct nvme_fc_remote_port *remoteport,
+ 			void *lsreqbuf, u32 lsreqbuf_len);
+ 
+ 
++/*
++ * Routine called to get the appid field associated with request by the lldd
++ *
++ * If the return value is NULL : the user/libvirt has not set the appid to VM
++ * If the return value is non-zero: Returns the appid associated with VM
++ *
++ * @req: IO request from nvme fc to driver
++ */
++char *nvme_fc_io_getuuid(struct nvmefc_fcp_req *req);
+ 
+ /*
+  * ***************  LLDD FC-NVME Target/Subsystem API ***************
+@@ -1048,5 +1057,10 @@ int nvmet_fc_rcv_fcp_req(struct nvmet_fc_target_port *tgtport,
+ 
+ void nvmet_fc_rcv_fcp_abort(struct nvmet_fc_target_port *tgtport,
+ 			struct nvmefc_tgt_fcp_req *fcpreq);
++/*
++ * add a define, visible to the compiler, that indicates support
++ * for feature. Allows for conditional compilation in LLDDs.
++ */
++#define NVME_FC_FEAT_UUID	0x0001
+ 
+ #endif /* _NVME_FC_DRIVER_H */
 -- 
+2.26.2
+
