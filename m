@@ -2,367 +2,169 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EC9BC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 May 2022 18:23:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28B84C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 May 2022 20:06:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242968AbiESSXS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 May 2022 14:23:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43460 "EHLO
+        id S244596AbiESUGI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 May 2022 16:06:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241524AbiESSXQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2022 14:23:16 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 443F450E0E
-        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 11:23:14 -0700 (PDT)
+        with ESMTP id S244597AbiESUGC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2022 16:06:02 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9364930F71
+        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 13:06:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1652984593;
+        s=mimecast20190719; t=1652990759;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=K4smjWp14znqoihq7xaben8zyFhRUmdSHMIeNZ/0XE4=;
-        b=Pt3gndqGzIEEFpon+v9iE9rCDcGkmiTf9I8QU9DITns1ZYGZyFMD8jtvU1J6dVqAyTOAOc
-        tO6cc8pBdh1fWdRbV0IBd4pxN4wCauThZVyjqqDeR8sS30PH4ORO71paPW/2pdXytkiILN
-        4ScURE208MjETK1ghDJ6ioGLrk1nqJU=
-Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
- [209.85.167.71]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=GkgOXEHyMYuEPiFRBiZmgAMQEvG+Jg/37VBTbGhIxoU=;
+        b=ZBClHGzZ8uz6GnUTtJC+vjDS7GGho8AWWjXLIE52K8uGUf9cJIjfQEuWbyzyl0s+FE9Fa5
+        9evKDYGlCjduMD13WLdXWq60U+GfO48ahu0jlpMzDCz3Md6/ab6mRWHQH92Pm+tSUcPbB8
+        lp2a10AHHswPrfIF8oBSP/9Q+hSj3gs=
+Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
+ [209.85.167.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-659-npD8qD2eMjCffxmCAgfMYg-1; Thu, 19 May 2022 14:23:12 -0400
-X-MC-Unique: npD8qD2eMjCffxmCAgfMYg-1
-Received: by mail-lf1-f71.google.com with SMTP id u13-20020a05651206cd00b00477c7503103so1419311lff.15
-        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 11:23:11 -0700 (PDT)
+ us-mta-44-2exNsKrsN7aNtDjTf4aIaw-1; Thu, 19 May 2022 16:05:58 -0400
+X-MC-Unique: 2exNsKrsN7aNtDjTf4aIaw-1
+Received: by mail-lf1-f72.google.com with SMTP id e10-20020a05651236ca00b00474337bbe36so3137548lfs.2
+        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 13:05:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=K4smjWp14znqoihq7xaben8zyFhRUmdSHMIeNZ/0XE4=;
-        b=KwZd0MZZ5+C5lJtjdmLidiil3h3IUv6BeZEq6tDLYS1fTyvPvN8bc3pEAsm1DQBGk8
-         48Qk2oa1KEYg6uBUCwdK3fjM4+m4FFn/OE85l4elTYEr/8yx5ZFWo0cUoqtCIsy2r6db
-         rVO8b2FYI0Cwfw8qhApgJNdnh5T/79zjkqykUOybBcbk5ka1AuF+nrzkes9krSLOj+1N
-         x6yBoHAsJgtcid+iF/4gD78SW0wpgwOi/kmMvlsA5EO1lmdsuAyL28q1Xd4zyKJ1B/jU
-         JLzj+rmTbJu2wZ2UdnygKIOrvHqJgTNjgiJLkv2ha2xn4KA+dquV72MnzD8RvjXK85jm
-         E/dQ==
-X-Gm-Message-State: AOAM533BgUfrdt2LHZHFCg93PnDcvjbiO2SZaxYvs1zhm/pRl3sty4aC
-        1H+2RTLmPfUv/YvmGdzigX6IOAz3imL2zEHMyGcALFpxI39O/1ohUDpl/6OMIqHS5kNmwU0RvVU
-        RIVBTh5OSkJUhlZfPJjMjXNAsokC6bhmW0ktsyA==
-X-Received: by 2002:a05:6512:23a6:b0:477:943a:818d with SMTP id c38-20020a05651223a600b00477943a818dmr4144447lfv.644.1652984590357;
-        Thu, 19 May 2022 11:23:10 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxG7rECMHICUvzOFKrSVTCymxJqcu4qsBNr/MUwRxI2gr2DhMlwZdzvh69KU31p2WXmioD/KC9UVYpFdUxcu1k=
-X-Received: by 2002:a05:6512:23a6:b0:477:943a:818d with SMTP id
- c38-20020a05651223a600b00477943a818dmr4144434lfv.644.1652984590052; Thu, 19
- May 2022 11:23:10 -0700 (PDT)
+        bh=GkgOXEHyMYuEPiFRBiZmgAMQEvG+Jg/37VBTbGhIxoU=;
+        b=oDip6+MFVLjtj/KRR/4sEVdfO2AN6KYtHoBMW6CV1O8HIlESjUA4LKXpCIrjEn42Xa
+         rp1fMY67INvwSPCgL70gpJ0pN9TV15bVhXxxbAF9pLNVNLPOMU4pvpGT/GxfHntuzIXj
+         LXQ4cWA4R4/oTgqc7dcnIa2nhalKD37SlwDtcDFGTIOGTwlezoVOEjGumS4bkUNJJMW6
+         zJ7e663XHl9v2xD/gIi97kZUyYi8TJruKFPSkJ2R0rwZJa+xhNqMHFTzZUrs77y2n5r4
+         eU5voNoB0wH0pR1kCTid0yTiTgSlVnNBgWnsLFyXxhslNzwUmsyjSydTdoYCuLcMpo+h
+         cnEA==
+X-Gm-Message-State: AOAM531BztHjBnGHCj4a4I9pcOqNO59NSCtZ/b3czehQZtl1FlESnQI9
+        VP0gAp2xhovk3ktn+8INJi16FVcFt2spruDDasnG9FQ2YEi1eGYrRP+XBruzUSohn4BzmFO8tb5
+        34cCyMTeOUoQP20wxTRk1Vpcu6wkzaPeY+f2JKg==
+X-Received: by 2002:a2e:9b54:0:b0:250:c939:e782 with SMTP id o20-20020a2e9b54000000b00250c939e782mr3596842ljj.384.1652990756492;
+        Thu, 19 May 2022 13:05:56 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyFcDClxdXMoLlU60QdBB4KQF1oJVnP0NyHxHkLlSFQrEk783MxAUg5+ywR5AUyvudb93w+txOpVBLPX4oHE/0=
+X-Received: by 2002:a2e:9b54:0:b0:250:c939:e782 with SMTP id
+ o20-20020a2e9b54000000b00250c939e782mr3596837ljj.384.1652990756311; Thu, 19
+ May 2022 13:05:56 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220512111236.109851-1-hare@suse.de> <20220512111236.109851-7-hare@suse.de>
-In-Reply-To: <20220512111236.109851-7-hare@suse.de>
+References: <20220512111236.109851-1-hare@suse.de> <20220512111236.109851-9-hare@suse.de>
+In-Reply-To: <20220512111236.109851-9-hare@suse.de>
 From:   Ewan Milne <emilne@redhat.com>
-Date:   Thu, 19 May 2022 14:22:58 -0400
-Message-ID: <CAGtn9rkR02KF8QikQ0J6MskocA6VQ385ajoz36Q7RH32VXBjGg@mail.gmail.com>
-Subject: Re: [PATCH 06/20] qedf: use fc rport as argument for qedf_initiate_tmf()
+Date:   Thu, 19 May 2022 16:05:45 -0400
+Message-ID: <CAGtn9rn=RZRYpjD68ug+j6+ogenH-DSYD3-023bc5basjvq-4g@mail.gmail.com>
+Subject: Re: [PATCH 08/20] ibmvfc: open-code reset loop for target reset
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Saurav Kashyap <skashyap@marvell.com>
+        Tyrel Datwyler <tyreld@linux.ibm.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The patch changes the data type of the 'lun' argument to qedf_flush_active_ios()
-to a u64, but the remaining code still uses a wildcard of -1, perhaps
-this needs a
-#define or enum of a value that is unsigned also?
+This patch looks like it will call ibmvfc_reset_device() w/IBMVFC_TARGET_RESET
+before it has called ibmvfc_cancel_all() on all the devices, the
+existing code calls
+ibmvfc_reset_device() w/IBMVFC_TARGET_RESET after the iterator.
 
-Removing the call to fc_remote_port_chkready() in qedf_initiate_tmf()
-will result
-in different semantics for whether the TMF will be issued.
-
-Changing the debug logging in qedf_eh_target_reset() and qedf_eh_device_reset()
-might make identifying the target more difficult, although
-qedf_initiate_tmf() will
-also log a message, the rport->scsi_target_id is not the same value as
-the sdev->id.
+Since you have the starget, why change to use shost_for_each_device()
+and check the
+sdev->channel and sdev->id ?  That's what starget_for_each_device() does.
 
 -Ewan
 
 On Thu, May 12, 2022 at 7:13 AM Hannes Reinecke <hare@suse.de> wrote:
 >
-> When sending a TMF we're only concerned with the rport and the LUN ID,
-> so use struct fc_rport as argument for qedf_initiate_tmf().
+> From: Hannes Reinecke <hare@suse.com>
+>
+> For target reset we need a device to send the target reset to,
+> so open-code the loop in target reset to send the target reset TMF
+> to the correct device.
 >
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> Cc: Saurav Kashyap <skashyap@marvell.com>
+> Cc: Tyrel Datwyler <tyreld@linux.ibm.com>
 > ---
->  drivers/scsi/qedf/qedf.h      |  5 ++-
->  drivers/scsi/qedf/qedf_io.c   | 75 ++++++++++-------------------------
->  drivers/scsi/qedf/qedf_main.c | 19 ++++-----
->  3 files changed, 33 insertions(+), 66 deletions(-)
+>  drivers/scsi/ibmvscsi/ibmvfc.c | 42 +++++++++++++++++++---------------
+>  1 file changed, 23 insertions(+), 19 deletions(-)
 >
-> diff --git a/drivers/scsi/qedf/qedf.h b/drivers/scsi/qedf/qedf.h
-> index c5c0bbdafc4e..80814bcf4db1 100644
-> --- a/drivers/scsi/qedf/qedf.h
-> +++ b/drivers/scsi/qedf/qedf.h
-> @@ -112,6 +112,7 @@ struct qedf_ioreq {
->  #define QEDF_CMD_ERR_SCSI_DONE         0x5
->         u8 io_req_flags;
->         uint8_t tm_flags;
-> +       u64 tm_lun;
->         struct qedf_rport *fcport;
->  #define        QEDF_CMD_ST_INACTIVE            0
->  #define        QEDFC_CMD_ST_IO_ACTIVE          1
-> @@ -497,7 +498,7 @@ extern void qedf_process_warning_compl(struct qedf_ctx *qedf,
->         struct fcoe_cqe *cqe, struct qedf_ioreq *io_req);
->  extern void qedf_process_error_detect(struct qedf_ctx *qedf,
->         struct fcoe_cqe *cqe, struct qedf_ioreq *io_req);
-> -extern void qedf_flush_active_ios(struct qedf_rport *fcport, int lun);
-> +extern void qedf_flush_active_ios(struct qedf_rport *fcport, u64 lun);
->  extern void qedf_release_cmd(struct kref *ref);
->  extern int qedf_initiate_abts(struct qedf_ioreq *io_req,
->         bool return_scsi_cmd_on_abts);
-> @@ -522,7 +523,7 @@ extern int qedf_initiate_cleanup(struct qedf_ioreq *io_req,
->         bool return_scsi_cmd_on_abts);
->  extern void qedf_process_cleanup_compl(struct qedf_ctx *qedf,
->         struct fcoe_cqe *cqe, struct qedf_ioreq *io_req);
-> -extern int qedf_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags);
-> +extern int qedf_initiate_tmf(struct fc_rport *rport, u64 lun, u8 tm_flags);
->  extern void qedf_process_tmf_compl(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
->         struct qedf_ioreq *io_req);
->  extern void qedf_process_cqe(struct qedf_ctx *qedf, struct fcoe_cqe *cqe);
-> diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-> index 2ec1f710fd1d..5d82fd95e74c 100644
-> --- a/drivers/scsi/qedf/qedf_io.c
-> +++ b/drivers/scsi/qedf/qedf_io.c
-> @@ -546,7 +546,7 @@ static int qedf_build_bd_list_from_sg(struct qedf_ioreq *io_req)
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index d0eab5700dc5..721d965f4b0e 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -2925,18 +2925,6 @@ static void ibmvfc_dev_cancel_all_noreset(struct scsi_device *sdev, void *data)
+>         *rc |= ibmvfc_cancel_all(sdev, IBMVFC_TMF_SUPPRESS_ABTS);
 >  }
 >
->  static void qedf_build_fcp_cmnd(struct qedf_ioreq *io_req,
-> -                                 struct fcp_cmnd *fcp_cmnd)
-> +                               struct fcp_cmnd *fcp_cmnd)
->  {
->         struct scsi_cmnd *sc_cmd = io_req->sc_cmd;
->
-> @@ -554,8 +554,12 @@ static void qedf_build_fcp_cmnd(struct qedf_ioreq *io_req,
->         memset(fcp_cmnd, 0, FCP_CMND_LEN);
->
->         /* 8 bytes: SCSI LUN info */
-> -       int_to_scsilun(sc_cmd->device->lun,
-> -                       (struct scsi_lun *)&fcp_cmnd->fc_lun);
-> +       if (io_req->cmd_type == QEDF_TASK_MGMT_CMD)
-> +               int_to_scsilun(io_req->tm_lun,
-> +                              (struct scsi_lun *)&fcp_cmnd->fc_lun);
-> +       else
-> +               int_to_scsilun(sc_cmd->device->lun,
-> +                              (struct scsi_lun *)&fcp_cmnd->fc_lun);
->
->         /* 4 bytes: flag info */
->         fcp_cmnd->fc_pri_ta = 0;
-> @@ -1096,7 +1100,7 @@ static void qedf_parse_fcp_rsp(struct qedf_ioreq *io_req,
->         }
->
->         /* The sense buffer can be NULL for TMF commands */
-> -       if (sc_cmd->sense_buffer) {
-> +       if (sc_cmd && sc_cmd->sense_buffer) {
->                 memset(sc_cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
->                 if (fcp_sns_len)
->                         memcpy(sc_cmd->sense_buffer, sense_data,
-> @@ -1581,7 +1585,7 @@ static void qedf_flush_els_req(struct qedf_ctx *qedf,
->  /* A value of -1 for lun is a wild card that means flush all
->   * active SCSI I/Os for the target.
->   */
-> -void qedf_flush_active_ios(struct qedf_rport *fcport, int lun)
-> +void qedf_flush_active_ios(struct qedf_rport *fcport, u64 lun)
->  {
->         struct qedf_ioreq *io_req;
->         struct qedf_ctx *qedf;
-> @@ -1769,10 +1773,6 @@ void qedf_flush_active_ios(struct qedf_rport *fcport, int lun)
->                         kref_put(&io_req->refcount, qedf_release_cmd);
->                         continue;
->                 }
-> -               if (lun > -1) {
-> -                       if (io_req->lun != lun)
-> -                               continue;
-> -               }
->
->                 /*
->                  * Use kref_get_unless_zero in the unlikely case the command
-> @@ -2282,7 +2282,7 @@ void qedf_process_cleanup_compl(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
->         complete(&io_req->cleanup_done);
->  }
->
-> -static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
-> +static int qedf_execute_tmf(struct qedf_rport *fcport, u64 tm_lun,
->         uint8_t tm_flags)
->  {
->         struct qedf_ioreq *io_req;
-> @@ -2292,17 +2292,10 @@ static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
->         int rc = 0;
->         uint16_t xid;
->         int tmo = 0;
-> -       int lun = 0;
->         unsigned long flags;
->         struct fcoe_wqe *sqe;
->         u16 sqe_idx;
->
-> -       if (!sc_cmd) {
-> -               QEDF_ERR(&qedf->dbg_ctx, "sc_cmd is NULL\n");
-> -               return FAILED;
-> -       }
+> -/**
+> - * ibmvfc_dev_cancel_all_reset - Device iterated cancel all function
+> - * @sdev:      scsi device struct
+> - * @data:      return code
+> - *
+> - **/
+> -static void ibmvfc_dev_cancel_all_reset(struct scsi_device *sdev, void *data)
+> -{
+> -       unsigned long *rc = data;
+> -       *rc |= ibmvfc_cancel_all(sdev, IBMVFC_TMF_TGT_RESET);
+> -}
 > -
-> -       lun = (int)sc_cmd->device->lun;
->         if (!test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags)) {
->                 QEDF_ERR(&(qedf->dbg_ctx), "fcport not offloaded\n");
->                 rc = FAILED;
-> @@ -2322,7 +2315,7 @@ static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
->                 qedf->target_resets++;
->
->         /* Initialize rest of io_req fields */
-> -       io_req->sc_cmd = sc_cmd;
-> +       io_req->sc_cmd = NULL;
->         io_req->fcport = fcport;
->         io_req->cmd_type = QEDF_TASK_MGMT_CMD;
->
-> @@ -2336,6 +2329,7 @@ static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
->
->         /* Default is to return a SCSI command when an error occurs */
->         io_req->return_scsi_cmd_on_abts = false;
-> +       io_req->tm_lun = tm_lun;
->
->         /* Obtain exchange id */
->         xid = io_req->xid;
-> @@ -2390,7 +2384,7 @@ static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
->
->
->         if (tm_flags == FCP_TMF_LUN_RESET)
-> -               qedf_flush_active_ios(fcport, lun);
-> +               qedf_flush_active_ios(fcport, tm_lun);
->         else
->                 qedf_flush_active_ios(fcport, -1);
->
-> @@ -2405,23 +2399,18 @@ static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
->         return rc;
->  }
->
-> -int qedf_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
-> +int qedf_initiate_tmf(struct fc_rport *rport, u64 lun, u8 tm_flags)
+>  /**
+>   * ibmvfc_eh_target_reset_handler - Reset the target
+>   * @cmd:       scsi command struct
+> @@ -2946,22 +2934,38 @@ static void ibmvfc_dev_cancel_all_reset(struct scsi_device *sdev, void *data)
+>   **/
+>  static int ibmvfc_eh_target_reset_handler(struct scsi_cmnd *cmd)
 >  {
-> -       struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
->         struct fc_rport_libfc_priv *rp = rport->dd_data;
->         struct qedf_rport *fcport = (struct qedf_rport *)&rp[1];
-> -       struct qedf_ctx *qedf;
-> -       struct fc_lport *lport = shost_priv(sc_cmd->device->host);
-> +       struct qedf_ctx *qedf = fcport->qedf;
-> +       struct fc_lport *lport = rp->local_port;
->         int rc = SUCCESS;
-> -       int rval;
-> -       struct qedf_ioreq *io_req = NULL;
-> -       int ref_cnt = 0;
->         struct fc_rport_priv *rdata = fcport->rdata;
->
->         QEDF_ERR(NULL,
-> -                "tm_flags 0x%x sc_cmd %p op = 0x%02x target_id = 0x%x lun=%d\n",
-> -                tm_flags, sc_cmd, sc_cmd->cmd_len ? sc_cmd->cmnd[0] : 0xff,
-> -                rport->scsi_target_id, (int)sc_cmd->device->lun);
-> +                "tm_flags 0x%x target_id = 0x%x lun=%llu\n",
-> +                tm_flags, rport->scsi_target_id, lun);
->
->         if (!rdata || !kref_get_unless_zero(&rdata->kref)) {
->                 QEDF_ERR(NULL, "stale rport\n");
-> @@ -2432,33 +2421,10 @@ int qedf_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
->                  (tm_flags == FCP_TMF_TGT_RESET) ? "TARGET RESET" :
->                  "LUN RESET");
->
-> -       if (qedf_priv(sc_cmd)->io_req) {
-> -               io_req = qedf_priv(sc_cmd)->io_req;
-> -               ref_cnt = kref_read(&io_req->refcount);
-> -               QEDF_ERR(NULL,
-> -                        "orig io_req = %p xid = 0x%x ref_cnt = %d.\n",
-> -                        io_req, io_req->xid, ref_cnt);
-> -       }
-> -
-> -       rval = fc_remote_port_chkready(rport);
-> -       if (rval) {
-> -               QEDF_ERR(NULL, "device_reset rport not ready\n");
-> -               rc = FAILED;
-> -               goto tmf_err;
-> -       }
-> -
-> -       rc = fc_block_scsi_eh(sc_cmd);
-> +       rc = fc_block_rport(rport);
->         if (rc)
->                 goto tmf_err;
->
-> -       if (!fcport) {
-> -               QEDF_ERR(NULL, "device_reset: rport is NULL\n");
-> -               rc = FAILED;
-> -               goto tmf_err;
-> -       }
-> -
-> -       qedf = fcport->qedf;
-> -
->         if (!qedf) {
->                 QEDF_ERR(NULL, "qedf is NULL.\n");
->                 rc = FAILED;
-> @@ -2495,7 +2461,7 @@ int qedf_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
->                 goto tmf_err;
->         }
->
-> -       rc = qedf_execute_tmf(fcport, sc_cmd, tm_flags);
-> +       rc = qedf_execute_tmf(fcport, lun, tm_flags);
->
->  tmf_err:
->         kref_put(&rdata->kref, fc_rport_destroy);
-> @@ -2512,7 +2478,6 @@ void qedf_process_tmf_compl(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
->         fcp_rsp = &cqe->cqe_info.rsp_info;
->         qedf_parse_fcp_rsp(io_req, fcp_rsp);
->
-> -       io_req->sc_cmd = NULL;
->         complete(&io_req->tm_done);
->  }
->
-> diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-> index 18dc68d577b6..85ccfbc5cd26 100644
-> --- a/drivers/scsi/qedf/qedf_main.c
-> +++ b/drivers/scsi/qedf/qedf_main.c
-> @@ -773,7 +773,7 @@ static int qedf_eh_abort(struct scsi_cmnd *sc_cmd)
->                 goto drop_rdata_kref;
->         }
->
-> -       rc = fc_block_scsi_eh(sc_cmd);
-> +       rc = fc_block_rport(rport);
->         if (rc)
->                 goto drop_rdata_kref;
->
-> @@ -857,18 +857,19 @@ static int qedf_eh_abort(struct scsi_cmnd *sc_cmd)
->
->  static int qedf_eh_target_reset(struct scsi_cmnd *sc_cmd)
->  {
-> -       QEDF_ERR(NULL, "%d:0:%d:%lld: TARGET RESET Issued...",
-> -                sc_cmd->device->host->host_no, sc_cmd->device->id,
-> -                sc_cmd->device->lun);
-> -       return qedf_initiate_tmf(sc_cmd, FCP_TMF_TGT_RESET);
-> +       struct scsi_target *starget = scsi_target(sc_cmd->device);
+> -       struct scsi_device *sdev = cmd->device;
+> -       struct ibmvfc_host *vhost = shost_priv(sdev->host);
+> -       struct scsi_target *starget = scsi_target(sdev);
+> +       struct scsi_target *starget = scsi_target(cmd->device);
 > +       struct fc_rport *rport = starget_to_rport(starget);
-> +
-> +       QEDF_ERR(NULL, "TARGET RESET Issued...");
-> +       return qedf_initiate_tmf(rport, 0, FCP_TMF_TGT_RESET);
->  }
+> +       struct Scsi_Host *shost = rport_to_shost(rport);
+> +       struct ibmvfc_host *vhost = shost_priv(shost);
+>         int block_rc;
+>         int reset_rc = 0;
+>         int rc = FAILED;
+>         unsigned long cancel_rc = 0;
+> +       bool tgt_reset = false;
 >
->  static int qedf_eh_device_reset(struct scsi_cmnd *sc_cmd)
->  {
-> -       QEDF_ERR(NULL, "%d:0:%d:%lld: LUN RESET Issued... ",
-> -                sc_cmd->device->host->host_no, sc_cmd->device->id,
-> -                sc_cmd->device->lun);
-> -       return qedf_initiate_tmf(sc_cmd, FCP_TMF_LUN_RESET);
-> +       struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
+>         ENTER;
+> -       block_rc = fc_block_scsi_eh(cmd);
+> +       block_rc = fc_block_rport(rport);
+>         ibmvfc_wait_while_resetting(vhost);
+>         if (block_rc != FAST_IO_FAIL) {
+> -               starget_for_each_device(starget, &cancel_rc, ibmvfc_dev_cancel_all_reset);
+> -               reset_rc = ibmvfc_reset_device(sdev, IBMVFC_TARGET_RESET, "target");
+> +               struct scsi_device *sdev;
 > +
-> +       QEDF_ERR(NULL, "LUN RESET Issued...\n");
-> +       return qedf_initiate_tmf(rport, sc_cmd->device->lun, FCP_TMF_LUN_RESET);
->  }
+> +               shost_for_each_device(sdev, shost) {
+> +                       if ((sdev->channel != starget->channel) ||
+> +                           (sdev->id != starget->id))
+> +                               continue;
+> +
+> +                       cancel_rc |= ibmvfc_cancel_all(sdev,
+> +                                                      IBMVFC_TMF_TGT_RESET);
+> +                       if (!tgt_reset) {
+> +                               reset_rc = ibmvfc_reset_device(sdev,
+> +                                       IBMVFC_TARGET_RESET, "target");
+> +                               tgt_reset = true;
+> +                       }
+> +               }
+>         } else
+> -               starget_for_each_device(starget, &cancel_rc, ibmvfc_dev_cancel_all_noreset);
+> +               starget_for_each_device(starget, &cancel_rc,
+> +                                       ibmvfc_dev_cancel_all_noreset);
 >
->  bool qedf_wait_for_upload(struct qedf_ctx *qedf)
+>         if (!cancel_rc && !reset_rc)
+>                 rc = ibmvfc_wait_for_ops(vhost, starget, ibmvfc_match_target);
 > --
 > 2.29.2
 >
