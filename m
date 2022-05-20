@@ -2,79 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2B84C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 01:09:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47475C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 01:09:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344233AbiETBJ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 May 2022 21:09:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56934 "EHLO
+        id S1344244AbiETBJ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 May 2022 21:09:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344219AbiETBJY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2022 21:09:24 -0400
+        with ESMTP id S1344222AbiETBJZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2022 21:09:25 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 098DF129EF2;
-        Thu, 19 May 2022 18:09:23 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24K0JN7p030255;
-        Fri, 20 May 2022 01:09:17 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DCA1129EE2;
+        Thu, 19 May 2022 18:09:25 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24K0JFqK023930;
+        Fri, 20 May 2022 01:09:22 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=A+GjuZ2zd2rtSbDhPqVYhSMuMmvSGTiOWbGal5KdhHo=;
- b=bGGV7WT3HpOjOwMTyg3xL9GBOf2kGkRRX1hDus1EHuK86YMZkZW8M2RaA8zvwBruuYdD
- sxXFIfIQCQxd0A+8h0OSnajhvnWV9PBqVwswcCxrX9M0SiSXsXKXzIO+UamGkSLRxG8j
- 4EGZZuQex+CGynSsg9aIJ9Swk7XTW+mJTMu1VYC3wG1IteP+b3iT9LsMrxagJrpU1MvE
- QPbIVzC+puN6dEkZFvRO3Z7xtqtA6jd7i3bWswrOk2ZtKCImAhKSGsojeijlSYHeWSEi
- Q2nSZjz+kC1NkuSVmP4trhSbKOQ8dz5HdwB6uBVQJLlyLvdun78aCQ9bs6UjKn0kOOcI 8g== 
+ bh=h3o0epr+LElo8wuRHEgVvV0PZDfi8uMukJ6SK4jvkiM=;
+ b=wLxJC2+F2SKgBTndFgsGYBh0eIGQEpm/9LdxK8lDxbuPXthBwtP3Wu6FL9s0beTwvpBT
+ jDYmYGfQjiGUa+1sc94Y9C7VGT9tHwN3ODqDJ6PuIW6y3Si7dLua8cIfgcDfSqDecCZF
+ wZF1+bD9d1uTXmobHqHgtPzVAnimxsDByK2s25HyYzucHVWC4FLcd3KFy9rYU0pgFdsp
+ PfTXFj4XHgnO5VT6HpWhRiprmYX7tgew++RLu4RZFWmHM7xXt+YUYhyHjm8WJXnBRD44
+ 5+OB2nQC193B2jqJogD9SFTHEU+QxbbSNfRYsTHhbkTxhKpFER3TAd990PGc8N6USfhF lQ== 
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3g2310wtqy-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3g24aanetk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 20 May 2022 01:09:17 +0000
+        Fri, 20 May 2022 01:09:22 +0000
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24K15nMM020176;
-        Fri, 20 May 2022 01:09:16 GMT
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24K15ocj020274;
+        Fri, 20 May 2022 01:09:21 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3g37crythu-1
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3g37crytm0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 20 May 2022 01:09:16 +0000
+        Fri, 20 May 2022 01:09:21 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 24K19GK5030710;
-        Fri, 20 May 2022 01:09:16 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 24K19GKD030710;
+        Fri, 20 May 2022 01:09:21 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3g37crythd-1;
-        Fri, 20 May 2022 01:09:16 +0000
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com with ESMTP id 3g37crythd-5;
+        Fri, 20 May 2022 01:09:21 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Haowen Bai <baihaowen@meizu.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+To:     cgel.zte@gmail.com, brking@us.ibm.com
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: dpt_i2o: Drop redundant spinlock initialization
-Date:   Thu, 19 May 2022 21:09:00 -0400
-Message-Id: <165300891232.11465.12336284631669008040.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, jejb@linux.ibm.com,
+        Zeal Robot <zealci@zte.com.cn>, linux-kernel@vger.kernel.org,
+        Minghao Chi <chi.minghao@zte.com.cn>
+Subject: Re: [PATCH] [SCSI] ipr: use kobj_to_dev()
+Date:   Thu, 19 May 2022 21:09:04 -0400
+Message-Id: <165300891229.11465.3097494128929554082.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.35.2
-In-Reply-To: <1652176024-3981-1-git-send-email-baihaowen@meizu.com>
-References: <1652176024-3981-1-git-send-email-baihaowen@meizu.com>
+In-Reply-To: <20220510105113.1351891-1-chi.minghao@zte.com.cn>
+References: <20220510105113.1351891-1-chi.minghao@zte.com.cn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: W5GKhqritYDh4rlGiUbQjwgpi82wp9HA
-X-Proofpoint-GUID: W5GKhqritYDh4rlGiUbQjwgpi82wp9HA
+X-Proofpoint-ORIG-GUID: b2VVXjTWMFY-HBH6mJr_GgTs5WIS8n9h
+X-Proofpoint-GUID: b2VVXjTWMFY-HBH6mJr_GgTs5WIS8n9h
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 10 May 2022 17:47:03 +0800, Haowen Bai wrote:
+On Tue, 10 May 2022 10:51:13 +0000, cgel.zte@gmail.com wrote:
 
-> adpt_post_wait_lock has declared and initialized by DEFINE_SPINLOCK,
-> so we don't need to spin_lock_init again, drop it.
+> From: Minghao Chi <chi.minghao@zte.com.cn>
+> 
+> Use kobj_to_dev() instead of open-coding it.
 > 
 > 
 
 Applied to 5.19/scsi-queue, thanks!
 
-[1/1] scsi: dpt_i2o: Drop redundant spinlock initialization
-      https://git.kernel.org/mkp/scsi/c/91fdd0788878
+[1/1] ipr: use kobj_to_dev()
+      https://git.kernel.org/mkp/scsi/c/aabd5fea4946
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
