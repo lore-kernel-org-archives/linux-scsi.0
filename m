@@ -2,93 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF8EDC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 06:42:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6DE9C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 06:50:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345592AbiETGma (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 May 2022 02:42:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58462 "EHLO
+        id S241646AbiETGuD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 May 2022 02:50:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235792AbiETGm2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2022 02:42:28 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C6CB80209
-        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 23:42:27 -0700 (PDT)
+        with ESMTP id S1346028AbiETGuC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2022 02:50:02 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AE5714D7AD
+        for <linux-scsi@vger.kernel.org>; Thu, 19 May 2022 23:49:59 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 48BDD21CBC;
-        Fri, 20 May 2022 06:42:26 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 020CD1FD73;
+        Fri, 20 May 2022 06:49:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1653028946; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1653029398; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=rXUa3RZMEjJg3UPMy6qej39IplBP7xLddQJuovQma60=;
-        b=MPui2V9Shf9oRICCifL0wPIEPBzolDrCCXehJgnX5DKzNhDmS1XvYL9mT65b3uRcGKX+Ya
-        f4ImfFQAw+U5N3mM8FcZ38LE4J83cDx0mugk9wroBOmbQIPgJyYtdgJrtvw+CDFqmFQRE/
-        nRhZ48i2paG19QjGVDvlh71S/Ftug6Y=
+        bh=94BNlz1HfZVmAZQ2ywNmBfr2ghLsfwJsb4g+6p2K6TQ=;
+        b=LK/bsHNrJDv5vWpnuulwjMto9psMTwopvGD/QrXFmHDhjtUezBjHtGzuQ8T4TVD1m9gJR1
+        UsBgXq8Urdo+I4+oDFnS6Ps6Qsa68dkBfqoS+PcL2vrf8utvnopsnL9r5LufiSGLb+b6Xm
+        fptJGzo6nbK1KqlI2LmcjZAMQ067y/g=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1653028946;
+        s=susede2_ed25519; t=1653029398;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=rXUa3RZMEjJg3UPMy6qej39IplBP7xLddQJuovQma60=;
-        b=gejNFejF12cAfS9Jf4On4i2E00s6vyXDmXCaliH9KeqcsOBxwkKFxB0yYqDbBkZ78nA9KO
-        cnhNsFxwHgGCdhDw==
+        bh=94BNlz1HfZVmAZQ2ywNmBfr2ghLsfwJsb4g+6p2K6TQ=;
+        b=/jJg90Y4SbsU6iqG5hoSo9KUHJCqJTE9OEa2tPXY6IFzkghjbxj4VuGbTsMhrbYARGLp2W
+        GPAJ2qoUu0kdGECQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EB53013A5F;
-        Fri, 20 May 2022 06:42:25 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7337213A5F;
+        Fri, 20 May 2022 06:49:57 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id jNk1NlE4h2IxHQAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 20 May 2022 06:42:25 +0000
-Message-ID: <c32603bf-7c63-7971-64a1-28617091bc37@suse.de>
-Date:   Fri, 20 May 2022 08:42:24 +0200
+        id P8vZGBU6h2IXIAAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 20 May 2022 06:49:57 +0000
+Message-ID: <86d7ebc9-bb33-7f11-1e77-38b9f855d04d@suse.de>
+Date:   Fri, 20 May 2022 08:49:56 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH 05/20] mptfc: open-code mptfc_block_error_handler() for
- bus reset
+Subject: Re: [PATCH 06/20] qedf: use fc rport as argument for
+ qedf_initiate_tmf()
 Content-Language: en-US
 To:     Ewan Milne <emilne@redhat.com>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Saurav Kashyap <skashyap@marvell.com>
 References: <20220512111236.109851-1-hare@suse.de>
- <20220512111236.109851-6-hare@suse.de>
- <CAGtn9rkeUY0RwHSjEX3wuXvos-FUveqN9M1FeX-_1tRzLmS0Vw@mail.gmail.com>
+ <20220512111236.109851-7-hare@suse.de>
+ <CAGtn9rkR02KF8QikQ0J6MskocA6VQ385ajoz36Q7RH32VXBjGg@mail.gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <CAGtn9rkeUY0RwHSjEX3wuXvos-FUveqN9M1FeX-_1tRzLmS0Vw@mail.gmail.com>
+In-Reply-To: <CAGtn9rkR02KF8QikQ0J6MskocA6VQ385ajoz36Q7RH32VXBjGg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/19/22 10:05, Ewan Milne wrote:
-> This change removes the debug log messages that mptfc_block_error_handler()
-> would have generated, and also doesn't do the same thing, at all, for each rport
-> due to the differences in the logic between fc_block_rport() and
-> fc_remote_port_chkready()
-> and waiting for ioc->active == 0.
+On 5/19/22 11:22, Ewan Milne wrote:
+> The patch changes the data type of the 'lun' argument to qedf_flush_active_ios()
+> to a u64, but the remaining code still uses a wildcard of -1, perhaps
+> this needs a
+> #define or enum of a value that is unsigned also?
 > 
-Yes, I'll be adding back the checks for ioc->active.
+Ah, no, I went slightly overboard there. That needs to be changed back 
+to be an 'int'.
 
-> Perhaps this is desirable and intentional, if so, could you explain
-> this in the commit message?
+> Removing the call to fc_remote_port_chkready() in qedf_initiate_tmf()
+> will result
+> in different semantics for whether the TMF will be issued.
 > 
-Removing the debug calls was intentional; if needs be they can be 
-activated via scsi_logging_level.
+Really? 'fc_remote_port_chkready()' just evaluates the port state;
+this is also done by fc_block_rport().
+So dropping the first shouldn't make a difference.
 
-I'll be updating the commit message.
+> Changing the debug logging in qedf_eh_target_reset() and qedf_eh_device_reset()
+> might make identifying the target more difficult, although
+> qedf_initiate_tmf() will
+> also log a message, the rport->scsi_target_id is not the same value as
+> the sdev->id.
+> 
+Sigh. Yes, the error logging is suboptimal.
+Will be updating it.
 
 Cheers,
 
