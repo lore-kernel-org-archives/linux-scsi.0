@@ -2,52 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AABAEC4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 08:39:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A02CFC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 08:39:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347295AbiETIjP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 May 2022 04:39:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58576 "EHLO
+        id S1347351AbiETIje (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 May 2022 04:39:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347242AbiETIjC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2022 04:39:02 -0400
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F5F69D4F3;
-        Fri, 20 May 2022 01:39:00 -0700 (PDT)
+        with ESMTP id S1344602AbiETIjZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2022 04:39:25 -0400
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 146F7AFAED;
+        Fri, 20 May 2022 01:39:19 -0700 (PDT)
 Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220520083858epoutp01f63876db122f22a254f3048e34e755eb~ww22eq2bc2582325823epoutp01I;
-        Fri, 20 May 2022 08:38:58 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220520083858epoutp01f63876db122f22a254f3048e34e755eb~ww22eq2bc2582325823epoutp01I
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220520083916epoutp023cb1a42d725b95d6d8f1594f01295d96~ww3GiYS5L1883218832epoutp02L;
+        Fri, 20 May 2022 08:39:16 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220520083916epoutp023cb1a42d725b95d6d8f1594f01295d96~ww3GiYS5L1883218832epoutp02L
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1653035938;
-        bh=tGQbcADDC9Fa03PFlfhjPFDOHvT6aH+E1Jkc3ryxF7Q=;
+        s=mail20170921; t=1653035956;
+        bh=UsfrS4UvuS4dFM05SqF8Ta7tbBY/QrlkptYTWqQNH+E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tsu5EaV+kpXXRtq0bfaZOYjgr0vXVUkPsQah8PfwSdBSUlscRsrKfxiOlZlTcz7Tv
-         CwUHypFtFHa9ibH3iF4X64NQKQWCL6SyK/HY5lChVqIgO1OdJpnxbO7Ky/Lsy5MKQb
-         9q6CTX8IXnAQO8jwstpIeAldIC7fTvS1kmwIy4JE=
+        b=aia/QyHkPpm/zR9tj4Cj7Hno19svunmYHyHwsInquziQDKY6IlXghgdpNSmRLJkwO
+         rMMgMNRRTwdODovo4wXmgmRKS2FfG2tsdIrmOBUT4Rusv/VF9vkaCQC3zAi4lJgly2
+         CJZrPhtTbfKzpzk8glBclSgx019w9KpRKn0+ZccE=
 Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-        20220520083858epcas5p3b3b9c0bac758e8667d9ce6aaf1cf413f~ww22B7AA20239702397epcas5p3D;
-        Fri, 20 May 2022 08:38:58 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20220520083915epcas5p4ec28bb7c4b401490d717d8b028e47e93~ww3FwITUq1733217332epcas5p44;
+        Fri, 20 May 2022 08:39:15 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
         epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        47.83.09762.2A357826; Fri, 20 May 2022 17:38:58 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20220520083725epcas5p1c3e2989c991e50603a40c81ccc4982e0~ww1fHeaQi0616006160epcas5p1U;
-        Fri, 20 May 2022 08:37:25 +0000 (GMT)
+        5B.93.09762.3B357826; Fri, 20 May 2022 17:39:15 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20220520083805epcas5p40642f5a7f9844c61792cd3ac41ac01d3~ww2E389Eb1223812238epcas5p4E;
+        Fri, 20 May 2022 08:38:05 +0000 (GMT)
 Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220520083724epsmtrp2c9780becbc7d0a832da74153df35b414~ww1fF2Byh1034110341epsmtrp2M;
-        Fri, 20 May 2022 08:37:24 +0000 (GMT)
-X-AuditID: b6c32a4b-1fdff70000002622-27-628753a219df
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20220520083805epsmtrp14fa161785f4b8b8d2ec9823b3eae2ad9~ww2E2p3KN0239102391epsmtrp1b;
+        Fri, 20 May 2022 08:38:05 +0000 (GMT)
+X-AuditID: b6c32a4b-1fdff70000002622-65-628753b319ca
 Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
         epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        E6.F7.08924.44357826; Fri, 20 May 2022 17:37:24 +0900 (KST)
+        25.08.08924.D6357826; Fri, 20 May 2022 17:38:05 +0900 (KST)
 Received: from localhost.localdomain (unknown [107.109.224.44]) by
         epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20220520083716epsmtip24bdb8c10deccb8563372f2c9e2f53548~ww1XlR8I13055130551epsmtip2Q;
-        Fri, 20 May 2022 08:37:16 +0000 (GMT)
+        20220520083757epsmtip233116cea119605d9acfdc1abbb98de9a~ww19d5gaj3055430554epsmtip28;
+        Fri, 20 May 2022 08:37:57 +0000 (GMT)
 From:   Maninder Singh <maninder1.s@samsung.com>
 To:     keescook@chromium.org, pmladek@suse.com, bcain@quicinc.com,
         mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
@@ -69,342 +69,202 @@ Cc:     linux-hexagon@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-modules@vger.kernel.org,
         kgdb-bugreport@lists.sourceforge.net, v.narang@samsung.com,
         onkarnath.1@samsung.com, Maninder Singh <maninder1.s@samsung.com>
-Subject: [PATCH 1/5] kallsyms: pass buffer size in sprint_* APIs
-Date:   Fri, 20 May 2022 14:06:57 +0530
-Message-Id: <20220520083701.2610975-2-maninder1.s@samsung.com>
+Subject: [PATCH 5/5] kallsyms: remove unsed API lookup_symbol_attrs
+Date:   Fri, 20 May 2022 14:07:01 +0530
+Message-Id: <20220520083701.2610975-6-maninder1.s@samsung.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220520083701.2610975-1-maninder1.s@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA02TfVBUVRjGOXfvvbuss3UBzSNU1BKSNGFmO3MaHbCGhjuWjSmZ4xS6xB0g
-        Plx3BYx/WGCLYNkGEIRdvkE+WvluQdhF4xsWcQiYVkAoBCpBwgUEDATaD5j873fe93nP8z5n
-        5nBY9nK2Iyc4/DIjDheG8kku3tB+wO3totMJ/u/cHOSh2jszJMqpriCRIi4TQ7qH93G0kdbF
-        Rg90MhwZ475joQpNLIamNtpI1Dc3zkY5/abG3dJWEv2qWiHQozw1QFNdGgwVDTdgaOSGBPXJ
-        w5CsdoBAzbf0OHosayTRkDaHRNLsVQKlFMazkPyeqTalyiPR+uomge509eCoPf97HJV1b2Jo
-        OOVPgIrL9qPBlgIMaaQm5xvpG2xUnmwkUEVHMRt1K1owtDW1TKDbP0xgqK8kGyD5mhIgXW0R
-        iUqrK9moTZ8LkGxMcMyDXl9LA3S2dACn09drCVrz0whGF81IcbpJNc6mZbdH2fTP5e50cfMM
-        RifPyQi6Tp1I0mOGZpLuyVrH6ZSiFkDn6T+j+7MKwUnHc9yjAUxocCQjPuh5gRs0fS2WLRo9
-        c+WJ3oBJQZJPErDlQOo92DIxgJnZntIBqO0BSYBr4kUAKzvbWdbDEoANlXL2zkRByQRubWgB
-        /KWxFbMengCY2fI3MKtIygOqtc24mXdTtSRc6TthFrGocQxWPTRarnKgjsGClU4L45QrVFf1
-        E2bmUZ5wcn4Js9o5Q+XgqkVjS3nB4fkx3Kqxg3rltIVZJk18fbZlV0h1cmGcLBa3DntD44/x
-        pJUd4Gy3ZjuDI1yav2Wqc0wcBetTYqyzMlOcnPRtvRecHigkzBoWdQBWaw9ay6/AjN4qzOr7
-        AlSsT2/vyYONeTvsCmUjNYSVneDSwsL2OjRc7n20/cBpAC5ezyRSwGuq5/Konsuj+t+6ALDU
-        YB8jkoQFMhKB6HA4E+UhEYZJIsIDPb6+GFYHLP/F/eNGMDlh9GgDGAe0Achh8XfzQJjM354X
-        IPw2mhFfPC+OCGUkbcCJg/P38qitWH97KlB4mQlhGBEj3uliHFtHKfZW1GbM8a2OyC+uOz0L
-        mHERhf6Vv/9SfGOy0W7pyz1Cp8ibIVVPz2eeVLwkUC+67HpTVdlB7Ivh6kWtwxm//3bIxTXe
-        q6Q8aW9dSH4qin7/qxOG+j/USueFEYdAeUTixr250tFo35h6b9cFQfPLCRfcrtm0vvtY6Z/b
-        lHA/qO+fVdDx4F+d2NlvWfdixDe9Cse61g63Cr78k1VB2fyrnkMZ3nez1wj+h4cVM1V2QzYj
-        nx6pHjx9XGfzzGcx9VTNufLES/KzR/Erc2eSU/u1UqUmwTcxS2D3hiFBM6Txmuz+wBA5Z3BL
-        9Zkq2HX2yOdXx0899Wuqkfkuzgb7vZ47u6dcMf6RP+LjkiDhIXeWWCL8D65vPVieBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Sf1CTdRzH7/vseZ79KOwJzJ7wPGqddXEXiGf5yYzwgniu0jTUMK+jKc8N
-        jSFtCEpnzrEiBsPlcQiDcGMhsvFDEDhwa4dDcTvWAXKHyI9uCjFJ2QgDcgtqg7rzv/fn/X59
-        7v3548PjhFqIcN6RjCxWmiFKF5ICvL1bGPF6fFL+oU239VuguXeahMqmehLUivMYmO+P4rB0
-        rocLd81KHGYV33KgvvUMBhNLNhKcD8e5UNkXCH65eI2Efu0CAQ+qjAgmeloxqB5ux+COSQbO
-        QgkomwcIsPzswMGr7CBh8GolCfKKRQI0+jwOFN4OeBPaKhL8i8sE9PbYcei+8B0OtTeXMRjW
-        /IbAUPsK3OrSYdAqDzSbSpa4cKloloD66wYu3FR3YfDPxDwB1u9dGDhrKhAU+soRmJurSbjY
-        1MAFm+NHBMqxN+KiGL/vHGIq5AM4U+JvJpjWujsYUz0tx5lO7TiXUVpHuMyVS5GMwTKNMUUP
-        lQTTYiwgmbEhC8nYy/w4o6nuQkyVYw/TV6ZHu8M/E2xPZdOPZLPS6NgvBGmTpWe4mSP7T/zp
-        GMLkSJWoQnweTW2hdTUuPKhDqQ5Eu9Vpq/56+vGyF1/VYXTdspu7yswhuuzG7qAmqSjaeNUS
-        YAS8tdQ4SU/lF3ODA4dyY/Tlu3ZOkAqj4mjdwo2VbZzaSBsb+4igDqFi6XueR9hqQwRdfmtx
-        heFT79LDnrH/Loqle0r05Cr/LO0on1zxOQE+r62Co0GU9olI+0SkQ5gRvcBmyiRiiSwmc3MG
-        mxMlE0lkxzPEUYePSVrQyoNFRnYgi3E2yoYwHrIhmscRrg1BEuWh0JBU0clcVnosRXo8nZXZ
-        0HoeLnw+pF/lSAmlxKIs9kuWzWSl/6cYjx8ux64fLtZcUe8gUopPOzqz87eaZfcruwaiT5/9
-        1XWAv7fu2mYj+bZs59MwernF4PckN2Kv7dk28454DX9SOTg0rDc39ndfuPdRaZZ11+eNA4mD
-        cdHrvjpoejkn+dW/t8+EJ+wreBRxnrNsH3kp19mWM+csfWbx04NZnk8iamv29tpcSU/t9/9U
-        kz01N7Vh2w8P3mLWnP3rxIsz9u6EurYDf8R/rW9v8aU+HrVu6Depfe6t/oU3vwHTyZiiU8K5
-        o4oq7770NBWWtK7T6vQI8nZ8TBpGkxW/b3IfVWx8r9Nrsuftisg+Fa8kGhy5igIk1j0nT0jM
-        mW9qmPdivg+mVe8L8A/DXDuFuCxNFBPJkcpE/wKKLVJUzwMAAA==
-X-CMS-MailID: 20220520083725epcas5p1c3e2989c991e50603a40c81ccc4982e0
+X-Brightmail-Tracker: H4sIAAAAAAAAA01TfUxTVxzNfX0fBVPyBBfvIBsbC05RYc4577IJyzTL0w3nwjYzNwdFX5BI
+        kbV2sI/MCgUHiGuQD2lLsZAhFgaUryDfFMdnBxaRgUAEQaHAoMigIgFW+kbmf+f8zvndc89N
+        Lp/nnEi58kPDz7PicGGYB+mIVzTt2L67NOBS8BulPRTSd5hJpC4qIFFSdDqGqicGcLSS3Eyh
+        kWo5jizRsTxUUHYRQ6MrBhIZp4copO6yCX/mNpLojnKRQFMaHUCjzWUYyu6rwFB/vgQZE0VI
+        rjcRqKa2DUez8koS3a1Sk0imshJIoY3hocS/bLNRpYZEy9ZVAnU0t+KoKSsORzdaVjHUp3gE
+        UM6Nbai74TqGymS25PyUFQrlXbYQqOB2DoVakhowtDa6QKC6X4YxZPxNBVDiswyAqvXZJMot
+        +p1ChrZMgOSD+973ZpafJQNGJTPhTMqynmDKbvZjTLZZhjO3lEMUI6+7TzGleV5MTo0ZYy5P
+        ywmmRBdPMoO9NSTTem0ZZxTZDYDRtH3KdF3TgmOuJxzfO82GhX7Hin18gxzPDOU9JiLGPaOm
+        RzpxGYh1TwAOfEi/Be8Wl5IJwJHvTFcDqJi08DjyBEDz03qKI/MAli52gI2V9OpOjBOqALTW
+        rgKO/ANg/GUFb91F0t5QV1WDr+MttJ6Ei0b/dROPHsJg4YSFWhdc6INwYCbevoDTnnCksNuO
+        BbQv1K5qcC7OHWZ0W+1+B9oP9s0M4pxnM2zLGLNjns0TU66yXxzStY5wbGncVolvI4fgROPL
+        3DkucLKljOKwKzT/GkdxlkhYrrjArcoBrFenkJzHD46ZtMS6h0fvgEVVPtz4JZjaXohxsU4w
+        aXkM4+YCWKnZwJ5Q3l9McNgNzs/N/VeFgU2djTj3WMkAmiavkgrwivK5Osrn6ij/j74OeDrw
+        IhshEYWwkn0Re8PZSG+JUCSRhod4nzonKgH2/+L1USV4OGzxNgCMDwwA8nkeWwRAJA92FpwW
+        fv8DKz4XKJaGsRIDcOPjHlsF9NrFYGc6RHiePcuyEax4Q8X4Dq4y7M5tn9dFPytNBVHDn3TB
+        qMBevfBI1/Fdkq+7s75ofDN2oTygZ2vl4R9Ptn9jPLLywI/EpVfLye3tj9QTA/wpjXXSY6L4
+        aeCFPzpmnVJ3BmTHfGbOP/ll5M1Dqlu7Kw86bwu5EuHV66t7OzowxCUt98q8dPaA1XQ0vmTm
+        SXvOzIGizHH3o0Pl8dITToJ7cWLfhb87EvZaej4//m3Fx24qg1vAqzXvXprXhavPDgZ+eCp1
+        oTXNa080HZWeZk7K72kX7pfOkgmblpaC/EFmkPaBZX9oKlHUdvjhY113fWdMLFp7jR69N/fB
+        rvvvuA9vOtYj1XZ+pczaOVUX+oLTTwEi44K/OmdzrQcuOSPc48UTS4T/ApmcuBOeBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Sa0xTdxiH/Z+ec3rJGGeF4BksMqto0gHOIdub6JiJW3JiFhnRZAynrMwT
+        0NHKWnGic6lYueNYwwK0FbmEi6VO65ChdIyVpbYD5bJFKLSZlZVSIIWYOCKFulK2xG9Pfs+T
+        vF9eHkfYS0TzjstOsXKZJFdECvCuflFsgvRgcdab11doMA54SdDdMJBQWViDQc/MJA6ragsX
+        XD0qHBYLL3HA0HkBg6lVMwmD804u6IaC4n7rryQMa/4hYK5ej2DK0olB03gXBvYOBQyWS0Fl
+        HCHA9LMNhwVVNwl/3NWRoNQuEVDVeJED5WPBbUpTT4J/KUDAgMWKQ//VIhza7gUwGK9yI2hu
+        2wajfQ0YdCqDlzuqV7nQXrFIgOG3Zi7cq+zD4PnUUwJ6Sx5hMNiiRVC+XIegx9hEQuuN61ww
+        264gUDmS9yYy/mU1YrTKEZyp9hsJpvOaHWOavEqcuaNxchlV7wSX+bFdzDSbvBhTMa8imFv6
+        UpJxPDSRjLXWjzNVTX2IqbelMUO1jeij6AzBnmNs7vHTrHxHymeCHGf7NJHniTsz73qAK9Gl
+        2DLE59HULrqm5wFWhgQ8IdWN6OWGGXJdxNDPAgv4OkfQ1wIe7nr0BNG6b2uINUFSibT+rglf
+        E5GUk6Sniy+HKg7lweibLitnrYqg9tGTvtIQ41Qc7fphNMRhVArdGKj/70QsXTe6xF1jPvUe
+        Pe5zhHZhsLFUN5Lr/Su0re7v0M4J9hdvazlViNK8oDQvqAaE6dGrbJ5Cmi1V7Mx7S8Z+laiQ
+        SBX5suzEz09Kb6HQi4nF3cikX0w0I4yHzIjmcUSRYUiqyhKGHZMUnGXlJzPl+bmswoxieLho
+        Y9hwmS1TSGVLTrFfsGweK//fYjx+tBI7YTQmGeJnde6MidSi0iTVmQGXzukLXw0Pm9k6mbDP
+        942sfLfk7a9lfv/RykPuHe5DHanTFbrph0eYp+fTV9Rfnk+98rtNkHM6OS7jWUG/Y/cd/i+F
+        aV6zs9k6S+79fv8ndm3xhN7kOMHJlFrISiYeb4lq5be0PUpfeGfTOZ5hxZMp9tcMHNjy6eEN
+        +qRsdUTlk4Vau2BMNnw7P6Fkv3nznrqX5g98cLREXdKtvhp12X/zp8dpvr9Syy6oLTHuubMH
+        7wtmz/25a+z5+60bVWmvf7jJLrNu8bhFrqjtkckb3hgZSv+uaC78tcMfCzQJj1MiJrcuZhkL
+        4t3e5SPvGl/uUsVtFuGKHMlOMUeukPwLrdBORtEDAAA=
+X-CMS-MailID: 20220520083805epcas5p40642f5a7f9844c61792cd3ac41ac01d3
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: REQ_APPROVE
 CMS-TYPE: 105P
-X-CMS-RootMailID: 20220520083725epcas5p1c3e2989c991e50603a40c81ccc4982e0
+X-CMS-RootMailID: 20220520083805epcas5p40642f5a7f9844c61792cd3ac41ac01d3
 References: <20220520083701.2610975-1-maninder1.s@samsung.com>
-        <CGME20220520083725epcas5p1c3e2989c991e50603a40c81ccc4982e0@epcas5p1.samsung.com>
+        <CGME20220520083805epcas5p40642f5a7f9844c61792cd3ac41ac01d3@epcas5p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As of now sprint_* APIs don't pass buffer size as an argument
-and use sprintf directly.
+with commit '7878c231dae0 ("slab: remove /proc/slab_allocators")'
+lookup_symbol_attrs usage is removed.
 
-To replace dangerous sprintf API to scnprintf,
-buffer size is required in arguments.
+Thus removing redundant API.
 
-Co-developed-by: Onkarnath <onkarnath.1@samsung.com>
-Signed-off-by: Onkarnath <onkarnath.1@samsung.com>
 Signed-off-by: Maninder Singh <maninder1.s@samsung.com>
 ---
- arch/s390/lib/test_unwind.c    |  2 +-
- drivers/scsi/fnic/fnic_trace.c |  8 ++++----
- include/linux/kallsyms.h       | 20 ++++++++++----------
- init/main.c                    |  2 +-
- kernel/kallsyms.c              | 27 ++++++++++++++++-----------
- kernel/trace/trace_output.c    |  2 +-
- lib/vsprintf.c                 | 10 +++++-----
- 7 files changed, 38 insertions(+), 33 deletions(-)
+ include/linux/kallsyms.h |  6 ------
+ include/linux/module.h   |  6 ------
+ kernel/kallsyms.c        | 28 ----------------------------
+ kernel/module/kallsyms.c | 28 ----------------------------
+ 4 files changed, 68 deletions(-)
 
-diff --git a/arch/s390/lib/test_unwind.c b/arch/s390/lib/test_unwind.c
-index 5a053b393d5c..adbc2b53db16 100644
---- a/arch/s390/lib/test_unwind.c
-+++ b/arch/s390/lib/test_unwind.c
-@@ -75,7 +75,7 @@ static noinline int test_unwind(struct task_struct *task, struct pt_regs *regs,
- 			ret = -EINVAL;
- 			break;
- 		}
--		sprint_symbol(sym, addr);
-+		sprint_symbol(sym, KSYM_SYMBOL_LEN, addr);
- 		if (bt_pos < BT_BUF_SIZE) {
- 			bt_pos += snprintf(bt + bt_pos, BT_BUF_SIZE - bt_pos,
- 					   state.reliable ? " [%-7s%px] %pSR\n" :
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index 4a7536bb0ab3..33acaa9bb4ba 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -128,10 +128,10 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 			}
- 			/* Convert function pointer to function name */
- 			if (sizeof(unsigned long) < 8) {
--				sprint_symbol(str, tbp->fnaddr.low);
-+				sprint_symbol(str, KSYM_SYMBOL_LEN, tbp->fnaddr.low);
- 				jiffies_to_timespec64(tbp->timestamp.low, &val);
- 			} else {
--				sprint_symbol(str, tbp->fnaddr.val);
-+				sprint_symbol(str, KSYM_SYMBOL_LEN, tbp->fnaddr.val);
- 				jiffies_to_timespec64(tbp->timestamp.val, &val);
- 			}
- 			/*
-@@ -170,10 +170,10 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
- 			}
- 			/* Convert function pointer to function name */
- 			if (sizeof(unsigned long) < 8) {
--				sprint_symbol(str, tbp->fnaddr.low);
-+				sprint_symbol(str, KSYM_SYMBOL_LEN, tbp->fnaddr.low);
- 				jiffies_to_timespec64(tbp->timestamp.low, &val);
- 			} else {
--				sprint_symbol(str, tbp->fnaddr.val);
-+				sprint_symbol(str, KSYM_SYMBOL_LEN, tbp->fnaddr.val);
- 				jiffies_to_timespec64(tbp->timestamp.val, &val);
- 			}
- 			/*
 diff --git a/include/linux/kallsyms.h b/include/linux/kallsyms.h
-index 649faac31ddb..598ff08c72d6 100644
+index 8fe535fd848a..b78e9d942a77 100644
 --- a/include/linux/kallsyms.h
 +++ b/include/linux/kallsyms.h
-@@ -84,11 +84,11 @@ const char *kallsyms_lookup(unsigned long addr,
- 			    char **modname, char *namebuf);
+@@ -91,7 +91,6 @@ extern int sprint_backtrace(char *buffer, size_t size, unsigned long address);
+ extern int sprint_backtrace_build_id(char *buffer, size_t size, unsigned long address);
  
- /* Look up a kernel symbol and return it in a text buffer. */
--extern int sprint_symbol(char *buffer, unsigned long address);
--extern int sprint_symbol_build_id(char *buffer, unsigned long address);
--extern int sprint_symbol_no_offset(char *buffer, unsigned long address);
--extern int sprint_backtrace(char *buffer, unsigned long address);
--extern int sprint_backtrace_build_id(char *buffer, unsigned long address);
-+extern int sprint_symbol(char *buffer, size_t size, unsigned long address);
-+extern int sprint_symbol_build_id(char *buffer, size_t size, unsigned long address);
-+extern int sprint_symbol_no_offset(char *buffer, size_t size, unsigned long address);
-+extern int sprint_backtrace(char *buffer, size_t size, unsigned long address);
-+extern int sprint_backtrace_build_id(char *buffer, size_t size, unsigned long address);
+ int lookup_symbol_name(unsigned long addr, char *symname, size_t size);
+-int lookup_symbol_attrs(unsigned long addr, unsigned long *size, unsigned long *offset, char *modname, char *name);
  
- int lookup_symbol_name(unsigned long addr, char *symname);
- int lookup_symbol_attrs(unsigned long addr, unsigned long *size, unsigned long *offset, char *modname, char *name);
-@@ -118,31 +118,31 @@ static inline const char *kallsyms_lookup(unsigned long addr,
- 	return NULL;
+ /* How and when do we show kallsyms values? */
+ extern bool kallsyms_show_value(const struct cred *cred);
+@@ -153,11 +152,6 @@ static inline int lookup_symbol_name(unsigned long addr, char *symname, size_t s
+ 	return -ERANGE;
  }
  
--static inline int sprint_symbol(char *buffer, unsigned long addr)
-+static inline int sprint_symbol(char *buffer, size_t size, unsigned long addr)
+-static inline int lookup_symbol_attrs(unsigned long addr, unsigned long *size, unsigned long *offset, char *modname, char *name)
+-{
+-	return -ERANGE;
+-}
+-
+ static inline bool kallsyms_show_value(const struct cred *cred)
  {
- 	*buffer = '\0';
- 	return 0;
+ 	return false;
+diff --git a/include/linux/module.h b/include/linux/module.h
+index 9b91209d615f..4c5f8f99a252 100644
+--- a/include/linux/module.h
++++ b/include/linux/module.h
+@@ -658,7 +658,6 @@ const char *module_address_lookup(unsigned long addr,
+ 			    char **modname, const unsigned char **modbuildid,
+ 			    char *namebuf, size_t buf_size);
+ int lookup_module_symbol_name(unsigned long addr, char *symname, size_t size);
+-int lookup_module_symbol_attrs(unsigned long addr, unsigned long *size, unsigned long *offset, char *modname, char *name);
+ 
+ int register_module_notifier(struct notifier_block *nb);
+ int unregister_module_notifier(struct notifier_block *nb);
+@@ -766,11 +765,6 @@ static inline int lookup_module_symbol_name(unsigned long addr, char *symname, s
+ 	return -ERANGE;
  }
  
--static inline int sprint_symbol_build_id(char *buffer, unsigned long address)
-+static inline int sprint_symbol_build_id(char *buffer, size_t size, unsigned long address)
- {
- 	*buffer = '\0';
- 	return 0;
- }
- 
--static inline int sprint_symbol_no_offset(char *buffer, unsigned long addr)
-+static inline int sprint_symbol_no_offset(char *buffer, size_t size, unsigned long addr)
- {
- 	*buffer = '\0';
- 	return 0;
- }
- 
--static inline int sprint_backtrace(char *buffer, unsigned long addr)
-+static inline int sprint_backtrace(char *buffer, size_t size, unsigned long addr)
- {
- 	*buffer = '\0';
- 	return 0;
- }
- 
--static inline int sprint_backtrace_build_id(char *buffer, unsigned long addr)
-+static inline int sprint_backtrace_build_id(char *buffer, size_t size, unsigned long addr)
- {
- 	*buffer = '\0';
- 	return 0;
-diff --git a/init/main.c b/init/main.c
-index 40255f110885..399a15857bf9 100644
---- a/init/main.c
-+++ b/init/main.c
-@@ -1207,7 +1207,7 @@ static bool __init_or_module initcall_blacklisted(initcall_t fn)
- 		return false;
- 
- 	addr = (unsigned long) dereference_function_descriptor(fn);
--	sprint_symbol_no_offset(fn_name, addr);
-+	sprint_symbol_no_offset(fn_name, KSYM_SYMBOL_LEN, addr);
- 
- 	/*
- 	 * fn will be "function_name [module_name]" where [module_name] is not
+-static inline int lookup_module_symbol_attrs(unsigned long addr, unsigned long *size, unsigned long *offset, char *modname, char *name)
+-{
+-	return -ERANGE;
+-}
+-
+ static inline int module_get_kallsym(unsigned int symnum, unsigned long *value,
+ 					char *type, char *name,
+ 					char *module_name, int *exported)
 diff --git a/kernel/kallsyms.c b/kernel/kallsyms.c
-index 87e2b1638115..f354378e241f 100644
+index d6efce28505d..96ad59b5b2fd 100644
 --- a/kernel/kallsyms.c
 +++ b/kernel/kallsyms.c
-@@ -459,7 +459,7 @@ int lookup_symbol_attrs(unsigned long addr, unsigned long *size,
+@@ -430,34 +430,6 @@ int lookup_symbol_name(unsigned long addr, char *symname, size_t size)
+ 	return 0;
  }
  
+-int lookup_symbol_attrs(unsigned long addr, unsigned long *size,
+-			unsigned long *offset, char *modname, char *name)
+-{
+-	int res;
+-
+-	name[0] = '\0';
+-	name[KSYM_NAME_LEN - 1] = '\0';
+-
+-	if (is_ksym_addr(addr)) {
+-		unsigned long pos;
+-
+-		pos = get_symbol_pos(addr, size, offset);
+-		/* Grab name */
+-		kallsyms_expand_symbol(get_symbol_offset(pos),
+-				       name, KSYM_NAME_LEN);
+-		modname[0] = '\0';
+-		goto found;
+-	}
+-	/* See if it's in a module. */
+-	res = lookup_module_symbol_attrs(addr, size, offset, modname, name);
+-	if (res)
+-		return res;
+-
+-found:
+-	cleanup_symbol_name(name);
+-	return 0;
+-}
+-
  /* Look up a kernel symbol and return it in a text buffer. */
--static int __sprint_symbol(char *buffer, unsigned long address,
-+static int __sprint_symbol(char *buffer, size_t buf_size, unsigned long address,
+ static int __sprint_symbol(char *buffer, size_t buf_size, unsigned long address,
  			   int symbol_offset, int add_offset, int add_buildid)
- {
- 	char *modname;
-@@ -502,6 +502,7 @@ static int __sprint_symbol(char *buffer, unsigned long address,
- /**
-  * sprint_symbol - Look up a kernel symbol and return it in a text buffer
-  * @buffer: buffer to be stored
-+ * @size: size of buffer
-  * @address: address to lookup
-  *
-  * This function looks up a kernel symbol with @address and stores its name,
-@@ -510,15 +511,16 @@ static int __sprint_symbol(char *buffer, unsigned long address,
-  *
-  * This function returns the number of bytes stored in @buffer.
-  */
--int sprint_symbol(char *buffer, unsigned long address)
-+int sprint_symbol(char *buffer, size_t size, unsigned long address)
- {
--	return __sprint_symbol(buffer, address, 0, 1, 0);
-+	return __sprint_symbol(buffer, size, address, 0, 1, 0);
- }
- EXPORT_SYMBOL_GPL(sprint_symbol);
- 
- /**
-  * sprint_symbol_build_id - Look up a kernel symbol and return it in a text buffer
-  * @buffer: buffer to be stored
-+ * @size: size of buffer
-  * @address: address to lookup
-  *
-  * This function looks up a kernel symbol with @address and stores its name,
-@@ -527,15 +529,16 @@ EXPORT_SYMBOL_GPL(sprint_symbol);
-  *
-  * This function returns the number of bytes stored in @buffer.
-  */
--int sprint_symbol_build_id(char *buffer, unsigned long address)
-+int sprint_symbol_build_id(char *buffer, size_t size, unsigned long address)
- {
--	return __sprint_symbol(buffer, address, 0, 1, 1);
-+	return __sprint_symbol(buffer, size, address, 0, 1, 1);
- }
- EXPORT_SYMBOL_GPL(sprint_symbol_build_id);
- 
- /**
-  * sprint_symbol_no_offset - Look up a kernel symbol and return it in a text buffer
-  * @buffer: buffer to be stored
-+ * @size: size of buffer
-  * @address: address to lookup
-  *
-  * This function looks up a kernel symbol with @address and stores its name
-@@ -544,15 +547,16 @@ EXPORT_SYMBOL_GPL(sprint_symbol_build_id);
-  *
-  * This function returns the number of bytes stored in @buffer.
-  */
--int sprint_symbol_no_offset(char *buffer, unsigned long address)
-+int sprint_symbol_no_offset(char *buffer, size_t size, unsigned long address)
- {
--	return __sprint_symbol(buffer, address, 0, 0, 0);
-+	return __sprint_symbol(buffer, size, address, 0, 0, 0);
- }
- EXPORT_SYMBOL_GPL(sprint_symbol_no_offset);
- 
- /**
-  * sprint_backtrace - Look up a backtrace symbol and return it in a text buffer
-  * @buffer: buffer to be stored
-+ * @size: size of buffer
-  * @address: address to lookup
-  *
-  * This function is for stack backtrace and does the same thing as
-@@ -564,14 +568,15 @@ EXPORT_SYMBOL_GPL(sprint_symbol_no_offset);
-  *
-  * This function returns the number of bytes stored in @buffer.
-  */
--int sprint_backtrace(char *buffer, unsigned long address)
-+int sprint_backtrace(char *buffer, size_t size, unsigned long address)
- {
--	return __sprint_symbol(buffer, address, -1, 1, 0);
-+	return __sprint_symbol(buffer, size, address, -1, 1, 0);
+diff --git a/kernel/module/kallsyms.c b/kernel/module/kallsyms.c
+index c982860405c6..e6f16c62a888 100644
+--- a/kernel/module/kallsyms.c
++++ b/kernel/module/kallsyms.c
+@@ -375,34 +375,6 @@ int lookup_module_symbol_name(unsigned long addr, char *symname, size_t size)
+ 	return -ERANGE;
  }
  
- /**
-  * sprint_backtrace_build_id - Look up a backtrace symbol and return it in a text buffer
-  * @buffer: buffer to be stored
-+ * @size: size of buffer
-  * @address: address to lookup
-  *
-  * This function is for stack backtrace and does the same thing as
-@@ -584,9 +589,9 @@ int sprint_backtrace(char *buffer, unsigned long address)
-  *
-  * This function returns the number of bytes stored in @buffer.
-  */
--int sprint_backtrace_build_id(char *buffer, unsigned long address)
-+int sprint_backtrace_build_id(char *buffer, size_t size, unsigned long address)
+-int lookup_module_symbol_attrs(unsigned long addr, unsigned long *size,
+-			       unsigned long *offset, char *modname, char *name)
+-{
+-	struct module *mod;
+-
+-	preempt_disable();
+-	list_for_each_entry_rcu(mod, &modules, list) {
+-		if (mod->state == MODULE_STATE_UNFORMED)
+-			continue;
+-		if (within_module(addr, mod)) {
+-			const char *sym;
+-
+-			sym = find_kallsyms_symbol(mod, addr, size, offset);
+-			if (!sym)
+-				goto out;
+-			if (modname)
+-				strscpy(modname, mod->name, MODULE_NAME_LEN);
+-			if (name)
+-				strscpy(name, sym, KSYM_NAME_LEN);
+-			preempt_enable();
+-			return 0;
+-		}
+-	}
+-out:
+-	preempt_enable();
+-	return -ERANGE;
+-}
+-
+ int module_get_kallsym(unsigned int symnum, unsigned long *value, char *type,
+ 		       char *name, char *module_name, int *exported)
  {
--	return __sprint_symbol(buffer, address, -1, 1, 1);
-+	return __sprint_symbol(buffer, size, address, -1, 1, 1);
- }
- 
- /* To avoid using get_symbol_offset for every symbol, we carry prefix along. */
-diff --git a/kernel/trace/trace_output.c b/kernel/trace/trace_output.c
-index 8aa493d25c73..2a6ec049cab5 100644
---- a/kernel/trace/trace_output.c
-+++ b/kernel/trace/trace_output.c
-@@ -362,7 +362,7 @@ trace_seq_print_sym(struct trace_seq *s, unsigned long address, bool offset)
- 	const char *name;
- 
- 	if (offset)
--		sprint_symbol(str, address);
-+		sprint_symbol(str, KSYM_SYMBOL_LEN, address);
- 	else
- 		kallsyms_lookup(address, NULL, NULL, NULL, str);
- 	name = kretprobed(str, address);
-diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-index f8ff861ef24a..cb241b63c967 100644
---- a/lib/vsprintf.c
-+++ b/lib/vsprintf.c
-@@ -991,15 +991,15 @@ char *symbol_string(char *buf, char *end, void *ptr,
- 
- #ifdef CONFIG_KALLSYMS
- 	if (*fmt == 'B' && fmt[1] == 'b')
--		sprint_backtrace_build_id(sym, value);
-+		sprint_backtrace_build_id(sym, KSYM_SYMBOL_LEN, value);
- 	else if (*fmt == 'B')
--		sprint_backtrace(sym, value);
-+		sprint_backtrace(sym, KSYM_SYMBOL_LEN, value);
- 	else if (*fmt == 'S' && (fmt[1] == 'b' || (fmt[1] == 'R' && fmt[2] == 'b')))
--		sprint_symbol_build_id(sym, value);
-+		sprint_symbol_build_id(sym, KSYM_SYMBOL_LEN, value);
- 	else if (*fmt != 's')
--		sprint_symbol(sym, value);
-+		sprint_symbol(sym, KSYM_SYMBOL_LEN, value);
- 	else
--		sprint_symbol_no_offset(sym, value);
-+		sprint_symbol_no_offset(sym, KSYM_SYMBOL_LEN, value);
- 
- 	return string_nocheck(buf, end, sym, spec);
- #else
 -- 
 2.17.1
 
