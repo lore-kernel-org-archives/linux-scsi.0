@@ -2,52 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A02CFC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 08:39:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DC68C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 08:40:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347351AbiETIje (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 May 2022 04:39:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58834 "EHLO
+        id S1347354AbiETIj4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 May 2022 04:39:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344602AbiETIjZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2022 04:39:25 -0400
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 146F7AFAED;
-        Fri, 20 May 2022 01:39:19 -0700 (PDT)
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220520083916epoutp023cb1a42d725b95d6d8f1594f01295d96~ww3GiYS5L1883218832epoutp02L;
-        Fri, 20 May 2022 08:39:16 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220520083916epoutp023cb1a42d725b95d6d8f1594f01295d96~ww3GiYS5L1883218832epoutp02L
+        with ESMTP id S1347278AbiETIjM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2022 04:39:12 -0400
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8B059E9F7;
+        Fri, 20 May 2022 01:39:05 -0700 (PDT)
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20220520083904epoutp01d633c5bcdcb6da73271b21c597906494~ww27ZggBF2627726277epoutp01N;
+        Fri, 20 May 2022 08:39:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20220520083904epoutp01d633c5bcdcb6da73271b21c597906494~ww27ZggBF2627726277epoutp01N
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1653035956;
-        bh=UsfrS4UvuS4dFM05SqF8Ta7tbBY/QrlkptYTWqQNH+E=;
+        s=mail20170921; t=1653035944;
+        bh=2237/Ofuxqe67/VYFRa9P3BISgr2hp9724ybcz8E9F4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aia/QyHkPpm/zR9tj4Cj7Hno19svunmYHyHwsInquziQDKY6IlXghgdpNSmRLJkwO
-         rMMgMNRRTwdODovo4wXmgmRKS2FfG2tsdIrmOBUT4Rusv/VF9vkaCQC3zAi4lJgly2
-         CJZrPhtTbfKzpzk8glBclSgx019w9KpRKn0+ZccE=
-Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-        20220520083915epcas5p4ec28bb7c4b401490d717d8b028e47e93~ww3FwITUq1733217332epcas5p44;
-        Fri, 20 May 2022 08:39:15 +0000 (GMT)
-Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        5B.93.09762.3B357826; Fri, 20 May 2022 17:39:15 +0900 (KST)
+        b=u8EuLCU4damLDZX89+GSfa5zldk34IKUPwDaK6R19ZlesjN7mpBhJsbdnTTWC3qDM
+         fObGoLvRtp1uMLJfVvZnPfccUAhB8mogz6NlgreqwZCLKObcXlegTji+lQFr2s3Flw
+         pokB64aAUXpFmH+syf18ARawGRcf2nl2fHB5465I=
+Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+        20220520083903epcas5p3adf18f19c5ed99372f394308244c18ae~ww26m8o2E0240402404epcas5p3-;
+        Fri, 20 May 2022 08:39:03 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        3F.B5.09827.7A357826; Fri, 20 May 2022 17:39:03 +0900 (KST)
 Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
         epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-        20220520083805epcas5p40642f5a7f9844c61792cd3ac41ac01d3~ww2E389Eb1223812238epcas5p4E;
-        Fri, 20 May 2022 08:38:05 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        20220520083733epcas5p4ff2414309bf128f40b0bbd3adde52297~ww1nQxUww1594815948epcas5p4M;
+        Fri, 20 May 2022 08:37:33 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
         epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20220520083805epsmtrp14fa161785f4b8b8d2ec9823b3eae2ad9~ww2E2p3KN0239102391epsmtrp1b;
-        Fri, 20 May 2022 08:38:05 +0000 (GMT)
-X-AuditID: b6c32a4b-1fdff70000002622-65-628753b319ca
+        20220520083733epsmtrp1ebe1d16f82b71ff5466e4767a66bb9a8~ww1nPCU0l0237202372epsmtrp1R;
+        Fri, 20 May 2022 08:37:33 +0000 (GMT)
+X-AuditID: b6c32a4a-b3bff70000002663-8c-628753a72e5d
 Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        25.08.08924.D6357826; Fri, 20 May 2022 17:38:05 +0900 (KST)
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        12.FB.11276.D4357826; Fri, 20 May 2022 17:37:33 +0900 (KST)
 Received: from localhost.localdomain (unknown [107.109.224.44]) by
         epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20220520083757epsmtip233116cea119605d9acfdc1abbb98de9a~ww19d5gaj3055430554epsmtip28;
-        Fri, 20 May 2022 08:37:57 +0000 (GMT)
+        20220520083725epsmtip23ee302e3ef5a51c52121b1c30ddb4167~ww1f26llB3055130551epsmtip2R;
+        Fri, 20 May 2022 08:37:25 +0000 (GMT)
 From:   Maninder Singh <maninder1.s@samsung.com>
 To:     keescook@chromium.org, pmladek@suse.com, bcain@quicinc.com,
         mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
@@ -69,202 +69,112 @@ Cc:     linux-hexagon@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-modules@vger.kernel.org,
         kgdb-bugreport@lists.sourceforge.net, v.narang@samsung.com,
         onkarnath.1@samsung.com, Maninder Singh <maninder1.s@samsung.com>
-Subject: [PATCH 5/5] kallsyms: remove unsed API lookup_symbol_attrs
-Date:   Fri, 20 May 2022 14:07:01 +0530
-Message-Id: <20220520083701.2610975-6-maninder1.s@samsung.com>
+Subject: [PATCH 2/5] kallsyms: replace sprintf with scnprintf
+Date:   Fri, 20 May 2022 14:06:58 +0530
+Message-Id: <20220520083701.2610975-3-maninder1.s@samsung.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220520083701.2610975-1-maninder1.s@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA01TfUxTVxzNfX0fBVPyBBfvIBsbC05RYc4577IJyzTL0w3nwjYzNwdFX5BI
-        kbV2sI/MCgUHiGuQD2lLsZAhFgaUryDfFMdnBxaRgUAEQaHAoMigIgFW+kbmf+f8zvndc89N
-        Lp/nnEi58kPDz7PicGGYB+mIVzTt2L67NOBS8BulPRTSd5hJpC4qIFFSdDqGqicGcLSS3Eyh
-        kWo5jizRsTxUUHYRQ6MrBhIZp4copO6yCX/mNpLojnKRQFMaHUCjzWUYyu6rwFB/vgQZE0VI
-        rjcRqKa2DUez8koS3a1Sk0imshJIoY3hocS/bLNRpYZEy9ZVAnU0t+KoKSsORzdaVjHUp3gE
-        UM6Nbai74TqGymS25PyUFQrlXbYQqOB2DoVakhowtDa6QKC6X4YxZPxNBVDiswyAqvXZJMot
-        +p1ChrZMgOSD+973ZpafJQNGJTPhTMqynmDKbvZjTLZZhjO3lEMUI6+7TzGleV5MTo0ZYy5P
-        ywmmRBdPMoO9NSTTem0ZZxTZDYDRtH3KdF3TgmOuJxzfO82GhX7Hin18gxzPDOU9JiLGPaOm
-        RzpxGYh1TwAOfEi/Be8Wl5IJwJHvTFcDqJi08DjyBEDz03qKI/MAli52gI2V9OpOjBOqALTW
-        rgKO/ANg/GUFb91F0t5QV1WDr+MttJ6Ei0b/dROPHsJg4YSFWhdc6INwYCbevoDTnnCksNuO
-        BbQv1K5qcC7OHWZ0W+1+B9oP9s0M4pxnM2zLGLNjns0TU66yXxzStY5wbGncVolvI4fgROPL
-        3DkucLKljOKwKzT/GkdxlkhYrrjArcoBrFenkJzHD46ZtMS6h0fvgEVVPtz4JZjaXohxsU4w
-        aXkM4+YCWKnZwJ5Q3l9McNgNzs/N/VeFgU2djTj3WMkAmiavkgrwivK5Osrn6ij/j74OeDrw
-        IhshEYWwkn0Re8PZSG+JUCSRhod4nzonKgH2/+L1USV4OGzxNgCMDwwA8nkeWwRAJA92FpwW
-        fv8DKz4XKJaGsRIDcOPjHlsF9NrFYGc6RHiePcuyEax4Q8X4Dq4y7M5tn9dFPytNBVHDn3TB
-        qMBevfBI1/Fdkq+7s75ofDN2oTygZ2vl4R9Ptn9jPLLywI/EpVfLye3tj9QTA/wpjXXSY6L4
-        aeCFPzpmnVJ3BmTHfGbOP/ll5M1Dqlu7Kw86bwu5EuHV66t7OzowxCUt98q8dPaA1XQ0vmTm
-        SXvOzIGizHH3o0Pl8dITToJ7cWLfhb87EvZaej4//m3Fx24qg1vAqzXvXprXhavPDgZ+eCp1
-        oTXNa080HZWeZk7K72kX7pfOkgmblpaC/EFmkPaBZX9oKlHUdvjhY113fWdMLFp7jR69N/fB
-        rvvvuA9vOtYj1XZ+pczaOVUX+oLTTwEi44K/OmdzrQcuOSPc48UTS4T/ApmcuBOeBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Sa0xTdxiH/Z+ec3rJGGeF4BksMqto0gHOIdub6JiJW3JiFhnRZAynrMwT
-        0NHKWnGic6lYueNYwwK0FbmEi6VO65ChdIyVpbYD5bJFKLSZlZVSIIWYOCKFulK2xG9Pfs+T
-        vF9eHkfYS0TzjstOsXKZJFdECvCuflFsgvRgcdab11doMA54SdDdMJBQWViDQc/MJA6ragsX
-        XD0qHBYLL3HA0HkBg6lVMwmD804u6IaC4n7rryQMa/4hYK5ej2DK0olB03gXBvYOBQyWS0Fl
-        HCHA9LMNhwVVNwl/3NWRoNQuEVDVeJED5WPBbUpTT4J/KUDAgMWKQ//VIhza7gUwGK9yI2hu
-        2wajfQ0YdCqDlzuqV7nQXrFIgOG3Zi7cq+zD4PnUUwJ6Sx5hMNiiRVC+XIegx9hEQuuN61ww
-        264gUDmS9yYy/mU1YrTKEZyp9hsJpvOaHWOavEqcuaNxchlV7wSX+bFdzDSbvBhTMa8imFv6
-        UpJxPDSRjLXWjzNVTX2IqbelMUO1jeij6AzBnmNs7vHTrHxHymeCHGf7NJHniTsz73qAK9Gl
-        2DLE59HULrqm5wFWhgQ8IdWN6OWGGXJdxNDPAgv4OkfQ1wIe7nr0BNG6b2uINUFSibT+rglf
-        E5GUk6Sniy+HKg7lweibLitnrYqg9tGTvtIQ41Qc7fphNMRhVArdGKj/70QsXTe6xF1jPvUe
-        Pe5zhHZhsLFUN5Lr/Su0re7v0M4J9hdvazlViNK8oDQvqAaE6dGrbJ5Cmi1V7Mx7S8Z+laiQ
-        SBX5suzEz09Kb6HQi4nF3cikX0w0I4yHzIjmcUSRYUiqyhKGHZMUnGXlJzPl+bmswoxieLho
-        Y9hwmS1TSGVLTrFfsGweK//fYjx+tBI7YTQmGeJnde6MidSi0iTVmQGXzukLXw0Pm9k6mbDP
-        942sfLfk7a9lfv/RykPuHe5DHanTFbrph0eYp+fTV9Rfnk+98rtNkHM6OS7jWUG/Y/cd/i+F
-        aV6zs9k6S+79fv8ndm3xhN7kOMHJlFrISiYeb4lq5be0PUpfeGfTOZ5hxZMp9tcMHNjy6eEN
-        +qRsdUTlk4Vau2BMNnw7P6Fkv3nznrqX5g98cLREXdKtvhp12X/zp8dpvr9Syy6oLTHuubMH
-        7wtmz/25a+z5+60bVWmvf7jJLrNu8bhFrqjtkckb3hgZSv+uaC78tcMfCzQJj1MiJrcuZhkL
-        4t3e5SPvGl/uUsVtFuGKHMlOMUeukPwLrdBORtEDAAA=
-X-CMS-MailID: 20220520083805epcas5p40642f5a7f9844c61792cd3ac41ac01d3
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Te0xTVxzHd27vo9QUr4jxDHQCGWwwrejEnS0oc/i4sGzBOI1blsyiN8Cg
+        wKiKM1lWoPJGkeGAUgoFZ+VVBAtDWpSH8hglrEjkMZhgwcE0Gy9BaZBRLmb+9znfR37nd5LD
+        59klUQ78kPDTbFS4OMyFFOA1ze4e2zRHEgI9R7NtUGXHBImUFWUkSovNwpB+/A8cLWa0UGhE
+        L8fRZOwFHirTxWDIvNhEIuPTIQopu5aNzmuNJPpdMUegJ6oSgMwtOgwV9tVgqL9UiowpEiSv
+        NBHIUN+Oo3/ltSS6X6ckkSx3nkDp6jgeSuld1swKFYks8y8J1NHShqPm/HgcaVpfYqgvfQyg
+        Io0b6m4owJBOtjy5NHORQtdTJwlUdreIQq1pDRhaMj8j0O3EYQwZf8kFKGUhByB9ZSGJrlWU
+        U6ipPQ8g+aDXxyLGspABmFyZCWcyLZUEoyvux5jCCRnO3FIMUYz89gDF3LzuwRQZJjAm9amc
+        YKpKkkhm8IGBZNqyLTiTXtgAGFX7YaYrWw0CHL4SeJ9iw0LOslHb954QBPdoS6nIRNtzurEW
+        Qgaq1iQDGz6kd8GbyfFEMhDw7Wg9gL/GGUirYUdPAzh95TzHcwC+aAhNBvyVwvOxA1y+HsB8
+        YyvOHWYBjGlMXSmTtAiW1BlwK9vTlSScM35mDfHoIQxqxycpq7Ge3gMLZiswK+O0K6yb1azo
+        QnovnDGrKe56W2BO9/wK29A+sO+fQZzLrIPtOaMrzFvOxFXn8qwDIN0ogNXjD1fL+6G+8zHJ
+        8Xr4d6tuVXeAE5fiKW6daFid/iPXlQN4R5m5mveBoyY1Yc3waHdYUbedkzfDK79pMW6uLUyz
+        jGKcLoS1qlfsCuX9NwiOHeHM1BTOMQOfaLoo7rUyAMxVXabSgZPitX0Ur+2j+H90AeCVgDfZ
+        SKkkiJV6Re4MZ6NFUrFEeiY8SHQyQlIFVn6Lh38tGBmeFDUBjA+aAOTzXOyFQCIPtBOeEn9/
+        no2K+CbqTBgrbQKOfNxlo5Beigm0o4PEp9lQlo1ko165GN/GQYat86rOcg74y/Z4hmxN/eeN
+        j2IHojfkXy4p3lpRKSt2yYKJJaafjfsOT7vi7uhFt7ixp/frXZ1B3qLig0V+P1Qt3TviEVd9
+        9Us30eDdkTsuSUmlkqk82VX+znlLX8K9CZXFe9/uT5rhxRMdU0c/6l+QxMouvf1+87c70tam
+        2GuLyGPNG3bnDXxa3LnVz+2A8qKNNrDsoP/JY/k9/vH9M3Nbnmn/VLYJ33F22tQVenaTYUlt
+        6TUd0hlHHNWz5hrNnhvvPvrJ38k3LHzM09Pki3rTY89hvsdN5Qn233W99fBowFqzR+cX26L1
+        bwQ7P3Ae/tAPPNbdCrkveH5o436f8IgLmzvJ8vc+cMGlweIdHrwoqfg/NRNEd5wEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SfVDTdRzH+/6ewZY/gTt/wiW1K0rUEWXyOc9gfxT+otMUu9OzOhj5u+m5
+        IbchKWVNXLJ4MNRdsgeQgYA8Pw9ikxvQTSbzQCGBhC5bBFw7xJQICIiH687/Xp/P+3Wf9z8f
+        BvezkYHM8cRkQZUoU4gpX8LaKQ7evvdgesIb091iqOueoMBcU0lBdtpVDGzjDwhYuOyk4aFN
+        S8BU2jc4VDaew8Cz0EGB2ztCg7lnObhT0k5Br/FvEv7ML0fgcTZiUDhoxWCoQg3uTCVo6+6S
+        YL/pIuCRtoWCvlYzBRrTDAk5lvM4ZA4s7zzGfArmZxZJ6HZ2EdB57QIBpbcWMRjMGUVQVBoC
+        9xwFGDRqlpsr9As03MiaIqHyxyIabmU7MFjyTJPQpvsVA3exCUHmnAGBra6QgpKaKho6XHkI
+        tMNvSyX8/NxlxJs0dwleP19H8o1lQxhfOKEh+B+MIzSvbfuZ5htuhPJF9gmMz/JqSb6+/FuK
+        H75vp/iu3HmCzyl0ID7fdYDvybWg/YFHfHcfFRTHUwRVWGS877H+6go6SffC6cZRJ6lB9esy
+        EMNw7A7un9H3MpAP48faENeS9soKc2wQN7v4iFhjf65scYxec/5CXF/7JytMsRKuvNW+7Pgy
+        AewIxf2RfpFeGXB2DONqH3bhK5Y/+w5X8LQGW2GCfZVrfVq6eknERnJPPBZ6rSGYM9ybWWUf
+        NoobnBwm1toiOafeQq35GziX4ffVPb7sn28y4TmINT4TGZ+JChBWjjYJSWqlXKkOTwpPFD6X
+        qGVK9alEueSzk8p6tPpfoVtaUHP5lKQDYQzqQByDiwNESKlN8BMdlZ1JFVQn41SnFIK6AwUx
+        hHijqDfDFefHymXJwglBSBJU/6cY4xOowfSZU7+4i2YlTWe7Mr8r2Ox/u8ZQ2VWqq00feJ4c
+        ZaVDe56MXLsef0VrqV3ouRL0xYN9ER9UdZ6J+thXLq1akmZtqThscocthOShHOdrd3rtebrN
+        ou+bFW9tPWu78GnsNOGwzm1sMDhu4gV4fNDh6B0vx6QOvH4geiziK0t1+6Hcr9v6FCneTc9F
+        t71rjY29lBKhN20IqjLL+9dP/rQ9bVwe4B3ZuquJyd5b/+KJnZJiZ8njlOrbBnzykM/SR2X7
+        T0ddbYMGRn/ElpravGu2OGSiP3o2wcjHHUw+tzvspXGv7nHVm0ytfNtFxzbzlPTD34LL0J5/
+        Y2Ka72dYr8fttL5v/3KdmFAfk4WH4iq17D/cxLrazgMAAA==
+X-CMS-MailID: 20220520083733epcas5p4ff2414309bf128f40b0bbd3adde52297
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: REQ_APPROVE
 CMS-TYPE: 105P
-X-CMS-RootMailID: 20220520083805epcas5p40642f5a7f9844c61792cd3ac41ac01d3
+X-CMS-RootMailID: 20220520083733epcas5p4ff2414309bf128f40b0bbd3adde52297
 References: <20220520083701.2610975-1-maninder1.s@samsung.com>
-        <CGME20220520083805epcas5p40642f5a7f9844c61792cd3ac41ac01d3@epcas5p4.samsung.com>
+        <CGME20220520083733epcas5p4ff2414309bf128f40b0bbd3adde52297@epcas5p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-with commit '7878c231dae0 ("slab: remove /proc/slab_allocators")'
-lookup_symbol_attrs usage is removed.
+replace sprintf API with scnprintf which prevents buffer overflow.
 
-Thus removing redundant API.
-
+Co-developed-by: Onkarnath <onkarnath.1@samsung.com>
+Signed-off-by: Onkarnath <onkarnath.1@samsung.com>
 Signed-off-by: Maninder Singh <maninder1.s@samsung.com>
 ---
- include/linux/kallsyms.h |  6 ------
- include/linux/module.h   |  6 ------
- kernel/kallsyms.c        | 28 ----------------------------
- kernel/module/kallsyms.c | 28 ----------------------------
- 4 files changed, 68 deletions(-)
+ kernel/kallsyms.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/kallsyms.h b/include/linux/kallsyms.h
-index 8fe535fd848a..b78e9d942a77 100644
---- a/include/linux/kallsyms.h
-+++ b/include/linux/kallsyms.h
-@@ -91,7 +91,6 @@ extern int sprint_backtrace(char *buffer, size_t size, unsigned long address);
- extern int sprint_backtrace_build_id(char *buffer, size_t size, unsigned long address);
- 
- int lookup_symbol_name(unsigned long addr, char *symname, size_t size);
--int lookup_symbol_attrs(unsigned long addr, unsigned long *size, unsigned long *offset, char *modname, char *name);
- 
- /* How and when do we show kallsyms values? */
- extern bool kallsyms_show_value(const struct cred *cred);
-@@ -153,11 +152,6 @@ static inline int lookup_symbol_name(unsigned long addr, char *symname, size_t s
- 	return -ERANGE;
- }
- 
--static inline int lookup_symbol_attrs(unsigned long addr, unsigned long *size, unsigned long *offset, char *modname, char *name)
--{
--	return -ERANGE;
--}
--
- static inline bool kallsyms_show_value(const struct cred *cred)
- {
- 	return false;
-diff --git a/include/linux/module.h b/include/linux/module.h
-index 9b91209d615f..4c5f8f99a252 100644
---- a/include/linux/module.h
-+++ b/include/linux/module.h
-@@ -658,7 +658,6 @@ const char *module_address_lookup(unsigned long addr,
- 			    char **modname, const unsigned char **modbuildid,
- 			    char *namebuf, size_t buf_size);
- int lookup_module_symbol_name(unsigned long addr, char *symname, size_t size);
--int lookup_module_symbol_attrs(unsigned long addr, unsigned long *size, unsigned long *offset, char *modname, char *name);
- 
- int register_module_notifier(struct notifier_block *nb);
- int unregister_module_notifier(struct notifier_block *nb);
-@@ -766,11 +765,6 @@ static inline int lookup_module_symbol_name(unsigned long addr, char *symname, s
- 	return -ERANGE;
- }
- 
--static inline int lookup_module_symbol_attrs(unsigned long addr, unsigned long *size, unsigned long *offset, char *modname, char *name)
--{
--	return -ERANGE;
--}
--
- static inline int module_get_kallsym(unsigned int symnum, unsigned long *value,
- 					char *type, char *name,
- 					char *module_name, int *exported)
 diff --git a/kernel/kallsyms.c b/kernel/kallsyms.c
-index d6efce28505d..96ad59b5b2fd 100644
+index f354378e241f..9e4316fe0ba1 100644
 --- a/kernel/kallsyms.c
 +++ b/kernel/kallsyms.c
-@@ -430,34 +430,6 @@ int lookup_symbol_name(unsigned long addr, char *symname, size_t size)
- 	return 0;
- }
+@@ -472,28 +472,29 @@ static int __sprint_symbol(char *buffer, size_t buf_size, unsigned long address,
+ 	name = kallsyms_lookup_buildid(address, &size, &offset, &modname, &buildid,
+ 				       buffer);
+ 	if (!name)
+-		return sprintf(buffer, "0x%lx", address - symbol_offset);
++		return scnprintf(buffer, buf_size, "0x%lx", address - symbol_offset);
  
--int lookup_symbol_attrs(unsigned long addr, unsigned long *size,
--			unsigned long *offset, char *modname, char *name)
--{
--	int res;
--
--	name[0] = '\0';
--	name[KSYM_NAME_LEN - 1] = '\0';
--
--	if (is_ksym_addr(addr)) {
--		unsigned long pos;
--
--		pos = get_symbol_pos(addr, size, offset);
--		/* Grab name */
--		kallsyms_expand_symbol(get_symbol_offset(pos),
--				       name, KSYM_NAME_LEN);
--		modname[0] = '\0';
--		goto found;
--	}
--	/* See if it's in a module. */
--	res = lookup_module_symbol_attrs(addr, size, offset, modname, name);
--	if (res)
--		return res;
--
--found:
--	cleanup_symbol_name(name);
--	return 0;
--}
--
- /* Look up a kernel symbol and return it in a text buffer. */
- static int __sprint_symbol(char *buffer, size_t buf_size, unsigned long address,
- 			   int symbol_offset, int add_offset, int add_buildid)
-diff --git a/kernel/module/kallsyms.c b/kernel/module/kallsyms.c
-index c982860405c6..e6f16c62a888 100644
---- a/kernel/module/kallsyms.c
-+++ b/kernel/module/kallsyms.c
-@@ -375,34 +375,6 @@ int lookup_module_symbol_name(unsigned long addr, char *symname, size_t size)
- 	return -ERANGE;
- }
+ 	if (name != buffer)
+-		strcpy(buffer, name);
++		strncpy(buffer, name, buf_size);
++
+ 	len = strlen(buffer);
+ 	offset -= symbol_offset;
  
--int lookup_module_symbol_attrs(unsigned long addr, unsigned long *size,
--			       unsigned long *offset, char *modname, char *name)
--{
--	struct module *mod;
--
--	preempt_disable();
--	list_for_each_entry_rcu(mod, &modules, list) {
--		if (mod->state == MODULE_STATE_UNFORMED)
--			continue;
--		if (within_module(addr, mod)) {
--			const char *sym;
--
--			sym = find_kallsyms_symbol(mod, addr, size, offset);
--			if (!sym)
--				goto out;
--			if (modname)
--				strscpy(modname, mod->name, MODULE_NAME_LEN);
--			if (name)
--				strscpy(name, sym, KSYM_NAME_LEN);
--			preempt_enable();
--			return 0;
--		}
--	}
--out:
--	preempt_enable();
--	return -ERANGE;
--}
--
- int module_get_kallsym(unsigned int symnum, unsigned long *value, char *type,
- 		       char *name, char *module_name, int *exported)
- {
+ 	if (add_offset)
+-		len += sprintf(buffer + len, "+%#lx/%#lx", offset, size);
++		len += scnprintf(buffer + len, buf_size - len, "+%#lx/%#lx", offset, size);
+ 
+ 	if (modname) {
+-		len += sprintf(buffer + len, " [%s", modname);
++		len += scnprintf(buffer + len, buf_size - len, " [%s", modname);
+ #if IS_ENABLED(CONFIG_STACKTRACE_BUILD_ID)
+ 		if (add_buildid && buildid) {
+ 			/* build ID should match length of sprintf */
+ #if IS_ENABLED(CONFIG_MODULES)
+ 			static_assert(sizeof(typeof_member(struct module, build_id)) == 20);
+ #endif
+-			len += sprintf(buffer + len, " %20phN", buildid);
++			len += scnprintf(buffer + len, buf_size - len, " %20phN", buildid);
+ 		}
+ #endif
+-		len += sprintf(buffer + len, "]");
++		len += scnprintf(buffer + len, buf_size - len, "]");
+ 	}
+ 
+ 	return len;
 -- 
 2.17.1
 
