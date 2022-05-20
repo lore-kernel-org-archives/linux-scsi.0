@@ -2,53 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE355C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 23:32:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9D4BC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 23:33:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350074AbiETXck (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 May 2022 19:32:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50662 "EHLO
+        id S1354142AbiETXdw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 May 2022 19:33:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350508AbiETXcg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2022 19:32:36 -0400
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7401C1A7D18
-        for <linux-scsi@vger.kernel.org>; Fri, 20 May 2022 16:32:35 -0700 (PDT)
+        with ESMTP id S234713AbiETXdu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2022 19:33:50 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3042B1A7D2B
+        for <linux-scsi@vger.kernel.org>; Fri, 20 May 2022 16:33:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1653089554; x=1684625554;
+  t=1653089624; x=1684625624;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=nlqrTymAHeI9jw2VarrArEVOw1HPczPiwh10VKEkDxg=;
-  b=Yi5YAwZivM41RyXy02WceU6zeCNOplGIXnPXkPK4rIkRQ8Mvvp3au3Ph
-   /p5LFoFIyr1UWqenyBy667hXYKFPzbAk8E6pZ8O6ambt2h4CquuN+RLqP
-   VQsh+mnGAw9k/oPvH21QAkzHcBs296oiIo2KHDQfE8kQ1X0y6gblT31XH
-   mGM1B9hq4bafdPZk/Rnp7Z8nJZHrJ0kq9HxJdi96do7sXBPvGVvK0efP9
-   qlSfmlXCJBE/5F2/wp/tIW/M4dhFroMqVvVQZ802f2MEJ/+Tqpz6W5owS
-   7cPCPJECpgxWFeHX864K+Tg1ZDLGvTTUUgfd5tLlPoNBfPNkSWwzv16Jl
-   A==;
+  bh=KysS6TGl8Pc7oX51Xw7igXQNpZmTRMOUskNztCAEee0=;
+  b=RO5Yl3PhJ4q63wsShavF41jN4z4wxqHncPSjKvrDe9ZYqhhMWD9bwlXW
+   caluW65bVz215oRIh5yvC3d1rmcnmKNKR388Gt+EBgVMBJmc6kWl7uryT
+   45XJViS1xMWY+OlFP8jkf76I1pHRqQHiIabAO6G5vFXj10Nwrzo5XR3pi
+   otHalArD9lM9Lv/mu40RH1j+RWtENFv1ne+gmnrZCTpbT12GYWZSC+uvY
+   lJ3YUQuUqk+MXtmSdH5AE/z3aoLlcKfj8EOQeRcfc4FAZQi56TY+hfnRM
+   K03zlnfRCf1U/ko+r2pMmYDzQtlSlnMYGf10BjJNggPU5/Mo3J7yAbpcf
+   w==;
 X-IronPort-AV: E=Sophos;i="5.91,240,1647273600"; 
-   d="scan'208";a="200966289"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 21 May 2022 07:32:31 +0800
-IronPort-SDR: lTezi57I4Zsjebx/07Vl2kmUbkVHx/Ar6DiO+DWsQ7/iNMyhwprpFxgTUIHPuOTe1h0lGi3dh6
- 9aP6vXj3FiBIJFi50zDTPi3MlHAdh17JvrDAFkL4g990FJGAY1DFMfcASQNflLsecNxb1NTr5J
- 9zWacRFU/t0CYuoXiS6ZgFSBVTiVPTZy7FYlmQE0/7A7K8GzK6sj7kYEZuBdX+GRJmXbUeRAQ3
- 3rSOvqglNshFDqxNWzi1T4CdndkXuBg8mEWjh6rUIcA43Y/1W3BebYsPjdwe8/iFbmuAEXWJ+a
- dmxOPJW3lYw0QoHVZxszRS7L
+   d="scan'208";a="312941535"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 21 May 2022 07:33:33 +0800
+IronPort-SDR: 3P0A6CHtFjmfiG6TQcx39FRT9u0Fgv/p+RMN3sgRvtXC8hUd+eyM8EhZNT6wNQ3HvbWskI2jXy
+ 0THwkAdWL44X+Vys2OWJTxEYdHHVB5R+4kDktMF7UN/H2vRVFXDU+TvxPqbNhjPEFrinCAYoHQ
+ VnTmX6yHIx5IsVoAe3+TR8NAZnJ9AmS1AZG47OgzoIui2SDuxxMlsQaTmZ3MXwDroFWxaHSS8p
+ x/9YQc7kZNDcXjcBc2akOeg3J5NRfdlEsfe0fXtChfejbDHA9tkZuz+a6fz6Ddi3dlRvuWQJCG
+ wpmQb/s920YF61kZ/Mut530o
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 May 2022 15:57:55 -0700
-IronPort-SDR: 9aBtmgNMsLSDJsTapoEtTjnVPw+yn+vmF3yR1aY+ZWxYsgf/Dd1uohvDGdLfMH21ugepWXhxZ9
- GmrXsy8EAJNPSiXZ0DWYmQ+BQmAL9QV8ixAQXgn1dz5IKKGLO4akb+jCgr9POg3WQcDzBUuHrf
- 0FEHNe03SW6Qv/2zq38fv6TQhrjCSJpCsa/dkmvnG2D2Jhl2bXnzPKu4yexqmoj7rTkQ6jBhKy
- uRJYx/QvllHggZq0+0jyWUHNHZChGxjK9xgJ0mFhDMRiGocp/OdYl5u+QcBV5b2TqSDXB6bbkL
- 4SU=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 May 2022 15:56:17 -0700
+IronPort-SDR: +82DKD35upTEXzMMhmBvQ2jJ/t3byioLkWGTW7ImZtX/CV+PnghtGJAvQ/PfnMDIyvRjupxVCQ
+ Yg+1VBSWInePGDHYumaZMihvaUq6t5aetyto264DfRo+mZYah0ThEsx+xjcFJrpz4CW7UycXJw
+ gOzvne/udvrDEoQ3+V+sYu6SZbWKxSyMJyI02OnDy7AB9GVmTw8zG7RzmUCC/u0bGnxbpwHKs2
+ 6w2C16kl2mMkAiJH8Lj07YSiOfRBmB6TckXoW+4yWeIh6yJFXsKVDqM9mfTGd8OuDwripI4eMs
+ b24=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 May 2022 16:32:33 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 May 2022 16:33:34 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4L4jgh4QkNz1SVp1
-        for <linux-scsi@vger.kernel.org>; Fri, 20 May 2022 16:32:32 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4L4jhs2Kpgz1SVp3
+        for <linux-scsi@vger.kernel.org>; Fri, 20 May 2022 16:33:33 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,27 +56,27 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1653089551; x=1655681552; bh=nlqrTymAHeI9jw2VarrArEVOw1HPczPiwh1
-        0VKEkDxg=; b=EdV2FxZidnZiv8fZT8Mv8bveSXH46h+c2KjLhAttf5g2dKfMwQl
-        cJja6NwxT66QwCkiZXS+GST0N1x8SUxakoOOENSOVBCMD0yvfXUjjSG4qWuvJD9M
-        KW+zbDNZSJRsBqIOJEMlBAJ9cMijNxN0nq+JsdT1h/Lvvnes8wHFtiP1+L9lTtgY
-        PCMkxSADkwb5YB1kVC8Lx0OUrfZiyxf3ovjjat6j5ooV2PlW2oFulowqBVxfptQF
-        wCKFqAcJgWv7UkbOOA3+jf2AWosW7eNuSPR4k6ZG+5ljypSWHG2emM4ZPIu9REUC
-        PtE9ztTvY5KCFWCZByOd/rGIswaqiKRCJNw==
+        1653089612; x=1655681613; bh=KysS6TGl8Pc7oX51Xw7igXQNpZmTRMOUskN
+        ztCAEee0=; b=uDGNOQIsh48inaoun4AJwCUgoJIBlCt2pvcG1/RPSae5nO73YFv
+        dTjg1WJbEhrRrJrL6FBx9wI2n5x3PtQ3g7JxNREFUo1z0h8Wcsk+WF5izoeuwNqH
+        5jS0Kz3SYNDbFExwLsgoDjZJgb/Ucoy9tTCeI+mAppQxcV5PuqkSjRGCglCLQalS
+        pw67JD9iyU/mfxiU94bNsf6CnzD81OkVdHhRpUGqWsj20ClGWM7ej9elGn21cVjq
+        H/bA5J78ULBEWq2jSPrlOwkLJrJ/Xjr1tQ4Qm9Sphuo/ih9Be4N1Cwlc2JTqAIlw
+        bvuzzI1ozKNOCj8qIPICikHcZQLCqaxHFzA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id tq7YB_0qTTd0 for <linux-scsi@vger.kernel.org>;
-        Fri, 20 May 2022 16:32:31 -0700 (PDT)
+        with ESMTP id qo96CiRH_m5E for <linux-scsi@vger.kernel.org>;
+        Fri, 20 May 2022 16:33:32 -0700 (PDT)
 Received: from [10.225.163.51] (unknown [10.225.163.51])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4L4jgc191Pz1Rvlc;
-        Fri, 20 May 2022 16:32:27 -0700 (PDT)
-Message-ID: <8f46233b-9905-c35b-0d27-00c9af729195@opensource.wdc.com>
-Date:   Sat, 21 May 2022 08:32:26 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4L4jhn73qjz1Rvlc;
+        Fri, 20 May 2022 16:33:29 -0700 (PDT)
+Message-ID: <250a10e6-40ae-e4e8-ae01-4f7144b089f8@opensource.wdc.com>
+Date:   Sat, 21 May 2022 08:33:28 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.9.0
-Subject: Re: [PATCH 1/4] dma-mapping: Add dma_opt_mapping_size()
+Subject: Re: [PATCH 2/4] dma-iommu: Add iommu_dma_opt_mapping_size()
 Content-Language: en-US
 To:     John Garry <john.garry@huawei.com>, joro@8bytes.org,
         will@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -86,10 +86,10 @@ Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, liyihang6@hisilicon.com,
         chenxiang66@hisilicon.com, thunder.leizhen@huawei.com
 References: <1653035003-70312-1-git-send-email-john.garry@huawei.com>
- <1653035003-70312-2-git-send-email-john.garry@huawei.com>
+ <1653035003-70312-3-git-send-email-john.garry@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <1653035003-70312-2-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1653035003-70312-3-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -97,104 +97,77 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 5/20/22 17:23, John Garry wrote:
-> Streaming DMA mapping involving an IOMMU may be much slower for larger
-> total mapping size. This is because every IOMMU DMA mapping requires an
-> IOVA to be allocated and freed. IOVA sizes above a certain limit are not
-> cached, which can have a big impact on DMA mapping performance.
+> Add the IOMMU callback for DMA mapping API dma_opt_mapping_size(), which
+> allows the drivers to know the optimal mapping limit and thus limit the
+> requested IOVA lengths.
 > 
-> Provide an API for device drivers to know this "optimal" limit, such that
-> they may try to produce mapping which don't exceed it.
+> This value is based on the IOVA rcache range limit, as IOVAs allocated
+> above this limit must always be newly allocated, which may be quite slow.
 > 
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->  Documentation/core-api/dma-api.rst |  9 +++++++++
->  include/linux/dma-map-ops.h        |  1 +
->  include/linux/dma-mapping.h        |  5 +++++
->  kernel/dma/mapping.c               | 12 ++++++++++++
->  4 files changed, 27 insertions(+)
+>  drivers/iommu/dma-iommu.c | 6 ++++++
+>  drivers/iommu/iova.c      | 5 +++++
+>  include/linux/iova.h      | 2 ++
+>  3 files changed, 13 insertions(+)
 > 
-> diff --git a/Documentation/core-api/dma-api.rst b/Documentation/core-api/dma-api.rst
-> index 6d6d0edd2d27..b3cd9763d28b 100644
-> --- a/Documentation/core-api/dma-api.rst
-> +++ b/Documentation/core-api/dma-api.rst
-> @@ -204,6 +204,15 @@ Returns the maximum size of a mapping for the device. The size parameter
->  of the mapping functions like dma_map_single(), dma_map_page() and
->  others should not be larger than the returned value.
+> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
+> index 09f6e1c0f9c0..f619e41b9172 100644
+> --- a/drivers/iommu/dma-iommu.c
+> +++ b/drivers/iommu/dma-iommu.c
+> @@ -1442,6 +1442,11 @@ static unsigned long iommu_dma_get_merge_boundary(struct device *dev)
+>  	return (1UL << __ffs(domain->pgsize_bitmap)) - 1;
+>  }
 >  
-> +::
+> +static size_t iommu_dma_opt_mapping_size(void)
+> +{
+> +	return iova_rcache_range();
+> +}
 > +
-> +	size_t
-> +	dma_opt_mapping_size(struct device *dev);
-> +
-> +Returns the maximum optimal size of a mapping for the device. Mapping large
-> +buffers may take longer so device drivers are advised to limit total DMA
-> +streaming mappings length to the returned value.
-> +
->  ::
->  
->  	bool
-> diff --git a/include/linux/dma-map-ops.h b/include/linux/dma-map-ops.h
-> index 0d5b06b3a4a6..98ceba6fa848 100644
-> --- a/include/linux/dma-map-ops.h
-> +++ b/include/linux/dma-map-ops.h
-> @@ -69,6 +69,7 @@ struct dma_map_ops {
->  	int (*dma_supported)(struct device *dev, u64 mask);
->  	u64 (*get_required_mask)(struct device *dev);
->  	size_t (*max_mapping_size)(struct device *dev);
-> +	size_t (*opt_mapping_size)(void);
->  	unsigned long (*get_merge_boundary)(struct device *dev);
+>  static const struct dma_map_ops iommu_dma_ops = {
+>  	.alloc			= iommu_dma_alloc,
+>  	.free			= iommu_dma_free,
+> @@ -1462,6 +1467,7 @@ static const struct dma_map_ops iommu_dma_ops = {
+>  	.map_resource		= iommu_dma_map_resource,
+>  	.unmap_resource		= iommu_dma_unmap_resource,
+>  	.get_merge_boundary	= iommu_dma_get_merge_boundary,
+> +	.opt_mapping_size	= iommu_dma_opt_mapping_size,
 >  };
 >  
-> diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-> index dca2b1355bb1..fe3849434b2a 100644
-> --- a/include/linux/dma-mapping.h
-> +++ b/include/linux/dma-mapping.h
-> @@ -144,6 +144,7 @@ int dma_set_mask(struct device *dev, u64 mask);
->  int dma_set_coherent_mask(struct device *dev, u64 mask);
->  u64 dma_get_required_mask(struct device *dev);
->  size_t dma_max_mapping_size(struct device *dev);
-> +size_t dma_opt_mapping_size(struct device *dev);
->  bool dma_need_sync(struct device *dev, dma_addr_t dma_addr);
->  unsigned long dma_get_merge_boundary(struct device *dev);
->  struct sg_table *dma_alloc_noncontiguous(struct device *dev, size_t size,
-> @@ -266,6 +267,10 @@ static inline size_t dma_max_mapping_size(struct device *dev)
->  {
->  	return 0;
->  }
-> +static inline size_t dma_opt_mapping_size(struct device *dev)
-> +{
-> +	return 0;
-> +}
->  static inline bool dma_need_sync(struct device *dev, dma_addr_t dma_addr)
->  {
->  	return false;
-> diff --git a/kernel/dma/mapping.c b/kernel/dma/mapping.c
-> index db7244291b74..1bfe11b1edb6 100644
-> --- a/kernel/dma/mapping.c
-> +++ b/kernel/dma/mapping.c
-> @@ -773,6 +773,18 @@ size_t dma_max_mapping_size(struct device *dev)
->  }
->  EXPORT_SYMBOL_GPL(dma_max_mapping_size);
+>  /*
+> diff --git a/drivers/iommu/iova.c b/drivers/iommu/iova.c
+> index db77aa675145..9f00b58d546e 100644
+> --- a/drivers/iommu/iova.c
+> +++ b/drivers/iommu/iova.c
+> @@ -26,6 +26,11 @@ static unsigned long iova_rcache_get(struct iova_domain *iovad,
+>  static void free_cpu_cached_iovas(unsigned int cpu, struct iova_domain *iovad);
+>  static void free_iova_rcaches(struct iova_domain *iovad);
 >  
-> +size_t dma_opt_mapping_size(struct device *dev)
+> +unsigned long iova_rcache_range(void)
+
+Why not a size_t return type ?
+
 > +{
-> +	const struct dma_map_ops *ops = get_dma_ops(dev);
-> +	size_t size = SIZE_MAX;
-> +
-> +	if (ops && ops->opt_mapping_size)
-> +		size = ops->opt_mapping_size();
-> +
-> +	return min(dma_max_mapping_size(dev), size);
+> +	return PAGE_SIZE << (IOVA_RANGE_CACHE_MAX_SIZE - 1);
 > +}
-> +EXPORT_SYMBOL_GPL(dma_opt_mapping_size);
 > +
->  bool dma_need_sync(struct device *dev, dma_addr_t dma_addr)
+>  static int iova_cpuhp_dead(unsigned int cpu, struct hlist_node *node)
 >  {
->  	const struct dma_map_ops *ops = get_dma_ops(dev);
+>  	struct iova_domain *iovad;
+> diff --git a/include/linux/iova.h b/include/linux/iova.h
+> index 320a70e40233..c6ba6d95d79c 100644
+> --- a/include/linux/iova.h
+> +++ b/include/linux/iova.h
+> @@ -79,6 +79,8 @@ static inline unsigned long iova_pfn(struct iova_domain *iovad, dma_addr_t iova)
+>  int iova_cache_get(void);
+>  void iova_cache_put(void);
+>  
+> +unsigned long iova_rcache_range(void);
+> +
+>  void free_iova(struct iova_domain *iovad, unsigned long pfn);
+>  void __free_iova(struct iova_domain *iovad, struct iova *iova);
+>  struct iova *alloc_iova(struct iova_domain *iovad, unsigned long size,
 
-Looks OK to me.
-
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
 -- 
 Damien Le Moal
