@@ -2,258 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C9D2C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 20:03:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D2E6C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 May 2022 23:30:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351655AbiETUD3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 May 2022 16:03:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41060 "EHLO
+        id S1354109AbiETXal (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 May 2022 19:30:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236679AbiETUD1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2022 16:03:27 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC9BC19C39F
-        for <linux-scsi@vger.kernel.org>; Fri, 20 May 2022 13:03:26 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 7B32E1FA6F;
-        Fri, 20 May 2022 20:03:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1653077005; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=PLcNLOpcjes25Lho7R+866IMs61FnVBOPXa/QIyn5Ys=;
-        b=ZwQxHr+HwHkv/a4wSQ9FjdGHW2BHVaM8ImQTWft07bmrLkCGFsTY/no0h6Fi1hnO/tVYpN
-        MBIlAtlKqqorqAQh3FzMGBponY5FChwRk8KOaouy+o4OS1uXSK6uC+vJR/wBHioDVkTVey
-        MsRh+8IIgBzajJVpP12El/JJZGVMA4w=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3D75513A5F;
-        Fri, 20 May 2022 20:03:25 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id yx9tDQ30h2IubAAAMHmgww
-        (envelope-from <mwilck@suse.com>); Fri, 20 May 2022 20:03:25 +0000
-Message-ID: <234ccf5fc9f36fd837b3959057691a716685da3b.camel@suse.com>
-Subject: Re: [PATCH 1/1] scsi_dh_alua: properly handling the ALUA
- transitioning state
-From:   Martin Wilck <mwilck@suse.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Brian Bunker <brian@purestorage.com>,
-        linux-scsi@vger.kernel.org
-Cc:     Benjamin Marzinski <bmarzins@redhat.com>
-Date:   Fri, 20 May 2022 22:03:24 +0200
-In-Reply-To: <7d0140a6-9ab7-9b88-9601-4204ab8a88ca@oracle.com>
-References: <CAHZQxy+4sTPz9+pY3=7VJH+CLUJsDct81KtnR2be8ycN5mhqTg@mail.gmail.com>
-         <165153834205.24012.9775963085982195213.b4-ty@oracle.com>
-         <c8e9451c521573b1774bd47f7a4dfe911fd80f8d.camel@suse.com>
-         <32404e1c-bbd3-d3fb-c83f-394bc3765e7b@suse.de>
-         <2f6d93fd90c3e78166a1803a989b4dc6064fcada.camel@suse.com>
-         <7d0140a6-9ab7-9b88-9601-4204ab8a88ca@oracle.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.1 
+        with ESMTP id S1354081AbiETXak (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2022 19:30:40 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 559E71A7D18
+        for <linux-scsi@vger.kernel.org>; Fri, 20 May 2022 16:30:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1653089439; x=1684625439;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=mC23Js+fgQ42aR1x1h3Crwa5qeNduvEcgjySjZ6gkSE=;
+  b=Cdhxwvv8UENU76yQZk09raIt7JYswpWr96ncTec/7notDTqY+D/fe+B2
+   HALPCE5QjC/MEjVA8BV2VUKx3OWOjANOA9cShaRhXOp19LsSVA+EO9/0g
+   RY2kn7reYeQ1/aRxcjJ/KADtHor+M0cw8jl+OwBPN2ncno/YR7BQYwA5H
+   N+dku+bqcPo68+WknCVLT4WHTmhF0Qqn8j5D0WBUGK8PvzvFmYvb086YV
+   +XHbUC4HoGGvx9lOLMMXXmpWc+TW5Nu93kcrMBePzVT1r1rg+Zdw+5Do9
+   RGX2DzyIOH/b3voLbQjCJo3dwCMkNQ3t/6xdI77Tv+y+YNXT4gSgux8vD
+   A==;
+X-IronPort-AV: E=Sophos;i="5.91,240,1647273600"; 
+   d="scan'208";a="199759571"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 21 May 2022 07:30:36 +0800
+IronPort-SDR: h3d1+Yi+7K6YiPcYJcEQ2oWJm5APhQLIwT9+yRvHj/+pCCeQDcZgo6rB0Nr3tnsXWST2uF6Y2J
+ m7f06ze97g/miEgwPhJAojm+3jhEejhdm7BlL/gJH0kFWvqzspJSQVHLakbC8uUK5RqwMG4Ev3
+ Wpki1giUnWchqwE3GOfjrEStMFI9KmxzZbIEh+Bs6nZ84IqsqHaZEx5k7AJ9vX1qc84O532Hoi
+ /osIMty+fEVvnWiJ/ZSlbet0oe2xuJ2EOvNm7QyTpHYqaiOvRg7XBYQqFCznDsXcwx71k2yeZz
+ YSnzXPMUSpiHOe5zokc032K5
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 May 2022 15:53:19 -0700
+IronPort-SDR: H/zVt4WSjVq07MTOZuPvZ6pgEq5HhoOv3V7idTacY+y1H87KuZKzrl05DbmfrbhgZxupzvE9a+
+ SDOqA1wKEu6yqP6Y2VXglphoRYHJJFj+vf6m0eVhJEk5VyfUezIH4XTaGjF3HvuO7wTGdRoO2f
+ c3raBB6eOuanCAlm+ZsBw4non/aqobnuzNISoleOMrNU+uhYign2OBL43tojVri+ZyWlLQWiab
+ 325nkkY2e1LPl1vStleicZHcYyqIlFkeyq9hiQ8/DDWvH3HbeexX6tjq2TqGI0EkWgXQLCqDww
+ LW8=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 May 2022 16:30:36 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4L4jdR4K2fz1SVp4
+        for <linux-scsi@vger.kernel.org>; Fri, 20 May 2022 16:30:35 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1653089434; x=1655681435; bh=mC23Js+fgQ42aR1x1h3Crwa5qeNduvEcgjy
+        SjZ6gkSE=; b=Nk8Hxo8+XR7/VqUuVjQ5LqiJPLj5h7vTFa/tWJg11fe3HCm13hn
+        b70LJIxRTW43v6GNhZEwLiDvFaFUAxs5i/nG5e8PxJF5WO463aNgJ+xmnTYRjBd7
+        RySZ5jWJQqmIkDz+LEeoz6rIgGGNzuDQvDMbRxWGmyyV/cFJpPkw7DHXKHdH+Lft
+        6PpNvvml7iiRSpRAP8MLMUrxTHuF/uloCDy+a6pQuQj/F8pwNU+gx8m5uBoht8hf
+        0vnnpYuYTOx/aDHe1k3AR1MO/x4gSoAgX7Cjl4VgQeD74fncW/Y75z2TrB7/CZMp
+        nZEBM0HcRilBjsU7QQ79PFhTR/8WUDihf0A==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id kHjLfWZ5ci3U for <linux-scsi@vger.kernel.org>;
+        Fri, 20 May 2022 16:30:34 -0700 (PDT)
+Received: from [10.225.163.51] (unknown [10.225.163.51])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4L4jdM62rXz1Rvlc;
+        Fri, 20 May 2022 16:30:31 -0700 (PDT)
+Message-ID: <e65e7329-67e3-016f-e213-86e51b8021d6@opensource.wdc.com>
+Date:   Sat, 21 May 2022 08:30:30 +0900
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+Subject: Re: [PATCH 3/4] scsi: core: Cap shost max_sectors according to DMA
+ optimum mapping limits
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, joro@8bytes.org,
+        will@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com
+Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-scsi@vger.kernel.org, liyihang6@hisilicon.com,
+        chenxiang66@hisilicon.com, thunder.leizhen@huawei.com
+References: <1653035003-70312-1-git-send-email-john.garry@huawei.com>
+ <1653035003-70312-4-git-send-email-john.garry@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <1653035003-70312-4-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2022-05-20 at 14:08 -0500, Mike Christie wrote:
-> On 5/20/22 9:03 AM, Martin Wilck wrote:
-> > On Fri, 2022-05-20 at 14:06 +0200, Hannes Reinecke wrote:
-> > > On 5/20/22 12:57, Martin Wilck wrote:
-> > > > Brian, Martin,
-> > > >=20
-> > > > sorry, I've overlooked this patch previously. I have to say I
-> > > > think
-> > > > it's wrong and shouldn't have been applied. At least I need
-> > > > more
-> > > > in-
-> > > > depth explanation.
-> > > >=20
-> > > > On Mon, 2022-05-02 at 20:50 -0400, Martin K. Petersen wrote:
-> > > > > On Mon, 2 May 2022 08:09:17 -0700, Brian Bunker wrote:
-> > > > >=20
-> > > > > > The handling of the ALUA transitioning state is currently
-> > > > > > broken.
-> > > > > > When
-> > > > > > a target goes into this state, it is expected that the
-> > > > > > target
-> > > > > > is
-> > > > > > allowed to stay in this state for the implicit transition
-> > > > > > timeout
-> > > > > > without a path failure.
-> > > >=20
-> > > > Can you please show me a quote from the specs on which this
-> > > > expectation
-> > > > ("without a path failure") is based? AFAIK the SCSI specs don't
-> > > > say
-> > > > anything about device-mapper multipath semantics.
-> > > >=20
-> > > > > > The handler has this logic, but it gets
-> > > > > > skipped currently.
-> > > > > >=20
-> > > > > > When the target transitions, there is in-flight I/O from
-> > > > > > the
-> > > > > > initiator. The first of these responses from the target
-> > > > > > will be
-> > > > > > a
-> > > > > > unit
-> > > > > > attention letting the initiator know that the ALUA state
-> > > > > > has
-> > > > > > changed.
-> > > > > > The remaining in-flight I/Os, before the initiator finds
-> > > > > > out
-> > > > > > that
-> > > > > > the
-> > > > > > portal state has changed, will return not ready, ALUA state
-> > > > > > is
-> > > > > > transitioning. The portal state will change to
-> > > > > > SCSI_ACCESS_STATE_TRANSITIONING. This will lead to all new
-> > > > > > I/O
-> > > > > > immediately failing the path unexpectedly. The path failure
-> > > > > > happens
-> > > > > > in
-> > > > > > less than a second instead of the expected successes until
-> > > > > > the
-> > > > > > transition timer is exceeded.
-> > > >=20
-> > > > dm multipath has no concept of "transitioning" state. Path
-> > > > state
-> > > > can be
-> > > > either active or inactive. As Brian wrote, commands sent to the
-> > > > transitioning device will return NOT READY, TRANSITIONING, and
-> > > > require
-> > > > retries on the SCSI layer. If we know this in advance, why
-> > > > should
-> > > > we
-> > > > continue sending I/O down this semi-broken path? If other,
-> > > > healthy
-> > > > paths are available, why it would it not be the right thing to
-> > > > switch
-> > > > I/O to them ASAP?
-> > > >=20
-> > > But we do, don't we?
-> > > Commands are being returned with the appropriate status, and=20
-> > > dm-multipath should make the corresponding decisions here.
-> > > This patch just modifies the check when _sending_ commands; ie
-> > > multipath=20
-> > > had decided that the path is still usable.
-> > > Question rather would be why multipath did that;
-> >=20
-> > If alua_prep_fn() got called, the path was considered usable at the
-> > given point in time by dm-multipath. Most probably the reason was
-> > simply that no error condition had occured on this path before ALUA
-> > state switched to transitioning. I suppose this can happen
-> > if=A0storage
-> > switches a PG consisting of multiple paths to TRANSITIONING. We get
-> > an
-> > error on one path (sda, say), issue an RTPG, and receive the new
-> > ALUA
-> > state for all paths of the PG. For all paths except sda, we'd just
-> > see
-> > a switch to TRANSITIONING without a previous SCSI error.
-> >=20
-> > With this patch, we'll dispatch I/O (usually an entire bunch) to
-> > these
-> > paths despite seeing them in TRANSITIONING state. Eventually, when
-> > the
-> > SCSI responses are received, this leads to path failures. If I/O
-> > latencies are small, this happens after a few ms. In that case, the
-> > goal of Brian's patch is not reached, because the time until path
-> > failure would still be on the order of milliseconds. OTOH, if
-> > latencies
-> > are high, it takes substantially longer for the kernel to realize
-> > that
-> > the path is non-functional, while other, good paths may be idle.=A0I
-> > fail
-> > to see the benefit.
-> >=20
->=20
-> I'm not sure everyone agrees with you on the meaning of
-> transitioning.
->=20
-> If we go from non-optimized to optimized or standby to non-
-> opt/optimized
-> we don't want to try other paths because it can cause thrashing.
+On 5/20/22 17:23, John Garry wrote:
+> Streaming DMA mappings may be considerably slower when mappings go through
+> an IOMMU and the total mapping length is somewhat long. This is because the
+> IOMMU IOVA code allocates and free an IOVA for each mapping, which may
+> affect performance.
+> 
+> For performance reasons set the request_queue max_sectors from
+> dma_opt_mapping_size(), which knows this mapping limit.
+> 
+> In addition, the shost->max_sectors is repeatedly set for each sdev in
+> __scsi_init_queue(). This is unnecessary, so set once when adding the
+> host.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  drivers/scsi/hosts.c    | 5 +++++
+>  drivers/scsi/scsi_lib.c | 4 ----
+>  2 files changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index f69b77cbf538..a3ae6345473b 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -225,6 +225,11 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>  	shost->cmd_per_lun = min_t(int, shost->cmd_per_lun,
+>  				   shost->can_queue);
+>  
+> +	if (dma_dev->dma_mask) {
+> +		shost->max_sectors = min_t(unsigned int, shost->max_sectors,
+> +				dma_opt_mapping_size(dma_dev) >> SECTOR_SHIFT);
+> +	}
 
-But only with explicit ALUA, or am I missing something? I agree that
-the host shouldn't initiate a PG switch if it encounters transitioning
-state. I also agree that for transitioning towards a "better" state,
-e.g. standby to (non)-optimized, failing the path would be
-questionable.=A0Unfortunately we don't know in which "direction" the path
-is transitioning - it could be for 'better' or 'worse'. I suppose that
-in the case of a PG switch, it can happen that we dispatch I/O to a=20
-device that used to be in Standby and is now transitioning. Would it
-make sense to remember the previous state and "guess" what we're going
-to transition to? I.e. if the previous state was "Standby", it's
-probably going to be (non)optimized after the transition, and vice-
-versa?
+Nit: you could drop the curly brackets here.
 
->  We just
-> need to transition resources before we can fully use the path. It
-> could
-> be a local cache operation or for distributed targets it could be a
-> really
-> expensive operation.
->=20
-> For both though, it can take longer than the retries we get from
-> scsi-ml.
+> +
+>  	error = scsi_init_sense_cache(shost);
+>  	if (error)
+>  		goto fail;
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 8d18cc7e510e..2d43bb8799bd 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1884,10 +1884,6 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+>  		blk_queue_max_integrity_segments(q, shost->sg_prot_tablesize);
+>  	}
+>  
+> -	if (dev->dma_mask) {
+> -		shost->max_sectors = min_t(unsigned int, shost->max_sectors,
+> -				dma_max_mapping_size(dev) >> SECTOR_SHIFT);
+> -	}
+>  	blk_queue_max_hw_sectors(q, shost->max_sectors);
+>  	blk_queue_segment_boundary(q, shost->dma_boundary);
+>  	dma_set_seg_boundary(dev, shost->dma_boundary);
 
-So if we want to do "the right thing", we'd continue dispatching to the
-device until either the state changes or the device-reported transition
-timeout has expired?
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Martin
-
-
-> For example this patch:
->=20
-> commit 2b35865e7a290d313c3d156c0c2074b4c4ffaf52
-> Author: Hannes Reinecke <hare@suse.de>
-> Date:=A0=A0 Fri Feb 19 09:17:13 2016 +0100
->=20
-> =A0=A0=A0 scsi_dh_alua: Recheck state on unit attention
->=20
->=20
-> caused us issues because the retries were used up quickly. We just
-> changed
-> the target to return BUSY status and we don't use the transitioning
-> state.
-> The spec does mention using either return value in "5.15.2.5
-> Transitions
-> between target port asymmetric access states":
->=20
-> ------
-> if during the transition the logical unit is inaccessible, then the
-> transition
-> is performed as a single indivisible event and the device server
-> shall respond
-> by either returning BUSY status, or returning CHECK CONDITION status,
-> with the
-> sense key set to NOT READY, and the sense code set to LOGICAL UNIT
-> NOT ACCESSIBLE,
-> ASYMMETRIC ACCESS STATE TRANSITION;
->=20
-> ------
->=20
-> So Brian's patch works if you return BUSY instead of 02/04/0a and are
-> setting
-> the state to transitioning during the time it's transitioning.
->=20
-> I do partially agree with you and it's kind of a messy mix and match.
-> However,
-> I think we should change alua_check_sense to handle 02/04/0a the same
-> way we
-> handle it in alua_prep_fn. And then we should add a new flag for
-> devices that
-> have a bug and return transitioning forever.
->=20
-
+-- 
+Damien Le Moal
+Western Digital Research
