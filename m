@@ -2,41 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE33C4332F
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 May 2022 11:12:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 127BAC433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 21 May 2022 11:13:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354874AbiEULMp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 21 May 2022 07:12:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48658 "EHLO
+        id S1345198AbiEULNO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 21 May 2022 07:13:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237544AbiEULMU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 May 2022 07:12:20 -0400
+        with ESMTP id S1354837AbiEULMm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 May 2022 07:12:42 -0400
 Received: from mail3-relais-sop.national.inria.fr (mail3-relais-sop.national.inria.fr [192.134.164.104])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FDC7344CF;
-        Sat, 21 May 2022 04:12:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F43D4553A;
+        Sat, 21 May 2022 04:12:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=inria.fr; s=dc;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=Sse69UXGgPJIp1+jRucjbT9ptGTvZZVZyLqJcWhxwaE=;
-  b=fF11EU1r5UFogIvp9YVtHDqepTR6/bPtJOSRROpo1PFARDpz0+c0sH7R
-   Ukgk5CPC7IP0laCLZV4gQk7u+TfNsHZ/Cu+6v8UC2DY7zpyrgtU632kLO
-   FqMniYtoLHhSCv4EWYEILNJ5LZ0ft9kBEIKkjcoJ0lnlUtYxRV0rEz7/O
+  bh=lTFEVnoIDC5LKQmyxjDTFhn2hrsCSGKVLvv14vfENGo=;
+  b=IF/7KeW4DSd6UgIfZbp7pPPlSfA/uxJU/Tgs7aYYeU8t/q+BTCJOCJy3
+   RcOR16grx8Ffeh0UjWMovQIRBe/o7JSWmUbMT8qQE4P5nSXY480we+MV8
+   /u1AJYy+9BzsJ+o4+etOc8ke6FGEObJtFz2Cd2WgX279uYKyBhTm3lVc+
    Q=;
 Authentication-Results: mail3-relais-sop.national.inria.fr; dkim=none (message not signed) header.i=none; spf=SoftFail smtp.mailfrom=Julia.Lawall@inria.fr; dmarc=fail (p=none dis=none) d=inria.fr
 X-IronPort-AV: E=Sophos;i="5.91,242,1647298800"; 
-   d="scan'208";a="14727937"
+   d="scan'208";a="14727963"
 Received: from i80.paris.inria.fr (HELO i80.paris.inria.fr.) ([128.93.90.48])
-  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2022 13:11:59 +0200
+  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2022 13:12:02 +0200
 From:   Julia Lawall <Julia.Lawall@inria.fr>
-To:     Bradley Grove <linuxdrivers@attotech.com>
+To:     Don Brace <don.brace@microchip.com>
 Cc:     kernel-janitors@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: esas2r: fix typo in comment
-Date:   Sat, 21 May 2022 13:10:50 +0200
-Message-Id: <20220521111145.81697-40-Julia.Lawall@inria.fr>
+        storagedev@microchip.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: smartpqi: fix typo in comment
+Date:   Sat, 21 May 2022 13:11:08 +0200
+Message-Id: <20220521111145.81697-58-Julia.Lawall@inria.fr>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -50,20 +51,20 @@ Detected with the help of Coccinelle.
 Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
 
 ---
- drivers/scsi/esas2r/esas2r_flash.c |    2 +-
+ drivers/scsi/smartpqi/smartpqi.h |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_flash.c b/drivers/scsi/esas2r/esas2r_flash.c
-index 429d64299fe9..f910e2553fbb 100644
---- a/drivers/scsi/esas2r/esas2r_flash.c
-+++ b/drivers/scsi/esas2r/esas2r_flash.c
-@@ -232,7 +232,7 @@ static bool load_image(struct esas2r_adapter *a, struct esas2r_request *rq)
- 	 */
- 	rq->req_stat = RS_PENDING;
- 	if (test_bit(AF_DEGRADED_MODE, &a->flags))
--		/* not suppported for now */;
-+		/* not supported for now */;
- 	else
- 		build_flash_msg(a, rq);
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index c4c48272d8ad..2e40320129c0 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -1082,7 +1082,7 @@ struct pqi_stream_data {
+ };
  
+ struct pqi_scsi_dev {
+-	int	devtype;		/* as reported by INQUIRY commmand */
++	int	devtype;		/* as reported by INQUIRY command */
+ 	u8	device_type;		/* as reported by */
+ 					/* BMIC_IDENTIFY_PHYSICAL_DEVICE */
+ 					/* only valid for devtype = TYPE_DISK */
 
