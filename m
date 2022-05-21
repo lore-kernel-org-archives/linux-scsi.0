@@ -2,148 +2,73 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E972C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 May 2022 11:34:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35DD5C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 21 May 2022 13:32:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243008AbiEULeV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 21 May 2022 07:34:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43662 "EHLO
+        id S240907AbiEUNcW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 21 May 2022 09:32:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348363AbiEULdx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 May 2022 07:33:53 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 742462B26F;
-        Sat, 21 May 2022 04:33:23 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 053FAB81DAC;
-        Sat, 21 May 2022 11:33:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 258BBC385B8;
-        Sat, 21 May 2022 11:33:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653132800;
-        bh=wm9pcMgVu3P9v6Y+m3D8sP6eIQtacSxLPWXGB9NFpp8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=CzhjF1B4xqpFKPKPxoXUgMzfeNrtddFy65rt4d/zzd9aifRb3hCUFe+Nl61Gb3p45
-         ZAZsVyGbEJj6g/xOflpWZzquwOiUf1obrMqDFb3tMP4Pl3haACPZXM5vJrb+0fa9TP
-         Ako/SI9aGAvM5KVkF8dfNJSteWKHhZxlCdFG71lyiMtp9l6mGDjcEhS0MI6LWymd+m
-         3YAe7+97Zv4ccESyDHfVBzdbZJGaiX5Mr1wlopld5OEuc9xK333O3oXGfD0j/yLTKK
-         6t+9nv0INskWQVbDtL7YM7n84fI0kMxBNHW9lZcWWiPzR750urqZYO0eA62JqYDH22
-         dXTiBYghMP/Pw==
-From:   Chao Yu <chao@kernel.org>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        chao@kernel.org
-Subject: [RFC PATCH] scsi: support packing multi-segment in UNMAP command
-Date:   Sat, 21 May 2022 19:32:59 +0800
-Message-Id: <20220521113259.3953757-1-chao@kernel.org>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S231151AbiEUNcV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 May 2022 09:32:21 -0400
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A232F6A067;
+        Sat, 21 May 2022 06:32:19 -0700 (PDT)
+Received: by mail-pj1-x1031.google.com with SMTP id pq9-20020a17090b3d8900b001df622bf81dso9920673pjb.3;
+        Sat, 21 May 2022 06:32:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=rOZc26P/AawBI79fmyAuEjRloPhm1mfxzfm+SDknsl4=;
+        b=CVG8lXKZxNqlH40n39FAl3jhEfK5DObWSjW+NL0hWdzPzqOPhS+W4GVQkZOcq4IgRG
+         vXr4xUN2KB/DO8BbEicpuD0c3cvldNj+NuPVVFkvthrByoL/dX0k0XG7v9zzRuQy5QiE
+         pHtj7rhp/ecVHWLcEmcwtf5usUlY9jqN3rdZVK6Q4rl8mZ6a44W8LEXvQpTzehuWtm9P
+         oOoEXBsUEvSiMZCs5e4dz9mMbfTZX1Nv3OCnUi7rrb0Y6CAF90kbtGx7BFEtO3tn+hFD
+         LJRgF00wVzGH6D1Hk5u1QOT2TI84ZZD/OkDQC+gUr+9UaLuAPIjFmS83x2DbesNB7ij/
+         +Utw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=rOZc26P/AawBI79fmyAuEjRloPhm1mfxzfm+SDknsl4=;
+        b=1vx+YkIM2nWQSDO49+jhjTUlaF+eHSUJVRpd95wfoHaopGie+sXN7/1+GVfiKQH3uT
+         pyF6DSB3IFlwVYmNw095VYbkqY6diFTM1HJt7lSzf1vvs0R5QvVgncgv6IdNrD/+QG/v
+         4F2fCO3W4ye0UZ+bs3GEp66WoOrj2uAQhmO13cj7nDrwdEJj2VH6EcpW0GiNd/d3KqoP
+         pY1Xsvi82+1losi0Osb7/klObVLa8hshzuBLEW1HMJiEuhBavraEa70qzQlFYXSnBlNt
+         6Z4NfFCIRNrzrdKqZX3B1vX7jD6KA1MZn2mhWOuEJE47SqlGytrCyP1rViXTkboV9m4N
+         7wUw==
+X-Gm-Message-State: AOAM531PhP4Br4qTfJXAiDq52Gikg7LnNtH/XFo7o/KijttVVbc42Yei
+        ijzydUeYZQQe7Aa9cTcpE72qfVZ1SHnNLl25TQ==
+X-Google-Smtp-Source: ABdhPJzBrQ1+384CkiSu9lDhv92p5hBvjz4SeNw5RqjCZKw5Fs9oyVJ1ykaRcLJqbaHouGMvrSH+EfUv6YV6bUFzfQg=
+X-Received: by 2002:a17:902:d711:b0:161:f859:bed7 with SMTP id
+ w17-20020a170902d71100b00161f859bed7mr6509846ply.31.1653139939214; Sat, 21
+ May 2022 06:32:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From:   Zheyu Ma <zheyuma97@gmail.com>
+Date:   Sat, 21 May 2022 21:32:08 +0800
+Message-ID: <CAMhUBjmVvALtNANHOv-H1dBJ4MpHWhVVrxkzQSg_Zz9RwqTgsA@mail.gmail.com>
+Subject: [BUG] scsi: myrb: null-pointer-dereference in myrb_cleanup
+To:     hare@kernel.org, jejb@linux.ibm.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As SPEC describes that it can support unmapping one or more LBA range
-in single UNMAP command, however, previously we only pack one LBA
-range in UNMAP command by default no matter device gives the block
-limits that says it can support in-batch UNMAP.
+Hello,
 
-This patch tries to set max_discard_segments config according to block
-limits of device, and supports in-batch UNMAP.
+I found a bug in the driver myrb when probing the module.
+The following log can reveal it:
 
-Signed-off-by: Chao Yu <chao@kernel.org>
----
- drivers/scsi/sd.c | 30 +++++++++++++++++++-----------
- drivers/scsi/sd.h |  1 +
- 2 files changed, 20 insertions(+), 11 deletions(-)
+[    0.985741] myrb 0000:00:05.0: Unknown Initialization Error 49
+[    0.986078] myrb 0000:00:05.0: Failed to initialize Controller
+[    0.986376] BUG: kernel NULL pointer dereference, address: 0000000000000000
+[    0.987368] Call Trace:
+[    0.987368]  myrb_cleanup+0x4ad/0x7b0
+[    0.987368]  myrb_probe.cold+0x95/0x12a0
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index dc6e55761fd1..be070457c78d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -790,6 +790,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
- 	q->limits.discard_granularity =
- 		max(sdkp->physical_block_size,
- 		    sdkp->unmap_granularity * logical_block_size);
-+	blk_queue_max_discard_segments(q, sdkp->max_block_desc_count);
- 	sdkp->provisioning_mode = mode;
- 
- 	switch (mode) {
-@@ -837,10 +838,10 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
- {
- 	struct scsi_device *sdp = cmd->device;
- 	struct request *rq = scsi_cmd_to_rq(cmd);
-+	struct bio *bio;
- 	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
--	u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
--	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
--	unsigned int data_len = 24;
-+	unsigned short segments = blk_rq_nr_discard_segments(rq);
-+	unsigned int data_len = 8 + 16 * segments, i = 0;
- 	char *buf;
- 
- 	rq->special_vec.bv_page = mempool_alloc(sd_page_pool, GFP_ATOMIC);
-@@ -853,13 +854,20 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
- 
- 	cmd->cmd_len = 10;
- 	cmd->cmnd[0] = UNMAP;
--	cmd->cmnd[8] = 24;
-+	cmd->cmnd[8] = data_len;
- 
- 	buf = bvec_virt(&rq->special_vec);
--	put_unaligned_be16(6 + 16, &buf[0]);
--	put_unaligned_be16(16, &buf[2]);
--	put_unaligned_be64(lba, &buf[8]);
--	put_unaligned_be32(nr_blocks, &buf[16]);
-+	put_unaligned_be16(6 + 16 * segments, &buf[0]);
-+	put_unaligned_be16(16 * segments, &buf[2]);
-+
-+	__rq_for_each_bio(bio, rq) {
-+		u64 lba = sectors_to_logical(sdp, bio->bi_iter.bi_sector);
-+		u32 nr_blocks = sectors_to_logical(sdp, bio_sectors(bio));
-+
-+		put_unaligned_be64(lba, &buf[8 + 16 * i]);
-+		put_unaligned_be32(nr_blocks, &buf[8 + 16 * i + 8]);
-+		i++;
-+	}
- 
- 	cmd->allowed = sdkp->max_retries;
- 	cmd->transfersize = data_len;
-@@ -2859,7 +2867,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 	sdkp->opt_xfer_blocks = get_unaligned_be32(&buffer[12]);
- 
- 	if (buffer[3] == 0x3c) {
--		unsigned int lba_count, desc_count;
-+		unsigned int lba_count;
- 
- 		sdkp->max_ws_blocks = (u32)get_unaligned_be64(&buffer[36]);
- 
-@@ -2867,9 +2875,9 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 			goto out;
- 
- 		lba_count = get_unaligned_be32(&buffer[20]);
--		desc_count = get_unaligned_be32(&buffer[24]);
-+		sdkp->max_block_desc_count = get_unaligned_be32(&buffer[24]);
- 
--		if (lba_count && desc_count)
-+		if (lba_count && sdkp->max_block_desc_count)
- 			sdkp->max_unmap_blocks = lba_count;
- 
- 		sdkp->unmap_granularity = get_unaligned_be32(&buffer[28]);
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 0a33a4b68ffb..e396bcaf76ca 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -99,6 +99,7 @@ struct scsi_disk {
- 	u32		opt_xfer_blocks;
- 	u32		max_ws_blocks;
- 	u32		max_unmap_blocks;
-+	u32		max_block_desc_count;
- 	u32		unmap_granularity;
- 	u32		unmap_alignment;
- 	u32		index;
--- 
-2.25.1
+The reason is that the driver does not initialize the disable_intr,
+resulting in a null-pointer-dereference bug.
 
+Zheyu Ma
