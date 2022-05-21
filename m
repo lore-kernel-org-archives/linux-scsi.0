@@ -2,68 +2,148 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DC6EC433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 May 2022 11:15:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E972C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 21 May 2022 11:34:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355087AbiEULPS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 21 May 2022 07:15:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48316 "EHLO
+        id S243008AbiEULeV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 21 May 2022 07:34:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355050AbiEULOI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 May 2022 07:14:08 -0400
-Received: from mail3-relais-sop.national.inria.fr (mail3-relais-sop.national.inria.fr [192.134.164.104])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7C5213327F;
-        Sat, 21 May 2022 04:12:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=inria.fr; s=dc;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=KIkX41j6V5jfrTv89vOQJuGQ4iVzCVQtr2ohyilPIsw=;
-  b=ZVTsdMtRMleeiL6TCAb7qZ1V1DEz3ZRDCPCoTlU2ep0qU259GbG6OmjY
-   h06lf1F3tEyaTjq3z5MIPH26RKQDP868WmjyEbABszodOWxVadBoYnN+O
-   c81nOXJvXfe2D147Ck9WxyJ9XHpYCQ+iYsC8wnOEFKOYR+HBEHfDOODCu
-   w=;
-Authentication-Results: mail3-relais-sop.national.inria.fr; dkim=none (message not signed) header.i=none; spf=SoftFail smtp.mailfrom=Julia.Lawall@inria.fr; dmarc=fail (p=none dis=none) d=inria.fr
-X-IronPort-AV: E=Sophos;i="5.91,242,1647298800"; 
-   d="scan'208";a="14727999"
-Received: from i80.paris.inria.fr (HELO i80.paris.inria.fr.) ([128.93.90.48])
-  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2022 13:12:08 +0200
-From:   Julia Lawall <Julia.Lawall@inria.fr>
-To:     Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc:     kernel-janitors@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: isci: fix typo in comment
-Date:   Sat, 21 May 2022 13:11:41 +0200
-Message-Id: <20220521111145.81697-91-Julia.Lawall@inria.fr>
-X-Mailer: git-send-email 2.20.1
+        with ESMTP id S1348363AbiEULdx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 May 2022 07:33:53 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 742462B26F;
+        Sat, 21 May 2022 04:33:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 053FAB81DAC;
+        Sat, 21 May 2022 11:33:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 258BBC385B8;
+        Sat, 21 May 2022 11:33:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653132800;
+        bh=wm9pcMgVu3P9v6Y+m3D8sP6eIQtacSxLPWXGB9NFpp8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=CzhjF1B4xqpFKPKPxoXUgMzfeNrtddFy65rt4d/zzd9aifRb3hCUFe+Nl61Gb3p45
+         ZAZsVyGbEJj6g/xOflpWZzquwOiUf1obrMqDFb3tMP4Pl3haACPZXM5vJrb+0fa9TP
+         Ako/SI9aGAvM5KVkF8dfNJSteWKHhZxlCdFG71lyiMtp9l6mGDjcEhS0MI6LWymd+m
+         3YAe7+97Zv4ccESyDHfVBzdbZJGaiX5Mr1wlopld5OEuc9xK333O3oXGfD0j/yLTKK
+         6t+9nv0INskWQVbDtL7YM7n84fI0kMxBNHW9lZcWWiPzR750urqZYO0eA62JqYDH22
+         dXTiBYghMP/Pw==
+From:   Chao Yu <chao@kernel.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        chao@kernel.org
+Subject: [RFC PATCH] scsi: support packing multi-segment in UNMAP command
+Date:   Sat, 21 May 2022 19:32:59 +0800
+Message-Id: <20220521113259.3953757-1-chao@kernel.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Spelling mistake (triple letters) in comment.
-Detected with the help of Coccinelle.
+As SPEC describes that it can support unmapping one or more LBA range
+in single UNMAP command, however, previously we only pack one LBA
+range in UNMAP command by default no matter device gives the block
+limits that says it can support in-batch UNMAP.
 
-Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
+This patch tries to set max_discard_segments config according to block
+limits of device, and supports in-batch UNMAP.
 
+Signed-off-by: Chao Yu <chao@kernel.org>
 ---
- drivers/scsi/isci/request.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/sd.c | 30 +++++++++++++++++++-----------
+ drivers/scsi/sd.h |  1 +
+ 2 files changed, 20 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index ac17e3a35d2c..6370cdbfba08 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -2182,7 +2182,7 @@ static enum sci_status atapi_data_tc_completion_handler(struct isci_request *ire
- 	case (SCU_TASK_DONE_UNEXP_FIS << SCU_COMPLETION_TL_STATUS_SHIFT): {
- 		u16 len = sci_req_tx_bytes(ireq);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index dc6e55761fd1..be070457c78d 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -790,6 +790,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ 	q->limits.discard_granularity =
+ 		max(sdkp->physical_block_size,
+ 		    sdkp->unmap_granularity * logical_block_size);
++	blk_queue_max_discard_segments(q, sdkp->max_block_desc_count);
+ 	sdkp->provisioning_mode = mode;
  
--		/* likely non-error data underrrun, workaround missing
-+		/* likely non-error data underrun, workaround missing
- 		 * d2h frame from the controller
- 		 */
- 		if (d2h->fis_type != FIS_REGD2H) {
+ 	switch (mode) {
+@@ -837,10 +838,10 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_device *sdp = cmd->device;
+ 	struct request *rq = scsi_cmd_to_rq(cmd);
++	struct bio *bio;
+ 	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
+-	u64 lba = sectors_to_logical(sdp, blk_rq_pos(rq));
+-	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
+-	unsigned int data_len = 24;
++	unsigned short segments = blk_rq_nr_discard_segments(rq);
++	unsigned int data_len = 8 + 16 * segments, i = 0;
+ 	char *buf;
+ 
+ 	rq->special_vec.bv_page = mempool_alloc(sd_page_pool, GFP_ATOMIC);
+@@ -853,13 +854,20 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+ 
+ 	cmd->cmd_len = 10;
+ 	cmd->cmnd[0] = UNMAP;
+-	cmd->cmnd[8] = 24;
++	cmd->cmnd[8] = data_len;
+ 
+ 	buf = bvec_virt(&rq->special_vec);
+-	put_unaligned_be16(6 + 16, &buf[0]);
+-	put_unaligned_be16(16, &buf[2]);
+-	put_unaligned_be64(lba, &buf[8]);
+-	put_unaligned_be32(nr_blocks, &buf[16]);
++	put_unaligned_be16(6 + 16 * segments, &buf[0]);
++	put_unaligned_be16(16 * segments, &buf[2]);
++
++	__rq_for_each_bio(bio, rq) {
++		u64 lba = sectors_to_logical(sdp, bio->bi_iter.bi_sector);
++		u32 nr_blocks = sectors_to_logical(sdp, bio_sectors(bio));
++
++		put_unaligned_be64(lba, &buf[8 + 16 * i]);
++		put_unaligned_be32(nr_blocks, &buf[8 + 16 * i + 8]);
++		i++;
++	}
+ 
+ 	cmd->allowed = sdkp->max_retries;
+ 	cmd->transfersize = data_len;
+@@ -2859,7 +2867,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	sdkp->opt_xfer_blocks = get_unaligned_be32(&buffer[12]);
+ 
+ 	if (buffer[3] == 0x3c) {
+-		unsigned int lba_count, desc_count;
++		unsigned int lba_count;
+ 
+ 		sdkp->max_ws_blocks = (u32)get_unaligned_be64(&buffer[36]);
+ 
+@@ -2867,9 +2875,9 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 			goto out;
+ 
+ 		lba_count = get_unaligned_be32(&buffer[20]);
+-		desc_count = get_unaligned_be32(&buffer[24]);
++		sdkp->max_block_desc_count = get_unaligned_be32(&buffer[24]);
+ 
+-		if (lba_count && desc_count)
++		if (lba_count && sdkp->max_block_desc_count)
+ 			sdkp->max_unmap_blocks = lba_count;
+ 
+ 		sdkp->unmap_granularity = get_unaligned_be32(&buffer[28]);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 0a33a4b68ffb..e396bcaf76ca 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -99,6 +99,7 @@ struct scsi_disk {
+ 	u32		opt_xfer_blocks;
+ 	u32		max_ws_blocks;
+ 	u32		max_unmap_blocks;
++	u32		max_block_desc_count;
+ 	u32		unmap_granularity;
+ 	u32		unmap_alignment;
+ 	u32		index;
+-- 
+2.25.1
 
