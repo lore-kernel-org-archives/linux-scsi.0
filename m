@@ -2,95 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5629C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 May 2022 08:19:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2210BC433FE
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 May 2022 09:43:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241235AbiEVITj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 22 May 2022 04:19:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47008 "EHLO
+        id S242388AbiEVJnS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 22 May 2022 05:43:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230461AbiEVITh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 May 2022 04:19:37 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3157227CF3
-        for <linux-scsi@vger.kernel.org>; Sun, 22 May 2022 01:19:36 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id A6A1B21A51;
-        Sun, 22 May 2022 08:19:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1653207574; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=dS/go9y2/G5eo8pMz5L5F3j8+HaeVCrvf5u6NT3/3+A=;
-        b=TEMAHEO+CmZQN8cWAhZXUCs52WTuVD55Tuy8cHRpNh0pJp7waZAWA+ZI/uyH6Fc7N90xpp
-        +j/0jclfQQy2v4Cm9tX644btVAGSiyZxTw8RUDNIh/DWulsHAPrz7CmB2tdEZ/rRcVQxI8
-        jZ58uPw5BOHKmvV4nzHtNWl2TbN8JAw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1653207574;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=dS/go9y2/G5eo8pMz5L5F3j8+HaeVCrvf5u6NT3/3+A=;
-        b=1tlVDFQKm8f6zg7c9cpj92qA+q01h53CwKaJuWW3s82/EUld1HZv9lRbzJimBepHAjVLTc
-        qQIwug2NHsQ8oHCw==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id AA8422C141;
-        Sun, 22 May 2022 08:19:33 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 9D4C551945E3; Sun, 22 May 2022 10:19:33 +0200 (CEST)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Zheyu Ma <zheyuma97@gmail.com>
-Subject: [PATCH] myrb: fixup null pointer access on myrb_cleanup()
-Date:   Sun, 22 May 2022 10:19:21 +0200
-Message-Id: <20220522081921.105515-1-hare@suse.de>
-X-Mailer: git-send-email 2.29.2
+        with ESMTP id S234369AbiEVJnR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 May 2022 05:43:17 -0400
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6368E369F5;
+        Sun, 22 May 2022 02:43:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1653212596; x=1684748596;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=J1uRxreTk2vcgBP+Mv+o2kjbzDSrcYl4+WqXF1IBsU8=;
+  b=XLdFBFgoTxYniEX/Tgn4Zn+eawD1UL5Q246madtsbUR93j8vJQJxGjGC
+   DSmUBRbgrz1vTIcybBLpuT4IxU6VLCyv0S4x5GShKFED4IgCb7Oq0htuq
+   JJzS5PP8EuSazctx0FafiAytjCG4YkwDjJ5d6xursevIyPMC/3+XZEYQ1
+   CU5NPbb35V0FZkTgnA4oN/pGVkgMvKLyufNbocRKD+0rRB1WL6DbGOvvc
+   E+3c6wF9N2x1TKJgnidh20sMU/i4ItCB0LdyCiNVDifDZTBXvtFyhs6rO
+   nm7O4P7n9m8b3D3NeSXjti3nte6hgIqoLVXtK5ZhGD9Ga2Gu4dtfRq+KA
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10354"; a="260564934"
+X-IronPort-AV: E=Sophos;i="5.91,244,1647327600"; 
+   d="scan'208";a="260564934"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2022 02:43:15 -0700
+X-IronPort-AV: E=Sophos;i="5.91,244,1647327600"; 
+   d="scan'208";a="571562866"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2022 02:43:06 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.95)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1nsi73-000IR6-9y;
+        Sun, 22 May 2022 12:43:01 +0300
+Date:   Sun, 22 May 2022 12:43:01 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Waiman Long <longman@redhat.com>
+Cc:     Maninder Singh <maninder1.s@samsung.com>, keescook@chromium.org,
+        pmladek@suse.com, bcain@quicinc.com, mpe@ellerman.id.au,
+        benh@kernel.crashing.org, paulus@samba.org, hca@linux.ibm.com,
+        gor@linux.ibm.com, agordeev@linux.ibm.com,
+        borntraeger@linux.ibm.com, svens@linux.ibm.com, satishkh@cisco.com,
+        sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, mcgrof@kernel.org,
+        jason.wessel@windriver.com, daniel.thompson@linaro.org,
+        dianders@chromium.org, naveen.n.rao@linux.ibm.com,
+        anil.s.keshavamurthy@intel.com, davem@davemloft.net,
+        mhiramat@kernel.org, peterz@infradead.org, mingo@redhat.com,
+        will@kernel.org, boqun.feng@gmail.com, rostedt@goodmis.org,
+        senozhatsky@chromium.org, linux@rasmusvillemoes.dk,
+        akpm@linux-foundation.org, arnd@arndb.de,
+        linux-hexagon@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-modules@vger.kernel.org,
+        kgdb-bugreport@lists.sourceforge.net, v.narang@samsung.com,
+        onkarnath.1@samsung.com
+Subject: Re: [PATCH 1/5] kallsyms: pass buffer size in sprint_* APIs
+Message-ID: <YooFpVGuDoyfoQPS@smile.fi.intel.com>
+References: <20220520083701.2610975-1-maninder1.s@samsung.com>
+ <CGME20220520083725epcas5p1c3e2989c991e50603a40c81ccc4982e0@epcas5p1.samsung.com>
+ <20220520083701.2610975-2-maninder1.s@samsung.com>
+ <f3627eae-f5ae-1d30-2c09-1820a255334a@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <f3627eae-f5ae-1d30-2c09-1820a255334a@redhat.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When myrb_probe() fails the callback might not be set, so we need
-to validate the 'disable_intr' callback in myrb_cleanup() to not
-cause a null pointer exception. And while at it do not call
-myrb_cleanup() if we cannot enable the PCI device at all.
+On Fri, May 20, 2022 at 03:52:01PM -0400, Waiman Long wrote:
+> On 5/20/22 04:36, Maninder Singh wrote:
 
-Reported-by: Zheyu Ma <zheyuma97@gmail.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/myrb.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+...
 
-diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index 71585528e8db..f460aed2435f 100644
---- a/drivers/scsi/myrb.c
-+++ b/drivers/scsi/myrb.c
-@@ -1239,7 +1239,8 @@ static void myrb_cleanup(struct myrb_hba *cb)
- 	myrb_unmap(cb);
- 
- 	if (cb->mmio_base) {
--		cb->disable_intr(cb->io_base);
-+		if (cb->disable_intr)
-+			cb->disable_intr(cb->io_base);
- 		iounmap(cb->mmio_base);
- 	}
- 	if (cb->irq)
-@@ -3414,8 +3415,11 @@ static struct myrb_hba *myrb_detect(struct pci_dev *pdev,
- 	mutex_init(&cb->dma_mutex);
- 	cb->pdev = pdev;
- 
--	if (pci_enable_device(pdev))
--		goto failure;
-+	if (pci_enable_device(pdev)) {
-+		dev_err(&pdev->dev, "Failed to enable PCI device\n");
-+		scsi_host_put(shost);
-+		return NULL;
-+	}
- 
- 	if (privdata->hw_init == DAC960_PD_hw_init ||
- 	    privdata->hw_init == DAC960_P_hw_init) {
+> > -		sprint_symbol(sym, addr);
+> > +		sprint_symbol(sym, KSYM_SYMBOL_LEN, addr);
+> 
+> Instead of hardcoding KSYM_SYMBOL_LEN everywhere, will it better to hide it
+> like this:
+> 
+>         extern int __sprint_symbol(char *buffer, size_t size, unsigned long
+> address);
+>         #define sprint_symbol(buf, addr)        __sprint_symbol(buf,
+> sizeof(buf), addr)
+> 
+> Or you can use sizeof(buf) directly instead of KSYM_SYMBOL_LEN.
+
+This assumes that buf is defined as char [], which might be not always the
+case. If you are going with the macro, than ARRAY_SIZE() seems appropriate
+to perform a check against the above mentioned constraint.
+
+
 -- 
-2.29.2
+With Best Regards,
+Andy Shevchenko
+
 
