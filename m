@@ -2,69 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7933C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 May 2022 00:22:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FDC3C4332F
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 May 2022 06:09:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347829AbiEVAWe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 21 May 2022 20:22:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36198 "EHLO
+        id S237922AbiEVGJR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 22 May 2022 02:09:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347501AbiEVAWd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 May 2022 20:22:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA08F3FBC1;
-        Sat, 21 May 2022 17:22:32 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 62DBA60EF8;
-        Sun, 22 May 2022 00:22:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C5B4EC385B8;
-        Sun, 22 May 2022 00:22:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653178951;
-        bh=Cvc0TCsFYfrtsDOto8w+o7+IC1twPbLpFDRQpCQ0iuI=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=PR5FsHIUfOhCx01eG+RwbDAyS79lbtxvT4VlmR6JdrQI1G0KwBnf48mtMipnfYXdv
-         +mzErIuChSdA00G5iePqTcgbZvUu5FECyiFwM+vBpI/n+i6te17upy5WlEcJWKdxGg
-         UDlSd/ffIgTufldG2T2HdA2jheZJNrfYHTzdA/zD1kSlslWS6iMIiBXx67QYEyw+8S
-         brgzJGTIYa8T6BrgMG4fZZjo81y21qtTd7uUbiurQ+Cpx0p7Kw38wySheFtI+/Xi3a
-         Ct6srvCJ+z/dXqK71h/tMPNZNMk5/nsi2zyYMlVoVXK2Ur4u31+c2eIazrN6Wb0jcY
-         DG/n6Z9XxXVAA==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id B3B30E7BA5A;
-        Sun, 22 May 2022 00:22:31 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 5.18-rc6
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <333254c5b864c9c8bf50b895d99309b27065a487.camel@HansenPartnership.com>
-References: <333254c5b864c9c8bf50b895d99309b27065a487.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <333254c5b864c9c8bf50b895d99309b27065a487.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: d5d92b64408443e113b9742f8f1c35278910dd4d
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 36ed2da76b181200ecdee4a8bf84f698138f290a
-Message-Id: <165317895173.14812.15638882572260549793.pr-tracker-bot@kernel.org>
-Date:   Sun, 22 May 2022 00:22:31 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        with ESMTP id S229530AbiEVGJO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 May 2022 02:09:14 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FFA73C704;
+        Sat, 21 May 2022 23:09:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=f8vODVBPPT4aieHBVtPQZPwEE8oetsAgiBP0SHP03Ns=; b=dVrwKB+az4x8MRcYyIRObMC3Kz
+        0/Lk5RsZ/uHq7rxWTwLfDctoffMnHd/XYI6CywnbwDoBtQ0kGP0IAReMVRjqBcN7i0SOfz0WyQzjA
+        72LMGsN8V9ohaRMa+yuZL8XoU9VwEiQiE2PgbZvQra5fAtbw50/0JLdprjgLYkqxfuWFiZ6BP/ylm
+        NxxYXDcrYvan5XviHSu6Iu2oEMAP9rTCG164FVGAiNtLsWVSqGCba2HcD3pGV4AYzuLQExeQAeT4l
+        L1Dtehj+OTr3rq74yGZS0MDlKvD/f3IME9yzaWi1wHGZN47KQaz/+4mUl1RmIeJIrS4yLTIpAl1X9
+        obWQzOxQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nsekq-000fUe-8y; Sun, 22 May 2022 06:07:52 +0000
+Date:   Sat, 21 May 2022 23:07:52 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Maninder Singh <maninder1.s@samsung.com>
+Cc:     keescook@chromium.org, pmladek@suse.com, bcain@quicinc.com,
+        mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
+        hca@linux.ibm.com, gor@linux.ibm.com, agordeev@linux.ibm.com,
+        borntraeger@linux.ibm.com, svens@linux.ibm.com, satishkh@cisco.com,
+        sebaddel@cisco.com, kartilak@cisco.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, mcgrof@kernel.org,
+        jason.wessel@windriver.com, daniel.thompson@linaro.org,
+        dianders@chromium.org, naveen.n.rao@linux.ibm.com,
+        anil.s.keshavamurthy@intel.com, davem@davemloft.net,
+        mhiramat@kernel.org, peterz@infradead.org, mingo@redhat.com,
+        will@kernel.org, longman@redhat.com, boqun.feng@gmail.com,
+        rostedt@goodmis.org, senozhatsky@chromium.org,
+        andriy.shevchenko@linux.intel.com, linux@rasmusvillemoes.dk,
+        akpm@linux-foundation.org, arnd@arndb.de,
+        linux-hexagon@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-modules@vger.kernel.org,
+        kgdb-bugreport@lists.sourceforge.net, v.narang@samsung.com,
+        onkarnath.1@samsung.com
+Subject: Re: [PATCH 0/5] kallsyms: make kallsym APIs more safe with scnprintf
+Message-ID: <YonTOL4zC4CytVrn@infradead.org>
+References: <CGME20220520083715epcas5p400b11adef4d540756c985feb20ba29bc@epcas5p4.samsung.com>
+ <20220520083701.2610975-1-maninder1.s@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220520083701.2610975-1-maninder1.s@samsung.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sat, 21 May 2022 13:09:43 -0400:
+On Fri, May 20, 2022 at 02:06:56PM +0530, Maninder Singh wrote:
+> kallsyms functionality depends on KSYM_NAME_LEN directly.
+> but if user passed array length lesser than it, sprintf
+> can cause issues of buffer overflow attack.
+> 
+> So changing *sprint* and *lookup* APIs in this patch set
+> to have buffer size as an argument and replacing sprintf with
+> scnprintf.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+This is still a pretty horrible API.  Passing something like
+a struct seq_buf seems like the much better API here.  Also with
+the amount of arguments and by reference passing it might be worth
+to pass them as a structure while you're at it.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/36ed2da76b181200ecdee4a8bf84f698138f290a
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
