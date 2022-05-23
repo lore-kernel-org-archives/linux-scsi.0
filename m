@@ -2,167 +2,352 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93384C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 May 2022 14:21:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50C49C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 May 2022 15:33:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237094AbiEWOVT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 May 2022 10:21:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47744 "EHLO
+        id S237919AbiEWPdr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 May 2022 11:33:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237101AbiEWOVA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 May 2022 10:21:00 -0400
-Received: from smtp.digdes.com (smtp.digdes.com [85.114.5.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87C03117
-        for <linux-scsi@vger.kernel.org>; Mon, 23 May 2022 07:20:57 -0700 (PDT)
-Received: from DDSM-MAIL01.digdes.com (172.16.100.67) by relay2.digdes.com
- (172.16.96.56) with Microsoft SMTP Server (TLS) id 14.3.498.0; Mon, 23 May
- 2022 17:20:55 +0300
-Received: from DDSM-MAIL01.digdes.com (172.16.100.67) by
- DDSM-MAIL01.digdes.com (172.16.100.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.12; Mon, 23 May 2022 17:20:55 +0300
-Received: from smtp.digdes.com (172.16.96.56) by DDSM-MAIL01.digdes.com
- (172.16.100.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2375.12 via Frontend
- Transport; Mon, 23 May 2022 17:20:55 +0300
-Received: from EUR01-DB5-obe.outbound.protection.outlook.com (104.47.2.51) by
- relay2.digdes.com (172.16.96.56) with Microsoft SMTP Server (TLS) id
- 14.3.498.0; Mon, 23 May 2022 17:20:54 +0300
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eHZcjIOhKIDU5VvnvQ1q6abOwUDFQQ+sVEUJlqFe+68ildBiTrmN0RyDQSH+irZKU8V8GJVxqrwIaH/HtLcBSnB4YYcQDF/dAXwwpqjzI19qysMmbqIRn/v/QWhHP+T/rX1wf/wgYEwjaaKsZmttr2sBC42o6OoOPs8B8a7L4SJmoXWozZ3JmE27LdtrrXKYBjxmLuyMLl7Xm9Rmv9RYA1W6mUtrXiFVrEDBhQFLuLu5GMoEth0koHFBtFn28v9wHSO/RYP3NIF27tNlyT/27hjCagipyH/OuBJ4St6JcPZ7B+2zMpfrOSMXOI+ir0AP06jHmfbBI44/pn6dCOAT6g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HsKc7bz0laLxtni+XgiM5Aa8OUM2ZtEm7KdN+vts5lE=;
- b=LVn8+gYm6FZ69JroXB2+6pFzfajR/+qOEEQhlXodb7D++fdf0r7iLDTmT8VGEkjEn7+iwt3elGgQh799G/5Em9O2DTGGeoiuOwUe4quwbsMWHuwjgCGWkceMse0LfDtmWWh/pL2d+zHFaGPxtabz8fSxOTneAL4aj2v9FyD1X/pV1PrLR6/fMADtRIeAC1JvluqeUsIhpHtrd46zxziDvd80WUElOBlFEkNUf7zRbJ7vncbFie7+ukMcyrQo612S0x4p6FIBoart95Vm2riB/S/NfQJkdstckk2zhkeJ5n0FPM1XKP6BM3oi0edn7IC++kYd4NopfB40RDM+7y5WEg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=raidix.com; dmarc=pass action=none header.from=raidix.com;
- dkim=pass header.d=raidix.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=digdes.onmicrosoft.com; s=selector2-digdes-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HsKc7bz0laLxtni+XgiM5Aa8OUM2ZtEm7KdN+vts5lE=;
- b=YmEmuuiurogIYFnK10hhwfHJI6FlcsNbTthSsCoQglhBcfOrrZz9igJCvLBhy0BP0YOfgb94kxk6i0LAc0fa2a1RK3gZNMbln0Smzzps6NtTV3bhyIjiCbYOPQKSFJfVuMXKkkEJ8stZLs6IMkl5ihKQ0CNWlolkpbGGVN2cBmk=
-Received: from AM9PR10MB4118.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:20b:1ff::5)
- by DB7PR10MB1929.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:5:6::10) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5273.16; Mon, 23 May 2022 14:20:53 +0000
-Received: from AM9PR10MB4118.EURPRD10.PROD.OUTLOOK.COM
- ([fe80::6047:e205:1bca:5d29]) by AM9PR10MB4118.EURPRD10.PROD.OUTLOOK.COM
- ([fe80::6047:e205:1bca:5d29%8]) with mapi id 15.20.5273.022; Mon, 23 May 2022
- 14:20:53 +0000
-From:   Chesnokov Gleb <Chesnokov.G@raidix.com>
-To:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 1/1] qla2xxx: Remove unused ql_dm_tgt_ex_pct parameter
-Thread-Topic: [PATCH 1/1] qla2xxx: Remove unused ql_dm_tgt_ex_pct parameter
-Thread-Index: AQHYbobah7S1K+EECUWb/HaurQb5x60sgrbT
-Date:   Mon, 23 May 2022 14:20:53 +0000
-Message-ID: <AM9PR10MB4118C108A0DFFF23D790BF8F9DD49@AM9PR10MB4118.EURPRD10.PROD.OUTLOOK.COM>
-References: <AM9PR10MB41185ADE95B92B4E6926BE639DD49@AM9PR10MB4118.EURPRD10.PROD.OUTLOOK.COM>
-In-Reply-To: <AM9PR10MB41185ADE95B92B4E6926BE639DD49@AM9PR10MB4118.EURPRD10.PROD.OUTLOOK.COM>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-suggested_attachment_session_id: b3ee7050-d80c-ee3d-a1e1-a831a5ff499d
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=raidix.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: ccfac801-6d89-42fa-9d31-08da3cc771da
-x-ms-traffictypediagnostic: DB7PR10MB1929:EE_
-x-microsoft-antispam-prvs: <DB7PR10MB19294C7EC5735E436F11E3FC9DD49@DB7PR10MB1929.EURPRD10.PROD.OUTLOOK.COM>
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: ZgsUGkodxcwV1IsYdBl1+IiM6rPzg/x/8Tlrg9SUY2O6htGD07u3ryLFc3LvahGLLrF2ClOuqDY1gMDpvAH3+wwTQbOox/Ci1qaIFRqPmTMD+hNKHUe8ZJzcuENJIldx19B9PBKu9MGixLsC4aiUA6cTzL4biswNIfNsqLGojP65/tytpCcSn0Xu4j3zssRvNc+9445P9gA1dR1S4Ww0xphPA7GLiUMFk7E5Mf1DckmO8nVLwhYcgHYy3O1wzL9nKsSgEZGdmTFHTZtXdWVf+d/ayCIp4EKSb2r3C3G48YR1rI0wdaQCPO33bNGrP16QiZiOYryWf7ofb01hDrAiJotUnORNo/Jsq7VRCEbRwI9R+sRZr+DHHf+RPbGWSu31HD5MOsqhSA/h5tMSiUpckWBniyj14rh8LM1C0NIZ5ms0X68TP6AO/NN/oFaJZMxmQVfmHhCf2dKNHXuSY+zVRQeZZNGoFsM+JvG4fcUkXkEfAK2F0Yrn5EXjte6qGM56V0FH/xN3FUuYucNbFuaA+yoAT5sRASaiIZmROA4UoZZ3da/PpA2Vxw30msEKPhD1oeN1MwPuYrzRTxDNpBtdvZxOJKKVRrRW5Aun5LdW0/eHlY8xr3UJqIsb0pp59CYOhvBU+5S7IzH23MrtGndBQpsMjzw2ELq3VRIQVo+KRA3+01dPdyRvvAtfy/okBf03kpXVIcrVtzRpFftLhNdjUQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR10MB4118.EURPRD10.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6506007)(8676002)(66556008)(66476007)(64756008)(66946007)(66446008)(83380400001)(55016003)(52536014)(38070700005)(76116006)(71200400001)(8936002)(508600001)(122000001)(2906002)(2940100002)(316002)(7696005)(86362001)(38100700002)(186003)(91956017)(6916009)(33656002)(26005)(9686003)(5660300002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?lbKHK9D/nZrTyfzPPYSGEW7Ah1uuS89h4/XRRsxyeTUC+kv+sW2BUEKhz/?=
- =?iso-8859-1?Q?JaFHgJI3P6GIhn2D3IE4KrZzQdveOZewMgMolyb03LQPoKu4lPUvT4OUPM?=
- =?iso-8859-1?Q?ETAnTbzkERb0btIK4wcGJ9440qV/sOZp5b1nvoFnWPUQvJMxjRWnKvTIBE?=
- =?iso-8859-1?Q?Gs6ozBr0z50aiCBTiIUU8foNvu3jXWKv/E63Bqugmx7Jd3HBQOQNPFis9E?=
- =?iso-8859-1?Q?7N0DDLtZDUgo21zdY3w6JnW7cBj8L2d4YJHzET+dgWsIy9fxWEsMqVe7AO?=
- =?iso-8859-1?Q?7ptCLfH2ggkG7lNpmEzPiPoz9MxiFiGjH2ejRo8MZM/vkCfdsK1jbTTOUu?=
- =?iso-8859-1?Q?hntYSzbqxwSewlVrDTZ6uqDP6FtyaYfZTA9GjgJOjraLNscBZeMRsf2czZ?=
- =?iso-8859-1?Q?koK2S5jkJKG+TrJZ1zNiXGmBeDeZe9CIBGuHIZDsTQzEWDbvgw9UFi+y0X?=
- =?iso-8859-1?Q?YX7lJNTaXfTr3kCcpIAmy+Bb2lhfzAedm1AgK5fKXa0qL7rlEuXGhqhpfd?=
- =?iso-8859-1?Q?wg7JZhSTyQ31yyDclchVwUQ6KoPUiQoaEy2C/AjYBFMC4wTkjHRE9DMRHZ?=
- =?iso-8859-1?Q?LHGGyuF2t9lybWL6u73R7UQRHRHEMYmgyi0eVya44neAisLSQPPSA6E2HR?=
- =?iso-8859-1?Q?Fprb5Bsq37vLWjYD2JavjALT1dqSqSIumMw573yiMFOLh5TYeWnNVWhyhp?=
- =?iso-8859-1?Q?zmVnMDxjG5bNZVzvQaJNNS5EocdTi46RS7Q5SONDodZ0Z5PdAoBCRFYJGJ?=
- =?iso-8859-1?Q?MzsOftxu4/GUHZA2RW0TO6tXAFqGgKVThoZy0QArMTMSWunBFrm7xcL/cA?=
- =?iso-8859-1?Q?hEjUug98oQYeSJUFSGAJk2cvA4SfRyXce7rrMsd0bNq8eEjCPavwLnRjY+?=
- =?iso-8859-1?Q?sRve5or4/B4Foyp7VlP1XGF2QJI/VYC2b7XMU4kkeCkf9WIp6wyFaQ1STy?=
- =?iso-8859-1?Q?1cRgr9lq76ty1ePg0PzoDiq3h/I6/7WtIOvlr9lU41PFYcghzX9bAM1xjT?=
- =?iso-8859-1?Q?AWV7ynwqMjjaO4nuxbtxL7HKsR79gZ3pUwWMrCzRToBhgAKKJy+D8Jqw10?=
- =?iso-8859-1?Q?l4xEtSAB6NOv51vB/dIqNJEQo1rWcwEpsGxOnBNxKXW3GHR6JUb/geOBMJ?=
- =?iso-8859-1?Q?jploFC6f1y93GmrTddNCUTNCACIBjrT0bILcMcEcuXiHl6CSYNuVel8DLq?=
- =?iso-8859-1?Q?6P2RgbtY3CDuqYKrn1NJZaowQKOboSN7Qc4Idevgi8WgeTQCY15y30hA86?=
- =?iso-8859-1?Q?aXimNXYmfe7YxfAvK4AKgHQQ0RmhS/GiJW3D9a0F8/rZvldzAqR15yNW+h?=
- =?iso-8859-1?Q?stOKKXhVajjN5F1+i6X0Jl6ufcyiGuZ901tWUY8AFw14bNm9Fgs2Daz0C0?=
- =?iso-8859-1?Q?g3Sx8J6Kp5EwPSHdPE///rSozY5hP22TWHTmM7vUKM6bp1UVD1iOUWqNc/?=
- =?iso-8859-1?Q?5rnB6QD4U71KAUfwIB1BiPisrGgmNnoo1WTNCtHARV/GXP32ryOF3PTtkY?=
- =?iso-8859-1?Q?deDANZ9vJnOmUOUT62glNO7eNnkDQYkVx5T86+Lf8PTxE9bakdM/knpC6l?=
- =?iso-8859-1?Q?ltBMTuIXFVLhONOU1/BwT4dv6Jo+p+TpEjq+H2iDbZ+ExITd/iXrZaSWZb?=
- =?iso-8859-1?Q?8lI7FBODT11zXgpUas2oqoD9R84iahLOkyOD8n3puMt9eTZcQGudPfP7Yy?=
- =?iso-8859-1?Q?MRMJeCgFWGZZs7c8yc302RgvhqGvR2gshkyDpu9HVoxfMC5u1KnFoWvzrh?=
- =?iso-8859-1?Q?gkBHJNILfR4CpZi7cD9PEccCJJ1d+C0zmc4A07EKvkZey1yvX/9cUUjGUT?=
- =?iso-8859-1?Q?/tdLRFxzIQ=3D=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
+        with ESMTP id S237865AbiEWPdp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 May 2022 11:33:45 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70F702717D
+        for <linux-scsi@vger.kernel.org>; Mon, 23 May 2022 08:33:43 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 28F821F948;
+        Mon, 23 May 2022 15:33:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1653320022; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=QvpPtNZ7MIwBoA5gEor9/nS6YOBms56MF4GDK0ASlBg=;
+        b=K39/77WHGfqhsPaAPBqfYrThibqZsYAksxymgFRPA33tCBifLX/+6moy0kLWsq170/DLwV
+        OWNiIq6/E1UI8vh6QrOxAI4ucp2mV4HyqVMsrgES/0/96YYC8kgUOPqthJf3rn0hUJsiEZ
+        MiGTHB/C+/F5cOQ1v8uQOQp2IzO5bv4=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id DFB9B13AA5;
+        Mon, 23 May 2022 15:33:41 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id CaPzNFWpi2LQGQAAMHmgww
+        (envelope-from <mwilck@suse.com>); Mon, 23 May 2022 15:33:41 +0000
+Message-ID: <c6d36e75817866b341b3a3b5163472a92697fe10.camel@suse.com>
+Subject: Re: [PATCH 1/1] scsi_dh_alua: properly handling the ALUA
+ transitioning state
+From:   Martin Wilck <mwilck@suse.com>
+To:     Hannes Reinecke <hare@suse.de>,
+        Mike Christie <michael.christie@oracle.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Brian Bunker <brian@purestorage.com>,
+        linux-scsi@vger.kernel.org
+Cc:     Benjamin Marzinski <bmarzins@redhat.com>
+Date:   Mon, 23 May 2022 17:33:41 +0200
+In-Reply-To: <a9567ba6-d4ec-70d5-26a8-d6e055fd79e5@suse.de>
+References: <CAHZQxy+4sTPz9+pY3=7VJH+CLUJsDct81KtnR2be8ycN5mhqTg@mail.gmail.com>
+         <165153834205.24012.9775963085982195213.b4-ty@oracle.com>
+         <c8e9451c521573b1774bd47f7a4dfe911fd80f8d.camel@suse.com>
+         <32404e1c-bbd3-d3fb-c83f-394bc3765e7b@suse.de>
+         <2f6d93fd90c3e78166a1803a989b4dc6064fcada.camel@suse.com>
+         <7d0140a6-9ab7-9b88-9601-4204ab8a88ca@oracle.com>
+         <234ccf5fc9f36fd837b3959057691a716685da3b.camel@suse.com>
+         <a9567ba6-d4ec-70d5-26a8-d6e055fd79e5@suse.de>
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.1 
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: AM9PR10MB4118.EURPRD10.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: ccfac801-6d89-42fa-9d31-08da3cc771da
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 May 2022 14:20:53.2501
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70c55e28-9cd7-4753-937e-c751128a9d38
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: oPmfRm9O0vOiR/kGwALBh79SWomFn2hgqP0sVTouaT9Y26SNCUunF+JRCrG+4o/ruUzZ3UimKr8H4tSUJ5dJdQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB7PR10MB1929
-X-OriginatorOrg: raidix.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> The ql_dm_tgt_ex_pct parameter was introduced in commit ead038556f64=0A=
-> ("qla2xxx: Add Dual mode support in the driver"). Then the use of this pa=
-rameter=0A=
-> was dropped in commit 99e1b683c4be ("scsi: qla2xxx: Add ql2xiniexchg para=
-meter").=0A=
->=0A=
-> Thus, remove ql_dm_tgt_ex_pct since it is no longer used.=0A=
-> ---=0A=
-> drivers/scsi/qla2xxx/qla_target.c | 7 -------=0A=
->  1 file changed, 7 deletions(-)=0A=
->=0A=
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla=
-_target.c=0A=
-> index 6dfcfd8e7337..d03b9223b75e 100644=0A=
-> --- a/drivers/scsi/qla2xxx/qla_target.c=0A=
-> +++ b/drivers/scsi/qla2xxx/qla_target.c=0A=
-> @@ -48,13 +48,6 @@ MODULE_PARM_DESC(qlini_mode,=0A=
->         "when ready "=0A=
->         "\"enabled\" (default) - initiator mode will always stay enabled.=
-");=0A=
->=0A=
-> -static int ql_dm_tgt_ex_pct =3D 0;=0A=
-> -module_param(ql_dm_tgt_ex_pct, int, S_IRUGO|S_IWUSR);=0A=
-> -MODULE_PARM_DESC(ql_dm_tgt_ex_pct,=0A=
-> -       "For Dual Mode (qlini_mode=3Ddual), this parameter determines "=
-=0A=
-> -       "the percentage of exchanges/cmds FW will allocate resources "=0A=
-> -       "for Target mode.");=0A=
-> -=0A=
->  int ql2xuctrlirq =3D 1;=0A=
->  module_param(ql2xuctrlirq, int, 0644);=0A=
->  MODULE_PARM_DESC(ql2xuctrlirq,=0A=
-> --=0A=
-> 2.36.1=0A=
-=0A=
-I'm sorry, I forgot to add Signed-off-by: Gleb Chesnokov <Chesnokov.G@raidi=
-x.com>=0A=
-=0A=
-Best Regards,=0A=
-Gleb.=
+On Sat, 2022-05-21 at 12:17 +0200, Hannes Reinecke wrote:
+> On 5/20/22 13:03, Martin Wilck wrote:
+> > On Fri, 2022-05-20 at 14:08 -0500, Mike Christie wrote:
+> > > On 5/20/22 9:03 AM, Martin Wilck wrote:
+> > > > On Fri, 2022-05-20 at 14:06 +0200, Hannes Reinecke wrote:
+> > > > > On 5/20/22 12:57, Martin Wilck wrote:
+> > > > > > Brian, Martin,
+> > > > > >=20
+> > > > > > sorry, I've overlooked this patch previously. I have to say
+> > > > > > I
+> > > > > > think
+> > > > > > it's wrong and shouldn't have been applied. At least I need
+> > > > > > more
+> > > > > > in-
+> > > > > > depth explanation.
+> > > > > >=20
+> > > > > > On Mon, 2022-05-02 at 20:50 -0400, Martin K. Petersen
+> > > > > > wrote:
+> > > > > > > On Mon, 2 May 2022 08:09:17 -0700, Brian Bunker wrote:
+> > > > > > >=20
+> > > > > > > > The handling of the ALUA transitioning state is
+> > > > > > > > currently
+> > > > > > > > broken.
+> > > > > > > > When
+> > > > > > > > a target goes into this state, it is expected that the
+> > > > > > > > target
+> > > > > > > > is
+> > > > > > > > allowed to stay in this state for the implicit
+> > > > > > > > transition
+> > > > > > > > timeout
+> > > > > > > > without a path failure.
+> > > > > >=20
+> > > > > > Can you please show me a quote from the specs on which this
+> > > > > > expectation
+> > > > > > ("without a path failure") is based? AFAIK the SCSI specs
+> > > > > > don't
+> > > > > > say
+> > > > > > anything about device-mapper multipath semantics.
+> > > > > >=20
+> > > > > > > > The handler has this logic, but it gets
+> > > > > > > > skipped currently.
+> > > > > > > >=20
+> > > > > > > > When the target transitions, there is in-flight I/O
+> > > > > > > > from
+> > > > > > > > the
+> > > > > > > > initiator. The first of these responses from the target
+> > > > > > > > will be
+> > > > > > > > a
+> > > > > > > > unit
+> > > > > > > > attention letting the initiator know that the ALUA
+> > > > > > > > state
+> > > > > > > > has
+> > > > > > > > changed.
+> > > > > > > > The remaining in-flight I/Os, before the initiator
+> > > > > > > > finds
+> > > > > > > > out
+> > > > > > > > that
+> > > > > > > > the
+> > > > > > > > portal state has changed, will return not ready, ALUA
+> > > > > > > > state
+> > > > > > > > is
+> > > > > > > > transitioning. The portal state will change to
+> > > > > > > > SCSI_ACCESS_STATE_TRANSITIONING. This will lead to all
+> > > > > > > > new
+> > > > > > > > I/O
+> > > > > > > > immediately failing the path unexpectedly. The path
+> > > > > > > > failure
+> > > > > > > > happens
+> > > > > > > > in
+> > > > > > > > less than a second instead of the expected successes
+> > > > > > > > until
+> > > > > > > > the
+> > > > > > > > transition timer is exceeded.
+> > > > > >=20
+> > > > > > dm multipath has no concept of "transitioning" state. Path
+> > > > > > state
+> > > > > > can be
+> > > > > > either active or inactive. As Brian wrote, commands sent to
+> > > > > > the
+> > > > > > transitioning device will return NOT READY, TRANSITIONING,
+> > > > > > and
+> > > > > > require
+> > > > > > retries on the SCSI layer. If we know this in advance, why
+> > > > > > should
+> > > > > > we
+> > > > > > continue sending I/O down this semi-broken path? If other,
+> > > > > > healthy
+> > > > > > paths are available, why it would it not be the right thing
+> > > > > > to
+> > > > > > switch
+> > > > > > I/O to them ASAP?
+> > > > > >=20
+> > > > > But we do, don't we?
+> > > > > Commands are being returned with the appropriate status, and
+> > > > > dm-multipath should make the corresponding decisions here.
+> > > > > This patch just modifies the check when _sending_ commands;
+> > > > > ie
+> > > > > multipath Depending on timing, multipathd may or may not
+> > > > > already have done a PG switch because of 3.)
+> > > > > had decided that the path is still usable.
+> > > > > Question rather would be why multipath did that;
+> > > >=20
+> > > > If alua_prep_fn() got called, the path was considered usable at
+> > > > the
+> > > > given point in time by dm-multipath. Most probably the reason
+> > > > was
+> > > > simply that no error condition had occured on this path before
+> > > > ALUA
+> > > > state switched to transitioning. I suppose this can happen
+> > > > if=A0storage
+> > > > switches a PG consisting of multiple paths to TRANSITIONING. We
+> > > > get
+> > > > an
+> > > > error on one path (sda, say), issue an RTPG, and receive the
+> > > > new
+> > > > ALUA
+> > > > state for all paths of the PG. For all paths except sda, we'd
+> > > > just
+> > > > see
+> > > > a switch to TRANSITIONING without a previous SCSI error.
+> > > >=20
+> > > > With this patch, we'll dispatch I/O (usually an entire bunch)
+> > > > to
+> > > > these
+> > > > paths despite seeing them in TRANSITIONING state. Eventually,
+> > > > when
+> > > > the
+> > > > SCSI responses are received, this leads to path failures. If
+> > > > I/O
+> > > > latencies are small, this happens after a few ms. In that case,
+> > > > the
+> > > > goal of Brian's patch is not reached, because the time until
+> > > > path
+> > > > failure would still be on the order of milliseconds. OTOH, if
+> > > > latencies
+> > > > are high, it takes substantially longer for the kernel to
+> > > > realize
+> > > > that
+> > > > the path is non-functional, while other, good paths may be
+> > > > idle.=A0I
+> > > > fail
+> > > > to see the benefit.
+> > > >=20
+> > >=20
+> > > I'm not sure everyone agrees with you on the meaning of
+> > > transitioning.
+> > >=20
+> > > If we go from non-optimized to optimized or standby to non-
+> > > opt/optimized
+> > > we don't want to try other paths because it can cause thrashing.
+> >=20
+> > But only with explicit ALUA, or am I missing something? I agree
+> > that
+> > the host shouldn't initiate a PG switch if it encounters
+> > transitioning
+> > state. I also agree that for transitioning towards a "better"
+> > state,
+> > e.g. standby to (non)-optimized, failing the path would be
+> > questionable.=A0Unfortunately we don't know in which "direction" the
+> > path
+> > is transitioning - it could be for 'better' or 'worse'. I suppose
+> > that
+> > in the case of a PG switch, it can happen that we dispatch I/O to a
+> > device that used to be in Standby and is now transitioning. Would
+> > it
+> > make sense to remember the previous state and "guess" what we're
+> > going
+> > to transition to? I.e. if the previous state was "Standby", it's
+> > probably going to be (non)optimized after the transition, and vice-
+> > versa?
+> >=20
+> > > =A0 We just
+> > > need to transition resources before we can fully use the path. It
+> > > could
+> > > be a local cache operation or for distributed targets it could be
+> > > a
+> > > really
+> > > expensive operation.
+> > >=20
+> > > For both though, it can take longer than the retries we get from
+> > > scsi-ml.
+> >=20
+> > So if we want to do "the right thing", we'd continue dispatching to
+> > the
+> > device until either the state changes or the device-reported
+> > transition
+> > timeout has expired?
+> >=20
+> Not quite.
+> I think multipath should make the decision, and we shouldn't try to=20
+> out-guess multipathing from the device driver.
+> We should only make the information available (to wit: the path
+> state)=20
+> for multipath to make the decision.=20
+
+The only information that dm-multipath currently has is the block-level
+error code. The SCSI layer uses BLK_STS_AGAIN for "transitioning". Can
+dm-multipath assume that BLK_STS_AGAIN *always* has these semantics,
+regadless of the low-level driver? It isn't clearly documented, AFAICS.
+
+Doing this properly requires additional logic in dm-mpath.c to treat
+BLK_STS_AGAIN differently from other path errors. IIUC, what Brian and
+Mike say is that dm-multipath may do path failover, but not PG failover
+for BLK_STS_AGAIN. We currently don't have this logic, but we could
+work on it.
+
+IMO this means that Brian's patch would be a step in the wrong
+direction: by returning BLK_STS_OK instead of BLK_STS_AGAIN, dm-
+multipath gets *less* information about path state than before.
+
+dm-multipath has 3 ways to get notified of transitioning state
+(correct me if I'm missing anything):
+
+ 1. I/O queuing fails with BLK_STS_AGAIN in scsi_prep_fn(). This won't
+    happen any more with Brian's patch.
+ 2. I/O returns from target with CHECK CONDITION / NOT READY / 0x4:0xa
+    (LU not accessible - asymmetric state change transition).
+    In this case the SCSI layer applies the "maybe_retry" logic,
+    i.e. it retries the command. When retries are exhausted, it fails
+    the command with BLK_STS_AGAIN.
+ 3. multipathd in user space sees a TRANSITIONING status during routine
+    path checking. Currently multipathd uses prio=3D0 for TRANSITIONING
+    state, which is even less than the prio used for STANDBY (1). Thus
+    multipathd would initiate a PG switch sooner or later. I believe
+    these prio assignments by multipathd are questionable, but that's
+    a different discussion.
+
+dm-multipath interprets BLK_STS_AGAIN in 2.) as path error, and will
+thus do a path failover in the PG. In a case like Brian's, the other
+paths in the PG will likely also be in TRANSITIONING state, so
+procedure 2.) will repeat until all paths in the PG have failed. In
+that situation, dm-multipath will initiate a PG switch, which is what
+Brian wanted to avoid in the first place.
+
+> But if multipath decides to send I/O via a path which we _think_ it's
+> in=20
+> transitioning we shouldn't be arguing with that (ie we shouldn't
+> preempt=20
+> is from prep_fn) but rather let it rip; who knows, maybe there was a=20
+> reason for that.
+
+You seem to assume that multipath knows more about the device then the
+SCSI layer. Isn't the opposite true?=A0dm-multipath would never know that
+the path is "transitioning", and it has zero knowledge about the
+transition timeout. Only the ALUA code knows that certain path devices
+will change their status simultaneously, always. The only additional
+"knowledge" that multipath has is knowledge about path siblings and
+PGs. By returning BLK_STS_OK from scsi_prep_fn(), we hold back
+information that the multipath layer could use for an informed
+decision.
+
+> The only thing this patch changes (for any current setup) is that
+> we'll=20
+> incur additional round-trip times for I/O being sent in between the=20
+> first I/O returning with 'transitioning' and multipath picking up the
+> new path state. This I/O will be returned more-or-less immediately by
+> the target, so really we're only having an additional round-trip
+> latency=20
+> for each I/O during that time. This is at most in the milliseconds=20
+> range, so I guess we can live with that.
+
+Side note: AFAICS it'll be several round-trips (until SCSI retries are
+exhausted,=A0as this is not a "fast io fail" case).
+
+Anyway, you're right, a PG switch will happen after a few milliseconds.
+That's what Brian wanted to avoid. IOW, the patch won't achieve what
+it's supposed to achieve. *But* it will hold back information that dm-
+multipath could use for handling transitions smarter than it currently
+does.
+
+> If, however, multipath fails to pick up the 'transitioning' state
+> then=20
+> this won't work, and we indeed will incur a regression. But that=20
+> arguably is an issue with multipath ...
+
+dm-multipath currently doesn't. Requesting that it should is a valid
+feature request, no less and no more. I'm not against working on this
+feature. But the generic device model in dm-multipath isn't quite
+powerful enough for this. We could try to handle it more cleverly in
+user space, but yet I don't see how it could  be done.
+
+Cheers,
+Martin
+
