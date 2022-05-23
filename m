@@ -2,97 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C78BBC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 May 2022 12:02:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4D5CC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 May 2022 12:25:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235322AbiEWMCv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 May 2022 08:02:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43980 "EHLO
+        id S235356AbiEWMZN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 May 2022 08:25:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235324AbiEWMCs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 May 2022 08:02:48 -0400
+        with ESMTP id S235333AbiEWMZJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 May 2022 08:25:09 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81D7624F03
-        for <linux-scsi@vger.kernel.org>; Mon, 23 May 2022 05:02:46 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id F022B1F8BE;
-        Mon, 23 May 2022 12:02:44 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38961FF8
+        for <linux-scsi@vger.kernel.org>; Mon, 23 May 2022 05:25:08 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id E6D581F383;
+        Mon, 23 May 2022 12:25:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1653307364; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=E+/WcHV/pFWN/ZqaPouJZ48cXXiXCAGJ0RAXgFYl3wU=;
-        b=wY1v2vC7EDJXjDBM4++5kwCbsNjvdTOKMrdNIrRs1ujxY0TJcCPWfTUJASaSeDZee4pVQw
-        E0dEvozd5qsp7UYCpoY4O8cPBChoRfVFnr0G2SMrbCzwgKbxZ5jWl03Dc5e/y27Wz+Xdvu
-        rczhI65kyygVjl1/F7Dy4oWxJXFG/Ps=
+        t=1653308706; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=C6s0IIS88G0Ze+OjZIoCSWYi4Jan7LqXRFCrNGKtbeE=;
+        b=QKLqtwT7IAIBis9kUrjHGFZCEVFRbPBHXsaAc1rplFZkFzmQDic0pqAJC3BJRTSCbr8D/Z
+        3nokNoTZRmaHOYC0Dnb+GHSHMc9I08jyUcbGYA3aTt06qCjB5xvLpZJLe8nve9MyTG2LC1
+        KKCxMmsEDuf4sswU42HX2a2gKRWdZ/4=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1653307364;
+        s=susede2_ed25519; t=1653308706;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=E+/WcHV/pFWN/ZqaPouJZ48cXXiXCAGJ0RAXgFYl3wU=;
-        b=8uCZBP0i51ON99G1j/Bbob+tdZ+2JPQ3hbRWdhVENvZ2cfSDNFtriGjS+R3I+fHGlYJxIj
-        NsBiJZaQixeBW0Ag==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id DCEBF2C141;
-        Mon, 23 May 2022 12:02:44 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id CAECF5194619; Mon, 23 May 2022 14:02:44 +0200 (CEST)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Zheyu Ma <zheyuma97@gmail.com>
-Subject: [PATCHv2] myrb: fixup null pointer access on myrb_cleanup()
-Date:   Mon, 23 May 2022 14:02:44 +0200
-Message-Id: <20220523120244.99515-1-hare@suse.de>
-X-Mailer: git-send-email 2.29.2
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=C6s0IIS88G0Ze+OjZIoCSWYi4Jan7LqXRFCrNGKtbeE=;
+        b=uvj6CqkJsKJfe3/8FyUrqE2MYUehNqB6sCugB4tQKBQP1jsJSW54517biwDSCyjaV2RtVw
+        Nv+ktFZvoLydoRBg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A342113AA5;
+        Mon, 23 May 2022 12:25:06 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id fIa9JCJ9i2L+OQAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 23 May 2022 12:25:06 +0000
+Message-ID: <f103023f-0ef7-076c-52ea-f8bbca0fd49f@suse.de>
+Date:   Mon, 23 May 2022 14:25:05 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH 04/20] mptfusion: correct definitions for
+ mptscsih_dev_reset()
+Content-Language: en-US
+To:     Ewan Milne <emilne@redhat.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+References: <20220512111236.109851-1-hare@suse.de>
+ <20220512111236.109851-5-hare@suse.de>
+ <CAGtn9rnkZ1Y6-H7N_VkgmsDfWURiRBm1-kjnhLYxSk7un08CyQ@mail.gmail.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <CAGtn9rnkZ1Y6-H7N_VkgmsDfWURiRBm1-kjnhLYxSk7un08CyQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When myrb_probe() fails the callback might not be set, so we need
-to validate the 'disable_intr' callback in myrb_cleanup() to not
-cause a null pointer exception. And while at it do not call
-myrb_cleanup() if we cannot enable the PCI device at all.
+On 5/19/22 19:27, Ewan Milne wrote:
+> This patch appears to change the EH activity from issuing a target
+> reset to a LUN reset only
+> (since it does not add an entry in the host templates for
+> .eh_target_reset_handler to invoke
+> the new mptscsih_target_reset() function, nor does any other patch in
+> the series).
+> 
+> Is this going to work properly, and without escalating to a host reset
+> which might not have happened before?
+> 
+You are correct, the drivers need to be changed to refer to target_reset 
+now. Will be fixing it with the next version.
 
-Reported-by: Zheyu Ma <zheyuma97@gmail.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/myrb.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index 71585528e8db..e885c1dbf61f 100644
---- a/drivers/scsi/myrb.c
-+++ b/drivers/scsi/myrb.c
-@@ -1239,7 +1239,8 @@ static void myrb_cleanup(struct myrb_hba *cb)
- 	myrb_unmap(cb);
- 
- 	if (cb->mmio_base) {
--		cb->disable_intr(cb->io_base);
-+		if (cb->disable_intr)
-+			cb->disable_intr(cb->io_base);
- 		iounmap(cb->mmio_base);
- 	}
- 	if (cb->irq)
-@@ -3413,9 +3414,13 @@ static struct myrb_hba *myrb_detect(struct pci_dev *pdev,
- 	mutex_init(&cb->dcmd_mutex);
- 	mutex_init(&cb->dma_mutex);
- 	cb->pdev = pdev;
-+	cb->host = shost;
- 
--	if (pci_enable_device(pdev))
--		goto failure;
-+	if (pci_enable_device(pdev)) {
-+		dev_err(&pdev->dev, "Failed to enable PCI device\n");
-+		scsi_host_put(shost);
-+		return NULL;
-+	}
- 
- 	if (privdata->hw_init == DAC960_PD_hw_init ||
- 	    privdata->hw_init == DAC960_P_hw_init) {
+Hannes
 -- 
-2.29.2
-
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
