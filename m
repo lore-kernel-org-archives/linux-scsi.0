@@ -2,255 +2,182 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E45FC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 May 2022 08:50:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8179CC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 May 2022 11:18:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233278AbiEXIu3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 May 2022 04:50:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48746 "EHLO
+        id S230439AbiEXLSG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 May 2022 07:18:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233279AbiEXIu2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2022 04:50:28 -0400
-Received: from m12-18.163.com (m12-18.163.com [220.181.12.18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 52F287CB35;
-        Tue, 24 May 2022 01:50:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=9KFfo
-        46Pv2roKfZgjfQwCtxLH+v1kf+Ql85XaC4j/Xo=; b=WjRJKwA5aw4BvijVtqP4M
-        5lGH3T5bmU+KXaC09PS613OxwxJxTlVmGxFZF/G+gVv6+qE9cHxXF10O+cKY5B5F
-        XHhZJAvuNN11WU4ONytiM6LXnEBU/h4ZCdMf6PazQjCWYMgYzo3xNlgdelrMmPlR
-        m6jDN68MH8CUT4G5WHLkck=
-Received: from carlis (unknown [218.17.89.92])
-        by smtp14 (Coremail) with SMTP id EsCowABX+eQ9nIxihWfrDw--.40768S2;
-        Tue, 24 May 2022 16:50:06 +0800 (CST)
-From:   Xuezhi Zhang <zhangxuezhi1@coolpad.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        llyz108@163.com, Xuezhi Zhang <zhangxuezhi1@coolpad.com>
-Subject: [PATCH] scsi: core: sysfs: convert sysfs snprintf to sysfs_emit
-Date:   Tue, 24 May 2022 08:49:59 +0000
-Message-Id: <20220524084959.126188-1-zhangxuezhi1@coolpad.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S236755AbiEXLRI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2022 07:17:08 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CBAC94181
+        for <linux-scsi@vger.kernel.org>; Tue, 24 May 2022 04:16:37 -0700 (PDT)
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24O9AAM1004282;
+        Tue, 24 May 2022 11:16:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=h3s/3vG3K5oNfct8CH0WLi+od4c07+lHnc+mnK/ZKiY=;
+ b=ODZGT0s5l98hU33DG25F/2858EGzo44X2PFB9NZ0iNV6Am9V1d43pKvwxW4iQ3F9QnTv
+ 6BMTGKyvqjNunMSyE10WiyZrCk13nBqQpxUt7MIe34iEOTiLx32GGQwFsjDRhKWEgBDv
+ oHuPILL0WAcDuCNLMRJ4RElgXAoVLgJsMGMDSNKwRpOMHaUZCAlTOumdssdyOs/uTABr
+ JNGTbFglOUbQzAXYStS2N4p89YyBqAqeAnXdw1jne+DylA813tkDBzRMhkwH63rMck9x
+ DTYqTSrTlZtHm+JCHgfvVYO3sB9ArZVE6H/+81ey4tpYjalPmj6cNvuQAYngEy1fQMnA 2Q== 
+Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3g8uv0k03c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 24 May 2022 11:16:23 +0000
+Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
+        by ppma06fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 24OB7N7e005782;
+        Tue, 24 May 2022 11:16:21 GMT
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
+        by ppma06fra.de.ibm.com with ESMTP id 3g8c7gr8xc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 24 May 2022 11:16:21 +0000
+Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 24OBGJii22413570
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 24 May 2022 11:16:19 GMT
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 12EC94C046;
+        Tue, 24 May 2022 11:16:19 +0000 (GMT)
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 904C74C040;
+        Tue, 24 May 2022 11:16:18 +0000 (GMT)
+Received: from [9.145.57.10] (unknown [9.145.57.10])
+        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Tue, 24 May 2022 11:16:18 +0000 (GMT)
+Message-ID: <8e50ff48-7ad1-29a3-23ee-48559fa79919@linux.ibm.com>
+Date:   Tue, 24 May 2022 13:16:18 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+Subject: Re: [PATCH 06/16] qedf: use fc rport as argument for
+ qedf_initiate_tmf()
+Content-Language: en-US
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Saurav Kashyap <skashyap@marvell.com>
+References: <20220524061602.86760-1-hare@suse.de>
+ <20220524061602.86760-7-hare@suse.de>
+From:   Steffen Maier <maier@linux.ibm.com>
+In-Reply-To: <20220524061602.86760-7-hare@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: QvkJU1hMg75LtfgTD8IYG5B6r5xmkDxx
+X-Proofpoint-ORIG-GUID: QvkJU1hMg75LtfgTD8IYG5B6r5xmkDxx
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: EsCowABX+eQ9nIxihWfrDw--.40768S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW3GrW8KFy8uF4ktw4kZF4rGrg_yoW3WFWxpF
-        yfGa45A3y8Gr1Duws0gFs3uFyY9rWUA343JayrGw1j93ZFyrWkta4kAFWjq3yrGrZ5C3W7
-        ZF4DKFW5CF4rurJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jviihUUUUU=
-X-Originating-IP: [218.17.89.92]
-Sender: llyz108@163.com
-X-CM-SenderInfo: xoo16iiqy6il2tof0z/1tbiMhcEhVWBzZ8v4gABsu
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.486,FMLib:17.11.64.514
+ definitions=2022-05-24_06,2022-05-23_01,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
+ mlxlogscore=873 phishscore=0 lowpriorityscore=0 clxscore=1011
+ suspectscore=0 malwarescore=0 bulkscore=0 impostorscore=0
+ priorityscore=1501 spamscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2202240000 definitions=main-2205240057
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following coccicheck warnings:
-drivers/scsi/scsi_sysfs.c:705:8-16:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:696:8-16:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:1119:9-17:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:738:8-16:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:986:8-16:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:1209:8-16:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:717:8-16:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:385:8-16:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:961:8-16:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:402:8-16:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:881:8-16:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:277:9-17:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:327:9-17:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:231:8-16:
-WARNING: use scnprintf or sprintf
-drivers/scsi/scsi_sysfs.c:866:8-16:
-WARNING: use scnprintf or sprintf
+On 5/24/22 08:15, Hannes Reinecke wrote:
+> When sending a TMF we're only concerned with the rport and the LUN ID,
+> so use struct fc_rport as argument for qedf_initiate_tmf().
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> Cc: Saurav Kashyap <skashyap@marvell.com>
+> ---
+>   drivers/scsi/qedf/qedf.h      |  3 +-
+>   drivers/scsi/qedf/qedf_io.c   | 69 ++++++++++-------------------------
+>   drivers/scsi/qedf/qedf_main.c | 19 +++++-----
+>   3 files changed, 31 insertions(+), 60 deletions(-)
 
-Signed-off-by: Xuezhi Zhang <zhangxuezhi1@coolpad.com>
----
- drivers/scsi/scsi_sysfs.c | 38 +++++++++++++++++++-------------------
- 1 file changed, 19 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 546a9e3cfbec..256d45ca5fa5 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -163,7 +163,7 @@ show_##name (struct device *dev, struct device_attribute *attr, 	\
- 	     char *buf)							\
- {									\
- 	struct Scsi_Host *shost = class_to_shost(dev);			\
--	return snprintf (buf, 20, format_string, shost->field);		\
-+	return sysfs_emit(buf, format_string, shost->field);		\
- }
- 
- /*
-@@ -228,7 +228,7 @@ show_shost_state(struct device *dev, struct device_attribute *attr, char *buf)
- 	if (!name)
- 		return -EINVAL;
- 
--	return snprintf(buf, 20, "%s\n", name);
-+	return sysfs_emit(buf, "%s\n", name);
- }
- 
- /* DEVICE_ATTR(state) clashes with dev_attr_state for sdev */
-@@ -274,7 +274,7 @@ show_shost_active_mode(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 
- 	if (shost->active_mode == MODE_UNKNOWN)
--		return snprintf(buf, 20, "unknown\n");
-+		return sysfs_emit(buf, "unknown\n");
- 	else
- 		return show_shost_mode(shost->active_mode, buf);
- }
-@@ -382,7 +382,7 @@ static ssize_t
- show_host_busy(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct Scsi_Host *shost = class_to_shost(dev);
--	return snprintf(buf, 20, "%d\n", scsi_host_busy(shost));
-+	return sysfs_emit(buf, "%d\n", scsi_host_busy(shost));
- }
- static DEVICE_ATTR(host_busy, S_IRUGO, show_host_busy, NULL);
- 
-@@ -399,7 +399,7 @@ show_nr_hw_queues(struct device *dev, struct device_attribute *attr, char *buf)
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct blk_mq_tag_set *tag_set = &shost->tag_set;
- 
--	return snprintf(buf, 20, "%d\n", tag_set->nr_hw_queues);
-+	return sysfs_emit(buf, "%d\n", tag_set->nr_hw_queues);
- }
- static DEVICE_ATTR(nr_hw_queues, S_IRUGO, show_nr_hw_queues, NULL);
- 
-@@ -606,7 +606,7 @@ sdev_show_##field (struct device *dev, struct device_attribute *attr,	\
- {									\
- 	struct scsi_device *sdev;					\
- 	sdev = to_scsi_device(dev);					\
--	return snprintf (buf, 20, format_string, sdev->field);		\
-+	return sysfs_emit(buf, format_string, sdev->field);		\
- }									\
- 
- /*
-@@ -693,7 +693,7 @@ sdev_show_device_busy(struct device *dev, struct device_attribute *attr,
- 		char *buf)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%d\n", scsi_device_busy(sdev));
-+	return sysfs_emit(buf, "%d\n", scsi_device_busy(sdev));
- }
- static DEVICE_ATTR(device_busy, S_IRUGO, sdev_show_device_busy, NULL);
- 
-@@ -702,7 +702,7 @@ sdev_show_device_blocked(struct device *dev, struct device_attribute *attr,
- 		char *buf)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%d\n", atomic_read(&sdev->device_blocked));
-+	return sysfs_emit(buf, "%d\n", atomic_read(&sdev->device_blocked));
- }
- static DEVICE_ATTR(device_blocked, S_IRUGO, sdev_show_device_blocked, NULL);
- 
-@@ -714,7 +714,7 @@ sdev_show_timeout (struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%d\n", sdev->request_queue->rq_timeout / HZ);
-+	return sysfs_emit(buf, "%d\n", sdev->request_queue->rq_timeout / HZ);
- }
- 
- static ssize_t
-@@ -735,7 +735,7 @@ sdev_show_eh_timeout(struct device *dev, struct device_attribute *attr, char *bu
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%u\n", sdev->eh_timeout / HZ);
-+	return sysfs_emit(buf, "%u\n", sdev->eh_timeout / HZ);
- }
- 
- static ssize_t
-@@ -863,7 +863,7 @@ show_state_field(struct device *dev, struct device_attribute *attr, char *buf)
- 	if (!name)
- 		return -EINVAL;
- 
--	return snprintf(buf, 20, "%s\n", name);
-+	return sysfs_emit(buf, "%s\n", name);
- }
- 
- static DEVICE_ATTR(state, S_IRUGO | S_IWUSR, show_state_field, store_state_field);
-@@ -878,7 +878,7 @@ show_queue_type_field(struct device *dev, struct device_attribute *attr,
- 	if (sdev->simple_tags)
- 		name = "simple";
- 
--	return snprintf(buf, 20, "%s\n", name);
-+	return sysfs_emit(buf, "%s\n", name);
- }
- 
- static ssize_t
-@@ -958,7 +958,7 @@ static ssize_t
- show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
- 			char *buf)
- {
--	return snprintf(buf, 20, "%d\n", (int)sizeof(atomic_t) * 8);
-+	return sysfs_emit(buf, "%d\n", (int)sizeof(atomic_t) * 8);
- }
- 
- static DEVICE_ATTR(iocounterbits, S_IRUGO, show_iostat_counterbits, NULL);
-@@ -970,7 +970,7 @@ show_iostat_##field(struct device *dev, struct device_attribute *attr,	\
- {									\
- 	struct scsi_device *sdev = to_scsi_device(dev);			\
- 	unsigned long long count = atomic_read(&sdev->field);		\
--	return snprintf(buf, 20, "0x%llx\n", count);			\
-+	return sysfs_emit(buf, "0x%llx\n", count);			\
- }									\
- static DEVICE_ATTR(field, S_IRUGO, show_iostat_##field, NULL)
- 
-@@ -983,7 +983,7 @@ sdev_show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf (buf, 20, SCSI_DEVICE_MODALIAS_FMT "\n", sdev->type);
-+	return sysfs_emit(buf, SCSI_DEVICE_MODALIAS_FMT "\n", sdev->type);
- }
- static DEVICE_ATTR(modalias, S_IRUGO, sdev_show_modalias, NULL);
- 
-@@ -994,7 +994,7 @@ sdev_show_evt_##name(struct device *dev, struct device_attribute *attr,	\
- {									\
- 	struct scsi_device *sdev = to_scsi_device(dev);			\
- 	int val = test_bit(SDEV_EVT_##Cap_name, sdev->supported_events);\
--	return snprintf(buf, 20, "%d\n", val);				\
-+	return sysfs_emit(buf, "%d\n", val);				\
- }
- 
- #define DECLARE_EVT_STORE(name, Cap_name)				\
-@@ -1116,9 +1116,9 @@ sdev_show_dh_state(struct device *dev, struct device_attribute *attr,
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 
- 	if (!sdev->handler)
--		return snprintf(buf, 20, "detached\n");
-+		return sysfs_emit(buf, "detached\n");
- 
--	return snprintf(buf, 20, "%s\n", sdev->handler->name);
-+	return sysfs_emit(buf, "%s\n", sdev->handler->name);
- }
- 
- static ssize_t
-@@ -1206,7 +1206,7 @@ sdev_show_queue_ramp_up_period(struct device *dev,
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%u\n",
-+	return sysfs_emit(buf, "%u\n",
- 			jiffies_to_msecs(sdev->queue_ramp_up_period));
- }
- 
+> @@ -2432,33 +2425,10 @@ int qedf_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
+>   		 (tm_flags == FCP_TMF_TGT_RESET) ? "TARGET RESET" :
+>   		 "LUN RESET");
+> 
+> -	if (qedf_priv(sc_cmd)->io_req) {
+> -		io_req = qedf_priv(sc_cmd)->io_req;
+> -		ref_cnt = kref_read(&io_req->refcount);
+> -		QEDF_ERR(NULL,
+> -			 "orig io_req = %p xid = 0x%x ref_cnt = %d.\n",
+> -			 io_req, io_req->xid, ref_cnt);
+> -	}
+> -
+> -	rval = fc_remote_port_chkready(rport);
+> -	if (rval) {
+> -		QEDF_ERR(NULL, "device_reset rport not ready\n");
+> -		rc = FAILED;
+> -		goto tmf_err;
+> -	}
+> -
+> -	rc = fc_block_scsi_eh(sc_cmd);
+> +	rc = fc_block_rport(rport);
+
+
+> diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+> index 18dc68d577b6..85ccfbc5cd26 100644
+> --- a/drivers/scsi/qedf/qedf_main.c
+> +++ b/drivers/scsi/qedf/qedf_main.c
+> @@ -773,7 +773,7 @@ static int qedf_eh_abort(struct scsi_cmnd *sc_cmd)
+>   		goto drop_rdata_kref;
+>   	}
+> 
+> -	rc = fc_block_scsi_eh(sc_cmd);
+> +	rc = fc_block_rport(rport);
+>   	if (rc)
+>   		goto drop_rdata_kref;
+> 
+
+Why replace the fc_block helper here in the abort handler?
+Isn't the scope of the abort hander exactly the one scsi_cmnd?
+The description of this patch is about changes to TMF (so I understand the 
+change in qedf_initiate_tmf() above for device or target reset), i.e. not abort.
+Admittedly, it shouldn't be a problem functional-wise, as fc_block_scsi_eh() 
+delegates internally to fc_block_rport(), but it looks odd to me nonetheless.
+
+This change seems inconsistent with the other patches in this series.
+You don't plan to get rid of fc_block_scsi_eh(), do you?
+
+Oh, later in patch 09 you write:
+"Use fc_block_rport() instead of fc_block_scsi_eh() as the latter
+will be deprecated."
+
+Why?
+Then all FCP HBA abort handlers need to convert their scsi_cmnd to fc_rport 
+themselves.
+E.g. zfcp_scsi_eh_abort_handler() does not deal with fc_rport so far as there 
+was no need. From what I've seen you haven't touched that part in
+[PATCH v2 03/24] zfcp: open-code fc_block_scsi_eh() for host reset
+when zfcp was still part of the series, so I smell an inconsistency.
+
+Haven't seen that coming. Did I miss this having been announced explicitly 
+somewhere else earlier? If not, I would find it interesting to being made 
+explicit. In retrospectice, I found some hints hidden in individual patches of 
+earlier version in this series, but I had completely missed it.
+Also, it seems a separate topic, not necessarily related to changing the 
+scsi_eh callback API for dev/target/bus/host reset to get rid of their 
+unsuitable argument scsi_cmnd.
+
 -- 
-2.25.1
+Mit freundlichen Gruessen / Kind regards
+Steffen Maier
 
+Linux on IBM Z and LinuxONE
+
+https://www.ibm.com/privacy/us/en/
+IBM Deutschland Research & Development GmbH
+Vorsitzender des Aufsichtsrats: Gregor Pillen
+Geschaeftsfuehrung: David Faller
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
