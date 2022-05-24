@@ -2,77 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3146FC43217
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 May 2022 18:12:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E801C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 May 2022 18:12:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240248AbiEXSMD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 May 2022 14:12:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55690 "EHLO
+        id S240256AbiEXSME (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 May 2022 14:12:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240205AbiEXSL4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2022 14:11:56 -0400
+        with ESMTP id S240212AbiEXSL5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2022 14:11:57 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6472E5DD11
-        for <linux-scsi@vger.kernel.org>; Tue, 24 May 2022 11:11:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B17AD5E16C
+        for <linux-scsi@vger.kernel.org>; Tue, 24 May 2022 11:11:56 -0700 (PDT)
 Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24OHnrWG022454;
-        Tue, 24 May 2022 18:11:47 GMT
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24OHnrWF022454;
+        Tue, 24 May 2022 18:11:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=er/fT+hHbVLthAaXQ4lglw/eYas750EEF7PZIjjVkSg=;
- b=THufrsct6muwiCqGLNE0zXuqOiCTb9EQXld645cwQM5e8SBYh5kGcP/kgWPS0BmQUI3n
- eih3Qo6x+z5CVvZNsfwZ/+i89ObPzXLmgW+bhkA/wSGCjoQ+6X1nBDI9gII1IdghDqL0
- o/PlWr+HVU4SXgLnwSj82o8Xt2sUZg/2gi0iWf0pFiPYnbE1OYLYtR1eO+AjOGEJfE6q
- I6CdETL/PVjJkyHmCLhkdXvAhPwNCl08jzrh1LkC8tO8h2s0dV7ZaxTEJD7pm0HjJspK
- lG4G1pcQWb6EnCUnsalH/3cC5uJQpLCPZHB5em0BbfNhZ1SXhxNbUMXrSRoU5HuHTeS3 6w== 
+ bh=4N3oavYm7srSSmyU7HRMbbIaGEzKYtuehG7tD0eXNQo=;
+ b=SgfSu/5vxfrRMKU2NY4PFM7r0XwKsxnMD6R+uea379Um5BJ/27Nwg3yRh4a6zvzH6txS
+ XvS3YmY7eUS+zsGyWWpSG2HHFku0OfrlNVadqGL8kSKW7PF8zpIjHzDshE5Z3IYXP/4s
+ 0Ej/9ee5kp0uvLzFndQRXp6VqvUV+aiSzfpYEzeDsNS6SuBNxGe66sBSdkl/w0xNOILC
+ ZxxObr2bR1z1AT1s8Sk/0AOd5j2Bz4OGc2+L/abMmYp4QghbfkugVbXnPyqM58Z9PLip
+ o+AQwP9MT7C7Bdi0qVT0ZnRWN9B2IvYqv46o0NKPCxrmZf/4opBQB3KTgGqDjkRiKkSr wA== 
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3g93tar3fy-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3g93tar3fv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Tue, 24 May 2022 18:11:46 +0000
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24OHoI9I016378;
-        Tue, 24 May 2022 18:11:45 GMT
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 24OHoOGZ016620;
+        Tue, 24 May 2022 18:11:44 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3g93x50s4t-1
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3g93x50s4b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 May 2022 18:11:45 +0000
+        Tue, 24 May 2022 18:11:44 +0000
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 24OIAvn0039045;
-        Tue, 24 May 2022 18:11:45 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 24OIAvmu039045;
+        Tue, 24 May 2022 18:11:44 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3g93x50s3r-4;
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3g93x50s3r-2;
         Tue, 24 May 2022 18:11:44 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
+To:     Hannes Reinecke <hare@suse.de>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, haowenchao@huawei.com
-Subject: Re: [PATCH] sd: don't call blk_cleanup_disk in sd_probe
-Date:   Tue, 24 May 2022 14:11:36 -0400
-Message-Id: <165341587530.22286.3131420282323524417.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, Zheyu Ma <zheyuma97@gmail.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>
+Subject: Re: [PATCHv2] myrb: fixup null pointer access on myrb_cleanup()
+Date:   Tue, 24 May 2022 14:11:34 -0400
+Message-Id: <165341587531.22286.3143357087389295163.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.35.2
-In-Reply-To: <20220523083813.227935-1-hch@lst.de>
-References: <20220523083813.227935-1-hch@lst.de>
+In-Reply-To: <20220523120244.99515-1-hare@suse.de>
+References: <20220523120244.99515-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: FwK9JeSirJgwL79dmib61CCClCUy8_3n
-X-Proofpoint-ORIG-GUID: FwK9JeSirJgwL79dmib61CCClCUy8_3n
+X-Proofpoint-GUID: 8Pwru6qVKXRPX1b3JautBAIpU3gMShBo
+X-Proofpoint-ORIG-GUID: 8Pwru6qVKXRPX1b3JautBAIpU3gMShBo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 23 May 2022 10:38:13 +0200, Christoph Hellwig wrote:
+On Mon, 23 May 2022 14:02:44 +0200, Hannes Reinecke wrote:
 
-> In SCSI the midlayer has ownership of the request_queue, so on probe
-> failure we must only put the gendisk, but leave the request_queue alone.
+> When myrb_probe() fails the callback might not be set, so we need
+> to validate the 'disable_intr' callback in myrb_cleanup() to not
+> cause a null pointer exception. And while at it do not call
+> myrb_cleanup() if we cannot enable the PCI device at all.
 > 
 > 
 
 Applied to 5.19/scsi-queue, thanks!
 
-[1/1] sd: don't call blk_cleanup_disk in sd_probe
-      https://git.kernel.org/mkp/scsi/c/7274ce0558ad
+[1/1] myrb: fixup null pointer access on myrb_cleanup()
+      https://git.kernel.org/mkp/scsi/c/f9f0a46141e2
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
