@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93130C43219
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 May 2022 12:15:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7976C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 May 2022 12:15:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237271AbiEXMPl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S237272AbiEXMPl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 24 May 2022 08:15:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51088 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237256AbiEXMPh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2022 08:15:37 -0400
+        with ESMTP id S237265AbiEXMPj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2022 08:15:39 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 351476F493;
-        Tue, 24 May 2022 05:15:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C24B26F492;
+        Tue, 24 May 2022 05:15:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=S8K6Jpbf+n29Q5SpRcJVJSKq9o1yhB/HxfphEluK0VI=; b=07YSOFjSyqDSOlhdh6xXYbl860
-        r00kzqXlpqAg2BfbFHHBUS43E2pMfHQPyOIlxyUaWfnJuNgSvxq170xoIdxh7fBAk6lPMgJxIj4GG
-        FmBVrTZLNUar2PHaVWbaWFdG9TiF92mN63/GQR/OP+ADLj7HTKZXtw2mwUmeAvgk28M3NY5hSjoTb
-        tmqmTyZ9P3pWd1S72Pds+ISwSDzls6Vuo7K0jUH6ex4rlj2SLW/M0kszceO3XHqvEqcOQdkEvYLWU
-        v8nV4ztuymUhTdK6liXchQTYT3/sDt+R0Nr/94g1r9EaUF9QXtqeuM+fhKPv1T7SzA9m5g/QpSBwd
-        utntL1ow==;
+        bh=yCHyDn6f0zT3UcsDszcvQe5hB0K4/MVhkceMeYt1MdY=; b=qUsDXZRBls6kBzJ3e8hR3KuMz+
+        DZ6u3vbkyeL4WUpuxvebUauQgMV90nxnE6Ud/hGA18s3/Dsrn4TNBTAWiQC1X92zD+duSv+tE4AGy
+        GRHmXU96FRp+7sN6Sp78+jnUNF0enAyL4UOlYBPd+YA5oS7WtYFJqNIU5SNNCx03Hese0TFBWRaUQ
+        nt0/p86ZNjxFTfVAbECv+AVSeoQ/lgvYYvCT0eYxF0rzMZCQKEjLUHTlvwiAq0gPXEk4JW1v0iZz0
+        K3LJ/aI92n/lm+PfYLbA18Ew8hqxLOGfLTtxd1NFrenM8aBn2LepWw2QbpbQabfeB2e+M7TUuwxmq
+        YqHT2ZdQ==;
 Received: from [2001:4bb8:18c:7298:91b6:63de:2998:b8b2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1ntTRm-007wak-Js; Tue, 24 May 2022 12:15:35 +0000
+        id 1ntTRp-007wb8-7E; Tue, 24 May 2022 12:15:37 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org, Keith Busch <kbusch@kernel.org>
-Subject: [PATCH 1/3] blk-mq: remove __blk_execute_rq_nowait
-Date:   Tue, 24 May 2022 14:15:28 +0200
-Message-Id: <20220524121530.943123-2-hch@lst.de>
+Subject: [PATCH 2/3] blk-mq: avoid a mess of casts for blk_end_sync_rq
+Date:   Tue, 24 May 2022 14:15:29 +0200
+Message-Id: <20220524121530.943123-3-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220524121530.943123-1-hch@lst.de>
 References: <20220524121530.943123-1-hch@lst.de>
@@ -45,116 +45,105 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We don't want to plug for synchronous execution that where we immediately
-wait for the request.  Once that is done not a whole lot of code is
-shared, so just remove __blk_execute_rq_nowait.
+Instead of trying to cast a __bitwise 32-bit integer to a larger integer
+and then a pointer, just allow a struct with the blk_status_t and the
+completion on stack and set the end_io_data to that.  Use the
+opportunity to move the code to where it belongs and drop rather
+confusing comments.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Keith Busch <kbusch@kernel.org>
 ---
- block/blk-mq.c | 69 ++++++++++++++++++++++----------------------------
- 1 file changed, 30 insertions(+), 39 deletions(-)
+ block/blk-mq.c | 43 ++++++++++++++++++++-----------------------
+ 1 file changed, 20 insertions(+), 23 deletions(-)
 
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index ae116b7556482..31a89d1004b8f 100644
+index 31a89d1004b8f..28b3e6db98499 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -1203,28 +1203,6 @@ static void blk_add_rq_to_plug(struct blk_plug *plug, struct request *rq)
- 	plug->rq_count++;
+@@ -1151,24 +1151,6 @@ void blk_mq_start_request(struct request *rq)
  }
+ EXPORT_SYMBOL(blk_mq_start_request);
  
--static void __blk_execute_rq_nowait(struct request *rq, bool at_head,
--		rq_end_io_fn *done, bool use_plug)
+-/**
+- * blk_end_sync_rq - executes a completion event on a request
+- * @rq: request to complete
+- * @error: end I/O status of the request
+- */
+-static void blk_end_sync_rq(struct request *rq, blk_status_t error)
 -{
--	WARN_ON(irqs_disabled());
--	WARN_ON(!blk_rq_is_passthrough(rq));
+-	struct completion *waiting = rq->end_io_data;
 -
--	rq->end_io = done;
+-	rq->end_io_data = (void *)(uintptr_t)error;
 -
--	blk_account_io_start(rq);
--
--	if (use_plug && current->plug) {
--		blk_add_rq_to_plug(current->plug, rq);
--		return;
--	}
 -	/*
--	 * don't check dying flag for MQ because the request won't
--	 * be reused after dying flag is set
+-	 * complete last, if this is a stack request the process (and thus
+-	 * the rq pointer) could be invalid right after this complete()
 -	 */
--	blk_mq_sched_insert_request(rq, at_head, true, false);
+-	complete(waiting);
 -}
 -
--
- /**
-  * blk_execute_rq_nowait - insert a request to I/O scheduler for execution
-  * @rq:		request to insert
-@@ -1240,8 +1218,16 @@ static void __blk_execute_rq_nowait(struct request *rq, bool at_head,
-  */
- void blk_execute_rq_nowait(struct request *rq, bool at_head, rq_end_io_fn *done)
- {
--	__blk_execute_rq_nowait(rq, at_head, done, true);
-+	WARN_ON(irqs_disabled());
-+	WARN_ON(!blk_rq_is_passthrough(rq));
- 
-+	rq->end_io = done;
-+
-+	blk_account_io_start(rq);
-+	if (current->plug)
-+		blk_add_rq_to_plug(current->plug, rq);
-+	else
-+		blk_mq_sched_insert_request(rq, at_head, true, false);
+ /*
+  * Allow 2x BLK_MAX_REQUEST_COUNT requests on plug queue for multiple
+  * queues. This is important for md arrays to benefit from merging
+@@ -1231,6 +1213,19 @@ void blk_execute_rq_nowait(struct request *rq, bool at_head, rq_end_io_fn *done)
  }
  EXPORT_SYMBOL_GPL(blk_execute_rq_nowait);
  
-@@ -1277,27 +1263,32 @@ static void blk_rq_poll_completion(struct request *rq, struct completion *wait)
++struct blk_rq_wait {
++	struct completion done;
++	blk_status_t ret;
++};
++
++static void blk_end_sync_rq(struct request *rq, blk_status_t ret)
++{
++	struct blk_rq_wait *wait = rq->end_io_data;
++
++	wait->ret = ret;
++	complete(&wait->done);
++}
++
+ static bool blk_rq_is_poll(struct request *rq)
+ {
+ 	if (!rq->mq_hctx)
+@@ -1262,7 +1257,9 @@ static void blk_rq_poll_completion(struct request *rq, struct completion *wait)
+  */
  blk_status_t blk_execute_rq(struct request *rq, bool at_head)
  {
- 	DECLARE_COMPLETION_ONSTACK(wait);
--	unsigned long hang_check;
+-	DECLARE_COMPLETION_ONSTACK(wait);
++	struct blk_rq_wait wait = {
++		.done = COMPLETION_INITIALIZER_ONSTACK(wait.done),
++	};
  
--	/*
--	 * iopoll requires request to be submitted to driver, so can't
--	 * use plug
--	 */
-+	WARN_ON(irqs_disabled());
-+	WARN_ON(!blk_rq_is_passthrough(rq));
-+
- 	rq->end_io_data = &wait;
--	__blk_execute_rq_nowait(rq, at_head, blk_end_sync_rq,
--			!blk_rq_is_poll(rq));
-+	rq->end_io = blk_end_sync_rq;
+ 	WARN_ON(irqs_disabled());
+ 	WARN_ON(!blk_rq_is_passthrough(rq));
+@@ -1274,7 +1271,7 @@ blk_status_t blk_execute_rq(struct request *rq, bool at_head)
+ 	blk_mq_sched_insert_request(rq, at_head, true, false);
  
--	/* Prevent hang_check timer from firing at us during very long I/O */
--	hang_check = sysctl_hung_task_timeout_secs;
-+	blk_account_io_start(rq);
-+	blk_mq_sched_insert_request(rq, at_head, true, false);
+ 	if (blk_rq_is_poll(rq)) {
+-		blk_rq_poll_completion(rq, &wait);
++		blk_rq_poll_completion(rq, &wait.done);
+ 	} else {
+ 		/*
+ 		 * Prevent hang_check timer from firing at us during very long
+@@ -1283,14 +1280,14 @@ blk_status_t blk_execute_rq(struct request *rq, bool at_head)
+ 		unsigned long hang_check = sysctl_hung_task_timeout_secs;
  
--	if (blk_rq_is_poll(rq))
-+	if (blk_rq_is_poll(rq)) {
- 		blk_rq_poll_completion(rq, &wait);
--	else if (hang_check)
--		while (!wait_for_completion_io_timeout(&wait,
--				hang_check * (HZ/2)))
--			;
--	else
--		wait_for_completion_io(&wait);
-+	} else {
-+		/*
-+		 * Prevent hang_check timer from firing at us during very long
-+		 * I/O
-+		 */
-+		unsigned long hang_check = sysctl_hung_task_timeout_secs;
-+
-+		if (hang_check)
-+			while (!wait_for_completion_io_timeout(&wait,
-+					hang_check * (HZ/2)))
-+				;
-+		else
-+			wait_for_completion_io(&wait);
-+	}
+ 		if (hang_check)
+-			while (!wait_for_completion_io_timeout(&wait,
++			while (!wait_for_completion_io_timeout(&wait.done,
+ 					hang_check * (HZ/2)))
+ 				;
+ 		else
+-			wait_for_completion_io(&wait);
++			wait_for_completion_io(&wait.done);
+ 	}
  
- 	return (blk_status_t)(uintptr_t)rq->end_io_data;
+-	return (blk_status_t)(uintptr_t)rq->end_io_data;
++	return wait.ret;
  }
+ EXPORT_SYMBOL(blk_execute_rq);
+ 
 -- 
 2.30.2
 
