@@ -2,146 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6095C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 May 2022 16:40:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80489C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 May 2022 16:51:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235874AbiEYQkb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 May 2022 12:40:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48700 "EHLO
+        id S245488AbiEYQvX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 May 2022 12:51:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231173AbiEYQk3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 12:40:29 -0400
-Received: from mx1.riseup.net (mx1.riseup.net [198.252.153.129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8143656434;
-        Wed, 25 May 2022 09:40:28 -0700 (PDT)
-Received: from fews1.riseup.net (fews1-pn.riseup.net [10.0.1.83])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256
-         client-signature RSA-PSS (2048 bits) client-digest SHA256)
-        (Client CN "mail.riseup.net", Issuer "R3" (not verified))
-        by mx1.riseup.net (Postfix) with ESMTPS id 4L7cHv6WRZzDq99;
-        Wed, 25 May 2022 09:40:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=riseup.net; s=squak;
-        t=1653496828; bh=wu6xEaXOL0trEsdjhmzYXfb4lvQfG+o2d5deXcMtdk4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=hHFroYoT8tqG8q/7QwK5LNT5bE59m2cUsjw3LMOiFDammb5yNZYOLA4OkGKhOqUZg
-         kxbSKTAlaw9e0okNCotspDQ0qXphieOq17JXAPbof91qedu76oVSW2omplUqOelaEZ
-         MI5vwN3STBmVUm5rQOWWtfpJzIDI0sQWIreC0dRc=
-X-Riseup-User-ID: 5B2B0250F4591D8626F9B624C116C1ECA5390A76FCD21044D81EAEB0BB4E6A36
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-         by fews1.riseup.net (Postfix) with ESMTPSA id 4L7cHr1PN4z5vXK;
-        Wed, 25 May 2022 09:40:23 -0700 (PDT)
-From:   Nia Espera <a5b6@riseup.net>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
-        Nia Espera <a5b6@riseup.net>
-Subject: [RESEND PATCH] scsi: ufs: sysfs: support writing boot_lun attr
-Date:   Wed, 25 May 2022 19:40:13 +0300
-Message-Id: <20220525164013.93748-1-a5b6@riseup.net>
+        with ESMTP id S243615AbiEYQvU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 12:51:20 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B54D52180B;
+        Wed, 25 May 2022 09:51:18 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id EA42467373; Wed, 25 May 2022 18:51:14 +0200 (CEST)
+Date:   Wed, 25 May 2022 18:51:14 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-block@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 11/14] block: remove GENHD_FL_EXT_DEVT
+Message-ID: <20220525165114.GA2750@lst.de>
+References: <20211122130625.1136848-1-hch@lst.de> <20211122130625.1136848-12-hch@lst.de> <Yo4+zEnrBTnoEMCz@T590>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yo4+zEnrBTnoEMCz@T590>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Expands sysfs boot_lun attribute to be writable. Necessary to enable
-proper support for LUN switching on some UFS devices.
+On Wed, May 25, 2022 at 10:35:56PM +0800, Ming Lei wrote:
+> > @@ -872,7 +871,8 @@ static ssize_t disk_ext_range_show(struct device *dev,
+> >  {
+> >  	struct gendisk *disk = dev_to_disk(dev);
+> >  
+> > -	return sprintf(buf, "%d\n", disk_max_parts(disk));
+> > +	return sprintf(buf, "%d\n",
+>
+>
+> The above change breaks parted on loop, which reads 'ext_range' to add
+> partitions.
 
-Signed-off-by: Nia Espera <a5b6@riseup.net>
----
- drivers/scsi/ufs/ufs-sysfs.c | 67 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 66 insertions(+), 1 deletion(-)
+That change alone is not the one breaking it alone, as even if the
+file reported something else you still could not create new partitions.
 
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 5c405ff7b6ea..7bf5d6c3d0ec 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -1047,6 +1047,71 @@ static inline bool ufshcd_is_wb_attrs(enum attr_idn idn)
- 		idn <= QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE;
- }
+Something like the test below should fix it, but I'll need some more
+time to actually test it:
+
+diff --git a/block/genhd.c b/block/genhd.c
+index 36532b9318419..27205ae47d593 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -385,6 +385,8 @@ int disk_scan_partitions(struct gendisk *disk, fmode_t mode)
  
-+static ssize_t boot_lun_enabled_show(struct device *dev,
-+				     struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u32 slot;
-+	int ret;
-+	u8 index = 0;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		up(&hba->host_sem);
-+		return -EBUSY;
-+	}
-+	if (ufshcd_is_wb_attrs(QUERY_ATTR_IDN_BOOT_LU_EN))
-+		index = ufshcd_wb_get_query_index(hba);
-+	ufshcd_rpm_get_sync(hba);
-+
-+	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+		QUERY_ATTR_IDN_BOOT_LU_EN, index, 0, &slot);
-+
-+	ufshcd_rpm_put_sync(hba);
-+	if (ret) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	ret = sysfs_emit(buf, "0x%08X\n", slot);
-+out:
-+	up(&hba->host_sem);
-+	return ret;
-+}
-+
-+static ssize_t boot_lun_enabled_store(struct device *dev,
-+				      struct device_attribute *attr,
-+				      const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u32 slot;
-+	int ret;
-+	u8 index = 0;
-+
-+	if (kstrtouint(buf, 0, &slot) < 0)
+ 	if (disk->flags & (GENHD_FL_NO_PART | GENHD_FL_HIDDEN))
+ 		return -EINVAL;
++	if (test_bit(GD_SUPPRESS_PART_SCAN, &disk->state))
 +		return -EINVAL;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		up(&hba->host_sem);
-+		return -EBUSY;
-+	}
-+	if (ufshcd_is_wb_attrs(QUERY_ATTR_IDN_BOOT_LU_EN))
-+		index = ufshcd_wb_get_query_index(hba);
-+	ufshcd_rpm_get_sync(hba);
-+
-+	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+				      QUERY_ATTR_IDN_BOOT_LU_EN, index, 0, &slot);
-+	ufshcd_rpm_put_sync(hba);
-+	if (ret) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+out:
-+	up(&hba->host_sem);
-+	return ret ? ret : count;
-+}
-+
- #define UFS_ATTRIBUTE(_name, _uname)					\
- static ssize_t _name##_show(struct device *dev,				\
- 	struct device_attribute *attr, char *buf)			\
-@@ -1077,8 +1142,8 @@ out:									\
- 	return ret;							\
- }									\
- static DEVICE_ATTR_RO(_name)
-+static DEVICE_ATTR_RW(boot_lun_enabled);
+ 	if (disk->open_partitions)
+ 		return -EBUSY;
  
--UFS_ATTRIBUTE(boot_lun_enabled, _BOOT_LU_EN);
- UFS_ATTRIBUTE(max_data_size_hpb_single_cmd, _MAX_HPB_SINGLE_CMD);
- UFS_ATTRIBUTE(current_power_mode, _POWER_MODE);
- UFS_ATTRIBUTE(active_icc_level, _ACTIVE_ICC_LVL);
--- 
-2.36.1
-
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index e2cb51810e89a..5bef97ffbe21e 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -1102,7 +1102,7 @@ static int loop_configure(struct loop_device *lo, fmode_t mode,
+ 		lo->lo_flags |= LO_FLAGS_PARTSCAN;
+ 	partscan = lo->lo_flags & LO_FLAGS_PARTSCAN;
+ 	if (partscan)
+-		lo->lo_disk->flags &= ~GENHD_FL_NO_PART;
++		clear_bit(GD_SUPPRESS_PART_SCAN, &lo->lo_disk->state);
+ 
+ 	loop_global_unlock(lo, is_loop);
+ 	if (partscan)
+@@ -1198,7 +1198,7 @@ static void __loop_clr_fd(struct loop_device *lo, bool release)
+ 	 */
+ 	lo->lo_flags = 0;
+ 	if (!part_shift)
+-		lo->lo_disk->flags |= GENHD_FL_NO_PART;
++		set_bit(GD_SUPPRESS_PART_SCAN, &lo->lo_disk->state);
+ 	mutex_lock(&lo->lo_mutex);
+ 	lo->lo_state = Lo_unbound;
+ 	mutex_unlock(&lo->lo_mutex);
+@@ -1308,7 +1308,7 @@ loop_set_status(struct loop_device *lo, const struct loop_info64 *info)
+ 
+ 	if (!err && (lo->lo_flags & LO_FLAGS_PARTSCAN) &&
+ 	     !(prev_lo_flags & LO_FLAGS_PARTSCAN)) {
+-		lo->lo_disk->flags &= ~GENHD_FL_NO_PART;
++		clear_bit(GD_SUPPRESS_PART_SCAN, &lo->lo_disk->state);
+ 		partscan = true;
+ 	}
+ out_unlock:
+@@ -2011,7 +2011,7 @@ static int loop_add(int i)
+ 	 * userspace tools. Parameters like this in general should be avoided.
+ 	 */
+ 	if (!part_shift)
+-		disk->flags |= GENHD_FL_NO_PART;
++		set_bit(GD_SUPPRESS_PART_SCAN, &disk->state);
+ 	mutex_init(&lo->lo_mutex);
+ 	lo->lo_number		= i;
+ 	spin_lock_init(&lo->lo_lock);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 1b24c1fb3bb1e..bf0c85cfdd8bf 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -147,6 +147,7 @@ struct gendisk {
+ #define GD_DEAD				2
+ #define GD_NATIVE_CAPACITY		3
+ #define GD_ADDED			4
++#define GD_SUPPRESS_PART_SCAN		4
+ 
+ 	struct mutex open_mutex;	/* open/close mutex */
+ 	unsigned open_partitions;	/* number of open partitions */
