@@ -2,64 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9956EC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 May 2022 09:35:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D482C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 May 2022 09:51:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235458AbiEYJfY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 May 2022 05:35:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43946 "EHLO
+        id S235035AbiEYJvg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 May 2022 05:51:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230165AbiEYJfY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 05:35:24 -0400
-Received: from out30-43.freemail.mail.aliyun.com (out30-43.freemail.mail.aliyun.com [115.124.30.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC0B08B094;
-        Wed, 25 May 2022 02:35:22 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R721e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04357;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0VEMuQ7p_1653471316;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VEMuQ7p_1653471316)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Wed, 25 May 2022 17:35:20 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     sathya.prakash@broadcom.com
-Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        sreekanth.reddy@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] scsi: mpi3mr: Fix kernel-doc
-Date:   Wed, 25 May 2022 17:35:14 +0800
-Message-Id: <20220525093514.55467-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        with ESMTP id S230337AbiEYJvf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 05:51:35 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B63527153
+        for <linux-scsi@vger.kernel.org>; Wed, 25 May 2022 02:51:31 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 0CD84219C8;
+        Wed, 25 May 2022 09:51:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1653472290; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=EczfhZiJ7jF+981x+WlB4h4TursXHI8LLSKAzdsNwgU=;
+        b=oX+H3ifVfPqLa6ImfX9p4uKHDr5NdxJDe7PRbXMvujUmbC9TXawjAaU9+SjyFa70PqAar7
+        /N7ChjsKNxbaA9eL8hM6eAQlg+julm21vQhLkHYPo59BINe3jQ3p1lIKq8qrwjKanrHqBf
+        dcIvGDL7sOarYid+jK/zh9NGM+25xaM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1653472290;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=EczfhZiJ7jF+981x+WlB4h4TursXHI8LLSKAzdsNwgU=;
+        b=TlJzezo98MHjitnm7bb5IwmumiA9ocmMqJeFfst4v0Wluw79rMm2/wbM1DtwcOrJJL3+1d
+        mNFYuDs3UJIsx3Bw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9078B13487;
+        Wed, 25 May 2022 09:51:29 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id PC8oICH8jWK7XgAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 25 May 2022 09:51:29 +0000
+Message-ID: <0639fb0d-70e7-3ba0-a9e1-98572b55dc3f@suse.de>
+Date:   Wed, 25 May 2022 11:51:28 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH REPOST] scsi: lpfc: Add support for ATTO Fibre Channel
+ devices
+Content-Language: en-US
+To:     Bradley Grove <bradley.grove@gmail.com>, linux-scsi@vger.kernel.org
+Cc:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        Bradley Grove <bgrove@attotech.com>,
+        Jason Seba <jseba@attotech.com>
+References: <20220524125621.47102-1-bgrove@attotech.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20220524125621.47102-1-bgrove@attotech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following W=1 kernel warnings:
+On 5/24/22 14:56, Bradley Grove wrote:
+> Update pci_device_id table and generate reporting strings for ATTO
+> Celerity and ThunderLink Fibre Channel devices.
+> 
+> Co-developed-by: Jason Seba <jseba@attotech.com>
+> Signed-off-by: Jason Seba <jseba@attotech.com>
+> Signed-off-by: Bradley Grove <bgrove@attotech.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_hw.h   | 22 +++++++++
+>   drivers/scsi/lpfc/lpfc_ids.h  | 30 ++++++++++++
+>   drivers/scsi/lpfc/lpfc_init.c | 89 +++++++++++++++++++++++++++++++++++
+>   3 files changed, 141 insertions(+)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-drivers/scsi/mpi3mr/mpi3mr_app.c:1706: warning: expecting prototype for
-adapter_state_show(). Prototype was for adp_state_show() instead.
+Cheers,
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- drivers/scsi/mpi3mr/mpi3mr_app.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 9ab1762468ad..113cf6f281be 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -1693,7 +1693,7 @@ logging_level_store(struct device *dev,
- static DEVICE_ATTR_RW(logging_level);
- 
- /**
-- * adapter_state_show - SysFS callback for adapter state show
-+ * adp_state_show() - SysFS callback for adapter state show
-  * @dev: class device
-  * @attr: Device attributes
-  * @buf: Buffer to copy
+Hannes
 -- 
-2.20.1.7.g153144c
-
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
