@@ -2,35 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D64DFC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 May 2022 16:27:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6095C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 May 2022 16:40:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245318AbiEYQ1g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 May 2022 12:27:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42282 "EHLO
+        id S235874AbiEYQkb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 May 2022 12:40:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233582AbiEYQ1f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 12:27:35 -0400
+        with ESMTP id S231173AbiEYQk3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 12:40:29 -0400
 Received: from mx1.riseup.net (mx1.riseup.net [198.252.153.129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91D67A1AB;
-        Wed, 25 May 2022 09:27:34 -0700 (PDT)
-Received: from fews2.riseup.net (fews2-pn.riseup.net [10.0.1.84])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8143656434;
+        Wed, 25 May 2022 09:40:28 -0700 (PDT)
+Received: from fews1.riseup.net (fews1-pn.riseup.net [10.0.1.83])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256
          client-signature RSA-PSS (2048 bits) client-digest SHA256)
         (Client CN "mail.riseup.net", Issuer "R3" (not verified))
-        by mx1.riseup.net (Postfix) with ESMTPS id 4L7c1163zvzDrgH;
-        Wed, 25 May 2022 09:27:33 -0700 (PDT)
+        by mx1.riseup.net (Postfix) with ESMTPS id 4L7cHv6WRZzDq99;
+        Wed, 25 May 2022 09:40:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=riseup.net; s=squak;
-        t=1653496054; bh=wu6xEaXOL0trEsdjhmzYXfb4lvQfG+o2d5deXcMtdk4=;
+        t=1653496828; bh=wu6xEaXOL0trEsdjhmzYXfb4lvQfG+o2d5deXcMtdk4=;
         h=From:To:Cc:Subject:Date:From;
-        b=ZTi51qNEh1CF+IHWU7pTR81tAtn95nnw3fJ4XMr3CbOX43kLfaOv4I4B7GzMaOWm3
-         GcOkJUm030VkyOOA67zTlB0aV0e7yUTAp7J8T3+0hHRhLcS9K4xlIFIsfkZm9Hnf6G
-         orIjgOPszQTuBFDrYwpdBnGUf/j23/NCWxNOtpu0=
-X-Riseup-User-ID: CE90C1541A4B1DC364A0A41ACD3E0D74BA5125FD1E1CAF2C6B3680EE9D35C382
+        b=hHFroYoT8tqG8q/7QwK5LNT5bE59m2cUsjw3LMOiFDammb5yNZYOLA4OkGKhOqUZg
+         kxbSKTAlaw9e0okNCotspDQ0qXphieOq17JXAPbof91qedu76oVSW2omplUqOelaEZ
+         MI5vwN3STBmVUm5rQOWWtfpJzIDI0sQWIreC0dRc=
+X-Riseup-User-ID: 5B2B0250F4591D8626F9B624C116C1ECA5390A76FCD21044D81EAEB0BB4E6A36
 Received: from [127.0.0.1] (localhost [127.0.0.1])
-         by fews2.riseup.net (Postfix) with ESMTPSA id 4L7c0w6WH0z1yXB;
-        Wed, 25 May 2022 09:27:28 -0700 (PDT)
+         by fews1.riseup.net (Postfix) with ESMTPSA id 4L7cHr1PN4z5vXK;
+        Wed, 25 May 2022 09:40:23 -0700 (PDT)
 From:   Nia Espera <a5b6@riseup.net>
 To:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
@@ -39,9 +39,9 @@ To:     Alim Akhtar <alim.akhtar@samsung.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
         Nia Espera <a5b6@riseup.net>
-Subject: [PATCH] add sysfs support for writing to boot lun
-Date:   Wed, 25 May 2022 19:24:40 +0300
-Message-Id: <20220525162440.90918-1-a5b6@riseup.net>
+Subject: [RESEND PATCH] scsi: ufs: sysfs: support writing boot_lun attr
+Date:   Wed, 25 May 2022 19:40:13 +0300
+Message-Id: <20220525164013.93748-1-a5b6@riseup.net>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
