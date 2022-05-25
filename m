@@ -2,410 +2,204 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD9FDC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 May 2022 11:27:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3435C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 May 2022 12:08:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234726AbiEYL1o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 May 2022 07:27:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47370 "EHLO
+        id S234006AbiEYMIF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 May 2022 08:08:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242873AbiEYL1Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 07:27:25 -0400
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D8A83A3085;
-        Wed, 25 May 2022 04:27:07 -0700 (PDT)
-Received: from linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net (linux.microsoft.com [13.77.154.182])
-        by linux.microsoft.com (Postfix) with ESMTPSA id 73B7320B71D5;
-        Wed, 25 May 2022 04:27:07 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 73B7320B71D5
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-        s=default; t=1653478027;
-        bh=TCipyz+zpKdcptF4J3O7qxFtbSfg3/OIv3wOazuVWmw=;
-        h=From:To:Subject:Date:From;
-        b=eGENxPD2bEgP7QcUDDABJ7CJLKhyWI/ILvEyWcN8+c+PMyQhxjIDKGInqGNAX0KpH
-         q7LDd6rsd+j9CE6aMZ7SZgbEvYjcY45GFoMHsyEtj3DDg51QdszHylwNd+u9292QYa
-         SpNVDW0IrK/iARESSRz1wUCdNbux969Z3rsJWUsE=
-From:   Saurabh Sengar <ssengar@linux.microsoft.com>
-To:     ssengar@microsoft.com, kys@microsoft.com, haiyangz@microsoft.com,
-        sthemmin@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        mikelley@microsoft.com, longli@microsoft.com,
-        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4] scsi: storvsc: Removing Pre Win8 related logic
-Date:   Wed, 25 May 2022 04:27:02 -0700
-Message-Id: <1653478022-26621-1-git-send-email-ssengar@linux.microsoft.com>
-X-Mailer: git-send-email 1.8.3.1
+        with ESMTP id S230511AbiEYMIE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 08:08:04 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A504C12754
+        for <linux-scsi@vger.kernel.org>; Wed, 25 May 2022 05:08:00 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 46B50219FD;
+        Wed, 25 May 2022 12:07:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1653480479; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=nwl6kzNM081rV7M+9SayTyi1QTXmCiCzIRRQSZsADaE=;
+        b=JExseuqj8kSV4XlYsX3GrJUYOPZE7cefGky/p1W+xevIRIOfcIRN/L/oca6ZvVggFVETH8
+        XQui3neEOIp7aPWChWAD6Fp92q1VsZrEDRSW3iU2cXml9zvx19Mm7l+O6I7AeTvQY4AARS
+        5Tr1dVrwoSOva68BxNigJPJNBAOJE7Y=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1653480479;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=nwl6kzNM081rV7M+9SayTyi1QTXmCiCzIRRQSZsADaE=;
+        b=+n6LGrjSRcFHBVi9dZHqeWw/M1WcjdcjGRCKRWGZ+Quhb0R5QHKqoEX9pz93RQlz07nzQF
+        wmWK6p0wFsSrxQBg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A5D4613487;
+        Wed, 25 May 2022 12:07:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 0J+KIx4cjmLRJAAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 25 May 2022 12:07:58 +0000
+Message-ID: <afa5f370-4e16-319f-ded8-49e11f12ff56@suse.de>
+Date:   Wed, 25 May 2022 14:07:57 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Content-Language: en-US
+To:     Martin Wilck <mwilck@suse.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Brian Bunker <brian@purestorage.com>,
+        Martin Wilck <mwilck@suse.de>
+References: <20220525081139.88165-1-hare@suse.de>
+ <37b61d6b956c18bf4a56d14b5746dab2719ef20d.camel@suse.com>
+From:   Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_dh_alua: mark port group as failed after ALUA
+ transitioning timeout
+In-Reply-To: <37b61d6b956c18bf4a56d14b5746dab2719ef20d.camel@suse.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The latest storvsc code has already removed the support for windows 7 and
-earlier. There is still some code logic reamining which is there to support
-pre Windows 8 OS. This patch removes these stale logic.
-This patch majorly does three things :
+On 5/25/22 13:20, Martin Wilck wrote:
+> On Wed, 2022-05-25 at 10:11 +0200, Hannes Reinecke wrote:
+>> When ALUA transitioning timeout triggers the path group state must
+>> be considered invalid. So add a new flag ALUA_PG_FAILED to indicate
+>> that the path state isn't necessarily valid, and keep the existing
+>> path state until we get a valid response from a RTPG.
+>>
+>> Cc: Brian Bunker <brian@purestorage.com>
+>> Cc: Martin Wilck <mwilck@suse.de>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>   drivers/scsi/device_handler/scsi_dh_alua.c | 24 +++++++-------------
+>> --
+>>   1 file changed, 7 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
+>> b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> index 1d9be771f3ee..6921490a5e65 100644
+>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> @@ -49,6 +49,7 @@
+>>   #define ALUA_PG_RUN_RTPG               0x10
+>>   #define ALUA_PG_RUN_STPG               0x20
+>>   #define ALUA_PG_RUNNING                        0x40
+>> +#define ALUA_PG_FAILED                 0x80
+>>   
+>>   static uint optimize_stpg;
+>>   module_param(optimize_stpg, uint, S_IRUGO|S_IWUSR);
+>> @@ -420,7 +421,7 @@ static enum scsi_disposition
+>> alua_check_sense(struct scsi_device *sdev,
+>>                           */
+>>                          rcu_read_lock();
+>>                          pg = rcu_dereference(h->pg);
+>> -                       if (pg)
+>> +                       if (pg && !(pg->flags & ALUA_PG_FAILED))
+>>                                  pg->state =
+>> SCSI_ACCESS_STATE_TRANSITIONING;
+>>                          rcu_read_unlock();
+>>                          alua_check(sdev, false);
+> 
+> You still return NEEDS_RETRY from alua_check_sense(), even if
+> ALUA_PG_FAILED is set?
+> 
+>> @@ -694,7 +695,7 @@ static int alua_rtpg(struct scsi_device *sdev,
+>> struct alua_port_group *pg)
+>>   
+>>    skip_rtpg:
+>>          spin_lock_irqsave(&pg->lock, flags);
+>> -       if (transitioning_sense)
+>> +       if (transitioning_sense && !(pg->flags & ALUA_PG_FAILED))
+>>                  pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
+>>   
+>>          if (group_id_old != pg->group_id || state_old != pg->state ||
+>> @@ -718,23 +719,10 @@ static int alua_rtpg(struct scsi_device *sdev,
+>> struct alua_port_group *pg)
+>>                          pg->interval = ALUA_RTPG_RETRY_DELAY;
+>>                          err = SCSI_DH_RETRY;
+>>                  } else {
+>> -                       struct alua_dh_data *h;
+>> -
+>> -                       /* Transitioning time exceeded, set port to
+>> standby */
+>> +                       /* Transitioning time exceeded, mark pg as
+>> failed */
+>>                          err = SCSI_DH_IO;
+>> -                       pg->state = SCSI_ACCESS_STATE_STANDBY;
+>> +                       pg->flags |= ALUA_PG_FAILED;
+>>                          pg->expiry = 0;
+>> -                       rcu_read_lock();
+>> -                       list_for_each_entry_rcu(h, &pg->dh_list,
+>> node) {
+>> -                               if (!h->sdev)
+>> -                                       continue;
+>> -                               h->sdev->access_state =
+>> -                                       (pg->state &
+>> SCSI_ACCESS_STATE_MASK);
+>> -                               if (pg->pref)
+>> -                                       h->sdev->access_state |=
+>> -
+>>                                                 SCSI_ACCESS_STATE_PREFE
+>> RRED;
+>> -                       }
+>> -                       rcu_read_unlock();
+>>                  }
+>>                  break;
+>>          case SCSI_ACCESS_STATE_OFFLINE:
+>> @@ -746,6 +734,8 @@ static int alua_rtpg(struct scsi_device *sdev,
+>> struct alua_port_group *pg)
+>>                  /* Useable path if active */
+>>                  err = SCSI_DH_OK;
+>>                  pg->expiry = 0;
+>> +               /* RTPG succeeded, clear ALUA_PG_FAILED */
+>> +               pg->flags &= ~ALUA_PG_FAILED;
+> 
+> Shouldn't this be done for any state except TRANSITIONING?
+> 
+Why, but it does.
+We're only entering this block if the state is not TRANSITIONING.
+(It's part of a 'switch' statement)
 
-1. Removes vmscsi_size_delta and its logic, as the vmscsi_request struct is
-same for all the OS post windows 8 there is no need of delta.
-2. Simplify sense_buffer_size logic, as there is single buffer size for
-all the post windows 8 OS.
-3. Embed the vmscsi_win8_extension structure inside the vmscsi_request,
-as there is no separate handling required for different OS.
+> Btw I've re-read SPC6 and found "The IMPLICIT TRANSITION TIME field
+> indicates the minimum amount of time in seconds the application client
+> should wait prior to timing out an implicit state transition (see
+> 5.18.2.3)".
+> 
+> This is unclear to me. "minimum amount of time" suggests that the host
+> could decide to wait longer until it times out the transition. Worse,
+> the spec doesn't clearly define when the transition is supposed to have
+> started. From the host's PoV it makes sense to assume the start time is
+> when it first encounters either TRANSITIONING from an RTPG, or NOT
+> READY / 04 / 0a from a regular I/O, which is what we currently do. But
+> the spec is remarkably unclear about it. Finally, the spec explicitly
+> says that the timeout applies only to implicit transitions, without
+> saying what to do in the case of an explicit transition...
+> 
+Why, but it does; "5.15.2.5 Transitions between target port asymmetric 
+access states" speaks at length what should happen when transitions 
+fail. Problem is, a timeout expiring is something outside the spec, so 
+one can't be sure that the array does what's expected here.
 
-Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
----
-v4:
-* Removed sense_buffer_size variable and used STORVSC_SENSE_BUFFER_SIZE directly in all places
-* Removed the comment along with sense_buffer_size and placed a more simpler comment for STORVSC_SENSE_BUFFER_SIZE
-* Added back WIN6 and WIN7 protocol version macros
+But the one key takeaway is that any port in transitioning is allowed to 
+ignore TMFs, so any SCSI EH is pointless anyway.
 
- drivers/scsi/storvsc_drv.c | 155 ++++++++++---------------------------
- 1 file changed, 39 insertions(+), 116 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 3a9d7bac26f7..ca3530982e52 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -54,7 +54,6 @@
- 
- #define VMSTOR_PROTO_VERSION(MAJOR_, MINOR_)	((((MAJOR_) & 0xff) << 8) | \
- 						(((MINOR_) & 0xff)))
--
- #define VMSTOR_PROTO_VERSION_WIN6	VMSTOR_PROTO_VERSION(2, 0)
- #define VMSTOR_PROTO_VERSION_WIN7	VMSTOR_PROTO_VERSION(4, 2)
- #define VMSTOR_PROTO_VERSION_WIN8	VMSTOR_PROTO_VERSION(5, 1)
-@@ -136,20 +135,10 @@ struct hv_fc_wwn_packet {
-  */
- #define STORVSC_MAX_CMD_LEN			0x10
- 
--#define POST_WIN7_STORVSC_SENSE_BUFFER_SIZE	0x14
--#define PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE	0x12
--
-+/* Sense buffer size is the same for all versions since Windows 8 */
- #define STORVSC_SENSE_BUFFER_SIZE		0x14
- #define STORVSC_MAX_BUF_LEN_WITH_PADDING	0x14
- 
--/*
-- * Sense buffer size changed in win8; have a run-time
-- * variable to track the size we should use.  This value will
-- * likely change during protocol negotiation but it is valid
-- * to start by assuming pre-Win8.
-- */
--static int sense_buffer_size = PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE;
--
- /*
-  * The storage protocol version is determined during the
-  * initial exchange with the host.  It will indicate which
-@@ -177,18 +166,6 @@ do {								\
- 		dev_warn(&(dev)->device, fmt, ##__VA_ARGS__);	\
- } while (0)
- 
--struct vmscsi_win8_extension {
--	/*
--	 * The following were added in Windows 8
--	 */
--	u16 reserve;
--	u8  queue_tag;
--	u8  queue_action;
--	u32 srb_flags;
--	u32 time_out_value;
--	u32 queue_sort_ey;
--} __packed;
--
- struct vmscsi_request {
- 	u16 length;
- 	u8 srb_status;
-@@ -214,46 +191,23 @@ struct vmscsi_request {
- 	/*
- 	 * The following was added in win8.
- 	 */
--	struct vmscsi_win8_extension win8_extension;
-+	u16 reserve;
-+	u8  queue_tag;
-+	u8  queue_action;
-+	u32 srb_flags;
-+	u32 time_out_value;
-+	u32 queue_sort_ey;
- 
- } __attribute((packed));
- 
- /*
-- * The list of storage protocols in order of preference.
-+ * The list of windows version in order of preference.
-  */
--struct vmstor_protocol {
--	int protocol_version;
--	int sense_buffer_size;
--	int vmscsi_size_delta;
--};
--
- 
--static const struct vmstor_protocol vmstor_protocols[] = {
--	{
-+static const int protocol_version[] = {
- 		VMSTOR_PROTO_VERSION_WIN10,
--		POST_WIN7_STORVSC_SENSE_BUFFER_SIZE,
--		0
--	},
--	{
- 		VMSTOR_PROTO_VERSION_WIN8_1,
--		POST_WIN7_STORVSC_SENSE_BUFFER_SIZE,
--		0
--	},
--	{
- 		VMSTOR_PROTO_VERSION_WIN8,
--		POST_WIN7_STORVSC_SENSE_BUFFER_SIZE,
--		0
--	},
--	{
--		VMSTOR_PROTO_VERSION_WIN7,
--		PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE,
--		sizeof(struct vmscsi_win8_extension),
--	},
--	{
--		VMSTOR_PROTO_VERSION_WIN6,
--		PRE_WIN8_STORVSC_SENSE_BUFFER_SIZE,
--		sizeof(struct vmscsi_win8_extension),
--	}
- };
- 
- 
-@@ -409,9 +363,7 @@ static void storvsc_on_channel_callback(void *context);
- #define STORVSC_IDE_MAX_CHANNELS			1
- 
- /*
-- * Upper bound on the size of a storvsc packet. vmscsi_size_delta is not
-- * included in the calculation because it is set after STORVSC_MAX_PKT_SIZE
-- * is used in storvsc_connect_to_vsp
-+ * Upper bound on the size of a storvsc packet.
-  */
- #define STORVSC_MAX_PKT_SIZE (sizeof(struct vmpacket_descriptor) +\
- 			      sizeof(struct vstor_packet))
-@@ -452,17 +404,6 @@ struct storvsc_device {
- 	unsigned char path_id;
- 	unsigned char target_id;
- 
--	/*
--	 * The size of the vmscsi_request has changed in win8. The
--	 * additional size is because of new elements added to the
--	 * structure. These elements are valid only when we are talking
--	 * to a win8 host.
--	 * Track the correction to size we need to apply. This value
--	 * will likely change during protocol negotiation but it is
--	 * valid to start by assuming pre-Win8.
--	 */
--	int vmscsi_size_delta;
--
- 	/*
- 	 * Max I/O, the device can support.
- 	 */
-@@ -795,8 +736,7 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
- 	vstor_packet->sub_channel_count = num_sc;
- 
- 	ret = vmbus_sendpacket(device->channel, vstor_packet,
--			       (sizeof(struct vstor_packet) -
--			       stor_device->vmscsi_size_delta),
-+			       sizeof(struct vstor_packet),
- 			       VMBUS_RQST_INIT,
- 			       VM_PKT_DATA_INBAND,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-@@ -864,8 +804,7 @@ static int storvsc_execute_vstor_op(struct hv_device *device,
- 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
- 
- 	ret = vmbus_sendpacket(device->channel, vstor_packet,
--			       (sizeof(struct vstor_packet) -
--			       stor_device->vmscsi_size_delta),
-+			       sizeof(struct vstor_packet),
- 			       VMBUS_RQST_INIT,
- 			       VM_PKT_DATA_INBAND,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-@@ -915,14 +854,13 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
- 	 * Query host supported protocol version.
- 	 */
- 
--	for (i = 0; i < ARRAY_SIZE(vmstor_protocols); i++) {
-+	for (i = 0; i < ARRAY_SIZE(protocol_version); i++) {
- 		/* reuse the packet for version range supported */
- 		memset(vstor_packet, 0, sizeof(struct vstor_packet));
- 		vstor_packet->operation =
- 			VSTOR_OPERATION_QUERY_PROTOCOL_VERSION;
- 
--		vstor_packet->version.major_minor =
--			vmstor_protocols[i].protocol_version;
-+		vstor_packet->version.major_minor = protocol_version[i];
- 
- 		/*
- 		 * The revision number is only used in Windows; set it to 0.
-@@ -936,21 +874,16 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
- 			return -EINVAL;
- 
- 		if (vstor_packet->status == 0) {
--			vmstor_proto_version =
--				vmstor_protocols[i].protocol_version;
--
--			sense_buffer_size =
--				vmstor_protocols[i].sense_buffer_size;
--
--			stor_device->vmscsi_size_delta =
--				vmstor_protocols[i].vmscsi_size_delta;
-+			vmstor_proto_version = protocol_version[i];
- 
- 			break;
- 		}
- 	}
- 
--	if (vstor_packet->status != 0)
-+	if (vstor_packet->status != 0) {
-+		dev_err(&device->device, "Obsolete Hyper-V version\n");
- 		return -EINVAL;
-+	}
- 
- 
- 	memset(vstor_packet, 0, sizeof(struct vstor_packet));
-@@ -986,11 +919,10 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
- 	cpumask_set_cpu(device->channel->target_cpu,
- 			&stor_device->alloced_cpus);
- 
--	if (vmstor_proto_version >= VMSTOR_PROTO_VERSION_WIN8) {
--		if (vstor_packet->storage_channel_properties.flags &
--		    STORAGE_CHANNEL_SUPPORTS_MULTI_CHANNEL)
--			process_sub_channels = true;
--	}
-+	if (vstor_packet->storage_channel_properties.flags &
-+	    STORAGE_CHANNEL_SUPPORTS_MULTI_CHANNEL)
-+		process_sub_channels = true;
-+
- 	stor_device->max_transfer_bytes =
- 		vstor_packet->storage_channel_properties.max_transfer_bytes;
- 
-@@ -1197,7 +1129,7 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
- 	 * Copy over the sense_info_length, but limit to the known max
- 	 * size if Hyper-V returns a bad value.
- 	 */
--	stor_pkt->vm_srb.sense_info_length = min_t(u8, sense_buffer_size,
-+	stor_pkt->vm_srb.sense_info_length = min_t(u8, STORVSC_SENSE_BUFFER_SIZE,
- 		vstor_packet->vm_srb.sense_info_length);
- 
- 	if (vstor_packet->vm_srb.scsi_status != 0 ||
-@@ -1289,8 +1221,8 @@ static void storvsc_on_channel_callback(void *context)
- 		struct storvsc_cmd_request *request = NULL;
- 		u32 pktlen = hv_pkt_datalen(desc);
- 		u64 rqst_id = desc->trans_id;
--		u32 minlen = rqst_id ? sizeof(struct vstor_packet) -
--			stor_device->vmscsi_size_delta : sizeof(enum vstor_packet_operation);
-+		u32 minlen = rqst_id ? sizeof(struct vstor_packet) :
-+			sizeof(enum vstor_packet_operation);
- 
- 		if (pktlen < minlen) {
- 			dev_err(&device->device,
-@@ -1346,7 +1278,7 @@ static void storvsc_on_channel_callback(void *context)
- 		}
- 
- 		memcpy(&request->vstor_packet, packet,
--		       (sizeof(struct vstor_packet) - stor_device->vmscsi_size_delta));
-+		       sizeof(struct vstor_packet));
- 		complete(&request->wait_event);
- 	}
- }
-@@ -1557,11 +1489,10 @@ static int storvsc_do_io(struct hv_device *device,
- found_channel:
- 	vstor_packet->flags |= REQUEST_COMPLETION_FLAG;
- 
--	vstor_packet->vm_srb.length = (sizeof(struct vmscsi_request) -
--					stor_device->vmscsi_size_delta);
-+	vstor_packet->vm_srb.length = sizeof(struct vmscsi_request);
- 
- 
--	vstor_packet->vm_srb.sense_info_length = sense_buffer_size;
-+	vstor_packet->vm_srb.sense_info_length = STORVSC_SENSE_BUFFER_SIZE;
- 
- 
- 	vstor_packet->vm_srb.data_transfer_length =
-@@ -1574,13 +1505,11 @@ static int storvsc_do_io(struct hv_device *device,
- 		ret = vmbus_sendpacket_mpb_desc(outgoing_channel,
- 				request->payload, request->payload_sz,
- 				vstor_packet,
--				(sizeof(struct vstor_packet) -
--				stor_device->vmscsi_size_delta),
-+				sizeof(struct vstor_packet),
- 				(unsigned long)request);
- 	} else {
- 		ret = vmbus_sendpacket(outgoing_channel, vstor_packet,
--			       (sizeof(struct vstor_packet) -
--				stor_device->vmscsi_size_delta),
-+			       sizeof(struct vstor_packet),
- 			       (unsigned long)request,
- 			       VM_PKT_DATA_INBAND,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-@@ -1684,8 +1613,7 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
- 	vstor_packet->vm_srb.path_id = stor_device->path_id;
- 
- 	ret = vmbus_sendpacket(device->channel, vstor_packet,
--			       (sizeof(struct vstor_packet) -
--				stor_device->vmscsi_size_delta),
-+			       sizeof(struct vstor_packet),
- 			       VMBUS_RQST_RESET,
- 			       VM_PKT_DATA_INBAND,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-@@ -1778,31 +1706,31 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 
- 	memset(&cmd_request->vstor_packet, 0, sizeof(struct vstor_packet));
- 	vm_srb = &cmd_request->vstor_packet.vm_srb;
--	vm_srb->win8_extension.time_out_value = 60;
-+	vm_srb->time_out_value = 60;
- 
--	vm_srb->win8_extension.srb_flags |=
-+	vm_srb->srb_flags |=
- 		SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
- 
- 	if (scmnd->device->tagged_supported) {
--		vm_srb->win8_extension.srb_flags |=
-+		vm_srb->srb_flags |=
- 		(SRB_FLAGS_QUEUE_ACTION_ENABLE | SRB_FLAGS_NO_QUEUE_FREEZE);
--		vm_srb->win8_extension.queue_tag = SP_UNTAGGED;
--		vm_srb->win8_extension.queue_action = SRB_SIMPLE_TAG_REQUEST;
-+		vm_srb->queue_tag = SP_UNTAGGED;
-+		vm_srb->queue_action = SRB_SIMPLE_TAG_REQUEST;
- 	}
- 
- 	/* Build the SRB */
- 	switch (scmnd->sc_data_direction) {
- 	case DMA_TO_DEVICE:
- 		vm_srb->data_in = WRITE_TYPE;
--		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_OUT;
-+		vm_srb->srb_flags |= SRB_FLAGS_DATA_OUT;
- 		break;
- 	case DMA_FROM_DEVICE:
- 		vm_srb->data_in = READ_TYPE;
--		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_DATA_IN;
-+		vm_srb->srb_flags |= SRB_FLAGS_DATA_IN;
- 		break;
- 	case DMA_NONE:
- 		vm_srb->data_in = UNKNOWN_TYPE;
--		vm_srb->win8_extension.srb_flags |= SRB_FLAGS_NO_DATA_TRANSFER;
-+		vm_srb->srb_flags |= SRB_FLAGS_NO_DATA_TRANSFER;
- 		break;
- 	default:
- 		/*
-@@ -2004,7 +1932,6 @@ static int storvsc_probe(struct hv_device *device,
- 	init_waitqueue_head(&stor_device->waiting_to_drain);
- 	stor_device->device = device;
- 	stor_device->host = host;
--	stor_device->vmscsi_size_delta = sizeof(struct vmscsi_win8_extension);
- 	spin_lock_init(&stor_device->lock);
- 	hv_set_drvdata(device, stor_device);
- 	dma_set_min_align_mask(&device->device, HV_HYP_PAGE_SIZE - 1);
-@@ -2217,10 +2144,6 @@ static int __init storvsc_drv_init(void)
- 	 * than the ring buffer size since that page is reserved for
- 	 * the ring buffer indices) by the max request size (which is
- 	 * vmbus_channel_packet_multipage_buffer + struct vstor_packet + u64)
--	 *
--	 * The computation underestimates max_outstanding_req_per_channel
--	 * for Win7 and older hosts because it does not take into account
--	 * the vmscsi_size_delta correction to the max request size.
- 	 */
- 	max_outstanding_req_per_channel =
- 		((storvsc_ringbuffer_size - PAGE_SIZE) /
+Hannes
 -- 
-2.25.1
-
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
