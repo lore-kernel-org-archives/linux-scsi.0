@@ -2,134 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 900E3C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 May 2022 08:11:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9956EC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 May 2022 09:35:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236012AbiEYILx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 May 2022 04:11:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45364 "EHLO
+        id S235458AbiEYJfY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 May 2022 05:35:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236082AbiEYILr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 04:11:47 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E72637A07
-        for <linux-scsi@vger.kernel.org>; Wed, 25 May 2022 01:11:46 -0700 (PDT)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id CF7461F905;
-        Wed, 25 May 2022 08:11:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1653466304; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=OfP9r62jn+CXI2avoP5YI171LAlZH73VlP1pt+/Y2Pk=;
-        b=vzerogMQFc+oqEQJAxhFGyKB0+im4Ubx7zgw0MnhLbra62TV7Dab/OPS5fa0TkScrSxcRd
-        o4waPoDFXzGOucEChryC/t1sPpJjvTZxp7HuSTakzqmOc90K/J7VhTmaXDzFVXqqobt6aG
-        F472DghUyL8zEWtDVDG6+mYUS8wL7dk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1653466304;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=OfP9r62jn+CXI2avoP5YI171LAlZH73VlP1pt+/Y2Pk=;
-        b=6+1b9V6sm8NP2romTR2oK6WeGYDSE4st/sWAF8o7L3EzeiLiyPWkUSJGNK6iXm+gWUiFjm
-        DNeeG4Vy8RD0KUAA==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id C13522C141;
-        Wed, 25 May 2022 08:11:44 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id B453051946C4; Wed, 25 May 2022 10:11:44 +0200 (CEST)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Brian Bunker <brian@purestorage.com>,
-        Martin Wilck <mwilck@suse.de>
-Subject: [PATCH] scsi_dh_alua: mark port group as failed after ALUA transitioning timeout
-Date:   Wed, 25 May 2022 10:11:39 +0200
-Message-Id: <20220525081139.88165-1-hare@suse.de>
-X-Mailer: git-send-email 2.29.2
+        with ESMTP id S230165AbiEYJfY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 05:35:24 -0400
+Received: from out30-43.freemail.mail.aliyun.com (out30-43.freemail.mail.aliyun.com [115.124.30.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC0B08B094;
+        Wed, 25 May 2022 02:35:22 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R721e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04357;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0VEMuQ7p_1653471316;
+Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VEMuQ7p_1653471316)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Wed, 25 May 2022 17:35:20 +0800
+From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     sathya.prakash@broadcom.com
+Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        sreekanth.reddy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH] scsi: mpi3mr: Fix kernel-doc
+Date:   Wed, 25 May 2022 17:35:14 +0800
+Message-Id: <20220525093514.55467-1-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When ALUA transitioning timeout triggers the path group state must
-be considered invalid. So add a new flag ALUA_PG_FAILED to indicate
-that the path state isn't necessarily valid, and keep the existing
-path state until we get a valid response from a RTPG.
+Fix the following W=1 kernel warnings:
 
-Cc: Brian Bunker <brian@purestorage.com>
-Cc: Martin Wilck <mwilck@suse.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+drivers/scsi/mpi3mr/mpi3mr_app.c:1706: warning: expecting prototype for
+adapter_state_show(). Prototype was for adp_state_show() instead.
+
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 24 +++++++---------------
- 1 file changed, 7 insertions(+), 17 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 1d9be771f3ee..6921490a5e65 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -49,6 +49,7 @@
- #define ALUA_PG_RUN_RTPG		0x10
- #define ALUA_PG_RUN_STPG		0x20
- #define ALUA_PG_RUNNING			0x40
-+#define ALUA_PG_FAILED			0x80
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 9ab1762468ad..113cf6f281be 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -1693,7 +1693,7 @@ logging_level_store(struct device *dev,
+ static DEVICE_ATTR_RW(logging_level);
  
- static uint optimize_stpg;
- module_param(optimize_stpg, uint, S_IRUGO|S_IWUSR);
-@@ -420,7 +421,7 @@ static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
- 			 */
- 			rcu_read_lock();
- 			pg = rcu_dereference(h->pg);
--			if (pg)
-+			if (pg && !(pg->flags & ALUA_PG_FAILED))
- 				pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
- 			rcu_read_unlock();
- 			alua_check(sdev, false);
-@@ -694,7 +695,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 
-  skip_rtpg:
- 	spin_lock_irqsave(&pg->lock, flags);
--	if (transitioning_sense)
-+	if (transitioning_sense && !(pg->flags & ALUA_PG_FAILED))
- 		pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
- 
- 	if (group_id_old != pg->group_id || state_old != pg->state ||
-@@ -718,23 +719,10 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 			pg->interval = ALUA_RTPG_RETRY_DELAY;
- 			err = SCSI_DH_RETRY;
- 		} else {
--			struct alua_dh_data *h;
--
--			/* Transitioning time exceeded, set port to standby */
-+			/* Transitioning time exceeded, mark pg as failed */
- 			err = SCSI_DH_IO;
--			pg->state = SCSI_ACCESS_STATE_STANDBY;
-+			pg->flags |= ALUA_PG_FAILED;
- 			pg->expiry = 0;
--			rcu_read_lock();
--			list_for_each_entry_rcu(h, &pg->dh_list, node) {
--				if (!h->sdev)
--					continue;
--				h->sdev->access_state =
--					(pg->state & SCSI_ACCESS_STATE_MASK);
--				if (pg->pref)
--					h->sdev->access_state |=
--						SCSI_ACCESS_STATE_PREFERRED;
--			}
--			rcu_read_unlock();
- 		}
- 		break;
- 	case SCSI_ACCESS_STATE_OFFLINE:
-@@ -746,6 +734,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		/* Useable path if active */
- 		err = SCSI_DH_OK;
- 		pg->expiry = 0;
-+		/* RTPG succeeded, clear ALUA_PG_FAILED */
-+		pg->flags &= ~ALUA_PG_FAILED;
- 		break;
- 	}
- 	spin_unlock_irqrestore(&pg->lock, flags);
+ /**
+- * adapter_state_show - SysFS callback for adapter state show
++ * adp_state_show() - SysFS callback for adapter state show
+  * @dev: class device
+  * @attr: Device attributes
+  * @buf: Buffer to copy
 -- 
-2.29.2
+2.20.1.7.g153144c
 
