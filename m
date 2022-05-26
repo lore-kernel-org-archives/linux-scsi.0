@@ -2,44 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 563AAC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 May 2022 09:08:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D07C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 May 2022 10:04:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346814AbiEZJIH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 May 2022 05:08:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52360 "EHLO
+        id S1345836AbiEZKED (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 May 2022 06:04:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241430AbiEZJIG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 May 2022 05:08:06 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BB8E13F0F;
-        Thu, 26 May 2022 02:08:05 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 9B6BD68B05; Thu, 26 May 2022 11:08:01 +0200 (CEST)
-Date:   Thu, 26 May 2022 11:08:01 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-block@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 11/14] block: remove GENHD_FL_EXT_DEVT
-Message-ID: <20220526090801.GA27200@lst.de>
-References: <20211122130625.1136848-1-hch@lst.de> <20211122130625.1136848-12-hch@lst.de> <Yo4+zEnrBTnoEMCz@T590> <20220525165114.GA2750@lst.de> <Yo7uxyrD2BywxEHt@T590>
+        with ESMTP id S229593AbiEZKEA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 May 2022 06:04:00 -0400
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D461FAF337;
+        Thu, 26 May 2022 03:03:59 -0700 (PDT)
+Received: by mail-wr1-f46.google.com with SMTP id k30so1514290wrd.5;
+        Thu, 26 May 2022 03:03:59 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=tDRmsRg9eHIRMMIJkb1fiFBKJkrJH57+pbLbM0Gs91g=;
+        b=dyRhNK6jtTWT3zxI/mL873sTVokc1tUxdZmempgaU1FgHEb20OtgFEFYO0scFX2TQm
+         P72yEdsfxkey1z/YEN8PpSYgrlEk4rNUR2rwPj37tjTKs/0hZnScfXmHu8bHeMS6oP/i
+         s1a6+0+hop+3HQyogY0ASd7ewUKBjNPwiLm9YjYXGC1oeSdlua9zwV0eI4odIxfybF7j
+         CSXm41mRwGB388E1W+2vjbmvEDF1wWlS0yLG7CGjWBOQhOn07RTkVaE4E8A6PfwGAQR/
+         X2jINUCtNqkzjFhNrEs0mh50fEZnT43uLLQJnZZbMhxpow6l9fnUyqoOazuHZHX61aea
+         jNHA==
+X-Gm-Message-State: AOAM532dV56i2Ie3Xl9z60/oMl61kl22zbANxB3euw8h43gPqSAPT8jY
+        7RJQWho/7WlKQF+EWKD8V0s=
+X-Google-Smtp-Source: ABdhPJyrqvqG/bHULPa78r/6vh6qWdO5aa9YtzHtKfOQ3Jh9att+19mGOVmh8MsXZZzJzP6O2+AiDQ==
+X-Received: by 2002:a5d:6c61:0:b0:20f:ef37:a9d0 with SMTP id r1-20020a5d6c61000000b0020fef37a9d0mr10939895wrz.140.1653559438419;
+        Thu, 26 May 2022 03:03:58 -0700 (PDT)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id 13-20020a05600c020d00b003942a244eebsm1276081wmi.48.2022.05.26.03.03.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 26 May 2022 03:03:57 -0700 (PDT)
+Date:   Thu, 26 May 2022 10:03:56 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>
+Cc:     Saurabh Sengar <ssengar@linux.microsoft.com>,
+        Saurabh Singh Sengar <ssengar@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        Long Li <longli@microsoft.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4] scsi: storvsc: Removing Pre Win8 related logic
+Message-ID: <20220526100356.qwvc4qe2rkaja5wm@liuwe-devbox-debian-v2>
+References: <1653478022-26621-1-git-send-email-ssengar@linux.microsoft.com>
+ <PH0PR21MB302574301005664B719B5196D7D69@PH0PR21MB3025.namprd21.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Yo7uxyrD2BywxEHt@T590>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <PH0PR21MB302574301005664B719B5196D7D69@PH0PR21MB3025.namprd21.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, May 26, 2022 at 11:06:47AM +0800, Ming Lei wrote:
-> BTW, SUPPRESS_PART_SCAN looks more like one flag, instead of 'state'.
+On Wed, May 25, 2022 at 01:52:01PM +0000, Michael Kelley (LINUX) wrote:
+> From: Saurabh Sengar <ssengar@linux.microsoft.com> Sent: Wednesday, May 25, 2022 4:27 AM
+> > 
+> > The latest storvsc code has already removed the support for windows 7 and
+> > earlier. There is still some code logic reamining which is there to support
+> 
+> s/reamining/remaining/
+> 
+> > pre Windows 8 OS. This patch removes these stale logic.
+> > This patch majorly does three things :
+> > 
+> > 1. Removes vmscsi_size_delta and its logic, as the vmscsi_request struct is
+> > same for all the OS post windows 8 there is no need of delta.
+> > 2. Simplify sense_buffer_size logic, as there is single buffer size for
+> > all the post windows 8 OS.
+> > 3. Embed the vmscsi_win8_extension structure inside the vmscsi_request,
+> > as there is no separate handling required for different OS.
+> > 
+> > Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
+> > ---
+> > v4:
+> > * Removed sense_buffer_size variable and used STORVSC_SENSE_BUFFER_SIZE directly
+> > in all places
+> > * Removed the comment along with sense_buffer_size and placed a more simpler
+> > comment for STORVSC_SENSE_BUFFER_SIZE
+> > * Added back WIN6 and WIN7 protocol version macros
+> > 
+> >  drivers/scsi/storvsc_drv.c | 155 ++++++++++---------------------------
+> >  1 file changed, 39 insertions(+), 116 deletions(-)
+> 
+> Reviewed-by: Michael Kelley <mikelley@microsoft.com>
 
-It is kinda inbetween, but I favour the state.  ->flags is suppoed to be
-set statically at initialization time, and the GENHD_FL_NO_PART usage
-by loop is the only thing that violates it.  And once a device declares
-support for partitions supresing the scans is basically a policy and thus
-a state anyway.
+Fixed the typo and applied to hyperv-next. Thanks.
