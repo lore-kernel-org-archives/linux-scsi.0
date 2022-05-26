@@ -2,98 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D07C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 May 2022 10:04:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1027C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 May 2022 10:27:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345836AbiEZKED (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 May 2022 06:04:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36396 "EHLO
+        id S1345544AbiEZK1z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 May 2022 06:27:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229593AbiEZKEA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 May 2022 06:04:00 -0400
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D461FAF337;
-        Thu, 26 May 2022 03:03:59 -0700 (PDT)
-Received: by mail-wr1-f46.google.com with SMTP id k30so1514290wrd.5;
-        Thu, 26 May 2022 03:03:59 -0700 (PDT)
+        with ESMTP id S242223AbiEZK1x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 May 2022 06:27:53 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D912FC9679
+        for <linux-scsi@vger.kernel.org>; Thu, 26 May 2022 03:27:51 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id bo5so1359663pfb.4
+        for <linux-scsi@vger.kernel.org>; Thu, 26 May 2022 03:27:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=oUe5qjHE746YsZEG88fvj0C8TBLZdImHAFuEEdYBkXw=;
+        b=Stw9e/v85gPO2N1vgvwURGj/CxdNR6Azaiv97JK6NQnC940NOP+Clev15pCSWT4xyT
+         3JzT+Y/NldWIOhGkH1iJqwkzCdGZULf3Jy1FLhuYQz6ZmBZhplHx+175DIwVM9mU1baw
+         LnVRP0b4ZQkGQjpGggN05t64QoKodEh7UMgifBA1ciK8hvfP/aYqxHkeHiUpIF64qYNs
+         uDrdr7Wu9tKkzkP8TShGWX+QWTLRZKGKq3tKCENZMoL9b6QfXXvSfDwk+EexkJFASX+V
+         laexhG2eygNOfgCYl+xvNJRcnpj7IqUSrx5mam9sPOeapbpMZQAi3yJELV9xFAjLOyG3
+         kEyA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=tDRmsRg9eHIRMMIJkb1fiFBKJkrJH57+pbLbM0Gs91g=;
-        b=dyRhNK6jtTWT3zxI/mL873sTVokc1tUxdZmempgaU1FgHEb20OtgFEFYO0scFX2TQm
-         P72yEdsfxkey1z/YEN8PpSYgrlEk4rNUR2rwPj37tjTKs/0hZnScfXmHu8bHeMS6oP/i
-         s1a6+0+hop+3HQyogY0ASd7ewUKBjNPwiLm9YjYXGC1oeSdlua9zwV0eI4odIxfybF7j
-         CSXm41mRwGB388E1W+2vjbmvEDF1wWlS0yLG7CGjWBOQhOn07RTkVaE4E8A6PfwGAQR/
-         X2jINUCtNqkzjFhNrEs0mh50fEZnT43uLLQJnZZbMhxpow6l9fnUyqoOazuHZHX61aea
-         jNHA==
-X-Gm-Message-State: AOAM532dV56i2Ie3Xl9z60/oMl61kl22zbANxB3euw8h43gPqSAPT8jY
-        7RJQWho/7WlKQF+EWKD8V0s=
-X-Google-Smtp-Source: ABdhPJyrqvqG/bHULPa78r/6vh6qWdO5aa9YtzHtKfOQ3Jh9att+19mGOVmh8MsXZZzJzP6O2+AiDQ==
-X-Received: by 2002:a5d:6c61:0:b0:20f:ef37:a9d0 with SMTP id r1-20020a5d6c61000000b0020fef37a9d0mr10939895wrz.140.1653559438419;
-        Thu, 26 May 2022 03:03:58 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id 13-20020a05600c020d00b003942a244eebsm1276081wmi.48.2022.05.26.03.03.57
+        bh=oUe5qjHE746YsZEG88fvj0C8TBLZdImHAFuEEdYBkXw=;
+        b=4w8KRF5Kkv0BzhdgvuuGzw5ce2Z5RUvQ2AlxqXPogdImSs+Nfzb7KKtHGgIZUAetrh
+         V9hIltNluIYEdeDJIJRqRsz08xWUQTRf4BPvIvCUSjcNkGHBg927aT6hmGAOlLTnMaKO
+         YKGsoUsmAGEbnHOWBfVALCgS8yAcd3pAIvFEI4vH6n5drdiXluRdfQEBRy1ZrZu7zX7C
+         9FFeR4TwmKxIE6BXMP6Ao71tcO+ENzv9yLmKL0d7C+gT1LVizFzt26c52L/4vlzxJ/ob
+         9Fxmx9Z0HveU0GXnPzx2w6/HTyYpNxgy47siC7FowAK8COOvKeD05j1R+NBEEh0lxFOX
+         KHmg==
+X-Gm-Message-State: AOAM531pEv4NppwM8nema6fXhN53sPj+iiwyYCAsjUoi8Pkniy+uJKYr
+        ikOspdk6v3OewbHHh0gt6SwwOw==
+X-Google-Smtp-Source: ABdhPJzk/4qznsz2eXu4MQ8+yKPx64W3doEbD81UmTDqITtBAoa74V+NV5H6kgRfZ3+aohJyYyt5sw==
+X-Received: by 2002:a63:488:0:b0:3f5:e6da:4619 with SMTP id 130-20020a630488000000b003f5e6da4619mr32218957pge.6.1653560871342;
+        Thu, 26 May 2022 03:27:51 -0700 (PDT)
+Received: from localhost ([122.162.234.2])
+        by smtp.gmail.com with ESMTPSA id k2-20020a170902f28200b0015e8d4eb1dcsm1134696plc.38.2022.05.26.03.27.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 May 2022 03:03:57 -0700 (PDT)
-Date:   Thu, 26 May 2022 10:03:56 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>
-Cc:     Saurabh Sengar <ssengar@linux.microsoft.com>,
-        Saurabh Singh Sengar <ssengar@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        Long Li <longli@microsoft.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4] scsi: storvsc: Removing Pre Win8 related logic
-Message-ID: <20220526100356.qwvc4qe2rkaja5wm@liuwe-devbox-debian-v2>
-References: <1653478022-26621-1-git-send-email-ssengar@linux.microsoft.com>
- <PH0PR21MB302574301005664B719B5196D7D69@PH0PR21MB3025.namprd21.prod.outlook.com>
+        Thu, 26 May 2022 03:27:50 -0700 (PDT)
+Date:   Thu, 26 May 2022 15:57:49 +0530
+From:   Viresh Kumar <viresh.kumar@linaro.org>
+To:     Stephen Boyd <sboyd@kernel.org>
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Taniya Das <tdas@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [RFC PATCH v2 4/6] PM: opp: allow control of multiple clocks
+Message-ID: <20220526102749.5tj5ttr5wxwfdrhh@vireshk-i7>
+References: <20220425072710.v6gwo4gu3aouezg4@vireshk-i7>
+ <dea39b1f-0091-2690-7f07-108d07ef9f3c@linaro.org>
+ <20220510044053.ykn6ygnbeokhzrsa@vireshk-i7>
+ <1e533194-7047-8342-b426-f607fddbfaa3@linaro.org>
+ <20220511050643.hd5tcrojb3wkbg7t@vireshk-i7>
+ <20220518235708.1A04CC385A9@smtp.kernel.org>
+ <65a4c28d-6702-3a9f-f837-1ea69a428777@linaro.org>
+ <20220520005934.8AB1DC385AA@smtp.kernel.org>
+ <20220525070551.guv3csxi5kkqfr4f@vireshk-i7>
+ <20220525160455.67E2BC385B8@smtp.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <PH0PR21MB302574301005664B719B5196D7D69@PH0PR21MB3025.namprd21.prod.outlook.com>
+In-Reply-To: <20220525160455.67E2BC385B8@smtp.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, May 25, 2022 at 01:52:01PM +0000, Michael Kelley (LINUX) wrote:
-> From: Saurabh Sengar <ssengar@linux.microsoft.com> Sent: Wednesday, May 25, 2022 4:27 AM
-> > 
-> > The latest storvsc code has already removed the support for windows 7 and
-> > earlier. There is still some code logic reamining which is there to support
-> 
-> s/reamining/remaining/
-> 
-> > pre Windows 8 OS. This patch removes these stale logic.
-> > This patch majorly does three things :
-> > 
-> > 1. Removes vmscsi_size_delta and its logic, as the vmscsi_request struct is
-> > same for all the OS post windows 8 there is no need of delta.
-> > 2. Simplify sense_buffer_size logic, as there is single buffer size for
-> > all the post windows 8 OS.
-> > 3. Embed the vmscsi_win8_extension structure inside the vmscsi_request,
-> > as there is no separate handling required for different OS.
-> > 
-> > Signed-off-by: Saurabh Sengar <ssengar@linux.microsoft.com>
-> > ---
-> > v4:
-> > * Removed sense_buffer_size variable and used STORVSC_SENSE_BUFFER_SIZE directly
-> > in all places
-> > * Removed the comment along with sense_buffer_size and placed a more simpler
-> > comment for STORVSC_SENSE_BUFFER_SIZE
-> > * Added back WIN6 and WIN7 protocol version macros
-> > 
-> >  drivers/scsi/storvsc_drv.c | 155 ++++++++++---------------------------
-> >  1 file changed, 39 insertions(+), 116 deletions(-)
-> 
-> Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+On 25-05-22, 09:04, Stephen Boyd wrote:
+> I'm saying that each OPP table would be for a single clk, but they would
+> be connected through required-opps for the device's OPP table.
 
-Fixed the typo and applied to hyperv-next. Thanks.
+Ahh, okay.
+
+> It would
+> mean that dev_pm_opp_set_clkname() would need extension to let a driver
+> indicate which clk is associated with an OPP table.
+
+Hmm, just that it complicates simple cases. Lets see.
+
+> From your other
+> reply on v3 it seems that you're leaning towards having an array of
+> frequency values in the OPP table instead of doing table linking?
+
+I am not against that to be honest, we have done that for voltages and
+current already. I am just not fine with having any one of them as the
+primary clock. I liked your idea of reusing "level" for that.
+
+I have started some rewriting of the core, to simplify things and
+reduce the number of ever increasing APIs (which you suggested earlier
+once). Lets see where we land eventually.
+
+-- 
+viresh
