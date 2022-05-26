@@ -2,69 +2,44 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D07AC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 May 2022 08:58:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 563AAC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 May 2022 09:08:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346766AbiEZI6E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 May 2022 04:58:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59404 "EHLO
+        id S1346814AbiEZJIH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 May 2022 05:08:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346797AbiEZI6D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 May 2022 04:58:03 -0400
-Received: from mail-m974.mail.163.com (mail-m974.mail.163.com [123.126.97.4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 54FB1C5DA3;
-        Thu, 26 May 2022 01:58:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=m9eS1
-        TxSHRFd/u36PSumGJaKjxQmnHrPcXPPPIMXmEY=; b=LLsQ2rxbS9QTNaaEI7mhw
-        /X+3pCYNIIZuQ+dvwDqHcNhJn5awVvArwcF0zFQDOTitz4GQDoSc6NwyliMUm/vX
-        jFy0RZN2qwcj8MioFvGfaewqU6zYK3ROLFaFGEwjONtXrPTlyaDnJR6bvf1lxzfI
-        ur8s+Lfat000VTOxzlJaOU=
-Received: from localhost.localdomain (unknown [123.112.69.106])
-        by smtp4 (Coremail) with SMTP id HNxpCgDnHeP4QI9igxV5EQ--.19625S4;
-        Thu, 26 May 2022 16:57:31 +0800 (CST)
-From:   Jianglei Nie <niejianglei2021@163.com>
-To:     ketan.mukadam@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jianglei Nie <niejianglei2021@163.com>
-Subject: [PATCH] scsi: be2iscsi: fix potential memory leak in beiscsi_process_mcc_compl()
-Date:   Thu, 26 May 2022 16:57:21 +0800
-Message-Id: <20220526085721.481202-1-niejianglei2021@163.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S241430AbiEZJIG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 May 2022 05:08:06 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BB8E13F0F;
+        Thu, 26 May 2022 02:08:05 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 9B6BD68B05; Thu, 26 May 2022 11:08:01 +0200 (CEST)
+Date:   Thu, 26 May 2022 11:08:01 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-block@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 11/14] block: remove GENHD_FL_EXT_DEVT
+Message-ID: <20220526090801.GA27200@lst.de>
+References: <20211122130625.1136848-1-hch@lst.de> <20211122130625.1136848-12-hch@lst.de> <Yo4+zEnrBTnoEMCz@T590> <20220525165114.GA2750@lst.de> <Yo7uxyrD2BywxEHt@T590>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: HNxpCgDnHeP4QI9igxV5EQ--.19625S4
-X-Coremail-Antispam: 1Uf129KBjvdXoW7GrykCrW8CFWfJF17Jw43Jrb_yoW3Wwb_ur
-        43tr17K39xGFsayr1Fgan8AFZI9FW8Xwn7urWaq34SvFWUurnxXFyDtrn7W3y8Aw4xXFn8
-        Jw4Dur1Yyws3XjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRidWrtUUUUU==
-X-Originating-IP: [123.112.69.106]
-X-CM-SenderInfo: xqlhyxxdqjzvrlsqjii6rwjhhfrp/1tbiPhsNjFxBsWACbgAAsE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yo7uxyrD2BywxEHt@T590>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We should call free_mcc_wrb() before the function returns.This patch
-adds the missing free_mcc_wrb() before the funciton returns.
+On Thu, May 26, 2022 at 11:06:47AM +0800, Ming Lei wrote:
+> BTW, SUPPRESS_PART_SCAN looks more like one flag, instead of 'state'.
 
-Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
----
- drivers/scsi/be2iscsi/be_cmds.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 69b1a80e3687..d07107a0bf41 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -498,6 +498,7 @@ int beiscsi_process_mcc_compl(struct be_ctrl_info *ctrl,
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_MBOX |
- 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
- 			    "BC_%d : MBX cmd completed but not posted\n");
-+		free_mcc_wrb(ctrl, tag);
- 		return 0;
- 	}
- 
--- 
-2.25.1
-
+It is kinda inbetween, but I favour the state.  ->flags is suppoed to be
+set statically at initialization time, and the GENHD_FL_NO_PART usage
+by loop is the only thing that violates it.  And once a device declares
+support for partitions supresing the scans is basically a policy and thus
+a state anyway.
