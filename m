@@ -2,93 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1514FC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 May 2022 02:18:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17364C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 May 2022 02:59:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344051AbiEZCSB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 May 2022 22:18:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60820 "EHLO
+        id S1345172AbiEZC7X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 May 2022 22:59:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbiEZCR6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 22:17:58 -0400
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEDA5BC6C8
-        for <linux-scsi@vger.kernel.org>; Wed, 25 May 2022 19:17:57 -0700 (PDT)
-Received: by mail-ej1-x630.google.com with SMTP id f21so400891ejh.11
-        for <linux-scsi@vger.kernel.org>; Wed, 25 May 2022 19:17:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=lV5zgCXHyqPoniN4egpc4ez8v2ywGktu+KT77l1Uk9w=;
-        b=TWlmfSYO1gOTBu4bXnhrBzM1Rv9dK1/PZds8v/pKilDbkkFP21w0PVI58t7co3BHlF
-         ShnTmtragg2Cx23Y2qLdT72mfuoDSuBYjJrJsDUEU7Vtde2CX1jBU9X4X3cgHbRlV4YI
-         MLTPfTDlN5hV/rhUvSb/M5+0OjO3oa3jnaLnU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=lV5zgCXHyqPoniN4egpc4ez8v2ywGktu+KT77l1Uk9w=;
-        b=KRYKh2rhSBZOYAP07/tGOz4jvMLbQaCdVUAKLPtL6YVd130sngS6dli2MI81Xr0UTX
-         +FzIOPl+1I99lvLT3VkeuIVy/z/jTJl/uXkH3zQe4INS7WbvTo4y1gsgijlmjEJ8pqTy
-         Af71gOF+HUSj3JlQxHn9ljHXC1GPJgPmvaNjA8N3Y4vNXnh5xumbIPqLS8fQpTfp71Ws
-         7XyakRwEO1ihmV4r36U+2X/xtRapOG7i6ZpLq4UreAN/QyKXBfmN7cTNB6asFMiTp+zr
-         D12w719ulpAJNSqoosQdv7ZUhvUAs2/CG/fuH8ASRe+c+C38FW8xVHPLLcufL3pLLoPA
-         0EjA==
-X-Gm-Message-State: AOAM530U4NKcb8MJHaxGwc/DDoB1S6AAK81mMEhLOyCQB6MOpgRDr67l
-        4RV0FSwB8Yq8uvHD2xy8mVMDJZ2LKcM0gvaKomM=
-X-Google-Smtp-Source: ABdhPJyJX+YoHsujzWt2QOPHIC20Sfd23t4GEihyY7g7Nbi2J1fadwVTW6El7BVx+bbMAs1qfnP5LQ==
-X-Received: by 2002:a17:907:2d90:b0:6fe:cf3c:ac97 with SMTP id gt16-20020a1709072d9000b006fecf3cac97mr18165933ejc.742.1653531475734;
-        Wed, 25 May 2022 19:17:55 -0700 (PDT)
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com. [209.85.128.44])
-        by smtp.gmail.com with ESMTPSA id m4-20020a509984000000b0042ac2b71078sm134523edb.55.2022.05.25.19.17.55
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 25 May 2022 19:17:55 -0700 (PDT)
-Received: by mail-wm1-f44.google.com with SMTP id i82-20020a1c3b55000000b003974edd7c56so1781360wma.2
-        for <linux-scsi@vger.kernel.org>; Wed, 25 May 2022 19:17:55 -0700 (PDT)
-X-Received: by 2002:a05:600c:3d18:b0:397:6531:b585 with SMTP id
- bh24-20020a05600c3d1800b003976531b585mr104467wmb.38.1653531474740; Wed, 25
- May 2022 19:17:54 -0700 (PDT)
-MIME-Version: 1.0
-References: <bd25414c73fae85529568c6f5b88bfdad6df7b97.camel@HansenPartnership.com>
-In-Reply-To: <bd25414c73fae85529568c6f5b88bfdad6df7b97.camel@HansenPartnership.com>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Wed, 25 May 2022 19:17:38 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wh5SyuAox3QXvmJLwV4VgN_EK4oaAkh5-73FVf36ZdHog@mail.gmail.com>
-Message-ID: <CAHk-=wh5SyuAox3QXvmJLwV4VgN_EK4oaAkh5-73FVf36ZdHog@mail.gmail.com>
+        with ESMTP id S237445AbiEZC7V (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2022 22:59:21 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29E09BCE9E;
+        Wed, 25 May 2022 19:59:20 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CF28AB81EC3;
+        Thu, 26 May 2022 02:59:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 80389C385B8;
+        Thu, 26 May 2022 02:59:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653533957;
+        bh=VJabWyAI7ssWfGvUOMDtsGx8kN+ReQPetUHWFWvaVuc=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=FWS03qWeRCSXcLyIHdIhNwz6UD9S5SNAI3Gmxqz8dt+JhqoZaTqugQOWDyQw+ES93
+         OQYCoU3zda5yLq41AFikYQcIQJpwiX+pWVoNaLCKEjml7xHpLzg5waoopMnI3pPUZR
+         Clbqp4Fk5Eu4wZtfDGIZElOxmXMrI3Q2sAob0y1wXNxDsUvj0pLe/ifCSgkdmL/riC
+         iApF2zkuHrl7Lev31JFaFtPCqMBYSaq1vgr265EFfWDmPCwzheBXle+q6Bihopvs5Z
+         5Di6uRy0V0bNAaif12eW1zm/2Rh9bie40zQqo0mOAuMTe1YfQ6s0rXdjbSbaq2S1e6
+         6iEHLfPW1LB7Q==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 6EA69E8DBDA;
+        Thu, 26 May 2022 02:59:17 +0000 (UTC)
 Subject: Re: [GIT PULL] first round of SCSI updates for the 5.18+ merge window
-To:     James Bottomley <James.Bottomley@hansenpartnership.com>
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <bd25414c73fae85529568c6f5b88bfdad6df7b97.camel@HansenPartnership.com>
+References: <bd25414c73fae85529568c6f5b88bfdad6df7b97.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <bd25414c73fae85529568c6f5b88bfdad6df7b97.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+X-PR-Tracked-Commit-Id: 325d5c5fb216674296f3902a8902b942da3adc5b
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: fbe86daca0ba878b04fa241b85e26e54d17d4229
+Message-Id: <165353395744.29187.3005143147293528642.pr-tracker-bot@kernel.org>
+Date:   Thu, 26 May 2022 02:59:17 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
         linux-scsi <linux-scsi@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, May 24, 2022 at 7:38 PM James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> Max Gurtovoy (3):
->       scsi: target: iscsi: Rename iscsi_session to iscsit_session
->       scsi: target: iscsi: Rename iscsi_conn to iscsit_conn
->       scsi: target: iscsi: Rename iscsi_cmd to iscsit_cmd
+The pull request you sent on Tue, 24 May 2022 22:38:34 -0400:
 
-People, there really isn't some incredible drought of letters in the
-world. It's ok to write out "target" instead of just "t".
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-Done is done, and renaming things further is probably not worth it,
-but when the commit talks about "more readable code" I really don't
-know if "struct iscsit_session" and friends is conducive to "more
-readable". It looks more like line noise.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/fbe86daca0ba878b04fa241b85e26e54d17d4229
 
-Yeah, it's less typing, and maybe "struct iscsi_target_session" would
-have been too long. But still, I had to do a double-take when looking
-at the diff, and aside from it being line noise, having a structure
-name that differs by just one character in the middle between target
-and initiator feels like mistake.
+Thank you!
 
-Anyway, pulled despite what feels like an oddity.
-
-                Linus
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
