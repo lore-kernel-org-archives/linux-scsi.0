@@ -2,107 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E334C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 May 2022 05:40:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF482C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 May 2022 05:52:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243632AbiE0FkF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 May 2022 01:40:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57732 "EHLO
+        id S243510AbiE0FwL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 May 2022 01:52:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243642AbiE0FkC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 May 2022 01:40:02 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E2BAEBAB6
-        for <linux-scsi@vger.kernel.org>; Thu, 26 May 2022 22:39:43 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id B945A1F916;
-        Fri, 27 May 2022 05:39:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1653629981; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=wj+Ywrm5oQ1q9cP0OSSSn4YwjJY7zkDZHZjv3ApSw6A=;
-        b=Xf94BBE8nGdkSx9Ca2AD3ecjHxZT3qrxxMorHCaX0mrL3FOysXngLkO2c+y7loHWRl2qde
-        7dNLvb5X7caUxPzLW8IwIL03PDp3VeA/Yfx4/s86h8Oj4KJMAwVgnQAcp5zCO9+G7vEm0X
-        vobWmZKgAssMqnaiz9AUIYmBHff/Wcs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1653629981;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=wj+Ywrm5oQ1q9cP0OSSSn4YwjJY7zkDZHZjv3ApSw6A=;
-        b=rsW6Ym2S8UqiR2CP3aqPbHQ7WEQClxOrzGwD8serR6zX4SwYGs9XrdKAqqfg+Y5PE6FrFO
-        5Ldgj3iSppyR+sAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7DEFB1346B;
-        Fri, 27 May 2022 05:39:41 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id D6R+HR1kkGJ0fgAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 27 May 2022 05:39:41 +0000
-Message-ID: <b3e08c9a-675a-d1d0-cd78-36b2947acbf6@suse.de>
-Date:   Fri, 27 May 2022 07:39:41 +0200
+        with ESMTP id S235470AbiE0FwK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 May 2022 01:52:10 -0400
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE112E2794;
+        Thu, 26 May 2022 22:52:09 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id d22so4168700edj.4;
+        Thu, 26 May 2022 22:52:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=o0TsDTzVWppTPCx2R4Hy7J51cpcj3p1lUYm2XC/H4lg=;
+        b=glKjVk7syc34w4mICRNMJu0ilDcg10vhUplxhbx5404kAZtUq1/6zYjzNAZjiIMYSA
+         /heqB+OSWEGBENmHoAO97bZ+CLeEPtxi6fKMOdJVL9QzcTo//F0sbZLbRrNM9PbU9D/Z
+         Xb4X09xa6z2lQBeYq+LPHZh42fNIo79guxqPXZXSGTpXVVrShfTjEQWSMf7kVgpZilkg
+         beoj/m/m1bugn/0ZG9jMlkkd37huHXfNwsGlPayo0MRVFZ5NDI8m+Y6G/cD/tsZVFQSV
+         Hs60apaK7AlnIuU9C/q1NrEeA2tOzZKzuf3L7BMn4iMXKSv/ydG5fH2N+P5orAWp1HVQ
+         Jacg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=o0TsDTzVWppTPCx2R4Hy7J51cpcj3p1lUYm2XC/H4lg=;
+        b=o0tt6X3DjoBltaFqIHq8EBOL2fm1YPf8G2thWbw5EyMyU4xekzSZdhUqnnm9VrXyW1
+         lsTe7/VuUCpS/FWdOWi4i8emK/+d5Kry996IbtDKhkN9VWXewoN5KS3Pek1/ZA4TNHjQ
+         XwDHr0xoVyMeYMkPFl68MbmzoQBUPAPmtwTHgeRxFzMXYukIwdO/pYwaQVvEbidFRTz2
+         V07ZN4LzGJT+TYx7nN8d6G/vYK6D+0gp3G2GlVppxGihL81DX0ZW041m47u+7vPLx5aW
+         fnPGvfgUtW1SdgkLzI2p5iKNqrehNlQC+XsUwEvb6s7l/Bsh2l/dVUTTPGa94DEFo1W+
+         rK4w==
+X-Gm-Message-State: AOAM532N+NgERU05IcXEFizfAyuAxw9eja7Uk2Xll3FqzB0AgmP0L+8E
+        2XrCEKTTg981t1MATjAfJsbqZCWIyr0YqsOWHHEPlGaVh/ZxhCjj
+X-Google-Smtp-Source: ABdhPJwSu46XRZ5LBbBzfunrf7upIs4isceABvMMmYwxQ0LbQyu/K+cqGyAsT6asEyHl5VQhbKr5Fk7sbTN5PQvyYag=
+X-Received: by 2002:a05:6402:3491:b0:42b:635a:efaf with SMTP id
+ v17-20020a056402349100b0042b635aefafmr25387855edc.135.1653630728363; Thu, 26
+ May 2022 22:52:08 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH 06/20] qedf: use fc rport as argument for
- qedf_initiate_tmf()
-Content-Language: en-US
-To:     Ewan Milne <emilne@redhat.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        James Smart <james.smart@broadcom.com>
-References: <20220512111236.109851-1-hare@suse.de>
- <20220512111236.109851-7-hare@suse.de>
- <CAGtn9rkR02KF8QikQ0J6MskocA6VQ385ajoz36Q7RH32VXBjGg@mail.gmail.com>
- <86d7ebc9-bb33-7f11-1e77-38b9f855d04d@suse.de>
- <CAGtn9rk_rc0x+DdPuiZZBVFexp9s41sc0zZtB0cCBJEtBFSd2A@mail.gmail.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <CAGtn9rk_rc0x+DdPuiZZBVFexp9s41sc0zZtB0cCBJEtBFSd2A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From:   Dongliang Mu <mudongliangabcd@gmail.com>
+Date:   Fri, 27 May 2022 13:51:42 +0800
+Message-ID: <CAD-N9QXY57RvFwGQvh8U7WBc3JCX-0kpqB6+fZ=oJJtHmFdUwg@mail.gmail.com>
+Subject: Null Pointer Dereference in sd_zbc_release_disk
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/25/22 21:06, Ewan Milne wrote:
-> Well, fc_remote_port_chkready() has in the _ONLINE and _MARGINAL case:
-> 
->                  if (rport->roles & FC_PORT_ROLE_FCP_TARGET)
->                          result = 0;
->                  else if (rport->flags & FC_RPORT_DEVLOSS_PENDING)
->                          result = DID_IMM_RETRY << 16;
->                  else
->                          result = DID_NO_CONNECT << 16;
->                  break;
-> 
-> which fc_block_rport() does not have.  Admittedly, I would have thought that
-> the rport would be blocked while devloss was pending but there is code in
-> fc_timeout_deleted_rport() that indicates otherwise, maybe this only happens
-> if there is a role change.
-> 
-Sort of. But the code in qedf only deals with FCP target ports, so we'll 
-always take the first branch and the entire code is pointless.
-Am I wrong?
+Hi maintainers,
 
-Cheers,
+I found a NPD(Null Pointer Dereference) in sd_zbc_release_disk function.
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+There are two definitions of sd_zbc_release_disk:
+
+#ifdef CONFIG_BLK_DEV_ZONED
+void sd_zbc_release_disk(struct scsi_disk *sdkp);
+#else /* CONFIG_BLK_DEV_ZONED */
+static inline void sd_zbc_release_disk(struct scsi_disk *sdkp) {}
+#endif
+
+When CONFIG_BLK_DEV_ZONED=y, the function implementation is as follows:
+
+void sd_zbc_release_disk(struct scsi_disk *sdkp)
+{
+    if (sd_is_zoned(sdkp))
+        sd_zbc_clear_zone_info(sdkp);
+}
+
+static inline int sd_is_zoned(struct scsi_disk *sdkp)
+{
+    return sdkp->zoned == 1 || sdkp->device->type == TYPE_ZBC;
+}
+
+In drivers/scsi/sd.c, sd_probe() allocates sdkp with kzalloc(). If
+errors occurred before the assignment "sdkp->device", after the
+allocation, it will triggers a NPD in sd_is_zoned.
+
+I am not familiar with kernel configuration. Does anyone have a
+suggestion to fix this NPD?
+
+I really appreciate any help you can provide.
+--
+My best regards to you.
+
+     No System Is Safe!
+     Dongliang Mu
