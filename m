@@ -2,149 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB34BC433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 May 2022 00:27:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1250CC433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 May 2022 02:38:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355264AbiE1A1o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 May 2022 20:27:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39236 "EHLO
+        id S231347AbiE1Cib (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 May 2022 22:38:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245666AbiE1A1n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 May 2022 20:27:43 -0400
-Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75723101FE;
-        Fri, 27 May 2022 17:27:42 -0700 (PDT)
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24RJPT3O013619;
-        Fri, 27 May 2022 17:27:31 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type : content-id; s=pfpt0220;
- bh=Vb1GuDgqYbAUPSENMyVLcjQ2bVoYMKH0ZvazQCEsd5I=;
- b=lHiA0zpE4yK3ng0SPXGyNqiu77Yjxyz7p9ke4GAwbMyJVYTqG1xZXRr49v+xQLcAWtZ8
- yZ9cWzGepwBWiqv5FF//R0aY2h8G/NgGejvl3JiU50a08B5ER41ghRxR/TJthg0oTFc/
- EExG/NjMiqu2xB7mzZSLERy2+5ckN4ULhfq5WnfsSf3OAqlV4sq7mstKQNdNBwmz12Td
- S9RGGNBeHrwCMvoat7BrEnlpBD6x2Y6xdYYGtkOXFY14S03dVXccPFiqvsr3eKIl6VVm
- p7+08mIf/nWcWyJKaZ5B5tXpVwGxv5Tg+WrsxmbNYT/7d5z9c8Y9qqOnuxxT/ywjUPaq Pg== 
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3gaf2rwhrc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Fri, 27 May 2022 17:27:31 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Fri, 27 May
- 2022 17:27:29 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
- Transport; Fri, 27 May 2022 17:27:29 -0700
-Received: from mvluser05.qlc.com (unknown [10.112.10.135])
-        by maili.marvell.com (Postfix) with ESMTP id 9B3655B6936;
-        Fri, 27 May 2022 17:27:29 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by mvluser05.qlc.com (8.14.4/8.14.4/Submit) with ESMTP id 24S0RRxv008651;
-        Fri, 27 May 2022 17:27:29 -0700
-X-Authentication-Warning: mvluser05.qlc.com: aeasi owned process doing -bs
-Date:   Fri, 27 May 2022 17:27:27 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@mvluser05.qlc.com
-To:     Tony Battersby <tonyb@cybernetics.com>
-CC:     Saurav Kashyap <skashyap@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <regressions@lists.linux.dev>
-Subject: Re: [REGRESSION] qla2xxx: tape drive not removed after unplug FC
- cable
-In-Reply-To: <baef87c3-5dad-3b47-44c1-6914bfc90108@cybernetics.com>
-Message-ID: <alpine.LRH.2.21.9999.2205271524460.4730@mvluser05.qlc.com>
-References: <baef87c3-5dad-3b47-44c1-6914bfc90108@cybernetics.com>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+        with ESMTP id S1343827AbiE1Cia (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 May 2022 22:38:30 -0400
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FC725E751
+        for <linux-scsi@vger.kernel.org>; Fri, 27 May 2022 19:38:29 -0700 (PDT)
+Received: by mail-pj1-x1029.google.com with SMTP id l20-20020a17090a409400b001dd2a9d555bso5900228pjg.0
+        for <linux-scsi@vger.kernel.org>; Fri, 27 May 2022 19:38:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:in-reply-to:references:subject:message-id:date
+         :mime-version:content-transfer-encoding;
+        bh=QKfoIOgyZL/xb/1L1zYSEnG8584E1/HMwnAVrhZ2S90=;
+        b=tH6+E+cGuT10WwPZrOtbguliVJw3nPEIIo/uPIghoZ8VrVVaGPhE4oGTYjtXil580O
+         SMGg63x4IXfmFZ8VWCdUumkzN24l6LCh8z+IlJ3TleDDWN/UZ3dseGM6Yd9Y2vXrmhvE
+         wAPABGmjXeGSOaobxzvHbNMbc+cxdkKD2+ngK46HedrQfDwgz/sglIQ0CAVlC/g0cKQc
+         2BdfOUnDVKR5d4rwyo76Gs/0v08wH0e5JenWN0ejCsiX0bDS+BddQoeMoRmeVLGzZ92U
+         UvFUbk5LLTrBeEzCTxzCrA1IZ70wgcvqjIx/oV38AA1OCAGvh+X26jXNW4vZIA92hN8m
+         2dyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
+         :message-id:date:mime-version:content-transfer-encoding;
+        bh=QKfoIOgyZL/xb/1L1zYSEnG8584E1/HMwnAVrhZ2S90=;
+        b=dv35AA37V7WJTVOeT5+OxELObvp713uXI6O7KFx/ZCgFNZbN/j9mFnCcjbbc05+NxA
+         ZH4kF1+PYR/Kzzr/oa24i/FoMcezm+84wB03skkdLzU8Ovy7j8itTNKeKeh72buINO+M
+         rJ++xKTqvqQhZ/Joo6qZHgKK/bZx5gLmR9Q3I7fzt8Gr2Bu4VdqJEsZSKhOjVVmuBjRx
+         VGdRL7Gz03/tWh0qwOXlJj7UMqCXe4vSWhFaJOlXriBDQEh/tFOa4uc1lHuBOcHMfpzN
+         EpaIgueda0ZeIeLG8L8N2FbEsoZ06Eo+qIma/EkEx3A9/1laQCDzkJZoHbGtrmaMZknj
+         QG3A==
+X-Gm-Message-State: AOAM533rKdk6yvwKKupCITbcdO1S06Q27r8vZjIPdNyF3CWfHb5PeTu2
+        fTYtFJJtIzfBrgseSGiVg+lcnan5qfUvSg==
+X-Google-Smtp-Source: ABdhPJzwqCNbh7NAKqkBulvD58E83zSeEol1PkLOrJgIZxpF2Fwj1W9WHtYjW3cxajUp9ll+eE+62Q==
+X-Received: by 2002:a17:90b:4f43:b0:1dc:c1f1:59c9 with SMTP id pj3-20020a17090b4f4300b001dcc1f159c9mr11236684pjb.183.1653705509015;
+        Fri, 27 May 2022 19:38:29 -0700 (PDT)
+Received: from [127.0.1.1] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id u10-20020a170902e5ca00b001619cec6f95sm4394027plf.257.2022.05.27.19.38.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 27 May 2022 19:38:28 -0700 (PDT)
+From:   Jens Axboe <axboe@kernel.dk>
+To:     Christoph Hellwig <hch@lst.de>, hare@suse.de
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        james.bottomley@hansenpartnership.com, linux-block@vger.kernel.org
+In-Reply-To: <20220524055631.85480-1-hare@suse.de>
+References: <20220524055631.85480-1-hare@suse.de>
+Subject: Re: (subset) [PATCH 0/2] block,scsi: BLK_STS_AGAIN clarification
+Message-Id: <165370550803.603787.9990337398772714237.b4-ty@kernel.dk>
+Date:   Fri, 27 May 2022 20:38:28 -0600
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-        boundary="1879738122-1443816806-1653693424=:4730"
-Content-ID: <alpine.LRH.2.21.9999.2205271720570.4730@mvluser05.qlc.com>
-X-Proofpoint-ORIG-GUID: NKPAGJdVIFsyfuMHkYbCs7mr2U1irP6P
-X-Proofpoint-GUID: NKPAGJdVIFsyfuMHkYbCs7mr2U1irP6P
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.486,FMLib:17.11.64.514
- definitions=2022-05-27_07,2022-05-27_01,2022-02-23_01
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---1879738122-1443816806-1653693424=:4730
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 8BIT
-Content-ID: <alpine.LRH.2.21.9999.2205271720571.4730@mvluser05.qlc.com>
+On Tue, 24 May 2022 07:56:29 +0200, Hannes Reinecke wrote:
+> BLK_STS_AGAIN should only be used under very specify circumstances,
+> so we should better document that. And modify the SCSI midlayer to
+> not return it, of course.
+> 
+> As usual, comments and reviews are welcome.
+> 
+> Hannes Reinecke (2):
+>   block: document BLK_STS_AGAIN usage
+>   scsi: return BLK_STS_TRANSPORT for ALUA transitioning
+> 
+> [...]
 
-Hi Tony,
+Applied, thanks!
 
-Thanks for reporting the issue. We are trying to recreate this issue in 
-house. I will reach out to you for logs, if we cannot repro. Typically, we 
-get sufficient context to the issue when the problem is reproduced with 
-module parameter "ql2xextended_error_logging=1".
+[1/2] block: document BLK_STS_AGAIN usage
+      commit: 98d40e76652e9aeb3aec4065f600d633ed335e94
 
-Anyway, I will let you know the status.
+Best regards,
+-- 
+Jens Axboe
 
-Regards,
--Arun
 
-On Wed, 25 May 2022, 3:03pm, Tony Battersby wrote:
-
-> #regzbot introduced: 44c57f205876
-> 
-> I have several different QLogic FC HBAs (8, 16, 32 Gbps) and several
-> different FC LTO tape drives (IBM Ultrium 8 & 9).  When I plug in the FC
-> cable, the tape drive shows up as a SCSI device as expected.  With older
-> kernels, when I unplug the FC cable, the tape drive SCSI device would
-> disappear after about 30 seconds.  But with newer kernels (including
-> 5.18), when I unplug the FC cable, the tape drive SCSI device never
-> disappears.  I have bisected the change in behavior to the following
-> commit in kernel 5.15:
-> 
-> 44c57f205876 ("scsi: qla2xxx: Changes to support FCP2 Target")
-> 
-> This commit has been backported to various -stable kernels, so they are
-> also affected.
-> 
-> When testing with two different tape drives:
-> 1) Plug FC cable into tape drive A.  Tape drive A shows up as a SCSI device.
-> 2) Unplug FC cable; wait 60 seconds.  Tape drive A does not disappear.
-> 3) Plug FC cable into tape drive B.  Tape drive A disappears 30 seconds
-> later, but tape drive B does not show up.
-> 4) Unplug FC cable and plug it back into tape drive B.  Tape drive B
-> shows up as a SCSI device.
-> 
-> So I can actually make a tape drive disappear by plugging the cable into
-> a different tape drive, but then I have to reseat the cable again to
-> make the new tape drive show up.
-> 
-> lspci -n
-> 83:00.0 0c04: 1077:2031 (rev 02)
-> 83:00.1 0c04: 1077:2031 (rev 02)
-> 
-> When plugging in cable:
-> qla2xxx [0000:83:00.1]-500a:7: LOOP UP detected (8 Gbps).
-> 
-> When unplugging cable with old kernel:
-> qla2xxx [0000:83:00.1]-500b:7: LOOP DOWN detected (2 7 0 0).
-> rport-7:0-2: blocked FC remote port time out: removing target and saving binding
-> 
-> When unplugging cable with new kernel:
-> qla2xxx [0000:83:00.1]-500b:7: LOOP DOWN detected (2 7 0 0).
-> 
-> /sys/class/fc_remote_ports/rport-*/
-> dev_loss_tmo: 30
-> supported_classes: Class 3
-> port_state: Online
-> (port_state remains Online even when FC cable unplugged)
-> 
-> /proc/scsi/scsi
-> Host: scsi7 Channel: 00 Id: 01 Lun: 00
->   Vendor: IBM      Model: ULTRIUM-HH8      Rev: K4K1
->   Type:   Sequential-Access                ANSI  SCSI revision: 06
-> 
-> Tony Battersby
-> Cybernetics
-> 
-> 
---1879738122-1443816806-1653693424=:4730--
